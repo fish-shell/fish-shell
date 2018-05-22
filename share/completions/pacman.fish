@@ -136,3 +136,4 @@ complete -c $progname -n "$files" -l machinereadable -d 'Show in machine readabl
 # Using "pkg.tar.*" here would change __fish_complete_suffix's descriptions to "unknown"
 complete -c $progname -n "$upgrade" -xa '(__fish_complete_suffix pkg.tar.xz)' -d 'Package file'
 complete -c $progname -n "$upgrade" -xa '(__fish_complete_suffix pkg.tar.gz)' -d 'Package file'
+complete -c $progname -n "$upgrade" -xa '(__fish_complete_suffix pkg.tar)' -d 'Package file'

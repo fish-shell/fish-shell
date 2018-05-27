@@ -422,3 +422,14 @@ bxy
 xy
 aabxyx
 xyx
+
+####################
+# Check NUL
+a\x00b
+a\x00c
+a
+\x00
+d
+a\x00b
+a\x00g
+a\x00g

@@ -116,12 +116,16 @@ class arg_iterator_t {
     arg_iterator_t(const wchar_t *const *argv, int argidx, const io_streams_t &streams)
         : argv_(argv), argidx_(argidx), streams_(streams) {}
 
-    /// \return the next argument, or null if the argument list is exhausted.
-    const wchar_t *next() {
+    const wcstring *nextstr() {
         if (string_args_from_stdin(streams_)) {
-            return get_arg_stdin();
+            return get_arg_stdin() ? &storage_ : NULL;
         }
-        return string_get_arg_argv(&argidx_, argv_);
+        if (auto arg = string_get_arg_argv(&argidx_, argv_)) {
+            storage_ = wcstring(arg);
+            return &storage_;
+        } else {
+            return NULL;
+        }
     }
 };
 }
@@ -480,113 +484,6 @@ static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, wc
     return STATUS_CMD_OK;
 }
 
-/// Escape a string so that it can be used in a fish script without further word splitting.
-static int string_escape_script(options_t &opts, int optind, wchar_t **argv,
-                                io_streams_t &streams) {
-    int nesc = 0;
-    escape_flags_t flags = ESCAPE_ALL;
-    if (opts.no_quoted) flags |= ESCAPE_NO_QUOTED;
-
-    arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        streams.out.append(escape_string(arg, flags, STRING_STYLE_SCRIPT));
-        streams.out.append(L'\n');
-        nesc++;
-    }
-
-    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
-}
-
-/// Escape a string so that it can be used as a URL.
-static int string_escape_url(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
-    UNUSED(opts);
-    int nesc = 0;
-    escape_flags_t flags = 0;
-
-    arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        streams.out.append(escape_string(arg, flags, STRING_STYLE_URL));
-        streams.out.append(L'\n');
-        nesc++;
-    }
-
-    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
-}
-
-/// Escape a string so that it can be used as a fish var name.
-static int string_escape_var(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
-    UNUSED(opts);
-    int nesc = 0;
-    escape_flags_t flags = 0;
-
-    arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        streams.out.append(escape_string(arg, flags, STRING_STYLE_VAR));
-        streams.out.append(L'\n');
-        nesc++;
-    }
-
-    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
-}
-
-/// Unescape a string encoded so it can be used in fish script.
-static int string_unescape_script(options_t &opts, int optind, wchar_t **argv,
-                                  io_streams_t &streams) {
-    UNUSED(opts);
-    int nesc = 0;
-    unescape_flags_t flags = 0;
-
-    arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        wcstring result;
-        if (unescape_string(arg, &result, flags, STRING_STYLE_SCRIPT)) {
-            streams.out.append(result);
-            streams.out.append(L'\n');
-            nesc++;
-        }
-    }
-
-    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
-}
-
-/// Unescape an encoded URL.
-static int string_unescape_url(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
-    UNUSED(opts);
-    int nesc = 0;
-    unescape_flags_t flags = 0;
-
-    arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        wcstring result;
-        if (unescape_string(arg, &result, flags, STRING_STYLE_URL)) {
-            streams.out.append(result);
-            streams.out.append(L'\n');
-            nesc++;
-        }
-    }
-
-    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
-}
-
-/// Unescape an encoded var name.
-static int string_unescape_var(options_t &opts, int optind, wchar_t **argv, io_streams_t &streams) {
-    UNUSED(opts);
-    int nesc = 0;
-    unescape_flags_t flags = 0;
-
-    arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        wcstring result;
-        if (unescape_string(arg, &result, flags, STRING_STYLE_VAR)) {
-            streams.out.append(result);
-            streams.out.append(L'\n');
-            nesc++;
-        }
-    }
-
-    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
-}
-
 static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
     options_t opts;
     opts.no_quoted_valid = true;
@@ -595,18 +492,23 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wcha
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    switch (opts.escape_style) {
-        case STRING_STYLE_SCRIPT: {
-            return string_escape_script(opts, optind, argv, streams);
-        }
-        case STRING_STYLE_URL: {
-            return string_escape_url(opts, optind, argv, streams);
-        }
-        case STRING_STYLE_VAR: {
-            return string_escape_var(opts, optind, argv, streams);
-        }
+    // Currently, only the script style supports options.
+    // Ignore them for other styles for now.
+    escape_flags_t flags = 0;
+    if (opts.escape_style == STRING_STYLE_SCRIPT) {
+        flags = ESCAPE_ALL;
+        if (opts.no_quoted) flags |= ESCAPE_NO_QUOTED;
     }
 
+    int nesc = 0;
+    arg_iterator_t aiter(argv, optind, streams);
+    while (auto arg = aiter.nextstr()) {
+        streams.out.append(escape_string(*arg, flags, opts.escape_style));
+        streams.out.append(L'\n');
+        nesc++;
+    }
+
+    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
     DIE("should never reach this statement");
 }
 
@@ -616,20 +518,22 @@ static int string_unescape(parser_t &parser, io_streams_t &streams, int argc, wc
     opts.style_valid = true;
     int optind;
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    int nesc = 0;
+    unescape_flags_t flags = 0;
+
     if (retval != STATUS_CMD_OK) return retval;
 
-    switch (opts.escape_style) {
-        case STRING_STYLE_SCRIPT: {
-            return string_unescape_script(opts, optind, argv, streams);
-        }
-        case STRING_STYLE_URL: {
-            return string_unescape_url(opts, optind, argv, streams);
-        }
-        case STRING_STYLE_VAR: {
-            return string_unescape_var(opts, optind, argv, streams);
+    arg_iterator_t aiter(argv, optind, streams);
+    while (auto arg = aiter.nextstr()) {
+        wcstring result;
+        if (unescape_string(*arg, &result, flags, opts.escape_style)) {
+            streams.out.append(result);
+            streams.out.append(L'\n');
+            nesc++;
         }
     }
 
+    return nesc > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
     DIE("should never reach this statement");
 }
 
@@ -643,12 +547,12 @@ static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_
     const wchar_t *sep = opts.arg1;
     int nargs = 0;
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
+    while (auto arg = aiter.nextstr()) {
         if (!opts.quiet) {
             if (nargs > 0) {
                 streams.out.append(sep);
             }
-            streams.out.append(arg);
+            streams.out.append(*arg);
         }
         nargs++;
     }
@@ -668,8 +572,8 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, wcha
 
     int nnonempty = 0;
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        size_t n = wcslen(arg);
+    while (auto arg = aiter.nextstr()) {
+        size_t n = arg->length();
         if (n > 0) {
             nnonempty++;
         }
@@ -693,7 +597,7 @@ class string_matcher_t {
         : opts(std::move(opts_)), streams(streams_), total_matched(0) {}
 
     virtual ~string_matcher_t() = default;
-    virtual bool report_matches(const wchar_t *arg) = 0;
+    virtual bool report_matches(const wcstring &arg) = 0;
     int match_count() { return total_matched; }
 };
 
@@ -702,7 +606,7 @@ class wildcard_matcher_t : public string_matcher_t {
     wcstring wcpattern;
 
    public:
-    wildcard_matcher_t(const wchar_t * /*argv0*/, const wchar_t *pattern, const options_t &opts,
+    wildcard_matcher_t(const wchar_t * /*argv0*/, const wcstring &pattern, const options_t &opts,
                        io_streams_t &streams)
         : string_matcher_t(opts, streams), wcpattern(parse_util_unescape_wildcards(pattern)) {
         if (opts.ignore_case) {
@@ -718,7 +622,7 @@ class wildcard_matcher_t : public string_matcher_t {
 
     ~wildcard_matcher_t() override = default;
 
-    bool report_matches(const wchar_t *arg) override {
+    bool report_matches(const wcstring &arg) override {
         // Note: --all is a no-op for glob matching since the pattern is always matched
         // against the entire argument.
         bool match;
@@ -737,7 +641,7 @@ class wildcard_matcher_t : public string_matcher_t {
 
             if (!opts.quiet) {
                 if (opts.index) {
-                    streams.out.append_format(L"1 %lu\n", wcslen(arg));
+                    streams.out.append_format(L"1 %lu\n", arg.length());
                 } else {
                     streams.out.append(arg);
                     streams.out.append(L'\n');
@@ -758,7 +662,7 @@ struct compiled_regex_t {
     pcre2_code *code;
     pcre2_match_data *match;
 
-    compiled_regex_t(const wchar_t *argv0, const wchar_t *pattern, bool ignore_case,
+    compiled_regex_t(const wchar_t *argv0, const wcstring &pattern, bool ignore_case,
                      io_streams_t &streams)
         : code(0), match(0) {
         // Disable some sequences that can lead to security problems.
@@ -770,13 +674,12 @@ struct compiled_regex_t {
         int err_code = 0;
         PCRE2_SIZE err_offset = 0;
 
-        code =
-            pcre2_compile(PCRE2_SPTR(pattern), PCRE2_ZERO_TERMINATED,
-                          options | (ignore_case ? PCRE2_CASELESS : 0), &err_code, &err_offset, 0);
+        code = pcre2_compile(PCRE2_SPTR(pattern.c_str()), pattern.length(),
+                             options | (ignore_case ? PCRE2_CASELESS : 0), &err_code, &err_offset, 0);
         if (code == 0) {
             string_error(streams, _(L"%ls: Regular expression compile error: %ls\n"), argv0,
                          pcre2_strerror(err_code).c_str());
-            string_error(streams, L"%ls: %ls\n", argv0, pattern);
+            string_error(streams, L"%ls: %ls\n", argv0, pattern.c_str());
             string_error(streams, L"%ls: %*ls\n", argv0, err_offset, L"^");
             return;
         }
@@ -799,12 +702,12 @@ class pcre2_matcher_t : public string_matcher_t {
     const wchar_t *argv0;
     compiled_regex_t regex;
 
-    int report_match(const wchar_t *arg, int pcre2_rc) {
+    int report_match(const wcstring &arg, int pcre2_rc) {
         // Return values: -1 = error, 0 = no match, 1 = match.
         if (pcre2_rc == PCRE2_ERROR_NOMATCH) {
             if (opts.invert_match && !opts.quiet) {
                 if (opts.index) {
-                    streams.out.append_format(L"1 %lu\n", wcslen(arg));
+                    streams.out.append_format(L"1 %lu\n", arg.length());
                 } else {
                     streams.out.append(arg);
                     streams.out.push_back(L'\n');
@@ -850,7 +753,7 @@ class pcre2_matcher_t : public string_matcher_t {
     }
 
    public:
-    pcre2_matcher_t(const wchar_t *argv0_, const wchar_t *pattern, const options_t &opts,
+    pcre2_matcher_t(const wchar_t *argv0_, const wcstring &pattern, const options_t &opts,
                     io_streams_t &streams)
         : string_matcher_t(opts, streams),
           argv0(argv0_),
@@ -858,7 +761,7 @@ class pcre2_matcher_t : public string_matcher_t {
 
     ~pcre2_matcher_t() override = default;
 
-    bool report_matches(const wchar_t *arg) override {
+    bool report_matches(const wcstring &arg) override {
         // A return value of true means all is well (even if no matches were found), false indicates
         // an unrecoverable error.
         if (regex.code == 0) {
@@ -869,9 +772,9 @@ class pcre2_matcher_t : public string_matcher_t {
         int matched = 0;
 
         // See pcre2demo.c for an explanation of this logic.
-        PCRE2_SIZE arglen = wcslen(arg);
+        PCRE2_SIZE arglen = arg.length();
         int rc = report_match(
-            arg, pcre2_match(regex.code, PCRE2_SPTR(arg), arglen, 0, 0, regex.match, 0));
+                              arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, 0, 0, regex.match, 0));
         if (rc < 0) {  // pcre2 match error.
             return false;
         } else if (rc == 0) {  // no match
@@ -897,7 +800,7 @@ class pcre2_matcher_t : public string_matcher_t {
                 options = PCRE2_NOTEMPTY_ATSTART | PCRE2_ANCHORED;
             }
 
-            rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg), arglen, offset, options,
+            rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, offset, options,
                                                regex.match, 0));
             if (rc < 0) {
                 return false;
@@ -946,8 +849,8 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
     }
 
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        if (!matcher->report_matches(arg)) {
+    while (auto arg = aiter.nextstr()) {
+        if (!matcher->report_matches(*arg)) {
             return STATUS_INVALID_ARGS;
         }
     }
@@ -968,30 +871,32 @@ class string_replacer_t {
 
     virtual ~string_replacer_t() = default;
     int replace_count() { return total_replaced; }
-    virtual bool replace_matches(const wchar_t *arg) = 0;
+    virtual bool replace_matches(const wcstring &arg) = 0;
 };
 
 class literal_replacer_t : public string_replacer_t {
-    const wchar_t *pattern;
-    const wchar_t *replacement;
+    const wcstring pattern;
+    const wcstring replacement;
     size_t patlen;
 
    public:
-    literal_replacer_t(const wchar_t *argv0, const wchar_t *pattern_, const wchar_t *replacement_,
+    literal_replacer_t(const wchar_t *argv0, const wcstring &pattern_, const wchar_t *replacement_,
                        const options_t &opts, io_streams_t &streams)
         : string_replacer_t(argv0, opts, streams),
           pattern(pattern_),
           replacement(replacement_),
-          patlen(wcslen(pattern)) {}
+          patlen(pattern.length()) {}
 
     ~literal_replacer_t() override = default;
-    bool replace_matches(const wchar_t *arg) override;
+    bool replace_matches(const wcstring &arg) override;
 };
 
-static wcstring interpret_escapes(const wchar_t *orig) {
+static wcstring interpret_escapes(const wcstring &arg) {
     wcstring result;
 
-    while (*orig != L'\0') {
+    const wchar_t *orig = arg.c_str();
+    const wchar_t *start = arg.c_str();
+    while (orig - start < arg.size()) {
         if (*orig == L'\\') {
             orig += read_unquoted_escape(orig, &result, true, false);
         } else {
@@ -1008,18 +913,18 @@ class regex_replacer_t : public string_replacer_t {
     wcstring replacement;
 
    public:
-    regex_replacer_t(const wchar_t *argv0, const wchar_t *pattern, const wchar_t *replacement_,
+    regex_replacer_t(const wchar_t *argv0, const wcstring &pattern, const wcstring &replacement_,
                      const options_t &opts, io_streams_t &streams)
         : string_replacer_t(argv0, opts, streams),
           regex(argv0, pattern, opts.ignore_case, streams),
           replacement(interpret_escapes(replacement_)) {}
 
-    bool replace_matches(const wchar_t *arg) override;
+    bool replace_matches(const wcstring &arg) override;
 };
 
 /// A return value of true means all is well (even if no replacements were performed), false
 /// indicates an unrecoverable error.
-bool literal_replacer_t::replace_matches(const wchar_t *arg) {
+bool literal_replacer_t::replace_matches(const wcstring &arg) {
     wcstring result;
     bool replacement_occurred = false;
 
@@ -1028,9 +933,10 @@ bool literal_replacer_t::replace_matches(const wchar_t *arg) {
         result = arg;
     } else {
         auto &cmp_func = opts.ignore_case ? wcsncasecmp : wcsncmp;
-        const wchar_t *cur = arg;
-        while (*cur != L'\0') {
-            if ((opts.all || !replacement_occurred) && cmp_func(cur, pattern, patlen) == 0) {
+        const wchar_t *cur = arg.c_str();
+        const wchar_t *start = arg.c_str();
+        while (cur - start < arg.size()) {
+            if ((opts.all || !replacement_occurred) && cmp_func(cur, pattern.c_str(), patlen) == 0) {
                 result += replacement;
                 cur += patlen;
                 replacement_occurred = true;
@@ -1052,26 +958,26 @@ bool literal_replacer_t::replace_matches(const wchar_t *arg) {
 
 /// A return value of true means all is well (even if no replacements were performed), false
 /// indicates an unrecoverable error.
-bool regex_replacer_t::replace_matches(const wchar_t *arg) {
+bool regex_replacer_t::replace_matches(const wcstring &arg) {
     if (!regex.code) return false;  // pcre2_compile() failed
 
     uint32_t options = PCRE2_SUBSTITUTE_OVERFLOW_LENGTH | PCRE2_SUBSTITUTE_EXTENDED |
                        (opts.all ? PCRE2_SUBSTITUTE_GLOBAL : 0);
-    size_t arglen = wcslen(arg);
+    size_t arglen = arg.length();
     PCRE2_SIZE bufsize = (arglen == 0) ? 16 : 2 * arglen;
     wchar_t *output = (wchar_t *)malloc(sizeof(wchar_t) * bufsize);
     int pcre2_rc;
+    PCRE2_SIZE outlen = bufsize;
 
     bool done = false;
     while (!done) {
         assert(output);
 
-        PCRE2_SIZE outlen = bufsize;
-        pcre2_rc = pcre2_substitute(regex.code, PCRE2_SPTR(arg), arglen,
+        pcre2_rc = pcre2_substitute(regex.code, PCRE2_SPTR(arg.c_str()), arglen,
                                     0,  // start offset
                                     options, regex.match,
                                     0,  // match context
-                                    PCRE2_SPTR(replacement.c_str()), PCRE2_ZERO_TERMINATED,
+                                    PCRE2_SPTR(replacement.c_str()), replacement.length(),
                                     (PCRE2_UCHAR *)output, &outlen);
 
         if (pcre2_rc != PCRE2_ERROR_NOMEMORY || bufsize >= outlen) {
@@ -1083,6 +989,7 @@ bool regex_replacer_t::replace_matches(const wchar_t *arg) {
         }
     }
 
+    wcstring outstr(output, outlen);
     bool rc = true;
     if (pcre2_rc < 0) {
         string_error(streams, _(L"%ls: Regular expression substitute error: %ls\n"), argv0,
@@ -1091,7 +998,7 @@ bool regex_replacer_t::replace_matches(const wchar_t *arg) {
     } else {
         bool replacement_occurred = pcre2_rc > 0;
         if (!opts.quiet && (!opts.filter || replacement_occurred)) {
-            streams.out.append(output);
+            streams.out.append(outstr);
             streams.out.append(L'\n');
         }
         total_replaced += pcre2_rc;
@@ -1123,8 +1030,8 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
     }
 
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        if (!replacer->replace_matches(arg)) return STATUS_INVALID_ARGS;
+    while (auto arg = aiter.nextstr()) {
+        if (!replacer->replace_matches(*arg)) return STATUS_INVALID_ARGS;
     }
 
     return replacer->replace_count() > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
@@ -1141,20 +1048,18 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
     int retval = parse_opts(&opts, &optind, 1, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    const wchar_t *sep = opts.arg1;
-    const wchar_t *sep_end = sep + wcslen(sep);
+    const wcstring sep(opts.arg1);
 
     wcstring_list_t splits;
     size_t arg_count = 0;
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        const wchar_t *arg_end = arg + wcslen(arg);
+    while (auto arg = aiter.nextstr()) {
         if (opts.right) {
-            typedef std::reverse_iterator<const wchar_t *> reverser;
-            split_about(reverser(arg_end), reverser(arg), reverser(sep_end), reverser(sep), &splits,
-                        opts.max, opts.no_empty);
+            split_about(arg->rbegin(), arg->rend(), sep.rbegin(), sep.rend(), &splits, opts.max, opts.no_empty);
+            // split_about(reverser(arg->end()), reverser(arg->begin()), reverser(sep_end), reverser(sep), &splits,
+            //             opts.max, opts.no_empty);
         } else {
-            split_about(arg, arg_end, sep, sep_end, &splits, opts.max, opts.no_empty);
+            split_about(arg->begin(), arg->end(), sep.begin(), sep.end(), &splits, opts.max, opts.no_empty);
         }
         arg_count++;
     }
@@ -1194,6 +1099,7 @@ static wcstring wcsrepeat(const wcstring &to_repeat, size_t count) {
 // Helper function to abstract the repeat until logic from string_repeat
 // returns the to_repeat string, repeated until max char has been reached.
 static wcstring wcsrepeat_until(const wcstring &to_repeat, size_t max) {
+    if (to_repeat.length() == 0) return wcstring();
     size_t count = max / to_repeat.length();
     size_t mod = max % to_repeat.length();
 
@@ -1214,12 +1120,11 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
     bool is_empty = true;
 
     arg_iterator_t aiter(argv, optind, streams);
-    if ((to_repeat = aiter.next()) != NULL && *to_repeat) {
-        const wcstring word(to_repeat);
+    if (auto word = aiter.nextstr()) {
         const bool limit_repeat =
-            (opts.max > 0 && word.length() * opts.count > (size_t)opts.max) || !opts.count;
+            (opts.max > 0 && word->length() * opts.count > (size_t)opts.max) || !opts.count;
         const wcstring repeated =
-            limit_repeat ? wcsrepeat_until(word, opts.max) : wcsrepeat(word, opts.count);
+            limit_repeat ? wcsrepeat_until(*word, opts.max) : wcsrepeat(*word, opts.count);
         is_empty = repeated.empty();
 
         if (!opts.quiet && !is_empty) {
@@ -1243,20 +1148,19 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
 
     int nsub = 0;
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
+    while (auto s = aiter.nextstr()) {
         typedef wcstring::size_type size_type;
         size_type pos = 0;
         size_type count = wcstring::npos;
-        wcstring s(arg);
         if (opts.start > 0) {
             pos = static_cast<size_type>(opts.start - 1);
         } else if (opts.start < 0) {
             assert(opts.start != LONG_MIN);  // checked above
             size_type n = static_cast<size_type>(-opts.start);
-            pos = n > s.length() ? 0 : s.length() - n;
+            pos = n > s->length() ? 0 : s->length() - n;
         }
-        if (pos > s.length()) {
-            pos = s.length();
+        if (pos > s->length()) {
+            pos = s->length();
         }
 
         if (opts.length >= 0) {
@@ -1265,7 +1169,7 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
 
         // Note that std::string permits count to extend past end of string.
         if (!opts.quiet) {
-            streams.out.append(s.substr(pos, count));
+            streams.out.append(s->substr(pos, count));
             streams.out.append(L'\n');
         }
         nsub++;
@@ -1291,25 +1195,23 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
 
     size_t ntrim = 0;
 
-    wcstring argstr;
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        argstr = arg;
+    while (auto arg = aiter.nextstr()) {
         // Begin and end are respectively the first character to keep on the left, and first
         // character to trim on the right. The length is thus end - start.
-        size_t begin = 0, end = argstr.size();
+        size_t begin = 0, end = arg->size();
         if (opts.right) {
-            size_t last_to_keep = argstr.find_last_not_of(opts.chars_to_trim);
+            size_t last_to_keep = arg->find_last_not_of(opts.chars_to_trim);
             end = (last_to_keep == wcstring::npos) ? 0 : last_to_keep + 1;
         }
         if (opts.left) {
-            size_t first_to_keep = argstr.find_first_not_of(opts.chars_to_trim);
+            size_t first_to_keep = arg->find_first_not_of(opts.chars_to_trim);
             begin = (first_to_keep == wcstring::npos ? end : first_to_keep);
         }
-        assert(begin <= end && end <= argstr.size());
-        ntrim += argstr.size() - (end - begin);
+        assert(begin <= end && end <= arg->size());
+        ntrim += arg->size() - (end - begin);
         if (!opts.quiet) {
-            streams.out.append(wcstring(argstr, begin, end - begin));
+            streams.out.append(wcstring(*arg, begin, end - begin));
             streams.out.append(L'\n');
         }
     }
@@ -1317,8 +1219,8 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
     return ntrim > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
-/// Implementation of `string lower`.
-static int string_lower(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+// A helper function for lower and upper.
+static int string_transform(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv, decltype(std::towlower) func) {
     options_t opts;
     opts.quiet_valid = true;
     int optind;
@@ -1327,10 +1229,10 @@ static int string_lower(parser_t &parser, io_streams_t &streams, int argc, wchar
 
     int n_transformed = 0;
     arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        wcstring transformed(arg);
-        std::transform(transformed.begin(), transformed.end(), transformed.begin(), std::towlower);
-        if (wcscmp(transformed.c_str(), arg)) n_transformed++;
+    while (auto arg = aiter.nextstr()) {
+        wcstring transformed(*arg);
+        std::transform(transformed.begin(), transformed.end(), transformed.begin(), func);
+        if (transformed != *arg) n_transformed++;
         if (!opts.quiet) {
             streams.out.append(transformed);
             streams.out.append(L'\n');
@@ -1340,27 +1242,14 @@ static int string_lower(parser_t &parser, io_streams_t &streams, int argc, wchar
     return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
+/// Implementation of `string lower`.
+static int string_lower(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    return string_transform(parser, streams, argc, argv, std::towlower);
+}
+
 /// Implementation of `string upper`.
 static int string_upper(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
-    options_t opts;
-    opts.quiet_valid = true;
-    int optind;
-    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
-    if (retval != STATUS_CMD_OK) return retval;
-
-    int n_transformed = 0;
-    arg_iterator_t aiter(argv, optind, streams);
-    while (const wchar_t *arg = aiter.next()) {
-        wcstring transformed(arg);
-        std::transform(transformed.begin(), transformed.end(), transformed.begin(), std::towupper);
-        if (wcscmp(transformed.c_str(), arg)) n_transformed++;
-        if (!opts.quiet) {
-            streams.out.append(transformed);
-            streams.out.append(L'\n');
-        }
-    }
-
-    return n_transformed > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+    return string_transform(parser, streams, argc, argv, std::towupper);
 }
 
 static const struct string_subcommand {

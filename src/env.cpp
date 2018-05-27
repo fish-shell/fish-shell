@@ -1492,17 +1492,17 @@ static void get_exported(const env_node_t *n, var_table_t &h) {
     }
 }
 
-// Given a map from key to value, add values to out of the form key=value.
-static void export_func(const var_table_t &envs, std::vector<std::string> &out) {
-    out.reserve(out.size() + envs.size());
-    for (auto iter = envs.begin(); iter != envs.end(); ++iter) {
-        const wcstring &key = iter->first;
-        const std::string &ks = wcs2string(key);
-        std::string vs = wcs2string(iter->second.as_string());
+// Given a map from key to value, return a vector of strings of the form key=value
+static std::vector<std::string> get_export_list(const var_table_t &envs) {
+    std::vector<std::string> result;
+    result.reserve(envs.size());
+    for (const auto &kv : envs) {
+        std::string ks = wcs2string(kv.first);
+        std::string vs = wcs2string(kv.second.as_string());
 
         // Arrays in the value are ASCII record separator (0x1e) delimited. But some variables
         // should have colons. Add those.
-        if (variable_is_colon_delimited_var(key)) {
+        if (variable_is_colon_delimited_var(kv.first)) {
             // Replace ARRAY_SEP with colon.
             std::replace(vs.begin(), vs.end(), (char)ARRAY_SEP, ':');
         }
@@ -1512,8 +1512,9 @@ static void export_func(const var_table_t &envs, std::vector<std::string> &out) 
         str.append(ks);
         str.append("=");
         str.append(vs);
-        out.push_back(std::move(str));
+        result.push_back(std::move(str));
     }
+    return result;
 }
 
 void var_stack_t::update_export_array_if_necessary() {
@@ -1527,8 +1528,7 @@ void var_stack_t::update_export_array_if_necessary() {
 
     if (uvars()) {
         const wcstring_list_t uni = uvars()->get_names(true, false);
-        for (size_t i = 0; i < uni.size(); i++) {
-            const wcstring &key = uni.at(i);
+        for (const wcstring &key : uni) {
             auto var = uvars()->get(key);
 
             if (!var.missing_or_empty()) {
@@ -1539,9 +1539,7 @@ void var_stack_t::update_export_array_if_necessary() {
         }
     }
 
-    std::vector<std::string> local_export_buffer;
-    export_func(vals, local_export_buffer);
-    export_array.set(local_export_buffer);
+    export_array.set(get_export_list(vals));
     has_changed_exported = false;
 }
 

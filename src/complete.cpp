@@ -1662,6 +1662,5 @@ wcstring_list_t complete_get_wrap_targets(const wcstring &command) {
 
 tuple_list<wcstring, wcstring> complete_get_wrap_pairs() {
     scoped_lock locker(wrapper_lock);
-    const wrapper_map_t &wraps = wrap_map();
     return flatten(wrap_map());
 }

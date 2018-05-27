@@ -1911,7 +1911,10 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
     job_reap(1);
 
     gettimeofday(&time_after, NULL);
-    set_env_cmd_duration(&time_after, &time_before);
+    
+    // update the execution duration iff a command is requested for execution
+    // issue - #4926
+    if (!ft.empty()) set_env_cmd_duration(&time_after, &time_before);
 
     term_steal();
 

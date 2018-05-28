@@ -758,19 +758,17 @@ static void read_try(job_t *j) {
         debug(3, L"proc::read_try('%ls')", j->command_wcstr());
         while (1) {
             char b[BUFFER_SIZE];
-            long l;
-
-            l = read_blocked(buff->pipe_fd[0], b, BUFFER_SIZE);
-            if (l == 0) {
+            long len = read_blocked(buff->pipe_fd[0], b, BUFFER_SIZE);
+            if (len == 0) {
                 break;
-            } else if (l < 0) {
+            } else if (len < 0) {
                 if (errno != EAGAIN) {
                     debug(1, _(L"An error occured while reading output from code block"));
                     wperror(L"read_try");
                 }
                 break;
             } else {
-                buff->out_buffer_append(b, l);
+                buff->append(b, len);
             }
         }
     }

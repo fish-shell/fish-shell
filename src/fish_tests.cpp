@@ -929,9 +929,9 @@ static void test_1_cancellation(const wchar_t *src) {
     });
     parser_t::principal_parser().eval(src, io_chain, TOP);
     out_buff->read();
-    if (out_buff->out_buffer_size() != 0) {
+    if (out_buff->buffer().size() != 0) {
         err(L"Expected 0 bytes in out_buff, but instead found %lu bytes\n",
-            out_buff->out_buffer_size());
+            out_buff->buffer().size());
     }
     iothread_drain_all();
 }

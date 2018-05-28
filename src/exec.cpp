@@ -540,7 +540,7 @@ void exec_job(parser_t &parser, job_t *j) {
         if ((io->io_mode == IO_BUFFER)) {
             io_buffer_t *io_buffer = static_cast<io_buffer_t *>(io.get());
             assert(!io_buffer->is_input);
-            stdout_read_limit = io_buffer->get_buffer_limit();
+            stdout_read_limit = io_buffer->buffer().limit();
         }
     }
 
@@ -891,8 +891,10 @@ void exec_job(parser_t &parser, job_t *j) {
 
                 block_output_io_buffer->read();
 
-                const char *buffer = block_output_io_buffer->out_buffer_ptr();
-                size_t count = block_output_io_buffer->out_buffer_size();
+                const std::string buffer_contents =
+                    block_output_io_buffer->buffer().newline_serialized();
+                const char *buffer = buffer_contents.data();
+                size_t count = buffer_contents.size();
                 if (count > 0) {
                     // We don't have to drain threads here because our child process is simple.
                     const char *fork_reason = p->type == INTERNAL_BLOCK_NODE ? "internal block io" : "internal function io";
@@ -1192,7 +1194,7 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, boo
         io_buffer->read();
     }
 
-    if (io_buffer->output_discarded()) subcommand_status = STATUS_READ_TOO_MUCH;
+    if (io_buffer->buffer().discarded()) subcommand_status = STATUS_READ_TOO_MUCH;
 
     // If the caller asked us to preserve the exit status, restore the old status. Otherwise set the
     // status of the subcommand.
@@ -1203,8 +1205,9 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, boo
         return subcommand_status;
     }
 
-    const char *begin = io_buffer->out_buffer_ptr();
-    const char *end = begin + io_buffer->out_buffer_size();
+    const std::string buffer_contents = io_buffer->buffer().newline_serialized();
+    const char *begin = buffer_contents.data();
+    const char *end = begin + buffer_contents.size();
     if (split_output) {
         const char *cursor = begin;
         while (cursor < end) {

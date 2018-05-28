@@ -31,6 +31,17 @@ void io_buffer_t::print() const {
              is_input ? "yes" : "no", (unsigned long)out_buffer_size());
 }
 
+void io_buffer_t::append_from_stream(const output_stream_t &stream) {
+    if (output_discarded())
+        return;
+    if (stream.output_discarded()) {
+        set_discard();
+        return;
+    }
+    const std::string str = wcs2string(stream.buffer());
+    out_buffer_append(str.data(), str.size());
+}
+
 void io_buffer_t::read() {
     exec_close(pipe_fd[1]);
 

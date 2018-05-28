@@ -98,6 +98,7 @@ class io_pipe_t : public io_data_t {
 };
 
 class io_chain_t;
+class output_stream_t;
 class io_buffer_t : public io_pipe_t {
    private:
     /// True if we're discarding input.
@@ -121,8 +122,7 @@ class io_buffer_t : public io_pipe_t {
     void out_buffer_append(const char *ptr, size_t count) {
         if (discard) return;
         if (buffer_limit && out_buffer.size() + count > buffer_limit) {
-            discard = true;
-            out_buffer.clear();
+            set_discard();
             return;
         }
         out_buffer.insert(out_buffer.end(), ptr, ptr + count);
@@ -152,6 +152,10 @@ class io_buffer_t : public io_pipe_t {
 
     /// Close output pipe, and read from input pipe until eof.
     void read();
+
+    /// Appends data from a given output_stream_t.
+    /// Marks the receiver as discarded if the stream was discarded.
+    void append_from_stream(const output_stream_t &stream);
 
     /// Create a IO_BUFFER type io redirection, complete with a pipe and a vector<char> for output.
     /// The default file descriptor used is STDOUT_FILENO for buffering.
@@ -258,7 +262,7 @@ class output_stream_t {
     const wcstring &buffer() const { return buffer_; }
 
     /// Function that returns true if we discarded the input because there was too much data.
-    bool output_discarded() { return discard; }
+    bool output_discarded() const { return discard; }
 
     bool empty() const { return buffer_.empty(); }
 };

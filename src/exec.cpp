@@ -925,8 +925,8 @@ void exec_job(parser_t &parser, job_t *j) {
                     process_net_io_chain.get_io_for_fd(STDERR_FILENO);
 
                 assert(builtin_io_streams.get() != NULL);
-                const wcstring &stdout_buffer = builtin_io_streams->out.buffer();
-                const wcstring &stderr_buffer = builtin_io_streams->err.buffer();
+                const output_stream_t &stdout_stream = builtin_io_streams->out;
+                const output_stream_t &stderr_stream = builtin_io_streams->err;
 
                 // If we are outputting to a file, we have to actually do it, even if we have no
                 // output, so that we can truncate the file. Does not apply to /dev/null.
@@ -936,9 +936,9 @@ void exec_job(parser_t &parser, job_t *j) {
                     // We are handling reads directly in the main loop. Note that we may still end
                     // up forking.
                     const bool stdout_is_to_buffer = stdout_io && stdout_io->io_mode == IO_BUFFER;
-                    const bool no_stdout_output = stdout_buffer.empty();
-                    const bool no_stderr_output = stderr_buffer.empty();
-                    const bool stdout_discarded = builtin_io_streams->out.output_discarded();
+                    const bool no_stdout_output = stdout_stream.empty();
+                    const bool no_stderr_output = stderr_stream.empty();
+                    const bool stdout_discarded = stdout_stream.output_discarded();
 
                     if (!stdout_discarded && no_stdout_output && no_stderr_output) {
                         // The builtin produced no output and is not inside of a pipeline. No
@@ -954,19 +954,14 @@ void exec_job(parser_t &parser, job_t *j) {
                               p->argv0());
 
                         io_buffer_t *io_buffer = static_cast<io_buffer_t *>(stdout_io.get());
-                        if (stdout_discarded) {
-                            io_buffer->set_discard();
-                        } else {
-                            const std::string res = wcs2string(builtin_io_streams->out.buffer());
-                            io_buffer->out_buffer_append(res.data(), res.size());
-                        }
+                        io_buffer->append_from_stream(stdout_stream);
                         fork_was_skipped = true;
                     } else if (stdout_io.get() == NULL && stderr_io.get() == NULL) {
                         // We are writing to normal stdout and stderr. Just do it - no need to fork.
                         debug(3, L"Skipping fork: ordinary output for internal builtin '%ls'",
                               p->argv0());
-                        const std::string outbuff = wcs2string(stdout_buffer);
-                        const std::string errbuff = wcs2string(stderr_buffer);
+                        const std::string outbuff = wcs2string(stdout_stream.buffer());
+                        const std::string errbuff = wcs2string(stderr_stream.buffer());
                         bool builtin_io_done = do_builtin_io(outbuff.data(), outbuff.size(),
                                                              errbuff.data(), errbuff.size());
                         if (!builtin_io_done && errno != EPIPE) {
@@ -995,11 +990,11 @@ void exec_job(parser_t &parser, job_t *j) {
                     // in the child.
                     //
                     // These strings may contain embedded nulls, so don't treat them as C strings.
-                    const std::string outbuff_str = wcs2string(stdout_buffer);
+                    const std::string outbuff_str = wcs2string(stdout_stream.buffer());
                     const char *outbuff = outbuff_str.data();
                     size_t outbuff_len = outbuff_str.size();
 
-                    const std::string errbuff_str = wcs2string(stderr_buffer);
+                    const std::string errbuff_str = wcs2string(stderr_stream.buffer());
                     const char *errbuff = errbuff_str.data();
                     size_t errbuff_len = errbuff_str.size();
 

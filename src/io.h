@@ -101,7 +101,7 @@ class io_chain_t;
 class io_buffer_t : public io_pipe_t {
    private:
     /// True if we're discarding input.
-    bool discard;
+    bool discard{false};
     /// Limit on how much data we'll buffer. Zero means no limit.
     size_t buffer_limit;
     /// Buffer to save output in.
@@ -109,7 +109,6 @@ class io_buffer_t : public io_pipe_t {
 
     explicit io_buffer_t(int f, size_t limit)
         : io_pipe_t(IO_BUFFER, f, false /* not input */),
-          discard(false),
           buffer_limit(limit),
           out_buffer() {}
 
@@ -130,25 +129,23 @@ class io_buffer_t : public io_pipe_t {
     }
 
     /// Function to get a pointer to the buffer.
-    char *out_buffer_ptr(void) { return out_buffer.empty() ? NULL : &out_buffer.at(0); }
-
-    const char *out_buffer_ptr(void) const { return out_buffer.empty() ? NULL : &out_buffer.at(0); }
+    const char *out_buffer_ptr() const { return out_buffer.empty() ? NULL : &out_buffer.at(0); }
 
     /// Function to get the size of the buffer.
-    size_t out_buffer_size(void) const { return out_buffer.size(); }
+    size_t out_buffer_size() const { return out_buffer.size(); }
 
     /// Function that returns true if we discarded the input because there was too much data.
-    bool output_discarded(void) { return discard; }
+    bool output_discarded() { return discard; }
 
     /// Function to explicitly put the object in discard mode. Meant to be used when moving
     /// the results from an output_stream_t to an io_buffer_t.
-    void set_discard(void) {
+    void set_discard() {
         discard = true;
         out_buffer.clear();
     }
 
     /// This is used to transfer the buffer limit for this object to a output_stream_t object.
-    size_t get_buffer_limit(void) { return buffer_limit; }
+    size_t get_buffer_limit() { return buffer_limit; }
 
     /// Ensures that the pipes do not conflict with any fd redirections in the chain.
     bool avoid_conflicts_with_io_chain(const io_chain_t &ios);
@@ -213,10 +210,6 @@ class output_stream_t {
    public:
     output_stream_t(size_t buffer_limit_) : buffer_limit(buffer_limit_), discard(false) {}
 
-#if 0
-    void set_buffer_limit(size_t buffer_limit_) { buffer_limit = buffer_limit_; }
-#endif
-
     void append(const wcstring &s) {
         if (discard) return;
         buffer_.append(s);
@@ -265,7 +258,7 @@ class output_stream_t {
     const wcstring &buffer() const { return buffer_; }
 
     /// Function that returns true if we discarded the input because there was too much data.
-    bool output_discarded(void) { return discard; }
+    bool output_discarded() { return discard; }
 
     bool empty() const { return buffer_.empty(); }
 };

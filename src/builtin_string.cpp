@@ -502,7 +502,7 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wcha
 
     int nesc = 0;
     arg_iterator_t aiter(argv, optind, streams);
-    while (auto arg = aiter.nextstr()) {
+    while (const wcstring *arg = aiter.nextstr()) {
         streams.out.append(escape_string(*arg, flags, opts.escape_style));
         streams.out.append(L'\n');
         nesc++;
@@ -524,7 +524,7 @@ static int string_unescape(parser_t &parser, io_streams_t &streams, int argc, wc
     if (retval != STATUS_CMD_OK) return retval;
 
     arg_iterator_t aiter(argv, optind, streams);
-    while (auto arg = aiter.nextstr()) {
+    while (const wcstring *arg = aiter.nextstr()) {
         wcstring result;
         if (unescape_string(*arg, &result, flags, opts.escape_style)) {
             streams.out.append(result);
@@ -547,7 +547,7 @@ static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_
     const wchar_t *sep = opts.arg1;
     int nargs = 0;
     arg_iterator_t aiter(argv, optind, streams);
-    while (auto arg = aiter.nextstr()) {
+    while (const wcstring *arg = aiter.nextstr()) {
         if (!opts.quiet) {
             if (nargs > 0) {
                 streams.out.append(sep);
@@ -572,7 +572,7 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, wcha
 
     int nnonempty = 0;
     arg_iterator_t aiter(argv, optind, streams);
-    while (auto arg = aiter.nextstr()) {
+    while (const wcstring *arg = aiter.nextstr()) {
         size_t n = arg->length();
         if (n > 0) {
             nnonempty++;
@@ -849,7 +849,7 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
     }
 
     arg_iterator_t aiter(argv, optind, streams);
-    while (auto arg = aiter.nextstr()) {
+    while (const wcstring *arg = aiter.nextstr()) {
         if (!matcher->report_matches(*arg)) {
             return STATUS_INVALID_ARGS;
         }
@@ -1030,7 +1030,7 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
     }
 
     arg_iterator_t aiter(argv, optind, streams);
-    while (auto arg = aiter.nextstr()) {
+    while (const wcstring *arg = aiter.nextstr()) {
         if (!replacer->replace_matches(*arg)) return STATUS_INVALID_ARGS;
     }
 
@@ -1053,7 +1053,7 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
     wcstring_list_t splits;
     size_t arg_count = 0;
     arg_iterator_t aiter(argv, optind, streams);
-    while (auto arg = aiter.nextstr()) {
+    while (const wcstring *arg = aiter.nextstr()) {
         if (opts.right) {
             split_about(arg->rbegin(), arg->rend(), sep.rbegin(), sep.rend(), &splits, opts.max, opts.no_empty);
         } else {
@@ -1118,7 +1118,7 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
     bool is_empty = true;
 
     arg_iterator_t aiter(argv, optind, streams);
-    if (auto word = aiter.nextstr()) {
+    if (const wcstring *word = aiter.nextstr()) {
         const bool limit_repeat =
             (opts.max > 0 && word->length() * opts.count > (size_t)opts.max) || !opts.count;
         const wcstring repeated =
@@ -1146,7 +1146,7 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
 
     int nsub = 0;
     arg_iterator_t aiter(argv, optind, streams);
-    while (auto s = aiter.nextstr()) {
+    while (const wcstring *s = aiter.nextstr()) {
         typedef wcstring::size_type size_type;
         size_type pos = 0;
         size_type count = wcstring::npos;
@@ -1194,7 +1194,7 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
     size_t ntrim = 0;
 
     arg_iterator_t aiter(argv, optind, streams);
-    while (auto arg = aiter.nextstr()) {
+    while (const wcstring *arg = aiter.nextstr()) {
         // Begin and end are respectively the first character to keep on the left, and first
         // character to trim on the right. The length is thus end - start.
         size_t begin = 0, end = arg->size();
@@ -1227,7 +1227,7 @@ static int string_transform(parser_t &parser, io_streams_t &streams, int argc, w
 
     int n_transformed = 0;
     arg_iterator_t aiter(argv, optind, streams);
-    while (auto arg = aiter.nextstr()) {
+    while (const wcstring *arg = aiter.nextstr()) {
         wcstring transformed(*arg);
         std::transform(transformed.begin(), transformed.end(), transformed.begin(), func);
         if (transformed != *arg) n_transformed++;

@@ -795,9 +795,9 @@ Variables can be explicitly set to be exported with the `-x` or `--export` switc
 
 -# If a variable is not explicitly set to be either exported or not exported and has never before been defined, the variable will not be exported.
 
--# If a variable has local-scope and is exported, any function called receives a _copy_ of it, so any changes it makes to the variable disappear once the function returns.
+-# If a variable has local scope and is exported, any function called receives a _copy_ of it, so any changes it makes to the variable disappear once the function returns.
 
--# If a variable has global-scope, it is accessible read-write to functions whether it is exported or not.
+-# If a variable has global scope, it is accessible read-write to functions whether it is exported or not.
 
 \subsection variables-arrays Arrays
 

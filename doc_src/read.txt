@@ -2,7 +2,7 @@
 
 \subsection read-synopsis Synopsis
 \fish{synopsis}
-read [OPTIONS] VARIABLES...
+read [OPTIONS] [VARIABLE ...]
 \endfish
 
 \subsection read-description Description

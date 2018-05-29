@@ -376,12 +376,8 @@ static bool input_mapping_is_match(const input_mapping_t &m) {
     assert(str.size() > 0 && "zero-length input string passed to input_mapping_is_match!");
     debug(4, L"trying to match mapping %ls", escape_string(m.seq.c_str(), ESCAPE_ALL).c_str());
 
-    bool timed_first_char = iswcntrl(str[0]);
+    bool timed = false;
     for (size_t i = 0; i < str.size(); ++i) {
-        // Treat all strings beginning with control codes (0x00-0x1F) as timed characters, meaning they are assumed to be
-        // their literal representation if not followed up with another character within the defined timeout. Obviously
-        // we never time out on the first character in the sequence.
-        bool timed = i && timed_first_char;
         wchar_t read = input_common_readch(timed);
 
         if (read != str[i]) {
@@ -393,6 +389,10 @@ static bool input_mapping_is_match(const input_mapping_t &m) {
             }
             return false;
         }
+
+        // If we just read an escape, we need to add a timeout for the next char,
+        // to distinguish between the actual escape key and an "alt"-modifier.
+        timed = (str[i] == L'\e');
     }
 
     return true;

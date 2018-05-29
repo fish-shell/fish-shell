@@ -263,7 +263,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     end
 
     function __fish_winch_handler --on-signal WINCH -d "Repaint screen when window changes size"
-        commandline -f repaint
+        commandline -f repaint >/dev/null 2>/dev/null
     end
 
     # Notify terminals when $PWD changes (issue #906).

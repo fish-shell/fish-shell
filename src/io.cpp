@@ -34,11 +34,11 @@ void io_buffer_t::print() const {
 void io_buffer_t::append_from_stream(const output_stream_t &stream) {
     if (output_discarded())
         return;
-    if (stream.output_discarded()) {
+    if (stream.buffer().discarded()) {
         set_discard();
         return;
     }
-    const std::string str = wcs2string(stream.buffer());
+    const std::string str = wcs2string(stream.contents());
     out_buffer_append(str.data(), str.size());
 }
 

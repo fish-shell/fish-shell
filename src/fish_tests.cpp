@@ -4107,10 +4107,10 @@ static void run_one_string_test(const wchar_t *const *argv, int expected_rc,
     if (rc != expected_rc) {
         err(L"Test failed on line %lu: [%ls]: expected return code %d but got %d", __LINE__,
             args.c_str(), expected_rc, rc);
-    } else if (streams.out.buffer() != expected_out) {
+    } else if (streams.out.contents() != expected_out) {
         err(L"Test failed on line %lu: [%ls]: expected [%ls] but got [%ls]", __LINE__, args.c_str(),
             escape_string(expected_out, ESCAPE_ALL).c_str(),
-            escape_string(streams.out.buffer(), ESCAPE_ALL).c_str());
+            escape_string(streams.out.contents(), ESCAPE_ALL).c_str());
     }
 }
 

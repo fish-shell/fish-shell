@@ -752,7 +752,7 @@ complete -f -c git -n '__fish_git_needs_command' -a init -d 'Create an empty git
 ### log
 complete -c git -n '__fish_git_needs_command' -a shortlog -d 'Show commit shortlog'
 complete -c git -n '__fish_git_needs_command' -a log -d 'Show commit logs'
-complete -c git -n '__fish_git_using_command log; and not contains -- -- (commandline -op)' -a '(__fish_git_refs) (__fish_git_ranges)'
+complete -c git -n '__fish_git_using_command log; and not contains -- -- (commandline -op)' -a '(__fish_git_ranges)'
 
 complete -c git -n '__fish_git_using_command log' -l follow -d 'Continue listing file history beyond renames'
 complete -c git -n '__fish_git_using_command log' -l no-decorate -d 'Don\'t print ref names'

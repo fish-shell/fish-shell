@@ -75,25 +75,29 @@ class arg_iterator_t {
     int argidx_;
     // If not using argv, a string to store bytes that have been read but not yet returned.
     std::string buffer_;
+    // If set, when reading from a stream, split on zeros instead of newlines.
+    const bool split0_;
     // Backing storage for the next() string.
     wcstring storage_;
     const io_streams_t &streams_;
 
-    /// \return the next argument from stdin
-    const wchar_t *get_arg_stdin() {
+    /// Reads the next argument from stdin, returning true if an argument was produced and false if
+    /// not. On true, the string is stored in storage_.
+    bool get_arg_stdin() {
         assert(string_args_from_stdin(streams_) && "should not be reading from stdin");
-        // Read in chunks from fd until buffer has a line.
+        // Read in chunks from fd until buffer has a line (or zero if split0_ is set).
+        const char sep = split0_ ? '\0' : '\n';
         size_t pos;
-        while ((pos = buffer_.find('\n')) == std::string::npos) {
+        while ((pos = buffer_.find(sep)) == std::string::npos) {
             char buf[STRING_CHUNK_SIZE];
             long n = read_blocked(streams_.stdin_fd, buf, STRING_CHUNK_SIZE);
             if (n == 0) {
                 // If we still have buffer contents, flush them,
-                // in case there was no trailing '\n'.
-                if (buffer_.empty()) return NULL;
+                // in case there was no trailing sep.
+                if (buffer_.empty()) return false;
                 storage_ = str2wcstring(buffer_);
                 buffer_.clear();
-                return storage_.c_str();
+                return true;
             }
             if (n == -1) {
                 // Some error happened. We can't do anything about it,
@@ -101,20 +105,21 @@ class arg_iterator_t {
                 // (read_blocked already retries for EAGAIN and EINTR)
                 storage_ = str2wcstring(buffer_);
                 buffer_.clear();
-                return NULL;
+                return false;
             }
             buffer_.append(buf, n);
         }
 
-        // Split the buffer on the '\n' and return the first part.
+        // Split the buffer on the sep and return the first part.
         storage_ = str2wcstring(buffer_, pos);
         buffer_.erase(0, pos + 1);
-        return storage_.c_str();
+        return true;
     }
 
    public:
-    arg_iterator_t(const wchar_t *const *argv, int argidx, const io_streams_t &streams)
-        : argv_(argv), argidx_(argidx), streams_(streams) {}
+    arg_iterator_t(const wchar_t *const *argv, int argidx, const io_streams_t &streams,
+                   bool split0 = false)
+        : argv_(argv), argidx_(argidx), split0_(split0), streams_(streams) {}
 
     const wcstring *nextstr() {
         if (string_args_from_stdin(streams_)) {
@@ -1037,7 +1042,8 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
     return replacer->replace_count() > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }
 
-static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv,
+                               bool is_split0) {
     options_t opts;
     opts.quiet_valid = true;
     opts.right_valid = true;
@@ -1045,14 +1051,14 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
     opts.max = LONG_MAX;
     opts.no_empty_valid = true;
     int optind;
-    int retval = parse_opts(&opts, &optind, 1, argc, argv, parser, streams);
+    int retval = parse_opts(&opts, &optind, is_split0 ? 0 : 1, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    const wcstring sep(opts.arg1);
+    const wcstring sep = is_split0 ? wcstring(1, L'\0') : wcstring(opts.arg1);
 
     wcstring_list_t splits;
     size_t arg_count = 0;
-    arg_iterator_t aiter(argv, optind, streams);
+    arg_iterator_t aiter(argv, optind, streams, is_split0);
     while (const wcstring *arg = aiter.nextstr()) {
         if (opts.right) {
             split_about(arg->rbegin(), arg->rend(), sep.rbegin(), sep.rend(), &splits, opts.max, opts.no_empty);
@@ -1070,15 +1076,24 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
         std::reverse(splits.begin(), splits.end());
     }
 
+    const size_t split_count = splits.size();
     if (!opts.quiet) {
-        for (wcstring_list_t::const_iterator si = splits.begin(); si != splits.end(); ++si) {
-            streams.out.append(*si);
-            streams.out.append(L'\n');
+        auto &buff = streams.out.buffer();
+        for (const wcstring &split : splits) {
+            buff.append(split, separation_type_t::explicitly);
         }
     }
 
     // We split something if we have more split values than args.
-    return splits.size() > arg_count ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+    return split_count > arg_count ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    return string_split_maybe0(parser, streams, argc, argv, false /* is_split0 */);
+}
+
+static int string_split0(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    return string_split_maybe0(parser, streams, argc, argv, true /* is_split0 */);
 }
 
 // Helper function to abstract the repeat logic from string_repeat
@@ -1256,19 +1271,13 @@ static const struct string_subcommand {
                    wchar_t **argv);                       //!OCLINT(unused param)
 }
 
-string_subcommands[] = {{L"escape", &string_escape},
-                        {L"join", &string_join},
-                        {L"length", &string_length},
-                        {L"match", &string_match},
-                        {L"replace", &string_replace},
-                        {L"split", &string_split},
-                        {L"sub", &string_sub},
-                        {L"trim", &string_trim},
-                        {L"lower", &string_lower},
-                        {L"upper", &string_upper},
-                        {L"repeat", &string_repeat},
-                        {L"unescape", &string_unescape},
-                        {NULL, NULL}};
+string_subcommands[] = {{L"escape", &string_escape},     {L"join", &string_join},
+                        {L"length", &string_length},     {L"match", &string_match},
+                        {L"replace", &string_replace},   {L"split", &string_split},
+                        {L"split0", &string_split0},     {L"sub", &string_sub},
+                        {L"trim", &string_trim},         {L"lower", &string_lower},
+                        {L"upper", &string_upper},       {L"repeat", &string_repeat},
+                        {L"unescape", &string_unescape}, {NULL, NULL}};
 
 /// The string builtin, for manipulating strings.
 int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {

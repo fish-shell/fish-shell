@@ -36,6 +36,7 @@ enum class separation_type_t {
 /// others which must be separated further by the user (e.g. via IFS).
 template <typename StringType>
 class separated_buffer_t {
+   public:
     struct element_t {
         StringType contents;
         separation_type_t separation;
@@ -46,6 +47,7 @@ class separated_buffer_t {
         bool is_explicitly_separated() const { return separation == separation_type_t::explicitly; }
     };
 
+   private:
     /// Limit on how much data we'll buffer. Zero means no limit.
     size_t buffer_limit_;
 
@@ -236,9 +238,6 @@ class io_buffer_t : public io_pipe_t {
     /// Access the underlying buffer.
     const separated_buffer_t<std::string> &buffer() const { return buffer_; }
 
-    /// Access the underlying buffer.
-    separated_buffer_t<std::string> &buffer() { return buffer_; }
-
     /// Function to append to the buffer.
     void append(const char *ptr, size_t count) { buffer_.append(ptr, ptr + count); }
 
@@ -300,6 +299,8 @@ class output_stream_t {
     output_stream_t(size_t buffer_limit) : buffer_(buffer_limit) {}
 
     void append(const wcstring &s) { buffer_.append(s.begin(), s.end()); }
+
+    separated_buffer_t<wcstring> &buffer() { return buffer_; }
 
     const separated_buffer_t<wcstring> &buffer() const { return buffer_; }
 

@@ -433,3 +433,16 @@ d
 a\x00b
 a\x00g
 a\x00g
+
+####################
+# string split0
+1
+3
+4
+3
+2
+1
+
+####################
+# string split0 in functions
+4

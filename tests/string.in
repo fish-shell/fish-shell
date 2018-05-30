@@ -340,4 +340,22 @@ printf 'a\0b' | string replace -r b g | string escape
 # TODO: These do not yet work!
 # printf 'a\0b' | string match '*b' | string escape
 
+logmsg string split0
+count (echo -ne 'abcdefghi' | string split0)
+count (echo -ne 'abc\x00def\x00ghi\x00' | string split0)
+count (echo -ne 'abc\x00def\x00ghi\x00\x00' | string split0)
+count (echo -ne 'abc\x00def\x00ghi' | string split0)
+count (echo -ne 'abc\ndef\x00ghi\x00' | string split0)
+count (echo -ne 'abc\ndef\nghi' | string split0)
+
+logmsg string split0 in functions
+# This function outputs some newline-separated content, and some
+# explicitly separated content.
+function dualsplit
+  echo alpha
+  echo beta
+  echo -ne 'gamma\x00delta' | string split0
+end
+count (dualsplit)
+
 exit 0

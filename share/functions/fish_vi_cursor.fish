@@ -13,6 +13,11 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     # But since tmux in konsole seems rather common and that case so uncommon,
     # we will just fail there (though it seems that tmux or st swallow it anyway).
 
+    # If we're not interactive, there is effectively no bind mode.
+    if not status is-interactive
+        return
+    end
+
     if set -q INSIDE_EMACS
         return
     end

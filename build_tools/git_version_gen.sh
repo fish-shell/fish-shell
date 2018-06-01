@@ -1,11 +1,13 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 # Originally from the git sources (GIT-VERSION-GEN)
 # Presumably (C) Junio C Hamano <junkio@cox.net>
 # Reused under GPL v2.0
 # Modified for fish by David Adam <zanchey@ucc.gu.uwa.edu.au>
 
+set -e
+
 # Find the fish git directory as two levels up from script directory.
-GIT_DIR="$( cd "$( dirname $( dirname "${BASH_SOURCE[0]}" ) )" && pwd )"
+GIT_DIR="$( cd "$( dirname $( dirname "$0" ) )" && pwd )"
 
 FBVF=FISH-BUILD-VERSION-FILE
 DEF_VER=unknown
@@ -26,7 +28,7 @@ else
 	VC=unset
 fi
 
-# Output the FBVF.
+# Maybe output the FBVF
 # It looks like FISH_BUILD_VERSION="2.7.1-621-ga2f065e6"
 test "$VN" = "$VC" || {
 	echo >&2 "FISH_BUILD_VERSION=$VN"

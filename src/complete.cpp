@@ -542,20 +542,19 @@ void completer_t::complete_strings(const wcstring &wc_escaped, const wchar_t *de
 void completer_t::complete_cmd_desc(const wcstring &str) {
     ASSERT_IS_MAIN_THREAD();
 
-    const wchar_t *cmd_start;
-    const wchar_t *const cmd = str.c_str();
-    cmd_start = wcsrchr(cmd, L'/');
-
-    if (cmd_start)
-        cmd_start++;
-    else
-        cmd_start = cmd;
+    wcstring cmd;
+    size_t pos = str.find_last_of(L'/');
+    if (pos != std::string::npos) {
+        cmd = wcstring(str, pos);
+    } else {
+        cmd = str;
+    }
 
     // Using apropos with a single-character search term produces far to many results - require at
     // least two characters if we don't know the location of the whatis-database.
-    if (wcslen(cmd_start) < 2) return;
+    if (cmd.length() < 2) return;
 
-    if (wildcard_has(cmd_start, 0)) {
+    if (wildcard_has(cmd, 0)) {
         return;
     }
 
@@ -572,7 +571,7 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
     }
 
     wcstring lookup_cmd(L"__fish_describe_command ");
-    lookup_cmd.append(escape_string(cmd_start, 1));
+    lookup_cmd.append(escape_string(cmd, 1));
 
     // First locate a list of possible descriptions using a single call to apropos or a direct
     // search if we know the location of the whatis database. This can take some time on slower
@@ -589,7 +588,8 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
         // mqudsi: I don't know if the above were ever true, but it's certainly not any more.
         // Plenty of allocations below.
         for (const wcstring &elstr : list) {
-            const wcstring fullkey(elstr, wcslen(cmd_start));
+            if (elstr.length() < cmd.length()) continue;
+            const wcstring fullkey(elstr, cmd.length());
 
             size_t tab_idx = fullkey.find(L'\t');
             if (tab_idx == wcstring::npos) continue;

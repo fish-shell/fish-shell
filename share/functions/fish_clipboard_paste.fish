@@ -9,6 +9,10 @@ function fish_clipboard_paste
         if not set data (xsel --clipboard 2>/dev/null)
             return 1
         end
+    else if type -q xclip
+        if not set data (xclip -selection clipboard -o 2>/dev/null)
+            return 1
+        end
     end
     # Also split on \r to turn it into a newline,
     # otherwise the output looks really confusing.

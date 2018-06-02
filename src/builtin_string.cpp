@@ -1218,7 +1218,7 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
 }
 
 // A helper function for lower and upper.
-static int string_transform(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv, decltype(std::towlower) func) {
+static int string_transform(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv, std::wint_t (*func)(std::wint_t)) {
     options_t opts;
     opts.quiet_valid = true;
     int optind;

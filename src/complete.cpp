@@ -545,7 +545,8 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
     wcstring cmd;
     size_t pos = str.find_last_of(L'/');
     if (pos != std::string::npos) {
-        cmd = wcstring(str, pos);
+        if (pos + 1 > str.length()) return;
+        cmd = wcstring(str, pos + 1);
     } else {
         cmd = str;
     }

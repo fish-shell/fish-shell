@@ -25,7 +25,7 @@ complete -c unzip -s K  -d "keep setuid/setgid/tacky permissions"
 complete -c unzip -s M  -d "pipe through `more` pager"
 
 # Debian version of unzip
-if unzip -h | string match -eq Debian
+if unzip -v 2>/dev/null | string match -eq Debian
 
 	# the first non-switch argument should be the zipfile
 	complete -c unzip -n '__fish_is_first_token' -xa '(__fish_complete_suffix .zip)'

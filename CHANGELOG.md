@@ -81,6 +81,7 @@ This section is for changes merged to the `major` branch that are not also merge
   - `npm`<sup>†</sup>
   - `python`/`python2`/`python3`
   - `service`
+  - `scp`
   - `ssh` (#4344)
   - `sudo` (see above)
   - `yarn`<sup>&#x2217;</sup><sup>†</sup>

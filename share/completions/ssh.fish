@@ -6,7 +6,7 @@ __fish_complete_ssh ssh
 #
 # ssh specific completions
 #
-complete -x -c ssh -d Hostname -a "(__fish_complete_user_at_hosts)"
+complete -x -c ssh -d "Remote" -a "(__fish_complete_user_at_hosts)"
 
 # Disable as username completion is not very useful.
 # complete -x -c ssh -d User -a "
@@ -51,4 +51,4 @@ function __ssh_history_completions --argument limit
 	history --prefix ssh | sed -n "s/.* \([A-Za-z0-9._:-]\+@[A-Za-z0-9._:-]\+\).*/\1/p" | head -n $limit
 end
 
-complete -k -c ssh -a '(__ssh_history_completions 100)' -f
+complete -k -c ssh -a '(__ssh_history_completions 100)' -f -d "Remote"

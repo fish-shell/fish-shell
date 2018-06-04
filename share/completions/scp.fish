@@ -22,28 +22,39 @@ function __scp_remote_path_prefix
     and echo $path_prefix[2]
 end
 
+function __fish_no_scp_remote_specified
+    set -l tokens (commandline -t)
+    # can't use `for token in tokens[1..-2]` due to https://github.com/fish-shell/fish-shell/issues/4897
+    set -e tokens[-1]
+    for token in $tokens # ignoring current token
+        if string match -e @ -- $token
+            return 1
+        end
+    end
+    return 0
+end
+
 #
 # scp specific completions
 #
 
 #
-# Hostname
+# Inherit user/host completions from ssh
 #
-complete -c scp -d Hostname -n "commandline --cut-at-cursor --current-token | string match -v '*:*'" -a "
-(__fish_complete_user_at_hosts):"
+complete -c scp -d Remote -n "__fish_no_scp_remote_specified; and not string match -e : (commandline -ct)" -a "(complete -C'ssh ' | string replace -r '\t.*' ':')"
 
 #
 # Local path
 #
-complete -c scp -d "Local Path" -n "commandline -ct | string match ':'"
+complete -c scp -d "Local Path" -n "not string match @ -- (commandline -ct)"
 
 #
 # Remote path
 #
-complete -c scp -d "Remote Path" -f -n "commandline --cut-at-cursor --current-token | string match -r '.+:'" -a "
-(__scp_remote_target):(
-	# Get the list of remote files from the scp target.
-        ssh (__scp2ssh_port_number) -o 'BatchMode yes' (__scp_remote_target) ls\ -dp\ (__scp_remote_path_prefix)\* 2>/dev/null
+# Get the list of remote files from the scp target.
+complete -c scp -d "Remote Path" -f -n "commandline -ct | string match -eq ':'" -a "
+(__scp_remote_target):( \
+        ssh (__scp2ssh_port_number) -o 'BatchMode yes' (__scp_remote_target) /bin/ls\ -dp\ (__scp_remote_path_prefix)\* 2>/dev/null
 )
 "
 complete -c scp -s B -d "Batch mode"

@@ -73,6 +73,7 @@ This section is for changes merged to the `major` branch that are not also merge
   - `port`
   - `ttx`
   - `unzip`
+  - `xsv`
 - Improved completions for
   - `brew`
   - `diskutil`

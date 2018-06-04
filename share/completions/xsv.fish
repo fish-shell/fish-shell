@@ -1,0 +1,28 @@
+complete -c xsv -n '__fish_is_first_token' -xa cat         -d 'Concatenate by row or column'
+complete -c xsv -n '__fish_is_first_token' -xa count       -d 'Count records'
+complete -c xsv -n '__fish_is_first_token' -xa fixlengths  -d 'Makes all records have same length'
+complete -c xsv -n '__fish_is_first_token' -xa flatten     -d 'Show one field per line'
+complete -c xsv -n '__fish_is_first_token' -xa fmt         -d 'Format CSV output (change field delimiter)'
+complete -c xsv -n '__fish_is_first_token' -xa frequency   -d 'Show frequency tables'
+complete -c xsv -n '__fish_is_first_token' -xa headers     -d 'Show header names'
+complete -c xsv -n '__fish_is_first_token' -xa help        -d 'Show this usage message.'
+complete -c xsv -n '__fish_is_first_token' -xa index       -d 'Create CSV index for faster access'
+complete -c xsv -n '__fish_is_first_token' -xa input       -d 'Read CSV data with special quoting rules'
+complete -c xsv -n '__fish_is_first_token' -xa join        -d 'Join CSV files'
+complete -c xsv -n '__fish_is_first_token' -xa sample      -d 'Randomly sample CSV data'
+complete -c xsv -n '__fish_is_first_token' -xa search      -d 'Search CSV data with regexes'
+complete -c xsv -n '__fish_is_first_token' -xa select      -d 'Select columns from CSV'
+complete -c xsv -n '__fish_is_first_token' -xa slice       -d 'Slice records from CSV'
+complete -c xsv -n '__fish_is_first_token' -xa sort        -d 'Sort CSV data'
+complete -c xsv -n '__fish_is_first_token' -xa split       -d 'Split CSV data into many files'
+complete -c xsv -n '__fish_is_first_token' -xa stats       -d 'Compute basic statistics'
+complete -c xsv -n '__fish_is_first_token' -xa table       -d 'Align CSV data into columns'
+
+# with a subcommand
+complete -c xsv -n 'not __fish_is_first_token' -xa '(__fish_complete_suffix .csv)'
+complete -c xsv -n 'not __fish_is_first_token' -s h -l help -d 'Display help for this xsv command'
+
+# without a subcommand
+complete -c xsv -s h -l help -d 'Display xsv help'
+complete -c xsv -l version -d 'Display xsv version info'
+complete -c xsv -l list -d 'List all xsv commands'

@@ -6,6 +6,7 @@
 <div class="menu tutorial_menu">
 \endhtmlonly
 - <a href="#tut_why_fish">Why fish?</a>
+- <a href="#tut_getting_started">Getting started</a>
 - <a href="#tut_learning_Fish">Learning fish</a>
 - <a href="#tut_running_commands">Running Commands</a>
 - <a href="#tut_getting_help">Getting Help</a>
@@ -29,6 +30,7 @@
 - <a href="#tut_startup">Startup</a>
 - <a href="#tut_autoload">Autoloading Functions</a>
 - <a href="#tut_universal">Universal Variables</a>
+- <a href="#tut_switching_to_fish">Switching to fish</a>
 - <a href="#tut_more">Ready for more?</a>
 
 \htmlonly[block]
@@ -46,21 +48,32 @@
 If you want to make your command line more productive, more useful, and more fun, without learning a bunch of arcane syntax and configuration options, then `fish` might be just what you're looking for!
 
 
-\section tut_learning_Fish Learning fish
+\section tut_getting_started Getting started
 
-This tutorial assumes a basic understanding of command line shells and Unix commands, and that you have a working copy of `fish`.
+Once installed, just type in `fish` into your current shell to try it out!
 
-If you have a strong understanding of other shells, and want to know what `fish` does differently, search for the magic phrase <em>unlike other shells</em>, which is used to call out important differences.
-
-When you start `fish`, you should see this:
+You will be greeted by the standard fish prompt,
+which means you are all set up and can start using fish:
 
 \fish{cli-dark}
+> fish
 <outp>Welcome to fish, the friendly interactive shell</outp>
 <outp>Type <span class="cwd">help</span> for instructions on how to use fish</outp>
 <asis>you@hostname</asis> ~>____
 \endfish
 
-`fish` comes with a default prompt that shows your username, hostname, and working directory. You'll see <a href="#tut_prompt">how to change your prompt</a> further down. From now on, we'll pretend your prompt is just a '`>`' to save space.
+This prompt that you see above is the `fish` default prompt: it shows your username, hostname, and working directory.
+- to change this prompt see <a href="#tut_prompt">how to change your prompt</a>
+- to switch to fish permanently see <a href="#tut_switching_to_fish">switch your default shell to fish</a>
+
+From now on, we'll pretend your prompt is just a '`>`' to save space.
+
+
+\section tut_learning_Fish Learning fish
+
+This tutorial assumes a basic understanding of command line shells and Unix commands, and that you have a working copy of `fish`.
+
+If you have a strong understanding of other shells, and want to know what `fish` does differently, search for the magic phrase <em>unlike other shells</em>, which is used to call out important differences.
 
 
 \section tut_running_commands Running Commands
@@ -676,6 +689,33 @@ Now in another shell:
 >_ echo $EDITOR
 vim
 \endfish
+
+
+\section tut_switching_to_fish Switching to fish?
+
+If you wish to use fish (or any other shell) as your default shell,
+you need to enter your new shell's executable `/usr/local/bin/fish` in two places:
+- add `/usr/local/bin/fish` to `/etc/shells`
+- change your default shell with `chsh -s` to `/usr/local/bin/fish`
+
+You can use the following commands for this:
+
+Add the fish shell `/usr/local/bin/fish`
+to `/etc/shells` with:
+
+\fish{cli-dark}
+>echo /usr/local/bin/fish | sudo tee -a /etc/shells
+\endfish
+
+Change your default shell to fish with:
+
+\fish{cli-dark}
+>chsh -s /usr/local/bin/fish
+\endfish
+
+(To change it back to another shell, just substitute `/usr/local/bin/fish`
+with `/bin/bash`, `/bin/tcsh` or `/bin/zsh` as appropriate in the steps above.)
+
 
 \section tut_more  Ready for more?
 

@@ -71,6 +71,7 @@ This section is for changes merged to the `major` branch that are not also merge
   - `ngrok` (#4642)
   - `optipng`
   - `port`
+  - `serve` (#5026)
   - `ttx`
   - `unzip`
   - `xsv`

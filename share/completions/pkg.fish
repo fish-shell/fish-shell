@@ -1,6 +1,6 @@
 # Completions for pkgng package manager
 
-if uname | not string match FreeBSD
+if uname | not string match -q FreeBSD
 	exit
 end
 

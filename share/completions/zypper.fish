@@ -117,34 +117,39 @@ function __fish_zypper_is_subcommand_lr
         __fish_zypper_cmd_in_array repos lr
 end
 
-complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l export -s e           -d 'Export all defined repositories as a single local .repo file'
-complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l alias -s a            -d 'Show also repository alias'
-complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l name -s n             -d 'Show also repository name'
-complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l uri -s u              -d 'Show also base URI of repositories'
-complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l priority -s p         -d 'Show also repository priority'
-complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l refresh -s r          -d 'Show also the autorefresh flag'
-complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l details -s d          -d 'Show more information like URI, priority, type'
-complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l service -s s          -d 'Show also alias of parent service'
-complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l sort-by-uri -s U      -d 'Sort the list by URI'
-complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l sort-by-priority -s P -d 'Sort the list by repository priority'
-complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l sort-by-alias -s A    -d 'Sort the list by alias'
-complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l sort-by-name -s N     -d 'Sort the list by name'
+complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l export -s e            -d 'Export all defined repositories as a single local .repo file'
+complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l alias -s a             -d 'Show also repository alias'
+complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l name -s n              -d 'Show also repository name'
+complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l uri -s u               -d 'Show also base URI of repositories'
+complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l priority -s p          -d 'Show also repository priority'
+complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l refresh -s r           -d 'Show also the autorefresh flag'
+complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l details -s d           -d 'Show more information like URI, priority, type'
+complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l service -s s           -d 'Show also alias of parent service'
+complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l show-enabled-only -s E -d 'Show enabled repos only'
+complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l sort-by-uri -s U       -d 'Sort the list by URI'
+complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l sort-by-priority -s P  -d 'Sort the list by repository priority'
+complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l sort-by-alias -s A     -d 'Sort the list by alias'
+complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l sort-by-name -s N      -d 'Sort the list by name'
 
 function __fish_zypper_is_subcommand_ar
         __fish_zypper_cmd_in_array addrepo ar
 end
 
-complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l repo -s r             -d 'Just another means to specify a .repo file to read'
-complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l type -s t             -d 'Type of repository (yast2, rpm-md, plaindir)'
-complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l disable -s d          -d 'Add the repository as disabled'
-complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l check -s c            -d 'Probe URI'
-complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l no-check -s C         -d "Don't probe URI, probe later during refresh"
-complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l name -s n             -d 'Specify descriptive name for the repository'
-complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l keep-packages -s k    -d 'Enable RPM files caching'
-complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l no-keep-packages -s K -d 'Disable RPM files caching'
-complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l gpgcheck -s g         -d 'Enable GPG check for this repository'
-complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l no-gpgcheck -s G      -d 'Disable GPG check for this repository'
-complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l refresh -s f          -d 'Enable autorefresh of the repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l repo -s r                       -d 'Just another means to specify a .repo file to read'
+complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l check -s c                      -d 'Probe URI'
+complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l no-check -s C                   -d "Don't probe URI, probe later during refresh"
+complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l name -s n                       -d 'Specify descriptive name for the repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l disable -s d                    -d 'Add the repository as disabled'
+complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l refresh -s f                    -d 'Enable autorefresh of the repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l priority -s p                   -d 'Set the priority of the repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l keep-packages -s k              -d 'Enable RPM files caching'
+complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l no-keep-packages -s K           -d 'Disable RPM files caching'
+complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l gpgcheck -s g                   -d 'Enable GPG check for this repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l gpgcheck-strict                 -d 'Enable strict GPG check for this repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l gpgcheck-allow-unsigned         -d 'Short hand for --gpgcheck-allow-unsigned-repo --gpgcheck-allow-unsigned-package'
+complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l gpgcheck-allow-unsigned-repo    -d 'Enable GPG check but allow the repository metadata to be unsigned'
+complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l gpgcheck-allow-unsigned-package -d 'Enable GPG check but allow installing unsigned packages from this repository.'
+complete -c zypper -n '__fish_zypper_is_subcommand_ar' -l no-gpgcheck -s G                -d 'Disable GPG check for this repository'
 
 function __fish_zypper_is_subcommand_rr
         __fish_zypper_cmd_in_array removerepo rr
@@ -157,20 +162,24 @@ function __fish_zypper_is_subcommand_mr
         __fish_zypper_cmd_in_array modifyrepo mr
 end
 
-complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l disable -s d          -d "Disable the repository (but don't remove it)"
-complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l enable -s e           -d 'Enable a disabled repository'
-complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l refresh -s r          -d 'Enable auto-refresh of the repository'
-complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l no-refresh -s R       -d 'Disable auto-refresh of the repository'
-complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l name -s n             -d 'Set a descriptive name for the repository'
-complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l priority -s p         -d 'Set priority of the repository'
-complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l keep-packages -s k    -d 'Enable RPM files caching'
-complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l no-keep-packages -s K -d 'Disable RPM files caching'
-complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l gpgcheck -s g         -d 'Enable GPG check for this repository'
-complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l no-gpgcheck -s G      -d 'Disable GPG check for this repository'
-complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l all -s a              -d 'Apply changes to all repositories'
-complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l local -s l            -d 'Apply changes to all local repositories'
-complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l remote -s t           -d 'Apply changes to all remote repositories'
-complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l medium-type -s m      -d 'Apply changes to repositories of specified type'
+complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l name -s n                       -d 'Set a descriptive name for the repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l disable -s d                    -d "Disable the repository"
+complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l enable -s e                     -d 'Enable the repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l refresh -s f                    -d 'Enable auto-refresh of the repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l no-refresh -s F                 -d 'Disable auto-refresh of the repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l priority -s p                   -d 'Set the priority of the repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l keep-packages -s k              -d 'Enable RPM files caching'
+complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l no-keep-packages -s K           -d 'Disable RPM files caching'
+complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l gpgcheck -s g                   -d 'Enable GPG check for this repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l gpgcheck-strict                 -d 'Enable strict GPG check for this repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l gpgcheck-allow-unsigned         -d 'Short hand for --gpgcheck-allow-unsigned-repo --gpgcheck-allow-unsigned-package'
+complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l gpgcheck-allow-unsigned-repo    -d 'Enable GPG check but allow the repository metadata to be unsigned'
+complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l gpgcheck-allow-unsigned-package -d 'Enable GPG check but allow installing unsigned packages from this repository.'
+complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l no-gpgcheck -s G                -d 'Disable GPG check for this repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l all -s a                        -d 'Apply changes to all repositories'
+complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l local -s l                      -d 'Apply changes to all local repositories'
+complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l remote -s t                     -d 'Apply changes to all remote repositories'
+complete -c zypper -n '__fish_zypper_is_subcommand_mr' -l medium-type -s m                -d 'Apply changes to repositories of specified type'
 
 function __fish_zypper_is_subcommand_ref
         __fish_zypper_cmd_in_array refresh ref
@@ -387,6 +396,12 @@ complete -c zypper -n '__fish_zypper_is_subcommand_se' -l match-any             
 complete -c zypper -n '__fish_zypper_is_subcommand_se' -l match-substrings         -d 'Search for a match to partial words (default)'
 complete -c zypper -n '__fish_zypper_is_subcommand_se' -l match-words              -d 'Search for a match to whole words only'
 complete -c zypper -n '__fish_zypper_is_subcommand_se' -l match-exact              -d 'Searches for an exact package name'
+complete -c zypper -n '__fish_zypper_is_subcommand_se' -l provides                 -d 'Search for packages which provide the search strings'
+complete -c zypper -n '__fish_zypper_is_subcommand_se' -l recommends               -d 'Search for packages which recommend the search strings'
+complete -c zypper -n '__fish_zypper_is_subcommand_se' -l requires                 -d 'Search for packages which require the search strings'
+complete -c zypper -n '__fish_zypper_is_subcommand_se' -l suggests                 -d 'Search for packages which suggest the search strings'
+complete -c zypper -n '__fish_zypper_is_subcommand_se' -l conflicts                -d 'Search packages conflicting with search strings'
+complete -c zypper -n '__fish_zypper_is_subcommand_se' -l obsoletes                -d 'Search for packages which obsolete the search strings'
 
 function __fish_zypper_is_subcommand_if
         __fish_zypper_cmd_in_array info if
@@ -394,8 +409,12 @@ end
 
 complete -c zypper -n '__fish_zypper_is_subcommand_if' -l repo -s r  -d 'Work only with the specified repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_if' -l type -s t  -d 'Type of package (package, patch, pattern, product). Default: package'
-complete -c zypper -n '__fish_zypper_is_subcommand_if' -l requires   -d 'Show also requires and prerequires'
-complete -c zypper -n '__fish_zypper_is_subcommand_if' -l recommends -d 'Show also recommends'
+complete -c zypper -n '__fish_zypper_is_subcommand_if' -l provides   -d 'Show symbols the package provides'
+complete -c zypper -n '__fish_zypper_is_subcommand_if' -l requires   -d 'Show symbols the package requires'
+complete -c zypper -n '__fish_zypper_is_subcommand_if' -l conflicts  -d 'Show symbols the package conflicts with'
+complete -c zypper -n '__fish_zypper_is_subcommand_if' -l obsoletes  -d 'Show symbols the package obsoletes'
+complete -c zypper -n '__fish_zypper_is_subcommand_if' -l recommends -d 'Show symbols the package recommends'
+complete -c zypper -n '__fish_zypper_is_subcommand_if' -l suggests   -d 'Show symbols the package suggests'
 
 function __fish_zypper_is_subcommand_pch
         __fish_zypper_cmd_in_array patches pch
@@ -410,6 +429,10 @@ end
 complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l repo -s r             -d 'Just another means to specify repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l installed-only -s i   -d 'Show only installed packages'
 complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l uninstalled-only -s u -d 'Show only packages which are not installed'
+complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l orphaned              -d 'Show packages which are orphaned (without repository)'
+complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l suggested             -d 'Show packages which are suggested'
+complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l recommended           -d 'Show packages which are recommended'
+complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l unneeded              -d 'Show packages which are unneeded'
 complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l sort-by-name -s N     -d 'Sort the list by package name'
 complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l sort-by-repo -s R     -d 'Sort the list by repository'
 

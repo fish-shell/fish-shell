@@ -184,20 +184,6 @@ function . --description 'Evaluate contents of file (deprecated, see "source")' 
     end
 end
 
-# As last part of initialization, source the conf directories.
-# Implement precedence (User > Admin > Extra (e.g. vendors) > Fish) by basically doing "basename".
-set -l sourcelist
-for file in $configdir/fish/conf.d/*.fish $__fish_sysconf_dir/conf.d/*.fish $__extra_confdir/*.fish
-    set -l basename (string replace -r '^.*/' '' -- $file)
-    contains -- $basename $sourcelist
-    and continue
-    set sourcelist $sourcelist $basename
-    # Also skip non-files or unreadable files.
-    # This allows one to use e.g. symlinks to /dev/null to "mask" something (like in systemd).
-    [ -f $file -a -r $file ]
-    and source $file
-end
-
 # Upgrade pre-existing abbreviations from the old "key=value" to the new "key value" syntax.
 # This needs to be in share/config.fish because __fish_config_interactive is called after sourcing
 # config.fish, which might contain abbr calls.
@@ -305,3 +291,16 @@ function disown --wraps disown
     builtin disown (__fish_expand_pid_args $argv)
 end
 
+# As last part of initialization, source the conf directories.
+# Implement precedence (User > Admin > Extra (e.g. vendors) > Fish) by basically doing "basename".
+set -l sourcelist
+for file in $configdir/fish/conf.d/*.fish $__fish_sysconf_dir/conf.d/*.fish $__extra_confdir/*.fish
+    set -l basename (string replace -r '^.*/' '' -- $file)
+    contains -- $basename $sourcelist
+    and continue
+    set sourcelist $sourcelist $basename
+    # Also skip non-files or unreadable files.
+    # This allows one to use e.g. symlinks to /dev/null to "mask" something (like in systemd).
+    [ -f $file -a -r $file ]
+    and source $file
+end

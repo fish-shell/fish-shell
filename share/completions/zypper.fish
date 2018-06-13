@@ -43,7 +43,7 @@ function __fish_zypper_print_packages
     set -l type
     set -l idx
     set -l args (commandline -poc)
-    while test -n "$args"
+    while set -q args[1]
         switch $args[1]
             case '-t' '--type'
                 set -e args[1]
@@ -66,11 +66,11 @@ function __fish_zypper_print_packages
     end
 
     if test -z "$type"
-        cut -f 1 $idx | sort | uniq
+        cut -f 1 $idx
     else if test "$type" = "package"
         awk '!/application:|srcpackage:|product:|pattern:|patch:/ {print $1}' $idx
     else
-        sed -n "s/^$type://p" $idx | cut -f 1 | sort | uniq
+        sed -n "s/^$type://p" $idx | cut -f 1
     end
 end
 

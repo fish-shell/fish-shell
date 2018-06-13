@@ -2,54 +2,61 @@
 # Completion for sudo
 #
 
-# All these options should be valid for GNU and OSX sudo
-complete -c sudo -s A -d "Ask for password via the askpass or \$SSH_ASKPASS program"
-complete -c sudo -s C -d "Close all file descriptors greater or equal to the given number" -a "(seq 0 255)"
-complete -c sudo -s E -d "Preserve environment"
-complete -c sudo -s H -d "Set home"
-complete -c sudo -s K -d "Remove the credential timestamp entirely"
-complete -c sudo -s P -d "Preserve group vector"
-complete -c sudo -s S -d "Read password from stdin"
-complete -c sudo -s b -d "Run command in the background"
-complete -c sudo -s e -r -d "Edit"
-complete -c sudo -s g -a "(__fish_complete_groups)" -x -d "Run command as group"
-complete -c sudo -s h -n "__fish_no_arguments" -d "Display help and exit"
-complete -c sudo -s i -d "Run a login shell"
-complete -c sudo -s k -d "Reset or ignore the credential timestamp"
-complete -c sudo -s l -d "List the allowed and forbidden commands for the given user, or the full path to the given command if it is allowed"
-complete -c sudo -s n -d "Do not prompt for a password - if one is needed, fail"
-complete -c sudo -s p -d "Specify a custom password prompt"
-complete -c sudo -s s -d "Run the given command in a shell"
-complete -c sudo -s u -a "(__fish_complete_users)" -x -d "Run command as user"
-complete -c sudo -s v -n "__fish_no_arguments" -d "Validate the credentials, extending timeout"
-
-# Complete the command we are executed under sudo
-complete -c sudo -d "Command to run" -x -a "(__fish_complete_subcommand_root -u -g)"
-
-# Or provide completions
-function __fish_complete_sudo_payload
-	set -l tokens (commandline -co)
-	# at least sudo and cmd
-	if test (count $tokens) -ge 2; \
-		# and second parameter is not a flag
-		and string match -qr '^[^-]' -- $tokens[2] \
-		# and 2nd parameter is a valid cmd
-		and type -q $tokens[2]
-			echo $tokens[2..-1] | complete -C # complete from 2nd parameter onwards
-	# or at least sudo, switch, and cmd
-	else if test (count $tokens) -ge 3; \
-		# and second parameter takes no arguments
-		and string match -qr '^-[AEHKPSbiknsv]\b' -- $tokens[2]
-		# and 3rd parameter is a valid cmd
-		and type -q $tokens[3]
-			echo $tokens[3..-1] | complete -C # complete from 3rd parameter onwards
-	# or sudo, switch, param, and cmd
-	else if test (count $tokens) -ge 4; \
-		# and 4th parameter is a valid cmd
-		and type -q $tokens[4] \
-			echo $tokens[4..-1] | complete -C # complete from 4th parameter onwards
-	end
+function __fish_sudo_print_remaining_args
+    set -l tokens (commandline -opc) (commandline -ct)
+    set -e tokens[1]
+    # These are all the options mentioned in the man page for Todd Miller's "sudo.ws" sudo (in that order).
+    # If any other implementation has different options, this should be harmless, since they shouldn't be used anyway.
+    set -l opts A/askpass b/background C/close-from= E/preserve-env=?
+    # Note that "-h" is both "--host" (which takes an option) and "--help" (which doesn't).
+    # But `-h` as `--help` only counts when it's the only argument (`sudo -h`),
+    # so any argument completion after that should take it as "--host".
+    set -a opts e/edit g/group= H/set-home h/host= '1-help'
+    set -a opts i/login K/remove-timestamp k/reset-timestamp l/list n/non-interactive
+    set -a opts P/preserve-groups p/prompt= S/stdin s/shell U/other-user=
+    set -a opts u/user= T/command-timeout= V/version v/validate
+    argparse -s $opts -- $tokens 2>/dev/null
+    # The remaining argv is the subcommand with all its options, which is what
+    # we want.
+    if test -n "$argv"
+        and not string match -qr '^-' $argv[1]
+        echo $argv
+        return 0
+    else
+        return 1
+    end
 end
 
-# Provide completions for the command being sudo'd, as if `sudo` weren't in play
-complete -c sudo -xa '(__fish_complete_sudo_payload)'
+function __fish_sudo_no_subcommand
+    not __fish_sudo_print_remaining_args >/dev/null
+end
+
+function __fish_complete_sudo_subcommand
+    set -l args (__fish_sudo_print_remaining_args)
+    complete -C"$args"
+end
+
+# All these options should be valid for GNU and OSX sudo
+complete -c sudo -n "__fish_no_arguments" -s h -d "Display help and exit"
+complete -c sudo -n "__fish_no_arguments" -s V -d "Display version information and exit"
+complete -c sudo -n "__fish_sudo_no_subcommand" -s A -d "Ask for password via the askpass or \$SSH_ASKPASS program"
+complete -c sudo -n "__fish_sudo_no_subcommand" -s C -d "Close all file descriptors greater or equal to the given number" -a "(seq 0 255)"
+complete -c sudo -n "__fish_sudo_no_subcommand" -s E -d "Preserve environment"
+complete -c sudo -n "__fish_sudo_no_subcommand" -s H -d "Set home"
+complete -c sudo -n "__fish_sudo_no_subcommand" -s K -d "Remove the credential timestamp entirely"
+complete -c sudo -n "__fish_sudo_no_subcommand" -s P -d "Preserve group vector"
+complete -c sudo -n "__fish_sudo_no_subcommand" -s S -d "Read password from stdin"
+complete -c sudo -n "__fish_sudo_no_subcommand" -s b -d "Run command in the background"
+complete -c sudo -n "__fish_sudo_no_subcommand" -s e -r -d "Edit"
+complete -c sudo -n "__fish_sudo_no_subcommand" -s g -a "(__fish_complete_groups)" -x -d "Run command as group"
+complete -c sudo -n "__fish_sudo_no_subcommand" -s i -d "Run a login shell"
+complete -c sudo -n "__fish_sudo_no_subcommand" -s k -d "Reset or ignore the credential timestamp"
+complete -c sudo -n "__fish_sudo_no_subcommand" -s l -d "List the allowed and forbidden commands for the given user, or the full path to the given command if it is allowed"
+complete -c sudo -n "__fish_sudo_no_subcommand" -s n -d "Do not prompt for a password - if one is needed, fail"
+complete -c sudo -n "__fish_sudo_no_subcommand" -s p -d "Specify a custom password prompt"
+complete -c sudo -n "__fish_sudo_no_subcommand" -s s -d "Run the given command in a shell"
+complete -c sudo -n "__fish_sudo_no_subcommand" -s u -a "(__fish_complete_users)" -x -d "Run command as user"
+complete -c sudo -n "__fish_sudo_no_subcommand" -s v -n "__fish_no_arguments" -d "Validate the credentials, extending timeout"
+
+# Complete the command we are executed under sudo
+complete -c sudo -x -a "(__fish_complete_sudo_subcommand)"

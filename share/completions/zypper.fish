@@ -31,11 +31,16 @@ function __fish_zypper_use_repo
 end
 
 function __fish_zypper_print_repos
-    zypper -t lr | sed '1,/-+-/d' | cut -d '|' -f 2 | cut -d ' ' -f 2
-end
-
-function __fish_zypper_print_enabled_repos
-    zypper -t lr -E | sed '1,/-+-/d' | cut -d '|' -f 2 | cut -d ' ' -f 2
+    argparse 'e/enabled' -- $argv
+    set -q _flag_e; and set -l enabled -E
+    set -l zypper_lr (zypper -t lr $enabled)
+    # Because spaces are allowed in repo aliases (even at beginnings and
+    # endings -- bad practice though, but allowed), it's impossible to parse
+    # the aliases from zypper's output correctly. So we fetch them from repo
+    # files.
+    set repos (cat /etc/zypp/repos.d/*.repo | string replace -rf '\[(.+)\]' '$1')
+    # Then use the aliases to match their names from zypper's output.
+    string replace -rf '^[\d\s]+\| ('(string join \| $repos)') +\| ([^|]+)\s+.*$' '$1\t$2' -- $zypper_lr
 end
 
 function __fish_zypper_print_packages
@@ -52,7 +57,7 @@ function __fish_zypper_print_packages
                 end
             case '-r' '--repo' '--from'
                 set -e args[1]
-                if contains -- $args[1] (__fish_zypper_print_enabled_repos)
+                if contains -- $args[1] (__fish_zypper_print_repos -e)
                     set repo $repo $args[1]
                 end
         end
@@ -66,11 +71,11 @@ function __fish_zypper_print_packages
     end
 
     if test -z "$type"
-        cut -f 1 $idx
+        cat $idx | string replace -rf '^([^\t]+)\t.*\t.*$' '$1'
     else if test "$type" = "package"
-        awk '!/application:|srcpackage:|product:|pattern:|patch:/ {print $1}' $idx
+        cat $idx | string match -rv '^('(string join \| $__fish_zypper_package_types)'):' | string replace -rf '^([^\t]+)\t.*\t.*$' '$1'
     else
-        sed -n "s/^$type://p" $idx | cut -f 1
+        cat $idx | string replace -rf "^$type"':([^\t]+)\t.*\t.*$' '$1\t'"$type"
     end
 end
 
@@ -230,7 +235,7 @@ complete -c zypper -n '__fish_zypper_is_subcommand_ref' -l force-build -s b    -
 complete -c zypper -n '__fish_zypper_is_subcommand_ref' -l force-download -s d -d 'Force download of raw metadata'
 complete -c zypper -n '__fish_zypper_is_subcommand_ref' -l build-only -s B     -d "Only build the database, don't download metadata"
 complete -c zypper -n '__fish_zypper_is_subcommand_ref' -l download-only -s D  -d "Only download raw metadata, don't build the database"
-complete -c zypper -n '__fish_zypper_is_subcommand_ref' -l repo -s r -r -a "(__fish_zypper_print_enabled_repos)"           -d 'Refresh only specified repositories'
+complete -c zypper -n '__fish_zypper_is_subcommand_ref' -l repo -s r -r -a "(__fish_zypper_print_repos -e)"           -d 'Refresh only specified repositories'
 complete -c zypper -n '__fish_zypper_is_subcommand_ref' -l services -s s       -d 'Refresh also services before refreshing repos'
 
 function __fish_zypper_is_subcommand_ls
@@ -291,7 +296,7 @@ function __fish_zypper_is_subcommand_in
         __fish_zypper_cmd_in_array install in
 end
 
-complete -c zypper -n '__fish_zypper_is_subcommand_in' -l repo -s r -f -r -a "(__fish_zypper_print_enabled_repos)"   -d 'Load only the specified repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_in' -l repo -s r -f -r -a "(__fish_zypper_print_repos -e)"   -d 'Load only the specified repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_in' -l type -s t -f -r -a "$__fish_zypper_package_types" -d 'Type of package'
 complete -c zypper -n '__fish_zypper_is_subcommand_in' -l name -s n                     -d 'Select packages by plain name, not by capability'
 complete -c zypper -n '__fish_zypper_is_subcommand_in' -l capability -s C               -d 'Select packages by capability'
@@ -305,14 +310,14 @@ complete -c zypper -n '__fish_zypper_is_subcommand_in' -l debug-solver          
 complete -c zypper -n '__fish_zypper_is_subcommand_in' -l no-recommends                 -d 'Do not install recommended packages, only required'
 complete -c zypper -n '__fish_zypper_is_subcommand_in' -l recommends                    -d 'Install also recommended packages in addition to the required'
 complete -c zypper -n '__fish_zypper_is_subcommand_in' -l force-resolution              -d 'Force the solver to find a solution (even an aggressive one)'
-complete -c zypper -n '__fish_zypper_is_subcommand_in' -l from -f -r -a "(__fish_zypper_print_enabled_repos)" -d 'Select packages from the specified repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_in' -l from -f -r -a "(__fish_zypper_print_repos -e)" -d 'Select packages from the specified repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_in' -l download -f -r -a "$__fish_zypper_download_modes" -d 'Set the download-install mode'
 
 function __fish_zypper_is_subcommand_rm
         __fish_zypper_cmd_in_array remove rm
 end
 
-complete -c zypper -n '__fish_zypper_is_subcommand_rm' -l repo -s r -r -a "(__fish_zypper_print_enabled_repos)"   -d 'Load only the specified repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_rm' -l repo -s r -r -a "(__fish_zypper_print_repos -e)"   -d 'Load only the specified repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_rm' -l type -s t -r -a "$__fish_zypper_package_types" -d 'Type of package'
 complete -c zypper -n '__fish_zypper_is_subcommand_rm' -l name -s n                -d 'Select packages by plain name, not by capability'
 complete -c zypper -n '__fish_zypper_is_subcommand_rm' -l capability -s C          -d 'Select packages by capability'
@@ -327,7 +332,7 @@ function __fish_zypper_is_subcommand_ve
         __fish_zypper_cmd_in_array verify ve
 end
 
-complete -c zypper -n '__fish_zypper_is_subcommand_ve' -l repo -s r -r -a "(__fish_zypper_print_enabled_repos)" -d 'Load only the specified repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_ve' -l repo -s r -r -a "(__fish_zypper_print_repos -e)" -d 'Load only the specified repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_ve' -l dry-run -s D       -d 'Test the repair, do not actually do anything to the system'
 complete -c zypper -n '__fish_zypper_is_subcommand_ve' -l download-only -s d -d 'Only download the packages, do not install'
 complete -c zypper -n '__fish_zypper_is_subcommand_ve' -l no-recommends      -d 'Do not install recommended packages, only required'
@@ -340,13 +345,13 @@ end
 
 complete -c zypper -n '__fish_zypper_is_subcommand_si' -l build-deps-only -s d -d 'Install only build dependencies of specified packages'
 complete -c zypper -n '__fish_zypper_is_subcommand_si' -l no-build-deps -s D   -d "Don't install build dependencies"
-complete -c zypper -n '__fish_zypper_is_subcommand_si' -l repo -s r -r -a "(__fish_zypper_print_enabled_repos)" -d 'Install packages only from specified repositories'
+complete -c zypper -n '__fish_zypper_is_subcommand_si' -l repo -s r -r -a "(__fish_zypper_print_repos -e)" -d 'Install packages only from specified repositories'
 
 function __fish_zypper_is_subcommand_inr
         __fish_zypper_cmd_in_array install-new-recommends inr
 end
 
-complete -c zypper -n '__fish_zypper_is_subcommand_inr' -l repo -s r -r -a "(__fish_zypper_print_enabled_repos)" -d 'Load only the specified repositories'
+complete -c zypper -n '__fish_zypper_is_subcommand_inr' -l repo -s r -r -a "(__fish_zypper_print_repos -e)" -d 'Load only the specified repositories'
 complete -c zypper -n '__fish_zypper_is_subcommand_inr' -l dry-run -s D       -d 'Test the installation, do not actually install'
 complete -c zypper -n '__fish_zypper_is_subcommand_inr' -l download-only -s d -d 'Only download the packages, do not install'
 complete -c zypper -n '__fish_zypper_is_subcommand_inr' -l download -f -r -a "$__fish_zypper_download_modes" -d 'Set the download-install mode'
@@ -357,7 +362,7 @@ function __fish_zypper_is_subcommand_up
 end
 
 complete -c zypper -n '__fish_zypper_is_subcommand_up' -l type -s t -r -a "$__fish_zypper_package_types" -d 'Type of package'
-complete -c zypper -n '__fish_zypper_is_subcommand_up' -l repo -s r -r -a "(__fish_zypper_print_enabled_repos)"   -d 'Load only the specified repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_up' -l repo -s r -r -a "(__fish_zypper_print_repos -e)"   -d 'Load only the specified repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_up' -l auto-agree-with-licenses -s l -d "Automatically say 'yes' to third party license confirmation prompt"
 complete -c zypper -n '__fish_zypper_is_subcommand_up' -l no-force-resolution -s R      -d 'Do not force the solver to find solution, let it ask'
 complete -c zypper -n '__fish_zypper_is_subcommand_up' -l dry-run -s D                  -d 'Test the update, do not actually update'
@@ -375,7 +380,7 @@ function __fish_zypper_is_subcommand_lu
 end
 
 complete -c zypper -n '__fish_zypper_is_subcommand_lu' -l type -s t -r -a "$__fish_zypper_package_types" -d 'Type of package'
-complete -c zypper -n '__fish_zypper_is_subcommand_lu' -l repo -s r -r -a "(__fish_zypper_print_enabled_repos)"   -d 'List only updates from the specified repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_lu' -l repo -s r -r -a "(__fish_zypper_print_repos -e)"   -d 'List only updates from the specified repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_lu' -l all -s a    -d 'List all packages for which newer versions are available, regardless whether they are installable or not'
 complete -c zypper -n '__fish_zypper_is_subcommand_lu' -l best-effort -d "Do a 'best effort' approach to update. Updates to a lower than the latest version are also acceptable"
 
@@ -386,7 +391,7 @@ end
 complete -c zypper -n '__fish_zypper_is_subcommand_lp' -l bugzilla -s b -d 'List needed patches for Bugzilla issues'
 complete -c zypper -n '__fish_zypper_is_subcommand_lp' -l category -s g -d 'List all patches in this category'
 complete -c zypper -n '__fish_zypper_is_subcommand_lp' -l all -s a      -d 'List all patches, not only the needed ones'
-complete -c zypper -n '__fish_zypper_is_subcommand_lp' -l repo -s r -r -a "(__fish_zypper_print_enabled_repos)"     -d 'List only patches from the specified repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_lp' -l repo -s r -r -a "(__fish_zypper_print_repos -e)"     -d 'List only patches from the specified repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_lp' -l date          -d 'List patches issued up to the specified date <YYYY-MM-DD>'
 complete -c zypper -n '__fish_zypper_is_subcommand_lp' -l cve           -d 'List needed patches for CVE issues'
 complete -c zypper -n '__fish_zypper_is_subcommand_lp' -l issuesstring  -d 'Look for issues matching the specified string'
@@ -395,14 +400,14 @@ function __fish_zypper_is_subcommand_dup
         __fish_zypper_cmd_in_array dist-upgrade dup
 end
 
-complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l repo -s r -r -a "(__fish_zypper_print_enabled_repos)" -d 'Load only the specified repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l repo -s r -r -a "(__fish_zypper_print_repos -e)" -d 'Load only the specified repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l auto-agree-with-licenses -s l -d "Automatically say 'yes' to third party license confirmation prompt"
 complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l dry-run -s D                  -d 'Test the upgrade, do not actually upgrade'
 complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l download-only -s d            -d 'Only download the packages, do not install'
 complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l debug-solver                  -d 'Create solver test case for debugging'
 complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l no-recommends                 -d 'Do not install recommended packages, only required'
 complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l recommends                    -d 'Install also recommended packages in addition to the required'
-complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l from -f -r -a "(__fish_zypper_print_enabled_repos)" -d 'Restrict upgrade to specified repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l from -f -r -a "(__fish_zypper_print_repos -e)" -d 'Restrict upgrade to specified repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l download -f -r -a "$__fish_zypper_download_modes" -d 'Set the download-install mode'
 complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l no-allow-downgrade            -d 'Do not allow installed resolvables to be downgraded'
 complete -c zypper -n '__fish_zypper_is_subcommand_dup' -l allow-downgrade               -d 'Allow installed resolvables to be downgraded'
@@ -417,7 +422,7 @@ function __fish_zypper_is_subcommand_pchk
         __fish_zypper_cmd_in_array patch-check pchk
 end
 
-complete -c zypper -n '__fish_zypper_is_subcommand_pchk' -l repo -s r -r -a "(__fish_zypper_print_enabled_repos)" -d 'Check for patches only in the specified repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_pchk' -l repo -s r -r -a "(__fish_zypper_print_repos -e)" -d 'Check for patches only in the specified repository'
 
 function __fish_zypper_is_subcommand_se
         __fish_zypper_cmd_in_array search se
@@ -428,7 +433,7 @@ complete -c zypper -n '__fish_zypper_is_subcommand_se' -l case-sensitive -s C   
 complete -c zypper -n '__fish_zypper_is_subcommand_se' -l installed-only -s i      -d 'Show only packages that are already installed'
 complete -c zypper -n '__fish_zypper_is_subcommand_se' -l uninstalled-only -s u    -d 'Show only packages that are not currently installed'
 complete -c zypper -n '__fish_zypper_is_subcommand_se' -l type -s t -r -a "$__fish_zypper_package_types" -d 'Search only for packages of the specified type'
-complete -c zypper -n '__fish_zypper_is_subcommand_se' -l repo -s r -r -a "(__fish_zypper_print_enabled_repos)"   -d 'Search only in the specified repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_se' -l repo -s r -r -a "(__fish_zypper_print_repos -e)"   -d 'Search only in the specified repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_se' -l details -s s             -d 'Show each available version in each repository on a separate line'
 complete -c zypper -n '__fish_zypper_is_subcommand_se' -l sort-by-name             -d 'Sort packages by name (default)'
 complete -c zypper -n '__fish_zypper_is_subcommand_se' -l sort-by-repo             -d 'Sort packages by repository'
@@ -448,7 +453,7 @@ function __fish_zypper_is_subcommand_if
         __fish_zypper_cmd_in_array info if
 end
 
-complete -c zypper -n '__fish_zypper_is_subcommand_if' -l repo -s r -r -a "(__fish_zypper_print_enabled_repos)"  -d 'Work only with the specified repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_if' -l repo -s r -r -a "(__fish_zypper_print_repos -e)"  -d 'Work only with the specified repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_if' -l type -s t -r -a "$__fish_zypper_package_types" -d 'Type of package'
 complete -c zypper -n '__fish_zypper_is_subcommand_if' -l provides   -d 'Show symbols the package provides'
 complete -c zypper -n '__fish_zypper_is_subcommand_if' -l requires   -d 'Show symbols the package requires'
@@ -461,13 +466,13 @@ function __fish_zypper_is_subcommand_pch
         __fish_zypper_cmd_in_array patches pch
 end
 
-complete -c zypper -n '__fish_zypper_is_subcommand_pch' -l repo -s r -r -a "(__fish_zypper_print_enabled_repos)" -d 'Just another means to specify repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_pch' -l repo -s r -r -a "(__fish_zypper_print_repos -e)" -d 'Just another means to specify repository'
 
 function __fish_zypper_is_subcommand_pa
         __fish_zypper_cmd_in_array packages pa
 end
 
-complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l repo -s r -r -a "(__fish_zypper_print_enabled_repos)" -d 'Just another means to specify repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l repo -s r -r -a "(__fish_zypper_print_repos -e)" -d 'Just another means to specify repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l installed-only -s i   -d 'Show only installed packages'
 complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l uninstalled-only -s u -d 'Show only packages which are not installed'
 complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l orphaned              -d 'Show packages which are orphaned (without repository)'
@@ -481,7 +486,7 @@ function __fish_zypper_is_subcommand_pt
         __fish_zypper_cmd_in_array patterns pt
 end
 
-complete -c zypper -n '__fish_zypper_is_subcommand_pt' -l repo -s r -r -a "(__fish_zypper_print_enabled_repos)" -d 'Just another means to specify repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_pt' -l repo -s r -r -a "(__fish_zypper_print_repos -e)" -d 'Just another means to specify repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_pt' -l installed-only -s i   -d 'Show only installed patterns'
 complete -c zypper -n '__fish_zypper_is_subcommand_pt' -l uninstalled-only -s u -d 'Show only patterns which are not installed'
 
@@ -489,7 +494,7 @@ function __fish_zypper_is_subcommand_pd
         __fish_zypper_cmd_in_array products pd
 end
 
-complete -c zypper -n '__fish_zypper_is_subcommand_pd' -l repo -s r -r -a "(__fish_zypper_print_enabled_repos)" -d 'Just another means to specify repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_pd' -l repo -s r -r -a "(__fish_zypper_print_repos -e)" -d 'Just another means to specify repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_pd' -l installed-only -s i   -d 'Show only installed products'
 complete -c zypper -n '__fish_zypper_is_subcommand_pd' -l uninstalled-only -s u -d 'Show only products which are not installed'
 
@@ -497,14 +502,14 @@ function __fish_zypper_is_subcommand_al
         __fish_zypper_cmd_in_array addlock al
 end
 
-complete -c zypper -n '__fish_zypper_is_subcommand_al' -l repo -s r -r -a "(__fish_zypper_print_enabled_repos)"   -d 'Restrict the lock to the specified repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_al' -l repo -s r -r -a "(__fish_zypper_print_repos -e)"   -d 'Restrict the lock to the specified repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_al' -l type -s t -r -a "$__fish_zypper_package_types" -d 'Type of package'
 
 function __fish_zypper_is_subcommand_rl
         __fish_zypper_cmd_in_array removelock rl
 end
 
-complete -c zypper -n '__fish_zypper_is_subcommand_rl' -l repo -s r -r -a "(__fish_zypper_print_enabled_repos)"   -d 'Remove only locks with specified repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_rl' -l repo -s r -r -a "(__fish_zypper_print_repos -e)"   -d 'Remove only locks with specified repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_rl' -l type -s t -r -a "$__fish_zypper_package_types" -d 'Type of package'
 
 function __fish_zypper_is_subcommand_cl
@@ -542,7 +547,7 @@ end
 complete -c zypper -n '__fish_zypper_is_subcommand_patch' -l auto-agree-with-licenses -s l -d "Automatically say 'yes' to third party license confirmation prompt"
 complete -c zypper -n '__fish_zypper_is_subcommand_patch' -l bugzilla -s b                 -d 'Install patch fixing the specified bugzilla issue'
 complete -c zypper -n '__fish_zypper_is_subcommand_patch' -l category -s g                 -d 'Install all patches in this category'
-complete -c zypper -n '__fish_zypper_is_subcommand_patch' -l repo -s r -r -a "(__fish_zypper_print_enabled_repos)" -d 'Load only the specified repository'
+complete -c zypper -n '__fish_zypper_is_subcommand_patch' -l repo -s r -r -a "(__fish_zypper_print_repos -e)" -d 'Load only the specified repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_patch' -l dry-run -s D                  -d 'Test the update, do not actually update'
 complete -c zypper -n '__fish_zypper_is_subcommand_patch' -l download-only -s d            -d 'Only download the packages, do not install'
 complete -c zypper -n '__fish_zypper_is_subcommand_patch' -l cve                           -d 'Install patch fixing the specified CVE issue'

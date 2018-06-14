@@ -18,7 +18,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - The new `math` builtin (see below) does not support logical expressions; `test` should be used instead (#4777).
 
 ## Notable fixes and improvements
-- A new feature flags mechanism is added for staging deprecations and breaking changes. (#4940)
+- A new feature flags mechanism is added for staging deprecations and breaking changes. Feature flags may be specified at launch with `fish --features ...` or by setting the universal `fish_features` variable. (#4940)
 - `wait` builtin is added for waiting on processes (#4498).
 - `read` has a new `--delimiter` option as a better alternative to the `IFS` variable (#4256).
 - `read` writes directly to stdout if called without arguments (#4407)

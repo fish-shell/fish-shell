@@ -12,6 +12,7 @@ complete -c ebuild -l skip-manifest	-d "Skip all manifest checks"
 
 ## Subcommands
 complete -c ebuild -n '__fish_seen_ebuild_arg' -xa 'help'        -d "Show help"
+complete -c ebuild -n '__fish_seen_ebuild_arg' -xa 'pretend'     -d "Run pkg_pretend()"
 complete -c ebuild -n '__fish_seen_ebuild_arg' -xa 'setup'       -d "Run setup and system checks"
 complete -c ebuild -n '__fish_seen_ebuild_arg' -xa 'clean'       -d "Clean build dir"
 complete -c ebuild -n '__fish_seen_ebuild_arg' -xa 'fetch'       -d "Fetches all files from SRC_URI"

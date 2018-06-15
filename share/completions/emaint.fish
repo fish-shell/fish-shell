@@ -18,11 +18,11 @@ complete -c emaint -n '__fish_use_subcommand' -xa 'sync'        -d 'Check repos.
 complete -c emaint -n '__fish_use_subcommand' -xa 'world'       -d 'Check and fix problems in the world file'
 
 ## Local opts
-# cleanlogs
-complete -c emaint -n '__fish_seen_subcommand_from cleanlogs' -s t -l time      -d "Delete logs older than NUM of days" \
+# logs
+complete -c emaint -n '__fish_seen_subcommand_from logs' -s t -l time      -d "Delete logs older than NUM of days" \
 	-xa "(seq 0 365)"
-complete -c emaint -n '__fish_seen_subcommand_from cleanlogs' -s p -l pretend   -d "Output logs that would be deleted"
-complete -c emaint -n '__fish_seen_subcommand_from cleanlogs' -s C -l clean     -d "Cleans out logs more than 7 days old"
+complete -c emaint -n '__fish_seen_subcommand_from logs' -s p -l pretend   -d "Output logs that would be deleted"
+complete -c emaint -n '__fish_seen_subcommand_from logs' -s C -l clean     -d "Cleans out logs more than 7 days old"
 # sync
 complete -c emaint -n '__fish_seen_subcommand_from sync' -s a -l auto          	-d "Sync auto-sync enabled repos only"
 complete -c emaint -n '__fish_seen_subcommand_from sync' -s A -l allrepos      	-d "Sync all repos that have a sync-url defined"

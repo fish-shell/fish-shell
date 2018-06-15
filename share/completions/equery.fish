@@ -46,7 +46,7 @@ complete -c equery -n '__fish_seen_subcommand_from k check f files s size' \
 
 ## Local opts
 # belongs
-complete -c equery -n '__fish_seen_subcommand_from b belongs' -s f -l full-regex        -d "Supplied query is a regex"
+complete -c equery -n '__fish_seen_subcommand_from b belongs' -s f -l full-regex        -d "Query is a regex"
 complete -c equery -n '__fish_seen_subcommand_from b belongs' -s e -l early-out         -d "Stop after first match"
 complete -c equery -n '__fish_seen_subcommand_from b belongs' -s n -l name-only         -d "Omit version"
 
@@ -59,7 +59,7 @@ complete -c equery -n '__fish_seen_subcommand_from c changes'      -l limit     
 #complete -c equery -n '__fish_seen_subcommand_from c changes'      -l to=VER            -d "Set which version to display to"
 
 # check
-complete -c equery -n '__fish_seen_subcommand_from k check' -s f -l full-regex        -d "Query is a regular expression"
+complete -c equery -n '__fish_seen_subcommand_from k check' -s f -l full-regex        -d "Query is a regex"
 complete -c equery -n '__fish_seen_subcommand_from k check' -s o -l only-failures     -d "Only display pkgs that do not pass"
 
 # depends
@@ -99,7 +99,7 @@ complete -c equery -n '__fish_seen_subcommand_from a has h hasuse' -s p -l porta
 # list
 complete -c equery -n '__fish_seen_subcommand_from l list' -s d -l duplicates        -d "List only installed duplicate pkgs"
 complete -c equery -n '__fish_seen_subcommand_from l list' -s b -l binpkgs-missing   -d "List only installed pkgs without a corresponding binary pkg"
-complete -c equery -n '__fish_seen_subcommand_from l list' -s f -l full-regex        -d "Query is a regular expression"
+complete -c equery -n '__fish_seen_subcommand_from l list' -s f -l full-regex        -d "Query is a regex"
 complete -c equery -n '__fish_seen_subcommand_from l list' -s m -l mask-reason       -d "Include reason for pkg mask"
 complete -c equery -n '__fish_seen_subcommand_from l list' -s I -l exclude-installed -d "Exclude installed pkgs from output"
 complete -c equery -n '__fish_seen_subcommand_from l list' -s o -l overlay-tree      -d "List pkgs in overlays"
@@ -111,7 +111,7 @@ complete -c equery -n '__fish_seen_subcommand_from l list; and     __fish_contai
 	-xa "(__fish_portage_print_available_pkgs)"
 
 # meta
-complete -c equery -n '__fish_seen_subcommand_from m meta' -s d -l description       -d "Show an extended pkg description"
+complete -c equery -n '__fish_seen_subcommand_from m meta' -s d -l description       -d "Show extended pkg description"
 complete -c equery -n '__fish_seen_subcommand_from m meta' -s H -l herd              -d "Show pkg's herd(s)"
 complete -c equery -n '__fish_seen_subcommand_from m meta' -s k -l keywords          -d "Show keywords for all matching pkg versions"
 complete -c equery -n '__fish_seen_subcommand_from m meta' -s l -l license           -d "Show licenses for the best maching version"
@@ -123,12 +123,12 @@ complete -c equery -n '__fish_seen_subcommand_from m meta' -s x -l xml          
 
 # size
 complete -c equery -n '__fish_seen_subcommand_from s size' -s b -l bytes             -d "Report size in bytes"
-complete -c equery -n '__fish_seen_subcommand_from s size' -s f -l full-regex        -d "Query is a regular expression"
+complete -c equery -n '__fish_seen_subcommand_from s size' -s f -l full-regex        -d "Query is a regex"
 
 # uses
 complete -c equery -n '__fish_seen_subcommand_from u uses' -s a -l all               -d "Include all pkg versions"
 complete -c equery -n '__fish_seen_subcommand_from u uses' -s i -l ignore-l10n       -d "Don't show l10n USE flags"
 
 # which
-complete -c equery -n '__fish_seen_subcommand_from w which' -s m -l include-masked    -d "Return highest version ebuild available"
-complete -c equery -n '__fish_seen_subcommand_from w which' -s e -l ebuild            -d "Print the ebuild"
+complete -c equery -n '__fish_seen_subcommand_from w which' -s m -l include-masked      -d "Return highest version ebuild available"
+complete -c equery -n '__fish_seen_subcommand_from w which' -s e -l ebuild              -d "Print the ebuild"

@@ -34,13 +34,12 @@ function __fish_zypper_print_repos
     argparse 'e/enabled' -- $argv
     set -q _flag_e; and set -l enabled -E
     set -l zypper_lr (zypper -t lr $enabled)
-    # Because spaces are allowed in repo aliases (even at beginnings and
-    # endings -- bad practice though, but allowed), it's impossible to parse
-    # the aliases from zypper's output correctly. So we fetch them from repo
-    # files.
-    set repos (cat /etc/zypp/repos.d/*.repo | string replace -rf '\[(.+)\]' '$1')
+    # Because spaces and special characters are allowed in repo aliases (bad
+    # practice though, but allowed), it's impossible to parse the aliases from
+    # zypper's output correctly. So we fetch them from the repo files.
+    set repos (cat /etc/zypp/repos.d/*.repo | string replace -rf '^\[(.+)\]$' '$1')
     # Then use the aliases to match their names from zypper's output.
-    string replace -rf '^[\d\s]+\| ('(string join \| $repos)') +\| ([^|]+)\s+.*$' '$1\t$2' -- $zypper_lr
+    string replace -rf '^[\d\s]+\| ('(string escape -n $repos | string join \|)') +\| (.+)\s+\|.*\|.*\|.*$' '$1\t$2' -- $zypper_lr
 end
 
 function __fish_zypper_print_packages
@@ -57,7 +56,7 @@ function __fish_zypper_print_packages
                 end
             case '-r' '--repo' '--from'
                 set -e args[1]
-                if contains -- $args[1] (__fish_zypper_print_repos -e)
+                if contains -- $args[1] (__fish_zypper_print_repos -e | string replace -r '^(.+)\t.*$' '$1')
                     set repo $repo $args[1]
                 end
         end

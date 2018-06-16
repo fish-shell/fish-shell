@@ -649,7 +649,7 @@ static bool expand_cmdsubst(const wcstring &input, std::vector<completion_t> *ou
             // sub_res, idx ), idx );
             // sub_res[idx] = 0; // ??
         }
-        sub_res = sub_res2;
+        sub_res = std::move(sub_res2);
     }
 
     // Recursively call ourselves to expand any remaining command substitutions. The result of this

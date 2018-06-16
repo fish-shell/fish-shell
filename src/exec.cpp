@@ -893,8 +893,7 @@ void exec_job(parser_t &parser, job_t *j) {
 
                 const char *buffer = block_output_io_buffer->out_buffer_ptr();
                 size_t count = block_output_io_buffer->out_buffer_size();
-
-                if (block_output_io_buffer->out_buffer_size() > 0) {
+                if (count > 0) {
                     // We don't have to drain threads here because our child process is simple.
                     const char *fork_reason = p->type == INTERNAL_BLOCK_NODE ? "internal block io" : "internal function io";
                     if (!do_fork(false, fork_reason, [&] {

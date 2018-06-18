@@ -195,7 +195,7 @@ struct alternative {};
         return detail::type_possible<Desired, Index, __VA_ARGS__>();                         \
     }                                                                                        \
     static const production_element_t *resolve(const parse_token_t &, const parse_token_t &, \
-                                               parse_node_tag_t *);
+                                               parse_node_tag_t *)
 
 // A job_list is a list of job_conjunctions, separated by semicolons or newlines
 DEF_ALT(job_list) {

@@ -3,7 +3,7 @@ set -l commands list-units list-sockets start stop reload restart try-restart re
 isolate kill is-active is-failed status show get-cgroup-attr set-cgroup-attr unset-cgroup-attr set-cgroup help \
 reset-failed list-unit-files enable disable is-enabled reenable preset mask unmask link load list-jobs cancel dump \
 list-dependencies snapshot delete daemon-reload daemon-reexec show-environment set-environment unset-environment \
-default rescue emergency halt poweroff reboot kexec exit suspend hibernate hybrid-sleep switch-root
+default rescue emergency halt poweroff reboot kexec exit suspend hibernate hybrid-sleep switch-root list-timers
 if test $systemd_version -gt 208
     set commands $commands cat
     if test $systemd_version -gt 217

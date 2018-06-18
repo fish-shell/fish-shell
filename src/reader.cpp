@@ -687,7 +687,7 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
     proc_push_interactive(0);
     if (exec_subshell(fish_title_command, lst, false /* ignore exit status */) != -1 &&
         !lst.empty()) {
-        fputws(L"\e]0;", stdout);
+        fputws(L"\x1B]0;", stdout);
         for (size_t i = 0; i < lst.size(); i++) {
             fputws(lst.at(i).c_str(), stdout);
         }
@@ -2687,7 +2687,7 @@ const wchar_t *reader_readline(int nchars) {
                 break;
             }
             // Escape was pressed.
-            case L'\e': {
+            case L'\x1B': {
                 if (data->search_mode != history_search_mode_t::none) {
                     data->search_mode = history_search_mode_t::none;
 

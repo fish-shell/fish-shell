@@ -265,10 +265,10 @@ void init_input() {
         input_mapping_add(L"\x5", L"bind");
         input_mapping_add(L"\x7f", L"backward-delete-char");
         // Arrows - can't have functions, so *-or-search isn't available.
-        input_mapping_add(L"\e[A", L"up-line");
-        input_mapping_add(L"\e[B", L"down-line");
-        input_mapping_add(L"\e[C", L"forward-char");
-        input_mapping_add(L"\e[D", L"backward-char");
+        input_mapping_add(L"\x1B[A", L"up-line");
+        input_mapping_add(L"\x1B[B", L"down-line");
+        input_mapping_add(L"\x1B[C", L"forward-char");
+        input_mapping_add(L"\x1B[D", L"backward-char");
     }
 
     input_initialized = true;
@@ -392,7 +392,7 @@ static bool input_mapping_is_match(const input_mapping_t &m) {
 
         // If we just read an escape, we need to add a timeout for the next char,
         // to distinguish between the actual escape key and an "alt"-modifier.
-        timed = (str[i] == L'\e');
+        timed = (str[i] == L'\x1B');
     }
 
     return true;

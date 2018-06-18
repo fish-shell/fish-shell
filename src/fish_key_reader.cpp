@@ -40,7 +40,7 @@ struct config_paths_t determine_config_directory_paths(const char *argv0);
 static const wchar_t *ctrl_symbolic_names[] = {
     NULL,   NULL,   NULL,   NULL, NULL, NULL,   NULL, L"\\a", L"\\b", L"\\t", L"\\n",
     L"\\v", L"\\f", L"\\r", NULL, NULL, NULL,   NULL, NULL,   NULL,   NULL,   NULL,
-    NULL,   NULL,   NULL,   NULL, NULL, L"\\e", NULL, NULL,   NULL,   NULL};
+    NULL,   NULL,   NULL,   NULL, NULL, L"\\x1B", NULL, NULL,   NULL,   NULL};
 static bool keep_running = true;
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.

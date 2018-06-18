@@ -981,7 +981,7 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                     need_escape = need_complex_escape = 1;
                     break;
                 }
-                case L'\e': {
+                case L'\x1B': {
                     out += L'\\';
                     out += L'e';
                     need_escape = need_complex_escape = 1;
@@ -1243,9 +1243,9 @@ size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_i
             }
             break;
         }
-        // \e means escape.
+        // \x1B means escape.
         case L'e': {
-            result_char_or_none = L'\e';
+            result_char_or_none = L'\x1B';
             break;
         }
         // \f means form feed.

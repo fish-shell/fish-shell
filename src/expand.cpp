@@ -132,7 +132,7 @@ static int is_quotable(const wchar_t *str) {
         case L'\t':
         case L'\r':
         case L'\b':
-        case L'\e': {
+        case L'\x1B': {
             return 0;
         }
         default: { return is_quotable(str + 1); }

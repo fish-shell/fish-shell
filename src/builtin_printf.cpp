@@ -26,7 +26,7 @@
 // \a = alert (bell)
 // \b = backspace
 // \c = produce no further output
-// \e = escape
+// \x1B = escape
 // \f = form feed
 // \n = new line
 // \r = carriage return
@@ -317,7 +317,7 @@ void builtin_printf_state_t::print_esc_char(wchar_t c) {
             break;
         }
         case L'e': {  // escape
-            this->append_output(L'\e');
+            this->append_output(L'\x1B');
             break;
         }
         case L'f': {  // form feed

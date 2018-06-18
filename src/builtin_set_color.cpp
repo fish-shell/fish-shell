@@ -62,9 +62,9 @@ static const struct woption long_options[] = {{L"background", required_argument,
                                               {NULL, 0, NULL, 0}};
 
 #if __APPLE__
-char sitm_esc[] = "\e[3m";
-char ritm_esc[] = "\e[23m";
-char dim_esc[] = "\e[2m";
+char sitm_esc[] = "\x1B[3m";
+char ritm_esc[] = "\x1B[23m";
+char dim_esc[] = "\x1B[2m";
 #endif
 
 /// set_color builtin.

@@ -26,7 +26,7 @@
 // \a = alert (bell)
 // \b = backspace
 // \c = produce no further output
-// \x1B = escape
+// \e = escape
 // \f = form feed
 // \n = new line
 // \r = carriage return

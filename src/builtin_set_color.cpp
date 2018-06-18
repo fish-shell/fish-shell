@@ -193,36 +193,36 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     output_set_writer(set_color_builtin_outputter);
 
     if (bold && enter_bold_mode) {
-        writembs(tparm(enter_bold_mode));
+        writembs_nofail(tparm(enter_bold_mode));
     }
 
     if (underline && enter_underline_mode) {
-        writembs(enter_underline_mode);
+        writembs_nofail(enter_underline_mode);
     }
 
     if (italics && enter_italics_mode) {
-        writembs(enter_italics_mode);
+        writembs_nofail(enter_italics_mode);
     }
 
     if (dim && enter_dim_mode) {
-        writembs(enter_dim_mode);
+        writembs_nofail(enter_dim_mode);
     }
 
     if (reverse && enter_reverse_mode) {
-        writembs(enter_reverse_mode);
+        writembs_nofail(enter_reverse_mode);
     } else if (reverse && enter_standout_mode) {
-        writembs(enter_standout_mode);
+        writembs_nofail(enter_standout_mode);
     }
 
     if (bgcolor != NULL && bg.is_normal()) {
         write_color(rgb_color_t::black(), false /* not is_fg */);
-        writembs(tparm(exit_attribute_mode));
+        writembs_nofail(tparm(exit_attribute_mode));
     }
 
     if (!fg.is_none()) {
         if (fg.is_normal() || fg.is_reset()) {
             write_color(rgb_color_t::black(), true /* is_fg */);
-            writembs(tparm(exit_attribute_mode));
+            writembs_nofail(tparm(exit_attribute_mode));
         } else {
             if (!write_color(fg, true /* is_fg */)) {
                 // We need to do *something* or the lack of any output messes up

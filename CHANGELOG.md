@@ -67,6 +67,7 @@ This section is for changes merged to the `major` branch that are not also merge
   - `configure` (autoconf only)
   - `j` (autojump #4344)
   - `jhipster` (#4472)
+  - `kldload`
   - `meson`
   - `ngrok` (#4642)
   - `optipng`

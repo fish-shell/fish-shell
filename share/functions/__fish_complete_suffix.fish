@@ -41,17 +41,33 @@ function __fish_complete_suffix -d "Complete using files"
     # echo "base: $base" > /dev/tty
     # echo "suffix: $suff" > /dev/tty
 
+    set -l all
+    set -l dirs
     # If $comp is "./ma" and the file is "main.py", we'll catch that case here,
     # but complete.cpp will not consider it a match, so we have to output the
     # correct form.
+
+    # Also do directory completion, since there might be files with the correct
+    # suffix in a subdirectory. `eval` is used since $suff may be passed in
+    # as {.foo,.bar} and we want to expand that.
+    eval "set all $base*$suff"
+    if not string match -qr '/$' -- $suff
+        eval "set dirs $base*/"
+
+        # The problem is that we now have each directory included twice in the output,
+        # once as `dir` and once as `dir/`. The runtime here is O(n) for n directories
+        # in the output, but hopefully since we have only one level (no nested results)
+        # it should be fast. The alternative is to shell out to `sort` and remove any
+        # duplicate results, but it would have to be a huge `n` to make up for the fork
+        # overhead.
+        for dir in $dirs
+            set all (string match -v (string match -r '(.*)/$' -- $dir)[2] -- $all)
+        end
+    end
+
+    set files $dirs $all
     if string match -qr '^\\./' -- $comp
-        # Also do directory completion, since there might be files
-        # with the correct suffix in a subdirectory
-        eval "set files ./$base*{$suff,/}"
-    else
-        # Also do directory completion, since there might be files
-        # with the correct suffix in a subdirectory
-        eval "set files $base*{$suff,/}"
+        set files ./$files
     end
 
     # Another problem is that expanded paths are not matched, either.
@@ -63,16 +79,11 @@ function __fish_complete_suffix -d "Complete using files"
         set files (string replace -- $expanded $comp $files)
     end
 
-    # It's very unfortunate to do all this work in-process and have to shell out here,
-    # but unfortunately at this time expressions like "foo{t,te}*" applied against
-    # "footer" will result in "footer" being reported twice. Not sure if this can be
-    # term a "bug" per-se.
-
-    if test $files[1]
+    if set -q files[1]
         if not string match -q -- "$desc" ""
            set -l desc "\t$desc"
         end
-        printf "%s$desc\n" $files | sort -u
+        printf "%s$desc\n" $files #| sort -u
     end
 
 end

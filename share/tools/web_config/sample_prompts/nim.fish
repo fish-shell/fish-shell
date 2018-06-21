@@ -78,9 +78,9 @@ function fish_prompt
     and _nim_prompt_wrapper $retc V (basename "$VIRTUAL_ENV")
 
     # git
-    test -d .git
-    or git rev-parse --git-dir >/dev/null ^/dev/null
-    and _nim_prompt_wrapper $retc G (__fish_git_prompt | string trim -c ' ()')
+    set prompt_git (__fish_git_prompt | string trim -c ' ()')
+    test -n "$prompt_git"
+    and _nim_prompt_wrapper $retc G $prompt_git
 
     # Battery status
     type -q acpi

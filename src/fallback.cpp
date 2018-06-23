@@ -320,12 +320,22 @@ static bool is_width_2_in_Uni9_but_1_in_Uni8(wchar_t c) {
     return where != std::end(pairs) && where->lo <= c;
 }
 
+// Return whether wc is a variation selector, which wcwidth() is likely to mishandle (#2652).
+static bool is_variation_selector(wchar_t wc) {
+    return (0xFE00 <= wc && wc <= 0xFE0F)       // variation selectors
+           || (0xE0100 <= wc && wc <= 0xE01EF)  // variation selector supplement
+           || (0x180B <= wc && wc <= 0x180D);   // Mongolian variation selectors
+}
+
 // Possible negative return values from wcwidth9()
 enum { width_non_printable = -1, width_ambiguous = -2, width_private_use = -3 };
 
 int fish_wcwidth(wchar_t wc) {
     // Check for certain characters whose width is terminal emulator dependent.
     if (is_width_2_in_Uni9_but_1_in_Uni8(wc)) return fish_get_emoji_width(wc);
+
+    // Check for variation selectors which system wcwidth mishandles (see #2652).
+    if (is_variation_selector(wc)) return -1;
 
     int w9_width = wcwidth9(wc);
     if (w9_width >= 0) return w9_width;

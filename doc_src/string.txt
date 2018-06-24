@@ -4,6 +4,7 @@
 \fish{synopsis}
 string escape [(-n | --no-quoted)] [--style=xxx] [STRING...]
 string join [(-q | --quiet)] SEP [STRING...]
+string join0 [(-q | --quiet)] [STRING...]
 string length [(-q | --quiet)] [STRING...]
 string lower [(-q | --quiet)] [STRING...]
 string match [(-a | --all)] [(-e | --entire)] [(-i | --ignore-case)] [(-r | --regex)]
@@ -50,6 +51,10 @@ The third is `--style=url` which ensures the string can be used as a URL by hex 
 \subsection string-join "join" subcommand
 
 `string join` joins its STRING arguments into a single string separated by SEP, which can be an empty string. Exit status: 0 if at least one join was performed, or 1 otherwise.
+
+\subsection string-join0 "join0" subcommand
+
+`string join` joins its STRING arguments into a single string separated by the zero byte (NUL), and adds a trailing NUL. This is most useful in conjunction with tools that accept NUL-delimited input, such as `sort -z`. Exit status: 0 if at least one join was performed, or 1 otherwise.
 
 \subsection string-length "length" subcommand
 
@@ -248,11 +253,18 @@ foo2
 <outp>0xBadC0de</outp>
 \endfish
 
-\subsection string-example-split0 Split0 Examples
+\subsection string-example-split0 NUL Delimited Examples
 
 \fish{cli-dark}
-# Count files in a directory, without being confused by newlines.
+>_ # Count files in a directory, without being confused by newlines.
 >_ count (find . -print0 | string split0)
+<outp>42</outp>
+
+>_ # Sort a list of elements which may contain newlines
+>_ set foo beta alpha\ngamma
+>_ set foo (string join0 $foo | sort -z | string split0)
+>_ string escape $foo[1]
+<outp>alpha\ngamma</outp>
 \endfish
 
 \subsection string-example-replace-literal Replace Literal Examples

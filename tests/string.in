@@ -348,6 +348,12 @@ count (echo -ne 'abc\x00def\x00ghi' | string split0)
 count (echo -ne 'abc\ndef\x00ghi\x00' | string split0)
 count (echo -ne 'abc\ndef\nghi' | string split0)
 
+logmsg string join0
+set tmp beta alpha\ngamma
+count (string join \n $tmp)
+count (string join0 $tmp)
+count (string join0 $tmp | string split0)
+
 logmsg string split0 in functions
 # This function outputs some newline-separated content, and some
 # explicitly separated content.

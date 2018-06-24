@@ -542,14 +542,15 @@ static int string_unescape(parser_t &parser, io_streams_t &streams, int argc, wc
     DIE("should never reach this statement");
 }
 
-static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+static int string_join_maybe0(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv,
+                              bool is_join0) {
     options_t opts;
     opts.quiet_valid = true;
     int optind;
-    int retval = parse_opts(&opts, &optind, 1, argc, argv, parser, streams);
+    int retval = parse_opts(&opts, &optind, is_join0 ? 0 : 1, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    const wchar_t *sep = opts.arg1;
+    const wcstring sep = is_join0 ? wcstring(1, L'\0') : wcstring(opts.arg1);
     int nargs = 0;
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *arg = aiter.nextstr()) {
@@ -562,10 +563,18 @@ static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_
         nargs++;
     }
     if (nargs > 0 && !opts.quiet) {
-        streams.out.push_back(L'\n');
+        streams.out.push_back(is_join0 ? L'\0' : L'\n');
     }
 
     return nargs > 1 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
+static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    return string_join_maybe0(parser, streams, argc, argv, false /* is_join0 */);
+}
+
+static int string_join0(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    return string_join_maybe0(parser, streams, argc, argv, true /* is_join0 */);
 }
 
 static int string_length(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
@@ -1271,13 +1280,12 @@ static const struct string_subcommand {
                    wchar_t **argv);                       //!OCLINT(unused param)
 }
 
-string_subcommands[] = {{L"escape", &string_escape},     {L"join", &string_join},
-                        {L"length", &string_length},     {L"match", &string_match},
-                        {L"replace", &string_replace},   {L"split", &string_split},
-                        {L"split0", &string_split0},     {L"sub", &string_sub},
-                        {L"trim", &string_trim},         {L"lower", &string_lower},
-                        {L"upper", &string_upper},       {L"repeat", &string_repeat},
-                        {L"unescape", &string_unescape}, {NULL, NULL}};
+string_subcommands[] = {
+    {L"escape", &string_escape}, {L"join", &string_join},         {L"join0", &string_join0},
+    {L"length", &string_length}, {L"match", &string_match},       {L"replace", &string_replace},
+    {L"split", &string_split},   {L"split0", &string_split0},     {L"sub", &string_sub},
+    {L"trim", &string_trim},     {L"lower", &string_lower},       {L"upper", &string_upper},
+    {L"repeat", &string_repeat}, {L"unescape", &string_unescape}, {NULL, NULL}};
 
 /// The string builtin, for manipulating strings.
 int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {

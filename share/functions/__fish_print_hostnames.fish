@@ -54,10 +54,9 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
         end
 
         function _recursive --no-scope-shadowing
-            set -l orig_dir $PWD
             set -l paths
             for config in $argv
-                if test -r "$config"
+                if test -r "$config" -a -f "$config"
                     set paths $paths (
                     # Keep only Include lines and remove Include syntax
                     string replace -rfi '^\s*Include\s+' '' <$config \
@@ -66,25 +65,24 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
                 end
             end
 
-            # Skip unusable paths.
-            test -d "$relative_path" -a -x "$relative_path"
-            or return
-
-            builtin cd $relative_path
             set -l new_paths
             for path in $paths
                 set -l expanded_path
-                eval "set expanded_path (printf \"%s\n\" $path)"
+                # Scope "relative" paths in accordance to ssh path resolution
+                if string match -qrv '^[~/]' $path
+                    set path $relative_path/$path
+                end
+                # Use `eval` to expand paths (eg ~/.ssh/../test/* to /home/<user>/test/file1 /home/<user>/test/file2),
+                # and `set` will prevent "No matches for wildcard" messages
+                eval set expanded_path $path
                 for path in $expanded_path
-                    # Resolve "relative" paths in accordance to ssh path resolution
-                    if string match -qv '/*' $path
-                        set path $relative_path/$path
-                    end
+                    # Skip unusable paths.
+                    test -r "$path" -a -f "$path"
+                    or continue
                     echo $path
                     set new_paths $new_paths $path
                 end
             end
-            builtin cd $orig_dir
 
             if test -n "$new_paths"
                 _recursive $new_paths

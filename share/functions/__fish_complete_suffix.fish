@@ -35,11 +35,9 @@ function __fish_complete_suffix -d "Complete using files"
 
     # Strip leading ./ as it confuses the detection of base and suffix
     # It is conditionally re-added below.
-    set -l base_temp (string replace -r '^\\./' '' -- $comp)
-
-    set base (string replace -r '\\.[^.]*$' '' -- $base_temp | string trim -c '\'"') # " make emacs syntax highlighting happy
-    # echo "base: $base" > /dev/tty
-    # echo "suffix: $suff" > /dev/tty
+    set base (string replace -r '^("\')?\\./' '' -- $comp | string trim -c '\'"') # " make emacs syntax highlighting happy
+    echo "base: $base" > /dev/tty
+    echo "suffix: $suff" > /dev/tty
 
     set -l all
     set -l dirs

@@ -16,6 +16,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - Successive commas in brace expansions are handled in less surprising manner (`{,,,}` expands to four empty strings rather than an empty string, a comma and an empty string again). (#3002, #4632).
 - `%` is no longer used for process and job expansion. `$fish_pid` and `$last_pid` have taken the place of `%self` and `%last` respectively. (#4230, #1202)
 - The new `math` builtin (see below) does not support logical expressions; `test` should be used instead (#4777).
+- Range expansion (`$foo[1..5]`) will now always go forward if only the end is negative, and in reverse if just the start is. This is to enable clamping to the last valid index without changing direction if the list has fewer elements than expected.
 
 ## Notable fixes and improvements
 - A new feature flags mechanism is added for staging deprecations and breaking changes. Feature flags may be specified at launch with `fish --features ...` or by setting the universal `fish_features` variable. (#4940)

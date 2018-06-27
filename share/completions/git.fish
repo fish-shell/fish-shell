@@ -131,8 +131,7 @@ function __fish_git_files
     # If we aren't looking for untracked/ignored files, let git status skip them.
     set -q untracked; and set -a status_opt -unormal
     or set -a status_opt -uno
-    set -q ignored; and set -a status_opt --ignored=matching
-    or set -a status_opt --ignored=no
+    set -q ignored; and set -a status_opt --ignored
 
     # We pick the v2 format if we can, because it shows relative filenames (if used without "-z").
     # We fall back on the v1 format by reading git's _version_, because trying v2 first is too slow.

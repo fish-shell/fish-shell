@@ -29,7 +29,7 @@ The following options change the way `commandline` updates the command line buff
 
 The following options change what part of the commandline is printed or updated:
 
-- `-b` or `--current-buffer` select the entire buffer (default)
+- `-b` or `--current-buffer` select the entire buffer, including any displayed autosuggestion (default)
 
 - `-j` or `--current-job` select the current job
 

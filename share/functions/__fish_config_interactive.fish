@@ -47,27 +47,26 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # bump this to 2_4_0 when rolling release if anything changes after 9/10/2016
     if not set -q __fish_init_2_39_8
         # Regular syntax highlighting colors
-        # XXX - not quite the same as default colors in web config. Sync these up.
         set -q fish_color_normal
         or set -U fish_color_normal normal
         set -q fish_color_command
-        or set -U fish_color_command --bold
+        or set -U fish_color_command 005fd7
         set -q fish_color_param
-        or set -U fish_color_param cyan
+        or set -U fish_color_param 00afff
         set -q fish_color_redirection
-        or set -U fish_color_redirection brblue
+        or set -U fish_color_redirection 00afff
         set -q fish_color_comment
-        or set -U fish_color_comment red
+        or set -U fish_color_comment 990000
         set -q fish_color_error
-        or set -U fish_color_error brred
+        or set -U fish_color_error ff0000
         set -q fish_color_escape
-        or set -U fish_color_escape bryellow --bold
+        or set -U fish_color_escape 00a6b2
         set -q fish_color_operator
-        or set -U fish_color_operator bryellow
+        or set -U fish_color_operator 00a6b2
         set -q fish_color_end
-        or set -U fish_color_end brmagenta
+        or set -U fish_color_end 009900
         set -q fish_color_quote
-        or set -U fish_color_quote yellow
+        or set -U fish_color_quote 999900
         set -q fish_color_autosuggestion
         or set -U fish_color_autosuggestion 555 brblack
         set -q fish_color_user

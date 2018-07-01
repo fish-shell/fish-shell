@@ -4,7 +4,7 @@
 .BEGIN:
 	# test for cmake, which is the only requirement to be able to run this Makefile
 	# cmake will perform the remaining dependency tests on its own
-	@which cmake >/dev/null 2>/dev/null || (echo "Please install cmake and then re-run the `make` command!" 1>&2 && false)
+	@which cmake >/dev/null 2>/dev/null || (echo 'Please install cmake and then re-run the `make` command!' 1>&2 && false)
 
 # Use ninja, if it is installed
 _GENERATOR!=which ninja 2>/dev/null >/dev/null && echo Ninja || echo "'Unix Makefiles'"

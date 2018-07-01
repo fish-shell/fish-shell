@@ -929,9 +929,9 @@ static void test_1_cancellation(const wchar_t *src) {
     });
     parser_t::principal_parser().eval(src, io_chain, TOP);
     out_buff->read();
-    if (out_buff->out_buffer_size() != 0) {
+    if (out_buff->buffer().size() != 0) {
         err(L"Expected 0 bytes in out_buff, but instead found %lu bytes\n",
-            out_buff->out_buffer_size());
+            out_buff->buffer().size());
     }
     iothread_drain_all();
 }
@@ -4107,10 +4107,10 @@ static void run_one_string_test(const wchar_t *const *argv, int expected_rc,
     if (rc != expected_rc) {
         err(L"Test failed on line %lu: [%ls]: expected return code %d but got %d", __LINE__,
             args.c_str(), expected_rc, rc);
-    } else if (streams.out.buffer() != expected_out) {
+    } else if (streams.out.contents() != expected_out) {
         err(L"Test failed on line %lu: [%ls]: expected [%ls] but got [%ls]", __LINE__, args.c_str(),
             escape_string(expected_out, ESCAPE_ALL).c_str(),
-            escape_string(streams.out.buffer(), ESCAPE_ALL).c_str());
+            escape_string(streams.out.contents(), ESCAPE_ALL).c_str());
     }
 }
 

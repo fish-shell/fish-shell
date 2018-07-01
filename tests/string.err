@@ -294,3 +294,12 @@ string repeat -l fakearg
 
 ####################
 # Check NUL
+
+####################
+# string split0
+
+####################
+# string join0
+
+####################
+# string split0 in functions

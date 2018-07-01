@@ -540,7 +540,7 @@ void exec_job(parser_t &parser, job_t *j) {
         if ((io->io_mode == IO_BUFFER)) {
             io_buffer_t *io_buffer = static_cast<io_buffer_t *>(io.get());
             assert(!io_buffer->is_input);
-            stdout_read_limit = io_buffer->get_buffer_limit();
+            stdout_read_limit = io_buffer->buffer().limit();
         }
     }
 
@@ -891,8 +891,10 @@ void exec_job(parser_t &parser, job_t *j) {
 
                 block_output_io_buffer->read();
 
-                const char *buffer = block_output_io_buffer->out_buffer_ptr();
-                size_t count = block_output_io_buffer->out_buffer_size();
+                const std::string buffer_contents =
+                    block_output_io_buffer->buffer().newline_serialized();
+                const char *buffer = buffer_contents.data();
+                size_t count = buffer_contents.size();
                 if (count > 0) {
                     // We don't have to drain threads here because our child process is simple.
                     const char *fork_reason = p->type == INTERNAL_BLOCK_NODE ? "internal block io" : "internal function io";
@@ -925,8 +927,8 @@ void exec_job(parser_t &parser, job_t *j) {
                     process_net_io_chain.get_io_for_fd(STDERR_FILENO);
 
                 assert(builtin_io_streams.get() != NULL);
-                const wcstring &stdout_buffer = builtin_io_streams->out.buffer();
-                const wcstring &stderr_buffer = builtin_io_streams->err.buffer();
+                const output_stream_t &stdout_stream = builtin_io_streams->out;
+                const output_stream_t &stderr_stream = builtin_io_streams->err;
 
                 // If we are outputting to a file, we have to actually do it, even if we have no
                 // output, so that we can truncate the file. Does not apply to /dev/null.
@@ -936,9 +938,9 @@ void exec_job(parser_t &parser, job_t *j) {
                     // We are handling reads directly in the main loop. Note that we may still end
                     // up forking.
                     const bool stdout_is_to_buffer = stdout_io && stdout_io->io_mode == IO_BUFFER;
-                    const bool no_stdout_output = stdout_buffer.empty();
-                    const bool no_stderr_output = stderr_buffer.empty();
-                    const bool stdout_discarded = builtin_io_streams->out.output_discarded();
+                    const bool no_stdout_output = stdout_stream.empty();
+                    const bool no_stderr_output = stderr_stream.empty();
+                    const bool stdout_discarded = stdout_stream.buffer().discarded();
 
                     if (!stdout_discarded && no_stdout_output && no_stderr_output) {
                         // The builtin produced no output and is not inside of a pipeline. No
@@ -950,23 +952,24 @@ void exec_job(parser_t &parser, job_t *j) {
                         // The builtin produced no stderr, and its stdout is going to an
                         // internal buffer. There is no need to fork. This helps out the
                         // performance quite a bit in complex completion code.
+                        // TODO: we're sloppy about handling explicitly separated output.
+                        // Theoretically we could have explicitly separated output on stdout and
+                        // also stderr output; in that case we ought to thread the exp-sep output
+                        // through to the io buffer. We're getting away with this because the only
+                        // thing that can output exp-sep output is `string split0` which doesn't
+                        // also produce stderr.
                         debug(3, L"Skipping fork: buffered output for internal builtin '%ls'",
                               p->argv0());
 
                         io_buffer_t *io_buffer = static_cast<io_buffer_t *>(stdout_io.get());
-                        if (stdout_discarded) {
-                            io_buffer->set_discard();
-                        } else {
-                            const std::string res = wcs2string(builtin_io_streams->out.buffer());
-                            io_buffer->out_buffer_append(res.data(), res.size());
-                        }
+                        io_buffer->append_from_stream(stdout_stream);
                         fork_was_skipped = true;
                     } else if (stdout_io.get() == NULL && stderr_io.get() == NULL) {
                         // We are writing to normal stdout and stderr. Just do it - no need to fork.
                         debug(3, L"Skipping fork: ordinary output for internal builtin '%ls'",
                               p->argv0());
-                        const std::string outbuff = wcs2string(stdout_buffer);
-                        const std::string errbuff = wcs2string(stderr_buffer);
+                        const std::string outbuff = wcs2string(stdout_stream.contents());
+                        const std::string errbuff = wcs2string(stderr_stream.contents());
                         bool builtin_io_done = do_builtin_io(outbuff.data(), outbuff.size(),
                                                              errbuff.data(), errbuff.size());
                         if (!builtin_io_done && errno != EPIPE) {
@@ -995,11 +998,11 @@ void exec_job(parser_t &parser, job_t *j) {
                     // in the child.
                     //
                     // These strings may contain embedded nulls, so don't treat them as C strings.
-                    const std::string outbuff_str = wcs2string(stdout_buffer);
+                    const std::string outbuff_str = wcs2string(stdout_stream.contents());
                     const char *outbuff = outbuff_str.data();
                     size_t outbuff_len = outbuff_str.size();
 
-                    const std::string errbuff_str = wcs2string(stderr_buffer);
+                    const std::string errbuff_str = wcs2string(stderr_stream.contents());
                     const char *errbuff = errbuff_str.data();
                     size_t errbuff_len = errbuff_str.size();
 
@@ -1191,7 +1194,7 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, boo
         io_buffer->read();
     }
 
-    if (io_buffer->output_discarded()) subcommand_status = STATUS_READ_TOO_MUCH;
+    if (io_buffer->buffer().discarded()) subcommand_status = STATUS_READ_TOO_MUCH;
 
     // If the caller asked us to preserve the exit status, restore the old status. Otherwise set the
     // status of the subcommand.
@@ -1201,33 +1204,41 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, boo
     if (lst == NULL || io_buffer.get() == NULL) {
         return subcommand_status;
     }
+    // Walk over all the elements.
+    for (const auto &elem : io_buffer->buffer().elements()) {
+        if (elem.is_explicitly_separated()) {
+            // Just append this one.
+            lst->push_back(str2wcstring(elem.contents));
+            continue;
+        }
 
-    const char *begin = io_buffer->out_buffer_ptr();
-    const char *end = begin + io_buffer->out_buffer_size();
-    if (split_output) {
-        const char *cursor = begin;
-        while (cursor < end) {
-            // Look for the next separator.
-            const char *stop = (const char *)memchr(cursor, '\n', end - cursor);
-            const bool hit_separator = (stop != NULL);
-            if (!hit_separator) {
-                // If it's not found, just use the end.
-                stop = end;
+        // Not explicitly separated. We have to split it explicitly.
+        assert(!elem.is_explicitly_separated() && "should not be explicitly separated");
+        const char *begin = elem.contents.data();
+        const char *end = begin + elem.contents.size();
+        if (split_output) {
+            const char *cursor = begin;
+            while (cursor < end) {
+                // Look for the next separator.
+                const char *stop = (const char *)memchr(cursor, '\n', end - cursor);
+                const bool hit_separator = (stop != NULL);
+                if (!hit_separator) {
+                    // If it's not found, just use the end.
+                    stop = end;
+                }
+                // Stop now points at the first character we do not want to copy.
+                lst->push_back(str2wcstring(cursor, stop - cursor));
+
+                // If we hit a separator, skip over it; otherwise we're at the end.
+                cursor = stop + (hit_separator ? 1 : 0);
             }
-            // Stop now points at the first character we do not want to copy.
-            const wcstring wc = str2wcstring(cursor, stop - cursor);
-            lst->push_back(wc);
-
-            // If we hit a separator, skip over it; otherwise we're at the end.
-            cursor = stop + (hit_separator ? 1 : 0);
+        } else {
+            // We're not splitting output, but we still want to trim off a trailing newline.
+            if (end != begin && end[-1] == '\n') {
+                --end;
+            }
+            lst->push_back(str2wcstring(begin, end - begin));
         }
-    } else {
-        // We're not splitting output, but we still want to trim off a trailing newline.
-        if (end != begin && end[-1] == '\n') {
-            --end;
-        }
-        const wcstring wc = str2wcstring(begin, end - begin);
-        lst->push_back(wc);
     }
 
     return subcommand_status;

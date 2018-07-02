@@ -1,5 +1,12 @@
-
+# Use --installed to limit to installed packages only
 function __fish_print_packages
+    argparse --name=__fish_print_packages 'i/installed' -- $argv
+    or return;
+
+    set -l only_installed 1
+    if not set -q _flag_installed
+        set -e only_installed
+    end
 
     # apt-cache is much, much faster than rpm, and can do this in real
     # time. We use it if available.
@@ -13,10 +20,15 @@ function __fish_print_packages
     set -l package (_ "Package")
 
     if type -q -f apt-cache
-        # Do not generate the cache as apparently sometimes this is slow.
-        # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=547550
-        apt-cache --no-generate pkgnames (commandline -ct) 2>/dev/null | sed -e 's/$/'\t$package'/'
-        return
+        if set -q only_installed
+            dpkg --get-selections | string replace -r '(\S+).*' "\$1\t$package"
+            return
+        else
+            # Do not generate the cache as apparently sometimes this is slow.
+            # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=547550
+            apt-cache --no-generate pkgnames (commandline -ct) 2>/dev/null | sed -e 's/$/'\t$package'/'
+            return
+        end
     end
 
     # Pkg is fast on FreeBSD and provides versioning info which we want for

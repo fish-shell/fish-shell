@@ -80,6 +80,7 @@ This section is for changes merged to the `major` branch that are not also merge
   - `unzip`
   - `xsv`
 - Improved completions for
+  - `apt`
   - `brew`
   - `diskutil`
   - `git` (#4395, #4396, #4592)

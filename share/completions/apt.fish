@@ -1,7 +1,8 @@
 # Completions for the `apt` command
 
 set -l all_subcmds update upgrade full-upgrade search list install show remove edit-sources purge changelog autoremove depends rdepends
-set -l pkg_subcmds install remove upgrade full-upgrade show search purge changelog policy depends rdepends
+set -l pkg_subcmds install upgrade full-upgrade show search purge changelog policy depends rdepends
+set -l installed_pkg_subcmds remove
 
 function __fish_apt_subcommand
     set subcommand $argv[1]
@@ -15,7 +16,11 @@ function __fish_apt_option
     complete -f -c apt -n "__fish_seen_subcommand_from $subcommand" $argv
 end
 
-complete -c apt -n "__fish_seen_subcommand_from $pkg_subcmds" -a '(__fish_print_packages | head -n 100)' -d 'Package'
+#using -r and not -e as string match -e is broken, this will cause problems
+#if the commandline contains special characters, but most package names do
+#not contain special characters. Can switch to -e after #4971 is fixed.
+complete -c apt -n "__fish_seen_subcommand_from $pkg_subcmds" -a '(__fish_print_packages | string match -r -- (commandline -ct) | head -n 100)' -d 'Package'
+complete -c apt -n "__fish_seen_subcommand_from $installed_pkg_subcmds" -a '(__fish_print_packages --installed | string match -r -- ".*"(commandline -ct)".*" | head -n 100)' -d 'Package'
 
 # Support flags
 complete -x -f -c apt -s h -l help     -d 'Display help'

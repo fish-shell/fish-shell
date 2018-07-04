@@ -143,7 +143,7 @@ static void write_part(const wchar_t *begin, const wchar_t *end, int cut_at_curs
         tokenizer_t tok(buff.c_str(), TOK_ACCEPT_UNFINISHED);
         tok_t token;
         while (tok.next(&token)) {
-            if ((cut_at_cursor) && (token.offset + token.length >= pos)) break;
+            if ((cut_at_cursor) && (token.offset + token.length > pos)) break;
 
             if (token.type == TOK_STRING) {
                 wcstring tmp = tok.text_of(token);

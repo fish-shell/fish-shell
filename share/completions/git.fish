@@ -111,6 +111,8 @@ function __fish_git_files
     contains -- copied $argv; and set -l copied
     and set -l copied_desc (_ "Copied file")
 
+    set -l dir_desc (_ "Directory")
+
     # A literal "?" for use in `case`.
     set -l q '\\?'
     if status test-feature qmark-noglob
@@ -231,6 +233,17 @@ function __fish_git_files
                 set -l fromroot (builtin realpath -- $file 2>/dev/null)
                 and set fromroot (string replace -- "$root/" ":/" "$fromroot")
                 and printf '%s\t%s\n' "$fromroot" $desc
+
+                # And the containing directory.
+                # TODO: We may want to offer the parent, but only if another child of that also has a change.
+                # E.g:
+                # - a/b/c is added
+                # - a/d/e is modified
+                # - a/ should be offered, but only a/b/ and a/d/ are.
+                #
+                # Always offering all parents is overkill however, which is why we don't currently do it.
+                set -l dir (string replace -rf '/[^/]+$' '/' -- $file)
+                and printf '%s\t%s\n' $dir "$dir_desc"
             end
         end
     else
@@ -342,6 +355,9 @@ function __fish_git_files
                 end
                 set -a file (string join / -- $previous)
                 printf '%s\n' $file\t$desc
+
+                set -l dir (string replace -rf '/[^/]+$' '/' -- $file)
+                and printf '%s\t%s\n' $dir "$dir_desc"
             end
         end
     end

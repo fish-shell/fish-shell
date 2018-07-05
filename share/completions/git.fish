@@ -1220,7 +1220,7 @@ complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_heads)' 
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_tags)' -d 'Tag'
 complete -f -c git -n '__fish_git_using_command rebase' -l continue -d 'Restart the rebasing process'
 complete -f -c git -n '__fish_git_using_command rebase' -l abort -d 'Abort the rebase operation'
-complete -f -c git -n '__fish_git_using_command rebase' -l keep-empty -d "Keep the commits that don't cahnge anything"
+complete -f -c git -n '__fish_git_using_command rebase' -l keep-empty -d "Keep the commits that don't change anything"
 complete -f -c git -n '__fish_git_using_command rebase' -l skip -d 'Restart the rebasing process by skipping the current patch'
 complete -f -c git -n '__fish_git_using_command rebase' -s m -l merge -d 'Use merging strategies to rebase'
 complete -f -c git -n '__fish_git_using_command rebase' -s q -l quiet -d 'Be quiet'

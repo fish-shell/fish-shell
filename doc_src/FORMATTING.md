@@ -8,7 +8,7 @@ While the documentation is pretty robust to variations in the documentation sour
 
 ## Line breaks and wrapping
 
-Contrary to the rest of the fish source code, the documentation greatly benefits from the use of long lines and soft wrapping. It allows paragraphs to be treated as complete blocks by Doxygen, means that the semantic filter can see complete lines when deciding on how to apply syntax highlighting, and means that man pages will consistently wrap to the width of the users console in advanced pagers, such as 'most'.
+Contrary to the rest of the fish source code, the documentation greatly benefits from the use of long lines and soft wrapping. Doxygen is able to treat paragraphs as complete blocks. The semantic filter can see complete lines when deciding on how to apply syntax highlighting. In advanced pagers, such as 'most', man pages will consistenly wrap to the width of the user's console.
 
 ## Doxygen special commands and aliases
 

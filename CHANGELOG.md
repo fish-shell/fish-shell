@@ -163,6 +163,7 @@ Xcode builds and macOS packages could not be produced with 2.7b1, but this is fi
   - `apt`
   - `cd` (#4061)
   - `composer` (#4295)
+  - `eopkg`
   - `flatpak` (#4456)
   - `git` (#4117, #4147, #4329, #4368)
   - `gphoto2`

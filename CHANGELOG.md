@@ -67,6 +67,7 @@ This section is for changes merged to the `major` branch that are not also merge
   - `bd` (#4472)
   - `bower`<sup>&#x2217;</sup>
   - `configure` (autoconf only)
+  - `docker`
   - `j` (autojump #4344)
   - `jhipster` (#4472)
   - `kldload`

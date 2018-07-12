@@ -1015,6 +1015,7 @@ bool history_t::load_old_if_needed() {
     if (loaded_old) return true;
     loaded_old = true;
 
+    time_profiler_t profiler("load_old");  //!OCLINT(side-effect)
     bool ok = false;
     if (map_file(name, &mmap_start, &mmap_length, &mmap_file_id)) {
         // Here we've mapped the file.

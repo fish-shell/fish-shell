@@ -12,6 +12,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#if defined(__linux__)
+#include <sys/statfs.h>
+#endif
+#include <sys/mount.h>
+#include <sys/statvfs.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <wchar.h>
@@ -276,6 +281,32 @@ int make_fd_blocking(int fd) {
         err = fcntl(fd, F_SETFL, flags & ~O_NONBLOCK);
     }
     return err == -1 ? errno : 0;
+}
+
+int fd_check_is_remote(int fd) {
+#if defined(__linux__)
+    struct statfs buf{0};
+    if (fstatfs(fd, &buf) < 0) {
+        return -1;
+    }
+    // Linux has constants for these like NFS_SUPER_MAGIC, SMB_SUPER_MAGIC, CIFS_MAGIC_NUMBER but
+    // these are in varying headers. Simply hard code them.
+    switch (buf.f_type) {
+        case 0x6969:      // NFS_SUPER_MAGIC
+        case 0x517B:      // SMB_SUPER_MAGIC
+        case 0xFF534D42:  // CIFS_MAGIC_NUMBER
+            return 1;
+        default:
+            // Other FSes are assumed local.
+            return 0;
+    }
+#elif defined(MNT_LOCAL)
+    struct statfs buf {};
+    if (fstatfs(fd, &buf) < 0) return -1;
+    return (buf.f_flags & MNT_LOCAL) ? 0 : 1;
+#else
+    return -1;
+#endif
 }
 
 static inline void safe_append(char *buffer, const char *s, size_t buffsize) {

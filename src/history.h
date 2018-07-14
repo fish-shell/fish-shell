@@ -104,16 +104,18 @@ class history_item_t {
 
 typedef std::deque<history_item_t> history_item_list_t;
 
-// The type of file that we mmap'd.
-enum history_file_type_t { history_type_unknown, history_type_fish_2_0, history_type_fish_1_x };
+class history_file_contents_t;
 
 class history_t {
     friend class history_tests_t;
 
    private:
-    // No copying.
-    history_t(const history_t &);
-    history_t &operator=(const history_t &);
+    // No copying or moving.
+    history_t() = delete;
+    history_t(const history_t &) = delete;
+    history_t(history_t &&) = delete;
+    history_t &operator=(const history_t &) = delete;
+    history_t &operator=(history_t &&) = delete;
 
     // Privately add an item. If pending, the item will not be returned by history searches until a
     // call to resolve_pending.
@@ -146,17 +148,11 @@ class history_t {
     // Deleted item contents.
     std::unordered_set<wcstring> deleted_items;
 
-    // The mmaped region for the history file.
-    const char *mmap_start{nullptr};
+    // The buffer containing the history file contents.
+    std::unique_ptr<history_file_contents_t> file_contents;
 
-    // The size of the mmap'd region.
-    size_t mmap_length{0};
-
-    // The type of file we mmap'd.
-    history_file_type_t mmap_type{history_file_type_t(-1)};
-
-    // The file ID of the file we mmap'd.
-    file_id_t mmap_file_id{kInvalidFileID};
+    // The file ID of the history file.
+    file_id_t history_file_id;
 
     // The boundary timestamp distinguishes old items from new items. Items whose timestamps are <=
     // the boundary are considered "old". Items whose timestemps are > the boundary are new, and are
@@ -177,11 +173,11 @@ class history_t {
     // This causes things like locks to fail.
     bool chaos_mode{false};
 
-    // Figure out the offsets of our mmap data.
-    void populate_from_mmap();
+    // Figure out the offsets of our file contents.
+    void populate_from_file_contents();
 
     // Loads old items if necessary.
-    bool load_old_if_needed();
+    void load_old_if_needed();
 
     // Reads the history file if necessary.
     bool mmap_if_needed();
@@ -205,19 +201,12 @@ class history_t {
     // Saves history unless doing so is disabled.
     void save_internal_unless_disabled();
 
-    // Do a private, read-only map of the entirety of a history file with the given name. Returns
-    // true if successful. Returns the mapped memory region by reference.
-    bool map_file(const wcstring &name, const char **out_map_start, size_t *out_map_len,
-                  file_id_t *file_id) const;
-
-    // Like map_file but takes a file descriptor
-    bool map_fd(int fd, const char **out_map_start, size_t *out_map_len) const;
-
     // Implementation of item_at_index and items_at_indexes
     history_item_t item_at_index_assume_locked(size_t idx);
 
    public:
-    explicit history_t(wcstring );  // constructor
+    explicit history_t(wcstring name);
+    ~history_t();
 
     // Returns history with the given name, creating it if necessary.
     static history_t &history_with_name(const wcstring &name);

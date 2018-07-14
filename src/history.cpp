@@ -2,6 +2,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <ctype.h>
+#include <cstdint>
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -155,6 +156,22 @@ static bool history_file_lock(int fd, int lock_type) {
     return retval != -1;
 }
 
+// History file types.
+enum history_file_type_t { history_type_fish_2_0, history_type_fish_1_x };
+
+/// Try to infer the history file type based on inspecting the data.
+static maybe_t<history_file_type_t> infer_file_type(const void *data, size_t len) {
+    maybe_t<history_file_type_t> result{};
+    if (len > 0) {  // old fish started with a #
+        if (static_cast<const char *>(data)[0] == '#') {
+            result = history_type_fish_1_x;
+        } else {  // assume new fish
+            result = history_type_fish_2_0;
+        }
+    }
+    return result;
+}
+
 /// Our LRU cache is used for restricting the amount of history we have, and limiting how long we
 /// order it.
 class history_lru_item_t {
@@ -203,6 +220,68 @@ class history_collection_t {
 };
 
 }  // anonymous namespace
+
+// history_file_contents_t holds the read-only contents of a file.
+class history_file_contents_t {
+    // The memory mapped pointer.
+    void *start_;
+
+    // The mapped length.
+    size_t length_;
+
+    // The type of the mapped file.
+    history_file_type_t type_;
+
+    // Private constructor; use the static create() function.
+    history_file_contents_t(void *mmap_start, size_t mmap_length, history_file_type_t type)
+        : start_(mmap_start), length_(mmap_length), type_(type) {
+        assert(mmap_start != MAP_FAILED && "Invalid mmap address");
+    }
+
+    history_file_contents_t(history_file_contents_t &&) = delete;
+    void operator=(history_file_contents_t &&) = delete;
+
+   public:
+    // Access the address at a given offset.
+    const char *address_at(size_t offset) const {
+        assert(offset <= length_ && "Invalid offset");
+        auto base = static_cast<const char *>(start_);
+        return base + offset;
+    }
+
+    // Return a pointer to the beginning.
+    const char *begin() const { return address_at(0); }
+
+    // Return a pointer to one-past-the-end.
+    const char *end() const { return address_at(length_); }
+
+    // Get the size of the contents.
+    size_t length() const { return length_; }
+
+    // Get the file type.
+    history_file_type_t type() const { return type_; }
+
+    ~history_file_contents_t() { munmap(start_, length_); }
+
+    // Construct a history file contents from a file descriptor. The file descriptor is not closed.
+    static std::unique_ptr<history_file_contents_t> create(int fd) {
+        // Check that the file is seekable, and its size.
+        off_t len = lseek(fd, 0, SEEK_END);
+        if (len <= 0 || len >= SIZE_MAX) return nullptr;
+        if (lseek(fd, 0, SEEK_SET) != 0) return nullptr;
+
+        // Map the file.
+        void *mmap_start = mmap(0, size_t(len), PROT_READ, MAP_PRIVATE, fd, 0);
+        if (mmap_start == MAP_FAILED) return nullptr;
+
+        // Check the file type.
+        auto mtype = infer_file_type(mmap_start, len);
+        if (!mtype) return nullptr;
+
+        return std::unique_ptr<history_file_contents_t>(
+            new history_file_contents_t(mmap_start, len, *mtype));
+    }
+};
 
 static history_collection_t histories;
 
@@ -272,19 +351,6 @@ static wcstring history_unescape_newlines_fish_1_x(const wcstring &in_str) {
         }
     }
     return out;
-}
-
-/// Try to infer the history file type based on inspecting the data.
-static history_file_type_t infer_file_type(const char *data, size_t len) {
-    history_file_type_t result = history_type_unknown;
-    if (len > 0) {  // old fish started with a #
-        if (data[0] == '#') {
-            result = history_type_fish_1_x;
-        } else {  // assume new fish
-            result = history_type_fish_2_0;
-        }
-    }
-    return result;
 }
 
 /// Decode an item via the fish 1.x format. Adapted from fish 1.x's item_get().
@@ -416,9 +482,15 @@ done:
     return result;
 }
 
-static history_item_t decode_item(const char *base, size_t len, history_file_type_t type) {
-    if (type == history_type_fish_2_0) return decode_item_fish_2_0(base, len);
-    if (type == history_type_fish_1_x) return decode_item_fish_1_x(base, len);
+static history_item_t decode_item(const history_file_contents_t &contents, size_t offset) {
+    const char *base = contents.address_at(offset);
+    size_t len = contents.length() - offset;
+    switch (contents.type()) {
+        case history_type_fish_2_0:
+            return decode_item_fish_2_0(base, len);
+        case history_type_fish_1_x:
+            return decode_item_fish_1_x(base, len);
+    }
     return history_item_t(L"");
 }
 
@@ -564,19 +636,21 @@ static const char *next_line(const char *start, size_t length) {
 }
 
 /// Support for iteratively locating the offsets of history items.
-/// Pass the address and length of a mapped region.
-/// Pass a pointer to a cursor size_t, initially 0.
+/// Pass the file contents and a pointer to a cursor size_t, initially 0.
 /// If custoff_timestamp is nonzero, skip items created at or after that timestamp.
 /// Returns (size_t)-1 when done.
-static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length,
+static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &contents,
                                            size_t *inout_cursor, time_t cutoff_timestamp) {
     size_t cursor = *inout_cursor;
-    size_t result = (size_t)-1;
-    while (cursor < mmap_length) {
-        const char *line_start = begin + cursor;
+    size_t result = size_t(-1);
+    const size_t length = contents.length();
+    const char *const begin = contents.begin();
+    const char *const end = contents.end();
+    while (cursor < length) {
+        const char *line_start = contents.address_at(cursor);
 
         // Advance the cursor to the next line.
-        const char *a_newline = (const char *)memchr(line_start, '\n', mmap_length - cursor);
+        const char *a_newline = (const char *)memchr(line_start, '\n', length - cursor);
         if (a_newline == NULL) break;
 
         // Advance the cursor past this line. +1 is for the newline.
@@ -621,8 +695,6 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
             // We try hard to ensure that our items are sorted by their timestamps, so in theory we
             // could just break, but I don't think that works well if (for example) the clock
             // changes. So we'll read all subsequent items.
-            const char *const end = begin + mmap_length;
-
             // Walk over lines that we think are interior. These lines are not null terminated, but
             // are guaranteed to contain a newline.
             bool has_timestamp = false;
@@ -693,16 +765,16 @@ static size_t offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length
 }
 
 /// Returns the offset of the next item based on the given history type, or -1.
-static size_t offset_of_next_item(const char *begin, size_t mmap_length,
-                                  history_file_type_t mmap_type, size_t *inout_cursor,
+static size_t offset_of_next_item(const history_file_contents_t &contents, size_t *inout_cursor,
                                   time_t cutoff_timestamp) {
-    size_t result = (size_t)-1;
-    if (mmap_type == history_type_fish_2_0) {
-        result = offset_of_next_item_fish_2_0(begin, mmap_length, inout_cursor, cutoff_timestamp);
-    } else if (mmap_type == history_type_fish_1_x) {
-        result = offset_of_next_item_fish_1_x(begin, mmap_length, inout_cursor);
+    switch (contents.type()) {
+        case history_type_fish_2_0:
+            return offset_of_next_item_fish_2_0(contents, inout_cursor, cutoff_timestamp);
+            ;
+        case history_type_fish_1_x:
+            return offset_of_next_item_fish_1_x(contents.begin(), contents.length(), inout_cursor);
     }
-    return result;
+    return size_t(-1);
 }
 
 history_t &history_collection_t::get_creating(const wcstring &name) {
@@ -721,7 +793,10 @@ history_t &history_t::history_with_name(const wcstring &name) {
     return histories.get_creating(name);
 }
 
-history_t::history_t(wcstring pname) : name(std::move(pname)), boundary_timestamp(time(NULL)) {}
+history_t::history_t(wcstring pname)
+    : name(std::move(pname)), boundary_timestamp(time(NULL)), history_file_id(kInvalidFileID) {}
+
+history_t::~history_t() = default;
 
 void history_t::add(const history_item_t &item, bool pending) {
     scoped_lock locker(lock);
@@ -852,9 +927,7 @@ void history_t::get_history(wcstring_list_t &result) {
     load_old_if_needed();
     for (auto iter = old_item_offsets.crbegin(); iter != old_item_offsets.crend(); ++iter) {
         size_t offset = *iter;
-        const history_item_t item =
-            decode_item(mmap_start + offset, mmap_length - offset, mmap_type);
-
+        const history_item_t item = decode_item(*file_contents, offset);
         if (seen.insert(item.str()).second) result.push_back(item.str());
     }
 }
@@ -894,7 +967,7 @@ history_item_t history_t::item_at_index_assume_locked(size_t idx) {
     if (idx < old_item_count) {
         // idx == 0 corresponds to last item in old_item_offsets.
         size_t offset = old_item_offsets.at(old_item_count - idx - 1);
-        return decode_item(mmap_start + offset, mmap_length - offset, mmap_type);
+        return decode_item(*file_contents, offset);
     }
 
     // Index past the valid range, so return an empty history item.
@@ -926,89 +999,50 @@ std::unordered_map<long, wcstring> history_t::items_at_indexes(const std::vector
     return result;
 }
 
-void history_t::populate_from_mmap() {
-    mmap_type = infer_file_type(mmap_start, mmap_length);
-    size_t cursor = 0;
-    for (;;) {
-        size_t offset =
-            offset_of_next_item(mmap_start, mmap_length, mmap_type, &cursor, boundary_timestamp);
-        // If we get back -1, we're done.
-        if (offset == (size_t)-1) break;
+void history_t::populate_from_file_contents() {
+    old_item_offsets.clear();
+    if (file_contents) {
+        size_t cursor = 0;
+        for (;;) {
+            size_t offset = offset_of_next_item(*file_contents, &cursor, boundary_timestamp);
+            // If we get back -1, we're done.
+            if (offset == size_t(-1)) break;
 
-        // Remember this item.
-        old_item_offsets.push_back(offset);
-    }
-}
-
-bool history_t::map_fd(int fd, const char **out_map_start, size_t *out_map_len) const {
-    if (fd < 0) {
-        return false;
-    }
-
-    // Take a read lock to guard against someone else appending. This is released when the file
-    // is closed (below). We will read the file after releasing the lock, but that's not a
-    // problem, because we never modify already written data. In short, the purpose of this lock
-    // is to ensure we don't see the file size change mid-update.
-    //
-    // We may fail to lock (e.g. on lockless NFS - see issue #685. In that case, we proceed as
-    // if it did not fail. The risk is that we may get an incomplete history item; this is
-    // unlikely because we only treat an item as valid if it has a terminating newline.
-    //
-    // Simulate a failing lock in chaos_mode.
-    bool result = false;
-    if (!chaos_mode) history_file_lock(fd, LOCK_SH);
-    off_t len = lseek(fd, 0, SEEK_END);
-    if (len != (off_t)-1) {
-        size_t mmap_length = (size_t)len;
-        if (lseek(fd, 0, SEEK_SET) == 0) {
-            char *mmap_start;
-            if ((mmap_start = (char *)mmap(0, mmap_length, PROT_READ, MAP_PRIVATE, fd, 0)) !=
-                MAP_FAILED) {
-                result = true;
-                *out_map_start = mmap_start;
-                *out_map_len = mmap_length;
-            }
+            // Remember this item.
+            old_item_offsets.push_back(offset);
         }
     }
-    if (!chaos_mode) history_file_lock(fd, LOCK_UN);
-    return result;
 }
 
-/// Do a private, read-only map of the entirety of a history file with the given name. Returns true
-/// if successful. Returns the mapped memory region by reference.
-bool history_t::map_file(const wcstring &name, const char **out_map_start, size_t *out_map_len,
-                         file_id_t *file_id) const {
-    wcstring filename = history_filename(name, L"");
-    if (filename.empty()) {
-        return false;
-    }
-
-    int fd = wopen_cloexec(filename, O_RDONLY);
-    if (fd < 0) {
-        return false;
-    }
-
-    // Get the file ID if requested.
-    if (file_id != NULL) *file_id = file_id_for_fd(fd);
-    bool result = this->map_fd(fd, out_map_start, out_map_len);
-    close(fd);
-    return result;
-}
-
-bool history_t::load_old_if_needed() {
-    if (loaded_old) return true;
+void history_t::load_old_if_needed() {
+    if (loaded_old) return;
     loaded_old = true;
 
     time_profiler_t profiler("load_old");  //!OCLINT(side-effect)
-    bool ok = false;
-    if (map_file(name, &mmap_start, &mmap_length, &mmap_file_id)) {
-        // Here we've mapped the file.
-        ok = true;
-        time_profiler_t profiler("populate_from_mmap");  //!OCLINT(side-effect)
-        this->populate_from_mmap();
-    }
+    wcstring filename = history_filename(name, L"");
+    if (!filename.empty()) {
+        int fd = wopen_cloexec(filename, O_RDONLY);
+        if (fd >= 0) {
+            // Take a read lock to guard against someone else appending. This is released when the
+            // file is closed (below). We will read the file after releasing the lock, but that's
+            // not a problem, because we never modify already written data. In short, the purpose of
+            // this lock is to ensure we don't see the file size change mid-update.
+            //
+            // We may fail to lock (e.g. on lockless NFS - see issue #685. In that case, we proceed
+            // as if it did not fail. The risk is that we may get an incomplete history item; this
+            // is unlikely because we only treat an item as valid if it has a terminating newline.
+            //
+            // Simulate a failing lock in chaos_mode.
+            if (!chaos_mode) history_file_lock(fd, LOCK_SH);
+            file_contents = history_file_contents_t::create(fd);
+            this->history_file_id = file_contents ? file_id_for_fd(fd) : kInvalidFileID;
+            if (!chaos_mode) history_file_lock(fd, LOCK_UN);
+            close(fd);
 
-    return ok;
+            time_profiler_t profiler("populate_from_file_contents");  //!OCLINT(side-effect)
+            this->populate_from_file_contents();
+        }
+    }
 }
 
 void history_search_t::skip_matches(const wcstring_list_t &skips) {
@@ -1156,11 +1190,7 @@ static wcstring history_filename(const wcstring &session_id, const wcstring &suf
 void history_t::clear_file_state() {
     ASSERT_IS_LOCKED(lock);
     // Erase everything we know about our file.
-    if (mmap_start != NULL && mmap_start != MAP_FAILED) {
-        munmap((void *)mmap_start, mmap_length);
-    }
-    mmap_start = NULL;
-    mmap_length = 0;
+    file_contents.reset();
     loaded_old = false;
     old_item_offsets.clear();
 }
@@ -1200,23 +1230,17 @@ bool history_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) const {
     // Make an LRU cache to save only the last N elements.
     history_lru_cache_t lru(HISTORY_SAVE_MAX);
 
-    // Map in existing items (which may have changed out from underneath us, so don't trust our
-    // old mmap'd data).
-    const char *local_mmap_start = NULL;
-    size_t local_mmap_size = 0;
-    if (existing_fd >= 0 && map_fd(existing_fd, &local_mmap_start, &local_mmap_size)) {
-        const history_file_type_t local_mmap_type =
-            infer_file_type(local_mmap_start, local_mmap_size);
+    // Read in existing items (which may have changed out from underneath us, so don't trust our
+    // old file contents).
+    if (auto local_file = history_file_contents_t::create(existing_fd)) {
         size_t cursor = 0;
         for (;;) {
-            size_t offset =
-                offset_of_next_item(local_mmap_start, local_mmap_size, local_mmap_type, &cursor, 0);
+            size_t offset = offset_of_next_item(*local_file, &cursor, 0);
             // If we get back -1, we're done.
             if (offset == (size_t)-1) break;
 
             // Try decoding an old item.
-            const history_item_t old_item =
-                decode_item(local_mmap_start + offset, local_mmap_size - offset, local_mmap_type);
+            const history_item_t old_item = decode_item(*local_file, offset);
 
             if (old_item.empty() || deleted_items.count(old_item.str()) > 0) {
                 // debug(0, L"Item is deleted : %s\n", old_item.str().c_str());
@@ -1225,7 +1249,6 @@ bool history_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) const {
             // Add this old item.
             lru.add_item(old_item);
         }
-        munmap((void *)local_mmap_start, local_mmap_size);
     }
 
     // Insert any unwritten new items
@@ -1409,9 +1432,8 @@ bool history_t::save_internal_via_appending() {
 
     // We are going to open the file, lock it, append to it, and then close it
     // After locking it, we need to stat the file at the path; if there is a new file there, it
-    // means
-    // the file was replaced and we have to try again
-    // Limit our max tries so we don't do this forever
+    // means the file was replaced and we have to try again.
+    // Limit our max tries so we don't do this forever.
     int history_fd = -1;
     for (int i = 0; i < max_save_tries; i++) {
         int fd = wopen_cloexec(history_path, O_WRONLY | O_APPEND);
@@ -1434,7 +1456,7 @@ bool history_t::save_internal_via_appending() {
         } else {
             // File IDs match, so the file we opened is still at that path
             // We're going to use this fd
-            if (file_id != this->mmap_file_id) {
+            if (file_id != this->history_file_id) {
                 file_changed = true;
             }
             history_fd = fd;
@@ -1485,11 +1507,10 @@ bool history_t::save_internal_via_appending() {
 
         // Since we just modified the file, update our mmap_file_id to match its current state
         // Otherwise we'll think the file has been changed by someone else the next time we go to
-        // write
+        // write.
         // We don't update the mapping since we only appended to the file, and everything we
-        // appended
-        // remains in our new_items
-        this->mmap_file_id = file_id_for_fd(history_fd);
+        // appended remains in our new_items
+        this->history_file_id = file_id_for_fd(history_fd);
 
         close(history_fd);
     }

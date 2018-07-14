@@ -137,7 +137,7 @@ struct file_id_t {
     // Used to permit these as keys in std::map.
     bool operator<(const file_id_t &rhs) const;
 
-    static file_id_t file_id_from_stat(const struct stat *buf);
+    static file_id_t from_stat(const struct stat &buf);
 
    private:
     int compare_file_id(const file_id_t &rhs) const;

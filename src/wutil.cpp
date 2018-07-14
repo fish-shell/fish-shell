@@ -620,25 +620,23 @@ unsigned long long fish_wcstoull(const wchar_t *str, const wchar_t **endptr, int
     return result;
 }
 
-file_id_t file_id_t::file_id_from_stat(const struct stat *buf) {
-    assert(buf != NULL);
-
+file_id_t file_id_t::from_stat(const struct stat &buf) {
     file_id_t result = {};
-    result.device = buf->st_dev;
-    result.inode = buf->st_ino;
-    result.size = buf->st_size;
-    result.change_seconds = buf->st_ctime;
-    result.mod_seconds = buf->st_mtime;
+    result.device = buf.st_dev;
+    result.inode = buf.st_ino;
+    result.size = buf.st_size;
+    result.change_seconds = buf.st_ctime;
+    result.mod_seconds = buf.st_mtime;
 
 #ifdef HAVE_STRUCT_STAT_ST_CTIME_NSEC
-    result.change_nanoseconds = buf->st_ctime_nsec;
-    result.mod_nanoseconds = buf->st_mtime_nsec;
+    result.change_nanoseconds = buf.st_ctime_nsec;
+    result.mod_nanoseconds = buf.st_mtime_nsec;
 #elif defined(__APPLE__)
-    result.change_nanoseconds = buf->st_ctimespec.tv_nsec;
-    result.mod_nanoseconds = buf->st_mtimespec.tv_nsec;
+    result.change_nanoseconds = buf.st_ctimespec.tv_nsec;
+    result.mod_nanoseconds = buf.st_mtimespec.tv_nsec;
 #elif defined(_BSD_SOURCE) || defined(_SVID_SOURCE) || defined(_XOPEN_SOURCE)
-    result.change_nanoseconds = buf->st_ctim.tv_nsec;
-    result.mod_nanoseconds = buf->st_mtim.tv_nsec;
+    result.change_nanoseconds = buf.st_ctim.tv_nsec;
+    result.mod_nanoseconds = buf.st_mtim.tv_nsec;
 #else
     result.change_nanoseconds = 0;
     result.mod_nanoseconds = 0;
@@ -651,7 +649,7 @@ file_id_t file_id_for_fd(int fd) {
     file_id_t result = kInvalidFileID;
     struct stat buf = {};
     if (fd >= 0 && 0 == fstat(fd, &buf)) {
-        result = file_id_t::file_id_from_stat(&buf);
+        result = file_id_t::from_stat(buf);
     }
     return result;
 }
@@ -660,7 +658,7 @@ file_id_t file_id_for_path(const wcstring &path) {
     file_id_t result = kInvalidFileID;
     struct stat buf = {};
     if (0 == wstat(path, &buf)) {
-        result = file_id_t::file_id_from_stat(&buf);
+        result = file_id_t::from_stat(buf);
     }
     return result;
 }

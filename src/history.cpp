@@ -721,19 +721,7 @@ history_t &history_t::history_with_name(const wcstring &name) {
     return histories.get_creating(name);
 }
 
-history_t::history_t(wcstring pname)
-    : name(std::move(pname)),
-      first_unwritten_new_item_index(0),
-      has_pending_item(false),
-      disable_automatic_save_counter(0),
-      mmap_start(NULL),
-      mmap_length(0),
-      mmap_type(history_file_type_t(-1)),
-      mmap_file_id(kInvalidFileID),
-      boundary_timestamp(time(NULL)),
-      countdown_to_vacuum(-1),
-      loaded_old(false),
-      chaos_mode(false) {}
+history_t::history_t(wcstring pname) : name(std::move(pname)), boundary_timestamp(time(NULL)) {}
 
 void history_t::add(const history_item_t &item, bool pending) {
     scoped_lock locker(lock);
@@ -849,11 +837,8 @@ void history_t::get_history(wcstring_list_t &result) {
     bool next_is_pending = this->has_pending_item;
     std::unordered_set<wcstring> seen;
 
-    // Append new items. Note that in principle we could use const_reverse_iterator, but we do not
-    // because reverse_iterator is not convertible to const_reverse_iterator. See
-    // https://github.com/fish-shell/fish-shell/issues/431.
-    for (history_item_list_t::reverse_iterator iter = new_items.rbegin(); iter < new_items.rend();
-         ++iter) {
+    // Append new items.
+    for (auto iter = new_items.crbegin(); iter < new_items.crend(); ++iter) {
         // Skip a pending item if we have one.
         if (next_is_pending) {
             next_is_pending = false;
@@ -865,8 +850,7 @@ void history_t::get_history(wcstring_list_t &result) {
 
     // Append old items.
     load_old_if_needed();
-    for (std::deque<size_t>::reverse_iterator iter = old_item_offsets.rbegin();
-         iter != old_item_offsets.rend(); ++iter) {
+    for (auto iter = old_item_offsets.crbegin(); iter != old_item_offsets.crend(); ++iter) {
         size_t offset = *iter;
         const history_item_t item =
             decode_item(mmap_start + offset, mmap_length - offset, mmap_type);

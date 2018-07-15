@@ -523,7 +523,7 @@ A `fish` function is a list of commands, which may optionally take arguments. Un
   end
 >_ say_hello
 <outp>Hello</outp>
->_ say_hello everybody!
+>_ say_hello Hello everybody!
 <outp>Hello everybody!</outp>
 \endfish
 

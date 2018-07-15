@@ -40,6 +40,7 @@
 #include "parser.h"
 #include "path.h"
 #include "proc.h"
+#include "reader.h"
 #include "tnode.h"
 #include "util.h"
 #include "wildcard.h"
@@ -1226,13 +1227,17 @@ bool completer_t::try_complete_user(const wcstring &str) {
     bool result = false;
     size_t name_len = wcslen(user_name);
 
-    // We don't bother with the thread-safe `getpwent_r()` variant because it isn't needed. This is
-    // only run in a completion context and thus will only be called from a single thread and there
-    // is no place else in fish where we call `getpwent()`.
-    struct passwd *pw;
+    // We don't bother with the thread-safe `getpwent_r()` variant because this is the sole place
+    // where we call getpwent().
+    static fish_mutex_t lock;
+    scoped_lock locker(lock);
     setpwent();
     // cppcheck-suppress getpwentCalled
-    while ((pw = getpwent()) != NULL) {
+    while (struct passwd *pw = getpwent()) {
+        bool interrupted = is_main_thread() ? reader_interrupted() : reader_thread_job_is_stale();
+        if (interrupted) {
+            break;
+        }
         const wcstring pw_name_str = str2wcstring(pw->pw_name);
         const wchar_t *pw_name = pw_name_str.c_str();
         if (wcsncmp(user_name, pw_name, name_len) == 0) {

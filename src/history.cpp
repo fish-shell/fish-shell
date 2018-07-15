@@ -241,6 +241,38 @@ class history_file_contents_t {
     history_file_contents_t(history_file_contents_t &&) = delete;
     void operator=(history_file_contents_t &&) = delete;
 
+    // Check if we should mmap the fd.
+    // Don't try mmap() on non-local filesystems.
+    static bool should_mmap(int fd) {
+        if (history_t::never_mmap) return false;
+
+        // mmap only if we are known not-remote (return is 0).
+        int ret = fd_check_is_remote(fd);
+        return ret == 0;
+    }
+
+    // Read up to len bytes from fd into address, zeroing the rest.
+    // Return true on success, false on failure.
+    static bool read_from_fd(int fd, void *address, size_t len) {
+        size_t remaining = len;
+        char *ptr = static_cast<char *>(address);
+        while (remaining > 0) {
+            ssize_t amt = read(fd, ptr, remaining);
+            if (amt < 0) {
+                if (errno != EINTR) {
+                    return false;
+                }
+            } else if (amt == 0) {
+                break;
+            } else {
+                remaining -= amt;
+                ptr += amt;
+            }
+        }
+        bzero(ptr, remaining);
+        return true;
+    }
+
    public:
     // Access the address at a given offset.
     const char *address_at(size_t offset) const {
@@ -270,9 +302,21 @@ class history_file_contents_t {
         if (len <= 0 || len >= SIZE_MAX) return nullptr;
         if (lseek(fd, 0, SEEK_SET) != 0) return nullptr;
 
-        // Map the file.
-        void *mmap_start = mmap(0, size_t(len), PROT_READ, MAP_PRIVATE, fd, 0);
-        if (mmap_start == MAP_FAILED) return nullptr;
+        // Read the file, possibly ussing mmap.
+        void *mmap_start = nullptr;
+        if (should_mmap(fd)) {
+            // We feel confident to map the file directly. Note this is still risky: if another
+            // process truncates the file we risk SIGBUS.
+            mmap_start = mmap(0, size_t(len), PROT_READ, MAP_PRIVATE, fd, 0);
+            if (mmap_start == MAP_FAILED) return nullptr;
+        } else {
+            // We don't want to map the file. mmap some private memory and then read into it. We use
+            // mmap instead of malloc so that the destructor can always munmap().
+            mmap_start =
+                mmap(0, size_t(len), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+            if (mmap_start == MAP_FAILED) return nullptr;
+            if (!read_from_fd(fd, mmap_start, len)) return nullptr;
+        }
 
         // Check the file type.
         auto mtype = infer_file_type(mmap_start, len);
@@ -797,6 +841,9 @@ history_t::history_t(wcstring pname)
     : name(std::move(pname)), boundary_timestamp(time(NULL)), history_file_id(kInvalidFileID) {}
 
 history_t::~history_t() = default;
+
+bool history_t::chaos_mode = false;
+bool history_t::never_mmap = false;
 
 void history_t::add(const history_item_t &item, bool pending) {
     scoped_lock locker(lock);

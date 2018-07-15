@@ -169,10 +169,6 @@ class history_t {
     // List of old items, as offsets into out mmap data.
     std::deque<size_t> old_item_offsets;
 
-    // Whether we're in maximum chaos mode, useful for testing.
-    // This causes things like locks to fail.
-    bool chaos_mode{false};
-
     // Figure out the offsets of our file contents.
     void populate_from_file_contents();
 
@@ -207,6 +203,13 @@ class history_t {
    public:
     explicit history_t(wcstring name);
     ~history_t();
+
+    // Whether we're in maximum chaos mode, useful for testing.
+    // This causes things like locks to fail.
+    static bool chaos_mode;
+
+    // Whether to force the read path instead of mmap. This is useful for testing.
+    static bool never_mmap;
 
     // Returns history with the given name, creating it if necessary.
     static history_t &history_with_name(const wcstring &name);

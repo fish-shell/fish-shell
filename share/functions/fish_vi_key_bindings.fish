@@ -261,7 +261,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind $argv visual -m default x kill-selection end-selection force-repaint
     bind $argv visual -m default X kill-whole-line end-selection force-repaint
     bind $argv visual -m default y kill-selection yank end-selection force-repaint
-    bind $argv visual -m default '"*y' "commandline -s | xsel -p" end-selection force-repaint
+    bind $argv visual -m default '"*y' "commandline -s | xsel -p; commandline -f end-selection force-repaint"
 
     bind $argv visual -m default \cc end-selection force-repaint
     bind $argv visual -m default \e end-selection force-repaint

@@ -156,12 +156,11 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
                 paths.doc = base_path + (seems_installed ? L"/share/doc/fish" : L"/user_doc/html");
                 paths.bin = base_path + (seems_installed ? L"/bin" : L"");
 
-                // Check only that the data and sysconf directories exist. Handle the doc
-                // directories separately.
-                struct stat buf;
-                if (0 == wstat(paths.data, &buf) && 0 == wstat(paths.sysconf, &buf)) {
+                // Check only that the data directories exist. Allow the sysconf dir to be invalid.
+                // Handle the doc directories separately.
+                if (0 == waccess(paths.data, R_OK)) {
                     // The docs dir may not exist; in that case fall back to the compiled in path.
-                    if (0 != wstat(paths.doc, &buf)) {
+                    if (0 == waccess(paths.doc, R_OK)) {
                         paths.doc = L"" DOCDIR;
                     }
                     done = true;

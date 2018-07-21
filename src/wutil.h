@@ -28,6 +28,10 @@ int make_fd_nonblocking(int fd);
 /// Mark an fd as blocking; returns errno or 0 on success.
 int make_fd_blocking(int fd);
 
+/// Check if an fd is on a remote filesystem (NFS, SMB, CFS)
+/// Return 1 if remote, 0 if local, -1 on error or if not implemented on this platform.
+int fd_check_is_remote(int fd);
+
 /// Wide character version of opendir(). Note that opendir() is guaranteed to set close-on-exec by
 /// POSIX (hooray).
 DIR *wopendir(const wcstring &name);
@@ -137,7 +141,7 @@ struct file_id_t {
     // Used to permit these as keys in std::map.
     bool operator<(const file_id_t &rhs) const;
 
-    static file_id_t file_id_from_stat(const struct stat *buf);
+    static file_id_t from_stat(const struct stat &buf);
 
    private:
     int compare_file_id(const file_id_t &rhs) const;

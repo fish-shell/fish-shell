@@ -104,16 +104,18 @@ class history_item_t {
 
 typedef std::deque<history_item_t> history_item_list_t;
 
-// The type of file that we mmap'd.
-enum history_file_type_t { history_type_unknown, history_type_fish_2_0, history_type_fish_1_x };
+class history_file_contents_t;
 
 class history_t {
     friend class history_tests_t;
 
    private:
-    // No copying.
-    history_t(const history_t &);
-    history_t &operator=(const history_t &);
+    // No copying or moving.
+    history_t() = delete;
+    history_t(const history_t &) = delete;
+    history_t(history_t &&) = delete;
+    history_t &operator=(const history_t &) = delete;
+    history_t &operator=(history_t &&) = delete;
 
     // Privately add an item. If pending, the item will not be returned by history searches until a
     // call to resolve_pending.
@@ -134,29 +136,23 @@ class history_t {
     history_item_list_t new_items;
 
     // The index of the first new item that we have not yet written.
-    size_t first_unwritten_new_item_index;
+    size_t first_unwritten_new_item_index{0};
 
     // Whether we have a pending item. If so, the most recently added item is ignored by
     // item_at_index.
-    bool has_pending_item;
+    bool has_pending_item{false};
 
     // Whether we should disable saving to the file for a time.
-    uint32_t disable_automatic_save_counter;
+    uint32_t disable_automatic_save_counter{0};
 
     // Deleted item contents.
     std::unordered_set<wcstring> deleted_items;
 
-    // The mmaped region for the history file.
-    const char *mmap_start;
+    // The buffer containing the history file contents.
+    std::unique_ptr<history_file_contents_t> file_contents;
 
-    // The size of the mmap'd region.
-    size_t mmap_length;
-
-    // The type of file we mmap'd.
-    history_file_type_t mmap_type;
-
-    // The file ID of the file we mmap'd.
-    file_id_t mmap_file_id;
+    // The file ID of the history file.
+    file_id_t history_file_id;
 
     // The boundary timestamp distinguishes old items from new items. Items whose timestamps are <=
     // the boundary are considered "old". Items whose timestemps are > the boundary are new, and are
@@ -165,22 +161,22 @@ class history_t {
     time_t boundary_timestamp;
 
     // How many items we add until the next vacuum. Initially a random value.
-    int countdown_to_vacuum;
+    int countdown_to_vacuum{-1};
 
-    // Figure out the offsets of our mmap data.
-    void populate_from_mmap(void);
+    // Whether we've loaded old items.
+    bool loaded_old{false};
 
     // List of old items, as offsets into out mmap data.
     std::deque<size_t> old_item_offsets;
 
-    // Whether we've loaded old items.
-    bool loaded_old;
+    // Figure out the offsets of our file contents.
+    void populate_from_file_contents();
 
-    // Loads old if necessary.
-    bool load_old_if_needed(void);
+    // Loads old items if necessary.
+    void load_old_if_needed();
 
-    // Memory maps the history file if necessary.
-    bool mmap_if_needed(void);
+    // Reads the history file if necessary.
+    bool mmap_if_needed();
 
     // Deletes duplicates in new_items.
     void compact_new_items();
@@ -201,29 +197,26 @@ class history_t {
     // Saves history unless doing so is disabled.
     void save_internal_unless_disabled();
 
-    // Do a private, read-only map of the entirety of a history file with the given name. Returns
-    // true if successful. Returns the mapped memory region by reference.
-    bool map_file(const wcstring &name, const char **out_map_start, size_t *out_map_len,
-                  file_id_t *file_id) const;
-
-    // Like map_file but takes a file descriptor
-    bool map_fd(int fd, const char **out_map_start, size_t *out_map_len) const;
-
-    // Whether we're in maximum chaos mode, useful for testing.
-    bool chaos_mode;
-
     // Implementation of item_at_index and items_at_indexes
     history_item_t item_at_index_assume_locked(size_t idx);
 
    public:
-    explicit history_t(wcstring );  // constructor
+    explicit history_t(wcstring name);
+    ~history_t();
+
+    // Whether we're in maximum chaos mode, useful for testing.
+    // This causes things like locks to fail.
+    static bool chaos_mode;
+
+    // Whether to force the read path instead of mmap. This is useful for testing.
+    static bool never_mmap;
 
     // Returns history with the given name, creating it if necessary.
     static history_t &history_with_name(const wcstring &name);
 
     // Determines whether the history is empty. Unfortunately this cannot be const, since it may
     // require populating the history.
-    bool is_empty(void);
+    bool is_empty();
 
     // Add a new history item to the end. If pending is set, the item will not be returned by
     // item_at_index until a call to resolve_pending(). Pending items are tracked with an offset
@@ -320,25 +313,25 @@ class history_search_t {
     void skip_matches(const wcstring_list_t &skips);
 
     // Finds the next search term (forwards in time). Returns true if one was found.
-    bool go_forwards(void);
+    bool go_forwards();
 
     // Finds the previous search result (backwards in time). Returns true if one was found.
-    bool go_backwards(void);
+    bool go_backwards();
 
     // Goes to the end (forwards).
-    void go_to_end(void);
+    void go_to_end();
 
     // Returns if we are at the end. We start out at the end.
-    bool is_at_end(void) const;
+    bool is_at_end() const;
 
     // Goes to the beginning (backwards).
-    void go_to_beginning(void);
+    void go_to_beginning();
 
     // Returns the current search result item. asserts if there is no current item.
-    history_item_t current_item(void) const;
+    history_item_t current_item() const;
 
     // Returns the current search result item contents. asserts if there is no current item.
-    wcstring current_string(void) const;
+    wcstring current_string() const;
 
     // Constructor.
     history_search_t(history_t &hist, const wcstring &str,

@@ -689,7 +689,7 @@ void wildcard_expander_t::expand_intermediate_segment(const wcstring &base_dir, 
             continue;
         }
 
-        const file_id_t file_id = file_id_t::file_id_from_stat(&buf);
+        const file_id_t file_id = file_id_t::from_stat(buf);
         if (!this->visited_files.insert(file_id).second) {
             // Symlink loop! This directory was already visited, so skip it.
             continue;

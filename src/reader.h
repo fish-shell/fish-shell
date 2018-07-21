@@ -101,7 +101,7 @@ void reader_run_command(const wcstring &buff);
 const wchar_t *reader_get_buffer();
 
 /// Returns the current reader's history.
-history_t *reader_get_history(void);
+history_t *reader_get_history();
 
 /// Set the string of characters in the command buffer, as well as the cursor position.
 ///

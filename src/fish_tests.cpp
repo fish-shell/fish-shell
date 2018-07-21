@@ -3476,7 +3476,7 @@ void history_tests_t::test_history_speed(void)
 #endif
 
 static void test_new_parser_correctness() {
-    say(L"Testing new parser!");
+    say(L"Testing parser correctness");
     const struct parser_test_t {
         const wchar_t *src;
         bool ok;
@@ -3506,8 +3506,6 @@ static void test_new_parser_correctness() {
 
         parse_node_tree_t parse_tree;
         bool success = parse_tree_from_string(test->src, parse_flag_none, &parse_tree, NULL);
-        say(L"%lu / %lu: Parse \"%ls\": %s", i + 1, sizeof parser_tests / sizeof *parser_tests,
-            test->src, success ? "yes" : "no");
         if (success && !test->ok) {
             err(L"\"%ls\" should NOT have parsed, but did", test->src);
         } else if (!success && test->ok) {

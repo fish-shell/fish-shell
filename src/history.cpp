@@ -838,7 +838,7 @@ history_t &history_t::history_with_name(const wcstring &name) {
 }
 
 history_t::history_t(wcstring pname)
-    : name(std::move(pname)), boundary_timestamp(time(NULL)), history_file_id(kInvalidFileID) {}
+    : name(std::move(pname)), history_file_id(kInvalidFileID), boundary_timestamp(time(NULL)) {}
 
 history_t::~history_t() = default;
 

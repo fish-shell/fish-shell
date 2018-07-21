@@ -1138,7 +1138,6 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    const wchar_t *to_repeat;
     bool is_empty = true;
 
     arg_iterator_t aiter(argv, optind, streams);

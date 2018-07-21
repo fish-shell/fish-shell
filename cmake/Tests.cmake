@@ -114,8 +114,13 @@ ADD_CUSTOM_TARGET(test_fishscript
 #   cd tests; ../test/root/bin/fish interactive.fish
 # .PHONY: test_interactive
 
+ADD_CUSTOM_TARGET(test_interactive
+    COMMAND cd tests && ${TEST_ROOT_DIR}/bin/fish interactive.fish
+    DEPENDS test_prep test_invocation test_fishscript
+    USES_TERMINAL)
+
 ADD_CUSTOM_TARGET(test_high_level
-                  DEPENDS test_invocation test_fishscript)
+                  DEPENDS test_invocation test_fishscript test_interactive)
 ADD_DEPENDENCIES(test test_high_level)
 
 # Group test targets into a TestTargets folder

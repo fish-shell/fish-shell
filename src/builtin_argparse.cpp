@@ -78,12 +78,12 @@ static int check_for_mutually_exclusive_flags(argparse_cmd_opts_t &opts, io_stre
 
         // We saw this option at least once. Check all the sets of mutually exclusive options to see
         // if this option appears in any of them.
-        for (auto xarg_set : opts.exclusive_flag_sets) {
+        for (const auto &xarg_set : opts.exclusive_flag_sets) {
             auto found = std::find(xarg_set.begin(), xarg_set.end(), opt_spec->short_flag);
             if (found != xarg_set.end()) {
                 // Okay, this option is in a mutually exclusive set of options. Check if any of the
                 // other mutually exclusive options have been seen.
-                for (auto xflag : xarg_set) {
+                for (const auto &xflag : xarg_set) {
                     auto xopt_spec_iter = opts.options.find(xflag);
                     if (xopt_spec_iter == opts.options.end()) continue;
 
@@ -136,7 +136,7 @@ static int parse_exclusive_args(argparse_cmd_opts_t &opts, io_streams_t &streams
         }
 
         std::vector<wchar_t> exclusive_set;
-        for (auto flag : xflags) {
+        for (const auto &flag : xflags) {
             if (flag.size() == 1 && opts.options.find(flag[0]) != opts.options.end()) {
                 // It's a short flag.
                 exclusive_set.push_back(flag[0]);
@@ -457,8 +457,8 @@ static int validate_arg(argparse_cmd_opts_t &opts, option_spec_t *opt_spec, bool
     env_set_one(var_name_prefix + L"value", ENV_LOCAL, woptarg);
 
     int retval = exec_subshell(opt_spec->validation_command, cmd_output, false);
-    for (auto it : cmd_output) {
-        streams.err.append(it);
+    for (const auto &output : cmd_output) {
+        streams.err.append(output);
         streams.err.push_back(L'\n');
     }
     env_pop();

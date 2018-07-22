@@ -60,3 +60,17 @@ set x (functions -v -D multiline_descr)
 if test $x[5] != 'line 1\\\\n\\nline 2 & more; way more'
     echo "Unexpected output for 'functions -v -D multiline_descr': $x" >&2
 end
+
+# ==========
+# Verify function description setting
+function test_func_desc ; end
+functions test_func_desc | string match --quiet '*description*'
+and echo "Unexpected description" >&2
+
+functions --description description1 test_func_desc
+functions test_func_desc | string match --quiet '*description1*'
+or echo "Failed to find description 1" >&2
+
+functions -d description2 test_func_desc
+functions test_func_desc | string match --quiet '*description2*'
+or echo "Failed to find description 2" >&2

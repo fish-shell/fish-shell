@@ -9,11 +9,8 @@
 #include <wchar.h>
 
 #include <algorithm>
-#include <functional>
-#include <iterator>
 #include <memory>
 #include <string>
-#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -28,8 +25,7 @@
 #include "wgetopt.h"  // IWYU pragma: keep
 #include "wutil.h"    // IWYU pragma: keep
 
-class parser_t;
-const wcstring var_name_prefix = L"_flag_";
+static const wcstring var_name_prefix = L"_flag_";
 
 #define BUILTIN_ERR_INVALID_OPT_SPEC _(L"%ls: Invalid option spec '%ls' at char '%lc'\n")
 
@@ -60,7 +56,7 @@ struct argparse_cmd_opts_t {
     std::vector<std::vector<wchar_t>> exclusive_flag_sets;
 };
 
-static const wchar_t *short_options = L"+:hn:sx:N:X:";
+static const wchar_t *const short_options = L"+:hn:sx:N:X:";
 static const struct woption long_options[] = {{L"stop-nonopt", no_argument, NULL, 's'},
                                               {L"name", required_argument, NULL, 'n'},
                                               {L"exclusive", required_argument, NULL, 'x'},
@@ -71,7 +67,7 @@ static const struct woption long_options[] = {{L"stop-nonopt", no_argument, NULL
 
 // Check if any pair of mutually exclusive options was seen. Note that since every option must have
 // a short name we only need to check those.
-static int check_for_mutually_exclusive_flags(argparse_cmd_opts_t &opts, io_streams_t &streams) {
+static int check_for_mutually_exclusive_flags(const argparse_cmd_opts_t &opts, io_streams_t &streams) {
     for (const auto &kv : opts.options) {
         const auto &opt_spec = kv.second;
         if (opt_spec->num_seen == 0) continue;
@@ -414,32 +410,30 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
     return collect_option_specs(opts, optind, argc, argv, streams);
 }
 
-static void populate_option_strings(
-    argparse_cmd_opts_t &opts, wcstring &short_options,
-    std::unique_ptr<woption, std::function<void(woption *)>> &long_options) {
-    int i = 0;
+static void populate_option_strings(const argparse_cmd_opts_t &opts, wcstring *short_options,
+                                    std::vector<woption> *long_options) {
     for (const auto &kv : opts.options) {
         const auto &opt_spec = kv.second;
-        if (opt_spec->short_flag_valid) short_options.push_back(opt_spec->short_flag);
+        if (opt_spec->short_flag_valid) short_options->push_back(opt_spec->short_flag);
 
         int arg_type = no_argument;
         if (opt_spec->num_allowed == -1) {
             arg_type = optional_argument;
-            if (opt_spec->short_flag_valid) short_options.append(L"::");
+            if (opt_spec->short_flag_valid) short_options->append(L"::");
         } else if (opt_spec->num_allowed > 0) {
             arg_type = required_argument;
-            if (opt_spec->short_flag_valid) short_options.append(L":");
+            if (opt_spec->short_flag_valid) short_options->append(L":");
         }
 
         if (!opt_spec->long_flag.empty()) {
-            long_options.get()[i++] = {opt_spec->long_flag.c_str(), arg_type, NULL,
-                                       opt_spec->short_flag};
+            long_options->push_back(
+                {opt_spec->long_flag.c_str(), arg_type, NULL, opt_spec->short_flag});
         }
     }
-    long_options.get()[i] = {NULL, 0, NULL, 0};
+    long_options->push_back({NULL, 0, NULL, 0});
 }
 
-static int validate_arg(argparse_cmd_opts_t &opts, option_spec_t *opt_spec, bool is_long_flag,
+static int validate_arg(const argparse_cmd_opts_t &opts, option_spec_t *opt_spec, bool is_long_flag,
                         const wchar_t *woptarg, io_streams_t &streams) {
     // Obviously if there is no arg validation command we assume the arg is okay.
     if (opt_spec->validation_command.empty()) return STATUS_CMD_OK;
@@ -581,12 +575,11 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
     if (args.empty()) return STATUS_CMD_OK;
 
     wcstring short_options = opts.stop_nonopt ? L"+:" : L":";
-    size_t nflags = opts.options.size();
-    // This assumes every option has a long flag. Which is the worst case and isn't worth optimizing
-    // since the number of options is always quite small.
-    auto long_options = std::unique_ptr<woption, std::function<void(woption *)>>(
-        new woption[nflags + 1], [](woption *p) { delete[] p; });
-    populate_option_strings(opts, short_options, long_options);
+    std::vector<woption> long_options;
+    populate_option_strings(opts, &short_options, &long_options);
+
+    // long_options should have a "null terminator"
+    assert(!long_options.empty() && long_options.back().name == nullptr);
 
     const wchar_t *cmd = opts.name.c_str();
     int argc = static_cast<int>(args.size());
@@ -597,7 +590,7 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
     auto argv = (wchar_t **)argv_container.get();
 
     int optind;
-    int retval = argparse_parse_flags(opts, short_options.c_str(), long_options.get(), cmd, argc,
+    int retval = argparse_parse_flags(opts, short_options.c_str(), long_options.data(), cmd, argc,
                                       argv, &optind, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 

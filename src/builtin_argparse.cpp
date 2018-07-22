@@ -10,10 +10,8 @@
 
 #include <algorithm>
 #include <functional>
-#include <iostream>
 #include <iterator>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
@@ -134,28 +132,14 @@ static int check_for_mutually_exclusive_flags(argparse_cmd_opts_t &opts, io_stre
             }
         }
     }
-
     return STATUS_CMD_OK;
-}
-
-// This is used as a specialization to allow us to force operator>> to split the input on something
-// other than spaces.
-class WordDelimitedByComma : public wcstring {};
-
-// Cppcheck incorrectly complains this is unused. It is indirectly used by std:istream_iterator.
-std::wistream &operator>>(std::wistream &is, WordDelimitedByComma &output) {  // cppcheck-suppress
-    std::getline(is, output, L',');
-    return is;
 }
 
 // This should be called after all the option specs have been parsed. At that point we have enough
 // information to parse the values associated with any `--exclusive` flags.
 static int parse_exclusive_args(argparse_cmd_opts_t &opts, io_streams_t &streams) {
-    for (auto raw_xflags : opts.raw_exclusive_flags) {
-        // This is an advanced technique that leverages the C++ STL to split the string on commas.
-        std::wistringstream iss(raw_xflags);
-        wcstring_list_t xflags((std::istream_iterator<WordDelimitedByComma, wchar_t>(iss)),
-                               std::istream_iterator<WordDelimitedByComma, wchar_t>());
+    for (const wcstring &raw_xflags : opts.raw_exclusive_flags) {
+        const wcstring_list_t xflags = split_string(raw_xflags, L',');
         if (xflags.size() < 2) {
             streams.err.append_format(_(L"%ls: exclusive flag string '%ls' is not valid\n"),
                                       opts.name.c_str(), raw_xflags.c_str());

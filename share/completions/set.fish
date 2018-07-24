@@ -65,6 +65,9 @@ complete -c set -n '__fish_is_first_token' -s U -l universal -d "Share variable 
 complete -c set -n '__fish_is_first_token' -s q -l query -d "Test if variable is defined"
 complete -c set -n '__fish_is_first_token' -s h -l help -d "Display help and exit"
 complete -c set -n '__fish_is_first_token' -s n -l names -d "List the names of the variables, but not their value"
+complete -c set -n '__fish_is_first_token' -s a -l append -d "Append value to a list"
+complete -c set -n '__fish_is_first_token' -s p -l prepend -d "Prepend value to a list"
+complete -c set -n '__fish_is_first_token' -s S -l show -d "Show variable"
 
 #TODO: add CPP code to generate list of read-only variables and exclude them from the following completions
 

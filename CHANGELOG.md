@@ -32,7 +32,7 @@ fish 3.0 is a major release which brings with it both improvements in functional
 - `abbr` has been reimplemented to be faster. This means the old `fish_user_abbreviations` variable is ignored (#4048).
 - Setting variables is much faster (#4200, #4341).
 - Using a read-only variable in a for loop is now an error. Note that this never worked. It simply failed to set the for loop var and thus silently produced incorrect results (#4342).
-- `math` is now a builtin rather than a wrapper around `bc` (#3157).
+- `math` is now a builtin rather than a wrapper around `bc` (#3157). The default scale is now 6, so that floating point computations produce decimals (#4478).
 - `history search` supports globs for wildcard searching (#3136).
 - `bind` has a new `--silent` option to ignore bind requests for named keys not available under the current `$TERMINAL` (#4188, #4431).
 - Globs are faster (#4579).

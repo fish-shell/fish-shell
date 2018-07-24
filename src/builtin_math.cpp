@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <string>
 
 #include "tinyexpr.h"
@@ -18,9 +19,17 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
+// The maximum number of points after the decimal that we'll print.
+static constexpr int kDefaultScale = 6;
+
+// The end of the range such that every integer is representable as a double.
+// i.e. this is the first value such that x + 1 == x (or == x + 2, depending on rounding mode).
+static constexpr double kMaximumContiguousInteger =
+    double(1LLU << std::numeric_limits<double>::digits);
+
 struct math_cmd_opts_t {
     bool print_help = false;
-    int scale = 0;
+    int scale = kDefaultScale;
 };
 
 // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
@@ -130,6 +139,27 @@ static wcstring math_describe_error(te_error_t& error) {
     }
 }
 
+/// Return a formatted version of the value \p v respecting the given \p opts.
+static wcstring format_double(double v, const math_cmd_opts_t &opts) {
+    wcstring ret = format_string(L"%.*f", opts.scale, v);
+    // If we contain a decimal separator, trim trailing zeros after it, and then the separator
+    // itself if there's nothing after it. Detect a decimal separator as a non-digit.
+    const wchar_t *const digits = L"0123456789";
+    if (ret.find_first_not_of(digits) != wcstring::npos) {
+        while (ret.back() == L'0') {
+            ret.pop_back();
+        }
+        if (!wcschr(digits, ret.back())) {
+            ret.pop_back();
+        }
+    }
+    // If we trimmed everything it must have just been zero.
+    if (ret.empty()) {
+        ret.push_back(L'0');
+    }
+    return ret;
+}
+
 /// Evaluate math expressions.
 static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_t &streams,
                                math_cmd_opts_t &opts, wcstring &expression) {
@@ -150,27 +180,21 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
         // TODO: Really, this should be done in tinyexpr
         // (e.g. infinite is the result of "x / 0"),
         // but that's much more work.
+        const char *error_message = NULL;
         if (std::isinf(v)) {
-            streams.err.append_format(L"%ls: Error: Result is infinite\n", cmd);
-            streams.err.append_format(L"'%ls'\n", expression.c_str());
-            retval = STATUS_CMD_ERROR;
+            error_message = "Result is infinite";
         } else if (std::isnan(v)) {
-            streams.err.append_format(L"%ls: Error: Result is not a number\n", cmd);
+            error_message = "Result is not a number";
+        } else if (std::abs(v) >= kMaximumContiguousInteger) {
+            error_message = "Result magnitude is too large";
+        }
+        if (error_message) {
+            streams.err.append_format(L"%ls: Error: %s\n", cmd, error_message);
             streams.err.append_format(L"'%ls'\n", expression.c_str());
             retval = STATUS_CMD_ERROR;
-        } else if (v >= LONG_MAX) {
-            streams.err.append_format(L"%ls: Error: Result is too large\n", cmd);
-            streams.err.append_format(L"'%ls'\n", expression.c_str());
-            retval = STATUS_CMD_ERROR;
-        } else if (v <= LONG_MIN) {
-            streams.err.append_format(L"%ls: Error: Result is too small\n", cmd);
-            streams.err.append_format(L"'%ls'\n", expression.c_str());
-            retval = STATUS_CMD_ERROR;
-        } else if (opts.scale == 0) {
-            // Normal results
-            streams.out.append_format(L"%ld\n", static_cast<long>(v));
         } else {
-            streams.out.append_format(L"%.*lf\n", opts.scale, v);
+            streams.out.append(format_double(v, opts));
+            streams.out.push_back(L'\n');
         }
     } else {
         streams.err.append_format(L"%ls: Error: %ls\n", cmd, math_describe_error(error).c_str());

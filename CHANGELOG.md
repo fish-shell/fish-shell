@@ -1,5 +1,6 @@
 # fish 3.0b1
-This section is for changes merged to the `major` branch that are not also merged to 2.7.
+
+fish 3.0 is a major release which brings with it both improvements in functionality and some breaking changes. All fish scripts should be reviewed
 
 ## Deprecations
 - The `IFS` variable is deprecated and will be removed in fish 4.0 (#4156).
@@ -66,7 +67,7 @@ This section is for changes merged to the `major` branch that are not also merge
 - Command substitution output is now limited to 10 MB by default (#3822).
 - Added completions for
   - `bd` (#4472)
-  - `bower`<sup>&#x2217;</sup>
+  - `bower`
   - `configure` (autoconf only)
   - `j` (autojump #4344)
   - `jhipster` (#4472)
@@ -80,21 +81,8 @@ This section is for changes merged to the `major` branch that are not also merge
   - `ttx`
   - `unzip`
   - `xsv`
-- Improved completions for
-  - `apt`
-  - `brew`
-  - `diskutil`
-  - `git` (#4395, #4396, #4592)
-  - `npm`<sup>†</sup>
-  - `python`/`python2`/`python3`
-  - `service`
-  - `scp`
-  - `ssh` (#4344)
-  - `sudo` (see above)
-  - `yarn`<sup>&#x2217;</sup><sup>†</sup>
-
-&#x2217; _`jq` must be installed to complete the list of currently installed `bower` or `yarn` packages_. <br/>
-† _to autocomplete the list of packages available for installation with `npm` or `yarn`, `all-the-package-names` must be installed globally (typically: `sudo npm install -g all-the-package-names`)._
+-  Lots of improvements to completions (especially `git`).
+-  Improved French translations.
 
 --
 

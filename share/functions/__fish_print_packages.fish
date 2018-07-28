@@ -21,7 +21,7 @@ function __fish_print_packages
 
     if type -q -f apt-cache
         if set -q only_installed
-            dpkg --get-selections | string replace -r '(\S+).*' "\$1\t$package"
+            dpkg --get-selections | string replace -fr '(\S+)\s+install' "\$1\t$package"
             return
         else
             # Do not generate the cache as apparently sometimes this is slow.

@@ -19,7 +19,7 @@ end
 #using -r and not -e as string match -e is broken, this will cause problems
 #if the commandline contains special characters, but most package names do
 #not contain special characters. Can switch to -e after #4971 is fixed.
-complete -c apt -n "__fish_seen_subcommand_from $pkg_subcmds" -a '(__fish_print_packages | string match -r -- (commandline -ct) | head -n 100)' -d 'Package'
+complete -c apt -n "__fish_seen_subcommand_from $pkg_subcmds" -a '(__fish_print_packages | head -n 100)'
 complete -c apt -n "__fish_seen_subcommand_from $installed_pkg_subcmds" -a '(__fish_print_packages --installed | string match -r -- ".*"(commandline -ct)".*" | head -n 100)' -d 'Package'
 
 # Support flags

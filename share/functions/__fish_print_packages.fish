@@ -20,13 +20,18 @@ function __fish_print_packages
     set -l package (_ "Package")
 
     if type -q -f apt-cache
-        if set -q only_installed
-            dpkg --get-selections | string replace -fr '(\S+)\s+install' "\$1\t$package"
-            return
-        else
+        if not set -q only_installed
             # Do not generate the cache as apparently sometimes this is slow.
             # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=547550
-            apt-cache --no-generate pkgnames (commandline -ct) 2>/dev/null | sed -e 's/$/'\t$package'/'
+            # (It is safe to use `sed -r` here as we are guaranteed to be on a GNU platform
+            # if apt-cache was found. Using unicode reserved range in `fish/tr` and the
+            # little-endian bytecode equivalent in `sed`. Supports localization.)
+            apt-cache --no-generate show '.*'(commandline -ct)'.*' 2>/dev/null | sed -r '/^(Package|Description-[a-z]{2}):/!d;s/Package: (.*)/\1\t/g;s/Description-.*: (.*)/\1\xee\x80\x80\x0a/g' | tr -d \n | tr -s \uE000 \n | uniq
+            return
+        else
+            set -l packages (dpkg --get-selections | string replace -fr '(\S+)\s+install' "\$1" | string match -e (commandline -ct))
+            apt-cache --no-generate show $packages 2>/dev/null | sed -r '/^(Package|Description-[a-z]{2}):/!d;s/Package: (.*)/\1\t/g;s/Description-.*: (.*)/\1\xee\x80\x80\x0a/g' | tr -d \n | tr -s \uE000 \n | uniq
+
             return
         end
     end

@@ -2247,6 +2247,18 @@ static void test_test() {
     // https://github.com/fish-shell/fish-shell/issues/601
     do_test(run_test_test(0, L"-S = -S"));
     do_test(run_test_test(1, L"! ! ! A"));
+
+    // Verify that 1. doubles are treated as doubles, and 2. integers that cannot be represented as
+    // doubles are still treated as integers.
+    do_test(run_test_test(0, L"4611686018427387904 -eq 4611686018427387904"));
+    do_test(run_test_test(0, L"4611686018427387904.0 -eq 4611686018427387904.0"));
+    do_test(run_test_test(0, L"4611686018427387904.00000000000000001 -eq 4611686018427387904.0"));
+    do_test(run_test_test(1, L"4611686018427387904 -eq 4611686018427387905"));
+    do_test(run_test_test(0, L"-4611686018427387904 -ne 4611686018427387904"));
+    do_test(run_test_test(0, L"-4611686018427387904 -le 4611686018427387904"));
+    do_test(run_test_test(1, L"-4611686018427387904 -ge 4611686018427387904"));
+    do_test(run_test_test(1, L"4611686018427387904 -gt 4611686018427387904"));
+    do_test(run_test_test(0, L"4611686018427387904 -ge 4611686018427387904"));
 }
 
 /// Testing colors.

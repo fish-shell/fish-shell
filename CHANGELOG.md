@@ -62,6 +62,7 @@ fish 3.0 is a major release which brings with it both improvements in functional
 - Path completions now support expansions, meaning expressions like `python ~/<TAB>` now provides file suggestions just like any other relative or absolute path. (This includes support for other expansions, too.)
 - The `string` builtin has new commands `split0` and `join0` for working with NUL-delimited output.
 - The `-d` option to `functions` to set the description of an existing function now works; before 3.0 it was documented but unimplemented. Note that the long form `--description` continues to work. (#5105)
+- `test` and `[` now support floating point values in numeric comparisons.
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).

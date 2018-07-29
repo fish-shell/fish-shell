@@ -517,6 +517,11 @@ int fish_wcswidth(const wchar_t *str) { return fish_wcswidth(str, wcslen(str)); 
 /// See fallback.h for the normal definitions.
 int fish_wcswidth(const wcstring &str) { return fish_wcswidth(str.c_str(), str.size()); }
 
+locale_t fish_c_locale() {
+    static locale_t loc = newlocale(LC_ALL_MASK, "C", NULL);
+    return loc;
+}
+
 /// Like fish_wcstol(), but fails on a value outside the range of an int.
 ///
 /// This is needed because BSD and GNU implementations differ in several ways that make it really

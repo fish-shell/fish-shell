@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <time.h>
+#include <xlocale.h>
 #include <string>
 
 #include "common.h"
@@ -116,6 +117,9 @@ int fish_iswgraph(wint_t wc);
 
 int fish_wcswidth(const wchar_t *str);
 int fish_wcswidth(const wcstring &str);
+
+// returns an immortal locale_t corresponding to the C locale.
+locale_t fish_c_locale();
 
 int fish_wcstoi(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10);
 long fish_wcstol(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10);

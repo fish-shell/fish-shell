@@ -69,6 +69,7 @@ fish 3.0 is a major release which brings with it both improvements in functional
   - `bd` (#4472)
   - `bower`
   - `configure` (autoconf only)
+  - `hjson`
   - `j` (autojump #4344)
   - `jhipster` (#4472)
   - `kldload`

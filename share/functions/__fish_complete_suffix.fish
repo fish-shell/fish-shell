@@ -63,7 +63,7 @@ function __fish_complete_suffix -d "Complete using files"
         end
     end
 
-    set files $dirs $all
+    set files $all $dirs
     if string match -qr '^\\./' -- $comp
         set files ./$files
     end

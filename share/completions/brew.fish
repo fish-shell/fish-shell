@@ -95,7 +95,7 @@ function __fish_brew_needs_cask_action
 end
 
 function __fish_brew_casks
-  brew cask search
+  brew search --casks
 end
 
 function __fish_brew_casks_installed

@@ -2,8 +2,12 @@
 ================================================
 
 fish is a smart and user-friendly command line shell for macOS, Linux, and the rest of the family.
-fish includes features like syntax highlighting, autosuggest-as-you-type, and fancy tab completions
-that just work, with no configuration required.
+fish includes features such as
+* syntax highlighting
+* auto suggestions
+* fancy tab completions
+
+that just work, with no configuration or learn required.
 
 For more on fish's design philosophy, see the [design document](https://fishshell.com/docs/current/design.html).
 
@@ -85,6 +89,12 @@ If you wish to use fish as your default shell, use the following command:
 	chsh -s /usr/local/bin/fish
 
 `chsh` will prompt you for your password and change your default shell. (Substitute `/usr/local/bin/fish` with whatever path fish was installed to, if it differs.)
+
+If you wish to use fish as permanently default shell for specified user:
+
+	usermod -s /usr/bin/fish username
+
+`username` for the specified user, and must be run as root though.
 
 Use the following command if fish isn't already added to `/etc/shells` to permit fish to be your login shell:
 

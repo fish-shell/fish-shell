@@ -2,8 +2,12 @@
 ================================================
 
 fish is a smart and user-friendly command line shell for macOS, Linux, and the rest of the family.
-fish includes features like syntax highlighting, autosuggest-as-you-type, and fancy tab completions
-that just work, with no configuration required.
+fish includes features such as
+* syntax highlighting
+* auto suggestions
+* fancy tab completions
+
+that just work, with no configuration or learn required.
 
 For more on fish's design philosophy, see the [design document](https://fishshell.com/docs/current/design.html).
 

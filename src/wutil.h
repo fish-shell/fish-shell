@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <time.h>
-#include <xlocale.h>
+#include <locale.h>
 #include <string>
 
 #include "common.h"

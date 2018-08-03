@@ -84,6 +84,7 @@ fish 3.0 is a major release which brings with it both improvements in functional
   - `unzip`
   - `xsv`
 -  Lots of improvements to completions (especially `git`).
+  - `brew`
 -  Improved French translations.
 
 --

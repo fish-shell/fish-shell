@@ -17,7 +17,201 @@
 
 \section introduction Introduction
 
-This is the documentation for `fish`, the friendly interactive shell. `fish` is a user friendly commandline shell intended mostly for interactive use. A shell is a program used to execute other programs. For the latest information on `fish`, please visit the <a href="https://fishshell.com/">`fish` homepage</a>.
+This is the documentation for *fish* the <b>f</b> riendly <b>i</b> nteractive <b>sh</b> ell.
+
+A shell is a commandline interpreter. It reads text input from the commandline and interpretes it as commands to operating system, see: <a href="#shell">What is a Shell</a>.
+
+So shells serve as user-interface between applications and the operating system. There are many different shells. They differ on how this interface is implemented. *fish* specializes in the following ways:
+
+- <b>Extensive UI</b>: *fish* supports the user with syntax highlighting, autosuggestions, tab completions and selections lists, that can be navigated and filtered, see: <a href="#autosuggestions">Autosuggestions</a> and <a href="#completion">Tab Completions</a>.
+
+- <b>No further configuration is needed</b>: *fish* comes preconfigured so that it will be an efficient helper on the commandline out of the box.
+
+- <b>Add new commands easily</b>: in *fish* new commands can be added on the fly. The syntax is easy to learn and there is no administrative overhead, see: <a href="#syntax-function">Functions</a>.
+
+- <b>Interactive shell</b>: *fish* focuses on commands that will be run in an interactive session: While it supports job control for external commands, its own commands share the process of the shell, that started them.
+
+<a href="#introduction"><-</a><hr>
+
+
+\section install Installation and Start
+
+This section is on how to install, uninstall, start and exit a *fish* shell and on how to make *fish* the default shell:
+
+- <a href="#installation">Install</a>: How to install *fish*
+- <a href="#default-shell">Default Shell</a>: How to switch to *fish* as the default shell
+- <a href="#start">Starting and Exiting</a>: How to start and exit a *fish* shell
+- <a href="#uninstall">Uninstall</a>: How to uninstall *fish*
+- <a href="#bash">Executing Bash</a>: How to execute *bash* commands in *fish*
+
+\subsection installation Installation
+
+Instructions for installing fish are on the <a href="https://fishshell.com/">fish homepage</a>. Search that page for "Go fish". 
+
+To install the development version of *fish* see the instructions at the <a href="https://github.com/fish-shell/fish-shell">project's GitHub page</a>.
+
+\subsection default-shell Default Shell
+
+You can make *fish* your default shell by adding *fish*'s  executable in two places:
+- add `/usr/local/bin/fish`  to  `/etc/shells`
+- change your default shell with `chsh -s` to `/usr/local/bin/fish`
+
+For for detailed instructions see <a href="tutorial.html#tut_switching_to_fish">Switching to *fish*</a>.
+
+\subsection uninstall Uninstalling
+
+For uninstalling *fish*: see <a href="faq.html#faq-uninstalling">FAQ: Uninstalling *fish*</a>
+
+\subsection start Starting and Exiting
+
+Once *fish* has been installed, open a terminal. If *fish* is not the default shell:
+
+- Enter `fish` to start a *fish* shell:
+
+\fish
+>fish
+\endfish
+
+- Enter `exit` to exit a *fish* shell:
+
+\fish
+>exit
+\endfish
+
+\subsection bash Executing Bash
+
+If *fish* is your default shell you can still execute *bash* commands in case you need to:
+
+- a single command can be executed with:
+
+\fish
+>bash -c SomeBashCommand
+\endfish
+
+- or a *bash* shell can be opened with:
+
+\fish
+>/bin/bash
+\endfish
+
+This might be useful, when copying complicated *bash* commands from a website. Translating them into *fish* syntax can be avoided that way.
+
+<a href="#install"><-</a><hr>
+
+\section shell What is a Shell
+
+This section is about the basics of shells. *fish* is a shell and shells have a lot in common:
+
+- <a href="#shell-standards">Shell Standards</a>: Why shells adjust to standards
+- <a href="#man-page">Manual Pages</a>: Commands usually come with a standardized manual page
+- <a href="#shell-syntax">Command Syntax</a>: Shell commands have a standard syntax
+- <a href="#shell-programming">Commands versus Programs</a>: Commands differ from normal programs
+- <a href="#shebang-line">Shebang Line</a>: How the shell knows the language of a script
+
+\subsection shell-standards Shell Standards
+
+A shell is an interface to the operating system that reads from the commandline of a terminal. A shell's task is to identify and interpret commands. The commands can come from different applications and can be written in different programming languages.
+
+This can only work smoothly if shells adapt to some common standards. For shells there is the POSIX standard, see <a href="https://en.wikipedia.org/wiki/Command-line_interface#Command-line_interpreter">Command-line interpreters</a>. `fish` tries to satisfy the POSIX standard wherever it does not get into the way of its own design principles, see <a href="design.html">`fish` Design</a>.
+
+\subsection man-page Manual Pages
+
+There is a common standard on how to receive help on shell commands: applications provide a manual page to their commands that can be opened with the `man` command:
+
+\fish
+>man COMMAND
+\endfish
+
+This convention helps to make sure help can be found on commands no matter where they originate from. *fish*'s internal commands all come with a manual page.
+
+\subsection shell-syntax Command Syntax
+
+Shell commands also have some syntax in common, no matter where they originate from: 
+
+Commands consist of three parts:
+
+\fish
+COMMAND [OPTIONS] ARGUMENTS
+\endfish
+
+- <b>`COMMAND`</b>: the name of the executeable
+
+- <b>`[OPTIONS]`</b>: options can change the behaviour of a command
+
+- <b>`ARGUMENTS`</b>: input to the command
+
+For external <b>commands</b> the executable is usually stored on file and the file path must be included in the variable `$PATH`, so that the file can be found: see <a href="#variables-special">Special Variables</a>.
+
+<b>Options</b> come in two forms: a short name, that is a hyphen with a single letter; or a long name, consisting of two hyphens with words connected by hyphens. Example: `-h` and `--help` are common options for opening the manual page of a command. Options are a fixed set, described in the manual pages of the command, see <a href="#man-page">Manual Pages</a>
+
+<b>Arguments</b> are the arbitrary input part of a command: often it is a file or directory name, sometimes it is a string or a list.
+
+Example:
+
+\fish
+>echo -s Hallo World!
+HalloWorld!
+\endfish
+
+-  both `Hallo` and `World!` are arguments to the echo command
+- `-s` is an option that suppresses spaces in the output of the command
+
+\subsection shell-programming Commands versus Programs
+
+Shell commands differ from other programs in the following way:
+
+- they cannot return variables
+
+Instead:
+
+- They transform an <b>input stream</b> into an <b>output stream</b>. Both of these streams are usually the terminal, but they can be redirected.
+
+- They return an <b>exit code</b>: this exit code is 0 when the command executes normally and between 1 and 255 otherwise.
+
+This leads to another way of programming for shell commands: they can directly return variables, but they can pass on content to other commands in following ways:
+
+<b>Commands can pass on content as a stream</b>: one command takes the output stream of another command as its input stream: 
+
+Example:
+
+\fish
+>ls -l | grep "my topic"
+\endfish
+
+- every line of the `ls` command is immediatelly passed on to the `grep` command and treated separately. 
+
+In this case the two commands execute in parallel. This is called piping, see <a href="#piping">Piping</a>.
+
+<b>Commands can pass on all of their output stream as a chunk</b>: 
+
+Example:
+\fish
+>echo (ls a*)
+\endfish
+
+- the `echo` command takes the output of the `ls` command as a chunk and prints it to the terminal. The `echo` command waits for the `ls` command to finish, before it executes.
+
+In this case one command waits for the other command to finish, before it executes. This is called command substitution, see <a href="#expand-command-substitution">Command Substitution</a>.
+
+\subsection shebang-line Shebang Line
+
+Since script for shell commands can be written in many different languages, they need to carry information about what interpreter is needed to execute them: For this they are expected to have a first line, the shebang line, which names an executable for this purpose:
+
+Example: 
+
+A scripts written in `bash` it would need a first line like this:
+
+```
+#!/bin/bash
+```
+
+- this line tells the shell to execute the file with the *bash* interpreter, that is located at the path `/bin/bash`.
+
+For a script, written in another language, just replace the interpreter `/bin/bash` with the language interpreter of that other language (for example `/bin/python` for a `python` script)
+
+This line is only needed when scripts are executed by another interpreter, so for *fish* internal commands, that are executed by *fish* the shebang line is not necessary.
+
+<a href="#shell"><-</a><hr>
 
 
 \section syntax Syntax overview

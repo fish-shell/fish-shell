@@ -500,12 +500,6 @@ int builtin_run(parser_t &parser, wchar_t **argv, io_streams_t &streams) {
     }
 
     if (const builtin_data_t *data = builtin_lookup(argv[0])) {
-        // Warning: layering violation and naughty cast. The code originally had a much more
-        // complicated solution to achieve exactly the same result: lie about the constness of argv.
-        // Some of the builtins we call do mutate the array via their calls to wgetopt() which could
-        // result in the pointers being reordered. This is harmless because we only get called once
-        // with a given argv array and nothing else will look at the contents of the array after we
-        // return.
         return data->func(parser, streams, argv);
     }
 

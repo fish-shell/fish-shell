@@ -90,8 +90,8 @@ class process_t {
     void set_argv(const wcstring_list_t &argv) { argv_array.set(argv); }
 
     /// Returns argv.
-    const wchar_t *const *get_argv(void) const { return argv_array.get(); }
-    const null_terminated_array_t<wchar_t> &get_argv_array(void) const { return argv_array; }
+    wchar_t **get_argv() { return argv_array.get(); }
+    const null_terminated_array_t<wchar_t> &get_argv_array() const { return argv_array; }
 
     /// Returns argv[idx].
     const wchar_t *argv(size_t idx) const {

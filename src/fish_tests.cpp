@@ -2159,14 +2159,16 @@ static void test_test_brackets() {
     parser_t parser;
     io_streams_t streams(0);
 
-    const wchar_t *argv1[] = {L"[", L"foo", NULL};
-    do_test(builtin_test(parser, streams, (wchar_t **)argv1) != 0);
+    null_terminated_array_t<wchar_t> args;
 
-    const wchar_t *argv2[] = {L"[", L"foo", L"]", NULL};
-    do_test(builtin_test(parser, streams, (wchar_t **)argv2) == 0);
+    args.set({L"[", L"foo"});
+    do_test(builtin_test(parser, streams, args.get()) != 0);
 
-    const wchar_t *argv3[] = {L"[", L"foo", L"]", L"bar", NULL};
-    do_test(builtin_test(parser, streams, (wchar_t **)argv3) != 0);
+    args.set({L"[", L"foo", L"]"});
+    do_test(builtin_test(parser, streams, args.get()) == 0);
+
+    args.set({L"[", L"foo", L"]", L"bar"});
+    do_test(builtin_test(parser, streams, args.get()) != 0);
 }
 
 static void test_test() {

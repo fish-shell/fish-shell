@@ -523,7 +523,7 @@ char **make_null_terminated_array(const std::vector<std::string> &lst);
 // Helper class for managing a null-terminated array of null-terminated strings (of some char type).
 template <typename CharType_t>
 class null_terminated_array_t {
-    CharType_t **array;
+    CharType_t **array{NULL};
 
     // No assignment or copying.
     void operator=(null_terminated_array_t rhs);
@@ -547,11 +547,22 @@ class null_terminated_array_t {
     }
 
    public:
-    null_terminated_array_t() : array(NULL) {}
+    null_terminated_array_t() = default;
+
     explicit null_terminated_array_t(const string_list_t &argv)
         : array(make_null_terminated_array(argv)) {}
 
     ~null_terminated_array_t() { this->free(); }
+
+    null_terminated_array_t(null_terminated_array_t &&rhs) : array(rhs.array) {
+        rhs.array = nullptr;
+    }
+
+    null_terminated_array_t operator=(null_terminated_array_t &&rhs) {
+        free();
+        array = rhs.array;
+        rhs.array = nullptr;
+    }
 
     void set(const string_list_t &argv) {
         this->free();
@@ -559,6 +570,7 @@ class null_terminated_array_t {
     }
 
     const CharType_t *const *get() const { return array; }
+    CharType_t **get() { return array; }
 
     void clear() { this->free(); }
 };

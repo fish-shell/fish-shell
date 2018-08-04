@@ -212,9 +212,8 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     wcstring_list_t args = {L"function"};
     args.insert(args.end(), c_args.begin(), c_args.end());
 
-    // Hackish const_cast matches the one in builtin_run.
-    const null_terminated_array_t<wchar_t> argv_array(args);
-    wchar_t **argv = const_cast<wchar_t **>(argv_array.get());
+    null_terminated_array_t<wchar_t> argv_array(args);
+    wchar_t **argv = argv_array.get();
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
 

@@ -88,7 +88,7 @@ enum { COMMAND_NOT_BUILTIN, BUILTIN_REGULAR, BUILTIN_FUNCTION };
 void builtin_init();
 bool builtin_exists(const wcstring &cmd);
 
-int builtin_run(parser_t &parser, const wchar_t *const *argv, io_streams_t &streams);
+int builtin_run(parser_t &parser, wchar_t **argv, io_streams_t &streams);
 
 wcstring_list_t builtin_get_names();
 void builtin_get_names(std::vector<completion_t> *list);

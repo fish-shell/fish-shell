@@ -587,7 +587,7 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
     // We need to convert our wcstring_list_t to a <wchar_t **> that can be used by wgetopt_long().
     // This ensures the memory for the data structure is freed when we leave this scope.
     null_terminated_array_t<wchar_t> argv_container(args);
-    auto argv = (wchar_t **)argv_container.get();
+    auto argv = argv_container.get();
 
     int optind;
     int retval = argparse_parse_flags(opts, short_options.c_str(), long_options.data(), cmd, argc,

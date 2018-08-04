@@ -486,7 +486,7 @@ static const wcstring_list_t help_builtins({L"for", L"while", L"function", L"if"
 static bool cmd_needs_help(const wchar_t *cmd) { return contains(help_builtins, cmd); }
 
 /// Execute a builtin command
-int builtin_run(parser_t &parser, const wchar_t *const *argv, io_streams_t &streams) {
+int builtin_run(parser_t &parser, wchar_t **argv, io_streams_t &streams) {
     UNUSED(parser);
     UNUSED(streams);
     if (argv == NULL || argv[0] == NULL) return STATUS_INVALID_ARGS;
@@ -499,15 +499,14 @@ int builtin_run(parser_t &parser, const wchar_t *const *argv, io_streams_t &stre
         return STATUS_CMD_OK;
     }
 
-    const builtin_data_t *data = builtin_lookup(argv[0]);
-    if (data) {
+    if (const builtin_data_t *data = builtin_lookup(argv[0])) {
         // Warning: layering violation and naughty cast. The code originally had a much more
         // complicated solution to achieve exactly the same result: lie about the constness of argv.
         // Some of the builtins we call do mutate the array via their calls to wgetopt() which could
         // result in the pointers being reordered. This is harmless because we only get called once
         // with a given argv array and nothing else will look at the contents of the array after we
         // return.
-        return data->func(parser, streams, (wchar_t **)argv);
+        return data->func(parser, streams, argv);
     }
 
     debug(0, UNKNOWN_BUILTIN_ERR_MSG, argv[0]);

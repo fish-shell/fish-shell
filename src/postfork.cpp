@@ -133,7 +133,7 @@ bool set_child_group(job_t *j, pid_t child_pid) {
     return true;
 }
 
-bool maybe_assign_terminal(job_t *j) {
+bool maybe_assign_terminal(const job_t *j) {
     assert(j->pgid > 1 && "maybe_assign_terminal() called on job with invalid pgid!");
 
     if (j->get_flag(JOB_TERMINAL) && j->get_flag(JOB_FOREGROUND)) {  //!OCLINT(early exit)

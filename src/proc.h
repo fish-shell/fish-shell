@@ -372,4 +372,4 @@ pid_t proc_wait_any();
 
 #endif
 
-bool terminal_give_to_job(job_t *j, int cont);
+bool terminal_give_to_job(const job_t *j, bool cont);

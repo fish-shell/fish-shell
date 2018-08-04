@@ -2676,7 +2676,7 @@ static void test_autosuggest_suggest_special() {
     perform_one_completion_cd_test(L"cd ~hahaha/", L"path1/", __LINE__);
 
     popd();
-    system("rmdir ~/test_autosuggest_suggest_special/");
+    (void)system("rmdir ~/test_autosuggest_suggest_special/");
 }
 
 static void perform_one_autosuggestion_should_ignore_test(const wcstring &command, long line) {
@@ -2831,7 +2831,7 @@ static void test_universal() {
             }
         }
     }
-    system("rm -Rf test/fish_uvars_test/");
+    (void)system("rm -Rf test/fish_uvars_test/");
 }
 
 static bool callback_data_less_than(const callback_data_t &a, const callback_data_t &b) {
@@ -2886,7 +2886,7 @@ static void test_universal_callbacks() {
     do_test(callbacks.at(2).type == ERASE);
     do_test(callbacks.at(2).key == L"delta");
     do_test(callbacks.at(2).val == L"");
-    system("rm -Rf test/fish_uvars_test/");
+    (void)system("rm -Rf test/fish_uvars_test/");
 }
 
 bool poll_notifier(const std::unique_ptr<universal_notifier_t> &note) {

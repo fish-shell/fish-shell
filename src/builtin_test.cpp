@@ -24,8 +24,7 @@
 using std::unique_ptr;
 using std::move;
 
-int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv);
-
+namespace {
 namespace test_expressions {
 
 enum token_t {
@@ -794,6 +793,7 @@ static bool unary_primary_evaluate(test_expressions::token_t token, const wcstri
     }
 }
 };  // namespace test_expressions
+};  // anonymous namespace
 
 /// Evaluate a conditional expression given the arguments. If fromtest is set, the caller is the
 /// test or [ builtin; with the pointer giving the name of the command. for POSIX conformance this

@@ -500,7 +500,15 @@ int builtin_run(parser_t &parser, wchar_t **argv, io_streams_t &streams) {
     }
 
     if (const builtin_data_t *data = builtin_lookup(argv[0])) {
-        return data->func(parser, streams, argv);
+        // If we are interactive, save the foreground pgroup and restore it after in case the
+        // builtin needs to read from the terminal. See #4540.
+        bool grab_tty = is_interactive_session && isatty(streams.stdin_fd);
+        pid_t pgroup_to_restore = grab_tty ? terminal_acquire_before_builtin() : -1;
+        int ret = data->func(parser, streams, argv);
+        if (pgroup_to_restore >= 0) {
+            tcsetpgrp(STDIN_FILENO, pgroup_to_restore);
+        }
+        return ret;
     }
 
     debug(0, UNKNOWN_BUILTIN_ERR_MSG, argv[0]);

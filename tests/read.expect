@@ -90,6 +90,14 @@ expect_prompt
 expect_marker 7
 print_var_contents foo
 
+# Verify we don't hang on `read | cat`. See #4540.
+send_line "read | cat"
+expect_read_prompt
+send_line -h "bar\r_marker 4540"
+expect_prompt
+expect_marker 4540
+
+
 # ==========
 # The fix for issue #2007 initially introduced a problem when using a function
 # to read from /dev/stdin when that is associated with the tty. These tests

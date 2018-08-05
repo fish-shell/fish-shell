@@ -881,6 +881,17 @@ bool terminal_give_to_job(const job_t *j, bool cont) {
     return true;
 }
 
+pid_t terminal_acquire_before_builtin() {
+    pid_t selfpid = getpid();
+    pid_t current_owner = tcgetpgrp(STDIN_FILENO);
+    if (current_owner >= 0 && current_owner != selfpid) {
+        if (tcsetpgrp(STDIN_FILENO, selfpid) == 0) {
+            return current_owner;
+        }
+    }
+    return -1;
+}
+
 /// Returns control of the terminal to the shell, and saves the terminal attribute state to the job,
 /// so that we can restore the terminal ownership to the job at a later time.
 static bool terminal_return_from_job(job_t *j) {

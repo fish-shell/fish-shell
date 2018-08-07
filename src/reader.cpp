@@ -1180,9 +1180,10 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
         if (wcschr(L"'\"", last_char) && cursor_at_end) return nothing;
 
         // Try normal completions.
+        completion_request_flags_t complete_flags = COMPLETION_REQUEST_AUTOSUGGESTION;
         std::vector<completion_t> completions;
-        complete(search_string, &completions, COMPLETION_REQUEST_AUTOSUGGESTION);
-        completions_sort_and_prioritize(&completions);
+        complete(search_string, &completions, complete_flags);
+        completions_sort_and_prioritize(&completions, complete_flags);
         if (!completions.empty()) {
             const completion_t &comp = completions.at(0);
             size_t cursor = cursor_pos;

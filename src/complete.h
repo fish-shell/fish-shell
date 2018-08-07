@@ -43,7 +43,9 @@ enum {
     /// If you do escape, don't escape tildes.
     COMPLETE_DONT_ESCAPE_TILDES = 1 << 5,
     /// Do not sort supplied completions
-    COMPLETE_DONT_SORT = 1 << 6
+    COMPLETE_DONT_SORT = 1 << 6,
+    /// This completion looks to have the same string as an existing argument.
+    COMPLETE_DUPLICATES_ARGUMENT = 1 << 7
 };
 typedef int complete_flags_t;
 
@@ -94,10 +96,6 @@ class completion_t {
     void prepend_token_prefix(const wcstring &prefix);
 };
 
-/// Sorts and remove any duplicate completions in the completion list, then puts them in priority
-/// order.
-void completions_sort_and_prioritize(std::vector<completion_t> *comps);
-
 enum {
     COMPLETION_REQUEST_DEFAULT = 0,
     COMPLETION_REQUEST_AUTOSUGGESTION = 1
@@ -113,6 +111,11 @@ enum complete_option_type_t {
     option_type_single_long,  // -foo
     option_type_double_long   // --foo
 };
+
+/// Sorts and remove any duplicate completions in the completion list, then puts them in priority
+/// order.
+void completions_sort_and_prioritize(std::vector<completion_t> *comps,
+                                     completion_request_flags_t flags = COMPLETION_REQUEST_DEFAULT);
 
 /// Add a completion.
 ///

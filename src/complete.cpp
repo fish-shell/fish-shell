@@ -18,7 +18,6 @@
 #include <list>
 #include <memory>
 #include <numeric>
-#include <set>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
@@ -130,6 +129,9 @@ typedef struct complete_entry_opt {
     }
 
 } complete_entry_opt_t;
+
+using arg_list_t = std::vector<tnode_t<grammar::argument>>;
+
 /// Last value used in the order field of completion_entry_t.
 static unsigned int kCompleteOrder = 0;
 
@@ -243,6 +245,13 @@ static bool compare_completions_by_match_type(const completion_t &a, const compl
     return a.match.type < b.match.type;
 }
 
+static bool compare_completions_by_duplicate_arguments(const completion_t &a,
+                                                       const completion_t &b) {
+    bool ad = a.flags & COMPLETE_DUPLICATES_ARGUMENT;
+    bool bd = b.flags & COMPLETE_DUPLICATES_ARGUMENT;
+    return ad < bd;
+}
+
 template <class Iterator, class HashFunction>
 static Iterator unique_unsorted(Iterator begin, Iterator end, HashFunction hash) {
     typedef typename std::iterator_traits<Iterator>::value_type T;
@@ -251,7 +260,8 @@ static Iterator unique_unsorted(Iterator begin, Iterator end, HashFunction hash)
     return std::remove_if(begin, end, [&](const T &val) { return !temp.insert(hash(val)).second; });
 }
 
-void completions_sort_and_prioritize(std::vector<completion_t> *comps) {
+void completions_sort_and_prioritize(std::vector<completion_t> *comps,
+                                     completion_request_flags_t flags) {
     // Find the best match type.
     fuzzy_match_type_t best_type = fuzzy_match_none;
     for (size_t i = 0; i < comps->size(); i++) {
@@ -279,6 +289,11 @@ void completions_sort_and_prioritize(std::vector<completion_t> *comps) {
 
     // Sort the remainder by match type. They're already sorted alphabetically.
     stable_sort(comps->begin(), comps->end(), compare_completions_by_match_type);
+
+    // Lastly, if this is for an autosuggestion, prefer to avoid completions that duplicate
+    // arguments.
+    if (flags & COMPLETION_REQUEST_AUTOSUGGESTION)
+        stable_sort(comps->begin(), comps->end(), compare_completions_by_duplicate_arguments);
 }
 
 /// Class representing an attempt to compute completions.
@@ -348,6 +363,8 @@ class completer_t {
     }
 
     bool empty() const { return completions.empty(); }
+
+    void mark_completions_duplicating_arguments(const wcstring &prefix, const arg_list_t &args);
 
    public:
     completer_t(wcstring c, completion_request_flags_t f) : cmd(std::move(c)), flags(f) {}
@@ -1304,9 +1321,34 @@ static void walk_wrap_chain(const wcstring &command_line, source_range_t command
     }
 }
 
+/// Set the DUPLICATES_ARG flag in any completion that duplicates an argument.
+void completer_t::mark_completions_duplicating_arguments(const wcstring &prefix,
+                                                         const arg_list_t &args) {
+    // Get all the arguments, unescaped, into an array that we're going to bsearch.
+    wcstring_list_t arg_strs;
+    for (const auto &arg : args) {
+        wcstring argstr = arg.get_source(cmd);
+        wcstring argstr_unesc;
+        if (unescape_string(argstr, &argstr_unesc, UNESCAPE_DEFAULT)) {
+            arg_strs.push_back(std::move(argstr_unesc));
+        }
+    }
+    std::sort(arg_strs.begin(), arg_strs.end());
+
+    wcstring comp_str;
+    for (completion_t &comp : completions) {
+        comp_str = comp.completion;
+        if (!(comp.flags & COMPLETE_REPLACES_TOKEN)) {
+            comp_str.insert(0, prefix);
+        }
+        if (std::binary_search(arg_strs.begin(), arg_strs.end(), comp_str)) {
+            comp.flags |= COMPLETE_DUPLICATES_ARGUMENT;
+        }
+    }
+}
+
 /// Return the index of an argument from \p args containing the position \p pos, or none if none.
-static maybe_t<size_t> find_argument_containing_position(
-    const std::vector<tnode_t<grammar::argument>> &args, size_t pos) {
+static maybe_t<size_t> find_argument_containing_position(const arg_list_t &args, size_t pos) {
     size_t idx = 0;
     for (const auto &arg : args) {
         if (arg.location_in_or_at_end_of_source_range(pos)) {
@@ -1426,7 +1468,7 @@ void completer_t::perform() {
             complete_cmd(current_token, use_function, use_builtin, use_command, use_implicit_cd);
         } else {
             // Get all the arguments.
-            auto all_arguments = plain_statement.descendants<grammar::argument>();
+            arg_list_t all_arguments = plain_statement.descendants<grammar::argument>();
 
             // See whether we are in an argument. We may also be in a redirection, or nothing at
             // all.
@@ -1518,6 +1560,9 @@ void completer_t::perform() {
 
             // This function wants the unescaped string.
             complete_param_expand(current_token, do_file, handle_as_special_cd);
+
+            // Lastly mark any completions that appear to already be present in arguments.
+            mark_completions_duplicating_arguments(current_token, all_arguments);
         }
     }
 }

@@ -313,7 +313,7 @@ class completer_t {
     completer_t(wcstring c, completion_request_flags_t f) : flags(f), initial_cmd(std::move(c)) {}
 
     bool empty() const { return completions.empty(); }
-    const std::vector<completion_t> &get_completions() { return completions; }
+    std::vector<completion_t> acquire_completions() { return std::move(completions); }
 
     bool try_complete_variable(const wcstring &str);
     bool try_complete_user(const wcstring &str);
@@ -1534,7 +1534,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
         }
     }
 
-    *out_comps = completer.get_completions();
+    *out_comps = completer.acquire_completions();
 }
 
 /// Print the GNU longopt style switch \c opt, and the argument \c argument to the specified

@@ -283,8 +283,8 @@ class lru_cache_t {
 
         explicit iterator(const lru_link_t *val) : node(val) {}
         void operator++() { node = node->prev; }
-        bool operator==(const iterator &other) { return node == other.node; }
-        bool operator!=(const iterator &other) { return !(*this == other); }
+        bool operator==(const iterator &other) const { return node == other.node; }
+        bool operator!=(const iterator &other) const { return !(*this == other); }
         value_type operator*() const {
             const lru_node_t *dnode = static_cast<const lru_node_t *>(node);
             return {*dnode->key, dnode->value};

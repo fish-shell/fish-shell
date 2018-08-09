@@ -1171,7 +1171,7 @@ class universal_notifier_notifyd_t : public universal_notifier_t {
         }
     }
 
-    int notification_fd() { return notify_fd; }
+    int notification_fd() const { return notify_fd; }
 
     bool notification_fd_became_readable(int fd) {
         // notifyd notifications come in as 32 bit values. We don't care about the value. We set
@@ -1253,7 +1253,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         }
     }
 
-    int notification_fd() override {
+    int notification_fd() const override {
         if (polling_due_to_readable_fd) {
             // We are in polling mode because we think our fd is readable. This means that, if we
             // return it to be select()'d on, we'll be called back immediately. So don't return it.
@@ -1411,7 +1411,7 @@ universal_notifier_t::universal_notifier_t() = default;
 
 universal_notifier_t::~universal_notifier_t() = default;
 
-int universal_notifier_t::notification_fd() { return -1; }
+int universal_notifier_t::notification_fd() const { return -1; }
 
 void universal_notifier_t::post_notification() {}
 

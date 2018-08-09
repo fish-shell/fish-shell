@@ -154,7 +154,7 @@ class universal_notifier_t {
     virtual unsigned long usec_delay_between_polls() const;
 
     // Returns the fd from which to watch for events, or -1 if none.
-    virtual int notification_fd();
+    virtual int notification_fd() const;
 
     // The notification_fd is readable; drain it. Returns true if a notification is considered to
     // have been posted.

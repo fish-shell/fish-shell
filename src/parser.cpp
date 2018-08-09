@@ -601,7 +601,7 @@ job_t *parser_t::job_get(job_id_t id) {
     return NULL;
 }
 
-job_t *parser_t::job_get_from_pid(pid_t pid) {
+job_t *parser_t::job_get_from_pid(pid_t pid) const {
     job_iterator_t jobs;
     job_t *job;
 
@@ -708,7 +708,7 @@ template int parser_t::eval_node(parsed_source_ref_t, tnode_t<grammar::job_list>
                                  const io_chain_t &, enum block_type_t);
 
 bool parser_t::detect_errors_in_argument_list(const wcstring &arg_list_src, wcstring *out,
-                                              const wchar_t *prefix) {
+                                              const wchar_t *prefix) const {
     bool errored = false;
     parse_error_list_t errors;
 

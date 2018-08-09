@@ -303,7 +303,7 @@ class parser_t {
     job_t *job_get(job_id_t job_id);
 
     /// Returns the job with the given pid.
-    job_t *job_get_from_pid(pid_t pid);
+    job_t *job_get_from_pid(pid_t pid) const;
 
     /// Returns a new profile item if profiling is active. The caller should fill it in. The
     /// parser_t will clean it up.
@@ -315,7 +315,7 @@ class parser_t {
     /// Detect errors in the specified string when parsed as an argument list. Returns true if an
     /// error occurred.
     bool detect_errors_in_argument_list(const wcstring &arg_list_src, wcstring *out_err,
-                                        const wchar_t *prefix);
+                                        const wchar_t *prefix) const;
 
     /// Tell the parser that the specified function may not be run if not inside of a conditional
     /// block. This is to remove some possibilities of infinite recursion.

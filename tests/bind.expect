@@ -112,6 +112,54 @@ expect_prompt -re {\r\nMORE\r\n} {
     puts stderr "vi mode delete char, default timeout: long delay"
 }
 
+# Test jumping forward til before a character with t
+send "echo MORE-TEXT-IS-NICE"
+send "\033"
+# Delay needed to allow fish to transition to vi "normal" mode.
+sleep 0.250
+send "0tTD\r"
+expect_prompt -re {\r\nMORE\r\n} {
+    puts "vi mode forward-jump-till character, default timeout: long delay"
+} unmatched {
+    puts stderr "vi mode forward-jump-till character, default timeout: long delay"
+}
+
+# Test jumping backward til before a character with T
+send "echo MORE-TEXT-IS-NICE"
+send "\033"
+# Delay needed to allow fish to transition to vi "normal" mode.
+sleep 0.250
+send "TSD\r"
+expect_prompt -re {\r\nMORE-TEXT-IS\r\n} {
+    puts "vi mode backward-jump-till character, default timeout: long delay"
+} unmatched {
+    puts stderr "vi mode backward-jump-till character, default timeout: long delay"
+}
+
+# Test jumping backward with F and repeating
+send "echo MORE-TEXT-IS-NICE"
+send "\033"
+# Delay needed to allow fish to transition to vi "normal" mode.
+sleep 0.250
+send "F-;D\r"
+expect_prompt -re {\r\nMORE-TEXT\r\n} {
+    puts "vi mode backward-jump-to character and repeat, default timeout: long delay"
+} unmatched {
+    puts stderr "vi mode backward-jump-to character and repeat, default timeout: long delay"
+}
+
+# Test jumping backward with F w/reverse jump
+send "echo MORE-TEXT-IS-NICE"
+send "\033"
+# Delay needed to allow fish to transition to vi "normal" mode.
+sleep 0.250
+send "F-F-,D\r"
+expect_prompt -re {\r\nMORE-TEXT-IS\r\n} {
+    puts "vi mode backward-jump-to character, and reverse, default timeout: long delay"
+} unmatched {
+    puts stderr "vi mode backward-jump-to character, and reverse, default timeout: long delay"
+}
+
 # Verify that changing the escape timeout has an effect.
 send "set -g fish_escape_delay_ms 200\r"
 expect_prompt

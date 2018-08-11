@@ -159,37 +159,37 @@ class reader_data_t {
     /// Current page rendering.
     page_rendering_t current_page_rendering;
     /// Whether autosuggesting is allowed at all.
-    bool allow_autosuggestion;
+    bool allow_autosuggestion{false};
     /// When backspacing, we temporarily suppress autosuggestions.
-    bool suppress_autosuggestion;
+    bool suppress_autosuggestion{false};
     /// Whether abbreviations are expanded.
-    bool expand_abbreviations;
+    bool expand_abbreviations{false};
     /// Silent mode used for password input on the read command
-    bool silent;
+    bool silent{false};
     /// The representation of the current screen contents.
     screen_t screen;
     /// The history.
-    history_t *history;
+    history_t *history{nullptr};
     /// String containing the current search item.
     wcstring search_buff;
     /// History search.
     history_search_t history_search;
     /// Saved position used by token history search.
-    size_t token_history_pos;
+    size_t token_history_pos{0};
     /// Saved search string for token history search. Not handled by command_line_changed.
     wcstring token_history_buff;
     /// List for storing previous search results. Used to avoid duplicates.
     wcstring_list_t search_prev;
-    /// The current position in search_prev.
-    size_t search_pos;
+    /// The current position in token_search_prev.
+    size_t search_pos{0};
     /// Indicates whether a selection is currently active.
-    bool sel_active;
+    bool sel_active{false};
     /// The position of the cursor, when selection was initiated.
-    size_t sel_begin_pos;
+    size_t sel_begin_pos{0};
     /// The start position of the current selection, if one.
-    size_t sel_start_pos;
+    size_t sel_start_pos{0};
     /// The stop position of the current selection, if one.
-    size_t sel_stop_pos;
+    size_t sel_stop_pos{0};
     /// Name of the current application.
     wcstring app_name;
     /// The prompt commands.
@@ -201,36 +201,36 @@ class reader_data_t {
     wcstring right_prompt_buff;
     /// Completion support.
     wcstring cycle_command_line;
-    size_t cycle_cursor_pos;
+    size_t cycle_cursor_pos{0};
     /// Color is the syntax highlighting for buff.  The format is that color[i] is the
     /// classification (according to the enum in highlight.h) of buff[i].
     std::vector<highlight_spec_t> colors;
     /// An array defining the block level at each character.
     std::vector<int> indents;
     /// Function for tab completion.
-    complete_function_t complete_func;
+    complete_function_t complete_func{nullptr};
     /// Function for syntax highlighting.
-    highlight_function_t highlight_function;
+    highlight_function_t highlight_func{nullptr};
     /// Function for testing if the string can be returned.
-    parser_test_error_bits_t (*test_func)(const wchar_t *);
+    test_function_t test_func{nullptr};
     /// When this is true, the reader will exit.
-    bool end_loop;
+    bool end_loop{false};
     /// If this is true, exit reader even if there are running jobs. This happens if we press e.g.
     /// ^D twice.
-    bool prev_end_loop;
+    bool prev_end_loop{false};
     /// The current contents of the top item in the kill ring.
     wcstring kill_item;
     /// Pointer to previous reader_data.
-    reader_data_t *next;
+    reader_data_t *next{nullptr};
     /// This variable keeps state on if we are in search mode, and if yes, what mode.
     history_search_mode_t search_mode = history_search_mode_t::none;
     /// Keep track of whether any internal code has done something which is known to require a
     /// repaint.
-    bool repaint_needed;
+    bool repaint_needed{false};
     /// Whether a screen reset is needed after a repaint.
-    bool screen_reset_needed;
+    bool screen_reset_needed{false};
     /// Whether the reader should exit on ^C.
-    bool exit_on_interrupt;
+    bool exit_on_interrupt{false};
 
     bool is_navigating_pager_contents() const { return this->pager.is_navigating_contents(); }
 
@@ -253,28 +253,7 @@ class reader_data_t {
     bool expand_abbreviation_as_necessary(size_t cursor_backtrack) const;
 
     /// Constructor
-    reader_data_t()
-        : allow_autosuggestion(false),
-          suppress_autosuggestion(false),
-          expand_abbreviations(false),
-          silent(false),
-          history(0),
-          token_history_pos(0),
-          search_pos(0),
-          sel_active(false),
-          sel_begin_pos(0),
-          sel_start_pos(0),
-          sel_stop_pos(0),
-          cycle_cursor_pos(0),
-          complete_func(0),
-          highlight_function(0),
-          test_func(0),
-          end_loop(false),
-          prev_end_loop(false),
-          next(0),
-          repaint_needed(false),
-          screen_reset_needed(false),
-          exit_on_interrupt(false) {}
+    reader_data_t() = default;
 };
 
 /// Sets the command line contents, without clearing the pager.
@@ -1927,8 +1906,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
 #endif
 }
 
-parser_test_error_bits_t reader_shell_test(const wchar_t *b) {
-    assert(b != NULL);
+parser_test_error_bits_t reader_shell_test(const wcstring &b) {
     wcstring bstr = b;
 
     // Append a newline, to act as a statement terminator.
@@ -1957,7 +1935,7 @@ parser_test_error_bits_t reader_shell_test(const wchar_t *b) {
 ///
 /// TODO: Possibly remove this. It is called from only only one place: reader_push().Since it always
 /// returns a static result it's not clear why it's needed.
-static parser_test_error_bits_t default_test(const wchar_t *b) {
+static parser_test_error_bits_t default_test(const wcstring &b) {
     UNUSED(b);
     return 0;
 }
@@ -2024,11 +2002,9 @@ void reader_set_expand_abbreviations(bool flag) { data->expand_abbreviations = f
 
 void reader_set_complete_function(complete_function_t f) { data->complete_func = f; }
 
-void reader_set_highlight_function(highlight_function_t func) { data->highlight_function = func; }
+void reader_set_highlight_function(highlight_function_t func) { data->highlight_func = func; }
 
-void reader_set_test_function(parser_test_error_bits_t (*f)(const wchar_t *)) {
-    data->test_func = f;
-}
+void reader_set_test_function(test_function_t f) { data->test_func = f; }
 
 void reader_set_exit_on_interrupt(bool i) { data->exit_on_interrupt = i; }
 
@@ -2098,7 +2074,7 @@ static std::function<highlight_result_t(void)> get_highlight_performer(const wcs
                                                                        bool no_io) {
     env_vars_snapshot_t vars(env_vars_snapshot_t::highlighting_keys);
     unsigned int generation_count = read_generation_count();
-    highlight_function_t highlight_func = no_io ? highlight_shell_no_io : data->highlight_function;
+    highlight_function_t highlight_func = no_io ? highlight_shell_no_io : data->highlight_func;
     return [=]() -> highlight_result_t {
         if (generation_count != read_generation_count()) {
             // The gen count has changed, so don't do anything.
@@ -2764,7 +2740,7 @@ const wchar_t *reader_readline(int nchars) {
                 }
 
                 // See if this command is valid.
-                int command_test_result = data->test_func(el->text.c_str());
+                int command_test_result = data->test_func(el->text);
                 if (command_test_result == 0 || command_test_result == PARSER_TEST_INCOMPLETE) {
                     // This command is valid, but an abbreviation may make it invalid. If so, we
                     // will have to test again.

@@ -162,17 +162,20 @@ void reader_set_complete_function(complete_function_t);
 typedef void (*highlight_function_t)(const wcstring &, std::vector<highlight_spec_t> &, size_t,
                                      wcstring_list_t *, const env_vars_snapshot_t &vars);
 
+/// Function type for testing if a string is valid for the reader to return.
+using test_function_t = parser_test_error_bits_t (*)(const wcstring &);
+
 /// Specify function for syntax highlighting. The function must take these arguments:
 ///
 /// - The command to be highlighted as a null terminated array of wchar_t
 /// - The color code of each character as an array of ints
 /// - The cursor position
 /// - An array_list_t used for storing error messages
-void reader_set_highlight_function(highlight_function_t);
+void reader_set_highlight_function(highlight_function_t func);
 
 /// Specify function for testing if the command buffer contains syntax errors that must be corrected
 /// before returning.
-void reader_set_test_function(parser_test_error_bits_t (*f)(const wchar_t *));
+void reader_set_test_function(test_function_t func);
 
 /// Specify string of shell commands to be run in order to generate the prompt.
 void reader_set_left_prompt(const wcstring &prompt);
@@ -202,7 +205,7 @@ bool reader_exit_forced();
 
 /// Test if the given shell command contains errors. Uses parser_test for testing. Suitable for
 /// reader_set_test_function().
-parser_test_error_bits_t reader_shell_test(const wchar_t *b);
+parser_test_error_bits_t reader_shell_test(const wcstring &);
 
 /// Test whether the interactive reader is in search mode.
 ///

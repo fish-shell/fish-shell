@@ -44,12 +44,6 @@ void io_buffer_t::read() {
     exec_close(pipe_fd[1]);
 
     if (io_mode == IO_BUFFER) {
-#if 0
-        if (fcntl( pipe_fd[0], F_SETFL, 0)) {
-            wperror( L"fcntl" );
-            return;
-        }
-#endif
         debug(4, L"io_buffer_t::read: blocking read on fd %d", pipe_fd[0]);
         while (1) {
             char b[4096];

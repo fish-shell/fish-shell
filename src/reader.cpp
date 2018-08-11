@@ -2693,7 +2693,6 @@ const wchar_t *reader_readline(int nchars) {
                     data->search_mode = history_search_mode_t::none;
 
                     if (data->token_history_pos == (size_t)-1) {
-                        // history_reset();
                         data->history_search.go_to_end();
                         reader_set_buffer(data->search_buff, data->search_buff.size());
                     } else {

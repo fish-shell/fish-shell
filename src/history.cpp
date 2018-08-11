@@ -555,15 +555,6 @@ bool history_item_t::merge(const history_item_t &item) {
     return result;
 }
 
-#if 0
-history_item_t::history_item_t(const wcstring &str)
-    : contents(str), contents_lower(L""), creation_timestamp(time(NULL)), identifier(0) {
-        for (wcstring::const_iterator it = str.begin(); it != str.end(); ++it) {
-                contents_lower.push_back(towlower(*it));
-        }
-    }
-#endif
-
 history_item_t::history_item_t(const wcstring &str, time_t when, history_identifier_t ident)
     : contents(str), contents_lower(L""), creation_timestamp(when), identifier(ident) {
     for (wcstring::const_iterator it = str.begin(); it != str.end(); ++it) {

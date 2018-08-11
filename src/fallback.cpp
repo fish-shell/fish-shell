@@ -211,21 +211,6 @@ size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz) {
 }
 #endif
 
-#if 0
-// These are not currently used.
-#ifndef HAVE_LRAND48_R
-int lrand48_r(struct drand48_data *buffer, long int *result) {
-    *result = rand_r(&buffer->seed);
-    return 0;
-}
-
-int srand48_r(long int seedval, struct drand48_data *buffer) {
-    buffer->seed = (unsigned int)seedval;
-    return 0;
-}
-#endif
-#endif
-
 #ifndef HAVE_FUTIMES
 int futimes(int fd, const struct timeval *times) {
     errno = ENOSYS;

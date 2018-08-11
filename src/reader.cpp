@@ -1932,9 +1932,6 @@ parser_test_error_bits_t reader_shell_test(const wcstring &b) {
 
 /// Test if the given string contains error. Since this is the error detection for general purpose,
 /// there are no invalid strings, so this function always returns false.
-///
-/// TODO: Possibly remove this. It is called from only only one place: reader_push().Since it always
-/// returns a static result it's not clear why it's needed.
 static parser_test_error_bits_t default_test(const wcstring &b) {
     UNUSED(b);
     return 0;
@@ -1948,7 +1945,7 @@ void reader_change_history(const wchar_t *name) {
     }
 }
 
-void reader_push(const wchar_t *name) {
+void reader_push(const wcstring &name) {
     reader_data_t *n = new reader_data_t();
 
     n->history = &history_t::history_with_name(name);
@@ -2205,7 +2202,7 @@ static bool selection_is_at_top() {
 
 /// Read interactively. Read input from stdin while providing editing facilities.
 static int read_i() {
-    reader_push(history_session_id().c_str());
+    reader_push(history_session_id());
     reader_set_complete_function(&complete);
     reader_set_highlight_function(&highlight_shell);
     reader_set_test_function(&reader_shell_test);

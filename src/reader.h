@@ -144,7 +144,7 @@ bool reader_thread_job_is_stale();
 const wchar_t *reader_readline(int nchars);
 
 /// Push a new reader environment.
-void reader_push(const wchar_t *name);
+void reader_push(const wcstring &name);
 
 /// Return to previous reader environment.
 void reader_pop();

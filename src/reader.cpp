@@ -190,8 +190,6 @@ class reader_data_t {
     size_t sel_start_pos{0};
     /// The stop position of the current selection, if one.
     size_t sel_stop_pos{0};
-    /// Name of the current application.
-    wcstring app_name;
     /// The prompt commands.
     wcstring left_prompt;
     wcstring right_prompt;
@@ -1949,7 +1947,6 @@ void reader_push(const wcstring &name) {
     reader_data_t *n = new reader_data_t();
 
     n->history = &history_t::history_with_name(name);
-    n->app_name = name;
     n->next = data;
 
     data = n;
@@ -1984,7 +1981,6 @@ void reader_pop() {
         reader_interactive_destroy();
     } else {
         end_loop = 0;
-        // history_set_mode( data->app_name.c_str() );
         s_reset(&data->screen, screen_reset_abandon_line);
     }
 }

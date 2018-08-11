@@ -108,7 +108,7 @@ history_t *reader_get_history();
 /// \param b the new buffer value
 /// \param p the cursor position. If \c p is larger than the length of the command line, the cursor
 /// is placed on the last character.
-void reader_set_buffer(const wcstring &b, size_t p);
+void reader_set_buffer(const wcstring &b, size_t p = -1);
 
 /// Get the current cursor position in the command line. If interactive mode is uninitialized,
 /// return (size_t)-1.
@@ -208,15 +208,10 @@ bool reader_exit_forced();
 parser_test_error_bits_t reader_shell_test(const wcstring &);
 
 /// Test whether the interactive reader is in search mode.
-///
-/// \return 0 if not in search mode, 1 if in search mode and -1 if not in interactive mode
-int reader_search_mode();
+bool reader_is_in_search_mode();
 
 /// Test whether the interactive reader has visible pager contents.
-///
-/// \return 0 if it has pager contents, 1 if it does not have pager contents, and -1 if not in
-/// interactive mode
-int reader_has_pager_contents();
+bool reader_has_pager_contents();
 
 /// Given a command line and an autosuggestion, return the string that gets shown to the user.
 /// Exposed for testing purposes only.

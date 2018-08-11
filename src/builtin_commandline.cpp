@@ -422,11 +422,11 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     }
 
     if (search_mode) {
-        return !reader_search_mode();
+        return reader_is_in_search_mode() ? 0 : 1;
     }
 
     if (paging_mode) {
-        return !reader_has_pager_contents();
+        return reader_has_pager_contents() ? 0 : 1;
     }
 
     switch (buffer_part) {

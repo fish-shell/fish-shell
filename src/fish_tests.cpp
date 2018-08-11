@@ -3050,8 +3050,7 @@ void history_tests_t::test_history() {
     test_history_matches(searcher, 6, __LINE__);
     do_test(searcher.current_string() == L"alph");
 
-    // Items matching "alpha", case-insensitive. Note that HISTORY_SEARCH_TYPE_CONTAINS but we have
-    // to explicitly specify it in order to be able to pass false for the case_sensitive parameter.
+    // Items matching "alpha", case-insensitive.
     searcher = history_search_t(history, L"AlPhA", HISTORY_SEARCH_TYPE_CONTAINS, false);
     test_history_matches(searcher, 3, __LINE__);
     do_test(searcher.current_string() == L"Alpha");
@@ -3071,12 +3070,12 @@ void history_tests_t::test_history() {
     test_history_matches(searcher, 3, __LINE__);
     do_test(searcher.current_string() == L"Beta");
 
-    // Items exactly matchine "alph", case-sensitive.
+    // Items exactly matching "alph", case-sensitive.
     searcher = history_search_t(history, L"alph", HISTORY_SEARCH_TYPE_EXACT, true);
     test_history_matches(searcher, 1, __LINE__);
     do_test(searcher.current_string() == L"alph");
 
-    // Items exactly matchine "alph", case-insensitive.
+    // Items exactly matching "alph", case-insensitive.
     searcher = history_search_t(history, L"alph", HISTORY_SEARCH_TYPE_EXACT, false);
     test_history_matches(searcher, 2, __LINE__);
     do_test(searcher.current_string() == L"ALPH");

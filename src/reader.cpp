@@ -38,8 +38,10 @@
 #include <algorithm>
 #include <atomic>
 #include <csignal>
+#include <deque>
 #include <functional>
 #include <memory>
+#include <set>
 #include <stack>
 
 #include "color.h"
@@ -114,12 +116,6 @@
 /// current contents of the kill buffer.
 #define KILL_PREPEND 1
 
-enum class history_search_mode_t {
-    none,  // no search
-    line,  // searching by line
-    token  // searching by token
-};
-
 enum class history_search_direction_t { forward, backward };
 
 /// Any time the contents of a buffer changes, we update the generation count. This allows for our
@@ -146,6 +142,156 @@ void editable_line_t::insert_string(const wcstring &str, size_t start, size_t le
     this->position += len;
 }
 
+namespace {
+
+/// Encapsulation of the reader's history search functionality.
+class reader_history_search_t {
+   public:
+    enum mode_t {
+        inactive,  // no search
+        line,      // searching by line
+        token      // searching by token
+    };
+
+   private:
+    /// The type of search performed.
+    mode_t mode_{inactive};
+
+    /// Our history search itself.
+    history_search_t search_;
+
+    /// The ordered list of matches. This may grow long.
+    std::deque<wcstring> matches_;
+
+    /// A set of new items to skip, corresponding to matches_ and anything added in skip().
+    std::set<wcstring> skips_;
+
+    /// Index into our matches list.
+    size_t match_index_{0};
+
+    /// Adds the given match if we haven't seen it before.
+    void add_if_new(wcstring text) {
+        if (add_skip(text)) {
+            matches_.push_back(std::move(text));
+        }
+    }
+
+    /// Attempt to append matches from the current history item.
+    /// \return true if something was appended.
+    bool append_matches_from_search() {
+        if (search_.is_at_end()) return false;
+
+        const size_t before = matches_.size();
+        wcstring text = search_.current_string();
+        if (mode_ == line) {
+            add_if_new(std::move(text));
+        } else if (mode_ == token) {
+            const wcstring &needle = search_string();
+            tokenizer_t tok(text.c_str(), TOK_ACCEPT_UNFINISHED);
+            tok_t token;
+            while (tok.next(&token)) {
+                if (token.type != TOK_STRING) continue;
+                wcstring text = tok.text_of(token);
+                if (text.find(needle) != wcstring::npos) {
+                    add_if_new(std::move(text));
+                }
+            }
+        }
+        return matches_.size() > before;
+    }
+
+    bool move_forwards() {
+        // Try to move within our previously discovered matches.
+        if (match_index_ > 0) {
+            match_index_--;
+            return true;
+        }
+        return false;
+    }
+
+    bool move_backwards() {
+        // Try to move backwards within our previously discovered matches.
+        if (match_index_ + 1 < matches_.size()) {
+            match_index_++;
+            return true;
+        }
+
+        // Add more items from our search.
+        while (search_.go_backwards()) {
+            if (append_matches_from_search()) {
+                match_index_++;
+                assert(match_index_ < matches_.size() && "Should have found more matches");
+                return true;
+            }
+        }
+
+        // Here we failed to go backwards past the last history item.
+        return false;
+    }
+
+   public:
+    reader_history_search_t() = default;
+    ~reader_history_search_t() = default;
+
+    bool active() const { return mode_ != inactive; }
+
+    bool by_token() const { return mode_ == token; }
+
+    bool by_line() const { return mode_ == line; }
+
+    /// Move the history search in the given direction \p dir.
+    bool move_in_direction(history_search_direction_t dir) {
+        return dir == history_search_direction_t::forward ? move_forwards() : move_backwards();
+    }
+
+    /// Go to the beginning (earliest) of the search.
+    void go_to_beginning() {
+        while (move_forwards())
+            ;
+    }
+
+    /// Go to the end (most recent) of the search.
+    void go_to_end() { match_index_ = 0; }
+
+    /// \return the current search result.
+    const wcstring &current_result() const {
+        assert(match_index_ < matches_.size() && "Invalid match index");
+        return matches_.at(match_index_);
+    }
+
+    /// \return the string we are searching for.
+    const wcstring &search_string() const { return search_.get_term(); }
+
+    /// \return whether we are at the end (most recent) of our search.
+    bool is_at_end() const { return match_index_ == 0; }
+
+    // Add an item to skip.
+    // \return true if it was added, false if already present.
+    bool add_skip(const wcstring &str) { return skips_.insert(str).second; }
+
+    /// Reset, beginning a new line or token mode search.
+    void reset_to_mode(const wcstring &text, history_t *hist, mode_t mode,
+                       wcstring_list_t skip_list = {}) {
+        assert(mode != inactive && "mode cannot be inactive in this setter");
+        skips_ = {text};
+        matches_ = {text};
+        match_index_ = 0;
+        mode_ = mode;
+        search_ = history_search_t(*hist, text);
+    }
+
+    /// Reset to inactive search.
+    void reset() {
+        matches_.clear();
+        skips_.clear();
+        match_index_ = 0;
+        mode_ = inactive;
+        search_ = history_search_t();
+    }
+};
+
+}  // namespace
+
 /// A struct describing the state of the interactive reader. These states can be stacked, in case
 /// reader_readline() calls are nested. This happens when the 'read' builtin is used.
 class reader_data_t {
@@ -170,18 +316,8 @@ class reader_data_t {
     screen_t screen;
     /// The history.
     history_t *history{nullptr};
-    /// String containing the current search item.
-    wcstring search_buff;
-    /// History search.
-    history_search_t history_search;
-    /// Saved position used by token history search.
-    size_t token_history_pos{0};
-    /// Saved search string for token history search. Not handled by command_line_changed.
-    wcstring token_history_buff;
-    /// List for storing previous search results. Used to avoid duplicates.
-    wcstring_list_t search_prev;
-    /// The current position in token_search_prev.
-    size_t search_pos{0};
+    /// The history search.
+    reader_history_search_t history_search{};
     /// Indicates whether a selection is currently active.
     bool sel_active{false};
     /// The position of the cursor, when selection was initiated.
@@ -220,8 +356,6 @@ class reader_data_t {
     wcstring kill_item;
     /// Pointer to previous reader_data.
     reader_data_t *next{nullptr};
-    /// This variable keeps state on if we are in search mode, and if yes, what mode.
-    history_search_mode_t search_mode{history_search_mode_t::none};
     /// Keep track of whether any internal code has done something which is known to require a
     /// repaint.
     bool repaint_needed{false};
@@ -280,7 +414,7 @@ static volatile sig_atomic_t is_interactive_read;
 static int end_loop = 0;
 
 /// The stack containing names of files that are being parsed.
-static std::stack<const wchar_t *, std::vector<const wchar_t *> > current_filename;
+static std::stack<const wchar_t *, std::vector<const wchar_t *>> current_filename;
 
 /// This variable is set to true by the signal handler when ^C is pressed.
 static volatile sig_atomic_t interrupted = 0;
@@ -705,7 +839,7 @@ static void exec_prompt() {
 
     // HACK: Query winsize again because it might have changed.
     // This allows prompts to react to $COLUMNS.
-    (void) get_current_winsize();
+    (void)get_current_winsize();
 
     // If we have any prompts, they must be run non-interactively.
     if (data->left_prompt.size() || data->right_prompt.size()) {
@@ -1625,7 +1759,7 @@ static void reader_interactive_init() {
 
     invalidate_termsize();
 
-    //For compatibility with fish 2.0's $_, now replaced with `status current-command`
+    // For compatibility with fish 2.0's $_, now replaced with `status current-command`
     env_set_one(L"_", ENV_GLOBAL, L"fish");
 }
 
@@ -1678,109 +1812,15 @@ static void reader_replace_current_token(const wcstring &new_token) {
     set_command_line_and_position(el, new_buff, new_pos);
 }
 
-/// Reset the data structures associated with the token search.
-static void reset_token_history() {
+/// Apply the history search to the command line.
+static void update_command_line_from_history_search() {
     reader_data_t *data = current_data();
-    const editable_line_t *el = data->active_edit_line();
-    const wchar_t *begin, *end;
-    const wchar_t *buff = el->text.c_str();
-    parse_util_token_extent((wchar_t *)buff, el->position, &begin, &end, 0, 0);
-
-    data->search_buff.clear();
-    if (begin) {
-        data->search_buff.append(begin, end - begin);
-    }
-
-    data->token_history_pos = -1;
-    data->search_pos = 0;
-    data->search_prev.clear();
-    data->search_prev.push_back(data->search_buff);
-
-    data->history_search =
-        history_search_t(*data->history, data->search_buff, HISTORY_SEARCH_TYPE_CONTAINS);
-}
-
-/// Handles a token search command.
-///
-/// \param dir if the search should be forward or reverse
-/// \param reset whether the current token should be made the new search token
-static void handle_token_history(history_search_direction_t dir, bool reset = false) {
-    reader_data_t *data = current_data_or_null();
-    if (!data) return;
-    const bool forward = (dir == history_search_direction_t::forward);
-
-    wcstring str;
-    size_t current_pos;
-
-    if (reset) {
-        // Start a new token search using the current token.
-        reset_token_history();
-    }
-
-    current_pos = data->token_history_pos;
-
-    if (forward || data->search_pos + 1 < data->search_prev.size()) {
-        if (forward) {
-            if (data->search_pos > 0) {
-                data->search_pos--;
-            }
-            str = data->search_prev.at(data->search_pos);
-        } else {
-            data->search_pos++;
-            str = data->search_prev.at(data->search_pos);
-        }
-
-        reader_replace_current_token(str);
-        reader_super_highlight_me_plenty();
-        reader_repaint();
-    } else {
-        if (current_pos == size_t(-1)) {
-            data->token_history_buff.clear();
-
-            // Search for previous item that contains this substring.
-            if (data->history_search.go_backwards()) {
-                data->token_history_buff = data->history_search.current_string();
-            }
-            current_pos = data->token_history_buff.size();
-        }
-
-        if (data->token_history_buff.empty()) {
-            // We have reached the end of the history - check if the history already contains the
-            // search string itself, if so return, otherwise add it.
-            const wcstring &last = data->search_prev.back();
-            if (data->search_buff != last) {
-                str = data->search_buff;
-            } else {
-                return;
-            }
-        } else {
-            // debug( 3, L"new '%ls'", data->token_history_buff.c_str() );
-            tokenizer_t tok(data->token_history_buff.c_str(), TOK_ACCEPT_UNFINISHED);
-            tok_t token;
-            while (tok.next(&token)) {
-                if (token.type != TOK_STRING) continue;
-                wcstring text = tok.text_of(token);
-                if (text.find(data->search_buff) == wcstring::npos) continue;
-                if (token.offset >= current_pos) continue;
-
-                auto found = find(data->search_prev.begin(), data->search_prev.end(), text);
-                if (found == data->search_prev.end()) {
-                    data->token_history_pos = token.offset;
-                    str = text;
-                }
-            }
-        }
-
-        if (!str.empty()) {
-            reader_replace_current_token(str);
-            reader_super_highlight_me_plenty();
-            reader_repaint();
-            data->search_pos = data->search_prev.size();
-            data->search_prev.push_back(str);
-        } else if (!reader_interrupted()) {
-            data->token_history_pos = -1;
-            handle_token_history(history_search_direction_t::forward);
-        }
+    wcstring new_text = data->history_search.is_at_end() ? data->history_search.search_string()
+                                                         : data->history_search.current_result();
+    if (data->history_search.by_token()) {
+        reader_replace_current_token(new_text);
+    } else if (data->history_search.by_line()) {
+        set_command_line_and_position(&data->command_line, new_text, new_text.size());
     }
 }
 
@@ -1861,10 +1901,7 @@ static void reader_set_buffer_maintaining_pager(const wcstring &b, size_t pos) {
     update_buff_pos(&data->command_line, pos);
 
     // Clear history search and pager contents.
-    data->search_mode = history_search_mode_t::none;
-    data->search_buff.clear();
-    data->history_search.go_to_end();
-
+    data->history_search.reset();
     reader_super_highlight_me_plenty();
     reader_repaint_needed();
 }
@@ -1915,7 +1952,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     wcstring ft = tok_first(cmd);
 
-    //For compatibility with fish 2.0's $_, now replaced with `status current-command`
+    // For compatibility with fish 2.0's $_, now replaced with `status current-command`
     if (!ft.empty()) env_set_one(L"_", ENV_GLOBAL, ft);
 
     reader_write_title(cmd);
@@ -1928,14 +1965,14 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
     job_reap(1);
 
     gettimeofday(&time_after, NULL);
-    
+
     // update the execution duration iff a command is requested for execution
     // issue - #4926
     if (!ft.empty()) set_env_cmd_duration(&time_after, &time_before);
 
     term_steal();
 
-    //For compatibility with fish 2.0's $_, now replaced with `status current-command`
+    // For compatibility with fish 2.0's $_, now replaced with `status current-command`
     env_set_one(L"_", ENV_GLOBAL, program_name);
 
 #ifdef HAVE__PROC_SELF_STAT
@@ -2060,15 +2097,16 @@ void reader_import_history_if_necessary() {
 /// Called to set the highlight flag for search results.
 static void highlight_search() {
     reader_data_t *data = current_data();
-    if (!data->search_buff.empty() && !data->history_search.is_at_end()) {
-        const editable_line_t *el = &data->command_line;
-        const wcstring &needle = data->search_buff;
-        size_t match_pos = el->text.find(needle);
-        if (match_pos != wcstring::npos) {
-            size_t end = match_pos + needle.size();
-            for (size_t i = match_pos; i < end; i++) {
-                data->colors.at(i) |= (highlight_spec_search_match << 16);
-            }
+    if (data->history_search.is_at_end()) {
+        return;
+    }
+    const wcstring &needle = data->history_search.search_string();
+    const editable_line_t *el = &data->command_line;
+    size_t match_pos = el->text.find(needle);
+    if (match_pos != wcstring::npos) {
+        size_t end = match_pos + needle.size();
+        for (size_t i = match_pos; i < end; i++) {
+            data->colors.at(i) |= (highlight_spec_search_match << 16);
         }
     }
 }
@@ -2362,8 +2400,7 @@ const wchar_t *reader_readline(int nchars) {
     data->cycle_command_line.clear();
     data->cycle_cursor_pos = 0;
 
-    data->search_buff.clear();
-    data->search_mode = history_search_mode_t::none;
+    data->history_search.reset();
 
     exec_prompt();
 
@@ -2698,20 +2735,12 @@ const wchar_t *reader_readline(int nchars) {
             }
             // Escape was pressed.
             case L'\x1B': {
-                if (data->search_mode != history_search_mode_t::none) {
-                    data->search_mode = history_search_mode_t::none;
-
-                    if (data->token_history_pos == (size_t)-1) {
-                        data->history_search.go_to_end();
-                        reader_set_buffer(data->search_buff, data->search_buff.size());
-                    } else {
-                        reader_replace_current_token(data->search_buff);
-                    }
-                    data->search_buff.clear();
-                    reader_super_highlight_me_plenty();
-                    reader_repaint_needed();
+                if (data->history_search.active()) {
+                    data->history_search.go_to_end();
+                    update_command_line_from_history_search();
+                    data->history_search.reset();
                 }
-
+                assert(!data->history_search.active());
                 break;
             }
             case R_BACKWARD_DELETE_CHAR: {
@@ -2818,56 +2847,42 @@ const wchar_t *reader_readline(int nchars) {
             case R_HISTORY_TOKEN_SEARCH_BACKWARD:
             case R_HISTORY_SEARCH_FORWARD:
             case R_HISTORY_TOKEN_SEARCH_FORWARD: {
-                int reset = 0;
-                if (data->search_mode == history_search_mode_t::none) {
-                    reset = 1;
-                    if ((c == R_HISTORY_SEARCH_BACKWARD) || (c == R_HISTORY_SEARCH_FORWARD)) {
-                        data->search_mode = history_search_mode_t::line;
-                    } else {
-                        data->search_mode = history_search_mode_t::token;
-                    }
-
+                if (data->history_search.is_at_end()) {
                     const editable_line_t *el = &data->command_line;
-                    data->search_buff.append(el->text);
-                    data->history_search = history_search_t(*data->history, data->search_buff,
-                                                            HISTORY_SEARCH_TYPE_CONTAINS);
-
-                    // Always skip history entries that exactly match what has been typed so far.
-                    wcstring_list_t skip_list;
-                    skip_list.push_back(data->command_line.text);
-                    const wcstring &suggest = data->autosuggestion;
-                    if (!suggest.empty() && !data->screen.autosuggestion_is_truncated) {
-                        // Also skip the autosuggestion in the history unless it was truncated.
-                        skip_list.push_back(suggest);
-                    }
-                    data->history_search.skip_matches(skip_list);
-                }
-
-                if (data->search_mode == history_search_mode_t::line) {
-                    if ((c == R_HISTORY_SEARCH_BACKWARD) ||
-                        (c == R_HISTORY_TOKEN_SEARCH_BACKWARD)) {
-                        data->history_search.go_backwards();
+                    bool by_token = (c == R_HISTORY_TOKEN_SEARCH_BACKWARD) ||
+                                    (c == R_HISTORY_TOKEN_SEARCH_FORWARD);
+                    if (by_token) {
+                        // Searching by token.
+                        const wchar_t *begin, *end;
+                        const wchar_t *buff = el->text.c_str();
+                        parse_util_token_extent(buff, el->position, &begin, &end, 0, 0);
+                        if (begin) {
+                            wcstring token(begin, end);
+                            data->history_search.reset_to_mode(token, data->history,
+                                                               reader_history_search_t::token);
+                        } else {
+                            // No current token, refuse to do a token search.
+                            data->history_search.reset();
+                        }
                     } else {
-                        if (!data->history_search.go_forwards()) {
-                            // If you try to go forwards past the end, we just go to the end.
-                            data->history_search.go_to_end();
+                        // Searching by line.
+                        data->history_search.reset_to_mode(el->text, data->history,
+                                                           reader_history_search_t::line);
+
+                        // Skip the autosuggestion in the history unless it was truncated.
+                        const wcstring &suggest = data->autosuggestion;
+                        if (!suggest.empty() && !data->screen.autosuggestion_is_truncated) {
+                            data->history_search.add_skip(suggest);
                         }
                     }
-
-                    wcstring new_text;
-                    if (data->history_search.is_at_end()) {
-                        new_text = data->search_buff;
-                    } else {
-                        new_text = data->history_search.current_string();
-                    }
-                    set_command_line_and_position(&data->command_line, new_text, new_text.size());
-                } else if (data->search_mode == history_search_mode_t::token) {
-                    if ((c == R_HISTORY_SEARCH_BACKWARD) ||
-                        (c == R_HISTORY_TOKEN_SEARCH_BACKWARD)) {
-                        handle_token_history(history_search_direction_t::backward, reset);
-                    } else {
-                        handle_token_history(history_search_direction_t::forward, reset);
-                    }
+                }
+                if (data->history_search.active()) {
+                    history_search_direction_t dir =
+                        (c == R_HISTORY_SEARCH_BACKWARD || c == R_HISTORY_TOKEN_SEARCH_BACKWARD)
+                            ? history_search_direction_t::backward
+                            : history_search_direction_t::forward;
+                    data->history_search.move_in_direction(dir);
+                    update_command_line_from_history_search();
                 }
                 break;
             }
@@ -2947,27 +2962,19 @@ const wchar_t *reader_readline(int nchars) {
                 }
                 break;
             }
-            case R_BEGINNING_OF_HISTORY: {
-                if (data->is_navigating_pager_contents()) {
-                    select_completion_in_direction(direction_page_north);
-                } else {
-                    const editable_line_t *el = &data->command_line;
-                    data->history_search =
-                        history_search_t(*data->history, el->text, HISTORY_SEARCH_TYPE_PREFIX);
-                    data->history_search.go_to_beginning();
-                    if (!data->history_search.is_at_end()) {
-                        wcstring new_text = data->history_search.current_string();
-                        set_command_line_and_position(&data->command_line, new_text,
-                                                      new_text.size());
-                    }
-                }
-                break;
-            }
+            case R_BEGINNING_OF_HISTORY:
             case R_END_OF_HISTORY: {
+                bool up = (c == R_BEGINNING_OF_HISTORY);
                 if (data->is_navigating_pager_contents()) {
-                    select_completion_in_direction(direction_page_south);
+                    select_completion_in_direction(up ? direction_page_north
+                                                      : direction_page_south);
                 } else {
-                    data->history_search.go_to_end();
+                    if (up) {
+                        data->history_search.go_to_beginning();
+                    } else {
+                        data->history_search.go_to_end();
+                    }
+                    update_command_line_from_history_search();
                 }
                 break;
             }
@@ -3227,10 +3234,7 @@ const wchar_t *reader_readline(int nchars) {
         if ((c != R_HISTORY_SEARCH_BACKWARD) && (c != R_HISTORY_SEARCH_FORWARD) &&
             (c != R_HISTORY_TOKEN_SEARCH_BACKWARD) && (c != R_HISTORY_TOKEN_SEARCH_FORWARD) &&
             (c != R_NULL) && (c != R_REPAINT) && (c != R_FORCE_REPAINT)) {
-            data->search_mode = history_search_mode_t::none;
-            data->search_buff.clear();
-            data->history_search.go_to_end();
-            data->token_history_pos = -1;
+            data->history_search.reset();
         }
 
         last_char = c;
@@ -3259,21 +3263,14 @@ const wchar_t *reader_readline(int nchars) {
     return finished ? data->command_line.text.c_str() : NULL;
 }
 
-int reader_search_mode() {
+bool reader_is_in_search_mode() {
     reader_data_t *data = current_data_or_null();
-    if (!data) {
-        return -1;
-    }
-    return data->search_mode == history_search_mode_t::none ? 0 : 1;
+    return data && data->history_search.active();
 }
 
-int reader_has_pager_contents() {
+bool reader_has_pager_contents() {
     reader_data_t *data = current_data_or_null();
-    if (!data) {
-        return -1;
-    }
-
-    return !data->current_page_rendering.screen_data.empty();
+    return data && !data->current_page_rendering.screen_data.empty();
 }
 
 /// Read non-interactively.  Read input from stdin without displaying the prompt, using syntax

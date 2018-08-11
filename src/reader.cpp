@@ -118,6 +118,9 @@
 
 enum class history_search_direction_t { forward, backward };
 
+enum class jump_direction_t { forward, backward };
+enum class jump_precision_t { till, to };
+
 /// Any time the contents of a buffer changes, we update the generation count. This allows for our
 /// background threads to notice it and skip doing work that they would otherwise have to do.
 static std::atomic<unsigned int> s_generation_count;
@@ -363,6 +366,10 @@ class reader_data_t {
     bool screen_reset_needed{false};
     /// Whether the reader should exit on ^C.
     bool exit_on_interrupt{false};
+    /// The target character of the last jump command.
+    wchar_t last_jump_target{0};
+    jump_direction_t last_jump_direction{jump_direction_t::forward};
+    jump_precision_t last_jump_precision{jump_precision_t::to};
 
     bool is_navigating_pager_contents() const { return this->pager.is_navigating_contents(); }
 
@@ -422,6 +429,7 @@ static volatile sig_atomic_t interrupted = 0;
 // Prototypes for a bunch of functions defined later on.
 static bool is_backslashed(const wcstring &str, size_t pos);
 static wchar_t unescaped_quote(const wcstring &str, size_t pos);
+bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el, wchar_t target);
 
 /// Mode on startup, which we restore on exit.
 static struct termios terminal_mode_on_startup;
@@ -3179,33 +3187,80 @@ const wchar_t *reader_readline(int nchars) {
             case R_FORWARD_JUMP: {
                 editable_line_t *el = data->active_edit_line();
                 wchar_t target = input_function_pop_arg();
-                bool status = false;
+                bool success = jump(jump_direction_t::forward, jump_precision_t::to, el, target);
 
-                for (size_t i = el->position + 1; i < el->size(); i++) {
-                    if (el->at(i) == target) {
-                        update_buff_pos(el, i);
-                        status = true;
-                        break;
-                    }
-                }
-                input_function_set_status(status);
+                input_function_set_status(success);
                 reader_repaint_needed();
                 break;
             }
             case R_BACKWARD_JUMP: {
                 editable_line_t *el = data->active_edit_line();
                 wchar_t target = input_function_pop_arg();
-                bool status = false;
+                bool success = jump(jump_direction_t::backward, jump_precision_t::to, el, target);
 
-                size_t tmp_pos = el->position;
-                while (tmp_pos--) {
-                    if (el->at(tmp_pos) == target) {
-                        update_buff_pos(el, tmp_pos);
-                        status = true;
-                        break;
-                    }
+                input_function_set_status(success);
+                reader_repaint_needed();
+                break;
+            }
+            case R_FORWARD_JUMP_TILL: {
+                editable_line_t *el = data->active_edit_line();
+                wchar_t target = input_function_pop_arg();
+                bool success = jump(jump_direction_t::forward, jump_precision_t::till, el, target);
+
+                input_function_set_status(success);
+                reader_repaint_needed();
+                break;
+            }
+            case R_BACKWARD_JUMP_TILL: {
+                editable_line_t *el = data->active_edit_line();
+                wchar_t target = input_function_pop_arg();
+                bool success = jump(jump_direction_t::backward, jump_precision_t::till, el, target);
+
+                input_function_set_status(success);
+                reader_repaint_needed();
+                break;
+            }
+            case R_REPEAT_JUMP: {
+                editable_line_t *el = data->active_edit_line();
+                bool success = false;
+
+                if (data->last_jump_target) {
+                    success = jump(
+                            data->last_jump_direction,
+                            data->last_jump_precision,
+                            el,
+                            data->last_jump_target
+                    );
                 }
-                input_function_set_status(status);
+
+                input_function_set_status(success);
+                reader_repaint_needed();
+                break;
+            }
+            case R_REVERSE_REPEAT_JUMP: {
+                editable_line_t *el = data->active_edit_line();
+                bool success = false;
+                jump_direction_t original_dir, dir;
+                original_dir = dir = data->last_jump_direction;
+
+                if (data->last_jump_direction == jump_direction_t::forward) {
+                    dir = jump_direction_t::backward;
+                } else {
+                    dir = jump_direction_t::forward;
+                }
+
+                if (data->last_jump_target) {
+                    success = jump(
+                        dir,
+                        data->last_jump_precision,
+                        el,
+                        data->last_jump_target
+                    );
+                }
+
+                data->last_jump_direction = original_dir;
+
+                input_function_set_status(success);
                 reader_repaint_needed();
                 break;
             }
@@ -3261,6 +3316,48 @@ const wchar_t *reader_readline(int nchars) {
     }
 
     return finished ? data->command_line.text.c_str() : NULL;
+}
+
+bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el, wchar_t target) {
+    reader_data_t *data = current_data_or_null();
+    bool success = false;
+
+    data->last_jump_target = target;
+    data->last_jump_direction = dir;
+    data->last_jump_precision = precision;
+
+    switch (dir) {
+        case jump_direction_t::backward: {
+            size_t tmp_pos = el->position;
+
+            while (tmp_pos--) {
+                if (el->at(tmp_pos) == target) {
+                    if (precision == jump_precision_t::till) {
+                        tmp_pos = std::min(el->size()-1, tmp_pos+1);
+                    }
+                    update_buff_pos(el, tmp_pos);
+                    success = true;
+                    break;
+                }
+            }
+            break;
+        }
+        case jump_direction_t::forward: {
+            for (size_t tmp_pos=el->position+1; tmp_pos < el->size(); tmp_pos++) {
+                if (el->at(tmp_pos) == target) {
+                    if (precision == jump_precision_t::till && tmp_pos) {
+                        tmp_pos--;
+                    }
+                    update_buff_pos(el, tmp_pos);
+                    success = true;
+                    break;
+                }
+            }
+            break;
+        }
+    }
+
+    return success;
 }
 
 bool reader_is_in_search_mode() {

@@ -22,10 +22,9 @@
 enum hist_cmd_t { HIST_SEARCH = 1, HIST_DELETE, HIST_CLEAR, HIST_MERGE, HIST_SAVE, HIST_UNDEF };
 
 // Must be sorted by string, not enum or random.
-const enum_map<hist_cmd_t> hist_enum_map[] = {{HIST_CLEAR, L"clear"},   {HIST_DELETE, L"delete"},
-                                              {HIST_MERGE, L"merge"},   {HIST_SAVE, L"save"},
-                                              {HIST_SEARCH, L"search"}, {HIST_UNDEF, NULL}};
-#define hist_enum_map_len (sizeof hist_enum_map / sizeof *hist_enum_map)
+static const enum_map<hist_cmd_t> hist_enum_map[] = {
+    {HIST_CLEAR, L"clear"}, {HIST_DELETE, L"delete"}, {HIST_MERGE, L"merge"},
+    {HIST_SAVE, L"save"},   {HIST_SEARCH, L"search"}, {HIST_UNDEF, NULL}};
 
 struct history_cmd_opts_t {
     bool print_help = false;
@@ -78,20 +77,21 @@ static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
     return true;
 }
 
-#define CHECK_FOR_UNEXPECTED_HIST_ARGS(hist_cmd)                                                \
-    if (opts.history_search_type_defined || opts.show_time_format || opts.null_terminate) {     \
-        const wchar_t *subcmd_str = enum_to_str(hist_cmd, hist_enum_map);                       \
-        streams.err.append_format(_(L"%ls: you cannot use any options with the %ls command\n"), \
-                                  cmd, subcmd_str);                                             \
-        status = STATUS_INVALID_ARGS;                                                           \
-        break;                                                                                  \
-    }                                                                                           \
-    if (args.size() != 0) {                                                                     \
-        const wchar_t *subcmd_str = enum_to_str(hist_cmd, hist_enum_map);                       \
-        streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, subcmd_str, 0, args.size());     \
-        status = STATUS_INVALID_ARGS;                                                           \
-        break;                                                                                  \
+static bool check_for_unexpected_hist_args(const history_cmd_opts_t &opts, const wchar_t *cmd,
+                                           const wcstring_list_t &args, io_streams_t &streams) {
+    if (opts.history_search_type_defined || opts.show_time_format || opts.null_terminate) {
+        const wchar_t *subcmd_str = enum_to_str(opts.hist_cmd, hist_enum_map);
+        streams.err.append_format(_(L"%ls: you cannot use any options with the %ls command\n"), cmd,
+                                  subcmd_str);
+        return true;
     }
+    if (args.size() != 0) {
+        const wchar_t *subcmd_str = enum_to_str(opts.hist_cmd, hist_enum_map);
+        streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, subcmd_str, 0, args.size());
+        return true;
+    }
+    return false;
+}
 
 static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
@@ -224,6 +224,7 @@ int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Note that this can be simplified after we eliminate allowing subcommands as flags.
     // See the TODO above regarding the `long_options` array.
     if (optind < argc) {
+        constexpr size_t hist_enum_map_len = sizeof hist_enum_map / sizeof *hist_enum_map;
         hist_cmd_t subcmd = str_to_enum(argv[optind], hist_enum_map, hist_enum_map_len);
         if (subcmd != HIST_UNDEF) {
             if (!set_hist_cmd(cmd, &opts.hist_cmd, subcmd, streams)) {
@@ -278,18 +279,28 @@ int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             break;
         }
         case HIST_CLEAR: {
-            CHECK_FOR_UNEXPECTED_HIST_ARGS(opts.hist_cmd)
+            if (check_for_unexpected_hist_args(opts, cmd, args, streams)) {
+                status = STATUS_INVALID_ARGS;
+                break;
+            }
             history->clear();
             history->save();
             break;
         }
         case HIST_MERGE: {
-            CHECK_FOR_UNEXPECTED_HIST_ARGS(opts.hist_cmd)
+            if (check_for_unexpected_hist_args(opts, cmd, args, streams)) {
+                status = STATUS_INVALID_ARGS;
+                break;
+            }
+
             history->incorporate_external_changes();
             break;
         }
         case HIST_SAVE: {
-            CHECK_FOR_UNEXPECTED_HIST_ARGS(opts.hist_cmd)
+            if (check_for_unexpected_hist_args(opts, cmd, args, streams)) {
+                status = STATUS_INVALID_ARGS;
+                break;
+            }
             history->save();
             break;
         }

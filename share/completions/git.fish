@@ -27,7 +27,7 @@ end
 function __fish_git_branches
     # This is much faster than using `git branch`,
     # and avoids having to deal with localized "detached HEAD" messages.
-    command git for-each-ref --format='%(refname)' refs/heads/ refs/remotes/ \
+    command git for-each-ref --format='%(refname)' refs/heads/ refs/remotes/ 2>/dev/null \
         | string replace -r '^refs/heads/(.*)$' '$1\tLocal Branch' \
         | string replace -r '^refs/remotes/(.*)$' '$1\tRemote Branch'
 end
@@ -39,7 +39,7 @@ function __fish_git_unique_remote_branches
     # `git checkout frobulate` is equivalent to `git checkout -b frobulate --track alice/frobulate`.
     command git for-each-ref --format="%(refname:strip=3)" \
         --sort="refname:strip=3" \
-        "refs/remotes/*/$match*" "refs/remotes/*/*/**" | \
+        "refs/remotes/*/$match*" "refs/remotes/*/*/**" 2>/dev/null | \
         uniq -u
 end
 

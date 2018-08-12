@@ -1201,8 +1201,9 @@ static bool can_autosuggest() {
     reader_data_t *data = current_data();
     const editable_line_t *el = data->active_edit_line();
     const wchar_t *whitespace = L" \t\r\n\v";
-    return !data->suppress_autosuggestion && data->history_search.is_at_end() &&
-           el == &data->command_line && el->text.find_first_not_of(whitespace) != wcstring::npos;
+    return data->allow_autosuggestion && !data->suppress_autosuggestion &&
+           data->history_search.is_at_end() && el == &data->command_line &&
+           el->text.find_first_not_of(whitespace) != wcstring::npos;
 }
 
 // Called after an autosuggestion has been computed on a background thread
@@ -1223,8 +1224,7 @@ static void update_autosuggestion() {
     // we're not doing a history search.
     reader_data_t *data = current_data();
     data->autosuggestion.clear();
-    if (data->allow_autosuggestion && !data->suppress_autosuggestion &&
-        !data->command_line.empty() && data->history_search.is_at_end()) {
+    if (can_autosuggest()) {
         const editable_line_t *el = data->active_edit_line();
         auto performer = get_autosuggestion_performer(el->text, el->position, data->history);
         iothread_perform(performer, &autosuggest_completed);

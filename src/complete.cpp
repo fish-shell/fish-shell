@@ -1672,7 +1672,7 @@ bool complete_add_wrapper(const wcstring &command, const wcstring &new_target) {
     wrapper_map_t &wraps = wrap_map();
     wcstring_list_t *targets = &wraps[command];
     // If it's already present, we do nothing.
-    if (std::find(targets->begin(), targets->end(), new_target) == targets->end()) {
+    if (!contains(*targets, new_target)) {
         targets->push_back(new_target);
     }
     return true;
@@ -1689,8 +1689,7 @@ bool complete_remove_wrapper(const wcstring &command, const wcstring &target_to_
     wrapper_map_t::iterator current_targets_iter = wraps.find(command);
     if (current_targets_iter != wraps.end()) {
         wcstring_list_t *targets = &current_targets_iter->second;
-        wcstring_list_t::iterator where =
-            std::find(targets->begin(), targets->end(), target_to_remove);
+        auto where = std::find(targets->begin(), targets->end(), target_to_remove);
         if (where != targets->end()) {
             targets->erase(where);
             result = true;

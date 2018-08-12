@@ -167,8 +167,7 @@ job_id_t acquire_job_id() {
     std::vector<bool> &consumed_job_ids = locker.value;
 
     // Find the index of the first 0 slot.
-    std::vector<bool>::iterator slot =
-        std::find(consumed_job_ids.begin(), consumed_job_ids.end(), false);
+    auto slot = std::find(consumed_job_ids.begin(), consumed_job_ids.end(), false);
     if (slot != consumed_job_ids.end()) {
         // We found a slot. Note that slot 0 corresponds to job ID 1.
         *slot = true;

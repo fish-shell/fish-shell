@@ -338,8 +338,7 @@ static void event_fire_internal(const event_t &event) {
     // Iterate over our list of matching events.
     for (shared_ptr<event_t> &criterion : fire) {
         // Only fire if this event is still present
-        if (std::find(s_event_handlers.begin(), s_event_handlers.end(), criterion) ==
-            s_event_handlers.end()) {
+        if (!contains(s_event_handlers, criterion)) {
             continue;
         }
 

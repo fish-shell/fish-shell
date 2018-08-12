@@ -151,7 +151,7 @@ static bool find_job_by_name(const wchar_t *proc, std::vector<job_id_t> &ids) {
         if (j->command_is_empty()) continue;
 
         if (match_pid(j->command(), proc)) {
-            if (std::find(ids.begin(), ids.end(), j->job_id) == ids.end()) {
+            if (!contains(ids, j->job_id)) {
                 // If pids doesn't already have the pgid, add it.
                 ids.push_back(j->job_id);
             }
@@ -163,7 +163,7 @@ static bool find_job_by_name(const wchar_t *proc, std::vector<job_id_t> &ids) {
             if (p->actual_cmd.empty()) continue;
 
             if (match_pid(p->actual_cmd, proc)) {
-                if (std::find(ids.begin(), ids.end(), j->job_id) == ids.end()) {
+                if (!contains(ids, j->job_id)) {
                     // If pids doesn't already have the pgid, add it.
                     ids.push_back(j->job_id);
                 }

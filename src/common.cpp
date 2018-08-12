@@ -1842,10 +1842,6 @@ int string_fuzzy_match_t::compare(const string_fuzzy_match_t &rhs) const {
     return 0;  // equal
 }
 
-bool contains(const wcstring_list_t &list, const wcstring &str) {
-    return std::find(list.begin(), list.end(), str) != list.end();
-}
-
 wcstring_list_t split_string(const wcstring &val, wchar_t sep) {
     wcstring_list_t out;
     size_t pos = 0, end = val.size();

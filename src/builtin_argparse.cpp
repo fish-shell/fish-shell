@@ -75,8 +75,7 @@ static int check_for_mutually_exclusive_flags(const argparse_cmd_opts_t &opts, i
         // We saw this option at least once. Check all the sets of mutually exclusive options to see
         // if this option appears in any of them.
         for (const auto &xarg_set : opts.exclusive_flag_sets) {
-            auto found = std::find(xarg_set.begin(), xarg_set.end(), opt_spec->short_flag);
-            if (found != xarg_set.end()) {
+            if (contains(xarg_set, opt_spec->short_flag)) {
                 // Okay, this option is in a mutually exclusive set of options. Check if any of the
                 // other mutually exclusive options have been seen.
                 for (const auto &xflag : xarg_set) {

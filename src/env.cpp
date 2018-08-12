@@ -370,7 +370,7 @@ static void fix_colon_delimited_var(const wcstring &var_name) {
     // See if there's any empties.
     const wcstring empty = wcstring();
     const wcstring_list_t &strs = paths->as_list();
-    if (std::find(strs.begin(), strs.end(), empty) != strs.end()) {
+    if (contains(strs, empty)) {
         // Copy the list and replace empties with L"."
         wcstring_list_t newstrs = strs;
         std::replace(newstrs.begin(), newstrs.end(), empty, wcstring(L"."));

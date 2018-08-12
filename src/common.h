@@ -17,6 +17,7 @@
 #include <sys/ioctl.h>  // IWYU pragma: keep
 #endif
 
+#include <algorithm>
 #include <memory>
 #include <mutex>
 #include <sstream>
@@ -283,8 +284,11 @@ inline bool is_whitespace(const wchar_t *input) { return is_whitespace(wcstring(
 /// See https://developer.gnome.org/glib/stable/glib-I18N.html#N-:CAPS
 #define N_(wstr) wstr
 
-/// Test if a list of stirngs contains a particular string.
-bool contains(const wcstring_list_t &list, const wcstring &str);
+/// Test if a vector contains a value.
+template <typename T1, typename T2>
+bool contains(const std::vector<T1> &vec, const T2 &val) {
+    return std::find(vec.begin(), vec.end(), val) != vec.end();
+}
 
 /// Print a stack trace to stderr.
 void show_stackframe(const wchar_t msg_level, int frame_count = 100, int skip_levels = 0);

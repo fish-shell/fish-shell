@@ -2,7 +2,6 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <ctype.h>
-#include <cstdint>
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -10,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <cstdint>
 // We need the sys/file.h for the flock() declaration on Linux but not OS X.
 #include <sys/file.h>  // IWYU pragma: keep
 #include <sys/mman.h>
@@ -564,7 +564,7 @@ history_item_t::history_item_t(const wcstring &str, time_t when, history_identif
 
 bool history_item_t::matches_search(const wcstring &term, enum history_search_type_t type,
                                     bool case_sensitive) const {
-    // Note that this->term has already been lowercased when constructing the
+    // Note that 'term' has already been lowercased when constructing the
     // search object if we're doing a case insensitive search.
     const wcstring &content_to_match = case_sensitive ? contents : contents_lower;
 
@@ -1083,87 +1083,52 @@ void history_t::load_old_if_needed() {
     }
 }
 
-void history_search_t::skip_matches(const wcstring_list_t &skips) {
-    external_skips = skips;
-    std::sort(external_skips.begin(), external_skips.end());
-}
-
-bool history_search_t::should_skip_match(const wcstring &str) const {
-    return std::binary_search(external_skips.begin(), external_skips.end(), str);
-}
-
-bool history_search_t::go_forwards() {
-    // Pop the top index (if more than one) and return if we have any left.
-    if (prev_matches.size() > 1) {
-        prev_matches.pop_back();
-        return true;
-    }
-    return false;
-}
-
 bool history_search_t::go_backwards() {
     // Backwards means increasing our index.
-    const size_t max_idx = (size_t)-1;
+    const size_t max_index = (size_t)-1;
 
-    size_t idx = 0;
-    if (!prev_matches.empty()) idx = prev_matches.back().first;
-
-    if (idx == max_idx) return false;
-
+    if (current_index_ == max_index) return false;
     const bool main_thread = is_main_thread();
 
-    while (++idx < max_idx) {
+    size_t index = current_index_;
+    while (++index < max_index) {
         if (main_thread ? reader_interrupted() : reader_thread_job_is_stale()) {
             return false;
         }
 
-        const history_item_t item = history->item_at_index(idx);
+        history_item_t item = history_->item_at_index(index);
+
         // We're done if it's empty or we cancelled.
         if (item.empty()) {
             return false;
         }
 
-        // Look for a term that matches and that we haven't seen before.
-        const wcstring &str = item.str();
-        if (item.matches_search(term, search_type, case_sensitive) && !match_already_made(str) &&
-            !should_skip_match(str)) {
-            prev_matches.push_back(prev_match_t(idx, item));
-            return true;
+        // Look for an item that matches and (if deduping) that we haven't seen before.
+        if (!item.matches_search(canon_term_, search_type_, !ignores_case())) {
+            continue;
         }
+
+        // Skip if deduplicating.
+        if (dedup() && !deduper_.insert(item.str()).second) {
+            continue;
+        }
+
+        // This is our new item.
+        current_item_ = std::move(item);
+        current_index_ = index;
+        return true;
     }
     return false;
 }
 
-/// Goes to the end (forwards).
-void history_search_t::go_to_end() { prev_matches.clear(); }
-
-/// Returns if we are at the end, which is where we start.
-bool history_search_t::is_at_end() const { return prev_matches.empty(); }
-
-/// Goes to the beginning (backwards).
-void history_search_t::go_to_beginning() {
-    // Go backwards as far as we can.
-    while (go_backwards()) {  //!OCLINT(empty while statement)
-        // Do nothing.
-    }
-}
-
 history_item_t history_search_t::current_item() const {
-    assert(!prev_matches.empty());  //!OCLINT(double negative)
-    return prev_matches.back().second;
+    assert(current_item_ && "No current item");
+    return *current_item_;
 }
 
 wcstring history_search_t::current_string() const {
     history_item_t item = this->current_item();
     return item.str();
-}
-
-bool history_search_t::match_already_made(const wcstring &match) const {
-    for (std::vector<prev_match_t>::const_iterator iter = prev_matches.begin();
-         iter != prev_matches.end(); ++iter) {
-        if (iter->second.str() == match) return true;
-    }
-    return false;
 }
 
 static void replace_all(std::string *str, const char *needle, const char *replacement) {
@@ -1633,15 +1598,13 @@ bool history_t::search_with_args(history_search_type_t search_type, wcstring_lis
     size_t hist_size = this->size();
     if (max_items > hist_size) max_items = hist_size;
 
-    for (wcstring_list_t::const_iterator iter = search_args.begin(); iter != search_args.end();
-         ++iter) {
-        const wcstring &search_string = *iter;
+    for (const wcstring &search_string : search_args) {
         if (search_string.empty()) {
             streams.err.append_format(L"Searching for the empty string isn't allowed");
             return false;
         }
-        history_search_t searcher =
-            history_search_t(*this, search_string, search_type, case_sensitive);
+        history_search_t searcher = history_search_t(
+            *this, search_string, search_type, case_sensitive ? 0 : history_search_ignore_case);
         while (searcher.go_backwards()) {
             wcstring result;
             auto cur_item = searcher.current_item();
@@ -1908,8 +1871,9 @@ wcstring history_session_id() {
         } else if (valid_var_name(session_id)) {
             result = session_id;
         } else {
-            debug(0, _(L"History session ID '%ls' is not a valid variable name. "
-                       L"Falling back to `%ls`."),
+            debug(0,
+                  _(L"History session ID '%ls' is not a valid variable name. "
+                    L"Falling back to `%ls`."),
                   session_id.c_str(), result.c_str());
         }
     }

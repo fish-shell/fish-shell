@@ -2728,19 +2728,17 @@ static void test_autosuggestion_combining() {
     do_test(combine_command_and_autosuggestion(L"alpha", L"ALPHA") == L"alpha");
 }
 
-static void test_history_matches(history_search_t &search, size_t matches, unsigned from_line) {
-    size_t i;
-    for (i = 0; i < matches; i++) {
-        do_test(search.go_backwards());
+static void test_history_matches(history_search_t &search, const wcstring_list_t &expected,
+                                 unsigned from_line) {
+    wcstring_list_t found;
+    while (search.go_backwards()) {
+        found.push_back(search.current_string());
     }
-    // do_test_from(!search.go_backwards(), from_line);
-    bool result = search.go_backwards();
-    do_test_from(!result, from_line);
-
-    for (i = 1; i < matches; i++) {
-        do_test_from(search.go_forwards(), from_line);
+    do_test_from(expected == found, from_line);
+    if (expected != found) {
+        fprintf(stderr, "Expected %ls, found %ls\n", comma_join(expected).c_str(),
+                comma_join(found).c_str());
     }
-    do_test_from(!search.go_forwards(), from_line);
 }
 
 static bool history_contains(history_t *history, const wcstring &txt) {
@@ -3028,64 +3026,82 @@ static wcstring random_string() {
     return result;
 }
 
+// Helper to lowercase a string.
+static wcstring lower(const wcstring &s) {
+    wcstring result;
+    for (wchar_t c : s) {
+        result.push_back(towlower(c));
+    }
+    return result;
+}
+
 void history_tests_t::test_history() {
     history_search_t searcher;
     say(L"Testing history");
 
+    const wcstring_list_t items = {L"Gamma", L"beta",  L"BetA", L"Beta", L"alpha",
+                                   L"AlphA", L"Alpha", L"alph", L"ALPH", L"ZZZ"};
+    const history_search_flags_t nocase = history_search_ignore_case;
+
+    // Populate a history.
     history_t &history = history_t::history_with_name(L"test_history");
     history.clear();
-    history.add(L"Gamma");
-    history.add(L"beta");
-    history.add(L"BetA");
-    history.add(L"Beta");
-    history.add(L"alpha");
-    history.add(L"AlphA");
-    history.add(L"Alpha");
-    history.add(L"alph");
-    history.add(L"ALPH");
-    history.add(L"ZZZ");
+    for (const wcstring &s : items) {
+        history.add(s);
+    }
+
+    // Helper to set expected items to those matching a predicate, in reverse order.
+    wcstring_list_t expected;
+    auto set_expected = [&](const std::function<bool(const wcstring &)> &filt) {
+        expected.clear();
+        for (const auto &s : items) {
+            if (filt(s)) expected.push_back(s);
+        }
+        std::reverse(expected.begin(), expected.end());
+    };
 
     // Items matching "a", case-sensitive.
     searcher = history_search_t(history, L"a");
-    test_history_matches(searcher, 6, __LINE__);
-    do_test(searcher.current_string() == L"alph");
+    set_expected([](const wcstring &s) { return s.find(L'a') != wcstring::npos; });
+    test_history_matches(searcher, expected, __LINE__);
 
     // Items matching "alpha", case-insensitive.
-    searcher = history_search_t(history, L"AlPhA", HISTORY_SEARCH_TYPE_CONTAINS, false);
-    test_history_matches(searcher, 3, __LINE__);
-    do_test(searcher.current_string() == L"Alpha");
+    searcher = history_search_t(history, L"AlPhA", HISTORY_SEARCH_TYPE_CONTAINS, nocase);
+    set_expected([](const wcstring &s) { return lower(s).find(L"alpha") != wcstring::npos; });
+    test_history_matches(searcher, expected, __LINE__);
 
     // Items matching "et", case-sensitive.
     searcher = history_search_t(history, L"et");
-    test_history_matches(searcher, 3, __LINE__);
-    do_test(searcher.current_string() == L"Beta");
+    set_expected([](const wcstring &s) { return s.find(L"et") != wcstring::npos; });
+    test_history_matches(searcher, expected, __LINE__);
 
     // Items starting with "be", case-sensitive.
-    searcher = history_search_t(history, L"be", HISTORY_SEARCH_TYPE_PREFIX, true);
-    test_history_matches(searcher, 1, __LINE__);
-    do_test(searcher.current_string() == L"beta");
+    searcher = history_search_t(history, L"be", HISTORY_SEARCH_TYPE_PREFIX, 0);
+    set_expected([](const wcstring &s) { return string_prefixes_string(L"be", s); });
+    test_history_matches(searcher, expected, __LINE__);
 
     // Items starting with "be", case-insensitive.
-    searcher = history_search_t(history, L"be", HISTORY_SEARCH_TYPE_PREFIX, false);
-    test_history_matches(searcher, 3, __LINE__);
-    do_test(searcher.current_string() == L"Beta");
+    searcher = history_search_t(history, L"be", HISTORY_SEARCH_TYPE_PREFIX, nocase);
+    set_expected(
+        [](const wcstring &s) { return string_prefixes_string_case_insensitive(L"be", s); });
+    test_history_matches(searcher, expected, __LINE__);
 
     // Items exactly matching "alph", case-sensitive.
-    searcher = history_search_t(history, L"alph", HISTORY_SEARCH_TYPE_EXACT, true);
-    test_history_matches(searcher, 1, __LINE__);
-    do_test(searcher.current_string() == L"alph");
+    searcher = history_search_t(history, L"alph", HISTORY_SEARCH_TYPE_EXACT, 0);
+    set_expected([](const wcstring &s) { return s == L"alph"; });
+    test_history_matches(searcher, expected, __LINE__);
 
     // Items exactly matching "alph", case-insensitive.
-    searcher = history_search_t(history, L"alph", HISTORY_SEARCH_TYPE_EXACT, false);
-    test_history_matches(searcher, 2, __LINE__);
-    do_test(searcher.current_string() == L"ALPH");
+    searcher = history_search_t(history, L"alph", HISTORY_SEARCH_TYPE_EXACT, nocase);
+    set_expected([](const wcstring &s) { return lower(s) == L"alph"; });
+    test_history_matches(searcher, expected, __LINE__);
 
     // Test item removal case-sensitive.
     searcher = history_search_t(history, L"Alpha");
-    test_history_matches(searcher, 1, __LINE__);
+    test_history_matches(searcher, {L"Alpha"}, __LINE__);
     history.remove(L"Alpha");
     searcher = history_search_t(history, L"Alpha");
-    test_history_matches(searcher, 0, __LINE__);
+    test_history_matches(searcher, {}, __LINE__);
 
     // Test history escaping and unescaping, yaml, etc.
     history_item_list_t before, after;

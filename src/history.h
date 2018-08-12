@@ -241,6 +241,7 @@ class history_t {
     bool search(history_search_type_t search_type, wcstring_list_t search_args,
                 const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
                 bool null_terminate, bool reverse, io_streams_t &streams);
+
     bool search_with_args(history_search_type_t search_type, wcstring_list_t search_args,
                           const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
                           bool null_terminate, bool reverse, io_streams_t &streams);
@@ -281,51 +282,56 @@ class history_t {
     size_t size();
 };
 
+/// Flags for history searching.
+enum {
+    // If set, ignore case.
+    history_search_ignore_case = 1 << 0,
+
+    // If set, do not deduplicate, which can help performance.
+    history_search_no_dedup = 1 << 1
+};
+using history_search_flags_t = uint32_t;
+
+/// Support for searching a history backwards.
+/// Note this does NOT de-duplicate; it is the caller's responsibility to do so.
 class history_search_t {
    private:
     // The history in which we are searching.
-    history_t *history;
+    history_t *history_;
 
-    // The search term.
-    wcstring term;
+    // The original search term.
+    wcstring orig_term_;
+
+    // The (possibly lowercased) search term.
+    wcstring canon_term_;
 
     // Our search type.
-    enum history_search_type_t search_type;
-    bool case_sensitive;
+    enum history_search_type_t search_type_ { HISTORY_SEARCH_TYPE_CONTAINS };
 
-    // Our list of previous matches as index, value. The end is the current match.
-    typedef std::pair<size_t, history_item_t> prev_match_t;
-    std::vector<prev_match_t> prev_matches;
+    // Our flags.
+    history_search_flags_t flags_{0};
 
-    // Returns yes if a given term is in prev_matches.
-    bool match_already_made(const wcstring &match) const;
+    // The current history item.
+    maybe_t<history_item_t> current_item_;
 
-    // Additional strings to skip (sorted).
-    wcstring_list_t external_skips;
+    // Index of the current history item.
+    size_t current_index_{0};
 
-    bool should_skip_match(const wcstring &str) const;
+    // If deduping, the items we've seen.
+    std::unordered_set<wcstring> deduper_;
+
+    // return whether we are case insensitive.
+    bool ignores_case() const { return flags_ & history_search_ignore_case; }
+
+    // return whether we deduplicate items.
+    bool dedup() const { return !(flags_ & history_search_no_dedup); }
 
    public:
-    // Gets the search term.
-    const wcstring &get_term() const { return term; }
-
-    // Sets additional string matches to skip.
-    void skip_matches(const wcstring_list_t &skips);
-
-    // Finds the next search term (forwards in time). Returns true if one was found.
-    bool go_forwards();
+    // Gets the original search term.
+    const wcstring &original_term() const { return orig_term_; }
 
     // Finds the previous search result (backwards in time). Returns true if one was found.
     bool go_backwards();
-
-    // Goes to the end (forwards).
-    void go_to_end();
-
-    // Returns if we are at the end. We start out at the end.
-    bool is_at_end() const;
-
-    // Goes to the beginning (backwards).
-    void go_to_beginning();
 
     // Returns the current search result item. asserts if there is no current item.
     history_item_t current_item() const;
@@ -336,19 +342,15 @@ class history_search_t {
     // Constructor.
     history_search_t(history_t &hist, const wcstring &str,
                      enum history_search_type_t type = HISTORY_SEARCH_TYPE_CONTAINS,
-                     bool case_sensitive = true)
-        : history(&hist), term(str), search_type(type), case_sensitive(case_sensitive) {
-        if (!case_sensitive) {
-            term = wcstring();
-            for (wcstring::const_iterator it = str.begin(); it != str.end(); ++it) {
-                term.push_back(towlower(*it));
-            }
+                     history_search_flags_t flags = 0)
+        : history_(&hist), orig_term_(str), canon_term_(str), search_type_(type), flags_(flags) {
+        if (ignores_case()) {
+            std::transform(canon_term_.begin(), canon_term_.end(), canon_term_.begin(), towlower);
         }
     }
 
     // Default constructor.
-    history_search_t()
-        : history(), term(), search_type(HISTORY_SEARCH_TYPE_CONTAINS), case_sensitive(true) {}
+    history_search_t() = default;
 };
 
 /// Saves the new history to disk.

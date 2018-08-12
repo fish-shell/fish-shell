@@ -179,8 +179,6 @@ class reader_history_search_t {
     /// Attempt to append matches from the current history item.
     /// \return true if something was appended.
     bool append_matches_from_search() {
-        if (search_.is_at_end()) return false;
-
         const size_t before = matches_.size();
         wcstring text = search_.current_string();
         if (mode_ == line) {
@@ -260,7 +258,7 @@ class reader_history_search_t {
     }
 
     /// \return the string we are searching for.
-    const wcstring &search_string() const { return search_.get_term(); }
+    const wcstring &search_string() const { return search_.original_term(); }
 
     /// \return whether we are at the end (most recent) of our search.
     bool is_at_end() const { return match_index_ == 0; }
@@ -277,7 +275,9 @@ class reader_history_search_t {
         matches_ = {text};
         match_index_ = 0;
         mode_ = mode;
-        search_ = history_search_t(*hist, text);
+        // We can skip dedup in history_search_t because we do it ourselves in skips_.
+        search_ =
+            history_search_t(*hist, text, HISTORY_SEARCH_TYPE_CONTAINS, history_search_no_dedup);
     }
 
     /// Reset to inactive search.

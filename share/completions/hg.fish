@@ -381,7 +381,7 @@ complete -c hg -l profile -d "print command execution profile"
 complete -c hg -l version -d "output version information and exit"
 complete -c hg -s h -l help -d "display help and exit"
 complete -c hg -l hidden -d "consider hidden changesets"
-complete -c hg -l color -x -a "true false always auto never" -d "when to colorize"
+complete -c hg -l color -x -a "true false always auto never debug" -d "when to colorize"
 complete -c hg -l pager -x -a "true false always auto never" -d "when to paginate"
 
 # subcommands

@@ -406,7 +406,7 @@ for cmd in addr addre addrem addremo addremov addremove
 end
 
 # hg annotate
-for cmd in an ann anno annot annota annotat annotate
+for cmd in an ann anno annot annota annotat annotate bl bla blam blame
     complete -c hg -n "__fish_hg_using_command $cmd" -x -a "(__fish_hg_status -cmdr)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "annotate the specified revision"
     complete -c hg -n "__fish_hg_using_command $cmd" -l no-follow -d "don't follow copies and renames"

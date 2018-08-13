@@ -564,7 +564,7 @@ end
 
 # hg diff
 for cmd in d di dif diff
-    complete -c hg -n "__fish_hg_using_command $cmd" -f -a "(__fish_hg_status -m)"
+    complete -c hg -n "__fish_hg_using_command $cmd" -f -a "(__fish_hg_status -amr)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "revision"
     complete -c hg -n "__fish_hg_using_command $cmd" -s c -l change -x -a "(__fish_hg_labels)" -d "change made by revision"
     complete -c hg -n "__fish_hg_using_command $cmd" -s a -l text -d "treat all files as text"

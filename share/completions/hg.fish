@@ -427,14 +427,14 @@ end
 
 # hg archive
 for cmd in ar arc arch archi archiv archive
-    complete -c hg -n "__fish_hg_using_command archive" -l no-decode -d "do not pass files through decoders"
-    complete -c hg -n "__fish_hg_using_command archive" -s p -l prefix -x -d "directory prefix for files in archive"
-    complete -c hg -n "__fish_hg_using_command archive" -s r -l rev -x -a "(__fish_hg_labels)" -d "revision to distribute"
-    complete -c hg -n "__fish_hg_using_command archive" -s t -l type -x -d "type of distribution to create"
-    complete -c hg -n "__fish_hg_using_command archive" -s S -l subrepos -d "recurse into subrepositories"
-    complete -c hg -n "__fish_hg_using_command archive" -s I -l include -x -d "include names matching the given patterns"
-    complete -c hg -n "__fish_hg_using_command archive" -s X -l exclude -x -d "exclude names matching the given patterns"
-    complete -c hg -n "__fish_hg_using_command archive; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l no-decode -d "do not pass files through decoders"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s p -l prefix -x -d "directory prefix for files in archive"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "revision to distribute"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s t -l type -x -a "files tar tbz2 tgz uzip zip" -d "type of distribution to create"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s S -l subrepos -d "recurse into subrepositories"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s I -l include -x -d "include names matching the given patterns"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s X -l exclude -x -d "exclude names matching the given patterns"
+    complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end
 
 # hg backout

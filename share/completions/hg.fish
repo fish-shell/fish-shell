@@ -421,6 +421,7 @@ for cmd in an ann anno annot annota annotat annotate bl bla blam blame
     complete -c hg -n "__fish_hg_using_command $cmd" -s w -l ignore-all-space -d "ignore white space when comparing lines"
     complete -c hg -n "__fish_hg_using_command $cmd" -s b -l ignore-space-change -d "ignore changes in the amount of white space"
     complete -c hg -n "__fish_hg_using_command $cmd" -s B -l ignore-blank-lines -d "ignore changes whose lines are all blank"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s Z -l ignore-space-at-eol -d "ignore changes in whitespace at EOL"
     complete -c hg -n "__fish_hg_using_command $cmd" -s I -l include -x -d "include names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd" -s X -l exclude -x -d "exclude names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
@@ -442,7 +443,9 @@ end
 for cmd in ba bac back backo backou backout
     complete -c hg -n "__fish_hg_using_command $cmd" -x -a "(__fish_hg_labels)"
     complete -c hg -n "__fish_hg_using_command $cmd" -l merge -d "merge with old dirstate parent after backout"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l no-commit -d "do not commit"
     complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "revision to backout"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s e -l edit -d "invoke editor on commit messages"
     complete -c hg -n "__fish_hg_using_command $cmd" -s t -l tool -x -a "(__fish_hg_merge_tools)" -d "specify merge tool"
     complete -c hg -n "__fish_hg_using_command $cmd" -s I -l include -x -d "include names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd" -s X -l exclude -x -d "exclude names matching the given patterns"
@@ -522,7 +525,7 @@ for cmd in cl clo clon clone
     complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -d "do not clone everything, but include this changeset and its ancestors"
     complete -c hg -n "__fish_hg_using_command $cmd" -s b -l branch -x -d "do not clone everything, but include this branch's changesets and their ancestors"
     complete -c hg -n "__fish_hg_using_command $cmd" -l pull -d "use pull protocol to copy metadata"
-    complete -c hg -n "__fish_hg_using_command $cmd" -l uncompressed -d "use uncompressed transfer (fast over LAN)"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l stream -d "clone with minimal data processing"
     complete -c hg -n "__fish_hg_using_command $cmd" -s e -l ssh -x -d "specify ssh command to use"
     complete -c hg -n "__fish_hg_using_command $cmd" -l remotecmd -x -d "specify hg command to run on the remote side"
     complete -c hg -n "__fish_hg_using_command $cmd" -l insecure -d "do not verify server certificate (ignoring web.cacerts config)"
@@ -535,6 +538,8 @@ for cmd in com comm commi commit ci
     complete -c hg -n "__fish_hg_using_command $cmd" -l close-branch -d "mark a branch head as closed"
     complete -c hg -n "__fish_hg_using_command $cmd" -l amend -d "amend the parent of the working directory"
     complete -c hg -n "__fish_hg_using_command $cmd" -s s -l secret -d "use the secret phase for committing"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s e -l edit -d "invoke editor on commit messages"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s i -l interactive -d "use interactive mode"
     complete -c hg -n "__fish_hg_using_command $cmd" -s I -l include -x -d "include names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd" -s X -l exclude -x -d "exclude names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd" -s m -l message -x -d "use text as commit message"
@@ -549,6 +554,9 @@ end
 for cmd in conf confi config sh sho show showc showco showcon showconf showconfi showconfig
     complete -c hg -n "__fish_hg_using_command $cmd" -f -a "(__fish_hg_config_entries)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s u -l untrusted -d "show untrusted configuration options"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s e -l edit -d "edit user config"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s l -l local -d "edit repository config"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s g -l global -d "edit global config"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end
 
@@ -570,14 +578,18 @@ for cmd in d di dif diff
     complete -c hg -n "__fish_hg_using_command $cmd" -s c -l change -x -a "(__fish_hg_labels)" -d "change made by revision"
     complete -c hg -n "__fish_hg_using_command $cmd" -s a -l text -d "treat all files as text"
     complete -c hg -n "__fish_hg_using_command $cmd" -s g -l git -d "use git extended diff format"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l binary -d "generate binary diffs in git mode (default)"
     complete -c hg -n "__fish_hg_using_command $cmd" -l nodates -d "omit dates from diff headers"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l noprefix -d "omit a/ and b/ prefixes from filenames"
     complete -c hg -n "__fish_hg_using_command $cmd" -s p -l show-function -d "show which function each change is in"
     complete -c hg -n "__fish_hg_using_command $cmd" -l reverse -d "produce a diff that undoes the changes"
     complete -c hg -n "__fish_hg_using_command $cmd" -s w -l ignore-all-space -d "ignore white space when comparing lines"
     complete -c hg -n "__fish_hg_using_command $cmd" -s b -l ignore-space-change -d "ignore changes in the amount of white space"
     complete -c hg -n "__fish_hg_using_command $cmd" -s B -l ignore-blank-lines -d "ignore changes whose lines are all blank"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s Z -l ignore-space-at-eol -d "ignore changes in whitespace at EOL"
     complete -c hg -n "__fish_hg_using_command $cmd" -s U -l unified -x -d "number of lines of context to show"
     complete -c hg -n "__fish_hg_using_command $cmd" -l stat -d "output diffstat-style summary of changes"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l root -x -d "produce diffs relative to subdirectory"
     complete -c hg -n "__fish_hg_using_command $cmd" -s I -l include -x -d "include names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd" -s X -l exclude -x -d "exclude names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd" -s S -l subrepos -d "recurse into subrepositories"
@@ -587,11 +599,13 @@ end
 # hg export
 for cmd in exp expo expor export
     complete -c hg -n "__fish_hg_using_command $cmd" -f -a "(__fish_hg_labels)"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s B -l bookmark -x -a "(__fish_hg_bookmarks)" -d "export changes only reachable by given bookmark"
     complete -c hg -n "__fish_hg_using_command $cmd" -s o -l output -x -d "print output to file with formatted name"
     complete -c hg -n "__fish_hg_using_command $cmd" -l switch-parent -d "diff against the second parent"
     complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "revisions to export"
     complete -c hg -n "__fish_hg_using_command $cmd" -s a -l text -d "treat all files as text"
     complete -c hg -n "__fish_hg_using_command $cmd" -s g -l git -d "use git extended diff format"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l binary -d "generate binary diffs in git mode (default)"
     complete -c hg -n "__fish_hg_using_command $cmd" -l nodates -d "omit dates from diff headers"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end
@@ -599,8 +613,10 @@ end
 # hg forget
 for cmd in fo for forg forge forget
     complete -c hg -n "__fish_hg_using_command $cmd" -x -a "(__fish_hg_status -ca)"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s i -l interactive -d "use interactive mode"
     complete -c hg -n "__fish_hg_using_command $cmd" -s I -l include -x -d "include names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd" -s X -l exclude -x -d "exclude names matching the given patterns"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s n -l dry-run -d "do not perform actions, just print output"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end
 
@@ -609,8 +625,12 @@ for cmd in gra graf graft
     complete -c hg -n "__fish_hg_using_command $cmd" -x -a "(__fish_hg_labels)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "revisions to graft"
     complete -c hg -n "__fish_hg_using_command $cmd" -s c -l continue -d "resume interrupted graft"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l stop -d "stop interrupted graft"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l abort -d "abort interrupted graft"
     complete -c hg -n "__fish_hg_using_command $cmd" -s e -l edit -d "invoke editor on commit messages"
     complete -c hg -n "__fish_hg_using_command $cmd" -l log -d "append graft info to log message"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l no-commit -d "don't commit, just apply the changes in working directory"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s f -l force -d "force graft"
     complete -c hg -n "__fish_hg_using_command $cmd" -s D -l currentdate -d "record the current date as commit date"
     complete -c hg -n "__fish_hg_using_command $cmd" -s U -l currentuser -d "record the current user as committer"
     complete -c hg -n "__fish_hg_using_command $cmd" -s d -l date -x -d "record the specified date as commit date"
@@ -625,6 +645,7 @@ for cmd in gre grep
     complete -c hg -n "__fish_hg_using_command $cmd" -f -a "(__fish_hg_status -cmrd)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s 0 -l print0 -d "end fields with NUL"
     complete -c hg -n "__fish_hg_using_command $cmd" -l all -d "print all revisions that match"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l diff -d "print all revisions when the term was introduced or removed"
     complete -c hg -n "__fish_hg_using_command $cmd" -s a -l text -d "treat all files as text"
     complete -c hg -n "__fish_hg_using_command $cmd" -s f -l follow -d "follow changeset history, or file history across copies and renames"
     complete -c hg -n "__fish_hg_using_command $cmd" -s i -l ignore-case -d "ignore case when matching"
@@ -654,6 +675,7 @@ for cmd in hel help
     complete -c hg -n "__fish_hg_using_command $cmd" -s e -l extension -d "show only help for extensions"
     complete -c hg -n "__fish_hg_using_command $cmd" -s c -l command -d "show only help for commands"
     complete -c hg -n "__fish_hg_using_command $cmd" -s k -l keyword -d "show topics matching keyword"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s s -l system -x -d "show help for specific platform(s)"
 end
 
 # hg histedit
@@ -661,6 +683,7 @@ for cmd in histe histed histedi histedit
     complete -c hg -n "__fish_hg_using_command $cmd" -x -a "(__fish_hg_labels)"
     complete -c hg -n "__fish_hg_using_command $cmd" -l commands -r -d "read history edits from the specified file"
     complete -c hg -n "__fish_hg_using_command $cmd" -s c -l continue -d "continue an edit already in progress"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l edit-plan -d "edit remaining actions list"
     complete -c hg -n "__fish_hg_using_command $cmd" -s k -l keep -d "don't strip old nodes after edit is complete"
     complete -c hg -n "__fish_hg_using_command $cmd" -l abort -d "abort an edit in progress"
     complete -c hg -n "__fish_hg_using_command $cmd" -s o -l outgoing -d "changesets not found in destination"
@@ -690,7 +713,9 @@ for cmd in im imp impo impor import patc patch
     complete -c hg -n "__fish_hg_using_command $cmd" -s e -l edit -d "invoke editor on commit messages"
     complete -c hg -n "__fish_hg_using_command $cmd" -l no-commit -d "don't commit, just update the working directory"
     complete -c hg -n "__fish_hg_using_command $cmd" -l bypass -d "apply patch without touching the working directory"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l partial -d "commit even if some hunks fail"
     complete -c hg -n "__fish_hg_using_command $cmd" -l exact -d "abort if patch would apply lossily"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l prefix -r -d "apply patch to subdirectory"
     complete -c hg -n "__fish_hg_using_command $cmd" -l import-branch -d "use any branch information in patch (implied by --exact)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s m -l message -x -d "use text as commit message"
     complete -c hg -n "__fish_hg_using_command $cmd" -s l -l logfile -r -d "read commit message from file"
@@ -777,6 +802,7 @@ for cmd in me mer merg merge
     complete -c hg -n "__fish_hg_using_command $cmd" -f -a "(__fish_hg_labels)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "revision to merge"
     complete -c hg -n "__fish_hg_using_command $cmd" -s P -l preview -d "review revisions to merge (no merge is performed)"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l abort -d "abort the ongoing merge"
     complete -c hg -n "__fish_hg_using_command $cmd" -s t -l tool -x -a "(__fish_hg_merge_tools)" -d "specify merge tool"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end
@@ -1096,6 +1122,7 @@ for cmd in rem remo remov remove rm
     complete -c hg -n "__fish_hg_using_command $cmd" -s S -l subrepos -d "recurse into subrepositories"
     complete -c hg -n "__fish_hg_using_command $cmd" -s I -l include -x -d "include names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd" -s X -l exclude -x -d "exclude names matching the given patterns"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s n -l dry-run -d "do not perform actions, just print output"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end
 
@@ -1131,6 +1158,7 @@ for cmd in rev reve rever revert
     complete -c hg -n "__fish_hg_using_command $cmd" -s d -l date -x -d "tipmost revision matching date"
     complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "revert to the specified revision"
     complete -c hg -n "__fish_hg_using_command $cmd" -s C -l no-backup -d "do not save backup copies of files"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s i -l interactive -d "interactively select the changes"
     complete -c hg -n "__fish_hg_using_command $cmd" -s I -l include -x -d "include names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd" -s X -l exclude -x -d "exclude names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd" -s n -l dry-run -d "do not perform actions, just print output"
@@ -1146,7 +1174,7 @@ end
 for cmd in se ser serv serve
     complete -c hg -n "__fish_hg_using_command $cmd" -s A -l accesslog -r -d "name of access log file to write to"
     complete -c hg -n "__fish_hg_using_command $cmd" -s d -l daemon -d "run server in background"
-    complete -c hg -n "__fish_hg_using_command $cmd" -l daemon-pipefds -x -d "used internally by daemon mode"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l daemon-postexec -x -d "used internally by daemon mode"
     complete -c hg -n "__fish_hg_using_command $cmd" -s E -l errorlog -r -d "name of error log file to write to"
     complete -c hg -n "__fish_hg_using_command $cmd" -s p -l port -x -d "port to listen on (default: 8000)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s a -l address -x -d "address to listen on (default: all interfaces)"
@@ -1160,6 +1188,7 @@ for cmd in se ser serv serve
     complete -c hg -n "__fish_hg_using_command $cmd" -l style -x -d "template style to use"
     complete -c hg -n "__fish_hg_using_command $cmd" -s 6 -l ipv6 -d "use IPv6 in addition to IPv4"
     complete -c hg -n "__fish_hg_using_command $cmd" -l certificate -r -d "SSL certificate file"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l print-url -d "start and print only the URL"
     complete -c hg -n "__fish_hg_using_command $cmd" -s S -l subrepos -d "recurse into subrepositories"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end
@@ -1227,8 +1256,10 @@ for cmd in up upd upda updat update che chec check checko checkou checkout co
     complete -c hg -n "__fish_hg_using_command $cmd" -x -a "(__fish_hg_labels)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s C -l clean -d "discard uncommitted changes (no backup)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s c -l check -d "require clean working directory"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s m -l merge -d "merge uncommitted changes"
     complete -c hg -n "__fish_hg_using_command $cmd" -s d -l date -x -d "tipmost revision matching date"
     complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "revision"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s t -l tool -x -a "(__fish_hg_merge_tools)" -d "specify merge tool"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end
 

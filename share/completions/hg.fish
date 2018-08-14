@@ -470,7 +470,7 @@ end
 for cmd in bo boo book bookm bookma bookmar bookmark bookmarks
     complete -c hg -n "__fish_hg_using_command $cmd" -f -a "(__fish_hg_bookmarks)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s f -l force -d "force"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "revision"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "revision for bookmark action"
     complete -c hg -n "__fish_hg_using_command $cmd" -s d -l delete -d "delete a given bookmark"
     complete -c hg -n "__fish_hg_using_command $cmd" -s m -l rename -x -a "(__fish_hg_bookmarks)" -d "rename a given bookmark"
     complete -c hg -n "__fish_hg_using_command $cmd" -s i -l inactive -d "mark a bookmark inactive"
@@ -499,7 +499,7 @@ for cmd in bu bun bund bundl bundle
     complete -c hg -n "__fish_hg_using_command $cmd" -s t -l type -x -d "bundle compression type to use (default: bzip2)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s e -l ssh -x -d "specify ssh command to use"
     complete -c hg -n "__fish_hg_using_command $cmd" -l remotecmd -x -d "specify hg command to run on the remote side"
-    complete -c hg -n "__fish_hg_using_command $cmd" -l insecure -d "do not verify server certificate (ignoring web.cacerts"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l insecure -d "do not verify server certificate (ignoring web.cacerts config)"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end
 
@@ -517,10 +517,10 @@ end
 # hg clone
 for cmd in cl clo clon clone
     complete -c hg -n "__fish_hg_using_command $cmd" -r -a "(__fish_hg_sources)"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s U -l noupdate -d "the clone will include an empty working copy (only a repository)"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s u -l updaterev -x -d "revision, tag or branch to check out"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -d "include the specified changeset"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s b -l branch -x -d "clone only the specified branch"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s U -l noupdate -d "the clone will include an empty working directory (only a repository)"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s u -l updaterev -x -d "revision, tag, or branch to check out"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -d "do not clone everything, but include this changeset and its ancestors"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s b -l branch -x -d "do not clone everything, but include this branch's changesets and their ancestors"
     complete -c hg -n "__fish_hg_using_command $cmd" -l pull -d "use pull protocol to copy metadata"
     complete -c hg -n "__fish_hg_using_command $cmd" -l uncompressed -d "use uncompressed transfer (fast over LAN)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s e -l ssh -x -d "specify ssh command to use"
@@ -532,7 +532,7 @@ end
 for cmd in com comm commi commit ci
     complete -c hg -n "__fish_hg_using_command $cmd" -f -a "(__fish_hg_status -amr)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s A -l addremove -d "mark new/missing files as added/removed before committing"
-    complete -c hg -n "__fish_hg_using_command $cmd" -l close-branch -d "mark a branch as closed, hiding it from the branch list"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l close-branch -d "mark a branch head as closed"
     complete -c hg -n "__fish_hg_using_command $cmd" -l amend -d "amend the parent of the working directory"
     complete -c hg -n "__fish_hg_using_command $cmd" -s s -l secret -d "use the secret phase for committing"
     complete -c hg -n "__fish_hg_using_command $cmd" -s I -l include -x -d "include names matching the given patterns"
@@ -651,7 +651,7 @@ end
 # hg help
 for cmd in hel help
     complete -c hg -n "__fish_hg_using_command $cmd" -x -a "(__fish_hg_help_topics)"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s e -l extension -d "only help for extensions"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s e -l extension -d "show only help for extensions"
     complete -c hg -n "__fish_hg_using_command $cmd" -s c -l command -d "show only help for commands"
     complete -c hg -n "__fish_hg_using_command $cmd" -s k -l keyword -d "show topics matching keyword"
 end
@@ -690,7 +690,7 @@ for cmd in im imp impo impor import patc patch
     complete -c hg -n "__fish_hg_using_command $cmd" -s e -l edit -d "invoke editor on commit messages"
     complete -c hg -n "__fish_hg_using_command $cmd" -l no-commit -d "don't commit, just update the working directory"
     complete -c hg -n "__fish_hg_using_command $cmd" -l bypass -d "apply patch without touching the working directory"
-    complete -c hg -n "__fish_hg_using_command $cmd" -l exact -d "apply patch to the nodes from which it was generated"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l exact -d "abort if patch would apply lossily"
     complete -c hg -n "__fish_hg_using_command $cmd" -l import-branch -d "use any branch information in patch (implied by --exact)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s m -l message -x -d "use text as commit message"
     complete -c hg -n "__fish_hg_using_command $cmd" -s l -l logfile -r -d "read commit message from file"
@@ -748,7 +748,7 @@ for cmd in log histo histor history
     complete -c hg -n "__fish_hg_using_command "$cmd -s d -l date -x -d "show revisions matching date spec"
     complete -c hg -n "__fish_hg_using_command "$cmd -s C -l copies -d "show copied files"
     complete -c hg -n "__fish_hg_using_command "$cmd -s k -l keyword -x -d "do case-insensitive search for a given text"
-    complete -c hg -n "__fish_hg_using_command "$cmd -s r -l rev -x -a "(__fish_hg_labels)" -d "show the specified revision or range"
+    complete -c hg -n "__fish_hg_using_command "$cmd -s r -l rev -x -a "(__fish_hg_labels)" -d "show the specified revision or revset"
     complete -c hg -n "__fish_hg_using_command "$cmd -l removed -d "include revisions where files were removed"
     complete -c hg -n "__fish_hg_using_command "$cmd -s u -l user -x -d "revisions committed by user"
     complete -c hg -n "__fish_hg_using_command "$cmd -s b -l branch -x -a "(__fish_hg_branches)" -d "show changesets within the given named branch"
@@ -830,9 +830,9 @@ end
 # hg pull
 for cmd in pul pull
     complete -c hg -n "__fish_hg_using_command $cmd" -r -a "(__fish_hg_sources)"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s u -l update -d "update to new branch head if changesets were pulled"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s u -l update -d "update to new branch head if new descendants were pulled"
     complete -c hg -n "__fish_hg_using_command $cmd" -s f -l force -d "run even when remote repository is unrelated"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -d "a remote changeset inteded to be added"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -d "a remote changeset intended to be added"
     complete -c hg -n "__fish_hg_using_command $cmd" -s B -l bookmark -x -d "bookmark to pull"
     complete -c hg -n "__fish_hg_using_command $cmd" -s b -l branch -x -d "a specific branch you would like to pull"
     complete -c hg -n "__fish_hg_using_command $cmd" -s e -l ssh -x -d "specify ssh command to use"
@@ -1092,7 +1092,7 @@ end
 for cmd in rem remo remov remove rm
     complete -c hg -n "__fish_hg_using_command $cmd" -x -a "(__fish_hg_status -c)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s A -l after -d "record delete for missing files"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s f -l force -d "remove (and delete) file even if added or modified"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s f -l force -d "forget added files, delete modified files"
     complete -c hg -n "__fish_hg_using_command $cmd" -s S -l subrepos -d "recurse into subrepositories"
     complete -c hg -n "__fish_hg_using_command $cmd" -s I -l include -x -d "include names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd" -s X -l exclude -x -d "exclude names matching the given patterns"
@@ -1189,9 +1189,9 @@ end
 for cmd in str stri strip
     complete -c hg -n "__fish_hg_using_command $cmd" -x -a "(__fish_hg_labels)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "strip specified revision"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s f -l force -d "force removal of changesets, discard uncommitted changes"
-    complete -c hg -n "__fish_hg_using_command $cmd" -l no-backup -d "no backups"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s k -l keep -d "do not modify working copy during strip"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s f -l force -d "force removal of changesets, discard uncommitted changes (no backup)"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l no-backup -d "do not save backup bundle"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s k -l keep -d "do not modify working directory during strip"
     complete -c hg -n "__fish_hg_using_command $cmd" -s B -l bookmark -x -a "(__fish_hg_bookmarks)" -d "remove revs only reachable from given bookmark"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end
@@ -1207,7 +1207,7 @@ complete -c hg -n "__fish_hg_using_command tag" -s f -l force -d "force tag"
 complete -c hg -n "__fish_hg_using_command tag" -s l -l local -d "make the tag local"
 complete -c hg -n "__fish_hg_using_command tag" -s r -l rev -x -a "(__fish_hg_labels)" -d "revision to tag"
 complete -c hg -n "__fish_hg_using_command tag" -l remove -d "remove a tag"
-complete -c hg -n "__fish_hg_using_command tag" -s e -l edit -d "edit commit message"
+complete -c hg -n "__fish_hg_using_command tag" -s e -l edit -d "invoke editor on commit messages"
 complete -c hg -n "__fish_hg_using_command tag" -s m -l message -x -d "use <text> as commit message"
 complete -c hg -n "__fish_hg_using_command tag" -s d -l date -x -d "record the specified date as commit date"
 complete -c hg -n "__fish_hg_using_command tag" -s u -l user -x -d "record the specified user as committer"
@@ -1226,7 +1226,7 @@ end
 for cmd in up upd upda updat update che chec check checko checkou checkout co
     complete -c hg -n "__fish_hg_using_command $cmd" -x -a "(__fish_hg_labels)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s C -l clean -d "discard uncommitted changes (no backup)"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s c -l check -d "update across branches if no uncommitted changes"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s c -l check -d "require clean working directory"
     complete -c hg -n "__fish_hg_using_command $cmd" -s d -l date -x -d "tipmost revision matching date"
     complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "revision"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"

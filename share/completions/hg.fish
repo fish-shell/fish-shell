@@ -644,8 +644,7 @@ for cmd in hea head heads
     complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "show only heads which are descendants of STARTREV"
     complete -c hg -n "__fish_hg_using_command $cmd" -s t -l topo -d "show topological heads only"
     complete -c hg -n "__fish_hg_using_command $cmd" -s c -l closed -d "show normal and closed branch heads"
-    complete -c hg -n "__fish_hg_using_command $cmd" -l style -x -d "display using template map file"
-    complete -c hg -n "__fish_hg_using_command $cmd" -l template -x -d "display with template"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s T -l template -x -d "display with template"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end
 
@@ -716,8 +715,7 @@ for cmd in inc inco incom incomi incomin incoming in
     complete -c hg -n "__fish_hg_using_command $cmd" -s M -l no-merges -d "do not show merges"
     complete -c hg -n "__fish_hg_using_command $cmd" -l stat -d "output diffstat-style summary of changes"
     complete -c hg -n "__fish_hg_using_command $cmd" -s G -l graph -d "show the revision DAG"
-    complete -c hg -n "__fish_hg_using_command $cmd" -l style -x -d "display using template map file"
-    complete -c hg -n "__fish_hg_using_command $cmd" -l template -x -d "display with template"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s T -l template -x -d "display with template"
     complete -c hg -n "__fish_hg_using_command $cmd" -s e -l ssh -x -d "specify ssh command to use"
     complete -c hg -n "__fish_hg_using_command $cmd" -l remotecmd -x -d "specify hg command to run on the remote side"
     complete -c hg -n "__fish_hg_using_command $cmd" -l insecure -d "do not verify server certificate (ignoring web.cacerts config)"
@@ -761,8 +759,7 @@ for cmd in log histo histor history
     complete -c hg -n "__fish_hg_using_command "$cmd -s M -l no-merges -d "do not show merges"
     complete -c hg -n "__fish_hg_using_command "$cmd -l stat -d "output diffstat-style summary of changes"
     complete -c hg -n "__fish_hg_using_command "$cmd -s G -l graph -d "show the revision DAG"
-    complete -c hg -n "__fish_hg_using_command "$cmd -l style -x -d "display using template map file"
-    complete -c hg -n "__fish_hg_using_command "$cmd -l template -x -d "display with template"
+    complete -c hg -n "__fish_hg_using_command "$cmd -s T -l template -x -d "display with template"
     complete -c hg -n "__fish_hg_using_command "$cmd -s I -l include -x -d "include names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command "$cmd -s X -l exclude -x -d "exclude names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command "$cmd"; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
@@ -798,8 +795,7 @@ for cmd in o ou out outg outgo outgoi outgoin outgoing
     complete -c hg -n "__fish_hg_using_command $cmd" -s M -l no-merges -d "do not show merges"
     complete -c hg -n "__fish_hg_using_command $cmd" -l stat -d "output diffstat-style summary of changes"
     complete -c hg -n "__fish_hg_using_command $cmd" -s G -l graph -d "show the revision DAG"
-    complete -c hg -n "__fish_hg_using_command $cmd" -l style -x -d "display using template map file"
-    complete -c hg -n "__fish_hg_using_command $cmd" -l template -x -d "display with template"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s T -l template -x -d "display with template"
     complete -c hg -n "__fish_hg_using_command $cmd" -s e -l ssh -x -d "specify ssh command to use"
     complete -c hg -n "__fish_hg_using_command $cmd" -l remotecmd -x -d "specify hg command to run on the remote side"
     complete -c hg -n "__fish_hg_using_command $cmd" -l insecure -d "do not verify server certificate (ignoring web.cacerts config)"
@@ -811,8 +807,7 @@ end
 for cmd in par pare paren parent parents
     complete -c hg -n "__fish_hg_using_command $cmd" -f -a "(__fish_hg_status -cmrd)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "show parents of the specified revision"
-    complete -c hg -n "__fish_hg_using_command $cmd" -l style -x -d "display using template map file"
-    complete -c hg -n "__fish_hg_using_command $cmd" -l template -x -d "display with template"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s T -l template -x -d "display with template"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end
 

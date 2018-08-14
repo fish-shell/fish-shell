@@ -399,6 +399,7 @@ complete -c hg -n "__fish_hg_using_command add; and __fish_hg_mq_enabled" -l mq 
 for cmd in addr addre addrem addremo addremov addremove
     complete -c hg -n "__fish_hg_using_command $cmd" -f -a "(__fish_hg_status -ud)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s s -l similarity -x -d "guess renamed files by similarity (0<=s<=100)"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s S -l subrepos -d "recurse into subrepositories"
     complete -c hg -n "__fish_hg_using_command $cmd" -s I -l include -x -d "include names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd" -s X -l exclude -x -d "exclude names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd" -s n -l dry-run -d "do not perform actions, just print output"
@@ -1097,6 +1098,7 @@ for cmd in rem remo remov remove rm
     complete -c hg -n "__fish_hg_using_command $cmd" -x -a "(__fish_hg_status -c)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s A -l after -d "record delete for missing files"
     complete -c hg -n "__fish_hg_using_command $cmd" -s f -l force -d "remove (and delete) file even if added or modified"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s S -l subrepos -d "recurse into subrepositories"
     complete -c hg -n "__fish_hg_using_command $cmd" -s I -l include -x -d "include names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd" -s X -l exclude -x -d "exclude names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
@@ -1163,6 +1165,7 @@ for cmd in se ser serv serve
     complete -c hg -n "__fish_hg_using_command $cmd" -l style -x -d "template style to use"
     complete -c hg -n "__fish_hg_using_command $cmd" -s 6 -l ipv6 -d "use IPv6 in addition to IPv4"
     complete -c hg -n "__fish_hg_using_command $cmd" -l certificate -x -d "SSL certificate file"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s S -l subrepos -d "recurse into subrepositories"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end
 

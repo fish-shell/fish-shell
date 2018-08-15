@@ -574,6 +574,22 @@ for cmd in conf confi config sh sho show showc showco showcon showconf showconfi
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end
 
+# hg convert
+for cmd in conv conve conver convert
+    complete -c hg -n "__fish_hg_using_command $cmd" -s s -l source-type -x -a "hg cvs darcs git svn mtn gnuarch bzr p4" -d "source repository type"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s d -l dest-type -x -a "hg svn" -d "destination repository type"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -d "import up to this source revision"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s A -l authormap -r -d "remap usernames using this file"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l filemap -r -d "remap file names using contents of file"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l full -d "apply filemap changes by converting all files again"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l splicemap -r -d "splice synthesized history into place"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l branchmap -r -d "change branch names while converting"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l branchsort -d "try to sort changesets by branches"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l datesort -d "try to sort changesets by date"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l sourcesort -d "preserve source changesets order"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l closesort -d "try to reorder closed revisions"
+end
+
 # hg copy
 for cmd in cop copy cp
     complete -c hg -n "__fish_hg_using_command $cmd" -x -a "(__fish_hg_status -cmrd)"
@@ -608,6 +624,41 @@ for cmd in d di dif diff
     complete -c hg -n "__fish_hg_using_command $cmd" -s X -l exclude -x -d "exclude names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd" -s S -l subrepos -d "recurse into subrepositories"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
+end
+
+# hg email
+for cmd in em ema emai email
+    complete -c hg -n "__fish_hg_using_command $cmd" -f -a "(__fish_hg_labels)"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s g -l git -d "use git extended diff format"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l plain -d "omit hg patch header"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s o -l outgoing -d "send changes not found in the target repository"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s b -l bundle -d "send changes not in target as a binary bundle"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s B -l bookmark -x -a "(__fish_hg_bookmarks)" -d "send changes only reachable by given bookmark"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l bundlename -x -d "name of the bundle attachment file"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "a revision to send"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l force -d "run even when remote repository is unrelated (with -b/--bundle)"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l base -x -a "(__fish_hg_labels)" -d "a base changeset to specify instead of a destination (with -b/--bundle)"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l intro -d "send an introduction email for a single patch"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l body -d "send patches as inline message text (default)"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s a -l attach -d "send patches as attachments"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s i -l inline -d "send patches as inline attachments"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l bcc -x -d "email addresses of blind carbon copy recipients"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s c -l cc -x -d "email addresses of copy recipients"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l confirm -d "ask for confirmation before sending"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s d -l diffstat -d "add diffstat output to messages"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l date -x -d "use the given date as the sending date"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l desc -x -d "use the given file as the series description"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s f -l from -x -d "email address of sender"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s n -l test -d "print messages that would be sent"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s m -l mbox -r -d "write messages to mbox file instead of sending them"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l reply-to -x -d "email addresses replies should be sent to"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s s -l subject -x -d "subject of first message (intro or single patch)"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l in-reply-to -x -d "message identifier to reply to"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l flag -x -d "flags to add in subject prefixes"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s t -l to -x -d "email addresses of recipients"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s e -l ssh -x -d "specify ssh command to use"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l remotecmd -x -d "specify hg command to run on the remote side"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l insecure -d "do not verify server certificate (ignoring web.cacerts config)"
 end
 
 # hg export

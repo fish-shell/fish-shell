@@ -1197,7 +1197,7 @@ end
 
 # hg revert
 for cmd in rev reve rever revert
-    complete -c hg -n "__fish_hg_using_command $cmd" -f -a "(__fish_hg_status -camr)"
+    complete -c hg -n "__fish_hg_using_command $cmd" -f -a "(__fish_hg_status -camrd)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s a -l all -d "revert all changes when no arguments given"
     complete -c hg -n "__fish_hg_using_command $cmd" -s d -l date -x -d "tipmost revision matching date"
     complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "revert to the specified revision"

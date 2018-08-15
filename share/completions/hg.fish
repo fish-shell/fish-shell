@@ -919,8 +919,8 @@ for cmd in qcl qclo qclon qclone
     complete -c hg -n "__fish_hg_using_command $cmd" -s U -l noupdate -d "do not update the new working directories"
     complete -c hg -n "__fish_hg_using_command $cmd" -l uncompressed -d "use uncompressed transfer (fast over LAN)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s p -l patches -d "location of source patch repository"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s e -l ssh -d "specify ssh command to use"
-    complete -c hg -n "__fish_hg_using_command $cmd" -l remotecmd -d "specify hg command to run on the remote side"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s e -l ssh -x -d "specify ssh command to use"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l remotecmd -x -d "specify hg command to run on the remote side"
     complete -c hg -n "__fish_hg_using_command $cmd" -l insecure -d "do not verify server certificate (ignoring web.cacerts config)"
 end
 
@@ -935,14 +935,18 @@ for cmd in qdi qdif qdiff
     complete -c hg -n "__fish_hg_using_command $cmd" -f -a "(__fish_hg_status -mrd --rev .^)"
     complete -c hg -n "__fish_hg_using_command $cmd" -s a -l text -d "treat all files as text"
     complete -c hg -n "__fish_hg_using_command $cmd" -s g -l git -d "use git extended diff format"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l binary -d "generate binary diffs in git mode (default)"
     complete -c hg -n "__fish_hg_using_command $cmd" -l nodates -d "omit dates from diff headers"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l noprefix -d "omit a/ and b/ prefixes from filenames"
     complete -c hg -n "__fish_hg_using_command $cmd" -s p -l show-function -d "show which function each change is in"
     complete -c hg -n "__fish_hg_using_command $cmd" -l reverse -d "produce a diff that undoes the changes"
     complete -c hg -n "__fish_hg_using_command $cmd" -s w -l ignore-all-space -d "ignore white space when comparing lines"
     complete -c hg -n "__fish_hg_using_command $cmd" -s b -l ignore-space-change -d "ignore changes in the amount of white space"
     complete -c hg -n "__fish_hg_using_command $cmd" -s B -l ignore-blank-lines -d "ignore changes whose lines are all blank"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s Z -l ignore-space-at-eol -d "ignore changes in whitespace at EOL"
     complete -c hg -n "__fish_hg_using_command $cmd" -s U -l unified -x -d "number of lines of context to show"
     complete -c hg -n "__fish_hg_using_command $cmd" -l stat -d "output diffstat-style summary of changes"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l root -x -d "produce diffs relative to subdirectory"
     complete -c hg -n "__fish_hg_using_command $cmd" -s I -l include -x -d "include names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd" -s X -l exclude -x -d "exclude names matching the given patterns"
 end
@@ -956,10 +960,10 @@ end
 # hg qfold
 for cmd in qfo qfol qfold
     complete -c hg -n "__fish_hg_using_command $cmd" -x -a "(__fish_hg_patches)"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s e -l edit -d "edit patch header"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s e -l edit -d "invoke editor on commit messages"
     complete -c hg -n "__fish_hg_using_command $cmd" -s k -l keep -d "keep folded patch files"
     complete -c hg -n "__fish_hg_using_command $cmd" -s m -l message -x -d "use text as commit message"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s l -l logfile -x -d "read commit message from file"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s l -l logfile -r -d "read commit message from file"
 end
 
 # hg qgoto
@@ -973,7 +977,7 @@ end
 # hg qguard
 for cmd in qgu qgua qguar qguard
     complete -c hg -n "__fish_hg_using_command $cmd" -x -a "(__fish_hg_patches)"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s l -l list -d "all patches and guards"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s l -l list -d "list all patches and guards"
     complete -c hg -n "__fish_hg_using_command $cmd" -s n -l none -d "drop all guards"
 end
 
@@ -985,7 +989,7 @@ end
 # hg qimport
 for cmd in qim qimp qimpo qimpor qimport
     complete -c hg -n "__fish_hg_using_command $cmd" -s e -l existing -d "import file in patch directory"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s n -l name -d "name of patch file"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s n -l name -x -d "name of patch file"
     complete -c hg -n "__fish_hg_using_command $cmd" -s f -l force -d "overwrite existing files"
     complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "place existing revisions under mq control"
     complete -c hg -n "__fish_hg_using_command $cmd" -s g -l git -d "use git extended diff format"
@@ -993,16 +997,16 @@ for cmd in qim qimp qimpo qimpor qimport
 end
 
 # hg qnew
-complete -c hg -n "__fish_hg_using_command qnew" -s e -l edit -d "edit commit message"
+complete -c hg -n "__fish_hg_using_command qnew" -s e -l edit -d "invoke editor on commit messages"
 complete -c hg -n "__fish_hg_using_command qnew" -s g -l git -d "use git extended diff format"
 complete -c hg -n "__fish_hg_using_command qnew" -s U -l currentuser -d "add \"From: <current user>\" to patch"
 complete -c hg -n "__fish_hg_using_command qnew" -s u -l user -x -d "add \"From: <USER>\" to patch"
 complete -c hg -n "__fish_hg_using_command qnew" -s D -l currentdate -d "add \"Date: <current date>\" to patch"
 complete -c hg -n "__fish_hg_using_command qnew" -s d -l date -x -d "add \"Date: <DATE>\" to patch"
-complete -c hg -n "__fish_hg_using_command qnew" -s I -l include -d "include names matching the given patterns"
-complete -c hg -n "__fish_hg_using_command qnew" -s X -l exclude -d "exclude names matching the given patterns"
-complete -c hg -n "__fish_hg_using_command qnew" -s m -l message -d "use text as commit message"
-complete -c hg -n "__fish_hg_using_command qnew" -s l -l logfile -d "read commit message from file"
+complete -c hg -n "__fish_hg_using_command qnew" -s I -l include -x -d "include names matching the given patterns"
+complete -c hg -n "__fish_hg_using_command qnew" -s X -l exclude -x -d "exclude names matching the given patterns"
+complete -c hg -n "__fish_hg_using_command qnew" -s m -l message -x -d "use text as commit message"
+complete -c hg -n "__fish_hg_using_command qnew" -s l -l logfile -r -d "read commit message from file"
 complete -c hg -n "__fish_hg_using_command qnew" -s i -l interactive -d "interactively record a new patch"
 
 # hg qnext
@@ -1068,7 +1072,7 @@ end
 # hg qrefresh
 for cmd in qref qrefr qrefre qrefres qrefresh
     complete -c hg -n "__fish_hg_using_command $cmd" -f -a "(__fish_hg_status -amr)"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s e -l edit -d "edit commit message"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s e -l edit -d "invoke editor on commit messages"
     complete -c hg -n "__fish_hg_using_command $cmd" -s g -l git -d "use git extended diff format"
     complete -c hg -n "__fish_hg_using_command $cmd" -s s -l short -d "refresh only files already in the patch and specified files"
     complete -c hg -n "__fish_hg_using_command $cmd" -s U -l currentuser -d "add/update author field in patch with current user"
@@ -1078,7 +1082,7 @@ for cmd in qref qrefr qrefre qrefres qrefresh
     complete -c hg -n "__fish_hg_using_command $cmd" -s I -l include -x -d "include names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd" -s X -l exclude -x -d "exclude names matching the given patterns"
     complete -c hg -n "__fish_hg_using_command $cmd" -s m -l message -x -d "use text as commit message"
-    complete -c hg -n "__fish_hg_using_command $cmd" -s l -l logfile -x -d "read commit message from file"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s l -l logfile -r -d "read commit message from file"
     complete -c hg -n "__fish_hg_using_command $cmd" -s i -l interactive -d "interactively select changes to refresh"
 end
 

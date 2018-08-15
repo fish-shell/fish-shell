@@ -327,6 +327,10 @@ function __fish_hg_sources
     end
 end
 
+function __fish_hg_shelves
+    printf "%s\tshelve\n" (__fish_hg shelve -ql)
+end
+
 function __fish_hg_mq_enabled
     if set -l line (__fish_hg config extensions.hgext.mq)
         set -l parts (string split "=" -m 1 $line)
@@ -617,6 +621,16 @@ for cmd in exp expo expor export
     complete -c hg -n "__fish_hg_using_command $cmd" -s g -l git -d "use git extended diff format"
     complete -c hg -n "__fish_hg_using_command $cmd" -l binary -d "generate binary diffs in git mode (default)"
     complete -c hg -n "__fish_hg_using_command $cmd" -l nodates -d "omit dates from diff headers"
+    complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
+end
+
+# hg files
+for cmd in fi fil file files
+    complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "search the repository as it is in REV"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s 0 -l print0 -d "end filenames with NUL, for use with xargs"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s I -l include -x -d "include names matching the given patterns"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s X -l exclude -x -d "exclude names matching the given patterns"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s S -l subrepos -d "recurse into subrepositories"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end
 
@@ -1099,6 +1113,26 @@ for cmd in qu qun quna qunap qunapp qunappl qunappli qunapplie qunapplied
     complete -c hg -n "__fish_hg_using_command $cmd" -s s -l summary -d "print first line of patch header"
 end
 
+# hg rebase
+for cmd in reb reba rebas rebase
+    complete -c hg -n "__fish_hg_using_command $cmd" -s s -l source -x -a "(__fish_hg_labels)" -d "rebase the specified changeset and descendants"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s b -l base -x -a "(__fish_hg_labels)" -d "rebase everything from branching point of specified changeset"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s r -l rev -x -a "(__fish_hg_labels)" -d "rebase these revisions"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s d -l dest -x -a "(__fish_hg_labels)" -d "rebase onto the specified changeset"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l collapse -d "collapse the rebased changesets"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s m -l message -x -d "use text as collapse commit message"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s e -l edit -d "invoke editor on commit messages"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s l -l logfile -r -d "read collapse commit message from file"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s k -l keep -d "keep original changesets"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l keepbranches -d "keep original branch names"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s t -l tool -x -a "(__fish_hg_merge_tools)" -d "specify merge tool"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s c -l continue -d "continue an interrupted rebase"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s a -l abort -d "abort an interrupted rebase"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s n -l dry-run -d "do not perform actions, just print output"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l confirm -d "ask before applying actions"
+    complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
+end
+
 # hg record
 for cmd in recor record
     complete -c hg -n "__fish_hg_using_command $cmd" -f -a "(__fish_hg_status -amr)"
@@ -1203,6 +1237,26 @@ for cmd in se ser serv serve
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end
 
+# hg shelve
+for cmd in she shel shelv shelve
+    complete -c hg -n "__fish_hg_using_command $cmd" -x -a "(__fish_hg_status -amrd)"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s A -l addremove -d "mark new/missing files as added/removed before shelving"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s u -l unknown -d "store unknown files in the shelve"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l cleanup -d "delete all shelved changes"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l date -x -d "shelve with the specified commit date"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s d -l delete -d "delete the named shelved change(s)"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s e -l edit -d "invoke editor on commit messages"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s l -l list -d "list current shelves"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s m -l message -x -d "use text as shelve message"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s n -l name -x -d "use the given name for the shelved commit"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s p -l patch -d "output patches for changes (provide the names of the shelved changes as positional arguments)"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s i -l interactive -d "interactive mode, only works while creating a shelve"
+    complete -c hg -n "__fish_hg_using_command $cmd" -l stat -d "output diffstat-style summary of changes (provide the names of the shelved changes as positional arguments)"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s I -l include -x -d "include names matching the given patterns"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s X -l exclude -x -d "exclude names matching the given patterns"
+    complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
+end
+
 # hg status
 for cmd in st sta stat statu status
     complete -c hg -n "__fish_hg_using_command $cmd" -s A -l all -d "show status of all files"
@@ -1258,6 +1312,17 @@ complete -c hg -n "__fish_hg_using_command tags; and __fish_hg_mq_enabled" -l mq
 # hg unbundle
 for cmd in un unb unbu unbun unbund unbundl unbundle
     complete -c hg -n "__fish_hg_using_command $cmd" -s u -l update -d "update to new branch head if changesets were unbundled"
+    complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
+end
+
+# hg unshelve
+for cmd in uns unsh unshe unshel unshelv unshelve
+    complete -c hg -n "__fish_hg_using_command $cmd" -x -a "(__fish_hg_shelves)"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s a -l abort -d "abort an incomplete unshelve operation"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s c -l continue -d "continue an incomplete unshelve operation"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s k -l keep -d "keep shelve after unshelving"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s n -l name -x -a "(__fish_hg_shelves)" -d "restore shelved change with given name"
+    complete -c hg -n "__fish_hg_using_command $cmd" -s t -l tool -x -a "(__fish_hg_merge_tools)" -d "specify merge tool"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end
 

@@ -54,13 +54,13 @@ function __fish_hg_commands
             case bisect
                 printf "$command\tsubdivision search of changesets\n"
             case bookmarks
-                printf "$command\ttrack a line of development with movable markers\n"
+                printf "$command\tcreate a new bookmark or list existing bookmarks\n"
             case branch
                 printf "$command\tset or show the current branch name\n"
             case branches
                 printf "$command\tlist repository named branches\n"
             case bundle
-                printf "$command\tcreate a changegroup file\n"
+                printf "$command\tcreate a bundle file\n"
             case cat
                 printf "$command\toutput the current or given revision of files\n"
             case churn
@@ -77,16 +77,20 @@ function __fish_hg_commands
                 printf "$command\tmark files as copied for the next commit\n"
             case diff
                 printf "$command\tdiff repository (or selected files)\n"
+            case email
+                printf "$command\tsend changesets by email\n"
             case export
                 printf "$command\tdump the header and diffs for one or more changesets\n"
             case extdiff
                 printf "$command\tuse external program to diff repository (or selected files)\n"
+            case files
+                printf "$command\tlist tracked files\n"
             case forget
                 printf "$command\tforget the specified files on the next commit\n"
             case graft
                 printf "$command\tcopy changes from other branches onto the current branch\n"
             case grep
-                printf "$command\tsearch for a pattern in specified files and revisions\n"
+                printf "$command\tsearch revision history for a pattern in specified files\n"
             case heads
                 printf "$command\tshow branch heads\n"
             case help
@@ -94,7 +98,7 @@ function __fish_hg_commands
             case histedit
                 printf "$command\tinteractively edit changeset history\n"
             case identify
-                printf "$command\tidentify the working copy or specified revision\n"
+                printf "$command\tidentify the working directory or specified revision\n"
             case import
                 printf "$command\timport an ordered set of patches\n"
             case incoming
@@ -108,7 +112,7 @@ function __fish_hg_commands
             case manifest
                 printf "$command\toutput the current or given revision of the project manifest\n"
             case merge
-                printf "$command\tmerge working directory with another revision\n"
+                printf "$command\tmerge another revision into working directory\n"
             case outgoing
                 printf "$command\tshow changesets not found in the destination\n"
             case parents
@@ -175,6 +179,8 @@ function __fish_hg_commands
                 printf "$command\tprint the name of the current patch\n"
             case qunapplied
                 printf "$command\tprint the patches not yet applied\n"
+            case rebase
+                printf "$command\tmove changeset (and descendants) to a different branch\n"
             case record
                 printf "$command\tinteractively select changes to commit\n"
             case recover
@@ -193,6 +199,8 @@ function __fish_hg_commands
                 printf "$command\tprint the root (top) of the current working directory\n"
             case serve
                 printf "$command\tstart stand-alone webserver\n"
+            case shelve
+                printf "$command\tsave and set aside changes from the working directory\n"
             case status
                 printf "$command\tshow changed files in the working directory\n"
             case strip
@@ -206,7 +214,9 @@ function __fish_hg_commands
             case tip
                 # deprecated
             case unbundle
-                printf "$command\tapply one or more changegroup files\n"
+                printf "$command\tapply one or more bundle files\n"
+            case unshelve
+                printf "$command\trestore a shelved change to the working directory\n"
             case update
                 printf "$command\tupdate working directory (or switch revisions)\n"
             case verify

@@ -187,12 +187,19 @@ class reader_history_search_t {
             const wcstring &needle = search_string();
             tokenizer_t tok(text.c_str(), TOK_ACCEPT_UNFINISHED);
             tok_t token;
+
+            std::vector<wcstring> local_tokens;
             while (tok.next(&token)) {
                 if (token.type != TOK_STRING) continue;
                 wcstring text = tok.text_of(token);
                 if (text.find(needle) != wcstring::npos) {
-                    add_if_new(std::move(text));
+                    local_tokens.emplace_back(std::move(text));
                 }
+            }
+
+            // Make sure tokens are added in reverse order. See #5150
+            for (auto i = local_tokens.rbegin(); i != local_tokens.rend(); ++i) {
+                add_if_new(std::move(*i));
             }
         }
         return matches_.size() > before;

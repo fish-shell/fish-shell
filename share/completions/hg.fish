@@ -380,7 +380,7 @@ end
 
 # global options
 complete -c hg -s R -l repository -x -d "repository root directory or name of overlay bundle file"
-complete -c hg -l cwd -x -d "change working directory"
+complete -c hg -l cwd -x -a "(__fish_complete_directories (commandline -ct))" -d "change working directory"
 complete -c hg -s y -l noninteractive -d "do not prompt, automatically pick the first choice for all prompts"
 complete -c hg -s q -l quiet -d "suppress output"
 complete -c hg -s v -l verbose -d "enable additional output"

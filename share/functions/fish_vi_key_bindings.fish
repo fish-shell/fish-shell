@@ -207,8 +207,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
     bind f forward-jump
     bind F backward-jump
-    bind t forward-jump and backward-char
-    bind T backward-jump and forward-char
+    bind t forward-jump-till
+    bind T backward-jump-till
+    bind ';' repeat-jump
+    bind , repeat-jump-reverse
 
     # in emacs yank means paste
     bind p yank
@@ -245,9 +247,9 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind $argv visual o swap-selection-start-stop force-repaint
 
     bind $argv visual f forward-jump
-    bind $argv visual t forward-jump backward-char
+    bind $argv visual t forward-jump-till
     bind $argv visual F backward-jump
-    bind $argv visual T backward-jump forward-char
+    bind $argv visual T backward-jump-till
 
     for key in $eol_keys
         bind $argv visual $key end-of-line

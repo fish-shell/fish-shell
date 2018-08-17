@@ -120,6 +120,10 @@ static const input_function_metadata_t input_function_metadata[] = {
     {R_KILL_SELECTION, L"kill-selection"},
     {R_FORWARD_JUMP, L"forward-jump"},
     {R_BACKWARD_JUMP, L"backward-jump"},
+    {R_FORWARD_JUMP_TILL, L"forward-jump-till"},
+    {R_BACKWARD_JUMP_TILL, L"backward-jump-till"},
+    {R_REPEAT_JUMP, L"repeat-jump"},
+    {R_REVERSE_REPEAT_JUMP, L"repeat-jump-reverse"},
     {R_AND, L"and"},
     {R_CANCEL, L"cancel"}};
 
@@ -176,7 +180,15 @@ void input_set_bind_mode(const wcstring &bm) {
 
 /// Returns the arity of a given input function.
 static int input_function_arity(int function) {
-    return (function == R_FORWARD_JUMP || function == R_BACKWARD_JUMP) ? 1 : 0;
+    switch (function) {
+        case R_FORWARD_JUMP:
+        case R_BACKWARD_JUMP:
+        case R_FORWARD_JUMP_TILL:
+        case R_BACKWARD_JUMP_TILL:
+            return 1;
+        default:
+            return 0;
+    }
 }
 
 /// Sets the return status of the most recently executed input function.

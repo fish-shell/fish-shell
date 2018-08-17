@@ -7,6 +7,10 @@ vi-mode default timeout set correctly
 vi replace line, default timeout: long delay
 vi mode replace char, default timeout: long delay
 vi mode delete char, default timeout: long delay
+vi mode forward-jump-till character, default timeout: long delay
+vi mode backward-jump-till character, default timeout: long delay
+vi mode backward-jump-to character and repeat, default timeout: long delay
+vi mode backward-jump-to character, and reverse, default timeout: long delay
 vi replace line, 100ms timeout: long delay
 vi replace line, 100ms timeout: short delay
 t-binding success

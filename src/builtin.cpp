@@ -486,7 +486,7 @@ static const wcstring_list_t help_builtins({L"for", L"while", L"function", L"if"
 static bool cmd_needs_help(const wchar_t *cmd) { return contains(help_builtins, cmd); }
 
 /// Execute a builtin command
-int builtin_run(parser_t &parser, wchar_t **argv, io_streams_t &streams) {
+int builtin_run(parser_t &parser, int job_pgid, wchar_t **argv, io_streams_t &streams) {
     UNUSED(parser);
     UNUSED(streams);
     if (argv == NULL || argv[0] == NULL) return STATUS_INVALID_ARGS;
@@ -503,7 +503,7 @@ int builtin_run(parser_t &parser, wchar_t **argv, io_streams_t &streams) {
         // If we are interactive, save the foreground pgroup and restore it after in case the
         // builtin needs to read from the terminal. See #4540.
         bool grab_tty = is_interactive_session && isatty(streams.stdin_fd);
-        pid_t pgroup_to_restore = grab_tty ? terminal_acquire_before_builtin() : -1;
+        pid_t pgroup_to_restore = grab_tty ? terminal_acquire_before_builtin(job_pgid) : -1;
         int ret = data->func(parser, streams, argv);
         if (pgroup_to_restore >= 0) {
             tcsetpgrp(STDIN_FILENO, pgroup_to_restore);

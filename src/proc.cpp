@@ -870,10 +870,10 @@ bool terminal_give_to_job(const job_t *j, bool cont) {
     return true;
 }
 
-pid_t terminal_acquire_before_builtin() {
+pid_t terminal_acquire_before_builtin(int job_pgid) {
     pid_t selfpid = getpid();
     pid_t current_owner = tcgetpgrp(STDIN_FILENO);
-    if (current_owner >= 0 && current_owner != selfpid) {
+    if (current_owner >= 0 && current_owner != selfpid && current_owner == job_pgid) {
         if (tcsetpgrp(STDIN_FILENO, selfpid) == 0) {
             return current_owner;
         }

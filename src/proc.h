@@ -374,6 +374,6 @@ pid_t proc_wait_any();
 
 bool terminal_give_to_job(const job_t *j, bool cont);
 
-/// Given that we are about to run a builtin, acquire the terminal if we do not own it. Returns the
-/// pid to restore after running the builtin, or -1 if there is no pid to restore.
-pid_t terminal_acquire_before_builtin();
+/// Given that we are about to run a builtin, acquire the terminal if it is owned by the given job.
+/// Returns the pid to restore after running the builtin, or -1 if there is no pid to restore.
+pid_t terminal_acquire_before_builtin(int job_pgid);

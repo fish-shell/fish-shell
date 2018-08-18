@@ -249,6 +249,10 @@ int killpg(int pgr, int sig) {
 }
 #endif
 
+// Width of ambiguous characters. 1 is typical default.
+int g_fish_ambiguous_width = 1;
+
+// Width of emoji characters.
 int g_fish_emoji_width = 0;
 
 // 1 is the typical emoji width in Unicode 8.
@@ -289,8 +293,10 @@ int fish_wcwidth(wchar_t wc) {
             // Fall back to system wcwidth in this case.
             return wcwidth(wc);
         case widechar_ambiguous:
+            return g_fish_ambiguous_width;
         case widechar_private_use:
-            return 1;
+            // TR11: "All private-use characters are by default classified as Ambiguous".
+            return g_fish_ambiguous_width;
         case widechar_widened_in_9:
             return fish_get_emoji_width(wc);
         default:

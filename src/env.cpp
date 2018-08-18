@@ -788,6 +788,16 @@ static void handle_change_emoji_width(const wcstring &op, const wcstring &var_na
     g_fish_emoji_width = std::max(0, new_width);
 }
 
+static void handle_change_ambiguous_width(const wcstring &op, const wcstring &var_name) {
+    (void)op;
+    (void)var_name;
+    int new_width = 1;
+    if (auto width_str = env_get(L"fish_ambiguous_width")) {
+        new_width = fish_wcstol(width_str->as_string().c_str());
+    }
+    g_fish_ambiguous_width = std::max(0, new_width);
+}
+
 static void handle_term_size_change(const wcstring &op, const wcstring &var_name) {
     UNUSED(op);
     UNUSED(var_name);
@@ -860,6 +870,7 @@ static void setup_var_dispatch_table() {
     var_dispatch_table.emplace(L"fish_term24bit", handle_fish_term_change);
     var_dispatch_table.emplace(L"fish_escape_delay_ms", handle_escape_delay_change);
     var_dispatch_table.emplace(L"fish_emoji_width", handle_change_emoji_width);
+    var_dispatch_table.emplace(L"fish_ambiguous_width", handle_change_ambiguous_width);
     var_dispatch_table.emplace(L"LINES", handle_term_size_change);
     var_dispatch_table.emplace(L"COLUMNS", handle_term_size_change);
     var_dispatch_table.emplace(L"fish_complete_path", handle_complete_path_change);

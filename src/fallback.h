@@ -16,6 +16,9 @@
 // substitution if wchar.h is included after this header.
 #include <wchar.h>  // IWYU pragma: keep
 
+/// The column width of ambiguous East Asian characters.
+extern int g_fish_ambiguous_width;
+
 /// The column width of emoji characters. This must be configurable because the value changed
 /// between Unicode 8 and Unicode 9, wcwidth() is emoji-ignorant, and terminal emulators do
 /// different things. See issues like #4539 and https://github.com/neovim/neovim/issues/4976 for how

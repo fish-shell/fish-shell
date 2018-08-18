@@ -858,6 +858,8 @@ The user can change the settings of `fish` by changing the values of certain var
 
 - `fish_emoji_width` controls the computed width of certain characters, in particular emoji, whose rendered width varies across terminal emulators. This should be set to 1 if your terminal emulator renders emoji single-width, or 2 if double-width. Set this only if you see graphical glitching when printing emoji.
 
+- `fish_ambiguous_width` controls the computed width of ambiguous East Asian characters. This should be set to 1 if your terminal emulator renders these characters as single-width (typical), or 2 if double-width.
+
 - `fish_escape_delay_ms` overrides the default timeout of 300ms (default key bindings) or 10ms (vi key bindings) after seeing an escape character before giving up on matching a key binding. See the documentation for the <a href='bind.html#special-case-escape'>bind</a> builtin command. This delay facilitates using escape as a meta key.
 
 - `fish_greeting`, the greeting message printed on startup.

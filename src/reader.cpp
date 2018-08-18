@@ -436,7 +436,8 @@ static volatile sig_atomic_t interrupted = 0;
 // Prototypes for a bunch of functions defined later on.
 static bool is_backslashed(const wcstring &str, size_t pos);
 static wchar_t unescaped_quote(const wcstring &str, size_t pos);
-bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el, wchar_t target);
+static bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el,
+                 wchar_t target);
 
 /// Mode on startup, which we restore on exit.
 static struct termios terminal_mode_on_startup;

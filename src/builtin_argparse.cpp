@@ -461,9 +461,9 @@ static int validate_arg(const argparse_cmd_opts_t &opts, option_spec_t *opt_spec
 // Check if it is an implicit integer option. Try to parse and validate it as a valid integer. The
 // code that parses option specs has already ensured that implicit integers have either an explicit
 // or implicit validation function.
-static int check_for_implicit_int(argparse_cmd_opts_t &opts, const wchar_t *val, const wchar_t *cmd,
-                                  const wchar_t *const *argv, wgetopter_t &w, int opt, int long_idx,
-                                  parser_t &parser, io_streams_t &streams) {
+static int check_for_implicit_int(const argparse_cmd_opts_t &opts, const wchar_t *val,
+                                  const wchar_t *cmd, const wchar_t *const *argv, wgetopter_t &w,
+                                  int opt, int long_idx, parser_t &parser, io_streams_t &streams) {
     if (opts.implicit_int_flag == L'\0') {
         // There is no implicit integer option so report an error.
         builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
@@ -495,7 +495,7 @@ static int check_for_implicit_int(argparse_cmd_opts_t &opts, const wchar_t *val,
     return STATUS_CMD_OK;
 }
 
-static int handle_flag(argparse_cmd_opts_t &opts, option_spec_t *opt_spec, int long_idx,
+static int handle_flag(const argparse_cmd_opts_t &opts, option_spec_t *opt_spec, int long_idx,
                        const wchar_t *woptarg, io_streams_t &streams) {
     opt_spec->num_seen++;
     if (opt_spec->num_allowed == 0) {
@@ -531,7 +531,7 @@ static int handle_flag(argparse_cmd_opts_t &opts, option_spec_t *opt_spec, int l
     return STATUS_CMD_OK;
 }
 
-static int argparse_parse_flags(argparse_cmd_opts_t &opts, const wchar_t *short_options,
+static int argparse_parse_flags(const argparse_cmd_opts_t &opts, const wchar_t *short_options,
                                 const woption *long_options, const wchar_t *cmd, int argc,
                                 wchar_t **argv, int *optind, parser_t &parser,
                                 io_streams_t &streams) {
@@ -601,7 +601,7 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
     return STATUS_CMD_OK;
 }
 
-static int check_min_max_args_constraints(argparse_cmd_opts_t &opts, parser_t &parser,
+static int check_min_max_args_constraints(const argparse_cmd_opts_t &opts, parser_t &parser,
                                           io_streams_t &streams) {
     UNUSED(parser);
     const wchar_t *cmd = opts.name.c_str();
@@ -619,7 +619,7 @@ static int check_min_max_args_constraints(argparse_cmd_opts_t &opts, parser_t &p
 }
 
 /// Put the result of parsing the supplied args into the caller environment as local vars.
-static void set_argparse_result_vars(argparse_cmd_opts_t &opts) {
+static void set_argparse_result_vars(const argparse_cmd_opts_t &opts) {
     for (const auto &kv : opts.options) {
         const auto &opt_spec = kv.second;
         if (!opt_spec->num_seen) continue;

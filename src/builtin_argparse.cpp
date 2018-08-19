@@ -458,29 +458,23 @@ static int validate_arg(const argparse_cmd_opts_t &opts, option_spec_t *opt_spec
     return retval;
 }
 
-// Check if it is an implicit integer option. Try to parse and validate it as a valid integer. The
-// code that parses option specs has already ensured that implicit integers have either an explicit
-// or implicit validation function.
-static int check_for_implicit_int(const argparse_cmd_opts_t &opts, const wchar_t *val,
-                                  const wchar_t *cmd, const wchar_t *const *argv, wgetopter_t &w,
-                                  int opt, int long_idx, parser_t &parser, io_streams_t &streams) {
+/// \return whether the option 'opt' is an implicit integer option.
+static bool is_implicit_int(const argparse_cmd_opts_t &opts, const wchar_t *val) {
     if (opts.implicit_int_flag == L'\0') {
-        // There is no implicit integer option so report an error.
-        builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
-        return STATUS_INVALID_ARGS;
+        // There is no implicit integer option.
+        return false;
     }
 
-    if (opt == '?') {
-        // It's a flag that might be an implicit integer flag. Try to parse it as an integer to
-        // decide if it is in fact something like `-NNN` or an invalid flag.
-        (void)fish_wcstol(val);
-        if (errno) {
-            builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
-            return STATUS_INVALID_ARGS;
-        }
-    }
+    // We succeed if this argument can be parsed as an integer.
+    errno = 0;
+    (void)fish_wcstol(val);
+    return errno == 0;
+}
 
-    // Okay, it looks like an integer. See if it passes the validation checks.
+// Store this value under the implicit int option.
+static int validate_and_store_implicit_int(const argparse_cmd_opts_t &opts, const wchar_t *val,
+                                           wgetopter_t &w, int long_idx, io_streams_t &streams) {
+    // See if this option passes the validation checks.
     auto found = opts.options.find(opts.implicit_int_flag);
     assert(found != opts.options.end());
     const auto &opt_spec = found->second;
@@ -546,8 +540,14 @@ static int argparse_parse_flags(const argparse_cmd_opts_t &opts, const wchar_t *
 
         if (opt == '?') {
             // It's not a recognized flag. See if it's an implicit int flag.
-            int retval = check_for_implicit_int(opts, argv[w.woptind - 1] + 1, cmd, argv, w, opt,
-                                                long_idx, parser, streams);
+            const wchar_t *arg_contents = argv[w.woptind - 1] + 1;
+            int retval = STATUS_CMD_OK;
+            if (is_implicit_int(opts, arg_contents)) {
+                retval = validate_and_store_implicit_int(opts, arg_contents, w, long_idx, streams);
+            } else {
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+                retval = STATUS_INVALID_ARGS;
+            }
             if (retval != STATUS_CMD_OK) return retval;
             long_idx = -1;
             continue;

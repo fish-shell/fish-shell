@@ -40,12 +40,7 @@
 
 #include <stdio.h>
 #include <wchar.h>
-// This needs to come after some library #include to get __GNU_LIBRARY__ defined.
-#ifdef __GNU_LIBRARY__
-// Don't include stdlib.h for non-GNU C libraries because some of them contain conflicting
-// prototypes for getopt.
-#include <stdlib.h>
-#endif  // GNU C library.
+#include <string.h>
 
 // This version of `getopt' appears to the caller like standard Unix `getopt' but it behaves
 // differently for the user, since it allows the user to intersperse the options with the other
@@ -61,39 +56,6 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
-
-#ifdef __GNU_LIBRARY__
-// We want to avoid inclusion of string.h with non-GNU libraries because there are many ways it can
-// cause trouble. On some systems, it contains special magic macros that don't work in GCC.
-#include <string.h>  // IWYU pragma: keep
-#define my_index wcschr
-#else
-
-// Avoid depending on library functions or files whose names are inconsistent.
-
-char *getenv();
-
-static wchar_t *my_index(const wchar_t *str, int chr) {
-    while (*str) {
-        if (*str == chr) return (wchar_t *)str;
-        str++;
-    }
-    return 0;
-}
-
-// If using GCC, we can safely declare strlen this way. If not using GCC, it is ok not to declare
-// it.
-#ifdef __GNUC__
-// Note that Motorola Delta 68k R3V7 comes with GCC but not stddef.h. That was relevant to code that
-// was here before.
-#if !defined(__STDC__) || !__STDC__
-// gcc with -traditional declares the built-in strlen to return int, and has done so at least since
-// version 2.4.5. -- rms.
-extern int wcslen(const wchar_t *);
-#endif  // not __STDC__
-#endif  // __GNUC__
-
-#endif  // not __GNU_LIBRARY__
 
 // Exchange two adjacent subsequences of ARGV. One subsequence is elements
 // [first_nonopt,last_nonopt) which contains all the non-options that have been skipped so far. The
@@ -236,7 +198,7 @@ int wgetopter_t::_advance_to_next_argv(  //!OCLINT(high cyclomatic complexity)
 int wgetopter_t::_handle_short_opt(int argc, wchar_t **argv) {
     // Look at and handle the next short option-character.
     wchar_t c = *nextchar++;
-    wchar_t *temp = const_cast<wchar_t *>(my_index(shortopts, c));
+    const wchar_t *temp = wcschr(shortopts, c);
 
     // Increment `woptind' when we start to process its last character.
     if (*nextchar == '\0') ++woptind;
@@ -396,7 +358,7 @@ bool wgetopter_t::_handle_long_opt(int argc, wchar_t **argv, const struct woptio
     // Can't find it as a long option.  If this is not getopt_long_only, or the option starts
     // with '--' or is not a valid short option, then it's an error. Otherwise interpret it as a
     // short option.
-    if (!long_only || argv[woptind][1] == '-' || my_index(shortopts, *nextchar) == NULL) {
+    if (!long_only || argv[woptind][1] == '-' || wcschr(shortopts, *nextchar) == NULL) {
         if (wopterr) {
             if (argv[woptind][1] == '-')  // --option
                 fwprintf(stderr, _(L"%ls: Unrecognized option '--%ls'\n"), argv[0], nextchar);
@@ -479,7 +441,7 @@ int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *opts
     // This distinction seems to be the most useful approach.
     if (longopts != NULL &&
         (argv[woptind][1] == '-' ||
-         (long_only && (argv[woptind][2] || !my_index(shortopts, argv[woptind][1]))))) {
+         (long_only && (argv[woptind][2] || !wcschr(shortopts, argv[woptind][1]))))) {
         int retval;
         if (_handle_long_opt(argc, argv, longopts, longind, long_only, &retval)) return retval;
     }

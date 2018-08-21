@@ -737,6 +737,32 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
         return parse_execution_errored;
     }
 
+    // Protect against exec with background processes running
+    static uint32_t last_exec_run_counter =  -1;
+    if (process_type == INTERNAL_EXEC) {
+        job_iterator_t jobs;
+        bool have_bg = false;
+        const job_t *bg = nullptr;
+        while ((bg = jobs.next())) {
+            if (!job_is_completed(bg)) {
+                have_bg = true;
+                break;
+            }
+        }
+
+        if (have_bg) {
+            /* debug(1, "Background jobs remain! run_counter: %u, last_exec_run_count: %u", reader_run_count(), last_exec_run_counter); */
+            if (isatty(STDIN_FILENO) && reader_run_count() - 1 != last_exec_run_counter) {
+                reader_bg_job_warning();
+                last_exec_run_counter = reader_run_count();
+                return parse_execution_errored;
+            }
+            else {
+                kill_background_jobs();
+            }
+        }
+    }
+
     wcstring path_to_external_command;
     if (process_type == EXTERNAL || process_type == INTERNAL_EXEC) {
         // Determine the actual command. This may be an implicit cd.

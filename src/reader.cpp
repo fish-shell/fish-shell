@@ -2220,7 +2220,7 @@ bool shell_is_exiting() {
     return end_loop;
 }
 
-static void bg_job_warning() {
+void reader_bg_job_warning() {
     fputws(_(L"There are still jobs active:\n"), stdout);
     fputws(_(L"\n   PID  Command\n"), stdout);
 
@@ -2235,11 +2235,19 @@ static void bg_job_warning() {
     fputws(_(L"Use 'disown PID' to remove jobs from the list without terminating them.\n"), stdout);
 }
 
+void kill_background_jobs() {
+    job_iterator_t jobs;
+    while (job_t *j = jobs.next()) {
+        if (!job_is_completed(j)) {
+            if (job_is_stopped(j)) job_signal(j, SIGCONT);
+            job_signal(j, SIGHUP);
+        }
+    }
+}
+
 /// This function is called when the main loop notices that end_loop has been set while in
 /// interactive mode. It checks if it is ok to exit.
 static void handle_end_loop() {
-    job_iterator_t jobs;
-
     if (!reader_exit_forced()) {
         const parser_t &parser = parser_t::principal_parser();
         for (size_t i = 0; i < parser.block_count(); i++) {
@@ -2251,6 +2259,7 @@ static void handle_end_loop() {
         }
 
         bool bg_jobs = false;
+        job_iterator_t jobs;
         while (const job_t *j = jobs.next()) {
             if (!job_is_completed(j)) {
                 bg_jobs = true;
@@ -2260,7 +2269,7 @@ static void handle_end_loop() {
 
         reader_data_t *data = current_data();
         if (!data->prev_end_loop && bg_jobs) {
-            bg_job_warning();
+            reader_bg_job_warning();
             reader_exit(0, 0);
             data->prev_end_loop = 1;
             return;
@@ -2268,13 +2277,7 @@ static void handle_end_loop() {
     }
 
     // Kill remaining jobs before exiting.
-    jobs.reset();
-    while (job_t *j = jobs.next()) {
-        if (!job_is_completed(j)) {
-            if (job_is_stopped(j)) job_signal(j, SIGCONT);
-            job_signal(j, SIGHUP);
-        }
-    }
+    kill_background_jobs();
 }
 
 static bool selection_is_at_top() {
@@ -2287,6 +2290,13 @@ static bool selection_is_at_top() {
     if (col != 0 && col != PAGER_SELECTION_NONE) return false;
 
     return true;
+}
+
+static uint32_t run_count = 0;
+
+/// Returns the current interactive loop count
+uint32_t reader_run_count() {
+    return run_count;
 }
 
 /// Read interactively. Read input from stdin while providing editing facilities.
@@ -2305,6 +2315,7 @@ static int read_i() {
 
     while ((!data->end_loop) && (!sanity_check())) {
         event_fire_generic(L"fish_prompt");
+        run_count++;
 
         if (is_breakpoint && function_exists(DEBUG_PROMPT_FUNCTION_NAME)) {
             reader_set_left_prompt(DEBUG_PROMPT_FUNCTION_NAME);

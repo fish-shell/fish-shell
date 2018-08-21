@@ -21,6 +21,7 @@ fish 3.0 is a major release which brings with it both improvements in functional
 
 ## Notable fixes and improvements
 - A new feature flags mechanism is added for staging deprecations and breaking changes. Feature flags may be specified at launch with `fish --features ...` or by setting the universal `fish_features` variable. (#4940)
+- `exec` now triggers the same safety features as `exit` and prompts for confirmation if background jobs are running.
 - `wait` builtin is added for waiting on processes (#4498).
 - `read` has a new `--delimiter` option as a better alternative to the `IFS` variable (#4256).
 - `read` writes directly to stdout if called without arguments (#4407)

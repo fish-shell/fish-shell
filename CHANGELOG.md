@@ -86,6 +86,9 @@ fish 3.0 is a major release which brings with it both improvements in functional
   - `unzip`
   - `xsv`
 - Lots of improvements to completions (especially `git` and `hg`).
+- Completions for `yarn` and `npm` now require the `all-the-package-names` NPM package for full
+  functionality.
+- Completions for `bower` and `yarn` now require the `jq` utility for full functionality.
 - Improved French translations.
 
 --

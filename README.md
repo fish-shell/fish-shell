@@ -77,6 +77,8 @@ The following optional features also have specific requirements:
 * the `fish_config` web configuration tool requires Python (2.7+ or 3.3 +) and a web browser
 * system clipboard integration (with the default Ctrl-V and Ctrl-X bindings) require either the
   `xsel` or `pbcopy`/`pbpaste` utilities
+* full completions for `yarn` and `bower` require the `jq` utility
+* full completions for `yarn` and `npm` require the `all-the-package-names` NPM module
 
 ### Switching to fish
 

@@ -67,7 +67,8 @@ static const struct woption long_options[] = {{L"stop-nonopt", no_argument, NULL
 
 // Check if any pair of mutually exclusive options was seen. Note that since every option must have
 // a short name we only need to check those.
-static int check_for_mutually_exclusive_flags(const argparse_cmd_opts_t &opts, io_streams_t &streams) {
+static int check_for_mutually_exclusive_flags(const argparse_cmd_opts_t &opts,
+                                              io_streams_t &streams) {
     for (const auto &kv : opts.options) {
         const auto &opt_spec = kv.second;
         if (opt_spec->num_seen == 0) continue;

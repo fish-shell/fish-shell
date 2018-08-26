@@ -1021,12 +1021,6 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
     // Start out at zero.
     std::fill(this->color_array.begin(), this->color_array.end(), 0);
 
-#if 0
-    // Disabled for the 2.2.0 release: https://github.com/fish-shell/fish-shell/issues/1809.
-    const wcstring dump = parse_dump_tree(parse_tree, buff);
-    fwprintf(stderr, L"%ls\n", dump.c_str());
-#endif
-
     // Walk the node tree.
     for (const parse_node_t &node : parse_tree) {
         switch (node.type) {

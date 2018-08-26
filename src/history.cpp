@@ -299,7 +299,7 @@ class history_file_contents_t {
     static std::unique_ptr<history_file_contents_t> create(int fd) {
         // Check that the file is seekable, and its size.
         off_t len = lseek(fd, 0, SEEK_END);
-        if (len <= 0 || len >= SIZE_MAX) return nullptr;
+        if (len <= 0 || static_cast<unsigned long>(len) >= SIZE_MAX) return nullptr;
         if (lseek(fd, 0, SEEK_SET) != 0) return nullptr;
 
         // Read the file, possibly ussing mmap.

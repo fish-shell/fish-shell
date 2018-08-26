@@ -907,18 +907,17 @@ class literal_replacer_t : public string_replacer_t {
 
 static wcstring interpret_escapes(const wcstring &arg) {
     wcstring result;
-
-    const wchar_t *orig = arg.c_str();
-    const wchar_t *start = arg.c_str();
-    while (orig - start < arg.size()) {
-        if (*orig == L'\\') {
-            orig += read_unquoted_escape(orig, &result, true, false);
+    result.reserve(arg.size());
+    const wchar_t *cursor = arg.c_str();
+    const wchar_t *end = cursor + arg.size();
+    while (cursor < end) {
+        if (*cursor == L'\\') {
+            cursor += read_unquoted_escape(cursor, &result, true, false);
         } else {
-            result += *orig;
-            orig++;
+            result.push_back(*cursor);
+            cursor++;
         }
     }
-
     return result;
 }
 
@@ -948,15 +947,15 @@ bool literal_replacer_t::replace_matches(const wcstring &arg) {
     } else {
         auto &cmp_func = opts.ignore_case ? wcsncasecmp : wcsncmp;
         const wchar_t *cur = arg.c_str();
-        const wchar_t *start = arg.c_str();
-        while (cur - start < arg.size()) {
+        const wchar_t *end = cur + arg.size();
+        while (cur < end) {
             if ((opts.all || !replacement_occurred) && cmp_func(cur, pattern.c_str(), patlen) == 0) {
                 result += replacement;
                 cur += patlen;
                 replacement_occurred = true;
                 total_replaced++;
             } else {
-                result += *cur;
+                result.push_back(*cur);
                 cur++;
             }
         }

@@ -278,8 +278,7 @@ class reader_history_search_t {
     bool add_skip(const wcstring &str) { return skips_.insert(str).second; }
 
     /// Reset, beginning a new line or token mode search.
-    void reset_to_mode(const wcstring &text, history_t *hist, mode_t mode,
-                       wcstring_list_t skip_list = {}) {
+    void reset_to_mode(const wcstring &text, history_t *hist, mode_t mode) {
         assert(mode != inactive && "mode cannot be inactive in this setter");
         skips_ = {text};
         matches_ = {text};

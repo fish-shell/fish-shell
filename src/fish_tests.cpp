@@ -4520,11 +4520,12 @@ static void test_illegal_command_exit_code() {
     };
 
     const command_result_tuple_t tests[] = {
-        {L"echo -n", STATUS_CMD_OK}, {L"pwd", STATUS_CMD_OK},
-        // a `)` without a matching `(` is now a tokenizer error, and cannot be executed even as an illegal command
-        // {L")", STATUS_ILLEGAL_CMD},  {L") ", STATUS_ILLEGAL_CMD}, {L") ", STATUS_ILLEGAL_CMD}
-        {L"*", STATUS_ILLEGAL_CMD},  {L"**", STATUS_ILLEGAL_CMD},
-        {L"?", STATUS_ILLEGAL_CMD},  {L"abc?def", STATUS_ILLEGAL_CMD},
+        {L"echo -n", STATUS_CMD_OK},
+        {L"pwd", STATUS_CMD_OK},
+        {L"UNMATCHABLE_WILDCARD*", STATUS_UNMATCHED_WILDCARD},
+        {L"UNMATCHABLE_WILDCARD**", STATUS_UNMATCHED_WILDCARD},
+        {L"?", STATUS_UNMATCHED_WILDCARD},
+        {L"abc?def", STATUS_UNMATCHED_WILDCARD},
     };
 
     int res = 0;
@@ -4534,9 +4535,9 @@ static void test_illegal_command_exit_code() {
     for (const auto &test : tests) {
         res = parser.eval(test.txt, empty_ios, TOP);
 
-        int exit_status = res ? STATUS_CMD_UNKNOWN : proc_get_last_status();
+        int exit_status = proc_get_last_status();
         if (exit_status != test.result) {
-            err(L"command '%ls': expected exit code %d , got %d", test.txt, test.result,
+            err(L"command '%ls': expected exit code %d, got %d", test.txt, test.result,
                 exit_status);
         }
     }

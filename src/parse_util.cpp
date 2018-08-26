@@ -1127,14 +1127,12 @@ static bool detect_errors_in_plain_statement(const wcstring &buff_src,
         }
     }
 
-    if (maybe_t<wcstring> mcommand = command_for_plain_statement(pst, buff_src)) {
-        wcstring command = std::move(*mcommand);
+    if (maybe_t<wcstring> unexp_command = command_for_plain_statement(pst, buff_src)) {
+        wcstring command;
         // Check that we can expand the command.
-        if (!expand_one(command, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS,
-                        NULL)) {
-            // TODO: leverage the resulting errors.
-            errored = append_syntax_error(parse_errors, source_start, ILLEGAL_CMD_ERR_MSG,
-                                          command.c_str());
+        if (expand_to_command_and_args(*unexp_command, &command, nullptr, parse_errors) ==
+            EXPAND_ERROR) {
+            errored = true;
         }
 
         // Check that pipes are sound.

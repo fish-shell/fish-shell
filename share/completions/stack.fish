@@ -7,6 +7,8 @@ complete -c stack -f
 # Options:
 #
 
+set -l project_path "(stack path --project-root)"
+
 complete -c stack -l help -d 'Show this help text'
 complete -c stack -l version -d'Show version'
 complete -c stack -l numeric-version -d 'Show only version number'
@@ -75,3 +77,5 @@ complete -c stack -a config -d 'Subcommands specific to modifying stack.yaml fil
 complete -c stack -a image -d 'Subcommands specific to imaging (experimental)'
 complete -c stack -a hpc -d 'Subcommands specific to Haskell Program Coverage'
 complete -c stack -a sig -d 'Subcommands specific to package signatures (experimental)'
+
+complete -c stack -n '__fish_seen_subcommand_from exec' -a "(ls $project_path/.stack-work/install/**/bin/)"

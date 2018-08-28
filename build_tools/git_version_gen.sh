@@ -9,7 +9,9 @@ set -e
 # Find the fish git directory as two levels up from script directory.
 GIT_DIR="$( cd "$( dirname $( dirname "$0" ) )" && pwd )"
 
-FBVF=FISH-BUILD-VERSION-FILE
+# Set the output directory as either the first param or cwd.
+test -n "$1" && OUTPUT_DIR=$1/ || OUTPUT_DIR=
+FBVF=${OUTPUT_DIR}FISH-BUILD-VERSION-FILE
 DEF_VER=unknown
 
 # First see if there is a version file (included in release tarballs),
@@ -32,9 +34,9 @@ fi
 # It looks like FISH_BUILD_VERSION="2.7.1-621-ga2f065e6"
 test "$VN" = "$VC" || {
 	echo >&2 "FISH_BUILD_VERSION=$VN"
-	echo "FISH_BUILD_VERSION=\"$VN\"" >$FBVF
+	echo "FISH_BUILD_VERSION=\"$VN\"" >${FBVF}
 }
 
 # Output the fish-build-version-witness.txt
 # See https://cmake.org/cmake/help/v3.4/policy/CMP0058.html
-date +%s > fish-build-version-witness.txt
+date +%s > ${OUTPUT_DIR}fish-build-version-witness.txt

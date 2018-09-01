@@ -667,6 +667,44 @@ class scoped_push {
     }
 };
 
+/// A helper class for managing and automatically closing a file descriptor.
+class autoclose_fd_t {
+    int fd_;
+
+   public:
+    // Closes the fd if not already closed.
+    void close();
+
+    // Returns the fd.
+    int fd() const { return fd_; }
+
+    // Returns the fd, transferring ownership to the caller.
+    int acquire() {
+        int temp = fd_;
+        fd_ = -1;
+        return temp;
+    }
+
+    // Resets to a new fd, taking ownership.
+    void reset(int fd) {
+        if (fd == fd_) return;
+        close();
+        fd_ = fd;
+    }
+
+    autoclose_fd_t(const autoclose_fd_t &) = delete;
+    void operator=(const autoclose_fd_t &) = delete;
+    autoclose_fd_t(autoclose_fd_t &&rhs) : fd_(rhs.fd_) { rhs.fd_ = -1; }
+
+    void operator=(autoclose_fd_t &&rhs) {
+        close();
+        std::swap(this->fd_, rhs.fd_);
+    }
+
+    explicit autoclose_fd_t(int fd = -1) : fd_(fd) {}
+    ~autoclose_fd_t() { close(); }
+};
+
 /// Appends a path component, with a / if necessary.
 void append_path_component(wcstring &path, const wcstring &component);
 

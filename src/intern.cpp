@@ -21,17 +21,15 @@ static const wchar_t *intern_with_dup(const wchar_t *in, bool dup) {
     if (!in) return NULL;
 
     debug(5, L"intern %ls", in);
-    auto &&lock_string_table = string_table.acquire();
-    std::vector<const wchar_t *> &string_table = lock_string_table.value;
+    auto table = string_table.acquire();
 
     const wchar_t *result;
-    auto iter =
-        std::lower_bound(string_table.begin(), string_table.end(), in, string_less_than_string);
-    if (iter != string_table.end() && wcscmp(*iter, in) == 0) {
+    auto iter = std::lower_bound(table->begin(), table->end(), in, string_less_than_string);
+    if (iter != table->end() && wcscmp(*iter, in) == 0) {
         result = *iter;
     } else {
         result = dup ? wcsdup(in) : in;
-        string_table.insert(iter, result);
+        table->insert(iter, result);
     }
     return result;
 }

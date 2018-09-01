@@ -598,20 +598,25 @@ typedef std::lock_guard<std::recursive_mutex> scoped_rlock;
 //
 template <typename DATA>
 class acquired_lock {
-    scoped_lock lock;
-    acquired_lock(fish_mutex_t &lk, DATA *v) : lock(lk), value(*v) {}
+    std::unique_lock<fish_mutex_t> lock;
+    acquired_lock(fish_mutex_t &lk, DATA *v) : lock(lk), value(v) {}
 
     template <typename T>
     friend class owning_lock;
 
+    DATA *value;
+
    public:
-    // No copying, move only
+    // No copying, move construction only
     acquired_lock &operator=(const acquired_lock &) = delete;
     acquired_lock(const acquired_lock &) = delete;
     acquired_lock(acquired_lock &&) = default;
     acquired_lock &operator=(acquired_lock &&) = default;
 
-    DATA &value;
+    DATA *operator->() { return value; }
+    const DATA *operator->() const { return value; }
+    DATA &operator*() { return *value; }
+    const DATA &operator*() const { return *value; }
 };
 
 // A lock that owns a piece of data

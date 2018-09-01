@@ -448,8 +448,8 @@ const wcstring &wgettext(const wchar_t *in) {
     wcstring key = in;
 
     wgettext_init_if_necessary();
-    auto &&wmap = wgettext_map.acquire();
-    wcstring &val = wmap.value[key];
+    auto wmap = wgettext_map.acquire();
+    wcstring &val = (*wmap)[key];
     if (val.empty()) {
         cstring mbs_in = wcs2string(key);
         char *out = fish_gettext(mbs_in.c_str());

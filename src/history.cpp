@@ -816,8 +816,8 @@ history_t &history_collection_t::get_creating(const wcstring &name) {
     // Return a history for the given name, creating it if necessary
     // Note that histories are currently never deleted, so we can return a reference to them without
     // using something like shared_ptr
-    auto &&hs = histories.acquire();
-    std::unique_ptr<history_t> &hist = hs.value[name];
+    auto hs = histories.acquire();
+    std::unique_ptr<history_t> &hist = (*hs)[name];
     if (!hist) {
         hist = make_unique<history_t>(name);
     }
@@ -1849,8 +1849,8 @@ void history_t::incorporate_external_changes() {
 
 void history_collection_t::save() {
     // Save all histories
-    auto &&h = histories.acquire();
-    for (auto &p : h.value) {
+    auto hists = histories.acquire();
+    for (auto &p : *hists) {
         p.second->save();
     }
 }

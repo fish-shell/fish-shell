@@ -163,39 +163,37 @@ int proc_get_last_status() { return last_status; }
 static owning_lock<std::vector<bool>> locked_consumed_job_ids;
 
 job_id_t acquire_job_id() {
-    auto &&locker = locked_consumed_job_ids.acquire();
-    std::vector<bool> &consumed_job_ids = locker.value;
+    auto consumed_job_ids = locked_consumed_job_ids.acquire();
 
     // Find the index of the first 0 slot.
-    auto slot = std::find(consumed_job_ids.begin(), consumed_job_ids.end(), false);
-    if (slot != consumed_job_ids.end()) {
+    auto slot = std::find(consumed_job_ids->begin(), consumed_job_ids->end(), false);
+    if (slot != consumed_job_ids->end()) {
         // We found a slot. Note that slot 0 corresponds to job ID 1.
         *slot = true;
-        return (job_id_t)(slot - consumed_job_ids.begin() + 1);
+        return (job_id_t)(slot - consumed_job_ids->begin() + 1);
     }
 
     // We did not find a slot; create a new slot. The size of the vector is now the job ID
     // (since it is one larger than the slot).
-    consumed_job_ids.push_back(true);
-    return (job_id_t)consumed_job_ids.size();
+    consumed_job_ids->push_back(true);
+    return (job_id_t)consumed_job_ids->size();
 }
 
 void release_job_id(job_id_t jid) {
     assert(jid > 0);
-    auto &&locker = locked_consumed_job_ids.acquire();
-    std::vector<bool> &consumed_job_ids = locker.value;
-    size_t slot = (size_t)(jid - 1), count = consumed_job_ids.size();
+    auto consumed_job_ids = locked_consumed_job_ids.acquire();
+    size_t slot = (size_t)(jid - 1), count = consumed_job_ids->size();
 
     // Make sure this slot is within our vector and is currently set to consumed.
     assert(slot < count);
-    assert(consumed_job_ids.at(slot) == true);
+    assert(consumed_job_ids->at(slot) == true);
 
     // Clear it and then resize the vector to eliminate unused trailing job IDs.
-    consumed_job_ids.at(slot) = false;
+    consumed_job_ids->at(slot) = false;
     while (count--) {
-        if (consumed_job_ids.at(count)) break;
+        if (consumed_job_ids->at(count)) break;
     }
-    consumed_job_ids.resize(count + 1);
+    consumed_job_ids->resize(count + 1);
 }
 
 job_t *job_get(job_id_t id) {

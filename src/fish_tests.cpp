@@ -4088,6 +4088,9 @@ static void test_highlighting() {
     highlight_tests.push_back({{L"/bin/c", highlight_spec_command, ns},
                                {L"$VARIABLE_IN_COMMAND2", highlight_spec_operator, ns}});
 
+    highlight_tests.push_back({{L"$EMPTY_VARIABLE", highlight_spec_error}});
+    highlight_tests.push_back({{L"\"$EMPTY_VARIABLE\"", highlight_spec_error}});
+
     for (const highlight_component_list_t &components : highlight_tests) {
         // Generate the text.
         wcstring text;

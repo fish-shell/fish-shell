@@ -1,8 +1,16 @@
 # Test that using variables as command names work correctly.
 
-# Both of these should generate errors about using variables as command names.
-# Verify that the expected errors are written to stderr.
-exec $test
-exec "$test"
+$EMPTY_VARIABLE
+"$EMPTY_VARIABLE"
+
+set CMD1 echo basic command as variable
+$CMD1
+
+set CMD2 echo '(' not expanded again
+$CMD2
+
+# Test implicit cd
+set CMD3 /usr/bin
+$CMD3 && echo $PWD
 
 exit 0

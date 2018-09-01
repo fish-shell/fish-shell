@@ -613,7 +613,7 @@ parse_execution_result_t parse_execution_context_t::report_errors(
 
 /// Reports an unmatched wildcard error and returns parse_execution_errored.
 parse_execution_result_t parse_execution_context_t::report_unmatched_wildcard_error(
-    const parse_node_t &unmatched_wildcard) {
+    const parse_node_t &unmatched_wildcard) const {
     proc_set_last_status(STATUS_UNMATCHED_WILDCARD);
     report_error(unmatched_wildcard, WILDCARD_ERR_MSG, get_source(unmatched_wildcard).c_str());
     return parse_execution_errored;
@@ -670,13 +670,6 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
             this->report_error(statement, ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, name_str.c_str(),
                                assigned_val.c_str());
         }
-    } else if (wcschr(cmd, L'$') || wcschr(cmd, VARIABLE_EXPAND_SINGLE) ||
-               wcschr(cmd, VARIABLE_EXPAND)) {
-        const wchar_t *msg =
-            _(L"Variables may not be used as commands. In fish, "
-              L"please define a function or use 'eval %ls'.");
-        wcstring eval_cmd = reconstruct_orig_str(cmd_str);
-        this->report_error(statement, msg, eval_cmd.c_str());
     } else if (err_code != ENOENT) {
         this->report_error(statement, _(L"The file '%ls' is not executable by this user"), cmd);
     } else {
@@ -707,6 +700,36 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
     return parse_execution_errored;
 }
 
+parse_execution_result_t parse_execution_context_t::expand_command(
+    tnode_t<grammar::plain_statement> statement, wcstring *out_cmd,
+    wcstring_list_t *out_args) const {
+    // Here we're expanding a command, for example $HOME/bin/stuff or $randomthing. The first
+    // completion becomes the command itself, everything after becomes arguments. Command
+    // substitutions are not supported.
+    parse_error_list_t errors;
+
+    // Get the unexpanded command string. We expect to always get it here.
+    wcstring unexp_cmd = *command_for_plain_statement(statement, pstree->src);
+    wcstring cmd;
+    wcstring_list_t args;
+
+    // Expand the string to produce completions, and report errors.
+    expand_error_t expand_err = expand_to_command_and_args(unexp_cmd, out_cmd, out_args, &errors);
+    if (expand_err == EXPAND_ERROR) {
+        proc_set_last_status(STATUS_ILLEGAL_CMD);
+        return report_errors(errors);
+    } else if (expand_err == EXPAND_WILDCARD_NO_MATCH) {
+        return report_unmatched_wildcard_error(statement);
+    }
+    assert(expand_err == EXPAND_OK || expand_err == EXPAND_WILDCARD_MATCH);
+
+    // Complain if the resulting expansion was empty, or expanded to an empty string.
+    if (out_cmd->empty()) {
+        return this->report_error(statement, _(L"The expanded command was empty."));
+    }
+    return parse_execution_success;
+}
+
 /// Creates a 'normal' (non-block) process.
 parse_execution_result_t parse_execution_context_t::populate_plain_process(
     job_t *job, process_t *proc, tnode_t<grammar::plain_statement> statement) {
@@ -716,16 +739,14 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
     // We may decide that a command should be an implicit cd.
     bool use_implicit_cd = false;
 
-    // Get the command. We expect to always get it here.
-    wcstring cmd = *command_for_plain_statement(statement, pstree->src);
-
-    // Expand it as a command. Return an error on failure.
-    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, NULL);
-    if (!expanded) {
-        report_error(statement, ILLEGAL_CMD_ERR_MSG, cmd.c_str());
-        proc_set_last_status(STATUS_ILLEGAL_CMD);
-        return parse_execution_errored;
+    // Get the command and any arguments due to expanding the command.
+    wcstring cmd;
+    wcstring_list_t args_from_cmd_expansion;
+    auto ret = expand_command(statement, &cmd, &args_from_cmd_expansion);
+    if (ret != parse_execution_success) {
+        return ret;
     }
+    assert(!cmd.empty() && "expand_command should not produce an empty command");
 
     // Determine the process type.
     enum process_type_t process_type = process_type_for_command(statement, cmd);
@@ -776,9 +797,9 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
         if (!has_command && get_decoration(statement) == parse_statement_decoration_none) {
             // Implicit cd requires an empty argument and redirection list.
             tnode_t<g::arguments_or_redirections_list> args = statement.child<1>();
-            if (!args.try_get_child<g::argument, 0>() && !args.try_get_child<g::redirection, 0>()) {
-                // Ok, no arguments or redirections; check to see if the first argument is a
-                // directory.
+            if (args_from_cmd_expansion.empty() && !args.try_get_child<g::argument, 0>() &&
+                !args.try_get_child<g::redirection, 0>()) {
+                // Ok, no arguments or redirections; check to see if the command is a directory.
                 wcstring implicit_cd_path;
                 use_implicit_cd = path_can_be_implicit_cd(cmd, &implicit_cd_path);
             }
@@ -790,27 +811,31 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
         }
     }
 
-    // The argument list and set of IO redirections that we will construct for the process.
+    // Produce the full argument list and the set of IO redirections.
+    wcstring_list_t cmd_args;
     io_chain_t process_io_chain;
-    wcstring_list_t argument_list;
     if (use_implicit_cd) {
-        /* Implicit cd is simple */
-        argument_list.push_back(L"cd");
-        argument_list.push_back(cmd);
+        // Implicit cd is simple.
+        cmd_args = {L"cd", cmd};
         path_to_external_command.clear();
 
         // If we have defined a wrapper around cd, use it, otherwise use the cd builtin.
         process_type = function_exists(L"cd") ? INTERNAL_FUNCTION : INTERNAL_BUILTIN;
     } else {
+        // Not implicit cd.
         const globspec_t glob_behavior = (cmd == L"set" || cmd == L"count") ? nullglob : failglob;
-        // Form the list of arguments. The command is the first argument.
+        // Form the list of arguments. The command is the first argument, followed by any arguments
+        // from expanding the command, followed by the argument nodes themselves. E.g. if the
+        // command is '$gco foo' and $gco is git checkout.
+        cmd_args.push_back(cmd);
+        cmd_args.insert(cmd_args.end(), args_from_cmd_expansion.begin(),
+                        args_from_cmd_expansion.end());
         argument_node_list_t arg_nodes = statement.descendants<g::argument>();
         parse_execution_result_t arg_result =
-            this->expand_arguments_from_nodes(arg_nodes, &argument_list, glob_behavior);
+            this->expand_arguments_from_nodes(arg_nodes, &cmd_args, glob_behavior);
         if (arg_result != parse_execution_success) {
             return arg_result;
         }
-        argument_list.insert(argument_list.begin(), cmd);
 
         // The set of IO redirections that we construct for the process.
         if (!this->determine_io_chain(statement.child<1>(), &process_io_chain)) {
@@ -823,7 +848,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
 
     // Populate the process.
     proc->type = process_type;
-    proc->set_argv(argument_list);
+    proc->set_argv(cmd_args);
     proc->set_io_chain(process_io_chain);
     proc->actual_cmd = path_to_external_command;
     return parse_execution_success;

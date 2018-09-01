@@ -1065,10 +1065,37 @@ bool expand_one(wcstring &string, expand_flags_t flags, parse_error_list_t *erro
 
     if (expand_string(string, &completions, flags | EXPAND_NO_DESCRIPTIONS, errors) &&
         completions.size() == 1) {
-        string = completions.at(0).completion;
+        string = std::move(completions.at(0).completion);
         return true;
     }
     return false;
+}
+
+expand_error_t expand_to_command_and_args(const wcstring &instr, wcstring *out_cmd,
+                                          wcstring_list_t *out_args, parse_error_list_t *errors) {
+    // Fast path.
+    if (expand_is_clean(instr)) {
+        *out_cmd = instr;
+        return EXPAND_OK;
+    }
+
+    std::vector<completion_t> completions;
+    expand_error_t expand_err =
+        expand_string(instr, &completions,
+                      EXPAND_SKIP_CMDSUBST | EXPAND_NO_DESCRIPTIONS | EXPAND_SKIP_JOBS, errors);
+    if (expand_err == EXPAND_OK || expand_err == EXPAND_WILDCARD_MATCH) {
+        // The first completion is the command, any remaning are arguments.
+        bool first = true;
+        for (auto &comp : completions) {
+            if (first) {
+                if (out_cmd) *out_cmd = std::move(comp.completion);
+                first = false;
+            } else {
+                if (out_args) out_args->push_back(std::move(comp.completion));
+            }
+        }
+    }
+    return expand_err;
 }
 
 // https://github.com/fish-shell/fish-shell/issues/367

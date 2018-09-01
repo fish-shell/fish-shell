@@ -124,6 +124,16 @@ __warn_unused expand_error_t expand_string(const wcstring &input, std::vector<co
 /// \return Whether expansion succeded
 bool expand_one(wcstring &inout_str, expand_flags_t flags, parse_error_list_t *errors = NULL);
 
+/// Expand a command string like $HOME/bin/cmd into a command and list of arguments.
+/// Return the command and arguments by reference.
+/// If the expansion resulted in no or an empty command, the command will be an empty string. Note
+/// that API does not distinguish between expansion resulting in an empty command (''), and
+/// expansion resulting in no command (e.g. unset variable).
+// \return an expand error.
+expand_error_t expand_to_command_and_args(const wcstring &instr, wcstring *out_cmd,
+                                          wcstring_list_t *out_args,
+                                          parse_error_list_t *errors = NULL);
+
 /// Convert the variable value to a human readable form, i.e. escape things, handle arrays, etc.
 /// Suitable for pretty-printing.
 wcstring expand_escape_variable(const env_var_t &var);

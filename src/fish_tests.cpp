@@ -3893,22 +3893,23 @@ static void test_highlighting() {
         const wchar_t *txt;
         int color;
     };
+    using highlight_component_list_t = std::vector<highlight_component_t>;
+    std::vector<highlight_component_list_t> highlight_tests;
 
-    const highlight_component_t components1[] = {
-        {L"echo", highlight_spec_command},
-        {L"test/fish_highlight_test/foo", highlight_spec_param | highlight_modifier_valid_path},
-        {L"&", highlight_spec_statement_terminator},
-        {NULL, -1}};
+    highlight_tests.push_back(
+        {{L"echo", highlight_spec_command},
+         {L"test/fish_highlight_test/foo", highlight_spec_param | highlight_modifier_valid_path},
+         {L"&", highlight_spec_statement_terminator}});
 
-    const highlight_component_t components2[] = {
+    highlight_tests.push_back({
         {L"command", highlight_spec_command},
         {L"echo", highlight_spec_command},
         {L"abc", highlight_spec_param},
         {L"test/fish_highlight_test/foo", highlight_spec_param | highlight_modifier_valid_path},
         {L"&", highlight_spec_statement_terminator},
-        {NULL, -1}};
+    });
 
-    const highlight_component_t components3[] = {
+    highlight_tests.push_back({
         {L"if command ls", highlight_spec_command},
         {L"; ", highlight_spec_statement_terminator},
         {L"echo", highlight_spec_command},
@@ -3917,39 +3918,40 @@ static void test_highlighting() {
         {L"/bin/definitely_not_a_command", highlight_spec_error},
         {L"; ", highlight_spec_statement_terminator},
         {L"end", highlight_spec_command},
-        {NULL, -1}};
+    });
 
     // Verify that cd shows errors for non-directories.
-    const highlight_component_t components4[] = {
+    highlight_tests.push_back({
         {L"cd", highlight_spec_command},
         {L"test/fish_highlight_test", highlight_spec_param | highlight_modifier_valid_path},
-        {NULL, -1}};
+    });
 
-    const highlight_component_t components5[] = {
+    highlight_tests.push_back({
         {L"cd", highlight_spec_command},
         {L"test/fish_highlight_test/foo", highlight_spec_error},
-        {NULL, -1}};
+    });
 
-    const highlight_component_t components6[] = {
+    highlight_tests.push_back({
         {L"cd", highlight_spec_command},
         {L"--help", highlight_spec_param},
         {L"-h", highlight_spec_param},
         {L"definitely_not_a_directory", highlight_spec_error},
-        {NULL, -1}};
+    });
 
     // Command substitutions.
-    const highlight_component_t components7[] = {{L"echo", highlight_spec_command},
-                                                 {L"param1", highlight_spec_param},
-                                                 {L"(", highlight_spec_operator},
-                                                 {L"ls", highlight_spec_command},
-                                                 {L"param2", highlight_spec_param},
-                                                 {L")", highlight_spec_operator},
-                                                 {L"|", highlight_spec_statement_terminator},
-                                                 {L"cat", highlight_spec_command},
-                                                 {NULL, -1}};
+    highlight_tests.push_back({
+        {L"echo", highlight_spec_command},
+        {L"param1", highlight_spec_param},
+        {L"(", highlight_spec_operator},
+        {L"ls", highlight_spec_command},
+        {L"param2", highlight_spec_param},
+        {L")", highlight_spec_operator},
+        {L"|", highlight_spec_statement_terminator},
+        {L"cat", highlight_spec_command},
+    });
 
     // Redirections substitutions.
-    const highlight_component_t components8[] = {
+    highlight_tests.push_back({
         {L"echo", highlight_spec_command},
         {L"param1", highlight_spec_param},
 
@@ -3993,36 +3995,41 @@ static void test_highlighting() {
 
         // Just another param.
         {L"param2", highlight_spec_param},
-        {NULL, -1}};
+    });
 
-    const highlight_component_t components9[] = {{L"end", highlight_spec_error},
-                                                 {L";", highlight_spec_statement_terminator},
-                                                 {L"if", highlight_spec_command},
-                                                 {L"end", highlight_spec_error},
-                                                 {NULL, -1}};
+    highlight_tests.push_back({
+        {L"end", highlight_spec_error},
+        {L";", highlight_spec_statement_terminator},
+        {L"if", highlight_spec_command},
+        {L"end", highlight_spec_error},
+    });
 
-    const highlight_component_t components10[] = {
-        {L"echo", highlight_spec_command}, {L"'single_quote", highlight_spec_error}, {NULL, -1}};
+    highlight_tests.push_back({
+        {L"echo", highlight_spec_command},
+        {L"'single_quote", highlight_spec_error},
+    });
 
-    const highlight_component_t components11[] = {{L"echo", highlight_spec_command},
-                                                  {L"$foo", highlight_spec_operator},
-                                                  {L"\"", highlight_spec_quote},
-                                                  {L"$bar", highlight_spec_operator},
-                                                  {L"\"", highlight_spec_quote},
-                                                  {L"$baz[", highlight_spec_operator},
-                                                  {L"1 2..3", highlight_spec_param},
-                                                  {L"]", highlight_spec_operator},
-                                                  {NULL, -1}};
+    highlight_tests.push_back({
+        {L"echo", highlight_spec_command},
+        {L"$foo", highlight_spec_operator},
+        {L"\"", highlight_spec_quote},
+        {L"$bar", highlight_spec_operator},
+        {L"\"", highlight_spec_quote},
+        {L"$baz[", highlight_spec_operator},
+        {L"1 2..3", highlight_spec_param},
+        {L"]", highlight_spec_operator},
+    });
 
-    const highlight_component_t components12[] = {{L"for", highlight_spec_command},
-                                                  {L"i", highlight_spec_param},
-                                                  {L"in", highlight_spec_command},
-                                                  {L"1 2 3", highlight_spec_param},
-                                                  {L";", highlight_spec_statement_terminator},
-                                                  {L"end", highlight_spec_command},
-                                                  {NULL, -1}};
+    highlight_tests.push_back({
+        {L"for", highlight_spec_command},
+        {L"i", highlight_spec_param},
+        {L"in", highlight_spec_command},
+        {L"1 2 3", highlight_spec_param},
+        {L";", highlight_spec_statement_terminator},
+        {L"end", highlight_spec_command},
+    });
 
-    const highlight_component_t components13[] = {
+    highlight_tests.push_back({
         {L"echo", highlight_spec_command},
         {L"$$foo[", highlight_spec_operator},
         {L"1", highlight_spec_param},
@@ -4030,49 +4037,40 @@ static void test_highlighting() {
         {L"2", highlight_spec_param},
         {L"]", highlight_spec_operator},
         {L"[3]", highlight_spec_param},  // two dollar signs, so last one is not an expansion
-        {NULL, -1}};
+    });
 
-    const highlight_component_t components14[] = {{L"cat", highlight_spec_command},
-                                                  {L"/dev/null", highlight_spec_param},
-                                                  {L"|", highlight_spec_statement_terminator},
-                                                  {L"less", highlight_spec_command},
-                                                  {L"2>", highlight_spec_redirection},
-                                                  {NULL, -1}};
+    highlight_tests.push_back({
+        {L"cat", highlight_spec_command},
+        {L"/dev/null", highlight_spec_param},
+        {L"|", highlight_spec_statement_terminator},
+        {L"less", highlight_spec_command},
+        {L"2>", highlight_spec_redirection},
+    });
 
-    const highlight_component_t components15[] = {{L"if", highlight_spec_command},
-                                                  {L"true", highlight_spec_command},
-                                                  {L"&&", highlight_spec_operator},
-                                                  {L"false", highlight_spec_command},
-                                                  {L";", highlight_spec_statement_terminator},
-                                                  {L"or", highlight_spec_operator},
-                                                  {L"false", highlight_spec_command},
-                                                  {L"||", highlight_spec_operator},
-                                                  {L"true", highlight_spec_command},
-                                                  {L";", highlight_spec_statement_terminator},
-                                                  {L"and", highlight_spec_operator},
-                                                  {L"not", highlight_spec_operator},
-                                                  {L"!", highlight_spec_operator},
-                                                  {L"true", highlight_spec_command},
-                                                  {L";", highlight_spec_statement_terminator},
-                                                  {L"end", highlight_spec_command},
-                                                  {NULL, -1}};
+    highlight_tests.push_back({
+        {L"if", highlight_spec_command},
+        {L"true", highlight_spec_command},
+        {L"&&", highlight_spec_operator},
+        {L"false", highlight_spec_command},
+        {L";", highlight_spec_statement_terminator},
+        {L"or", highlight_spec_operator},
+        {L"false", highlight_spec_command},
+        {L"||", highlight_spec_operator},
+        {L"true", highlight_spec_command},
+        {L";", highlight_spec_statement_terminator},
+        {L"and", highlight_spec_operator},
+        {L"not", highlight_spec_operator},
+        {L"!", highlight_spec_operator},
+        {L"true", highlight_spec_command},
+        {L";", highlight_spec_statement_terminator},
+        {L"end", highlight_spec_command},
+    });
 
-    const highlight_component_t *tests[] = {components1,  components2,  components3,  components4,
-                                            components5,  components6,  components7,  components8,
-                                            components9,  components10, components11, components12,
-                                            components13, components14, components15};
-    for (size_t which = 0; which < sizeof tests / sizeof *tests; which++) {
-        const highlight_component_t *components = tests[which];
-        // Count how many we have.
-        size_t component_count = 0;
-        while (components[component_count].txt != NULL) {
-            component_count++;
-        }
-
+    for (const highlight_component_list_t &components : highlight_tests) {
         // Generate the text.
         wcstring text;
         std::vector<highlight_spec_t> expected_colors;
-        for (size_t i = 0; i < component_count; i++) {
+        for (size_t i = 0; i < components.size(); i++) {
             if (i > 0) {
                 text.push_back(L' ');
                 expected_colors.push_back(0);
@@ -4096,10 +4094,9 @@ static void test_highlighting() {
 
             if (expected_colors.at(i) != colors.at(i)) {
                 const wcstring spaces(i, L' ');
-                err(L"Wrong color in test %lu at index %lu in text (expected %#x, actual "
+                err(L"Wrong color in test at index %lu in text (expected %#x, actual "
                     L"%#x):\n%ls\n%ls^",
-                    which + 1, i, expected_colors.at(i), colors.at(i), text.c_str(),
-                    spaces.c_str());
+                    i, expected_colors.at(i), colors.at(i), text.c_str(), spaces.c_str());
             }
         }
     }

@@ -511,8 +511,6 @@ void on_process_created(job_t *j, pid_t child_pid) {
 }
 
 void exec_job(parser_t &parser, job_t *j) {
-    pid_t pid = 0;
-
     // Set to true if something goes wrong while exec:ing the job, in which case the cleanup code
     // will kick in.
     bool exec_error = false;
@@ -745,10 +743,10 @@ void exec_job(parser_t &parser, job_t *j) {
 
         // We fork in several different places. Each time the same code must be executed, so unify
         // it all here.
-        auto do_fork = [&j, &p, &pid, &exec_error, &process_net_io_chain,
+        auto do_fork = [&j, &p, &exec_error, &process_net_io_chain,
                         &child_forked](bool drain_threads, const char *fork_type,
                                        std::function<void()> child_action) -> bool {
-            pid = execute_fork(drain_threads);
+            pid_t pid = execute_fork(drain_threads);
             if (pid == 0) {
                 // This is the child process. Setup redirections, print correct output to
                 // stdout and stderr, and then exit.
@@ -1044,6 +1042,7 @@ void exec_job(parser_t &parser, job_t *j) {
                     posix_spawn_file_actions_t actions = posix_spawn_file_actions_t();
                     bool made_it = fork_actions_make_spawn_properties(&attr, &actions, j, p,
                                                                       process_net_io_chain);
+                    pid_t pid = 0;
                     if (made_it) {
                         // We successfully made the attributes and actions; actually call
                         // posix_spawn.

@@ -245,12 +245,9 @@ static bool plain_statement_get_expanded_command(const wcstring &src,
                                                  wcstring *out_cmd) {
     // Get the command. Try expanding it. If we cannot, it's an error.
     maybe_t<wcstring> cmd = command_for_plain_statement(stmt, src);
-    if (cmd && expand_one(*cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS)) {
-        // Success, return the expanded string by reference.
-        *out_cmd = std::move(*cmd);
-        return true;
-    }
-    return false;
+    if (!cmd) return false;
+    expand_error_t err = expand_to_command_and_args(*cmd, out_cmd, nullptr);
+    return err == EXPAND_OK || err == EXPAND_WILDCARD_MATCH;
 }
 
 rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background) {
@@ -437,12 +434,15 @@ static size_t color_variable(const wchar_t *in, size_t in_len,
     return idx;
 }
 
-/// This function is a disaster badly in need of refactoring. It colors an argument, without regard
-/// to command substitutions.
-static void color_argument_internal(const wcstring &buffstr,
-                                    std::vector<highlight_spec_t>::iterator colors) {
+/// This function is a disaster badly in need of refactoring. It colors an argument or command,
+/// without regard to command substitutions.
+static void color_string_internal(const wcstring &buffstr, highlight_spec_t base_color,
+                                  std::vector<highlight_spec_t>::iterator colors) {
+    // Clarify what we expect.
+    assert((base_color == highlight_spec_param || base_color == highlight_spec_command) &&
+           "Unexpected base color");
     const size_t buff_len = buffstr.size();
-    std::fill(colors, colors + buff_len, (highlight_spec_t)highlight_spec_param);
+    std::fill(colors, colors + buff_len, base_color);
 
     enum { e_unquoted, e_single_quoted, e_double_quoted } mode = e_unquoted;
     int bracket_count = 0;
@@ -616,7 +616,7 @@ static void color_argument_internal(const wcstring &buffstr,
             case e_double_quoted: {
                 // Slices are colored in advance, past `in_pos`, and we don't want to overwrite
                 // that.
-                if (colors[in_pos] == highlight_spec_param) {
+                if (colors[in_pos] == base_color) {
                     colors[in_pos] = highlight_spec_quote;
                 }
                 switch (c) {
@@ -671,6 +671,8 @@ class highlighter_t {
     color_array_t color_array;
     // The parse tree of the buff.
     parse_node_tree_t parse_tree;
+    // Color a command.
+    void color_command(tnode_t<g::tok_string> node);
     // Color an argument.
     void color_argument(tnode_t<g::tok_string> node);
     // Color a redirection.
@@ -720,6 +722,18 @@ void highlighter_t::color_node(const parse_node_t &node, highlight_spec_t color)
               color);
 }
 
+void highlighter_t::color_command(tnode_t<g::tok_string> node) {
+    auto source_range = node.source_range();
+    if (!source_range) return;
+
+    const wcstring cmd_str = node.get_source(this->buff);
+
+    // Get an iterator to the colors associated with the argument.
+    const size_t arg_start = source_range->start;
+    const color_array_t::iterator colors = color_array.begin() + arg_start;
+    color_string_internal(cmd_str, highlight_spec_command, colors);
+}
+
 // node does not necessarily have type symbol_argument here.
 void highlighter_t::color_argument(tnode_t<g::tok_string> node) {
     auto source_range = node.source_range();
@@ -732,7 +746,7 @@ void highlighter_t::color_argument(tnode_t<g::tok_string> node) {
     const color_array_t::iterator arg_colors = color_array.begin() + arg_start;
 
     // Color this argument without concern for command substitutions.
-    color_argument_internal(arg_str, arg_colors);
+    color_string_internal(arg_str, highlight_spec_param, arg_colors);
 
     // Now do command substitutions.
     size_t cmdsub_cursor = 0, cmdsub_start = 0, cmdsub_end = 0;
@@ -1094,16 +1108,20 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
                     // We cannot check if the command is invalid, so just assume it's valid.
                     is_valid_cmd = true;
                 } else {
+                    wcstring expanded_cmd;
                     // Check to see if the command is valid.
                     // Try expanding it. If we cannot, it's an error.
-                    bool expanded = expand_one(
-                        *cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS);
-                    if (expanded && !has_expand_reserved(*cmd)) {
-                        is_valid_cmd = command_is_valid(*cmd, decoration, working_directory, vars);
+                    bool expanded = plain_statement_get_expanded_command(buff, stmt, &expanded_cmd);
+                    if (expanded && !has_expand_reserved(expanded_cmd)) {
+                        is_valid_cmd =
+                            command_is_valid(expanded_cmd, decoration, working_directory, vars);
                     }
                 }
-                this->color_node(*cmd_node,
-                                 is_valid_cmd ? highlight_spec_command : highlight_spec_error);
+                if (!is_valid_cmd) {
+                    this->color_node(*cmd_node, highlight_spec_error);
+                } else {
+                    this->color_command(cmd_node);
+                }
                 break;
             }
             // Only work on root lists, so that we don't re-color child lists.

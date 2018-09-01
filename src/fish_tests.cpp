@@ -3892,7 +3892,12 @@ static void test_highlighting() {
     struct highlight_component_t {
         const wchar_t *txt;
         int color;
+        bool nospace;
+        highlight_component_t(const wchar_t *txt, int color, bool nospace = false)
+            : txt(txt), color(color), nospace(nospace) {}
     };
+    const bool ns = true;
+
     using highlight_component_list_t = std::vector<highlight_component_t>;
     std::vector<highlight_component_list_t> highlight_tests;
 
@@ -4066,17 +4071,34 @@ static void test_highlighting() {
         {L"end", highlight_spec_command},
     });
 
+    // Verify variables and wildcards in commands using /bin/cat.
+    env_set(L"VARIABLE_IN_COMMAND", ENV_LOCAL, {L"a"});
+    env_set(L"VARIABLE_IN_COMMAND2", ENV_LOCAL, {L"at"});
+    highlight_tests.push_back(
+        {{L"/bin/ca", highlight_spec_command, ns}, {L"*", highlight_spec_operator, ns}});
+
+    highlight_tests.push_back({{L"/bin/c", highlight_spec_command, ns},
+                               {L"{$VARIABLE_IN_COMMAND}", highlight_spec_operator, ns},
+                               {L"*", highlight_spec_operator, ns}});
+
+    highlight_tests.push_back({{L"/bin/c", highlight_spec_command, ns},
+                               {L"{$VARIABLE_IN_COMMAND}", highlight_spec_operator, ns},
+                               {L"*", highlight_spec_operator, ns}});
+
+    highlight_tests.push_back({{L"/bin/c", highlight_spec_command, ns},
+                               {L"$VARIABLE_IN_COMMAND2", highlight_spec_operator, ns}});
+
     for (const highlight_component_list_t &components : highlight_tests) {
         // Generate the text.
         wcstring text;
         std::vector<highlight_spec_t> expected_colors;
-        for (size_t i = 0; i < components.size(); i++) {
-            if (i > 0) {
+        for (const highlight_component_t &comp : components) {
+            if (!text.empty() && !comp.nospace) {
                 text.push_back(L' ');
                 expected_colors.push_back(0);
             }
-            text.append(components[i].txt);
-            expected_colors.resize(text.size(), components[i].color);
+            text.append(comp.txt);
+            expected_colors.resize(text.size(), comp.color);
         }
         do_test(expected_colors.size() == text.size());
 
@@ -4100,6 +4122,8 @@ static void test_highlighting() {
             }
         }
     }
+    env_remove(L"VARIABLE_IN_COMMAND", ENV_DEFAULT);
+    env_remove(L"VARIABLE_IN_COMMAND2", ENV_DEFAULT);
 }
 
 static void test_wcstring_tok() {

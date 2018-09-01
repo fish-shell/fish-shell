@@ -617,9 +617,7 @@ void exec_job(parser_t &parser, job_t *j) {
     // 2. The pipe that the current process should write to
     // 3. The pipe that the next process should read from (courtesy of us)
     //
-    // We are careful to set these to -1 when closed, so if we exit the loop abruptly, we can still
-    // close them.
-    int pipe_current_read = -1, pipe_current_write = -1, pipe_next_read = -1;
+    autoclose_fd_t pipe_current_write, pipe_next_read;
     for (std::unique_ptr<process_t> &unique_p : j->processes) {
         if (exec_error) {
             break;
@@ -630,9 +628,7 @@ void exec_job(parser_t &parser, job_t *j) {
         io_chain_t process_net_io_chain = j->block_io_chain();
 
         // "Consume" any pipe_next_read by making it current.
-        assert(pipe_current_read == -1);
-        pipe_current_read = pipe_next_read;
-        pipe_next_read = -1;
+        autoclose_fd_t pipe_current_read = std::move(pipe_next_read);
 
         // See if we need a pipe.
         const bool pipes_to_next_command = !p->is_last_in_job;
@@ -686,7 +682,7 @@ void exec_job(parser_t &parser, job_t *j) {
         if (!p->is_first_in_job) {
             pipe_read.reset(new io_pipe_t(p->pipe_read_fd, true));
             // Record the current read in pipe_read.
-            pipe_read->pipe_fd[0] = pipe_current_read;
+            pipe_read->pipe_fd[0] = pipe_current_read.fd();
             process_net_io_chain.push_back(pipe_read);
         }
 
@@ -733,11 +729,11 @@ void exec_job(parser_t &parser, job_t *j) {
 
             // Record our pipes. The fds should be negative to indicate that we aren't overwriting
             // an fd we failed to close.
-            assert(pipe_current_write == -1);
-            pipe_current_write = local_pipe[1];
+            assert(pipe_current_write.fd() == -1);
+            pipe_current_write.reset(local_pipe[1]);
 
-            assert(pipe_next_read == -1);
-            pipe_next_read = local_pipe[0];
+            assert(pipe_next_read.fd() == -1);
+            pipe_next_read.reset(local_pipe[0]);
         }
 
         // This is the IO buffer we use for storing the output of a block or function when it is in
@@ -1128,22 +1124,14 @@ void exec_job(parser_t &parser, job_t *j) {
         }
 
         // Close the pipe the current process uses to read from the previous process_t.
-        if (pipe_current_read >= 0) {
-            exec_close(pipe_current_read);
-            pipe_current_read = -1;
-        }
-
         // Close the write end too, since the curent child subprocess already has a copy of it.
-        if (pipe_current_write >= 0) {
-            exec_close(pipe_current_write);
-            pipe_current_write = -1;
-        }
+        pipe_current_read.close();
+        pipe_current_write.close();
     }
 
     // Clean up any file descriptors we left open.
-    if (pipe_current_read >= 0) exec_close(pipe_current_read);
-    if (pipe_current_write >= 0) exec_close(pipe_current_write);
-    if (pipe_next_read >= 0) exec_close(pipe_next_read);
+    pipe_current_write.close();
+    pipe_next_read.close();
 
     // The keepalive process is no longer needed, so we terminate it with extreme prejudice.
     if (needs_keepalive) {

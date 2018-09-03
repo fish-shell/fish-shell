@@ -525,9 +525,6 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, job_t *j,
 
     // See if we need a pipe.
     const bool pipes_to_next_command = !p->is_last_in_job;
-    // Set to true if we end up forking for this process.
-    bool child_forked = false;
-    bool child_spawned = false;
 
     // The write end of any pipe we create.
     autoclose_fd_t pipe_current_write{};
@@ -635,7 +632,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, job_t *j,
 
     // We fork in several different places. Each time the same code must be executed, so unify
     // it all here.
-    auto do_fork = [j, p, &exec_error, &process_net_io_chain, &child_forked](
+    auto do_fork = [j, p, &exec_error, &process_net_io_chain](
                        bool drain_threads, const char *fork_type,
                        std::function<void()> child_action) -> bool {
         pid_t pid = execute_fork(drain_threads);
@@ -659,7 +656,6 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, job_t *j,
         // This is the parent process. Store away information on the child, and
         // possibly give it control over the terminal.
         debug(2, L"Fork #%d, pid %d: %s for '%ls'", g_fork_count, pid, fork_type, p->argv0());
-        child_forked = true;
 
         p->pid = pid;
         on_process_created(j, p->pid);
@@ -968,7 +964,6 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, job_t *j,
 
                 // these are all things do_fork() takes care of normally (for forked processes):
                 p->pid = pid;
-                child_spawned = true;
                 on_process_created(j, p->pid);
 
                 // We explicitly don't call set_child_group() for spawned processes because that

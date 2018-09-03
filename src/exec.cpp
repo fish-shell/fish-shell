@@ -510,6 +510,39 @@ void on_process_created(job_t *j, pid_t child_pid) {
     }
 }
 
+/// Call fork() as part of executing a process \p p in a job \j. Execute \p child_action in the
+/// context of the child. Returns true if fork succeeded, false if fork failed.
+static bool fork_child_for_process(job_t *j, process_t *p, const io_chain_t &io_chain,
+                                   bool drain_threads, const char *fork_type,
+                                   const std::function<void()> &child_action) {
+    pid_t pid = execute_fork(drain_threads);
+    if (pid == 0) {
+        // This is the child process. Setup redirections, print correct output to
+        // stdout and stderr, and then exit.
+        p->pid = getpid();
+        child_set_group(j, p);
+        setup_child_process(p, io_chain);
+        child_action();
+        DIE("Child process returned control to fork_child lambda!");
+    }
+
+    if (pid < 0) {
+        debug(1, L"Failed to fork %s!\n", fork_type);
+        job_mark_process_as_failed(j, p);
+        return false;
+    }
+
+    // This is the parent process. Store away information on the child, and
+    // possibly give it control over the terminal.
+    debug(2, L"Fork #%d, pid %d: %s for '%ls'", g_fork_count, pid, fork_type, p->argv0());
+
+    p->pid = pid;
+    on_process_created(j, p->pid);
+    set_child_group(j, p->pid);
+    maybe_assign_terminal(j);
+    return true;
+}
+
 /// Executes a process \p in job \j, using the read pipe \p pipe_current_read.
 /// If the process pipes to a command, the read end of the created pipe is returned in
 /// out_pipe_next_read. \returns true on success, false on exec error.
@@ -630,41 +663,6 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, job_t *j,
     // This is the io_streams we pass to internal builtins.
     std::unique_ptr<io_streams_t> builtin_io_streams(new io_streams_t(stdout_read_limit));
 
-    // We fork in several different places. Each time the same code must be executed, so unify
-    // it all here.
-    auto do_fork = [j, p, &exec_error, &process_net_io_chain](
-                       bool drain_threads, const char *fork_type,
-                       std::function<void()> child_action) -> bool {
-        pid_t pid = execute_fork(drain_threads);
-        if (pid == 0) {
-            // This is the child process. Setup redirections, print correct output to
-            // stdout and stderr, and then exit.
-            p->pid = getpid();
-            child_set_group(j, p);
-            setup_child_process(p, process_net_io_chain);
-            child_action();
-            DIE("Child process returned control to do_fork lambda!");
-        }
-
-        if (pid < 0) {
-            debug(1, L"Failed to fork %s!\n", fork_type);
-            job_mark_process_as_failed(j, p);
-            exec_error = true;
-            return false;
-        }
-
-        // This is the parent process. Store away information on the child, and
-        // possibly give it control over the terminal.
-        debug(2, L"Fork #%d, pid %d: %s for '%ls'", g_fork_count, pid, fork_type, p->argv0());
-
-        p->pid = pid;
-        on_process_created(j, p->pid);
-        set_child_group(j, p->pid);
-        maybe_assign_terminal(j);
-
-        return true;
-    };
-
     // Helper routine executed by INTERNAL_FUNCTION and INTERNAL_BLOCK_NODE to make sure an
     // output buffer exists in case there is another command in the job chain that will be
     // reading from this command's output.
@@ -780,9 +778,10 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, job_t *j,
                 // We don't have to drain threads here because our child process is simple.
                 const char *fork_reason =
                     p->type == INTERNAL_BLOCK_NODE ? "internal block io" : "internal function io";
-                if (!do_fork(false, fork_reason, [&] {
+                if (!fork_child_for_process(j, p, process_net_io_chain, false, fork_reason, [&] {
                         exec_write_and_exit(block_output_io_buffer->fd, buffer, count, status);
                     })) {
+                    exec_error = true;
                     break;
                 }
             } else {
@@ -889,14 +888,15 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, job_t *j,
 
                 fflush(stdout);
                 fflush(stderr);
-                if (!do_fork(false, "internal builtin", [&] {
-                        do_builtin_io(outbuff, outbuff_len, errbuff, errbuff_len);
-                        exit_without_destructors(p->status);
-                    })) {
+                if (!fork_child_for_process(
+                        j, p, process_net_io_chain, false, "internal builtin", [&] {
+                            do_builtin_io(outbuff, outbuff_len, errbuff, errbuff_len);
+                            exit_without_destructors(p->status);
+                        })) {
+                    exec_error = true;
                     break;
                 }
             }
-
             break;
         }
 
@@ -992,8 +992,10 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, job_t *j,
             } else
 #endif
             {
-                if (!do_fork(false, "external command",
-                             [&] { safe_launch_process(p, actual_cmd, argv, envv); })) {
+                if (!fork_child_for_process(
+                        j, p, process_net_io_chain, false, "external command",
+                        [&] { safe_launch_process(p, actual_cmd, argv, envv); })) {
+                    exec_error = true;
                     break;
                 }
             }

@@ -510,12 +510,13 @@ void on_process_created(job_t *j, pid_t child_pid) {
     }
 }
 
-/// Launches a process \p in job \j, using the read pipe \p pipe_current_read.
-/// If the process pipes to a command, the read end of the created pipe is returned in out_pipe_next_read.
-/// \returns true on success, false on exec error.
-static bool launch_process(parser_t &parser, process_t *p, job_t *j,
-                           autoclose_fd_t pipe_current_read, autoclose_fd_t *out_pipe_next_read,
-                           const io_chain_t &all_ios, size_t stdout_read_limit) {
+/// Executes a process \p in job \j, using the read pipe \p pipe_current_read.
+/// If the process pipes to a command, the read end of the created pipe is returned in
+/// out_pipe_next_read. \returns true on success, false on exec error.
+static bool exec_process_in_job(parser_t &parser, process_t *p, job_t *j,
+                                autoclose_fd_t pipe_current_read,
+                                autoclose_fd_t *out_pipe_next_read, const io_chain_t &all_ios,
+                                size_t stdout_read_limit) {
     bool exec_error = false;
 
     // The IO chain for this process. It starts with the block IO, then pipes, and then gets any
@@ -1122,8 +1123,8 @@ void exec_job(parser_t &parser, job_t *j) {
     autoclose_fd_t pipe_next_read;
     for (std::unique_ptr<process_t> &unique_p : j->processes) {
         autoclose_fd_t current_read = std::move(pipe_next_read);
-        if (!launch_process(parser, unique_p.get(), j, std::move(current_read), &pipe_next_read,
-                            all_ios, stdout_read_limit)) {
+        if (!exec_process_in_job(parser, unique_p.get(), j, std::move(current_read),
+                                 &pipe_next_read, all_ios, stdout_read_limit)) {
             exec_error = true;
             break;
         }

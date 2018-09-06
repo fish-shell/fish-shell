@@ -73,11 +73,9 @@ void exec_close(int fd) {
     }
 
     while (close(fd) == -1) {
-        if (errno != EINTR) {
-            debug(1, FD_ERROR, fd);
-            wperror(L"close");
-            break;
-        }
+        debug(1, FD_ERROR, fd);
+        wperror(L"close");
+        break;
     }
 }
 

@@ -2010,11 +2010,8 @@ void convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &wide_a
 
 void autoclose_fd_t::close() {
     if (fd_ < 0) return;
-    while (::close(fd_) == -1) {
-        if (errno != EINTR) {
-            wperror(L"close");
-            break;
-        }
+    if (::close(fd_) == -1) {
+        wperror(L"close");
     }
     fd_ = -1;
 }

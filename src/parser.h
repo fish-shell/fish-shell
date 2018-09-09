@@ -162,9 +162,7 @@ class parser_t {
 
    private:
     /// Indication that we should skip all blocks.
-    volatile sig_atomic_t cancellation_requested;
-    /// Indicates that we are within the process of initializing fish.
-    bool is_within_fish_initialization;
+    volatile sig_atomic_t cancellation_requested = false;
     /// The current execution context.
     std::unique_ptr<parse_execution_context_t> execution_context;
     /// List of called functions, used to help prevent infinite recursion.
@@ -206,6 +204,12 @@ class parser_t {
     /// Helper for push_block()
     void push_block_int(block_t *b);
 
+    /// Create a parser.
+    parser_t();
+
+    /// The main parser.
+    static parser_t principal;
+
    public:
     /// Get the "principal" parser, whatever that is.
     static parser_t &principal_parser();
@@ -213,9 +217,6 @@ class parser_t {
     /// Indicates that execution of all blocks in the principal parser should stop. This is called
     /// from signal handlers!
     static void skip_all_blocks();
-
-    /// Create a parser.
-    parser_t();
 
     /// Global event blocks.
     event_blockage_list_t global_event_blocks;
@@ -269,10 +270,6 @@ class parser_t {
 
     /// Get the list of jobs.
     job_list_t &job_list() { return my_job_list; }
-
-    // Hackish. In order to correctly report the origin of code with no associated file, we need to
-    // know whether it's run during initialization or not.
-    void set_is_within_fish_initialization(bool flag);
 
     /// Pushes a new block created with the given arguments
     /// Returns a pointer to the block. The pointer is valid

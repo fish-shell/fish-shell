@@ -100,26 +100,22 @@ static wcstring user_presentable_path(const wcstring &path) {
     return replace_home_directory_with_tilde(path);
 }
 
-parser_t::parser_t() : cancellation_requested(false), is_within_fish_initialization(false) {}
+parser_t::parser_t() = default;
 
 // Out of line destructor to enable forward declaration of parse_execution_context_t
 parser_t::~parser_t() = default;
 
-static parser_t s_principal_parser;
+parser_t parser_t::principal;
 
 parser_t &parser_t::principal_parser() {
     ASSERT_IS_MAIN_THREAD();
-    return s_principal_parser;
-}
-
-void parser_t::set_is_within_fish_initialization(bool flag) {
-    is_within_fish_initialization = flag;
+    return principal;
 }
 
 void parser_t::skip_all_blocks() {
     // Tell all blocks to skip.
     // This may be called from a signal handler!
-    s_principal_parser.cancellation_requested = true;
+    principal.cancellation_requested = true;
 }
 
 // Given a new-allocated block, push it onto our block stack, acquiring ownership
@@ -399,7 +395,7 @@ void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const {
         if (file) {
             append_format(*buff, _(L"\tcalled on line %d of file %ls\n"), b->src_lineno,
                           user_presentable_path(file).c_str());
-        } else if (is_within_fish_initialization) {
+        } else if (is_within_fish_initialization()) {
             append_format(*buff, _(L"\tcalled during startup\n"));
         } else {
             append_format(*buff, _(L"\tcalled on standard input\n"));
@@ -536,7 +532,7 @@ wcstring parser_t::current_line() {
         if (file) {
             append_format(prefix, _(L"%ls (line %d): "), user_presentable_path(file).c_str(),
                           lineno);
-        } else if (is_within_fish_initialization) {
+        } else if (is_within_fish_initialization()) {
             append_format(prefix, L"%ls (line %d): ", _(L"Startup"), lineno);
         } else {
             append_format(prefix, L"%ls (line %d): ", _(L"Standard input"), lineno);

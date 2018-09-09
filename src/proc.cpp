@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
+#include <atomic>
 
 #if HAVE_TERM_H
 #include <curses.h>
@@ -1289,3 +1290,9 @@ void hup_background_jobs() {
         }
     }
 }
+
+static std::atomic<bool> s_is_within_fish_initialization{false};
+
+void set_is_within_fish_initialization(bool flag) { s_is_within_fish_initialization.store(flag); }
+
+bool is_within_fish_initialization() { return s_is_within_fish_initialization.load(); }

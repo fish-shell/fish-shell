@@ -846,11 +846,15 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return result
 
     def do_get_abbreviations(self):
-        out, err = run_fish_cmd('echo -n -s $fish_user_abbreviations\x1e')
-
-        lines = (x for x in out.rstrip().split('\x1e'))
-        abbrs = (re.split('[ =]', x, maxsplit=1) for x in lines if x)
-        result = [{'word': x, 'phrase': y} for x, y in abbrs]
+        # Example abbreviation line:
+        # abbr -a -U -- ls 'ls -a'
+        result = []
+        out, err = run_fish_cmd('abbr --show')
+        for line in out.rstrip().split('\n'):
+            if not line: continue
+            _, abbr = line.split(' -- ', 1)
+            word, phrase = abbr.split(' ', 1)
+            result.append({'word':word, 'phrase':phrase})
         return result
 
     def do_remove_abbreviation(self, abbreviation):

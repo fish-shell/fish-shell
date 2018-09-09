@@ -1,0 +1,3 @@
+set -g SPLITENV_TEST A:B:C:D\nE:F::
+splitenv SPLITENV_TEST something_that_is_not_a_variable
+count $SPLITENV_TEST

@@ -1,0 +1,18 @@
+\section splitenv splitenv - split a variable on colons
+
+\subsection splitenv-synopsis Synopsis
+\fish{synopsis}
+splitenv VARNAME...
+\endfish
+
+\subsection splitenv-description Description
+
+`splitenv` takes one or more variable names, and splits the variable on colons. This can be used to import colon-delimited environment variables as fish arrays.
+
+\subsection splitenv-example Example
+
+\fish
+splitenv PYTHONPATH
+# Imports PYTHONPATH as a colon delimited array.
+\endfish
+

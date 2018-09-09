@@ -46,8 +46,8 @@
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
-#include "wildcard.h"
 #include "wcstringutil.h"
+#include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 #ifdef KERN_PROCARGS2
 #else
@@ -468,7 +468,7 @@ static bool expand_variables(const wcstring &instr, std::vector<completion_t> *o
 
 /// Perform brace expansion.
 static expand_error_t expand_braces(const wcstring &instr, expand_flags_t flags,
-                                      std::vector<completion_t> *out, parse_error_list_t *errors) {
+                                    std::vector<completion_t> *out, parse_error_list_t *errors) {
     bool syntax_error = false;
     int brace_count = 0;
 
@@ -556,7 +556,7 @@ static expand_error_t expand_braces(const wcstring &instr, expand_flags_t flags,
             assert(pos >= item_begin);
             size_t item_len = pos - item_begin;
             wcstring item = wcstring(item_begin, item_len);
-            item = trim(item, (const wchar_t[]) { BRACE_SPACE, L'\0' });
+            item = trim(item, (const wchar_t[]){BRACE_SPACE, L'\0'});
             for (auto &c : item) {
                 if (c == BRACE_SPACE) {
                     c = ' ';
@@ -746,8 +746,7 @@ static void expand_home_directory(wcstring &input) {
         }
 
         maybe_t<wcstring> realhome;
-        if (home)
-            realhome = wrealpath(home->as_string());
+        if (home) realhome = wrealpath(home->as_string());
 
         if (realhome) {
             input.replace(input.begin(), input.begin() + tail_idx, *realhome);
@@ -902,13 +901,12 @@ static expand_error_t expand_stage_variables(const wcstring &input, std::vector<
 }
 
 static expand_error_t expand_stage_braces(const wcstring &input, std::vector<completion_t> *out,
-                                            expand_flags_t flags, parse_error_list_t *errors) {
+                                          expand_flags_t flags, parse_error_list_t *errors) {
     return expand_braces(input, flags, out, errors);
 }
 
-static expand_error_t expand_stage_home(const wcstring &input,
-                                                std::vector<completion_t> *out,
-                                                expand_flags_t flags, parse_error_list_t *errors) {
+static expand_error_t expand_stage_home(const wcstring &input, std::vector<completion_t> *out,
+                                        expand_flags_t flags, parse_error_list_t *errors) {
     (void)errors;
     wcstring next = input;
 

@@ -2294,9 +2294,7 @@ static bool selection_is_at_top() {
 static uint32_t run_count = 0;
 
 /// Returns the current interactive loop count
-uint32_t reader_run_count() {
-    return run_count;
-}
+uint32_t reader_run_count() { return run_count; }
 
 /// Read interactively. Read input from stdin while providing editing facilities.
 static int read_i() {
@@ -3243,12 +3241,8 @@ const wchar_t *reader_readline(int nchars) {
                 bool success = false;
 
                 if (data->last_jump_target) {
-                    success = jump(
-                            data->last_jump_direction,
-                            data->last_jump_precision,
-                            el,
-                            data->last_jump_target
-                    );
+                    success = jump(data->last_jump_direction, data->last_jump_precision, el,
+                                   data->last_jump_target);
                 }
 
                 input_function_set_status(success);
@@ -3268,12 +3262,7 @@ const wchar_t *reader_readline(int nchars) {
                 }
 
                 if (data->last_jump_target) {
-                    success = jump(
-                        dir,
-                        data->last_jump_precision,
-                        el,
-                        data->last_jump_target
-                    );
+                    success = jump(dir, data->last_jump_precision, el, data->last_jump_target);
                 }
 
                 data->last_jump_direction = original_dir;
@@ -3351,7 +3340,7 @@ bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el,
             while (tmp_pos--) {
                 if (el->at(tmp_pos) == target) {
                     if (precision == jump_precision_t::till) {
-                        tmp_pos = std::min(el->size()-1, tmp_pos+1);
+                        tmp_pos = std::min(el->size() - 1, tmp_pos + 1);
                     }
                     update_buff_pos(el, tmp_pos);
                     success = true;
@@ -3361,7 +3350,7 @@ bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el,
             break;
         }
         case jump_direction_t::forward: {
-            for (size_t tmp_pos=el->position+1; tmp_pos < el->size(); tmp_pos++) {
+            for (size_t tmp_pos = el->position + 1; tmp_pos < el->size(); tmp_pos++) {
                 if (el->at(tmp_pos) == target) {
                     if (precision == jump_precision_t::till && tmp_pos) {
                         tmp_pos--;

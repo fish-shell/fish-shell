@@ -198,7 +198,7 @@ void function_load(const wcstring &cmd) {
     }
 }
 
-int function_exists_no_autoload(const wcstring &cmd, const env_vars_snapshot_t &vars) {
+int function_exists_no_autoload(const wcstring &cmd, const environment_t &vars) {
     if (parser_keywords_is_reserved(cmd)) return 0;
     scoped_rlock locker(functions_lock);
     return loaded_functions.find(cmd) != loaded_functions.end() ||

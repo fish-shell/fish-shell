@@ -333,7 +333,7 @@ static bool autosuggest_parse_command(const wcstring &buff, wcstring *out_expand
 
 bool autosuggest_validate_from_history(const history_item_t &item,
                                        const wcstring &working_directory,
-                                       const env_vars_snapshot_t &vars) {
+                                       const environment_t &vars) {
     ASSERT_IS_BACKGROUND_THREAD();
 
     bool handled = false, suggestionOK = false;
@@ -667,7 +667,7 @@ class highlighter_t {
     // Cursor position.
     const size_t cursor_pos;
     // Environment variables. Again, a reference member variable!
-    const env_vars_snapshot_t &vars;
+    const environment_t &vars;
     // Whether it's OK to do I/O.
     const bool io_ok;
     // Working directory.
@@ -698,7 +698,7 @@ class highlighter_t {
 
    public:
     // Constructor
-    highlighter_t(const wcstring &str, size_t pos, const env_vars_snapshot_t &ev, wcstring wd,
+    highlighter_t(const wcstring &str, size_t pos, const environment_t &ev, wcstring wd,
                   bool can_do_io)
         : buff(str),
           cursor_pos(pos),
@@ -985,7 +985,7 @@ void highlighter_t::color_children(const parse_node_t &parent, parse_token_type_
 
 /// Determine if a command is valid.
 static bool command_is_valid(const wcstring &cmd, enum parse_statement_decoration_t decoration,
-                             const wcstring &working_directory, const env_vars_snapshot_t &vars) {
+                             const wcstring &working_directory, const environment_t &vars) {
     // Determine which types we check, based on the decoration.
     bool builtin_ok = true, function_ok = true, abbreviation_ok = true, command_ok = true,
          implicit_cd_ok = true;
@@ -1196,7 +1196,7 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
 }
 
 void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos,
-                     wcstring_list_t *error, const env_vars_snapshot_t &vars) {
+                     wcstring_list_t *error, const environment_t &vars) {
     UNUSED(error);
     // Do something sucky and get the current working directory on this background thread. This
     // should really be passed in.
@@ -1208,7 +1208,7 @@ void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color,
 }
 
 void highlight_shell_no_io(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos,
-                           wcstring_list_t *error, const env_vars_snapshot_t &vars) {
+                           wcstring_list_t *error, const environment_t &vars) {
     UNUSED(error);
     // Do something sucky and get the current working directory on this background thread. This
     // should really be passed in.
@@ -1306,7 +1306,7 @@ static void highlight_universal_internal(const wcstring &buffstr,
 }
 
 void highlight_universal(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos,
-                         wcstring_list_t *error, const env_vars_snapshot_t &vars) {
+                         wcstring_list_t *error, const environment_t &vars) {
     UNUSED(error);
     UNUSED(vars);
     assert(buff.size() == color.size());

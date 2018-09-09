@@ -1589,6 +1589,8 @@ void env_set_argv(const wchar_t *const *argv) {
     }
 }
 
+environment_t::~environment_t() = default;
+
 env_vars_snapshot_t::env_vars_snapshot_t(const wchar_t *const *keys) {
     ASSERT_IS_MAIN_THREAD();
     wcstring key;
@@ -1596,12 +1598,13 @@ env_vars_snapshot_t::env_vars_snapshot_t(const wchar_t *const *keys) {
         key.assign(keys[i]);
         const auto var = env_get(key);
         if (var) {
-            vars[key] = *var;
+            vars[key] = std::move(*var);
         }
     }
 }
 
-env_vars_snapshot_t::env_vars_snapshot_t() {}
+env_vars_snapshot_t::env_vars_snapshot_t() = default;
+env_vars_snapshot_t::~env_vars_snapshot_t() = default;
 
 // The "current" variables are not a snapshot at all, but instead trampoline to env_get, etc.
 // We identify the current snapshot based on pointer values.
@@ -1610,10 +1613,10 @@ const env_vars_snapshot_t &env_vars_snapshot_t::current() { return sCurrentSnaps
 
 bool env_vars_snapshot_t::is_current() const { return this == &sCurrentSnapshot; }
 
-maybe_t<env_var_t> env_vars_snapshot_t::get(const wcstring &key) const {
+maybe_t<env_var_t> env_vars_snapshot_t::get(const wcstring &key, env_mode_flags_t mode) const {
     // If we represent the current state, bounce to env_get.
     if (this->is_current()) {
-        return env_get(key);
+        return env_get(key, mode);
     }
     auto iter = vars.find(key);
     if (iter == vars.end()) return none();

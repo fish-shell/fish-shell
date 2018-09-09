@@ -14,8 +14,8 @@
 #include "highlight.h"
 #include "parse_constants.h"
 
+class environment_t;
 class history_t;
-class env_vars_snapshot_t;
 class io_chain_t;
 
 /// Helper class for storing a command line.
@@ -160,7 +160,7 @@ void reader_set_complete_function(complete_function_t);
 
 /// The type of a highlight function.
 typedef void (*highlight_function_t)(const wcstring &, std::vector<highlight_spec_t> &, size_t,
-                                     wcstring_list_t *, const env_vars_snapshot_t &vars);
+                                     wcstring_list_t *, const environment_t &vars);
 
 /// Function type for testing if a string is valid for the reader to return.
 using test_function_t = parser_test_error_bits_t (*)(const wcstring &);

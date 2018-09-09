@@ -131,6 +131,17 @@ class env_var_t {
     bool operator!=(const env_var_t &rhs) const { return ! (*this == rhs); }
 };
 
+/// An environment is read-only access to variable values.
+class environment_t {
+   protected:
+    environment_t() = default;
+
+   public:
+    virtual maybe_t<env_var_t> get(const wcstring &key,
+                                   env_mode_flags_t mode = ENV_DEFAULT) const = 0;
+    virtual ~environment_t();
+};
+
 /// Gets the variable with the specified name, or none() if it does not exist.
 maybe_t<env_var_t> env_get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT);
 
@@ -180,7 +191,7 @@ wcstring env_get_pwd_slash();
 /// Update the read_byte_limit variable.
 void env_set_read_limit();
 
-class env_vars_snapshot_t {
+class env_vars_snapshot_t : public environment_t {
     std::map<wcstring, env_var_t> vars;
     bool is_current() const;
 
@@ -191,7 +202,9 @@ class env_vars_snapshot_t {
     env_vars_snapshot_t(const wchar_t *const *keys);
     env_vars_snapshot_t();
 
-    maybe_t<env_var_t> get(const wcstring &key) const;
+    ~env_vars_snapshot_t();
+
+    maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
 
     // Returns the fake snapshot representing the live variables array.
     static const env_vars_snapshot_t &current();

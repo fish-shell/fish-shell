@@ -115,7 +115,7 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
     return false;
 }
 
-bool path_get_path(const wcstring &cmd, wcstring *out_path, const env_vars_snapshot_t &vars) {
+bool path_get_path(const wcstring &cmd, wcstring *out_path, const environment_t &vars) {
     return path_get_path_core(cmd, out_path, vars.get(L"PATH"));
 }
 
@@ -158,7 +158,7 @@ wcstring_list_t path_get_paths(const wcstring &cmd) {
 }
 
 bool path_get_cdpath(const wcstring &dir, wcstring *out, const wcstring &wd,
-                     const env_vars_snapshot_t &env_vars) {
+                     const environment_t &env_vars) {
     int err = ENOENT;
     if (dir.empty()) return false;
 
@@ -216,7 +216,7 @@ bool path_get_cdpath(const wcstring &dir, wcstring *out, const wcstring &wd,
 }
 
 bool path_can_be_implicit_cd(const wcstring &path, const wcstring &wd, wcstring *out_path,
-                             const env_vars_snapshot_t &vars) {
+                             const environment_t &vars) {
     wcstring exp_path = path;
     expand_tilde(exp_path);
 

@@ -6,6 +6,7 @@
 // IWYU pragma: no_include <__bit_reference>
 #include "config.h"
 
+#include <atomic>
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
@@ -13,7 +14,6 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
-#include <atomic>
 
 #if HAVE_TERM_H
 #include <curses.h>

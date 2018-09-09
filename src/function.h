@@ -77,7 +77,7 @@ int function_exists(const wcstring &name);
 void function_load(const wcstring &name);
 
 /// Returns true if the function with the name name exists, without triggering autoload.
-int function_exists_no_autoload(const wcstring &name, const env_vars_snapshot_t &vars);
+int function_exists_no_autoload(const wcstring &name, const environment_t &vars);
 
 /// Returns all function names.
 ///

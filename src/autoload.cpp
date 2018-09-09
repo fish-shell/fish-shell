@@ -96,7 +96,7 @@ int autoload_t::load(const wcstring &cmd, bool reload) {
     return res;
 }
 
-bool autoload_t::can_load(const wcstring &cmd, const env_vars_snapshot_t &vars) {
+bool autoload_t::can_load(const wcstring &cmd, const environment_t &vars) {
     auto path_var = vars.get(env_var_name);
     if (path_var.missing_or_empty()) return false;
 

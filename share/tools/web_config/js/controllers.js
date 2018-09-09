@@ -214,51 +214,83 @@ controllers.controller("variablesController", function($scope, $http) {
 });
 
 controllers.controller("historyController", function($scope, $http, $timeout) {
-    $scope.historyItems = [];
-    $scope.historySize = 0;
-    // Stores items which are yet to be added in history items
-    $scope.remainingItems = [];
+    // All history items, as strings.
+    $scope.allItems = [];
+    // How many items per page.
+    $scope.itemsPerPage = 50;
+    // Filtered items grouped into pages. A list of lists. Never empty.
+    $scope.filteredItemPages = [[]];
+    // The current page index (0 based).
+    $scope.currentPage = 0;
+    // The filter query.
+    $scope.query = "";
+    // The items which are selected.
     $scope.selectedItems = [];
 
-    // Populate history items in parts
-    $scope.loadHistory = function() {
-        if ($scope.remainingItems.length <= 0) {
-            $scope.loadingText = "";
-            return;
+    // Filter all of our items, and group them into pages.
+    $scope.filterAndGroup = function () {
+        // Filter items.
+        var filteredItems;
+        if ($scope.query && $scope.query.length > 0) {
+            filteredItems = $scope.allItems.filter(function(item) {
+                return item.indexOf($scope.query) >= 0;
+            });
+        } else {
+            filteredItems = $scope.allItems;
         }
 
-        var toLoad = $scope.remainingItems.splice(0, 100);
-        for (i in toLoad) {
-            $scope.historyItems.push(toLoad[i]);
+        // Group them by pages. Ensure our pages are never empty.
+        var pages = [];
+        for (var start = 0; start < filteredItems.length; start += $scope.itemsPerPage) {
+            var end = Math.min(start + $scope.itemsPerPage, filteredItems.length);
+            pages.push(filteredItems.slice(start, end));
         }
+        if (pages.length == 0) {
+            pages.push([]);
+        }
+        $scope.filteredItemPages = pages;
+    };
 
-        $scope.loadingText = "Loading " + $scope.historyItems.length + "/" + $scope.historySize;
-        $timeout($scope.loadHistory, 100);
-    }
+    $scope.currentPageDescription = function() {
+        if ($scope.filteredItemPages[0].length === 0) {
+            return "None";
+        }
+        return ($scope.currentPage + 1) + " / " + ($scope.filteredItemPages.length + 1);
+    };
+
+    $scope.prevPage = function () {
+        $scope.currentPage = Math.max($scope.currentPage - 1, 0);
+    };
+    
+    $scope.nextPage = function () {
+        $scope.currentPage = Math.min($scope.currentPage + 1,
+                                      $scope.filteredItemPages.length - 1);
+    };
 
     $scope.selectItem = function(item) {
         var index = $scope.selectedItems.indexOf(item);
-        if ( index >= 0) {
+        if (index >= 0) {
+            // Deselect.
             $scope.selectedItems.splice(index,1);
         }
         else {
             $scope.selectedItems.push(item);
         }
     }
+
     // Get history from server
     $scope.fetchHistory = function() {
         $http.get("history/").success(function(data, status, headers, config) {
-        $scope.historySize = data.length;
-        $scope.remainingItems = data;
-
-        /* Call this function 10 times/second */
-        $timeout($scope.loadHistory, 100);
-    })};
+            $scope.allItems = data;
+            $scope.filterAndGroup();
+        });
+    };
 
     $scope.deleteHistoryItem = function(item) {
-        index = $scope.historyItems.indexOf(item);
+        index = $scope.allItems.indexOf(item);
         $http.post("delete_history_item/","what=" + encodeURIComponent(item), { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config) {
-        $scope.historyItems.splice(index, 1);
+        $scope.allItems.splice(index, 1);
+        $scope.filterAndGroup();
     })};
 
     var queryInputTimeout = null;
@@ -269,6 +301,8 @@ controllers.controller("historyController", function($scope, $http, $timeout) {
 
         queryInputTimeout = $timeout(function() {
             $scope.query = $scope.queryInput;
+            $scope.filterAndGroup();
+            $scope.currentPage = 0;
         }, 1000);
     });
 

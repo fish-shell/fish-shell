@@ -174,7 +174,7 @@ static bool pushd(const char *path) {
         return false;
     }
 
-    env_set_pwd_from_getcwd();
+    env_stack_t::principal().set_pwd_from_getcwd();
     return true;
 }
 
@@ -184,7 +184,7 @@ static void popd() {
         err(L"chdir(\"%s\") from popd() failed: errno = %d", old_cwd.c_str(), errno);
     }
     pushed_dirs.pop_back();
-    env_set_pwd_from_getcwd();
+    env_stack_t::principal().set_pwd_from_getcwd();
 }
 
 // The odd formulation of these macros is to avoid "multiple unary operator" warnings from oclint

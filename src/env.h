@@ -182,14 +182,85 @@ void env_set_argv(const wchar_t *const *argv);
 /// Returns all variable names.
 wcstring_list_t env_get_names(int flags);
 
-/// Update the PWD variable based on the result of getcwd.
-void env_set_pwd_from_getcwd();
-
 /// Returns the PWD with a terminating slash.
 wcstring env_get_pwd_slash();
 
 /// Update the read_byte_limit variable.
 void env_set_read_limit();
+
+/// A environment stack of scopes. This is the main class that tracks fish variables.
+struct var_stack_t;
+class env_node_t;
+class env_stack_t : public environment_t {
+    std::unique_ptr<var_stack_t> vars_;
+
+    int set_internal(const wcstring &key, env_mode_flags_t var_mode, wcstring_list_t val);
+
+    bool try_remove(env_node_t *n, const wchar_t *key, int var_mode);
+    env_node_t *get_node(const wcstring &key);
+
+    var_stack_t &vars_stack();
+    const var_stack_t &vars_stack() const;
+
+    env_stack_t();
+    ~env_stack_t() override;
+
+   public:
+    /// Gets the variable with the specified name, or none() if it does not exist.
+    maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
+
+    /// Sets the variable with the specified name to the given values.
+    int set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);
+
+    /// Sets the variable with the specified name to a single value.
+    int set_one(const wcstring &key, env_mode_flags_t mode, wcstring val);
+
+    /// Sets the variable with the specified name to no values.
+    int set_empty(const wcstring &key, env_mode_flags_t mode);
+
+    /// Update the PWD variable based on the result of getcwd.
+    void set_pwd_from_getcwd();
+
+    /// Remove environment variable.
+    ///
+    /// \param key The name of the variable to remove
+    /// \param mode should be ENV_USER if this is a remove request from the user, 0 otherwise. If
+    /// this is a user request, read-only variables can not be removed. The mode may also specify
+    /// the scope of the variable that should be erased.
+    ///
+    /// \return zero if the variable existed, and non-zero if the variable did not exist
+    int remove(const wcstring &key, int mode);
+
+    /// Push the variable stack. Used for implementing local variables for functions and for-loops.
+    void push(bool new_scope);
+
+    /// Pop the variable stack. Used for implementing local variables for functions and for-loops.
+    void pop();
+
+    /// Synchronizes all universal variable changes: writes everything out, reads stuff in.
+    void universal_barrier();
+
+    /// Returns an array containing all exported variables in a format suitable for execv
+    const char *const *export_arr();
+
+    /// Returns all variable names.
+    wcstring_list_t get_names(int flags);
+
+    /// Sets up argv as the given null terminated array of strings.
+    void set_argv(const wchar_t *const *argv);
+
+    /// Returns the PWD with a terminating slash.
+    wcstring get_pwd_slash();
+
+    /// Update the read_byte_limit variable.
+    void set_read_limit();
+
+    /// Mark that exported variables have changed.
+    void mark_changed_exported();
+
+    // Compatibility hack; access the "environment stack" from back when there was just one.
+    static env_stack_t &principal();
+};
 
 class env_vars_snapshot_t : public environment_t {
     std::map<wcstring, env_var_t> vars;

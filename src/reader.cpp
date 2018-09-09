@@ -2026,7 +2026,7 @@ static parser_test_error_bits_t default_test(const wcstring &b) {
     return 0;
 }
 
-void reader_change_history(const wchar_t *name) {
+void reader_change_history(const wcstring &name) {
     // We don't need to _change_ if we're not initialized yet.
     reader_data_t *data = current_data_or_null();
     if (data && data->history) {

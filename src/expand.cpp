@@ -328,9 +328,10 @@ static bool expand_variables(const wcstring &instr, std::vector<completion_t> *o
     history_t *history = nullptr;
     maybe_t<env_var_t> var{};
     if (var_name == L"history") {
-        // We do this only on the main thread, matching env.cpp.
+        // Note reader_get_history may return null, if we are running non-interactively (e.g. from
+        // web_config).
         if (is_main_thread()) {
-            history = reader_get_history();
+            history = &history_t::history_with_name(history_session_id());
         }
     } else if (var_name != wcstring{VARIABLE_EXPAND_EMPTY}) {
         var = env_get(var_name);

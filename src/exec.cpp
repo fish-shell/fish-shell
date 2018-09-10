@@ -202,14 +202,14 @@ static void safe_launch_process(process_t *p, const char *actual_cmd, const char
 
 /// This function is similar to launch_process, except it is not called after a fork (i.e. it only
 /// calls exec) and therefore it can allocate memory.
-static void launch_process_nofork(process_t *p) {
+static void launch_process_nofork(env_stack_t &vars, process_t *p) {
     ASSERT_IS_MAIN_THREAD();
     ASSERT_IS_NOT_FORKED_CHILD();
 
     null_terminated_array_t<char> argv_array;
     convert_wide_array_to_narrow(p->get_argv_array(), &argv_array);
 
-    const char *const *envv = env_export_arr();
+    const char *const *envv = vars.export_arr();
     char *actual_cmd = wcs2str(p->actual_cmd);
 
     // Ensure the terminal modes are what they were before we changed them.
@@ -358,7 +358,7 @@ static bool can_use_posix_spawn_for_job(const std::shared_ptr<job_t> &job,
     return result;
 }
 
-void internal_exec(job_t *j, const io_chain_t &&all_ios) {
+void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &all_ios) {
     // Do a regular launch -  but without forking first...
 
     // setup_child_process makes sure signals are properly set up.
@@ -380,7 +380,7 @@ void internal_exec(job_t *j, const io_chain_t &&all_ios) {
         env_set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, shlvl_str);
 
         // launch_process _never_ returns.
-        launch_process_nofork(j->processes.front().get());
+        launch_process_nofork(vars, j->processes.front().get());
     } else {
         j->set_flag(job_flag_t::CONSTRUCTED, true);
         j->processes.front()->completed = 1;
@@ -648,8 +648,8 @@ static bool handle_builtin_output(const std::shared_ptr<job_t> &j, process_t *p,
 
 /// Executes an external command.
 /// \return true on success, false if there is an exec error.
-static bool exec_external_command(const std::shared_ptr<job_t> &j, process_t *p,
-                                  const io_chain_t &proc_io_chain) {
+static bool exec_external_command(env_stack_t &vars, const std::shared_ptr<job_t> &j,
+                                  process_t *p, const io_chain_t &proc_io_chain) {
     assert(p->type == EXTERNAL && "Process is not external");
     // Get argv and envv before we fork.
     null_terminated_array_t<char> argv_array;
@@ -663,7 +663,7 @@ static bool exec_external_command(const std::shared_ptr<job_t> &j, process_t *p,
     make_fd_blocking(STDIN_FILENO);
 
     const char *const *argv = argv_array.get();
-    const char *const *envv = env_export_arr();
+    const char *const *envv = vars.export_arr();
 
     std::string actual_cmd_str = wcs2string(p->actual_cmd);
     const char *actual_cmd = actual_cmd_str.c_str();
@@ -919,7 +919,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
             set_proc_had_barrier(true);
             env_universal_barrier();
         }
-        env_export_arr();
+        parser.vars().export_arr();
     }
 
     // Set up fds that will be used in the pipe.
@@ -975,7 +975,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
         }
 
         case EXTERNAL: {
-            if (!exec_external_command(j, p, process_net_io_chain)) {
+            if (!exec_external_command(parser.vars(), j, p, process_net_io_chain)) {
                 return false;
             }
             break;
@@ -1028,7 +1028,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     }
 
     if (j->processes.front()->type == INTERNAL_EXEC) {
-        internal_exec(j.get(), std::move(all_ios));
+        internal_exec(parser.vars(), j.get(), all_ios);
         DIE("this should be unreachable");
     }
 

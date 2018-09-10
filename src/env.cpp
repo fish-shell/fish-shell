@@ -1444,8 +1444,6 @@ void env_pop() { env_stack_t::principal().pop(); }
 
 void env_universal_barrier() { env_stack_t::principal().universal_barrier(); }
 
-const char *const *env_export_arr() { return env_stack_t::principal().export_arr(); }
-
 void env_set_argv(const wchar_t *const *argv) { return env_stack_t::principal().set_argv(argv); }
 
 wcstring_list_t env_get_names(int flags) { return env_stack_t::principal().get_names(flags); }
@@ -1580,7 +1578,7 @@ void var_stack_t::update_export_array_if_necessary() {
         return;
     }
 
-    debug(4, L"env_export_arr() recalc");
+    debug(4, L"export_arr() recalc");
     var_table_t vals;
     get_exported(this->top.get(), vals);
 

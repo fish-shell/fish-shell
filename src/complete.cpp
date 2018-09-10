@@ -81,11 +81,11 @@ void complete_set_variable_names(const wcstring_list_t *names) {
     s_override_variable_names = names;
 }
 
-static inline wcstring_list_t complete_get_variable_names() {
+static inline wcstring_list_t complete_get_variable_names(const environment_t &vars) {
     if (s_override_variable_names != NULL) {
         return *s_override_variable_names;
     }
-    return env_get_names(0);
+    return vars.get_names(0);
 }
 
 /// Struct describing a completion option entry.
@@ -301,8 +301,16 @@ void completions_sort_and_prioritize(std::vector<completion_t> *comps,
 
 /// Class representing an attempt to compute completions.
 class completer_t {
+    /// Environment inside which we are completing.
+    const environment_t &vars;
+
+    /// The command to complete.
     const wcstring cmd;
+
+    /// Flags associated with the completion request.
     const completion_request_flags_t flags;
+
+    /// The output cmopletions.
     std::vector<completion_t> completions;
 
     /// Table of completions conditions that have already been tested and the corresponding test
@@ -372,7 +380,8 @@ class completer_t {
     void mark_completions_duplicating_arguments(const wcstring &prefix, const arg_list_t &args);
 
    public:
-    completer_t(wcstring c, completion_request_flags_t f) : cmd(std::move(c)), flags(f) {}
+    completer_t(const environment_t &vars, wcstring c, completion_request_flags_t f)
+        : vars(vars), cmd(std::move(c)), flags(f) {}
 
     void perform();
 
@@ -886,22 +895,11 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
         }
     };
 
-    // This was originally written as a static variable protected by a mutex that is updated only if
-    // `scmd.size() == 1` to prevent too many lookups, but it turns out that this is mainly only
-    // called when the user explicitly presses <TAB> after a command, so the overhead of the
-    // additional env lookup should be negligible.
-    env_vars_snapshot_t completion_snapshot;
-
     // debug(0, L"\nThinking about looking up completions for %ls\n", cmd.c_str());
     bool head_exists = builtin_exists(cmd);
     // Only reload environment variables if builtin_exists returned false, as an optimization
     if (head_exists == false) {
-        run_on_main_thread([&completion_snapshot]() {
-            completion_snapshot = std::move(
-                env_vars_snapshot_t((wchar_t const *const[]){L"fish_function_path", nullptr}));
-        });
-
-        head_exists = function_exists_no_autoload(cmd, completion_snapshot);
+        head_exists = function_exists_no_autoload(cmd.c_str(), vars);
         // While it may seem like first testing `path_get_path` before resorting to an env lookup
         // may be faster, path_get_path can potentially do a lot of FS/IO access, so env.get() +
         // function_exists() should still be faster.
@@ -1127,7 +1125,7 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
     size_t varlen = str.length() - start_offset;
     bool res = false;
 
-    const wcstring_list_t names = complete_get_variable_names();
+    const wcstring_list_t names = complete_get_variable_names(vars);
     for (size_t i = 0; i < names.size(); i++) {
         const wcstring &env_name = names.at(i);
 
@@ -1578,14 +1576,14 @@ void completer_t::perform() {
 }
 
 void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_comps,
-              completion_request_flags_t flags) {
+              completion_request_flags_t flags, const environment_t &vars) {
     // Determine the innermost subcommand.
     const wchar_t *cmdsubst_begin, *cmdsubst_end;
     parse_util_cmdsubst_extent(cmd_with_subcmds.c_str(), cmd_with_subcmds.size(), &cmdsubst_begin,
                                &cmdsubst_end);
     assert(cmdsubst_begin != NULL && cmdsubst_end != NULL && cmdsubst_end >= cmdsubst_begin);
     wcstring cmd = wcstring(cmdsubst_begin, cmdsubst_end - cmdsubst_begin);
-    completer_t completer(std::move(cmd), flags);
+    completer_t completer(vars, std::move(cmd), flags);
     completer.perform();
     *out_comps = completer.acquire_completions();
 }

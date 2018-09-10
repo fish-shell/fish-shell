@@ -22,11 +22,10 @@
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
+#include "parser.h"
 #include "proc.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
-
-class parser_t;
 
 struct set_cmd_opts_t {
     bool print_help = false;
@@ -475,7 +474,7 @@ static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, 
     UNUSED(parser);
 
     bool names_only = opts.list;
-    wcstring_list_t names = env_get_names(compute_scope(opts));
+    wcstring_list_t names = parser.vars().get_names(compute_scope(opts));
     sort(names.begin(), names.end());
 
     for (size_t i = 0; i < names.size(); i++) {
@@ -592,7 +591,7 @@ static int builtin_set_show(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, 
     UNUSED(opts);
 
     if (argc == 0) {  // show all vars
-        wcstring_list_t names = env_get_names(ENV_USER);
+        wcstring_list_t names = parser.vars().get_names(ENV_USER);
         sort(names.begin(), names.end());
         for (auto it : names) {
             show_scope(it.c_str(), ENV_LOCAL, streams);

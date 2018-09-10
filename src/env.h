@@ -139,6 +139,7 @@ class environment_t {
    public:
     virtual maybe_t<env_var_t> get(const wcstring &key,
                                    env_mode_flags_t mode = ENV_DEFAULT) const = 0;
+    virtual wcstring_list_t get_names(int flags) const = 0;
     virtual ~environment_t();
 };
 
@@ -175,9 +176,6 @@ void env_universal_barrier();
 
 /// Sets up argv as the given null terminated array of strings.
 void env_set_argv(const wchar_t *const *argv);
-
-/// Returns all variable names.
-wcstring_list_t env_get_names(int flags);
 
 /// Returns the PWD with a terminating slash.
 wcstring env_get_pwd_slash();
@@ -242,7 +240,7 @@ class env_stack_t : public environment_t {
     const char *const *export_arr();
 
     /// Returns all variable names.
-    wcstring_list_t get_names(int flags);
+    wcstring_list_t get_names(int flags) const override;
 
     /// Sets up argv as the given null terminated array of strings.
     void set_argv(const wchar_t *const *argv);
@@ -262,18 +260,21 @@ class env_stack_t : public environment_t {
 
 class env_vars_snapshot_t : public environment_t {
     std::map<wcstring, env_var_t> vars;
+    wcstring_list_t names;
     bool is_current() const;
 
+    static const env_vars_snapshot_t s_current;
+
    public:
+    env_vars_snapshot_t() = default;
     env_vars_snapshot_t(const env_vars_snapshot_t &) = default;
     env_vars_snapshot_t &operator=(const env_vars_snapshot_t &) = default;
-
-    env_vars_snapshot_t(const wchar_t *const *keys);
-    env_vars_snapshot_t();
-
-    ~env_vars_snapshot_t();
+    env_vars_snapshot_t(const environment_t &source, const wchar_t *const *keys);
+    ~env_vars_snapshot_t() override;
 
     maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
+
+    wcstring_list_t get_names(int flags) const override;
 
     // Returns the fake snapshot representing the live variables array.
     static const env_vars_snapshot_t &current();

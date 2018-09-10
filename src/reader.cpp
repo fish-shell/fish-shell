@@ -1279,7 +1279,8 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
     const wcstring &search_string, size_t cursor_pos, history_t *history) {
     const unsigned int generation_count = read_generation_count();
     const wcstring working_directory(env_get_pwd_slash());
-    env_vars_snapshot_t vars(env_vars_snapshot_t::highlighting_keys);
+    env_vars_snapshot_t vars(parser_t::principal_parser().vars(),
+                             env_vars_snapshot_t::highlighting_keys);
     // TODO: suspicious use of 'history' here
     // This is safe because histories are immortal, but perhaps
     // this should use shared_ptr
@@ -1329,7 +1330,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
         // Try normal completions.
         completion_request_flags_t complete_flags = COMPLETION_REQUEST_AUTOSUGGESTION;
         std::vector<completion_t> completions;
-        complete(search_string, &completions, complete_flags);
+        complete(search_string, &completions, complete_flags, vars);
         completions_sort_and_prioritize(&completions, complete_flags);
         if (!completions.empty()) {
             const completion_t &comp = completions.at(0);
@@ -2201,7 +2202,8 @@ static void highlight_complete(highlight_result_t result) {
 static std::function<highlight_result_t(void)> get_highlight_performer(const wcstring &text,
                                                                        long match_highlight_pos,
                                                                        bool no_io) {
-    env_vars_snapshot_t vars(env_vars_snapshot_t::highlighting_keys);
+    env_vars_snapshot_t vars(parser_t::principal_parser().vars(),
+                             env_vars_snapshot_t::highlighting_keys);
     unsigned int generation_count = read_generation_count();
     highlight_function_t highlight_func =
         no_io ? highlight_shell_no_io : current_data()->highlight_func;
@@ -2683,7 +2685,8 @@ const wchar_t *reader_readline(int nchars) {
                     complete_flags_t complete_flags = COMPLETION_REQUEST_DEFAULT |
                                                       COMPLETION_REQUEST_DESCRIPTIONS |
                                                       COMPLETION_REQUEST_FUZZY_MATCH;
-                    data->complete_func(buffcpy, &comp, complete_flags);
+                    data->complete_func(buffcpy, &comp, complete_flags,
+                                        parser_t::principal_parser().vars());
 
                     // Munge our completions.
                     completions_sort_and_prioritize(&comp);

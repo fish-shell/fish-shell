@@ -1446,8 +1446,6 @@ void env_universal_barrier() { env_stack_t::principal().universal_barrier(); }
 
 void env_set_argv(const wchar_t *const *argv) { return env_stack_t::principal().set_argv(argv); }
 
-wcstring_list_t env_get_names(int flags) { return env_stack_t::principal().get_names(flags); }
-
 wcstring env_get_pwd_slash() { return env_stack_t::principal().get_pwd_slash(); }
 
 void env_set_read_limit() { return env_stack_t::principal().set_read_limit(); }
@@ -1483,7 +1481,7 @@ static void add_key_to_string_set(const var_table_t &envs, std::set<wcstring> *s
     }
 }
 
-wcstring_list_t env_stack_t::get_names(int flags) {
+wcstring_list_t env_stack_t::get_names(int flags) const {
     scoped_lock locker(env_lock);
 
     wcstring_list_t result;
@@ -1620,7 +1618,6 @@ void env_stack_t::set_argv(const wchar_t *const *argv) {
 }
 
 environment_t::~environment_t() = default;
-
 env_stack_t::~env_stack_t() = default;
 
 env_stack_t &env_stack_t::principal() {
@@ -1628,27 +1625,28 @@ env_stack_t &env_stack_t::principal() {
     return s_principal;
 }
 
-env_vars_snapshot_t::env_vars_snapshot_t(const wchar_t *const *keys) {
+env_vars_snapshot_t::env_vars_snapshot_t(const environment_t &source, const wchar_t *const *keys) {
     ASSERT_IS_MAIN_THREAD();
     wcstring key;
     for (size_t i = 0; keys[i]; i++) {
         key.assign(keys[i]);
-        const auto var = env_get(key);
+        const auto var = source.get(key);
         if (var) {
             vars[key] = std::move(*var);
         }
     }
+    names = source.get_names(0);
 }
 
-env_vars_snapshot_t::env_vars_snapshot_t() = default;
 env_vars_snapshot_t::~env_vars_snapshot_t() = default;
 
 // The "current" variables are not a snapshot at all, but instead trampoline to env_get, etc.
 // We identify the current snapshot based on pointer values.
-static const env_vars_snapshot_t sCurrentSnapshot;
-const env_vars_snapshot_t &env_vars_snapshot_t::current() { return sCurrentSnapshot; }
+// This is an ugly thing that has to go away.
+const env_vars_snapshot_t env_vars_snapshot_t::s_current;
+const env_vars_snapshot_t &env_vars_snapshot_t::current() { return s_current; }
 
-bool env_vars_snapshot_t::is_current() const { return this == &sCurrentSnapshot; }
+bool env_vars_snapshot_t::is_current() const { return this == &s_current; }
 
 maybe_t<env_var_t> env_vars_snapshot_t::get(const wcstring &key, env_mode_flags_t mode) const {
     // If we represent the current state, bounce to env_get.
@@ -1660,6 +1658,13 @@ maybe_t<env_var_t> env_vars_snapshot_t::get(const wcstring &key, env_mode_flags_
     return iter->second;
 }
 
+wcstring_list_t env_vars_snapshot_t::get_names(int flags) const { return names; }
+
+const wchar_t *const env_vars_snapshot_t::highlighting_keys[] = {L"PATH", L"CDPATH",
+    L"fish_function_path", NULL};
+
+const wchar_t *const env_vars_snapshot_t::completing_keys[] = {L"PATH", L"CDPATH",
+    L"fish_function_path", NULL};
 
 #if defined(__APPLE__) || defined(__CYGWIN__)
 static int check_runtime_path(const char *path) {
@@ -1722,9 +1727,3 @@ wcstring env_get_runtime_path() {
     }
     return result;
 }
-
-
-const wchar_t *const env_vars_snapshot_t::highlighting_keys[] = {L"PATH", L"CDPATH",
-                                                                 L"fish_function_path", NULL};
-
-const wchar_t *const env_vars_snapshot_t::completing_keys[] = {L"PATH", L"CDPATH", NULL};

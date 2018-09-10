@@ -30,6 +30,8 @@
 /// Character that separates the completion and description on programmable completions.
 #define PROG_COMPLETE_SEP L'\t'
 
+class environment_t;
+
 enum {
     /// Do not insert space afterwards if this is the only completion. (The default is to try insert
     /// a space).
@@ -172,7 +174,7 @@ void complete_remove_all(const wcstring &cmd, bool cmd_is_path);
 
 /// Find all completions of the command cmd, insert them into out.
 void complete(const wcstring &cmd, std::vector<completion_t> *out_comps,
-              completion_request_flags_t flags);
+              completion_request_flags_t flags, const environment_t &vars);
 
 /// Return a list of all current completions.
 wcstring complete_print();

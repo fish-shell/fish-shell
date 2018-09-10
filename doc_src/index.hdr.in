@@ -1347,7 +1347,7 @@ Example:
 To specify a signal handler for the WINCH signal, write:
 
 \fish
-function --on-signal WINCH my_signal_handler
+function my_signal_handler --on-signal WINCH
     echo Got WINCH signal!
 end
 \endfish

@@ -300,10 +300,14 @@ env SHLVL="  3" ../test/root/bin/fish -c 'echo SHLVL: $SHLVL'
 env DISPLAY="localhost:0.0" ../test/root/bin/fish -c 'echo Elements in DISPLAY: (count $DISPLAY)'
 # We can't use PATH for this because the global configuration will modify PATH
 # based on /etc/paths and /etc/paths.d.
-# Exported arrays should use record separator, with a few exceptions. So we can use an arbitrary variable for this.
+# Exported arrays are colon delimited; they are automatically split on colons if they end in PATH.
 set -gx FOO one two three four
-../test/root/bin/fish -c 'echo Elements in FOO: (count $FOO)'
+set -gx FOOPATH one two three four
+../test/root/bin/fish -c 'echo Elements in FOO and FOOPATH: (count $FOO) (count $FOOPATH)'
 # some must use colon separators!
 set -lx MANPATH man1 man2 man3 ; env | grep '^MANPATH='
+# ensure we don't escape colon values
+set -x DONT_ESCAPE_COLONS 1: 2: :3: ; env | grep '^DONT_ESCAPE_COLONS='
+
 
 true

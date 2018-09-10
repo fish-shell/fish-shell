@@ -11,6 +11,7 @@ fish 3.0 is a major release which brings with it both improvements in functional
 
 ## Notable non-backward compatible changes
 - `%` is no longer used for process and job expansion. `$fish_pid` and `$last_pid` have taken the place of `%self` and `%last` respectively. Some commands have been wrapped to still understand process expansion, including `bg`, `fg` and `kill` (#4230, #1202)
+- Incoming environment variables are no longer split into arrays based on RS. Instead, variables are not split, unless their name ends in PATH, in which case they are split on colons. (#436)
 - A literal `{}` now expands to itself, rather than nothing. This makes working with `find -exec` easier. (#1109, #4632)
 - Successive commas in brace expansions are handled in less surprising manner (`{,,,}` expands to four empty strings rather than an empty string, a comma and an empty string again). (#3002, #4632).
 - `for` loop control variables are no longer local to the `for` block (#1935).

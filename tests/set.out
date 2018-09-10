@@ -105,7 +105,7 @@ $var6: not set in universal scope
 # Exporting works
 TESTVAR0=
 TESTVAR1=a
-TESTVAR2=a^^b
+TESTVAR2=a b
 
 ####################
 # if/for/while scope

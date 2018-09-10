@@ -848,7 +848,14 @@ A range of indices can be specified, see <a href='#expand-index-range'>index ran
 
 All arrays are one-dimensional and cannot contain other arrays, although it is possible to fake nested arrays using the dereferencing rules of <a href="#expand-variable">variable expansion</a>.
 
-`fish` automatically creates arrays from the variables `PATH`, `CDPATH` and `MANPATH` when it is started. (Previous versions created arrays from *all* colon-delimited environment variables.)
+When an array is exported as an environment variable, it is colon delimited:
+\fish
+set -x smurf blue small
+env | grep smurf
+<outp># Outputs smurf=blue:small</outp>
+\endfish
+
+`fish` automatically creates arrays from all environment variables whose name ends in PATH, by splitting them on colons. Other variables are not automatically split; however you can manually split them via `splitenv`.
 
 \subsection variables-special Special variables
 

@@ -192,12 +192,13 @@ void env_set_read_limit();
 struct var_stack_t;
 class env_node_t;
 class env_stack_t : public environment_t {
+    friend class parser_t;
     std::unique_ptr<var_stack_t> vars_;
 
     int set_internal(const wcstring &key, env_mode_flags_t var_mode, wcstring_list_t val);
 
-    bool try_remove(env_node_t *n, const wchar_t *key, int var_mode);
-    env_node_t *get_node(const wcstring &key);
+    bool try_remove(std::shared_ptr<env_node_t> n, const wchar_t *key, int var_mode);
+    std::shared_ptr<env_node_t> get_node(const wcstring &key);
 
     var_stack_t &vars_stack();
     const var_stack_t &vars_stack() const;

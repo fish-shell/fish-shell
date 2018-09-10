@@ -100,7 +100,7 @@ static wcstring user_presentable_path(const wcstring &path) {
     return replace_home_directory_with_tilde(path);
 }
 
-parser_t::parser_t() = default;
+parser_t::parser_t() : variables(env_stack_t::principal()) {}
 
 // Out of line destructor to enable forward declaration of parse_execution_context_t
 parser_t::~parser_t() = default;

@@ -154,7 +154,7 @@ void parser_t::push_block_int(block_t *new_current) {
     }
 
     if (new_current->type() != TOP) {
-        env_push(type == FUNCTION_CALL);
+        vars().push(type == FUNCTION_CALL);
         new_current->wants_pop_env = true;
     }
 }
@@ -172,7 +172,7 @@ void parser_t::pop_block(const block_t *expected) {
     std::unique_ptr<block_t> old = std::move(block_stack.back());
     block_stack.pop_back();
 
-    if (old->wants_pop_env) env_pop();
+    if (old->wants_pop_env) vars().pop();
 
     // Figure out if `status is-block` should consider us to be in a block now.
     bool new_is_block = false;

@@ -161,7 +161,12 @@ struct var_stack_t {
     void mark_changed_exported() { has_changed_exported = true; }
     void update_export_array_if_necessary();
 
-    var_stack_t() : top(globals()), global_env(globals()) {}
+    var_stack_t() : top(globals()), global_env(globals()) {
+        // Add a toplevel local scope on top of the global scope. This local scope will persist
+        // throughout the lifetime of the fish process, and it will ensure that `set -l` commands
+        // run at the command-line don't affect the global scope.
+        push(false);
+    }
 
     // Pushes a new node onto our stack
     // Optionally creates a new scope for the node
@@ -999,11 +1004,6 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     callback_data_list_t callbacks;
     s_universal_variables->initialize(callbacks);
     env_universal_callbacks(&env_stack_t::principal(), callbacks);
-
-    // Now that the global scope is fully initialized, add a toplevel local scope. This same local
-    // scope will persist throughout the lifetime of the fish process, and it will ensure that `set
-    // -l` commands run at the command-line don't affect the global scope.
-    env_push(false);
 }
 
 /// Search all visible scopes in order for the specified key. Return the first scope in which it was
@@ -1437,10 +1437,6 @@ int env_set_empty(const wcstring &key, env_mode_flags_t mode) {
 }
 
 int env_remove(const wcstring &key, int mode) { return env_stack_t::principal().remove(key, mode); }
-
-void env_push(bool new_scope) { env_stack_t::principal().push(new_scope); }
-
-void env_pop() { env_stack_t::principal().pop(); }
 
 void env_universal_barrier() { env_stack_t::principal().universal_barrier(); }
 

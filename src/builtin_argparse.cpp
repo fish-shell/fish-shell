@@ -22,6 +22,7 @@
 #include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
+#include "parser.h"
 #include "wgetopt.h"  // IWYU pragma: keep
 #include "wutil.h"    // IWYU pragma: keep
 
@@ -433,14 +434,14 @@ static void populate_option_strings(const argparse_cmd_opts_t &opts, wcstring *s
     long_options->push_back({NULL, 0, NULL, 0});
 }
 
-static int validate_arg(const argparse_cmd_opts_t &opts, option_spec_t *opt_spec, bool is_long_flag,
-                        const wchar_t *woptarg, io_streams_t &streams) {
+static int validate_arg(parser_t &parser, const argparse_cmd_opts_t &opts, option_spec_t *opt_spec,
+                        bool is_long_flag, const wchar_t *woptarg, io_streams_t &streams) {
     // Obviously if there is no arg validation command we assume the arg is okay.
     if (opt_spec->validation_command.empty()) return STATUS_CMD_OK;
 
     wcstring_list_t cmd_output;
 
-    env_push(true);
+    parser.vars().push(true);
     env_set_one(L"_argparse_cmd", ENV_LOCAL, opts.name);
     if (is_long_flag) {
         env_set_one(var_name_prefix + L"name", ENV_LOCAL, opt_spec->long_flag);
@@ -455,7 +456,7 @@ static int validate_arg(const argparse_cmd_opts_t &opts, option_spec_t *opt_spec
         streams.err.append(output);
         streams.err.push_back(L'\n');
     }
-    env_pop();
+    parser.vars().pop();
     return retval;
 }
 
@@ -473,13 +474,14 @@ static bool is_implicit_int(const argparse_cmd_opts_t &opts, const wchar_t *val)
 }
 
 // Store this value under the implicit int option.
-static int validate_and_store_implicit_int(const argparse_cmd_opts_t &opts, const wchar_t *val,
-                                           wgetopter_t &w, int long_idx, io_streams_t &streams) {
+static int validate_and_store_implicit_int(parser_t &parser, const argparse_cmd_opts_t &opts,
+                                           const wchar_t *val, wgetopter_t &w, int long_idx,
+                                           io_streams_t &streams) {
     // See if this option passes the validation checks.
     auto found = opts.options.find(opts.implicit_int_flag);
     assert(found != opts.options.end());
     const auto &opt_spec = found->second;
-    int retval = validate_arg(opts, opt_spec.get(), long_idx != -1, val, streams);
+    int retval = validate_arg(parser, opts, opt_spec.get(), long_idx != -1, val, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     // It's a valid integer so store it and return success.
@@ -490,8 +492,8 @@ static int validate_and_store_implicit_int(const argparse_cmd_opts_t &opts, cons
     return STATUS_CMD_OK;
 }
 
-static int handle_flag(const argparse_cmd_opts_t &opts, option_spec_t *opt_spec, int long_idx,
-                       const wchar_t *woptarg, io_streams_t &streams) {
+static int handle_flag(parser_t &parser, const argparse_cmd_opts_t &opts, option_spec_t *opt_spec,
+                       int long_idx, const wchar_t *woptarg, io_streams_t &streams) {
     opt_spec->num_seen++;
     if (opt_spec->num_allowed == 0) {
         // It's a boolean flag. Save the flag we saw since it might be useful to know if the
@@ -506,7 +508,7 @@ static int handle_flag(const argparse_cmd_opts_t &opts, option_spec_t *opt_spec,
     }
 
     if (woptarg) {
-        int retval = validate_arg(opts, opt_spec, long_idx != -1, woptarg, streams);
+        int retval = validate_arg(parser, opts, opt_spec, long_idx != -1, woptarg, streams);
         if (retval != STATUS_CMD_OK) return retval;
     }
 
@@ -526,9 +528,9 @@ static int handle_flag(const argparse_cmd_opts_t &opts, option_spec_t *opt_spec,
     return STATUS_CMD_OK;
 }
 
-static int argparse_parse_flags(const argparse_cmd_opts_t &opts, const wchar_t *short_options,
-                                const woption *long_options, const wchar_t *cmd, int argc,
-                                wchar_t **argv, int *optind, parser_t &parser,
+static int argparse_parse_flags(parser_t &parser, const argparse_cmd_opts_t &opts,
+                                const wchar_t *short_options, const woption *long_options,
+                                const wchar_t *cmd, int argc, wchar_t **argv, int *optind,
                                 io_streams_t &streams) {
     int opt;
     int long_idx = -1;
@@ -544,7 +546,8 @@ static int argparse_parse_flags(const argparse_cmd_opts_t &opts, const wchar_t *
             const wchar_t *arg_contents = argv[w.woptind - 1] + 1;
             int retval = STATUS_CMD_OK;
             if (is_implicit_int(opts, arg_contents)) {
-                retval = validate_and_store_implicit_int(opts, arg_contents, w, long_idx, streams);
+                retval = validate_and_store_implicit_int(parser, opts, arg_contents, w, long_idx,
+                                                         streams);
             } else {
                 builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                 retval = STATUS_INVALID_ARGS;
@@ -558,7 +561,7 @@ static int argparse_parse_flags(const argparse_cmd_opts_t &opts, const wchar_t *
         auto found = opts.options.find(opt);
         assert(found != opts.options.end());
 
-        int retval = handle_flag(opts, found->second.get(), long_idx, w.woptarg, streams);
+        int retval = handle_flag(parser, opts, found->second.get(), long_idx, w.woptarg, streams);
         if (retval != STATUS_CMD_OK) return retval;
         long_idx = -1;
     }
@@ -590,8 +593,8 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
     auto argv = argv_container.get();
 
     int optind;
-    int retval = argparse_parse_flags(opts, short_options.c_str(), long_options.data(), cmd, argc,
-                                      argv, &optind, parser, streams);
+    int retval = argparse_parse_flags(parser, opts, short_options.c_str(), long_options.data(), cmd,
+                                      argc, argv, &optind, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     retval = check_for_mutually_exclusive_flags(opts, streams);

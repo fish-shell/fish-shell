@@ -165,12 +165,6 @@ int env_set_empty(const wcstring &key, env_mode_flags_t mode);
 /// \return zero if the variable existed, and non-zero if the variable did not exist
 int env_remove(const wcstring &key, int mode);
 
-/// Push the variable stack. Used for implementing local variables for functions and for-loops.
-void env_push(bool new_scope);
-
-/// Pop the variable stack. Used for implementing local variables for functions and for-loops.
-void env_pop();
-
 /// Synchronizes all universal variable changes: writes everything out, reads stuff in.
 void env_universal_barrier();
 

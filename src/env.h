@@ -152,9 +152,6 @@ int env_set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);
 /// Sets the variable with the specified name to a single value.
 int env_set_one(const wcstring &key, env_mode_flags_t mode, wcstring val);
 
-/// Sets the variable with the specified name to no values.
-int env_set_empty(const wcstring &key, env_mode_flags_t mode);
-
 /// Synchronizes all universal variable changes: writes everything out, reads stuff in.
 void env_universal_barrier();
 

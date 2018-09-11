@@ -387,7 +387,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
     auto var = env_get(for_var_name, ENV_LOCAL);
     if (!var && !is_function_context()) var = env_get(for_var_name, ENV_DEFAULT);
     if (!var || var->read_only()) {
-        int retval = env_set_empty(for_var_name, ENV_LOCAL | ENV_USER);
+        int retval = parser->vars().set_empty(for_var_name, ENV_LOCAL | ENV_USER);
         if (retval != ENV_OK) {
             report_error(var_name_node, L"You cannot use read-only variable '%ls' in a for loop",
                          for_var_name.c_str());

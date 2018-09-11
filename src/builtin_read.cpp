@@ -26,6 +26,7 @@
 #include "highlight.h"
 #include "history.h"
 #include "io.h"
+#include "parser.h"
 #include "proc.h"
 #include "reader.h"
 #include "wcstringutil.h"
@@ -452,7 +453,7 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     auto vars_left = [&] () { return argv + argc - var_ptr; };
     auto clear_remaining_vars = [&] () {
         while (vars_left()) {
-            env_set_empty(*var_ptr, opts.place);
+            parser.vars().set_empty(*var_ptr, opts.place);
             // env_set_one(*var_ptr, opts.place, L"");
             ++var_ptr;
         }

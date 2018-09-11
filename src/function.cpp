@@ -356,7 +356,7 @@ void function_prepare_environment(env_stack_t &vars, const wcstring &name,
                 env_set_one(named_arg, ENV_LOCAL | ENV_USER, *arg);
                 arg++;
             } else {
-                env_set_empty(named_arg, ENV_LOCAL | ENV_USER);
+                vars.set_empty(named_arg, ENV_LOCAL | ENV_USER);
             }
         }
     }

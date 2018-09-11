@@ -320,8 +320,8 @@ static void handle_env_return(int retval, const wchar_t *cmd, const wchar_t *key
 
 /// Call env_set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
 /// description of the problem to stderr.
-static int my_env_set(const wchar_t *cmd, const wchar_t *key, int scope, wcstring_list_t &list,
-                      io_streams_t &streams) {
+static int env_set_reporting_errors(const wchar_t *cmd, const wchar_t *key, int scope,
+                                    wcstring_list_t &list, io_streams_t &streams) {
     if (is_path_variable(key) && !validate_path_warning_on_colons(cmd, key, list, streams)) {
         return STATUS_CMD_ERROR;
     }
@@ -639,7 +639,7 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
         wcstring_list_t result;
         dest_var->to_list(result);
         erase_values(result, indexes);
-        retval = my_env_set(cmd, dest, scope, result, streams);
+        retval = env_set_reporting_errors(cmd, dest, scope, result, streams);
     }
 
     if (retval != STATUS_CMD_OK) return retval;
@@ -748,7 +748,7 @@ static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, w
     }
     if (retval != STATUS_CMD_OK) return retval;
 
-    retval = my_env_set(cmd, varname, scope, new_values, streams);
+    retval = env_set_reporting_errors(cmd, varname, scope, new_values, streams);
     if (retval != STATUS_CMD_OK) return retval;
     return check_global_scope_exists(cmd, opts, varname, streams);
 }

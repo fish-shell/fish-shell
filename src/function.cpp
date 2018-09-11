@@ -344,9 +344,10 @@ void function_invalidate_path() { function_autoloader.invalidate(); }
 // 1. argv
 // 2. named arguments
 // 3. inherited variables
-void function_prepare_environment(const wcstring &name, const wchar_t *const *argv,
+void function_prepare_environment(env_stack_t &vars, const wcstring &name,
+                                  const wchar_t *const *argv,
                                   const std::map<wcstring, env_var_t> &inherited_vars) {
-    env_set_argv(argv);
+    vars.set_argv(argv);
     auto props = function_get_properties(name);
     if (props && !props->named_arguments.empty()) {
         const wchar_t *const *arg = argv;

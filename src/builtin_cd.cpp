@@ -86,6 +86,6 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_CMD_ERROR;
     }
 
-    env_set_one(L"PWD", ENV_EXPORT | ENV_GLOBAL, std::move(norm_dir));
+    parser.vars().set_one(L"PWD", ENV_EXPORT | ENV_GLOBAL, std::move(norm_dir));
     return STATUS_CMD_OK;
 }

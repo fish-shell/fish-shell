@@ -787,7 +787,7 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
 
         function_block_t *fb =
             parser.push_block<function_block_t>(p, func_name, props->shadow_scope);
-        function_prepare_environment(func_name, p->get_argv() + 1, inherit_vars);
+        function_prepare_environment(parser.vars(), func_name, p->get_argv() + 1, inherit_vars);
         parser.forbid_function(func_name);
 
         internal_exec_helper(parser, props->parsed_source, props->body_node, io_chain, j);

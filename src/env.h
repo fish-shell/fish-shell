@@ -168,9 +168,6 @@ int env_remove(const wcstring &key, int mode);
 /// Synchronizes all universal variable changes: writes everything out, reads stuff in.
 void env_universal_barrier();
 
-/// Sets up argv as the given null terminated array of strings.
-void env_set_argv(const wchar_t *const *argv);
-
 /// Returns the PWD with a terminating slash.
 wcstring env_get_pwd_slash();
 
@@ -235,6 +232,12 @@ class env_stack_t : public environment_t {
 
     /// Returns all variable names.
     wcstring_list_t get_names(int flags) const override;
+
+    /// Update the termsize variable.
+    void set_termsize();
+
+    /// Update the PWD variable directory.
+    bool set_pwd();
 
     /// Sets up argv as the given null terminated array of strings.
     void set_argv(const wchar_t *const *argv);

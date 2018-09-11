@@ -109,7 +109,8 @@ std::map<wcstring, env_var_t> function_get_inherit_vars(const wcstring &name);
 bool function_copy(const wcstring &name, const wcstring &new_name);
 
 /// Prepares the environment for executing a function.
-void function_prepare_environment(const wcstring &name, const wchar_t *const *argv,
+void function_prepare_environment(env_stack_t &vars, const wcstring &name,
+                                  const wchar_t *const *argv,
                                   const std::map<wcstring, env_var_t> &inherited_vars);
 
 /// Observes that fish_function_path has changed.

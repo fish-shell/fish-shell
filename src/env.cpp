@@ -1435,8 +1435,6 @@ int env_set_empty(const wcstring &key, env_mode_flags_t mode) {
     return env_stack_t::principal().set_empty(key, mode);
 }
 
-int env_remove(const wcstring &key, int mode) { return env_stack_t::principal().remove(key, mode); }
-
 void env_universal_barrier() { env_stack_t::principal().universal_barrier(); }
 
 wcstring env_get_pwd_slash() { return env_stack_t::principal().get_pwd_slash(); }

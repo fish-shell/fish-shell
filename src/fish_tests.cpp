@@ -2762,7 +2762,7 @@ static void test_autosuggest_suggest_special() {
     perform_one_completion_cd_test(L"cd ~haha", L"ha/", __LINE__);
     perform_one_completion_cd_test(L"cd ~hahaha/", L"path1/", __LINE__);
 
-    env_remove(L"HOME", ENV_LOCAL | ENV_EXPORT);
+    parser_t::principal_parser().vars().remove(L"HOME", ENV_LOCAL | ENV_EXPORT);
     popd();
 }
 
@@ -4284,9 +4284,10 @@ static void test_highlighting() {
         {L"self%not", highlight_spec_param},
     });
 
+    auto &vars = parser_t::principal_parser().vars();
     // Verify variables and wildcards in commands using /bin/cat.
-    env_set(L"VARIABLE_IN_COMMAND", ENV_LOCAL, {L"a"});
-    env_set(L"VARIABLE_IN_COMMAND2", ENV_LOCAL, {L"at"});
+    vars.set(L"VARIABLE_IN_COMMAND", ENV_LOCAL, {L"a"});
+    vars.set(L"VARIABLE_IN_COMMAND2", ENV_LOCAL, {L"at"});
     highlight_tests.push_back(
         {{L"/bin/ca", highlight_spec_command, ns}, {L"*", highlight_spec_operator, ns}});
 
@@ -4319,7 +4320,7 @@ static void test_highlighting() {
         do_test(expected_colors.size() == text.size());
 
         std::vector<highlight_spec_t> colors(text.size());
-        highlight_shell(text, colors, 20, NULL, env_vars_snapshot_t::current());
+        highlight_shell(text, colors, 20, NULL, vars);
 
         if (expected_colors.size() != colors.size()) {
             err(L"Color vector has wrong size! Expected %lu, actual %lu", expected_colors.size(),
@@ -4338,8 +4339,8 @@ static void test_highlighting() {
             }
         }
     }
-    env_remove(L"VARIABLE_IN_COMMAND", ENV_DEFAULT);
-    env_remove(L"VARIABLE_IN_COMMAND2", ENV_DEFAULT);
+    vars.remove(L"VARIABLE_IN_COMMAND", ENV_DEFAULT);
+    vars.remove(L"VARIABLE_IN_COMMAND2", ENV_DEFAULT);
 }
 
 static void test_wcstring_tok() {

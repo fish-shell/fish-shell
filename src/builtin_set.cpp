@@ -652,7 +652,7 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
     }
 
     if (idx_count == 0) {  // unset the var
-        retval = env_remove(dest, scope);
+        retval = parser.vars().remove(dest, scope);
         // Temporarily swallowing ENV_NOT_FOUND errors to prevent
         // breaking all tests that unset variables that aren't set.
         if (retval != ENV_NOT_FOUND) {

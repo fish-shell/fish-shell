@@ -155,16 +155,6 @@ int env_set_one(const wcstring &key, env_mode_flags_t mode, wcstring val);
 /// Sets the variable with the specified name to no values.
 int env_set_empty(const wcstring &key, env_mode_flags_t mode);
 
-/// Remove environment variable.
-///
-/// \param key The name of the variable to remove
-/// \param mode should be ENV_USER if this is a remove request from the user, 0 otherwise. If this
-/// is a user request, read-only variables can not be removed. The mode may also specify the scope
-/// of the variable that should be erased.
-///
-/// \return zero if the variable existed, and non-zero if the variable did not exist
-int env_remove(const wcstring &key, int mode);
-
 /// Synchronizes all universal variable changes: writes everything out, reads stuff in.
 void env_universal_barrier();
 

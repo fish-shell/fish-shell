@@ -47,7 +47,7 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         dir_in = maybe_dir_in->as_string();
     }
 
-    if (!path_get_cdpath(dir_in, &dir, env_get_pwd_slash())) {
+    if (!path_get_cdpath(dir_in, &dir, parser.vars().get_pwd_slash())) {
         if (errno == ENOTDIR) {
             streams.err.append_format(_(L"%ls: '%ls' is not a directory\n"), cmd, dir_in.c_str());
         } else if (errno == ENOENT) {

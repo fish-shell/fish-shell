@@ -911,7 +911,7 @@ static void test_parser() {
 
     say(L"Testing eval_args");
     completion_list_t comps;
-    parser_t::expand_argument_list(L"alpha 'beta gamma' delta", 0, &comps);
+    parser_t::expand_argument_list(L"alpha 'beta gamma' delta", 0, null_environment_t{}, &comps);
     do_test(comps.size() == 3);
     do_test(comps.at(0).completion == L"alpha");
     do_test(comps.at(1).completion == L"beta gamma");
@@ -1500,6 +1500,19 @@ static void test_lru() {
     do_test(cache.evicted.size() == size_t(total_nodes));
 }
 
+/// A crappy environment_t that only knows about PWD.
+struct pwd_environment_t : public environment_t {
+    virtual maybe_t<env_var_t> get(const wcstring &key,
+                                   env_mode_flags_t mode = ENV_DEFAULT) const override {
+        if (key == L"PWD") {
+            return env_var_t{wgetcwd(), 0};
+        }
+        return {};
+    }
+
+    wcstring_list_t get_names(int flags) const override { return {L"PWD"}; }
+};
+
 /// Perform parameter expansion and test if the output equals the zero-terminated parameter list
 /// supplied.
 ///
@@ -1515,7 +1528,7 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
     wchar_t *arg;
     parse_error_list_t errors;
 
-    if (expand_string(in, &output, flags, &errors) == EXPAND_ERROR) {
+    if (expand_string(in, &output, flags, pwd_environment_t{}, &errors) == EXPAND_ERROR) {
         if (errors.empty()) {
             err(L"Bug: Parse error reported but no error text found.");
         } else {
@@ -2173,7 +2186,7 @@ static bool run_test_test(int expected, const wcstring &str) {
 
     // We need to tokenize the string in the same manner a normal shell would do. This is because we
     // need to test things like quoted strings that have leading and trailing whitespace.
-    parser_t::expand_argument_list(str, 0, &comps);
+    parser_t::expand_argument_list(str, 0, null_environment_t{}, &comps);
     for (completion_list_t::const_iterator it = comps.begin(), end = comps.end(); it != end; ++it) {
         argv.push_back(it->completion);
     }
@@ -2341,6 +2354,9 @@ static void test_complete() {
 
         maybe_t<env_var_t> get(const wcstring &key,
                                env_mode_flags_t mode = ENV_DEFAULT) const override {
+            if (key == L"PWD") {
+                return env_var_t{wgetcwd(), 0};
+            }
             return {};
         }
     };
@@ -2604,7 +2620,7 @@ static void test_completion_insertions() {
 static void perform_one_autosuggestion_cd_test(const wcstring &command, const wcstring &expected,
                                                long line) {
     std::vector<completion_t> comps;
-    complete(command, &comps, COMPLETION_REQUEST_AUTOSUGGESTION, env_vars_snapshot_t{});
+    complete(command, &comps, COMPLETION_REQUEST_AUTOSUGGESTION, pwd_environment_t{});
 
     bool expects_error = (expected == L"<error>");
 

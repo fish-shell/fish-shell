@@ -677,7 +677,7 @@ void env_stack_t::set_read_limit() {
 
 void env_stack_t::mark_changed_exported() { vars_stack().mark_changed_exported(); }
 
-wcstring env_stack_t::get_pwd_slash() {
+wcstring environment_t::get_pwd_slash() const {
     // Return "/" if PWD is missing.
     // See https://github.com/fish-shell/fish-shell/issues/5080
     auto pwd_var = env_get(L"PWD");
@@ -1433,8 +1433,6 @@ int env_set_one(const wcstring &key, env_mode_flags_t mode, wcstring val) {
 
 void env_universal_barrier() { env_stack_t::principal().universal_barrier(); }
 
-wcstring env_get_pwd_slash() { return env_stack_t::principal().get_pwd_slash(); }
-
 void env_set_read_limit() { return env_stack_t::principal().set_read_limit(); }
 
 /// Returns true if the specified scope or any non-shadowed non-global subscopes contain an exported
@@ -1605,6 +1603,13 @@ void env_stack_t::set_argv(const wchar_t *const *argv) {
 
 environment_t::~environment_t() = default;
 env_stack_t::~env_stack_t() = default;
+
+null_environment_t::null_environment_t() = default;
+null_environment_t::~null_environment_t() = default;
+maybe_t<env_var_t> null_environment_t::get(const wcstring &key, env_mode_flags_t mode) const {
+    return none();
+}
+wcstring_list_t null_environment_t::get_names(int flags) const { return {}; }
 
 env_stack_t &env_stack_t::principal() {
     static env_stack_t s_principal;

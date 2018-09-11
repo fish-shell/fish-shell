@@ -314,6 +314,7 @@ void parser_t::emit_profiling(const char *path) const {
 }
 
 void parser_t::expand_argument_list(const wcstring &arg_list_src, expand_flags_t eflags,
+                                    const environment_t &vars,
                                     std::vector<completion_t> *output_arg_list) {
     assert(output_arg_list != NULL);
 
@@ -330,7 +331,8 @@ void parser_t::expand_argument_list(const wcstring &arg_list_src, expand_flags_t
     tnode_t<grammar::freestanding_argument_list> arg_list(&tree, &tree.at(0));
     while (auto arg = arg_list.next_in_list<grammar::argument>()) {
         const wcstring arg_src = arg.get_source(arg_list_src);
-        if (expand_string(arg_src, output_arg_list, eflags, NULL) == EXPAND_ERROR) {
+        if (expand_string(arg_src, output_arg_list, eflags, vars, NULL /* errors */) ==
+            EXPAND_ERROR) {
             break;  // failed to expand a string
         }
     }

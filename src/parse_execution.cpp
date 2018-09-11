@@ -121,13 +121,14 @@ tnode_t<g::plain_statement> parse_execution_context_t::infinite_recursive_statem
     // are not infinite recursion. In particular that is what enables 'wrapper functions'.
     tnode_t<g::statement> statement = first_job.child<0>();
     tnode_t<g::job_continuation> continuation = first_job.child<1>();
+    const null_environment_t nullenv{};
     while (statement) {
         tnode_t<g::plain_statement> plain_statement =
             statement.try_get_child<g::decorated_statement, 0>()
                 .try_get_child<g::plain_statement, 0>();
         if (plain_statement) {
             maybe_t<wcstring> cmd = command_for_plain_statement(plain_statement, pstree->src);
-            if (cmd && expand_one(*cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, NULL) &&
+            if (cmd && expand_one(*cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, nullenv) &&
                 cmd == forbidden_function_name) {
                 // This is it.
                 infinite_recursive_statement = plain_statement;
@@ -371,7 +372,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
     // in just one.
     tnode_t<g::tok_string> var_name_node = header.child<1>();
     wcstring for_var_name = get_source(var_name_node);
-    if (!expand_one(for_var_name, 0, NULL)) {
+    if (!expand_one(for_var_name, 0, parser->vars())) {
         report_error(var_name_node, FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG, for_var_name.c_str());
         return parse_execution_errored;
     }
@@ -438,8 +439,8 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
     // Expand it. We need to offset any errors by the position of the string.
     std::vector<completion_t> switch_values_expanded;
     parse_error_list_t errors;
-    int expand_ret =
-        expand_string(switch_value, &switch_values_expanded, EXPAND_NO_DESCRIPTIONS, &errors);
+    int expand_ret = expand_string(switch_value, &switch_values_expanded, EXPAND_NO_DESCRIPTIONS,
+                                   parser->vars(), &errors);
     parse_error_offset_source_start(&errors, switch_value_n.source_range()->start);
 
     switch (expand_ret) {
@@ -722,7 +723,8 @@ parse_execution_result_t parse_execution_context_t::expand_command(
     wcstring_list_t args;
 
     // Expand the string to produce completions, and report errors.
-    expand_error_t expand_err = expand_to_command_and_args(unexp_cmd, out_cmd, out_args, &errors);
+    expand_error_t expand_err =
+        expand_to_command_and_args(unexp_cmd, parser->vars(), out_cmd, out_args, &errors);
     if (expand_err == EXPAND_ERROR) {
         proc_set_last_status(STATUS_ILLEGAL_CMD);
         return report_errors(errors);
@@ -813,7 +815,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
                 // Ok, no arguments or redirections; check to see if the command is a directory.
                 wcstring implicit_cd_path;
                 use_implicit_cd =
-                    path_can_be_implicit_cd(cmd, env_get_pwd_slash(), &implicit_cd_path);
+                    path_can_be_implicit_cd(cmd, parser->vars().get_pwd_slash(), &implicit_cd_path);
             }
         }
 
@@ -883,7 +885,8 @@ parse_execution_result_t parse_execution_context_t::expand_arguments_from_nodes(
         // Expand this string.
         parse_error_list_t errors;
         arg_expanded.clear();
-        int expand_ret = expand_string(arg_str, &arg_expanded, EXPAND_NO_DESCRIPTIONS, &errors);
+        int expand_ret =
+            expand_string(arg_str, &arg_expanded, EXPAND_NO_DESCRIPTIONS, parser->vars(), &errors);
         parse_error_offset_source_start(&errors, arg_node.source_range()->start);
         switch (expand_ret) {
             case EXPAND_ERROR: {
@@ -931,7 +934,8 @@ bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redir
         auto redirect_type = redirection_type(redirect_node, pstree->src, &source_fd, &target);
 
         // PCA: I can't justify this EXPAND_SKIP_VARIABLES flag. It was like this when I got here.
-        bool target_expanded = expand_one(target, no_exec ? EXPAND_SKIP_VARIABLES : 0, NULL);
+        bool target_expanded =
+            expand_one(target, no_exec ? EXPAND_SKIP_VARIABLES : 0, parser->vars());
         if (!target_expanded || target.empty()) {
             // TODO: Improve this error message.
             errored =

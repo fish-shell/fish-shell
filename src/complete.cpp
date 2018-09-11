@@ -535,7 +535,7 @@ void completer_t::complete_strings(const wcstring &wc_escaped, const description
                                    const std::vector<completion_t> &possible_comp,
                                    complete_flags_t flags) {
     wcstring tmp = wc_escaped;
-    if (!expand_one(tmp, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_WILDCARDS | this->expand_flags(), NULL))
+    if (!expand_one(tmp, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_WILDCARDS | this->expand_flags(), vars))
         return;
 
     const wcstring wc = parse_util_unescape_wildcards(tmp);
@@ -656,7 +656,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
         expand_error_t result = expand_string(str_cmd, &this->completions,
                                               EXPAND_SPECIAL_FOR_COMMAND | EXPAND_FOR_COMPLETIONS |
                                                   EXECUTABLES_ONLY | this->expand_flags(),
-                                              NULL);
+                                              vars, NULL);
         if (result != EXPAND_ERROR && this->wants_descriptions()) {
             this->complete_cmd_desc(str_cmd);
         }
@@ -668,7 +668,8 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
         expand_error_t ignore =
             // Append all matching directories
             expand_string(str_cmd, &this->completions,
-                          EXPAND_FOR_COMPLETIONS | DIRECTORIES_ONLY | this->expand_flags(), NULL);
+                          EXPAND_FOR_COMPLETIONS | DIRECTORIES_ONLY | this->expand_flags(), vars,
+                          NULL);
         UNUSED(ignore);
     }
 
@@ -740,7 +741,7 @@ void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
     }
 
     std::vector<completion_t> possible_comp;
-    parser_t::expand_argument_list(args, eflags, &possible_comp);
+    parser_t::expand_argument_list(args, eflags, vars, &possible_comp);
 
     if (!is_autosuggest) {
         proc_pop_interactive();
@@ -1079,7 +1080,7 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
         // See #4954.
         const wcstring sep_string = wcstring(str, sep_index + 1);
         std::vector<completion_t> local_completions;
-        if (expand_string(sep_string, &local_completions, flags, NULL) == EXPAND_ERROR) {
+        if (expand_string(sep_string, &local_completions, flags, vars, NULL) == EXPAND_ERROR) {
             debug(3, L"Error while expanding string '%ls'", sep_string.c_str());
         }
 
@@ -1098,7 +1099,7 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
         // consider relaxing this if there was a preceding double-dash argument.
         if (string_prefixes_string(L"-", str)) flags &= ~EXPAND_FUZZY_MATCH;
 
-        if (expand_string(str, &this->completions, flags, NULL) == EXPAND_ERROR) {
+        if (expand_string(str, &this->completions, flags, vars, NULL) == EXPAND_ERROR) {
             debug(3, L"Error while expanding string '%ls'", str.c_str());
         }
     }

@@ -1277,10 +1277,10 @@ struct autosuggestion_result_t {
 // on a background thread) to determine the autosuggestion
 static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer(
     const wcstring &search_string, size_t cursor_pos, history_t *history) {
+    const auto &parser_vars = parser_t::principal_parser().vars();
     const unsigned int generation_count = read_generation_count();
-    const wcstring working_directory(env_get_pwd_slash());
-    env_vars_snapshot_t vars(parser_t::principal_parser().vars(),
-                             env_vars_snapshot_t::highlighting_keys);
+    const wcstring working_directory = parser_vars.get_pwd_slash();
+    env_vars_snapshot_t vars(vars, env_vars_snapshot_t::highlighting_keys);
     // TODO: suspicious use of 'history' here
     // This is safe because histories are immortal, but perhaps
     // this should use shared_ptr
@@ -2473,6 +2473,8 @@ const wchar_t *reader_readline(int nchars) {
     s_reset(&data->screen, screen_reset_abandon_line);
     reader_repaint();
 
+    const auto &vars = parser_t::principal_parser().vars();
+
     // Get the current terminal modes. These will be restored when the function returns.
     if (tcgetattr(STDIN_FILENO, &old_modes) == -1 && errno == EIO) redirect_tty_output();
     // Set the new modes.
@@ -2685,8 +2687,7 @@ const wchar_t *reader_readline(int nchars) {
                     complete_flags_t complete_flags = COMPLETION_REQUEST_DEFAULT |
                                                       COMPLETION_REQUEST_DESCRIPTIONS |
                                                       COMPLETION_REQUEST_FUZZY_MATCH;
-                    data->complete_func(buffcpy, &comp, complete_flags,
-                                        parser_t::principal_parser().vars());
+                    data->complete_func(buffcpy, &comp, complete_flags, vars);
 
                     // Munge our completions.
                     completions_sort_and_prioritize(&comp);
@@ -2893,7 +2894,8 @@ const wchar_t *reader_readline(int nchars) {
                     // space.
                     const editable_line_t *el = &data->command_line;
                     if (data->history != NULL && !el->empty() && el->text.at(0) != L' ') {
-                        data->history->add_pending_with_file_detection(el->text);
+                        data->history->add_pending_with_file_detection(el->text,
+                                                                       vars.get_pwd_slash());
                     }
                     finished = 1;
                     update_buff_pos(&data->command_line, data->command_line.size());

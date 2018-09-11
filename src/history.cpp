@@ -1918,7 +1918,8 @@ static bool string_could_be_path(const wcstring &potential_path) {
     return true;
 }
 
-void history_t::add_pending_with_file_detection(const wcstring &str) {
+void history_t::add_pending_with_file_detection(const wcstring &str,
+                                                const wcstring &working_dir_slash) {
     ASSERT_IS_MAIN_THREAD();
 
     // Find all arguments that look like they could be file paths.
@@ -1967,8 +1968,7 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
 
         // Check for which paths are valid on a background thread,
         // then on the main thread update our history item
-        const wcstring wd = env_get_pwd_slash();
-        iothread_perform([=]() { return valid_paths(potential_paths, wd); },
+        iothread_perform([=]() { return valid_paths(potential_paths, working_dir_slash); },
                          [=](path_list_t validated_paths) {
                              this->set_valid_file_paths(validated_paths, identifier);
                              this->enable_automatic_saving();

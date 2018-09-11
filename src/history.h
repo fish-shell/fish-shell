@@ -229,7 +229,7 @@ class history_t {
 
     // Add a new pending history item to the end, and then begin file detection on the items to
     // determine which arguments are paths
-    void add_pending_with_file_detection(const wcstring &str);
+    void add_pending_with_file_detection(const wcstring &str, const wcstring &working_dir_slash);
 
     // Resolves any pending history items, so that they may be returned in history searches.
     void resolve_pending();

@@ -243,11 +243,11 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
 // appropriately for commands. If we succeed, return true.
 static bool plain_statement_get_expanded_command(const wcstring &src,
                                                  tnode_t<g::plain_statement> stmt,
-                                                 wcstring *out_cmd) {
+                                                 const environment_t &vars, wcstring *out_cmd) {
     // Get the command. Try expanding it. If we cannot, it's an error.
     maybe_t<wcstring> cmd = command_for_plain_statement(stmt, src);
     if (!cmd) return false;
-    expand_error_t err = expand_to_command_and_args(*cmd, out_cmd, nullptr);
+    expand_error_t err = expand_to_command_and_args(*cmd, vars, out_cmd, nullptr);
     return err == EXPAND_OK || err == EXPAND_WILDCARD_MATCH;
 }
 
@@ -310,8 +310,8 @@ static bool has_expand_reserved(const wcstring &str) {
 
 // Parse a command line. Return by reference the last command, and the last argument to that command
 // (as a string), if any. This is used by autosuggestions.
-static bool autosuggest_parse_command(const wcstring &buff, wcstring *out_expanded_command,
-                                      wcstring *out_last_arg) {
+static bool autosuggest_parse_command(const wcstring &buff, const environment_t &vars,
+                                      wcstring *out_expanded_command, wcstring *out_last_arg) {
     // Parse the buffer.
     parse_node_tree_t parse_tree;
     parse_tree_from_string(buff,
@@ -321,7 +321,7 @@ static bool autosuggest_parse_command(const wcstring &buff, wcstring *out_expand
     // Find the last statement.
     auto last_statement = parse_tree.find_last_node<g::plain_statement>();
     if (last_statement &&
-        plain_statement_get_expanded_command(buff, last_statement, out_expanded_command)) {
+        plain_statement_get_expanded_command(buff, last_statement, vars, out_expanded_command)) {
         // Find the last argument. If we don't get one, return an invalid node.
         if (auto last_arg = parse_tree.find_last_node<g::argument>(last_statement)) {
             *out_last_arg = last_arg.get_source(buff);
@@ -341,11 +341,11 @@ bool autosuggest_validate_from_history(const history_item_t &item,
     // Parse the string.
     wcstring parsed_command;
     wcstring cd_dir;
-    if (!autosuggest_parse_command(item.str(), &parsed_command, &cd_dir)) return false;
+    if (!autosuggest_parse_command(item.str(), vars, &parsed_command, &cd_dir)) return false;
 
     if (parsed_command == L"cd" && !cd_dir.empty()) {
         // We can possibly handle this specially.
-        if (expand_one(cd_dir, EXPAND_SKIP_CMDSUBST)) {
+        if (expand_one(cd_dir, EXPAND_SKIP_CMDSUBST, vars)) {
             handled = true;
             bool is_help =
                 string_prefixes_string(cd_dir, L"--help") || string_prefixes_string(cd_dir, L"-h");
@@ -823,7 +823,7 @@ bool highlighter_t::is_cd(tnode_t<g::plain_statement> stmt) const {
     bool cmd_is_cd = false;
     if (this->io_ok && stmt.has_source()) {
         wcstring cmd_str;
-        if (plain_statement_get_expanded_command(this->buff, stmt, &cmd_str)) {
+        if (plain_statement_get_expanded_command(this->buff, stmt, vars, &cmd_str)) {
             cmd_is_cd = (cmd_str == L"cd");
         }
     }
@@ -840,7 +840,7 @@ void highlighter_t::color_arguments(const std::vector<tnode_t<g::argument>> &arg
         if (cmd_is_cd) {
             // Mark this as an error if it's not 'help' and not a valid cd path.
             wcstring param = arg.get_source(this->buff);
-            if (expand_one(param, EXPAND_SKIP_CMDSUBST)) {
+            if (expand_one(param, EXPAND_SKIP_CMDSUBST, vars)) {
                 bool is_help = string_prefixes_string(param, L"--help") ||
                                string_prefixes_string(param, L"-h");
                 if (!is_help && this->io_ok &&
@@ -883,7 +883,7 @@ void highlighter_t::color_redirection(tnode_t<g::redirection> redirection_node) 
                 // I/O is disallowed, so we don't have much hope of catching anything but gross
                 // errors. Assume it's valid.
                 target_is_valid = true;
-            } else if (!expand_one(target, EXPAND_SKIP_CMDSUBST)) {
+            } else if (!expand_one(target, EXPAND_SKIP_CMDSUBST, vars)) {
                 // Could not be expanded.
                 target_is_valid = false;
             } else {
@@ -1117,7 +1117,8 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
                     wcstring expanded_cmd;
                     // Check to see if the command is valid.
                     // Try expanding it. If we cannot, it's an error.
-                    bool expanded = plain_statement_get_expanded_command(buff, stmt, &expanded_cmd);
+                    bool expanded =
+                        plain_statement_get_expanded_command(buff, stmt, vars, &expanded_cmd);
                     if (expanded && !has_expand_reserved(expanded_cmd)) {
                         is_valid_cmd =
                             command_is_valid(expanded_cmd, decoration, working_directory, vars);
@@ -1200,7 +1201,7 @@ void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color,
     UNUSED(error);
     // Do something sucky and get the current working directory on this background thread. This
     // should really be passed in.
-    const wcstring working_directory = env_get_pwd_slash();
+    const wcstring working_directory = vars.get_pwd_slash();
 
     // Highlight it!
     highlighter_t highlighter(buff, pos, vars, working_directory, true /* can do IO */);
@@ -1212,7 +1213,7 @@ void highlight_shell_no_io(const wcstring &buff, std::vector<highlight_spec_t> &
     UNUSED(error);
     // Do something sucky and get the current working directory on this background thread. This
     // should really be passed in.
-    const wcstring working_directory = env_get_pwd_slash();
+    const wcstring working_directory = vars.get_pwd_slash();
 
     // Highlight it!
     highlighter_t highlighter(buff, pos, vars, working_directory, false /* no IO allowed */);

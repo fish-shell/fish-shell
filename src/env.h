@@ -141,6 +141,19 @@ class environment_t {
                                    env_mode_flags_t mode = ENV_DEFAULT) const = 0;
     virtual wcstring_list_t get_names(int flags) const = 0;
     virtual ~environment_t();
+
+    /// Returns the PWD with a terminating slash.
+    wcstring get_pwd_slash() const;
+};
+
+/// The null environment contains nothing.
+class null_environment_t : public environment_t {
+   public:
+    null_environment_t();
+    ~null_environment_t() override;
+
+    maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
+    wcstring_list_t get_names(int flags) const override;
 };
 
 /// Gets the variable with the specified name, or none() if it does not exist.
@@ -154,9 +167,6 @@ int env_set_one(const wcstring &key, env_mode_flags_t mode, wcstring val);
 
 /// Synchronizes all universal variable changes: writes everything out, reads stuff in.
 void env_universal_barrier();
-
-/// Returns the PWD with a terminating slash.
-wcstring env_get_pwd_slash();
 
 /// Update the read_byte_limit variable.
 void env_set_read_limit();
@@ -228,9 +238,6 @@ class env_stack_t : public environment_t {
 
     /// Sets up argv as the given null terminated array of strings.
     void set_argv(const wchar_t *const *argv);
-
-    /// Returns the PWD with a terminating slash.
-    wcstring get_pwd_slash();
 
     /// Update the read_byte_limit variable.
     void set_read_limit();

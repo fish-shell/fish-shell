@@ -196,8 +196,6 @@ void append_completion(std::vector<completion_t> *completions, wcstring comp,
                        wcstring desc = wcstring(), int flags = 0,
                        string_fuzzy_match_t match = string_fuzzy_match_t(fuzzy_match_exact));
 
-/// Function used for testing.
-void complete_set_variable_names(const wcstring_list_t *names);
 
 /// Support for "wrap targets." A wrap target is a command that completes like another command.
 bool complete_add_wrapper(const wcstring &command, const wcstring &wrap_target);

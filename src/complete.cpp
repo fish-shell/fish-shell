@@ -74,20 +74,6 @@ static const wcstring &C_(const wcstring &s) { return s; }
 
 static void complete_load(const wcstring &name, bool reload);
 
-/// Testing apparatus.
-const wcstring_list_t *s_override_variable_names = NULL;
-
-void complete_set_variable_names(const wcstring_list_t *names) {
-    s_override_variable_names = names;
-}
-
-static inline wcstring_list_t complete_get_variable_names(const environment_t &vars) {
-    if (s_override_variable_names != NULL) {
-        return *s_override_variable_names;
-    }
-    return vars.get_names(0);
-}
-
 /// Struct describing a completion option entry.
 ///
 /// If option is empty, the comp field must not be empty and contains a list of arguments to the
@@ -1125,10 +1111,8 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
     size_t varlen = str.length() - start_offset;
     bool res = false;
 
-    const wcstring_list_t names = complete_get_variable_names(vars);
-    for (size_t i = 0; i < names.size(); i++) {
-        const wcstring &env_name = names.at(i);
-
+    const wcstring_list_t names = vars.get_names(0);
+    for (const wcstring &env_name : vars.get_names(0)) {
         string_fuzzy_match_t match =
             string_fuzzy_match_string(var, env_name, this->max_fuzzy_match_type());
         if (match.type == fuzzy_match_none) {

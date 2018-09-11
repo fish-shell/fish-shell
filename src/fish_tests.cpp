@@ -2333,13 +2333,19 @@ static void test_colors() {
 static void test_complete() {
     say(L"Testing complete");
 
-    const wchar_t *name_strs[] = {L"Foo1", L"Foo2", L"Foo3", L"Bar1", L"Bar2", L"Bar3"};
-    size_t count = sizeof name_strs / sizeof *name_strs;
-    const wcstring_list_t names(name_strs, name_strs + count);
-    std::vector<completion_t> completions;
-    complete_set_variable_names(&names);
-    env_vars_snapshot_t vars;
+    struct test_complete_vars_t : environment_t {
+        wcstring_list_t get_names(int flags) const override {
+            return {L"Foo1", L"Foo2", L"Foo3", L"Bar1", L"Bar2", L"Bar3"};
+        }
 
+        maybe_t<env_var_t> get(const wcstring &key,
+                               env_mode_flags_t mode = ENV_DEFAULT) const override {
+            return {};
+        }
+    };
+    test_complete_vars_t vars;
+
+    completion_list_t completions;
     complete(L"$", &completions, COMPLETION_REQUEST_DEFAULT, vars);
     completions_sort_and_prioritize(&completions);
     do_test(completions.size() == 6);
@@ -2510,7 +2516,6 @@ static void test_complete() {
 
     popd();
     completions.clear();
-    complete_set_variable_names(NULL);
 
     // Test abbreviations.
     auto &pvars = parser_t::principal_parser().vars();

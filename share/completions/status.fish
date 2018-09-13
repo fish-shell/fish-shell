@@ -9,7 +9,7 @@ complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_com
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a is-interactive -d "Test if this is an interactive shell"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a is-command-substitution -d "Test if a command substitution is currently evaluated"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a is-block -d "Test if a code block is currently evaluated"
-complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a is-breakpoing -d "Test if a breakpoint is currently in effect"
+complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a is-breakpoint -d "Test if a breakpoint is currently in effect"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a is-no-job-control -d "Test if new jobs are never put under job control"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a is-interactive-job-control -d "Test if only interactive new jobs are put under job control"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a is-full-job-control -d "Test if all new jobs are put under job control"

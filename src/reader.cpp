@@ -397,6 +397,11 @@ class reader_data_t {
     /// Expand abbreviations at the current cursor position, minus backtrack_amt.
     bool expand_abbreviation_as_necessary(size_t cursor_backtrack) const;
 
+    /// Return the variable set used for e.g. command duration.
+    env_stack_t &vars() { return parser_t::principal_parser().vars(); }
+
+    const env_stack_t &vars() const { return parser_t::principal_parser().vars(); }
+
     /// Constructor
     reader_data_t(history_t *hist) : history(hist) {}
 };
@@ -903,10 +908,12 @@ static void exec_prompt() {
 void reader_init() {
     DIE_ON_FAILURE(pthread_key_create(&generation_count_key, NULL));
 
+    auto &vars = parser_t::principal_parser().vars();
+
     // Ensure this var is present even before an interactive command is run so that if it is used
     // in a function like `fish_prompt` or `fish_right_prompt` it is defined at the time the first
     // prompt is written.
-    env_set_one(ENV_CMD_DURATION, ENV_UNEXPORT, L"0");
+    vars.set_one(ENV_CMD_DURATION, ENV_UNEXPORT, L"0");
 
     // Save the initial terminal mode.
     tcgetattr(STDIN_FILENO, &terminal_mode_on_startup);
@@ -1825,7 +1832,7 @@ static void reader_interactive_init() {
     invalidate_termsize();
 
     // For compatibility with fish 2.0's $_, now replaced with `status current-command`
-    env_set_one(L"_", ENV_GLOBAL, L"fish");
+    parser_t::principal_parser().vars().set_one(L"_", ENV_GLOBAL, L"fish");
 }
 
 /// Destroy data for interactive use.
@@ -1998,7 +2005,7 @@ bool reader_get_selection(size_t *start, size_t *len) {
     return result;
 }
 
-void set_env_cmd_duration(struct timeval *after, struct timeval *before) {
+void set_env_cmd_duration(struct timeval *after, struct timeval *before, env_stack_t &vars) {
     time_t secs = after->tv_sec - before->tv_sec;
     suseconds_t usecs = after->tv_usec - before->tv_usec;
     wchar_t buf[16];
@@ -2009,7 +2016,7 @@ void set_env_cmd_duration(struct timeval *after, struct timeval *before) {
     }
 
     swprintf(buf, 16, L"%d", (secs * 1000) + (usecs / 1000));
-    env_set_one(ENV_CMD_DURATION, ENV_UNEXPORT, buf);
+    vars.set_one(ENV_CMD_DURATION, ENV_UNEXPORT, buf);
 }
 
 void reader_run_command(parser_t &parser, const wcstring &cmd) {
@@ -2018,7 +2025,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
     wcstring ft = tok_first(cmd);
 
     // For compatibility with fish 2.0's $_, now replaced with `status current-command`
-    if (!ft.empty()) env_set_one(L"_", ENV_GLOBAL, ft);
+    if (!ft.empty()) parser.vars().set_one(L"_", ENV_GLOBAL, ft);
 
     reader_write_title(cmd);
 
@@ -2033,12 +2040,12 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     // update the execution duration iff a command is requested for execution
     // issue - #4926
-    if (!ft.empty()) set_env_cmd_duration(&time_after, &time_before);
+    if (!ft.empty()) set_env_cmd_duration(&time_after, &time_before, parser.vars());
 
     term_steal();
 
     // For compatibility with fish 2.0's $_, now replaced with `status current-command`
-    env_set_one(L"_", ENV_GLOBAL, program_name);
+    parser.vars().set_one(L"_", ENV_GLOBAL, program_name);
 
 #ifdef HAVE__PROC_SELF_STAT
     proc_update_jiffies();

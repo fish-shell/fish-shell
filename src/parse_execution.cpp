@@ -405,7 +405,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
             break;
         }
 
-        int retval = env_set_one(for_var_name, ENV_DEFAULT | ENV_USER, val);
+        int retval = parser->vars().set_one(for_var_name, ENV_DEFAULT | ENV_USER, val);
         assert(retval == ENV_OK && "for loop variable should have been successfully set");
         (void)retval;
 

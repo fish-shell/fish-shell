@@ -159,12 +159,6 @@ class null_environment_t : public environment_t {
 /// Gets the variable with the specified name, or none() if it does not exist.
 maybe_t<env_var_t> env_get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT);
 
-/// Sets the variable with the specified name to the given values.
-int env_set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);
-
-/// Sets the variable with the specified name to a single value.
-int env_set_one(const wcstring &key, env_mode_flags_t mode, wcstring val);
-
 /// Synchronizes all universal variable changes: writes everything out, reads stuff in.
 void env_universal_barrier();
 
@@ -183,11 +177,16 @@ class env_stack_t : public environment_t {
     bool try_remove(std::shared_ptr<env_node_t> n, const wchar_t *key, int var_mode);
     std::shared_ptr<env_node_t> get_node(const wcstring &key);
 
+    static env_stack_t make_principal();
+
     var_stack_t &vars_stack();
     const var_stack_t &vars_stack() const;
 
+    explicit env_stack_t(std::unique_ptr<var_stack_t> vars_);
     env_stack_t();
     ~env_stack_t() override;
+
+    env_stack_t(env_stack_t &&);
 
    public:
     /// Gets the variable with the specified name, or none() if it does not exist.
@@ -247,6 +246,10 @@ class env_stack_t : public environment_t {
 
     // Compatibility hack; access the "environment stack" from back when there was just one.
     static env_stack_t &principal();
+
+    // Access a variable stack that only represents globals.
+    // Do not push or pop from this.
+    static env_stack_t &globals();
 };
 
 class env_vars_snapshot_t : public environment_t {

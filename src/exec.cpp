@@ -377,7 +377,7 @@ void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &all_ios) {
                 shlvl_str = to_string<long>(shlvl - 1);
             }
         }
-        env_set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, shlvl_str);
+        vars.set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, std::move(shlvl_str));
 
         // launch_process _never_ returns.
         launch_process_nofork(vars, j->processes.front().get());
@@ -1074,7 +1074,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
 
     j->set_flag(job_flag_t::CONSTRUCTED, true);
     if (!j->is_foreground()) {
-        env_set_one(L"last_pid", ENV_GLOBAL, to_string(j->pgid));
+        parser.vars().set_one(L"last_pid", ENV_GLOBAL, to_string(j->pgid));
     }
 
     if (exec_error) {

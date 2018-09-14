@@ -353,7 +353,7 @@ void function_prepare_environment(env_stack_t &vars, const wcstring &name,
         const wchar_t *const *arg = argv;
         for (const wcstring &named_arg : props->named_arguments) {
             if (*arg) {
-                env_set_one(named_arg, ENV_LOCAL | ENV_USER, *arg);
+                vars.set_one(named_arg, ENV_LOCAL | ENV_USER, *arg);
                 arg++;
             } else {
                 vars.set_empty(named_arg, ENV_LOCAL | ENV_USER);
@@ -362,6 +362,6 @@ void function_prepare_environment(env_stack_t &vars, const wcstring &name,
     }
 
     for (const auto &kv : inherited_vars) {
-        env_set(kv.first, ENV_LOCAL | ENV_USER, kv.second.as_list());
+        vars.set(kv.first, ENV_LOCAL | ENV_USER, kv.second.as_list());
     }
 }

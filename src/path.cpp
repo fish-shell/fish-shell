@@ -266,10 +266,11 @@ wcstring path_apply_working_directory(const wcstring &path, const wcstring &work
 static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &custom_error_msg,
                                      bool using_xdg, const wcstring &xdg_var, const wcstring &path,
                                      int saved_errno) {
+    auto &vars = env_stack_t::globals();
     wcstring warning_var_name = L"_FISH_WARNED_" + which_dir;
-    auto var = env_get(warning_var_name, ENV_GLOBAL | ENV_EXPORT);
+    auto var = vars.get(warning_var_name, ENV_GLOBAL | ENV_EXPORT);
     if (!var) return;
-    env_set_one(warning_var_name, ENV_GLOBAL | ENV_EXPORT, L"1");
+    vars.set_one(warning_var_name, ENV_GLOBAL | ENV_EXPORT, L"1");
 
     debug(0, custom_error_msg.c_str());
     if (path.empty()) {

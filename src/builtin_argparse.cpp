@@ -441,22 +441,24 @@ static int validate_arg(parser_t &parser, const argparse_cmd_opts_t &opts, optio
 
     wcstring_list_t cmd_output;
 
-    parser.vars().push(true);
-    env_set_one(L"_argparse_cmd", ENV_LOCAL, opts.name);
+    auto &vars = parser.vars();
+
+    vars.push(true);
+    vars.set_one(L"_argparse_cmd", ENV_LOCAL, opts.name);
     if (is_long_flag) {
-        env_set_one(var_name_prefix + L"name", ENV_LOCAL, opt_spec->long_flag);
+        vars.set_one(var_name_prefix + L"name", ENV_LOCAL, opt_spec->long_flag);
     } else {
-        env_set_one(var_name_prefix + L"name", ENV_LOCAL,
-                    wcstring(1, opt_spec->short_flag).c_str());
+        vars.set_one(var_name_prefix + L"name", ENV_LOCAL,
+                     wcstring(1, opt_spec->short_flag).c_str());
     }
-    env_set_one(var_name_prefix + L"value", ENV_LOCAL, woptarg);
+    vars.set_one(var_name_prefix + L"value", ENV_LOCAL, woptarg);
 
     int retval = exec_subshell(opt_spec->validation_command, cmd_output, false);
     for (const auto &output : cmd_output) {
         streams.err.append(output);
         streams.err.push_back(L'\n');
     }
-    parser.vars().pop();
+    vars.pop();
     return retval;
 }
 
@@ -623,13 +625,13 @@ static int check_min_max_args_constraints(const argparse_cmd_opts_t &opts, parse
 }
 
 /// Put the result of parsing the supplied args into the caller environment as local vars.
-static void set_argparse_result_vars(const argparse_cmd_opts_t &opts) {
+static void set_argparse_result_vars(env_stack_t &vars, const argparse_cmd_opts_t &opts) {
     for (const auto &kv : opts.options) {
         const auto &opt_spec = kv.second;
         if (!opt_spec->num_seen) continue;
 
         if (opt_spec->short_flag_valid) {
-            env_set(var_name_prefix + opt_spec->short_flag, ENV_LOCAL, opt_spec->vals);
+            vars.set(var_name_prefix + opt_spec->short_flag, ENV_LOCAL, opt_spec->vals);
         }
         if (!opt_spec->long_flag.empty()) {
             // We do a simple replacement of all non alphanum chars rather than calling
@@ -638,11 +640,11 @@ static void set_argparse_result_vars(const argparse_cmd_opts_t &opts) {
             for (size_t pos = 0; pos < long_flag.size(); pos++) {
                 if (!iswalnum(long_flag[pos])) long_flag[pos] = L'_';
             }
-            env_set(var_name_prefix + long_flag, ENV_LOCAL, opt_spec->vals);
+            vars.set(var_name_prefix + long_flag, ENV_LOCAL, opt_spec->vals);
         }
     }
 
-    env_set(L"argv", ENV_LOCAL, opts.argv);
+    vars.set(L"argv", ENV_LOCAL, opts.argv);
 }
 
 /// The argparse builtin. This is explicitly not compatible with the BSD or GNU version of this
@@ -679,6 +681,6 @@ int builtin_argparse(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     retval = check_min_max_args_constraints(opts, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    set_argparse_result_vars(opts);
+    set_argparse_result_vars(parser.vars(), opts);
     return retval;
 }

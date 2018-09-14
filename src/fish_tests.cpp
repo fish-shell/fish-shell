@@ -1777,7 +1777,7 @@ static void test_abbreviations() {
         {L"gx", L"git checkout"},
     };
     for (const auto &kv : abbreviations) {
-        int ret = env_set_one(L"_fish_abbr_" + kv.first, ENV_LOCAL, kv.second);
+        int ret = vars.set_one(L"_fish_abbr_" + kv.first, ENV_LOCAL, kv.second);
         if (ret != 0) err(L"Unable to set abbreviation variable");
     }
 
@@ -2539,7 +2539,7 @@ static void test_complete() {
     function_data_t fd;
     fd.name = L"testabbrsonetwothreefour";
     function_add(fd, parser_t::principal_parser());
-    int ret = env_set_one(L"_fish_abbr_testabbrsonetwothreezero", ENV_LOCAL, L"expansion");
+    int ret = pvars.set_one(L"_fish_abbr_testabbrsonetwothreezero", ENV_LOCAL, L"expansion");
     complete(L"testabbrsonetwothree", &completions, COMPLETION_REQUEST_DEFAULT, pvars);
     do_test(ret == 0);
     do_test(completions.size() == 2);
@@ -2692,6 +2692,7 @@ static void perform_one_completion_cd_test(const wcstring &command, const wcstri
 // Testing test_autosuggest_suggest_special, in particular for properly handling quotes and
 // backslashes.
 static void test_autosuggest_suggest_special() {
+    auto &vars = parser_t::principal_parser().vars();
     if (system("mkdir -p 'test/autosuggest_test/0foobar'")) err(L"mkdir failed");
     if (system("mkdir -p 'test/autosuggest_test/1foo bar'")) err(L"mkdir failed");
     if (system("mkdir -p 'test/autosuggest_test/2foo  bar'")) err(L"mkdir failed");
@@ -2705,7 +2706,7 @@ static void test_autosuggest_suggest_special() {
     // This is to ensure tilde expansion is handled. See the `cd ~/test_autosuggest_suggest_specia`
     // test below.
     // Fake out the home directory
-    env_set_one(L"HOME", ENV_LOCAL | ENV_EXPORT, L"test/test-home");
+    parser_t::principal_parser().vars().set_one(L"HOME", ENV_LOCAL | ENV_EXPORT, L"test/test-home");
     if (system("mkdir -p test/test-home/test_autosuggest_suggest_special/")) {
         err(L"mkdir failed");
     }
@@ -2740,7 +2741,7 @@ static void test_autosuggest_suggest_special() {
     perform_one_autosuggestion_cd_test(L"cd \"test/autosuggest_test/5", L"foo\"bar/", __LINE__);
     perform_one_autosuggestion_cd_test(L"cd 'test/autosuggest_test/5", L"foo\"bar/", __LINE__);
 
-    env_set_one(L"AUTOSUGGEST_TEST_LOC", ENV_LOCAL, wd);
+    vars.set_one(L"AUTOSUGGEST_TEST_LOC", ENV_LOCAL, wd);
     perform_one_autosuggestion_cd_test(L"cd $AUTOSUGGEST_TEST_LOC/0", L"foobar/", __LINE__);
     perform_one_autosuggestion_cd_test(L"cd ~/test_autosuggest_suggest_specia", L"l/", __LINE__);
 
@@ -4755,14 +4756,15 @@ static void test_string() {
 
 /// Helper for test_timezone_env_vars().
 long return_timezone_hour(time_t tstamp, const wchar_t *timezone) {
+    auto &vars = parser_t::principal_parser().vars();
     struct tm ltime;
     char ltime_str[3];
     char *str_ptr;
     size_t n;
 
-    env_set_one(L"TZ", ENV_EXPORT, timezone);
+    vars.set_one(L"TZ", ENV_EXPORT, timezone);
 
-    const auto var = env_get(L"TZ", ENV_DEFAULT);
+    const auto var = vars.get(L"TZ", ENV_DEFAULT);
     (void)var;
 
     localtime_r(&tstamp, &ltime);

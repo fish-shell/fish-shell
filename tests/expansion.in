@@ -71,7 +71,9 @@ expansion $foo[-10..-5]
 expansion (printf '%s\n' $foo)[-5..2]
 expansion (printf '%s\n' $foo)[-2..-1]
 expansion (printf '%s\n' $foo)[-10..-5]
+expansion (echo one)[2..-1]
 
+echo "# foo = "
 set -l foo
 expansion "$foo[1]"
 expansion $foo[1]
@@ -83,11 +85,15 @@ expansion "$foo[1 2]"
 expansion $foo[1 2]
 expansion "$foo[2 1]"
 expansion $foo[2 1]
+echo "# foo = a b c"
 set -l foo a b c
 expansion $foo[17]
 expansion $foo[-17]
 expansion $foo[17..18]
 expansion $foo[4..-2]
+echo "# foo = a"
+set -l foo a
+expansion $foo[2..-1]
 
 echo "$foo[d]"
 echo $foo[d]

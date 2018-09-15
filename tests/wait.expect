@@ -12,31 +12,6 @@ expect_prompt "Job 1, 'sleep 1 &' has ended" {} unmatched { puts stderr $error_m
 send_line "jobs"
 expect_prompt "jobs: There are no jobs" {} unmatched { puts stderr $error_msg }
 
-# three background jobs
-set error_msg "three background jobs: Fail"
-
-send_line "sleep 3 &; sleep 1 &; sleep 2 &"
-expect_prompt
-send_line "wait"
-expect "Job 2, 'sleep 1 &' has ended" {} timeout { puts stderr $error_msg }
-expect "Job 3, 'sleep 2 &' has ended" {} timeout { puts stderr $error_msg }
-expect_prompt "Job 1, 'sleep 3 &' has ended" {} unmatched { puts stderr $error_msg }
-send_line "jobs"
-expect_prompt "jobs: There are no jobs" {} unmatched { puts stderr $error_msg }
-
-# one job id specified
-set error_msg "one job id specified"
-
-send_line "sleep 3 &; sleep 1 &; sleep 2 &"
-expect_prompt
-send_line "wait %3"
-expect "Job 2, 'sleep 1 &' has ended" {} timeout { puts stderr $error_msg }
-expect_prompt "Job 3, 'sleep 2 &' has ended" {} unmatched { puts stderr $error_msg }
-send_line "wait %1"
-expect_prompt "Job 1, 'sleep 3 &' has ended" {} unmatched { puts stderr $error_msg }
-send_line "jobs"
-expect_prompt "jobs: There are no jobs" {} unmatched { puts stderr $error_msg }
-
 # three job ids specified
 set error_msg "three job ids specified: Fail"
 
@@ -47,20 +22,6 @@ expect "Job 2, 'sleep 1 &' has ended" {} timeout { puts stderr $error_msg }
 expect "Job 3, 'sleep 2 &' has ended" {} timeout { puts stderr $error_msg }
 expect "Job 1, 'sleep 3 &' has ended" {} timeout { puts stderr $error_msg }
 expect_prompt "Job 4, 'sleep 4 &' has ended" {} unmatched { puts stderr $error_msg }
-send_line "jobs"
-expect_prompt "jobs: There are no jobs" {} unmatched { puts stderr $error_msg }
-
-# wait with -n option
-set error_msg "wait with -n option: Fail"
-
-send_line "sleep 3 &; sleep 1 &; sleep 2 &"
-expect_prompt
-send_line "wait -n"
-expect_prompt "Job 2, 'sleep 1 &' has ended" {} unmatched { puts stderr $error_msg }
-send_line "wait --any"
-expect_prompt "Job 3, 'sleep 2 &' has ended" {} unmatched { puts stderr $error_msg }
-send_line "wait -n"
-expect_prompt "Job 1, 'sleep 3 &' has ended" {} unmatched { puts stderr $error_msg }
 send_line "jobs"
 expect_prompt "jobs: There are no jobs" {} unmatched { puts stderr $error_msg }
 
@@ -107,16 +68,6 @@ expect_prompt
 send_line "jobs"
 expect_prompt "jobs: There are no jobs" {} unmatched { puts stderr $error_msg }
 
-# wait for jobs by its process name
-set error_msg "wait for jobs by its process name: Fail"
-
-send_line "for i in (seq 1 10); sleep 2 &; end"
-expect_prompt
-send_line "wait sleep"
-expect_prompt
-send_line "jobs"
-expect_prompt "jobs: There are no jobs" {} unmatched { puts stderr $error_msg }
-
 # wait for jobs by its process name with -n option
 set error_msg "wait for jobs by its process name with -n option: Fail"
 
@@ -146,25 +97,6 @@ expect_prompt
 send_line "jobs"
 expect_prompt "jobs: There are no jobs" {} unmatched { puts stderr $error_msg }
 
-# complex case 2
-set error_msg "complex case 2: Fail"
-
-send_line "for i in (seq 2 4); ls | sleep \$i | cat > /dev/null &; end"
-expect_prompt
-send_line "sleep 3 | cat &"
-expect_prompt
-send_line "sleep 1 &"
-expect_prompt
-send_line "wait -n cat"
-expect_prompt
-send_line "jobs | wc -l"
-expect "3" {} timeout { puts stderr $error_msg }
-expect_prompt
-send_line "wait"
-expect_prompt
-send_line "jobs"
-expect_prompt "jobs: There are no jobs" {} unmatched { puts stderr $error_msg }
-
 # don't wait for itself
 set error_msg "don't wait for itself: Fail"
 
@@ -178,9 +110,6 @@ expect_prompt "jobs: There are no jobs" {} unmatched { puts stderr $error_msg }
 # test with fish script
 set error_msg "test with fish script: Fail"
 
-send_line "fish -c 'sleep 2 &; sleep 1 &; wait \$last_pid; jobs | wc -l'"
-expect "1" {} timeout { puts stderr $error_msg }
-expect_prompt
 send_line "fish -c 'sleep 2 &; sleep 3 &; sleep 1 &; wait -n sleep; jobs | wc -l'"
 expect "1" {} timeout { puts stderr $error_msg }
 expect_prompt

@@ -800,7 +800,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
     wcstring path_to_external_command;
     if (process_type == EXTERNAL || process_type == INTERNAL_EXEC) {
         // Determine the actual command. This may be an implicit cd.
-        bool has_command = path_get_path(cmd, &path_to_external_command);
+        bool has_command = path_get_path(cmd, &path_to_external_command, parser->vars());
 
         // If there was no command, then we care about the value of errno after checking for it, to
         // distinguish between e.g. no file vs permissions problem.

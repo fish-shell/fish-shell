@@ -255,9 +255,6 @@ class env_stack_t : public environment_t {
 class env_vars_snapshot_t : public environment_t {
     std::map<wcstring, env_var_t> vars;
     wcstring_list_t names;
-    bool is_current() const;
-
-    static const env_vars_snapshot_t s_current;
 
    public:
     env_vars_snapshot_t() = default;
@@ -269,9 +266,6 @@ class env_vars_snapshot_t : public environment_t {
     maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
 
     wcstring_list_t get_names(int flags) const override;
-
-    // Returns the fake snapshot representing the live variables array.
-    static const env_vars_snapshot_t &current();
 
     // Vars necessary for highlighting.
     static const wchar_t *const highlighting_keys[];

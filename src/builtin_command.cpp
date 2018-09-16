@@ -10,6 +10,7 @@
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
+#include "parser.h"
 #include "path.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -102,7 +103,7 @@ int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
         } else {
             wcstring path;
-            if (path_get_path(command_name, &path)) {
+            if (path_get_path(command_name, &path, parser.vars())) {
                 if (!opts.quiet) streams.out.append_format(L"%ls\n", path.c_str());
                 ++found;
             }

@@ -34,13 +34,12 @@ bool path_get_data(wcstring &path);
 /// Args:
 /// cmd - The name of the executable.
 /// output_or_NULL - If non-NULL, store the full path.
-/// vars - The environment variables snapshot to use
+/// vars - The environment variables to use
 ///
 /// Returns:
 /// false if the command can not be found else true. The result
 /// should be freed with free().
-bool path_get_path(const wcstring &cmd, wcstring *output_or_NULL,
-                   const environment_t &vars = env_vars_snapshot_t::current());
+bool path_get_path(const wcstring &cmd, wcstring *output_or_NULL, const environment_t &vars);
 
 /// Return all the paths that match the given command.
 wcstring_list_t path_get_paths(const wcstring &cmd);

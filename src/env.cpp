@@ -1658,19 +1658,7 @@ env_vars_snapshot_t::env_vars_snapshot_t(const environment_t &source, const wcha
 
 env_vars_snapshot_t::~env_vars_snapshot_t() = default;
 
-// The "current" variables are not a snapshot at all, but instead trampoline to env_get, etc.
-// We identify the current snapshot based on pointer values.
-// This is an ugly thing that has to go away.
-const env_vars_snapshot_t env_vars_snapshot_t::s_current;
-const env_vars_snapshot_t &env_vars_snapshot_t::current() { return s_current; }
-
-bool env_vars_snapshot_t::is_current() const { return this == &s_current; }
-
 maybe_t<env_var_t> env_vars_snapshot_t::get(const wcstring &key, env_mode_flags_t mode) const {
-    // If we represent the current state, bounce to env_get.
-    if (this->is_current()) {
-        return env_get(key, mode);
-    }
     auto iter = vars.find(key);
     if (iter == vars.end()) return none();
     return iter->second;

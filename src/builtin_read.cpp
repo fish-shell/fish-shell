@@ -455,7 +455,6 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     auto clear_remaining_vars = [&] () {
         while (vars_left()) {
             parser.vars().set_empty(*var_ptr, opts.place);
-            // env_set_one(*var_ptr, opts.place, L"");
             ++var_ptr;
         }
     };

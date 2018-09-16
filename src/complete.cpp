@@ -495,18 +495,19 @@ void complete_remove_all(const wcstring &cmd, bool cmd_is_path) {
 }
 
 /// Find the full path and commandname from a command string 'str'.
-static void parse_cmd_string(const wcstring &str, wcstring &path, wcstring &cmd) {
-    if (!path_get_path(str, &path)) {
+static void parse_cmd_string(const wcstring &str, wcstring *path, wcstring *cmd,
+                             const environment_t &vars) {
+    if (!path_get_path(str, path, vars)) {
         /// Use the empty string as the 'path' for commands that can not be found.
-        path = L"";
+        *path = L"";
     }
 
     // Make sure the path is not included in the command.
     size_t last_slash = str.find_last_of(L'/');
     if (last_slash != wcstring::npos) {
-        cmd = str.substr(last_slash + 1);
+        *cmd = str.substr(last_slash + 1);
     } else {
-        cmd = str;
+        *cmd = str;
     }
 }
 
@@ -865,7 +866,7 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
     bool use_common = 1, use_files = 1;
 
     wcstring cmd, path;
-    parse_cmd_string(cmd_orig, path, cmd);
+    parse_cmd_string(cmd_orig, &path, &cmd, vars);
 
     // mqudsi: run_on_main_thread() already just runs `func` if we're on the main thread,
     // but it makes a kcall to get the current thread id to ascertain that. Perhaps even
@@ -891,8 +892,8 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
         // may be faster, path_get_path can potentially do a lot of FS/IO access, so env.get() +
         // function_exists() should still be faster.
         head_exists =
-            head_exists ||
-            path_get_path(cmd_orig, nullptr);  // use cmd_orig here as it is potentially pathed
+            head_exists || path_get_path(cmd_orig, nullptr,
+                                         vars);  // use cmd_orig here as it is potentially pathed
     }
 
     if (!head_exists) {

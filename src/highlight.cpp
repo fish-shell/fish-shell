@@ -364,7 +364,7 @@ bool autosuggest_validate_from_history(const history_item_t &item,
 
     // Not handled specially so handle it here.
     bool cmd_ok = false;
-    if (path_get_path(parsed_command, NULL)) {
+    if (path_get_path(parsed_command, NULL, vars)) {
         cmd_ok = true;
     } else if (builtin_exists(parsed_command) ||
                function_exists_no_autoload(parsed_command, vars)) {

@@ -352,7 +352,7 @@ static size_t calc_prompt_lines(const wcstring &prompt) {
 
 /// Stat stdout and stderr and save result. This should be done before calling a function that may
 /// cause output.
-static void s_save_status(screen_t *s) {
+void s_save_status(screen_t *s) {
     fstat(1, &s->prev_buff_1);
     fstat(2, &s->prev_buff_2);
 }

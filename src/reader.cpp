@@ -1438,6 +1438,9 @@ static void reader_flash() {
 
     reader_repaint();
     ignore_result(write(STDOUT_FILENO, "\a", 1));
+    // The write above changed the timestamp of stdout; ensure we don't therefore reset our screen.
+    // See #3693.
+    s_save_status(&data->screen);
 
     pollint.tv_sec = 0;
     pollint.tv_nsec = 100 * 1000000;

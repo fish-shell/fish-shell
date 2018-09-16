@@ -1548,12 +1548,11 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
         if (arg) {
             wcstring msg = L"Expected [";
             bool first = true;
-            for (wcstring_list_t::const_iterator it = expected.begin(), end = expected.end();
-                 it != end; ++it) {
+            for (const wcstring &exp : expected) {
                 if (!first) msg += L", ";
                 first = false;
                 msg += '"';
-                msg += *it;
+                msg += exp;
                 msg += '"';
             }
             msg += L"], found [";

@@ -328,9 +328,8 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
     // has_commands: there are shell commands that need to be evaluated
     bool has_commands = false, has_functions = false;
 
-    for (wcstring_list_t::const_iterator it = m.commands.begin(), end = m.commands.end(); it != end;
-         ++it) {
-        if (input_function_get_code(*it) != INPUT_CODE_NONE)
+    for (const wcstring &cmd : m.commands) {
+        if (input_function_get_code(cmd) != INPUT_CODE_NONE)
             has_functions = true;
         else
             has_commands = true;
@@ -365,9 +364,8 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
         // FIXME(snnw): if commands add stuff to input queue (e.g. commandline -f execute), we won't
         // see that until all other commands have also been run.
         int last_status = proc_get_last_status();
-        for (wcstring_list_t::const_iterator it = m.commands.begin(), end = m.commands.end();
-             it != end; ++it) {
-            parser_t::principal_parser().eval(it->c_str(), io_chain_t(), TOP);
+        for (const wcstring &cmd : m.commands) {
+            parser_t::principal_parser().eval(cmd.c_str(), io_chain_t(), TOP);
         }
         proc_set_last_status(last_status);
         input_common_next_ch(R_NULL);

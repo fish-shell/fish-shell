@@ -203,9 +203,8 @@ bool path_get_cdpath(const env_var_t &dir_var, wcstring *out, const wchar_t *wd,
     }
 
     bool success = false;
-    for (wcstring_list_t::const_iterator iter = paths.begin(); iter != paths.end(); ++iter) {
+    for (const wcstring &dir : paths) {
         struct stat buf;
-        const wcstring &dir = *iter;
         if (wstat(dir, &buf) == 0) {
             if (S_ISDIR(buf.st_mode)) {
                 success = true;

@@ -269,8 +269,7 @@ int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 status = STATUS_INVALID_ARGS;
                 break;
             }
-            for (wcstring_list_t::const_iterator iter = args.begin(); iter != args.end(); ++iter) {
-                wcstring delete_string = *iter;
+            for (wcstring delete_string : args) {
                 if (delete_string[0] == '"' && delete_string[delete_string.length() - 1] == '"') {
                     delete_string = delete_string.substr(1, delete_string.length() - 2);
                 }

@@ -1,5 +1,5 @@
 # Note that when a completion file is sourced a new block scope is created so `set -l` works.
-set -l __fish_status_all_commands is-login is-interactive is-block is-breakpoint is-command-substitution is-no-job-control is-interactive-job-control is-full-job-control current-filename current-line-number print-stack-trace job-control
+set -l __fish_status_all_commands is-login is-interactive is-block is-breakpoint is-command-substitution is-no-job-control is-interactive-job-control is-full-job-control current-filename current-line-number print-stack-trace job-control features test-feature
 
 # These are the recognized flags.
 complete -c status -s h -l help -d "Display help and exit"
@@ -24,3 +24,7 @@ complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_com
 complete -f -c status -n "__fish_seen_subcommand_from job-control" -a full -d "Set all jobs under job control"
 complete -f -c status -n "__fish_seen_subcommand_from job-control" -a interactive -d "Set only interactive jobs under job control"
 complete -f -c status -n "__fish_seen_subcommand_from job-control" -a none -d "Set no jobs under job control"
+
+complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a features -d "List all feature flags"
+complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a test-feature -d "Test if a feature flag is enabled"
+complete -f -c status -n "__fish_seen_subcommand_from test-feature" -a '(status features)'

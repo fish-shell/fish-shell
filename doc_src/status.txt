@@ -16,6 +16,8 @@ status function
 status line-number
 status stack-trace
 status job-control CONTROL-TYPE
+status features
+status test-feature FEATURE
 \endfish
 
 \subsection status-description Description
@@ -47,9 +49,13 @@ The following operations (sub-commands) are available:
 
 - `line-number` prints the line number of the currently running script. Also `current-line-number`, `-n` or `--current-line-number`.
 
+- `stack-trace` prints a stack trace of all function calls on the call stack. Also `print-stack-trace`, `-t` or `--print-stack-trace`.
+
 - `job-control CONTROL-TYPE` sets the job control type, which can be `none`, `full`, or `interactive`. Also `-j CONTROL-TYPE` or `--job-control=CONTROL-TYPE`.
 
-- `stack-trace` prints a stack trace of all function calls on the call stack. Also `print-stack-trace`, `-t` or `--print-stack-trace`.
+- `features` lists all available feature flags.
+
+- `test-feature FEATURE` returns 0 when FEATURE is enabled, 1 if it is disabled, and 2 if it is not recognized.
 
 \subsection status-notes Notes
 

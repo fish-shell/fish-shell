@@ -385,6 +385,10 @@ abbxy
 caabxyxz
 
 ####################
+# string match --entire "" -- banana
+banana
+
+####################
 # string match -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
 abx
 by

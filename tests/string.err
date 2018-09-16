@@ -284,6 +284,9 @@ string repeat -l fakearg
 # string match --entire -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
 
 ####################
+# string match --entire "" -- banana
+
+####################
 # string match -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
 
 ####################

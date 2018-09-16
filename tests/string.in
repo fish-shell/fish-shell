@@ -289,6 +289,10 @@ logmsg 'string match --entire -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abc
 string match --entire -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
 or echo exit 1
 
+logmsg 'string match --entire "" -- banana'
+string match --entire "" -- banana
+or echo exit 1
+
 logmsg 'string match -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz'
 string match -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
 or echo exit 1

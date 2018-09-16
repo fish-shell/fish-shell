@@ -157,13 +157,12 @@ wcstring_list_t path_get_paths(const wcstring &cmd) {
     return paths;
 }
 
-bool path_get_cdpath(const wcstring &dir, wcstring *out, const wcstring &wd,
-                     const environment_t &env_vars) {
+maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
+                                  const environment_t &env_vars) {
     int err = ENOENT;
-    if (dir.empty()) return false;
+    if (dir.empty()) return none();
 
-    assert(!wd.empty() && wd.back() == L'/');
-
+    assert(wd.empty() || wd.back() == L'/');
     wcstring_list_t paths;
     if (dir.at(0) == L'/') {
         // Absolute path.
@@ -197,36 +196,32 @@ bool path_get_cdpath(const wcstring &dir, wcstring *out, const wcstring &wd,
         }
     }
 
-    bool success = false;
     for (const wcstring &dir : paths) {
         struct stat buf;
         if (wstat(dir, &buf) == 0) {
             if (S_ISDIR(buf.st_mode)) {
-                success = true;
-                if (out) out->assign(dir);
-                break;
-            } else {
-                err = ENOTDIR;
+                return dir;
             }
+            err = ENOTDIR;
         }
     }
 
-    if (!success) errno = err;
-    return success;
+    errno = err;
+    return none();
 }
 
-bool path_can_be_implicit_cd(const wcstring &path, const wcstring &wd, wcstring *out_path,
-                             const environment_t &vars) {
+maybe_t<wcstring> path_as_implicit_cd(const wcstring &path, const wcstring &wd,
+                                      const environment_t &vars) {
     wcstring exp_path = path;
     expand_tilde(exp_path);
-
-    bool result = false;
     if (string_prefixes_string(L"/", exp_path) || string_prefixes_string(L"./", exp_path) ||
         string_prefixes_string(L"../", exp_path) || string_suffixes_string(L"/", exp_path) ||
         exp_path == L"..") {
-        result = path_get_cdpath(exp_path, out_path, wd, vars);
+        // These paths can be implicit cd, so see if you cd to the path. Note that a single period
+        // cannot (that's used for sourcing files anyways).
+        return path_get_cdpath(exp_path, wd, vars);
     }
-    return result;
+    return none();
 }
 
 // If the given path looks like it's relative to the working directory, then prepend that working

@@ -34,8 +34,6 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     wcstring dir_in;
-    wcstring dir;
-
     if (argv[optind]) {
         dir_in = argv[optind];
     } else {
@@ -47,7 +45,9 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         dir_in = maybe_dir_in->as_string();
     }
 
-    if (!path_get_cdpath(dir_in, &dir, parser.vars().get_pwd_slash())) {
+    wcstring pwd = parser.vars().get_pwd_slash();
+    maybe_t<wcstring> mdir = path_get_cdpath(dir_in, pwd, parser.vars());
+    if (!mdir) {
         if (errno == ENOTDIR) {
             streams.err.append_format(_(L"%ls: '%ls' is not a directory\n"), cmd, dir_in.c_str());
         } else if (errno == ENOENT) {
@@ -64,6 +64,7 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         return STATUS_CMD_ERROR;
     }
+    const wcstring &dir = *mdir;
 
     wcstring norm_dir = normalize_path(dir);
 

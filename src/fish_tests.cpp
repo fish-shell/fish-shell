@@ -4664,6 +4664,22 @@ void test_layout_cache() {
     do_test(seqs.find_prompt_layout(L"whatever")->line_count == 100);
 }
 
+void test_normalize_path() {
+    say(L"Testing path normalization");
+    do_test(normalize_path(L"") == L".");
+    do_test(normalize_path(L"..") == L"..");
+    do_test(normalize_path(L"./") == L".");
+    do_test(normalize_path(L"////abc") == L"//abc");
+    do_test(normalize_path(L"/abc") == L"/abc");
+    do_test(normalize_path(L"/abc/") == L"/abc");
+    do_test(normalize_path(L"/abc/..def/") == L"/abc/..def");
+    do_test(normalize_path(L"//abc/../def/") == L"//def");
+    do_test(normalize_path(L"abc/../abc/../abc/../abc") == L"abc");
+    do_test(normalize_path(L"../../") == L"../..");
+    do_test(normalize_path(L"foo/./bar") == L"foo/bar");
+    do_test(normalize_path(L"foo/././bar/.././baz") == L"foo/baz");
+}
+
 /// Main test.
 int main(int argc, char **argv) {
     UNUSED(argc);
@@ -4762,6 +4778,7 @@ int main(int argc, char **argv) {
     if (should_test_function("illegal_command_exit_code")) test_illegal_command_exit_code();
     if (should_test_function("maybe")) test_maybe();
     if (should_test_function("layout_cache")) test_layout_cache();
+    if (should_test_function("normalize")) test_normalize_path();
     // history_tests_t::test_history_speed();
 
     say(L"Encountered %d errors in low-level tests", err_count);

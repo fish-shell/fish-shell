@@ -68,6 +68,12 @@ int wchdir(const wcstring &dir);
 /// \returns the canonicalized path, or none if the path is invalid.
 maybe_t<wcstring> wrealpath(const wcstring &pathname);
 
+/// Given an input path, "normalize" it:
+/// 1. Collapse multiple /s into a single /, except maybe at the beginning.
+/// 2. .. goes up a level.
+/// 3. Remove /./ in the middle.
+wcstring normalize_path(const wcstring &path);
+
 /// Wide character version of readdir().
 bool wreaddir(DIR *dir, wcstring &out_name);
 bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, wcstring &out_name,

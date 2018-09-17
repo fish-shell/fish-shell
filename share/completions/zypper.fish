@@ -1,8 +1,9 @@
 # completion for zypper
 
 set -g __fish_zypper_all_commands shell sh repos lr addrepo ar removerepo rr renamerepo nr modifyrepo mr refresh ref clean cc services ls addservice as modifyservice ms removeservice rs refresh-services refs install in remove rm verify ve source-install si install-new-recommends inr update up list-updates lu patch list-patches lp dist-upgrade dup patch-check pchk search se info if patch-info pattern-info product-info patches pch packages pa patterns pt products pd what-provides wp addlock al removelock rl locks ll cleanlocks cl versioncmp vcmp targetos tos licenses source-download
-set -g __fish_zypper_pkg_commands in install rm remove info if addlock al removelock rl source-install si
-set -g __fish_zypper_repo_commands repos lr removerepo rr renamerepo nr modifyrepo mr refresh ref clean cc packages pa
+set -g __fish_zypper_pkg_commands install in remove rm info if addlock al removelock rl source-install si update up
+set -g __fish_zypper_repo_commands repos lr removerepo rr renamerepo nr modifyrepo mr refresh ref clean cc packages pa patches pch patterns pt products pd
+set -g __fish_zypper_file_commands install in addrepo ar
 set -g __fish_zypper_package_types package patch pattern product srcpackage application
 set -g __fish_zypper_download_modes only in-advance in-heaps as-needed
 
@@ -28,6 +29,10 @@ end
 
 function __fish_zypper_use_repo
         __fish_zypper_cmd_in_array $__fish_zypper_repo_commands
+end
+
+function __fish_zypper_not_use_file
+        not __fish_zypper_cmd_in_array $__fish_zypper_file_commands
 end
 
 function __fish_zypper_print_repos
@@ -63,7 +68,9 @@ function __fish_zypper_print_packages
         set -e args[1]
     end
 
-    if test -z "$repo"
+    if __fish_zypper_is_subcommand_rm
+        set idx /var/cache/zypp/solv/@System/solv.idx
+    else if test -z "$repo"
         set idx /var/cache/zypp/solv/*/solv.idx
     else
         set idx /var/cache/zypp/solv/$repo/solv.idx
@@ -80,6 +87,7 @@ end
 
 complete -n '__fish_zypper_use_pkg' -c zypper -a '(__fish_zypper_print_packages)' -d 'Package'
 complete -f -n '__fish_zypper_use_repo' -c zypper -a '(__fish_zypper_print_repos)' -d 'Repo'
+complete -f -n '__fish_zypper_not_use_file' -c zypper
 
 complete -n '__fish_zypper_no_subcommand' -c zypper -a 'install in' -d 'Install packages'
 
@@ -129,7 +137,7 @@ complete -f -n '__fish_zypper_no_subcommand' -c zypper -a 'source-download'     
 
 complete -c zypper -n '__fish_zypper_no_subcommand' -l help -s h            -d 'Help'
 complete -c zypper -n '__fish_zypper_no_subcommand' -l version -s V         -d 'Output the version number'
-complete -c zypper -n '__fish_zypper_no_subcommand' -l config -s c          -d 'Use specified config file instead of the default'
+complete -c zypper -n '__fish_zypper_no_subcommand' -l config -s c -r       -d 'Use specified config file instead of the default'
 complete -c zypper -n '__fish_zypper_no_subcommand' -l quiet -s q           -d 'Suppress normal output, print only error messages'
 complete -c zypper -n '__fish_zypper_no_subcommand' -l verbose -s v         -d 'Increase verbosity'
 complete -c zypper -n '__fish_zypper_no_subcommand' -l no-abbrev -s A       -d 'Do not abbreviate text in tables'
@@ -139,9 +147,9 @@ complete -c zypper -n '__fish_zypper_no_subcommand' -l non-interactive -s n -d '
 complete -c zypper -n '__fish_zypper_no_subcommand' -l xmlout -s x          -d 'Switch to XML output'
 complete -c zypper -n '__fish_zypper_no_subcommand' -l ignore-unknown -s i  -d 'Ignore unknown packages'
 complete -c zypper -n '__fish_zypper_no_subcommand' -l plus-repo -s p       -d 'Use an additional repository'
-complete -c zypper -n '__fish_zypper_no_subcommand' -l reposd-dir -s D      -d 'Use alternative repository definition file directory'
-complete -c zypper -n '__fish_zypper_no_subcommand' -l cache-dir -s C       -d 'Use alternative directory for all caches'
-complete -c zypper -n '__fish_zypper_no_subcommand' -l root -s R            -d 'Operate on a different root directory'
+complete -c zypper -n '__fish_zypper_no_subcommand' -l reposd-dir -s D -r   -d 'Use alternative repository definition file directory'
+complete -c zypper -n '__fish_zypper_no_subcommand' -l cache-dir -s C -r    -d 'Use alternative directory for all caches'
+complete -c zypper -n '__fish_zypper_no_subcommand' -l root -s R -r         -d 'Operate on a different root directory'
 
 complete -c zypper -n '__fish_zypper_no_subcommand' -l non-interactive-include-reboot-patches -d 'Do not treat patches as interactive, which have the rebootSuggested-flag set'
 complete -c zypper -n '__fish_zypper_no_subcommand' -l no-gpg-checks                          -d 'Ignore GPG check failures and continue'
@@ -153,15 +161,15 @@ complete -c zypper -n '__fish_zypper_no_subcommand' -l no-remote                
 complete -c zypper -n '__fish_zypper_no_subcommand' -l disable-system-resolvables             -d 'Do not read installed packages'
 complete -c zypper -n '__fish_zypper_no_subcommand' -l promptids                              -d 'Output a list of zypper user prompts'
 complete -c zypper -n '__fish_zypper_no_subcommand' -l userdata                               -d 'User defined transaction id used in history and plugins'
-complete -c zypper -n '__fish_zypper_no_subcommand' -l raw-cache-dir                          -d 'Use alternative raw meta-data cache directory'
-complete -c zypper -n '__fish_zypper_no_subcommand' -l solv-cache-dir                         -d 'Use alternative solv file cache directory'
-complete -c zypper -n '__fish_zypper_no_subcommand' -l pkg-cache-dir                          -d 'Use alternative package cache directory'
+complete -c zypper -n '__fish_zypper_no_subcommand' -l raw-cache-dir -r                       -d 'Use alternative raw meta-data cache directory'
+complete -c zypper -n '__fish_zypper_no_subcommand' -l solv-cache-dir -r                      -d 'Use alternative solv file cache directory'
+complete -c zypper -n '__fish_zypper_no_subcommand' -l pkg-cache-dir -r                       -d 'Use alternative package cache directory'
 
 function __fish_zypper_is_subcommand_lr
         __fish_zypper_cmd_in_array repos lr
 end
 
-complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l export -s e            -d 'Export all defined repositories as a single local .repo file'
+complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l export -s e -r         -d 'Export all defined repositories as a single local .repo file'
 complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l alias -s a             -d 'Show also repository alias'
 complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l name -s n              -d 'Show also repository name'
 complete -c zypper -n '__fish_zypper_is_subcommand_lr' -l uri -s u               -d 'Show also base URI of repositories'

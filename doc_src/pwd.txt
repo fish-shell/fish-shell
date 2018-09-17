@@ -9,4 +9,8 @@ pwd
 
 `pwd` outputs (prints) the current working directory.
 
-Note that `fish` always resolves symbolic links in the current directory path.
+The following options are available:
+
+- `-L`, Output the logical working directory, without resolving symlinks (default behavior).
+
+- `-P`, Output the physical working directory, with symlinks resolved.

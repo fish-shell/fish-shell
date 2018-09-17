@@ -156,8 +156,8 @@ void env_set_argv(const wchar_t *const *argv);
 /// Returns all variable names.
 wcstring_list_t env_get_names(int flags);
 
-/// Update the PWD variable directory.
-bool env_set_pwd();
+/// Update the PWD variable based on the result of getcwd.
+void env_set_pwd_from_getcwd();
 
 /// Returns the PWD with a terminating slash.
 wcstring env_get_pwd_slash();

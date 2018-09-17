@@ -663,15 +663,15 @@ static void env_set_termsize() {
     if (rows.missing_or_empty()) env_set_one(L"LINES", ENV_GLOBAL, DFLT_TERM_ROW_STR);
 }
 
-bool env_set_pwd() {
+/// Update the PWD variable directory from the result of getcwd().
+void env_set_pwd_from_getcwd() {
     wcstring cwd = wgetcwd();
     if (cwd.empty()) {
         debug(0,
               _(L"Could not determine current working directory. Is your locale set correctly?"));
-        return false;
+        return;
     }
-    env_set_one(L"PWD", ENV_EXPORT | ENV_GLOBAL, cwd);
-    return true;
+    env_set_one(L"PWD", ENV_EXPORT | ENV_GLOBAL, std::move(cwd));
 }
 
 /// Allow the user to override the limit on how much data the `read` command will process.
@@ -982,7 +982,11 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         }
     }
 
-    env_set_pwd();         // initialize the PWD variable
+    // initialize the PWD variable if necessary
+    // Note we may inherit a virtual PWD that doesn't match what getcwd would return; respect that.
+    if (env_get(L"PWD").missing_or_empty()) {
+        env_set_pwd_from_getcwd();
+    }
     env_set_termsize();    // initialize the terminal size variables
     env_set_read_limit();  // initialize the read_byte_limit
 

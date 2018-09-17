@@ -65,7 +65,11 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_CMD_ERROR;
     }
 
-    if (wchdir(dir) != 0) {
+    // Prepend the PWD if we don't start with a slash, and then normalize the directory.
+    wcstring norm_dir =
+        normalize_path(string_prefixes_string(L"/", dir) ? dir : env_get_pwd_slash() + dir);
+
+    if (wchdir(norm_dir) != 0) {
         struct stat buffer;
         int status;
 
@@ -84,10 +88,6 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_CMD_ERROR;
     }
 
-    if (!env_set_pwd()) {
-        streams.err.append_format(_(L"%ls: Could not set PWD variable\n"), cmd);
-        return STATUS_CMD_ERROR;
-    }
-
+    env_set_one(L"PWD", ENV_EXPORT | ENV_GLOBAL, std::move(norm_dir));
     return STATUS_CMD_OK;
 }

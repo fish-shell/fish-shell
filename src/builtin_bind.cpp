@@ -26,6 +26,7 @@ struct bind_cmd_opts_t {
     bool print_help = false;
     bool silent = false;
     bool use_terminfo = false;
+    bool user = true;
     int mode = BIND_INSERT;
     const wchar_t *bind_mode = DEFAULT_BIND_MODE;
     const wchar_t *sets_bind_mode = L"";
@@ -110,7 +111,7 @@ void builtin_bind_t::list(const wchar_t *bind_mode, io_streams_t &streams) {
 ///
 /// \param all if set, all terminfo key binding names will be printed. If not set, only ones that
 /// are defined for this terminal are printed.
-void builtin_bind_t::key_names(int all, io_streams_t &streams) {
+void builtin_bind_t::key_names(bool all, io_streams_t &streams) {
     const wcstring_list_t names = input_terminfo_get_names(!all);
     for (size_t i = 0; i < names.size(); i++) {
         const wcstring &name = names.at(i);
@@ -152,18 +153,18 @@ bool builtin_bind_t::get_terminfo_sequence(const wchar_t *seq, wcstring *out_seq
 
 /// Add specified key binding.
 bool builtin_bind_t::add(const wchar_t *seq, const wchar_t *const *cmds, size_t cmds_len,
-                             const wchar_t *mode, const wchar_t *sets_mode, int terminfo,
+                         const wchar_t *mode, const wchar_t *sets_mode, bool terminfo, bool user,
                              io_streams_t &streams) {
     if (terminfo) {
         wcstring seq2;
         if (get_terminfo_sequence(seq, &seq2, streams)) {
-            input_mapping_add(seq2.c_str(), cmds, cmds_len, mode, sets_mode);
+            input_mapping_add(seq2.c_str(), cmds, cmds_len, mode, sets_mode, user);
         } else {
             return true;
         }
 
     } else {
-        input_mapping_add(seq, cmds, cmds_len, mode, sets_mode);
+        input_mapping_add(seq, cmds, cmds_len, mode, sets_mode, user);
     }
 
     return false;
@@ -181,17 +182,12 @@ bool builtin_bind_t::add(const wchar_t *seq, const wchar_t *const *cmds, size_t 
 /// @param  use_terminfo
 ///    Whether to look use terminfo -k name
 ///
-bool builtin_bind_t::erase(wchar_t **seq, int all, const wchar_t *mode, int use_terminfo,
+bool builtin_bind_t::erase(wchar_t **seq, bool all, const wchar_t *mode, bool use_terminfo, bool user,
                                io_streams_t &streams) {
     if (all) {
-        const std::vector<input_mapping_name_t> lst = input_mapping_get_names();
-        for (std::vector<input_mapping_name_t>::const_iterator it = lst.begin(), end = lst.end();
-             it != end; ++it) {
-            if (mode == NULL || mode == it->mode) {
-                input_mapping_erase(it->seq, it->mode);
-            }
-        }
-
+        // TODO: Respect user setting!
+        debug(0, L"Erasing all %ls", user ? L"user" : L"default");
+        input_mapping_clear(mode, user);
         return false;
     }
 
@@ -214,7 +210,7 @@ bool builtin_bind_t::erase(wchar_t **seq, int all, const wchar_t *mode, int use_
     return res;
 }
 
-bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv,
+bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv, bool user,
                                 io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int arg_count = argc - optind;
@@ -247,7 +243,7 @@ bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv,
         }
     } else {
         if (add(argv[optind], argv + (optind + 1), argc - (optind + 1), opts->bind_mode,
-                             opts->sets_bind_mode, opts->use_terminfo, streams)) {
+                opts->sets_bind_mode, opts->use_terminfo, opts->user, streams)) {
             return true;
         }
     }
@@ -276,6 +272,7 @@ int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss meth
     wchar_t *cmd = argv[0];
     static const wchar_t *short_options = L":aehkKfM:Lm:s";
     static const struct woption long_options[] = {{L"all", no_argument, NULL, 'a'},
+                                                  {L"default", no_argument, NULL, 'd'},
                                                   {L"erase", no_argument, NULL, 'e'},
                                                   {L"function-names", no_argument, NULL, 'f'},
                                                   {L"help", no_argument, NULL, 'h'},
@@ -293,6 +290,10 @@ int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss meth
         switch (opt) {
             case L'a': {
                 opts.all = true;
+                break;
+            }
+            case L'd': {
+                opts.user = false;
                 break;
             }
             case L'e': {
@@ -382,14 +383,14 @@ int builtin_bind_t::builtin_bind(parser_t &parser, io_streams_t &streams, wchar_
     switch (opts.mode) {
         case BIND_ERASE: {
             const wchar_t *bind_mode = opts.bind_mode_given ? opts.bind_mode : NULL;
-            if (erase(&argv[optind], opts.all, bind_mode, opts.use_terminfo,
+            if (erase(&argv[optind], opts.all, bind_mode, opts.use_terminfo, opts.user,
                                    streams)) {
                 return STATUS_CMD_ERROR;
             }
             break;
         }
         case BIND_INSERT: {
-            if (insert(optind, argc, argv, streams)) {
+            if (insert(optind, argc, argv, opts.user, streams)) {
                 return STATUS_CMD_ERROR;
             }
             break;

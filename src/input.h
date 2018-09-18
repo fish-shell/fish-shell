@@ -48,11 +48,11 @@ void input_queue_ch(wint_t ch);
 /// \param command an input function that will be run whenever the key sequence occurs
 void input_mapping_add(const wchar_t *sequence, const wchar_t *command,
                        const wchar_t *mode = DEFAULT_BIND_MODE,
-                       const wchar_t *new_mode = DEFAULT_BIND_MODE);
+                       const wchar_t *new_mode = DEFAULT_BIND_MODE, bool user = true);
 
 void input_mapping_add(const wchar_t *sequence, const wchar_t *const *commands, size_t commands_len,
                        const wchar_t *mode = DEFAULT_BIND_MODE,
-                       const wchar_t *new_mode = DEFAULT_BIND_MODE);
+                       const wchar_t *new_mode = DEFAULT_BIND_MODE, bool user = true);
 
 struct input_mapping_name_t {
     wcstring seq;
@@ -62,8 +62,11 @@ struct input_mapping_name_t {
 /// Returns all mapping names and modes.
 std::vector<input_mapping_name_t> input_mapping_get_names();
 
+/// Erase all bindings
+void input_mapping_clear(const wchar_t *mode = NULL, bool user = true);
+
 /// Erase binding for specified key sequence.
-bool input_mapping_erase(const wcstring &sequence, const wcstring &mode = DEFAULT_BIND_MODE);
+bool input_mapping_erase(const wcstring &sequence, const wcstring &mode = DEFAULT_BIND_MODE, bool user = true);
 
 /// Gets the command bound to the specified key sequence in the specified mode. Returns true if it
 /// exists, false if not.

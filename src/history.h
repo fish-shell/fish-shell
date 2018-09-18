@@ -22,6 +22,7 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 struct io_streams_t;
+class environment_t;
 
 // Fish supports multiple shells writing to history at once. Here is its strategy:
 //
@@ -214,6 +215,9 @@ class history_t {
     // Returns history with the given name, creating it if necessary.
     static history_t &history_with_name(const wcstring &name);
 
+    /// Returns whether this is using the default name.
+    bool is_default() const;
+
     // Determines whether the history is empty. Unfortunately this cannot be const, since it may
     // require populating the history.
     bool is_empty();
@@ -357,7 +361,7 @@ class history_search_t {
 void history_save_all();
 
 /// Return the prefix for the files to be used for command and read history.
-wcstring history_session_id();
+wcstring history_session_id(const environment_t &vars);
 
 /// Given a list of paths and a working directory, return the paths that are valid
 /// This does disk I/O and may only be called in a background thread

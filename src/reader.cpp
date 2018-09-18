@@ -2150,8 +2150,9 @@ void reader_import_history_if_necessary() {
         data->history->populate_from_config_path();
     }
 
-    // Import history from bash, etc. if our current history is still empty.
-    if (data->history && data->history->is_empty()) {
+    // Import history from bash, etc. if our current history is still empty and is the default
+    // history.
+    if (data->history && data->history->is_empty() && data->history->is_default()) {
         // Try opening a bash file. We make an effort to respect $HISTFILE; this isn't very complete
         // (AFAIK it doesn't have to be exported), and to really get this right we ought to ask bash
         // itself. But this is better than nothing.
@@ -2346,7 +2347,8 @@ uint32_t reader_run_count() { return run_count; }
 
 /// Read interactively. Read input from stdin while providing editing facilities.
 static int read_i() {
-    reader_push(history_session_id());
+    parser_t &parser = parser_t::principal_parser();
+    reader_push(history_session_id(parser.vars()));
     reader_set_complete_function(&complete);
     reader_set_highlight_function(&highlight_shell);
     reader_set_test_function(&reader_shell_test);
@@ -2354,7 +2356,6 @@ static int read_i() {
     reader_set_expand_abbreviations(true);
     reader_import_history_if_necessary();
 
-    parser_t &parser = parser_t::principal_parser();
     reader_data_t *data = current_data();
     data->prev_end_loop = 0;
 

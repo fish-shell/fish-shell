@@ -811,7 +811,7 @@ static void handle_fish_history_change(const wcstring &op, const wcstring &var_n
                                        env_stack_t &vars) {
     UNUSED(op);
     UNUSED(var_name);
-    reader_change_history(history_session_id().c_str());
+    reader_change_history(history_session_id(vars).c_str());
 }
 
 static void handle_function_path_change(const wcstring &op, const wcstring &var_name,
@@ -1391,7 +1391,7 @@ maybe_t<env_var_t> env_stack_t::get(const wcstring &key, env_mode_flags_t mode) 
 
             history_t *history = reader_get_history();
             if (!history) {
-                history = &history_t::history_with_name(history_session_id());
+                history = &history_t::history_with_name(history_session_id(*this));
             }
             wcstring_list_t result;
             if (history) history->get_history(result);

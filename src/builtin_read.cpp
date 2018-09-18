@@ -204,7 +204,8 @@ static int read_interactive(wcstring &buff, int nchars, bool shell, bool silent,
     int exit_res = STATUS_CMD_OK;
     const wchar_t *line;
 
-    wcstring read_history_ID = history_session_id();
+    auto &vars = env_stack_t::principal();
+    wcstring read_history_ID = history_session_id(vars);
     if (!read_history_ID.empty()) read_history_ID += L"_read";
     reader_push(read_history_ID);
 

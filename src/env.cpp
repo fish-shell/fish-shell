@@ -112,8 +112,8 @@ static const wcstring_list_t locale_variables({L"LANG", L"LANGUAGE", L"LC_ALL", 
 static const wcstring_list_t curses_variables({L"TERM", L"TERMINFO", L"TERMINFO_DIRS"});
 
 // Some forward declarations to make it easy to logically group the code.
-static void init_locale();
-static void init_curses();
+static void init_locale(const environment_t &vars);
+static void init_curses(const environment_t &vars);
 
 // Struct representing one level in the function variable stack.
 // Only our variable stack should create and destroy these
@@ -264,8 +264,10 @@ void var_stack_t::pop() {
         }
     }
 
-    if (locale_changed) init_locale();
-    if (curses_changed) init_curses();
+    // TODO: instantize this locale and curses
+    const auto &vars = env_stack_t::principal();
+    if (locale_changed) init_locale(vars);
+    if (curses_changed) init_curses(vars);
 }
 
 env_node_ref_t var_stack_t::next_scope_to_search(const env_node_ref_t &node) const {
@@ -346,9 +348,9 @@ static mode_t get_umask() {
 }
 
 /// Properly sets all timezone information.
-static void handle_timezone(const wchar_t *env_var_name) {
+static void handle_timezone(const wchar_t *env_var_name, const environment_t &vars) {
     // const env_var_t var = env_get(env_var_name, ENV_EXPORT);
-    const auto var = env_get(env_var_name, ENV_DEFAULT);
+    const auto var = vars.get(env_var_name, ENV_DEFAULT);
     debug(2, L"handle_timezone() current timezone var: |%ls| => |%ls|", env_var_name,
           !var ? L"MISSING" : var->as_string().c_str());
     const std::string &name = wcs2string(env_var_name);
@@ -383,13 +385,13 @@ static void fix_colon_delimited_var(const wcstring &var_name, env_stack_t &vars)
 }
 
 /// Initialize the locale subsystem.
-static void init_locale() {
+static void init_locale(const environment_t &vars) {
     // We have to make a copy because the subsequent setlocale() call to change the locale will
     // invalidate the pointer from the this setlocale() call.
     char *old_msg_locale = strdup(setlocale(LC_MESSAGES, NULL));
 
     for (const auto &var_name : locale_variables) {
-        const auto var = env_get(var_name, ENV_EXPORT);
+        const auto var = vars.get(var_name, ENV_EXPORT);
         const std::string &name = wcs2string(var_name);
         if (var.missing_or_empty()) {
             debug(5, L"locale var %s missing or empty", name.c_str());
@@ -434,8 +436,8 @@ bool term_supports_setting_title() { return can_set_term_title; }
 /// terminal title if the underlying terminal does so, but will print garbage on terminals that
 /// don't. Since we can't see the underlying terminal below screen there is no way to fix this.
 static const wchar_t *const title_terms[] = {L"xterm", L"screen", L"tmux", L"nxterm", L"rxvt"};
-static bool does_term_support_setting_title() {
-    const auto term_var = env_get(L"TERM");
+static bool does_term_support_setting_title(const environment_t &vars) {
+    const auto term_var = vars.get(L"TERM");
     if (term_var.missing_or_empty()) return false;
 
     const wcstring term_str = term_var->as_string();
@@ -460,11 +462,11 @@ static bool does_term_support_setting_title() {
 }
 
 /// Updates our idea of whether we support term256 and term24bit (see issue #10222).
-static void update_fish_color_support() {
+static void update_fish_color_support(const environment_t &vars) {
     // Detect or infer term256 support. If fish_term256 is set, we respect it;
     // otherwise infer it from the TERM variable or use terminfo.
-    auto fish_term256 = env_get(L"fish_term256");
-    auto term_var = env_get(L"TERM");
+    auto fish_term256 = vars.get(L"fish_term256");
+    auto term_var = vars.get(L"TERM");
     wcstring term = term_var.missing_or_empty() ? L"" : term_var->as_string();
     bool support_term256 = false;  // default to no support
     if (!fish_term256.missing_or_empty()) {
@@ -476,8 +478,8 @@ static void update_fish_color_support() {
         debug(2, L"256 color support enabled for '256color' in TERM");
     } else if (term.find(L"xterm") != wcstring::npos) {
         // Assume that all xterms are 256, except for OS X SnowLeopard
-        const auto prog_var = env_get(L"TERM_PROGRAM");
-        const auto progver_var = env_get(L"TERM_PROGRAM_VERSION");
+        const auto prog_var = vars.get(L"TERM_PROGRAM");
+        const auto progver_var = vars.get(L"TERM_PROGRAM_VERSION");
         wcstring term_program = prog_var.missing_or_empty() ? L"" : prog_var->as_string();
         if (term_program == L"Apple_Terminal" && !progver_var.missing_or_empty()) {
             // OS X Lion is version 300+, it has 256 color support
@@ -497,7 +499,7 @@ static void update_fish_color_support() {
         debug(2, L"256 color support not enabled (yet)");
     }
 
-    auto fish_term24bit = env_get(L"fish_term24bit");
+    auto fish_term24bit = vars.get(L"fish_term24bit");
     bool support_term24bit;
     if (!fish_term24bit.missing_or_empty()) {
         support_term24bit = from_string<bool>(fish_term24bit->as_string());
@@ -520,7 +522,8 @@ static void update_fish_color_support() {
 static bool initialize_curses_using_fallback(const char *term) {
     // If $TERM is already set to the fallback name we're about to use there isn't any point in
     // seeing if the fallback name can be used.
-    auto term_var = env_get(L"TERM");
+    auto &vars = env_stack_t::globals();
+    auto term_var = vars.get(L"TERM");
     if (term_var.missing_or_empty()) return false;
 
     auto term_env = wcs2string(term_var->as_string());
@@ -547,12 +550,13 @@ static void init_path_vars() {
 /// Update the value of g_guessed_fish_emoji_width
 static void guess_emoji_width() {
     wcstring term;
-    if (auto term_var = env_get(L"TERM_PROGRAM")) {
+    auto &vars = env_stack_t::globals();
+    if (auto term_var = vars.get(L"TERM_PROGRAM")) {
         term = term_var->as_string();
     }
 
     double version = 0;
-    if (auto version_var = env_get(L"TERM_PROGRAM_VERSION")) {
+    if (auto version_var = vars.get(L"TERM_PROGRAM_VERSION")) {
         std::string narrow_version = wcs2string(version_var->as_string());
         version = strtod(narrow_version.c_str(), NULL);
     }
@@ -569,10 +573,10 @@ static void guess_emoji_width() {
 }
 
 /// Initialize the curses subsystem.
-static void init_curses() {
+static void init_curses(const environment_t &vars) {
     for (const auto &var_name : curses_variables) {
         std::string name = wcs2string(var_name);
-        const auto var = env_get(var_name, ENV_EXPORT);
+        const auto var = vars.get(var_name, ENV_EXPORT);
         if (var.missing_or_empty()) {
             debug(2, L"curses var %s missing or empty", name.c_str());
             unsetenv(name.c_str());
@@ -585,7 +589,7 @@ static void init_curses() {
 
     int err_ret;
     if (setupterm(NULL, STDOUT_FILENO, &err_ret) == ERR) {
-        auto term = env_get(L"TERM");
+        auto term = vars.get(L"TERM");
         if (is_interactive_session) {
             debug(1, _(L"Could not set up terminal."));
             if (term.missing_or_empty()) {
@@ -601,9 +605,9 @@ static void init_curses() {
         }
     }
 
-    can_set_term_title = does_term_support_setting_title();
+    can_set_term_title = does_term_support_setting_title(vars);
     term_has_xn = tigetflag((char *)"xenl") == 1;  // does terminal have the eat_newline_glitch
-    update_fish_color_support();
+    update_fish_color_support(vars);
     // Invalidate the cached escape sequences since they may no longer be valid.
     cached_layouts.clear();
     curses_initialized = true;
@@ -679,7 +683,7 @@ void env_stack_t::set_pwd_from_getcwd() {
 /// Allow the user to override the limit on how much data the `read` command will process.
 /// This is primarily for testing but could be used by users in special situations.
 void env_stack_t::set_read_limit() {
-    auto read_byte_limit_var = env_get(L"fish_read_limit");
+    auto read_byte_limit_var = this->get(L"fish_read_limit");
     if (!read_byte_limit_var.missing_or_empty()) {
         size_t limit = fish_wcstoull(read_byte_limit_var->as_string().c_str());
         if (errno) {
@@ -708,14 +712,15 @@ wcstring environment_t::get_pwd_slash() const {
 
 /// Set up the USER variable.
 static void setup_user(bool force) {
-    if (force || env_get(L"USER").missing_or_empty()) {
+    auto &vars = env_stack_t::globals();
+    if (force || vars.get(L"USER").missing_or_empty()) {
         struct passwd userinfo;
         struct passwd *result;
         char buf[8192];
         int retval = getpwuid_r(getuid(), &userinfo, buf, sizeof(buf), &result);
         if (!retval && result) {
             const wcstring uname = str2wcstring(userinfo.pw_name);
-            env_stack_t::globals().set_one(L"USER", ENV_GLOBAL | ENV_EXPORT, uname);
+            vars.set_one(L"USER", ENV_GLOBAL | ENV_EXPORT, uname);
         }
     }
 }
@@ -755,7 +760,7 @@ static void handle_fish_term_change(const wcstring &op, const wcstring &var_name
                                     env_stack_t &vars) {
     UNUSED(op);
     UNUSED(var_name);
-    update_fish_color_support();
+    update_fish_color_support(vars);
     reader_react_to_color_change();
 }
 
@@ -763,7 +768,7 @@ static void handle_escape_delay_change(const wcstring &op, const wcstring &var_n
                                        env_stack_t &vars) {
     UNUSED(op);
     UNUSED(var_name);
-    update_wait_on_escape_ms();
+    update_wait_on_escape_ms(vars);
 }
 
 static void handle_change_emoji_width(const wcstring &op, const wcstring &var_name,
@@ -771,7 +776,7 @@ static void handle_change_emoji_width(const wcstring &op, const wcstring &var_na
     (void)op;
     (void)var_name;
     int new_width = 0;
-    if (auto width_str = env_get(L"fish_emoji_width")) {
+    if (auto width_str = vars.get(L"fish_emoji_width")) {
         new_width = fish_wcstol(width_str->as_string().c_str());
     }
     g_fish_emoji_width = std::max(0, new_width);
@@ -782,7 +787,7 @@ static void handle_change_ambiguous_width(const wcstring &op, const wcstring &va
     (void)op;
     (void)var_name;
     int new_width = 1;
-    if (auto width_str = env_get(L"fish_ambiguous_width")) {
+    if (auto width_str = vars.get(L"fish_ambiguous_width")) {
         new_width = fish_wcstol(width_str->as_string().c_str());
     }
     g_fish_ambiguous_width = std::max(0, new_width);
@@ -825,7 +830,7 @@ static void handle_complete_path_change(const wcstring &op, const wcstring &var_
 
 static void handle_tz_change(const wcstring &op, const wcstring &var_name, env_stack_t &vars) {
     UNUSED(op);
-    handle_timezone(var_name.c_str());
+    handle_timezone(var_name.c_str(), vars);
 }
 
 static void handle_magic_colon_var_change(const wcstring &op, const wcstring &var_name,
@@ -837,14 +842,14 @@ static void handle_magic_colon_var_change(const wcstring &op, const wcstring &va
 static void handle_locale_change(const wcstring &op, const wcstring &var_name, env_stack_t &vars) {
     UNUSED(op);
     UNUSED(var_name);
-    init_locale();
+    init_locale(vars);
 }
 
 static void handle_curses_change(const wcstring &op, const wcstring &var_name, env_stack_t &vars) {
     UNUSED(op);
     UNUSED(var_name);
     guess_emoji_width();
-    init_curses();
+    init_curses(vars);
 }
 
 /// Populate the dispatch table used by `react_to_variable_change()` to efficiently call the
@@ -915,8 +920,8 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     path_get_data(user_data_dir);
     vars.set_one(FISH_USER_DATA_DIR, ENV_GLOBAL, user_data_dir);
 
-    init_locale();
-    init_curses();
+    init_locale(vars);
+    init_curses(vars);
     init_input();
     init_path_vars();
     guess_emoji_width();
@@ -966,8 +971,8 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     // if the target user is root, unless "--preserve-environment" is used.
     // Since that is an explicit choice, we should allow it to enable e.g.
     //     env HOME=(mktemp -d) su --preserve-environment fish
-    if (env_get(L"HOME").missing_or_empty()) {
-        auto user_var = env_get(L"USER");
+    if (vars.get(L"HOME").missing_or_empty()) {
+        auto user_var = vars.get(L"USER");
         if (!user_var.missing_or_empty()) {
             char *unam_narrow = wcs2str(user_var->as_string());
             struct passwd userinfo;
@@ -977,7 +982,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
             if (retval || !result) {
                 // Maybe USER is set but it's bogus. Reset USER from the db and try again.
                 setup_user(true);
-                user_var = env_get(L"USER");
+                user_var = vars.get(L"USER");
                 if (!user_var.missing_or_empty()) {
                     unam_narrow = wcs2str(user_var->as_string());
                     retval = getpwnam_r(unam_narrow, &userinfo, buf, sizeof(buf), &result);

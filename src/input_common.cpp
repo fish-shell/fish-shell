@@ -158,8 +158,8 @@ static wint_t readb() {
 
 // Update the wait_on_escape_ms value in response to the fish_escape_delay_ms user variable being
 // set.
-void update_wait_on_escape_ms() {
-    auto escape_time_ms = env_get(L"fish_escape_delay_ms");
+void update_wait_on_escape_ms(const environment_t &vars) {
+    auto escape_time_ms = vars.get(L"fish_escape_delay_ms");
     if (escape_time_ms.missing_or_empty()) {
         wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
         return;

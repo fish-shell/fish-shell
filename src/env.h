@@ -168,7 +168,7 @@ void env_set_read_limit();
 /// A environment stack of scopes. This is the main class that tracks fish variables.
 struct var_stack_t;
 class env_node_t;
-class env_stack_t : public environment_t {
+class env_stack_t final : public environment_t {
     friend class parser_t;
     std::unique_ptr<var_stack_t> vars_;
 

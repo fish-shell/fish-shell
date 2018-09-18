@@ -3,12 +3,14 @@
 \subsection bind-synopsis Synopsis
 \fish{synopsis}
 bind [(-M | --mode) MODE] [(-m | --sets-mode) NEW_MODE]
+     [--preset | --user]
      [(-s | --silent)] [(-k | --key)] SEQUENCE COMMAND [COMMAND...]
-bind [(-M | --mode) MODE] [(-k | --key)] SEQUENCE
-bind (-K | --key-names) [(-a | --all)]
+bind [(-M | --mode) MODE] [(-k | --key)] [--preset] [--user] SEQUENCE
+bind (-K | --key-names) [(-a | --all)] [--preset] [--user]
 bind (-f | --function-names)
 bind (-L | --list-modes)
 bind (-e | --erase) [(-M | --mode) MODE]
+     [--preset] [--user]
      (-a | --all | [(-k | --key)] SEQUENCE [SEQUENCE...])
 \endfish
 
@@ -32,7 +34,7 @@ When multiple `COMMAND`s are provided, they are all run in the specified order w
 
 If no `SEQUENCE` is provided, all bindings (or just the bindings in the specified `MODE`) are printed. If `SEQUENCE` is provided without `COMMAND`, just the binding matching that sequence is printed.
 
-Key bindings are not saved between sessions by default. **Bare `bind` statements in <a href="index.html#initialization">config.fish</a> won't have any effect because it is sourced before the default keybindings are setup.** To save custom keybindings, put the `bind` statements into a function called `fish_user_key_bindings`, which will be <a href="tutorial.html#tut_autoload">autoloaded</a>.
+To save custom keybindings, put the `bind` statements into <a href="index.html#initialization">config.fish</a>. Alternatively, fish also automatically executes a function called `fish_user_key_bindings` if it exists.
 
 Key bindings may use "modes", which mimics Vi's modal input behavior. The default mode is "default", and every bind applies to a single mode. The mode can be viewed/changed with the `$fish_bind_mode` variable.
 
@@ -53,6 +55,8 @@ The following parameters are available:
 - `-e` or `--erase` Erase the binding with the given sequence and mode instead of defining a new one. Multiple sequences can be specified with this flag. Specifying `-a` or `--all` with `-M` or `--mode` erases all binds in the given mode regardless of sequence. Specifying `-a` or `--all` without `-M` or `--mode` erases all binds in all modes regardless of sequence.
 
 - `-a` or `--all` See `--erase` and `--key-names`
+
+- `--preset` and `--user` specify if bind should operate on user or preset bindings. User bindings take precedence over preset bindings when fish looks up mappings. By default, all `bind` invocations work on the "user" level except for listing, which will show both levels. All invocations except for inserting new bindings can operate on both levels at the same time. `--preset` should only be used in full binding sets (like when working on `fish_vi_key_bindings`).
 
 \subsection bind-functions Special input functions
 The following special input functions are available:

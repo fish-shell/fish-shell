@@ -6,7 +6,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
     end
 
     if not set -q argv[1]
-        bind --erase --all # clear earlier bindings, if any
+        bind --erase --all --preset # clear earlier bindings, if any
         if test "$fish_key_bindings" != "fish_default_key_bindings"
             # Allow the user to set the variable universally
             set -q fish_key_bindings
@@ -28,76 +28,76 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
     or return # protect against invalid $argv
 
     # This is the default binding, i.e. the one used if no other binding matches
-    bind $argv "" self-insert
+    bind --preset $argv "" self-insert
     or exit # protect against invalid $argv
 
-    bind $argv \n execute
-    bind $argv \r execute
+    bind --preset $argv \n execute
+    bind --preset $argv \r execute
 
-    bind $argv \ck kill-line
+    bind --preset $argv \ck kill-line
 
-    bind $argv \eOC forward-char
-    bind $argv \eOD backward-char
-    bind $argv \e\[C forward-char
-    bind $argv \e\[D backward-char
-    bind $argv -k right forward-char
-    bind $argv -k left backward-char
+    bind --preset $argv \eOC forward-char
+    bind --preset $argv \eOD backward-char
+    bind --preset $argv \e\[C forward-char
+    bind --preset $argv \e\[D backward-char
+    bind --preset $argv -k right forward-char
+    bind --preset $argv -k left backward-char
 
-    bind $argv -k dc delete-char
-    bind $argv -k backspace backward-delete-char
-    bind $argv \x7f backward-delete-char
+    bind --preset $argv -k dc delete-char
+    bind --preset $argv -k backspace backward-delete-char
+    bind --preset $argv \x7f backward-delete-char
 
     # for PuTTY
     # https://github.com/fish-shell/fish-shell/issues/180
-    bind $argv \e\[1~ beginning-of-line
-    bind $argv \e\[3~ delete-char
-    bind $argv \e\[4~ end-of-line
+    bind --preset $argv \e\[1~ beginning-of-line
+    bind --preset $argv \e\[3~ delete-char
+    bind --preset $argv \e\[4~ end-of-line
 
     # OS X SnowLeopard doesn't have these keys. Don't show an annoying error message.
-    bind $argv -k home beginning-of-line 2>/dev/null
-    bind $argv -k end end-of-line 2>/dev/null
-    bind $argv \e\[3\;2~ backward-delete-char # Mavericks Terminal.app shift-ctrl-delete
+    bind --preset $argv -k home beginning-of-line 2>/dev/null
+    bind --preset $argv -k end end-of-line 2>/dev/null
+    bind --preset $argv \e\[3\;2~ backward-delete-char # Mavericks Terminal.app shift-ctrl-delete
 
-    bind $argv \ca beginning-of-line
-    bind $argv \ce end-of-line
-    bind $argv \ch backward-delete-char
-    bind $argv \cp up-or-search
-    bind $argv \cn down-or-search
-    bind $argv \cf forward-char
-    bind $argv \cb backward-char
-    bind $argv \ct transpose-chars
-    bind $argv \et transpose-words
-    bind $argv \eu upcase-word
+    bind --preset $argv \ca beginning-of-line
+    bind --preset $argv \ce end-of-line
+    bind --preset $argv \ch backward-delete-char
+    bind --preset $argv \cp up-or-search
+    bind --preset $argv \cn down-or-search
+    bind --preset $argv \cf forward-char
+    bind --preset $argv \cb backward-char
+    bind --preset $argv \ct transpose-chars
+    bind --preset $argv \et transpose-words
+    bind --preset $argv \eu upcase-word
 
     # This clashes with __fish_list_current_token
-    # bind $argv \el downcase-word
-    bind $argv \ec capitalize-word
+    # bind --preset $argv \el downcase-word
+    bind --preset $argv \ec capitalize-word
     # One of these is alt+backspace.
-    bind $argv \e\x7f backward-kill-word
-    bind $argv \e\b backward-kill-word
-    bind $argv \eb backward-word
-    bind $argv \ef forward-word
-    bind $argv \e\[1\;5C forward-word
-    bind $argv \e\[1\;5D backward-word
-    bind $argv \e\< beginning-of-buffer
-    bind $argv \e\> end-of-buffer
+    bind --preset $argv \e\x7f backward-kill-word
+    bind --preset $argv \e\b backward-kill-word
+    bind --preset $argv \eb backward-word
+    bind --preset $argv \ef forward-word
+    bind --preset $argv \e\[1\;5C forward-word
+    bind --preset $argv \e\[1\;5D backward-word
+    bind --preset $argv \e\< beginning-of-buffer
+    bind --preset $argv \e\> end-of-buffer
 
-    bind $argv \ed kill-word
+    bind --preset $argv \ed kill-word
 
     # Ignore some known-bad control sequences
     # https://github.com/fish-shell/fish-shell/issues/1917
-    bind $argv \e\[I 'begin;end'
-    bind $argv \e\[O 'begin;end'
+    bind --preset $argv \e\[I 'begin;end'
+    bind --preset $argv \e\[O 'begin;end'
 
     # term-specific special bindings
     switch "$TERM"
         case 'rxvt*'
-            bind $argv \e\[8~ end-of-line
-            bind $argv \eOc forward-word
-            bind $argv \eOd backward-word
+            bind --preset $argv \e\[8~ end-of-line
+            bind --preset $argv \eOc forward-word
+            bind --preset $argv \eOd backward-word
         case 'xterm-256color'
             # Microsoft's conemu uses xterm-256color plus
             # the following to tell a console to paste:
-            bind $argv \e\x20ep fish_clipboard_paste
+            bind --preset $argv \e\x20ep fish_clipboard_paste
     end
 end

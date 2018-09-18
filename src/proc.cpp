@@ -55,6 +55,9 @@
 /// Status of last process to exit.
 static int last_status = 0;
 
+/// The signals that signify crashes to us.
+static const std::vector<int> crashsignals = { SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGSYS };
+
 bool job_list_is_empty() {
     ASSERT_IS_MAIN_THREAD();
     return parser_t::principal_parser().job_list().empty();
@@ -533,7 +536,8 @@ static int process_clean_after_marking(bool allow_interactive) {
             // Handle signals other than SIGPIPE.
             int proc_is_job = (p->is_first_in_job && p->is_last_in_job);
             if (proc_is_job) j->set_flag(JOB_NOTIFIED, true);
-            if (j->get_flag(JOB_SKIP_NOTIFICATION)) {
+            // Always report crashes.
+            if (j->get_flag(JOB_SKIP_NOTIFICATION) && !contains(crashsignals,WTERMSIG(p->status))) {
                 continue;
             }
 

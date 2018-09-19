@@ -21,6 +21,7 @@ fish 3.0 is a major release which brings with it both improvements in functional
 - Background jobs not first `disown`'d will be reaped upon `exec`, bringing the behavior in line with that of `exit`.
 
 ## Notable fixes and improvements
+- Add completions for openbsd's doas.
 - A new feature flags mechanism is added for staging deprecations and breaking changes. Feature flags may be specified at launch with `fish --features ...` or by setting the universal `fish_features` variable. (#4940)
 - `exec` now triggers the same safety features as `exit` and prompts for confirmation if background jobs are running.
 - `wait` builtin is added for waiting on processes (#4498).

@@ -142,7 +142,7 @@ static wcstring get_runtime_path() {
     } else {
         // Don't rely on $USER being set, as setup_user() has not yet been called.
         // See https://github.com/fish-shell/fish-shell/issues/5180
-        const char *uname = getpwuid(geteuid()).pw_name;
+        const char *uname = getpwuid(geteuid())->pw_name;
         // /tmp/fish.user
         std::string tmpdir = "/tmp/fish.";
         tmpdir.append(uname);

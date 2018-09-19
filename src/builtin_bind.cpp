@@ -255,13 +255,18 @@ bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv, bool user,
 
 /// List all current bind modes.
 void builtin_bind_t::list_modes(io_streams_t &streams) {
-    const std::vector<input_mapping_name_t> lst = input_mapping_get_names();
+    // List all known modes, even if they are only in default bindings.
+    const std::vector<input_mapping_name_t> lst = input_mapping_get_names(true);
+    const std::vector<input_mapping_name_t> def_lst = input_mapping_get_names(false);
     // A set accomplishes two things for us here:
     // - It removes duplicates (no twenty "default" entries).
     // - It sorts it, which makes it nicer on the user.
     std::set<wcstring> modes;
 
     for (const input_mapping_name_t &binding : lst) {
+        modes.insert(binding.mode);
+    }
+    for (const input_mapping_name_t &binding : def_lst) {
         modes.insert(binding.mode);
     }
     for (const auto &mode : modes) {

@@ -105,7 +105,7 @@ bool fs_is_case_insensitive(const wcstring &path, int fd,
 ///
 /// We expect the path to already be unescaped.
 bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_list_t &directories,
-                       path_flags_t flags) {
+                       const environment_t &vars, path_flags_t flags) {
     ASSERT_IS_BACKGROUND_THREAD();
 
     const bool require_dir = static_cast<bool>(flags & PATH_REQUIRE_DIR);
@@ -216,7 +216,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
 // Given a string, return whether it prefixes a path that we could cd into. Return that path in
 // out_path. Expects path to be unescaped.
 static bool is_potential_cd_path(const wcstring &path, const wcstring &working_directory,
-                                 path_flags_t flags) {
+                                 const environment_t &vars, path_flags_t flags) {
     wcstring_list_t directories;
 
     if (string_prefixes_string(L"./", path)) {
@@ -224,7 +224,7 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
         directories.push_back(working_directory);
     } else {
         // Get the CDPATH.
-        auto cdpath = env_get(L"CDPATH");
+        auto cdpath = vars.get(L"CDPATH");
         std::vector<wcstring> pathsv =
             cdpath.missing_or_empty() ? wcstring_list_t{L"."} : cdpath->as_list();
 
@@ -236,7 +236,7 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
     }
 
     // Call is_potential_path with all of these directories.
-    return is_potential_path(path, directories, flags | PATH_REQUIRE_DIR);
+    return is_potential_path(path, directories, vars, flags | PATH_REQUIRE_DIR);
 }
 
 // Given a plain statement node in a parse tree, get the command and return it, expanded
@@ -252,6 +252,8 @@ static bool plain_statement_get_expanded_command(const wcstring &src,
 }
 
 rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background) {
+    // TODO: rationalize this principal_vars.
+    const auto &vars = env_stack_t::principal();
     rgb_color_t result = rgb_color_t::normal();
 
     // If sloppy_background is set, then we look at the foreground color even if is_background is
@@ -264,17 +266,17 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background) 
         return rgb_color_t::normal();
     }
 
-    auto var = env_get(highlight_var[idx]);
+    auto var = vars.get(highlight_var[idx]);
 
     // debug( 1, L"%d -> %d -> %ls", highlight, idx, val );
 
-    if (!var) var = env_get(highlight_var[0]);
+    if (!var) var = vars.get(highlight_var[0]);
 
     if (var) result = parse_color(*var, treat_as_background);
 
     // Handle modifiers.
     if (highlight & highlight_modifier_valid_path) {
-        auto var2 = env_get(L"fish_color_valid_path");
+        auto var2 = vars.get(L"fish_color_valid_path");
         if (var2) {
             rgb_color_t result2 = parse_color(*var2, is_background);
             if (result.is_normal())
@@ -800,7 +802,7 @@ void highlighter_t::color_argument(tnode_t<g::tok_string> node) {
 /// Indicates whether the source range of the given node forms a valid path in the given
 /// working_directory.
 static bool node_is_potential_path(const wcstring &src, const parse_node_t &node,
-                                   const wcstring &working_directory) {
+                                   const environment_t &vars, const wcstring &working_directory) {
     if (!node.has_source()) return false;
 
     // Get the node source, unescape it, and then pass it to is_potential_path along with the
@@ -813,7 +815,7 @@ static bool node_is_potential_path(const wcstring &src, const parse_node_t &node
         if (!token.empty() && token.at(0) == HOME_DIRECTORY) token.at(0) = L'~';
 
         const wcstring_list_t working_directory_list(1, working_directory);
-        result = is_potential_path(token, working_directory_list, PATH_EXPAND_TILDE);
+        result = is_potential_path(token, working_directory_list, vars, PATH_EXPAND_TILDE);
     }
     return result;
 }
@@ -843,7 +845,7 @@ void highlighter_t::color_arguments(const std::vector<tnode_t<g::argument>> &arg
                 bool is_help = string_prefixes_string(param, L"--help") ||
                                string_prefixes_string(param, L"-h");
                 if (!is_help && this->io_ok &&
-                    !is_potential_cd_path(param, working_directory, PATH_EXPAND_TILDE)) {
+                    !is_potential_cd_path(param, working_directory, vars, PATH_EXPAND_TILDE)) {
                     this->color_node(arg, highlight_spec_error);
                 }
             }
@@ -1180,7 +1182,7 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
         // (and the cursor is just beyond the last token), we may still underline it.
         if (this->cursor_pos >= node.source_start &&
             this->cursor_pos - node.source_start <= node.source_length &&
-            node_is_potential_path(buff, node, working_directory)) {
+            node_is_potential_path(buff, node, vars, working_directory)) {
             // It is, underline it.
             for (size_t i = node.source_start; i < node.source_start + node.source_length; i++) {
                 // Don't color highlight_spec_error because it looks dorky. For example,

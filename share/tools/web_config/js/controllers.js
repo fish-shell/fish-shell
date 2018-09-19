@@ -255,7 +255,7 @@ controllers.controller("historyController", function($scope, $http, $timeout) {
         if ($scope.filteredItemPages[0].length === 0) {
             return "None";
         }
-        return ($scope.currentPage + 1) + " / " + ($scope.filteredItemPages.length + 1);
+        return ($scope.currentPage + 1) + " / " + $scope.filteredItemPages.length;
     };
 
     $scope.prevPage = function () {

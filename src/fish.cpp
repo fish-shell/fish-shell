@@ -218,7 +218,7 @@ int run_command_list(std::vector<std::string> *cmds, const io_chain_t &io) {
 
 /// Parse the argument list, return the index of the first non-flag arguments.
 static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
-    static const char * const short_opts = "+hilnvc:C:p:d:f:D:";
+    static const char * const short_opts = "+hPilnvc:C:p:d:f:D:";
     static const struct option long_opts[] = {{"command", required_argument, NULL, 'c'},
                                               {"init-command", required_argument, NULL, 'C'},
                                               {"features", required_argument, NULL, 'f'},
@@ -228,6 +228,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                                               {"login", no_argument, NULL, 'l'},
                                               {"no-execute", no_argument, NULL, 'n'},
                                               {"profile", required_argument, NULL, 'p'},
+                                              {"private", no_argument, NULL, 'P'},
                                               {"help", no_argument, NULL, 'h'},
                                               {"version", no_argument, NULL, 'v'},
                                               {NULL, 0, NULL, 0}};
@@ -281,6 +282,10 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
             case 'p': {
                 s_profiling_output_filename = optarg;
                 g_profiling_active = true;
+                break;
+            }
+            case 'P': {
+                start_private_mode();
                 break;
             }
             case 'v': {

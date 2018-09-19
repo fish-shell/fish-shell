@@ -297,7 +297,8 @@ bool string_set_contains(const T &set, const wchar_t *val) {
 /// Check if a variable may not be set using the set command.
 static bool is_read_only(const wchar_t *val) {
     const string_set_t env_read_only = {L"PWD", L"SHLVL", L"history", L"status", L"version", L"fish_pid", L"hostname", L"_"};
-    return string_set_contains(env_read_only, val);
+    return string_set_contains(env_read_only, val) ||
+        (in_private_mode() && wcscmp(L"fish_history", val) == 0);
 }
 
 static bool is_read_only(const wcstring &val) { return is_read_only(val.c_str()); }

@@ -367,4 +367,9 @@ path_list_t valid_paths(const path_list_t &paths, const wcstring &working_direct
 /// return true if all paths in the list are valid
 /// Returns true for if paths is empty
 bool all_paths_are_valid(const path_list_t &paths, const wcstring &working_directory);
+
+/// Sets private mode on. Once in private mode, it cannot be turned off.
+void start_private_mode();
+/// Queries private mode status.
+bool in_private_mode();
 #endif

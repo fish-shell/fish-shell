@@ -48,18 +48,21 @@ struct bind_cmd_opts_t {
 
 /// List a single key binding.
 /// Returns false if no binding with that sequence and mode exists.
-bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode,
+bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bool user,
                                   io_streams_t &streams) {
     std::vector<wcstring> ecmds;
     wcstring sets_mode;
 
-    if (!input_mapping_get(seq, bind_mode, &ecmds, &sets_mode)) {
+    if (!input_mapping_get(seq, bind_mode, &ecmds, user, &sets_mode)) {
         return false;
     }
 
     streams.out.append(L"bind");
 
     // Append the mode flags if applicable.
+    if (!user) {
+        streams.out.append(L" --default");
+    }
     if (bind_mode != DEFAULT_BIND_MODE) {
         const wcstring emode = escape_string(bind_mode, ESCAPE_ALL);
         streams.out.append(L" -M ");
@@ -95,15 +98,15 @@ bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode,
 }
 
 /// List all current key bindings.
-void builtin_bind_t::list(const wchar_t *bind_mode, io_streams_t &streams) {
-    const std::vector<input_mapping_name_t> lst = input_mapping_get_names();
+void builtin_bind_t::list(const wchar_t *bind_mode, bool user, io_streams_t &streams) {
+    const std::vector<input_mapping_name_t> lst = input_mapping_get_names(user);
 
     for (const input_mapping_name_t &binding : lst) {
         if (bind_mode && bind_mode != binding.mode) {
             continue;
         }
 
-        list_one(binding.seq, binding.mode, streams);
+        list_one(binding.seq, binding.mode, user, streams);
     }
 }
 
@@ -186,7 +189,6 @@ bool builtin_bind_t::erase(wchar_t **seq, bool all, const wchar_t *mode, bool us
                                io_streams_t &streams) {
     if (all) {
         // TODO: Respect user setting!
-        debug(0, L"Erasing all %ls", user ? L"user" : L"default");
         input_mapping_clear(mode, user);
         return false;
     }
@@ -216,7 +218,7 @@ bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv, bool user,
     int arg_count = argc - optind;
 
     if (arg_count == 0) {
-        list(opts->bind_mode_given ? opts->bind_mode : NULL, streams);
+        list(opts->bind_mode_given ? opts->bind_mode : NULL, user, streams);
     } else if (arg_count == 1) {
         wcstring seq;
         if (opts->use_terminfo) {
@@ -228,7 +230,7 @@ bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv, bool user,
             seq = argv[optind];
         }
 
-        if (!list_one(seq, opts->bind_mode, streams)) {
+        if (!list_one(seq, opts->bind_mode, user, streams)) {
             wcstring eseq = escape_string(argv[optind], 0);
             if (!opts->silent) {
                 if (opts->use_terminfo) {

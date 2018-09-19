@@ -60,7 +60,7 @@ struct input_mapping_name_t {
 };
 
 /// Returns all mapping names and modes.
-std::vector<input_mapping_name_t> input_mapping_get_names();
+std::vector<input_mapping_name_t> input_mapping_get_names(bool user = true);
 
 /// Erase all bindings
 void input_mapping_clear(const wchar_t *mode = NULL, bool user = true);
@@ -70,7 +70,7 @@ bool input_mapping_erase(const wcstring &sequence, const wcstring &mode = DEFAUL
 
 /// Gets the command bound to the specified key sequence in the specified mode. Returns true if it
 /// exists, false if not.
-bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds,
+bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds, bool user,
                        wcstring *out_new_mode);
 
 /// Return the current bind mode.

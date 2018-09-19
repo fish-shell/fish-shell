@@ -529,10 +529,10 @@ wint_t input_readch(bool allow_commands) {
     }
 }
 
-std::vector<input_mapping_name_t> input_mapping_get_names() {
+std::vector<input_mapping_name_t> input_mapping_get_names(bool user) {
     // Sort the mappings by the user specification order, so we can return them in the same order
     // that the user specified them in.
-    std::vector<input_mapping_t> local_list = mapping_list;
+    std::vector<input_mapping_t> local_list = user ? mapping_list : default_mapping_list;
     std::sort(local_list.begin(), local_list.end(), specification_order_is_less_than);
     std::vector<input_mapping_name_t> result;
     result.reserve(local_list.size());
@@ -570,21 +570,12 @@ bool input_mapping_erase(const wcstring &sequence, const wcstring &mode, bool us
     return result;
 }
 
-bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds,
+bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds, bool user,
                        wcstring *out_sets_mode) {
     bool result = false;
-    for (std::vector<input_mapping_t>::const_iterator it = mapping_list.begin(),
-                                                      end = mapping_list.end();
-         it != end; ++it) {
-        if (sequence == it->seq && mode == it->mode) {
-            *out_cmds = it->commands;
-            *out_sets_mode = it->sets_mode;
-            result = true;
-            break;
-        }
-    }
-    for (std::vector<input_mapping_t>::const_iterator it = default_mapping_list.begin(),
-                                                      end = default_mapping_list.end();
+    auto& ml = user ? mapping_list : default_mapping_list;
+    for (std::vector<input_mapping_t>::const_iterator it = ml.begin(),
+                                                      end = ml.end();
          it != end; ++it) {
         if (sequence == it->seq && mode == it->mode) {
             *out_cmds = it->commands;

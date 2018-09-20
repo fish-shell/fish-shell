@@ -1,4 +1,4 @@
-function abbr_old --description "Manage abbreviations using old fish 2.x scheme."
+function __fish_abbr_old --description "Manage abbreviations using old fish 2.x scheme."
     # parse arguments
     set -l mode
     set -l mode_flag # the flag that was specified, for better errors

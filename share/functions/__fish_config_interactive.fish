@@ -8,7 +8,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         # Perform transitions relevant to going from fish 2.x to 3.x.
 
         # Migrate old universal abbreviations to the new scheme.
-        abbr_old | source
+        __fish_abbr_old | source
 
         set -U __fish_init_3_x
     end

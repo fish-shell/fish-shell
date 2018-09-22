@@ -1436,7 +1436,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                 case L'\t':
                 case L' ': {
                     if (unescape_special && brace_count > 0) {
-                        to_append_or_none = brace_text_start ? BRACE_SPACE : NOT_A_WCHAR;
+                        to_append_or_none = brace_text_start ? wint_t(BRACE_SPACE) : NOT_A_WCHAR;
                     }
                     break;
                 }

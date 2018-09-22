@@ -235,6 +235,26 @@ DIR *wopendir(const wcstring &name) {
     return opendir(tmp.c_str());
 }
 
+dir_t::dir_t(const wcstring &path) {
+    const cstring tmp = wcs2string(path);
+    this->dir = opendir(tmp.c_str());
+}
+
+dir_t::~dir_t() {
+    if (this->dir != nullptr) {
+        closedir(this->dir);
+        this->dir = nullptr;
+    }
+}
+
+bool dir_t::valid() const {
+    return this->dir != nullptr;
+}
+
+bool dir_t::read(wcstring &name) {
+    return wreaddir(this->dir, name);
+}
+
 int wstat(const wcstring &file_name, struct stat *buf) {
     const cstring tmp = wcs2string(file_name);
     return stat(tmp.c_str(), buf);

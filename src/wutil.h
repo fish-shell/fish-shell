@@ -152,6 +152,15 @@ struct file_id_t {
     int compare_file_id(const file_id_t &rhs) const;
 };
 
+/// RAII wrapper for DIR*
+struct dir_t {
+    DIR *dir;
+    bool valid() const;
+    bool read(wcstring &name);
+    dir_t(const wcstring &path);
+    ~dir_t();
+};
+
 #ifndef HASH_FILE_ID
 #define HASH_FILE_ID 1
 namespace std {

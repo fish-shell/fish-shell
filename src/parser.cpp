@@ -96,8 +96,8 @@ static const struct block_lookup_entry block_lookup[] = {
     {(block_type_t)0, 0, 0}};
 
 // Given a file path, return something nicer. Currently we just "unexpand" tildes.
-static wcstring user_presentable_path(const wcstring &path) {
-    return replace_home_directory_with_tilde(path);
+wcstring parser_t::user_presentable_path(const wcstring &path) const {
+    return replace_home_directory_with_tilde(path, vars());
 }
 
 parser_t::parser_t() : variables(env_stack_t::principal()) {}

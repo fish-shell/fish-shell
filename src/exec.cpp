@@ -369,7 +369,7 @@ void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &all_ios) {
     // really make sense, so I'm not trying to fix it here.
     if (!setup_child_process(0, all_ios)) {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
-        auto shlvl_var = env_get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
+        auto shlvl_var = vars.get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
         wcstring shlvl_str = L"0";
         if (shlvl_var) {
             long shlvl = fish_wcstol(shlvl_var->as_string().c_str());
@@ -1085,14 +1085,14 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     return true;
 }
 
-static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, bool apply_exit_status,
-                                  bool is_subcmd) {
+static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstring_list_t *lst,
+                                  bool apply_exit_status, bool is_subcmd) {
     ASSERT_IS_MAIN_THREAD();
     bool prev_subshell = is_subshell;
     const int prev_status = proc_get_last_status();
     bool split_output = false;
 
-    const auto ifs = env_get(L"IFS");
+    const auto ifs = parser.vars().get(L"IFS");
     if (!ifs.missing_or_empty()) {
         split_output = true;
     }
@@ -1163,13 +1163,13 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, boo
     return subcommand_status;
 }
 
-int exec_subshell(const wcstring &cmd, std::vector<wcstring> &outputs, bool apply_exit_status,
-                  bool is_subcmd) {
+int exec_subshell(const wcstring &cmd, parser_t &parser, std::vector<wcstring> &outputs,
+                  bool apply_exit_status, bool is_subcmd) {
     ASSERT_IS_MAIN_THREAD();
-    return exec_subshell_internal(cmd, &outputs, apply_exit_status, is_subcmd);
+    return exec_subshell_internal(cmd, parser, &outputs, apply_exit_status, is_subcmd);
 }
 
-int exec_subshell(const wcstring &cmd, bool apply_exit_status, bool is_subcmd) {
+int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status, bool is_subcmd) {
     ASSERT_IS_MAIN_THREAD();
-    return exec_subshell_internal(cmd, NULL, apply_exit_status, is_subcmd);
+    return exec_subshell_internal(cmd, parser, NULL, apply_exit_status, is_subcmd);
 }

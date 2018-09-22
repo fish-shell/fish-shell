@@ -400,6 +400,9 @@ class reader_data_t {
     /// Return the variable set used for e.g. command duration.
     env_stack_t &vars() { return parser_t::principal_parser().vars(); }
 
+    /// Hackish access to the parser. TODO: rationalize this.
+    parser_t &parser() { return parser_t::principal_parser(); }
+
     const env_stack_t &vars() const { return parser_t::principal_parser().vars(); }
 
     /// Constructor
@@ -829,7 +832,8 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
 
     wcstring_list_t lst;
     proc_push_interactive(0);
-    if (exec_subshell(fish_title_command, lst, false /* ignore exit status */) != -1 &&
+    if (exec_subshell(fish_title_command, current_data()->parser(), lst,
+                      false /* ignore exit status */) != -1 &&
         !lst.empty()) {
         fputws(L"\x1B]0;", stdout);
         for (size_t i = 0; i < lst.size(); i++) {
@@ -867,7 +871,8 @@ static void exec_prompt() {
         // Prepend any mode indicator to the left prompt (issue #1988).
         if (function_exists(MODE_PROMPT_FUNCTION_NAME)) {
             wcstring_list_t mode_indicator_list;
-            exec_subshell(MODE_PROMPT_FUNCTION_NAME, mode_indicator_list, apply_exit_status);
+            exec_subshell(MODE_PROMPT_FUNCTION_NAME, data->parser(), mode_indicator_list,
+                          apply_exit_status);
             // We do not support multiple lines in the mode indicator, so just concatenate all of
             // them.
             for (size_t i = 0; i < mode_indicator_list.size(); i++) {
@@ -878,7 +883,7 @@ static void exec_prompt() {
         if (!data->left_prompt.empty()) {
             wcstring_list_t prompt_list;
             // Ignore return status.
-            exec_subshell(data->left_prompt, prompt_list, apply_exit_status);
+            exec_subshell(data->left_prompt, data->parser(), prompt_list, apply_exit_status);
             for (size_t i = 0; i < prompt_list.size(); i++) {
                 if (i > 0) data->left_prompt_buff += L'\n';
                 data->left_prompt_buff += prompt_list.at(i);
@@ -888,7 +893,7 @@ static void exec_prompt() {
         if (!data->right_prompt.empty()) {
             wcstring_list_t prompt_list;
             // Status is ignored.
-            exec_subshell(data->right_prompt, prompt_list, apply_exit_status);
+            exec_subshell(data->right_prompt, data->parser(), prompt_list, apply_exit_status);
             for (size_t i = 0; i < prompt_list.size(); i++) {
                 // Right prompt does not support multiple lines, so just concatenate all of them.
                 data->right_prompt_buff += prompt_list.at(i);
@@ -2155,9 +2160,9 @@ void reader_import_history_if_necessary() {
         // Try opening a bash file. We make an effort to respect $HISTFILE; this isn't very complete
         // (AFAIK it doesn't have to be exported), and to really get this right we ought to ask bash
         // itself. But this is better than nothing.
-        const auto var = env_get(L"HISTFILE");
+        const auto var = data->vars().get(L"HISTFILE");
         wcstring path = (var ? var->as_string() : L"~/.bash_history");
-        expand_tilde(path);
+        expand_tilde(path, data->vars());
         FILE *f = wfopen(path, "r");
         if (f) {
             data->history->populate_from_bash(f);

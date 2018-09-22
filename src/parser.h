@@ -199,6 +199,9 @@ class parser_t {
     /// every block if it is of type FUNCTION_CALL.
     const wchar_t *is_function(size_t idx = 0) const;
 
+    // Given a file path, return something nicer. Currently we just "unexpand" tildes.
+    wcstring user_presentable_path(const wcstring &path) const;
+
     /// Helper for stack_trace().
     void stack_trace_internal(size_t block_idx, wcstring *out) const;
 

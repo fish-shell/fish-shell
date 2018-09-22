@@ -19,6 +19,7 @@
 #include "common.h"
 #include "env.h"
 #include "exec.h"
+#include "parser.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// The time before we'll recheck an autoloaded file.
@@ -256,7 +257,8 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
     // If we have a script, either built-in or a file source, then run it.
     if (really_load && !script_source.empty()) {
         // Do nothing on failure.
-        exec_subshell(script_source, false /* do not apply exit status */);
+        exec_subshell(script_source, parser_t::principal_parser(),
+                      false /* do not apply exit status */);
     }
 
     if (really_load) {

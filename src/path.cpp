@@ -187,7 +187,7 @@ maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
                 // TODO: if next_path starts with ./ we need to replace the . with the wd.
                 next_path = wd;
             }
-            expand_tilde(next_path);
+            expand_tilde(next_path, env_vars);
             if (next_path.empty()) continue;
 
             wcstring whole_path = next_path;
@@ -213,7 +213,7 @@ maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
 maybe_t<wcstring> path_as_implicit_cd(const wcstring &path, const wcstring &wd,
                                       const environment_t &vars) {
     wcstring exp_path = path;
-    expand_tilde(exp_path);
+    expand_tilde(exp_path, vars);
     if (string_prefixes_string(L"/", exp_path) || string_prefixes_string(L"./", exp_path) ||
         string_prefixes_string(L"../", exp_path) || string_suffixes_string(L"/", exp_path) ||
         exp_path == L"..") {

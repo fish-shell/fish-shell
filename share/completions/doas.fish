@@ -1,4 +1,4 @@
-
+#!/usr/bin/fish
 #
 # Completion for doas https://github.com/multiplexd/doas
 # based on the sudo completions
@@ -21,16 +21,17 @@ function __fish_doas_print_remaining_args
     end
 end
 
-function __fish_doas_no_subcommand
-    not __fish_doas_print_remaining_args >/dev/null
+function __fish_complete_doas_subcommand
+    set -l args (__fish_doas_print_remaining_args)
+    complete -C"$args"
 end
 
-complete -c doas -n "__fish_doas_no_subcommand" -s a -d "Choose auth method on openbsd systems"
-complete -c doas -n "__fish_doas_no_subcommand" -s C -r -d "Parse and check given config file, then search for applying rules"
-complete -c doas -n "__fish_doas_no_subcommand" -s L -d "Clear persisted authorizations, then immeadiately exit. No command is exectued"
-complete -c doas -n "__fish_doas_no_subcommand" -s n -d "Non interactive mode, fail if doas would prompt for password."
-complete -c doas -n "__fish_doas_no_subcommand" -s s -d "Execute the shell from SHELL or /etc/passwd."
-complete -c doas -n "__fish_doas_no_subcommand" -s u -a "(__fish_complete_users)" -x -d "Execute the command as user. The default is root."
+complete -c doas -n "not __fish_doas_print_remaining_args" -s a -d "Choose auth method on systems using /etc/login.conf"
+complete -c doas -n "not __fish_doas_print_remaining_args" -s C -r -d "validate given config file and test it against given command"
+complete -c doas -n "not __fish_doas_print_remaining_args" -s L -d "Clear persisted authorizations, then exit"
+complete -c doas -n "not __fish_doas_print_remaining_args" -s n -d "Fail if doas would prompt for password"
+complete -c doas -n "not __fish_doas_print_remaining_args" -s s -d "Execute the shell from SHELL or /etc/passwd"
+complete -c doas -n "not __fish_doas_print_remaining_args" -s u -a "(__fish_complete_users)" -x -d "Execute the command as user. The default is root."
 
 # Complete the command we are executing under doas
-complete -c doas -xa "( __fish_complete_subcommand )"
+complete -c doas -x -a "(__fish_complete_doas_subcommand)"

@@ -1188,34 +1188,33 @@ bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc
     return result;
 }
 
-static owning_lock<std::map<wcstring, wcstring>> s_abbreviations;
-void update_abbr_cache(const wchar_t *op, const wcstring &varname) {
-    wcstring abbr;
-    if (!unescape_string(varname.substr(wcslen(L"_fish_abbr_")), &abbr, 0, STRING_STYLE_VAR)) {
-        debug(1, L"Abbreviation var '%ls' is not correctly encoded, ignoring it.", varname.c_str());
-        return;
-    }
-    auto abbreviations = s_abbreviations.acquire();
-    abbreviations->erase(abbr);
-    if (wcscmp(op, L"ERASE") != 0) {
-        const auto expansion = env_get(varname);
-        if (!expansion.missing_or_empty()) {
-            abbreviations->emplace(abbr, expansion->as_string());
-        }
-    }
-}
+maybe_t<wcstring> expand_abbreviation(const wcstring &src) {
+    if (src.empty()) return none();
 
-bool expand_abbreviation(const wcstring &src, wcstring *output) {
-    if (src.empty()) return false;
-
-    auto abbreviations = s_abbreviations.acquire();
-    auto abbr = abbreviations->find(src);
-    if (abbr == abbreviations->end()) return false;
-    if (output != NULL) output->assign(abbr->second);
-    return true;
+    const auto &vars = env_stack_t::principal();
+    wcstring unesc_src;
+    if (!unescape_string(src, &unesc_src, STRING_STYLE_VAR)) {
+        return none();
+    }
+    wcstring var_name = L"_fish_abbr_" + unesc_src;
+    auto var_value = vars.get(var_name);
+    if (var_value) {
+        return var_value->as_string();
+    }
+    return none();
 }
 
 std::map<wcstring, wcstring> get_abbreviations() {
-    auto abbreviations = s_abbreviations.acquire();
-    return *abbreviations;
+    // TODO: try to make this cheaper
+    const auto &vars = env_stack_t::principal();
+    const size_t fish_abbr_len = wcslen(L"_fish_abbr_");
+    auto names = vars.get_names(0);
+    std::map<wcstring, wcstring> result;
+    for (const wcstring &name : names) {
+        if (string_prefixes_string(L"_fish_abbr_", name)) {
+            result[name.substr(fish_abbr_len)] = vars.get(name)->as_string();
+        }
+    }
+    return result;
 }
+

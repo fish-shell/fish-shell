@@ -747,14 +747,13 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
     bool result = false;
     if (matching_cmd_node) {
         const wcstring token = matching_cmd_node.get_source(subcmd);
-        wcstring abbreviation;
-        if (expand_abbreviation(token, &abbreviation)) {
+        if (auto abbreviation = expand_abbreviation(token)) {
             // There was an abbreviation! Replace the token in the full command. Maintain the
             // relative position of the cursor.
             if (output != NULL) {
                 output->assign(cmdline);
                 source_range_t r = *matching_cmd_node.source_range();
-                output->replace(subcmd_offset + r.start, r.length, abbreviation);
+                output->replace(subcmd_offset + r.start, r.length, *abbreviation);
             }
             result = true;
         }

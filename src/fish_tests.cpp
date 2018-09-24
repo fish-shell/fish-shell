@@ -1781,19 +1781,19 @@ static void test_abbreviations() {
         if (ret != 0) err(L"Unable to set abbreviation variable");
     }
 
-    wcstring result;
-    if (expand_abbreviation(L"", &result)) err(L"Unexpected success with empty abbreviation");
-    if (expand_abbreviation(L"nothing", &result))
-        err(L"Unexpected success with missing abbreviation");
+    if (expand_abbreviation(L"")) err(L"Unexpected success with empty abbreviation");
+    if (expand_abbreviation(L"nothing")) err(L"Unexpected success with missing abbreviation");
 
-    if (!expand_abbreviation(L"gc", &result)) err(L"Unexpected failure with gc abbreviation");
-    if (result != L"git checkout") err(L"Wrong abbreviation result for gc");
-    result.clear();
+    auto mresult = expand_abbreviation(L"gc");
+    if (!mresult) err(L"Unexpected failure with gc abbreviation");
+    if (*mresult != L"git checkout") err(L"Wrong abbreviation result for gc");
 
-    if (!expand_abbreviation(L"foo", &result)) err(L"Unexpected failure with foo abbreviation");
-    if (result != L"bar") err(L"Wrong abbreviation result for foo");
+    mresult = expand_abbreviation(L"foo");
+    if (!mresult) err(L"Unexpected failure with foo abbreviation");
+    if (*mresult != L"bar") err(L"Wrong abbreviation result for foo");
 
     bool expanded;
+    wcstring result;
     expanded = reader_expand_abbreviation_in_command(L"just a command", 3, &result);
     if (expanded) err(L"Command wrongly expanded on line %ld", (long)__LINE__);
     expanded = reader_expand_abbreviation_in_command(L"gc somebranch", 0, &result);

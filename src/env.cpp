@@ -625,8 +625,6 @@ static void react_to_variable_change(const wchar_t *op, const wcstring &key, env
     auto dispatch = var_dispatch_table.find(key);
     if (dispatch != var_dispatch_table.end()) {
         (*dispatch->second)(op, key, vars);
-    } else if (string_prefixes_string(L"_fish_abbr_", key)) {
-        update_abbr_cache(op, key);
     } else if (string_prefixes_string(L"fish_color_", key)) {
         reader_react_to_color_change();
     }

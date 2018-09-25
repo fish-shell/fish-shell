@@ -802,7 +802,7 @@ static void handle_read_limit_change(const wcstring &op, const wcstring &var_nam
                                      env_stack_t &vars) {
     UNUSED(op);
     UNUSED(var_name);
-    env_set_read_limit();
+    vars.set_read_limit();
 }
 
 static void handle_fish_history_change(const wcstring &op, const wcstring &var_name,
@@ -1241,11 +1241,7 @@ int env_stack_t::set_internal(const wcstring &key, env_mode_flags_t input_var_mo
     ev.arguments.push_back(L"VARIABLE");
     ev.arguments.push_back(L"SET");
     ev.arguments.push_back(key);
-
-    // debug(1, L"env_set: fire events on variable |%ls|", key);
     event_fire(&ev);
-    // debug(1, L"env_set: return from event firing");
-
     react_to_variable_change(L"SET", key, *this);
     return ENV_OK;
 }
@@ -1377,7 +1373,7 @@ maybe_t<env_var_t> env_stack_t::get(const wcstring &key, env_mode_flags_t mode) 
     const bool search_unexported = (mode & ENV_UNEXPORT) || !(mode & ENV_EXPORT);
 
     // Make the assumption that electric keys can't be shadowed elsewhere, since we currently block
-    // that in env_set().
+    // that in env_stack_t::set().
     if (is_electric(key)) {
         if (!search_global) return none();
         if (key == L"history") {
@@ -1450,8 +1446,6 @@ maybe_t<env_var_t> env_get(const wcstring &key, env_mode_flags_t mode) {
 }
 
 void env_universal_barrier() { env_stack_t::principal().universal_barrier(); }
-
-void env_set_read_limit() { return env_stack_t::principal().set_read_limit(); }
 
 /// Returns true if the specified scope or any non-shadowed non-global subscopes contain an exported
 /// variable.

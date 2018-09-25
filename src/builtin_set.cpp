@@ -336,13 +336,13 @@ static void handle_env_return(int retval, const wchar_t *cmd, const wchar_t *key
             break;
         }
         default: {
-            DIE("unexpected env_set() ret val");
+            DIE("unexpected vars.set() ret val");
             break;
         }
     }
 }
 
-/// Call env_set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
+/// Call vars.set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
 /// description of the problem to stderr.
 static int env_set_reporting_errors(const wchar_t *cmd, const wchar_t *key, int scope,
                                     const wcstring_list_t &list, io_streams_t &streams,

@@ -16,7 +16,11 @@
 extern size_t read_byte_limit;
 extern bool curses_initialized;
 
-// Flags that may be passed as the 'mode' in env_set / env_get.
+/// Character for separating two array elements. We use 30, i.e. the ascii record separator since
+/// that seems logical.
+#define ARRAY_SEP (wchar_t)0x1e
+
+// Flags that may be passed as the 'mode' in env_stack_t::set() / environment_t::get().
 enum {
     /// Default mode. Used with `env_get()` to indicate the caller doesn't care what scope the var
     /// is in or whether it is exported or unexported.
@@ -43,7 +47,7 @@ enum {
 };
 typedef uint32_t env_mode_flags_t;
 
-/// Return values for `env_set()`.
+/// Return values for `env_stack_t::set()`.
 enum { ENV_OK, ENV_PERM, ENV_SCOPE, ENV_INVALID, ENV_NOT_FOUND };
 
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
@@ -161,9 +165,6 @@ maybe_t<env_var_t> env_get(const wcstring &key, env_mode_flags_t mode = ENV_DEFA
 
 /// Synchronizes all universal variable changes: writes everything out, reads stuff in.
 void env_universal_barrier();
-
-/// Update the read_byte_limit variable.
-void env_set_read_limit();
 
 /// A environment stack of scopes. This is the main class that tracks fish variables.
 struct var_stack_t;

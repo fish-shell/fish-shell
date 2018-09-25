@@ -882,18 +882,6 @@ struct enum_map {
 };
 
 
-/// Use for scoped enums (i.e. `enum class`) with bitwise operations
-#define ENUM_FLAG_OPERATOR(T,X,Y) \
-inline T operator X (T lhs, T rhs) { return (T) (static_cast<std::underlying_type<T>::type>(lhs) X static_cast<std::underlying_type<T>::type>(rhs)); } \
-inline T operator Y (T &lhs, T rhs) { return lhs = (T) (static_cast<std::underlying_type<T>::type>(lhs) X static_cast<std::underlying_type<T>::type>(rhs)); }
-#define ENUM_FLAGS(T) \
-enum class T; \
-inline T operator ~ (T t) { return (T) (~static_cast<std::underlying_type<T>::type>(t)); } \
-ENUM_FLAG_OPERATOR(T,|,|=) \
-ENUM_FLAG_OPERATOR(T,^,^=) \
-ENUM_FLAG_OPERATOR(T,&,&=) \
-enum class T
-
 /// Given a string return the matching enum. Return the sentinal enum if no match is made. The map
 /// must be sorted by the `str` member. A binary search is twice as fast as a linear search with 16
 /// elements in the map.

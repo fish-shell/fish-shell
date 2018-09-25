@@ -554,7 +554,7 @@ void writembs_check(const char *mbs, const char *mbs_name, bool critical, const 
     if (mbs != NULL) {
         tputs(mbs, 1, &writeb);
     } else if (critical) {
-        auto term = env_get(L"TERM");
+        auto term = env_stack_t::globals().get(L"TERM");
         const wchar_t *fmt =
             _(L"Tried to use terminfo string %s on line %ld of %s, which is "
               L"undefined in terminal of type \"%ls\". Please report this error to %s");

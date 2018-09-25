@@ -66,8 +66,12 @@ int autoload_t::load(const wcstring &cmd, bool reload) {
     CHECK_BLOCK(0);
     ASSERT_IS_MAIN_THREAD();
 
+    // TODO: Justify this principal_parser.
+    auto &parser = parser_t::principal_parser();
+    auto &vars = parser.vars();
+
     if (!this->paths) {
-        auto path_var = env_get(env_var_name);
+        auto path_var = vars.get(env_var_name);
         if (path_var.missing_or_empty()) return 0;
         this->paths = path_var->as_list();
     }
@@ -257,6 +261,7 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
     // If we have a script, either built-in or a file source, then run it.
     if (really_load && !script_source.empty()) {
         // Do nothing on failure.
+        // TODO: rationalize this use of principal_parser, or inject the loading from outside.
         exec_subshell(script_source, parser_t::principal_parser(),
                       false /* do not apply exit status */);
     }

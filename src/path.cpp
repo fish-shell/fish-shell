@@ -119,12 +119,8 @@ bool path_get_path(const wcstring &cmd, wcstring *out_path, const environment_t 
     return path_get_path_core(cmd, out_path, vars.get(L"PATH"));
 }
 
-bool path_get_path(const wcstring &cmd, wcstring *out_path) {
-    return path_get_path_core(cmd, out_path, env_get(L"PATH"));
-}
-
-wcstring_list_t path_get_paths(const wcstring &cmd) {
-    debug(5, L"path_get_paths('%ls')", cmd.c_str());
+wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars) {
+    debug(3, L"path_get_paths('%ls')", cmd.c_str());
     wcstring_list_t paths;
 
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
@@ -138,7 +134,7 @@ wcstring_list_t path_get_paths(const wcstring &cmd) {
         return paths;
     }
 
-    auto path_var = env_get(L"PATH");
+    auto path_var = vars.get(L"PATH");
     std::vector<wcstring> pathsv;
     if (path_var) path_var->to_list(pathsv);
     for (auto path : pathsv) {
@@ -291,7 +287,8 @@ static void path_create(wcstring &path, const wcstring &xdg_var, const wcstring 
     // The vars we fetch must be exported. Allowing them to be universal doesn't make sense and
     // allowing that creates a lock inversion that deadlocks the shell since we're called before
     // uvars are available.
-    const auto xdg_dir = env_get(xdg_var, ENV_GLOBAL | ENV_EXPORT);
+    const auto &vars = env_stack_t::globals();
+    const auto xdg_dir = vars.get(xdg_var, ENV_GLOBAL | ENV_EXPORT);
     if (!xdg_dir.missing_or_empty()) {
         using_xdg = true;
         path = xdg_dir->as_string() + L"/fish";
@@ -301,7 +298,7 @@ static void path_create(wcstring &path, const wcstring &xdg_var, const wcstring 
             saved_errno = errno;
         }
     } else {
-        const auto home = env_get(L"HOME", ENV_GLOBAL | ENV_EXPORT);
+        const auto home = vars.get(L"HOME", ENV_GLOBAL | ENV_EXPORT);
         if (!home.missing_or_empty()) {
             path = home->as_string() +
                    (which_dir == L"config" ? L"/.config/fish" : L"/.local/share/fish");

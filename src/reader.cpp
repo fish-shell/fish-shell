@@ -395,7 +395,7 @@ class reader_data_t {
     void pager_selection_changed();
 
     /// Expand abbreviations at the current cursor position, minus backtrack_amt.
-    bool expand_abbreviation_as_necessary(size_t cursor_backtrack) const;
+    static bool expand_abbreviation_as_necessary(size_t cursor_backtrack);
 
     /// Return the variable set used for e.g. command duration.
     env_stack_t &vars() { return parser_t::principal_parser().vars(); }
@@ -699,7 +699,7 @@ void reader_data_t::pager_selection_changed() {
 
 /// Expand abbreviations at the given cursor position. Does NOT inspect 'data'.
 bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t cursor_pos,
-                                           wcstring *output) {
+                                           const environment_t &vars, wcstring *output) {
     // See if we are at "command position". Get the surrounding command substitution, and get the
     // extent of the first token.
     const wchar_t *const buff = cmdline.c_str();
@@ -750,7 +750,7 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
     bool result = false;
     if (matching_cmd_node) {
         const wcstring token = matching_cmd_node.get_source(subcmd);
-        if (auto abbreviation = expand_abbreviation(token)) {
+        if (auto abbreviation = expand_abbreviation(token, vars)) {
             // There was an abbreviation! Replace the token in the full command. Maintain the
             // relative position of the cursor.
             if (output != NULL) {
@@ -767,15 +767,16 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
 /// Expand abbreviations at the current cursor position, minus the given  cursor backtrack. This may
 /// change the command line but does NOT repaint it. This is to allow the caller to coalesce
 /// repaints.
-bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack) const {
+bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack) {
     reader_data_t *data = current_data();
     bool result = false;
     editable_line_t *el = data->active_edit_line();
-    if (this->expand_abbreviations && el == &data->command_line) {
+    if (data->expand_abbreviations && el == &data->command_line) {
         // Try expanding abbreviations.
         wcstring new_cmdline;
         size_t cursor_pos = el->position - mini(el->position, cursor_backtrack);
-        if (reader_expand_abbreviation_in_command(el->text, cursor_pos, &new_cmdline)) {
+        if (reader_expand_abbreviation_in_command(el->text, cursor_pos, data->vars(),
+                                                  &new_cmdline)) {
             // We expanded an abbreviation! The cursor moves by the difference in the command line
             // lengths.
             size_t new_buff_pos = el->position + new_cmdline.size() - el->text.size();

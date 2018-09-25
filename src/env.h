@@ -22,8 +22,8 @@ extern bool curses_initialized;
 
 // Flags that may be passed as the 'mode' in env_stack_t::set() / environment_t::get().
 enum {
-    /// Default mode. Used with `env_get()` to indicate the caller doesn't care what scope the var
-    /// is in or whether it is exported or unexported.
+    /// Default mode. Used with `env_stack_t::get()` to indicate the caller doesn't care what scope
+    /// the var is in or whether it is exported or unexported.
     ENV_DEFAULT = 0,
     /// Flag for local (to the current block) variable.
     ENV_LOCAL = 1 << 0,
@@ -159,9 +159,6 @@ class null_environment_t : public environment_t {
     maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
     wcstring_list_t get_names(int flags) const override;
 };
-
-/// Gets the variable with the specified name, or none() if it does not exist.
-maybe_t<env_var_t> env_get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT);
 
 /// Synchronizes all universal variable changes: writes everything out, reads stuff in.
 void env_universal_barrier();

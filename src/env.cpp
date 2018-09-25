@@ -349,7 +349,6 @@ static mode_t get_umask() {
 
 /// Properly sets all timezone information.
 static void handle_timezone(const wchar_t *env_var_name, const environment_t &vars) {
-    // const env_var_t var = env_get(env_var_name, ENV_EXPORT);
     const auto var = vars.get(env_var_name, ENV_DEFAULT);
     debug(2, L"handle_timezone() current timezone var: |%ls| => |%ls|", env_var_name,
           !var ? L"MISSING" : var->as_string().c_str());
@@ -697,7 +696,7 @@ void env_stack_t::mark_changed_exported() { vars_stack().mark_changed_exported()
 wcstring environment_t::get_pwd_slash() const {
     // Return "/" if PWD is missing.
     // See https://github.com/fish-shell/fish-shell/issues/5080
-    auto pwd_var = env_get(L"PWD");
+    auto pwd_var = get(L"PWD");
     wcstring pwd;
     if (!pwd_var.missing_or_empty()) {
         pwd = pwd_var->as_string();
@@ -951,8 +950,8 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     get_hostname_identifier(hostname);
     vars.set_one(L"hostname", ENV_GLOBAL, hostname);
 
-    // Set up SHLVL variable. Not we can't use env_get because SHLVL is read-only, and therefore was
-    // not inherited from the environment.
+    // Set up SHLVL variable. Not we can't use vars.get() because SHLVL is read-only, and therefore
+    // was not inherited from the environment.
     wcstring nshlvl_str = L"1";
     if (const char *shlvl_var = getenv("SHLVL")) {
         const wchar_t *end;
@@ -1049,7 +1048,7 @@ static int set_umask(const wcstring_list_t &list_val) {
     }
 
     if (errno || mask > 0777 || mask < 0) return ENV_INVALID;
-    // Do not actually create a umask variable. On env_get() it will be calculated.
+    // Do not actually create a umask variable. On env_stack_t::get() it will be calculated.
     umask(mask);
     return ENV_OK;
 }
@@ -1422,7 +1421,7 @@ maybe_t<env_var_t> env_stack_t::get(const wcstring &key, env_mode_flags_t mode) 
     if (!search_universal) return none();
 
     // Another hack. Only do a universal barrier on the main thread (since it can change variable
-    // values). Make sure we do this outside the env_lock because it may itself call `env_get()`.
+    // values). Make sure we do this outside the env_lock because it may itself call `get()`.
     if (is_main_thread() && !get_proc_had_barrier()) {
         set_proc_had_barrier(true);
         env_universal_barrier();
@@ -1438,11 +1437,6 @@ maybe_t<env_var_t> env_stack_t::get(const wcstring &key, env_mode_flags_t mode) 
     }
 
     return none();
-}
-
-/// Legacy versions.
-maybe_t<env_var_t> env_get(const wcstring &key, env_mode_flags_t mode) {
-    return env_stack_t::principal().get(key, mode);
 }
 
 void env_universal_barrier() { env_stack_t::principal().universal_barrier(); }

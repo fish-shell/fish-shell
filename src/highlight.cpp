@@ -1015,7 +1015,7 @@ static bool command_is_valid(const wcstring &cmd, enum parse_statement_decoratio
     if (!is_valid && function_ok) is_valid = function_exists_no_autoload(cmd, vars);
 
     // Abbreviations
-    if (!is_valid && abbreviation_ok) is_valid = expand_abbreviation(cmd).has_value();
+    if (!is_valid && abbreviation_ok) is_valid = expand_abbreviation(cmd, vars).has_value();
 
     // Regular commands
     if (!is_valid && command_ok) is_valid = path_get_path(cmd, NULL, vars);

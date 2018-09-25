@@ -160,7 +160,7 @@ wcstring replace_home_directory_with_tilde(const wcstring &str, const environmen
 
 /// Abbreviation support. Expand src as an abbreviation, returning the expanded form if found,
 /// none() if not.
-maybe_t<wcstring> expand_abbreviation(const wcstring &src);
+maybe_t<wcstring> expand_abbreviation(const wcstring &src, const environment_t &vars);
 
 /// \return a snapshot of all abbreviations as a map abbreviation->expansion.
 std::map<wcstring, wcstring> get_abbreviations();

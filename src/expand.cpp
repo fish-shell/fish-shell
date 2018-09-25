@@ -1010,7 +1010,7 @@ static expand_error_t expand_stage_wildcards(wcstring path_to_expand, std::vecto
                 // Get the PATH/CDPATH and CWD. Perhaps these should be passed in. An empty CDPATH
                 // implies just the current directory, while an empty PATH is left empty.
                 wcstring_list_t paths;
-                if (auto paths_var = env_get(for_cd ? L"CDPATH" : L"PATH")) {
+                if (auto paths_var = vars.get(for_cd ? L"CDPATH" : L"PATH")) {
                     paths = paths_var->as_list();
                 }
                 if (paths.empty()) {
@@ -1193,17 +1193,15 @@ bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc
     return result;
 }
 
-maybe_t<wcstring> expand_abbreviation(const wcstring &src) {
+maybe_t<wcstring> expand_abbreviation(const wcstring &src, const environment_t &vars) {
     if (src.empty()) return none();
 
-    const auto &vars = env_stack_t::principal();
     wcstring unesc_src;
     if (!unescape_string(src, &unesc_src, STRING_STYLE_VAR)) {
         return none();
     }
     wcstring var_name = L"_fish_abbr_" + unesc_src;
-    auto var_value = vars.get(var_name);
-    if (var_value) {
+    if (auto var_value = vars.get(var_name)) {
         return var_value->as_string();
     }
     return none();

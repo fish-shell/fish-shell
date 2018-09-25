@@ -216,7 +216,7 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
 
 /// Expand abbreviations at the given cursor position. Exposed for testing purposes only.
 bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t cursor_pos,
-                                           wcstring *output);
+                                           const environment_t &vars, wcstring *output);
 
 /// Apply a completion string. Exposed for testing only.
 wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flags_t flags,

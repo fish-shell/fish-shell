@@ -2,3 +2,4 @@
 bind: mode name 'bad bind mode' is not valid. See `help identifiers`.
 # Verify that an invalid bind mode target is rejected.
 bind: mode name 'bind-mode' is not valid. See `help identifiers`.
+bind: No binding found for sequence '\t'

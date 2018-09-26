@@ -1,0 +1,55 @@
+# Listing bindings
+bind --default '' self-insert
+bind --default \n execute
+bind --default \r execute
+bind --default \t complete
+bind --default \cc commandline\ \'\'
+bind --default \cd exit
+bind --default \ce bind
+bind --default \e\[A up-line
+bind --default \e\[B down-line
+bind --default \e\[C forward-char
+bind --default \e\[D backward-char
+bind -M bind_mode \cx true
+bind --default '' self-insert
+bind --default \n execute
+bind --default \r execute
+bind --default \t complete
+bind --default \cc commandline\ \'\'
+bind --default \cd exit
+bind --default \ce bind
+bind --default \e\[A up-line
+bind --default \e\[B down-line
+bind --default \e\[C forward-char
+bind --default \e\[D backward-char
+bind -M bind_mode \cx true
+# Default only
+bind --default '' self-insert
+bind --default \n execute
+bind --default \r execute
+bind --default \t complete
+bind --default \cc commandline\ \'\'
+bind --default \cd exit
+bind --default \ce bind
+bind --default \e\[A up-line
+bind --default \e\[B down-line
+bind --default \e\[C forward-char
+bind --default \e\[D backward-char
+# User only
+bind -M bind_mode \cx true
+# Adding bindings
+bind --default '' self-insert
+bind --default \n execute
+bind --default \r execute
+bind --default \t complete
+bind --default \cc commandline\ \'\'
+bind --default \cd exit
+bind --default \ce bind
+bind --default \e\[A up-line
+bind --default \e\[B down-line
+bind --default \e\[C forward-char
+bind --default \e\[D backward-char
+bind -M bind_mode \cx true
+bind \t 'echo banana'
+# Erasing bindings
+bind --default \t complete

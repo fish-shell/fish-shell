@@ -205,7 +205,6 @@ bool builtin_bind_t::add(const wchar_t *seq, const wchar_t *const *cmds, size_t 
 bool builtin_bind_t::erase(wchar_t **seq, bool all, const wchar_t *mode, bool use_terminfo, bool user,
                                io_streams_t &streams) {
     if (all) {
-        // TODO: Respect user setting!
         input_mapping_clear(mode, user);
         return false;
     }
@@ -217,12 +216,12 @@ bool builtin_bind_t::erase(wchar_t **seq, bool all, const wchar_t *mode, bool us
         if (use_terminfo) {
             wcstring seq2;
             if (get_terminfo_sequence(*seq++, &seq2, streams)) {
-                input_mapping_erase(seq2, mode);
+                input_mapping_erase(seq2, mode, user);
             } else {
                 res = true;
             }
         } else {
-            input_mapping_erase(*seq++, mode);
+            input_mapping_erase(*seq++, mode, user);
         }
     }
 

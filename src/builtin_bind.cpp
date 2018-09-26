@@ -26,7 +26,10 @@ struct bind_cmd_opts_t {
     bool print_help = false;
     bool silent = false;
     bool use_terminfo = false;
-    bool user = true;
+    bool have_user = false;
+    bool user = false;
+    bool have_def = false;
+    bool def = false;
     int mode = BIND_INSERT;
     const wchar_t *bind_mode = DEFAULT_BIND_MODE;
     const wchar_t *sets_bind_mode = L"";
@@ -95,6 +98,20 @@ bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bo
     streams.out.push_back(L'\n');
 
     return true;
+}
+
+// Overload with both kinds of bindings.
+// Returns false only if neither exists.
+bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bool user, bool def,
+                                  io_streams_t &streams) {
+    bool retval = false;
+    if (def) {
+        retval |= list_one(seq, bind_mode, false, streams);
+    }
+    if (user) {
+        retval |= list_one(seq, bind_mode, true, streams);
+    }
+    return retval;
 }
 
 /// List all current key bindings.
@@ -212,13 +229,35 @@ bool builtin_bind_t::erase(wchar_t **seq, bool all, const wchar_t *mode, bool us
     return res;
 }
 
-bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv, bool user,
+bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv,
                                 io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int arg_count = argc - optind;
 
+    if (arg_count < 2) {
+        // If we get both or neither default/user, we list both.
+        if (!opts->have_def && !opts->have_user) {
+            opts->def = true;
+            opts->user = true;
+        }
+    } else {
+        // Inserting both on the other hand makes no sense.
+        if (opts->have_def && opts->have_user) {
+            streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
+                                      L"--default and --user can not be used together when inserting bindings.");
+            return true;
+        }
+    }
+
     if (arg_count == 0) {
-        list(opts->bind_mode_given ? opts->bind_mode : NULL, user, streams);
+        // We don't overload this with user and def because we want them to be grouped.
+        // First the defaults, then the users (because of scrolling).
+        if (opts->def) {
+            list(opts->bind_mode_given ? opts->bind_mode : NULL, false, streams);
+        }
+        if (opts->user) {
+            list(opts->bind_mode_given ? opts->bind_mode : NULL, true, streams);
+        }
     } else if (arg_count == 1) {
         wcstring seq;
         if (opts->use_terminfo) {
@@ -230,7 +269,7 @@ bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv, bool user,
             seq = argv[optind];
         }
 
-        if (!list_one(seq, opts->bind_mode, user, streams)) {
+        if (!list_one(seq, opts->bind_mode, opts->user, opts->def, streams)) {
             wcstring eseq = escape_string(argv[optind], 0);
             if (!opts->silent) {
                 if (opts->use_terminfo) {
@@ -244,6 +283,7 @@ bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv, bool user,
             return true;
         }
     } else {
+        // Actually insert!
         if (add(argv[optind], argv + (optind + 1), argc - (optind + 1), opts->bind_mode,
                 opts->sets_bind_mode, opts->use_terminfo, opts->user, streams)) {
             return true;
@@ -289,6 +329,7 @@ int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss meth
                                                   {L"mode", required_argument, NULL, 'M'},
                                                   {L"sets-mode", required_argument, NULL, 'm'},
                                                   {L"silent", no_argument, NULL, 's'},
+                                                  {L"user", no_argument, NULL, 'u'},
                                                   {NULL, 0, NULL, 0}};
 
     int opt;
@@ -300,7 +341,8 @@ int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss meth
                 break;
             }
             case L'd': {
-                opts.user = false;
+                opts.have_def = true;
+                opts.def = true;
                 break;
             }
             case L'e': {
@@ -348,6 +390,11 @@ int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss meth
                 opts.silent = true;
                 break;
             }
+            case L'u': {
+                opts.have_user = true;
+                opts.user = true;
+                break;
+            }
             case ':': {
                 builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
                 return STATUS_INVALID_ARGS;
@@ -387,17 +434,28 @@ int builtin_bind_t::builtin_bind(parser_t &parser, io_streams_t &streams, wchar_
         return STATUS_CMD_OK;
     }
 
+    // Default to user mode
+    if (!opts.have_def && !opts.have_user) opts.user = true;
     switch (opts.mode) {
         case BIND_ERASE: {
             const wchar_t *bind_mode = opts.bind_mode_given ? opts.bind_mode : NULL;
-            if (erase(&argv[optind], opts.all, bind_mode, opts.use_terminfo, opts.user,
-                                   streams)) {
-                return STATUS_CMD_ERROR;
+            // If we get both, we erase both.
+            if (opts.user) {
+                if (erase(&argv[optind], opts.all, bind_mode, opts.use_terminfo, /* user */ true,
+                          streams)) {
+                    return STATUS_CMD_ERROR;
+                }
+            }
+            if (opts.def) {
+                if (erase(&argv[optind], opts.all, bind_mode, opts.use_terminfo, /* user */ false,
+                          streams)) {
+                    return STATUS_CMD_ERROR;
+                }
             }
             break;
         }
         case BIND_INSERT: {
-            if (insert(optind, argc, argv, opts.user, streams)) {
+            if (insert(optind, argc, argv, streams)) {
                 return STATUS_CMD_ERROR;
             }
             break;

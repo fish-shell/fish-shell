@@ -25,10 +25,11 @@ private:
 	bool erase(wchar_t **seq, bool all, const wchar_t *mode, bool use_terminfo, bool def,
 								 io_streams_t &streams);
 	bool get_terminfo_sequence(const wchar_t *seq, wcstring *out_seq, io_streams_t &streams);
-	bool insert(int optind, int argc, wchar_t **argv, bool def,
+	bool insert(int optind, int argc, wchar_t **argv,
 								 io_streams_t &streams);
 	void list_modes(io_streams_t &streams);
 	bool list_one(const wcstring &seq, const wcstring &bind_mode, bool user, io_streams_t &streams);
+	bool list_one(const wcstring &seq, const wcstring &bind_mode, bool user, bool def, io_streams_t &streams);
 };
 
 inline int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv) {

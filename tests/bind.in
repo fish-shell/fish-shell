@@ -9,3 +9,23 @@ bind -M bind-mode \cX true
 
 # This should succeed and result in a success, zero, status.
 bind -M bind_mode \cX true
+
+echo \# Listing bindings
+bind
+bind --user --default
+echo \# Default only
+bind --default
+echo \# User only
+bind --user
+
+echo \# Adding bindings
+bind \t 'echo banana'
+bind
+echo \# Erasing bindings
+bind --erase \t
+bind \t
+bind \t 'echo wurst'
+bind --erase --user --default \t
+bind \t
+
+exit 0

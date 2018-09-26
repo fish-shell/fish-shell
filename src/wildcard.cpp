@@ -119,7 +119,8 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const
                     return fuzzy_match_none;
                 }
 
-                // Common case of * at the end. In that case we can early out since we know it will match.
+                // Common case of * at the end. In that case we can early out since we know it will
+                // match.
                 if (wc_x[1] == L'\0') {
                     return fuzzy_match_exact;
                 }
@@ -137,7 +138,7 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const
                 wc_x++;
                 str_x++;
                 continue;
-            } else if (*str_x != 0 && *str_x == *wc_x) { // ordinary character
+            } else if (*str_x != 0 && *str_x == *wc_x) {  // ordinary character
                 wc_x++;
                 str_x++;
                 continue;
@@ -156,7 +157,8 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const
 }
 
 // This does something horrible refactored from an even more horrible function.
-static wcstring resolve_description(wcstring *completion, const wchar_t *explicit_desc,
+static wcstring resolve_description(const wchar_t *full_completion, wcstring *completion,
+                                    const wchar_t *explicit_desc,
                                     wcstring (*desc_func)(const wcstring &)) {
     size_t complete_sep_loc = completion->find(PROG_COMPLETE_SEP);
     if (complete_sep_loc != wcstring::npos) {
@@ -166,7 +168,7 @@ static wcstring resolve_description(wcstring *completion, const wchar_t *explici
         return description;
     }
 
-    const wcstring func_result = (desc_func ? desc_func(*completion) : wcstring());
+    const wcstring func_result = (desc_func ? desc_func(full_completion) : wcstring());
     if (!func_result.empty()) {
         return func_result;
     }
@@ -241,7 +243,8 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
         // the wildcard.
         assert(!full_replacement || wcslen(wc) <= wcslen(str));
         wcstring out_completion = full_replacement ? params.orig : str + wcslen(wc);
-        wcstring out_desc = resolve_description(&out_completion, params.desc, params.desc_func);
+        wcstring out_desc =
+            resolve_description(str, &out_completion, params.desc, params.desc_func);
 
         // Note: out_completion may be empty if the completion really is empty, e.g. tab-completing
         // 'foo' when a file 'foo' exists.
@@ -323,8 +326,8 @@ bool wildcard_complete(const wcstring &str, const wchar_t *wc, const wchar_t *de
 }
 
 bool wildcard_match(const wcstring &str, const wcstring &wc, bool leading_dots_fail_to_match) {
-    enum fuzzy_match_type_t match = wildcard_match_internal(
-        str.c_str(), wc.c_str(), leading_dots_fail_to_match);
+    enum fuzzy_match_type_t match =
+        wildcard_match_internal(str.c_str(), wc.c_str(), leading_dots_fail_to_match);
     return match != fuzzy_match_none;
 }
 
@@ -427,7 +430,8 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
         return false;
     }
 
-    if (is_windows_subsystem_for_linux() && string_suffixes_string_case_insensitive(L".dll", filename)) {
+    if (is_windows_subsystem_for_linux() &&
+        string_suffixes_string_case_insensitive(L".dll", filename)) {
         return false;
     }
 

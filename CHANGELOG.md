@@ -67,6 +67,7 @@ fish 3.0 is a major release which brings with it both improvements in functional
 - `test` and `[` now support floating point values in numeric comparisons.
 - Autosuggestions try to avoid arguments that are already present in the command line.
 - Variables may be used inside commands (#154).
+- Bare `bind` invocations in config.fish now work. The `fish_user_key_bindings` function is no longer necessary, but will still be executed if it exists (#5191).
 
 ## Other significant changes
 - Command substitution output is now limited to 10 MB by default (#3822).

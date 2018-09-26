@@ -14,7 +14,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
         set rebind false
         set -e argv[1]
     else
-        bind --erase --all # clear earlier bindings, if any
+        bind --erase --all --default # clear earlier bindings, if any
     end
 
     # Silence warnings about unavailable keys. See #4431, 4188

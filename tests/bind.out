@@ -6,7 +6,6 @@ bind --default \t complete
 bind --default \cc commandline\ \'\'
 bind --default \cd exit
 bind --default \ce bind
-bind --default  backward-delete-char
 bind --default \e\[A up-line
 bind --default \e\[B down-line
 bind --default \e\[C forward-char
@@ -19,7 +18,6 @@ bind --default \t complete
 bind --default \cc commandline\ \'\'
 bind --default \cd exit
 bind --default \ce bind
-bind --default  backward-delete-char
 bind --default \e\[A up-line
 bind --default \e\[B down-line
 bind --default \e\[C forward-char
@@ -33,7 +31,6 @@ bind --default \t complete
 bind --default \cc commandline\ \'\'
 bind --default \cd exit
 bind --default \ce bind
-bind --default  backward-delete-char
 bind --default \e\[A up-line
 bind --default \e\[B down-line
 bind --default \e\[C forward-char
@@ -48,7 +45,6 @@ bind --default \t complete
 bind --default \cc commandline\ \'\'
 bind --default \cd exit
 bind --default \ce bind
-bind --default  backward-delete-char
 bind --default \e\[A up-line
 bind --default \e\[B down-line
 bind --default \e\[C forward-char

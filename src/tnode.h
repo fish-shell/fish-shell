@@ -107,6 +107,9 @@ class tnode_t {
     }
 
     wcstring get_source(const wcstring &str) const {
+        if (!nodeptr) {
+            return L"";
+        }
         return nodeptr->get_source(str);
     }
 

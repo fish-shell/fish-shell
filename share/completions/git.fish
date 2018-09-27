@@ -85,8 +85,13 @@ function __fish_git_files
     # to get _all_ kinds of staged files.
 
     # Save the repo root to remove it from the path later.
-    set -l root (command git rev-parse --show-toplevel 2>/dev/null)
+    set -l root (command git rev-parse --show-toplevel --is-bare-repository 2>/dev/null)
     or return
+
+    # Skip bare repositories.
+    test "$root[2]" = "true"
+    and return
+    or set -e root[2]
 
     # Cache the translated descriptions so we don't have to get it
     # once per file.

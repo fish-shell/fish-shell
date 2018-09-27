@@ -644,9 +644,9 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
 /// Returns a description for the specified function, or an empty string if none.
 static wcstring complete_function_desc(const wcstring &fn) {
     wcstring result;
-    bool has_description = function_get_desc(fn, &result);
+    bool has_description = function_get_desc(fn, result);
     if (!has_description) {
-        function_get_definition(fn, &result);
+        function_get_definition(fn, result);
     }
     return result;
 }

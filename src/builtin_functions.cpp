@@ -124,8 +124,8 @@ static wcstring functions_def(const wcstring &name) {
     CHECK(!name.empty(), L"");  //!OCLINT(multiple unary operator)
     wcstring out;
     wcstring desc, def;
-    function_get_desc(name, &desc);
-    function_get_definition(name, &def);
+    function_get_desc(name, desc);
+    function_get_definition(name, def);
     event_t search(EVENT_ANY);
     search.function_name = name;
     std::vector<std::shared_ptr<event_t>> ev;
@@ -243,7 +243,7 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
             path = L"stdin";
         }
         shadows_scope = props->shadow_scope ? L"scope-shadowing" : L"no-scope-shadowing";
-        function_get_desc(funcname, &description);
+        function_get_desc(funcname, description);
         description = escape_string(description, ESCAPE_NO_QUOTED);
     }
 

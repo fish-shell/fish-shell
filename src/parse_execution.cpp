@@ -528,6 +528,7 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
     tnode_t<g::andor_job_list> condition_boolean_tail = header.child<3>();
 
     // Run while the condition is true.
+    bool loop_executed = false;
     for (;;) {
         // Check the condition.
         parse_execution_result_t cond_ret =
@@ -546,6 +547,8 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
             ret = parse_execution_cancelled;
             break;
         }
+
+        loop_executed = true;
 
         // Push a while block and then check its cancellation reason.
         while_block_t *wb = parser->push_block<while_block_t>();
@@ -569,6 +572,11 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
             break;
         }
     }
+
+    if (loop_executed) {
+        proc_set_last_status(STATUS_CMD_OK);
+    }
+
     return ret;
 }
 

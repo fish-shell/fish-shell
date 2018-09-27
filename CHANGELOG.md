@@ -68,7 +68,6 @@ fish 3.0 is a major release which brings with it both improvements in functional
 - `test` and `[` now support floating point values in numeric comparisons.
 - Autosuggestions try to avoid arguments that are already present in the command line.
 - Variables may be used inside commands (#154).
-- A `hash` function has been added for compatibiility with `sh` and `bash`
 - `while` sets `$status` to a more useful value (#4982)
 
 ## Other significant changes

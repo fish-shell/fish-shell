@@ -346,8 +346,8 @@ bool pager_t::completion_info_passes_filter(const comp_t &info) const {
 
     const wcstring &needle = this->search_field_line.text;
 
-    // We do substring matching.
-    const fuzzy_match_type_t limit = fuzzy_match_substring;
+    // We do full fuzzy matching just like the completion code itself.
+    const fuzzy_match_type_t limit = fuzzy_match_none;
 
     // Match against the description.
     if (string_fuzzy_match_string(needle, info.desc, limit).type != fuzzy_match_none) {

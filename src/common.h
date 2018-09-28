@@ -22,9 +22,9 @@
 #include <mutex>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <unordered_map>
-#include <tuple>
 #include <vector>
 
 #include "fallback.h"  // IWYU pragma: keep
@@ -187,7 +187,8 @@ extern struct termios shell_modes;
 /// The character to use where the text has been truncated. Is an ellipsis on unicode system and a $
 /// on other systems.
 extern wchar_t ellipsis_char;
-/// The character or string to use where text has been truncated (ellipsis if possible, otherwise ...)
+/// The character or string to use where text has been truncated (ellipsis if possible, otherwise
+/// ...)
 extern const wchar_t *ellipsis_str;
 
 /// Character representing an omitted newline at the end of text.
@@ -328,7 +329,8 @@ bool string_prefixes_string(const wchar_t *proposed_prefix, const wchar_t *value
 /// Test if a string is a suffix of another.
 bool string_suffixes_string(const wcstring &proposed_suffix, const wcstring &value);
 bool string_suffixes_string(const wchar_t *proposed_suffix, const wcstring &value);
-bool string_suffixes_string_case_insensitive(const wcstring &proposed_suffix, const wcstring &value);
+bool string_suffixes_string_case_insensitive(const wcstring &proposed_suffix,
+                                             const wcstring &value);
 
 /// Test if a string prefixes another without regard to case. Returns true if a is a prefix of b.
 bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix,
@@ -534,7 +536,7 @@ class null_terminated_array_t {
     void operator=(null_terminated_array_t rhs);
     null_terminated_array_t(const null_terminated_array_t &);
 
-    typedef std::vector<std::basic_string<CharType_t> > string_list_t;
+    typedef std::vector<std::basic_string<CharType_t>> string_list_t;
 
     size_t size() const {
         size_t len = 0;
@@ -882,7 +884,6 @@ struct enum_map {
     const wchar_t *const str;
 };
 
-
 /// Given a string return the matching enum. Return the sentinal enum if no match is made. The map
 /// must be sorted by the `str` member. A binary search is twice as fast as a linear search with 16
 /// elements in the map.
@@ -916,13 +917,13 @@ static const wchar_t *enum_to_str(T enum_val, const enum_map<T> map[]) {
     return NULL;
 };
 
-template<typename... Args>
+template <typename... Args>
 using tuple_list = std::vector<std::tuple<Args...>>;
 
-//Given a container mapping one X to many Y, return a list of {X,Y}
-template<typename X, typename Y>
+// Given a container mapping one X to many Y, return a list of {X,Y}
+template <typename X, typename Y>
 inline tuple_list<X, Y> flatten(const std::unordered_map<X, std::vector<Y>> &list) {
-    tuple_list<X, Y> results(list.size() * 1.5); //just a guess as to the initial size
+    tuple_list<X, Y> results(list.size() * 1.5);  // just a guess as to the initial size
     for (auto &kv : list) {
         for (auto &v : kv.second) {
             results.emplace_back(std::make_tuple(kv.first, v));
@@ -1004,7 +1005,7 @@ struct hash<const wcstring> {
         return hasher((wcstring)w);
     }
 };
-}
+}  // namespace std
 #endif
 
 #endif

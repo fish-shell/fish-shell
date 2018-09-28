@@ -180,8 +180,7 @@ show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
 
 #else   // HAVE_BACKTRACE_SYMBOLS
 
-void __attribute__((noinline))
-show_stackframe(const wchar_t msg_level, int, int) {
+void __attribute__((noinline)) show_stackframe(const wchar_t msg_level, int, int) {
     debug_shared(msg_level, L"Sorry, but your system does not support backtraces");
 }
 #endif  // HAVE_BACKTRACE_SYMBOLS
@@ -331,8 +330,8 @@ char *wcs2str(const wchar_t *in) {
     // Here we probably allocate a buffer probably much larger than necessary.
     char *out = (char *)malloc(MAX_UTF8_BYTES * wcslen(in) + 1);
     assert(out);
-    //Instead of returning the return value of wcs2str_internal, return `out` directly.
-    //This eliminates false warnings in coverity about resource leaks.
+    // Instead of returning the return value of wcs2str_internal, return `out` directly.
+    // This eliminates false warnings in coverity about resource leaks.
     wcs2str_internal(in, out);
     return out;
 }
@@ -521,18 +520,16 @@ void fish_setlocale() {
     if (can_be_encoded(L'\u2026')) {
         ellipsis_char = L'\u2026';
         ellipsis_str = L"\u2026";
-    }
-    else {
-        ellipsis_char = L'$'; // "horizontal ellipsis"
+    } else {
+        ellipsis_char = L'$';  // "horizontal ellipsis"
         ellipsis_str = L"...";
     }
     if (is_windows_subsystem_for_linux()) {
-        //neither of \u23CE and \u25CF can be displayed in the default fonts on Windows, though
-        //they can be *encoded* just fine. Use alternative glyphs.
+        // neither of \u23CE and \u25CF can be displayed in the default fonts on Windows, though
+        // they can be *encoded* just fine. Use alternative glyphs.
         omitted_newline_char = can_be_encoded(L'\u00b6') ? L'\u00b6' : L'~';   // "pilcrow"
         obfuscation_read_char = can_be_encoded(L'\u2022') ? L'\u2022' : L'*';  // "bullet"
-    }
-    else {
+    } else {
         omitted_newline_char = can_be_encoded(L'\u23CE') ? L'\u23CE' : L'~';   // "return"
         obfuscation_read_char = can_be_encoded(L'\u25CF') ? L'\u25CF' : L'#';  // "black circle"
     }
@@ -589,7 +586,6 @@ ssize_t read_loop(int fd, void *buff, size_t count) {
 bool should_suppress_stderr_for_tests() {
     return program_name && !wcscmp(program_name, TESTS_PROGRAM_NAME);
 }
-
 
 static void debug_shared(const wchar_t level, const wcstring &msg) {
     pid_t current_pid = getpid();
@@ -805,7 +801,7 @@ wcstring reformat_for_screen(const wcstring &msg) {
 
 /// Escape a string in a fashion suitable for using as a URL. Store the result in out_str.
 static void escape_string_url(const wcstring &in, wcstring &out) {
-    for (auto& c1 : in) {
+    for (auto &c1 : in) {
         // This silliness is so we get the correct result whether chars are signed or unsigned.
         unsigned int c2 = (unsigned int)c1 & 0xFF;
         if (!(c2 & 0x80) &&
@@ -1027,7 +1023,8 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                 case L';':
                 case L'"':
                 case L'~': {
-                    bool char_is_normal = (c == L'~' && no_tilde) || (c == L'^' && no_caret) || (c == L'?' && no_qmark);
+                    bool char_is_normal = (c == L'~' && no_tilde) || (c == L'^' && no_caret) ||
+                                          (c == L'?' && no_qmark);
                     if (!char_is_normal) {
                         need_escape = 1;
                         if (escape_all) out += L'\\';
@@ -1346,7 +1343,12 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
     int brace_count = 0;
 
     bool errored = false;
-    enum { mode_unquoted, mode_single_quotes, mode_double_quotes, mode_braces } mode = mode_unquoted;
+    enum {
+        mode_unquoted,
+        mode_single_quotes,
+        mode_double_quotes,
+        mode_braces
+    } mode = mode_unquoted;
 
     for (size_t input_position = 0; input_position < input_len && !errored; input_position++) {
         const wchar_t c = input[input_position];
@@ -1418,7 +1420,8 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                         // We can't parse them properly, but it shouldn't hurt,
                         // so we don't assert here.
                         // See #4954.
-                        // assert(brace_count > 0 && "imbalanced brackets are a tokenizer error, we shouldn't be able to get here");
+                        // assert(brace_count > 0 && "imbalanced brackets are a tokenizer error, we
+                        // shouldn't be able to get here");
                         brace_count--;
                         brace_text_start = brace_text_start && brace_count > 0;
                         to_append_or_none = BRACE_END;
@@ -1748,10 +1751,11 @@ bool string_suffixes_string(const wchar_t *proposed_suffix, const wcstring &valu
            value.compare(value.size() - suffix_size, suffix_size, proposed_suffix) == 0;
 }
 
-bool string_suffixes_string_case_insensitive(const wcstring &proposed_suffix, const wcstring &value) {
+bool string_suffixes_string_case_insensitive(const wcstring &proposed_suffix,
+                                             const wcstring &value) {
     size_t suffix_size = proposed_suffix.size();
-    return suffix_size <= value.size() &&
-           wcsncasecmp(value.c_str() + (value.size() - suffix_size), proposed_suffix.c_str(), suffix_size) == 0;
+    return suffix_size <= value.size() && wcsncasecmp(value.c_str() + (value.size() - suffix_size),
+                                                      proposed_suffix.c_str(), suffix_size) == 0;
 }
 
 /// Returns true if seq, represented as a subsequence, is contained within string.
@@ -2061,9 +2065,7 @@ void setup_fork_guards() {
     initial_pid = getpid();
 }
 
-void save_term_foreground_process_group() {
-    initial_fg_process_group = tcgetpgrp(STDIN_FILENO);
-}
+void save_term_foreground_process_group() { initial_fg_process_group = tcgetpgrp(STDIN_FILENO); }
 
 void restore_term_foreground_process_group() {
     if (initial_fg_process_group == -1) return;

@@ -575,7 +575,7 @@ static void test_tokenizer() {
         tokenizer_t t(L"abc\\", 0);
         do_test(t.next(&token));
         do_test(token.type == TOK_ERROR);
-        do_test(token.error == TOK_UNTERMINATED_ESCAPE);
+        do_test(token.error == tokenizer_error_t::unterminated_escape);
         do_test(token.error_offset == 3);
     }
 
@@ -584,7 +584,7 @@ static void test_tokenizer() {
         do_test(t.next(&token));
         do_test(t.next(&token));
         do_test(token.type == TOK_ERROR);
-        do_test(token.error == TOK_CLOSING_UNOPENED_SUBSHELL);
+        do_test(token.error == tokenizer_error_t::closing_unopened_subshell);
         do_test(token.error_offset == 4);
     }
 
@@ -593,7 +593,7 @@ static void test_tokenizer() {
         do_test(t.next(&token));
         do_test(t.next(&token));
         do_test(token.type == TOK_ERROR);
-        do_test(token.error == TOK_UNTERMINATED_SUBSHELL);
+        do_test(token.error == tokenizer_error_t::unterminated_subshell);
         do_test(token.error_offset == 4);
     }
 
@@ -602,7 +602,7 @@ static void test_tokenizer() {
         do_test(t.next(&token));
         do_test(t.next(&token));
         do_test(token.type == TOK_ERROR);
-        do_test(token.error == TOK_UNTERMINATED_SLICE);
+        do_test(token.error == tokenizer_error_t::unterminated_slice);
         do_test(token.error_offset == 4);
     }
 
@@ -1735,7 +1735,9 @@ static void test_abbreviations() {
     env_push(true);
 
     const std::vector<std::pair<const wcstring, const wcstring>> abbreviations = {
-        {L"gc", L"git checkout"}, {L"foo", L"bar"}, {L"gx", L"git checkout"},
+        {L"gc", L"git checkout"},
+        {L"foo", L"bar"},
+        {L"gx", L"git checkout"},
     };
     for (auto it : abbreviations) {
         int ret = env_set_one(L"_fish_abbr_" + it.first, ENV_LOCAL, it.second);

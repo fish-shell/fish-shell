@@ -27,6 +27,23 @@ static bool production_is_empty(const production_element_t *production) {
     return *production == token_type_invalid;
 }
 
+static parse_error_code_t parse_error_from_tokenizer_error(tokenizer_error_t err) {
+    switch (err) {
+        case tokenizer_error_t::none:
+            return parse_error_none;
+        case tokenizer_error_t::unterminated_quote:
+            return parse_error_tokenizer_unterminated_quote;
+        case tokenizer_error_t::unterminated_subshell:
+            return parse_error_tokenizer_unterminated_subshell;
+        case tokenizer_error_t::unterminated_slice:
+            return parse_error_tokenizer_unterminated_slice;
+        case tokenizer_error_t::unterminated_escape:
+            return parse_error_tokenizer_unterminated_escape;
+        default:
+            return parse_error_tokenizer_other;
+    }
+}
+
 /// Returns a string description of this parse error.
 wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring &prefix,
                                              bool is_interactive, bool skip_caret) const {
@@ -671,10 +688,10 @@ void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &sta
 }
 
 void parse_ll_t::report_tokenizer_error(const tok_t &tok) {
-    parse_error_code_t parse_error_code = tok.error->parser_error;
+    parse_error_code_t parse_error_code = parse_error_from_tokenizer_error(tok.error);
     this->parse_error_at_location(tok.offset, tok.length, tok.offset + tok.error_offset,
                                   parse_error_code, L"%ls",
-                                  tok.error->Message());
+                                  tokenizer_get_error_message(tok.error).c_str());
 }
 
 void parse_ll_t::parse_error_unexpected_token(const wchar_t *expected, parse_token_t token) {
@@ -794,8 +811,7 @@ bool parse_ll_t::top_node_handle_terminal_types(const parse_token_t &token) {
         node.keyword = token.keyword;
         node.source_start = token.source_start;
         node.source_length = token.source_length;
-        if (token.preceding_escaped_nl)
-            node.flags |= parse_node_flag_preceding_escaped_nl;
+        if (token.preceding_escaped_nl) node.flags |= parse_node_flag_preceding_escaped_nl;
     } else {
         // Failure
         if (stack_top.type == parse_token_type_string && token.type == parse_token_type_string) {
@@ -863,8 +879,7 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
         special_node.parent = symbol_stack.back().node_idx;
         special_node.source_start = token1.source_start;
         special_node.source_length = token1.source_length;
-        if (token1.preceding_escaped_nl)
-            special_node.flags |= parse_node_flag_preceding_escaped_nl;
+        if (token1.preceding_escaped_nl) special_node.flags |= parse_node_flag_preceding_escaped_nl;
         nodes.push_back(special_node);
 
         // Mark special flags.
@@ -1206,4 +1221,3 @@ const parse_node_t *parse_node_tree_t::find_last_node_of_type(parse_token_type_t
     }
     return result;
 }
-

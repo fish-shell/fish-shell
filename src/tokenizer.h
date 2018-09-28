@@ -23,29 +23,6 @@ enum token_type {
     TOK_COMMENT      /// comment token
 };
 
-struct tokenizer_error {
-private:
-    const wchar_t *_message;
-public:
-    const wchar_t *Message() const;
-    enum parse_error_code_t parser_error; //the parser error associated with this tokenizer error
-    tokenizer_error(const wchar_t *msg, enum parse_error_code_t perr = parse_error_tokenizer_other)
-        : _message(msg), parser_error(perr) {}
-    tokenizer_error(const tokenizer_error&) = delete;
-};
-
-extern tokenizer_error *TOK_ERROR_NONE;
-extern tokenizer_error *TOK_UNTERMINATED_QUOTE;
-extern tokenizer_error *TOK_UNTERMINATED_SUBSHELL;
-extern tokenizer_error *TOK_UNTERMINATED_SLICE;
-extern tokenizer_error *TOK_UNTERMINATED_ESCAPE;
-extern tokenizer_error *TOK_UNTERMINATED_BRACE;
-extern tokenizer_error *TOK_INVALID_REDIRECT;
-extern tokenizer_error *TOK_INVALID_PIPE;
-extern tokenizer_error *TOK_CLOSING_UNOPENED_SUBSHELL;
-extern tokenizer_error *TOK_CLOSING_UNOPENED_BRACE;
-extern tokenizer_error *TOK_ILLEGAL_SLICE;
-
 enum class redirection_type_t {
     overwrite,  // normal redirection: > file.txt
     append,     // appending redirection: >> file.txt
@@ -67,6 +44,25 @@ enum class redirection_type_t {
 
 typedef unsigned int tok_flags_t;
 
+enum class tokenizer_error_t {
+    none,
+    unterminated_quote,
+    unterminated_subshell,
+    unterminated_slice,
+    unterminated_escape,
+    invalid_redirect,
+    invalid_pipe,
+    closing_unopened_subshell,
+    illegal_slice,
+    closing_unopened_brace,
+    unterminated_brace,
+    expected_pclose_found_bclose,
+    expected_bclose_found_pclose,
+};
+
+/// Get the error message for an error \p err.
+wcstring tokenizer_get_error_message(tokenizer_error_t err);
+
 struct tok_t {
     // The type of the token.
     token_type type{TOK_NONE};
@@ -80,7 +76,7 @@ struct tok_t {
     maybe_t<int> redirected_fd{};
 
     // If an error, this is the error code.
-    tokenizer_error *error { TOK_ERROR_NONE };
+    tokenizer_error_t error{tokenizer_error_t::none};
 
     // Whether the token was preceded by an escaped newline.
     bool preceding_escaped_nl{false};
@@ -113,7 +109,7 @@ class tokenizer_t {
     /// Whether to continue the previous line after the comment.
     bool continue_line_after_comment{false};
 
-    tok_t call_error(tokenizer_error *error_type, const wchar_t *token_start,
+    tok_t call_error(tokenizer_error_t error_type, const wchar_t *token_start,
                      const wchar_t *error_loc);
     tok_t read_string();
     maybe_t<tok_t> tok_next();
@@ -155,9 +151,6 @@ int fd_redirected_by_pipe(const wcstring &str);
 
 /// Helper function to return oflags (as in open(2)) for a redirection type.
 int oflags_for_redirection_type(redirection_type_t type);
-
-/// Returns an error message for an error code.
-wcstring error_message_for_code(tokenizer_error err);
 
 enum move_word_style_t {
     move_word_style_punctuation,      // stop at punctuation

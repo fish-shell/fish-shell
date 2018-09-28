@@ -1161,11 +1161,9 @@ static wint_t string_last_char(const wcstring &str) {
 
 /// Given a null terminated string starting with a backslash, read the escape as if it is unquoted,
 /// appending to result. Return the number of characters consumed, or 0 on error.
-size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_incomplete,
-                            bool unescape_special) {
-    if (input[0] != L'\\') {
-        return 0;  // not an escape
-    }
+maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_incomplete,
+                                     bool unescape_special) {
+    assert(input[0] == L'\\' && "Not an escape");
 
     // Here's the character we'll ultimately append, or NOT_A_WCHAR for none. Note that L'\0' is a
     // valid thing to append.
@@ -1328,7 +1326,9 @@ size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_i
         assert((wint_t)result_char == result_char_or_none);
         result->push_back(result_char);
     }
-    return errored ? 0 : in_pos;
+    if (errored) return none();
+
+    return in_pos;
 }
 
 /// Returns the unescaped version of input_str into output_str (by reference). Returns true if
@@ -1357,16 +1357,16 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                 case L'\\': {
                     // Backslashes (escapes) are complicated and may result in errors, or appending
                     // INTERNAL_SEPARATORs, so we have to handle them specially.
-                    size_t escape_chars = read_unquoted_escape(input + input_position, &result,
-                                                               allow_incomplete, unescape_special);
-                    if (escape_chars == 0) {
-                        // A 0 return indicates an error.
+                    auto escape_chars = read_unquoted_escape(input + input_position, &result,
+                                                             allow_incomplete, unescape_special);
+                    if (!escape_chars) {
+                        // A none() return indicates an error.
                         errored = true;
                     } else {
                         // Skip over the characters we read, minus one because the outer loop will
                         // increment it.
-                        assert(escape_chars > 0);
-                        input_position += escape_chars - 1;
+                        assert(*escape_chars > 0);
+                        input_position += *escape_chars - 1;
                     }
                     // We've already appended, don't append anything else.
                     to_append_or_none = NOT_A_WCHAR;

@@ -4180,6 +4180,7 @@ static void run_one_string_test(const wchar_t *const *argv, int expected_rc,
 }
 
 static void test_string() {
+    say(L"Testing builtin_string");
     const struct string_test {
         const wchar_t *argv[15];
         int expected_rc;
@@ -4369,6 +4370,7 @@ static void test_string() {
         {{L"string", L"replace", L"-r", L"a", L"$1", L"a", 0}, STATUS_INVALID_ARGS, L""},
         {{L"string", L"replace", L"-r", L"(a)", L"$2", L"a", 0}, STATUS_INVALID_ARGS, L""},
         {{L"string", L"replace", L"-r", L"*", L".", L"a", 0}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"replace", L"-ra", L"x", L"\\c", 0}, STATUS_CMD_ERROR, L""},
         {{L"string", L"replace", L"-r", L"^(.)", L"\t$1", L"abc", L"x", 0},
          STATUS_CMD_OK,
          L"\tabc\n\tx\n"},
@@ -4463,6 +4465,7 @@ static void test_string() {
         {{L"string", L"trim", L"-c", L"\\/", L"a/"}, STATUS_CMD_OK, L"a\n"},
         {{L"string", L"trim", L"-c", L"\\/", L"\\a/"}, STATUS_CMD_OK, L"a\n"},
         {{L"string", L"trim", L"-c", L"", L".a."}, STATUS_CMD_ERROR, L".a.\n"}};
+    
     for (const auto &t : string_tests) {
         run_one_string_test(t.argv, t.expected_rc, t.expected_out);
     }

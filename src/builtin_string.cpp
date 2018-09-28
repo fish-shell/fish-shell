@@ -906,14 +906,19 @@ class literal_replacer_t : public string_replacer_t {
     bool replace_matches(const wcstring &arg) override;
 };
 
-static wcstring interpret_escapes(const wcstring &arg) {
+static maybe_t<wcstring> interpret_escapes(const wcstring &arg) {
     wcstring result;
     result.reserve(arg.size());
     const wchar_t *cursor = arg.c_str();
     const wchar_t *end = cursor + arg.size();
     while (cursor < end) {
         if (*cursor == L'\\') {
-            cursor += read_unquoted_escape(cursor, &result, true, false);
+            if (auto escape_len = read_unquoted_escape(cursor, &result, true, false)) {
+                cursor += *escape_len;
+            } else {
+                // Invalid escape.
+                return none();
+            }
         } else {
             result.push_back(*cursor);
             cursor++;
@@ -924,7 +929,7 @@ static wcstring interpret_escapes(const wcstring &arg) {
 
 class regex_replacer_t : public string_replacer_t {
     compiled_regex_t regex;
-    wcstring replacement;
+    maybe_t<wcstring> replacement;
 
    public:
     regex_replacer_t(const wchar_t *argv0, const wcstring &pattern, const wcstring &replacement_,
@@ -974,6 +979,7 @@ bool literal_replacer_t::replace_matches(const wcstring &arg) {
 /// indicates an unrecoverable error.
 bool regex_replacer_t::replace_matches(const wcstring &arg) {
     if (!regex.code) return false;  // pcre2_compile() failed
+    if (!replacement) return false;  // replacement was an invalid string
 
     uint32_t options = PCRE2_SUBSTITUTE_OVERFLOW_LENGTH | PCRE2_SUBSTITUTE_EXTENDED |
                        (opts.all ? PCRE2_SUBSTITUTE_GLOBAL : 0);
@@ -991,7 +997,7 @@ bool regex_replacer_t::replace_matches(const wcstring &arg) {
                                     0,  // start offset
                                     options, regex.match,
                                     0,  // match context
-                                    PCRE2_SPTR(replacement.c_str()), replacement.length(),
+                                    PCRE2_SPTR(replacement->c_str()), replacement->length(),
                                     (PCRE2_UCHAR *)output, &outlen);
 
         if (pcre2_rc != PCRE2_ERROR_NOMEMORY || bufsize >= outlen) {

@@ -28,7 +28,8 @@
 #include <vector>
 
 #include "fallback.h"  // IWYU pragma: keep
-#include "signal.h"    // IWYU pragma: keep
+#include "maybe.h"
+#include "signal.h"  // IWYU pragma: keep
 
 // Define a symbol we can use elsewhere in our code to determine if we're being built on MS Windows
 // under Cygwin.
@@ -771,9 +772,9 @@ wcstring debug_escape(const wcstring &in);
 /// defined in a private use area of Unicode. This assumes wchar_t is a unicode character set.
 
 /// Given a null terminated string starting with a backslash, read the escape as if it is unquoted,
-/// appending to result. Return the number of characters consumed, or 0 on error.
-size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_incomplete,
-                            bool unescape_special);
+/// appending to result. Return the number of characters consumed, or none() on error.
+maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_incomplete,
+                                     bool unescape_special);
 
 /// Unescapes a string in-place. A true result indicates the string was unescaped, a false result
 /// indicates the string was unmodified.

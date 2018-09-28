@@ -36,6 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <string>
 #include <vector>
 
+#include "../lmdb/lmdb.h"
 #include "builtin.h"
 #include "common.h"
 #include "env.h"
@@ -382,6 +383,22 @@ int main(int argc, char **argv) {
     }
 
     const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
+
+    // Create and open the lmdb environment, which is shared between all lmdb databases
+    mdb_env_create(&mdb_env);
+    mdb_env_set_maxdbs(mdb_env, 1); // just the function description cache, for now
+    auto cache_path = env_get_runtime_path();
+    auto result = mdb_env_open(mdb_env, wcs2str(cache_path), 0, S_IRWXU);
+    if (result != 0) {
+        debug(1, _(L"Cannot create LMDB environment in %ls: %d"), cache_path.c_str(), result);
+        mdb_env_close(mdb_env);
+        mdb_env = nullptr;
+    } else {
+        before_exit.emplace([=]() {
+                mdb_env_close(mdb_env);
+                mdb_env = nullptr;
+            });
+    }
 
     // save history both on exit and on exec
     if (is_interactive_session) {

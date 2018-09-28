@@ -13,11 +13,13 @@
 #include <algorithm>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
 
+#include "../lmdb/lmdb.h"
 #include "autoload.h"
 #include "common.h"
 #include "env.h"
@@ -28,6 +30,11 @@
 #include "parser_keywords.h"
 #include "reader.h"
 #include "wutil.h"  // IWYU pragma: keep
+
+/// An LMDB RO transaction for looking up function descriptions
+static MDB_txn *fdesc_txn = nullptr;
+static MDB_dbi fdesc_dbi;
+static std::once_flag fdesc_txn_flag;
 
 class function_info_t {
    public:
@@ -73,6 +80,57 @@ static autoload_t function_autoloader(L"fish_function_path", autoloaded_function
 /// Kludgy flag set by the load function in order to tell function_add that the function being
 /// defined is autoloaded. There should be a better way to do this...
 static bool is_autoload = false;
+
+static void init_txn_fdesc() {
+    ASSERT_IS_MAIN_THREAD();
+
+    mdb_txn_begin(mdb_env, nullptr, 0, &fdesc_txn);
+    assert(fdesc_txn != nullptr);
+    before_exit.emplace([=]() { mdb_txn_commit(fdesc_txn); });
+    mdb_dbi_open(fdesc_txn, "fdesc", MDB_CREATE, &fdesc_dbi);
+}
+
+static void cache_func_desc(const wcstring &name, const wcstring &desc) {
+    ASSERT_IS_MAIN_THREAD();
+    std::call_once(fdesc_txn_flag, init_txn_fdesc);
+
+    debug(3, "Caching description for function %ls: %ls", name.c_str(), desc.c_str());
+
+    MDB_txn *txn;
+    mdb_txn_begin(mdb_env, fdesc_txn, 0, &txn);
+
+    MDB_val key {
+        (name.size() + 1) * sizeof(wchar_t),
+        (void *) name.c_str(),
+    };
+    MDB_val value = {
+        (desc.size() + 1) * sizeof(wchar_t),
+        (void *) desc.c_str(),
+    };
+    auto result = mdb_put(txn, fdesc_dbi, &key, &value, 0);
+    assert(result == 0);
+    mdb_txn_commit(txn);
+}
+
+static wcstring cached_func_desc(const wcstring &name) {
+    ASSERT_IS_MAIN_THREAD();
+    std::call_once(fdesc_txn_flag, init_txn_fdesc);
+
+    debug(3, "Looking up cached description for function %ls", name.c_str());
+
+    MDB_val key = {
+        (name.size() + 1) * sizeof(wchar_t),
+        (void *) name.c_str(),
+    };
+    MDB_val value{};
+    auto result = mdb_get(fdesc_txn, fdesc_dbi, &key, &value);
+
+    if (result == MDB_NOTFOUND) {
+        return L"";
+    }
+
+    return wcstring((const wchar_t *)value.mv_data);
+}
 
 /// Make sure that if the specified function is a dynamically loaded function, it has been fully
 /// loaded.
@@ -167,6 +225,9 @@ void function_add(const function_data_t &data, const parser_t &parser) {
     const function_map_t::value_type new_pair(data.name,
                                               function_info_t(data, filename, is_autoload));
     loaded_functions.insert(new_pair);
+    if (!data.description.empty()) {
+        cache_func_desc(data.name, data.description);
+    }
 
     // Add event handlers.
     for (const event_t &event : data.events) {
@@ -256,6 +317,7 @@ std::map<wcstring, env_var_t> function_get_inherit_vars(const wcstring &name) {
     return func ? func->inherit_vars : std::map<wcstring, env_var_t>();
 }
 
+
 bool function_get_desc(const wcstring &name, wcstring &out_desc) {
     // Empty length string goes to NULL.
     scoped_rlock locker(functions_lock);
@@ -265,7 +327,9 @@ bool function_get_desc(const wcstring &name, wcstring &out_desc) {
         return true;
     }
 
-    return false;
+    out_desc = cached_func_desc(name);
+
+    return out_desc.size() != 0;
 }
 
 void function_set_desc(const wcstring &name, const wcstring &desc) {
@@ -275,6 +339,8 @@ void function_set_desc(const wcstring &name, const wcstring &desc) {
     if (iter != loaded_functions.end()) {
         iter->second.description = desc;
     }
+
+    cache_func_desc(name, desc);
 }
 
 bool function_copy(const wcstring &name, const wcstring &new_name) {

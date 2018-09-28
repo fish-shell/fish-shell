@@ -382,6 +382,14 @@ int main(int argc, char **argv) {
     }
 
     const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
+
+    // save history both on exit and on exec
+    if (is_interactive_session) {
+        before_exit.emplace([=]() {
+                history_save_all();
+                });
+    }
+
     env_init(&paths);
     // Set features early in case other initialization depends on them.
     // Start with the ones set in the environment, then those set on the command line (so the
@@ -472,7 +480,6 @@ int main(int argc, char **argv) {
         before_exit.pop();
     }
 
-    history_save_all();
     proc_destroy();
     exit_without_destructors(exit_status);
     return EXIT_FAILURE;  // above line should always exit

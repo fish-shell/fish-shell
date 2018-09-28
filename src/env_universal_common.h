@@ -161,6 +161,8 @@ class universal_notifier_t {
     virtual bool notification_fd_became_readable(int fd);
 };
 
+wcstring get_runtime_path();
+
 // Environment variable for requesting a particular universal notifier. See
 // fetch_default_strategy_from_environment for names.
 #define UNIVERSAL_NOTIFIER_ENV_NAME "fish_universal_notifier"

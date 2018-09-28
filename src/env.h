@@ -197,4 +197,7 @@ extern bool term_has_xn;  // does the terminal have the "eat_newline_glitch"
 
 /// Returns true if we think the terminal supports setting its title.
 bool term_supports_setting_title();
+
+/// Gets a path appropriate for runtime storage
+wcstring env_get_runtime_path();
 #endif

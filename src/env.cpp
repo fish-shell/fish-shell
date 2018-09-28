@@ -1631,6 +1631,68 @@ maybe_t<env_var_t> env_vars_snapshot_t::get(const wcstring &key) const {
     return iter->second;
 }
 
+
+#if !defined(__APPLE__) && !defined(__CYGWIN__)
+/// Check, and create if necessary, a secure runtime path. Derived from tmux.c in tmux
+/// (http://tmux.sourceforge.net/).
+static int check_runtime_path(const char *path) {
+    // Copyright (c) 2007 Nicholas Marriott <nicm@users.sourceforge.net>
+    //
+    // Permission to use, copy, modify, and distribute this software for any
+    // purpose with or without fee is hereby granted, provided that the above
+    // copyright notice and this permission notice appear in all copies.
+    //
+    // THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+    // WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+    // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+    // ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+    // WHATSOEVER RESULTING FROM LOSS OF MIND, USE, DATA OR PROFITS, WHETHER
+    // IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
+    // OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+    struct stat statpath;
+    uid_t uid = geteuid();
+
+    if (mkdir(path, S_IRWXU) != 0 && errno != EEXIST) return errno;
+    if (lstat(path, &statpath) != 0) return errno;
+    if (!S_ISDIR(statpath.st_mode) || statpath.st_uid != uid ||
+        (statpath.st_mode & (S_IRWXG | S_IRWXO)) != 0)
+        return EACCES;
+    return 0;
+}
+#endif
+
+/// Return the path of an appropriate runtime data directory.
+wcstring env_get_runtime_path() {
+    wcstring result;
+    const char *dir = getenv("XDG_RUNTIME_DIR");
+
+    // Check that the path is actually usable. Technically this is guaranteed by the fdo spec but in
+    // practice it is not always the case: see #1828 and #2222.
+    int mode = R_OK | W_OK | X_OK;
+    if (dir != NULL && access(dir, mode) == 0 && check_runtime_path(dir) == 0) {
+        result = str2wcstring(dir);
+    } else {
+        // Don't rely on $USER being set, as setup_user() has not yet been called.
+        // See https://github.com/fish-shell/fish-shell/issues/5180
+        const char *uname = getpwuid(geteuid())->pw_name;
+        // /tmp/fish.user
+        std::string tmpdir = "/tmp/fish.";
+        tmpdir.append(uname);
+
+#if !defined(__APPLE__) && !defined(__CYGWIN__)
+        if (check_runtime_path(tmpdir.c_str()) != 0) {
+            debug(0, L"Runtime path not available.");
+            debug(0, L"Try deleting the directory %s and restarting fish.", tmpdir.c_str());
+            return result;
+        }
+#endif
+
+        result = str2wcstring(tmpdir);
+    }
+    return result;
+}
+
+
 const wchar_t *const env_vars_snapshot_t::highlighting_keys[] = {L"PATH", L"CDPATH",
                                                                  L"fish_function_path", NULL};
 

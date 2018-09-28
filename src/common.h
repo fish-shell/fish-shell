@@ -21,6 +21,7 @@
 #include <memory>
 #include <mutex>
 #include <sstream>
+#include <stack>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -422,6 +423,8 @@ void assert_is_main_thread(const char *who);
 void assert_is_background_thread(const char *who);
 #define ASSERT_IS_BACKGROUND_THREAD_TRAMPOLINE(x) assert_is_background_thread(x)
 #define ASSERT_IS_BACKGROUND_THREAD() ASSERT_IS_BACKGROUND_THREAD_TRAMPOLINE(__FUNCTION__)
+
+extern std::stack<std::function<void()>> before_exit;
 
 // fish_mutex is a wrapper around std::mutex that tracks whether it is locked, allowing for checking
 // if the mutex is locked. It owns a boolean guarded by the lock that records whether the lock is

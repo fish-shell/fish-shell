@@ -78,6 +78,7 @@ static void debug_shared(const wchar_t msg_level, const wcstring &msg);
 
 const wcstring whitespace = L" \t\r\n\v";
 const char *whitespace_narrow = " \t\r\n\v";
+std::stack<std::function<void()>> before_exit;
 
 bool is_whitespace(const wchar_t input) {
     for (auto c : whitespace) {

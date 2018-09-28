@@ -1632,7 +1632,11 @@ maybe_t<env_var_t> env_vars_snapshot_t::get(const wcstring &key) const {
 }
 
 
-#if !defined(__APPLE__) && !defined(__CYGWIN__)
+#if defined(__APPLE__) || defined(__CYGWIN__)
+static int check_runtime_path(const char *path) {
+    return 0;
+}
+#else
 /// Check, and create if necessary, a secure runtime path. Derived from tmux.c in tmux
 /// (http://tmux.sourceforge.net/).
 static int check_runtime_path(const char *path) {
@@ -1679,13 +1683,11 @@ wcstring env_get_runtime_path() {
         std::string tmpdir = "/tmp/fish.";
         tmpdir.append(uname);
 
-#if !defined(__APPLE__) && !defined(__CYGWIN__)
         if (check_runtime_path(tmpdir.c_str()) != 0) {
             debug(0, L"Runtime path not available.");
             debug(0, L"Try deleting the directory %s and restarting fish.", tmpdir.c_str());
             return result;
         }
-#endif
 
         result = str2wcstring(tmpdir);
     }

@@ -34,6 +34,7 @@
 #include <memory>  // IWYU pragma: keep
 #include <type_traits>
 
+#include "../lmdb/lmdb.h"
 #include "common.h"
 #include "env.h"
 #include "expand.h"
@@ -2234,3 +2235,6 @@ bool valid_func_name(const wcstring &str) {
     if (str.find_first_of(L'/') != wcstring::npos) return false;
     return true;
 }
+
+MDB_env *mdb_env = nullptr;
+std::vector<MDB_txn*> mdb_pending_transactions{};

@@ -1011,4 +1011,9 @@ struct hash<const wcstring> {
 }  // namespace std
 #endif
 
+struct MDB_env;
+struct MDB_txn;
+extern MDB_env *mdb_env;
+extern std::vector<MDB_txn*> mdb_pending_transactions;
+
 #endif

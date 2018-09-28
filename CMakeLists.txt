@@ -109,13 +109,14 @@ ENDIF()
 
 # Set up PCRE2
 INCLUDE(cmake/PCRE2.cmake)
+ADD_SUBDIRECTORY(lmdb)
 
 # Set up the docs.
 INCLUDE(cmake/Docs.cmake)
 
 # Define a function to link dependencies.
 FUNCTION(FISH_LINK_DEPS target)
-  TARGET_LINK_LIBRARIES(${target} fishlib tinyexpr)
+  TARGET_LINK_LIBRARIES(${target} fishlib tinyexpr liblmdb)
 ENDFUNCTION(FISH_LINK_DEPS)
 
 ADD_LIBRARY(tinyexpr STATIC src/tinyexpr.c src/tinyexpr.h)

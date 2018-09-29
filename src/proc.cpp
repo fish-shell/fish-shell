@@ -264,6 +264,12 @@ int job_signal(job_t *j, int signal) {
     return res;
 }
 
+static void mark_job_complete(const job_t *j) {
+    for (auto &p : j->processes) {
+        p->completed = 1;
+    }
+}
+
 /// Store the status of the process pid that was returned by waitpid.
 static void mark_process_status(process_t *p, int status) {
     // debug( 0, L"Process %ls %ls", p->argv[0], WIFSTOPPED (status)?L"stopped":(WIFEXITED( status
@@ -362,9 +368,12 @@ typedef unsigned int process_generation_count_t;
 /// the SIGCHLD signal handler, and therefore does not need atomics or locks.
 static volatile process_generation_count_t s_sigchld_generation_cnt = 0;
 
-/// If we have received a SIGCHLD signal, process any children. If await is false, this returns
-/// immediately if no SIGCHLD has been received. If await is true, this waits for one. Returns true
-/// if something was processed. This returns the number of children processed, or -1 on error.
+/// If we have received a SIGCHLD signal, reap exited children of fully-constructed jobs. We cannot
+/// reap **all** children (as in, `waitpid(-1, ...)`) since that may reap a pgrp leader that has
+/// exited but has another process in its job that has yet to launch and join its pgrp (#5219).
+/// If await is false, this returns immediately if no SIGCHLD has been received. If await is true,
+/// this waits for one. Returns true if something was processed.
+/// This returns the number of children processed, or -1 on error.
 static int process_mark_finished_children(bool wants_await) {
     ASSERT_IS_MAIN_THREAD();
 
@@ -399,12 +408,39 @@ static int process_mark_finished_children(bool wants_await) {
             }
 
             int status = -1;
-            pid_t pid = waitpid(-1, &status, options);
+            pid_t pid = 0;
+
+            bool any_jobs = false;
+            // Reap only processes belonging to fully-constructed jobs to prevent reaping of processes
+            // before other processes in the same process group have a chance to join their pgrp.
+            job_t *j; job_iterator_t jobs;
+            while ((j = jobs.next())) {
+                any_jobs = true;
+                if (j->pgid == -2 || !j->get_flag(JOB_CONSTRUCTED)) {
+                    // Job has not been fully constructed yet
+                    debug(4, "Skipping iteration of not fully constructed job %d", j->pgid);
+                    continue;
+                }
+
+                assert(j->pgid != 0);
+                debug(4, "Waiting on processes from job %d", j->pgid);
+                pid = waitpid(-1 * j->pgid, &status, options);
+                if (pid != 0) {
+                    // We'll handle this below
+                    break;
+                }
+            }
+
+            if (!any_jobs) {
+                debug(4, "No jobs found to wait for!");
+            }
+
             if (pid > 0) {
-                // We got a valid pid.
                 handle_child_status(pid, status);
                 processed_count += 1;
-            } else if (pid == 0) {
+                continue;
+            }
+            else if (pid == 0) {
                 // No ready-and-waiting children, we're done.
                 break;
             } else {
@@ -789,7 +825,7 @@ bool terminal_give_to_job(const job_t *j, bool cont) {
     // http://curiousthing.org/sigttin-sigttou-deep-dive-linux In all cases, our goal here was just
     // to hand over control of the terminal to this process group, which is a no-op if it's already
     // been done.
-    if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
+    if (j->pgid == -2 || tcgetpgrp(STDIN_FILENO) == j->pgid) {
         debug(4, L"Process group %d already has control of terminal\n", j->pgid);
     } else {
         debug(4,
@@ -806,6 +842,7 @@ bool terminal_give_to_job(const job_t *j, bool cont) {
         // guarantee the process isn't going to exit while we wait (which would cause us to possibly
         // block indefinitely).
         while (tcsetpgrp(STDIN_FILENO, j->pgid) != 0) {
+            debug(3, "tcsetpgrp failed");
             bool pgroup_terminated = false;
             if (errno == EINTR) {
                 ;  // Always retry on EINTR, see comments in tcsetattr EINTR code below.
@@ -844,7 +881,9 @@ bool terminal_give_to_job(const job_t *j, bool cont) {
                 // the group terminated, and didn't need to access the terminal, otherwise it would
                 // have hung waiting for terminal IO (SIGTTIN). We can ignore this.
                 debug(3, L"tcsetpgrp called but process group %d has terminated.\n", j->pgid);
-                break;
+                mark_job_complete(j);
+                signal_unblock();
+                return true;
             }
         }
     }
@@ -971,19 +1010,21 @@ void job_continue(job_t *j, bool cont) {
 
             // Wait for job to report.
             while (!reader_exit_forced() && !job_is_stopped(j) && !job_is_completed(j)) {
-                // debug( 1, L"select_try()" );
                 switch (select_try(j)) {
                     case 1: {
+                        // debug(1, L"select_try() 1" );
                         read_try(j);
                         process_mark_finished_children(false);
                         break;
                     }
                     case 0: {
+                        // debug(1, L"select_try() 0" );
                         // No FDs are ready. Look for finished processes.
-                        process_mark_finished_children(false);
+                        process_mark_finished_children(true);
                         break;
                     }
                     case -1: {
+                        // debug(1, L"select_try() -1" );
                         // If there is no funky IO magic, we can use waitpid instead of handling
                         // child deaths through signals. This gives a rather large speed boost (A
                         // factor 3 startup time improvement on my 300 MHz machine) on short-lived

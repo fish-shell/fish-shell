@@ -206,9 +206,8 @@ extern bool g_profiling_active;
 /// Name of the current program. Should be set at startup. Used by the debug function.
 extern const wchar_t *program_name;
 
-/// Set to false at run-time if it's been determined we can't trust the last modified timestamp on
-/// the tty.
-extern bool has_working_tty_timestamps;
+/// Set to false if it's been determined we can't trust the last modified timestamp on the tty.
+extern const bool has_working_tty_timestamps;
 
 /// A list of all whitespace characters
 extern const wcstring whitespace;

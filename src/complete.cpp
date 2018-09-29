@@ -1649,18 +1649,8 @@ wcstring complete_print() {
 void complete_invalidate_path() { completion_autoloader.invalidate(); }
 
 /// Completion "wrapper" support. The map goes from wrapping-command to wrapped-command-list.
-static fish_mutex_t wrapper_lock;
-typedef std::unordered_map<wcstring, wcstring_list_t> wrapper_map_t;
-static wrapper_map_t &wrap_map() {
-    ASSERT_IS_LOCKED(wrapper_lock);
-    // A pointer is a little more efficient than an object as a static because we can elide the
-    // thread-safe initialization.
-    static wrapper_map_t *wrapper_map = NULL;
-    if (wrapper_map == NULL) {
-        wrapper_map = new wrapper_map_t();
-    }
-    return *wrapper_map;
-}
+using wrapper_map_t = std::unordered_map<wcstring, wcstring_list_t>;
+static owning_lock<wrapper_map_t> wrapper_map;
 
 /// Add a new target that wraps a command. Example: __fish_XYZ (function) wraps XYZ (target).
 bool complete_add_wrapper(const wcstring &command, const wcstring &new_target) {
@@ -1668,8 +1658,8 @@ bool complete_add_wrapper(const wcstring &command, const wcstring &new_target) {
         return false;
     }
 
-    scoped_lock locker(wrapper_lock);
-    wrapper_map_t &wraps = wrap_map();
+    auto locked_map = wrapper_map.acquire();
+    wrapper_map_t &wraps = *locked_map;
     wcstring_list_t *targets = &wraps[command];
     // If it's already present, we do nothing.
     if (!contains(*targets, new_target)) {
@@ -1683,8 +1673,8 @@ bool complete_remove_wrapper(const wcstring &command, const wcstring &target_to_
         return false;
     }
 
-    scoped_lock locker(wrapper_lock);
-    wrapper_map_t &wraps = wrap_map();
+    auto locked_map = wrapper_map.acquire();
+    wrapper_map_t &wraps = *locked_map;
     bool result = false;
     wrapper_map_t::iterator current_targets_iter = wraps.find(command);
     if (current_targets_iter != wraps.end()) {
@@ -1702,14 +1692,14 @@ wcstring_list_t complete_get_wrap_targets(const wcstring &command) {
     if (command.empty()) {
         return {};
     }
-    scoped_lock locker(wrapper_lock);
-    const wrapper_map_t &wraps = wrap_map();
+    auto locked_map = wrapper_map.acquire();
+    wrapper_map_t &wraps = *locked_map;
     auto iter = wraps.find(command);
     if (iter == wraps.end()) return {};
     return iter->second;
 }
 
 tuple_list<wcstring, wcstring> complete_get_wrap_pairs() {
-    scoped_lock locker(wrapper_lock);
-    return flatten(wrap_map());
+    auto locked_map = wrapper_map.acquire();
+    return flatten(*locked_map);
 }

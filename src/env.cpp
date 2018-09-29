@@ -736,15 +736,6 @@ void misc_init() {
         fflush(stdout);
         setvbuf(stdout, NULL, _IONBF, 0);
     }
-
-#if defined(OS_IS_CYGWIN) || defined(WSL)
-    // MS Windows tty devices do not currently have either a read or write timestamp. Those
-    // respective fields of `struct stat` are always the current time. Which means we can't
-    // use them. So we assume no external program has written to the terminal behind our
-    // back. This makes multiline promptusable. See issue #2859 and
-    // https://github.com/Microsoft/BashOnWindows/issues/545
-    has_working_tty_timestamps = false;
-#endif
 }
 
 static void env_universal_callbacks(callback_data_list_t &callbacks) {

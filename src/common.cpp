@@ -64,6 +64,7 @@ int debug_stack_frames = 0;  // default number of stack frames to show on debug(
 static pid_t initial_pid = 0;
 
 /// Be able to restore the term's foreground process group.
+/// This is set during startup and not modified after.
 static pid_t initial_fg_process_group = -1;
 
 /// This struct maintains the current state of the terminal size. It is updated on demand after
@@ -76,23 +77,34 @@ static volatile bool termsize_valid = false;
 static char *wcs2str_internal(const wchar_t *in, char *out);
 static void debug_shared(const wchar_t msg_level, const wcstring &msg);
 
-const wcstring whitespace = L" \t\r\n\v";
-const char *whitespace_narrow = " \t\r\n\v";
-
-bool is_whitespace(const wchar_t input) {
-    for (auto c : whitespace) {
-        if (c == input) {
+bool is_whitespace(wchar_t c) {
+    switch (c) {
+        case ' ':
+        case '\t':
+        case '\r':
+        case '\n':
+        case '\v':
             return true;
-        }
+        default:
+            return false;
     }
-    return false;
 }
 
 bool is_whitespace(const wcstring &input) {
-    return input.find_first_not_of(whitespace) == wcstring::npos;
+    bool (*pred)(wchar_t c) = is_whitespace;
+    return std::all_of(input.begin(), input.end(), pred);
 }
 
-bool has_working_tty_timestamps = true;
+#if defined(OS_IS_CYGWIN) || defined(WSL)
+// MS Windows tty devices do not currently have either a read or write timestamp. Those
+// respective fields of `struct stat` are always the current time. Which means we can't
+// use them. So we assume no external program has written to the terminal behind our
+// back. This makes multiline promptusable. See issue #2859 and
+// https://github.com/Microsoft/BashOnWindows/issues/545
+const bool has_working_tty_timestamps = false;
+#else
+const bool has_working_tty_timestamps = true;
+#endif
 
 /// Convert a character to its integer equivalent if it is a valid character for the requested base.
 /// Return the integer value if it is valid else -1.
@@ -598,7 +610,7 @@ static void debug_shared(const wchar_t level, const wcstring &msg) {
     }
 }
 
-static wchar_t level_char[] = {L'E', L'W', L'2', L'3', L'4', L'5'};
+static const wchar_t level_char[] = {L'E', L'W', L'2', L'3', L'4', L'5'};
 void __attribute__((noinline)) debug_impl(int level, const wchar_t *msg, ...) {
     int errno_old = errno;
     va_list va;
@@ -2065,7 +2077,10 @@ void setup_fork_guards() {
     initial_pid = getpid();
 }
 
-void save_term_foreground_process_group() { initial_fg_process_group = tcgetpgrp(STDIN_FILENO); }
+void save_term_foreground_process_group() {
+    ASSERT_IS_MAIN_THREAD();
+    initial_fg_process_group = tcgetpgrp(STDIN_FILENO);
+}
 
 void restore_term_foreground_process_group() {
     if (initial_fg_process_group == -1) return;

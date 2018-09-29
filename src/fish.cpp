@@ -241,7 +241,7 @@ int run_command_list(std::vector<std::string> *cmds, const io_chain_t &io) {
 
 /// Parse the argument list, return the index of the first non-flag arguments.
 static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
-    static const char *short_opts = "+hilnvc:C:p:d:f:D:";
+    static const char * const short_opts = "+hilnvc:C:p:d:f:D:";
     static const struct option long_opts[] = {{"command", required_argument, NULL, 'c'},
                                               {"init-command", required_argument, NULL, 'C'},
                                               {"features", required_argument, NULL, 'f'},
@@ -361,8 +361,8 @@ int main(int argc, char **argv) {
     // struct stat tmp;
     // stat("----------FISH_HIT_MAIN----------", &tmp);
 
+    const char *dummy_argv[2] = {"fish", NULL};
     if (!argv[0]) {
-        static const char *dummy_argv[2] = {"fish", NULL};
         argv = (char **)dummy_argv;  //!OCLINT(parameter reassignment)
         argc = 1;                    //!OCLINT(parameter reassignment)
     }

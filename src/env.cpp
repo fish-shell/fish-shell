@@ -697,37 +697,13 @@ void env_set_read_limit() {
 }
 
 wcstring env_get_pwd_slash() {
+    // Return "/" if PWD is missing.
+    // See https://github.com/fish-shell/fish-shell/issues/5080
     auto pwd_var = env_get(L"PWD");
     wcstring pwd;
     if (!pwd_var.missing_or_empty()) {
         pwd = pwd_var->as_string();
     }
-    else {
-        // Not sure how we can end up here, but it's possible.
-        // See https://github.com/fish-shell/fish-shell/issues/5080
-        // Perhaps it can happen on some platforms if the path is too long?
-        std::vector<char> path;
-        bool cwd_success = false;
-        for (int i = 1; !cwd_success && i <= 10; ++i) {
-            path.resize(PATH_MAX * i);
-            if (getcwd(&path[0], PATH_MAX * i) == nullptr) {
-                if (errno == ERANGE) {
-                    // buffer is not big enough, try again (up to a point)
-                    continue;
-                }
-                debug(1, "getcwd() failed with errno %d", errno);
-                // . but with a trailing slash, because that's what this function does
-                return L"./";
-            }
-            cwd_success = true;
-        }
-        if (!cwd_success) {
-            debug(1, "getcwd() path too long!");
-            return L"./";
-        }
-        pwd = str2wcstring(path.data());
-    }
-
     if (!string_suffixes_string(L"/", pwd)) {
         pwd.push_back(L'/');
     }

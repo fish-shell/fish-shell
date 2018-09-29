@@ -466,12 +466,6 @@ int main(int argc, char **argv) {
         parser.emit_profiling(s_profiling_output_filename);
     }
 
-    // since we exit without destructors, we need some way to run cleanup code when necessary
-    while (!before_exit.empty()) {
-        before_exit.top()();
-        before_exit.pop();
-    }
-
     history_save_all();
     proc_destroy();
     exit_without_destructors(exit_status);

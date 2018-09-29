@@ -359,12 +359,6 @@ static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *proce
 void internal_exec(job_t *j, const io_chain_t &&all_ios) {
     // Do a regular launch -  but without forking first...
 
-    // since we are about to quit, make sure to run pending cleanup tasks
-    while (!before_exit.empty()) {
-        before_exit.top()();
-        before_exit.pop();
-    }
-
     // setup_child_process makes sure signals are properly set up.
 
     // PCA This is for handling exec. Passing all_ios here matches what fish 2.0.0 and 1.x did.

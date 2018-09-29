@@ -101,16 +101,6 @@ static maybe_t<wcstring> default_vars_path() {
     return none();
 }
 
-/// Returns a "variables" file in the appropriate runtime directory. This is called infrequently and
-/// so does not need to be cached.
-static wcstring default_named_pipe_path() {
-    wcstring result = env_get_runtime_path();
-    if (!result.empty()) {
-        result.append(L"/fish_universal_variables");
-    }
-    return result;
-}
-
 /// Test if the message msg contains the command cmd.
 static bool match(const wchar_t *msg, const wchar_t *cmd) {
     size_t len = wcslen(cmd);
@@ -1366,6 +1356,16 @@ bool universal_notifier_t::notification_fd_became_readable(int fd) {
 }
 
 #if !defined(__APPLE__) && !defined(__CYGWIN__)
+/// Returns a "variables" file in the appropriate runtime directory. This is called infrequently and
+/// so does not need to be cached.
+static wcstring default_named_pipe_path() {
+    wcstring result = env_get_runtime_path();
+    if (!result.empty()) {
+        result.append(L"/fish_universal_variables");
+    }
+    return result;
+}
+
 void universal_notifier_named_pipe_t::make_pipe(const wchar_t *test_path) {
     wcstring vars_path = test_path ? wcstring(test_path) : default_named_pipe_path();
     vars_path.append(L".notifier");

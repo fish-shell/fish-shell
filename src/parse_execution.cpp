@@ -207,7 +207,6 @@ bool parse_execution_context_t::job_is_simple_block(tnode_t<g::job> job_node) co
     // Check if we're a block statement with redirections. We do it this obnoxious way to preserve
     // type safety (in case we add more specific statement types).
     const parse_node_t &specific_statement = statement.get_child_node<0>();
-    tnode_t<g::arguments_or_redirections_list> args_and_redirs;
     switch (specific_statement.type) {
         case symbol_block_statement:
             return is_empty(statement.require_get_child<g::block_statement, 0>().child<3>());

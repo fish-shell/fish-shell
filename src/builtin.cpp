@@ -485,7 +485,10 @@ static const builtin_data_t *builtin_lookup(const wcstring &name) {
 /// Initialize builtin data.
 void builtin_init() {
     for (size_t i = 0; i < BUILTIN_COUNT; i++) {
-        intern_static(builtin_datas[i].name);
+        const wchar_t *name = builtin_datas[i].name;
+        intern_static(name);
+        assert((i == 0 || wcscmp(builtin_datas[i - 1].name, name) < 0) &&
+               "builtins are not sorted alphabetically");
     }
 }
 

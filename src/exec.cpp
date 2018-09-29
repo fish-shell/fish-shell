@@ -985,14 +985,11 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, job_t *j,
 }
 
 void exec_job(parser_t &parser, job_t *j) {
+    assert(j != nullptr && "null job_t passed to exec_job!");
+
     // Set to true if something goes wrong while exec:ing the job, in which case the cleanup code
     // will kick in.
     bool exec_error = false;
-    bool needs_keepalive = false;
-    process_t keepalive;
-
-    CHECK(j, );
-    CHECK_BLOCK();
 
     // If fish was invoked with -n or --no-execute, then no_exec will be set and we do nothing.
     if (no_exec) {
@@ -1024,10 +1021,9 @@ void exec_job(parser_t &parser, job_t *j) {
     // We may have block IOs that conflict with fd redirections. For example, we may have a command
     // with a redireciton like <&3; we may also have chosen 3 as the fd for our pipe. Ensure we have
     // no conflicts.
-    for (size_t i = 0; i < all_ios.size(); i++) {
-        io_data_t *io = all_ios.at(i).get();
+    for (const auto io : all_ios) {
         if (io->io_mode == IO_BUFFER) {
-            io_buffer_t *io_buffer = static_cast<io_buffer_t *>(io);
+            auto *io_buffer = static_cast<io_buffer_t *>(io.get());
             if (!io_buffer->avoid_conflicts_with_io_chain(all_ios)) {
                 // We could not avoid conflicts, probably due to fd exhaustion. Mark an error.
                 exec_error = true;
@@ -1037,21 +1033,17 @@ void exec_job(parser_t &parser, job_t *j) {
         }
     }
 
-    // See if we need to create a group keepalive process. This is a process that we create to make
-    // sure that the process group doesn't die accidentally, and is often needed when a
-    // builtin/block/function is inside a pipeline, since that usually means we have to wait for one
-    // program to exit before continuing in the pipeline, causing the group leader to exit.
-    if (j->get_flag(JOB_CONTROL) && !exec_error) {
+    // When running under WSL, create a keepalive process unconditionally if our first
+    // process is external as WSL does not permit joining the pgrp of an exited process.
+    // Fixed in Windows 10 17713 and later, but keep this hack around until an RTM build is
+    // released with that resolution. See #4676, #5210, https://github.com/Microsoft/WSL/issues/1353,
+    // and https://github.com/Microsoft/WSL/issues/2786.
+    process_t keepalive;
+    bool needs_keepalive = false;
+    if (is_windows_subsystem_for_linux() && j->get_flag(JOB_CONTROL) && !exec_error) {
         for (const process_ptr_t &p : j->processes) {
-            if (p->type != EXTERNAL && (!p->is_last_in_job || !p->is_first_in_job)) {
-                needs_keepalive = true;
-                break;
-            }
-            // When running under WSL, create a keepalive process unconditionally if our first process is external.
-            // This is because WSL does not permit joining the pgrp of an exited process.
-            // (see https://github.com/Microsoft/WSL/issues/2786), also fish PR #4676
-            if (is_windows_subsystem_for_linux() && j->processes.front()->type == EXTERNAL
-                    && !p->is_first_in_job) { //but not if it's the only process
+            // but not if it's the only process
+            if (j->processes.front()->type == EXTERNAL && !p->is_first_in_job) {
                 needs_keepalive = true;
                 break;
             }
@@ -1105,7 +1097,6 @@ void exec_job(parser_t &parser, job_t *j) {
         kill(keepalive.pid, SIGKILL);
     }
 
-    debug(3, L"Job is constructed");
     j->set_flag(JOB_CONSTRUCTED, true);
     if (!j->get_flag(JOB_FOREGROUND)) {
         proc_last_bg_pid = j->pgid;

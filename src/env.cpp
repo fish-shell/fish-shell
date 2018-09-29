@@ -278,12 +278,6 @@ static env_universal_t *s_universal_variables = NULL;
 /// Getter for universal variables.
 static env_universal_t *uvars() { return s_universal_variables; }
 
-// Helper class for storing constant strings, without needing to wrap them in a wcstring.
-
-// Comparer for const string set.
-// Note our sets are small so we don't bother to sort them.
-typedef std::unordered_set<wcstring> const_string_set_t;
-
 // A typedef for a set of constant strings. Note our sets are typically on the order of 6 elements,
 // so we don't bother to sort them.
 using string_set_t = const wchar_t *const[];
@@ -321,11 +315,9 @@ static bool variable_is_colon_delimited_var(const wcstring &str) {
 }
 
 /// Table of variables whose value is dynamically calculated, such as umask, status, etc.
-static const_string_set_t env_electric;
+static const string_set_t env_electric = {L"history", L"status", L"umask"};
 
-static bool is_electric(const wcstring &key) {
-    return env_electric.find(key) != env_electric.end();
-}
+static bool is_electric(const wcstring &key) { return contains(env_electric, key); }
 
 maybe_t<env_var_t> env_node_t::find_entry(const wcstring &key) {
     var_table_t::const_iterator entry = env.find(key);
@@ -875,9 +867,6 @@ static void setup_var_dispatch_table() {
 
 void env_init(const struct config_paths_t *paths /* or NULL */) {
     setup_var_dispatch_table();
-
-    // Names of all dynamically calculated variables.
-    env_electric.insert({L"history", L"status", L"umask"});
 
     // Now the environment variable handling is set up, the next step is to insert valid data.
 
@@ -1456,7 +1445,7 @@ wcstring_list_t env_get_names(int flags) {
     if (show_global) {
         add_key_to_string_set(vars_stack().global_env->env, &names, show_exported, show_unexported);
         if (show_unexported) {
-            result.insert(result.end(), env_electric.begin(), env_electric.end());
+            result.insert(result.end(), std::begin(env_electric), std::end(env_electric));
         }
     }
 

@@ -56,7 +56,7 @@
 static int last_status = 0;
 
 /// The signals that signify crashes to us.
-static const std::vector<int> crashsignals = { SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGSYS };
+static const int crashsignals[] = {SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGSYS};
 
 bool job_list_is_empty() {
     ASSERT_IS_MAIN_THREAD();

@@ -34,7 +34,7 @@ struct math_cmd_opts_t {
 
 // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
 // This is needed because of the minus, `-`, operator in math expressions.
-static const wchar_t *short_options = L"+:hs:";
+static const wchar_t *const short_options = L"+:hs:";
 static const struct woption long_options[] = {{L"scale", required_argument, NULL, 's'},
                                               {L"help", no_argument, NULL, 'h'},
                                               {NULL, 0, NULL, 0}};

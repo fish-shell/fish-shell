@@ -185,7 +185,7 @@ int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int argc = builtin_count_args(argv);
     bool any_flag = false;  // flag for -n option
 
-    static const wchar_t *short_options = L":n";
+    static const wchar_t *const short_options = L":n";
     static const struct woption long_options[] = {{L"any", no_argument, NULL, 'n'},
                                                   {NULL, 0, NULL, 0}};
 

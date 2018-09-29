@@ -18,7 +18,7 @@ struct builtin_cmd_opts_t {
     bool print_help = false;
     bool list_names = false;
 };
-static const wchar_t *short_options = L":hn";
+static const wchar_t *const short_options = L":hn";
 static const struct woption long_options[] = {
     {L"help", no_argument, NULL, 'h'}, {L"names", no_argument, NULL, 'n'}, {NULL, 0, NULL, 0}};
 

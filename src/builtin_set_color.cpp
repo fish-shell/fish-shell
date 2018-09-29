@@ -49,7 +49,7 @@ static int set_color_builtin_outputter(char c) {
     return 0;
 }
 
-static const wchar_t *short_options = L":b:hvoidrcu";
+static const wchar_t *const short_options = L":b:hvoidrcu";
 static const struct woption long_options[] = {{L"background", required_argument, NULL, 'b'},
                                               {L"help", no_argument, NULL, 'h'},
                                               {L"bold", no_argument, NULL, 'o'},

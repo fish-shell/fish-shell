@@ -20,7 +20,7 @@ struct command_cmd_opts_t {
     bool quiet = false;
     bool all_paths = false;
 };
-static const wchar_t *short_options = L":ahqsv";
+static const wchar_t *const short_options = L":ahqsv";
 static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
                                               {L"all", no_argument, NULL, 'a'},
                                               {L"quiet", no_argument, NULL, 'q'},

@@ -48,7 +48,7 @@ struct set_cmd_opts_t {
 // Variables used for parsing the argument list. This command is atypical in using the "+"
 // (REQUIRE_ORDER) option for flag parsing. This is not typical of most fish commands. It means
 // we stop scanning for flags when the first non-flag argument is seen.
-static const wchar_t *short_options = L"+:LSUaeghlnpqux";
+static const wchar_t *const short_options = L"+:LSUaeghlnpqux";
 static const struct woption long_options[] = {
     {L"export", no_argument, NULL, 'x'},    {L"global", no_argument, NULL, 'g'},
     {L"local", no_argument, NULL, 'l'},     {L"erase", no_argument, NULL, 'e'},

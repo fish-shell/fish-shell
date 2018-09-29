@@ -42,7 +42,7 @@ struct history_cmd_opts_t {
 /// the non-flag subcommand form. While many of these flags are deprecated they must be
 /// supported at least until fish 3.0 and possibly longer to avoid breaking everyones
 /// config.fish and other scripts.
-static const wchar_t *short_options = L":CRcehmn:pt::z";
+static const wchar_t *const short_options = L":CRcehmn:pt::z";
 static const struct woption long_options[] = {{L"prefix", no_argument, NULL, 'p'},
                                               {L"contains", no_argument, NULL, 'c'},
                                               {L"help", no_argument, NULL, 'h'},

@@ -17,7 +17,7 @@ struct echo_cmd_opts_t {
     bool print_spaces = true;
     bool interpret_special_chars = false;
 };
-static const wchar_t *short_options = L"+:Eens";
+static const wchar_t *const short_options = L"+:Eens";
 static const struct woption *long_options = NULL;
 
 static int parse_cmd_opts(echo_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,

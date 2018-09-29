@@ -23,7 +23,7 @@ struct block_cmd_opts_t {
 static int parse_cmd_opts(block_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
-    static const wchar_t *short_options = L":eghl";
+    static const wchar_t *const short_options = L":eghl";
     static const struct woption long_options[] = {{L"erase", no_argument, NULL, 'e'},
                                                   {L"local", no_argument, NULL, 'l'},
                                                   {L"global", no_argument, NULL, 'g'},

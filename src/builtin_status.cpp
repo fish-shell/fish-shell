@@ -98,7 +98,7 @@ struct status_cmd_opts_t {
 /// the non-flag subcommand form. While these flags are deprecated they must be supported at
 /// least until fish 3.0 and possibly longer to avoid breaking everyones config.fish and other
 /// scripts.
-static const wchar_t *short_options = L":L:cbilfnhj:t";
+static const wchar_t *const short_options = L":L:cbilfnhj:t";
 static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
                                               {L"is-command-substitution", no_argument, NULL, 'c'},
                                               {L"is-block", no_argument, NULL, 'b'},

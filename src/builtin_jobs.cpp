@@ -119,7 +119,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int mode = JOBS_DEFAULT;
     int print_last = 0;
 
-    static const wchar_t *short_options = L":cghlpq";
+    static const wchar_t *const short_options = L":cghlpq";
     static const struct woption long_options[] = {
         {L"command", no_argument, NULL, 'c'},
         {L"group", no_argument, NULL, 'g'},

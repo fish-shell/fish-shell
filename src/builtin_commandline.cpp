@@ -206,7 +206,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         return STATUS_CMD_ERROR;
     }
 
-    static const wchar_t *short_options = L":abijpctwforhI:CLSsP";
+    static const wchar_t *const short_options = L":abijpctwforhI:CLSsP";
     static const struct woption long_options[] = {{L"append", no_argument, NULL, 'a'},
                                                   {L"insert", no_argument, NULL, 'i'},
                                                   {L"replace", no_argument, NULL, 'r'},

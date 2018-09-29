@@ -54,7 +54,7 @@ struct read_cmd_opts_t {
     bool one_line = false;
 };
 
-static const wchar_t *short_options = L":Aac:d:ghiLlm:n:p:suxzP:UR:LB";
+static const wchar_t *const short_options = L":Aac:d:ghiLlm:n:p:suxzP:UR:LB";
 static const struct woption long_options[] = {
     {L"array", no_argument, NULL, 'a'},
     {L"all-lines", no_argument, NULL, 'A'},

@@ -274,7 +274,7 @@ void builtin_bind_t::list_modes(io_streams_t &streams) {
 int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
-    static const wchar_t *short_options = L":aehkKfM:Lm:s";
+    static const wchar_t *const short_options = L":aehkKfM:Lm:s";
     static const struct woption long_options[] = {{L"all", no_argument, NULL, 'a'},
                                                   {L"erase", no_argument, NULL, 'e'},
                                                   {L"function-names", no_argument, NULL, 'f'},

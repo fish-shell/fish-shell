@@ -61,7 +61,7 @@ wcstring_list_t path_get_paths(const wcstring &cmd);
 /// \param vars The environment variable snapshot to use (for the CDPATH variable)
 /// \return 0 if the command can not be found, the path of the command otherwise. The path should be
 /// free'd with free().
-bool path_get_cdpath(const env_var_t &dir, wcstring *out_or_NULL, const wchar_t *wd = NULL,
+bool path_get_cdpath(const wcstring &dir, wcstring *out_or_NULL, const wchar_t *wd = NULL,
                      const env_vars_snapshot_t &vars = env_vars_snapshot_t::current());
 
 /// Returns whether the path can be used for an implicit cd command; if so, also returns the path by

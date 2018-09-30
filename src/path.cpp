@@ -157,11 +157,10 @@ wcstring_list_t path_get_paths(const wcstring &cmd) {
     return paths;
 }
 
-bool path_get_cdpath(const env_var_t &dir_var, wcstring *out, const wchar_t *wd,
+bool path_get_cdpath(const wcstring &dir, wcstring *out, const wchar_t *wd,
                      const env_vars_snapshot_t &env_vars) {
     int err = ENOENT;
-    if (dir_var.empty()) return false;
-    wcstring dir = dir_var.as_string();
+    if (dir.empty()) return false;
 
     if (wd) {
         size_t len = wcslen(wd);
@@ -229,10 +228,7 @@ bool path_can_be_implicit_cd(const wcstring &path, wcstring *out_path, const wch
     if (string_prefixes_string(L"/", exp_path) || string_prefixes_string(L"./", exp_path) ||
         string_prefixes_string(L"../", exp_path) || string_suffixes_string(L"/", exp_path) ||
         exp_path == L"..") {
-        // These paths can be implicit cd, so see if you cd to the path. Note that a single period
-        // cannot (that's used for sourcing files anyways).
-        env_var_t path_var(L"n/a", exp_path);
-        result = path_get_cdpath(path_var, out_path, wd, vars);
+        result = path_get_cdpath(exp_path, out_path, wd, vars);
     }
     return result;
 }

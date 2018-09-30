@@ -350,8 +350,7 @@ bool autosuggest_validate_from_history(const history_item_t &item,
                 string_prefixes_string(cd_dir, L"--help") || string_prefixes_string(cd_dir, L"-h");
             if (!is_help) {
                 wcstring path;
-                env_var_t dir_var(cd_dir, 0);
-                bool can_cd = path_get_cdpath(dir_var, &path, working_directory.c_str(), vars);
+                bool can_cd = path_get_cdpath(cd_dir, &path, working_directory.c_str(), vars);
                 if (can_cd && !paths_are_same_file(working_directory, path)) {
                     suggestionOK = true;
                 }

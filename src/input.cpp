@@ -544,10 +544,11 @@ std::vector<input_mapping_name_t> input_mapping_get_names(bool user) {
 
 void input_mapping_clear(const wchar_t *mode, bool user) {
     auto& ml = user ? mapping_list : preset_mapping_list;
-    for (std::vector<input_mapping_t>::iterator it = ml.begin(), end = ml.end();
-         it != end; ++it) {
+    for (std::vector<input_mapping_t>::iterator it = ml.begin(); it != ml.end();) {
         if (mode == NULL || mode == it->mode) {
-            ml.erase(it);
+            it = ml.erase(it);
+        } else {
+            ++it;
         }
     }
 }

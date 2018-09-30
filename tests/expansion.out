@@ -73,3 +73,7 @@ All digits: 0
 
 ####################
 # Test tilde expansion
+
+####################
+# Test delimiters
+one two three one:two:three

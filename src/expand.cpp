@@ -447,6 +447,9 @@ static bool expand_variables(wcstring instr, std::vector<completion_t> *out, siz
     }
 
     if (is_single) {
+        // Quoted expansion. Here we expect the variable's delimiter.
+        // Note history always has a space delimiter.
+        wchar_t delimit = history ? L' ' : var->get_delimiter();
         wcstring res(instr, 0, varexp_char_idx);
         if (!res.empty()) {
             if (res.back() != VARIABLE_EXPAND_SINGLE) {
@@ -457,15 +460,8 @@ static bool expand_variables(wcstring instr, std::vector<completion_t> *out, siz
             }
         }
 
-        // Append all entries in var_item_list, separated by spaces.
-        // Remove the last space.
-        if (!var_item_list.empty()) {
-            for (const wcstring &item : var_item_list) {
-                res.append(item);
-                res.push_back(L' ');
-            }
-            res.pop_back();
-        }
+        // Append all entries in var_item_list, separated by the delimiter.
+        res.append(join_strings(var_item_list, delimit));
         res.append(instr, var_name_and_slice_stop, wcstring::npos);
         return expand_variables(std::move(res), out, varexp_char_idx, errors);
     } else {

@@ -496,8 +496,8 @@ void builtin_init() {
 bool builtin_exists(const wcstring &cmd) { return static_cast<bool>(builtin_lookup(cmd)); }
 
 /// Is the command a keyword we need to special-case the handling of `-h` and `--help`.
-static const wcstring_list_t help_builtins({L"for", L"while", L"function", L"if", L"end", L"switch",
-                                            L"case"});
+static const wchar_t *const help_builtins[] = {L"for", L"while",  L"function", L"if",
+                                               L"end", L"switch", L"case"};
 static bool cmd_needs_help(const wchar_t *cmd) { return contains(help_builtins, cmd); }
 
 /// Execute a builtin command

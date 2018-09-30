@@ -424,7 +424,7 @@ bool term_supports_setting_title() { return can_set_term_title; }
 /// One situation in which this breaks down is with screen, since screen supports setting the
 /// terminal title if the underlying terminal does so, but will print garbage on terminals that
 /// don't. Since we can't see the underlying terminal below screen there is no way to fix this.
-static const wcstring_list_t title_terms({L"xterm", L"screen", L"tmux", L"nxterm", L"rxvt"});
+static const wchar_t *const title_terms[] = {L"xterm", L"screen", L"tmux", L"nxterm", L"rxvt"};
 static bool does_term_support_setting_title() {
     const auto term_var = env_get(L"TERM");
     if (term_var.missing_or_empty()) return false;

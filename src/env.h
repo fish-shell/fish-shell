@@ -101,6 +101,9 @@ class env_var_t {
     void to_list(wcstring_list_t &out) const;
     const wcstring_list_t &as_list() const;
 
+    /// \return the character used when delimiting quoted expansion.
+    wchar_t get_delimiter() const;
+
     void set_vals(wcstring_list_t v) { vals = std::move(v); }
 
     void set_exports(bool exportv) {

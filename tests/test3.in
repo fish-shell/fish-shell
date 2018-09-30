@@ -306,8 +306,9 @@ set -gx FOOPATH one two three four
 ../test/root/bin/fish -c 'echo Elements in FOO and FOOPATH: (count $FOO) (count $FOOPATH)'
 # some must use colon separators!
 set -lx MANPATH man1 man2 man3 ; env | grep '^MANPATH='
-# ensure we don't escape colon values
+# ensure we don't escape space and colon values
 set -x DONT_ESCAPE_COLONS 1: 2: :3: ; env | grep '^DONT_ESCAPE_COLONS='
-
+set -x DONT_ESCAPE_SPACES '1 ' '2 ' ' 3 ' 4 ; env | grep '^DONT_ESCAPE_SPACES='
+set -x DONT_ESCAPE_COLONS_PATH 1: 2: :3: ; env | grep '^DONT_ESCAPE_COLONS_PATH='
 
 true

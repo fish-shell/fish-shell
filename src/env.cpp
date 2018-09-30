@@ -1302,10 +1302,13 @@ int env_remove(const wcstring &key, int var_mode) {
 
 const wcstring_list_t &env_var_t::as_list() const { return vals; }
 
+wchar_t env_var_t::get_delimiter() const {
+    return is_pathvar() ? PATH_ARRAY_SEP : NONPATH_ARRAY_SEP;
+}
+
 /// Return a string representation of the var.
 wcstring env_var_t::as_string() const {
-    wchar_t sep = is_pathvar() ? PATH_ARRAY_SEP : NONPATH_ARRAY_SEP;
-    return join_strings(vals, sep);
+    return join_strings(vals, get_delimiter());
 }
 
 void env_var_t::to_list(wcstring_list_t &out) const {

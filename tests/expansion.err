@@ -16,3 +16,6 @@ echo $$paren
 
 ####################
 # Test tilde expansion
+
+####################
+# Test delimiters

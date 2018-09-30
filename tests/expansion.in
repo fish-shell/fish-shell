@@ -121,3 +121,8 @@ end
 unlink $tmpdir/linkhome
 rmdir $tmpdir/realhome
 rmdir $tmpdir
+
+logmsg Test delimiters
+set TEST_DELIMITER one two three
+set TEST_DELIMITER_PATH one two three
+echo "$TEST_DELIMITER" "$TEST_DELIMITER_PATH"

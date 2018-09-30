@@ -543,20 +543,15 @@ std::vector<input_mapping_name_t> input_mapping_get_names(bool user) {
 }
 
 void input_mapping_clear(const wchar_t *mode, bool user) {
-    auto& ml = user ? mapping_list : preset_mapping_list;
-    for (std::vector<input_mapping_t>::iterator it = ml.begin(); it != ml.end();) {
-        if (mode == NULL || mode == it->mode) {
-            it = ml.erase(it);
-        } else {
-            ++it;
-        }
-    }
+    ASSERT_IS_MAIN_THREAD();
+    auto &ml = user ? mapping_list : preset_mapping_list;
+    auto should_erase = [=](const input_mapping_t &m) { return mode == NULL || mode == m.mode; };
+    ml.erase(std::remove_if(ml.begin(), ml.end(), should_erase), ml.end());
 }
 
 bool input_mapping_erase(const wcstring &sequence, const wcstring &mode, bool user) {
     ASSERT_IS_MAIN_THREAD();
     bool result = false;
-
     auto& ml = user ? mapping_list : preset_mapping_list;
     for (std::vector<input_mapping_t>::iterator it = ml.begin(), end = ml.end();
          it != end; ++it) {
@@ -573,12 +568,10 @@ bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_
                        wcstring *out_sets_mode) {
     bool result = false;
     auto& ml = user ? mapping_list : preset_mapping_list;
-    for (std::vector<input_mapping_t>::const_iterator it = ml.begin(),
-                                                      end = ml.end();
-         it != end; ++it) {
-        if (sequence == it->seq && mode == it->mode) {
-            *out_cmds = it->commands;
-            *out_sets_mode = it->sets_mode;
+    for (const input_mapping_t &m : ml) {
+        if (sequence == m.seq && mode == m.mode) {
+            *out_cmds = m.commands;
+            *out_sets_mode = m.sets_mode;
             result = true;
             break;
         }

@@ -180,12 +180,14 @@ bool path_get_cdpath(const wcstring &dir, wcstring *out, const wchar_t *wd,
         paths.push_back(path);
     } else {
         // Respect CDPATH.
-        auto cdpaths = env_vars.get(L"CDPATH");
-        if (cdpaths.missing_or_empty()) cdpaths = env_var_t(L"CDPATH", L".");
-
-        std::vector<wcstring> cdpathsv;
-        cdpaths->to_list(cdpathsv);
-        for (auto next_path : cdpathsv) {
+        wcstring_list_t cdpathsv;
+        if (auto cdpaths = env_vars.get(L"CDPATH")) {
+            cdpathsv = cdpaths->as_list();
+        }
+        if (cdpathsv.empty()) {
+            cdpathsv.push_back(L".");
+        }
+        for (wcstring next_path : cdpathsv) {
             if (next_path.empty()) next_path = L".";
             if (next_path == L"." && wd != NULL) {
                 // next_path is just '.', and we have a working directory, so use the wd instead.

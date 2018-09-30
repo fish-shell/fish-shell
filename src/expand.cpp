@@ -727,30 +727,29 @@ static void expand_home_directory(wcstring &input) {
         size_t tail_idx;
         wcstring username = get_home_directory_name(input, &tail_idx);
 
-        maybe_t<env_var_t> home;
+        maybe_t<wcstring> home;
         if (username.empty()) {
             // Current users home directory.
-            home = env_get(L"HOME");
-            if (home.missing_or_empty()) {
+            auto home_var = env_get(L"HOME");
+            if (home_var.missing_or_empty()) {
                 input.clear();
                 return;
             }
+            home = home_var->as_string();
             tail_idx = 1;
         } else {
-            // Some other users home directory.
+            // Some other user's home directory.
             std::string name_cstr = wcs2string(username);
             struct passwd userinfo;
             struct passwd *result;
             char buf[8192];
             int retval = getpwnam_r(name_cstr.c_str(), &userinfo, buf, sizeof(buf), &result);
             if (!retval && result) {
-                home = env_var_t(L"HOME", str2wcstring(userinfo.pw_dir));
+                home = str2wcstring(userinfo.pw_dir);
             }
         }
 
-        maybe_t<wcstring> realhome;
-        if (home) realhome = wrealpath(home->as_string());
-
+        maybe_t<wcstring> realhome = (home ? wrealpath(*home) : none());
         if (realhome) {
             input.replace(input.begin(), input.begin() + tail_idx, *realhome);
         } else {

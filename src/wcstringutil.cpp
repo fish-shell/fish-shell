@@ -47,7 +47,7 @@ wcstring truncate(const wcstring &input, int max_len, ellipsis_type etype) {
 }
 
 wcstring trim(const wcstring &input) {
-    return trim(input, whitespace.c_str());
+    return trim(input, L"\t\v \r\n");
 }
 
 wcstring trim(const wcstring &input, const wchar_t *any_of) {

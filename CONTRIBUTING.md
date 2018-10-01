@@ -38,7 +38,7 @@ Automated analysis tools like cppcheck and oclint can point out potential bugs o
 
 Ultimately we want lint free code. However, at the moment a lot of cleanup is required to reach that goal. For now simply try to avoid introducing new lint.
 
-To make linting the code easy there are two make targets: `lint` and `lint-all`. The latter does only what the name implies. The former will lint any modified but not committed `*.cpp` files. If there is no uncommitted work it will lint the files in the most recent commit.
+To make linting the code easy there are two make targets: `lint` and `lint-all`. The latter does exactly what the name implies. The former will lint any modified but not committed `*.cpp` files. If there is no uncommitted work it will lint the files in the most recent commit.
 
 Fish has custom cppcheck rules in the file `.cppcheck.rule`. These help catch mistakes such as using `wcwidth()` rather than `fish_wcwidth()`. Please add a new rule if you find similar mistakes being made.
 

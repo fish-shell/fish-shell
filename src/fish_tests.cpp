@@ -3456,9 +3456,9 @@ void history_tests_t::test_history_formats() {
         err(L"Couldn't open file tests/history_sample_bash");
     } else {
         // The results are in the reverse order that they appear in the bash history file.
-        // We don't expect whitespace to be elided.
+        // We don't expect whitespace to be elided (#4908: except for leading/trailing whitespace)
         const wchar_t *expected[] = {L"sleep 123",
-                                     L"    final line",
+                                     L"final line",
                                      L"echo supsup",
                                      L"export XVAR='exported'",
                                      L"history --help",

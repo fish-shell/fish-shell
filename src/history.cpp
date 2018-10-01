@@ -41,6 +41,7 @@
 #include "path.h"
 #include "reader.h"
 #include "tnode.h"
+#include "wcstringutil.h"
 #include "wildcard.h"  // IWYU pragma: keep
 #include "wutil.h"     // IWYU pragma: keep
 
@@ -556,9 +557,12 @@ bool history_item_t::merge(const history_item_t &item) {
 }
 
 history_item_t::history_item_t(const wcstring &str, time_t when, history_identifier_t ident)
-    : contents(str), contents_lower(L""), creation_timestamp(when), identifier(ident) {
-    for (wcstring::const_iterator it = str.begin(); it != str.end(); ++it) {
-        contents_lower.push_back(towlower(*it));
+    : creation_timestamp(when), identifier(ident) {
+
+    contents = trim(str);
+    contents_lower.reserve(contents.size());
+    for (const auto &c : contents) {
+        contents_lower.push_back(towlower(c));
     }
 }
 

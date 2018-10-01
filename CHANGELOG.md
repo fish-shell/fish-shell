@@ -81,7 +81,7 @@ fish 3.0 is a major release which brings with it both improvements in functional
   - `bd` (#4472)
   - `bower`
   - `configure` (autoconf only)
-  - `doas`
+  - `doas` (#5196)
   - `hjson`
   - `j` (autojump #4344)
   - `jhipster` (#4472)
@@ -90,6 +90,7 @@ fish 3.0 is a major release which brings with it both improvements in functional
   - `meson`
   - `ngrok` (#4642)
   - `optipng`
+  - `opkg` (#5168)
   - `port`
   - `serve` (#5026)
   - `ttx`

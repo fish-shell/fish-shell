@@ -11,8 +11,6 @@
 
 #include <sys/wait.h>
 
-static int retval;
-
 /// Return the job id to which the process with pid belongs.
 /// If a specified process has already finished but the job hasn't, parser_t::job_get_from_pid()
 /// doesn't work properly, so use this function in wait command.
@@ -70,17 +68,17 @@ static bool any_jobs_finished(size_t jobs_len) {
     return false;
 }
 
-static void wait_for_backgrounds(bool any_flag) {
+static int wait_for_backgrounds(bool any_flag) {
     job_iterator_t jobs;
     size_t jobs_len = jobs.count();
 
     while ((!any_flag && !all_jobs_finished()) || (any_flag && !any_jobs_finished(jobs_len))) {
         pid_t pid = proc_wait_any();
         if (pid == -1 && errno == EINTR) {
-            retval = 128 + SIGINT;
-            return;
+            return 128 + SIGINT;
         }
     }
+    return 0;
 }
 
 static bool all_specified_jobs_finished(const std::vector<job_id_t> &ids) {
@@ -111,15 +109,15 @@ static bool any_specified_jobs_finished(const std::vector<job_id_t> &ids) {
     return false;
 }
 
-static void wait_for_backgrounds_specified(const std::vector<job_id_t> &ids, bool any_flag) {
+static int wait_for_backgrounds_specified(const std::vector<job_id_t> &ids, bool any_flag) {
     while ((!any_flag && !all_specified_jobs_finished(ids)) ||
            (any_flag && !any_specified_jobs_finished(ids))) {
         pid_t pid = proc_wait_any();
         if (pid == -1 && errno == EINTR) {
-            retval = 128 + SIGINT;
-            return;
+            return 128 + SIGINT;
         }
     }
+    return 0;
 }
 
 /// Tests if all characters in the wide string are numeric.
@@ -179,7 +177,7 @@ static bool find_job_by_name(const wchar_t *proc, std::vector<job_id_t> &ids) {
 /// safe. It waits for child jobs, not for child processes individually.
 int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     ASSERT_IS_MAIN_THREAD();
-
+    int retval = STATUS_CMD_OK;
     job_iterator_t jobs;
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
@@ -213,7 +211,7 @@ int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (w.woptind == argc) {
         // no jobs specified
-        wait_for_backgrounds(any_flag);
+        retval = wait_for_backgrounds(any_flag);
     } else {
         // jobs specified
         std::vector<job_id_t> waited_job_ids;
@@ -245,7 +243,7 @@ int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         if (waited_job_ids.empty()) return STATUS_INVALID_ARGS;
 
-        wait_for_backgrounds_specified(waited_job_ids, any_flag);
+        retval = wait_for_backgrounds_specified(waited_job_ids, any_flag);
     }
 
     return retval;

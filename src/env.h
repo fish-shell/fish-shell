@@ -16,10 +16,6 @@
 extern size_t read_byte_limit;
 extern bool curses_initialized;
 
-/// Character for separating two array elements. We use 30, i.e. the ascii record separator since
-/// that seems logical.
-#define ARRAY_SEP (wchar_t)0x1e
-
 // Flags that may be passed as the 'mode' in env_set / env_get.
 enum {
     /// Default mode. Used with `env_get()` to indicate the caller doesn't care what scope the var
@@ -71,8 +67,7 @@ class env_var_t {
    public:
     enum {
         flag_export = 1 << 0,         // whether the variable is exported
-        flag_colon_delimit = 1 << 1,  // whether the variable is colon delimited
-        flag_read_only = 1 << 2       // whether the variable is read only
+        flag_read_only = 1 << 1       // whether the variable is read only
     };
 
     // Constructors.

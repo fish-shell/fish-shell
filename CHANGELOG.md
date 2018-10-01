@@ -11,6 +11,7 @@ fish 3.0 is a major release which brings with it both improvements in functional
 
 ## Notable non-backward compatible changes
 - `%` is no longer used for process and job expansion. `$fish_pid` and `$last_pid` have taken the place of `%self` and `%last` respectively. Some commands have been wrapped to still understand process expansion, including `bg`, `fg` and `kill` (#4230, #1202)
+- Incoming environment variables are no longer split into arrays based on RS. Instead, variables are not split, unless their name ends in PATH, in which case they are split on colons. (#436)
 - A literal `{}` now expands to itself, rather than nothing. This makes working with `find -exec` easier. (#1109, #4632)
 - Successive commas in brace expansions are handled in less surprising manner (`{,,,}` expands to four empty strings rather than an empty string, a comma and an empty string again). (#3002, #4632).
 - `for` loop control variables are no longer local to the `for` block (#1935).
@@ -77,6 +78,7 @@ fish 3.0 is a major release which brings with it both improvements in functional
 - Wrapping completions (from `complete -w` or `function -w`) can now inject arguments. For example, `complete gco -w 'git checkout'` now works properly (#1976). The `alias` function has been updated to respect this behavior.
 - Path completions now support expansions, meaning expressions like `python ~/<TAB>` now provides file suggestions just like any other relative or absolute path. (This includes support for other expansions, too.)
 - Autosuggestions try to avoid arguments that are already present in the command line.
+- A new `splitenv` function can be used to import colon-delimited environment variables as fish arrays (#436).
 - Added completions for
   - `bd` (#4472)
   - `bower`

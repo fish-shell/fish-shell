@@ -76,6 +76,9 @@ extern char **environ;
 #define READ_BYTE_LIMIT 10 * 1024 * 1024
 size_t read_byte_limit = READ_BYTE_LIMIT;
 
+/// The character used to separate exported array environment variable. See #436.
+static const wchar_t EXPORTED_ENV_ARRAY_SEP = L':';
+
 bool g_use_posix_spawn = false;  // will usually be set to true
 bool curses_initialized = false;
 
@@ -298,20 +301,9 @@ static bool is_read_only(const wchar_t *val) {
 
 static bool is_read_only(const wcstring &val) { return is_read_only(val.c_str()); }
 
-// Here is the whitelist of variables that we colon-delimit, both incoming from the environment and
-// outgoing back to it. This is deliberately very short - we don't want to add language-specific
-// values like CLASSPATH.
-static const string_set_t colon_delimited_variable = {L"PATH", L"CDPATH", L"MANPATH"};
-static bool variable_is_colon_delimited_var(const wchar_t *str) {
-    /// List of "path" like variable names that need special handling. This includes automatic
-    /// splitting and joining on import/export. As well as replacing empty elements, which
-    /// implicitly refer to the CWD, with an explicit '.' in the case of PATH and CDPATH. Note this
-    /// is sorted
-    return string_set_contains(colon_delimited_variable, str);
-}
-
-static bool variable_is_colon_delimited_var(const wcstring &str) {
-    return variable_is_colon_delimited_var(str.c_str());
+/// Return true if a variable should auto 'splitenv', i.e. should be treated as a colon-delimited array. See #436.
+static bool variable_should_auto_splitenv(const wcstring &name) {
+    return string_suffixes_string(L"PATH", name);
 }
 
 /// Table of variables whose value is dynamically calculated, such as umask, status, etc.
@@ -353,9 +345,6 @@ static void handle_timezone(const wchar_t *env_var_name) {
 /// Unfortunately that convention causes problems for fish scripts. So this function replaces the
 /// empty path element with an explicit ".". See issue #3914.
 static void fix_colon_delimited_var(const wcstring &var_name) {
-    // While we auto split/join MANPATH we do not want to replace empty elements with "." (#4158).
-    if (var_name == L"MANPATH") return;
-
     const auto paths = env_get(var_name);
     if (paths.missing_or_empty()) return;
 
@@ -527,9 +516,9 @@ static bool initialize_curses_using_fallback(const char *term) {
 /// Ensure the content of the magic path env vars is reasonable. Specifically, that empty path
 /// elements are converted to explicit "." to make the vars easier to use in fish scripts.
 static void init_path_vars() {
-    for (const wchar_t *var_name : colon_delimited_variable) {
-        fix_colon_delimited_var(var_name);
-    }
+    // Do not replace empties in MATHPATH - see #4158.
+    fix_colon_delimited_var(L"PATH");
+    fix_colon_delimited_var(L"CDPATH");
 }
 
 /// Update the value of g_guessed_fish_emoji_width
@@ -847,10 +836,8 @@ static void setup_var_dispatch_table() {
         var_dispatch_table.emplace(var_name, handle_curses_change);
     }
 
-    for (const auto &var_name : colon_delimited_variable) {
-        var_dispatch_table.emplace(var_name, handle_magic_colon_var_change);
-    }
-
+    var_dispatch_table.emplace(L"PATH", handle_magic_colon_var_change);
+    var_dispatch_table.emplace(L"CDPATH", handle_magic_colon_var_change);
     var_dispatch_table.emplace(L"fish_term256", handle_fish_term_change);
     var_dispatch_table.emplace(L"fish_term24bit", handle_fish_term_change);
     var_dispatch_table.emplace(L"fish_escape_delay_ms", handle_escape_delay_change);
@@ -885,10 +872,15 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
             env_set_empty(key_and_val, ENV_EXPORT | ENV_GLOBAL);
         } else {
             key.assign(key_and_val, 0, eql);
+            val.assign(key_and_val, eql+1, wcstring::npos);
             if (is_read_only(key) || is_electric(key)) continue;
-            val.assign(key_and_val, eql + 1, wcstring::npos);
-            wchar_t sep = variable_is_colon_delimited_var(key) ? L':' : ARRAY_SEP;
-            env_set(key, ENV_EXPORT | ENV_GLOBAL, split_string(val, sep));
+            wcstring_list_t values;
+            if (variable_should_auto_splitenv(key)) {
+                values = split_string(val, L':');
+            } else {
+                values = {val};
+            }
+            env_set(key, ENV_EXPORT | ENV_GLOBAL, std::move(values));
         }
     }
 
@@ -1287,11 +1279,9 @@ int env_remove(const wcstring &key, int var_mode) {
 
 const wcstring_list_t &env_var_t::as_list() const { return vals; }
 
-/// Return a string representation of the var. At the present time this uses the legacy 2.x
-/// encoding.
+/// Return a string representation of the var.
 wcstring env_var_t::as_string() const {
-    wchar_t sep = (flags & flag_colon_delimit) ? L':' : ARRAY_SEP;
-    return join_strings(vals, sep);
+    return join_strings(vals, EXPORTED_ENV_ARRAY_SEP);
 }
 
 void env_var_t::to_list(wcstring_list_t &out) const {
@@ -1301,7 +1291,6 @@ void env_var_t::to_list(wcstring_list_t &out) const {
 env_var_t::env_var_flags_t env_var_t::flags_for(const wchar_t *name) {
     env_var_flags_t result = 0;
     if (is_read_only(name)) result |= flag_read_only;
-    if (variable_is_colon_delimited_var(name)) result |= flag_colon_delimit;
     return result;
 }
 
@@ -1492,13 +1481,6 @@ static std::vector<std::string> get_export_list(const var_table_t &envs) {
     for (const auto &kv : envs) {
         std::string ks = wcs2string(kv.first);
         std::string vs = wcs2string(kv.second.as_string());
-
-        // Arrays in the value are ASCII record separator (0x1e) delimited. But some variables
-        // should have colons. Add those.
-        if (variable_is_colon_delimited_var(kv.first)) {
-            // Replace ARRAY_SEP with colon.
-            std::replace(vs.begin(), vs.end(), (char)ARRAY_SEP, ':');
-        }
         // Create and append a string of the form ks=vs
         std::string str;
         str.reserve(ks.size() + 1 + vs.size());

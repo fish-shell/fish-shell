@@ -423,7 +423,7 @@ static const struct woption long_options[] = {
     {L"right", no_argument, NULL, 'r'},       {L"start", required_argument, NULL, 's'},
     {L"style", required_argument, NULL, 1},   {NULL, 0, NULL, 0}};
 
-static std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
+static const std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
     {'f', handle_flag_f}, {'i', handle_flag_i}, {'l', handle_flag_l}, {'m', handle_flag_m},
     {'n', handle_flag_n}, {'q', handle_flag_q}, {'r', handle_flag_r}, {'s', handle_flag_s},

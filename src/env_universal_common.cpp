@@ -198,7 +198,7 @@ static bool append_file_entry(fish_message_type_t type, const wcstring &key_in,
 }
 
 /// Encoding of a null string.
-static const wchar_t *ENV_NULL = L"\x1d";
+static const wchar_t * const ENV_NULL = L"\x1d";
 
 /// Decode a serialized universal variable value into a list.
 static wcstring_list_t decode_serialized(const wcstring &val) {

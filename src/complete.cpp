@@ -12,6 +12,7 @@
 #include <wctype.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cstddef>
 #include <functional>
 #include <iterator>
@@ -133,7 +134,7 @@ typedef struct complete_entry_opt {
 using arg_list_t = std::vector<tnode_t<grammar::argument>>;
 
 /// Last value used in the order field of completion_entry_t.
-static unsigned int kCompleteOrder = 0;
+static std::atomic<unsigned int> k_complete_order{0};
 
 /// Struct describing a command completion.
 typedef std::list<complete_entry_opt_t> option_list_t;
@@ -159,7 +160,7 @@ class completion_entry_t {
     bool remove_option(const wcstring &option, complete_option_type_t type);
 
     completion_entry_t(wcstring c, bool type)
-        : cmd(std::move(c)), cmd_is_path(type), order(++kCompleteOrder) {}
+        : cmd(std::move(c)), cmd_is_path(type), order(++k_complete_order) {}
 };
 
 /// Set of all completion entries.

@@ -1,6 +1,6 @@
 # Guidelines For Developers
 
-This document provides guidelines for making changes to the fish-shell project. This includes rules for how to format the code, naming conventions, etcetera. Generally known as the style of the code. It also includes recommended best practices such as creating a Travis CI account so you can verify that your changes pass all the tests before making a pull request.
+This document provides guidelines for making changes to the fish-shell project. This includes rules for how to format the code, naming conventions, et cetera. Generally known as the style of the code. It also includes recommended best practices such as creating a Travis CI account so you can verify that your changes pass all the tests before making a pull request.
 
 See the bottom of this document for help on installing the linting and style reformatting tools discussed in the following sections.
 
@@ -26,7 +26,11 @@ brew tap jasonmp85/iwyu
 brew install iwyu
 ```
 
-On Ubuntu you can install it via `sudo apt-get install iwyu`.
+On Ubuntu you can install it via `apt-get`:
+
+```
+sudo apt-get install iwyu
+```
 
 ## Lint Free Code
 
@@ -34,7 +38,7 @@ Automated analysis tools like cppcheck and oclint can point out potential bugs o
 
 Ultimately we want lint free code. However, at the moment a lot of cleanup is required to reach that goal. For now simply try to avoid introducing new lint.
 
-To make linting the code easy there are two make targets: `lint` and `lint-all`. The latter does just what the name implies. The former will lint any modified but not committed `*.cpp` files. If there is no uncommitted work it will lint the files in the most recent commit.
+To make linting the code easy there are two make targets: `lint` and `lint-all`. The latter does only what the name implies. The former will lint any modified but not committed `*.cpp` files. If there is no uncommitted work it will lint the files in the most recent commit.
 
 Fish has custom cppcheck rules in the file `.cppcheck.rule`. These help catch mistakes such as using `wcwidth()` rather than `fish_wcwidth()`. Please add a new rule if you find similar mistakes being made.
 
@@ -68,9 +72,9 @@ The following sections discuss the specific rules for the style that should be u
 make style
 ```
 
-before commiting your change. That will run `git-clang-format` to rewrite just the lines you're modifying.
+before committing your change. That will run `git-clang-format` to rewrite only the lines you're modifying.
 
-If you've already committed your changes that's okay since it will then check the files in the most recent commit. This can be useful after you've merged someone elses change and want to check that it's style is acceptable. However, in that case it will run `clang-format` to ensure the entire file, not just the lines modified by the commit, conform to the style.
+If you've already committed your changes that's okay since it will then check the files in the most recent commit. This can be useful after you've merged another person's change and want to check that it's style is acceptable. However, in that case it will run `clang-format` to ensure the entire file, not just the lines modified by the commit, conform to the style.
 
 If you want to check the style of the entire code base run
 
@@ -177,18 +181,20 @@ The tests can be run on your local computer on all operating systems.
 
 Running the tests is only supported from the autotools build and not xcodebuild. On OS X, you will need to install autoconf &mdash; we suggest using [Homebrew](https://brew.sh/) to install these tools.
 
-    autoconf
-    ./configure
-    make test # or "gmake test" on BSD
+```
+autoconf
+./configure
+make test # or "gmake test" on BSD
+```
 
 ### Travis CI Build and Test
 
-The Travis Continuous Integration services can be used to test your changes using multiple configurations. This is the same service that the fish shell project uses to ensure new changes haven't broken anything. Thus it is a really good idea that you leverage Travis CI before making a pull request to avoid potential embarrassment at breaking the build.
+The Travis Continuous Integration services can be used to test your changes using multiple configurations. This is the same service that the fish-shell project uses to ensure new changes haven't broken anything. Thus it is a really good idea that you leverage Travis CI before making a pull request to avoid potential embarrassment at breaking the build.
 
 You will need to [fork the fish-shell repository on GitHub](https://help.github.com/articles/fork-a-repo/), then setup Travis to test your changes before making a pull request.
 
 1. [Sign in to Travis CI](https://travis-ci.org/auth) with your GitHub account, accepting the GitHub access permissions confirmation.
-1. Once you're signed in and your repositories are synchronised, go to your [profile page](https://travis-ci.org/profile) and enable the fish-shell repository.
+1. Once you're signed in and your repositories are synchronized, go to your [profile page](https://travis-ci.org/profile) and enable the fish-shell repository.
 1. Push your changes to GitHub.
 
 You'll receive an email when the tests are complete telling you whether or not any tests failed.

@@ -388,7 +388,7 @@ void internal_exec(job_t *j, const io_chain_t &&all_ios) {
 
 static void on_process_created(job_t *j, pid_t child_pid) {
     // We only need to do this the first time a child is forked/spawned
-    if (j->pgid != -2) {
+    if (j->pgid != INVALID_PID) {
         return;
     }
 
@@ -724,9 +724,9 @@ static bool exec_external_command(job_t *j, process_t *p, const io_chain_t &proc
         }
 #else
         // In do_fork, the pid of the child process is used as the group leader if j->pgid
-        // == 2 above, posix_spawn assigned the new group a pgid equal to its own id if
-        // j->pgid == 2 so this is what we do instead of calling set_child_group:
-        if (j->pgid == -2) {
+        // invalid, posix_spawn assigned the new group a pgid equal to its own id if
+        // j->pgid was invalid, so this is what we do instead of calling set_child_group
+        if (j->pgid == INVALID_PID) {
             j->pgid = pid;
         }
 #endif

@@ -65,8 +65,7 @@ static void debug_safe_int(int level, const char *format, int val) {
 bool child_set_group(job_t *j, process_t *p) {
     bool retval = true;
     if (j->get_flag(JOB_CONTROL)) {
-        // New jobs have the pgid set to -2
-        if (j->pgid == -2) {
+        if (j->pgid == INVALID_PID) {
             j->pgid = p->pid;
         }
         if (setpgid(p->pid, j->pgid) < 0) {
@@ -106,7 +105,7 @@ bool child_set_group(job_t *j, process_t *p) {
 /// if it's to run in the foreground.
 bool set_child_group(job_t *j, pid_t child_pid) {
     if (j->get_flag(JOB_CONTROL)) {
-        assert (j->pgid != -2
+        assert (j->pgid != INVALID_PID
                 && "set_child_group called with JOB_CONTROL before job pgid determined!");
 
         // The parent sets the child's group. This incurs the well-known unavoidable race with the
@@ -345,7 +344,7 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
         // set_child_group puts each job into its own process group
         // do the same here if there is no PGID yet (i.e. PGID == -2)
         desired_process_group_id = j->pgid;
-        if (desired_process_group_id == -2) {
+        if (desired_process_group_id == INVALID_PID) {
             desired_process_group_id = 0;
         }
     }

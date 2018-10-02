@@ -114,7 +114,7 @@ Additionally, if compiling fish with GNU Make from git (that is, not from an off
 
 ```bash
 mkdir build; cd build
-cmake .. #  add -DCMAKE_BUILD_TYPE=Release for release build
+cmake ..
 make
 sudo make install
 ```

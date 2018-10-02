@@ -198,9 +198,12 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
         // Explicitly refuse $foo[0] as valid syntax, regardless of whether or not we're going
         // to show an error if the index ultimately evaluates to zero. This will help newcomers
         // to fish avoid a common off-by-one error. See #4862.
-        if (literal_zero_index && in[pos] == L'0') {
-            zero_index = pos;
-            literal_zero_index = true;
+        if (literal_zero_index) {
+            if (in[pos] == L'0') {
+                zero_index = pos;
+            } else {
+                literal_zero_index = false;
+            }
         }
 
         const size_t i1_src_pos = pos;

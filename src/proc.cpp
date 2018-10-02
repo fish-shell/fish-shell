@@ -363,96 +363,80 @@ typedef unsigned int process_generation_count_t;
 /// the SIGCHLD signal handler, and therefore does not need atomics or locks.
 static volatile process_generation_count_t s_sigchld_generation_cnt = 0;
 
-/// If we have received a SIGCHLD signal, reap exited children of fully-constructed jobs. We cannot
-/// reap **all** children (as in, `waitpid(-1, ...)`) since that may reap a pgrp leader that has
-/// exited but has another process in its job that has yet to launch and join its pgrp (#5219).
-/// If await is false, this returns immediately if no SIGCHLD has been received. If await is true,
-/// this waits for one. Returns true if something was processed.
-/// This returns the number of children processed, or -1 on error.
-static int process_mark_finished_children(bool wants_await) {
+/// See if any children of a fully constructed job have exited or been killed, and mark them
+/// accordingly. We cannot reap just any child that's exited, (as in, `waitpid(-1,…`) since
+/// that may reap a pgrp leader that has exited but in a job with another process that has yet to
+/// launch and join its pgrp (#5219). Returns as soon as a single child is reaped & processed.
+/// \param block_on_fg when true, blocks waiting for the foreground job to finish.
+/// \return whether the operation completed without incident
+static bool process_mark_finished_children(bool block_on_fg) {
     ASSERT_IS_MAIN_THREAD();
 
-    // A static value tracking the SIGCHLD gen count at the time we last processed it. When this is
-    // different from s_sigchld_generation_cnt, it indicates there may be unreaped processes.
-    // There may not be if we reaped them via the other waitpid path. This is only ever modified
-    // from the main thread, and not from a signal handler.
-    static process_generation_count_t s_last_sigchld_generation_cnt = 0;
+    // This is always called from the main thread (and not forked), so we can cache this value.
+    static pid_t shell_pgid = getpgrp();
 
-    int processed_count = 0;
-    bool got_error = false;
+    bool has_error = false;
+    job_t *job_fg = nullptr;
+    // Reap only processes belonging to fully-constructed jobs to prevent reaping of processes
+    // before others in the same process group have a chance to join their pgrp.
+    job_iterator_t jobs;
+    while (auto j = jobs.next()) {
+        // A job can have pgrp INVALID_PID if it consists solely of builtins that perform no IO
+        if (j->pgid == INVALID_PID || !j->get_flag(JOB_CONSTRUCTED)) {
+            // Job has not been fully constructed yet
+            debug(4, "Skipping wait on incomplete job %d", j->pgid);
+            continue;
+        }
 
-    // The critical read. This fetches a value which is only written in the signal handler. This
-    // needs to be an atomic read (we'd use sig_atomic_t, if we knew that were unsigned -
-    // fortunately aligned unsigned int is atomic on pretty much any modern chip.) It also needs to
-    // occur before we start reaping, since the signal handler can be invoked at any point.
-    const process_generation_count_t local_count = s_sigchld_generation_cnt;
+        // Whether we will wait for uncompleted processes depends on the combination of `block_on_fg` and the
+        // nature of the process. Default is WNOHANG, but if foreground, constructed, not stopped, *and*
+        // block_on_fg is true, then no WNOHANG (i.e. "HANG").
+        int options = WUNTRACED | WNOHANG;
+        if (j->get_flag(JOB_FOREGROUND) && !job_is_stopped(j) && !job_is_completed(j)) {
+            assert(job_fg == nullptr && "More than one active, fully-constructed foreground job!");
+            job_fg = j;
+        }
+        // We should never block twice in the same go, as `waitpid()' returning could mean one
+        // process completed or many, and there is a race condition when calling `waitpid()` after
+        // the process group exits having reaped all children and terminated the process group and
+        // when a subsequent call to `waitpid()` for the same process group returns immediately if
+        // that process group no longer exists. i.e. it's possible for all processes to have exited
+        // but the process group to remain momentarily valid, in which case calling `waitpid()`
+        // without WNOHANG can cause an infinite wait. Additionally, only wait on external jobs that
+        // spawned new process groups (i.e. JOB_CONTROL). We do not break or return on error as we
+        // wait on only one pgrp at a time and we need to check all pgrps before returning, but we
+        // never wait/block on fg processes after an error has been encountered to give ourselves
+        // (elsewhere) a chance to handle the fallout from process termination, etc.
+        if (!has_error && block_on_fg && j->pgid != shell_pgid
+                && j == job_fg && j->get_flag(JOB_CONTROL)) {
+            debug(4, "Waiting on processes from foreground job %d.", j->pgid, shell_pgid);
+            options &= ~WNOHANG;
+        }
 
-    // Determine whether we have children to process. Note that we can't reliably use the difference
-    // because a single SIGCHLD may be delivered for multiple children - see #1768. Also if we are
-    // awaiting, we always process.
-    bool wants_waitpid = wants_await || local_count != s_last_sigchld_generation_cnt;
-
-    if (wants_waitpid) {
-        for (;;) {
-            // Call waitpid until we get 0/ECHILD. If we wait, it's only on the first iteration. So
-            // we want to set NOHANG (don't wait) unless wants_await is true and this is the first
-            // iteration.
-            int options = WUNTRACED;
-            if (!(wants_await && processed_count == 0)) {
-                options |= WNOHANG;
-            }
-
-            int status = -1;
-            pid_t pid = 0;
-
-            bool any_jobs = false;
-            // Reap only processes belonging to fully-constructed jobs to prevent reaping of processes
-            // before other processes in the same process group have a chance to join their pgrp.
-            job_t *j; job_iterator_t jobs;
-            while ((j = jobs.next())) {
-                any_jobs = true;
-                if (j->pgid == INVALID_PID || !j->get_flag(JOB_CONSTRUCTED)) {
-                    // Job has not been fully constructed yet
-                    debug(4, "Skipping iteration of not fully constructed job %d", j->pgid);
-                    continue;
-                }
-
-                assert(j->pgid != 0);
-                debug(4, "Waiting on processes from job %d", j->pgid);
-                pid = waitpid(-1 * j->pgid, &status, options);
-                if (pid != 0) {
-                    // We'll handle this below
-                    break;
-                }
-            }
-
-            if (!any_jobs) {
-                debug(4, "No jobs found to wait for!");
-            }
-
-            if (pid > 0) {
-                handle_child_status(pid, status);
-                processed_count += 1;
-                continue;
-            }
-            else if (pid == 0) {
-                // No ready-and-waiting children, we're done.
-                break;
-            } else {
-                // This indicates an error. One likely failure is ECHILD (no children), which we
-                // break on, and is not considered an error. The other likely failure is EINTR,
-                // which means we got a signal, which is considered an error.
-                got_error = (errno != ECHILD);
-                break;
+        int status = -1;
+        // A negative PID passed in to `waitpid()` means wait on any child in that process group
+        auto pid = waitpid(-1 * j->pgid, &status, options);
+        if (pid > 0) {
+            // A child process has been reaped
+            handle_child_status(pid, status);
+            return true;
+        }
+        else if (pid == 0) {
+            // No killed/dead children in this particular process group
+        } else {
+            // pid < 0 indicates an error. One likely failure is ECHILD (no children), which is not
+            // an error and is ignored. The other likely failure is EINTR, which means we got a
+            // signal, which is considered an error. We absolutely do not break or return on error,
+            // as we need to iterate over all constructed jobs but we only call waitpid for one pgrp
+            // at a time. We do bypass future waits in case of error, however.
+            if (errno != ECHILD) {
+                has_error = true;
+                wperror(L"waitpid in process_mark_finished_children");
             }
         }
     }
 
-    if (got_error) {
-        return -1;
-    }
-    s_last_sigchld_generation_cnt = local_count;
-    return processed_count;
+    return !has_error;
 }
 
 /// This is called from a signal handler. The signal is always SIGCHLD.

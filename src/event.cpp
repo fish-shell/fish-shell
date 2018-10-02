@@ -129,7 +129,7 @@ wcstring event_get_desc(const event_t &e) {
                 result = format_string(_(L"exit handler for process %d"), e.param1.pid);
             } else {
                 // In events, PGIDs are stored as negative PIDs
-                job_t *j = job_get_from_pid(-e.param1.pid);
+                job_t *j = job_t::from_pid(-e.param1.pid);
                 if (j)
                     result = format_string(_(L"exit handler for job %d, '%ls'"), j->job_id,
                                            j->command_wcstr());
@@ -140,7 +140,7 @@ wcstring event_get_desc(const event_t &e) {
             break;
         }
         case EVENT_JOB_ID: {
-            job_t *j = job_get(e.param1.job_id);
+            job_t *j = job_t::from_job_id(e.param1.job_id);
             if (j) {
                 result = format_string(_(L"exit handler for job %d, '%ls'"), j->job_id,
                                        j->command_wcstr());
@@ -211,7 +211,7 @@ static wcstring event_desc_compact(const event_t &event) {
                 res = format_string(L"EVENT_EXIT(pid %d)", event.param1.pid);
             } else {
                 // In events, PGIDs are stored as negative PIDs
-                job_t *j = job_get_from_pid(-event.param1.pid);
+                job_t *j = job_t::from_pid(-event.param1.pid);
                 if (j)
                     res = format_string(L"EVENT_EXIT(jobid %d: \"%ls\")", j->job_id,
                                         j->command_wcstr());
@@ -221,7 +221,7 @@ static wcstring event_desc_compact(const event_t &event) {
             break;
         }
         case EVENT_JOB_ID: {
-            job_t *j = job_get(event.param1.job_id);
+            job_t *j = job_t::from_job_id(event.param1.job_id);
             if (j)
                 res =
                     format_string(L"EVENT_JOB_ID(job %d: \"%ls\")", j->job_id, j->command_wcstr());

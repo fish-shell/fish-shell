@@ -218,22 +218,25 @@ void job_t::set_flag(job_flag_t flag, bool set) { this->flags.set(flag, set); }
 
 bool job_t::get_flag(job_flag_t flag) const { return this->flags.get(flag); }
 
-int job_t::signal(int signal) {
-    pid_t my_pgid = getpgrp();
-    int res = 0;
+bool job_t::signal(int signal) {
+    // Presumably we are distinguishing between the two cases below because we do
+    // not want to send ourselves the signal in question in case the job shares
+    // a pgid with the shell.
 
-    if (pgid != my_pgid) {
-        res = killpg(pgid, signal);
+    if (pgid != getpgrp()) {
+        if (killpg(pgid, signal) == -1) {
+            wperror(L"killpg");
+            return false;
+        }
     } else {
-        for (const process_ptr_t &p : processes) {
-            if (!p->completed && p->pid && kill(p->pid, signal)) {
-                res = -1;
-                break;
+        for (const auto &p : processes) {
+            if (!p->completed && p->pid && kill(p->pid, signal) == -1) {
+                return false;
             }
         }
     }
 
-    return res;
+    return true;
 }
 
 static void mark_job_complete(const job_t *j) {
@@ -681,19 +684,17 @@ void proc_update_jiffies() {
 /// Check if there are buffers associated with the job, and select on them for a while if available.
 ///
 /// \param j the job to test
-///
-/// \return 1 if buffers were available, zero otherwise
-static int select_try(job_t *j) {
+/// \return the status of the select operation
+static select_try_t select_try(job_t *j) {
     fd_set fds;
     int maxfd = -1;
 
     FD_ZERO(&fds);
 
     const io_chain_t chain = j->all_io_redirections();
-    for (size_t idx = 0; idx < chain.size(); idx++) {
-        const io_data_t *io = chain.at(idx).get();
+    for (const auto &io : chain) {
         if (io->io_mode == IO_BUFFER) {
-            const io_pipe_t *io_pipe = static_cast<const io_pipe_t *>(io);
+            auto io_pipe = static_cast<const io_pipe_t *>(io.get());
             int fd = io_pipe->pipe_fd[0];
             FD_SET(fd, &fds);
             maxfd = std::max(maxfd, fd);
@@ -702,20 +703,20 @@ static int select_try(job_t *j) {
     }
 
     if (maxfd >= 0) {
-        int retval;
-        struct timeval tv;
+        struct timeval timeout;
 
-        tv.tv_sec = 0;
-        tv.tv_usec = 10000;
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 10000;
 
-        retval = select(maxfd + 1, &fds, 0, 0, &tv);
+        int retval = select(maxfd + 1, &fds, 0, 0, &timeout);
         if (retval == 0) {
             debug(4, L"select_try hit timeout");
+            return select_try_t::TIMEOUT;
         }
-        return retval > 0;
+        return select_try_t::DATA_READY;
     }
 
-    return -1;
+    return select_try_t::IO_ERROR;
 }
 
 /// Read from descriptors until they are empty.
@@ -915,39 +916,41 @@ static bool terminal_return_from_job(job_t *j) {
     return true;
 }
 
-void job_t::continue_job(bool cont) {
+void job_t::continue_job(bool send_sigcont) {
     // Put job first in the job list.
     promote();
     set_flag(job_flag_t::NOTIFIED, false);
 
-    debug(4, L"%ls job %d, gid %d (%ls), %ls, %ls", cont ? L"Continue" : L"Start", job_id,
+    debug(4, L"%ls job %d, gid %d (%ls), %ls, %ls", send_sigcont ? L"Continue" : L"Start", job_id,
           pgid, command_wcstr(), is_completed() ? L"COMPLETED" : L"UNCOMPLETED",
           is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
 
     if (!is_completed()) {
         if (get_flag(job_flag_t::TERMINAL) && is_foreground()) {
-            // Put the job into the foreground.
+            // Put the job into the foreground and give it control of the terminal.
             // Hack: ensure that stdin is marked as blocking first (issue #176).
             make_fd_blocking(STDIN_FILENO);
-            if (!terminal_give_to_job(this, cont)) return;
+            if (!terminal_give_to_job(this, send_sigcont)) {
+                // This returns without bubbling up the error. Presumably that is OK.
+                return;
+            }
         }
 
-        // Send the job a continue signal, if necessary.
-        if (cont) {
-            for (process_ptr_t &p : processes) p->stopped = false;
+        // If both requested and necessary, send the job a continue signal
+        if (send_sigcont) {
+            // reset the status of each process instance
+            for (auto &p : processes) {
+                p->stopped = false;
+            }
 
-            if (get_flag(job_flag_t::JOB_CONTROL)) {
-                if (killpg(pgid, SIGCONT)) {
-                    wperror(L"killpg (SIGCONT)");
-                    return;
-                }
-            } else {
-                for (const process_ptr_t &p : processes) {
-                    if (kill(p->pid, SIGCONT) < 0) {
-                        wperror(L"kill (SIGCONT)");
-                        return;
-                    }
-                }
+            // This code used to check for JOB_CONTROL to decide between using killpg to signal
+            // all processes in the group or iterating over each process in the group and sending
+            // the signal individually. job_t::signal() does the same, but uses the shell's own
+            // pgroup to make that distinction.
+            if (!signal(SIGCONT)) {
+                // This returns without bubbling up the error. Presumably that is OK.
+                debug(2, "Failed to send SIGCONT to any processes in pgroup %d!", pgid);
+                return;
             }
         }
 
@@ -955,36 +958,45 @@ void job_t::continue_job(bool cont) {
             // Look for finished processes first, to avoid select() if it's already done.
             process_mark_finished_children(false);
 
-            // Wait for job to report.
+            // sigcont is NOT sent only when a job is first created. In the event of "nested jobs"
+            // (i.e. new jobs started due to the evaluation of functions), we can start a process
+            // that feeds its output to a child job (e.g. `some_func | some_builtin`, which is two
+            // jobs), and if the first job in that expression generates enough data that it fills
+            // its pipe buffer, it'll hang waiting for the second job to read from it. If we block
+            // on foreground jobs in this case, we'll keep waiting forever.
+            bool block_on_fg = send_sigcont;
+
+            // Wait for data to become available or the status of our own job to change
             while (!reader_exit_forced() && !is_stopped() && !is_completed()) {
-                switch (select_try(this)) {
-                    case 1: {
-                        // debug(1, L"select_try() 1" );
-                        read_try(this);
-                        process_mark_finished_children(false);
-                        break;
-                    }
-                    case 0: {
-                        // debug(1, L"select_try() 0" );
-                        // No FDs are ready. Look for finished processes.
-                        process_mark_finished_children(true);
-                        break;
-                    }
-                    case -1: {
-                        // debug(1, L"select_try() -1" );
-                        // If there is no funky IO magic, we can use waitpid instead of handling
-                        // child deaths through signals. This gives a rather large speed boost (A
-                        // factor 3 startup time improvement on my 300 MHz machine) on short-lived
-                        // jobs.
-                        //
-                        // This will return early if we get a signal, like SIGHUP.
-                        process_mark_finished_children(true);
-                        break;
-                    }
-                    default: {
-                        DIE("unexpected return value from select_try()");
-                        break;
-                    }
+                auto result = select_try(this);
+
+                if (result == select_try_t::DATA_READY) {
+                    // Read the data that we know is now available, then scan for finished processes
+                    // but do not block. We don't block so long as we have IO to process, once the
+                    // fd buffers are empty we'll block in the second case below.
+                    read_try(this);
+                    process_mark_finished_children(false);
+                }
+                else if (result == select_try_t::TIMEOUT) {
+                    // Our select_try() timeout is ~10ms, so this can be EXTREMELY chatty but this is very useful
+                    // if trying to debug an unknown hang in fish. Uncomment to see if we're stuck here.
+                    // debug(1, L"select_try: no fds returned valid data within the timeout" );
+
+                    // No FDs are ready. Look for finished processes instead.
+                    process_mark_finished_children(block_on_fg);
+                }
+                else {
+                    // This is easily encountered by simply transferring control of the terminal to another process,
+                    // then suspending it. For example, `nvim`, then `ctrl+z`. Since we are not the foreground process
+                    debug(3, L"select_try: interrupted read from job file descriptors" );
+
+                    // This tends to happen when the foreground process has changed, e.g. it was suspended and control
+                    // has returned to the shell. It's a good time to block on foreground processes.
+                    process_mark_finished_children(block_on_fg);
+
+                    // If it turns out that we encountered this because the file descriptor we were reading from has
+                    // died, process_mark_finished_children() should take care of changing the status of our is_completed()
+                    // (assuming it is appropriate to do so), in which case we will break out of this loop.
                 }
             }
         }
@@ -992,19 +1004,15 @@ void job_t::continue_job(bool cont) {
 
     if (is_foreground()) {
         if (is_completed()) {
-            // It's possible that the job will produce output and exit before we've even read from
-            // it.
-            //
-            // We'll eventually read the output, but it may be after we've executed subsequent calls
-            // This is why my prompt colors kept getting screwed up - the builtin echo calls
-            // were sometimes having their output combined with the set_color calls in the wrong
-            // order!
+            // It's possible that the job will produce output and exit before we've even read from it.
+            // In that case, make sure we read that output now, before we've executed any subsequent calls.
+            // This is why prompt colors were getting screwed up - the builtin `echo` calls were sometimes
+            // having their output combined with the `set_color` calls in the wrong order!
             read_try(this);
 
-            const std::unique_ptr<process_t> &p = processes.back();
-
-            // Mark process status only if we are in the foreground and the last process in a pipe,
-            // and it is not a short circuited builtin.
+            // Set $status only if we are in the foreground and the last process in the job has finished
+            // and is not a short-circuited builtin.
+            auto &p = processes.back();
             if ((WIFEXITED(p->status) || WIFSIGNALED(p->status)) && p->pid) {
                 int status = proc_format_status(p->status);
                 proc_set_last_status(get_flag(job_flag_t::NEGATE) ? !status : status);

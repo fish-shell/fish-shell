@@ -41,6 +41,16 @@ enum {
     JOB_CONTROL_NONE,
 };
 
+/// The return value of select_try(), indicating IO readiness or an error
+enum class select_try_t {
+    /// One or more fds have data ready for read
+    DATA_READY,
+    /// The timeout elapsed without any data becoming available for read
+    TIMEOUT,
+    /// The select operation was aborted due to an interrupt or IO error
+    IO_ERROR,
+};
+
 /// A structure representing a single fish process. Contains variables for tracking process state
 /// and the process argument list. Actually, a fish process can be either a regular external
 /// process, an internal builtin which may or may not spawn a fake IO process during execution, a
@@ -239,19 +249,20 @@ class job_t {
     /// The job is in a stopped state
     bool is_stopped() const;
 
+    // (This function would just be called `continue` but that's obviously a reserved keyword)
     /// Resume a (possibly) stopped job. Puts job in the foreground.  If cont is true, restore the
     /// saved terminal modes and send the process group a SIGCONT signal to wake it up before we
     /// block.
     ///
-    /// \param cont Whether the function should wait for the job to complete before returning
-    // (This would just be called `continue` but that's obviously a reserved keyword)
-    void continue_job(bool cont);
+    /// \param send_sigcont Whether SIGCONT should be sent to the job if it is in the foreground.
+    void continue_job(bool send_sigcont);
 
     /// Promotes the job to the front of the job list.
     void promote();
 
     /// Send the specified signal to all processes in this job.
-    int signal(int signal);
+    /// \return true on success, false on failure.
+    bool signal(int signal);
 
     /// Return the job instance matching this unique job id.
     /// If id is 0 or less, return the last job used.

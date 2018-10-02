@@ -423,7 +423,7 @@ static bool fork_child_for_process(job_t *j, process_t *p, const io_chain_t &io_
 
     // This is the parent process. Store away information on the child, and
     // possibly give it control over the terminal.
-    debug(2, L"Fork #%d, pid %d: %s for '%ls'", g_fork_count, pid, fork_type, p->argv0());
+    debug(4, L"Fork #%d, pid %d: %s for '%ls'", g_fork_count, pid, fork_type, p->argv0());
 
     p->pid = pid;
     on_process_created(j, p->pid);
@@ -573,7 +573,7 @@ static bool handle_builtin_output(job_t *j, process_t *p, io_chain_t *io_chain,
         if (!stdout_discarded && no_stdout_output && no_stderr_output) {
             // The builtin produced no output and is not inside of a pipeline. No
             // need to fork or even output anything.
-            debug(3, L"Skipping fork: no output for internal builtin '%ls'", p->argv0());
+            debug(4, L"Skipping fork: no output for internal builtin '%ls'", p->argv0());
             fork_was_skipped = true;
         } else if (no_stderr_output && stdout_is_to_buffer) {
             // The builtin produced no stderr, and its stdout is going to an
@@ -585,14 +585,14 @@ static bool handle_builtin_output(job_t *j, process_t *p, io_chain_t *io_chain,
             // through to the io buffer. We're getting away with this because the only
             // thing that can output exp-sep output is `string split0` which doesn't
             // also produce stderr.
-            debug(3, L"Skipping fork: buffered output for internal builtin '%ls'", p->argv0());
+            debug(4, L"Skipping fork: buffered output for internal builtin '%ls'", p->argv0());
 
             io_buffer_t *io_buffer = static_cast<io_buffer_t *>(stdout_io.get());
             io_buffer->append_from_stream(stdout_stream);
             fork_was_skipped = true;
         } else if (stdout_io.get() == NULL && stderr_io.get() == NULL) {
             // We are writing to normal stdout and stderr. Just do it - no need to fork.
-            debug(3, L"Skipping fork: ordinary output for internal builtin '%ls'", p->argv0());
+            debug(4, L"Skipping fork: ordinary output for internal builtin '%ls'", p->argv0());
             const std::string outbuff = wcs2string(stdout_stream.contents());
             const std::string errbuff = wcs2string(stderr_stream.contents());
             bool builtin_io_done =
@@ -610,7 +610,7 @@ static bool handle_builtin_output(job_t *j, process_t *p, io_chain_t *io_chain,
     if (fork_was_skipped) {
         p->completed = 1;
         if (p->is_last_in_job) {
-            debug(3, L"Set status of %ls to %d using short circuit", j->command_wcstr(), p->status);
+            debug(4, L"Set status of job %d (%ls) to %d using short circuit", j->job_id, j->preview().c_str(), p->status);
 
             int status = p->status;
             proc_set_last_status(j->get_flag(JOB_NEGATE) ? (!status) : status);
@@ -698,7 +698,7 @@ static bool exec_external_command(job_t *j, process_t *p, const io_chain_t &proc
 
         // A 0 pid means we failed to posix_spawn. Since we have no pid, we'll never get
         // told when it's exited, so we have to mark the process as failed.
-        debug(2, L"Fork #%d, pid %d: spawn external command '%s' from '%ls'", g_fork_count, pid,
+        debug(4, L"Fork #%d, pid %d: spawn external command '%s' from '%ls'", g_fork_count, pid,
               actual_cmd, file ? file : L"<no file>");
         if (pid == 0) {
             job_mark_process_as_failed(j, p);
@@ -996,8 +996,6 @@ void exec_job(parser_t &parser, job_t *j) {
         return;
     }
 
-    debug(4, L"Exec job '%ls' with id %d", j->command_wcstr(), j->job_id);
-
     // Verify that all IO_BUFFERs are output. We used to support a (single, hacked-in) magical input
     // IO_BUFFER used by fish_pager, but now the claim is that there are no more clients and it is
     // removed. This assertion double-checks that.
@@ -1062,7 +1060,7 @@ void exec_job(parser_t &parser, job_t *j) {
             exit_without_destructors(0);
         } else {
             // Parent
-            debug(2, L"Fork #%d, pid %d: keepalive fork for '%ls'", g_fork_count, keepalive.pid,
+            debug(4, L"Fork #%d, pid %d: keepalive fork for '%ls'", g_fork_count, keepalive.pid,
                   j->command_wcstr());
             on_process_created(j, keepalive.pid);
             set_child_group(j, keepalive.pid);
@@ -1091,6 +1089,9 @@ void exec_job(parser_t &parser, job_t *j) {
         }
     }
     pipe_next_read.close();
+
+
+    debug(3, L"Created job %d from command '%ls' with pgrp %d", j->job_id, j->command_wcstr(), j->pgid);
 
     // The keepalive process is no longer needed, so we terminate it with extreme prejudice.
     if (needs_keepalive) {

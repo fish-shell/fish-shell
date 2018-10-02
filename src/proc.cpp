@@ -384,7 +384,7 @@ static bool process_mark_finished_children(bool block_on_fg) {
         // A job can have pgrp INVALID_PID if it consists solely of builtins that perform no IO
         if (j->pgid == INVALID_PID || !j->get_flag(JOB_CONSTRUCTED)) {
             // Job has not been fully constructed yet
-            debug(4, "Skipping wait on incomplete job %d", j->pgid);
+            debug(5, "Skipping wait on incomplete job %d (%ls)", j->job_id, j->preview().c_str());
             continue;
         }
 
@@ -724,7 +724,7 @@ static int select_try(job_t *j) {
             // fwprintf( stderr, L"fd %d on job %ls\n", fd, j->command );
             FD_SET(fd, &fds);
             maxfd = maxi(maxfd, fd);
-            debug(3, L"select_try on %d", fd);
+            debug(4, L"select_try on %d", fd);
         }
     }
 
@@ -737,7 +737,7 @@ static int select_try(job_t *j) {
 
         retval = select(maxfd + 1, &fds, 0, 0, &tv);
         if (retval == 0) {
-            debug(3, L"select_try hit timeout");
+            debug(4, L"select_try hit timeout");
         }
         return retval > 0;
     }
@@ -761,7 +761,7 @@ static void read_try(job_t *j) {
     }
 
     if (buff) {
-        debug(3, L"proc::read_try('%ls')", j->command_wcstr());
+        debug(4, L"proc::read_try('%ls')", j->command_wcstr());
         while (1) {
             char b[BUFFER_SIZE];
             long len = read_blocked(buff->pipe_fd[0], b, BUFFER_SIZE);

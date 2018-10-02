@@ -375,22 +375,22 @@ static void init_locale() {
         const auto var = env_get(var_name, ENV_EXPORT);
         const std::string &name = wcs2string(var_name);
         if (var.missing_or_empty()) {
-            debug(2, L"locale var %s missing or empty", name.c_str());
+            debug(5, L"locale var %s missing or empty", name.c_str());
             unsetenv(name.c_str());
         } else {
             const std::string value = wcs2string(var->as_string());
-            debug(2, L"locale var %s='%s'", name.c_str(), value.c_str());
+            debug(5, L"locale var %s='%s'", name.c_str(), value.c_str());
             setenv(name.c_str(), value.c_str(), 1);
         }
     }
 
     char *locale = setlocale(LC_ALL, "");
     fish_setlocale();
-    debug(2, L"init_locale() setlocale(): '%s'", locale);
+    debug(5, L"init_locale() setlocale(): '%s'", locale);
 
     const char *new_msg_locale = setlocale(LC_MESSAGES, NULL);
-    debug(3, L"old LC_MESSAGES locale: '%s'", old_msg_locale);
-    debug(3, L"new LC_MESSAGES locale: '%s'", new_msg_locale);
+    debug(5, L"old LC_MESSAGES locale: '%s'", old_msg_locale);
+    debug(5, L"new LC_MESSAGES locale: '%s'", new_msg_locale);
 #ifdef HAVE__NL_MSG_CAT_CNTR
     if (strcmp(old_msg_locale, new_msg_locale)) {
         // Make change known to GNU gettext.

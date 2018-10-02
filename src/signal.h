@@ -40,4 +40,17 @@ bool signal_is_blocked();
 
 /// Returns signals with non-default handlers.
 void get_signals_with_handlers(sigset_t *set);
+
+/// A RAII wrapper for signal_block/signal_unblock that triggers a signal block on creation, and then
+/// automatically releases the block when the object is destroyed, handling control flow and exceptions.
+struct signal_block_t {
+    signal_block_t() {
+        signal_block();
+    }
+
+    ~signal_block_t() {
+        signal_unblock();
+    }
+};
+
 #endif

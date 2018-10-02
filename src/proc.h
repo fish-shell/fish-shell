@@ -386,7 +386,12 @@ int proc_format_status(int status);
 /// Wait for any process finishing.
 pid_t proc_wait_any();
 
-bool terminal_give_to_job(const job_t *j, bool cont);
+/// Give ownership of the terminal to the specified job.
+///
+/// \param j The job to give the terminal to.
+/// \param restore_attrs If this variable is set, we are giving back control to a job that was previously
+/// stopped. In that case, we need to set the terminal attributes to those saved in the job.
+bool terminal_give_to_job(const job_t *j, bool restore_attrs);
 
 /// Given that we are about to run a builtin, acquire the terminal if it is owned by the given job.
 /// Returns the pid to restore after running the builtin, or -1 if there is no pid to restore.

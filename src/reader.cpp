@@ -2242,7 +2242,7 @@ void reader_bg_job_warning() {
 
     job_iterator_t jobs;
     while (job_t *j = jobs.next()) {
-        if (!job_is_completed(j)) {
+        if (!j->is_completed()) {
             fwprintf(stdout, L"%6d  %ls\n", j->processes[0]->pid, j->command_wcstr());
         }
     }
@@ -2254,9 +2254,9 @@ void reader_bg_job_warning() {
 void kill_background_jobs() {
     job_iterator_t jobs;
     while (job_t *j = jobs.next()) {
-        if (!job_is_completed(j)) {
-            if (job_is_stopped(j)) job_signal(j, SIGCONT);
-            job_signal(j, SIGHUP);
+        if (!j->is_completed()) {
+            if (j->is_stopped()) j->signal(SIGCONT);
+            j->signal(SIGHUP);
         }
     }
 }
@@ -2277,7 +2277,7 @@ static void handle_end_loop() {
         bool bg_jobs = false;
         job_iterator_t jobs;
         while (const job_t *j = jobs.next()) {
-            if (!job_is_completed(j)) {
+            if (!j->is_completed()) {
                 bg_jobs = true;
                 break;
             }

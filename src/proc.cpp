@@ -77,22 +77,6 @@ job_iterator_t::job_iterator_t() : job_list(&parser_t::principal_parser().job_li
 
 size_t job_iterator_t::count() const { return this->job_list->size(); }
 
-#if 0
-// This isn't used so the lint tools were complaining about its presence. I'm keeping it in the
-// source because it could be useful for debugging. However, it would probably be better to add a
-// verbose or debug option to the builtin `jobs` command.
-void print_jobs(void)
-{
-    job_iterator_t jobs;
-    job_t *j;
-    while (j = jobs.next()) {
-        fwprintf(stdout, L"%p -> %ls -> (foreground %d, complete %d, stopped %d, constructed %d)\n",
-                 j, j->command_wcstr(), j->get_flag(JOB_FOREGROUND), job_is_completed(j),
-                 job_is_stopped(j), j->get_flag(JOB_CONSTRUCTED));
-    }
-}
-#endif
-
 bool is_interactive_session = false;
 bool is_subshell = false;
 bool is_block = false;
@@ -140,9 +124,9 @@ static int job_remove(job_t *j) {
     return parser_t::principal_parser().job_remove(j);
 }
 
-void job_promote(job_t *job) {
+void job_t::promote() {
     ASSERT_IS_MAIN_THREAD();
-    parser_t::principal_parser().job_promote(job);
+    parser_t::principal_parser().job_promote(this);
 }
 
 void proc_destroy() {
@@ -199,61 +183,49 @@ void release_job_id(job_id_t jid) {
     consumed_job_ids->resize(count + 1);
 }
 
-job_t *job_get(job_id_t id) {
+job_t *job_t::from_job_id(job_id_t id) {
     ASSERT_IS_MAIN_THREAD();
     return parser_t::principal_parser().job_get(id);
 }
 
-job_t *job_get_from_pid(int pid) {
+job_t *job_t::from_pid(pid_t pid) {
     ASSERT_IS_MAIN_THREAD();
     return parser_t::principal_parser().job_get_from_pid(pid);
 }
 
 /// Return true if all processes in the job have stopped or completed.
-///
-/// \param j the job to test
-int job_is_stopped(const job_t *j) {
-    for (const process_ptr_t &p : j->processes) {
+bool job_t::is_stopped() const {
+    for (const process_ptr_t &p : processes) {
         if (!p->completed && !p->stopped) {
-            return 0;
+            return false;
         }
     }
-    return 1;
+    return true;
 }
 
 /// Return true if the last processes in the job has completed.
-///
-/// \param j the job to test
-bool job_is_completed(const job_t *j) {
-    assert(!j->processes.empty());
-    bool result = true;
-    for (const process_ptr_t &p : j->processes) {
+bool job_t::is_completed() const {
+    assert(!processes.empty());
+    for (const process_ptr_t &p : processes) {
         if (!p->completed) {
-            result = false;
-            break;
+            return false;
         }
     }
-    return result;
+    return true;
 }
 
-void job_t::set_flag(job_flag_t flag, bool set) {
-    if (set) {
-        this->flags |= flag;
-    } else {
-        this->flags &= ~flag;
-    }
-}
+void job_t::set_flag(job_flag_t flag, bool set) { this->flags.set(flag, set); }
 
-bool job_t::get_flag(job_flag_t flag) const { return (this->flags & flag) == flag; }
+bool job_t::get_flag(job_flag_t flag) const { return this->flags.get(flag); }
 
-int job_signal(job_t *j, int signal) {
+int job_t::signal(int signal) {
     pid_t my_pgid = getpgrp();
     int res = 0;
 
-    if (j->pgid != my_pgid) {
-        res = killpg(j->pgid, signal);
+    if (pgid != my_pgid) {
+        res = killpg(pgid, signal);
     } else {
-        for (const process_ptr_t &p : j->processes) {
+        for (const process_ptr_t &p : processes) {
             if (!p->completed && p->pid && kill(p->pid, signal)) {
                 res = -1;
                 break;
@@ -344,7 +316,7 @@ static void handle_child_status(pid_t pid, int status) {
 process_t::process_t() {}
 
 job_t::job_t(job_id_t jobid, io_chain_t bio)
-    : block_io(std::move(bio)), pgid(INVALID_PID), tmodes(), job_id(jobid), flags(0) {}
+    : block_io(std::move(bio)), pgid(INVALID_PID), tmodes(), job_id(jobid), flags{} {}
 
 job_t::~job_t() { release_job_id(job_id); }
 
@@ -382,7 +354,7 @@ static bool process_mark_finished_children(bool block_on_fg) {
     job_iterator_t jobs;
     while (auto j = jobs.next()) {
         // A job can have pgrp INVALID_PID if it consists solely of builtins that perform no IO
-        if (j->pgid == INVALID_PID || !j->get_flag(JOB_CONSTRUCTED)) {
+        if (j->pgid == INVALID_PID || !j->is_constructed()) {
             // Job has not been fully constructed yet
             debug(5, "Skipping wait on incomplete job %d (%ls)", j->job_id, j->preview().c_str());
             continue;
@@ -392,10 +364,11 @@ static bool process_mark_finished_children(bool block_on_fg) {
         // nature of the process. Default is WNOHANG, but if foreground, constructed, not stopped, *and*
         // block_on_fg is true, then no WNOHANG (i.e. "HANG").
         int options = WUNTRACED | WNOHANG;
-        if (j->get_flag(JOB_FOREGROUND) && !job_is_stopped(j) && !job_is_completed(j)) {
+        if (j->is_foreground() && !j->is_stopped() && !j->is_completed()) {
             assert(job_fg == nullptr && "More than one active, fully-constructed foreground job!");
             job_fg = j;
         }
+
         // We should never block twice in the same go, as `waitpid()' returning could mean one
         // process completed or many, and there is a race condition when calling `waitpid()` after
         // the process group exits having reaped all children and terminated the process group and
@@ -408,8 +381,8 @@ static bool process_mark_finished_children(bool block_on_fg) {
         // never wait/block on fg processes after an error has been encountered to give ourselves
         // (elsewhere) a chance to handle the fallout from process termination, etc.
         if (!has_error && block_on_fg && j->pgid != shell_pgid
-                && j == job_fg && j->get_flag(JOB_CONTROL)) {
-            debug(4, "Waiting on processes from foreground job %d.", j->pgid, shell_pgid);
+                && j == job_fg && j->get_flag(job_flag_t::JOB_CONTROL)) {
+            debug(4, "Waiting on processes from foreground job %d", job_fg->pgid);
             options &= ~WNOHANG;
         }
 
@@ -524,8 +497,8 @@ static int process_clean_after_marking(bool allow_interactive) {
 
         // If we are reaping only jobs who do not need status messages sent to the console, do not
         // consider reaping jobs that need status messages.
-        if ((!j->get_flag(JOB_SKIP_NOTIFICATION)) && (!interactive) &&
-            (!j->get_flag(JOB_FOREGROUND))) {
+        if ((!j->get_flag(job_flag_t::SKIP_NOTIFICATION)) && (!interactive) &&
+            (!j->is_foreground())) {
             continue;
         }
 
@@ -550,9 +523,10 @@ static int process_clean_after_marking(bool allow_interactive) {
 
             // Handle signals other than SIGPIPE.
             int proc_is_job = (p->is_first_in_job && p->is_last_in_job);
-            if (proc_is_job) j->set_flag(JOB_NOTIFIED, true);
+            if (proc_is_job) j->set_flag(job_flag_t::NOTIFIED, true);
             // Always report crashes.
-            if (j->get_flag(JOB_SKIP_NOTIFICATION) && !contains(crashsignals,WTERMSIG(p->status))) {
+            if (j->get_flag(job_flag_t::SKIP_NOTIFICATION) &&
+                !contains(crashsignals, WTERMSIG(p->status))) {
                 continue;
             }
 
@@ -565,7 +539,7 @@ static int process_clean_after_marking(bool allow_interactive) {
             // signals. If echoctl is on, then the terminal will have written ^C to the console.
             // If off, it won't have. We don't echo ^C either way, so as to respect the user's
             // preference.
-            if (WTERMSIG(p->status) != SIGINT || !j->get_flag(JOB_FOREGROUND)) {
+            if (WTERMSIG(p->status) != SIGINT || !j->is_foreground()) {
                 if (proc_is_job) {
                     // We want to report the job number, unless it's the only job, in which case
                     // we don't need to.
@@ -598,9 +572,9 @@ static int process_clean_after_marking(bool allow_interactive) {
 
         // If all processes have completed, tell the user the job has completed and delete it from
         // the active job list.
-        if (job_is_completed(j)) {
-            if (!j->get_flag(JOB_FOREGROUND) && !j->get_flag(JOB_NOTIFIED) &&
-                !j->get_flag(JOB_SKIP_NOTIFICATION)) {
+        if (j->is_completed()) {
+            if (!j->is_foreground() && !j->get_flag(job_flag_t::NOTIFIED) &&
+                !j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
                 format_job_info(j, JOB_ENDED);
                 found = 1;
             }
@@ -616,13 +590,13 @@ static int process_clean_after_marking(bool allow_interactive) {
             proc_fire_event(L"JOB_EXIT", EVENT_JOB_ID, j->job_id, 0);
 
             job_remove(j);
-        } else if (job_is_stopped(j) && !j->get_flag(JOB_NOTIFIED)) {
+        } else if (j->is_stopped() && !j->get_flag(job_flag_t::NOTIFIED)) {
             // Notify the user about newly stopped jobs.
-            if (!j->get_flag(JOB_SKIP_NOTIFICATION)) {
+            if (!j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
                 format_job_info(j, JOB_STOPPED);
                 found = 1;
             }
-            j->set_flag(JOB_NOTIFIED, true);
+            j->set_flag(job_flag_t::NOTIFIED, true);
         }
     }
 
@@ -946,35 +920,35 @@ static bool terminal_return_from_job(job_t *j) {
     return true;
 }
 
-void job_continue(job_t *j, bool cont) {
+void job_t::continue_job(bool cont) {
     // Put job first in the job list.
-    job_promote(j);
-    j->set_flag(JOB_NOTIFIED, false);
+    promote();
+    set_flag(job_flag_t::NOTIFIED, false);
 
     CHECK_BLOCK();
-    debug(4, L"%ls job %d, gid %d (%ls), %ls, %ls", cont ? L"Continue" : L"Start", j->job_id,
-          j->pgid, j->command_wcstr(), job_is_completed(j) ? L"COMPLETED" : L"UNCOMPLETED",
+    debug(4, L"%ls job %d, gid %d (%ls), %ls, %ls", cont ? L"Continue" : L"Start", job_id, pgid,
+          command_wcstr(), is_completed() ? L"COMPLETED" : L"UNCOMPLETED",
           is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
 
-    if (!job_is_completed(j)) {
-        if (j->get_flag(JOB_TERMINAL) && j->get_flag(JOB_FOREGROUND)) {
+    if (!is_completed()) {
+        if (get_flag(job_flag_t::TERMINAL) && is_foreground()) {
             // Put the job into the foreground. Hack: ensure that stdin is marked as blocking first
             // (issue #176).
             make_fd_blocking(STDIN_FILENO);
-            if (!terminal_give_to_job(j, cont)) return;
+            if (!terminal_give_to_job(this, cont)) return;
         }
 
         // Send the job a continue signal, if necessary.
         if (cont) {
-            for (process_ptr_t &p : j->processes) p->stopped = false;
+            for (process_ptr_t &p : processes) p->stopped = false;
 
-            if (j->get_flag(JOB_CONTROL)) {
-                if (killpg(j->pgid, SIGCONT)) {
+            if (get_flag(job_flag_t::JOB_CONTROL)) {
+                if (killpg(pgid, SIGCONT)) {
                     wperror(L"killpg (SIGCONT)");
                     return;
                 }
             } else {
-                for (const process_ptr_t &p : j->processes) {
+                for (const process_ptr_t &p : processes) {
                     if (kill(p->pid, SIGCONT) < 0) {
                         wperror(L"kill (SIGCONT)");
                         return;
@@ -983,16 +957,16 @@ void job_continue(job_t *j, bool cont) {
             }
         }
 
-        if (j->get_flag(JOB_FOREGROUND)) {
+        if (is_foreground()) {
             // Look for finished processes first, to avoid select() if it's already done.
             process_mark_finished_children(false);
 
             // Wait for job to report.
-            while (!reader_exit_forced() && !job_is_stopped(j) && !job_is_completed(j)) {
-                switch (select_try(j)) {
+            while (!reader_exit_forced() && !is_stopped() && !is_completed()) {
+                switch (select_try(this)) {
                     case 1: {
                         // debug(1, L"select_try() 1" );
-                        read_try(j);
+                        read_try(this);
                         process_mark_finished_children(false);
                         break;
                     }
@@ -1022,8 +996,8 @@ void job_continue(job_t *j, bool cont) {
         }
     }
 
-    if (j->get_flag(JOB_FOREGROUND)) {
-        if (job_is_completed(j)) {
+    if (is_foreground()) {
+        if (is_completed()) {
             // It's possible that the job will produce output and exit before we've even read from
             // it.
             //
@@ -1031,23 +1005,21 @@ void job_continue(job_t *j, bool cont) {
             // This is why my prompt colors kept getting screwed up - the builtin echo calls
             // were sometimes having their output combined with the set_color calls in the wrong
             // order!
-            read_try(j);
+            read_try(this);
 
-            const std::unique_ptr<process_t> &p = j->processes.back();
+            const std::unique_ptr<process_t> &p = processes.back();
 
             // Mark process status only if we are in the foreground and the last process in a pipe,
             // and it is not a short circuited builtin.
             if ((WIFEXITED(p->status) || WIFSIGNALED(p->status)) && p->pid) {
                 int status = proc_format_status(p->status);
-                // fwprintf(stdout, L"setting status %d for %ls\n", job_get_flag( j, JOB_NEGATE
-                // )?!status:status, j->command);
-                proc_set_last_status(j->get_flag(JOB_NEGATE) ? !status : status);
+                proc_set_last_status(get_flag(job_flag_t::NEGATE) ? !status : status);
             }
         }
 
         // Put the shell back in the foreground.
-        if (j->get_flag(JOB_TERMINAL) && j->get_flag(JOB_FOREGROUND)) {
-            terminal_return_from_job(j);
+        if (get_flag(job_flag_t::TERMINAL) && is_foreground()) {
+            terminal_return_from_job(this);
         }
     }
 }
@@ -1066,10 +1038,10 @@ void proc_sanity_check() {
 
     job_iterator_t jobs;
     while (const job_t *j = jobs.next()) {
-        if (!j->get_flag(JOB_CONSTRUCTED)) continue;
+        if (!j->is_constructed()) continue;
 
         // More than one foreground job?
-        if (j->get_flag(JOB_FOREGROUND) && !(job_is_stopped(j) || job_is_completed(j))) {
+        if (j->is_foreground() && !(j->is_stopped() || j->is_completed())) {
             if (fg_job) {
                 debug(0, _(L"More than one job in foreground: job 1: '%ls' job 2: '%ls'"),
                       fg_job->command_wcstr(), j->command_wcstr());

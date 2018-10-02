@@ -64,7 +64,7 @@ static void debug_safe_int(int level, const char *format, int val) {
 /// Returns true on sucess, false on failiure.
 bool child_set_group(job_t *j, process_t *p) {
     bool retval = true;
-    if (j->get_flag(JOB_CONTROL)) {
+    if (j->get_flag(job_flag_t::JOB_CONTROL)) {
         if (j->pgid == INVALID_PID) {
             j->pgid = p->pid;
         }
@@ -104,7 +104,7 @@ bool child_set_group(job_t *j, process_t *p) {
 /// group in the case of JOB_CONTROL, and we can give the new process group control of the terminal
 /// if it's to run in the foreground.
 bool set_child_group(job_t *j, pid_t child_pid) {
-    if (j->get_flag(JOB_CONTROL)) {
+    if (j->get_flag(job_flag_t::JOB_CONTROL)) {
         assert (j->pgid != INVALID_PID
                 && "set_child_group called with JOB_CONTROL before job pgid determined!");
 
@@ -135,7 +135,7 @@ bool set_child_group(job_t *j, pid_t child_pid) {
 bool maybe_assign_terminal(const job_t *j) {
     assert(j->pgid > 1 && "maybe_assign_terminal() called on job with invalid pgid!");
 
-    if (j->get_flag(JOB_TERMINAL) && j->get_flag(JOB_FOREGROUND)) {  //!OCLINT(early exit)
+    if (j->get_flag(job_flag_t::TERMINAL) && j->is_foreground()) {  //!OCLINT(early exit)
         if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
             // We've already assigned the process group control of the terminal when the first
             // process in the job was started. There's no need to do so again, and on some platforms
@@ -338,7 +338,7 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
 
     bool should_set_process_group_id = false;
     int desired_process_group_id = 0;
-    if (j->get_flag(JOB_CONTROL)) {
+    if (j->get_flag(job_flag_t::JOB_CONTROL)) {
         should_set_process_group_id = true;
 
         // set_child_group puts each job into its own process group

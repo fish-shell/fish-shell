@@ -336,10 +336,10 @@ void internal_exec_helper(parser_t &parser, parsed_source_ref_t parsed_source, t
 // foreground process group, we don't use posix_spawn if we're going to foreground the process. (If
 // we use fork(), we can call tcsetpgrp after the fork, before the exec, and avoid the race).
 static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *process) {
-    if (job->get_flag(JOB_CONTROL)) {  //!OCLINT(collapsible if statements)
+    if (job->get_flag(job_flag_t::JOB_CONTROL)) {  //!OCLINT(collapsible if statements)
         // We are going to use job control; therefore when we launch this job it will get its own
         // process group ID. But will it be foregrounded?
-        if (job->get_flag(JOB_TERMINAL) && job->get_flag(JOB_FOREGROUND)) {
+        if (job->get_flag(job_flag_t::TERMINAL) && job->is_foreground()) {
             // It will be foregrounded, so we will call tcsetpgrp(), therefore do not use
             // posix_spawn.
             return false;
@@ -380,7 +380,7 @@ void internal_exec(job_t *j, const io_chain_t &&all_ios) {
         // launch_process _never_ returns.
         launch_process_nofork(j->processes.front().get());
     } else {
-        j->set_flag(JOB_CONSTRUCTED, true);
+        j->set_flag(job_flag_t::CONSTRUCTED, true);
         j->processes.front()->completed = 1;
         return;
     }
@@ -392,7 +392,7 @@ static void on_process_created(job_t *j, pid_t child_pid) {
         return;
     }
 
-    if (j->get_flag(JOB_CONTROL)) {
+    if (j->get_flag(job_flag_t::JOB_CONTROL)) {
         j->pgid = child_pid;
     } else {
         j->pgid = getpgrp();
@@ -524,15 +524,15 @@ static bool exec_internal_builtin_proc(parser_t &parser, job_t *j, process_t *p,
     // way, the builtin does not need to know what job it is part of. It could
     // probably figure that out by walking the job list, but it seems more robust to
     // make exec handle things.
-    const int fg = j->get_flag(JOB_FOREGROUND);
-    j->set_flag(JOB_FOREGROUND, false);
+    const int fg = j->is_foreground();
+    j->set_flag(job_flag_t::FOREGROUND, false);
 
     // Note this call may block for a long time, while the builtin performs I/O.
     p->status = builtin_run(parser, j->pgid, p->get_argv(), streams);
 
     // Restore the fg flag, which is temporarily set to false during builtin
     // execution so as not to confuse some job-handling builtins.
-    j->set_flag(JOB_FOREGROUND, fg);
+    j->set_flag(job_flag_t::FOREGROUND, fg);
 
     // If stdin has been redirected, close the redirection stream.
     if (close_stdin) {
@@ -613,7 +613,7 @@ static bool handle_builtin_output(job_t *j, process_t *p, io_chain_t *io_chain,
             debug(4, L"Set status of job %d (%ls) to %d using short circuit", j->job_id, j->preview().c_str(), p->status);
 
             int status = p->status;
-            proc_set_last_status(j->get_flag(JOB_NEGATE) ? (!status) : status);
+            proc_set_last_status(j->get_flag(job_flag_t::NEGATE) ? (!status) : status);
         }
     } else {
         // Ok, unfortunately, we have to do a real fork. Bummer. We work hard to make
@@ -719,7 +719,7 @@ static bool exec_external_command(job_t *j, process_t *p, const io_chain_t &proc
         // child group has been set. See discussion here:
         // https://github.com/Microsoft/WSL/issues/2997 And confirmation that this persists
         // past glibc 2.24+ here: https://github.com/fish-shell/fish-shell/issues/4715
-        if (j->get_flag(JOB_CONTROL) && getpgid(p->pid) != j->pgid) {
+        if (j->get_flag(job_flag_t::JOB_CONTROL) && getpgid(p->pid) != j->pgid) {
             set_child_group(j, p->pid);
         }
 #else
@@ -803,7 +803,7 @@ static bool exec_block_or_func_process(parser_t &parser, job_t *j, process_t *p,
         // No buffer, so we exit directly. This means we have to manually set the exit
         // status.
         if (p->is_last_in_job) {
-            proc_set_last_status(j->get_flag(JOB_NEGATE) ? (!status) : status);
+            proc_set_last_status(j->get_flag(job_flag_t::NEGATE) ? (!status) : status);
         }
         p->completed = 1;
         return true;
@@ -828,7 +828,7 @@ static bool exec_block_or_func_process(parser_t &parser, job_t *j, process_t *p,
         }
     } else {
         if (p->is_last_in_job) {
-            proc_set_last_status(j->get_flag(JOB_NEGATE) ? (!status) : status);
+            proc_set_last_status(j->get_flag(job_flag_t::NEGATE) ? (!status) : status);
         }
         p->completed = 1;
     }
@@ -1038,7 +1038,7 @@ void exec_job(parser_t &parser, job_t *j) {
     // and https://github.com/Microsoft/WSL/issues/2786.
     process_t keepalive;
     bool needs_keepalive = false;
-    if (is_windows_subsystem_for_linux() && j->get_flag(JOB_CONTROL) && !exec_error) {
+    if (is_windows_subsystem_for_linux() && j->get_flag(job_flag_t::JOB_CONTROL) && !exec_error) {
         for (const process_ptr_t &p : j->processes) {
             // but not if it's the only process
             if (j->processes.front()->type == EXTERNAL && !p->is_first_in_job) {
@@ -1098,18 +1098,18 @@ void exec_job(parser_t &parser, job_t *j) {
         kill(keepalive.pid, SIGKILL);
     }
 
-    j->set_flag(JOB_CONSTRUCTED, true);
-    if (!j->get_flag(JOB_FOREGROUND)) {
+    j->set_flag(job_flag_t::CONSTRUCTED, true);
+    if (!j->is_foreground()) {
         proc_last_bg_pid = j->pgid;
         env_set(L"last_pid", ENV_GLOBAL, { to_string(proc_last_bg_pid) });
     }
 
     if (!exec_error) {
-        job_continue(j, false);
+        j->continue_job(false);
     } else {
         // Mark the errored job as not in the foreground. I can't fully justify whether this is the
         // right place, but it prevents sanity_lose from complaining.
-        j->set_flag(JOB_FOREGROUND, false);
+        j->set_flag(job_flag_t::FOREGROUND, false);
     }
 }
 

@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "common.h"
+#include "enum_set.h"
 #include "io.h"
 #include "parse_tree.h"
 #include "tnode.h"
@@ -139,23 +140,23 @@ typedef std::unique_ptr<process_t> process_ptr_t;
 typedef std::vector<process_ptr_t> process_list_t;
 
 /// Constants for the flag variable in the job struct.
-enum job_flag_t {
+enum class job_flag_t {
     /// Whether the user has been told about stopped job.
-    JOB_NOTIFIED = 1 << 0,
+    NOTIFIED,
     /// Whether this job is in the foreground.
-    JOB_FOREGROUND = 1 << 1,
+    FOREGROUND,
     /// Whether the specified job is completely constructed, i.e. completely parsed, and every
     /// process in the job has been forked, etc.
-    JOB_CONSTRUCTED = 1 << 2,
+    CONSTRUCTED,
     /// Whether the specified job is a part of a subshell, event handler or some other form of
     /// special job that should not be reported.
-    JOB_SKIP_NOTIFICATION = 1 << 3,
+    SKIP_NOTIFICATION,
     /// Whether the exit status should be negated. This flag can only be set by the not builtin.
-    JOB_NEGATE = 1 << 4,
+    NEGATE,
     /// Whether the job is under job control.
-    JOB_CONTROL = 1 << 5,
+    JOB_CONTROL,
     /// Whether the job wants to own the terminal when in the foreground.
-    JOB_TERMINAL = 1 << 6
+    TERMINAL,
 };
 
 typedef int job_id_t;
@@ -215,7 +216,7 @@ class job_t {
     /// this shell, and is used e.g. in process expansion.
     const job_id_t job_id;
     /// Bitset containing information about the job. A combination of the JOB_* constants.
-    unsigned int flags;
+    enum_set_t<job_flag_t> flags;
 
     // Get and set flags
     bool get_flag(job_flag_t flag) const;
@@ -227,6 +228,37 @@ class job_t {
 
     /// Fetch all the IO redirections associated with the job.
     io_chain_t all_io_redirections() const;
+
+    // Helper functions to check presence of flags on instances of jobs
+    /// The job has been fully constructed, i.e. all its member processes have been launched
+    bool is_constructed() const { return get_flag(job_flag_t::CONSTRUCTED); };
+    /// The job was launched in the foreground and has control of the terminal
+    bool is_foreground() const { return get_flag(job_flag_t::FOREGROUND); };
+    /// The job is complete, i.e. all its member processes have been reaped
+    bool is_completed() const;
+    /// The job is in a stopped state
+    bool is_stopped() const;
+
+    /// Resume a (possibly) stopped job. Puts job in the foreground.  If cont is true, restore the
+    /// saved terminal modes and send the process group a SIGCONT signal to wake it up before we
+    /// block.
+    ///
+    /// \param cont Whether the function should wait for the job to complete before returning
+    // (This would just be called `continue` but that's obviously a reserved keyword)
+    void continue_job(bool cont);
+
+    /// Promotes the job to the front of the job list.
+    void promote();
+
+    /// Send the specified signal to all processes in this job.
+    int signal(int signal);
+
+    /// Return the job instance matching this unique job id.
+    /// If id is 0 or less, return the last job used.
+    static job_t *from_job_id(job_id_t id);
+
+    /// Return the job containing the process identified by the unique pid provided.
+    static job_t *from_pid(pid_t pid);
 };
 
 /// Whether we are reading from the keyboard right now.
@@ -306,28 +338,6 @@ void proc_set_last_status(int s);
 /// Returns the status of the last process to exit.
 int proc_get_last_status();
 
-/// Promotes a job to the front of the job list.
-void job_promote(job_t *job);
-
-/// Return the job with the specified job id. If id is 0 or less, return the last job used.
-job_t *job_get(job_id_t id);
-
-/// Return the job with the specified pid.
-job_t *job_get_from_pid(int pid);
-
-/// Tests if the job is stopped.
-int job_is_stopped(const job_t *j);
-
-/// Tests if the job has completed, i.e. if the last process of the pipeline has ended.
-bool job_is_completed(const job_t *j);
-
-/// Reassume a (possibly) stopped job. Put job j in the foreground.  If cont is true, restore the
-/// saved terminal modes and send the process group a SIGCONT signal to wake it up before we block.
-///
-/// \param j The job
-/// \param cont Whether the function should wait for the job to complete before returning
-void job_continue(job_t *j, bool cont);
-
 /// Notify the user about stopped or terminated jobs. Delete terminated jobs from the job list.
 ///
 /// \param interactive whether interactive jobs should be reaped as well
@@ -335,9 +345,6 @@ int job_reap(bool interactive);
 
 /// Signal handler for SIGCHLD. Mark any processes with relevant information.
 void job_handle_signal(int signal, siginfo_t *info, void *con);
-
-/// Send the specified signal to all processes in the specified job.
-int job_signal(job_t *j, int signal);
 
 /// Mark a process as failed to execute (and therefore completed).
 void job_mark_process_as_failed(job_t *job, const process_t *p);

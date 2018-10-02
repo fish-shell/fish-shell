@@ -170,7 +170,7 @@ static wcstring functions_def(const wcstring &name) {
                 break;
             }
             case EVENT_JOB_ID: {
-                const job_t *j = job_get(next->param1.job_id);
+                const job_t *j = job_t::from_job_id(next->param1.job_id);
                 if (j) append_format(out, L" --on-job-exit %d", j->pgid);
                 break;
             }

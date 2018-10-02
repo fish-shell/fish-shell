@@ -362,7 +362,8 @@ const production_element_t *parse_productions::production_for_token(parse_token_
                                                                     const parse_token_t &input1,
                                                                     const parse_token_t &input2,
                                                                     parse_node_tag_t *out_tag) {
-    debug(5, "Resolving production for %ls with input token <%ls>",
+    // this is **extremely** chatty
+    debug(6, "Resolving production for %ls with input token <%ls>",
           token_type_description(node_type), input1.describe().c_str());
 
     // Fetch the function to resolve the list of productions.

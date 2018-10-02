@@ -192,6 +192,15 @@ class job_t {
     /// Sets the command.
     void set_command(const wcstring &cmd) { command_str = cmd; }
 
+    /// Returns a truncated version of the job string. Used when a message has already been emitted
+    /// containing the full job string and job id, but using the job id alone would be confusing
+    /// due to reuse of freed job ids. Prevents overloading the debug comments with the full,
+    /// untruncated job string when we don't care what the job is, only which of the currently
+    /// running jobs it is.
+    wcstring preview() const {
+        return processes.empty() ? L"" : processes[0]->argv0() + wcstring(L" ...");
+    }
+
     /// All the processes in this job.
     process_list_t processes;
 

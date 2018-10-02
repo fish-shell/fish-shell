@@ -55,15 +55,17 @@ fish 3.0 is a major release which brings with it both improvements in functional
 - `read` can now read one or more individual lines from the input stream without consuming the input in its entirety via `read -L/--line`. Refer to the `read` documentation for more info.
 - `set` has a new `--append` and `--prepend` option (#1326).
 - `set` has a new `--show` option to show lots of information about variables (#4265).
+- `string match` with an empty pattern and "--entire" in glob mode now matches everything instead of nothing (#4971).
 - `string split` supports `-n/--no-empty` to exclude empty strings from the result (#4779).
 - `string` builtin has new commands `split0` and `join0` for working with NUL-delimited output.
-- `test` and `[` now support floating point values in numeric comparisons.
+- `string` can now read NULs via stdin, and will no longer stop processing text after them (#4605)
+- `test` now supports floating point values in numeric comparisons.
 
 ### Performance improvements
 - `abbr` has been reimplemented to be faster. This means the old `fish_user_abbreviations` variable is ignored (#4048).
 - Setting variables is much faster (#4200, #4341).
 - Globs are faster (#4579).
-- `string` reads from stdin faster (#4610).
+- `string` reads from stdin faster by a factor of 10 (#4610).
 - Slicing $history (in particular, `$history[1]` for the last executed command) is much faster.
 
 ### Interactive improvements and completions
@@ -72,11 +74,22 @@ fish 3.0 is a major release which brings with it both improvements in functional
 - Pager navigation has been improved. Most notably, moving down now wraps around, moving up from the commandline now jumps to the last element and moving right and left now reverse each other even when wrapping around (#4680).
 - Typing normal characters while the completion pager is active no longer shows the search field. Instead it enters them into the command line, and ends paging (#2249).
 - A new input binding `pager-toggle-search` toggles the search field in the completions pager on and off. By default this is bound to control-s.
+- Searching in the pager now does a full fuzzy search (#5213).
 - The pager will now show the full command instead of just its last line if the number of completions is large (#4702).
 - Tildes in file names are now properly escaped in completions (#2274).
 - Wrapping completions (from `complete -w` or `function -w`) can now inject arguments. For example, `complete gco -w 'git checkout'` now works properly (#1976). The `alias` function has been updated to respect this behavior.
 - Path completions now support expansions, meaning expressions like `python ~/<TAB>` now provides file suggestions just like any other relative or absolute path. (This includes support for other expansions, too.)
 - Autosuggestions try to avoid arguments that are already present in the command line.
+- Notification about crashed processes is now always shown, even in command substitutions (#4962).
+- The screen is no longer reset after a BEL, fixing graphical glitches (#3693).
+- vi-mode now supports ';' and ',' motions. This introduces new {forward,backward}-jump-till and repeat-jump{,-reverse} bind functions (#5140).
+- The `*y` vi-mode binding now works (#5100).
+- Truecolor is now enabled in neovim by default (#2792).
+- Terminal size ($COLUMNS/$LINES) is now updated before fish_prompt is called, allowing the prompt to react (improves #904).
+- Multi-line prompts no longer repeat when the terminal is resized (#2320).
+- `xclip` support in the clipboard integration (#5020).
+- $cmd_duration is no longer updated when no command is executed (#5011).
+
 - Added completions for
   - `bd` (#4472)
   - `bower`
@@ -96,11 +109,17 @@ fish 3.0 is a major release which brings with it both improvements in functional
   - `ttx`
   - `unzip`
   - `xsv`
-- Lots of improvements to completions (especially `git` and `hg`).
+- Lots of improvements to completions (especially `darcs` (#5112), `git` and `hg`).
 - Completions for `yarn` and `npm` now require the `all-the-package-names` NPM package for full
   functionality.
 - Completions for `bower` and `yarn` now require the `jq` utility for full functionality.
 - Improved French translations.
+
+### Other fixes and improvements
+- Fish's internal wcwidth function has been updated to deal with newer unicode, and the width of some characters can be configured via the "$fish_ambiguous_width" (#5149) and "$fish_emoji_width" (#2652) variables.
+- Alternatively, a new build-time option INTERNAL_WCWIDTH can be used to use the system's wcwidth instead (#4816).
+- Fuzzy translations are no longer used as they often produced nonsense and could even trigger crashes (#4847).
+- /etc/paths is now parsed like macOS' path_helper would, fixing $PATH order (#4336, #4852).
 
 --
 

@@ -370,10 +370,17 @@ int proc_format_status(int status);
 /// Wait for any process finishing.
 pid_t proc_wait_any();
 
-#endif
-
 bool terminal_give_to_job(const job_t *j, bool cont);
 
 /// Given that we are about to run a builtin, acquire the terminal if it is owned by the given job.
 /// Returns the pid to restore after running the builtin, or -1 if there is no pid to restore.
 pid_t terminal_acquire_before_builtin(int job_pgid);
+
+
+/// 0 should not be used; although it is not a valid PGID in userspace,
+///   the Linux kernel will use it for kernel processes.
+/// -1 should not be used; it is a possible return value of the getpgid()
+///   function
+enum { INVALID_PID  = -2 };
+
+#endif

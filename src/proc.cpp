@@ -343,13 +343,8 @@ static void handle_child_status(pid_t pid, int status) {
 
 process_t::process_t() {}
 
-/// The constructor sets the pgid to -2 as a sentinel value
-/// 0 should not be used; although it is not a valid PGID in userspace,
-///   the Linux kernel will use it for kernel processes.
-/// -1 should not be used; it is a possible return value of the getpgid()
-///   function
 job_t::job_t(job_id_t jobid, io_chain_t bio)
-    : block_io(std::move(bio)), pgid(-2), tmodes(), job_id(jobid), flags(0) {}
+    : block_io(std::move(bio)), pgid(INVALID_PID), tmodes(), job_id(jobid), flags(0) {}
 
 job_t::~job_t() { release_job_id(job_id); }
 
@@ -416,7 +411,7 @@ static int process_mark_finished_children(bool wants_await) {
             job_t *j; job_iterator_t jobs;
             while ((j = jobs.next())) {
                 any_jobs = true;
-                if (j->pgid == -2 || !j->get_flag(JOB_CONSTRUCTED)) {
+                if (j->pgid == INVALID_PID || !j->get_flag(JOB_CONSTRUCTED)) {
                     // Job has not been fully constructed yet
                     debug(4, "Skipping iteration of not fully constructed job %d", j->pgid);
                     continue;
@@ -627,11 +622,11 @@ static int process_clean_after_marking(bool allow_interactive) {
             }
             // TODO: The generic process-exit event is useless and unused.
             // Remove this in future.
-            // Don't fire the exit-event for jobs with pgid -2.
+            // Don't fire the exit-event for jobs with pgid INVALID_PID.
             // That's our "sentinel" pgid, for jobs that don't (yet) have a pgid,
             // or jobs that consist entirely of builtins (and hence don't have a process).
             // This causes issues if fish is PID 2, which is quite common on WSL. See #4582.
-            if (j->pgid != -2) {
+            if (j->pgid != INVALID_PID) {
                 proc_fire_event(L"JOB_EXIT", EVENT_EXIT, -j->pgid, 0);
             }
             proc_fire_event(L"JOB_EXIT", EVENT_JOB_ID, j->job_id, 0);
@@ -825,7 +820,7 @@ bool terminal_give_to_job(const job_t *j, bool cont) {
     // http://curiousthing.org/sigttin-sigttou-deep-dive-linux In all cases, our goal here was just
     // to hand over control of the terminal to this process group, which is a no-op if it's already
     // been done.
-    if (j->pgid == -2 || tcgetpgrp(STDIN_FILENO) == j->pgid) {
+    if (j->pgid == INVALID_PID || tcgetpgrp(STDIN_FILENO) == j->pgid) {
         debug(4, L"Process group %d already has control of terminal\n", j->pgid);
     } else {
         debug(4,

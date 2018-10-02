@@ -1,0 +1,3 @@
+echo $foo[0]
+echo $foo[ 0 ]
+echo $foo[ 00 ]

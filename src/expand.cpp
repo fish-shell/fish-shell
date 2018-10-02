@@ -185,11 +185,22 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
     const long size = (long)array_size;
     size_t pos = 1;  // skip past the opening square brace
 
+    int zero_index = -1;
+    bool literal_zero_index = true;
+
     while (1) {
         while (iswspace(in[pos]) || (in[pos] == INTERNAL_SEPARATOR)) pos++;
         if (in[pos] == L']') {
             pos++;
             break;
+        }
+
+        // Explicitly refuse $foo[0] as valid syntax, regardless of whether or not we're going
+        // to show an error if the index ultimately evaluates to zero. This will help newcomers
+        // to fish avoid a common off-by-one error. See #4862.
+        if (literal_zero_index && in[pos] == L'0') {
+            zero_index = pos;
+            literal_zero_index = true;
         }
 
         const size_t i1_src_pos = pos;
@@ -248,6 +259,10 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
         // debug( 0, L"Push idx %d", tmp );
         idx.push_back(i1);
         source_positions.push_back(i1_src_pos);
+    }
+
+    if (literal_zero_index && zero_index != -1) {
+        return zero_index;
     }
 
     if (end_ptr) {
@@ -363,7 +378,12 @@ static bool expand_variables(const wcstring &instr, std::vector<completion_t> *o
         size_t bad_pos = parse_slice(in + slice_start, &slice_end, var_idx_list, var_pos_list,
                                      effective_val_count);
         if (bad_pos != 0) {
-            append_syntax_error(errors, slice_start + bad_pos, L"Invalid index value");
+            if (in[slice_start + bad_pos] == L'0') {
+                append_syntax_error(errors, slice_start + bad_pos,
+                        L"array indices start at 1, not 0.");
+            } else {
+                append_syntax_error(errors, slice_start + bad_pos, L"Invalid index value");
+            }
             return false;
         }
         var_name_and_slice_stop = (slice_end - in);

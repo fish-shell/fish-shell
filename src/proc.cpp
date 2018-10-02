@@ -695,10 +695,9 @@ static int select_try(job_t *j) {
         if (io->io_mode == IO_BUFFER) {
             const io_pipe_t *io_pipe = static_cast<const io_pipe_t *>(io);
             int fd = io_pipe->pipe_fd[0];
-            // fwprintf( stderr, L"fd %d on job %ls\n", fd, j->command );
             FD_SET(fd, &fds);
-            maxfd = maxi(maxfd, fd);
-            debug(4, L"select_try on %d", fd);
+            maxfd = std::max(maxfd, fd);
+            debug(4, L"select_try on fd %d", fd);
         }
     }
 
@@ -754,19 +753,17 @@ static void read_try(job_t *j) {
     }
 }
 
-/// Give ownership of the terminal to the specified job.
-///
-/// \param j The job to give the terminal to.
-/// \param cont If this variable is set, we are giving back control to a job that has previously
-/// been stopped. In that case, we need to set the terminal attributes to those saved in the job.
-bool terminal_give_to_job(const job_t *j, bool cont) {
-    errno = 0;
+// Return control of the terminal to a job's process group. restore_attrs is true if we are restoring
+// a previously-stopped job, in which case we need to restore terminal attributes.
+bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
     if (j->pgid == 0) {
         debug(2, "terminal_give_to_job() returning early due to no process group");
         return true;
     }
 
-    signal_block();
+    // RAII wrappers must have a name so that their scope is tied to the function as it is legal for
+    // the compiler to construct and then immediately deconstruct unnamed objects otherwise.
+    signal_block_t signal_block;
 
     // It may not be safe to call tcsetpgrp if we've already done so, as at that point we are no
     // longer the controlling process group for the terminal and no longer have permission to set
@@ -795,11 +792,11 @@ bool terminal_give_to_job(const job_t *j, bool cont) {
         // guarantee the process isn't going to exit while we wait (which would cause us to possibly
         // block indefinitely).
         while (tcsetpgrp(STDIN_FILENO, j->pgid) != 0) {
-            debug(3, "tcsetpgrp failed");
+            debug(3, "tcsetpgrp failed: %d", errno);
+
             bool pgroup_terminated = false;
-            if (errno == EINTR) {
-                ;  // Always retry on EINTR, see comments in tcsetattr EINTR code below.
-            } else if (errno == EINVAL) {
+            // No need to test for EINTR as we are blocking signals
+            if (errno == EINVAL) {
                 // OS X returns EINVAL if the process group no longer lives. Probably other OSes,
                 // too. Unlike EPERM below, EINVAL can only happen if the process group has
                 // terminated.
@@ -818,49 +815,47 @@ bool terminal_give_to_job(const job_t *j, bool cont) {
                     // Debug the original tcsetpgrp error (not the waitpid errno) to the log, and
                     // then retry until not EPERM or the process group has exited.
                     debug(2, L"terminal_give_to_job(): EPERM.\n", j->pgid);
+                    continue;
                 }
             } else {
-                if (errno == ENOTTY) redirect_tty_output();
-                debug(1, _(L"Could not send job %d ('%ls') with pgid %d to foreground"), j->job_id,
-                      j->command_wcstr(), j->pgid);
+                if (errno == ENOTTY) {
+                    redirect_tty_output();
+                }
+                debug(1, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
+                            j->job_id, j->command_wcstr(), j->pgid);
                 wperror(L"tcsetpgrp");
-                signal_unblock();
                 return false;
             }
 
             if (pgroup_terminated) {
-                // All processes in the process group has exited. Since we force all child procs to
-                // SIGSTOP on startup, the only way that can happen is if the very last process in
-                // the group terminated, and didn't need to access the terminal, otherwise it would
-                // have hung waiting for terminal IO (SIGTTIN). We can ignore this.
+                // All processes in the process group has exited.
+                // Since we delay reaping any processes in a process group until all members of that
+                // job/group have been started, the only way this can happen is if the very last process in
+                // the group terminated and didn't need to access the terminal, otherwise it would
+                // have hung waiting for terminal IO (SIGTTIN). We can safely ignore this.
                 debug(3, L"tcsetpgrp called but process group %d has terminated.\n", j->pgid);
                 mark_job_complete(j);
-                signal_unblock();
                 return true;
             }
+
+            break;
         }
     }
 
-    if (cont) {
-        int result = -1;
-        // TODO: Remove this EINTR loop since we have blocked all signals and thus cannot be
-        // interrupted. I'm leaving it in place because all of the logic involving controlling
-        // terminal management is more than a little opaque and smacks of voodoo programming.
-        errno = EINTR;
-        while (result == -1 && errno == EINTR) {
-            result = tcsetattr(STDIN_FILENO, TCSADRAIN, &j->tmodes);
-        }
+    if (restore_attrs) {
+        auto result = tcsetattr(STDIN_FILENO, TCSADRAIN, &j->tmodes);
         if (result == -1) {
-            if (errno == ENOTTY) redirect_tty_output();
-            debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id,
-                  j->command_wcstr());
+            // No need to test for EINTR and retry since we have blocked all signals
+            if (errno == ENOTTY) {
+                redirect_tty_output();
+            }
+
+            debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id, j->preview().c_str());
             wperror(L"tcsetattr");
-            signal_unblock();
             return false;
         }
     }
 
-    signal_unblock();
     return true;
 }
 
@@ -925,15 +920,14 @@ void job_t::continue_job(bool cont) {
     promote();
     set_flag(job_flag_t::NOTIFIED, false);
 
-    CHECK_BLOCK();
-    debug(4, L"%ls job %d, gid %d (%ls), %ls, %ls", cont ? L"Continue" : L"Start", job_id, pgid,
-          command_wcstr(), is_completed() ? L"COMPLETED" : L"UNCOMPLETED",
+    debug(4, L"%ls job %d, gid %d (%ls), %ls, %ls", cont ? L"Continue" : L"Start", job_id,
+          pgid, command_wcstr(), is_completed() ? L"COMPLETED" : L"UNCOMPLETED",
           is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
 
     if (!is_completed()) {
         if (get_flag(job_flag_t::TERMINAL) && is_foreground()) {
-            // Put the job into the foreground. Hack: ensure that stdin is marked as blocking first
-            // (issue #176).
+            // Put the job into the foreground.
+            // Hack: ensure that stdin is marked as blocking first (issue #176).
             make_fd_blocking(STDIN_FILENO);
             if (!terminal_give_to_job(this, cont)) return;
         }

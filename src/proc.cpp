@@ -925,37 +925,54 @@ void job_t::continue_job(bool send_sigcont) {
           pgid, command_wcstr(), is_completed() ? L"COMPLETED" : L"UNCOMPLETED",
           is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
 
+    // Make sure we retake control of the terminal before leaving this function.
+    bool term_transferred = false;
+    cleanup_t take_term_back([&]() {
+            if (term_transferred) {
+                terminal_return_from_job(this);
+            }
+        });
+
+    bool read_attempted = false;
     if (!is_completed()) {
         if (get_flag(job_flag_t::TERMINAL) && is_foreground()) {
             // Put the job into the foreground and give it control of the terminal.
             // Hack: ensure that stdin is marked as blocking first (issue #176).
             make_fd_blocking(STDIN_FILENO);
             if (!terminal_give_to_job(this, send_sigcont)) {
+                // This scenario has always returned without any error handling. Presumably that is OK.
+                return;
+            }
+            term_transferred = true;
+        }
+
+        // If both requested and necessary, send the job a continue signal.
+        if (send_sigcont) {
+            // This code used to check for JOB_CONTROL to decide between using killpg to signal all
+            // processes in the group or iterating over each process in the group and sending the
+            // signal individually. job_t::signal() does the same, but uses the shell's own pgroup
+            // to make that distinction.
+            if (!signal(SIGCONT)) {
+                debug(2, "Failed to send SIGCONT to any processes in pgroup %d!", pgid);
                 // This returns without bubbling up the error. Presumably that is OK.
                 return;
             }
-        }
 
-        // If both requested and necessary, send the job a continue signal
-        if (send_sigcont) {
             // reset the status of each process instance
             for (auto &p : processes) {
                 p->stopped = false;
             }
-
-            // This code used to check for JOB_CONTROL to decide between using killpg to signal
-            // all processes in the group or iterating over each process in the group and sending
-            // the signal individually. job_t::signal() does the same, but uses the shell's own
-            // pgroup to make that distinction.
-            if (!signal(SIGCONT)) {
-                // This returns without bubbling up the error. Presumably that is OK.
-                debug(2, "Failed to send SIGCONT to any processes in pgroup %d!", pgid);
-                return;
-            }
         }
 
         if (is_foreground()) {
-            // Look for finished processes first, to avoid select() if it's already done.
+            // This is an optimization to not call select_try() in case a process has exited. While
+            // it may seem silly, unless there is IO (and there usually isn't in terms of total CPU
+            // time), select_try() will wait for 10ms (our timeout) before returning. If during
+            // these 10ms a process exited, the shell will basically hang until the timeout happens
+            // and we are free to call `process_mark_finished_children()` to discover that fact. By
+            // calling it here before calling `select_try()` below, shell responsiveness can be
+            // dramatically improved (noticably so, not just "theoretically speaking" per the
+            // discussion in #5219).
             process_mark_finished_children(false);
 
             // sigcont is NOT sent only when a job is first created. In the event of "nested jobs"
@@ -969,6 +986,7 @@ void job_t::continue_job(bool send_sigcont) {
             // Wait for data to become available or the status of our own job to change
             while (!reader_exit_forced() && !is_stopped() && !is_completed()) {
                 auto result = select_try(this);
+                read_attempted = true;
 
                 if (result == select_try_t::DATA_READY) {
                     // Read the data that we know is now available, then scan for finished processes
@@ -978,25 +996,28 @@ void job_t::continue_job(bool send_sigcont) {
                     process_mark_finished_children(false);
                 }
                 else if (result == select_try_t::TIMEOUT) {
-                    // Our select_try() timeout is ~10ms, so this can be EXTREMELY chatty but this is very useful
-                    // if trying to debug an unknown hang in fish. Uncomment to see if we're stuck here.
-                    // debug(1, L"select_try: no fds returned valid data within the timeout" );
+                    // Our select_try() timeout is ~10ms, so this can be EXTREMELY chatty but this
+                    // is very useful if trying to debug an unknown hang in fish. Uncomment to see
+                    // if we're stuck here.  debug(1, L"select_try: no fds returned valid data
+                    // within the timeout" );
 
                     // No FDs are ready. Look for finished processes instead.
                     process_mark_finished_children(block_on_fg);
                 }
                 else {
-                    // This is easily encountered by simply transferring control of the terminal to another process,
-                    // then suspending it. For example, `nvim`, then `ctrl+z`. Since we are not the foreground process
+                    // This is easily encountered by simply transferring control of the terminal to
+                    // another process, then suspending it. For example, `nvim`, then `ctrl+z`.
+                    // Since we are not the foreground process
                     debug(3, L"select_try: interrupted read from job file descriptors" );
 
-                    // This tends to happen when the foreground process has changed, e.g. it was suspended and control
-                    // has returned to the shell. It's a good time to block on foreground processes.
+                    // This tends to happen when the foreground process has changed, e.g. it was
+                    // suspended and control has returned to the shell.
                     process_mark_finished_children(block_on_fg);
 
-                    // If it turns out that we encountered this because the file descriptor we were reading from has
-                    // died, process_mark_finished_children() should take care of changing the status of our is_completed()
-                    // (assuming it is appropriate to do so), in which case we will break out of this loop.
+                    // If it turns out that we encountered this because the file descriptor we were
+                    // reading from has died, process_mark_finished_children() should take care of
+                    // changing the status of our is_completed() (assuming it is appropriate to do
+                    // so), in which case we will break out of this loop.
                 }
             }
         }
@@ -1004,11 +1025,14 @@ void job_t::continue_job(bool send_sigcont) {
 
     if (is_foreground()) {
         if (is_completed()) {
-            // It's possible that the job will produce output and exit before we've even read from it.
-            // In that case, make sure we read that output now, before we've executed any subsequent calls.
-            // This is why prompt colors were getting screwed up - the builtin `echo` calls were sometimes
-            // having their output combined with the `set_color` calls in the wrong order!
-            read_try(this);
+            // It's possible that the job will produce output and exit before we've even read from
+            // it.  In that case, make sure we read that output now, before we've executed any
+            // subsequent calls.  This is why prompt colors were getting screwed up - the builtin
+            // `echo` calls were sometimes having their output combined with the `set_color` calls
+            // in the wrong order!
+            if (!read_attempted) {
+                read_try(this);
+            }
 
             // Set $status only if we are in the foreground and the last process in the job has finished
             // and is not a short-circuited builtin.
@@ -1017,11 +1041,6 @@ void job_t::continue_job(bool send_sigcont) {
                 int status = proc_format_status(p->status);
                 proc_set_last_status(get_flag(job_flag_t::NEGATE) ? !status : status);
             }
-        }
-
-        // Put the shell back in the foreground.
-        if (get_flag(job_flag_t::TERMINAL) && is_foreground()) {
-            terminal_return_from_job(this);
         }
     }
 }

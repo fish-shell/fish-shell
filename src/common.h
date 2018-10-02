@@ -18,6 +18,7 @@
 #endif
 
 #include <algorithm>
+#include <functional>
 #include <iterator>
 #include <memory>
 #include <mutex>
@@ -1088,5 +1089,18 @@ struct hash<const wcstring> {
 
 /// Get the absolute path to the fish executable itself
 std::string get_executable_path(const char *fallback);
+
+/// A RAII wrapper for resources that don't recur, so we don't have to create a separate RAII
+/// wrapper for each function. Avoids needing to call "return cleanup()" or similar / everywhere.
+struct cleanup_t {
+private:
+    const std::function<void()> cleanup;
+public:
+    cleanup_t(std::function<void()> exit_actions)
+        : cleanup{exit_actions} {}
+    ~cleanup_t() {
+        cleanup();
+    }
+};
 
 #endif

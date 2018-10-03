@@ -136,8 +136,8 @@ tok_t tokenizer_t::read_string() {
     tok_mode_t mode{tok_modes::regular_text};
     std::vector<int> paran_offsets;
     std::vector<int> brace_offsets;
+    std::vector<int> slice_offsets;
     std::vector<char> expecting;
-    int slice_offset = 0;
     const wchar_t *const buff_start = this->buff;
     bool is_first = true;
 
@@ -204,28 +204,35 @@ tok_t tokenizer_t::read_string() {
             }
             expecting.pop_back();
         } else if (c == L'[') {
-            if (this->buff != buff_start) {
-                if ((mode & tok_modes::array_brackets) == tok_modes::array_brackets) {
-                    // Nested brackets should not overwrite the existing slice_offset
-                    // mqudsi: TOK_ILLEGAL_SLICE is the right error here, but the shell
-                    // prints an error message with the caret pointing at token_start,
-                    // not err_loc, making the TOK_ILLEGAL_SLICE message misleading.
-                    // return call_error(TOK_ILLEGAL_SLICE, buff_start, this->buff);
-                    return this->call_error(tokenizer_error_t::unterminated_slice, this->start,
-                                            this->buff);
-                }
-                slice_offset = this->buff - this->start;
+            if (this->buff != buff_start || buff[1] != L' ') {
+                slice_offsets.push_back(this->buff - this->start);
+                expecting.push_back(L']');
                 mode |= tok_modes::array_brackets;
             } else {
                 // This is actually allowed so the test operator `[` can be used as the head of a
-                // command
+                // command. Treat it as plain text by allowing allowing tokenizer to continue normally.
             }
         }
         // Only exit bracket mode if we are in bracket mode.
         // Reason: `]` can be a parameter, e.g. last parameter to `[` test alias.
         // e.g. echo $argv[([ $x -eq $y ])] # must not end bracket mode on first bracket
         else if (c == L']' && ((mode & tok_modes::array_brackets) == tok_modes::array_brackets)) {
-            mode &= ~(tok_modes::array_brackets);
+            if (expecting.size() > 0 && expecting.back() != L']') {
+                return this->call_error(tokenizer_error_t::expected_pclose_found_bclose,
+                        this->start, this->buff);
+            }
+            switch (slice_offsets.size()) {
+                case 0:
+                    // this is a huge, dirty hack, but it's OK to let this through since the test
+                    // alias `[` expects a closing literal `]`. You can thank bash (or is it sh?)
+                    // for this abomination.
+                    break;
+                case 1:
+                    mode &= ~(tok_modes::array_brackets);
+                default:
+                    slice_offsets.pop_back();
+                    expecting.pop_back();
+            }
         } else if (c == L'\'' || c == L'"') {
             const wchar_t *end = quote_end(this->buff);
             if (end) {
@@ -263,7 +270,7 @@ tok_t tokenizer_t::read_string() {
                                      this->buff - 1);
         } else if ((mode & tok_modes::array_brackets) == tok_modes::array_brackets) {
             error = this->call_error(tokenizer_error_t::unterminated_slice, buff_start,
-                                     this->start + slice_offset);
+                                     this->start + slice_offsets.back());
         } else if ((mode & tok_modes::subshell) == tok_modes::subshell) {
             assert(paran_offsets.size() > 0);
             size_t offset_of_open_paran = paran_offsets.back();

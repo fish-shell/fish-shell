@@ -515,6 +515,8 @@ static int process_clean_after_marking(bool allow_interactive) {
 
             // TODO: The generic process-exit event is useless and unused.
             // Remove this in future.
+            // Update: This event is used for cleaning up the psub temporary files and folders.
+            // Removing it breaks the psub tests as a result.
             proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, p->pid,
                             (WIFSIGNALED(s) ? -1 : WEXITSTATUS(s)));
 

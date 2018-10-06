@@ -458,8 +458,8 @@ static void reader_super_highlight_me_plenty(int highlight_pos_adjust = 0, bool 
 static bool exit_forced;
 
 /// Give up control of terminal.
-static void term_donate() {
-    set_color(rgb_color_t::normal(), rgb_color_t::normal());
+static void term_donate(outputter_t &outp) {
+    outp.set_color(rgb_color_t::normal(), rgb_color_t::normal());
 
     while (1) {
         if (tcsetattr(STDIN_FILENO, TCSANOW, &tty_modes_for_external_cmds) == -1) {
@@ -844,7 +844,7 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
     }
 
     proc_pop_interactive();
-    set_color(rgb_color_t::reset(), rgb_color_t::reset());
+    outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
     if (reset_cursor_position && !lst.empty()) {
         // Put the cursor back at the beginning of the line (issue #2453).
         ignore_result(write(STDOUT_FILENO, "\r", 1));
@@ -1844,7 +1844,7 @@ static void reader_interactive_init() {
 /// Destroy data for interactive use.
 static void reader_interactive_destroy() {
     kill_destroy();
-    set_color(rgb_color_t::reset(), rgb_color_t::reset());
+    outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
     input_destroy();
 }
 
@@ -2031,9 +2031,9 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
     // For compatibility with fish 2.0's $_, now replaced with `status current-command`
     if (!ft.empty()) parser.vars().set_one(L"_", ENV_GLOBAL, ft);
 
+    outputter_t &outp = outputter_t::stdoutput();
     reader_write_title(cmd);
-
-    term_donate();
+    term_donate(outp);
 
     gettimeofday(&time_before, NULL);
 
@@ -3358,7 +3358,7 @@ const wchar_t *reader_readline(int nchars) {
             if (errno == EIO) redirect_tty_output();
             wperror(L"tcsetattr");  // return to previous mode
         }
-        set_color(rgb_color_t::reset(), rgb_color_t::reset());
+        outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
     }
 
     return finished ? data->command_line.text.c_str() : NULL;

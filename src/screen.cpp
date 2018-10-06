@@ -52,29 +52,14 @@
 
 static void invalidate_soft_wrap(screen_t *scr);
 
-/// Ugly kludge. The internal buffer used to store output of tputs. Since tputs external function
-/// can only take an integer and not a pointer as parameter we need a static storage buffer.
-typedef std::vector<char> data_buffer_t;
-static data_buffer_t *s_writeb_buffer = 0;
-
-static int s_writeb(char character);
-
-/// Class to temporarily set s_writeb_buffer and the writer function in a scoped way.
+/// RAII class to begin and end buffering around stdoutput().
 class scoped_buffer_t {
-    data_buffer_t *const old_buff;
-    int (*const old_writer)(char);
+    screen_t &screen_;
 
    public:
-    explicit scoped_buffer_t(data_buffer_t *buff)
-        : old_buff(s_writeb_buffer), old_writer(output_get_writer()) {
-        s_writeb_buffer = buff;
-        output_set_writer(s_writeb);
-    }
+    scoped_buffer_t(screen_t &s) : screen_(s) { screen_.outp().beginBuffering(); }
 
-    ~scoped_buffer_t() {
-        s_writeb_buffer = old_buff;
-        output_set_writer(old_writer);
-    }
+    ~scoped_buffer_t() { screen_.outp().endBuffering(); }
 };
 
 // Singleton of the cached escape sequences seen in prompts and similar strings.
@@ -439,12 +424,6 @@ static void s_desired_append_char(screen_t *s, wchar_t b, int c, int indent, siz
     }
 }
 
-/// The writeb function offered to tputs.
-static int s_writeb(char c) {
-    s_writeb_buffer->push_back(c);
-    return 0;
-}
-
 /// Write the bytes needed to move screen cursor to the specified position to the specified buffer.
 /// The actual_cursor field of the specified screen_t will be updated.
 ///
@@ -452,8 +431,10 @@ static int s_writeb(char c) {
 /// \param b the buffer to send the output escape codes to
 /// \param new_x the new x position
 /// \param new_y the new y position
-static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
+static void s_move(screen_t *s, int new_x, int new_y) {
     if (s->actual.cursor.x == new_x && s->actual.cursor.y == new_y) return;
+
+    const scoped_buffer_t buffering(*s);
 
     // If we are at the end of our window, then either the cursor stuck to the edge or it didn't. We
     // don't know! We can fix it up though.
@@ -461,9 +442,9 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
         // Either issue a cr to go back to the beginning of this line, or a nl to go to the
         // beginning of the next one, depending on what we think is more efficient.
         if (new_y <= s->actual.cursor.y) {
-            b->push_back('\r');
+            s->outp().push_back('\r');
         } else {
-            b->push_back('\n');
+            s->outp().push_back('\n');
             s->actual.cursor.y++;
         }
         // Either way we're not in the first column.
@@ -474,7 +455,7 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
     int x_steps, y_steps;
 
     const char *str;
-    scoped_buffer_t scoped_buffer(b);
+    auto &outp = s->outp();
 
     y_steps = new_y - s->actual.cursor.y;
 
@@ -492,13 +473,13 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
     }
 
     for (i = 0; i < abs(y_steps); i++) {
-        writembs(str);
+        writembs(outp, str);
     }
 
     x_steps = new_x - s->actual.cursor.x;
 
     if (x_steps && new_x == 0) {
-        b->push_back('\r');
+        outp.push_back('\r');
         x_steps = 0;
     }
 
@@ -517,10 +498,10 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
         multi_str != NULL && multi_str[0] != '\0' && abs(x_steps) * strlen(str) > strlen(multi_str);
     if (use_multi && cur_term) {
         char *multi_param = tparm((char *)multi_str, abs(x_steps));
-        writembs(multi_param);
+        writembs(outp, multi_param);
     } else {
         for (i = 0; i < abs(x_steps); i++) {
-            writembs(str);
+            writembs(outp, str);
         }
     }
 
@@ -529,20 +510,19 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
 }
 
 /// Set the pen color for the terminal.
-static void s_set_color(screen_t *s, data_buffer_t *b, highlight_spec_t c) {
+static void s_set_color(screen_t *s, const environment_t &vars, highlight_spec_t c) {
     UNUSED(s);
-    scoped_buffer_t scoped_buffer(b);
 
     unsigned int uc = (unsigned int)c;
-    set_color(highlight_get_color(uc & 0xffff, false),
-              highlight_get_color((uc >> 16) & 0xffff, true));
+    s->outp().set_color(highlight_get_color(uc & 0xfff, false),
+                        highlight_get_color((uc >> 16) & 0xffff, true));
 }
 
 /// Convert a wide character to a multibyte string and append it to the buffer.
-static void s_write_char(screen_t *s, data_buffer_t *b, wchar_t c) {
-    scoped_buffer_t scoped_buffer(b);
+static void s_write_char(screen_t *s, wchar_t c) {
+    scoped_buffer_t outp(*s);
     s->actual.cursor.x += fish_wcwidth_min_0(c);
-    writech(c);
+    s->outp().writech(c);
     if (s->actual.cursor.x == s->actual_width && allow_soft_wrap()) {
         s->soft_wrap_location.x = 0;
         s->soft_wrap_location.y = s->actual.cursor.y + 1;
@@ -555,17 +535,11 @@ static void s_write_char(screen_t *s, data_buffer_t *b, wchar_t c) {
     }
 }
 
-/// Send the specified string through tputs and append the output to the specified buffer.
-static void s_write_mbs(data_buffer_t *b, const char *s) {
-    scoped_buffer_t scoped_buffer(b);
-    writembs(s);
-}
+/// Send the specified string through tputs and append the output to the screen's outputter.
+static void s_write_mbs(screen_t *screen, const char *s) { writembs(screen->outp(), s); }
 
 /// Convert a wide string to a multibyte string and append it to the buffer.
-static void s_write_str(data_buffer_t *b, const wchar_t *s) {
-    scoped_buffer_t scoped_buffer(b);
-    writestr(s);
-}
+static void s_write_str(screen_t *screen, const wchar_t *s) { screen->outp().writestr(s); }
 
 /// Returns the length of the "shared prefix" of the two lines, which is the run of matching text
 /// and colors. If the prefix ends on a combining character, do not include the previous character
@@ -608,7 +582,8 @@ static void invalidate_soft_wrap(screen_t *scr) { scr->soft_wrap_location = INVA
 
 /// Update the screen to match the desired output.
 static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring &right_prompt) {
-    // if (test_stuff(scr)) return;
+    const environment_t &vars = env_stack_t::principal();
+    const scoped_buffer_t buffering(*scr);
     const size_t left_prompt_width =
         calc_prompt_layout(left_prompt, cached_layouts).last_line_width;
     const size_t right_prompt_width =
@@ -620,8 +595,6 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
     size_t actual_lines_before_reset = scr->actual_lines_before_reset;
     scr->actual_lines_before_reset = 0;
 
-    data_buffer_t output;
-
     bool need_clear_lines = scr->need_clear_lines;
     bool need_clear_screen = scr->need_clear_screen;
     bool has_cleared_screen = false;
@@ -630,7 +603,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         // Ensure we don't issue a clear screen for the very first output, to avoid issue #402.
         if (scr->actual_width != SCREEN_WIDTH_UNINITIALIZED) {
             need_clear_screen = true;
-            s_move(scr, &output, 0, 0);
+            s_move(scr, 0, 0);
             s_reset(scr, screen_reset_current_line_contents);
 
             need_clear_lines = need_clear_lines || scr->need_clear_lines;
@@ -647,8 +620,8 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
     const size_t lines_with_stuff = maxi(actual_lines_before_reset, scr->actual.line_count());
 
     if (left_prompt != scr->actual_left_prompt) {
-        s_move(scr, &output, 0, 0);
-        s_write_str(&output, left_prompt.c_str());
+        s_move(scr, 0, 0);
+        s_write_str(scr, left_prompt.c_str());
         scr->actual_left_prompt = left_prompt;
         scr->actual.cursor.x = (int)left_prompt_width;
     }
@@ -714,22 +687,22 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
             // wrapping.
             if (j + 1 == (size_t)screen_width && should_clear_screen_this_line &&
                 !has_cleared_screen) {
-                s_move(scr, &output, current_width, (int)i);
-                s_write_mbs(&output, clr_eos);
+                s_move(scr, current_width, (int)i);
+                s_write_mbs(scr, clr_eos);
                 has_cleared_screen = true;
             }
 
             perform_any_impending_soft_wrap(scr, current_width, (int)i);
-            s_move(scr, &output, current_width, (int)i);
-            s_set_color(scr, &output, o_line.color_at(j));
-            s_write_char(scr, &output, o_line.char_at(j));
+            s_move(scr, current_width, (int)i);
+            s_set_color(scr, vars, o_line.color_at(j));
+            s_write_char(scr, o_line.char_at(j));
             current_width += fish_wcwidth_min_0(o_line.char_at(j));
         }
 
         // Clear the screen if we have not done so yet.
         if (should_clear_screen_this_line && !has_cleared_screen) {
-            s_move(scr, &output, current_width, (int)i);
-            s_write_mbs(&output, clr_eos);
+            s_move(scr, current_width, (int)i);
+            s_write_mbs(scr, clr_eos);
             has_cleared_screen = true;
         }
 
@@ -750,16 +723,16 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
             clear_remainder = prev_width > current_width;
         }
         if (clear_remainder && clr_eol) {
-            s_set_color(scr, &output, 0xffffffff);
-            s_move(scr, &output, current_width, (int)i);
-            s_write_mbs(&output, clr_eol);
+            s_set_color(scr, vars, 0xffffffff);
+            s_move(scr, current_width, (int)i);
+            s_write_mbs(scr, clr_eol);
         }
 
         // Output any rprompt if this is the first line.
         if (i == 0 && right_prompt_width > 0) {  //!OCLINT(Use early exit/continue)
-            s_move(scr, &output, (int)(screen_width - right_prompt_width), (int)i);
-            s_set_color(scr, &output, 0xffffffff);
-            s_write_str(&output, right_prompt.c_str());
+            s_move(scr, (int)(screen_width - right_prompt_width), (int)i);
+            s_set_color(scr, vars, 0xffffffff);
+            s_write_str(scr, right_prompt.c_str());
             scr->actual.cursor.x += right_prompt_width;
 
             // We output in the last column. Some terms (Linux) push the cursor further right, past
@@ -770,28 +743,23 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
             // wrapped. If so, then a cr will go to the beginning of the following line! So instead
             // issue a bunch of "move left" commands to get back onto the line, and then jump to the
             // front of it.
-            s_move(scr, &output, scr->actual.cursor.x - (int)right_prompt_width,
-                   scr->actual.cursor.y);
-            s_write_str(&output, L"\r");
+            s_move(scr, scr->actual.cursor.x - (int)right_prompt_width, scr->actual.cursor.y);
+            s_write_str(scr, L"\r");
             scr->actual.cursor.x = 0;
         }
     }
 
     // Clear remaining lines (if any) if we haven't cleared the screen.
     if (!has_cleared_screen && scr->desired.line_count() < lines_with_stuff && clr_eol) {
-        s_set_color(scr, &output, 0xffffffff);
+        s_set_color(scr, vars, 0xffffffff);
         for (size_t i = scr->desired.line_count(); i < lines_with_stuff; i++) {
-            s_move(scr, &output, 0, (int)i);
-            s_write_mbs(&output, clr_eol);
+            s_move(scr, 0, (int)i);
+            s_write_mbs(scr, clr_eol);
         }
     }
 
-    s_move(scr, &output, scr->desired.cursor.x, scr->desired.cursor.y);
-    s_set_color(scr, &output, 0xffffffff);
-
-    if (!output.empty()) {
-        write_loop(STDOUT_FILENO, &output.at(0), output.size());
-    }
+    s_move(scr, scr->desired.cursor.x, scr->desired.cursor.y);
+    s_set_color(scr, vars, 0xffffffff);
 
     // We have now synced our actual screen against our desired screen. Note that this is a big
     // assignment!
@@ -1206,21 +1174,15 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
     fstat(2, &s->prev_buff_2);
 }
 
-bool screen_force_clear_to_end() {
-    bool result = false;
+void screen_force_clear_to_end() {
     if (clr_eos) {
-        data_buffer_t output;
-        s_write_mbs(&output, clr_eos);
-        if (!output.empty()) {
-            write_loop(STDOUT_FILENO, &output.at(0), output.size());
-            result = true;
-        }
+        writembs(outputter_t::stdoutput(), clr_eos);
     }
-    return result;
 }
 
 screen_t::screen_t()
-    : desired(),
+    : outp_(outputter_t::stdoutput()),
+      desired(),
       actual(),
       actual_left_prompt(),
       last_right_prompt_width(),

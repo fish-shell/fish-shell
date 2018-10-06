@@ -252,37 +252,25 @@ static wcstring prettify(const wcstring &src, bool do_indent) {
     return std::move(prettifier.output);
 }
 
-// Helper for output_set_writer
-static std::string output_receiver;
-static int write_to_output_receiver(char c) {
-    output_receiver.push_back(c);
-    return 0;
-}
-
 /// Given a string and list of colors of the same size, return the string with ANSI escape sequences
 /// representing the colors.
 static std::string ansi_colorize(const wcstring &text,
                                  const std::vector<highlight_spec_t> &colors) {
     assert(colors.size() == text.size());
-    assert(output_receiver.empty());
-
-    int (*saved)(char) = output_get_writer();
-    output_set_writer(write_to_output_receiver);
+    outputter_t outp;
+    const auto &vars = env_stack_t::globals();
 
     highlight_spec_t last_color = highlight_spec_normal;
     for (size_t i = 0; i < text.size(); i++) {
         highlight_spec_t color = colors.at(i);
         if (color != last_color) {
-            set_color(highlight_get_color(color, false), rgb_color_t::normal());
+            outp.set_color(highlight_get_color(color, false), rgb_color_t::normal());
             last_color = color;
         }
-        writech(text.at(i));
+        outp.writech(text.at(i));
     }
-    set_color(rgb_color_t::normal(), rgb_color_t::normal());
-    output_set_writer(saved);
-    std::string result;
-    result.swap(output_receiver);
-    return result;
+    outp.set_color(rgb_color_t::normal(), rgb_color_t::normal());
+    return outp.contents();
 }
 
 /// Given a string and list of colors of the same size, return the string with HTML span elements

@@ -30,24 +30,8 @@
 #include "output.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-static int writeb_internal(char c);
-
-/// The function used for output.
-static int (*out)(char c) = writeb_internal;  //!OCLINT(unused param)
-
 /// Whether term256 and term24bit are supported.
 static color_support_t color_support = 0;
-
-/// Set the function used for writing in move_cursor, writespace and set_color and all other output
-/// functions in this library. By default, the write call is used to give completely unbuffered
-/// output to stdout.
-void output_set_writer(int (*writer)(char)) {
-    CHECK(writer, );
-    out = writer;
-}
-
-/// Return the current output writer.
-int (*output_get_writer())(char) { return out; }
 
 /// Returns true if we think tparm can handle outputting a color index
 static bool term_supports_color_natively(unsigned int c) { return (unsigned)max_colors >= c + 1; }
@@ -63,10 +47,10 @@ unsigned char index_for_color(rgb_color_t c) {
     return c.to_term256_index();
 }
 
-static bool write_color_escape(const char *todo, unsigned char idx, bool is_fg) {
+static bool write_color_escape(outputter_t &outp, const char *todo, unsigned char idx, bool is_fg) {
     if (term_supports_color_natively(idx)) {
         // Use tparm to emit color escape.
-        writembs(tparm((char *)todo, idx));
+        writembs(outp, tparm((char *)todo, idx));
         return true;
     }
 
@@ -85,45 +69,46 @@ static bool write_color_escape(const char *todo, unsigned char idx, bool is_fg) 
         snprintf(buff, sizeof buff, "\x1B[%d;5;%dm", is_fg ? 38 : 48, idx);
     }
 
-    int (*writer)(char) = output_get_writer();
-    if (writer) {
-        for (size_t i = 0; buff[i]; i++) {
-            writer(buff[i]);
-        }
-    }
-
+    outp.writestr(buff);
     return true;
 }
 
-static bool write_foreground_color(unsigned char idx) {
+static bool write_foreground_color(outputter_t &outp, unsigned char idx) {
     if (!cur_term) return false;
     if (set_a_foreground && set_a_foreground[0]) {
-        return write_color_escape(set_a_foreground, idx, true);
+        return write_color_escape(outp, set_a_foreground, idx, true);
     } else if (set_foreground && set_foreground[0]) {
-        return write_color_escape(set_foreground, idx, true);
+        return write_color_escape(outp, set_foreground, idx, true);
     }
     return false;
 }
 
-static bool write_background_color(unsigned char idx) {
+static bool write_background_color(outputter_t &outp, unsigned char idx) {
     if (!cur_term) return false;
     if (set_a_background && set_a_background[0]) {
-        return write_color_escape(set_a_background, idx, false);
+        return write_color_escape(outp, set_a_background, idx, false);
     } else if (set_background && set_background[0]) {
-        return write_color_escape(set_background, idx, false);
+        return write_color_escape(outp, set_background, idx, false);
     }
     return false;
+}
+
+void outputter_t::flush_to(int fd) {
+    if (fd >= 0 && !contents_.empty()) {
+        write_loop(fd, contents_.data(), contents_.size());
+        contents_.clear();
+    }
 }
 
 // Exported for builtin_set_color's usage only.
-bool write_color(rgb_color_t color, bool is_fg) {
+bool outputter_t::write_color(rgb_color_t color, bool is_fg) {
     if (!cur_term) return false;
     bool supports_term24bit =
         static_cast<bool>(output_get_color_support() & color_support_term24bit);
     if (!supports_term24bit || !color.is_rgb()) {
         // Indexed or non-24 bit color.
         unsigned char idx = index_for_color(color);
-        return (is_fg ? write_foreground_color : write_background_color)(idx);
+        return (is_fg ? write_foreground_color : write_background_color)(*this, idx);
     }
 
     // 24 bit! No tparm here, just ANSI escape sequences.
@@ -133,13 +118,7 @@ bool write_color(rgb_color_t color, bool is_fg) {
     char buff[128];
     snprintf(buff, sizeof buff, "\x1B[%d;2;%u;%u;%um", is_fg ? 38 : 48, rgb.rgb[0], rgb.rgb[1],
              rgb.rgb[2]);
-    int (*writer)(char) = output_get_writer();
-    if (writer) {
-        for (size_t i = 0; buff[i]; i++) {
-            writer(buff[i]);
-        }
-    }
-
+    writestr(buff);
     return true;
 }
 
@@ -162,23 +141,10 @@ bool write_color(rgb_color_t color, bool is_fg) {
 ///
 /// \param c Foreground color.
 /// \param c2 Background color.
-void set_color(rgb_color_t c, rgb_color_t c2) {
-#if 0
-    wcstring tmp = c.description();
-    wcstring tmp2 = c2.description();
-    debug(3, "set_color %ls : %ls", tmp.c_str(), tmp2.c_str());
-#endif
-    ASSERT_IS_MAIN_THREAD();
+void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
     if (!cur_term) return;
 
     const rgb_color_t normal = rgb_color_t::normal();
-    static rgb_color_t last_color = rgb_color_t::normal();
-    static rgb_color_t last_color2 = rgb_color_t::normal();
-    static bool was_bold = false;
-    static bool was_underline = false;
-    static bool was_italics = false;
-    static bool was_dim = false;
-    static bool was_reverse = false;
     bool bg_set = false, last_bg_set = false;
     bool is_bold = false;
     bool is_underline = false;
@@ -216,14 +182,14 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
         was_reverse = false;
         // If we exit attibute mode, we must first set a color, or previously coloured text might
         // lose it's color. Terminals are weird...
-        write_foreground_color(0);
-        writembs(exit_attribute_mode);
+        write_foreground_color(*this, 0);
+        writembs(*this, exit_attribute_mode);
         return;
     }
 
     if (was_bold && !is_bold) {
         // Only way to exit bold mode is a reset of all attributes.
-        writembs(exit_attribute_mode);
+        writembs(*this, exit_attribute_mode);
         last_color = normal;
         last_color2 = normal;
         was_bold = false;
@@ -235,7 +201,7 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
 
     if (was_dim && !is_dim) {
         // Only way to exit dim mode is a reset of all attributes.
-        writembs(exit_attribute_mode);
+        writembs(*this, exit_attribute_mode);
         last_color = normal;
         last_color2 = normal;
         was_bold = false;
@@ -247,7 +213,7 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
 
     if (was_reverse && !is_reverse) {
         // Only way to exit reverse mode is a reset of all attributes.
-        writembs(exit_attribute_mode);
+        writembs(*this, exit_attribute_mode);
         last_color = normal;
         last_color2 = normal;
         was_bold = false;
@@ -272,18 +238,18 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
         if (bg_set && !last_bg_set) {
             // Background color changed and is set, so we enter bold mode to make reading easier.
             // This means bold mode is _always_ on when the background color is set.
-            writembs_nofail(enter_bold_mode);
+            writembs_nofail(*this, enter_bold_mode);
         }
         if (!bg_set && last_bg_set) {
             // Background color changed and is no longer set, so we exit bold mode.
-            writembs(exit_attribute_mode);
+            writembs(*this, exit_attribute_mode);
             was_bold = false;
             was_underline = false;
             was_italics = false;
             was_dim = false;
             was_reverse = false;
             // We don't know if exit_attribute_mode resets colors, so we set it to something known.
-            if (write_foreground_color(0)) {
+            if (write_foreground_color(*this, 0)) {
                 last_color = rgb_color_t::black();
             }
         }
@@ -291,8 +257,8 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
 
     if (last_color != c) {
         if (c.is_normal()) {
-            write_foreground_color(0);
-            writembs(exit_attribute_mode);
+            write_foreground_color(*this, 0);
+            writembs(*this, exit_attribute_mode);
 
             last_color2 = rgb_color_t::normal();
             was_bold = false;
@@ -309,9 +275,9 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
 
     if (last_color2 != c2) {
         if (c2.is_normal()) {
-            write_background_color(0);
+            write_background_color(*this, 0);
 
-            writembs(exit_attribute_mode);
+            writembs(*this, exit_attribute_mode);
             if (!last_color.is_normal()) {
                 write_color(last_color, true /* foreground */);
             }
@@ -330,66 +296,75 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
 
     // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
     if (is_bold && !was_bold && enter_bold_mode && strlen(enter_bold_mode) > 0 && !bg_set) {
-        writembs_nofail(tparm((char *)enter_bold_mode));
+        writembs_nofail(*this, tparm(enter_bold_mode));
         was_bold = is_bold;
     }
 
     if (was_underline && !is_underline) {
-        writembs_nofail(exit_underline_mode);
+        writembs_nofail(*this, exit_underline_mode);
     }
 
     if (!was_underline && is_underline) {
-        writembs_nofail(enter_underline_mode);
+        writembs_nofail(*this, enter_underline_mode);
     }
     was_underline = is_underline;
 
     if (was_italics && !is_italics && enter_italics_mode && strlen(enter_italics_mode) > 0) {
-        writembs_nofail(exit_italics_mode);
+        writembs_nofail(*this, exit_italics_mode);
         was_italics = is_italics;
     }
 
     if (!was_italics && is_italics && enter_italics_mode && strlen(enter_italics_mode) > 0) {
-        writembs_nofail(enter_italics_mode);
+        writembs_nofail(*this, enter_italics_mode);
         was_italics = is_italics;
     }
 
     if (is_dim && !was_dim && enter_dim_mode && strlen(enter_dim_mode) > 0) {
-        writembs_nofail(enter_dim_mode);
+        writembs_nofail(*this, enter_dim_mode);
         was_dim = is_dim;
     }
 
     if (is_reverse && !was_reverse) {
         // Some terms do not have a reverse mode set, so standout mode is a fallback.
         if (enter_reverse_mode && strlen(enter_reverse_mode) > 0) {
-            writembs_nofail(enter_reverse_mode);
+            writembs_nofail(*this, enter_reverse_mode);
             was_reverse = is_reverse;
         } else if (enter_standout_mode && strlen(enter_standout_mode) > 0) {
-            writembs_nofail(enter_standout_mode);
+            writembs_nofail(*this, enter_standout_mode);
             was_reverse = is_reverse;
         }
     }
 }
 
-/// Default output method, simply calls write() on stdout.
-static int writeb_internal(char c) {  // cppcheck
-    write_loop(1, &c, 1);
+// tputs accepts a function pointer that receives an int only.
+// Use the following lock to redirect it to the proper outputter.
+// Note we can't use owning_lock because the tputs_writer must access it and owning_lock is not
+// recursive.
+static std::mutex s_tputs_receiver_lock;
+static outputter_t *s_tputs_receiver{nullptr};
+
+static int tputs_writer(tputs_arg_t b) {
+    ASSERT_IS_LOCKED(s_tputs_receiver_lock);
+    assert(s_tputs_receiver && "null s_tputs_receiver");
+    char c = static_cast<char>(b);
+    s_tputs_receiver->writestr(&c, 1);
     return 0;
 }
 
-/// This is for writing process notification messages. Has to write to stdout, so clr_eol and such
-/// functions will work correctly. Not an issue since this function is only used in interactive mode
-/// anyway.
-int writeb(tputs_arg_t b) {
-    out(b);
-    return 0;
+int outputter_t::term_puts(const char *str, int affcnt) {
+    // Acquire the lock, use a scoped_push to substitute in our receiver, then call tputs. The
+    // scoped_push will restore it.
+    scoped_lock locker{s_tputs_receiver_lock};
+    scoped_push<outputter_t *> push(&s_tputs_receiver, this);
+    return tputs(str, affcnt, tputs_writer);
 }
 
-/// Write a wide character using the output method specified using output_set_writer(). This should
-/// only be used when writing characters from user supplied strings. This is needed due to our use
-/// of the ENCODE_DIRECT_BASE mechanism to allow the user to specify arbitrary byte values to be
-/// output. Such as in a `printf` invocation that includes literal byte values such as `\x1B`.
-/// This should not be used for writing non-user supplied characters.
-int writech(wint_t ch) {
+/// Write a wide character to the outputter. This should only be used when writing characters from
+/// user supplied strings. This is needed due to our use of the ENCODE_DIRECT_BASE mechanism to
+/// allow the user to specify arbitrary byte values to be output. Such as in a `printf` invocation
+/// that includes literal byte values such as `\x1B`. This should not be used for writing non-user
+/// supplied characters.
+int outputter_t::writech(wint_t ch) {
     char buff[MB_LEN_MAX + 1];
     size_t len;
 
@@ -408,10 +383,7 @@ int writech(wint_t ch) {
             return 1;
         }
     }
-
-    for (size_t i = 0; i < len; i++) {
-        out(buff[i]);
-    }
+    this->writestr(buff, len);
     return 0;
 }
 
@@ -419,12 +391,12 @@ int writech(wint_t ch) {
 /// messages; just use debug() or fwprintf() for that. It should only be used to output user
 /// supplied strings that might contain literal bytes; e.g., "\342\224\214" from issue #1894. This
 /// is needed because those strings may contain chars specially encoded using ENCODE_DIRECT_BASE.
-void writestr(const wchar_t *str) {
-    CHECK(str, );
+void outputter_t::writestr(const wchar_t *str) {
+    assert(str && "Empty input string");
 
     if (MB_CUR_MAX == 1) {
         // Single-byte locale (C/POSIX/ISO-8859).
-        while (*str) writech(*str++);
+        this->writestr(str);
         return;
     }
 
@@ -443,13 +415,14 @@ void writestr(const wchar_t *str) {
         buffer = new char[len];
     }
     wcstombs(buffer, str, len);
-
-    // Write the string.
-    for (char *pos = buffer; *pos; pos++) {
-        out(*pos);
-    }
-
+    this->writestr(buffer);
     if (buffer != static_buffer) delete[] buffer;
+}
+
+outputter_t &outputter_t::stdoutput() {
+    ASSERT_IS_MAIN_THREAD();
+    static outputter_t res(STDOUT_FILENO);
+    return res;
 }
 
 /// Given a list of rgb_color_t, pick the "best" one, as determined by the color support. Returns
@@ -548,9 +521,10 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
 }
 
 /// Write specified multibyte string.
-void writembs_check(const char *mbs, const char *mbs_name, bool critical, const char *file, long line) {
+void writembs_check(outputter_t &outp, const char *mbs, const char *mbs_name, bool critical,
+                    const char *file, long line) {
     if (mbs != NULL) {
-        tputs((char *)mbs, 1, &writeb);
+        outp.term_puts(mbs, 1);
     } else if (critical) {
         auto term = env_stack_t::globals().get(L"TERM");
         const wchar_t *fmt =

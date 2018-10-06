@@ -475,12 +475,13 @@ typedef enum { JOB_STOPPED, JOB_ENDED } job_status_t;
 static void print_job_status(const job_t *j, job_status_t status) {
     const wchar_t *msg = L"Job %d, '%ls' has ended";  // this is the most common status msg
     if (status == JOB_STOPPED) msg = L"Job %d, '%ls' has stopped";
-
-    fwprintf(stdout, L"\r");
-    fwprintf(stdout, _(msg), j->job_id, truncate_command(j->command()).c_str());
+    outputter_t outp;
+    outp.writestr("\r");
+    outp.writestr(format_string(_(msg), j->job_id, truncate_command(j->command()).c_str()));
+    if (clr_eol) outp.term_puts(clr_eol, 1);
+    outp.writestr(L"\n");
     fflush(stdout);
-    if (clr_eol) tputs(clr_eol, 1, &writeb);
-    fwprintf(stdout, L"\n");
+    outp.flush_to(STDOUT_FILENO);
 }
 
 void proc_fire_event(const wchar_t *msg, event_type_t type, pid_t pid, int status) {
@@ -578,7 +579,7 @@ static bool process_clean_after_marking(bool allow_interactive) {
                              signal_get_desc(WTERMSIG(p->status)));
                 }
 
-                if (clr_eol) tputs(clr_eol, 1, &writeb);
+                if (clr_eol) outputter_t::stdoutput().term_puts(clr_eol, 1);
                 fwprintf(stdout, L"\n");
             }
             found = false;

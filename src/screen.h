@@ -110,10 +110,14 @@ class screen_data_t {
     bool empty() const { return line_datas.empty(); }
 };
 
+class outputter_t;
+
 /// The class representing the current and desired screen contents.
 class screen_t {
+    outputter_t &outp_;
+
    public:
-    /// Constructor
+    /// Constructor.
     screen_t();
 
     /// The internal representation of the desired screen contents.
@@ -144,6 +148,9 @@ class screen_t {
     /// These status buffers are used to check if any output has occurred other than from fish's
     /// main loop, in which case we need to redraw.
     struct stat prev_buff_1, prev_buff_2, post_buff_1, post_buff_2;
+
+    /// \return the outputter for this screen.
+    outputter_t &outp() { return outp_; }
 };
 
 /// This is the main function for the screen putput library. It is used to define the desired
@@ -197,8 +204,8 @@ enum screen_reset_mode_t {
 
 void s_reset(screen_t *s, screen_reset_mode_t mode);
 
-/// Issues an immediate clr_eos, returning if it existed.
-bool screen_force_clear_to_end();
+/// Issues an immediate clr_eos.
+void screen_force_clear_to_end();
 
 /// Returns the length of an escape code. Exposed for testing purposes only.
 size_t escape_code_length(const wchar_t *code);

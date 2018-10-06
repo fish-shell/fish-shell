@@ -30,7 +30,7 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
     # Find an hg directory above $PWD
     # without calling `hg root` because that's too slow
     set -l root
-    set -l dir $PWD
+    set -l dir (pwd -P)
     while test $dir != "/"
         if test -f $dir'/.hg/dirstate'
             set root $dir"/.hg"

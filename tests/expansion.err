@@ -21,4 +21,4 @@ echo $$paren
 # Test tilde expansion
 
 ####################
-# Test delimiters
+# Test path variables

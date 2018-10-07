@@ -75,5 +75,10 @@ All digits: 0
 # Test tilde expansion
 
 ####################
-# Test delimiters
-one two three one:two:three
+# Test path variables
+TEST_DELIMITER: one two three one two three
+TEST_DELIMITER_PATH: one two three one:two:three
+Not a path: ONE:TWO:THREE 1
+As a path: ONE:TWO:THREE 3
+Appended path: ONE:TWO:THREE:FOUR 4
+Back to normal variable: ONE TWO THREE FOUR 4

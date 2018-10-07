@@ -37,12 +37,20 @@ struct set_cmd_opts_t {
     bool erase = false;
     bool list = false;
     bool unexport = false;
+    bool pathvar = false;
+    bool unpathvar = false;
     bool universal = false;
     bool query = false;
     bool shorten_ok = true;
     bool append = false;
     bool prepend = false;
     bool preserve_failure_exit_status = true;
+};
+
+/// Values used for long-only options.
+enum {
+    opt_path = 1,
+    opt_unpath = 2,
 };
 
 // Variables used for parsing the argument list. This command is atypical in using the "+"
@@ -56,6 +64,7 @@ static const struct woption long_options[] = {
     {L"universal", no_argument, NULL, 'U'}, {L"long", no_argument, NULL, 'L'},
     {L"query", no_argument, NULL, 'q'},     {L"show", no_argument, NULL, 'S'},
     {L"append", no_argument, NULL, 'a'},    {L"prepend", no_argument, NULL, 'p'},
+    {L"path", no_argument, NULL, opt_path}, {L"unpath", no_argument, NULL, opt_unpath},
     {L"help", no_argument, NULL, 'h'},      {NULL, 0, NULL, 0}};
 
 // Hint for invalid path operation with a colon.
@@ -122,6 +131,14 @@ static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncs
                 opts.unexport = true;
                 break;
             }
+            case opt_path: {
+                opts.pathvar = true;
+                break;
+            }
+            case opt_unpath: {
+                opts.unpathvar = true;
+                break;
+            }
             case 'U': {
                 opts.universal = true;
                 break;
@@ -179,6 +196,13 @@ static int validate_cmd_opts(const wchar_t *cmd, set_cmd_opts_t &opts,  //!OCLIN
 
     // Variables can only have one export status.
     if (opts.exportv && opts.unexport) {
+        streams.err.append_format(BUILTIN_ERR_EXPUNEXP, cmd);
+        builtin_print_help(parser, streams, cmd, streams.err);
+        return STATUS_INVALID_ARGS;
+    }
+
+    // Variables can only have one path status.
+    if (opts.pathvar && opts.unpathvar) {
         streams.err.append_format(BUILTIN_ERR_EXPUNEXP, cmd);
         builtin_print_help(parser, streams, cmd, streams.err);
         return STATUS_INVALID_ARGS;
@@ -429,13 +453,15 @@ static void erase_values(wcstring_list_t &list, const std::vector<long> &indexes
     }
 }
 
-static int compute_scope(set_cmd_opts_t &opts) {
+static env_mode_flags_t compute_scope(set_cmd_opts_t &opts) {
     int scope = ENV_USER;
     if (opts.local) scope |= ENV_LOCAL;
     if (opts.global) scope |= ENV_GLOBAL;
     if (opts.exportv) scope |= ENV_EXPORT;
     if (opts.unexport) scope |= ENV_UNEXPORT;
     if (opts.universal) scope |= ENV_UNIVERSAL;
+    if (opts.pathvar) scope |= ENV_PATHVAR;
+    if (opts.unpathvar) scope |= ENV_UNPATHVAR;
     return scope;
 }
 

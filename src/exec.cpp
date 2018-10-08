@@ -1031,43 +1031,6 @@ void exec_job(parser_t &parser, job_t *j) {
         }
     }
 
-    // When running under WSL, create a keepalive process unconditionally if our first
-    // process is external as WSL does not permit joining the pgrp of an exited process.
-    // Fixed in Windows 10 17713 and later, but keep this hack around until an RTM build is
-    // released with that resolution. See #4676, #5210, https://github.com/Microsoft/WSL/issues/1353,
-    // and https://github.com/Microsoft/WSL/issues/2786.
-    process_t keepalive;
-    bool needs_keepalive = false;
-    if (is_windows_subsystem_for_linux() && j->get_flag(job_flag_t::JOB_CONTROL) && !exec_error) {
-        for (const process_ptr_t &p : j->processes) {
-            // but not if it's the only process
-            if (j->processes.front()->type == EXTERNAL && !p->is_first_in_job) {
-                needs_keepalive = true;
-                break;
-            }
-        }
-    }
-
-    if (needs_keepalive) {
-        // Call fork. No need to wait for threads since our use is confined and simple.
-        pid_t parent_pid = getpid();
-        keepalive.pid = execute_fork(false);
-        if (keepalive.pid == 0) {
-            // Child
-            keepalive.pid = getpid();
-            child_set_group(j, &keepalive);
-            run_as_keepalive(parent_pid);
-            exit_without_destructors(0);
-        } else {
-            // Parent
-            debug(4, L"Fork #%d, pid %d: keepalive fork for '%ls'", g_fork_count, keepalive.pid,
-                  j->command_wcstr());
-            on_process_created(j, keepalive.pid);
-            set_child_group(j, keepalive.pid);
-            maybe_assign_terminal(j);
-        }
-    }
-
     // This loop loops over every process_t in the job, starting it as appropriate. This turns out
     // to be rather complex, since a process_t can be one of many rather different things.
     //
@@ -1092,11 +1055,6 @@ void exec_job(parser_t &parser, job_t *j) {
 
 
     debug(3, L"Created job %d from command '%ls' with pgrp %d", j->job_id, j->command_wcstr(), j->pgid);
-
-    // The keepalive process is no longer needed, so we terminate it with extreme prejudice.
-    if (needs_keepalive) {
-        kill(keepalive.pid, SIGKILL);
-    }
 
     j->set_flag(job_flag_t::CONSTRUCTED, true);
     if (!j->is_foreground()) {

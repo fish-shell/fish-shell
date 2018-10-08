@@ -395,7 +395,10 @@ static bool process_mark_finished_children(bool block_on_fg) {
         }
 
         if (j != job_fg && j->is_foreground() && !j->is_stopped() && !j->is_completed()) {
-            assert(job_fg == nullptr && "More than one active, fully-constructed foreground job!");
+            // Ignore jobs created via function evaluation in this sanity check
+            if (!job_fg || (!job_fg->get_flag(job_flag_t::NESTED) && !j->get_flag(job_flag_t::NESTED))) {
+                assert(job_fg == nullptr && "More than one active, fully-constructed foreground job!");
+            }
             job_fg = j;
         }
 
@@ -421,15 +424,36 @@ static bool process_mark_finished_children(bool block_on_fg) {
             options &= ~WNOHANG;
         }
 
+        bool wait_by_process = j->get_flag(job_flag_t::WAIT_BY_PROCESS);
+        process_list_t::iterator process = j->processes.begin();
         // waitpid(2) returns 1 process each time, we need to keep calling it until we've reaped all
         // children of the pgrp in question or else we can't reset the dirty_state flag. In all
         // cases, calling waitpid(2) is faster than potentially calling select_try() on a process
         // that has exited, which will force us to wait the full timeout before coming back here and
         // calling waitpid() again.
         while (true) {
-            int status = -1;
-            // A negative PID passed in to `waitpid()` means wait on any child in that process group
-            auto pid = waitpid(-1 * j->pgid, &status, options);
+            int status;
+            pid_t pid;
+
+            if (wait_by_process) {
+                // If the evaluation of a function resulted in the sharing of a pgroup between the
+                // real job and the job that shouldn't have been created as a separate job AND the
+                // parent job is still under construction (which is the case when continue_job() is
+                // first called on the child job during the recursive call to exec_job() before the
+                // parent job has been fully constructed), we need to call waitpid(2) on the
+                // individual processes of the child job instead of using a catch-all waitpid(2)
+                // call on the job's process group.
+                if (process == j->processes.end()) {
+                    break;
+                }
+                assert((*process)->pid != INVALID_PID && "Waiting by process on an invalid PID!");
+                pid = waitpid((*process)->pid, &status, options);
+                process++;
+            } else {
+                // A negative PID passed in to `waitpid()` means wait on any child in that process group
+                pid = waitpid(-1 * j->pgid, &status, options);
+            }
+
             // Never make two calls to waitpid(2) without WNOHANG (i.e. with "HANG") in a row,
             // because we might wait on a non-stopped job that becomes stopped, but we don't refresh
             // our view of the process state before calling waitpid(2) again here.
@@ -439,19 +463,19 @@ static bool process_mark_finished_children(bool block_on_fg) {
                 // A child process has been reaped
                 handle_child_status(pid, status);
             }
-            else if (pid == 0) {
+            else if (pid == 0 || errno == ECHILD) {
                 // No killed/dead children in this particular process group
-                break;
+                if (!wait_by_process) {
+                    break;
+                }
             } else {
                 // pid < 0 indicates an error. One likely failure is ECHILD (no children), which is not
                 // an error and is ignored. The other likely failure is EINTR, which means we got a
                 // signal, which is considered an error. We absolutely do not break or return on error,
                 // as we need to iterate over all constructed jobs but we only call waitpid for one pgrp
                 // at a time. We do bypass future waits in case of error, however.
-                if (errno != ECHILD) {
-                    has_error = true;
-                    wperror(L"waitpid in process_mark_finished_children");
-                }
+                has_error = true;
+                wperror(L"waitpid in process_mark_finished_children");
                 break;
             }
         }
@@ -1034,13 +1058,13 @@ void job_t::continue_job(bool send_sigcont) {
             // discussion in #5219).
             process_mark_finished_children(false);
 
-            // sigcont is NOT sent only when a job is first created. In the event of "nested jobs"
-            // (i.e. new jobs started due to the evaluation of functions), we can start a process
-            // that feeds its output to a child job (e.g. `some_func | some_builtin`, which is two
-            // jobs), and if the first job in that expression generates enough data that it fills
-            // its pipe buffer, it'll hang waiting for the second job to read from it. If we block
-            // on foreground jobs in this case, we'll keep waiting forever.
-            bool block_on_fg = send_sigcont;
+            // If this is a child job and the parent job is still under construction (i.e. job1 |
+            // some_func), we can't block on execution of the nested job for `some_func`. Doing
+            // so can cause hangs if job1 emits more data than fits in the OS pipe buffer.
+            // The test for block_on_fg is this->parent_job.is_constructed(), which coincides
+            // with WAIT_BY_PROCESS (which will have to do since we don't store a reference to
+            // the parent job in the job_t structure).
+            bool block_on_fg = !get_flag(job_flag_t::WAIT_BY_PROCESS);
 
             // Wait for data to become available or the status of our own job to change
             while (!reader_exit_forced() && !is_stopped() && !is_completed()) {

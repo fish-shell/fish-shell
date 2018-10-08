@@ -1241,6 +1241,8 @@ complete -f -c git -n '__fish_git_using_command rebase' -l root -d 'Rebase all r
 complete -f -c git -n '__fish_git_using_command rebase' -l autosquash -d 'Automatic squashing'
 complete -f -c git -n '__fish_git_using_command rebase' -l no-autosquash -d 'No automatic squashing'
 complete -f -c git -n '__fish_git_using_command rebase' -l no-ff -d 'No fast-forward'
+# This actually takes script for $SHELL, but completing that is... complicated.
+complete -r -c git -n '__fish_git_using_command rebase' -l exec -d 'Execute shellscript'
 
 ### reset
 complete -c git -n '__fish_git_needs_command' -a reset -d 'Reset current HEAD to the specified state'

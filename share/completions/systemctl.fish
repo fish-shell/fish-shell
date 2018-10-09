@@ -3,7 +3,8 @@ set -l commands list-units list-sockets start stop reload restart try-restart re
 isolate kill is-active is-failed status show get-cgroup-attr set-cgroup-attr unset-cgroup-attr set-cgroup help \
 reset-failed list-unit-files enable disable is-enabled reenable preset mask unmask link load list-jobs cancel dump \
 list-dependencies snapshot delete daemon-reload daemon-reexec show-environment set-environment unset-environment \
-default rescue emergency halt poweroff reboot kexec exit suspend hibernate hybrid-sleep switch-root list-timers
+default rescue emergency halt poweroff reboot kexec exit suspend hibernate hybrid-sleep switch-root list-timers \
+set-property
 if test $systemd_version -gt 208
     set commands $commands cat
     if test $systemd_version -gt 217
@@ -34,6 +35,7 @@ complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a enabl
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a disable -d 'Disable one or more units'
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a isolate -d 'Start a unit and dependencies and disable all others'
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a set-default -d 'Set the default target to boot into'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a set-property -d 'Sets one or more properties of a unit'
 
 # Command completion done via argparse.
 complete -c systemctl -a '(_fish_systemctl)' -f

@@ -63,12 +63,31 @@ static void debug_safe_int(int level, const char *format, int val) {
 /// process if it is the first in a JOB_CONTROL job.
 /// Returns true on sucess, false on failiure.
 bool child_set_group(job_t *j, process_t *p) {
-    bool retval = true;
     if (j->get_flag(job_flag_t::JOB_CONTROL)) {
         if (j->pgid == INVALID_PID) {
             j->pgid = p->pid;
         }
-        if (setpgid(p->pid, j->pgid) < 0) {
+
+        for (int i = 0; setpgid(p->pid, j->pgid) != 0; ++i) {
+            // Put a cap on how many times we retry so we are never stuck here
+            if (i < 100) {
+                if (errno == EPERM) {
+                    // The setpgid(2) man page says that EPERM is returned only if attempts are made to
+                    // move processes into groups across session boundaries (which can never be the case
+                    // in fish, anywhere) or to change the process group ID of a session leader (again,
+                    // can never be the case). I'm pretty sure this is a WSL bug, as we see the same
+                    // with tcsetpgrp(2) in other places and it disappears on retry.
+                    debug_safe(2, "setpgid(2) returned EPERM. Retrying");
+                    continue;
+                } else if (errno == EINTR) {
+                    // I don't think signals are blocked here. The parent (fish) redirected the signal
+                    // handlers and `setup_child_process()` calls `signal_reset_handlers()` after we're
+                    // done here (and not `signal_unblock()`). We're already in a loop, so let's just
+                    // handle EINTR just in case.
+                    continue;
+                }
+            }
+
             char pid_buff[128];
             char job_id_buff[128];
             char getpgid_buff[128];
@@ -88,14 +107,15 @@ bool child_set_group(job_t *j, process_t *p) {
                 pid_buff, argv0, job_id_buff, command, getpgid_buff, job_pgid_buff);
 
             safe_perror("setpgid");
-            retval = false;
+
+            return false;
         }
     } else {
-        // The child does not actualyl use this field.
+        // The child does not actually use this field.
         j->pgid = getpgrp();
     }
 
-    return retval;
+    return true;
 }
 
 /// Called only by the parent only after a child forks and successfully calls child_set_group,

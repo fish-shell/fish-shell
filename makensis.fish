@@ -1,5 +1,5 @@
 # System to create Windows installers
-# See: https://nsis.sourceforce.io
+# See: https://nsis.sourceforge.io
 
 complete -c makensis -o CMDHELP -d 'Prints out help for a specific command, or lists all commands'
 complete -c makensis -o INPUTCHARSET -a 'ACP OEM UTF8 UTF16LE UTF16BE' -d 'Specifies input charset'

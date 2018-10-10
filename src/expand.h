@@ -61,6 +61,8 @@ class completion_t;
 enum {
     /// Character representing a home directory.
     HOME_DIRECTORY = EXPAND_RESERVED_BASE,
+    /// Character representing process expansion for %self.
+    PROCESS_EXPAND_SELF,
     /// Character representing variable expansion.
     VARIABLE_EXPAND,
     /// Character representing variable expansion into a single element.
@@ -94,6 +96,9 @@ enum expand_error_t {
     /// Ok, a wildcard in the string matched a file.
     EXPAND_WILDCARD_MATCH
 };
+
+/// The string represented by PROCESS_EXPAND_SELF
+#define PROCESS_EXPAND_SELF_STR L"%self"
 
 /// Perform various forms of expansion on in, such as tilde expansion (\~USER becomes the users home
 /// directory), variable expansion (\$VAR_NAME becomes the value of the environment variable

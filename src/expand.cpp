@@ -56,7 +56,7 @@
 
 /// Characters which make a string unclean if they are the first character of the string. See \c
 /// expand_is_clean().
-#define UNCLEAN_FIRST L"~"
+#define UNCLEAN_FIRST L"~%"
 /// Unclean characters. See \c expand_is_clean().
 #define UNCLEAN L"$*?\\\"'({})"
 
@@ -784,6 +784,13 @@ static void expand_home_directory(wcstring &input) {
     }
 }
 
+/// Expand the %self escape. Note this can only come at the beginning of the string.
+static void expand_percent_self(wcstring &input) {
+    if (!input.empty() && input.front() == PROCESS_EXPAND_SELF) {
+        input.replace(0, 1, to_string<long>(getpid()));
+    }
+}
+
 void expand_tilde(wcstring &input) {
     // Avoid needless COW behavior by ensuring we use const at.
     const wcstring &tmp = input;
@@ -934,12 +941,13 @@ static expand_error_t expand_stage_braces(wcstring input, std::vector<completion
     return expand_braces(input, flags, out, errors);
 }
 
-static expand_error_t expand_stage_home(wcstring input, std::vector<completion_t> *out,
-                                        expand_flags_t flags, parse_error_list_t *errors) {
+static expand_error_t expand_stage_home_and_self(wcstring input, std::vector<completion_t> *out,
+                                                 expand_flags_t flags, parse_error_list_t *errors) {
     (void)errors;
     if (!(EXPAND_SKIP_HOME_DIRECTORIES & flags)) {
         expand_home_directory(input);
     }
+    expand_percent_self(input);
     append_completion(out, std::move(input));
     return EXPAND_OK;
 }
@@ -1047,7 +1055,7 @@ expand_error_t expand_string(wcstring input, std::vector<completion_t> *out_comp
 
     // Our expansion stages.
     const expand_stage_t stages[] = {expand_stage_cmdsubst, expand_stage_variables,
-                                     expand_stage_braces, expand_stage_home,
+                                     expand_stage_braces, expand_stage_home_and_self,
                                      expand_stage_wildcards};
 
     // Load up our single initial completion.

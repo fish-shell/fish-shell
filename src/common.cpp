@@ -1040,6 +1040,7 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                 case L'|':
                 case L';':
                 case L'"':
+                case L'%':
                 case L'~': {
                     bool char_is_normal = (c == L'~' && no_tilde) || (c == L'^' && no_caret) ||
                                           (c == L'?' && no_qmark);
@@ -1395,6 +1396,17 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                 case L'~': {
                     if (unescape_special && (input_position == 0)) {
                         to_append_or_none = HOME_DIRECTORY;
+                    }
+                    break;
+                }
+                case L'%': {
+                    // Note that this only recognizes %self if the string is literally %self.
+                    // %self/foo will NOT match this.
+                    if (unescape_special && input_position == 0 &&
+                        !wcscmp(input, PROCESS_EXPAND_SELF_STR)) {
+                        to_append_or_none = PROCESS_EXPAND_SELF;
+                        input_position +=
+                            wcslen(PROCESS_EXPAND_SELF_STR) - 1;  // skip over 'self' part.
                     }
                     break;
                 }

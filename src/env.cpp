@@ -924,7 +924,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     wcstring version = str2wcstring(get_fish_version());
     env_set_one(L"version", ENV_GLOBAL, version);
 
-    // Set the $fish_pid variable (%self replacement)
+    // Set the $fish_pid variable.
     env_set_one(L"fish_pid", ENV_GLOBAL, to_string<long>(getpid()));
 
     // Set the $hostname variable

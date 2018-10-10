@@ -121,6 +121,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
     for (size_t i = 0; i < path_with_magic.size(); i++) {
         wchar_t c = path_with_magic.at(i);
         switch (c) {
+            case PROCESS_EXPAND_SELF:
             case VARIABLE_EXPAND:
             case VARIABLE_EXPAND_SINGLE:
             case BRACE_BEGIN:

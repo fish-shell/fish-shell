@@ -9,6 +9,9 @@ echo ()[d]
         ^
 
 ####################
+# Percent self
+
+####################
 # Catch your breath
 fish: $) is not a valid variable in fish.
 echo $$paren

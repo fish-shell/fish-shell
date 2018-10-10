@@ -30,6 +30,10 @@
 #include <sys/ioctl.h>
 #endif
 
+#ifdef __FreeBSD__
+#include <sys/sysctl.h>
+#endif
+
 #include <algorithm>
 #include <memory>  // IWYU pragma: keep
 #include <type_traits>
@@ -2248,3 +2252,49 @@ bool valid_func_name(const wcstring &str) {
     if (str.find_first_of(L'/') != wcstring::npos) return false;
     return true;
 }
+
+/// Return the path to the current executable. This needs to be realpath'd.
+std::string get_executable_path(const char *argv0) {
+    char buff[PATH_MAX];
+
+#if __APPLE__
+    // On OS X use it's proprietary API to get the path to the executable.
+    // This is basically grabbing exec_path after argc, argv, envp, ...: for us
+    // https://opensource.apple.com/source/adv_cmds/adv_cmds-163/ps/print.c
+    uint32_t buffSize = sizeof buff;
+    if (_NSGetExecutablePath(buff, &buffSize) == 0) return std::string(buff);
+#elif __FreeBSD__
+    // FreeBSD does not have /proc by default, but it can be mounted as procfs via the
+    // Linux compatibility layer. Per sysctl(3), passing in a process ID of -1 returns
+    // the value for the current process.
+    size_t buff_size = sizeof buff;
+    int name[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
+    int result = sysctl(name, sizeof(name) / sizeof(int), buff, &buff_size, nullptr, 0);
+    if (result != 0) {
+        wperror(L"sysctl KERN_PROC_PATHNAME");
+    }
+    else {
+        return std::string(buff);
+    }
+#else
+    // On other unixes, fall back to the Linux-ish /proc/ directory
+    ssize_t len;
+    len = readlink("/proc/self/exe", buff, sizeof buff - 1);  // Linux
+    if (len == -1) {
+        len = readlink("/proc/curproc/file", buff, sizeof buff - 1);  // other BSDs
+        if (len == -1) {
+            len = readlink("/proc/self/path/a.out", buff, sizeof buff - 1);  // Solaris
+        }
+    }
+    if (len > 0) {
+        buff[len] = '\0';
+        return std::string(buff);
+    }
+#endif
+
+    // Just return argv0, which probably won't work (i.e. it's not an absolute path or a path
+    // relative to the working directory, but instead something the caller found via $PATH). We'll
+    // eventually fall back to the compile time paths.
+    return std::string(argv0 ? argv0 : "");
+}
+

@@ -33,15 +33,6 @@ typedef std::string cstring;
 
 const file_id_t kInvalidFileID = {(dev_t)-1LL, (ino_t)-1LL, (uint64_t)-1LL, -1, -1, -1, -1};
 
-#ifndef PATH_MAX
-#ifdef MAXPATHLEN
-#define PATH_MAX MAXPATHLEN
-#else
-/// Fallback length of MAXPATHLEN. Hopefully a sane value.
-#define PATH_MAX 4096
-#endif
-#endif
-
 /// Map used as cache by wgettext.
 static owning_lock<std::unordered_map<wcstring, wcstring>> wgettext_map;
 

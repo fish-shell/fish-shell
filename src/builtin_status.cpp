@@ -21,6 +21,7 @@ enum status_cmd_t {
     STATUS_CURRENT_CMD = 1,
     STATUS_FEATURES,
     STATUS_FILENAME,
+    STATUS_FISH_PATH,
     STATUS_FUNCTION,
     STATUS_IS_BLOCK,
     STATUS_IS_BREAKPOINT,
@@ -45,6 +46,7 @@ const enum_map<status_cmd_t> status_enum_map[] = {
     {STATUS_LINE_NUMBER, L"current-line-number"},
     {STATUS_FEATURES, L"features"},
     {STATUS_FILENAME, L"filename"},
+    {STATUS_FISH_PATH, L"fish-path"},
     {STATUS_FUNCTION, L"function"},
     {STATUS_IS_BLOCK, L"is-block"},
     {STATUS_IS_BREAKPOINT, L"is-breakpoint"},
@@ -103,6 +105,7 @@ static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
           {L"current-filename", no_argument, NULL, 'f'},
           {L"current-line-number", no_argument, NULL, 'n'},
           {L"filename", no_argument, NULL, 'f'},
+          {L"fish-path", no_argument, NULL, STATUS_FISH_PATH},
           {L"is-block", no_argument, NULL, 'b'},
           {L"is-command-substitution", no_argument, NULL, 'c'},
           {L"is-full-job-control", no_argument, NULL, STATUS_IS_FULL_JOB_CTRL},
@@ -165,6 +168,12 @@ static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
             }
             case STATUS_IS_NO_JOB_CTRL: {
                 if (!set_status_cmd(cmd, opts, STATUS_IS_NO_JOB_CTRL, streams)) {
+                    return STATUS_CMD_ERROR;
+                }
+                break;
+            }
+            case STATUS_FISH_PATH: {
+                if (!set_status_cmd(cmd, opts, STATUS_FISH_PATH, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
@@ -417,7 +426,13 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.out.append(program_name);
             streams.out.push_back(L'\n');
             break;
-         }
+        }
+        case STATUS_FISH_PATH: {
+            CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
+            streams.out.append(str2wcstring(get_executable_path("fish")).c_str());
+            streams.out.push_back(L'\n');
+            break;
+        }
     }
 
     return retval;

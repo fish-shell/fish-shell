@@ -12,6 +12,7 @@ status is-no-job-control
 status is-full-job-control
 status is-interactive-job-control
 status filename
+status fish-path
 status function
 status line-number
 status stack-trace
@@ -43,6 +44,8 @@ The following operations (sub-commands) are available:
 - `is-no-job-control` returns 0 if no job control is enabled. Also `--is-no-job-control` (no short flag).
 
 - `filename` prints the filename of the currently running script. Also `current-filename`, `-f` or `--current-filename`.
+
+- `fish-path` prints the absolute path to the currently executing instance of fish.
 
 - `function` prints the name of the currently called function if able, when missing displays "Not a
   function" (or equivalent translated string). Also `current-function`, `-u` or `--current-function`.

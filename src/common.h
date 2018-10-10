@@ -106,6 +106,16 @@ static_assert(false, "Neither NAME_MAX nor MAXNAMELEN is defined!");
 #endif
 #endif
 
+// PATH_MAX may not exist.
+#ifndef PATH_MAX
+#ifdef MAXPATHLEN
+#define PATH_MAX MAXPATHLEN
+#else
+/// Fallback length of MAXPATHLEN. Hopefully a sane value.
+#define PATH_MAX 4096
+#endif
+#endif
+
 enum escape_string_style_t { STRING_STYLE_SCRIPT, STRING_STYLE_URL, STRING_STYLE_VAR };
 
 // Flags for unescape_string functions.
@@ -1006,5 +1016,8 @@ struct hash<const wcstring> {
 };
 }  // namespace std
 #endif
+
+/// Get the absolute path to the fish executable itself
+std::string get_executable_path(const char *fallback);
 
 #endif

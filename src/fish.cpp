@@ -54,6 +54,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "signal.h"
 #include "wutil.h"  // IWYU pragma: keep
 
+#ifdef __FreeBSD__
+#include <sys/sysctl.h>
+#endif
+
 // PATH_MAX may not exist.
 #ifndef PATH_MAX
 #define PATH_MAX 4096
@@ -104,12 +108,25 @@ static std::string get_executable_path(const char *argv0) {
     // https://opensource.apple.com/source/adv_cmds/adv_cmds-163/ps/print.c
     uint32_t buffSize = sizeof buff;
     if (_NSGetExecutablePath(buff, &buffSize) == 0) return std::string(buff);
+#elif __FreeBSD__
+    // FreeBSD does not have /proc by default, but it can be mounted as procfs via the
+    // Linux compatibility layer. Per sysctl(3), passing in a process ID of -1 returns
+    // the value for the current process.
+    size_t buff_size = sizeof buff;
+    int name[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
+    int result = sysctl(name, sizeof(name) / sizeof(int), buff, &buff_size, nullptr, 0);
+    if (result != 0) {
+        wperror(L"sysctl KERN_PROC_PATHNAME");
+    }
+    else {
+        return std::string(buff);
+    }
 #else
-    // On non-OS X UNIXes, try /proc directory.
+    // On other unixes, fall back to the Linux-ish /proc/ directory
     ssize_t len;
     len = readlink("/proc/self/exe", buff, sizeof buff - 1);  // Linux
     if (len == -1) {
-        len = readlink("/proc/curproc/file", buff, sizeof buff - 1);  // BSD
+        len = readlink("/proc/curproc/file", buff, sizeof buff - 1);  // other BSDs
         if (len == -1) {
             len = readlink("/proc/self/path/a.out", buff, sizeof buff - 1);  // Solaris
         }

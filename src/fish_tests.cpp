@@ -2472,7 +2472,6 @@ static void test_complete() {
     do_test(completions.at(1).completion == L"zero");
     do_test((completions.at(1).flags & COMPLETE_NO_SPACE) != 0);
 
-
     // Test wraps.
     do_test(comma_join(complete_get_wrap_targets(L"wrapper1")) == L"");
     complete_add_wrapper(L"wrapper1", L"wrapper2");
@@ -4084,6 +4083,13 @@ static void test_highlighting() {
         {L"true", highlight_spec_command},
         {L";", highlight_spec_statement_terminator},
         {L"end", highlight_spec_command},
+    });
+
+    highlight_tests.push_back({
+        {L"echo", highlight_spec_command},
+        {L"%self", highlight_spec_operator},
+        {L"not%self", highlight_spec_param},
+        {L"self%not", highlight_spec_param},
     });
 
     // Verify variables and wildcards in commands using /bin/cat.

@@ -444,6 +444,12 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
     const size_t buff_len = buffstr.size();
     std::fill(colors, colors + buff_len, base_color);
 
+    // Hacky support for %self which must be an unquoted literal argument.
+    if (buffstr == PROCESS_EXPAND_SELF_STR) {
+        std::fill_n(colors, wcslen(PROCESS_EXPAND_SELF_STR), highlight_spec_operator);
+        return;
+    }
+
     enum { e_unquoted, e_single_quoted, e_double_quoted } mode = e_unquoted;
     int bracket_count = 0;
     for (size_t in_pos = 0; in_pos < buff_len; in_pos++) {
@@ -692,8 +698,8 @@ class highlighter_t {
 
    public:
     // Constructor
-    highlighter_t(const wcstring &str, size_t pos, const env_vars_snapshot_t &ev,
-                  wcstring wd, bool can_do_io)
+    highlighter_t(const wcstring &str, size_t pos, const env_vars_snapshot_t &ev, wcstring wd,
+                  bool can_do_io)
         : buff(str),
           cursor_pos(pos),
           vars(ev),

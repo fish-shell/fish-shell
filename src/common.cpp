@@ -32,6 +32,8 @@
 
 #ifdef __FreeBSD__
 #include <sys/sysctl.h>
+#elif __APPLE__
+#include <mach-o/dyld.h>
 #endif
 
 #include <algorithm>

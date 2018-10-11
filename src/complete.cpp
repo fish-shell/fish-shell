@@ -381,8 +381,9 @@ static autoload_t completion_autoloader(L"fish_complete_path", autoloaded_comple
 /// Create a new completion entry.
 void append_completion(std::vector<completion_t> *completions, wcstring comp, wcstring desc,
                        complete_flags_t flags, string_fuzzy_match_t match) {
-    completions->emplace_back(std::move(comp), std::move(desc), match,
-                              resolve_auto_space(comp, flags));
+    complete_flags_t resolved_flags = resolve_auto_space(comp, flags);
+    completion_t completion{std::move(comp), std::move(desc), match, resolved_flags};
+    completions->push_back(std::move(completion));
 }
 
 /// Test if the specified script returns zero. The result is cached, so that if multiple completions
@@ -677,9 +678,9 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
     if (str_cmd.find(L'/') == wcstring::npos && str_cmd.at(0) != L'~') {
         if (use_function) {
             wcstring_list_t names = function_get_names(str_cmd.at(0) == L'_');
-            for (size_t i = 0; i < names.size(); i++) {
+            for (wcstring &name : names) {
                 // Append all known matching functions
-                append_completion(&possible_comp, names.at(i));
+                append_completion(&possible_comp, std::move(name));
             }
 
             this->complete_strings(str_cmd, 0, &complete_function_desc, possible_comp, 0);
@@ -992,9 +993,9 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
             // Check if the short style option matches.
             if (short_ok(str, &o, options)) {
                 // It's a match.
-                const wcstring desc = o.localized_desc();
+                wcstring desc = o.localized_desc();
                 // Append a short-style option
-                append_completion(&this->completions, o.option, desc, 0);
+                append_completion(&this->completions, o.option, std::move(desc), 0);
             }
 
             // Check if the long style option matches.
@@ -1035,11 +1036,11 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
                 // functions.
                 wcstring completion = format_string(L"%ls=", whole_opt.c_str() + offset);
                 // Append a long-style option with a mandatory trailing equal sign
-                append_completion(&this->completions, completion, C_(o.desc), flags);
+                append_completion(&this->completions, std::move(completion), C_(o.desc), flags);
             }
 
             // Append a long-style option
-            append_completion(&this->completions, whole_opt.c_str() + offset, C_(o.desc), flags);
+            append_completion(&this->completions, whole_opt.substr(offset), C_(o.desc), flags);
         }
     }
 
@@ -1147,7 +1148,7 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
         }
 
         // Append matching environment variables
-        append_completion(&this->completions, comp, desc, flags, match);
+        append_completion(&this->completions, std::move(comp), desc, flags, match);
 
         res = true;
     }

@@ -110,7 +110,7 @@ enum expand_error_t {
 /// \return One of EXPAND_OK, EXPAND_ERROR, EXPAND_WILDCARD_MATCH and EXPAND_WILDCARD_NO_MATCH.
 /// EXPAND_WILDCARD_NO_MATCH and EXPAND_WILDCARD_MATCH are normal exit conditions used only on
 /// strings containing wildcards to tell if the wildcard produced any matches.
-__warn_unused expand_error_t expand_string(const wcstring &input, std::vector<completion_t> *output,
+__warn_unused expand_error_t expand_string(wcstring input, std::vector<completion_t> *output,
                                            expand_flags_t flags, parse_error_list_t *errors);
 
 /// expand_one is identical to expand_string, except it will fail if in expands to more than one

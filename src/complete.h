@@ -78,8 +78,9 @@ class completion_t {
     completion_t(const completion_t &);
     completion_t &operator=(const completion_t &);
 
-    completion_t(completion_t &&);
-    completion_t &operator=(completion_t &&);
+    // noexcepts are required for push_back to use the move ctor.
+    completion_t(completion_t &&) noexcept;
+    completion_t &operator=(completion_t &&) noexcept;
 
     // Compare two completions. No operating overlaoding to make this always explicit (there's
     // potentially multiple ways to compare completions).

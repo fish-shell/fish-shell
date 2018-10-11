@@ -4771,7 +4771,10 @@ int main(int argc, char **argv) {
     if (should_test_function("autosuggest_suggest_special")) test_autosuggest_suggest_special();
     if (should_test_function("history")) history_tests_t::test_history();
     if (should_test_function("history_merge")) history_tests_t::test_history_merge();
-    if (should_test_function("history_races")) history_tests_t::test_history_races();
+    if (!is_windows_subsystem_for_linux()) {
+        // this test always fails under WSL
+        if (should_test_function("history_races")) history_tests_t::test_history_races();
+    }
     if (should_test_function("history_formats")) history_tests_t::test_history_formats();
     if (should_test_function("string")) test_string();
     if (should_test_function("illegal_command_exit_code")) test_illegal_command_exit_code();

@@ -151,7 +151,7 @@ static wcstring comma_join(const wcstring_list_t &lst) {
     return result;
 }
 
-static std::vector<const char *> pushed_dirs;
+static std::vector<std::string> pushed_dirs;
 
 /// Helper to chdir and then update $PWD.
 static bool pushd(const char *path) {
@@ -160,7 +160,7 @@ static bool pushd(const char *path) {
         err(L"getcwd() from pushd() failed: errno = %d", errno);
         return false;
     }
-    pushed_dirs.push_back(strdup(cwd));
+    pushed_dirs.push_back(cwd);
 
     // We might need to create the directory. We don't care if this fails due to the directory
     // already being present.
@@ -177,11 +177,10 @@ static bool pushd(const char *path) {
 }
 
 static void popd() {
-    const char *old_cwd = pushed_dirs.back();
-    if (chdir(old_cwd) == -1) {
-        err(L"chdir(\"%s\") from popd() failed: errno = %d", old_cwd, errno);
+    const std::string &old_cwd = pushed_dirs.back();
+    if (chdir(old_cwd.c_str()) == -1) {
+        err(L"chdir(\"%s\") from popd() failed: errno = %d", old_cwd.c_str(), errno);
     }
-    free((void *)old_cwd);
     pushed_dirs.pop_back();
     env_set_pwd_from_getcwd();
 }

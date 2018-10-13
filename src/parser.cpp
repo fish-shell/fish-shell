@@ -591,7 +591,7 @@ void parser_t::job_promote(job_t *job) {
     assert(loc != my_job_list.end());
 
     // Move the job to the beginning.
-    my_job_list.splice(my_job_list.begin(), my_job_list, loc);
+    std::rotate(my_job_list.begin(), loc, my_job_list.end());
 }
 
 job_t *parser_t::job_get(job_id_t id) {

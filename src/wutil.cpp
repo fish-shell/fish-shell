@@ -426,7 +426,6 @@ maybe_t<wcstring> wrealpath(const wcstring &pathname) {
 
 wcstring normalize_path(const wcstring &path) {
     // Count the leading slashes.
-    // Preserve up to 2.
     const wchar_t sep = L'/';
     size_t leading_slashes = 0;
     for (wchar_t c : path) {
@@ -439,23 +438,23 @@ wcstring normalize_path(const wcstring &path) {
     for (wcstring &comp : comps) {
         if (comp.empty() || comp == L".") {
             continue;
-        } else if (comp == L"..") {
-            if (new_comps.empty() || new_comps.back() == L"..") {
-                // We underflowed the ..s, retain this component.
-                new_comps.push_back(L"..");
-            } else {
-                new_comps.pop_back();
-            }
-        } else {
+        } else if (comp != L"..") {
             new_comps.push_back(std::move(comp));
+        } else if (!new_comps.empty() && new_comps.back() != L"..") {
+            // '..' with a real path component, drop that path component.
+            new_comps.pop_back();
+        } else if (leading_slashes == 0) {
+            // We underflowed the .. and are a relative (not absolute) path.
+            new_comps.push_back(L"..");
         }
     }
-
-    // Prepend up to two leading slashes (as empty components).
-    new_comps.insert(new_comps.begin(), leading_slashes > 2 ? 2 : leading_slashes, wcstring());
-    // Ensure e.g. './' normalizes to '.' and not empty.
-    if (new_comps.empty()) new_comps.push_back(L".");
-    return join_strings(new_comps, sep);
+    wcstring result = join_strings(new_comps, sep);
+    // Prepend one or two leading slashes.
+    // Two slashes are preserved. Three+ slashes are collapsed to one. (!)
+    result.insert(0, leading_slashes > 2 ? 1 : leading_slashes, sep);
+    // Ensure ./ normalizes to . and not empty.
+    if (result.empty()) result.push_back(L'.');
+    return result;
 }
 
 wcstring wdirname(const wcstring &path) {

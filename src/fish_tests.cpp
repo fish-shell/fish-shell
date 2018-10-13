@@ -4668,7 +4668,15 @@ void test_normalize_path() {
     do_test(normalize_path(L"") == L".");
     do_test(normalize_path(L"..") == L"..");
     do_test(normalize_path(L"./") == L".");
-    do_test(normalize_path(L"////abc") == L"//abc");
+    do_test(normalize_path(L"./.") == L".");
+    do_test(normalize_path(L"/") == L"/");
+    do_test(normalize_path(L"//") == L"//");
+    do_test(normalize_path(L"///") == L"/");
+    do_test(normalize_path(L"////") == L"/");
+    do_test(normalize_path(L"/.///") == L"/");
+    do_test(normalize_path(L".//") == L".");
+    do_test(normalize_path(L"/.//../") == L"/");
+    do_test(normalize_path(L"////abc") == L"/abc");
     do_test(normalize_path(L"/abc") == L"/abc");
     do_test(normalize_path(L"/abc/") == L"/abc");
     do_test(normalize_path(L"/abc/..def/") == L"/abc/..def");
@@ -4676,6 +4684,9 @@ void test_normalize_path() {
     do_test(normalize_path(L"abc/../abc/../abc/../abc") == L"abc");
     do_test(normalize_path(L"../../") == L"../..");
     do_test(normalize_path(L"foo/./bar") == L"foo/bar");
+    do_test(normalize_path(L"foo/../") == L".");
+    do_test(normalize_path(L"foo/../foo") == L"foo");
+    do_test(normalize_path(L"foo/../foo/") == L"foo");
     do_test(normalize_path(L"foo/././bar/.././baz") == L"foo/baz");
 }
 

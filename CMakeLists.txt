@@ -94,6 +94,10 @@ ADD_DEFINITIONS(-D_UNICODE=1
 # This defines the FBVF variable.
 INCLUDE(Version)
 
+# Let fish pick up when we're running out of the build directory without installing
+ADD_DEFINITIONS(-DCMAKE_BINARY_DIR="${CMAKE_BINARY_DIR}")
+ADD_DEFINITIONS(-DCMAKE_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+
 # Teach fish_version.o to rebuild when FBVF changes.
 # The standard C++ include detection machinery misses this.
 SET_SOURCE_FILES_PROPERTIES(src/fish_version.cpp

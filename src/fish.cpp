@@ -95,6 +95,20 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
     std::string exec_path = get_executable_path(argv0);
     if (get_realpath(exec_path)) {
         debug(2, L"exec_path: '%s'", exec_path.c_str());
+
+#ifdef CMAKE_BINARY_DIR
+        // Detect if we're running right out of the CMAKE build directory
+        if (exec_path == std::string(CMAKE_BINARY_DIR) + "/fish") {
+            debug(2, "Running out of build directory, falling back to source paths");
+
+            done = true;
+            paths.data = wcstring{L"" CMAKE_SOURCE_DIR} + L"/share";
+            paths.sysconf = L"" SYSCONFDIR "/fish";
+            paths.doc = L"" DOCDIR;
+            paths.bin = L"" BINDIR;
+        }
+#endif
+
         if (!done) {
             // The next check is that we are in a reloctable directory tree
             const char *installed_suffix = "/bin/fish";

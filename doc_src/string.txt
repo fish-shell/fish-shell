@@ -261,10 +261,10 @@ foo2
 <outp>42</outp>
 
 >_ # Sort a list of elements which may contain newlines
->_ set foo beta alpha\ngamma
+>_ set foo beta alpha\\ngamma
 >_ set foo (string join0 $foo | sort -z | string split0)
 >_ string escape $foo[1]
-<outp>alpha\ngamma</outp>
+<outp>alpha\\ngamma</outp>
 \endfish
 
 \subsection string-example-replace-literal Replace Literal Examples

@@ -420,6 +420,9 @@ function __fish_git_needs_command
     return 0
 end
 
+function __fish_git_config_keys
+    git config -l | string match -r '[^=]+'
+end
 
 # HACK: Aliases
 # Git allows aliases, so we need to see what command the current command-token corresponds to
@@ -1455,6 +1458,42 @@ complete -f -c git -n '__fish_git_using_command help' -a status -d 'Show the wor
 complete -f -c git -n '__fish_git_using_command help' -a submodule -d 'Initialize, update or inspect submodules'
 complete -f -c git -n '__fish_git_using_command help' -a tag -d 'Create, list, delete or verify a tag object signed with GPG'
 complete -f -c git -n '__fish_git_using_command help' -a whatchanged -d 'Show logs with difference each commit introduces'
+
+# Complete both options and possible parameters to `git config`
+complete -f -c git -n '__fish_git_using_command config' -l global -d 'Get/set global configuration'
+complete -f -c git -n '__fish_git_using_command config' -l system -d 'Get/set system configuration'
+complete -f -c git -n '__fish_git_using_command config' -l local -d 'Get/set local repo configuration'
+complete -f -c git -n '__fish_git_using_command config' -s f -l file -d 'Read config from file'
+complete -f -c git -n '__fish_git_using_command config' -l blob -d 'Read config from blob' -ra '(__fish_complete_suffix '')'
+
+# If no argument is specified, it's as if --get was used
+complete -c git -n '__fish_git_using_command config and __fish_is_token_n 3' -fa '(__fish_git_config_keys)'
+complete -f -c git -n '__fish_git_using_command config and __fish_is_first_arg' -l get -d 'Get config with name' -ra '(__fish_git_config_keys)'
+complete -f -c git -n '__fish_git_using_command config' -l get -d 'Get config with name' -ra '(__fish_git_config_keys)'
+complete -f -c git -n '__fish_git_using_command config' -l get-all -d 'Get all values matching key' -a '(__fish_git_config_keys)'
+complete -f -c git -n '__fish_git_using_command config' -l get-urlmatch -d 'Get value specific for the section url' -r
+complete -f -c git -n '__fish_git_using_command config' -l replace-all -d 'Replace all matching variables' -ra '(__fish_git_config_keys)'
+complete -f -c git -n '__fish_git_using_command config' -l add -d 'Add a new variable' -r
+complete -f -c git -n '__fish_git_using_command config' -l unset -d 'Remove a variable' -a '(__fish_git_config_keys)'
+complete -f -c git -n '__fish_git_using_command config' -l unset-all -d 'Remove matching variables' -a '(__fish_git_config_keys)'
+complete -f -c git -n '__fish_git_using_command config' -l rename-section -d 'Rename section' -r
+complete -f -c git -n '__fish_git_using_command config' -s l -l list -d 'List all variables'
+complete -f -c git -n '__fish_git_using_command config' -s e -l edit -d 'Open configuration in an editor'
+
+complete -f -c git -n '__fish_git_using_command config' -s t -l type -d 'Value is of given type'
+complete -f -c git -n '__fish_git_using_command config' -l bool -d 'Value is \'true\' or \'false\''
+complete -f -c git -n '__fish_git_using_command config' -l int -d 'Value is a decimal number'
+complete -f -c git -n '__fish_git_using_command config' -l bool-or-int -d 'Value is --bool or --int'
+complete -f -c git -n '__fish_git_using_command config' -l path -d 'Value is a path'
+complete -f -c git -n '__fish_git_using_command config' -l expiry-date -d 'Value is an expiry date'
+
+complete -f -c git -n '__fish_git_using_command config' -s z -l null -d 'Terminate values with NUL byte'
+complete -f -c git -n '__fish_git_using_command config' -l name-only -d 'Show variable names only'
+complete -f -c git -n '__fish_git_using_command config' -l includes -d 'Respect include directives'
+complete -f -c git -n '__fish_git_using_command config' -l show-origin -d 'Show origin of configuration'
+complete -f -c git -n '__fish_git_using_command config and __fish_seen_argument --get' -l default -d 'Use default value when missing entry'
+
+
 
 ## Custom commands (git-* commands installed in the PATH)
 complete -c git -n '__fish_git_needs_command' -a '(__fish_git_custom_commands)' -d 'Custom command'

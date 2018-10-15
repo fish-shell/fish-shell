@@ -1,5 +1,8 @@
 # This is meant to be bound to something like \cC.
 function __fish_cancel_commandline
+    # Close the pager if it's open (#4298)
+    commandline -f cancel
+
     set -l cmd (commandline)
     if test -n "$cmd"
         commandline -C 1000000

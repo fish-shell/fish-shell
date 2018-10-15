@@ -260,6 +260,7 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
         }
 
         // debug( 0, L"Push idx %d", tmp );
+        literal_zero_index = literal_zero_index && tmp == 0;
         idx.push_back(i1);
         source_positions.push_back(i1_src_pos);
     }

@@ -1,3 +1,8 @@
 echo $foo[0]
 echo $foo[ 0 ]
 echo $foo[ 00 ]
+
+# and make sure these didn't break
+set -l foo one two three
+echo $foo[001]
+

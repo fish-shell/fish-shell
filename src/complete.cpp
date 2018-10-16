@@ -196,6 +196,10 @@ const option_list_t &completion_entry_t::get_options() const {
     return options;
 }
 
+description_func_t const_desc(const wcstring &s) {
+    return [=](const wcstring &ignored) { return s; };
+}
+
 /// Clear the COMPLETE_AUTO_SPACE flag, and set COMPLETE_NO_SPACE appropriately depending on the
 /// suffix of the string.
 static complete_flags_t resolve_auto_space(const wcstring &comp, complete_flags_t flags) {
@@ -342,9 +346,8 @@ class completer_t {
 
     bool condition_test(const wcstring &condition);
 
-    void complete_strings(const wcstring &wc_escaped, const wchar_t *desc,
-                          wcstring (*desc_func)(const wcstring &),
-                          std::vector<completion_t> &possible_comp, complete_flags_t flags);
+    void complete_strings(const wcstring &wc_escaped, const description_func_t &desc_func,
+                          const std::vector<completion_t> &possible_comp, complete_flags_t flags);
 
     expand_flags_t expand_flags() const {
         // Never do command substitution in autosuggestions. Sadly, we also can't yet do job
@@ -520,20 +523,15 @@ static void parse_cmd_string(const wcstring &str, wcstring &path, wcstring &cmd)
 ///    the prefix, possibly containing wildcards. The wildcard should not have
 ///    been unescaped, i.e. '*' should be used for any string, not the
 ///    ANY_STRING character.
-/// @param  desc
-///    the default description, used for completions with no embedded
-///    description. The description _may_ contain a COMPLETE_SEP character, if
-///    not, one will be prefixed to it
 /// @param  desc_func
-///    the function that generates a description for those completions witout an
+///    the function that generates a description for those completions without an
 ///    embedded description
 /// @param  possible_comp
 ///    the list of possible completions to iterate over
 /// @param  flags
 ///    The flags
-void completer_t::complete_strings(const wcstring &wc_escaped, const wchar_t *desc,
-                                   wcstring (*desc_func)(const wcstring &),
-                                   std::vector<completion_t> &possible_comp,
+void completer_t::complete_strings(const wcstring &wc_escaped, const description_func_t &desc_func,
+                                   const std::vector<completion_t> &possible_comp,
                                    complete_flags_t flags) {
     wcstring tmp = wc_escaped;
     if (!expand_one(tmp, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_WILDCARDS | this->expand_flags(), NULL))
@@ -546,7 +544,7 @@ void completer_t::complete_strings(const wcstring &wc_escaped, const wchar_t *de
         const wchar_t *next_str = temp.empty() ? NULL : temp.c_str();
 
         if (next_str) {
-            wildcard_complete(next_str, wc.c_str(), desc, desc_func, &this->completions,
+            wildcard_complete(next_str, wc.c_str(), desc_func, &this->completions,
                               this->expand_flags(), flags);
         }
     }
@@ -683,7 +681,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
                 append_completion(&possible_comp, std::move(name));
             }
 
-            this->complete_strings(str_cmd, 0, &complete_function_desc, possible_comp, 0);
+            this->complete_strings(str_cmd, complete_function_desc, possible_comp, 0);
         }
 
         possible_comp.clear();
@@ -691,7 +689,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
         if (use_builtin) {
             // Append all matching builtins
             builtin_get_names(&possible_comp);
-            this->complete_strings(str_cmd, 0, &builtin_get_desc, possible_comp, 0);
+            this->complete_strings(str_cmd, builtin_get_desc, possible_comp, 0);
         }
     }
 }
@@ -733,7 +731,7 @@ void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
         proc_pop_interactive();
     }
 
-    this->complete_strings(escape_string(str, ESCAPE_ALL), desc.c_str(), 0, possible_comp, flags);
+    this->complete_strings(escape_string(str, ESCAPE_ALL), const_desc(desc), possible_comp, flags);
 }
 
 static size_t leading_dash_count(const wchar_t *str) {

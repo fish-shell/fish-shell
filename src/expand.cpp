@@ -493,6 +493,18 @@ static bool expand_variables(wcstring instr, std::vector<completion_t> *out, siz
     return true;
 }
 
+static expand_error_t expand_range(long start, long end, std::vector<completion_t> *out) {
+    // debug(1, "Expanding range from %ld to %ld", start, end);
+    int step = (end < start) ? -1 : 1;
+    for (auto i = start; i != end; i += step) {
+        std::wstringstream stream;
+        stream << i;
+        append_completion(out, std::move(stream.str()));
+    }
+
+    return EXPAND_OK;
+}
+
 /// Perform brace expansion.
 static expand_error_t expand_braces(const wcstring &instr, expand_flags_t flags,
                                     std::vector<completion_t> *out, parse_error_list_t *errors) {
@@ -506,6 +518,25 @@ static expand_error_t expand_braces(const wcstring &instr, expand_flags_t flags,
     size_t length_preceding_braces, length_following_braces, tot_len;
 
     const wchar_t *const in = instr.c_str();
+
+    const wchar_t *num_end = nullptr;
+    long range_start = fish_wcstol(in, &num_end);
+    if (num_end != in && num_end[0] == L'.' && num_end[1] == L'.') {
+        // Found start of range, i.e. "1.."
+        const wchar_t *num2_start = num_end + 2;
+        bool inclusive = false;
+        if (num2_start[0] == L'=') {
+            // Found start of inclusive range, i.e. "1..="
+            inclusive = true;
+            num2_start = &num2_start[1];
+        }
+
+        long range_end = fish_wcstol(num2_start, &num_end);
+        if (num2_start != num_end && *num_end == L'\0') {
+            // debug(1, "Found valid range %d to %d", range_start, range_end);
+            return expand_range(range_start, range_end + (inclusive ? 1 : 0), out);
+        }
+    }
 
     // Locate the first non-nested brace pair.
     for (const wchar_t *pos = in; (*pos) && !syntax_error; pos++) {

@@ -1738,8 +1738,8 @@ static void test_abbreviations() {
         {L"foo", L"bar"},
         {L"gx", L"git checkout"},
     };
-    for (auto it : abbreviations) {
-        int ret = env_set_one(L"_fish_abbr_" + it.first, ENV_LOCAL, it.second);
+    for (const auto &kv : abbreviations) {
+        int ret = env_set_one(L"_fish_abbr_" + kv.first, ENV_LOCAL, kv.second);
         if (ret != 0) err(L"Unable to set abbreviation variable");
     }
 
@@ -2457,6 +2457,21 @@ static void test_complete() {
     popd();
     completions.clear();
     complete_set_variable_names(NULL);
+
+    // Test abbreviations.
+    function_data_t fd;
+    fd.name = L"testabbrsonetwothreefour";
+    function_add(fd, parser_t::principal_parser());
+    int ret = env_set_one(L"_fish_abbr_testabbrsonetwothreezero", ENV_LOCAL, L"expansion");
+    complete(L"testabbrsonetwothree", &completions, COMPLETION_REQUEST_DEFAULT);
+    do_test(ret == 0);
+    do_test(completions.size() == 2);
+    do_test(completions.at(0).completion == L"four");
+    do_test((completions.at(0).flags & COMPLETE_NO_SPACE) == 0);
+    // Abbreviations should not have a space after them.
+    do_test(completions.at(1).completion == L"zero");
+    do_test((completions.at(1).flags & COMPLETE_NO_SPACE) != 0);
+
 
     // Test wraps.
     do_test(comma_join(complete_get_wrap_targets(L"wrapper1")) == L"");

@@ -27,9 +27,9 @@
 
 #include <algorithm>
 #include <functional>
+#include <map>
 #include <memory>  // IWYU pragma: keep
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -1176,7 +1176,7 @@ bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc
     return result;
 }
 
-static owning_lock<std::unordered_map<wcstring, wcstring>> s_abbreviations;
+static owning_lock<std::map<wcstring, wcstring>> s_abbreviations;
 void update_abbr_cache(const wchar_t *op, const wcstring &varname) {
     wcstring abbr;
     if (!unescape_string(varname.substr(wcslen(L"_fish_abbr_")), &abbr, 0, STRING_STYLE_VAR)) {
@@ -1201,4 +1201,9 @@ bool expand_abbreviation(const wcstring &src, wcstring *output) {
     if (abbr == abbreviations->end()) return false;
     if (output != NULL) output->assign(abbr->second);
     return true;
+}
+
+std::map<wcstring, wcstring> get_abbreviations() {
+    auto abbreviations = s_abbreviations.acquire();
+    return *abbreviations;
 }

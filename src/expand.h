@@ -9,6 +9,7 @@
 
 #include <stddef.h>
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -150,6 +151,9 @@ wcstring replace_home_directory_with_tilde(const wcstring &str);
 /// not. If result is not-null, returns the abbreviation by reference.
 void update_abbr_cache(const wchar_t *op, const wcstring &varname);
 bool expand_abbreviation(const wcstring &src, wcstring *output);
+
+/// \return a snapshot of all abbreviations as a map abbreviation->expansion.
+std::map<wcstring, wcstring> get_abbreviations();
 
 // Terrible hacks
 bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc,

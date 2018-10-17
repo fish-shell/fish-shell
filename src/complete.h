@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 
+#include <functional>
 #include <vector>
 
 #include "common.h"

@@ -399,6 +399,9 @@ enum fuzzy_match_type_t {
     // We match a substring of the string: OOBA matches FOOBAR.
     fuzzy_match_substring,
 
+    // We match a substring of the string: ooBA matches FOOBAR.
+    fuzzy_match_substring_case_insensitive,
+
     // A subsequence match with insertions only: FBR matches FOOBAR.
     fuzzy_match_subsequence_insertions_only,
 

@@ -26,7 +26,7 @@
 /// command-specific completions.
 class job_t;
 class parser_t;
-void exec_job(parser_t &parser, job_t *j);
+void exec_job(parser_t &parser, std::shared_ptr<job_t> j);
 
 /// Evaluate the expression cmd in a subshell, add the outputs into the list l. On return, the
 /// status flag as returned bu \c proc_gfet_last_status will not be changed.

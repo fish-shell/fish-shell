@@ -984,8 +984,8 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, job_t *j,
     return true;
 }
 
-void exec_job(parser_t &parser, job_t *j) {
-    assert(j != nullptr && "null job_t passed to exec_job!");
+void exec_job(parser_t &parser, shared_ptr<job_t> j) {
+    assert(j && "null job_t passed to exec_job!");
 
     // Set to true if something goes wrong while exec:ing the job, in which case the cleanup code
     // will kick in.
@@ -1012,7 +1012,7 @@ void exec_job(parser_t &parser, job_t *j) {
     }
 
     if (j->processes.front()->type == INTERNAL_EXEC) {
-        internal_exec(j, std::move(all_ios));
+        internal_exec(j.get(), std::move(all_ios));
         DIE("this should be unreachable");
     }
 
@@ -1025,7 +1025,7 @@ void exec_job(parser_t &parser, job_t *j) {
             if (!io_buffer->avoid_conflicts_with_io_chain(all_ios)) {
                 // We could not avoid conflicts, probably due to fd exhaustion. Mark an error.
                 exec_error = true;
-                job_mark_process_as_failed(j, j->processes.front().get());
+                job_mark_process_as_failed(j.get(), j->processes.front().get());
                 break;
             }
         }
@@ -1045,7 +1045,7 @@ void exec_job(parser_t &parser, job_t *j) {
     autoclose_fd_t pipe_next_read;
     for (std::unique_ptr<process_t> &unique_p : j->processes) {
         autoclose_fd_t current_read = std::move(pipe_next_read);
-        if (!exec_process_in_job(parser, unique_p.get(), j, std::move(current_read),
+        if (!exec_process_in_job(parser, unique_p.get(), j.get(), std::move(current_read),
                                  &pipe_next_read, all_ios, stdout_read_limit)) {
             exec_error = true;
             break;

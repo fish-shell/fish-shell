@@ -1230,7 +1230,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
         }
 
         // Actually execute the job.
-        exec_job(*this->parser, job.get());
+        exec_job(*this->parser, job);
 
         // Only external commands require a new fishd barrier.
         if (job_contained_external_command) {

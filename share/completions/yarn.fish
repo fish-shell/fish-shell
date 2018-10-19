@@ -12,10 +12,18 @@ function __yarn_list_packages
     all-the-package-names
 end
 
-# Entire list of packages is too long to be used in a `complete` subcommand
-# Search it for matches instead
+# Entire list of packages is too long to be used efficiently in a `complete` subcommand.
+# Search it for matches instead.
 function __yarn_filtered_list_packages
-    __yarn_list_packages | grep (commandline -ct) | head -n 50
+    # We used to avoid the duplication of this check by calling __yarn_list_packages
+    # instead of all-the-package-names directly below, but a) that breaks IO buffering
+    # because the output of all-the-package-names is > 10 MiB (#5267), and b) IO
+    # buffering slowed down the call considerably in all cases.
+    if not type -q all-the-package-names
+        return
+    end
+
+    all-the-package-names | string match -e -- (commandline -ct)
 end
 
 function __yarn_find_package_json
@@ -68,8 +76,12 @@ function __yarn_installed_packages
 end
 
 
-complete -f -c yarn -n '__fish_seen_subcommand_from remove' -xa '(__yarn_installed_packages)'
-complete -f -c yarn -n '__fish_seen_subcommand_from add' -a '(__yarn_filtered_list_packages)'
+# Typically there is no need to check if (commandline -ct) begins with `--`
+# because it won't be matched. But we can prevent the slowdown from getting
+# a list of all packages and filtering through it if we only do that when
+# completing what seems to be a package name.
+complete -f -c yarn -n '__fish_seen_subcommand_from remove; and not __fish_is_switch' -xa '(__yarn_installed_packages)'
+complete -f -c yarn -n '__fish_seen_subcommand_from add; and not __fish_is_switch' -xa '(__yarn_filtered_list_packages)'
 
 complete -f -c yarn -n '__fish_use_subcommand' -a help
 

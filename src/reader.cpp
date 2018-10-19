@@ -924,7 +924,6 @@ void reader_init() {
     shell_modes.c_iflag &= ~INLCR;  // disable mapping NL (\cJ) to CR (\cM)
     shell_modes.c_iflag &= ~IXON;   // disable flow control
     shell_modes.c_iflag &= ~IXOFF;  // disable flow control
-    shell_modes.c_iflag &= ~ONLCR;  // disable mapping of NL to CR-NL on output (#4505)
 
     shell_modes.c_lflag &= ~ICANON;  // turn off canonical mode
     shell_modes.c_lflag &= ~ECHO;    // turn off echo mode

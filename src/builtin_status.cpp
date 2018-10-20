@@ -429,7 +429,7 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
         case STATUS_FISH_PATH: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            streams.out.append(str2wcstring(get_executable_path("fish")).c_str());
+            streams.out.append(str2wcstring(get_executable_path("fish")));
             streams.out.push_back(L'\n');
             break;
         }

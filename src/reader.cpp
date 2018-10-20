@@ -1166,10 +1166,9 @@ static bool insert_char(editable_line_t *el, wchar_t c, bool allow_expand_abbrev
 /// characters. This is used to determine whether we go inside a trailing quote.
 ///
 /// \return The completed string
-wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flags_t flags,
+wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t flags,
                                           const wcstring &command_line, size_t *inout_cursor_pos,
                                           bool append_only) {
-    const wchar_t *val = val_str.c_str();
     bool add_space = !bool(flags & COMPLETE_NO_SPACE);
     bool do_replace = bool(flags & COMPLETE_REPLACES_TOKEN);
     bool do_escape = !bool(flags & COMPLETE_DONT_ESCAPE);
@@ -1195,7 +1194,7 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
             move_cursor = escaped.size();
         } else {
             sb.append(val);
-            move_cursor = wcslen(val);
+            move_cursor = val.length();
         }
 
         if (add_space) {
@@ -1227,7 +1226,7 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
             }
         }
 
-        replaced = parse_util_escape_string_with_quote(val_str, quote, no_tilde);
+        replaced = parse_util_escape_string_with_quote(val, quote, no_tilde);
     } else {
         replaced = val;
     }

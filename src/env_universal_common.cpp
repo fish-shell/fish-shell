@@ -74,6 +74,9 @@
 /// Small note about not editing ~/.fishd manually. Inserted at the top of all .fishd files.
 #define SAVE_MSG "# This file contains fish universal variable definitions.\n"
 
+/// The different types of messages found in the fishd file.
+enum class uvar_message_type_t { set, set_export };
+
 static wcstring get_machine_identifier();
 
 /// return a list of paths where the uvars file has been historically stored.
@@ -148,7 +151,7 @@ static bool append_utf8(const wcstring &input, std::string *receiver, std::strin
 
 /// Creates a file entry like "SET fish_color_cwd:FF0". Appends the result to *result (as UTF8).
 /// Returns true on success. storage may be used for temporary storage, to avoid allocations.
-static bool append_file_entry(fish_message_type_t type, const wcstring &key_in,
+static bool append_file_entry(uvar_message_type_t type, const wcstring &key_in,
                               const wcstring &val_in, std::string *result, std::string *storage) {
     assert(storage != NULL);
     assert(result != NULL);
@@ -158,7 +161,7 @@ static bool append_file_entry(fish_message_type_t type, const wcstring &key_in,
     const size_t result_length_on_entry = result->size();
 
     // Append header like "SET "
-    result->append(type == SET ? SET_MBS : SET_EXPORT_MBS);
+    result->append(type == uvar_message_type_t::set ? SET_MBS : SET_EXPORT_MBS);
     result->push_back(' ');
 
     // Append variable name like "fish_color_cwd".
@@ -300,7 +303,7 @@ void env_universal_t::generate_callbacks(const var_table_t &new_vars,
 
         // If the value is not present in new_vars, it has been erased.
         if (new_vars.find(key) == new_vars.end()) {
-            callbacks.push_back(callback_data_t(ERASE, key, L""));
+            callbacks.push_back(callback_data_t(key, none()));
         }
     }
 
@@ -319,8 +322,7 @@ void env_universal_t::generate_callbacks(const var_table_t &new_vars,
         if (existing == this->vars.end() || existing->second.exports() != new_entry.exports() ||
             existing->second != new_entry) {
             // Value has changed.
-            callbacks.push_back(callback_data_t(new_entry.exports() ? SET_EXPORT : SET, key,
-                                                new_entry.as_string()));
+            callbacks.push_back(callback_data_t(key, new_entry.as_string()));
         }
     }
 }
@@ -407,8 +409,9 @@ bool env_universal_t::write_to_fd(int fd, const wcstring &path) {
         // variable; soldier on.
         const wcstring &key = iter->first;
         const env_var_t &var = iter->second;
-        append_file_entry(var.exports() ? SET_EXPORT : SET, key, encode_serialized(var.as_list()),
-                          &contents, &storage);
+        append_file_entry(
+            var.exports() ? uvar_message_type_t::set_export : uvar_message_type_t::set, key,
+            encode_serialized(var.as_list()), &contents, &storage);
 
         // Go to next.
         ++iter;

@@ -608,28 +608,16 @@ static void react_to_variable_change(const wchar_t *op, const wcstring &key) {
 
 /// Universal variable callback function. This function makes sure the proper events are triggered
 /// when an event occurs.
-static void universal_callback(fish_message_type_t type, const wchar_t *name) {
-    const wchar_t *op;
+static void universal_callback(const callback_data_t &cb) {
+    const wchar_t *op = cb.is_erase() ? L"ERASE" : L"SET";
 
-    switch (type) {
-        case SET:
-        case SET_EXPORT: {
-            op = L"SET";
-            break;
-        }
-        case ERASE: {
-            op = L"ERASE";
-            break;
-        }
-    }
-
-    react_to_variable_change(op, name);
+    react_to_variable_change(op, cb.key);
     vars_stack().mark_changed_exported();
 
-    event_t ev = event_t::variable_event(name);
+    event_t ev = event_t::variable_event(cb.key);
     ev.arguments.push_back(L"VARIABLE");
     ev.arguments.push_back(op);
-    ev.arguments.push_back(name);
+    ev.arguments.push_back(cb.key);
     event_fire(&ev);
 }
 
@@ -720,10 +708,9 @@ void misc_init() {
     }
 }
 
-static void env_universal_callbacks(callback_data_list_t &callbacks) {
-    for (size_t i = 0; i < callbacks.size(); i++) {
-        const callback_data_t &data = callbacks.at(i);
-        universal_callback(data.type, data.key.c_str());
+static void env_universal_callbacks(const callback_data_list_t &callbacks) {
+    for (const callback_data_t &cb : callbacks) {
+        universal_callback(cb);
     }
 }
 

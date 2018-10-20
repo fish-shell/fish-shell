@@ -2915,15 +2915,12 @@ static void test_universal_callbacks() {
 
     // Should see exactly three changes.
     do_test(callbacks.size() == 3);
-    do_test(callbacks.at(0).type == SET);
     do_test(callbacks.at(0).key == L"alpha");
-    do_test(callbacks.at(0).val == L"2");
-    do_test(callbacks.at(1).type == SET_EXPORT);
+    do_test(callbacks.at(0).val == wcstring{L"2"});
     do_test(callbacks.at(1).key == L"beta");
-    do_test(callbacks.at(1).val == L"1");
-    do_test(callbacks.at(2).type == ERASE);
+    do_test(callbacks.at(1).val == wcstring{L"1"});
     do_test(callbacks.at(2).key == L"delta");
-    do_test(callbacks.at(2).val == L"");
+    do_test(callbacks.at(2).val == none());
     (void)system("rm -Rf test/fish_uvars_test/");
 }
 

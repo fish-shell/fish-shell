@@ -13,17 +13,19 @@
 #include "env.h"
 #include "wutil.h"
 
-/// The different types of messages found in the fishd file.
-typedef enum { SET, SET_EXPORT, ERASE } fish_message_type_t;
-
 /// Callback data, reflecting a change in universal variables.
 struct callback_data_t {
-    fish_message_type_t type;
+    // The name of the variable.
     wcstring key;
-    wcstring val;
 
-    callback_data_t(fish_message_type_t t, wcstring k, wcstring v)
-        : type(t), key(std::move(k)), val(std::move(v)) {}
+    // The value of the variable, or none if it is erased.
+    maybe_t<wcstring> val;
+
+    /// Construct from a key and maybe a value.
+    callback_data_t(wcstring k, maybe_t<wcstring> v) : key(std::move(k)), val(std::move(v)) {}
+
+    /// \return whether this callback represents an erased variable.
+    bool is_erase() const { return !val.has_value(); }
 };
 
 typedef std::vector<struct callback_data_t> callback_data_list_t;

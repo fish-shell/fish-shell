@@ -2809,6 +2809,22 @@ static void test_input() {
     }
 }
 
+static void test_line_iterator() {
+    say(L"Testing line iterator");
+
+    std::string text1 = "Alpha\nBeta\nGamma\n\nDelta\n";
+    std::vector<std::string> lines1;
+    line_iterator_t<std::string> iter1(text1);
+    while (iter1.next()) lines1.push_back(iter1.line());
+    do_test((lines1 == std::vector<std::string>{"Alpha", "Beta", "Gamma", "", "Delta"}));
+
+    wcstring text2 = L"\n\nAlpha\nBeta\nGamma\n\nDelta";
+    std::vector<wcstring> lines2;
+    line_iterator_t<wcstring> iter2(text2);
+    while (iter2.next()) lines2.push_back(iter2.line());
+    do_test((lines2 == std::vector<wcstring>{L"", L"", L"Alpha", L"Beta", L"Gamma", L"", L"Delta"}));
+}
+
 #define UVARS_PER_THREAD 8
 #define UVARS_TEST_PATH L"test/fish_uvars_test/varsfile.txt"
 
@@ -4805,6 +4821,7 @@ int main(int argc, char **argv) {
     if (should_test_function("colors")) test_colors();
     if (should_test_function("complete")) test_complete();
     if (should_test_function("input")) test_input();
+    if (should_test_function("line_iterator")) test_line_iterator();
     if (should_test_function("universal")) test_universal();
     if (should_test_function("universal")) test_universal_callbacks();
     if (should_test_function("notifiers")) test_universal_notifiers();

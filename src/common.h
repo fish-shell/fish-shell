@@ -379,6 +379,42 @@ wcstring_list_t split_string(const wcstring &val, wchar_t sep);
 /// Join a list of strings by a separator character.
 wcstring join_strings(const wcstring_list_t &vals, wchar_t sep);
 
+/// Support for iterating over a newline-separated string.
+template <typename Collection>
+class line_iterator_t {
+    // Storage for each line.
+    Collection storage;
+
+    // The collection we're iterating. Note we hold this by reference.
+    const Collection &coll;
+
+    // The current location in the iteration.
+    typename Collection::const_iterator current;
+
+public:
+    /// Construct from a collection (presumably std::string or std::wcstring).
+    line_iterator_t(const Collection &coll) : coll(coll), current(coll.cbegin()) {}
+
+    /// Access the storage in which the last line was stored.
+    const Collection &line() const {
+        return storage;
+    }
+
+    /// Advances to the next line. \return true on success, false if we have exhausted the string.
+    bool next() {
+        if (current == coll.end())
+            return false;
+        auto newline_or_end = std::find(current, coll.cend(), '\n');
+        storage.assign(current, newline_or_end);
+        current = newline_or_end;
+
+        // Skip the newline.
+        if (current != coll.cend())
+            ++current;
+        return true;
+    }
+};
+
 enum fuzzy_match_type_t {
     // We match the string exactly: FOOBAR matches FOOBAR.
     fuzzy_match_exact = 0,

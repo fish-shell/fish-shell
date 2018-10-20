@@ -87,12 +87,11 @@ size_t parse_util_get_offset_from_line(const wcstring &str, int line) {
 }
 
 size_t parse_util_get_offset(const wcstring &str, int line, long line_offset) {
-    const wchar_t *buff = str.c_str();
-    size_t off = parse_util_get_offset_from_line(buff, line);
-    size_t off2 = parse_util_get_offset_from_line(buff, line + 1);
+    size_t off = parse_util_get_offset_from_line(str, line);
+    size_t off2 = parse_util_get_offset_from_line(str, line + 1);
 
     if (off == (size_t)-1) return (size_t)-1;
-    if (off2 == (size_t)-1) off2 = wcslen(buff) + 1;
+    if (off2 == (size_t)-1) off2 = str.length() + 1;
     if (line_offset < 0) line_offset = 0;  //!OCLINT(parameter reassignment)
 
     if ((size_t)line_offset >= off2 - off - 1) {
@@ -360,15 +359,17 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
     // pos is equivalent to cursor_pos within the range of the command substitution {begin, end}.
     size_t offset_within_cmdsubst = cursor_pos - (cmdsubst_begin - buff);
 
+    size_t bufflen = wcslen(buff);
+
     a = cmdsubst_begin + offset_within_cmdsubst;
     b = a;
     pa = cmdsubst_begin + offset_within_cmdsubst;
     pb = pa;
 
     assert(cmdsubst_begin >= buff);
-    assert(cmdsubst_begin <= (buff + wcslen(buff)));
+    assert(cmdsubst_begin <= (buff + bufflen));
     assert(cmdsubst_end >= cmdsubst_begin);
-    assert(cmdsubst_end <= (buff + wcslen(buff)));
+    assert(cmdsubst_end <= (buff + bufflen));
 
     const wcstring buffcpy = wcstring(cmdsubst_begin, cmdsubst_end - cmdsubst_begin);
 
@@ -411,9 +412,9 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
     if (prev_end) *prev_end = pb;
 
     assert(pa >= buff);
-    assert(pa <= (buff + wcslen(buff)));
+    assert(pa <= (buff + bufflen));
     assert(pb >= pa);
-    assert(pb <= (buff + wcslen(buff)));
+    assert(pb <= (buff + bufflen));
 }
 
 wcstring parse_util_unescape_wildcards(const wcstring &str) {
@@ -494,7 +495,7 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
 
     wchar_t *cmd_tmp = wcsdup(cmd.c_str());
     cmd_tmp[pos] = 0;
-    size_t cmdlen = wcslen(cmd_tmp);
+    size_t cmdlen = pos;
     bool finished = cmdlen != 0;
     if (finished) {
         finished = (quote == NULL);

@@ -861,6 +861,24 @@ env | grep smurf
 
 `fish` automatically creates arrays from all environment variables whose name ends in PATH, by splitting them on colons. Other variables are not automatically split.
 
+\subsection variables-path PATH variables
+
+Path variables are a special kind of variable used to support colon-delimited path lists including PATH, CDPATH, MANPATH, PYTHONPATH, etc. All variables that end in `PATH` (case-sensitive) become PATH variables.
+
+PATH variables act as normal arrays, except they are are implicitly joined and split on colons.
+\fish
+set MYPATH 1 2 3
+echo "$MYPATH"
+<outp># 1:2:3</outp>
+set MYPATH "$MYPATH:4:5"
+echo $MYPATH
+# 1 2 3 4 5
+echo "$MYPATH"
+<outp># 1:2:3:4:5</outp>
+\endfish
+
+Variables can be marked or unmarked as PATH variables via the `--path` and `--unpath` options to `set`.
+
 \subsection variables-special Special variables
 
 The user can change the settings of `fish` by changing the values of certain variables.

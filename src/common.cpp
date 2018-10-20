@@ -330,9 +330,9 @@ wcstring str2wcstring(const std::string &in, size_t len) {
     return str2wcs_internal(in.data(), len);
 }
 
-char *wcs2str(const wchar_t *in) {
+char *wcs2str(const wchar_t *in, size_t len) {
     if (!in) return NULL;
-    size_t desired_size = MAX_UTF8_BYTES * wcslen(in) + 1;
+    size_t desired_size = MAX_UTF8_BYTES * len + 1;
     char local_buff[512];
     if (desired_size <= sizeof local_buff / sizeof *local_buff) {
         // Convert into local buff, then use strdup() so we don't waste malloc'd space.
@@ -346,7 +346,7 @@ char *wcs2str(const wchar_t *in) {
     }
 
     // Here we probably allocate a buffer probably much larger than necessary.
-    char *out = (char *)malloc(MAX_UTF8_BYTES * wcslen(in) + 1);
+    char *out = (char *)malloc(MAX_UTF8_BYTES * len + 1);
     assert(out);
     // Instead of returning the return value of wcs2str_internal, return `out` directly.
     // This eliminates false warnings in coverity about resource leaks.
@@ -354,7 +354,8 @@ char *wcs2str(const wchar_t *in) {
     return out;
 }
 
-char *wcs2str(const wcstring &in) { return wcs2str(in.c_str()); }
+char *wcs2str(const wchar_t *in) { return wcs2str(in, wcslen(in)); }
+char *wcs2str(const wcstring &in) { return wcs2str(in.c_str(), in.length()); }
 
 /// This function is distinguished from wcs2str_internal in that it allows embedded null bytes.
 std::string wcs2string(const wcstring &input) {

@@ -19,3 +19,6 @@ echo $$paren
 
 ####################
 # Test tilde expansion
+
+####################
+# Test path variables

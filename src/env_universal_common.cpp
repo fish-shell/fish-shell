@@ -199,16 +199,20 @@ static bool append_file_entry(fish_message_type_t type, const wcstring &key_in,
 /// Encoding of a null string.
 static const wchar_t * const ENV_NULL = L"\x1d";
 
+/// Character used to separate arrays in universal variables file.
+/// This is 30, the ASCII record separator.
+static const wchar_t UVAR_ARRAY_SEP = 0x1e;
+
 /// Decode a serialized universal variable value into a list.
 static wcstring_list_t decode_serialized(const wcstring &val) {
     if (val == ENV_NULL) return {};
-    return split_string(val, ARRAY_SEP);
+    return split_string(val, UVAR_ARRAY_SEP);
 }
 
 /// Decode a a list into a serialized universal variable value.
 static wcstring encode_serialized(const wcstring_list_t &vals) {
     if (vals.empty()) return ENV_NULL;
-    return join_strings(vals, ARRAY_SEP);
+    return join_strings(vals, UVAR_ARRAY_SEP);
 }
 
 env_universal_t::env_universal_t(wcstring path) : explicit_vars_path(std::move(path)) {}

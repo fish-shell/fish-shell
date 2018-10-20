@@ -18,6 +18,7 @@
 #endif
 
 #include <algorithm>
+#include <iterator>
 #include <memory>
 #include <mutex>
 #include <sstream>
@@ -299,6 +300,13 @@ inline bool is_whitespace(const wchar_t *input) { return is_whitespace(wcstring(
 template <typename Col, typename T2>
 bool contains(const Col &col, const T2 &val) {
     return std::find(std::begin(col), std::end(col), val) != std::end(col);
+}
+
+/// Append a vector \p donator to the vector \p receiver.
+template <typename T>
+void vec_append(std::vector<T> &receiver, std::vector<T> &&donator) {
+    receiver.insert(receiver.end(), std::make_move_iterator(donator.begin()),
+                    std::make_move_iterator(donator.end()));
 }
 
 /// Print a stack trace to stderr.

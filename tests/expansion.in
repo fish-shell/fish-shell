@@ -126,3 +126,18 @@ end
 unlink $tmpdir/linkhome
 rmdir $tmpdir/realhome
 rmdir $tmpdir
+
+logmsg Test path variables
+set TEST_DELIMITER one two three
+set TEST_DELIMITER_PATH one two three
+echo TEST_DELIMITER: $TEST_DELIMITER "$TEST_DELIMITER"
+echo TEST_DELIMITER_PATH: $TEST_DELIMITER_PATH "$TEST_DELIMITER_PATH"
+
+set testvar ONE:TWO:THREE
+echo "Not a path: $testvar" (count $testvar)
+set --path testvar $testvar
+echo "As a path: $testvar" (count $testvar)
+set testvar "$testvar:FOUR"
+echo "Appended path: $testvar" (count $testvar)
+set --unpath testvar $testvar
+echo "Back to normal variable: $testvar" (count $testvar)

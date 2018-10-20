@@ -1899,7 +1899,18 @@ wcstring_list_t split_string(const wcstring &val, wchar_t sep) {
 }
 
 wcstring join_strings(const wcstring_list_t &vals, wchar_t sep) {
+    if (vals.empty()) return wcstring{};
+
+    // Reserve the size we will need.
+    // count-1 separators, plus the length of all strings.
+    size_t size = vals.size() - 1;
+    for (const wcstring &s : vals) {
+        size += s.size();
+    }
+
+    // Construct the string.
     wcstring result;
+    result.reserve(size);
     bool first = true;
     for (const wcstring &s : vals) {
         if (!first) {

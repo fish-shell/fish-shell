@@ -16,10 +16,6 @@
 extern size_t read_byte_limit;
 extern bool curses_initialized;
 
-/// Character for separating two array elements. We use 30, i.e. the ascii record separator since
-/// that seems logical.
-#define ARRAY_SEP (wchar_t)0x1e
-
 // Flags that may be passed as the 'mode' in env_set / env_get.
 enum {
     /// Default mode. Used with `env_get()` to indicate the caller doesn't care what scope the var
@@ -35,11 +31,15 @@ enum {
     ENV_EXPORT = 1 << 3,
     /// Flag for unexported variable.
     ENV_UNEXPORT = 1 << 4,
+    /// Flag to mark a variable as a path variable.
+    ENV_PATHVAR = 1 << 5,
+    /// Flag to unmark a variable as a path variable.
+    ENV_UNPATHVAR = 1 << 6,
     /// Flag for variable update request from the user. All variable changes that are made directly
     /// by the user, such as those from the `read` and `set` builtin must have this flag set. It
     /// serves one purpose: to indicate that an error should be returned if the user is attempting
     /// to modify a var that should not be modified by direct user action; e.g., a read-only var.
-    ENV_USER = 1 << 5,
+    ENV_USER = 1 << 7,
 };
 typedef uint32_t env_mode_flags_t;
 
@@ -63,16 +63,18 @@ void env_init(const struct config_paths_t *paths = NULL);
 void misc_init();
 
 class env_var_t {
-   private:
+   public:
     using env_var_flags_t = uint8_t;
+
+   private:
     wcstring_list_t vals;  // list of values assigned to the var
     env_var_flags_t flags;
 
    public:
     enum {
-        flag_export = 1 << 0,         // whether the variable is exported
-        flag_colon_delimit = 1 << 1,  // whether the variable is colon delimited
-        flag_read_only = 1 << 2       // whether the variable is read only
+        flag_export = 1 << 0,     // whether the variable is exported
+        flag_read_only = 1 << 1,  // whether the variable is read only
+        flag_pathvar = 1 << 2,    // whether the variable is a path variable
     };
 
     // Constructors.
@@ -92,10 +94,15 @@ class env_var_t {
     bool empty() const { return vals.empty() || (vals.size() == 1 && vals[0].empty()); };
     bool read_only() const { return flags & flag_read_only; }
     bool exports() const { return flags & flag_export; }
+    bool is_pathvar() const { return flags & flag_pathvar; }
+    env_var_flags_t get_flags() const { return flags; }
 
     wcstring as_string() const;
     void to_list(wcstring_list_t &out) const;
     const wcstring_list_t &as_list() const;
+
+    /// \return the character used when delimiting quoted expansion.
+    wchar_t get_delimiter() const;
 
     void set_vals(wcstring_list_t v) { vals = std::move(v); }
 
@@ -104,6 +111,14 @@ class env_var_t {
             flags |= flag_export;
         } else {
             flags &= ~flag_export;
+        }
+    }
+
+    void set_pathvar(bool pathvar) {
+        if (pathvar) {
+            flags |= flag_pathvar;
+        } else {
+            flags &= ~flag_pathvar;
         }
     }
 

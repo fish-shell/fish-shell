@@ -225,7 +225,9 @@ bool job_t::signal(int signal) {
 
     if (pgid != getpgrp()) {
         if (killpg(pgid, signal) == -1) {
-            wperror(L"killpg");
+            char buffer[512];
+            sprintf(buffer, "killpg(%d, %s)", pgid, strsignal(signal));
+            wperror(str2wcstring(buffer).c_str());
             return false;
         }
     } else {
@@ -1198,4 +1200,22 @@ pid_t proc_wait_any() {
     handle_child_status(pid, pid_status);
     process_clean_after_marking(is_interactive);
     return pid;
+}
+
+void hup_background_jobs() {
+    job_iterator_t jobs;
+
+    while (job_t *j = jobs.next()) {
+        // Make sure we don't try to SIGHUP the calling builtin
+        if (j->pgid == INVALID_PID || !j->get_flag(job_flag_t::JOB_CONTROL)) {
+            continue;
+        }
+
+        if (!j->is_completed()) {
+            if (j->is_stopped()) {
+                j->signal(SIGCONT);
+            }
+            j->signal(SIGHUP);
+        }
+    }
 }

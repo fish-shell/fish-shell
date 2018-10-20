@@ -391,45 +391,32 @@ bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t 
     return result;
 }
 
+/// Serialize the contents to a string.
+std::string env_universal_t::serialize_with_vars(const var_table_t &vars) {
+    std::string storage;
+    std::string contents = SAVE_MSG;
+    for (const auto &kv : vars) {
+        // Append the entry. Note that append_file_entry may fail, but that only affects one
+        // variable; soldier on.
+        const wcstring &key = kv.first;
+        const env_var_t &var = kv.second;
+        append_file_entry(
+            var.exports() ? uvar_message_type_t::set_export : uvar_message_type_t::set, key,
+            encode_serialized(var.as_list()), &contents, &storage);
+    }
+    return contents;
+}
+
 /// Writes our state to the fd. path is provided only for error reporting.
 bool env_universal_t::write_to_fd(int fd, const wcstring &path) {
     ASSERT_IS_LOCKED(lock);
     assert(fd >= 0);
     bool success = true;
-
-    // Stuff we output to fd.
-    std::string contents;
-
-    // Temporary storage.
-    std::string storage;
-
-    // Write the save message. If this fails, we don't bother complaining.
-    write_loop(fd, SAVE_MSG, strlen(SAVE_MSG));
-
-    var_table_t::const_iterator iter = vars.begin();
-    while (iter != vars.end()) {
-        // Append the entry. Note that append_file_entry may fail, but that only affects one
-        // variable; soldier on.
-        const wcstring &key = iter->first;
-        const env_var_t &var = iter->second;
-        append_file_entry(
-            var.exports() ? uvar_message_type_t::set_export : uvar_message_type_t::set, key,
-            encode_serialized(var.as_list()), &contents, &storage);
-
-        // Go to next.
-        ++iter;
-
-        // Flush if this is the last iteration or we exceed a page.
-        if (iter == vars.end() || contents.size() >= 4096) {
-            if (write_loop(fd, contents.data(), contents.size()) < 0) {
-                const char *error = strerror(errno);
-                debug(0, _(L"Unable to write to universal variables file '%ls': %s"), path.c_str(),
-                      error);
-                success = false;
-                break;
-            }
-            contents.clear();
-        }
+    std::string contents = serialize_with_vars(vars);
+    if (write_loop(fd, contents.data(), contents.size()) < 0) {
+        const char *error = strerror(errno);
+        debug(0, _(L"Unable to write to universal variables file '%ls': %s"), path.c_str(), error);
+        success = false;
     }
 
     // Since we just wrote out this file, it matches our internal state; pretend we read from it.

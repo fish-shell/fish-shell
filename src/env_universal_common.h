@@ -109,6 +109,9 @@ class env_universal_t {
 
     /// Guess a file format. Exposed for testing only.
     static uvar_format_t format_for_contents(const std::string &s);
+
+    /// Serialize a variable list. Exposed for testing only.
+    static std::string serialize_with_vars(const var_table_t &vars);
 };
 
 /// The "universal notifier" is an object responsible for broadcasting and receiving universal

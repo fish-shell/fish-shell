@@ -727,18 +727,18 @@ static bool expand_cmdsubst(const wcstring &input, std::vector<completion_t> *ou
 // string if it is just a tilde. Also return by reference the index of the first character of the
 // remaining part of the string (e.g. the subsequent slash).
 static wcstring get_home_directory_name(const wcstring &input, size_t *out_tail_idx) {
-    const wchar_t *const in = input.c_str();
-    assert(in[0] == HOME_DIRECTORY || in[0] == L'~');
-    size_t tail_idx;
+    assert(input[0] == HOME_DIRECTORY || input[0] == L'~');
 
-    const wchar_t *name_end = wcschr(in, L'/');
-    if (name_end) {
-        tail_idx = name_end - in;
+    auto pos = input.find_first_of(L'/');
+    // We get the position of the /, but we need to remove it as well.
+    if (pos != wcstring::npos) {
+        pos -= 1;
+        *out_tail_idx = pos;
     } else {
-        tail_idx = wcslen(in);
+        *out_tail_idx = input.length();
     }
-    *out_tail_idx = tail_idx;
-    return input.substr(1, tail_idx - 1);
+
+    return input.substr(1, pos);
 }
 
 /// Attempts tilde expansion of the string specified, modifying it in place.

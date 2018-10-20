@@ -404,6 +404,9 @@ int proc_format_status(int status);
 /// Wait for any process finishing.
 pid_t proc_wait_any();
 
+/// Terminate all background jobs
+void hup_background_jobs();
+
 /// Give ownership of the terminal to the specified job.
 ///
 /// \param j The job to give the terminal to.

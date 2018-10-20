@@ -786,7 +786,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
                 return parse_execution_errored;
             }
             else {
-                kill_background_jobs();
+                hup_background_jobs();
             }
         }
     }

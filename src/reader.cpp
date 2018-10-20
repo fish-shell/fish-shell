@@ -1780,7 +1780,7 @@ static void reader_interactive_init() {
                 // Try stopping us.
                 int ret = killpg(shell_pgid, SIGTTIN);
                 if (ret < 0) {
-                    wperror(L"killpg");
+                    wperror(L"killpg(shell_pgid, SIGTTIN)");
                     exit_without_destructors(1);
                 }
             }
@@ -2251,16 +2251,6 @@ void reader_bg_job_warning() {
     fputws(_(L"Use 'disown PID' to remove jobs from the list without terminating them.\n"), stdout);
 }
 
-void kill_background_jobs() {
-    job_iterator_t jobs;
-    while (job_t *j = jobs.next()) {
-        if (!j->is_completed()) {
-            if (j->is_stopped()) j->signal(SIGCONT);
-            j->signal(SIGHUP);
-        }
-    }
-}
-
 /// This function is called when the main loop notices that end_loop has been set while in
 /// interactive mode. It checks if it is ok to exit.
 static void handle_end_loop() {
@@ -2293,7 +2283,7 @@ static void handle_end_loop() {
     }
 
     // Kill remaining jobs before exiting.
-    kill_background_jobs();
+    hup_background_jobs();
 }
 
 static bool selection_is_at_top() {

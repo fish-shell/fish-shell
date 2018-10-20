@@ -119,10 +119,9 @@ static bool is_universal_safe_to_encode_directly(wchar_t c) {
 }
 
 /// Escape specified string.
-static wcstring full_escape(const wchar_t *in) {
+static wcstring full_escape(const wcstring &in) {
     wcstring out;
-    for (; *in; in++) {
-        wchar_t c = *in;
+    for (wchar_t c : in) {
         if (is_universal_safe_to_encode_directly(c)) {
             out.push_back(c);
         } else if (c <= (wchar_t)ASCII_MAX) {
@@ -178,7 +177,7 @@ static bool append_file_entry(fish_message_type_t type, const wcstring &key_in,
     }
 
     // Append value.
-    if (success && !append_utf8(full_escape(val_in.c_str()), result, storage)) {
+    if (success && !append_utf8(full_escape(val_in), result, storage)) {
         debug(0, L"Could not convert %ls to narrow character string", val_in.c_str());
         success = false;
     }

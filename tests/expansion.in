@@ -101,6 +101,11 @@ echo $foo[d]
 echo ()[1]
 echo ()[d]
 
+logmsg Percent self
+echo %selfNOT NOT%self \%self "%self" '%self'
+echo %self | string match -qr '^\\d+$'
+echo "All digits: $status"
+
 logmsg Catch your breath
 set paren ')'
 echo $$paren

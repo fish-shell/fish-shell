@@ -30,6 +30,10 @@ struct callback_data_t {
 
 typedef std::vector<struct callback_data_t> callback_data_list_t;
 
+// List of fish universal variable formats.
+// This is exposed for testing.
+enum class uvar_format_t { fish_2_x, fish_3_0, future };
+
 bool get_hostname_identifier(wcstring &result);
 /// Class representing universal variables.
 class env_universal_t {
@@ -68,7 +72,10 @@ class env_universal_t {
     // vars_to_acquire.
     void acquire_variables(var_table_t &vars_to_acquire);
 
-    static void parse_message_internal(const wcstring &msg, var_table_t *vars, wcstring *storage);
+    static void parse_message_2x_internal(const wcstring &msg, var_table_t *vars,
+                                          wcstring *storage);
+    static void parse_message_30_internal(const wcstring &msg, var_table_t *vars,
+                                          wcstring *storage);
     static var_table_t read_message_internal(int fd);
 
    public:
@@ -95,6 +102,13 @@ class env_universal_t {
     /// Reads and writes variables at the correct path. Returns true if modified variables were
     /// written.
     bool sync(callback_data_list_t &callbacks);
+
+    /// Populate a variable table \p out_vars from a \p s string.
+    /// This is exposed for testing only.
+    static void populate_variables(const std::string &s, var_table_t *out_vars);
+
+    /// Guess a file format. Exposed for testing only.
+    static uvar_format_t format_for_contents(const std::string &s);
 };
 
 /// The "universal notifier" is an object responsible for broadcasting and receiving universal

@@ -342,6 +342,8 @@ std::string wcs2string(const wcstring &input);
 bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value);
 bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &value);
 bool string_prefixes_string(const wchar_t *proposed_prefix, const wchar_t *value);
+bool string_prefixes_string(const char *proposed_prefix, const std::string &value);
+bool string_prefixes_string(const char *proposed_prefix, const char *value);
 
 /// Test if a string is a suffix of another.
 bool string_suffixes_string(const wcstring &proposed_suffix, const wcstring &value);

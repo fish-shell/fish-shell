@@ -2940,6 +2940,27 @@ static void test_universal_callbacks() {
     (void)system("rm -Rf test/fish_uvars_test/");
 }
 
+static void test_universal_formats() {
+    say(L"Testing universal format detection");
+    const struct {
+        const char *str;
+        uvar_format_t format;
+    } tests[] = {
+        {"# VERSION: 3.0", uvar_format_t::fish_3_0},
+        {"# version: 3.0", uvar_format_t::fish_2_x},
+        {"# blah blahVERSION: 3.0", uvar_format_t::fish_2_x},
+        {"stuff\n# blah blahVERSION: 3.0", uvar_format_t::fish_2_x},
+        {"# blah\n# VERSION: 3.0", uvar_format_t::fish_3_0},
+        {"# blah\n#VERSION: 3.0", uvar_format_t::fish_3_0},
+        {"# blah\n#VERSION:3.0", uvar_format_t::fish_3_0},
+        {"# blah\n#VERSION:3.1", uvar_format_t::future},
+    };
+    for (const auto &test : tests) {
+        uvar_format_t format = env_universal_t::format_for_contents(test.str);
+        do_test(format == test.format);
+    }
+}
+
 bool poll_notifier(const std::unique_ptr<universal_notifier_t> &note) {
     bool result = false;
     if (note->usec_delay_between_polls() > 0) {
@@ -4824,6 +4845,7 @@ int main(int argc, char **argv) {
     if (should_test_function("line_iterator")) test_line_iterator();
     if (should_test_function("universal")) test_universal();
     if (should_test_function("universal")) test_universal_callbacks();
+    if (should_test_function("universal")) test_universal_formats();
     if (should_test_function("notifiers")) test_universal_notifiers();
     if (should_test_function("completion_insertions")) test_completion_insertions();
     if (should_test_function("autosuggestion_ignores")) test_autosuggestion_ignores();

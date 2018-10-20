@@ -74,6 +74,9 @@
 /// Small note about not editing ~/.fishd manually. Inserted at the top of all .fishd files.
 #define SAVE_MSG "# This file contains fish universal variable definitions.\n"
 
+/// Version for fish 3.0
+#define UVARS_VERSION_3_0 "3.0"
+
 /// The different types of messages found in the fishd file.
 enum class uvar_message_type_t { set, set_export };
 
@@ -764,7 +767,7 @@ var_table_t env_universal_t::read_message_internal(int fd) {
             // Process it if it's a newline (which is true if we are before the end of the buffer).
             if (cursor < bufflen && !line.empty()) {
                 if (utf8_to_wchar(line.data(), line.size(), &wide_line, 0)) {
-                    env_universal_t::parse_message_internal(wide_line, &result, &storage);
+                    env_universal_t::parse_message_2x_internal(wide_line, &result, &storage);
                 }
                 line.clear();
             }
@@ -778,8 +781,70 @@ var_table_t env_universal_t::read_message_internal(int fd) {
     return result;
 }
 
-/// Parse message msg/
-void env_universal_t::parse_message_internal(const wcstring &msgstr, var_table_t *vars,
+/// \return the format corresponding to file contents \p s.
+uvar_format_t env_universal_t::format_for_contents(const std::string &s) {
+    // Walk over leading comments, looking for one like '# version'
+    line_iterator_t<std::string> iter{s};
+    while (iter.next()) {
+        const std::string &line = iter.line();
+        if (line.empty()) continue;
+        if (line.front() != L'#') {
+            // Exhausted leading comments.
+            break;
+        }
+        // Note scanf %s is max characters to write; add 1 for null terminator.
+        char versionbuf[64 + 1];
+        if (sscanf(line.c_str(), "# VERSION: %64s", versionbuf) != 1) continue;
+
+        // Try reading the version.
+        if (!strcmp(versionbuf, UVARS_VERSION_3_0)) {
+            return uvar_format_t::fish_3_0;
+        } else {
+            // Unknown future version.
+            return uvar_format_t::future;
+        }
+    }
+    // No version found, assume 2.x
+    return uvar_format_t::fish_2_x;
+}
+
+void env_universal_t::populate_variables(const std::string &s, var_table_t *out_vars) {
+    // Decide on the format.
+    const uvar_format_t format = format_for_contents(s);
+
+    line_iterator_t<std::string> iter{s};
+    wcstring wide_line;
+    wcstring storage;
+    while (iter.next()) {
+        const std::string &line = iter.line();
+        // Skip empties and constants.
+        if (line.empty() || line.front() == L'#') continue;
+
+        // Convert to UTF8.
+        wide_line.clear();
+        if (!utf8_to_wchar(line.data(), line.size(), &wide_line, 0)) continue;
+
+        switch (format) {
+            case uvar_format_t::fish_2_x:
+                env_universal_t::parse_message_2x_internal(wide_line, out_vars, &storage);
+                break;
+            case uvar_format_t::fish_3_0:
+            // For future formats, just try with the most recent one.
+            case uvar_format_t::future:
+                env_universal_t::parse_message_30_internal(wide_line, out_vars, &storage);
+                break;
+        }
+    }
+}
+
+/// Parse message msg per fish 3.0 format.
+void env_universal_t::parse_message_30_internal(const wcstring &msgstr, var_table_t *vars,
+                                                wcstring *storage) {
+    // TODO.
+}
+
+/// Parse message msg per fish 2.x format.
+void env_universal_t::parse_message_2x_internal(const wcstring &msgstr, var_table_t *vars,
                                              wcstring *storage) {
     const wchar_t *msg = msgstr.c_str();
 

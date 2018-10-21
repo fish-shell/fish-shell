@@ -1723,6 +1723,8 @@ static void test_fuzzy_match() {
         err(L"test_fuzzy_match failed on line %ld", __LINE__);
     if (string_fuzzy_match_string(L"LPH", L"ALPHA!").type != fuzzy_match_substring)
         err(L"test_fuzzy_match failed on line %ld", __LINE__);
+    if (string_fuzzy_match_string(L"lPh", L"ALPHA!").type != fuzzy_match_substring_case_insensitive)
+        err(L"test_fuzzy_match failed on line %ld", __LINE__);
     if (string_fuzzy_match_string(L"AA", L"ALPHA!").type != fuzzy_match_subsequence_insertions_only)
         err(L"test_fuzzy_match failed on line %ld", __LINE__);
     if (string_fuzzy_match_string(L"BB", L"ALPHA!").type != fuzzy_match_none)

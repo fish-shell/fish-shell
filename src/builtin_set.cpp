@@ -37,6 +37,8 @@ struct set_cmd_opts_t {
     bool erase = false;
     bool list = false;
     bool unexport = false;
+    bool pathvar = false;
+    bool unpathvar = false;
     bool universal = false;
     bool query = false;
     bool shorten_ok = true;
@@ -45,10 +47,16 @@ struct set_cmd_opts_t {
     bool preserve_failure_exit_status = true;
 };
 
+/// Values used for long-only options.
+enum {
+    opt_path = 1,
+    opt_unpath = 2,
+};
+
 // Variables used for parsing the argument list. This command is atypical in using the "+"
 // (REQUIRE_ORDER) option for flag parsing. This is not typical of most fish commands. It means
 // we stop scanning for flags when the first non-flag argument is seen.
-static const wchar_t *short_options = L"+:LSUaeghlnpqux";
+static const wchar_t *const short_options = L"+:LSUaeghlnpqux";
 static const struct woption long_options[] = {
     {L"export", no_argument, NULL, 'x'},    {L"global", no_argument, NULL, 'g'},
     {L"local", no_argument, NULL, 'l'},     {L"erase", no_argument, NULL, 'e'},
@@ -56,6 +64,7 @@ static const struct woption long_options[] = {
     {L"universal", no_argument, NULL, 'U'}, {L"long", no_argument, NULL, 'L'},
     {L"query", no_argument, NULL, 'q'},     {L"show", no_argument, NULL, 'S'},
     {L"append", no_argument, NULL, 'a'},    {L"prepend", no_argument, NULL, 'p'},
+    {L"path", no_argument, NULL, opt_path}, {L"unpath", no_argument, NULL, opt_unpath},
     {L"help", no_argument, NULL, 'h'},      {NULL, 0, NULL, 0}};
 
 // Hint for invalid path operation with a colon.
@@ -68,7 +77,7 @@ static const struct woption long_options[] = {
     _(L"%ls: Universal variable '%ls' is shadowed by the global variable of the same name.\n")
 
 // Test if the specified variable should be subject to path validation.
-static const wcstring_list_t path_variables({L"PATH", L"CDPATH"});
+static const wchar_t *const path_variables[] = {L"PATH", L"CDPATH"};
 static int is_path_variable(const wchar_t *env) { return contains(path_variables, env); }
 
 static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
@@ -120,6 +129,14 @@ static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncs
             }
             case 'u': {
                 opts.unexport = true;
+                break;
+            }
+            case opt_path: {
+                opts.pathvar = true;
+                break;
+            }
+            case opt_unpath: {
+                opts.unpathvar = true;
                 break;
             }
             case 'U': {
@@ -179,6 +196,13 @@ static int validate_cmd_opts(const wchar_t *cmd, set_cmd_opts_t &opts,  //!OCLIN
 
     // Variables can only have one export status.
     if (opts.exportv && opts.unexport) {
+        streams.err.append_format(BUILTIN_ERR_EXPUNEXP, cmd);
+        builtin_print_help(parser, streams, cmd, streams.err);
+        return STATUS_INVALID_ARGS;
+    }
+
+    // Variables can only have one path status.
+    if (opts.pathvar && opts.unpathvar) {
         streams.err.append_format(BUILTIN_ERR_EXPUNEXP, cmd);
         builtin_print_help(parser, streams, cmd, streams.err);
         return STATUS_INVALID_ARGS;
@@ -279,15 +303,8 @@ static bool validate_path_warning_on_colons(const wchar_t *cmd,
     return any_success;
 }
 
-/// Call env_set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
-/// description of the problem to stderr.
-static int my_env_set(const wchar_t *cmd, const wchar_t *key, int scope, wcstring_list_t &list,
-                      io_streams_t &streams) {
-    if (is_path_variable(key) && !validate_path_warning_on_colons(cmd, key, list, streams)) {
-        return STATUS_CMD_ERROR;
-    }
-
-    int retval = env_set(key, scope | ENV_USER, list);
+static void handle_env_return(int retval, const wchar_t *cmd, const wchar_t *key, io_streams_t &streams)
+{
     switch (retval) {
         case ENV_OK: {
             retval = STATUS_CMD_OK;
@@ -301,14 +318,20 @@ static int my_env_set(const wchar_t *cmd, const wchar_t *key, int scope, wcstrin
         }
         case ENV_SCOPE: {
             streams.err.append_format(
-                _(L"%ls: Tried to set the special variable '%ls' with the wrong scope\n"), cmd,
+                _(L"%ls: Tried to modify the special variable '%ls' with the wrong scope\n"), cmd,
                 key);
             retval = STATUS_CMD_ERROR;
             break;
         }
         case ENV_INVALID: {
             streams.err.append_format(
-                _(L"%ls: Tried to set the special variable '%ls' to an invalid value\n"), cmd, key);
+                _(L"%ls: Tried to modify the special variable '%ls' to an invalid value\n"), cmd, key);
+            retval = STATUS_CMD_ERROR;
+            break;
+        }
+        case ENV_NOT_FOUND: {
+            streams.err.append_format(
+                _(L"%ls: The variable '%ls' does not exist\n"), cmd, key);
             retval = STATUS_CMD_ERROR;
             break;
         }
@@ -317,6 +340,18 @@ static int my_env_set(const wchar_t *cmd, const wchar_t *key, int scope, wcstrin
             break;
         }
     }
+}
+
+/// Call env_set. If this is a path variable, e.g. PATH, validate the elements. On error, print a
+/// description of the problem to stderr.
+static int env_set_reporting_errors(const wchar_t *cmd, const wchar_t *key, int scope,
+                                    wcstring_list_t &list, io_streams_t &streams) {
+    if (is_path_variable(key) && !validate_path_warning_on_colons(cmd, key, list, streams)) {
+        return STATUS_CMD_ERROR;
+    }
+
+    int retval = env_set(key, scope | ENV_USER, list);
+    handle_env_return(retval, cmd, key, streams);
 
     return retval;
 }
@@ -418,13 +453,15 @@ static void erase_values(wcstring_list_t &list, const std::vector<long> &indexes
     }
 }
 
-static int compute_scope(set_cmd_opts_t &opts) {
+static env_mode_flags_t compute_scope(set_cmd_opts_t &opts) {
     int scope = ENV_USER;
     if (opts.local) scope |= ENV_LOCAL;
     if (opts.global) scope |= ENV_GLOBAL;
     if (opts.exportv) scope |= ENV_EXPORT;
     if (opts.unexport) scope |= ENV_UNEXPORT;
     if (opts.universal) scope |= ENV_UNIVERSAL;
+    if (opts.pathvar) scope |= ENV_PATHVAR;
+    if (opts.unpathvar) scope |= ENV_UNPATHVAR;
     return scope;
 }
 
@@ -543,7 +580,7 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
         }
         const wcstring value = vals[i];
         const wcstring escaped_val =
-            escape_string(value.c_str(), ESCAPE_NO_QUOTED, STRING_STYLE_SCRIPT);
+            escape_string(value, ESCAPE_NO_QUOTED, STRING_STYLE_SCRIPT);
         streams.out.append_format(_(L"$%ls[%d]: length=%d value=|%ls|\n"), var_name, i + 1,
                                   value.size(), escaped_val.c_str());
     }
@@ -617,13 +654,18 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
 
     if (idx_count == 0) {  // unset the var
         retval = env_remove(dest, scope);
+        // Temporarily swallowing ENV_NOT_FOUND errors to prevent
+        // breaking all tests that unset variables that aren't set.
+        if (retval != ENV_NOT_FOUND) {
+            handle_env_return(retval, cmd, dest, streams);
+        }
     } else {  // remove just the specified indexes of the var
         const auto dest_var = env_get(dest, scope);
         if (!dest_var) return STATUS_CMD_ERROR;
         wcstring_list_t result;
         dest_var->to_list(result);
         erase_values(result, indexes);
-        retval = my_env_set(cmd, dest, scope, result, streams);
+        retval = env_set_reporting_errors(cmd, dest, scope, result, streams);
     }
 
     if (retval != STATUS_CMD_OK) return retval;
@@ -673,6 +715,7 @@ static int set_var_slices(const wchar_t *cmd, set_cmd_opts_t &opts, const wchar_
 
     if (indexes.size() != static_cast<size_t>(argc)) {
         streams.err.append_format(BUILTIN_SET_MISMATCHED_ARGS, cmd, indexes.size(), argc);
+        return STATUS_INVALID_ARGS;
     }
 
     int scope = compute_scope(opts);  // calculate the variable scope based on the provided options
@@ -731,7 +774,7 @@ static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, w
     }
     if (retval != STATUS_CMD_OK) return retval;
 
-    retval = my_env_set(cmd, varname, scope, new_values, streams);
+    retval = env_set_reporting_errors(cmd, varname, scope, new_values, streams);
     if (retval != STATUS_CMD_OK) return retval;
     return check_global_scope_exists(cmd, opts, varname, streams);
 }

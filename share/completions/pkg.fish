@@ -1,5 +1,9 @@
 # Completions for pkgng package manager
 
+if uname | not string match -q FreeBSD
+	exit
+end
+
 function __fish_pkg_is
 	for option in $argv
 		if contains $option (commandline -poc)

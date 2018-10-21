@@ -26,7 +26,7 @@ void kill_add(const wcstring &str) {
 /// Remove first match for specified string from circular list.
 static void kill_remove(const wcstring &s) {
     ASSERT_IS_MAIN_THREAD();
-    kill_list_t::iterator iter = std::find(kill_list.begin(), kill_list.end(), s);
+    auto iter = std::find(kill_list.begin(), kill_list.end(), s);
     if (iter != kill_list.end()) kill_list.erase(iter);
 }
 

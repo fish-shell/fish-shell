@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <numeric>
 #include <string>
 #include <vector>
 
@@ -49,74 +50,77 @@ struct read_cmd_opts_t {
     bool split_null = false;
     bool to_stdout = false;
     int nchars = 0;
+    bool all_lines = false;
+    bool one_line = false;
 };
 
-static const wchar_t *short_options = L":ac:ghilm:n:p:d:suxzP:UR:";
-static const struct woption long_options[] = {{L"export", no_argument, NULL, 'x'},
-                                              {L"global", no_argument, NULL, 'g'},
-                                              {L"local", no_argument, NULL, 'l'},
-                                              {L"universal", no_argument, NULL, 'U'},
-                                              {L"unexport", no_argument, NULL, 'u'},
-                                              {L"prompt", required_argument, NULL, 'p'},
-                                              {L"prompt-str", required_argument, NULL, 'P'},
-                                              {L"right-prompt", required_argument, NULL, 'R'},
-                                              {L"command", required_argument, NULL, 'c'},
-                                              {L"mode-name", required_argument, NULL, 'm'},
-                                              {L"silent", no_argument, NULL, 'i'},
-                                              {L"nchars", required_argument, NULL, 'n'},
-                                              {L"delimiter", required_argument, NULL, 'd'},
-                                              {L"shell", no_argument, NULL, 's'},
-                                              {L"array", no_argument, NULL, 'a'},
-                                              {L"null", no_argument, NULL, 'z'},
-                                              {L"help", no_argument, NULL, 'h'},
-                                              {NULL, 0, NULL, 0}};
+static const wchar_t *const short_options = L":Aac:d:ghiLlm:n:p:suxzP:UR:LB";
+static const struct woption long_options[] = {
+    {L"array", no_argument, NULL, 'a'},
+    {L"all-lines", no_argument, NULL, 'A'},
+    {L"command", required_argument, NULL, 'c'},
+    {L"delimiter", required_argument, NULL, 'd'},
+    {L"export", no_argument, NULL, 'x'},
+    {L"global", no_argument, NULL, 'g'},
+    {L"help", no_argument, NULL, 'h'},
+    {L"line", no_argument, NULL, 'L'},
+    {L"local", no_argument, NULL, 'l'},
+    {L"mode-name", required_argument, NULL, 'm'},
+    {L"nchars", required_argument, NULL, 'n'},
+    {L"null", no_argument, NULL, 'z'},
+    {L"prompt", required_argument, NULL, 'p'},
+    {L"prompt-str", required_argument, NULL, 'P'},
+    {L"right-prompt", required_argument, NULL, 'R'},
+    {L"shell", no_argument, NULL, 'S'},
+    {L"silent", no_argument, NULL, 's'},
+    {L"unexport", no_argument, NULL, 'u'},
+    {L"universal", no_argument, NULL, 'U'},
+    {NULL, 0, NULL, 0}
+};
 
 static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
-    if (argc == 1) {
-        opts.to_stdout = true;
-        return STATUS_CMD_OK;
-    }
-
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
-            case L'x': {
-                opts.place |= ENV_EXPORT;
+            case 'a': {
+                opts.array = true;
                 break;
+            }
+            case L'A': {
+                opts.all_lines = true;
+                break;
+            }
+            case L'c': {
+                opts.commandline = w.woptarg;
+                break;
+            }
+            case 'd': {
+                opts.have_delimiter = true;
+                opts.delimiter = w.woptarg;
+                break;
+            }
+            case 'i': {
+                streams.err.append_format(_(L"%ls: usage of -i for --silent is deprecated. Please use -s or --silent instead.\n"),
+                        cmd);
+                return STATUS_INVALID_ARGS;
             }
             case L'g': {
                 opts.place |= ENV_GLOBAL;
                 break;
             }
+            case 'h': {
+                opts.print_help = true;
+                break;
+            }
+            case L'L': {
+                opts.one_line = true;
+                break;
+            }
             case L'l': {
                 opts.place |= ENV_LOCAL;
-                break;
-            }
-            case L'U': {
-                opts.place |= ENV_UNIVERSAL;
-                break;
-            }
-            case L'u': {
-                opts.place |= ENV_UNEXPORT;
-                break;
-            }
-            case L'p': {
-                opts.prompt = w.woptarg;
-                break;
-            }
-            case L'P': {
-                opts.prompt_str = w.woptarg;
-                break;
-            }
-            case L'R': {
-                opts.right_prompt = w.woptarg;
-                break;
-            }
-            case L'c': {
-                opts.commandline = w.woptarg;
                 break;
             }
             case L'm': {
@@ -142,29 +146,40 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 }
                 break;
             }
-            case 'd': {
-                opts.have_delimiter = true;
-                opts.delimiter = w.woptarg;
+            case L'P': {
+                opts.prompt_str = w.woptarg;
+                break;
+            }
+            case L'p': {
+                opts.prompt = w.woptarg;
+                break;
+            }
+            case L'R': {
+                opts.right_prompt = w.woptarg;
                 break;
             }
             case 's': {
+                opts.silent = true;
+                break;
+            }
+            case L'S': {
                 opts.shell = true;
                 break;
             }
-            case 'a': {
-                opts.array = true;
+            case L'U': {
+                opts.place |= ENV_UNIVERSAL;
                 break;
             }
-            case L'i': {
-                opts.silent = true;
+            case L'u': {
+                opts.place |= ENV_UNEXPORT;
+                break;
+            }
+            case L'x': {
+                opts.place |= ENV_EXPORT;
                 break;
             }
             case L'z': {
                 opts.split_null = true;
-                break;
-            }
-            case 'h': {
-                opts.print_help = true;
                 break;
             }
             case ':': {
@@ -196,7 +211,7 @@ static int read_interactive(wcstring &buff, int nchars, bool shell, bool silent,
 
     wcstring read_history_ID = history_session_id();
     if (!read_history_ID.empty()) read_history_ID += L"_read";
-    reader_push(read_history_ID.c_str());
+    reader_push(read_history_ID);
 
     reader_set_left_prompt(prompt);
     reader_set_right_prompt(right_prompt);
@@ -341,8 +356,25 @@ static int read_one_char_at_a_time(int fd, wcstring &buff, int nchars, bool spli
 static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int argc,
                               const wchar_t *const *argv, parser_t &parser, io_streams_t &streams) {
     if (opts.prompt && opts.prompt_str) {
-        streams.err.append_format(_(L"%ls: You can't specify both -p and -P\n"), cmd);
+        streams.err.append_format(_(L"%ls: Options %ls and %ls cannot be used together\n"), cmd, L"-p", L"-P");
         builtin_print_help(parser, streams, cmd, streams.err);
+        return STATUS_INVALID_ARGS;
+    }
+
+    if (opts.have_delimiter && opts.all_lines) {
+        streams.err.append_format(_(L"%ls: Options %ls and %ls cannot be used together\n"), cmd, L"--delimiter", L"--all-lines");
+        return STATUS_INVALID_ARGS;
+    }
+    if (opts.have_delimiter && opts.one_line) {
+        streams.err.append_format(_(L"%ls: Options %ls and %ls cannot be used together\n"), cmd, L"--delimiter", L"--line");
+        return STATUS_INVALID_ARGS;
+    }
+    if (opts.one_line && opts.all_lines) {
+        streams.err.append_format(_(L"%ls: Options %ls and %ls cannot be used together\n"), cmd, L"--all-lines", L"--line");
+        return STATUS_INVALID_ARGS;
+    }
+    if (opts.one_line && opts.split_null) {
+        streams.err.append_format(_(L"%ls: Options %ls and %ls cannot be used together\n"), cmd, L"-z", L"--line");
         return STATUS_INVALID_ARGS;
     }
 
@@ -367,13 +399,18 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
         return STATUS_INVALID_ARGS;
     }
 
-    if (!opts.array && argc < 1) {
+    if (!opts.array && argc < 1 && !opts.to_stdout) {
         streams.err.append_format(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, argc);
         return STATUS_INVALID_ARGS;
     }
 
     if (opts.array && argc != 1) {
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, cmd, 1, argc);
+        return STATUS_INVALID_ARGS;
+    }
+
+    if (opts.to_stdout && argc > 0) {
+        streams.err.append_format(BUILTIN_ERR_MAX_ARG_COUNT1, cmd, 0, argc);
         return STATUS_INVALID_ARGS;
     }
 
@@ -387,11 +424,6 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
     }
 
     return STATUS_CMD_OK;
-}
-
-void write_stdout(wcstring val) {
-    const std::string &out = wcs2string(val);
-    write_loop(STDOUT_FILENO, out.c_str(), out.size());
 }
 
 /// The read builtin. Reads from stdin and stores the values in environment variables.
@@ -410,6 +442,10 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         argv += optind;
     }
 
+    if (argc == 0) {
+        opts.to_stdout = true;
+    }
+
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd, streams.out);
         return STATUS_CMD_OK;
@@ -418,129 +454,148 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     retval = validate_read_args(cmd, opts, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    // TODO: Determine if the original set of conditions for interactive reads should be reinstated:
-    // if (isatty(0) && streams.stdin_fd == STDIN_FILENO && !split_null) {
-    int stream_stdin_is_a_tty = isatty(streams.stdin_fd);
-    if (stream_stdin_is_a_tty && !opts.split_null) {
-        // We should read interactively using reader_readline(). This does not support splitting on
-        // null.
-        exit_res = read_interactive(buff, opts.nchars, opts.shell, opts.silent, opts.prompt,
-                                    opts.right_prompt, opts.commandline);
-    } else if (!opts.nchars && !stream_stdin_is_a_tty &&
-               lseek(streams.stdin_fd, 0, SEEK_CUR) != -1) {
-        exit_res = read_in_chunks(streams.stdin_fd, buff, opts.split_null);
-    } else {
-        exit_res = read_one_char_at_a_time(streams.stdin_fd, buff, opts.nchars, opts.split_null);
+    if (opts.all_lines) {
+        // --all-lines is the same as read -d \n -z
+        opts.have_delimiter = true;
+        opts.delimiter = L"\n";
+        opts.split_null = true;
+        opts.shell = false;
+    }
+    else if (opts.one_line) {
+        // --line is the same as read -d \n repeated N times
+        opts.have_delimiter = true;
+        opts.delimiter = L"\n";
+        opts.split_null = false;
+        opts.shell = false;
     }
 
-    if (exit_res != STATUS_CMD_OK) {
-        // Define the var(s) without any data. We do this because when this happens we want the user
-        // to be able to use the var but have it expand to nothing.
-        for (int i = 0; i < argc; i++) env_set_empty(argv[i], opts.place);
-        return exit_res;
-    }
+    wchar_t * const *var_ptr = argv;
+    auto vars_left = [&] () { return argv + argc - var_ptr; };
+    auto clear_remaining_vars = [&] () {
+        while (vars_left()) {
+            env_set_empty(*var_ptr, opts.place);
+            // env_set_one(*var_ptr, opts.place, L"");
+            ++var_ptr;
+        }
+    };
 
-    if (opts.to_stdout) {
-        write_stdout(buff);
-        return exit_res;
-    }
+    // Normally, we either consume a line of input or all available input. But if we are reading a line at
+    // a time, we need a middle ground where we only consume as many lines as we need to fill the given vars.
+    do {
+        buff.clear();
 
-    if (!opts.have_delimiter) {
-        auto ifs = env_get(L"IFS");
-        if (!ifs.missing_or_empty()) opts.delimiter = ifs->as_string();
-    }
-
-    if (opts.delimiter.empty()) {
-        // Every character is a separate token with one wrinkle involving non-array mode where the
-        // final var gets the remaining characters as a single string.
-        size_t x = std::max(static_cast<size_t>(1), buff.size());
-        size_t n_splits = (opts.array || static_cast<size_t>(argc) > x) ? x : argc;
-        wcstring_list_t chars;
-        chars.reserve(n_splits);
-        x = x - n_splits + 1;
-        int i = 0;
-        for (auto it = buff.begin(), end = buff.end(); it != end; ++i, ++it) {
-            if (opts.array || i < argc) {
-                chars.emplace_back(wcstring(1, *it));
-            } else {
-                if (x) {
-                    chars.back().reserve(x);
-                    x = 0;
-                }
-                chars.back().push_back(*it);
-            }
+        // TODO: Determine if the original set of conditions for interactive reads should be reinstated:
+        // if (isatty(0) && streams.stdin_fd == STDIN_FILENO && !split_null) {
+        int stream_stdin_is_a_tty = isatty(streams.stdin_fd);
+        if (stream_stdin_is_a_tty && !opts.split_null) {
+            // Read interactively using reader_readline(). This does not support splitting on null.
+            exit_res = read_interactive(buff, opts.nchars, opts.shell, opts.silent, opts.prompt,
+                                        opts.right_prompt, opts.commandline);
+        } else if (!opts.nchars && !stream_stdin_is_a_tty &&
+                   lseek(streams.stdin_fd, 0, SEEK_CUR) != -1) {
+            exit_res = read_in_chunks(streams.stdin_fd, buff, opts.split_null);
+        } else {
+            exit_res = read_one_char_at_a_time(streams.stdin_fd, buff, opts.nchars, opts.split_null);
         }
 
-        if (opts.array) {
-            // Array mode: assign each char as a separate element of the sole var.
-            env_set(argv[0], opts.place, chars);
-        } else {
-            // Not array mode: assign each char to a separate var with the remainder being assigned
-            // to the last var.
+        if (exit_res != STATUS_CMD_OK) {
+            clear_remaining_vars();
+            return exit_res;
+        }
+
+        if (opts.to_stdout) {
+            streams.out.append(buff);
+            return exit_res;
+        }
+
+        if (!opts.have_delimiter) {
+            auto ifs = env_get(L"IFS");
+            if (!ifs.missing_or_empty()) opts.delimiter = ifs->as_string();
+        }
+
+        if (opts.delimiter.empty()) {
+            // Every character is a separate token with one wrinkle involving non-array mode where the
+            // final var gets the remaining characters as a single string.
+            size_t x = std::max(static_cast<size_t>(1), buff.size());
+            size_t n_splits = (opts.array || static_cast<size_t>(vars_left()) > x) ? x : vars_left();
+            wcstring_list_t chars;
+            chars.reserve(n_splits);
+            x = x - n_splits + 1;
             int i = 0;
-            size_t j = 0;
-            for (; i + 1 < argc; ++i) {
-                if (j < chars.size()) {
-                    env_set_one(argv[i], opts.place, chars[j]);
-                    j++;
+            for (auto it = buff.begin(), end = buff.end(); it != end; ++i, ++it) {
+                if (opts.array || i + 1 < vars_left()) {
+                    chars.emplace_back(1, *it);
                 } else {
-                    env_set_one(argv[i], opts.place, L"");
+                    chars.emplace_back(it, buff.end());
+                    break;
                 }
             }
 
-            if (i < argc) {
-                wcstring val = chars.size() == static_cast<size_t>(argc) ? chars[i] : L"";
-                env_set_one(argv[i], opts.place, val);
+            if (opts.array) {
+                // Array mode: assign each char as a separate element of the sole var.
+                env_set(*var_ptr++, opts.place, chars);
             } else {
-                env_set_empty(argv[i], opts.place);
-            }
-        }
-    } else if (opts.array) {
-        // The user has requested the input be split into a sequence of tokens and all the tokens
-        // assigned to a single var. How we do the tokenizing depends on whether the user specified
-        // the delimiter string or we're using IFS.
-        if (!opts.have_delimiter) {
-            // We're using IFS, so tokenize the buffer using each IFS char. This is for backward
-            // compatibility with old versions of fish.
-            wcstring_list_t tokens;
-
-            for (wcstring_range loc = wcstring_tok(buff, opts.delimiter);
-                 loc.first != wcstring::npos; loc = wcstring_tok(buff, opts.delimiter, loc)) {
-                tokens.emplace_back(wcstring(buff, loc.first, loc.second));
-            }
-            env_set(argv[0], opts.place, tokens);
-        } else {
-            // We're using a delimiter provided by the user so use the `string split` behavior.
-            wcstring_list_t splits;
-            split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
-                        &splits, LONG_MAX);
-            env_set(argv[0], opts.place, splits);
-        }
-    } else {
-        // Not array mode. Split the input into tokens and assign each to the vars in sequence.
-        if (!opts.have_delimiter) {
-            // We're using IFS, so tokenize the buffer using each IFS char. This is for backward
-            // compatibility with old versions of fish.
-            wcstring_range loc = wcstring_range(0, 0);
-            for (int i = 0; i < argc; i++) {
-                wcstring substr;
-                loc = wcstring_tok(buff, (i + 1 < argc) ? opts.delimiter : wcstring(), loc);
-                if (loc.first != wcstring::npos) {
-                    substr = wcstring(buff, loc.first, loc.second);
+                // Not array mode: assign each char to a separate var with the remainder being assigned
+                // to the last var.
+                auto c = chars.begin();
+                for (; c != chars.end() && vars_left(); ++c) {
+                    env_set_one(*var_ptr++, opts.place, *c);
                 }
-                env_set_one(argv[i], opts.place, substr);
+            }
+        } else if (opts.array) {
+            // The user has requested the input be split into a sequence of tokens and all the tokens
+            // assigned to a single var. How we do the tokenizing depends on whether the user specified
+            // the delimiter string or we're using IFS.
+            if (!opts.have_delimiter) {
+                // We're using IFS, so tokenize the buffer using each IFS char. This is for backward
+                // compatibility with old versions of fish.
+                wcstring_list_t tokens;
+
+                for (wcstring_range loc = wcstring_tok(buff, opts.delimiter);
+                     loc.first != wcstring::npos; loc = wcstring_tok(buff, opts.delimiter, loc)) {
+                    tokens.emplace_back(wcstring(buff, loc.first, loc.second));
+                }
+                env_set(*var_ptr++, opts.place, tokens);
+            } else {
+                // We're using a delimiter provided by the user so use the `string split` behavior.
+                wcstring_list_t splits;
+                split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
+                            &splits);
+
+                env_set(*var_ptr++, opts.place, splits);
             }
         } else {
-            // We're using a delimiter provided by the user so use the `string split` behavior.
-            wcstring_list_t splits;
-            // We're making at most argc - 1 splits so the last variable
-            // is set to the remaining string.
-            split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
-                        &splits, argc - 1);
-            for (size_t i = 0; i < (size_t)argc && i < splits.size(); i++) {
-                env_set_one(argv[i], opts.place, splits[i]);
+            // Not array mode. Split the input into tokens and assign each to the vars in sequence.
+            if (!opts.have_delimiter) {
+                // We're using IFS, so tokenize the buffer using each IFS char. This is for backward
+                // compatibility with old versions of fish.
+                wcstring_range loc = wcstring_range(0, 0);
+                while (vars_left()) {
+                    wcstring substr;
+                    loc = wcstring_tok(buff, (vars_left() > 1) ? opts.delimiter : wcstring(), loc);
+                    if (loc.first != wcstring::npos) {
+                        substr = wcstring(buff, loc.first, loc.second);
+                    }
+                    env_set_one(*var_ptr++, opts.place, substr);
+                }
+            } else {
+                // We're using a delimiter provided by the user so use the `string split` behavior.
+                wcstring_list_t splits;
+                // We're making at most argc - 1 splits so the last variable
+                // is set to the remaining string.
+                split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
+                            &splits, argc - 1);
+                assert(splits.size() <= (size_t) vars_left());
+                for (const auto &split : splits) {
+                    env_set_one(*var_ptr++, opts.place, split);
+                }
             }
         }
+    } while (opts.one_line && vars_left());
+
+    if (!opts.array) {
+        // In case there were more args than splits
+        clear_remaining_vars();
     }
 
     return exit_res;

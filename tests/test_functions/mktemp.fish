@@ -18,6 +18,8 @@ function mktemp
                 set opts $opts d
             case -t
                 set opts $opts t
+            case -u
+                set opts $opts u
             case --
                 set -e argv[1]
                 break
@@ -69,6 +71,9 @@ function mktemp
     end
 
     set -l args
+    if contains u $opts
+        set args $args -u
+    end
     if contains d $opts
         set args $args -d
     end
@@ -88,7 +93,7 @@ function mktemp
     end
     set args $args $template
 
-    command mktemp $args
+    realpath (command mktemp $args)
 end
 
 function _mktemp_help

@@ -259,7 +259,7 @@ void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt);
 #define ERROR_NOT_STATUS _(L"$? is not the exit status. In fish, please use $status.")
 
 /// Error issued on $$.
-#define ERROR_NOT_PID _(L"$$ is not the pid. In fish, please use %%self.")
+#define ERROR_NOT_PID _(L"$$ is not the pid. In fish, please use $fish_pid.")
 
 /// Error issued on $#.
 #define ERROR_NOT_ARGV_COUNT _(L"$# is not supported. In fish, please use 'count $argv'.")

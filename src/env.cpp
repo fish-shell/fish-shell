@@ -63,8 +63,8 @@
 #define DEFAULT_TERM2 "dumb"
 
 /// Some configuration path environment variables.
-#define FISH_DATADIR_VAR L"__fish_datadir"
-#define FISH_SYSCONFDIR_VAR L"__fish_sysconfdir"
+#define FISH_DATADIR_VAR L"__fish_data_dir"
+#define FISH_SYSCONFDIR_VAR L"__fish_sysconf_dir"
 #define FISH_HELPDIR_VAR L"__fish_help_dir"
 #define FISH_BIN_DIR L"__fish_bin_dir"
 
@@ -75,6 +75,10 @@ extern char **environ;
 // fish_read_limit variable.
 #define READ_BYTE_LIMIT 10 * 1024 * 1024
 size_t read_byte_limit = READ_BYTE_LIMIT;
+
+/// The character used to delimit path and non-path variables in exporting and in string expansion.
+static const wchar_t PATH_ARRAY_SEP = L':';
+static const wchar_t NONPATH_ARRAY_SEP = L' ';
 
 bool g_use_posix_spawn = false;  // will usually be set to true
 bool curses_initialized = false;
@@ -109,33 +113,6 @@ static const wcstring_list_t curses_variables({L"TERM", L"TERMINFO", L"TERMINFO_
 static void init_locale();
 static void init_curses();
 
-/// This is used to convert a serialized env_var_t back into a list. It is used when reading legacy
-/// (fish 2.x) encoded vars stored in the universal variable file and the environment.
-static void tokenize_variable_array(const wcstring &val, wcstring_list_t &out) {
-    out.clear();  // ensure the output var is empty -- this will normally be a no-op
-
-    // Zero element arrays are externally encoded as this placeholder string.
-    if (val == ENV_NULL) return;
-
-    size_t pos = 0, end = val.size();
-    while (pos <= end) {
-        size_t next_pos = val.find(ARRAY_SEP, pos);
-        if (next_pos == wcstring::npos) {
-            next_pos = end;
-        }
-        out.resize(out.size() + 1);
-        out.back().assign(val, pos, next_pos - pos);
-        pos = next_pos + 1;  // skip the separator, or skip past the end
-    }
-}
-
-/// This is used to convert a serialized env_var_t back into a list.
-wcstring_list_t decode_serialized(const wcstring &s) {
-    wcstring_list_t values;
-    tokenize_variable_array(s, values);
-    return values;
-}
-
 // Struct representing one level in the function variable stack.
 // Only our variable stack should create and destroy these
 class env_node_t {
@@ -158,10 +135,6 @@ class env_node_t {
     maybe_t<env_var_t> find_entry(const wcstring &key);
 
     bool contains_any_of(const wcstring_list_t &vars) const;
-};
-
-class variable_entry_t {
-    wcstring value; /**< Value of the variable */
 };
 
 static fish_mutex_t env_lock;
@@ -309,12 +282,6 @@ static env_universal_t *s_universal_variables = NULL;
 /// Getter for universal variables.
 static env_universal_t *uvars() { return s_universal_variables; }
 
-// Helper class for storing constant strings, without needing to wrap them in a wcstring.
-
-// Comparer for const string set.
-// Note our sets are small so we don't bother to sort them.
-typedef std::unordered_set<wcstring> const_string_set_t;
-
 // A typedef for a set of constant strings. Note our sets are typically on the order of 6 elements,
 // so we don't bother to sort them.
 using string_set_t = const wchar_t *const[];
@@ -329,34 +296,21 @@ bool string_set_contains(const T &set, const wchar_t *val) {
 
 /// Check if a variable may not be set using the set command.
 static bool is_read_only(const wchar_t *val) {
-    const string_set_t env_read_only = {L"PWD", L"SHLVL", L"_", L"history", L"status", L"version"};
+    const string_set_t env_read_only = {L"PWD", L"SHLVL", L"history", L"status", L"version", L"fish_pid", L"hostname", L"_"};
     return string_set_contains(env_read_only, val);
 }
 
 static bool is_read_only(const wcstring &val) { return is_read_only(val.c_str()); }
 
-// Here is the whitelist of variables that we colon-delimit, both incoming from the environment and
-// outgoing back to it. This is deliberately very short - we don't want to add language-specific
-// values like CLASSPATH.
-static const string_set_t colon_delimited_variable = {L"PATH", L"CDPATH", L"MANPATH"};
-static bool variable_is_colon_delimited_var(const wchar_t *str) {
-    /// List of "path" like variable names that need special handling. This includes automatic
-    /// splitting and joining on import/export. As well as replacing empty elements, which
-    /// implicitly refer to the CWD, with an explicit '.' in the case of PATH and CDPATH. Note this
-    /// is sorted
-    return string_set_contains(colon_delimited_variable, str);
-}
-
-static bool variable_is_colon_delimited_var(const wcstring &str) {
-    return variable_is_colon_delimited_var(str.c_str());
+/// Return true if a variable should become a path variable by default. See #436.
+static bool variable_should_auto_pathvar(const wcstring &name) {
+    return string_suffixes_string(L"PATH", name);
 }
 
 /// Table of variables whose value is dynamically calculated, such as umask, status, etc.
-static const_string_set_t env_electric;
+static const string_set_t env_electric = {L"history", L"status", L"umask"};
 
-static bool is_electric(const wcstring &key) {
-    return env_electric.find(key) != env_electric.end();
-}
+static bool is_electric(const wcstring &key) { return contains(env_electric, key); }
 
 maybe_t<env_var_t> env_node_t::find_entry(const wcstring &key) {
     var_table_t::const_iterator entry = env.find(key);
@@ -392,16 +346,13 @@ static void handle_timezone(const wchar_t *env_var_name) {
 /// Unfortunately that convention causes problems for fish scripts. So this function replaces the
 /// empty path element with an explicit ".". See issue #3914.
 static void fix_colon_delimited_var(const wcstring &var_name) {
-    // While we auto split/join MANPATH we do not want to replace empty elements with "." (#4158).
-    if (var_name == L"MANPATH") return;
-
     const auto paths = env_get(var_name);
     if (paths.missing_or_empty()) return;
 
     // See if there's any empties.
     const wcstring empty = wcstring();
     const wcstring_list_t &strs = paths->as_list();
-    if (std::find(strs.begin(), strs.end(), empty) != strs.end()) {
+    if (contains(strs, empty)) {
         // Copy the list and replace empties with L"."
         wcstring_list_t newstrs = strs;
         std::replace(newstrs.begin(), newstrs.end(), empty, wcstring(L"."));
@@ -463,7 +414,7 @@ bool term_supports_setting_title() { return can_set_term_title; }
 /// One situation in which this breaks down is with screen, since screen supports setting the
 /// terminal title if the underlying terminal does so, but will print garbage on terminals that
 /// don't. Since we can't see the underlying terminal below screen there is no way to fix this.
-static const wcstring_list_t title_terms({L"xterm", L"screen", L"tmux", L"nxterm", L"rxvt"});
+static const wchar_t *const title_terms[] = {L"xterm", L"screen", L"tmux", L"nxterm", L"rxvt"};
 static bool does_term_support_setting_title() {
     const auto term_var = env_get(L"TERM");
     if (term_var.missing_or_empty()) return false;
@@ -566,9 +517,9 @@ static bool initialize_curses_using_fallback(const char *term) {
 /// Ensure the content of the magic path env vars is reasonable. Specifically, that empty path
 /// elements are converted to explicit "." to make the vars easier to use in fish scripts.
 static void init_path_vars() {
-    for (const wchar_t *var_name : colon_delimited_variable) {
-        fix_colon_delimited_var(var_name);
-    }
+    // Do not replace empties in MATHPATH - see #4158.
+    fix_colon_delimited_var(L"PATH");
+    fix_colon_delimited_var(L"CDPATH");
 }
 
 /// Update the value of g_guessed_fish_emoji_width
@@ -702,15 +653,15 @@ static void env_set_termsize() {
     if (rows.missing_or_empty()) env_set_one(L"LINES", ENV_GLOBAL, DFLT_TERM_ROW_STR);
 }
 
-bool env_set_pwd() {
+/// Update the PWD variable directory from the result of getcwd().
+void env_set_pwd_from_getcwd() {
     wcstring cwd = wgetcwd();
     if (cwd.empty()) {
         debug(0,
               _(L"Could not determine current working directory. Is your locale set correctly?"));
-        return false;
+        return;
     }
-    env_set_one(L"PWD", ENV_EXPORT | ENV_GLOBAL, cwd);
-    return true;
+    env_set_one(L"PWD", ENV_EXPORT | ENV_GLOBAL, std::move(cwd));
 }
 
 /// Allow the user to override the limit on how much data the `read` command will process.
@@ -728,11 +679,13 @@ void env_set_read_limit() {
 }
 
 wcstring env_get_pwd_slash() {
+    // Return "/" if PWD is missing.
+    // See https://github.com/fish-shell/fish-shell/issues/5080
     auto pwd_var = env_get(L"PWD");
-    if (pwd_var.missing_or_empty()) {
-        return L"";
+    wcstring pwd;
+    if (!pwd_var.missing_or_empty()) {
+        pwd = pwd_var->as_string();
     }
-    wcstring pwd = pwd_var->as_string();
     if (!string_suffixes_string(L"/", pwd)) {
         pwd.push_back(L'/');
     }
@@ -765,28 +718,6 @@ void misc_init() {
         fflush(stdout);
         setvbuf(stdout, NULL, _IONBF, 0);
     }
-
-#ifdef OS_IS_CYGWIN
-    // MS Windows tty devices do not currently have either a read or write timestamp. Those
-    // respective fields of `struct stat` are always the current time. Which means we can't
-    // use them. So we assume no external program has written to the terminal behind our
-    // back. This makes multiline promptusable. See issue #2859 and
-    // https://github.com/Microsoft/BashOnWindows/issues/545
-    has_working_tty_timestamps = false;
-#else
-    // This covers preview builds of Windows Subsystem for Linux (WSL).
-    FILE *procsyskosrel;
-    if ((procsyskosrel = wfopen(L"/proc/sys/kernel/osrelease", "r"))) {
-        wcstring osrelease;
-        fgetws2(&osrelease, procsyskosrel);
-        if (osrelease.find(L"3.4.0-Microsoft") != wcstring::npos) {
-            has_working_tty_timestamps = false;
-        }
-    }
-    if (procsyskosrel) {
-        fclose(procsyskosrel);
-    }
-#endif  // OS_IS_MS_WINDOWS
 }
 
 static void env_universal_callbacks(callback_data_list_t &callbacks) {
@@ -823,11 +754,23 @@ static void handle_escape_delay_change(const wcstring &op, const wcstring &var_n
 }
 
 static void handle_change_emoji_width(const wcstring &op, const wcstring &var_name) {
+    (void)op;
+    (void)var_name;
     int new_width = 0;
     if (auto width_str = env_get(L"fish_emoji_width")) {
         new_width = fish_wcstol(width_str->as_string().c_str());
     }
     g_fish_emoji_width = std::max(0, new_width);
+}
+
+static void handle_change_ambiguous_width(const wcstring &op, const wcstring &var_name) {
+    (void)op;
+    (void)var_name;
+    int new_width = 1;
+    if (auto width_str = env_get(L"fish_ambiguous_width")) {
+        new_width = fish_wcstol(width_str->as_string().c_str());
+    }
+    g_fish_ambiguous_width = std::max(0, new_width);
 }
 
 static void handle_term_size_change(const wcstring &op, const wcstring &var_name) {
@@ -894,14 +837,13 @@ static void setup_var_dispatch_table() {
         var_dispatch_table.emplace(var_name, handle_curses_change);
     }
 
-    for (const auto &var_name : colon_delimited_variable) {
-        var_dispatch_table.emplace(var_name, handle_magic_colon_var_change);
-    }
-
+    var_dispatch_table.emplace(L"PATH", handle_magic_colon_var_change);
+    var_dispatch_table.emplace(L"CDPATH", handle_magic_colon_var_change);
     var_dispatch_table.emplace(L"fish_term256", handle_fish_term_change);
     var_dispatch_table.emplace(L"fish_term24bit", handle_fish_term_change);
     var_dispatch_table.emplace(L"fish_escape_delay_ms", handle_escape_delay_change);
     var_dispatch_table.emplace(L"fish_emoji_width", handle_change_emoji_width);
+    var_dispatch_table.emplace(L"fish_ambiguous_width", handle_change_ambiguous_width);
     var_dispatch_table.emplace(L"LINES", handle_term_size_change);
     var_dispatch_table.emplace(L"COLUMNS", handle_term_size_change);
     var_dispatch_table.emplace(L"fish_complete_path", handle_complete_path_change);
@@ -913,9 +855,6 @@ static void setup_var_dispatch_table() {
 
 void env_init(const struct config_paths_t *paths /* or NULL */) {
     setup_var_dispatch_table();
-
-    // Names of all dynamically calculated variables.
-    env_electric.insert({L"history", L"status", L"umask"});
 
     // Now the environment variable handling is set up, the next step is to insert valid data.
 
@@ -934,16 +873,9 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
             env_set_empty(key_and_val, ENV_EXPORT | ENV_GLOBAL);
         } else {
             key.assign(key_and_val, 0, eql);
+            val.assign(key_and_val, eql+1, wcstring::npos);
             if (is_read_only(key) || is_electric(key)) continue;
-            val.assign(key_and_val, eql + 1, wcstring::npos);
-            if (variable_is_colon_delimited_var(key)) {
-                std::replace(val.begin(), val.end(), L':', ARRAY_SEP);
-                wcstring_list_t values = decode_serialized(val);
-                env_set(key, ENV_EXPORT | ENV_GLOBAL, values);
-            } else {
-                wcstring_list_t values = decode_serialized(val);
-                env_set(key, ENV_EXPORT | ENV_GLOBAL, values);
-            }
+            env_set(key, ENV_EXPORT | ENV_GLOBAL, {val});
         }
     }
 
@@ -972,9 +904,20 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     uid_t uid = getuid();
     setup_user(uid == 0);
 
+    // Set up $IFS - this used to be in share/config.fish, but really breaks if it isn't done.
+    env_set_one(L"IFS", ENV_GLOBAL, L"\n \t");
+
     // Set up the version variable.
     wcstring version = str2wcstring(get_fish_version());
     env_set_one(L"version", ENV_GLOBAL, version);
+
+    // Set the $fish_pid variable.
+    env_set_one(L"fish_pid", ENV_GLOBAL, to_string<long>(getpid()));
+
+    // Set the $hostname variable
+    wcstring hostname = L"fish";
+    get_hostname_identifier(hostname);
+    env_set_one(L"hostname", ENV_GLOBAL, hostname);
 
     // Set up SHLVL variable. Not we can't use env_get because SHLVL is read-only, and therefore was
     // not inherited from the environment.
@@ -1026,7 +969,11 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         }
     }
 
-    env_set_pwd();         // initialize the PWD variable
+    // initialize the PWD variable if necessary
+    // Note we may inherit a virtual PWD that doesn't match what getcwd would return; respect that.
+    if (env_get(L"PWD").missing_or_empty()) {
+        env_set_pwd_from_getcwd();
+    }
     env_set_termsize();    // initialize the terminal size variables
     env_set_read_limit();  // initialize the read_byte_limit
 
@@ -1048,7 +995,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     assert(s_universal_variables == NULL);
     s_universal_variables = new env_universal_t(L"");
     callback_data_list_t callbacks;
-    s_universal_variables->load(callbacks);
+    s_universal_variables->initialize(callbacks);
     env_universal_callbacks(callbacks);
 
     // Now that the global scope is fully initialized, add a toplevel local scope. This same local
@@ -1096,8 +1043,10 @@ static int set_umask(const wcstring_list_t &list_val) {
 /// * ENV_SCOPE, the variable cannot be set in the given scope. This applies to readonly/electric
 /// variables set from the local or universal scopes, or set as exported.
 /// * ENV_INVALID, the variable value was invalid. This applies only to special variables.
-static int env_set_internal(const wcstring &key, env_mode_flags_t var_mode, wcstring_list_t val) {
+static int env_set_internal(const wcstring &key, env_mode_flags_t input_var_mode,
+                            wcstring_list_t val) {
     ASSERT_IS_MAIN_THREAD();
+    env_mode_flags_t var_mode = input_var_mode;
     bool has_changed_old = vars_stack().has_changed_exported;
     int done = 0;
 
@@ -1149,13 +1098,12 @@ static int env_set_internal(const wcstring &key, env_mode_flags_t var_mode, wcst
         // Determine the node.
         bool has_changed_new = false;
         env_node_t *preexisting_node = env_get_node(key);
-        bool preexisting_entry_exportv = false;
+        maybe_t<env_var_t::env_var_flags_t> preexisting_flags{};
         if (preexisting_node != NULL) {
             var_table_t::const_iterator result = preexisting_node->env.find(key);
             assert(result != preexisting_node->env.end());
-            const env_var_t &var = result->second;
-            if (var.exports()) {
-                preexisting_entry_exportv = true;
+            preexisting_flags = result->second.get_flags();
+            if (*preexisting_flags & env_var_t::flag_export) {
                 has_changed_new = true;
             }
         }
@@ -1169,8 +1117,9 @@ static int env_set_internal(const wcstring &key, env_mode_flags_t var_mode, wcst
             node = preexisting_node;
             if ((var_mode & (ENV_EXPORT | ENV_UNEXPORT)) == 0) {
                 // Use existing entry's exportv status.
-                var_mode =  //!OCLINT(parameter reassignment)
-                    preexisting_entry_exportv ? ENV_EXPORT : 0;
+                if (preexisting_flags && (*preexisting_flags & env_var_t::flag_export)) {
+                    var_mode |= ENV_EXPORT;
+                }
             }
         } else {
             if (!get_proc_had_barrier()) {
@@ -1198,6 +1147,27 @@ static int env_set_internal(const wcstring &key, env_mode_flags_t var_mode, wcst
         }
 
         if (!done) {
+            // Resolve if we should mark ourselves as a path variable or not.
+            // If there's an existing variable, use its path flag; otherwise infer it.
+            if ((var_mode & (ENV_PATHVAR | ENV_UNPATHVAR)) == 0) {
+                bool should_pathvar = false;
+                if (auto existing = node->find_entry(key)) {
+                    should_pathvar = existing->is_pathvar();
+                } else {
+                    should_pathvar = variable_should_auto_pathvar(key);
+                }
+                var_mode |= should_pathvar ? ENV_PATHVAR : ENV_UNPATHVAR;
+            }
+
+            // Split about ':' if it's a path variable.
+            if (var_mode & ENV_PATHVAR) {
+                wcstring_list_t split_val;
+                for (const wcstring &str : val) {
+                    vec_append(split_val, split_string(str, PATH_ARRAY_SEP));
+                }
+                val = std::move(split_val);
+            }
+
             // Set the entry in the node. Note that operator[] accesses the existing entry, or
             // creates a new one.
             env_var_t &var = node->env[key];
@@ -1207,6 +1177,7 @@ static int env_set_internal(const wcstring &key, env_mode_flags_t var_mode, wcst
             }
 
             var.set_vals(std::move(val));
+            var.set_pathvar(var_mode & ENV_PATHVAR);
 
             if (var_mode & ENV_EXPORT) {
                 // The new variable is exported.
@@ -1288,7 +1259,7 @@ int env_remove(const wcstring &key, int var_mode) {
     int erased = 0;
 
     if ((var_mode & ENV_USER) && is_read_only(key)) {
-        return 2;
+        return ENV_SCOPE;
     }
 
     first_node = vars_stack().top.get();
@@ -1326,24 +1297,18 @@ int env_remove(const wcstring &key, int var_mode) {
 
     react_to_variable_change(L"ERASE", key);
 
-    return !erased;
+    return erased ? ENV_OK : ENV_NOT_FOUND;
 }
 
 const wcstring_list_t &env_var_t::as_list() const { return vals; }
 
-/// Return a string representation of the var. At the present time this uses the legacy 2.x
-/// encoding.
-wcstring env_var_t::as_string() const {
-    if (this->vals.empty()) return wcstring(ENV_NULL);
+wchar_t env_var_t::get_delimiter() const {
+    return is_pathvar() ? PATH_ARRAY_SEP : NONPATH_ARRAY_SEP;
+}
 
-    wchar_t sep = (flags & flag_colon_delimit) ? L':' : ARRAY_SEP;
-    auto it = this->vals.cbegin();
-    wcstring result(*it);
-    while (++it != vals.end()) {
-        result.push_back(sep);
-        result.append(*it);
-    }
-    return result;
+/// Return a string representation of the var.
+wcstring env_var_t::as_string() const {
+    return join_strings(vals, get_delimiter());
 }
 
 void env_var_t::to_list(wcstring_list_t &out) const {
@@ -1353,7 +1318,6 @@ void env_var_t::to_list(wcstring_list_t &out) const {
 env_var_t::env_var_flags_t env_var_t::flags_for(const wchar_t *name) {
     env_var_flags_t result = 0;
     if (is_read_only(name)) result |= flag_read_only;
-    if (variable_is_colon_delimited_var(name)) result |= flag_colon_delimit;
     return result;
 }
 
@@ -1497,7 +1461,7 @@ wcstring_list_t env_get_names(int flags) {
     if (show_global) {
         add_key_to_string_set(vars_stack().global_env->env, &names, show_exported, show_unexported);
         if (show_unexported) {
-            result.insert(result.end(), env_electric.begin(), env_electric.end());
+            result.insert(result.end(), std::begin(env_electric), std::end(env_electric));
         }
     }
 
@@ -1537,31 +1501,22 @@ static void get_exported(const env_node_t *n, var_table_t &h) {
     }
 }
 
-// Given a map from key to value, add values to out of the form key=value.
-static void export_func(const var_table_t &envs, std::vector<std::string> &out) {
-    out.reserve(out.size() + envs.size());
-    for (auto iter = envs.begin(); iter != envs.end(); ++iter) {
-        const wcstring &key = iter->first;
-        const std::string &ks = wcs2string(key);
-        std::string vs = wcs2string(iter->second.as_string());
-
-        // Arrays in the value are ASCII record separator (0x1e) delimited. But some variables
-        // should have colons. Add those.
-        if (variable_is_colon_delimited_var(key)) {
-            // Replace ARRAY_SEP with colon.
-            std::replace(vs.begin(), vs.end(), (char)ARRAY_SEP, ':');
-        }
-
-        // Put a string on the vector.
-        out.push_back(std::string());
-        std::string &str = out.back();
+// Given a map from key to value, return a vector of strings of the form key=value
+static std::vector<std::string> get_export_list(const var_table_t &envs) {
+    std::vector<std::string> result;
+    result.reserve(envs.size());
+    for (const auto &kv : envs) {
+        std::string ks = wcs2string(kv.first);
+        std::string vs = wcs2string(kv.second.as_string());
+        // Create and append a string of the form ks=vs
+        std::string str;
         str.reserve(ks.size() + 1 + vs.size());
-
-        // Append our environment variable data to it.
         str.append(ks);
         str.append("=");
         str.append(vs);
+        result.push_back(std::move(str));
     }
+    return result;
 }
 
 void var_stack_t::update_export_array_if_necessary() {
@@ -1575,8 +1530,7 @@ void var_stack_t::update_export_array_if_necessary() {
 
     if (uvars()) {
         const wcstring_list_t uni = uvars()->get_names(true, false);
-        for (size_t i = 0; i < uni.size(); i++) {
-            const wcstring &key = uni.at(i);
+        for (const wcstring &key : uni) {
             auto var = uvars()->get(key);
 
             if (!var.missing_or_empty()) {
@@ -1587,9 +1541,7 @@ void var_stack_t::update_export_array_if_necessary() {
         }
     }
 
-    std::vector<std::string> local_export_buffer;
-    export_func(vals, local_export_buffer);
-    export_array.set(local_export_buffer);
+    export_array.set(get_export_list(vals));
     has_changed_exported = false;
 }
 
@@ -1643,6 +1595,70 @@ maybe_t<env_var_t> env_vars_snapshot_t::get(const wcstring &key) const {
     if (iter == vars.end()) return none();
     return iter->second;
 }
+
+
+#if defined(__APPLE__) || defined(__CYGWIN__)
+static int check_runtime_path(const char *path) {
+    return 0;
+}
+#else
+/// Check, and create if necessary, a secure runtime path. Derived from tmux.c in tmux
+/// (http://tmux.sourceforge.net/).
+static int check_runtime_path(const char *path) {
+    // Copyright (c) 2007 Nicholas Marriott <nicm@users.sourceforge.net>
+    //
+    // Permission to use, copy, modify, and distribute this software for any
+    // purpose with or without fee is hereby granted, provided that the above
+    // copyright notice and this permission notice appear in all copies.
+    //
+    // THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+    // WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+    // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+    // ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+    // WHATSOEVER RESULTING FROM LOSS OF MIND, USE, DATA OR PROFITS, WHETHER
+    // IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
+    // OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+    struct stat statpath;
+    uid_t uid = geteuid();
+
+    if (mkdir(path, S_IRWXU) != 0 && errno != EEXIST) return errno;
+    if (lstat(path, &statpath) != 0) return errno;
+    if (!S_ISDIR(statpath.st_mode) || statpath.st_uid != uid ||
+        (statpath.st_mode & (S_IRWXG | S_IRWXO)) != 0)
+        return EACCES;
+    return 0;
+}
+#endif
+
+/// Return the path of an appropriate runtime data directory.
+wcstring env_get_runtime_path() {
+    wcstring result;
+    const char *dir = getenv("XDG_RUNTIME_DIR");
+
+    // Check that the path is actually usable. Technically this is guaranteed by the fdo spec but in
+    // practice it is not always the case: see #1828 and #2222.
+    int mode = R_OK | W_OK | X_OK;
+    if (dir != NULL && access(dir, mode) == 0 && check_runtime_path(dir) == 0) {
+        result = str2wcstring(dir);
+    } else {
+        // Don't rely on $USER being set, as setup_user() has not yet been called.
+        // See https://github.com/fish-shell/fish-shell/issues/5180
+        const char *uname = getpwuid(geteuid())->pw_name;
+        // /tmp/fish.user
+        std::string tmpdir = "/tmp/fish.";
+        tmpdir.append(uname);
+
+        if (check_runtime_path(tmpdir.c_str()) != 0) {
+            debug(0, L"Runtime path not available.");
+            debug(0, L"Try deleting the directory %s and restarting fish.", tmpdir.c_str());
+            return result;
+        }
+
+        result = str2wcstring(tmpdir);
+    }
+    return result;
+}
+
 
 const wchar_t *const env_vars_snapshot_t::highlighting_keys[] = {L"PATH", L"CDPATH",
                                                                  L"fish_function_path", NULL};

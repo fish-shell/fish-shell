@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <time.h>
+#include <locale.h>
 #include <string>
 
 #include "common.h"
@@ -27,6 +28,10 @@ int make_fd_nonblocking(int fd);
 
 /// Mark an fd as blocking; returns errno or 0 on success.
 int make_fd_blocking(int fd);
+
+/// Check if an fd is on a remote filesystem (NFS, SMB, CFS)
+/// Return 1 if remote, 0 if local, -1 on error or if not implemented on this platform.
+int fd_check_is_remote(int fd);
 
 /// Wide character version of opendir(). Note that opendir() is guaranteed to set close-on-exec by
 /// POSIX (hooray).
@@ -62,6 +67,12 @@ int wchdir(const wcstring &dir);
 /// Wide character version of realpath function.
 /// \returns the canonicalized path, or none if the path is invalid.
 maybe_t<wcstring> wrealpath(const wcstring &pathname);
+
+/// Given an input path, "normalize" it:
+/// 1. Collapse multiple /s into a single /, except maybe at the beginning.
+/// 2. .. goes up a level.
+/// 3. Remove /./ in the middle.
+wcstring normalize_path(const wcstring &path);
 
 /// Wide character version of readdir().
 bool wreaddir(DIR *dir, wcstring &out_name);
@@ -113,10 +124,14 @@ int fish_iswgraph(wint_t wc);
 int fish_wcswidth(const wchar_t *str);
 int fish_wcswidth(const wcstring &str);
 
+// returns an immortal locale_t corresponding to the C locale.
+locale_t fish_c_locale();
+
 int fish_wcstoi(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10);
 long fish_wcstol(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10);
 long long fish_wcstoll(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10);
 unsigned long long fish_wcstoull(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10);
+double fish_wcstod(const wchar_t *str, const wchar_t **endptr);
 
 /// Class for representing a file's inode. We use this to detect and avoid symlink loops, among
 /// other things. While an inode / dev pair is sufficient to distinguish co-existing files, Linux
@@ -137,10 +152,19 @@ struct file_id_t {
     // Used to permit these as keys in std::map.
     bool operator<(const file_id_t &rhs) const;
 
-    static file_id_t file_id_from_stat(const struct stat *buf);
+    static file_id_t from_stat(const struct stat &buf);
 
    private:
     int compare_file_id(const file_id_t &rhs) const;
+};
+
+/// RAII wrapper for DIR*
+struct dir_t {
+    DIR *dir;
+    bool valid() const;
+    bool read(wcstring &name);
+    dir_t(const wcstring &path);
+    ~dir_t();
 };
 
 #ifndef HASH_FILE_ID

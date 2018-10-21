@@ -211,21 +211,6 @@ size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz) {
 }
 #endif
 
-#if 0
-// These are not currently used.
-#ifndef HAVE_LRAND48_R
-int lrand48_r(struct drand48_data *buffer, long int *result) {
-    *result = rand_r(&buffer->seed);
-    return 0;
-}
-
-int srand48_r(long int seedval, struct drand48_data *buffer) {
-    buffer->seed = (unsigned int)seedval;
-    return 0;
-}
-#endif
-#endif
-
 #ifndef HAVE_FUTIMES
 int futimes(int fd, const struct timeval *times) {
     errno = ENOSYS;
@@ -264,12 +249,17 @@ int killpg(int pgr, int sig) {
 }
 #endif
 
+// Width of ambiguous characters. 1 is typical default.
+int g_fish_ambiguous_width = 1;
+
+// Width of emoji characters.
 int g_fish_emoji_width = 0;
 
 // 1 is the typical emoji width in Unicode 8.
 int g_guessed_fish_emoji_width = 1;
 
 int fish_get_emoji_width(wchar_t c) {
+    (void)c;
     // Respect an explicit value. If we don't have one, use the guessed value. Do not try to fall
     // back to wcwidth(), it's hopeless.
     if (g_fish_emoji_width > 0) return g_fish_emoji_width;
@@ -287,56 +277,32 @@ int fish_wcwidth(wchar_t wc) { return wcwidth(wc); }
 int fish_wcswidth(const wchar_t *str, size_t n) { return wcswidth(str, n); }
 #else
 
-#include "wcwidth9/wcwidth9.h"
-
-// This is the sort listed of inclusive ranges of characters whose width was 1 in Unicode 8, but was
-// changed to width 2 in Unicode 9. Note that no characters became narrower from Unicode 8 to 9.
-static bool is_width_2_in_Uni9_but_1_in_Uni8(wchar_t c) {
-    const struct pair_t {
-        int lo;
-        int hi;
-    } pairs[] = {{0x0231A, 0x0231B}, {0x023E9, 0x023EC}, {0x023F0, 0x023F0}, {0x023F3, 0x023F3},
-                 {0x025FD, 0x025FE}, {0x02614, 0x02615}, {0x02648, 0x02653}, {0x0267F, 0x0267F},
-                 {0x02693, 0x02693}, {0x026A1, 0x026A1}, {0x026AA, 0x026AB}, {0x026BD, 0x026BE},
-                 {0x026C4, 0x026C5}, {0x026CE, 0x026CE}, {0x026D4, 0x026D4}, {0x026EA, 0x026EA},
-                 {0x026F2, 0x026F3}, {0x026F5, 0x026F5}, {0x026FA, 0x026FA}, {0x026FD, 0x026FD},
-                 {0x02705, 0x02705}, {0x0270A, 0x0270B}, {0x02728, 0x02728}, {0x0274C, 0x0274C},
-                 {0x0274E, 0x0274E}, {0x02753, 0x02755}, {0x02757, 0x02757}, {0x02795, 0x02797},
-                 {0x027B0, 0x027B0}, {0x027BF, 0x027BF}, {0x02B1B, 0x02B1C}, {0x02B50, 0x02B50},
-                 {0x02B55, 0x02B55}, {0x16FE0, 0x16FE0}, {0x17000, 0x187EC}, {0x18800, 0x18AF2},
-                 {0x1F004, 0x1F004}, {0x1F0CF, 0x1F0CF}, {0x1F18E, 0x1F18E}, {0x1F191, 0x1F19A},
-                 {0x1F23B, 0x1F23B}, {0x1F300, 0x1F320}, {0x1F32D, 0x1F335}, {0x1F337, 0x1F37C},
-                 {0x1F37E, 0x1F393}, {0x1F3A0, 0x1F3CA}, {0x1F3CF, 0x1F3D3}, {0x1F3E0, 0x1F3F0},
-                 {0x1F3F4, 0x1F3F4}, {0x1F3F8, 0x1F43E}, {0x1F440, 0x1F440}, {0x1F442, 0x1F4FC},
-                 {0x1F4FF, 0x1F53D}, {0x1F54B, 0x1F54E}, {0x1F550, 0x1F567}, {0x1F57A, 0x1F57A},
-                 {0x1F595, 0x1F596}, {0x1F5A4, 0x1F5A4}, {0x1F5FB, 0x1F64F}, {0x1F680, 0x1F6C5},
-                 {0x1F6CC, 0x1F6CC}, {0x1F6D0, 0x1F6D2}, {0x1F6EB, 0x1F6EC}, {0x1F6F4, 0x1F6F6},
-                 {0x1F910, 0x1F91E}, {0x1F920, 0x1F927}, {0x1F930, 0x1F930}, {0x1F933, 0x1F93E},
-                 {0x1F940, 0x1F94B}, {0x1F950, 0x1F95E}, {0x1F980, 0x1F991}, {0x1F9C0, 0x1F9C0}};
-    auto where = std::lower_bound(std::begin(pairs), std::end(pairs), c,
-                                  [](pair_t p, wchar_t c) { return p.hi < c; });
-    assert((where == std::end(pairs) || where->hi >= c) && "unexpected binary search result");
-    return where != std::end(pairs) && where->lo <= c;
-}
-
-// Possible negative return values from wcwidth9()
-enum { width_non_printable = -1, width_ambiguous = -2, width_private_use = -3 };
+#include "widecharwidth/widechar_width.h"
 
 int fish_wcwidth(wchar_t wc) {
-    // Check for certain characters whose width is terminal emulator dependent.
-    if (is_width_2_in_Uni9_but_1_in_Uni8(wc)) return fish_get_emoji_width(wc);
+    // Check for VS16 which selects emoji presentation. This "promotes" a character like U+2764
+    // (width 1) to an emoji (probably width 2). So treat it as width 1 so the sums work. See #2652.
+    const int variation_selector_16 = 0xFE0F;
+    if (wc == variation_selector_16) return 1;
 
-    int w9_width = wcwidth9(wc);
-    if (w9_width >= 0) return w9_width;
-
-    // Fall back to system wcwidth().
-    int sys_width = wcwidth(wc);
-    if (sys_width >= 0) return sys_width;
-
-    // Treat ambiguous and private use widths as 1.
-    if (w9_width == width_ambiguous || w9_width == width_private_use) return 1;
-
-    return -1;
+    int width = widechar_wcwidth(wc);
+    switch (width) {
+        case widechar_nonprint:
+        case widechar_combining:
+        case widechar_unassigned:
+            // Fall back to system wcwidth in this case.
+            return wcwidth(wc);
+        case widechar_ambiguous:
+            return g_fish_ambiguous_width;
+        case widechar_private_use:
+            // TR11: "All private-use characters are by default classified as Ambiguous".
+            return g_fish_ambiguous_width;
+        case widechar_widened_in_9:
+            return fish_get_emoji_width(wc);
+        default:
+            assert(width > 0 && "Unexpectedly nonpositive width");
+            return width;
+    }
 }
 
 int fish_wcswidth(const wchar_t *str, size_t n) {

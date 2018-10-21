@@ -117,16 +117,16 @@
 # string unescape --style=var (string escape --style=var -- -)
 
 ####################
-# string match "?" a
+# string match "*" a
 
 ####################
 # string match "a*b" axxb
 
 ####################
-# string match -i "a??B" Axxb
+# string match -i "a**B" Axxb
 
 ####################
-# echo "ok?" | string match "*\?"
+# echo "ok?" | string match "*?"
 
 ####################
 # string match -r "cat|dog|fish" "nice dog"
@@ -190,7 +190,7 @@ string invalidarg; and echo "unexpected exit 0"
 # string match -r -v "[dcantg].*" dog can cat diz
 
 ####################
-# string match -v "???" dog can cat diz
+# string match -v "*" dog can cat diz
 
 ####################
 # string match -rvn a bbb
@@ -284,6 +284,9 @@ string repeat -l fakearg
 # string match --entire -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
 
 ####################
+# string match --entire "" -- banana
+
+####################
 # string match -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
 
 ####################
@@ -291,3 +294,15 @@ string repeat -l fakearg
 
 ####################
 # string match -r "a*b([xy]+)" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
+
+####################
+# Check NUL
+
+####################
+# string split0
+
+####################
+# string join0
+
+####################
+# string split0 in functions

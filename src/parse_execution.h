@@ -59,7 +59,7 @@ class parse_execution_context_t {
 
     // Wildcard error helper.
     parse_execution_result_t report_unmatched_wildcard_error(
-        const parse_node_t &unmatched_wildcard);
+        const parse_node_t &unmatched_wildcard) const;
 
     /// Command not found support.
     parse_execution_result_t handle_command_not_found(const wcstring &cmd,
@@ -71,6 +71,11 @@ class parse_execution_context_t {
     tnode_t<grammar::plain_statement> infinite_recursive_statement_in_job_list(
         tnode_t<grammar::job_list> job_list, wcstring *out_func_name) const;
     bool is_function_context() const;
+
+    // Expand a command which may contain variables, producing an expand command and possibly
+    // arguments. Prints an error message on error.
+    parse_execution_result_t expand_command(tnode_t<grammar::plain_statement> statement,
+                                            wcstring *out_cmd, wcstring_list_t *out_args) const;
 
     /// Return whether we should skip a job with the given bool statement type.
     bool should_skip(parse_bool_statement_type_t type) const;
@@ -95,13 +100,16 @@ class parse_execution_context_t {
                                                     tnode_t<Type> specific_statement);
 
     // These encapsulate the actual logic of various (block) statements.
-    parse_execution_result_t run_block_statement(tnode_t<grammar::block_statement> statement);
+    parse_execution_result_t run_block_statement(tnode_t<grammar::block_statement> statement,
+                                                 const block_t *associated_block);
     parse_execution_result_t run_for_statement(tnode_t<grammar::for_header> header,
                                                tnode_t<grammar::job_list> contents);
-    parse_execution_result_t run_if_statement(tnode_t<grammar::if_statement> statement);
+    parse_execution_result_t run_if_statement(tnode_t<grammar::if_statement> statement,
+                                              const block_t *associated_block);
     parse_execution_result_t run_switch_statement(tnode_t<grammar::switch_statement> statement);
     parse_execution_result_t run_while_statement(tnode_t<grammar::while_header> statement,
-                                                 tnode_t<grammar::job_list> contents);
+                                                 tnode_t<grammar::job_list> contents,
+                                                 const block_t *associated_block);
     parse_execution_result_t run_function_statement(tnode_t<grammar::function_header> header,
                                                     tnode_t<grammar::job_list> body);
     parse_execution_result_t run_begin_statement(tnode_t<grammar::job_list> contents);

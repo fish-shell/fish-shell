@@ -181,6 +181,9 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
 /// line of garbage for every repaint, which will quickly fill the screen.
 void s_reset(screen_t *s, bool reset_cursor, bool reset_prompt = true);
 
+/// Stat stdout and stderr and save result as the current timestamp.
+void s_save_status(screen_t *s);
+
 enum screen_reset_mode_t {
     /// Do not make a new line, do not repaint the prompt.
     screen_reset_current_line_contents,

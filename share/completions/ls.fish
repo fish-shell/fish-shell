@@ -17,7 +17,7 @@ complete -c ls -s x -d "List entries by lines"
 complete -c ls -s 1 -d "List one file per line"
 
 # Test if we are using GNU ls
-if command ls --version >/dev/null ^/dev/null
+if command ls --version >/dev/null 2>/dev/null
     complete -c ls -s a -l all -d "Show hidden"
     complete -c ls -s A -l almost-all -d "Show hidden except . and .."
     complete -c ls -s F -l classify -d "Append filetype indicator"

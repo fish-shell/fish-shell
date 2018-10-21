@@ -1,7 +1,7 @@
 #
 # Make ls use colors if we are on a system that supports that feature and writing to stdout.
 #
-if command ls --version >/dev/null ^/dev/null
+if command ls --version >/dev/null 2>/dev/null
     # This appears to be GNU ls.
     function ls --description "List contents of directory"
         set -l param --color=auto
@@ -29,7 +29,7 @@ if command ls --version >/dev/null ^/dev/null
             end
         end
     end
-else if command ls -G / >/dev/null ^/dev/null
+else if command ls -G / >/dev/null 2>/dev/null
     # It looks like BSD, OS X and a few more which support colors through the -G switch instead.
     function ls --description "List contents of directory"
         command ls -G $argv

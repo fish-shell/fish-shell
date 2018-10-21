@@ -54,7 +54,7 @@ function cdh --description "Menu based cd command"
             set dir_color (set_color $fish_color_history_current)
         end
 
-        set -l home_dir (string match -r "$HOME(/.*|\$)" "$dir")
+        set -l home_dir (string match -r "^$HOME(/.*|\$)" "$dir")
         if set -q home_dir[2]
             set dir "~$home_dir[2]"
         end

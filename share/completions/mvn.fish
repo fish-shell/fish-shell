@@ -64,20 +64,17 @@ complete -c mvn -f -o v -l version                           -d "Display version
 complete -c mvn -f -o X -l debug                             -d "Produce execution debug output"
 
 #
-#
 # Profiles
 #
-#
-function __fish_mvn_profiles_from_settings
-  grep -e "<profile>" -A 1 ~/.m2/settings.xml | grep -e "<id>.*</id>" | sed 's/.*<id>//' | sed 's/<\/id>.*//g'
-end
-
 #TODO search pom.xml hierarchy
-function __fish_mvn_profiles_from_pom
-  [ -e pom.xml ]; and grep -e "<profile>" -A 1 pom.xml | grep -e "<id>.*</id>" | sed 's/.*<id>//' | sed 's/<\/id>.*//g'
+function __fish_mvn_profiles
+	# find line opening the profile-tag
+	# read next line
+	# extract contents of id-tag
+	sed -n -e '/<profile>/{n; s!^.*<id>\([^<]*\)</id>.*$!\1!; p}' ~/.m2/settings.xml pom.xml ^/dev/null
 end
 
-complete -c mvn -f -r -o P -l activate-profiles -a "(__fish_mvn_profiles_from_pom) (__fish_mvn_profiles_from_settings)"    -d "Comma-delimited list of profiles to activate"
+complete -c mvn -f -r -o P -l activate-profiles -a "(__fish_mvn_profiles)"    -d "Comma-delimited list of profiles to activate"
 
 
 #default properties for some plugins / profiles

@@ -25,30 +25,29 @@ SET(configure_input
  DO NOT MANUALLY EDIT THIS FILE!")
 
 SET(extra_completionsdir
-    ${rel_datadir}/fish/vendor_completions.d
+    ${datadir}/fish/vendor_completions.d
     CACHE STRING "Path for extra completions")
 
 SET(extra_functionsdir
-    ${rel_datadir}/fish/vendor_functions.d
+    ${datadir}/fish/vendor_functions.d
     CACHE STRING "Path for extra completions")
 
 SET(extra_confdir
-    ${rel_datadir}/fish/vendor_conf.d
+    ${datadir}/fish/vendor_conf.d
     CACHE STRING "Path for extra configuration")
 
-# These are the man pages that go in system manpath.
+# These are the man pages that go in system manpath; all manpages go in the fish-specific manpath.
 SET(MANUALS ${CMAKE_CURRENT_BINARY_DIR}/share/man/man1/fish.1
             ${CMAKE_CURRENT_BINARY_DIR}/share/man/man1/fish_indent.1
             ${CMAKE_CURRENT_BINARY_DIR}/share/man/man1/fish_key_reader.1)
 
-# These are the manpages that go in fish-specific manpath.
-FILE(GLOB HELP_MANPAGES share/man/man1/*.1)
-
-# Determine which man pages we don't want to install.
+# Determine which man page we don't want to install.
 # On OS X, don't install a man page for open, since we defeat fish's open
 # function on OS X.
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-  LIST(REMOVE_ITEM HELP_MANPAGES share/man/man1/open.1)
+  SET(CONDEMNED_PAGE "open.1")
+ELSE()
+  SET(CONDEMNED_PAGE "none")
 ENDIF()
 
 # Define a function to help us create directories.
@@ -91,16 +90,6 @@ INSTALL(TARGETS ${PROGRAMS}
 FISH_CREATE_DIRS(${sysconfdir}/fish/conf.d)
 INSTALL(FILES etc/config.fish DESTINATION ${sysconfdir}/fish/)
 
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/completions
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/functions
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/groff
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/man/man1
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config/js
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config/partials
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config/sample_prompts
 FISH_CREATE_DIRS(${rel_datadir}/fish ${rel_datadir}/fish/completions
                  ${rel_datadir}/fish/functions ${rel_datadir}/fish/groff
                  ${rel_datadir}/fish/man/man1 ${rel_datadir}/fish/tools
@@ -132,7 +121,7 @@ CONFIGURE_FILE(fish.pc.in fish.pc.noversion)
 
 ADD_CUSTOM_COMMAND(OUTPUT fish.pc
     COMMAND sed '/Version/d' fish.pc.noversion > fish.pc
-    COMMAND echo -n "Version: " >> fish.pc
+    COMMAND printf "Version: " >> fish.pc
     COMMAND sed 's/FISH_BUILD_VERSION=//\;s/\"//g' ${FBVF} >> fish.pc
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${FBVF} ${CMAKE_CURRENT_BINARY_DIR}/fish.pc.noversion)
@@ -160,10 +149,13 @@ INSTALL(DIRECTORY share/groff
         DESTINATION ${rel_datadir}/fish)
 
 # $v test -z "$(wildcard share/man/man1/*.1)" || $(INSTALL) -m 644 $(filter-out $(addprefix share/man/man1/, $(CONDEMNED_PAGES)), $(wildcard share/man/man1/*.1)) $(DESTDIR)$(datadir)/fish/man/man1/
-# CONDEMNED_PAGES is managed by the LIST() function after the glob
+# CONDEMNED_PAGE is managed by the conditional above
 # Building the man pages is optional: if doxygen isn't installed, they're not built
-INSTALL(FILES ${HELP_MANPAGES}
-        DESTINATION ${rel_datadir}/fish/man/man1)
+INSTALL(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/share/man/man1/
+        DESTINATION ${rel_datadir}/fish/man/man1
+        FILES_MATCHING
+        PATTERN "*.1"
+        PATTERN ${CONDEMNED_PAGE} EXCLUDE)
 
 # @echo "Installing helper tools";
 # $v $(INSTALL) -m 755 share/tools/*.py $(DESTDIR)$(datadir)/fish/tools/
@@ -204,7 +196,7 @@ INSTALL(FILES ${MANUALS} DESTINATION ${mandir}/man1/ OPTIONAL)
 #        fi; \
 #    done;
 # Building the manual is optional
-INSTALL(DIRECTORY user_doc/html/ # Trailing slash is important!
+INSTALL(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/user_doc/html/ # Trailing slash is important!
         DESTINATION ${docdir} OPTIONAL)
 INSTALL(FILES CHANGELOG.md DESTINATION ${docdir})
 

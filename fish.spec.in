@@ -11,7 +11,13 @@ URL:                    https://fishshell.com/
 Source0:                %{name}_@VERSION@.orig.tar.gz
 BuildRequires:          ncurses-devel gettext gcc-c++ autoconf
 
-%if 0%{?opensuse_bs} && 0%{?rhel} && 0%{?rhel} < 7
+%if 0%{?rhel_version} && 0%{?rhel_version} && 0%{?rhel_version} < 800
+BuildRequires: cmake3
+%else
+BuildRequires: cmake
+%endif
+
+%if 0%{?opensuse_bs} && 0%{?rhel_version} && 0%{?rhel_version} < 700
 BuildRequires: gcc48 gcc48-c++
 %endif
 
@@ -41,23 +47,33 @@ is simple but incompatible with other shell languages.
 %setup -q -n %{name}-@VERSION@
 
 %build
-%if 0%{?opensuse_bs} && 0%{?rhel} && 0%{?rhel} < 7
+%if 0%{?opensuse_bs} && 0%{?rhel_version} && 0%{?rhel_version} < 700
 export CC=gcc48
 export CXX=g++48
+EXTRA_CMAKE_FLAGS="-DCURSES_EXTRA_LIBRARY=tinfo"
 %if 0%{?rhel} < 6
 # i686 required for atomic instructions; default is i386
 export CXXFLAGS="$CXXFLAGS -march=i686"
 %endif
 %endif
-%if 0%{?opensuse_bs}
-%configure || cat config.log
+# CMake macros on OpenSUSE and Fedora define the wrong sysconfdir arguments
+%if 0%{?rhel_version} && 0%{?rhel_version} < 800
+%cmake3 -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir} $EXTRA_CMAKE_FLAGS
 %else
-%configure
+%cmake -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir} $EXTRA_CMAKE_FLAGS
 %endif
+%if 0%{?make_jobs:1}
+%make_jobs
+%else
 make %{?_smp_mflags}
+%endif
 
 %install
-make install DESTDIR="$RPM_BUILD_ROOT"
+%if 0%{?cmake_install:1}
+%cmake_install
+%else
+%make_install
+%endif
 %find_lang %{name}
 
 %clean

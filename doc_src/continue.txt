@@ -18,6 +18,9 @@ for i in *.tmp
     if grep smurf $i
         continue
     end
+    # This "rm" is skipped over if "continue" is executed.
     rm $i
+    # As is this "echo"
+    echo $i
 end
 \endfish

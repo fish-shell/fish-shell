@@ -1,4 +1,4 @@
-if mktemp --version >/dev/null ^/dev/null # GNU
+if mktemp --version >/dev/null 2>/dev/null # GNU
 	complete -c mktemp -s d -l directory    -d 'create a directory, not a file'
 	complete -c mktemp -s u -l dry-run      -d 'do not create anything; merely print a name (unsafe)'
 	complete -c mktemp -s q -l quiet        -d 'suppress diagnostics about file/dir-creation failure'

@@ -49,7 +49,7 @@ function __fish_adb_run_command -d 'Runs adb with any -s parameters already give
 end
 
 function __fish_adb_list_packages
-    __fish_adb_run_command pm list packages ^/dev/null | string replace 'package:' ''
+    __fish_adb_run_command pm list packages 2>/dev/null | string replace 'package:' ''
 end
 
 
@@ -57,6 +57,21 @@ function __fish_adb_list_uninstallable_packages
     # -3 doesn't exactly mean show uninstallable, but it's the closest you can get to with pm list
     __fish_adb_run_command pm list packages -3 | string replace 'package:' ''
 end
+
+function __fish_adb_list_files
+   set -l token (commandline -ct)
+
+   # Have tab complete show initial / if nothing on current token
+   if test -z "$token"
+       set token "/"
+   end
+
+   # Return list of directories suffixed with '/'
+   __fish_adb_run_command find -H "$token*" -maxdepth 0 -type d 2>/dev/null | awk '{print $1"/"}'
+   # Return list of files
+   __fish_adb_run_command find -H "$token*" -maxdepth 0 -type f 2>/dev/null
+end
+
 
 # Generic options, must come before command
 complete -n '__fish_adb_no_subcommand' -c adb -s s -x -a "(__fish_adb_get_devices)" -d 'Device to communicate with'
@@ -143,3 +158,7 @@ complete -n '__fish_seen_subcommand_from sideload' -c adb -xa '(__fish_complete_
 
 # reconnect
 complete -n '__fish_seen_subcommand_from reconnect' -c adb -x -a 'device' -d 'Kick current connection from device side and make it reconnect.'
+
+# commands that accept listing device files
+complete -n '__fish_seen_subcommand_from shell' -c adb -f -a "(__fish_adb_list_files)" -d 'File on device'
+complete -n '__fish_seen_subcommand_from pull' -c adb -f -a "(__fish_adb_list_files)" -d 'File on device'

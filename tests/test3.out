@@ -41,5 +41,8 @@ SHLVL: 1
 SHLVL: 4
 SHLVL: 4
 Elements in DISPLAY: 1
-Elements in FOO: 4
+Elements in FOO and FOOPATH: 1 4
 MANPATH=man1:man2:man3
+DONT_ESCAPE_COLONS=1: 2: :3:
+DONT_ESCAPE_SPACES=1  2   3  4
+DONT_ESCAPE_COLONS_PATH=1::2:::3:

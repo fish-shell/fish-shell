@@ -3,8 +3,8 @@
 \subsection alias-synopsis Synopsis
 \fish{synopsis}
 alias
-alias NAME DEFINITION
-alias NAME=DEFINITION
+alias [OPTIONS] NAME DEFINITION
+alias [OPTIONS] NAME=DEFINITION
 \endfish
 
 \subsection alias-description Description
@@ -17,6 +17,12 @@ alias NAME=DEFINITION
 - `DEFINITION` is the actual command to execute. The string `$argv` will be appended.
 
 You cannot create an alias to a function with the same name. Note that spaces need to be escaped in the call to `alias` just like at the command line, _even inside quoted parts_.
+
+The following options are available:
+
+- `-h` or `--help` displays help about using this command.
+
+- `-s` or `--save` Automatically save the function created by the alias into your fish configuration directory using <a href='#funcsave'>funcsave</a>.
 
 \subsection alias-example Example
 

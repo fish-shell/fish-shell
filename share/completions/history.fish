@@ -10,6 +10,8 @@ complete -c history -n '__fish_seen_subcommand_from search delete' \
     -s e -l exact -d "Match items identical to the string"
 complete -c history -n '__fish_seen_subcommand_from search delete' \
     -s t -l show-time -d "Output with timestamps"
+complete -c history -n '__fish_seen_subcommand_from search delete' \
+    -s C -l case-sensitive -d "Match items in a case-sensitive manner"
 complete -c history -n '__fish_seen_subcommand_from search' \
     -s n -l max -d "Limit output to the first 'n' matches"
 

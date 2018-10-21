@@ -5,7 +5,7 @@
 # Test if we are using GNU sed
 
 set -l is_gnu
-sed --version >/dev/null ^/dev/null; and set is_gnu --is-gnu
+sed --version >/dev/null 2>/dev/null; and set is_gnu --is-gnu
 
 # Shared ls switches
 

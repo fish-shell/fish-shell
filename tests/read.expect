@@ -41,11 +41,11 @@ expect_prompt
 expect_marker 2
 print_var_contents foo
 
-# read -i
+# read -s
 
-send_line "read -i foo"
+send_line "read -s foo"
 expect_read_prompt
-send_line -h "read_i\r_marker 3"
+send_line -h "read_s\r_marker 3"
 expect_prompt
 expect_marker 3
 print_var_contents foo
@@ -89,6 +89,14 @@ send_line -h "12`_marker 7"
 expect_prompt
 expect_marker 7
 print_var_contents foo
+
+# Verify we don't hang on `read | cat`. See #4540.
+send_line "read | cat"
+expect_read_prompt
+send_line -h "bar\r_marker 4540"
+expect_prompt
+expect_marker 4540
+
 
 # ==========
 # The fix for issue #2007 initially introduced a problem when using a function

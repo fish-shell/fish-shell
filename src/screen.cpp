@@ -125,7 +125,7 @@ static bool is_screen_name_escape_seq(const wchar_t *code, size_t *resulting_len
     }
 #endif
 
-    const wchar_t *const screen_name_end_sentinel = L"\e\\";
+    const wchar_t *const screen_name_end_sentinel = L"\x1B\\";
     const wchar_t *screen_name_end = wcsstr(&code[2], screen_name_end_sentinel);
     if (screen_name_end == NULL) {
         // Consider just <esc>k to be the code.
@@ -146,7 +146,7 @@ static bool is_iterm2_escape_seq(const wchar_t *code, size_t *resulting_length) 
         size_t cursor = 2;
         for (; code[cursor] != L'\0'; cursor++) {
             // Consume a sequence of characters up to <esc>\ or <bel>.
-            if (code[cursor] == '\x07' || (code[cursor] == '\\' && code[cursor - 1] == '\e')) {
+            if (code[cursor] == '\x07' || (code[cursor] == '\\' && code[cursor - 1] == '\x1B')) {
                 found = true;
                 break;
             }
@@ -261,11 +261,11 @@ static bool is_visual_escape_seq(const wchar_t *code, size_t *resulting_length) 
 }
 
 /// Returns the number of characters in the escape code starting at 'code'. We only handle sequences
-/// that begin with \e. If it doesn't we return zero. We also return zero if we don't recognize the
+/// that begin with \x1B. If it doesn't we return zero. We also return zero if we don't recognize the
 /// escape sequence based on querying terminfo and other heuristics.
 size_t escape_code_length(const wchar_t *code) {
     assert(code != NULL);
-    if (*code != L'\e') return 0;
+    if (*code != L'\x1B') return 0;
 
     size_t esc_seq_len = cached_layouts.find_escape_code(code);
     if (esc_seq_len) return esc_seq_len;
@@ -313,7 +313,7 @@ static prompt_layout_t calc_prompt_layout(const wcstring &prompt, layout_cache_t
     size_t current_line_width = 0;
 
     for (int j = 0; prompt[j]; j++) {
-        if (prompt[j] == L'\e') {
+        if (prompt[j] == L'\x1B') {
             // This is the start of an escape code. Skip over it if it's at least one char long.
             size_t len = escape_code_length(&prompt[j]);
             if (len > 0) j += len - 1;
@@ -352,7 +352,7 @@ static size_t calc_prompt_lines(const wcstring &prompt) {
 
 /// Stat stdout and stderr and save result. This should be done before calling a function that may
 /// cause output.
-static void s_save_status(screen_t *s) {
+void s_save_status(screen_t *s) {
     fstat(1, &s->prev_buff_1);
     fstat(2, &s->prev_buff_2);
 }
@@ -1196,7 +1196,9 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
         // line above your prompt. This doesn't make a difference in normal usage, but copying and
         // pasting your terminal log becomes a pain. This commit clears that line, making it an
         // actual empty line.
-        abandon_line_string.append(L"\e[2K");
+        if (!is_dumb()) {
+            abandon_line_string.append(str2wcstring(clr_eol));
+        }
 
         const std::string narrow_abandon_line_string = wcs2string(abandon_line_string);
         write_loop(STDOUT_FILENO, narrow_abandon_line_string.c_str(),

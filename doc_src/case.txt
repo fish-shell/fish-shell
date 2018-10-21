@@ -7,7 +7,7 @@ switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end
 
 \subsection case-description Description
 
-`switch` performs one of several blocks of commands, depending on whether a specified value equals one of several wildcarded values. `case` is used together with the `switch` statement in order to determine which block should be executed.
+`switch` executes one of several blocks of commands, depending on whether a specified value matches one of several values. `case` is used together with the `switch` statement in order to determine which block should be executed.
 
 Each `case` command is given one or more parameters. The first `case` command with a parameter that matches the string specified in the switch command will be evaluated. `case` parameters may contain wildcards. These need to be escaped or quoted in order to avoid regular wildcard expansion using filenames.
 
@@ -18,8 +18,7 @@ Note that command substitutions in a case statement will be evaluated even if it
 
 \subsection case-example Example
 
-If the variable \$animal contains the name of an animal, the following
-code would attempt to classify it:
+Say \$animal contains the name of an animal. Then this code would classify it:
 
 \fish
 switch $animal
@@ -40,3 +39,4 @@ end
 If the above code was run with `$animal` set to `whale`, the output
 would be `mammal`.
 
+If `$animal` was set to "banana", it would print "I have no idea what a banana is".

@@ -18,11 +18,11 @@ function suspend --description 'Suspend the current shell.'
     end
 
     if status is-interactive
-        echo -ns 'Suspending ' %self ': run'
-        echo -n (set_color --bold) 'kill -CONT' %self (set_color normal)
+        echo -ns 'Suspending ' $fish_pid ': run'
+        echo -n (set_color --bold) 'kill -CONT' $fish_pid (set_color normal)
         echo 'from another terminal to resume'
     end
 
     # XXX always causes a zombie until one fg's when we do this:
-    kill -STOP %self
+    kill -STOP $fish_pid
 end

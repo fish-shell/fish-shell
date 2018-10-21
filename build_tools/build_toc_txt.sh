@@ -12,5 +12,6 @@ for i in $@; do
 	NAME=`basename $NAME .hdr.in`
   env sed <$i >>toc.txt -n \
     -e 's,.*\\page *\([^ ]*\) *\(.*\)$,- <a href="'$NAME'.html" id="toc-'$NAME'">\2</a>,p' \
-    -e 's,.*\\section *\([^ ]*\) *\([^-]*\)\(.*\)$,  - <a href="'$NAME'.html#\1">\2</a>,p'
+    -e 's,.*\\section *\([^ ]*\) *\(.*\) - .*$,  - <a href="'$NAME'.html#\1">\2</a>,p' \
+    -e 's,.*\\section *\([^ ]*\) *\(.*\)$,  - <a href="'$NAME'.html#\1">\2</a>,p'
 done

@@ -7,36 +7,36 @@ function fish_prompt
     if not set -q -g __fish_robbyrussell_functions_defined
         set -g __fish_robbyrussell_functions_defined
         function _git_branch_name
-            set -l branch (git symbolic-ref --quiet HEAD ^/dev/null)
+            set -l branch (git symbolic-ref --quiet HEAD 2>/dev/null)
             if set -q branch[1]
                 echo (string replace -r '^refs/heads/' '' $branch)
             else
-                echo (git rev-parse --short HEAD ^/dev/null)
+                echo (git rev-parse --short HEAD 2>/dev/null)
             end
         end
 
         function _is_git_dirty
-            echo (git status -s --ignore-submodules=dirty ^/dev/null)
+            echo (git status -s --ignore-submodules=dirty 2>/dev/null)
         end
 
         function _is_git_repo
             type -q git
             or return 1
-            git status -s >/dev/null ^/dev/null
+            git status -s >/dev/null 2>/dev/null
         end
 
         function _hg_branch_name
-            echo (hg branch ^/dev/null)
+            echo (hg branch 2>/dev/null)
         end
 
         function _is_hg_dirty
-            echo (hg status -mard ^/dev/null)
+            echo (hg status -mard 2>/dev/null)
         end
 
         function _is_hg_repo
             type -q hg
             or return 1
-            hg summary >/dev/null ^/dev/null
+            hg summary >/dev/null 2>/dev/null
         end
 
         function _repo_branch_name

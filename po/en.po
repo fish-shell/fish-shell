@@ -118,7 +118,7 @@ msgstr "%ls: '%ls' is not a valid variable name\n"
 #: src/builtin_bg.cpp:95 src/builtin_disown.cpp:89 src/builtin_wait.cpp:163
 #, fuzzy, c-format
 msgid "%ls: Could not find job '%d'\n"
-msgstr "%s: Could not find “%s”\n"
+msgstr "%s: Could not find “%d”\n"
 
 #: src/builtin_bind.cpp:141
 #, c-format
@@ -2068,7 +2068,7 @@ msgstr ""
 
 #: src/parse_constants.h:275
 #, c-format
-msgid "$$ is not the pid. In fish, please use %%self."
+msgid "$$ is not the pid. In fish, please use $fish_pid."
 msgstr ""
 
 #: src/parse_constants.h:278

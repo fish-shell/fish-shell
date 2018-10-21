@@ -44,7 +44,8 @@ ENDIF(${CMAKE_GENERATOR} STREQUAL Ninja)
 
 # Set up the version targets
 ADD_CUSTOM_TARGET(CHECK-FISH-BUILD-VERSION-FILE
-                  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/git_version_gen.sh
+                  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/build_tools/git_version_gen.sh ${CMAKE_CURRENT_BINARY_DIR}
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                   BYPRODUCTS ${CFBVF-BYPRODUCTS})
 
 ADD_CUSTOM_COMMAND(OUTPUT ${FBVF-OUTPUT}

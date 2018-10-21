@@ -34,10 +34,12 @@ function test_file
     set -l base (basename $file .in)
 
     echo -n "Testing file $file ... "
+    set starttime (date +%s)
 
-    ../test/root/bin/fish <$file >$base.tmp.out ^$base.tmp.err
+    ../test/root/bin/fish <$file >$base.tmp.out 2>$base.tmp.err
     set -l exit_status $status
     set -l res ok
+    set test_duration (math (date +%s) - $starttime)
 
     diff $base.tmp.out $base.out >/dev/null
     set -l out_status $status
@@ -45,7 +47,7 @@ function test_file
     set -l err_status $status
 
     if test $out_status -eq 0 -a $err_status -eq 0 -a $exit_status -eq 0
-        say green "ok"
+        say green "ok ($test_duration sec)"
         # clean up tmp files
         rm -f $base.tmp.{err,out}
         return 0

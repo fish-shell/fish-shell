@@ -94,7 +94,6 @@ Some characters can not be written directly on the command line. For these chara
 - '<code>\\*</code>' escapes the star character
 - '<code>\\?</code>' escapes the question mark character
 - '<code>\\~</code>' escapes the tilde character
-- '<code>\\%</code>' escapes the percent character
 - '<code>\\#</code>' escapes the hash character
 - '<code>\\(</code>' escapes the left parenthesis character
 - '<code>\\)</code>' escapes the right parenthesis character
@@ -143,11 +142,11 @@ An example of a file redirection is `echo hello > output.txt`, which directs the
 
 - To read standard input from a file, write `<SOURCE_FILE`
 - To write standard output to a file, write `>DESTINATION`
-- To write standard error to a file, write `^DESTINATION`
+- To write standard error to a file, write `2>DESTINATION`
 - To append standard output to a file, write `>>DESTINATION_FILE`
-- To append standard error to a file, write `^^DESTINATION_FILE`
+- To append standard error to a file, write `2>>DESTINATION_FILE`
 
-- To not overwrite ("clobber") an existing file, write '>?DESTINATION' or '^?DESTINATION'
+- To not overwrite ("clobber") an existing file, write '>?DESTINATION' or '2>?DESTINATION'
 
 `DESTINATION` can be one of the following:
 
@@ -159,7 +158,7 @@ An example of a file redirection is `echo hello > output.txt`, which directs the
 
 Example:
 
-To redirect both standard output and standard error to the file 'all_output.txt', you can write `echo Hello > all_output.txt ^&1`.
+To redirect both standard output and standard error to the file 'all_output.txt', you can write `echo Hello > all_output.txt 2>&1`.
 
 Any file descriptor can be redirected in an arbitrary way by prefixing the redirection with the file descriptor.
 
@@ -167,7 +166,7 @@ Any file descriptor can be redirected in an arbitrary way by prefixing the redir
 - To redirect output of FD N, write `N>DESTINATION`
 - To append the output of FD N to a file, write `N>>DESTINATION_FILE`
 
-Example: `echo Hello 2>output.stderr` and `echo Hello ^output.stderr` are equivalent, and write the standard error (file descriptor 2) of the target program to `output.stderr`.
+Example: `echo Hello 2>output.stderr` and `echo Hello 2>output.stderr` are equivalent, and write the standard error (file descriptor 2) of the target program to `output.stderr`.
 
 \subsection piping Piping
 
@@ -179,7 +178,7 @@ cat foo.txt | head
 
 will call the `cat` program with the parameter 'foo.txt', which will print the contents of the file 'foo.txt'. The contents of foo.txt will then be filtered through the program 'head', which will pass on the first ten lines of the file to the screen. For more information on how to combine commands through pipes, read the manual pages of the commands you want to use using the `man` command. If you want to find out more about the `cat` program, type `man cat`.
 
-Pipes usually connect file descriptor 1 (standard output) of the first process to file descriptor 0 (standard input) of the second process. It is possible use a different output file descriptor by prepending the desired FD number and then output redirect symbol to the pipe. For example:
+Pipes usually connect file descriptor 1 (standard output) of the first process to file descriptor 0 (standard input) of the second process. It is possible to use a different output file descriptor by prepending the desired FD number and then output redirect symbol to the pipe. For example:
 
 \fish
 make fish 2>| less
@@ -332,8 +331,6 @@ These are the general purpose tab completions that `fish` provides:
 - Completion of usernames for tilde expansion.
 
 - Completion of filenames, even on strings with wildcards such as '`*`', '`**`' and '`?`'.
-
-- Completion of job ID, job name and process names for <a href="#expand-process">process expansion</a>.
 
 `fish` provides a large number of program specific completions. Most of these completions are simple options like the `-l` option for `ls`, but some are more advanced. The latter include:
 
@@ -550,11 +547,20 @@ echo The plural of $WORD is {$WORD}s
 
 Note that without the quotes or braces, fish will try to expand a variable called `$WORDs`, which may not exist.
 
-The latter syntax `{$WORD}` works by exploiting <a href="#expand-brace">brace expansion</a>; care should be taken with zero-element array variables and undefined variables, as these expand as a <a href="#cartesian-product">cartesian product</a>, so they eliminate the string.
+The latter syntax `{$WORD}` works by exploiting <a href="#expand-brace">brace expansion</a>.
 
-Variable expansion is the only type of expansion performed on double quoted strings. There is, however, an important difference in how variables are expanded when quoted and when unquoted. An unquoted variable expansion will result in a variable number of arguments. For example, if the variable `$foo` has zero elements or is undefined, the argument `$foo` will expand to zero elements. If the variable $foo is an array of five elements, the argument `$foo` will expand to five elements. When quoted, like `"$foo"`, a variable expansion will always result in exactly one argument. Undefined variables will expand to the empty string, and array variables will be concatenated using the space character.
 
-There is one further notable feature of fish variable expansion. Consider the following code snippet:
+In these cases, the expansion eliminates the string, as a result of the implicit <a href="#cartesian-product">cartesian product</a>.
+
+If, in the example above, $WORD is undefined or an empty list, the "s" is not printed. However, it is printed, if $WORD is the empty string.
+
+Unlike all other expanions, variable expansion also happens in double quoted strings. Inside double quotes (`"these"`), variables will always expand to exactly one argument. If they are empty or undefined, it will result in an empty string. If they have one element, they'll expand to that element. If they have more than that, the elements will be joined with spaces.
+
+Outside of double quotes, variables will expand to as many arguments as they have elements. That means an empty list will expand to nothing, a variable with one element will expand to that element, and a variable with multiple elements will expand to each of those elements separately.
+
+When two unquoted expansions directly follow each other, you need to watch out for expansions that expand to nothing. This includes undefined variables and empty lists, but also command substitutions with no output. See the <a href="#cartesian-product">cartesian product</a> section for more information.
+
+The `$` symbol can also be used multiple times, as a kind of "dereference" operator (the `*` in C or C++), like in the following code:
 
 \fish
 set foo a b c
@@ -569,7 +575,7 @@ end
 # 30
 \endfish
 
-The above code demonstrates how to use multiple '`$`' symbols to expand the value of a variable as a variable name. One can think of the `$` symbol as a variable dereference operator. When using this feature together with array brackets, the brackets will always match the innermost `$` dereference. Thus, `$$foo[5]` will always mean the fifth element of the `foo` variable should be dereferenced, not the fifth element of the doubly dereferenced variable `foo`. The latter can instead be expressed as `$$foo[1][5]`.
+When using this feature together with array brackets, the brackets will always match the innermost `$` dereference. Thus, `$$foo[5]` will always mean the fifth element of the `foo` variable should be dereferenced, not the fifth element of the doubly dereferenced variable `foo`. The latter can instead be expressed as `$$foo[1][5]`.
 
 
 \subsection cartesian-product Cartesian Products
@@ -595,14 +601,37 @@ Examples:
 
 >_ echo {$b}word
 <outp>1word 2word 3word</outp>
+
+>_ echo {$c}word
+<outp># Output is an empty line</outp>
 \endfish
 
-Be careful when you try to use braces to separate variable names from text. The dangers noted in the last example above can be avoided by wrapping the variable in double quotes instead of braces (`echo "$b"word`).
+Be careful when you try to use braces to separate variable names from text. The problem shown above can be avoided by wrapping the variable in double quotes instead of braces (`echo "$c"word`).
 
+This also happens after <a href="#expand-command-substitution">command substitution</a>. Therefore strings might be eliminated. This can be avoided by making the inner command return a trailing newline.
+
+E.g.
+
+\fish{cli-dark}
+>_ echo (printf '%s' '')banana # the printf prints literally nothing
+>_ echo (printf '%s\n' '')banana # the printf prints just a newline, so the command substitution expands to an empty string
+<outp>banana</outp>
+# After command substitution, the previous line looks like:
+>_ echo ""banana
+\endfish
+
+Examples:
+\fish{cli-dark}
+>_ set b 1 2 3
+>_ echo (echo x)$b
+<outp>x1 x2 x3</outp>
+\endfish
 
 \subsection expand-index-range Index range expansion
 
 Both command substitution and shell variable expansion support accessing only specific items by providing a set of indices in square brackets. It's often needed to access a sequence of elements. To do this, use the range operator '`..`' for this. A range '`a..b`', where range limits 'a' and 'b' are integer numbers, is expanded into a sequence of indices '`a a+1 a+2 ... b`' or '`a a-1 a-2 ... b`' depending on which of 'a' or 'b' is higher. The negative range limits are calculated from the end of the array or command substitution. Note that invalid indexes for either end are silently clamped to one or the size of the array as appropriate.
+
+Range expansion will go in reverse if the end element is earlier in the list than the start and forward if the end is later than the start, unless exactly one of the given indices is negative. This is to enable clamping without changing direction if the list has fewer elements than expected.
 
 Some examples:
 
@@ -622,6 +651,11 @@ echo (seq 10)[-1..1]
 # Uses elements from the last output line to
 # the first one in reverse direction
 # Output is: 10 9 8 7 6 5 4 3 2 1
+
+# The command substitution has only one line,
+# so these will result in empty output:
+echo (echo one)[2..-1]
+echo (echo one)[-3..1]
 \endfish
 
 The same works when setting or expanding variables:
@@ -643,31 +677,6 @@ Note that variables can be used as indices for expansion of variables, but not c
 \subsection expand-home Home directory expansion
 
 The `~` (tilde) character at the beginning of a parameter, followed by a username, is expanded into the home directory of the specified user. A lone `~`, or a `~` followed by a slash, is expanded into the home directory of the process owner.
-
-
-\subsection expand-process Process expansion
-
-The `%` (percent) character at the beginning of a parameter followed by a string is expanded into a process ID (PID). The following expansions are performed:
-
-- If the string is the entire word `self`, the shell's PID is the result.
-
-- Otherwise, if the string is the entire word `last`, the last job's PID is the result.
-
-- Otherwise, if the string is the ID of a job, the result is the process group ID of the job.
-
-- Otherwise, if any child processes match the specified string, their PIDs are the result of the expansion.
-
-- Otherwise, if any processes owned by the user match the specified string, their PIDs are the result of the expansion.
-
-- If none of these matches apply, an error is produced.
-
-This form of expansion is useful for commands like kill and fg, which take process IDs as arguments.
-
-Example:
-
-`fg %%ema` will search for a process whose command line begins with the letters 'ema', such as emacs, and if found, put it in the foreground.
-
-`kill -s SIGINT %3` will send the SIGINT signal to the job with job ID 3.
 
 
 \subsection  combine Combining different expansions
@@ -793,9 +802,9 @@ Variables can be explicitly set to be exported with the `-x` or `--export` switc
 
 -# If a variable is not explicitly set to be either exported or not exported and has never before been defined, the variable will not be exported.
 
--# If a variable has local-scope and is exported, any function called receives a _copy_ of it, so any changes it makes to the variable disappear once the function returns.
+-# If a variable has local scope and is exported, any function called receives a _copy_ of it, so any changes it makes to the variable disappear once the function returns.
 
--# If a variable has global-scope, it is accessible read-write to functions whether it is exported or not.
+-# If a variable has global scope, it is accessible read-write to functions whether it is exported or not.
 
 \subsection variables-arrays Arrays
 
@@ -839,7 +848,36 @@ A range of indices can be specified, see <a href='#expand-index-range'>index ran
 
 All arrays are one-dimensional and cannot contain other arrays, although it is possible to fake nested arrays using the dereferencing rules of <a href="#expand-variable">variable expansion</a>.
 
-`fish` automatically creates arrays from the variables `PATH`, `CDPATH` and `MANPATH` when it is started. (Previous versions created arrays from *all* colon-delimited environment variables.)
+When an array is exported as an environment variable, it is either space or colon delimited, depending on whether it is a path variable:
+\fish
+set -x smurf blue small
+set -x smurf_PATH forest mushroom
+env | grep smurf
+<outp>
+# smurf=blue small
+# smurf_PATH=forest:mushroom
+</outp>
+\endfish
+
+`fish` automatically creates arrays from all environment variables whose name ends in PATH, by splitting them on colons. Other variables are not automatically split.
+
+\subsection variables-path PATH variables
+
+Path variables are a special kind of variable used to support colon-delimited path lists including PATH, CDPATH, MANPATH, PYTHONPATH, etc. All variables that end in `PATH` (case-sensitive) become PATH variables.
+
+PATH variables act as normal arrays, except they are are implicitly joined and split on colons.
+\fish
+set MYPATH 1 2 3
+echo "$MYPATH"
+<outp># 1:2:3</outp>
+set MYPATH "$MYPATH:4:5"
+echo $MYPATH
+# 1 2 3 4 5
+echo "$MYPATH"
+<outp># 1:2:3:4:5</outp>
+\endfish
+
+Variables can be marked or unmarked as PATH variables via the `--path` and `--unpath` options to `set`.
 
 \subsection variables-special Special variables
 
@@ -848,6 +886,8 @@ The user can change the settings of `fish` by changing the values of certain var
 - A large number of variable starting with the prefixes `fish_color` and `fish_pager_color.` See <a href='#variables-color'>Variables for changing highlighting colors</a> for more information.
 
 - `fish_emoji_width` controls the computed width of certain characters, in particular emoji, whose rendered width varies across terminal emulators. This should be set to 1 if your terminal emulator renders emoji single-width, or 2 if double-width. Set this only if you see graphical glitching when printing emoji.
+
+- `fish_ambiguous_width` controls the computed width of ambiguous East Asian characters. This should be set to 1 if your terminal emulator renders these characters as single-width (typical), or 2 if double-width.
 
 - `fish_escape_delay_ms` overrides the default timeout of 300ms (default key bindings) or 10ms (vi key bindings) after seeing an escape character before giving up on matching a key binding. See the documentation for the <a href='bind.html#special-case-escape'>bind</a> builtin command. This delay facilitates using escape as a meta key.
 
@@ -1207,12 +1247,12 @@ Note that functions cannot be started in the background. Functions that are stop
 On startup, Fish evaluates a number of configuration files, which can be used to control the behavior of the shell. The location of these configuration variables is controlled by a number of environment variables, and their default or usual location is given below.
 
 Configuration files are evaluated in the following order:
-- Configuration shipped with fish, which should not be edited, in `$__fish_datadir/config.fish` (usually `/usr/share/fish/config.fish`).
-- System-wide configuration files, where administrators can include initialization that should be run for all users on the system - similar to `/etc/profile` for POSIX-style shells - in `$__fish_sysconfdir` (usually `/etc/fish/config.fish`);
+- Configuration shipped with fish, which should not be edited, in `$__fish_data_dir/config.fish` (usually `/usr/share/fish/config.fish`).
+- System-wide configuration files, where administrators can include initialization that should be run for all users on the system - similar to `/etc/profile` for POSIX-style shells - in `$__fish_sysconf_dir` (usually `/etc/fish/config.fish`);
 - Configuration snippets in files ending in `.fish`, in the directories:
   - `$XDG_CONFIG_HOME/fish/conf.d` (by default, `~/.config/fish/conf.d/`)
-  - `$__fish_sysconfdir/conf.d` (by default, `/etc/fish/conf.d`)
-  - `/usr/share/fish/vendor_conf.d` (set at compile time; by default, `$__fish_datadir/conf.d`)
+  - `$__fish_sysconf_dir/conf.d` (by default, `/etc/fish/conf.d`)
+  - `/usr/share/fish/vendor_conf.d` (set at compile time; by default, `$__fish_data_dir/conf.d`)
 
   If there are multiple files with the same name in these directories, only the first will be executed.
   They are executed in order of their filename, sorted (like globs) in a natural order (i.e. "01" sorts before "2").
@@ -1242,11 +1282,34 @@ end
 If you want to run a set of commands when `fish` exits, use an <a href='#event'>event handler</a> that is triggered by the exit of the shell:
 
 \fish
-function on_exit --on-process %self
+function on_exit --on-process $fish_pid
     echo fish is now exiting
 end
 \endfish
 
+\section featureflags Future feature flags
+
+Feature flags are how fish stages changes that might break scripts. Breaking changes are introduced as opt-in, in a few releases they become opt-out, and eventually the old behavior is removed.
+
+You can see the current list of features via `status features`:
+
+\fish
+> status features
+stderr-nocaret  on     3.0      ^ no longer redirects stderr
+qmark-noglob    off    3.0      ? no longer globs
+\endfish
+
+There are two breaking changes in fish 3.0: caret `^` no longer redirects stderr, and question mark `?` is no longer a glob. These changes are off by default. They can be enabled on a per session basis:
+
+\fish
+> fish --features qmark-noglob,stderr-nocaret
+\endfish
+
+or opted into globally for a user:
+
+\fish
+> set -U fish_features stderr-nocaret qmark-noglob
+\endfish
 
 \section other Other features
 
@@ -1269,14 +1332,14 @@ To customize the syntax highlighting, you can set the environment variables list
 
 \subsection title Programmable title
 
-When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the `fish_title` function. The `fish_title` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The $_ environment variable will always contain the name of the job to be put into the foreground (Or 'fish' if control is returning to the shell) when the `fish_prompt` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string, starting with fish 2.2.
+When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the `fish_title` function. The `fish_title` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The `status current-command` builtin will always return the name of the job to be put into the foreground (or 'fish' if control is returning to the shell) when the `fish_prompt` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string, starting with fish 2.2.
 
 Examples:
 The default `fish` title is
 
 \fish
 function fish_title
-    echo $_ ' '
+    echo (status current-command) ' '
     pwd
 end
 \endfish
@@ -1313,7 +1376,7 @@ Example:
 To specify a signal handler for the WINCH signal, write:
 
 \fish
-function --on-signal WINCH my_signal_handler
+function my_signal_handler --on-signal WINCH
     echo Got WINCH signal!
 end
 \endfish
@@ -1330,11 +1393,6 @@ Fish includes a built in debugging facility. The debugger allows you to stop exe
 To start a debug session simply run the builtin command `breakpoint` at the point in a function or script where you wish to gain control. Also, the default action of the TRAP signal is to call this builtin. So a running script can be debugged by sending it the TRAP signal with the `kill` command. Once in the debugger, it is easy to insert new breakpoints by using the funced function to edit the definition of a function.
 
 Note: At the moment the debug prompt is identical to your normal fish prompt. This can make it hard to recognize that you've entered a debug session. <a hread="https://github.com/fish-shell/fish-shell/issues/1310">Issue 1310</a> is open to improve this.
-
-
-\section issues Common issues with fish
-
-If you install fish in your home directory, fish will not work correctly for any other user than yourself. This is because fish needs its initialization files to function properly. To solve this problem, either copy the initialization files to each fish users home directory, or install them in `/etc`.
 
 
 \section more-help Further help and development

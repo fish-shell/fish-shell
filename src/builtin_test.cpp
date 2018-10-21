@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <wchar.h>
 
+#include <cmath>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -23,8 +24,7 @@
 using std::unique_ptr;
 using std::move;
 
-int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv);
-
+namespace {
 namespace test_expressions {
 
 enum token_t {
@@ -72,6 +72,36 @@ enum token_t {
 
     test_paren_open,   // "(", open paren
     test_paren_close,  // ")", close paren
+};
+
+/// Our number type. We support both doubles and long longs. We have to support these separately
+/// because some integers are not representable as doubles; these may come up in practice (e.g.
+/// inodes).
+class number_t {
+    // A number has an integral base and a floating point delta.
+    // Conceptually the number is base + delta.
+    // We enforce the property that 0 <= delta < 1.
+    long long base;
+    double delta;
+
+   public:
+    number_t(long long base, double delta) : base(base), delta(delta) {
+        assert(0.0 <= delta && delta < 1.0 && "Invalid delta");
+    }
+    number_t() : number_t(0, 0.0) {}
+
+    // Compare two numbers. Returns an integer -1, 0, 1 corresponding to whether we are less than,
+    // equal to, or greater than the rhs.
+    int compare(number_t rhs) const {
+        if (this->base != rhs.base) return (this->base > rhs.base) - (this->base < rhs.base);
+        return (this->delta > rhs.delta) - (this->delta < rhs.delta);
+    }
+
+    // Return true if the number is a tty()/
+    bool isatty() const {
+        if (delta != 0.0 || base > INT_MAX || base < INT_MIN) return false;
+        return ::isatty(static_cast<int>(base));
+    }
 };
 
 static bool binary_primary_evaluate(test_expressions::token_t token, const wcstring &left,
@@ -599,22 +629,54 @@ bool parenthetical_expression::evaluate(wcstring_list_t &errors) {
     return contents->evaluate(errors);
 }
 
+// Parse a double from arg. Return true on success, false on failure.
+static bool parse_double(const wchar_t *arg, double *out_res) {
+    // Consume leading spaces.
+    while (arg && *arg != L'\0' && iswspace(*arg)) arg++;
+    errno = 0;
+    wchar_t *end = NULL;
+    *out_res = wcstod_l(arg, &end, fish_c_locale());
+    // Consume trailing spaces.
+    while (end && *end != L'\0' && iswspace(*end)) end++;
+    return errno == 0 && end > arg && *end == L'\0';
+}
+
 // IEEE 1003.1 says nothing about what it means for two strings to be "algebraically equal". For
 // example, should we interpret 0x10 as 0, 10, or 16? Here we use only base 10 and use wcstoll,
 // which allows for leading + and -, and whitespace. This is consistent, albeit a bit more lenient
 // since we allow trailing whitespace, with other implementations such as bash.
-static bool parse_number(const wcstring &arg, long long *out, wcstring_list_t &errors) {
-    *out = fish_wcstoll(arg.c_str());
-    if (errno) {
-        errors.push_back(format_string(_(L"invalid integer '%ls'"), arg.c_str()));
+static bool parse_number(const wcstring &arg, number_t *number, wcstring_list_t &errors) {
+    const wchar_t *argcs = arg.c_str();
+    double floating = 0;
+    bool got_float = parse_double(argcs, &floating);
+
+    errno = 0;
+    long long integral = fish_wcstoll(argcs);
+    bool got_int = (errno == 0);
+    if (got_int) {
+        // Here the value is just an integer; ignore the floating point parse because it may be
+        // invalid (e.g. not a representable integer).
+        *number = number_t{integral, 0.0};
+        return true;
+    } else if (got_float) {
+        // Here we parsed an (in range) floating point value that could not be parsed as an integer.
+        // Break the floating point value into base and delta. Ensure that base is <= the floating
+        // point value.
+        double intpart = std::floor(floating);
+        double delta = floating - intpart;
+        *number = number_t{static_cast<long long>(intpart), delta};
+        return true;
+    } else {
+        // We could not parse a float or an int.
+        errors.push_back(format_string(_(L"invalid number '%ls'"), arg.c_str()));
+        return false;
     }
-    return !errno;
 }
 
 static bool binary_primary_evaluate(test_expressions::token_t token, const wcstring &left,
                                     const wcstring &right, wcstring_list_t &errors) {
     using namespace test_expressions;
-    long long left_num, right_num;
+    number_t ln, rn;
     switch (token) {
         case test_string_equal: {
             return left == right;
@@ -623,28 +685,28 @@ static bool binary_primary_evaluate(test_expressions::token_t token, const wcstr
             return left != right;
         }
         case test_number_equal: {
-            return parse_number(left, &left_num, errors) &&
-                   parse_number(right, &right_num, errors) && left_num == right_num;
+            return parse_number(left, &ln, errors) && parse_number(right, &rn, errors) &&
+                   ln.compare(rn) == 0;
         }
         case test_number_not_equal: {
-            return parse_number(left, &left_num, errors) &&
-                   parse_number(right, &right_num, errors) && left_num != right_num;
+            return parse_number(left, &ln, errors) && parse_number(right, &rn, errors) &&
+                   ln.compare(rn) != 0;
         }
         case test_number_greater: {
-            return parse_number(left, &left_num, errors) &&
-                   parse_number(right, &right_num, errors) && left_num > right_num;
+            return parse_number(left, &ln, errors) && parse_number(right, &rn, errors) &&
+                   ln.compare(rn) > 0;
         }
         case test_number_greater_equal: {
-            return parse_number(left, &left_num, errors) &&
-                   parse_number(right, &right_num, errors) && left_num >= right_num;
+            return parse_number(left, &ln, errors) && parse_number(right, &rn, errors) &&
+                   ln.compare(rn) >= 0;
         }
         case test_number_lesser: {
-            return parse_number(left, &left_num, errors) &&
-                   parse_number(right, &right_num, errors) && left_num < right_num;
+            return parse_number(left, &ln, errors) && parse_number(right, &rn, errors) &&
+                   ln.compare(rn) < 0;
         }
         case test_number_lesser_equal: {
-            return parse_number(left, &left_num, errors) &&
-                   parse_number(right, &right_num, errors) && left_num <= right_num;
+            return parse_number(left, &ln, errors) && parse_number(right, &rn, errors) &&
+                   ln.compare(rn) <= 0;
         }
         default: {
             errors.push_back(format_string(L"Unknown token type in %s", __func__));
@@ -657,7 +719,6 @@ static bool unary_primary_evaluate(test_expressions::token_t token, const wcstri
                                    wcstring_list_t &errors) {
     using namespace test_expressions;
     struct stat buf;
-    long long num;
     switch (token) {
         case test_filetype_b: {  // "-b", for block special files
             return !wstat(arg, &buf) && S_ISBLK(buf.st_mode);
@@ -704,7 +765,8 @@ static bool unary_primary_evaluate(test_expressions::token_t token, const wcstri
             return !wstat(arg, &buf) && buf.st_size > 0;
         }
         case test_filedesc_t: {  // "-t", whether the fd is associated with a terminal
-            return parse_number(arg, &num, errors) && num == (int)num && isatty((int)num);
+            number_t num;
+            return parse_number(arg, &num, errors) && num.isatty();
         }
         case test_fileperm_r: {  // "-r", read permission
             return !waccess(arg, R_OK);
@@ -731,6 +793,7 @@ static bool unary_primary_evaluate(test_expressions::token_t token, const wcstri
     }
 }
 };  // namespace test_expressions
+};  // anonymous namespace
 
 /// Evaluate a conditional expression given the arguments. If fromtest is set, the caller is the
 /// test or [ builtin; with the pointer giving the name of the command. for POSIX conformance this

@@ -102,6 +102,7 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     const wcstring ft = tok_first(j->command());
+    //For compatibility with fish 2.0's $_, now replaced with `status current-command`
     if (!ft.empty()) env_set_one(L"_", ENV_EXPORT, ft);
     reader_write_title(j->command());
 

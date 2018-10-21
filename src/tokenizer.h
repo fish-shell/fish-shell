@@ -7,6 +7,7 @@
 
 #include "common.h"
 #include "maybe.h"
+#include "parse_constants.h"
 
 /// Token types.
 enum token_type {
@@ -20,17 +21,6 @@ enum token_type {
     TOK_REDIRECT,    /// redirection token
     TOK_BACKGROUND,  /// send job to bg token
     TOK_COMMENT      /// comment token
-};
-
-/// Tokenizer error types.
-enum tokenizer_error {
-    TOK_ERROR_NONE,
-    TOK_UNTERMINATED_QUOTE,
-    TOK_UNTERMINATED_SUBSHELL,
-    TOK_UNTERMINATED_SLICE,
-    TOK_UNTERMINATED_ESCAPE,
-    TOK_INVALID_REDIRECT,
-    TOK_INVALID_PIPE
 };
 
 enum class redirection_type_t {
@@ -54,6 +44,25 @@ enum class redirection_type_t {
 
 typedef unsigned int tok_flags_t;
 
+enum class tokenizer_error_t {
+    none,
+    unterminated_quote,
+    unterminated_subshell,
+    unterminated_slice,
+    unterminated_escape,
+    invalid_redirect,
+    invalid_pipe,
+    closing_unopened_subshell,
+    illegal_slice,
+    closing_unopened_brace,
+    unterminated_brace,
+    expected_pclose_found_bclose,
+    expected_bclose_found_pclose,
+};
+
+/// Get the error message for an error \p err.
+wcstring tokenizer_get_error_message(tokenizer_error_t err);
+
 struct tok_t {
     // The type of the token.
     token_type type{TOK_NONE};
@@ -67,7 +76,10 @@ struct tok_t {
     maybe_t<int> redirected_fd{};
 
     // If an error, this is the error code.
-    enum tokenizer_error error { TOK_ERROR_NONE };
+    tokenizer_error_t error{tokenizer_error_t::none};
+
+    // Whether the token was preceded by an escaped newline.
+    bool preceding_escaped_nl{false};
 
     // If an error, this is the offset of the error within the token. A value of 0 means it occurred
     // at 'offset'.
@@ -97,7 +109,7 @@ class tokenizer_t {
     /// Whether to continue the previous line after the comment.
     bool continue_line_after_comment{false};
 
-    tok_t call_error(enum tokenizer_error error_type, const wchar_t *token_start,
+    tok_t call_error(tokenizer_error_t error_type, const wchar_t *token_start,
                      const wchar_t *error_loc);
     tok_t read_string();
     maybe_t<tok_t> tok_next();
@@ -139,9 +151,6 @@ int fd_redirected_by_pipe(const wcstring &str);
 
 /// Helper function to return oflags (as in open(2)) for a redirection type.
 int oflags_for_redirection_type(redirection_type_t type);
-
-/// Returns an error message for an error code.
-wcstring error_message_for_code(tokenizer_error err);
 
 enum move_word_style_t {
     move_word_style_punctuation,      // stop at punctuation

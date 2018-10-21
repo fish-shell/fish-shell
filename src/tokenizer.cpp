@@ -13,51 +13,50 @@
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "future_feature_flags.h"
 #include "tokenizer.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-/// Error string for unexpected end of string.
-#define QUOTE_ERROR _(L"Unexpected end of string, quotes are not balanced")
-
-/// Error string for mismatched parenthesis.
-#define PARAN_ERROR _(L"Unexpected end of string, parenthesis do not match")
-
-/// Error string for mismatched square brackets.
-#define SQUARE_BRACKET_ERROR _(L"Unexpected end of string, square brackets do not match")
-
-/// Error string for unterminated escape (backslash without continuation).
-#define UNTERMINATED_ESCAPE_ERROR _(L"Unexpected end of string, incomplete escape sequence")
-
-/// Error string for invalid redirections.
-#define REDIRECT_ERROR _(L"Invalid input/output redirection")
-
-/// Error string for when trying to pipe from fd 0.
-#define PIPE_ERROR _(L"Cannot use stdin (fd 0) as pipe output")
-
-wcstring error_message_for_code(tokenizer_error err) {
+wcstring tokenizer_get_error_message(tokenizer_error_t err) {
     switch (err) {
-        case TOK_UNTERMINATED_QUOTE:
-            return QUOTE_ERROR;
-        case TOK_UNTERMINATED_SUBSHELL:
-            return PARAN_ERROR;
-        case TOK_UNTERMINATED_SLICE:
-            return SQUARE_BRACKET_ERROR;
-        case TOK_UNTERMINATED_ESCAPE:
-            return UNTERMINATED_ESCAPE_ERROR;
-        case TOK_INVALID_REDIRECT:
-            return REDIRECT_ERROR;
-        case TOK_INVALID_PIPE:
-            return PIPE_ERROR;
-        default:
-            assert(0 && "Unknown error type");
-            return {};
+        case tokenizer_error_t::none:
+            return L"";
+        case tokenizer_error_t::unterminated_quote:
+            return _(L"Unexpected end of string, quotes are not balanced");
+        case tokenizer_error_t::unterminated_subshell:
+            return _(L"Unexpected end of string, expecting ')'");
+        case tokenizer_error_t::unterminated_slice:
+            return _(L"Unexpected end of string, square brackets do not match");
+        case tokenizer_error_t::unterminated_escape:
+            return _(L"Unexpected end of string, incomplete escape sequence");
+        case tokenizer_error_t::invalid_redirect:
+            return _(L"Invalid input/output redirection");
+        case tokenizer_error_t::invalid_pipe:
+            return _(L"Cannot use stdin (fd 0) as pipe output");
+        case tokenizer_error_t::closing_unopened_subshell:
+            return _(L"Unexpected ')' for unopened parenthesis");
+        case tokenizer_error_t::illegal_slice:
+            return _(L"Unexpected '[' at this location");
+        case tokenizer_error_t::closing_unopened_brace:
+            return _(L"Unexpected '}' for unopened brace expansion");
+        case tokenizer_error_t::unterminated_brace:
+            return _(L"Unexpected end of string, incomplete parameter expansion");
+        case tokenizer_error_t::expected_pclose_found_bclose:
+            return _(L"Unexpected '}' found, expecting ')'");
+        case tokenizer_error_t::expected_bclose_found_pclose:
+            return _(L"Unexpected ')' found, expecting '}'");
     }
+    assert(0 && "Unexpected tokenizer error");
+    return NULL;
 }
 
+// Whether carets redirect stderr.
+static bool caret_redirs() { return !feature_test(features_t::stderr_nocaret); }
+
 /// Return an error token and mark that we no longer have a next token.
-tok_t tokenizer_t::call_error(enum tokenizer_error error_type, const wchar_t *token_start,
+tok_t tokenizer_t::call_error(tokenizer_error_t error_type, const wchar_t *token_start,
                               const wchar_t *error_loc) {
-    assert(error_type != TOK_ERROR_NONE && "TOK_ERROR_NONE passed to call_error");
+    assert(error_type != tokenizer_error_t::none && "tokenizer_error_t::none passed to call_error");
     assert(error_loc >= token_start && "Invalid error location");
     assert(this->buff >= token_start && "Invalid buff location");
 
@@ -110,7 +109,7 @@ static bool tok_is_string_character(wchar_t c, bool is_first) {
         }
         case L'^': {
             // Conditional separator.
-            return !is_first;
+            return !caret_redirs() || !is_first;
         }
         default: { return true; }
     }
@@ -119,194 +118,164 @@ static bool tok_is_string_character(wchar_t c, bool is_first) {
 /// Quick test to catch the most common 'non-magical' characters, makes read_string slightly faster
 /// by adding a fast path for the most common characters. This is obviously not a suitable
 /// replacement for iswalpha.
-static int myal(wchar_t c) { return (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z'); }
+static inline int myal(wchar_t c) { return (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z'); }
+
+namespace tok_modes {
+enum {
+    regular_text = 0,         // regular text
+    subshell = 1 << 0,        // inside of subshell parentheses
+    array_brackets = 1 << 1,  // inside of array brackets
+    curly_braces = 1 << 2,
+    char_escape = 1 << 3,
+};
+}
+using tok_mode_t = uint32_t;
 
 /// Read the next token as a string.
 tok_t tokenizer_t::read_string() {
-    bool do_loop = true;
-    size_t paran_count = 0;
-    // Up to 96 open parens, before we give up on good error reporting.
-    const size_t paran_offsets_max = 96;
-    size_t paran_offsets[paran_offsets_max];
-    // Where the open bracket is.
-    size_t offset_of_bracket = 0;
+    tok_mode_t mode{tok_modes::regular_text};
+    std::vector<int> paran_offsets;
+    std::vector<int> brace_offsets;
+    std::vector<char> expecting;
+    int slice_offset = 0;
     const wchar_t *const buff_start = this->buff;
     bool is_first = true;
 
-    enum tok_mode_t {
-        mode_regular_text = 0,    // regular text
-        mode_subshell = 1,        // inside of subshell
-        mode_array_brackets = 2,  // inside of array brackets
-        mode_array_brackets_and_subshell =
-            3  // inside of array brackets and subshell, like in '$foo[(ech'
-    } mode = mode_regular_text;
+    while (true) {
+        wchar_t c = *this->buff;
+#if false
+        wcstring msg = L"Handling 0x%x (%lc)";
+        tok_mode mode_begin = mode;
+#endif
 
-    while (1) {
-        if (!myal(*this->buff)) {
-            if (*this->buff == L'\\') {
-                const wchar_t *error_location = this->buff;
-                this->buff++;
-                if (*this->buff == L'\0') {
-                    if ((!this->accept_unfinished)) {
-                        return this->call_error(TOK_UNTERMINATED_ESCAPE, buff_start,
-                                                error_location);
-                    }
-                    // Since we are about to increment tok->buff, decrement it first so the
-                    // increment doesn't go past the end of the buffer. See issue #389.
-                    this->buff--;
-                    do_loop = 0;
-                }
-
-                this->buff++;
-                continue;
-            }
-
-            switch (mode) {
-                case mode_regular_text: {
-                    switch (*this->buff) {
-                        case L'(': {
-                            paran_count = 1;
-                            paran_offsets[0] = this->buff - this->start;
-                            mode = mode_subshell;
-                            break;
-                        }
-                        case L'[': {
-                            if (this->buff != buff_start) {
-                                mode = mode_array_brackets;
-                                offset_of_bracket = this->buff - this->start;
-                            }
-                            break;
-                        }
-                        case L'\'':
-                        case L'"': {
-                            const wchar_t *end = quote_end(this->buff);
-                            if (end) {
-                                this->buff = end;
-                            } else {
-                                const wchar_t *error_loc = this->buff;
-                                this->buff += wcslen(this->buff);
-
-                                if (!this->accept_unfinished) {
-                                    return this->call_error(TOK_UNTERMINATED_QUOTE, buff_start,
-                                                            error_loc);
-                                }
-                                do_loop = 0;
-                            }
-                            break;
-                        }
-                        default: {
-                            if (!tok_is_string_character(*(this->buff), is_first)) {
-                                do_loop = 0;
-                            }
-                            break;
-                        }
-                    }
-                    break;
-                }
-
-                case mode_array_brackets_and_subshell:
-                case mode_subshell: {
-                    switch (*this->buff) {
-                        case L'\'':
-                        case L'\"': {
-                            const wchar_t *end = quote_end(this->buff);
-                            if (end) {
-                                this->buff = end;
-                            } else {
-                                const wchar_t *error_loc = this->buff;
-                                this->buff += wcslen(this->buff);
-                                if ((!this->accept_unfinished)) {
-                                    return this->call_error(TOK_UNTERMINATED_QUOTE, buff_start,
-                                                            error_loc);
-                                }
-                                do_loop = 0;
-                            }
-                            break;
-                        }
-                        case L'(': {
-                            if (paran_count < paran_offsets_max) {
-                                paran_offsets[paran_count] = this->buff - this->start;
-                            }
-                            paran_count++;
-                            break;
-                        }
-                        case L')': {
-                            assert(paran_count > 0);
-                            paran_count--;
-                            if (paran_count == 0) {
-                                mode =
-                                    (mode == mode_array_brackets_and_subshell ? mode_array_brackets
-                                                                              : mode_regular_text);
-                            }
-                            break;
-                        }
-                        case L'\0': {
-                            do_loop = 0;
-                            break;
-                        }
-                        default: {
-                            break;  // ignore other chars
-                        }
-                    }
-                    break;
-                }
-
-                case mode_array_brackets: {
-                    switch (*this->buff) {
-                        case L'(': {
-                            paran_count = 1;
-                            paran_offsets[0] = this->buff - this->start;
-                            mode = mode_array_brackets_and_subshell;
-                            break;
-                        }
-                        case L']': {
-                            mode = mode_regular_text;
-                            break;
-                        }
-                        case L'\0': {
-                            do_loop = 0;
-                            break;
-                        }
-                        default: {
-                            break;  // ignore other chars
-                        }
-                    }
-                    break;
-                }
-            }
+        if (c == L'\0') {
+            break;
         }
 
-        if (!do_loop) break;
+        // Make sure this character isn't being escaped before anything else
+        if ((mode & tok_modes::char_escape) == tok_modes::char_escape) {
+            mode &= ~(tok_modes::char_escape);
+            // and do nothing more
+        } else if (myal(c)) {
+            // Early exit optimization in case the character is just a letter,
+            // which has no special meaning to the tokenizer, i.e. the same mode continues.
+        }
+
+        // Now proceed with the evaluation of the token, first checking to see if the token
+        // has been explicitly ignored (escaped).
+        else if (c == L'\\') {
+            mode |= tok_modes::char_escape;
+        } else if (c == L'(') {
+            paran_offsets.push_back(this->buff - this->start);
+            expecting.push_back(L')');
+            mode |= tok_modes::subshell;
+        } else if (c == L'{') {
+            brace_offsets.push_back(this->buff - this->start);
+            expecting.push_back(L'}');
+            mode |= tok_modes::curly_braces;
+        } else if (c == L')') {
+            if (expecting.size() > 0 && expecting.back() == L'}') {
+                return this->call_error(tokenizer_error_t::expected_bclose_found_pclose,
+                                        this->start, this->buff);
+            }
+            switch (paran_offsets.size()) {
+                case 0:
+                    return this->call_error(tokenizer_error_t::closing_unopened_subshell,
+                                            this->start, this->buff);
+                case 1:
+                    mode &= ~(tok_modes::subshell);
+                default:
+                    paran_offsets.pop_back();
+            }
+            expecting.pop_back();
+        } else if (c == L'}') {
+            if (expecting.size() > 0 && expecting.back() == L')') {
+                return this->call_error(tokenizer_error_t::expected_pclose_found_bclose,
+                                        this->start, this->buff);
+            }
+            switch (brace_offsets.size()) {
+                case 0:
+                    return this->call_error(tokenizer_error_t::closing_unopened_brace, this->start,
+                                            this->buff);
+                case 1:
+                    mode &= ~(tok_modes::curly_braces);
+                default:
+                    brace_offsets.pop_back();
+            }
+            expecting.pop_back();
+        } else if (c == L'[') {
+            if (this->buff != buff_start) {
+                if ((mode & tok_modes::array_brackets) == tok_modes::array_brackets) {
+                    // Nested brackets should not overwrite the existing slice_offset
+                    // mqudsi: TOK_ILLEGAL_SLICE is the right error here, but the shell
+                    // prints an error message with the caret pointing at token_start,
+                    // not err_loc, making the TOK_ILLEGAL_SLICE message misleading.
+                    // return call_error(TOK_ILLEGAL_SLICE, buff_start, this->buff);
+                    return this->call_error(tokenizer_error_t::unterminated_slice, this->start,
+                                            this->buff);
+                }
+                slice_offset = this->buff - this->start;
+                mode |= tok_modes::array_brackets;
+            } else {
+                // This is actually allowed so the test operator `[` can be used as the head of a
+                // command
+            }
+        }
+        // Only exit bracket mode if we are in bracket mode.
+        // Reason: `]` can be a parameter, e.g. last parameter to `[` test alias.
+        // e.g. echo $argv[([ $x -eq $y ])] # must not end bracket mode on first bracket
+        else if (c == L']' && ((mode & tok_modes::array_brackets) == tok_modes::array_brackets)) {
+            mode &= ~(tok_modes::array_brackets);
+        } else if (c == L'\'' || c == L'"') {
+            const wchar_t *end = quote_end(this->buff);
+            if (end) {
+                this->buff = end;
+            } else {
+                const wchar_t *error_loc = this->buff;
+                this->buff += wcslen(this->buff);
+                if ((!this->accept_unfinished)) {
+                    return this->call_error(tokenizer_error_t::unterminated_quote, buff_start,
+                                            error_loc);
+                }
+                break;
+            }
+        } else if (mode == tok_modes::regular_text && !tok_is_string_character(c, is_first)) {
+            break;
+        }
+
+#if false
+        if (mode != mode_begin) {
+            msg.append(L": mode 0x%x -> 0x%x\n");
+        } else {
+            msg.push_back(L'\n');
+        }
+        debug(0, msg.c_str(), c, c, int(mode_begin), int(mode));
+#endif
 
         this->buff++;
         is_first = false;
     }
 
-    if ((!this->accept_unfinished) && (mode != mode_regular_text)) {
+    if ((!this->accept_unfinished) && (mode != tok_modes::regular_text)) {
         tok_t error;
-        switch (mode) {
-            case mode_subshell: {
-                // Determine the innermost opening paran offset by interrogating paran_offsets.
-                assert(paran_count > 0);
-                size_t offset_of_open_paran = 0;
-                if (paran_count <= paran_offsets_max) {
-                    offset_of_open_paran = paran_offsets[paran_count - 1];
-                }
+        if ((mode & tok_modes::char_escape) == tok_modes::char_escape) {
+            error = this->call_error(tokenizer_error_t::unterminated_escape, buff_start,
+                                     this->buff - 1);
+        } else if ((mode & tok_modes::array_brackets) == tok_modes::array_brackets) {
+            error = this->call_error(tokenizer_error_t::unterminated_slice, buff_start,
+                                     this->start + slice_offset);
+        } else if ((mode & tok_modes::subshell) == tok_modes::subshell) {
+            assert(paran_offsets.size() > 0);
+            size_t offset_of_open_paran = paran_offsets.back();
 
-                error = this->call_error(TOK_UNTERMINATED_SUBSHELL, buff_start,
-                                         this->start + offset_of_open_paran);
-                break;
-            }
-            case mode_array_brackets:
-            case mode_array_brackets_and_subshell: {
-                error = this->call_error(TOK_UNTERMINATED_SLICE, buff_start,
-                                         this->start + offset_of_bracket);
-                break;
-            }
-            default: {
-                DIE("unexpected mode in read_string");
-                break;
-            }
+            error = this->call_error(tokenizer_error_t::unterminated_subshell, buff_start,
+                                     this->start + offset_of_open_paran);
+        } else if ((mode & tok_modes::curly_braces) == tok_modes::curly_braces) {
+            assert(brace_offsets.size() > 0);
+            size_t offset_of_open_brace = brace_offsets.back();
+
+            error = this->call_error(tokenizer_error_t::unterminated_brace, buff_start,
+                                     this->start + offset_of_open_brace);
         }
         return error;
     }
@@ -362,7 +331,11 @@ static maybe_t<parsed_redir_or_pipe_t> read_redirection_or_fd_pipe(const wchar_t
                 break;
             }
             case L'^': {
-                result.fd = STDERR_FILENO;
+                if (caret_redirs()) {
+                    result.fd = STDERR_FILENO;
+                } else {
+                    errored = true;
+                }
                 break;
             }
             default: {
@@ -375,7 +348,7 @@ static maybe_t<parsed_redir_or_pipe_t> read_redirection_or_fd_pipe(const wchar_t
     // Either way we should have ended on the redirection character itself like '>'.
     // Don't allow an fd with a caret redirection - see #1873
     wchar_t redirect_char = buff[idx++];  // note increment of idx
-    if (redirect_char == L'>' || (redirect_char == L'^' && idx == 1)) {
+    if (redirect_char == L'>' || (redirect_char == L'^' && idx == 1 && caret_redirs())) {
         result.redirection_mode = redirection_type_t::overwrite;
         if (buff[idx] == redirect_char) {
             // Doubled up like ^^ or >>. That means append.
@@ -469,10 +442,12 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
     }
 
     // Consume non-newline whitespace. If we get an escaped newline, mark it and continue past it.
+    bool preceding_escaped_nl = false;
     for (;;) {
         if (this->buff[0] == L'\\' && this->buff[1] == L'\n') {
             this->buff += 2;
             this->continue_line_after_comment = true;
+            preceding_escaped_nl = true;
         } else if (iswspace_not_nl(this->buff[0])) {
             this->buff++;
         } else {
@@ -495,6 +470,7 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
             result.type = TOK_COMMENT;
             result.offset = comment_start - this->start;
             result.length = comment_len;
+            result.preceding_escaped_nl = preceding_escaped_nl;
             return result;
         }
         while (iswspace_not_nl(this->buff[0])) this->buff++;
@@ -553,13 +529,13 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
             break;
         }
         case L'>':
-        case L'<':
-        case L'^': {
+        case L'<': {
             // There's some duplication with the code in the default case below. The key difference
             // here is that we must never parse these as a string; a failed redirection is an error!
             auto redir_or_pipe = read_redirection_or_fd_pipe(this->buff);
             if (!redir_or_pipe || redir_or_pipe->fd < 0) {
-                return this->call_error(TOK_INVALID_REDIRECT, this->buff, this->buff);
+                return this->call_error(tokenizer_error_t::invalid_redirect, this->buff,
+                                        this->buff);
             }
             result.type = redir_or_pipe->type;
             result.redirected_fd = redir_or_pipe->fd;
@@ -571,7 +547,7 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
             // Maybe a redirection like '2>&1', maybe a pipe like 2>|, maybe just a string.
             const wchar_t *error_location = this->buff;
             maybe_t<parsed_redir_or_pipe_t> redir_or_pipe;
-            if (iswdigit(*this->buff)) {
+            if (iswdigit(*this->buff) || (*this->buff == L'^' && caret_redirs())) {
                 redir_or_pipe = read_redirection_or_fd_pipe(this->buff);
             }
 
@@ -580,7 +556,8 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
                 // that fd 0 may be -1, indicating overflow; but we don't treat that as a tokenizer
                 // error.
                 if (redir_or_pipe->type == TOK_PIPE && redir_or_pipe->fd == 0) {
-                    return this->call_error(TOK_INVALID_PIPE, error_location, error_location);
+                    return this->call_error(tokenizer_error_t::invalid_pipe, error_location,
+                                            error_location);
                 }
                 result.type = redir_or_pipe->type;
                 result.redirected_fd = redir_or_pipe->fd;
@@ -593,6 +570,7 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
             break;
         }
     }
+    result.preceding_escaped_nl = preceding_escaped_nl;
     return result;
 }
 

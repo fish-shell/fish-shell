@@ -40,16 +40,16 @@ class maybe_t {
     /* implicit */ maybe_t(const T &v) : filled(true) { new (storage) T(v); }
 
     // Copy constructor.
-    maybe_t(const maybe_t &v) {
+    maybe_t(const maybe_t &v) : filled(v.filled) {
         if (v.filled) {
             new (storage) T(v.value());
         }
     }
 
     // Move constructor.
-    /* implicit */ maybe_t(maybe_t &&v) {
+    /* implicit */ maybe_t(maybe_t &&v) : filled(v.filled) {
         if (v.filled) {
-            *this = std::move(v.value());
+            new (storage) T(std::move(v.value()));
         }
     }
 
@@ -62,6 +62,14 @@ class maybe_t {
     const T &value() const {
         assert(filled && "maybe_t does not have a value");
         return *reinterpret_cast<const T *>(storage);
+    }
+
+    // Transfer the value to the caller.
+    T acquire() {
+        assert(filled && "maybe_t does not have a value");
+        T res = std::move(value());
+        reset();
+        return res;
     }
 
     // Clear the value.

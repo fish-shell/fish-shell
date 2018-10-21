@@ -12,6 +12,7 @@
 #include "common.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "parser.h"
 #include "proc.h"
 #include "reader.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -233,6 +234,12 @@ static void handle_int(int sig, siginfo_t *info, void *context) {
     default_handler(sig, info, context);
 }
 
+/// Non-interactive ^C handler.
+static void handle_int_notinteractive(int sig, siginfo_t *info, void *context) {
+    parser_t::skip_all_blocks();
+    default_handler(sig, info, context);
+}
+
 /// sigchld handler. Does notification and calls the handler in proc.c.
 static void handle_chld(int sig, siginfo_t *info, void *context) {
     job_handle_signal(sig, info, context);
@@ -317,11 +324,12 @@ static void set_non_interactive_handlers() {
     act.sa_flags = 0;
     sigemptyset(&act.sa_mask);
 
-    // Non-interactive. Ignore interrupt, check exit status of processes to determine result
-    // instead.
     act.sa_handler = SIG_IGN;
-    sigaction(SIGINT, &act, 0);
     sigaction(SIGQUIT, &act, 0);
+
+    act.sa_sigaction = &handle_int_notinteractive;
+    act.sa_flags = SA_SIGINFO;
+    sigaction(SIGINT, &act, NULL);
 }
 
 /// Sets up appropriate signal handlers.

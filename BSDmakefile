@@ -1,25 +1,44 @@
-JARG =
-GMAKE = "gmake"
-#When gmake is called from another make instance, -w is automatically added
-#which causes extraneous messages about directory changes to be emitted.
-#--no-print-directory silences these messages.
-GARGS = "--no-print-directory"
-
-.if "$(.MAKE.JOBS)" != ""
-JARG = -j$(.MAKE.JOBS)
-.endif
-
-#by default bmake will cd into ./obj first
+# by default bmake will cd into ./obj first
 .OBJDIR: ./
 
-.PHONY: FRC
-$(.TARGETS): FRC
-	$(GMAKE) $(GARGS) $(.TARGETS:S,.DONE,,) $(JARG)
+.BEGIN:
+	# test for cmake, which is the only requirement to be able to run this Makefile
+	# cmake will perform the remaining dependency tests on its own
+	@which cmake >/dev/null 2>/dev/null || (echo 'Please install cmake and then re-run the `make` command!' 1>&2 && false)
 
-.DONE .DEFAULT: .SILENT
-	$(GMAKE) $(GARGS) $(.TARGETS:S,.DONE,,) $(JARG)
+# Use ninja, if it is installed
+_GENERATOR!=which ninja 2>/dev/null >/dev/null && echo Ninja || echo "'Unix Makefiles'"
+GENERATOR?=$(_GENERATOR)
+PREFIX?=/usr/local
 
-.ERROR: .SILENT
-	if ! which $(GMAKE) > /dev/null; then \
-		echo "GNU Make is required!"; \
-	fi
+.if $(GENERATOR) == "Ninja"
+BUILDFILE=build/build.ninja
+.else
+BUILDFILE=build/Makefile
+.endif
+
+.DEFAULT: build/fish
+build/fish: build/$(BUILDFILE)
+	cmake --build build
+
+build:
+	mkdir -p build
+
+build/$(BUILDFILE): build
+	cd build; cmake .. -G $(GENERATOR) -DCMAKE_INSTALL_PREFIX=$(PREFIX) -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+
+.PHONY: install
+install: build/fish
+	cmake --build build --target install
+
+.PHONY: clean
+clean:
+	rm -rf build
+
+.PHONY: test
+test: build/fish
+	cmake --build build --target test
+
+.PHONY: run
+run: build/fish
+	build/fish

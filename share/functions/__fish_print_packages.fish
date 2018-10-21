@@ -1,5 +1,12 @@
-
+# Use --installed to limit to installed packages only
 function __fish_print_packages
+    argparse --name=__fish_print_packages 'i/installed' -- $argv
+    or return;
+
+    set -l only_installed 1
+    if not set -q _flag_installed
+        set -e only_installed
+    end
 
     # apt-cache is much, much faster than rpm, and can do this in real
     # time. We use it if available.
@@ -12,17 +19,21 @@ function __fish_print_packages
     #Get the word 'Package' in the current language
     set -l package (_ "Package")
 
-    # Set up cache directory
-    if test -z "$XDG_CACHE_HOME"
-        set XDG_CACHE_HOME $HOME/.cache
-    end
-    mkdir -m 700 -p $XDG_CACHE_HOME
-
     if type -q -f apt-cache
-        # Do not generate the cache as apparently sometimes this is slow.
-        # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=547550
-        apt-cache --no-generate pkgnames (commandline -ct) ^/dev/null | sed -e 's/$/'\t$package'/'
-        return
+        if not set -q only_installed
+            # Do not generate the cache as apparently sometimes this is slow.
+            # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=547550
+            # (It is safe to use `sed -r` here as we are guaranteed to be on a GNU platform
+            # if apt-cache was found. Using unicode reserved range in `fish/tr` and the
+            # little-endian bytecode equivalent in `sed`. Supports localization.)
+            apt-cache --no-generate show '.*'(commandline -ct)'.*' 2>/dev/null | sed -r '/^(Package|Description-[a-z]{2}):/!d;s/Package: (.*)/\1\t/g;s/Description-.*: (.*)/\1\xee\x80\x80\x0a/g' | tr -d \n | tr -s \uE000 \n | uniq
+            return
+        else
+            set -l packages (dpkg --get-selections | string replace -fr '(\S+)\s+install' "\$1" | string match -e (commandline -ct))
+            apt-cache --no-generate show $packages 2>/dev/null | sed -r '/^(Package|Description-[a-z]{2}):/!d;s/Package: (.*)/\1\t/g;s/Description-.*: (.*)/\1\xee\x80\x80\x0a/g' | tr -d \n | tr -s \uE000 \n | uniq
+
+            return
+        end
     end
 
     # Pkg is fast on FreeBSD and provides versioning info which we want for
@@ -41,6 +52,14 @@ function __fish_print_packages
         string replace '/var/db/pkg/' '' -- $files
         return
     end
+
+    ### BEGIN CACHED RESULTS ###
+
+    # Set up cache directory
+    if test -z "$XDG_CACHE_HOME"
+        set XDG_CACHE_HOME $HOME/.cache
+    end
+    mkdir -m 700 -p $XDG_CACHE_HOME
 
     # Caches for 5 minutes
     if type -q -f pacman
@@ -131,20 +150,37 @@ function __fish_print_packages
     if type -q -f eopkg
 
         # If the cache is less than max_age, we do not recalculate it
+        # Determine whether to print installed/available packages
 
-        set cache_file $XDG_CACHE_HOME/.eopkg-cache.$USER
-        if test -f $cache_file
-            cat $cache_file
-            set age (math (date +%s) - (stat -c '%Y' $cache_file))
-            set max_age 500
-            if test $age -lt $max_age
-                return
+        if set -q only_installed
+            set cache_file $XDG_CACHE_HOME/.eopkg-installed-cache.$USER
+            if test -f $cache_file
+                cat $cache_file
+                set age (math (date +%s) - (stat -c '%Y' $cache_file))
+                set max_age 500
+                if test $age -lt $max_age
+                    return
+                end
             end
-        end
 
-        # Remove package version information from output and pipe into cache file
-        eopkg list-available -N | cut -d ' ' -f 1 >$cache_file &
-        return
+            # Remove package version information from output and pipe into cache file
+            eopkg list-installed -N | cut -d ' ' -f 1 >$cache_file &
+            return
+        else
+            set cache_file $XDG_CACHE_HOME/.eopkg-available-cache.$USER
+            if test -f $cache_file
+                cat $cache_file
+                set age (math (date +%s) - (stat -c '%Y' $cache_file))
+                set max_age 500
+                if test $age -lt $max_age
+                    return
+                end
+            end
+
+            # Remove package version information from output and pipe into cache file
+            eopkg list-available -N | cut -d ' ' -f 1 >$cache_file &
+            return
+        end
     end
 
     # This completes the package name from the portage tree.
@@ -182,6 +218,16 @@ function __fish_print_packages
         port echo all | awk '{$1=$1};1' >>$cache_file &
         cat $cache_file
         return
+    end
+
+    if type -q -f opkg
+        if not set -q only_installed
+            opkg list-installed 2>/dev/null | sed -r 's/^([a-zA-Z0-9\-]+) - ([a-zA-Z0-9\-]+)/\1\t\2/g'
+            return
+        else
+            opkg list 2>/dev/null | sed -r 's/^([a-zA-Z0-9\-]+) - ([a-zA-Z0-9\-]+)/\1\t\2/g'
+            return
+        end
     end
 
 end

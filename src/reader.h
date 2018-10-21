@@ -70,7 +70,7 @@ const wchar_t *reader_current_filename();
 void reader_push_current_filename(const wchar_t *fn);
 
 /// Change the history file for the current command reading context.
-void reader_change_history(const wchar_t *fn);
+void reader_change_history(const wcstring &name);
 
 /// Pop the current filename from the stack of read files.
 void reader_pop_current_filename();
@@ -101,14 +101,14 @@ void reader_run_command(const wcstring &buff);
 const wchar_t *reader_get_buffer();
 
 /// Returns the current reader's history.
-history_t *reader_get_history(void);
+history_t *reader_get_history();
 
 /// Set the string of characters in the command buffer, as well as the cursor position.
 ///
 /// \param b the new buffer value
 /// \param p the cursor position. If \c p is larger than the length of the command line, the cursor
 /// is placed on the last character.
-void reader_set_buffer(const wcstring &b, size_t p);
+void reader_set_buffer(const wcstring &b, size_t p = -1);
 
 /// Get the current cursor position in the command line. If interactive mode is uninitialized,
 /// return (size_t)-1.
@@ -144,7 +144,7 @@ bool reader_thread_job_is_stale();
 const wchar_t *reader_readline(int nchars);
 
 /// Push a new reader environment.
-void reader_push(const wchar_t *name);
+void reader_push(const wcstring &name);
 
 /// Return to previous reader environment.
 void reader_pop();
@@ -162,17 +162,20 @@ void reader_set_complete_function(complete_function_t);
 typedef void (*highlight_function_t)(const wcstring &, std::vector<highlight_spec_t> &, size_t,
                                      wcstring_list_t *, const env_vars_snapshot_t &vars);
 
+/// Function type for testing if a string is valid for the reader to return.
+using test_function_t = parser_test_error_bits_t (*)(const wcstring &);
+
 /// Specify function for syntax highlighting. The function must take these arguments:
 ///
 /// - The command to be highlighted as a null terminated array of wchar_t
 /// - The color code of each character as an array of ints
 /// - The cursor position
 /// - An array_list_t used for storing error messages
-void reader_set_highlight_function(highlight_function_t);
+void reader_set_highlight_function(highlight_function_t func);
 
 /// Specify function for testing if the command buffer contains syntax errors that must be corrected
 /// before returning.
-void reader_set_test_function(parser_test_error_bits_t (*f)(const wchar_t *));
+void reader_set_test_function(test_function_t func);
 
 /// Specify string of shell commands to be run in order to generate the prompt.
 void reader_set_left_prompt(const wcstring &prompt);
@@ -202,18 +205,13 @@ bool reader_exit_forced();
 
 /// Test if the given shell command contains errors. Uses parser_test for testing. Suitable for
 /// reader_set_test_function().
-parser_test_error_bits_t reader_shell_test(const wchar_t *b);
+parser_test_error_bits_t reader_shell_test(const wcstring &);
 
 /// Test whether the interactive reader is in search mode.
-///
-/// \return 0 if not in search mode, 1 if in search mode and -1 if not in interactive mode
-int reader_search_mode();
+bool reader_is_in_search_mode();
 
 /// Test whether the interactive reader has visible pager contents.
-///
-/// \return 0 if it has pager contents, 1 if it does not have pager contents, and -1 if not in
-/// interactive mode
-int reader_has_pager_contents();
+bool reader_has_pager_contents();
 
 /// Given a command line and an autosuggestion, return the string that gets shown to the user.
 /// Exposed for testing purposes only.
@@ -228,5 +226,15 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
 wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flags_t flags,
                                           const wcstring &command_line, size_t *inout_cursor_pos,
                                           bool append_only);
+
+/// Terminate all background jobs
+void kill_background_jobs();
+
+/// Print warning with list of backgrounded jobs
+void reader_bg_job_warning();
+
+/// Return the current interactive reads loop count. Useful for determining how many commands have
+/// been executed between invocations of code.
+uint32_t reader_run_count();
 
 #endif

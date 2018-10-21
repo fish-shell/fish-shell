@@ -20,9 +20,9 @@ function event_test --on-event test_event
 end
 
 emit test_event something
+\endfish
 
 
 \subsection emit-notes Notes
 
 Note that events are only sent to the current fish process as there is no way to send events from one fish process to another.
-\endfish

@@ -1,0 +1,9 @@
+logmsg cd symlink non-resolution
+set real (mktemp -d)
+set link (mktemp -u)
+ln -s $real $link
+cd $link
+test "$PWD" = "$link" || echo "\$PWD != \$link:"\n   "\$PWD: $PWD"\n   "\$link: $link"\n
+test (pwd) = "$link" || echo "(pwd) != \$link:"\n   "\$PWD: "(pwd)\n   "\$link: $link"\n
+test (pwd -P) = "$real" || echo "(pwd -P) != \$real:"\n   "\$PWD: $PWD"\n   "\$real: $real"\n
+test (pwd -P -L) = "$link" || echo "(pwd -P -L) != \$link:"\n   "\$PWD: $PWD"\n   "\$link: $link"\n

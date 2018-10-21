@@ -3,6 +3,9 @@
 # Validate basic expressions
 
 ####################
+# Validate some integral computations
+
+####################
 # Validate how variables in an expression are handled
 
 ####################
@@ -24,3 +27,7 @@ math: Error: Too many arguments
        ^
 math: Expected at least 1 args, got only 0
 math: Expected at least 1 args, got only 0
+math: Error: Result is infinite
+'2^999999'
+math: Error: Result is infinite
+'1 / 0'

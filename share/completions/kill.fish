@@ -10,7 +10,7 @@ end
 
 complete -c kill -xa '(__fish_complete_pids)'
 
-if kill -L > /dev/null ^ /dev/null
+if kill -L > /dev/null 2>/dev/null
 	complete -c kill -s s -l signal -d "Signal to send"
 	complete -c kill -s l -l list -d "Printf list of signal names, or name of given SIG NUMBER"
 	complete -c kill -s L -l table -d " Print signal names and their corresponding numbers"

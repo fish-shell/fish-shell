@@ -1,4 +1,4 @@
-if seq --version ^ /dev/null > /dev/null #GNU
+if seq --version 2>/dev/null > /dev/null #GNU
 	complete -c seq -s f -l format -d 'Use printf style floating-point FORMAT'
 	complete -c seq -s s -l separator -d 'Use STRING to separate numbers'
 	complete -c seq -s w -l equal-width -d 'Equalize width with leading zeroes'

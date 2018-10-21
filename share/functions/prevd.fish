@@ -10,7 +10,7 @@ function prevd --description "Move back in the directory history"
 
     set -l times 1
     if set -q argv[1]
-        if test $argv[1] -ge 0 ^/dev/null
+        if test $argv[1] -ge 0 2>/dev/null
             set times $argv[1]
         else
             printf (_ "%s: The number of positions to skip must be a non-negative integer\n") nextd

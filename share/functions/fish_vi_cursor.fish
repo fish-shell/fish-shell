@@ -13,6 +13,11 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     # But since tmux in konsole seems rather common and that case so uncommon,
     # we will just fail there (though it seems that tmux or st swallow it anyway).
 
+    # If we're not interactive, there is effectively no bind mode.
+    if not status is-interactive
+        return
+    end
+
     if set -q INSIDE_EMACS
         return
     end
@@ -20,14 +25,14 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     # vte-based terms set $TERM = xterm*, but only gained support relatively recently.
     # From https://bugzilla.gnome.org/show_bug.cgi?id=720821, it appears it was version 0.40.0
     if set -q VTE_VERSION
-        and test "$VTE_VERSION" -lt 4000 ^/dev/null
+        and test "$VTE_VERSION" -lt 4000 2>/dev/null
         return
     end
 
     # We use the `tput` here just to see if terminfo thinks we can change the cursor.
     # We cannot use that sequence directly as it's not the correct one for konsole and iTerm,
     # and because we may want to change the cursor even though terminfo says we can't (tmux).
-    if not tput Ss >/dev/null ^/dev/null
+    if not tput Ss >/dev/null 2>/dev/null
         # Whitelist tmux...
         and not begin
             set -q TMUX
@@ -57,7 +62,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
                 or set -q ITERM_PROFILE
                 or set -q VTE_VERSION # which version is already checked above
                 # If $XTERM_VERSION is undefined, this will return 1 and print an error. Silence it.
-                or test (string replace -r "XTerm\((\d+)\)" '$1' -- $XTERM_VERSION) -ge 280 ^/dev/null
+                or test (string replace -r "XTerm\((\d+)\)" '$1' -- $XTERM_VERSION) -ge 280 2>/dev/null
             end
         end
 

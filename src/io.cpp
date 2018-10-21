@@ -27,28 +27,30 @@ void io_pipe_t::print() const {
 }
 
 void io_buffer_t::print() const {
-    fwprintf(stderr, L"buffer %p (input: %s, size %lu)\n", out_buffer_ptr(),
-             is_input ? "yes" : "no", (unsigned long)out_buffer_size());
+    fwprintf(stderr, L"buffer (input: %s, size %lu)\n",
+             is_input ? "yes" : "no", (unsigned long)buffer_.size());
+}
+
+void io_buffer_t::append_from_stream(const output_stream_t &stream) {
+    if (buffer_.discarded()) return;
+    if (stream.buffer().discarded()) {
+        buffer_.set_discard();
+        return;
+    }
+    buffer_.append_wide_buffer(stream.buffer());
 }
 
 void io_buffer_t::read() {
     exec_close(pipe_fd[1]);
 
     if (io_mode == IO_BUFFER) {
-#if 0
-        if (fcntl( pipe_fd[0], F_SETFL, 0)) {
-            wperror( L"fcntl" );
-            return;
-        }
-#endif
         debug(4, L"io_buffer_t::read: blocking read on fd %d", pipe_fd[0]);
         while (1) {
             char b[4096];
-            long l;
-            l = read_blocked(pipe_fd[0], b, 4096);
-            if (l == 0) {
+            long len = read_blocked(pipe_fd[0], b, 4096);
+            if (len == 0) {
                 break;
-            } else if (l < 0) {
+            } else if (len < 0) {
                 // exec_read_io_buffer is only called on jobs that have exited, and will therefore
                 // never block. But a broken pipe seems to cause some flags to reset, causing the
                 // EOF flag to not be set. Therefore, EAGAIN is ignored and we exit anyway.
@@ -61,7 +63,7 @@ void io_buffer_t::read() {
 
                 break;
             } else {
-                out_buffer_append(b, l);
+                buffer_.append(&b[0], &b[len]);
             }
         }
     }

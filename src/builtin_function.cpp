@@ -37,7 +37,7 @@ struct function_cmd_opts_t {
 
 // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
 // This is needed due to the semantics of the -a/--argument-names flag.
-static const wchar_t *short_options = L"+:a:d:e:hj:p:s:v:w:SV:";
+static const wchar_t *const short_options = L"+:a:d:e:hj:p:s:v:w:SV:";
 static const struct woption long_options[] = {{L"description", required_argument, NULL, 'd'},
                                               {L"on-signal", required_argument, NULL, 's'},
                                               {L"on-job-exit", required_argument, NULL, 'j'},
@@ -115,6 +115,10 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                     }
                     e.type = EVENT_JOB_ID;
                     e.param1.job_id = job_id;
+                } else if ((opt == 'p') && (wcscasecmp(w.woptarg, L"%self") == 0)) {
+                    pid = getpid();
+                    e.type = EVENT_EXIT;
+                    e.param1.pid = pid;
                 } else {
                     pid = fish_wcstoi(w.woptarg);
                     if (errno || pid < 0) {
@@ -208,9 +212,8 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     wcstring_list_t args = {L"function"};
     args.insert(args.end(), c_args.begin(), c_args.end());
 
-    // Hackish const_cast matches the one in builtin_run.
-    const null_terminated_array_t<wchar_t> argv_array(args);
-    wchar_t **argv = const_cast<wchar_t **>(argv_array.get());
+    null_terminated_array_t<wchar_t> argv_array(args);
+    wchar_t **argv = argv_array.get();
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
 

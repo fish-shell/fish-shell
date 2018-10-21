@@ -67,15 +67,19 @@ enum {
     R_KILL_SELECTION,
     R_FORWARD_JUMP,
     R_BACKWARD_JUMP,
+    R_FORWARD_JUMP_TILL,
+    R_BACKWARD_JUMP_TILL,
     R_AND,
     R_CANCEL,
+    R_REPEAT_JUMP,
+    R_REVERSE_REPEAT_JUMP,
 
     R_TIMEOUT,  // we didn't get interactive input within wait_on_escape_ms
 
     // The range of key codes for inputrc-style keyboard functions that are passed on to the caller
     // of input_read().
     R_BEGIN_INPUT_FUNCTIONS = R_BEGINNING_OF_LINE,
-    R_END_INPUT_FUNCTIONS = R_CANCEL + 1
+    R_END_INPUT_FUNCTIONS = R_REVERSE_REPEAT_JUMP + 1
 };
 
 /// Init the library.

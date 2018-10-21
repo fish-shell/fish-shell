@@ -106,14 +106,24 @@ bool child_set_group(job_t *j, process_t *p) {
 /// if it's to run in the foreground.
 bool set_child_group(job_t *j, pid_t child_pid) {
     if (j->get_flag(JOB_CONTROL)) {
-        assert (j->pgid != -2 && "set_child_group called with JOB_CONTROL before job pgid determined!");
+        assert (j->pgid != -2
+                && "set_child_group called with JOB_CONTROL before job pgid determined!");
 
         // The parent sets the child's group. This incurs the well-known unavoidable race with the
         // child exiting, so ignore ESRCH and EPERM (in case the pid was recycled).
+        // Additionally ignoring EACCES. See #4715 and #4884.
         if (setpgid(child_pid, j->pgid) < 0) {
-            if (errno != ESRCH && errno != EPERM) {
+            if (errno != ESRCH && errno != EPERM && errno != EACCES) {
                 safe_perror("setpgid");
                 return false;
+            }
+            else {
+                // Just in case it's ever not right to ignore the setpgid call, (i.e. if this
+                // ever leads to a terminal hang due if both this setpgid call AND posix_spawn's
+                // internal setpgid calls failed), write to the debug log so a future developer
+                // doesn't go crazy trying to track this down.
+                debug(2, "Error %d while calling setpgid for child %d (probably harmless)",
+                        errno, child_pid);
             }
         }
     } else {
@@ -123,7 +133,7 @@ bool set_child_group(job_t *j, pid_t child_pid) {
     return true;
 }
 
-bool maybe_assign_terminal(job_t *j) {
+bool maybe_assign_terminal(const job_t *j) {
     assert(j->pgid > 1 && "maybe_assign_terminal() called on job with invalid pgid!");
 
     if (j->get_flag(JOB_TERMINAL) && j->get_flag(JOB_FOREGROUND)) {  //!OCLINT(early exit)

@@ -2051,9 +2051,9 @@ msgstr ""
 
 #: src/parse_constants.h:275
 #, c-format
-msgid "$$ is not the pid. In fish, please use %%self."
+msgid "$$ is not the pid. In fish, please use $fish_pid."
 msgstr ""
-"$$ nie jest numerem identyfikacyjnym procesu. W fish używane jest %%self."
+"$$ nie jest numerem identyfikacyjnym procesu. W fish używane jest $fish_pid."
 
 #: src/parse_constants.h:278
 msgid "$# is not supported. In fish, please use 'count $argv'."

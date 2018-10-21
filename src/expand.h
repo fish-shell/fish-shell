@@ -9,6 +9,7 @@
 
 #include <stddef.h>
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -60,18 +61,20 @@ class completion_t;
 enum {
     /// Character representing a home directory.
     HOME_DIRECTORY = EXPAND_RESERVED_BASE,
-    /// Character representing process expansion.
-    PROCESS_EXPAND,
+    /// Character representing process expansion for %self.
+    PROCESS_EXPAND_SELF,
     /// Character representing variable expansion.
     VARIABLE_EXPAND,
     /// Character representing variable expansion into a single element.
     VARIABLE_EXPAND_SINGLE,
     /// Character representing the start of a bracket expansion.
-    BRACKET_BEGIN,
+    BRACE_BEGIN,
     /// Character representing the end of a bracket expansion.
-    BRACKET_END,
+    BRACE_END,
     /// Character representing separation between two bracket elements.
-    BRACKET_SEP,
+    BRACE_SEP,
+    /// Character that takes the place of any whitespace within non-quoted text in braces
+    BRACE_SPACE,
     /// Separate subtokens in a token with this character.
     INTERNAL_SEPARATOR,
     /// Character representing an empty variable expansion. Only used transitively while expanding
@@ -94,6 +97,9 @@ enum expand_error_t {
     EXPAND_WILDCARD_MATCH
 };
 
+/// The string represented by PROCESS_EXPAND_SELF
+#define PROCESS_EXPAND_SELF_STR L"%self"
+
 /// Perform various forms of expansion on in, such as tilde expansion (\~USER becomes the users home
 /// directory), variable expansion (\$VAR_NAME becomes the value of the environment variable
 /// VAR_NAME), cmdsubst expansion and wildcard expansion. The results are inserted into the list
@@ -110,7 +116,7 @@ enum expand_error_t {
 /// \return One of EXPAND_OK, EXPAND_ERROR, EXPAND_WILDCARD_MATCH and EXPAND_WILDCARD_NO_MATCH.
 /// EXPAND_WILDCARD_NO_MATCH and EXPAND_WILDCARD_MATCH are normal exit conditions used only on
 /// strings containing wildcards to tell if the wildcard produced any matches.
-__warn_unused expand_error_t expand_string(const wcstring &input, std::vector<completion_t> *output,
+__warn_unused expand_error_t expand_string(wcstring input, std::vector<completion_t> *output,
                                            expand_flags_t flags, parse_error_list_t *errors);
 
 /// expand_one is identical to expand_string, except it will fail if in expands to more than one
@@ -123,6 +129,16 @@ __warn_unused expand_error_t expand_string(const wcstring &input, std::vector<co
 ///
 /// \return Whether expansion succeded
 bool expand_one(wcstring &inout_str, expand_flags_t flags, parse_error_list_t *errors = NULL);
+
+/// Expand a command string like $HOME/bin/cmd into a command and list of arguments.
+/// Return the command and arguments by reference.
+/// If the expansion resulted in no or an empty command, the command will be an empty string. Note
+/// that API does not distinguish between expansion resulting in an empty command (''), and
+/// expansion resulting in no command (e.g. unset variable).
+// \return an expand error.
+expand_error_t expand_to_command_and_args(const wcstring &instr, wcstring *out_cmd,
+                                          wcstring_list_t *out_args,
+                                          parse_error_list_t *errors = NULL);
 
 /// Convert the variable value to a human readable form, i.e. escape things, handle arrays, etc.
 /// Suitable for pretty-printing.
@@ -140,6 +156,9 @@ wcstring replace_home_directory_with_tilde(const wcstring &str);
 /// not. If result is not-null, returns the abbreviation by reference.
 void update_abbr_cache(const wchar_t *op, const wcstring &varname);
 bool expand_abbreviation(const wcstring &src, wcstring *output);
+
+/// \return a snapshot of all abbreviations as a map abbreviation->expansion.
+std::map<wcstring, wcstring> get_abbreviations();
 
 // Terrible hacks
 bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc,

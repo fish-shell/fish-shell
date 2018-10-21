@@ -1,4 +1,4 @@
-if stat --version ^ /dev/null > /dev/null # GNU
+if stat --version 2>/dev/null > /dev/null # GNU
 	complete -c stat -s L -l dereference     -d 'follow links'
 	complete -c stat -s f -l file-system     -d 'display file system status instead of file status'
 	complete -c stat -s c -l format -x       -d 'use the specified FORMAT instead of the default; output a newline after each use of FORMAT'

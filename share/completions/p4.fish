@@ -242,10 +242,10 @@ function __fish_print_p4_parallel_options -d "Values for --parallel option in va
     # for now only looks that mode is set, later it will need to have a specific setting
     echo 'threads='\t"sends files concurrently using N independent network connections"
     echo 'batch='\t"specifies the number of files in a batch"
-    test "$mode"
+    test -n "$mode"
     or echo 'batchsize='\t"specifies the number of bytes in a batch"
     echo 'min='\t"specifies the minimum number of files in a parallel sync"
-    test "$mode"
+    test -n "$mode"
     or echo 'minsize='\t"specifies the minimum number of bytes in a parallel sync"
 end
 

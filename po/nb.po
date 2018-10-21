@@ -2027,7 +2027,7 @@ msgstr ""
 
 #: src/parse_constants.h:275
 #, c-format
-msgid "$$ is not the pid. In fish, please use %%self."
+msgid "$$ is not the pid. In fish, please use $fish_pid."
 msgstr ""
 
 #: src/parse_constants.h:278

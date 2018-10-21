@@ -97,18 +97,17 @@ static void iothread_init() {
 }
 
 static bool dequeue_spawn_request(spawn_request_t *result) {
-    auto &&locker = s_spawn_requests.acquire();
-    thread_data_t &td = locker.value;
-    if (!td.request_queue.empty()) {
-        *result = std::move(td.request_queue.front());
-        td.request_queue.pop();
+    auto requests = s_spawn_requests.acquire();
+    if (!requests->request_queue.empty()) {
+        *result = std::move(requests->request_queue.front());
+        requests->request_queue.pop();
         return true;
     }
     return false;
 }
 
 static void enqueue_thread_result(spawn_request_t req) {
-    s_result_queue.acquire().value.push(std::move(req));
+    s_result_queue.acquire()->push(std::move(req));
 }
 
 static void *this_thread() { return (void *)(intptr_t)pthread_self(); }
@@ -140,7 +139,7 @@ static void *iothread_worker(void *unused) {
     // committed to not handling anything else. Therefore, we have to decrement
     // the thread count under the lock, which we still hold. Likewise, the main thread must
     // check the value under the lock.
-    int new_thread_count = --s_spawn_requests.acquire().value.thread_count;
+    int new_thread_count = --s_spawn_requests.acquire()->thread_count;
     assert(new_thread_count >= 0);
 
     debug(5, "pthread %p exiting", this_thread());
@@ -180,14 +179,13 @@ int iothread_perform_impl(void_function_t &&func, void_function_t &&completion) 
     bool spawn_new_thread = false;
     {
         // Lock around a local region.
-        auto &&locker = s_spawn_requests.acquire();
-        thread_data_t &td = locker.value;
-        td.request_queue.push(std::move(req));
-        if (td.thread_count < IO_MAX_THREADS) {
-            td.thread_count++;
+        auto spawn_reqs = s_spawn_requests.acquire();
+        spawn_reqs->request_queue.push(std::move(req));
+        if (spawn_reqs->thread_count < IO_MAX_THREADS) {
+            spawn_reqs->thread_count++;
             spawn_new_thread = true;
         }
-        local_thread_count = td.thread_count;
+        local_thread_count = spawn_reqs->thread_count;
     }
 
     // Kick off the thread if we decided to do so.
@@ -249,7 +247,7 @@ void iothread_drain_all() {
 #endif
 
     // Nasty polling via select().
-    while (s_spawn_requests.acquire().value.thread_count > 0) {
+    while (s_spawn_requests.acquire()->thread_count > 0) {
         if (iothread_wait_for_pending_completions(1000)) {
             iothread_service_completion();
         }
@@ -300,7 +298,7 @@ static void iothread_service_main_thread_requests() {
 static void iothread_service_result_queue() {
     // Move the queue to a local variable.
     std::queue<spawn_request_t> result_queue;
-    s_result_queue.acquire().value.swap(result_queue);
+    (*s_result_queue.acquire()).swap(result_queue);
 
     // Perform each completion in order
     while (!result_queue.empty()) {

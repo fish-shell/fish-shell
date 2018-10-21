@@ -18,7 +18,7 @@ function vared --description "Edit variable value"
             case '*'
                 if test (count $$argv ) -lt 2
                     set -l init ''
-                    if test $$argv
+                    if test -n "$$argv"
                         set init $$argv
                     end
                     set -l prompt 'set_color green; echo '$argv'; set_color normal; echo "> "'
@@ -30,7 +30,7 @@ function vared --description "Edit variable value"
                         # global, so that it will not die when this
                         # function dies
 
-                        if test $$argv
+                        if test -n "$$argv"
                             set $argv $tmp
                         else
                             set -g $argv $tmp

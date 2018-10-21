@@ -90,8 +90,8 @@ class process_t {
     void set_argv(const wcstring_list_t &argv) { argv_array.set(argv); }
 
     /// Returns argv.
-    const wchar_t *const *get_argv(void) const { return argv_array.get(); }
-    const null_terminated_array_t<wchar_t> &get_argv_array(void) const { return argv_array; }
+    wchar_t **get_argv() { return argv_array.get(); }
+    const null_terminated_array_t<wchar_t> &get_argv_array() const { return argv_array; }
 
     /// Returns argv[idx].
     const wchar_t *argv(size_t idx) const {
@@ -372,4 +372,8 @@ pid_t proc_wait_any();
 
 #endif
 
-bool terminal_give_to_job(job_t *j, int cont);
+bool terminal_give_to_job(const job_t *j, bool cont);
+
+/// Given that we are about to run a builtin, acquire the terminal if it is owned by the given job.
+/// Returns the pid to restore after running the builtin, or -1 if there is no pid to restore.
+pid_t terminal_acquire_before_builtin(int job_pgid);

@@ -271,19 +271,11 @@ template <>
 long double raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
     double val = wcstod(s, end);
     if (**end == L'\0') return val;
-
     // The conversion using the user's locale failed. That may be due to the string not being a
     // valid floating point value. It could also be due to the locale using different separator
     // characters than the normal english convention. So try again by forcing the use of a locale
     // that employs the english convention for writing floating point numbers.
-    //
-    // TODO: switch to the wcstod_l() function to avoid changing the global locale.
-    char *saved_locale = strdup(setlocale(LC_NUMERIC, NULL));
-    setlocale(LC_NUMERIC, "C");
-    val = wcstod(s, end);
-    setlocale(LC_NUMERIC, saved_locale);
-    free(saved_locale);
-    return val;
+    return wcstod_l(s, end, fish_c_locale());
 }
 
 template <typename T>
@@ -317,7 +309,7 @@ void builtin_printf_state_t::print_esc_char(wchar_t c) {
             break;
         }
         case L'e': {  // escape
-            this->append_output(L'\e');
+            this->append_output(L'\x1B');
             break;
         }
         case L'f': {  // form feed

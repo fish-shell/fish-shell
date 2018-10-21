@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 
+#include <functional>
 #include <vector>
 
 #include "common.h"
@@ -43,9 +44,17 @@ enum {
     /// If you do escape, don't escape tildes.
     COMPLETE_DONT_ESCAPE_TILDES = 1 << 5,
     /// Do not sort supplied completions
-    COMPLETE_DONT_SORT = 1 << 6
+    COMPLETE_DONT_SORT = 1 << 6,
+    /// This completion looks to have the same string as an existing argument.
+    COMPLETE_DUPLICATES_ARGUMENT = 1 << 7
 };
 typedef int complete_flags_t;
+
+/// std::function which accepts a completion string and returns its description.
+using description_func_t = std::function<wcstring(const wcstring &)>;
+
+/// Helper to return a description_func_t for a constant string.
+description_func_t const_desc(const wcstring &s);
 
 class completion_t {
    private:
@@ -76,8 +85,9 @@ class completion_t {
     completion_t(const completion_t &);
     completion_t &operator=(const completion_t &);
 
-    completion_t(completion_t &&);
-    completion_t &operator=(completion_t &&);
+    // noexcepts are required for push_back to use the move ctor.
+    completion_t(completion_t &&) noexcept;
+    completion_t &operator=(completion_t &&) noexcept;
 
     // Compare two completions. No operating overlaoding to make this always explicit (there's
     // potentially multiple ways to compare completions).
@@ -94,10 +104,6 @@ class completion_t {
     void prepend_token_prefix(const wcstring &prefix);
 };
 
-/// Sorts and remove any duplicate completions in the completion list, then puts them in priority
-/// order.
-void completions_sort_and_prioritize(std::vector<completion_t> *comps);
-
 enum {
     COMPLETION_REQUEST_DEFAULT = 0,
     COMPLETION_REQUEST_AUTOSUGGESTION = 1
@@ -113,6 +119,11 @@ enum complete_option_type_t {
     option_type_single_long,  // -foo
     option_type_double_long   // --foo
 };
+
+/// Sorts and remove any duplicate completions in the completion list, then puts them in priority
+/// order.
+void completions_sort_and_prioritize(std::vector<completion_t> *comps,
+                                     completion_request_flags_t flags = COMPLETION_REQUEST_DEFAULT);
 
 /// Add a completion.
 ///
@@ -193,8 +204,7 @@ bool complete_remove_wrapper(const wcstring &command, const wcstring &wrap_targe
 /// Returns a list of wrap targets for a given command.
 wcstring_list_t complete_get_wrap_targets(const wcstring &command);
 
-// Wonky interface: returns all wraps. Even-values are the commands, odd values are the targets.
-wcstring_list_t complete_get_wrap_pairs();
+tuple_list<wcstring, wcstring> complete_get_wrap_pairs();
 
 // Observes that fish_complete_path has changed.
 void complete_invalidate_path();

@@ -80,9 +80,9 @@ static bool write_color_escape(char *todo, unsigned char idx, bool is_fg) {
         // with what we do here, will make the brights actually work for virtual consoles/ancient
         // emulators.
         if (max_colors == 8 && idx > 8) idx -= 8;
-        snprintf(buff, sizeof buff, "\e[%dm", ((idx > 7) ? 82 : 30) + idx + !is_fg * 10);
+        snprintf(buff, sizeof buff, "\x1B[%dm", ((idx > 7) ? 82 : 30) + idx + !is_fg * 10);
     } else {
-        snprintf(buff, sizeof buff, "\e[%d;5;%dm", is_fg ? 38 : 48, idx);
+        snprintf(buff, sizeof buff, "\x1B[%d;5;%dm", is_fg ? 38 : 48, idx);
     }
 
     int (*writer)(char) = output_get_writer();
@@ -131,7 +131,7 @@ bool write_color(rgb_color_t color, bool is_fg) {
     // Background: ^[48;2;<r>;<g>;<b>m
     color24_t rgb = color.to_color24();
     char buff[128];
-    snprintf(buff, sizeof buff, "\e[%d;2;%u;%u;%um", is_fg ? 38 : 48, rgb.rgb[0], rgb.rgb[1],
+    snprintf(buff, sizeof buff, "\x1B[%d;2;%u;%u;%um", is_fg ? 38 : 48, rgb.rgb[0], rgb.rgb[1],
              rgb.rgb[2]);
     int (*writer)(char) = output_get_writer();
     if (writer) {
@@ -274,7 +274,7 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
         if (bg_set && !last_bg_set) {
             // Background color changed and is set, so we enter bold mode to make reading easier.
             // This means bold mode is _always_ on when the background color is set.
-            writembs(enter_bold_mode);
+            writembs_nofail(enter_bold_mode);
         }
         if (!bg_set && last_bg_set) {
             // Background color changed and is no longer set, so we exit bold mode.
@@ -332,41 +332,41 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
 
     // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
     if (is_bold && !was_bold && enter_bold_mode && strlen(enter_bold_mode) > 0 && !bg_set) {
-        writembs(tparm(enter_bold_mode));
+        writembs_nofail(tparm(enter_bold_mode));
         was_bold = is_bold;
     }
 
     if (was_underline && !is_underline) {
-        writembs(exit_underline_mode);
+        writembs_nofail(exit_underline_mode);
     }
 
     if (!was_underline && is_underline) {
-        writembs(enter_underline_mode);
+        writembs_nofail(enter_underline_mode);
     }
     was_underline = is_underline;
 
     if (was_italics && !is_italics && enter_italics_mode && strlen(enter_italics_mode) > 0) {
-        writembs(exit_italics_mode);
+        writembs_nofail(exit_italics_mode);
         was_italics = is_italics;
     }
 
     if (!was_italics && is_italics && enter_italics_mode && strlen(enter_italics_mode) > 0) {
-        writembs(enter_italics_mode);
+        writembs_nofail(enter_italics_mode);
         was_italics = is_italics;
     }
 
     if (is_dim && !was_dim && enter_dim_mode && strlen(enter_dim_mode) > 0) {
-        writembs(enter_dim_mode);
+        writembs_nofail(enter_dim_mode);
         was_dim = is_dim;
     }
 
     if (is_reverse && !was_reverse) {
         // Some terms do not have a reverse mode set, so standout mode is a fallback.
         if (enter_reverse_mode && strlen(enter_reverse_mode) > 0) {
-            writembs(enter_reverse_mode);
+            writembs_nofail(enter_reverse_mode);
             was_reverse = is_reverse;
         } else if (enter_standout_mode && strlen(enter_standout_mode) > 0) {
-            writembs(enter_standout_mode);
+            writembs_nofail(enter_standout_mode);
             was_reverse = is_reverse;
         }
     }
@@ -550,10 +550,10 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
 }
 
 /// Write specified multibyte string.
-void writembs_check(char *mbs, const char *mbs_name, const char *file, long line) {
+void writembs_check(char *mbs, const char *mbs_name, bool critical, const char *file, long line) {
     if (mbs != NULL) {
         tputs(mbs, 1, &writeb);
-    } else {
+    } else if (critical) {
         auto term = env_get(L"TERM");
         const wchar_t *fmt =
             _(L"Tried to use terminfo string %s on line %ld of %s, which is "

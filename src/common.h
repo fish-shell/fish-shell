@@ -17,15 +17,20 @@
 #include <sys/ioctl.h>  // IWYU pragma: keep
 #endif
 
+#include <algorithm>
+#include <iterator>
 #include <memory>
 #include <mutex>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 #include "fallback.h"  // IWYU pragma: keep
-#include "signal.h"    // IWYU pragma: keep
+#include "maybe.h"
+#include "signal.h"  // IWYU pragma: keep
 
 // Define a symbol we can use elsewhere in our code to determine if we're being built on MS Windows
 // under Cygwin.
@@ -99,6 +104,16 @@ typedef std::vector<wcstring> wcstring_list_t;
 #define NAME_MAX MAXNAMELEN
 #else
 static_assert(false, "Neither NAME_MAX nor MAXNAMELEN is defined!");
+#endif
+#endif
+
+// PATH_MAX may not exist.
+#ifndef PATH_MAX
+#ifdef MAXPATHLEN
+#define PATH_MAX MAXPATHLEN
+#else
+/// Fallback length of MAXPATHLEN. Hopefully a sane value.
+#define PATH_MAX 4096
 #endif
 #endif
 
@@ -183,6 +198,9 @@ extern struct termios shell_modes;
 /// The character to use where the text has been truncated. Is an ellipsis on unicode system and a $
 /// on other systems.
 extern wchar_t ellipsis_char;
+/// The character or string to use where text has been truncated (ellipsis if possible, otherwise
+/// ...)
+extern const wchar_t *ellipsis_str;
 
 /// Character representing an omitted newline at the end of text.
 extern wchar_t omitted_newline_char;
@@ -199,9 +217,16 @@ extern bool g_profiling_active;
 /// Name of the current program. Should be set at startup. Used by the debug function.
 extern const wchar_t *program_name;
 
-/// Set to false at run-time if it's been determined we can't trust the last modified timestamp on
-/// the tty.
-extern bool has_working_tty_timestamps;
+/// Set to false if it's been determined we can't trust the last modified timestamp on the tty.
+extern const bool has_working_tty_timestamps;
+
+/// A list of all whitespace characters
+extern const wcstring whitespace;
+extern const char *whitespace_narrow;
+
+bool is_whitespace(const wchar_t input);
+bool is_whitespace(const wcstring &input);
+inline bool is_whitespace(const wchar_t *input) { return is_whitespace(wcstring(input)); }
 
 /// This macro is used to check that an argument is true. It is a bit like a non-fatal form of
 /// assert. Instead of exiting on failure, the current function is ended at once. The second
@@ -271,8 +296,18 @@ extern bool has_working_tty_timestamps;
 /// See https://developer.gnome.org/glib/stable/glib-I18N.html#N-:CAPS
 #define N_(wstr) wstr
 
-/// Test if a list of stirngs contains a particular string.
-bool contains(const wcstring_list_t &list, const wcstring &str);
+/// Test if a collection contains a value.
+template <typename Col, typename T2>
+bool contains(const Col &col, const T2 &val) {
+    return std::find(std::begin(col), std::end(col), val) != std::end(col);
+}
+
+/// Append a vector \p donator to the vector \p receiver.
+template <typename T>
+void vec_append(std::vector<T> &receiver, std::vector<T> &&donator) {
+    receiver.insert(receiver.end(), std::make_move_iterator(donator.begin()),
+                    std::make_move_iterator(donator.end()));
+}
 
 /// Print a stack trace to stderr.
 void show_stackframe(const wchar_t msg_level, int frame_count = 100, int skip_levels = 0);
@@ -311,10 +346,50 @@ bool string_prefixes_string(const wchar_t *proposed_prefix, const wchar_t *value
 /// Test if a string is a suffix of another.
 bool string_suffixes_string(const wcstring &proposed_suffix, const wcstring &value);
 bool string_suffixes_string(const wchar_t *proposed_suffix, const wcstring &value);
+bool string_suffixes_string_case_insensitive(const wcstring &proposed_suffix,
+                                             const wcstring &value);
 
 /// Test if a string prefixes another without regard to case. Returns true if a is a prefix of b.
 bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix,
                                              const wcstring &value);
+
+/// Helper struct for ifind, templated to allow using it with both std::string and std::wstring
+/// Supports locale-specific search for characters that transform into a different character
+/// when upper/lower-cased, such as those in Turkish and German.
+template<typename T>
+struct string_iequal_t {
+private:
+    const std::locale &_locale;
+public:
+    string_iequal_t(const std::locale &locale)
+        : _locale(locale) {}
+    bool operator() (T char1, T char2) {
+        return std::toupper(char1, _locale) == std::toupper(char2, _locale);
+    }
+};
+
+/// Case-insensitive string search, templated for use with both std::string and std::wstring.
+/// Modeled after std::string::find().
+/// \return the offset of the first case-insensitive matching instance of `needle` within
+/// `haystack`, or `string::npos()` if no results were found.
+template<typename T>
+size_t ifind(const T &haystack, const T &needle,
+        const std::locale &locale = std::locale()) {
+    auto result = std::search(haystack.begin(), haystack.end(), needle.begin(), needle.end(),
+            string_iequal_t<typename T::value_type>(locale));
+
+    if (result != haystack.end()) {
+        return result - haystack.begin();
+    }
+
+    return T::npos;
+}
+
+/// Split a string by a separator character.
+wcstring_list_t split_string(const wcstring &val, wchar_t sep);
+
+/// Join a list of strings by a separator character.
+wcstring join_strings(const wcstring_list_t &vals, wchar_t sep);
 
 enum fuzzy_match_type_t {
     // We match the string exactly: FOOBAR matches FOOBAR.
@@ -331,6 +406,9 @@ enum fuzzy_match_type_t {
 
     // We match a substring of the string: OOBA matches FOOBAR.
     fuzzy_match_substring,
+
+    // We match a substring of the string: ooBA matches FOOBAR.
+    fuzzy_match_substring_case_insensitive,
 
     // A subsequence match with insertions only: FBR matches FOOBAR.
     fuzzy_match_subsequence_insertions_only,
@@ -504,13 +582,13 @@ char **make_null_terminated_array(const std::vector<std::string> &lst);
 // Helper class for managing a null-terminated array of null-terminated strings (of some char type).
 template <typename CharType_t>
 class null_terminated_array_t {
-    CharType_t **array;
+    CharType_t **array{NULL};
 
     // No assignment or copying.
     void operator=(null_terminated_array_t rhs);
     null_terminated_array_t(const null_terminated_array_t &);
 
-    typedef std::vector<std::basic_string<CharType_t> > string_list_t;
+    typedef std::vector<std::basic_string<CharType_t>> string_list_t;
 
     size_t size() const {
         size_t len = 0;
@@ -528,11 +606,22 @@ class null_terminated_array_t {
     }
 
    public:
-    null_terminated_array_t() : array(NULL) {}
+    null_terminated_array_t() = default;
+
     explicit null_terminated_array_t(const string_list_t &argv)
         : array(make_null_terminated_array(argv)) {}
 
     ~null_terminated_array_t() { this->free(); }
+
+    null_terminated_array_t(null_terminated_array_t &&rhs) : array(rhs.array) {
+        rhs.array = nullptr;
+    }
+
+    null_terminated_array_t operator=(null_terminated_array_t &&rhs) {
+        free();
+        array = rhs.array;
+        rhs.array = nullptr;
+    }
 
     void set(const string_list_t &argv) {
         this->free();
@@ -540,6 +629,7 @@ class null_terminated_array_t {
     }
 
     const CharType_t *const *get() const { return array; }
+    CharType_t **get() { return array; }
 
     void clear() { this->free(); }
 };
@@ -563,20 +653,25 @@ typedef std::lock_guard<std::recursive_mutex> scoped_rlock;
 //
 template <typename DATA>
 class acquired_lock {
-    scoped_lock lock;
-    acquired_lock(fish_mutex_t &lk, DATA *v) : lock(lk), value(*v) {}
+    std::unique_lock<fish_mutex_t> lock;
+    acquired_lock(fish_mutex_t &lk, DATA *v) : lock(lk), value(v) {}
 
     template <typename T>
     friend class owning_lock;
 
+    DATA *value;
+
    public:
-    // No copying, move only
+    // No copying, move construction only
     acquired_lock &operator=(const acquired_lock &) = delete;
     acquired_lock(const acquired_lock &) = delete;
     acquired_lock(acquired_lock &&) = default;
     acquired_lock &operator=(acquired_lock &&) = default;
 
-    DATA &value;
+    DATA *operator->() { return value; }
+    const DATA *operator->() const { return value; }
+    DATA &operator*() { return *value; }
+    const DATA &operator*() const { return *value; }
 };
 
 // A lock that owns a piece of data
@@ -625,6 +720,44 @@ class scoped_push {
             restored = true;
         }
     }
+};
+
+/// A helper class for managing and automatically closing a file descriptor.
+class autoclose_fd_t {
+    int fd_;
+
+   public:
+    // Closes the fd if not already closed.
+    void close();
+
+    // Returns the fd.
+    int fd() const { return fd_; }
+
+    // Returns the fd, transferring ownership to the caller.
+    int acquire() {
+        int temp = fd_;
+        fd_ = -1;
+        return temp;
+    }
+
+    // Resets to a new fd, taking ownership.
+    void reset(int fd) {
+        if (fd == fd_) return;
+        close();
+        fd_ = fd;
+    }
+
+    autoclose_fd_t(const autoclose_fd_t &) = delete;
+    void operator=(const autoclose_fd_t &) = delete;
+    autoclose_fd_t(autoclose_fd_t &&rhs) : fd_(rhs.fd_) { rhs.fd_ = -1; }
+
+    void operator=(autoclose_fd_t &&rhs) {
+        close();
+        std::swap(this->fd_, rhs.fd_);
+    }
+
+    explicit autoclose_fd_t(int fd = -1) : fd_(fd) {}
+    ~autoclose_fd_t() { close(); }
 };
 
 /// Appends a path component, with a / if necessary.
@@ -683,14 +816,19 @@ wcstring escape_string(const wchar_t *in, escape_flags_t flags,
 wcstring escape_string(const wcstring &in, escape_flags_t flags,
                        escape_string_style_t style = STRING_STYLE_SCRIPT);
 
+/// \return a string representation suitable for debugging (not for presenting to the user). This
+/// replaces non-ASCII characters with either tokens like <BRACE_SEP> or <\xfdd7>. No other escapes
+/// are made (i.e. this is a lossy escape).
+wcstring debug_escape(const wcstring &in);
+
 /// Expand backslashed escapes and substitute them with their unescaped counterparts. Also
 /// optionally change the wildcards, the tilde character and a few more into constants which are
 /// defined in a private use area of Unicode. This assumes wchar_t is a unicode character set.
 
 /// Given a null terminated string starting with a backslash, read the escape as if it is unquoted,
-/// appending to result. Return the number of characters consumed, or 0 on error.
-size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_incomplete,
-                            bool unescape_special);
+/// appending to result. Return the number of characters consumed, or none() on error.
+maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_incomplete,
+                                     bool unescape_special);
 
 /// Unescapes a string in-place. A true result indicates the string was unescaped, a false result
 /// indicates the string was unmodified.
@@ -759,7 +897,7 @@ void assert_is_not_forked_child(const char *who);
 
 /// Detect if we are Windows Subsystem for Linux by inspecting /proc/sys/kernel/osrelease
 /// and checking if "Microsoft" is in the first line.
-/// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997 
+/// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997
 constexpr bool is_windows_subsystem_for_linux() {
 #ifdef WSL
     return true;
@@ -830,6 +968,22 @@ static const wchar_t *enum_to_str(T enum_val, const enum_map<T> map[]) {
     }
     return NULL;
 };
+
+template <typename... Args>
+using tuple_list = std::vector<std::tuple<Args...>>;
+
+// Given a container mapping one X to many Y, return a list of {X,Y}
+template <typename X, typename Y>
+inline tuple_list<X, Y> flatten(const std::unordered_map<X, std::vector<Y>> &list) {
+    tuple_list<X, Y> results(list.size() * 1.5);  // just a guess as to the initial size
+    for (auto &kv : list) {
+        for (auto &v : kv.second) {
+            results.emplace_back(std::make_tuple(kv.first, v));
+        }
+    }
+
+    return results;
+}
 
 void redirect_tty_output();
 
@@ -903,7 +1057,10 @@ struct hash<const wcstring> {
         return hasher((wcstring)w);
     }
 };
-}
+}  // namespace std
 #endif
+
+/// Get the absolute path to the fish executable itself
+std::string get_executable_path(const char *fallback);
 
 #endif

@@ -12,6 +12,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#if defined(__linux__)
+#include <sys/statfs.h>
+#endif
+#include <sys/mount.h>
+#include <sys/statvfs.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <wchar.h>
@@ -27,15 +32,6 @@
 typedef std::string cstring;
 
 const file_id_t kInvalidFileID = {(dev_t)-1LL, (ino_t)-1LL, (uint64_t)-1LL, -1, -1, -1, -1};
-
-#ifndef PATH_MAX
-#ifdef MAXPATHLEN
-#define PATH_MAX MAXPATHLEN
-#else
-/// Fallback length of MAXPATHLEN. Hopefully a sane value.
-#define PATH_MAX 4096
-#endif
-#endif
 
 /// Map used as cache by wgettext.
 static owning_lock<std::unordered_map<wcstring, wcstring>> wgettext_map;
@@ -230,6 +226,26 @@ DIR *wopendir(const wcstring &name) {
     return opendir(tmp.c_str());
 }
 
+dir_t::dir_t(const wcstring &path) {
+    const cstring tmp = wcs2string(path);
+    this->dir = opendir(tmp.c_str());
+}
+
+dir_t::~dir_t() {
+    if (this->dir != nullptr) {
+        closedir(this->dir);
+        this->dir = nullptr;
+    }
+}
+
+bool dir_t::valid() const {
+    return this->dir != nullptr;
+}
+
+bool dir_t::read(wcstring &name) {
+    return wreaddir(this->dir, name);
+}
+
 int wstat(const wcstring &file_name, struct stat *buf) {
     const cstring tmp = wcs2string(file_name);
     return stat(tmp.c_str(), buf);
@@ -276,6 +292,32 @@ int make_fd_blocking(int fd) {
         err = fcntl(fd, F_SETFL, flags & ~O_NONBLOCK);
     }
     return err == -1 ? errno : 0;
+}
+
+int fd_check_is_remote(int fd) {
+#if defined(__linux__)
+    struct statfs buf{0};
+    if (fstatfs(fd, &buf) < 0) {
+        return -1;
+    }
+    // Linux has constants for these like NFS_SUPER_MAGIC, SMB_SUPER_MAGIC, CIFS_MAGIC_NUMBER but
+    // these are in varying headers. Simply hard code them.
+    switch (buf.f_type) {
+        case 0x6969:      // NFS_SUPER_MAGIC
+        case 0x517B:      // SMB_SUPER_MAGIC
+        case 0xFF534D42:  // CIFS_MAGIC_NUMBER
+            return 1;
+        default:
+            // Other FSes are assumed local.
+            return 0;
+    }
+#elif defined(MNT_LOCAL)
+    struct statfs buf {};
+    if (fstatfs(fd, &buf) < 0) return -1;
+    return (buf.f_flags & MNT_LOCAL) ? 0 : 1;
+#else
+    return -1;
+#endif
 }
 
 static inline void safe_append(char *buffer, const char *s, size_t buffsize) {
@@ -382,6 +424,39 @@ maybe_t<wcstring> wrealpath(const wcstring &pathname) {
     return str2wcstring(real_path);
 }
 
+wcstring normalize_path(const wcstring &path) {
+    // Count the leading slashes.
+    const wchar_t sep = L'/';
+    size_t leading_slashes = 0;
+    for (wchar_t c : path) {
+        if (c != sep) break;
+        leading_slashes++;
+    }
+
+    wcstring_list_t comps = split_string(path, sep);
+    wcstring_list_t new_comps;
+    for (wcstring &comp : comps) {
+        if (comp.empty() || comp == L".") {
+            continue;
+        } else if (comp != L"..") {
+            new_comps.push_back(std::move(comp));
+        } else if (!new_comps.empty() && new_comps.back() != L"..") {
+            // '..' with a real path component, drop that path component.
+            new_comps.pop_back();
+        } else if (leading_slashes == 0) {
+            // We underflowed the .. and are a relative (not absolute) path.
+            new_comps.push_back(L"..");
+        }
+    }
+    wcstring result = join_strings(new_comps, sep);
+    // Prepend one or two leading slashes.
+    // Two slashes are preserved. Three+ slashes are collapsed to one. (!)
+    result.insert(0, leading_slashes > 2 ? 1 : leading_slashes, sep);
+    // Ensure ./ normalizes to . and not empty.
+    if (result.empty()) result.push_back(L'.');
+    return result;
+}
+
 wcstring wdirname(const wcstring &path) {
     char *tmp = wcs2str(path);
     char *narrow_res = dirname(tmp);
@@ -417,8 +492,8 @@ const wcstring &wgettext(const wchar_t *in) {
     wcstring key = in;
 
     wgettext_init_if_necessary();
-    auto &&wmap = wgettext_map.acquire();
-    wcstring &val = wmap.value[key];
+    auto wmap = wgettext_map.acquire();
+    wcstring &val = (*wmap)[key];
     if (val.empty()) {
         cstring mbs_in = wcs2string(key);
         char *out = fish_gettext(mbs_in.c_str());
@@ -485,6 +560,11 @@ int fish_wcswidth(const wchar_t *str) { return fish_wcswidth(str, wcslen(str)); 
 ///
 /// See fallback.h for the normal definitions.
 int fish_wcswidth(const wcstring &str) { return fish_wcswidth(str.c_str(), str.size()); }
+
+locale_t fish_c_locale() {
+    static locale_t loc = newlocale(LC_ALL_MASK, "C", NULL);
+    return loc;
+}
 
 /// Like fish_wcstol(), but fails on a value outside the range of an int.
 ///
@@ -620,25 +700,23 @@ unsigned long long fish_wcstoull(const wchar_t *str, const wchar_t **endptr, int
     return result;
 }
 
-file_id_t file_id_t::file_id_from_stat(const struct stat *buf) {
-    assert(buf != NULL);
-
+file_id_t file_id_t::from_stat(const struct stat &buf) {
     file_id_t result = {};
-    result.device = buf->st_dev;
-    result.inode = buf->st_ino;
-    result.size = buf->st_size;
-    result.change_seconds = buf->st_ctime;
-    result.mod_seconds = buf->st_mtime;
+    result.device = buf.st_dev;
+    result.inode = buf.st_ino;
+    result.size = buf.st_size;
+    result.change_seconds = buf.st_ctime;
+    result.mod_seconds = buf.st_mtime;
 
 #ifdef HAVE_STRUCT_STAT_ST_CTIME_NSEC
-    result.change_nanoseconds = buf->st_ctime_nsec;
-    result.mod_nanoseconds = buf->st_mtime_nsec;
+    result.change_nanoseconds = buf.st_ctime_nsec;
+    result.mod_nanoseconds = buf.st_mtime_nsec;
 #elif defined(__APPLE__)
-    result.change_nanoseconds = buf->st_ctimespec.tv_nsec;
-    result.mod_nanoseconds = buf->st_mtimespec.tv_nsec;
+    result.change_nanoseconds = buf.st_ctimespec.tv_nsec;
+    result.mod_nanoseconds = buf.st_mtimespec.tv_nsec;
 #elif defined(_BSD_SOURCE) || defined(_SVID_SOURCE) || defined(_XOPEN_SOURCE)
-    result.change_nanoseconds = buf->st_ctim.tv_nsec;
-    result.mod_nanoseconds = buf->st_mtim.tv_nsec;
+    result.change_nanoseconds = buf.st_ctim.tv_nsec;
+    result.mod_nanoseconds = buf.st_mtim.tv_nsec;
 #else
     result.change_nanoseconds = 0;
     result.mod_nanoseconds = 0;
@@ -651,7 +729,7 @@ file_id_t file_id_for_fd(int fd) {
     file_id_t result = kInvalidFileID;
     struct stat buf = {};
     if (fd >= 0 && 0 == fstat(fd, &buf)) {
-        result = file_id_t::file_id_from_stat(&buf);
+        result = file_id_t::from_stat(buf);
     }
     return result;
 }
@@ -660,7 +738,7 @@ file_id_t file_id_for_path(const wcstring &path) {
     file_id_t result = kInvalidFileID;
     struct stat buf = {};
     if (0 == wstat(path, &buf)) {
-        result = file_id_t::file_id_from_stat(&buf);
+        result = file_id_t::from_stat(buf);
     }
     return result;
 }

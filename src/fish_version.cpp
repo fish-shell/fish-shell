@@ -8,7 +8,7 @@
 // The contents of FISH-BUILD-VERSION-FILE looks like:
 // FISH_BUILD_VERSION="2.7.1-62-gc0480092-dirty"
 // Arrange for it to become a variable.
-static const char *
+static const char * const
 #include "FISH-BUILD-VERSION-FILE"
     ;
 #endif

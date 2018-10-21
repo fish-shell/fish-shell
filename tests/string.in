@@ -124,17 +124,17 @@ string unescape --style=var -- (string escape --style=var -- -)
 
 # The following tests verify that we can correctly match strings.
 
-logmsg 'string match "?" a'
-string match "?" a
+logmsg 'string match "*" a'
+string match "*" a
 
 logmsg 'string match "a*b" axxb'
 string match "a*b" axxb
 
-logmsg 'string match -i "a??B" Axxb'
-string match -i "a??B" Axxb
+logmsg 'string match -i "a**B" Axxb'
+string match -i "a**B" Axxb
 
-logmsg 'echo "ok?" | string match "*\?"'
-echo "ok?" | string match "*\?"
+logmsg 'echo "ok?" | string match "*?"'
+echo "ok?" | string match "*?"
 
 logmsg 'string match -r "cat|dog|fish" "nice dog"'
 string match -r "cat|dog|fish" "nice dog"
@@ -199,8 +199,8 @@ string length; or echo "missing argument returns 1"
 logmsg 'string match -r -v "[dcantg].*" dog can cat diz'
 string match -r -v "[dcantg].*" dog can cat diz; or echo "no regexp invert match"
 
-logmsg 'string match -v "???" dog can cat diz'
-string match -v "???" dog can cat diz; or echo "no glob invert match"
+logmsg 'string match -v "*" dog can cat diz'
+string match -v "*" dog can cat diz; or echo "no glob invert match"
 
 logmsg 'string match -rvn a bbb'
 string match -rvn a bbb; or echo "exit 1"
@@ -289,6 +289,10 @@ logmsg 'string match --entire -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abc
 string match --entire -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
 or echo exit 1
 
+logmsg 'string match --entire "" -- banana'
+string match --entire "" -- banana
+or echo exit 1
+
 logmsg 'string match -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz'
 string match -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
 or echo exit 1
@@ -328,5 +332,40 @@ or echo strings not converted to uppercase
 
 string upper -q ABC DEF
 and echo uppercasing a uppercase string did not fail as expected
+
+logmsg 'Check NUL'
+# Note: We do `string escape` at the end to make a `\0` literal visible.
+printf 'a\0b' | string escape
+printf 'a\0c' | string match -e 'a' | string escape
+printf 'a\0d' | string split '' | string escape
+printf 'a\0b' | string match -r '.*b$' | string escape
+printf 'a\0b' | string replace b g | string escape
+printf 'a\0b' | string replace -r b g | string escape
+# TODO: These do not yet work!
+# printf 'a\0b' | string match '*b' | string escape
+
+logmsg string split0
+count (echo -ne 'abcdefghi' | string split0)
+count (echo -ne 'abc\x00def\x00ghi\x00' | string split0)
+count (echo -ne 'abc\x00def\x00ghi\x00\x00' | string split0)
+count (echo -ne 'abc\x00def\x00ghi' | string split0)
+count (echo -ne 'abc\ndef\x00ghi\x00' | string split0)
+count (echo -ne 'abc\ndef\nghi' | string split0)
+
+logmsg string join0
+set tmp beta alpha\ngamma
+count (string join \n $tmp)
+count (string join0 $tmp)
+count (string join0 $tmp | string split0)
+
+logmsg string split0 in functions
+# This function outputs some newline-separated content, and some
+# explicitly separated content.
+function dualsplit
+  echo alpha
+  echo beta
+  echo -ne 'gamma\x00delta' | string split0
+end
+count (dualsplit)
 
 exit 0

@@ -1,4 +1,4 @@
-if command -s uname > /dev/null ^/dev/null
+if command -s uname > /dev/null 2>/dev/null
     if test (uname) = "Linux"
         complete -c modinfo -a "(__fish_print_modules)"
         complete -c modinfo -l author -s a -d "Print only 'author'"

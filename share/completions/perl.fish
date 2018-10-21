@@ -8,7 +8,7 @@
 begin
     set -l unicode 'commandline | string match -qr -- "-[a-zA-Z]*C[a-zA-Z]*\$"'
     set -l noopt 'commandline | not string match -qr -- "-[a-zA-Z]*C[a-zA-Z]*\$"'
-    set -l modules "(find (perl -lE'print for @INC') -name '*.pm' -printf '%P\n' ^/dev/null \
+    set -l modules "(find (perl -lE'print for @INC') -name '*.pm' -printf '%P\n' 2>/dev/null \
                         | sed -e 's,/,::,g; s,\.pm\$,,' | sort -u)"
     complete -c perl -s 0 -n $noopt -d 'Specify record separator'
     complete -c perl -s a -n $noopt -d 'Turn on autosplit mode'

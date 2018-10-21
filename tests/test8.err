@@ -19,3 +19,6 @@
 
 ####################
 # Catch this corner case, which should produce an error
+
+####################
+# Loop control in conditions

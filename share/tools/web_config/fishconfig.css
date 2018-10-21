@@ -547,4 +547,39 @@ img.delete_icon {
 	height: 16px;
 	vertical-align: text-top;
 	margin-left: 10px;
-};
+}
+
+.paginator {
+	border-spacing: 0;
+	border-collapse: collapse;
+	display: inline;
+	vertical-align: bottom;
+	margin-right: 15px;
+}
+
+.paginator td {
+	border: solid 1px #777;
+	padding: 8px;
+}
+
+.paginator .prev, .paginator .next {
+	font-size: 11pt;
+}
+
+.paginator a {
+	text-decoration: none;
+	text-align: center;
+	color: #0080AA;
+	font-size: larger;
+}
+
+.paginator .disabled a {
+    color: #999999;
+    background-color: transparent;
+    cursor: default;
+}
+
+.paginator .desc {
+	background: #222;
+	color: #BBB;
+}

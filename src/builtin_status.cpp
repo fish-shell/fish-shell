@@ -10,6 +10,7 @@
 #include "builtin_status.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "future_feature_flags.h"
 #include "io.h"
 #include "parser.h"
 #include "proc.h"
@@ -17,28 +18,35 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 enum status_cmd_t {
-    STATUS_IS_LOGIN = 1,
-    STATUS_IS_INTERACTIVE,
+    STATUS_CURRENT_CMD = 1,
+    STATUS_FEATURES,
+    STATUS_FILENAME,
+    STATUS_FISH_PATH,
+    STATUS_FUNCTION,
     STATUS_IS_BLOCK,
     STATUS_IS_BREAKPOINT,
     STATUS_IS_COMMAND_SUB,
     STATUS_IS_FULL_JOB_CTRL,
+    STATUS_IS_INTERACTIVE,
     STATUS_IS_INTERACTIVE_JOB_CTRL,
+    STATUS_IS_LOGIN,
     STATUS_IS_NO_JOB_CTRL,
-    STATUS_FILENAME,
-    STATUS_FUNCTION,
     STATUS_LINE_NUMBER,
     STATUS_SET_JOB_CONTROL,
     STATUS_STACK_TRACE,
+    STATUS_TEST_FEATURE,
     STATUS_UNDEF
 };
 
 // Must be sorted by string, not enum or random.
 const enum_map<status_cmd_t> status_enum_map[] = {
+    {STATUS_CURRENT_CMD, L"current-command"},
     {STATUS_FILENAME, L"current-filename"},
     {STATUS_FUNCTION, L"current-function"},
     {STATUS_LINE_NUMBER, L"current-line-number"},
+    {STATUS_FEATURES, L"features"},
     {STATUS_FILENAME, L"filename"},
+    {STATUS_FISH_PATH, L"fish-path"},
     {STATUS_FUNCTION, L"function"},
     {STATUS_IS_BLOCK, L"is-block"},
     {STATUS_IS_BREAKPOINT, L"is-breakpoint"},
@@ -52,6 +60,7 @@ const enum_map<status_cmd_t> status_enum_map[] = {
     {STATUS_LINE_NUMBER, L"line-number"},
     {STATUS_STACK_TRACE, L"print-stack-trace"},
     {STATUS_STACK_TRACE, L"stack-trace"},
+    {STATUS_TEST_FEATURE, L"test-feature"},
     {STATUS_UNDEF, NULL}};
 #define status_enum_map_len (sizeof status_enum_map / sizeof *status_enum_map)
 
@@ -63,6 +72,9 @@ const enum_map<status_cmd_t> status_enum_map[] = {
         retval = STATUS_INVALID_ARGS;                                                       \
         break;                                                                              \
     }
+
+/// Values that may be returned from the test-feature option to status.
+enum { TEST_FEATURE_ON, TEST_FEATURE_OFF, TEST_FEATURE_NOT_RECOGNIZED };
 
 int job_control_str_to_mode(const wchar_t *mode, wchar_t *cmd, io_streams_t &streams) {
     if (wcscmp(mode, L"full") == 0) {
@@ -80,6 +92,7 @@ struct status_cmd_opts_t {
     bool print_help = false;
     int level = 1;
     int new_job_control_mode = -1;
+    const wchar_t *feature_name;
     status_cmd_t status_cmd = STATUS_UNDEF;
 };
 
@@ -87,24 +100,25 @@ struct status_cmd_opts_t {
 /// the non-flag subcommand form. While these flags are deprecated they must be supported at
 /// least until fish 3.0 and possibly longer to avoid breaking everyones config.fish and other
 /// scripts.
-static const wchar_t *short_options = L":L:cbilfnhj:t";
+static const wchar_t *const short_options = L":L:cbilfnhj:t";
 static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
-                                              {L"is-command-substitution", no_argument, NULL, 'c'},
-                                              {L"is-block", no_argument, NULL, 'b'},
-                                              {L"is-interactive", no_argument, NULL, 'i'},
-                                              {L"is-login", no_argument, NULL, 'l'},
-                                              {L"is-full-job-control", no_argument, NULL, 1},
-                                              {L"is-interactive-job-control", no_argument, NULL, 2},
-                                              {L"is-no-job-control", no_argument, NULL, 3},
-                                              {L"filename", no_argument, NULL, 'f'},
-                                              {L"current-filename", no_argument, NULL, 'f'},
-                                              {L"level", required_argument, NULL, 'L'},
-                                              {L"line", no_argument, NULL, 'n'},
-                                              {L"line-number", no_argument, NULL, 'n'},
-                                              {L"current-line-number", no_argument, NULL, 'n'},
-                                              {L"job-control", required_argument, NULL, 'j'},
-                                              {L"print-stack-trace", no_argument, NULL, 't'},
-                                              {NULL, 0, NULL, 0}};
+          {L"current-filename", no_argument, NULL, 'f'},
+          {L"current-line-number", no_argument, NULL, 'n'},
+          {L"filename", no_argument, NULL, 'f'},
+          {L"fish-path", no_argument, NULL, STATUS_FISH_PATH},
+          {L"is-block", no_argument, NULL, 'b'},
+          {L"is-command-substitution", no_argument, NULL, 'c'},
+          {L"is-full-job-control", no_argument, NULL, STATUS_IS_FULL_JOB_CTRL},
+          {L"is-interactive", no_argument, NULL, 'i'},
+          {L"is-interactive-job-control", no_argument, NULL, STATUS_IS_INTERACTIVE_JOB_CTRL},
+          {L"is-login", no_argument, NULL, 'l'},
+          {L"is-no-job-control", no_argument, NULL, STATUS_IS_NO_JOB_CTRL},
+          {L"job-control", required_argument, NULL, 'j'},
+          {L"level", required_argument, NULL, 'L'},
+          {L"line", no_argument, NULL, 'n'},
+          {L"line-number", no_argument, NULL, 'n'},
+          {L"print-stack-trace", no_argument, NULL, 't'},
+          {NULL, 0, NULL, 0}};
 
 /// Remember the status subcommand and disallow selecting more than one status subcommand.
 static bool set_status_cmd(wchar_t *const cmd, status_cmd_opts_t &opts, status_cmd_t sub_cmd,
@@ -124,6 +138,15 @@ static bool set_status_cmd(wchar_t *const cmd, status_cmd_opts_t &opts, status_c
     return true;
 }
 
+/// Print the features and their values.
+static void print_features(io_streams_t &streams) {
+    for (const auto &md : features_t::metadata) {
+        int set = feature_test(md.flag);
+        streams.out.append_format(L"%ls\t%s\t%ls\t%ls\n", md.name, set ? "on" : "off", md.groups,
+                                  md.description);
+    }
+}
+
 static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
@@ -131,20 +154,26 @@ static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
-            case 1: {
+            case STATUS_IS_FULL_JOB_CTRL: {
                 if (!set_status_cmd(cmd, opts, STATUS_IS_FULL_JOB_CTRL, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
             }
-            case 2: {
+            case STATUS_IS_INTERACTIVE_JOB_CTRL: {
                 if (!set_status_cmd(cmd, opts, STATUS_IS_INTERACTIVE_JOB_CTRL, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
             }
-            case 3: {
+            case STATUS_IS_NO_JOB_CTRL: {
                 if (!set_status_cmd(cmd, opts, STATUS_IS_NO_JOB_CTRL, streams)) {
+                    return STATUS_CMD_ERROR;
+                }
+                break;
+            }
+            case STATUS_FISH_PATH: {
+                if (!set_status_cmd(cmd, opts, STATUS_FISH_PATH, streams)) {
                     return STATUS_CMD_ERROR;
                 }
                 break;
@@ -305,6 +334,24 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             job_control_mode = opts.new_job_control_mode;
             break;
         }
+        case STATUS_FEATURES: {
+            print_features(streams);
+            break;
+        }
+        case STATUS_TEST_FEATURE: {
+            if (args.size() != 1) {
+                const wchar_t *subcmd_str = enum_to_str(opts.status_cmd, status_enum_map);
+                streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, subcmd_str, 1, args.size());
+                return STATUS_INVALID_ARGS;
+            }
+            const auto *metadata = features_t::metadata_for(args.front().c_str());
+            if (!metadata) {
+                retval = TEST_FEATURE_NOT_RECOGNIZED;
+            } else {
+                retval = feature_test(metadata->flag) ? TEST_FEATURE_ON : TEST_FEATURE_OFF;
+            }
+            break;
+        }
         case STATUS_FILENAME: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
             const wchar_t *fn = parser.current_filename();
@@ -372,6 +419,18 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         case STATUS_STACK_TRACE: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
             streams.out.append(parser.stack_trace());
+            break;
+        }
+        case STATUS_CURRENT_CMD: {
+            CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
+            streams.out.append(program_name);
+            streams.out.push_back(L'\n');
+            break;
+        }
+        case STATUS_FISH_PATH: {
+            CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
+            streams.out.append(str2wcstring(get_executable_path("fish")));
+            streams.out.push_back(L'\n');
             break;
         }
     }

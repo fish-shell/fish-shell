@@ -23,7 +23,7 @@
 
 complete -c subl                  --long-option project    --require-parameter -d "Load the given project"
 complete -c subl                  --long-option command    --require-parameter -d "Run the given command"
-complete -c subl --short-option n --long-option new-window --no-files          -d "Open a new window"
+complete -c subl --short-option n --long-option new-window                     -d "Open a new window"
 complete -c subl --short-option a --long-option add        --require-parameter -d "Add folders to the current window"
 complete -c subl --short-option w --long-option wait                           -d "Wait for the files to be closed before returning"
 complete -c subl --short-option b --long-option background                     -d "Don't activate the application"

@@ -4,38 +4,39 @@
 
 # File extensions that should never be checked in regardless of which project
 # directory they reside in.
-*.exe
-*.app
-*.out
-*.so
-*.dylib
-*.dll
-*.lai
-*.la
+*.DS_Store
 *.a
+*.app
+*.d
+*.dll
+*.dylib
+*.exe
+*.gch
+*.la
+*.lai
 *.lib
+*.lo
+*.log
+*.new
 *.o
 *.obj
-*.lo
-*.slo
-*.d
-*.gch
+*.orig
+!tests/*.out
+*.out
 *.pch
+*.slo
+*.so
 *.xccheckout
+*bak
 *~
 *~HEAD
-*bak
-*.new
-*.orig
-*.log
-.Trash-*
-*.DS_Store
 .AppleDouble
 .LSOverride
+.Trash-*
 ._*
+Desktop.ini
 Thumbs.db
 ehthumbs.db
-Desktop.ini
 
 
 # These file names can appear anywhere in the hierarchy. They tend to be OS
@@ -84,23 +85,20 @@ fish-build-version-witness.txt
 # from building and testing.
 /doc_src/commands.hdr
 /doc_src/index.hdr
+/pcre2-*/configure.lineno
 /po/*.gmo
 /share/__fish_build_paths.fish
-/tests/*.tmp.*
 /share/pkgconfig
-/muparser-*/bk-deps
-/muparser-*/shared-ld-sh
-/muparser-*/build/autoconf/muparser.pc
-/muparser-2.2.5/samples/example1/example1
-/pcre2-*/configure.lineno
+/tests/*.tmp.*
 
 # xcode
 ## Build generated
-/build/
-/DerivedData/
-xcuserdata/
 *.moved-aside
 *.xccheckout
 *.xcscmblueprin
 .vscode
+/DerivedData/
+/build/
+/tags
+xcuserdata/
 

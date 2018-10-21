@@ -5,12 +5,10 @@ function __fish_complete_convert_options --description 'Complete Convert options
         case color Color
             convert -list color | awk '{ print $1"\t"$2" "$3} ' | sed '1,/----/d'
         case family
-            convert -list Font | grep family | sed 's/^\s*.\+: //' | sort -u
+            convert -list Font | sed '/family/!d; s/^\s*.\+: //' | sort -u
         case font Font
-            convert -list Font | grep Font | sed 's/^\s*.\+: //' | sort -u
+            convert -list Font | sed '/Font/!d; s/^\s*.\+: //' | sort -u
         case '*'
             convert -list $what
     end
-
-
 end

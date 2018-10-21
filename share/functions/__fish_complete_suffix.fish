@@ -33,21 +33,55 @@ function __fish_complete_suffix -d "Complete using files"
 
     end
 
-    # Perform the completion
+    # Strip leading ./ as it confuses the detection of base and suffix
+    # It is conditionally re-added below.
+    set base (string replace -r '^("\')?\\./' '' -- $comp | string trim -c '\'"') # " make emacs syntax highlighting happy
+    # echo "base: $base" > /dev/tty
+    # echo "suffix: $suff" > /dev/tty
 
-    set base (string replace -r '\.[^.]*$' '' -- $comp | string trim -c '\'"') # " make emacs syntax highlighting happy
-    eval "set files $base*$suff"
+    set -l all
+    set -l dirs
+    # If $comp is "./ma" and the file is "main.py", we'll catch that case here,
+    # but complete.cpp will not consider it a match, so we have to output the
+    # correct form.
 
-    if test $files[1]
-        printf "%s\t$desc\n" $files
+    # Also do directory completion, since there might be files with the correct
+    # suffix in a subdirectory. `eval` is used since $suff may be passed in
+    # as {.foo,.bar} and we want to expand that.
+    eval "set all $base*$suff"
+    if not string match -qr '/$' -- $suff
+        eval "set dirs $base*/"
+
+        # The problem is that we now have each directory included twice in the output,
+        # once as `dir` and once as `dir/`. The runtime here is O(n) for n directories
+        # in the output, but hopefully since we have only one level (no nested results)
+        # it should be fast. The alternative is to shell out to `sort` and remove any
+        # duplicate results, but it would have to be a huge `n` to make up for the fork
+        # overhead.
+        for dir in $dirs
+            set all (string match -v (string match -r '(.*)/$' -- $dir)[2] -- $all)
+        end
     end
 
-    #
-    # Also do directory completion, since there might be files
-    # with the correct suffix in a subdirectory
-    # No need to describe directories (#279)
-    #
+    set files $all $dirs
+    if string match -qr '^\\./' -- $comp
+        set files ./$files
+    end
 
-    __fish_complete_directories $comp ""
+    # Another problem is that expanded paths are not matched, either.
+    # So an expression like $HOME/foo*.zip will expand to /home/rdahl/foo-bar.zip
+    # but that no longer matches the expression at the command line.
+    if string match -qr '[${}*~]' -- $comp
+        set -l expanded
+        eval "set expanded $comp"
+        set files (string replace -- $expanded $comp $files)
+    end
+
+    if set -q files[1]
+        if not string match -q -- "$desc" ""
+           set -l desc "\t$desc"
+        end
+        printf "%s$desc\n" $files #| sort -u
+    end
 
 end

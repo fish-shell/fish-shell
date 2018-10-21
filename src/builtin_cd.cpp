@@ -33,33 +33,31 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_CMD_OK;
     }
 
-    env_var_t dir_in;
+    wcstring dir_in;
     wcstring dir;
 
     if (argv[optind]) {
-        dir_in = env_var_t(wcstring(argv[optind]), 0);  // unamed var
+        dir_in = argv[optind];
     } else {
         auto maybe_dir_in = env_get(L"HOME");
         if (maybe_dir_in.missing_or_empty()) {
             streams.err.append_format(_(L"%ls: Could not find home directory\n"), cmd);
             return STATUS_CMD_ERROR;
         }
-        dir_in = std::move(*maybe_dir_in);
+        dir_in = maybe_dir_in->as_string();
     }
 
     if (!path_get_cdpath(dir_in, &dir)) {
         if (errno == ENOTDIR) {
-            streams.err.append_format(_(L"%ls: '%ls' is not a directory\n"), cmd,
-                                      dir_in.as_string().c_str());
+            streams.err.append_format(_(L"%ls: '%ls' is not a directory\n"), cmd, dir_in.c_str());
         } else if (errno == ENOENT) {
             streams.err.append_format(_(L"%ls: The directory '%ls' does not exist\n"), cmd,
-                                      dir_in.as_string().c_str());
+                                      dir_in.c_str());
         } else if (errno == EROTTEN) {
-            streams.err.append_format(_(L"%ls: '%ls' is a rotten symlink\n"), cmd,
-                                      dir_in.as_string().c_str());
+            streams.err.append_format(_(L"%ls: '%ls' is a rotten symlink\n"), cmd, dir_in.c_str());
         } else {
             streams.err.append_format(_(L"%ls: Unknown error trying to locate directory '%ls'\n"),
-                                      cmd, dir_in.as_string().c_str());
+                                      cmd, dir_in.c_str());
         }
 
         if (!shell_is_interactive()) streams.err.append(parser.current_line());
@@ -67,7 +65,11 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_CMD_ERROR;
     }
 
-    if (wchdir(dir) != 0) {
+    // Prepend the PWD if we don't start with a slash, and then normalize the directory.
+    wcstring norm_dir =
+        normalize_path(string_prefixes_string(L"/", dir) ? dir : env_get_pwd_slash() + dir);
+
+    if (wchdir(norm_dir) != 0) {
         struct stat buffer;
         int status;
 
@@ -86,10 +88,6 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_CMD_ERROR;
     }
 
-    if (!env_set_pwd()) {
-        streams.err.append_format(_(L"%ls: Could not set PWD variable\n"), cmd);
-        return STATUS_CMD_ERROR;
-    }
-
+    env_set_one(L"PWD", ENV_EXPORT | ENV_GLOBAL, std::move(norm_dir));
     return STATUS_CMD_OK;
 }

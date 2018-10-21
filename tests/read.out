@@ -35,9 +35,9 @@ two
 1 'hello'
 1 'h' 1 'ello'
 1 'h' 1 'e' 1 'llo'
-1 ''
-1 't' 1 ''
-1 't' 1 '' 1 ''
+0
+1 't' 0
+1 't' 0 0
 1 ' ' 1 't'
 
 2 'hello' 'there'
@@ -130,3 +130,5 @@ Multi-char delimiters with IFS
 a
 b
 ..c
+
+banana sausage

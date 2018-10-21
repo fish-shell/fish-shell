@@ -157,7 +157,7 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     bool soft = false;
     int what = RLIMIT_FSIZE;
 
-    static const wchar_t *short_options = L":HSacdflmnstuvh";
+    static const wchar_t *const short_options = L":HSacdflmnstuvh";
     static const struct woption long_options[] = {
         {L"all", no_argument, NULL, 'a'},
         {L"hard", no_argument, NULL, 'H'},

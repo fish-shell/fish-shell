@@ -109,7 +109,7 @@ void builtin_wperror(const wchar_t *s, io_streams_t &streams) {
     }
 }
 
-static const wchar_t *short_options = L"+:h";
+static const wchar_t *const short_options = L"+:h";
 static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
                                               {NULL, 0, NULL, 0}};
 
@@ -485,7 +485,10 @@ static const builtin_data_t *builtin_lookup(const wcstring &name) {
 /// Initialize builtin data.
 void builtin_init() {
     for (size_t i = 0; i < BUILTIN_COUNT; i++) {
-        intern_static(builtin_datas[i].name);
+        const wchar_t *name = builtin_datas[i].name;
+        intern_static(name);
+        assert((i == 0 || wcscmp(builtin_datas[i - 1].name, name) < 0) &&
+               "builtins are not sorted alphabetically");
     }
 }
 
@@ -493,12 +496,12 @@ void builtin_init() {
 bool builtin_exists(const wcstring &cmd) { return static_cast<bool>(builtin_lookup(cmd)); }
 
 /// Is the command a keyword we need to special-case the handling of `-h` and `--help`.
-static const wcstring_list_t help_builtins({L"for", L"while", L"function", L"if", L"end", L"switch",
-                                            L"case"});
+static const wchar_t *const help_builtins[] = {L"for", L"while",  L"function", L"if",
+                                               L"end", L"switch", L"case"};
 static bool cmd_needs_help(const wchar_t *cmd) { return contains(help_builtins, cmd); }
 
 /// Execute a builtin command
-int builtin_run(parser_t &parser, const wchar_t *const *argv, io_streams_t &streams) {
+int builtin_run(parser_t &parser, int job_pgid, wchar_t **argv, io_streams_t &streams) {
     UNUSED(parser);
     UNUSED(streams);
     if (argv == NULL || argv[0] == NULL) return STATUS_INVALID_ARGS;
@@ -511,15 +514,16 @@ int builtin_run(parser_t &parser, const wchar_t *const *argv, io_streams_t &stre
         return STATUS_CMD_OK;
     }
 
-    const builtin_data_t *data = builtin_lookup(argv[0]);
-    if (data) {
-        // Warning: layering violation and naughty cast. The code originally had a much more
-        // complicated solution to achieve exactly the same result: lie about the constness of argv.
-        // Some of the builtins we call do mutate the array via their calls to wgetopt() which could
-        // result in the pointers being reordered. This is harmless because we only get called once
-        // with a given argv array and nothing else will look at the contents of the array after we
-        // return.
-        return data->func(parser, streams, (wchar_t **)argv);
+    if (const builtin_data_t *data = builtin_lookup(argv[0])) {
+        // If we are interactive, save the foreground pgroup and restore it after in case the
+        // builtin needs to read from the terminal. See #4540.
+        bool grab_tty = is_interactive_session && isatty(streams.stdin_fd);
+        pid_t pgroup_to_restore = grab_tty ? terminal_acquire_before_builtin(job_pgid) : -1;
+        int ret = data->func(parser, streams, argv);
+        if (pgroup_to_restore >= 0) {
+            tcsetpgrp(STDIN_FILENO, pgroup_to_restore);
+        }
+        return ret;
     }
 
     debug(0, UNKNOWN_BUILTIN_ERR_MSG, argv[0]);

@@ -11,6 +11,15 @@ PROJECT(fish)
 
 # We are C++11.
 SET(CMAKE_CXX_STANDARD 11)
+SET(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
+SET(CMAKE_CXX_FLAGS_RELEASE "-O2")
+SET(DEFAULT_BUILD_TYPE "RelWithDebInfo")
+
+IF(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    MESSAGE(STATUS "Setting build type to default '${DEFAULT_BUILD_TYPE}'")
+    SET(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}")
+ENDIF()
 
 # Disable exception handling.
 ADD_COMPILE_OPTIONS(-fno-exceptions)
@@ -58,6 +67,7 @@ SET(FISH_SRCS
     src/postfork.cpp src/proc.cpp src/reader.cpp src/sanity.cpp src/screen.cpp
     src/signal.cpp src/tnode.cpp src/tokenizer.cpp src/utf8.cpp src/util.cpp
     src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp src/wutil.cpp
+    src/future_feature_flags.cpp
 )
 
 # Header files are just globbed.
@@ -84,11 +94,22 @@ ADD_DEFINITIONS(-D_UNICODE=1
 # This defines the FBVF variable.
 INCLUDE(Version)
 
+# Let fish pick up when we're running out of the build directory without installing
+ADD_DEFINITIONS(-DCMAKE_BINARY_DIR="${CMAKE_BINARY_DIR}")
+ADD_DEFINITIONS(-DCMAKE_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+
 # Teach fish_version.o to rebuild when FBVF changes.
 # The standard C++ include detection machinery misses this.
 SET_SOURCE_FILES_PROPERTIES(src/fish_version.cpp
                             PROPERTIES OBJECT_DEPENDS
                             ${CMAKE_CURRENT_BINARY_DIR}/${FBVF})
+
+OPTION(INTERNAL_WCWIDTH "use fallback wcwidth" ON)
+IF(INTERNAL_WCWIDTH)
+    add_definitions(-DHAVE_BROKEN_WCWIDTH=1)
+ELSE()
+    add_definitions(-DHAVE_BROKEN_WCWIDTH=0)
+ENDIF()
 
 # Set up PCRE2
 INCLUDE(cmake/PCRE2.cmake)

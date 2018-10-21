@@ -1,10 +1,10 @@
 
 function __fish_complete_pg_database
-    psql -AtqwlF \t ^/dev/null | awk 'NF > 1 { print $1 }'
+    psql -AtqwlF \t 2>/dev/null | awk 'NF > 1 { print $1 }'
 end
 
 function __fish_complete_pg_user
-    psql -Atqwc 'select usename from pg_user' template1 ^/dev/null
+    psql -Atqwc 'select usename from pg_user' template1 2>/dev/null
 end
 
 complete -c psql --no-files -a '(__fish_complete_pg_database)'

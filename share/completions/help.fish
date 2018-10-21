@@ -1,4 +1,4 @@
-if test -d "$__fish_datadir/man/man1/"
+if test -d "$__fish_data_dir/man/man1/"
 	complete -c help -x -a '(__fish_print_commands)' -d 'Help for this command'
 end
 
@@ -38,7 +38,6 @@ complete -c help -x -a history-search -d 'Searchable history'
 complete -c help -x -a identifiers -d 'Shell variable and function names'
 complete -c help -x -a initialization -d 'Initialization files'
 complete -c help -x -a introduction -d 'Introduction'
-complete -c help -x -a issues -d 'Common issues with fish'
 complete -c help -x -a job-control -d 'Running multiple programs'
 complete -c help -x -a killring -d 'Copy and paste (Kill Ring)'
 complete -c help -x -a more-help -d 'Further help and development'

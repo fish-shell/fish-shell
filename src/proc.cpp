@@ -55,6 +55,9 @@
 /// Status of last process to exit.
 static int last_status = 0;
 
+/// The signals that signify crashes to us.
+static const int crashsignals[] = {SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGSYS};
+
 bool job_list_is_empty() {
     ASSERT_IS_MAIN_THREAD();
     return parser_t::principal_parser().job_list().empty();
@@ -163,40 +166,37 @@ int proc_get_last_status() { return last_status; }
 static owning_lock<std::vector<bool>> locked_consumed_job_ids;
 
 job_id_t acquire_job_id() {
-    auto &&locker = locked_consumed_job_ids.acquire();
-    std::vector<bool> &consumed_job_ids = locker.value;
+    auto consumed_job_ids = locked_consumed_job_ids.acquire();
 
     // Find the index of the first 0 slot.
-    std::vector<bool>::iterator slot =
-        std::find(consumed_job_ids.begin(), consumed_job_ids.end(), false);
-    if (slot != consumed_job_ids.end()) {
+    auto slot = std::find(consumed_job_ids->begin(), consumed_job_ids->end(), false);
+    if (slot != consumed_job_ids->end()) {
         // We found a slot. Note that slot 0 corresponds to job ID 1.
         *slot = true;
-        return (job_id_t)(slot - consumed_job_ids.begin() + 1);
+        return (job_id_t)(slot - consumed_job_ids->begin() + 1);
     }
 
     // We did not find a slot; create a new slot. The size of the vector is now the job ID
     // (since it is one larger than the slot).
-    consumed_job_ids.push_back(true);
-    return (job_id_t)consumed_job_ids.size();
+    consumed_job_ids->push_back(true);
+    return (job_id_t)consumed_job_ids->size();
 }
 
 void release_job_id(job_id_t jid) {
     assert(jid > 0);
-    auto &&locker = locked_consumed_job_ids.acquire();
-    std::vector<bool> &consumed_job_ids = locker.value;
-    size_t slot = (size_t)(jid - 1), count = consumed_job_ids.size();
+    auto consumed_job_ids = locked_consumed_job_ids.acquire();
+    size_t slot = (size_t)(jid - 1), count = consumed_job_ids->size();
 
     // Make sure this slot is within our vector and is currently set to consumed.
     assert(slot < count);
-    assert(consumed_job_ids.at(slot) == true);
+    assert(consumed_job_ids->at(slot) == true);
 
     // Clear it and then resize the vector to eliminate unused trailing job IDs.
-    consumed_job_ids.at(slot) = false;
+    consumed_job_ids->at(slot) = false;
     while (count--) {
-        if (consumed_job_ids.at(count)) break;
+        if (consumed_job_ids->at(count)) break;
     }
-    consumed_job_ids.resize(count + 1);
+    consumed_job_ids->resize(count + 1);
 }
 
 job_t *job_get(job_id_t id) {
@@ -333,16 +333,6 @@ static void handle_child_status(pid_t pid, int status) {
         sigaction(SIGQUIT, &act, 0);
         kill(getpid(), WTERMSIG(status));
     }
-
-#if 0
-    // TODO: Decide whether to eliminate this block or have it emit a warning message.
-    // WARNING: See the special short-circuit logic above vis-a-vis signals.
-    if (!found_proc) {
-        // A child we lost track of? There have been bugs in both subshell handling and in builtin
-        // handling that have caused this previously...
-    }
-#endif
-    return;
 }
 
 process_t::process_t() {}
@@ -452,8 +442,7 @@ static wcstring truncate_command(const wcstring &cmd) {
     }
 
     // Truncation required.
-    const bool ellipsis_is_unicode = (ellipsis_char == L'\x2026');
-    const size_t ellipsis_length = ellipsis_is_unicode ? 1 : 3;
+    const size_t ellipsis_length = wcslen(ellipsis_str); //no need for wcwidth
     size_t trunc_length = max_len - ellipsis_length;
     // Eat trailing whitespace.
     while (trunc_length > 0 && iswspace(cmd.at(trunc_length - 1))) {
@@ -461,11 +450,7 @@ static wcstring truncate_command(const wcstring &cmd) {
     }
     wcstring result = wcstring(cmd, 0, trunc_length);
     // Append ellipsis.
-    if (ellipsis_is_unicode) {
-        result.push_back(ellipsis_char);
-    } else {
-        result.append(L"...");
-    }
+    result.append(ellipsis_str);
     return result;
 }
 
@@ -481,7 +466,7 @@ static void format_job_info(const job_t *j, job_status_t status) {
     if (cur_term) {
         tputs(clr_eol, 1, &writeb);
     } else {
-        fwprintf(stdout, L"\e[K");
+        fwprintf(stdout, L"\x1B[K");
     }
     fwprintf(stdout, L"\n");
 }
@@ -551,7 +536,8 @@ static int process_clean_after_marking(bool allow_interactive) {
             // Handle signals other than SIGPIPE.
             int proc_is_job = (p->is_first_in_job && p->is_last_in_job);
             if (proc_is_job) j->set_flag(JOB_NOTIFIED, true);
-            if (j->get_flag(JOB_SKIP_NOTIFICATION)) {
+            // Always report crashes.
+            if (j->get_flag(JOB_SKIP_NOTIFICATION) && !contains(crashsignals,WTERMSIG(p->status))) {
                 continue;
             }
 
@@ -587,7 +573,7 @@ static int process_clean_after_marking(bool allow_interactive) {
                 if (cur_term != NULL) {
                     tputs(clr_eol, 1, &writeb);
                 } else {
-                    fwprintf(stdout, L"\e[K");  // no term set up - do clr_eol manually
+                    fwprintf(stdout, L"\x1B[K");  // no term set up - do clr_eol manually
                 }
                 fwprintf(stdout, L"\n");
             }
@@ -763,19 +749,17 @@ static void read_try(job_t *j) {
         debug(3, L"proc::read_try('%ls')", j->command_wcstr());
         while (1) {
             char b[BUFFER_SIZE];
-            long l;
-
-            l = read_blocked(buff->pipe_fd[0], b, BUFFER_SIZE);
-            if (l == 0) {
+            long len = read_blocked(buff->pipe_fd[0], b, BUFFER_SIZE);
+            if (len == 0) {
                 break;
-            } else if (l < 0) {
+            } else if (len < 0) {
                 if (errno != EAGAIN) {
                     debug(1, _(L"An error occured while reading output from code block"));
                     wperror(L"read_try");
                 }
                 break;
             } else {
-                buff->out_buffer_append(b, l);
+                buff->append(b, len);
             }
         }
     }
@@ -786,7 +770,7 @@ static void read_try(job_t *j) {
 /// \param j The job to give the terminal to.
 /// \param cont If this variable is set, we are giving back control to a job that has previously
 /// been stopped. In that case, we need to set the terminal attributes to those saved in the job.
-bool terminal_give_to_job(job_t *j, int cont) {
+bool terminal_give_to_job(const job_t *j, bool cont) {
     errno = 0;
     if (j->pgid == 0) {
         debug(2, "terminal_give_to_job() returning early due to no process group");
@@ -886,6 +870,17 @@ bool terminal_give_to_job(job_t *j, int cont) {
 
     signal_unblock();
     return true;
+}
+
+pid_t terminal_acquire_before_builtin(int job_pgid) {
+    pid_t selfpid = getpid();
+    pid_t current_owner = tcgetpgrp(STDIN_FILENO);
+    if (current_owner >= 0 && current_owner != selfpid && current_owner == job_pgid) {
+        if (tcsetpgrp(STDIN_FILENO, selfpid) == 0) {
+            return current_owner;
+        }
+    }
+    return -1;
 }
 
 /// Returns control of the terminal to the shell, and saves the terminal attribute state to the job,

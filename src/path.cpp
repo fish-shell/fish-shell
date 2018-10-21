@@ -80,12 +80,21 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
             err = EACCES;
         } else {
             switch (errno) {
-                case ENOENT:
-                case ENAMETOOLONG:
                 case EACCES:
+                case ENAMETOOLONG:
+                case ENOENT:
                 case ENOTDIR: {
                     break;
                 }
+#ifdef __sun
+                //Solaris 5.11 can return any of the following three if the path
+                //does not exist. Yes, even 0. No, none of this is documented.
+                case 0:
+                case EAGAIN:
+                case EEXIST: {
+                    break;
+                }
+#endif
                 //WSL has a bug where access(2) can return EINVAL
                 //See https://github.com/Microsoft/BashOnWindows/issues/2522
                 //The only other way EINVAL can happen is if the wrong
@@ -148,11 +157,10 @@ wcstring_list_t path_get_paths(const wcstring &cmd) {
     return paths;
 }
 
-bool path_get_cdpath(const env_var_t &dir_var, wcstring *out, const wchar_t *wd,
+bool path_get_cdpath(const wcstring &dir, wcstring *out, const wchar_t *wd,
                      const env_vars_snapshot_t &env_vars) {
     int err = ENOENT;
-    if (dir_var.empty()) return false;
-    wcstring dir = dir_var.as_string();
+    if (dir.empty()) return false;
 
     if (wd) {
         size_t len = wcslen(wd);
@@ -172,12 +180,14 @@ bool path_get_cdpath(const env_var_t &dir_var, wcstring *out, const wchar_t *wd,
         paths.push_back(path);
     } else {
         // Respect CDPATH.
-        auto cdpaths = env_vars.get(L"CDPATH");
-        if (cdpaths.missing_or_empty()) cdpaths = env_var_t(L"CDPATH", L".");
-
-        std::vector<wcstring> cdpathsv;
-        cdpaths->to_list(cdpathsv);
-        for (auto next_path : cdpathsv) {
+        wcstring_list_t cdpathsv;
+        if (auto cdpaths = env_vars.get(L"CDPATH")) {
+            cdpathsv = cdpaths->as_list();
+        }
+        if (cdpathsv.empty()) {
+            cdpathsv.push_back(L".");
+        }
+        for (wcstring next_path : cdpathsv) {
             if (next_path.empty()) next_path = L".";
             if (next_path == L"." && wd != NULL) {
                 // next_path is just '.', and we have a working directory, so use the wd instead.
@@ -194,9 +204,8 @@ bool path_get_cdpath(const env_var_t &dir_var, wcstring *out, const wchar_t *wd,
     }
 
     bool success = false;
-    for (wcstring_list_t::const_iterator iter = paths.begin(); iter != paths.end(); ++iter) {
+    for (const wcstring &dir : paths) {
         struct stat buf;
-        const wcstring &dir = *iter;
         if (wstat(dir, &buf) == 0) {
             if (S_ISDIR(buf.st_mode)) {
                 success = true;
@@ -221,10 +230,7 @@ bool path_can_be_implicit_cd(const wcstring &path, wcstring *out_path, const wch
     if (string_prefixes_string(L"/", exp_path) || string_prefixes_string(L"./", exp_path) ||
         string_prefixes_string(L"../", exp_path) || string_suffixes_string(L"/", exp_path) ||
         exp_path == L"..") {
-        // These paths can be implicit cd, so see if you cd to the path. Note that a single period
-        // cannot (that's used for sourcing files anyways).
-        env_var_t path_var(L"n/a", exp_path);
-        result = path_get_cdpath(path_var, out_path, wd, vars);
+        result = path_get_cdpath(exp_path, out_path, wd, vars);
     }
     return result;
 }

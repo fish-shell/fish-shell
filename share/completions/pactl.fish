@@ -27,11 +27,11 @@ end
 
 function __fish_pa_list_ports
 	# Yes, this is localized
-	env LC_ALL=C pactl list cards ^/dev/null | sed -n -e '/Ports:/,$p' | string match -r '^\t\t\w.*$' | string replace -r '\s+([-+\w:]+): (\w.+)' '$1\t$2'
+	env LC_ALL=C pactl list cards 2>/dev/null | sed -n -e '/Ports:/,$p' | string match -r '^\t\t\w.*$' | string replace -r '\s+([-+\w:]+): (\w.+)' '$1\t$2'
 end
 
 function __fish_pa_list_profiles
-	env LC_ALL=C pactl list cards ^/dev/null | sed -n -e '/Profiles:/,/Active Profile/p' | string match -r '\t\t.*' | string replace -r '\s+([-+\w:]+): (\w.+)' '$1\t$2'
+	env LC_ALL=C pactl list cards 2>/dev/null | sed -n -e '/Profiles:/,/Active Profile/p' | string match -r '\t\t.*' | string replace -r '\s+([-+\w:]+): (\w.+)' '$1\t$2'
 end
 
 # This is needed to filter out loaded modules

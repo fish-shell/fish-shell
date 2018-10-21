@@ -1,6 +1,6 @@
 if test (uname) = 'Darwin' # OS X
-	complete -c open -s a -d 'Open APP, or open FILE(s), if supplied, with APP' -x -a "(mdfind -onlyin /Applications -onlyin ~/Applications -onlyin /Developer/Applications 'kMDItemKind==Application' | sed -E 's/.+\/(.+)\.app/\1/g')"
-	complete -c open -s b -d 'Bundle Identifier of APP to open, or to be used to open FILE' -x -a "(mdls (mdfind -onlyin /Applications -onlyin ~/Applications -onlyin /Developer/Applications 'kMDItemKind==Application') -name kMDItemCFBundleIdentifier | sed -E 's/kMDItemCFBundleIdentifier = \"(.+)\"/\1/g')"
+	complete -c open -s a -d 'Open APP, or open FILE(s), if supplied, with APP' -r -a "(mdfind -onlyin /Applications -onlyin ~/Applications -onlyin /Developer/Applications 'kMDItemContentType==com.apple.application-*' | sed -E 's/.+\/(.+)\.app/\1/g')"
+	complete -c open -s b -d 'Bundle Identifier of APP to open, or to be used to open FILE' -x -a "(mdls (mdfind -onlyin /Applications -onlyin ~/Applications -onlyin /Developer/Applications 'kMDItemContentType==com.apple.application-*') -name kMDItemCFBundleIdentifier | sed -E 's/kMDItemCFBundleIdentifier = \"(.+)\"/\1/g')"
 	complete -c open -s e -d 'Open FILE(s) with /Applications/TextEdit'
 	complete -c open -s t -d 'Open FILE(s) with default text editor from LaunchServices'
 	complete -c open -s f -d 'Open STDIN/PIPE with default text editor. End input with C-d.'

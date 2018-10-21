@@ -32,8 +32,9 @@ else
     set files_to_test *.expect
 end
 
-source test_util.fish (status -f) $argv; or exit
-cat interactive.config >> $XDG_CONFIG_HOME/fish/config.fish
+source test_util.fish (status -f) $argv
+or exit
+cat interactive.config >>$XDG_CONFIG_HOME/fish/config.fish
 
 say -o cyan "Testing interactive functionality"
 if not type -q expect
@@ -44,12 +45,14 @@ end
 function test_file
     set -l file $argv[1]
     echo -n "Testing file $file ... "
+    set starttime (date +%s)
     begin
         set -lx TERM dumb
-        expect -n -c 'source interactive.expect.rc' -f $file >$file.tmp.out ^$file.tmp.err
+        expect -n -c 'source interactive.expect.rc' -f $file >$file.tmp.out 2>$file.tmp.err
     end
     set -l exit_status $status
     set -l res ok
+    set test_duration (math (date +%s) - $starttime)
     mv -f interactive.tmp.log $file.tmp.log
 
     diff $file.tmp.out $file.out >/dev/null
@@ -58,7 +61,7 @@ function test_file
     set -l err_status $status
 
     if test $out_status -eq 0 -a $err_status -eq 0 -a $exit_status -eq 0
-        say green "ok"
+        say green "ok ($test_duration sec)"
         # clean up tmp files
         rm -f $file.tmp.{err,out,log}
         return 0

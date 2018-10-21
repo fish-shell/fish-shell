@@ -93,5 +93,5 @@ function __fish_complete_zfs_rw_properties -d "Completes with ZFS read-write pro
 		echo -e "volmode\t"(_ "How to expose volumes to OS")" (default, geom, dev, none)"
 	end		
 	# User properties; the /dev/null redirection masks the possible "no datasets available"
-	zfs list -o all ^/dev/null | head -n 1 | string replace -a -r "\s+" "\n" | string match -e ":" | string lower
+	zfs list -o all 2>/dev/null | head -n 1 | string replace -a -r "\s+" "\n" | string match -e ":" | string lower
 end

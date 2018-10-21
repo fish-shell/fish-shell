@@ -9,13 +9,8 @@
 #include <wchar.h>
 
 #include <algorithm>
-#include <functional>
-#include <iostream>
-#include <iterator>
 #include <memory>
-#include <sstream>
 #include <string>
-#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -30,33 +25,24 @@
 #include "wgetopt.h"  // IWYU pragma: keep
 #include "wutil.h"    // IWYU pragma: keep
 
-class parser_t;
-const wcstring var_name_prefix = L"_flag_";
+static const wcstring var_name_prefix = L"_flag_";
 
 #define BUILTIN_ERR_INVALID_OPT_SPEC _(L"%ls: Invalid option spec '%ls' at char '%lc'\n")
 
-class option_spec_t {
-   public:
-    wchar_t short_flag;
+struct option_spec_t {
+    const wchar_t short_flag;
     wcstring long_flag;
     wcstring validation_command;
     wcstring_list_t vals;
-    bool short_flag_valid;
-    int num_allowed;
-    int num_seen;
+    bool short_flag_valid{true};
+    int num_allowed{0};
+    int num_seen{0};
 
-    option_spec_t(wchar_t s)
-        : short_flag(s),
-          long_flag(),
-          validation_command(),
-          vals(),
-          short_flag_valid(true),
-          num_allowed(0),
-          num_seen(0) {}
+    option_spec_t(wchar_t s) : short_flag(s) {}
 };
+using option_spec_ref_t = std::unique_ptr<option_spec_t>;
 
-class argparse_cmd_opts_t {
-   public:
+struct argparse_cmd_opts_t {
     bool print_help = false;
     bool stop_nonopt = false;
     size_t min_args = 0;
@@ -65,18 +51,12 @@ class argparse_cmd_opts_t {
     wcstring name = L"argparse";
     wcstring_list_t raw_exclusive_flags;
     wcstring_list_t argv;
-    std::unordered_map<wchar_t, option_spec_t *> options;
+    std::unordered_map<wchar_t, option_spec_ref_t> options;
     std::unordered_map<wcstring, wchar_t> long_to_short_flag;
     std::vector<std::vector<wchar_t>> exclusive_flag_sets;
-
-    ~argparse_cmd_opts_t() {
-        for (auto it : options) {
-            delete it.second;
-        }
-    }
 };
 
-static const wchar_t *short_options = L"+:hn:sx:N:X:";
+static const wchar_t *const short_options = L"+:hn:sx:N:X:";
 static const struct woption long_options[] = {{L"stop-nonopt", no_argument, NULL, 's'},
                                               {L"name", required_argument, NULL, 'n'},
                                               {L"exclusive", required_argument, NULL, 'x'},
@@ -87,20 +67,23 @@ static const struct woption long_options[] = {{L"stop-nonopt", no_argument, NULL
 
 // Check if any pair of mutually exclusive options was seen. Note that since every option must have
 // a short name we only need to check those.
-static int check_for_mutually_exclusive_flags(argparse_cmd_opts_t &opts, io_streams_t &streams) {
-    for (auto it : opts.options) {
-        auto opt_spec = it.second;
+static int check_for_mutually_exclusive_flags(const argparse_cmd_opts_t &opts,
+                                              io_streams_t &streams) {
+    for (const auto &kv : opts.options) {
+        const auto &opt_spec = kv.second;
         if (opt_spec->num_seen == 0) continue;
 
         // We saw this option at least once. Check all the sets of mutually exclusive options to see
         // if this option appears in any of them.
-        for (auto xarg_set : opts.exclusive_flag_sets) {
-            auto found = std::find(xarg_set.begin(), xarg_set.end(), opt_spec->short_flag);
-            if (found != xarg_set.end()) {
+        for (const auto &xarg_set : opts.exclusive_flag_sets) {
+            if (contains(xarg_set, opt_spec->short_flag)) {
                 // Okay, this option is in a mutually exclusive set of options. Check if any of the
                 // other mutually exclusive options have been seen.
-                for (auto xflag : xarg_set) {
-                    auto xopt_spec = opts.options[xflag];
+                for (const auto &xflag : xarg_set) {
+                    auto xopt_spec_iter = opts.options.find(xflag);
+                    if (xopt_spec_iter == opts.options.end()) continue;
+
+                    const auto &xopt_spec = xopt_spec_iter->second;
                     // Ignore this flag in the list of mutually exclusive flags.
                     if (xopt_spec->short_flag == opt_spec->short_flag) continue;
 
@@ -134,28 +117,14 @@ static int check_for_mutually_exclusive_flags(argparse_cmd_opts_t &opts, io_stre
             }
         }
     }
-
     return STATUS_CMD_OK;
-}
-
-// This is used as a specialization to allow us to force operator>> to split the input on something
-// other than spaces.
-class WordDelimitedByComma : public wcstring {};
-
-// Cppcheck incorrectly complains this is unused. It is indirectly used by std:istream_iterator.
-std::wistream &operator>>(std::wistream &is, WordDelimitedByComma &output) {  // cppcheck-suppress
-    std::getline(is, output, L',');
-    return is;
 }
 
 // This should be called after all the option specs have been parsed. At that point we have enough
 // information to parse the values associated with any `--exclusive` flags.
 static int parse_exclusive_args(argparse_cmd_opts_t &opts, io_streams_t &streams) {
-    for (auto raw_xflags : opts.raw_exclusive_flags) {
-        // This is an advanced technique that leverages the C++ STL to split the string on commas.
-        std::wistringstream iss(raw_xflags);
-        wcstring_list_t xflags((std::istream_iterator<WordDelimitedByComma, wchar_t>(iss)),
-                               std::istream_iterator<WordDelimitedByComma, wchar_t>());
+    for (const wcstring &raw_xflags : opts.raw_exclusive_flags) {
+        const wcstring_list_t xflags = split_string(raw_xflags, L',');
         if (xflags.size() < 2) {
             streams.err.append_format(_(L"%ls: exclusive flag string '%ls' is not valid\n"),
                                       opts.name.c_str(), raw_xflags.c_str());
@@ -163,7 +132,7 @@ static int parse_exclusive_args(argparse_cmd_opts_t &opts, io_streams_t &streams
         }
 
         std::vector<wchar_t> exclusive_set;
-        for (auto flag : xflags) {
+        for (const auto &flag : xflags) {
             if (flag.size() == 1 && opts.options.find(flag[0]) != opts.options.end()) {
                 // It's a short flag.
                 exclusive_set.push_back(flag[0]);
@@ -187,7 +156,7 @@ static int parse_exclusive_args(argparse_cmd_opts_t &opts, io_streams_t &streams
     return STATUS_CMD_OK;
 }
 
-static bool parse_flag_modifiers(argparse_cmd_opts_t &opts, option_spec_t *opt_spec,
+static bool parse_flag_modifiers(const argparse_cmd_opts_t &opts, const option_spec_ref_t &opt_spec,
                                  const wcstring &option_spec, const wchar_t **opt_spec_str,
                                  io_streams_t &streams) {
     const wchar_t *s = *opt_spec_str;
@@ -231,14 +200,13 @@ static bool parse_flag_modifiers(argparse_cmd_opts_t &opts, option_spec_t *opt_s
         return false;
     }
 
-    opts.options.emplace(opt_spec->short_flag, opt_spec);
     *opt_spec_str = s;
     return true;
 }
 
 /// Parse the text following the short flag letter.
-static bool parse_option_spec_sep(argparse_cmd_opts_t &opts, option_spec_t *opt_spec,
-                                  wcstring &option_spec, const wchar_t **opt_spec_str,
+static bool parse_option_spec_sep(argparse_cmd_opts_t &opts, const option_spec_ref_t &opt_spec,
+                                  const wcstring &option_spec, const wchar_t **opt_spec_str,
                                   io_streams_t &streams) {
     const wchar_t *s = *opt_spec_str;
     if (*(s - 1) == L'#') {
@@ -280,7 +248,6 @@ static bool parse_option_spec_sep(argparse_cmd_opts_t &opts, option_spec_t *opt_
         opts.implicit_int_flag = opt_spec->short_flag;
         opt_spec->num_allowed = 1;  // mandatory arg and can appear only once
         s++;  // the struct is initialized assuming short_flag_valid should be true
-        if (!*s) opts.options.emplace(opt_spec->short_flag, opt_spec);
     } else {
         // Long flag name not allowed if second char isn't '/', '-' or '#' so just check for
         // behavior modifier chars.
@@ -293,7 +260,7 @@ static bool parse_option_spec_sep(argparse_cmd_opts_t &opts, option_spec_t *opt_
 
 /// This parses an option spec string into a struct option_spec.
 static bool parse_option_spec(argparse_cmd_opts_t &opts,  //!OCLINT(high npath complexity)
-                              wcstring option_spec, io_streams_t &streams) {
+                              const wcstring &option_spec, io_streams_t &streams) {
     if (option_spec.empty()) {
         streams.err.append_format(_(L"%ls: An option spec must have a short flag letter\n"),
                                   opts.name.c_str());
@@ -307,29 +274,40 @@ static bool parse_option_spec(argparse_cmd_opts_t &opts,  //!OCLINT(high npath c
         return false;
     }
 
-    option_spec_t *opt_spec = new option_spec_t(*s++);
-    if (!*s) {
-        // Bool short flag only.
-        opts.options.emplace(opt_spec->short_flag, opt_spec);
-        return true;
-    }
-    if (!parse_option_spec_sep(opts, opt_spec, option_spec, &s, streams)) return false;
-    if (!*s) return true;  // parsed the entire string so the option spec doesn't have a long flag
+    std::unique_ptr<option_spec_t> opt_spec(new option_spec_t{*s++});
 
-    // Collect the long flag name.
-    const wchar_t *e = s;
-    while (*e && (*e == L'-' || *e == L'_' || iswalnum(*e))) e++;
-    if (e != s) {
-        opt_spec->long_flag = wcstring(s, e - s);
-        if (opts.long_to_short_flag.find(opt_spec->long_flag) != opts.long_to_short_flag.end()) {
-            streams.err.append_format(L"%ls: Long flag '%ls' already defined\n", opts.name.c_str(),
-                                      opt_spec->long_flag.c_str());
-            return false;
+    // Try parsing stuff after the short flag.
+    if (*s && !parse_option_spec_sep(opts, opt_spec, option_spec, &s, streams)) {
+        return false;
+    }
+
+    // Collect any long flag name.
+    if (*s) {
+        const wchar_t *const long_flag_start = s;
+        while (*s && (*s == L'-' || *s == L'_' || iswalnum(*s))) s++;
+        if (s != long_flag_start) {
+            opt_spec->long_flag = wcstring(long_flag_start, s);
+            if (opts.long_to_short_flag.count(opt_spec->long_flag) > 0) {
+                streams.err.append_format(L"%ls: Long flag '%ls' already defined\n",
+                                          opts.name.c_str(), opt_spec->long_flag.c_str());
+                return false;
+            }
         }
-        opts.long_to_short_flag.emplace(opt_spec->long_flag, opt_spec->short_flag);
+    }
+    if (!parse_flag_modifiers(opts, opt_spec, option_spec, &s, streams)) {
+        return false;
     }
 
-    return parse_flag_modifiers(opts, opt_spec, option_spec, &e, streams);
+    // Record our long flag if we have one.
+    if (!opt_spec->long_flag.empty()) {
+        auto ins = opts.long_to_short_flag.emplace(opt_spec->long_flag, opt_spec->short_flag);
+        assert(ins.second && "Should have inserted long flag");
+        (void)ins;
+    }
+
+    // Record our option under its short flag.
+    opts.options[opt_spec->short_flag] = std::move(opt_spec);
+    return true;
 }
 
 static int collect_option_specs(argparse_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
@@ -432,32 +410,30 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
     return collect_option_specs(opts, optind, argc, argv, streams);
 }
 
-static void populate_option_strings(
-    argparse_cmd_opts_t &opts, wcstring &short_options,
-    std::unique_ptr<woption, std::function<void(woption *)>> &long_options) {
-    int i = 0;
-    for (auto it : opts.options) {
-        option_spec_t *opt_spec = it.second;
-        if (opt_spec->short_flag_valid) short_options.push_back(opt_spec->short_flag);
+static void populate_option_strings(const argparse_cmd_opts_t &opts, wcstring *short_options,
+                                    std::vector<woption> *long_options) {
+    for (const auto &kv : opts.options) {
+        const auto &opt_spec = kv.second;
+        if (opt_spec->short_flag_valid) short_options->push_back(opt_spec->short_flag);
 
         int arg_type = no_argument;
         if (opt_spec->num_allowed == -1) {
             arg_type = optional_argument;
-            if (opt_spec->short_flag_valid) short_options.append(L"::");
+            if (opt_spec->short_flag_valid) short_options->append(L"::");
         } else if (opt_spec->num_allowed > 0) {
             arg_type = required_argument;
-            if (opt_spec->short_flag_valid) short_options.append(L":");
+            if (opt_spec->short_flag_valid) short_options->append(L":");
         }
 
         if (!opt_spec->long_flag.empty()) {
-            long_options.get()[i++] = {opt_spec->long_flag.c_str(), arg_type, NULL,
-                                       opt_spec->short_flag};
+            long_options->push_back(
+                {opt_spec->long_flag.c_str(), arg_type, NULL, opt_spec->short_flag});
         }
     }
-    long_options.get()[i] = {NULL, 0, NULL, 0};
+    long_options->push_back({NULL, 0, NULL, 0});
 }
 
-static int validate_arg(argparse_cmd_opts_t &opts, option_spec_t *opt_spec, bool is_long_flag,
+static int validate_arg(const argparse_cmd_opts_t &opts, option_spec_t *opt_spec, bool is_long_flag,
                         const wchar_t *woptarg, io_streams_t &streams) {
     // Obviously if there is no arg validation command we assume the arg is okay.
     if (opt_spec->validation_command.empty()) return STATUS_CMD_OK;
@@ -475,41 +451,35 @@ static int validate_arg(argparse_cmd_opts_t &opts, option_spec_t *opt_spec, bool
     env_set_one(var_name_prefix + L"value", ENV_LOCAL, woptarg);
 
     int retval = exec_subshell(opt_spec->validation_command, cmd_output, false);
-    for (auto it : cmd_output) {
-        streams.err.append(it);
+    for (const auto &output : cmd_output) {
+        streams.err.append(output);
         streams.err.push_back(L'\n');
     }
     env_pop();
     return retval;
 }
 
-// Check if it is an implicit integer option. Try to parse and validate it as a valid integer. The
-// code that parses option specs has already ensured that implicit integers have either an explicit
-// or implicit validation function.
-static int check_for_implicit_int(argparse_cmd_opts_t &opts, const wchar_t *val, const wchar_t *cmd,
-                                  const wchar_t *const *argv, wgetopter_t &w, int opt, int long_idx,
-                                  parser_t &parser, io_streams_t &streams) {
+/// \return whether the option 'opt' is an implicit integer option.
+static bool is_implicit_int(const argparse_cmd_opts_t &opts, const wchar_t *val) {
     if (opts.implicit_int_flag == L'\0') {
-        // There is no implicit integer option so report an error.
-        builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
-        return STATUS_INVALID_ARGS;
+        // There is no implicit integer option.
+        return false;
     }
 
-    if (opt == '?') {
-        // It's a flag that might be an implicit integer flag. Try to parse it as an integer to
-        // decide if it is in fact something like `-NNN` or an invalid flag.
-        (void)fish_wcstol(val);
-        if (errno) {
-            builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
-            return STATUS_INVALID_ARGS;
-        }
-    }
+    // We succeed if this argument can be parsed as an integer.
+    errno = 0;
+    (void)fish_wcstol(val);
+    return errno == 0;
+}
 
-    // Okay, it looks like an integer. See if it passes the validation checks.
+// Store this value under the implicit int option.
+static int validate_and_store_implicit_int(const argparse_cmd_opts_t &opts, const wchar_t *val,
+                                           wgetopter_t &w, int long_idx, io_streams_t &streams) {
+    // See if this option passes the validation checks.
     auto found = opts.options.find(opts.implicit_int_flag);
     assert(found != opts.options.end());
-    auto opt_spec = found->second;
-    int retval = validate_arg(opts, opt_spec, long_idx != -1, val, streams);
+    const auto &opt_spec = found->second;
+    int retval = validate_arg(opts, opt_spec.get(), long_idx != -1, val, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
     // It's a valid integer so store it and return success.
@@ -520,7 +490,7 @@ static int check_for_implicit_int(argparse_cmd_opts_t &opts, const wchar_t *val,
     return STATUS_CMD_OK;
 }
 
-static int handle_flag(argparse_cmd_opts_t &opts, option_spec_t *opt_spec, int long_idx,
+static int handle_flag(const argparse_cmd_opts_t &opts, option_spec_t *opt_spec, int long_idx,
                        const wchar_t *woptarg, io_streams_t &streams) {
     opt_spec->num_seen++;
     if (opt_spec->num_allowed == 0) {
@@ -556,7 +526,7 @@ static int handle_flag(argparse_cmd_opts_t &opts, option_spec_t *opt_spec, int l
     return STATUS_CMD_OK;
 }
 
-static int argparse_parse_flags(argparse_cmd_opts_t &opts, const wchar_t *short_options,
+static int argparse_parse_flags(const argparse_cmd_opts_t &opts, const wchar_t *short_options,
                                 const woption *long_options, const wchar_t *cmd, int argc,
                                 wchar_t **argv, int *optind, parser_t &parser,
                                 io_streams_t &streams) {
@@ -571,8 +541,14 @@ static int argparse_parse_flags(argparse_cmd_opts_t &opts, const wchar_t *short_
 
         if (opt == '?') {
             // It's not a recognized flag. See if it's an implicit int flag.
-            int retval = check_for_implicit_int(opts, argv[w.woptind - 1] + 1, cmd, argv, w, opt,
-                                                long_idx, parser, streams);
+            const wchar_t *arg_contents = argv[w.woptind - 1] + 1;
+            int retval = STATUS_CMD_OK;
+            if (is_implicit_int(opts, arg_contents)) {
+                retval = validate_and_store_implicit_int(opts, arg_contents, w, long_idx, streams);
+            } else {
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+                retval = STATUS_INVALID_ARGS;
+            }
             if (retval != STATUS_CMD_OK) return retval;
             long_idx = -1;
             continue;
@@ -582,8 +558,7 @@ static int argparse_parse_flags(argparse_cmd_opts_t &opts, const wchar_t *short_
         auto found = opts.options.find(opt);
         assert(found != opts.options.end());
 
-        option_spec_t *opt_spec = found->second;
-        int retval = handle_flag(opts, opt_spec, long_idx, w.woptarg, streams);
+        int retval = handle_flag(opts, found->second.get(), long_idx, w.woptarg, streams);
         if (retval != STATUS_CMD_OK) return retval;
         long_idx = -1;
     }
@@ -600,12 +575,11 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
     if (args.empty()) return STATUS_CMD_OK;
 
     wcstring short_options = opts.stop_nonopt ? L"+:" : L":";
-    size_t nflags = opts.options.size();
-    // This assumes every option has a long flag. Which is the worst case and isn't worth optimizing
-    // since the number of options is always quite small.
-    auto long_options = std::unique_ptr<woption, std::function<void(woption *)>>(
-        new woption[nflags + 1], [](woption *p) { delete[] p; });
-    populate_option_strings(opts, short_options, long_options);
+    std::vector<woption> long_options;
+    populate_option_strings(opts, &short_options, &long_options);
+
+    // long_options should have a "null terminator"
+    assert(!long_options.empty() && long_options.back().name == nullptr);
 
     const wchar_t *cmd = opts.name.c_str();
     int argc = static_cast<int>(args.size());
@@ -613,10 +587,10 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
     // We need to convert our wcstring_list_t to a <wchar_t **> that can be used by wgetopt_long().
     // This ensures the memory for the data structure is freed when we leave this scope.
     null_terminated_array_t<wchar_t> argv_container(args);
-    auto argv = (wchar_t **)argv_container.get();
+    auto argv = argv_container.get();
 
     int optind;
-    int retval = argparse_parse_flags(opts, short_options.c_str(), long_options.get(), cmd, argc,
+    int retval = argparse_parse_flags(opts, short_options.c_str(), long_options.data(), cmd, argc,
                                       argv, &optind, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
@@ -628,7 +602,7 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
     return STATUS_CMD_OK;
 }
 
-static int check_min_max_args_constraints(argparse_cmd_opts_t &opts, parser_t &parser,
+static int check_min_max_args_constraints(const argparse_cmd_opts_t &opts, parser_t &parser,
                                           io_streams_t &streams) {
     UNUSED(parser);
     const wchar_t *cmd = opts.name.c_str();
@@ -646,9 +620,9 @@ static int check_min_max_args_constraints(argparse_cmd_opts_t &opts, parser_t &p
 }
 
 /// Put the result of parsing the supplied args into the caller environment as local vars.
-static void set_argparse_result_vars(argparse_cmd_opts_t &opts) {
-    for (auto it : opts.options) {
-        option_spec_t *opt_spec = it.second;
+static void set_argparse_result_vars(const argparse_cmd_opts_t &opts) {
+    for (const auto &kv : opts.options) {
+        const auto &opt_spec = kv.second;
         if (!opt_spec->num_seen) continue;
 
         if (opt_spec->short_flag_valid) {

@@ -77,6 +77,9 @@
 /// Version for fish 3.0
 #define UVARS_VERSION_3_0 "3.0"
 
+// Maximum file size we'll read.
+static constexpr size_t k_max_read_size = 16 * 1024 * 1024;
+
 // Fields used in fish 3.0 uvars
 namespace fish3_uvars {
 namespace {
@@ -733,48 +736,26 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
 var_table_t env_universal_t::read_message_internal(int fd) {
     var_table_t result;
 
-    // Temp value used to avoid repeated allocations.
-    wcstring storage;
-
-    // The line we construct (and then parse).
-    std::string line;
-    wcstring wide_line;
-    for (;;) {
-        // Read into a buffer. Note this is NOT null-terminated!
-        char buffer[1024];
+    // Read everything from the fd. Put a sane limit on it.
+    std::string contents;
+    while (contents.size() < k_max_read_size) {
+        char buffer[4096];
         ssize_t amt = read_loop(fd, buffer, sizeof buffer);
         if (amt <= 0) {
             break;
         }
-        const size_t bufflen = (size_t)amt;
-
-        // Walk over it by lines. The contents of an unterminated line will be left in 'line' for
-        // the next iteration.
-        ssize_t line_start = 0;
-        while (line_start < amt) {
-            // Run until we hit a newline.
-            size_t cursor = line_start;
-            while (cursor < bufflen && buffer[cursor] != '\n') {
-                cursor++;
-            }
-
-            // Copy over what we read.
-            line.append(buffer + line_start, cursor - line_start);
-
-            // Process it if it's a newline (which is true if we are before the end of the buffer).
-            if (cursor < bufflen && !line.empty()) {
-                if (utf8_to_wchar(line.data(), line.size(), &wide_line, 0)) {
-                    env_universal_t::parse_message_2x_internal(wide_line, &result, &storage);
-                }
-                line.clear();
-            }
-
-            // Skip over the newline (or skip past the end).
-            line_start = cursor + 1;
-        }
+        contents.append(buffer, amt);
     }
 
-    // We make no effort to handle an unterminated last line.
+    // Handle overlong files.
+    if (contents.size() >= k_max_read_size) {
+        contents.resize(k_max_read_size);
+        // Back up to a newline.
+        size_t newline = contents.rfind('\n');
+        contents.resize(newline == wcstring::npos ? 0 : newline);
+    }
+
+    populate_variables(contents, &result);
     return result;
 }
 

@@ -62,10 +62,10 @@ end
 # unless they already exist
 #
 
-set -l configdir ~/.config
+set -g __fish_config_dir ~/.config
 
 if set -q XDG_CONFIG_HOME
-    set configdir $XDG_CONFIG_HOME
+    set __fish_config_dir $XDG_CONFIG_HOME
 end
 
 set -l userdatadir ~/.local/share
@@ -90,7 +90,7 @@ end
 # default functions/completions are included in the respective path.
 
 if not set -q fish_function_path
-    set fish_function_path $configdir/fish/functions $__fish_sysconf_dir/functions $__extra_functionsdir $__fish_data_dir/functions
+    set fish_function_path $__fish_config_dir/functions $__fish_sysconf_dir/functions $__extra_functionsdir $__fish_data_dir/functions
 end
 
 if not contains -- $__fish_data_dir/functions $fish_function_path
@@ -98,7 +98,7 @@ if not contains -- $__fish_data_dir/functions $fish_function_path
 end
 
 if not set -q fish_complete_path
-    set fish_complete_path $configdir/fish/completions $__fish_sysconf_dir/completions $__extra_completionsdir $__fish_data_dir/completions $userdatadir/fish/generated_completions
+    set fish_complete_path $__fish_config_dir/completions $__fish_sysconf_dir/completions $__extra_completionsdir $__fish_data_dir/completions $userdatadir/fish/generated_completions
 end
 
 if not contains -- $__fish_data_dir/completions $fish_complete_path
@@ -294,7 +294,7 @@ end
 # As last part of initialization, source the conf directories.
 # Implement precedence (User > Admin > Extra (e.g. vendors) > Fish) by basically doing "basename".
 set -l sourcelist
-for file in $configdir/fish/conf.d/*.fish $__fish_sysconf_dir/conf.d/*.fish $__extra_confdir/*.fish
+for file in $__fish_config_dir/conf.d/*.fish $__fish_sysconf_dir/conf.d/*.fish $__extra_confdir/*.fish
     set -l basename (string replace -r '^.*/' '' -- $file)
     contains -- $basename $sourcelist
     and continue

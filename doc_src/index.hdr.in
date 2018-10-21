@@ -1250,14 +1250,14 @@ Configuration files are evaluated in the following order:
 - Configuration shipped with fish, which should not be edited, in `$__fish_data_dir/config.fish` (usually `/usr/share/fish/config.fish`).
 - System-wide configuration files, where administrators can include initialization that should be run for all users on the system - similar to `/etc/profile` for POSIX-style shells - in `$__fish_sysconf_dir` (usually `/etc/fish/config.fish`);
 - Configuration snippets in files ending in `.fish`, in the directories:
-  - `$XDG_CONFIG_HOME/fish/conf.d` (by default, `~/.config/fish/conf.d/`)
+  - `$__fish_config_dir/conf.d` (by default, `~/.config/fish/conf.d/`)
   - `$__fish_sysconf_dir/conf.d` (by default, `/etc/fish/conf.d`)
   - `/usr/share/fish/vendor_conf.d` (set at compile time; by default, `$__fish_data_dir/conf.d`)
 
   If there are multiple files with the same name in these directories, only the first will be executed.
   They are executed in order of their filename, sorted (like globs) in a natural order (i.e. "01" sorts before "2").
 
-- User initialization, usually in `~/.config/fish/config.fish` (controlled by the `XDG_CONFIG_HOME` environment variable).
+- User initialization, usually in `~/.config/fish/config.fish` (controlled by the `XDG_CONFIG_HOME` environment variable, and accessible as `$__fish_config_dir`).
 
 These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.
 

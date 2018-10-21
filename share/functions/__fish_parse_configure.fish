@@ -10,17 +10,16 @@ function __fish_parse_configure
 		return 1
 	end
 
-# Must support output along the lines of
-#  -h, --help              display this help and exit
-#      --help=short        display options specific to this package
-#      --help=recursive    display the short help of all the included packages
-#  -V, --version           display version information and exit
-#  -q, --quiet, --silent   do not print `checking ...' messages
+    # Must support output along the lines of
+    #  -h, --help              display this help and exit
+    #      --help=short        display options specific to this package
+    #      --help=recursive    display the short help of all the included packages
+    #  -V, --version           display version information and exit
+    #  -q, --quiet, --silent   do not print `checking ...' messages
 
 	set -l next_line
 	set -l line
 	set -l buffer
-	# eval $argv[1] --help 2>/dev/null |
 	# Just fish's `./configure --help` takes ~350ms to run, before parsing
 	# The following chain attempts to extract the help message:
 	cat $argv[1] | tr \n \u0e | sed -n 's/.*Report the --help message\(.*\?\)ac_status.*/\1/; s/ac_status.*//p' | tr \u0e \n |

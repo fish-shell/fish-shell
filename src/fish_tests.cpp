@@ -2890,14 +2890,26 @@ static void test_universal() {
 
 static void test_universal_output() {
     say(L"Testing universal variable output");
+
+    const env_var_t::env_var_flags_t flag_export = env_var_t::flag_export;
+    const env_var_t::env_var_flags_t flag_pathvar = env_var_t::flag_pathvar;
+
     var_table_t vars;
     vars[L"varA"] = env_var_t(wcstring_list_t{L"ValA1", L"ValA2"}, 0);
-    vars[L"varB"] = env_var_t(wcstring_list_t{L"ValB1"}, env_var_t::flag_export);
+    vars[L"varB"] = env_var_t(wcstring_list_t{L"ValB1"}, flag_export);
+    vars[L"varC"] = env_var_t(wcstring_list_t{L"ValC1"}, 0);
+    vars[L"varD"] = env_var_t(wcstring_list_t{L"ValD1"}, flag_export | flag_pathvar);
+    vars[L"varE"] = env_var_t(wcstring_list_t{L"ValE1", L"ValE2"}, flag_pathvar);
+
     std::string text = env_universal_t::serialize_with_vars(vars);
     const char *expected =
         "# This file contains fish universal variable definitions.\n"
-        "SET varA:ValA1\\x1eValA2\n"
-        "SET_EXPORT varB:ValB1\n";
+        "# VERSION: 3.0\n"
+        "SETUVAR varA:ValA1\\x1eValA2\n"
+        "SETUVAR --export varB:ValB1\n"
+        "SETUVAR varC:ValC1\n"
+        "SETUVAR --export --path varD:ValD1\n"
+        "SETUVAR --path varE:ValE1\\x1eValE2\n";
     do_test(text == expected);
 }
 

@@ -56,7 +56,6 @@
 #include <bsd/ifaddrs.h>
 #endif  // Haiku
 
-
 /// Error message.
 #define PARSE_ERR L"Unable to parse universal variable message: '%ls'"
 
@@ -166,19 +165,29 @@ static bool append_utf8(const wcstring &input, std::string *receiver, std::strin
 
 /// Creates a file entry like "SET fish_color_cwd:FF0". Appends the result to *result (as UTF8).
 /// Returns true on success. storage may be used for temporary storage, to avoid allocations.
-static bool append_file_entry(uvar_message_type_t type, const wcstring &key_in,
+static bool append_file_entry(env_var_t::env_var_flags_t flags, const wcstring &key_in,
                               const wcstring &val_in, std::string *result, std::string *storage) {
+    namespace f3 = fish3_uvars;
     assert(storage != NULL);
     assert(result != NULL);
-    namespace f2x = fish2x_uvars;
 
     // Record the length on entry, in case we need to back up.
     bool success = true;
     const size_t result_length_on_entry = result->size();
 
-    // Append header like "SET "
-    result->append(type == uvar_message_type_t::set ? f2x::SET : f2x::SET_EXPORT);
+    // Append SETVAR header.
+    result->append(f3::SETUVAR);
     result->push_back(' ');
+
+    // Append flags.
+    if (flags & env_var_t::flag_export) {
+        result->append(f3::EXPORT);
+        result->push_back(' ');
+    }
+    if (flags & env_var_t::flag_pathvar) {
+        result->append(f3::PATH);
+        result->push_back(' ');
+    }
 
     // Append variable name like "fish_color_cwd".
     if (!valid_var_name(key_in)) {
@@ -407,15 +416,16 @@ bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t 
 /// Serialize the contents to a string.
 std::string env_universal_t::serialize_with_vars(const var_table_t &vars) {
     std::string storage;
-    std::string contents = SAVE_MSG;
+    std::string contents;
+    contents.append(SAVE_MSG);
+    contents.append("# VERSION: " UVARS_VERSION_3_0 "\n");
+
     for (const auto &kv : vars) {
         // Append the entry. Note that append_file_entry may fail, but that only affects one
         // variable; soldier on.
         const wcstring &key = kv.first;
         const env_var_t &var = kv.second;
-        append_file_entry(
-            var.exports() ? uvar_message_type_t::set_export : uvar_message_type_t::set, key,
-            encode_serialized(var.as_list()), &contents, &storage);
+        append_file_entry(var.get_flags(), key, encode_serialized(var.as_list()), &contents, &storage);
     }
     return contents;
 }

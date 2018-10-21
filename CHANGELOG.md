@@ -39,7 +39,7 @@ fish 3.0 is a major release which brings with it both improvements in functional
 - `while` sets `$status` to a more useful value (#4982)
 - Command substitution output is now limited to 10 MB by default (#3822).
 - The machine hostname, where available, is now exposed as `$hostname` which is now a reserved variable. This drops the dependency on the `hostname` executable (#4422).
-- The universal variables file no longer contains the MAC address. It is now at the fixed location `.config/fish/fish_universal_variables` (#1912).
+- The universal variables file no longer contains the MAC address. It is now at the fixed location `.config/fish/fish_variables` (#1912).
 - Bare `bind` invocations in config.fish now work. The `fish_user_key_bindings` function is no longer necessary, but will still be executed if it exists (#5191).
 - `$fish_pid` and `$last_pid` are available as an alternatives to `%self` and `%last`.
 

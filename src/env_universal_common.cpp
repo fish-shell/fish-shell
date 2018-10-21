@@ -93,6 +93,10 @@ static wcstring get_machine_identifier();
 /// return a list of paths where the uvars file has been historically stored.
 static wcstring_list_t get_legacy_paths(const wcstring &wdir) {
     wcstring_list_t result;
+    // A path used during fish 3.0 development.
+    result.push_back(wdir + L"/fish_universal_variables");
+
+    // Paths used in 2.x.
     result.push_back(wdir + L"/fishd." + get_machine_identifier());
     wcstring hostname_id;
     if (get_hostname_identifier(hostname_id)) {
@@ -109,7 +113,7 @@ static maybe_t<wcstring> default_vars_path_directory() {
 
 static maybe_t<wcstring> default_vars_path() {
     if (auto path = default_vars_path_directory()) {
-        path->append(L"/fish_universal_variables");
+        path->append(L"/fish_variables");
         return path;
     }
     return none();

@@ -13,13 +13,9 @@ function funcsave --description "Save the current definition of all specified fu
         set configdir $XDG_CONFIG_HOME
     end
 
-    for i in $configdir $configdir/fish $configdir/fish/functions
-        if not test -d $i
-            if not command mkdir $i >/dev/null
-                printf (_ "%s: Could not create configuration directory\n") funcsave
-                return 1
-            end
-        end
+    if not mkdir -p $configdir/fish/functions
+        printf (_ "%s: Could not create configuration directory\n") funcsave
+        return 1
     end
 
     set -l retval 0

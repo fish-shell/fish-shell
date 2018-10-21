@@ -48,6 +48,10 @@ class env_universal_t {
     // Path that we save to. If empty, use the default.
     const wcstring explicit_vars_path;
 
+    // Whether it's OK to save. This may be set to false if we discover that a future version of
+    // fish wrote the uvars contents.
+    bool ok_to_save{true};
+
     mutable fish_mutex_t lock;
     bool load_from_path(const wcstring &path, callback_data_list_t &callbacks);
     void load_from_fd(int fd, callback_data_list_t &callbacks);
@@ -79,7 +83,9 @@ class env_universal_t {
                                           wcstring *storage);
     static void parse_message_30_internal(const wcstring &msg, var_table_t *vars,
                                           wcstring *storage);
-    static var_table_t read_message_internal(int fd);
+    static uvar_format_t read_message_internal(int fd, var_table_t *vars);
+
+    bool save(const wcstring &directory, const wcstring &vars_path);
 
    public:
     explicit env_universal_t(wcstring path);
@@ -108,13 +114,17 @@ class env_universal_t {
 
     /// Populate a variable table \p out_vars from a \p s string.
     /// This is exposed for testing only.
-    static void populate_variables(const std::string &s, var_table_t *out_vars);
+    /// \return the format of the file that we read.
+    static uvar_format_t populate_variables(const std::string &s, var_table_t *out_vars);
 
     /// Guess a file format. Exposed for testing only.
     static uvar_format_t format_for_contents(const std::string &s);
 
     /// Serialize a variable list. Exposed for testing only.
     static std::string serialize_with_vars(const var_table_t &vars);
+
+    /// Exposed for testing only.
+    bool is_ok_to_save() const { return ok_to_save; }
 };
 
 /// The "universal notifier" is an object responsible for broadcasting and receiving universal

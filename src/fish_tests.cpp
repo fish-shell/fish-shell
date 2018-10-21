@@ -3028,6 +3028,34 @@ static void test_universal_formats() {
     }
 }
 
+static void test_universal_ok_to_save() {
+    // Ensure we don't try to save after reading from a newer fish.
+    say(L"Testing universal Ok to save");
+    if (system("mkdir -p test/fish_uvars_test/")) err(L"mkdir failed");
+    const char *contents = "# VERSION: 99999.99\n";
+    FILE *fp = wfopen(UVARS_TEST_PATH, "w");
+    assert(fp && "Failed to open UVARS_TEST_PATH for writing");
+    fwrite(contents, strlen(contents), 1, fp);
+    fclose(fp);
+
+    file_id_t before_id = file_id_for_path(UVARS_TEST_PATH);
+    do_test(before_id != kInvalidFileID && "UVARS_TEST_PATH should be readable");
+
+    callback_data_list_t cbs;
+    env_universal_t uvars(UVARS_TEST_PATH);
+    do_test(uvars.is_ok_to_save() && "Should be OK to save before sync");
+    uvars.sync(cbs);
+    cbs.clear();
+    do_test(!uvars.is_ok_to_save() && "Should no longer be OK to save");
+    uvars.set(L"SOMEVAR", {L"SOMEVALUE"}, false);
+    uvars.sync(cbs);
+
+    // Ensure file is same.
+    file_id_t after_id = file_id_for_path(UVARS_TEST_PATH);
+    do_test(before_id == after_id && "UVARS_TEST_PATH should not have changed");
+    (void)system("rm -Rf test/fish_uvars_test/");
+}
+
 bool poll_notifier(const std::unique_ptr<universal_notifier_t> &note) {
     bool result = false;
     if (note->usec_delay_between_polls() > 0) {
@@ -4924,6 +4952,7 @@ int main(int argc, char **argv) {
     if (should_test_function("universal")) test_universal_parsing_legacy();
     if (should_test_function("universal")) test_universal_callbacks();
     if (should_test_function("universal")) test_universal_formats();
+    if (should_test_function("universal")) test_universal_ok_to_save();
     if (should_test_function("notifiers")) test_universal_notifiers();
     if (should_test_function("completion_insertions")) test_completion_insertions();
     if (should_test_function("autosuggestion_ignores")) test_autosuggestion_ignores();

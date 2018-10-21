@@ -381,7 +381,14 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t &callbacks) {
         debug(5, L"universal log sync elided based on fstat()");
     } else {
         // Read a variables table from the file.
-        var_table_t new_vars = this->read_message_internal(fd);
+        var_table_t new_vars;
+        uvar_format_t format = this->read_message_internal(fd, &new_vars);
+
+        // Hacky: if the read format is in the future, avoid overwriting the file: never try to
+        // save.
+        if (format == uvar_format_t::future) {
+            ok_to_save = false;
+        }
 
         // Announce changes.
         this->generate_callbacks(new_vars, callbacks);
@@ -659,8 +666,6 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
     const wcstring directory = wdirname(vars_path);
     bool success = true;
     int vars_fd = -1;
-    int private_fd = -1;
-    wcstring private_file_path;
 
     debug(5, L"universal log performing full sync");
 
@@ -676,11 +681,29 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
         this->load_from_fd(vars_fd, callbacks);
     }
 
-    // Open adjacent temporary file.
-    if (success) {
-        success = this->open_temporary_file(directory, &private_file_path, &private_fd);
-        if (!success) debug(5, L"universal log open_temporary_file() failed");
+    if (success && ok_to_save) {
+        success = this->save(directory, vars_path);
     }
+
+    // Clean up.
+    if (vars_fd >= 0) {
+        close(vars_fd);
+    }
+
+    return success;
+}
+
+// Write our file contents.
+// \return true on success, false on failure.
+bool env_universal_t::save(const wcstring &directory, const wcstring &vars_path) {
+    assert(ok_to_save && "It's not OK to save");
+
+    int private_fd = -1;
+    wcstring private_file_path;
+
+    // Open adjacent temporary file.
+    bool success = this->open_temporary_file(directory, &private_file_path, &private_fd);
+    if (!success) debug(5, L"universal log open_temporary_file() failed");
 
     // Write to it.
     if (success) {
@@ -698,14 +721,14 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
             if (fchmod(private_fd, sbuf.st_mode) == -1) debug(5, L"universal log fchmod() failed");
         }
 
-// Linux by default stores the mtime with low precision, low enough that updates that occur in quick
-// succession may result in the same mtime (even the nanoseconds field). So manually set the mtime
-// of the new file to a high-precision clock. Note that this is only necessary because Linux
-// aggressively reuses inodes, causing the ABA problem; on other platforms we tend to notice the
-// file has changed due to a different inode (or file size!)
-//
-// It's probably worth finding a simpler solution to this. The tests ran into this, but it's
-// unlikely to affect users.
+        // Linux by default stores the mtime with low precision, low enough that updates that occur
+        // in quick succession may result in the same mtime (even the nanoseconds field). So
+        // manually set the mtime of the new file to a high-precision clock. Note that this is only
+        // necessary because Linux aggressively reuses inodes, causing the ABA problem; on other
+        // platforms we tend to notice the file has changed due to a different inode (or file size!)
+        //
+        // It's probably worth finding a simpler solution to this. The tests ran into this, but it's
+        // unlikely to affect users.
 #if HAVE_CLOCK_GETTIME && HAVE_FUTIMENS
         struct timespec times[2] = {};
         times[0].tv_nsec = UTIME_OMIT;  // don't change ctime
@@ -725,27 +748,20 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
     }
 
     // Clean up.
-    if (vars_fd >= 0) {
-        close(vars_fd);
-    }
     if (private_fd >= 0) {
         close(private_fd);
     }
     if (!private_file_path.empty()) {
         wunlink(private_file_path);
     }
-
     if (success) {
         // All of our modified variables have now been written out.
         modified.clear();
     }
-
     return success;
 }
 
-var_table_t env_universal_t::read_message_internal(int fd) {
-    var_table_t result;
-
+uvar_format_t env_universal_t::read_message_internal(int fd, var_table_t *vars) {
     // Read everything from the fd. Put a sane limit on it.
     std::string contents;
     while (contents.size() < k_max_read_size) {
@@ -765,8 +781,7 @@ var_table_t env_universal_t::read_message_internal(int fd) {
         contents.resize(newline == wcstring::npos ? 0 : newline);
     }
 
-    populate_variables(contents, &result);
-    return result;
+    return populate_variables(contents, vars);
 }
 
 /// \return the format corresponding to file contents \p s.
@@ -796,7 +811,7 @@ uvar_format_t env_universal_t::format_for_contents(const std::string &s) {
     return uvar_format_t::fish_2_x;
 }
 
-void env_universal_t::populate_variables(const std::string &s, var_table_t *out_vars) {
+uvar_format_t env_universal_t::populate_variables(const std::string &s, var_table_t *out_vars) {
     // Decide on the format.
     const uvar_format_t format = format_for_contents(s);
 
@@ -823,6 +838,7 @@ void env_universal_t::populate_variables(const std::string &s, var_table_t *out_
                 break;
         }
     }
+    return format;
 }
 
 static const wchar_t *skip_spaces(const wchar_t *str) {

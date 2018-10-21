@@ -2905,6 +2905,32 @@ static void test_universal_parsing() {
     say(L"Testing universal variable parsing");
     const char *input =
         "# This file contains fish universal variable definitions.\n"
+        "# VERSION: 3.0\n"
+        "SETUVAR varA:ValA1\\x1eValA2\n"
+        "SETUVAR --export varB:ValB1\n"
+        "SETUVAR --nonsenseflag varC:ValC1\n"
+        "SETUVAR --export --path varD:ValD1\n"
+        "SETUVAR --path --path varE:ValE1\\x1eValE2\n";
+
+    const env_var_t::env_var_flags_t flag_export = env_var_t::flag_export;
+    const env_var_t::env_var_flags_t flag_pathvar = env_var_t::flag_pathvar;
+
+    var_table_t vars;
+    vars[L"varA"] = env_var_t(wcstring_list_t{L"ValA1", L"ValA2"}, 0);
+    vars[L"varB"] = env_var_t(wcstring_list_t{L"ValB1"}, flag_export);
+    vars[L"varC"] = env_var_t(wcstring_list_t{L"ValC1"}, 0);
+    vars[L"varD"] = env_var_t(wcstring_list_t{L"ValD1"}, flag_export | flag_pathvar);
+    vars[L"varE"] = env_var_t(wcstring_list_t{L"ValE1", L"ValE2"}, flag_pathvar);
+
+    var_table_t parsed_vars;
+    env_universal_t::populate_variables(input, &parsed_vars);
+    do_test(vars == parsed_vars);
+}
+
+static void test_universal_parsing_legacy() {
+    say(L"Testing universal variable legacy parsing");
+    const char *input =
+        "# This file contains fish universal variable definitions.\n"
         "SET varA:ValA1\\x1eValA2\n"
         "SET_EXPORT varB:ValB1\n";
 
@@ -4883,6 +4909,7 @@ int main(int argc, char **argv) {
     if (should_test_function("universal")) test_universal();
     if (should_test_function("universal")) test_universal_output();
     if (should_test_function("universal")) test_universal_parsing();
+    if (should_test_function("universal")) test_universal_parsing_legacy();
     if (should_test_function("universal")) test_universal_callbacks();
     if (should_test_function("universal")) test_universal_formats();
     if (should_test_function("notifiers")) test_universal_notifiers();

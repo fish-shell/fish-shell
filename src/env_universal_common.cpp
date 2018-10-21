@@ -77,6 +77,15 @@
 /// Version for fish 3.0
 #define UVARS_VERSION_3_0 "3.0"
 
+// Fields used in fish 3.0 uvars
+namespace fish3_uvars {
+namespace {
+constexpr const wchar_t *SETUVAR = L"SETUVAR";
+constexpr const wchar_t *EXPORT = L"--export";
+constexpr const wchar_t *PATH = L"--path";
+}  // namespace
+}  // namespace fish3_uvars
+
 /// The different types of messages found in the fishd file.
 enum class uvar_message_type_t { set, set_export };
 
@@ -108,12 +117,13 @@ static maybe_t<wcstring> default_vars_path() {
 }
 
 /// Test if the message msg contains the command cmd.
-static bool match(const wchar_t *msg, const wchar_t *cmd) {
+/// On success, updates the cursor to just past the command.
+static bool match(const wchar_t **inout_cursor, const wchar_t *cmd) {
+    const wchar_t *cursor = *inout_cursor;
     size_t len = wcslen(cmd);
-    if (wcsncasecmp(msg, cmd, len) != 0) return false;
-
-    if (msg[len] && msg[len] != L' ' && msg[len] != L'\t') return false;
-
+    if (wcsncasecmp(cursor, cmd, len) != 0) return false;
+    if (cursor[len] && cursor[len] != L' ' && cursor[len] != L'\t') return false;
+    *inout_cursor = cursor + len;
     return true;
 }
 
@@ -824,45 +834,84 @@ void env_universal_t::populate_variables(const std::string &s, var_table_t *out_
     }
 }
 
+static const wchar_t *skip_spaces(const wchar_t *str) {
+    while (*str == L' ' || *str == L'\t') str++;
+    return str;
+}
+
+bool env_universal_t::populate_1_variable(const wchar_t *input, env_var_t::env_var_flags_t flags,
+                                          var_table_t *vars, wcstring *storage) {
+    const wchar_t *str = skip_spaces(input);
+    const wchar_t *colon = wcschr(str, L':');
+    if (!colon) return false;
+
+    // Parse out the value into storage, and decode it into a variable.
+    storage->clear();
+    if (!unescape_string(colon + 1, storage, 0)) {
+        return false;
+    }
+    env_var_t var{decode_serialized(*storage), flags};
+
+    // Parse out the key and write into the map.
+    storage->assign(str, colon - str);
+    const wcstring &key = *storage;
+    (*vars)[key] = std::move(var);
+    return true;
+}
+
 /// Parse message msg per fish 3.0 format.
 void env_universal_t::parse_message_30_internal(const wcstring &msgstr, var_table_t *vars,
                                                 wcstring *storage) {
-    // TODO.
+    namespace f3 = fish3_uvars;
+    const wchar_t *const msg = msgstr.c_str();
+    if (msg[0] == L'#') return;
+
+    const wchar_t *cursor = msg;
+    if (!match(&cursor, f3::SETUVAR)) {
+        debug(1, PARSE_ERR, msg);
+        return;
+    }
+    // Parse out flags.
+    env_var_t::env_var_flags_t flags = 0;
+    for (;;) {
+        cursor = skip_spaces(cursor);
+        if (*cursor != L'-') break;
+        if (match(&cursor, f3::EXPORT)) {
+            flags |= env_var_t::flag_export;
+        } else if (match(&cursor, f3::PATH)) {
+            flags |= env_var_t::flag_pathvar;
+        } else {
+            // Skip this unknown flag, for future proofing.
+            while (*cursor && *cursor != L' ' && *cursor != L'\t') cursor++;
+        }
+    }
+
+    // Populate the variable with these flags.
+    if (!populate_1_variable(cursor, flags, vars, storage)) {
+        debug(1, PARSE_ERR, msg);
+    }
 }
 
 /// Parse message msg per fish 2.x format.
 void env_universal_t::parse_message_2x_internal(const wcstring &msgstr, var_table_t *vars,
                                              wcstring *storage) {
-    const wchar_t *msg = msgstr.c_str();
+    const wchar_t *const msg = msgstr.c_str();
+    const wchar_t *cursor = msg;
 
     // debug(3, L"parse_message( %ls );", msg);
-    if (msg[0] == L'#') return;
+    if (cursor[0] == L'#') return;
 
-    bool is_set_export = match(msg, SET_EXPORT_STR);
-    bool is_set = !is_set_export && match(msg, SET_STR);
-    if (is_set || is_set_export) {
-        const wchar_t *name, *tmp;
-        const bool exportv = is_set_export;
-
-        name = msg + (exportv ? wcslen(SET_EXPORT_STR) : wcslen(SET_STR));
-        while (name[0] == L'\t' || name[0] == L' ') name++;
-
-        tmp = wcschr(name, L':');
-        if (tmp) {
-            // Use 'storage' to hold our key to avoid allocations.
-            storage->assign(name, tmp - name);
-            const wcstring &key = *storage;
-
-            wcstring val;
-            if (unescape_string(tmp + 1, &val, 0)) {
-                env_var_t &entry = (*vars)[key];
-                entry.set_exports(exportv);
-                entry.set_vals(decode_serialized(val));
-            }
-        } else {
-            debug(1, PARSE_ERR, msg);
-        }
+    env_var_t::env_var_flags_t flags = 0;
+    if (match(&cursor, SET_EXPORT_STR)) {
+        flags |= env_var_t::flag_export;
+    } else if (match(&cursor, SET_STR)) {
+        flags |= 0;
     } else {
+        debug(1, PARSE_ERR, msg);
+        return;
+    }
+
+    if (!populate_1_variable(cursor, flags, vars, storage)) {
         debug(1, PARSE_ERR, msg);
     }
 }

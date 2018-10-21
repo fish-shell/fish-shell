@@ -72,6 +72,9 @@ class env_universal_t {
     // vars_to_acquire.
     void acquire_variables(var_table_t &vars_to_acquire);
 
+    static bool populate_1_variable(const wchar_t *str, env_var_t::env_var_flags_t flags,
+                                    var_table_t *vars, wcstring *storage);
+
     static void parse_message_2x_internal(const wcstring &msg, var_table_t *vars,
                                           wcstring *storage);
     static void parse_message_30_internal(const wcstring &msg, var_table_t *vars,

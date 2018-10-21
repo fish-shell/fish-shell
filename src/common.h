@@ -353,35 +353,23 @@ bool string_suffixes_string_case_insensitive(const wcstring &proposed_suffix,
 bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix,
                                              const wcstring &value);
 
-/// Helper struct for ifind, templated to allow using it with both std::string and std::wstring
-/// Supports locale-specific search for characters that transform into a different character
-/// when upper/lower-cased, such as those in Turkish and German.
-template<typename T>
-struct string_iequal_t {
-private:
-    const std::locale &_locale;
-public:
-    string_iequal_t(const std::locale &locale)
-        : _locale(locale) {}
-    bool operator() (T char1, T char2) {
-        return std::toupper(char1, _locale) == std::toupper(char2, _locale);
-    }
-};
 
 /// Case-insensitive string search, templated for use with both std::string and std::wstring.
 /// Modeled after std::string::find().
 /// \return the offset of the first case-insensitive matching instance of `needle` within
 /// `haystack`, or `string::npos()` if no results were found.
-template<typename T>
-size_t ifind(const T &haystack, const T &needle,
-        const std::locale &locale = std::locale()) {
-    auto result = std::search(haystack.begin(), haystack.end(), needle.begin(), needle.end(),
-            string_iequal_t<typename T::value_type>(locale));
-
+template <typename T>
+size_t ifind(const T &haystack, const T &needle) {
+    using char_t = typename T::value_type;
+    auto icase_eq = [](char_t c1, char_t c2) {
+        auto locale = std::locale();
+        return std::toupper(c1, locale) == std::toupper(c2, locale);
+    };
+    auto result =
+        std::search(haystack.begin(), haystack.end(), needle.begin(), needle.end(), icase_eq);
     if (result != haystack.end()) {
         return result - haystack.begin();
     }
-
     return T::npos;
 }
 

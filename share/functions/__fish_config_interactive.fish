@@ -21,11 +21,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
     set -g __fish_config_interactive_done
     set -g __fish_active_key_bindings
 
-    # Set the correct configuration directory
-    set -l configdir ~/.config
-    if set -q XDG_CONFIG_HOME
-        set configdir $XDG_CONFIG_HOME
-    end
     # Set the correct user data directory
     set -l userdatadir ~/.local/share
     if set -q XDG_DATA_HOME

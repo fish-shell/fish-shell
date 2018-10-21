@@ -56,17 +56,6 @@
 #include <bsd/ifaddrs.h>
 #endif  // Haiku
 
-/// The set command.
-#define SET_STR L"SET"
-
-/// The set_export command.
-#define SET_EXPORT_STR L"SET_EXPORT"
-
-/// Non-wide version of the set command.
-#define SET_MBS "SET"
-
-/// Non-wide version of the set_export command.
-#define SET_EXPORT_MBS "SET_EXPORT"
 
 /// Error message.
 #define PARSE_ERR L"Unable to parse universal variable message: '%ls'"
@@ -80,12 +69,20 @@
 // Maximum file size we'll read.
 static constexpr size_t k_max_read_size = 16 * 1024 * 1024;
 
+// Fields used in fish 2.x uvars.
+namespace fish2x_uvars {
+namespace {
+constexpr const char *SET = "SET";
+constexpr const char *SET_EXPORT = "SET_EXPORT";
+}  // namespace
+}  // namespace fish2x_uvars
+
 // Fields used in fish 3.0 uvars
 namespace fish3_uvars {
 namespace {
-constexpr const wchar_t *SETUVAR = L"SETUVAR";
-constexpr const wchar_t *EXPORT = L"--export";
-constexpr const wchar_t *PATH = L"--path";
+constexpr const char *SETUVAR = "SETUVAR";
+constexpr const char *EXPORT = "--export";
+constexpr const char *PATH = "--path";
 }  // namespace
 }  // namespace fish3_uvars
 
@@ -121,10 +118,12 @@ static maybe_t<wcstring> default_vars_path() {
 
 /// Test if the message msg contains the command cmd.
 /// On success, updates the cursor to just past the command.
-static bool match(const wchar_t **inout_cursor, const wchar_t *cmd) {
+static bool match(const wchar_t **inout_cursor, const char *cmd) {
     const wchar_t *cursor = *inout_cursor;
-    size_t len = wcslen(cmd);
-    if (wcsncasecmp(cursor, cmd, len) != 0) return false;
+    size_t len = strlen(cmd);
+    if (!std::equal(cmd, cmd + len, cursor)) {
+        return false;
+    }
     if (cursor[len] && cursor[len] != L' ' && cursor[len] != L'\t') return false;
     *inout_cursor = cursor + len;
     return true;
@@ -171,13 +170,14 @@ static bool append_file_entry(uvar_message_type_t type, const wcstring &key_in,
                               const wcstring &val_in, std::string *result, std::string *storage) {
     assert(storage != NULL);
     assert(result != NULL);
+    namespace f2x = fish2x_uvars;
 
     // Record the length on entry, in case we need to back up.
     bool success = true;
     const size_t result_length_on_entry = result->size();
 
     // Append header like "SET "
-    result->append(type == uvar_message_type_t::set ? SET_MBS : SET_EXPORT_MBS);
+    result->append(type == uvar_message_type_t::set ? f2x::SET : f2x::SET_EXPORT);
     result->push_back(' ');
 
     // Append variable name like "fish_color_cwd".
@@ -876,6 +876,7 @@ void env_universal_t::parse_message_30_internal(const wcstring &msgstr, var_tabl
 /// Parse message msg per fish 2.x format.
 void env_universal_t::parse_message_2x_internal(const wcstring &msgstr, var_table_t *vars,
                                              wcstring *storage) {
+    namespace f2x = fish2x_uvars;
     const wchar_t *const msg = msgstr.c_str();
     const wchar_t *cursor = msg;
 
@@ -883,9 +884,9 @@ void env_universal_t::parse_message_2x_internal(const wcstring &msgstr, var_tabl
     if (cursor[0] == L'#') return;
 
     env_var_t::env_var_flags_t flags = 0;
-    if (match(&cursor, SET_EXPORT_STR)) {
+    if (match(&cursor, f2x::SET_EXPORT)) {
         flags |= env_var_t::flag_export;
-    } else if (match(&cursor, SET_STR)) {
+    } else if (match(&cursor, f2x::SET)) {
         flags |= 0;
     } else {
         debug(1, PARSE_ERR, msg);

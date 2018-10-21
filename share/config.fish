@@ -62,10 +62,10 @@ end
 # unless they already exist
 #
 
-set -g __fish_config_dir ~/.config
+set -g __fish_config_dir ~/.config/fish
 
 if set -q XDG_CONFIG_HOME
-    set __fish_config_dir $XDG_CONFIG_HOME
+    set __fish_config_dir $XDG_CONFIG_HOME/fish
 end
 
 set -l userdatadir ~/.local/share

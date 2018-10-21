@@ -61,7 +61,7 @@ function funced --description 'Edit function definition'
         set -l prompt 'printf "%s%s%s> " (set_color green) '$funcname' (set_color normal)'
         if read -p $prompt -c "$init" --shell cmd
             echo -n $cmd | fish_indent | read -lz cmd
-            eval "$cmd"
+            $cmd
         end
         if set -q _flag_save
             funcsave $funcname
@@ -89,7 +89,7 @@ function funced --description 'Edit function definition'
     while true
         set -l checksum (__funced_md5 "$tmpname")
 
-        if not eval $editor $tmpname
+        if not $editor $tmpname
             echo (_ "Editing failed or was cancelled")
         else
             # Verify the checksum (if present) to detect potential problems

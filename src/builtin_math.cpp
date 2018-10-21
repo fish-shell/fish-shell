@@ -141,6 +141,13 @@ static wcstring math_describe_error(te_error_t& error) {
 
 /// Return a formatted version of the value \p v respecting the given \p opts.
 static wcstring format_double(double v, const math_cmd_opts_t &opts) {
+    // As a special-case, a scale of 0 means to truncate to an integer
+    // instead of rounding.
+    if (opts.scale == 0) {
+        v = std::trunc(v);
+        return format_string(L"%.*f", opts.scale, v);
+    }
+
     wcstring ret = format_string(L"%.*f", opts.scale, v);
     // If we contain a decimal separator, trim trailing zeros after it, and then the separator
     // itself if there's nothing after it. Detect a decimal separator as a non-digit.

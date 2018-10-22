@@ -213,6 +213,9 @@ echo 'echo "source argv {$argv}"' | source
 echo 'echo "source argv {$argv}"' | source -
 echo 'echo "source argv {$argv}"' | source - abc
 echo 'echo "source argv {$argv}"' | source - abc def
+# This hangs if it fails!
+source
+echo $status
 
 always_fails
 echo $status

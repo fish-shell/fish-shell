@@ -23,6 +23,7 @@ fish 3.0 is a major release which brings with it both improvements in functional
 - Background jobs not first `disown`'d will be reaped upon `exec`, bringing the behavior in line with that of `exit`.
 - `read` now uses `-s` as short for `--silent` (à la `bash`); `--shell`'s abbreviation (formerly `-s`) is now `-S` instead (#4490).
 - `cd` no longer resolves symlinks. fish now maintains a virtual path, matching other shells. (#3350).
+- `source` now requires an explicit `-` as the filename to read from the terminal (#2633).
 
 ## Notable fixes and improvements
 ### Syntax/semantic changes and new builtins

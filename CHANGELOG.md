@@ -29,6 +29,7 @@ fish 3.0 is a major release which brings with it both improvements in functional
 ### Syntax/semantic changes and new builtins
 - fish now supports `&&`, `||`, and `!` (#4620).
 - Variables may be used as commands (#154).
+- fish may be started in private mode via `fish --private` or `fish -P`. Private mode fish sessions do not have access to the history file and any commands evaluated in private mode are not persisted for future sessions. A session variable `$fish_private_mode` can be queried to detect private mode and adjust the behavior of scripts accordingly to respect the user's wish for privacy.
 - A new feature flags mechanism is added for staging deprecations and breaking changes. Feature flags may be specified at launch with `fish --features ...` or by setting the universal `fish_features` variable. (#4940)
 - `wait` builtin is added for waiting on processes (#4498).
 - `math` is now a builtin rather than a wrapper around `bc` (#3157). The default scale is now 6, so that floating point computations produce decimals (#4478).

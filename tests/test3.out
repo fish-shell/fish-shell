@@ -46,3 +46,10 @@ MANPATH=man1:man2:man3
 DONT_ESCAPE_COLONS=1: 2: :3:
 DONT_ESCAPE_SPACES=1  2   3  4
 DONT_ESCAPE_COLONS_PATH=1::2:::3:
+
+####################
+# Path universal variables
+a b c 1:2:3
+a b c 1 2 3
+a:b:c 1 2 3
+a:b:c 1:2:3

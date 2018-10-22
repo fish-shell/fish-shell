@@ -311,4 +311,18 @@ set -x DONT_ESCAPE_COLONS 1: 2: :3: ; env | grep '^DONT_ESCAPE_COLONS='
 set -x DONT_ESCAPE_SPACES '1 ' '2 ' ' 3 ' 4 ; env | grep '^DONT_ESCAPE_SPACES='
 set -x DONT_ESCAPE_COLONS_PATH 1: 2: :3: ; env | grep '^DONT_ESCAPE_COLONS_PATH='
 
+logmsg Path universal variables
+set __fish_test_path_not a b c
+set __fish_test_PATH 1 2 3
+echo "$__fish_test_path_not $__fish_test_PATH"
+set --unpath __fish_test_PATH $__fish_test_PATH
+echo "$__fish_test_path_not $__fish_test_PATH"
+set --path __fish_test_path_not $__fish_test_path_not
+echo "$__fish_test_path_not $__fish_test_PATH"
+set --path __fish_test_PATH $__fish_test_PATH
+echo "$__fish_test_path_not $__fish_test_PATH"
+
+
+
+
 true

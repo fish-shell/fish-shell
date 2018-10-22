@@ -2834,7 +2834,7 @@ static int test_universal_helper(int x) {
     for (int j = 0; j < UVARS_PER_THREAD; j++) {
         const wcstring key = format_string(L"key_%d_%d", x, j);
         const wcstring val = format_string(L"val_%d_%d", x, j);
-        uvars.set(key, {val}, false);
+        uvars.set(key, env_var_t{val, 0});
         bool synced = uvars.sync(callbacks);
         if (!synced) {
             err(L"Failed to sync universal variables after modification");
@@ -2966,28 +2966,30 @@ static void test_universal_callbacks() {
     env_universal_t uvars1(UVARS_TEST_PATH);
     env_universal_t uvars2(UVARS_TEST_PATH);
 
+    env_var_t::env_var_flags_t noflags = 0;
+
     // Put some variables into both.
-    uvars1.set(L"alpha", {L"1"}, false);
-    uvars1.set(L"beta", {L"1"}, false);
-    uvars1.set(L"delta", {L"1"}, false);
-    uvars1.set(L"epsilon", {L"1"}, false);
-    uvars1.set(L"lambda", {L"1"}, false);
-    uvars1.set(L"kappa", {L"1"}, false);
-    uvars1.set(L"omicron", {L"1"}, false);
+    uvars1.set(L"alpha", env_var_t{L"1", noflags});
+    uvars1.set(L"beta", env_var_t{L"1", noflags});
+    uvars1.set(L"delta", env_var_t{L"1", noflags});
+    uvars1.set(L"epsilon", env_var_t{L"1", noflags});
+    uvars1.set(L"lambda", env_var_t{L"1", noflags});
+    uvars1.set(L"kappa", env_var_t{L"1", noflags});
+    uvars1.set(L"omicron", env_var_t{L"1", noflags});
 
     uvars1.sync(callbacks);
     uvars2.sync(callbacks);
 
     // Change uvars1.
-    uvars1.set(L"alpha", {L"2"}, false);    // changes value
-    uvars1.set(L"beta", {L"1"}, true);      // changes export
+    uvars1.set(L"alpha", env_var_t{L"2", noflags});                // changes value
+    uvars1.set(L"beta", env_var_t{L"1", env_var_t::flag_export});  // changes export
     uvars1.remove(L"delta");                // erases value
-    uvars1.set(L"epsilon", {L"1"}, false);  // changes nothing
+    uvars1.set(L"epsilon", env_var_t{L"1", noflags});  // changes nothing
     uvars1.sync(callbacks);
 
     // Change uvars2. It should treat its value as correct and ignore changes from uvars1.
-    uvars2.set(L"lambda", {L"1"}, false);  // same value
-    uvars2.set(L"kappa", {L"2"}, false);   // different value
+    uvars2.set(L"lambda", {L"1", noflags});  // same value
+    uvars2.set(L"kappa", {L"2", noflags});   // different value
 
     // Now see what uvars2 sees.
     callbacks.clear();
@@ -3047,7 +3049,7 @@ static void test_universal_ok_to_save() {
     uvars.sync(cbs);
     cbs.clear();
     do_test(!uvars.is_ok_to_save() && "Should no longer be OK to save");
-    uvars.set(L"SOMEVAR", {L"SOMEVALUE"}, false);
+    uvars.set(L"SOMEVAR", env_var_t{wcstring{L"SOMEVALUE"}, 0});
     uvars.sync(cbs);
 
     // Ensure file is same.

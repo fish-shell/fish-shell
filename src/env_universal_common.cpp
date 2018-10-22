@@ -255,17 +255,15 @@ maybe_t<env_var_t> env_universal_t::get(const wcstring &name) const {
     return none();
 }
 
-bool env_universal_t::get_export(const wcstring &name) const {
-    bool result = false;
+maybe_t<env_var_t::env_var_flags_t> env_universal_t::get_flags(const wcstring &name) const {
     var_table_t::const_iterator where = vars.find(name);
     if (where != vars.end()) {
-        result = where->second.exports();
+        return where->second.get_flags();
     }
-    return result;
+    return none();
 }
 
-void env_universal_t::set_internal(const wcstring &key, wcstring_list_t vals, bool exportv,
-                                   bool overwrite) {
+void env_universal_t::set_internal(const wcstring &key, env_var_t var, bool overwrite) {
     ASSERT_IS_LOCKED(lock);
     if (!overwrite && this->modified.find(key) != this->modified.end()) {
         // This value has been modified and we're not overwriting it. Skip it.
@@ -273,9 +271,8 @@ void env_universal_t::set_internal(const wcstring &key, wcstring_list_t vals, bo
     }
 
     env_var_t &entry = vars[key];
-    if (entry.exports() != exportv || entry.as_list() != vals) {
-        entry.set_vals(std::move(vals));
-        entry.set_exports(exportv);
+    if (entry != var) {
+        entry = var;
 
         // If we are overwriting, then this is now modified.
         if (overwrite) {
@@ -284,9 +281,9 @@ void env_universal_t::set_internal(const wcstring &key, wcstring_list_t vals, bo
     }
 }
 
-void env_universal_t::set(const wcstring &key, wcstring_list_t vals, bool exportv) {
+void env_universal_t::set(const wcstring &key, env_var_t var) {
     scoped_lock locker(lock);
-    this->set_internal(key, std::move(vals), exportv, true /* overwrite */);
+    this->set_internal(key, std::move(var), true /* overwrite */);
 }
 
 bool env_universal_t::remove_internal(const wcstring &key) {

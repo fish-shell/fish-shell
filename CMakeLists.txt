@@ -65,7 +65,7 @@ SET(FISH_SRCS
     src/parse_execution.cpp src/parse_productions.cpp src/parse_tree.cpp
     src/parse_util.cpp src/parser.cpp src/parser_keywords.cpp src/path.cpp
     src/postfork.cpp src/proc.cpp src/reader.cpp src/sanity.cpp src/screen.cpp
-    src/signal.cpp src/tnode.cpp src/tokenizer.cpp src/utf8.cpp src/util.cpp
+    src/signal.cpp src/tinyexpr.c src/tnode.cpp src/tokenizer.cpp src/utf8.cpp src/util.cpp
     src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp src/wutil.cpp
     src/future_feature_flags.cpp
 )
@@ -119,10 +119,8 @@ INCLUDE(cmake/Docs.cmake)
 
 # Define a function to link dependencies.
 FUNCTION(FISH_LINK_DEPS target)
-  TARGET_LINK_LIBRARIES(${target} fishlib tinyexpr)
+  TARGET_LINK_LIBRARIES(${target} fishlib)
 ENDFUNCTION(FISH_LINK_DEPS)
-
-ADD_LIBRARY(tinyexpr STATIC src/tinyexpr.c src/tinyexpr.h)
 
 # Define libfish.a.
 ADD_LIBRARY(fishlib STATIC ${FISH_SRCS})

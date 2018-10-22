@@ -1360,6 +1360,9 @@ When fish waits for input, it will display a prompt by evaluating the `fish_prom
 
 If a function named `fish_greeting` exists, it will be run when entering interactive mode. Otherwise, if an environment variable named `fish_greeting` exists, it will be printed.
 
+\subsection private-mode Private mode
+
+fish supports launching in private mode via `fish --private` (or `fish -P` for short). In private mode, old history is not available and any interactive commands you execute will not be appended to the global history file, making it useful both for avoiding inadvertently leaking personal information (e.g. for screencasts) and when dealing with sensitive information to prevent it being persisted to disk. You can query the global variable `fish_private_mode` (`if set -q fish_private_mode ...`) if you would like to respect the user's wish for privacy and alter the behavior of your own fish scripts.
 
 \subsection event Event handlers
 

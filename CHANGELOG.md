@@ -98,6 +98,7 @@ fish 3.0 is a major release which brings with it both improvements in functional
 - Added completions for
   - `bd` (#4472)
   - `bower`
+  - `clang` and `clang++` (#4174)
   - `configure` (autoconf only)
   - `doas` (#5196)
   - `hjson`

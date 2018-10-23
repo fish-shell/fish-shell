@@ -169,12 +169,6 @@ wcstring builtin_help_get(parser_t &parser, io_streams_t &streams, const wchar_t
     wcstring out;
     const wcstring name_esc = escape_string(name, 1);
     wcstring cmd = format_string(L"__fish_print_help %ls", name_esc.c_str());
-    if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
-        // since we're using a subshell, __fish_print_help can't tell we're in
-        // a terminal. Tell it ourselves.
-        int cols = common_get_width();
-        cmd = format_string(L"__fish_print_help --tty-width %d %ls", cols, name_esc.c_str());
-    }
     if (exec_subshell(cmd, lst, false /* don't apply exit status */) >= 0) {
         for (size_t i = 0; i < lst.size(); i++) {
             out.append(lst.at(i));

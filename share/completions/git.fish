@@ -399,34 +399,27 @@ function __fish_git_ranges
 end
 
 function __fish_git_needs_command
+    # Figure out if the current invocation already has a command.
+
+    # Git has tons of options, but fortunately only a few can appear before the command.
+    # They are listed here.
+    set -l opts h-help p P-paginate N-no-pager b-bare o-no-replace-objects \
+    l-literal-pathspecs g-glob-pathspecs O-noglob-pathspecs i-icase-pathspecs \
+    e-exec-path= G-git-dir= c= C= v-version H-html-path \
+    m-man-path I-info-path w-work-tree= a-namespace= s-super-prefix=
     set cmd (commandline -opc)
-    set -l skip_next 1
-    set -q cmd[2]
+    set -e cmd[1]
+    argparse -s $opts -- $cmd 2>/dev/null
     or return 0
-    # Skip first word because it's "git" or a wrapper
-    for c in $cmd[2..-1]
-        test $skip_next -eq 0
-        and set skip_next 1
-        and continue
-        # git can only take a few options before a command, these are the ones mentioned in the "git" man page
-        # e.g. `git --follow log` is wrong, `git --help log` is okay (and `git --help log $branch` is superfluous but works)
-        # In case any other option is used before a command, we'll fail, but that's okay since it's invalid anyway
-        switch $c
-            # General options that can still take a command
-            case "--help" "-p" "--paginate" "--no-pager" "--bare" "--no-replace-objects" --{literal,glob,noglob,icase}-pathspecs --{exec-path,git-dir,work-tree,namespace}"=*"
-                continue
-                # General options with an argument we need to skip. The option=value versions have already been handled above
-            case --{exec-path,git-dir,work-tree,namespace}
-                set skip_next 0
-                continue
-                # General options that cause git to do something and exit - these behave like commands and everything after them is ignored
-            case "--version" --{html,man,info}-path
-                return 1
-                # We assume that any other token that's not an argument to a general option is a command
-            case "*"
-                echo $c
-                return 1
-        end
+    # These flags function as commands, effectively.
+    set -q _flag_version; and return 1
+    set -q _flag_html_path; and return 1
+    set -q _flag_man_path; and return 1
+    set -q _flag_info_path; and return 1
+    if set -q argv[1]
+        # Also print the command, so this can be used to figure out what it is.
+        echo $argv[1]
+        return 1
     end
     return 0
 end
@@ -535,7 +528,7 @@ function __fish_git_branch_for_remote
     end
     set -q remote[1]
     or return 1
-    __fish_git_branches | string match -- "$remote/*" | string replace -- "$remote/" ''
+    __fish_git_branches | string replace -f -- "$remote/" ''
 end
 
 # Return 0 if the current token is a possible commit-hash with at least 3 characters

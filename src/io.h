@@ -101,6 +101,10 @@ public:
      discard = true;
  }
 
+ void reset_discard() {
+     discard = false;
+ }
+
  /// Serialize the contents to a single string, where explicitly separated elements have a
  /// newline appended.
  StringType newline_serialized() const {
@@ -228,7 +232,10 @@ class io_buffer_t : public io_pipe_t {
 
     explicit io_buffer_t(int f, size_t limit)
         : io_pipe_t(IO_BUFFER, f, false /* not input */),
-          buffer_(limit) {}
+          buffer_(limit) {
+        // Explicitly reset the discard flag because we share this buffer.
+        buffer_.reset_discard();
+    }
 
    public:
     void print() const override;

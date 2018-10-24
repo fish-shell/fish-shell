@@ -135,19 +135,30 @@ function __fish_git_files
     #
     set -l status_opt --ignore-submodules=all
 
-    # If we aren't looking for untracked/ignored files, let git status skip them.
+    # If we aren't looking for ignored files, let git status skip them.
+    set -q ignored; and set -a status_opt --ignored=matching
+    or set -a status_opt --ignored=no
+
+    # Glob just the current token for performance
+    # and so git shows untracked files (even in untracked dirs) for that.
+    # If the current token is empty, this matches everything in $PWD.
+    set -l files (commandline -ct)
+    # With the trailing "/", it will match directories, but won't descend.
+    set files "$files*" "$files*/"
     set -q untracked; and set -a status_opt -unormal
     or set -a status_opt -uno
-    set -q ignored; and set -a status_opt --ignored
+
+    # We need to set status.relativePaths to true because the porcelain v2 format still honors that,
+    # and core.quotePath to false so characters > 0x80 (i.e. non-ASCII) aren't considered special.
+    # We explicitly enable globs so we can use that to match the current token.
+    set -l git_opt -c status.relativePaths -c core.quotePath= --glob-pathspecs
 
     # We pick the v2 format if we can, because it shows relative filenames (if used without "-z").
     # We fall back on the v1 format by reading git's _version_, because trying v2 first is too slow.
     set -l ver (command git --version | string replace -rf 'git version (\d+)\.(\d+)\.?.*' '$1\n$2')
     # Version >= 2.11.* has the v2 format.
     if test "$ver[1]" -gt 2 2>/dev/null; or test "$ver[1]" -eq 2 -a "$ver[2]" -ge 11 2>/dev/null
-        # We need to set status.relativePaths to true because we want relative paths,
-        # and core.quotePath to false so characters > 0x80 (i.e. non-ASCII) aren't escaped.
-        command git -c status.relativePaths -c core.quotePath= status --porcelain=2 $status_opt \
+        command git $git_opt status --porcelain=2 $status_opt -- $files \
         | while read -la -d ' ' line
             set -l file
             set -l desc
@@ -262,7 +273,7 @@ function __fish_git_files
         set -l previousfile
         # Note that we can't use space as a delimiter between status and filename, because
         # the status can contain spaces - " M" is different from "M ".
-        command git -c core.quotePath= status --porcelain -z $status_opt \
+        command git $git_opt status --porcelain -z $status_opt -- $files \
         | while read -lz line
             set -l desc
             # The entire line is the "from" from a rename.

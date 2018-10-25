@@ -45,4 +45,7 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
         echo (_ "or the file was empty")
     end
     command rm $f
+    # We've probably opened something that messed with the screen.
+    # A repaint seems in order.
+    commandline -f repaint
 end

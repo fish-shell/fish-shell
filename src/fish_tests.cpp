@@ -2809,6 +2809,22 @@ static void test_input() {
     }
 }
 
+static void test_line_iterator() {
+    say(L"Testing line iterator");
+
+    std::string text1 = "Alpha\nBeta\nGamma\n\nDelta\n";
+    std::vector<std::string> lines1;
+    line_iterator_t<std::string> iter1(text1);
+    while (iter1.next()) lines1.push_back(iter1.line());
+    do_test((lines1 == std::vector<std::string>{"Alpha", "Beta", "Gamma", "", "Delta"}));
+
+    wcstring text2 = L"\n\nAlpha\nBeta\nGamma\n\nDelta";
+    std::vector<wcstring> lines2;
+    line_iterator_t<wcstring> iter2(text2);
+    while (iter2.next()) lines2.push_back(iter2.line());
+    do_test((lines2 == std::vector<wcstring>{L"", L"", L"Alpha", L"Beta", L"Gamma", L"", L"Delta"}));
+}
+
 #define UVARS_PER_THREAD 8
 #define UVARS_TEST_PATH L"test/fish_uvars_test/varsfile.txt"
 
@@ -2818,7 +2834,7 @@ static int test_universal_helper(int x) {
     for (int j = 0; j < UVARS_PER_THREAD; j++) {
         const wcstring key = format_string(L"key_%d_%d", x, j);
         const wcstring val = format_string(L"val_%d_%d", x, j);
-        uvars.set(key, {val}, false);
+        uvars.set(key, env_var_t{val, 0});
         bool synced = uvars.sync(callbacks);
         if (!synced) {
             err(L"Failed to sync universal variables after modification");
@@ -2872,6 +2888,73 @@ static void test_universal() {
     (void)system("rm -Rf test/fish_uvars_test/");
 }
 
+static void test_universal_output() {
+    say(L"Testing universal variable output");
+
+    const env_var_t::env_var_flags_t flag_export = env_var_t::flag_export;
+    const env_var_t::env_var_flags_t flag_pathvar = env_var_t::flag_pathvar;
+
+    var_table_t vars;
+    vars[L"varA"] = env_var_t(wcstring_list_t{L"ValA1", L"ValA2"}, 0);
+    vars[L"varB"] = env_var_t(wcstring_list_t{L"ValB1"}, flag_export);
+    vars[L"varC"] = env_var_t(wcstring_list_t{L"ValC1"}, 0);
+    vars[L"varD"] = env_var_t(wcstring_list_t{L"ValD1"}, flag_export | flag_pathvar);
+    vars[L"varE"] = env_var_t(wcstring_list_t{L"ValE1", L"ValE2"}, flag_pathvar);
+
+    std::string text = env_universal_t::serialize_with_vars(vars);
+    const char *expected =
+        "# This file contains fish universal variable definitions.\n"
+        "# VERSION: 3.0\n"
+        "SETUVAR varA:ValA1\\x1eValA2\n"
+        "SETUVAR --export varB:ValB1\n"
+        "SETUVAR varC:ValC1\n"
+        "SETUVAR --export --path varD:ValD1\n"
+        "SETUVAR --path varE:ValE1\\x1eValE2\n";
+    do_test(text == expected);
+}
+
+static void test_universal_parsing() {
+    say(L"Testing universal variable parsing");
+    const char *input =
+        "# This file contains fish universal variable definitions.\n"
+        "# VERSION: 3.0\n"
+        "SETUVAR varA:ValA1\\x1eValA2\n"
+        "SETUVAR --export varB:ValB1\n"
+        "SETUVAR --nonsenseflag varC:ValC1\n"
+        "SETUVAR --export --path varD:ValD1\n"
+        "SETUVAR --path --path varE:ValE1\\x1eValE2\n";
+
+    const env_var_t::env_var_flags_t flag_export = env_var_t::flag_export;
+    const env_var_t::env_var_flags_t flag_pathvar = env_var_t::flag_pathvar;
+
+    var_table_t vars;
+    vars[L"varA"] = env_var_t(wcstring_list_t{L"ValA1", L"ValA2"}, 0);
+    vars[L"varB"] = env_var_t(wcstring_list_t{L"ValB1"}, flag_export);
+    vars[L"varC"] = env_var_t(wcstring_list_t{L"ValC1"}, 0);
+    vars[L"varD"] = env_var_t(wcstring_list_t{L"ValD1"}, flag_export | flag_pathvar);
+    vars[L"varE"] = env_var_t(wcstring_list_t{L"ValE1", L"ValE2"}, flag_pathvar);
+
+    var_table_t parsed_vars;
+    env_universal_t::populate_variables(input, &parsed_vars);
+    do_test(vars == parsed_vars);
+}
+
+static void test_universal_parsing_legacy() {
+    say(L"Testing universal variable legacy parsing");
+    const char *input =
+        "# This file contains fish universal variable definitions.\n"
+        "SET varA:ValA1\\x1eValA2\n"
+        "SET_EXPORT varB:ValB1\n";
+
+    var_table_t vars;
+    vars[L"varA"] = env_var_t(wcstring_list_t{L"ValA1", L"ValA2"}, 0);
+    vars[L"varB"] = env_var_t(wcstring_list_t{L"ValB1"}, env_var_t::flag_export);
+
+    var_table_t parsed_vars;
+    env_universal_t::populate_variables(input, &parsed_vars);
+    do_test(vars == parsed_vars);
+}
+
 static bool callback_data_less_than(const callback_data_t &a, const callback_data_t &b) {
     return a.key < b.key;
 }
@@ -2883,28 +2966,30 @@ static void test_universal_callbacks() {
     env_universal_t uvars1(UVARS_TEST_PATH);
     env_universal_t uvars2(UVARS_TEST_PATH);
 
+    env_var_t::env_var_flags_t noflags = 0;
+
     // Put some variables into both.
-    uvars1.set(L"alpha", {L"1"}, false);
-    uvars1.set(L"beta", {L"1"}, false);
-    uvars1.set(L"delta", {L"1"}, false);
-    uvars1.set(L"epsilon", {L"1"}, false);
-    uvars1.set(L"lambda", {L"1"}, false);
-    uvars1.set(L"kappa", {L"1"}, false);
-    uvars1.set(L"omicron", {L"1"}, false);
+    uvars1.set(L"alpha", env_var_t{L"1", noflags});
+    uvars1.set(L"beta", env_var_t{L"1", noflags});
+    uvars1.set(L"delta", env_var_t{L"1", noflags});
+    uvars1.set(L"epsilon", env_var_t{L"1", noflags});
+    uvars1.set(L"lambda", env_var_t{L"1", noflags});
+    uvars1.set(L"kappa", env_var_t{L"1", noflags});
+    uvars1.set(L"omicron", env_var_t{L"1", noflags});
 
     uvars1.sync(callbacks);
     uvars2.sync(callbacks);
 
     // Change uvars1.
-    uvars1.set(L"alpha", {L"2"}, false);    // changes value
-    uvars1.set(L"beta", {L"1"}, true);      // changes export
+    uvars1.set(L"alpha", env_var_t{L"2", noflags});                // changes value
+    uvars1.set(L"beta", env_var_t{L"1", env_var_t::flag_export});  // changes export
     uvars1.remove(L"delta");                // erases value
-    uvars1.set(L"epsilon", {L"1"}, false);  // changes nothing
+    uvars1.set(L"epsilon", env_var_t{L"1", noflags});  // changes nothing
     uvars1.sync(callbacks);
 
     // Change uvars2. It should treat its value as correct and ignore changes from uvars1.
-    uvars2.set(L"lambda", {L"1"}, false);  // same value
-    uvars2.set(L"kappa", {L"2"}, false);   // different value
+    uvars2.set(L"lambda", {L"1", noflags});  // same value
+    uvars2.set(L"kappa", {L"2", noflags});   // different value
 
     // Now see what uvars2 sees.
     callbacks.clear();
@@ -2915,15 +3000,61 @@ static void test_universal_callbacks() {
 
     // Should see exactly three changes.
     do_test(callbacks.size() == 3);
-    do_test(callbacks.at(0).type == SET);
     do_test(callbacks.at(0).key == L"alpha");
-    do_test(callbacks.at(0).val == L"2");
-    do_test(callbacks.at(1).type == SET_EXPORT);
+    do_test(callbacks.at(0).val == wcstring{L"2"});
     do_test(callbacks.at(1).key == L"beta");
-    do_test(callbacks.at(1).val == L"1");
-    do_test(callbacks.at(2).type == ERASE);
+    do_test(callbacks.at(1).val == wcstring{L"1"});
     do_test(callbacks.at(2).key == L"delta");
-    do_test(callbacks.at(2).val == L"");
+    do_test(callbacks.at(2).val == none());
+    (void)system("rm -Rf test/fish_uvars_test/");
+}
+
+static void test_universal_formats() {
+    say(L"Testing universal format detection");
+    const struct {
+        const char *str;
+        uvar_format_t format;
+    } tests[] = {
+        {"# VERSION: 3.0", uvar_format_t::fish_3_0},
+        {"# version: 3.0", uvar_format_t::fish_2_x},
+        {"# blah blahVERSION: 3.0", uvar_format_t::fish_2_x},
+        {"stuff\n# blah blahVERSION: 3.0", uvar_format_t::fish_2_x},
+        {"# blah\n# VERSION: 3.0", uvar_format_t::fish_3_0},
+        {"# blah\n#VERSION: 3.0", uvar_format_t::fish_3_0},
+        {"# blah\n#VERSION:3.0", uvar_format_t::fish_3_0},
+        {"# blah\n#VERSION:3.1", uvar_format_t::future},
+    };
+    for (const auto &test : tests) {
+        uvar_format_t format = env_universal_t::format_for_contents(test.str);
+        do_test(format == test.format);
+    }
+}
+
+static void test_universal_ok_to_save() {
+    // Ensure we don't try to save after reading from a newer fish.
+    say(L"Testing universal Ok to save");
+    if (system("mkdir -p test/fish_uvars_test/")) err(L"mkdir failed");
+    const char *contents = "# VERSION: 99999.99\n";
+    FILE *fp = wfopen(UVARS_TEST_PATH, "w");
+    assert(fp && "Failed to open UVARS_TEST_PATH for writing");
+    fwrite(contents, strlen(contents), 1, fp);
+    fclose(fp);
+
+    file_id_t before_id = file_id_for_path(UVARS_TEST_PATH);
+    do_test(before_id != kInvalidFileID && "UVARS_TEST_PATH should be readable");
+
+    callback_data_list_t cbs;
+    env_universal_t uvars(UVARS_TEST_PATH);
+    do_test(uvars.is_ok_to_save() && "Should be OK to save before sync");
+    uvars.sync(cbs);
+    cbs.clear();
+    do_test(!uvars.is_ok_to_save() && "Should no longer be OK to save");
+    uvars.set(L"SOMEVAR", env_var_t{wcstring{L"SOMEVALUE"}, 0});
+    uvars.sync(cbs);
+
+    // Ensure file is same.
+    file_id_t after_id = file_id_for_path(UVARS_TEST_PATH);
+    do_test(before_id == after_id && "UVARS_TEST_PATH should not have changed");
     (void)system("rm -Rf test/fish_uvars_test/");
 }
 
@@ -4568,6 +4699,14 @@ static void test_timezone_env_vars() {
 static void test_env_vars() {
     test_timezone_env_vars();
     // TODO: Add tests for the locale and ncurses vars.
+
+    env_var_t v1 = {L"abc", env_var_t::flag_export};
+    env_var_t v2 = {wcstring_list_t{L"abc"}, env_var_t::flag_export};
+    env_var_t v3 = {wcstring_list_t{L"abc"}, 0};
+    env_var_t v4 = {wcstring_list_t{L"abc", L"def"}, env_var_t::flag_export};
+    do_test(v1 == v2 && ! (v1 != v2));
+    do_test(v1 != v3 && ! (v1 == v3));
+    do_test(v1 != v4 && ! (v1 == v4));
 }
 
 static void test_illegal_command_exit_code() {
@@ -4808,8 +4947,14 @@ int main(int argc, char **argv) {
     if (should_test_function("colors")) test_colors();
     if (should_test_function("complete")) test_complete();
     if (should_test_function("input")) test_input();
+    if (should_test_function("line_iterator")) test_line_iterator();
     if (should_test_function("universal")) test_universal();
+    if (should_test_function("universal")) test_universal_output();
+    if (should_test_function("universal")) test_universal_parsing();
+    if (should_test_function("universal")) test_universal_parsing_legacy();
     if (should_test_function("universal")) test_universal_callbacks();
+    if (should_test_function("universal")) test_universal_formats();
+    if (should_test_function("universal")) test_universal_ok_to_save();
     if (should_test_function("notifiers")) test_universal_notifiers();
     if (should_test_function("completion_insertions")) test_completion_insertions();
     if (should_test_function("autosuggestion_ignores")) test_autosuggestion_ignores();

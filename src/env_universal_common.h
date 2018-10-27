@@ -13,20 +13,26 @@
 #include "env.h"
 #include "wutil.h"
 
-/// The different types of messages found in the fishd file.
-typedef enum { SET, SET_EXPORT, ERASE } fish_message_type_t;
-
 /// Callback data, reflecting a change in universal variables.
 struct callback_data_t {
-    fish_message_type_t type;
+    // The name of the variable.
     wcstring key;
-    wcstring val;
 
-    callback_data_t(fish_message_type_t t, wcstring k, wcstring v)
-        : type(t), key(std::move(k)), val(std::move(v)) {}
+    // The value of the variable, or none if it is erased.
+    maybe_t<wcstring> val;
+
+    /// Construct from a key and maybe a value.
+    callback_data_t(wcstring k, maybe_t<wcstring> v) : key(std::move(k)), val(std::move(v)) {}
+
+    /// \return whether this callback represents an erased variable.
+    bool is_erase() const { return !val.has_value(); }
 };
 
 typedef std::vector<struct callback_data_t> callback_data_list_t;
+
+// List of fish universal variable formats.
+// This is exposed for testing.
+enum class uvar_format_t { fish_2_x, fish_3_0, future };
 
 bool get_hostname_identifier(wcstring &result);
 /// Class representing universal variables.
@@ -42,11 +48,15 @@ class env_universal_t {
     // Path that we save to. If empty, use the default.
     const wcstring explicit_vars_path;
 
+    // Whether it's OK to save. This may be set to false if we discover that a future version of
+    // fish wrote the uvars contents.
+    bool ok_to_save{true};
+
     mutable fish_mutex_t lock;
     bool load_from_path(const wcstring &path, callback_data_list_t &callbacks);
     void load_from_fd(int fd, callback_data_list_t &callbacks);
 
-    void set_internal(const wcstring &key, wcstring_list_t val, bool exportv, bool overwrite);
+    void set_internal(const wcstring &key, env_var_t var, bool overwrite);
     bool remove_internal(const wcstring &name);
 
     // Functions concerned with saving.
@@ -66,8 +76,16 @@ class env_universal_t {
     // vars_to_acquire.
     void acquire_variables(var_table_t &vars_to_acquire);
 
-    static void parse_message_internal(const wcstring &msg, var_table_t *vars, wcstring *storage);
-    static var_table_t read_message_internal(int fd);
+    static bool populate_1_variable(const wchar_t *str, env_var_t::env_var_flags_t flags,
+                                    var_table_t *vars, wcstring *storage);
+
+    static void parse_message_2x_internal(const wcstring &msg, var_table_t *vars,
+                                          wcstring *storage);
+    static void parse_message_30_internal(const wcstring &msg, var_table_t *vars,
+                                          wcstring *storage);
+    static uvar_format_t read_message_internal(int fd, var_table_t *vars);
+
+    bool save(const wcstring &directory, const wcstring &vars_path);
 
    public:
     explicit env_universal_t(wcstring path);
@@ -75,11 +93,11 @@ class env_universal_t {
     // Get the value of the variable with the specified name.
     maybe_t<env_var_t> get(const wcstring &name) const;
 
-    // Returns whether the variable with the given name is exported, or false if it does not exist.
-    bool get_export(const wcstring &name) const;
+    // \return flags from the variable with the given name.
+    maybe_t<env_var_t::env_var_flags_t> get_flags(const wcstring &name) const;
 
     // Sets a variable.
-    void set(const wcstring &key, wcstring_list_t val, bool exportv);
+    void set(const wcstring &key, env_var_t var);
 
     // Removes a variable. Returns true if it was found, false if not.
     bool remove(const wcstring &name);
@@ -93,6 +111,20 @@ class env_universal_t {
     /// Reads and writes variables at the correct path. Returns true if modified variables were
     /// written.
     bool sync(callback_data_list_t &callbacks);
+
+    /// Populate a variable table \p out_vars from a \p s string.
+    /// This is exposed for testing only.
+    /// \return the format of the file that we read.
+    static uvar_format_t populate_variables(const std::string &s, var_table_t *out_vars);
+
+    /// Guess a file format. Exposed for testing only.
+    static uvar_format_t format_for_contents(const std::string &s);
+
+    /// Serialize a variable list. Exposed for testing only.
+    static std::string serialize_with_vars(const var_table_t &vars);
+
+    /// Exposed for testing only.
+    bool is_ok_to_save() const { return ok_to_save; }
 };
 
 /// The "universal notifier" is an object responsible for broadcasting and receiving universal

@@ -56,29 +56,47 @@
 #include <bsd/ifaddrs.h>
 #endif  // Haiku
 
-/// The set command.
-#define SET_STR L"SET"
-
-/// The set_export command.
-#define SET_EXPORT_STR L"SET_EXPORT"
-
-/// Non-wide version of the set command.
-#define SET_MBS "SET"
-
-/// Non-wide version of the set_export command.
-#define SET_EXPORT_MBS "SET_EXPORT"
-
 /// Error message.
 #define PARSE_ERR L"Unable to parse universal variable message: '%ls'"
 
 /// Small note about not editing ~/.fishd manually. Inserted at the top of all .fishd files.
 #define SAVE_MSG "# This file contains fish universal variable definitions.\n"
 
+/// Version for fish 3.0
+#define UVARS_VERSION_3_0 "3.0"
+
+// Maximum file size we'll read.
+static constexpr size_t k_max_read_size = 16 * 1024 * 1024;
+
+// Fields used in fish 2.x uvars.
+namespace fish2x_uvars {
+namespace {
+constexpr const char *SET = "SET";
+constexpr const char *SET_EXPORT = "SET_EXPORT";
+}  // namespace
+}  // namespace fish2x_uvars
+
+// Fields used in fish 3.0 uvars
+namespace fish3_uvars {
+namespace {
+constexpr const char *SETUVAR = "SETUVAR";
+constexpr const char *EXPORT = "--export";
+constexpr const char *PATH = "--path";
+}  // namespace
+}  // namespace fish3_uvars
+
+/// The different types of messages found in the fishd file.
+enum class uvar_message_type_t { set, set_export };
+
 static wcstring get_machine_identifier();
 
 /// return a list of paths where the uvars file has been historically stored.
 static wcstring_list_t get_legacy_paths(const wcstring &wdir) {
     wcstring_list_t result;
+    // A path used during fish 3.0 development.
+    result.push_back(wdir + L"/fish_universal_variables");
+
+    // Paths used in 2.x.
     result.push_back(wdir + L"/fishd." + get_machine_identifier());
     wcstring hostname_id;
     if (get_hostname_identifier(hostname_id)) {
@@ -95,19 +113,22 @@ static maybe_t<wcstring> default_vars_path_directory() {
 
 static maybe_t<wcstring> default_vars_path() {
     if (auto path = default_vars_path_directory()) {
-        path->append(L"/fish_universal_variables");
+        path->append(L"/fish_variables");
         return path;
     }
     return none();
 }
 
 /// Test if the message msg contains the command cmd.
-static bool match(const wchar_t *msg, const wchar_t *cmd) {
-    size_t len = wcslen(cmd);
-    if (wcsncasecmp(msg, cmd, len) != 0) return false;
-
-    if (msg[len] && msg[len] != L' ' && msg[len] != L'\t') return false;
-
+/// On success, updates the cursor to just past the command.
+static bool match(const wchar_t **inout_cursor, const char *cmd) {
+    const wchar_t *cursor = *inout_cursor;
+    size_t len = strlen(cmd);
+    if (!std::equal(cmd, cmd + len, cursor)) {
+        return false;
+    }
+    if (cursor[len] && cursor[len] != L' ' && cursor[len] != L'\t') return false;
+    *inout_cursor = cursor + len;
     return true;
 }
 
@@ -148,8 +169,9 @@ static bool append_utf8(const wcstring &input, std::string *receiver, std::strin
 
 /// Creates a file entry like "SET fish_color_cwd:FF0". Appends the result to *result (as UTF8).
 /// Returns true on success. storage may be used for temporary storage, to avoid allocations.
-static bool append_file_entry(fish_message_type_t type, const wcstring &key_in,
+static bool append_file_entry(env_var_t::env_var_flags_t flags, const wcstring &key_in,
                               const wcstring &val_in, std::string *result, std::string *storage) {
+    namespace f3 = fish3_uvars;
     assert(storage != NULL);
     assert(result != NULL);
 
@@ -157,9 +179,19 @@ static bool append_file_entry(fish_message_type_t type, const wcstring &key_in,
     bool success = true;
     const size_t result_length_on_entry = result->size();
 
-    // Append header like "SET "
-    result->append(type == SET ? SET_MBS : SET_EXPORT_MBS);
+    // Append SETVAR header.
+    result->append(f3::SETUVAR);
     result->push_back(' ');
+
+    // Append flags.
+    if (flags & env_var_t::flag_export) {
+        result->append(f3::EXPORT);
+        result->push_back(' ');
+    }
+    if (flags & env_var_t::flag_pathvar) {
+        result->append(f3::PATH);
+        result->push_back(' ');
+    }
 
     // Append variable name like "fish_color_cwd".
     if (!valid_var_name(key_in)) {
@@ -223,17 +255,15 @@ maybe_t<env_var_t> env_universal_t::get(const wcstring &name) const {
     return none();
 }
 
-bool env_universal_t::get_export(const wcstring &name) const {
-    bool result = false;
+maybe_t<env_var_t::env_var_flags_t> env_universal_t::get_flags(const wcstring &name) const {
     var_table_t::const_iterator where = vars.find(name);
     if (where != vars.end()) {
-        result = where->second.exports();
+        return where->second.get_flags();
     }
-    return result;
+    return none();
 }
 
-void env_universal_t::set_internal(const wcstring &key, wcstring_list_t vals, bool exportv,
-                                   bool overwrite) {
+void env_universal_t::set_internal(const wcstring &key, env_var_t var, bool overwrite) {
     ASSERT_IS_LOCKED(lock);
     if (!overwrite && this->modified.find(key) != this->modified.end()) {
         // This value has been modified and we're not overwriting it. Skip it.
@@ -241,9 +271,8 @@ void env_universal_t::set_internal(const wcstring &key, wcstring_list_t vals, bo
     }
 
     env_var_t &entry = vars[key];
-    if (entry.exports() != exportv || entry.as_list() != vals) {
-        entry.set_vals(std::move(vals));
-        entry.set_exports(exportv);
+    if (entry != var) {
+        entry = var;
 
         // If we are overwriting, then this is now modified.
         if (overwrite) {
@@ -252,9 +281,9 @@ void env_universal_t::set_internal(const wcstring &key, wcstring_list_t vals, bo
     }
 }
 
-void env_universal_t::set(const wcstring &key, wcstring_list_t vals, bool exportv) {
+void env_universal_t::set(const wcstring &key, env_var_t var) {
     scoped_lock locker(lock);
-    this->set_internal(key, std::move(vals), exportv, true /* overwrite */);
+    this->set_internal(key, std::move(var), true /* overwrite */);
 }
 
 bool env_universal_t::remove_internal(const wcstring &key) {
@@ -300,7 +329,7 @@ void env_universal_t::generate_callbacks(const var_table_t &new_vars,
 
         // If the value is not present in new_vars, it has been erased.
         if (new_vars.find(key) == new_vars.end()) {
-            callbacks.push_back(callback_data_t(ERASE, key, L""));
+            callbacks.push_back(callback_data_t(key, none()));
         }
     }
 
@@ -319,8 +348,7 @@ void env_universal_t::generate_callbacks(const var_table_t &new_vars,
         if (existing == this->vars.end() || existing->second.exports() != new_entry.exports() ||
             existing->second != new_entry) {
             // Value has changed.
-            callbacks.push_back(callback_data_t(new_entry.exports() ? SET_EXPORT : SET, key,
-                                                new_entry.as_string()));
+            callbacks.push_back(callback_data_t(key, new_entry.as_string()));
         }
     }
 }
@@ -354,7 +382,14 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t &callbacks) {
         debug(5, L"universal log sync elided based on fstat()");
     } else {
         // Read a variables table from the file.
-        var_table_t new_vars = this->read_message_internal(fd);
+        var_table_t new_vars;
+        uvar_format_t format = this->read_message_internal(fd, &new_vars);
+
+        // Hacky: if the read format is in the future, avoid overwriting the file: never try to
+        // save.
+        if (format == uvar_format_t::future) {
+            ok_to_save = false;
+        }
 
         // Announce changes.
         this->generate_callbacks(new_vars, callbacks);
@@ -386,44 +421,33 @@ bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t 
     return result;
 }
 
+/// Serialize the contents to a string.
+std::string env_universal_t::serialize_with_vars(const var_table_t &vars) {
+    std::string storage;
+    std::string contents;
+    contents.append(SAVE_MSG);
+    contents.append("# VERSION: " UVARS_VERSION_3_0 "\n");
+
+    for (const auto &kv : vars) {
+        // Append the entry. Note that append_file_entry may fail, but that only affects one
+        // variable; soldier on.
+        const wcstring &key = kv.first;
+        const env_var_t &var = kv.second;
+        append_file_entry(var.get_flags(), key, encode_serialized(var.as_list()), &contents, &storage);
+    }
+    return contents;
+}
+
 /// Writes our state to the fd. path is provided only for error reporting.
 bool env_universal_t::write_to_fd(int fd, const wcstring &path) {
     ASSERT_IS_LOCKED(lock);
     assert(fd >= 0);
     bool success = true;
-
-    // Stuff we output to fd.
-    std::string contents;
-
-    // Temporary storage.
-    std::string storage;
-
-    // Write the save message. If this fails, we don't bother complaining.
-    write_loop(fd, SAVE_MSG, strlen(SAVE_MSG));
-
-    var_table_t::const_iterator iter = vars.begin();
-    while (iter != vars.end()) {
-        // Append the entry. Note that append_file_entry may fail, but that only affects one
-        // variable; soldier on.
-        const wcstring &key = iter->first;
-        const env_var_t &var = iter->second;
-        append_file_entry(var.exports() ? SET_EXPORT : SET, key, encode_serialized(var.as_list()),
-                          &contents, &storage);
-
-        // Go to next.
-        ++iter;
-
-        // Flush if this is the last iteration or we exceed a page.
-        if (iter == vars.end() || contents.size() >= 4096) {
-            if (write_loop(fd, contents.data(), contents.size()) < 0) {
-                const char *error = strerror(errno);
-                debug(0, _(L"Unable to write to universal variables file '%ls': %s"), path.c_str(),
-                      error);
-                success = false;
-                break;
-            }
-            contents.clear();
-        }
+    std::string contents = serialize_with_vars(vars);
+    if (write_loop(fd, contents.data(), contents.size()) < 0) {
+        const char *error = strerror(errno);
+        debug(0, _(L"Unable to write to universal variables file '%ls': %s"), path.c_str(), error);
+        success = false;
     }
 
     // Since we just wrote out this file, it matches our internal state; pretend we read from it.
@@ -643,8 +667,6 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
     const wcstring directory = wdirname(vars_path);
     bool success = true;
     int vars_fd = -1;
-    int private_fd = -1;
-    wcstring private_file_path;
 
     debug(5, L"universal log performing full sync");
 
@@ -660,11 +682,29 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
         this->load_from_fd(vars_fd, callbacks);
     }
 
-    // Open adjacent temporary file.
-    if (success) {
-        success = this->open_temporary_file(directory, &private_file_path, &private_fd);
-        if (!success) debug(5, L"universal log open_temporary_file() failed");
+    if (success && ok_to_save) {
+        success = this->save(directory, vars_path);
     }
+
+    // Clean up.
+    if (vars_fd >= 0) {
+        close(vars_fd);
+    }
+
+    return success;
+}
+
+// Write our file contents.
+// \return true on success, false on failure.
+bool env_universal_t::save(const wcstring &directory, const wcstring &vars_path) {
+    assert(ok_to_save && "It's not OK to save");
+
+    int private_fd = -1;
+    wcstring private_file_path;
+
+    // Open adjacent temporary file.
+    bool success = this->open_temporary_file(directory, &private_file_path, &private_fd);
+    if (!success) debug(5, L"universal log open_temporary_file() failed");
 
     // Write to it.
     if (success) {
@@ -682,14 +722,14 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
             if (fchmod(private_fd, sbuf.st_mode) == -1) debug(5, L"universal log fchmod() failed");
         }
 
-// Linux by default stores the mtime with low precision, low enough that updates that occur in quick
-// succession may result in the same mtime (even the nanoseconds field). So manually set the mtime
-// of the new file to a high-precision clock. Note that this is only necessary because Linux
-// aggressively reuses inodes, causing the ABA problem; on other platforms we tend to notice the
-// file has changed due to a different inode (or file size!)
-//
-// It's probably worth finding a simpler solution to this. The tests ran into this, but it's
-// unlikely to affect users.
+        // Linux by default stores the mtime with low precision, low enough that updates that occur
+        // in quick succession may result in the same mtime (even the nanoseconds field). So
+        // manually set the mtime of the new file to a high-precision clock. Note that this is only
+        // necessary because Linux aggressively reuses inodes, causing the ABA problem; on other
+        // platforms we tend to notice the file has changed due to a different inode (or file size!)
+        //
+        // It's probably worth finding a simpler solution to this. The tests ran into this, but it's
+        // unlikely to affect users.
 #if HAVE_CLOCK_GETTIME && HAVE_FUTIMENS
         struct timespec times[2] = {};
         times[0].tv_nsec = UTIME_OMIT;  // don't change ctime
@@ -709,105 +749,178 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
     }
 
     // Clean up.
-    if (vars_fd >= 0) {
-        close(vars_fd);
-    }
     if (private_fd >= 0) {
         close(private_fd);
     }
     if (!private_file_path.empty()) {
         wunlink(private_file_path);
     }
-
     if (success) {
         // All of our modified variables have now been written out.
         modified.clear();
     }
-
     return success;
 }
 
-var_table_t env_universal_t::read_message_internal(int fd) {
-    var_table_t result;
-
-    // Temp value used to avoid repeated allocations.
-    wcstring storage;
-
-    // The line we construct (and then parse).
-    std::string line;
-    wcstring wide_line;
-    for (;;) {
-        // Read into a buffer. Note this is NOT null-terminated!
-        char buffer[1024];
+uvar_format_t env_universal_t::read_message_internal(int fd, var_table_t *vars) {
+    // Read everything from the fd. Put a sane limit on it.
+    std::string contents;
+    while (contents.size() < k_max_read_size) {
+        char buffer[4096];
         ssize_t amt = read_loop(fd, buffer, sizeof buffer);
         if (amt <= 0) {
             break;
         }
-        const size_t bufflen = (size_t)amt;
+        contents.append(buffer, amt);
+    }
 
-        // Walk over it by lines. The contents of an unterminated line will be left in 'line' for
-        // the next iteration.
-        ssize_t line_start = 0;
-        while (line_start < amt) {
-            // Run until we hit a newline.
-            size_t cursor = line_start;
-            while (cursor < bufflen && buffer[cursor] != '\n') {
-                cursor++;
-            }
+    // Handle overlong files.
+    if (contents.size() >= k_max_read_size) {
+        contents.resize(k_max_read_size);
+        // Back up to a newline.
+        size_t newline = contents.rfind('\n');
+        contents.resize(newline == wcstring::npos ? 0 : newline);
+    }
 
-            // Copy over what we read.
-            line.append(buffer + line_start, cursor - line_start);
+    return populate_variables(contents, vars);
+}
 
-            // Process it if it's a newline (which is true if we are before the end of the buffer).
-            if (cursor < bufflen && !line.empty()) {
-                if (utf8_to_wchar(line.data(), line.size(), &wide_line, 0)) {
-                    env_universal_t::parse_message_internal(wide_line, &result, &storage);
-                }
-                line.clear();
-            }
+/// \return the format corresponding to file contents \p s.
+uvar_format_t env_universal_t::format_for_contents(const std::string &s) {
+    // Walk over leading comments, looking for one like '# version'
+    line_iterator_t<std::string> iter{s};
+    while (iter.next()) {
+        const std::string &line = iter.line();
+        if (line.empty()) continue;
+        if (line.front() != L'#') {
+            // Exhausted leading comments.
+            break;
+        }
+        // Note scanf %s is max characters to write; add 1 for null terminator.
+        char versionbuf[64 + 1];
+        if (sscanf(line.c_str(), "# VERSION: %64s", versionbuf) != 1) continue;
 
-            // Skip over the newline (or skip past the end).
-            line_start = cursor + 1;
+        // Try reading the version.
+        if (!strcmp(versionbuf, UVARS_VERSION_3_0)) {
+            return uvar_format_t::fish_3_0;
+        } else {
+            // Unknown future version.
+            return uvar_format_t::future;
+        }
+    }
+    // No version found, assume 2.x
+    return uvar_format_t::fish_2_x;
+}
+
+uvar_format_t env_universal_t::populate_variables(const std::string &s, var_table_t *out_vars) {
+    // Decide on the format.
+    const uvar_format_t format = format_for_contents(s);
+
+    line_iterator_t<std::string> iter{s};
+    wcstring wide_line;
+    wcstring storage;
+    while (iter.next()) {
+        const std::string &line = iter.line();
+        // Skip empties and constants.
+        if (line.empty() || line.front() == L'#') continue;
+
+        // Convert to UTF8.
+        wide_line.clear();
+        if (!utf8_to_wchar(line.data(), line.size(), &wide_line, 0)) continue;
+
+        switch (format) {
+            case uvar_format_t::fish_2_x:
+                env_universal_t::parse_message_2x_internal(wide_line, out_vars, &storage);
+                break;
+            case uvar_format_t::fish_3_0:
+            // For future formats, just try with the most recent one.
+            case uvar_format_t::future:
+                env_universal_t::parse_message_30_internal(wide_line, out_vars, &storage);
+                break;
+        }
+    }
+    return format;
+}
+
+static const wchar_t *skip_spaces(const wchar_t *str) {
+    while (*str == L' ' || *str == L'\t') str++;
+    return str;
+}
+
+bool env_universal_t::populate_1_variable(const wchar_t *input, env_var_t::env_var_flags_t flags,
+                                          var_table_t *vars, wcstring *storage) {
+    const wchar_t *str = skip_spaces(input);
+    const wchar_t *colon = wcschr(str, L':');
+    if (!colon) return false;
+
+    // Parse out the value into storage, and decode it into a variable.
+    storage->clear();
+    if (!unescape_string(colon + 1, storage, 0)) {
+        return false;
+    }
+    env_var_t var{decode_serialized(*storage), flags};
+
+    // Parse out the key and write into the map.
+    storage->assign(str, colon - str);
+    const wcstring &key = *storage;
+    (*vars)[key] = std::move(var);
+    return true;
+}
+
+/// Parse message msg per fish 3.0 format.
+void env_universal_t::parse_message_30_internal(const wcstring &msgstr, var_table_t *vars,
+                                                wcstring *storage) {
+    namespace f3 = fish3_uvars;
+    const wchar_t *const msg = msgstr.c_str();
+    if (msg[0] == L'#') return;
+
+    const wchar_t *cursor = msg;
+    if (!match(&cursor, f3::SETUVAR)) {
+        debug(1, PARSE_ERR, msg);
+        return;
+    }
+    // Parse out flags.
+    env_var_t::env_var_flags_t flags = 0;
+    for (;;) {
+        cursor = skip_spaces(cursor);
+        if (*cursor != L'-') break;
+        if (match(&cursor, f3::EXPORT)) {
+            flags |= env_var_t::flag_export;
+        } else if (match(&cursor, f3::PATH)) {
+            flags |= env_var_t::flag_pathvar;
+        } else {
+            // Skip this unknown flag, for future proofing.
+            while (*cursor && *cursor != L' ' && *cursor != L'\t') cursor++;
         }
     }
 
-    // We make no effort to handle an unterminated last line.
-    return result;
+    // Populate the variable with these flags.
+    if (!populate_1_variable(cursor, flags, vars, storage)) {
+        debug(1, PARSE_ERR, msg);
+    }
 }
 
-/// Parse message msg/
-void env_universal_t::parse_message_internal(const wcstring &msgstr, var_table_t *vars,
+/// Parse message msg per fish 2.x format.
+void env_universal_t::parse_message_2x_internal(const wcstring &msgstr, var_table_t *vars,
                                              wcstring *storage) {
-    const wchar_t *msg = msgstr.c_str();
+    namespace f2x = fish2x_uvars;
+    const wchar_t *const msg = msgstr.c_str();
+    const wchar_t *cursor = msg;
 
     // debug(3, L"parse_message( %ls );", msg);
-    if (msg[0] == L'#') return;
+    if (cursor[0] == L'#') return;
 
-    bool is_set_export = match(msg, SET_EXPORT_STR);
-    bool is_set = !is_set_export && match(msg, SET_STR);
-    if (is_set || is_set_export) {
-        const wchar_t *name, *tmp;
-        const bool exportv = is_set_export;
-
-        name = msg + (exportv ? wcslen(SET_EXPORT_STR) : wcslen(SET_STR));
-        while (name[0] == L'\t' || name[0] == L' ') name++;
-
-        tmp = wcschr(name, L':');
-        if (tmp) {
-            // Use 'storage' to hold our key to avoid allocations.
-            storage->assign(name, tmp - name);
-            const wcstring &key = *storage;
-
-            wcstring val;
-            if (unescape_string(tmp + 1, &val, 0)) {
-                env_var_t &entry = (*vars)[key];
-                entry.set_exports(exportv);
-                entry.set_vals(decode_serialized(val));
-            }
-        } else {
-            debug(1, PARSE_ERR, msg);
-        }
+    env_var_t::env_var_flags_t flags = 0;
+    if (match(&cursor, f2x::SET_EXPORT)) {
+        flags |= env_var_t::flag_export;
+    } else if (match(&cursor, f2x::SET)) {
+        flags |= 0;
     } else {
+        debug(1, PARSE_ERR, msg);
+        return;
+    }
+
+    if (!populate_1_variable(cursor, flags, vars, storage)) {
         debug(1, PARSE_ERR, msg);
     }
 }

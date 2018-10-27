@@ -364,8 +364,8 @@ bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix,
 template <typename T>
 size_t ifind(const T &haystack, const T &needle) {
     using char_t = typename T::value_type;
-    auto icase_eq = [](char_t c1, char_t c2) {
-        auto locale = std::locale();
+    auto locale = std::locale();
+    auto icase_eq = [&locale](char_t c1, char_t c2) {
         return std::toupper(c1, locale) == std::toupper(c2, locale);
     };
     auto result =

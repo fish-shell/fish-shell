@@ -1035,6 +1035,15 @@ static void env_set_internal_universal(const wcstring &key, wcstring_list_t val,
         var_mode |= (dopathvar ? ENV_PATHVAR : ENV_UNPATHVAR);
     }
 
+    // Split about ':' if it's a path variable.
+    if (var_mode & ENV_PATHVAR) {
+        wcstring_list_t split_val;
+        for (const wcstring &str : val) {
+            vec_append(split_val, split_string(str, PATH_ARRAY_SEP));
+        }
+        val = std::move(split_val);
+    }
+
     // Construct and set the new variable.
     env_var_t::env_var_flags_t varflags = 0;
     if (var_mode & ENV_EXPORT) varflags |= env_var_t::flag_export;

@@ -49,7 +49,9 @@ DONT_ESCAPE_COLONS_PATH=1::2:::3:
 
 ####################
 # Path universal variables
-a b c 1:2:3
-a b c 1 2 3
-a:b:c 1 2 3
-a:b:c 1:2:3
+a b c 1:2:3 a b c 1 2 3
+a b c 1 2 3 a b c 1 2 3
+a:b:c 1 2 3 a b c 1 2 3
+a:b:c 1:2:3 a b c 1 2 3
+1:2:3 1 2 3
+a:b a b

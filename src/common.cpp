@@ -1859,7 +1859,7 @@ string_fuzzy_match_t string_fuzzy_match_string(const wcstring &string,
         result.match_distance_first = match_against.size() - string.size();
         result.match_distance_second = location;  // prefer earlier matches
     } else if (limit_type >= fuzzy_match_substring_case_insensitive &&
-               (location = ifind(match_against, string)) != wcstring::npos) {
+               (location = ifind(match_against, string, true)) != wcstring::npos) {
         // A case-insensitive version of the string is in the match against.
         result.type = fuzzy_match_substring_case_insensitive;
         assert(match_against.size() >= string.size());

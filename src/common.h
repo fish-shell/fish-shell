@@ -356,18 +356,54 @@ bool string_suffixes_string_case_insensitive(const wcstring &proposed_suffix,
 bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix,
                                              const wcstring &value);
 
-
 /// Case-insensitive string search, templated for use with both std::string and std::wstring.
 /// Modeled after std::string::find().
+/// \param fuzzy indicates this is being used for fuzzy matching and case insensitivity is
+/// expanded to include symbolic characters (#3584).
 /// \return the offset of the first case-insensitive matching instance of `needle` within
 /// `haystack`, or `string::npos()` if no results were found.
 template <typename T>
-size_t ifind(const T &haystack, const T &needle) {
+size_t ifind(const T &haystack, const T &needle, bool fuzzy = false) {
     using char_t = typename T::value_type;
     auto locale = std::locale();
-    auto icase_eq = [&locale](char_t c1, char_t c2) {
-        return std::toupper(c1, locale) == std::toupper(c2, locale);
-    };
+
+    std::function<bool(char_t, char_t)> icase_eq;
+
+    if (!fuzzy) {
+        icase_eq = [&locale](char_t c1, char_t c2) {
+            return std::toupper(c1, locale) == std::toupper(c2, locale);
+        };
+    } else {
+        icase_eq = [&locale](char_t c1, char_t c2) {
+            // This `ifind()` call is being used for fuzzy string matching. Further extend case
+            // insensitivity to treat `-` and `_` as equal (#3584).
+
+            // The two lines below were tested to be 27% faster than
+            //      (c1 == '_' || c1 == '-') && (c2 == '-' || c2 == '_')
+            // while returning no false positives for all (c1, c2) combinations in the printable
+            // range (0x20-0x7E). It might return false positives outside that range, but fuzzy
+            // comparisons are typically called for file names only, which are unlikely to have
+            // such characters and this entire function is 100% broken on unicode so there's no
+            // point in worrying about anything outside of the ANSII range.
+            // ((c1 == Literal<char_t>('_') || c1 == Literal<char_t>('-')) &&
+            // ((c1 ^ c2) == (Literal<char_t>('-') ^ Literal<char_t>('_'))));
+
+            // One of the following would be an illegal comparison between a char and a wchar_t.
+            // However, placing them behind a constexpr gate results in the elision of the if
+            // statement and the incorrect branch, with the compiler's SFINAE support suppressing
+            // any errors in the branch not taken.
+            if (sizeof(char_t) == sizeof(char)) {
+                return std::toupper(c1, locale) == std::toupper(c2, locale) ||
+                ((c1 == '_' || c1 == '-') &&
+                ((c1 ^ c2) == ('-' ^ '_')));
+            } else {
+                return std::toupper(c1, locale) == std::toupper(c2, locale) ||
+                ((c1 == L'_' || c1 == L'-') &&
+                ((c1 ^ c2) == (L'-' ^ L'_')));
+            }
+        };
+    }
+
     auto result =
         std::search(haystack.begin(), haystack.end(), needle.begin(), needle.end(), icase_eq);
     if (result != haystack.end()) {

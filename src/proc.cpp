@@ -1063,10 +1063,11 @@ void job_t::continue_job(bool send_sigcont) {
             // If this is a child job and the parent job is still under construction (i.e. job1 |
             // some_func), we can't block on execution of the nested job for `some_func`. Doing
             // so can cause hangs if job1 emits more data than fits in the OS pipe buffer.
-            // The test for block_on_fg is this->parent_job.is_constructed(), which coincides
-            // with WAIT_BY_PROCESS (which will have to do since we don't store a reference to
-            // the parent job in the job_t structure).
-            bool block_on_fg = !get_flag(job_flag_t::WAIT_BY_PROCESS);
+            // The solution is to to not block on fg from the initial call in exec_job(), which
+            // is also the only place that send_sigcont is false. parent_job.is_constructed()
+            // must also be true, which coincides with WAIT_BY_PROCESS (which will have to do
+            // since we don't store a reference to the parent job in the job_t structure).
+            bool block_on_fg = send_sigcont && !get_flag(job_flag_t::WAIT_BY_PROCESS);
 
             // Wait for data to become available or the status of our own job to change
             while (!reader_exit_forced() && !is_stopped() && !is_completed()) {
@@ -1096,8 +1097,9 @@ void job_t::continue_job(bool send_sigcont) {
                     debug(3, L"select_try: interrupted read from job file descriptors" );
 
                     // This tends to happen when the foreground process has changed, e.g. it was
-                    // suspended and control has returned to the shell.
-                    process_mark_finished_children(block_on_fg);
+                    // suspended and control has returned to the shell or when a fg process takes
+                    // initial control of the shell.
+                    process_mark_finished_children(true);
 
                     // If it turns out that we encountered this because the file descriptor we were
                     // reading from has died, process_mark_finished_children() should take care of

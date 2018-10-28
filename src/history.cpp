@@ -314,7 +314,11 @@ class history_file_contents_t {
             // We don't want to map the file. mmap some private memory and then read into it. We use
             // mmap instead of malloc so that the destructor can always munmap().
             mmap_start =
+#ifdef MAP_ANON
+                mmap(0, size_t(len), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+#else
                 mmap(0, size_t(len), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+#endif
             if (mmap_start == MAP_FAILED) return nullptr;
             if (!read_from_fd(fd, mmap_start, len)) return nullptr;
         }

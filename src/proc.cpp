@@ -421,8 +421,7 @@ static bool process_mark_finished_children(bool block_on_fg) {
         // wait on only one pgrp at a time and we need to check all pgrps before returning, but we
         // never wait/block on fg processes after an error has been encountered to give ourselves
         // (elsewhere) a chance to handle the fallout from process termination, etc.
-        if (!has_error && block_on_fg && j->pgid != shell_pgid && j == job_fg &&
-            j->get_flag(job_flag_t::JOB_CONTROL)) {
+        if (!has_error && block_on_fg && j == job_fg) {
             debug(4, "Waiting on processes from foreground job %d", job_fg->pgid);
             options &= ~WNOHANG;
         }
@@ -1096,18 +1095,14 @@ void job_t::continue_job(bool send_sigcont) {
                         break;
 
                     case select_try_t::TIMEOUT:
-                        // Our select_try() timeout is ~10ms, so this can be EXTREMELY chatty but this
-                        // is very useful if trying to debug an unknown hang in fish. Uncomment to see
-                        // if we're stuck here.
-
-                        // debug(1, L"select_try: no fds returned valid data within the timeout" );
-
                         // No FDs are ready. Look for finished processes instead.
+                        debug(4, L"select_try: no fds returned valid data within the timeout" );
                         process_mark_finished_children(block_on_fg);
                         break;
 
                     case select_try_t::IOCHAIN_EMPTY:
                         // There were no IO fds to select on.
+                        debug(4, L"select_try: no IO fds" );
                         process_mark_finished_children(true);
 
                         // If it turns out that we encountered this because the file descriptor we were

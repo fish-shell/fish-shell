@@ -41,16 +41,6 @@ enum {
     JOB_CONTROL_NONE,
 };
 
-/// The return value of select_try(), indicating IO readiness or an error
-enum class select_try_t {
-    /// One or more fds have data ready for read
-    DATA_READY,
-    /// The timeout elapsed without any data becoming available for read
-    TIMEOUT,
-    /// The select operation was aborted due to an interrupt or IO error
-    IO_ERROR,
-};
-
 /// A structure representing a single fish process. Contains variables for tracking process state
 /// and the process argument list. Actually, a fish process can be either a regular external
 /// process, an internal builtin which may or may not spawn a fake IO process during execution, a

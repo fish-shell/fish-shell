@@ -766,6 +766,16 @@ void proc_update_jiffies() {
 
 #endif
 
+/// The return value of select_try(), indicating IO readiness or an error
+enum class select_try_t {
+    /// One or more fds have data ready for read
+    DATA_READY,
+    /// The timeout elapsed without any data becoming available for read
+    TIMEOUT,
+    /// There were no FDs in the io chain for which to select on.
+    IOCHAIN_EMPTY,
+};
+
 /// Check if there are buffers associated with the job, and select on them for a while if available.
 ///
 /// \param j the job to test
@@ -801,7 +811,7 @@ static select_try_t select_try(job_t *j) {
         return select_try_t::DATA_READY;
     }
 
-    return select_try_t::IO_ERROR;
+    return select_try_t::IOCHAIN_EMPTY;
 }
 
 /// Read from descriptors until they are empty.
@@ -1088,22 +1098,16 @@ void job_t::continue_job(bool send_sigcont) {
                     case select_try_t::TIMEOUT:
                         // Our select_try() timeout is ~10ms, so this can be EXTREMELY chatty but this
                         // is very useful if trying to debug an unknown hang in fish. Uncomment to see
-                        // if we're stuck here.  debug(1, L"select_try: no fds returned valid data
-                        // within the timeout" );
+                        // if we're stuck here.
+
+                        // debug(1, L"select_try: no fds returned valid data within the timeout" );
 
                         // No FDs are ready. Look for finished processes instead.
                         process_mark_finished_children(block_on_fg);
                         break;
 
-                    case select_try_t::IO_ERROR:
-                        // This is easily encountered by simply transferring control of the terminal to
-                        // another process, then suspending it. For example, `nvim`, then `ctrl+z`.
-                        // Since we are not the foreground process
-                        debug(3, L"select_try: interrupted read from job file descriptors");
-
-                        // This tends to happen when the foreground process has changed, e.g. it was
-                        // suspended and control has returned to the shell or when a fg process takes
-                        // initial control of the shell.
+                    case select_try_t::IOCHAIN_EMPTY:
+                        // There were no IO fds to select on.
                         process_mark_finished_children(true);
 
                         // If it turns out that we encountered this because the file descriptor we were

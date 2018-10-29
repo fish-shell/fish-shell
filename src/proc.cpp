@@ -1076,35 +1076,41 @@ void job_t::continue_job(bool send_sigcont) {
                 auto result = select_try(this);
                 read_attempted = true;
 
-                if (result == select_try_t::DATA_READY) {
-                    // Read the data that we know is now available, then scan for finished processes
-                    // but do not block. We don't block so long as we have IO to process, once the
-                    // fd buffers are empty we'll block in the second case below.
-                    read_try(this);
-                    process_mark_finished_children(false);
-                } else if (result == select_try_t::TIMEOUT) {
-                    // Our select_try() timeout is ~10ms, so this can be EXTREMELY chatty but this
-                    // is very useful if trying to debug an unknown hang in fish. Uncomment to see
-                    // if we're stuck here.  debug(1, L"select_try: no fds returned valid data
-                    // within the timeout" );
+                switch (result) {
+                    case select_try_t::DATA_READY:
+                        // Read the data that we know is now available, then scan for finished processes
+                        // but do not block. We don't block so long as we have IO to process, once the
+                        // fd buffers are empty we'll block in the second case below.
+                        read_try(this);
+                        process_mark_finished_children(false);
+                        break;
 
-                    // No FDs are ready. Look for finished processes instead.
-                    process_mark_finished_children(block_on_fg);
-                } else {
-                    // This is easily encountered by simply transferring control of the terminal to
-                    // another process, then suspending it. For example, `nvim`, then `ctrl+z`.
-                    // Since we are not the foreground process
-                    debug(3, L"select_try: interrupted read from job file descriptors");
+                    case select_try_t::TIMEOUT:
+                        // Our select_try() timeout is ~10ms, so this can be EXTREMELY chatty but this
+                        // is very useful if trying to debug an unknown hang in fish. Uncomment to see
+                        // if we're stuck here.  debug(1, L"select_try: no fds returned valid data
+                        // within the timeout" );
 
-                    // This tends to happen when the foreground process has changed, e.g. it was
-                    // suspended and control has returned to the shell or when a fg process takes
-                    // initial control of the shell.
-                    process_mark_finished_children(true);
+                        // No FDs are ready. Look for finished processes instead.
+                        process_mark_finished_children(block_on_fg);
+                        break;
 
-                    // If it turns out that we encountered this because the file descriptor we were
-                    // reading from has died, process_mark_finished_children() should take care of
-                    // changing the status of our is_completed() (assuming it is appropriate to do
-                    // so), in which case we will break out of this loop.
+                    case select_try_t::IO_ERROR:
+                        // This is easily encountered by simply transferring control of the terminal to
+                        // another process, then suspending it. For example, `nvim`, then `ctrl+z`.
+                        // Since we are not the foreground process
+                        debug(3, L"select_try: interrupted read from job file descriptors");
+
+                        // This tends to happen when the foreground process has changed, e.g. it was
+                        // suspended and control has returned to the shell or when a fg process takes
+                        // initial control of the shell.
+                        process_mark_finished_children(true);
+
+                        // If it turns out that we encountered this because the file descriptor we were
+                        // reading from has died, process_mark_finished_children() should take care of
+                        // changing the status of our is_completed() (assuming it is appropriate to do
+                        // so), in which case we will break out of this loop.
+                        break;
                 }
             }
         }

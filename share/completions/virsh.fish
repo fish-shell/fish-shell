@@ -125,11 +125,11 @@ complete -c virsh -n "__fish_seen_subcommand_from attach-interface" -l managed -
 
 # virsh autostart
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a autostart -d "Autostart a domain"
-complete -c virsh -n "__fish_seen_subcommand_from autostart" -a '(__fish_virsh_get_domains)'
+complete -c virsh -n "__fish_seen_subcommand_from autostart" -a '(__fish_virsh_get_domains)' -x
 complete -c virsh -n "__fish_seen_subcommand_from autostart" -l disable -d "Disable autostarting"
 
 # virsh blkdeviotune
-complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a blkdeviotune -d "Set or query a block device I/O tuning parameters."
+complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a blkdeviotune -d "Set or query a block device I/O tuning parameters"
 complete -c virsh -n "__fish_seen_subcommand_from blkdeviotune" -l total-bytes-sec -d "Total throughput limit, as scaled integer (default bytes)"
 complete -c virsh -n "__fish_seen_subcommand_from blkdeviotune" -l read-bytes-sec -d "Read throughput limit, as scaled integer (default bytes)"
 complete -c virsh -n "__fish_seen_subcommand_from blkdeviotune" -l write-bytes-sec -d "Write throughput limit, as scaled integer (default bytes)"
@@ -167,7 +167,7 @@ complete -c virsh -n "__fish_seen_subcommand_from blkiotune" -l live -d "Affect 
 complete -c virsh -n "__fish_seen_subcommand_from blkiotune" -l current -d "Affect current domain"
 
 # virsh blockcommit
-complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a blockcommit -d "Start a block commit operation."
+complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a blockcommit -d "Start a block commit operation"
 complete -c virsh -n "__fish_seen_subcommand_from blockcommit" -l bandwidth -d "Bandwidth limit in MiB/s"
 complete -c virsh -n "__fish_seen_subcommand_from blockcommit" -l base -d "Path of base file to commit into (default bottom of chain)"
 complete -c virsh -n "__fish_seen_subcommand_from blockcommit" -l shallow -d "Use backing file of top as base"
@@ -184,7 +184,7 @@ complete -c virsh -n "__fish_seen_subcommand_from blockcommit" -l keep-relative 
 complete -c virsh -n "__fish_seen_subcommand_from blockcommit" -l bytes -d "The bandwidth limit is in bytes/s rather than MiB/s"
 
 # virsh blockcopy
-complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a blockcopy -d "Start a block copy operation."
+complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a blockcopy -d "Start a block copy operation"
 complete -c virsh -n "__fish_seen_subcommand_from blockcopy" -l dest -d "Path of the copy to create"
 complete -c virsh -n "__fish_seen_subcommand_from blockcopy" -l bandwidth -d "Bandwidth limit in MiB/s"
 complete -c virsh -n "__fish_seen_subcommand_from blockcopy" -l shallow -d "Make the copy share a backing chain"
@@ -214,7 +214,7 @@ complete -c virsh -n "__fish_seen_subcommand_from blockjob" -l raw -d "Implies -
 complete -c virsh -n "__fish_seen_subcommand_from blockjob" -l bandwidth -d "Set the bandwidth limit in MiB/s"
 
 # virsh blockpull
-complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a blockpull -d "Populate a disk from its backing image."
+complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a blockpull -d "Populate a disk from its backing image"
 complete -c virsh -n "__fish_seen_subcommand_from blockpull" -l bandwidth -d "Bandwidth limit in MiB/s"
 complete -c virsh -n "__fish_seen_subcommand_from blockpull" -l base -d "Path of backing file in chain for a partial pull"
 complete -c virsh -n "__fish_seen_subcommand_from blockpull" -l wait -d "Wait for job to finish"
@@ -225,7 +225,7 @@ complete -c virsh -n "__fish_seen_subcommand_from blockpull" -l keep-relative -d
 complete -c virsh -n "__fish_seen_subcommand_from blockpull" -l bytes -d "The bandwidth limit is in bytes/s rather than MiB/s"
 
 # virsh blockresize
-complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a blockresize -d "Resize block device of domain."
+complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a blockresize -d "Resize block device of domain"
 
 # virsh change-media
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a change-media -d "Change media of CD or floppy drive"
@@ -242,7 +242,7 @@ complete -c virsh -n "__fish_seen_subcommand_from change-media" -l block -d "Sou
 
 # virsh console
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a console -d "Connect to the guest console"
-complete -c virsh -n "__fish_seen_subcommand_from console" -a '(__fish_virsh_get_domains running)'
+complete -c virsh -n "__fish_seen_subcommand_from console" -a '(__fish_virsh_get_domains running)' -x
 complete -c virsh -n "__fish_seen_subcommand_from console" -l devname -d "Character device name"
 complete -c virsh -n "__fish_seen_subcommand_from console" -l force -d "Force console connection (disconnect already connected sessions)"
 complete -c virsh -n "__fish_seen_subcommand_from console" -l safe -d "Only connect if safe console handling is supported"
@@ -315,16 +315,16 @@ complete -c virsh -n "__fish_seen_subcommand_from domdisplay" -l type -d "Select
 complete -c virsh -n "__fish_seen_subcommand_from domdisplay" -l all -d "Show all possible graphical displays"
 
 # virsh domfsfreeze
-complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a domfsfreeze -d "Freeze domain's mounted filesystems."
+complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a domfsfreeze -d "Freeze domain's mounted filesystems"
 
 # virsh domfsthaw
-complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a domfsthaw -d "Thaw domain's mounted filesystems."
+complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a domfsthaw -d "Thaw domain's mounted filesystems"
 
 # virsh domfsinfo
-complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a domfsinfo -d "Get information of domain's mounted filesystems."
+complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a domfsinfo -d "Get information of domain's mounted filesystems"
 
 # virsh domfstrim
-complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a domfstrim -d "Invoke fstrim on domain's mounted filesystems."
+complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a domfstrim -d "Invoke fstrim on domain's mounted filesystems"
 complete -c virsh -n "__fish_seen_subcommand_from domfstrim" -l minimum -d "Just a hint to ignore contiguous free ranges smaller than this (Bytes)"
 complete -c virsh -n "__fish_seen_subcommand_from domfstrim" -l mountpoint -d "Which mount point to trim"
 
@@ -358,20 +358,20 @@ complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a domname -d "Conv
 
 # virsh domrename
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a domrename -d "Rename a domain"
-complete -c virsh -n "__fish_seen_subcommand_from domrename" -a '(__fish_virsh_get_domains)'
+complete -c virsh -n "__fish_seen_subcommand_from domrename" -a '(__fish_virsh_get_domains)' -x
 
 # virsh dompmsuspend
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a dompmsuspend -d "Suspend a domain gracefully using power management functions"
 complete -c virsh -n "__fish_seen_subcommand_from dompmsuspend" -l duration -d "Duration in seconds"
-complete -c virsh -n "__fish_seen_subcommand_from dompmsuspend" -a '(__fish_virsh_get_domains running)'
+complete -c virsh -n "__fish_seen_subcommand_from dompmsuspend" -a '(__fish_virsh_get_domains running)' -x
 
 # virsh dompmwakeup
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a dompmwakeup -d "Wakeup a domain from pmsuspended state"
-complete -c virsh -n "__fish_seen_subcommand_from dompmwakeup" -a '(__fish_virsh_get_domains paused)'
+complete -c virsh -n "__fish_seen_subcommand_from dompmwakeup" -a '(__fish_virsh_get_domains paused)' -x
 
 # virsh domuuid
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a domuuid -d "Convert a domain name or id to domain UUID"
-complete -c virsh -n "__fish_seen_subcommand_from domuuid" -a '(__fish_virsh_get_domains)'
+complete -c virsh -n "__fish_seen_subcommand_from domuuid" -a '(__fish_virsh_get_domains)' -x
 
 # virsh domxml-from-native
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a domxml-from-native -d "Convert native config to domain XML"
@@ -393,7 +393,7 @@ complete -c virsh -n "__fish_seen_subcommand_from dump" -l format -d "Specify th
 
 # virsh dumpxml
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a dumpxml -d "Domain information in XML"
-complete -c virsh -n "__fish_seen_subcommand_from dumpxml" -a '(__fish_virsh_get_domains)'
+complete -c virsh -n "__fish_seen_subcommand_from dumpxml" -a '(__fish_virsh_get_domains)' -x
 complete -c virsh -n "__fish_seen_subcommand_from dumpxml" -l inactive -d "Show inactive defined XML"
 complete -c virsh -n "__fish_seen_subcommand_from dumpxml" -l security-info -d "Include security sensitive information in XML dump"
 complete -c virsh -n "__fish_seen_subcommand_from dumpxml" -l update-cpu -d "Update guest CPU according to host CPU"
@@ -401,7 +401,7 @@ complete -c virsh -n "__fish_seen_subcommand_from dumpxml" -l migratable -d "Pro
 
 # virsh edit
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a edit -d "Edit XML configuration for a domain"
-complete -c virsh -n "__fish_seen_subcommand_from edit" -a '(__fish_virsh_get_domains)'
+complete -c virsh -n "__fish_seen_subcommand_from edit" -a '(__fish_virsh_get_domains)' -x
 complete -c virsh -n "__fish_seen_subcommand_from edit" -l skip-validate -d "Skip validation of the XML against the schema"
 
 # virsh event
@@ -594,7 +594,7 @@ complete -c virsh -n "__fish_seen_subcommand_from qemu-monitor-event" -l timesta
 
 # virsh qemu-agent-command
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a qemu-agent-command -d "QEMU Guest Agent Command"
-complete -c virsh -n "__fish_seen_subcommand_from qemu-agent-command" -l timeout -d "Timeout seconds. must be positive."
+complete -c virsh -n "__fish_seen_subcommand_from qemu-agent-command" -l timeout -d "Timeout seconds. must be positive"
 complete -c virsh -n "__fish_seen_subcommand_from qemu-agent-command" -l async -d "Execute command without waiting for timeout"
 complete -c virsh -n "__fish_seen_subcommand_from qemu-agent-command" -l block -d "Execute command without timeout"
 complete -c virsh -n "__fish_seen_subcommand_from qemu-agent-command" -l pretty -d "Pretty-print the output"
@@ -602,7 +602,7 @@ complete -c virsh -n "__fish_seen_subcommand_from qemu-agent-command" -l pretty 
 # virsh reboot
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a reboot -d "Reboot a domain"
 complete -c virsh -n "__fish_seen_subcommand_from reboot" -l mode -d "Shutdown mode" -x -a "acpi agent initctl signal paravirt"
-complete -c virsh -n "__fish_seen_subcommand_from reboot" -a '(__fish_virsh_get_domains running)'
+complete -c virsh -n "__fish_seen_subcommand_from reboot" -a '(__fish_virsh_get_domains running)' -x
 
 # virsh reset
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a reset -d "Reset a domain"
@@ -616,11 +616,11 @@ complete -c virsh -n "__fish_seen_subcommand_from restore" -l paused -d "Restore
 
 # virsh resume
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a resume -d "Resume a domain"
-complete -c virsh -n "__fish_seen_subcommand_from resume" -a '(__fish_virsh_get_domains paused)'
+complete -c virsh -n "__fish_seen_subcommand_from resume" -a '(__fish_virsh_get_domains paused)' -x
 
 # virsh save
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a save -d "Save a domain state to a file"
-complete -c virsh -n "__fish_seen_subcommand_from save" -a '(__fish_virsh_get_domains running)'
+complete -c virsh -n "__fish_seen_subcommand_from save" -a '(__fish_virsh_get_domains running)' -x
 complete -c virsh -n "__fish_seen_subcommand_from save" -l bypass-cache -d "Avoid file system cache when saving"
 complete -c virsh -n "__fish_seen_subcommand_from save" -l xml -d "Filename containing updated XML for the target"
 complete -c virsh -n "__fish_seen_subcommand_from save" -l running -d "Set domain to be running on restore"
@@ -643,7 +643,7 @@ complete -c virsh -n "__fish_seen_subcommand_from save-image-edit" -l paused -d 
 
 # virsh schedinfo
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a schedinfo -d "Show/set scheduler parameters"
-complete -c virsh -n "__fish_seen_subcommand_from shechinfo" -a '(__fish_virsh_get_domains)'
+complete -c virsh -n "__fish_seen_subcommand_from shechinfo" -a '(__fish_virsh_get_domains)' -x
 complete -c virsh -n "__fish_seen_subcommand_from schedinfo" -l weight -d "Weight for XEN_CREDIT"
 complete -c virsh -n "__fish_seen_subcommand_from schedinfo" -l cap -d "Cap for XEN_CREDIT"
 complete -c virsh -n "__fish_seen_subcommand_from schedinfo" -l current -d "Get/set current scheduler info"
@@ -688,12 +688,12 @@ complete -c virsh -n "__fish_seen_subcommand_from setvcpus" -l hotpluggable -d "
 
 # virsh shutdown
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a shutdown -d "Gracefully shutdown a domain"
-complete -c virsh -n "__fish_seen_subcommand_from shutdown" -a '(__fish_virsh_get_domains running)'
+complete -c virsh -n "__fish_seen_subcommand_from shutdown" -a '(__fish_virsh_get_domains running)' -x
 complete -c virsh -n "__fish_seen_subcommand_from shutdown" -l mode -d "Shutdown mode" -x -a "acpi agent initctl signal paravirt"
 
 # virsh start
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a start -d "Start a (previously defined) inactive domain"
-complete -c virsh -n "__fish_seen_subcommand_from start" -a '(__fish_virsh_get_domains inactive)'
+complete -c virsh -n "__fish_seen_subcommand_from start" -a '(__fish_virsh_get_domains inactive)' -x
 complete -c virsh -n "__fish_seen_subcommand_from start" -l console -d "Attach to console after creation"
 complete -c virsh -n "__fish_seen_subcommand_from start" -l paused -d "Leave the guest paused after creation"
 complete -c virsh -n "__fish_seen_subcommand_from start" -l autodestroy -d "Automatically destroy the guest when virsh disconnects"
@@ -703,10 +703,10 @@ complete -c virsh -n "__fish_seen_subcommand_from start" -l pass-fds -d "Pass fi
 
 # virsh suspend
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a suspend -d "Suspend a domain"
-complete -c virsh -n "__fish_seen_subcommand_from suspend" -a '(__fish_virsh_get_domains running)'
+complete -c virsh -n "__fish_seen_subcommand_from suspend" -a '(__fish_virsh_get_domains running)' -x
 
 # virsh ttyconsole
-complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a ttyconsole -d "Tty console"
+complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a ttyconsole -d "TTY console"
 
 # virsh undefine
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a undefine -d "Undefine a domain"
@@ -924,16 +924,16 @@ complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a nodecpumap -d "N
 complete -c virsh -n "__fish_seen_subcommand_from nodecpumap" -l pretty -d "Return human readable output"
 
 # virsh nodecpustats
-complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a nodecpustats -d "Prints cpu stats of the node."
-complete -c virsh -n "__fish_seen_subcommand_from nodecpustats" -l cpu -d "Prints specified cpu statistics only."
-complete -c virsh -n "__fish_seen_subcommand_from nodecpustats" -l percent -d "Prints by percentage during 1 second."
+complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a nodecpustats -d "Prints cpu stats of the node"
+complete -c virsh -n "__fish_seen_subcommand_from nodecpustats" -l cpu -d "Prints specified cpu statistics only"
+complete -c virsh -n "__fish_seen_subcommand_from nodecpustats" -l percent -d "Prints by percentage during 1 second"
 
 # virsh nodeinfo
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a nodeinfo -d "Node information"
 
 # virsh nodememstats
-complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a nodememstats -d "Prints memory stats of the node."
-complete -c virsh -n "__fish_seen_subcommand_from nodememstats" -l cell -d "Prints specified cell statistics only."
+complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a nodememstats -d "Prints memory stats of the node"
+complete -c virsh -n "__fish_seen_subcommand_from nodememstats" -l cell -d "Prints specified cell statistics only"
 
 # virsh nodesuspend
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a nodesuspend -d "Suspend the host node for a given time duration"
@@ -1367,7 +1367,7 @@ complete -c virsh -n "__fish_seen_subcommand_from pool-event" -l list -d "List v
 complete -c virsh -n "__fish_seen_subcommand_from pool-event" -l timestamp -d "Show timestamp for each printed event"
 
 # virsh vol-clone
-complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a vol-clone -d "Clone a volume."
+complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a vol-clone -d "Clone a volume"
 complete -c virsh -n "__fish_seen_subcommand_from vol-clone" -l pool -d "Pool name or UUID"
 complete -c virsh -n "__fish_seen_subcommand_from vol-clone" -l prealloc-metadata -d "Preallocate metadata (for qcow2 instead of full allocation)"
 complete -c virsh -n "__fish_seen_subcommand_from vol-clone" -l reflink -d "Use btrfs COW lightweight copy"

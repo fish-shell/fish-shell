@@ -478,7 +478,11 @@ static bool process_mark_finished_children(bool block_on_fg) {
                 // waitpid for one pgrp at a time. We do bypass future waits in case of error,
                 // however.
                 has_error = true;
-                wperror(L"waitpid in process_mark_finished_children");
+
+                // Do not audibly complain on interrupt (see #5293)
+                if (errno != EINTR) {
+                    wperror(L"waitpid in process_mark_finished_children");
+                }
                 break;
             }
         }

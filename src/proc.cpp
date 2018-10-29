@@ -372,8 +372,7 @@ static bool process_mark_finished_children(bool block_on_fg) {
     // If the last time that we received a SIGCHLD we did not waitpid all jobs, we cannot early out.
     if (!dirty_state && last_sigchld_count == s_sigchld_generation_cnt) {
         // If we have foreground jobs, we need to block on them below
-        if (!block_on_fg)
-        {
+        if (!block_on_fg) {
             // We can assume that no children have exited and that all waitpid calls with
             // WNOHANG below will confirm that.
             return true;
@@ -398,15 +397,17 @@ static bool process_mark_finished_children(bool block_on_fg) {
 
         if (j != job_fg && j->is_foreground() && !j->is_stopped() && !j->is_completed()) {
             // Ignore jobs created via function evaluation in this sanity check
-            if (!job_fg || (!job_fg->get_flag(job_flag_t::NESTED) && !j->get_flag(job_flag_t::NESTED))) {
-                assert(job_fg == nullptr && "More than one active, fully-constructed foreground job!");
+            if (!job_fg ||
+                (!job_fg->get_flag(job_flag_t::NESTED) && !j->get_flag(job_flag_t::NESTED))) {
+                assert(job_fg == nullptr &&
+                       "More than one active, fully-constructed foreground job!");
             }
             job_fg = j;
         }
 
-        // Whether we will wait for uncompleted processes depends on the combination of `block_on_fg` and the
-        // nature of the process. Default is WNOHANG, but if foreground, constructed, not stopped, *and*
-        // block_on_fg is true, then no WNOHANG (i.e. "HANG").
+        // Whether we will wait for uncompleted processes depends on the combination of
+        // `block_on_fg` and the nature of the process. Default is WNOHANG, but if foreground,
+        // constructed, not stopped, *and* block_on_fg is true, then no WNOHANG (i.e. "HANG").
         int options = WUNTRACED | WNOHANG;
 
         // We should never block twice in the same go, as `waitpid()' returning could mean one
@@ -420,8 +421,8 @@ static bool process_mark_finished_children(bool block_on_fg) {
         // wait on only one pgrp at a time and we need to check all pgrps before returning, but we
         // never wait/block on fg processes after an error has been encountered to give ourselves
         // (elsewhere) a chance to handle the fallout from process termination, etc.
-        if (!has_error && block_on_fg && j->pgid != shell_pgid && j == job_fg
-                && j->get_flag(job_flag_t::JOB_CONTROL)) {
+        if (!has_error && block_on_fg && j->pgid != shell_pgid && j == job_fg &&
+            j->get_flag(job_flag_t::JOB_CONTROL)) {
             debug(4, "Waiting on processes from foreground job %d", job_fg->pgid);
             options &= ~WNOHANG;
         }
@@ -452,7 +453,8 @@ static bool process_mark_finished_children(bool block_on_fg) {
                 pid = waitpid((*process)->pid, &status, options);
                 process++;
             } else {
-                // A negative PID passed in to `waitpid()` means wait on any child in that process group
+                // A negative PID passed in to `waitpid()` means wait on any child in that process
+                // group
                 pid = waitpid(-1 * j->pgid, &status, options);
             }
 
@@ -464,18 +466,18 @@ static bool process_mark_finished_children(bool block_on_fg) {
             if (pid > 0) {
                 // A child process has been reaped
                 handle_child_status(pid, status);
-            }
-            else if (pid == 0 || errno == ECHILD) {
+            } else if (pid == 0 || errno == ECHILD) {
                 // No killed/dead children in this particular process group
                 if (!wait_by_process) {
                     break;
                 }
             } else {
-                // pid < 0 indicates an error. One likely failure is ECHILD (no children), which is not
-                // an error and is ignored. The other likely failure is EINTR, which means we got a
-                // signal, which is considered an error. We absolutely do not break or return on error,
-                // as we need to iterate over all constructed jobs but we only call waitpid for one pgrp
-                // at a time. We do bypass future waits in case of error, however.
+                // pid < 0 indicates an error. One likely failure is ECHILD (no children), which is
+                // not an error and is ignored. The other likely failure is EINTR, which means we
+                // got a signal, which is considered an error. We absolutely do not break or return
+                // on error, as we need to iterate over all constructed jobs but we only call
+                // waitpid for one pgrp at a time. We do bypass future waits in case of error,
+                // however.
                 has_error = true;
                 wperror(L"waitpid in process_mark_finished_children");
                 break;
@@ -489,8 +491,7 @@ static bool process_mark_finished_children(bool block_on_fg) {
         // We received SIGCHLD but were not able to definitely say whether or not all children were
         // reaped.
         dirty_state = true;
-    }
-    else {
+    } else {
         // We can safely assume that no SIGCHLD means we can just return next time around
         dirty_state = false;
     }
@@ -516,7 +517,7 @@ static wcstring truncate_command(const wcstring &cmd) {
     }
 
     // Truncation required.
-    const size_t ellipsis_length = wcslen(ellipsis_str); //no need for wcwidth
+    const size_t ellipsis_length = wcslen(ellipsis_str);  // no need for wcwidth
     size_t trunc_length = max_len - ellipsis_length;
     // Eat trailing whitespace.
     while (trunc_length > 0 && iswspace(cmd.at(trunc_length - 1))) {
@@ -561,8 +562,8 @@ static int process_clean_after_marking(bool allow_interactive) {
     job_t *jnext;
     int found = 0;
 
-    // this function may fire an event handler, we do not want to call ourselves recursively (to avoid
-    // infinite recursion).
+    // this function may fire an event handler, we do not want to call ourselves recursively (to
+    // avoid infinite recursion).
     static bool locked = false;
     if (locked) {
         return 0;
@@ -572,7 +573,6 @@ static int process_clean_after_marking(bool allow_interactive) {
     // this may be invoked in an exit handler, after the TERM has been torn down
     // don't try to print in that case (#3222)
     const bool interactive = allow_interactive && cur_term != NULL;
-
 
     job_iterator_t jobs;
     const size_t job_count = jobs.count();
@@ -907,8 +907,8 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
                 if (errno == ENOTTY) {
                     redirect_tty_output();
                 }
-                debug(1, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
-                            j->job_id, j->command_wcstr(), j->pgid);
+                debug(1, _(L"Could not send job %d ('%ls') with pgid %d to foreground"), j->job_id,
+                      j->command_wcstr(), j->pgid);
                 wperror(L"tcsetpgrp");
                 return false;
             }
@@ -916,9 +916,9 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
             if (pgroup_terminated) {
                 // All processes in the process group has exited.
                 // Since we delay reaping any processes in a process group until all members of that
-                // job/group have been started, the only way this can happen is if the very last process in
-                // the group terminated and didn't need to access the terminal, otherwise it would
-                // have hung waiting for terminal IO (SIGTTIN). We can safely ignore this.
+                // job/group have been started, the only way this can happen is if the very last
+                // process in the group terminated and didn't need to access the terminal, otherwise
+                // it would have hung waiting for terminal IO (SIGTTIN). We can safely ignore this.
                 debug(3, L"tcsetpgrp called but process group %d has terminated.\n", j->pgid);
                 mark_job_complete(j);
                 return true;
@@ -936,7 +936,8 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
                 redirect_tty_output();
             }
 
-            debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id, j->preview().c_str());
+            debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id,
+                  j->preview().c_str());
             wperror(L"tcsetattr");
             return false;
         }
@@ -988,13 +989,13 @@ static bool terminal_return_from_job(job_t *j) {
 // Linux, 'cd . ; ftp' prevents you from typing into the ftp prompt. See
 // https://github.com/fish-shell/fish-shell/issues/121
 #if 0
-    // Restore the shell's terminal modes.
-    if (tcsetattr(STDIN_FILENO, TCSADRAIN, &shell_modes) == -1) {
-        if (errno == EIO) redirect_tty_output();
-        debug(1, _(L"Could not return shell to foreground"));
-        wperror(L"tcsetattr");
-        return false;
-    }
+// Restore the shell's terminal modes.
+if (tcsetattr(STDIN_FILENO, TCSADRAIN, &shell_modes) == -1) {
+if (errno == EIO) redirect_tty_output();
+debug(1, _(L"Could not return shell to foreground"));
+wperror(L"tcsetattr");
+return false;
+}
 #endif
 
     signal_unblock();
@@ -1013,10 +1014,10 @@ void job_t::continue_job(bool send_sigcont) {
     // Make sure we retake control of the terminal before leaving this function.
     bool term_transferred = false;
     cleanup_t take_term_back([&]() {
-            if (term_transferred) {
-                terminal_return_from_job(this);
-            }
-        });
+        if (term_transferred) {
+            terminal_return_from_job(this);
+        }
+    });
 
     bool read_attempted = false;
     if (!is_completed()) {
@@ -1025,7 +1026,8 @@ void job_t::continue_job(bool send_sigcont) {
             // Hack: ensure that stdin is marked as blocking first (issue #176).
             make_fd_blocking(STDIN_FILENO);
             if (!terminal_give_to_job(this, send_sigcont)) {
-                // This scenario has always returned without any error handling. Presumably that is OK.
+                // This scenario has always returned without any error handling. Presumably that is
+                // OK.
                 return;
             }
             term_transferred = true;
@@ -1080,8 +1082,7 @@ void job_t::continue_job(bool send_sigcont) {
                     // fd buffers are empty we'll block in the second case below.
                     read_try(this);
                     process_mark_finished_children(false);
-                }
-                else if (result == select_try_t::TIMEOUT) {
+                } else if (result == select_try_t::TIMEOUT) {
                     // Our select_try() timeout is ~10ms, so this can be EXTREMELY chatty but this
                     // is very useful if trying to debug an unknown hang in fish. Uncomment to see
                     // if we're stuck here.  debug(1, L"select_try: no fds returned valid data
@@ -1089,12 +1090,11 @@ void job_t::continue_job(bool send_sigcont) {
 
                     // No FDs are ready. Look for finished processes instead.
                     process_mark_finished_children(block_on_fg);
-                }
-                else {
+                } else {
                     // This is easily encountered by simply transferring control of the terminal to
                     // another process, then suspending it. For example, `nvim`, then `ctrl+z`.
                     // Since we are not the foreground process
-                    debug(3, L"select_try: interrupted read from job file descriptors" );
+                    debug(3, L"select_try: interrupted read from job file descriptors");
 
                     // This tends to happen when the foreground process has changed, e.g. it was
                     // suspended and control has returned to the shell or when a fg process takes
@@ -1121,8 +1121,8 @@ void job_t::continue_job(bool send_sigcont) {
                 read_try(this);
             }
 
-            // Set $status only if we are in the foreground and the last process in the job has finished
-            // and is not a short-circuited builtin.
+            // Set $status only if we are in the foreground and the last process in the job has
+            // finished and is not a short-circuited builtin.
             auto &p = processes.back();
             if ((WIFEXITED(p->status) || WIFSIGNALED(p->status)) && p->pid) {
                 int status = proc_format_status(p->status);

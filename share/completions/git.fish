@@ -32,6 +32,11 @@ function __fish_git_branches
         | string replace -r '^refs/remotes/(.*)$' '$1\tRemote Branch'
 end
 
+function __fish_git_local_branches
+    command git for-each-ref --format='%(refname)' refs/heads/ refs/remotes/ 2>/dev/null \
+        | string replace -rf '^refs/heads/(.*)$' '$1\tLocal Branch'
+end
+
 function __fish_git_unique_remote_branches
     # `git checkout` accepts remote branches without the remote part
     # if they are unambiguous.
@@ -825,8 +830,8 @@ complete -f -c git -n '__fish_git_needs_command' -a bisect -d 'Find the change t
 ### branch
 complete -f -c git -n '__fish_git_needs_command' -a branch -d 'List, create, or delete branches'
 complete -f -c git -n '__fish_git_using_command branch' -a '(__fish_git_branches)'
-complete -f -c git -n '__fish_git_using_command branch' -s d -d 'Delete branch'
-complete -f -c git -n '__fish_git_using_command branch' -s D -d 'Force deletion of branch'
+complete -f -c git -n '__fish_git_using_command branch' -s d -d 'Delete branch' -xa '(__fish_git_local_branches)'
+complete -f -c git -n '__fish_git_using_command branch' -s D -d 'Force deletion of branch' -xa '(__fish_git_local_branches)'
 complete -f -c git -n '__fish_git_using_command branch' -s m -d 'Rename branch'
 complete -f -c git -n '__fish_git_using_command branch' -s M -d 'Force renaming branch'
 complete -f -c git -n '__fish_git_using_command branch' -s a -d 'Lists both local and remote branches'

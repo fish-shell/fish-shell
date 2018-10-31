@@ -962,6 +962,8 @@ void assert_is_not_forked_child(const char *who);
 /// and checking if "Microsoft" is in the first line.
 /// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997
 constexpr bool is_windows_subsystem_for_linux() {
+    // This function is called after fork() and before exec() in postfork.cpp. Make sure we
+    // don't allocate any memory here!
 #ifdef WSL
     return true;
 #else

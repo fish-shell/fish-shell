@@ -106,6 +106,11 @@ bool child_set_group(job_t *j, process_t *p) {
                 1, "Could not send own process %s, '%s' in job %s, '%s' from group %s to group %s",
                 pid_buff, argv0, job_id_buff, command, getpgid_buff, job_pgid_buff);
 
+            if (is_windows_subsystem_for_linux() && errno == EPERM) {
+                debug_safe(1, "Please update to Windows 10 1809/17763 or higher to address known issues "
+                        "with process groups and zombie processes.");
+            }
+
             safe_perror("setpgid");
 
             return false;

@@ -1789,6 +1789,38 @@ static void reader_interactive_init() {
         signal_set_handlers();
     }
 
+
+    // It shouldn't be necessary to place fish in its own process group and force control
+    // of the terminal, but that works around fish being started with an invalid pgroup,
+    // such as when launched via firejail (#5295)
+    if (shell_pgid == 0) {
+        shell_pgid = getpid();
+        if (setpgid(shell_pgid, shell_pgid) < 0) {
+            debug(0, _(L"Failed to assign shell to its own process group"));
+            wperror(L"setpgid");
+            exit_without_destructors(1);
+        }
+
+        // Take control of the terminal
+        if (tcsetpgrp(STDIN_FILENO, shell_pgid) == -1) {
+            if (errno == ENOTTY) {
+                redirect_tty_output();
+            }
+            debug(0, _(L"Failed to take control of the terminal"));
+            wperror(L"tcsetpgrp");
+            exit_without_destructors(1);
+        }
+
+        // Configure terminal attributes
+        if (tcsetattr(0, TCSANOW, &shell_modes) == -1) {
+            if (errno == EIO) {
+                redirect_tty_output();
+            }
+            debug(1, _(L"Failed to set startup terminal mode!"));
+            wperror(L"tcsetattr");
+        }
+    }
+
     invalidate_termsize();
 
     // For compatibility with fish 2.0's $_, now replaced with `status current-command`

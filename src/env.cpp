@@ -286,19 +286,11 @@ static env_universal_t *uvars() { return s_universal_variables; }
 // so we don't bother to sort them.
 using string_set_t = const wchar_t *const[];
 
-template <typename T>
-bool string_set_contains(const T &set, const wchar_t *val) {
-    for (const wchar_t *entry : set) {
-        if (!wcscmp(val, entry)) return true;
-    }
-    return false;
-}
-
 /// Check if a variable may not be set using the set command.
 static bool is_read_only(const wchar_t *val) {
     const string_set_t env_read_only = {L"PWD", L"SHLVL", L"history", L"status", L"version",
         L"fish_pid", L"hostname", L"_", L"fish_private_mode"};
-    return string_set_contains(env_read_only, val) ||
+    return contains(env_read_only, val) ||
         (in_private_mode() && wcscmp(L"fish_history", val) == 0);
 }
 

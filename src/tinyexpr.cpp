@@ -38,8 +38,10 @@ typedef double (*te_fun1)(double);
 typedef double (*te_fun0)();
 
 enum {
-      TE_VARIABLE = 0, TE_CONSTANT,
-      TE_FUNCTION0 = 8, TE_FUNCTION1, TE_FUNCTION2, TE_FUNCTION3
+      TE_CONSTANT = 0,
+      TE_FUNCTION0, TE_FUNCTION1, TE_FUNCTION2, TE_FUNCTION3,
+      TOK_NULL, TOK_ERROR, TOK_END, TOK_SEP,
+      TOK_OPEN, TOK_CLOSE, TOK_NUMBER, TOK_INFIX
 };
 
 int get_arity(const int type) {
@@ -48,12 +50,6 @@ int get_arity(const int type) {
     if (type == TE_FUNCTION1) return 1;
     return 0;
 }
-
-// TODO: Is it actually used that these share a space?
-enum {
-    TOK_NULL = TE_FUNCTION0+16, TOK_ERROR, TOK_END, TOK_SEP,
-    TOK_OPEN, TOK_CLOSE, TOK_NUMBER, TOK_INFIX
-};
 
 typedef struct te_expr {
     int type;
@@ -465,7 +461,6 @@ double te_eval(const te_expr *n) {
 static void optimize(te_expr *n) {
     /* Evaluates as much as possible. */
     if (n->type == TE_CONSTANT) return;
-    if (n->type == TE_VARIABLE) return;
 
     const int arity = get_arity(n->type);
     bool known = true;

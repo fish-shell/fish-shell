@@ -671,8 +671,19 @@ set n -3
 echo $PATH[$n..-1]
 \endfish
 
-Note that variables can be used as indices for expansion of variables, but not command substitution.
+Variables can be used as indices for expansion of variables, like so:
+\fish
+set index 2
+set letters a b c d
+echo $letters[$index] # returns 'b'
+\endfish
+However using variables as indices for command substitution is currently not supported, so 
+\fish
+echo (seq 5)[$index] # This won't work
 
+set sequence (seq 5) # It needs to be written on two lines like this.
+echo $sequence[$index] # returns '2'
+\endfish
 
 \subsection expand-home Home directory expansion
 

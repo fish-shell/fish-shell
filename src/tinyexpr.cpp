@@ -39,13 +39,11 @@ typedef double (*te_fun0)();
 
 enum {
       TE_VARIABLE = 0, TE_CONSTANT,
-      TE_FUNCTION0 = 8, TE_FUNCTION1, TE_FUNCTION2, TE_FUNCTION3,
-      TE_FLAG_PURE = 32
+      TE_FUNCTION0 = 8, TE_FUNCTION1, TE_FUNCTION2, TE_FUNCTION3
 };
 
 // TODO: This is crappy bit-fiddling that should not be done.
 #define TYPE_MASK(TYPE) ((TYPE)&0x0000001F)
-#define IS_PURE(TYPE) (((TYPE) & TE_FLAG_PURE) != 0)
 #define ARITY(TYPE) ( ((TYPE) & TE_FUNCTION0) ? ((TYPE) & 0x00000007) : 0 )
 
 // TODO: Is it actually used that these share a space?
@@ -160,31 +158,31 @@ static double npr(double n, double r) {return ncr(n, r) * fac(r);}
 
 static const te_variable functions[] = {
     /* must be in alphabetical order */
-    {"abs", (const void *)(te_fun1)fabs,     TE_FUNCTION1 | TE_FLAG_PURE},
-    {"acos", (const void *)(te_fun1)acos,    TE_FUNCTION1 | TE_FLAG_PURE},
-    {"asin", (const void *)(te_fun1)asin,    TE_FUNCTION1 | TE_FLAG_PURE},
-    {"atan", (const void *)(te_fun1)atan,    TE_FUNCTION1 | TE_FLAG_PURE},
-    {"atan2", (const void *)(te_fun2)atan2,  TE_FUNCTION2 | TE_FLAG_PURE},
-    {"ceil", (const void *)(te_fun1)ceil,    TE_FUNCTION1 | TE_FLAG_PURE},
-    {"cos", (const void *)(te_fun1)cos,      TE_FUNCTION1 | TE_FLAG_PURE},
-    {"cosh", (const void *)(te_fun1)cosh,    TE_FUNCTION1 | TE_FLAG_PURE},
-    {"e", (const void *)(te_fun0)e,          TE_FUNCTION0 | TE_FLAG_PURE},
-    {"exp", (const void *)(te_fun1)exp,      TE_FUNCTION1 | TE_FLAG_PURE},
-    {"fac", (const void *)(te_fun1)fac,      TE_FUNCTION1 | TE_FLAG_PURE},
-    {"floor", (const void *)(te_fun1)floor,  TE_FUNCTION1 | TE_FLAG_PURE},
-    {"ln", (const void *)(te_fun1)log,       TE_FUNCTION1 | TE_FLAG_PURE},
-    {"log", (const void *)(te_fun1)log10,    TE_FUNCTION1 | TE_FLAG_PURE},
-    {"log10", (const void *)(te_fun1)log10,  TE_FUNCTION1 | TE_FLAG_PURE},
-    {"ncr", (const void *)(te_fun2)ncr,      TE_FUNCTION2 | TE_FLAG_PURE},
-    {"npr", (const void *)(te_fun2)npr,      TE_FUNCTION2 | TE_FLAG_PURE},
-    {"pi", (const void *)(te_fun1)pi,        TE_FUNCTION0 | TE_FLAG_PURE},
-    {"pow", (const void *)(te_fun2)pow,      TE_FUNCTION2 | TE_FLAG_PURE},
-    {"round", (const void *)(te_fun1)round,  TE_FUNCTION1 | TE_FLAG_PURE},
-    {"sin", (const void *)(te_fun1)sin,      TE_FUNCTION1 | TE_FLAG_PURE},
-    {"sinh", (const void *)(te_fun1)sinh,    TE_FUNCTION1 | TE_FLAG_PURE},
-    {"sqrt", (const void *)(te_fun1)sqrt,    TE_FUNCTION1 | TE_FLAG_PURE},
-    {"tan", (const void *)(te_fun1)tan,      TE_FUNCTION1 | TE_FLAG_PURE},
-    {"tanh", (const void *)(te_fun1)tanh,    TE_FUNCTION1 | TE_FLAG_PURE},
+    {"abs", (const void *)(te_fun1)fabs,     TE_FUNCTION1},
+    {"acos", (const void *)(te_fun1)acos,    TE_FUNCTION1},
+    {"asin", (const void *)(te_fun1)asin,    TE_FUNCTION1},
+    {"atan", (const void *)(te_fun1)atan,    TE_FUNCTION1},
+    {"atan2", (const void *)(te_fun2)atan2,  TE_FUNCTION2},
+    {"ceil", (const void *)(te_fun1)ceil,    TE_FUNCTION1},
+    {"cos", (const void *)(te_fun1)cos,      TE_FUNCTION1},
+    {"cosh", (const void *)(te_fun1)cosh,    TE_FUNCTION1},
+    {"e", (const void *)(te_fun0)e,          TE_FUNCTION0},
+    {"exp", (const void *)(te_fun1)exp,      TE_FUNCTION1},
+    {"fac", (const void *)(te_fun1)fac,      TE_FUNCTION1},
+    {"floor", (const void *)(te_fun1)floor,  TE_FUNCTION1},
+    {"ln", (const void *)(te_fun1)log,       TE_FUNCTION1},
+    {"log", (const void *)(te_fun1)log10,    TE_FUNCTION1},
+    {"log10", (const void *)(te_fun1)log10,  TE_FUNCTION1},
+    {"ncr", (const void *)(te_fun2)ncr,      TE_FUNCTION2},
+    {"npr", (const void *)(te_fun2)npr,      TE_FUNCTION2},
+    {"pi", (const void *)(te_fun1)pi,        TE_FUNCTION0},
+    {"pow", (const void *)(te_fun2)pow,      TE_FUNCTION2},
+    {"round", (const void *)(te_fun1)round,  TE_FUNCTION1},
+    {"sin", (const void *)(te_fun1)sin,      TE_FUNCTION1},
+    {"sinh", (const void *)(te_fun1)sinh,    TE_FUNCTION1},
+    {"sqrt", (const void *)(te_fun1)sqrt,    TE_FUNCTION1},
+    {"tan", (const void *)(te_fun1)tan,      TE_FUNCTION1},
+    {"tanh", (const void *)(te_fun1)tanh,    TE_FUNCTION1},
     {0, 0, 0}
 };
 
@@ -383,7 +381,7 @@ static te_expr *power(state *s) {
     if (sign == 1) {
         ret = base(s);
     } else {
-        ret = NEW_EXPR(TE_FUNCTION1 | TE_FLAG_PURE, base(s));
+        ret = NEW_EXPR(TE_FUNCTION1, base(s));
         ret->function = (const void *) negate;
     }
 
@@ -397,7 +395,7 @@ static te_expr *factor(state *s) {
     while (s->type == TOK_INFIX && (s->function == (const void*)(te_fun2)pow)) {
         te_fun2 t = (te_fun2) s->function;
         next_token(s);
-        ret = NEW_EXPR(TE_FUNCTION2 | TE_FLAG_PURE, ret, power(s));
+        ret = NEW_EXPR(TE_FUNCTION2, ret, power(s));
         ret->function = (const void *) t;
     }
 
@@ -412,7 +410,7 @@ static te_expr *term(state *s) {
     while (s->type == TOK_INFIX && (s->function == (const void*)(te_fun2)mul || s->function == (const void*)(te_fun2)divide || s->function == (const void*)(te_fun2)fmod)) {
         te_fun2 t = (te_fun2) s->function;
         next_token(s);
-        ret = NEW_EXPR(TE_FUNCTION2 | TE_FLAG_PURE, ret, factor(s));
+        ret = NEW_EXPR(TE_FUNCTION2, ret, factor(s));
         ret->function = (const void *) t;
     }
 
@@ -427,7 +425,7 @@ static te_expr *expr(state *s) {
     while (s->type == TOK_INFIX && (s->function == add || s->function == sub)) {
         te_fun2 t = (te_fun2) s->function;
         next_token(s);
-        ret = NEW_EXPR(TE_FUNCTION2 | TE_FLAG_PURE, ret, term(s));
+        ret = NEW_EXPR(TE_FUNCTION2, ret, term(s));
         ret->function = (const void *) t;
     }
 
@@ -465,23 +463,19 @@ static void optimize(te_expr *n) {
     if (n->type == TE_CONSTANT) return;
     if (n->type == TE_VARIABLE) return;
 
-    /* Only optimize out functions flagged as pure. */
-    // (which is currently all of them)
-    if (IS_PURE(n->type)) {
-        const int arity = ARITY(n->type);
-        bool known = true;
-        for (int i = 0; i < arity; ++i) {
-            optimize((te_expr *)n->parameters[i]);
-            if (((te_expr*)(n->parameters[i]))->type != TE_CONSTANT) {
-                known = false;
-            }
+    const int arity = ARITY(n->type);
+    bool known = true;
+    for (int i = 0; i < arity; ++i) {
+        optimize((te_expr *)n->parameters[i]);
+        if (((te_expr*)(n->parameters[i]))->type != TE_CONSTANT) {
+            known = false;
         }
-        if (known) {
-            const double value = te_eval(n);
-            te_free_parameters(n);
-            n->type = TE_CONSTANT;
-            n->value = value;
-        }
+    }
+    if (known) {
+        const double value = te_eval(n);
+        te_free_parameters(n);
+        n->type = TE_CONSTANT;
+        n->value = value;
     }
 }
 

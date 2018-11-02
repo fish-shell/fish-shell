@@ -191,6 +191,7 @@ static const te_variable *find_builtin(const char *name, int len) {
     const auto end = std::end(functions);
     const te_variable *found = std::lower_bound(std::begin(functions), end, name,
                                                 [len](const te_variable &lhs, const char *rhs) {
+                                                    // The length is important because that's where the parens start
                                                     return strncmp(lhs.name, rhs, len) < 0;
                                                 });
     // We need to compare again because we might have gotten the first "larger" element.
@@ -242,6 +243,7 @@ void next_token(state *s) {
             } else {
                 /* Look for an operator or special character. */
                 switch (s->next++[0]) {
+                    // The "te_fun2" casts are necessary to pick the right overload.
                     case '+': s->type = TOK_INFIX; s->function = (const void *)(te_fun2) add; break;
                     case '-': s->type = TOK_INFIX; s->function = (const void *)(te_fun2) sub; break;
                     case '*': s->type = TOK_INFIX; s->function = (const void *)(te_fun2) mul; break;

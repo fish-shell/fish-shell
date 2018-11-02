@@ -42,9 +42,12 @@ enum {
       TE_FUNCTION0 = 8, TE_FUNCTION1, TE_FUNCTION2, TE_FUNCTION3
 };
 
-// TODO: This is crappy bit-fiddling that should not be done.
-#define TYPE_MASK(TYPE) ((TYPE)&0x0000001F)
-#define ARITY(TYPE) ( ((TYPE) & TE_FUNCTION0) ? ((TYPE) & 0x00000007) : 0 )
+int get_arity(const int type) {
+    if (type == TE_FUNCTION3) return 3;
+    if (type == TE_FUNCTION2) return 2;
+    if (type == TE_FUNCTION1) return 1;
+    return 0;
+}
 
 // TODO: Is it actually used that these share a space?
 enum {
@@ -90,7 +93,7 @@ void te_free(te_expr *n);
 #define NEW_EXPR(type, ...) new_expr((type), std::move((const te_expr*[]){__VA_ARGS__}))
 
 static te_expr *new_expr(const int type, const te_expr *parameters[]) {
-    const int arity = ARITY(type);
+    const int arity = get_arity(type);
     const int psize = sizeof(void*) * arity;
     const int size = (sizeof(te_expr) - sizeof(void*)) + psize;
     te_expr *ret = (te_expr *)malloc(size);
@@ -107,11 +110,8 @@ static te_expr *new_expr(const int type, const te_expr *parameters[]) {
 
 void te_free_parameters(te_expr *n) {
     if (!n) return;
-    switch (TYPE_MASK(n->type)) {
-        case TE_FUNCTION3: te_free((te_expr *)n->parameters[2]);
-        case TE_FUNCTION2: te_free((te_expr *)n->parameters[1]);
-        case TE_FUNCTION1: te_free((te_expr *)n->parameters[0]);
-    }
+    const int arity = get_arity(n->type);
+    if (arity > 0) te_free((te_expr *)n->parameters[arity - 1]);
 }
 
 
@@ -235,7 +235,7 @@ void next_token(state *s) {
                 const te_variable *var = find_builtin(start, s->next - start);
 
                 if (var) {
-                    switch(TYPE_MASK(var->type)) {
+                    switch(var->type) {
                         case TE_FUNCTION0: case TE_FUNCTION1: case TE_FUNCTION2: case TE_FUNCTION3:
                             s->type = var->type;
                             s->function = var->address;
@@ -276,7 +276,7 @@ static te_expr *base(state *s) {
     te_expr *ret;
     int arity;
 
-    switch (TYPE_MASK(s->type)) {
+    switch (s->type) {
         case TOK_NUMBER:
             ret = new_expr(TE_CONSTANT, 0);
             ret->value = s->value;
@@ -301,7 +301,7 @@ static te_expr *base(state *s) {
 
         case TE_FUNCTION1:
         case TE_FUNCTION2: case TE_FUNCTION3:
-            arity = ARITY(s->type);
+            arity = get_arity(s->type);
 
             ret = new_expr(s->type, 0);
             ret->function = s->function;
@@ -439,7 +439,7 @@ static te_expr *expr(state *s) {
 double te_eval(const te_expr *n) {
     if (!n) return NAN;
 
-    switch(TYPE_MASK(n->type)) {
+    switch(n->type) {
         case TE_CONSTANT: return n->value;
         case TE_FUNCTION0:
             return TE_FUN(void)();
@@ -462,7 +462,7 @@ static void optimize(te_expr *n) {
     if (n->type == TE_CONSTANT) return;
     if (n->type == TE_VARIABLE) return;
 
-    const int arity = ARITY(n->type);
+    const int arity = get_arity(n->type);
     bool known = true;
     for (int i = 0; i < arity; ++i) {
         optimize((te_expr *)n->parameters[i]);

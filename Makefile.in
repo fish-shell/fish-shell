@@ -744,10 +744,6 @@ obj/%.o: src/%.cpp | show-CXX show-CXXFLAGS show-CPPFLAGS obj
 	@echo "  CXX      $(em)$@$(sgr0)"
 	$v $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-obj/tinyexpr.o: src/tinyexpr.c | obj
-	@echo "  CC       $(em)$@$(sqr0)"
-	$v $(CC) $(CFLAGS) -c $< -o $@
-
 #
 # obj directory
 #

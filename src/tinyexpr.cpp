@@ -30,6 +30,8 @@
 #include <stdio.h>
 #include <limits.h>
 
+#include <algorithm>
+#include <iterator>
 #include <utility>
 
 // TODO: It would be nice not to rely on a typedef for this, especially one that can only do functions with two args.
@@ -181,29 +183,18 @@ static const te_variable functions[] = {
     {"sinh", (const void *)(te_fun1)sinh,    TE_FUNCTION1},
     {"sqrt", (const void *)(te_fun1)sqrt,    TE_FUNCTION1},
     {"tan", (const void *)(te_fun1)tan,      TE_FUNCTION1},
-    {"tanh", (const void *)(te_fun1)tanh,    TE_FUNCTION1},
-    {0, 0, 0}
+    {"tanh", (const void *)(te_fun1)tanh,    TE_FUNCTION1}
 };
 
 static const te_variable *find_builtin(const char *name, int len) {
-    long imin = 0;
-    long imax = sizeof(functions) / sizeof(te_variable) - 2;
-
-    /*Binary search.*/
-    while (imax >= imin) {
-        const int i = (imin + ((imax-imin)/2));
-        int c = strncmp(name, functions[i].name, len);
-        if (!c) c = '\0' - functions[i].name[len];
-        if (c == 0) {
-            return functions + i;
-        } else if (c > 0) {
-            imin = i + 1;
-        } else {
-            imax = i - 1;
-        }
-    }
-
-    return 0;
+    const auto end = std::end(functions);
+    const te_variable *found = std::lower_bound(std::begin(functions), end, name,
+                                                [len](const te_variable &lhs, const char *rhs) {
+                                                    return strncmp(lhs.name, rhs, len) < 0;
+                                                });
+    // We need to compare again because we might have gotten the first "larger" element.
+    if (found != end && strncmp(found->name, name, len) == 0) return found;
+    return NULL;
 }
 
 static double add(double a, double b) {return a + b;}

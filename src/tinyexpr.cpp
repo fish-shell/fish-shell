@@ -110,8 +110,12 @@ static te_expr *new_expr(const int type, const te_expr *parameters[]) {
 
 void te_free_parameters(te_expr *n) {
     if (!n) return;
-    const int arity = get_arity(n->type);
-    if (arity > 0) te_free((te_expr *)n->parameters[arity - 1]);
+    int arity = get_arity(n->type);
+    // Free all parameters from the back to the front.
+    while (arity > 0) {
+        te_free((te_expr *)n->parameters[arity - 1]);
+        arity--;
+    }
 }
 
 

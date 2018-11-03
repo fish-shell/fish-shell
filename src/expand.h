@@ -45,7 +45,7 @@ enum {
     /// EXPAND_FUZZY_MATCH is set.
     EXPAND_NO_FUZZY_DIRECTORIES = 1 << 10,
     /// Do expansions specifically to support cd. This means using CDPATH as a list of potential
-    /// working directories.
+    /// working directories, and to use logical instead of physical paths.
     EXPAND_SPECIAL_FOR_CD = 1 << 11,
     /// Do expansions specifically for cd autosuggestion. This is to differentiate between cd
     /// completions and cd autosuggestions.

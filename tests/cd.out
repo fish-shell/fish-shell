@@ -1,3 +1,19 @@
 
 ####################
 # cd symlink non-resolution
+
+####################
+# cd symlink completion
+ls:
+../b1
+../b2
+../b3
+../d1/
+../d2/
+../d3/
+../glass/
+cd:
+../a1/
+../a2/
+../a3/
+../rabbithole/

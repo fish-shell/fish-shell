@@ -7,3 +7,32 @@ test "$PWD" = "$link" || echo "\$PWD != \$link:"\n   "\$PWD: $PWD"\n   "\$link: 
 test (pwd) = "$link" || echo "(pwd) != \$link:"\n   "\$PWD: "(pwd)\n   "\$link: $link"\n
 test (pwd -P) = "$real" || echo "(pwd -P) != \$real:"\n   "\$PWD: $PWD"\n   "\$real: $real"\n
 test (pwd -P -L) = "$link" || echo "(pwd -P -L) != \$link:"\n   "\$PWD: $PWD"\n   "\$link: $link"\n
+
+logmsg cd symlink completion
+
+# Create a symlink and verify logical completion.
+# create directory $base/through/the/looking/glass
+# symlink $base/somewhere/teleport -> $base/through/the/looking/glass
+# verify that .. completions work
+set -l base /tmp/cdcomp_test/
+rm -Rf $base
+mkdir -p $base
+cd $base
+mkdir -p $base/through/the/looking/glass
+
+mkdir -p $base/somewhere
+mkdir $base/somewhere/a1
+mkdir $base/somewhere/a2
+mkdir $base/somewhere/a3
+touch $base/through/the/looking/b(seq 1 3)
+mkdir $base/through/the/looking/d1
+mkdir $base/through/the/looking/d2
+mkdir $base/through/the/looking/d3
+ln -s $base/through/the/looking/glass $base/somewhere/rabbithole
+
+cd $base/somewhere/rabbithole
+echo "ls:"
+complete -C'ls ../'
+echo "cd:"
+complete -C'cd ../'
+rm -Rf $base

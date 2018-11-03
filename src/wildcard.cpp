@@ -574,6 +574,9 @@ class wildcard_expander_t {
         wcstring abs_path = this->working_directory;
         append_path_component(abs_path, filepath);
 
+        // We must normalize the path to allow 'cd ..' to operate on logical paths.
+        if (flags & EXPAND_SPECIAL_FOR_CD) abs_path = normalize_path(abs_path);
+
         size_t before = this->resolved_completions->size();
         if (wildcard_test_flags_then_complete(abs_path, filename, wildcard.c_str(), this->flags,
                                               this->resolved_completions)) {
@@ -591,8 +594,7 @@ class wildcard_expander_t {
             }
 
             // Implement EXPAND_SPECIAL_FOR_CD_AUTOSUGGEST by descending the deepest unique
-            // hierarchy we
-            // can, and then appending any components to each new result.
+            // hierarchy we can, and then appending any components to each new result.
             // Only descend deepest unique for cd autosuggest and not for cd tab completion
             // (issue #4402).
             if (flags & EXPAND_SPECIAL_FOR_CD_AUTOSUGGEST) {
@@ -613,6 +615,16 @@ class wildcard_expander_t {
     DIR *open_dir(const wcstring &base_dir) const {
         wcstring path = this->working_directory;
         append_path_component(path, base_dir);
+        if (flags & EXPAND_SPECIAL_FOR_CD) {
+            // cd operates on logical paths.
+            // for example, cd ../<tab> should complete "without resolving symlinks".
+            path = normalize_path(path);
+        } else {
+            // Other commands operate on physical paths.
+            if (auto tmp = wrealpath(path)) {
+                path = tmp.acquire();
+            }
+        }
         return wopendir(path);
     }
 

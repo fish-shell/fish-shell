@@ -60,11 +60,11 @@ typedef struct te_expr {
 } te_expr;
 
 // TODO: Rename since variables have been removed.
-typedef struct te_variable {
+typedef struct te_builtin {
     const char *name;
     const void *address;
     int type;
-} te_variable;
+} te_builtin;
 
 typedef struct state {
     const char *start;
@@ -157,7 +157,7 @@ static double ncr(double n, double r) {
 
 static double npr(double n, double r) {return ncr(n, r) * fac(r);}
 
-static const te_variable functions[] = {
+static const te_builtin functions[] = {
     /* must be in alphabetical order */
     {"abs", (const void *)(te_fun1)fabs,     TE_FUNCTION1},
     {"acos", (const void *)(te_fun1)acos,    TE_FUNCTION1},
@@ -186,10 +186,10 @@ static const te_variable functions[] = {
     {"tanh", (const void *)(te_fun1)tanh,    TE_FUNCTION1}
 };
 
-static const te_variable *find_builtin(const char *name, int len) {
+static const te_builtin *find_builtin(const char *name, int len) {
     const auto end = std::end(functions);
-    const te_variable *found = std::lower_bound(std::begin(functions), end, name,
-                                                [len](const te_variable &lhs, const char *rhs) {
+    const te_builtin *found = std::lower_bound(std::begin(functions), end, name,
+                                                [len](const te_builtin &lhs, const char *rhs) {
                                                     // The length is important because that's where the parens start
                                                     return strncmp(lhs.name, rhs, len) < 0;
                                                 });
@@ -224,7 +224,7 @@ void next_token(state *s) {
                 start = s->next;
                 while ((s->next[0] >= 'a' && s->next[0] <= 'z') || (s->next[0] >= '0' && s->next[0] <= '9') || (s->next[0] == '_')) s->next++;
 
-                const te_variable *var = find_builtin(start, s->next - start);
+                const te_builtin *var = find_builtin(start, s->next - start);
 
                 if (var) {
                     switch(var->type) {

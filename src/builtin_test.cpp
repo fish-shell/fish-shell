@@ -111,53 +111,52 @@ static bool unary_primary_evaluate(test_expressions::token_t token, const wcstri
 
 enum { UNARY_PRIMARY = 1 << 0, BINARY_PRIMARY = 1 << 1 };
 
-static const struct token_info_t {
+struct token_info_t {
     token_t tok;
-    const wchar_t *string;
     unsigned int flags;
-} token_infos[] = {{test_unknown, L"", 0},
-                   {test_bang, L"!", 0},
-                   {test_filetype_b, L"-b", UNARY_PRIMARY},
-                   {test_filetype_c, L"-c", UNARY_PRIMARY},
-                   {test_filetype_d, L"-d", UNARY_PRIMARY},
-                   {test_filetype_e, L"-e", UNARY_PRIMARY},
-                   {test_filetype_f, L"-f", UNARY_PRIMARY},
-                   {test_filetype_G, L"-G", UNARY_PRIMARY},
-                   {test_filetype_g, L"-g", UNARY_PRIMARY},
-                   {test_filetype_h, L"-h", UNARY_PRIMARY},
-                   {test_filetype_k, L"-k", UNARY_PRIMARY},
-                   {test_filetype_L, L"-L", UNARY_PRIMARY},
-                   {test_filetype_O, L"-O", UNARY_PRIMARY},
-                   {test_filetype_p, L"-p", UNARY_PRIMARY},
-                   {test_filetype_S, L"-S", UNARY_PRIMARY},
-                   {test_filesize_s, L"-s", UNARY_PRIMARY},
-                   {test_filedesc_t, L"-t", UNARY_PRIMARY},
-                   {test_fileperm_r, L"-r", UNARY_PRIMARY},
-                   {test_fileperm_u, L"-u", UNARY_PRIMARY},
-                   {test_fileperm_w, L"-w", UNARY_PRIMARY},
-                   {test_fileperm_x, L"-x", UNARY_PRIMARY},
-                   {test_string_n, L"-n", UNARY_PRIMARY},
-                   {test_string_z, L"-z", UNARY_PRIMARY},
-                   {test_string_equal, L"=", BINARY_PRIMARY},
-                   {test_string_not_equal, L"!=", BINARY_PRIMARY},
-                   {test_number_equal, L"-eq", BINARY_PRIMARY},
-                   {test_number_not_equal, L"-ne", BINARY_PRIMARY},
-                   {test_number_greater, L"-gt", BINARY_PRIMARY},
-                   {test_number_greater_equal, L"-ge", BINARY_PRIMARY},
-                   {test_number_lesser, L"-lt", BINARY_PRIMARY},
-                   {test_number_lesser_equal, L"-le", BINARY_PRIMARY},
-                   {test_combine_and, L"-a", 0},
-                   {test_combine_or, L"-o", 0},
-                   {test_paren_open, L"(", 0},
-                   {test_paren_close, L")", 0}};
+};
 
-const token_info_t *token_for_string(const wcstring &str) {
-    for (size_t i = 0; i < sizeof token_infos / sizeof *token_infos; i++) {
-        if (str == token_infos[i].string) {
-            return &token_infos[i];
-        }
-    }
-    return &token_infos[0];  // unknown
+    static const std::map<wcstring, const token_info_t> token_infos = 
+        {{L"", {test_unknown, 0}},
+         {L"!", {test_bang, 0}},
+         {L"-b", {test_filetype_b, UNARY_PRIMARY}},
+         {L"-c", {test_filetype_c, UNARY_PRIMARY}},
+         {L"-d", {test_filetype_d, UNARY_PRIMARY}},
+         {L"-e", {test_filetype_e, UNARY_PRIMARY}},
+         {L"-f", {test_filetype_f, UNARY_PRIMARY}},
+         {L"-G", {test_filetype_G, UNARY_PRIMARY}},
+         {L"-g", {test_filetype_g, UNARY_PRIMARY}},
+         {L"-h", {test_filetype_h, UNARY_PRIMARY}},
+         {L"-k", {test_filetype_k, UNARY_PRIMARY}},
+         {L"-L", {test_filetype_L, UNARY_PRIMARY}},
+         {L"-O", {test_filetype_O, UNARY_PRIMARY}},
+         {L"-p", {test_filetype_p, UNARY_PRIMARY}},
+         {L"-S", {test_filetype_S, UNARY_PRIMARY}},
+         {L"-s", {test_filesize_s, UNARY_PRIMARY}},
+         {L"-t", {test_filedesc_t, UNARY_PRIMARY}},
+         {L"-r", {test_fileperm_r, UNARY_PRIMARY}},
+         {L"-u", {test_fileperm_u, UNARY_PRIMARY}},
+         {L"-w", {test_fileperm_w, UNARY_PRIMARY}},
+         {L"-x", {test_fileperm_x, UNARY_PRIMARY}},
+         {L"-n", {test_string_n, UNARY_PRIMARY}},
+         {L"-z", {test_string_z, UNARY_PRIMARY}},
+         {L"=", {test_string_equal, BINARY_PRIMARY}},
+         {L"!=", {test_string_not_equal, BINARY_PRIMARY}},
+         {L"-eq", {test_number_equal, BINARY_PRIMARY}},
+         {L"-ne", {test_number_not_equal, BINARY_PRIMARY}},
+         {L"-gt", {test_number_greater, BINARY_PRIMARY}},
+         {L"-ge", {test_number_greater_equal, BINARY_PRIMARY}},
+         {L"-lt", {test_number_lesser, BINARY_PRIMARY}},
+         {L"-le", {test_number_lesser_equal, BINARY_PRIMARY}},
+         {L"-a", {test_combine_and, 0}},
+         {L"-o", {test_combine_or, 0}},
+         {L"(", {test_paren_open, 0}},
+         {L")", {test_paren_close, 0}}};
+
+const token_info_t * const token_for_string(const wcstring &str) {
+    auto t = token_infos.find(str);
+    if (t != token_infos.end()) return &t->second;
+    return &token_infos.find(L"")->second;
 }
 
 // Grammar.

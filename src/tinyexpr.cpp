@@ -56,8 +56,7 @@ int get_arity(const int type) {
 typedef struct te_expr {
     int type;
     union {double value; const void *function;};
-    // TODO: This void pointer is quite ugly.
-    void *parameters[1];
+    te_expr *parameters[1];
 } te_expr;
 
 // TODO: Rename since variables have been removed.
@@ -92,7 +91,7 @@ void te_free(te_expr *n);
 
 static te_expr *new_expr(const int type, const te_expr *parameters[]) {
     const int arity = get_arity(type);
-    const int psize = sizeof(void*) * arity;
+    const int psize = sizeof(te_expr*) * arity;
     const int size = (sizeof(te_expr) - sizeof(void*)) + psize;
     te_expr *ret = (te_expr *)malloc(size);
     // This sets float to 0, which depends on the implementation.
@@ -111,7 +110,7 @@ void te_free_parameters(te_expr *n) {
     int arity = get_arity(n->type);
     // Free all parameters from the back to the front.
     while (arity > 0) {
-        te_free((te_expr *)n->parameters[arity - 1]);
+        te_free(n->parameters[arity - 1]);
         arity--;
     }
 }
@@ -427,7 +426,7 @@ static te_expr *expr(state *s) {
 
 
 #define TE_FUN(...) ((double(*)(__VA_ARGS__))n->function)
-#define M(e) te_eval((te_expr *)n->parameters[e])
+#define M(e) te_eval(n->parameters[e])
 
 
 double te_eval(const te_expr *n) {
@@ -458,8 +457,8 @@ static void optimize(te_expr *n) {
     const int arity = get_arity(n->type);
     bool known = true;
     for (int i = 0; i < arity; ++i) {
-        optimize((te_expr *)n->parameters[i]);
-        if (((te_expr*)(n->parameters[i]))->type != TE_CONSTANT) {
+        optimize(n->parameters[i]);
+        if ((n->parameters[i])->type != TE_CONSTANT) {
             known = false;
         }
     }

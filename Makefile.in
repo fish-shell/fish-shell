@@ -612,6 +612,8 @@ install-force: all install-translations install-doc | show-datadir show-sysconfd
 	@echo "Creating sysconfdir tree"
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish/conf.d
+	$v $(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish/completions
+	$v $(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish/functions
 	$v $(INSTALL) -m 644 etc/config.fish $(DESTDIR)$(sysconfdir)/fish/
 	@echo "Creating datadir tree"
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish

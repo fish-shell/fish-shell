@@ -157,13 +157,6 @@ enum class job_flag_t {
     JOB_CONTROL,
     /// Whether the job wants to own the terminal when in the foreground.
     TERMINAL,
-    /// This job was created via a recursive call to exec_job upon evaluation of a function.
-    /// Ideally it should not be a top-level job, and there are places where it won't be treated
-    /// as such.
-    NESTED,
-    /// This job shares a pgrp with a not-yet-constructed job, so we can't waitpid on its pgid
-    /// directly. Hack to work around fucntions starting new jobs. See `exec_job()`.
-    WAIT_BY_PROCESS
 };
 
 typedef int job_id_t;

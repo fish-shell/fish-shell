@@ -1090,7 +1090,7 @@ void job_t::continue_job(bool send_sigcont) {
             // is also the only place that send_sigcont is false. parent_job.is_constructed()
             // must also be true, which coincides with WAIT_BY_PROCESS (which will have to do
             // since we don't store a reference to the parent job in the job_t structure).
-            bool block_on_fg = send_sigcont && !get_flag(job_flag_t::WAIT_BY_PROCESS);
+            bool block_on_fg = send_sigcont && job_chain_is_fully_constructed();
 
             // Wait for data to become available or the status of our own job to change
             while (!reader_exit_forced() && !is_stopped() && !is_completed()) {

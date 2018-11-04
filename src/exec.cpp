@@ -1002,44 +1002,13 @@ void exec_job(parser_t &parser, shared_ptr<job_t> j) {
         return;
     }
 
-    // Unfortunately `exec_job()` is called recursively when functions are encountered, with a new
-    // job id (and therefore pgrp) each time, but always from the main thread. This breaks terminal
-    // control since new pgrps take terminal control away from commands upstream in a different pgrp.
-    // We try to work around this with a heuristic to determine whether to reuse the same pgrp as the
-    // last-spawned pgrp if part of an existing job pipeline (keeping in mind that new jobs are
-    // recursively started for both foreground and background jobs, and that a function can expand
-    // to more than one external command, one (or more?) of which may want to read from upstream or
-    // write to downstream of a pipe.
-    // By keeping track of (select) "jobs in flight" we can try to marshall newly-created external
-    // processes into existing pgrps. Fixes #3952.
-    // This is a HACK and the correct solution would be to pass the active job through the pipeline
-    // to the newly established parser context so that the funtion as parsed and evaluated can be
-    // directly associated with this job and not a new one, BUT sometimes functions NEED to start a
-    // new job. This HACK seeks a compromise by letting functions trigger the unilateral creation of
-    // a new job, but reusing the "parent" job's existing pgrp in case of terminal control.
-    static std::stack<decltype(j)> active_jobs;
-    // There's an assumption that there's a one-to-one mapping between jobs under job control and
-    // pgrps. When we share a parent job's pgrp, we risk reaping its processes before it is fully
-    // constructed, causing later setpgrp(2) calls to fails (#5219). While the parent job is still
-    // under construction, child jobs have job_flag_t::WAIT_BY_PROCESS set to prevent early repaing.
-    // We store them here until the parent job is constructed, at which point it unsets this flag.
-    static std::stack<decltype(j)> child_jobs;
+    const std::shared_ptr<job_t> parent_job = j->get_parent();
 
-    auto parent_job = active_jobs.empty() ? nullptr : active_jobs.top();
-    bool job_pushed = false;
-    if (j->get_flag(job_flag_t::TERMINAL) && j->get_flag(job_flag_t::JOB_CONTROL)) {
-        // This will be popped before this job leaves exec_job
-        active_jobs.push(j);
-        job_pushed = true;
-    }
-
+    // Perhaps inherit our parent's pgid and job control flag.
     if (parent_job && j->processes.front()->type == EXTERNAL) {
         if (parent_job->pgid != INVALID_PID) {
             j->pgid = parent_job->pgid;
             j->set_flag(job_flag_t::JOB_CONTROL, true);
-            j->set_flag(job_flag_t::NESTED, true);
-            j->set_flag(job_flag_t::WAIT_BY_PROCESS, true);
-            child_jobs.push(j);
         }
     }
 
@@ -1106,21 +1075,6 @@ void exec_job(parser_t &parser, shared_ptr<job_t> j) {
     j->set_flag(job_flag_t::CONSTRUCTED, true);
     if (!j->is_foreground()) {
         env_set_one(L"last_pid", ENV_GLOBAL, to_string(j->pgid));
-    }
-
-    if (job_pushed) {
-        active_jobs.pop();
-    }
-
-    if (!parent_job) {
-        // Unset WAIT_BY_PROCESS on all child jobs. We could leave it, but this speeds up the
-        // execution of `process_mark_finished_children()`.
-        while (!child_jobs.empty()) {
-            auto child = child_jobs.top();
-            child_jobs.pop();
-
-            child->set_flag(job_flag_t::WAIT_BY_PROCESS, false);
-        }
     }
 
     if (!exec_error) {

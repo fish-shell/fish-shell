@@ -83,7 +83,6 @@ bool is_block = false;
 bool is_breakpoint = false;
 bool is_login = false;
 int is_event = false;
-pid_t proc_last_bg_pid = 0;
 int job_control_mode = JOB_CONTROL_INTERACTIVE;
 int no_exec = 0;
 

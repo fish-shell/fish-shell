@@ -1101,8 +1101,7 @@ void exec_job(parser_t &parser, shared_ptr<job_t> j) {
 
     j->set_flag(job_flag_t::CONSTRUCTED, true);
     if (!j->is_foreground()) {
-        proc_last_bg_pid = j->pgid;
-        env_set(L"last_pid", ENV_GLOBAL, { to_string(proc_last_bg_pid) });
+        env_set_one(L"last_pid", ENV_GLOBAL, to_string(j->pgid));
     }
 
     if (job_pushed) {

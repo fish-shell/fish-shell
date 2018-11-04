@@ -327,9 +327,6 @@ class job_iterator_t {
 bool get_proc_had_barrier();
 void set_proc_had_barrier(bool flag);
 
-/// Pid of last process started in the background.
-extern pid_t proc_last_bg_pid;
-
 /// The current job control mode.
 ///
 /// Must be one of JOB_CONTROL_ALL, JOB_CONTROL_INTERACTIVE and JOB_CONTROL_NONE.

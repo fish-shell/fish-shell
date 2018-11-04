@@ -110,6 +110,7 @@ fish 3.0 is a major release which brings with it both improvements in functional
   - `ngrok` (#4642)
   - `optipng`
   - `opkg` (#5168)
+  - `pandoc` (#2937)
   - `port`
   - `serve` (#5026)
   - `ttx`

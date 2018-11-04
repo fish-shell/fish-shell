@@ -131,7 +131,7 @@ int fish_wcstoi(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10
 long fish_wcstol(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10);
 long long fish_wcstoll(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10);
 unsigned long long fish_wcstoull(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10);
-double fish_wcstod(const wchar_t *str, const wchar_t **endptr);
+double fish_wcstod(const wchar_t *str, wchar_t **endptr);
 
 /// Class for representing a file's inode. We use this to detect and avoid symlink loops, among
 /// other things. While an inode / dev pair is sufficient to distinguish co-existing files, Linux

@@ -2285,6 +2285,24 @@ static void test_test() {
     do_test(run_test_test(0, L"4611686018427387904 -ge 4611686018427387904"));
 }
 
+static void test_wcstod() {
+    say(L"Testing fish_wcstod");
+    auto tod_test = [](const wchar_t *a, const char *b) {
+        char *narrow_end = nullptr;
+        wchar_t *wide_end = nullptr;
+        double val1 = wcstod(a, &wide_end);
+        double val2 = strtod(b, &narrow_end);
+        do_test((isnan(val1) && isnan(val2)) || fabs(val1 - val2) <= __DBL_EPSILON__);
+        do_test(wide_end - a == narrow_end - b);
+    };
+    tod_test(L"", "");
+    tod_test(L"1.2", "1.2");
+    tod_test(L"1.5", "1.5");
+    tod_test(L"-1000", "-1000");
+    tod_test(L"0.12345", "0.12345");
+    tod_test(L"nope", "nope");
+}
+
 /// Testing colors.
 static void test_colors() {
     say(L"Testing colors");
@@ -4949,6 +4967,7 @@ int main(int argc, char **argv) {
     if (should_test_function("ifind_fuzzy")) test_ifind_fuzzy();
     if (should_test_function("abbreviations")) test_abbreviations();
     if (should_test_function("test")) test_test();
+    if (should_test_function("wcstod")) test_wcstod();
     if (should_test_function("path")) test_path();
     if (should_test_function("pager_navigation")) test_pager_navigation();
     if (should_test_function("pager_layout")) test_pager_layout();

@@ -634,7 +634,7 @@ static bool parse_double(const wchar_t *arg, double *out_res) {
     while (arg && *arg != L'\0' && iswspace(*arg)) arg++;
     errno = 0;
     wchar_t *end = NULL;
-    *out_res = wcstod_l(arg, &end, fish_c_locale());
+    *out_res = fish_wcstod(arg, &end);
     // Consume trailing spaces.
     while (end && *end != L'\0' && iswspace(*end)) end++;
     return errno == 0 && end > arg && *end == L'\0';

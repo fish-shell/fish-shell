@@ -213,6 +213,15 @@ bool job_t::is_completed() const {
     return true;
 }
 
+bool job_t::job_chain_is_fully_constructed() const {
+    const job_t *cursor = this;
+    while (cursor) {
+        if (!cursor->is_constructed()) return false;
+        cursor = cursor->get_parent().get();
+    }
+    return true;
+}
+
 void job_t::set_flag(job_flag_t flag, bool set) { this->flags.set(flag, set); }
 
 bool job_t::get_flag(job_flag_t flag) const { return this->flags.get(flag); }
@@ -263,7 +272,7 @@ static void mark_process_status(process_t *p, int status) {
     }
 }
 
-void job_mark_process_as_failed(job_t *job, const process_t *failed_proc) {
+void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *failed_proc) {
     // The given process failed to even lift off (e.g. posix_spawn failed) and so doesn't have a
     // valid pid. Mark it and everything after it as dead.
     bool found = false;
@@ -319,8 +328,13 @@ static void handle_child_status(pid_t pid, int status) {
 
 process_t::process_t() {}
 
-job_t::job_t(job_id_t jobid, io_chain_t bio)
-    : block_io(std::move(bio)), pgid(INVALID_PID), tmodes(), job_id(jobid), flags{} {}
+job_t::job_t(job_id_t jobid, io_chain_t bio, std::shared_ptr<job_t> parent)
+    : block_io(std::move(bio)),
+      parent_job(std::move(parent)),
+      pgid(INVALID_PID),
+      tmodes(),
+      job_id(jobid),
+      flags{} {}
 
 job_t::~job_t() { release_job_id(job_id); }
 
@@ -392,12 +406,10 @@ static bool process_mark_finished_children(bool block_on_fg) {
         }
 
         if (j != job_fg && j->is_foreground() && !j->is_stopped() && !j->is_completed()) {
-            // Ignore jobs created via function evaluation in this sanity check
-            if (!job_fg ||
-                (!job_fg->get_flag(job_flag_t::NESTED) && !j->get_flag(job_flag_t::NESTED))) {
-                assert(job_fg == nullptr &&
-                       "More than one active, fully-constructed foreground job!");
-            }
+            // Ensure that we don't have multiple fully constructed foreground jobs.
+            assert((!job_fg || !job_fg->job_chain_is_fully_constructed() ||
+                    !j->job_chain_is_fully_constructed()) &&
+                   "More than one active, fully-constructed foreground job!");
             job_fg = j;
         }
 
@@ -422,7 +434,7 @@ static bool process_mark_finished_children(bool block_on_fg) {
             options &= ~WNOHANG;
         }
 
-        bool wait_by_process = j->get_flag(job_flag_t::WAIT_BY_PROCESS);
+        bool wait_by_process = !j->job_chain_is_fully_constructed();
         process_list_t::iterator process = j->processes.begin();
         // waitpid(2) returns 1 process each time, we need to keep calling it until we've reaped all
         // children of the pgrp in question or else we can't reset the dirty_state flag. In all
@@ -1078,7 +1090,7 @@ void job_t::continue_job(bool send_sigcont) {
             // is also the only place that send_sigcont is false. parent_job.is_constructed()
             // must also be true, which coincides with WAIT_BY_PROCESS (which will have to do
             // since we don't store a reference to the parent job in the job_t structure).
-            bool block_on_fg = send_sigcont && !get_flag(job_flag_t::WAIT_BY_PROCESS);
+            bool block_on_fg = send_sigcont && job_chain_is_fully_constructed();
 
             // Wait for data to become available or the status of our own job to change
             while (!reader_exit_forced() && !is_stopped() && !is_completed()) {

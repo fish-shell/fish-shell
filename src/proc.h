@@ -157,13 +157,6 @@ enum class job_flag_t {
     JOB_CONTROL,
     /// Whether the job wants to own the terminal when in the foreground.
     TERMINAL,
-    /// This job was created via a recursive call to exec_job upon evaluation of a function.
-    /// Ideally it should not be a top-level job, and there are places where it won't be treated
-    /// as such.
-    NESTED,
-    /// This job shares a pgrp with a not-yet-constructed job, so we can't waitpid on its pgid
-    /// directly. Hack to work around fucntions starting new jobs. See `exec_job()`.
-    WAIT_BY_PROCESS
 };
 
 typedef int job_id_t;
@@ -180,12 +173,16 @@ class job_t {
     // The IO chain associated with the block.
     const io_chain_t block_io;
 
+    // The parent job. If we were created as a nested job due to execution of a block or function in
+    // a pipeline, then this refers to the job corresponding to that pipeline. Otherwise it is null.
+    const std::shared_ptr<job_t> parent_job;
+
     // No copying.
     job_t(const job_t &rhs) = delete;
     void operator=(const job_t &) = delete;
 
    public:
-    job_t(job_id_t jobid, io_chain_t bio);
+    job_t(job_id_t jobid, io_chain_t bio, std::shared_ptr<job_t> parent);
     ~job_t();
 
     /// Returns whether the command is empty.
@@ -245,6 +242,12 @@ class job_t {
     bool is_completed() const;
     /// The job is in a stopped state
     bool is_stopped() const;
+
+    /// \return the parent job, or nullptr.
+    const std::shared_ptr<job_t> get_parent() const { return parent_job; }
+
+    /// \return whether this job and its parent chain are fully constructed.
+    bool job_chain_is_fully_constructed() const;
 
     // (This function would just be called `continue` but that's obviously a reserved keyword)
     /// Resume a (possibly) stopped job. Puts job in the foreground.  If cont is true, restore the
@@ -352,7 +355,7 @@ int job_reap(bool interactive);
 void job_handle_signal(int signal, siginfo_t *info, void *con);
 
 /// Mark a process as failed to execute (and therefore completed).
-void job_mark_process_as_failed(job_t *job, const process_t *p);
+void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *p);
 
 #ifdef HAVE__PROC_SELF_STAT
 /// Use the procfs filesystem to look up how many jiffies of cpu time was used by this process. This

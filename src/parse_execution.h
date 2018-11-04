@@ -36,9 +36,11 @@ class parse_execution_context_t {
     // Cached line number information.
     size_t cached_lineno_offset = 0;
     int cached_lineno_count = 0;
+    // The parent job for any jobs created by this context.
+    const std::shared_ptr<job_t> parent_job;
     // No copying allowed.
-    parse_execution_context_t(const parse_execution_context_t &);
-    parse_execution_context_t &operator=(const parse_execution_context_t &);
+    parse_execution_context_t(const parse_execution_context_t &) = delete;
+    parse_execution_context_t &operator=(const parse_execution_context_t &) = delete;
 
     // Should I cancel?
     bool should_cancel_execution(const block_t *block) const;
@@ -137,7 +139,8 @@ class parse_execution_context_t {
     int line_offset_of_character_at_offset(size_t char_idx);
 
    public:
-    parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p);
+    parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p,
+                              std::shared_ptr<job_t> parent);
 
     /// Returns the current line number, indexed from 1. Not const since it touches
     /// cached_lineno_offset.

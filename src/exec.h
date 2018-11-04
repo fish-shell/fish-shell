@@ -11,19 +11,7 @@
 /// Pipe redirection error message.
 #define PIPE_ERROR _(L"An error occurred while setting up pipe")
 
-/// Execute the processes specified by j.
-///
-/// I've put a fair bit of work into making builtins behave like other programs as far as pipes are
-/// concerned. Unlike i.e. bash, builtins can pipe to other builtins with arbitrary amounts of data,
-/// and so on. To do this, after a builtin is run in the real process, it forks and a dummy process
-/// is created, responsible for writing the output of the builtin. This is surprisingly cheap on my
-/// computer, probably because of the marvels of copy on write forking.
-///
-/// This rule is short circuited in the case where a builtin does not output to a pipe and does in
-/// fact not output anything. The speed improvement from this optimization is not noticable on a
-/// normal computer/OS in regular use, but the promiscous amounts of forking that resulted was
-/// responsible for a huge slowdown when using Valgrind as well as when doing complex
-/// command-specific completions.
+/// Execute the processes specified by \p j in the parser \p.
 class job_t;
 class parser_t;
 void exec_job(parser_t &parser, std::shared_ptr<job_t> j);

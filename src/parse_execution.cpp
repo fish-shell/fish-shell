@@ -79,8 +79,9 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
     return result;
 }
 
-parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p)
-    : pstree(std::move(pstree)), parser(p) {}
+parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p,
+                                                     std::shared_ptr<job_t> parent)
+    : pstree(std::move(pstree)), parser(p), parent_job(std::move(parent)) {}
 
 // Utilities
 
@@ -1182,7 +1183,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
         return result;
     }
 
-    shared_ptr<job_t> job = std::make_shared<job_t>(acquire_job_id(), block_io);
+    shared_ptr<job_t> job = std::make_shared<job_t>(acquire_job_id(), block_io, parent_job);
     job->tmodes = tmodes;
     job->set_flag(job_flag_t::JOB_CONTROL,
                   (job_control_mode == JOB_CONTROL_ALL) ||

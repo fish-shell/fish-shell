@@ -306,3 +306,21 @@ Note that you can use either single or double quotes to enclose the message to b
 Be cautious about blindly updating an existing translation file. Trivial changes to an existing message (e.g., changing the punctuation) will cause existing translations to be removed, since the tools do literal string matching. Therefore, in general, you need to carefully review any recommended deletions.
 
 Read the [translations wiki](https://github.com/fish-shell/fish-shell/wiki/Translations) for more information.
+
+
+
+## Contributing to the documentation
+
+You can contribute to the documentation by editing it and submitting a pull request. For example, to edit
+
+https://fishshell.com/docs/current/commands.html
+
+The relevant page is
+
+https://github.com/fish-shell/fish-site/blob/master/site/docs/current/commands.html
+
+Remember to explain your changes in the pull request description.
+
+
+
+

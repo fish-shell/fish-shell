@@ -180,12 +180,16 @@ class job_t {
     // The IO chain associated with the block.
     const io_chain_t block_io;
 
+    // The parent job. If we were created as a nested job due to execution of a block or function in
+    // a pipeline, then this refers to the job corresponding to that pipeline. Otherwise it is null.
+    const std::shared_ptr<job_t> parent_job;
+
     // No copying.
     job_t(const job_t &rhs) = delete;
     void operator=(const job_t &) = delete;
 
    public:
-    job_t(job_id_t jobid, io_chain_t bio);
+    job_t(job_id_t jobid, io_chain_t bio, std::shared_ptr<job_t> parent);
     ~job_t();
 
     /// Returns whether the command is empty.
@@ -352,7 +356,7 @@ int job_reap(bool interactive);
 void job_handle_signal(int signal, siginfo_t *info, void *con);
 
 /// Mark a process as failed to execute (and therefore completed).
-void job_mark_process_as_failed(job_t *job, const process_t *p);
+void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *p);
 
 #ifdef HAVE__PROC_SELF_STAT
 /// Use the procfs filesystem to look up how many jiffies of cpu time was used by this process. This

@@ -263,7 +263,7 @@ static void mark_process_status(process_t *p, int status) {
     }
 }
 
-void job_mark_process_as_failed(job_t *job, const process_t *failed_proc) {
+void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *failed_proc) {
     // The given process failed to even lift off (e.g. posix_spawn failed) and so doesn't have a
     // valid pid. Mark it and everything after it as dead.
     bool found = false;
@@ -319,8 +319,13 @@ static void handle_child_status(pid_t pid, int status) {
 
 process_t::process_t() {}
 
-job_t::job_t(job_id_t jobid, io_chain_t bio)
-    : block_io(std::move(bio)), pgid(INVALID_PID), tmodes(), job_id(jobid), flags{} {}
+job_t::job_t(job_id_t jobid, io_chain_t bio, std::shared_ptr<job_t> parent)
+    : block_io(std::move(bio)),
+      parent_job(std::move(parent)),
+      pgid(INVALID_PID),
+      tmodes(),
+      job_id(jobid),
+      flags{} {}
 
 job_t::~job_t() { release_job_id(job_id); }
 

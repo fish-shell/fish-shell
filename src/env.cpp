@@ -1147,8 +1147,8 @@ static int env_set_internal(const wcstring &key, env_mode_flags_t input_var_mode
             // If there's an existing variable, use its path flag; otherwise infer it.
             if ((var_mode & (ENV_PATHVAR | ENV_UNPATHVAR)) == 0) {
                 bool should_pathvar = false;
-                if (auto existing = node->find_entry(key)) {
-                    should_pathvar = existing->is_pathvar();
+                if (preexisting_flags) {
+                    should_pathvar = *preexisting_flags & env_var_t::flag_pathvar;
                 } else {
                     should_pathvar = variable_should_auto_pathvar(key);
                 }

@@ -213,6 +213,15 @@ bool job_t::is_completed() const {
     return true;
 }
 
+bool job_t::job_chain_is_fully_constructed() const {
+    const job_t *cursor = this;
+    while (cursor) {
+        if (!cursor->is_constructed()) return false;
+        cursor = cursor->get_parent().get();
+    }
+    return true;
+}
+
 void job_t::set_flag(job_flag_t flag, bool set) { this->flags.set(flag, set); }
 
 bool job_t::get_flag(job_flag_t flag) const { return this->flags.get(flag); }
@@ -397,12 +406,10 @@ static bool process_mark_finished_children(bool block_on_fg) {
         }
 
         if (j != job_fg && j->is_foreground() && !j->is_stopped() && !j->is_completed()) {
-            // Ignore jobs created via function evaluation in this sanity check
-            if (!job_fg ||
-                (!job_fg->get_flag(job_flag_t::NESTED) && !j->get_flag(job_flag_t::NESTED))) {
-                assert(job_fg == nullptr &&
-                       "More than one active, fully-constructed foreground job!");
-            }
+            // Ensure that we don't have multiple fully constructed foreground jobs.
+            assert((!job_fg || !job_fg->job_chain_is_fully_constructed() ||
+                    !j->job_chain_is_fully_constructed()) &&
+                   "More than one active, fully-constructed foreground job!");
             job_fg = j;
         }
 
@@ -427,7 +434,7 @@ static bool process_mark_finished_children(bool block_on_fg) {
             options &= ~WNOHANG;
         }
 
-        bool wait_by_process = j->get_flag(job_flag_t::WAIT_BY_PROCESS);
+        bool wait_by_process = !j->job_chain_is_fully_constructed();
         process_list_t::iterator process = j->processes.begin();
         // waitpid(2) returns 1 process each time, we need to keep calling it until we've reaped all
         // children of the pgrp in question or else we can't reset the dirty_state flag. In all

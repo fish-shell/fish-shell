@@ -250,6 +250,12 @@ class job_t {
     /// The job is in a stopped state
     bool is_stopped() const;
 
+    /// \return the parent job, or nullptr.
+    const std::shared_ptr<job_t> get_parent() const { return parent_job; }
+
+    /// \return whether this job and its parent chain are fully constructed.
+    bool job_chain_is_fully_constructed() const;
+
     // (This function would just be called `continue` but that's obviously a reserved keyword)
     /// Resume a (possibly) stopped job. Puts job in the foreground.  If cont is true, restore the
     /// saved terminal modes and send the process group a SIGCONT signal to wake it up before we

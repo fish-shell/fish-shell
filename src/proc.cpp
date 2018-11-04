@@ -349,9 +349,6 @@ static volatile process_generation_count_t s_sigchld_generation_cnt = 0;
 static bool process_mark_finished_children(bool block_on_fg) {
     ASSERT_IS_MAIN_THREAD();
 
-    // This is always called from the main thread (and not forked), so we can cache this value.
-    static pid_t shell_pgid = getpgrp();
-
     // We can't always use SIGCHLD to determine if waitpid() should be called since it is not
     // strictly one-SIGCHLD-per-one-child-exited (i.e. multiple exits can share a SIGCHLD call) and
     // we a) return immediately the first time a dead child is reaped, b) explicitly skip over jobs

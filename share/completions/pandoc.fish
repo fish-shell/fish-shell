@@ -2,10 +2,10 @@
 # Copyright (c) 2018 David Sanson
 # Licensed under the GNU General Public License version 2
 
-set informats "commonmark creole docbook docx epub gfm haddock html jats json latex markdown markdown_github markdown_mmd markdown_phpextra markdown_strict mediawiki muse native odt opml org rst t2t textile tikiwiki twiki vimwiki"
-set outformats "asciidoc beamer commonmark context docbook docbook4 docbook5 docx dokuwiki dzslides epub epub2 epub3 fb2 gfm haddock html html4 html5 icml jats json latex man markdown markdown_github markdown_mmd markdown_phpextra markdown_strict mediawiki ms muse native odt opendocument opml org plain pptx revealjs rst rtf s5 slideous slidy tei texinfo textile zimwiki"
-set highlight_styles "pygments tango espresso zenburn kate monochrome breezedark haddock"
-set datadir "$HOME/.pandoc"
+set -l informats "commonmark creole docbook docx epub gfm haddock html jats json latex markdown markdown_github markdown_mmd markdown_phpextra markdown_strict mediawiki muse native odt opml org rst t2t textile tikiwiki twiki vimwiki"
+set -l outformats "asciidoc beamer commonmark context docbook docbook4 docbook5 docx dokuwiki dzslides epub epub2 epub3 fb2 gfm haddock html html4 html5 icml jats json latex man markdown markdown_github markdown_mmd markdown_phpextra markdown_strict mediawiki ms muse native odt opendocument opml org plain pptx revealjs rst rtf s5 slideous slidy tei texinfo textile zimwiki"
+set -l highlight_styles "pygments tango espresso zenburn kate monochrome breezedark haddock"
+set -l datadir "$HOME/.pandoc"
 
 # options that take no arguments
 complete -c pandoc -s p -l preserve-tabs

@@ -148,8 +148,8 @@ function __fish_git_files
     # and so git shows untracked files (even in untracked dirs) for that.
     # If the current token is empty, this matches everything in $PWD.
     set -l files (commandline -ct)
-    # With the trailing "/", it will match directories, but won't descend.
-    set files "$files*" "$files*/"
+    # The trailing "**" is necessary to match files inside the given directories.
+    set files "$files*" "$files*/**"
     set -q untracked; and set -a status_opt -unormal
     or set -a status_opt -uno
 

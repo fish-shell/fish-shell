@@ -74,6 +74,7 @@ fish 3.0 is a major release which brings with it both improvements in functional
 - Slicing $history (in particular, `$history[1]` for the last executed command) is much faster.
 
 ### Interactive improvements and completions
+- Italics and dim support out of the box on macOS for Terminal.app and iTerm (#4436).
 - `cd` tab completions no longer descend into the deepest unambiguous path (#4649).
 - `sudo` completions now provide completions for the target of the sudo command.
 - Pager navigation has been improved. Most notably, moving down now wraps around, moving up from the commandline now jumps to the last element and moving right and left now reverse each other even when wrapping around (#4680).

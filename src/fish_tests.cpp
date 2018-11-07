@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <libgen.h>
 #include <limits.h>
+#include <math.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdarg.h>

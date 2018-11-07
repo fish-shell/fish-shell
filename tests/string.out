@@ -130,6 +130,17 @@ __a__b__c__
 _2D_
 
 ####################
+# string escape with multibyte chars
+a%C3%B6b
+%E4%B8%AD
+aöb
+中
+a_C3_B6_b
+_E4_B8_AD_
+aöb
+中
+
+####################
 # set x (string unescape (echo \x07 | string escape))
 success
 

@@ -90,6 +90,17 @@ string escape --style=var '_a_b_c_'
 logmsg 'string escape --style=var -- -'
 string escape --style=var -- -
 
+logmsg 'string escape with multibyte chars'
+string escape --style=url aöb
+string escape --style=url 中
+string escape --style=url aöb | string unescape --style=url
+string escape --style=url 中 | string unescape --style=url
+
+string escape --style=var aöb
+string escape --style=var 中
+string escape --style=var aöb | string unescape --style=var
+string escape --style=var 中 | string unescape --style=var
+
 # The following tests verify that we can correctly unescape the same strings
 # we tested escaping above.
 

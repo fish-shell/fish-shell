@@ -5,10 +5,7 @@
 set -l informats commonmark creole docbook docx epub gfm haddock html jats json latex markdown markdown_github markdown_mmd markdown_phpextra markdown_strict mediawiki muse native odt opml org rst t2t textile tikiwiki twiki vimwiki
 set -l outformats asciidoc beamer commonmark context docbook docbook4 docbook5 docx dokuwiki dzslides epub epub2 epub3 fb2 gfm haddock html html4 html5 icml jats json latex man markdown markdown_github markdown_mmd markdown_phpextra markdown_strict mediawiki ms muse native odt opendocument opml org plain pptx revealjs rst rtf s5 slideous slidy tei texinfo textile zimwiki
 set -l highlight_styles pygments tango espresso zenburn kate monochrome breezedark haddock
-
-# Instead of hardcoding $HOME/.config/... here or doing the $XDG_CONFIG_HOME
-# song and dance, (ab)use what fish already knows about the config directory
-set -l datadir (readlink -f $__fish_config_dir/../.pandoc)
+set -l datadir $HOME/.pandoc
 
 # Only suggest installed engines
 set -l pdfengines

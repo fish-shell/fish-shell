@@ -109,6 +109,7 @@ fish 3.0 is a major release which brings with it both improvements in functional
   - `kldunload`
   - `meson`
   - `ngrok` (#4642)
+  - `openocd`
   - `optipng`
   - `opkg` (#5168)
   - `pandoc` (#2937)

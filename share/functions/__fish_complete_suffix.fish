@@ -14,7 +14,7 @@ function __fish_complete_suffix -d "Complete using files"
     set -l suff
     set -l desc
     set -l files
-    set -l prefix
+    set -l prefix ""
 
     switch (count $argv)
 

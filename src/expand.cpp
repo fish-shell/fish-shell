@@ -732,8 +732,8 @@ static wcstring get_home_directory_name(const wcstring &input, size_t *out_tail_
     auto pos = input.find_first_of(L'/');
     // We get the position of the /, but we need to remove it as well.
     if (pos != wcstring::npos) {
-        pos -= 1;
         *out_tail_idx = pos;
+        pos -= 1;
     } else {
         *out_tail_idx = input.length();
     }

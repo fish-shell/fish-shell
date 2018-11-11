@@ -157,7 +157,7 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const
 }
 
 // This does something horrible refactored from an even more horrible function.
-static wcstring resolve_description(const wchar_t *full_completion, wcstring *completion,
+static wcstring resolve_description(const wcstring &full_completion, wcstring *completion,
                                     expand_flags_t expand_flags,
                                     const description_func_t &desc_func) {
     size_t complete_sep_loc = completion->find(PROG_COMPLETE_SEP);
@@ -237,8 +237,8 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
         // the wildcard.
         assert(!full_replacement || wcslen(wc) <= wcslen(str));
         wcstring out_completion = full_replacement ? params.orig : str + wcslen(wc);
-        wcstring out_desc =
-            resolve_description(str, &out_completion, params.expand_flags, params.desc_func);
+        wcstring out_desc = resolve_description(params.orig, &out_completion, params.expand_flags,
+                                                params.desc_func);
 
         // Note: out_completion may be empty if the completion really is empty, e.g. tab-completing
         // 'foo' when a file 'foo' exists.

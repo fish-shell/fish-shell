@@ -3,15 +3,10 @@
 
 function fish_prompt -d "Write out the prompt"
     set laststatus $status
-    function _git_branch_name
-        echo (git symbolic-ref HEAD 2>/dev/null | sed -e 's|^refs/heads/||')
-    end
-    function _is_git_dirty
-        echo (git status -s --ignore-submodules=dirty 2>/dev/null)
-    end
-    if [ (_git_branch_name) ]
-        set -l git_branch (set_color -o blue)(_git_branch_name)
-        if [ (_is_git_dirty) ]
+
+    if set -l git_branch (command git symbolic-ref HEAD 2>/dev/null | string replace refs/heads/ '')
+        set git_branch (set_color -o blue)"$git_branch"
+        if command git diff-index --quiet HEAD --
             for i in (git branch -qv --no-color | string match -r '\*' | cut -d' ' -f4- | cut -d] -f1 | tr , \n)\
  (git status --porcelain | cut -c 1-2 | uniq)
                 switch $i
@@ -38,6 +33,7 @@ function fish_prompt -d "Write out the prompt"
         end
         set git_info "(git$git_status$git_branch"(set_color white)")"
     end
+
     set_color -b black
     printf '%s%s%s%s%s%s%s%s%s%s%s%s%s' (set_color -o white) '❰' (set_color green) $USER (set_color white) '❙' (set_color yellow) (echo $PWD | sed -e "s|^$HOME|~|") (set_color white) $git_info (set_color white) '❱' (set_color white)
     if test $laststatus -eq 0

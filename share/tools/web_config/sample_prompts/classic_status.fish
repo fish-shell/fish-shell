@@ -5,8 +5,7 @@ function fish_prompt --description "Write out the prompt"
     # Save our status
     set -l last_status $status
 
-    set -l last_status_string ""
-    if [ $last_status -ne 0 ]
+    if test $last_status -ne 0
         printf "%s(%d)%s " (set_color red --bold) $last_status (set_color normal)
     end
 

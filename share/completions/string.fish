@@ -16,6 +16,10 @@ complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains --
 complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] trim" -s c -l chars -d "Specify the chars to trim (default: whitespace)"
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a "escape"
 complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] escape" -s n -l no-quoted -d "Escape with \\ instead of quoting"
+complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] escape" -l style -d "Pick escaping style" -a "
+(printf '%s\t%s\n' script 'For use in scripts' \
+ var 'For use as a variable name' \
+ url 'For use as a URL')"
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a "match"
 complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] match" -s n -l index -d "Report index and length of the matches"
 complete -f -c string -n "test (count (commandline -opc)) -ge 2; and contains -- (commandline -opc)[2] match" -s v -l invert -d "Report only non-matching input"

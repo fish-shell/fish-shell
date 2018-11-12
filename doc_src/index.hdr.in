@@ -699,7 +699,6 @@ When combining multiple parameter expansions, expansions are performed in the fo
 - Command substitutions
 - Variable expansions
 - Bracket expansion
-- Pid expansion
 - Wildcard expansion
 
 Expansions are performed from right to left, nested bracket expansions are performed from the inside and out.

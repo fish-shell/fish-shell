@@ -193,6 +193,27 @@ function __fish_ip_scope
 	host "Address is only valid on this host"
 end
 
+function __fish_ip_types
+	printf '%s\t%s\n' \
+	macvtap "Virtual interface based on link layer address (MAC) and TAP." \
+	vcan "Virtual Controller Area Network interface" \
+	veth "Virtual ethernet interface" \
+	vlan "802.1q tagged virtual LAN interface" \
+	vxlan "Virtual eXtended LAN" \
+	ip6tnl "Virtual tunnel interface IPv4|IPv6 over IPv6" \
+	ipip "Virtual tunnel interface IPv4 over IPv4" \
+	sit "Virtual tunnel interface IPv6 over IPv4" \
+	gre "Virtual tunnel interface GRE over IPv4" \
+	gretap "Virtual L2 tunnel interface GRE over IPv4" \
+	ip6gre "Virtual tunnel interface GRE over IPv6" \
+	ip6gretap "Virtual L2 tunnel interface GRE over IPv6" \
+	vti "Virtual tunnel interface" \
+	nlmon "Netlink monitoring device" \
+	ipvlan "Interface for L3 (IPv6/IPv4) based VLANs" \
+	lowpan "Interface for 6LoWPAN (IPv6) over IEEE 802.15.4 / Bluetooth" \
+	geneve "GEneric NEtwork Virtualization Encapsulation"
+end
+
 function __fish_complete_ip
 	set -l cmd (__fish_ip_commandwords)
 	set -l count (count $cmd)
@@ -289,31 +310,70 @@ function __fish_complete_ip
 				switch $cmd[2]
 					case add
 						switch $cmd[-2]
-							case link
+                            case link
 								__fish_ip_device
-							case name
+							case name # freeform, uncompleteable.
 							case type
-								printf '%s\t%s\n' \
-								macvtap "Virtual interface based on link layer address (MAC) and TAP." \
-								vcan "Virtual Controller Area Network interface" \
-								veth "Virtual ethernet interface" \
-								vlan "802.1q tagged virtual LAN interface" \
-								vxlan "Virtual eXtended LAN" \
-								ip6tnl "Virtual tunnel interface IPv4|IPv6 over IPv6" \
-								ipip "Virtual tunnel interface IPv4 over IPv4" \
-								sit "Virtual tunnel interface IPv6 over IPv4" \
-								gre "Virtual tunnel interface GRE over IPv4" \
-								gretap "Virtual L2 tunnel interface GRE over IPv4" \
-								ip6gre "Virtual tunnel interface GRE over IPv6" \
-								ip6gretap "Virtual L2 tunnel interface GRE over IPv6" \
-								vti "Virtual tunnel interface" \
-								nlmon "Netlink monitoring device" \
-								ipvlan "Interface for L3 (IPv6/IPv4) based VLANs" \
-								lowpan "Interface for 6LoWPAN (IPv6) over IEEE 802.15.4 / Bluetooth" \
-								geneve "GEneric NEtwork Virtualization Encapsulation"
+                                __fish_ip_types
+                            case txqueuelen
+                            case address
+                            case broadcast
+                            case mtu index numtxqueues numrxqueues gso_max_size gso_max_segs
+                                # These all take some kind of number?
+                                seq 0 50
+                            case add '*'
+                                # We assume if we haven't checked it above, we're back to `ip link add`, with any optionals completed.
+                                # So we now suggest optionals.
+                                printf '%s\t%s\n' \
+                                link "" \
+                                type "" \
+                                txqueuelen PACKETS  \
+                                address LLADDR \
+                                broadcast LLADDR  \
+                                mtu MTU \
+                                index IDX  \
+                                numtxqueues QUEUE_COUNT \
+                                numrxqueues QUEUE_COUNT  \
+                                gso_max_size BYTES \
+                                gso_max_segs
 						end
 					case delete
 					case set
+						switch $cmd[-2]
+                            case type
+                                __fish_ip_types
+                                echo bridge_slave
+                                echo bond_slave
+                            case arp dynamic {all,}multicast pro{misc,todown} trailers spoofchk query_rss trust
+                                echo on
+                                echo off
+                            case name alias
+                            case address broadcast
+                            case mtu txqueuelen
+                            case netns
+                            case link-netnsid
+                            case vf mac
+                            case {{max,min}_tx_,}rate
+                            case node_guid port_guid
+                            case state
+                                echo auto
+                                echo enable
+                                echo disable
+                            case master dev # Yes, the word "dev" is allowed here!
+                                __fish_ip_device
+                            case nomaster
+                            case vrf
+                            case xdp'*'
+                            case object section pinned
+                            case addrgenmode
+                            case macaddr
+                            case group
+                            case set '*'
+                                __fish_ip_device
+                                echo group
+                                echo up
+                                echo down
+                        end
 					case show
 					case help
 				end

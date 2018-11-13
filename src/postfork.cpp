@@ -158,8 +158,6 @@ bool set_child_group(job_t *j, pid_t child_pid) {
 }
 
 bool maybe_assign_terminal(const job_t *j) {
-    assert(j->pgid > 1 && "maybe_assign_terminal() called on job with invalid pgid!");
-
     if (j->get_flag(job_flag_t::TERMINAL) && j->is_foreground()) {  //!OCLINT(early exit)
         if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
             // We've already assigned the process group control of the terminal when the first

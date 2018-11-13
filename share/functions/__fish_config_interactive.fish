@@ -276,7 +276,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
                 or set -q INSIDE_EMACS
                 return
             end
-            printf \e\]7\;file://\%s\%s\a (hostname) (string escape --style=url $PWD)
+            printf \e\]7\;file://\%s\%s\a $hostname (string escape --style=url $PWD)
         end
         __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
     end

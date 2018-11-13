@@ -46,7 +46,7 @@ or not string match -q '*/share/functions/abbr.fish' $x[1]
 or test $x[2] != autoloaded
 or test $x[3] != 1
 or test $x[4] != scope-shadowing
-or test $x[5] != 'Manage abbreviations using new fish 3.0 scheme.'
+or test $x[5] != 'Manage abbreviations'
     echo "Unexpected output for 'functions -v -D abbr': $x" >&2
 end
 

@@ -434,7 +434,9 @@ static bool process_mark_finished_children(bool block_on_fg) {
             options &= ~WNOHANG;
         }
 
-        bool wait_by_process = !j->job_chain_is_fully_constructed();
+        // If the pgid is 0, we need to wait by process because that's invalid.
+        // This happens in firejail for reasons not entirely clear to me.
+        bool wait_by_process = !j->job_chain_is_fully_constructed() || j->pgid == 0;
         process_list_t::iterator process = j->processes.begin();
         // waitpid(2) returns 1 process each time, we need to keep calling it until we've reaped all
         // children of the pgrp in question or else we can't reset the dirty_state flag. In all
@@ -968,10 +970,15 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
 }
 
 pid_t terminal_acquire_before_builtin(int job_pgid) {
-    pid_t selfpid = getpid();
+    pid_t selfpgid = getpgrp();
+    if (selfpgid == 0) {
+        debug(2, L"Not acquiring terminal because we don't have a valid pgroup");
+        return -1;
+    }
+
     pid_t current_owner = tcgetpgrp(STDIN_FILENO);
-    if (current_owner >= 0 && current_owner != selfpid && current_owner == job_pgid) {
-        if (tcsetpgrp(STDIN_FILENO, selfpid) == 0) {
+    if (current_owner >= 0 && current_owner != selfpgid && current_owner == job_pgid) {
+        if (tcsetpgrp(STDIN_FILENO, selfpgid) == 0) {
             return current_owner;
         }
     }
@@ -982,7 +989,7 @@ pid_t terminal_acquire_before_builtin(int job_pgid) {
 /// so that we can restore the terminal ownership to the job at a later time.
 static bool terminal_return_from_job(job_t *j) {
     errno = 0;
-    if (j->pgid == 0) {
+    if (j->pgid == 0 || getpgrp() == 0) {
         debug(2, "terminal_return_from_job() returning early due to no process group");
         return true;
     }

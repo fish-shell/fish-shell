@@ -8,3 +8,5 @@ varFuncNullUB
 // the warning being suppressed. In other words this unmatchedSuppression
 // warnings are false positives.
 unmatchedSuppression
+// Suppress this one because it reports assert(condition && "message"), which we use all over the place
+incorrectStringBooleanError

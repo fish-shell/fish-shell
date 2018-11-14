@@ -263,7 +263,7 @@ maybe_t<env_var_t::env_var_flags_t> env_universal_t::get_flags(const wcstring &n
     return none();
 }
 
-void env_universal_t::set_internal(const wcstring &key, env_var_t var, bool overwrite) {
+void env_universal_t::set_internal(const wcstring &key, const env_var_t &var, bool overwrite) {
     ASSERT_IS_LOCKED(lock);
     if (!overwrite && this->modified.find(key) != this->modified.end()) {
         // This value has been modified and we're not overwriting it. Skip it.

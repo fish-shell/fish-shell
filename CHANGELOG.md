@@ -6,6 +6,7 @@ fish 3 is a major release, which introduces some breaking changes alongside impr
 -  Process and job expansion has largely been removed. `%` will no longer perform these expansions, except for `%self` for the PID of the current shell. Additionally, job management commands (`disown`, `wait`, `bg`, `fg` and `kill`) will expand job specifiers starting with `%` (#4230, #1202).
 - `set x[1] x[2] a b`, to set multiple elements of an array at once, is no longer valid syntax (#4236).
 - A literal `{}` now expands to itself, rather than nothing. This makes working with `find -exec` easier (#1109, #4632).
+- Literally accessing a zero-index is now illegal syntax and is caught by the parser (#4862). (fish indices start at 1)
 - Successive commas in brace expansions are handled in less surprising manner. For example, `{,,,}` expands to four empty strings rather than an empty string, a comma and an empty string again (#3002, #4632).
 - `for` loop control variables are no longer local to the `for` block (#1935).
 - Variables set in `if` and `while` conditions are available outside the block (#4820).

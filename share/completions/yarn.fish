@@ -23,7 +23,7 @@ function __yarn_filtered_list_packages
         return
     end
 
-    all-the-package-names | string match -e -- (commandline -ct)
+    all-the-package-names | string match -er -- "(?:\\b|_)"(commandline -ct | string escape --style=pcre2)
 end
 
 function __yarn_find_package_json

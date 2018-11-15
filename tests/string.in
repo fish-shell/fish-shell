@@ -101,6 +101,12 @@ string escape --style=var 中
 string escape --style=var aöb | string unescape --style=var
 string escape --style=var 中 | string unescape --style=var
 
+# test regex escaping
+logmsg 'string escape for literal pcre2 searching'
+string escape --style=pcre2 ".ext"
+string escape --style=pcre2 "bonjour, amigo"
+string escape --style=pcre2 "^this is a literal string"
+
 # The following tests verify that we can correctly unescape the same strings
 # we tested escaping above.
 

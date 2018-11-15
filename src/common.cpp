@@ -1096,6 +1096,42 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
     }
 }
 
+/// Escapes a string for use in a regex string. Not safe for use with `eval` as only
+/// characters reserved by PCRE2 are escaped, i.e. it relies on fish's automatic escaping
+/// of subshell output in subsequent concatenation or for use as an argument.
+/// \param in is the raw string to be searched for literally when substituted in a PCRE2 expression.
+static wcstring escape_string_pcre2(const wcstring &in) {
+    wcstring out;
+    out.reserve(in.size() * 1.3); // a wild guess
+
+    for (auto c : in) {
+        switch (c) {
+            case L'.':
+            case L'^':
+            case L'$':
+            case L'*':
+            case L'+':
+            case L'(':
+            case L')':
+            case L'?':
+            case L'[':
+            case L'{':
+            case L'}':
+            case L'\\':
+            case L'|':
+            // these two only *need* to be escaped within a character class, and technically it makes
+            // no sense to ever use process substitution output to compose a character class, but...
+            case L'-':
+            case L']':
+                out.push_back('\\');
+            default:
+                out.push_back(c);
+        }
+    }
+
+    return out;
+}
+
 wcstring escape_string(const wchar_t *in, escape_flags_t flags, escape_string_style_t style) {
     wcstring result;
 
@@ -1110,6 +1146,10 @@ wcstring escape_string(const wchar_t *in, escape_flags_t flags, escape_string_st
         }
         case STRING_STYLE_VAR: {
             escape_string_var(in, result);
+            break;
+        }
+        case STRING_STYLE_PCRE2: {
+            result = escape_string_pcre2(in);
             break;
         }
     }
@@ -1131,6 +1171,10 @@ wcstring escape_string(const wcstring &in, escape_flags_t flags, escape_string_s
         }
         case STRING_STYLE_VAR: {
             escape_string_var(in, result);
+            break;
+        }
+        case STRING_STYLE_PCRE2: {
+            result = escape_string_pcre2(in);
             break;
         }
     }
@@ -1617,6 +1661,11 @@ bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t es
             success = unescape_string_var(input, output);
             break;
         }
+        case STRING_STYLE_PCRE2: {
+            // unescaping PCRE2 is not needed/supported, the PCRE2 engine is responsible for that
+            success = false;
+            break;
+        }
     }
     if (!success) output->clear();
     return success;
@@ -1636,6 +1685,11 @@ bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t e
         }
         case STRING_STYLE_VAR: {
             success = unescape_string_var(input.c_str(), output);
+            break;
+        }
+        case STRING_STYLE_PCRE2: {
+            // unescaping PCRE2 is not needed/supported, the PCRE2 engine is responsible for that
+            success = false;
             break;
         }
     }

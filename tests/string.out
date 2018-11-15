@@ -141,6 +141,12 @@ aöb
 中
 
 ####################
+# string escape for literal pcre2 searching
+\.ext
+bonjour, amigo
+\^this is a literal string
+
+####################
 # set x (string unescape (echo \x07 | string escape))
 success
 

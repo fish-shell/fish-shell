@@ -4349,6 +4349,33 @@ static void test_wcstring_tok() {
     }
 }
 
+static void test_pcre2_escape() {
+    say(L"Testing escaping strings as pcre2 literals");
+    // plain text should not be needlessly escaped
+    auto input = L"hello world!";
+    auto escaped = escape_string(input, 0, STRING_STYLE_PCRE2);
+    if (escaped != input) {
+        err(L"Input string %ls unnecessarily PCRE2 escaped as %ls", input, escaped.c_str());
+    }
+
+    // all the following are intended to be ultimately matched literally - even if they don't look
+    // like that's the intent - so we escape them.
+    const wchar_t * tests[][2] = {
+        L".ext", L"\\.ext",
+        L"{word}", L"\\{word\\}",
+        L"hola-mundo", L"hola\\-mundo",
+        L"$17.42 is your total?", L"\\$17\\.42 is your total\\?",
+        L"not really escaped\\?", L"not really escaped\\\\\\?",
+    };
+
+    for (auto &test : tests) {
+        auto escaped = escape_string(test[0], 0, STRING_STYLE_PCRE2);
+        if (escaped != test[1]) {
+            err(L"pcre2_escape error: pcre2_escape(%ls) -> %ls, expected %ls", test[0], escaped.c_str(), test[1]);
+        }
+    }
+}
+
 int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv);
 static void run_one_string_test(const wchar_t *const *argv, int expected_rc,
                                 const wchar_t *expected_out) {
@@ -4961,6 +4988,7 @@ int main(int argc, char **argv) {
     if (should_test_function("utf8")) test_utf8();
     if (should_test_function("feature_flags")) test_feature_flags();
     if (should_test_function("escape_sequences")) test_escape_sequences();
+    if (should_test_function("pcre2_escape")) test_pcre2_escape();
     if (should_test_function("lru")) test_lru();
     if (should_test_function("expand")) test_expand();
     if (should_test_function("fuzzy_match")) test_fuzzy_match();

@@ -118,7 +118,12 @@ static_assert(false, "Neither NAME_MAX nor MAXNAMELEN is defined!");
 #endif
 #endif
 
-enum escape_string_style_t { STRING_STYLE_SCRIPT, STRING_STYLE_URL, STRING_STYLE_VAR };
+enum escape_string_style_t {
+    STRING_STYLE_SCRIPT,
+    STRING_STYLE_URL,
+    STRING_STYLE_VAR,
+    STRING_STYLE_PCRE2,
+};
 
 // Flags for unescape_string functions.
 enum {

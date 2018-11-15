@@ -93,6 +93,9 @@
 # string escape with multibyte chars
 
 ####################
+# string escape for literal pcre2 searching
+
+####################
 # set x (string unescape (echo \x07 | string escape))
 
 ####################
@@ -182,7 +185,7 @@ string match: ^
 ####################
 # string invalidarg
 string: Subcommand 'invalidarg' is not valid
-Standard input (line 205): 
+Standard input (line 211): 
 string invalidarg; and echo "unexpected exit 0"
 ^
 
@@ -267,7 +270,7 @@ string repeat: Expected argument
 ####################
 # string repeat -l fakearg 2>&1
 string repeat: Unknown option '-l'
-Standard input (line 281): 
+Standard input (line 287): 
 string repeat -l fakearg
 ^
 

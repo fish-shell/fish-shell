@@ -78,7 +78,7 @@ When using a variable as an argument for a test operator you should almost alway
 
 - `NUM1 -le NUM2` returns true if `NUM1` is less than or equal to `NUM2`.
 
-Note that only integers are supported. For more complex mathematical operations, including fractions, the `env` program may be useful. Consult the documentation for your operating system.
+Both integers and floating point numbers are supported.
 
 \subsection test-combinators Operators to combine expressions
 

@@ -3,6 +3,11 @@ function man --description "Format and display the on-line manual pages"
     # by prepending our fish datadir to man. This also ensures that man gives fish's
     # man pages priority, without having to put fish's bin directories first in $PATH
 
+    if not command -qs man
+        echo fish: (_ "Unknown command") 'man'
+        return 1
+    end
+
     set -l manpath
     if set -q MANPATH
         set manpath $MANPATH

@@ -122,7 +122,7 @@ enum escape_string_style_t {
     STRING_STYLE_SCRIPT,
     STRING_STYLE_URL,
     STRING_STYLE_VAR,
-    STRING_STYLE_PCRE2,
+    STRING_STYLE_REGEX,
 };
 
 // Flags for unescape_string functions.

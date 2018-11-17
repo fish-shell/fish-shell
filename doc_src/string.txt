@@ -46,7 +46,7 @@ The following subcommands are available.
 
 `--style=url` ensures the string can be used as a URL by hex encoding any character which is not legal in a URL. The string is first converted to UTF-8 before being encoded.
 
-`--style=pcre2` escapes an input string for literal matching within a regex expression. The string is first converted to UTF-8 before being encoded.
+`--style=regex` escapes an input string for literal matching within a regex expression. The string is first converted to UTF-8 before being encoded.
 
 `string unescape` performs the inverse of the `string escape` command. If the string to be unescaped is not properly formatted it is ignored. For example, doing `string unescape --style=var (string escape --style=var $str)` will return the original string. There is no support for unescaping pcre2.
 

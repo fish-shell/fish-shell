@@ -4353,7 +4353,7 @@ static void test_pcre2_escape() {
     say(L"Testing escaping strings as pcre2 literals");
     // plain text should not be needlessly escaped
     auto input = L"hello world!";
-    auto escaped = escape_string(input, 0, STRING_STYLE_PCRE2);
+    auto escaped = escape_string(input, 0, STRING_STYLE_REGEX);
     if (escaped != input) {
         err(L"Input string %ls unnecessarily PCRE2 escaped as %ls", input, escaped.c_str());
     }
@@ -4369,7 +4369,7 @@ static void test_pcre2_escape() {
     };
 
     for (auto &test : tests) {
-        auto escaped = escape_string(test[0], 0, STRING_STYLE_PCRE2);
+        auto escaped = escape_string(test[0], 0, STRING_STYLE_REGEX);
         if (escaped != test[1]) {
             err(L"pcre2_escape error: pcre2_escape(%ls) -> %ls, expected %ls", test[0], escaped.c_str(), test[1]);
         }

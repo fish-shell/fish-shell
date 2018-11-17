@@ -67,7 +67,7 @@ A new feature flags mechanism is added for staging deprecations and breaking cha
 - `string split` supports a new `--no-empty` option to exclude empty strings from the result (#4779).
 - `string` has new subcommands `split0` and `join0` for working with NUL-delimited output.
 - `string` no longer stops processing text after NUL characters (#4605)
-- `string escape` has a new `--style pcre2` option for escaping strings to be matched literally in `string` regex operations.
+- `string escape` has a new `--style regex` option for escaping strings to be matched literally in `string` regex operations.
 - `test` now supports floating point values in numeric comparisons.
 
 ### Interactive improvements

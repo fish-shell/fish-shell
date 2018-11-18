@@ -70,3 +70,9 @@ function test_ifforwhile_scope
     set --show ifvar1 ifvar2 ifvar3 whilevar1
 end
 test_ifforwhile_scope
+
+# $status should always be read-only, setting it makes no sense because it's immediately overwritten.
+logmsg readonly vars
+set -g status 5
+
+exit 0

@@ -388,8 +388,7 @@ maybe_t<wcstring> wrealpath(const wcstring &pathname) {
     cstring real_path;
     cstring narrow_path = wcs2string(pathname);
 
-    // Strip trailing slashes. This is needed to be bug-for-bug compatible with GNU realpath which
-    // treats "/a//" as equivalent to "/a" whether or not /a exists.
+    // Strip trailing slashes. This is treats "/a//" as equivalent to "/a" if /a is a non-directory.
     while (narrow_path.size() > 1 && narrow_path.at(narrow_path.size() - 1) == '/') {
         narrow_path.erase(narrow_path.size() - 1, 1);
     }
@@ -410,6 +409,7 @@ maybe_t<wcstring> wrealpath(const wcstring &pathname) {
         } else {
             // Only call realpath() on the portion up to the last component.
             errno = 0;
+
             if (pathsep_idx == cstring::npos) {
                 // If there is no "/", this is a file in $PWD, so give the realpath to that.
                 narrow_res = realpath(".", tmpbuf);
@@ -422,11 +422,11 @@ maybe_t<wcstring> wrealpath(const wcstring &pathname) {
             if (!narrow_res) return none();
 
             pathsep_idx++;
-
             real_path.append(narrow_res);
 
-            // This test is to deal with pathological cases such as /../../x => //x.
+            // This test is to deal with cases such as /../../x => //x.
             if (real_path.size() > 1) real_path.append("/");
+
             real_path.append(narrow_path.substr(pathsep_idx, cstring::npos));
         }
     }

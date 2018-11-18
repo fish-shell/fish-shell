@@ -32,6 +32,13 @@ builtin realpath /../../x
 builtin realpath /abc/
 builtin realpath /def///
 
+# Verify `realpath .` when cwd is a deleted directory gives a no such file or dir error.
+set -l tmpdir (mktemp -d)
+pushd $tmpdir
+rmdir $tmpdir
+builtin realpath .
+popd
+
 # A single symlink to a directory is correctly resolved.
 ln -s fish $XDG_DATA_HOME/fish-symlink
 set -l real_path (builtin realpath $XDG_DATA_HOME/fish-symlink)

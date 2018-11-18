@@ -380,6 +380,8 @@ void safe_perror(const char *message) {
     errno = err;
 }
 
+/// Wide character realpath. The last path component does not need to be valid. If an error occurs,
+/// wrealpath() returns none() and errno is likely set.
 maybe_t<wcstring> wrealpath(const wcstring &pathname) {
     if (pathname.empty()) return none();
 
@@ -394,28 +396,38 @@ maybe_t<wcstring> wrealpath(const wcstring &pathname) {
 
     char tmpbuf[PATH_MAX];
     char *narrow_res = realpath(narrow_path.c_str(), tmpbuf);
+
     if (narrow_res) {
         real_path.append(narrow_res);
     } else {
         size_t pathsep_idx = narrow_path.rfind('/');
+
         if (pathsep_idx == 0) {
             // If the only pathsep is the first character then it's an absolute path with a
             // single path component and thus doesn't need conversion.
             real_path = narrow_path;
         } else {
             char tmpbuff[PATH_MAX];
+
             if (pathsep_idx == cstring::npos) {
                 // No pathsep means a single path component relative to pwd.
+                errno = 0;
                 narrow_res = realpath(".", tmpbuff);
-                assert(narrow_res != NULL && "realpath unexpectedly returned null");
+
+                if (narrow_res == NULL)  // likely no such file or dir
+                    return none();
+
                 pathsep_idx = 0;
             } else {
+                errno = 0;
                 // Only call realpath() on the portion up to the last component.
                 narrow_res = realpath(narrow_path.substr(0, pathsep_idx).c_str(), tmpbuff);
+
                 if (!narrow_res) return none();
+
                 pathsep_idx++;
             }
-            real_path.append(narrow_res);
+            real_path.append(narrow_res); // if things went wrong, we are just appending NULL.
             // This test is to deal with pathological cases such as /../../x => //x.
             if (real_path.size() > 1) real_path.append("/");
             real_path.append(narrow_path.substr(pathsep_idx, cstring::npos));

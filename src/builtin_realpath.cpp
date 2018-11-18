@@ -40,10 +40,19 @@ int builtin_realpath(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (auto real_path = wrealpath(argv[optind])) {
         streams.out.append(*real_path);
     } else {
-        // We don't actually know why it failed. We should check errno.
-        streams.err.append_format(_(L"%ls: Invalid path: %ls\n"), cmd, argv[optind]);
+        if (errno)
+            // realpath() just couldn't do it. Report the error and make it clear
+            // this is an error from our builtin, not the system's realpath.
+            streams.err.append_format(L"builtin %ls: %ls: %s\n", cmd, argv[optind],
+                                      strerror(errno));
+        else
+            // Who knows. Probably a bug in our wrealpath() implementation.
+            streams.err.append_format(_(L"builtin %ls: Invalid path: %ls\n"), cmd, argv[optind]);
+
         return STATUS_CMD_ERROR;
     }
+
     streams.out.append(L"\n");
+
     return STATUS_CMD_OK;
 }

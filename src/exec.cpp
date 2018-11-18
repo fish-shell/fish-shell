@@ -990,16 +990,16 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
     return true;
 }
 
-void exec_job(parser_t &parser, shared_ptr<job_t> j) {
+bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     assert(j && "null job_t passed to exec_job!");
 
-    // Set to true if something goes wrong while exec:ing the job, in which case the cleanup code
-    // will kick in.
+    // Set to true if something goes wrong while executing the job, in which case the cleanup
+    // code will kick in.
     bool exec_error = false;
 
     // If fish was invoked with -n or --no-execute, then no_exec will be set and we do nothing.
     if (no_exec) {
-        return;
+        return true;
     }
 
     const std::shared_ptr<job_t> parent_job = j->get_parent();
@@ -1059,7 +1059,7 @@ void exec_job(parser_t &parser, shared_ptr<job_t> j) {
     // 3. The pipe that the next process should read from (courtesy of us)
     //
     autoclose_fd_t pipe_next_read;
-    for (std::unique_ptr<process_t> &unique_p : j->processes) {
+    for (const auto &unique_p : j->processes) {
         autoclose_fd_t current_read = std::move(pipe_next_read);
         if (!exec_process_in_job(parser, unique_p.get(), j, std::move(current_read),
                                  &pipe_next_read, all_ios, stdout_read_limit)) {
@@ -1077,13 +1077,12 @@ void exec_job(parser_t &parser, shared_ptr<job_t> j) {
         env_set_one(L"last_pid", ENV_GLOBAL, to_string(j->pgid));
     }
 
-    if (!exec_error) {
-        j->continue_job(false);
-    } else {
-        // Mark the errored job as not in the foreground. I can't fully justify whether this is the
-        // right place, but it prevents sanity_lose from complaining.
-        j->set_flag(job_flag_t::FOREGROUND, false);
+    if (exec_error) {
+        return false;
     }
+
+    j->continue_job(false);
+    return true;
 }
 
 static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, bool apply_exit_status,

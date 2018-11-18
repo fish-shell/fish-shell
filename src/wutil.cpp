@@ -457,6 +457,50 @@ wcstring normalize_path(const wcstring &path) {
     return result;
 }
 
+wcstring path_normalize_for_cd(const wcstring &wd, const wcstring &path) {
+    // Fast paths.
+    const wchar_t sep = L'/';
+    assert(!wd.empty() && wd.front() == sep && wd.back() == sep &&
+           "Invalid working directory, it must start and end with /");
+    if (path.empty()) {
+        return wd;
+    } else if (path.front() == sep) {
+        return path;
+    } else if (path.front() != L'.') {
+        return wd + path;
+    }
+
+    // Split our strings by the sep.
+    wcstring_list_t wd_comps = split_string(wd, sep);
+    wcstring_list_t path_comps = split_string(path, sep);
+
+    // Remove empty segments from wd_comps.
+    // In particular this removes the leading and trailing empties.
+    wd_comps.erase(std::remove(wd_comps.begin(), wd_comps.end(), L""), wd_comps.end());
+
+    // Erase leading . and .. components from path_comps, popping from wd_comps as we go.
+    size_t erase_count = 0;
+    for (const wcstring &comp : path_comps) {
+        bool erase_it = false;
+        if (comp.empty() || comp == L".") {
+            erase_it = true;
+        } else if (comp == L".." && !wd_comps.empty()) {
+            erase_it = true;
+            wd_comps.pop_back();
+        }
+        if (erase_it) {
+            erase_count++;
+        } else {
+            break;
+        }
+    }
+    // Append un-erased elements to wd_comps and join them, then prepend the leading /.
+    std::move(path_comps.begin() + erase_count, path_comps.end(), std::back_inserter(wd_comps));
+    wcstring result = join_strings(wd_comps, sep);
+    result.insert(0, 1, L'/');
+    return result;
+}
+
 wcstring wdirname(const wcstring &path) {
     char *tmp = wcs2str(path);
     char *narrow_res = dirname(tmp);

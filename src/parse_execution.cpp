@@ -809,7 +809,8 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
                 !args.try_get_child<g::redirection, 0>()) {
                 // Ok, no arguments or redirections; check to see if the command is a directory.
                 wcstring implicit_cd_path;
-                use_implicit_cd = path_can_be_implicit_cd(cmd, &implicit_cd_path);
+                use_implicit_cd =
+                    path_can_be_implicit_cd(cmd, env_get_pwd_slash(), &implicit_cd_path);
             }
         }
 

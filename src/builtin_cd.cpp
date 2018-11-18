@@ -47,7 +47,7 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         dir_in = maybe_dir_in->as_string();
     }
 
-    if (!path_get_cdpath(dir_in, &dir)) {
+    if (!path_get_cdpath(dir_in, &dir, env_get_pwd_slash())) {
         if (errno == ENOTDIR) {
             streams.err.append_format(_(L"%ls: '%ls' is not a directory\n"), cmd, dir_in.c_str());
         } else if (errno == ENOENT) {
@@ -65,9 +65,7 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_CMD_ERROR;
     }
 
-    // Prepend the PWD if we don't start with a slash, and then normalize the directory.
-    wcstring norm_dir =
-        normalize_path(string_prefixes_string(L"/", dir) ? dir : env_get_pwd_slash() + dir);
+    wcstring norm_dir = normalize_path(dir);
 
     if (wchdir(norm_dir) != 0) {
         struct stat buffer;
@@ -75,10 +73,10 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         status = wstat(dir, &buffer);
         if (!status && S_ISDIR(buffer.st_mode)) {
-            streams.err.append_format(_(L"%ls: Permission denied: '%ls'\n"), cmd, dir.c_str());
+            streams.err.append_format(_(L"%ls: Permission denied: '%ls'\n"), cmd, dir_in.c_str());
 
         } else {
-            streams.err.append_format(_(L"%ls: '%ls' is not a directory\n"), cmd, dir.c_str());
+            streams.err.append_format(_(L"%ls: '%ls' is not a directory\n"), cmd, dir_in.c_str());
         }
 
         if (!shell_is_interactive()) {

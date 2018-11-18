@@ -684,7 +684,7 @@ int parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, const io_chain_
         return 1;
     }
 
-    job_reap(0);  // not sure why we reap jobs here
+    job_reap(false);  // not sure why we reap jobs here
 
     // Start it up
     scope_block_t *scope_block = this->push_block<scope_block_t>(block_type);
@@ -697,7 +697,7 @@ int parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, const io_chain_
     exc.restore();
     this->pop_block(scope_block);
 
-    job_reap(0);  // reap again
+    job_reap(false);  // reap again
     return result;
 }
 

@@ -349,6 +349,14 @@ io_chain_t job_t::all_io_redirections() const {
 
 typedef unsigned int process_generation_count_t;
 
+/// A list of pids/pgids that have been disowned. They are kept around until either they exit or
+/// we exit. Poll these from time-to-time to prevent zombie processes from happening (#5342).
+static std::vector<pid_t> s_disowned_pids;
+
+void add_disowned_pgid(pid_t pgid) {
+    s_disowned_pids.push_back(pgid * -1);
+}
+
 /// A static value tracking how many SIGCHLDs we have seen, which is used in a heurstic to
 /// determine if we should call waitpid() at all in `process_mark_finished_children`.
 static volatile process_generation_count_t s_sigchld_generation_cnt = 0;
@@ -495,6 +503,13 @@ static bool process_mark_finished_children(bool block_on_fg) {
             }
         }
     }
+
+    // Poll disowned processes/process groups, but do nothing with the result. Only used to avoid
+    // zombie processes. Entries have already be converted to negative for process groups.
+    int status;
+    s_disowned_pids.erase(std::remove_if(s_disowned_pids.begin(), s_disowned_pids.end(),
+                [&status](pid_t pid) { return waitpid(pid, &status, WNOHANG) > 0; }),
+            s_disowned_pids.end());
 
     // Yes, the below can be collapsed to a single line, but it's worth being explicit about it with
     // the comments. Fret not, the compiler will optimize it. (It better!)

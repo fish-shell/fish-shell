@@ -31,8 +31,13 @@ static int disown_job(const wchar_t *cmd, parser_t &parser, io_streams_t &stream
         streams.err.append_format(fmt, cmd, j->job_id, j->command_wcstr());
     }
 
-    if (parser.job_remove(j)) return STATUS_CMD_OK;
-    return STATUS_CMD_ERROR;
+    pid_t pgid = j->pgid;
+    if (!parser.job_remove(j)) {
+        return STATUS_CMD_ERROR;
+    }
+
+    add_disowned_pgid(pgid);
+    return STATUS_CMD_OK;
 }
 
 /// Builtin for removing jobs from the job list.

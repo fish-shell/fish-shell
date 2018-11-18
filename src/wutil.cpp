@@ -400,6 +400,7 @@ maybe_t<wcstring> wrealpath(const wcstring &pathname) {
     if (narrow_res) {
         real_path.append(narrow_res);
     } else {
+        // Check if everything up to the last path component is valid.
         size_t pathsep_idx = narrow_path.rfind('/');
 
         if (pathsep_idx == 0) {
@@ -407,29 +408,23 @@ maybe_t<wcstring> wrealpath(const wcstring &pathname) {
             // single path component and thus doesn't need conversion.
             real_path = narrow_path;
         } else {
-            char tmpbuff[PATH_MAX];
-
+            // Only call realpath() on the portion up to the last component.
+            errno = 0;
             if (pathsep_idx == cstring::npos) {
-                // No pathsep means a single path component relative to pwd.
-                errno = 0;
-                narrow_res = realpath(".", tmpbuff);
-
-                if (narrow_res == NULL)  // likely no such file or dir
-                    return none();
-
-                pathsep_idx = 0;
+                // If there is no "/", this is a file in $PWD, so give the realpath to that.
+                narrow_res = realpath(".", tmpbuf);
             } else {
-                errno = 0;
-                // Only call realpath() on the portion up to the last component.
-                // Be sure to include the last "/", so that the penultimate component is considered as a directory.
+                // Be sure to include the last "/" to have the penultimate component considered a directory.
                 // Otherwise "file/something" succeeds.
-                narrow_res = realpath(narrow_path.substr(0, pathsep_idx + 1).c_str(), tmpbuff);
-
-                if (!narrow_res) return none();
-
-                pathsep_idx++;
+                narrow_res = realpath(narrow_path.substr(0, pathsep_idx + 1).c_str(), tmpbuf);
             }
-            real_path.append(narrow_res); // if things went wrong, we are just appending NULL.
+
+            if (!narrow_res) return none();
+
+            pathsep_idx++;
+
+            real_path.append(narrow_res);
+
             // This test is to deal with pathological cases such as /../../x => //x.
             if (real_path.size() > 1) real_path.append("/");
             real_path.append(narrow_path.substr(pathsep_idx, cstring::npos));

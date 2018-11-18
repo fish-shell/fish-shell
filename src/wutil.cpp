@@ -421,7 +421,9 @@ maybe_t<wcstring> wrealpath(const wcstring &pathname) {
             } else {
                 errno = 0;
                 // Only call realpath() on the portion up to the last component.
-                narrow_res = realpath(narrow_path.substr(0, pathsep_idx).c_str(), tmpbuff);
+                // Be sure to include the last "/", so that the penultimate component is considered as a directory.
+                // Otherwise "file/something" succeeds.
+                narrow_res = realpath(narrow_path.substr(0, pathsep_idx + 1).c_str(), tmpbuff);
 
                 if (!narrow_res) return none();
 

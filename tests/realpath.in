@@ -80,4 +80,7 @@ else
     echo "unexpected pwd-resolved-to-itself failure: $real_path != $PWD" >&2
 end
 
+# Confirm that the penultimate component still needs to be a directory:
+builtin realpath realpath.out/..
+
 exit 0

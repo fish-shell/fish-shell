@@ -414,9 +414,9 @@ maybe_t<wcstring> wrealpath(const wcstring &pathname) {
                 // If there is no "/", this is a file in $PWD, so give the realpath to that.
                 narrow_res = realpath(".", tmpbuf);
             } else {
-                // Be sure to include the last "/" to have the penultimate component considered a directory.
-                // Otherwise "file/something" succeeds.
-                narrow_res = realpath(narrow_path.substr(0, pathsep_idx + 1).c_str(), tmpbuf);
+                errno = 0;
+                // Only call realpath() on the portion up to the last component.
+                narrow_res = realpath(narrow_path.substr(0, pathsep_idx).c_str(), tmpbuf);
             }
 
             if (!narrow_res) return none();

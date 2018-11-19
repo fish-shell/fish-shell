@@ -3,12 +3,14 @@
 # But only when writing to stdout
 #
 
-if command ip -c l >/dev/null 2>/dev/null
-    function ip
-        if isatty stdout
-            command ip -c $argv
-        else
-            command ip $argv
+if command -s ip >/dev/null
+    if command ip -c l >/dev/null 2>/dev/null
+        function ip
+            if isatty stdout
+                command ip -c $argv
+            else
+                command ip $argv
+            end
         end
     end
 end

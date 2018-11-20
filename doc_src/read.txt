@@ -45,8 +45,6 @@ The following options are available:
 
 - `-L` or `--line` reads each line into successive variables, and stops after each variable has been filled. This cannot be combined with the `--delimiter` option.
 
-- `-A` or `--all-lines` splits input into the given variables, separated by line breaks. The entire input stream is consumed and interactive mode is disabled. Probably only useful with `-a` to read all lines into a single array variable. Where possible, ` | while read --line` should be preferred over ` | read --all-lines` as the latter will block until the input stream has been consumed, leading to latency and decreased responsiveness.
-
 Without the `--line` option, `read` reads a single line of input from standard input, breaks it into tokens, and then assigns one token to each variable specified in `VARIABLES`. If there are more tokens than variables, the complete remainder is assigned to the last variable.
 
 If the `--delimiter` argument is not given, the variable `IFS` is used as a list of characters to split on. Relying on the use of `IFS` is deprecated and this behaviour will be removed in future versions. The default value of `IFS` contains space, tab and newline characters. As a special case, if `IFS` is set to the empty string, each character of the input is considered a separate token.

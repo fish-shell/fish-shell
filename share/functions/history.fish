@@ -32,7 +32,7 @@ function history --description "display or manipulate interactive command histor
 
     set -l hist_cmd
     set -l show_time
-
+    set -l skip_indent
     set -l max_count
     set -q _flag_max
     set max_count -n$_flag_max
@@ -41,6 +41,10 @@ function history --description "display or manipulate interactive command histor
     and set -l _flag_show_time $_flag_with_time
     if set -q _flag_show_time[1]
         set show_time --show-time=$_flag_show_time
+        # `history -t` by default shows timestamps on seperate lines beginning with # characters.
+        # When colorized the timetamps would highlighted as comments by fish_indent. With a custom
+        # format there is no guarantee fish_indent can do anything useful.
+        set skip_indent true
     else if set -q _flag_show_time
         set show_time --show-time
     end
@@ -87,7 +91,20 @@ function history --description "display or manipulate interactive command histor
                 set -l pager less
                 set -q PAGER
                 and set pager $PAGER
-                builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv | eval $pager
+
+                # If the user hasn't preconfigured less with the $LESS environment variable,
+                # we do so to prevent the stripping of control characters (for color) and have
+                # it behave like cat if output fits on one screen. Prevent the screen from clearing
+                # on quit, so there is something to see if it exits.
+                # These are the same three options `git` sets through $LESS before starting the pager.
+                not set -qx LESS
+                and set -x LESS --RAW-CONTROL-CHARS --quit-if-one-screen --no-init
+                not set -qx LV # ask the pager lv not to strip colors
+                and set -x LV -c
+
+                set -q skip_indent[1] # --show-time=FORMAT set, arbitrary output may not be valid fish script
+                and builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv | $pager
+                or builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv | fish_indent --ansi | $pager
             else
                 builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv
             end

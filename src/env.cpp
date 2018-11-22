@@ -296,8 +296,9 @@ bool string_set_contains(const T &set, const wchar_t *val) {
 
 /// Check if a variable may not be set using the set command.
 static bool is_read_only(const wchar_t *val) {
-    const string_set_t env_read_only = {L"PWD", L"SHLVL", L"history", L"status", L"version",
-        L"fish_pid", L"hostname", L"_", L"fish_private_mode"};
+    const string_set_t env_read_only = {
+        L"PWD",          L"SHLVL",    L"history",  L"status", L"version",
+        L"FISH_VERSION", L"fish_pid", L"hostname", L"_",      L"fish_private_mode"};
     return string_set_contains(env_read_only, val) ||
         (in_private_mode() && wcscmp(L"fish_history", val) == 0);
 }
@@ -899,6 +900,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     // Set up the version variable.
     wcstring version = str2wcstring(get_fish_version());
     env_set_one(L"version", ENV_GLOBAL, version);
+    env_set_one(L"FISH_VERSION", ENV_GLOBAL, version);
 
     // Set the $fish_pid variable.
     env_set_one(L"fish_pid", ENV_GLOBAL, to_string<long>(getpid()));

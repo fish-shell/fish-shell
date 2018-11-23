@@ -693,6 +693,9 @@ struct compiled_regex_t {
             return;
         }
 
+        // Maybe enable JIT. This does nothing if JIT is not available.
+        pcre2_jit_compile(code, PCRE2_JIT_COMPLETE);
+
         match = pcre2_match_data_create_from_pattern(code, 0);
         assert(match);
     }

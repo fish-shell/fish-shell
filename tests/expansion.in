@@ -60,6 +60,8 @@ set -l fooer ''
 expansion $$foo
 expansion prefix$$foo
 
+logmsg Slices
+
 set -l foo bar '' fooest
 expansion "$$foo"
 expansion $$foo
@@ -100,6 +102,11 @@ echo $foo[d]
 
 echo ()[1]
 echo ()[d]
+
+set -l outer out1 out2
+set -l inner 1 2
+echo $outer[$inner[2]] # out2
+echo $outer[$inner[2..1]] # out2 out1
 
 logmsg Percent self
 echo %selfNOT NOT%self \%self "%self" '%self'

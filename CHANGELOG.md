@@ -41,10 +41,10 @@ A new feature flags mechanism is added for staging deprecations and breaking cha
 - Variables may be used as commands (#154).
 - fish may be started in private mode via `fish --private`. Private mode fish sessions do not have access to the history file and any commands evaluated in private mode are not persisted for future sessions. A session variable `$fish_private_mode` can be queried to detect private mode and adjust the behavior of scripts accordingly to respect the user's wish for privacy.
 - A new `wait` command for waiting on backgrounded processes (#4498).
-- `math` is now a builtin rather than a wrapper around `bc` (#3157). The default scale is now 6, so that floating point computations produce decimals (#4478).
+- `math` is now a builtin rather than a wrapper around `bc` (#3157). Floating point computations is now used by default, and can be controlled with the new `--scale` option (#4478).
 - Setting `$PATH` no longer warns on non-existent directories, allowing for a single $PATH to be shared across machines (eg via dotfiles) (#2969).
 - `while` sets `$status` to a non-zero value if the loop is not executed (#4982).
-- Command substitution output is now limited to 10 MB by default, controlled by the `fish_read_limit` variable (#3822).
+- Command substitution output is now limited to 10 MB by default, controlled by the `fish_read_limit` variable (#3822). Notably, this is larger than most operating systems' argument size limit, so trying to pass argument lists this size to external commands has never worked.
 - The machine hostname, where available, is now exposed as the `$hostname` reserved variable. This removes the dependency on the `hostname` executable (#4422).
 - Bare `bind` invocations in config.fish now work. The `fish_user_key_bindings` function is no longer necessary, but will still be executed if it exists (#5191).
 - `$fish_pid` and `$last_pid` are available as replacements for `%self` and `%last`.

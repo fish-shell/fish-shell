@@ -3,8 +3,10 @@
 #
 
 # Shared ls switches
+set -l uname (uname -s)
 complete -c ls -s C -d "Force multi-column output"
-complete -c ls -s S -d "Sort by size"
+test "$uname" != SunOS
+    and complete -c ls -s S -d "Sort by size"
 complete -c ls -s m -d "Comma-separated format, fills across screen"
 complete -c ls -s x -d "Multi-column output, horizontally listed"
 complete -c ls -s 1 -d "List one entry per line"
@@ -16,7 +18,7 @@ complete -c ls -s c -d "Sort (-t) by modified time and show time (-l)"
 complete -c ls -s u -d "Sort (-t) by access time and show time (-l)"
 
 # Test if we are using GNU ls
-if command ls --version >/dev/null 2>/dev/null
+if ls --version >/dev/null 2>/dev/null
     complete -c ls -s k -d "Set blocksize to 1kB" # BSD ls -k enables blocksize *output*
     complete -c ls -s a -l all -d "Show hidden"
     complete -c ls -s A -l almost-all -d "Show hidden except . and .."
@@ -84,27 +86,28 @@ if command ls --version >/dev/null 2>/dev/null
     complete -c ls -l help -d "Display help and exit"
     complete -c ls -l version -d "Display version and exit"
 else
-    set -l uname (uname -s)
-    ####              ls on the BSDs                 ####
+    ####              ls on eunichs                  ####
     # From latest checked-in man pages as of Nov 2018.
     # Reformatted with Open Group's ordering and spacing,
     # then sorted by prevelance, consolidating option
     # matches.
 
-    #              [         IEEE 1003.1-2017 options         ]  [ extension options ]
-    # freebsd: ls -[ikqrs][glno][Aa][Cmx1][Fp][LH][Rd][Sft][cu]  [ThBbWwPUG ZyI,     ] [-D format] [--color=when] [file ...]
-    # netbsd:  ls -[ikqrs][glno][Aa][Cmx1][Fp][L ][Rd][Sft][cu]  [ThBbWwP       XMO  ] [file ...]
-    # macOS:   ls -[ikqrs][glno][Aa][Cmx1][Fp][LH][Rd][Sft][cu]  [ThBbWwPUG       Oe@] [file ...]
-    # openbsd: ls -[ikqrs][glno][Aa][Cmx1][Fp][LH][Rd][Sft][cu]  [Th                 ] [file ...]
+    #              [         IEEE 1003.1-2017 options         ]  [   extension options  ]
+    # freebsd: ls -[ikqrs][glno][Aa][Cmx1][Fp][LH][Rd][Sft][cu]  [ThBbWwPUG ZyI,        ] [-D format] [--color=when] [file ...]
+    # netbsd:  ls -[ikqrs][glno][Aa][Cmx1][Fp][L ][Rd][Sft][cu]  [ThBbWwP       XMO     ] [file ...]
+    # macOS:   ls -[ikqrs][glno][Aa][Cmx1][Fp][LH][Rd][Sft][cu]  [ThBbWwPUG       Oe@   ] [file ...]
+    # openbsd: ls -[ikqrs][glno][Aa][Cmx1][Fp][LH][Rd][Sft][cu]  [Th                    ] [file ...]
+    # solaris: ls -[i qrs][glno][Aa][Cmx1][Fp][LH][Rd][ ft][cu]  [ h b             e@EvV] [file ...]
 
     # netbsd ls -O: only leaf files, no dirs | macos ls -O: include file flags in -l output
     # so: don't complete -H for netbsd, and return early after the ls -P completion.
-    #     But not before adding their -B, -X, -M, -O options. Same kind of thing for the other OSes.
+    #     But not before adding their -X, -M, -O options. Same kind of thing for the other OSes.
 
     ## IEEE 1003.1-2017 standard options:
 
     complete -c ls -s i -d "Show inode numbers for files"
-    complete -c ls -s k -d "for -s: Display sizes in kB, not blocks" # GNU sets block size with -k
+    test "$uname" != SunOS
+        and complete -c ls -s k -d "for -s: Display sizes in kB, not blocks" # GNU sets block size with -k
     complete -c ls -s q -d "Replace non-graphic characters with '?'"
     complete -c ls -s r -d "Reverse sort order"
     complete -c ls -s s -d "Show file sizes"
@@ -112,7 +115,9 @@ else
     complete -c ls -s g -d "Show group instead of owner in long format"
     complete -c ls -s l -d "Long listing format"
     complete -c ls -s n -d "Long format, numerical UIDs and GIDs"
-    complete -c ls -s o -d "Long format, omit group names" # POSIX. FreeBSD enables file flags!
+    contains "$uname" FreeBSD NetBSD OpenBSD DragonFly
+        and complete -c ls -o o -d "Long format, show file flags" # annoying BSD
+        or complete -c ls -s o -d "Long format, omit group names" # annoying POSIX
 
     complete -c ls -s A -d "Show hidden except . and .."
     complete -c ls -s a -d "Show hidden entries"
@@ -133,15 +138,15 @@ else
 
     # -c in common, -u in common
 
-    ## These options are not standardized, but seem supported everywhere:
-    complete -c ls -s T -d "for -l: Show complete date and time"
+    ## These options are not standardized:
+
+    test "$uname" != SunOS
+        and complete -c ls -s T -d "for -l: Show complete date and time"
     complete -c ls -s h -d "Human-readable sizes"
-
-    if [ "$uname" = OpenBSD ] # no arguments supported after -h on OpenBSD. See table above
-        exit 0
-    end
-
-    complete -c ls -s B -d "Octal escapes for non-graphic characters"
+    test "$uname" = OpenBSD # no arguments supported after -h on OpenBSD. See table above
+        and exit 0
+    test "$uname" != SunOS
+        and complete -c ls -s B -d "Octal escapes for non-graphic characters"
     complete -c ls -s b -d "C escapes for non-graphic characters"
     complete -c ls -s W -d "Display whiteouts when scanning directories"
     complete -c ls -s w -d "Force raw printing of non-printable characters"
@@ -152,15 +157,12 @@ else
         complete -c ls -s O -d "Show only leaf files (not dirs), eliding other output"
         exit 0
     end
-    complete -c ls -s U -d "Sort (-t) by creation time and show time (-l)"
-    complete -c ls -s G -d "Enable colorized output" # macos, freebsd.
 
     switch "$uname"
         case Darwin:
             complete -c ls -s O -d "for -l: Show file flags"
             complete -c ls -s e -d "for -l: Print ACL associated with file, if present"
-            complete -c ls -s @ -d "for -l: Display extended attribute keys and sizes"
-            exit 0
+            complete -c ls -s @ -d "for -l: Display extended attributes"
         case FreeBSD:
             complete -c ls -s Z -d "Display each file's MAC label"
             complete -c ls -s y -d "for -t: Sort A-Z output in same order as time output"
@@ -169,6 +171,15 @@ else
 
             complete -r -c ls -s D -d "for -l: Format date with strptime string"
             complete -c ls -l color -f -a "auto always never" -d "Enable color output"
+        case SunOS: # e@EvV - e and @ are different than what macOS does.
+            complete -c ls -s e -d "Like -l, but fixed time format with seconds"
+            complete -c ls -s @ -d "Like -l, but xattrs shown instead of ACLs"
+            complete -c ls -s E -d "Like -l, but fixed time format with nanoseconds"
+            complete -c ls -s v -d "Like -l, but verbose ACL information shown as well as -l output"
+            complete -c ls -s V -d "Like -l, but compact ACL information printed after -l output"
             exit 0
     end
+
+    complete -c ls -s U -d "Sort (-t) by creation time and show time (-l)"
+    complete -c ls -s G -d "Enable colorized output" # macos, freebsd.
 end

@@ -15,8 +15,6 @@ If no process is specified, the most recently-used job is removed (like `bg` and
 
 If a job is stopped, it is sent a signal to continue running, and a warning is printed. It is not possible to use the `bg` builtin to continue a job once it has been disowned.
 
-The PID of the desired process is usually found by using <a href="index.html#expand-process">process expansion</a>, which can specify jobs or search by process name.
-
 `disown` returns 0 if all specified jobs were disowned successfully, and 1 if any problems were encountered.
 
 \subsection disown-example Example

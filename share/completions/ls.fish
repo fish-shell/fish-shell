@@ -93,11 +93,11 @@ else
     # matches.
 
     #              [         IEEE 1003.1-2017 options         ]  [   extension options  ]
-    # freebsd: ls -[ikqrs][glno][Aa][Cmx1][Fp][LH][Rd][Sft][cu]  [ThBbWwPUG ZyI,        ] [-D format] [--color=when] [file ...]
-    # netbsd:  ls -[ikqrs][glno][Aa][Cmx1][Fp][L ][Rd][Sft][cu]  [ThBbWwP       XMO     ] [file ...]
-    # macOS:   ls -[ikqrs][glno][Aa][Cmx1][Fp][LH][Rd][Sft][cu]  [ThBbWwPUG       Oe@   ] [file ...]
-    # openbsd: ls -[ikqrs][glno][Aa][Cmx1][Fp][LH][Rd][Sft][cu]  [Th                    ] [file ...]
-    # solaris: ls -[i qrs][glno][Aa][Cmx1][Fp][LH][Rd][ ft][cu]  [ h b             e@EvV] [file ...]
+    # freebsd: ls -[ikqrs][glno][Aa][Cmx1][Fp][LH][Rd][Sft][cu]  [hbTBWwPUG ZyI,        ] [-D format] [--color=when] [file ...]
+    # netbsd:  ls -[ikqrs][glno][Aa][Cmx1][Fp][L ][Rd][Sft][cu]  [hbTBWwP       XMO     ] [file ...]
+    # macOS:   ls -[ikqrs][glno][Aa][Cmx1][Fp][LH][Rd][Sft][cu]  [hbTBWwPUG       Oe@   ] [file ...]
+    # openbsd: ls -[ikqrs][glno][Aa][Cmx1][Fp][LH][Rd][Sft][cu]  [  TB                  ] [file ...]
+    # solaris: ls -[i qrs][glno][Aa][Cmx1][Fp][LH][Rd][ ft][cu]  [hb               e@EvV] [file ...]
 
     # netbsd ls -O: only leaf files, no dirs | macos ls -O: include file flags in -l output
     # so: don't complete -H for netbsd, and return early after the ls -P completion.
@@ -135,31 +135,33 @@ else
     complete -c ls -s d -d "List directories, not their content"
 
     # -S in common, -f in common, -t in common
-
     # -c in common, -u in common
-
     ## These options are not standardized:
-
-    test "$uname" != SunOS
-        and complete -c ls -s T -d "for -l: Show complete date and time"
-    complete -c ls -s h -d "Human-readable sizes"
-    test "$uname" = OpenBSD # no arguments supported after -h on OpenBSD. See table above
-        and exit 0
-    if [ "$uname" != SunOS ]
-        complete -c ls -s B -d "Octal escapes for non-graphic characters"
+    if [ "$uname" != OpenBSD ]
+        complete -c ls -s h -d "Human-readable sizes"
         complete -c ls -s b -d "C escapes for non-graphic characters"
-        complete -c ls -s W -d "Display whiteouts when scanning directories"
-        complete -c ls -s w -d "Force raw printing of non-printable characters"
-        complete -c ls -s P -d "Don't follow symlinks"
+        if [ "$uname" = SunOS ]
+            complete -c ls -s e -d "Like -l, but fixed time format with seconds"
+            complete -c ls -s @ -d "Like -l, but xattrs shown instead of ACLs"
+            complete -c ls -s E -d "Like -l, but fixed time format with nanoseconds"
+            complete -c ls -s v -d "Like -l, but verbose ACL information shown as well as -l output"
+            complete -c ls -s V -d "Like -l, but compact ACL information printed after -l output"
+            exit 0
+        end
+    else
+        exit 0 # OpenBSD
     end
-    if [ "$uname" = NetBSD ]
-        complete -c ls -s X -d "Don't cross mount points when recursing"
-        complete -c ls -s M -d "for -l, -s: Format size/count with commas"
-        complete -c ls -s O -d "Show only leaf files (not dirs), eliding other output"
-        exit 0
-    end
-
+    complete -c ls -s T -d "for -l: Show complete date and time"
+    complete -c ls -s B -d "Octal escapes for non-graphic characters"
+    complete -c ls -s W -d "Display whiteouts when scanning directories"
+    complete -c ls -s w -d "Force raw printing of non-printable characters"
+    complete -c ls -s P -d "Don't follow symlinks"
     switch "$uname"
+        case NetBSD:
+            complete -c ls -s X -d "Don't cross mount points when recursing"
+            complete -c ls -s M -d "for -l, -s: Format size/count with commas"
+            complete -c ls -s O -d "Show only leaf files (not dirs), eliding other output"
+            exit 0
         case Darwin:
             complete -c ls -s O -d "for -l: Show file flags"
             complete -c ls -s e -d "for -l: Print ACL associated with file, if present"
@@ -169,18 +171,9 @@ else
             complete -c ls -s y -d "for -t: Sort A-Z output in same order as time output"
             complete -c ls -s I -d "Prevent -A from being automatically set for root"
             complete -c ls -s , -d "for -l: Format size/count number groups with ,/locale"
-
             complete -r -c ls -s D -d "for -l: Format date with strptime string"
             complete -c ls -l color -f -a "auto always never" -d "Enable color output"
-        case SunOS: # e@EvV - e and @ are different than what macOS does.
-            complete -c ls -s e -d "Like -l, but fixed time format with seconds"
-            complete -c ls -s @ -d "Like -l, but xattrs shown instead of ACLs"
-            complete -c ls -s E -d "Like -l, but fixed time format with nanoseconds"
-            complete -c ls -s v -d "Like -l, but verbose ACL information shown as well as -l output"
-            complete -c ls -s V -d "Like -l, but compact ACL information printed after -l output"
-            exit 0
     end
-
     complete -c ls -s U -d "Sort (-t) by creation time and show time (-l)"
     complete -c ls -s G -d "Enable colorized output" # macos, freebsd.
 end

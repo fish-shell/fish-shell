@@ -157,16 +157,16 @@ else
     complete -c ls -s w -d "Force raw printing of non-printable characters"
     complete -c ls -s P -d "Don't follow symlinks"
     switch "$uname"
-        case NetBSD:
+        case NetBSD
             complete -c ls -s X -d "Don't cross mount points when recursing"
             complete -c ls -s M -d "for -l, -s: Format size/count with commas"
             complete -c ls -s O -d "Show only leaf files (not dirs), eliding other output"
             exit 0
-        case Darwin:
+        case Darwin
             complete -c ls -s O -d "for -l: Show file flags"
             complete -c ls -s e -d "for -l: Print ACL associated with file, if present"
             complete -c ls -s @ -d "for -l: Display extended attributes"
-        case FreeBSD:
+        case FreeBSD
             complete -c ls -s Z -d "Display each file's MAC label"
             complete -c ls -s y -d "for -t: Sort A-Z output in same order as time output"
             complete -c ls -s I -d "Prevent -A from being automatically set for root"

@@ -145,12 +145,13 @@ else
     complete -c ls -s h -d "Human-readable sizes"
     test "$uname" = OpenBSD # no arguments supported after -h on OpenBSD. See table above
         and exit 0
-    test "$uname" != SunOS
-        and complete -c ls -s B -d "Octal escapes for non-graphic characters"
-    complete -c ls -s b -d "C escapes for non-graphic characters"
-    complete -c ls -s W -d "Display whiteouts when scanning directories"
-    complete -c ls -s w -d "Force raw printing of non-printable characters"
-    complete -c ls -s P -d "Don't follow symlinks"
+    if [ "$uname" != SunOS ]
+        complete -c ls -s B -d "Octal escapes for non-graphic characters"
+        complete -c ls -s b -d "C escapes for non-graphic characters"
+        complete -c ls -s W -d "Display whiteouts when scanning directories"
+        complete -c ls -s w -d "Force raw printing of non-printable characters"
+        complete -c ls -s P -d "Don't follow symlinks"
+    end
     if [ "$uname" = NetBSD ]
         complete -c ls -s X -d "Don't cross mount points when recursing"
         complete -c ls -s M -d "for -l, -s: Format size/count with commas"

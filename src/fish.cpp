@@ -94,18 +94,19 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
     bool done = false;
     std::string exec_path = get_executable_path(argv0);
     if (get_realpath(exec_path)) {
-        debug(2, L"exec_path: '%s'", exec_path.c_str());
+        debug(2, L"exec_path: '%s', argv[0]: '%s'", exec_path.c_str(), argv0);
+        // TODO: we should determine program_name from argv0 somewhere in this file
 
 #ifdef CMAKE_BINARY_DIR
         // Detect if we're running right out of the CMAKE build directory
-        if (exec_path == std::string(CMAKE_BINARY_DIR) + "/fish") {
-            debug(2, "Running out of build directory, falling back to source paths");
+        if (string_prefixes_string(CMAKE_BINARY_DIR, exec_path.c_str())) {
+            debug(2, "Running out of build directory, using paths relative to CMAKE_SOURCE_DIR:\n %s", CMAKE_SOURCE_DIR);
 
             done = true;
             paths.data = wcstring{L"" CMAKE_SOURCE_DIR} + L"/share";
-            paths.sysconf = L"" SYSCONFDIR "/fish";
-            paths.doc = L"" DOCDIR;
-            paths.bin = L"" BINDIR;
+            paths.sysconf = wcstring{L"" CMAKE_SOURCE_DIR} + L"/etc";
+            paths.doc = wcstring{L"" CMAKE_SOURCE_DIR} + L"/user_doc/html";
+            paths.bin = wcstring{L"" CMAKE_BINARY_DIR};
         }
 #endif
 

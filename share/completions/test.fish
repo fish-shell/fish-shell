@@ -1,6 +1,3 @@
-complete -c [ --wraps test
-#complete -c test -l help -d "Display help and exit"
-#complete -c test -l version -d "Display version and exit"
 complete -c test -f -a ! -d "Negate expression"
 complete -c test -f -s a -d "Logical AND"
 complete -c test -f -s o -d "Logical OR"
@@ -35,4 +32,3 @@ complete -c test -f -s t -d "FD is a terminal"
 complete -c test -s u -d "File set-user-ID bit is set"
 complete -c test -s w -d "File is writable"
 complete -c test -s x -d "File is executable"
-

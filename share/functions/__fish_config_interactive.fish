@@ -186,6 +186,12 @@ function __fish_config_interactive -d "Initializations that should be performed 
         complete -x -p "/etc/init.d/*" -a reload --description 'Reload service configuration'
     end
 
+    #
+    # We want to show our completions for the [ (test) builtin, but
+    # we don't want to create a [.fish. test.fish will not be loaded until
+    # the user tries [ interactively.
+    #
+    complete -c [ --wraps test
 
     # Reload key bindings when binding variable change
     function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings

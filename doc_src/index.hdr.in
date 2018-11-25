@@ -1292,7 +1292,7 @@ end
 If you want to run a set of commands when `fish` exits, use an <a href='#event'>event handler</a> that is triggered by the exit of the shell:
 
 \fish
-function on_exit --on-process $fish_pid
+function on_exit --on-event fish_exit
     echo fish is now exiting
 end
 \endfish

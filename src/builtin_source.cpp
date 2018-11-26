@@ -41,7 +41,7 @@ int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (argc == optind || wcscmp(argv[optind], L"-") == 0) {
         // Either a bare `source` which means to implicitly read from stdin or an explicit `-`.
-        if (argc == optind && !streams.stdin_is_directly_redirected) {
+        if (argc == optind && isatty(streams.stdin_fd)) {
             // Don't implicitly read from the terminal.
             return STATUS_CMD_ERROR;
         }

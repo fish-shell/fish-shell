@@ -554,7 +554,7 @@ unique_ptr<expression> test_parser::parse_args(const wcstring_list_t &args, wcst
         assert(result->range.end <= args.size());
         if (result->range.end < args.size()) {
             if (err.empty()) {
-                append_format(err, L"%ls: unexpected argument at index %lu: '%ls'\n", program_name,
+                append_format(err, L"%s: unexpected argument at index %lu: '%ls'\n", program_name,
                               (unsigned long)result->range.end, args.at(result->range.end).c_str());
             }
             result.reset(NULL);

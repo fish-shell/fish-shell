@@ -381,7 +381,7 @@ static std::string html_colorize(const wcstring &text,
 static std::string no_colorize(const wcstring &text) { return wcs2string(text); }
 
 int main(int argc, char *argv[]) {
-    program_name = L"fish_indent";
+    program_name = argv[0];
     set_main_thread();
     setup_fork_guards();
     // Using the user's default locale could be a problem if it doesn't use UTF-8 encoding. That's

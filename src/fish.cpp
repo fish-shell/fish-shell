@@ -100,7 +100,7 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
 #ifdef CMAKE_BINARY_DIR
         // Detect if we're running right out of the CMAKE build directory
         if (string_prefixes_string(CMAKE_BINARY_DIR, exec_path.c_str())) {
-            debug(2, "Running out of build directory, using paths relative to CMAKE_SOURCE_DIR:\n %s", CMAKE_SOURCE_DIR);
+            debug(2, "Running out of5 build directory, using paths relative to CMAKE_SOURCE_DIR:\n %s", CMAKE_SOURCE_DIR);
 
             done = true;
             paths.data = wcstring{L"" CMAKE_SOURCE_DIR} + L"/share";
@@ -334,7 +334,13 @@ int main(int argc, char **argv) {
     int res = 1;
     int my_optind = 0;
 
-    program_name = L"fish";
+    const char *dummy_argv[2] = {"fish", NULL};
+    if (!argv[0]) {
+        argv = (char **)dummy_argv;  //!OCLINT(parameter reassignment)
+        argc = 1;                    //!OCLINT(parameter reassignment)
+    }
+
+    program_name = argv[0];
     set_main_thread();
     setup_fork_guards();
     signal_unblock_all();
@@ -344,11 +350,6 @@ int main(int argc, char **argv) {
     // struct stat tmp;
     // stat("----------FISH_HIT_MAIN----------", &tmp);
 
-    const char *dummy_argv[2] = {"fish", NULL};
-    if (!argv[0]) {
-        argv = (char **)dummy_argv;  //!OCLINT(parameter reassignment)
-        argc = 1;                    //!OCLINT(parameter reassignment)
-    }
     fish_cmd_opts_t opts;
     my_optind = fish_parse_opt(argc, argv, &opts);
 

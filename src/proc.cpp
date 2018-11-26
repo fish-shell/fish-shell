@@ -659,7 +659,7 @@ static int process_clean_after_marking(bool allow_interactive) {
                     // we don't need to.
                     const wcstring job_number_desc =
                         (job_count == 1) ? wcstring() : format_string(_(L"Job %d, "), j->job_id);
-                    fwprintf(stdout, _(L"%ls: %ls\'%ls\' terminated by signal %ls (%ls)"),
+                    fwprintf(stdout, _(L"%s: %ls\'%ls\' terminated by signal %ls (%ls)"),
                              program_name, job_number_desc.c_str(),
                              truncate_command(j->command()).c_str(), sig2wcs(WTERMSIG(p->status)),
                              signal_get_desc(WTERMSIG(p->status)));
@@ -667,7 +667,7 @@ static int process_clean_after_marking(bool allow_interactive) {
                     const wcstring job_number_desc =
                         (job_count == 1) ? wcstring() : format_string(L"from job %d, ", j->job_id);
                     const wchar_t *fmt =
-                        _(L"%ls: Process %d, \'%ls\' %ls\'%ls\' terminated by signal %ls (%ls)");
+                        _(L"%s: Process %d, \'%ls\' %ls\'%ls\' terminated by signal %ls (%ls)");
                     fwprintf(stdout, fmt, program_name, p->pid, p->argv0(), job_number_desc.c_str(),
                              truncate_command(j->command()).c_str(), sig2wcs(WTERMSIG(p->status)),
                              signal_get_desc(WTERMSIG(p->status)));

@@ -2037,7 +2037,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
     term_steal();
 
     // For compatibility with fish 2.0's $_, now replaced with `status current-command`
-    env_set_one(L"_", ENV_GLOBAL, program_name);
+    env_set_one(L"_", ENV_GLOBAL, str2wcstring(program_name).c_str());
 
 #ifdef HAVE__PROC_SELF_STAT
     proc_update_jiffies();

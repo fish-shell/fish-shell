@@ -383,7 +383,7 @@ static bool parse_flags(int argc, char **argv, bool *continuous_mode) {
 }
 
 int main(int argc, char **argv) {
-    program_name = L"fish_key_reader";
+    program_name = argv[0];
     bool continuous_mode = false;
 
     if (!parse_flags(argc, argv, &continuous_mode)) return 1;

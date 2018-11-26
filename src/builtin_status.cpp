@@ -429,7 +429,7 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 streams.out.append(var->as_string());
                 streams.out.push_back(L'\n');
             } else {
-                streams.out.append(program_name);
+                streams.out.append(str2wcstring(program_name).c_str());
                 streams.out.push_back(L'\n');
             }
             break;

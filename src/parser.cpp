@@ -775,7 +775,7 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
                 prefix = format_string(_(L"%ls: "), user_presentable_path(filename).c_str());
             }
         } else {
-            prefix = L"fish: ";
+            prefix = format_string(L"%s: ", program_name);
         }
 
         const wcstring description =

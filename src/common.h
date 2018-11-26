@@ -221,7 +221,7 @@ extern int debug_stack_frames;
 extern bool g_profiling_active;
 
 /// Name of the current program. Should be set at startup. Used by the debug function.
-extern const wchar_t *program_name;
+extern const char *program_name;
 
 /// Set to false if it's been determined we can't trust the last modified timestamp on the tty.
 extern const bool has_working_tty_timestamps;
@@ -532,7 +532,7 @@ string_fuzzy_match_t string_fuzzy_match_string(const wcstring &string,
                                                fuzzy_match_type_t limit_type = fuzzy_match_none);
 
 // Check if we are running in the test mode, where we should suppress error output
-#define TESTS_PROGRAM_NAME L"(ignore)"
+#define TESTS_PROGRAM_NAME "(ignore)"
 bool should_suppress_stderr_for_tests();
 
 void assert_is_main_thread(const char *who);

@@ -62,7 +62,7 @@ const wchar_t *ellipsis_str = nullptr;
 wchar_t omitted_newline_char;
 wchar_t obfuscation_read_char;
 bool g_profiling_active = false;
-const wchar_t *program_name;
+const char *program_name;
 int debug_level = 1;         // default maximum debug output level (errors and warnings)
 int debug_stack_frames = 0;  // default number of stack frames to show on debug() calls
 
@@ -603,16 +603,16 @@ ssize_t read_loop(int fd, void *buff, size_t count) {
 /// like `debug()`. It is only intended to supress diagnostic noise from testing things like the
 /// fish parser where we expect a lot of diagnostic messages due to testing error conditions.
 bool should_suppress_stderr_for_tests() {
-    return program_name && !wcscmp(program_name, TESTS_PROGRAM_NAME);
+    return program_name && !strcmp(program_name, TESTS_PROGRAM_NAME);
 }
 
 static void debug_shared(const wchar_t level, const wcstring &msg) {
     pid_t current_pid = getpid();
 
     if (current_pid == initial_pid) {
-        fwprintf(stderr, L"<%lc> %ls: %ls\n", (unsigned long)level, program_name, msg.c_str());
+        fwprintf(stderr, L"<%lc> %s: %ls\n", (unsigned long)level, program_name, msg.c_str());
     } else {
-        fwprintf(stderr, L"<%lc> %ls: %d: %ls\n", (unsigned long)level, program_name, current_pid,
+        fwprintf(stderr, L"<%lc> %s: %d: %ls\n", (unsigned long)level, program_name, current_pid,
                  msg.c_str());
     }
 }

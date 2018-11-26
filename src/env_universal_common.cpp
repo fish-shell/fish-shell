@@ -1047,7 +1047,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
 
         // Use a path based on our uid to avoid collisions.
         char path[NAME_MAX];
-        snprintf(path, sizeof path, "/%ls_shmem_%d", program_name ? program_name : L"fish",
+        snprintf(path, sizeof path, "/%s_shmem_%d", L"fish",
                  getuid());
 
         bool errored = false;
@@ -1181,8 +1181,7 @@ class universal_notifier_notifyd_t : public universal_notifier_t {
     void setup_notifyd() {
         // Per notify(3), the user.uid.%d style is only accessible to processes with that uid.
         char local_name[256];
-        snprintf(local_name, sizeof local_name, "user.uid.%d.%ls.uvars", getuid(),
-                 program_name ? program_name : L"fish");
+        snprintf(local_name, sizeof local_name, "user.uid.%d.fish.uvars", getuid());
         name.assign(local_name);
 
         uint32_t status =

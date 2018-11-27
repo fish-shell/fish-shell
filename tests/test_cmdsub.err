@@ -4,14 +4,14 @@
 
 ####################
 # Command sub at the limit should fail
-fish: Too much data emitted by command substitution so it was discarded
+../test/root/bin/fish: Too much data emitted by command substitution so it was discarded
 
 set b (string repeat -n 512 x)
       ^
 
 ####################
 # Command sub over the limit should fail
-fish: Too much data emitted by command substitution so it was discarded
+../test/root/bin/fish: Too much data emitted by command substitution so it was discarded
 
     set -l x (string repeat -n $argv x)
              ^
@@ -28,7 +28,7 @@ in command substitution
 
 ####################
 # Same builtin in a command substitution is affected
-fish: Too much data emitted by command substitution so it was discarded
+../test/root/bin/fish: Too much data emitted by command substitution so it was discarded
 
 echo this will fail (string repeat --max 513 b) to output anything
                     ^

@@ -7,13 +7,13 @@
 
 ####################
 # Testing -V with changed variables
-fish: function: Illegal function name '-a'
+../test/root/bin/fish: function: Illegal function name '-a'
 function -a arg1 arg2 name2 ; end
 ^
-fish: function: Illegal function name '--argument-names'
+../test/root/bin/fish: function: Illegal function name '--argument-names'
 function --argument-names arg1 arg2 name4 ; end
 ^
-fish: function: Unexpected positional argument 'abc'
+../test/root/bin/fish: function: Unexpected positional argument 'abc'
 function name5 abc --argument-names def ; end
 ^
 
@@ -25,7 +25,7 @@ function name5 abc --argument-names def ; end
 
 ####################
 # Checking reserved names
-fish: function: The name 'test' is reserved,
+../test/root/bin/fish: function: The name 'test' is reserved,
 and can not be used as a function name
 function test; echo banana; end
 ^

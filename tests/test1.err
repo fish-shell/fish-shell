@@ -34,7 +34,7 @@
 
 ####################
 # For loops with read-only vars is an error (#4342)
-fish: You cannot use read-only variable 'status' in a for loop
+../test/root/bin/fish: You cannot use read-only variable 'status' in a for loop
 for status in a b c
     ^
 

@@ -1004,7 +1004,7 @@ The following variables are available to change the highlighting colors in fish:
 
 - `fish_color_selection`, the color used when selecting text (in vi visual mode)
 
-- `fish_color_search_match`, the color used to highlight history search matches
+- `fish_color_search_match`, used to highlight history search matches and the selected pager item (must be a background)
 
 - `fish_color_operator`, the color for parameter expansion operators like '*' and '~'
 

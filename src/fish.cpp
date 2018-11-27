@@ -100,7 +100,7 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
 #ifdef CMAKE_BINARY_DIR
         // Detect if we're running right out of the CMAKE build directory
         if (string_prefixes_string(CMAKE_BINARY_DIR, exec_path.c_str())) {
-            debug(2, "Running out of5 build directory, using paths relative to CMAKE_SOURCE_DIR:\n %s", CMAKE_SOURCE_DIR);
+            debug(2, "Running out of build directory, using paths relative to CMAKE_SOURCE_DIR:\n %s", CMAKE_SOURCE_DIR);
 
             done = true;
             paths.data = wcstring{L"" CMAKE_SOURCE_DIR} + L"/share";
@@ -218,7 +218,7 @@ int run_command_list(std::vector<std::string> *cmds, const io_chain_t &io) {
 }
 
 /// Parse the argument list, return the index of the first non-flag arguments.
-static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
+static int fish_parse_opt(const int argc, char * const argv[], fish_cmd_opts_t *opts) {
     static const char * const short_opts = "+hPilnvc:C:p:d:f:D:";
     static const struct option long_opts[] = {{"command", required_argument, NULL, 'c'},
                                               {"init-command", required_argument, NULL, 'C'},
@@ -318,7 +318,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
     }
 
     // If our command name begins with a dash that implies we're a login shell.
-    is_login |= argv[0][0] == '-';
+    is_login |= program_name[0] == '-';
 
     // We are an interactive session if we have not been given an explicit
     // command or file to execute and stdin is a tty. Note that the -i or
@@ -330,17 +330,11 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
     return optind;
 }
 
-int main(int argc, char **argv) {
+int main(const int argc, char * const argv[]) {
     int res = 1;
     int my_optind = 0;
+    program_name = argv[0] ? argv[0] : "fish";
 
-    const char *dummy_argv[2] = {"fish", NULL};
-    if (!argv[0]) {
-        argv = (char **)dummy_argv;  //!OCLINT(parameter reassignment)
-        argc = 1;                    //!OCLINT(parameter reassignment)
-    }
-
-    program_name = argv[0];
     set_main_thread();
     setup_fork_guards();
     signal_unblock_all();
@@ -365,7 +359,7 @@ int main(int argc, char **argv) {
         save_term_foreground_process_group();
     }
 
-    const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
+    const struct config_paths_t paths = determine_config_directory_paths(program_name);
     env_init(&paths);
     // Set features early in case other initialization depends on them.
     // Start with the ones set in the environment, then those set on the command line (so the
@@ -415,7 +409,7 @@ int main(int argc, char **argv) {
                 set_cloexec(fd);
 
                 wcstring_list_t list;
-                for (char **ptr = argv + my_optind; *ptr; ptr++) {
+                for (char * const *ptr = argv + my_optind; *ptr; ptr++) {
                     list.push_back(str2wcstring(*ptr));
                 }
                 env_set(L"argv", ENV_DEFAULT, list);

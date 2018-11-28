@@ -131,7 +131,7 @@ class time_profiler_t {
 
     ~time_profiler_t() {
         double end = timef();
-        debug(2, "%s: %.0f ms", what, (end - start) * 1000);
+        debug(5, "%s: %.0f ms", what, (end - start) * 1000);
     }
 };
 

@@ -1,13 +1,13 @@
 
 ####################
 # Slices
-../test/root/bin/fish: Invalid index value
+fish: Invalid index value
 echo "$foo[d]"
            ^
-../test/root/bin/fish: Invalid index value
+fish: Invalid index value
 echo $foo[d]
           ^
-../test/root/bin/fish: Invalid index value
+fish: Invalid index value
 echo ()[d]
         ^
 
@@ -16,7 +16,7 @@ echo ()[d]
 
 ####################
 # Catch your breath
-../test/root/bin/fish: $) is not a valid variable in fish.
+fish: $) is not a valid variable in fish.
 echo $$paren
       ^
 

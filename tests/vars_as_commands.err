@@ -1,6 +1,6 @@
-../test/root/bin/fish: The expanded command was empty.
+fish: The expanded command was empty.
 $EMPTY_VARIABLE
 ^
-../test/root/bin/fish: The expanded command was empty.
+fish: The expanded command was empty.
 "$EMPTY_VARIABLE"
 ^

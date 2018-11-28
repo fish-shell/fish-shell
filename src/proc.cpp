@@ -564,11 +564,7 @@ static void format_job_info(const job_t *j, job_status_t status) {
     fwprintf(stdout, L"\r");
     fwprintf(stdout, _(msg), j->job_id, truncate_command(j->command()).c_str());
     fflush(stdout);
-    if (cur_term) {
-        tputs(clr_eol, 1, &writeb);
-    } else {
-        fwprintf(stdout, L"\x1B[K");
-    }
+    if (clr_eol) tputs(clr_eol, 1, &writeb);
     fwprintf(stdout, L"\n");
 }
 
@@ -673,11 +669,7 @@ static int process_clean_after_marking(bool allow_interactive) {
                              signal_get_desc(WTERMSIG(p->status)));
                 }
 
-                if (cur_term != NULL) {
-                    tputs(clr_eol, 1, &writeb);
-                } else {
-                    fwprintf(stdout, L"\x1B[K");  // no term set up - do clr_eol manually
-                }
+                if (clr_eol) tputs(clr_eol, 1, &writeb);
                 fwprintf(stdout, L"\n");
             }
             found = 1;

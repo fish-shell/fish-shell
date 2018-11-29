@@ -7,13 +7,17 @@ function fish_prompt -d "Write out the prompt"
     if set -l git_branch (command git symbolic-ref HEAD 2>/dev/null | string replace refs/heads/ '')
         set git_branch (set_color -o blue)"$git_branch"
         if command git diff-index --quiet HEAD --
-            for i in (git branch -qv --no-color | string match -r '\*' | cut -d' ' -f4- | cut -d] -f1 | tr , \n)\
- (git status --porcelain | cut -c 1-2 | uniq)
+            if set -l count (command git rev-list --count --left-right $upstream...HEAD 2>/dev/null)
+                echo $count | read -l ahead behind
+                if test "$ahead" -gt 0
+                    set git_status "$git_status"(set_color red)⬆
+                end
+                if test "$behind" -gt 0
+                    set git_status "$git_status"(set_color red)⬇
+                end
+            end
+            for i in (git status --porcelain | string sub -l 2 | uniq)
                 switch $i
-                    case "*[ahead *"
-                        set git_status "$git_status"(set_color red)⬆
-                    case "*behind *"
-                        set git_status "$git_status"(set_color red)⬇
                     case "."
                         set git_status "$git_status"(set_color green)✚
                     case " D"

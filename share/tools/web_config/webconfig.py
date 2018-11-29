@@ -738,7 +738,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         "Sets a color for a fish color name, like 'autosuggestion'"
         if not color:
             color = 'normal'
-        varname = 'fish_color' + name
+        varname = 'fish_color_' + name
         # If the name already starts with "fish_", use it as the varname
         # This is needed for 'fish_pager_color' vars.
         if name.startswith('fish_'):

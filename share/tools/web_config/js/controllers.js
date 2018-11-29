@@ -99,10 +99,36 @@ controllers.controller("colorsController", function($scope, $http) {
 	}
 
     $scope.setTheme = function() {
-        var settingNames = ["autosuggestion", "command", "param", "redirection", "comment", "error", "quote", "end"];
+        var settingNames = ["normal",
+                            "command",
+                            "quote",
+                            "redirection",
+                            "end",
+                            "error",
+                            "param",
+                            "comment",
+                            "match",
+                            "selection",
+                            "search_match",
+                            "history_current",
+                            "operator",
+                            "escape",
+                            "cwd",
+                            "cwd_root",
+                            "valid_path",
+                            "autosuggestion",
+                            "user",
+                            "host",
+                            "cancel"
+                           ];
         var remaining = settingNames.length;
-        for (name in settingNames) {
-            var postData = "what=" + settingNames[name] + "&color=" + $scope.selectedColorScheme[settingNames[name]] + "&background_color=&bold=&underline=";
+        for (name of settingNames) {
+            // Skip colors undefined in the current theme
+            if (!$scope.selectedColorScheme[name]) {
+            	remaining -= 1;
+                continue;
+            }
+            var postData = "what=" + name + "&color=" + $scope.selectedColorScheme[name] + "&background_color=&bold=&underline=";
             $http.post("set_color/", postData, { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config) {
             	if (status == 200) {
             		remaining -= 1;

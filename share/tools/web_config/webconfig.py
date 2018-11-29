@@ -573,6 +573,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                          'param',
                          'comment',
                          'match',
+                         'selection',
                          'search_match',
                          'operator',
                          'escape',
@@ -580,6 +581,9 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                          'redirection',
                          'valid_path',
                          'autosuggestion'
+                         'user',
+                         'host',
+                         'cancel'
                          ])
 
         # Here are our color descriptions
@@ -593,6 +597,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             'param': 'Command parameters',
             'comment': 'Comments start with #',
             'match': 'Matching parenthesis',
+            'selection': 'Selected text',
             'search_match': 'History searching',
             'history_current': 'Directory history',
             'operator': 'Like * and ~',
@@ -600,7 +605,10 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             'cwd': 'Current directory',
             'cwd_root': 'cwd for root user',
             'valid_path': 'Valid paths',
-            'autosuggestion': 'Suggested completion'
+            'autosuggestion': 'Suggested completion',
+            'user': 'Username in the prompt',
+            'host': 'Hostname in the prompt',
+            'cancel': 'The ^C cancel indicator'
         }
 
         out, err = run_fish_cmd('set -L')

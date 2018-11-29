@@ -735,10 +735,16 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_set_color_for_variable(self, name, color, background_color, bold,
                                   underline):
+        "Sets a color for a fish color name, like 'autosuggestion'"
         if not color:
             color = 'normal'
-        "Sets a color for a fish color name, like 'autosuggestion'"
-        command = 'set -U fish_color_' + name
+        varname = 'fish_color' + name
+        # If the name already starts with "fish_", use it as the varname
+        # This is needed for 'fish_pager_color' vars.
+        if name.startswith('fish_'):
+            varname = name
+        # TODO: Check if the varname is allowable.
+        command = 'set -U ' + varname
         if color:
             command += ' ' + color
         if background_color:

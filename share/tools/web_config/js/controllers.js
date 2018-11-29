@@ -119,7 +119,11 @@ controllers.controller("colorsController", function($scope, $http) {
                             "autosuggestion",
                             "user",
                             "host",
-                            "cancel"
+                            "cancel",
+                            "fish_pager_color_completion",
+                            "fish_pager_color_description",
+                            "fish_pager_color_prefix",
+                            "fish_pager_color_progress"
                            ];
         var remaining = settingNames.length;
         for (name of settingNames) {

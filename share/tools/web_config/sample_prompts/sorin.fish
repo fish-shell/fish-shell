@@ -18,11 +18,11 @@ function fish_right_prompt
 
     if git rev-parse 2>/dev/null
         # Magenta if branch detached else green
-        git branch -qv | grep "\*" | string match -rq detached
+        set -l branch (command git branch -qv | string match "\**")
+        string match -rq detached -- $branch
         and set_color brmagenta
         or set_color brgreen
 
-        # Need optimization on this block (eliminate space)
         git name-rev --name-only HEAD
 
         # Merging state
@@ -31,13 +31,18 @@ function fish_right_prompt
         printf ' '
 
         # Symbols
-        for i in (git branch -qv --no-color|grep \*|cut -d' ' -f4-|cut -d] -f1|tr , \n)\
- (git status --porcelain | cut -c 1-2 | uniq)
+        if set -l count (command git rev-list --count --left-right $upstream...HEAD 2>/dev/null)
+            echo $count | read -l ahead behind
+            if test "$ahead" -gt 0
+                printf (set_color magenta)⬆' '
+            end
+            if test "$behind" -gt 0
+                printf (set_color magenta)⬇' '
+            end
+        end
+
+        for i in (git status --porcelain | string sub -l 2 | uniq)
             switch $i
-                case "*[ahead *"
-                    printf (set_color magenta)⬆' '
-                case "*behind *"
-                    printf (set_color magenta)⬇' '
                 case "."
                     printf (set_color green)✚' '
                 case " D"

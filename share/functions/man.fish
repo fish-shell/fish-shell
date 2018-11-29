@@ -19,7 +19,7 @@ function man --description "Format and display the on-line manual pages"
     set -lx MANPATH $manpath
 
     # Prepend fish's man directory if available.
-    set -l fish_manpath (dirname $__fish_datadir)/fish/man
+    set -l fish_manpath (dirname $__fish_data_dir)/fish/man
     if test -d $fish_manpath
         set MANPATH $fish_manpath $MANPATH
     end

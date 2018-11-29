@@ -284,6 +284,11 @@ var color_scheme_solarized_light = {
     param: solarized.base00,
     quote: solarized.base0,
     redirection: solarized.violet,
+    search_match: 'bryellow --background=white',
+    fish_pager_color_completion: 'green',
+    fish_pager_color_description: 'B3A06D',
+    fish_pager_color_prefix: 'cyan --underline',
+    fish_pager_color_progress: 'brwhite --background=cyan',
 
     url: 'http://ethanschoonover.com/solarized'
 };
@@ -301,6 +306,11 @@ var color_scheme_solarized_dark = {
     param: solarized.base0,
     quote: solarized.base00,
     redirection: solarized.violet,
+    search_match: 'bryellow --background=black',
+    fish_pager_color_completion: 'cyan',
+    fish_pager_color_description: 'B3A06D',
+    fish_pager_color_prefix: 'cyan --underline',
+    fish_pager_color_progress: 'brwhite --background=cyan',
 
     url: 'http://ethanschoonover.com/solarized'
 };

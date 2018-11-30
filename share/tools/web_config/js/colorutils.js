@@ -307,7 +307,7 @@ var color_scheme_solarized_dark = {
     quote: solarized.base00,
     redirection: solarized.violet,
     search_match: 'bryellow --background=black',
-    fish_pager_color_completion: 'cyan',
+    fish_pager_color_completion: 'B3A06D',
     fish_pager_color_description: 'B3A06D',
     fish_pager_color_prefix: 'cyan --underline',
     fish_pager_color_progress: 'brwhite --background=cyan',

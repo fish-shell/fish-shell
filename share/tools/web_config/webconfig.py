@@ -4,6 +4,10 @@ from __future__ import unicode_literals
 from __future__ import print_function
 import binascii
 import cgi
+try:
+    from html import escape as escape_html
+except ImportError:
+    from cgi import escape as escape_html
 from distutils.version import LooseVersion
 import glob
 import multiprocessing.pool
@@ -322,7 +326,7 @@ def ansi_to_html(val):
         if i % 2 == 0:
             # It's text, possibly empty
             # Clean up other ANSI junk
-            result.append(cgi.escape(strip_ansi(component)))
+            result.append(escape_html(strip_ansi(component)))
         else:
             # It's an escape sequence. Close the previous escape.
             span_open = append_html_for_ansi_escape(component, result,

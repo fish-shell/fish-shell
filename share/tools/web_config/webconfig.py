@@ -308,8 +308,9 @@ def ansi_to_html(val):
     reg = re.compile("""
         (                        # Capture
          \x1b                    # Escape
-         [^m]+                   # One or more non-'m's
+         [^m]*                   # Zero or more non-'m's
          m                       # Literal m terminates the sequence
+         \x0f?                   # HACK: A ctrl-o - this is how tmux' sgr0 ends
         )                        # End capture
         """, re.VERBOSE)
     separated = reg.split(val)

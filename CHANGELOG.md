@@ -33,7 +33,6 @@ A new feature flags mechanism is added for staging deprecations and breaking cha
 - `$_` is deprecated and will removed in the future (#813). Use `status current-command` in a command substitution instead.
 - `^` as a redirection deprecated and will be removed in the future. (#4394). Use `2>` to redirect stderr. This is controlled by the `stderr-nocaret` feature flag.
 - `?` as a glob is deprecated and will be removed in the future (#4520). This is controlled by the `qmark-noglob` feature flag.
-- The `CMD_DURATION` variable should be used as `cmd_duration`, although both versions are available for now.
 
 ## Notable fixes and improvements
 ### Syntax changes and new commands

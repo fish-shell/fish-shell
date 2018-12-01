@@ -15,6 +15,10 @@ math 5 \* -2
 math -- -4 / 2
 math -- '-4 * 2'
 
+logmsg Validate some rounding functions
+math 'round(3/2)' ; math 'floor(3/2)' ; math 'ceil(3/2)'
+math 'round(-3/2)' ; math 'floor(-3/2)' ; math 'ceil(-3/2)'
+
 logmsg Validate some integral computations
 math 1
 math 10

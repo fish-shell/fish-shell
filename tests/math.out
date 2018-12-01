@@ -18,6 +18,15 @@
 -8
 
 ####################
+# Validate some rounding functions
+2
+1
+2
+-2
+-2
+-1
+
+####################
 # Validate some integral computations
 1
 10

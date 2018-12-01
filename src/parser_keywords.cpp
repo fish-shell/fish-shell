@@ -9,7 +9,9 @@
 #include "parser_keywords.h"
 
 bool parser_keywords_skip_arguments(const wcstring &cmd) {
-    return cmd == L"else" || cmd == L"begin";
+    static const wcstring el = L"else";
+    static const wcstring beg = L"begin";
+    return cmd == el || cmd == beg;
 }
 
 static const std::unordered_set<wcstring> subcommand_keywords = {L"command", L"builtin", L"while", L"exec",

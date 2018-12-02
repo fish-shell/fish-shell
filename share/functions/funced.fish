@@ -35,9 +35,9 @@ function funced --description 'Edit function definition'
     else if set -q _flag_editor
         set editor $_flag_editor
     else if set -q VISUAL
-        set editor $VISUAL
+        eval set editor $VISUAL
     else if set -q EDITOR
-        set editor $EDITOR
+        eval set editor $EDITOR
     else
         set editor fish
     end

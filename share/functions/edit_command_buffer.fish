@@ -15,14 +15,17 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
     end
 
     # Edit the command line with the users preferred editor or vim or emacs.
+    # Guard against the possibility that VISUAL or EDITOR contains spaces - see #5348.
     commandline -b >$f
     if set -q VISUAL
         __fish_disable_bracketed_paste
-        $VISUAL $f
+        eval set -l visual_cmd $VISUAL
+        $visual_cmd $f
         __fish_enable_bracketed_paste
     else if set -q EDITOR
         __fish_disable_bracketed_paste
-        $EDITOR $f
+        eval set -l editor_cmd $EDITOR
+        $editor_cmd $f
         __fish_enable_bracketed_paste
     else
         echo

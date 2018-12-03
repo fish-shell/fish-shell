@@ -1,4 +1,4 @@
-# complete.fish
+# Completions for complete
 
 complete -c complete -s c -l command -d "Command to add completion to" -r
 complete -c complete -s p -l path -d "Path to add completion to"

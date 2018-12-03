@@ -2,8 +2,8 @@
 
 complete -c complete -s c -l command -d "Command to add completion to" -r
 complete -c complete -s p -l path -d "Path to add completion to"
-complete -c complete -s s -l short-option -d "POSIX-style option to complete"
-complete -c complete -s l -l long-option -d "GNU-style option to complete"
+complete -c complete -s s -l short-option -d "POSIX-style short option to complete"
+complete -c complete -s l -l long-option -d "GNU-style long option to complete"
 complete -c complete -s o -l old-option -d "Old style long option to complete"
 complete -c complete -s f -l no-files -d "Do not use file completion"
 complete -c complete -s r -l require-parameter -d "Require parameter"

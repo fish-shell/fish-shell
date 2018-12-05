@@ -2,7 +2,7 @@
 complete -c ulimit -s S -l soft -d "Set or get soft limit"
 complete -c ulimit -s H -l hard -d "Set or get hard limit"
 
-complete -c ulimit -s a -l all -d "Set or get all current limits"
+complete -c ulimit -s a -l all -d "Get all current limits"
 complete -c ulimit -s c -l core-size -d "Maximum size of core files created"
 complete -c ulimit -s d -l data-size -d "Maximum size of a process's data segment"
 complete -c ulimit -s f -l file-size -d "Maximum size of files created by the shell"

@@ -140,7 +140,7 @@ controllers.controller("colorsController", function($scope, $http) {
             } else {
                 selected = $scope.selectedColorScheme[name];
             }
-            var postData = "what=" + name + "&color=" + selected + "&background_color=&bold=&underline=";
+            var postData = "what=" + name + "&color=" + selected + "&background_color=&bold=&underline=&dim=&reverse=&italics=";
             $http.post("set_color/", postData, { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config) {
             	if (status == 200) {
             		remaining -= 1;

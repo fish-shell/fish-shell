@@ -137,7 +137,7 @@ def parse_color(color_str):
     comps = color_str.split(' ')
     color = 'normal'
     background_color = ''
-    bold, underline = False, False
+    bold, underline, italics, dim, reverse = False, False, False, False, False
     for comp in comps:
         # Remove quotes
         comp = comp.strip("'\" ")
@@ -145,6 +145,12 @@ def parse_color(color_str):
             bold = True
         elif comp == '--underline':
             underline = True
+        elif comp == '--italics':
+            italics = True
+        elif comp == '--dim':
+            dim = True
+        elif comp == '--reverse':
+            reverse = True
         elif comp.startswith('--background='):
             # Background color
             background_color = better_color(
@@ -154,7 +160,7 @@ def parse_color(color_str):
             color = better_color(color, parse_one_color(comp))
 
     return {"color": color, "background": background_color, "bold": bold,
-            "underline": underline}
+            "underline": underline, "italics": italics, "dim": dim, "reverse": reverse}
 
 
 def parse_bool(val):
@@ -739,7 +745,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return out
 
     def do_set_color_for_variable(self, name, color, background_color, bold,
-                                  underline):
+                                  underline, italics, dim, reverse):
         "Sets a color for a fish color name, like 'autosuggestion'"
         if not color:
             color = 'normal'
@@ -758,6 +764,12 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             command += ' --bold'
         if underline:
             command += ' --underline'
+        if italics:
+            command += ' --italics'
+        if dim:
+            command += ' --dim'
+        if reverse:
+            command += ' --reverse'
 
         out, err = run_fish_cmd(command)
         return out
@@ -992,13 +1004,17 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             color = postvars.get('color')
             background_color = postvars.get('background_color')
             bold = postvars.get('bold')
+            italics = postvars.get('italics')
+            reverse = postvars.get('reverse')
+            dim = postvars.get('dim')
             underline = postvars.get('underline')
 
             if what:
                 # Not sure why we get lists here?
                 output = self.do_set_color_for_variable(
                     what[0], color[0], background_color[0],
-                    parse_bool(bold[0]), parse_bool(underline[0]))
+                    parse_bool(bold[0]), parse_bool(underline[0]), parse_bool(italics[0]),
+                    parse_bool(dim[0]), parse_bool(reverse[0]))
             else:
                 output = 'Bad request'
         elif p == '/get_function/':

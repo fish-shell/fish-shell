@@ -16,7 +16,7 @@ function fish_right_prompt
     test $status != 0
     and printf (set_color red)"⏎ "
 
-    if git rev-parse 2>/dev/null
+    if set -l git_dir (git rev-parse --git-dir 2>/dev/null)
         # Magenta if branch detached else green
         set -l branch (command git branch -qv | string match "\**")
         string match -rq detached -- $branch
@@ -24,6 +24,11 @@ function fish_right_prompt
         or set_color brgreen
 
         git name-rev --name-only HEAD
+
+        # Merging state
+        test -f "$git_dir/MERGE_HEAD"
+        and printf ':'(set_color red)'merge'
+        printf ' '
 
         # Symbols
         if set -l count (command git rev-list --count --left-right $upstream...HEAD 2>/dev/null)

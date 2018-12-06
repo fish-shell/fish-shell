@@ -25,11 +25,6 @@ function fish_right_prompt
 
         git name-rev --name-only HEAD
 
-        # Merging state
-        git merge -q 2>/dev/null
-        or printf ':'(set_color red)'merge'
-        printf ' '
-
         # Symbols
         if set -l count (command git rev-list --count --left-right $upstream...HEAD 2>/dev/null)
             echo $count | read -l ahead behind

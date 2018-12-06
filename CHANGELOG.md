@@ -21,6 +21,7 @@ fish 3 is a major release, which introduces some breaking changes alongside impr
 - The `fish_user_abbreviations` variable is no longer used; abbreviations will be migrated to the new storage format automatically.
 - The `FISH_READ_BYTE_LIMIT` variable is now called `fish_byte_limit` (#4414).
 - Environment variables are no longer split into arrays based on the record separator character on startup. Instead, variables are not split, unless their name ends in PATH, in which case they are split on colons (#436).
+- The `history` builtin's `--with-time` option has been removed; this has been deprecated in favor of `--show-time` since 2.7.0 (#4403).
 
 ## Deprecations
 
@@ -55,7 +56,7 @@ A new feature flags mechanism is added for staging deprecations and breaking cha
 - `exec` prompts for confirmation if background jobs are running.
 - `funced` has a new `--save` option to automatically save the edited function after successfully editing (#4668).
 - `functions` has a new ` --handlers` option to show functions registered as event handlers (#4694).
-- `history search` supports globs for wildcard searching (#3136).
+- `history search` supports globs for wildcard searching (#3136) and has a new `--reverse` option to show entries from oldest to newest (#4375)..
 - `jobs` has a new `--quiet` option to silence the output.
 - `read` has a new `--delimiter` option for splitting input into arrays (#4256).
 - `read` writes directly to stdout if called without arguments (#4407).
@@ -91,6 +92,7 @@ A new feature flags mechanism is added for staging deprecations and breaking cha
 - Terminal size variables (`$COLUMNS`/`$LINES`) is now updated before fish_prompt is called, allowing the prompt to react (#904).
 - Multi-line prompts no longer repeat when the terminal is resized (#2320).
 - `xclip` support has been added to the clipboard integration (#5020).
+- The Alt-P keybinding paginates the last command if the command line is empty.
 - `$cmd_duration` is no longer reset when no command is executed (#5011).
 - Added completions for
   - `bd` (#4472)
@@ -127,6 +129,9 @@ A new feature flags mechanism is added for staging deprecations and breaking cha
 - `/etc/paths` is now parsed like macOS' bash `path_helper`, fixing $PATH order (#4336, #4852) on macOS.
 - Using a read-only variable in a `for` loop produces an error, rather than silently producing incorrect results (#4342).
 - The universal variables filename no longer contains the hostname or MAC address. It is now at the fixed location `.config/fish/fish_variables` (#1912).
+- Exported variables in the global or universal scope no longer have their exported status affected by local variables (#2611).
+- Major rework of terminal and job handling to eliminate bugs (#3805, #3952, #4178, #4235, #4238, #4929, #5210).
+- Improvements to the manual page completion generator (#2937, #4313).
 
 --
 

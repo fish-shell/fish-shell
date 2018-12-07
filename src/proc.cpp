@@ -971,10 +971,6 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
 
 pid_t terminal_acquire_before_builtin(int job_pgid) {
     pid_t selfpgid = getpgrp();
-    if (selfpgid == 0) {
-        debug(2, L"Not acquiring terminal because we don't have a valid pgroup");
-        return -1;
-    }
 
     pid_t current_owner = tcgetpgrp(STDIN_FILENO);
     if (current_owner >= 0 && current_owner != selfpgid && current_owner == job_pgid) {
@@ -989,7 +985,7 @@ pid_t terminal_acquire_before_builtin(int job_pgid) {
 /// so that we can restore the terminal ownership to the job at a later time.
 static bool terminal_return_from_job(job_t *j) {
     errno = 0;
-    if (j->pgid == 0 || getpgrp() == 0) {
+    if (j->pgid == 0) {
         debug(2, "terminal_return_from_job() returning early due to no process group");
         return true;
     }

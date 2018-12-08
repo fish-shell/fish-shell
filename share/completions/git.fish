@@ -141,8 +141,8 @@ function __fish_git_files
     set -l status_opt --ignore-submodules=all
 
     # If we aren't looking for ignored files, let git status skip them.
-    set -q ignored; and set -a status_opt --ignored=matching
-    or set -a status_opt --ignored=no
+    # (don't use --ignored=no because that was only added in git 2.16, from Jan 2018.
+    set -q ignored; and set -a status_opt --ignored
 
     # Glob just the current token for performance
     # and so git shows untracked files (even in untracked dirs) for that.

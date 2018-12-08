@@ -255,11 +255,21 @@ int g_fish_ambiguous_width = 1;
 // Width of emoji characters.
 int g_fish_emoji_width = 0;
 
-// 1 is the typical emoji width in Unicode 8.
-// 2 is typical in Unicode 9, which for glibc has been introduced in 2.26.
-#if defined(__GLIBC_PREREQ) && __GLIBC_PREREQ(2, 26)
+// Try to detect if we have a unicode 9 supporting libc (currently only glibc)
+// For glibc, this was introduced in version 2.26
+#if defined(__GLIBC_PREREQ)
+#if __GLIBC_PREREQ(2, 26)
+#define UNICODE_9 1
+#endif
+#else
+#define UNICODE_9 0
+#endif
+
+// Unicode 9 typically uses a width of 2.
+#if UNICODE_9
 int g_guessed_fish_emoji_width = 2;
 #else
+// 1 is the typical emoji width in Unicode 8.
 int g_guessed_fish_emoji_width = 1;
 #endif
 

@@ -22,6 +22,7 @@ fish 3 is a major release, which introduces some breaking changes alongside impr
 - The `FISH_READ_BYTE_LIMIT` variable is now called `fish_byte_limit` (#4414).
 - Environment variables are no longer split into arrays based on the record separator character on startup. Instead, variables are not split, unless their name ends in PATH, in which case they are split on colons (#436).
 - The `history` builtin's `--with-time` option has been removed; this has been deprecated in favor of `--show-time` since 2.7.0 (#4403).
+- The internal variables `__fish_datadir` and `__fish_sysconfdir` are now known as `__fish_data_dir` and `__fish_sysconf_dir` respectively.
 
 ## Deprecations
 
@@ -33,7 +34,7 @@ A new feature flags mechanism is added for staging deprecations and breaking cha
 - The `function --on-process-exit` switch will be removed in future (#4700). Use the `fish_exit` event instead: `function --on-event fish_exit`.
 - `$_` is deprecated and will removed in the future (#813). Use `status current-command` in a command substitution instead.
 - `^` as a redirection deprecated and will be removed in the future. (#4394). Use `2>` to redirect stderr. This is controlled by the `stderr-nocaret` feature flag.
-- `?` as a glob is deprecated and will be removed in the future (#4520). This is controlled by the `qmark-noglob` feature flag.
+- `?` as a glob (wildcard) is deprecated and will be removed in the future (#4520). This is controlled by the `qmark-noglob` feature flag.
 
 ## Notable fixes and improvements
 ### Syntax changes and new commands
@@ -89,40 +90,54 @@ A new feature flags mechanism is added for staging deprecations and breaking cha
 - vi-mode now supports ';' and ',' motions. This introduces new {forward,backward}-jump-till and repeat-jump{,-reverse} bind functions (#5140).
 - The `*y` vi-mode binding now works (#5100).
 - True color is now enabled in neovim by default (#2792).
-- Terminal size variables (`$COLUMNS`/`$LINES`) is now updated before fish_prompt is called, allowing the prompt to react (#904).
+- Terminal size variables (`$COLUMNS`/`$LINES`) are now updated before fish_prompt is called, allowing the prompt to react (#904).
 - Multi-line prompts no longer repeat when the terminal is resized (#2320).
 - `xclip` support has been added to the clipboard integration (#5020).
 - The Alt-P keybinding paginates the last command if the command line is empty.
 - `$cmd_duration` is no longer reset when no command is executed (#5011).
+- Deleting a one-character word no longer erases the next word as well (#4747).
 - Added completions for
+  - `ansible`, including `ansible-galaxy`, `ansible-playbook` and `ansible-vault` (#4697)
+  - `bb-power` (#4800)
   - `bd` (#4472)
   - `bower`
   - `clang` and `clang++` (#4174)
-  - `configure` (autoconf only)
+  - `conda` (#4837)
+  - `configure` (for autoconf-generated files only)
   - `doas` (#5196)
+  - `ebuild` (#4911)
+  - `emaint` (#4758)
+  - `eopkg` (#4600)
+  - `exercism` (#4495)
   - `hjson`
-  - `j` (autojump #4344)
+  - `hugo` (#4529)
+  - `j` (from autojump #4344)
+  - `jbake` (#4814)
   - `jhipster` (#4472)
   - `kldload`
   - `kldunload`
   - `meson`
+  - `mkdocs` (#4906)
   - `ngrok` (#4642)
+  - OpenBSD's `pkg_add`, `pkg_delete`, `pkg_info`, `pfctl`, `rcctl`, `signify`, and `vmctl` (#4584)
   - `openocd`
   - `optipng`
   - `opkg` (#5168)
   - `pandoc` (#2937)
-  - `port`
+  - `port` (#4737)
+  - `powerpill` (#4800)
   - `serve` (#5026)
   - `ttx`
   - `unzip`
   - `xsv`
-- Lots of improvements to completions (especially `darcs` (#5112), `git` and `hg`).
+  - `zfs` and `zpool` (#4608)
+- Lots of improvements to completions (especially `darcs` (#5112), `git`, `hg` and `sudo`).
 - Completions for `yarn` and `npm` now require the `all-the-package-names` NPM package for full functionality.
 - Completions for `bower` and `yarn` now require the `jq` utility for full functionality.
 - Improved French translations.
 
 ### Other fixes and improvements
-- Significant performance improvements to `abbr` (#4048), setting variables (#4200, #4341), globs (#4579), `string` reading from standard input - by a factor of 10 (#4610), and slicing history (in particular, `$history[1]` for the last executed command).
+- Significant performance improvements to `abbr` (#4048), setting variables (#4200, #4341), executing functions, globs (#4579), `string` reading from standard input (#4610), and slicing history (in particular, `$history[1]` for the last executed command).
 - Fish's internal wcwidth function has been updated to deal with newer Unicode, and the width of some characters can be configured via the `fish_ambiguous_width` (#5149) and `fish_emoji_width` (#2652) variables.
 - Alternatively, a new build-time option INTERNAL_WCWIDTH can be used to use the system's wcwidth instead (#4816).
 - `functions` correctly supports `-d` as the short form of `--description`. (#5105)
@@ -132,6 +147,12 @@ A new feature flags mechanism is added for staging deprecations and breaking cha
 - Exported variables in the global or universal scope no longer have their exported status affected by local variables (#2611).
 - Major rework of terminal and job handling to eliminate bugs (#3805, #3952, #4178, #4235, #4238, #4929, #5210).
 - Improvements to the manual page completion generator (#2937, #4313).
+- `suspend --force` now works correctly (#4672).
+
+### For distributors and developers
+- fish ships with a new build system based on CMake. CMake 3.2 is the minimum required version. Although the autotools-based Makefile and the Xcode project are still shipped with this release, they will be removed in the near future. All distributors and developers are encouraged to migrate to the CMake build.
+- Build scripts for most platforms no longer require bash, using the standard sh instead.
+- The `hostname` command is no longer required for fish to operate.
 
 --
 

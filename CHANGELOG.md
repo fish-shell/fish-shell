@@ -1,4 +1,4 @@
-# fish 3.0b1
+# fish 3.0b1 (released December 11, 2018)
 
 fish 3 is a major release, which introduces some breaking changes alongside improved functionality. Although most existing scripts will continue to work, they should be reviewed against the list below.
 

@@ -75,12 +75,12 @@ A new feature flags mechanism is added for staging deprecations and breaking cha
 - A pipe at the end of a line now allows the job to continue on the next line (#1285).
 - Italics and dim support out of the box on macOS for Terminal.app and iTerm (#4436).
 - `cd` tab completions no longer descend into the deepest unambiguous path (#4649).
-- `sudo` completions now provide completions for the target of the sudo command.
 - Pager navigation has been improved. Most notably, moving down now wraps around, moving up from the commandline now jumps to the last element and moving right and left now reverse each other even when wrapping around (#4680).
 - Typing normal characters while the completion pager is active no longer shows the search field. Instead it enters them into the command line, and ends paging (#2249).
 - A new input binding `pager-toggle-search` toggles the search field in the completions pager on and off. By default, this is bound to Ctrl-S.
 - Searching in the pager now does a full fuzzy search (#5213).
 - The pager will now show the full command instead of just its last line if the number of completions is large (#4702).
+- Abbreviations can be tab-completed (#3233).
 - Tildes in file names are now properly escaped in completions (#2274).
 - Wrapping completions (from `complete --wraps` or `function --wraps`) can now inject arguments. For example, `complete gco --wraps 'git checkout'` now works properly (#1976). The `alias` function has been updated to respect this behavior.
 - Path completions now support expansions, meaning expressions like `python ~/<TAB>` now provides file suggestions just like any other relative or absolute path. (This includes support for other expansions, too.)
@@ -90,12 +90,15 @@ A new feature flags mechanism is added for staging deprecations and breaking cha
 - vi-mode now supports ';' and ',' motions. This introduces new {forward,backward}-jump-till and repeat-jump{,-reverse} bind functions (#5140).
 - The `*y` vi-mode binding now works (#5100).
 - True color is now enabled in neovim by default (#2792).
-- Terminal size variables (`$COLUMNS`/`$LINES`) are now updated before fish_prompt is called, allowing the prompt to react (#904).
+- Terminal size variables (`$COLUMNS`/`$LINES`) are now updated before `fish_prompt` is called, allowing the prompt to react (#904).
 - Multi-line prompts no longer repeat when the terminal is resized (#2320).
 - `xclip` support has been added to the clipboard integration (#5020).
 - The Alt-P keybinding paginates the last command if the command line is empty.
 - `$cmd_duration` is no longer reset when no command is executed (#5011).
 - Deleting a one-character word no longer erases the next word as well (#4747).
+- Token history search (Alt-Up) omits duplicate entries (#4795).
+- The `fish_escape_delay_ms` timeout, allowing the use of the escape key both on its own and as part of a control sequence, was applied to all control characters; this has been reduced to just the escape key.
+- Completing a function shows the description properly (#5206).
 - Added completions for
   - `ansible`, including `ansible-galaxy`, `ansible-playbook` and `ansible-vault` (#4697)
   - `bb-power` (#4800)
@@ -104,6 +107,7 @@ A new feature flags mechanism is added for staging deprecations and breaking cha
   - `clang` and `clang++` (#4174)
   - `conda` (#4837)
   - `configure` (for autoconf-generated files only)
+  - `curl`
   - `doas` (#5196)
   - `ebuild` (#4911)
   - `emaint` (#4758)
@@ -114,8 +118,10 @@ A new feature flags mechanism is added for staging deprecations and breaking cha
   - `j` (from autojump #4344)
   - `jbake` (#4814)
   - `jhipster` (#4472)
+  - `kitty`
   - `kldload`
   - `kldunload`
+  - `makensis` (#5242)
   - `meson`
   - `mkdocs` (#4906)
   - `ngrok` (#4642)
@@ -126,9 +132,12 @@ A new feature flags mechanism is added for staging deprecations and breaking cha
   - `pandoc` (#2937)
   - `port` (#4737)
   - `powerpill` (#4800)
+  - `pstack` (#5135)
   - `serve` (#5026)
   - `ttx`
   - `unzip`
+  - `virsh` (#5113)
+  - `xclip` (#5126)
   - `xsv`
   - `zfs` and `zpool` (#4608)
 - Lots of improvements to completions (especially `darcs` (#5112), `git`, `hg` and `sudo`).
@@ -138,16 +147,16 @@ A new feature flags mechanism is added for staging deprecations and breaking cha
 
 ### Other fixes and improvements
 - Significant performance improvements to `abbr` (#4048), setting variables (#4200, #4341), executing functions, globs (#4579), `string` reading from standard input (#4610), and slicing history (in particular, `$history[1]` for the last executed command).
-- Fish's internal wcwidth function has been updated to deal with newer Unicode, and the width of some characters can be configured via the `fish_ambiguous_width` (#5149) and `fish_emoji_width` (#2652) variables.
-- Alternatively, a new build-time option INTERNAL_WCWIDTH can be used to use the system's wcwidth instead (#4816).
+- Fish's internal wcwidth function has been updated to deal with newer Unicode, and the width of some characters can be configured via the `fish_ambiguous_width` (#5149) and `fish_emoji_width` (#2652) variables. Alternatively, a new build-time option INTERNAL_WCWIDTH can be used to use the system's wcwidth instead (#4816).
 - `functions` correctly supports `-d` as the short form of `--description`. (#5105)
 - `/etc/paths` is now parsed like macOS' bash `path_helper`, fixing $PATH order (#4336, #4852) on macOS.
 - Using a read-only variable in a `for` loop produces an error, rather than silently producing incorrect results (#4342).
 - The universal variables filename no longer contains the hostname or MAC address. It is now at the fixed location `.config/fish/fish_variables` (#1912).
 - Exported variables in the global or universal scope no longer have their exported status affected by local variables (#2611).
-- Major rework of terminal and job handling to eliminate bugs (#3805, #3952, #4178, #4235, #4238, #4929, #5210).
+- Major rework of terminal and job handling to eliminate bugs (#3805, #3952, #4178, #4235, #4238, #4540, #4929, #5210).
 - Improvements to the manual page completion generator (#2937, #4313).
 - `suspend --force` now works correctly (#4672).
+- Pressing Ctrl-C while running a script now reliably terminates fish (#5253).
 
 ### For distributors and developers
 - fish ships with a new build system based on CMake. CMake 3.2 is the minimum required version. Although the autotools-based Makefile and the Xcode project are still shipped with this release, they will be removed in the near future. All distributors and developers are encouraged to migrate to the CMake build.

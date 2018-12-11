@@ -104,7 +104,7 @@ function history --description "display or manipulate interactive command histor
 
                 set -q skip_indent[1] # --show-time=FORMAT set, arbitrary output may not be valid fish script
                 and builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv | $pager
-                or builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv | fish_indent --ansi | $pager
+                or builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv | fish_indent -d0 --ansi | $pager
             else
                 builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv
             end

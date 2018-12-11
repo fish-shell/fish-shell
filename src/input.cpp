@@ -489,15 +489,11 @@ wint_t input_readch(bool allow_commands) {
     // Clear the interrupted flag.
     reader_reset_interrupted();
     // Search for sequence in mapping tables.
-    while (1) {
+    while (true) {
         wchar_t c = input_common_readch(0);
 
         if (c >= R_BEGIN_INPUT_FUNCTIONS && c < R_END_INPUT_FUNCTIONS) {
             switch (c) {
-                case R_EOF:  // if it's closed, then just return
-                {
-                    return R_EOF;
-                }
                 case R_SELF_INSERT: {
                     // Issue #1595: ensure we only insert characters, not readline functions. The
                     // common case is that this will be empty.

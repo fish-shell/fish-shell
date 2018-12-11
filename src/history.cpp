@@ -131,7 +131,7 @@ class time_profiler_t {
 
     ~time_profiler_t() {
         double end = timef();
-        debug(2, "%s: %.0f ms", what, (end - start) * 1000);
+        debug(5, "%s: %.0f ms", what, (end - start) * 1000);
     }
 };
 
@@ -314,7 +314,11 @@ class history_file_contents_t {
             // We don't want to map the file. mmap some private memory and then read into it. We use
             // mmap instead of malloc so that the destructor can always munmap().
             mmap_start =
+#ifdef MAP_ANON
+                mmap(0, size_t(len), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+#else
                 mmap(0, size_t(len), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+#endif
             if (mmap_start == MAP_FAILED) return nullptr;
             if (!read_from_fd(fd, mmap_start, len)) return nullptr;
         }
@@ -1985,4 +1989,16 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
 void history_t::resolve_pending() {
     scoped_lock locker(lock);
     this->has_pending_item = false;
+}
+
+
+static bool private_mode = false;
+void start_private_mode() {
+    private_mode = true;
+    env_set_one(L"fish_history", ENV_GLOBAL, L"");
+    env_set_one(L"fish_private_mode", ENV_GLOBAL, L"1");
+}
+
+bool in_private_mode() {
+    return private_mode;
 }

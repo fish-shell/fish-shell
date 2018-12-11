@@ -196,6 +196,8 @@ static int handle_flag_1(wchar_t **argv, parser_t &parser, io_streams_t &streams
             opts->escape_style = STRING_STYLE_URL;
         } else if (wcscmp(w.woptarg, L"var") == 0) {
             opts->escape_style = STRING_STYLE_VAR;
+        } else if (wcscmp(w.woptarg, L"regex") == 0) {
+            opts->escape_style = STRING_STYLE_REGEX;
         } else {
             string_error(streams, _(L"%ls: Invalid escape style '%ls'\n"), cmd, w.woptarg);
             return STATUS_INVALID_ARGS;

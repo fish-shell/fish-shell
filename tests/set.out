@@ -129,3 +129,6 @@ $whilevar1[1]: length=4 value=|val3|
 $whilevar1: not set in global scope
 $whilevar1: not set in universal scope
 
+
+####################
+# readonly vars

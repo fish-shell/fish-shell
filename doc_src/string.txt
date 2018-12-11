@@ -42,11 +42,13 @@ The following subcommands are available.
 
 `string escape` escapes each STRING in one of three ways. The first is `--style=script`. This is the default. It alters the string such that it can be passed back to `eval` to produce the original argument again. By default, all special characters are escaped, and quotes are used to simplify the output when possible. If `-n` or `--no-quoted` is given, the simplifying quoted format is not used. Exit status: 0 if at least one string was escaped, or 1 otherwise.
 
-The second is `--style=var` which ensures the string can be used as a variable name by hex encoding any non-alphanumeric characters. The string is first converted to UTF-8 before being encoded.
+`--style=var` ensures the string can be used as a variable name by hex encoding any non-alphanumeric characters. The string is first converted to UTF-8 before being encoded.
 
-The third is `--style=url` which ensures the string can be used as a URL by hex encoding any character which is not legal in a URL. The string is first converted to UTF-8 before being encoded.
+`--style=url` ensures the string can be used as a URL by hex encoding any character which is not legal in a URL. The string is first converted to UTF-8 before being encoded.
 
-`string unescape` performs the inverse of the `string escape` command. If the string to be unescaped is not properly formatted it is ignored. For example, doing `string unescape --style=var (string escape --style=var $str)` will return the original string.
+`--style=regex` escapes an input string for literal matching within a regex expression. The string is first converted to UTF-8 before being encoded.
+
+`string unescape` performs the inverse of the `string escape` command. If the string to be unescaped is not properly formatted it is ignored. For example, doing `string unescape --style=var (string escape --style=var $str)` will return the original string. There is no support for unescaping pcre2.
 
 \subsection string-join "join" subcommand
 
@@ -123,6 +125,50 @@ See also `read --delimiter`.
 Both the `match` and `replace` subcommand support regular expressions when used with the `-r` or `--regex` option. The dialect is that of PCRE2.
 
 In general, special characters are special by default, so `a+` matches one or more "a"s, while `a\+` matches an "a" and then a "+". `(a+)` matches one or more "a"s in a capturing group (`(?:XXXX)` denotes a non-capturing group). For the replacement parameter of `replace`, `$n` refers to the n-th group of the match. In the match parameter, `\n` (e.g. `\1`) refers back to groups.
+
+Some features include repetitions:
+- `*` refers to 0 or more repetitions of the previous expression
+- `+` 1 or more
+- `?` 0 or 1.
+- `{n}` to exactly n (where n is a number)
+- `{n,m}` at least n, no more than m.
+- `{n,}` n or more
+
+Character classes, some of the more important:
+- `.` any character except newline
+- `\d` a decimal digit and `\D`, not a decimal digit
+- `\s` whitespace and `\S`, not whitespace
+- `\w` a "word" character and `\W`, a "non-word" character
+- `[...]` (where "..." is some characters) is a character set
+- `[^...]` is the inverse of the given character set
+- `[x-y]` is the range of characters from x-y
+- `[[:xxx:]]` is a named character set
+- `[[:^xxx:]]` is the inverse of a named character set
+- `[[:alnum:]]`  : "alphanumeric"
+- `[[:alpha:]]`  : "alphabetic"
+- `[[:ascii:]]`  : "0-127"
+- `[[:blank:]]`  : "space or tab"
+- `[[:cntrl:]]`  : "control character"
+- `[[:digit:]]`  : "decimal digit"
+- `[[:graph:]]`  : "printing, excluding space"
+- `[[:lower:]]`  : "lower case letter"
+- `[[:print:]]`  : "printing, including space"
+- `[[:punct:]]`  : "printing, excluding alphanumeric"
+- `[[:space:]]`  : "white space"
+- `[[:upper:]]`  : "upper case letter"
+- `[[:word:]]`   : "same as \w"
+- `[[:xdigit:]]` : "hexadecimal digit"
+
+Groups:
+- `(...)` is a capturing group
+- `(?:...)` is a non-capturing group
+- `\n` is a backreference (where n is the number of the group, starting with 1)
+- `$n` is a reference from the replacement expression to a group in the match expression.
+
+And some other things:
+- `\b` denotes a word boundary, `\B` is not a word boundary.
+- `^` is the start of the string or line, `$` the end.
+- `|` is "alternation", i.e. the "or".
 
 \subsection string-example Examples
 

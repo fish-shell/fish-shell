@@ -27,22 +27,8 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
         return 1
     end
 
-    # Find an hg directory above $PWD
-    # without calling `hg root` because that's too slow
-    set -l root
-    set -l dir (pwd -P)
-    while test $dir != "/"
-        if test -f $dir'/.hg/dirstate'
-            set root $dir"/.hg"
-            break
-        end
-        # Go up one directory
-        set dir (string replace -r '[^/]*/?$' '' $dir)
-    end
-
-    if test -z "$root"
-        return 0
-    end
+    set -l root (fish_print_hg_root)
+    or return 0
 
     # Read branch and bookmark
     set -l branch (cat $root/branch 2>/dev/null; or echo default)

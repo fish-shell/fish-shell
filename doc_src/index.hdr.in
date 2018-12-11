@@ -671,8 +671,19 @@ set n -3
 echo $PATH[$n..-1]
 \endfish
 
-Note that variables can be used as indices for expansion of variables, but not command substitution.
+Variables can be used as indices for expansion of variables, like so:
+\fish
+set index 2
+set letters a b c d
+echo $letters[$index] # returns 'b'
+\endfish
+However using variables as indices for command substitution is currently not supported, so 
+\fish
+echo (seq 5)[$index] # This won't work
 
+set sequence (seq 5) # It needs to be written on two lines like this.
+echo $sequence[$index] # returns '2'
+\endfish
 
 \subsection expand-home Home directory expansion
 
@@ -688,7 +699,6 @@ When combining multiple parameter expansions, expansions are performed in the fo
 - Command substitutions
 - Variable expansions
 - Bracket expansion
-- Pid expansion
 - Wildcard expansion
 
 Expansions are performed from right to left, nested bracket expansions are performed from the inside and out.
@@ -929,9 +939,9 @@ The user can change the settings of `fish` by changing the values of certain var
 
 - `USER`, the current username. This variable can be changed by the user.
 
-- `cmd_duration`, the runtime of the last command in milliseconds.
+- `CMD_DURATION`, the runtime of the last command in milliseconds.
 
-- `version`, the version of the currently running fish
+- `version`, the version of the currently running fish (also available as `FISH_VERSION` for backward compatibility).
 
 - `SHLVL`, the level of nesting of shells
 
@@ -939,7 +949,7 @@ The user can change the settings of `fish` by changing the values of certain var
 
 The names of these variables are mostly derived from the csh family of shells and differ from the ones used by Bourne style shells such as bash.
 
-Variables whose name are in uppercase are exported to the commands started by fish, while those in lowercase are not exported. This rule is not enforced by fish, but it is good coding practice to use casing to distinguish between exported and unexported variables. `fish` also uses several variables internally. Such variables are prefixed with the string `__FISH` or `__fish.` These should never be used by the user. Changing their value may break fish.
+Variables whose name are in uppercase are generally exported to the commands started by fish, while those in lowercase are not exported (`CMD_DURATION` is an exception, for historical reasons). This rule is not enforced by fish, but it is good coding practice to use casing to distinguish between exported and unexported variables. `fish` also uses several variables internally. Such variables are prefixed with the string `__FISH` or `__fish.` These should never be used by the user. Changing their value may break fish.
 
 \subsection variables-status The status variable
 
@@ -994,7 +1004,7 @@ The following variables are available to change the highlighting colors in fish:
 
 - `fish_color_selection`, the color used when selecting text (in vi visual mode)
 
-- `fish_color_search_match`, the color used to highlight history search matches
+- `fish_color_search_match`, used to highlight history search matches and the selected pager item (must be a background)
 
 - `fish_color_operator`, the color for parameter expansion operators like '*' and '~'
 
@@ -1250,14 +1260,14 @@ Configuration files are evaluated in the following order:
 - Configuration shipped with fish, which should not be edited, in `$__fish_data_dir/config.fish` (usually `/usr/share/fish/config.fish`).
 - System-wide configuration files, where administrators can include initialization that should be run for all users on the system - similar to `/etc/profile` for POSIX-style shells - in `$__fish_sysconf_dir` (usually `/etc/fish/config.fish`);
 - Configuration snippets in files ending in `.fish`, in the directories:
-  - `$XDG_CONFIG_HOME/fish/conf.d` (by default, `~/.config/fish/conf.d/`)
+  - `$__fish_config_dir/conf.d` (by default, `~/.config/fish/conf.d/`)
   - `$__fish_sysconf_dir/conf.d` (by default, `/etc/fish/conf.d`)
   - `/usr/share/fish/vendor_conf.d` (set at compile time; by default, `$__fish_data_dir/conf.d`)
 
   If there are multiple files with the same name in these directories, only the first will be executed.
   They are executed in order of their filename, sorted (like globs) in a natural order (i.e. "01" sorts before "2").
 
-- User initialization, usually in `~/.config/fish/config.fish` (controlled by the `XDG_CONFIG_HOME` environment variable).
+- User initialization, usually in `~/.config/fish/config.fish` (controlled by the `XDG_CONFIG_HOME` environment variable, and accessible as `$__fish_config_dir`).
 
 These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.
 
@@ -1282,7 +1292,7 @@ end
 If you want to run a set of commands when `fish` exits, use an <a href='#event'>event handler</a> that is triggered by the exit of the shell:
 
 \fish
-function on_exit --on-process $fish_pid
+function on_exit --on-event fish_exit
     echo fish is now exiting
 end
 \endfish
@@ -1360,6 +1370,9 @@ When fish waits for input, it will display a prompt by evaluating the `fish_prom
 
 If a function named `fish_greeting` exists, it will be run when entering interactive mode. Otherwise, if an environment variable named `fish_greeting` exists, it will be printed.
 
+\subsection private-mode Private mode
+
+fish supports launching in private mode via `fish --private` (or `fish -P` for short). In private mode, old history is not available and any interactive commands you execute will not be appended to the global history file, making it useful both for avoiding inadvertently leaking personal information (e.g. for screencasts) and when dealing with sensitive information to prevent it being persisted to disk. You can query the global variable `fish_private_mode` (`if set -q fish_private_mode ...`) if you would like to respect the user's wish for privacy and alter the behavior of your own fish scripts.
 
 \subsection event Event handlers
 

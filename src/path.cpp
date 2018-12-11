@@ -33,7 +33,7 @@ const wcstring_list_t dflt_pathsv({L"/bin", L"/usr/bin", PREFIX L"/bin"});
 
 static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                                const maybe_t<env_var_t> &bin_path_var) {
-    debug(3, L"path_get_path( '%ls' )", cmd.c_str());
+    debug(5, L"path_get_path( '%ls' )", cmd.c_str());
 
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
     // looking for a matching command.
@@ -124,7 +124,7 @@ bool path_get_path(const wcstring &cmd, wcstring *out_path) {
 }
 
 wcstring_list_t path_get_paths(const wcstring &cmd) {
-    debug(3, L"path_get_paths('%ls')", cmd.c_str());
+    debug(5, L"path_get_paths('%ls')", cmd.c_str());
     wcstring_list_t paths;
 
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
@@ -157,15 +157,12 @@ wcstring_list_t path_get_paths(const wcstring &cmd) {
     return paths;
 }
 
-bool path_get_cdpath(const wcstring &dir, wcstring *out, const wchar_t *wd,
+bool path_get_cdpath(const wcstring &dir, wcstring *out, const wcstring &wd,
                      const env_vars_snapshot_t &env_vars) {
     int err = ENOENT;
     if (dir.empty()) return false;
 
-    if (wd) {
-        size_t len = wcslen(wd);
-        assert(wd[len - 1] == L'/');
-    }
+    assert(!wd.empty() && wd.back() == L'/');
 
     wcstring_list_t paths;
     if (dir.at(0) == L'/') {
@@ -174,10 +171,7 @@ bool path_get_cdpath(const wcstring &dir, wcstring *out, const wchar_t *wd,
     } else if (string_prefixes_string(L"./", dir) || string_prefixes_string(L"../", dir) ||
                dir == L"." || dir == L"..") {
         // Path is relative to the working directory.
-        wcstring path;
-        if (wd) path.append(wd);
-        path.append(dir);
-        paths.push_back(path);
+        paths.push_back(path_normalize_for_cd(wd, dir));
     } else {
         // Respect CDPATH.
         wcstring_list_t cdpathsv;
@@ -189,7 +183,7 @@ bool path_get_cdpath(const wcstring &dir, wcstring *out, const wchar_t *wd,
         }
         for (wcstring next_path : cdpathsv) {
             if (next_path.empty()) next_path = L".";
-            if (next_path == L"." && wd != NULL) {
+            if (next_path == L"." && !wd.empty()) {
                 // next_path is just '.', and we have a working directory, so use the wd instead.
                 // TODO: if next_path starts with ./ we need to replace the . with the wd.
                 next_path = wd;
@@ -221,7 +215,7 @@ bool path_get_cdpath(const wcstring &dir, wcstring *out, const wchar_t *wd,
     return success;
 }
 
-bool path_can_be_implicit_cd(const wcstring &path, wcstring *out_path, const wchar_t *wd,
+bool path_can_be_implicit_cd(const wcstring &path, const wcstring &wd, wcstring *out_path,
                              const env_vars_snapshot_t &vars) {
     wcstring exp_path = path;
     expand_tilde(exp_path);

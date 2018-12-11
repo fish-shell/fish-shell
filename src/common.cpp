@@ -820,7 +820,8 @@ wcstring reformat_for_screen(const wcstring &msg) {
 
 /// Escape a string in a fashion suitable for using as a URL. Store the result in out_str.
 static void escape_string_url(const wcstring &in, wcstring &out) {
-    for (auto &c1 : in) {
+    const std::string narrow = wcs2string(in);
+    for (auto &c1 : narrow) {
         // This silliness is so we get the correct result whether chars are signed or unsigned.
         unsigned int c2 = (unsigned int)c1 & 0xFF;
         if (!(c2 & 0x80) &&
@@ -871,22 +872,25 @@ static bool unescape_string_url(const wchar_t *in, wcstring *out) {
 /// Escape a string in a fashion suitable for using as a fish var name. Store the result in out_str.
 static void escape_string_var(const wcstring &in, wcstring &out) {
     bool prev_was_hex_encoded = false;
-    for (auto c1 : in) {
-        if (c1 >= 0 && c1 <= 127 && isalnum(c1) && (!prev_was_hex_encoded || !is_hex_digit(c1))) {
+    const std::string narrow = wcs2string(in);
+    for (auto c1 : narrow) {
+        // This silliness is so we get the correct result whether chars are signed or unsigned.
+        unsigned int c2 = (unsigned int)c1 & 0xFF;
+        if (!(c2 & 0x80) && isalnum(c2) && (!prev_was_hex_encoded || !is_hex_digit(c2))) {
             // ASCII alphanumerics don't need to be encoded.
             if (prev_was_hex_encoded) {
                 out.push_back(L'_');
                 prev_was_hex_encoded = false;
             }
-            out.push_back(c1);
-        } else if (c1 == L'_') {
+            out.push_back((wchar_t)c2);
+        } else if (c2 == '_') {
             // Underscores are encoded by doubling them.
             out.append(L"__");
             prev_was_hex_encoded = false;
         } else {
             // All other chars need to have their UTF-8 representation encoded in hex.
             wchar_t buf[4];
-            swprintf(buf, sizeof buf / sizeof buf[0], L"_%02X", c1);
+            swprintf(buf, sizeof buf / sizeof buf[0], L"_%02X", c2);
             out.append(buf);
             prev_was_hex_encoded = true;
         }
@@ -1092,6 +1096,42 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
     }
 }
 
+/// Escapes a string for use in a regex string. Not safe for use with `eval` as only
+/// characters reserved by PCRE2 are escaped, i.e. it relies on fish's automatic escaping
+/// of subshell output in subsequent concatenation or for use as an argument.
+/// \param in is the raw string to be searched for literally when substituted in a PCRE2 expression.
+static wcstring escape_string_pcre2(const wcstring &in) {
+    wcstring out;
+    out.reserve(in.size() * 1.3); // a wild guess
+
+    for (auto c : in) {
+        switch (c) {
+            case L'.':
+            case L'^':
+            case L'$':
+            case L'*':
+            case L'+':
+            case L'(':
+            case L')':
+            case L'?':
+            case L'[':
+            case L'{':
+            case L'}':
+            case L'\\':
+            case L'|':
+            // these two only *need* to be escaped within a character class, and technically it makes
+            // no sense to ever use process substitution output to compose a character class, but...
+            case L'-':
+            case L']':
+                out.push_back('\\');
+            default:
+                out.push_back(c);
+        }
+    }
+
+    return out;
+}
+
 wcstring escape_string(const wchar_t *in, escape_flags_t flags, escape_string_style_t style) {
     wcstring result;
 
@@ -1106,6 +1146,10 @@ wcstring escape_string(const wchar_t *in, escape_flags_t flags, escape_string_st
         }
         case STRING_STYLE_VAR: {
             escape_string_var(in, result);
+            break;
+        }
+        case STRING_STYLE_REGEX: {
+            result = escape_string_pcre2(in);
             break;
         }
     }
@@ -1127,6 +1171,10 @@ wcstring escape_string(const wcstring &in, escape_flags_t flags, escape_string_s
         }
         case STRING_STYLE_VAR: {
             escape_string_var(in, result);
+            break;
+        }
+        case STRING_STYLE_REGEX: {
+            result = escape_string_pcre2(in);
             break;
         }
     }
@@ -1613,6 +1661,11 @@ bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t es
             success = unescape_string_var(input, output);
             break;
         }
+        case STRING_STYLE_REGEX: {
+            // unescaping PCRE2 is not needed/supported, the PCRE2 engine is responsible for that
+            success = false;
+            break;
+        }
     }
     if (!success) output->clear();
     return success;
@@ -1632,6 +1685,11 @@ bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t e
         }
         case STRING_STYLE_VAR: {
             success = unescape_string_var(input.c_str(), output);
+            break;
+        }
+        case STRING_STYLE_REGEX: {
+            // unescaping PCRE2 is not needed/supported, the PCRE2 engine is responsible for that
+            success = false;
             break;
         }
     }
@@ -1744,8 +1802,7 @@ int common_get_width() { return get_current_winsize().ws_col; }
 int common_get_height() { return get_current_winsize().ws_row; }
 
 bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &value) {
-    size_t prefix_size = wcslen(proposed_prefix);
-    return prefix_size <= value.size() && value.compare(0, prefix_size, proposed_prefix) == 0;
+    return string_prefixes_string(proposed_prefix, value.c_str());
 }
 
 bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value) {
@@ -1760,6 +1817,17 @@ bool string_prefixes_string(const wchar_t *proposed_prefix, const wchar_t *value
         if (proposed_prefix[idx] != value[idx]) return false;
     }
     // We must have that proposed_prefix[idx] == L'\0', so we have a prefix match.
+    return true;
+}
+
+bool string_prefixes_string(const char *proposed_prefix, const std::string &value) {
+    return string_prefixes_string(proposed_prefix, value.c_str());
+}
+
+bool string_prefixes_string(const char *proposed_prefix, const char *value) {
+    for (size_t idx = 0; proposed_prefix[idx] != L'\0'; idx++) {
+        if (proposed_prefix[idx] != value[idx]) return false;
+    }
     return true;
 }
 
@@ -1848,8 +1916,8 @@ string_fuzzy_match_t string_fuzzy_match_string(const wcstring &string,
         assert(match_against.size() >= string.size());
         result.match_distance_first = match_against.size() - string.size();
         result.match_distance_second = location;  // prefer earlier matches
-    } else if (limit_type >= fuzzy_match_substring &&
-               (location = ifind(match_against, string)) != wcstring::npos) {
+    } else if (limit_type >= fuzzy_match_substring_case_insensitive &&
+               (location = ifind(match_against, string, true)) != wcstring::npos) {
         // A case-insensitive version of the string is in the match against.
         result.type = fuzzy_match_substring_case_insensitive;
         assert(match_against.size() >= string.size());
@@ -1942,8 +2010,8 @@ int create_directory(const wcstring &d) {
 }
 
 __attribute__((noinline)) void bugreport() {
-    debug(0, _(L"This is a bug. Break on bugreport to debug."));
-    debug(0, _(L"If you can reproduce it, please send a bug report to %s."), PACKAGE_BUGREPORT);
+    debug(0, _(L"This is a bug. Break on 'bugreport' to debug."));
+    debug(0, _(L"If you can reproduce it, please report: %s."), PACKAGE_BUGREPORT);
 }
 
 wcstring format_size(long long sz) {

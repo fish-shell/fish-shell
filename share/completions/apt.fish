@@ -16,11 +16,8 @@ function __fish_apt_option
     complete -f -c apt -n "__fish_seen_subcommand_from $subcommand" $argv
 end
 
-#using -r and not -e as string match -e is broken, this will cause problems
-#if the commandline contains special characters, but most package names do
-#not contain special characters. Can switch to -e after #4971 is fixed.
-complete -c apt -n "__fish_seen_subcommand_from $pkg_subcmds" -a '(__fish_print_packages | head -n 100)'
-complete -c apt -n "__fish_seen_subcommand_from $installed_pkg_subcmds" -a '(__fish_print_packages --installed | string match -r -- ".*"(commandline -ct)".*" | head -n 100)' -d 'Package'
+complete -c apt -n "__fish_seen_subcommand_from $pkg_subcmds" -a '(__fish_print_packages | head -n 250)'
+complete -c apt -n "__fish_seen_subcommand_from $installed_pkg_subcmds" -a '(__fish_print_packages --installed | string match -re -- "(?:\\b|_)"(commandline -ct | string escape --style=regex) | head -n 250)' -d 'Package'
 
 # Support flags
 complete -x -f -c apt -s h -l help     -d 'Display help'

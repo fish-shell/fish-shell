@@ -27,6 +27,12 @@ function cd --description "Change directory"
         return $status
     end
 
+    # allow explicit "cd ." if the mount-point became stale in the meantime
+    if test "$argv" = "."
+        cd "$PWD"
+        return $status
+    end
+
     builtin cd $argv
     set -l cd_status $status
 

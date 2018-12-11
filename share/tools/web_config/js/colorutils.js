@@ -227,7 +227,7 @@ var color_scheme_fish_default = {
     'colors': [],
     'preferred_background': 'black',
 
-    'autosuggestion': '555',
+    'autosuggestion': '555 brblack',
     'command': '005fd7',
     'param': '00afff',
     'redirection': '00afff',
@@ -236,7 +236,22 @@ var color_scheme_fish_default = {
     'escape': '00a6b2',
     'operator': '00a6b2',
     'quote': '999900',
-    'end': '009900'
+    'end': '009900',
+    'search_match' : 'bryellow --background=brblack',
+    'fish_pager_color_completion' : '',
+    'fish_pager_color_description' : 'B3A06D yellow',
+    'fish_pager_color_prefix' : 'white --bold --underline',
+    'fish_pager_color_progress' : 'brwhite --background=cyan',
+    'normal' : 'normal',
+    'user' : 'brgreen',
+    'host' : 'normal',
+    'valid_path' : '--underline',
+    'cwd' : 'green',
+    'cwd_root' : 'red',
+    'match' : '--background=brblue',
+    'selection' : 'white --bold --background=brblack',
+    'cancel' : '-r',
+    'history_current' : '--bold'
 };
 
 
@@ -284,6 +299,11 @@ var color_scheme_solarized_light = {
     param: solarized.base00,
     quote: solarized.base0,
     redirection: solarized.violet,
+    search_match: 'bryellow --background=white',
+    fish_pager_color_completion: 'green',
+    fish_pager_color_description: 'B3A06D',
+    fish_pager_color_prefix: 'cyan --underline',
+    fish_pager_color_progress: 'brwhite --background=cyan',
 
     url: 'http://ethanschoonover.com/solarized'
 };
@@ -301,6 +321,11 @@ var color_scheme_solarized_dark = {
     param: solarized.base0,
     quote: solarized.base00,
     redirection: solarized.violet,
+    search_match: 'bryellow --background=black',
+    fish_pager_color_completion: 'B3A06D',
+    fish_pager_color_description: 'B3A06D',
+    fish_pager_color_prefix: 'cyan --underline',
+    fish_pager_color_progress: 'brwhite --background=cyan',
 
     url: 'http://ethanschoonover.com/solarized'
 };

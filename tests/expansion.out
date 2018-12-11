@@ -32,6 +32,9 @@
 2 prefixbaz prefixquux
 3 baz quux 
 3 prefixbaz prefixquux prefix
+
+####################
+# Slices
 1 baz quux  fooest
 2 baz quux
 1 prefixbaz quux  fooest
@@ -62,6 +65,8 @@
 # foo = a
 0
 
+out2
+out2 out1
 
 ####################
 # Percent self

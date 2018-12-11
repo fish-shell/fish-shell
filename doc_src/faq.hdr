@@ -12,6 +12,7 @@
 - <a href='#faq-prompt'>How do I set my prompt?</a>
 - <a href='#faq-cmd-history'>How do I run a command from history?</a>
 - <a href='#faq-subcommand'>How do I run a subcommand? The backtick doesn't work!</a>
+- <a href='#faq-pkg-config'>My command (pkg-config) gives its output as a single long string?</a>
 - <a href='#faq-exit-status'>How do I get the exit status of a command?</a>
 - <a href='#faq-single-env'>How do I set an environment variable for just one command?</a>
 - <a href='#faq-exported-uvar'>Why doesn't `set -Ux` (exported universal variables) seem to work?</a>
@@ -81,6 +82,33 @@ for i in (ls)
 end
 \endfish
 
+\section faq-pkg-config My command (pkg-config) gives its output as a single long string?
+
+Unlike other shells, fish splits command substitutions only on newlines, not spaces or tabs or the characters in $IFS.
+
+That means if you run
+
+\fish{cli-dark}
+echo x(printf '%s ' a b c)x
+\endfish
+
+It will print `xa b c x`. But if you do
+
+\fish{cli-dark}
+echo x(printf '%s\n' a b c)x
+\endfish
+
+it will print `xax xbx xcx`.
+
+In the overwhelming majority of cases, splitting on spaces is unwanted, so this is an improvement.
+
+However sometimes, especially with `pkg-config` and related tools, splitting on spaces is needed.
+
+In these cases use `string split " "` like:
+
+\fish{cli-dark}
+g++ example_01.cpp (pkg-config --cflags --libs gtk+-2.0 | string split " ")
+\endfish
 
 \section faq-exit-status How do I get the exit status of a command?
 

@@ -1,11 +1,4 @@
 function __fish_print_help --description "Print help message for the specified fish function or builtin" --argument item
-    # special support for builtin_help_get()
-    set -l tty_width 0
-    if test "$item" = "--tty-width"
-        set tty_width $argv[2]
-        set item $argv[3]
-    end
-
     if test "$item" = '.'
         set item source
     end
@@ -17,22 +10,8 @@ function __fish_print_help --description "Print help message for the specified f
 
     # Render help output, save output into the variable 'help'
     set -l help
-    set -l cols
+    set -l cols $COLUMNS
     set -l rLL
-    if test "$tty_width" -gt 0
-        set cols $tty_width
-    else if command test -t 1
-        # We want to simulate `man`'s dynamic line length, because
-        # defaulting to 80 kind of sucks.
-        # Note: using `command test` instead of `test` because `test -t 1`
-        # doesn't seem to work right.
-        # Note: grab the size from the stdout terminal in case it's somehow
-        # different than the stdin of fish.
-        # use fd 3 to copy our stdout because we need to pipe the output of stty
-        begin
-            stty size 0<&3 | read __ cols
-        end 3<&1
-    end
     if test -n "$cols"
         set cols (math $cols - 4) # leave a bit of space on the right
         set rLL -rLL=$cols[1]n

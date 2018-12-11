@@ -380,44 +380,53 @@ void safe_perror(const char *message) {
     errno = err;
 }
 
+/// Wide character realpath. The last path component does not need to be valid. If an error occurs,
+/// wrealpath() returns none() and errno is likely set.
 maybe_t<wcstring> wrealpath(const wcstring &pathname) {
     if (pathname.empty()) return none();
 
     cstring real_path;
     cstring narrow_path = wcs2string(pathname);
 
-    // Strip trailing slashes. This is needed to be bug-for-bug compatible with GNU realpath which
-    // treats "/a//" as equivalent to "/a" whether or not /a exists.
+    // Strip trailing slashes. This is treats "/a//" as equivalent to "/a" if /a is a non-directory.
     while (narrow_path.size() > 1 && narrow_path.at(narrow_path.size() - 1) == '/') {
         narrow_path.erase(narrow_path.size() - 1, 1);
     }
 
     char tmpbuf[PATH_MAX];
     char *narrow_res = realpath(narrow_path.c_str(), tmpbuf);
+
     if (narrow_res) {
         real_path.append(narrow_res);
     } else {
+        // Check if everything up to the last path component is valid.
         size_t pathsep_idx = narrow_path.rfind('/');
+
         if (pathsep_idx == 0) {
             // If the only pathsep is the first character then it's an absolute path with a
             // single path component and thus doesn't need conversion.
             real_path = narrow_path;
         } else {
-            char tmpbuff[PATH_MAX];
+            // Only call realpath() on the portion up to the last component.
+            errno = 0;
+
             if (pathsep_idx == cstring::npos) {
-                // No pathsep means a single path component relative to pwd.
-                narrow_res = realpath(".", tmpbuff);
-                assert(narrow_res != NULL && "realpath unexpectedly returned null");
-                pathsep_idx = 0;
+                // If there is no "/", this is a file in $PWD, so give the realpath to that.
+                narrow_res = realpath(".", tmpbuf);
             } else {
+                errno = 0;
                 // Only call realpath() on the portion up to the last component.
-                narrow_res = realpath(narrow_path.substr(0, pathsep_idx).c_str(), tmpbuff);
-                if (!narrow_res) return none();
-                pathsep_idx++;
+                narrow_res = realpath(narrow_path.substr(0, pathsep_idx).c_str(), tmpbuf);
             }
+
+            if (!narrow_res) return none();
+
+            pathsep_idx++;
             real_path.append(narrow_res);
-            // This test is to deal with pathological cases such as /../../x => //x.
+
+            // This test is to deal with cases such as /../../x => //x.
             if (real_path.size() > 1) real_path.append("/");
+
             real_path.append(narrow_path.substr(pathsep_idx, cstring::npos));
         }
     }
@@ -454,6 +463,50 @@ wcstring normalize_path(const wcstring &path) {
     result.insert(0, leading_slashes > 2 ? 1 : leading_slashes, sep);
     // Ensure ./ normalizes to . and not empty.
     if (result.empty()) result.push_back(L'.');
+    return result;
+}
+
+wcstring path_normalize_for_cd(const wcstring &wd, const wcstring &path) {
+    // Fast paths.
+    const wchar_t sep = L'/';
+    assert(!wd.empty() && wd.front() == sep && wd.back() == sep &&
+           "Invalid working directory, it must start and end with /");
+    if (path.empty()) {
+        return wd;
+    } else if (path.front() == sep) {
+        return path;
+    } else if (path.front() != L'.') {
+        return wd + path;
+    }
+
+    // Split our strings by the sep.
+    wcstring_list_t wd_comps = split_string(wd, sep);
+    wcstring_list_t path_comps = split_string(path, sep);
+
+    // Remove empty segments from wd_comps.
+    // In particular this removes the leading and trailing empties.
+    wd_comps.erase(std::remove(wd_comps.begin(), wd_comps.end(), L""), wd_comps.end());
+
+    // Erase leading . and .. components from path_comps, popping from wd_comps as we go.
+    size_t erase_count = 0;
+    for (const wcstring &comp : path_comps) {
+        bool erase_it = false;
+        if (comp.empty() || comp == L".") {
+            erase_it = true;
+        } else if (comp == L".." && !wd_comps.empty()) {
+            erase_it = true;
+            wd_comps.pop_back();
+        }
+        if (erase_it) {
+            erase_count++;
+        } else {
+            break;
+        }
+    }
+    // Append un-erased elements to wd_comps and join them, then prepend the leading /.
+    std::move(path_comps.begin() + erase_count, path_comps.end(), std::back_inserter(wd_comps));
+    wcstring result = join_strings(wd_comps, sep);
+    result.insert(0, 1, L'/');
     return result;
 }
 
@@ -698,6 +751,29 @@ unsigned long long fish_wcstoull(const wchar_t *str, const wchar_t **endptr, int
     }
     if (endptr) *endptr = _endptr;
     return result;
+}
+
+/// Like wcstod(), but wcstod() is enormously expensive on some platforms so this tries to have a
+/// fast path.
+double fish_wcstod(const wchar_t *str, wchar_t **endptr) {
+    // The "fast path." If we're all ASCII and we fit inline, use strtod().
+    char narrow[128];
+    size_t len = wcslen(str);
+    size_t len_plus_0 = 1 + len;
+    auto is_digit = [](wchar_t c) { return '0' <= c && c <= '9'; };
+    if (len_plus_0 <= sizeof narrow && std::all_of(str, str + len, is_digit)) {
+        // Fast path. Copy the string into a local buffer and run strtod() on it.
+        // We can ignore the locale-taking version because we are limited to ASCII digits.
+        std::copy(str, str + len_plus_0, narrow);
+        char *narrow_endptr = nullptr;
+        double ret = strtod(narrow, endptr ? &narrow_endptr : nullptr);
+        if (endptr) {
+            assert(narrow_endptr && "narrow_endptr should not be null");
+            *endptr = const_cast<wchar_t *>(str + (narrow_endptr - narrow));
+        }
+        return ret;
+    }
+    return wcstod_l(str, endptr, fish_c_locale());
 }
 
 file_id_t file_id_t::from_stat(const struct stat &buf) {

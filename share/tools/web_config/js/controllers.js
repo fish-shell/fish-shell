@@ -99,10 +99,48 @@ controllers.controller("colorsController", function($scope, $http) {
 	}
 
     $scope.setTheme = function() {
-        var settingNames = ["autosuggestion", "command", "param", "redirection", "comment", "error", "quote", "end"];
+        var settingNames = ["normal",
+                            "command",
+                            "quote",
+                            "redirection",
+                            "end",
+                            "error",
+                            "param",
+                            "comment",
+                            "match",
+                            "selection",
+                            "search_match",
+                            "history_current",
+                            "operator",
+                            "escape",
+                            "cwd",
+                            "cwd_root",
+                            "valid_path",
+                            "autosuggestion",
+                            "user",
+                            "host",
+                            "cancel",
+                            "fish_pager_color_completion",
+                            "fish_pager_color_description",
+                            "fish_pager_color_prefix",
+                            "fish_pager_color_progress"
+                           ];
         var remaining = settingNames.length;
-        for (name in settingNames) {
-            var postData = "what=" + settingNames[name] + "&color=" + $scope.selectedColorScheme[settingNames[name]] + "&background_color=&bold=&underline=";
+        for (name of settingNames) {
+            var selected;
+            // Skip colors undefined in the current theme
+            // js is dumb - the empty string is false,
+            // but we want that to mean unsetting a var.
+            if (!$scope.selectedColorScheme[name] && $scope.selectedColorScheme[name] !== '') {
+                // Fall back onto the defaut colorscheme.
+                selected = color_scheme_fish_default[name];
+                if (!selected && selected !== '') {
+                    selected = '';
+                }
+            } else {
+                selected = $scope.selectedColorScheme[name];
+            }
+            var postData = "what=" + name + "&color=" + selected + "&background_color=&bold=&underline=&dim=&reverse=&italics=";
             $http.post("set_color/", postData, { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config) {
             	if (status == 200) {
             		remaining -= 1;

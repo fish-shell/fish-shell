@@ -23,3 +23,7 @@ $argle bargle: invalid var name
 
 ####################
 # if/for/while scope
+
+####################
+# readonly vars
+set: Tried to change the read-only variable 'status'

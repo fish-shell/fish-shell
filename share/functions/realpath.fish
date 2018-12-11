@@ -25,7 +25,7 @@ function realpath -d "return an absolute path without symlinks"
     set -l options 'h/help' 'q/quiet' 'V-version' 's/strip' 'N-no-symlinks' 'z/zero'
     set -a options 'e/canonicalize-existing' 'm/canonicalize-missing' 'L/logical' 'P/physical'
     set -a options 'R-relative-to=' 'B-relative-base='
-    argparse -n realpath --min-args=1 $options -- $argv
+    argparse -n realpath $options -- $argv
     or return
 
     if set -q _flag_help
@@ -39,6 +39,11 @@ function realpath -d "return an absolute path without symlinks"
         printf (_ "%s: These flags are not allowed by fish realpath: '%s'") realpath "$flags" >&2
         echo >&2
         __fish_print_help realpath
+        return 1
+    end
+
+    if not set -q argv[1]
+        printf (_ "%ls: Expected at least %d args, got only %d\n") realpath 1 0
         return 1
     end
 

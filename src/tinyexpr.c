@@ -150,6 +150,7 @@ static const te_variable functions[] = {
     {"npr", npr,      TE_FUNCTION2 | TE_FLAG_PURE, 0},
     {"pi", pi,        TE_FUNCTION0 | TE_FLAG_PURE, 0},
     {"pow", pow,      TE_FUNCTION2 | TE_FLAG_PURE, 0},
+    {"round", round,  TE_FUNCTION1 | TE_FLAG_PURE, 0},
     {"sin", sin,      TE_FUNCTION1 | TE_FLAG_PURE, 0},
     {"sinh", sinh,    TE_FUNCTION1 | TE_FLAG_PURE, 0},
     {"sqrt", sqrt,    TE_FUNCTION1 | TE_FLAG_PURE, 0},

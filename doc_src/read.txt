@@ -7,7 +7,7 @@ read [OPTIONS] [VARIABLE ...]
 
 \subsection read-description Description
 
-`read` reads from standard input and either writes the result back to the terminal for use in command substitution or stores the result in one or more shell variables. By default, `read` reads up to the next newline and splits it into given variables on spaces or tabs. Alternatively, a null character or a maximum number of characters can be used to terminate the input, and other delimiters can be given. Unlike other shells, there is no default variable (such as `REPLY`) for storing the result. Instead, it is printed on stdout.
+`read` reads from standard input and either writes the result back to standard output (for use in command substitution), or stores the result in one or more shell variables. By default, `read` reads a single line and splits it into variables on spaces or tabs. Alternatively, a null character or a maximum number of characters can be used to terminate the input, and other delimiters can be given. Unlike other shells, there is no default variable (such as `REPLY`) for storing the result - instead, it is printed on standard output.
 
 The following options are available:
 
@@ -43,17 +43,19 @@ The following options are available:
 - `-z` or `--null` marks the end of the line with the NUL character, instead of newline. This also
   disables interactive mode.
 
-- `-L` or `--line` reads a single line at a time from the input stream and stores it in the `N` given variable. No more than `N` lines are consumed (one line per variable) from the input stream.
+- `-L` or `--line` reads each line into successive variables, and stops after each variable has been filled. This cannot be combined with the `--delimiter` option.
 
-- `-A` or `--all-lines` splits input into the given variables, separated by line breaks. The entire input stream is consumed and interactive mode is disabled. Probably only useful with `-a` to read all lines into a single array variable. Where possible, ` | while read --line` should be preferred over ` | read --all-lines` as the latter will block until the input stream has been consumed, leading to latency and decreased responsiveness.
+Without the `--line` option, `read` reads a single line of input from standard input, breaks it into tokens, and then assigns one token to each variable specified in `VARIABLES`. If there are more tokens than variables, the complete remainder is assigned to the last variable.
 
-`read` reads a single line of input from stdin, breaks it into tokens based on the delimiter set via `-d`/`--delimiter` as a complete string (like `string split` or, if that has not been given the (deprecated) `IFS` shell variable as a set of characters, and then assigns one token to each variable specified in `VARIABLES`. If there are more tokens than variables, the complete remainder is assigned to the last variable. As a special case, if `IFS` is set to the empty string, each character of the input is considered a separate token.
+If the `--delimiter` argument is not given, the variable `IFS` is used as a list of characters to split on. Relying on the use of `IFS` is deprecated and this behaviour will be removed in future versions. The default value of `IFS` contains space, tab and newline characters. As a special case, if `IFS` is set to the empty string, each character of the input is considered a separate token.
 
-If no parameters are provided, `read` enters a special case that simply provides redirection from `stdin` to `stdout`, useful for command substitution. For instance, the fish shell command below can be used to read data that should be provided via a command line argument from the console instead of hardcoding it in the command itself, allowing the command to both be reused as-is in various contexts with different input values and preventing possibly sensitive text from being included in the shell history:
+With the `--line` option, `read` reads a line of input from standard input into each provided variable, stopping when each variable has been filled. The line is not tokenized.
+
+If no variable names are provided, `read` enters a special case that simply provides redirection from standard input to standard output, useful for command substitution. For instance, the fish shell command below can be used to read data that should be provided via a command line argument from the console instead of hardcoding it in the command itself, allowing the command to both be reused as-is in various contexts with different input values and preventing possibly sensitive text from being included in the shell history:
 
 `mysql -uuser -p(read)`
 
-When running in stdout redirect mode, `read` does not split the input in any way and text is redirected to standard output without any further processing or manipulation.
+When running in this mode, `read` does not split the input in any way and text is redirected to standard output without any further processing or manipulation.
 
 If `-a` or `--array` is provided, only one variable name is allowed and the tokens are stored as an array in this variable.
 

@@ -32,6 +32,11 @@ function __fish_git_branches
         | string replace -r '^refs/remotes/(.*)$' '$1\tRemote Branch'
 end
 
+function __fish_git_local_branches
+    command git for-each-ref --format='%(refname)' refs/heads/ refs/remotes/ 2>/dev/null \
+        | string replace -rf '^refs/heads/(.*)$' '$1\tLocal Branch'
+end
+
 function __fish_git_unique_remote_branches
     # `git checkout` accepts remote branches without the remote part
     # if they are unambiguous.
@@ -135,19 +140,30 @@ function __fish_git_files
     #
     set -l status_opt --ignore-submodules=all
 
-    # If we aren't looking for untracked/ignored files, let git status skip them.
+    # If we aren't looking for ignored files, let git status skip them.
+    # (don't use --ignored=no because that was only added in git 2.16, from Jan 2018.
+    set -q ignored; and set -a status_opt --ignored
+
+    # Glob just the current token for performance
+    # and so git shows untracked files (even in untracked dirs) for that.
+    # If the current token is empty, this matches everything in $PWD.
+    set -l files (commandline -ct)
+    # The trailing "**" is necessary to match files inside the given directories.
+    set files "$files*" "$files*/**"
     set -q untracked; and set -a status_opt -unormal
     or set -a status_opt -uno
-    set -q ignored; and set -a status_opt --ignored
+
+    # We need to set status.relativePaths to true because the porcelain v2 format still honors that,
+    # and core.quotePath to false so characters > 0x80 (i.e. non-ASCII) aren't considered special.
+    # We explicitly enable globs so we can use that to match the current token.
+    set -l git_opt -c status.relativePaths -c core.quotePath= --glob-pathspecs
 
     # We pick the v2 format if we can, because it shows relative filenames (if used without "-z").
     # We fall back on the v1 format by reading git's _version_, because trying v2 first is too slow.
     set -l ver (command git --version | string replace -rf 'git version (\d+)\.(\d+)\.?.*' '$1\n$2')
     # Version >= 2.11.* has the v2 format.
     if test "$ver[1]" -gt 2 2>/dev/null; or test "$ver[1]" -eq 2 -a "$ver[2]" -ge 11 2>/dev/null
-        # We need to set status.relativePaths to true because we want relative paths,
-        # and core.quotePath to false so characters > 0x80 (i.e. non-ASCII) aren't escaped.
-        command git -c status.relativePaths -c core.quotePath= status --porcelain=2 $status_opt \
+        command git $git_opt status --porcelain=2 $status_opt -- $files \
         | while read -la -d ' ' line
             set -l file
             set -l desc
@@ -262,7 +278,7 @@ function __fish_git_files
         set -l previousfile
         # Note that we can't use space as a delimiter between status and filename, because
         # the status can contain spaces - " M" is different from "M ".
-        command git -c core.quotePath= status --porcelain -z $status_opt \
+        command git $git_opt status --porcelain -z $status_opt -- $files \
         | while read -lz line
             set -l desc
             # The entire line is the "from" from a rename.
@@ -388,34 +404,27 @@ function __fish_git_ranges
 end
 
 function __fish_git_needs_command
+    # Figure out if the current invocation already has a command.
+
+    # Git has tons of options, but fortunately only a few can appear before the command.
+    # They are listed here.
+    set -l opts h-help p P-paginate N-no-pager b-bare o-no-replace-objects \
+    l-literal-pathspecs g-glob-pathspecs O-noglob-pathspecs i-icase-pathspecs \
+    e-exec-path= G-git-dir= c= C= v-version H-html-path \
+    m-man-path I-info-path w-work-tree= a-namespace= s-super-prefix=
     set cmd (commandline -opc)
-    set -l skip_next 1
-    set -q cmd[2]
+    set -e cmd[1]
+    argparse -s $opts -- $cmd 2>/dev/null
     or return 0
-    # Skip first word because it's "git" or a wrapper
-    for c in $cmd[2..-1]
-        test $skip_next -eq 0
-        and set skip_next 1
-        and continue
-        # git can only take a few options before a command, these are the ones mentioned in the "git" man page
-        # e.g. `git --follow log` is wrong, `git --help log` is okay (and `git --help log $branch` is superfluous but works)
-        # In case any other option is used before a command, we'll fail, but that's okay since it's invalid anyway
-        switch $c
-            # General options that can still take a command
-            case "--help" "-p" "--paginate" "--no-pager" "--bare" "--no-replace-objects" --{literal,glob,noglob,icase}-pathspecs --{exec-path,git-dir,work-tree,namespace}"=*"
-                continue
-                # General options with an argument we need to skip. The option=value versions have already been handled above
-            case --{exec-path,git-dir,work-tree,namespace}
-                set skip_next 0
-                continue
-                # General options that cause git to do something and exit - these behave like commands and everything after them is ignored
-            case "--version" --{html,man,info}-path
-                return 1
-                # We assume that any other token that's not an argument to a general option is a command
-            case "*"
-                echo $c
-                return 1
-        end
+    # These flags function as commands, effectively.
+    set -q _flag_version; and return 1
+    set -q _flag_html_path; and return 1
+    set -q _flag_man_path; and return 1
+    set -q _flag_info_path; and return 1
+    if set -q argv[1]
+        # Also print the command, so this can be used to figure out what it is.
+        echo $argv[1]
+        return 1
     end
     return 0
 end
@@ -524,7 +533,7 @@ function __fish_git_branch_for_remote
     end
     set -q remote[1]
     or return 1
-    __fish_git_branches | string match -- "$remote/*" | string replace -- "$remote/" ''
+    __fish_git_branches | string replace -f -- "$remote/" ''
 end
 
 # Return 0 if the current token is a possible commit-hash with at least 3 characters
@@ -728,12 +737,13 @@ complete -r -c git -n '__fish_git_using_command filter-branch' -s d -d 'Use this
 complete -c git -n '__fish_git_using_command filter-branch' -s f -l force -d 'Force filter branch to start even w/ refs in refs/original or existing temp directory'
 
 ### remote
-set -l remotecommands add rm show prune update rename set-head set-url set-branches
+set -l remotecommands add rm remove show prune update rename set-head set-url set-branches
 complete -f -c git -n '__fish_git_needs_command' -a remote -d 'Manage set of tracked repositories'
 complete -f -c git -n '__fish_git_using_command remote' -a '(__fish_git_remotes)'
 complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -s v -l verbose -d 'Be verbose'
 complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a add -d 'Adds a new remote'
 complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a rm -d 'Removes a remote'
+complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a remove -d 'Removes a remote'
 complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a show -d 'Shows a remote'
 complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a prune -d 'Deletes all stale tracking branches'
 complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a update -d 'Fetches updates'
@@ -744,6 +754,7 @@ complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subc
 complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from add " -s f -d 'Once the remote information is set up git fetch <name> is run'
 complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from add " -l tags -d 'Import every tag from a remote with git fetch <name>'
 complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from add " -l no-tags -d "Don't import tags from a remote with git fetch <name>"
+complete -f -c git -n '__fish_git_using_command remote; and __fish_seen_subcommand_from remove' -xa '(__fish_git_remotes)'
 complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from set-branches" -l add -d 'Add to the list of currently tracked branches instead of replacing it'
 complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from set-url" -l push -d 'Manipulate push URLs instead of fetch URLs'
 complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from set-url" -l add -d 'Add new URL instead of changing the existing URLs'
@@ -821,8 +832,8 @@ complete -f -c git -n '__fish_git_needs_command' -a bisect -d 'Find the change t
 ### branch
 complete -f -c git -n '__fish_git_needs_command' -a branch -d 'List, create, or delete branches'
 complete -f -c git -n '__fish_git_using_command branch' -a '(__fish_git_branches)'
-complete -f -c git -n '__fish_git_using_command branch' -s d -d 'Delete branch'
-complete -f -c git -n '__fish_git_using_command branch' -s D -d 'Force deletion of branch'
+complete -f -c git -n '__fish_git_using_command branch' -s d -d 'Delete branch' -xa '(__fish_git_local_branches)'
+complete -f -c git -n '__fish_git_using_command branch' -s D -d 'Force deletion of branch' -xa '(__fish_git_local_branches)'
 complete -f -c git -n '__fish_git_using_command branch' -s m -d 'Rename branch'
 complete -f -c git -n '__fish_git_using_command branch' -s M -d 'Force renaming branch'
 complete -f -c git -n '__fish_git_using_command branch' -s a -d 'Lists both local and remote branches'

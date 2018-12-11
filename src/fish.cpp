@@ -94,18 +94,19 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
     bool done = false;
     std::string exec_path = get_executable_path(argv0);
     if (get_realpath(exec_path)) {
-        debug(2, L"exec_path: '%s'", exec_path.c_str());
+        debug(2, L"exec_path: '%s', argv[0]: '%s'", exec_path.c_str(), argv0);
+        // TODO: we should determine program_name from argv0 somewhere in this file
 
 #ifdef CMAKE_BINARY_DIR
         // Detect if we're running right out of the CMAKE build directory
-        if (exec_path == std::string(CMAKE_BINARY_DIR) + "/fish") {
-            debug(2, "Running out of build directory, falling back to source paths");
+        if (string_prefixes_string(CMAKE_BINARY_DIR, exec_path.c_str())) {
+            debug(2, "Running out of build directory, using paths relative to CMAKE_SOURCE_DIR:\n %s", CMAKE_SOURCE_DIR);
 
             done = true;
             paths.data = wcstring{L"" CMAKE_SOURCE_DIR} + L"/share";
-            paths.sysconf = L"" SYSCONFDIR "/fish";
-            paths.doc = L"" DOCDIR;
-            paths.bin = L"" BINDIR;
+            paths.sysconf = wcstring{L"" CMAKE_SOURCE_DIR} + L"/etc";
+            paths.doc = wcstring{L"" CMAKE_SOURCE_DIR} + L"/user_doc/html";
+            paths.bin = wcstring{L"" CMAKE_BINARY_DIR};
         }
 #endif
 
@@ -218,7 +219,7 @@ int run_command_list(std::vector<std::string> *cmds, const io_chain_t &io) {
 
 /// Parse the argument list, return the index of the first non-flag arguments.
 static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
-    static const char * const short_opts = "+hilnvc:C:p:d:f:D:";
+    static const char * const short_opts = "+hPilnvc:C:p:d:f:D:";
     static const struct option long_opts[] = {{"command", required_argument, NULL, 'c'},
                                               {"init-command", required_argument, NULL, 'C'},
                                               {"features", required_argument, NULL, 'f'},
@@ -228,6 +229,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                                               {"login", no_argument, NULL, 'l'},
                                               {"no-execute", no_argument, NULL, 'n'},
                                               {"profile", required_argument, NULL, 'p'},
+                                              {"private", no_argument, NULL, 'P'},
                                               {"help", no_argument, NULL, 'h'},
                                               {"version", no_argument, NULL, 'v'},
                                               {NULL, 0, NULL, 0}};
@@ -281,6 +283,10 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
             case 'p': {
                 s_profiling_output_filename = optarg;
                 g_profiling_active = true;
+                break;
+            }
+            case 'P': {
+                start_private_mode();
                 break;
             }
             case 'v': {

@@ -37,7 +37,7 @@ static bool all_jobs_finished() {
     while (job_t *j = jobs.next()) {
         // If any job is not completed, return false.
         // If there are stopped jobs, they are ignored.
-        if ((j->flags & JOB_CONSTRUCTED) && !job_is_completed(j) && !job_is_stopped(j)) {
+        if (j->is_constructed() && !j->is_completed() && !j->is_stopped()) {
             return false;
         }
     }
@@ -54,11 +54,11 @@ static bool any_jobs_finished(size_t jobs_len) {
     }
     while (job_t *j = jobs.next()) {
         // If any job is completed, return true.
-        if ((j->flags & JOB_CONSTRUCTED) && (job_is_completed(j) || job_is_stopped(j))) {
+        if (j->is_constructed() && (j->is_completed() || j->is_stopped())) {
             return true;
         }
         // Check for jobs running exist or not.
-        if ((j->flags & JOB_CONSTRUCTED) && !job_is_stopped(j)) {
+        if (j->is_constructed() && !j->is_stopped()) {
             no_jobs_running = false;
         }
     }
@@ -83,10 +83,10 @@ static int wait_for_backgrounds(bool any_flag) {
 
 static bool all_specified_jobs_finished(const std::vector<job_id_t> &ids) {
     for (auto id : ids) {
-        if (job_t *j = job_get(id)) {
+        if (job_t *j = job_t::from_job_id(id)) {
             // If any specified job is not completed, return false.
             // If there are stopped jobs, they are ignored.
-            if ((j->flags & JOB_CONSTRUCTED) && !job_is_completed(j) && !job_is_stopped(j)) {
+            if (j->is_constructed() && !j->is_completed() && !j->is_stopped()) {
                 return false;
             }
         }
@@ -96,9 +96,9 @@ static bool all_specified_jobs_finished(const std::vector<job_id_t> &ids) {
 
 static bool any_specified_jobs_finished(const std::vector<job_id_t> &ids) {
     for (auto id : ids) {
-        if (job_t *j = job_get(id)) {
+        if (job_t *j = job_t::from_job_id(id)) {
             // If any specified job is completed, return true.
-            if ((j->flags & JOB_CONSTRUCTED) && (job_is_completed(j) || job_is_stopped(j))) {
+            if (j->is_constructed() && (j->is_completed() || j->is_stopped())) {
                 return true;
             }
         } else {

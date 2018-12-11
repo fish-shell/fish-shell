@@ -86,8 +86,11 @@ INSTALL(TARGETS ${PROGRAMS}
 
 # $v $(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish
 # $v $(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish/conf.d
+# $v $(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish/completions
+# $v $(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish/functions
 # $v $(INSTALL) -m 644 etc/config.fish $(DESTDIR)$(sysconfdir)/fish/
-FISH_CREATE_DIRS(${sysconfdir}/fish/conf.d)
+FISH_CREATE_DIRS(${sysconfdir}/fish/conf.d ${sysconfdir}/fish/completions
+    ${sysconfdir}/fish/functions)
 INSTALL(FILES etc/config.fish DESTINATION ${sysconfdir}/fish/)
 
 FISH_CREATE_DIRS(${rel_datadir}/fish ${rel_datadir}/fish/completions

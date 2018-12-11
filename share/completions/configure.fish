@@ -12,5 +12,9 @@ complete -c configure -l host -d "Cross-compile to build programs to run on HOST
 complete -c configure -l target -d "Configure for building compilers for TARGET" -x
 
 # use autoconf's --help to generate completions:
-echo "sourcing configure completions"
-complete -c 'configure' -a '(__fish_parse_configure (commandline | string replace -r "(.*configure) .*" "\$1"))'
+complete -c 'configure' -a '(for tok in (commandline -opc)
+    if string match -q "*configure" -- $tok
+        __fish_parse_configure $tok
+        break
+    end
+end)'

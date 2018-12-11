@@ -205,17 +205,8 @@ tok_t tokenizer_t::read_string() {
             expecting.pop_back();
         } else if (c == L'[') {
             if (this->buff != buff_start) {
-                if ((mode & tok_modes::array_brackets) == tok_modes::array_brackets) {
-                    // Nested brackets should not overwrite the existing slice_offset
-                    // mqudsi: TOK_ILLEGAL_SLICE is the right error here, but the shell
-                    // prints an error message with the caret pointing at token_start,
-                    // not err_loc, making the TOK_ILLEGAL_SLICE message misleading.
-                    // return call_error(TOK_ILLEGAL_SLICE, buff_start, this->buff);
-                    return this->call_error(tokenizer_error_t::unterminated_slice, this->start,
-                                            this->buff);
-                }
-                slice_offset = this->buff - this->start;
                 mode |= tok_modes::array_brackets;
+                slice_offset = this->buff - this->start;
             } else {
                 // This is actually allowed so the test operator `[` can be used as the head of a
                 // command

@@ -296,8 +296,11 @@ bool string_set_contains(const T &set, const wchar_t *val) {
 
 /// Check if a variable may not be set using the set command.
 static bool is_read_only(const wchar_t *val) {
-    const string_set_t env_read_only = {L"PWD", L"SHLVL", L"history", L"status", L"version", L"fish_pid", L"hostname", L"_"};
-    return string_set_contains(env_read_only, val);
+    const string_set_t env_read_only = {
+        L"PWD",          L"SHLVL",    L"history",  L"status", L"version",
+        L"FISH_VERSION", L"fish_pid", L"hostname", L"_",      L"fish_private_mode"};
+    return string_set_contains(env_read_only, val) ||
+        (in_private_mode() && wcscmp(L"fish_history", val) == 0);
 }
 
 static bool is_read_only(const wcstring &val) { return is_read_only(val.c_str()); }
@@ -373,22 +376,22 @@ static void init_locale() {
         const auto var = env_get(var_name, ENV_EXPORT);
         const std::string &name = wcs2string(var_name);
         if (var.missing_or_empty()) {
-            debug(2, L"locale var %s missing or empty", name.c_str());
+            debug(5, L"locale var %s missing or empty", name.c_str());
             unsetenv(name.c_str());
         } else {
             const std::string value = wcs2string(var->as_string());
-            debug(2, L"locale var %s='%s'", name.c_str(), value.c_str());
+            debug(5, L"locale var %s='%s'", name.c_str(), value.c_str());
             setenv(name.c_str(), value.c_str(), 1);
         }
     }
 
     char *locale = setlocale(LC_ALL, "");
     fish_setlocale();
-    debug(2, L"init_locale() setlocale(): '%s'", locale);
+    debug(5, L"init_locale() setlocale(): '%s'", locale);
 
     const char *new_msg_locale = setlocale(LC_MESSAGES, NULL);
-    debug(3, L"old LC_MESSAGES locale: '%s'", old_msg_locale);
-    debug(3, L"new LC_MESSAGES locale: '%s'", new_msg_locale);
+    debug(5, L"old LC_MESSAGES locale: '%s'", old_msg_locale);
+    debug(5, L"new LC_MESSAGES locale: '%s'", new_msg_locale);
 #ifdef HAVE__NL_MSG_CAT_CNTR
     if (strcmp(old_msg_locale, new_msg_locale)) {
         // Make change known to GNU gettext.
@@ -608,28 +611,16 @@ static void react_to_variable_change(const wchar_t *op, const wcstring &key) {
 
 /// Universal variable callback function. This function makes sure the proper events are triggered
 /// when an event occurs.
-static void universal_callback(fish_message_type_t type, const wchar_t *name) {
-    const wchar_t *op;
+static void universal_callback(const callback_data_t &cb) {
+    const wchar_t *op = cb.is_erase() ? L"ERASE" : L"SET";
 
-    switch (type) {
-        case SET:
-        case SET_EXPORT: {
-            op = L"SET";
-            break;
-        }
-        case ERASE: {
-            op = L"ERASE";
-            break;
-        }
-    }
-
-    react_to_variable_change(op, name);
+    react_to_variable_change(op, cb.key);
     vars_stack().mark_changed_exported();
 
-    event_t ev = event_t::variable_event(name);
+    event_t ev = event_t::variable_event(cb.key);
     ev.arguments.push_back(L"VARIABLE");
     ev.arguments.push_back(op);
-    ev.arguments.push_back(name);
+    ev.arguments.push_back(cb.key);
     event_fire(&ev);
 }
 
@@ -720,10 +711,9 @@ void misc_init() {
     }
 }
 
-static void env_universal_callbacks(callback_data_list_t &callbacks) {
-    for (size_t i = 0; i < callbacks.size(); i++) {
-        const callback_data_t &data = callbacks.at(i);
-        universal_callback(data.type, data.key.c_str());
+static void env_universal_callbacks(const callback_data_list_t &callbacks) {
+    for (const callback_data_t &cb : callbacks) {
+        universal_callback(cb);
     }
 }
 
@@ -910,6 +900,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     // Set up the version variable.
     wcstring version = str2wcstring(get_fish_version());
     env_set_one(L"version", ENV_GLOBAL, version);
+    env_set_one(L"FISH_VERSION", ENV_GLOBAL, version);
 
     // Set the $fish_pid variable.
     env_set_one(L"fish_pid", ENV_GLOBAL, to_string<long>(getpid()));
@@ -1027,6 +1018,47 @@ static int set_umask(const wcstring_list_t &list_val) {
     return ENV_OK;
 }
 
+/// Set a universal variable, inheriting as applicable from the given old variable.
+static void env_set_internal_universal(const wcstring &key, wcstring_list_t val,
+                                       env_mode_flags_t input_var_mode) {
+    ASSERT_IS_MAIN_THREAD();
+    if (!uvars()) return;
+    env_mode_flags_t var_mode = input_var_mode;
+    auto oldvar = uvars()->get(key);
+    // Resolve whether or not to export.
+    if ((var_mode & (ENV_EXPORT | ENV_UNEXPORT)) == 0) {
+        bool doexport = oldvar ? oldvar->exports() : false;
+        var_mode |= (doexport ? ENV_EXPORT : ENV_UNEXPORT);
+    }
+    // Resolve whether to be a path variable.
+    // Here we fall back to the auto-pathvar behavior.
+    if ((var_mode & (ENV_PATHVAR | ENV_UNPATHVAR)) == 0) {
+        bool dopathvar = oldvar ? oldvar->is_pathvar() : variable_should_auto_pathvar(key);
+        var_mode |= (dopathvar ? ENV_PATHVAR : ENV_UNPATHVAR);
+    }
+
+    // Split about ':' if it's a path variable.
+    if (var_mode & ENV_PATHVAR) {
+        wcstring_list_t split_val;
+        for (const wcstring &str : val) {
+            vec_append(split_val, split_string(str, PATH_ARRAY_SEP));
+        }
+        val = std::move(split_val);
+    }
+
+    // Construct and set the new variable.
+    env_var_t::env_var_flags_t varflags = 0;
+    if (var_mode & ENV_EXPORT) varflags |= env_var_t::flag_export;
+    if (var_mode & ENV_PATHVAR) varflags |= env_var_t::flag_pathvar;
+    env_var_t new_var{val, varflags};
+
+    uvars()->set(key, new_var);
+    env_universal_barrier();
+    if (new_var.exports() || (oldvar && oldvar->exports())) {
+        vars_stack().mark_changed_exported();
+    }
+}
+
 /// Set the value of the environment variable whose name matches key to val.
 ///
 /// \param key The key
@@ -1075,24 +1107,8 @@ static int env_set_internal(const wcstring &key, env_mode_flags_t input_var_mode
     }
 
     if (var_mode & ENV_UNIVERSAL) {
-        const bool old_export = uvars() && uvars()->get_export(key);
-        bool new_export;
-        if (var_mode & ENV_EXPORT) {
-            // Export the var.
-            new_export = true;
-        } else if (var_mode & ENV_UNEXPORT) {
-            // Unexport the var.
-            new_export = false;
-        } else {
-            // Not changing the export status of the var.
-            new_export = old_export;
-        }
         if (uvars()) {
-            uvars()->set(key, val, new_export);
-            env_universal_barrier();
-            if (old_export || new_export) {
-                vars_stack().mark_changed_exported();
-            }
+            env_set_internal_universal(key, std::move(val), var_mode);
         }
     } else {
         // Determine the node.
@@ -1126,20 +1142,10 @@ static int env_set_internal(const wcstring &key, env_mode_flags_t input_var_mode
                 set_proc_had_barrier(true);
                 env_universal_barrier();
             }
-
             if (uvars() && uvars()->get(key)) {
-                bool exportv;
-                if (var_mode & ENV_EXPORT) {
-                    exportv = true;
-                } else if (var_mode & ENV_UNEXPORT) {
-                    exportv = false;
-                } else {
-                    exportv = uvars()->get_export(key);
-                }
-                uvars()->set(key, val, exportv);
-                env_universal_barrier();
-                done = 1;
-
+                // Modifying an existing universal variable.
+                env_set_internal_universal(key, std::move(val), var_mode);
+                done = true;
             } else {
                 // New variable with unspecified scope
                 node = vars_stack().resolve_unspecified_scope();
@@ -1151,8 +1157,8 @@ static int env_set_internal(const wcstring &key, env_mode_flags_t input_var_mode
             // If there's an existing variable, use its path flag; otherwise infer it.
             if ((var_mode & (ENV_PATHVAR | ENV_UNPATHVAR)) == 0) {
                 bool should_pathvar = false;
-                if (auto existing = node->find_entry(key)) {
-                    should_pathvar = existing->is_pathvar();
+                if (preexisting_flags) {
+                    should_pathvar = *preexisting_flags & env_var_t::flag_pathvar;
                 } else {
                     should_pathvar = variable_should_auto_pathvar(key);
                 }
@@ -1281,8 +1287,13 @@ int env_remove(const wcstring &key, int var_mode) {
     }
 
     if (!erased && !(var_mode & ENV_GLOBAL) && !(var_mode & ENV_LOCAL)) {
-        bool is_exported = uvars()->get_export(key);
-        erased = uvars() && uvars()->remove(key);
+        bool is_exported = false;
+        if (uvars()) {
+            if (auto old_flags = uvars()->get_flags(key)) {
+                is_exported = *old_flags & env_var_t::flag_export;
+            }
+            erased = uvars()->remove(key);
+        }
         if (erased) {
             env_universal_barrier();
             event_t ev = event_t::variable_event(key);
@@ -1390,7 +1401,7 @@ maybe_t<env_var_t> env_get(const wcstring &key, env_mode_flags_t mode) {
     // universal var return that.
     if (uvars()) {
         auto var = uvars()->get(key);
-        if (var && (uvars()->get_export(key) ? search_exported : search_unexported)) {
+        if (var && (var->exports() ? search_exported : search_unexported)) {
             return var;
         }
     }

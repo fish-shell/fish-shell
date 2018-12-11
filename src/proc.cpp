@@ -77,29 +77,12 @@ job_iterator_t::job_iterator_t() : job_list(&parser_t::principal_parser().job_li
 
 size_t job_iterator_t::count() const { return this->job_list->size(); }
 
-#if 0
-// This isn't used so the lint tools were complaining about its presence. I'm keeping it in the
-// source because it could be useful for debugging. However, it would probably be better to add a
-// verbose or debug option to the builtin `jobs` command.
-void print_jobs(void)
-{
-    job_iterator_t jobs;
-    job_t *j;
-    while (j = jobs.next()) {
-        fwprintf(stdout, L"%p -> %ls -> (foreground %d, complete %d, stopped %d, constructed %d)\n",
-                 j, j->command_wcstr(), j->get_flag(JOB_FOREGROUND), job_is_completed(j),
-                 job_is_stopped(j), j->get_flag(JOB_CONSTRUCTED));
-    }
-}
-#endif
-
 bool is_interactive_session = false;
 bool is_subshell = false;
 bool is_block = false;
 bool is_breakpoint = false;
 bool is_login = false;
 int is_event = false;
-pid_t proc_last_bg_pid = 0;
 int job_control_mode = JOB_CONTROL_INTERACTIVE;
 int no_exec = 0;
 
@@ -140,9 +123,9 @@ static int job_remove(job_t *j) {
     return parser_t::principal_parser().job_remove(j);
 }
 
-void job_promote(job_t *job) {
+void job_t::promote() {
     ASSERT_IS_MAIN_THREAD();
-    parser_t::principal_parser().job_promote(job);
+    parser_t::principal_parser().job_promote(this);
 }
 
 void proc_destroy() {
@@ -199,69 +182,77 @@ void release_job_id(job_id_t jid) {
     consumed_job_ids->resize(count + 1);
 }
 
-job_t *job_get(job_id_t id) {
+job_t *job_t::from_job_id(job_id_t id) {
     ASSERT_IS_MAIN_THREAD();
     return parser_t::principal_parser().job_get(id);
 }
 
-job_t *job_get_from_pid(int pid) {
+job_t *job_t::from_pid(pid_t pid) {
     ASSERT_IS_MAIN_THREAD();
     return parser_t::principal_parser().job_get_from_pid(pid);
 }
 
 /// Return true if all processes in the job have stopped or completed.
-///
-/// \param j the job to test
-int job_is_stopped(const job_t *j) {
-    for (const process_ptr_t &p : j->processes) {
+bool job_t::is_stopped() const {
+    for (const process_ptr_t &p : processes) {
         if (!p->completed && !p->stopped) {
-            return 0;
+            return false;
         }
     }
-    return 1;
+    return true;
 }
 
 /// Return true if the last processes in the job has completed.
-///
-/// \param j the job to test
-bool job_is_completed(const job_t *j) {
-    assert(!j->processes.empty());
-    bool result = true;
-    for (const process_ptr_t &p : j->processes) {
+bool job_t::is_completed() const {
+    assert(!processes.empty());
+    for (const process_ptr_t &p : processes) {
         if (!p->completed) {
-            result = false;
-            break;
+            return false;
         }
     }
-    return result;
+    return true;
 }
 
-void job_t::set_flag(job_flag_t flag, bool set) {
-    if (set) {
-        this->flags |= flag;
-    } else {
-        this->flags &= ~flag;
+bool job_t::job_chain_is_fully_constructed() const {
+    const job_t *cursor = this;
+    while (cursor) {
+        if (!cursor->is_constructed()) return false;
+        cursor = cursor->get_parent().get();
     }
+    return true;
 }
 
-bool job_t::get_flag(job_flag_t flag) const { return (this->flags & flag) == flag; }
+void job_t::set_flag(job_flag_t flag, bool set) { this->flags.set(flag, set); }
 
-int job_signal(job_t *j, int signal) {
-    pid_t my_pgid = getpgrp();
-    int res = 0;
+bool job_t::get_flag(job_flag_t flag) const { return this->flags.get(flag); }
 
-    if (j->pgid != my_pgid) {
-        res = killpg(j->pgid, signal);
+bool job_t::signal(int signal) {
+    // Presumably we are distinguishing between the two cases below because we do
+    // not want to send ourselves the signal in question in case the job shares
+    // a pgid with the shell.
+
+    if (pgid != getpgrp()) {
+        if (killpg(pgid, signal) == -1) {
+            char buffer[512];
+            sprintf(buffer, "killpg(%d, %s)", pgid, strsignal(signal));
+            wperror(str2wcstring(buffer).c_str());
+            return false;
+        }
     } else {
-        for (const process_ptr_t &p : j->processes) {
-            if (!p->completed && p->pid && kill(p->pid, signal)) {
-                res = -1;
-                break;
+        for (const auto &p : processes) {
+            if (!p->completed && p->pid && kill(p->pid, signal) == -1) {
+                return false;
             }
         }
     }
 
-    return res;
+    return true;
+}
+
+static void mark_job_complete(const job_t *j) {
+    for (auto &p : j->processes) {
+        p->completed = 1;
+    }
 }
 
 /// Store the status of the process pid that was returned by waitpid.
@@ -281,7 +272,7 @@ static void mark_process_status(process_t *p, int status) {
     }
 }
 
-void job_mark_process_as_failed(job_t *job, const process_t *failed_proc) {
+void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *failed_proc) {
     // The given process failed to even lift off (e.g. posix_spawn failed) and so doesn't have a
     // valid pid. Mark it and everything after it as dead.
     bool found = false;
@@ -337,13 +328,13 @@ static void handle_child_status(pid_t pid, int status) {
 
 process_t::process_t() {}
 
-/// The constructor sets the pgid to -2 as a sentinel value
-/// 0 should not be used; although it is not a valid PGID in userspace,
-///   the Linux kernel will use it for kernel processes.
-/// -1 should not be used; it is a possible return value of the getpgid()
-///   function
-job_t::job_t(job_id_t jobid, io_chain_t bio)
-    : block_io(std::move(bio)), pgid(-2), tmodes(), job_id(jobid), flags(0) {}
+job_t::job_t(job_id_t jobid, io_chain_t bio, std::shared_ptr<job_t> parent)
+    : block_io(std::move(bio)),
+      parent_job(std::move(parent)),
+      pgid(INVALID_PID),
+      tmodes(),
+      job_id(jobid),
+      flags{} {}
 
 job_t::~job_t() { release_job_id(job_id); }
 
@@ -358,70 +349,182 @@ io_chain_t job_t::all_io_redirections() const {
 
 typedef unsigned int process_generation_count_t;
 
-/// A static value tracking how many SIGCHLDs we have seen. This is only ever modified from within
-/// the SIGCHLD signal handler, and therefore does not need atomics or locks.
+/// A list of pids/pgids that have been disowned. They are kept around until either they exit or
+/// we exit. Poll these from time-to-time to prevent zombie processes from happening (#5342).
+static std::vector<pid_t> s_disowned_pids;
+
+void add_disowned_pgid(pid_t pgid) {
+    s_disowned_pids.push_back(pgid * -1);
+}
+
+/// A static value tracking how many SIGCHLDs we have seen, which is used in a heurstic to
+/// determine if we should call waitpid() at all in `process_mark_finished_children`.
 static volatile process_generation_count_t s_sigchld_generation_cnt = 0;
 
-/// If we have received a SIGCHLD signal, process any children. If await is false, this returns
-/// immediately if no SIGCHLD has been received. If await is true, this waits for one. Returns true
-/// if something was processed. This returns the number of children processed, or -1 on error.
-static int process_mark_finished_children(bool wants_await) {
+/// See if any children of a fully constructed job have exited or been killed, and mark them
+/// accordingly. We cannot reap just any child that's exited, (as in, `waitpid(-1,…`) since
+/// that may reap a pgrp leader that has exited but in a job with another process that has yet to
+/// launch and join its pgrp (#5219).
+/// \param block_on_fg when true, blocks waiting for the foreground job to finish.
+/// \return whether the operation completed without incident
+static bool process_mark_finished_children(bool block_on_fg) {
     ASSERT_IS_MAIN_THREAD();
 
-    // A static value tracking the SIGCHLD gen count at the time we last processed it. When this is
-    // different from s_sigchld_generation_cnt, it indicates there may be unreaped processes.
-    // There may not be if we reaped them via the other waitpid path. This is only ever modified
-    // from the main thread, and not from a signal handler.
-    static process_generation_count_t s_last_sigchld_generation_cnt = 0;
+    // We can't always use SIGCHLD to determine if waitpid() should be called since it is not
+    // strictly one-SIGCHLD-per-one-child-exited (i.e. multiple exits can share a SIGCHLD call) and
+    // we a) return immediately the first time a dead child is reaped, b) explicitly skip over jobs
+    // that aren't yet fully constructed, so it's possible that we can get SIGCHLD and even find a
+    // killed child in the jobs we are reaping, but also have an exited child process in a job that
+    // hasn't been fully constructed yet - which means we can end up never knowing about the exited
+    // child process in that job if we use SIGCHLD count as the only metric for whether or not
+    // waitpid() is called.
+    // Without this optimization, the slowdown caused by calling waitpid() even just once each time
+    // `process_mark_finished_children()` is called is rather obvious (see the performance-related
+    // discussion in #5219), making it worth the complexity of this heuristic.
 
-    int processed_count = 0;
-    bool got_error = false;
+    /// Tracks whether or not we received SIGCHLD without checking all jobs (due to jobs under
+    /// construction), forcing a full waitpid loop.
+    static bool dirty_state = true;
+    static process_generation_count_t last_sigchld_count = -1;
 
-    // The critical read. This fetches a value which is only written in the signal handler. This
-    // needs to be an atomic read (we'd use sig_atomic_t, if we knew that were unsigned -
-    // fortunately aligned unsigned int is atomic on pretty much any modern chip.) It also needs to
-    // occur before we start reaping, since the signal handler can be invoked at any point.
-    const process_generation_count_t local_count = s_sigchld_generation_cnt;
+    // If the last time that we received a SIGCHLD we did not waitpid all jobs, we cannot early out.
+    if (!dirty_state && last_sigchld_count == s_sigchld_generation_cnt) {
+        // If we have foreground jobs, we need to block on them below
+        if (!block_on_fg) {
+            // We can assume that no children have exited and that all waitpid calls with
+            // WNOHANG below will confirm that.
+            return true;
+        }
+    }
 
-    // Determine whether we have children to process. Note that we can't reliably use the difference
-    // because a single SIGCHLD may be delivered for multiple children - see #1768. Also if we are
-    // awaiting, we always process.
-    bool wants_waitpid = wants_await || local_count != s_last_sigchld_generation_cnt;
+    last_sigchld_count = s_sigchld_generation_cnt;
+    bool jobs_skipped = false;
+    bool has_error = false;
+    job_t *job_fg = nullptr;
 
-    if (wants_waitpid) {
-        for (;;) {
-            // Call waitpid until we get 0/ECHILD. If we wait, it's only on the first iteration. So
-            // we want to set NOHANG (don't wait) unless wants_await is true and this is the first
-            // iteration.
-            int options = WUNTRACED;
-            if (!(wants_await && processed_count == 0)) {
-                options |= WNOHANG;
+    // Reap only processes belonging to fully-constructed jobs to prevent reaping of processes
+    // before others in the same process group have a chance to join their pgrp.
+    job_iterator_t jobs;
+    while (auto j = jobs.next()) {
+        // (A job can have pgrp INVALID_PID if it consists solely of builtins that perform no IO)
+        if (j->pgid == INVALID_PID || !j->is_constructed()) {
+            debug(5, "Skipping wait on incomplete job %d (%ls)", j->job_id, j->preview().c_str());
+            jobs_skipped = true;
+            continue;
+        }
+
+        if (j != job_fg && j->is_foreground() && !j->is_stopped() && !j->is_completed()) {
+            // Ensure that we don't have multiple fully constructed foreground jobs.
+            assert((!job_fg || !job_fg->job_chain_is_fully_constructed() ||
+                    !j->job_chain_is_fully_constructed()) &&
+                   "More than one active, fully-constructed foreground job!");
+            job_fg = j;
+        }
+
+        // Whether we will wait for uncompleted processes depends on the combination of
+        // `block_on_fg` and the nature of the process. Default is WNOHANG, but if foreground,
+        // constructed, not stopped, *and* block_on_fg is true, then no WNOHANG (i.e. "HANG").
+        int options = WUNTRACED | WNOHANG;
+
+        // We should never block twice in the same go, as `waitpid()' returning could mean one
+        // process completed or many, and there is a race condition when calling `waitpid()` after
+        // the process group exits having reaped all children and terminated the process group and
+        // when a subsequent call to `waitpid()` for the same process group returns immediately if
+        // that process group no longer exists. i.e. it's possible for all processes to have exited
+        // but the process group to remain momentarily valid, in which case calling `waitpid()`
+        // without WNOHANG can cause an infinite wait. Additionally, only wait on external jobs that
+        // spawned new process groups (i.e. JOB_CONTROL). We do not break or return on error as we
+        // wait on only one pgrp at a time and we need to check all pgrps before returning, but we
+        // never wait/block on fg processes after an error has been encountered to give ourselves
+        // (elsewhere) a chance to handle the fallout from process termination, etc.
+        if (!has_error && block_on_fg && j == job_fg) {
+            debug(4, "Waiting on processes from foreground job %d", job_fg->pgid);
+            options &= ~WNOHANG;
+        }
+
+        // If the pgid is 0, we need to wait by process because that's invalid.
+        // This happens in firejail for reasons not entirely clear to me.
+        bool wait_by_process = !j->job_chain_is_fully_constructed() || j->pgid == 0;
+        process_list_t::iterator process = j->processes.begin();
+        // waitpid(2) returns 1 process each time, we need to keep calling it until we've reaped all
+        // children of the pgrp in question or else we can't reset the dirty_state flag. In all
+        // cases, calling waitpid(2) is faster than potentially calling select_try() on a process
+        // that has exited, which will force us to wait the full timeout before coming back here and
+        // calling waitpid() again.
+        while (true) {
+            int status;
+            pid_t pid;
+
+            if (wait_by_process) {
+                // If the evaluation of a function resulted in the sharing of a pgroup between the
+                // real job and the job that shouldn't have been created as a separate job AND the
+                // parent job is still under construction (which is the case when continue_job() is
+                // first called on the child job during the recursive call to exec_job() before the
+                // parent job has been fully constructed), we need to call waitpid(2) on the
+                // individual processes of the child job instead of using a catch-all waitpid(2)
+                // call on the job's process group.
+                if (process == j->processes.end()) {
+                    break;
+                }
+                assert((*process)->pid != INVALID_PID && "Waiting by process on an invalid PID!");
+                pid = waitpid((*process)->pid, &status, options);
+                process++;
+            } else {
+                // A negative PID passed in to `waitpid()` means wait on any child in that process
+                // group
+                pid = waitpid(-1 * j->pgid, &status, options);
             }
 
-            int status = -1;
-            pid_t pid = waitpid(-1, &status, options);
+            // Never make two calls to waitpid(2) without WNOHANG (i.e. with "HANG") in a row,
+            // because we might wait on a non-stopped job that becomes stopped, but we don't refresh
+            // our view of the process state before calling waitpid(2) again here.
+            options |= WNOHANG;
+
             if (pid > 0) {
-                // We got a valid pid.
+                // A child process has been reaped
                 handle_child_status(pid, status);
-                processed_count += 1;
-            } else if (pid == 0) {
-                // No ready-and-waiting children, we're done.
-                break;
+            } else if (pid == 0 || errno == ECHILD) {
+                // No killed/dead children in this particular process group
+                if (!wait_by_process) {
+                    break;
+                }
             } else {
-                // This indicates an error. One likely failure is ECHILD (no children), which we
-                // break on, and is not considered an error. The other likely failure is EINTR,
-                // which means we got a signal, which is considered an error.
-                got_error = (errno != ECHILD);
+                // pid < 0 indicates an error. One likely failure is ECHILD (no children), which is
+                // not an error and is ignored. The other likely failure is EINTR, which means we
+                // got a signal, which is considered an error. We absolutely do not break or return
+                // on error, as we need to iterate over all constructed jobs but we only call
+                // waitpid for one pgrp at a time. We do bypass future waits in case of error,
+                // however.
+                has_error = true;
+
+                // Do not audibly complain on interrupt (see #5293)
+                if (errno != EINTR) {
+                    wperror(L"waitpid in process_mark_finished_children");
+                }
                 break;
             }
         }
     }
 
-    if (got_error) {
-        return -1;
+    // Poll disowned processes/process groups, but do nothing with the result. Only used to avoid
+    // zombie processes. Entries have already be converted to negative for process groups.
+    int status;
+    s_disowned_pids.erase(std::remove_if(s_disowned_pids.begin(), s_disowned_pids.end(),
+                [&status](pid_t pid) { return waitpid(pid, &status, WNOHANG) > 0; }),
+            s_disowned_pids.end());
+
+    // Yes, the below can be collapsed to a single line, but it's worth being explicit about it with
+    // the comments. Fret not, the compiler will optimize it. (It better!)
+    if (jobs_skipped) {
+        // We received SIGCHLD but were not able to definitely say whether or not all children were
+        // reaped.
+        dirty_state = true;
+    } else {
+        // We can safely assume that no SIGCHLD means we can just return next time around
+        dirty_state = false;
     }
-    s_last_sigchld_generation_cnt = local_count;
-    return processed_count;
+
+    return !has_error;
 }
 
 /// This is called from a signal handler. The signal is always SIGCHLD.
@@ -442,7 +545,7 @@ static wcstring truncate_command(const wcstring &cmd) {
     }
 
     // Truncation required.
-    const size_t ellipsis_length = wcslen(ellipsis_str); //no need for wcwidth
+    const size_t ellipsis_length = wcslen(ellipsis_str);  // no need for wcwidth
     size_t trunc_length = max_len - ellipsis_length;
     // Eat trailing whitespace.
     while (trunc_length > 0 && iswspace(cmd.at(trunc_length - 1))) {
@@ -463,11 +566,7 @@ static void format_job_info(const job_t *j, job_status_t status) {
     fwprintf(stdout, L"\r");
     fwprintf(stdout, _(msg), j->job_id, truncate_command(j->command()).c_str());
     fflush(stdout);
-    if (cur_term) {
-        tputs(clr_eol, 1, &writeb);
-    } else {
-        fwprintf(stdout, L"\x1B[K");
-    }
+    if (clr_eol) tputs(clr_eol, 1, &writeb);
     fwprintf(stdout, L"\n");
 }
 
@@ -487,8 +586,8 @@ static int process_clean_after_marking(bool allow_interactive) {
     job_t *jnext;
     int found = 0;
 
-    // this function may fire an event handler, we do not want to call ourselves recursively (to avoid
-    // infinite recursion).
+    // this function may fire an event handler, we do not want to call ourselves recursively (to
+    // avoid infinite recursion).
     static bool locked = false;
     if (locked) {
         return 0;
@@ -499,7 +598,6 @@ static int process_clean_after_marking(bool allow_interactive) {
     // don't try to print in that case (#3222)
     const bool interactive = allow_interactive && cur_term != NULL;
 
-
     job_iterator_t jobs;
     const size_t job_count = jobs.count();
     jnext = jobs.next();
@@ -509,8 +607,8 @@ static int process_clean_after_marking(bool allow_interactive) {
 
         // If we are reaping only jobs who do not need status messages sent to the console, do not
         // consider reaping jobs that need status messages.
-        if ((!j->get_flag(JOB_SKIP_NOTIFICATION)) && (!interactive) &&
-            (!j->get_flag(JOB_FOREGROUND))) {
+        if ((!j->get_flag(job_flag_t::SKIP_NOTIFICATION)) && (!interactive) &&
+            (!j->is_foreground())) {
             continue;
         }
 
@@ -524,6 +622,8 @@ static int process_clean_after_marking(bool allow_interactive) {
 
             // TODO: The generic process-exit event is useless and unused.
             // Remove this in future.
+            // Update: This event is used for cleaning up the psub temporary files and folders.
+            // Removing it breaks the psub tests as a result.
             proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, p->pid,
                             (WIFSIGNALED(s) ? -1 : WEXITSTATUS(s)));
 
@@ -535,9 +635,10 @@ static int process_clean_after_marking(bool allow_interactive) {
 
             // Handle signals other than SIGPIPE.
             int proc_is_job = (p->is_first_in_job && p->is_last_in_job);
-            if (proc_is_job) j->set_flag(JOB_NOTIFIED, true);
+            if (proc_is_job) j->set_flag(job_flag_t::NOTIFIED, true);
             // Always report crashes.
-            if (j->get_flag(JOB_SKIP_NOTIFICATION) && !contains(crashsignals,WTERMSIG(p->status))) {
+            if (j->get_flag(job_flag_t::SKIP_NOTIFICATION) &&
+                !contains(crashsignals, WTERMSIG(p->status))) {
                 continue;
             }
 
@@ -550,7 +651,7 @@ static int process_clean_after_marking(bool allow_interactive) {
             // signals. If echoctl is on, then the terminal will have written ^C to the console.
             // If off, it won't have. We don't echo ^C either way, so as to respect the user's
             // preference.
-            if (WTERMSIG(p->status) != SIGINT || !j->get_flag(JOB_FOREGROUND)) {
+            if (WTERMSIG(p->status) != SIGINT || !j->is_foreground()) {
                 if (proc_is_job) {
                     // We want to report the job number, unless it's the only job, in which case
                     // we don't need to.
@@ -570,11 +671,7 @@ static int process_clean_after_marking(bool allow_interactive) {
                              signal_get_desc(WTERMSIG(p->status)));
                 }
 
-                if (cur_term != NULL) {
-                    tputs(clr_eol, 1, &writeb);
-                } else {
-                    fwprintf(stdout, L"\x1B[K");  // no term set up - do clr_eol manually
-                }
+                if (clr_eol) tputs(clr_eol, 1, &writeb);
                 fwprintf(stdout, L"\n");
             }
             found = 1;
@@ -583,31 +680,31 @@ static int process_clean_after_marking(bool allow_interactive) {
 
         // If all processes have completed, tell the user the job has completed and delete it from
         // the active job list.
-        if (job_is_completed(j)) {
-            if (!j->get_flag(JOB_FOREGROUND) && !j->get_flag(JOB_NOTIFIED) &&
-                !j->get_flag(JOB_SKIP_NOTIFICATION)) {
+        if (j->is_completed()) {
+            if (!j->is_foreground() && !j->get_flag(job_flag_t::NOTIFIED) &&
+                !j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
                 format_job_info(j, JOB_ENDED);
                 found = 1;
             }
             // TODO: The generic process-exit event is useless and unused.
             // Remove this in future.
-            // Don't fire the exit-event for jobs with pgid -2.
+            // Don't fire the exit-event for jobs with pgid INVALID_PID.
             // That's our "sentinel" pgid, for jobs that don't (yet) have a pgid,
             // or jobs that consist entirely of builtins (and hence don't have a process).
             // This causes issues if fish is PID 2, which is quite common on WSL. See #4582.
-            if (j->pgid != -2) {
+            if (j->pgid != INVALID_PID) {
                 proc_fire_event(L"JOB_EXIT", EVENT_EXIT, -j->pgid, 0);
             }
             proc_fire_event(L"JOB_EXIT", EVENT_JOB_ID, j->job_id, 0);
 
             job_remove(j);
-        } else if (job_is_stopped(j) && !j->get_flag(JOB_NOTIFIED)) {
+        } else if (j->is_stopped() && !j->get_flag(job_flag_t::NOTIFIED)) {
             // Notify the user about newly stopped jobs.
-            if (!j->get_flag(JOB_SKIP_NOTIFICATION)) {
+            if (!j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
                 format_job_info(j, JOB_STOPPED);
                 found = 1;
             }
-            j->set_flag(JOB_NOTIFIED, true);
+            j->set_flag(job_flag_t::NOTIFIED, true);
         }
     }
 
@@ -689,45 +786,52 @@ void proc_update_jiffies() {
 
 #endif
 
+/// The return value of select_try(), indicating IO readiness or an error
+enum class select_try_t {
+    /// One or more fds have data ready for read
+    DATA_READY,
+    /// The timeout elapsed without any data becoming available for read
+    TIMEOUT,
+    /// There were no FDs in the io chain for which to select on.
+    IOCHAIN_EMPTY,
+};
+
 /// Check if there are buffers associated with the job, and select on them for a while if available.
 ///
 /// \param j the job to test
-///
-/// \return 1 if buffers were available, zero otherwise
-static int select_try(job_t *j) {
+/// \return the status of the select operation
+static select_try_t select_try(job_t *j) {
     fd_set fds;
     int maxfd = -1;
 
     FD_ZERO(&fds);
 
     const io_chain_t chain = j->all_io_redirections();
-    for (size_t idx = 0; idx < chain.size(); idx++) {
-        const io_data_t *io = chain.at(idx).get();
+    for (const auto &io : chain) {
         if (io->io_mode == IO_BUFFER) {
-            const io_pipe_t *io_pipe = static_cast<const io_pipe_t *>(io);
+            auto io_pipe = static_cast<const io_pipe_t *>(io.get());
             int fd = io_pipe->pipe_fd[0];
-            // fwprintf( stderr, L"fd %d on job %ls\n", fd, j->command );
             FD_SET(fd, &fds);
-            maxfd = maxi(maxfd, fd);
-            debug(3, L"select_try on %d", fd);
+            maxfd = std::max(maxfd, fd);
+            debug(4, L"select_try on fd %d", fd);
         }
     }
 
     if (maxfd >= 0) {
-        int retval;
-        struct timeval tv;
+        struct timeval timeout;
 
-        tv.tv_sec = 0;
-        tv.tv_usec = 10000;
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 10000;
 
-        retval = select(maxfd + 1, &fds, 0, 0, &tv);
+        int retval = select(maxfd + 1, &fds, 0, 0, &timeout);
         if (retval == 0) {
-            debug(3, L"select_try hit timeout");
+            debug(4, L"select_try hit timeout");
+            return select_try_t::TIMEOUT;
         }
-        return retval > 0;
+        return select_try_t::DATA_READY;
     }
 
-    return -1;
+    return select_try_t::IOCHAIN_EMPTY;
 }
 
 /// Read from descriptors until they are empty.
@@ -746,7 +850,7 @@ static void read_try(job_t *j) {
     }
 
     if (buff) {
-        debug(3, L"proc::read_try('%ls')", j->command_wcstr());
+        debug(4, L"proc::read_try('%ls')", j->command_wcstr());
         while (1) {
             char b[BUFFER_SIZE];
             long len = read_blocked(buff->pipe_fd[0], b, BUFFER_SIZE);
@@ -765,19 +869,17 @@ static void read_try(job_t *j) {
     }
 }
 
-/// Give ownership of the terminal to the specified job.
-///
-/// \param j The job to give the terminal to.
-/// \param cont If this variable is set, we are giving back control to a job that has previously
-/// been stopped. In that case, we need to set the terminal attributes to those saved in the job.
-bool terminal_give_to_job(const job_t *j, bool cont) {
-    errno = 0;
+// Return control of the terminal to a job's process group. restore_attrs is true if we are restoring
+// a previously-stopped job, in which case we need to restore terminal attributes.
+bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
     if (j->pgid == 0) {
         debug(2, "terminal_give_to_job() returning early due to no process group");
         return true;
     }
 
-    signal_block();
+    // RAII wrappers must have a name so that their scope is tied to the function as it is legal for
+    // the compiler to construct and then immediately deconstruct unnamed objects otherwise.
+    signal_block_t signal_block;
 
     // It may not be safe to call tcsetpgrp if we've already done so, as at that point we are no
     // longer the controlling process group for the terminal and no longer have permission to set
@@ -789,7 +891,7 @@ bool terminal_give_to_job(const job_t *j, bool cont) {
     // http://curiousthing.org/sigttin-sigttou-deep-dive-linux In all cases, our goal here was just
     // to hand over control of the terminal to this process group, which is a no-op if it's already
     // been done.
-    if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
+    if (j->pgid == INVALID_PID || tcgetpgrp(STDIN_FILENO) == j->pgid) {
         debug(4, L"Process group %d already has control of terminal\n", j->pgid);
     } else {
         debug(4,
@@ -806,10 +908,11 @@ bool terminal_give_to_job(const job_t *j, bool cont) {
         // guarantee the process isn't going to exit while we wait (which would cause us to possibly
         // block indefinitely).
         while (tcsetpgrp(STDIN_FILENO, j->pgid) != 0) {
+            debug(3, "tcsetpgrp failed: %d", errno);
+
             bool pgroup_terminated = false;
-            if (errno == EINTR) {
-                ;  // Always retry on EINTR, see comments in tcsetattr EINTR code below.
-            } else if (errno == EINVAL) {
+            // No need to test for EINTR as we are blocking signals
+            if (errno == EINVAL) {
                 // OS X returns EINVAL if the process group no longer lives. Probably other OSes,
                 // too. Unlike EPERM below, EINVAL can only happen if the process group has
                 // terminated.
@@ -828,55 +931,57 @@ bool terminal_give_to_job(const job_t *j, bool cont) {
                     // Debug the original tcsetpgrp error (not the waitpid errno) to the log, and
                     // then retry until not EPERM or the process group has exited.
                     debug(2, L"terminal_give_to_job(): EPERM.\n", j->pgid);
+                    continue;
                 }
             } else {
-                if (errno == ENOTTY) redirect_tty_output();
+                if (errno == ENOTTY) {
+                    redirect_tty_output();
+                }
                 debug(1, _(L"Could not send job %d ('%ls') with pgid %d to foreground"), j->job_id,
                       j->command_wcstr(), j->pgid);
                 wperror(L"tcsetpgrp");
-                signal_unblock();
                 return false;
             }
 
             if (pgroup_terminated) {
-                // All processes in the process group has exited. Since we force all child procs to
-                // SIGSTOP on startup, the only way that can happen is if the very last process in
-                // the group terminated, and didn't need to access the terminal, otherwise it would
-                // have hung waiting for terminal IO (SIGTTIN). We can ignore this.
+                // All processes in the process group has exited.
+                // Since we delay reaping any processes in a process group until all members of that
+                // job/group have been started, the only way this can happen is if the very last
+                // process in the group terminated and didn't need to access the terminal, otherwise
+                // it would have hung waiting for terminal IO (SIGTTIN). We can safely ignore this.
                 debug(3, L"tcsetpgrp called but process group %d has terminated.\n", j->pgid);
-                break;
+                mark_job_complete(j);
+                return true;
             }
+
+            break;
         }
     }
 
-    if (cont) {
-        int result = -1;
-        // TODO: Remove this EINTR loop since we have blocked all signals and thus cannot be
-        // interrupted. I'm leaving it in place because all of the logic involving controlling
-        // terminal management is more than a little opaque and smacks of voodoo programming.
-        errno = EINTR;
-        while (result == -1 && errno == EINTR) {
-            result = tcsetattr(STDIN_FILENO, TCSADRAIN, &j->tmodes);
-        }
+    if (restore_attrs) {
+        auto result = tcsetattr(STDIN_FILENO, TCSADRAIN, &j->tmodes);
         if (result == -1) {
-            if (errno == ENOTTY) redirect_tty_output();
+            // No need to test for EINTR and retry since we have blocked all signals
+            if (errno == ENOTTY) {
+                redirect_tty_output();
+            }
+
             debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id,
-                  j->command_wcstr());
+                  j->preview().c_str());
             wperror(L"tcsetattr");
-            signal_unblock();
             return false;
         }
     }
 
-    signal_unblock();
     return true;
 }
 
 pid_t terminal_acquire_before_builtin(int job_pgid) {
-    pid_t selfpid = getpid();
+    pid_t selfpgid = getpgrp();
+
     pid_t current_owner = tcgetpgrp(STDIN_FILENO);
-    if (current_owner >= 0 && current_owner != selfpid && current_owner == job_pgid) {
-        if (tcsetpgrp(STDIN_FILENO, selfpid) == 0) {
+    if (current_owner >= 0 && current_owner != selfpgid && current_owner == job_pgid) {
+        if (tcsetpgrp(STDIN_FILENO, selfpgid) == 0) {
             return current_owner;
         }
     }
@@ -915,119 +1020,141 @@ static bool terminal_return_from_job(job_t *j) {
 // Linux, 'cd . ; ftp' prevents you from typing into the ftp prompt. See
 // https://github.com/fish-shell/fish-shell/issues/121
 #if 0
-    // Restore the shell's terminal modes.
-    if (tcsetattr(STDIN_FILENO, TCSADRAIN, &shell_modes) == -1) {
-        if (errno == EIO) redirect_tty_output();
-        debug(1, _(L"Could not return shell to foreground"));
-        wperror(L"tcsetattr");
-        return false;
-    }
+// Restore the shell's terminal modes.
+if (tcsetattr(STDIN_FILENO, TCSADRAIN, &shell_modes) == -1) {
+if (errno == EIO) redirect_tty_output();
+debug(1, _(L"Could not return shell to foreground"));
+wperror(L"tcsetattr");
+return false;
+}
 #endif
 
     signal_unblock();
     return true;
 }
 
-void job_continue(job_t *j, bool cont) {
+void job_t::continue_job(bool send_sigcont) {
     // Put job first in the job list.
-    job_promote(j);
-    j->set_flag(JOB_NOTIFIED, false);
+    promote();
+    set_flag(job_flag_t::NOTIFIED, false);
 
-    CHECK_BLOCK();
-    debug(4, L"%ls job %d, gid %d (%ls), %ls, %ls", cont ? L"Continue" : L"Start", j->job_id,
-          j->pgid, j->command_wcstr(), job_is_completed(j) ? L"COMPLETED" : L"UNCOMPLETED",
+    debug(4, L"%ls job %d, gid %d (%ls), %ls, %ls", send_sigcont ? L"Continue" : L"Start", job_id,
+          pgid, command_wcstr(), is_completed() ? L"COMPLETED" : L"UNCOMPLETED",
           is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
 
-    if (!job_is_completed(j)) {
-        if (j->get_flag(JOB_TERMINAL) && j->get_flag(JOB_FOREGROUND)) {
-            // Put the job into the foreground. Hack: ensure that stdin is marked as blocking first
-            // (issue #176).
+    // Make sure we retake control of the terminal before leaving this function.
+    bool term_transferred = false;
+    cleanup_t take_term_back([&]() {
+        if (term_transferred) {
+            terminal_return_from_job(this);
+        }
+    });
+
+    bool read_attempted = false;
+    if (!is_completed()) {
+        if (get_flag(job_flag_t::TERMINAL) && is_foreground()) {
+            // Put the job into the foreground and give it control of the terminal.
+            // Hack: ensure that stdin is marked as blocking first (issue #176).
             make_fd_blocking(STDIN_FILENO);
-            if (!terminal_give_to_job(j, cont)) return;
+            if (!terminal_give_to_job(this, send_sigcont)) {
+                // This scenario has always returned without any error handling. Presumably that is
+                // OK.
+                return;
+            }
+            term_transferred = true;
         }
 
-        // Send the job a continue signal, if necessary.
-        if (cont) {
-            for (process_ptr_t &p : j->processes) p->stopped = false;
+        // If both requested and necessary, send the job a continue signal.
+        if (send_sigcont) {
+            // This code used to check for JOB_CONTROL to decide between using killpg to signal all
+            // processes in the group or iterating over each process in the group and sending the
+            // signal individually. job_t::signal() does the same, but uses the shell's own pgroup
+            // to make that distinction.
+            if (!signal(SIGCONT)) {
+                debug(2, "Failed to send SIGCONT to any processes in pgroup %d!", pgid);
+                // This returns without bubbling up the error. Presumably that is OK.
+                return;
+            }
 
-            if (j->get_flag(JOB_CONTROL)) {
-                if (killpg(j->pgid, SIGCONT)) {
-                    wperror(L"killpg (SIGCONT)");
-                    return;
-                }
-            } else {
-                for (const process_ptr_t &p : j->processes) {
-                    if (kill(p->pid, SIGCONT) < 0) {
-                        wperror(L"kill (SIGCONT)");
-                        return;
-                    }
-                }
+            // reset the status of each process instance
+            for (auto &p : processes) {
+                p->stopped = false;
             }
         }
 
-        if (j->get_flag(JOB_FOREGROUND)) {
-            // Look for finished processes first, to avoid select() if it's already done.
+        if (is_foreground()) {
+            // This is an optimization to not call select_try() in case a process has exited. While
+            // it may seem silly, unless there is IO (and there usually isn't in terms of total CPU
+            // time), select_try() will wait for 10ms (our timeout) before returning. If during
+            // these 10ms a process exited, the shell will basically hang until the timeout happens
+            // and we are free to call `process_mark_finished_children()` to discover that fact. By
+            // calling it here before calling `select_try()` below, shell responsiveness can be
+            // dramatically improved (noticably so, not just "theoretically speaking" per the
+            // discussion in #5219).
             process_mark_finished_children(false);
 
-            // Wait for job to report.
-            while (!reader_exit_forced() && !job_is_stopped(j) && !job_is_completed(j)) {
-                // debug( 1, L"select_try()" );
-                switch (select_try(j)) {
-                    case 1: {
-                        read_try(j);
+            // If this is a child job and the parent job is still under construction (i.e. job1 |
+            // some_func), we can't block on execution of the nested job for `some_func`. Doing
+            // so can cause hangs if job1 emits more data than fits in the OS pipe buffer.
+            // The solution is to to not block on fg from the initial call in exec_job(), which
+            // is also the only place that send_sigcont is false. parent_job.is_constructed()
+            // must also be true, which coincides with WAIT_BY_PROCESS (which will have to do
+            // since we don't store a reference to the parent job in the job_t structure).
+            bool block_on_fg = send_sigcont && job_chain_is_fully_constructed();
+
+            // Wait for data to become available or the status of our own job to change
+            while (!reader_exit_forced() && !is_stopped() && !is_completed()) {
+                auto result = select_try(this);
+                read_attempted = true;
+
+                switch (result) {
+                    case select_try_t::DATA_READY:
+                        // Read the data that we know is now available, then scan for finished processes
+                        // but do not block. We don't block so long as we have IO to process, once the
+                        // fd buffers are empty we'll block in the second case below.
+                        read_try(this);
                         process_mark_finished_children(false);
                         break;
-                    }
-                    case 0: {
-                        // No FDs are ready. Look for finished processes.
-                        process_mark_finished_children(false);
+
+                    case select_try_t::TIMEOUT:
+                        // No FDs are ready. Look for finished processes instead.
+                        debug(4, L"select_try: no fds returned valid data within the timeout" );
+                        process_mark_finished_children(block_on_fg);
                         break;
-                    }
-                    case -1: {
-                        // If there is no funky IO magic, we can use waitpid instead of handling
-                        // child deaths through signals. This gives a rather large speed boost (A
-                        // factor 3 startup time improvement on my 300 MHz machine) on short-lived
-                        // jobs.
-                        //
-                        // This will return early if we get a signal, like SIGHUP.
+
+                    case select_try_t::IOCHAIN_EMPTY:
+                        // There were no IO fds to select on.
+                        debug(4, L"select_try: no IO fds" );
                         process_mark_finished_children(true);
+
+                        // If it turns out that we encountered this because the file descriptor we were
+                        // reading from has died, process_mark_finished_children() should take care of
+                        // changing the status of our is_completed() (assuming it is appropriate to do
+                        // so), in which case we will break out of this loop.
                         break;
-                    }
-                    default: {
-                        DIE("unexpected return value from select_try()");
-                        break;
-                    }
                 }
             }
         }
     }
 
-    if (j->get_flag(JOB_FOREGROUND)) {
-        if (job_is_completed(j)) {
+    if (is_foreground()) {
+        if (is_completed()) {
             // It's possible that the job will produce output and exit before we've even read from
-            // it.
-            //
-            // We'll eventually read the output, but it may be after we've executed subsequent calls
-            // This is why my prompt colors kept getting screwed up - the builtin echo calls
-            // were sometimes having their output combined with the set_color calls in the wrong
-            // order!
-            read_try(j);
+            // it.  In that case, make sure we read that output now, before we've executed any
+            // subsequent calls.  This is why prompt colors were getting screwed up - the builtin
+            // `echo` calls were sometimes having their output combined with the `set_color` calls
+            // in the wrong order!
+            if (!read_attempted) {
+                read_try(this);
+            }
 
-            const std::unique_ptr<process_t> &p = j->processes.back();
-
-            // Mark process status only if we are in the foreground and the last process in a pipe,
-            // and it is not a short circuited builtin.
+            // Set $status only if we are in the foreground and the last process in the job has
+            // finished and is not a short-circuited builtin.
+            auto &p = processes.back();
             if ((WIFEXITED(p->status) || WIFSIGNALED(p->status)) && p->pid) {
                 int status = proc_format_status(p->status);
-                // fwprintf(stdout, L"setting status %d for %ls\n", job_get_flag( j, JOB_NEGATE
-                // )?!status:status, j->command);
-                proc_set_last_status(j->get_flag(JOB_NEGATE) ? !status : status);
+                proc_set_last_status(get_flag(job_flag_t::NEGATE) ? !status : status);
             }
-        }
-
-        // Put the shell back in the foreground.
-        if (j->get_flag(JOB_TERMINAL) && j->get_flag(JOB_FOREGROUND)) {
-            terminal_return_from_job(j);
         }
     }
 }
@@ -1046,10 +1173,10 @@ void proc_sanity_check() {
 
     job_iterator_t jobs;
     while (const job_t *j = jobs.next()) {
-        if (!j->get_flag(JOB_CONSTRUCTED)) continue;
+        if (!j->is_constructed()) continue;
 
         // More than one foreground job?
-        if (j->get_flag(JOB_FOREGROUND) && !(job_is_stopped(j) || job_is_completed(j))) {
+        if (j->is_foreground() && !(j->is_stopped() || j->is_completed())) {
             if (fg_job) {
                 debug(0, _(L"More than one job in foreground: job 1: '%ls' job 2: '%ls'"),
                       fg_job->command_wcstr(), j->command_wcstr());
@@ -1102,4 +1229,22 @@ pid_t proc_wait_any() {
     handle_child_status(pid, pid_status);
     process_clean_after_marking(is_interactive);
     return pid;
+}
+
+void hup_background_jobs() {
+    job_iterator_t jobs;
+
+    while (job_t *j = jobs.next()) {
+        // Make sure we don't try to SIGHUP the calling builtin
+        if (j->pgid == INVALID_PID || !j->get_flag(job_flag_t::JOB_CONTROL)) {
+            continue;
+        }
+
+        if (!j->is_completed()) {
+            if (j->is_stopped()) {
+                j->signal(SIGCONT);
+            }
+            j->signal(SIGHUP);
+        }
+    }
 }

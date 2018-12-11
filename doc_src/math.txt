@@ -74,6 +74,7 @@ Use them without a leading `$` - `pi - 3` should be about 0.
 - `ncr`
 - `npr`
 - `pow(x,y)` returns x to the y (and can be written as `x ^ y`)
+- `round` - rounds to the nearest integer, away from 0
 - `sin`
 - `sinh`
 - `sqrt`

@@ -2010,8 +2010,8 @@ int create_directory(const wcstring &d) {
 }
 
 __attribute__((noinline)) void bugreport() {
-    debug(0, _(L"This is a bug. Break on bugreport to debug."));
-    debug(0, _(L"If you can reproduce it, please send a bug report to %s."), PACKAGE_BUGREPORT);
+    debug(0, _(L"This is a bug. Break on 'bugreport' to debug."));
+    debug(0, _(L"If you can reproduce it, please report: %s."), PACKAGE_BUGREPORT);
 }
 
 wcstring format_size(long long sz) {

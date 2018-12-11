@@ -323,6 +323,7 @@ AC_CHECK_FUNCS( futimens clock_gettime )
 AC_CHECK_FUNCS( getpwent flock )
 AC_CHECK_FUNCS( dirfd )
 
+AC_CHECK_DECL( [__NetBSD__], AC_DEFINE([TPARM_VARARGS], 1, [ Make tparm take varargs ]) )
 AC_CHECK_DECL( [mkostemp], [ AC_CHECK_FUNCS([mkostemp]) ] )
 
 #
@@ -553,6 +554,7 @@ AC_COMPILE_IFELSE(
   [
     AC_LANG_PROGRAM(
       [
+    #define TPARM_VARARGS 1
 	#if HAVE_NCURSES_H
 	#include <ncurses.h>
 	#elif HAVE_NCURSES_CURSES_H

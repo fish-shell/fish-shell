@@ -43,7 +43,7 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "util.h"      // IWYU pragma: keep
 
-#ifdef TPARM_SOLARIS_KLUDGE
+#if defined(TPARM_SOLARIS_KLUDGE)
 #undef tparm
 
 char *tparm_solaris_kludge(char *str, long p1, long p2, long p3, long p4,

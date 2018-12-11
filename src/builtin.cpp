@@ -200,11 +200,11 @@ void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *
         bool is_short = false;
         if (is_stderr) {
             // Interactive mode help to screen - only print synopsis if the rest won't fit.
-            int screen_height, lines;
+            int screen_height, my_lines;
 
             screen_height = common_get_height();
-            lines = count_char(str, L'\n');
-            if (!shell_is_interactive() || (lines > 2 * screen_height / 3)) {
+            my_lines = count_char(str, L'\n');
+            if (!shell_is_interactive() || (my_lines > 2 * screen_height / 3)) {
                 wchar_t *pos;
                 int cut = 0;
                 int i;

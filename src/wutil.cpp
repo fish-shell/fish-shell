@@ -311,7 +311,7 @@ int fd_check_is_remote(int fd) {
             // Other FSes are assumed local.
             return 0;
     }
-#elif defined(MNT_LOCAL)
+#elif defined(MNT_LOCAL) && !defined(__NetBSD__)
     struct statfs buf {};
     if (fstatfs(fd, &buf) < 0) return -1;
     return (buf.f_flags & MNT_LOCAL) ? 0 : 1;

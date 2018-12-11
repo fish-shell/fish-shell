@@ -321,7 +321,24 @@ AC_CHECK_FUNCS( wcslcpy lrand48_r killpg )
 AC_CHECK_FUNCS( backtrace_symbols getifaddrs )
 AC_CHECK_FUNCS( futimens clock_gettime )
 AC_CHECK_FUNCS( getpwent flock )
-AC_CHECK_FUNCS( dirfd )
+
+AC_MSG_CHECKING([dirfd])
+AC_LINK_IFELSE([
+
+#include <dirent.h>
+
+DIR *dirp;
+
+int
+main(void)
+{
+	return dirfd(dirp);
+}
+], [ AC_MSG_RESULT([yes])
+     AC_DEFINE([HAVE_DIRFD], 1, [ Define to 1 if you have the `dirfd' function or macro. ])
+   ],
+   [ AC_MSG_RESULT([no])]
+)
 
 AC_CHECK_DECL( [__NetBSD__], AC_DEFINE([TPARM_VARARGS], 1, [ Make tparm take varargs ]) )
 AC_CHECK_DECL( [mkostemp], [ AC_CHECK_FUNCS([mkostemp]) ] )

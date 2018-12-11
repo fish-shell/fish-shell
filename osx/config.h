@@ -4,6 +4,9 @@
 /* Define to 1 if you have the `backtrace_symbols' function. */
 #define HAVE_BACKTRACE_SYMBOLS 1
 
+/* banana */
+#define HAVE_BROKEN_WCWIDTH 1
+
 /* Define to 1 if you have the `clock_gettime' function. */
 /* #undef HAVE_CLOCK_GETTIME */
 
@@ -91,6 +94,9 @@
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #define HAVE_STDLIB_H 1
+
+/* Define to 1 if you have the `std::make_unique' function. */
+/* #undef HAVE_STD__MAKE_UNIQUE */
 
 /* Define to 1 if you have the `std::wcscasecmp' function. */
 /* #undef HAVE_STD__WCSCASECMP */

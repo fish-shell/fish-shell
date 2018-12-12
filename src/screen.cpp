@@ -214,7 +214,7 @@ static bool is_color_escape_seq(const wchar_t *code, size_t *resulting_length) {
 
     // Detect these terminfo color escapes with parameter value up to max_colors, all of which
     // don't move the cursor.
-    char *const esc[] = {
+    const char *const esc[] = {
         set_a_foreground, set_a_background, set_foreground, set_background,
     };
 
@@ -237,7 +237,7 @@ static bool is_color_escape_seq(const wchar_t *code, size_t *resulting_length) {
 /// displayed other than the color.
 static bool is_visual_escape_seq(const wchar_t *code, size_t *resulting_length) {
     if (!cur_term) return false;
-    char *const esc2[] = {
+    const char *const esc2[] = {
         enter_bold_mode,      exit_attribute_mode,    enter_underline_mode,  exit_underline_mode,
         enter_standout_mode,  exit_standout_mode,     flash_screen,          enter_subscript_mode,
         exit_subscript_mode,  enter_superscript_mode, exit_superscript_mode, enter_blink_mode,
@@ -483,7 +483,7 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
     int i;
     int x_steps, y_steps;
 
-    char *str;
+    const char *str;
     scoped_buffer_t scoped_buffer(b);
 
     y_steps = new_y - s->actual.cursor.y;
@@ -512,7 +512,7 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
         x_steps = 0;
     }
 
-    char *multi_str = NULL;
+    const char *multi_str = NULL;
     if (x_steps < 0) {
         str = cursor_left;
         multi_str = parm_left_cursor;

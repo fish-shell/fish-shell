@@ -63,7 +63,7 @@ unsigned char index_for_color(rgb_color_t c) {
     return c.to_term256_index();
 }
 
-static bool write_color_escape(char *todo, unsigned char idx, bool is_fg) {
+static bool write_color_escape(const char *todo, unsigned char idx, bool is_fg) {
     if (term_supports_color_natively(idx)) {
         // Use tparm to emit color escape.
         writembs(tparm((char *)todo, idx));
@@ -550,7 +550,7 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
 }
 
 /// Write specified multibyte string.
-void writembs_check(char *mbs, const char *mbs_name, bool critical, const char *file, long line) {
+void writembs_check(const char *mbs, const char *mbs_name, bool critical, const char *file, long line) {
     if (mbs != NULL) {
         tputs(mbs, 1, &writeb);
     } else if (critical) {

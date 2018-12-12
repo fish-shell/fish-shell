@@ -30,7 +30,7 @@ enum {
 
 void set_color(rgb_color_t c, rgb_color_t c2);
 
-void writembs_check(char *mbs, const char *mbs_name, bool critical, const char *file, long line);
+void writembs_check(const char *mbs, const char *mbs_name, bool critical, const char *file, long line);
 #define writembs(mbs) writembs_check((mbs), #mbs, true, __FILE__, __LINE__)
 #define writembs_nofail(mbs) writembs_check((mbs), #mbs, false, __FILE__, __LINE__)
 

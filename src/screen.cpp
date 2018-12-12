@@ -566,7 +566,7 @@ static void s_write_char(screen_t *s, data_buffer_t *b, wchar_t c) {
 }
 
 /// Send the specified string through tputs and append the output to the specified buffer.
-static void s_write_mbs(data_buffer_t *b, char *s) {
+static void s_write_mbs(data_buffer_t *b, const char *s) {
     scoped_buffer_t scoped_buffer(b);
     writembs(s);
 }

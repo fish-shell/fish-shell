@@ -316,6 +316,7 @@ AC_STRUCT_DIRENT_D_TYPE
 #
 
 AC_CHECK_FUNCS( wcsndup )
+AC_CHECK_FUNCS( wcstod_l )
 AC_CHECK_FUNCS( futimes )
 AC_CHECK_FUNCS( wcslcpy lrand48_r killpg )
 AC_CHECK_FUNCS( backtrace_symbols getifaddrs )

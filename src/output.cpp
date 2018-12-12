@@ -66,7 +66,7 @@ unsigned char index_for_color(rgb_color_t c) {
 static bool write_color_escape(char *todo, unsigned char idx, bool is_fg) {
     if (term_supports_color_natively(idx)) {
         // Use tparm to emit color escape.
-        writembs(tparm(todo, idx));
+        writembs(tparm((char *)todo, idx));
         return true;
     }
 
@@ -332,7 +332,7 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
 
     // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
     if (is_bold && !was_bold && enter_bold_mode && strlen(enter_bold_mode) > 0 && !bg_set) {
-        writembs_nofail(tparm(enter_bold_mode));
+        writembs_nofail(tparm((char *)enter_bold_mode));
         was_bold = is_bold;
     }
 

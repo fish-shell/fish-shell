@@ -1,0 +1,21 @@
+image: archlinux
+packages:
+  - cmake
+  - ninja
+  - expect
+sources:
+  - https://git.sr.ht/~faho/fish
+tasks:
+  - build: |
+          cd fish
+          mkdir build || :
+          cd build
+          cmake -G Ninja .. \
+          -DCMAKE_INSTALL_PREFIX=/usr \
+          -DCMAKE_INSTALL_DATADIR=share \
+          -DCMAKE_INSTALL_DOCDIR=share/doc/fish \
+          -DCMAKE_INSTALL_SYSCONFDIR=/etc
+          ninja
+  - test: |
+          cd fish/build
+          env SHOW_INTERACTIVE_LOG=1 ninja test

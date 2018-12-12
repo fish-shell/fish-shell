@@ -431,6 +431,9 @@ static bool does_term_support_setting_title() {
     if (!recognized) {
         if (wcscmp(term, L"linux") == 0) return false;
         if (wcscmp(term, L"dumb") == 0) return false;
+        // NetBSD
+        if (wcscmp(term, L"vt100") == 0) return false;
+        if (wcscmp(term, L"wsvt25") == 0) return false;
 
         char buf[PATH_MAX];
         int retval = ttyname_r(STDIN_FILENO, buf, PATH_MAX);

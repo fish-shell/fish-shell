@@ -38,6 +38,8 @@ function fish_right_prompt
         return
     end
 
+    # Get the current action ("merge", "rebase", etc.)
+    # and if there's one get the current commit hash too.
     set -l commit ''
     if set -l action (__fish_git_action "$git_dir")
         set commit (command git rev-parse HEAD 2> /dev/null | string sub -l 7)

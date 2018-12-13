@@ -71,9 +71,42 @@ function fish_right_prompt
         end
     end
 
-    # Count added, deleted, modified, renamed, unmerged, and untracked.
-    # T (type change) is undocumented, see http://git.io/FnpMGw.
-    # For a table of scenarii, see http://i.imgur.com/2YLu1.png.
+    # git-status' porcelain v1 format starts with 2 letters on each line:
+    #   The first letter (X) denotes the index state.
+    #   The second letter (Y) denotes the working directory state.
+    #
+    # The following table presents the possible combinations:
+    # * The underscore character denotes whitespace.
+    # * The cell values stand for the following file states:
+    #   a: added
+    #   d: deleted
+    #   m: modified
+    #   r: renamed
+    #   u: unmerged
+    #   t: untracked
+    # * Cells with more than one letter signify that both states
+    #   are simultaneously the case. This is possible since the git index
+    #   and working directory operate independently of each other.
+    # * Cells which are empty are unhandled by this code.
+    # * T (= type change) is undocumented.
+    #   See Git v1.7.8.2 release notes for more information.
+    #
+    #   \ Y→
+    #  X \
+    #  ↓  | A  | C  | D  | M  | R  | T  | U  | X  | B  | ?  | _
+    # ----+----+----+----+----+----+----+----+----+----+----+----
+    #  A  | u  |    | ad | am | r  | am | u  |    |    |    | a
+    #  C  |    |    | ad | am | r  | am | u  |    |    |    | a
+    #  D  |    |    | u  | am | r  | am | u  |    |    |    | a
+    #  M  |    |    | ad | am | r  | am | u  |    |    |    | a
+    #  R  | r  | r  | rd | rm | r  | rm | ur | r  | r  | r  | r
+    #  T  |    |    | ad | am | r  | am | u  |    |    |    | a
+    #  U  | u  | u  | u  | um | ur | um | u  | u  | u  | u  | u
+    #  X  |    |    |    | m  | r  | m  | u  |    |    |    |
+    #  B  |    |    |    | m  | r  | m  | u  |    |    |    |
+    #  ?  |    |    |    | m  | r  | m  | u  |    |    | t  |
+    #  _  |    |    | d  | m  | r  | m  | u  |    |    |    |
+
     set -l status_added 0
     set -l status_deleted 0
     set -l status_modified 0

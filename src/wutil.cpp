@@ -311,7 +311,13 @@ int fd_check_is_remote(int fd) {
             // Other FSes are assumed local.
             return 0;
     }
-#elif defined(MNT_LOCAL) && !defined(__NetBSD__)
+#elif defined(ST_LOCAL)
+    // ST_LOCAL is a flag to statvfs, which is itself standardized.
+    // In practice the only system to use this path is NetBSD.
+    struct statvfs buf {};
+    if (fstatvfs(fd, &buf) < 0) return -1;
+    return (buf.f_flag & ST_LOCAL) ? 0 : 1;
+#elif defined(MNT_LOCAL)
     struct statfs buf {};
     if (fstatfs(fd, &buf) < 0) return -1;
     return (buf.f_flags & MNT_LOCAL) ? 0 : 1;

@@ -1,5 +1,5 @@
 # name: Sorin
-# author: Ivan Tham <ivanthamjunhoe@gmail.com>
+# author: Leonard Hecker <leonard@hecker.io>
 
 # Sources:
 # - General theme setup: https://github.com/sorin-ionescu/prezto/blob/d275f316ffdd0bbd075afbff677c3e00791fba16/modules/prompt/functions/prompt_sorin_setup

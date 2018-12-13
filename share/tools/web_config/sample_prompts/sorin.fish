@@ -33,8 +33,7 @@ function fish_right_prompt
 
     # Get the git directory for later use.
     # Return if not inside a Git repository work tree.
-    set -l git_dir (command git rev-parse --git-dir 2>/dev/null)
-    if test $status -ne 0
+    if not set -l git_dir (command git rev-parse --git-dir 2>/dev/null)
         set_color normal
         return
     end

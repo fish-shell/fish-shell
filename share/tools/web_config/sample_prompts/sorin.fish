@@ -65,7 +65,7 @@ function fish_right_prompt
     if test -f "$git_dir/refs/stash"
         set status_stashed 1
     else if test -r "$git_dir/commondir"
-        read -d \n -l commondir <"$git_dir/commondir"
+        read -l commondir <"$git_dir/commondir"
         if test -f "$commondir/refs/stash"
             set status_stashed 1
         end

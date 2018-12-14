@@ -668,10 +668,12 @@ static bool parse_number(const wcstring &arg, number_t *number, wcstring_list_t 
     } else {
         // We could not parse a float or an int.
         // Check for special fish_wcsto* value or show standard EINVAL/ERANGE error.
-        if (errno == -1)
-            errors.push_back(format_string(_(L"Integer %lld in '%ls' followed by non-digit"), integral, argcs));
-        else
+        if (errno == -1) {
+            errors.push_back(format_string(_(L"Integer %lld in '%ls' followed by non-digit"),
+                                           integral, argcs));
+        } else {
             errors.push_back(format_string(L"%s: '%ls'", strerror(errno), argcs));
+        }
         return false;
     }
 }

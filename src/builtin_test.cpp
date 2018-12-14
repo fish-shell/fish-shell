@@ -657,7 +657,7 @@ static bool parse_number(const wcstring &arg, number_t *number, wcstring_list_t 
         // invalid (e.g. not a representable integer).
         *number = number_t{integral, 0.0};
         return true;
-    } else if (got_float) {
+    } else if (got_float && errno != ERANGE) {
         // Here we parsed an (in range) floating point value that could not be parsed as an integer.
         // Break the floating point value into base and delta. Ensure that base is <= the floating
         // point value.
@@ -667,7 +667,11 @@ static bool parse_number(const wcstring &arg, number_t *number, wcstring_list_t 
         return true;
     } else {
         // We could not parse a float or an int.
-        errors.push_back(format_string(_(L"invalid number '%ls'"), arg.c_str()));
+        // Check for special fish_wcsto* value or show standard EINVAL/ERANGE error.
+        if (errno == -1)
+            errors.push_back(format_string(_(L"Integer %lld in '%ls' followed by non-digit"), integral, argcs));
+        else
+            errors.push_back(format_string(L"%s: '%ls'", strerror(errno), argcs));
         return false;
     }
 }

@@ -198,3 +198,7 @@ int flock(int fd, int op);
 #endif
 
 #endif
+
+#ifndef wcstod_l
+double wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t loc);
+#endif

@@ -21,12 +21,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
     set -g __fish_config_interactive_done
     set -g __fish_active_key_bindings
 
-    # Set the correct user data directory
-    set -l userdatadir ~/.local/share
-    if set -q XDG_DATA_HOME
-        set userdatadir $XDG_DATA_HOME
-    end
-
     if not set -q fish_greeting
         set -l line1 (_ 'Welcome to fish, the friendly interactive shell')
         set -l line2 ''
@@ -97,7 +91,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     #
     # Don't do this if we're being invoked as part of running unit tests.
     if not set -q FISH_UNIT_TESTS_RUNNING
-        if not test -d $userdatadir/fish/generated_completions
+        if not test -d $__fish_user_data_dir/generated_completions
             # Generating completions from man pages needs python (see issue #3588).
 
             # We cannot simply do `fish_update_completions &` because it is a function.

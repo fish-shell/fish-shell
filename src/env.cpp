@@ -67,6 +67,8 @@
 #define FISH_SYSCONFDIR_VAR L"__fish_sysconf_dir"
 #define FISH_HELPDIR_VAR L"__fish_help_dir"
 #define FISH_BIN_DIR L"__fish_bin_dir"
+#define FISH_CONFIG_DIR L"__fish_config_dir"
+#define FISH_USER_DATA_DIR L"__fish_user_data_dir"
 
 /// At init, we read all the environment variables from this array.
 extern char **environ;
@@ -876,6 +878,14 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         env_set_one(FISH_HELPDIR_VAR, ENV_GLOBAL, paths->doc);
         env_set_one(FISH_BIN_DIR, ENV_GLOBAL, paths->bin);
     }
+
+    wcstring user_config_dir;
+    path_get_config(user_config_dir);
+    env_set_one(FISH_CONFIG_DIR, ENV_GLOBAL, user_config_dir);
+
+    wcstring user_data_dir;
+    path_get_data(user_data_dir);
+    env_set_one(FISH_USER_DATA_DIR, ENV_GLOBAL, user_data_dir);
 
     init_locale();
     init_curses();

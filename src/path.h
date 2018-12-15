@@ -19,6 +19,9 @@
 /// \return whether the directory was returned successfully
 bool path_get_config(wcstring &path);
 
+/// Disables `path_get_config` going forward
+void path_disable_user_config();
+
 /// Returns the user data directory for fish. If the directory or one of its parents doesn't exist,
 /// they are first created.
 ///

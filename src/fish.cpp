@@ -67,6 +67,8 @@ class fish_cmd_opts_t {
 
 /// If we are doing profiling, the filename to output to.
 static const char *s_profiling_output_filename = NULL;
+/// Used to prevent loading of user configuration at startup
+static bool s_load_user_config = true;
 
 static bool has_suffix(const std::string &path, const char *suffix, bool ignore_case) {
     size_t pathlen = path.size(), suffixlen = strlen(suffix);
@@ -198,7 +200,7 @@ static int read_init(const struct config_paths_t &paths) {
     // If path_get_config returns false then we have no configuration directory and no custom config
     // to load.
     wcstring config_dir;
-    if (path_get_config(config_dir)) {
+    if (s_load_user_config && path_get_config(config_dir)) {
         source_config_in_directory(config_dir);
     }
 
@@ -230,6 +232,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                                               {"no-execute", no_argument, NULL, 'n'},
                                               {"profile", required_argument, NULL, 'p'},
                                               {"private", no_argument, NULL, 'P'},
+                                              {"no-config", no_argument, NULL, 'N'},
                                               {"help", no_argument, NULL, 'h'},
                                               {"version", no_argument, NULL, 'v'},
                                               {NULL, 0, NULL, 0}};
@@ -278,6 +281,12 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
             }
             case 'n': {
                 no_exec = 1;
+                break;
+            }
+            case 'N': {
+                // debug(1, "disable user directory");
+                s_load_user_config = false;
+                path_disable_user_config();
                 break;
             }
             case 'p': {

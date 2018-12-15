@@ -31,6 +31,8 @@
 // we've already tested.
 const wcstring_list_t dflt_pathsv({L"/bin", L"/usr/bin", PREFIX L"/bin"});
 
+static bool s_no_user_config = false;
+
 static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                                const maybe_t<env_var_t> &bin_path_var) {
     debug(5, L"path_get_path( '%ls' )", cmd.c_str());
@@ -326,14 +328,22 @@ static void path_create(wcstring &path, const wcstring &xdg_var, const wcstring 
     return;
 }
 
+void path_disable_user_config() {
+    s_no_user_config = true;
+}
+
 /// Cache the config path.
 bool path_get_config(wcstring &path) {
     static bool config_path_done = false;
     static wcstring config_path(L"");
 
     if (!config_path_done) {
-        path_create(config_path, L"XDG_CONFIG_HOME", L"config",
-                    _(L"Your personal settings will not be saved."));
+        if (s_no_user_config) {
+            config_path = env_get_runtime_path();
+        } else {
+            path_create(config_path, L"XDG_CONFIG_HOME", L"config",
+                        _(L"Your personal settings will not be saved."));
+        }
         config_path_done = true;
     }
 
@@ -347,8 +357,12 @@ bool path_get_data(wcstring &path) {
     static wcstring data_path(L"");
 
     if (!data_path_done) {
+        if (s_no_user_config) {
+            data_path = env_get_runtime_path();
+        } else {
+            path_create(data_path, L"XDG_DATA_HOME", L"data", _(L"Your history will not be saved."));
+        }
         data_path_done = true;
-        path_create(data_path, L"XDG_DATA_HOME", L"data", _(L"Your history will not be saved."));
     }
 
     path = data_path;

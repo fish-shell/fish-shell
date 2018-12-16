@@ -206,7 +206,7 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
     } else {
         streams.err.append_format(L"%ls: Error: %ls\n", cmd, math_describe_error(error).c_str());
         streams.err.append_format(L"'%ls'\n", expression.c_str());
-        streams.err.append_format(L"%*lc^\n", error.position - 1, L' ');
+        streams.err.append_format(L"%*ls%ls\n", error.position - 1, L" ",L"^");
         retval = STATUS_CMD_ERROR;
     }
     setlocale(LC_NUMERIC, saved_locale);

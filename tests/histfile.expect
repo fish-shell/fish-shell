@@ -110,8 +110,8 @@ expect_prompt
 
 # TODO: Figure out why this `history --save` is only needed in one of the
 # three Travis CI build environments and neither of my OS X or Ubuntu servers.
-send "history --save\r"
-expect_prompt
+# send "history --save\r"
+# expect_prompt
 
 send "grep '^$hist_line' $env_histfile\r"
 expect_prompt -re "\r\n$hist_line\r\n" {

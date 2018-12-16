@@ -1124,6 +1124,7 @@ static wcstring escape_string_pcre2(const wcstring &in) {
             case L'-':
             case L']':
                 out.push_back('\\');
+                /* FALLTHROUGH */
             default:
                 out.push_back(c);
         }

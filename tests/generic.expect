@@ -56,3 +56,8 @@ send_line "echo hoge >|  \n cat"
 expect_prompt "hoge" {} unmatched {
     puts stderr "Error with a pipe with redirection at the end of the line"
 }
+
+send_line "source; or echo failed"
+expect_prompt "failed" {} unmatched {
+    puts stderr "Error with sourcing from the terminal"
+}

@@ -62,18 +62,6 @@ end
 # unless they already exist
 #
 
-set -g __fish_config_dir ~/.config/fish
-
-if set -q XDG_CONFIG_HOME
-    set __fish_config_dir $XDG_CONFIG_HOME/fish
-end
-
-set -l userdatadir ~/.local/share
-
-if set -q XDG_DATA_HOME
-    set userdatadir $XDG_DATA_HOME
-end
-
 # __fish_data_dir, __fish_sysconf_dir, __fish_help_dir, __fish_bin_dir
 # are expected to have been set up by read_init from fish.cpp
 
@@ -98,7 +86,7 @@ if not contains -- $__fish_data_dir/functions $fish_function_path
 end
 
 if not set -q fish_complete_path
-    set fish_complete_path $__fish_config_dir/completions $__fish_sysconf_dir/completions $__extra_completionsdir $__fish_data_dir/completions $userdatadir/fish/generated_completions
+    set fish_complete_path $__fish_config_dir/completions $__fish_sysconf_dir/completions $__extra_completionsdir $__fish_data_dir/completions $__fish_user_data_dir/generated_completions
 end
 
 if not contains -- $__fish_data_dir/completions $fish_complete_path
@@ -109,7 +97,7 @@ end
 function :
     # no-op function for compatibility with sh, bash, and others.
     # Often used to insert a comment into a chain of commands without having
-	# it eat up the remainder of the line, handy in Makefiles.
+    # it eat up the remainder of the line, handy in Makefiles.
 end
 
 #

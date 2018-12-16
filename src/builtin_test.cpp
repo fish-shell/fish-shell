@@ -648,7 +648,6 @@ static bool parse_number(const wcstring &arg, number_t *number, wcstring_list_t 
     const wchar_t *argcs = arg.c_str();
     double floating = 0;
     bool got_float = parse_double(argcs, &floating);
-
     errno = 0;
     long long integral = fish_wcstoll(argcs);
     bool got_int = (errno == 0);
@@ -656,18 +655,26 @@ static bool parse_number(const wcstring &arg, number_t *number, wcstring_list_t 
         // Here the value is just an integer; ignore the floating point parse because it may be
         // invalid (e.g. not a representable integer).
         *number = number_t{integral, 0.0};
+
         return true;
-    } else if (got_float) {
+    } else if (got_float && errno != ERANGE) {
         // Here we parsed an (in range) floating point value that could not be parsed as an integer.
         // Break the floating point value into base and delta. Ensure that base is <= the floating
         // point value.
         double intpart = std::floor(floating);
         double delta = floating - intpart;
         *number = number_t{static_cast<long long>(intpart), delta};
+
         return true;
     } else {
         // We could not parse a float or an int.
-        errors.push_back(format_string(_(L"invalid number '%ls'"), arg.c_str()));
+        // Check for special fish_wcsto* value or show standard EINVAL/ERANGE error.
+        if (errno == -1) {
+            errors.push_back(format_string(_(L"Integer %lld in '%ls' followed by non-digit"),
+                                           integral, argcs));
+        } else {
+            errors.push_back(format_string(L"%s: '%ls'", strerror(errno), argcs));
+        }
         return false;
     }
 }
@@ -829,7 +836,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wcstring_list_t args(argv + 1, argv + 1 + argc);
 
     if (argc == 0) {
-        return STATUS_CMD_ERROR;  // Per 1003.1, exit false.
+        return STATUS_INVALID_ARGS;  // Per 1003.1, exit false.
     } else if (argc == 1) {
         // Per 1003.1, exit true if the arg is non-empty.
         return args.at(0).empty() ? STATUS_CMD_ERROR : STATUS_CMD_OK;
@@ -852,11 +859,13 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     wcstring_list_t eval_errors;
     bool result = expr->evaluate(eval_errors);
-    if (!eval_errors.empty() && !should_suppress_stderr_for_tests()) {
-        streams.err.append(L"test returned eval errors:\n");
-        for (size_t i = 0; i < eval_errors.size(); i++) {
-            streams.err.append_format(L"\t%ls\n", eval_errors.at(i).c_str());
+    if (!eval_errors.empty()) {
+        if (!should_suppress_stderr_for_tests()) {
+            for (size_t i = 0; i < eval_errors.size(); i++) {
+                streams.err.append_format(L"\t%ls\n", eval_errors.at(i).c_str());
+            }
         }
+        return STATUS_INVALID_ARGS;
     }
     return result ? STATUS_CMD_OK : STATUS_CMD_ERROR;
 }

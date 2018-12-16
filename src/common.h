@@ -1078,9 +1078,13 @@ enum {
     STATUS_CMD_OK = 0,
     /// The status code used for failure exit in a command (but not if the args were invalid).
     STATUS_CMD_ERROR = 1,
+    /// The status code used for invalid arguments given to a command. This is distinct from valid
+    /// arguments that might result in a command failure. An invalid args condition is something
+    /// like an unrecognized flag, missing or too many arguments, an invalid integer, etc. But
+    STATUS_INVALID_ARGS = 2,
+
     /// The status code used when a command was not found.
     STATUS_CMD_UNKNOWN = 127,
-
     /// TODO: Figure out why we have two distinct failure codes for when an external command cannot
     /// be run.
     ///
@@ -1095,10 +1099,6 @@ enum {
     STATUS_ILLEGAL_CMD = 123,
     /// The status code used when `read` is asked to consume too much data.
     STATUS_READ_TOO_MUCH = 122,
-    /// The status code used for invalid arguments given to a command. This is distinct from valid
-    /// arguments that might result in a command failure. An invalid args condition is something
-    /// like an unrecognized flag, missing or too many arguments, an invalid integer, etc. But
-    STATUS_INVALID_ARGS = 121,
 };
 
 /* Normally casting an expression to void discards its value, but GCC

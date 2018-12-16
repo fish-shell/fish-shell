@@ -43,7 +43,9 @@ printf '%e\n' "2,34"  # should fail
 # Try to use one of several locales that use a comma as the decimal mark
 # rather than the period used in english speaking locales. If we don't find
 # one installed we simply don't run this test.
-set -l locales (locale -a)
+#
+# musl currently does not have a `locale` command, so we also skip it then.
+set -l locales (command -sq locale; and locale -a)
 set -l acceptable_locales bg_BG de_DE es_ES fr_FR ru_RU
 set -l numeric_locale
 for locale in {$acceptable_locales}.{UTF-8,UTF8}

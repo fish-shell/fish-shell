@@ -80,16 +80,6 @@ fish_dir="$(dirname "${fish_exe}")"
 fish_leaf="$(basename "${fish_exe}")"
 
 
-# Terminal colouring
-term_red="$(tput setaf 1)"
-term_green="$(tput setaf 2)"
-term_yellow="$(tput setaf 3)"
-term_blue="$(tput setaf 4)"
-term_magenta="$(tput setaf 5)"
-term_cyan="$(tput setaf 6)"
-term_white="$(tput setaf 7)"
-term_reset="$(tput sgr0)"
-
 # Which system are we on.
 # fish has slightly different behaviour depending on the system it is
 # running on (and the libraries that it is linked with), so for special
@@ -299,6 +289,17 @@ if [ ! -x "${fish_exe}" ] ; then
 fi
 
 clean_environment
+
+# Terminal colouring
+# Only do this after setting up $TERM.
+term_red="$(tput setaf 1)"
+term_green="$(tput setaf 2)"
+term_yellow="$(tput setaf 3)"
+term_blue="$(tput setaf 4)"
+term_magenta="$(tput setaf 5)"
+term_cyan="$(tput setaf 6)"
+term_white="$(tput setaf 7)"
+term_reset="$(tput sgr0)"
 
 say cyan "Testing shell invocation functionality"
 

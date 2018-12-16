@@ -62,14 +62,12 @@ Function name4 not found as expected
 
 ####################
 # Checking that the copied functions are identical other than the name
-1c1
-< function name1 --argument arg1 arg2
----
-> function name1a --argument arg1 arg2
-1c1
-< function name3 --argument arg1 arg2
----
-> function name3a --argument arg1 arg2
+function name1 --argument arg1 arg2
+function name1a --argument arg1 arg2
+1 = 1a
+function name3 --argument arg1 arg2
+function name3a --argument arg1 arg2
+3 = 3a
 
 ####################
 # Checking reserved names

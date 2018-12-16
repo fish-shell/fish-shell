@@ -43,8 +43,18 @@ functions -q name3a
 or echo "Function name3a not found as expected"
 
 logmsg Checking that the copied functions are identical other than the name
-diff (functions name1 | psub) (functions name1a | psub)
-diff (functions name3 | psub) (functions name3a | psub)
+# Poor man's diff because on some systems diff defaults to unified output, but that prints filenames.
+#
+set -l name1 (functions name1)
+set -l name1a (functions name1a)
+set -l name3 (functions name3)
+set -l name3a (functions name3a)
+echo $name1[1]
+echo $name1a[1]
+test "$name1[2..-1]" = "$name1a[2..-1]"; and echo "1 = 1a"
+echo $name3[1]
+echo $name3a[1]
+test "$name3[2..-1]" = "$name3a[2..-1]"; and echo "3 = 3a"
 
 logmsg Checking reserved names
 function test; echo banana; end

@@ -292,14 +292,25 @@ clean_environment
 
 # Terminal colouring
 # Only do this after setting up $TERM.
-term_red="$(tput setaf 1)"
-term_green="$(tput setaf 2)"
-term_yellow="$(tput setaf 3)"
-term_blue="$(tput setaf 4)"
-term_magenta="$(tput setaf 5)"
-term_cyan="$(tput setaf 6)"
-term_white="$(tput setaf 7)"
-term_reset="$(tput sgr0)"
+term_red=""
+term_green=""
+term_yellow=""
+term_blue=""
+term_magenta=""
+term_cyan=""
+term_white=""
+term_reset=""
+# Some systems don't have tput. Disable coloring.
+if command -v tput >/dev/null 2>&1; then
+    term_red="$(tput setaf 1)"
+    term_green="$(tput setaf 2)"
+    term_yellow="$(tput setaf 3)"
+    term_blue="$(tput setaf 4)"
+    term_magenta="$(tput setaf 5)"
+    term_cyan="$(tput setaf 6)"
+    term_white="$(tput setaf 7)"
+    term_reset="$(tput sgr0)"
+fi
 
 say cyan "Testing shell invocation functionality"
 

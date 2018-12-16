@@ -1,6 +1,39 @@
 FIND_PACKAGE(Doxygen 1.8.7)
 
+FIND_PROGRAM(SPHINX_EXECUTABLE NAMES sphinx-build
+    HINTS
+    $ENV{SPHINX_DIR}
+    PATH_SUFFIXES bin
+    DOC "Sphinx documentation generator")
+
 INCLUDE(FeatureSummary)
+
+SET(SPHINX_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/sphinx_src")
+SET(SPHINX_ROOT_DIR "${CMAKE_CURRENT_BINARY_DIR}/sphinx-root")
+SET(SPHINX_BUILD_DIR "${SPHINX_ROOT_DIR}/build")
+SET(SPHINX_CACHE_DIR "${SPHINX_ROOT_DIR}/doctrees")
+SET(SPHINX_HTML_DIR "${SPHINX_ROOT_DIR}/html")
+SET(SPHINX_MANPAGE_DIR "${SPHINX_ROOT_DIR}/man")
+
+CONFIGURE_FILE("${SPHINX_SRC_DIR}/conf.py" "${SPHINX_BUILD_DIR}/conf.py" @ONLY)
+
+ADD_CUSTOM_TARGET(sphinx-docs
+    ${SPHINX_EXECUTABLE}
+        -q -b html
+        -c "${SPHINX_SRC_DIR}"
+        -d "${SPHINX_CACHE_DIR}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/sphinx_src"
+        "${SPHINX_HTML_DIR}"
+    COMMENT "Building HTML documentation with Sphinx")
+
+ADD_CUSTOM_TARGET(sphinx-manpages
+    ${SPHINX_EXECUTABLE}
+        -q -b man
+        -c "${SPHINX_SRC_DIR}"
+        -d "${SPHINX_CACHE_DIR}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/sphinx_src"
+        "${SPHINX_MANPAGE_DIR}"
+    COMMENT "Building man pages with Sphinx")
 
 IF(DOXYGEN_FOUND)
     OPTION(BUILD_DOCS "build documentation (requires Doxygen)" ON)

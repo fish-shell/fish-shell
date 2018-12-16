@@ -10,11 +10,11 @@ if test "$TRAVIS_OS_NAME" = osx
 end
 
 # This is a list of flakey tests that often succeed when rerun.
-set TESTS_TO_RETRY bind.expect
+set -l TESTS_TO_RETRY bind.expect
 
 # Set this var to modify behavior of the code being tests. Such as avoiding running
 # `fish_update_completions` when running tests.
-set -x FISH_UNIT_TESTS_RUNNING 1
+set -gx FISH_UNIT_TESTS_RUNNING 1
 
 # Change to directory containing this script
 cd (dirname (status -f))
@@ -22,7 +22,7 @@ cd (dirname (status -f))
 # These env vars should not be inherited from the user environment because they can affect the
 # behavior of the tests. So either remove them or set them to a known value.
 # See also tests/test.fish.
-set TERM xterm
+set -gx TERM xterm
 set -e ITERM_PROFILE
 
 # Test files specified on commandline, or all *.expect files

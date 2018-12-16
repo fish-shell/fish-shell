@@ -5,6 +5,13 @@ Introduction
 
 This is the documentation for ``fish``, the friendly interactive shell. fish is a user friendly commandline shell intended mostly for interactive use. A shell is a program used to execute other programs. For the latest information on fish, please visit the `fish homepage <https://fishsshell.com/>`_.
 
+.. toctree::
+   :glob:
+   :maxdepth: 1
+   
+   cmds/*
+
+
 .. _syntax:
 
 Syntax overview

@@ -1,0 +1,39 @@
+\section switch switch - conditionally execute a block of commands
+
+\subsection switch-synopsis Synopsis
+\fish{synopsis}
+switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end
+\endfish
+
+\subsection switch-description Description
+
+`switch` performs one of several blocks of commands, depending on whether a specified value equals one of several wildcarded values. `case` is used together with the `switch` statement in order to determine which block should be executed.
+
+Each `case` command is given one or more parameters. The first `case` command with a parameter that matches the string specified in the switch command will be evaluated. `case` parameters may contain wildcards. These need to be escaped or quoted in order to avoid regular wildcard expansion using filenames.
+
+Note that fish does not fall through on case statements. Only the first matching case is executed.
+
+Note that command substitutions in a case statement will be evaluated even if its body is not taken. All substitutions, including command substitutions, must be performed before the value can be compared against the parameter.
+
+
+\subsection switch-example Example
+
+If the variable \$animal contains the name of an animal, the following code would attempt to classify it:
+
+\fish
+switch $animal
+    case cat
+        echo evil
+    case wolf dog human moose dolphin whale
+        echo mammal
+    case duck goose albatross
+        echo bird
+    case shark trout stingray
+        echo fish
+    case '*'
+        echo I have no idea what a $animal is
+end
+\endfish
+
+If the above code was run with `$animal` set to `whale`, the output
+would be `mammal`.

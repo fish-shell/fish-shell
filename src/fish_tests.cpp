@@ -2155,7 +2155,12 @@ static bool run_one_test_test(int expected, wcstring_list_t &lst, bool bracket) 
     argv[i + 1] = NULL;
     io_streams_t streams(0);
     int result = builtin_test(parser, streams, argv);
+
+    if (expected != result)
+        err(L"expected builtin_test() to return %d, got %d", expected, result);
+
     delete[] argv;
+
     return expected == result;
 }
 
@@ -2207,13 +2212,13 @@ static void test_test() {
     do_test(run_test_test(0, L"' 2' -eq 2"));
     do_test(run_test_test(0, L"'2 ' -eq 2"));
     do_test(run_test_test(0, L"' 2 ' -eq 2"));
-    do_test(run_test_test(1, L"' 2x' -eq 2"));
-    do_test(run_test_test(1, L"'' -eq 0"));
-    do_test(run_test_test(1, L"'' -ne 0"));
-    do_test(run_test_test(1, L"'  ' -eq 0"));
-    do_test(run_test_test(1, L"'  ' -ne 0"));
-    do_test(run_test_test(1, L"'x' -eq 0"));
-    do_test(run_test_test(1, L"'x' -ne 0"));
+    do_test(run_test_test(2, L"' 2x' -eq 2"));
+    do_test(run_test_test(2, L"'' -eq 0"));
+    do_test(run_test_test(2, L"'' -ne 0"));
+    do_test(run_test_test(2, L"'  ' -eq 0"));
+    do_test(run_test_test(2, L"'  ' -ne 0"));
+    do_test(run_test_test(2, L"'x' -eq 0"));
+    do_test(run_test_test(2, L"'x' -ne 0"));
     do_test(run_test_test(1, L"-1 -ne -1"));
     do_test(run_test_test(0, L"abc != def"));
     do_test(run_test_test(1, L"abc = def"));
@@ -2284,6 +2289,10 @@ static void test_test() {
     do_test(run_test_test(1, L"-4611686018427387904 -ge 4611686018427387904"));
     do_test(run_test_test(1, L"4611686018427387904 -gt 4611686018427387904"));
     do_test(run_test_test(0, L"4611686018427387904 -ge 4611686018427387904"));
+
+    // test out-of-range numbers
+    do_test(run_test_test(2, L"99999999999999999999999999 -ge 1"));
+    do_test(run_test_test(2, L"1 -eq -99999999999999999999999999.9"));
 }
 
 static void test_wcstod() {

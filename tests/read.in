@@ -3,6 +3,8 @@
 # Test read builtin and IFS.
 #
 
+# Set term again explicitly to ensure behavior.
+set -gx TERM xterm
 logmsg Read with no vars is not an error
 read
 

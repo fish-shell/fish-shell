@@ -1,4 +1,6 @@
-\section block block - temporarily block delivery of events
+block - temporarily block delivery of events
+==========================================
+
 
 \subsection block-synopsis Synopsis
 \fish{synopsis}

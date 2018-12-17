@@ -1,4 +1,6 @@
-\section begin begin - start a new block of code
+begin - start a new block of code
+==========================================
+
 
 \subsection begin-synopsis Synopsis
 \fish{synopsis}

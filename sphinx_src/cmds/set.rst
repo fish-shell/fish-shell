@@ -1,4 +1,6 @@
-\section set set - display and change shell variables.
+set - display and change shell variables.
+==========================================
+
 
 \subsection set-synopsis Synopsis
 \fish{synopsis}

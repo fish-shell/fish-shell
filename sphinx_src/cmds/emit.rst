@@ -1,4 +1,6 @@
-\section emit emit - Emit a generic event
+emit - Emit a generic event
+==========================================
+
 
 \subsection emit-synopsis Synopsis
 \fish{synopsis}

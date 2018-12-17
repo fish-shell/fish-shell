@@ -1,4 +1,6 @@
-\section fish_key_reader fish_key_reader - explore what characters keyboard keys send
+fish_key_reader - explore what characters keyboard keys send
+==========================================
+
 
 \subsection fish_key_reader-synopsis Synopsis
 \fish{synopsis}

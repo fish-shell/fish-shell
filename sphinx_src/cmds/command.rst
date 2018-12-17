@@ -1,4 +1,6 @@
-\section command command - run a program
+command - run a program
+==========================================
+
 
 \subsection command-synopsis Synopsis
 \fish{synopsis}

@@ -1,4 +1,6 @@
-\section fish_indent fish_indent - indenter and prettifier
+fish_indent - indenter and prettifier
+==========================================
+
 
 \subsection fish_indent-synopsis Synopsis
 \fish{synopsis}

@@ -1,4 +1,6 @@
-\section funced funced - edit a function interactively
+funced - edit a function interactively
+==========================================
+
 
 \subsection funced-synopsis Synopsis
 \fish{synopsis}

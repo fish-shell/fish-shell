@@ -1,4 +1,6 @@
-\section random random - generate random number
+random - generate random number
+==========================================
+
 
 \subsection random-synopsis Synopsis
 \fish{synopsis}

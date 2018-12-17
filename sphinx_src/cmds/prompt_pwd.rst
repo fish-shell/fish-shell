@@ -1,4 +1,6 @@
-\section prompt_pwd prompt_pwd - Print pwd suitable for prompt
+prompt_pwd - Print pwd suitable for prompt
+==========================================
+
 
 \subsection prompt_pwd-synopsis Synopsis
 \fish{synopsis}

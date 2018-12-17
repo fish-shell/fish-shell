@@ -1,4 +1,6 @@
-\section or or - conditionally execute a command
+or - conditionally execute a command
+==========================================
+
 
 \subsection or-synopsis Synopsis
 \fish{synopsis}

@@ -1,4 +1,6 @@
-\section trap trap - perform an action when the shell receives a signal
+trap - perform an action when the shell receives a signal
+==========================================
+
 
 \subsection trap-synopsis Synopsis
 \fish{synopsis}

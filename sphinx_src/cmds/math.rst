@@ -1,4 +1,6 @@
-\section math math - Perform mathematics calculations
+math - Perform mathematics calculations
+==========================================
+
 
 \subsection math-synopsis Synopsis
 \fish{synopsis}

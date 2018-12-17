@@ -1,4 +1,6 @@
-\section ulimit ulimit - set or get resource usage limits
+ulimit - set or get resource usage limits
+==========================================
+
 
 \subsection ulimit-synopsis Synopsis
 \fish{synopsis}

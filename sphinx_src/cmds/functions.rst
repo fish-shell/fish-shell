@@ -1,4 +1,6 @@
-\section functions functions - print or erase functions
+functions - print or erase functions
+==========================================
+
 
 \subsection functions-synopsis Synopsis
 \fish{synopsis}

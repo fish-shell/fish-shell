@@ -1,4 +1,6 @@
-\section count count - count the number of elements of an array
+count - count the number of elements of an array
+==========================================
+
 
 \subsection count-synopsis Synopsis
 \fish{synopsis}

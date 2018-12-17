@@ -1,4 +1,6 @@
-\section breakpoint breakpoint - Launch debug mode
+breakpoint - Launch debug mode
+==========================================
+
 
 \subsection breakpoint-synopsis Synopsis
 \fish{synopsis}

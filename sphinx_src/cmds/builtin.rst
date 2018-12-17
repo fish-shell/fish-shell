@@ -1,4 +1,6 @@
-\section builtin builtin - run a builtin command
+builtin - run a builtin command
+==========================================
+
 
 \subsection builtin-synopsis Synopsis
 \fish{synopsis}

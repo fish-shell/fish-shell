@@ -1,4 +1,6 @@
-\section jobs jobs - print currently running jobs
+jobs - print currently running jobs
+==========================================
+
 
 \subsection jobs-synopsis Synopsis
 \fish{synopsis}

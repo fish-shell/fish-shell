@@ -1,4 +1,6 @@
-\section not not - negate the exit status of a job
+not - negate the exit status of a job
+==========================================
+
 
 \subsection not-synopsis Synopsis
 \fish{synopsis}

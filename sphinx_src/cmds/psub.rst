@@ -1,4 +1,6 @@
-\section psub psub - perform process substitution
+psub - perform process substitution
+==========================================
+
 
 \subsection psub-synopsis Synopsis
 \fish{synopsis}

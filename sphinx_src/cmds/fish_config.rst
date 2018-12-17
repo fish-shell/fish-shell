@@ -1,4 +1,6 @@
-\section fish_config fish_config - start the web-based configuration interface
+fish_config - start the web-based configuration interface
+==========================================
+
 
 \subsection fish_config-description Description
 

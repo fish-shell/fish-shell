@@ -1,4 +1,6 @@
-\section function function - create a function
+function - create a function
+==========================================
+
 
 \subsection function-synopsis Synopsis
 \fish{synopsis}

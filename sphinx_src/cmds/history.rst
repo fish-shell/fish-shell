@@ -1,4 +1,6 @@
-\section history history - Show and manipulate command history
+history - Show and manipulate command history
+==========================================
+
 
 \subsection history-synopsis Synopsis
 \fish{synopsis}

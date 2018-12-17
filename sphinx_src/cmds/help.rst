@@ -1,4 +1,6 @@
-\section help help - display fish documentation
+help - display fish documentation
+==========================================
+
 
 \subsection help-synopsis Synopsis
 \fish{synopsis}

@@ -1,4 +1,6 @@
-\section complete complete - edit command specific tab-completions
+complete - edit command specific tab-completions
+==========================================
+
 
 \subsection complete-synopsis Synopsis
 \fish{synopsis}

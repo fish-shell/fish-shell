@@ -1,4 +1,6 @@
-\section commandline commandline - set or get the current command line buffer
+commandline - set or get the current command line buffer
+==========================================
+
 
 \subsection commandline-synopsis Synopsis
 \fish{synopsis}

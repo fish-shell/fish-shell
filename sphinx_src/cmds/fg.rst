@@ -1,4 +1,6 @@
-\section fg fg - bring job to foreground
+fg - bring job to foreground
+==========================================
+
 
 \subsection fg-synopsis Synopsis
 \fish{synopsis}

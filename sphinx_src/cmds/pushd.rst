@@ -1,4 +1,6 @@
-\section pushd pushd - push directory to directory stack
+pushd - push directory to directory stack
+==========================================
+
 
 \subsection pushd-synopsis Synopsis
 \fish{synopsis}

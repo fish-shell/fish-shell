@@ -1,4 +1,6 @@
-\section cdh cdh - change to a recently visited directory
+cdh - change to a recently visited directory
+==========================================
+
 
 \subsection cdh-synopsis Synopsis
 \fish{synopsis}

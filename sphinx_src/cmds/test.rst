@@ -1,4 +1,6 @@
-\section test test - perform tests on files and text
+test - perform tests on files and text
+==========================================
+
 
 \subsection test-synopsis Synopsis
 \fish{synopsis}

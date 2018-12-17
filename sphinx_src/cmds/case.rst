@@ -1,4 +1,6 @@
-\section case case - conditionally execute a block of commands
+case - conditionally execute a block of commands
+==========================================
+
 
 \subsection case-synopsis Synopsis
 \fish{synopsis}

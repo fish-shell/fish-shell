@@ -1,4 +1,6 @@
-\section umask umask - set or get the file creation mode mask
+umask - set or get the file creation mode mask
+==========================================
+
 
 \subsection umask-synopsis Synopsis
 \fish{synopsis}

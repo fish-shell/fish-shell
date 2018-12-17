@@ -1,4 +1,6 @@
-\section if if - conditionally execute a command
+if - conditionally execute a command
+==========================================
+
 
 \subsection if-synopsis Synopsis
 \fish{synopsis}

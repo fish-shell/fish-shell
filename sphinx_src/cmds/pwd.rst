@@ -1,4 +1,6 @@
-\section pwd pwd - output the current working directory
+pwd - output the current working directory
+==========================================
+
 
 \subsection pwd-synopsis Synopsis
 \fish{synopsis}

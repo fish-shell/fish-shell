@@ -1,4 +1,6 @@
-\section read read - read line of input into variables
+read - read line of input into variables
+==========================================
+
 
 \subsection read-synopsis Synopsis
 \fish{synopsis}

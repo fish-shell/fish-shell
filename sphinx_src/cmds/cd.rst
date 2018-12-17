@@ -1,4 +1,6 @@
-\section cd cd - change directory
+cd - change directory
+==========================================
+
 
 \subsection cd-synopsis Synopsis
 \fish{synopsis}

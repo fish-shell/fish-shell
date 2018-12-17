@@ -1,4 +1,6 @@
-\section continue continue - skip the remainder of the current iteration of the current inner loop
+continue - skip the remainder of the current iteration of the current inner loop
+==========================================
+
 
 \subsection continue-synopsis Synopsis
 \fish{synopsis}

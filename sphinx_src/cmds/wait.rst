@@ -1,4 +1,6 @@
-\section wait wait - wait for jobs to complete
+wait - wait for jobs to complete
+==========================================
+
 
 \subsection wait-synopsis Synopsis
 \fish{synopsis}

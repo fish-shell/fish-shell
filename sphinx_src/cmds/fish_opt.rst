@@ -1,4 +1,6 @@
-\section fish_opt fish_opt - create an option spec for the argparse command
+fish_opt - create an option spec for the argparse command
+==========================================
+
 
 \subsection fish_opt-synopsis Synopsis
 \fish{synopsis}

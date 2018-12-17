@@ -1,4 +1,6 @@
-\section vared vared - interactively edit the value of an environment variable
+vared - interactively edit the value of an environment variable
+==========================================
+
 
 \subsection vared-synopsis Synopsis
 \fish{synopsis}

@@ -1,4 +1,6 @@
-\section realpath realpath - Convert a path to an absolute path without symlinks
+realpath - Convert a path to an absolute path without symlinks
+==========================================
+
 
 \subsection realpath-synopsis Synopsis
 \fish{synopsis}

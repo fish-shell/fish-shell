@@ -1,4 +1,6 @@
-\section fish_vi_mode fish_vi_mode - Enable vi mode
+fish_vi_mode - Enable vi mode
+==========================================
+
 
 \subsection fish_vi_mode-synopsis Synopsis
 \fish{synopsis}

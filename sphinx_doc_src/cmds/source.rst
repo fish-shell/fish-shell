@@ -1,4 +1,6 @@
-\section source source - evaluate contents of file.
+source - evaluate contents of file.
+==========================================
+
 
 \subsection source-synopsis Synopsis
 \fish{synopsis}

@@ -1,4 +1,6 @@
-\section popd popd - move through directory stack
+popd - move through directory stack
+==========================================
+
 
 \subsection popd-synopsis Synopsis
 \fish{synopsis}

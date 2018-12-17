@@ -1,4 +1,6 @@
-\section status status - query fish runtime information
+status - query fish runtime information
+==========================================
+
 
 \subsection status-synopsis Synopsis
 \fish{synopsis}

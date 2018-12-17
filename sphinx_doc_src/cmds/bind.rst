@@ -1,4 +1,6 @@
-\section bind bind - handle fish key bindings
+bind - handle fish key bindings
+==========================================
+
 
 \subsection bind-synopsis Synopsis
 \fish{synopsis}

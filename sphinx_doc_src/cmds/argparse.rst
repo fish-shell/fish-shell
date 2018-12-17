@@ -1,4 +1,6 @@
-\section argparse argparse - parse options passed to a fish script or function
+argparse - parse options passed to a fish script or function
+==========================================
+
 
 \subsection argparse-synopsis Synopsis
 \fish{synopsis}

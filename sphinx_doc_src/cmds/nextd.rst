@@ -1,4 +1,6 @@
-\section nextd nextd - move forward through directory history
+nextd - move forward through directory history
+==========================================
+
 
 \subsection nextd-synopsis Synopsis
 \fish{synopsis}

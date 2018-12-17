@@ -1,4 +1,6 @@
-\section fish fish - the friendly interactive shell
+fish - the friendly interactive shell
+==========================================
+
 
 \subsection fish-synopsis Synopsis
 \fish{synopsis}

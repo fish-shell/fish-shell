@@ -1,4 +1,6 @@
-\section suspend suspend - suspend the current shell
+suspend - suspend the current shell
+==========================================
+
 
 \subsection suspend-synopsis Synopsis
 \fish{synopsis}

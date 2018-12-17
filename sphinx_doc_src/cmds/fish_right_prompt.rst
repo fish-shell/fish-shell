@@ -1,4 +1,6 @@
-\section fish_right_prompt fish_right_prompt - define the appearance of the right-side command line prompt
+fish_right_prompt - define the appearance of the right-side command line prompt
+==========================================
+
 
 \subsection fish_right_prompt-synopsis Synopsis
 \fish{synopsis}

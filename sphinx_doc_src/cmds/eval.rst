@@ -1,4 +1,6 @@
-\section eval eval - evaluate the specified commands
+eval - evaluate the specified commands
+==========================================
+
 
 \subsection eval-synopsis Synopsis
 \fish{synopsis}

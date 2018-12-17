@@ -1,4 +1,6 @@
-\section fish_update_completions fish_update_completions - Update completions using manual pages
+fish_update_completions - Update completions using manual pages
+==========================================
+
 
 \subsection fish_update_completions-description Description
 

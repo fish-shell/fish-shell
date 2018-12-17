@@ -1,4 +1,6 @@
-\section dirs dirs - print directory stack
+dirs - print directory stack
+==========================================
+
 
 \subsection dirs-synopsis Synopsis
 \fish{synopsis}

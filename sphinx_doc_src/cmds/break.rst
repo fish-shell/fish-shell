@@ -1,4 +1,6 @@
-\section break break - stop the current inner loop
+break - stop the current inner loop
+==========================================
+
 
 \subsection break-synopsis Synopsis
 \fish{synopsis}

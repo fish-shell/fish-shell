@@ -1,4 +1,6 @@
-\section string string - manipulate strings
+string - manipulate strings
+==========================================
+
 
 \subsection string-synopsis Synopsis
 \fish{synopsis}

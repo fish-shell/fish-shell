@@ -1,4 +1,6 @@
-\section abbr abbr - manage fish abbreviations
+abbr - manage fish abbreviations
+==========================================
+
 
 \subsection abbr-synopsis Synopsis
 \fish{synopsis}

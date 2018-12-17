@@ -1,4 +1,6 @@
-\section true true - return a successful result
+true - return a successful result
+==========================================
+
 
 \subsection true-synopsis Synopsis
 \fish{synopsis}

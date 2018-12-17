@@ -1,4 +1,6 @@
-\section open open - open file in its default application
+open - open file in its default application
+==========================================
+
 
 \subsection open-synopsis Synopsis
 \fish{synopsis}

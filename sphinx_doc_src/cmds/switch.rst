@@ -1,4 +1,6 @@
-\section switch switch - conditionally execute a block of commands
+switch - conditionally execute a block of commands
+==========================================
+
 
 \subsection switch-synopsis Synopsis
 \fish{synopsis}

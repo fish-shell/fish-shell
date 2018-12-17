@@ -1,4 +1,6 @@
-\section fish_breakpoint_prompt fish_breakpoint_prompt - define the appearance of the command line prompt when in the context of a `breakpoint` command
+fish_breakpoint_prompt - define the appearance of the command line prompt when in the context of a `breakpoint` command
+==========================================
+
 
 \subsection fish_breakpoint_prompt-synopsis Synopsis
 \fish{synopsis}

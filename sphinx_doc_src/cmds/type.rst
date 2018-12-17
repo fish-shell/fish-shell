@@ -1,4 +1,6 @@
-\section type type - indicate how a command would be interpreted
+type - indicate how a command would be interpreted
+==========================================
+
 
 \subsection type-synopsis Synopsis
 \fish{synopsis}

@@ -1,4 +1,6 @@
-\section isatty isatty - test if a file descriptor is a tty.
+isatty - test if a file descriptor is a tty.
+==========================================
+
 
 \subsection isatty-synopsis Synopsis
 \fish{synopsis}

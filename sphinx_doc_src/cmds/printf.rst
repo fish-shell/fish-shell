@@ -1,4 +1,6 @@
-\section printf printf - display text according to a format string
+printf - display text according to a format string
+==========================================
+
 
 \subsection printf-synopsis Synopsis
 \fish{synopsis}

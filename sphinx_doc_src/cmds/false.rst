@@ -1,4 +1,6 @@
-\section false false - return an unsuccessful result
+false - return an unsuccessful result
+==========================================
+
 
 \subsection false-synopsis Synopsis
 \fish{synopsis}

@@ -1,4 +1,6 @@
-\section end end - end a block of commands.
+end - end a block of commands.
+==========================================
+
 
 \subsection end-synopsis Synopsis
 \fish{synopsis}

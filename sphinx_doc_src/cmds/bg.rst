@@ -1,4 +1,6 @@
-\section bg bg - send jobs to background
+bg - send jobs to background
+==========================================
+
 
 \subsection bg-synopsis Synopsis
 \fish{synopsis}

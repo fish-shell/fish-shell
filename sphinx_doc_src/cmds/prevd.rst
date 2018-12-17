@@ -1,4 +1,6 @@
-\section prevd prevd - move backward through directory history
+prevd - move backward through directory history
+==========================================
+
 
 \subsection prevd-synopsis Synopsis
 \fish{synopsis}

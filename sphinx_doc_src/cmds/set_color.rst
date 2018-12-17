@@ -1,4 +1,6 @@
-\section set_color set_color - set the terminal color
+set_color - set the terminal color
+==========================================
+
 
 \subsection set_color-synopsis Synopsis
 \fish{synopsis}

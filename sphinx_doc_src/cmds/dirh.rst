@@ -1,4 +1,6 @@
-\section dirh dirh - print directory history
+dirh - print directory history
+==========================================
+
 
 \subsection dirh-synopsis Synopsis
 \fish{synopsis}

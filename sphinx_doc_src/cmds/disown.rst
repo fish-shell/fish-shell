@@ -1,4 +1,6 @@
-\section disown disown - remove a process from the list of jobs
+disown - remove a process from the list of jobs
+==========================================
+
 
 \subsection disown-synopsis Synopsis
 \fish{synopsis}

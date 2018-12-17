@@ -1,4 +1,6 @@
-\section exit exit - exit the shell
+exit - exit the shell
+==========================================
+
 
 \subsection exit-synopsis Synopsis
 \fish{synopsis}

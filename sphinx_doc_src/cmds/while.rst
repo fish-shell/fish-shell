@@ -1,4 +1,6 @@
-\section while while - perform a command multiple times
+while - perform a command multiple times
+==========================================
+
 
 \subsection while-synopsis Synopsis
 \fish{synopsis}

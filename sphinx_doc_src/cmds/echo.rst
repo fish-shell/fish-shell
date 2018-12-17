@@ -1,4 +1,6 @@
-\section echo echo - display a line of text
+echo - display a line of text
+==========================================
+
 
 \subsection echo-synopsis Synopsis
 \fish{synopsis}

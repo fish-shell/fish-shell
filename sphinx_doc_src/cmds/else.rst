@@ -1,4 +1,6 @@
-\section else else - execute command if a condition is not met
+else - execute command if a condition is not met
+==========================================
+
 
 \subsection else-synopsis Synopsis
 \fish{synopsis}

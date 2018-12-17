@@ -1,4 +1,6 @@
-\section contains contains - test if a word is present in a list
+contains - test if a word is present in a list
+==========================================
+
 
 \subsection contains-synopsis Synopsis
 \fish{synopsis}

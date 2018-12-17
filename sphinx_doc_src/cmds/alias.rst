@@ -1,4 +1,6 @@
-\section alias alias - create a function
+alias - create a function
+==========================================
+
 
 \subsection alias-synopsis Synopsis
 \fish{synopsis}

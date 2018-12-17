@@ -1,4 +1,6 @@
-\section return return - stop the current inner function
+return - stop the current inner function
+==========================================
+
 
 \subsection return-synopsis Synopsis
 \fish{synopsis}

@@ -1,11 +1,11 @@
 pwd - output the current working directory
 ==========================================
 
+Synopsis
+--------
 
-\subsection pwd-synopsis Synopsis
-\fish{synopsis}
 pwd
-\endfish
+
 
 \subsection pwd-description Description
 

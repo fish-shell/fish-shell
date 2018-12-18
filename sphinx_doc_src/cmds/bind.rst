@@ -1,9 +1,9 @@
 bind - handle fish key bindings
 ==========================================
 
+Synopsis
+--------
 
-\subsection bind-synopsis Synopsis
-\fish{synopsis}
 bind [(-M | --mode) MODE] [(-m | --sets-mode) NEW_MODE]
      [--preset | --user]
      [(-s | --silent)] [(-k | --key)] SEQUENCE COMMAND [COMMAND...]
@@ -14,7 +14,7 @@ bind (-L | --list-modes)
 bind (-e | --erase) [(-M | --mode) MODE]
      [--preset] [--user]
      (-a | --all | [(-k | --key)] SEQUENCE [SEQUENCE...])
-\endfish
+
 
 \subsection bind-description Description
 

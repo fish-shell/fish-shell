@@ -2,10 +2,11 @@ cdh - change to a recently visited directory
 ==========================================
 
 
-\subsection cdh-synopsis Synopsis
-\fish{synopsis}
+Synopsis
+--------
+
 cdh [ directory ]
-\endfish
+
 
 \subsection cdh-description Description
 

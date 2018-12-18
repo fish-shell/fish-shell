@@ -1,11 +1,11 @@
 realpath - Convert a path to an absolute path without symlinks
 ==========================================
 
+Synopsis
+--------
 
-\subsection realpath-synopsis Synopsis
-\fish{synopsis}
 realpath path
-\endfish
+
 
 \subsection realpath-description Description
 

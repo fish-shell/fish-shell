@@ -1,11 +1,11 @@
 for - perform a set of commands multiple times.
 ==========================================
 
+Synopsis
+--------
 
-\subsection for-synopsis Synopsis
-\fish{synopsis}
 for VARNAME in [VALUES...]; COMMANDS...; end
-\endfish
+
 
 \subsection for-description Description
 

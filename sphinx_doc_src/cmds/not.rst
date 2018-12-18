@@ -1,11 +1,11 @@
 not - negate the exit status of a job
 ==========================================
 
+Synopsis
+--------
 
-\subsection not-synopsis Synopsis
-\fish{synopsis}
 not COMMAND [OPTIONS...]
-\endfish
+
 
 \subsection not-description Description
 

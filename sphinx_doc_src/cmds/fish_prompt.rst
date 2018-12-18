@@ -1,13 +1,13 @@
 fish_prompt - define the appearance of the command line prompt
 ==========================================
 
+Synopsis
+--------
 
-\subsection fish_prompt-synopsis Synopsis
-\fish{synopsis}
 function fish_prompt
     ...
 end
-\endfish
+
 
 \subsection fish_prompt-description Description
 

@@ -1,11 +1,11 @@
 true - return a successful result
 ==========================================
 
+Synopsis
+--------
 
-\subsection true-synopsis Synopsis
-\fish{synopsis}
 true
-\endfish
+
 
 \subsection true-description Description
 

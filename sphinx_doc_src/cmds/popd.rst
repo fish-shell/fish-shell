@@ -1,11 +1,11 @@
 popd - move through directory stack
 ==========================================
 
+Synopsis
+--------
 
-\subsection popd-synopsis Synopsis
-\fish{synopsis}
 popd
-\endfish
+
 
 \subsection popd-description Description
 

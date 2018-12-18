@@ -1,11 +1,11 @@
 contains - test if a word is present in a list
 ==========================================
 
+Synopsis
+--------
 
-\subsection contains-synopsis Synopsis
-\fish{synopsis}
 contains [OPTIONS] KEY [VALUES...]
-\endfish
+
 
 \subsection contains-description Description
 

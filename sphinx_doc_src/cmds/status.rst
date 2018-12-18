@@ -1,9 +1,9 @@
 status - query fish runtime information
 ==========================================
 
+Synopsis
+--------
 
-\subsection status-synopsis Synopsis
-\fish{synopsis}
 status
 status is-login
 status is-interactive
@@ -21,7 +21,7 @@ status stack-trace
 status job-control CONTROL-TYPE
 status features
 status test-feature FEATURE
-\endfish
+
 
 \subsection status-description Description
 

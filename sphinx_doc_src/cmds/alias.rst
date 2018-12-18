@@ -1,13 +1,13 @@
 alias - create a function
 ==========================================
 
+Synopsis
+--------
 
-\subsection alias-synopsis Synopsis
-\fish{synopsis}
 alias
 alias [OPTIONS] NAME DEFINITION
 alias [OPTIONS] NAME=DEFINITION
-\endfish
+
 
 \subsection alias-description Description
 

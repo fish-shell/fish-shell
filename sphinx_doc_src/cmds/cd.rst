@@ -1,11 +1,11 @@
 cd - change directory
 ==========================================
 
+Synopsis
+--------
 
-\subsection cd-synopsis Synopsis
-\fish{synopsis}
 cd [DIRECTORY]
-\endfish
+
 
 \subsection cd-description Description
 `cd` changes the current working directory.

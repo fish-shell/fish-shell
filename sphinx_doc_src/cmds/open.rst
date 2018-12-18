@@ -1,11 +1,11 @@
 open - open file in its default application
 ==========================================
 
+Synopsis
+--------
 
-\subsection open-synopsis Synopsis
-\fish{synopsis}
 open FILES...
-\endfish
+
 
 \subsection open-description Description
 

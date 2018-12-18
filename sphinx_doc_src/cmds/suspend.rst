@@ -1,11 +1,11 @@
 suspend - suspend the current shell
 ==========================================
 
+Synopsis
+--------
 
-\subsection suspend-synopsis Synopsis
-\fish{synopsis}
 suspend [--force]
-\endfish
+
 
 \subsection suspend-description Description
 

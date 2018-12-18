@@ -1,11 +1,11 @@
 math - Perform mathematics calculations
 ==========================================
 
+Synopsis
+--------
 
-\subsection math-synopsis Synopsis
-\fish{synopsis}
 math [-sN | --scale=N] [--] EXPRESSION
-\endfish
+
 
 \subsection math-description Description
 

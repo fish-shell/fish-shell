@@ -1,15 +1,14 @@
 abbr - manage fish abbreviations
 ==========================================
 
+Synopsis
+--------
 
-\subsection abbr-synopsis Synopsis
-\fish{synopsis}
 abbr --add [SCOPE] WORD EXPANSION
 abbr --erase word
 abbr --rename [SCOPE] OLD_WORD NEW_WORD
 abbr --show
 abbr --list
-\endfish
 
 \subsection abbr-description Description
 

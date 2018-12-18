@@ -1,11 +1,11 @@
 function - create a function
 ==========================================
 
+Synopsis
+--------
 
-\subsection function-synopsis Synopsis
-\fish{synopsis}
 function NAME [OPTIONS]; BODY; end
-\endfish
+
 
 \subsection function-description Description
 

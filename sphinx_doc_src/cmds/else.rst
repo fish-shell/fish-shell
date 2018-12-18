@@ -1,11 +1,11 @@
 else - execute command if a condition is not met
 ==========================================
 
+Synopsis
+--------
 
-\subsection else-synopsis Synopsis
-\fish{synopsis}
 if CONDITION; COMMANDS_TRUE...; [else; COMMANDS_FALSE...;] end
-\endfish
+
 
 \subsection else-description Description
 

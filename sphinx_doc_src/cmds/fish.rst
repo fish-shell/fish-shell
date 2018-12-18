@@ -1,11 +1,11 @@
 fish - the friendly interactive shell
 ==========================================
 
+Synopsis
+--------
 
-\subsection fish-synopsis Synopsis
-\fish{synopsis}
 fish [OPTIONS] [-c command] [FILE [ARGUMENTS...]]
-\endfish
+
 
 \subsection fish-description Description
 

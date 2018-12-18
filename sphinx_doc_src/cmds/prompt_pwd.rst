@@ -1,11 +1,11 @@
 prompt_pwd - Print pwd suitable for prompt
 ==========================================
 
+Synopsis
+--------
 
-\subsection prompt_pwd-synopsis Synopsis
-\fish{synopsis}
 prompt_pwd
-\endfish
+
 
 \subsection prompt_pwd-description Description
 

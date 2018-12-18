@@ -1,9 +1,9 @@
 string - manipulate strings
 ==========================================
 
+Synopsis
+--------
 
-\subsection string-synopsis Synopsis
-\fish{synopsis}
 string escape [(-n | --no-quoted)] [--style=xxx] [STRING...]
 string join [(-q | --quiet)] SEP [STRING...]
 string join0 [(-q | --quiet)] [STRING...]
@@ -25,7 +25,7 @@ string trim [(-l | --left)] [(-r | --right)] [(-c | --chars CHARS)]
             [(-q | --quiet)] [STRING...]
 string unescape [--style=xxx] [STRING...]
 string upper [(-q | --quiet)] [STRING...]
-\endfish
+
 
 
 \subsection string-description Description

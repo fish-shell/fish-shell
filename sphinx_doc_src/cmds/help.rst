@@ -1,11 +1,11 @@
 help - display fish documentation
 ==========================================
 
+Synopsis
+--------
 
-\subsection help-synopsis Synopsis
-\fish{synopsis}
 help [SECTION]
-\endfish
+
 
 \subsection help-description Description
 

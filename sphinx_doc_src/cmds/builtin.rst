@@ -1,11 +1,11 @@
 builtin - run a builtin command
 ==========================================
 
+Synopsis
+--------
 
-\subsection builtin-synopsis Synopsis
-\fish{synopsis}
 builtin BUILTINNAME [OPTIONS...]
-\endfish
+
 
 \subsection builtin-description Description
 

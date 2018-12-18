@@ -1,11 +1,11 @@
 fish_vi_mode - Enable vi mode
 ==========================================
 
+Synopsis
+--------
 
-\subsection fish_vi_mode-synopsis Synopsis
-\fish{synopsis}
 fish_vi_mode
-\endfish
+
 
 \subsection fish_vi_mode-description Description
 

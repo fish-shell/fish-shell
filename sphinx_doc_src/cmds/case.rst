@@ -1,11 +1,11 @@
 case - conditionally execute a block of commands
 ==========================================
 
+Synopsis
+--------
 
-\subsection case-synopsis Synopsis
-\fish{synopsis}
 switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end
-\endfish
+
 
 \subsection case-description Description
 

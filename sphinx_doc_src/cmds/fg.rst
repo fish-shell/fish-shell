@@ -1,11 +1,11 @@
 fg - bring job to foreground
 ==========================================
 
+Synopsis
+--------
 
-\subsection fg-synopsis Synopsis
-\fish{synopsis}
 fg [PID]
-\endfish
+
 
 \subsection fg-description Description
 

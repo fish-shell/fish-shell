@@ -1,11 +1,11 @@
 disown - remove a process from the list of jobs
 ==========================================
 
+Synopsis
+--------
 
-\subsection disown-synopsis Synopsis
-\fish{synopsis}
 disown [ PID ... ]
-\endfish
+
 
 \subsection disown-description Description
 

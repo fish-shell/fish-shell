@@ -1,11 +1,11 @@
 argparse - parse options passed to a fish script or function
 ==========================================
 
+Synopsis
+--------
 
-\subsection argparse-synopsis Synopsis
-\fish{synopsis}
 argparse [OPTIONS] OPTION_SPEC... -- [ARG...]
-\endfish
+
 
 \subsection argparse-description Description
 

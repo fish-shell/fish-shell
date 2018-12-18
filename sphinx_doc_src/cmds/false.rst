@@ -1,11 +1,11 @@
 false - return an unsuccessful result
 ==========================================
 
+Synopsis
+--------
 
-\subsection false-synopsis Synopsis
-\fish{synopsis}
 false
-\endfish
+
 
 \subsection false-description Description
 

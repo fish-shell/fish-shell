@@ -1,11 +1,11 @@
 and - conditionally execute a command
 ==========================================
 
+Synopsis
+--------
 
-\subsection and-synopsis Synopsis
-\fish{synopsis}
 COMMAND1; and COMMAND2
-\endfish
+
 
 \subsection and-description Description
 

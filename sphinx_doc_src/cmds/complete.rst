@@ -1,9 +1,9 @@
 complete - edit command specific tab-completions
 ==========================================
 
+Synopsis
+--------
 
-\subsection complete-synopsis Synopsis
-\fish{synopsis}
 complete ( -c | --command | -p | --path ) COMMAND
         [( -c | --command | -p | --path ) COMMAND]...
         [( -e | --erase )]
@@ -18,7 +18,7 @@ complete ( -c | --command | -p | --path ) COMMAND
         [( -n | --condition ) CONDITION]
         [( -d | --description ) DESCRIPTION]
 complete ( -C[STRING] | --do-complete[=STRING] )
-\endfish
+
 
 \subsection complete-description Description
 

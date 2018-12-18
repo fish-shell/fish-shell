@@ -1,9 +1,9 @@
 set - display and change shell variables.
 ==========================================
 
+Synopsis
+--------
 
-\subsection set-synopsis Synopsis
-\fish{synopsis}
 set [SCOPE_OPTIONS]
 set [OPTIONS] VARIABLE_NAME VALUES...
 set [OPTIONS] VARIABLE_NAME[INDICES]... VALUES...
@@ -11,7 +11,7 @@ set ( -q | --query ) [SCOPE_OPTIONS] VARIABLE_NAMES...
 set ( -e | --erase ) [SCOPE_OPTIONS] VARIABLE_NAME
 set ( -e | --erase ) [SCOPE_OPTIONS] VARIABLE_NAME[INDICES]...
 set ( -S | --show ) [SCOPE_OPTIONS] [VARIABLE_NAME]...
-\endfish
+
 
 \subsection set-description Description
 

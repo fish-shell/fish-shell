@@ -1,11 +1,11 @@
 read - read line of input into variables
 ==========================================
 
+Synopsis
+--------
 
-\subsection read-synopsis Synopsis
-\fish{synopsis}
 read [OPTIONS] [VARIABLE ...]
-\endfish
+
 
 \subsection read-description Description
 

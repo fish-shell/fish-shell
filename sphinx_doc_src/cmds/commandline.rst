@@ -1,11 +1,11 @@
 commandline - set or get the current command line buffer
 ==========================================
 
+Synopsis
+--------
 
-\subsection commandline-synopsis Synopsis
-\fish{synopsis}
 commandline [OPTIONS] [CMD]
-\endfish
+
 
 \subsection commandline-description Description
 

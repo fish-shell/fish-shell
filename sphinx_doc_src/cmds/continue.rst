@@ -1,11 +1,11 @@
 continue - skip the remainder of the current iteration of the current inner loop
 ==========================================
 
+Synopsis
+--------
 
-\subsection continue-synopsis Synopsis
-\fish{synopsis}
 LOOP_CONSTRUCT; [COMMANDS...;] continue; [COMMANDS...;] end
-\endfish
+
 
 \subsection continue-description Description
 

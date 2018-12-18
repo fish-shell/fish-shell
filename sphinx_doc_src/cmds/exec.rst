@@ -1,11 +1,11 @@
 exec - execute command in current process
 ==========================================
 
+Synopsis
+--------
 
-\subsection exec-synopsis Synopsis
-\fish{synopsis}
 exec COMMAND [OPTIONS...]
-\endfish
+
 
 \subsection exec-description Description
 

@@ -1,11 +1,11 @@
 count - count the number of elements of an array
 ==========================================
 
+Synopsis
+--------
 
-\subsection count-synopsis Synopsis
-\fish{synopsis}
 count $VARIABLE
-\endfish
+
 
 \subsection count-description Description
 

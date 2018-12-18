@@ -1,11 +1,11 @@
 pushd - push directory to directory stack
 ==========================================
 
+Synopsis
+--------
 
-\subsection pushd-synopsis Synopsis
-\fish{synopsis}
 pushd [DIRECTORY]
-\endfish
+
 
 \subsection pushd-description Description
 

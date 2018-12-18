@@ -1,11 +1,11 @@
 or - conditionally execute a command
 ==========================================
 
+Synopsis
+--------
 
-\subsection or-synopsis Synopsis
-\fish{synopsis}
 COMMAND1; or COMMAND2
-\endfish
+
 
 \subsection or-description Description
 

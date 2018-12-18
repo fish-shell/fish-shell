@@ -1,13 +1,13 @@
 fish_breakpoint_prompt - define the appearance of the command line prompt when in the context of a `breakpoint` command
 ==========================================
 
+Synopsis
+--------
 
-\subsection fish_breakpoint_prompt-synopsis Synopsis
-\fish{synopsis}
 function fish_breakpoint_prompt
     ...
 end
-\endfish
+
 
 \subsection fish_breakpoint_prompt-description Description
 

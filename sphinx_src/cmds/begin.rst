@@ -1,11 +1,11 @@
 begin - start a new block of code
 ==========================================
 
+Synopsis
+--------
 
-\subsection begin-synopsis Synopsis
-\fish{synopsis}
 begin; [COMMANDS...;] end
-\endfish
+
 
 \subsection begin-description Description
 

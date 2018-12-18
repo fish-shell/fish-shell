@@ -1,11 +1,11 @@
 dirh - print directory history
 ==========================================
 
+Synopsis
+--------
 
-\subsection dirh-synopsis Synopsis
-\fish{synopsis}
 dirh
-\endfish
+
 
 \subsection dirh-description Description
 

@@ -1,11 +1,11 @@
 command - run a program
 ==========================================
 
+Synopsis
+--------
 
-\subsection command-synopsis Synopsis
-\fish{synopsis}
 command [OPTIONS] COMMANDNAME [ARGS...]
-\endfish
+
 
 \subsection command-description Description
 

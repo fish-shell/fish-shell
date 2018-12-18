@@ -1,15 +1,15 @@
 end - end a block of commands.
 ==========================================
 
+Synopsis
+--------
 
-\subsection end-synopsis Synopsis
-\fish{synopsis}
 begin; [COMMANDS...] end
 if CONDITION; COMMANDS_TRUE...; [else; COMMANDS_FALSE...;] end
 while CONDITION; COMMANDS...; end
 for VARNAME in [VALUES...]; COMMANDS...; end
 switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end
-\endfish
+
 
 \subsection end-description Description
 

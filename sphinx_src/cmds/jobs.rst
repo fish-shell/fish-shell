@@ -1,11 +1,11 @@
 jobs - print currently running jobs
 ==========================================
 
+Synopsis
+--------
 
-\subsection jobs-synopsis Synopsis
-\fish{synopsis}
 jobs [OPTIONS] [PID]
-\endfish
+
 
 \subsection jobs-description Description
 

@@ -1,11 +1,11 @@
 set_color - set the terminal color
 ==========================================
 
+Synopsis
+--------
 
-\subsection set_color-synopsis Synopsis
-\fish{synopsis}
 set_color [OPTIONS] VALUE
-\endfish
+
 
 \subsection set_color-description Description
 

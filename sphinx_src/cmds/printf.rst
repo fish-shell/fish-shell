@@ -1,11 +1,11 @@
 printf - display text according to a format string
 ==========================================
 
+Synopsis
+--------
 
-\subsection printf-synopsis Synopsis
-\fish{synopsis}
 printf format [argument...]
-\endfish
+
 
 \subsection printf-description Description
 printf formats the string FORMAT with ARGUMENT, and displays the result.

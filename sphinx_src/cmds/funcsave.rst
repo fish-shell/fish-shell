@@ -1,11 +1,11 @@
 funcsave - save the definition of a function to the user's autoload directory
 ==========================================
 
+Synopsis
+--------
 
-\subsection funcsave-synopsis Synopsis
-\fish{synopsis}
 funcsave FUNCTION_NAME
-\endfish
+
 
 \subsection funcsave-description Description
 

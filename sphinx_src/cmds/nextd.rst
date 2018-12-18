@@ -1,11 +1,11 @@
 nextd - move forward through directory history
 ==========================================
 
+Synopsis
+--------
 
-\subsection nextd-synopsis Synopsis
-\fish{synopsis}
 nextd [ -l | --list ] [POS]
-\endfish
+
 
 \subsection nextd-description Description
 

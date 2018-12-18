@@ -1,11 +1,11 @@
 fish_indent - indenter and prettifier
 ==========================================
 
+Synopsis
+--------
 
-\subsection fish_indent-synopsis Synopsis
-\fish{synopsis}
 fish_indent [OPTIONS]
-\endfish
+
 
 \subsection fish_indent-description Description
 

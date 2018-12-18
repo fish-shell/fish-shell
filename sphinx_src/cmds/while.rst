@@ -1,11 +1,11 @@
 while - perform a command multiple times
 ==========================================
 
+Synopsis
+--------
 
-\subsection while-synopsis Synopsis
-\fish{synopsis}
 while CONDITION; COMMANDS...; end
-\endfish
+
 
 \subsection while-description Description
 

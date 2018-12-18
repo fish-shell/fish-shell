@@ -1,11 +1,11 @@
 wait - wait for jobs to complete
 ==========================================
 
+Synopsis
+--------
 
-\subsection wait-synopsis Synopsis
-\fish{synopsis}
 wait [-n | --any] [PID | PROCESS_NAME] ...
-\endfish
+
 
 \subsection wait-description Description
 

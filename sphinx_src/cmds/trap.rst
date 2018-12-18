@@ -1,11 +1,11 @@
 trap - perform an action when the shell receives a signal
 ==========================================
 
+Synopsis
+--------
 
-\subsection trap-synopsis Synopsis
-\fish{synopsis}
 trap [OPTIONS] [[ARG] REASON ... ]
-\endfish
+
 
 \subsection trap-description Description
 

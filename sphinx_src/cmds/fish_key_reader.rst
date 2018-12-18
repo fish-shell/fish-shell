@@ -1,11 +1,11 @@
 fish_key_reader - explore what characters keyboard keys send
 ==========================================
 
+Synopsis
+--------
 
-\subsection fish_key_reader-synopsis Synopsis
-\fish{synopsis}
 fish_key_reader [OPTIONS]
-\endfish
+
 
 \subsection fish_key_reader-description Description
 

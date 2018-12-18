@@ -1,11 +1,11 @@
 break - stop the current inner loop
 ==========================================
 
+Synopsis
+--------
 
-\subsection break-synopsis Synopsis
-\fish{synopsis}
 LOOP_CONSTRUCT; [COMMANDS...] break; [COMMANDS...] end
-\endfish
+
 
 \subsection break-description Description
 

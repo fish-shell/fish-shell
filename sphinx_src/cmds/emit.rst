@@ -1,11 +1,11 @@
 emit - Emit a generic event
 ==========================================
 
+Synopsis
+--------
 
-\subsection emit-synopsis Synopsis
-\fish{synopsis}
 emit EVENT_NAME [ARGUMENTS...]
-\endfish
+
 
 \subsection emit-description Description
 

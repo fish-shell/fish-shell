@@ -1,11 +1,11 @@
 type - indicate how a command would be interpreted
 ==========================================
 
+Synopsis
+--------
 
-\subsection type-synopsis Synopsis
-\fish{synopsis}
 type [OPTIONS] NAME [NAME ...]
-\endfish
+
 
 \subsection type-description Description
 

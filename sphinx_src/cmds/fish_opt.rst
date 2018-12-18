@@ -1,13 +1,13 @@
 fish_opt - create an option spec for the argparse command
 ==========================================
 
+Synopsis
+--------
 
-\subsection fish_opt-synopsis Synopsis
-\fish{synopsis}
 fish_opt [ -h | --help ]
 fish_opt ( -s X | --short=X ) [ -l LONG | --long=LONG ] [ --long-only ] \
     [ -o | --optional-val ] [ -r | --required-val ] [ --multiple-vals ]
-\endfish
+
 
 \subsection fish_opt-description Description
 

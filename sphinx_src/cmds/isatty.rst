@@ -1,11 +1,11 @@
 isatty - test if a file descriptor is a tty.
 ==========================================
 
+Synopsis
+--------
 
-\subsection isatty-synopsis Synopsis
-\fish{synopsis}
 isatty [FILE DESCRIPTOR]
-\endfish
+
 
 \subsection isatty-description Description
 

@@ -1,12 +1,12 @@
 source - evaluate contents of file.
 ==========================================
 
+Synopsis
+--------
 
-\subsection source-synopsis Synopsis
-\fish{synopsis}
 source FILENAME [ARGUMENTS...]
 somecommand | source
-\endfish
+
 
 \subsection source-description Description
 

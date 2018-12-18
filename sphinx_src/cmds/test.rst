@@ -1,12 +1,12 @@
 test - perform tests on files and text
 ==========================================
 
+Synopsis
+--------
 
-\subsection test-synopsis Synopsis
-\fish{synopsis}
 test [EXPRESSION]
 [ [EXPRESSION] ]
-\endfish
+
 
 \subsection test-description Description
 

@@ -1,11 +1,11 @@
 ulimit - set or get resource usage limits
 ==========================================
 
+Synopsis
+--------
 
-\subsection ulimit-synopsis Synopsis
-\fish{synopsis}
 ulimit [OPTIONS] [LIMIT]
-\endfish
+
 
 \subsection ulimit-description Description
 

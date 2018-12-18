@@ -1,11 +1,11 @@
 bg - send jobs to background
 ==========================================
 
+Synopsis
+--------
 
-\subsection bg-synopsis Synopsis
-\fish{synopsis}
 bg [PID...]
-\endfish
+
 
 \subsection bg-description Description
 

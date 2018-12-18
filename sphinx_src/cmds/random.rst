@@ -1,15 +1,15 @@
 random - generate random number
 ==========================================
 
+Synopsis
+--------
 
-\subsection random-synopsis Synopsis
-\fish{synopsis}
 random
 random SEED
 random START END
 random START STEP END
 random choice [ITEMS...]
-\endfish
+
 
 \subsection random-description Description
 

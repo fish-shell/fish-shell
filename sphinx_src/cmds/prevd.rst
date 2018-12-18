@@ -1,11 +1,11 @@
 prevd - move backward through directory history
 ==========================================
 
+Synopsis
+--------
 
-\subsection prevd-synopsis Synopsis
-\fish{synopsis}
 prevd [ -l | --list ] [POS]
-\endfish
+
 
 \subsection prevd-description Description
 

@@ -2,7 +2,6 @@ fish_mode_prompt - define the appearance of the mode indicator
 ==========================================
 
 
-\subsection fish_mode_prompt-synopsis Synopsis
 
 The fish_mode_prompt function will output the mode indicator for use in vi-mode.
 

@@ -1,11 +1,11 @@
 psub - perform process substitution
 ==========================================
 
+Synopsis
+--------
 
-\subsection psub-synopsis Synopsis
-\fish{synopsis}
 COMMAND1 ( COMMAND2 | psub [-F | --fifo] [-f | --file] [-s SUFFIX])
-\endfish
+
 
 \subsection psub-description Description
 

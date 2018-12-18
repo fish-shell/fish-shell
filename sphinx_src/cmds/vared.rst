@@ -1,11 +1,11 @@
 vared - interactively edit the value of an environment variable
 ==========================================
 
+Synopsis
+--------
 
-\subsection vared-synopsis Synopsis
-\fish{synopsis}
 vared VARIABLE_NAME
-\endfish
+
 
 \subsection vared-description Description
 

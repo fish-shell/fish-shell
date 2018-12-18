@@ -1,11 +1,11 @@
 exit - exit the shell
 ==========================================
 
+Synopsis
+--------
 
-\subsection exit-synopsis Synopsis
-\fish{synopsis}
 exit [STATUS]
-\endfish
+
 
 \subsection exit-description Description
 

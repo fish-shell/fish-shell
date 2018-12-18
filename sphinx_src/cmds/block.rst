@@ -1,11 +1,11 @@
 block - temporarily block delivery of events
 ==========================================
 
+Synopsis
+--------
 
-\subsection block-synopsis Synopsis
-\fish{synopsis}
 block [OPTIONS...]
-\endfish
+
 
 \subsection block-description Description
 

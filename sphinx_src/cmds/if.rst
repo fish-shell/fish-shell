@@ -1,14 +1,14 @@
 if - conditionally execute a command
 ==========================================
 
+Synopsis
+--------
 
-\subsection if-synopsis Synopsis
-\fish{synopsis}
 if CONDITION; COMMANDS_TRUE...;
 [else if CONDITION2; COMMANDS_TRUE2...;]
 [else; COMMANDS_FALSE...;]
 end
-\endfish
+
 
 \subsection if-description Description
 

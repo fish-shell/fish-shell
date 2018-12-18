@@ -1,11 +1,11 @@
 return - stop the current inner function
 ==========================================
 
+Synopsis
+--------
 
-\subsection return-synopsis Synopsis
-\fish{synopsis}
 function NAME; [COMMANDS...;] return [STATUS]; [COMMANDS...;] end
-\endfish
+
 
 \subsection return-description Description
 

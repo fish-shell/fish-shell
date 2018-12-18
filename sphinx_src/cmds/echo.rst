@@ -1,11 +1,11 @@
 echo - display a line of text
 ==========================================
 
+Synopsis
+--------
 
-\subsection echo-synopsis Synopsis
-\fish{synopsis}
 echo [OPTIONS] [STRING]
-\endfish
+
 
 \subsection echo-description Description
 

@@ -1,12 +1,12 @@
 dirs - print directory stack
 ==========================================
 
+Synopsis
+--------
 
-\subsection dirs-synopsis Synopsis
-\fish{synopsis}
 dirs
 dirs -c
-\endfish
+
 
 \subsection dirs-description Description
 

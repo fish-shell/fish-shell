@@ -1,11 +1,11 @@
 funced - edit a function interactively
 ==========================================
 
+Synopsis
+--------
 
-\subsection funced-synopsis Synopsis
-\fish{synopsis}
 funced [OPTIONS] NAME
-\endfish
+
 
 \subsection funced-description Description
 

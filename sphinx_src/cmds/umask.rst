@@ -1,11 +1,11 @@
 umask - set or get the file creation mode mask
 ==========================================
 
+Synopsis
+--------
 
-\subsection umask-synopsis Synopsis
-\fish{synopsis}
 umask [OPTIONS] [MASK]
-\endfish
+
 
 \subsection umask-description Description
 

@@ -1,11 +1,11 @@
 breakpoint - Launch debug mode
 ==========================================
 
+Synopsis
+--------
 
-\subsection breakpoint-synopsis Synopsis
-\fish{synopsis}
 breakpoint
-\endfish
+
 
 \subsection breakpoint-description Description
 

@@ -15,27 +15,33 @@ Description
 Example
 ------------
 
-\fish
-for i in foo bar baz; echo $i; end
 
-# would output:
-foo
-bar
-baz
-\endfish
+
+::
+
+    for i in foo bar baz; echo $i; end
+    
+    # would output:
+    foo
+    bar
+    baz
+
 
 Notes
 ------------
 
 The `VARNAME` was local to the for block in releases prior to 3.0.0. This means that if you did something like this:
 
-\fish
-for var in a b c
-    if break_from_loop
-        break
+
+
+::
+
+    for var in a b c
+        if break_from_loop
+            break
+        end
     end
-end
-echo $var
-\endfish
+    echo $var
+
 
 The last value assigned to `var` when the loop terminated would not be available outside the loop. What `echo $var` would write depended on what it was set to before the loop was run. Likely nothing.

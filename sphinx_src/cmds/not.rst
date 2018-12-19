@@ -18,10 +18,13 @@ Example
 
 The following code reports an error and exits if no file named spoon can be found.
 
-\fish
-if not test -f spoon
-    echo There is no spoon
-    exit 1
-end
-\endfish
+
+
+::
+
+    if not test -f spoon
+        echo There is no spoon
+        exit 1
+    end
+
 

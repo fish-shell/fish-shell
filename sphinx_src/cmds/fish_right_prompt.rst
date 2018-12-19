@@ -22,9 +22,12 @@ Example
 
 A simple right prompt:
 
-\fish
-function fish_right_prompt -d "Write out the right prompt"
-    date '+%m/%d/%y'
-end
-\endfish
+
+
+::
+
+    function fish_right_prompt -d "Write out the right prompt"
+        date '+%m/%d/%y'
+    end
+
 

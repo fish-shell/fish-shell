@@ -60,42 +60,51 @@ By using one of the event handler switches, a function can be made to run automa
 Example
 ------------
 
-\fish
-function ll
-    ls -l $argv
-end
-\endfish
+
+
+::
+
+    function ll
+        ls -l $argv
+    end
+
 
 will run the `ls` command, using the `-l` option, while passing on any additional files and switches to `ls`.
 
-\fish
-function mkdir -d "Create a directory and set CWD"
-    command mkdir $argv
-    if test $status = 0
-        switch $argv[(count $argv)]
-            case '-*'
 
-            case '*'
-                cd $argv[(count $argv)]
-                return
+
+::
+
+    function mkdir -d "Create a directory and set CWD"
+        command mkdir $argv
+        if test $status = 0
+            switch $argv[(count $argv)]
+                case '-*'
+    
+                case '*'
+                    cd $argv[(count $argv)]
+                    return
+            end
         end
     end
-end
-\endfish
+
 
 This will run the `mkdir` command, and if it is successful, change the current working directory to the one just created.
 
-\fish
-function notify
-    set -l job (jobs -l -g)
-    or begin; echo "There are no jobs" >&2; return 1; end
 
-    function _notify_job_$job --on-job-exit $job --inherit-variable job
-        echo -n \a # beep
-        functions -e _notify_job_$job
+
+::
+
+    function notify
+        set -l job (jobs -l -g)
+        or begin; echo "There are no jobs" >&2; return 1; end
+    
+        function _notify_job_$job --on-job-exit $job --inherit-variable job
+            echo -n \a # beep
+            functions -e _notify_job_$job
+        end
     end
-end
-\endfish
+
 
 This will beep when the most recent job completes.
 

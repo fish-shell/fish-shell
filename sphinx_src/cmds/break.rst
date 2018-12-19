@@ -19,11 +19,14 @@ Example
 ------------
 The following code searches all .c files for "smurf", and halts at the first occurrence.
 
-\fish
-for i in *.c
-    if grep smurf $i
-        echo Smurfs are present in $i
-        break
+
+
+::
+
+    for i in *.c
+        if grep smurf $i
+            echo Smurfs are present in $i
+            break
+        end
     end
-end
-\endfish
+

@@ -35,7 +35,10 @@ The return status is 1 if any `REASON` is invalid; otherwise trap returns 0.
 Example
 ------------
 
-\fish
-trap "status --print-stack-trace" SIGUSR1
-# Prints a stack trace each time the SIGUSR1 signal is sent to the shell.
-\endfish
+
+
+::
+
+    trap "status --print-stack-trace" SIGUSR1
+    # Prints a stack trace each time the SIGUSR1 signal is sent to the shell.
+

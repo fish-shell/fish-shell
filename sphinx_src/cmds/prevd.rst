@@ -21,16 +21,19 @@ You may be interested in the <a href="commands.html#cdh">`cdh`</a> command which
 Example
 ------------
 
-\fish
-cd /usr/src
-# Working directory is now /usr/src
 
-cd /usr/src/fish-shell
-# Working directory is now /usr/src/fish-shell
 
-prevd
-# Working directory is now /usr/src
+::
 
-nextd
-# Working directory is now /usr/src/fish-shell
-\endfish
+    cd /usr/src
+    # Working directory is now /usr/src
+    
+    cd /usr/src/fish-shell
+    # Working directory is now /usr/src/fish-shell
+    
+    prevd
+    # Working directory is now /usr/src
+    
+    nextd
+    # Working directory is now /usr/src/fish-shell
+

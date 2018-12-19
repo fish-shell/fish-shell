@@ -99,37 +99,52 @@ Example
 
 The short style option `-o` for the `gcc` command requires that a file follows it.  This can be done using writing:
 
-\fish
-complete -c gcc -s o -r
-\endfish
+
+
+::
+
+    complete -c gcc -s o -r
+
 
 The short style option `-d` for the `grep` command requires that one of the strings '`read`', '`skip`' or '`recurse`' is used.  This can be specified writing:
 
-\fish
-complete -c grep -s d -x -a "read skip recurse"
-\endfish
+
+
+::
+
+    complete -c grep -s d -x -a "read skip recurse"
+
 
 The `su` command takes any username as an argument. Usernames are given as the first colon-separated field in the file /etc/passwd. This can be specified as:
 
-\fish
-complete -x -c su -d "Username" -a "(cat /etc/passwd | cut -d : -f 1)"
-\endfish
+
+
+::
+
+    complete -x -c su -d "Username" -a "(cat /etc/passwd | cut -d : -f 1)"
+
 
 The `rpm` command has several different modes. If the `-e` or `--erase` flag has been specified, `rpm` should delete one or more packages, in which case several switches related to deleting packages are valid, like the `nodeps` switch.
 
 This can be written as:
 
-\fish
-complete -c rpm -n "__fish_contains_opt -s e erase" -l nodeps -d "Don't check dependencies"
-\endfish
+
+
+::
+
+    complete -c rpm -n "__fish_contains_opt -s e erase" -l nodeps -d "Don't check dependencies"
+
 
 where `__fish_contains_opt` is a function that checks the command line buffer for the presence of a specified set of options.
 
 To implement an alias, use the `-w` or `--wraps` option:
 
-\fish
-complete -c hub -w git
-\endfish
+
+
+::
+
+    complete -c hub -w git
+
 
 Now hub inherits all of the completions from git. Note this can also be specified in a function declaration.
 

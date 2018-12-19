@@ -23,10 +23,13 @@ The following options are available:
 Example
 ------------
 
-\fish
-diff (sort a.txt | psub) (sort b.txt | psub)
-# shows the difference between the sorted versions of files `a.txt` and `b.txt`.
 
-source-highlight -f esc (cpp main.c | psub -f -s .c)
-# highlights `main.c` after preprocessing as a C source.
-\endfish
+
+::
+
+    diff (sort a.txt | psub) (sort b.txt | psub)
+    # shows the difference between the sorted versions of files `a.txt` and `b.txt`.
+    
+    source-highlight -f esc (cpp main.c | psub -f -s .c)
+    # highlights `main.c` after preprocessing as a C source.
+

@@ -22,18 +22,24 @@ Examples
 
 From an interactive shell, the commands below exit with a return value of zero:
 
-\fish
-isatty
-isatty stdout
-isatty 2
-echo | isatty 1
-\endfish
+
+
+::
+
+    isatty
+    isatty stdout
+    isatty 2
+    echo | isatty 1
+
 
 And these will exit non-zero:
 
-\fish
-echo | isatty
-isatty 9
-isatty stdout > file
-isatty 2 2> file
-\endfish
+
+
+::
+
+    echo | isatty
+    isatty 9
+    isatty stdout > file
+    isatty 2 2> file
+

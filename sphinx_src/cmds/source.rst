@@ -23,10 +23,13 @@ The return status of `source` is the return status of the last job to execute. I
 Example
 ------------
 
-\fish
-source ~/.config/fish/config.fish
-# Causes fish to re-read its initialization file.
-\endfish
+
+
+::
+
+    source ~/.config/fish/config.fish
+    # Causes fish to re-read its initialization file.
+
 
 \subsection Caveats
 

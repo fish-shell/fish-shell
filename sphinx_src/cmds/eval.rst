@@ -18,8 +18,11 @@ Example
 
 The following code will call the ls command. Note that `fish` does not support the use of shell variables as direct commands; `eval` can be used to work around this.
 
-\fish
-set cmd ls
-eval $cmd
-\endfish
+
+
+::
+
+    set cmd ls
+    eval $cmd
+
 

@@ -188,193 +188,232 @@ And some other things:
 Examples
 ------------
 
-\fish{cli-dark}
->_ string length 'hello, world'
-<outp>12</outp>
 
->_ set str foo
->_ string length -q $str; echo $status
-0
-# Equivalent to test -n $str
-\endfish
 
-\fish{cli-dark}
->_ string sub --length 2 abcde
-<outp>ab</outp>
+::
 
->_ string sub -s 2 -l 2 abcde
-<outp>bc</outp>
+    >_ string length 'hello, world'
+    <outp>12</outp>
+    
+    >_ set str foo
+    >_ string length -q $str; echo $status
+    0
+    # Equivalent to test -n $str
 
->_ string sub --start=-2 abcde
-<outp>de</outp>
-\endfish
 
-\fish{cli-dark}
->_ string split . example.com
-<outp>example</outp>
-<outp>com</outp>
 
->_ string split -r -m1 / /usr/local/bin/fish
-<outp>/usr/local/bin</outp>
-<outp>fish</outp>
 
->_ string split '' abc
-<outp>a</outp>
-<outp>b</outp>
-<outp>c</outp>
-\endfish
+::
 
-\fish{cli-dark}
->_ seq 3 | string join ...
-<outp>1...2...3</outp>
-\endfish
+    >_ string sub --length 2 abcde
+    <outp>ab</outp>
+    
+    >_ string sub -s 2 -l 2 abcde
+    <outp>bc</outp>
+    
+    >_ string sub --start=-2 abcde
+    <outp>de</outp>
 
-\fish{cli-dark}
->_ string trim ' abc  '
-<outp>abc</outp>
 
->_ string trim --right --chars=yz xyzzy zany
-<outp>x</outp>
-<outp>zan</outp>
-\endfish
 
-\fish{cli-dark}
->_ echo \\x07 | string escape
-<bs>cg</bs>
-\endfish
 
-\fish{cli-dark}
->_ string escape --style=var 'a1 b2'\\u6161
-<bs>a1_20b2__c_E6_85_A1</bs>
-\endfish
+::
+
+    >_ string split . example.com
+    <outp>example</outp>
+    <outp>com</outp>
+    
+    >_ string split -r -m1 / /usr/local/bin/fish
+    <outp>/usr/local/bin</outp>
+    <outp>fish</outp>
+    
+    >_ string split '' abc
+    <outp>a</outp>
+    <outp>b</outp>
+    <outp>c</outp>
+
+
+
+
+::
+
+    >_ seq 3 | string join ...
+    <outp>1...2...3</outp>
+
+
+
+
+::
+
+    >_ string trim ' abc  '
+    <outp>abc</outp>
+    
+    >_ string trim --right --chars=yz xyzzy zany
+    <outp>x</outp>
+    <outp>zan</outp>
+
+
+
+
+::
+
+    >_ echo \\x07 | string escape
+    <bs>cg</bs>
+
+
+
+
+::
+
+    >_ string escape --style=var 'a1 b2'\\u6161
+    <bs>a1_20b2__c_E6_85_A1</bs>
+
 
 Match Glob Examples
 ------------
 
-\fish{cli-dark}
->_ string match '?' a
-<outp>a</outp>
 
->_ string match 'a*b' axxb
-<outp>axxb</outp>
 
->_ string match -i 'a??B' Axxb
-<outp>Axxb</outp>
+::
 
->_ echo 'ok?' | string match '*\\?'
-<outp>ok?</outp>
+    >_ string match '?' a
+    <outp>a</outp>
+    
+    >_ string match 'a*b' axxb
+    <outp>axxb</outp>
+    
+    >_ string match -i 'a??B' Axxb
+    <outp>Axxb</outp>
+    
+    >_ echo 'ok?' | string match '*\\?'
+    <outp>ok?</outp>
+    
+    # Note that only the second STRING will match here.
+    >_ string match 'foo' 'foo1' 'foo' 'foo2'
+    <outp>foo</outp>
+    
+    >_ string match -e 'foo' 'foo1' 'foo' 'foo2'
+    <outp>foo1
+    foo
+    foo2
+    </outp>
+    
+    >_ string match 'foo?' 'foo1' 'foo' 'foo2'
+    <outp>foo1
+    foo
+    foo2
+    </outp>
 
-# Note that only the second STRING will match here.
->_ string match 'foo' 'foo1' 'foo' 'foo2'
-<outp>foo</outp>
-
->_ string match -e 'foo' 'foo1' 'foo' 'foo2'
-<outp>foo1
-foo
-foo2
-</outp>
-
->_ string match 'foo?' 'foo1' 'foo' 'foo2'
-<outp>foo1
-foo
-foo2
-</outp>
-\endfish
 
 Match Regex Examples
 ------------
 
-\fish{cli-dark}
->_ string match -r 'cat|dog|fish' 'nice dog'
-<outp>dog</outp>
 
->_ string match -r -v "c.*[12]" {cat,dog}(seq 1 4)
-<outp>dog1</outp>
-<outp>dog2</outp>
-<outp>cat3</outp>
-<outp>dog3</outp>
-<outp>cat4</outp>
-<outp>dog4</outp>
 
->_ string match -r '(\\d\\d?):(\\d\\d):(\\d\\d)' <asis>2:34:56</asis>
-<outp>2:34:56</outp>
-<outp>2</outp>
-<outp>34</outp>
-<outp>56</outp>
+::
 
->_ string match -r '^(\\w{{2,4}})\\g1$' papa mud murmur
-<outp>papa</outp>
-<outp>pa</outp>
-<outp>murmur</outp>
-<outp>mur</outp>
+    >_ string match -r 'cat|dog|fish' 'nice dog'
+    <outp>dog</outp>
+    
+    >_ string match -r -v "c.*[12]" {cat,dog}(seq 1 4)
+    <outp>dog1</outp>
+    <outp>dog2</outp>
+    <outp>cat3</outp>
+    <outp>dog3</outp>
+    <outp>cat4</outp>
+    <outp>dog4</outp>
+    
+    >_ string match -r '(\\d\\d?):(\\d\\d):(\\d\\d)' <asis>2:34:56</asis>
+    <outp>2:34:56</outp>
+    <outp>2</outp>
+    <outp>34</outp>
+    <outp>56</outp>
+    
+    >_ string match -r '^(\\w{{2,4}})\\g1$' papa mud murmur
+    <outp>papa</outp>
+    <outp>pa</outp>
+    <outp>murmur</outp>
+    <outp>mur</outp>
+    
+    >_ string match -r -a -n at ratatat
+    <outp>2 2</outp>
+    <outp>4 2</outp>
+    <outp>6 2</outp>
+    
+    >_ string match -r -i '0x[0-9a-f]{{1,8}}' 'int magic = 0xBadC0de;'
+    <outp>0xBadC0de</outp>
 
->_ string match -r -a -n at ratatat
-<outp>2 2</outp>
-<outp>4 2</outp>
-<outp>6 2</outp>
-
->_ string match -r -i '0x[0-9a-f]{{1,8}}' 'int magic = 0xBadC0de;'
-<outp>0xBadC0de</outp>
-\endfish
 
 \subsection string-example-split0 NUL Delimited Examples
 
-\fish{cli-dark}
->_ # Count files in a directory, without being confused by newlines.
->_ count (find . -print0 | string split0)
-<outp>42</outp>
 
->_ # Sort a list of elements which may contain newlines
->_ set foo beta alpha\\ngamma
->_ set foo (string join0 $foo | sort -z | string split0)
->_ string escape $foo[1]
-<outp>alpha\\ngamma</outp>
-\endfish
+
+::
+
+    >_ # Count files in a directory, without being confused by newlines.
+    >_ count (find . -print0 | string split0)
+    <outp>42</outp>
+    
+    >_ # Sort a list of elements which may contain newlines
+    >_ set foo beta alpha\\ngamma
+    >_ set foo (string join0 $foo | sort -z | string split0)
+    >_ string escape $foo[1]
+    <outp>alpha\\ngamma</outp>
+
 
 Replace Literal Examples
 ------------
 
-\fish{cli-dark}
->_ string replace is was 'blue is my favorite'
-<outp>blue was my favorite</outp>
 
->_ string replace 3rd last 1st 2nd 3rd
-<outp>1st</outp>
-<outp>2nd</outp>
-<outp>last</outp>
 
->_ string replace -a ' ' _ 'spaces to underscores'
-<outp>spaces_to_underscores</outp>
-\endfish
+::
+
+    >_ string replace is was 'blue is my favorite'
+    <outp>blue was my favorite</outp>
+    
+    >_ string replace 3rd last 1st 2nd 3rd
+    <outp>1st</outp>
+    <outp>2nd</outp>
+    <outp>last</outp>
+    
+    >_ string replace -a ' ' _ 'spaces to underscores'
+    <outp>spaces_to_underscores</outp>
+
 
 Replace Regex Examples
 ------------
 
-\fish{cli-dark}
->_ string replace -r -a '[^\\d.]+' ' ' '0 one two 3.14 four 5x'
-<outp>0 3.14 5</outp>
 
->_ string replace -r '(\\w+)\\s+(\\w+)' '$2 $1 $$' 'left right'
-<outp>right left $</outp>
 
->_ string replace -r '\\s*newline\\s*' '\\n' 'put a newline here'
-<outp>put a</outp>
-<outp>here</outp>
-\endfish
+::
+
+    >_ string replace -r -a '[^\\d.]+' ' ' '0 one two 3.14 four 5x'
+    <outp>0 3.14 5</outp>
+    
+    >_ string replace -r '(\\w+)\\s+(\\w+)' '$2 $1 $$' 'left right'
+    <outp>right left $</outp>
+    
+    >_ string replace -r '\\s*newline\\s*' '\\n' 'put a newline here'
+    <outp>put a</outp>
+    <outp>here</outp>
+
 
 Repeat Examples
 ------------
 
-\fish{cli-dark}
->_ string repeat -n 2 'foo '
-<outp>foo foo</outp>
 
->_ echo foo | string repeat -n 2
-<outp>foofoo</outp>
 
->_ string repeat -n 2 -m 5 'foo'
-<outp>foofo</outp>
+::
 
->_ string repeat -m 5 'foo'
-<outp>foofo</outp>
-\endfish
+    >_ string repeat -n 2 'foo '
+    <outp>foo foo</outp>
+    
+    >_ echo foo | string repeat -n 2
+    <outp>foofoo</outp>
+    
+    >_ string repeat -n 2 -m 5 'foo'
+    <outp>foofo</outp>
+    
+    >_ string repeat -m 5 'foo'
+    <outp>foofo</outp>
+

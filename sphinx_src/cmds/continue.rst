@@ -17,14 +17,17 @@ Example
 
 The following code removes all tmp files that do not contain the word smurf.
 
-\fish
-for i in *.tmp
-    if grep smurf $i
-        continue
+
+
+::
+
+    for i in *.tmp
+        if grep smurf $i
+            continue
+        end
+        # This "rm" is skipped over if "continue" is executed.
+        rm $i
+        # As is this "echo"
+        echo $i
     end
-    # This "rm" is skipped over if "continue" is executed.
-    rm $i
-    # As is this "echo"
-    echo $i
-end
-\endfish
+

@@ -21,7 +21,10 @@ Example
 
 The following code runs the `make` command to build a program. If the build succeeds, `make`'s exit status is 0, and the program is installed. If either step fails, the exit status is 1, and `make clean` is run, which removes the files created by the build process.
 
-\fish
-make; and make install; or make clean
-\endfish
+
+
+::
+
+    make; and make install; or make clean
+
 

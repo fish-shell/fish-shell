@@ -22,7 +22,10 @@ You can use <a href="#and">`and`</a> or <a href="#or">`or`</a> for complex condi
 Example
 ------------
 
-\fish
-while test -f foo.txt; or test -f bar.txt ; echo file exists; sleep 10; end
-# outputs 'file exists' at 10 second intervals as long as the file foo.txt or bar.txt exists.
-\endfish
+
+
+::
+
+    while test -f foo.txt; or test -f bar.txt ; echo file exists; sleep 10; end
+    # outputs 'file exists' at 10 second intervals as long as the file foo.txt or bar.txt exists.
+

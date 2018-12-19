@@ -24,20 +24,23 @@ Example
 
 If the variable \$animal contains the name of an animal, the following code would attempt to classify it:
 
-\fish
-switch $animal
-    case cat
-        echo evil
-    case wolf dog human moose dolphin whale
-        echo mammal
-    case duck goose albatross
-        echo bird
-    case shark trout stingray
-        echo fish
-    case '*'
-        echo I have no idea what a $animal is
-end
-\endfish
+
+
+::
+
+    switch $animal
+        case cat
+            echo evil
+        case wolf dog human moose dolphin whale
+            echo mammal
+        case duck goose albatross
+            echo bird
+        case shark trout stingray
+            echo fish
+        case '*'
+            echo I have no idea what a $animal is
+    end
+
 
 If the above code was run with `$animal` set to `whale`, the output
 would be `mammal`.

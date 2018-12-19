@@ -42,12 +42,15 @@ Notes
 Examples
 ------------
 
-\fish
-set_color red; echo "Roses are red"
-set_color blue; echo "Violets are blue"
-set_color 62A; echo "Eggplants are dark purple"
-set_color normal; echo "Normal is nice" # Resets the background too
-\endfish
+
+
+::
+
+    set_color red; echo "Roses are red"
+    set_color blue; echo "Violets are blue"
+    set_color 62A; echo "Eggplants are dark purple"
+    set_color normal; echo "Normal is nice" # Resets the background too
+
 
 Terminal Capability Detection
 ------------

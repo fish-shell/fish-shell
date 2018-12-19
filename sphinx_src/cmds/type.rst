@@ -32,7 +32,10 @@ The `-q`, `-p`, `-t` and `-P` flags (and their long flag aliases) are mutually e
 Example
 ------------
 
-\fish{cli-dark}
->_ type fg
-<outp>fg is a builtin</outp>
-\endfish
+
+
+::
+
+    >_ type fg
+    <outp>fg is a builtin</outp>
+

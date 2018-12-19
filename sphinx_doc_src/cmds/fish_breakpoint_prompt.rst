@@ -9,7 +9,8 @@ function fish_breakpoint_prompt
 end
 
 
-\subsection fish_breakpoint_prompt-description Description
+Description
+------------
 
 By defining the `fish_breakpoint_prompt` function, the user can choose a custom prompt when asking for input in response to a `breakpoint` command. The `fish_breakpoint_prompt` function is executed when the prompt is to be shown, and the output is used as a prompt.
 
@@ -18,7 +19,8 @@ The exit status of commands within `fish_breakpoint_prompt` will not modify the 
 `fish` ships with a default version of this function that displays the function name and line number of the current execution context.
 
 
-\subsection fish_breakpoint_prompt-example Example
+Example
+------------
 
 A simple prompt that is a simplified version of the default debugging prompt:
 

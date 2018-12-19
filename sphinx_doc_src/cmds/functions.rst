@@ -11,7 +11,8 @@ functions -d DESCRIPTION FUNCTION
 functions [ -e | -q ] FUNCTIONS...
 
 
-\subsection functions-description Description
+Description
+------------
 
 `functions` prints or erases functions.
 
@@ -58,7 +59,8 @@ Only one function's description can be changed in a single invocation of `functi
 The exit status of `functions` is the number of functions specified in the argument list that do not exist, which can be used in concert with the `-q` option.
 
 
-\subsection functions-example Examples
+Examples
+------------
 \fish
 functions -n
 # Displays a list of currently-defined functions

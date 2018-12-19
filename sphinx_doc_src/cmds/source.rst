@@ -8,7 +8,8 @@ source FILENAME [ARGUMENTS...]
 somecommand | source
 
 
-\subsection source-description Description
+Description
+------------
 
 `source` evaluates the commands of the specified file in the current shell. This is different from starting a new process to perform the commands (i.e. `fish < FILENAME`) since the commands will be evaluated by the current shell, which means that changes in shell variables will affect the current shell. If additional arguments are specified after the file name, they will be inserted into the `$argv` variable. The `$argv` variable will not include the name of the sourced file.
 
@@ -19,7 +20,8 @@ The return status of `source` is the return status of the last job to execute. I
 `.` (a single period) is an alias for the `source` command. The use of `.` is deprecated in favour of `source`, and `.` will be removed in a future version of fish.
 
 
-\subsection source-example Example
+Example
+------------
 
 \fish
 source ~/.config/fish/config.fish

@@ -10,13 +10,15 @@ abbr --rename [SCOPE] OLD_WORD NEW_WORD
 abbr --show
 abbr --list
 
-\subsection abbr-description Description
+Description
+------------
 
 `abbr` manages abbreviations - user-defined words that are replaced with longer phrases after they are entered.
 
 For example, a frequently-run command like `git checkout` can be abbreviated to `gco`. After entering `gco` and pressing @key{Space} or @key{Enter}, the full text `git checkout` will appear in the command line.
 
-\subsection abbr-options Options
+Options
+------------
 
 The following options are available:
 
@@ -37,7 +39,8 @@ In addition, when adding abbreviations:
 
 See the "Internals" section for more on them.
 
-\subsection abbr-example Examples
+Examples
+------------
 
 \fish
 abbr -a -g gco git checkout
@@ -64,7 +67,8 @@ ssh another_host abbr -s | source
 \endfish
 Import the abbreviations defined on another_host over SSH.
 
-\subsection abbr-internals Internals
+Internals
+------------
 Each abbreviation is stored in its own global or universal variable. The name consists of the prefix `_fish_abbr_` followed by the WORD after being transformed by `string escape style=var`. The WORD cannot contain a space but all other characters are legal.
 
 Defining an abbreviation with global scope is slightly faster than universal scope (which is the default). But in general you'll only want to use the global scope when defining abbreviations in a startup script like `~/.config/fish/config.fish` like this:

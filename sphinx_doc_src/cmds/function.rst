@@ -7,7 +7,8 @@ Synopsis
 function NAME [OPTIONS]; BODY; end
 
 
-\subsection function-description Description
+Description
+------------
 
 `function` creates a new function `NAME` with the body `BODY`.
 
@@ -56,7 +57,8 @@ By using one of the event handler switches, a function can be made to run automa
 
 - `fish_exit` is emitted right before fish exits.
 
-\subsection function-example Example
+Example
+------------
 
 \fish
 function ll
@@ -98,6 +100,7 @@ end
 This will beep when the most recent job completes.
 
 
-\subsection function-notes Notes
+Notes
+------------
 
 Note that events are only received from the current fish process as there is no way to send events from one fish process to another.

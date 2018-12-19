@@ -9,7 +9,8 @@ function fish_prompt
 end
 
 
-\subsection fish_prompt-description Description
+Description
+------------
 
 By defining the `fish_prompt` function, the user can choose a custom prompt. The `fish_prompt` function is executed when the prompt is to be shown, and the output is used as a prompt.
 
@@ -18,7 +19,8 @@ The exit status of commands within `fish_prompt` will not modify the value of <a
 `fish` ships with a number of example prompts that can be chosen with the `fish_config` command.
 
 
-\subsection fish_prompt-example Example
+Example
+------------
 
 A simple prompt:
 

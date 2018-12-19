@@ -9,7 +9,8 @@ alias [OPTIONS] NAME DEFINITION
 alias [OPTIONS] NAME=DEFINITION
 
 
-\subsection alias-description Description
+Description
+------------
 
 `alias` is a simple wrapper for the `function` builtin, which creates a function wrapping a command. It has similar syntax to POSIX shell `alias`. For other uses, it is recommended to define a <a href='#function'>function</a>.
 
@@ -26,7 +27,8 @@ The following options are available:
 
 - `-s` or `--save` Automatically save the function created by the alias into your fish configuration directory using <a href='#funcsave'>funcsave</a>.
 
-\subsection alias-example Example
+Example
+------------
 
 The following code will create `rmi`, which runs `rm` with additional arguments on every invocation.
 

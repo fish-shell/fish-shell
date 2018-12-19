@@ -9,7 +9,8 @@ fish_opt ( -s X | --short=X ) [ -l LONG | --long=LONG ] [ --long-only ] \
     [ -o | --optional-val ] [ -r | --required-val ] [ --multiple-vals ]
 
 
-\subsection fish_opt-description Description
+Description
+------------
 
 This command provides a way to produce option specifications suitable for use with the <a href="#argparse">`argparse`</a> command. You can, of course, write the option specs by hand without using this command. But you might prefer to use this for the clarity it provides.
 
@@ -29,7 +30,8 @@ The following `argparse` options are available:
 
 - `-h` or `--help` displays help about using this command.
 
-\subsection fish_opt-examples Examples
+Examples
+------------
 
 Define a single option spec for the boolean help flag:
 

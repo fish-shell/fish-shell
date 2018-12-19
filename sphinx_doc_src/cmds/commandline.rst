@@ -7,7 +7,8 @@ Synopsis
 commandline [OPTIONS] [CMD]
 
 
-\subsection commandline-description Description
+Description
+------------
 
 `commandline` can be used to set or get the current contents of the command line buffer.
 
@@ -58,7 +59,8 @@ The following options output metadata about the commandline state:
 - `-P` or `--paging-mode` evaluates to true if the commandline is showing pager contents, such as tab completions
 
 
-\subsection commandline-example Example
+Example
+------------
 
 `commandline -j $history[3]` replaces the job under the cursor with the third item from the command line history.
 

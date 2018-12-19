@@ -7,6 +7,7 @@ Synopsis
 false
 
 
-\subsection false-description Description
+Description
+------------
 
 `false` sets the exit status to 1.

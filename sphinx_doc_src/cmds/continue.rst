@@ -7,11 +7,13 @@ Synopsis
 LOOP_CONSTRUCT; [COMMANDS...;] continue; [COMMANDS...;] end
 
 
-\subsection continue-description Description
+Description
+------------
 
 `continue` skips the remainder of the current iteration of the current inner loop, such as a <a href="#for">for</a> loop or a <a href="#while">while</a> loop. It is usually added inside of a conditional block such as an <a href="#if">if</a> statement or a <a href="#switch">switch</a> statement.
 
-\subsection continue-example Example
+Example
+------------
 
 The following code removes all tmp files that do not contain the word smurf.
 

@@ -7,13 +7,15 @@ Synopsis
 popd
 
 
-\subsection popd-description Description
+Description
+------------
 
 `popd` removes the top directory from the directory stack and changes the working directory to the new top directory. Use <a href="#pushd">`pushd`</a> to add directories to the stack.
 
 You may be interested in the <a href="commands.html#cdh">`cdh`</a> command which provides a more intuitive way to navigate to recently visited directories.
 
-\subsection popd-example Example
+Example
+------------
 
 \fish
 pushd /usr/src

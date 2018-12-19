@@ -7,7 +7,8 @@ Synopsis
 funced [OPTIONS] NAME
 
 
-\subsection funced-description Description
+Description
+------------
 
 `funced` provides an interface to edit the definition of the function `NAME`.
 

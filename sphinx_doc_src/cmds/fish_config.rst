@@ -2,7 +2,8 @@ fish_config - start the web-based configuration interface
 ==========================================
 
 
-\subsection fish_config-description Description
+Description
+------------
 
 `fish_config` starts the web-based configuration interface.
 
@@ -15,6 +16,7 @@ The web interface allows you to view your functions, variables and history, and 
 If the `BROWSER` environment variable is set, it will be used as the name of the web browser to open instead of the system default.
 
 
-\subsection fish_config-example Example
+Example
+------------
 
 `fish_config` opens a new web browser window and allows you to configure certain fish settings.

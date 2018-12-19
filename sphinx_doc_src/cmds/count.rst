@@ -7,7 +7,8 @@ Synopsis
 count $VARIABLE
 
 
-\subsection count-description Description
+Description
+------------
 
 `count` prints the number of arguments that were passed to it. This is usually used to find out how many elements an environment variable array contains.
 
@@ -16,7 +17,8 @@ count $VARIABLE
 `count` exits with a non-zero exit status if no arguments were passed to it, and with zero if at least one argument was passed.
 
 
-\subsection count-example Example
+Example
+------------
 
 \fish
 count $PATH

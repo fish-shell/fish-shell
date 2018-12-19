@@ -7,7 +7,8 @@ Synopsis
 fish [OPTIONS] [-c command] [FILE [ARGUMENTS...]]
 
 
-\subsection fish-description Description
+Description
+------------
 
 `fish` is a command-line shell written mainly with interactive use in mind. The full manual is available <a href='index.html'>in HTML</a> by using the <a href='#help'>help</a> command from inside fish.
 

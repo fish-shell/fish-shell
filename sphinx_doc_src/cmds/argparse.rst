@@ -7,7 +7,8 @@ Synopsis
 argparse [OPTIONS] OPTION_SPEC... -- [ARG...]
 
 
-\subsection argparse-description Description
+Description
+------------
 
 This command makes it easy for fish scripts and functions to handle arguments in a manner 100% identical to how fish builtin commands handle their arguments. You pass a sequence of arguments that define the options recognized, followed by a literal `--`, then the arguments to be parsed (which might also include a literal `--`). More on this in the <a href="#argparse-usage">usage</a> section below.
 
@@ -17,7 +18,8 @@ Each option that is seen in the ARG list will result in a var name of the form `
 
 For example `_flag_h` and `_flag_help` if `-h` or `--help` is seen. The var will be set with local scope (i.e., as if the script had done `set -l _flag_X`). If the flag is a boolean (that is, does not have an associated value) the values are the short and long flags seen. If the option is not a boolean flag the values will be zero or more values corresponding to the values collected when the ARG list is processed. If the flag was not seen the flag var will not be set.
 
-\subsection argparse-options Options
+Options
+------------
 
 The following `argparse` options are available. They must appear before all OPTION_SPECs:
 
@@ -33,7 +35,8 @@ The following `argparse` options are available. They must appear before all OPTI
 
 - `-h` or `--help` displays help about using this command.
 
-\subsection argparse-usage Usage
+Usage
+------------
 
 Using this command involves passing two sets of arguments separated by `--`. The first set consists of one or more option specifications (`OPTION_SPEC` above) and options that modify the behavior of `argparse`. These must be listed before the `--` argument. The second set are the arguments to be parsed in accordance with the option specifications. They occur after the `--` argument and can be empty. More about this below but here is a simple example that might be used in a function named `my_function`:
 
@@ -60,7 +63,8 @@ argparse 'h/help' 'n/name' $argv
 
 The first `--` seen is what allows the `argparse` command to reliably separate the option specifications from the command arguments.
 
-\subsection argparse-option-specs Option Specifications
+Option Specifications
+------------
 
 Each option specification is a string composed of
 
@@ -84,7 +88,8 @@ See the <a href="#fish-opt">`fish_opt`</a> command for a friendlier but more ver
 
 In the following examples if a flag is not seen when parsing the arguments then the corresponding _flag_X var(s) will not be set.
 
-\subsection argparse-validation Flag Value Validation
+Flag Value Validation
+------------
 
 It is common to want to validate the the value provided for an option satisfies some criteria. For example, that it is a valid integer within a specific range. You can always do this after `argparse` returns but you can also request that `argparse` perform the validation by executing arbitrary fish script. To do so simply append an `!` (exclamation-mark) then the fish script to be run. When that code is executed three vars will be defined:
 
@@ -100,7 +105,8 @@ The script should write any error messages to stdout, not stderr. It should retu
 
 Fish ships with a `_validate_int` function that accepts a `--min` and `--max` flag. Let's say your command accepts a `-m` or `--max` flag and the minimum allowable value is zero and the maximum is 5. You would define the option like this: `m/max=!_validate_int --min 0 --max 5`. The default if you just call `_validate_int` without those flags is to simply check that the value is a valid integer with no limits on the min or max value allowed.
 
-\subsection argparse-optspec-examples Example OPTION_SPECs
+Example OPTION_SPECs
+------------
 
 Some OPTION_SPEC examples:
 
@@ -128,6 +134,7 @@ After parsing the arguments the `argv` var is set with local scope to any values
 
 If an error occurs during argparse processing it will exit with a non-zero status and print error messages to stderr.
 
-\subsection argparse-notes Notes
+Notes
+------------
 
 Prior to the addition of this builtin command in the 2.7.0 release there were two main ways to parse the arguments passed to a fish script or function. One way was to use the OS provided `getopt` command. The problem with that is that the GNU and BSD implementations are not compatible. Which makes using that external command difficult other than in trivial situations. The other way is to iterate over `$argv` and use the fish `switch` statement to decide how to handle the argument. That, however, involves a huge amount of boilerplate code. It is also borderline impossible to implement the same behavior as builtin commands.

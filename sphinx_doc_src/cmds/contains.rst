@@ -7,7 +7,8 @@ Synopsis
 contains [OPTIONS] KEY [VALUES...]
 
 
-\subsection contains-description Description
+Description
+------------
 
 `contains` tests whether the set `VALUES` contains the string `KEY`. If so, `contains` exits with status 0; if not, it exits with status 1.
 
@@ -17,7 +18,8 @@ The following options are available:
 
 Note that, like GNU tools and most of fish's builtins, `contains` interprets all arguments starting with a `-` as options to contains, until it reaches an argument that is `--` (two dashes). See the examples below.
 
-\subsection contains-example Example
+Example
+------------
 
 If $animals is a list of animals, the following will test if it contains a cat:
 

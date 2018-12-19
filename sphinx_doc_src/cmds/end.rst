@@ -11,7 +11,8 @@ for VARNAME in [VALUES...]; COMMANDS...; end
 switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end
 
 
-\subsection end-description Description
+Description
+------------
 
 `end` ends a block of commands.
 

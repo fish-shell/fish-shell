@@ -9,14 +9,16 @@ function fish_right_prompt
 end
 
 
-\subsection fish_right_prompt-description Description
+Description
+------------
 
 `fish_right_prompt` is similar to `fish_prompt`, except that it appears on the right side of the terminal window.
 
 Multiple lines are not supported in `fish_right_prompt`.
 
 
-\subsection fish_right_prompt-example Example
+Example
+------------
 
 A simple right prompt:
 

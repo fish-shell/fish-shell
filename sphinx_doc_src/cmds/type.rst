@@ -7,7 +7,8 @@ Synopsis
 type [OPTIONS] NAME [NAME ...]
 
 
-\subsection type-description Description
+Description
+------------
 
 With no options, `type` indicates how each `NAME` would be interpreted if used as a command name.
 
@@ -28,7 +29,8 @@ The following options are available:
 The `-q`, `-p`, `-t` and `-P` flags (and their long flag aliases) are mutually exclusive. Only one can be specified at a time.
 
 
-\subsection type-example Example
+Example
+------------
 
 \fish{cli-dark}
 >_ type fg

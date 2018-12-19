@@ -11,7 +11,8 @@ random START STEP END
 random choice [ITEMS...]
 
 
-\subsection random-description Description
+Description
+------------
 
 `RANDOM` generates a pseudo-random integer from a uniform distribution. The
 range (inclusive) is dependent on the arguments passed.
@@ -29,7 +30,8 @@ systems.
 You should not consider `RANDOM` cryptographically secure, or even
 statistically accurate.
 
-\subsection random-example Example
+Example
+------------
 
 The following code will count down from a random even number between 10 and 20 to 1:
 

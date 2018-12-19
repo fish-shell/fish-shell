@@ -7,7 +7,8 @@ Synopsis
 fish_vi_mode
 
 
-\subsection fish_vi_mode-description Description
+Description
+------------
 
 This function is deprecated. Please call `fish_vi_key_bindings directly`
 

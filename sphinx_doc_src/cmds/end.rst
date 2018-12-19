@@ -14,9 +14,9 @@ switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end
 Description
 ------------
 
-`end` ends a block of commands.
+``end`` ends a block of commands.
 
 For more information, read the
-documentation for the block constructs, such as `if`, `for` and `while`.
+documentation for the block constructs, such as ``if``, ``for`` and ``while``.
 
-The `end` command does not change the current exit status. Instead, the status after it will be the status returned by the most recent command.
+The ``end`` command does not change the current exit status. Instead, the status after it will be the status returned by the most recent command.

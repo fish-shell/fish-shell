@@ -12,9 +12,9 @@ end
 Description
 ------------
 
-`fish_right_prompt` is similar to `fish_prompt`, except that it appears on the right side of the terminal window.
+``fish_right_prompt`` is similar to ``fish_prompt``, except that it appears on the right side of the terminal window.
 
-Multiple lines are not supported in `fish_right_prompt`.
+Multiple lines are not supported in ``fish_right_prompt``.
 
 
 Example

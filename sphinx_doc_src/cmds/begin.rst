@@ -10,13 +10,13 @@ begin; [COMMANDS...;] end
 Description
 ------------
 
-`begin` is used to create a new block of code.
+``begin`` is used to create a new block of code.
 
-A block allows the introduction of a new variable scope, redirection of the input or output of a set of commands as a group, or to specify precedence when using the conditional commands like `and`.
+A block allows the introduction of a new variable scope, redirection of the input or output of a set of commands as a group, or to specify precedence when using the conditional commands like ``and``.
 
-The block is unconditionally executed. `begin; ...; end` is equivalent to `if true; ...; end`.
+The block is unconditionally executed. ``begin; ...; end`` is equivalent to ``if true; ...; end``.
 
-`begin` does not change the current exit status itself. After the block has completed, `$status` will be set to the status returned by the most recent command.
+``begin`` does not change the current exit status itself. After the block has completed, ``$status`` will be set to the status returned by the most recent command.
 
 
 Example

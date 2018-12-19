@@ -10,13 +10,13 @@ nextd [ -l | --list ] [POS]
 Description
 ------------
 
-`nextd` moves forwards `POS` positions in the history of visited directories; if the end of the history has been hit, a warning is printed.
+``nextd`` moves forwards ``POS`` positions in the history of visited directories; if the end of the history has been hit, a warning is printed.
 
-If the `-l` or `--list` flag is specified, the current directory history is also displayed.
+If the ``-l`` or ``--list`` flag is specified, the current directory history is also displayed.
 
-Note that the `cd` command limits directory history to the 25 most recently visited directories. The history is stored in the `$dirprev` and `$dirnext` variables which this command manipulates.
+Note that the ``cd`` command limits directory history to the 25 most recently visited directories. The history is stored in the ``$dirprev`` and ``$dirnext`` variables which this command manipulates.
 
-You may be interested in the <a href="commands.html#cdh">`cdh`</a> command which provides a more intuitive way to navigate to recently visited directories.
+You may be interested in the <a href="commands.html#cdh">``cdh``</a> command which provides a more intuitive way to navigate to recently visited directories.
 
 Example
 ------------

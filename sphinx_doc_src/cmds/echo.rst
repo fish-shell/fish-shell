@@ -10,46 +10,46 @@ echo [OPTIONS] [STRING]
 Description
 ------------
 
-`echo` displays a string of text.
+``echo`` displays a string of text.
 
 The following options are available:
 
-- `-n`, Do not output a newline
+- ``-n``, Do not output a newline
 
-- `-s`, Do not separate arguments with spaces
+- ``-s``, Do not separate arguments with spaces
 
-- `-E`, Disable interpretation of backslash escapes (default)
+- ``-E``, Disable interpretation of backslash escapes (default)
 
-- `-e`, Enable interpretation of backslash escapes
+- ``-e``, Enable interpretation of backslash escapes
 
 Escape Sequences
 ------------
 
-If `-e` is used, the following sequences are recognized:
+If ``-e`` is used, the following sequences are recognized:
 
-- `\` backslash
+- ``\`` backslash
 
-- `\a` alert (BEL)
+- ``\a`` alert (BEL)
 
-- `\b` backspace
+- ``\b`` backspace
 
-- `\c` produce no further output
+- ``\c`` produce no further output
 
-- `\e` escape
+- ``\e`` escape
 
-- `\f` form feed
+- ``\f`` form feed
 
-- `\n` new line
+- ``\n`` new line
 
-- `\r` carriage return
+- ``\r`` carriage return
 
-- `\t` horizontal tab
+- ``\t`` horizontal tab
 
-- `\v` vertical tab
+- ``\v`` vertical tab
 
-- `\0NNN` byte with octal value NNN (1 to 3 digits)
+- ``\0NNN`` byte with octal value NNN (1 to 3 digits)
 
-- `\xHH` byte with hexadecimal value HH (1 to 2 digits)
+- ``\xHH`` byte with hexadecimal value HH (1 to 2 digits)
 
 Example
 ------------

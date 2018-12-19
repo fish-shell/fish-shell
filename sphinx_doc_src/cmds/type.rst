@@ -10,23 +10,23 @@ type [OPTIONS] NAME [NAME ...]
 Description
 ------------
 
-With no options, `type` indicates how each `NAME` would be interpreted if used as a command name.
+With no options, ``type`` indicates how each ``NAME`` would be interpreted if used as a command name.
 
 The following options are available:
 
-- `-a` or `--all` prints all of possible definitions of the specified names.
+- ``-a`` or ``--all`` prints all of possible definitions of the specified names.
 
-- `-f` or `--no-functions` suppresses function and builtin lookup.
+- ``-f`` or ``--no-functions`` suppresses function and builtin lookup.
 
-- `-t` or `--type` prints `function`, `builtin`, or `file` if `NAME` is a shell function, builtin, or disk file, respectively.
+- ``-t`` or ``--type`` prints ``function``, ``builtin``, or ``file`` if ``NAME`` is a shell function, builtin, or disk file, respectively.
 
-- `-p` or `--path` returns the name of the disk file that would be executed, or nothing if `type  -t  name` would not return `file`.
+- ``-p`` or ``--path`` returns the name of the disk file that would be executed, or nothing if ``type  -t  name`` would not return ``file``.
 
-- `-P` or `--force-path` returns the name of the disk file that would be executed, or nothing if no file with the specified name could be found in the <tt>$PATH</tt>.
+- ``-P`` or ``--force-path`` returns the name of the disk file that would be executed, or nothing if no file with the specified name could be found in the <tt>$PATH</tt>.
 
-- `-q` or `--quiet` suppresses all output; this is useful when testing the exit status.
+- ``-q`` or ``--quiet`` suppresses all output; this is useful when testing the exit status.
 
-The `-q`, `-p`, `-t` and `-P` flags (and their long flag aliases) are mutually exclusive. Only one can be specified at a time.
+The ``-q``, ``-p``, ``-t`` and ``-P`` flags (and their long flag aliases) are mutually exclusive. Only one can be specified at a time.
 
 
 Example

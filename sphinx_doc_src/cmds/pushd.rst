@@ -10,17 +10,17 @@ pushd [DIRECTORY]
 Description
 ------------
 
-The `pushd` function adds `DIRECTORY` to the top of the directory stack and makes it the current working directory. <a href="#popd">`popd`</a> will pop it off and return to the original directory.
+The ``pushd`` function adds ``DIRECTORY`` to the top of the directory stack and makes it the current working directory. <a href="#popd">``popd``</a> will pop it off and return to the original directory.
 
 Without arguments, it exchanges the top two directories in the stack.
 
-`pushd +NUMBER` rotates the stack counter-clockwise i.e. from bottom to top
+``pushd +NUMBER`` rotates the stack counter-clockwise i.e. from bottom to top
 
-`pushd -NUMBER` rotates clockwise i.e. top to bottom.
+``pushd -NUMBER`` rotates clockwise i.e. top to bottom.
 
-See also `dirs` and `dirs -c`.
+See also ``dirs`` and ``dirs -c``.
 
-You may be interested in the <a href="commands.html#cdh">`cdh`</a> command which provides a more intuitive way to navigate to recently visited directories.
+You may be interested in the <a href="commands.html#cdh">``cdh``</a> command which provides a more intuitive way to navigate to recently visited directories.
 
 Example
 ------------

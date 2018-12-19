@@ -10,4 +10,4 @@ true
 Description
 ------------
 
-`true` sets the exit status to 0.
+``true`` sets the exit status to 0.

@@ -10,7 +10,7 @@ LOOP_CONSTRUCT; [COMMANDS...;] continue; [COMMANDS...;] end
 Description
 ------------
 
-`continue` skips the remainder of the current iteration of the current inner loop, such as a <a href="#for">for</a> loop or a <a href="#while">while</a> loop. It is usually added inside of a conditional block such as an <a href="#if">if</a> statement or a <a href="#switch">switch</a> statement.
+``continue`` skips the remainder of the current iteration of the current inner loop, such as a <a href="#for">for</a> loop or a <a href="#while">while</a> loop. It is usually added inside of a conditional block such as an <a href="#if">if</a> statement or a <a href="#switch">switch</a> statement.
 
 Example
 ------------

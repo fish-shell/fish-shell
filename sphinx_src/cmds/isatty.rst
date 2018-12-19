@@ -7,7 +7,8 @@ Synopsis
 isatty [FILE DESCRIPTOR]
 
 
-\subsection isatty-description Description
+Description
+------------
 
 `isatty` tests if a file descriptor is a tty.
 
@@ -16,7 +17,8 @@ isatty [FILE DESCRIPTOR]
 If the specified file descriptor is a tty, the exit status of the command is zero. Otherwise, the exit status is non-zero. No messages are printed to standard error.
 
 
-\subsection isatty-examples Examples
+Examples
+------------
 
 From an interactive shell, the commands below exit with a return value of zero:
 

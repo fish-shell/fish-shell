@@ -7,7 +7,8 @@ Synopsis
 begin; [COMMANDS...;] end
 
 
-\subsection begin-description Description
+Description
+------------
 
 `begin` is used to create a new block of code.
 
@@ -18,7 +19,8 @@ The block is unconditionally executed. `begin; ...; end` is equivalent to `if tr
 `begin` does not change the current exit status itself. After the block has completed, `$status` will be set to the status returned by the most recent command.
 
 
-\subsection begin-example Example
+Example
+------------
 
 The following code sets a number of variables inside of a block scope. Since the variables are set inside the block and have local scope, they will be automatically deleted when the block ends.
 

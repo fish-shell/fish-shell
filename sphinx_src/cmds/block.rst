@@ -7,7 +7,8 @@ Synopsis
 block [OPTIONS...]
 
 
-\subsection block-description Description
+Description
+------------
 
 `block` prevents events triggered by `fish` or the <a href="commands.html#emit">`emit`</a> command from being delivered and acted upon while the block is in place.
 
@@ -26,7 +27,8 @@ The following parameters are available:
 - `-e` or `--erase` Release global block
 
 
-\subsection block-example Example
+Example
+------------
 
 \fish
 # Create a function that listens for events
@@ -43,6 +45,7 @@ block -e
 \endfish
 
 
-\subsection block-notes Notes
+Notes
+------------
 
 Note that events are only received from the current fish process as there is no way to send events from one fish process to another.

@@ -7,7 +7,8 @@ Synopsis
 fish_indent [OPTIONS]
 
 
-\subsection fish_indent-description Description
+Description
+------------
 
 `fish_indent` is used to indent a piece of fish code. `fish_indent` reads commands from standard input and outputs them to standard output or a specified file.
 

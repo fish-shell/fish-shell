@@ -13,7 +13,8 @@ set ( -e | --erase ) [SCOPE_OPTIONS] VARIABLE_NAME[INDICES]...
 set ( -S | --show ) [SCOPE_OPTIONS] [VARIABLE_NAME]...
 
 
-\subsection set-description Description
+Description
+------------
 
 `set` manipulates <a href="index.html#variables">shell variables</a>.
 
@@ -82,7 +83,8 @@ In erase mode, if variable indices are specified, only the specified slices of t
 In assignment mode, `set` does not modify the exit status. This allows simultaneous capture of the output and exit status of a subcommand, e.g. `if set output (command)`. In query mode, the exit status is the number of variables that were not found. In erase mode, `set` exits with a zero exit status in case of success, with a non-zero exit status if the commandline was invalid, if the variable was write-protected or if the variable did not exist.
 
 
-\subsection set-examples Examples
+Examples
+------------
 \fish
 # Prints all global, exported variables.
 set -xg
@@ -109,7 +111,8 @@ if set python_path (type -p python)
 end
 \endfish
 
-\subsection set-notes Notes
+Notes
+------------
 
 Fish versions prior to 3.0 supported the syntax `set PATH[1] PATH[4] /bin /sbin`, which worked like
 `set PATH[1 4] /bin /sbin`. This syntax was not widely used, and was ambiguous and inconsistent.

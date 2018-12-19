@@ -10,7 +10,8 @@ if CONDITION; COMMANDS_TRUE...;
 end
 
 
-\subsection if-description Description
+Description
+------------
 
 `if` will execute the command `CONDITION`. If the condition's exit status is 0, the commands `COMMANDS_TRUE` will execute.  If the exit status is not 0 and `else` is given, `COMMANDS_FALSE` will be executed.
 
@@ -18,7 +19,8 @@ You can use <a href="#and">`and`</a> or <a href="#or">`or`</a> in the condition.
 
 The exit status of the last foreground command to exit can always be accessed using the <a href="index.html#variables-status">$status</a> variable.
 
-\subsection if-example Example
+Example
+------------
 
 The following code will print `foo.txt exists` if the file foo.txt exists and is a regular file, otherwise it will print `bar.txt exists` if the file bar.txt exists and is a regular file, otherwise it will print `foo.txt and bar.txt do not exist`.
 

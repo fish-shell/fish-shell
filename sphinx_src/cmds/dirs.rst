@@ -8,7 +8,8 @@ dirs
 dirs -c
 
 
-\subsection dirs-description Description
+Description
+------------
 
 `dirs` prints the current directory stack, as created by the <a href="#pushd">`pushd`</a> command.
 

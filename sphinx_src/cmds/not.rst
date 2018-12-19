@@ -7,12 +7,14 @@ Synopsis
 not COMMAND [OPTIONS...]
 
 
-\subsection not-description Description
+Description
+------------
 
 `not` negates the exit status of another command. If the exit status is zero, `not` returns 1. Otherwise, `not` returns 0.
 
 
-\subsection not-example Example
+Example
+------------
 
 The following code reports an error and exits if no file named spoon can be found.
 

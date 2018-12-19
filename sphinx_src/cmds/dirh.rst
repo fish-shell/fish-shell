@@ -7,7 +7,8 @@ Synopsis
 dirh
 
 
-\subsection dirh-description Description
+Description
+------------
 
 `dirh` prints the current directory history. The current position in the history is highlighted using the color defined in the `fish_color_history_current` environment variable.
 

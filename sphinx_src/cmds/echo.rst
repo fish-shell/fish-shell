@@ -7,7 +7,8 @@ Synopsis
 echo [OPTIONS] [STRING]
 
 
-\subsection echo-description Description
+Description
+------------
 
 `echo` displays a string of text.
 
@@ -21,7 +22,8 @@ The following options are available:
 
 - `-e`, Enable interpretation of backslash escapes
 
-\subsection echo-escapes Escape Sequences
+Escape Sequences
+------------
 
 If `-e` is used, the following sequences are recognized:
 
@@ -49,7 +51,8 @@ If `-e` is used, the following sequences are recognized:
 
 - `\xHH` byte with hexadecimal value HH (1 to 2 digits)
 
-\subsection echo-example Example
+Example
+------------
 
 \fish
 echo 'Hello World'

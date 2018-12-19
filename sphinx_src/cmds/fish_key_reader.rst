@@ -7,7 +7,8 @@ Synopsis
 fish_key_reader [OPTIONS]
 
 
-\subsection fish_key_reader-description Description
+Description
+------------
 
 `fish_key_reader` is used to study input received from the terminal and can help with key binds. The program is interactive and works on standard input. Individual characters themselves and their hexadecimal values are displayed.
 
@@ -25,7 +26,8 @@ The following options are available:
 
 - `-v` or `--version` prints fish_key_reader's version and exits.
 
-\subsection fish_key_reader-usage-notes Usage Notes
+Usage Notes
+------------
 
 The delay in milliseconds since the previous character was received is included in the diagnostic information written to stderr. This information may be useful to determine the optimal `fish_escape_delay_ms` setting or learn the amount of lag introduced by tools like `ssh`, `mosh` or `tmux`.
 

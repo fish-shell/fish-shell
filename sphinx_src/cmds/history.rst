@@ -12,7 +12,8 @@ history clear
 history ( -h | --help )
 
 
-\subsection history-description Description
+Description
+------------
 
 `history` is used to search, delete, and otherwise manipulate the history of interactive commands.
 
@@ -50,7 +51,8 @@ These flags can appear before or immediately after one of the sub-commands liste
 
 - `-h` or `--help` display help for this command.
 
-\subsection history-examples Example
+Example
+------------
 
 \fish
 history clear
@@ -64,7 +66,8 @@ history delete --prefix "foo"
 # You can select more than one entry by entering their IDs separated by a space.
 \endfish
 
-\subsection customizing-the-histfile Customizing the name of the history file
+Customizing the name of the history file
+------------
 
 By default interactive commands are logged to `$XDG_DATA_HOME/fish/fish_history` (typically `~/.local/share/fish/fish_history`).
 
@@ -74,7 +77,8 @@ You can change `fish_history` at any time (by using `set -x fish_history "sessio
 
 Other shells such as bash and zsh use a variable named `HISTFILE` for a similar purpose. Fish uses a different name to avoid conflicts and signal that the behavior is different (session name instead of a file path). Also, if you set the var to anything other than `fish` or `default` it will inhibit importing the bash history. That's because the most common use case for this feature is to avoid leaking private or sensitive history when giving a presentation.
 
-\subsection history-notes Notes
+Notes
+------------
 
 If you specify both `--prefix` and `--contains` the last flag seen is used.
 

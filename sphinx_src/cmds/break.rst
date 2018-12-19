@@ -7,14 +7,16 @@ Synopsis
 LOOP_CONSTRUCT; [COMMANDS...] break; [COMMANDS...] end
 
 
-\subsection break-description Description
+Description
+------------
 
 `break` halts a currently running loop, such as a <a href="#for">for</a> loop or a <a href="#while">while</a> loop. It is usually added inside of a conditional block such as an <a href="#if">if</a> statement or a <a href="#switch">switch</a> statement.
 
 There are no parameters for `break`.
 
 
-\subsection break-example Example
+Example
+------------
 The following code searches all .c files for "smurf", and halts at the first occurrence.
 
 \fish

@@ -7,7 +7,8 @@ Synopsis
 switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end
 
 
-\subsection case-description Description
+Description
+------------
 
 `switch` executes one of several blocks of commands, depending on whether a specified value matches one of several values. `case` is used together with the `switch` statement in order to determine which block should be executed.
 
@@ -18,7 +19,8 @@ Note that fish does not fall through on case statements. Only the first matching
 Note that command substitutions in a case statement will be evaluated even if its body is not taken. All substitutions, including command substitutions, must be performed before the value can be compared against the parameter.
 
 
-\subsection case-example Example
+Example
+------------
 
 Say \$animal contains the name of an animal. Then this code would classify it:
 

@@ -7,7 +7,8 @@ Synopsis
 help [SECTION]
 
 
-\subsection help-description Description
+Description
+------------
 
 `help` displays the fish help documentation.
 
@@ -20,6 +21,7 @@ If you prefer to use a different browser (other than as described above) for fis
 Note that most builtin commands display their help in the terminal when given the `--help` option.
 
 
-\subsection help-example Example
+Example
+------------
 
 `help fg` shows the documentation for the `fg` builtin.

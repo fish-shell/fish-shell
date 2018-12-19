@@ -20,7 +20,8 @@ complete ( -c | --command | -p | --path ) COMMAND
 complete ( -C[STRING] | --do-complete[=STRING] )
 
 
-\subsection complete-description Description
+Description
+------------
 
 For an introduction to specifying completions, see <a
 href='index.html#completion-own'>Writing your own completions</a> in
@@ -93,7 +94,8 @@ The `-w` or `--wraps` options causes the specified command to inherit completion
 When erasing completions, it is possible to either erase all completions for a specific command by specifying `complete -c COMMAND -e`, or by specifying a specific completion option to delete by specifying either a long, short or old style option.
 
 
-\subsection complete-example Example
+Example
+------------
 
 The short style option `-o` for the `gcc` command requires that a file follows it.  This can be done using writing:
 

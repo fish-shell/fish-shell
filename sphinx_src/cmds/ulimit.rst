@@ -7,7 +7,8 @@ Synopsis
 ulimit [OPTIONS] [LIMIT]
 
 
-\subsection ulimit-description Description
+Description
+------------
 
 `ulimit` builtin sets or outputs the resource usage limits of the shell and any processes spawned by it. If a new limit value is omitted, the current value of the limit of the resource is printed; otherwise, the specified limit is set to the new value.
 
@@ -60,7 +61,8 @@ The `fish` implementation of `ulimit` should behave identically to the implement
 - Fish `ulimit` does not support getting or setting multiple limits in one command, except reporting all values using the -a switch
 
 
-\subsection ulimit-example Example
+Example
+------------
 
 `ulimit -Hs 64` sets the hard stack size limit to 64 kB.
 

@@ -7,7 +7,8 @@ Synopsis
 suspend [--force]
 
 
-\subsection suspend-description Description
+Description
+------------
 
 `suspend` suspends execution of the current shell by sending it a
 SIGTSTP signal, returning to the controlling process. It can be

@@ -7,7 +7,8 @@ Synopsis
 pwd
 
 
-\subsection pwd-description Description
+Description
+------------
 
 `pwd` outputs (prints) the current working directory.
 

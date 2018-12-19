@@ -16,7 +16,8 @@ bind (-e | --erase) [(-M | --mode) MODE]
      (-a | --all | [(-k | --key)] SEQUENCE [SEQUENCE...])
 
 
-\subsection bind-description Description
+Description
+------------
 
 `bind` adds a binding for the specified key sequence to the specified command.
 
@@ -60,7 +61,8 @@ The following parameters are available:
 
 - `--preset` and `--user` specify if bind should operate on user or preset bindings. User bindings take precedence over preset bindings when fish looks up mappings. By default, all `bind` invocations work on the "user" level except for listing, which will show both levels. All invocations except for inserting new bindings can operate on both levels at the same time. `--preset` should only be used in full binding sets (like when working on `fish_vi_key_bindings`).
 
-\subsection bind-functions Special input functions
+Special input functions
+------------
 The following special input functions are available:
 
 - `accept-autosuggestion`, accept the current autosuggestion completely
@@ -144,7 +146,8 @@ The following special input functions are available:
 - `yank-pop`, rotate to the previous entry of the killring
 
 
-\subsection bind-example Examples
+Examples
+------------
 
 \fish
 bind <asis>\\cd</asis> 'exit'
@@ -163,7 +166,8 @@ bind -M insert \\cc kill-whole-line force-repaint
 Turns on Vi key bindings and rebinds @key{Control,C} to clear the input line.
 
 
-\subsection special-case-escape Special Case: The escape Character
+Special Case: The escape Character
+------------
 
 The escape key can be used standalone, for example, to switch from insertion mode to normal mode when using Vi keybindings. Escape may also be used as a "meta" key, to indicate the start of an escape sequence, such as function or arrow keys. Custom bindings can also be defined that begin with an escape character.
 

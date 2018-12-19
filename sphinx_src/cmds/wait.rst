@@ -7,7 +7,8 @@ Synopsis
 wait [-n | --any] [PID | PROCESS_NAME] ...
 
 
-\subsection wait-description Description
+Description
+------------
 
 `wait` waits for child jobs to complete.
 
@@ -16,7 +17,8 @@ wait [-n | --any] [PID | PROCESS_NAME] ...
 - If neither a pid nor a process name is specified, the command waits for all background jobs.
 - If the `-n` / `--any` flag is provided, the command returns as soon as the first job completes. If it is not provided, it returns after all jobs complete.
 
-\subsection wait-example Example
+Example
+------------
 
 \fish
 sleep 10 &

@@ -7,7 +7,8 @@ Synopsis
 command [OPTIONS] COMMANDNAME [ARGS...]
 
 
-\subsection command-description Description
+Description
+------------
 
 `command` forces the shell to execute the program `COMMANDNAME` and ignore any functions or builtins with the same name.
 
@@ -23,7 +24,8 @@ With the `-s` option, `command` treats every argument as a separate command to l
 
 For basic compatibility with POSIX `command`, the `-v` flag is recognized as an alias for `-s`.
 
-\subsection command-example Examples
+Examples
+------------
 
 `command ls` causes fish to execute the `ls` program, even if an `ls` function exists.
 

@@ -7,7 +7,8 @@ Synopsis
 breakpoint
 
 
-\subsection breakpoint-description Description
+Description
+------------
 
 `breakpoint` is used to halt a running script and launch an interactive debugging prompt.
 

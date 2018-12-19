@@ -10,9 +10,9 @@ isatty [FILE DESCRIPTOR]
 Description
 ------------
 
-`isatty` tests if a file descriptor is a tty.
+``isatty`` tests if a file descriptor is a tty.
 
-`FILE DESCRIPTOR` may be either the number of a file descriptor, or one of the strings `stdin`, `stdout`, or `stderr`.
+``FILE DESCRIPTOR`` may be either the number of a file descriptor, or one of the strings ``stdin``, ``stdout``, or ``stderr``.
 
 If the specified file descriptor is a tty, the exit status of the command is zero. Otherwise, the exit status is non-zero. No messages are printed to standard error.
 

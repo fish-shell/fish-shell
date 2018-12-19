@@ -10,4 +10,4 @@ false
 Description
 ------------
 
-`false` sets the exit status to 1.
+``false`` sets the exit status to 1.

@@ -10,11 +10,11 @@ builtin BUILTINNAME [OPTIONS...]
 Description
 ------------
 
-`builtin` forces the shell to use a builtin command, rather than a function or program.
+``builtin`` forces the shell to use a builtin command, rather than a function or program.
 
 The following parameters are available:
 
-- `-n` or `--names` List the names of all defined builtins
+- ``-n`` or ``--names`` List the names of all defined builtins
 
 
 Example

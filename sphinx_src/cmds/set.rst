@@ -16,45 +16,45 @@ set ( -S | --show ) [SCOPE_OPTIONS] [VARIABLE_NAME]...
 Description
 ------------
 
-`set` manipulates <a href="index.html#variables">shell variables</a>.
+``set`` manipulates <a href="index.html#variables">shell variables</a>.
 
 If set is called with no arguments, the names and values of all shell variables are printed in sorted order. If some of the scope or export flags have been given, only the variables matching the specified scope are printed.
 
-With both variable names and values provided, `set` assigns the variable `VARIABLE_NAME` the values `VALUES...`.
+With both variable names and values provided, ``set`` assigns the variable ``VARIABLE_NAME`` the values ``VALUES...``.
 
 The following options control variable scope:
 
-- `-a` or `--append` causes the values to be appended to the current set of values for the variable. This can be used with `--prepend` to both append and prepend at the same time. This cannot be used when assigning to a variable slice.
+- ``-a`` or ``--append`` causes the values to be appended to the current set of values for the variable. This can be used with ``--prepend`` to both append and prepend at the same time. This cannot be used when assigning to a variable slice.
 
-- `-p` or `--prepend` causes the values to be prepended to the current set of values for the variable. This can be used with `--append` to both append and prepend at the same time. This cannot be used when assigning to a variable slice.
+- ``-p`` or ``--prepend`` causes the values to be prepended to the current set of values for the variable. This can be used with ``--append`` to both append and prepend at the same time. This cannot be used when assigning to a variable slice.
 
-- `-l` or `--local` forces the specified shell variable to be given a scope that is local to the current block, even if a variable with the given name exists and is non-local
+- ``-l`` or ``--local`` forces the specified shell variable to be given a scope that is local to the current block, even if a variable with the given name exists and is non-local
 
-- `-g` or `--global` causes the specified shell variable to be given a global scope. Non-global variables disappear when the block they belong to ends
+- ``-g`` or ``--global`` causes the specified shell variable to be given a global scope. Non-global variables disappear when the block they belong to ends
 
-- `-U` or `--universal` causes the specified shell variable to be given a universal scope. If this option is supplied, the variable will be shared between all the current user's fish instances on the current computer, and will be preserved across restarts of the shell.
+- ``-U`` or ``--universal`` causes the specified shell variable to be given a universal scope. If this option is supplied, the variable will be shared between all the current user's fish instances on the current computer, and will be preserved across restarts of the shell.
 
-- `-x` or `--export` causes the specified shell variable to be exported to child processes (making it an "environment variable")
+- ``-x`` or ``--export`` causes the specified shell variable to be exported to child processes (making it an "environment variable")
 
-- `-u` or `--unexport` causes the specified shell variable to NOT be exported to child processes
+- ``-u`` or ``--unexport`` causes the specified shell variable to NOT be exported to child processes
 
 
 The following options are available:
 
-- `-e` or `--erase` causes the specified shell variable to be erased
+- ``-e`` or ``--erase`` causes the specified shell variable to be erased
 
-- `-q` or `--query` test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined.
+- ``-q`` or ``--query`` test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined.
 
-- `-n` or `--names` List only the names of all defined variables, not their value. The names are guaranteed to be sorted.
+- ``-n`` or ``--names`` List only the names of all defined variables, not their value. The names are guaranteed to be sorted.
 
-- `-S` or `--show` Shows information about the given variables. If no variable names are given then all variables are shown in sorted order. No other flags can be used with this option. The information shown includes whether or not it is set in each of the local, global, and universal scopes. If it is set in one of those scopes whether or not it is exported is reported. The individual elements are also shown along with the length of each element.
+- ``-S`` or ``--show`` Shows information about the given variables. If no variable names are given then all variables are shown in sorted order. No other flags can be used with this option. The information shown includes whether or not it is set in each of the local, global, and universal scopes. If it is set in one of those scopes whether or not it is exported is reported. The individual elements are also shown along with the length of each element.
 
-- `-L` or `--long` do not abbreviate long values when printing set variables
+- ``-L`` or ``--long`` do not abbreviate long values when printing set variables
 
 
 If a variable is set to more than one value, the variable will be an array with the specified elements. If a variable is set to zero elements, it will become an array with zero elements.
 
-If the variable name is one or more array elements, such as `PATH[1 3 7]`, only those array elements specified will be changed. If you specify a negative index when expanding or assigning to an array variable, the index will be calculated from the end of the array. For example, the index -1 means the last index of an array.
+If the variable name is one or more array elements, such as ``PATH[1 3 7]``, only those array elements specified will be changed. If you specify a negative index when expanding or assigning to an array variable, the index will be calculated from the end of the array. For example, the index -1 means the last index of an array.
 
 The scoping rules when creating or updating a variable are:
 
@@ -62,7 +62,7 @@ The scoping rules when creating or updating a variable are:
 
 -# If a variable is not explicitly set to be either universal, global or local, but has been previously defined, the previous variable scope is used.
 
--# If a variable is not explicitly set to be either universal, global or local and has never before been defined, the variable will be local to the currently executing function. Note that this is different from using the `-l` or `--local` flag. If one of those flags is used, the variable will be local to the most inner currently executing block, while without these the variable will be local to the function. If no function is executing, the variable will be global.
+-# If a variable is not explicitly set to be either universal, global or local and has never before been defined, the variable will be local to the currently executing function. Note that this is different from using the ``-l`` or ``--local`` flag. If one of those flags is used, the variable will be local to the most inner currently executing block, while without these the variable will be local to the function. If no function is executing, the variable will be global.
 
 
 The exporting rules when creating or updating a variable are identical to the scoping rules for variables:
@@ -78,9 +78,9 @@ In query mode, the scope to be examined can be specified.
 
 In erase mode, if variable indices are specified, only the specified slices of the array variable will be erased.
 
-`set` requires all options to come before any other arguments. For example, `set flags -l` will have the effect of setting the value of the variable `flags` to '-l', not making the variable local.
+``set`` requires all options to come before any other arguments. For example, ``set flags -l`` will have the effect of setting the value of the variable ``flags`` to '-l', not making the variable local.
 
-In assignment mode, `set` does not modify the exit status. This allows simultaneous capture of the output and exit status of a subcommand, e.g. `if set output (command)`. In query mode, the exit status is the number of variables that were not found. In erase mode, `set` exits with a zero exit status in case of success, with a non-zero exit status if the commandline was invalid, if the variable was write-protected or if the variable did not exist.
+In assignment mode, ``set`` does not modify the exit status. This allows simultaneous capture of the output and exit status of a subcommand, e.g. ``if set output (command)``. In query mode, the exit status is the number of variables that were not found. In erase mode, ``set`` exits with a zero exit status in case of success, with a non-zero exit status if the commandline was invalid, if the variable was write-protected or if the variable did not exist.
 
 
 Examples
@@ -108,7 +108,7 @@ Examples
     # Changes the fourth element of the $PATH array to ~/bin
     set PATH[4] ~/bin
     
-    # Outputs the path to Python if `type -p` returns true.
+    # Outputs the path to Python if ``type -p`` returns true.
     if set python_path (type -p python)
         echo "Python is at $python_path"
     end
@@ -117,5 +117,5 @@ Examples
 Notes
 ------------
 
-Fish versions prior to 3.0 supported the syntax `set PATH[1] PATH[4] /bin /sbin`, which worked like
-`set PATH[1 4] /bin /sbin`. This syntax was not widely used, and was ambiguous and inconsistent.
+Fish versions prior to 3.0 supported the syntax ``set PATH[1] PATH[4] /bin /sbin``, which worked like
+``set PATH[1 4] /bin /sbin``. This syntax was not widely used, and was ambiguous and inconsistent.

@@ -10,7 +10,7 @@ not COMMAND [OPTIONS...]
 Description
 ------------
 
-`not` negates the exit status of another command. If the exit status is zero, `not` returns 1. Otherwise, `not` returns 0.
+``not`` negates the exit status of another command. If the exit status is zero, ``not`` returns 1. Otherwise, ``not`` returns 0.
 
 
 Example

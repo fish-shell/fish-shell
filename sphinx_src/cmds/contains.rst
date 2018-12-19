@@ -10,13 +10,13 @@ contains [OPTIONS] KEY [VALUES...]
 Description
 ------------
 
-`contains` tests whether the set `VALUES` contains the string `KEY`. If so, `contains` exits with status 0; if not, it exits with status 1.
+``contains`` tests whether the set ``VALUES`` contains the string ``KEY``. If so, ``contains`` exits with status 0; if not, it exits with status 1.
 
 The following options are available:
 
-- `-i` or `--index` print the word index
+- ``-i`` or ``--index`` print the word index
 
-Note that, like GNU tools and most of fish's builtins, `contains` interprets all arguments starting with a `-` as options to contains, until it reaches an argument that is `--` (two dashes). See the examples below.
+Note that, like GNU tools and most of fish's builtins, ``contains`` interprets all arguments starting with a ``-`` as options to contains, until it reaches an argument that is ``--`` (two dashes). See the examples below.
 
 Example
 ------------
@@ -45,7 +45,7 @@ This code will add some directories to $PATH if they aren't yet included:
     end
 
 
-While this will check if `hasargs` was run with the `-q` option:
+While this will check if ``hasargs`` was run with the ``-q`` option:
 
 
 
@@ -58,4 +58,4 @@ While this will check if `hasargs` was run with the `-q` option:
     end
 
 
-The `--` here stops `contains` from treating `-q` to an option to itself. Instead it treats it as a normal string to check.
+The ``--`` here stops ``contains`` from treating ``-q`` to an option to itself. Instead it treats it as a normal string to check.

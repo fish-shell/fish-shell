@@ -10,10 +10,10 @@ pwd
 Description
 ------------
 
-`pwd` outputs (prints) the current working directory.
+``pwd`` outputs (prints) the current working directory.
 
 The following options are available:
 
-- `-L`, Output the logical working directory, without resolving symlinks (default behavior).
+- ``-L``, Output the logical working directory, without resolving symlinks (default behavior).
 
-- `-P`, Output the physical working directory, with symlinks resolved.
+- ``-P``, Output the physical working directory, with symlinks resolved.

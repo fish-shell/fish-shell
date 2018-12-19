@@ -10,11 +10,11 @@ count $VARIABLE
 Description
 ------------
 
-`count` prints the number of arguments that were passed to it. This is usually used to find out how many elements an environment variable array contains.
+``count`` prints the number of arguments that were passed to it. This is usually used to find out how many elements an environment variable array contains.
 
-`count` does not accept any options, not even `-h` or `--help`.
+``count`` does not accept any options, not even ``-h`` or ``--help``.
 
-`count` exits with a non-zero exit status if no arguments were passed to it, and with zero if at least one argument was passed.
+``count`` exits with a non-zero exit status if no arguments were passed to it, and with zero if at least one argument was passed.
 
 
 Example

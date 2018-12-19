@@ -20,10 +20,13 @@ Example
 
 The following code is an implementation of the false command as a fish function
 
-\fish
-function false
-    return 1
-end
-\endfish
+
+
+::
+
+    function false
+        return 1
+    end
+
 
 

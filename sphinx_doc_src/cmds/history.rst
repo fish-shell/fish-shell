@@ -54,17 +54,20 @@ These flags can appear before or immediately after one of the sub-commands liste
 Example
 ------------
 
-\fish
-history clear
-# Deletes all history items
 
-history search --contains "foo"
-# Outputs a list of all previous commands containing the string "foo".
 
-history delete --prefix "foo"
-# Interactively deletes commands which start with "foo" from the history.
-# You can select more than one entry by entering their IDs separated by a space.
-\endfish
+::
+
+    history clear
+    # Deletes all history items
+    
+    history search --contains "foo"
+    # Outputs a list of all previous commands containing the string "foo".
+    
+    history delete --prefix "foo"
+    # Interactively deletes commands which start with "foo" from the history.
+    # You can select more than one entry by entering their IDs separated by a space.
+
 
 Customizing the name of the history file
 ------------

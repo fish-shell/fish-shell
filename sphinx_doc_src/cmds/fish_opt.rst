@@ -35,24 +35,33 @@ Examples
 
 Define a single option spec for the boolean help flag:
 
-\fish
-set -l options (fish_opt -s h -l help)
-argparse $options -- $argv
-\endfish
+
+
+::
+
+    set -l options (fish_opt -s h -l help)
+    argparse $options -- $argv
+
 
 Same as above but with a second flag that requires a value:
 
-\fish
-set -l options (fish_opt -s h -l help)
-set options $options (fish_opt -s m -l max --required-val)
-argparse $options -- $argv
-\endfish
+
+
+::
+
+    set -l options (fish_opt -s h -l help)
+    set options $options (fish_opt -s m -l max --required-val)
+    argparse $options -- $argv
+
 
 Same as above but with a third flag that can be given multiple times saving the value of each instance seen and only the long flag name (`--token`) can be used:
 
-\fish
-set -l options (fish_opt --short=h --long=help)
-set options $options (fish_opt --short=m --long=max --required-val)
-set options $options (fish_opt --short=t --long=token --multiple-vals --long-only)
-argparse $options -- $argv
-\endfish
+
+
+::
+
+    set -l options (fish_opt --short=h --long=help)
+    set options $options (fish_opt --short=m --long=max --required-val)
+    set options $options (fish_opt --short=t --long=token --multiple-vals --long-only)
+    argparse $options -- $argv
+

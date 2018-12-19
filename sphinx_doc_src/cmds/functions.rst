@@ -61,13 +61,16 @@ The exit status of `functions` is the number of functions specified in the argum
 
 Examples
 ------------
-\fish
-functions -n
-# Displays a list of currently-defined functions
 
-functions -c foo bar
-# Copies the 'foo' function to a new function called 'bar'
 
-functions -e bar
-# Erases the function `bar`
-\endfish
+::
+
+    functions -n
+    # Displays a list of currently-defined functions
+    
+    functions -c foo bar
+    # Copies the 'foo' function to a new function called 'bar'
+    
+    functions -e bar
+    # Erases the function `bar`
+

@@ -35,14 +35,20 @@ Example
 
 The following code will count down from a random even number between 10 and 20 to 1:
 
-\fish
-for i in (seq (random 10 2 20) -1 1)
-    echo $i
-end
-\endfish
+
+
+::
+
+    for i in (seq (random 10 2 20) -1 1)
+        echo $i
+    end
+
 
 And this will open a random picture from any of the subdirectories:
 
-\fish
-open (random choice **jpg)
-\endfish
+
+
+::
+
+    open (random choice **jpg)
+

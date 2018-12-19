@@ -24,21 +24,24 @@ Example
 
 Say \$animal contains the name of an animal. Then this code would classify it:
 
-\fish
-switch $animal
-    case cat
-        echo evil
-    case wolf dog human moose dolphin whale
-        echo mammal
-    case duck goose albatross
-        echo bird
-    case shark trout stingray
-        echo fish
-    # Note that the next case has a wildcard which is quoted
-    case '*'
-        echo I have no idea what a $animal is
-end
-\endfish
+
+
+::
+
+    switch $animal
+        case cat
+            echo evil
+        case wolf dog human moose dolphin whale
+            echo mammal
+        case duck goose albatross
+            echo bird
+        case shark trout stingray
+            echo fish
+        # Note that the next case has a wildcard which is quoted
+        case '*'
+            echo I have no idea what a $animal is
+    end
+
 
 If the above code was run with `$animal` set to `whale`, the output
 would be `mammal`.

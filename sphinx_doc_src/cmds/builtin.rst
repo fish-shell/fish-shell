@@ -20,7 +20,10 @@ The following parameters are available:
 Example
 ------------
 
-\fish
-builtin jobs
-# executes the jobs builtin, even if a function named jobs exists
-\endfish
+
+
+::
+
+    builtin jobs
+    # executes the jobs builtin, even if a function named jobs exists
+

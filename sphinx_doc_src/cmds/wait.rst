@@ -20,19 +20,28 @@ Description
 Example
 ------------
 
-\fish
-sleep 10 &
-wait $last_pid
-\endfish
+
+
+::
+
+    sleep 10 &
+    wait $last_pid
+
 spawns `sleep` in the background, and then waits until it finishes.
-\fish
-for i in (seq 1 5); sleep 10 &; end
-wait
-\endfish
+
+
+::
+
+    for i in (seq 1 5); sleep 10 &; end
+    wait
+
 spawns five jobs in the background, and then waits until all of them finishes.
-\fish
-for i in (seq 1 5); sleep 10 &; end
-hoge &
-wait sleep
-\endfish
+
+
+::
+
+    for i in (seq 1 5); sleep 10 &; end
+    hoge &
+    wait sleep
+
 spawns five jobs and `hoge` in the background, and then waits until all `sleep`s finishes, and doesn't wait for `hoge` finishing.

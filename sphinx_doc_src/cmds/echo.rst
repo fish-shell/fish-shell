@@ -54,12 +54,18 @@ If `-e` is used, the following sequences are recognized:
 Example
 ------------
 
-\fish
-echo 'Hello World'
-\endfish
+
+
+::
+
+    echo 'Hello World'
+
 Print hello world to stdout
 
-\fish
-echo -e 'Top\\nBottom'
-\endfish
+
+
+::
+
+    echo -e 'Top\\nBottom'
+
 Print Top and Bottom on separate lines, using an escape sequence

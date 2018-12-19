@@ -24,20 +24,26 @@ Example
 
 The following code will print `foo.txt exists` if the file foo.txt exists and is a regular file, otherwise it will print `bar.txt exists` if the file bar.txt exists and is a regular file, otherwise it will print `foo.txt and bar.txt do not exist`.
 
-\fish
-if test -f foo.txt
-    echo foo.txt exists
-else if test -f bar.txt
-    echo bar.txt exists
-else
-    echo foo.txt and bar.txt do not exist
-end
-\endfish
+
+
+::
+
+    if test -f foo.txt
+        echo foo.txt exists
+    else if test -f bar.txt
+        echo bar.txt exists
+    else
+        echo foo.txt and bar.txt do not exist
+    end
+
 
 The following code will print "foo.txt exists and is readable" if foo.txt is a regular file and readable
-\fish
-if test -f foo.txt
-   and test -r foo.txt
-   echo "foo.txt exists and is readable"
-end
-\endfish
+
+
+::
+
+    if test -f foo.txt
+       and test -r foo.txt
+       echo "foo.txt exists and is readable"
+    end
+

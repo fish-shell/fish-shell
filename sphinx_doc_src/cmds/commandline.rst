@@ -65,22 +65,28 @@ Example
 `commandline -j $history[3]` replaces the job under the cursor with the third item from the command line history.
 
 If the commandline contains
-\fish
->_ echo $fl___ounder >&2 | less; and echo $catfish
-\endfish
+
+
+::
+
+    >_ echo $fl___ounder >&2 | less; and echo $catfish
+
 
 (with the cursor on the "o" of "flounder")
 
 Then the following invocations behave like this:
-\fish
->_ commandline -t
-$flounder
->_ commandline -ct
-$fl
->_ commandline -b # or just commandline
-echo $flounder >&2 | less; and echo $catfish
->_ commandline -p
-echo $flounder >&2
->_ commandline -j
-echo $flounder >&2 | less
-\endfish
+
+
+::
+
+    >_ commandline -t
+    $flounder
+    >_ commandline -ct
+    $fl
+    >_ commandline -b # or just commandline
+    echo $flounder >&2 | less; and echo $catfish
+    >_ commandline -p
+    echo $flounder >&2
+    >_ commandline -j
+    echo $flounder >&2 | less
+

@@ -18,10 +18,13 @@ Example
 
 The following code tests whether a file `foo.txt` exists as a regular file.
 
-\fish
-if test -f foo.txt
-    echo foo.txt exists
-else
-    echo foo.txt does not exist
-end
-\endfish
+
+
+::
+
+    if test -f foo.txt
+        echo foo.txt exists
+    else
+        echo foo.txt does not exist
+    end
+

@@ -24,27 +24,33 @@ Example
 
 The following code sets a number of variables inside of a block scope. Since the variables are set inside the block and have local scope, they will be automatically deleted when the block ends.
 
-\fish
-begin
-    set -l PIRATE Yarrr
 
-    ...
-end
 
-echo $PIRATE
-# This will not output anything, since the PIRATE variable
-# went out of scope at the end of the block
-\endfish
+::
+
+    begin
+        set -l PIRATE Yarrr
+    
+        ...
+    end
+    
+    echo $PIRATE
+    # This will not output anything, since the PIRATE variable
+    # went out of scope at the end of the block
+
 
 In the following code, all output is redirected to the file out.html.
 
-\fish
-begin
-    echo $xml_header
-    echo $html_header
-    if test -e $file
+
+
+::
+
+    begin
+        echo $xml_header
+        echo $html_header
+        if test -e $file
+            ...
+        end
         ...
-    end
-    ...
-end > out.html
-\endfish
+    end > out.html
+

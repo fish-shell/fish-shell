@@ -40,26 +40,35 @@ Usage
 
 Using this command involves passing two sets of arguments separated by `--`. The first set consists of one or more option specifications (`OPTION_SPEC` above) and options that modify the behavior of `argparse`. These must be listed before the `--` argument. The second set are the arguments to be parsed in accordance with the option specifications. They occur after the `--` argument and can be empty. More about this below but here is a simple example that might be used in a function named `my_function`:
 
-\fish
-argparse --name=my_function 'h/help' 'n/name=' -- $argv
-or return
-\endfish
+
+
+::
+
+    argparse --name=my_function 'h/help' 'n/name=' -- $argv
+    or return
+
 
 If `$argv` is empty then there is nothing to parse and `argparse` returns zero to indicate success. If `$argv` is not empty then it is checked for flags `-h`, `--help`, `-n` and `--name`. If they are found they are removed from the arguments and local variables (more on this <a href="argparse-local-variables">below</a>) are set so the script can determine which options were seen. Assuming `$argv` doesn't have any errors, such as a missing mandatory value for an option, then `argparse` exits with status zero. Otherwise it writes appropriate error messages to stderr and exits with a status of one.
 
 The `--` argument is required. You do not have to include any arguments after the `--` but you must include the `--`. For example, this is acceptable:
 
-\fish
-set -l argv
-argparse 'h/help' 'n/name' -- $argv
-\endfish
+
+
+::
+
+    set -l argv
+    argparse 'h/help' 'n/name' -- $argv
+
 
 But this is not:
 
-\fish
-set -l argv
-argparse 'h/help' 'n/name' $argv
-\endfish
+
+
+::
+
+    set -l argv
+    argparse 'h/help' 'n/name' $argv
+
 
 The first `--` seen is what allows the `argparse` command to reliably separate the option specifications from the command arguments.
 

@@ -23,30 +23,39 @@ Example
 
 If $animals is a list of animals, the following will test if it contains a cat:
 
-\fish
-if contains cat $animals
-   echo Your animal list is evil!
-end
-\endfish
+
+
+::
+
+    if contains cat $animals
+       echo Your animal list is evil!
+    end
+
 
 This code will add some directories to $PATH if they aren't yet included:
 
-\fish
-for i in ~/bin /usr/local/bin
-    if not contains $i $PATH
-        set PATH $PATH $i
+
+
+::
+
+    for i in ~/bin /usr/local/bin
+        if not contains $i $PATH
+            set PATH $PATH $i
+        end
     end
-end
-\endfish
+
 
 While this will check if `hasargs` was run with the `-q` option:
 
-\fish
-function hasargs
-    if contains -- -q $argv
-        echo '$argv contains a -q option'
+
+
+::
+
+    function hasargs
+        if contains -- -q $argv
+            echo '$argv contains a -q option'
+        end
     end
-end
-\endfish
+
 
 The `--` here stops `contains` from treating `-q` to an option to itself. Instead it treats it as a normal string to check.

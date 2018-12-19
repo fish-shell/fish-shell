@@ -18,13 +18,16 @@ Example
 
 The following code first defines an event handler for the generic event named 'test_event', and then emits an event of that type.
 
-\fish
-function event_test --on-event test_event
-    echo event test: $argv
-end
 
-emit test_event something
-\endfish
+
+::
+
+    function event_test --on-event test_event
+        echo event test: $argv
+    end
+    
+    emit test_event something
+
 
 
 Notes

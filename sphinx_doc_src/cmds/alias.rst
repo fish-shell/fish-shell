@@ -32,14 +32,17 @@ Example
 
 The following code will create `rmi`, which runs `rm` with additional arguments on every invocation.
 
-\fish
-alias rmi="rm -i"
 
-# This is equivalent to entering the following function:
-function rmi --wraps rm --description 'alias rmi=rm -i'
-    rm -i $argv
-end
 
-# This needs to have the spaces escaped or "Chrome.app..." will be seen as an argument to "/Applications/Google":
-alias chrome='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome banana'
-\endfish
+::
+
+    alias rmi="rm -i"
+    
+    # This is equivalent to entering the following function:
+    function rmi --wraps rm --description 'alias rmi=rm -i'
+        rm -i $argv
+    end
+    
+    # This needs to have the spaces escaped or "Chrome.app..." will be seen as an argument to "/Applications/Google":
+    alias chrome='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome banana'
+

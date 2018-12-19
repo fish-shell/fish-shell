@@ -24,13 +24,16 @@ As a special case, `cd .` is equivalent to `cd $PWD`, which is useful in cases w
 Examples
 ------------
 
-\fish
-cd
-# changes the working directory to your home directory.
 
-cd /usr/src/fish-shell
-# changes the working directory to /usr/src/fish-shell
-\endfish
+
+::
+
+    cd
+    # changes the working directory to your home directory.
+    
+    cd /usr/src/fish-shell
+    # changes the working directory to /usr/src/fish-shell
+
 
 See Also
 ------------

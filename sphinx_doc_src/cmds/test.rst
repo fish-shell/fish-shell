@@ -109,59 +109,80 @@ Examples
 
 If the `/tmp` directory exists, copy the `/etc/motd` file to it:
 
-\fish
-if test -d /tmp
-    cp /etc/motd /tmp/motd
-end
-\endfish
+
+
+::
+
+    if test -d /tmp
+        cp /etc/motd /tmp/motd
+    end
+
 
 If the variable `MANPATH` is defined and not empty, print the contents. (If `MANPATH` is not defined, then it will expand to zero arguments, unless quoted.)
 
-\fish
-if test -n "$MANPATH"
-    echo $MANPATH
-end
-\endfish
+
+
+::
+
+    if test -n "$MANPATH"
+        echo $MANPATH
+    end
+
 
 Parentheses and the `-o` and `-a` operators can be combined to produce more complicated expressions. In this example, success is printed if there is a `/foo` or `/bar` file as well as a `/baz` or `/bat` file.
 
-\fish
-if test \( -f /foo -o -f /bar \) -a \( -f /baz -o -f /bat \)
-    echo Success.
-end.
-\endfish
+
+
+::
+
+    if test \( -f /foo -o -f /bar \) -a \( -f /baz -o -f /bat \)
+        echo Success.
+    end.
+
 
 Numerical comparisons will simply fail if one of the operands is not a number:
 
-\fish
-if test 42 -eq "The answer to life, the universe and everything"
-    echo So long and thanks for all the fish # will not be executed
-end
-\endfish
+
+
+::
+
+    if test 42 -eq "The answer to life, the universe and everything"
+        echo So long and thanks for all the fish # will not be executed
+    end
+
 
 A common comparison is with $status:
 
-\fish
-if test $status -eq 0
-    echo "Previous command succeeded"
-end
-\endfish
+
+
+::
+
+    if test $status -eq 0
+        echo "Previous command succeeded"
+    end
+
 
 The previous test can likewise be inverted:
 
-\fish
-if test ! $status -eq 0
-    echo "Previous command failed"
-end
-\endfish
+
+
+::
+
+    if test ! $status -eq 0
+        echo "Previous command failed"
+    end
+
 
 which is logically equivalent to the following:
 
-\fish
-if test $status -ne 0
-    echo "Previous command failed"
-end
-\endfish
+
+
+::
+
+    if test $status -ne 0
+        echo "Previous command failed"
+    end
+
 
 Standards
 ------------

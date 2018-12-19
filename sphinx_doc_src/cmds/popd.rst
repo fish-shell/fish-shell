@@ -17,16 +17,19 @@ You may be interested in the <a href="commands.html#cdh">`cdh`</a> command which
 Example
 ------------
 
-\fish
-pushd /usr/src
-# Working directory is now /usr/src
-# Directory stack contains /usr/src
 
-pushd /usr/src/fish-shell
-# Working directory is now /usr/src/fish-shell
-# Directory stack contains /usr/src /usr/src/fish-shell
 
-popd
-# Working directory is now /usr/src
-# Directory stack contains /usr/src
-\endfish
+::
+
+    pushd /usr/src
+    # Working directory is now /usr/src
+    # Directory stack contains /usr/src
+    
+    pushd /usr/src/fish-shell
+    # Working directory is now /usr/src/fish-shell
+    # Directory stack contains /usr/src /usr/src/fish-shell
+    
+    popd
+    # Working directory is now /usr/src
+    # Directory stack contains /usr/src
+

@@ -149,20 +149,29 @@ The following special input functions are available:
 Examples
 ------------
 
-\fish
-bind <asis>\\cd</asis> 'exit'
-\endfish
+
+
+::
+
+    bind <asis>\\cd</asis> 'exit'
+
 Causes `fish` to exit when @key{Control,D} is pressed.
 
-\fish
-bind -k ppage history-search-backward
-\endfish
+
+
+::
+
+    bind -k ppage history-search-backward
+
 Performs a history search when the @key{Page Up} key is pressed.
 
-\fish
-set -g fish_key_bindings fish_vi_key_bindings
-bind -M insert \\cc kill-whole-line force-repaint
-\endfish
+
+
+::
+
+    set -g fish_key_bindings fish_vi_key_bindings
+    bind -M insert \\cc kill-whole-line force-repaint
+
 Turns on Vi key bindings and rebinds @key{Control,C} to clear the input line.
 
 

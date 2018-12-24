@@ -48,7 +48,6 @@ complete -c pkg -n __fish_pkg_subcommand -r -s R -l repo-conf-dir -d "Set reposi
 complete -c pkg -n __fish_pkg_subcommand    -s 4                  -d "Use IPv4"
 complete -c pkg -n __fish_pkg_subcommand    -s 6                  -d "Use IPv6"
 
-complete -c pkg -n __fish_pkg_subcommand -xa help       -d "Display help for command"
 complete -c pkg -n __fish_pkg_subcommand -xa add        -d "Install package file"
 complete -c pkg -n __fish_pkg_subcommand -xa annotate   -d "Modify annotations on packages"
 complete -c pkg -n __fish_pkg_subcommand -xa audit      -d "Audit installed packages"
@@ -60,8 +59,10 @@ complete -c pkg -n __fish_pkg_subcommand -xa convert    -d "Convert package from
 complete -c pkg -n __fish_pkg_subcommand -xa create     -d "Create a package"
 complete -c pkg -n __fish_pkg_subcommand -xa delete     -d "Remove a package"
 complete -c pkg -n __fish_pkg_subcommand -xa fetch      -d "Download a remote package"
+complete -c pkg -n __fish_pkg_subcommand -xa help       -d "Display help for command"
 complete -c pkg -n __fish_pkg_subcommand -xa info       -d "List installed packages"
 complete -c pkg -n __fish_pkg_subcommand -xa install    -d "Install packages"
+complete -c pkg -n __fish_pkg_subcommand -xa list       -d "List files belonging to package(s)"
 complete -c pkg -n __fish_pkg_subcommand -xa lock       -d "Prevent package modification"
 complete -c pkg -n __fish_pkg_subcommand -xa plugins    -d "List package manager plugins"
 complete -c pkg -n __fish_pkg_subcommand -xa query      -d "Query installed packages"
@@ -73,6 +74,7 @@ complete -c pkg -n __fish_pkg_subcommand -xa search     -d "Find packages"
 complete -c pkg -n __fish_pkg_subcommand -xa set        -d "Modify package information in database"
 complete -c pkg -n __fish_pkg_subcommand -xa shell      -d "Open a SQLite shell"
 complete -c pkg -n __fish_pkg_subcommand -xa shlib      -d "Display packages linking to shared library"
+complete -c pkg -n __fish_pkg_subcommand -xa show       -d "Show information about package(s)"
 complete -c pkg -n __fish_pkg_subcommand -xa stats      -d "Display package statistics"
 complete -c pkg -n __fish_pkg_subcommand -xa unlock     -d "Stop preventing package modification"
 complete -c pkg -n __fish_pkg_subcommand -xa update     -d "Update remote repositories"
@@ -114,6 +116,15 @@ complete -c pkg -n '__fish_pkg_is install upgrade' -s F -l fetch-only -d "Do not
 complete -c pkg -n '__fish_pkg_is install' -s R -l from-root -d "Reinstall packages required by this package"
 complete -c pkg -n '__fish_pkg_is install update' -x -s r -l repository -d "Use only a given repository"
 complete -c pkg -n '__fish_pkg_is install upgrade' -s U -l no-repo-update -d "Do not automatically update database"
+
+# info
+complete -c pkg -n '__fish_pkg_is info' -xa '(pkg query "%n")'
+
+# show
+complete -c pkg -n '__fish_pkg_is show' -xa '(pkg query "%n")'
+
+# list
+complete -c pkg -n '__fish_pkg_is list' -xa '(pkg query "%n")'
 
 # update
 complete -c pkg -n '__fish_pkg_is add update' -s f -l force -d "Force a full download of a repository"

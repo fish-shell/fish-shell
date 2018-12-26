@@ -9,7 +9,7 @@ argparse [OPTIONS] OPTION_SPEC... -- [ARG...]
 
 This command makes it easy for fish scripts and functions to handle arguments in a manner 100% identical to how fish builtin commands handle their arguments. You pass a sequence of arguments that define the options recognized, followed by a literal `--`, then the arguments to be parsed (which might also include a literal `--`). More on this in the <a href="#argparse-usage">usage</a> section below.
 
-Each OPTION_SPEC can be written in the domain specific language <a href="#argparse-option-specs">described below</a> or created using the companion <a href="#fish-opt">`fish_opt`</a> command. All OPTION_SPECs must appear after any argparse flags and before the `--` that separates them from the arguments to be parsed.
+Each OPTION_SPEC can be written in the domain specific language <a href="#argparse-option-specs">described below</a> or created using the companion <a href="#fish_opt">`fish_opt`</a> command. All OPTION_SPECs must appear after any argparse flags and before the `--` that separates them from the arguments to be parsed.
 
 Each option that is seen in the ARG list will result in a var name of the form `_flag_X`, where `X` is the short flag letter and the long flag name. The OPTION_SPEC always requires a short flag even if it can't be used. So there will always be `_flag_X` var set using the short flag letter if the corresponding short or long flag is seen. The long flag name var (e.g., `_flag_help`) will only be defined, obviously, if the OPTION_SPEC includes a long flag name.
 
@@ -78,7 +78,7 @@ Each option specification is a string composed of
 
 - Optionally a `!` followed by fish script to validate the value. Typically this will be a function to run. If the return status is zero the value for the flag is valid. If non-zero the value is invalid. Any error messages should be written to stdout (not stderr). See the section on <a href="#arparse-validation">Flag Value Validation</a> for more information.
 
-See the <a href="#fish-opt">`fish_opt`</a> command for a friendlier but more verbose way to create option specifications.
+See the <a href="#fish_opt">`fish_opt`</a> command for a friendlier but more verbose way to create option specifications.
 
 In the following examples if a flag is not seen when parsing the arguments then the corresponding _flag_X var(s) will not be set.
 

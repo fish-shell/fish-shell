@@ -4243,7 +4243,8 @@ static void test_highlighting() {
         {L"cat", highlight_spec_command},
         {L"/dev/null", highlight_spec_param},
         {L"|", highlight_spec_statement_terminator},
-        {L"less", highlight_spec_command},
+        // This is bogus, but we used to use "less" here and that doesn't have to be installed.
+        {L"cat", highlight_spec_command},
         {L"2>", highlight_spec_redirection},
     });
 

@@ -1,3 +1,20 @@
+# fish next-minor
+
+## Deprecations
+- None yet.
+
+## Notable fixes and improvements
+### Syntax changes and new commands
+- None yet.
+
+### Interactive improvements
+- Major improvements in performance and functionality to the 'sorin' sample prompt (#5411).
+- Added completions for:
+ - nothing yet...
+- Lots of improvements to completions.
+
+---
+
 # fish 3.0.0 (released December 28, 2018)
 
 fish 3 is a major release, which introduces some breaking changes alongside improved functionality. Although most existing scripts will continue to work, they should be reviewed against the list contained in the 3.0b1 release notes below.
@@ -21,7 +38,7 @@ If you are upgrading from version 2.7.1 or before, please also review the releas
 fish 3 is a major release, which introduces some breaking changes alongside improved functionality. Although most existing scripts will continue to work, they should be reviewed against the list below.
 
 ## Notable non-backward compatible changes
--  Process and job expansion has largely been removed. `%` will no longer perform these expansions, except for `%self` for the PID of the current shell. Additionally, job management commands (`disown`, `wait`, `bg`, `fg` and `kill`) will expand job specifiers starting with `%` (#4230, #1202).
+- Process and job expansion has largely been removed. `%` will no longer perform these expansions, except for `%self` for the PID of the current shell. Additionally, job management commands (`disown`, `wait`, `bg`, `fg` and `kill`) will expand job specifiers starting with `%` (#4230, #1202).
 - `set x[1] x[2] a b`, to set multiple elements of an array at once, is no longer valid syntax (#4236).
 - A literal `{}` now expands to itself, rather than nothing. This makes working with `find -exec` easier (#1109, #4632).
 - Literally accessing a zero-index is now illegal syntax and is caught by the parser (#4862). (fish indices start at 1)

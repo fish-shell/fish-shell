@@ -142,6 +142,11 @@
 /* Define to 1 if tparm accepts a fixed amount of paramters. */
 #cmakedefine TPARM_SOLARIS_KLUDGE 1
 
+/* Enable GNU extensions on systems that have them.  */
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE 1
+#endif
+
 /* The size of wchar_t in bits. */
 #define WCHAR_T_BITS ${WCHAR_T_BITS}
 

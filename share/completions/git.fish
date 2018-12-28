@@ -445,7 +445,7 @@ end
 # So instead, we store the aliases in global variables, named after the alias, containing the command.
 # This is because alias:command is an n:1 mapping (an alias can only have one corresponding command,
 #                                                  but a command can be aliased multiple times)
-git config -z --get-regexp 'alias\..*' | while read -lz alias command
+git config -z --get-regexp 'alias\..*' | while read -lz alias command _
     # Git aliases can contain chars that variable names can't - escape them.
     set alias (string replace 'alias.' '' -- $alias | string escape --style=var)
     set -g __fish_git_alias_$alias $command

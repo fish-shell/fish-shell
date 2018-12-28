@@ -1,3 +1,21 @@
+# fish 3.0.0 (released December 28, 2018)
+
+fish 3 is a major release, which introduces some breaking changes alongside improved functionality. Although most existing scripts will continue to work, they should be reviewed against the list contained in the 3.0b1 release notes below.
+
+Compared to the beta release of fish 3.0b1, fish version 3.0.0:
+
+- builds correctly against musl libc (#5407)
+- handles huge numeric arguments to `test` correctly (#5414)
+- removes the history colouring introduced in 3.0b1, which did not always work correctly
+
+There is one significant known issue which was not able to be corrected before the release:
+
+- fish 3.0.0 builds on Cygwin (#5423), but does not run correctly (#5426) and will result in a hanging terminal when started. Cygwin users are encouraged to continue using 2.7.1 until a release which corrects this is available.
+
+If you are upgrading from version 2.7.1 or before, please also review the release notes for 3.0b1 (included below).
+
+---
+
 # fish 3.0b1 (released December 11, 2018)
 
 fish 3 is a major release, which introduces some breaking changes alongside improved functionality. Although most existing scripts will continue to work, they should be reviewed against the list below.
@@ -57,7 +75,7 @@ A new feature flags mechanism is added for staging deprecations and breaking cha
 - `exec` prompts for confirmation if background jobs are running.
 - `funced` has a new `--save` option to automatically save the edited function after successfully editing (#4668).
 - `functions` has a new ` --handlers` option to show functions registered as event handlers (#4694).
-- `history search` supports globs for wildcard searching (#3136) and has a new `--reverse` option to show entries from oldest to newest (#4375)..
+- `history search` supports globs for wildcard searching (#3136) and has a new `--reverse` option to show entries from oldest to newest (#4375).
 - `jobs` has a new `--quiet` option to silence the output.
 - `read` has a new `--delimiter` option for splitting input into arrays (#4256).
 - `read` writes directly to stdout if called without arguments (#4407).

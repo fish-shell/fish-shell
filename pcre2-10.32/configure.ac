@@ -57,6 +57,12 @@ then
   fi
 fi
 
+# FISH PATCH
+# Enable maintainer mode to avoid spurious rebuilds due to timestamps in git
+# not being stored. Discussion in https://github.com/fish-shell/fish-shell/issues/2469
+AM_MAINTAINER_MODE
+# END FISH PATCH
+
 # This is a new thing required to stop a warning from automake 1.12
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 

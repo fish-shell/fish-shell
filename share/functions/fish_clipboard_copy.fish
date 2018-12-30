@@ -10,5 +10,7 @@ function fish_clipboard_copy
         printf '%s\n' $cmdline | xsel --clipboard 2>/dev/null
     else if type -q xclip
         printf '%s\n' $cmdline | xclip -selection clipboard 2>/dev/null
+    else if type -q wl-copy
+        printf '%s\n' $cmdline | wl-copy
     end
 end

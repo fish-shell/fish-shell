@@ -65,6 +65,8 @@ public:
             default: arity = 0;
         }
 
+        parameters.reserve(arity);
+
         // We allow filling the parameters later.
         if (params) {
             for (int i = 0; i < arity; i++) parameters.push_back(params[i]);

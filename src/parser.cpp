@@ -108,7 +108,6 @@ parser_t::~parser_t() = default;
 static parser_t s_principal_parser;
 
 parser_t &parser_t::principal_parser() {
-    ASSERT_IS_NOT_FORKED_CHILD();
     ASSERT_IS_MAIN_THREAD();
     return s_principal_parser;
 }

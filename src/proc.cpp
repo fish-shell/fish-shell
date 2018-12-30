@@ -354,7 +354,12 @@ typedef unsigned int process_generation_count_t;
 static std::vector<pid_t> s_disowned_pids;
 
 void add_disowned_pgid(pid_t pgid) {
-    s_disowned_pids.push_back(pgid * -1);
+    // NEVER add our own pgid, or one of the special values,
+    // or waiting for it will
+    // snag other processes away.
+    if (pgid != getpgrp() && (pgid > 0 || pgid < -1)) {
+        s_disowned_pids.push_back(pgid * -1);
+    }
 }
 
 /// A static value tracking how many SIGCHLDs we have seen, which is used in a heurstic to

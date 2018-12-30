@@ -12,6 +12,7 @@
 - Added completions for:
  - nothing yet...
 - Lots of improvements to completions.
+- fish_clipboard_* now supports wayland by means of [wl-clipboard](https://github.com/bugaevc/wl-clipboard).
 
 ---
 

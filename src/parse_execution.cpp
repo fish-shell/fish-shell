@@ -773,7 +773,10 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
         bool have_bg = false;
         const job_t *bg = nullptr;
         while ((bg = jobs.next())) {
-            if (!bg->is_completed()) {
+            // The assumption here is that if it is a foreground job,
+            // it's related to us.
+            // This stops us from asking if we're doing `exec` inside a function.
+            if (!bg->is_completed() && !bg->is_foreground()) {
                 have_bg = true;
                 break;
             }

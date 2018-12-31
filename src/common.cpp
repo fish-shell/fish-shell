@@ -2177,6 +2177,15 @@ bool is_forked_child() {
 }
 
 void setup_fork_guards() {
+    static bool already_initialized = false;
+
+    is_forked_proc = false;
+    if (already_initialized) {
+        // Just mark this process as main and exit
+        return;
+    }
+
+    already_initialized = true;
     pthread_atfork(nullptr, nullptr, []() {
         is_forked_proc = true;
     });

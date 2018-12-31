@@ -480,15 +480,17 @@ static bool process_mark_finished_children(bool block_on_fg) {
                 assert((*process)->pid != INVALID_PID && "Waiting by process on an invalid PID!");
                 if ((*process)->completed) {
                     // This process has already been waited on to completion
+                    process++;
                     continue;
                 }
 
                 if ((options & WNOHANG) == 0) {
-                    debug(4, "Waiting on individual process %d", (*process)->pid);
+                    debug(4, "Waiting on individual process %d: %ls", (*process)->pid, (*process)->argv0());
                 } else {
                     debug(4, "waitpid with WNOHANG on individual process %d", (*process)->pid);
                 }
                 pid = waitpid((*process)->pid, &status, options);
+
                 process++;
             } else {
                 // A negative PID passed in to `waitpid()` means wait on any child in that process

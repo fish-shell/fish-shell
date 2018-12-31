@@ -12,7 +12,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include <list>
+#include <deque>
 #include <memory>
 #include <vector>
 
@@ -451,8 +451,8 @@ extern bool is_login;
 /// nesting level.
 extern int is_event;
 
-// List of jobs. We sometimes mutate this while iterating - hence it must be a list, not a vector
-typedef std::list<shared_ptr<job_t>> job_list_t;
+// List of jobs.
+typedef std::deque<shared_ptr<job_t>> job_list_t;
 
 bool job_list_is_empty(void);
 

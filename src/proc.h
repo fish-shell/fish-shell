@@ -304,27 +304,8 @@ typedef std::list<shared_ptr<job_t>> job_list_t;
 
 bool job_list_is_empty(void);
 
-/// A class to aid iteration over jobs list
-class job_iterator_t {
-    job_list_t *const job_list;
-    job_list_t::iterator current, end;
-
-   public:
-    void reset(void);
-
-    job_t *next() {
-        job_t *job = NULL;
-        if (current != end) {
-            job = current->get();
-            ++current;
-        }
-        return job;
-    }
-
-    explicit job_iterator_t(job_list_t &jobs);
-    job_iterator_t();
-    size_t count() const;
-};
+/// A helper function to more easily access the job list
+job_list_t &jobs();
 
 /// Whether a universal variable barrier roundtrip has already been made for the currently executing
 /// command. Such a roundtrip only needs to be done once on a given command, unless a universal

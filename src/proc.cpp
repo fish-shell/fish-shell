@@ -63,19 +63,10 @@ bool job_list_is_empty() {
     return parser_t::principal_parser().job_list().empty();
 }
 
-void job_iterator_t::reset() {
-    this->current = job_list->begin();
-    this->end = job_list->end();
-}
-
-job_iterator_t::job_iterator_t(job_list_t &jobs) : job_list(&jobs) { this->reset(); }
-
-job_iterator_t::job_iterator_t() : job_list(&parser_t::principal_parser().job_list()) {
+job_list_t& jobs() {
     ASSERT_IS_MAIN_THREAD();
-    this->reset();
+    return parser_t::principal_parser().job_list();
 }
-
-size_t job_iterator_t::count() const { return this->job_list->size(); }
 
 bool is_interactive_session = false;
 bool is_subshell = false;
@@ -117,12 +108,6 @@ static std::vector<int> interactive_stack;
 
 void proc_init() { proc_push_interactive(0); }
 
-/// Remove job from list of jobs.
-static int job_remove(job_t *j) {
-    ASSERT_IS_MAIN_THREAD();
-    return parser_t::principal_parser().job_remove(j);
-}
-
 void job_t::promote() {
     ASSERT_IS_MAIN_THREAD();
     parser_t::principal_parser().job_promote(this);
@@ -130,10 +115,9 @@ void job_t::promote() {
 
 void proc_destroy() {
     job_list_t &jobs = parser_t::principal_parser().job_list();
-    while (!jobs.empty()) {
-        job_t *job = jobs.front().get();
-        debug(2, L"freeing leaked job %ls", job->command_wcstr());
-        job_remove(job);
+    for (auto job = jobs.begin(); job != jobs.end();) {
+        debug(2, L"freeing leaked job %ls", (*job)->command_wcstr());
+        job = jobs.erase(job);
     }
 }
 
@@ -289,11 +273,9 @@ void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process
 /// \param pid the pid of the process whose status changes
 /// \param status the status as returned by wait
 static void handle_child_status(pid_t pid, int status) {
-    job_t *j = NULL;
     const process_t *found_proc = NULL;
 
-    job_iterator_t jobs;
-    while (!found_proc && (j = jobs.next())) {
+    for (auto j : jobs()) {
         process_t *prev = NULL;
         for (process_ptr_t &p : j->processes) {
             if (pid == p->pid) {
@@ -302,6 +284,9 @@ static void handle_child_status(pid_t pid, int status) {
                 break;
             }
             prev = p.get();
+        }
+        if (found_proc) {
+            break;
         }
     }
 
@@ -410,8 +395,7 @@ static bool process_mark_finished_children(bool block_on_fg) {
 
     // Reap only processes belonging to fully-constructed jobs to prevent reaping of processes
     // before others in the same process group have a chance to join their pgrp.
-    job_iterator_t jobs;
-    while (auto j = jobs.next()) {
+    for (auto j : jobs()) {
         // (A job can have pgrp INVALID_PID if it consists solely of builtins that perform no IO)
         if (j->pgid == INVALID_PID || !j->is_constructed()) {
             debug(5, "Skipping wait on incomplete job %d (%ls)", j->job_id, j->preview().c_str());
@@ -419,12 +403,12 @@ static bool process_mark_finished_children(bool block_on_fg) {
             continue;
         }
 
-        if (j != job_fg && j->is_foreground() && !j->is_stopped() && !j->is_completed()) {
+        if (j.get() != job_fg && j->is_foreground() && !j->is_stopped() && !j->is_completed()) {
             // Ensure that we don't have multiple fully constructed foreground jobs.
             assert((!job_fg || !job_fg->job_chain_is_fully_constructed() ||
                     !j->job_chain_is_fully_constructed()) &&
                    "More than one active, fully-constructed foreground job!");
-            job_fg = j;
+            job_fg = j.get();
         }
 
         // Whether we will wait for uncompleted processes depends on the combination of
@@ -443,7 +427,7 @@ static bool process_mark_finished_children(bool block_on_fg) {
         // wait on only one pgrp at a time and we need to check all pgrps before returning, but we
         // never wait/block on fg processes after an error has been encountered to give ourselves
         // (elsewhere) a chance to handle the fallout from process termination, etc.
-        if (!has_error && block_on_fg && j == job_fg) {
+        if (!has_error && block_on_fg && j.get() == job_fg) {
             debug(4, "Waiting on processes from foreground job %d", job_fg->pgid);
             options &= ~WNOHANG;
         }
@@ -606,7 +590,6 @@ void proc_fire_event(const wchar_t *msg, int type, pid_t pid, int status) {
 
 static bool process_clean_after_marking(bool allow_interactive) {
     ASSERT_IS_MAIN_THREAD();
-    job_t *jnext;
     bool found = false;
 
     // this function may fire an event handler, we do not want to call ourselves recursively (to
@@ -621,13 +604,10 @@ static bool process_clean_after_marking(bool allow_interactive) {
     // don't try to print in that case (#3222)
     const bool interactive = allow_interactive && cur_term != NULL;
 
-    job_iterator_t jobs;
-    const size_t job_count = jobs.count();
-    jnext = jobs.next();
-    while (jnext) {
-        job_t *j = jnext;
-        jnext = jobs.next();
-
+    bool erased = false;
+    const size_t job_count = jobs().size();
+    for (auto itr = jobs().begin(); itr != jobs().end(); itr = (erased ? itr : (std::advance(itr, 1), itr)), erased = false) {
+        job_t *j = itr->get();
         // If we are reaping only jobs who do not need status messages sent to the console, do not
         // consider reaping jobs that need status messages.
         if ((!j->get_flag(job_flag_t::SKIP_NOTIFICATION)) && (!interactive) &&
@@ -720,7 +700,8 @@ static bool process_clean_after_marking(bool allow_interactive) {
             }
             proc_fire_event(L"JOB_EXIT", EVENT_JOB_ID, j->job_id, 0);
 
-            job_remove(j);
+            itr = jobs().erase(itr);
+            erased = true;
         } else if (j->is_stopped() && !j->get_flag(job_flag_t::NOTIFIED)) {
             // Notify the user about newly stopped jobs.
             if (!j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
@@ -796,10 +777,7 @@ unsigned long proc_get_jiffies(process_t *p) {
 
 /// Update the CPU time for all jobs.
 void proc_update_jiffies() {
-    job_t *job;
-    job_iterator_t j;
-
-    for (job = j.next(); job; job = j.next()) {
+    for (auto job : jobs()) {
         for (process_ptr_t &p : job->processes) {
             gettimeofday(&p->last_time, 0);
             p->last_jiffies = proc_get_jiffies(p.get());
@@ -1194,8 +1172,7 @@ int proc_format_status(int status) {
 void proc_sanity_check() {
     const job_t *fg_job = NULL;
 
-    job_iterator_t jobs;
-    while (const job_t *j = jobs.next()) {
+    for (const auto j : jobs()) {
         if (!j->is_constructed()) continue;
 
         // More than one foreground job?
@@ -1205,7 +1182,7 @@ void proc_sanity_check() {
                       fg_job->command_wcstr(), j->command_wcstr());
                 sanity_lose();
             }
-            fg_job = j;
+            fg_job = j.get();
         }
 
         for (const process_ptr_t &p : j->processes) {
@@ -1255,9 +1232,7 @@ pid_t proc_wait_any() {
 }
 
 void hup_background_jobs() {
-    job_iterator_t jobs;
-
-    while (job_t *j = jobs.next()) {
+    for (auto j : jobs()) {
         // Make sure we don't try to SIGHUP the calling builtin
         if (j->pgid == INVALID_PID || !j->get_flag(job_flag_t::JOB_CONTROL)) {
             continue;

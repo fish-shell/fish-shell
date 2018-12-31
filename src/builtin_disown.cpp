@@ -31,13 +31,17 @@ static int disown_job(const wchar_t *cmd, parser_t &parser, io_streams_t &stream
         streams.err.append_format(fmt, cmd, j->job_id, j->command_wcstr());
     }
 
-    pid_t pgid = j->pgid;
-    if (!parser.job_remove(j)) {
-        return STATUS_CMD_ERROR;
+    for (auto itr = jobs().begin(); itr != jobs().end(); ++itr) {
+        auto job = itr->get();
+        if (job == j) {
+            pid_t pgid = j->pgid;
+            add_disowned_pgid(pgid);
+            jobs().erase(itr);
+            return STATUS_CMD_OK;
+        }
     }
 
-    add_disowned_pgid(pgid);
-    return STATUS_CMD_OK;
+    return STATUS_CMD_ERROR;
 }
 
 /// Builtin for removing jobs from the job list.
@@ -56,20 +60,20 @@ int builtin_disown(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (argv[1] == 0) {
-        job_t *j;
         // Select last constructed job (ie first job in the job queue) that is possible to disown.
         // Stopped jobs can be disowned (they will be continued).
         // Foreground jobs can be disowned.
         // Even jobs that aren't under job control can be disowned!
-        job_iterator_t jobs;
-        while ((j = jobs.next())) {
+        job_t *job = nullptr;
+        for (auto j : jobs()) {
             if (j->is_constructed() && (!j->is_completed())) {
+                job = j.get();
                 break;
             }
         }
 
-        if (j) {
-            retval = disown_job(cmd, parser, streams, j);
+        if (job) {
+            retval = disown_job(cmd, parser, streams, job);
         } else {
             streams.err.append_format(_(L"%ls: There are no suitable jobs\n"), cmd);
             retval = STATUS_CMD_ERROR;

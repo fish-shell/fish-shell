@@ -2272,8 +2272,7 @@ void reader_bg_job_warning() {
     fputws(_(L"There are still jobs active:\n"), stdout);
     fputws(_(L"\n   PID  Command\n"), stdout);
 
-    job_iterator_t jobs;
-    while (job_t *j = jobs.next()) {
+    for (auto j : jobs()) {
         if (!j->is_completed()) {
             fwprintf(stdout, L"%6d  %ls\n", j->processes[0]->pid, j->command_wcstr());
         }
@@ -2297,8 +2296,7 @@ static void handle_end_loop() {
         }
 
         bool bg_jobs = false;
-        job_iterator_t jobs;
-        while (const job_t *j = jobs.next()) {
+        for (const auto j : jobs()) {
             if (!j->is_completed()) {
                 bg_jobs = true;
                 break;

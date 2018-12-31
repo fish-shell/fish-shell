@@ -51,19 +51,19 @@ int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (optind == argc) {
         // No jobs were specified so use the most recent (i.e., last) job.
-        job_t *j;
-        job_iterator_t jobs;
-        while ((j = jobs.next())) {
+        job_t *job = nullptr;
+        for (auto j : jobs()) {
             if (j->is_stopped() && j->get_flag(job_flag_t::JOB_CONTROL) && (!j->is_completed())) {
+                job = j.get();
                 break;
             }
         }
 
-        if (!j) {
+        if (!job) {
             streams.err.append_format(_(L"%ls: There are no suitable jobs\n"), cmd);
             retval = STATUS_CMD_ERROR;
         } else {
-            retval = send_to_bg(parser, streams, j);
+            retval = send_to_bg(parser, streams, job);
         }
 
         return retval;

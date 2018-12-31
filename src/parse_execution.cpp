@@ -769,10 +769,8 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
     // Protect against exec with background processes running
     static uint32_t last_exec_run_counter =  -1;
     if (process_type == INTERNAL_EXEC) {
-        job_iterator_t jobs;
         bool have_bg = false;
-        const job_t *bg = nullptr;
-        while ((bg = jobs.next())) {
+        for (const auto bg : jobs()) {
             // The assumption here is that if it is a foreground job,
             // it's related to us.
             // This stops us from asking if we're doing `exec` inside a function.
@@ -1113,6 +1111,16 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
     return result;
 }
 
+static bool remove_job(job_t *job) {
+    for (auto j = jobs().begin(); j != jobs().end(); ++j) {
+        if (j->get() == job) {
+            jobs().erase(j);
+            return true;
+        }
+    }
+    return false;
+}
+
 parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_node,
                                                               const block_t *associated_block) {
     if (should_cancel_execution(associated_block)) {
@@ -1236,7 +1244,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
 
         // Actually execute the job.
         if (!exec_job(*this->parser, job)) {
-            parser->job_remove(job.get());
+            remove_job(job.get());
         }
 
         // Only external commands require a new fishd barrier.

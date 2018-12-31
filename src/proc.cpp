@@ -478,6 +478,11 @@ static bool process_mark_finished_children(bool block_on_fg) {
                     break;
                 }
                 assert((*process)->pid != INVALID_PID && "Waiting by process on an invalid PID!");
+                if ((*process)->completed) {
+                    // This process has already been waited on to completion
+                    continue;
+                }
+
                 if ((options & WNOHANG) == 0) {
                     debug(4, "Waiting on individual process %d", (*process)->pid);
                 } else {

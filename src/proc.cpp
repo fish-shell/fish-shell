@@ -114,11 +114,10 @@ void job_t::promote() {
 }
 
 void proc_destroy() {
-    job_list_t &jobs = parser_t::principal_parser().job_list();
-    for (auto job = jobs.begin(); job != jobs.end();) {
-        debug(2, L"freeing leaked job %ls", (*job)->command_wcstr());
-        job = jobs.erase(job);
+    for (const auto job : jobs()) {
+        debug(2, L"freeing leaked job %ls", job->command_wcstr());
     }
+    jobs().clear();
 }
 
 void proc_set_last_status(int s) {
@@ -616,12 +615,11 @@ static bool process_clean_after_marking(bool allow_interactive) {
         }
 
         for (const process_ptr_t &p : j->processes) {
-            int s;
-            if (!p->completed) continue;
+            if (!p->completed || !p->pid) {
+                continue;
+            }
 
-            if (!p->pid) continue;
-
-            s = p->status;
+            int s = p->status;
 
             // TODO: The generic process-exit event is useless and unused.
             // Remove this in future.

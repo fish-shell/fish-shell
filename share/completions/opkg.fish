@@ -1,24 +1,35 @@
 #completion for opkg
 
 function __fish_opkg_no_subcommand -d 'Test if opkg has yet to be given the subcommand'
-	for i in (commandline -opc)
-		if contains -- $i update upgrade install configure remove flag list list-installed list-upgradable list-changed-conffiles files search find info status download compare-versions print-architecture depends whatdepends whatdependsrec whatrecommends whatsuggests whatprovides whatconflicts whatreplaces
-			return 1
-		end
-	end
-	return 0
+    for i in (commandline -opc)
+        if contains -- $i update upgrade install configure remove flag list list-installed list-upgradable list-changed-conffiles files search find info status download compare-versions print-architecture depends whatdepends whatdependsrec whatrecommends whatsuggests whatprovides whatconflicts  whatreplaces
+            return 1
+        end
+    end
+    return 0
 end
 
 function __fish_opkg_use_package -d 'Test if opkg command should have packages as potential completion'
-	for i in (commandline -opc)
-		if contains -- $i contains upgrade install configure remove flag files search find info status download compare-versions print-architecture depends whatdepends whatdependsrec whatrecommends whatsuggests whatprovides whatconflicts whatreplaces
-			return 0
-		end
-	end
-	return 1
+    for i in (commandline -opc)
+        if contains -- $i contains install search find info status download compare-versions print-architecture depends whatdepends whatdependsrec whatrecommends whatsuggests whatprovides whatconflicts whatreplaces
+            return 0
+        end
+    end
+    return 1
+end
+
+function __fish_opkg_use_package_installed -d 'Test if opkg command should have installed packages as potential completion'
+    for i in (commandline -opc)
+        if contains -- $i contains upgrade configure remove flag files
+            return 0
+        end
+    end
+    return 1
 end
 
 complete -c opkg -n '__fish_opkg_use_package' -a '(__fish_print_packages)' -d 'Package'
+
+complete -c opkg -n '__fish_opkg_use_package_installed' -a '(__fish_print_packages --installed)' -d 'Package'
 
 complete -f -n '__fish_opkg_no_subcommand' -c opkg -a 'update' -d 'Update list of available packages'
 complete -f -n '__fish_opkg_no_subcommand' -c opkg -a 'upgrade' -d 'Upgrade packages'

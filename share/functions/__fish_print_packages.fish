@@ -221,7 +221,7 @@ function __fish_print_packages
     end
 
     if type -q -f opkg
-        if not set -q only_installed
+        if set -q only_installed
             opkg list-installed 2>/dev/null | sed -r 's/^([a-zA-Z0-9\-]+) - ([a-zA-Z0-9\-]+)/\1\t\2/g'
             return
         else

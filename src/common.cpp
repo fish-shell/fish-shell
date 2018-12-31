@@ -37,6 +37,7 @@
 #endif
 
 #include <algorithm>
+#include <atomic>
 #include <memory>  // IWYU pragma: keep
 #include <type_traits>
 
@@ -53,8 +54,7 @@ constexpr wint_t NOT_A_WCHAR = static_cast<wint_t>(WEOF);
 
 struct termios shell_modes;
 
-// Note we foolishly assume that pthread_t is just a primitive. But it might be a struct.
-static pthread_t main_thread_id = 0;
+static std::atomic<size_t> thread_id { 0 };
 static bool thread_asserts_cfg_for_testing = false;
 
 wchar_t ellipsis_char;
@@ -2162,7 +2162,11 @@ __attribute__((noinline)) void debug_thread_error(void) {
 }
 }
 
-void set_main_thread() { main_thread_id = pthread_self(); }
+void set_main_thread() {
+    // Just call is_main_thread() once to force increment of thread_id
+    // We store the result as `volatile` to guarantee the function call is not optimized away
+    volatile bool _x = is_main_thread();
+}
 
 void configure_thread_assertions_for_testing() { thread_asserts_cfg_for_testing = true; }
 
@@ -2198,8 +2202,8 @@ void restore_term_foreground_process_group() {
 }
 
 bool is_main_thread() {
-    assert(main_thread_id != 0);
-    return main_thread_id == pthread_self();
+    static thread_local int local_thread_id = thread_id++;
+    return local_thread_id == 0;
 }
 
 void assert_is_main_thread(const char *who) {

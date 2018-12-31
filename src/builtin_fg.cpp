@@ -33,20 +33,20 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_CMD_OK;
     }
 
-    job_t *j = NULL;
-
+    job_t *job = nullptr;
     if (optind == argc) {
         // Select last constructed job (I.e. first job in the job que) that is possible to put in
         // the foreground.
-        job_iterator_t jobs;
-        while ((j = jobs.next())) {
+
+        for (auto j : jobs()) {
             if (j->is_constructed() && (!j->is_completed()) &&
                 ((j->is_stopped() || (!j->is_foreground())) &&
                  j->get_flag(job_flag_t::JOB_CONTROL))) {
+                job = j.get();
                 break;
             }
         }
-        if (!j) {
+        if (!job) {
             streams.err.append_format(_(L"%ls: There are no suitable jobs\n"), cmd);
         }
     } else if (optind + 1 < argc) {
@@ -58,8 +58,8 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         pid = fish_wcstoi(argv[optind]);
         if (!(errno || pid < 0)) {
-            j = job_t::from_pid(pid);
-            if (j) found_job = true;
+            job = job_t::from_pid(pid);
+            if (job) found_job = true;
         }
 
         if (found_job) {
@@ -70,46 +70,46 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         builtin_print_error_trailer(parser, streams.err, cmd);
 
-        j = 0;
+        job = 0;
     } else {
         int pid = abs(fish_wcstoi(argv[optind]));
         if (errno) {
             streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, argv[optind]);
             builtin_print_error_trailer(parser, streams.err, cmd);
         } else {
-            j = job_t::from_pid(pid);
-            if (!j || !j->is_constructed() || j->is_completed()) {
+            job = job_t::from_pid(pid);
+            if (!job || !job->is_constructed() || job->is_completed()) {
                 streams.err.append_format(_(L"%ls: No suitable job: %d\n"), cmd, pid);
-                j = 0;
-            } else if (!j->get_flag(job_flag_t::JOB_CONTROL)) {
+                job = nullptr;
+            } else if (!job->get_flag(job_flag_t::JOB_CONTROL)) {
                 streams.err.append_format(_(L"%ls: Can't put job %d, '%ls' to foreground because "
                                             L"it is not under job control\n"),
-                                          cmd, pid, j->command_wcstr());
-                j = 0;
+                                          cmd, pid, job->command_wcstr());
+                job = 0;
             }
         }
     }
 
-    if (!j) {
+    if (!job) {
         return STATUS_INVALID_ARGS;
     }
 
     if (streams.err_is_redirected) {
-        streams.err.append_format(FG_MSG, j->job_id, j->command_wcstr());
+        streams.err.append_format(FG_MSG, job->job_id, job->command_wcstr());
     } else {
         // If we aren't redirecting, send output to real stderr, since stuff in sb_err won't get
         // printed until the command finishes.
-        std::fwprintf(stderr, FG_MSG, j->job_id, j->command_wcstr());
+        std::fwprintf(stderr, FG_MSG, job->job_id, job->command_wcstr());
     }
 
-    const wcstring ft = tok_first(j->command());
+    const wcstring ft = tok_first(job->command());
     //For compatibility with fish 2.0's $_, now replaced with `status current-command`
     if (!ft.empty()) parser.vars().set_one(L"_", ENV_EXPORT, ft);
-    reader_write_title(j->command());
+    reader_write_title(job->command());
 
-    j->promote();
-    j->set_flag(job_flag_t::FOREGROUND, true);
+    job->promote();
+    job->set_flag(job_flag_t::FOREGROUND, true);
 
-    j->continue_job(j->is_stopped());
+    job->continue_job(job->is_stopped());
     return STATUS_CMD_OK;
 }

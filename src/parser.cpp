@@ -570,19 +570,6 @@ void parser_t::job_add(shared_ptr<job_t> job) {
     this->my_job_list.push_front(std::move(job));
 }
 
-bool parser_t::job_remove(job_t *job) {
-    for (auto iter = my_job_list.begin(); iter != my_job_list.end(); ++iter) {
-        if (iter->get() == job) {
-            my_job_list.erase(iter);
-            return true;
-        }
-    }
-
-    debug(1, _(L"Job inconsistency"));
-    sanity_lose();
-    return false;
-}
-
 void parser_t::job_promote(job_t *job) {
     job_list_t::iterator loc;
     for (loc = my_job_list.begin(); loc != my_job_list.end(); ++loc) {
@@ -604,20 +591,17 @@ job_t *parser_t::job_get(job_id_t id) {
 }
 
 job_t *parser_t::job_get_from_pid(pid_t pid) const {
-    job_iterator_t jobs;
-    job_t *job;
-
     pid_t pgid = getpgid(pid);
 
     if (pgid == -1) {
         return 0;
     }
 
-    while ((job = jobs.next())) {
+    for (auto job : jobs()) {
         if (job->pgid == pgid) {
             for (const process_ptr_t &p : job->processes) {
                 if (p->pid == pid) {
-                    return job;
+                    return job.get();
                 }
             }
         }

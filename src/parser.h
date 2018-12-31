@@ -288,9 +288,6 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Return the function name for the specified stack frame. Default is one (current frame).
     const wchar_t *get_function_name(int level = 1);
 
-    /// Removes a job.
-    bool job_remove(job_t *job);
-
     /// Promotes a job to the front of the list.
     void job_promote(job_t *job);
 

@@ -107,10 +107,10 @@ void job_t::promote() {
 }
 
 void proc_destroy() {
-    for (auto job = jobs().begin(); job != jobs().end(); ++job) {
-        debug(2, L"freeing leaked job %ls", (*job)->command_wcstr());
-        job = jobs().erase(job);
+    for (const auto job : jobs()) {
+        debug(2, L"freeing leaked job %ls", job->command_wcstr());
     }
+    jobs().clear();
 }
 
 void proc_set_last_statuses(statuses_t s) {
@@ -485,12 +485,11 @@ static bool process_clean_after_marking(bool allow_interactive) {
         }
 
         for (const process_ptr_t &p : j->processes) {
-            if (!p->completed) continue;
-
-            if (!p->pid) continue;
+            if (!p->completed || !p->pid) {
+                continue;
+            }
 
             auto s = p->status;
-
             // TODO: The generic process-exit event is useless and unused.
             // Remove this in future.
             // Update: This event is used for cleaning up the psub temporary files and folders.

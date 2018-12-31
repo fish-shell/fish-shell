@@ -1231,7 +1231,7 @@ static void highlight_universal_internal(const wcstring &buffstr,
             wchar_t prev_q = 0;
             const wchar_t *const buff = buffstr.c_str();
             const wchar_t *str = buff;
-            int match_found = 0;
+            bool match_found = false;
 
             while (*str) {
                 switch (*str) {
@@ -1257,7 +1257,7 @@ static void highlight_universal_internal(const wcstring &buffstr,
                                         highlight_make_background(highlight_spec_match);
                                     color.at(pos2) |=
                                         highlight_make_background(highlight_spec_match);
-                                    match_found = 1;
+                                    match_found = true;
                                 }
                                 prev_q = *str == L'\"' ? L'\'' : L'\"';
                             } else {
@@ -1286,7 +1286,7 @@ static void highlight_universal_internal(const wcstring &buffstr,
             wchar_t dec_char = *(wcschr(L"()[]{}", c) + step);
             wchar_t inc_char = c;
             int level = 0;
-            int match_found = 0;
+            bool match_found = false;
             for (long i = pos; i >= 0 && (size_t)i < buffstr.size(); i += step) {
                 const wchar_t test_char = buffstr.at(i);
                 if (test_char == inc_char) level++;
@@ -1295,7 +1295,7 @@ static void highlight_universal_internal(const wcstring &buffstr,
                     long pos2 = i;
                     color.at(pos) |= highlight_spec_match << 16;
                     color.at(pos2) |= highlight_spec_match << 16;
-                    match_found = 1;
+                    match_found = true;
                     break;
                 }
             }

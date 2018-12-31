@@ -604,10 +604,10 @@ void proc_fire_event(const wchar_t *msg, int type, pid_t pid, int status) {
     event.arguments.resize(0);
 }
 
-static int process_clean_after_marking(bool allow_interactive) {
+static bool process_clean_after_marking(bool allow_interactive) {
     ASSERT_IS_MAIN_THREAD();
     job_t *jnext;
-    int found = 0;
+    bool found = false;
 
     // this function may fire an event handler, we do not want to call ourselves recursively (to
     // avoid infinite recursion).
@@ -697,7 +697,7 @@ static int process_clean_after_marking(bool allow_interactive) {
                 if (clr_eol) tputs(clr_eol, 1, &writeb);
                 fwprintf(stdout, L"\n");
             }
-            found = 1;
+            found = false;
             p->status = 0;  // clear status so it is not reported more than once
         }
 
@@ -707,7 +707,7 @@ static int process_clean_after_marking(bool allow_interactive) {
             if (!j->is_foreground() && !j->get_flag(job_flag_t::NOTIFIED) &&
                 !j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
                 format_job_info(j, JOB_ENDED);
-                found = 1;
+                found = true;
             }
             // TODO: The generic process-exit event is useless and unused.
             // Remove this in future.
@@ -725,7 +725,7 @@ static int process_clean_after_marking(bool allow_interactive) {
             // Notify the user about newly stopped jobs.
             if (!j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
                 format_job_info(j, JOB_STOPPED);
-                found = 1;
+                found = true;
             }
             j->set_flag(job_flag_t::NOTIFIED, true);
         }
@@ -738,9 +738,9 @@ static int process_clean_after_marking(bool allow_interactive) {
     return found;
 }
 
-int job_reap(bool allow_interactive) {
+bool job_reap(bool allow_interactive) {
     ASSERT_IS_MAIN_THREAD();
-    int found = 0;
+    bool found = false;
 
     process_mark_finished_children(false);
 

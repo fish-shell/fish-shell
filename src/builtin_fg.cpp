@@ -53,12 +53,12 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         // try to locate the job argv[1], since we want to know if this is an ambigous job
         // specification or if this is an malformed job id.
         int pid;
-        int found_job = 0;
+        bool found_job = false;
 
         pid = fish_wcstoi(argv[optind]);
         if (!(errno || pid < 0)) {
             j = job_t::from_pid(pid);
-            if (j) found_job = 1;
+            if (j) found_job = true;
         }
 
         if (found_job) {

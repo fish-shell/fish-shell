@@ -354,7 +354,7 @@ int proc_get_last_status();
 /// Notify the user about stopped or terminated jobs. Delete terminated jobs from the job list.
 ///
 /// \param interactive whether interactive jobs should be reaped as well
-int job_reap(bool interactive);
+bool job_reap(bool interactive);
 
 /// Signal handler for SIGCHLD. Mark any processes with relevant information.
 void job_handle_signal(int signal, siginfo_t *info, void *con);

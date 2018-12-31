@@ -59,19 +59,10 @@ bool job_list_is_empty() {
     return parser_t::principal_parser().job_list().empty();
 }
 
-void job_iterator_t::reset() {
-    this->current = job_list->begin();
-    this->end = job_list->end();
-}
-
-job_iterator_t::job_iterator_t(job_list_t &jobs) : job_list(&jobs) { this->reset(); }
-
-job_iterator_t::job_iterator_t() : job_list(&parser_t::principal_parser().job_list()) {
+job_list_t& jobs() {
     ASSERT_IS_MAIN_THREAD();
-    this->reset();
+    return parser_t::principal_parser().job_list();
 }
-
-size_t job_iterator_t::count() const { return this->job_list->size(); }
 
 bool is_interactive_session = false;
 bool is_subshell = false;
@@ -110,23 +101,15 @@ static std::vector<int> interactive_stack;
 
 void proc_init() { proc_push_interactive(0); }
 
-/// Remove job from list of jobs.
-static int job_remove(job_t *j) {
-    ASSERT_IS_MAIN_THREAD();
-    return parser_t::principal_parser().job_remove(j);
-}
-
 void job_t::promote() {
     ASSERT_IS_MAIN_THREAD();
     parser_t::principal_parser().job_promote(this);
 }
 
 void proc_destroy() {
-    job_list_t &jobs = parser_t::principal_parser().job_list();
-    while (!jobs.empty()) {
-        job_t *job = jobs.front().get();
-        debug(2, L"freeing leaked job %ls", job->command_wcstr());
-        job_remove(job);
+    for (auto job = jobs().begin(); job != jobs().end(); ++job) {
+        debug(2, L"freeing leaked job %ls", (*job)->command_wcstr());
+        job = jobs().erase(job);
     }
 }
 
@@ -364,8 +347,7 @@ static void process_mark_finished_children(bool block_ok) {
     topic_set_t reaptopics{};
     generation_list_t gens{};
     gens.fill(invalid_generation);
-    job_iterator_t jobs;
-    while (auto *j = jobs.next()) {
+    for (const auto j: jobs()) {
         for (const auto &proc : j->processes) {
             if (auto mtopic = j->reap_topic_for_process(proc.get())) {
                 topic_t topic = *mtopic;
@@ -390,8 +372,7 @@ static void process_mark_finished_children(bool block_ok) {
 
     // We got some changes. Since we last checked we received SIGCHLD, and or HUP/INT.
     // Update the hup/int generations and reap any reapable processes.
-    jobs.reset();
-    while (auto *j = jobs.next()) {
+    for (const auto j : jobs()) {
         for (const auto &proc : j->processes) {
             if (auto mtopic = j->reap_topic_for_process(proc.get())) {
                 // Update the signal hup/int gen.
@@ -484,7 +465,7 @@ static bool process_clean_after_marking(bool allow_interactive) {
     // avoid infinite recursion).
     static bool locked = false;
     if (locked) {
-        return 0;
+        return false;
     }
     locked = true;
 
@@ -492,9 +473,10 @@ static bool process_clean_after_marking(bool allow_interactive) {
     // don't try to print in that case (#3222)
     const bool interactive = allow_interactive && cur_term != NULL;
 
-    job_iterator_t jobs;
-    const bool only_one_job = jobs.count() == 1;
-    while (job_t *const j = jobs.next()) {
+    bool erased = false;
+    const bool only_one_job = jobs().size() == 1;
+    for (auto itr = jobs().begin(); itr != jobs().end(); itr = (erased ? itr : (std::advance(itr, 1), itr)), erased = false) {
+        job_t *j = itr->get();
         // If we are reaping only jobs who do not need status messages sent to the console, do not
         // consider reaping jobs that need status messages.
         if ((!j->get_flag(job_flag_t::SKIP_NOTIFICATION)) && (!interactive) &&
@@ -587,7 +569,8 @@ static bool process_clean_after_marking(bool allow_interactive) {
             }
             proc_fire_event(L"JOB_EXIT", event_type_t::job_exit, j->job_id, 0);
 
-            job_remove(j);
+            itr = jobs().erase(itr);
+            erased = true;
         } else if (j->is_stopped() && !j->get_flag(job_flag_t::NOTIFIED)) {
             // Notify the user about newly stopped jobs.
             if (!j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
@@ -663,10 +646,7 @@ unsigned long proc_get_jiffies(process_t *p) {
 
 /// Update the CPU time for all jobs.
 void proc_update_jiffies() {
-    job_t *job;
-    job_iterator_t j;
-
-    for (job = j.next(); job; job = j.next()) {
+    for (auto job : jobs()) {
         for (process_ptr_t &p : job->processes) {
             gettimeofday(&p->last_time, 0);
             p->last_jiffies = proc_get_jiffies(p.get());
@@ -901,8 +881,7 @@ void job_t::continue_job(bool send_sigcont) {
 void proc_sanity_check() {
     const job_t *fg_job = NULL;
 
-    job_iterator_t jobs;
-    while (const job_t *j = jobs.next()) {
+    for (const auto j : jobs()) {
         if (!j->is_constructed()) continue;
 
         // More than one foreground job?
@@ -912,7 +891,7 @@ void proc_sanity_check() {
                       fg_job->command_wcstr(), j->command_wcstr());
                 sanity_lose();
             }
-            fg_job = j;
+            fg_job = j.get();
         }
 
         for (const process_ptr_t &p : j->processes) {
@@ -959,9 +938,7 @@ void proc_wait_any() {
 }
 
 void hup_background_jobs() {
-    job_iterator_t jobs;
-
-    while (job_t *j = jobs.next()) {
+    for (auto j : jobs()) {
         // Make sure we don't try to SIGHUP the calling builtin
         if (j->pgid == INVALID_PID || !j->get_flag(job_flag_t::JOB_CONTROL)) {
             continue;

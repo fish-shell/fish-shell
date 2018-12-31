@@ -16,10 +16,7 @@
 /// If a specified process has already finished but the job hasn't, parser_t::job_get_from_pid()
 /// doesn't work properly, so use this function in wait command.
 static job_id_t get_job_id_from_pid(pid_t pid) {
-    job_t *j;
-    job_iterator_t jobs;
-
-    while ((j = jobs.next()) != nullptr) {
+    for (auto j : jobs()) {
         if (j->pgid == pid) {
             return j->job_id;
         }
@@ -34,8 +31,7 @@ static job_id_t get_job_id_from_pid(pid_t pid) {
 }
 
 static bool all_jobs_finished() {
-    job_iterator_t jobs;
-    while (job_t *j = jobs.next()) {
+    for (auto j : jobs()) {
         // If any job is not completed, return false.
         // If there are stopped jobs, they are ignored.
         if (j->is_constructed() && !j->is_completed() && !j->is_stopped()) {
@@ -46,14 +42,13 @@ static bool all_jobs_finished() {
 }
 
 static bool any_jobs_finished(size_t jobs_len) {
-    job_iterator_t jobs;
     bool no_jobs_running = true;
 
     // If any job is removed from list, return true.
-    if (jobs_len != jobs.count()) {
+    if (jobs_len != jobs().size()) {
         return true;
     }
-    while (job_t *j = jobs.next()) {
+    for (auto j : jobs()) {
         // If any job is completed, return true.
         if (j->is_constructed() && (j->is_completed() || j->is_stopped())) {
             return true;
@@ -70,8 +65,7 @@ static bool any_jobs_finished(size_t jobs_len) {
 }
 
 static int wait_for_backgrounds(bool any_flag) {
-    job_iterator_t jobs;
-    size_t jobs_len = jobs.count();
+    size_t jobs_len = jobs().size();
 
     while ((!any_flag && !all_jobs_finished()) || (any_flag && !any_jobs_finished(jobs_len))) {
         if (reader_test_interrupted()) {
@@ -143,10 +137,9 @@ static bool match_pid(const wcstring &cmd, const wchar_t *proc) {
 
 /// It should search the job list for something matching the given proc.
 static bool find_job_by_name(const wchar_t *proc, std::vector<job_id_t> &ids) {
-    job_iterator_t jobs;
     bool found = false;
 
-    while (const job_t *j = jobs.next()) {
+    for (const auto j : jobs()) {
         if (j->command_is_empty()) continue;
 
         if (match_pid(j->command(), proc)) {
@@ -179,7 +172,6 @@ static bool find_job_by_name(const wchar_t *proc, std::vector<job_id_t> &ids) {
 int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     ASSERT_IS_MAIN_THREAD();
     int retval = STATUS_CMD_OK;
-    job_iterator_t jobs;
     const wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     bool any_flag = false;  // flag for -n option

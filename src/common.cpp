@@ -70,8 +70,6 @@ const wchar_t *program_name;
 int debug_level = 1;         // default maximum debug output level (errors and warnings)
 int debug_stack_frames = 0;  // default number of stack frames to show on debug() calls
 
-/// This allows us to notice when we've forked.
-static pid_t initial_pid = 0;
 
 /// Be able to restore the term's foreground process group.
 /// This is set during startup and not modified after.
@@ -611,11 +609,11 @@ bool should_suppress_stderr_for_tests() {
 }
 
 static void debug_shared(const wchar_t level, const wcstring &msg) {
-    pid_t current_pid = getpid();
-
-    if (current_pid == initial_pid) {
+    pid_t current_pid;
+    if (!is_forked_child()) {
         fwprintf(stderr, L"<%lc> %ls: %ls\n", (unsigned long)level, program_name, msg.c_str());
     } else {
+        current_pid = getpid();
         fwprintf(stderr, L"<%lc> %ls: %d: %ls\n", (unsigned long)level, program_name, current_pid,
                  msg.c_str());
     }

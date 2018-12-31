@@ -54,7 +54,11 @@ constexpr wint_t NOT_A_WCHAR = static_cast<wint_t>(WEOF);
 
 struct termios shell_modes;
 
+/// This allows us to determine if we're running on the main thread
 static std::atomic<size_t> thread_id { 0 };
+/// This allows us to notice when we've forked.
+static bool is_forked_proc = false;
+/// This allows us to bypass the main thread checks
 static bool thread_asserts_cfg_for_testing = false;
 
 wchar_t ellipsis_char;
@@ -2171,20 +2175,13 @@ void set_main_thread() {
 void configure_thread_assertions_for_testing() { thread_asserts_cfg_for_testing = true; }
 
 bool is_forked_child() {
-    // Just bail if nobody's called setup_fork_guards, e.g. some of our tools.
-    if (!initial_pid) return false;
-
-    bool is_child_of_fork = (getpid() != initial_pid);
-    if (is_child_of_fork) {
-        debug(0, L"Uh-oh: getpid() != initial_pid: %d != %d\n", getpid(), initial_pid);
-        while (1) sleep(10000);
-    }
-    return is_child_of_fork;
+    return is_forked_proc;
 }
 
 void setup_fork_guards() {
-    // Notice when we fork by stashing our pid. This seems simpler than pthread_atfork().
-    initial_pid = getpid();
+    pthread_atfork(nullptr, nullptr, []() {
+        is_forked_proc = true;
+    });
 }
 
 void save_term_foreground_process_group() {

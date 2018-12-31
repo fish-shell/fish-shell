@@ -72,9 +72,9 @@ static owning_lock<thread_data_t> s_spawn_requests;
 static owning_lock<std::queue<spawn_request_t>> s_result_queue;
 
 // "Do on main thread" support.
-static fish_mutex_t s_main_thread_performer_lock;             // protects the main thread requests
+static std::mutex s_main_thread_performer_lock;               // protects the main thread requests
 static std::condition_variable s_main_thread_performer_cond;  // protects the main thread requests
-static fish_mutex_t s_main_thread_request_q_lock;             // protects the queue
+static std::mutex s_main_thread_request_q_lock;               // protects the queue
 static std::queue<main_thread_request_t *> s_main_thread_request_queue;
 
 // Notifying pipes.
@@ -332,7 +332,7 @@ void iothread_perform_on_main(void_function_t &&func) {
     assert_with_errno(write_loop(s_write_pipe, &wakeup_byte, sizeof wakeup_byte) != -1);
 
     // Wait on the condition, until we're done.
-    std::unique_lock<std::mutex> perform_lock(s_main_thread_performer_lock.get_mutex());
+    std::unique_lock<std::mutex> perform_lock(s_main_thread_performer_lock);
     while (!req.done) {
         // It would be nice to support checking for cancellation here, but the clients need a
         // deterministic way to clean up to avoid leaks

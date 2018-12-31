@@ -78,7 +78,7 @@ static pid_t initial_fg_process_group = -1;
 /// This struct maintains the current state of the terminal size. It is updated on demand after
 /// receiving a SIGWINCH. Do not touch this struct directly, it's managed with a rwlock. Use
 /// common_get_width()/common_get_height().
-static fish_mutex_t termsize_lock;
+static std::mutex termsize_lock;
 static struct winsize termsize = {USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX};
 static volatile bool termsize_valid = false;
 
@@ -2234,11 +2234,16 @@ void assert_is_background_thread(const char *who) {
     }
 }
 
-void fish_mutex_t::assert_is_locked(const char *who, const char *caller) const {
-    if (!is_locked_) {
+void assert_is_locked(void *vmutex, const char *who, const char *caller) {
+    std::mutex *mutex = static_cast<std::mutex *>(vmutex);
+
+    // Note that std::mutex.try_lock() is allowed to return false when the mutex isn't
+    // actually locked; fortunately we are checking the opposite so we're safe.
+    if (mutex->try_lock()) {
         debug(0, "%s is not locked when it should be in '%s'", who, caller);
         debug(0, "Break on debug_thread_error to debug.");
         debug_thread_error();
+        mutex->unlock();
     }
 }
 

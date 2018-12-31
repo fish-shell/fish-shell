@@ -1253,9 +1253,7 @@ bool completer_t::try_complete_user(const wcstring &str) {
     bool result = false;
     size_t name_len = str.length() - 1;
 
-    // We don't bother with the thread-safe `getpwent_r()` variant because this is the sole place
-    // where we call getpwent().
-    static fish_mutex_t lock;
+    static std::mutex lock;
     scoped_lock locker(lock);
     setpwent();
     // cppcheck-suppress getpwentCalled

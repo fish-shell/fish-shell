@@ -52,7 +52,7 @@ class env_universal_t {
     // fish wrote the uvars contents.
     bool ok_to_save{true};
 
-    mutable fish_mutex_t lock;
+    mutable std::mutex lock;
     bool load_from_path(const wcstring &path, callback_data_list_t &callbacks);
     void load_from_fd(int fd, callback_data_list_t &callbacks);
 

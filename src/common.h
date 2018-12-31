@@ -543,39 +543,10 @@ void assert_is_background_thread(const char *who);
 #define ASSERT_IS_BACKGROUND_THREAD_TRAMPOLINE(x) assert_is_background_thread(x)
 #define ASSERT_IS_BACKGROUND_THREAD() ASSERT_IS_BACKGROUND_THREAD_TRAMPOLINE(__FUNCTION__)
 
-// fish_mutex is a wrapper around std::mutex that tracks whether it is locked, allowing for checking
-// if the mutex is locked. It owns a boolean guarded by the lock that records whether the lock is
-// currently locked; this is only used by assertions for correctness.
-class fish_mutex_t {
-    std::mutex lock_{};
-    bool is_locked_{false};
-
-   public:
-    constexpr fish_mutex_t() = default;
-    ~fish_mutex_t() = default;
-
-    void lock() {
-        lock_.lock();
-        is_locked_ = true;
-    }
-
-    void unlock() {
-        is_locked_ = false;
-        lock_.unlock();
-    }
-
-    // assert that this lock (identified as 'who') is locked in the function 'caller'.
-    void assert_is_locked(const char *who, const char *caller) const;
-
-    // return the underlying std::mutex. Note the fish_mutex_t cannot track locks to the underlying
-    // mutex; do not use assert_is_locked() with this.
-    std::mutex &get_mutex() { return lock_; }
-};
-
 /// Useful macro for asserting that a lock is locked. This doesn't check whether this thread locked
 /// it, which it would be nice if it did, but here it is anyways.
-void assert_is_locked(const fish_mutex_t &m, const char *who, const char *caller);
-#define ASSERT_IS_LOCKED(x) (x).assert_is_locked(#x, __FUNCTION__)
+void assert_is_locked(void *mutex, const char *who, const char *caller);
+#define ASSERT_IS_LOCKED(x) assert_is_locked((void *)(&x), #x, __FUNCTION__)
 
 /// Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer.
 wcstring format_size(long long sz);
@@ -706,7 +677,7 @@ class null_terminated_array_t {
 // null_terminated_array_t<char_t>.
 void convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &arr,
                                   null_terminated_array_t<char> *output);
-typedef std::lock_guard<fish_mutex_t> scoped_lock;
+typedef std::lock_guard<std::mutex> scoped_lock;
 typedef std::lock_guard<std::recursive_mutex> scoped_rlock;
 
 // An object wrapping a scoped lock and a value
@@ -721,8 +692,8 @@ typedef std::lock_guard<std::recursive_mutex> scoped_rlock;
 //
 template <typename DATA>
 class acquired_lock {
-    std::unique_lock<fish_mutex_t> lock;
-    acquired_lock(fish_mutex_t &lk, DATA *v) : lock(lk), value(v) {}
+    std::unique_lock<std::mutex> lock;
+    acquired_lock(std::mutex &lk, DATA *v) : lock(lk), value(v) {}
 
     template <typename T>
     friend class owning_lock;
@@ -752,7 +723,7 @@ class owning_lock {
     owning_lock(owning_lock &&) = default;
     owning_lock &operator=(owning_lock &&) = default;
 
-    fish_mutex_t lock;
+    std::mutex lock;
     DATA data;
 
    public:

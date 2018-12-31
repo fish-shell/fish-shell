@@ -139,7 +139,7 @@ class env_node_t {
     bool contains_any_of(const wcstring_list_t &vars) const;
 };
 
-static fish_mutex_t env_lock;
+static std::mutex env_lock;
 
 static bool local_scope_exports(const env_node_t *n);
 

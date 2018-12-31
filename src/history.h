@@ -122,7 +122,7 @@ class history_t {
     void add(const history_item_t &item, bool pending = false);
 
     // Lock for thread safety.
-    fish_mutex_t lock;
+    std::mutex lock;
 
     // Internal function.
     void clear_file_state();

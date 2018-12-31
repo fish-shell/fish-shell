@@ -475,7 +475,7 @@ static bool process_clean_after_marking(bool allow_interactive) {
 
     bool erased = false;
     const bool only_one_job = jobs().size() == 1;
-    for (auto itr = jobs().begin(); itr != jobs().end(); itr = (erased ? itr : (std::advance(itr, 1), itr)), erased = false) {
+    for (auto itr = jobs().begin(); itr != jobs().end(); itr = erased ? itr : itr + 1, erased = false) {
         job_t *j = itr->get();
         // If we are reaping only jobs who do not need status messages sent to the console, do not
         // consider reaping jobs that need status messages.

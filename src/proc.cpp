@@ -451,7 +451,12 @@ static bool process_mark_finished_children(bool block_on_fg) {
         // If the pgid is 0, we need to wait by process because that's invalid.
         // This happens in firejail for reasons not entirely clear to me.
         bool wait_by_process = !j->job_chain_is_fully_constructed() || j->pgid == 0;
-        process_list_t::iterator process = j->processes.begin();
+        // When waiting on processes individually in a pipeline, we need to enumerate in reverse
+        // order so that the first process we actually wait on (i.e. ~WNOHANG) is the last process
+        // in the IO chain, because that's the one that controls the lifetime of the foreground job
+        // - as long as it is still running, we are in the background and once it exits or is
+        // killed, all previous jobs in the IO pipeline must necessarily terminate as well.
+        auto process = j->processes.rbegin();
         // waitpid(2) returns 1 process each time, we need to keep calling it until we've reaped all
         // children of the pgrp in question or else we can't reset the dirty_state flag. In all
         // cases, calling waitpid(2) is faster than potentially calling select_try() on a process
@@ -469,10 +474,15 @@ static bool process_mark_finished_children(bool block_on_fg) {
                 // parent job has been fully constructed), we need to call waitpid(2) on the
                 // individual processes of the child job instead of using a catch-all waitpid(2)
                 // call on the job's process group.
-                if (process == j->processes.end()) {
+                if (process == j->processes.rend()) {
                     break;
                 }
                 assert((*process)->pid != INVALID_PID && "Waiting by process on an invalid PID!");
+                if ((options & WNOHANG) == 0) {
+                    debug(4, "Waiting on individual process %d", (*process)->pid);
+                } else {
+                    debug(4, "waitpid with WNOHANG on individual process %d", (*process)->pid);
+                }
                 pid = waitpid((*process)->pid, &status, options);
                 process++;
             } else {
@@ -513,7 +523,7 @@ static bool process_mark_finished_children(bool block_on_fg) {
     }
 
     // Poll disowned processes/process groups, but do nothing with the result. Only used to avoid
-    // zombie processes. Entries have already be converted to negative for process groups.
+    // zombie processes. Entries have already been converted to negative for process groups.
     int status;
     s_disowned_pids.erase(std::remove_if(s_disowned_pids.begin(), s_disowned_pids.end(),
                 [&status](pid_t pid) { return waitpid(pid, &status, WNOHANG) > 0; }),

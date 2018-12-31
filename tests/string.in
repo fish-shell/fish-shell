@@ -90,6 +90,23 @@ string escape --style=var '_a_b_c_'
 logmsg 'string escape --style=var -- -'
 string escape --style=var -- -
 
+logmsg 'string escape with multibyte chars'
+string escape --style=url aöb
+string escape --style=url 中
+string escape --style=url aöb | string unescape --style=url
+string escape --style=url 中 | string unescape --style=url
+
+string escape --style=var aöb
+string escape --style=var 中
+string escape --style=var aöb | string unescape --style=var
+string escape --style=var 中 | string unescape --style=var
+
+# test regex escaping
+logmsg 'string escape for literal pcre2 searching'
+string escape --style=regex ".ext"
+string escape --style=regex "bonjour, amigo"
+string escape --style=regex "^this is a literal string"
+
 # The following tests verify that we can correctly unescape the same strings
 # we tested escaping above.
 
@@ -287,6 +304,10 @@ string match x abc dxf xyz jkx x z
 
 logmsg 'string match --entire -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz'
 string match --entire -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz
+or echo exit 1
+
+logmsg 'string match --entire "" -- banana'
+string match --entire "" -- banana
 or echo exit 1
 
 logmsg 'string match -r "a*b[xy]+" abc abxc bye aaabyz kaabxz abbxy abcx caabxyxz'

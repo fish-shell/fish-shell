@@ -169,7 +169,6 @@ enum parse_error_code_t {
     parse_error_tokenizer_unterminated_subshell,
     parse_error_tokenizer_unterminated_slice,
     parse_error_tokenizer_unterminated_escape,
-    parse_error_tokenizer_nested_slice,
     parse_error_tokenizer_other,
 
     parse_error_unbalancing_end,   // end outside of block

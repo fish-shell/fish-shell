@@ -59,12 +59,12 @@ std::shared_ptr<const function_properties_t> function_get_properties(const wcstr
 /// Returns by reference the definition of the function with the name \c name. Returns true if
 /// successful, false if no function with the given name exists.
 /// This does not trigger autoloading.
-bool function_get_definition(const wcstring &name, wcstring *out_definition);
+bool function_get_definition(const wcstring &name, wcstring &out_definition);
 
 /// Returns by reference the description of the function with the name \c name. Returns true if the
 /// function exists and has a nonempty description, false if it does not.
 /// This does not trigger autoloading.
-bool function_get_desc(const wcstring &name, wcstring *out_desc);
+bool function_get_desc(const wcstring &name, wcstring &out_desc);
 
 /// Sets the description of the function with the name \c name.
 void function_set_desc(const wcstring &name, const wcstring &desc);

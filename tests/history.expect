@@ -50,7 +50,7 @@ expect_prompt -re {start2\r\necho start1; builtin history; echo end1\r\nend2\r\n
 # ==========
 # Verify explicit searching for the first two commands in the previous tests
 # returns the expected results.
-send "history search --reverse 'echo start'\r"
+send "history search --reverse 'echo start' | cat\r"
 expect_prompt -re {\r\necho start1;.*\r\necho start2;} {
     puts "history function explicit search succeeded"
 } timeout {
@@ -87,14 +87,14 @@ expect_prompt
 send "echo hello AGAIN\r"
 expect_prompt
 
-send "history search --exact 'echo goodbye'\r"
+send "history search --exact 'echo goodbye' | cat\r"
 expect_prompt -re {\r\necho goodbye\r\n} {
     puts "history function explicit exact search 'echo goodbye' succeeded"
 } timeout {
     puts stderr "history function explicit exact search 'echo goodbye' failed"
 }
 
-send "history search --exact 'echo hello'\r"
+send "history search --exact 'echo hello' | cat\r"
 expect_prompt -re {\r\necho hello\r\n} {
     puts "history function explicit exact search 'echo hello' succeeded"
 } timeout {
@@ -103,15 +103,15 @@ expect_prompt -re {\r\necho hello\r\n} {
 
 # This is slightly subtle in that it shouldn't actually match anything between
 # the command we sent and the next prompt.
-send "history search --exact 'echo hell'\r"
-expect_prompt -re {history search --exact 'echo hell'\r\n} {
+send "history search --exact 'echo hell' | cat\r"
+expect_prompt -re {history search --exact 'echo hell' | cat\r\n} {
     puts "history function explicit exact search 'echo hell' succeeded"
 } timeout {
     puts stderr "history function explicit exact search 'echo hell' failed"
 }
 
 # Verify that glob searching works.
-send "history search --prefix 'echo start*echo end'\r"
+send "history search --prefix 'echo start*echo end' | cat\r"
 expect_prompt -re {echo start1; builtin history; echo end1\r\n} {
     puts "history function explicit glob search 'echo start*echo end' succeeded"
 } timeout {

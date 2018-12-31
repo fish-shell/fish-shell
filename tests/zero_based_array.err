@@ -1,0 +1,9 @@
+fish: array indices start at 1, not 0.
+echo $foo[0]
+          ^
+fish: array indices start at 1, not 0.
+echo $foo[ 0 ]
+           ^
+fish: array indices start at 1, not 0.
+echo $foo[ 00 ]
+           ^

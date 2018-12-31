@@ -37,7 +37,7 @@ struct function_cmd_opts_t {
 
 // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
 // This is needed due to the semantics of the -a/--argument-names flag.
-static const wchar_t *short_options = L"+:a:d:e:hj:p:s:v:w:SV:";
+static const wchar_t *const short_options = L"+:a:d:e:hj:p:s:v:w:SV:";
 static const struct woption long_options[] = {{L"description", required_argument, NULL, 'd'},
                                               {L"on-signal", required_argument, NULL, 's'},
                                               {L"on-job-exit", required_argument, NULL, 'j'},

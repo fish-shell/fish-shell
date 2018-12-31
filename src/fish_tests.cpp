@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <libgen.h>
 #include <limits.h>
+#include <math.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -151,7 +152,7 @@ static wcstring comma_join(const wcstring_list_t &lst) {
     return result;
 }
 
-static std::vector<const char *> pushed_dirs;
+static std::vector<std::string> pushed_dirs;
 
 /// Helper to chdir and then update $PWD.
 static bool pushd(const char *path) {
@@ -160,7 +161,7 @@ static bool pushd(const char *path) {
         err(L"getcwd() from pushd() failed: errno = %d", errno);
         return false;
     }
-    pushed_dirs.push_back(strdup(cwd));
+    pushed_dirs.push_back(cwd);
 
     // We might need to create the directory. We don't care if this fails due to the directory
     // already being present.
@@ -172,18 +173,17 @@ static bool pushd(const char *path) {
         return false;
     }
 
-    env_set_pwd();
+    env_set_pwd_from_getcwd();
     return true;
 }
 
 static void popd() {
-    const char *old_cwd = pushed_dirs.back();
-    if (chdir(old_cwd) == -1) {
-        err(L"chdir(\"%s\") from popd() failed: errno = %d", old_cwd, errno);
+    const std::string &old_cwd = pushed_dirs.back();
+    if (chdir(old_cwd.c_str()) == -1) {
+        err(L"chdir(\"%s\") from popd() failed: errno = %d", old_cwd.c_str(), errno);
     }
-    free((void *)old_cwd);
     pushed_dirs.pop_back();
-    env_set_pwd();
+    env_set_pwd_from_getcwd();
 }
 
 // The odd formulation of these macros is to avoid "multiple unary operator" warnings from oclint
@@ -575,7 +575,7 @@ static void test_tokenizer() {
         tokenizer_t t(L"abc\\", 0);
         do_test(t.next(&token));
         do_test(token.type == TOK_ERROR);
-        do_test(token.error == TOK_UNTERMINATED_ESCAPE);
+        do_test(token.error == tokenizer_error_t::unterminated_escape);
         do_test(token.error_offset == 3);
     }
 
@@ -584,7 +584,7 @@ static void test_tokenizer() {
         do_test(t.next(&token));
         do_test(t.next(&token));
         do_test(token.type == TOK_ERROR);
-        do_test(token.error == TOK_CLOSING_UNOPENED_SUBSHELL);
+        do_test(token.error == tokenizer_error_t::closing_unopened_subshell);
         do_test(token.error_offset == 4);
     }
 
@@ -593,7 +593,7 @@ static void test_tokenizer() {
         do_test(t.next(&token));
         do_test(t.next(&token));
         do_test(token.type == TOK_ERROR);
-        do_test(token.error == TOK_UNTERMINATED_SUBSHELL);
+        do_test(token.error == tokenizer_error_t::unterminated_subshell);
         do_test(token.error_offset == 4);
     }
 
@@ -602,7 +602,7 @@ static void test_tokenizer() {
         do_test(t.next(&token));
         do_test(t.next(&token));
         do_test(token.type == TOK_ERROR);
-        do_test(token.error == TOK_UNTERMINATED_SLICE);
+        do_test(token.error == tokenizer_error_t::unterminated_slice);
         do_test(token.error_offset == 4);
     }
 
@@ -1548,12 +1548,11 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
         if (arg) {
             wcstring msg = L"Expected [";
             bool first = true;
-            for (wcstring_list_t::const_iterator it = expected.begin(), end = expected.end();
-                 it != end; ++it) {
+            for (const wcstring &exp : expected) {
                 if (!first) msg += L", ";
                 first = false;
                 msg += '"';
-                msg += *it;
+                msg += exp;
                 msg += '"';
             }
             msg += L"], found [";
@@ -1725,10 +1724,32 @@ static void test_fuzzy_match() {
         err(L"test_fuzzy_match failed on line %ld", __LINE__);
     if (string_fuzzy_match_string(L"LPH", L"ALPHA!").type != fuzzy_match_substring)
         err(L"test_fuzzy_match failed on line %ld", __LINE__);
+    if (string_fuzzy_match_string(L"lPh", L"ALPHA!").type != fuzzy_match_substring_case_insensitive)
+        err(L"test_fuzzy_match failed on line %ld", __LINE__);
     if (string_fuzzy_match_string(L"AA", L"ALPHA!").type != fuzzy_match_subsequence_insertions_only)
         err(L"test_fuzzy_match failed on line %ld", __LINE__);
     if (string_fuzzy_match_string(L"BB", L"ALPHA!").type != fuzzy_match_none)
         err(L"test_fuzzy_match failed on line %ld", __LINE__);
+}
+
+static void test_ifind() {
+    say(L"Testing ifind");
+    do_test(ifind(std::string{"alpha"}, std::string{"alpha"}) == 0);
+    do_test(ifind(wcstring{L"alphab"}, wcstring{L"alpha"}) == 0);
+    do_test(ifind(std::string{"alpha"}, std::string{"balpha"}) == std::string::npos);
+    do_test(ifind(std::string{"balpha"}, std::string{"alpha"}) == 1);
+    do_test(ifind(std::string{"alphab"}, std::string{"balpha"}) == std::string::npos);
+    do_test(ifind(std::string{"balpha"}, std::string{"lPh"}) == 2);
+    do_test(ifind(std::string{"balpha"}, std::string{"Plh"}) == std::string::npos);
+}
+
+static void test_ifind_fuzzy() {
+    say(L"Testing ifind with fuzzy logic");
+    do_test(ifind(std::string{"alpha"}, std::string{"alpha"}, true) == 0);
+    do_test(ifind(wcstring{L"alphab"}, wcstring{L"alpha"}, true) == 0);
+    do_test(ifind(std::string{"alpha-b"}, std::string{"alpha_b"}, true) == 0);
+    do_test(ifind(std::string{"alpha-_"}, std::string{"alpha_-"}, true) == 0);
+    do_test(ifind(std::string{"alpha-b"}, std::string{"alpha b"}, true) == std::string::npos);
 }
 
 static void test_abbreviations() {
@@ -1736,10 +1757,12 @@ static void test_abbreviations() {
     env_push(true);
 
     const std::vector<std::pair<const wcstring, const wcstring>> abbreviations = {
-        {L"gc", L"git checkout"}, {L"foo", L"bar"}, {L"gx", L"git checkout"},
+        {L"gc", L"git checkout"},
+        {L"foo", L"bar"},
+        {L"gx", L"git checkout"},
     };
-    for (auto it : abbreviations) {
-        int ret = env_set_one(L"_fish_abbr_" + it.first, ENV_LOCAL, it.second);
+    for (const auto &kv : abbreviations) {
+        int ret = env_set_one(L"_fish_abbr_" + kv.first, ENV_LOCAL, kv.second);
         if (ret != 0) err(L"Unable to set abbreviation variable");
     }
 
@@ -2132,7 +2155,12 @@ static bool run_one_test_test(int expected, wcstring_list_t &lst, bool bracket) 
     argv[i + 1] = NULL;
     io_streams_t streams(0);
     int result = builtin_test(parser, streams, argv);
+
+    if (expected != result)
+        err(L"expected builtin_test() to return %d, got %d", expected, result);
+
     delete[] argv;
+
     return expected == result;
 }
 
@@ -2184,13 +2212,13 @@ static void test_test() {
     do_test(run_test_test(0, L"' 2' -eq 2"));
     do_test(run_test_test(0, L"'2 ' -eq 2"));
     do_test(run_test_test(0, L"' 2 ' -eq 2"));
-    do_test(run_test_test(1, L"' 2x' -eq 2"));
-    do_test(run_test_test(1, L"'' -eq 0"));
-    do_test(run_test_test(1, L"'' -ne 0"));
-    do_test(run_test_test(1, L"'  ' -eq 0"));
-    do_test(run_test_test(1, L"'  ' -ne 0"));
-    do_test(run_test_test(1, L"'x' -eq 0"));
-    do_test(run_test_test(1, L"'x' -ne 0"));
+    do_test(run_test_test(2, L"' 2x' -eq 2"));
+    do_test(run_test_test(2, L"'' -eq 0"));
+    do_test(run_test_test(2, L"'' -ne 0"));
+    do_test(run_test_test(2, L"'  ' -eq 0"));
+    do_test(run_test_test(2, L"'  ' -ne 0"));
+    do_test(run_test_test(2, L"'x' -eq 0"));
+    do_test(run_test_test(2, L"'x' -ne 0"));
     do_test(run_test_test(1, L"-1 -ne -1"));
     do_test(run_test_test(0, L"abc != def"));
     do_test(run_test_test(1, L"abc = def"));
@@ -2261,6 +2289,28 @@ static void test_test() {
     do_test(run_test_test(1, L"-4611686018427387904 -ge 4611686018427387904"));
     do_test(run_test_test(1, L"4611686018427387904 -gt 4611686018427387904"));
     do_test(run_test_test(0, L"4611686018427387904 -ge 4611686018427387904"));
+
+    // test out-of-range numbers
+    do_test(run_test_test(2, L"99999999999999999999999999 -ge 1"));
+    do_test(run_test_test(2, L"1 -eq -99999999999999999999999999.9"));
+}
+
+static void test_wcstod() {
+    say(L"Testing fish_wcstod");
+    auto tod_test = [](const wchar_t *a, const char *b) {
+        char *narrow_end = nullptr;
+        wchar_t *wide_end = nullptr;
+        double val1 = wcstod(a, &wide_end);
+        double val2 = strtod(b, &narrow_end);
+        do_test((isnan(val1) && isnan(val2)) || fabs(val1 - val2) <= __DBL_EPSILON__);
+        do_test(wide_end - a == narrow_end - b);
+    };
+    tod_test(L"", "");
+    tod_test(L"1.2", "1.2");
+    tod_test(L"1.5", "1.5");
+    tod_test(L"-1000", "-1000");
+    tod_test(L"0.12345", "0.12345");
+    tod_test(L"nope", "nope");
 }
 
 /// Testing colors.
@@ -2457,6 +2507,20 @@ static void test_complete() {
     popd();
     completions.clear();
     complete_set_variable_names(NULL);
+
+    // Test abbreviations.
+    function_data_t fd;
+    fd.name = L"testabbrsonetwothreefour";
+    function_add(fd, parser_t::principal_parser());
+    int ret = env_set_one(L"_fish_abbr_testabbrsonetwothreezero", ENV_LOCAL, L"expansion");
+    complete(L"testabbrsonetwothree", &completions, COMPLETION_REQUEST_DEFAULT);
+    do_test(ret == 0);
+    do_test(completions.size() == 2);
+    do_test(completions.at(0).completion == L"four");
+    do_test((completions.at(0).flags & COMPLETE_NO_SPACE) == 0);
+    // Abbreviations should not have a space after them.
+    do_test(completions.at(1).completion == L"zero");
+    do_test((completions.at(1).flags & COMPLETE_NO_SPACE) != 0);
 
     // Test wraps.
     do_test(comma_join(complete_get_wrap_targets(L"wrapper1")) == L"");
@@ -2782,6 +2846,22 @@ static void test_input() {
     }
 }
 
+static void test_line_iterator() {
+    say(L"Testing line iterator");
+
+    std::string text1 = "Alpha\nBeta\nGamma\n\nDelta\n";
+    std::vector<std::string> lines1;
+    line_iterator_t<std::string> iter1(text1);
+    while (iter1.next()) lines1.push_back(iter1.line());
+    do_test((lines1 == std::vector<std::string>{"Alpha", "Beta", "Gamma", "", "Delta"}));
+
+    wcstring text2 = L"\n\nAlpha\nBeta\nGamma\n\nDelta";
+    std::vector<wcstring> lines2;
+    line_iterator_t<wcstring> iter2(text2);
+    while (iter2.next()) lines2.push_back(iter2.line());
+    do_test((lines2 == std::vector<wcstring>{L"", L"", L"Alpha", L"Beta", L"Gamma", L"", L"Delta"}));
+}
+
 #define UVARS_PER_THREAD 8
 #define UVARS_TEST_PATH L"test/fish_uvars_test/varsfile.txt"
 
@@ -2791,7 +2871,7 @@ static int test_universal_helper(int x) {
     for (int j = 0; j < UVARS_PER_THREAD; j++) {
         const wcstring key = format_string(L"key_%d_%d", x, j);
         const wcstring val = format_string(L"val_%d_%d", x, j);
-        uvars.set(key, {val}, false);
+        uvars.set(key, env_var_t{val, 0});
         bool synced = uvars.sync(callbacks);
         if (!synced) {
             err(L"Failed to sync universal variables after modification");
@@ -2845,6 +2925,73 @@ static void test_universal() {
     (void)system("rm -Rf test/fish_uvars_test/");
 }
 
+static void test_universal_output() {
+    say(L"Testing universal variable output");
+
+    const env_var_t::env_var_flags_t flag_export = env_var_t::flag_export;
+    const env_var_t::env_var_flags_t flag_pathvar = env_var_t::flag_pathvar;
+
+    var_table_t vars;
+    vars[L"varA"] = env_var_t(wcstring_list_t{L"ValA1", L"ValA2"}, 0);
+    vars[L"varB"] = env_var_t(wcstring_list_t{L"ValB1"}, flag_export);
+    vars[L"varC"] = env_var_t(wcstring_list_t{L"ValC1"}, 0);
+    vars[L"varD"] = env_var_t(wcstring_list_t{L"ValD1"}, flag_export | flag_pathvar);
+    vars[L"varE"] = env_var_t(wcstring_list_t{L"ValE1", L"ValE2"}, flag_pathvar);
+
+    std::string text = env_universal_t::serialize_with_vars(vars);
+    const char *expected =
+        "# This file contains fish universal variable definitions.\n"
+        "# VERSION: 3.0\n"
+        "SETUVAR varA:ValA1\\x1eValA2\n"
+        "SETUVAR --export varB:ValB1\n"
+        "SETUVAR varC:ValC1\n"
+        "SETUVAR --export --path varD:ValD1\n"
+        "SETUVAR --path varE:ValE1\\x1eValE2\n";
+    do_test(text == expected);
+}
+
+static void test_universal_parsing() {
+    say(L"Testing universal variable parsing");
+    const char *input =
+        "# This file contains fish universal variable definitions.\n"
+        "# VERSION: 3.0\n"
+        "SETUVAR varA:ValA1\\x1eValA2\n"
+        "SETUVAR --export varB:ValB1\n"
+        "SETUVAR --nonsenseflag varC:ValC1\n"
+        "SETUVAR --export --path varD:ValD1\n"
+        "SETUVAR --path --path varE:ValE1\\x1eValE2\n";
+
+    const env_var_t::env_var_flags_t flag_export = env_var_t::flag_export;
+    const env_var_t::env_var_flags_t flag_pathvar = env_var_t::flag_pathvar;
+
+    var_table_t vars;
+    vars[L"varA"] = env_var_t(wcstring_list_t{L"ValA1", L"ValA2"}, 0);
+    vars[L"varB"] = env_var_t(wcstring_list_t{L"ValB1"}, flag_export);
+    vars[L"varC"] = env_var_t(wcstring_list_t{L"ValC1"}, 0);
+    vars[L"varD"] = env_var_t(wcstring_list_t{L"ValD1"}, flag_export | flag_pathvar);
+    vars[L"varE"] = env_var_t(wcstring_list_t{L"ValE1", L"ValE2"}, flag_pathvar);
+
+    var_table_t parsed_vars;
+    env_universal_t::populate_variables(input, &parsed_vars);
+    do_test(vars == parsed_vars);
+}
+
+static void test_universal_parsing_legacy() {
+    say(L"Testing universal variable legacy parsing");
+    const char *input =
+        "# This file contains fish universal variable definitions.\n"
+        "SET varA:ValA1\\x1eValA2\n"
+        "SET_EXPORT varB:ValB1\n";
+
+    var_table_t vars;
+    vars[L"varA"] = env_var_t(wcstring_list_t{L"ValA1", L"ValA2"}, 0);
+    vars[L"varB"] = env_var_t(wcstring_list_t{L"ValB1"}, env_var_t::flag_export);
+
+    var_table_t parsed_vars;
+    env_universal_t::populate_variables(input, &parsed_vars);
+    do_test(vars == parsed_vars);
+}
+
 static bool callback_data_less_than(const callback_data_t &a, const callback_data_t &b) {
     return a.key < b.key;
 }
@@ -2856,28 +3003,30 @@ static void test_universal_callbacks() {
     env_universal_t uvars1(UVARS_TEST_PATH);
     env_universal_t uvars2(UVARS_TEST_PATH);
 
+    env_var_t::env_var_flags_t noflags = 0;
+
     // Put some variables into both.
-    uvars1.set(L"alpha", {L"1"}, false);
-    uvars1.set(L"beta", {L"1"}, false);
-    uvars1.set(L"delta", {L"1"}, false);
-    uvars1.set(L"epsilon", {L"1"}, false);
-    uvars1.set(L"lambda", {L"1"}, false);
-    uvars1.set(L"kappa", {L"1"}, false);
-    uvars1.set(L"omicron", {L"1"}, false);
+    uvars1.set(L"alpha", env_var_t{L"1", noflags});
+    uvars1.set(L"beta", env_var_t{L"1", noflags});
+    uvars1.set(L"delta", env_var_t{L"1", noflags});
+    uvars1.set(L"epsilon", env_var_t{L"1", noflags});
+    uvars1.set(L"lambda", env_var_t{L"1", noflags});
+    uvars1.set(L"kappa", env_var_t{L"1", noflags});
+    uvars1.set(L"omicron", env_var_t{L"1", noflags});
 
     uvars1.sync(callbacks);
     uvars2.sync(callbacks);
 
     // Change uvars1.
-    uvars1.set(L"alpha", {L"2"}, false);    // changes value
-    uvars1.set(L"beta", {L"1"}, true);      // changes export
+    uvars1.set(L"alpha", env_var_t{L"2", noflags});                // changes value
+    uvars1.set(L"beta", env_var_t{L"1", env_var_t::flag_export});  // changes export
     uvars1.remove(L"delta");                // erases value
-    uvars1.set(L"epsilon", {L"1"}, false);  // changes nothing
+    uvars1.set(L"epsilon", env_var_t{L"1", noflags});  // changes nothing
     uvars1.sync(callbacks);
 
     // Change uvars2. It should treat its value as correct and ignore changes from uvars1.
-    uvars2.set(L"lambda", {L"1"}, false);  // same value
-    uvars2.set(L"kappa", {L"2"}, false);   // different value
+    uvars2.set(L"lambda", {L"1", noflags});  // same value
+    uvars2.set(L"kappa", {L"2", noflags});   // different value
 
     // Now see what uvars2 sees.
     callbacks.clear();
@@ -2888,15 +3037,61 @@ static void test_universal_callbacks() {
 
     // Should see exactly three changes.
     do_test(callbacks.size() == 3);
-    do_test(callbacks.at(0).type == SET);
     do_test(callbacks.at(0).key == L"alpha");
-    do_test(callbacks.at(0).val == L"2");
-    do_test(callbacks.at(1).type == SET_EXPORT);
+    do_test(callbacks.at(0).val == wcstring{L"2"});
     do_test(callbacks.at(1).key == L"beta");
-    do_test(callbacks.at(1).val == L"1");
-    do_test(callbacks.at(2).type == ERASE);
+    do_test(callbacks.at(1).val == wcstring{L"1"});
     do_test(callbacks.at(2).key == L"delta");
-    do_test(callbacks.at(2).val == L"");
+    do_test(callbacks.at(2).val == none());
+    (void)system("rm -Rf test/fish_uvars_test/");
+}
+
+static void test_universal_formats() {
+    say(L"Testing universal format detection");
+    const struct {
+        const char *str;
+        uvar_format_t format;
+    } tests[] = {
+        {"# VERSION: 3.0", uvar_format_t::fish_3_0},
+        {"# version: 3.0", uvar_format_t::fish_2_x},
+        {"# blah blahVERSION: 3.0", uvar_format_t::fish_2_x},
+        {"stuff\n# blah blahVERSION: 3.0", uvar_format_t::fish_2_x},
+        {"# blah\n# VERSION: 3.0", uvar_format_t::fish_3_0},
+        {"# blah\n#VERSION: 3.0", uvar_format_t::fish_3_0},
+        {"# blah\n#VERSION:3.0", uvar_format_t::fish_3_0},
+        {"# blah\n#VERSION:3.1", uvar_format_t::future},
+    };
+    for (const auto &test : tests) {
+        uvar_format_t format = env_universal_t::format_for_contents(test.str);
+        do_test(format == test.format);
+    }
+}
+
+static void test_universal_ok_to_save() {
+    // Ensure we don't try to save after reading from a newer fish.
+    say(L"Testing universal Ok to save");
+    if (system("mkdir -p test/fish_uvars_test/")) err(L"mkdir failed");
+    const char *contents = "# VERSION: 99999.99\n";
+    FILE *fp = wfopen(UVARS_TEST_PATH, "w");
+    assert(fp && "Failed to open UVARS_TEST_PATH for writing");
+    fwrite(contents, strlen(contents), 1, fp);
+    fclose(fp);
+
+    file_id_t before_id = file_id_for_path(UVARS_TEST_PATH);
+    do_test(before_id != kInvalidFileID && "UVARS_TEST_PATH should be readable");
+
+    callback_data_list_t cbs;
+    env_universal_t uvars(UVARS_TEST_PATH);
+    do_test(uvars.is_ok_to_save() && "Should be OK to save before sync");
+    uvars.sync(cbs);
+    cbs.clear();
+    do_test(!uvars.is_ok_to_save() && "Should no longer be OK to save");
+    uvars.set(L"SOMEVAR", env_var_t{wcstring{L"SOMEVALUE"}, 0});
+    uvars.sync(cbs);
+
+    // Ensure file is same.
+    file_id_t after_id = file_id_for_path(UVARS_TEST_PATH);
+    do_test(before_id == after_id && "UVARS_TEST_PATH should not have changed");
     (void)system("rm -Rf test/fish_uvars_test/");
 }
 
@@ -3455,9 +3650,9 @@ void history_tests_t::test_history_formats() {
         err(L"Couldn't open file tests/history_sample_bash");
     } else {
         // The results are in the reverse order that they appear in the bash history file.
-        // We don't expect whitespace to be elided.
+        // We don't expect whitespace to be elided (#4908: except for leading/trailing whitespace)
         const wchar_t *expected[] = {L"sleep 123",
-                                     L"    final line",
+                                     L"final line",
                                      L"echo supsup",
                                      L"export XVAR='exported'",
                                      L"history --help",
@@ -4048,7 +4243,8 @@ static void test_highlighting() {
         {L"cat", highlight_spec_command},
         {L"/dev/null", highlight_spec_param},
         {L"|", highlight_spec_statement_terminator},
-        {L"less", highlight_spec_command},
+        // This is bogus, but we used to use "less" here and that doesn't have to be installed.
+        {L"cat", highlight_spec_command},
         {L"2>", highlight_spec_redirection},
     });
 
@@ -4069,6 +4265,13 @@ static void test_highlighting() {
         {L"true", highlight_spec_command},
         {L";", highlight_spec_statement_terminator},
         {L"end", highlight_spec_command},
+    });
+
+    highlight_tests.push_back({
+        {L"echo", highlight_spec_command},
+        {L"%self", highlight_spec_operator},
+        {L"not%self", highlight_spec_param},
+        {L"self%not", highlight_spec_param},
     });
 
     // Verify variables and wildcards in commands using /bin/cat.
@@ -4156,6 +4359,33 @@ static void test_wcstring_tok() {
     }
 }
 
+static void test_pcre2_escape() {
+    say(L"Testing escaping strings as pcre2 literals");
+    // plain text should not be needlessly escaped
+    auto input = L"hello world!";
+    auto escaped = escape_string(input, 0, STRING_STYLE_REGEX);
+    if (escaped != input) {
+        err(L"Input string %ls unnecessarily PCRE2 escaped as %ls", input, escaped.c_str());
+    }
+
+    // all the following are intended to be ultimately matched literally - even if they don't look
+    // like that's the intent - so we escape them.
+    const wchar_t * tests[][2] = {
+        L".ext", L"\\.ext",
+        L"{word}", L"\\{word\\}",
+        L"hola-mundo", L"hola\\-mundo",
+        L"$17.42 is your total?", L"\\$17\\.42 is your total\\?",
+        L"not really escaped\\?", L"not really escaped\\\\\\?",
+    };
+
+    for (auto &test : tests) {
+        auto escaped = escape_string(test[0], 0, STRING_STYLE_REGEX);
+        if (escaped != test[1]) {
+            err(L"pcre2_escape error: pcre2_escape(%ls) -> %ls, expected %ls", test[0], escaped.c_str(), test[1]);
+        }
+    }
+}
+
 int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv);
 static void run_one_string_test(const wchar_t *const *argv, int expected_rc,
                                 const wchar_t *expected_out) {
@@ -4179,6 +4409,7 @@ static void run_one_string_test(const wchar_t *const *argv, int expected_rc,
 }
 
 static void test_string() {
+    say(L"Testing builtin_string");
     const struct string_test {
         const wchar_t *argv[15];
         int expected_rc;
@@ -4368,6 +4599,7 @@ static void test_string() {
         {{L"string", L"replace", L"-r", L"a", L"$1", L"a", 0}, STATUS_INVALID_ARGS, L""},
         {{L"string", L"replace", L"-r", L"(a)", L"$2", L"a", 0}, STATUS_INVALID_ARGS, L""},
         {{L"string", L"replace", L"-r", L"*", L".", L"a", 0}, STATUS_INVALID_ARGS, L""},
+        {{L"string", L"replace", L"-ra", L"x", L"\\c", 0}, STATUS_CMD_ERROR, L""},
         {{L"string", L"replace", L"-r", L"^(.)", L"\t$1", L"abc", L"x", 0},
          STATUS_CMD_OK,
          L"\tabc\n\tx\n"},
@@ -4462,6 +4694,7 @@ static void test_string() {
         {{L"string", L"trim", L"-c", L"\\/", L"a/"}, STATUS_CMD_OK, L"a\n"},
         {{L"string", L"trim", L"-c", L"\\/", L"\\a/"}, STATUS_CMD_OK, L"a\n"},
         {{L"string", L"trim", L"-c", L"", L".a."}, STATUS_CMD_ERROR, L".a.\n"}};
+
     for (const auto &t : string_tests) {
         run_one_string_test(t.argv, t.expected_rc, t.expected_out);
     }
@@ -4531,6 +4764,14 @@ static void test_timezone_env_vars() {
 static void test_env_vars() {
     test_timezone_env_vars();
     // TODO: Add tests for the locale and ncurses vars.
+
+    env_var_t v1 = {L"abc", env_var_t::flag_export};
+    env_var_t v2 = {wcstring_list_t{L"abc"}, env_var_t::flag_export};
+    env_var_t v3 = {wcstring_list_t{L"abc"}, 0};
+    env_var_t v4 = {wcstring_list_t{L"abc", L"def"}, env_var_t::flag_export};
+    do_test(v1 == v2 && ! (v1 != v2));
+    do_test(v1 != v3 && ! (v1 == v3));
+    do_test(v1 != v4 && ! (v1 == v4));
 }
 
 static void test_illegal_command_exit_code() {
@@ -4660,6 +4901,46 @@ void test_layout_cache() {
     do_test(seqs.find_prompt_layout(L"whatever")->line_count == 100);
 }
 
+void test_normalize_path() {
+    say(L"Testing path normalization");
+    do_test(normalize_path(L"") == L".");
+    do_test(normalize_path(L"..") == L"..");
+    do_test(normalize_path(L"./") == L".");
+    do_test(normalize_path(L"./.") == L".");
+    do_test(normalize_path(L"/") == L"/");
+    do_test(normalize_path(L"//") == L"//");
+    do_test(normalize_path(L"///") == L"/");
+    do_test(normalize_path(L"////") == L"/");
+    do_test(normalize_path(L"/.///") == L"/");
+    do_test(normalize_path(L".//") == L".");
+    do_test(normalize_path(L"/.//../") == L"/");
+    do_test(normalize_path(L"////abc") == L"/abc");
+    do_test(normalize_path(L"/abc") == L"/abc");
+    do_test(normalize_path(L"/abc/") == L"/abc");
+    do_test(normalize_path(L"/abc/..def/") == L"/abc/..def");
+    do_test(normalize_path(L"//abc/../def/") == L"//def");
+    do_test(normalize_path(L"abc/../abc/../abc/../abc") == L"abc");
+    do_test(normalize_path(L"../../") == L"../..");
+    do_test(normalize_path(L"foo/./bar") == L"foo/bar");
+    do_test(normalize_path(L"foo/../") == L".");
+    do_test(normalize_path(L"foo/../foo") == L"foo");
+    do_test(normalize_path(L"foo/../foo/") == L"foo");
+    do_test(normalize_path(L"foo/././bar/.././baz") == L"foo/baz");
+
+    do_test(path_normalize_for_cd(L"/", L"..") == L"/..");
+    do_test(path_normalize_for_cd(L"/abc/", L"..") == L"/");
+    do_test(path_normalize_for_cd(L"/abc/def/", L"..") == L"/abc");
+    do_test(path_normalize_for_cd(L"/abc/def/", L"../..") == L"/");
+    do_test(path_normalize_for_cd(L"/abc///def/", L"../..") == L"/");
+    do_test(path_normalize_for_cd(L"/abc///def/", L"../..") == L"/");
+    do_test(path_normalize_for_cd(L"/abc///def///", L"../..") == L"/");
+    do_test(path_normalize_for_cd(L"/abc///def///", L"..") == L"/abc");
+    do_test(path_normalize_for_cd(L"/abc///def///", L"..") == L"/abc");
+    do_test(path_normalize_for_cd(L"/abc/def/", L"./././/..") == L"/abc");
+    do_test(path_normalize_for_cd(L"/abc/def/", L"../../../") == L"/../");
+    do_test(path_normalize_for_cd(L"/abc/def/", L"../ghi/..") == L"/abc/ghi/..");
+}
+
 /// Main test.
 int main(int argc, char **argv) {
     UNUSED(argc);
@@ -4730,11 +5011,15 @@ int main(int argc, char **argv) {
     if (should_test_function("utf8")) test_utf8();
     if (should_test_function("feature_flags")) test_feature_flags();
     if (should_test_function("escape_sequences")) test_escape_sequences();
+    if (should_test_function("pcre2_escape")) test_pcre2_escape();
     if (should_test_function("lru")) test_lru();
     if (should_test_function("expand")) test_expand();
     if (should_test_function("fuzzy_match")) test_fuzzy_match();
+    if (should_test_function("ifind")) test_ifind();
+    if (should_test_function("ifind_fuzzy")) test_ifind_fuzzy();
     if (should_test_function("abbreviations")) test_abbreviations();
     if (should_test_function("test")) test_test();
+    if (should_test_function("wcstod")) test_wcstod();
     if (should_test_function("path")) test_path();
     if (should_test_function("pager_navigation")) test_pager_navigation();
     if (should_test_function("pager_layout")) test_pager_layout();
@@ -4743,8 +5028,14 @@ int main(int argc, char **argv) {
     if (should_test_function("colors")) test_colors();
     if (should_test_function("complete")) test_complete();
     if (should_test_function("input")) test_input();
+    if (should_test_function("line_iterator")) test_line_iterator();
     if (should_test_function("universal")) test_universal();
+    if (should_test_function("universal")) test_universal_output();
+    if (should_test_function("universal")) test_universal_parsing();
+    if (should_test_function("universal")) test_universal_parsing_legacy();
     if (should_test_function("universal")) test_universal_callbacks();
+    if (should_test_function("universal")) test_universal_formats();
+    if (should_test_function("universal")) test_universal_ok_to_save();
     if (should_test_function("notifiers")) test_universal_notifiers();
     if (should_test_function("completion_insertions")) test_completion_insertions();
     if (should_test_function("autosuggestion_ignores")) test_autosuggestion_ignores();
@@ -4752,12 +5043,16 @@ int main(int argc, char **argv) {
     if (should_test_function("autosuggest_suggest_special")) test_autosuggest_suggest_special();
     if (should_test_function("history")) history_tests_t::test_history();
     if (should_test_function("history_merge")) history_tests_t::test_history_merge();
-    if (should_test_function("history_races")) history_tests_t::test_history_races();
+    if (!is_windows_subsystem_for_linux()) {
+        // this test always fails under WSL
+        if (should_test_function("history_races")) history_tests_t::test_history_races();
+    }
     if (should_test_function("history_formats")) history_tests_t::test_history_formats();
     if (should_test_function("string")) test_string();
     if (should_test_function("illegal_command_exit_code")) test_illegal_command_exit_code();
     if (should_test_function("maybe")) test_maybe();
     if (should_test_function("layout_cache")) test_layout_cache();
+    if (should_test_function("normalize")) test_normalize_path();
     // history_tests_t::test_history_speed();
 
     say(L"Encountered %d errors in low-level tests", err_count);

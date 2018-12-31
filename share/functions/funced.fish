@@ -13,12 +13,17 @@ end
 
 function funced --description 'Edit function definition'
     set -l options 'h/help' 'e/editor=' 'i/interactive' 's/save'
-    argparse -n funced --min-args=1 --max-args=1 $options -- $argv
+    argparse -n funced --max-args=1 $options -- $argv
     or return
 
     if set -q _flag_help
         __fish_print_help funced
         return 0
+    end
+
+    if not set -q argv[1]
+        printf (_ "%ls: Expected at least %d args, got only %d\n") funced 1 0
+        return 1
     end
 
     set funcname $argv[1]
@@ -46,13 +51,11 @@ function funced --description 'Edit function definition'
     end
 
     # Break editor up to get its first command (i.e. discard flags)
-    if test -n "$editor"
-        set -l editor_cmd
-        eval set editor_cmd $editor
-        if not type -q -f "$editor_cmd[1]"
-            echo (_ "funced: The value for \$EDITOR '$editor' could not be used because the command '$editor_cmd[1]' could not be found")
-            set editor fish
-        end
+    set -l editor_cmd
+    eval set editor_cmd $editor
+    if not type -q -f "$editor_cmd[1]"
+        echo (_ "funced: The value for \$EDITOR '$editor' could not be used because the command '$editor_cmd[1]' could not be found")
+        set editor fish
     end
 
     if test "$editor" = fish
@@ -91,7 +94,7 @@ function funced --description 'Edit function definition'
     while true
         set -l checksum (__funced_md5 "$tmpname")
 
-        if not eval $editor $tmpname
+        if not $editor $tmpname
             echo (_ "Editing failed or was cancelled")
         else
             # Verify the checksum (if present) to detect potential problems

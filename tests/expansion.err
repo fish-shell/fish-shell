@@ -1,3 +1,6 @@
+
+####################
+# Slices
 fish: Invalid index value
 echo "$foo[d]"
            ^
@@ -9,6 +12,9 @@ echo ()[d]
         ^
 
 ####################
+# Percent self
+
+####################
 # Catch your breath
 fish: $) is not a valid variable in fish.
 echo $$paren
@@ -16,3 +22,6 @@ echo $$paren
 
 ####################
 # Test tilde expansion
+
+####################
+# Test path variables

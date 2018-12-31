@@ -235,9 +235,9 @@ ALIASES += "key{2}=<span class=\"key\"><em>\1</em><span>-</span><b>\2</b></span>
 ALIASES += "key{3}=<span class=\"key\"><em>\1</em><span>-</span><b>\2</b></span>"
 ALIASES += "cursor_key{2}=<span class=\"key\"><b>\1</b></span>"
 
-ALIASES += "fish=\htmlonly[block] \n<pre class=\"fish\">"
-ALIASES += "fish{1}=\htmlonly[block] \n<pre class=\"fish \1\">"
-ALIASES += "endfish=</pre>\endhtmlonly \n"
+ALIASES += "fish=\htmlonly[block] <pre class=\"fish\">"
+ALIASES += "fish{1}=\htmlonly[block] <pre class=\"fish \1\">"
+ALIASES += "endfish=</pre>\endhtmlonly "
 
 ALIASES += "asis{1}=\1"
 ALIASES += "outp{1}=<span class=\"output\">\1</span>"

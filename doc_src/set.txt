@@ -29,7 +29,7 @@ The following options control variable scope:
 
 - `-g` or `--global` causes the specified shell variable to be given a global scope. Non-global variables disappear when the block they belong to ends
 
-- `-U` or `--universal` causes the specified shell variable to be given a universal scope. If this option is supplied, the variable will be shared between all the current users fish instances on the current computer, and will be preserved across restarts of the shell.
+- `-U` or `--universal` causes the specified shell variable to be given a universal scope. If this option is supplied, the variable will be shared between all the current user's fish instances on the current computer, and will be preserved across restarts of the shell.
 
 - `-x` or `--export` causes the specified shell variable to be exported to child processes (making it an "environment variable")
 

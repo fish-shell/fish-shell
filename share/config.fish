@@ -12,7 +12,7 @@ or set -g __fish_added_user_paths
 # Create the default command_not_found handler
 #
 function __fish_default_command_not_found_handler
-    echo "fish: Unknown command '$argv'" >&2
+    printf "fish: Unknown command '%s'\n" (string escape -- $argv) >&2
 end
 
 if status --is-interactive
@@ -62,18 +62,6 @@ end
 # unless they already exist
 #
 
-set -l configdir ~/.config
-
-if set -q XDG_CONFIG_HOME
-    set configdir $XDG_CONFIG_HOME
-end
-
-set -l userdatadir ~/.local/share
-
-if set -q XDG_DATA_HOME
-    set userdatadir $XDG_DATA_HOME
-end
-
 # __fish_data_dir, __fish_sysconf_dir, __fish_help_dir, __fish_bin_dir
 # are expected to have been set up by read_init from fish.cpp
 
@@ -90,7 +78,7 @@ end
 # default functions/completions are included in the respective path.
 
 if not set -q fish_function_path
-    set fish_function_path $configdir/fish/functions $__fish_sysconf_dir/functions $__extra_functionsdir $__fish_data_dir/functions
+    set fish_function_path $__fish_config_dir/functions $__fish_sysconf_dir/functions $__extra_functionsdir $__fish_data_dir/functions
 end
 
 if not contains -- $__fish_data_dir/functions $fish_function_path
@@ -98,7 +86,7 @@ if not contains -- $__fish_data_dir/functions $fish_function_path
 end
 
 if not set -q fish_complete_path
-    set fish_complete_path $configdir/fish/completions $__fish_sysconf_dir/completions $__extra_completionsdir $__fish_data_dir/completions $userdatadir/fish/generated_completions
+    set fish_complete_path $__fish_config_dir/completions $__fish_sysconf_dir/completions $__extra_completionsdir $__fish_data_dir/completions $__fish_user_data_dir/generated_completions
 end
 
 if not contains -- $__fish_data_dir/completions $fish_complete_path
@@ -109,7 +97,7 @@ end
 function :
     # no-op function for compatibility with sh, bash, and others.
     # Often used to insert a comment into a chain of commands without having
-	# it eat up the remainder of the line, handy in Makefiles.
+    # it eat up the remainder of the line, handy in Makefiles.
 end
 
 #
@@ -294,7 +282,7 @@ end
 # As last part of initialization, source the conf directories.
 # Implement precedence (User > Admin > Extra (e.g. vendors) > Fish) by basically doing "basename".
 set -l sourcelist
-for file in $configdir/fish/conf.d/*.fish $__fish_sysconf_dir/conf.d/*.fish $__extra_confdir/*.fish
+for file in $__fish_config_dir/conf.d/*.fish $__fish_sysconf_dir/conf.d/*.fish $__extra_confdir/*.fish
     set -l basename (string replace -r '^.*/' '' -- $file)
     contains -- $basename $sourcelist
     and continue

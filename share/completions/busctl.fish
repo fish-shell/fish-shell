@@ -18,36 +18,76 @@ function __fish_busctl
     command busctl $mode $argv --no-legend --no-pager 2>/dev/null
 end
 
-# Only get the arguments to the actual command, skipping all options and arguments to options
-function __fish_busctl_get_command_args
-	set -l skip
-	set -l skip_next 0
-	set -l cmd (commandline -opc)
-	for token in $cmd
-		switch $token
-			# Options that take arguments - when given without "=", the next token is the arg - skip it
-			case '--address' '--match' '--expect-reply' '--auto-start' '--allow-interactive-authorization' \
-				'--timeout' '--augment-creds' '-H' '--host' '-M' '--machine'
-				set skip_next 1
-				continue
-			# Skip all options themselves
-			case '-*'
-				continue
-			# Command args only start after a command
-			case 'status' 'monitor' 'capture' 'tree' 'introspect' 'call' 'get-property' 'set-property'
-				set -e skip
-				continue
-			# These take no arguments, so abort completion
-			case 'list' 'help'
-				break
-			case '*'
-				if test "$skip_next" -eq 1; or set -q skip
-					set skip_next 0
-					continue
-				end
-				echo $token
-		end
-	end
+function _fish_busctl
+    set -l args a-address= s-show-machine u-unique A-acquired ä-activatable \
+    m-match= S-size= l-list q-quiet v-verbose e-expect-reply= Ä-auto-start= \
+    1-allow-interactive-authorization= t-timeout= 2-augment-creds= U-user 3-system \
+    H/host= M/machine= n-no-pager N-no-legend h/help V-version
+    set -l cmdline (commandline -opc) (commandline -ct)
+    set -e cmdline[1]
+    argparse $args -- $cmdline 2>/dev/null
+    or return
+    set -l cmd $argv[1]
+    set -e argv[1]
+    switch "$cmd"
+        case list help
+            # Accepts nothing
+            return
+        case status
+            # A service
+            if not set -q argv[2]
+                __fish_busctl_busnames
+            end
+        case monitor capture tree
+            # Services
+            __fish_busctl_busnames
+        case introspect
+            # Service Object Interface
+            if not set -q argv[2]
+                __fish_busctl_busnames
+            else if not set -q argv[3]
+                __fish_busctl_objects $argv[1]
+            else if not set -q argv[4]
+                __fish_busctl_interfaces $argv[1..2]
+            end
+        case call
+            # SERVICE OBJECT INTERFACE METHOD [SIGNATURE [ARGUMENT...]]
+            if not set -q argv[2]
+                __fish_busctl_busnames
+            else if not set -q argv[3]
+                __fish_busctl_objects $argv[1]
+            else if not set -q argv[4]
+                __fish_busctl_interfaces $argv[1..2]
+            else if not set -q argv[5]
+                __fish_busctl_members method $argv[1..3]
+            else if not set -q argv[6]
+                __fish_busctl_signature $argv[1..4]
+            end
+        case get-property
+            # SERVICE OBJECT INTERFACE PROPERTY...
+            if not set -q argv[2]
+                __fish_busctl_busnames
+            else if not set -q argv[3]
+                __fish_busctl_objects $argv[1]
+            else if not set -q argv[4]
+                __fish_busctl_interfaces $argv[1..2]
+            else
+                __fish_busctl_members property $argv[1..3]
+            end
+        case set-property
+            # SERVICE OBJECT INTERFACE PROPERTY SIGNATURE ARGUMENT...
+            if not set -q argv[2]
+                __fish_busctl_busnames
+            else if not set -q argv[3]
+                __fish_busctl_objects $argv[1]
+            else if not set -q argv[4]
+                __fish_busctl_interfaces $argv[1..2]
+            else if not set -q argv[5]
+                __fish_busctl_members property $argv[1..3]
+            else if not set -q argv[6]
+                __fish_busctl_members signature $argv[1..4]
+            end
+    end
 end
 
 function __fish_busctl_busnames
@@ -74,36 +114,6 @@ function __fish_busctl_signature -a busname -a object -a interface -a member
 	| string match ".$member *" | while read a b c d; echo $c; end
 end
 
-# This function completes service/busname, object, interface and then whatever the arguments are
-# i.e. if argv[1] is "method", complete methods in the fourth place
-function __fish_busctl_soi
-	set -l args (__fish_busctl_get_command_args)
-	set -l num (count $args)
-	switch $num
-		case 0 # We have nothing, need busname
-			__fish_busctl_busnames
-		case 1 # We have busname, need object
-			__fish_busctl_objects $args
-		case 2 # We have busname and object, need interface
-			__fish_busctl_interfaces $args
-		case '*' # We have busname and object and interface, what we need now depends on the command, so we get it as argument
-			if test $num -ge 4; and set -q argv[2] # Check >= 4 to repeat the last type for get-property
-				# Signatures have to be handled specially, because they're dependent on the member (method/property)
-				# that's at the beginning of the line and prefixed with a "."
-				# I.e. `busctl introspect` will print ".Capacity", but the argument to give to `get-property` is "Capacity"
-				if test "$argv[2]" = "signature"
-					__fish_busctl_signature $args
-				else
-					__fish_busctl_members $argv[2] $args
-				end
-			else if test $num -ge 3; and set -q argv[1]
-				__fish_busctl_members $argv[1] $args
-			else
-				return 1
-			end
-	end
-end
-
 ### Commands
 set -l commands list status monitor capture tree introspect call get-property set-property help
 
@@ -111,19 +121,7 @@ complete -f -e -c busctl
 complete -f -c busctl -n "not __fish_seen_subcommand_from $commands" -a "$commands"
 
 ### Arguments to commands
-# "status" only takes a single service as argument
-complete -f -c busctl -n "__fish_seen_subcommand_from status; and not count (__fish_busctl_get_command_args)" -a "(__fish_busctl_busnames)"
-
-# These take multiple services
-complete -x -c busctl -n "__fish_seen_subcommand_from monitor capture tree" -a "(__fish_busctl_busnames)"
-
-# Read the busctl_soi calls as "Complete service, then object, then interface and then the arguments
-# e.g. `call` takes service object interface method signature arguments
-# We can't complete the arguments (without parsing the signature, which can look like "a{sv}" for an array of string-to-variant dictionaries)
-complete -x -c busctl -n "__fish_seen_subcommand_from call" -a "(__fish_busctl_soi method signature)"
-complete -x -c busctl -n "__fish_seen_subcommand_from get-property" -a "(__fish_busctl_soi property)"
-complete -x -c busctl -n "__fish_seen_subcommand_from set-property" -a "(__fish_busctl_soi property signature)"
-complete -x -c busctl -n "__fish_seen_subcommand_from introspect" -a "(__fish_busctl_soi)"
+complete -f -c busctl -a '(_fish_busctl)'
 
 # Flags
 # These are incomplete as I have no idea how to complete --address= or --match=

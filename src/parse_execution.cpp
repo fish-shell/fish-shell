@@ -79,8 +79,9 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
     return result;
 }
 
-parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p)
-    : pstree(std::move(pstree)), parser(p) {}
+parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p,
+                                                     std::shared_ptr<job_t> parent)
+    : pstree(std::move(pstree)), parser(p), parent_job(std::move(parent)) {}
 
 // Utilities
 
@@ -207,7 +208,6 @@ bool parse_execution_context_t::job_is_simple_block(tnode_t<g::job> job_node) co
     // Check if we're a block statement with redirections. We do it this obnoxious way to preserve
     // type safety (in case we add more specific statement types).
     const parse_node_t &specific_statement = statement.get_child_node<0>();
-    tnode_t<g::arguments_or_redirections_list> args_and_redirs;
     switch (specific_statement.type) {
         case symbol_block_statement:
             return is_empty(statement.require_get_child<g::block_statement, 0>().child<3>());
@@ -528,6 +528,7 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
     tnode_t<g::andor_job_list> condition_boolean_tail = header.child<3>();
 
     // Run while the condition is true.
+    bool loop_executed = false;
     for (;;) {
         // Check the condition.
         parse_execution_result_t cond_ret =
@@ -546,6 +547,8 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
             ret = parse_execution_cancelled;
             break;
         }
+
+        loop_executed = true;
 
         // Push a while block and then check its cancellation reason.
         while_block_t *wb = parser->push_block<while_block_t>();
@@ -569,6 +572,11 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
             break;
         }
     }
+
+    if (loop_executed) {
+        proc_set_last_status(STATUS_CMD_OK);
+    }
+
     return ret;
 }
 
@@ -765,7 +773,10 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
         bool have_bg = false;
         const job_t *bg = nullptr;
         while ((bg = jobs.next())) {
-            if (!job_is_completed(bg)) {
+            // The assumption here is that if it is a foreground job,
+            // it's related to us.
+            // This stops us from asking if we're doing `exec` inside a function.
+            if (!bg->is_completed() && !bg->is_foreground()) {
                 have_bg = true;
                 break;
             }
@@ -779,7 +790,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
                 return parse_execution_errored;
             }
             else {
-                kill_background_jobs();
+                hup_background_jobs();
             }
         }
     }
@@ -801,7 +812,8 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
                 !args.try_get_child<g::redirection, 0>()) {
                 // Ok, no arguments or redirections; check to see if the command is a directory.
                 wcstring implicit_cd_path;
-                use_implicit_cd = path_can_be_implicit_cd(cmd, &implicit_cd_path);
+                use_implicit_cd =
+                    path_can_be_implicit_cd(cmd, env_get_pwd_slash(), &implicit_cd_path);
             }
         }
 
@@ -968,7 +980,7 @@ bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redir
 
 parse_execution_result_t parse_execution_context_t::populate_not_process(
     job_t *job, process_t *proc, tnode_t<g::not_statement> not_statement) {
-    job->set_flag(JOB_NEGATE, !job->get_flag(JOB_NEGATE));
+    job->set_flag(job_flag_t::NEGATE, !job->get_flag(job_flag_t::NEGATE));
     return this->populate_job_process(job, proc,
                                       not_statement.require_get_child<g::statement, 1>());
 }
@@ -1175,17 +1187,17 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
         return result;
     }
 
-    shared_ptr<job_t> job = std::make_shared<job_t>(acquire_job_id(), block_io);
+    shared_ptr<job_t> job = std::make_shared<job_t>(acquire_job_id(), block_io, parent_job);
     job->tmodes = tmodes;
-    job->set_flag(JOB_CONTROL,
+    job->set_flag(job_flag_t::JOB_CONTROL,
                   (job_control_mode == JOB_CONTROL_ALL) ||
                       ((job_control_mode == JOB_CONTROL_INTERACTIVE) && shell_is_interactive()));
 
-    job->set_flag(JOB_FOREGROUND, !job_node_is_background(job_node));
+    job->set_flag(job_flag_t::FOREGROUND, !job_node_is_background(job_node));
 
-    job->set_flag(JOB_TERMINAL, job->get_flag(JOB_CONTROL) && !is_event);
+    job->set_flag(job_flag_t::TERMINAL, job->get_flag(job_flag_t::JOB_CONTROL) && !is_event);
 
-    job->set_flag(JOB_SKIP_NOTIFICATION,
+    job->set_flag(job_flag_t::SKIP_NOTIFICATION,
                   is_subshell || is_block || is_event || !shell_is_interactive());
 
     // Tell the current block what its job is. This has to happen before we populate it (#1394).
@@ -1223,7 +1235,9 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
         }
 
         // Actually execute the job.
-        exec_job(*this->parser, job.get());
+        if (!exec_job(*this->parser, job)) {
+            parser->job_remove(job.get());
+        }
 
         // Only external commands require a new fishd barrier.
         if (job_contained_external_command) {
@@ -1240,7 +1254,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
         profile_item->skipped = !populated_job;
     }
 
-    job_reap(0);  // clean up jobs
+    job_reap(false);  // clean up jobs
     return parse_execution_success;
 }
 
@@ -1379,7 +1393,7 @@ int parse_execution_context_t::line_offset_of_character_at_offset(size_t offset)
     const wchar_t *str = pstree->src.c_str();
     if (offset > cached_lineno_offset) {
         size_t i;
-        for (i = cached_lineno_offset; str[i] != L'\0' && i < offset; i++) {
+        for (i = cached_lineno_offset; i < offset && str[i] != L'\0'; i++) {
             // Add one for every newline we find in the range [cached_lineno_offset, offset).
             if (str[i] == L'\n') {
                 cached_lineno_count++;

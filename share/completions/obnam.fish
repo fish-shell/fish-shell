@@ -37,7 +37,7 @@ complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a 'verify' -
 complete -c obnam --no-files -l always-restore-setuid -d 'Restore setuid/setgid bits in restored files'
 complete -c obnam --no-files -l no-always-restore-setuid -d 'Do not restore setuid/setgid bits in restored files'
 complete -c obnam --no-files -l checksum-algorithm -a 'sha512 sha224 sha256 sha384' -d 'Use CHECKSUM algorithm'
-complete -c obnam --no-files -l client-name -a '(hostname)' -d 'Name of client'
+complete -c obnam --no-files -l client-name -a '$hostname' -d 'Name of client'
 complete -c obnam --no-files -l compress-with -a 'none deflate' -d 'Compress repository with'
 complete -c obnam --no-files -l critical-age -d 'For --nagios-last-backup-age: maximum age'
 complete -c obnam --no-files -l dump-repo-file-metadata -d 'Dump metadata about files'

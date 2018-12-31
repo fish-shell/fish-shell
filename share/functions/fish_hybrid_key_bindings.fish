@@ -1,5 +1,5 @@
 function fish_hybrid_key_bindings --description "Vi-style bindings that inherit emacs-style bindings in all modes"
-    bind --erase --all # clear earlier bindings, if any
+    bind --erase --all --preset # clear earlier bindings, if any
 
     if test "$fish_key_bindings" != "fish_hybrid_key_bindings"
         # Allow the user to set the variable universally

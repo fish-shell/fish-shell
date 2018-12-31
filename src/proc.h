@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "common.h"
+#include "enum_set.h"
 #include "io.h"
 #include "parse_tree.h"
 #include "tnode.h"
@@ -139,23 +140,23 @@ typedef std::unique_ptr<process_t> process_ptr_t;
 typedef std::vector<process_ptr_t> process_list_t;
 
 /// Constants for the flag variable in the job struct.
-enum job_flag_t {
+enum class job_flag_t {
     /// Whether the user has been told about stopped job.
-    JOB_NOTIFIED = 1 << 0,
+    NOTIFIED,
     /// Whether this job is in the foreground.
-    JOB_FOREGROUND = 1 << 1,
+    FOREGROUND,
     /// Whether the specified job is completely constructed, i.e. completely parsed, and every
     /// process in the job has been forked, etc.
-    JOB_CONSTRUCTED = 1 << 2,
+    CONSTRUCTED,
     /// Whether the specified job is a part of a subshell, event handler or some other form of
     /// special job that should not be reported.
-    JOB_SKIP_NOTIFICATION = 1 << 3,
+    SKIP_NOTIFICATION,
     /// Whether the exit status should be negated. This flag can only be set by the not builtin.
-    JOB_NEGATE = 1 << 4,
-    /// Whether the job is under job control.
-    JOB_CONTROL = 1 << 5,
+    NEGATE,
+    /// Whether the job is under job control, i.e. has its own pgrp.
+    JOB_CONTROL,
     /// Whether the job wants to own the terminal when in the foreground.
-    JOB_TERMINAL = 1 << 6
+    TERMINAL,
 };
 
 typedef int job_id_t;
@@ -172,12 +173,16 @@ class job_t {
     // The IO chain associated with the block.
     const io_chain_t block_io;
 
+    // The parent job. If we were created as a nested job due to execution of a block or function in
+    // a pipeline, then this refers to the job corresponding to that pipeline. Otherwise it is null.
+    const std::shared_ptr<job_t> parent_job;
+
     // No copying.
     job_t(const job_t &rhs) = delete;
     void operator=(const job_t &) = delete;
 
    public:
-    job_t(job_id_t jobid, io_chain_t bio);
+    job_t(job_id_t jobid, io_chain_t bio, std::shared_ptr<job_t> parent);
     ~job_t();
 
     /// Returns whether the command is empty.
@@ -191,6 +196,20 @@ class job_t {
 
     /// Sets the command.
     void set_command(const wcstring &cmd) { command_str = cmd; }
+
+    /// Returns a truncated version of the job string. Used when a message has already been emitted
+    /// containing the full job string and job id, but using the job id alone would be confusing
+    /// due to reuse of freed job ids. Prevents overloading the debug comments with the full,
+    /// untruncated job string when we don't care what the job is, only which of the currently
+    /// running jobs it is.
+    wcstring preview() const {
+        if (processes.empty())
+            return L"";
+        // Note argv0 may be empty in e.g. a block process.
+        const wchar_t *argv0 = processes.front()->argv0();
+        wcstring result = argv0 ? argv0 : L"null";
+        return result + L" ...";
+    }
 
     /// All the processes in this job.
     process_list_t processes;
@@ -206,7 +225,7 @@ class job_t {
     /// this shell, and is used e.g. in process expansion.
     const job_id_t job_id;
     /// Bitset containing information about the job. A combination of the JOB_* constants.
-    unsigned int flags;
+    enum_set_t<job_flag_t> flags;
 
     // Get and set flags
     bool get_flag(job_flag_t flag) const;
@@ -218,6 +237,44 @@ class job_t {
 
     /// Fetch all the IO redirections associated with the job.
     io_chain_t all_io_redirections() const;
+
+    // Helper functions to check presence of flags on instances of jobs
+    /// The job has been fully constructed, i.e. all its member processes have been launched
+    bool is_constructed() const { return get_flag(job_flag_t::CONSTRUCTED); };
+    /// The job was launched in the foreground and has control of the terminal
+    bool is_foreground() const { return get_flag(job_flag_t::FOREGROUND); };
+    /// The job is complete, i.e. all its member processes have been reaped
+    bool is_completed() const;
+    /// The job is in a stopped state
+    bool is_stopped() const;
+
+    /// \return the parent job, or nullptr.
+    const std::shared_ptr<job_t> get_parent() const { return parent_job; }
+
+    /// \return whether this job and its parent chain are fully constructed.
+    bool job_chain_is_fully_constructed() const;
+
+    // (This function would just be called `continue` but that's obviously a reserved keyword)
+    /// Resume a (possibly) stopped job. Puts job in the foreground.  If cont is true, restore the
+    /// saved terminal modes and send the process group a SIGCONT signal to wake it up before we
+    /// block.
+    ///
+    /// \param send_sigcont Whether SIGCONT should be sent to the job if it is in the foreground.
+    void continue_job(bool send_sigcont);
+
+    /// Promotes the job to the front of the job list.
+    void promote();
+
+    /// Send the specified signal to all processes in this job.
+    /// \return true on success, false on failure.
+    bool signal(int signal);
+
+    /// Return the job instance matching this unique job id.
+    /// If id is 0 or less, return the last job used.
+    static job_t *from_job_id(job_id_t id);
+
+    /// Return the job containing the process identified by the unique pid provided.
+    static job_t *from_pid(pid_t pid);
 };
 
 /// Whether we are reading from the keyboard right now.
@@ -278,9 +335,6 @@ class job_iterator_t {
 bool get_proc_had_barrier();
 void set_proc_had_barrier(bool flag);
 
-/// Pid of last process started in the background.
-extern pid_t proc_last_bg_pid;
-
 /// The current job control mode.
 ///
 /// Must be one of JOB_CONTROL_ALL, JOB_CONTROL_INTERACTIVE and JOB_CONTROL_NONE.
@@ -297,41 +351,16 @@ void proc_set_last_status(int s);
 /// Returns the status of the last process to exit.
 int proc_get_last_status();
 
-/// Promotes a job to the front of the job list.
-void job_promote(job_t *job);
-
-/// Return the job with the specified job id. If id is 0 or less, return the last job used.
-job_t *job_get(job_id_t id);
-
-/// Return the job with the specified pid.
-job_t *job_get_from_pid(int pid);
-
-/// Tests if the job is stopped.
-int job_is_stopped(const job_t *j);
-
-/// Tests if the job has completed, i.e. if the last process of the pipeline has ended.
-bool job_is_completed(const job_t *j);
-
-/// Reassume a (possibly) stopped job. Put job j in the foreground.  If cont is true, restore the
-/// saved terminal modes and send the process group a SIGCONT signal to wake it up before we block.
-///
-/// \param j The job
-/// \param cont Whether the function should wait for the job to complete before returning
-void job_continue(job_t *j, bool cont);
-
 /// Notify the user about stopped or terminated jobs. Delete terminated jobs from the job list.
 ///
 /// \param interactive whether interactive jobs should be reaped as well
-int job_reap(bool interactive);
+bool job_reap(bool interactive);
 
 /// Signal handler for SIGCHLD. Mark any processes with relevant information.
 void job_handle_signal(int signal, siginfo_t *info, void *con);
 
-/// Send the specified signal to all processes in the specified job.
-int job_signal(job_t *j, int signal);
-
 /// Mark a process as failed to execute (and therefore completed).
-void job_mark_process_as_failed(job_t *job, const process_t *p);
+void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *p);
 
 #ifdef HAVE__PROC_SELF_STAT
 /// Use the procfs filesystem to look up how many jiffies of cpu time was used by this process. This
@@ -370,10 +399,28 @@ int proc_format_status(int status);
 /// Wait for any process finishing.
 pid_t proc_wait_any();
 
-#endif
+/// Terminate all background jobs
+void hup_background_jobs();
 
-bool terminal_give_to_job(const job_t *j, bool cont);
+/// Give ownership of the terminal to the specified job.
+///
+/// \param j The job to give the terminal to.
+/// \param restore_attrs If this variable is set, we are giving back control to a job that was previously
+/// stopped. In that case, we need to set the terminal attributes to those saved in the job.
+bool terminal_give_to_job(const job_t *j, bool restore_attrs);
 
 /// Given that we are about to run a builtin, acquire the terminal if it is owned by the given job.
 /// Returns the pid to restore after running the builtin, or -1 if there is no pid to restore.
 pid_t terminal_acquire_before_builtin(int job_pgid);
+
+/// Add a pid to the list of pids we wait on even though they are not associated with any jobs.
+/// Used to avoid zombie processes after disown.
+void add_disowned_pgid(pid_t pgid);
+
+/// 0 should not be used; although it is not a valid PGID in userspace,
+///   the Linux kernel will use it for kernel processes.
+/// -1 should not be used; it is a possible return value of the getpgid()
+///   function
+enum { INVALID_PID  = -2 };
+
+#endif

@@ -7,7 +7,7 @@ complete -c cargo -l list -d 'List installed commands'
 complete -c cargo -s v -l verbose -d 'Use verbose output'
 complete -c cargo -s q -l quiet -d 'No output printed to stdout'
 
-set __fish_cargo_subcommands (cargo --list | tail -n +2 | tr -d " ")
+set __fish_cargo_subcommands (cargo --list | tail -n +2 | string trim | string replace -r '\s+' '\t')
 
 complete -c cargo -f -c cargo -n '__fish_use_subcommand' -a '$__fish_cargo_subcommands'
 complete -c cargo -x -c cargo -n '__fish_seen_subcommand_from help' -a '$__fish_cargo_subcommands'

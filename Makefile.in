@@ -71,7 +71,7 @@ extra_confdir = @extra_confdir@
 # pcre2
 #
 PCRE2_WIDTH = @WCHAR_T_BITS@
-PCRE2_DIR = pcre2-10.22
+PCRE2_DIR = pcre2-10.32
 PCRE2_LIBDIR = $(PCRE2_DIR)/.libs
 PCRE2_LIB = $(PCRE2_LIBDIR)/libpcre2-$(PCRE2_WIDTH).a
 PCRE2_H = $(PCRE2_DIR)/src/pcre2.h
@@ -612,6 +612,8 @@ install-force: all install-translations install-doc | show-datadir show-sysconfd
 	@echo "Creating sysconfdir tree"
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish/conf.d
+	$v $(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish/completions
+	$v $(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish/functions
 	$v $(INSTALL) -m 644 etc/config.fish $(DESTDIR)$(sysconfdir)/fish/
 	@echo "Creating datadir tree"
 	$v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish
@@ -741,10 +743,6 @@ install-doc: $(user_doc)
 obj/%.o: src/%.cpp | show-CXX show-CXXFLAGS show-CPPFLAGS obj
 	@echo "  CXX      $(em)$@$(sgr0)"
 	$v $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
-
-obj/tinyexpr.o: src/tinyexpr.c | obj
-	@echo "  CC       $(em)$@$(sqr0)"
-	$v $(CC) $(CFLAGS) -c $< -o $@
 
 #
 # obj directory

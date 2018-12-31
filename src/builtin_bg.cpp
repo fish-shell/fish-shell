@@ -18,7 +18,7 @@
 /// Helper function for builtin_bg().
 static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j) {
     assert(j != NULL);
-    if (!j->get_flag(JOB_CONTROL)) {
+    if (!j->get_flag(job_flag_t::JOB_CONTROL)) {
         streams.err.append_format(
             _(L"%ls: Can't put job %d, '%ls' to background because it is not under job control\n"),
             L"bg", j->job_id, j->command_wcstr());
@@ -28,9 +28,9 @@ static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j) {
 
     streams.err.append_format(_(L"Send job %d '%ls' to background\n"), j->job_id,
                               j->command_wcstr());
-    job_promote(j);
-    j->set_flag(JOB_FOREGROUND, false);
-    job_continue(j, job_is_stopped(j));
+    j->promote();
+    j->set_flag(job_flag_t::FOREGROUND, false);
+    j->continue_job(j->is_stopped());
     return STATUS_CMD_OK;
 }
 
@@ -54,7 +54,7 @@ int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         job_t *j;
         job_iterator_t jobs;
         while ((j = jobs.next())) {
-            if (job_is_stopped(j) && j->get_flag(JOB_CONTROL) && (!job_is_completed(j))) {
+            if (j->is_stopped() && j->get_flag(job_flag_t::JOB_CONTROL) && (!j->is_completed())) {
                 break;
             }
         }
@@ -89,7 +89,7 @@ int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Background all existing jobs that match the pids.
     // Non-existent jobs aren't an error, but information about them is useful.
     for (auto p : pids) {
-        if (job_t *j = job_get_from_pid(p)) {
+        if (job_t *j = job_t::from_pid(p)) {
             retval |= send_to_bg(parser, streams, j);
         } else {
             streams.err.append_format(_(L"%ls: Could not find job '%d'\n"), cmd, p);

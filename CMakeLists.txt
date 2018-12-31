@@ -21,6 +21,16 @@ IF(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     SET(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}")
 ENDIF()
 
+# Force colored warnings in Ninja's output, if the compiler has -fdiagnostics-color support.
+# Rationale in https://github.com/ninja-build/ninja/issues/814
+if (CMAKE_GENERATOR STREQUAL "Ninja" AND
+    ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9) OR
+     (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.5) OR
+     (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)))
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fdiagnostics-color=always")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=always")
+endif()
+
 # Disable exception handling.
 ADD_COMPILE_OPTIONS(-fno-exceptions)
 
@@ -65,7 +75,7 @@ SET(FISH_SRCS
     src/parse_execution.cpp src/parse_productions.cpp src/parse_tree.cpp
     src/parse_util.cpp src/parser.cpp src/parser_keywords.cpp src/path.cpp
     src/postfork.cpp src/proc.cpp src/reader.cpp src/sanity.cpp src/screen.cpp
-    src/signal.cpp src/tnode.cpp src/tokenizer.cpp src/utf8.cpp src/util.cpp
+    src/signal.cpp src/tinyexpr.cpp src/tnode.cpp src/tokenizer.cpp src/utf8.cpp src/util.cpp
     src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp src/wutil.cpp
     src/future_feature_flags.cpp
 )
@@ -94,6 +104,10 @@ ADD_DEFINITIONS(-D_UNICODE=1
 # This defines the FBVF variable.
 INCLUDE(Version)
 
+# Let fish pick up when we're running out of the build directory without installing
+ADD_DEFINITIONS(-DCMAKE_BINARY_DIR="${CMAKE_BINARY_DIR}")
+ADD_DEFINITIONS(-DCMAKE_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+
 # Teach fish_version.o to rebuild when FBVF changes.
 # The standard C++ include detection machinery misses this.
 SET_SOURCE_FILES_PROPERTIES(src/fish_version.cpp
@@ -115,10 +129,8 @@ INCLUDE(cmake/Docs.cmake)
 
 # Define a function to link dependencies.
 FUNCTION(FISH_LINK_DEPS target)
-  TARGET_LINK_LIBRARIES(${target} fishlib tinyexpr)
+  TARGET_LINK_LIBRARIES(${target} fishlib)
 ENDFUNCTION(FISH_LINK_DEPS)
-
-ADD_LIBRARY(tinyexpr STATIC src/tinyexpr.c src/tinyexpr.h)
 
 # Define libfish.a.
 ADD_LIBRARY(fishlib STATIC ${FISH_SRCS})

@@ -1,47 +1,7 @@
-function __fish_complete_proc --description 'Complete by list of running processes'
-    # Our function runs ps, followed by a massive list of commands passed to sed
-    set -l ps_cmd
-    set -l sed_cmds
-    if test (uname) = Linux
-        # comm and ucomm return a truncated name, so parse it from the command line field,
-        # which means we have to trim off the arguments.
-        # Unfortunately, it doesn't seem to escape spaces - so we can't distinguish
-        # between the command name, and the first argument. Still, processes with spaces
-        # in the name seem more common on OS X than on Linux, so prefer to parse out the
-        # command line rather than using the stat data.
-        # If the command line is unavailable, you get the stat data in brackets - so
-        # parse out brackets too.
-        set ps_opt -A -o command
-
-        # Erase everything after the first space
-        set -a sed_cmds 's/ .*//'
-
-        # Erases weird stuff Linux gives like kworker/0:0
-        set -a sed_cmds 's|/[0-9]:[0-9]]$||g'
-
-        # Retain the last path component only
-        set -a sed_cmds 's|.*/||g'
-
-        # Strip off square brackets. Cute, huh?
-        set -a sed_cmds 's/[][]//g'
-
-        # Erase things that are just numbers
-        set -a sed_cmds 's/^[0-9]*$//'
-    else
-        # OS X, BSD. Preserve leading spaces.
-        set ps_opt axc -o comm
-
-        # Delete parenthesized (zombie) processes
-        set -a sed_cmds '/(.*)/d'
-    end
-
-    # Append sed command to delete first line (the header)
-    set -a sed_cmds '1d'
-
-    # Append sed commands to delete leading dashes and trailing spaces
-    # In principle, commands may have trailing spaces, but ps emits space padding on OS X
-    set -a sed_cmds 's/^-//' 's/ *$//'
-
-    # Run ps, pipe it through our massive set of sed commands, then sort and unique
-    ps $ps_opt | sed '-e '$sed_cmds | sort -u
+function __fish_complete_proc
+    # "comm=" means "print comm field with an empty name", which causes the header to be removed.
+    # On many systems, comm is truncated (e.g. on Linux it's 15 chars),
+    # but that's okay since commands that accept them as argument also only use those (e.g. pgrep).
+    # String removes zombies (ones in parentheses) and padding (macOS adds some apparently).
+    ps -axc -o comm= | string match -rv '\(.*\)' | string trim
 end

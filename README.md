@@ -66,7 +66,7 @@ Once installed, run `fish` from your current shell to try fish out!
 Running fish requires:
 
 * curses or ncurses (preinstalled on most \*nix systems)
-* some common \*nix system utilities (currently `mktemp` and `seq`), in addition to the basic posix utilities
+* some common \*nix system utilities (currently `mktemp` and `seq`), in addition to the basic POSIX utilities
 * gettext (library and `gettext` command), if compiled with translation support
 
 The following optional features also have specific requirements:
@@ -114,7 +114,7 @@ Additionally, if compiling fish with GNU Make from git (that is, not from an off
 
 ```bash
 mkdir build; cd build
-cmake .. #  add -DCMAKE_BUILD_TYPE=Release for release build
+cmake ..
 make
 sudo make install
 ```
@@ -161,4 +161,4 @@ See the [Guide for Developers](CONTRIBUTING.md).
 
 Questions, comments, rants and raves can be posted to the official fish mailing list at <https://lists.sourceforge.net/lists/listinfo/fish-users> or join us on our [gitter.im channel](https://gitter.im/fish-shell/fish-shell) or IRC channel [#fish at irc.oftc.net](https://webchat.oftc.net/?channels=fish). Or use the [fish tag on Stackoverflow](https://stackoverflow.com/questions/tagged/fish) for questions related to fish script and the [fish tag on Superuser](https://superuser.com/questions/tagged/fish) for all other questions (e.g., customizing colors, changing key bindings).
 
-Found a bug? Have an awesome idea? Please open an issue on this github page.
+Found a bug? Have an awesome idea? Please [open an issue](https://github.com/fish-shell/fish-shell/issues/new).

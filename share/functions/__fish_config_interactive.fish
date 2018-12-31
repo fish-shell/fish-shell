@@ -8,7 +8,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         # Perform transitions relevant to going from fish 2.x to 3.x.
 
         # Migrate old universal abbreviations to the new scheme.
-        abbr_old | source
+        __fish_abbr_old | source
 
         set -U __fish_init_3_x
     end
@@ -21,17 +21,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
     set -g __fish_config_interactive_done
     set -g __fish_active_key_bindings
 
-    # Set the correct configuration directory
-    set -l configdir ~/.config
-    if set -q XDG_CONFIG_HOME
-        set configdir $XDG_CONFIG_HOME
-    end
-    # Set the correct user data directory
-    set -l userdatadir ~/.local/share
-    if set -q XDG_DATA_HOME
-        set userdatadir $XDG_DATA_HOME
-    end
-
     if not set -q fish_greeting
         set -l line1 (_ 'Welcome to fish, the friendly interactive shell')
         set -l line2 ''
@@ -41,78 +30,58 @@ function __fish_config_interactive -d "Initializations that should be performed 
         set -U fish_greeting "$line1$line2"
     end
 
+    if set -q fish_private_mode
+        set -l line (_ "fish is running in private mode, history will not be persisted.")
+        set -g fish_greeting $fish_greeting.\n$line
+    end
+
     #
     # If we are starting up for the first time, set various defaults.
     #
     # bump this to 2_4_0 when rolling release if anything changes after 9/10/2016
     if not set -q __fish_init_2_39_8
         # Regular syntax highlighting colors
-        set -q fish_color_normal
-        or set -U fish_color_normal normal
-        set -q fish_color_command
-        or set -U fish_color_command 005fd7
-        set -q fish_color_param
-        or set -U fish_color_param 00afff
-        set -q fish_color_redirection
-        or set -U fish_color_redirection 00afff
-        set -q fish_color_comment
-        or set -U fish_color_comment 990000
-        set -q fish_color_error
-        or set -U fish_color_error ff0000
-        set -q fish_color_escape
-        or set -U fish_color_escape 00a6b2
-        set -q fish_color_operator
-        or set -U fish_color_operator 00a6b2
-        set -q fish_color_end
-        or set -U fish_color_end 009900
-        set -q fish_color_quote
-        or set -U fish_color_quote 999900
-        set -q fish_color_autosuggestion
-        or set -U fish_color_autosuggestion 555 brblack
-        set -q fish_color_user
-        or set -U fish_color_user brgreen
+        set -q fish_color_normal || set -U fish_color_normal normal
+        set -q fish_color_command || set -U fish_color_command 005fd7
+        set -q fish_color_param || set -U fish_color_param 00afff
+        set -q fish_color_redirection || set -U fish_color_redirection 00afff
+        set -q fish_color_comment || set -U fish_color_comment 990000
+        set -q fish_color_errorset -U fish_color_error ff0000
+        set -q fish_color_escape || set -U fish_color_escape 00a6b2
+        set -q fish_color_operator || set -U fish_color_operator 00a6b2
+        set -q fish_color_end || set -U fish_color_end 009900
+        set -q fish_color_quote || set -U fish_color_quote 999900
+        set -q fish_color_autosuggestion || set -U fish_color_autosuggestion 555 brblack
+        set -q fish_color_user || set -U fish_color_user brgreen
 
-        set -q fish_color_host
-        or set -U fish_color_host normal
-        set -q fish_color_valid_path
-        or set -U fish_color_valid_path --underline
+        set -q fish_color_host || set -U fish_color_host normal
+        set -q fish_color_valid_path || set -U fish_color_valid_path --underline
 
-        set -q fish_color_cwd
-        or set -U fish_color_cwd green
-        set -q fish_color_cwd_root
-        or set -U fish_color_cwd_root red
+        set -q fish_color_cwd || set -U fish_color_cwd green
+        set -q fish_color_cwd_root || set -U fish_color_cwd_root red
 
         # Background color for matching quotes and parenthesis
-        set -q fish_color_match
-        or set -U fish_color_match --background=brblue
+        set -q fish_color_match || set -U fish_color_match --background=brblue
 
         # Background color for search matches
-        set -q fish_color_search_match
-        or set -U fish_color_search_match bryellow --background=brblack
+        set -q fish_color_search_match || set -U fish_color_search_match bryellow --background=brblack
 
         # Background color for selections
-        set -q fish_color_selection
-        or set -U fish_color_selection white --bold --background=brblack
+        set -q fish_color_selection || set -U fish_color_selection white --bold --background=brblack
 
-        set -q fish_color_cancel
-        or set -U fish_color_cancel -r
+        # XXX fish_color_cancel was added in 2.6, but this was added to post-2.3 initialization when 2.4 and 2.5 were already released
+        set -q fish_color_cancel || set -U fish_color_cancel -r
 
         # Pager colors
-        set -q fish_pager_color_prefix
-        or set -U fish_pager_color_prefix white --bold --underline
-        set -q fish_pager_color_completion
-        or set -U fish_pager_color_completion
-        set -q fish_pager_color_description
-        or set -U fish_pager_color_description B3A06D yellow
-        set -q fish_pager_color_progress
-        or set -U fish_pager_color_progress brwhite --background=cyan
+        set -q fish_pager_color_prefix || set -U fish_pager_color_prefix white --bold --underline
+        set -q fish_pager_color_completion || set -U fish_pager_color_completion
+        set -q fish_pager_color_description || set -U fish_pager_color_description B3A06D yellow
+        set -q fish_pager_color_progress || set -U fish_pager_color_progress brwhite --background=cyan
 
         #
         # Directory history colors
         #
-        set -q fish_color_history_current
-        or set -U fish_color_history_current --bold
-
+        set -q fish_color_history_current || set -U fish_color_history_current --bold
 
         set -U __fish_init_2_39_8
     end
@@ -122,7 +91,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     #
     # Don't do this if we're being invoked as part of running unit tests.
     if not set -q FISH_UNIT_TESTS_RUNNING
-        if not test -d $userdatadir/fish/generated_completions
+        if not test -d $__fish_user_data_dir/generated_completions
             # Generating completions from man pages needs python (see issue #3588).
 
             # We cannot simply do `fish_update_completions &` because it is a function.
@@ -131,12 +100,11 @@ function __fish_config_interactive -d "Initializations that should be performed 
             # Hence we'll call python directly.
             # c_m_p.py should work with any python version.
             set -l update_args -B $__fish_data_dir/tools/create_manpage_completions.py --manpath --cleanup-in '~/.config/fish/completions' --cleanup-in '~/.config/fish/generated_completions'
-            if command -qs python3
-                python3 $update_args >/dev/null 2>/dev/null &
-            else if command -qs python2
-                python2 $update_args >/dev/null 2>/dev/null &
-            else if command -qs python
-                python $update_args >/dev/null 2>/dev/null &
+            for py in python{3,2,}
+                if command -sq $py
+                    $py $update_args >/dev/null 2>&1 &
+                    break
+                end
             end
         end
     end
@@ -151,8 +119,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         else
             # The greeting used to be skipped when fish_greeting was empty (not just undefined)
             # Keep it that way to not print superfluous newlines on old configuration
-            test -n "$fish_greeting"
-            and echo $fish_greeting
+            test -n "$fish_greeting" && echo $fish_greeting
         end
     end
 
@@ -187,6 +154,12 @@ function __fish_config_interactive -d "Initializations that should be performed 
         complete -x -p "/etc/init.d/*" -a reload --description 'Reload service configuration'
     end
 
+    #
+    # We want to show our completions for the [ (test) builtin, but
+    # we don't want to create a [.fish. test.fish will not be loaded until
+    # the user tries [ interactively.
+    #
+    complete -c [ --wraps test
 
     # Reload key bindings when binding variable change
     function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings
@@ -233,7 +206,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
             # Redirect stderr per #1155
             fish_default_key_bindings 2>/dev/null
         else
-            eval $fish_key_bindings 2>/dev/null
+            $fish_key_bindings 2>/dev/null
         end
         # Load user key bindings if they are defined
         if functions --query fish_user_key_bindings >/dev/null
@@ -266,18 +239,13 @@ function __fish_config_interactive -d "Initializations that should be performed 
     end
 
     # Notify terminals when $PWD changes (issue #906).
-    # VTE based terminals, Terminal.app, and iTerm.app support this.
-    set -q VTE_VERSION
-    or set -l VTE_VERSION 0
-    set -q TERM_PROGRAM
-    or set -l TERM_PROGRAM
-    if test "$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal"
+    # VTE based terminals, Terminal.app, and iTerm.app (TODO) support this.
+    if test 0"$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal" -a 0"$TERM_PROGRAM_VERSION" -ge 309
         function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
-            if status --is-command-substitution
-                or set -q INSIDE_EMACS
+            if status --is-command-substitution || set -q INSIDE_EMACS
                 return
             end
-            printf \e\]7\;file://\%s\%s\a (hostname) (string escape --style=url $PWD)
+            printf \e\]7\;file://%s%s\a $hostname (string escape --style=url $PWD)
         end
         __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
     end
@@ -297,9 +265,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
         # First check if we are on OpenSUSE since SUSE's handler has no options
         # but the same name and path as Ubuntu's.
-        if contains -- suse $os
-            or contains -- sles $os
-            and type -q command-not-found
+        if contains -- suse $os || contains -- sles $os && type -q command-not-found
             function __fish_command_not_found_handler --on-event fish_command_not_found
                 /usr/bin/command-not-found $argv[1]
             end

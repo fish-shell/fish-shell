@@ -13,7 +13,7 @@ m4_syscmd([build_tools/git_version_gen.sh 2>/dev/null])
 AC_PREREQ([2.60])
 AC_INIT(fish,
         m4_esyscmd([cut -f 2 -d '=' FISH-BUILD-VERSION-FILE | tr -d '"\n']),
-        fish-users@lists.sourceforge.net)
+        https://github.com/fish-shell/fish-shell/issues)
 ac_clean_files=a.out.dSYM
 
 #
@@ -316,13 +316,32 @@ AC_STRUCT_DIRENT_D_TYPE
 #
 
 AC_CHECK_FUNCS( wcsndup )
+AC_CHECK_FUNCS( wcstod_l )
 AC_CHECK_FUNCS( futimes )
 AC_CHECK_FUNCS( wcslcpy lrand48_r killpg )
 AC_CHECK_FUNCS( backtrace_symbols getifaddrs )
 AC_CHECK_FUNCS( futimens clock_gettime )
 AC_CHECK_FUNCS( getpwent flock )
-AC_CHECK_FUNCS( dirfd )
 
+AC_MSG_CHECKING([dirfd])
+AC_LINK_IFELSE([
+
+#include <dirent.h>
+
+DIR *dirp;
+
+int
+main(void)
+{
+	return dirfd(dirp);
+}
+], [ AC_MSG_RESULT([yes])
+     AC_DEFINE([HAVE_DIRFD], 1, [ Define to 1 if you have the `dirfd' function or macro. ])
+   ],
+   [ AC_MSG_RESULT([no])]
+)
+
+AC_CHECK_DECL( [__NetBSD__], AC_DEFINE([TPARM_VARARGS], 1, [ Make tparm take varargs ]) )
 AC_CHECK_DECL( [mkostemp], [ AC_CHECK_FUNCS([mkostemp]) ] )
 
 #
@@ -553,6 +572,7 @@ AC_COMPILE_IFELSE(
   [
     AC_LANG_PROGRAM(
       [
+    #define TPARM_VARARGS 1
 	#if HAVE_NCURSES_H
 	#include <ncurses.h>
 	#elif HAVE_NCURSES_CURSES_H
@@ -685,7 +705,7 @@ if test "x$included_pcre2" = "xyes"; then
   AC_MSG_NOTICE([using included PCRE2 library])
   # unfortunately these get added to the global configuration
   ac_configure_args="$ac_configure_args --disable-pcre2-8 --enable-pcre2-$WCHAR_T_BITS --disable-shared"
-  AC_CONFIG_SUBDIRS([pcre2-10.22])
+  AC_CONFIG_SUBDIRS([pcre2-10.32])
 
   PCRE2_CXXFLAGS='-I$(PCRE2_DIR)/src'
   PCRE2_LIBS='-L$(PCRE2_LIBDIR) -lpcre2-$(PCRE2_WIDTH)'

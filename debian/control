@@ -12,7 +12,7 @@ Vcs-Browser: https://github.com/fish-shell/fish-shell
 
 Package: fish
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, fish-common (= ${source:Version}), passwd (>= 4.0.3-10), bc, gettext-base, man-db
+Depends: ${shlibs:Depends}, ${misc:Depends}, fish-common (= ${source:Version}), passwd (>= 4.0.3-10), gettext-base, man-db
 Recommends: xsel (>=1.2.0)
 Description: friendly interactive shell
  Fish is a command-line shell for modern systems, focusing on user-friendliness,

@@ -4,6 +4,9 @@
 /* Define to 1 if you have the `backtrace_symbols' function. */
 #define HAVE_BACKTRACE_SYMBOLS 1
 
+/* banana */
+#define HAVE_BROKEN_WCWIDTH 1
+
 /* Define to 1 if you have the `clock_gettime' function. */
 /* #undef HAVE_CLOCK_GETTIME */
 
@@ -91,6 +94,9 @@
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #define HAVE_STDLIB_H 1
+
+/* Define to 1 if you have the `std::make_unique' function. */
+/* #undef HAVE_STD__MAKE_UNIQUE */
 
 /* Define to 1 if you have the `std::wcscasecmp' function. */
 /* #undef HAVE_STD__WCSCASECMP */
@@ -194,13 +200,13 @@
 #define NOMACROS 1
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "fish-users@lists.sourceforge.net"
+#define PACKAGE_BUGREPORT "https://github.com/fish-shell/fish-shell/issues"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "fish"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "fish 2.7.1-git"
+#define PACKAGE_STRING "fish 3.0.0-git"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "fish"
@@ -209,7 +215,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.7.1-git"
+#define PACKAGE_VERSION "3.0.0-git"
 
 /* The size of `wchar_t', as computed by sizeof. */
 #define SIZEOF_WCHAR_T 4

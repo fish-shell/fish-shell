@@ -24,15 +24,20 @@ static int disown_job(const wchar_t *cmd, parser_t &parser, io_streams_t &stream
     }
 
     // Stopped disowned jobs must be manually signaled; explain how to do so.
-    if (job_is_stopped(j)) {
+    if (j->is_stopped()) {
         killpg(j->pgid, SIGCONT);
         const wchar_t *fmt =
             _(L"%ls: job %d ('%ls') was stopped and has been signalled to continue.\n");
         streams.err.append_format(fmt, cmd, j->job_id, j->command_wcstr());
     }
 
-    if (parser.job_remove(j)) return STATUS_CMD_OK;
-    return STATUS_CMD_ERROR;
+    pid_t pgid = j->pgid;
+    if (!parser.job_remove(j)) {
+        return STATUS_CMD_ERROR;
+    }
+
+    add_disowned_pgid(pgid);
+    return STATUS_CMD_OK;
 }
 
 /// Builtin for removing jobs from the job list.
@@ -58,7 +63,7 @@ int builtin_disown(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         // Even jobs that aren't under job control can be disowned!
         job_iterator_t jobs;
         while ((j = jobs.next())) {
-            if (j->get_flag(JOB_CONSTRUCTED) && (!job_is_completed(j))) {
+            if (j->is_constructed() && (!j->is_completed())) {
                 break;
             }
         }

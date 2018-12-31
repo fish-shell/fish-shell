@@ -68,6 +68,18 @@ int wchdir(const wcstring &dir);
 /// \returns the canonicalized path, or none if the path is invalid.
 maybe_t<wcstring> wrealpath(const wcstring &pathname);
 
+/// Given an input path, "normalize" it:
+/// 1. Collapse multiple /s into a single /, except maybe at the beginning.
+/// 2. .. goes up a level.
+/// 3. Remove /./ in the middle.
+wcstring normalize_path(const wcstring &path);
+
+/// Given an input path \p path and a working directory \p wd, do a "normalizing join" in a way
+/// appropriate for cd. That is, return effectively wd + path while resolving leading ../s from
+/// path. The intent here is to allow 'cd' out of a directory which may no longer exist, without
+/// allowing 'cd' into a directory that may not exist; see #5341.
+wcstring path_normalize_for_cd(const wcstring &wd, const wcstring &path);
+
 /// Wide character version of readdir().
 bool wreaddir(DIR *dir, wcstring &out_name);
 bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, wcstring &out_name,
@@ -125,7 +137,7 @@ int fish_wcstoi(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10
 long fish_wcstol(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10);
 long long fish_wcstoll(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10);
 unsigned long long fish_wcstoull(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10);
-double fish_wcstod(const wchar_t *str, const wchar_t **endptr);
+double fish_wcstod(const wchar_t *str, wchar_t **endptr);
 
 /// Class for representing a file's inode. We use this to detect and avoid symlink loops, among
 /// other things. While an inode / dev pair is sufficient to distinguish co-existing files, Linux
@@ -150,6 +162,15 @@ struct file_id_t {
 
    private:
     int compare_file_id(const file_id_t &rhs) const;
+};
+
+/// RAII wrapper for DIR*
+struct dir_t {
+    DIR *dir;
+    bool valid() const;
+    bool read(wcstring &name);
+    dir_t(const wcstring &path);
+    ~dir_t();
 };
 
 #ifndef HASH_FILE_ID

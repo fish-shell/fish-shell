@@ -61,8 +61,8 @@ bool wildcard_has(const wcstring &, bool internal);
 bool wildcard_has(const wchar_t *, bool internal);
 
 /// Test wildcard completion.
-bool wildcard_complete(const wcstring &str, const wchar_t *wc, const wchar_t *desc,
-                       wcstring (*desc_func)(const wcstring &), std::vector<completion_t> *out,
-                       expand_flags_t expand_flags, complete_flags_t flags);
+bool wildcard_complete(const wcstring &str, const wchar_t *wc, const description_func_t &desc_func,
+                       std::vector<completion_t> *out, expand_flags_t expand_flags,
+                       complete_flags_t flags);
 
 #endif

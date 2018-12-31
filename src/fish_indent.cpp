@@ -47,16 +47,27 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 // An indent_t represents an abstract indent depth. 2 means we are in a doubly-nested block, etc.
 typedef unsigned int indent_t;
 static bool dump_parse_tree = false;
+static int ret = 0;
 
 // Read the entire contents of a file into the specified string.
 static wcstring read_file(FILE *f) {
     wcstring result;
     while (1) {
         wint_t c = fgetwc(f);
+
         if (c == WEOF) {
             if (ferror(f)) {
-                wperror(L"fgetwc");
-                exit(1);
+                if (errno == EILSEQ) {
+                    // Illegal byte sequence. Try to skip past it.
+                    clearerr(f);
+                    int ch = fgetc(f); // for printing the warning, and seeks forward 1 byte.
+                    debug(1, "%s (byte=%X)", strerror(errno), ch);
+                    ret = 1;
+                    continue;
+                } else {
+                    wperror(L"fgetwc");
+                    exit(1);
+                }
             }
             break;
         }
@@ -551,5 +562,5 @@ int main(int argc, char *argv[]) {
     }
 
     fputws(str2wcstring(colored_output).c_str(), stdout);
-    return 0;
+    return ret;
 }

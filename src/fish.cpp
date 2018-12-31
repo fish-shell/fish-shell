@@ -54,11 +54,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "signal.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-// PATH_MAX may not exist.
-#ifndef PATH_MAX
-#define PATH_MAX 4096
-#endif
-
 // container to hold the options specified within the command line
 class fish_cmd_opts_t {
    public:
@@ -94,44 +89,27 @@ extern "C" {
 int _NSGetExecutablePath(char *buf, uint32_t *bufsize);
 }
 
-/// Return the path to the current executable. This needs to be realpath'd.
-static std::string get_executable_path(const char *argv0) {
-    char buff[PATH_MAX];
-
-#if __APPLE__
-    // On OS X use it's proprietary API to get the path to the executable.
-    // This is basically grabbing exec_path after argc, argv, envp, ...: for us
-    // https://opensource.apple.com/source/adv_cmds/adv_cmds-163/ps/print.c
-    uint32_t buffSize = sizeof buff;
-    if (_NSGetExecutablePath(buff, &buffSize) == 0) return std::string(buff);
-#else
-    // On non-OS X UNIXes, try /proc directory.
-    ssize_t len;
-    len = readlink("/proc/self/exe", buff, sizeof buff - 1);  // Linux
-    if (len == -1) {
-        len = readlink("/proc/curproc/file", buff, sizeof buff - 1);  // BSD
-        if (len == -1) {
-            len = readlink("/proc/self/path/a.out", buff, sizeof buff - 1);  // Solaris
-        }
-    }
-    if (len > 0) {
-        buff[len] = '\0';
-        return std::string(buff);
-    }
-#endif
-
-    // Just return argv0, which probably won't work (i.e. it's not an absolute path or a path
-    // relative to the working directory, but instead something the caller found via $PATH). We'll
-    // eventually fall back to the compile time paths.
-    return std::string(argv0 ? argv0 : "");
-}
-
 static struct config_paths_t determine_config_directory_paths(const char *argv0) {
     struct config_paths_t paths;
     bool done = false;
     std::string exec_path = get_executable_path(argv0);
     if (get_realpath(exec_path)) {
-        debug(2, L"exec_path: '%s'", exec_path.c_str());
+        debug(2, L"exec_path: '%s', argv[0]: '%s'", exec_path.c_str(), argv0);
+        // TODO: we should determine program_name from argv0 somewhere in this file
+
+#ifdef CMAKE_BINARY_DIR
+        // Detect if we're running right out of the CMAKE build directory
+        if (string_prefixes_string(CMAKE_BINARY_DIR, exec_path.c_str())) {
+            debug(2, "Running out of build directory, using paths relative to CMAKE_SOURCE_DIR:\n %s", CMAKE_SOURCE_DIR);
+
+            done = true;
+            paths.data = wcstring{L"" CMAKE_SOURCE_DIR} + L"/share";
+            paths.sysconf = wcstring{L"" CMAKE_SOURCE_DIR} + L"/etc";
+            paths.doc = wcstring{L"" CMAKE_SOURCE_DIR} + L"/user_doc/html";
+            paths.bin = wcstring{L"" CMAKE_BINARY_DIR};
+        }
+#endif
+
         if (!done) {
             // The next check is that we are in a reloctable directory tree
             const char *installed_suffix = "/bin/fish";
@@ -241,7 +219,7 @@ int run_command_list(std::vector<std::string> *cmds, const io_chain_t &io) {
 
 /// Parse the argument list, return the index of the first non-flag arguments.
 static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
-    static const char *short_opts = "+hilnvc:C:p:d:f:D:";
+    static const char * const short_opts = "+hPilnvc:C:p:d:f:D:";
     static const struct option long_opts[] = {{"command", required_argument, NULL, 'c'},
                                               {"init-command", required_argument, NULL, 'C'},
                                               {"features", required_argument, NULL, 'f'},
@@ -251,6 +229,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                                               {"login", no_argument, NULL, 'l'},
                                               {"no-execute", no_argument, NULL, 'n'},
                                               {"profile", required_argument, NULL, 'p'},
+                                              {"private", no_argument, NULL, 'P'},
                                               {"help", no_argument, NULL, 'h'},
                                               {"version", no_argument, NULL, 'v'},
                                               {NULL, 0, NULL, 0}};
@@ -304,6 +283,10 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
             case 'p': {
                 s_profiling_output_filename = optarg;
                 g_profiling_active = true;
+                break;
+            }
+            case 'P': {
+                start_private_mode();
                 break;
             }
             case 'v': {
@@ -361,8 +344,8 @@ int main(int argc, char **argv) {
     // struct stat tmp;
     // stat("----------FISH_HIT_MAIN----------", &tmp);
 
+    const char *dummy_argv[2] = {"fish", NULL};
     if (!argv[0]) {
-        static const char *dummy_argv[2] = {"fish", NULL};
         argv = (char **)dummy_argv;  //!OCLINT(parameter reassignment)
         argc = 1;                    //!OCLINT(parameter reassignment)
     }

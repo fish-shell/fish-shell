@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 
+#include <functional>
 #include <vector>
 
 #include "common.h"
@@ -49,6 +50,12 @@ enum {
 };
 typedef int complete_flags_t;
 
+/// std::function which accepts a completion string and returns its description.
+using description_func_t = std::function<wcstring(const wcstring &)>;
+
+/// Helper to return a description_func_t for a constant string.
+description_func_t const_desc(const wcstring &s);
+
 class completion_t {
    private:
     // No public default constructor.
@@ -78,8 +85,9 @@ class completion_t {
     completion_t(const completion_t &);
     completion_t &operator=(const completion_t &);
 
-    completion_t(completion_t &&);
-    completion_t &operator=(completion_t &&);
+    // noexcepts are required for push_back to use the move ctor.
+    completion_t(completion_t &&) noexcept;
+    completion_t &operator=(completion_t &&) noexcept;
 
     // Compare two completions. No operating overlaoding to make this always explicit (there's
     // potentially multiple ways to compare completions).

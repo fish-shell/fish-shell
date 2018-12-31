@@ -11,17 +11,13 @@ function fish_prompt --description 'Write out the prompt, prepending the Debian 
     end
 
     # Set variable identifying the chroot you work in (used in the prompt below)
-    if begin
-            not set -q debian_chroot
-            and test -r /etc/debian_chroot
-        end
+    if not set -q debian_chroot
+        and test -r /etc/debian_chroot
         set debian_chroot (cat /etc/debian_chroot)
     end
-    if begin
-            not set -q __fish_debian_chroot_prompt
-            and set -q debian_chroot
-            and test -n $debian_chroot
-        end
+    if not set -q __fish_debian_chroot_prompt
+        and set -q debian_chroot
+        and test -n "$debian_chroot"
         set -g __fish_debian_chroot_prompt "($debian_chroot)"
     end
 
@@ -31,9 +27,7 @@ function fish_prompt --description 'Write out the prompt, prepending the Debian 
     end
 
     switch "$USER"
-
         case root toor
-
             if not set -q __fish_prompt_cwd
                 if set -q fish_color_cwd_root
                     set -g __fish_prompt_cwd (set_color $fish_color_cwd_root)
@@ -45,7 +39,6 @@ function fish_prompt --description 'Write out the prompt, prepending the Debian 
             echo -n -s "$USER" @ (prompt_hostname) ' ' "$__fish_prompt_cwd" (prompt_pwd) "$__fish_prompt_normal" '# '
 
         case '*'
-
             if not set -q __fish_prompt_cwd
                 set -g __fish_prompt_cwd (set_color $fish_color_cwd)
             end

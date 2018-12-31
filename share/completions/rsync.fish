@@ -47,6 +47,7 @@ complete -c rsync -l rsync-path -x -d "Specify the rsync to run on remote machin
 complete -c rsync -l existing -d "Ignore non-existing files on receiving side"
 complete -c rsync -l ignore-existing -d "Ignore files that already exist on receiver"
 complete -c rsync -l remove-sent-files -d "Sent files/symlinks are removed from sender"
+complete -c rsync -l remove-source-files -d "Remove all synced files from source/sender"
 complete -c rsync -l del -d "An alias for --delete-during"
 complete -c rsync -l delete -d "Delete files that don’t exist on sender"
 complete -c rsync -l delete-before -d "Receiver deletes before transfer (default)"

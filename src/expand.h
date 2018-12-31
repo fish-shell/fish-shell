@@ -9,6 +9,7 @@
 
 #include <stddef.h>
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -44,7 +45,7 @@ enum {
     /// EXPAND_FUZZY_MATCH is set.
     EXPAND_NO_FUZZY_DIRECTORIES = 1 << 10,
     /// Do expansions specifically to support cd. This means using CDPATH as a list of potential
-    /// working directories.
+    /// working directories, and to use logical instead of physical paths.
     EXPAND_SPECIAL_FOR_CD = 1 << 11,
     /// Do expansions specifically for cd autosuggestion. This is to differentiate between cd
     /// completions and cd autosuggestions.
@@ -60,6 +61,8 @@ class completion_t;
 enum {
     /// Character representing a home directory.
     HOME_DIRECTORY = EXPAND_RESERVED_BASE,
+    /// Character representing process expansion for %self.
+    PROCESS_EXPAND_SELF,
     /// Character representing variable expansion.
     VARIABLE_EXPAND,
     /// Character representing variable expansion into a single element.
@@ -94,6 +97,9 @@ enum expand_error_t {
     EXPAND_WILDCARD_MATCH
 };
 
+/// The string represented by PROCESS_EXPAND_SELF
+#define PROCESS_EXPAND_SELF_STR L"%self"
+
 /// Perform various forms of expansion on in, such as tilde expansion (\~USER becomes the users home
 /// directory), variable expansion (\$VAR_NAME becomes the value of the environment variable
 /// VAR_NAME), cmdsubst expansion and wildcard expansion. The results are inserted into the list
@@ -110,7 +116,7 @@ enum expand_error_t {
 /// \return One of EXPAND_OK, EXPAND_ERROR, EXPAND_WILDCARD_MATCH and EXPAND_WILDCARD_NO_MATCH.
 /// EXPAND_WILDCARD_NO_MATCH and EXPAND_WILDCARD_MATCH are normal exit conditions used only on
 /// strings containing wildcards to tell if the wildcard produced any matches.
-__warn_unused expand_error_t expand_string(const wcstring &input, std::vector<completion_t> *output,
+__warn_unused expand_error_t expand_string(wcstring input, std::vector<completion_t> *output,
                                            expand_flags_t flags, parse_error_list_t *errors);
 
 /// expand_one is identical to expand_string, except it will fail if in expands to more than one
@@ -150,6 +156,9 @@ wcstring replace_home_directory_with_tilde(const wcstring &str);
 /// not. If result is not-null, returns the abbreviation by reference.
 void update_abbr_cache(const wchar_t *op, const wcstring &varname);
 bool expand_abbreviation(const wcstring &src, wcstring *output);
+
+/// \return a snapshot of all abbreviations as a map abbreviation->expansion.
+std::map<wcstring, wcstring> get_abbreviations();
 
 // Terrible hacks
 bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc,

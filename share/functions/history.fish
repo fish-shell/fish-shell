@@ -32,7 +32,6 @@ function history --description "display or manipulate interactive command histor
 
     set -l hist_cmd
     set -l show_time
-
     set -l max_count
     set -q _flag_max
     set max_count -n$_flag_max
@@ -87,7 +86,17 @@ function history --description "display or manipulate interactive command histor
                 set -l pager less
                 set -q PAGER
                 and set pager $PAGER
-                builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv | eval $pager
+
+                # If the user hasn't preconfigured less with the $LESS environment variable,
+                # we do so to have it behave like cat if output fits on one screen. Prevent the
+                # screen from clearing on quit, so there is something to see if it exits.
+                # These are two of the options `git` sets through $LESS before starting the pager.
+                not set -qx LESS
+                and set -x LESS --quit-if-one-screen --no-init
+                not set -qx LV # ask the pager lv not to strip colors
+                and set -x LV -c
+
+                builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv | $pager
             else
                 builtin history search $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv
             end

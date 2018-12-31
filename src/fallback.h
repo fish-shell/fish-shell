@@ -46,7 +46,7 @@ int fish_mkstemp_cloexec(char *);
 /// Under curses, tputs expects an int (*func)(char) as its last parameter, but in ncurses, tputs
 /// expects a int (*func)(int) as its last parameter. tputs_arg_t is defined to always be what tputs
 /// expects. Hopefully.
-#ifdef NCURSES_VERSION
+#if defined(NCURSES_VERSION) || defined(__NetBSD__)
 typedef int tputs_arg_t;
 #else
 typedef char tputs_arg_t;
@@ -63,7 +63,7 @@ struct winsize {
 
 #endif
 
-#ifdef TPARM_SOLARIS_KLUDGE
+#if defined(TPARM_SOLARIS_KLUDGE)
 /// Solaris tparm has a set fixed of paramters in its curses implementation, work around this here.
 #define tparm tparm_solaris_kludge
 char *tparm_solaris_kludge(char *str, long p1 = 0, long p2 = 0, long p3 = 0, long p4 = 0,
@@ -197,4 +197,8 @@ int flock(int fd, int op);
 #define LOCK_NB 4  // Don't block when locking.
 #endif
 
+#endif
+
+#ifndef HAVE_WCSTOD_L
+double wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t loc);
 #endif

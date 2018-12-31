@@ -18,17 +18,20 @@
 #endif
 
 #include <algorithm>
+#include <functional>
+#include <iterator>
 #include <memory>
 #include <mutex>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <unordered_map>
-#include <tuple>
 #include <vector>
 
 #include "fallback.h"  // IWYU pragma: keep
-#include "signal.h"    // IWYU pragma: keep
+#include "maybe.h"
+#include "signal.h"  // IWYU pragma: keep
 
 // Define a symbol we can use elsewhere in our code to determine if we're being built on MS Windows
 // under Cygwin.
@@ -105,7 +108,22 @@ static_assert(false, "Neither NAME_MAX nor MAXNAMELEN is defined!");
 #endif
 #endif
 
-enum escape_string_style_t { STRING_STYLE_SCRIPT, STRING_STYLE_URL, STRING_STYLE_VAR };
+// PATH_MAX may not exist.
+#ifndef PATH_MAX
+#ifdef MAXPATHLEN
+#define PATH_MAX MAXPATHLEN
+#else
+/// Fallback length of MAXPATHLEN. Hopefully a sane value.
+#define PATH_MAX 4096
+#endif
+#endif
+
+enum escape_string_style_t {
+    STRING_STYLE_SCRIPT,
+    STRING_STYLE_URL,
+    STRING_STYLE_VAR,
+    STRING_STYLE_REGEX,
+};
 
 // Flags for unescape_string functions.
 enum {
@@ -186,7 +204,8 @@ extern struct termios shell_modes;
 /// The character to use where the text has been truncated. Is an ellipsis on unicode system and a $
 /// on other systems.
 extern wchar_t ellipsis_char;
-/// The character or string to use where text has been truncated (ellipsis if possible, otherwise ...)
+/// The character or string to use where text has been truncated (ellipsis if possible, otherwise
+/// ...)
 extern const wchar_t *ellipsis_str;
 
 /// Character representing an omitted newline at the end of text.
@@ -204,9 +223,8 @@ extern bool g_profiling_active;
 /// Name of the current program. Should be set at startup. Used by the debug function.
 extern const wchar_t *program_name;
 
-/// Set to false at run-time if it's been determined we can't trust the last modified timestamp on
-/// the tty.
-extern bool has_working_tty_timestamps;
+/// Set to false if it's been determined we can't trust the last modified timestamp on the tty.
+extern const bool has_working_tty_timestamps;
 
 /// A list of all whitespace characters
 extern const wcstring whitespace;
@@ -284,10 +302,17 @@ inline bool is_whitespace(const wchar_t *input) { return is_whitespace(wcstring(
 /// See https://developer.gnome.org/glib/stable/glib-I18N.html#N-:CAPS
 #define N_(wstr) wstr
 
-/// Test if a vector contains a value.
-template <typename T1, typename T2>
-bool contains(const std::vector<T1> &vec, const T2 &val) {
-    return std::find(vec.begin(), vec.end(), val) != vec.end();
+/// Test if a collection contains a value.
+template <typename Col, typename T2>
+bool contains(const Col &col, const T2 &val) {
+    return std::find(std::begin(col), std::end(col), val) != std::end(col);
+}
+
+/// Append a vector \p donator to the vector \p receiver.
+template <typename T>
+void vec_append(std::vector<T> &receiver, std::vector<T> &&donator) {
+    receiver.insert(receiver.end(), std::make_move_iterator(donator.begin()),
+                    std::make_move_iterator(donator.end()));
 }
 
 /// Print a stack trace to stderr.
@@ -323,21 +348,116 @@ std::string wcs2string(const wcstring &input);
 bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value);
 bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &value);
 bool string_prefixes_string(const wchar_t *proposed_prefix, const wchar_t *value);
+bool string_prefixes_string(const char *proposed_prefix, const std::string &value);
+bool string_prefixes_string(const char *proposed_prefix, const char *value);
 
 /// Test if a string is a suffix of another.
 bool string_suffixes_string(const wcstring &proposed_suffix, const wcstring &value);
 bool string_suffixes_string(const wchar_t *proposed_suffix, const wcstring &value);
-bool string_suffixes_string_case_insensitive(const wcstring &proposed_suffix, const wcstring &value);
+bool string_suffixes_string_case_insensitive(const wcstring &proposed_suffix,
+                                             const wcstring &value);
 
 /// Test if a string prefixes another without regard to case. Returns true if a is a prefix of b.
 bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix,
                                              const wcstring &value);
+
+/// Case-insensitive string search, templated for use with both std::string and std::wstring.
+/// Modeled after std::string::find().
+/// \param fuzzy indicates this is being used for fuzzy matching and case insensitivity is
+/// expanded to include symbolic characters (#3584).
+/// \return the offset of the first case-insensitive matching instance of `needle` within
+/// `haystack`, or `string::npos()` if no results were found.
+template <typename T>
+size_t ifind(const T &haystack, const T &needle, bool fuzzy = false) {
+    using char_t = typename T::value_type;
+    auto locale = std::locale();
+
+    std::function<bool(char_t, char_t)> icase_eq;
+
+    if (!fuzzy) {
+        icase_eq = [&locale](char_t c1, char_t c2) {
+            return std::toupper(c1, locale) == std::toupper(c2, locale);
+        };
+    } else {
+        icase_eq = [&locale](char_t c1, char_t c2) {
+            // This `ifind()` call is being used for fuzzy string matching. Further extend case
+            // insensitivity to treat `-` and `_` as equal (#3584).
+
+            // The two lines below were tested to be 27% faster than
+            //      (c1 == '_' || c1 == '-') && (c2 == '-' || c2 == '_')
+            // while returning no false positives for all (c1, c2) combinations in the printable
+            // range (0x20-0x7E). It might return false positives outside that range, but fuzzy
+            // comparisons are typically called for file names only, which are unlikely to have
+            // such characters and this entire function is 100% broken on unicode so there's no
+            // point in worrying about anything outside of the ANSII range.
+            // ((c1 == Literal<char_t>('_') || c1 == Literal<char_t>('-')) &&
+            // ((c1 ^ c2) == (Literal<char_t>('-') ^ Literal<char_t>('_'))));
+
+            // One of the following would be an illegal comparison between a char and a wchar_t.
+            // However, placing them behind a constexpr gate results in the elision of the if
+            // statement and the incorrect branch, with the compiler's SFINAE support suppressing
+            // any errors in the branch not taken.
+            if (sizeof(char_t) == sizeof(char)) {
+                return std::toupper(c1, locale) == std::toupper(c2, locale) ||
+                ((c1 == '_' || c1 == '-') &&
+                ((c1 ^ c2) == ('-' ^ '_')));
+            } else {
+                return std::toupper(c1, locale) == std::toupper(c2, locale) ||
+                ((c1 == L'_' || c1 == L'-') &&
+                ((c1 ^ c2) == (L'-' ^ L'_')));
+            }
+        };
+    }
+
+    auto result =
+        std::search(haystack.begin(), haystack.end(), needle.begin(), needle.end(), icase_eq);
+    if (result != haystack.end()) {
+        return result - haystack.begin();
+    }
+    return T::npos;
+}
 
 /// Split a string by a separator character.
 wcstring_list_t split_string(const wcstring &val, wchar_t sep);
 
 /// Join a list of strings by a separator character.
 wcstring join_strings(const wcstring_list_t &vals, wchar_t sep);
+
+/// Support for iterating over a newline-separated string.
+template <typename Collection>
+class line_iterator_t {
+    // Storage for each line.
+    Collection storage;
+
+    // The collection we're iterating. Note we hold this by reference.
+    const Collection &coll;
+
+    // The current location in the iteration.
+    typename Collection::const_iterator current;
+
+public:
+    /// Construct from a collection (presumably std::string or std::wcstring).
+    line_iterator_t(const Collection &coll) : coll(coll), current(coll.cbegin()) {}
+
+    /// Access the storage in which the last line was stored.
+    const Collection &line() const {
+        return storage;
+    }
+
+    /// Advances to the next line. \return true on success, false if we have exhausted the string.
+    bool next() {
+        if (current == coll.end())
+            return false;
+        auto newline_or_end = std::find(current, coll.cend(), '\n');
+        storage.assign(current, newline_or_end);
+        current = newline_or_end;
+
+        // Skip the newline.
+        if (current != coll.cend())
+            ++current;
+        return true;
+    }
+};
 
 enum fuzzy_match_type_t {
     // We match the string exactly: FOOBAR matches FOOBAR.
@@ -354,6 +474,9 @@ enum fuzzy_match_type_t {
 
     // We match a substring of the string: OOBA matches FOOBAR.
     fuzzy_match_substring,
+
+    // We match a substring of the string: ooBA matches FOOBAR.
+    fuzzy_match_substring_case_insensitive,
 
     // A subsequence match with insertions only: FBR matches FOOBAR.
     fuzzy_match_subsequence_insertions_only,
@@ -420,39 +543,10 @@ void assert_is_background_thread(const char *who);
 #define ASSERT_IS_BACKGROUND_THREAD_TRAMPOLINE(x) assert_is_background_thread(x)
 #define ASSERT_IS_BACKGROUND_THREAD() ASSERT_IS_BACKGROUND_THREAD_TRAMPOLINE(__FUNCTION__)
 
-// fish_mutex is a wrapper around std::mutex that tracks whether it is locked, allowing for checking
-// if the mutex is locked. It owns a boolean guarded by the lock that records whether the lock is
-// currently locked; this is only used by assertions for correctness.
-class fish_mutex_t {
-    std::mutex lock_{};
-    bool is_locked_{false};
-
-   public:
-    constexpr fish_mutex_t() = default;
-    ~fish_mutex_t() = default;
-
-    void lock() {
-        lock_.lock();
-        is_locked_ = true;
-    }
-
-    void unlock() {
-        is_locked_ = false;
-        lock_.unlock();
-    }
-
-    // assert that this lock (identified as 'who') is locked in the function 'caller'.
-    void assert_is_locked(const char *who, const char *caller) const;
-
-    // return the underlying std::mutex. Note the fish_mutex_t cannot track locks to the underlying
-    // mutex; do not use assert_is_locked() with this.
-    std::mutex &get_mutex() { return lock_; }
-};
-
 /// Useful macro for asserting that a lock is locked. This doesn't check whether this thread locked
 /// it, which it would be nice if it did, but here it is anyways.
-void assert_is_locked(const fish_mutex_t &m, const char *who, const char *caller);
-#define ASSERT_IS_LOCKED(x) (x).assert_is_locked(#x, __FUNCTION__)
+void assert_is_locked(void *mutex, const char *who, const char *caller);
+#define ASSERT_IS_LOCKED(x) assert_is_locked((void *)(&x), #x, __FUNCTION__)
 
 /// Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer.
 wcstring format_size(long long sz);
@@ -533,7 +627,7 @@ class null_terminated_array_t {
     void operator=(null_terminated_array_t rhs);
     null_terminated_array_t(const null_terminated_array_t &);
 
-    typedef std::vector<std::basic_string<CharType_t> > string_list_t;
+    typedef std::vector<std::basic_string<CharType_t>> string_list_t;
 
     size_t size() const {
         size_t len = 0;
@@ -583,7 +677,7 @@ class null_terminated_array_t {
 // null_terminated_array_t<char_t>.
 void convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &arr,
                                   null_terminated_array_t<char> *output);
-typedef std::lock_guard<fish_mutex_t> scoped_lock;
+typedef std::lock_guard<std::mutex> scoped_lock;
 typedef std::lock_guard<std::recursive_mutex> scoped_rlock;
 
 // An object wrapping a scoped lock and a value
@@ -598,8 +692,8 @@ typedef std::lock_guard<std::recursive_mutex> scoped_rlock;
 //
 template <typename DATA>
 class acquired_lock {
-    std::unique_lock<fish_mutex_t> lock;
-    acquired_lock(fish_mutex_t &lk, DATA *v) : lock(lk), value(v) {}
+    std::unique_lock<std::mutex> lock;
+    acquired_lock(std::mutex &lk, DATA *v) : lock(lk), value(v) {}
 
     template <typename T>
     friend class owning_lock;
@@ -629,7 +723,7 @@ class owning_lock {
     owning_lock(owning_lock &&) = default;
     owning_lock &operator=(owning_lock &&) = default;
 
-    fish_mutex_t lock;
+    std::mutex lock;
     DATA data;
 
    public:
@@ -771,9 +865,9 @@ wcstring debug_escape(const wcstring &in);
 /// defined in a private use area of Unicode. This assumes wchar_t is a unicode character set.
 
 /// Given a null terminated string starting with a backslash, read the escape as if it is unquoted,
-/// appending to result. Return the number of characters consumed, or 0 on error.
-size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_incomplete,
-                            bool unescape_special);
+/// appending to result. Return the number of characters consumed, or none() on error.
+maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_incomplete,
+                                     bool unescape_special);
 
 /// Unescapes a string in-place. A true result indicates the string was unescaped, a false result
 /// indicates the string was unmodified.
@@ -844,6 +938,8 @@ void assert_is_not_forked_child(const char *who);
 /// and checking if "Microsoft" is in the first line.
 /// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997
 constexpr bool is_windows_subsystem_for_linux() {
+    // This function is called after fork() and before exec() in postfork.cpp. Make sure we
+    // don't allocate any memory here!
 #ifdef WSL
     return true;
 #else
@@ -881,19 +977,6 @@ struct enum_map {
     const wchar_t *const str;
 };
 
-
-/// Use for scoped enums (i.e. `enum class`) with bitwise operations
-#define ENUM_FLAG_OPERATOR(T,X,Y) \
-inline T operator X (T lhs, T rhs) { return (T) (static_cast<std::underlying_type<T>::type>(lhs) X static_cast<std::underlying_type<T>::type>(rhs)); } \
-inline T operator Y (T &lhs, T rhs) { return lhs = (T) (static_cast<std::underlying_type<T>::type>(lhs) X static_cast<std::underlying_type<T>::type>(rhs)); }
-#define ENUM_FLAGS(T) \
-enum class T; \
-inline T operator ~ (T t) { return (T) (~static_cast<std::underlying_type<T>::type>(t)); } \
-ENUM_FLAG_OPERATOR(T,|,|=) \
-ENUM_FLAG_OPERATOR(T,^,^=) \
-ENUM_FLAG_OPERATOR(T,&,&=) \
-enum class T
-
 /// Given a string return the matching enum. Return the sentinal enum if no match is made. The map
 /// must be sorted by the `str` member. A binary search is twice as fast as a linear search with 16
 /// elements in the map.
@@ -927,13 +1010,13 @@ static const wchar_t *enum_to_str(T enum_val, const enum_map<T> map[]) {
     return NULL;
 };
 
-template<typename... Args>
+template <typename... Args>
 using tuple_list = std::vector<std::tuple<Args...>>;
 
-//Given a container mapping one X to many Y, return a list of {X,Y}
-template<typename X, typename Y>
+// Given a container mapping one X to many Y, return a list of {X,Y}
+template <typename X, typename Y>
 inline tuple_list<X, Y> flatten(const std::unordered_map<X, std::vector<Y>> &list) {
-    tuple_list<X, Y> results(list.size() * 1.5); //just a guess as to the initial size
+    tuple_list<X, Y> results(list.size() * 1.5);  // just a guess as to the initial size
     for (auto &kv : list) {
         for (auto &v : kv.second) {
             results.emplace_back(std::make_tuple(kv.first, v));
@@ -966,9 +1049,13 @@ enum {
     STATUS_CMD_OK = 0,
     /// The status code used for failure exit in a command (but not if the args were invalid).
     STATUS_CMD_ERROR = 1,
+    /// The status code used for invalid arguments given to a command. This is distinct from valid
+    /// arguments that might result in a command failure. An invalid args condition is something
+    /// like an unrecognized flag, missing or too many arguments, an invalid integer, etc. But
+    STATUS_INVALID_ARGS = 2,
+
     /// The status code used when a command was not found.
     STATUS_CMD_UNKNOWN = 127,
-
     /// TODO: Figure out why we have two distinct failure codes for when an external command cannot
     /// be run.
     ///
@@ -983,10 +1070,6 @@ enum {
     STATUS_ILLEGAL_CMD = 123,
     /// The status code used when `read` is asked to consume too much data.
     STATUS_READ_TOO_MUCH = 122,
-    /// The status code used for invalid arguments given to a command. This is distinct from valid
-    /// arguments that might result in a command failure. An invalid args condition is something
-    /// like an unrecognized flag, missing or too many arguments, an invalid integer, etc. But
-    STATUS_INVALID_ARGS = 121,
 };
 
 /* Normally casting an expression to void discards its value, but GCC
@@ -1015,7 +1098,23 @@ struct hash<const wcstring> {
         return hasher((wcstring)w);
     }
 };
-}
+}  // namespace std
 #endif
+
+/// Get the absolute path to the fish executable itself
+std::string get_executable_path(const char *fallback);
+
+/// A RAII wrapper for resources that don't recur, so we don't have to create a separate RAII
+/// wrapper for each function. Avoids needing to call "return cleanup()" or similar / everywhere.
+struct cleanup_t {
+private:
+    const std::function<void()> cleanup;
+public:
+    cleanup_t(std::function<void()> exit_actions)
+        : cleanup{exit_actions} {}
+    ~cleanup_t() {
+        cleanup();
+    }
+};
 
 #endif

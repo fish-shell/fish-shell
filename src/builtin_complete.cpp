@@ -130,7 +130,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wcstring_list_t wrap_targets;
     bool preserve_order = false;
 
-    static const wchar_t *short_options = L":a:c:p:s:l:o:d:frxeuAn:C::w:hk";
+    static const wchar_t *const short_options = L":a:c:p:s:l:o:d:frxeuAn:C::w:hk";
     static const struct woption long_options[] = {{L"exclusive", no_argument, NULL, 'x'},
                                                   {L"no-files", no_argument, NULL, 'f'},
                                                   {L"require-parameter", no_argument, NULL, 'r'},

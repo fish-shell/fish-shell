@@ -63,13 +63,31 @@ static void debug_safe_int(int level, const char *format, int val) {
 /// process if it is the first in a JOB_CONTROL job.
 /// Returns true on sucess, false on failiure.
 bool child_set_group(job_t *j, process_t *p) {
-    bool retval = true;
-    if (j->get_flag(JOB_CONTROL)) {
-        // New jobs have the pgid set to -2
-        if (j->pgid == -2) {
+    if (j->get_flag(job_flag_t::JOB_CONTROL)) {
+        if (j->pgid == INVALID_PID) {
             j->pgid = p->pid;
         }
-        if (setpgid(p->pid, j->pgid) < 0) {
+
+        for (int i = 0; setpgid(p->pid, j->pgid) != 0; ++i) {
+            // Put a cap on how many times we retry so we are never stuck here
+            if (i < 100) {
+                if (errno == EPERM) {
+                    // The setpgid(2) man page says that EPERM is returned only if attempts are made to
+                    // move processes into groups across session boundaries (which can never be the case
+                    // in fish, anywhere) or to change the process group ID of a session leader (again,
+                    // can never be the case). I'm pretty sure this is a WSL bug, as we see the same
+                    // with tcsetpgrp(2) in other places and it disappears on retry.
+                    debug_safe(2, "setpgid(2) returned EPERM. Retrying");
+                    continue;
+                } else if (errno == EINTR) {
+                    // I don't think signals are blocked here. The parent (fish) redirected the signal
+                    // handlers and `setup_child_process()` calls `signal_reset_handlers()` after we're
+                    // done here (and not `signal_unblock()`). We're already in a loop, so let's just
+                    // handle EINTR just in case.
+                    continue;
+                }
+            }
+
             char pid_buff[128];
             char job_id_buff[128];
             char getpgid_buff[128];
@@ -88,15 +106,21 @@ bool child_set_group(job_t *j, process_t *p) {
                 1, "Could not send own process %s, '%s' in job %s, '%s' from group %s to group %s",
                 pid_buff, argv0, job_id_buff, command, getpgid_buff, job_pgid_buff);
 
+            if (is_windows_subsystem_for_linux() && errno == EPERM) {
+                debug_safe(1, "Please update to Windows 10 1809/17763 or higher to address known issues "
+                        "with process groups and zombie processes.");
+            }
+
             safe_perror("setpgid");
-            retval = false;
+
+            return false;
         }
     } else {
-        // The child does not actualyl use this field.
+        // The child does not actually use this field.
         j->pgid = getpgrp();
     }
 
-    return retval;
+    return true;
 }
 
 /// Called only by the parent only after a child forks and successfully calls child_set_group,
@@ -105,8 +129,8 @@ bool child_set_group(job_t *j, process_t *p) {
 /// group in the case of JOB_CONTROL, and we can give the new process group control of the terminal
 /// if it's to run in the foreground.
 bool set_child_group(job_t *j, pid_t child_pid) {
-    if (j->get_flag(JOB_CONTROL)) {
-        assert (j->pgid != -2
+    if (j->get_flag(job_flag_t::JOB_CONTROL)) {
+        assert (j->pgid != INVALID_PID
                 && "set_child_group called with JOB_CONTROL before job pgid determined!");
 
         // The parent sets the child's group. This incurs the well-known unavoidable race with the
@@ -134,9 +158,7 @@ bool set_child_group(job_t *j, pid_t child_pid) {
 }
 
 bool maybe_assign_terminal(const job_t *j) {
-    assert(j->pgid > 1 && "maybe_assign_terminal() called on job with invalid pgid!");
-
-    if (j->get_flag(JOB_TERMINAL) && j->get_flag(JOB_FOREGROUND)) {  //!OCLINT(early exit)
+    if (j->get_flag(job_flag_t::TERMINAL) && j->is_foreground()) {  //!OCLINT(early exit)
         if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
             // We've already assigned the process group control of the terminal when the first
             // process in the job was started. There's no need to do so again, and on some platforms
@@ -339,13 +361,13 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
 
     bool should_set_process_group_id = false;
     int desired_process_group_id = 0;
-    if (j->get_flag(JOB_CONTROL)) {
+    if (j->get_flag(job_flag_t::JOB_CONTROL)) {
         should_set_process_group_id = true;
 
         // set_child_group puts each job into its own process group
         // do the same here if there is no PGID yet (i.e. PGID == -2)
         desired_process_group_id = j->pgid;
-        if (desired_process_group_id == -2) {
+        if (desired_process_group_id == INVALID_PID) {
             desired_process_group_id = 0;
         }
     }

@@ -46,6 +46,10 @@ wcstring truncate(const wcstring &input, int max_len, ellipsis_type etype) {
     return output;
 }
 
+wcstring trim(const wcstring &input) {
+    return trim(input, L"\t\v \r\n");
+}
+
 wcstring trim(const wcstring &input, const wchar_t *any_of) {
     auto begin_offset = input.find_first_not_of(any_of);
     if (begin_offset == wcstring::npos) {

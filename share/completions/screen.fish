@@ -20,7 +20,8 @@ function __fish_complete_screen_general_list_mac -d "Get the socket list on mac"
 end
 
 function __fish_complete_screen_general_list -d "Get the socket list"
-    screen -list | string match -r '^\t.*\(.*\)\s*\('$argv'\)\s*$'| string replace -r '\t(.*)\s+\((.*)\)\s*\((.*)\)' '$1\t$2 $3'
+    set -l escaped (string escape --style=regex $argv)
+    screen -list | string match -r '^\t.*\(.*\)\s*\('$escaped'\)\s*$'| string replace -r '\t(.*)\s+\((.*)\)\s*\((.*)\)' '$1\t$2 $3'
 end
 
 function __fish_complete_screen_detached -d "Print a list of detached screen sessions"

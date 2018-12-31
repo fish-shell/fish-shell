@@ -4,7 +4,7 @@ function type --description 'Print the type of a command'
     or return 1
 
     set -l options 'h/help' 'a/all' 'f/no-functions' 't/type' 'p/path' 'P/force-path' 'q/quiet'
-    argparse -n type --min-args=1 -x t,p,P $options -- $argv
+    argparse -n type -x t,p,P $options -- $argv
     or return
 
     if set -q _flag_help

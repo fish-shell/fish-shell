@@ -26,6 +26,10 @@ struct bind_cmd_opts_t {
     bool print_help = false;
     bool silent = false;
     bool use_terminfo = false;
+    bool have_user = false;
+    bool user = false;
+    bool have_preset = false;
+    bool preset = false;
     int mode = BIND_INSERT;
     const wchar_t *bind_mode = DEFAULT_BIND_MODE;
     const wchar_t *sets_bind_mode = L"";
@@ -47,18 +51,21 @@ struct bind_cmd_opts_t {
 
 /// List a single key binding.
 /// Returns false if no binding with that sequence and mode exists.
-bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode,
+bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bool user,
                                   io_streams_t &streams) {
     std::vector<wcstring> ecmds;
     wcstring sets_mode;
 
-    if (!input_mapping_get(seq, bind_mode, &ecmds, &sets_mode)) {
+    if (!input_mapping_get(seq, bind_mode, &ecmds, user, &sets_mode)) {
         return false;
     }
 
     streams.out.append(L"bind");
 
     // Append the mode flags if applicable.
+    if (!user) {
+        streams.out.append(L" --preset");
+    }
     if (bind_mode != DEFAULT_BIND_MODE) {
         const wcstring emode = escape_string(bind_mode, ESCAPE_ALL);
         streams.out.append(L" -M ");
@@ -93,16 +100,30 @@ bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode,
     return true;
 }
 
+// Overload with both kinds of bindings.
+// Returns false only if neither exists.
+bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bool user, bool preset,
+                                  io_streams_t &streams) {
+    bool retval = false;
+    if (preset) {
+        retval |= list_one(seq, bind_mode, false, streams);
+    }
+    if (user) {
+        retval |= list_one(seq, bind_mode, true, streams);
+    }
+    return retval;
+}
+
 /// List all current key bindings.
-void builtin_bind_t::list(const wchar_t *bind_mode, io_streams_t &streams) {
-    const std::vector<input_mapping_name_t> lst = input_mapping_get_names();
+void builtin_bind_t::list(const wchar_t *bind_mode, bool user, io_streams_t &streams) {
+    const std::vector<input_mapping_name_t> lst = input_mapping_get_names(user);
 
     for (const input_mapping_name_t &binding : lst) {
         if (bind_mode && bind_mode != binding.mode) {
             continue;
         }
 
-        list_one(binding.seq, binding.mode, streams);
+        list_one(binding.seq, binding.mode, user, streams);
     }
 }
 
@@ -110,7 +131,7 @@ void builtin_bind_t::list(const wchar_t *bind_mode, io_streams_t &streams) {
 ///
 /// \param all if set, all terminfo key binding names will be printed. If not set, only ones that
 /// are defined for this terminal are printed.
-void builtin_bind_t::key_names(int all, io_streams_t &streams) {
+void builtin_bind_t::key_names(bool all, io_streams_t &streams) {
     const wcstring_list_t names = input_terminfo_get_names(!all);
     for (size_t i = 0; i < names.size(); i++) {
         const wcstring &name = names.at(i);
@@ -152,18 +173,18 @@ bool builtin_bind_t::get_terminfo_sequence(const wchar_t *seq, wcstring *out_seq
 
 /// Add specified key binding.
 bool builtin_bind_t::add(const wchar_t *seq, const wchar_t *const *cmds, size_t cmds_len,
-                             const wchar_t *mode, const wchar_t *sets_mode, int terminfo,
+                         const wchar_t *mode, const wchar_t *sets_mode, bool terminfo, bool user,
                              io_streams_t &streams) {
     if (terminfo) {
         wcstring seq2;
         if (get_terminfo_sequence(seq, &seq2, streams)) {
-            input_mapping_add(seq2.c_str(), cmds, cmds_len, mode, sets_mode);
+            input_mapping_add(seq2.c_str(), cmds, cmds_len, mode, sets_mode, user);
         } else {
             return true;
         }
 
     } else {
-        input_mapping_add(seq, cmds, cmds_len, mode, sets_mode);
+        input_mapping_add(seq, cmds, cmds_len, mode, sets_mode, user);
     }
 
     return false;
@@ -181,17 +202,10 @@ bool builtin_bind_t::add(const wchar_t *seq, const wchar_t *const *cmds, size_t 
 /// @param  use_terminfo
 ///    Whether to look use terminfo -k name
 ///
-bool builtin_bind_t::erase(wchar_t **seq, int all, const wchar_t *mode, int use_terminfo,
+bool builtin_bind_t::erase(wchar_t **seq, bool all, const wchar_t *mode, bool use_terminfo, bool user,
                                io_streams_t &streams) {
     if (all) {
-        const std::vector<input_mapping_name_t> lst = input_mapping_get_names();
-        for (std::vector<input_mapping_name_t>::const_iterator it = lst.begin(), end = lst.end();
-             it != end; ++it) {
-            if (mode == NULL || mode == it->mode) {
-                input_mapping_erase(it->seq, it->mode);
-            }
-        }
-
+        input_mapping_clear(mode, user);
         return false;
     }
 
@@ -202,12 +216,12 @@ bool builtin_bind_t::erase(wchar_t **seq, int all, const wchar_t *mode, int use_
         if (use_terminfo) {
             wcstring seq2;
             if (get_terminfo_sequence(*seq++, &seq2, streams)) {
-                input_mapping_erase(seq2, mode);
+                input_mapping_erase(seq2, mode, user);
             } else {
                 res = true;
             }
         } else {
-            input_mapping_erase(*seq++, mode);
+            input_mapping_erase(*seq++, mode, user);
         }
     }
 
@@ -219,8 +233,30 @@ bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv,
     wchar_t *cmd = argv[0];
     int arg_count = argc - optind;
 
+    if (arg_count < 2) {
+        // If we get both or neither preset/user, we list both.
+        if (!opts->have_preset && !opts->have_user) {
+            opts->preset = true;
+            opts->user = true;
+        }
+    } else {
+        // Inserting both on the other hand makes no sense.
+        if (opts->have_preset && opts->have_user) {
+            streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
+                                      L"--preset and --user can not be used together when inserting bindings.");
+            return true;
+        }
+    }
+
     if (arg_count == 0) {
-        list(opts->bind_mode_given ? opts->bind_mode : NULL, streams);
+        // We don't overload this with user and def because we want them to be grouped.
+        // First the presets, then the users (because of scrolling).
+        if (opts->preset) {
+            list(opts->bind_mode_given ? opts->bind_mode : NULL, false, streams);
+        }
+        if (opts->user) {
+            list(opts->bind_mode_given ? opts->bind_mode : NULL, true, streams);
+        }
     } else if (arg_count == 1) {
         wcstring seq;
         if (opts->use_terminfo) {
@@ -232,7 +268,7 @@ bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv,
             seq = argv[optind];
         }
 
-        if (!list_one(seq, opts->bind_mode, streams)) {
+        if (!list_one(seq, opts->bind_mode, opts->user, opts->preset, streams)) {
             wcstring eseq = escape_string(argv[optind], 0);
             if (!opts->silent) {
                 if (opts->use_terminfo) {
@@ -246,8 +282,9 @@ bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv,
             return true;
         }
     } else {
+        // Actually insert!
         if (add(argv[optind], argv + (optind + 1), argc - (optind + 1), opts->bind_mode,
-                             opts->sets_bind_mode, opts->use_terminfo, streams)) {
+                opts->sets_bind_mode, opts->use_terminfo, opts->user, streams)) {
             return true;
         }
     }
@@ -257,13 +294,18 @@ bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv,
 
 /// List all current bind modes.
 void builtin_bind_t::list_modes(io_streams_t &streams) {
-    const std::vector<input_mapping_name_t> lst = input_mapping_get_names();
+    // List all known modes, even if they are only in preset bindings.
+    const std::vector<input_mapping_name_t> lst = input_mapping_get_names(true);
+    const std::vector<input_mapping_name_t> preset_lst = input_mapping_get_names(false);
     // A set accomplishes two things for us here:
     // - It removes duplicates (no twenty "default" entries).
     // - It sorts it, which makes it nicer on the user.
     std::set<wcstring> modes;
 
     for (const input_mapping_name_t &binding : lst) {
+        modes.insert(binding.mode);
+    }
+    for (const input_mapping_name_t &binding : preset_lst) {
         modes.insert(binding.mode);
     }
     for (const auto &mode : modes) {
@@ -274,7 +316,7 @@ void builtin_bind_t::list_modes(io_streams_t &streams) {
 int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
-    static const wchar_t *short_options = L":aehkKfM:Lm:s";
+    static const wchar_t *const short_options = L":aehkKfM:Lm:s";
     static const struct woption long_options[] = {{L"all", no_argument, NULL, 'a'},
                                                   {L"erase", no_argument, NULL, 'e'},
                                                   {L"function-names", no_argument, NULL, 'f'},
@@ -283,8 +325,10 @@ int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss meth
                                                   {L"key-names", no_argument, NULL, 'K'},
                                                   {L"list-modes", no_argument, NULL, 'L'},
                                                   {L"mode", required_argument, NULL, 'M'},
+                                                  {L"preset", no_argument, NULL, 'p'},
                                                   {L"sets-mode", required_argument, NULL, 'm'},
                                                   {L"silent", no_argument, NULL, 's'},
+                                                  {L"user", no_argument, NULL, 'u'},
                                                   {NULL, 0, NULL, 0}};
 
     int opt;
@@ -336,8 +380,18 @@ int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss meth
                 opts.sets_bind_mode = w.woptarg;
                 break;
             }
+            case L'p': {
+                opts.have_preset = true;
+                opts.preset = true;
+                break;
+            }
             case L's': {
                 opts.silent = true;
+                break;
+            }
+            case L'u': {
+                opts.have_user = true;
+                opts.user = true;
                 break;
             }
             case ':': {
@@ -379,12 +433,23 @@ int builtin_bind_t::builtin_bind(parser_t &parser, io_streams_t &streams, wchar_
         return STATUS_CMD_OK;
     }
 
+    // Default to user mode
+    if (!opts.have_preset && !opts.have_user) opts.user = true;
     switch (opts.mode) {
         case BIND_ERASE: {
             const wchar_t *bind_mode = opts.bind_mode_given ? opts.bind_mode : NULL;
-            if (erase(&argv[optind], opts.all, bind_mode, opts.use_terminfo,
-                                   streams)) {
-                return STATUS_CMD_ERROR;
+            // If we get both, we erase both.
+            if (opts.user) {
+                if (erase(&argv[optind], opts.all, bind_mode, opts.use_terminfo, /* user */ true,
+                          streams)) {
+                    return STATUS_CMD_ERROR;
+                }
+            }
+            if (opts.preset) {
+                if (erase(&argv[optind], opts.all, bind_mode, opts.use_terminfo, /* user */ false,
+                          streams)) {
+                    return STATUS_CMD_ERROR;
+                }
             }
             break;
         }

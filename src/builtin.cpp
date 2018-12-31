@@ -26,7 +26,6 @@
 #include <algorithm>
 #include <memory>
 #include <string>
-#include <unordered_set>
 
 #include "builtin.h"
 #include "builtin_argparse.h"
@@ -76,6 +75,14 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
+bool builtin_data_t::operator<(const wcstring &other) const {
+    return wcscmp(this->name, other.c_str()) < 0;
+}
+
+bool builtin_data_t::operator<(const builtin_data_t *other) const {
+    return wcscmp(this->name, other->name) < 0;
+}
+
 /// Counts the number of arguments in the specified null-terminated array
 int builtin_count_args(const wchar_t *const *argv) {
     int argc;
@@ -102,7 +109,7 @@ void builtin_wperror(const wchar_t *s, io_streams_t &streams) {
     }
 }
 
-static const wchar_t *short_options = L"+:h";
+static const wchar_t *const short_options = L"+:h";
 static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
                                               {NULL, 0, NULL, 0}};
 
@@ -162,12 +169,6 @@ wcstring builtin_help_get(parser_t &parser, io_streams_t &streams, const wchar_t
     wcstring out;
     const wcstring name_esc = escape_string(name, 1);
     wcstring cmd = format_string(L"__fish_print_help %ls", name_esc.c_str());
-    if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
-        // since we're using a subshell, __fish_print_help can't tell we're in
-        // a terminal. Tell it ourselves.
-        int cols = common_get_width();
-        cmd = format_string(L"__fish_print_help --tty-width %d %ls", cols, name_esc.c_str());
-    }
     if (exec_subshell(cmd, lst, false /* don't apply exit status */) >= 0) {
         for (size_t i = 0; i < lst.size(); i++) {
             out.append(lst.at(i));
@@ -199,11 +200,11 @@ void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *
         bool is_short = false;
         if (is_stderr) {
             // Interactive mode help to screen - only print synopsis if the rest won't fit.
-            int screen_height, lines;
+            int screen_height, my_lines;
 
             screen_height = common_get_height();
-            lines = count_char(str, L'\n');
-            if (!shell_is_interactive() || (lines > 2 * screen_height / 3)) {
+            my_lines = count_char(str, L'\n');
+            if (!shell_is_interactive() || (my_lines > 2 * screen_height / 3)) {
                 wchar_t *pos;
                 int cut = 0;
                 int i;
@@ -394,10 +395,12 @@ int builtin_false(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
 // END OF BUILTIN COMMANDS
 // Below are functions for handling the builtin commands.
+// THESE MUST BE SORTED BY NAME! Completion lookup uses binary search.
 
 // Data about all the builtin commands in fish.
 // Functions that are bound to builtin_generic are handled directly by the parser.
-static const std::unordered_set<builtin_data_t> builtin_datas = {
+// NOTE: These must be kept in sorted order!
+static const builtin_data_t builtin_datas[] = {
     {L"[", &builtin_test, N_(L"Test a condition")},
     {L"and", &builtin_generic, N_(L"Execute command if previous command suceeded")},
     {L"argparse", &builtin_argparse, N_(L"Parse options in fish script")},
@@ -406,7 +409,8 @@ static const std::unordered_set<builtin_data_t> builtin_datas = {
     {L"bind", &builtin_bind, N_(L"Handle fish key bindings")},
     {L"block", &builtin_block, N_(L"Temporarily block delivery of events")},
     {L"break", &builtin_break_continue, N_(L"Stop the innermost loop")},
-    {L"breakpoint", &builtin_breakpoint, N_(L"Temporarily halt execution of a script and launch an interactive debug prompt")},
+    {L"breakpoint", &builtin_breakpoint,
+     N_(L"Temporarily halt execution of a script and launch an interactive debug prompt")},
     {L"builtin", &builtin_builtin, N_(L"Run a builtin command instead of a function")},
     {L"case", &builtin_generic, N_(L"Conditionally execute a block of commands")},
     {L"cd", &builtin_cd, N_(L"Change working directory")},
@@ -414,7 +418,8 @@ static const std::unordered_set<builtin_data_t> builtin_datas = {
     {L"commandline", &builtin_commandline, N_(L"Set or get the commandline")},
     {L"complete", &builtin_complete, N_(L"Edit command specific completions")},
     {L"contains", &builtin_contains, N_(L"Search for a specified string in a list")},
-    {L"continue", &builtin_break_continue, N_(L"Skip the rest of the current lap of the innermost loop")},
+    {L"continue", &builtin_break_continue,
+     N_(L"Skip the rest of the current lap of the innermost loop")},
     {L"count", &builtin_count, N_(L"Count the number of arguments")},
     {L"disown", &builtin_disown, N_(L"Remove job from job list")},
     {L"echo", &builtin_echo, N_(L"Print arguments")},
@@ -452,6 +457,8 @@ static const std::unordered_set<builtin_data_t> builtin_datas = {
     {L"wait", &builtin_wait, N_(L"Wait for background processes completed")},
     {L"while", &builtin_generic, N_(L"Perform a command multiple times")}};
 
+#define BUILTIN_COUNT (sizeof builtin_datas / sizeof *builtin_datas)
+
 /// Look up a builtin_data_t for a specified builtin
 ///
 /// @param  name
@@ -461,19 +468,21 @@ static const std::unordered_set<builtin_data_t> builtin_datas = {
 ///    Pointer to a builtin_data_t
 ///
 static const builtin_data_t *builtin_lookup(const wcstring &name) {
-    auto search = builtin_data_t { name };
-    auto result = builtin_datas.find(search);
-    if (result == builtin_datas.end()) {
-        return NULL;
+    const builtin_data_t *array_end = builtin_datas + BUILTIN_COUNT;
+    const builtin_data_t *found = std::lower_bound(builtin_datas, array_end, name);
+    if (found != array_end && name == found->name) {
+        return found;
     }
-
-    return &*result;
+    return NULL;
 }
 
 /// Initialize builtin data.
 void builtin_init() {
-    for (auto &bi : builtin_datas) {
-        intern_static(bi.name.c_str());
+    for (size_t i = 0; i < BUILTIN_COUNT; i++) {
+        const wchar_t *name = builtin_datas[i].name;
+        intern_static(name);
+        assert((i == 0 || wcscmp(builtin_datas[i - 1].name, name) < 0) &&
+               "builtins are not sorted alphabetically");
     }
 }
 
@@ -481,8 +490,8 @@ void builtin_init() {
 bool builtin_exists(const wcstring &cmd) { return static_cast<bool>(builtin_lookup(cmd)); }
 
 /// Is the command a keyword we need to special-case the handling of `-h` and `--help`.
-static const wcstring_list_t help_builtins({L"for", L"while", L"function", L"if", L"end", L"switch",
-                                            L"case"});
+static const wchar_t *const help_builtins[] = {L"for", L"while",  L"function", L"if",
+                                               L"end", L"switch", L"case"};
 static bool cmd_needs_help(const wchar_t *cmd) { return contains(help_builtins, cmd); }
 
 /// Execute a builtin command
@@ -518,9 +527,9 @@ int builtin_run(parser_t &parser, int job_pgid, wchar_t **argv, io_streams_t &st
 /// Returns a list of all builtin names.
 wcstring_list_t builtin_get_names() {
     wcstring_list_t result;
-    result.reserve(builtin_datas.size());
-    for (auto &bi : builtin_datas) {
-        result.push_back(bi.name);
+    result.reserve(BUILTIN_COUNT);
+    for (size_t i = 0; i < BUILTIN_COUNT; i++) {
+        result.push_back(builtin_datas[i].name);
     }
     return result;
 }
@@ -528,9 +537,9 @@ wcstring_list_t builtin_get_names() {
 /// Insert all builtin names into list.
 void builtin_get_names(std::vector<completion_t> *list) {
     assert(list != NULL);
-    list->reserve(list->size() + builtin_datas.size());
-    for (auto &bi : builtin_datas) {
-        append_completion(list, bi.name);
+    list->reserve(list->size() + BUILTIN_COUNT);
+    for (size_t i = 0; i < BUILTIN_COUNT; i++) {
+        append_completion(list, builtin_datas[i].name);
     }
 }
 
@@ -539,7 +548,7 @@ wcstring builtin_get_desc(const wcstring &name) {
     wcstring result;
     const builtin_data_t *builtin = builtin_lookup(name);
     if (builtin) {
-        result = _(builtin->desc.c_str());
+        result = _(builtin->desc);
     }
     return result;
 }

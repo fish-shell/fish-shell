@@ -70,7 +70,7 @@ const wchar_t *reader_current_filename();
 void reader_push_current_filename(const wchar_t *fn);
 
 /// Change the history file for the current command reading context.
-void reader_change_history(const wchar_t *fn);
+void reader_change_history(const wcstring &name);
 
 /// Pop the current filename from the stack of read files.
 void reader_pop_current_filename();
@@ -226,10 +226,6 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
 wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flags_t flags,
                                           const wcstring &command_line, size_t *inout_cursor_pos,
                                           bool append_only);
-
-/// Terminate all background jobs
-void kill_background_jobs();
-
 
 /// Print warning with list of backgrounded jobs
 void reader_bg_job_warning();

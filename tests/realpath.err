@@ -1,1 +1,2 @@
-realpath: Invalid path: /this/better/be/an/invalid/path
+builtin realpath: /this/better/be/an/invalid/path: No such file or directory
+builtin realpath: .: No such file or directory

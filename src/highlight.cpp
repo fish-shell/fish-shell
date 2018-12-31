@@ -121,6 +121,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
     for (size_t i = 0; i < path_with_magic.size(); i++) {
         wchar_t c = path_with_magic.at(i);
         switch (c) {
+            case PROCESS_EXPAND_SELF:
             case VARIABLE_EXPAND:
             case VARIABLE_EXPAND_SINGLE:
             case BRACE_BEGIN:
@@ -350,8 +351,7 @@ bool autosuggest_validate_from_history(const history_item_t &item,
                 string_prefixes_string(cd_dir, L"--help") || string_prefixes_string(cd_dir, L"-h");
             if (!is_help) {
                 wcstring path;
-                env_var_t dir_var(cd_dir, 0);
-                bool can_cd = path_get_cdpath(dir_var, &path, working_directory.c_str(), vars);
+                bool can_cd = path_get_cdpath(cd_dir, &path, working_directory, vars);
                 if (can_cd && !paths_are_same_file(working_directory, path)) {
                     suggestionOK = true;
                 }
@@ -443,6 +443,12 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
            "Unexpected base color");
     const size_t buff_len = buffstr.size();
     std::fill(colors, colors + buff_len, base_color);
+
+    // Hacky support for %self which must be an unquoted literal argument.
+    if (buffstr == PROCESS_EXPAND_SELF_STR) {
+        std::fill_n(colors, wcslen(PROCESS_EXPAND_SELF_STR), highlight_spec_operator);
+        return;
+    }
 
     enum { e_unquoted, e_single_quoted, e_double_quoted } mode = e_unquoted;
     int bracket_count = 0;
@@ -692,8 +698,8 @@ class highlighter_t {
 
    public:
     // Constructor
-    highlighter_t(const wcstring &str, size_t pos, const env_vars_snapshot_t &ev,
-                  wcstring wd, bool can_do_io)
+    highlighter_t(const wcstring &str, size_t pos, const env_vars_snapshot_t &ev, wcstring wd,
+                  bool can_do_io)
         : buff(str),
           cursor_pos(pos),
           vars(ev),
@@ -1015,7 +1021,7 @@ static bool command_is_valid(const wcstring &cmd, enum parse_statement_decoratio
 
     // Implicit cd
     if (!is_valid && implicit_cd_ok) {
-        is_valid = path_can_be_implicit_cd(cmd, NULL, working_directory.c_str(), vars);
+        is_valid = path_can_be_implicit_cd(cmd, working_directory, NULL, vars);
     }
 
     // Return what we got.
@@ -1225,7 +1231,7 @@ static void highlight_universal_internal(const wcstring &buffstr,
             wchar_t prev_q = 0;
             const wchar_t *const buff = buffstr.c_str();
             const wchar_t *str = buff;
-            int match_found = 0;
+            bool match_found = false;
 
             while (*str) {
                 switch (*str) {
@@ -1251,7 +1257,7 @@ static void highlight_universal_internal(const wcstring &buffstr,
                                         highlight_make_background(highlight_spec_match);
                                     color.at(pos2) |=
                                         highlight_make_background(highlight_spec_match);
-                                    match_found = 1;
+                                    match_found = true;
                                 }
                                 prev_q = *str == L'\"' ? L'\'' : L'\"';
                             } else {
@@ -1280,7 +1286,7 @@ static void highlight_universal_internal(const wcstring &buffstr,
             wchar_t dec_char = *(wcschr(L"()[]{}", c) + step);
             wchar_t inc_char = c;
             int level = 0;
-            int match_found = 0;
+            bool match_found = false;
             for (long i = pos; i >= 0 && (size_t)i < buffstr.size(); i += step) {
                 const wchar_t test_char = buffstr.at(i);
                 if (test_char == inc_char) level++;
@@ -1289,7 +1295,7 @@ static void highlight_universal_internal(const wcstring &buffstr,
                     long pos2 = i;
                     color.at(pos) |= highlight_spec_match << 16;
                     color.at(pos2) |= highlight_spec_match << 16;
-                    match_found = 1;
+                    match_found = true;
                     break;
                 }
             }

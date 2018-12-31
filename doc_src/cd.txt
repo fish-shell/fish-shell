@@ -16,6 +16,8 @@ Note that the shell will attempt to change directory without requiring `cd` if t
 
 Fish also ships a wrapper function around the builtin `cd` that understands `cd -` as changing to the previous directory. See also <a href="commands.html#prevd">`prevd`</a>. This wrapper function maintains a history of the 25 most recently visited directories in the `$dirprev` and `$dirnext` global variables. If you make those universal variables your `cd` history is shared among all fish instances.
 
+As a special case, `cd .` is equivalent to `cd $PWD`, which is useful in cases where a mountpoint has been recycled or a directory has been removed and recreated.
+
 \subsection cd-example Examples
 
 \fish

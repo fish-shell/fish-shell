@@ -39,7 +39,7 @@ struct functions_cmd_opts_t {
     wchar_t *handlers_type = NULL;
     wchar_t *description = NULL;
 };
-static const wchar_t *short_options = L":HDacd:ehnqv";
+static const wchar_t *const short_options = L":HDacd:ehnqv";
 static const struct woption long_options[] = {
     {L"erase", no_argument, NULL, 'e'},   {L"description", required_argument, NULL, 'd'},
     {L"names", no_argument, NULL, 'n'},   {L"all", no_argument, NULL, 'a'},
@@ -124,8 +124,8 @@ static wcstring functions_def(const wcstring &name) {
     CHECK(!name.empty(), L"");  //!OCLINT(multiple unary operator)
     wcstring out;
     wcstring desc, def;
-    function_get_desc(name, &desc);
-    function_get_definition(name, &def);
+    function_get_desc(name, desc);
+    function_get_definition(name, def);
     event_t search(EVENT_ANY);
     search.function_name = name;
     std::vector<std::shared_ptr<event_t>> ev;
@@ -170,7 +170,7 @@ static wcstring functions_def(const wcstring &name) {
                 break;
             }
             case EVENT_JOB_ID: {
-                const job_t *j = job_get(next->param1.job_id);
+                const job_t *j = job_t::from_job_id(next->param1.job_id);
                 if (j) append_format(out, L" --on-job-exit %d", j->pgid);
                 break;
             }
@@ -243,7 +243,7 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
             path = L"stdin";
         }
         shadows_scope = props->shadow_scope ? L"scope-shadowing" : L"no-scope-shadowing";
-        function_get_desc(funcname, &description);
+        function_get_desc(funcname, description);
         description = escape_string(description, ESCAPE_NO_QUOTED);
     }
 

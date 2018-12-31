@@ -68,7 +68,7 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
 #ifdef HAVE__PROC_SELF_STAT
             streams.out.append_format(L"%d%%\t", cpu_use(j));
 #endif
-            streams.out.append(job_is_stopped(j) ? _(L"stopped") : _(L"running"));
+            streams.out.append(j->is_stopped() ? _(L"stopped") : _(L"running"));
             streams.out.append(L"\t");
             streams.out.append(j->command_wcstr());
             streams.out.append(L"\n");
@@ -115,11 +115,11 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
 int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    int found = 0;
+    bool found = false;
     int mode = JOBS_DEFAULT;
     int print_last = 0;
 
-    static const wchar_t *short_options = L":cghlpq";
+    static const wchar_t *const short_options = L":cghlpq";
     static const struct woption long_options[] = {
         {L"command", no_argument, NULL, 'c'},
         {L"group", no_argument, NULL, 'g'},
@@ -177,7 +177,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         job_iterator_t jobs;
         const job_t *j;
         while ((j = jobs.next())) {
-            if ((j->flags & JOB_CONSTRUCTED) && !job_is_completed(j)) {
+            if (j->is_constructed() && !j->is_completed()) {
                 builtin_jobs_print(j, mode, !streams.out_is_redirected, streams);
                 return STATUS_CMD_ERROR;
             }
@@ -197,7 +197,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                         streams.err.append_format(_(L"%ls: '%ls' is not a valid job id"), cmd, argv[i]);
                         return STATUS_INVALID_ARGS;
                     }
-                    j = job_get(jobId);
+                    j = job_t::from_job_id(jobId);
                 }
                 else {
                     int pid = fish_wcstoi(argv[i]);
@@ -205,12 +205,12 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                         streams.err.append_format(_(L"%ls: '%ls' is not a valid process id\n"), cmd, argv[i]);
                         return STATUS_INVALID_ARGS;
                     }
-                    j = job_get_from_pid(pid);
+                    j = job_t::from_pid(pid);
                 }
 
-                if (j && !job_is_completed(j) && (j->flags & JOB_CONSTRUCTED)) {
+                if (j && !j->is_completed() && j->is_constructed()) {
                     builtin_jobs_print(j, mode, false, streams);
-                    found = 1;
+                    found = true;
                 } else {
                     streams.err.append_format(_(L"%ls: No suitable job: %ls\n"), cmd, argv[i]);
                     return STATUS_CMD_ERROR;
@@ -221,9 +221,9 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             const job_t *j;
             while ((j = jobs.next())) {
                 // Ignore unconstructed jobs, i.e. ourself.
-                if ((j->flags & JOB_CONSTRUCTED) && !job_is_completed(j)) {
+                if (j->is_constructed() && !j->is_completed()) {
                     builtin_jobs_print(j, mode, !found && !streams.out_is_redirected, streams);
-                    found = 1;
+                    found = true;
                 }
             }
         }

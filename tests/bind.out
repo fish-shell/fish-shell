@@ -1,0 +1,55 @@
+# Listing bindings
+bind --preset '' self-insert
+bind --preset \n execute
+bind --preset \r execute
+bind --preset \t complete
+bind --preset \cc commandline\ \'\'
+bind --preset \cd exit
+bind --preset \ce bind
+bind --preset \e\[A up-line
+bind --preset \e\[B down-line
+bind --preset \e\[C forward-char
+bind --preset \e\[D backward-char
+bind -M bind_mode \cx true
+bind --preset '' self-insert
+bind --preset \n execute
+bind --preset \r execute
+bind --preset \t complete
+bind --preset \cc commandline\ \'\'
+bind --preset \cd exit
+bind --preset \ce bind
+bind --preset \e\[A up-line
+bind --preset \e\[B down-line
+bind --preset \e\[C forward-char
+bind --preset \e\[D backward-char
+bind -M bind_mode \cx true
+# Preset only
+bind --preset '' self-insert
+bind --preset \n execute
+bind --preset \r execute
+bind --preset \t complete
+bind --preset \cc commandline\ \'\'
+bind --preset \cd exit
+bind --preset \ce bind
+bind --preset \e\[A up-line
+bind --preset \e\[B down-line
+bind --preset \e\[C forward-char
+bind --preset \e\[D backward-char
+# User only
+bind -M bind_mode \cx true
+# Adding bindings
+bind --preset '' self-insert
+bind --preset \n execute
+bind --preset \r execute
+bind --preset \t complete
+bind --preset \cc commandline\ \'\'
+bind --preset \cd exit
+bind --preset \ce bind
+bind --preset \e\[A up-line
+bind --preset \e\[B down-line
+bind --preset \e\[C forward-char
+bind --preset \e\[D backward-char
+bind -M bind_mode \cx true
+bind \t 'echo banana'
+# Erasing bindings
+bind --preset \t complete

@@ -9,3 +9,25 @@ bind -M bind-mode \cX true
 
 # This should succeed and result in a success, zero, status.
 bind -M bind_mode \cX true
+
+### HACK: All full bind listings need to have the \x7f -> backward-delete-char
+# binding explicitly removed, because on some systems that's backspace, on others not.
+echo \# Listing bindings
+bind | string match -v '*backward-delete-char'
+bind --user --preset | string match -v '*backward-delete-char'
+echo \# Preset only
+bind --preset | string match -v '*backward-delete-char'
+echo \# User only
+bind --user | string match -v '*backward-delete-char'
+
+echo \# Adding bindings
+bind \t 'echo banana'
+bind | string match -v '*backward-delete-char'
+echo \# Erasing bindings
+bind --erase \t
+bind \t
+bind \t 'echo wurst'
+bind --erase --user --preset \t
+bind \t
+
+exit 0

@@ -142,6 +142,7 @@ wcstring describe_char(wint_t c) {
 
 /// Mappings for the current input mode.
 static std::vector<input_mapping_t> mapping_list;
+static std::vector<input_mapping_t> preset_mapping_list;
 
 /// Terminfo map list.
 static std::vector<terminfo_mapping_t> terminfo_mappings;
@@ -205,15 +206,17 @@ static bool specification_order_is_less_than(const input_mapping_t &m1, const in
 
 /// Inserts an input mapping at the correct position. We sort them in descending order by length, so
 /// that we test longer sequences first.
-static void input_mapping_insert_sorted(const input_mapping_t &new_mapping) {
+static void input_mapping_insert_sorted(const input_mapping_t &new_mapping, bool user = true) {
+    auto& ml = user ? mapping_list : preset_mapping_list;
+
     std::vector<input_mapping_t>::iterator loc = std::lower_bound(
-        mapping_list.begin(), mapping_list.end(), new_mapping, length_is_greater_than);
-    mapping_list.insert(loc, new_mapping);
+        ml.begin(), ml.end(), new_mapping, length_is_greater_than);
+    ml.insert(loc, new_mapping);
 }
 
 /// Adds an input mapping.
 void input_mapping_add(const wchar_t *sequence, const wchar_t *const *commands, size_t commands_len,
-                       const wchar_t *mode, const wchar_t *sets_mode) {
+                       const wchar_t *mode, const wchar_t *sets_mode, bool user) {
     CHECK(sequence, );
     CHECK(commands, );
     CHECK(mode, );
@@ -226,8 +229,10 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t *const *commands, 
     // Remove existing mappings with this sequence.
     const wcstring_list_t commands_vector(commands, commands + commands_len);
 
-    for (size_t i = 0; i < mapping_list.size(); i++) {
-        input_mapping_t &m = mapping_list.at(i);
+    auto& ml = user ? mapping_list : preset_mapping_list;
+
+    for (size_t i = 0; i < ml.size(); i++) {
+        input_mapping_t &m = ml.at(i);
         if (m.seq == sequence && m.mode == mode) {
             m.commands = commands_vector;
             m.sets_mode = sets_mode;
@@ -237,12 +242,12 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t *const *commands, 
 
     // Add a new mapping, using the next order.
     const input_mapping_t new_mapping = input_mapping_t(sequence, commands_vector, mode, sets_mode);
-    input_mapping_insert_sorted(new_mapping);
+    input_mapping_insert_sorted(new_mapping, user);
 }
 
 void input_mapping_add(const wchar_t *sequence, const wchar_t *command, const wchar_t *mode,
-                       const wchar_t *sets_mode) {
-    input_mapping_add(sequence, &command, 1, mode, sets_mode);
+                       const wchar_t *sets_mode, bool user) {
+    input_mapping_add(sequence, &command, 1, mode, sets_mode, user);
 }
 
 /// Handle interruptions to key reading by reaping finshed jobs and propagating the interrupt to the
@@ -251,7 +256,7 @@ static int interrupt_handler() {
     // Fire any pending events.
     event_fire(NULL);
     // Reap stray processes, including printing exit status messages.
-    if (job_reap(1)) reader_repaint_needed();
+    if (job_reap(true)) reader_repaint_needed();
     // Tell the reader an event occured.
     if (reader_reading_interrupted()) {
         return shell_modes.c_cc[VINTR];
@@ -267,20 +272,20 @@ void init_input() {
     init_input_terminfo();
 
     // If we have no keybindings, add a few simple defaults.
-    if (mapping_list.empty()) {
-        input_mapping_add(L"", L"self-insert");
-        input_mapping_add(L"\n", L"execute");
-        input_mapping_add(L"\r", L"execute");
-        input_mapping_add(L"\t", L"complete");
-        input_mapping_add(L"\x3", L"commandline ''");
-        input_mapping_add(L"\x4", L"exit");
-        input_mapping_add(L"\x5", L"bind");
-        input_mapping_add(L"\x7f", L"backward-delete-char");
+    if (preset_mapping_list.empty()) {
+        input_mapping_add(L"", L"self-insert", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        input_mapping_add(L"\n", L"execute", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        input_mapping_add(L"\r", L"execute", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        input_mapping_add(L"\t", L"complete", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        input_mapping_add(L"\x3", L"commandline ''", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        input_mapping_add(L"\x4", L"exit", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        input_mapping_add(L"\x5", L"bind", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        input_mapping_add(L"\x7f", L"backward-delete-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
         // Arrows - can't have functions, so *-or-search isn't available.
-        input_mapping_add(L"\x1B[A", L"up-line");
-        input_mapping_add(L"\x1B[B", L"down-line");
-        input_mapping_add(L"\x1B[C", L"forward-char");
-        input_mapping_add(L"\x1B[D", L"backward-char");
+        input_mapping_add(L"\x1B[A", L"up-line", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        input_mapping_add(L"\x1B[B", L"down-line", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        input_mapping_add(L"\x1B[C", L"forward-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        input_mapping_add(L"\x1B[D", L"backward-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
     }
 
     input_initialized = true;
@@ -328,9 +333,8 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
     // has_commands: there are shell commands that need to be evaluated
     bool has_commands = false, has_functions = false;
 
-    for (wcstring_list_t::const_iterator it = m.commands.begin(), end = m.commands.end(); it != end;
-         ++it) {
-        if (input_function_get_code(*it) != INPUT_CODE_NONE)
+    for (const wcstring &cmd : m.commands) {
+        if (input_function_get_code(cmd) != INPUT_CODE_NONE)
             has_functions = true;
         else
             has_commands = true;
@@ -365,9 +369,8 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
         // FIXME(snnw): if commands add stuff to input queue (e.g. commandline -f execute), we won't
         // see that until all other commands have also been run.
         int last_status = proc_get_last_status();
-        for (wcstring_list_t::const_iterator it = m.commands.begin(), end = m.commands.end();
-             it != end; ++it) {
-            parser_t::principal_parser().eval(it->c_str(), io_chain_t(), TOP);
+        for (const wcstring &cmd : m.commands) {
+            parser_t::principal_parser().eval(cmd.c_str(), io_chain_t(), TOP);
         }
         proc_set_last_status(last_status);
         input_common_next_ch(R_NULL);
@@ -386,7 +389,6 @@ static bool input_mapping_is_match(const input_mapping_t &m) {
     const wcstring &str = m.seq;
 
     assert(str.size() > 0 && "zero-length input string passed to input_mapping_is_match!");
-    debug(4, L"trying to match mapping %ls", escape_string(m.seq.c_str(), ESCAPE_ALL).c_str());
 
     bool timed = false;
     for (size_t i = 0; i < str.size(); ++i) {
@@ -417,21 +419,28 @@ static void input_mapping_execute_matching_or_generic(bool allow_commands) {
 
     const wcstring bind_mode = input_get_bind_mode();
 
-    for (size_t i = 0; i < mapping_list.size(); i++) {
-        const input_mapping_t &m = mapping_list.at(i);
-
-        // debug(0, L"trying mapping (%ls,%ls,%ls)\n", escape_string(m.seq.c_str(),
-        // ESCAPE_ALL).c_str(),
-        //           m.mode.c_str(), m.sets_mode.c_str());
-
+    for (auto& m : mapping_list) {
         if (m.mode != bind_mode) {
-            // debug(0, L"skipping mapping because mode %ls != %ls\n", m.mode.c_str(),
-            // input_get_bind_mode().c_str());
             continue;
         }
 
         if (m.seq.length() == 0) {
             generic = &m;
+        } else if (input_mapping_is_match(m)) {
+            input_mapping_execute(m, allow_commands);
+            return;
+        }
+    }
+
+    // HACK: This is ugly duplication.
+    for (auto& m : preset_mapping_list) {
+        if (m.mode != bind_mode) {
+            continue;
+        }
+
+        if (m.seq.length() == 0) {
+            // Only use this generic if the user list didn't have one.
+            if (!generic) generic = &m;
         } else if (input_mapping_is_match(m)) {
             input_mapping_execute(m, allow_commands);
             return;
@@ -480,15 +489,11 @@ wint_t input_readch(bool allow_commands) {
     // Clear the interrupted flag.
     reader_reset_interrupted();
     // Search for sequence in mapping tables.
-    while (1) {
+    while (true) {
         wchar_t c = input_common_readch(0);
 
         if (c >= R_BEGIN_INPUT_FUNCTIONS && c < R_END_INPUT_FUNCTIONS) {
             switch (c) {
-                case R_EOF:  // if it's closed, then just return
-                {
-                    return R_EOF;
-                }
                 case R_SELF_INSERT: {
                     // Issue #1595: ensure we only insert characters, not readline functions. The
                     // common case is that this will be empty.
@@ -517,10 +522,10 @@ wint_t input_readch(bool allow_commands) {
     }
 }
 
-std::vector<input_mapping_name_t> input_mapping_get_names() {
+std::vector<input_mapping_name_t> input_mapping_get_names(bool user) {
     // Sort the mappings by the user specification order, so we can return them in the same order
     // that the user specified them in.
-    std::vector<input_mapping_t> local_list = mapping_list;
+    std::vector<input_mapping_t> local_list = user ? mapping_list : preset_mapping_list;
     std::sort(local_list.begin(), local_list.end(), specification_order_is_less_than);
     std::vector<input_mapping_name_t> result;
     result.reserve(local_list.size());
@@ -532,14 +537,21 @@ std::vector<input_mapping_name_t> input_mapping_get_names() {
     return result;
 }
 
-bool input_mapping_erase(const wcstring &sequence, const wcstring &mode) {
+void input_mapping_clear(const wchar_t *mode, bool user) {
+    ASSERT_IS_MAIN_THREAD();
+    auto &ml = user ? mapping_list : preset_mapping_list;
+    auto should_erase = [=](const input_mapping_t &m) { return mode == NULL || mode == m.mode; };
+    ml.erase(std::remove_if(ml.begin(), ml.end(), should_erase), ml.end());
+}
+
+bool input_mapping_erase(const wcstring &sequence, const wcstring &mode, bool user) {
     ASSERT_IS_MAIN_THREAD();
     bool result = false;
-
-    for (std::vector<input_mapping_t>::iterator it = mapping_list.begin(), end = mapping_list.end();
+    auto& ml = user ? mapping_list : preset_mapping_list;
+    for (std::vector<input_mapping_t>::iterator it = ml.begin(), end = ml.end();
          it != end; ++it) {
         if (sequence == it->seq && mode == it->mode) {
-            mapping_list.erase(it);
+            ml.erase(it);
             result = true;
             break;
         }
@@ -547,15 +559,14 @@ bool input_mapping_erase(const wcstring &sequence, const wcstring &mode) {
     return result;
 }
 
-bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds,
+bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds, bool user,
                        wcstring *out_sets_mode) {
     bool result = false;
-    for (std::vector<input_mapping_t>::const_iterator it = mapping_list.begin(),
-                                                      end = mapping_list.end();
-         it != end; ++it) {
-        if (sequence == it->seq && mode == it->mode) {
-            *out_cmds = it->commands;
-            *out_sets_mode = it->sets_mode;
+    auto& ml = user ? mapping_list : preset_mapping_list;
+    for (const input_mapping_t &m : ml) {
+        if (sequence == m.seq && mode == m.mode) {
+            *out_cmds = m.commands;
+            *out_sets_mode = m.sets_mode;
             result = true;
             break;
         }

@@ -325,17 +325,16 @@ AC_CHECK_FUNCS( getpwent flock )
 
 AC_MSG_CHECKING([dirfd])
 AC_LINK_IFELSE([
-
-#include <dirent.h>
-
-DIR *dirp;
-
-int
-main(void)
-{
-	return dirfd(dirp);
-}
-], [ AC_MSG_RESULT([yes])
+  AC_LANG_PROGRAM(
+    [
+      #include <dirent.h>
+      DIR *dirp;
+    ], [
+	    return dirfd(dirp);
+    ]
+  )
+  ]
+, [ AC_MSG_RESULT([yes])
      AC_DEFINE([HAVE_DIRFD], 1, [ Define to 1 if you have the `dirfd' function or macro. ])
    ],
    [ AC_MSG_RESULT([no])]

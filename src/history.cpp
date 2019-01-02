@@ -270,7 +270,7 @@ class history_file_contents_t {
                 ptr += amt;
             }
         }
-        bzero(ptr, remaining);
+        memset(ptr, 0, remaining);
         return true;
     }
 

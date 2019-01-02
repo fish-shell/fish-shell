@@ -49,6 +49,9 @@ EXTRA_CMAKE_FLAGS="-DCURSES_EXTRA_LIBRARY=tinfo"
 export CXXFLAGS="$CXXFLAGS -march=i686"
 %endif
 %endif
+# CMake macros define -DBUILD_SHARED_LIBS:BOOL=ON, which breaks the
+# bundled PCRE2 static library.
+EXTRA_CMAKE_FLAGS="$EXTRA_CMAKE_FLAGS -DBUILD_SHARED_LIBS:BOOL=OFF"
 # CMake macros define the wrong sysconfdir arguments
 EXTRA_CMAKE_FLAGS="$EXTRA_CMAKE_FLAGS -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir}"
 %if 0%{?rhel_version} && 0%{?rhel_version} < 800

@@ -28,6 +28,7 @@ INCLUDE(CheckIncludeFiles)
 INCLUDE(CheckStructHasMember)
 INCLUDE(CheckCXXSourceCompiles)
 INCLUDE(CheckTypeSize)
+INCLUDE(CMakePushCheckState)
 CHECK_CXX_SYMBOL_EXISTS(backtrace_symbols execinfo.h HAVE_BACKTRACE_SYMBOLS)
 CHECK_CXX_SYMBOL_EXISTS(clock_gettime time.h HAVE_CLOCK_GETTIME)
 CHECK_CXX_SYMBOL_EXISTS(ctermid_r stdio.h HAVE_CTERMID_R)
@@ -72,7 +73,12 @@ CHECK_CXX_SYMBOL_EXISTS(wcsdup wchar.h HAVE_WCSDUP)
 CHECK_CXX_SYMBOL_EXISTS(wcslcpy wchar.h HAVE_WCSLCPY)
 CHECK_CXX_SYMBOL_EXISTS(wcsncasecmp wchar.h HAVE_WCSNCASECMP)
 CHECK_CXX_SYMBOL_EXISTS(wcsndup wchar.h HAVE_WCSNDUP)
+
+CMAKE_PUSH_CHECK_STATE(RESET)
+# wcstod_l is a GNU-extension, sometimes hidden behind the following define
+LIST(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE=1)
 CHECK_CXX_SYMBOL_EXISTS(wcstod_l "wchar.h;xlocale.h" HAVE_WCSTOD_L)
+CMAKE_POP_CHECK_STATE()
 
 CHECK_CXX_SYMBOL_EXISTS(_sys_errs stdlib.h HAVE__SYS__ERRS)
 

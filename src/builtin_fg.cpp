@@ -35,8 +35,8 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     job_t *job = nullptr;
     if (optind == argc) {
-        // Select last constructed job (I.e. first job in the job que) that is possible to put in
-        // the foreground.
+        // Select last constructed job (i.e. first job in the job queue) that can be brought
+        // to the foreground.
 
         for (auto j : jobs()) {
             if (j->is_constructed() && (!j->is_completed()) &&
@@ -51,15 +51,12 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
     } else if (optind + 1 < argc) {
         // Specifying more than one job to put to the foreground is a syntax error, we still
-        // try to locate the job argv[1], since we want to know if this is an ambigous job
-        // specification or if this is an malformed job id.
-        int pid;
+        // try to locate the job $argv[1], since we need to determine which error message to
+        // emit (ambigous job specification vs malformed job id).
         bool found_job = false;
-
-        pid = fish_wcstoi(argv[optind]);
-        if (!(errno || pid < 0)) {
-            job = job_t::from_pid(pid);
-            if (job) found_job = true;
+        int pid = fish_wcstoi(argv[optind]);
+        if (errno == 0 && pid > 0) {
+            found_job = (job_t::from_pid(pid) != nullptr);
         }
 
         if (found_job) {
@@ -68,9 +65,8 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append_format(_(L"%ls: '%ls' is not a job\n"), cmd, argv[optind]);
         }
 
+        job = nullptr;
         builtin_print_error_trailer(parser, streams.err, cmd);
-
-        job = 0;
     } else {
         int pid = abs(fish_wcstoi(argv[optind]));
         if (errno) {
@@ -85,7 +81,7 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 streams.err.append_format(_(L"%ls: Can't put job %d, '%ls' to foreground because "
                                             L"it is not under job control\n"),
                                           cmd, pid, job->command_wcstr());
-                job = 0;
+                job = nullptr;
             }
         }
     }

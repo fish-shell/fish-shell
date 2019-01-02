@@ -947,6 +947,15 @@ constexpr bool is_windows_subsystem_for_linux() {
 #endif
 }
 
+/// Detect if we are running under Cygwin or Cgywin64
+constexpr bool is_cygwin() {
+#ifdef CYGWIN
+    return true;
+#else
+    return false;
+#endif
+}
+
 extern "C" {
 __attribute__((noinline)) void debug_thread_error(void);
 }

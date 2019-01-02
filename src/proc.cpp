@@ -448,9 +448,27 @@ static bool process_mark_finished_children(bool block_on_fg) {
             options &= ~WNOHANG;
         }
 
-        // If the pgid is 0, we need to wait by process because that's invalid.
-        // This happens in firejail for reasons not entirely clear to me.
-        bool wait_by_process = !j->job_chain_is_fully_constructed() || j->pgid == 0;
+        // Child jobs (produced via execution of functions) share job ids with their not-yet-
+        // fully-constructed parent jobs, so we have to wait on these by individual process id
+        // and not by the shared pgroup. End result is the same, but it just makes more calls
+        // to the kernel.
+        bool wait_by_process = !j->job_chain_is_fully_constructed();
+
+        // Firejail can result in jobs with pgroup 0, in which case we cannot wait by
+        // job id. See discussion in #5295.
+        if (j->pgid == 0) {
+            wait_by_process = true;
+        }
+
+        // Cygwin does some voodoo with regards to process management that I do not understand, but
+        // long story short, we cannot reap processes by their pgroup. The way child processes are
+        // launched under Cygwin is... weird, and outwardly they do not appear to retain information
+        // about their parent process when viewed in Task Manager. Waiting on processes by their
+        // pgroup results in never reaping any, so we just wait on them by process id instead.
+        if (is_cygwin()) {
+            wait_by_process = true;
+        }
+
         // When waiting on processes individually in a pipeline, we need to enumerate in reverse
         // order so that the first process we actually wait on (i.e. ~WNOHANG) is the last process
         // in the IO chain, because that's the one that controls the lifetime of the foreground job

@@ -37,27 +37,27 @@ const file_id_t kInvalidFileID = {(dev_t)-1LL, (ino_t)-1LL, (uint64_t)-1LL, -1, 
 static owning_lock<std::unordered_map<wcstring, wcstring>> wgettext_map;
 
 bool wreaddir_resolving(DIR *dir, const wcstring &dir_path, wcstring &out_name, bool *out_is_dir) {
-    struct dirent d;
-    struct dirent *result = NULL;
-    int retval = readdir_r(dir, &d, &result);
-    if (retval || !result) {
+    struct dirent *result = readdir(dir);
+    if (!result) {
         out_name = L"";
         return false;
     }
 
-    out_name = str2wcstring(d.d_name);
-    if (!out_is_dir) return true;
+    out_name = str2wcstring(result->d_name);
+    if (!out_is_dir) {
+        return true;
+    }
 
     // The caller cares if this is a directory, so check.
     bool is_dir = false;
     // We may be able to skip stat, if the readdir can tell us the file type directly.
     bool check_with_stat = true;
 #ifdef HAVE_STRUCT_DIRENT_D_TYPE
-    if (d.d_type == DT_DIR) {
+    if (result->d_type == DT_DIR) {
         // Known directory.
         is_dir = true;
         check_with_stat = false;
-    } else if (d.d_type == DT_LNK || d.d_type == DT_UNKNOWN) {
+    } else if (result->d_type == DT_LNK || result->d_type == DT_UNKNOWN) {
         // We want to treat symlinks to directories as directories. Use stat to resolve it.
         check_with_stat = true;
     } else {
@@ -70,7 +70,7 @@ bool wreaddir_resolving(DIR *dir, const wcstring &dir_path, wcstring &out_name, 
         // We couldn't determine the file type from the dirent; check by stat'ing it.
         cstring fullpath = wcs2string(dir_path);
         fullpath.push_back('/');
-        fullpath.append(d.d_name);
+        fullpath.append(result->d_name);
         struct stat buf;
         if (stat(fullpath.c_str(), &buf) != 0) {
             is_dir = false;
@@ -83,34 +83,24 @@ bool wreaddir_resolving(DIR *dir, const wcstring &dir_path, wcstring &out_name, 
 }
 
 bool wreaddir(DIR *dir, wcstring &out_name) {
-    // We need to use a union to ensure that the dirent struct is large enough to avoid stomping on
-    // the stack. Some platforms incorrectly defined the `d_name[]` member as being one element
-    // long when it should be at least NAME_MAX + 1.
-    union {
-        struct dirent d;
-        char c[offsetof(struct dirent, d_name) + NAME_MAX + 1];
-    } d_u;
-    struct dirent *result = NULL;
-
-    int retval = readdir_r(dir, &d_u.d, &result);
-    if (retval || !result) {
+    struct dirent *result = readdir(dir);
+    if (!result) {
         out_name = L"";
         return false;
     }
 
-    out_name = str2wcstring(d_u.d.d_name);
+    out_name = str2wcstring(result->d_name);
     return true;
 }
 
 bool wreaddir_for_dirs(DIR *dir, wcstring *out_name) {
-    struct dirent d;
     struct dirent *result = NULL;
     while (!result) {
-        int retval = readdir_r(dir, &d, &result);
-        if (retval || !result) break;
+        result = readdir(dir);
+        if (!result) break;
 
 #if HAVE_STRUCT_DIRENT_D_TYPE
-        switch (d.d_type) {
+        switch (result->d_type) {
             case DT_DIR:
             case DT_LNK:
             case DT_UNKNOWN: {
@@ -129,7 +119,8 @@ bool wreaddir_for_dirs(DIR *dir, wcstring *out_name) {
     if (result && out_name) {
         *out_name = str2wcstring(result->d_name);
     }
-    return result != NULL;
+    if (!result) return false;
+    return true;
 }
 
 const wcstring wgetcwd() {

@@ -49,11 +49,12 @@ EXTRA_CMAKE_FLAGS="-DCURSES_EXTRA_LIBRARY=tinfo"
 export CXXFLAGS="$CXXFLAGS -march=i686"
 %endif
 %endif
-# CMake macros on OpenSUSE and Fedora define the wrong sysconfdir arguments
+# CMake macros define the wrong sysconfdir arguments
+EXTRA_CMAKE_FLAGS="$EXTRA_CMAKE_FLAGS -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir}"
 %if 0%{?rhel_version} && 0%{?rhel_version} < 800
-%cmake3 -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir} $EXTRA_CMAKE_FLAGS
+%cmake3 $EXTRA_CMAKE_FLAGS
 %else
-%cmake -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir} $EXTRA_CMAKE_FLAGS
+%cmake $EXTRA_CMAKE_FLAGS
 %endif
 %if 0%{?make_jobs:1}
 %make_jobs

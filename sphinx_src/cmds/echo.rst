@@ -1,5 +1,5 @@
 echo - display a line of text
-==========================================
+=============================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ echo [OPTIONS] [STRING]
 
 
 Description
-------------
+-----------
 
 ``echo`` displays a string of text.
 
@@ -23,7 +23,7 @@ The following options are available:
 - ``-e``, Enable interpretation of backslash escapes
 
 Escape Sequences
-------------
+----------------
 
 If ``-e`` is used, the following sequences are recognized:
 
@@ -52,7 +52,7 @@ If ``-e`` is used, the following sequences are recognized:
 - ``\xHH`` byte with hexadecimal value HH (1 to 2 digits)
 
 Example
-------------
+-------
 
 
 

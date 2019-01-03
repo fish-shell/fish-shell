@@ -1,5 +1,5 @@
 bg - send jobs to background
-==========================================
+============================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ bg [PID...]
 
 
 Description
-------------
+-----------
 
 ``bg`` sends <a href="index.html#syntax-job-control">jobs</a> to the background, resuming them if they are stopped.
 
@@ -20,7 +20,7 @@ When at least one of the arguments isn't a valid job specifier (i.e. PID),
 When all arguments are valid job specifiers, bg will background all matching jobs that exist.
 
 Example
-------------
+-------
 
 ``bg 123 456 789`` will background 123, 456 and 789.
 

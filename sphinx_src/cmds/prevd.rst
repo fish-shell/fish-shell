@@ -1,5 +1,5 @@
 prevd - move backward through directory history
-==========================================
+===============================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ prevd [ -l | --list ] [POS]
 
 
 Description
-------------
+-----------
 
 ``prevd`` moves backwards ``POS`` positions in the history of visited directories; if the beginning of the history has been hit, a warning is printed.
 
@@ -19,7 +19,7 @@ Note that the ``cd`` command limits directory history to the 25 most recently vi
 You may be interested in the <a href="commands.html#cdh">``cdh``</a> command which provides a more intuitive way to navigate to recently visited directories.
 
 Example
-------------
+-------
 
 
 

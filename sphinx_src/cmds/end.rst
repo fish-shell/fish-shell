@@ -1,5 +1,5 @@
 end - end a block of commands.
-==========================================
+==============================
 
 Synopsis
 --------
@@ -12,7 +12,7 @@ switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end
 
 
 Description
-------------
+-----------
 
 ``end`` ends a block of commands.
 

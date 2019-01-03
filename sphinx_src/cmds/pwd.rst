@@ -8,7 +8,7 @@ pwd
 
 
 Description
-------------
+-----------
 
 ``pwd`` outputs (prints) the current working directory.
 

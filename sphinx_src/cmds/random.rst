@@ -1,5 +1,5 @@
 random - generate random number
-==========================================
+===============================
 
 Synopsis
 --------
@@ -12,7 +12,7 @@ random choice [ITEMS...]
 
 
 Description
-------------
+-----------
 
 ``RANDOM`` generates a pseudo-random integer from a uniform distribution. The
 range (inclusive) is dependent on the arguments passed.
@@ -31,7 +31,7 @@ You should not consider ``RANDOM`` cryptographically secure, or even
 statistically accurate.
 
 Example
-------------
+-------
 
 The following code will count down from a random even number between 10 and 20 to 1:
 

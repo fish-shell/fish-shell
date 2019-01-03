@@ -1,18 +1,18 @@
 fish_mode_prompt - define the appearance of the mode indicator
-==========================================
+==============================================================
 
 
 
 The fish_mode_prompt function will output the mode indicator for use in vi-mode.
 
 Description
-------------
+-----------
 
 The default ``fish_mode_prompt`` function will output indicators about the current Vi editor mode displayed to the left of the regular prompt. Define your own function to customize the appearance of the mode indicator. You can also define an empty ``fish_mode_prompt`` function to remove the Vi mode indicators. The ``$fish_bind_mode variable`` can be used to determine the current mode. It
 will be one of ``default``, ``insert``, ``replace_one``, or ``visual``.
 
 Example
-------------
+-------
 
 
 

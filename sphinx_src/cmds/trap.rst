@@ -1,5 +1,5 @@
 trap - perform an action when the shell receives a signal
-==========================================
+=========================================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ trap [OPTIONS] [[ARG] REASON ... ]
 
 
 Description
-------------
+-----------
 
 ``trap`` is a wrapper around the fish event delivery framework. It exists for backwards compatibility with POSIX shells. For other uses, it is recommended to define an <a href='index.html#event'>event handler</a>.
 
@@ -33,7 +33,7 @@ Signal names are case insensitive and the ``SIG`` prefix is optional.
 The return status is 1 if any ``REASON`` is invalid; otherwise trap returns 0.
 
 Example
-------------
+-------
 
 
 

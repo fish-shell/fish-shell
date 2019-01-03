@@ -1,5 +1,5 @@
 suspend - suspend the current shell
-==========================================
+===================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ suspend [--force]
 
 
 Description
-------------
+-----------
 
 ``suspend`` suspends execution of the current shell by sending it a
 SIGTSTP signal, returning to the controlling process. It can be

@@ -1,5 +1,5 @@
 umask - set or get the file creation mode mask
-==========================================
+==============================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ umask [OPTIONS] [MASK]
 
 
 Description
-------------
+-----------
 
 ``umask`` displays and manipulates the "umask", or file creation mode mask, which is used to restrict the default access to files.
 
@@ -40,6 +40,6 @@ Note that symbolic masks currently do not work as intended.
 
 
 Example
-------------
+-------
 
 ``umask 177`` or ``umask u=rw`` sets the file creation mask to read and write for the owner and no permissions at all for any other users.

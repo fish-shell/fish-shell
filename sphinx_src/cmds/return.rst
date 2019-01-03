@@ -1,5 +1,5 @@
 return - stop the current inner function
-==========================================
+========================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ function NAME; [COMMANDS...;] return [STATUS]; [COMMANDS...;] end
 
 
 Description
-------------
+-----------
 
 ``return`` halts a currently running function. The exit status is set to ``STATUS`` if it is given.
 
@@ -16,7 +16,7 @@ It is usually added inside of a conditional block such as an <a href="#if">if</a
 
 
 Example
-------------
+-------
 
 The following code is an implementation of the false command as a fish function
 

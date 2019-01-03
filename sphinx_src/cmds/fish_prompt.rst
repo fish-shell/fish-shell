@@ -1,5 +1,5 @@
 fish_prompt - define the appearance of the command line prompt
-==========================================
+==============================================================
 
 Synopsis
 --------
@@ -10,7 +10,7 @@ end
 
 
 Description
-------------
+-----------
 
 By defining the ``fish_prompt`` function, the user can choose a custom prompt. The ``fish_prompt`` function is executed when the prompt is to be shown, and the output is used as a prompt.
 
@@ -20,7 +20,7 @@ The exit status of commands within ``fish_prompt`` will not modify the value of 
 
 
 Example
-------------
+-------
 
 A simple prompt:
 

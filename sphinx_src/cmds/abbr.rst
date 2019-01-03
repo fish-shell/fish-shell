@@ -1,5 +1,5 @@
 abbr - manage fish abbreviations
-==========================================
+================================
 
 Synopsis
 --------
@@ -11,14 +11,14 @@ abbr --show
 abbr --list
 
 Description
-------------
+-----------
 
 ``abbr`` manages abbreviations - user-defined words that are replaced with longer phrases after they are entered.
 
 For example, a frequently-run command like ``git checkout`` can be abbreviated to ``gco``. After entering ``gco`` and pressing @key{Space} or @key{Enter}, the full text ``git checkout`` will appear in the command line.
 
 Options
-------------
+-------
 
 The following options are available:
 
@@ -40,7 +40,7 @@ In addition, when adding abbreviations:
 See the "Internals" section for more on them.
 
 Examples
-------------
+--------
 
 
 
@@ -83,7 +83,7 @@ Erase the ``gco`` abbreviation.
 Import the abbreviations defined on another_host over SSH.
 
 Internals
-------------
+---------
 Each abbreviation is stored in its own global or universal variable. The name consists of the prefix ``_fish_abbr_`` followed by the WORD after being transformed by ``string escape style=var``. The WORD cannot contain a space but all other characters are legal.
 
 Defining an abbreviation with global scope is slightly faster than universal scope (which is the default). But in general you'll only want to use the global scope when defining abbreviations in a startup script like ``~/.config/fish/config.fish`` like this:

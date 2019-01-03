@@ -1,5 +1,5 @@
 disown - remove a process from the list of jobs
-==========================================
+===============================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ disown [ PID ... ]
 
 
 Description
-------------
+-----------
 
 ``disown`` removes the specified <a href="index.html#syntax-job-control">job</a> from the list of jobs. The job itself continues to exist, but fish does not keep track of it any longer.
 
@@ -21,7 +21,7 @@ If a job is stopped, it is sent a signal to continue running, and a warning is p
 ``disown`` returns 0 if all specified jobs were disowned successfully, and 1 if any problems were encountered.
 
 Example
-------------
+-------
 
 ``firefox &; disown`` will start the Firefox web browser in the background and remove it from the job list, meaning it will not be closed when the fish process is closed.
 

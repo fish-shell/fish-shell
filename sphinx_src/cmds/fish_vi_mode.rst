@@ -1,5 +1,5 @@
 fish_vi_mode - Enable vi mode
-==========================================
+=============================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ fish_vi_mode
 
 
 Description
-------------
+-----------
 
 This function is deprecated. Please call ``fish_vi_key_bindings directly``
 

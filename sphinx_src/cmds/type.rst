@@ -1,5 +1,5 @@
 type - indicate how a command would be interpreted
-==========================================
+==================================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ type [OPTIONS] NAME [NAME ...]
 
 
 Description
-------------
+-----------
 
 With no options, ``type`` indicates how each ``NAME`` would be interpreted if used as a command name.
 
@@ -30,7 +30,7 @@ The ``-q``, ``-p``, ``-t`` and ``-P`` flags (and their long flag aliases) are mu
 
 
 Example
-------------
+-------
 
 
 

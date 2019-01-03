@@ -1,5 +1,5 @@
 status - query fish runtime information
-==========================================
+=======================================
 
 Synopsis
 --------
@@ -24,7 +24,7 @@ status test-feature FEATURE
 
 
 Description
-------------
+-----------
 
 With no arguments, ``status`` displays a summary of the current login and job control status of the shell.
 
@@ -64,7 +64,7 @@ The following operations (sub-commands) are available:
 - ``test-feature FEATURE`` returns 0 when FEATURE is enabled, 1 if it is disabled, and 2 if it is not recognized.
 
 Notes
-------------
+-----
 
 For backwards compatibility each subcommand can also be specified as a long or short option. For example, rather than ``status is-login`` you can type ``status --is-login``. The flag forms are deprecated and may be removed in a future release (but not before fish 3.0).
 

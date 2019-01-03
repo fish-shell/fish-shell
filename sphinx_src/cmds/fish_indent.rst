@@ -1,5 +1,5 @@
 fish_indent - indenter and prettifier
-==========================================
+=====================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ fish_indent [OPTIONS]
 
 
 Description
-------------
+-----------
 
 ``fish_indent`` is used to indent a piece of fish code. ``fish_indent`` reads commands from standard input and outputs them to standard output or a specified file.
 

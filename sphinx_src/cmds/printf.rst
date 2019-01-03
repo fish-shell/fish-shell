@@ -1,5 +1,5 @@
 printf - display text according to a format string
-==========================================
+==================================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ printf format [argument...]
 
 
 Description
-------------
+-----------
 printf formats the string FORMAT with ARGUMENT, and displays the result.
 
 The string FORMAT should contain format specifiers, each of which are replaced with successive arguments according to the specifier. Specifiers are detailed below, and are taken from the C library function ``printf(3)``.
@@ -61,7 +61,7 @@ The ``format`` argument is re-used as many times as necessary to convert all of 
 This file has been imported from the printf in GNU Coreutils version 6.9. If you would like to use a newer version of printf, for example the one shipped with your OS, try ``command printf``.
 
 Example
-------------
+-------
 
 
 

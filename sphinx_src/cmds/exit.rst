@@ -1,5 +1,5 @@
 exit - exit the shell
-==========================================
+=====================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ exit [STATUS]
 
 
 Description
-------------
+-----------
 
 ``exit`` causes fish to exit. If ``STATUS`` is supplied, it will be converted to an integer and used as the exit code. Otherwise, the exit code will be that of the last command executed.
 

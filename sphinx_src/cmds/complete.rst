@@ -1,5 +1,5 @@
 complete - edit command specific tab-completions
-==========================================
+================================================
 
 Synopsis
 --------
@@ -21,7 +21,7 @@ complete ( -C[STRING] | --do-complete[=STRING] )
 
 
 Description
-------------
+-----------
 
 For an introduction to specifying completions, see <a
 href='index.html#completion-own'>Writing your own completions</a> in
@@ -95,7 +95,7 @@ When erasing completions, it is possible to either erase all completions for a s
 
 
 Example
-------------
+-------
 
 The short style option ``-o`` for the ``gcc`` command requires that a file follows it.  This can be done using writing:
 

@@ -1,9 +1,9 @@
 fish_config - start the web-based configuration interface
-==========================================
+=========================================================
 
 
 Description
-------------
+-----------
 
 ``fish_config`` starts the web-based configuration interface.
 
@@ -17,6 +17,6 @@ If the ``BROWSER`` environment variable is set, it will be used as the name of t
 
 
 Example
-------------
+-------
 
 ``fish_config`` opens a new web browser window and allows you to configure certain fish settings.

@@ -1,5 +1,5 @@
 string - manipulate strings
-==========================================
+===========================
 
 Synopsis
 --------
@@ -29,7 +29,7 @@ string upper [(-q | --quiet)] [STRING...]
 
 
 Description
-------------
+-----------
 
 ``string`` performs operations on strings.
 
@@ -42,7 +42,7 @@ Most subcommands accept a ``-q`` or ``--quiet`` switch, which suppresses the usu
 The following subcommands are available.
 
 "escape" subcommand
-------------
+-------------------
 
 ``string escape`` escapes each STRING in one of three ways. The first is ``--style=script``. This is the default. It alters the string such that it can be passed back to ``eval`` to produce the original argument again. By default, all special characters are escaped, and quotes are used to simplify the output when possible. If ``-n`` or ``--no-quoted`` is given, the simplifying quoted format is not used. Exit status: 0 if at least one string was escaped, or 1 otherwise.
 
@@ -55,7 +55,7 @@ The following subcommands are available.
 ``string unescape`` performs the inverse of the ``string escape`` command. If the string to be unescaped is not properly formatted it is ignored. For example, doing ``string unescape --style=var (string escape --style=var $str)`` will return the original string. There is no support for unescaping pcre2.
 
 "join" subcommand
-------------
+-----------------
 
 ``string join`` joins its STRING arguments into a single string separated by SEP, which can be an empty string. Exit status: 0 if at least one join was performed, or 1 otherwise.
 
@@ -64,17 +64,17 @@ The following subcommands are available.
 ``string join`` joins its STRING arguments into a single string separated by the zero byte (NUL), and adds a trailing NUL. This is most useful in conjunction with tools that accept NUL-delimited input, such as ``sort -z``. Exit status: 0 if at least one join was performed, or 1 otherwise.
 
 "length" subcommand
-------------
+-------------------
 
 ``string length`` reports the length of each string argument in characters. Exit status: 0 if at least one non-empty STRING was given, or 1 otherwise.
 
 "lower" subcommand
-------------
+------------------
 
 ``string lower`` converts each string argument to lowercase. Exit status: 0 if at least one string was converted to lowercase, else 1. This means that in conjunction with the ``-q`` flag you can readily test whether a string is already lowercase.
 
 "match" subcommand
-------------
+------------------
 
 ``string match`` tests each STRING against PATTERN and prints matching substrings. Only the first match for each STRING is reported unless ``-a`` or ``--all`` is given, in which case all matches are reported.
 
@@ -91,12 +91,12 @@ If ``--invert`` or ``-v`` is used the selected lines will be only those which do
 Exit status: 0 if at least one match was found, or 1 otherwise.
 
 "repeat" subcommand
-------------
+-------------------
 
 ``string repeat`` repeats the STRING ``-n`` or ``--count`` times. The ``-m`` or ``--max`` option will limit the number of outputted char (excluding the newline). This option can be used by itself or in conjunction with ``--count``. If both ``--count`` and ``--max`` are present, max char will be outputed unless the final repeated string size is less than max, in that case, the string will repeat until count has been reached. Both ``--count`` and ``--max`` will accept a number greater than or equal to zero, in the case of zero, nothing will be outputed. If ``-N`` or ``--no-newline`` is given, the output won't contain a newline character at the end. Exit status: 0 if yielded string is not empty, 1 otherwise.
 
 "replace" subcommand
-------------
+--------------------
 
 ``string replace`` is similar to ``string match`` but replaces non-overlapping matching substrings with a replacement string and prints the result. By default, PATTERN is treated as a literal substring to be matched.
 
@@ -107,7 +107,7 @@ If you specify the ``-f`` or ``--filter`` flag then each input string is printed
 Exit status: 0 if at least one replacement was performed, or 1 otherwise.
 
 "split" subcommand
-------------
+------------------
 
 ``string split`` splits each STRING on the separator SEP, which can be an empty string. If ``-m`` or ``--max`` is specified, at most MAX splits are done on each STRING. If ``-r`` or ``--right`` is given, splitting is performed right-to-left. This is useful in combination with ``-m`` or ``--max``. With ``-n`` or ``--no-empty``, empty results are excluded from consideration (e.g. ``hello\n\nworld`` would expand to two strings and not three). Exit status: 0 if at least one split was performed, or 1 otherwise.
 
@@ -120,22 +120,22 @@ See also ``read --delimiter``.
 ``split0`` has the important property that its output is not further split when used in a command substitution, allowing for the command substitution to produce elements containing newlines. This is most useful when used with Unix tools that produce zero bytes, such as ``find -print0`` or ``sort -z``. See split0 examples below.
 
 "sub" subcommand
-------------
+----------------
 
 ``string sub`` prints a substring of each string argument. The start of the substring can be specified with ``-s`` or ``--start`` followed by a 1-based index value. Positive index values are relative to the start of the string and negative index values are relative to the end of the string. The default start value is 1. The length of the substring can be specified with ``-l`` or ``--length``. If the length is not specified, the substring continues to the end of each STRING. Exit status: 0 if at least one substring operation was performed, 1 otherwise.
 
 "trim" subcommand
-------------
+-----------------
 
 ``string trim`` removes leading and trailing whitespace from each STRING. If ``-l`` or ``--left`` is given, only leading whitespace is removed. If ``-r`` or ``--right`` is given, only trailing whitespace is trimmed. The ``-c`` or ``--chars`` switch causes the characters in CHARS to be removed instead of whitespace. Exit status: 0 if at least one character was trimmed, or 1 otherwise.
 
 "upper" subcommand
-------------
+------------------
 
 ``string upper`` converts each string argument to uppercase. Exit status: 0 if at least one string was converted to uppercase, else 1. This means that in conjunction with the ``-q`` flag you can readily test whether a string is already uppercase.
 
 Regular Expressions
-------------
+-------------------
 
 Both the ``match`` and ``replace`` subcommand support regular expressions when used with the ``-r`` or ``--regex`` option. The dialect is that of PCRE2.
 
@@ -186,7 +186,7 @@ And some other things:
 - ``|`` is "alternation", i.e. the "or".
 
 Examples
-------------
+--------
 
 
 
@@ -270,7 +270,7 @@ Examples
 
 
 Match Glob Examples
-------------
+-------------------
 
 
 
@@ -306,7 +306,7 @@ Match Glob Examples
 
 
 Match Regex Examples
-------------
+--------------------
 
 
 
@@ -362,7 +362,7 @@ Match Regex Examples
 
 
 Replace Literal Examples
-------------
+------------------------
 
 
 
@@ -381,7 +381,7 @@ Replace Literal Examples
 
 
 Replace Regex Examples
-------------
+----------------------
 
 
 
@@ -399,7 +399,7 @@ Replace Regex Examples
 
 
 Repeat Examples
-------------
+---------------
 
 
 

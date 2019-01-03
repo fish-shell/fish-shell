@@ -1,5 +1,5 @@
 isatty - test if a file descriptor is a tty.
-==========================================
+============================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ isatty [FILE DESCRIPTOR]
 
 
 Description
-------------
+-----------
 
 ``isatty`` tests if a file descriptor is a tty.
 
@@ -18,7 +18,7 @@ If the specified file descriptor is a tty, the exit status of the command is zer
 
 
 Examples
-------------
+--------
 
 From an interactive shell, the commands below exit with a return value of zero:
 

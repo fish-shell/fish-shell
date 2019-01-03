@@ -90,9 +90,17 @@ CHECK_CXX_SYMBOL_EXISTS(wcsncasecmp wchar.h HAVE_WCSNCASECMP)
 CHECK_CXX_SYMBOL_EXISTS(wcsndup wchar.h HAVE_WCSNDUP)
 
 CMAKE_PUSH_CHECK_STATE(RESET)
-# wcstod_l is a GNU-extension, sometimes hidden behind the following define
+# `wcstod_l` is a GNU-extension, sometimes hidden behind the following define
 LIST(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE=1)
-CHECK_CXX_SYMBOL_EXISTS(wcstod_l "wchar.h;xlocale.h" HAVE_WCSTOD_L)
+# `xlocale.h` is required to find `wcstod_l` in `wchar.h` under FreeBSD, but
+# it's not present under Linux.
+SET(WCSTOD_L_INCLUDES "")
+CHECK_INCLUDE_FILES("xlocale.h" HAVE_XLOCALE_H)
+IF(HAVE_XLOCALE_H)
+    LIST(APPEND WCSTOD_L_INCLUDES "xlocale.h")
+ENDIF()
+LIST(APPEND WCSTOD_L_INCLUDES "wchar.h")
+CHECK_CXX_SYMBOL_EXISTS(wcstod_l "${WCSTOD_L_INCLUDES}" HAVE_WCSTOD_L)
 CMAKE_POP_CHECK_STATE()
 
 CHECK_CXX_SYMBOL_EXISTS(_sys_errs stdlib.h HAVE__SYS__ERRS)

@@ -1,5 +1,15 @@
-# Detect curses.
-FIND_PACKAGE(Curses REQUIRED)
+# Try using CMake's own logic to locate curses/ncurses
+FIND_PACKAGE(Curses)
+IF(NOT ${CURSES_FOUND})
+    # CMake has trouble finding platform-specific system libraries
+    # installed to multiarch paths (e.g. /usr/lib/x86_64-linux-gnu)
+    # if not symlinked or passed in as a manual define.
+    MESSAGE("Falling back to pkg-config for (n)curses detection")
+    INCLUDE(FindPkgConfig)
+    PKG_SEARCH_MODULE(CURSES REQUIRED ncurses curses)
+    SET(CURSES_CURSES_LIBRARY ${CURSES_LIBRARIES})
+    SET(CURSES_LIBRARY ${CURSES_LIBRARIES})
+ENDIF()
 
 # Get threads.
 set(THREADS_PREFER_PTHREAD_FLAG ON)

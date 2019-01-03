@@ -1,5 +1,5 @@
 nextd - move forward through directory history
-==========================================
+==============================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ nextd [ -l | --list ] [POS]
 
 
 Description
-------------
+-----------
 
 ``nextd`` moves forwards ``POS`` positions in the history of visited directories; if the end of the history has been hit, a warning is printed.
 
@@ -19,7 +19,7 @@ Note that the ``cd`` command limits directory history to the 25 most recently vi
 You may be interested in the <a href="commands.html#cdh">``cdh``</a> command which provides a more intuitive way to navigate to recently visited directories.
 
 Example
-------------
+-------
 
 
 

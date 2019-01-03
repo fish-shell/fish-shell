@@ -1,5 +1,5 @@
 funced - edit a function interactively
-==========================================
+======================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ funced [OPTIONS] NAME
 
 
 Description
-------------
+-----------
 
 ``funced`` provides an interface to edit the definition of the function ``NAME``.
 

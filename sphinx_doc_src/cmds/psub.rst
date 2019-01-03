@@ -1,5 +1,5 @@
 psub - perform process substitution
-==========================================
+===================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ COMMAND1 ( COMMAND2 | psub [-F | --fifo] [-f | --file] [-s SUFFIX])
 
 
 Description
-------------
+-----------
 
 Some shells (e.g., ksh, bash) feature a syntax that is a mix between command substitution and piping, called process substitution. It is used to send the output of a command into the calling command, much like command substitution, but with the difference that the output is not sent through commandline arguments but through a named pipe, with the filename of the named pipe sent as an argument to the calling program. ``psub`` combined with a regular command substitution provides the same functionality.
 
@@ -21,7 +21,7 @@ The following options are available:
 - ``-s`` or ``--suffix`` will append SUFFIX to the filename.
 
 Example
-------------
+-------
 
 
 

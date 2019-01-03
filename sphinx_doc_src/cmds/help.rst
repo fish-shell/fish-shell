@@ -1,5 +1,5 @@
 help - display fish documentation
-==========================================
+=================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ help [SECTION]
 
 
 Description
-------------
+-----------
 
 ``help`` displays the fish help documentation.
 
@@ -22,6 +22,6 @@ Note that most builtin commands display their help in the terminal when given th
 
 
 Example
-------------
+-------
 
 ``help fg`` shows the documentation for the ``fg`` builtin.

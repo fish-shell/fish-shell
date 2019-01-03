@@ -1,5 +1,5 @@
 wait - wait for jobs to complete
-==========================================
+================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ wait [-n | --any] [PID | PROCESS_NAME] ...
 
 
 Description
-------------
+-----------
 
 ``wait`` waits for child jobs to complete.
 
@@ -18,7 +18,7 @@ Description
 - If the ``-n`` / ``--any`` flag is provided, the command returns as soon as the first job completes. If it is not provided, it returns after all jobs complete.
 
 Example
-------------
+-------
 
 
 

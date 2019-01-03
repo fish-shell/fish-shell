@@ -1,5 +1,5 @@
 pushd - push directory to directory stack
-==========================================
+=========================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ pushd [DIRECTORY]
 
 
 Description
-------------
+-----------
 
 The ``pushd`` function adds ``DIRECTORY`` to the top of the directory stack and makes it the current working directory. <a href="#popd">``popd``</a> will pop it off and return to the original directory.
 
@@ -23,7 +23,7 @@ See also ``dirs`` and ``dirs -c``.
 You may be interested in the <a href="commands.html#cdh">``cdh``</a> command which provides a more intuitive way to navigate to recently visited directories.
 
 Example
-------------
+-------
 
 
 

@@ -1,5 +1,5 @@
 jobs - print currently running jobs
-==========================================
+===================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ jobs [OPTIONS] [PID]
 
 
 Description
-------------
+-----------
 
 ``jobs`` prints a list of the currently running <a href="index.html#syntax-job-control">jobs</a> and their status.
 
@@ -29,10 +29,10 @@ On systems that supports this feature, jobs will print the CPU usage of each job
 The exit code of the ``jobs`` builtin is ``0`` if there are running background jobs and ``1`` otherwise.
 
 no output.
-------------
+----------
 
 
 Example
-------------
+-------
 
 ``jobs`` outputs a summary of the current jobs.

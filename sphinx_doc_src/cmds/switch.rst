@@ -1,5 +1,5 @@
 switch - conditionally execute a block of commands
-==========================================
+==================================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end
 
 
 Description
-------------
+-----------
 
 ``switch`` performs one of several blocks of commands, depending on whether a specified value equals one of several wildcarded values. ``case`` is used together with the ``switch`` statement in order to determine which block should be executed.
 
@@ -20,7 +20,7 @@ Note that command substitutions in a case statement will be evaluated even if it
 
 
 Example
-------------
+-------
 
 If the variable \$animal contains the name of an animal, the following code would attempt to classify it:
 

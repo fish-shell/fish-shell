@@ -1,5 +1,5 @@
 breakpoint - Launch debug mode
-==========================================
+==============================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ breakpoint
 
 
 Description
-------------
+-----------
 
 ``breakpoint`` is used to halt a running script and launch an interactive debugging prompt.
 

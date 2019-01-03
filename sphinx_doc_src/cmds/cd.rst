@@ -1,5 +1,5 @@
 cd - change directory
-==========================================
+=====================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ cd [DIRECTORY]
 
 
 Description
-------------
+-----------
 ``cd`` changes the current working directory.
 
 If ``DIRECTORY`` is supplied, it will become the new directory. If no parameter is given, the contents of the ``HOME`` environment variable will be used.
@@ -22,7 +22,7 @@ Fish also ships a wrapper function around the builtin ``cd`` that understands ``
 As a special case, ``cd .`` is equivalent to ``cd $PWD``, which is useful in cases where a mountpoint has been recycled or a directory has been removed and recreated.
 
 Examples
-------------
+--------
 
 
 
@@ -36,6 +36,6 @@ Examples
 
 
 See Also
-------------
+--------
 
 See also the <a href="commands.html#cdh">``cdh``</a> command for changing to a recently visited directory.

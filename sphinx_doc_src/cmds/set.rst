@@ -1,5 +1,5 @@
 set - display and change shell variables.
-==========================================
+=========================================
 
 Synopsis
 --------
@@ -14,7 +14,7 @@ set ( -S | --show ) [SCOPE_OPTIONS] [VARIABLE_NAME]...
 
 
 Description
-------------
+-----------
 
 ``set`` manipulates <a href="index.html#variables">shell variables</a>.
 
@@ -84,7 +84,7 @@ In assignment mode, ``set`` does not modify the exit status. This allows simulta
 
 
 Examples
-------------
+--------
 
 
 ::
@@ -115,7 +115,7 @@ Examples
 
 
 Notes
-------------
+-----
 
 Fish versions prior to 3.0 supported the syntax ``set PATH[1] PATH[4] /bin /sbin``, which worked like
 ``set PATH[1 4] /bin /sbin``. This syntax was not widely used, and was ambiguous and inconsistent.

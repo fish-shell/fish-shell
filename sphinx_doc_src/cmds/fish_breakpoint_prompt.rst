@@ -1,5 +1,5 @@
 fish_breakpoint_prompt - define the appearance of the command line prompt when in the context of a ``breakpoint`` command
-==========================================
+=========================================================================================================================
 
 Synopsis
 --------
@@ -10,7 +10,7 @@ end
 
 
 Description
-------------
+-----------
 
 By defining the ``fish_breakpoint_prompt`` function, the user can choose a custom prompt when asking for input in response to a ``breakpoint`` command. The ``fish_breakpoint_prompt`` function is executed when the prompt is to be shown, and the output is used as a prompt.
 
@@ -20,7 +20,7 @@ The exit status of commands within ``fish_breakpoint_prompt`` will not modify th
 
 
 Example
-------------
+-------
 
 A simple prompt that is a simplified version of the default debugging prompt:
 

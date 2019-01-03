@@ -1,5 +1,5 @@
 math - Perform mathematics calculations
-==========================================
+=======================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ math [-sN | --scale=N] [--] EXPRESSION
 
 
 Description
-------------
+-----------
 
 ``math`` is used to perform mathematical calculations. It supports all the usual operations such as addition, subtraction, etc. As well as functions like ``abs()``, ``sqrt()`` and ``log2()``.
 
@@ -23,19 +23,19 @@ The following options are available:
 - ``-sN`` or ``--scale=N`` sets the scale of the result. ``N`` must be an integer. A scale of zero causes results to be rounded down to the nearest integer. So ``3/2`` returns ``1`` rather than ``2`` which ``1.5`` would normally round to. This is for compatibility with ``bc`` which was the basis for this command prior to fish 3.0.0. Scale values greater than zero causes the result to be rounded using the usual rules to the specified number of decimal places.
 
 Return Values
-------------
+-------------
 
 If the expression is successfully evaluated and doesn't over/underflow or return NaN the return ``status`` is zero (success) else one.
 
 Syntax
-------------
+------
 
 ``math`` knows some operators, constants, functions and can (obviously) read numbers.
 
 For numbers, ``.`` is always the radix character regardless of locale - ``2.5``, not ``2,5``. Scientific notation (``10e5``) is also available.
 
 Operators
-------------
+---------
 
 ``math`` knows the following operators:
 
@@ -52,7 +52,7 @@ Operators
 They are all used in an infix manner - ``5 + 2``, not ``+ 5 2``.
 
 Constants
-------------
+---------
 
 ``math`` knows the following constants:
 
@@ -62,7 +62,7 @@ Constants
 Use them without a leading ``$`` - ``pi - 3`` should be about 0.
 
 Functions
-------------
+---------
 
 ``math`` supports the following functions:
 
@@ -92,7 +92,7 @@ Functions
 All of the trigonometric functions use radians.
 
 Examples
-------------
+--------
 
 ``math 1+1`` outputs 2.
 
@@ -107,7 +107,7 @@ Examples
 ``math "sin(pi)"`` outputs ``0``.
 
 Compatibility notes
-------------
+-------------------
 
 Fish 1.x and 2.x releases relied on the ``bc`` command for handling ``math`` expressions. Starting with fish 3.0.0 fish uses the tinyexpr library and evaluates the expression without the involvement of any external commands.
 

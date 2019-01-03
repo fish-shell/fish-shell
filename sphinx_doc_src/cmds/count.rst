@@ -1,5 +1,5 @@
 count - count the number of elements of an array
-==========================================
+================================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ count $VARIABLE
 
 
 Description
-------------
+-----------
 
 ``count`` prints the number of arguments that were passed to it. This is usually used to find out how many elements an environment variable array contains.
 
@@ -18,7 +18,7 @@ Description
 
 
 Example
-------------
+-------
 
 
 

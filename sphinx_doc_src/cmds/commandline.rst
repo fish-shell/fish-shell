@@ -1,5 +1,5 @@
 commandline - set or get the current command line buffer
-==========================================
+========================================================
 
 Synopsis
 --------
@@ -8,7 +8,7 @@ commandline [OPTIONS] [CMD]
 
 
 Description
-------------
+-----------
 
 ``commandline`` can be used to set or get the current contents of the command line buffer.
 
@@ -60,7 +60,7 @@ The following options output metadata about the commandline state:
 
 
 Example
-------------
+-------
 
 ``commandline -j $history[3]`` replaces the job under the cursor with the third item from the command line history.
 

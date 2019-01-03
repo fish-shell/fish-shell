@@ -1,5 +1,5 @@
 functions - print or erase functions
-==========================================
+====================================
 
 Synopsis
 --------
@@ -12,7 +12,7 @@ functions [ -e | -q ] FUNCTIONS...
 
 
 Description
-------------
+-----------
 
 ``functions`` prints or erases functions.
 
@@ -60,7 +60,7 @@ The exit status of ``functions`` is the number of functions specified in the arg
 
 
 Examples
-------------
+--------
 
 
 ::

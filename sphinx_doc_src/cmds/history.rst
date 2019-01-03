@@ -1,5 +1,5 @@
 history - Show and manipulate command history
-==========================================
+=============================================
 
 Synopsis
 --------
@@ -13,7 +13,7 @@ history ( -h | --help )
 
 
 Description
-------------
+-----------
 
 ``history`` is used to search, delete, and otherwise manipulate the history of interactive commands.
 
@@ -52,7 +52,7 @@ These flags can appear before or immediately after one of the sub-commands liste
 - ``-h`` or ``--help`` display help for this command.
 
 Example
-------------
+-------
 
 
 
@@ -70,7 +70,7 @@ Example
 
 
 Customizing the name of the history file
-------------
+----------------------------------------
 
 By default interactive commands are logged to ``$XDG_DATA_HOME/fish/fish_history`` (typically ``~/.local/share/fish/fish_history``).
 
@@ -81,7 +81,7 @@ You can change ``fish_history`` at any time (by using ``set -x fish_history "ses
 Other shells such as bash and zsh use a variable named ``HISTFILE`` for a similar purpose. Fish uses a different name to avoid conflicts and signal that the behavior is different (session name instead of a file path). Also, if you set the var to anything other than ``fish`` or ``default`` it will inhibit importing the bash history. That's because the most common use case for this feature is to avoid leaking private or sensitive history when giving a presentation.
 
 Notes
-------------
+-----
 
 If you specify both ``--prefix`` and ``--contains`` the last flag seen is used.
 

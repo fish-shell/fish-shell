@@ -32,7 +32,7 @@ fish can be installed:
 
 Packages for Debian, Fedora, openSUSE, and Red Hat Enterprise Linux/CentOS are available from the
 [openSUSE Build
-Service](https://software.opensuse.org/download.html?project=shells%3Afish%3Arelease%3A2&package=fish).
+Service](https://software.opensuse.org/download.html?project=shells%3Afish&package=fish).
 
 Packages for Ubuntu are available from the [fish
 PPA](https://launchpad.net/~fish-shell/+archive/ubuntu/release-3), and can be installed using the

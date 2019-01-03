@@ -35,11 +35,11 @@ Packages for Debian, Fedora, openSUSE, and Red Hat Enterprise Linux/CentOS are a
 Service](https://software.opensuse.org/download.html?project=shells%3Afish%3Arelease%3A2&package=fish).
 
 Packages for Ubuntu are available from the [fish
-PPA](https://launchpad.net/~fish-shell/+archive/ubuntu/release-2), and can be installed using the
+PPA](https://launchpad.net/~fish-shell/+archive/ubuntu/release-3), and can be installed using the
 following commands:
 
 ```
-sudo apt-add-repository ppa:fish-shell/release-2
+sudo apt-add-repository ppa:fish-shell/release-3
 sudo apt-get update
 sudo apt-get install fish
 ```

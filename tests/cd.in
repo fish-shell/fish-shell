@@ -1,3 +1,5 @@
+# Store pwd to later go back before cleaning up
+set -l oldpwd (pwd)
 logmsg cd symlink non-resolution
 set real (mktemp -d)
 set link (mktemp -u)
@@ -35,4 +37,7 @@ echo "ls:"
 complete -C'ls ../'
 echo "cd:"
 complete -C'cd ../'
+
+# cd back before removing the test directory again.
+cd $oldpwd
 rm -Rf $base

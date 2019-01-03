@@ -13,7 +13,7 @@
  - nothing yet...
 - Lots of improvements to completions.
 - fish_clipboard_* now supports wayland by means of [wl-clipboard](https://github.com/bugaevc/wl-clipboard).
-
+ - Improved completion for `ant`.
 ---
 
 # fish 3.0.0 (released December 28, 2018)

@@ -931,6 +931,8 @@ The user can change the settings of `fish` by changing the values of certain var
 
 - `HOME`, the user's home directory. This variable can be changed by the user.
 
+- `hostname`, the machine's hostname.
+
 - `IFS`, the internal field separator that is used for word splitting with the <a href="commands.html#read">read builtin</a>. Setting this to the empty string will also disable line splitting in <a href="#expand-command-substitution">command substitution</a>. This variable can be changed by the user.
 
 - `PWD`, the current working directory.

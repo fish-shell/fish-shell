@@ -622,9 +622,13 @@ class wildcard_matcher_t : public string_matcher_t {
             }
         }
         if (opts.entire) {
-            // If the pattern is empty, this becomes one ANY_STRING that matches everything.
-            if (wcpattern.front() != ANY_STRING) wcpattern.insert(0, 1, ANY_STRING);
-            if (wcpattern.back() != ANY_STRING) wcpattern.push_back(ANY_STRING);
+            if (!wcpattern.empty()) {
+                if (wcpattern.front() != ANY_STRING) wcpattern.insert(0, 1, ANY_STRING);
+                if (wcpattern.back() != ANY_STRING) wcpattern.push_back(ANY_STRING);
+            } else {
+                // If the pattern is empty, this becomes one ANY_STRING that matches everything.
+                wcpattern.push_back(ANY_STRING);
+            }
         }
     }
 

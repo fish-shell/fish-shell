@@ -71,13 +71,14 @@ CHECK_CXX_SYMBOL_EXISTS(mkostemp "stdlib.h;unistd.h" HAVE_MKOSTEMP)
 SET(HAVE_CURSES_H ${CURSES_HAVE_CURSES_H})
 SET(HAVE_NCURSES_CURSES_H ${CURSES_HAVE_NCURSES_CURSES_H})
 SET(HAVE_NCURSES_H ${CURSES_HAVE_NCURSES_H})
-CHECK_INCLUDE_FILES("curses.h;term.h" HAVE_TERM_H)
-CHECK_INCLUDE_FILE_CXX("ncurses/term.h" HAVE_NCURSES_TERM_H)
+IF(HAVE_CURSES_H)
+    CHECK_INCLUDE_FILES("curses.h;term.h" HAVE_TERM_H)
+ENDIF()
+IF(NOT HAVE_TERM_H)
+    CHECK_INCLUDE_FILE_CXX("ncurses/term.h" HAVE_NCURSES_TERM_H)
+ENDIF()
 CHECK_INCLUDE_FILE_CXX(siginfo.h HAVE_SIGINFO_H)
 CHECK_INCLUDE_FILE_CXX(spawn.h HAVE_SPAWN_H)
-CHECK_CXX_SYMBOL_EXISTS(std::wcscasecmp wchar.h HAVE_STD__WCSCASECMP)
-CHECK_CXX_SYMBOL_EXISTS(std::wcsdup wchar.h HAVE_STD__WCSDUP)
-CHECK_CXX_SYMBOL_EXISTS(std::wcsncasecmp wchar.h HAVE_STD__WCSNCASECMP)
 CHECK_STRUCT_HAS_MEMBER("struct stat" st_ctime_nsec "sys/stat.h" HAVE_STRUCT_STAT_ST_CTIME_NSEC
     LANGUAGE CXX)
 CHECK_STRUCT_HAS_MEMBER("struct stat" st_mtimespec.tv_nsec "sys/stat.h"
@@ -89,11 +90,24 @@ CHECK_INCLUDE_FILE_CXX(sys/ioctl.h HAVE_SYS_IOCTL_H)
 CHECK_INCLUDE_FILE_CXX(sys/select.h HAVE_SYS_SELECT_H)
 CHECK_INCLUDE_FILES("sys/types.h;sys/sysctl.h" HAVE_SYS_SYSCTL_H)
 CHECK_INCLUDE_FILE_CXX(termios.h HAVE_TERMIOS_H) # Needed for TIOCGWINSZ
+
 CHECK_CXX_SYMBOL_EXISTS(wcscasecmp wchar.h HAVE_WCSCASECMP)
 CHECK_CXX_SYMBOL_EXISTS(wcsdup wchar.h HAVE_WCSDUP)
 CHECK_CXX_SYMBOL_EXISTS(wcslcpy wchar.h HAVE_WCSLCPY)
 CHECK_CXX_SYMBOL_EXISTS(wcsncasecmp wchar.h HAVE_WCSNCASECMP)
 CHECK_CXX_SYMBOL_EXISTS(wcsndup wchar.h HAVE_WCSNDUP)
+
+# These are for compatibility with Solaris 10, which places the following
+# in the std namespace.
+IF(NOT HAVE_WCSNCASECMP)
+    CHECK_CXX_SYMBOL_EXISTS(std::wcscasecmp wchar.h HAVE_STD__WCSCASECMP)
+ENDIF()
+IF(NOT HAVE_WCSDUP)
+    CHECK_CXX_SYMBOL_EXISTS(std::wcsdup wchar.h HAVE_STD__WCSDUP)
+ENDIF()
+IF(NOT HAVE_WCSNCASECMP)
+    CHECK_CXX_SYMBOL_EXISTS(std::wcsncasecmp wchar.h HAVE_STD__WCSNCASECMP)
+ENDIF()
 
 # `xlocale.h` is required to find `wcstod_l` in `wchar.h` under FreeBSD,
 # but it's not present under Linux.

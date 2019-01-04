@@ -196,7 +196,7 @@ if command -sq /usr/libexec/path_helper
 
         for path_file in $argv[2] $argv[3]/*
             if test -f $path_file
-                while read -la entry
+                while read -l entry
                     if not contains $entry $result
                         set result $result $entry
                     end

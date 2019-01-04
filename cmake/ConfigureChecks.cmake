@@ -1,3 +1,14 @@
+# The following defines affect the environment configuration tests are run in:
+# CMAKE_REQUIRED_DEFINITIONS, CMAKE_REQUIRED_FLAGS, CMAKE_REQUIRED_LIBRARIES,
+# and CMAKE_REQUIRED_INCLUDES
+# `wcstod_l` is a GNU-extension, sometimes hidden behind GNU-related defines.
+# This is the case for at least Cygwin and Newlib.
+LIST(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE=1)
+IF(APPLE)
+  # 10.7+ only.
+  LIST(APPEND CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS} "-Werror=unguarded-availability")
+ENDIF()
+
 # Try using CMake's own logic to locate curses/ncurses
 FIND_PACKAGE(Curses)
 IF(NOT ${CURSES_FOUND})
@@ -18,11 +29,6 @@ IF(CMAKE_VERSION VERSION_LESS 3.4.0)
     ENABLE_LANGUAGE(C)
 ENDIF()
 FIND_PACKAGE(Threads REQUIRED)
-
-IF(APPLE)
-  # 10.7+ only.
-  SET(CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS} "-Werror=unguarded-availability")
-ENDIF()
 
 # Detect WSL. Does not match against native Windows/WIN32.
 if (CMAKE_HOST_SYSTEM_VERSION MATCHES ".*-Microsoft")
@@ -89,19 +95,14 @@ CHECK_CXX_SYMBOL_EXISTS(wcslcpy wchar.h HAVE_WCSLCPY)
 CHECK_CXX_SYMBOL_EXISTS(wcsncasecmp wchar.h HAVE_WCSNCASECMP)
 CHECK_CXX_SYMBOL_EXISTS(wcsndup wchar.h HAVE_WCSNDUP)
 
-CMAKE_PUSH_CHECK_STATE(RESET)
-# `wcstod_l` is a GNU-extension, sometimes hidden behind the following define
-LIST(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE=1)
-# `xlocale.h` is required to find `wcstod_l` in `wchar.h` under FreeBSD, but
-# it's not present under Linux.
-SET(WCSTOD_L_INCLUDES "")
+# `xlocale.h` is required to find `wcstod_l` in `wchar.h` under FreeBSD,
+# but it's not present under Linux.
 CHECK_INCLUDE_FILES("xlocale.h" HAVE_XLOCALE_H)
 IF(HAVE_XLOCALE_H)
     LIST(APPEND WCSTOD_L_INCLUDES "xlocale.h")
 ENDIF()
 LIST(APPEND WCSTOD_L_INCLUDES "wchar.h")
 CHECK_CXX_SYMBOL_EXISTS(wcstod_l "${WCSTOD_L_INCLUDES}" HAVE_WCSTOD_L)
-CMAKE_POP_CHECK_STATE()
 
 CHECK_CXX_SYMBOL_EXISTS(_sys_errs stdlib.h HAVE__SYS__ERRS)
 

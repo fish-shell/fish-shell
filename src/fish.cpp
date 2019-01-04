@@ -440,7 +440,10 @@ int main(int argc, char **argv) {
     // TODO: The generic process-exit event is useless and unused.
     // Remove this in future.
     proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, getpid(), exit_status);
-    event_fire_generic(L"fish_exit");
+
+    // Trigger any exit handlers.
+    wcstring_list_t event_args = {to_string<int>(exit_status)};
+    event_fire_generic(L"fish_exit", &event_args);
 
     restore_term_mode();
     restore_term_foreground_process_group();

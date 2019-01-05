@@ -2677,11 +2677,10 @@ static void test_autosuggest_suggest_special() {
         err(L"mkdir failed");  // a path with a double quote
     }
     // This is to ensure tilde expansion is handled. See the `cd ~/test_autosuggest_suggest_specia`
-    // test below. I really dislike this since it mucks with a persons home directory.
-    //
-    // The question is how to modify the test so that tilde expansion can be made hermetic to this
-    // test.
-    if (system("mkdir -p ~/test_autosuggest_suggest_special/")) {
+    // test below.
+    // Fake out the home directory
+    env_set_one(L"HOME", ENV_LOCAL | ENV_EXPORT, L"test/test-home");
+    if (system("mkdir -p test/test-home/test_autosuggest_suggest_special/")) {
         err(L"mkdir failed");
     }
     if (system("mkdir -p test/autosuggest_test/start/unique2/unique3/multi4")) {
@@ -2753,8 +2752,8 @@ static void test_autosuggest_suggest_special() {
     perform_one_completion_cd_test(L"cd ~haha", L"ha/", __LINE__);
     perform_one_completion_cd_test(L"cd ~hahaha/", L"path1/", __LINE__);
 
+    env_remove(L"HOME", ENV_LOCAL | ENV_EXPORT);
     popd();
-    (void)system("rmdir ~/test_autosuggest_suggest_special/");
 }
 
 static void perform_one_autosuggestion_should_ignore_test(const wcstring &command, long line) {

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # Run me like this: ./create_manpage_completions.py /usr/share/man/man{1,8}/* > man_completions.fish

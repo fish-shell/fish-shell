@@ -74,6 +74,13 @@ make %{?_smp_mflags}
 %else
 %make_install
 %endif
+
+# Fixes ERROR: ambiguous python shebang in F30/RHEL 8
+%if 0%{?fedora} > 29 || 0%{?rhel} && 0%{?rhel} > 7
+find %{buildroot}/usr/share/fish/tools -type f -name "*.py" -exec sed -i '1s:#!/usr/bin/env python$:#!/usr/bin/python3:' {} ';'
+find %{buildroot}/usr/share/fish/tools -type f -name "*.py" -exec sed -i '1s:#!/usr/bin/python$:#!/usr/bin/python3:' {} ';'
+%endif
+
 %find_lang %{name}
 
 %check

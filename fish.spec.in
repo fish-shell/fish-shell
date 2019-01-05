@@ -51,10 +51,6 @@ is simple but incompatible with other shell languages.
 export CC=gcc48
 export CXX=g++48
 EXTRA_CMAKE_FLAGS="-DCURSES_EXTRA_LIBRARY=tinfo"
-%if 0%{?rhel} < 6
-# i686 required for atomic instructions; default is i386
-export CXXFLAGS="$CXXFLAGS -march=i686"
-%endif
 %endif
 # CMake macros define -DBUILD_SHARED_LIBS:BOOL=ON, which breaks the
 # bundled PCRE2 static library.

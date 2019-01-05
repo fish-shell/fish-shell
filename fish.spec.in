@@ -25,6 +25,13 @@ BuildRequires: gcc48 gcc48-c++
 BuildRequires: pcre2-devel
 %endif
 
+# for tests
+BuildRequires: expect
+%if 0%{?fedora}
+# Need the en_US.utf-8 locale at a minimum
+BuildRequires: glibc-langpack-en
+%endif
+
 BuildRoot:              %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Requires:		python
@@ -72,6 +79,13 @@ make %{?_smp_mflags}
 %make_install
 %endif
 %find_lang %{name}
+
+%check
+# OpenSUSE does out-of-tree builds and defines __builddir
+%if 0%{?__builddir:1}
+cd %__builddir
+%endif
+make test
 
 %clean
 rm -rf $RPM_BUILD_ROOT

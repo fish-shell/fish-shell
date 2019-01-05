@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <cmath>
 #include <functional>
 #include <memory>
 #include <set>
@@ -2302,7 +2303,7 @@ static void test_wcstod() {
         wchar_t *wide_end = nullptr;
         double val1 = wcstod(a, &wide_end);
         double val2 = strtod(b, &narrow_end);
-        do_test((isnan(val1) && isnan(val2)) || fabs(val1 - val2) <= __DBL_EPSILON__);
+        do_test((std::isnan(val1) && std::isnan(val2)) || fabs(val1 - val2) <= __DBL_EPSILON__);
         do_test(wide_end - a == narrow_end - b);
     };
     tod_test(L"", "");

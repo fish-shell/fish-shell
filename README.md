@@ -71,7 +71,7 @@ Running fish requires:
 
 The following optional features also have specific requirements:
 
-* builtin commands that have the `--help` option or print usage messages require `nroff` and `ul`
+* builtin commands that have the `--help` option or print usage messages require `ul` and either `nroff` or `mandoc` for display
 * automated completion generation from manual pages requires Python (2.7+ or 3.3+) and possibly the
   `backports.lzma` module for Python 2.7
 * the `fish_config` web configuration tool requires Python (2.7+ or 3.3 +) and a web browser

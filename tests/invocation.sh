@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 ##
 # Test that the invocation of the fish executable works as we hope.
 #
@@ -57,22 +57,12 @@
 # Errors will be fatal
 set -e
 
-# If any command in the pipeline fails report the rc of the first fail.
-set -o pipefail
-
-# If nothing matches a glob expansion, return nothing (not the glob
-# itself)
-shopt -s nullglob
-
 # The directory this script is in (as everything is relative to here)
 here="$(cd "$(dirname "$0")" && pwd -P)"
 cd "$here"
 
 # The temporary directory to use
 temp_dir="$here/../test"
-
-# The files we're going to execute are in the 'invocation' directory.
-files_to_test=($(echo invocation/*.invoke))
 
 # The fish binary we are testing - for manual testing, may be overridden
 fish_exe="${fish_exe:-../test/root/bin/fish}"
@@ -89,7 +79,7 @@ system_name="$(uname -s)"
 
 # Check whether we have the 'colordiff' tool - if not, we'll revert to
 # boring regular 'diff'.
-if [ "$(type -t colordiff)" != '' ] ; then
+if command -v colordiff >/dev/null 2>&1; then
     difftool='colordiff'
 else
     difftool='diff'
@@ -99,7 +89,7 @@ fi
 ##
 # Set variables to known values so that they will not affect the
 # execution of the test.
-function clean_environment() {
+clean_environment() {
 
     # Reset the terminal variables to a known type.
     export TERM=xterm
@@ -119,27 +109,41 @@ function clean_environment() {
 
 ##
 # Fail completely :-(
-function fail() {
-    say red "FAIL: $*" >&2
+fail() {
+    say "$term_red" "FAIL: $*" >&2
     exit 1
 }
 
 
 ##
 # Coloured output
-function say() {
-    local color_name="$1"
-    local msg="$2"
-    local color_var="term_${color_name}"
-    local color="${!color_var}"
-
-    echo "$color$msg$term_reset"
+#
+# Use like `say "$term_green" "message".
+say() {
+    echo "$1$2$term_reset"
 }
 
+run_rc() {
+    # Write the return code on to the end of the stderr, so that it can be
+    # checked like anything else.
+    eval "$*" || echo "RC: $?" >&2
+}
+
+filter() {
+    # In some cases we want to check only a part of the output.
+    # For those we filter the output through grep'd matches.
+    if [ -f "$1" ] ; then
+        # grep '-o', '-E' and '-f' are supported by the tools in modern GNU
+        # environments, and on OS X.
+        grep -oE -f "$1"
+    else
+        cat
+    fi
+}
 
 ##
 # Actual testing of a .invoke file.
-function test_file() {
+test_file() {
     local file="$1"
     local dir="$(dirname "$file")"
     local base="$(basename "$file" .invoke)"
@@ -150,7 +154,7 @@ function test_file() {
     local grep_stdout="${dir}/${base}.grep"
     local want_stderr="${dir}/${base}.err"
     local empty="${dir}/${base}.empty"
-    local -a filter
+    local filter
     local rc=0
     local test_args_literal
     local test_args
@@ -191,16 +195,6 @@ function test_file() {
         rm -f "${temp_dir}/home/fish/config.fish"
     fi
 
-    # In some cases we want to check only a part of the output.
-    # For those we filter the output through grep'd matches.
-    if [ -f "$grep_stdout" ] ; then
-        # grep '-o', '-E' and '-f' are supported by the tools in modern GNU
-        # environments, and on OS X.
-        filter=('grep' '-o' '-E' '-f' "$grep_stdout")
-    else
-        filter=('cat')
-    fi
-
     echo -n "Testing file $file ${system_specific:+($system_name specific) }... "
 
     # The hoops we are jumping through here, with changing directory are
@@ -210,19 +204,12 @@ function test_file() {
     # We disable the exit-on-error here, so that we can catch the return
     # code.
     set +e
-    eval "cd \"$fish_dir\" && \"./$fish_leaf\" $test_args" \
+    run_rc "cd \"$fish_dir\" && \"./$fish_leaf\" $test_args" \
            2> "$test_stderr" \
            < /dev/null       \
-           | ${filter[*]}    \
+           | filter "$grep_stdout" \
            > "$test_stdout"
-    rc="$?"
     set -e
-
-    if [ "$rc" != '0' ] ; then
-        # Write the return code on to the end of the stderr, so that it can be
-        # checked like anything else.
-        echo "RC: $rc" >> "${test_stderr}"
-    fi
 
     # If the wanted output files are not present, they are assumed empty.
     if [ ! -f "$want_stdout" ] ; then
@@ -238,9 +225,9 @@ function test_file() {
     # However, fish will also have helpfully translated the home directory
     # into '~/' in the error report. Consequently, we need to perform a
     # small fix-up so that we can replace the string sanely.
-    xdg_config_in_home="$XDG_CONFIG_HOME"
-    if [ "${xdg_config_in_home:0:${#HOME}}" = "${HOME}" ] ; then
-        xdg_config_in_home="~/${xdg_config_in_home:${#HOME}+1}"
+    xdg_config_in_home="${XDG_CONFIG_HOME#$HOME}"
+    if [ "${#xdg_config_in_home}" -lt "${#XDG_CONFIG_HOME}" ]; then
+        xdg_config_in_home="~$xdg_config_in_home"
     fi
     # 'sed -i' (inplace) has different syntax on BSD and GNU versions of
     # the tool, so cannot be used here, hence we write to a separate file,
@@ -258,20 +245,20 @@ function test_file() {
 
     if [ "$out_status" = '0' ] && \
        [ "$err_status" = '0' ] ; then
-        say green "ok"
+        say "$term_green" "ok"
         # clean up tmp files
         rm -f "${test_stdout}" "${test_stderr}" "${empty}"
         rc=0
     else
-        say red "fail"
-        say blue "$test_args_literal" | sed 's/^/    /'
+        say "$term_red" "fail"
+        say "$term_blue" "$test_args_literal" | sed 's/^/    /'
 
         if [ "$out_status" != '0' ] ; then
-            say yellow "Output differs for file $file. Diff follows:"
+            say "$term_yellow" "Output differs for file $file. Diff follows:"
             "$difftool" -u "${test_stdout}" "${want_stdout}"
         fi
         if [ "$err_status" != '0' ] ; then
-            say yellow "Error output differs for file $file. Diff follows:"
+            say "$term_yellow" "Error output differs for file $file. Diff follows:"
             "$difftool" -u "${test_stderr}" "${want_stderr}"
         fi
         rc=1
@@ -312,11 +299,11 @@ if command -v tput >/dev/null 2>&1; then
     term_reset="$(tput sgr0)"
 fi
 
-say cyan "Testing shell invocation functionality"
+say "$term_cyan" "Testing shell invocation functionality"
 
 passed=0
 failed=0
-for file in ${files_to_test[*]} ; do
+for file in invocation/*.invoke; do
    if ! test_file "$file" ; then
        failed=$(( failed + 1 ))
    else

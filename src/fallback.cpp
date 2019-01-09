@@ -394,13 +394,13 @@ int flock(int fd, int op) {
 // For platforms without wcstod_l C extension, wrap wcstod after changing the
 // thread-specific locale.
 double fish_compat::wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t loc) {
-    // Create and use a new, thread-specific locale
-    locale_t locale = newlocale(LC_NUMERIC, "C", nullptr);
-    locale_t prev_locale = uselocale(locale);
+    char *saved_locale = strdup(setlocale(LC_NUMERIC, NULL));
+    // Yes, this is hardcoded to use the "C" locale.
+    // That's the only thing we need, and uselocale(loc) broke in my testing.
+    setlocale(LC_NUMERIC, "C");
     double ret = wcstod(enptr, endptr);
-    // Restore the old locale before freeing the locale we created and are still using
-    uselocale(prev_locale);
-    freelocale(locale);
+    setlocale(LC_NUMERIC, saved_locale);
+    free(saved_locale);
     return ret;
 }
 #endif // defined(wcstod_l)

@@ -18,6 +18,3 @@ override_dh_installdocs:
 # Consider transitioning https://wiki.debian.org/DebugPackage
 override_dh_strip:
 	dh_strip --dbg-package=fish-dbg
-
-# Don't run tests; they don't work until fish is installed
-override_dh_auto_test:

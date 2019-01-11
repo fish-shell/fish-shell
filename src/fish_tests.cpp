@@ -4420,15 +4420,15 @@ static void test_pcre2_escape() {
 
     // all the following are intended to be ultimately matched literally - even if they don't look
     // like that's the intent - so we escape them.
-    const wchar_t * tests[][2] = {
-        L".ext", L"\\.ext",
-        L"{word}", L"\\{word\\}",
-        L"hola-mundo", L"hola\\-mundo",
-        L"$17.42 is your total?", L"\\$17\\.42 is your total\\?",
-        L"not really escaped\\?", L"not really escaped\\\\\\?",
+    const wchar_t * const tests[][2] = {
+        {L".ext", L"\\.ext"},
+        {L"{word}", L"\\{word\\}"},
+        {L"hola-mundo", L"hola\\-mundo"},
+        {L"$17.42 is your total?", L"\\$17\\.42 is your total\\?"},
+        {L"not really escaped\\?", L"not really escaped\\\\\\?"},
     };
 
-    for (auto &test : tests) {
+    for (const auto &test : tests) {
         auto escaped = escape_string(test[0], 0, STRING_STYLE_REGEX);
         if (escaped != test[1]) {
             err(L"pcre2_escape error: pcre2_escape(%ls) -> %ls, expected %ls", test[0], escaped.c_str(), test[1]);

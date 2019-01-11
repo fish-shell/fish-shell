@@ -2166,9 +2166,10 @@ __attribute__((noinline)) void debug_thread_error(void) {
 }
 
 void set_main_thread() {
-    // Just call is_main_thread() once to force increment of thread_id
-    // We store the result as `volatile` to guarantee the function call is not optimized away
-    volatile bool _x = is_main_thread();
+    // Just call is_main_thread() once to force increment of thread_id.
+    bool x = is_main_thread();
+    assert(x && "set_main_thread should be main thread");
+    (void)x;
 }
 
 void configure_thread_assertions_for_testing() { thread_asserts_cfg_for_testing = true; }

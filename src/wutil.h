@@ -10,6 +10,10 @@
 #include <locale.h>
 #include <string>
 
+#ifdef HAVE_XLOCALE_H
+#include <xlocale.h>
+#endif
+
 #include "common.h"
 #include "maybe.h"
 

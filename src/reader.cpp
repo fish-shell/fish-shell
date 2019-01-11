@@ -1299,7 +1299,6 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
     return [=]() -> autosuggestion_result_t {
         ASSERT_IS_BACKGROUND_THREAD();
 
-
         const autosuggestion_result_t nothing = {};
         // If the main thread has moved on, skip all the work.
         if (generation_count != read_generation_count()) {

@@ -1658,10 +1658,10 @@ maybe_t<env_var_t> env_vars_snapshot_t::get(const wcstring &key, env_mode_flags_
 wcstring_list_t env_vars_snapshot_t::get_names(int flags) const { return names; }
 
 const wchar_t *const env_vars_snapshot_t::highlighting_keys[] = {
-    L"PATH", L"CDPATH", L"fish_function_path", L"PWD", NULL};
+    L"PATH", L"CDPATH", L"fish_function_path", L"PWD", L"HOME", NULL};
 
-const wchar_t *const env_vars_snapshot_t::completing_keys[] = {L"PATH", L"CDPATH",
-                                                               L"fish_function_path", L"PWD", NULL};
+const wchar_t *const env_vars_snapshot_t::completing_keys[] = {
+    L"PATH", L"CDPATH", L"fish_function_path", L"PWD", L"HOME", NULL};
 
 #if defined(__APPLE__) || defined(__CYGWIN__)
 static int check_runtime_path(const char *path) {

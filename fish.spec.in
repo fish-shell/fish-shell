@@ -81,7 +81,7 @@ make %{?_smp_mflags}
 %if 0%{?__builddir:1}
 cd %__builddir
 %endif
-make test
+make test SHOW_INTERACTIVE_LOG=1
 
 %clean
 rm -rf $RPM_BUILD_ROOT

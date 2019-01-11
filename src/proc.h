@@ -399,6 +399,12 @@ int proc_format_status(int status);
 /// Wait for any process finishing.
 pid_t proc_wait_any();
 
+/// Set and get whether we are in initialization.
+// Hackish. In order to correctly report the origin of code with no associated file, we need to
+// know whether it's run during initialization or not.
+void set_is_within_fish_initialization(bool flag);
+bool is_within_fish_initialization();
+
 /// Terminate all background jobs
 void hup_background_jobs();
 

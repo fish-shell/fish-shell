@@ -26,6 +26,7 @@
 #include "highlight.h"
 #include "history.h"
 #include "io.h"
+#include "parser.h"
 #include "proc.h"
 #include "reader.h"
 #include "wcstringutil.h"
@@ -203,7 +204,9 @@ static int read_interactive(wcstring &buff, int nchars, bool shell, bool silent,
     int exit_res = STATUS_CMD_OK;
     const wchar_t *line;
 
-    wcstring read_history_ID = history_session_id();
+    // TODO: rationalize this.
+    const auto &vars = env_stack_t::principal();
+    wcstring read_history_ID = history_session_id(vars);
     if (!read_history_ID.empty()) read_history_ID += L"_read";
     reader_push(read_history_ID);
 
@@ -414,6 +417,7 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
 
 /// The read builtin. Reads from stdin and stores the values in environment variables.
 int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    auto &vars = parser.vars();
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     wcstring buff;
@@ -452,8 +456,7 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     auto vars_left = [&] () { return argv + argc - var_ptr; };
     auto clear_remaining_vars = [&] () {
         while (vars_left()) {
-            env_set_empty(*var_ptr, opts.place);
-            // env_set_one(*var_ptr, opts.place, L"");
+            parser.vars().set_empty(*var_ptr, opts.place);
             ++var_ptr;
         }
     };
@@ -488,7 +491,7 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
 
         if (!opts.have_delimiter) {
-            auto ifs = env_get(L"IFS");
+            auto ifs = parser.vars().get(L"IFS");
             if (!ifs.missing_or_empty()) opts.delimiter = ifs->as_string();
         }
 
@@ -512,13 +515,13 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
             if (opts.array) {
                 // Array mode: assign each char as a separate element of the sole var.
-                env_set(*var_ptr++, opts.place, chars);
+                vars.set(*var_ptr++, opts.place, chars);
             } else {
                 // Not array mode: assign each char to a separate var with the remainder being assigned
                 // to the last var.
                 auto c = chars.begin();
                 for (; c != chars.end() && vars_left(); ++c) {
-                    env_set_one(*var_ptr++, opts.place, *c);
+                    vars.set_one(*var_ptr++, opts.place, *c);
                 }
             }
         } else if (opts.array) {
@@ -534,14 +537,14 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                      loc.first != wcstring::npos; loc = wcstring_tok(buff, opts.delimiter, loc)) {
                     tokens.emplace_back(wcstring(buff, loc.first, loc.second));
                 }
-                env_set(*var_ptr++, opts.place, tokens);
+                vars.set(*var_ptr++, opts.place, tokens);
             } else {
                 // We're using a delimiter provided by the user so use the `string split` behavior.
                 wcstring_list_t splits;
                 split_about(buff.begin(), buff.end(), opts.delimiter.begin(), opts.delimiter.end(),
                             &splits);
 
-                env_set(*var_ptr++, opts.place, splits);
+                vars.set(*var_ptr++, opts.place, splits);
             }
         } else {
             // Not array mode. Split the input into tokens and assign each to the vars in sequence.
@@ -555,7 +558,7 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                     if (loc.first != wcstring::npos) {
                         substr = wcstring(buff, loc.first, loc.second);
                     }
-                    env_set_one(*var_ptr++, opts.place, substr);
+                    vars.set_one(*var_ptr++, opts.place, substr);
                 }
             } else {
                 // We're using a delimiter provided by the user so use the `string split` behavior.
@@ -566,7 +569,7 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                             &splits, argc - 1);
                 assert(splits.size() <= (size_t) vars_left());
                 for (const auto &split : splits) {
-                    env_set_one(*var_ptr++, opts.place, split);
+                    vars.set_one(*var_ptr++, opts.place, split);
                 }
             }
         }

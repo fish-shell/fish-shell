@@ -202,14 +202,14 @@ static void safe_launch_process(process_t *p, const char *actual_cmd, const char
 
 /// This function is similar to launch_process, except it is not called after a fork (i.e. it only
 /// calls exec) and therefore it can allocate memory.
-static void launch_process_nofork(process_t *p) {
+static void launch_process_nofork(env_stack_t &vars, process_t *p) {
     ASSERT_IS_MAIN_THREAD();
     ASSERT_IS_NOT_FORKED_CHILD();
 
     null_terminated_array_t<char> argv_array;
     convert_wide_array_to_narrow(p->get_argv_array(), &argv_array);
 
-    const char *const *envv = env_export_arr();
+    const char *const *envv = vars.export_arr();
     char *actual_cmd = wcs2str(p->actual_cmd);
 
     // Ensure the terminal modes are what they were before we changed them.
@@ -358,7 +358,7 @@ static bool can_use_posix_spawn_for_job(const std::shared_ptr<job_t> &job,
     return result;
 }
 
-void internal_exec(job_t *j, const io_chain_t &&all_ios) {
+void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &all_ios) {
     // Do a regular launch -  but without forking first...
 
     // setup_child_process makes sure signals are properly set up.
@@ -369,7 +369,7 @@ void internal_exec(job_t *j, const io_chain_t &&all_ios) {
     // really make sense, so I'm not trying to fix it here.
     if (!setup_child_process(0, all_ios)) {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
-        auto shlvl_var = env_get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
+        auto shlvl_var = vars.get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
         wcstring shlvl_str = L"0";
         if (shlvl_var) {
             long shlvl = fish_wcstol(shlvl_var->as_string().c_str());
@@ -377,10 +377,10 @@ void internal_exec(job_t *j, const io_chain_t &&all_ios) {
                 shlvl_str = to_string<long>(shlvl - 1);
             }
         }
-        env_set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, shlvl_str);
+        vars.set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, std::move(shlvl_str));
 
         // launch_process _never_ returns.
-        launch_process_nofork(j->processes.front().get());
+        launch_process_nofork(vars, j->processes.front().get());
     } else {
         j->set_flag(job_flag_t::CONSTRUCTED, true);
         j->processes.front()->completed = 1;
@@ -648,8 +648,8 @@ static bool handle_builtin_output(const std::shared_ptr<job_t> &j, process_t *p,
 
 /// Executes an external command.
 /// \return true on success, false if there is an exec error.
-static bool exec_external_command(const std::shared_ptr<job_t> &j, process_t *p,
-                                  const io_chain_t &proc_io_chain) {
+static bool exec_external_command(env_stack_t &vars, const std::shared_ptr<job_t> &j,
+                                  process_t *p, const io_chain_t &proc_io_chain) {
     assert(p->type == EXTERNAL && "Process is not external");
     // Get argv and envv before we fork.
     null_terminated_array_t<char> argv_array;
@@ -663,7 +663,7 @@ static bool exec_external_command(const std::shared_ptr<job_t> &j, process_t *p,
     make_fd_blocking(STDIN_FILENO);
 
     const char *const *argv = argv_array.get();
-    const char *const *envv = env_export_arr();
+    const char *const *envv = vars.export_arr();
 
     std::string actual_cmd_str = wcs2string(p->actual_cmd);
     const char *actual_cmd = actual_cmd_str.c_str();
@@ -787,7 +787,7 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
 
         function_block_t *fb =
             parser.push_block<function_block_t>(p, func_name, props->shadow_scope);
-        function_prepare_environment(func_name, p->get_argv() + 1, inherit_vars);
+        function_prepare_environment(parser.vars(), func_name, p->get_argv() + 1, inherit_vars);
         parser.forbid_function(func_name);
 
         internal_exec_helper(parser, props->parsed_source, props->body_node, io_chain, j);
@@ -919,7 +919,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
             set_proc_had_barrier(true);
             env_universal_barrier();
         }
-        env_export_arr();
+        parser.vars().export_arr();
     }
 
     // Set up fds that will be used in the pipe.
@@ -975,7 +975,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
         }
 
         case EXTERNAL: {
-            if (!exec_external_command(j, p, process_net_io_chain)) {
+            if (!exec_external_command(parser.vars(), j, p, process_net_io_chain)) {
                 return false;
             }
             break;
@@ -1028,7 +1028,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     }
 
     if (j->processes.front()->type == INTERNAL_EXEC) {
-        internal_exec(j.get(), std::move(all_ios));
+        internal_exec(parser.vars(), j.get(), all_ios);
         DIE("this should be unreachable");
     }
 
@@ -1074,7 +1074,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
 
     j->set_flag(job_flag_t::CONSTRUCTED, true);
     if (!j->is_foreground()) {
-        env_set_one(L"last_pid", ENV_GLOBAL, to_string(j->pgid));
+        parser.vars().set_one(L"last_pid", ENV_GLOBAL, to_string(j->pgid));
     }
 
     if (exec_error) {
@@ -1085,14 +1085,14 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     return true;
 }
 
-static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, bool apply_exit_status,
-                                  bool is_subcmd) {
+static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstring_list_t *lst,
+                                  bool apply_exit_status, bool is_subcmd) {
     ASSERT_IS_MAIN_THREAD();
     bool prev_subshell = is_subshell;
     const int prev_status = proc_get_last_status();
     bool split_output = false;
 
-    const auto ifs = env_get(L"IFS");
+    const auto ifs = parser.vars().get(L"IFS");
     if (!ifs.missing_or_empty()) {
         split_output = true;
     }
@@ -1163,13 +1163,13 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, boo
     return subcommand_status;
 }
 
-int exec_subshell(const wcstring &cmd, std::vector<wcstring> &outputs, bool apply_exit_status,
-                  bool is_subcmd) {
+int exec_subshell(const wcstring &cmd, parser_t &parser, std::vector<wcstring> &outputs,
+                  bool apply_exit_status, bool is_subcmd) {
     ASSERT_IS_MAIN_THREAD();
-    return exec_subshell_internal(cmd, &outputs, apply_exit_status, is_subcmd);
+    return exec_subshell_internal(cmd, parser, &outputs, apply_exit_status, is_subcmd);
 }
 
-int exec_subshell(const wcstring &cmd, bool apply_exit_status, bool is_subcmd) {
+int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status, bool is_subcmd) {
     ASSERT_IS_MAIN_THREAD();
-    return exec_subshell_internal(cmd, NULL, apply_exit_status, is_subcmd);
+    return exec_subshell_internal(cmd, parser, NULL, apply_exit_status, is_subcmd);
 }

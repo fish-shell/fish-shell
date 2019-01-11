@@ -34,40 +34,36 @@ bool path_get_data(wcstring &path);
 /// Args:
 /// cmd - The name of the executable.
 /// output_or_NULL - If non-NULL, store the full path.
-/// vars - The environment variables snapshot to use
+/// vars - The environment variables to use
 ///
 /// Returns:
 /// false if the command can not be found else true. The result
 /// should be freed with free().
-bool path_get_path(const wcstring &cmd, wcstring *output_or_NULL,
-                   const env_vars_snapshot_t &vars = env_vars_snapshot_t::current());
+bool path_get_path(const wcstring &cmd, wcstring *output_or_NULL, const environment_t &vars);
 
 /// Return all the paths that match the given command.
-wcstring_list_t path_get_paths(const wcstring &cmd);
+wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars);
 
 /// Returns the full path of the specified directory, using the CDPATH variable as a list of base
-/// directories for relative paths. The returned string is allocated using halloc and the specified
-/// context.
+/// directories for relative paths.
 ///
-/// If no valid path is found, null is returned and errno is set to ENOTDIR if at least one such
+/// If no valid path is found, false is returned and errno is set to ENOTDIR if at least one such
 /// path was found, but it did not point to a directory, EROTTEN if a arotten symbolic link was
 /// found, or ENOENT if no file of the specified name was found. If both a rotten symlink and a file
 /// are found, it is undefined which error status will be returned.
 ///
 /// \param dir The name of the directory.
 /// \param out_or_NULL If non-NULL, return the path to the resolved directory
-/// \param wd The working directory, which should have a slash appended at the end.
-/// \param vars The environment variable snapshot to use (for the CDPATH variable)
-/// \return 0 if the command can not be found, the path of the command otherwise. The path should be
-/// free'd with free().
-bool path_get_cdpath(const wcstring &dir, wcstring *out_or_NULL, const wcstring &wd,
-                     const env_vars_snapshot_t &vars = env_vars_snapshot_t::current());
+/// \param wd The working directory. The working directory should have a slash appended at the end.
+/// \param vars The environment variables to use (for the CDPATH variable)
+/// \return the command, or none() if it could not be found.
+maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
+                                  const environment_t &vars);
 
-/// Returns whether the path can be used for an implicit cd command; if so, also returns the path by
-/// reference (if desired). This requires it to start with one of the allowed prefixes (., .., ~)
-/// and resolve to a directory.
-bool path_can_be_implicit_cd(const wcstring &path, const wcstring &wd, wcstring *out_path = NULL,
-                             const env_vars_snapshot_t &vars = env_vars_snapshot_t::current());
+/// Returns the path resolved as an implicit cd command, or none() if none. This requires it to
+/// start with one of the allowed prefixes (., .., ~) and resolve to a directory.
+maybe_t<wcstring> path_as_implicit_cd(const wcstring &path, const wcstring &wd,
+                                      const environment_t &vars);
 
 /// Remove double slashes and trailing slashes from a path, e.g. transform foo//bar/ into foo/bar.
 /// The string is modified in-place.

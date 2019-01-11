@@ -424,7 +424,7 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         case STATUS_CURRENT_CMD: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
             // HACK: Go via the deprecated variable to get the command.
-            const auto var = env_get(L"_");
+            const auto var = parser.vars().get(L"_");
             if (!var.missing_or_empty()) {
                 streams.out.append(var->as_string());
                 streams.out.push_back(L'\n');

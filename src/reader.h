@@ -14,8 +14,8 @@
 #include "highlight.h"
 #include "parse_constants.h"
 
+class environment_t;
 class history_t;
-class env_vars_snapshot_t;
 class io_chain_t;
 
 /// Helper class for storing a command line.
@@ -149,18 +149,14 @@ void reader_push(const wcstring &name);
 /// Return to previous reader environment.
 void reader_pop();
 
-/// Specify function to use for finding possible tab completions. The function must take these
-/// arguments:
-///
-/// - The command to be completed as a null terminated array of wchar_t
-/// - An array_list_t in which completions will be inserted.
+/// Specify function to use for finding possible tab completions.
 typedef void (*complete_function_t)(const wcstring &, std::vector<completion_t> *,
-                                    completion_request_flags_t);
+                                    completion_request_flags_t, const environment_t &);
 void reader_set_complete_function(complete_function_t);
 
 /// The type of a highlight function.
 typedef void (*highlight_function_t)(const wcstring &, std::vector<highlight_spec_t> &, size_t,
-                                     wcstring_list_t *, const env_vars_snapshot_t &vars);
+                                     wcstring_list_t *, const environment_t &vars);
 
 /// Function type for testing if a string is valid for the reader to return.
 using test_function_t = parser_test_error_bits_t (*)(const wcstring &);
@@ -220,7 +216,7 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
 
 /// Expand abbreviations at the given cursor position. Exposed for testing purposes only.
 bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t cursor_pos,
-                                           wcstring *output);
+                                           const environment_t &vars, wcstring *output);
 
 /// Apply a completion string. Exposed for testing only.
 wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flags_t flags,

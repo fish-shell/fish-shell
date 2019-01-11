@@ -53,6 +53,14 @@ class maybe_t {
         }
     }
 
+    // Construct a value in-place.
+    template <class... Args>
+    void emplace(Args &&... args) {
+        reset();
+        filled = true;
+        new (storage) T(std::forward<Args>(args)...);
+    }
+
     // Access the value.
     T &value() {
         assert(filled && "maybe_t does not have a value");

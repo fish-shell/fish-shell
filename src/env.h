@@ -16,10 +16,14 @@
 extern size_t read_byte_limit;
 extern bool curses_initialized;
 
-// Flags that may be passed as the 'mode' in env_set / env_get.
+/// Character for separating two array elements. We use 30, i.e. the ascii record separator since
+/// that seems logical.
+#define ARRAY_SEP (wchar_t)0x1e
+
+// Flags that may be passed as the 'mode' in env_stack_t::set() / environment_t::get().
 enum {
-    /// Default mode. Used with `env_get()` to indicate the caller doesn't care what scope the var
-    /// is in or whether it is exported or unexported.
+    /// Default mode. Used with `env_stack_t::get()` to indicate the caller doesn't care what scope
+    /// the var is in or whether it is exported or unexported.
     ENV_DEFAULT = 0,
     /// Flag for local (to the current block) variable.
     ENV_LOCAL = 1 << 0,
@@ -43,7 +47,7 @@ enum {
 };
 typedef uint32_t env_mode_flags_t;
 
-/// Return values for `env_set()`.
+/// Return values for `env_stack_t::set()`.
 enum { ENV_OK, ENV_PERM, ENV_SCOPE, ENV_INVALID, ENV_NOT_FOUND };
 
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
@@ -131,70 +135,135 @@ class env_var_t {
     bool operator!=(const env_var_t &rhs) const { return ! (*this == rhs); }
 };
 
-/// Gets the variable with the specified name, or none() if it does not exist.
-maybe_t<env_var_t> env_get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT);
+/// An environment is read-only access to variable values.
+class environment_t {
+   protected:
+    environment_t() = default;
 
-/// Sets the variable with the specified name to the given values.
-int env_set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);
+   public:
+    virtual maybe_t<env_var_t> get(const wcstring &key,
+                                   env_mode_flags_t mode = ENV_DEFAULT) const = 0;
+    virtual wcstring_list_t get_names(int flags) const = 0;
+    virtual ~environment_t();
 
-/// Sets the variable with the specified name to a single value.
-int env_set_one(const wcstring &key, env_mode_flags_t mode, wcstring val);
+    /// Returns the PWD with a terminating slash.
+    wcstring get_pwd_slash() const;
+};
 
-/// Sets the variable with the specified name to no values.
-int env_set_empty(const wcstring &key, env_mode_flags_t mode);
+/// The null environment contains nothing.
+class null_environment_t : public environment_t {
+   public:
+    null_environment_t();
+    ~null_environment_t() override;
 
-/// Remove environment variable.
-///
-/// \param key The name of the variable to remove
-/// \param mode should be ENV_USER if this is a remove request from the user, 0 otherwise. If this
-/// is a user request, read-only variables can not be removed. The mode may also specify the scope
-/// of the variable that should be erased.
-///
-/// \return zero if the variable existed, and non-zero if the variable did not exist
-int env_remove(const wcstring &key, int mode);
-
-/// Push the variable stack. Used for implementing local variables for functions and for-loops.
-void env_push(bool new_scope);
-
-/// Pop the variable stack. Used for implementing local variables for functions and for-loops.
-void env_pop();
+    maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
+    wcstring_list_t get_names(int flags) const override;
+};
 
 /// Synchronizes all universal variable changes: writes everything out, reads stuff in.
 void env_universal_barrier();
 
-/// Returns an array containing all exported variables in a format suitable for execv
-const char *const *env_export_arr();
+/// A environment stack of scopes. This is the main class that tracks fish variables.
+struct var_stack_t;
+class env_node_t;
+class env_stack_t final : public environment_t {
+    friend class parser_t;
+    std::unique_ptr<var_stack_t> vars_;
 
-/// Sets up argv as the given null terminated array of strings.
-void env_set_argv(const wchar_t *const *argv);
+    int set_internal(const wcstring &key, env_mode_flags_t var_mode, wcstring_list_t val);
 
-/// Returns all variable names.
-wcstring_list_t env_get_names(int flags);
+    bool try_remove(std::shared_ptr<env_node_t> n, const wchar_t *key, int var_mode);
+    std::shared_ptr<env_node_t> get_node(const wcstring &key);
 
-/// Update the PWD variable based on the result of getcwd.
-void env_set_pwd_from_getcwd();
+    static env_stack_t make_principal();
 
-/// Returns the PWD with a terminating slash.
-wcstring env_get_pwd_slash();
+    var_stack_t &vars_stack();
+    const var_stack_t &vars_stack() const;
 
-/// Update the read_byte_limit variable.
-void env_set_read_limit();
+    explicit env_stack_t(std::unique_ptr<var_stack_t> vars_);
+    env_stack_t();
+    ~env_stack_t() override;
 
-class env_vars_snapshot_t {
-    std::map<wcstring, env_var_t> vars;
-    bool is_current() const;
+    env_stack_t(env_stack_t &&);
 
    public:
+    /// Gets the variable with the specified name, or none() if it does not exist.
+    maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
+
+    /// Sets the variable with the specified name to the given values.
+    int set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);
+
+    /// Sets the variable with the specified name to a single value.
+    int set_one(const wcstring &key, env_mode_flags_t mode, wcstring val);
+
+    /// Sets the variable with the specified name to no values.
+    int set_empty(const wcstring &key, env_mode_flags_t mode);
+
+    /// Update the PWD variable based on the result of getcwd.
+    void set_pwd_from_getcwd();
+
+    /// Remove environment variable.
+    ///
+    /// \param key The name of the variable to remove
+    /// \param mode should be ENV_USER if this is a remove request from the user, 0 otherwise. If
+    /// this is a user request, read-only variables can not be removed. The mode may also specify
+    /// the scope of the variable that should be erased.
+    ///
+    /// \return zero if the variable existed, and non-zero if the variable did not exist
+    int remove(const wcstring &key, int mode);
+
+    /// Push the variable stack. Used for implementing local variables for functions and for-loops.
+    void push(bool new_scope);
+
+    /// Pop the variable stack. Used for implementing local variables for functions and for-loops.
+    void pop();
+
+    /// Synchronizes all universal variable changes: writes everything out, reads stuff in.
+    void universal_barrier();
+
+    /// Returns an array containing all exported variables in a format suitable for execv
+    const char *const *export_arr();
+
+    /// Returns all variable names.
+    wcstring_list_t get_names(int flags) const override;
+
+    /// Update the termsize variable.
+    void set_termsize();
+
+    /// Update the PWD variable directory.
+    bool set_pwd();
+
+    /// Sets up argv as the given null terminated array of strings.
+    void set_argv(const wchar_t *const *argv);
+
+    /// Update the read_byte_limit variable.
+    void set_read_limit();
+
+    /// Mark that exported variables have changed.
+    void mark_changed_exported();
+
+    // Compatibility hack; access the "environment stack" from back when there was just one.
+    static env_stack_t &principal();
+
+    // Access a variable stack that only represents globals.
+    // Do not push or pop from this.
+    static env_stack_t &globals();
+};
+
+class env_vars_snapshot_t : public environment_t {
+    std::map<wcstring, env_var_t> vars;
+    wcstring_list_t names;
+
+   public:
+    env_vars_snapshot_t() = default;
     env_vars_snapshot_t(const env_vars_snapshot_t &) = default;
     env_vars_snapshot_t &operator=(const env_vars_snapshot_t &) = default;
+    env_vars_snapshot_t(const environment_t &source, const wchar_t *const *keys);
+    ~env_vars_snapshot_t() override;
 
-    env_vars_snapshot_t(const wchar_t *const *keys);
-    env_vars_snapshot_t();
+    maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
 
-    maybe_t<env_var_t> get(const wcstring &key) const;
-
-    // Returns the fake snapshot representing the live variables array.
-    static const env_vars_snapshot_t &current();
+    wcstring_list_t get_names(int flags) const override;
 
     // Vars necessary for highlighting.
     static const wchar_t *const highlighting_keys[];

@@ -6,6 +6,7 @@
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
+#include "parser.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -48,7 +49,7 @@ int builtin_pwd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     wcstring pwd;
-    if (auto tmp = env_get(L"PWD")) {
+    if (auto tmp = parser.vars().get(L"PWD")) {
         pwd = tmp->as_string();
     }
     if (resolve_symlinks) {

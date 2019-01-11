@@ -28,7 +28,12 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 IF(CMAKE_VERSION VERSION_LESS 3.4.0)
     ENABLE_LANGUAGE(C)
 ENDIF()
-FIND_PACKAGE(Threads REQUIRED)
+# Don't set pthreads to required. Either we're on a platform where explict
+# linking with -lpthread is the norm (e.g. Linux) and it'll be found, or we're
+# on a platform that include pthreads by default (e.g. BSD, macOS) where this
+# won't find anything, or we're on a road-much-less-traveled OS where the user
+# can figure out what's wrong without a hard error here. See #5512.
+FIND_PACKAGE(Threads)
 
 # Detect WSL. Does not match against native Windows/WIN32.
 if (CMAKE_HOST_SYSTEM_VERSION MATCHES ".*-Microsoft")

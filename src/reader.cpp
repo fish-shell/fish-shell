@@ -1292,12 +1292,13 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
     const auto &parser_vars = parser_t::principal_parser().vars();
     const unsigned int generation_count = read_generation_count();
     const wcstring working_directory = parser_vars.get_pwd_slash();
-    env_vars_snapshot_t vars(vars, env_vars_snapshot_t::highlighting_keys);
+    env_vars_snapshot_t vars(parser_vars, env_vars_snapshot_t::completing_keys);
     // TODO: suspicious use of 'history' here
     // This is safe because histories are immortal, but perhaps
     // this should use shared_ptr
     return [=]() -> autosuggestion_result_t {
         ASSERT_IS_BACKGROUND_THREAD();
+
 
         const autosuggestion_result_t nothing = {};
         // If the main thread has moved on, skip all the work.

@@ -5,8 +5,11 @@
 # This is the case for at least Cygwin and Newlib.
 LIST(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE=1)
 IF(APPLE)
-  # 10.7+ only.
-  LIST(APPEND CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS} "-Werror=unguarded-availability")
+    INCLUDE(CheckCXXCompilerFlag)
+    CHECK_CXX_COMPILER_FLAG("-Werror=unguarded-availability" REQUIRES_UNGUARDED_AVAILABILITY)
+    IF(REQUIRES_UNGUARDED_AVAILABILITY)
+        LIST(APPEND CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS} "-Werror=unguarded-availability")
+    ENDIF()
 ENDIF()
 
 # Try using CMake's own logic to locate curses/ncurses

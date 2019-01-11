@@ -23,8 +23,11 @@ function __yarn_filtered_list_packages
         return
     end
 
-    all-the-package-names | string match -er -- "(?:\\b|_)"(commandline -ct |
+    # Do not provide any completions if nothing has been entered yet
+    if string match -r . (commandline -ct)
+        all-the-package-names | string match -er -- "(?:\\b|_)"(commandline -ct |
             string escape --style=regex) | head -n1000
+    end
 end
 
 function __yarn_find_package_json

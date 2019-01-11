@@ -4,27 +4,31 @@
 
 # If all-the-package-names is installed, it will be used to generate npm completions.
 # Install globally with `sudo npm install -g all-the-package-names`. Keep it up to date.
-function __yarn_list_packages
+function __yarn_helper_installed
     if not type -q all-the-package-names
-        return
+        if not set -qg __fish_yarn_pkg_info_shown
+            set -l old (commandline)
+            commandline -r ""
+            echo \nfish: Run `yarn global add all-the-package-names` to gain intelligent \
+                package completion > /dev/stderr
+            commandline -f repaint
+            commandline -r $old
+            set -g __fish_yarn_pkg_info_shown 1
+        end
+        return 1
     end
-
-    all-the-package-names
 end
 
 # Entire list of packages is too long to be used efficiently in a `complete` subcommand.
 # Search it for matches instead.
 function __yarn_filtered_list_packages
-    # We used to avoid the duplication of this check by calling __yarn_list_packages
-    # instead of all-the-package-names directly below, but a) that breaks IO buffering
-    # because the output of all-the-package-names is > 10 MiB (#5267), and b) IO
-    # buffering slowed down the call considerably in all cases.
-    if not type -q all-the-package-names
+    if not __yarn_helper_installed
         return
     end
 
-    # Do not provide any completions if nothing has been entered yet
+    # Do not provide any completions if nothing has been entered yet to avoid long hang.
     if string match -r . (commandline -ct)
+        # Filter the results here rather than in the C++ code due to #5267
         all-the-package-names | string match -er -- "(?:\\b|_)"(commandline -ct |
             string escape --style=regex) | head -n1000
     end

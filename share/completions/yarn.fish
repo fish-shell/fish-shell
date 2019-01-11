@@ -23,7 +23,8 @@ function __yarn_filtered_list_packages
         return
     end
 
-    all-the-package-names | string match -er -- "(?:\\b|_)"(commandline -ct | string escape --style=regex)
+    all-the-package-names | string match -er -- "(?:\\b|_)"(commandline -ct |
+            string escape --style=regex) | head -n1000
 end
 
 function __yarn_find_package_json
@@ -153,7 +154,7 @@ function __fish_yarn_run
   end
 end
 
-complete -f -c yarn -n '__fish_seen_subcommand_from run' -a "(__fish_yarn_run)"
+complete -c yarn -n '__fish_seen_subcommand_from run' -a "(__fish_yarn_run)"
 
 complete -f -c yarn -n '__fish_use_subcommand' -a tag
 complete -f -c yarn -n '__fish_seen_subcommand_from tag' -a 'add rm ls'
@@ -177,36 +178,36 @@ complete -f -c yarn -n '__fish_use_subcommand' -a why
 set -g yarn_cmds access add bin cache check clean config generate-lock-entry global info init install licenses link list login logout outdated owner pack publish remove run tag team unlink upgrade upgrade-interactive version versions why
 
 # Common short, long options
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l help -s h -d 'output usage information'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l version -s V -d 'output the version number'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l help -s h -d 'output usage information'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l version -s V -d 'output the version number'
 
 # The rest of common options are all of them long
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l verbose -d 'output verbose messages on internal operations'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l offline -d 'trigger an error if any required dependencies are not available in local cache'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l prefer-offline -d 'use network only if dependencies are not available in local cache'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l strict-semver
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l json
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l ignore-scripts -d 'don\'t run lifecycle scripts'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l har -d 'save HAR output of network traffic'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l ignore-platform -d 'ignore platform checks'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l ignore-engines -d 'ignore engines check'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l ignore-optional -d 'ignore optional dependencies'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l force -d 'ignore all caches'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l no-bin-links -d 'don\'t generate bin links when setting up packages'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l flat -d 'only allow one version of a package'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l 'prod production'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l no-lockfile -d 'don\'t read or generate a lockfile'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l pure-lockfile -d 'don\'t generate a lockfile'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l frozen-lockfile -d 'don\'t generate a lockfile and fail if an update is needed'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l global-folder
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l modules-folder -d 'rather than installing modules into the node_modules folder relative to the cwd, output them here'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l cache-folder -d 'specify a custom folder to store the yarn cache'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l verbose -d 'output verbose messages on internal operations'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l offline -d 'trigger an error if any required dependencies are not available in local cache'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l prefer-offline -d 'use network only if dependencies are not available in local cache'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l strict-semver
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l json
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l ignore-scripts -d 'don\'t run lifecycle scripts'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l har -d 'save HAR output of network traffic'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l ignore-platform -d 'ignore platform checks'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l ignore-engines -d 'ignore engines check'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l ignore-optional -d 'ignore optional dependencies'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l force -d 'ignore all caches'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l no-bin-links -d 'don\'t generate bin links when setting up packages'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l flat -d 'only allow one version of a package'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l 'prod production'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l no-lockfile -d 'don\'t read or generate a lockfile'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l pure-lockfile -d 'don\'t generate a lockfile'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l frozen-lockfile -d 'don\'t generate a lockfile and fail if an update is needed'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l global-folder
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l modules-folder -d 'rather than installing modules into the node_modules folder relative to the cwd, output them here'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l cache-folder -d 'specify a custom folder to store the yarn cache'
 
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l mutex -d 'use a mutex to ensure only one yarn instance is executing'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l mutex -a 'file network'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l mutex -d 'use a mutex to ensure only one yarn instance is executing'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l mutex -a 'file network'
 
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l no-emoji -d 'disable emoji in output'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l proxy
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l https-proxy
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l no-progress -d 'disable progress bar'
-complete -f -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l network-concurrency -d 'maximum number of concurrent network requests'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l no-emoji -d 'disable emoji in output'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l proxy
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l https-proxy
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l no-progress -d 'disable progress bar'
+complete -c yarn -n '__fish_seen_subcommand_from $yarn_cmds' -l network-concurrency -d 'maximum number of concurrent network requests'

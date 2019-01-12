@@ -17,6 +17,9 @@ public:
      /// Whether ? is supported as a glob.
      qmark_noglob,
 
+     /// Whether string replace -r double-unescapes the replacement.
+     string_replace_backslash,
+
      /// The number of flags.
      flag_count
  };

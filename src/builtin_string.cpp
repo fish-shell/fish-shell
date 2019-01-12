@@ -26,6 +26,7 @@
 #include "builtin.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "future_feature_flags.h"
 #include "io.h"
 #include "parse_util.h"
 #include "pcre2.h"
@@ -933,8 +934,13 @@ class regex_replacer_t : public string_replacer_t {
     regex_replacer_t(const wchar_t *argv0, const wcstring &pattern, const wcstring &replacement_,
                      const options_t &opts, io_streams_t &streams)
         : string_replacer_t(argv0, opts, streams),
-          regex(argv0, pattern, opts.ignore_case, streams),
-          replacement(interpret_escapes(replacement_)) {}
+          regex(argv0, pattern, opts.ignore_case, streams) {
+        if (feature_test(features_t::string_replace_backslash)) {
+            replacement = replacement_;
+        } else {
+            replacement = interpret_escapes(replacement_);
+        }
+    }
 
     bool replace_matches(const wcstring &arg) override;
 };

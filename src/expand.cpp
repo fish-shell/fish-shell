@@ -1207,6 +1207,12 @@ maybe_t<wcstring> expand_abbreviation(const wcstring &src, const environment_t &
     return none();
 }
 
+maybe_t<wcstring> expand_abbreviation(const wcstring &src) {
+    // FIXME: We use the principal environment stack because we don't know which variables need to
+    // be captured in a snapshot.
+    return expand_abbreviation(src, env_stack_t::principal());
+}
+
 std::map<wcstring, wcstring> get_abbreviations() {
     // TODO: try to make this cheaper
     const auto &vars = env_stack_t::principal();

@@ -1026,15 +1026,31 @@ The following variables are available to change the highlighting colors in fish:
 
 Additionally, the following variables are available to change the highlighting in the completion pager:
 
+- `fish_pager_color_progress`, the color of the progress bar at the bottom left corner
+
+- `fish_pager_color_background`, the background color of a line
+
 - `fish_pager_color_prefix`, the color of the prefix string, i.e. the string that is to be completed
 
 - `fish_pager_color_completion`, the color of the completion itself
 
 - `fish_pager_color_description`, the color of the completion description
 
-- `fish_pager_color_progress`, the color of the progress bar at the bottom left corner
+- `fish_pager_color_secondary_background`, `fish_pager_color_background` of every second unselected completion. Defaults to `fish_pager_color_background`
 
-- `fish_pager_color_secondary`, the background color of the every second completion
+- `fish_pager_color_secondary_ prefix`, `fish_pager_color_prefix` of every second unselected completion. Defaults to `fish_pager_color_prefix`
+
+- `fish_pager_color_secondary_completion`, `fish_pager_color_completion` of every second unselected completion. Defaults to `fish_pager_color_completion`
+
+- `fish_pager_color_secondary_description`, `fish_pager_color_description` of every second unselected completion. Defaults to `fish_pager_color_description`
+
+- `fish_pager_color_selected_background`, `fish_pager_color_background` of the selected completion. Defaults to `fish_color_search_match`
+
+- `fish_pager_color_selected_ prefix`, `fish_pager_color_prefix` of the selected completion. Defaults to `fish_pager_color_prefix`
+
+- `fish_pager_color_selected_completion`, `fish_pager_color_completion` of the selected completion. Defaults to `fish_pager_color_completion`
+
+- `fish_pager_color_selected_description`, `fish_pager_color_description` of the selected completion. Defaults to `fish_pager_color_description`
 
 Example:
 

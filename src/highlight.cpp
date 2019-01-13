@@ -42,27 +42,68 @@ namespace g = grammar;
 /// Number of elements in the highlight_var array.
 #define VAR_COUNT (sizeof(highlight_var) / sizeof(wchar_t *))
 static const wchar_t *const highlight_var[] = {
-    [highlight_spec_normal]                 = L"fish_color_normal",
-    [highlight_spec_error]                  = L"fish_color_error",
-    [highlight_spec_command]                = L"fish_color_command",
-    [highlight_spec_statement_terminator]   = L"fish_color_end",
-    [highlight_spec_param]                  = L"fish_color_param",
-    [highlight_spec_comment]                = L"fish_color_comment",
-    [highlight_spec_match]                  = L"fish_color_match",
-    [highlight_spec_search_match]           = L"fish_color_search_match",
-    [highlight_spec_operator]               = L"fish_color_operator",
-    [highlight_spec_escape]                 = L"fish_color_escape",
-    [highlight_spec_quote]                  = L"fish_color_quote",
-    [highlight_spec_redirection]            = L"fish_color_redirection",
-    [highlight_spec_autosuggestion]         = L"fish_color_autosuggestion",
-    [highlight_spec_selection]              = L"fish_color_selection",
-    [highlight_spec_pager_prefix]           = L"fish_pager_color_prefix",
-    [highlight_spec_pager_completion]       = L"fish_pager_color_completion",
-    [highlight_spec_pager_description]      = L"fish_pager_color_description",
-    [highlight_spec_pager_progress]         = L"fish_pager_color_progress",
-    [highlight_spec_pager_secondary]        = L"fish_pager_color_secondary",
+    [highlight_spec_normal]                       = L"fish_color_normal",
+    [highlight_spec_error]                        = L"fish_color_error",
+    [highlight_spec_command]                      = L"fish_color_command",
+    [highlight_spec_statement_terminator]         = L"fish_color_end",
+    [highlight_spec_param]                        = L"fish_color_param",
+    [highlight_spec_comment]                      = L"fish_color_comment",
+    [highlight_spec_match]                        = L"fish_color_match",
+    [highlight_spec_search_match]                 = L"fish_color_search_match",
+    [highlight_spec_operator]                     = L"fish_color_operator",
+    [highlight_spec_escape]                       = L"fish_color_escape",
+    [highlight_spec_quote]                        = L"fish_color_quote",
+    [highlight_spec_redirection]                  = L"fish_color_redirection",
+    [highlight_spec_autosuggestion]               = L"fish_color_autosuggestion",
+    [highlight_spec_selection]                    = L"fish_color_selection",
+    [highlight_spec_pager_progress]               = L"fish_pager_color_progress",
+    [highlight_spec_pager_background]             = L"fish_pager_color_background",
+    [highlight_spec_pager_prefix]                 = L"fish_pager_color_prefix",
+    [highlight_spec_pager_completion]             = L"fish_pager_color_completion",
+    [highlight_spec_pager_description]            = L"fish_pager_color_description",
+    [highlight_spec_pager_secondary_background]   = L"fish_pager_color_secondary_background",
+    [highlight_spec_pager_secondary_prefix]       = L"fish_pager_color_secondary_prefix",
+    [highlight_spec_pager_secondary_completion]   = L"fish_pager_color_secondary_completion",
+    [highlight_spec_pager_secondary_description]  = L"fish_pager_color_secondary_description",
+    [highlight_spec_pager_selected_background]    = L"fish_pager_color_selected_background",
+    [highlight_spec_pager_selected_prefix]        = L"fish_pager_color_selected_prefix",
+    [highlight_spec_pager_selected_completion]    = L"fish_pager_color_selected_completion",
+    [highlight_spec_pager_selected_description]   = L"fish_pager_color_selected_description",
 };
 static_assert(VAR_COUNT == HIGHLIGHT_SPEC_MAX, "Every color spec has a corresponding env var");
+
+// Table used to fetch fallback highlights in case the specified one
+// wasn't set.
+static const highlight_spec_t fallbacks[] = {
+    [highlight_spec_normal]                       = highlight_spec_normal,
+    [highlight_spec_error]                        = highlight_spec_normal,
+    [highlight_spec_command]                      = highlight_spec_normal,
+    [highlight_spec_statement_terminator]         = highlight_spec_normal,
+    [highlight_spec_param]                        = highlight_spec_normal,
+    [highlight_spec_comment]                      = highlight_spec_normal,
+    [highlight_spec_match]                        = highlight_spec_normal,
+    [highlight_spec_search_match]                 = highlight_spec_normal,
+    [highlight_spec_operator]                     = highlight_spec_normal,
+    [highlight_spec_escape]                       = highlight_spec_normal,
+    [highlight_spec_quote]                        = highlight_spec_normal,
+    [highlight_spec_redirection]                  = highlight_spec_normal,
+    [highlight_spec_autosuggestion]               = highlight_spec_normal,
+    [highlight_spec_selection]                    = highlight_spec_normal,
+    [highlight_spec_pager_progress]               = highlight_spec_normal,
+    [highlight_spec_pager_background]             = highlight_spec_normal,
+    [highlight_spec_pager_prefix]                 = highlight_spec_normal,
+    [highlight_spec_pager_completion]             = highlight_spec_normal,
+    [highlight_spec_pager_description]            = highlight_spec_normal,
+    [highlight_spec_pager_secondary_background]   = highlight_spec_pager_background,
+    [highlight_spec_pager_secondary_prefix]       = highlight_spec_pager_prefix,
+    [highlight_spec_pager_secondary_completion]   = highlight_spec_pager_completion,
+    [highlight_spec_pager_secondary_description]  = highlight_spec_pager_description,
+    [highlight_spec_pager_selected_background]    = highlight_spec_search_match,
+    [highlight_spec_pager_selected_prefix]        = highlight_spec_pager_prefix,
+    [highlight_spec_pager_selected_completion]    = highlight_spec_pager_completion,
+    [highlight_spec_pager_selected_description]   = highlight_spec_pager_description,
+};
+static_assert(sizeof(fallbacks) / sizeof(fallbacks[0]) == HIGHLIGHT_SPEC_MAX, "No missing fallbacks");
 
 /// Determine if the filesystem containing the given fd is case insensitive for lookups regardless
 /// of whether it preserves the case when saving a pathname.
@@ -270,6 +311,7 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background) 
 
     // debug( 1, L"%d -> %d -> %ls", highlight, idx, val );
 
+    if (!var) var = vars.get(highlight_var[fallbacks[idx]]);
     if (!var) var = vars.get(highlight_var[0]);
 
     if (var) result = parse_color(*var, treat_as_background);

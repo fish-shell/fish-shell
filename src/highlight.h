@@ -33,11 +33,20 @@ enum {
     highlight_spec_selection,
 
     // Pager support.
+    // NOTE: pager.cpp relies on these being in this order.
+    highlight_spec_pager_progress,
+    highlight_spec_pager_background,
     highlight_spec_pager_prefix,
     highlight_spec_pager_completion,
     highlight_spec_pager_description,
-    highlight_spec_pager_progress,
-    highlight_spec_pager_secondary,
+    highlight_spec_pager_secondary_background,
+    highlight_spec_pager_secondary_prefix,
+    highlight_spec_pager_secondary_completion,
+    highlight_spec_pager_secondary_description,
+    highlight_spec_pager_selected_background,
+    highlight_spec_pager_selected_prefix,
+    highlight_spec_pager_selected_completion,
+    highlight_spec_pager_selected_description,
 
     // Used to double check a data structure in highlight.cpp
     HIGHLIGHT_SPEC_MAX,

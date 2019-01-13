@@ -899,6 +899,7 @@ typedef expand_error_t (*expand_stage_t)(wcstring input,                  //!OCL
 static expand_error_t expand_stage_cmdsubst(wcstring input, std::vector<completion_t> *out,
                                             expand_flags_t flags, const environment_t &vars,
                                             parse_error_list_t *errors) {
+    UNUSED(vars);
     if (EXPAND_SKIP_CMDSUBST & flags) {
         wchar_t *begin, *end;
         if (parse_util_locate_cmdsubst(input.c_str(), &begin, &end, true) == 0) {
@@ -943,6 +944,7 @@ static expand_error_t expand_stage_variables(wcstring input, std::vector<complet
 static expand_error_t expand_stage_braces(wcstring input, std::vector<completion_t> *out,
                                           expand_flags_t flags, const environment_t &vars,
                                           parse_error_list_t *errors) {
+    UNUSED(vars);
     return expand_braces(input, flags, out, errors);
 }
 

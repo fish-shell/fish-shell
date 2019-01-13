@@ -162,6 +162,7 @@ static int count_char(const wchar_t *str, wchar_t c) {
 ///
 wcstring builtin_help_get(parser_t &parser, io_streams_t &streams, const wchar_t *name) {
     UNUSED(parser);
+    UNUSED(streams);
     // This won't ever work if no_exec is set.
     if (no_exec) return wcstring();
 

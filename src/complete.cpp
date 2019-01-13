@@ -186,7 +186,10 @@ const option_list_t &completion_entry_t::get_options() const {
 }
 
 description_func_t const_desc(const wcstring &s) {
-    return [=](const wcstring &ignored) { return s; };
+    return [=](const wcstring &ignored) {
+        UNUSED(ignored);
+        return s;
+    };
 }
 
 /// Clear the COMPLETE_AUTO_SPACE flag, and set COMPLETE_NO_SPACE appropriately depending on the

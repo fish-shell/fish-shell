@@ -794,6 +794,7 @@ static void handle_term_size_change(const wcstring &op, const wcstring &var_name
                                     env_stack_t &vars) {
     UNUSED(op);
     UNUSED(var_name);
+    UNUSED(vars);
     invalidate_termsize(true);  // force fish to update its idea of the terminal size plus vars
 }
 
@@ -815,6 +816,7 @@ static void handle_function_path_change(const wcstring &op, const wcstring &var_
                                         env_stack_t &vars) {
     UNUSED(op);
     UNUSED(var_name);
+    UNUSED(vars);
     function_invalidate_path();
 }
 
@@ -822,6 +824,7 @@ static void handle_complete_path_change(const wcstring &op, const wcstring &var_
                                         env_stack_t &vars) {
     UNUSED(op);
     UNUSED(var_name);
+    UNUSED(vars);
     complete_invalidate_path();
 }
 
@@ -1614,9 +1617,14 @@ env_stack_t::env_stack_t(env_stack_t &&) = default;
 null_environment_t::null_environment_t() = default;
 null_environment_t::~null_environment_t() = default;
 maybe_t<env_var_t> null_environment_t::get(const wcstring &key, env_mode_flags_t mode) const {
+    UNUSED(key);
+    UNUSED(mode);
     return none();
 }
-wcstring_list_t null_environment_t::get_names(int flags) const { return {}; }
+wcstring_list_t null_environment_t::get_names(int flags) const {
+    UNUSED(flags);
+    return {};
+}
 
 env_stack_t env_stack_t::make_principal() {
     const env_stack_t &gl = env_stack_t::globals();
@@ -1650,12 +1658,16 @@ env_vars_snapshot_t::env_vars_snapshot_t(const environment_t &source, const wcha
 env_vars_snapshot_t::~env_vars_snapshot_t() = default;
 
 maybe_t<env_var_t> env_vars_snapshot_t::get(const wcstring &key, env_mode_flags_t mode) const {
+    UNUSED(mode);
     auto iter = vars.find(key);
     if (iter == vars.end()) return none();
     return iter->second;
 }
 
-wcstring_list_t env_vars_snapshot_t::get_names(int flags) const { return names; }
+wcstring_list_t env_vars_snapshot_t::get_names(int flags) const {
+    UNUSED(flags);
+    return names;
+}
 
 const wchar_t *const env_vars_snapshot_t::highlighting_keys[] = {
     L"PATH", L"CDPATH", L"fish_function_path", L"PWD", L"HOME", NULL};
@@ -1665,6 +1677,7 @@ const wchar_t *const env_vars_snapshot_t::completing_keys[] = {
 
 #if defined(__APPLE__) || defined(__CYGWIN__)
 static int check_runtime_path(const char *path) {
+    UNUSED(path);
     return 0;
 }
 #else

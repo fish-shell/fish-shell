@@ -157,7 +157,7 @@ function __fish_git_files
     set -l ver (command git --version | string replace -rf 'git version (\d+)\.(\d+)\.?.*' '$1\n$2')
     # Version >= 2.11.* has the v2 format.
     if test "$ver[1]" -gt 2 2>/dev/null; or test "$ver[1]" -eq 2 -a "$ver[2]" -ge 11 2>/dev/null
-        command git $git_opt status --porcelain=2 $status_opt -- $files \
+        command git $git_opt status --porcelain=2 $status_opt \
         | while read -la -d ' ' line
             set -l file
             set -l desc

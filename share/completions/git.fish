@@ -440,6 +440,12 @@ end
 # This is because alias:command is an n:1 mapping (an alias can only have one corresponding command,
 #                                                  but a command can be aliased multiple times)
 git config -z --get-regexp 'alias\..*' | while read -lz alias command _
+    # If the command starts with a "!", it's a shell command, run with /bin/sh,
+    # or any other shell defined at git's build time.
+    #
+    # We can't do anything with them, and we run git-config again for listing aliases,
+    # so we skip them here.
+    string match -q '!*' -- $command; and continue
     # Git aliases can contain chars that variable names can't - escape them.
     set alias (string replace 'alias.' '' -- $alias | string escape --style=var)
     set -g __fish_git_alias_$alias $command

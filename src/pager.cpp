@@ -137,18 +137,24 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
         assert(comp_width <= width);
     }
 
-    int bg_color = secondary ? highlight_spec_pager_secondary : highlight_spec_normal;
-    if (selected) {
-        bg_color = highlight_spec_search_match;
-    }
+    int offset = selected
+        ? (highlight_spec_pager_selected_background - highlight_spec_pager_background)
+        : (secondary
+                ? (highlight_spec_pager_secondary_background - highlight_spec_pager_background)
+                : 0);
+    highlight_spec_t bg_color = highlight_spec_pager_background + offset;
+    highlight_spec_t prefix_fg = highlight_spec_pager_prefix + offset;
+    highlight_spec_t comp_fg = highlight_spec_pager_completion + offset;
+    highlight_spec_t desc_fg = highlight_spec_pager_description + offset;
 
     auto bg = highlight_make_background(bg_color);
+    auto prefix_col = prefix_fg | bg;
+    auto comp_col = comp_fg | bg;
+    auto desc_col = desc_fg | bg;
     // Print the completion part
     size_t comp_remaining = comp_width;
     for (size_t i = 0; i < c->comp.size(); i++) {
         const wcstring &comp = c->comp.at(i);
-        highlight_spec_t packed_color =
-            highlight_spec_pager_prefix | bg;
 
         if (i > 0) {
             comp_remaining -= print_max(PAGER_SPACER_STRING, bg, comp_remaining,
@@ -156,33 +162,27 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
         }
 
         comp_remaining -=
-            print_max(prefix, packed_color, comp_remaining, !comp.empty(), &line_data);
-
-        packed_color = highlight_spec_pager_completion | bg;
+            print_max(prefix, prefix_col, comp_remaining, !comp.empty(), &line_data);
         comp_remaining -=
-            print_max(comp, packed_color, comp_remaining, i + 1 < c->comp.size(), &line_data);
+            print_max(comp, comp_col, comp_remaining, i + 1 < c->comp.size(), &line_data);
     }
 
     size_t desc_remaining = width - comp_width + comp_remaining;
     if (c->desc_width > 0 && desc_remaining > 4) {
-        highlight_spec_t desc_color =
-            highlight_spec_pager_description | bg;
-        highlight_spec_t punct_color =
-            highlight_spec_pager_completion | bg;
-
         // always have at least two spaces to separate completion and description
-        desc_remaining -= print_max(L"  ", punct_color, 2, false, &line_data);
+        desc_remaining -= print_max(L"  ", bg, 2, false, &line_data);
 
         // right-justify the description by adding spaces
         // the 2 here refers to the parenthesis below
         while (desc_remaining > c->desc_width + 2) {
-            desc_remaining -= print_max(L" ", punct_color, 1, false, &line_data);
+            desc_remaining -= print_max(L" ", bg, 1, false, &line_data);
         }
 
         assert(desc_remaining >= 2);
-        desc_remaining -= print_max(L"(", punct_color, 1, false, &line_data);
-        desc_remaining -= print_max(c->desc, desc_color, desc_remaining - 1, false, &line_data);
-        desc_remaining -= print_max(L")", punct_color, 1, false, &line_data);
+        auto paren_col = highlight_spec_pager_completion | bg;
+        desc_remaining -= print_max(L"(", paren_col, 1, false, &line_data);
+        desc_remaining -= print_max(c->desc, desc_col, desc_remaining - 1, false, &line_data);
+        desc_remaining -= print_max(L")", paren_col, 1, false, &line_data);
     } else {
         // No description, or it won't fit. Just add spaces.
         print_max(wcstring(desc_remaining, L' '), bg, desc_remaining, false, &line_data);

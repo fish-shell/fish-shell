@@ -41,28 +41,28 @@ namespace g = grammar;
 
 /// Number of elements in the highlight_var array.
 #define VAR_COUNT (sizeof(highlight_var) / sizeof(wchar_t *))
-
-/// The environment variables used to specify the color of different tokens. This matches the order
-/// in highlight_spec_t.
-static const wchar_t *const highlight_var[] = {L"fish_color_normal",
-                                               L"fish_color_error",
-                                               L"fish_color_command",
-                                               L"fish_color_end",
-                                               L"fish_color_param",
-                                               L"fish_color_comment",
-                                               L"fish_color_match",
-                                               L"fish_color_search_match",
-                                               L"fish_color_operator",
-                                               L"fish_color_escape",
-                                               L"fish_color_quote",
-                                               L"fish_color_redirection",
-                                               L"fish_color_autosuggestion",
-                                               L"fish_color_selection",
-                                               L"fish_pager_color_prefix",
-                                               L"fish_pager_color_completion",
-                                               L"fish_pager_color_description",
-                                               L"fish_pager_color_progress",
-                                               L"fish_pager_color_secondary"};
+static const wchar_t *const highlight_var[] = {
+    [highlight_spec_normal]                 = L"fish_color_normal",
+    [highlight_spec_error]                  = L"fish_color_error",
+    [highlight_spec_command]                = L"fish_color_command",
+    [highlight_spec_statement_terminator]   = L"fish_color_end",
+    [highlight_spec_param]                  = L"fish_color_param",
+    [highlight_spec_comment]                = L"fish_color_comment",
+    [highlight_spec_match]                  = L"fish_color_match",
+    [highlight_spec_search_match]           = L"fish_color_search_match",
+    [highlight_spec_operator]               = L"fish_color_operator",
+    [highlight_spec_escape]                 = L"fish_color_escape",
+    [highlight_spec_quote]                  = L"fish_color_quote",
+    [highlight_spec_redirection]            = L"fish_color_redirection",
+    [highlight_spec_autosuggestion]         = L"fish_color_autosuggestion",
+    [highlight_spec_selection]              = L"fish_color_selection",
+    [highlight_spec_pager_prefix]           = L"fish_pager_color_prefix",
+    [highlight_spec_pager_completion]       = L"fish_pager_color_completion",
+    [highlight_spec_pager_description]      = L"fish_pager_color_description",
+    [highlight_spec_pager_progress]         = L"fish_pager_color_progress",
+    [highlight_spec_pager_secondary]        = L"fish_pager_color_secondary",
+};
+static_assert(VAR_COUNT == HIGHLIGHT_SPEC_MAX, "Every color spec has a corresponding env var");
 
 /// Determine if the filesystem containing the given fd is case insensitive for lookups regardless
 /// of whether it preserves the case when saving a pathname.

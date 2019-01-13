@@ -39,6 +39,9 @@ enum {
     highlight_spec_pager_progress,
     highlight_spec_pager_secondary,
 
+    // Used to double check a data structure in highlight.cpp
+    HIGHLIGHT_SPEC_MAX,
+
     HIGHLIGHT_SPEC_PRIMARY_MASK = 0xFF,
 
     // The following values are modifiers.

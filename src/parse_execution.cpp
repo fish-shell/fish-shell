@@ -575,8 +575,13 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
         }
     }
 
+    // $status after `while` should be 0 if it executed at least once, otherwise the last `$status`
+    // obtained by executing the condition is preserved. See #4982.
     if (loop_executed) {
-        proc_set_last_status(STATUS_CMD_OK);
+        // Do not override status if exiting due to the presence of an explict `return xxx` (#5513)
+        if (!associated_block->skip) {
+            proc_set_last_status(STATUS_CMD_OK);
+        }
     }
 
     return ret;

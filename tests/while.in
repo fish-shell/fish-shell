@@ -1,0 +1,27 @@
+# vim: set ft=fish:
+
+function never_runs
+	while false
+	end
+end
+
+function early_return
+	while true
+		return 2
+	end
+end
+
+function runs_once
+	set -l i 1
+	while test $i -ne 0 && set i (math $i - 1)
+	end
+end
+
+# this should return 1
+never_runs; echo $status
+
+# this should return 0
+runs_once; echo $status
+
+# this should return 2
+early_return; echo $status

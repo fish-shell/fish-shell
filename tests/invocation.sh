@@ -54,8 +54,12 @@
 #   non-zero.
 #
 
-# Errors will be fatal
-set -e
+# With this, errors would be fatal.
+# However, a return value of non-zero doesn't signal something that necessarily should be fatal.
+# For instance, `tput` returns 1 if an attribute isn't defined.
+# But we don't want it to kill our script, especially not without any indication.
+#
+# set -e
 
 # The directory this script is in (as everything is relative to here)
 here="$(cd "$(dirname "$0")" && pwd -P)"

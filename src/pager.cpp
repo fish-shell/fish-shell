@@ -113,13 +113,12 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
     UNUSED(column);
     UNUSED(row);
     UNUSED(rendering);
-    size_t comp_width, desc_width;
+    size_t comp_width;
     line_t line_data;
 
     if (c->preferred_width() <= width) {
         // The entry fits, we give it as much space as it wants.
         comp_width = c->comp_width;
-        desc_width = c->desc_width;
     } else {
         // The completion and description won't fit on the allocated space. Give a maximum of 2/3 of
         // the space to the completion, and whatever is left to the description

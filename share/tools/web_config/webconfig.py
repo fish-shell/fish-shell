@@ -290,9 +290,9 @@ def append_html_for_ansi_escape(full_val, result, span_open):
 
 def strip_ansi(val):
     # Make a half-assed effort to strip ANSI control sequences
-    # We assume that all such sequences start with 0x1b and end with m,
+    # We assume that all such sequences start with 0x1b and end with m or ctrl-o,
     # which catches most cases
-    return re.sub("\x1b[^m]*m", '', val)
+    return re.sub("\x1b[^m]*m\x0f?", '', val)
 
 
 def ansi_prompt_line_width(val):

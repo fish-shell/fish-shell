@@ -68,11 +68,10 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
 
     // Get the source for the block, and cut it at the next statement terminator.
     const size_t src_start = node.source_start;
-    size_t src_len = node.source_length;
 
     auto term = tree.find_child<g::end_command>(node);
     assert(term.has_source() && term.source_range()->start >= src_start);
-    src_len = term.source_range()->start - src_start;
+    size_t src_len = term.source_range()->start - src_start;
 
     wcstring result = wcstring(src, src_start, src_len);
     result.append(L"...");

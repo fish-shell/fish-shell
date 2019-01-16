@@ -496,13 +496,13 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
 
         if (opts.delimiter.empty()) {
-            // Every character is a separate token with one wrinkle involving non-array mode where the
-            // final var gets the remaining characters as a single string.
+            // Every character is a separate token with one wrinkle involving non-array mode where
+            // the final var gets the remaining characters as a single string.
             size_t x = std::max(static_cast<size_t>(1), buff.size());
             size_t n_splits = (opts.array || static_cast<size_t>(vars_left()) > x) ? x : vars_left();
             wcstring_list_t chars;
             chars.reserve(n_splits);
-            x = x - n_splits + 1;
+
             int i = 0;
             for (auto it = buff.begin(), end = buff.end(); it != end; ++i, ++it) {
                 if (opts.array || i + 1 < vars_left()) {
@@ -517,17 +517,16 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 // Array mode: assign each char as a separate element of the sole var.
                 vars.set(*var_ptr++, opts.place, chars);
             } else {
-                // Not array mode: assign each char to a separate var with the remainder being assigned
-                // to the last var.
-                auto c = chars.begin();
-                for (; c != chars.end() && vars_left(); ++c) {
+                // Not array mode: assign each char to a separate var with the remainder being
+                // assigned to the last var.
+                for (auto c = chars.begin(); c != chars.end() && vars_left(); ++c) {
                     vars.set_one(*var_ptr++, opts.place, *c);
                 }
             }
         } else if (opts.array) {
-            // The user has requested the input be split into a sequence of tokens and all the tokens
-            // assigned to a single var. How we do the tokenizing depends on whether the user specified
-            // the delimiter string or we're using IFS.
+            // The user has requested the input be split into a sequence of tokens and all the
+            // tokens assigned to a single var. How we do the tokenizing depends on whether the user
+            // specified the delimiter string or we're using IFS.
             if (!opts.have_delimiter) {
                 // We're using IFS, so tokenize the buffer using each IFS char. This is for backward
                 // compatibility with old versions of fish.

@@ -702,6 +702,20 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         for line in out.split('\n'):
             comps = line.split(' ', 2)
 
+            # If we don't have "bind", a sequence and a mapping,
+            # it's not a valid binding.
+            if len(comps) < 3:
+                continue
+
+            # Store the "--preset" value for later
+            if comps[1] == '--preset':
+                preset = True
+                # There's possibly a way to do this faster, but it's not important.
+                comps = line.split(' ', 3)[1:]
+            elif comps[1] == '--user':
+                preset = False
+                comps = line.split(' ', 3)[1:]
+            # Check again if we removed the level.
             if len(comps) < 3:
                 continue
 

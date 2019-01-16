@@ -742,10 +742,9 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return [binding.get_json_obj() for binding in bindings]
 
     def do_get_history(self):
-        # Use \x1e ("record separator") to distinguish between history items.
-        # The first backslash is so Python passes one backslash to fish.
-        out, err = run_fish_cmd('for val in $history; echo -n $val \\x1e; end')
-        result = out.split(' \x1e')
+        # Use NUL to distinguish between history items.
+        out, err = run_fish_cmd('builtin history -z')
+        result = out.split('\0')
         if result:
             result.pop()  # trim off the trailing element
         return result

@@ -134,11 +134,10 @@ autoload_function_t *autoload_t::get_autoloaded_function_with_creation(const wcs
     ASSERT_IS_LOCKED(lock);
     autoload_function_t *func = this->get(cmd);
     if (!func) {
-        bool added;
         if (allow_eviction) {
-            added = this->insert(cmd, autoload_function_t(false));
+            this->insert(cmd, autoload_function_t(false));
         } else {
-            added = this->insert_no_eviction(cmd, autoload_function_t(false));
+            this->insert_no_eviction(cmd, autoload_function_t(false));
         }
         func = this->get(cmd);
         assert(func);

@@ -303,36 +303,33 @@ static bool validate_path_warning_on_colons(const wchar_t *cmd,
     return any_success;
 }
 
-static void handle_env_return(int retval, const wchar_t *cmd, const wchar_t *key, io_streams_t &streams)
-{
+static void handle_env_return(int retval, const wchar_t *cmd, const wchar_t *key,
+        io_streams_t &streams) {
+
     switch (retval) {
         case ENV_OK: {
-            retval = STATUS_CMD_OK;
             break;
         }
         case ENV_PERM: {
             streams.err.append_format(_(L"%ls: Tried to change the read-only variable '%ls'\n"),
                                       cmd, key);
-            retval = STATUS_CMD_ERROR;
             break;
         }
         case ENV_SCOPE: {
             streams.err.append_format(
-                _(L"%ls: Tried to modify the special variable '%ls' with the wrong scope\n"), cmd,
-                key);
-            retval = STATUS_CMD_ERROR;
+                _(L"%ls: Tried to modify the special variable '%ls' with the wrong scope\n"),
+                cmd, key);
             break;
         }
         case ENV_INVALID: {
             streams.err.append_format(
-                _(L"%ls: Tried to modify the special variable '%ls' to an invalid value\n"), cmd, key);
-            retval = STATUS_CMD_ERROR;
+                _(L"%ls: Tried to modify the special variable '%ls' to an invalid value\n"),
+                cmd, key);
             break;
         }
         case ENV_NOT_FOUND: {
             streams.err.append_format(
                 _(L"%ls: The variable '%ls' does not exist\n"), cmd, key);
-            retval = STATUS_CMD_ERROR;
             break;
         }
         default: {
@@ -657,8 +654,9 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
 
     if (idx_count == 0) {  // unset the var
         retval = parser.vars().remove(dest, scope);
-        // Temporarily swallowing ENV_NOT_FOUND errors to prevent
-        // breaking all tests that unset variables that aren't set.
+        // When a non-existent-variable is unset, return ENV_NOT_FOUND as $status
+        // but do not emit any errors at the console as a compromise between user
+        // friendliness and correctness.
         if (retval != ENV_NOT_FOUND) {
             handle_env_return(retval, cmd, dest, streams);
         }

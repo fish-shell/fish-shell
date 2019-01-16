@@ -56,6 +56,15 @@ function type --description 'Print the type of a command'
                         end
                     case type
                         echo (_ 'function')
+                    case path
+                        set -l func_path (functions --details $i)
+                        switch $func_path
+                            case "n/a"
+                            case "stdin"
+                                break;
+                            case "*"
+                                echo $func_path
+                        end
                 end
                 if test $multi != yes
                     continue

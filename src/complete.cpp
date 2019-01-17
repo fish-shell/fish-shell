@@ -1656,6 +1656,11 @@ bool complete_add_wrapper(const wcstring &command, const wcstring &new_target) {
         return false;
     }
 
+    // If the command and the target are the same,
+    // there's no point in following the wrap-chain because we'd only complete the same thing.
+    // TODO: This should maybe include full cycle detection.
+    if (command == new_target) return false;
+
     auto locked_map = wrapper_map.acquire();
     wrapper_map_t &wraps = *locked_map;
     wcstring_list_t *targets = &wraps[command];

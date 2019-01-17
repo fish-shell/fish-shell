@@ -30,8 +30,9 @@ function __fish_complete_ant_targets -d "Print list of targets from build.xml an
         set -l buildfile $argv[1] # full path to buildfile
 
         if [ \( -z "$XDG_CACHE_HOME" \) -o \( ! -d "$XDG_CACHE_HOME" \) ]
-            set XDG_CACHE_HOME "$HOME/.cache/"
+            set XDG_CACHE_HOME "$HOME/.cache"
         end
+
         set -l cache_dir "$XDG_CACHE_HOME/fish/ant_completions"
         mkdir -p $cache_dir
 

@@ -19,3 +19,9 @@ myalias1 call1
 myalias2 call2
 complete -C'myalias1 call3 '
 complete -C'myalias2 call3 '
+
+# Ensure that commands can't wrap themselves - if this did,
+# the completion would be executed a bunch of times.
+function t --wraps t; echo t; end
+complete -c t -fa '(t)'
+complete -C't '

@@ -271,23 +271,23 @@ function __fish_expand_pid_args
     end
 end
 
-function bg --wraps bg
+function bg
     builtin bg (__fish_expand_pid_args $argv)
 end
 
-function fg --wraps fg
+function fg
     builtin fg (__fish_expand_pid_args $argv)
 end
 
-function kill --wraps kill
+function kill
     command kill (__fish_expand_pid_args $argv)
 end
 
-function wait --wraps wait
+function wait
     builtin wait (__fish_expand_pid_args $argv)
 end
 
-function disown --wraps disown
+function disown
     builtin disown (__fish_expand_pid_args $argv)
 end
 

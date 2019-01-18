@@ -46,7 +46,8 @@ function __fish_complete_ant_targets -d "Print list of targets from build.xml an
     end
 
     set -l tokens $argv
-    if not set -l buildfile (realpath -eq $buildfile (__get_buildfile $tokens))
+    set -l buildfile (realpath -eq $buildfile (__get_buildfile $tokens))
+    if [ $status -ne 0 ]
         return 1 # return nothing if buildfile does not exist
     end
 

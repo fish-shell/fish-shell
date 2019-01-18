@@ -147,23 +147,22 @@ filter() {
 
 ##
 # Actual testing of a .invoke file.
-test_file() {
-    local file="$1"
-    local dir="$(dirname "$file")"
-    local base="$(basename "$file" .invoke)"
-    local test_config="${dir}/${base}.config"
-    local test_stdout="${dir}/${base}.tmp.out"
-    local test_stderr="${dir}/${base}.tmp.err"
-    local want_stdout="${dir}/${base}.out"
-    local grep_stdout="${dir}/${base}.grep"
-    local want_stderr="${dir}/${base}.err"
-    local empty="${dir}/${base}.empty"
-    local filter
-    local rc=0
-    local test_args_literal
-    local test_args
-    local out_status=0
-    local err_status=0
+test_file() (
+    file="$1"
+    dir="$(dirname "$file")"
+    base="$(basename "$file" .invoke)"
+    test_config="${dir}/${base}.config"
+    test_stdout="${dir}/${base}.tmp.out"
+    test_stderr="${dir}/${base}.tmp.err"
+    want_stdout="${dir}/${base}.out"
+    grep_stdout="${dir}/${base}.grep"
+    want_stderr="${dir}/${base}.err"
+    empty="${dir}/${base}.empty"
+    rc=0
+    test_args_literal=
+    test_args=
+    out_status=0
+    err_status=0
 
     # Literal arguments, for printing
     test_args_literal="$(cat "$file")"
@@ -269,7 +268,7 @@ test_file() {
     fi
 
     return $rc
-}
+)
 
 
 ########################################################################

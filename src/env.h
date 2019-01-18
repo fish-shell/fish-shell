@@ -122,6 +122,14 @@ class env_var_t {
         }
     }
 
+    void set_read_only(bool read_only) {
+        if (read_only) {
+            flags |= flag_read_only;
+        } else {
+            flags &= ~flag_read_only;
+        }
+    }
+
     static env_var_flags_t flags_for(const wchar_t *name);
 
     env_var_t &operator=(const env_var_t &var) = default;

@@ -163,6 +163,11 @@ for status in a b c
   echo $status
 end
 
+logmsg "That goes for non-electric ones as well (#5548)"
+for hostname in a b c
+    echo $hostname
+end
+
 logmsg For loop control vars available outside the for block
 begin
   set -l loop_var initial-value

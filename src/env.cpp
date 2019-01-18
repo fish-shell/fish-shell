@@ -1184,6 +1184,7 @@ static int env_set_internal(const wcstring &key, env_mode_flags_t input_var_mode
 
             var.set_vals(std::move(val));
             var.set_pathvar(var_mode & ENV_PATHVAR);
+            var.set_read_only(is_read_only(key));
 
             if (var_mode & ENV_EXPORT) {
                 // The new variable is exported.

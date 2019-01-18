@@ -8,12 +8,6 @@ begin
     or echo '"status -b" unexpectedly returned false inside a begin block'
 end
 
-# Issue #1728
-# Bad file redirection on a block causes `status --is-block` to return 0 forever.
-begin; end >. # . is a directory, it can't be opened for writing
-status -b
-and echo '"status -b" unexpectedly returned true after bad redirect on a begin block'
-
 status -l
 and echo '"status -l" unexpectedly returned true for a non-login shell'
 

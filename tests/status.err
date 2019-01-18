@@ -1,5 +1,3 @@
-<W> fish: An error occurred while redirecting file '.'
-open: Is a directory
 status: Invalid combination of options,
 you cannot do both 'is-interactive' and 'is-login' in the same invocation
 status: Invalid combination of options,

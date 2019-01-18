@@ -35,7 +35,9 @@ builtin realpath /def///
 # Verify `realpath .` when cwd is a deleted directory gives a no such file or dir error.
 set -l tmpdir (mktemp -d)
 pushd $tmpdir
-rmdir $tmpdir
+# Solaris rmdir tries to protect against deleting $PWD.
+# But that's what we want to test, so we weasel around it.
+sh -c "cd ..; rmdir $tmpdir"
 builtin realpath .
 popd
 

@@ -97,6 +97,9 @@ Checking for infinite loops in no-execute
 # For loops with read-only vars is an error (#4342)
 
 ####################
+# That goes for non-electric ones as well (#5548)
+
+####################
 # For loop control vars available outside the for block
 $loop_var: set in local scope, unexported, with 1 elements
 $loop_var[1]: length=1 value=|c|

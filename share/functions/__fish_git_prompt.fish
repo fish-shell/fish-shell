@@ -372,16 +372,35 @@ function __fish_git_prompt --description "Prompt function for Git"
 
     set -l space "$___fish_git_prompt_color$___fish_git_prompt_char_stateseparator$___fish_git_prompt_color_done"
 
+    # Use our variables as defaults, but allow overrides via the local git config.
+    # That means if neither is set, this stays empty.
+    #
+    # So "!= true" or "!= false" are useful tests if you want to do something by default.
+    set -l dirty (command git config --bool bash.showDirtyState)
+    if not set -q dirty[1]
+        set -q __fish_git_prompt_showdirtystate
+        and set dirty true
+    end
+
+    set -l untracked (command git config --bool bash.showUntrackedFiles)
+    if not set -q untracked[1]
+        set -q __fish_git_prompt_showuntrackedfiles
+        and set untracked true
+    end
+
     if test "true" = $inside_worktree
+        # Use informative status, unless dirty or untracked have been set to false.
+        #
+        # This is to allow overrides for the repository.
         if set -q __fish_git_prompt_show_informative_status
+            and test "$dirty" != false
+            and test "$untracked" != false
             set informative_status "$space"(__fish_git_prompt_informative_status)
         else
-            if set -q __fish_git_prompt_showdirtystate
-                set -l config (command git config --bool bash.showDirtyState)
-                if test "$config" != "false"
-                    set w (__fish_git_prompt_dirty)
-                    set i (__fish_git_prompt_staged $sha)
-                end
+            # This has to be set explicitly.
+            if test "$dirty" = true
+                set w (__fish_git_prompt_dirty)
+                set i (__fish_git_prompt_staged $sha)
             end
 
             if set -q __fish_git_prompt_showstashstate
@@ -389,11 +408,8 @@ function __fish_git_prompt --description "Prompt function for Git"
                 set s $___fish_git_prompt_char_stashstate
             end
 
-            if set -q __fish_git_prompt_showuntrackedfiles
-                set -l config (command git config --bool bash.showUntrackedFiles)
-                if test "$config" != false
-                    set u (__fish_git_prompt_untracked)
-                end
+            if test "$untracked" != true
+                set u (__fish_git_prompt_untracked)
             end
         end
 

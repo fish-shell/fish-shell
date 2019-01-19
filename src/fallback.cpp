@@ -255,8 +255,11 @@ int g_fish_ambiguous_width = 1;
 // Width of emoji characters.
 int g_fish_emoji_width = 0;
 
-// 1 is the typical emoji width in Unicode 8.
-int g_guessed_fish_emoji_width = 1;
+// We've compiled a small program that checks the width of
+// a character.
+// 1 is the typical emoji width in Unicode 8,
+// 2 in Unicode 9 and up.
+int g_guessed_fish_emoji_width = DEFAULT_EMOJI_WIDTH;
 
 int fish_get_emoji_width(wchar_t c) {
     (void)c;

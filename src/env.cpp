@@ -549,7 +549,7 @@ static void init_path_vars() {
 
 /// Update the value of g_guessed_fish_emoji_width
 static void guess_emoji_width() {
-    wcstring term;
+    wcstring term = L"";
     auto &vars = env_stack_t::globals();
     if (auto term_var = vars.get(L"TERM_PROGRAM")) {
         term = term_var->as_string();
@@ -561,14 +561,16 @@ static void guess_emoji_width() {
         version = strtod(narrow_version.c_str(), NULL);
     }
 
-    // iTerm2 defaults to Unicode 8 sizes.
-    // See https://gitlab.com/gnachman/iterm2/wikis/unicodeversionswitching
 
     if (term == L"Apple_Terminal" && version >= 400) {
         // Apple Terminal on High Sierra
+        // TODO: We can probably remove this if it overlaps with
+        // system wcwidth() having unicode 9 sizes.
         g_guessed_fish_emoji_width = 2;
         debug(2, "default emoji width: 2 for %ls", term.c_str());
-    } else {
+    } else if (term == L"iTerm.app") {
+        // iTerm2 defaults to Unicode 8 sizes.
+        // See https://gitlab.com/gnachman/iterm2/wikis/unicodeversionswitching
         g_guessed_fish_emoji_width = 1;
         debug(2, "default emoji width: 1");
     }

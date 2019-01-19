@@ -128,10 +128,47 @@ SET_SOURCE_FILES_PROPERTIES(src/fish_version.cpp
                             ${CMAKE_CURRENT_BINARY_DIR}/${FBVF})
 
 OPTION(INTERNAL_WCWIDTH "use fallback wcwidth" ON)
+# Override the emoji width detection by picking unicode9 width.
+# We don't provide an option to pick unicode8 width because we'd already detect that,
+# or your terminal is worse than your system wcwidth.
+#
+# Note that this sets the "guessed_emoji_width", so it can still be overridden via $fish_emoji_width.
+OPTION(USE_UNICODE9_WIDTH "set the default emoji width to 2 (the unicode 9 value)" OFF)
 IF(INTERNAL_WCWIDTH)
-    ADD_DEFINITIONS(-DHAVE_BROKEN_WCWIDTH=1)
+  IF(NOT USE_UNICODE9_WIDTH)
+    # Compile and run a small program that checks an emoji for its width.
+    # Note that this relies on a unicode locale, and assumes that the terminal's wcwidth
+    # uses the unicode 9 widths IFF the system's does.
+    #
+    # So there's a bunch of assumptions, but this heuristic should still improve things.
+    try_run(WCW_RUN_RESULT
+      WCW_COMPILE_RESULT
+      ${CMAKE_CURRENT_BINARY_DIR}/
+      ${CMAKE_CURRENT_SOURCE_DIR}/test_wcwidth.cpp
+      RUN_OUTPUT_VARIABLE WCW_OUTPUT)
+    # If this refused to compile or run, we error out, because there's something wrong with the system. 
+    if("${WCW_COMPILE_RESULT}" AND ("${WCW_RUN_RESULT}" EQUAL 0))
+      # If the value is < 1 or > 2, most likely the locale is C.
+      # Since that happens a bunch, fall back to unicode 8 like before.
+      if("${WCW_OUTPUT}" LESS 1 OR "{WCW_OUTPUT}" GREATER 2)
+        MESSAGE(WARNING "wcwidth returned unusable results. Most likely you don't have a unicode locale set. Guessing you don't have unicode9 support.")
+        SET(DEFAULT_EMOJI_WIDTH 1)
+      ELSE()
+        # If the value is 1 or 2, we use it.
+        SET(DEFAULT_EMOJI_WIDTH ${WCW_OUTPUT})
+      ENDIF()
+    ELSE()
+      MESSAGE(FATAL_ERROR "WCWIDTH FAILED!")
+    ENDIF()
+  ELSE()
+    SET(DEFAULT_EMOJI_WIDTH 2)
+  ENDIF()
+
+  MESSAGE("EMOJI WIDTH SET TO ${DEFAULT_EMOJI_WIDTH}")
+  ADD_DEFINITIONS(-DDEFAULT_EMOJI_WIDTH=${DEFAULT_EMOJI_WIDTH})
+  ADD_DEFINITIONS(-DHAVE_BROKEN_WCWIDTH=1)
 ELSE()
-    ADD_DEFINITIONS(-DHAVE_BROKEN_WCWIDTH=0)
+  ADD_DEFINITIONS(-DHAVE_BROKEN_WCWIDTH=0)
 ENDIF()
 
 # Enable thread-safe errno on Solaris (#5611)

@@ -1,3 +1,10 @@
+# fish 3.0.1
+
+### Fixes and improvements
+
+- exec now behaves properly inside functions (#5449)
+
+
 # fish 3.0.0 (released December 28, 2018)
 
 fish 3 is a major release, which introduces some breaking changes alongside improved functionality. Although most existing scripts will continue to work, they should be reviewed against the list contained in the 3.0b1 release notes below.

@@ -389,7 +389,7 @@ int flock(int fd, int op) {
 
 #endif  // HAVE_FLOCK
 
-#ifndef HAVE_WCSTOD_L
+#if !defined(HAVE_WCSTOD_L) && !defined(__NetBSD__)
 #undef wcstod_l
 // For platforms without wcstod_l C extension, wrap wcstod after changing the
 // thread-specific locale.

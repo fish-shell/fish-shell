@@ -517,14 +517,14 @@ static bool process_mark_finished_children(bool block_on_fg) {
                 pid = waitpid(-1 * j->pgid, &status, options);
             }
 
-            // Never make two calls to waitpid(2) without WNOHANG (i.e. with "HANG") in a row,
-            // because we might wait on a non-stopped job that becomes stopped, but we don't refresh
-            // our view of the process state before calling waitpid(2) again here.
-            options |= WNOHANG;
-
             if (pid > 0) {
                 // A child process has been reaped
                 handle_child_status(pid, status);
+
+                // Always set WNOHANG (that is, don't hang). Otherwise we might wait on a non-stopped job
+                // that becomes stopped, but we don't refresh our view of the process state before
+                // calling waitpid(2) again here.
+                options |= WNOHANG;
             } else if (pid == 0 || errno == ECHILD) {
                 // No killed/dead children in this particular process group
                 if (!wait_by_process) {

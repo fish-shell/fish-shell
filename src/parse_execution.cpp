@@ -768,7 +768,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
 
     // Protect against exec with background processes running
     static uint32_t last_exec_run_counter =  -1;
-    if (process_type == INTERNAL_EXEC) {
+    if (process_type == INTERNAL_EXEC && shell_is_interactive()) {
         job_iterator_t jobs;
         bool have_bg = false;
         const job_t *bg = nullptr;

@@ -12,13 +12,7 @@ if command ls --version >/dev/null 2>/dev/null
     end
 
     if not set -q LS_COLORS
-        set -l dircolors
-        for d in gdircolors dircolors
-            if command -sq $d
-                set dircolors $d
-                break
-            end
-        end
+        set -l dircolors (command -s {g,}dircolors)[1]
 
         if set -q dircolors[1]
             set -l colorfile

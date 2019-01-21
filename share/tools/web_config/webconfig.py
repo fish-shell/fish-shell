@@ -21,6 +21,7 @@ import socket
 import string
 import subprocess
 import sys
+from itertools import chain
 
 FISH_BIN_PATH = False  # will be set later
 IS_PY2 = sys.version_info[0] == 2
@@ -254,7 +255,6 @@ def get_special_ansi_escapes():
 
 
 def append_html_for_ansi_escape(full_val, result, span_open):
-
     # Strip off the initial \x1b[ and terminating m
     val = full_val[2:-1]
 
@@ -271,10 +271,10 @@ def append_html_for_ansi_escape(full_val, result, span_open):
         result.append('<span style="color: ' + html_color + '">')
         return True  # span now open
 
-    # term8 foreground color
-    if val in [str(x) for x in range(30, 38)]:
+    # term16 foreground color
+    if val in (str(x) for x in chain(range(90, 97), range(30, 38))):
         close_span()
-        html_color = html_color_for_ansi_color_index(int(val) - 30)
+        html_color = html_color_for_ansi_color_index(int(val) - (30 if int(val) < 90 else 82))
         result.append('<span style="color: ' + html_color + '">')
         return True  # span now open
 
@@ -284,7 +284,7 @@ def append_html_for_ansi_escape(full_val, result, span_open):
         close_span()
         return False
 
-    # We don't handle bold or underline yet
+    # TODO We don't handle bold, underline, italics, dim, or reverse yet
 
     # Do nothing on failure
     return span_open

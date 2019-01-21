@@ -2491,11 +2491,9 @@ const wchar_t *reader_readline(int nchars) {
     // Get the current terminal modes. These will be restored when the function returns.
     if (tcgetattr(STDIN_FILENO, &old_modes) == -1 && errno == EIO) redirect_tty_output();
     // Set the new modes.
-    if (is_interactive_session) {
-        if (tcsetattr(0, TCSANOW, &shell_modes) == -1) {
-            if (errno == EIO) redirect_tty_output();
-            wperror(L"tcsetattr");
-        }
+    if (tcsetattr(0, TCSANOW, &shell_modes) == -1) {
+        if (errno == EIO) redirect_tty_output();
+        wperror(L"tcsetattr");
     }
 
     while (!finished && !data->end_loop) {

@@ -474,6 +474,7 @@ img.delete_icon {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	color: #c0c0c0; /* set_color normal, assume white (not brwhite) */
 }
 
 .prompt_demo {

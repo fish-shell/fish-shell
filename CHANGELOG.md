@@ -4,6 +4,7 @@
 
 - exec now behaves properly inside functions (#5449)
 - while loops now evaluate to the last executed command in the loop body (or zero if the body was empty), matching POSIX semantics.
+- `read --silent` no longer echoes to the tty when run from a non-interactive script (#5519)
 
 
 # fish 3.0.0 (released December 28, 2018)

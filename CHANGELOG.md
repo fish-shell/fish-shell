@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 # fish 3.0.1
+
+This release of fish fixes a number of major issues discovered in fish 3.0.0.
 
 ### Fixes and improvements
 
@@ -7,6 +10,9 @@
 - `read --silent` no longer echoes to the tty when run from a non-interactive script (#5519)
 - (macOS only) /etc/paths and /etc/paths.d now correctly set path entries with spaces. Also affects MANPATH. (#5481)
 
+If you are upgrading from version 2.7.1 or before, please also review the release notes for 3.0.0 and 3.0b1 (included below).
+
+---
 
 # fish 3.0.0 (released December 28, 2018)
 

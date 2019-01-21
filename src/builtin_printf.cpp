@@ -101,11 +101,7 @@ struct builtin_printf_state_t {
     void append_format_output(const wchar_t *fmt, ...);
 };
 
-static bool is_octal_digit(wchar_t c) { return c != L'\0' && wcschr(L"01234567", c) != NULL; }
-
-static bool is_hex_digit(wchar_t c) {
-    return c != L'\0' && wcschr(L"0123456789ABCDEFabcdef", c) != NULL;
-}
+static bool is_octal_digit(wchar_t c) { return iswdigit(c) && c < L'8'; }
 
 static int hex_to_bin(const wchar_t &c) {
     switch (c) {
@@ -350,7 +346,7 @@ long builtin_printf_state_t::print_esc(const wchar_t *escstart, bool octal_0) {
 
     if (*p == L'x') {
         // A hexadecimal \xhh escape sequence must have 1 or 2 hex. digits.
-        for (esc_length = 0, ++p; esc_length < 2 && is_hex_digit(*p); ++esc_length, ++p)
+        for (esc_length = 0, ++p; esc_length < 2 && iswxdigit(*p); ++esc_length, ++p)
             esc_value = esc_value * 16 + hex_to_bin(*p);
         if (esc_length == 0) this->fatal_error(_(L"missing hexadecimal number in escape"));
         this->append_output(ENCODE_DIRECT_BASE + esc_value % 256);
@@ -369,7 +365,7 @@ long builtin_printf_state_t::print_esc(const wchar_t *escstart, bool octal_0) {
         p++;
         uint32_t uni_value = 0;
         for (size_t esc_length = 0; esc_length < (esc_char == L'u' ? 4 : 8); esc_length++) {
-            if (!is_hex_digit(*p)) {
+            if (!iswxdigit(*p)) {
                 // Escape sequence must be done. Complain if we didn't get anything.
                 if (esc_length == 0) {
                     this->fatal_error(_(L"Missing hexadecimal number in Unicode escape"));

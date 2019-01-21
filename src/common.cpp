@@ -1721,7 +1721,7 @@ void common_handle_winch(int signal) {
 
 /// Validate the new terminal size. Fallback to the env vars if necessary. Ensure the values are
 /// sane and if not fallback to a default of 80x24.
-static void validate_new_termsize(struct winsize *new_termsize) {
+static void validate_new_termsize(struct winsize *new_termsize, const environment_t &vars) {
     if (new_termsize->ws_col == 0 || new_termsize->ws_row == 0) {
 #ifdef HAVE_WINSIZE
         if (shell_is_interactive()) {
@@ -1731,8 +1731,8 @@ static void validate_new_termsize(struct winsize *new_termsize) {
         }
 #endif
         // Fallback to the environment vars.
-        maybe_t<env_var_t> col_var = env_get(L"COLUMNS");
-        maybe_t<env_var_t> row_var = env_get(L"LINES");
+        maybe_t<env_var_t> col_var = vars.get(L"COLUMNS");
+        maybe_t<env_var_t> row_var = vars.get(L"LINES");
         if (!col_var.missing_or_empty() && !row_var.missing_or_empty()) {
             // Both vars have to have valid values.
             int col = fish_wcstoi(col_var->as_string().c_str());
@@ -1757,16 +1757,17 @@ static void validate_new_termsize(struct winsize *new_termsize) {
 }
 
 /// Export the new terminal size as env vars and to the kernel if possible.
-static void export_new_termsize(struct winsize *new_termsize) {
+static void export_new_termsize(struct winsize *new_termsize, env_stack_t &vars) {
     wchar_t buf[64];
 
-    auto cols = env_get(L"COLUMNS", ENV_EXPORT);
+    auto cols = vars.get(L"COLUMNS", ENV_EXPORT);
     swprintf(buf, 64, L"%d", (int)new_termsize->ws_col);
-    env_set_one(L"COLUMNS", ENV_GLOBAL | (cols.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT), buf);
+    vars.set_one(L"COLUMNS", ENV_GLOBAL | (cols.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT),
+                 buf);
 
-    auto lines = env_get(L"LINES", ENV_EXPORT);
+    auto lines = vars.get(L"LINES", ENV_EXPORT);
     swprintf(buf, 64, L"%d", (int)new_termsize->ws_row);
-    env_set_one(L"LINES", ENV_GLOBAL | (lines.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT), buf);
+    vars.set_one(L"LINES", ENV_GLOBAL | (lines.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT), buf);
 
 #ifdef HAVE_WINSIZE
     // Only write the new terminal size if we are in the foreground (#4477)
@@ -1791,9 +1792,9 @@ struct winsize get_current_winsize() {
         return termsize;
     }
 #endif
-
-    validate_new_termsize(&new_termsize);
-    export_new_termsize(&new_termsize);
+    auto &vars = env_stack_t::globals();
+    validate_new_termsize(&new_termsize, vars);
+    export_new_termsize(&new_termsize, vars);
     termsize.ws_col = new_termsize.ws_col;
     termsize.ws_row = new_termsize.ws_row;
     termsize_valid = true;
@@ -2165,9 +2166,10 @@ __attribute__((noinline)) void debug_thread_error(void) {
 }
 
 void set_main_thread() {
-    // Just call is_main_thread() once to force increment of thread_id
-    // We store the result as `volatile` to guarantee the function call is not optimized away
-    volatile bool _x = is_main_thread();
+    // Just call is_main_thread() once to force increment of thread_id.
+    bool x = is_main_thread();
+    assert(x && "set_main_thread should be main thread");
+    (void)x;
 }
 
 void configure_thread_assertions_for_testing() { thread_asserts_cfg_for_testing = true; }

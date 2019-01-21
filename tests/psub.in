@@ -30,14 +30,14 @@ else
 end
 
 # The --file flag is the default behavior.
-if count (echo foo | psub -s .cc | grep -o '\.cc$') >/dev/null
+if count (echo foo | psub -s .cc | string match -r '\.cc$') >/dev/null
     echo 'psub filename ends with .cc'
 else
     echo 'psub filename does not end with .cc'
 end
 
 # Make sure we get the same result if we explicitly ask for a temp file.
-if count (echo foo | psub -f -s .cc | grep -o '\.cc$') >/dev/null
+if count (echo foo | psub -f -s .cc | string match -r '\.cc$') >/dev/null
     echo 'psub filename ends with .cc'
 else
     echo 'psub filename does not end with .cc'
@@ -50,4 +50,5 @@ else
     echo 'psub directory was deleted'
 end
 
-diff -q (__fish_print_help psub | psub) (psub -hs banana | psub)
+set -l diffs (comm -3 (__fish_print_help psub | psub) (psub -hs banana | psub))
+test -z "$diffs"

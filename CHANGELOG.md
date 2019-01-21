@@ -12,9 +12,16 @@
 - Added completions for:
  - nothing yet...
 - Lots of improvements to completions.
-- fish_clipboard_* now supports wayland by means of [wl-clipboard](https://github.com/bugaevc/wl-clipboard).
  - Improved completion for `ant` (#5475).
----
+- fish_clipboard_* now supports wayland by means of [wl-clipboard](https://github.com/bugaevc/wl-clipboard).
+- mandoc can now be used to format the output from `--help` if nroff is not installed
+
+# fish 3.0.1
+
+### Fixes and improvements
+
+- exec now behaves properly inside functions (#5449)
+- while loops now evaluate to the last executed command in the loop body (or zero if the body was empty), matching POSIX semantics.
 
 # fish 3.0.0 (released December 28, 2018)
 

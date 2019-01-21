@@ -624,8 +624,8 @@ class null_terminated_array_t {
     CharType_t **array{NULL};
 
     // No assignment or copying.
-    void operator=(null_terminated_array_t rhs);
-    null_terminated_array_t(const null_terminated_array_t &);
+    void operator=(null_terminated_array_t rhs) = delete;
+    null_terminated_array_t(const null_terminated_array_t &) = delete;
 
     typedef std::vector<std::basic_string<CharType_t>> string_list_t;
 

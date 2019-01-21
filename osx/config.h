@@ -181,6 +181,9 @@
 /* Define to 1 if you have the `wcsndup' function. */
 /* #undef HAVE_WCSNDUP */
 
+/* Define to 1 if you have the `wcstod_l' function. */
+#define HAVE_WCSTOD_L 1
+
 /* Define to 1 if the winsize struct and TIOCGWINSZ macro exist */
 #define HAVE_WINSIZE 1
 

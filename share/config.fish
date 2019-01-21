@@ -196,7 +196,7 @@ if command -sq /usr/libexec/path_helper
 
         for path_file in $argv[2] $argv[3]/*
             if test -f $path_file
-                while read -la entry
+                while read -l entry
                     if not contains $entry $result
                         set result $result $entry
                     end
@@ -259,23 +259,23 @@ function __fish_expand_pid_args
     end
 end
 
-function bg --wraps bg
+function bg
     builtin bg (__fish_expand_pid_args $argv)
 end
 
-function fg --wraps fg
+function fg
     builtin fg (__fish_expand_pid_args $argv)
 end
 
-function kill --wraps kill
+function kill
     command kill (__fish_expand_pid_args $argv)
 end
 
-function wait --wraps wait
+function wait
     builtin wait (__fish_expand_pid_args $argv)
 end
 
-function disown --wraps disown
+function disown
     builtin disown (__fish_expand_pid_args $argv)
 end
 

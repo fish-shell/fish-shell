@@ -4,21 +4,8 @@
 # see also Fish's large set of completions for examples:
 # https://github.com/fish-shell/fish-shell/tree/master/share/completions
 
-# If all-the-package-names is installed, it will be used to generate npm completions.
-# Install globally with `sudo npm install -g all-the-package-names`. Keep it up to date.
-function __npm_list_packages
-    if not type -q all-the-package-names
-        return
-    end
-
-    all-the-package-names
-end
-
-# Entire list of packages is too long to be used in a `complete` subcommand
-# Search it for matches instead
-function __npm_filtered_list_packages
-    __npm_list_packages | grep (commandline -ct) | head -n 50
-end
+source $__fish_data_dir/functions/fish_npm_helper.fish
+set -l npm_install "npm install --global"
 
 function __fish_npm_needs_command
     set cmd (commandline -opc)
@@ -156,7 +143,7 @@ complete -f -c npm -n '__fish_npm_using_command owner' -a 'rm' -d 'Remove an own
 
 # remove
 for c in 'r' 'remove' 'rm' 'un' 'uninstall' 'unlink'
-    complete -f -c npm -n '__fish_npm_needs_command' -a "$c" -d 'remove package'
+    complete -f -c npm -n '__fish_npm_needs_command' -a "$c" -d 'remove package' -xa '(__yarn_installed_packages)'
     complete -x -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'remove global package'
     complete -x -c npm -n "__fish_npm_using_command $c" -l save -d 'Package will be removed from your dependencies'
     complete -x -c npm -n "__fish_npm_using_command $c" -l save-dev -d 'Package will be removed from your devDependencies'
@@ -208,4 +195,4 @@ complete -f -c npm -n '__fish_npm_needs_command' -a 'unpublish' -d 'Remove a pac
 complete -f -c npm -n '__fish_npm_needs_command' -a 'unstar' -d 'Remove star from a package'
 complete -f -c npm -n '__fish_npm_needs_command' -a 'version' -d 'Bump a package version'
 complete -f -c npm -n '__fish_npm_needs_command' -a 'whoami' -d 'Display npm username'
-complete -f -c npm -n '__fish_seen_subcommand_from install' -a '(__npm_filtered_list_packages)'
+complete -f -c npm -n '__fish_seen_subcommand_from install; and not __fish_is_switch' -a "(__yarn_filtered_list_packages \"$npm_install\")"

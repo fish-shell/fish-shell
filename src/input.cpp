@@ -164,8 +164,8 @@ static bool input_function_status;
 static int input_function_args_index = 0;
 
 /// Return the current bind mode.
-wcstring input_get_bind_mode() {
-    auto mode = env_get(FISH_BIND_MODE_VAR);
+wcstring input_get_bind_mode(const environment_t &vars) {
+    auto mode = vars.get(FISH_BIND_MODE_VAR);
     return mode ? mode->as_string() : DEFAULT_BIND_MODE;
 }
 
@@ -173,9 +173,11 @@ wcstring input_get_bind_mode() {
 void input_set_bind_mode(const wcstring &bm) {
     // Only set this if it differs to not execute variable handlers all the time.
     // modes may not be empty - empty is a sentinel value meaning to not change the mode
+    ASSERT_IS_MAIN_THREAD();
+    auto &vars = parser_t::principal_parser().vars();
     assert(!bm.empty());
-    if (input_get_bind_mode() != bm.c_str()) {
-        env_set_one(FISH_BIND_MODE_VAR, ENV_GLOBAL, bm);
+    if (input_get_bind_mode(vars) != bm.c_str()) {
+        vars.set_one(FISH_BIND_MODE_VAR, ENV_GLOBAL, bm);
     }
 }
 
@@ -417,7 +419,8 @@ void input_queue_ch(wint_t ch) { input_common_queue_ch(ch); }
 static void input_mapping_execute_matching_or_generic(bool allow_commands) {
     const input_mapping_t *generic = NULL;
 
-    const wcstring bind_mode = input_get_bind_mode();
+    const auto &vars = parser_t::principal_parser().vars();
+    const wcstring bind_mode = input_get_bind_mode(vars);
 
     for (auto& m : mapping_list) {
         if (m.mode != bind_mode) {

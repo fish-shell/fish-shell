@@ -105,7 +105,7 @@ bool fs_is_case_insensitive(const wcstring &path, int fd,
 ///
 /// We expect the path to already be unescaped.
 bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_list_t &directories,
-                       path_flags_t flags) {
+                       const environment_t &vars, path_flags_t flags) {
     ASSERT_IS_BACKGROUND_THREAD();
 
     const bool require_dir = static_cast<bool>(flags & PATH_REQUIRE_DIR);
@@ -114,7 +114,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
     bool result = false;
 
     wcstring path_with_magic(potential_path_fragment);
-    if (flags & PATH_EXPAND_TILDE) expand_tilde(path_with_magic);
+    if (flags & PATH_EXPAND_TILDE) expand_tilde(path_with_magic, vars);
 
     // debug( 1, L"%ls -> %ls ->%ls", path, tilde, unescaped );
 
@@ -216,7 +216,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
 // Given a string, return whether it prefixes a path that we could cd into. Return that path in
 // out_path. Expects path to be unescaped.
 static bool is_potential_cd_path(const wcstring &path, const wcstring &working_directory,
-                                 path_flags_t flags) {
+                                 const environment_t &vars, path_flags_t flags) {
     wcstring_list_t directories;
 
     if (string_prefixes_string(L"./", path)) {
@@ -224,7 +224,7 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
         directories.push_back(working_directory);
     } else {
         // Get the CDPATH.
-        auto cdpath = env_get(L"CDPATH");
+        auto cdpath = vars.get(L"CDPATH");
         std::vector<wcstring> pathsv =
             cdpath.missing_or_empty() ? wcstring_list_t{L"."} : cdpath->as_list();
 
@@ -236,22 +236,24 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
     }
 
     // Call is_potential_path with all of these directories.
-    return is_potential_path(path, directories, flags | PATH_REQUIRE_DIR);
+    return is_potential_path(path, directories, vars, flags | PATH_REQUIRE_DIR);
 }
 
 // Given a plain statement node in a parse tree, get the command and return it, expanded
 // appropriately for commands. If we succeed, return true.
 static bool plain_statement_get_expanded_command(const wcstring &src,
                                                  tnode_t<g::plain_statement> stmt,
-                                                 wcstring *out_cmd) {
+                                                 const environment_t &vars, wcstring *out_cmd) {
     // Get the command. Try expanding it. If we cannot, it's an error.
     maybe_t<wcstring> cmd = command_for_plain_statement(stmt, src);
     if (!cmd) return false;
-    expand_error_t err = expand_to_command_and_args(*cmd, out_cmd, nullptr);
+    expand_error_t err = expand_to_command_and_args(*cmd, vars, out_cmd, nullptr);
     return err == EXPAND_OK || err == EXPAND_WILDCARD_MATCH;
 }
 
 rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background) {
+    // TODO: rationalize this principal_vars.
+    const auto &vars = env_stack_t::principal();
     rgb_color_t result = rgb_color_t::normal();
 
     // If sloppy_background is set, then we look at the foreground color even if is_background is
@@ -264,17 +266,17 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background) 
         return rgb_color_t::normal();
     }
 
-    auto var = env_get(highlight_var[idx]);
+    auto var = vars.get(highlight_var[idx]);
 
     // debug( 1, L"%d -> %d -> %ls", highlight, idx, val );
 
-    if (!var) var = env_get(highlight_var[0]);
+    if (!var) var = vars.get(highlight_var[0]);
 
     if (var) result = parse_color(*var, treat_as_background);
 
     // Handle modifiers.
     if (highlight & highlight_modifier_valid_path) {
-        auto var2 = env_get(L"fish_color_valid_path");
+        auto var2 = vars.get(L"fish_color_valid_path");
         if (var2) {
             rgb_color_t result2 = parse_color(*var2, is_background);
             if (result.is_normal())
@@ -310,8 +312,8 @@ static bool has_expand_reserved(const wcstring &str) {
 
 // Parse a command line. Return by reference the last command, and the last argument to that command
 // (as a string), if any. This is used by autosuggestions.
-static bool autosuggest_parse_command(const wcstring &buff, wcstring *out_expanded_command,
-                                      wcstring *out_last_arg) {
+static bool autosuggest_parse_command(const wcstring &buff, const environment_t &vars,
+                                      wcstring *out_expanded_command, wcstring *out_last_arg) {
     // Parse the buffer.
     parse_node_tree_t parse_tree;
     parse_tree_from_string(buff,
@@ -321,7 +323,7 @@ static bool autosuggest_parse_command(const wcstring &buff, wcstring *out_expand
     // Find the last statement.
     auto last_statement = parse_tree.find_last_node<g::plain_statement>();
     if (last_statement &&
-        plain_statement_get_expanded_command(buff, last_statement, out_expanded_command)) {
+        plain_statement_get_expanded_command(buff, last_statement, vars, out_expanded_command)) {
         // Find the last argument. If we don't get one, return an invalid node.
         if (auto last_arg = parse_tree.find_last_node<g::argument>(last_statement)) {
             *out_last_arg = last_arg.get_source(buff);
@@ -333,7 +335,7 @@ static bool autosuggest_parse_command(const wcstring &buff, wcstring *out_expand
 
 bool autosuggest_validate_from_history(const history_item_t &item,
                                        const wcstring &working_directory,
-                                       const env_vars_snapshot_t &vars) {
+                                       const environment_t &vars) {
     ASSERT_IS_BACKGROUND_THREAD();
 
     bool handled = false, suggestionOK = false;
@@ -341,18 +343,17 @@ bool autosuggest_validate_from_history(const history_item_t &item,
     // Parse the string.
     wcstring parsed_command;
     wcstring cd_dir;
-    if (!autosuggest_parse_command(item.str(), &parsed_command, &cd_dir)) return false;
+    if (!autosuggest_parse_command(item.str(), vars, &parsed_command, &cd_dir)) return false;
 
     if (parsed_command == L"cd" && !cd_dir.empty()) {
         // We can possibly handle this specially.
-        if (expand_one(cd_dir, EXPAND_SKIP_CMDSUBST)) {
+        if (expand_one(cd_dir, EXPAND_SKIP_CMDSUBST, vars)) {
             handled = true;
             bool is_help =
                 string_prefixes_string(cd_dir, L"--help") || string_prefixes_string(cd_dir, L"-h");
             if (!is_help) {
-                wcstring path;
-                bool can_cd = path_get_cdpath(cd_dir, &path, working_directory, vars);
-                if (can_cd && !paths_are_same_file(working_directory, path)) {
+                auto path = path_get_cdpath(cd_dir, working_directory, vars);
+                if (path && !paths_are_same_file(working_directory, *path)) {
                     suggestionOK = true;
                 }
             }
@@ -365,7 +366,7 @@ bool autosuggest_validate_from_history(const history_item_t &item,
 
     // Not handled specially so handle it here.
     bool cmd_ok = false;
-    if (path_get_path(parsed_command, NULL)) {
+    if (path_get_path(parsed_command, NULL, vars)) {
         cmd_ok = true;
     } else if (builtin_exists(parsed_command) ||
                function_exists_no_autoload(parsed_command, vars)) {
@@ -667,7 +668,7 @@ class highlighter_t {
     // Cursor position.
     const size_t cursor_pos;
     // Environment variables. Again, a reference member variable!
-    const env_vars_snapshot_t &vars;
+    const environment_t &vars;
     // Whether it's OK to do I/O.
     const bool io_ok;
     // Working directory.
@@ -698,7 +699,7 @@ class highlighter_t {
 
    public:
     // Constructor
-    highlighter_t(const wcstring &str, size_t pos, const env_vars_snapshot_t &ev, wcstring wd,
+    highlighter_t(const wcstring &str, size_t pos, const environment_t &ev, wcstring wd,
                   bool can_do_io)
         : buff(str),
           cursor_pos(pos),
@@ -801,7 +802,7 @@ void highlighter_t::color_argument(tnode_t<g::tok_string> node) {
 /// Indicates whether the source range of the given node forms a valid path in the given
 /// working_directory.
 static bool node_is_potential_path(const wcstring &src, const parse_node_t &node,
-                                   const wcstring &working_directory) {
+                                   const environment_t &vars, const wcstring &working_directory) {
     if (!node.has_source()) return false;
 
     // Get the node source, unescape it, and then pass it to is_potential_path along with the
@@ -814,7 +815,7 @@ static bool node_is_potential_path(const wcstring &src, const parse_node_t &node
         if (!token.empty() && token.at(0) == HOME_DIRECTORY) token.at(0) = L'~';
 
         const wcstring_list_t working_directory_list(1, working_directory);
-        result = is_potential_path(token, working_directory_list, PATH_EXPAND_TILDE);
+        result = is_potential_path(token, working_directory_list, vars, PATH_EXPAND_TILDE);
     }
     return result;
 }
@@ -823,7 +824,7 @@ bool highlighter_t::is_cd(tnode_t<g::plain_statement> stmt) const {
     bool cmd_is_cd = false;
     if (this->io_ok && stmt.has_source()) {
         wcstring cmd_str;
-        if (plain_statement_get_expanded_command(this->buff, stmt, &cmd_str)) {
+        if (plain_statement_get_expanded_command(this->buff, stmt, vars, &cmd_str)) {
             cmd_is_cd = (cmd_str == L"cd");
         }
     }
@@ -840,11 +841,11 @@ void highlighter_t::color_arguments(const std::vector<tnode_t<g::argument>> &arg
         if (cmd_is_cd) {
             // Mark this as an error if it's not 'help' and not a valid cd path.
             wcstring param = arg.get_source(this->buff);
-            if (expand_one(param, EXPAND_SKIP_CMDSUBST)) {
+            if (expand_one(param, EXPAND_SKIP_CMDSUBST, vars)) {
                 bool is_help = string_prefixes_string(param, L"--help") ||
                                string_prefixes_string(param, L"-h");
                 if (!is_help && this->io_ok &&
-                    !is_potential_cd_path(param, working_directory, PATH_EXPAND_TILDE)) {
+                    !is_potential_cd_path(param, working_directory, vars, PATH_EXPAND_TILDE)) {
                     this->color_node(arg, highlight_spec_error);
                 }
             }
@@ -883,7 +884,7 @@ void highlighter_t::color_redirection(tnode_t<g::redirection> redirection_node) 
                 // I/O is disallowed, so we don't have much hope of catching anything but gross
                 // errors. Assume it's valid.
                 target_is_valid = true;
-            } else if (!expand_one(target, EXPAND_SKIP_CMDSUBST)) {
+            } else if (!expand_one(target, EXPAND_SKIP_CMDSUBST, vars)) {
                 // Could not be expanded.
                 target_is_valid = false;
             } else {
@@ -985,7 +986,7 @@ void highlighter_t::color_children(const parse_node_t &parent, parse_token_type_
 
 /// Determine if a command is valid.
 static bool command_is_valid(const wcstring &cmd, enum parse_statement_decoration_t decoration,
-                             const wcstring &working_directory, const env_vars_snapshot_t &vars) {
+                             const wcstring &working_directory, const environment_t &vars) {
     // Determine which types we check, based on the decoration.
     bool builtin_ok = true, function_ok = true, abbreviation_ok = true, command_ok = true,
          implicit_cd_ok = true;
@@ -1014,14 +1015,14 @@ static bool command_is_valid(const wcstring &cmd, enum parse_statement_decoratio
     if (!is_valid && function_ok) is_valid = function_exists_no_autoload(cmd, vars);
 
     // Abbreviations
-    if (!is_valid && abbreviation_ok) is_valid = expand_abbreviation(cmd, NULL);
+    if (!is_valid && abbreviation_ok) is_valid = expand_abbreviation(cmd).has_value();
 
     // Regular commands
     if (!is_valid && command_ok) is_valid = path_get_path(cmd, NULL, vars);
 
     // Implicit cd
     if (!is_valid && implicit_cd_ok) {
-        is_valid = path_can_be_implicit_cd(cmd, working_directory, NULL, vars);
+        is_valid = path_as_implicit_cd(cmd, working_directory, vars).has_value();
     }
 
     // Return what we got.
@@ -1117,7 +1118,8 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
                     wcstring expanded_cmd;
                     // Check to see if the command is valid.
                     // Try expanding it. If we cannot, it's an error.
-                    bool expanded = plain_statement_get_expanded_command(buff, stmt, &expanded_cmd);
+                    bool expanded =
+                        plain_statement_get_expanded_command(buff, stmt, vars, &expanded_cmd);
                     if (expanded && !has_expand_reserved(expanded_cmd)) {
                         is_valid_cmd =
                             command_is_valid(expanded_cmd, decoration, working_directory, vars);
@@ -1180,7 +1182,7 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
         // (and the cursor is just beyond the last token), we may still underline it.
         if (this->cursor_pos >= node.source_start &&
             this->cursor_pos - node.source_start <= node.source_length &&
-            node_is_potential_path(buff, node, working_directory)) {
+            node_is_potential_path(buff, node, vars, working_directory)) {
             // It is, underline it.
             for (size_t i = node.source_start; i < node.source_start + node.source_length; i++) {
                 // Don't color highlight_spec_error because it looks dorky. For example,
@@ -1196,11 +1198,11 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
 }
 
 void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos,
-                     wcstring_list_t *error, const env_vars_snapshot_t &vars) {
+                     wcstring_list_t *error, const environment_t &vars) {
     UNUSED(error);
     // Do something sucky and get the current working directory on this background thread. This
     // should really be passed in.
-    const wcstring working_directory = env_get_pwd_slash();
+    const wcstring working_directory = vars.get_pwd_slash();
 
     // Highlight it!
     highlighter_t highlighter(buff, pos, vars, working_directory, true /* can do IO */);
@@ -1208,11 +1210,11 @@ void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color,
 }
 
 void highlight_shell_no_io(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos,
-                           wcstring_list_t *error, const env_vars_snapshot_t &vars) {
+                           wcstring_list_t *error, const environment_t &vars) {
     UNUSED(error);
     // Do something sucky and get the current working directory on this background thread. This
     // should really be passed in.
-    const wcstring working_directory = env_get_pwd_slash();
+    const wcstring working_directory = vars.get_pwd_slash();
 
     // Highlight it!
     highlighter_t highlighter(buff, pos, vars, working_directory, false /* no IO allowed */);
@@ -1306,7 +1308,7 @@ static void highlight_universal_internal(const wcstring &buffstr,
 }
 
 void highlight_universal(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos,
-                         wcstring_list_t *error, const env_vars_snapshot_t &vars) {
+                         wcstring_list_t *error, const environment_t &vars) {
     UNUSED(error);
     UNUSED(vars);
     assert(buff.size() == color.size());

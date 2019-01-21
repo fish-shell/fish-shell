@@ -19,7 +19,7 @@ The following options are available:
 
 - `-p` or `--path` returns the name of the disk file that would be executed, or nothing if `type  -t  name` would not return `file`.
 
-- `-P` or `--force-path` returns the name of the disk file that would be executed, or nothing if no file with the specified name could be found in the <tt>$PATH</tt>.
+- `-P` or `--force-path` returns the path to the executable file `NAME`, presuming `NAME` is found in <tt>$PATH</tt>, or nothing otherwise. `--force-path` explicitly resolves only the path to executable files in <tt>$PATH</tt>, regardless of whether `$NAME` is shadowed by a function or builtin with the same name.
 
 - `-q` or `--quiet` suppresses all output; this is useful when testing the exit status.
 

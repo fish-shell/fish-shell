@@ -1,5 +1,5 @@
 language: cpp
-dist: trusty
+dist: xenial
 sudo: required
 
 matrix:
@@ -9,7 +9,6 @@ matrix:
       addons:
         apt:
           packages:
-            - bc
             - expect
             - gettext
             - libncurses5-dev
@@ -18,7 +17,6 @@ matrix:
       addons:
         apt:
           packages:
-            - bc
             - expect
             - gettext
             - lib32ncurses5-dev
@@ -30,7 +28,6 @@ matrix:
       addons:
         apt:
           packages:
-            - bc
             - expect
             - gettext
             - libncurses5-dev
@@ -55,7 +52,6 @@ matrix:
           packages:
             - clang-3.8
             - llvm-3.8 # for llvm-symbolizer
-            - bc
             - expect
             - gettext
             - libncurses5-dev

@@ -25,29 +25,31 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "function.h"
 #include "intern.h"
+#include "parser.h"
 #include "parser_keywords.h"
 #include "reader.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 class function_info_t {
-   public:
-    /// Immutable properties of the function.
-    std::shared_ptr<const function_properties_t> props;
-    /// Function description. This may be changed after the function is created.
-    wcstring description;
-    /// File where this function was defined (intern'd string).
-    const wchar_t *const definition_file;
-    /// Mapping of all variables that were inherited from the function definition scope to their
-    /// values.
-    const std::map<wcstring, env_var_t> inherit_vars;
-    /// Flag for specifying that this function was automatically loaded.
-    const bool is_autoload;
+public:
+ /// Immutable properties of the function.
+ std::shared_ptr<const function_properties_t> props;
+ /// Function description. This may be changed after the function is created.
+ wcstring description;
+ /// File where this function was defined (intern'd string).
+ const wchar_t *const definition_file;
+ /// Mapping of all variables that were inherited from the function definition scope to their
+ /// values.
+ const std::map<wcstring, env_var_t> inherit_vars;
+ /// Flag for specifying that this function was automatically loaded.
+ const bool is_autoload;
 
-    /// Constructs relevant information from the function_data.
-    function_info_t(function_data_t data, const wchar_t *filename, bool autoload);
+ /// Constructs relevant information from the function_data.
+ function_info_t(function_data_t data, const environment_t &vars, const wchar_t *filename,
+                 bool autoload);
 
-    /// Used by function_copy.
-    function_info_t(const function_info_t &data, const wchar_t *filename, bool autoload);
+ /// Used by function_copy.
+ function_info_t(const function_info_t &data, const wchar_t *filename, bool autoload);
 };
 
 /// Table containing all functions.
@@ -101,7 +103,9 @@ static int load(const wcstring &name) {
 static void autoload_names(std::unordered_set<wcstring> &names, int get_hidden) {
     size_t i;
 
-    const auto path_var = env_get(L"fish_function_path");
+    // TODO: justfy this.
+    auto &vars = env_stack_t::principal();
+    const auto path_var = vars.get(L"fish_function_path");
     if (path_var.missing_or_empty()) return;
 
     wcstring_list_t path_list;
@@ -127,20 +131,22 @@ static void autoload_names(std::unordered_set<wcstring> &names, int get_hidden) 
     }
 }
 
-static std::map<wcstring, env_var_t> snapshot_vars(const wcstring_list_t &vars) {
+static std::map<wcstring, env_var_t> snapshot_vars(const wcstring_list_t &vars,
+                                                   const environment_t &src) {
     std::map<wcstring, env_var_t> result;
     for (const wcstring &name : vars) {
-        auto var = env_get(name);
+        auto var = src.get(name);
         if (var) result[name] = std::move(*var);
     }
     return result;
 }
 
-function_info_t::function_info_t(function_data_t data, const wchar_t *filename, bool autoload)
+function_info_t::function_info_t(function_data_t data, const environment_t &vars,
+                                 const wchar_t *filename, bool autoload)
     : props(std::make_shared<const function_properties_t>(std::move(data.props))),
       description(std::move(data.description)),
       definition_file(intern(filename)),
-      inherit_vars(snapshot_vars(data.inherit_vars)),
+      inherit_vars(snapshot_vars(data.inherit_vars, vars)),
       is_autoload(autoload) {}
 
 function_info_t::function_info_t(const function_info_t &data, const wchar_t *filename,
@@ -164,8 +170,8 @@ void function_add(const function_data_t &data, const parser_t &parser) {
     // Create and store a new function.
     const wchar_t *filename = reader_current_filename();
 
-    const function_map_t::value_type new_pair(data.name,
-                                              function_info_t(data, filename, is_autoload));
+    const function_map_t::value_type new_pair(
+        data.name, function_info_t(data, parser.vars(), filename, is_autoload));
     loaded_functions.insert(new_pair);
 
     // Add event handlers.
@@ -198,7 +204,7 @@ void function_load(const wcstring &cmd) {
     }
 }
 
-int function_exists_no_autoload(const wcstring &cmd, const env_vars_snapshot_t &vars) {
+int function_exists_no_autoload(const wcstring &cmd, const environment_t &vars) {
     if (parser_keywords_is_reserved(cmd)) return 0;
     scoped_rlock locker(functions_lock);
     return loaded_functions.find(cmd) != loaded_functions.end() ||
@@ -344,23 +350,24 @@ void function_invalidate_path() { function_autoloader.invalidate(); }
 // 1. argv
 // 2. named arguments
 // 3. inherited variables
-void function_prepare_environment(const wcstring &name, const wchar_t *const *argv,
+void function_prepare_environment(env_stack_t &vars, const wcstring &name,
+                                  const wchar_t *const *argv,
                                   const std::map<wcstring, env_var_t> &inherited_vars) {
-    env_set_argv(argv);
+    vars.set_argv(argv);
     auto props = function_get_properties(name);
     if (props && !props->named_arguments.empty()) {
         const wchar_t *const *arg = argv;
         for (const wcstring &named_arg : props->named_arguments) {
             if (*arg) {
-                env_set_one(named_arg, ENV_LOCAL | ENV_USER, *arg);
+                vars.set_one(named_arg, ENV_LOCAL | ENV_USER, *arg);
                 arg++;
             } else {
-                env_set_empty(named_arg, ENV_LOCAL | ENV_USER);
+                vars.set_empty(named_arg, ENV_LOCAL | ENV_USER);
             }
         }
     }
 
     for (const auto &kv : inherited_vars) {
-        env_set(kv.first, ENV_LOCAL | ENV_USER, kv.second.as_list());
+        vars.set(kv.first, ENV_LOCAL | ENV_USER, kv.second.as_list());
     }
 }

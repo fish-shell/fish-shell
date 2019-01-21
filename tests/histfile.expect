@@ -92,7 +92,8 @@ expect_prompt -re "\r\n$hist_line\r\n" {
 # =============
 # Start by shutting down the previous shell.
 send "exit\r"
-close $spawn_id
+expect eof
+wait
 
 # Set the fish_history env var.
 set ::env(fish_history) env

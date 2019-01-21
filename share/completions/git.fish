@@ -144,26 +144,20 @@ function __fish_git_files
     # (don't use --ignored=no because that was only added in git 2.16, from Jan 2018.
     set -q ignored; and set -a status_opt --ignored
 
-    # Glob just the current token for performance
-    # and so git shows untracked files (even in untracked dirs) for that.
-    # If the current token is empty, this matches everything in $PWD.
-    set -l files (commandline -ct)
-    # The trailing "**" is necessary to match files inside the given directories.
-    set files "$files*" "$files*/**"
     set -q untracked; and set -a status_opt -unormal
     or set -a status_opt -uno
 
     # We need to set status.relativePaths to true because the porcelain v2 format still honors that,
     # and core.quotePath to false so characters > 0x80 (i.e. non-ASCII) aren't considered special.
     # We explicitly enable globs so we can use that to match the current token.
-    set -l git_opt -c status.relativePaths -c core.quotePath= --glob-pathspecs
+    set -l git_opt -c status.relativePaths -c core.quotePath=
 
     # We pick the v2 format if we can, because it shows relative filenames (if used without "-z").
     # We fall back on the v1 format by reading git's _version_, because trying v2 first is too slow.
     set -l ver (command git --version | string replace -rf 'git version (\d+)\.(\d+)\.?.*' '$1\n$2')
     # Version >= 2.11.* has the v2 format.
     if test "$ver[1]" -gt 2 2>/dev/null; or test "$ver[1]" -eq 2 -a "$ver[2]" -ge 11 2>/dev/null
-        command git $git_opt status --porcelain=2 $status_opt -- $files \
+        command git $git_opt status --porcelain=2 $status_opt \
         | while read -la -d ' ' line
             set -l file
             set -l desc
@@ -278,7 +272,7 @@ function __fish_git_files
         set -l previousfile
         # Note that we can't use space as a delimiter between status and filename, because
         # the status can contain spaces - " M" is different from "M ".
-        command git $git_opt status --porcelain -z $status_opt -- $files \
+        command git $git_opt status --porcelain -z $status_opt \
         | while read -lz line
             set -l desc
             # The entire line is the "from" from a rename.
@@ -446,6 +440,12 @@ end
 # This is because alias:command is an n:1 mapping (an alias can only have one corresponding command,
 #                                                  but a command can be aliased multiple times)
 git config -z --get-regexp 'alias\..*' | while read -lz alias command _
+    # If the command starts with a "!", it's a shell command, run with /bin/sh,
+    # or any other shell defined at git's build time.
+    #
+    # We can't do anything with them, and we run git-config again for listing aliases,
+    # so we skip them here.
+    string match -q '!*' -- $command; and continue
     # Git aliases can contain chars that variable names can't - escape them.
     set alias (string replace 'alias.' '' -- $alias | string escape --style=var)
     set -g __fish_git_alias_$alias $command

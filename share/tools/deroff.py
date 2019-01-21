@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """ Deroff.py, ported to Python from the venerable deroff.c """

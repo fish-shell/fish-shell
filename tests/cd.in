@@ -1,6 +1,12 @@
+# Store pwd to later go back before cleaning up
+set -l oldpwd (pwd)
+# Create a test directory to store our stuff.
+set -l base /tmp/cdcomp_test
+rm -Rf $base
+mkdir -p $base
 logmsg cd symlink non-resolution
 set real (mktemp -d)
-set link (mktemp -u)
+set link $base/link
 ln -s $real $link
 cd $link
 test "$PWD" = "$link" || echo "\$PWD != \$link:"\n   "\$PWD: $PWD"\n   "\$link: $link"\n
@@ -14,9 +20,6 @@ logmsg cd symlink completion
 # create directory $base/through/the/looking/glass
 # symlink $base/somewhere/teleport -> $base/through/the/looking/glass
 # verify that .. completions work
-set -l base /tmp/cdcomp_test/
-rm -Rf $base
-mkdir -p $base
 cd $base
 mkdir -p $base/through/the/looking/glass
 
@@ -35,4 +38,7 @@ echo "ls:"
 complete -C'ls ../'
 echo "cd:"
 complete -C'cd ../'
+
+# cd back before removing the test directory again.
+cd $oldpwd
 rm -Rf $base

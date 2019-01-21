@@ -199,7 +199,10 @@ int flock(int fd, int op);
 
 #endif
 
-#ifndef HAVE_WCSTOD_L
+// NetBSD _has_ wcstod_l, but it's doing some weak linking hullabaloo that I don't get.
+// Since it doesn't have uselocale (yes, the standard function isn't there, the non-standard extension is),
+// we can't try to use the fallback.
+#if !defined(HAVE_WCSTOD_L) && !defined(__NetBSD__)
 // On some platforms if this is incorrectly detected and a system-defined
 // defined version of `wcstod_l` exists, calling `wcstod` from our own
 // `wcstod_l` can call back into `wcstod_l` causing infinite recursion.

@@ -115,16 +115,12 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
     return false;
 }
 
-bool path_get_path(const wcstring &cmd, wcstring *out_path, const env_vars_snapshot_t &vars) {
+bool path_get_path(const wcstring &cmd, wcstring *out_path, const environment_t &vars) {
     return path_get_path_core(cmd, out_path, vars.get(L"PATH"));
 }
 
-bool path_get_path(const wcstring &cmd, wcstring *out_path) {
-    return path_get_path_core(cmd, out_path, env_get(L"PATH"));
-}
-
-wcstring_list_t path_get_paths(const wcstring &cmd) {
-    debug(5, L"path_get_paths('%ls')", cmd.c_str());
+wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars) {
+    debug(3, L"path_get_paths('%ls')", cmd.c_str());
     wcstring_list_t paths;
 
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
@@ -138,7 +134,7 @@ wcstring_list_t path_get_paths(const wcstring &cmd) {
         return paths;
     }
 
-    auto path_var = env_get(L"PATH");
+    auto path_var = vars.get(L"PATH");
     std::vector<wcstring> pathsv;
     if (path_var) path_var->to_list(pathsv);
     for (auto path : pathsv) {
@@ -157,13 +153,12 @@ wcstring_list_t path_get_paths(const wcstring &cmd) {
     return paths;
 }
 
-bool path_get_cdpath(const wcstring &dir, wcstring *out, const wcstring &wd,
-                     const env_vars_snapshot_t &env_vars) {
+maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
+                                  const environment_t &env_vars) {
     int err = ENOENT;
-    if (dir.empty()) return false;
+    if (dir.empty()) return none();
 
-    assert(!wd.empty() && wd.back() == L'/');
-
+    assert(wd.empty() || wd.back() == L'/');
     wcstring_list_t paths;
     if (dir.at(0) == L'/') {
         // Absolute path.
@@ -188,7 +183,7 @@ bool path_get_cdpath(const wcstring &dir, wcstring *out, const wcstring &wd,
                 // TODO: if next_path starts with ./ we need to replace the . with the wd.
                 next_path = wd;
             }
-            expand_tilde(next_path);
+            expand_tilde(next_path, env_vars);
             if (next_path.empty()) continue;
 
             wcstring whole_path = next_path;
@@ -197,36 +192,32 @@ bool path_get_cdpath(const wcstring &dir, wcstring *out, const wcstring &wd,
         }
     }
 
-    bool success = false;
     for (const wcstring &dir : paths) {
         struct stat buf;
         if (wstat(dir, &buf) == 0) {
             if (S_ISDIR(buf.st_mode)) {
-                success = true;
-                if (out) out->assign(dir);
-                break;
-            } else {
-                err = ENOTDIR;
+                return dir;
             }
+            err = ENOTDIR;
         }
     }
 
-    if (!success) errno = err;
-    return success;
+    errno = err;
+    return none();
 }
 
-bool path_can_be_implicit_cd(const wcstring &path, const wcstring &wd, wcstring *out_path,
-                             const env_vars_snapshot_t &vars) {
+maybe_t<wcstring> path_as_implicit_cd(const wcstring &path, const wcstring &wd,
+                                      const environment_t &vars) {
     wcstring exp_path = path;
-    expand_tilde(exp_path);
-
-    bool result = false;
+    expand_tilde(exp_path, vars);
     if (string_prefixes_string(L"/", exp_path) || string_prefixes_string(L"./", exp_path) ||
         string_prefixes_string(L"../", exp_path) || string_suffixes_string(L"/", exp_path) ||
         exp_path == L"..") {
-        result = path_get_cdpath(exp_path, out_path, wd, vars);
+        // These paths can be implicit cd, so see if you cd to the path. Note that a single period
+        // cannot (that's used for sourcing files anyways).
+        return path_get_cdpath(exp_path, wd, vars);
     }
-    return result;
+    return none();
 }
 
 // If the given path looks like it's relative to the working directory, then prepend that working
@@ -266,10 +257,11 @@ wcstring path_apply_working_directory(const wcstring &path, const wcstring &work
 static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &custom_error_msg,
                                      bool using_xdg, const wcstring &xdg_var, const wcstring &path,
                                      int saved_errno) {
+    auto &vars = env_stack_t::globals();
     wcstring warning_var_name = L"_FISH_WARNED_" + which_dir;
-    auto var = env_get(warning_var_name, ENV_GLOBAL | ENV_EXPORT);
+    auto var = vars.get(warning_var_name, ENV_GLOBAL | ENV_EXPORT);
     if (!var) return;
-    env_set_one(warning_var_name, ENV_GLOBAL | ENV_EXPORT, L"1");
+    vars.set_one(warning_var_name, ENV_GLOBAL | ENV_EXPORT, L"1");
 
     debug(0, custom_error_msg.c_str());
     if (path.empty()) {
@@ -295,7 +287,8 @@ static void path_create(wcstring &path, const wcstring &xdg_var, const wcstring 
     // The vars we fetch must be exported. Allowing them to be universal doesn't make sense and
     // allowing that creates a lock inversion that deadlocks the shell since we're called before
     // uvars are available.
-    const auto xdg_dir = env_get(xdg_var, ENV_GLOBAL | ENV_EXPORT);
+    const auto &vars = env_stack_t::globals();
+    const auto xdg_dir = vars.get(xdg_var, ENV_GLOBAL | ENV_EXPORT);
     if (!xdg_dir.missing_or_empty()) {
         using_xdg = true;
         path = xdg_dir->as_string() + L"/fish";
@@ -305,7 +298,7 @@ static void path_create(wcstring &path, const wcstring &xdg_var, const wcstring 
             saved_errno = errno;
         }
     } else {
-        const auto home = env_get(L"HOME", ENV_GLOBAL | ENV_EXPORT);
+        const auto home = vars.get(L"HOME", ENV_GLOBAL | ENV_EXPORT);
         if (!home.missing_or_empty()) {
             path = home->as_string() +
                    (which_dir == L"config" ? L"/.config/fish" : L"/.local/share/fish");

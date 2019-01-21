@@ -622,9 +622,13 @@ class wildcard_matcher_t : public string_matcher_t {
             }
         }
         if (opts.entire) {
-            // If the pattern is empty, this becomes one ANY_STRING that matches everything.
-            if (wcpattern.front() != ANY_STRING) wcpattern.insert(0, 1, ANY_STRING);
-            if (wcpattern.back() != ANY_STRING) wcpattern.push_back(ANY_STRING);
+            if (!wcpattern.empty()) {
+                if (wcpattern.front() != ANY_STRING) wcpattern.insert(0, 1, ANY_STRING);
+                if (wcpattern.back() != ANY_STRING) wcpattern.push_back(ANY_STRING);
+            } else {
+                // If the pattern is empty, this becomes one ANY_STRING that matches everything.
+                wcpattern.push_back(ANY_STRING);
+            }
         }
     }
 
@@ -1301,7 +1305,7 @@ int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (wcscmp(argv[1], L"-h") == 0 || wcscmp(argv[1], L"--help") == 0) {
-        builtin_print_help(parser, streams, L"string", streams.err);
+        builtin_print_help(parser, streams, L"string", streams.out);
         return STATUS_CMD_OK;
     }
 

@@ -524,13 +524,28 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
     const block_t *associated_block) {
     parse_execution_result_t ret = parse_execution_success;
 
+    // "The exit status of the while loop shall be the exit status of the last compound-list-2
+    // executed, or zero if none was executed."
+    // Here are more detailed requirements:
+    // - If we execute the loop body zero times, or the loop body is empty, the status is success.
+    // - An empty loop body is treated as true, both in the loop condition and after loop exit.
+    // - The exit status of the last command is visible in the loop condition. (i.e. do not set the
+    // exit status to true BEFORE executing the loop condition).
+    // We achieve this by restoring the status if the loop condition fails, plus a special
+    // affordance for the first condition.
+    bool first_cond_check = true;
+
     // The conditions of the while loop.
     tnode_t<g::job_conjunction> condition_head = header.child<1>();
     tnode_t<g::andor_job_list> condition_boolean_tail = header.child<3>();
 
     // Run while the condition is true.
-    bool loop_executed = false;
     for (;;) {
+        // Save off the exit status if it came from the loop body. We'll restore it if the condition
+        // is false.
+        int cond_saved_status = first_cond_check ? EXIT_SUCCESS : proc_get_last_status();
+        first_cond_check = false;
+
         // Check the condition.
         parse_execution_result_t cond_ret =
             this->run_job_conjunction(condition_head, associated_block);
@@ -538,8 +553,13 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
             cond_ret = run_job_list(condition_boolean_tail, associated_block);
         }
 
-        // We only continue on successful execution and EXIT_SUCCESS.
-        if (cond_ret != parse_execution_success || proc_get_last_status() != EXIT_SUCCESS) {
+        // If the loop condition failed to execute, then exit the loop without modifying the exit
+        // status. If the loop condition executed with a failure status, restore the status and then
+        // exit the loop.
+        if (cond_ret != parse_execution_success) {
+            break;
+        } else if (proc_get_last_status() != EXIT_SUCCESS) {
+            proc_set_last_status(cond_saved_status);
             break;
         }
 
@@ -548,8 +568,6 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
             ret = parse_execution_cancelled;
             break;
         }
-
-        loop_executed = true;
 
         // Push a while block and then check its cancellation reason.
         while_block_t *wb = parser->push_block<while_block_t>();
@@ -573,16 +591,6 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
             break;
         }
     }
-
-    // $status after `while` should be 0 if it executed at least once, otherwise the last `$status`
-    // obtained by executing the condition is preserved. See #4982.
-    if (loop_executed) {
-        // Do not override status if exiting due to the presence of an explict `return xxx` (#5513)
-        if (!associated_block->skip) {
-            proc_set_last_status(STATUS_CMD_OK);
-        }
-    }
-
     return ret;
 }
 

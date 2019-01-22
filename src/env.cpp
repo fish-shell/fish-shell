@@ -1723,12 +1723,16 @@ wcstring env_get_runtime_path() {
     } else {
         // Don't rely on $USER being set, as setup_user() has not yet been called.
         // See https://github.com/fish-shell/fish-shell/issues/5180
-        const char *uname = getpwuid(geteuid())->pw_name;
+        // getpeuid() can't fail, but getpwuid sure can.
+        auto pwuid = getpwuid(geteuid());
+        const char *uname = pwuid ? pwuid->pw_name : NULL;
         // /tmp/fish.user
         std::string tmpdir = "/tmp/fish.";
-        tmpdir.append(uname);
+        if (uname) {
+            tmpdir.append(uname);
+        }
 
-        if (check_runtime_path(tmpdir.c_str()) != 0) {
+        if (!uname || check_runtime_path(tmpdir.c_str()) != 0) {
             debug(0, L"Runtime path not available.");
             debug(0, L"Try deleting the directory %s and restarting fish.", tmpdir.c_str());
             return result;

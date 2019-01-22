@@ -1005,7 +1005,11 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
 
     // initialize the PWD variable if necessary
     // Note we may inherit a virtual PWD that doesn't match what getcwd would return; respect that.
-    if (vars.get(L"PWD").missing_or_empty()) {
+    // Note we treat PWD as read-only so it was not set in vars.
+    const char *incoming_pwd = getenv("PWD");
+    if (incoming_pwd && incoming_pwd[0]) {
+        vars.set_one(L"PWD",  ENV_EXPORT | ENV_GLOBAL, str2wcstring(incoming_pwd));
+    } else {
         vars.set_pwd_from_getcwd();
     }
     vars.set_termsize();    // initialize the terminal size variables

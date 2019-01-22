@@ -17,3 +17,7 @@ cd:
 ../a2/
 ../a3/
 ../rabbithole/
+
+####################
+# Virtual PWD inheritance
+PWD is /tmp/cdcomp_test/linkhome

@@ -10,7 +10,8 @@ function __fish_complete_man
             case '-**'
 
             case '*'
-                set section $prev[1]
+                set section (string escape --style=regex $prev[1])
+                set section (string replace --all / \\/ $section)
         end
         set -e prev[1]
     end

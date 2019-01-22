@@ -109,7 +109,6 @@ A new feature flags mechanism is added for staging deprecations and breaking cha
 - `read` writes directly to stdout if called without arguments (#4407).
 - `read` can now read individual lines into separate variables without consuming the input in its entirety via the new `/--line` option.
 - `set` has new `--append` and `--prepend` options (#1326).
-- `set` has a new `--show` option to show lots of information about variables (#4265).
 - `string match` with an empty pattern and `--entire` in glob mode now matches everything instead of nothing (#4971).
 - `string split` supports a new `--no-empty` option to exclude empty strings from the result (#4779).
 - `string` has new subcommands `split0` and `join0` for working with NUL-delimited output.

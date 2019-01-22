@@ -949,7 +949,7 @@ constexpr bool is_windows_subsystem_for_linux() {
 
 /// Detect if we are running under Cygwin or Cgywin64
 constexpr bool is_cygwin() {
-#ifdef CYGWIN
+#ifdef __CYGWIN__
     return true;
 #else
     return false;

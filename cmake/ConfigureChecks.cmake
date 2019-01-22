@@ -43,11 +43,6 @@ if (CMAKE_HOST_SYSTEM_VERSION MATCHES ".*-Microsoft")
   SET(WSL 1)
 endif()
 
-# Detect Cygwin.
-if (CMAKE_SYSTEM_NAME MATCHES "CYGWIN_NT.*")
-  SET(CYGWIN 1)
-endif()
-
 # Set up the config.h file.
 SET(PACKAGE_NAME "fish")
 SET(PACKAGE_TARNAME "fish")

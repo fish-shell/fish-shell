@@ -38,6 +38,16 @@ complete -C'ls ../'
 echo "cd:"
 complete -C'cd ../'
 
+logmsg Virtual PWD inheritance
+# PWD should be imported and respected by fish
+
+cd $oldpwd
+mkdir -p $base/realhome
+set fish_path $PWD/../test/root/bin/fish
+ln -s $base/realhome $base/linkhome
+cd $base/linkhome
+env HOME=$base/linkhome $fish_path -c 'echo PWD is $PWD'
+
 # cd back before removing the test directory again.
 cd $oldpwd
 rm -Rf $base

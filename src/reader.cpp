@@ -2728,10 +2728,15 @@ const wchar_t *reader_readline(int nchars) {
                 break;
             }
             case R_PAGER_TOGGLE_SEARCH: {
-                if (data->is_navigating_pager_contents()) {
+                if (!data->pager.empty()) {
+                    // Toggle search, and begin navigating if we are now searching.
                     bool sfs = data->pager.is_search_field_shown();
                     data->pager.set_search_field_shown(!sfs);
                     data->pager.set_fully_disclosed(true);
+                    if (data->pager.is_search_field_shown() &&
+                        !data->is_navigating_pager_contents()) {
+                        select_completion_in_direction(direction_south);
+                    }
                     reader_repaint_needed();
                 }
                 break;

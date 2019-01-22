@@ -24,6 +24,7 @@
 - exec now behaves properly inside functions (#5449)
 - while loops now evaluate to the last executed command in the loop body (or zero if the body was empty), matching POSIX semantics.
 - fish does not hang on launch when running under Cygwin/MSYS2
+- The pager-toggle-search binding (by default Control-S) now positions the cursor in the completions list.
 
 
 # fish 3.0.0 (released December 28, 2018)

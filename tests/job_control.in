@@ -1,0 +1,14 @@
+# vim: ft=fish tw=80 :
+
+# Regression test for #4178
+set -l test (mktemp)
+echo 'function confirm
+	read -l answer < /dev/tty
+	echo "answer=|$answer|"
+end
+
+confirm' > $test
+
+set -l fish (status fish-path)
+echo yes | command $fish $test
+rm -f $test

@@ -21,12 +21,12 @@ function __fish_complete_suffix -d "Complete using files"
         case 1
             set comp (commandline -ct)
             set suff $argv
-            set desc ""
+            set desc "\n"
 
         case 2
             set comp $argv[1]
             set suff $argv[2]
-            set desc ""
+            set desc "\n"
 
         case 3
             set comp $argv[1]

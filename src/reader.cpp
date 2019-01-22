@@ -2475,8 +2475,16 @@ const wchar_t *reader_readline(int nchars) {
     if (tcgetattr(STDIN_FILENO, &old_modes) == -1 && errno == EIO) redirect_tty_output();
     // Set the new modes.
     if (tcsetattr(0, TCSANOW, &shell_modes) == -1) {
-        if (errno == EIO) redirect_tty_output();
-        wperror(L"tcsetattr");
+        int err = errno;
+        if (err == EIO) {
+            redirect_tty_output();
+        }
+        // This check is required to work around certain issues with fish's approach to
+        // terminal control when launching interactive processes while in non-interactive
+        // mode. See #4178 for one such example.
+        if (err != ENOTTY || is_interactive_session) {
+            wperror(L"tcsetattr");
+        }
     }
 
     while (!finished && !data->end_loop) {

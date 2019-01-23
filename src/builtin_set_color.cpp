@@ -216,21 +216,18 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (bgcolor != NULL && bg.is_normal()) {
-        write_color(rgb_color_t::black(), false /* not is_fg */);
         writembs_nofail(tparm((char *)exit_attribute_mode));
     }
 
     if (!fg.is_none()) {
         if (fg.is_normal() || fg.is_reset()) {
-            write_color(rgb_color_t::black(), true /* is_fg */);
             writembs_nofail(tparm((char *)exit_attribute_mode));
-        } else {
-            if (!write_color(fg, true /* is_fg */)) {
-                // We need to do *something* or the lack of any output messes up
-                // when the cartesian product here would make "foo" disappear:
-                //  $ echo (set_color foo)bar
-                set_color(rgb_color_t::reset(), rgb_color_t::none());
-            }
+        } else if (!write_color(fg, true /* is_fg */)) {
+            // We need to do *something* or the lack of any output
+            // with a cartesian product here would make "foo" disappear
+            // on lame terminals:
+            // $ env TERM=vt100 fish -c 'echo (set_color red)"foo"'
+            set_color(rgb_color_t::reset(), rgb_color_t::none());
         }
     }
 

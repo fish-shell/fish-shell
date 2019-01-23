@@ -764,8 +764,8 @@ complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcomma
 ### show
 complete -f -c git -n '__fish_git_needs_command' -a show -d 'Shows the last commit of a branch'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_branches)'
-complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_tags)' -d 'Tag'
-complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_commits)'
+complete -f -c git -n '__fish_git_using_command show' -ka '(__fish_git_tags)' -d 'Tag'
+complete -f -c git -n '__fish_git_using_command show' -ka '(__fish_git_commits)'
 complete -f -c git -n '__fish_git_using_command show' -l format -d 'Pretty-print the contents of the commit logs in a given format' -a '(__fish_git_show_opt format)'
 complete -f -c git -n '__fish_git_using_command show' -l abbrev-commit -d 'Show only a partial hexadecimal commit object name'
 complete -f -c git -n '__fish_git_using_command show' -l no-abbrev-commit -d 'Show the full 40-byte hexadecimal commit object name'
@@ -845,7 +845,7 @@ complete -f -c git -n '__fish_git_using_command branch' -l no-merged -d 'List br
 complete -f -c git -n '__fish_git_needs_command' -a cherry-pick -d 'Apply the change introduced by an existing commit'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -a '(__fish_git_branches --no-merged)'
 # TODO: Filter further
-complete -f -c git -n '__fish_git_using_command cherry-pick; and __fish_git_possible_commithash' -a '(__fish_git_commits)'
+complete -f -c git -n '__fish_git_using_command cherry-pick; and __fish_git_possible_commithash' -ka '(__fish_git_commits)'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s e -l edit -d 'Edit the commit message prior to committing'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s x -d 'Append info in generated commit on the origin of the cherry-picked change'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s n -l no-commit -d 'Apply changes without making any commit'
@@ -1270,7 +1270,7 @@ complete -f -c git -n '__fish_git_using_command reset; and not contains -- -- (c
 
 ### revert
 complete -f -c git -n '__fish_git_needs_command' -a revert -d 'Revert an existing commit'
-complete -f -c git -n '__fish_git_using_command revert' -a '(__fish_git_commits)'
+complete -f -c git -n '__fish_git_using_command revert' -ka '(__fish_git_commits)'
 # TODO options
 
 ### rm
@@ -1303,7 +1303,7 @@ complete -f -c git -n '__fish_git_using_command tag' -s d -l delete -d 'Remove a
 complete -f -c git -n '__fish_git_using_command tag' -s v -l verify -d 'Verify signature of a tag'
 complete -f -c git -n '__fish_git_using_command tag' -s f -l force -d 'Force overwriting exising tag'
 complete -f -c git -n '__fish_git_using_command tag' -s l -l list -d 'List tags'
-complete -f -c git -n '__fish_git_using_command tag' -l contains -xa '(__fish_git_commits)' -d 'List tags that contain a commit'
+complete -f -c git -n '__fish_git_using_command tag' -l contains -xka '(__fish_git_commits)' -d 'List tags that contain a commit'
 complete -f -c git -n '__fish_git_using_command tag; and __fish_contains_opt -s d delete -s v verify' -a '(__fish_git_tags)' -d 'Tag'
 # TODO options
 

@@ -199,7 +199,7 @@ test_file() {
         rm -f "${temp_dir}/home/fish/config.fish"
     fi
 
-    printf "Testing file $file ${system_specific:+($system_name specific) }... "
+    printf '%s' "Testing file $file ${system_specific:+($system_name specific) }... "
 
     # The hoops we are jumping through here, with changing directory are
     # so that we always execute fish as './fish', which means that any

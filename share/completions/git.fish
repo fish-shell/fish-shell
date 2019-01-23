@@ -121,8 +121,6 @@ function __fish_git_files
     contains -- copied $argv; and set -l copied
     and set -l copied_desc (_ "Copied file")
 
-    set -l dir_desc (_ "Directory")
-
     # A literal "?" for use in `case`.
     set -l q '\\?'
     if status test-feature qmark-noglob
@@ -245,27 +243,22 @@ function __fish_git_files
                 # First the relative filename.
                 printf '%s\t%s\n' "$file" $desc
                 # Now from repo root.
-                set -l fromroot (builtin realpath -- $file 2>/dev/null)
-                and set fromroot (string replace -- "$root/" ":/" "$fromroot")
-                and printf '%s\t%s\n' "$fromroot" $desc
-
-                # And the containing directory.
-                # TODO: We may want to offer the parent, but only if another child of that also has a change.
-                # E.g:
-                # - a/b/c is added
-                # - a/d/e is modified
-                # - a/ should be offered, but only a/b/ and a/d/ are.
-                #
-                # Always offering all parents is overkill however, which is why we don't currently do it.
-                set -l dir (string replace -rf '/[^/]+$' '/' -- $file)
-                and printf '%s\t%s\n' $dir "$dir_desc"
+                # Only do this if the filename isn't a simple child,
+                # or the current token starts with ":"
+                if string match -q '../*' -- $file
+                    or string match -q ':*' -- (commandline -ct)
+                    set -l fromroot (builtin realpath -- $file 2>/dev/null)
+                    and set fromroot (string replace -- "$root/" ":/" "$fromroot")
+                    and printf '%s\t%s\n' "$fromroot" $desc
+                end
             end
         end
     else
         # v1 format logic
         # We need to compute relative paths on our own, which is slow.
         # Pre-remove the root at least, so we have fewer components to deal with.
-        set -l _pwd_list (string replace "$root/" "" -- $PWD | string split /)
+        set -l _pwd_list (string replace "$root/" "" -- $PWD/ | string split /)
+        test -z "$_pwd_list[-1]"; and set -e _pwd_list[-1]
         # Cache the previous relative path because these are sorted, so we can reuse it
         # often for files in the same directory.
         set -l previous
@@ -349,9 +342,7 @@ function __fish_git_files
                 # Again: "XY filename", so the filename starts on character 4.
                 set -l relfile (string sub -s 4 -- $line)
 
-                # The filename with ":/" prepended.
-                set -l file (string replace -- "$root/" ":/" "$root/$relfile")
-
+                set -l file
                 # Computing relative path by hand.
                 set -l abs (string split / -- $relfile)
                 # If it's in the same directory, we just need to change the filename.
@@ -359,7 +350,6 @@ function __fish_git_files
                     set previous[-1] $abs[-1]
                 else
                     set -l pwd_list $_pwd_list
-                    set previousfile $abs
                     # Remove common prefix
                     while test "$pwd_list[1]" = "$abs[1]"
                         set -e pwd_list[1]
@@ -369,10 +359,18 @@ function __fish_git_files
                     set previous (string replace -r '.*' '..' -- $pwd_list) $abs
                 end
                 set -a file (string join / -- $previous)
-                printf '%s\n' $file\t$desc
 
-                set -l dir (string replace -rf '/[^/]+$' '/' -- $file)
-                and printf '%s\t%s\n' $dir "$dir_desc"
+                # The filename with ":/" prepended.
+                if string match -q '../*' -- $file
+                    or string match -q ':*' -- (commandline -ct)
+                    set file (string replace -- "$root/" ":/" "$root/$relfile")
+                end
+
+                if test "$root/$relfile" = (pwd -P)/$relfile
+                    set file $relfile
+                end
+
+                printf '%s\n' $file\t$desc
             end
         end
     end

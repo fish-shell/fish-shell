@@ -649,8 +649,15 @@ static void setup_path() {
     auto &vars = env_stack_t::globals();
     const auto path = vars.get(L"PATH");
     if (path.missing_or_empty()) {
-        wcstring_list_t value({L"/usr/bin", L"/bin"});
-        vars.set(L"PATH", ENV_GLOBAL | ENV_EXPORT, value);
+#if defined(_CS_PATH)
+        // _CS_PATH: colon-separated paths to find POSIX utilities
+        std::string cspath;
+        cspath.resize(confstr(_CS_PATH, nullptr, 0));
+        confstr(_CS_PATH, &cspath[0], cspath.length());
+#else
+        std::string cspath = "/bin:/usr/bin"; // shouldn't really happen
+#endif
+        vars.set_one(L"PATH", ENV_GLOBAL | ENV_EXPORT, str2wcstring(cspath));
     }
 }
 

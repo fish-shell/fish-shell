@@ -46,7 +46,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         set -q fish_color_param || set -U fish_color_param 00afff
         set -q fish_color_redirection || set -U fish_color_redirection 00afff
         set -q fish_color_comment || set -U fish_color_comment 990000
-        set -q fish_color_errorset -U fish_color_error ff0000
+        set -q fish_color_error || set -U fish_color_error ff0000
         set -q fish_color_escape || set -U fish_color_escape 00a6b2
         set -q fish_color_operator || set -U fish_color_operator 00a6b2
         set -q fish_color_end || set -U fish_color_end 009900

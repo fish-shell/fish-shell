@@ -566,8 +566,10 @@ static void guess_emoji_width() {
     if (term == L"Apple_Terminal" && version >= 400) {
         // Apple Terminal on High Sierra
         g_guessed_fish_emoji_width = 2;
+        debug(2, "default emoji width: 2 for %ls", term.c_str());
     } else {
         g_guessed_fish_emoji_width = 1;
+        debug(2, "default emoji width: 1");
     }
 }
 
@@ -655,7 +657,7 @@ static void setup_path() {
         cspath.resize(confstr(_CS_PATH, nullptr, 0));
         confstr(_CS_PATH, &cspath[0], cspath.length());
 #else
-        std::string cspath = "/bin:/usr/bin"; // shouldn't really happen
+        std::string cspath = "/bin:/usr/bin"; // I doubt this is even necessary
 #endif
         vars.set_one(L"PATH", ENV_GLOBAL | ENV_EXPORT, str2wcstring(cspath));
     }
@@ -784,6 +786,7 @@ static void handle_change_emoji_width(const wcstring &op, const wcstring &var_na
         new_width = fish_wcstol(width_str->as_string().c_str());
     }
     g_fish_emoji_width = std::max(0, new_width);
+    debug(2, "'fish_emoji_width' preference: %d, overwriting default", g_fish_emoji_width);
 }
 
 static void handle_change_ambiguous_width(const wcstring &op, const wcstring &var_name,

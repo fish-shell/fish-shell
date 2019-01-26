@@ -29,7 +29,7 @@ function __fish_iptables_user_chains
         set tablearg "--table=$table"
     end
     # This only works as root, so ignore errors
-    iptables $tablearg -L 2>/dev/null | grep Chain | while read a b c
+    iptables $tablearg -L 2>/dev/null | string match '*Chain*' | while read a b c
         echo $b
     end
 end

@@ -123,9 +123,10 @@ void te_free(te_expr *n) {
 }
 
 
-static double pi() {return 3.14159265358979323846;}
-static double e() {return 2.71828182845904523536;}
-static double fac(double a) {/* simplest version of fac */
+static constexpr double pi() { return M_PI; }
+static constexpr double e() { return M_E; }
+
+static double fac(double a) { /* simplest version of fac */
     if (a < 0.0)
         return NAN;
     if (a > UINT_MAX)
@@ -198,11 +199,11 @@ static const te_builtin *find_builtin(const char *name, int len) {
     return NULL;
 }
 
-static double add(double a, double b) {return a + b;}
-static double sub(double a, double b) {return a - b;}
-static double mul(double a, double b) {return a * b;}
-static double divide(double a, double b) {return a / b;}
-static double negate(double a) {return -a;}
+static constexpr double add(double a, double b) {return a + b;}
+static constexpr double sub(double a, double b) {return a - b;}
+static constexpr double mul(double a, double b) {return a * b;}
+static constexpr double divide(double a, double b) {return a / b;}
+static constexpr double negate(double a) {return -a;}
 
 void next_token(state *s) {
     s->type = TOK_NULL;

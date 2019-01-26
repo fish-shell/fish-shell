@@ -591,15 +591,6 @@ install: all install-force | check-legacy-binaries
 .PHONY: install
 
 #
-# Xcode install
-#
-xcode-install:
-	rm -Rf /tmp/fish_build
-	xcrun xcodebuild install DSTROOT=/tmp/fish_build
-	ditto /tmp/fish_build /
-.PHONY: xcode-install
-
-#
 # Actually do the installation.
 #
 install-force: all install-translations install-doc | show-datadir show-sysconfdir show-extra_completionsdir show-extra_functionsdir show-extra_confdir show-mandir

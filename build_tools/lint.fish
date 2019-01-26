@@ -127,26 +127,7 @@ if set -q c_files[1]
         # The stderr to stdout redirection is because oclint, incorrectly writes its final summary
         # counts of the errors detected to stderr. Anyone running this who wants to capture its
         # output will expect those messages to be written to stdout.
-        if test "$kernel_name" = "Darwin"
-            if not test -f compile_commands.json
-                xcodebuild -alltargets >xcodebuild.log
-                oclint-xcodebuild xcodebuild.log >/dev/null
-            end
-            if test $all = yes
-                oclint-json-compilation-database -e '/pcre2-10.32/' -- -enable-global-analysis 2>&1
-            else
-                set i_files
-                for f in $c_files
-                    set i_files $i_files -i $f
-                end
-                echo oclint-json-compilation-database -e '/pcre2-10.32/' $i_files
-                oclint-json-compilation-database -e '/pcre2-10.32/' $i_files 2>&1
-            end
-        else
-            # Presumably we're on Linux or other platform not requiring special
-            # handling for oclint to work.
-            oclint $c_files -- $argv 2>&1
-        end
+        oclint $c_files -- $argv 2>&1
     end
 else
     echo

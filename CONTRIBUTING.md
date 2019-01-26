@@ -179,12 +179,9 @@ You are strongly encouraged to add tests when changing the functionality of fish
 
 The tests can be run on your local computer on all operating systems.
 
-Running the tests is only supported from the autotools build and not xcodebuild. On OS X, you will need to install autoconf &mdash; we suggest using [Homebrew](https://brew.sh/) to install these tools.
-
 ```
-autoconf
-./configure
-make test # or "gmake test" on BSD
+cmake path/to/fish-shell
+make test
 ```
 
 ### Travis CI Build and Test

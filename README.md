@@ -128,19 +128,6 @@ make
 sudo make install
 ```
 
-### Building from source (macOS only)
-
-* Build the `base` target in Xcode
-* Run the fish executable, for example, in `DerivedData/fish/Build/Products/Debug/base/bin/fish`
-
-To build and install fish with Xcode on macOS, execute the following in a terminal:
-
-```bash
-xcodebuild install
-sudo ditto /tmp/fish.dst /
-sudo make install-doc
-```
-
 ### Help, it didn't build!
 
 If fish reports that it could not find curses, try installing a curses development package and build again.

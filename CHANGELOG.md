@@ -39,6 +39,9 @@
 - A potential crash in `string match` discovered via GLIBCXX_ASSERTIONS was fixed. (#5479)
 - A crash on FreeBSD related to the wcstod_l function was fixed. (#5453)
 - An assertion that checked getpid() in a tight loop was removed, increasing performance in some cases up to 40%. (#5447)
+- `string` now prints help to stdout, like other builtins. (#5495)
+- The completions for `configure` now correctly offer directories. (#5518)
+- The `man` completions won't interpret the argument as a regex anymore. (#5566)
 
 
 # fish 3.0.0 (released December 28, 2018)

@@ -10,6 +10,20 @@ This release of fish fixes a number of major issues discovered in fish 3.0.0.
 - (macOS only) /etc/paths and /etc/paths.d now correctly set path entries with spaces. Also affects MANPATH. (#5481)
 - fish does not hang on launch when running under Cygwin/MSYS2
 - The pager-toggle-search binding (by default Control-S) now positions the cursor in the completions list.
+- The error when a command is not found is now printed a single time instead of once per argument. (#5588)
+- The git completions now print correct file paths instead of ../../../ (and so on) with older git versions directly inside a git root. (#5578)
+- The git completions won't suggest :/ paths (relative to the git root) so much anymore. (#5574)
+- The git completions will now fuzzy-match paths again. (#5476)
+- The git completions will ignore shell aliases, so enterprising users can set up the wrapping command (via `set -g __fish_git_alias_$command $whatitwraps`). (#5412)
+- A crash when the user's information can't be read was fixed. (#5550)
+- fish no longer crashes when $hostname or some other non-electric read-only variable is used as a loop variable. (#5548)
+- The "kill" completions won't invoke the same command 25 times anymore, speeding matters up considerably. (#5541)
+- Fish now inherits symlinked paths correctly. (#5525)
+- fish_title had a few spaces removed, saving space. (#5517)
+- The `nim` prompt now works correctly when chosen in fish_config. (#5490)
+- A potential crash in `string match` discovered via GLIBCXX_ASSERTIONS was fixed. (#5479)
+- A crash on FreeBSD related to the wcstod_l function was fixed. (#5453)
+- An assertion that checked getpid() in a tight loop was removed, increasing performance in some cases up to 40%. (#5447)
 
 If you are upgrading from version 2.7.1 or before, please also review the release notes for 3.0.0 and 3.0b1 (included below).
 

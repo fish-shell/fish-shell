@@ -20,4 +20,4 @@ complete -c commandline -s S -l search-mode -d "Return true if performing a hist
 complete -c commandline -s P -l paging-mode -d "Return true if showing pager content"
 
 
-complete -c commandline -n __fish_commandline_test -a '(bind --function-names)' -d 'Function name' -x
+complete -c commandline -n '__fish_contains_opt -s f function' -a '(bind --function-names)' -d 'Function name' -x

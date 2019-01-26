@@ -376,6 +376,8 @@ function __fish_git_prompt --description "Prompt function for Git"
     # That means if neither is set, this stays empty.
     #
     # So "!= true" or "!= false" are useful tests if you want to do something by default.
+    set -l informative (command git config --bool bash.showInformativeStatus)
+
     set -l dirty (command git config --bool bash.showDirtyState)
     if not set -q dirty[1]
         set -q __fish_git_prompt_showdirtystate
@@ -389,12 +391,16 @@ function __fish_git_prompt --description "Prompt function for Git"
     end
 
     if test "true" = $inside_worktree
-        # Use informative status, unless dirty or untracked have been set to false.
+        # Use informative status if it has been enabled locally, or it has been
+        # enabled globally (via the fish variable) and dirty or untracked are not false.
         #
         # This is to allow overrides for the repository.
-        if set -q __fish_git_prompt_show_informative_status
-            and test "$dirty" != false
-            and test "$untracked" != false
+        if test "$informative" = true
+            or begin
+                set -q __fish_git_prompt_show_informative_status
+                and test "$dirty" != false
+                and test "$untracked" != false
+            end
             set informative_status "$space"(__fish_git_prompt_informative_status)
         else
             # This has to be set explicitly.

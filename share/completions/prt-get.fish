@@ -1,4 +1,46 @@
 #completion for prt-get
+# A function to verify if prt-get (the crux package management tool) needs to be completed by a further command
+
+# a function to obtain a list of installed packages with prt-get
+function __fish_prt_packages -d 'Obtain a list of installed packages'
+    prt-get listinst
+end
+
+# a function to obtain a list of ports with prt-get
+
+function __fish_prt_ports -d 'Obtain a list of ports'
+    prt-get list
+end
+
+function __fish_prt_no_subcommand -d 'Test if prt-get has yet to be given the command'
+    for i in (commandline -opc)
+        if contains -- $i install depinst grpinst update remove sysup lock unlock listlocked diff quickdiff search dsearch fsearch info path readme depends quickdep dependent deptree dup list printf listinst listorphans isinst current ls cat edit help dumpconfig version cache
+            return 1
+        end
+    end
+    return 0
+end
+
+
+# a function to verify if prt-get should have packages as potential completion
+function __fish_prt_use_package -d 'Test if prt-get should have packages as potential completion'
+    for i in (commandline -opc)
+        if contains -- $i update remove lock unlock current
+            return 0
+        end
+    end
+    return 1
+end
+
+# a function to test if prt-get should have ports as potential completions
+function __fish_prt_use_port -d 'Test if prt-get should have ports as potential completion'
+    for i in (commandline -opc)
+        if contains -- $i install depinst grpinst diff depends quickdep dependent deptree isinst info path readme ls cat edit
+            return 0
+        end
+    end
+    return 1
+end
 
 complete -f -c prt-get -n '__fish_prt_use_package' -a '(__fish_prt_packages)' -d 'Package'
 complete -f -c prt-get -n '__fish_prt_use_port' -a '(__fish_prt_ports)' -d 'Port'

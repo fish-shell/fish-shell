@@ -1,4 +1,4 @@
-fish: Unknown command 'syntax-error'
+fish: Unknown command syntax-error
 $XDG_CONFIG_HOME/fish/config.fish (line 2): 
 syntax-error
 ^

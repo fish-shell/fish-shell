@@ -161,5 +161,8 @@ INCLUDE(cmake/Tests.cmake)
 # Set up install.
 INCLUDE(cmake/Install.cmake)
 
+# Mac app.
+INCLUDE(cmake/MacApp.cmake)
+
 INCLUDE(FeatureSummary)
 FEATURE_SUMMARY(WHAT ALL)

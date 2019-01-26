@@ -88,7 +88,7 @@ int main(void) {
     @autoreleasepool {
         /* Get the fish executable. Make sure it's absolute. */
         NSURL *fish_executable = [[NSBundle mainBundle] URLForResource:@"fish" withExtension:@""
-                                                          subdirectory:@"base/bin"];
+                                                          subdirectory:@"base/usr/local/bin"];
         if (! fish_executable)
             die("Could not find fish executable in bundle");
 

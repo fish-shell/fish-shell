@@ -34,9 +34,6 @@ productbuild  --package-path $PKGDIR/intermediates --distribution build_tools/os
 
 
 # Make the app
-xcodebuild -scheme fish.app -configuration Release DSTROOT=/tmp/fish_app/ SYMROOT=DerivedData/fish/Build/Products
-
-cd DerivedData/fish/Build/Products/Release/
-zip -r $OUTPUT_PATH/fish-$VERSION.app.zip fish.app
+( cd "$PKGDIR/build" && make fish_macapp && zip -r "$OUTPUT_PATH/fish-$VERSION.app.zip" fish.app )
 
 rm -r $PKGDIR

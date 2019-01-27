@@ -54,7 +54,7 @@ function trap -d 'Perform an action when the shell receives a signal'
         case clear
             for i in $argv
                 set sig (__trap_translate_signal $i)
-                if test $sig
+                if test -n "$sig"
                     functions -e __trap_handler_$sig
                 end
             end
@@ -67,7 +67,7 @@ function trap -d 'Perform an action when the shell receives a signal'
                 set -l sig (__trap_translate_signal $i)
                 set sw (__trap_switch $sig)
 
-                if test $sig
+                if test -n "$sig"
                     echo "function __trap_handler_$sig $sw; $cmd; end" | source
                 else
                     return 1
@@ -85,7 +85,7 @@ function trap -d 'Perform an action when the shell receives a signal'
             for i in $names
                 set sig (__trap_translate_signal $i)
 
-                if test sig
+                if test -n "$sig"
                     functions __trap_handler_$i
                 else
                     return 1

@@ -1046,7 +1046,7 @@ Additionally, the following variables are available to change the highlighting i
 
 - `fish_pager_color_selected_background`, `fish_pager_color_background` of the selected completion. Defaults to `fish_color_search_match`
 
-- `fish_pager_color_selected_ prefix`, `fish_pager_color_prefix` of the selected completion. Defaults to `fish_pager_color_prefix`
+- `fish_pager_color_selected_prefix`, `fish_pager_color_prefix` of the selected completion. Defaults to `fish_pager_color_prefix`
 
 - `fish_pager_color_selected_completion`, `fish_pager_color_completion` of the selected completion. Defaults to `fish_pager_color_completion`
 

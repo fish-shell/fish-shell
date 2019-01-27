@@ -14,6 +14,7 @@
 - Lots of improvements to completions.
 - fish_clipboard_* now supports wayland by means of [wl-clipboard](https://github.com/bugaevc/wl-clipboard).
 - mandoc can now be used to format the output from `--help` if nroff is not installed
+- New color options for the pager have been added (#5524).
 
 
 =======

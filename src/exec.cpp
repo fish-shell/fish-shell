@@ -39,6 +39,7 @@
 #include "postfork.h"
 #include "proc.h"
 #include "reader.h"
+#include "redirection.h"
 #include "signal.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -367,7 +368,8 @@ void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &all_ios) {
     // It's known to be wrong - for example, it means that redirections bound for subsequent
     // commands in the pipeline will apply to exec. However, using exec in a pipeline doesn't
     // really make sense, so I'm not trying to fix it here.
-    if (!setup_child_process(0, all_ios)) {
+    auto redirs = dup2_list_t::resolve_chain(all_ios);
+    if (redirs && !setup_child_process(0, *redirs)) {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
         auto shlvl_var = vars.get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
         wcstring shlvl_str = L"0";
@@ -404,7 +406,7 @@ static void on_process_created(const std::shared_ptr<job_t> &j, pid_t child_pid)
 /// Call fork() as part of executing a process \p p in a job \j. Execute \p child_action in the
 /// context of the child. Returns true if fork succeeded, false if fork failed.
 static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t *p,
-                                   const io_chain_t &io_chain, bool drain_threads,
+                                   const dup2_list_t &dup2s, bool drain_threads,
                                    const char *fork_type,
                                    const std::function<void()> &child_action) {
     pid_t pid = execute_fork(drain_threads);
@@ -413,7 +415,7 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
         // stdout and stderr, and then exit.
         p->pid = getpid();
         child_set_group(job.get(), p);
-        setup_child_process(p, io_chain);
+        setup_child_process(p, dup2s);
         child_action();
         DIE("Child process returned control to fork_child lambda!");
     }
@@ -634,9 +636,15 @@ static bool handle_builtin_output(const std::shared_ptr<job_t> &j, process_t *p,
         const char *errbuff = errbuff_str.data();
         size_t errbuff_len = errbuff_str.size();
 
+        // Resolve our IO chain to a sequence of dup2s.
+        auto dup2s = dup2_list_t::resolve_chain(*io_chain);
+        if (!dup2s) {
+            return false;
+        }
+
         fflush(stdout);
         fflush(stderr);
-        if (!fork_child_for_process(j, p, *io_chain, false, "internal builtin", [&] {
+        if (!fork_child_for_process(j, p, *dup2s, false, "internal builtin", [&] {
                 do_builtin_io(outbuff, outbuff_len, errbuff, errbuff_len);
                 exit_without_destructors(p->status);
             })) {
@@ -654,6 +662,11 @@ static bool exec_external_command(env_stack_t &vars, const std::shared_ptr<job_t
     // Get argv and envv before we fork.
     null_terminated_array_t<char> argv_array;
     convert_wide_array_to_narrow(p->get_argv_array(), &argv_array);
+
+    // Convert our IO chain to a dup2 sequence.
+    auto dup2s = dup2_list_t::resolve_chain(proc_io_chain);
+    if (! dup2s)
+        return false;
 
     // Ensure that stdin is blocking before we hand it off (see issue #176). It's a
     // little strange that we only do this with stdin and not with stdout or stderr.
@@ -741,7 +754,7 @@ static bool exec_external_command(env_stack_t &vars, const std::shared_ptr<job_t
     } else
 #endif
     {
-        if (!fork_child_for_process(j, p, proc_io_chain, false, "external command",
+        if (!fork_child_for_process(j, p, *dup2s, false, "external command",
                                     [&] { safe_launch_process(p, actual_cmd, argv, envv); })) {
             return false;
         }
@@ -820,6 +833,12 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
     io_chain.remove(block_output_io_buffer);
     block_output_io_buffer->read();
 
+    // Resolve our IO chain to a sequence of dup2s.
+    auto dup2s = dup2_list_t::resolve_chain(io_chain);
+    if (!dup2s) {
+        return false;
+    }
+
     const std::string buffer_contents = block_output_io_buffer->buffer().newline_serialized();
     const char *buffer = buffer_contents.data();
     size_t count = buffer_contents.size();
@@ -827,7 +846,7 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
         // We don't have to drain threads here because our child process is simple.
         const char *fork_reason =
             p->type == INTERNAL_BLOCK_NODE ? "internal block io" : "internal function io";
-        if (!fork_child_for_process(j, p, io_chain, false, fork_reason, [&] {
+        if (!fork_child_for_process(j, p, *dup2s, false, fork_reason, [&] {
                 exec_write_and_exit(block_output_io_buffer->fd, buffer, count, status);
             })) {
             return false;

@@ -163,11 +163,8 @@ void io_print(const io_chain_t &chain)
 }
 #endif
 
-/// If the given fd is used by the io chain, duplicates it repeatedly until an fd not used in the io
-/// chain is found, or we run out. If we return a new fd or an error, closes the old one. Any fd
-/// created is marked close-on-exec. Returns -1 on failure (in which case the given fd is still
-/// closed).
-static int move_fd_to_unused(int fd, const io_chain_t &io_chain) {
+
+int move_fd_to_unused(int fd, const io_chain_t &io_chain, bool cloexec) {
     if (fd < 0 || io_chain.get_io_for_fd(fd).get() == NULL) {
         return fd;
     }
@@ -188,7 +185,7 @@ static int move_fd_to_unused(int fd, const io_chain_t &io_chain) {
         // Ok, we have a new candidate fd. Recurse. If we get a valid fd, either it's the same as
         // what we gave it, or it's a new fd and what we gave it has been closed. If we get a
         // negative value, the fd also has been closed.
-        set_cloexec(tmp_fd);
+        if (cloexec) set_cloexec(tmp_fd);
         new_fd = move_fd_to_unused(tmp_fd, io_chain);
     }
 

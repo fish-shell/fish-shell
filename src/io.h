@@ -295,6 +295,12 @@ shared_ptr<io_data_t> io_chain_get(io_chain_t &src, int fd);
 /// set to -1).
 bool pipe_avoid_conflicts_with_io_chain(int fds[2], const io_chain_t &ios);
 
+/// If the given fd is used by the io chain, duplicates it repeatedly until an fd not used in the io
+/// chain is found, or we run out. If we return a new fd or an error, closes the old one.
+/// If \p cloexec is set, any fd created is marked close-on-exec.
+/// \returns -1 on failure (in which case the given fd is still closed).
+int move_fd_to_unused(int fd, const io_chain_t &io_chain, bool cloexec = true);
+
 /// Class representing the output that a builtin can generate.
 class output_stream_t {
    private:

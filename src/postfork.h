@@ -14,6 +14,7 @@
 #define FISH_USE_POSIX_SPAWN HAVE_SPAWN_H
 #endif
 
+class dup2_list_t;
 class io_chain_t;
 class job_t;
 class process_t;
@@ -29,11 +30,11 @@ bool maybe_assign_terminal(const job_t *j);
 /// descriptor actions are performed.
 ///
 /// \param p the child process to set up
-/// \param io_chain the IO chain to use
+/// \param dup2 the dup2 list to apply
 ///
 /// \return 0 on sucess, -1 on failiure. When this function returns, signals are always unblocked.
 /// On failiure, signal handlers, io redirections and process group of the process is undefined.
-int setup_child_process(process_t *p, const io_chain_t &io_chain);
+int setup_child_process(process_t *p, const dup2_list_t &dup2s);
 
 /// Call fork(), optionally waiting until we are no longer multithreaded. If the forked child
 /// doesn't do anything that could allocate memory, take a lock, etc. (like call exec), then it's

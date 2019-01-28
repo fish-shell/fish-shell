@@ -8,10 +8,6 @@ set -e
 
 # Find the fish git directory as two levels up from script directory.
 GIT_DIR="$( cd "$( dirname $( dirname "$0" ) )" && pwd )"
-
-# Set the output directory as either the first param or cwd.
-test -n "$1" && OUTPUT_DIR=$1/ || OUTPUT_DIR=
-FBVF=${OUTPUT_DIR}FISH-BUILD-VERSION-FILE
 DEF_VER=unknown
 
 # First see if there is a version file (included in release tarballs),
@@ -22,6 +18,17 @@ then
 elif ! VN=$(git -C "$GIT_DIR" describe --always --dirty 2>/dev/null); then
 	VN="$DEF_VER"
 fi
+
+# If the first param is --stdout, then output to stdout and exit.
+if test "$1" = '--stdout'
+then
+	echo $VN
+    exit 0
+fi
+
+# Set the output directory as either the first param or cwd.
+test -n "$1" && OUTPUT_DIR=$1/ || OUTPUT_DIR=
+FBVF=${OUTPUT_DIR}FISH-BUILD-VERSION-FILE
 
 if test -r $FBVF
 then

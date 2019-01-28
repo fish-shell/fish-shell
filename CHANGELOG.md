@@ -27,6 +27,7 @@ This release of fish fixes a number of major issues discovered in fish 3.0.0.
 - `string` now prints help to stdout, like other builtins. (#5495)
 - The completions for `configure` now correctly offer directories. (#5518)
 - The `man` completions won't interpret the argument as a regex anymore. (#5566)
+- Killing the terminal while fish is in vi-normal mode will no longer send it spinning and eating CPU. (#5528)
 
 If you are upgrading from version 2.7.1 or before, please also review the release notes for 3.0.0 and 3.0b1 (included below).
 

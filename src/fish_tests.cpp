@@ -64,6 +64,7 @@
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
+#include "redirection.h"
 #include "screen.h"
 #include "signal.h"
 #include "tnode.h"
@@ -2337,6 +2338,31 @@ static void test_wcstod() {
     tod_test(L"-1000", "-1000");
     tod_test(L"0.12345", "0.12345");
     tod_test(L"nope", "nope");
+}
+
+static void test_dup2s() {
+    using std::make_shared;
+    io_chain_t chain;
+    chain.push_back(make_shared<io_close_t>(17));
+    chain.push_back(make_shared<io_fd_t>(3, 19, true));
+    auto list = dup2_list_t::resolve_chain(chain);
+    do_test(list.has_value());
+    do_test(list->get_actions().size() == 2);
+
+    auto act1 = list->get_actions().at(0);
+    do_test(act1.src == 17);
+    do_test(act1.target == -1);
+
+    auto act2 = list->get_actions().at(1);
+    do_test(act2.src == 19);
+    do_test(act2.target == 3);
+
+    // Invalid files should fail to open.
+    // Suppress the debug() message.
+    scoped_push<int> saved_debug_level(&debug_level, -1);
+    chain.push_back(make_shared<io_file_t>(2, L"/definitely/not/a/valid/path/for/this/test", 0666));
+    list = dup2_list_t::resolve_chain(chain);
+    do_test(!list.has_value());
 }
 
 /// Testing colors.
@@ -5071,6 +5097,7 @@ int main(int argc, char **argv) {
     if (should_test_function("abbreviations")) test_abbreviations();
     if (should_test_function("test")) test_test();
     if (should_test_function("wcstod")) test_wcstod();
+    if (should_test_function("dup2s")) test_dup2s();
     if (should_test_function("path")) test_path();
     if (should_test_function("pager_navigation")) test_pager_navigation();
     if (should_test_function("pager_layout")) test_pager_layout();

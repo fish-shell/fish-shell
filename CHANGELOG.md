@@ -43,6 +43,7 @@
 - `string` now prints help to stdout, like other builtins. (#5495)
 - The completions for `configure` now correctly offer directories. (#5518)
 - The `man` completions won't interpret the argument as a regex anymore. (#5566)
+- Killing the terminal while fish is in vi-normal mode will no longer send it spinning and eating CPU. (#5528)
 
 
 # fish 3.0.0 (released December 28, 2018)

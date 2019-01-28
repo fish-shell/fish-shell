@@ -26,7 +26,6 @@ BuildRequires: pcre2-devel
 %endif
 
 # for tests
-BuildRequires: expect
 %if 0%{?fedora}
 # Need the en_US.utf-8 locale at a minimum
 BuildRequires: glibc-langpack-en

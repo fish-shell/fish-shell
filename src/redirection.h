@@ -11,6 +11,7 @@
 
 /// A class representing a sequence of basic redirections.
 class dup2_list_t {
+   public:
     /// A type that represents the action dup2(src, target).
     /// If target is negative, this represents close(src).
     /// Note none of the fds here are considered 'owned'.
@@ -19,6 +20,7 @@ class dup2_list_t {
         int target;
     };
 
+   private:
     /// The list of actions.
     std::vector<action_t> actions_;
 

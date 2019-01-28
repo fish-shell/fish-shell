@@ -516,6 +516,10 @@ wint_t input_readch(bool allow_commands) {
                 }
                 default: { return c; }
             }
+        } else if (c == R_EOF) {
+            // If we have R_EOF, we need to immediately quit.
+            // There's no need to go through the input functions.
+            return R_EOF;
         } else {
             input_common_next_ch(c);
             input_mapping_execute_matching_or_generic(allow_commands);

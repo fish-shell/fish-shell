@@ -240,10 +240,10 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # - Any listeners (like the vi-cursor)
     if set -q TMUX
         function __fish_enable_focus --on-event fish_postexec
-            echo \e\[\?1004h
+            echo -n \e\[\?1004h
         end
         function __fish_disable_focus --on-event fish_preexec
-            echo \e\[\?1004l
+            echo -n \e\[\?1004l
         end
         __fish_enable_focus
     end

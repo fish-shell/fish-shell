@@ -15,7 +15,6 @@
 #endif
 
 class dup2_list_t;
-class io_chain_t;
 class job_t;
 class process_t;
 
@@ -56,8 +55,8 @@ void run_as_keepalive(pid_t parent_pid);
 /// Initializes and fills in a posix_spawnattr_t; on success, the caller should destroy it via
 /// posix_spawnattr_destroy.
 bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
-                                        posix_spawn_file_actions_t *actions, job_t *j, process_t *p,
-                                        const io_chain_t &io_chain);
+                                        posix_spawn_file_actions_t *actions, const job_t *j,
+                                        const dup2_list_t &dup2s);
 #endif
 
 #endif

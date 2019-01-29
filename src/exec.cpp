@@ -115,18 +115,6 @@ static bool redirection_is_to_real_file(const io_data_t *io) {
     return result;
 }
 
-static bool chain_contains_redirection_to_real_file(const io_chain_t &io_chain) {
-    bool result = false;
-    for (size_t idx = 0; idx < io_chain.size(); idx++) {
-        const io_data_t *io = io_chain.at(idx).get();
-        if (redirection_is_to_real_file(io)) {
-            result = true;
-            break;
-        }
-    }
-    return result;
-}
-
 /// Returns the interpreter for the specified script. Returns NULL if file is not a script with a
 /// shebang.
 char *get_interpreter(const char *command, char *interpreter, size_t buff_size) {
@@ -330,11 +318,9 @@ void internal_exec_helper(parser_t &parser, parsed_source_ref_t parsed_source, t
     job_reap(false);
 }
 
-// Returns whether we can use posix spawn for a given process in a given job. Per
-// https://github.com/fish-shell/fish-shell/issues/364 , error handling for file redirections is too
-// difficult with posix_spawn, so in that case we use fork/exec.
+// Returns whether we can use posix spawn for a given process in a given job.
 //
-// Furthermore, to avoid the race between the caller calling tcsetpgrp() and the client checking the
+// To avoid the race between the caller calling tcsetpgrp() and the client checking the
 // foreground process group, we don't use posix_spawn if we're going to foreground the process. (If
 // we use fork(), we can call tcsetpgrp after the fork, before the exec, and avoid the race).
 static bool can_use_posix_spawn_for_job(const std::shared_ptr<job_t> &job,
@@ -348,15 +334,7 @@ static bool can_use_posix_spawn_for_job(const std::shared_ptr<job_t> &job,
             return false;
         }
     }
-
-    // Now see if we have a redirection involving a file. The only one we allow is /dev/null, which
-    // we assume will not fail.
-    bool result = true;
-    if (chain_contains_redirection_to_real_file(job->block_io_chain()) ||
-        chain_contains_redirection_to_real_file(process->io_chain())) {
-        result = false;
-    }
-    return result;
+    return true;
 }
 
 void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &all_ios) {

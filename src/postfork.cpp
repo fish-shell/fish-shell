@@ -223,9 +223,8 @@ pid_t execute_fork(bool wait_for_threads_to_die) {
 
 #if FISH_USE_POSIX_SPAWN
 bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
-                                        posix_spawn_file_actions_t *actions, job_t *j, process_t *p,
-                                        const io_chain_t &io_chain) {
-    UNUSED(p);
+                                        posix_spawn_file_actions_t *actions, const job_t *j,
+                                        const dup2_list_t &dup2s) {
     // Initialize the output.
     if (posix_spawnattr_init(attr) != 0) {
         return false;
@@ -279,52 +278,13 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
     sigemptyset(&sigmask);
     if (!err && reset_sigmask) err = posix_spawnattr_setsigmask(attr, &sigmask);
 
-    for (size_t idx = 0; idx < io_chain.size(); idx++) {
-        const shared_ptr<const io_data_t> io = io_chain.at(idx);
-
-        if (io->io_mode == io_mode_t::fd) {
-            const io_fd_t *io_fd = static_cast<const io_fd_t *>(io.get());
-            if (io->fd == io_fd->old_fd) continue;
-        }
-
-        switch (io->io_mode) {
-            case io_mode_t::close: {
-                if (!err) err = posix_spawn_file_actions_addclose(actions, io->fd);
-                break;
-            }
-
-            case io_mode_t::file: {
-                const io_file_t *io_file = static_cast<const io_file_t *>(io.get());
-                if (!err)
-                    err = posix_spawn_file_actions_addopen(actions, io->fd, io_file->filename_cstr,
-                                                           io_file->flags /* mode */, OPEN_MASK);
-                break;
-            }
-
-            case io_mode_t::fd: {
-                const io_fd_t *io_fd = static_cast<const io_fd_t *>(io.get());
-                if (!err)
-                    err = posix_spawn_file_actions_adddup2(actions, io_fd->old_fd /* from */,
-                                                           io->fd /* to */);
-                break;
-            }
-
-            case io_mode_t::buffer:
-            case io_mode_t::pipe: {
-                const io_pipe_t *io_pipe = static_cast<const io_pipe_t *>(io.get());
-                unsigned int write_pipe_idx = (io_pipe->is_input ? 0 : 1);
-                int from_fd = io_pipe->pipe_fd[write_pipe_idx];
-                int to_fd = io->fd;
-                if (!err) err = posix_spawn_file_actions_adddup2(actions, from_fd, to_fd);
-
-                if (write_pipe_idx > 0) {
-                    if (!err) err = posix_spawn_file_actions_addclose(actions, io_pipe->pipe_fd[0]);
-                    if (!err) err = posix_spawn_file_actions_addclose(actions, io_pipe->pipe_fd[1]);
-                } else {
-                    if (!err) err = posix_spawn_file_actions_addclose(actions, io_pipe->pipe_fd[0]);
-                }
-                break;
-            }
+    // Apply our dup2s.
+    for (const auto &act : dup2s.get_actions()) {
+        if (err) break;
+        if (act.target < 0) {
+            err = posix_spawn_file_actions_addclose(actions, act.src);
+        } else {
+            err = posix_spawn_file_actions_adddup2(actions, act.src, act.target);
         }
     }
 

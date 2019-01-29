@@ -511,6 +511,7 @@ static bool process_mark_finished_children(bool block_on_fg) {
 
             if (pid > 0) {
                 // A child process has been reaped
+                debug(4, "Reaped PID %d", pid);
                 handle_child_status(pid, status);
 
                 // Always set WNOHANG (that is, don't hang). Otherwise we might wait on a non-stopped job
@@ -520,15 +521,22 @@ static bool process_mark_finished_children(bool block_on_fg) {
             } else if (pid == 0 || errno == ECHILD) {
                 // No killed/dead children in this particular process group
                 if (!wait_by_process) {
+                    if ((options & WNOHANG) == 0) {
+                        // This normally implies that the job has completed, but if we try to wait
+                        // on a job that includes a process that changed its own group before we
+                        // enter `waitpid`, we will be waiting forever. See #5596 for such a case.
+                        wait_by_process = true;
+                        continue;
+                    }
                     break;
                 }
             } else {
                 // pid < 0 indicates an error. One likely failure is ECHILD (no children), which is
-                // not an error and is ignored. The other likely failure is EINTR, which means we
-                // got a signal, which is considered an error. We absolutely do not break or return
-                // on error, as we need to iterate over all constructed jobs but we only call
-                // waitpid for one pgrp at a time. We do bypass future waits in case of error,
-                // however.
+                // not an error and is ignored in the branch above. The other likely failure is
+                // EINTR, which means we got a signal, which is considered an error. We absolutely
+                // do not break or return on error, as we need to iterate over all constructed jobs
+                // but we only call waitpid for one pgrp at a time. We do bypass future waits in
+                // case of error, however.
                 has_error = true;
 
                 // Do not audibly complain on interrupt (see #5293)

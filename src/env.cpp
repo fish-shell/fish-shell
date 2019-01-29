@@ -657,7 +657,7 @@ static void setup_path() {
         cspath.resize(confstr(_CS_PATH, nullptr, 0));
         confstr(_CS_PATH, &cspath[0], cspath.length());
 #else
-        std::string cspath = "/bin:/usr/bin"; // I doubt this is even necessary
+        std::string cspath = "/usr/bin:/bin"; // I doubt this is even necessary
 #endif
         vars.set_one(L"PATH", ENV_GLOBAL | ENV_EXPORT, str2wcstring(cspath));
     }

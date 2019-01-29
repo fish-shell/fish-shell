@@ -691,8 +691,7 @@ static bool exec_external_command(env_stack_t &vars, const std::shared_ptr<job_t
         pid_t pid = 0;
         posix_spawnattr_t attr = posix_spawnattr_t();
         posix_spawn_file_actions_t actions = posix_spawn_file_actions_t();
-        bool made_it =
-            fork_actions_make_spawn_properties(&attr, &actions, j.get(), p, proc_io_chain);
+        bool made_it = fork_actions_make_spawn_properties(&attr, &actions, j.get(), *dup2s);
         if (made_it) {
             // We successfully made the attributes and actions; actually call
             // posix_spawn.

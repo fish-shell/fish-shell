@@ -576,11 +576,15 @@ void fish_setlocale() {
         ellipsis_char = L'$';  // "horizontal ellipsis"
         ellipsis_str = L"...";
     }
+
     if (is_windows_subsystem_for_linux()) {
         // neither of \u23CE and \u25CF can be displayed in the default fonts on Windows, though
         // they can be *encoded* just fine. Use alternative glyphs.
         omitted_newline_char = can_be_encoded(L'\u00b6') ? L'\u00b6' : L'~';   // "pilcrow"
         obfuscation_read_char = can_be_encoded(L'\u2022') ? L'\u2022' : L'*';  // "bullet"
+    } else if (is_console_session()) {
+        omitted_newline_char = L'@';
+        obfuscation_read_char = L'*';
     } else {
         omitted_newline_char = can_be_encoded(L'\u23CE') ? L'\u23CE' : L'~';   // "return"
         obfuscation_read_char = can_be_encoded(L'\u25CF') ? L'\u25CF' : L'#';  // "black circle"

@@ -2482,3 +2482,27 @@ std::string get_path_to_tmp_dir() {
     return "/tmp";
 #endif
 }
+
+// This function attempts to distinguish between a console session (at the actual login vty) and a
+// session within a terminal emulator inside a desktop environment or over SSH. Unfortunately
+// there are few values of $TERM that we can interpret as being exclusively console sessions, and
+// most common operating systems do not use them. The value is cached for the duration of the fish
+// session. We err on the side of assuming it's not a console session. This approach isn't
+// bullet-proof and that's OK.
+bool is_console_session() {
+    static bool console_session = []() {
+        ASSERT_IS_MAIN_THREAD();
+
+        const char *tty_name = ttyname(0);
+        auto len = strlen("/dev/tty");
+        const char *TERM = getenv("TERM");
+        return
+            // Test that the tty matches /dev/(console|dcons|tty[uv\d])
+            tty_name && ((strncmp(tty_name, "/dev/tty", len) == 0 &&
+            (tty_name[len] == 'u' || tty_name[len] == 'v' || isdigit(tty_name[len])))
+            || strcmp(tty_name, "/dev/dcons") == 0 || strcmp(tty_name, "/dev/console") == 0)
+            // and that $TERM is simple, e.g. `xterm` or `vt100`, not `xterm-something`
+            && (!TERM || !strchr(TERM, '-') || !strcmp(TERM, "sun-color"));
+    }();
+    return console_session;
+}

@@ -1048,4 +1048,6 @@ public:
     }
 };
 
-#endif
+bool is_console_session();
+
+#endif // FISH_COMMON_H

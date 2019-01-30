@@ -166,7 +166,7 @@ Any file descriptor can be redirected in an arbitrary way by prefixing the redir
 - To redirect output of FD N, write `N>DESTINATION`
 - To append the output of FD N to a file, write `N>>DESTINATION_FILE`
 
-Example: `echo Hello 2>output.stderr` and `echo Hello 2>output.stderr` are equivalent, and write the standard error (file descriptor 2) of the target program to `output.stderr`.
+Example: `echo Hello 2>output.stderr` writes the standard error (file descriptor 2) of the target program to `output.stderr`.
 
 \subsection piping Piping
 

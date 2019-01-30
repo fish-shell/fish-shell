@@ -70,7 +70,8 @@ static bool thread_asserts_cfg_for_testing = false;
 
 wchar_t ellipsis_char;
 const wchar_t *ellipsis_str = nullptr;
-wchar_t omitted_newline_char;
+const wchar_t *omitted_newline_str;
+int omitted_newline_width;
 wchar_t obfuscation_read_char;
 bool g_profiling_active = false;
 const wchar_t *program_name;
@@ -580,13 +581,21 @@ void fish_setlocale() {
     if (is_windows_subsystem_for_linux()) {
         // neither of \u23CE and \u25CF can be displayed in the default fonts on Windows, though
         // they can be *encoded* just fine. Use alternative glyphs.
-        omitted_newline_char = can_be_encoded(L'\u00b6') ? L'\u00b6' : L'~';   // "pilcrow"
-        obfuscation_read_char = can_be_encoded(L'\u2022') ? L'\u2022' : L'*';  // "bullet"
+        omitted_newline_str = L"\u00b6";   // "pilcrow"
+        omitted_newline_width = 1;
+        obfuscation_read_char = L'\u2022'; // "bullet"
     } else if (is_console_session()) {
-        omitted_newline_char = L'@';
+        omitted_newline_str = L"^J";
+        omitted_newline_width = 2;
         obfuscation_read_char = L'*';
     } else {
-        omitted_newline_char = can_be_encoded(L'\u23CE') ? L'\u23CE' : L'~';   // "return"
+        if (can_be_encoded(L'\u23CE')) {
+            omitted_newline_str = L"\u23CE";
+            omitted_newline_width = 1;
+        } else {
+            omitted_newline_str = L"^J";
+            omitted_newline_width = 2;
+        }
         obfuscation_read_char = can_be_encoded(L'\u25CF') ? L'\u25CF' : L'#';  // "black circle"
     }
 }

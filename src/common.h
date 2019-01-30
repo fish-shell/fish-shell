@@ -201,7 +201,8 @@ extern wchar_t ellipsis_char;
 extern const wchar_t *ellipsis_str;
 
 /// Character representing an omitted newline at the end of text.
-extern wchar_t omitted_newline_char;
+extern const wchar_t *omitted_newline_str;
+extern int omitted_newline_width;
 
 /// Character used for the silent mode of the read command
 extern wchar_t obfuscation_read_char;

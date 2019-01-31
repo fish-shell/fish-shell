@@ -6,3 +6,4 @@ complete -c fish -s i -l interactive -d "Run in interactive mode"
 complete -c fish -s l -l login -d "Run in login mode"
 complete -c fish -s p -l profile -d "Output profiling information to specified file" -f
 complete -c fish -s d -l debug -d "Run with the specified verbosity level"
+complete -c fish -s P -l private -d "Run fish in private mode"

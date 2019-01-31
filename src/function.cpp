@@ -251,7 +251,10 @@ bool function_get_definition(const wcstring &name, wcstring &out_definition) {
     scoped_rlock locker(functions_lock);
     const function_info_t *func = function_get(name);
     if (func) {
-        out_definition = func->props->body_node.get_source(func->props->parsed_source->src);
+        auto props = func->props;
+        if (props && props->parsed_source) {
+            out_definition = props->body_node.get_source(props->parsed_source->src);
+        }
     }
     return func != NULL;
 }

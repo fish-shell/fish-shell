@@ -239,6 +239,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # - The keybindings (reading the sequence and triggering an event)
     # - Any listeners (like the vi-cursor)
     if set -q TMUX
+       and [ "$TERM" = screen ]
         function __fish_enable_focus --on-event fish_postexec
             echo -n \e\[\?1004h
         end

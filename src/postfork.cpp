@@ -187,12 +187,12 @@ static int handle_child_io(const io_chain_t &io_chain) {
     for (size_t idx = 0; idx < io_chain.size(); idx++) {
         const io_data_t *io = io_chain.at(idx).get();
 
-        if (io->io_mode == IO_FD && io->fd == static_cast<const io_fd_t *>(io)->old_fd) {
+        if (io->io_mode == io_mode_t::fd && io->fd == static_cast<const io_fd_t *>(io)->old_fd) {
             continue;
         }
 
         switch (io->io_mode) {
-            case IO_CLOSE: {
+            case io_mode_t::close: {
                 if (log_redirections) fwprintf(stderr, L"%d: close %d\n", getpid(), io->fd);
                 if (close(io->fd)) {
                     debug_safe_int(0, "Failed to close file descriptor %s", io->fd);
@@ -201,7 +201,7 @@ static int handle_child_io(const io_chain_t &io_chain) {
                 break;
             }
 
-            case IO_FILE: {
+            case io_mode_t::file: {
                 // Here we definitely do not want to set CLO_EXEC because our child needs access.
                 const io_file_t *io_file = static_cast<const io_file_t *>(io);
                 int tmp = open(io_file->filename_cstr, io_file->flags, OPEN_MASK);
@@ -229,7 +229,7 @@ static int handle_child_io(const io_chain_t &io_chain) {
                 break;
             }
 
-            case IO_FD: {
+            case io_mode_t::fd: {
                 int old_fd = static_cast<const io_fd_t *>(io)->old_fd;
                 if (log_redirections)
                     fwprintf(stderr, L"%d: fd dup %d to %d\n", getpid(), old_fd, io->fd);
@@ -245,20 +245,20 @@ static int handle_child_io(const io_chain_t &io_chain) {
                 break;
             }
 
-            case IO_BUFFER:
-            case IO_PIPE: {
+            case io_mode_t::buffer:
+            case io_mode_t::pipe: {
                 const io_pipe_t *io_pipe = static_cast<const io_pipe_t *>(io);
                 // If write_pipe_idx is 0, it means we're connecting to the read end (first pipe
                 // fd). If it's 1, we're connecting to the write end (second pipe fd).
                 unsigned int write_pipe_idx = (io_pipe->is_input ? 0 : 1);
 #if 0
                 debug(0, L"%ls %ls on fd %d (%d %d)", write_pipe?L"write":L"read",
-                      (io->io_mode == IO_BUFFER)?L"buffer":L"pipe", io->fd, io->pipe_fd[0],
+                      (io->io_mode == io_mode_t::buffer)?L"buffer":L"pipe", io->fd, io->pipe_fd[0],
                       io->pipe_fd[1]);
 #endif
                 if (log_redirections)
                     fwprintf(stderr, L"%d: %s dup %d to %d\n", getpid(),
-                             io->io_mode == IO_BUFFER ? "buffer" : "pipe",
+                             io->io_mode == io_mode_t::buffer ? "buffer" : "pipe",
                              io_pipe->pipe_fd[write_pipe_idx], io->fd);
                 if (dup2(io_pipe->pipe_fd[write_pipe_idx], io->fd) != io->fd) {
                     debug_safe(1, LOCAL_PIPE_ERROR);
@@ -280,7 +280,7 @@ int setup_child_process(process_t *p, const io_chain_t &io_chain) {
     bool ok = true;
 
     if (ok) {
-        // In the case of IO_FILE, this can hang until data is available to read/write!
+        // In the case of io_mode_t::file, this can hang until data is available to read/write!
         ok = (0 == handle_child_io(io_chain));
         if (p != 0 && !ok) {
             debug_safe(4, "handle_child_io failed in setup_child_process");
@@ -405,18 +405,18 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
     for (size_t idx = 0; idx < io_chain.size(); idx++) {
         const shared_ptr<const io_data_t> io = io_chain.at(idx);
 
-        if (io->io_mode == IO_FD) {
+        if (io->io_mode == io_mode_t::fd) {
             const io_fd_t *io_fd = static_cast<const io_fd_t *>(io.get());
             if (io->fd == io_fd->old_fd) continue;
         }
 
         switch (io->io_mode) {
-            case IO_CLOSE: {
+            case io_mode_t::close: {
                 if (!err) err = posix_spawn_file_actions_addclose(actions, io->fd);
                 break;
             }
 
-            case IO_FILE: {
+            case io_mode_t::file: {
                 const io_file_t *io_file = static_cast<const io_file_t *>(io.get());
                 if (!err)
                     err = posix_spawn_file_actions_addopen(actions, io->fd, io_file->filename_cstr,
@@ -424,7 +424,7 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
                 break;
             }
 
-            case IO_FD: {
+            case io_mode_t::fd: {
                 const io_fd_t *io_fd = static_cast<const io_fd_t *>(io.get());
                 if (!err)
                     err = posix_spawn_file_actions_adddup2(actions, io_fd->old_fd /* from */,
@@ -432,8 +432,8 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
                 break;
             }
 
-            case IO_BUFFER:
-            case IO_PIPE: {
+            case io_mode_t::buffer:
+            case io_mode_t::pipe: {
                 const io_pipe_t *io_pipe = static_cast<const io_pipe_t *>(io.get());
                 unsigned int write_pipe_idx = (io_pipe->is_input ? 0 : 1);
                 int from_fd = io_pipe->pipe_fd[write_pipe_idx];

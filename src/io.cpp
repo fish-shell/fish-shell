@@ -43,7 +43,7 @@ void io_buffer_t::append_from_stream(const output_stream_t &stream) {
 void io_buffer_t::read() {
     exec_close(pipe_fd[1]);
 
-    if (io_mode == IO_BUFFER) {
+    if (io_mode == io_mode_t::buffer) {
         debug(4, L"io_buffer_t::read: blocking read on fd %d", pipe_fd[0]);
         while (1) {
             char b[4096];

@@ -150,7 +150,7 @@ public:
 };
 
 /// Describes what type of IO operation an io_data_t represents.
-enum io_mode_t { IO_FILE, IO_PIPE, IO_FD, IO_BUFFER, IO_CLOSE };
+enum class io_mode_t { file, pipe, fd, buffer, close };
 
 /// Represents an FD redirection.
 class io_data_t {
@@ -174,7 +174,7 @@ class io_data_t {
 
 class io_close_t : public io_data_t {
    public:
-    explicit io_close_t(int f) : io_data_t(IO_CLOSE, f) {}
+    explicit io_close_t(int f) : io_data_t(io_mode_t::close, f) {}
 
     void print() const override;
 };
@@ -191,7 +191,8 @@ class io_fd_t : public io_data_t {
 
     void print() const override;
 
-    io_fd_t(int f, int old, bool us) : io_data_t(IO_FD, f), old_fd(old), user_supplied(us) {}
+    io_fd_t(int f, int old, bool us)
+        : io_data_t(io_mode_t::fd, f), old_fd(old), user_supplied(us) {}
 };
 
 class io_file_t : public io_data_t {
@@ -204,7 +205,7 @@ class io_file_t : public io_data_t {
     void print() const override;
 
     io_file_t(int f, const wcstring &fname, int fl = 0)
-        : io_data_t(IO_FILE, f), filename_cstr(wcs2str(fname)), flags(fl) {}
+        : io_data_t(io_mode_t::file, f), filename_cstr(wcs2str(fname)), flags(fl) {}
 
     ~io_file_t() override { free((void *)filename_cstr); }
 };
@@ -221,7 +222,9 @@ class io_pipe_t : public io_data_t {
 
     void print() const override;
 
-    io_pipe_t(int f, bool i) : io_data_t(IO_PIPE, f), is_input(i) { pipe_fd[0] = pipe_fd[1] = -1; }
+    io_pipe_t(int f, bool i) : io_data_t(io_mode_t::pipe, f), is_input(i) {
+        pipe_fd[0] = pipe_fd[1] = -1;
+    }
 };
 
 class io_chain_t;
@@ -231,8 +234,7 @@ class io_buffer_t : public io_pipe_t {
     separated_buffer_t<std::string> buffer_;
 
     explicit io_buffer_t(int f, size_t limit)
-        : io_pipe_t(IO_BUFFER, f, false /* not input */),
-          buffer_(limit) {
+        : io_pipe_t(io_mode_t::buffer, f, false /* not input */), buffer_(limit) {
         // Explicitly reset the discard flag because we share this buffer.
         buffer_.reset_discard();
     }
@@ -258,8 +260,8 @@ class io_buffer_t : public io_pipe_t {
     /// Marks the receiver as discarded if the stream was discarded.
     void append_from_stream(const output_stream_t &stream);
 
-    /// Create a IO_BUFFER type io redirection, complete with a pipe and a vector<char> for output.
-    /// The default file descriptor used is STDOUT_FILENO for buffering.
+    /// Create a io_mode_t::buffer type io redirection, complete with a pipe and a vector<char> for
+    /// output. The default file descriptor used is STDOUT_FILENO for buffering.
     ///
     /// \param fd the fd that will be mapped in the child process, typically STDOUT_FILENO
     /// \param conflicts A set of IO redirections. The function ensures that any pipe it makes does

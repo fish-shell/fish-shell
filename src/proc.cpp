@@ -850,7 +850,7 @@ static select_try_t select_try(job_t *j) {
 
     const io_chain_t chain = j->all_io_redirections();
     for (const auto &io : chain) {
-        if (io->io_mode == IO_BUFFER) {
+        if (io->io_mode == io_mode_t::buffer) {
             auto io_pipe = static_cast<const io_pipe_t *>(io.get());
             int fd = io_pipe->pipe_fd[0];
             FD_SET(fd, &fds);
@@ -886,7 +886,7 @@ static void read_try(job_t *j) {
     const io_chain_t chain = j->all_io_redirections();
     for (size_t idx = 0; idx < chain.size(); idx++) {
         io_data_t *d = chain.at(idx).get();
-        if (d->io_mode == IO_BUFFER) {
+        if (d->io_mode == io_mode_t::buffer) {
             buff = static_cast<io_buffer_t *>(d);
         }
     }

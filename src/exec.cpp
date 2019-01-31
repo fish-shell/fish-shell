@@ -102,7 +102,7 @@ int exec_pipe(int fd[2]) {
 /// Returns true if the redirection is a file redirection to a file other than /dev/null.
 static bool redirection_is_to_real_file(const io_data_t *io) {
     bool result = false;
-    if (io != NULL && io->io_mode == IO_FILE) {
+    if (io != NULL && io->io_mode == io_mode_t::file) {
         // It's a file redirection. Compare the path to /dev/null.
         const io_file_t *io_file = static_cast<const io_file_t *>(io);
         const char *path = io_file->filename_cstr;
@@ -256,15 +256,15 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain,
         shared_ptr<io_data_t> out;  // gets allocated via new
 
         switch (in->io_mode) {
-            case IO_PIPE:
-            case IO_FD:
-            case IO_BUFFER:
-            case IO_CLOSE: {
+            case io_mode_t::pipe:
+            case io_mode_t::fd:
+            case io_mode_t::buffer:
+            case io_mode_t::close: {
                 // These redirections don't need transmogrification. They can be passed through.
                 out = in;
                 break;
             }
-            case IO_FILE: {
+            case io_mode_t::file: {
                 // Transmogrify file redirections.
                 int fd;
                 io_file_t *in_file = static_cast<io_file_t *>(in.get());
@@ -452,7 +452,7 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
         local_builtin_stdin = pipe_read->pipe_fd[0];
     } else if (const auto in = proc_io_chain.get_io_for_fd(STDIN_FILENO)) {
         switch (in->io_mode) {
-            case IO_FD: {
+            case io_mode_t::fd: {
                 const io_fd_t *in_fd = static_cast<const io_fd_t *>(in.get());
                 // Ignore user-supplied fd redirections from an fd other than the
                 // standard ones. e.g. in source <&3 don't actually read from fd 3,
@@ -466,12 +466,12 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
                 }
                 break;
             }
-            case IO_PIPE: {
+            case io_mode_t::pipe: {
                 const io_pipe_t *in_pipe = static_cast<const io_pipe_t *>(in.get());
                 local_builtin_stdin = in_pipe->pipe_fd[0];
                 break;
             }
-            case IO_FILE: {
+            case io_mode_t::file: {
                 // Do not set CLO_EXEC because child needs access.
                 const io_file_t *in_file = static_cast<const io_file_t *>(in.get());
                 local_builtin_stdin = open(in_file->filename_cstr, in_file->flags, OPEN_MASK);
@@ -484,7 +484,7 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
 
                 break;
             }
-            case IO_CLOSE: {
+            case io_mode_t::close: {
                 // FIXME: When requesting that stdin be closed, we really don't do
                 // anything. How should this be handled?
                 local_builtin_stdin = -1;
@@ -508,9 +508,9 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
         stdin_is_directly_redirected = true;
     } else {
         // We are not a pipe. Check if there is a redirection local to the process
-        // that's not IO_CLOSE.
+        // that's not io_mode_t::close.
         const shared_ptr<const io_data_t> stdin_io = io_chain_get(p->io_chain(), STDIN_FILENO);
-        stdin_is_directly_redirected = stdin_io && stdin_io->io_mode != IO_CLOSE;
+        stdin_is_directly_redirected = stdin_io && stdin_io->io_mode != io_mode_t::close;
     }
 
     streams.stdin_fd = local_builtin_stdin;
@@ -568,7 +568,7 @@ static bool handle_builtin_output(const std::shared_ptr<job_t> &j, process_t *p,
     if (!must_fork && p->is_last_in_job) {
         // We are handling reads directly in the main loop. Note that we may still end
         // up forking.
-        const bool stdout_is_to_buffer = stdout_io && stdout_io->io_mode == IO_BUFFER;
+        const bool stdout_is_to_buffer = stdout_io && stdout_io->io_mode == io_mode_t::buffer;
         const bool no_stdout_output = stdout_stream.empty();
         const bool no_stderr_output = stderr_stream.empty();
         const bool stdout_discarded = stdout_stream.buffer().discarded();
@@ -1012,15 +1012,15 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
         }
     }
 
-    // Verify that all IO_BUFFERs are output. We used to support a (single, hacked-in) magical input
-    // IO_BUFFER used by fish_pager, but now the claim is that there are no more clients and it is
-    // removed. This assertion double-checks that.
+    // Verify that all io_mode_t::buffers are output. We used to support a (single, hacked-in)
+    // magical input io_mode_t::buffer used by fish_pager, but now the claim is that there are no
+    // more clients and it is removed. This assertion double-checks that.
     size_t stdout_read_limit = 0;
     const io_chain_t all_ios = j->all_io_redirections();
     for (size_t idx = 0; idx < all_ios.size(); idx++) {
         const shared_ptr<io_data_t> &io = all_ios.at(idx);
 
-        if ((io->io_mode == IO_BUFFER)) {
+        if ((io->io_mode == io_mode_t::buffer)) {
             io_buffer_t *io_buffer = static_cast<io_buffer_t *>(io.get());
             assert(!io_buffer->is_input);
             stdout_read_limit = io_buffer->buffer().limit();
@@ -1036,7 +1036,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     // with a redireciton like <&3; we may also have chosen 3 as the fd for our pipe. Ensure we have
     // no conflicts.
     for (const auto io : all_ios) {
-        if (io->io_mode == IO_BUFFER) {
+        if (io->io_mode == io_mode_t::buffer) {
             auto *io_buffer = static_cast<io_buffer_t *>(io.get());
             if (!io_buffer->avoid_conflicts_with_io_chain(all_ios)) {
                 // We could not avoid conflicts, probably due to fd exhaustion. Mark an error.

@@ -3,6 +3,7 @@
 #include <limits.h>
 #include <pthread.h>
 #include <signal.h>
+#include <stdio.h>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -149,24 +150,14 @@ static void *iothread_worker(void *unused) {
 
 /// Spawn another thread. No lock is held when this is called.
 static void iothread_spawn() {
-    // The spawned thread inherits our signal mask. We don't want the thread to ever receive signals
-    // on the spawned thread, so temporarily block all signals, spawn the thread, and then restore
-    // it.
-    sigset_t new_set, saved_set;
-    sigfillset(&new_set);
-    DIE_ON_FAILURE(pthread_sigmask(SIG_BLOCK, &new_set, &saved_set));
-
     // Spawn a thread. If this fails, it means there's already a bunch of threads; it is very
     // unlikely that they are all on the verge of exiting, so one is likely to be ready to handle
     // extant requests. So we can ignore failure with some confidence.
     pthread_t thread = 0;
-    pthread_create(&thread, NULL, iothread_worker, NULL);
-
-    // We will never join this thread.
-    DIE_ON_FAILURE(pthread_detach(thread));
-    debug(5, "pthread %p spawned", (void *)(intptr_t)thread);
-    // Restore our sigmask.
-    DIE_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &saved_set, NULL));
+    if (make_pthread(&thread, iothread_worker, nullptr)) {
+        // We will never join this thread.
+        DIE_ON_FAILURE(pthread_detach(thread));
+    }
 }
 
 int iothread_perform_impl(void_function_t &&func, void_function_t &&completion) {
@@ -341,4 +332,49 @@ void iothread_perform_on_main(void_function_t &&func) {
 
     // Ok, the request must now be done.
     assert(req.done);
+}
+
+bool make_pthread(pthread_t *result, void *(*func)(void *), void *param) {
+    // The spawned thread inherits our signal mask. We don't want the thread to ever receive signals
+    // on the spawned thread, so temporarily block all signals, spawn the thread, and then restore
+    // it.
+    sigset_t new_set, saved_set;
+    sigfillset(&new_set);
+    DIE_ON_FAILURE(pthread_sigmask(SIG_BLOCK, &new_set, &saved_set));
+
+    // Spawn a thread. If this fails, it means there's already a bunch of threads; it is very
+    // unlikely that they are all on the verge of exiting, so one is likely to be ready to handle
+    // extant requests. So we can ignore failure with some confidence.
+    pthread_t thread = 0;
+    int err = pthread_create(&thread, NULL, func, param);
+    if (err == 0) {
+        // Success, return the thread.
+        debug(5, "pthread %p spawned", (void *)(intptr_t)thread);
+        *result = thread;
+    } else {
+        perror("pthread_create");
+    }
+    // Restore our sigmask.
+    DIE_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &saved_set, NULL));
+    return err == 0;
+}
+
+using void_func_t = std::function<void(void)>;
+
+static void *func_invoker(void *param) {
+    void_func_t *vf = static_cast<void_func_t *>(param);
+    (*vf)();
+    delete vf;
+    return nullptr;
+}
+
+bool make_pthread(pthread_t *result, void_func_t &&func) {
+    // Copy the function into a heap allocation.
+    void_func_t *vf = new void_func_t(std::move(func));
+    if (make_pthread(result, func_invoker, vf)) {
+        return true;
+    }
+    // Thread spawning failed, clean up our heap allocation.
+    delete vf;
+    return false;
 }

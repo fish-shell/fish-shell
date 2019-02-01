@@ -678,6 +678,20 @@ static void test_iothread() {
         max_achieved_thread_count);
 }
 
+static void test_pthread() {
+    say(L"Testing pthreads");
+    pthread_t result = {};
+    int val = 3;
+    bool made = make_pthread(&result, [&val](){
+        val += 2;
+    });
+    do_test(made);
+    void *ignore = nullptr;
+    int ret = pthread_join(result, &ignore);
+    do_test(ret == 0);
+    do_test(val == 5);
+}
+
 static parser_test_error_bits_t detect_argument_errors(const wcstring &src) {
     parse_node_tree_t tree;
     if (!parse_tree_from_string(src, parse_flag_none, &tree, NULL, symbol_argument_list)) {
@@ -5083,6 +5097,7 @@ int main(int argc, char **argv) {
     if (should_test_function("convert_nulls")) test_convert_nulls();
     if (should_test_function("tok")) test_tokenizer();
     if (should_test_function("iothread")) test_iothread();
+    if (should_test_function("pthread")) test_pthread();
     if (should_test_function("parser")) test_parser();
     if (should_test_function("cancellation")) test_cancellation();
     if (should_test_function("indents")) test_indents();

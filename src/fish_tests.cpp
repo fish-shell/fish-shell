@@ -920,8 +920,7 @@ static void test_parser() {
 }
 
 static void test_1_cancellation(const wchar_t *src) {
-    shared_ptr<io_buffer_t> out_buff(io_buffer_t::create(STDOUT_FILENO, io_chain_t()));
-    const io_chain_t io_chain{out_buff};
+    auto filler = io_bufferfill_t::create(io_chain_t{});
     pthread_t thread = pthread_self();
     double delay = 0.25 /* seconds */;
     iothread_perform([=]() {
@@ -929,11 +928,13 @@ static void test_1_cancellation(const wchar_t *src) {
         usleep(delay * 1E6);
         pthread_kill(thread, SIGINT);
     });
-    parser_t::principal_parser().eval(src, io_chain, TOP);
-    out_buff->read();
-    if (out_buff->buffer().size() != 0) {
+    parser_t::principal_parser().eval(src, io_chain_t{filler}, TOP);
+    auto buffer = filler->buffer();
+    filler.reset();
+    buffer->read_to_wouldblock();
+    if (buffer->buffer().size() != 0) {
         err(L"Expected 0 bytes in out_buff, but instead found %lu bytes\n",
-            out_buff->buffer().size());
+            buffer->buffer().size());
     }
     iothread_drain_all();
 }

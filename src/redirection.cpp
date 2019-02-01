@@ -73,15 +73,17 @@ maybe_t<dup2_list_t> dup2_list_t::resolve_chain(const io_chain_t &io_chain) {
                 break;
             }
 
-            case io_mode_t::buffer:
             case io_mode_t::pipe: {
                 const io_pipe_t *io = static_cast<const io_pipe_t *>(io_ref.get());
-                // If write_pipe_idx is 0, it means we're connecting to the read end (first pipe
-                // fd). If it's 1, we're connecting to the write end (second pipe fd).
-                unsigned int write_pipe_idx = (io->is_input ? 0 : 1);
-                result.add_dup2(io->pipe_fd[write_pipe_idx], io->fd);
-                if (io->pipe_fd[0] >= 0) result.add_close(io->pipe_fd[0]);
-                if (io->pipe_fd[1] >= 0) result.add_close(io->pipe_fd[1]);
+                result.add_dup2(io->pipe_fd(), io->fd);
+                result.add_close(io->pipe_fd());
+                break;
+            }
+
+            case io_mode_t::bufferfill: {
+                const io_bufferfill_t *io = static_cast<const io_bufferfill_t *>(io_ref.get());
+                result.add_dup2(io->write_fd(), io->fd);
+                result.add_close(io->write_fd());
                 break;
             }
         }

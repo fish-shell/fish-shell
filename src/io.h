@@ -150,7 +150,7 @@ public:
 };
 
 /// Describes what type of IO operation an io_data_t represents.
-enum class io_mode_t { file, pipe, fd, buffer, close };
+enum class io_mode_t { file, pipe, fd, close, bufferfill };
 
 /// Represents an FD redirection.
 class io_data_t {
@@ -210,39 +210,83 @@ class io_file_t : public io_data_t {
     ~io_file_t() override { free((void *)filename_cstr); }
 };
 
+/// Represents (one end) of a pipe.
 class io_pipe_t : public io_data_t {
-   protected:
-    io_pipe_t(io_mode_t m, int f, bool i) : io_data_t(m, f), is_input(i) {
-        pipe_fd[0] = pipe_fd[1] = -1;
-    }
+    // The pipe's fd. Conceptually this is dup2'd to io_data_t::fd.
+    autoclose_fd_t pipe_fd_;
+
+    /// Whether this is an input pipe. This is used only for informational purposes.
+    const bool is_input_;
 
    public:
-    int pipe_fd[2];
-    const bool is_input;
-
     void print() const override;
 
-    io_pipe_t(int f, bool i) : io_data_t(io_mode_t::pipe, f), is_input(i) {
-        pipe_fd[0] = pipe_fd[1] = -1;
-    }
+    io_pipe_t(int fd, bool is_input, autoclose_fd_t pipe_fd)
+        : io_data_t(io_mode_t::pipe, fd), pipe_fd_(std::move(pipe_fd)), is_input_(is_input) {}
+
+    ~io_pipe_t();
+
+    int pipe_fd() const { return pipe_fd_.fd(); }
 };
 
+class io_buffer_t;
 class io_chain_t;
+
+/// Represents filling an io_buffer_t. Very similar to io_pipe_t.
+/// Bufferfills always target stdout.
+class io_bufferfill_t : public io_data_t {
+    /// Write end. The other end is connected to an io_buffer_t.
+    const autoclose_fd_t write_fd_;
+
+    /// The receiving buffer.
+    const std::shared_ptr<io_buffer_t> buffer_;
+
+   public:
+    void print() const override;
+
+    io_bufferfill_t(autoclose_fd_t write_fd, std::shared_ptr<io_buffer_t> buffer)
+        : io_data_t(io_mode_t::bufferfill, STDOUT_FILENO),
+          write_fd_(std::move(write_fd)),
+          buffer_(std::move(buffer)) {}
+
+    ~io_bufferfill_t();
+
+    std::shared_ptr<io_buffer_t> buffer() const { return buffer_; }
+
+    int write_fd() const { return write_fd_.fd(); }
+
+    /// Create an io_bufferfill_t which, when written from, populates a buffer (also created).
+    /// \returns nullptr on failure, e.g. too many open fds.
+    ///
+    /// \param conflicts A set of IO redirections. The function ensures that any pipe it makes does
+    /// not conflict with an fd redirection in this list.
+    static shared_ptr<io_bufferfill_t> create(const io_chain_t &conflicts, size_t buffer_limit = 0);
+};
+
 class output_stream_t;
-class io_buffer_t : public io_pipe_t {
+
+/// An io_buffer_t is a buffer which can populate itself by reading from an fd.
+/// It is not an io_data_t.
+class io_buffer_t {
    private:
+    /// fd from which to read.
+    autoclose_fd_t read_;
+
+    /// Buffer storing what we have read.
     separated_buffer_t<std::string> buffer_;
 
-    explicit io_buffer_t(int f, size_t limit)
-        : io_pipe_t(io_mode_t::buffer, f, false /* not input */), buffer_(limit) {
+    /// Read some. Append it to our buffer.
+    /// \return positive if we read, 0 on EOF, -1 on error.
+    long read_some();
+
+   public:
+    explicit io_buffer_t(autoclose_fd_t read, size_t limit)
+        : read_(std::move(read)), buffer_(limit) {
         // Explicitly reset the discard flag because we share this buffer.
         buffer_.reset_discard();
     }
 
-   public:
-    void print() const override;
-
-    ~io_buffer_t() override;
+    ~io_buffer_t();
 
     /// Access the underlying buffer.
     const separated_buffer_t<std::string> &buffer() const { return buffer_; }
@@ -250,24 +294,16 @@ class io_buffer_t : public io_pipe_t {
     /// Function to append to the buffer.
     void append(const char *ptr, size_t count) { buffer_.append(ptr, ptr + count); }
 
-    /// Ensures that the pipes do not conflict with any fd redirections in the chain.
-    bool avoid_conflicts_with_io_chain(const io_chain_t &ios);
+    /// Read from input pipe until EOF or EAGAIN (i.e. would block).
+    void read_to_wouldblock();
 
-    /// Close output pipe, and read from input pipe until eof.
-    void read();
+    /// Read a bit, if our fd is readable, with the given timeout.
+    /// \return true if we read some, false on timeout.
+    bool try_read(unsigned long timeout_usec);
 
     /// Appends data from a given output_stream_t.
     /// Marks the receiver as discarded if the stream was discarded.
     void append_from_stream(const output_stream_t &stream);
-
-    /// Create a io_mode_t::buffer type io redirection, complete with a pipe and a vector<char> for
-    /// output. The default file descriptor used is STDOUT_FILENO for buffering.
-    ///
-    /// \param fd the fd that will be mapped in the child process, typically STDOUT_FILENO
-    /// \param conflicts A set of IO redirections. The function ensures that any pipe it makes does
-    /// not conflict with an fd redirection in this list.
-    static shared_ptr<io_buffer_t> create(int fd, const io_chain_t &conflicts,
-                                          size_t buffer_limit = 0);
 };
 
 class io_chain_t : public std::vector<shared_ptr<io_data_t>> {
@@ -287,11 +323,18 @@ class io_chain_t : public std::vector<shared_ptr<io_data_t>> {
 shared_ptr<const io_data_t> io_chain_get(const io_chain_t &src, int fd);
 shared_ptr<io_data_t> io_chain_get(io_chain_t &src, int fd);
 
-/// Given a pair of fds, if an fd is used by the given io chain, duplicate that fd repeatedly until
-/// we find one that does not conflict, or we run out of fds. Returns the new fds by reference,
-/// closing the old ones. If we get an error, returns false (in which case both fds are closed and
-/// set to -1).
-bool pipe_avoid_conflicts_with_io_chain(int fds[2], const io_chain_t &ios);
+/// Helper type returned from making autoclose pipes.
+struct autoclose_pipes_t {
+    /// Read end of the pipe.
+    autoclose_fd_t read;
+
+    /// Write end of the pipe.
+    autoclose_fd_t write;
+};
+/// Call pipe(), populating autoclose fds, avoiding conflicts.
+/// The pipes are marked CLO_EXEC.
+/// \return pipes on success, none() on error.
+maybe_t<autoclose_pipes_t> make_autoclose_pipes(const io_chain_t &ios);
 
 /// If the given fd is used by the io chain, duplicates it repeatedly until an fd not used in the io
 /// chain is found, or we run out. If we return a new fd or an error, closes the old one.

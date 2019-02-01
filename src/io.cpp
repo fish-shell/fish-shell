@@ -22,14 +22,10 @@ void io_fd_t::print() const { fwprintf(stderr, L"FD map %d -> %d\n", old_fd, fd)
 void io_file_t::print() const { fwprintf(stderr, L"file (%s)\n", filename_cstr); }
 
 void io_pipe_t::print() const {
-    fwprintf(stderr, L"pipe {%d, %d} (input: %s)\n", pipe_fd[0], pipe_fd[1],
-             is_input ? "yes" : "no");
+    fwprintf(stderr, L"pipe {%d} (input: %s)\n", pipe_fd(), is_input_ ? "yes" : "no");
 }
 
-void io_buffer_t::print() const {
-    fwprintf(stderr, L"buffer (input: %s, size %lu)\n",
-             is_input ? "yes" : "no", (unsigned long)buffer_.size());
-}
+void io_bufferfill_t::print() const { fwprintf(stderr, L"bufferfill {%d}\n", write_fd_.fd()); }
 
 void io_buffer_t::append_from_stream(const output_stream_t &stream) {
     if (buffer_.discarded()) return;
@@ -40,75 +36,84 @@ void io_buffer_t::append_from_stream(const output_stream_t &stream) {
     buffer_.append_wide_buffer(stream.buffer());
 }
 
-void io_buffer_t::read() {
-    exec_close(pipe_fd[1]);
+long io_buffer_t::read_some() {
+    int fd = read_.fd();
+    assert(fd >= 0 && "Should have a valid fd");
+    debug(4, L"io_buffer_t::read: blocking read on fd %d", fd);
+    long len;
+    char b[4096];
+    do {
+        len = read(fd, b, sizeof b);
+    } while (len < 0 && errno == EINTR);
+    if (len > 0) {
+        buffer_.append(&b[0], &b[len]);
+    }
+    return len;
+}
 
-    if (io_mode == io_mode_t::buffer) {
-        debug(4, L"io_buffer_t::read: blocking read on fd %d", pipe_fd[0]);
-        while (1) {
-            char b[4096];
-            long len = read_blocked(pipe_fd[0], b, 4096);
-            if (len == 0) {
-                break;
-            } else if (len < 0) {
-                // exec_read_io_buffer is only called on jobs that have exited, and will therefore
-                // never block. But a broken pipe seems to cause some flags to reset, causing the
-                // EOF flag to not be set. Therefore, EAGAIN is ignored and we exit anyway.
-                if (errno != EAGAIN) {
-                    const wchar_t *fmt =
-                        _(L"An error occured while reading output from code block on fd %d");
-                    debug(1, fmt, pipe_fd[0]);
-                    wperror(L"io_buffer_t::read");
-                }
+void io_buffer_t::read_to_wouldblock() {
+    long len;
+    do {
+        len = read_some();
+    } while (len > 0);
+    if (len < 0 && errno != EAGAIN) {
+        debug(1, _(L"An error occured while reading output from code block on fd %d"), read_.fd());
+        wperror(L"io_buffer_t::read");
+    }
+}
 
-                break;
-            } else {
-                buffer_.append(&b[0], &b[len]);
-            }
+bool io_buffer_t::try_read(unsigned long timeout_usec) {
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = timeout_usec;
+    int fd = read_.fd();
+    assert(fd >= 0 && "Should have a valid fd");
+    fd_set fds;
+    FD_ZERO(&fds);
+    FD_SET(fd, &fds);
+    int ret = select(fd + 1, &fds, nullptr, nullptr, &timeout);
+    if (ret < 0) {
+        // Treat EINTR as timeout.
+        if (errno != EINTR) {
+            debug(1, _(L"An error occured inside select on fd %d"), fd);
+            wperror(L"io_buffer_t::try_read");
         }
+        return false;
     }
+    if (ret > 0) {
+        read_some();
+    }
+    return ret > 0;
 }
 
-bool io_buffer_t::avoid_conflicts_with_io_chain(const io_chain_t &ios) {
-    bool result = pipe_avoid_conflicts_with_io_chain(this->pipe_fd, ios);
-    if (!result) {
-        wperror(L"dup");
+shared_ptr<io_bufferfill_t> io_bufferfill_t::create(const io_chain_t &conflicts,
+                                                    size_t buffer_limit) {
+    // Construct our pipes.
+    auto pipes = make_autoclose_pipes(conflicts);
+    if (!pipes) {
+        return nullptr;
     }
-    return result;
-}
 
-shared_ptr<io_buffer_t> io_buffer_t::create(int fd, const io_chain_t &conflicts,
-                                            size_t buffer_limit) {
-    bool success = true;
-    assert(fd >= 0);
-    shared_ptr<io_buffer_t> buffer_redirect(new io_buffer_t(fd, buffer_limit));
-
-    if (exec_pipe(buffer_redirect->pipe_fd) == -1) {
-        debug(1, PIPE_ERROR);
-        wperror(L"pipe");
-        success = false;
-    } else if (!buffer_redirect->avoid_conflicts_with_io_chain(conflicts)) {
-        // The above call closes the fds on error.
-        success = false;
-    } else if (make_fd_nonblocking(buffer_redirect->pipe_fd[0]) != 0) {
+    // Our buffer will read from the read end of the pipe. This end must be non-blocking. This is
+    // because we retain the write end of the pipe in this process (even after handing it off to a
+    // child process); therefore a read on the pipe may block forever. What we should do is arrange
+    // for the write end of the pipe to be closed at the right time; then the read could just block.
+    if (make_fd_nonblocking(pipes->read.fd())) {
         debug(1, PIPE_ERROR);
         wperror(L"fcntl");
-        success = false;
+        return nullptr;
     }
 
-    if (!success) {
-        buffer_redirect.reset();
-    }
-    return buffer_redirect;
+    // Our buffer gets the read end of the pipe; out_pipe gets the write end.
+    auto buffer = std::make_shared<io_buffer_t>(std::move(pipes->read), buffer_limit);
+    return std::make_shared<io_bufferfill_t>(std::move(pipes->write), buffer);
 }
 
-io_buffer_t::~io_buffer_t() {
-    if (pipe_fd[0] >= 0) {
-        exec_close(pipe_fd[0]);
-    }
-    // Dont free fd for writing. This should already be free'd before calling exec_read_io_buffer on
-    // the buffer.
-}
+io_pipe_t::~io_pipe_t() = default;
+
+io_bufferfill_t::~io_bufferfill_t() = default;
+
+io_buffer_t::~io_buffer_t() = default;
 
 void io_chain_t::remove(const shared_ptr<const io_data_t> &element) {
     // See if you can guess why std::find doesn't work here.
@@ -197,7 +202,7 @@ int move_fd_to_unused(int fd, const io_chain_t &io_chain, bool cloexec) {
     return new_fd;
 }
 
-bool pipe_avoid_conflicts_with_io_chain(int fds[2], const io_chain_t &ios) {
+static bool pipe_avoid_conflicts_with_io_chain(int fds[2], const io_chain_t &ios) {
     bool success = true;
     for (int i = 0; i < 2; i++) {
         fds[i] = move_fd_to_unused(fds[i], ios);
@@ -219,6 +224,27 @@ bool pipe_avoid_conflicts_with_io_chain(int fds[2], const io_chain_t &ios) {
         errno = saved_errno;
     }
     return success;
+}
+
+maybe_t<autoclose_pipes_t> make_autoclose_pipes(const io_chain_t &ios) {
+    int pipes[2] = {-1, -1};
+
+    if (pipe(pipes) < 0) {
+        debug(1, PIPE_ERROR);
+        wperror(L"pipe");
+        return none();
+    }
+    set_cloexec(pipes[0]);
+    set_cloexec(pipes[1]);
+
+    if (!pipe_avoid_conflicts_with_io_chain(pipes, ios)) {
+        // The pipes are closed on failure here.
+        return none();
+    }
+    autoclose_pipes_t result;
+    result.read = autoclose_fd_t(pipes[0]);
+    result.write = autoclose_fd_t(pipes[1]);
+    return result;
 }
 
 /// Return the last IO for the given fd.

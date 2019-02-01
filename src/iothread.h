@@ -69,10 +69,16 @@ int iothread_perform(const HANDLER &handler, const COMPLETION &completion) {
 
 // variant of iothread_perform without a completion handler
 inline int iothread_perform(std::function<void(void)> &&func) {
-    return iothread_perform_impl(std::move(func), std::function<void(void)>());
+    return iothread_perform_impl(std::move(func), {});
 }
 
 /// Performs a function on the main thread, blocking until it completes.
 void iothread_perform_on_main(std::function<void(void)> &&func);
+
+/// Creates a pthread, manipulating the signal mask so that the thread receives no signals.
+/// The pthread runs \p func.
+/// \returns true on success, false on failure.
+bool make_pthread(pthread_t *result, void *(*func)(void *), void *param);
+bool make_pthread(pthread_t *result, std::function<void(void)> &&func);
 
 #endif

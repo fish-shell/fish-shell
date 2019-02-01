@@ -943,9 +943,7 @@ static void test_1_cancellation(const wchar_t *src) {
         pthread_kill(thread, SIGINT);
     });
     parser_t::principal_parser().eval(src, io_chain_t{filler}, TOP);
-    auto buffer = filler->buffer();
-    filler.reset();
-    buffer->read_to_wouldblock();
+    auto buffer = io_bufferfill_t::finish(std::move(filler));
     if (buffer->buffer().size() != 0) {
         err(L"Expected 0 bytes in out_buff, but instead found %lu bytes\n",
             buffer->buffer().size());

@@ -836,27 +836,6 @@ void proc_update_jiffies() {
 
 #endif
 
-/// The return value of select_try(), indicating IO readiness or an error
-enum class block_receive_try_t {
-    /// There is no buffer to select on.
-    NO_BUFFER,
-    /// We have a block buffer, and we read some.
-    DATA_READ,
-    /// We have a block buffer, but we were unable to read any.
-    TIMEOUT,
-};
-
-/// \return the last IO buffer in job j, or nullptr if none.
-std::shared_ptr<io_buffer_t> last_buffer(job_t *j) {
-    std::shared_ptr<io_buffer_t> buff{};
-    for (const auto &io : j->all_io_redirections()) {
-        if (io->io_mode == io_mode_t::bufferfill) {
-            buff = static_cast<io_bufferfill_t *>(io.get())->buffer();
-        }
-    }
-    return buff;
-}
-
 // Return control of the terminal to a job's process group. restore_attrs is true if we are restoring
 // a previously-stopped job, in which case we need to restore terminal attributes.
 bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
@@ -1038,7 +1017,6 @@ void job_t::continue_job(bool send_sigcont) {
         }
     });
 
-    bool read_attempted = false;
     if (!is_completed()) {
         if (get_flag(job_flag_t::TERMINAL) && is_foreground()) {
             // Put the job into the foreground and give it control of the terminal.
@@ -1071,74 +1049,15 @@ void job_t::continue_job(bool send_sigcont) {
         }
 
         if (is_foreground()) {
-            // This is an optimization to not call select_try() in case a process has exited. While
-            // it may seem silly, unless there is IO (and there usually isn't in terms of total CPU
-            // time), select_try() will wait for 10ms (our timeout) before returning. If during
-            // these 10ms a process exited, the shell will basically hang until the timeout happens
-            // and we are free to call `process_mark_finished_children()` to discover that fact. By
-            // calling it here before calling `select_try()` below, shell responsiveness can be
-            // dramatically improved (noticably so, not just "theoretically speaking" per the
-            // discussion in #5219).
-            process_mark_finished_children(false);
-
-            // If this is a child job and the parent job is still under construction (i.e. job1 |
-            // some_func), we can't block on execution of the nested job for `some_func`. Doing
-            // so can cause hangs if job1 emits more data than fits in the OS pipe buffer.
-            // The solution is to to not block on fg from the initial call in exec_job(), which
-            // is also the only place that send_sigcont is false. parent_job.is_constructed()
-            // must also be true, which coincides with WAIT_BY_PROCESS (which will have to do
-            // since we don't store a reference to the parent job in the job_t structure).
-            bool block_on_fg = send_sigcont && job_chain_is_fully_constructed();
-
-            // Wait for data to become available or the status of our own job to change
+            // Wait for the status of our own job to change.
             while (!reader_exit_forced() && !is_stopped() && !is_completed()) {
-                read_attempted = true;
-                auto read_result = block_receive_try_t::NO_BUFFER;
-                if (auto buff = last_buffer(this)) {
-                    const unsigned long SELECT_TIMEOUT_USEC = 10000;
-                    bool did_read = buff->try_read(SELECT_TIMEOUT_USEC);
-                    read_result = did_read ? block_receive_try_t::DATA_READ : block_receive_try_t::TIMEOUT;
-                }
-                switch (read_result) {
-                    case block_receive_try_t::DATA_READ:
-                        // We read some data.
-                        process_mark_finished_children(false);
-                        break;
-
-                    case block_receive_try_t::TIMEOUT:
-                        // We read some data or timed out. Poll for finished processes.
-                        debug(4, L"select_try: no fds returned valid data within the timeout" );
-                        process_mark_finished_children(block_on_fg);
-                        break;
-
-                    case block_receive_try_t::NO_BUFFER:
-                        // We are not populating a buffer.
-                        debug(4, L"select_try: no IO fds" );
-                        process_mark_finished_children(true);
-
-                        // If it turns out that we encountered this because the file descriptor we were
-                        // reading from has died, process_mark_finished_children() should take care of
-                        // changing the status of our is_completed() (assuming it is appropriate to do
-                        // so), in which case we will break out of this loop.
-                        break;
-                }
+                process_mark_finished_children(true);
             }
         }
     }
 
     if (is_foreground()) {
         if (is_completed()) {
-            // It's possible that the job will produce output and exit before we've even read from
-            // it.  In that case, make sure we read that output now, before we've executed any
-            // subsequent calls.  This is why prompt colors were getting screwed up - the builtin
-            // `echo` calls were sometimes having their output combined with the `set_color` calls
-            // in the wrong order!
-            if (!read_attempted) {
-                if (auto buff = last_buffer(this)) {
-                    buff->read_to_wouldblock();
-                }
-            }
-
             // Set $status only if we are in the foreground and the last process in the job has
             // finished and is not a short-circuited builtin.
             auto &p = processes.back();

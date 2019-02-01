@@ -11,6 +11,7 @@
 #include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
+#include "iothread.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 io_data_t::~io_data_t() = default;
@@ -28,6 +29,7 @@ void io_pipe_t::print() const {
 void io_bufferfill_t::print() const { fwprintf(stderr, L"bufferfill {%d}\n", write_fd_.fd()); }
 
 void io_buffer_t::append_from_stream(const output_stream_t &stream) {
+    scoped_lock locker(append_lock_);
     if (buffer_.discarded()) return;
     if (stream.buffer().discarded()) {
         buffer_.set_discard();
@@ -36,54 +38,102 @@ void io_buffer_t::append_from_stream(const output_stream_t &stream) {
     buffer_.append_wide_buffer(stream.buffer());
 }
 
-long io_buffer_t::read_some() {
-    int fd = read_.fd();
-    assert(fd >= 0 && "Should have a valid fd");
-    debug(4, L"io_buffer_t::read: blocking read on fd %d", fd);
-    long len;
-    char b[4096];
-    do {
-        len = read(fd, b, sizeof b);
-    } while (len < 0 && errno == EINTR);
-    if (len > 0) {
-        buffer_.append(&b[0], &b[len]);
-    }
-    return len;
-}
+void io_buffer_t::run_background_fillthread(autoclose_fd_t readfd) {
+    // Here we are running the background fillthread, executing in a background thread.
+    // Our plan is:
+    // 1. poll via select() until the fd is readable.
+    // 2. Acquire the append lock.
+    // 3. read until EAGAIN (would block), appending
+    // 4. release the lock
+    // The purpose of holding the lock around the read calls is to ensure that data from background
+    // processes isn't weirdly interspersed with data directly transferred (from a builtin to a buffer).
 
-void io_buffer_t::read_to_wouldblock() {
-    long len;
-    do {
-        len = read_some();
-    } while (len > 0);
-    if (len < 0 && errno != EAGAIN) {
-        debug(1, _(L"An error occured while reading output from code block on fd %d"), read_.fd());
-        wperror(L"io_buffer_t::read");
-    }
-}
+    const int fd = readfd.fd();
 
-bool io_buffer_t::try_read(unsigned long timeout_usec) {
-    struct timeval timeout;
-    timeout.tv_sec = 0;
-    timeout.tv_usec = timeout_usec;
-    int fd = read_.fd();
-    assert(fd >= 0 && "Should have a valid fd");
-    fd_set fds;
-    FD_ZERO(&fds);
-    FD_SET(fd, &fds);
-    int ret = select(fd + 1, &fds, nullptr, nullptr, &timeout);
-    if (ret < 0) {
-        // Treat EINTR as timeout.
-        if (errno != EINTR) {
-            debug(1, _(L"An error occured inside select on fd %d"), fd);
-            wperror(L"io_buffer_t::try_read");
+    // 100 msec poll rate. Note that in most cases, the write end of the pipe will be closed so
+    // select() will return; the polling is important only for weird cases like a background process
+    // launched in a command substitution.
+    const long poll_timeout_usec = 100000;
+    struct timeval tv = {};
+    tv.tv_usec = poll_timeout_usec;
+
+    bool shutdown = false;
+    while (!shutdown) {
+        bool readable = false;
+        // Check the shutdown flag.
+        shutdown |= this->shutdown_fillthread_.load(std::memory_order_relaxed);
+
+        // Poll if our fd is readable.
+        // Do this even if the shutdown flag is set. It's important we wait for the fd at least
+        // once. For short-lived processes, it's possible for the process to execute, produce output
+        // (fits in the pipe buffer) and be reaped before we are even scheduled. So always wait at
+        // least once on the fd. Note that doesn't mean we will wait for the full poll duration;
+        // typically what will happen is our pipe will be widowed and so this will return quickly.
+        // It's only for weird cases (e.g. a background process launched inside a command
+        // substitution) that we'll wait out the entire poll time.
+        fd_set fds;
+        FD_ZERO(&fds);
+        FD_SET(fd, &fds);
+        int ret = select(fd + 1, &fds, NULL, NULL, &tv);
+        readable = ret > 0;
+        if (ret < 0 && errno != EINTR) {
+            // Surprising error.
+            wperror(L"select");
+            return;
         }
-        return false;
+
+        if (readable || shutdown) {
+            // Now either our fd is readable, or we have set the shutdown flag.
+            // Either way acquire the lock and read until we reach EOF, or EAGAIN / EINTR.
+            scoped_lock locker(append_lock_);
+            ssize_t ret;
+            do {
+                char buff[4096];
+                ret = read(fd, buff, sizeof buff);
+                if (ret > 0) {
+                    buffer_.append(&buff[0], &buff[ret]);
+                } else if (ret == 0) {
+                    shutdown = true;
+                } else if (errno != EINTR && errno != EAGAIN) {
+                    wperror(L"read");
+                    return;
+                }
+            } while (ret > 0);
+        }
     }
-    if (ret > 0) {
-        read_some();
+    assert(shutdown && "Should only exit loop if shutdown flag is set");
+}
+
+void io_buffer_t::begin_background_fillthread(autoclose_fd_t fd) {
+    ASSERT_IS_MAIN_THREAD();
+    assert(!fillthread_ && "Already have a fillthread");
+
+    // We want our background thread to own the fd but it's not easy to move into a std::function.
+    // Use a shared_ptr.
+    auto fdref = std::make_shared<autoclose_fd_t>(std::move(fd));
+
+    // Our function to read until the receiver is closed.
+    // It's OK to capture 'this' by value because 'this' owns the background thread and joins it
+    // before dtor.
+    std::function<void(void)> func = [this, fdref]() {
+        this->run_background_fillthread(std::move(*fdref));
+    };
+
+    pthread_t fillthread{};
+    if (!make_pthread(&fillthread, std::move(func))) {
+        wperror(L"make_pthread");
     }
-    return ret > 0;
+    fillthread_ = fillthread;
+}
+
+void io_buffer_t::complete_background_fillthread() {
+    ASSERT_IS_MAIN_THREAD();
+    assert(fillthread_ && "Should have a fillthread");
+    shutdown_fillthread_.store(true, std::memory_order_relaxed);
+    void *ignored = nullptr;
+    int err = pthread_join(*fillthread_, &ignored);
+    DIE_ON_FAILURE(err);
+    fillthread_.reset();
 }
 
 shared_ptr<io_bufferfill_t> io_bufferfill_t::create(const io_chain_t &conflicts,
@@ -93,27 +143,39 @@ shared_ptr<io_bufferfill_t> io_bufferfill_t::create(const io_chain_t &conflicts,
     if (!pipes) {
         return nullptr;
     }
-
     // Our buffer will read from the read end of the pipe. This end must be non-blocking. This is
-    // because we retain the write end of the pipe in this process (even after handing it off to a
-    // child process); therefore a read on the pipe may block forever. What we should do is arrange
-    // for the write end of the pipe to be closed at the right time; then the read could just block.
+    // because our fillthread needs to poll to decide if it should shut down, and also accept input
+    // from direct buffer transfers.
     if (make_fd_nonblocking(pipes->read.fd())) {
         debug(1, PIPE_ERROR);
         wperror(L"fcntl");
         return nullptr;
     }
-
-    // Our buffer gets the read end of the pipe; out_pipe gets the write end.
-    auto buffer = std::make_shared<io_buffer_t>(std::move(pipes->read), buffer_limit);
+    // Our fillthread gets the read end of the pipe; out_pipe gets the write end.
+    auto buffer = std::make_shared<io_buffer_t>(buffer_limit);
+    buffer->begin_background_fillthread(std::move(pipes->read));
     return std::make_shared<io_bufferfill_t>(std::move(pipes->write), buffer);
+}
+
+std::shared_ptr<io_buffer_t> io_bufferfill_t::finish(std::shared_ptr<io_bufferfill_t> &&filler) {
+    // The io filler is passed in. This typically holds the only instance of the write side of the
+    // pipe used by the buffer's fillthread (except for that side held by other processes). Get the
+    // buffer out of the bufferfill and clear the shared_ptr; this will typically widow the pipe.
+    // Then allow the buffer to finish.
+    assert(filler && "Null pointer in finish");
+    auto buffer = filler->buffer();
+    filler.reset();
+    buffer->complete_background_fillthread();
+    return buffer;
 }
 
 io_pipe_t::~io_pipe_t() = default;
 
 io_bufferfill_t::~io_bufferfill_t() = default;
 
-io_buffer_t::~io_buffer_t() = default;
+io_buffer_t::~io_buffer_t() {
+    assert(! fillthread_ && "io_buffer_t destroyed with outstanding fillthread");
+}
 
 void io_chain_t::remove(const shared_ptr<const io_data_t> &element) {
     // See if you can guess why std::find doesn't work here.

@@ -782,12 +782,8 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
 
     // Remove our write pipe and forget it. This may close the pipe, unless another thread has
     // claimed it (background write) or another process has inherited it.
-    auto block_output_buffer = block_output_bufferfill->buffer();
     io_chain.remove(block_output_bufferfill);
-    block_output_bufferfill.reset();
-
-    // Make the buffer populate itself from whatever was written to the write pipe.
-    block_output_buffer->read_to_wouldblock();
+    auto block_output_buffer = io_bufferfill_t::finish(std::move(block_output_bufferfill));
 
     // Resolve our IO chain to a sequence of dup2s.
     auto dup2s = dup2_list_t::resolve_chain(io_chain);
@@ -969,7 +965,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
         if ((io->io_mode == io_mode_t::bufferfill)) {
             // The read limit is dictated by the last bufferfill.
             const auto *bf = static_cast<io_bufferfill_t *>(io.get());
-            stdout_read_limit = bf->buffer()->buffer().limit();
+            stdout_read_limit = bf->buffer()->read_limit();
         }
     }
 
@@ -1040,9 +1036,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
         if (parser.eval(cmd, io_chain_t{bufferfill}, SUBST) == 0) {
             subcommand_status = proc_get_last_status();
         }
-        buffer = bufferfill->buffer();
-        bufferfill.reset();
-        buffer->read_to_wouldblock();
+        buffer = io_bufferfill_t::finish(std::move(bufferfill));
     }
 
     if (buffer && buffer->buffer().discarded()) subcommand_status = STATUS_READ_TOO_MUCH;

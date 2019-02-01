@@ -837,86 +837,24 @@ void proc_update_jiffies() {
 #endif
 
 /// The return value of select_try(), indicating IO readiness or an error
-enum class select_try_t {
-    /// One or more fds have data ready for read
-    DATA_READY,
-    /// The timeout elapsed without any data becoming available for read
+enum class block_receive_try_t {
+    /// There is no buffer to select on.
+    NO_BUFFER,
+    /// We have a block buffer, and we read some.
+    DATA_READ,
+    /// We have a block buffer, but we were unable to read any.
     TIMEOUT,
-    /// There were no FDs in the io chain for which to select on.
-    IOCHAIN_EMPTY,
 };
 
-/// Check if there are buffers associated with the job, and select on them for a while if available.
-///
-/// \param j the job to test
-/// \return the status of the select operation
-static select_try_t select_try(job_t *j) {
-    fd_set fds;
-    int maxfd = -1;
-
-    FD_ZERO(&fds);
-
-    const io_chain_t chain = j->all_io_redirections();
-    for (const auto &io : chain) {
-        if (io->io_mode == io_mode_t::buffer) {
-            auto io_pipe = static_cast<const io_pipe_t *>(io.get());
-            int fd = io_pipe->pipe_fd[0];
-            FD_SET(fd, &fds);
-            maxfd = std::max(maxfd, fd);
-            debug(4, L"select_try on fd %d", fd);
+/// \return the last IO buffer in job j, or nullptr if none.
+std::shared_ptr<io_buffer_t> last_buffer(job_t *j) {
+    std::shared_ptr<io_buffer_t> buff{};
+    for (const auto &io : j->all_io_redirections()) {
+        if (io->io_mode == io_mode_t::bufferfill) {
+            buff = static_cast<io_bufferfill_t *>(io.get())->buffer();
         }
     }
-
-    if (maxfd >= 0) {
-        struct timeval timeout;
-
-        timeout.tv_sec = 0;
-        timeout.tv_usec = 10000;
-
-        int retval = select(maxfd + 1, &fds, 0, 0, &timeout);
-        if (retval == 0) {
-            debug(4, L"select_try hit timeout");
-            return select_try_t::TIMEOUT;
-        }
-        return select_try_t::DATA_READY;
-    }
-
-    return select_try_t::IOCHAIN_EMPTY;
-}
-
-/// Read from descriptors until they are empty.
-///
-/// \param j the job to test
-static void read_try(job_t *j) {
-    io_buffer_t *buff = NULL;
-
-    // Find the last buffer, which is the one we want to read from.
-    const io_chain_t chain = j->all_io_redirections();
-    for (size_t idx = 0; idx < chain.size(); idx++) {
-        io_data_t *d = chain.at(idx).get();
-        if (d->io_mode == io_mode_t::buffer) {
-            buff = static_cast<io_buffer_t *>(d);
-        }
-    }
-
-    if (buff) {
-        debug(4, L"proc::read_try('%ls')", j->command_wcstr());
-        while (1) {
-            char b[BUFFER_SIZE];
-            long len = read_blocked(buff->pipe_fd[0], b, BUFFER_SIZE);
-            if (len == 0) {
-                break;
-            } else if (len < 0) {
-                if (errno != EAGAIN) {
-                    debug(1, _(L"An error occured while reading output from code block"));
-                    wperror(L"read_try");
-                }
-                break;
-            } else {
-                buff->append(b, len);
-            }
-        }
-    }
+    return buff;
 }
 
 // Return control of the terminal to a job's process group. restore_attrs is true if we are restoring
@@ -1154,26 +1092,27 @@ void job_t::continue_job(bool send_sigcont) {
 
             // Wait for data to become available or the status of our own job to change
             while (!reader_exit_forced() && !is_stopped() && !is_completed()) {
-                auto result = select_try(this);
                 read_attempted = true;
-
-                switch (result) {
-                    case select_try_t::DATA_READY:
-                        // Read the data that we know is now available, then scan for finished processes
-                        // but do not block. We don't block so long as we have IO to process, once the
-                        // fd buffers are empty we'll block in the second case below.
-                        read_try(this);
+                auto read_result = block_receive_try_t::NO_BUFFER;
+                if (auto buff = last_buffer(this)) {
+                    const unsigned long SELECT_TIMEOUT_USEC = 10000;
+                    bool did_read = buff->try_read(SELECT_TIMEOUT_USEC);
+                    read_result = did_read ? block_receive_try_t::DATA_READ : block_receive_try_t::TIMEOUT;
+                }
+                switch (read_result) {
+                    case block_receive_try_t::DATA_READ:
+                        // We read some data.
                         process_mark_finished_children(false);
                         break;
 
-                    case select_try_t::TIMEOUT:
-                        // No FDs are ready. Look for finished processes instead.
+                    case block_receive_try_t::TIMEOUT:
+                        // We read some data or timed out. Poll for finished processes.
                         debug(4, L"select_try: no fds returned valid data within the timeout" );
                         process_mark_finished_children(block_on_fg);
                         break;
 
-                    case select_try_t::IOCHAIN_EMPTY:
-                        // There were no IO fds to select on.
+                    case block_receive_try_t::NO_BUFFER:
+                        // We are not populating a buffer.
                         debug(4, L"select_try: no IO fds" );
                         process_mark_finished_children(true);
 
@@ -1195,7 +1134,9 @@ void job_t::continue_job(bool send_sigcont) {
             // `echo` calls were sometimes having their output combined with the `set_color` calls
             // in the wrong order!
             if (!read_attempted) {
-                read_try(this);
+                if (auto buff = last_buffer(this)) {
+                    buff->read_to_wouldblock();
+                }
             }
 
             // Set $status only if we are in the foreground and the last process in the job has

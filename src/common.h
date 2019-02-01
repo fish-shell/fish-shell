@@ -786,6 +786,9 @@ class autoclose_fd_t {
         fd_ = fd;
     }
 
+    // \return if this has a valid fd.
+    bool valid() const { return fd_ >= 0; }
+
     autoclose_fd_t(const autoclose_fd_t &) = delete;
     void operator=(const autoclose_fd_t &) = delete;
     autoclose_fd_t(autoclose_fd_t &&rhs) : fd_(rhs.fd_) { rhs.fd_ = -1; }

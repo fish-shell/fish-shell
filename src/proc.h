@@ -118,8 +118,6 @@ class process_t {
     pid_t pid{0};
     /// File descriptor that pipe output should bind to.
     int pipe_write_fd{0};
-    /// File descriptor that the _next_ process pipe input should bind to.
-    int pipe_read_fd{0};
     /// True if process has completed.
     volatile int completed{false};
     /// True if process has stopped.

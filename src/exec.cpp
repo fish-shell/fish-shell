@@ -902,7 +902,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
 
     // Read pipe goes last.
     if (!p->is_first_in_job) {
-        pipe_read.reset(new io_pipe_t(p->pipe_read_fd, true));
+        pipe_read.reset(new io_pipe_t(STDIN_FILENO, true));
         // Record the current read in pipe_read.
         pipe_read->pipe_fd[0] = pipe_current_read.fd();
         process_net_io_chain.push_back(pipe_read);

@@ -29,3 +29,6 @@ fish: function: The name 'test' is reserved,
 and can not be used as a function name
 function test; echo banana; end
 ^
+
+####################
+# Checking `functions -q` without arguments

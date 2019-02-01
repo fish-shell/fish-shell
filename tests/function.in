@@ -48,4 +48,7 @@ diff (functions name3 | psub) (functions name3a | psub)
 
 logmsg Checking reserved names
 function test; echo banana; end
+
+logmsg Checking `functions -q` without arguments
+functions -q; or echo "False"
 exit 0

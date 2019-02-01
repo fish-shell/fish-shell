@@ -73,3 +73,7 @@ Function name4 not found as expected
 
 ####################
 # Checking reserved names
+
+####################
+# Checking `functions -q` without arguments
+False

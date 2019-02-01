@@ -5,18 +5,11 @@
 VERSION=`git describe --always --dirty 2>/dev/null`
 if test -z "$VERSION" ; then
   echo "Could not get version from git"
-  VERSION=`sed -E -n 's/^.*PACKAGE_VERSION "([0-9a-z.\-]+)"/\1/p' osx/config.h`
-  if test -z "$VERSION"; then
-    echo "Could not get version from osx/config.h"
-    exit 1
-  fi
 fi
 
 echo "Version is $VERSION"
 
 set -x
-
-make distclean
 
 #Exit on error
 set -e

@@ -1106,7 +1106,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
         io_buffer_t::create(STDOUT_FILENO, io_chain_t(), is_subcmd ? read_byte_limit : 0));
     if (io_buffer.get() != NULL) {
         parser_t &parser = parser_t::principal_parser();
-        if (parser.eval(cmd, io_chain_t(io_buffer), SUBST) == 0) {
+        if (parser.eval(cmd, io_chain_t{io_buffer}, SUBST) == 0) {
             subcommand_status = proc_get_last_status();
         }
 

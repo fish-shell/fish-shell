@@ -120,15 +120,15 @@ void io_chain_t::remove(const shared_ptr<const io_data_t> &element) {
     }
 }
 
-void io_chain_t::push_back(const shared_ptr<io_data_t> &element) {
+void io_chain_t::push_back(shared_ptr<io_data_t> element) {
     // Ensure we never push back NULL.
-    assert(element.get() != NULL);
-    std::vector<shared_ptr<io_data_t> >::push_back(element);
+    assert(element.get() != nullptr);
+    std::vector<shared_ptr<io_data_t> >::push_back(std::move(element));
 }
 
-void io_chain_t::push_front(const shared_ptr<io_data_t> &element) {
-    assert(element.get() != NULL);
-    this->insert(this->begin(), element);
+void io_chain_t::push_front(shared_ptr<io_data_t> element) {
+    assert(element.get() != nullptr);
+    this->insert(this->begin(), std::move(element));
 }
 
 void io_chain_t::append(const io_chain_t &chain) {
@@ -253,8 +253,3 @@ shared_ptr<const io_data_t> io_chain_get(const io_chain_t &src, int fd) {
 }
 
 shared_ptr<io_data_t> io_chain_get(io_chain_t &src, int fd) { return src.get_io_for_fd(fd); }
-
-io_chain_t::io_chain_t(const shared_ptr<io_data_t> &data)
-    : std::vector<shared_ptr<io_data_t> >(1, data) {}
-
-io_chain_t::io_chain_t() : std::vector<shared_ptr<io_data_t> >() {}

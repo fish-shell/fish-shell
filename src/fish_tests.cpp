@@ -920,7 +920,7 @@ static void test_parser() {
 
 static void test_1_cancellation(const wchar_t *src) {
     shared_ptr<io_buffer_t> out_buff(io_buffer_t::create(STDOUT_FILENO, io_chain_t()));
-    const io_chain_t io_chain(out_buff);
+    const io_chain_t io_chain{out_buff};
     pthread_t thread = pthread_self();
     double delay = 0.25 /* seconds */;
     iothread_perform([=]() {

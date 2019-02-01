@@ -356,6 +356,9 @@ complete -f -c brew -n '__fish_brew_using_command untap' -a '(__fish_brew_taps)'
 complete -f -c brew -n '__fish_brew_needs_command' -a update -d 'Fetch newest version of Homebrew and formulas'
 complete -f -c brew -n '__fish_brew_using_command update' -l rebase -d 'Use git pull --rebase'
 
+# update-reset
+complete -f -c brew -n '__fish_brew_needs_command' -a update-reset -d 'Reset all Homebrew taps to upstream state'
+
 # upgrade
 complete -f -c brew -n '__fish_brew_needs_command' -a upgrade -d 'Upgrade outdated brews'
 complete -f -c brew -n '__fish_brew_using_command upgrade' -a '(__fish_brew_outdated_formulas)'
@@ -431,6 +434,7 @@ complete -f -c brew -n '__fish_brew_is_subcommand_cask homepage' -a '(__fish_bre
 # info
 complete -f -c brew -n '__fish_brew_needs_cask_action' -a 'info abv' -d 'Dislay info about cask'
 complete -f -c brew -n '__fish_brew_is_subcommand_cask info' -a '(__fish_brew_casks)'
+
 # adv
 complete -f -c brew -n '__fish_brew_is_subcommand_cask abv' -a '(__fish_brew_casks)'
 
@@ -475,9 +479,11 @@ complete -f -c brew -n '__fish_brew_is_subcommand_cask style' -a '(__fish_brew_c
 complete -f -c brew -n '__fish_brew_needs_cask_action' -a 'remove rm uninstall' -d 'Uninstall cask'
 complete -f -c brew -n '__fish_brew_is_subcommand_cask uninstall' -l force -d 'Force the uninstall'
 complete -f -c brew -n '__fish_brew_is_subcommand_cask uninstall' -a '(__fish_brew_casks_installed)'
+
 # remove
 complete -f -c brew -n '__fish_brew_is_subcommand_cask remove' -l force -d 'Force the uninstall'
 complete -f -c brew -n '__fish_brew_is_subcommand_cask remove' -a '(__fish_brew_casks_installed)'
+
 # rm
 complete -f -c brew -n '__fish_brew_is_subcommand_cask rm' -l force -d 'Force the uninstall'
 complete -f -c brew -n '__fish_brew_is_subcommand_cask rm' -a '(__fish_brew_casks_installed)'

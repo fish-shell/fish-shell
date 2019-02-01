@@ -71,3 +71,7 @@ function name3a --argument arg1 arg2
 
 ####################
 # Checking reserved names
+
+####################
+# Checking `functions -q` without arguments
+False

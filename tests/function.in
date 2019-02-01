@@ -58,4 +58,7 @@ test "$name3[2..-1]" = "$name3a[2..-1]"; and echo "3 = 3a"
 
 logmsg Checking reserved names
 function test; echo banana; end
+
+logmsg Checking `functions -q` without arguments
+functions -q; or echo "False"
 exit 0

@@ -337,6 +337,11 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_CMD_OK;
     }
 
+    // If we query with no argument, just return false.
+    if (opts.query && argc == optind) {
+        return STATUS_CMD_ERROR;
+    }
+
     if (opts.list || argc == optind) {
         wcstring_list_t names = function_get_names(opts.show_hidden);
         std::sort(names.begin(), names.end());

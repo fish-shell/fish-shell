@@ -1,26 +1,21 @@
 #ifndef FISH_IO_H
 #define FISH_IO_H
 
+#include <pthread.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdlib.h>
 
-#include <vector>
-// Note that we have to include something to get any _LIBCPP_VERSION defined so we can detect libc++
-// So it's key that vector go above. If we didn't need vector for other reasons, we might include
-// ciso646, which does nothing
-#if defined(_LIBCPP_VERSION) || __cplusplus > 199711L
-// C++11 or libc++ (which is a C++11-only library, but the memory header works OK in C++03)
+#include <atomic>
 #include <memory>
-using std::shared_ptr;
-#else
-// C++03 or libstdc++
-#include <tr1/memory>
-using std::tr1::shared_ptr;
-#endif
+#include <mutex>
+#include <vector>
 
 #include "common.h"
 #include "env.h"
+#include "maybe.h"
+
+using std::shared_ptr;
 
 /// separated_buffer_t is composed of a sequence of elements, some of which may be explicitly
 /// separated (e.g. through string spit0) and some of which the separation is inferred. This enum
@@ -244,6 +239,8 @@ class io_bufferfill_t : public io_data_t {
    public:
     void print() const override;
 
+    // The ctor is public to support make_shared() in the static create function below.
+    // Do not invoke this directly.
     io_bufferfill_t(autoclose_fd_t write_fd, std::shared_ptr<io_buffer_t> buffer)
         : io_data_t(io_mode_t::bufferfill, STDOUT_FILENO),
           write_fd_(std::move(write_fd)),
@@ -253,14 +250,19 @@ class io_bufferfill_t : public io_data_t {
 
     std::shared_ptr<io_buffer_t> buffer() const { return buffer_; }
 
+    /// \return the fd that, when written to, fills the buffer.
     int write_fd() const { return write_fd_.fd(); }
 
-    /// Create an io_bufferfill_t which, when written from, populates a buffer (also created).
+    /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
     /// \returns nullptr on failure, e.g. too many open fds.
     ///
     /// \param conflicts A set of IO redirections. The function ensures that any pipe it makes does
     /// not conflict with an fd redirection in this list.
     static shared_ptr<io_bufferfill_t> create(const io_chain_t &conflicts, size_t buffer_limit = 0);
+
+    /// Reset the receiver (possibly closing the write end of the pipe), and complete the fillthread
+    /// of the buffer. \return the buffer.
+    static std::shared_ptr<io_buffer_t> finish(std::shared_ptr<io_bufferfill_t> &&filler);
 };
 
 class output_stream_t;
@@ -269,19 +271,34 @@ class output_stream_t;
 /// It is not an io_data_t.
 class io_buffer_t {
    private:
-    /// fd from which to read.
-    autoclose_fd_t read_;
+    friend io_bufferfill_t;
 
     /// Buffer storing what we have read.
     separated_buffer_t<std::string> buffer_;
 
-    /// Read some. Append it to our buffer.
-    /// \return positive if we read, 0 on EOF, -1 on error.
-    long read_some();
+    /// Atomic flag indicating our fillthread should shut down.
+    std::atomic<bool> shutdown_fillthread_;
+
+    /// The background fillthread itself, if any.
+    maybe_t<pthread_t> fillthread_{};
+
+    /// Read limit of the buffer.
+    const size_t read_limit_;
+
+    /// Lock for appending.
+    std::mutex append_lock_{};
+
+    /// Called in the background thread to run it.
+    void run_background_fillthread(autoclose_fd_t readfd);
+
+    /// Begin the background fillthread operation, reading from the given fd.
+    void begin_background_fillthread(autoclose_fd_t readfd);
+
+    /// End the background fillthread operation.
+    void complete_background_fillthread();
 
    public:
-    explicit io_buffer_t(autoclose_fd_t read, size_t limit)
-        : read_(std::move(read)), buffer_(limit) {
+    explicit io_buffer_t(size_t limit) : buffer_(limit), read_limit_(limit) {
         // Explicitly reset the discard flag because we share this buffer.
         buffer_.reset_discard();
     }
@@ -289,17 +306,20 @@ class io_buffer_t {
     ~io_buffer_t();
 
     /// Access the underlying buffer.
-    const separated_buffer_t<std::string> &buffer() const { return buffer_; }
+    /// This requires that the background fillthread be none.
+    const separated_buffer_t<std::string> &buffer() const {
+        assert(!fillthread_ && "Cannot access buffer during background fill");
+        return buffer_;
+    }
 
     /// Function to append to the buffer.
-    void append(const char *ptr, size_t count) { buffer_.append(ptr, ptr + count); }
+    void append(const char *ptr, size_t count) {
+        scoped_lock locker(append_lock_);
+        buffer_.append(ptr, ptr + count);
+    }
 
-    /// Read from input pipe until EOF or EAGAIN (i.e. would block).
-    void read_to_wouldblock();
-
-    /// Read a bit, if our fd is readable, with the given timeout.
-    /// \return true if we read some, false on timeout.
-    bool try_read(unsigned long timeout_usec);
+    /// \return the read limit.
+    size_t read_limit() const { return read_limit_; }
 
     /// Appends data from a given output_stream_t.
     /// Marks the receiver as discarded if the stream was discarded.

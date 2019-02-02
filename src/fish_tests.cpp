@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
+#include <thread>
 
 #include <algorithm>
 #include <array>
@@ -69,6 +70,7 @@
 #include "signal.h"
 #include "tnode.h"
 #include "tokenizer.h"
+#include "topic_monitor.h"
 #include "utf8.h"
 #include "util.h"
 #include "wcstringutil.h"
@@ -5073,6 +5075,66 @@ void test_normalize_path() {
     do_test(path_normalize_for_cd(L"/abc/def/", L"../ghi/..") == L"/abc/ghi/..");
 }
 
+static void test_topic_monitor() {
+    say(L"Testing topic monitor");
+    topic_monitor_t monitor;
+    generation_list_t gens{};
+    constexpr auto t = topic_t::sigchld;
+    do_test(gens[t] == 0);
+    do_test(monitor.generation_for_topic(t) == 0);
+    auto changed = monitor.check(&gens, {t}, false /* wait */);
+    do_test(changed.none());
+    do_test(gens[t] == 0);
+
+    monitor.post(t);
+    changed = monitor.check(&gens, topic_set_t{t}, true /* wait */);
+    do_test(changed == topic_set_t{t});
+    do_test(gens[t] == 1);
+    do_test(monitor.generation_for_topic(t) == 1);
+
+    monitor.post(t);
+    do_test(monitor.generation_for_topic(t) == 2);
+    changed = monitor.check(&gens, topic_set_t{t}, true /* wait */);
+    do_test(changed == topic_set_t{t});
+}
+
+static void test_topic_monitor_torture() {
+    say(L"Torture-testing topic monitor");
+    topic_monitor_t monitor;
+    const size_t thread_count = 64;
+    constexpr auto t = topic_t::sigchld;
+    std::vector<generation_list_t> gens;
+    gens.resize(thread_count, generation_list_t{});
+    std::atomic<uint32_t> post_count{};
+    for (auto &gen : gens) {
+        gen = monitor.current_generations();
+        post_count += 1;
+        monitor.post(t);
+    }
+
+    std::atomic<uint32_t> completed{};
+    std::vector<std::thread> threads;
+    for (size_t i = 0; i < thread_count; i++) {
+        threads.emplace_back(
+            [&](size_t i) {
+                for (size_t j = 0; j < (1 << 11); j++) {
+                    auto before = gens[i];
+                    auto changed = monitor.check(&gens[i], topic_set_t{t}, true /* wait */);
+                    do_test(before[t] < gens[i][t]);
+                    do_test(gens[i][t] <= post_count);
+                }
+                auto amt = completed.fetch_add(1, std::memory_order_relaxed);
+            },
+            i);
+    }
+
+    while (completed.load(std::memory_order_relaxed) < thread_count) {
+        post_count += 1;
+        monitor.post(t);
+    }
+    for (auto &t : threads) t.join();
+}
+
 /// Main test.
 int main(int argc, char **argv) {
     UNUSED(argc);
@@ -5192,6 +5254,8 @@ int main(int argc, char **argv) {
     if (should_test_function("maybe")) test_maybe();
     if (should_test_function("layout_cache")) test_layout_cache();
     if (should_test_function("normalize")) test_normalize_path();
+    if (should_test_function("topics")) test_topic_monitor();
+    if (should_test_function("topics")) test_topic_monitor_torture();
     // history_tests_t::test_history_speed();
 
     say(L"Encountered %d errors in low-level tests", err_count);

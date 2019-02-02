@@ -15,6 +15,7 @@
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"
+#include "topic_monitor.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// Struct describing an entry for the lookup table used to convert between signal names and signal
@@ -262,6 +263,7 @@ static void handle_chld(int sig, siginfo_t *info, void *context) {
     if (reraise_if_forked_child(sig)) return;
     job_handle_signal(sig, info, context);
     default_handler(sig, info, context);
+    topic_monitor_t::principal().post(topic_t::sigchld);
 }
 
 // We have a sigalarm handler that does nothing. This is used in the signal torture test, to verify

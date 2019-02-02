@@ -29,7 +29,7 @@ class enum_set_t : private std::bitset<enum_count<T>()> {
    public:
     enum_set_t() = default;
 
-    explicit enum_set_t(T v) { set(v); }
+    /*implicit*/ enum_set_t(T v) { set(v); }
 
     static enum_set_t from_raw(unsigned long v) { return enum_set_t{v}; }
 

@@ -2422,6 +2422,30 @@ static void test_dup2s() {
     do_test(!list.has_value());
 }
 
+static void test_dup2s_fd_for_target_fd() {
+    using std::make_shared;
+    io_chain_t chain;
+    // note io_fd_t params are backwards from dup2.
+    chain.push_back(make_shared<io_close_t>(10));
+    chain.push_back(make_shared<io_fd_t>(9, 10, true));
+    chain.push_back(make_shared<io_fd_t>(5, 8, true));
+    chain.push_back(make_shared<io_fd_t>(1, 4, true));
+    chain.push_back(make_shared<io_fd_t>(3, 5, true));
+    auto list = dup2_list_t::resolve_chain(chain);
+
+    do_test(list.has_value());
+    do_test(list->fd_for_target_fd(3) == 8);
+    do_test(list->fd_for_target_fd(5) == 8);
+    do_test(list->fd_for_target_fd(8) == 8);
+    do_test(list->fd_for_target_fd(1) == 4);
+    do_test(list->fd_for_target_fd(4) == 4);
+    do_test(list->fd_for_target_fd(100) == 100);
+    do_test(list->fd_for_target_fd(0) == 0);
+    do_test(list->fd_for_target_fd(-1) == -1);
+    do_test(list->fd_for_target_fd(9) == -1);
+    do_test(list->fd_for_target_fd(10) == -1);
+}
+
 /// Testing colors.
 static void test_colors() {
     say(L"Testing colors");
@@ -5223,6 +5247,7 @@ int main(int argc, char **argv) {
     if (should_test_function("test")) test_test();
     if (should_test_function("wcstod")) test_wcstod();
     if (should_test_function("dup2s")) test_dup2s();
+    if (should_test_function("dup2s")) test_dup2s_fd_for_target_fd();
     if (should_test_function("path")) test_path();
     if (should_test_function("pager_navigation")) test_pager_navigation();
     if (should_test_function("pager_layout")) test_pager_layout();

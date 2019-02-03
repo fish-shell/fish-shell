@@ -273,6 +273,8 @@ class io_buffer_t : public io_pipe_t {
 class io_chain_t : public std::vector<shared_ptr<io_data_t>> {
    public:
     using std::vector<shared_ptr<io_data_t>>::vector;
+    // user-declared ctor to allow const init. Do not default this, it will break the build.
+    io_chain_t() {}
 
     void remove(const shared_ptr<const io_data_t> &element);
     void push_back(shared_ptr<io_data_t> element);

@@ -77,7 +77,7 @@ SET(FISH_SRCS
     src/postfork.cpp src/proc.cpp src/reader.cpp src/sanity.cpp src/screen.cpp
     src/signal.cpp src/tinyexpr.cpp src/tnode.cpp src/tokenizer.cpp src/utf8.cpp src/util.cpp
     src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp src/wutil.cpp
-    src/future_feature_flags.cpp src/redirection.cpp
+    src/future_feature_flags.cpp
 )
 
 # Header files are just globbed.

@@ -64,7 +64,6 @@
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
-#include "redirection.h"
 #include "screen.h"
 #include "signal.h"
 #include "tnode.h"
@@ -678,20 +677,6 @@ static void test_iothread() {
         max_achieved_thread_count);
 }
 
-static void test_pthread() {
-    say(L"Testing pthreads");
-    pthread_t result = {};
-    int val = 3;
-    bool made = make_pthread(&result, [&val](){
-        val += 2;
-    });
-    do_test(made);
-    void *ignore = nullptr;
-    int ret = pthread_join(result, &ignore);
-    do_test(ret == 0);
-    do_test(val == 5);
-}
-
 static parser_test_error_bits_t detect_argument_errors(const wcstring &src) {
     parse_node_tree_t tree;
     if (!parse_tree_from_string(src, parse_flag_none, &tree, NULL, symbol_argument_list)) {
@@ -934,7 +919,8 @@ static void test_parser() {
 }
 
 static void test_1_cancellation(const wchar_t *src) {
-    auto filler = io_bufferfill_t::create(io_chain_t{});
+    shared_ptr<io_buffer_t> out_buff(io_buffer_t::create(STDOUT_FILENO, io_chain_t()));
+    const io_chain_t io_chain{out_buff};
     pthread_t thread = pthread_self();
     double delay = 0.25 /* seconds */;
     iothread_perform([=]() {
@@ -942,11 +928,11 @@ static void test_1_cancellation(const wchar_t *src) {
         usleep(delay * 1E6);
         pthread_kill(thread, SIGINT);
     });
-    parser_t::principal_parser().eval(src, io_chain_t{filler}, TOP);
-    auto buffer = io_bufferfill_t::finish(std::move(filler));
-    if (buffer->buffer().size() != 0) {
+    parser_t::principal_parser().eval(src, io_chain, TOP);
+    out_buff->read();
+    if (out_buff->buffer().size() != 0) {
         err(L"Expected 0 bytes in out_buff, but instead found %lu bytes\n",
-            buffer->buffer().size());
+            out_buff->buffer().size());
     }
     iothread_drain_all();
 }
@@ -2351,31 +2337,6 @@ static void test_wcstod() {
     tod_test(L"-1000", "-1000");
     tod_test(L"0.12345", "0.12345");
     tod_test(L"nope", "nope");
-}
-
-static void test_dup2s() {
-    using std::make_shared;
-    io_chain_t chain;
-    chain.push_back(make_shared<io_close_t>(17));
-    chain.push_back(make_shared<io_fd_t>(3, 19, true));
-    auto list = dup2_list_t::resolve_chain(chain);
-    do_test(list.has_value());
-    do_test(list->get_actions().size() == 2);
-
-    auto act1 = list->get_actions().at(0);
-    do_test(act1.src == 17);
-    do_test(act1.target == -1);
-
-    auto act2 = list->get_actions().at(1);
-    do_test(act2.src == 19);
-    do_test(act2.target == 3);
-
-    // Invalid files should fail to open.
-    // Suppress the debug() message.
-    scoped_push<int> saved_debug_level(&debug_level, -1);
-    chain.push_back(make_shared<io_file_t>(2, L"/definitely/not/a/valid/path/for/this/test", 0666));
-    list = dup2_list_t::resolve_chain(chain);
-    do_test(!list.has_value());
 }
 
 /// Testing colors.
@@ -5095,7 +5056,6 @@ int main(int argc, char **argv) {
     if (should_test_function("convert_nulls")) test_convert_nulls();
     if (should_test_function("tok")) test_tokenizer();
     if (should_test_function("iothread")) test_iothread();
-    if (should_test_function("pthread")) test_pthread();
     if (should_test_function("parser")) test_parser();
     if (should_test_function("cancellation")) test_cancellation();
     if (should_test_function("indents")) test_indents();
@@ -5111,7 +5071,6 @@ int main(int argc, char **argv) {
     if (should_test_function("abbreviations")) test_abbreviations();
     if (should_test_function("test")) test_test();
     if (should_test_function("wcstod")) test_wcstod();
-    if (should_test_function("dup2s")) test_dup2s();
     if (should_test_function("path")) test_path();
     if (should_test_function("pager_navigation")) test_pager_navigation();
     if (should_test_function("pager_layout")) test_pager_layout();

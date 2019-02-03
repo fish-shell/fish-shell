@@ -29,10 +29,7 @@ function psub --description "Read from stdin into a file and output the filename
         or return
         set filename $dirname/psub.fifo"$_flag_suffix"
         mkfifo $filename
-        # Note that if we were to do the obvious `cat >$filename &`, we would deadlock
-        # because $filename may be opened before the fork. Use tee to ensure it is opened
-        # after the fork.
-        tee $filename >/dev/null &
+        cat >$filename &
     else if test -z "$_flag_suffix"
         set filename (mktemp $tmpdir/.psub.XXXXXXXXXX)
         cat >$filename

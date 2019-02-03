@@ -383,14 +383,13 @@ int main(int argc, char **argv) {
 
     parser_t &parser = parser_t::principal_parser();
 
-    const io_chain_t empty_ios;
     if (read_init(paths)) {
         // Stomp the exit status of any initialization commands (issue #635).
         proc_set_last_status(STATUS_CMD_OK);
 
         // Run post-config commands specified as arguments, if any.
         if (!opts.postconfig_cmds.empty()) {
-            res = run_command_list(&opts.postconfig_cmds, empty_ios);
+            res = run_command_list(&opts.postconfig_cmds, {});
         }
 
         if (!opts.batch_cmds.empty()) {
@@ -400,11 +399,11 @@ int main(int argc, char **argv) {
                 fish_xdm_login_hack_hack_hack_hack(&opts.batch_cmds, argc - my_optind,
                                                    argv + my_optind);
             }
-            res = run_command_list(&opts.batch_cmds, empty_ios);
+            res = run_command_list(&opts.batch_cmds, {});
             reader_exit(0, 0);
         } else if (my_optind == argc) {
             // Implicitly interactive mode.
-            res = reader_read(STDIN_FILENO, empty_ios);
+            res = reader_read(STDIN_FILENO, {});
         } else {
             char *file = *(argv + (my_optind++));
             int fd = open(file, O_RDONLY);
@@ -424,7 +423,7 @@ int main(int argc, char **argv) {
 
                 reader_push_current_filename(rel_filename.c_str());
 
-                res = reader_read(fd, empty_ios);
+                res = reader_read(fd, {});
 
                 if (res) {
                     debug(1, _(L"Error while reading file %ls\n"),

@@ -306,7 +306,7 @@ maybe_t<autoclose_pipes_t> make_autoclose_pipes(const io_chain_t &ios) {
     autoclose_pipes_t result;
     result.read = autoclose_fd_t(pipes[0]);
     result.write = autoclose_fd_t(pipes[1]);
-    return result;
+    return maybe_t<autoclose_pipes_t>{std::move(result)};
 }
 
 /// Return the last IO for the given fd.

@@ -335,7 +335,7 @@ void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &all_ios) {
         if (shlvl_var) {
             long shlvl = fish_wcstol(shlvl_var->as_string().c_str());
             if (!errno && shlvl > 0) {
-                shlvl_str = to_string<long>(shlvl - 1);
+                shlvl_str = to_string(shlvl - 1);
             }
         }
         vars.set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, std::move(shlvl_str));

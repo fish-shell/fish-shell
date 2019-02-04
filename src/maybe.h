@@ -2,7 +2,6 @@
 #define FISH_MAYBE_H
 
 #include <cassert>
-#include <utility>
 
 // A none_t is a helper type used to implicitly initialize maybe_t.
 // Example usage:

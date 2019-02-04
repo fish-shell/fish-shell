@@ -5,10 +5,12 @@
 
 #include <errno.h>
 #include <stdarg.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <wchar.h>
+#include <wctype.h>
 
 #include <cmath>
 #include <memory>

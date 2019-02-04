@@ -3,10 +3,6 @@
 
 #include "config.h"
 
-// IWYU likes to recommend adding <term.h> when we want <ncurses.h>. If we add <term.h> it breaks
-// compiling several modules that include this header because they use symbols which are defined as
-// macros in <term.h>.
-// IWYU pragma: no_include <term.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <unistd.h>

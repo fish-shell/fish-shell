@@ -204,8 +204,6 @@ bool complete_remove_wrapper(const wcstring &command, const wcstring &wrap_targe
 /// Returns a list of wrap targets for a given command.
 wcstring_list_t complete_get_wrap_targets(const wcstring &command);
 
-tuple_list<wcstring, wcstring> complete_get_wrap_pairs();
-
 // Observes that fish_complete_path has changed.
 void complete_invalidate_path();
 

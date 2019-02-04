@@ -469,7 +469,7 @@ static void update_fish_color_support(const environment_t &vars) {
     wcstring term = term_var.missing_or_empty() ? L"" : term_var->as_string();
     bool support_term256 = false;  // default to no support
     if (!fish_term256.missing_or_empty()) {
-        support_term256 = from_string<bool>(fish_term256->as_string());
+        support_term256 = bool_from_string(fish_term256->as_string());
         debug(2, L"256 color support determined by 'fish_term256'");
     } else if (term.find(L"256color") != wcstring::npos) {
         // TERM=*256color*: Explicitly supported.
@@ -501,7 +501,7 @@ static void update_fish_color_support(const environment_t &vars) {
     auto fish_term24bit = vars.get(L"fish_term24bit");
     bool support_term24bit;
     if (!fish_term24bit.missing_or_empty()) {
-        support_term24bit = from_string<bool>(fish_term24bit->as_string());
+        support_term24bit = bool_from_string(fish_term24bit->as_string());
         debug(2, L"'fish_term24bit' preference: 24-bit color %s",
               support_term24bit ? L"enabled" : L"disabled");
     } else {
@@ -956,7 +956,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     vars.set_one(L"FISH_VERSION", ENV_GLOBAL, version);
 
     // Set the $fish_pid variable.
-    vars.set_one(L"fish_pid", ENV_GLOBAL, to_string<long>(getpid()));
+    vars.set_one(L"fish_pid", ENV_GLOBAL, to_string(getpid()));
 
     // Set the $hostname variable
     wcstring hostname = L"fish";
@@ -971,7 +971,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         // TODO: Figure out how to handle invalid numbers better. Shouldn't we issue a diagnostic?
         long shlvl_i = fish_wcstol(str2wcstring(shlvl_var).c_str(), &end);
         if (!errno && shlvl_i >= 0) {
-            nshlvl_str = to_string<long>(shlvl_i + 1);
+            nshlvl_str = to_string(shlvl_i + 1);
         }
     }
     vars.set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, nshlvl_str);
@@ -1028,7 +1028,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     // Set g_use_posix_spawn. Default to true.
     auto use_posix_spawn = vars.get(L"fish_use_posix_spawn");
     g_use_posix_spawn =
-        use_posix_spawn.missing_or_empty() ? true : from_string<bool>(use_posix_spawn->as_string());
+        use_posix_spawn.missing_or_empty() ? true : bool_from_string(use_posix_spawn->as_string());
 
     // Set fish_bind_mode to "default".
     vars.set_one(FISH_BIND_MODE_VAR, ENV_GLOBAL, DEFAULT_BIND_MODE);

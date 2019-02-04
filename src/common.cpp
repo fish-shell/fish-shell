@@ -38,6 +38,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <locale>
 #include <memory>  // IWYU pragma: keep
 #include <type_traits>
 
@@ -692,56 +693,52 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
     errno = errno_old;
 }
 
-void format_long_safe(char buff[64], long val) {
-    if (val == 0) {
-        strcpy(buff, "0");
-    } else {
-        // Generate the string in reverse.
-        size_t idx = 0;
-        bool negative = (val < 0);
+// Careful to not negate LLONG_MIN.
+static unsigned long long absolute_value(long long x) {
+    if (x >= 0) return static_cast<unsigned long long>(x);
+    x = -(x + 1);
+    return static_cast<unsigned long long>(x) + 1;
+}
 
-        // Note that we can't just negate val if it's negative, because it may be the most negative
-        // value. We do rely on round-towards-zero division though.
+template <typename CharT>
+void format_safe_impl(CharT *buff, size_t size, unsigned long long val) {
+    size_t idx = 0;
+    if (val == 0) {
+        buff[idx++] = '0';
+    } else {
+        // Generate the string backwards, then reverse it.
         while (val != 0) {
-            long rem = val % 10;
-            buff[idx++] = '0' + (rem < 0 ? -rem : rem);
+            buff[idx++] = (val % 10) + '0';
             val /= 10;
         }
-        if (negative) buff[idx++] = '-';
-        buff[idx] = 0;
+        std::reverse(buff, buff + idx);
+    }
+    buff[idx++] = '\0';
+    assert(idx <= size && "Buffer overflowed");
+}
 
-        size_t left = 0, right = idx - 1;
-        while (left < right) {
-            char tmp = buff[left];
-            buff[left++] = buff[right];
-            buff[right--] = tmp;
-        }
+void format_long_safe(char buff[64], long val) {
+    unsigned long long uval = absolute_value(val);
+    if (val >= 0) {
+        format_safe_impl(buff, 64, uval);
+    } else {
+        buff[0] = '-';
+        format_safe_impl(buff + 1, 63, uval);
     }
 }
 
 void format_long_safe(wchar_t buff[64], long val) {
-    if (val == 0) {
-        wcscpy(buff, L"0");
+    unsigned long long uval = absolute_value(val);
+    if (val >= 0) {
+        format_safe_impl(buff, 64, uval);
     } else {
-        // Generate the string in reverse.
-        size_t idx = 0;
-        bool negative = (val < 0);
-
-        while (val != 0) {
-            long rem = val % 10;
-            buff[idx++] = L'0' + (wchar_t)(rem < 0 ? -rem : rem);
-            val /= 10;
-        }
-        if (negative) buff[idx++] = L'-';
-        buff[idx] = 0;
-
-        size_t left = 0, right = idx - 1;
-        while (left < right) {
-            wchar_t tmp = buff[left];
-            buff[left++] = buff[right];
-            buff[right--] = tmp;
-        }
+        buff[0] = '-';
+        format_safe_impl(buff + 1, 63, uval);
     }
+}
+
+void format_ullong_safe(wchar_t buff[64], unsigned long long val) {
+    return format_safe_impl(buff, 64, val);
 }
 
 void narrow_string_safe(char buff[64], const wchar_t *s) {
@@ -1954,6 +1951,36 @@ int string_fuzzy_match_t::compare(const string_fuzzy_match_t &rhs) const {
         return compare_ints(this->match_distance_second, rhs.match_distance_second);
     }
     return 0;  // equal
+}
+
+template <bool Fuzzy, typename T>
+size_t ifind_impl(const T &haystack, const T &needle) {
+    using char_t = typename T::value_type;
+    std::locale locale;
+
+    auto ieq = [&locale](char_t c1, char_t c2) {
+        if (c1 == c2 || std::toupper(c1, locale) == std::toupper(c2, locale)) return true;
+
+        // In fuzzy matching treat treat `-` and `_` as equal (#3584).
+        if (Fuzzy) {
+            if ((c1 == '-' || c1 == '_') && (c2 == '-' || c2 == '_')) return true;
+        }
+        return false;
+    };
+
+    auto result = std::search(haystack.begin(), haystack.end(), needle.begin(), needle.end(), ieq);
+    if (result != haystack.end()) {
+        return result - haystack.begin();
+    }
+    return T::npos;
+}
+
+size_t ifind(const wcstring &haystack, const wcstring &needle, bool fuzzy) {
+    return fuzzy ? ifind_impl<true>(haystack, needle) : ifind_impl<false>(haystack, needle);
+}
+
+size_t ifind(const std::string &haystack, const std::string &needle, bool fuzzy) {
+    return fuzzy ? ifind_impl<true>(haystack, needle) : ifind_impl<false>(haystack, needle);
 }
 
 wcstring_list_t split_string(const wcstring &val, wchar_t sep) {

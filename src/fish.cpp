@@ -442,7 +442,7 @@ int main(int argc, char **argv) {
     proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, getpid(), exit_status);
 
     // Trigger any exit handlers.
-    wcstring_list_t event_args = {to_string<int>(exit_status)};
+    wcstring_list_t event_args = {to_string(exit_status)};
     event_fire_generic(L"fish_exit", &event_args);
 
     restore_term_mode();

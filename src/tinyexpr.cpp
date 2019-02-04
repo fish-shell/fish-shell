@@ -202,7 +202,13 @@ static const te_builtin *find_builtin(const char *name, int len) {
 static constexpr double add(double a, double b) {return a + b;}
 static constexpr double sub(double a, double b) {return a - b;}
 static constexpr double mul(double a, double b) {return a * b;}
-static constexpr double divide(double a, double b) {return a / b;}
+static constexpr double divide(double a, double b) {
+    // If b isn't zero, divide.
+    // If a isn't zero, return signed INFINITY.
+    // Else, return NAN.
+    return b ? a / b : a ? copysign(1, a) * copysign(1,b) * INFINITY : NAN;
+}
+
 static constexpr double negate(double a) {return -a;}
 
 void next_token(state *s) {

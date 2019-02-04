@@ -3,28 +3,26 @@
 # This is meant to be run by "make lint" or "make lint-all". It is not meant to
 # be run directly from a shell prompt.
 #
-set cppchecks warning,performance,portability,information,missingInclude
+
+# We don't include "missingInclude" as that doesn't find our config.h.
+# Missing includes will quickly be found by... compiling the thing anyway.
+set cppchecks warning,performance,portability,information #,missingInclude
 set cppcheck_args
 set c_files
 set all no
 set kernel_name (uname -s)
 set machine_type (uname -m)
 
-set -gx CXX $argv[1]
+argparse a/all -- $argv
+set -q argv[1]; and set -gx CXX $argv[1]
 set -e argv[1]
-
-if test "$argv[1]" = "--all"
-    set all yes
-    set cppchecks "$cppchecks,unusedFunction"
-    set -e argv[1]
-end
 
 if test $kernel_name = Linux
     # This is an awful hack. However, the include-what-you-use program spews lots of errors like
     #   /usr/include/unistd.h:226:10: fatal error: 'stddef.h' file not found
     # if we don't explicitly tell it where to find the system headers on Linux. See
     # http://stackoverflow.com/questions/19642590/libtooling-cant-find-stddef-h-nor-other-headers/
-    set -l sys_includes (eval $CXX -v -c src/builtin.cpp 2>&1 | \
+    set -l sys_includes ($CXX -v -c src/builtin.cpp 2>&1 | \
         sed -n -e '/^#include <...> search/,/^End of search list/s/^ *//p')[2..-2]
     set -x CPLUS_INCLUDE_PATH (string join ':' $sys_includes)
 end
@@ -49,8 +47,9 @@ if test "$machine_type" = "x86_64"
     set cppcheck_args -D__x86_64__ -D__LP64__ $cppcheck_args
 end
 
-if test $all = yes
+if set -q _flag_all
     set c_files src/*.cpp
+    set cppchecks "$cppchecks,unusedFunction"
 else
     # We haven't been asked to lint all the source. If there are uncommitted
     # changes lint those, else lint the files in the most recent commit.

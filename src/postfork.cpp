@@ -406,15 +406,3 @@ bool do_builtin_io(const char *out, size_t outlen, const char *err, size_t errle
     errno = saved_errno;
     return success;
 }
-
-void run_as_keepalive(pid_t parent_pid) {
-    // Run this process as a keepalive. In typical usage the parent process will kill us. However
-    // this may not happen if the parent process exits abruptly, either via kill or exec. What we do
-    // is poll our ppid() and exit when it differs from parent_pid. We can afford to do this with
-    // low frequency because in the great majority of cases, fish will kill(9) us.
-    for (;;) {
-        // Note sleep is async-safe.
-        if (sleep(1)) break;
-        if (getppid() != parent_pid) break;
-    }
-}

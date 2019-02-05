@@ -42,7 +42,9 @@ matrix:
     - os: linux
       compiler: clang
       env:
-          - CXXFLAGS="-g -O2 -fno-omit-frame-pointer -fsanitize=address" ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1
+          - CXXFLAGS="-g -O2 -fno-omit-frame-pointer -fsanitize=undefined -fsanitize=address"
+          - ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1
+          - UBSAN_OPTIONS=print_stacktrace=1:report_error_type=1
       before_install: export CXX=clang++-3.8
       addons:
         apt:

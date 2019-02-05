@@ -5075,6 +5075,9 @@ int main(int argc, char **argv) {
     // Set default signal handlers, so we can ctrl-C out of this.
     signal_reset_handlers();
 
+    // Set PWD from getcwd - fixes #5599
+    env_stack_t::principal().set_pwd_from_getcwd();
+
     if (should_test_function("utility_functions")) test_utility_functions();
     if (should_test_function("wcstring_tok")) test_wcstring_tok();
     if (should_test_function("env_vars")) test_env_vars();

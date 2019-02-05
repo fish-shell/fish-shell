@@ -12,11 +12,12 @@ matrix:
             - expect
             - gettext
             - libncurses5-dev
+            - libpcre2-dev
     - os: linux
       compiler: gcc
       addons:
         apt:
-          packages:
+          packages: # Don't use libpcre2-dev here, so that one build uses the vendored code
             - expect
             - gettext
             - lib32ncurses5-dev
@@ -32,6 +33,7 @@ matrix:
             - gettext
             - libncurses5-dev
             - cmake
+            - libpcre2-dev
       env:
         - USE_CMAKE="1" # Dummy value, shows up in the Travis UI only
       script:
@@ -51,6 +53,7 @@ matrix:
             - expect
             - gettext
             - libncurses5-dev
+            - libpcre2-dev
     - os: osx
       before_install:
         - brew update

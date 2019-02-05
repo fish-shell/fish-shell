@@ -107,36 +107,31 @@ function fish_right_prompt
     #  B  |    |    |    | m  | r  | m  | u  |    |    |    |
     #  ?  |    |    |    | m  | r  | m  | u  |    |    | t  |
     #  _  |    |    | d  | m  | r  | m  | u  |    |    |    |
+    set -l porcelain_status (command git status --porcelain | string sub -l2)
 
     set -l status_added 0
+    if string match -qr '[ACDMT][ MT]|[ACMT]D' $porcelain_status
+        set status_added 1
+    end
     set -l status_deleted 0
+    if string match -qr '[ ACMRT]D' $porcelain_status
+        set status_deleted 1
+    end
     set -l status_modified 0
+    if string match -qr '[MT]$' $porcelain_status
+        set status_modified 1
+    end
     set -l status_renamed 0
+    if string match -qe 'R' $porcelain_status
+        set status_renamed 1
+    end
     set -l status_unmerged 0
+    if string match -qr 'AA|DD|U' $porcelain_status
+        set status_unmerged 1
+    end
     set -l status_untracked 0
-    for line in (command git status --porcelain | string sub -l 2)
-        # Check unambiguous cases first which allows us
-        # to skip running all the other regexps.
-        if test "$line" = '??'
-            set status_untracked 1
-            continue
-        end
-        if string match -r '^(?:AA|DD|U.|.U)$' "$line" >/dev/null
-            set status_unmerged 1
-            continue
-        end
-        if string match -r '^(?:[ACDMT][ MT]|[ACMT]D)$' "$line" >/dev/null
-            set status_added 1
-        end
-        if string match -r '^[ ACMRT]D$' "$line" >/dev/null
-            set status_deleted 1
-        end
-        if string match -r '^.[MT]$' "$line" >/dev/null
-            set status_modified 1
-        end
-        if string match -e 'R' "$line" >/dev/null
-            set status_renamed 1
-        end
+    if string match -qe '\?\?' $porcelain_status
+        set status_untracked 1
     end
 
     set_color -o

@@ -1741,7 +1741,7 @@ wcstring env_get_runtime_path() {
         auto pwuid = getpwuid(geteuid());
         const char *uname = pwuid ? pwuid->pw_name : NULL;
         // /tmp/fish.user
-        std::string tmpdir = "/tmp/fish.";
+        std::string tmpdir = get_path_to_tmp_dir() + "/fish.";
         if (uname) {
             tmpdir.append(uname);
         }

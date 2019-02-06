@@ -19,6 +19,11 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "maybe.h"
 
+// PATH_MAX may not exist.
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
 // Define a symbol we can use elsewhere in our code to determine if we're being built on MS Windows
 // under Cygwin.
 #if defined(_WIN32) || defined(_WIN64) || defined(WIN32) || defined(__CYGWIN__) || \
@@ -946,6 +951,8 @@ static const wchar_t *enum_to_str(T enum_val, const enum_map<T> map[]) {
 };
 
 void redirect_tty_output();
+
+std::string get_path_to_tmp_dir();
 
 // Minimum allowed terminal size and default size if the detected size is not reasonable.
 #define MIN_TERM_COL 20

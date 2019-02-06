@@ -764,8 +764,8 @@ void error_reset();
 /// initialization.
 void fish_setlocale();
 
-/// Call read while blocking the SIGCHLD signal. Should only be called if you _know_ there is data
-/// available for reading, or the program will hang until there is data.
+/// Call read, blocking and repeating on EINTR. Exits on EAGAIN.
+/// \return the number of bytes read, or 0 on EOF. On EAGAIN, returns -1 if nothing was read.
 long read_blocked(int fd, void *buf, size_t count);
 
 /// Loop a write request while failure is non-critical. Return -1 and set errno in case of critical

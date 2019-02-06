@@ -277,7 +277,7 @@ class io_buffer_t {
     separated_buffer_t<std::string> buffer_;
 
     /// Atomic flag indicating our fillthread should shut down.
-    std::atomic<bool> shutdown_fillthread_;
+    std::atomic<bool> shutdown_fillthread_{false};
 
     /// The background fillthread itself, if any.
     maybe_t<pthread_t> fillthread_{};

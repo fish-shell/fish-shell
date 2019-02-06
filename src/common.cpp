@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <paths.h>
 #include <pthread.h>
 #include <stdarg.h>
 #include <stddef.h>
@@ -2442,3 +2443,25 @@ std::string get_executable_path(const char *argv0) {
     return std::string(argv0 ? argv0 : "");
 }
 
+/// Return a path to a directory where we can store temporary files.
+std::string get_path_to_tmp_dir() {
+    char *env_tmpdir = getenv("TMPDIR");
+    if (env_tmpdir) {
+        return env_tmpdir;
+    }
+#if defined(_CS_DARWIN_USER_TEMP_DIR)
+    char osx_tmpdir[PATH_MAX];
+    size_t n = confstr(_CS_DARWIN_USER_TEMP_DIR, osx_tmpdir, PATH_MAX);
+    if (0 < n && n <= PATH_MAX) {
+        return osx_tmpdir;
+    } else {
+        return "/tmp";
+    }
+#elif defined(P_tmpdir)
+    return P_tmpdir;
+#elif defined(_PATH_TMP)
+    return _PATH_TMP;
+#else
+    return "/tmp";
+#endif
+}

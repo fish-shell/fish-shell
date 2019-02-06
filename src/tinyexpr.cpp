@@ -56,7 +56,7 @@ int get_arity(const int type) {
 typedef struct te_expr {
     int type;
     union {double value; const void *function;};
-    te_expr *parameters[1];
+    te_expr *parameters[];
 } te_expr;
 
 // TODO: Rename since variables have been removed.
@@ -92,7 +92,7 @@ void te_free(te_expr *n);
 static te_expr *new_expr(const int type, const te_expr *parameters[]) {
     const int arity = get_arity(type);
     const int psize = sizeof(te_expr*) * arity;
-    const int size = (sizeof(te_expr) - sizeof(void*)) + psize;
+    const int size = sizeof(te_expr) + psize;
     te_expr *ret = (te_expr *)malloc(size);
     // This sets float to 0, which depends on the implementation.
     // We rely on IEEE-754 floats anyway, so it's okay.

@@ -176,7 +176,7 @@ void input_set_bind_mode(const wcstring &bm) {
     ASSERT_IS_MAIN_THREAD();
     auto &vars = parser_t::principal_parser().vars();
     assert(!bm.empty());
-    if (input_get_bind_mode(vars) != bm.c_str()) {
+    if (input_get_bind_mode(vars) != bm) {
         vars.set_one(FISH_BIND_MODE_VAR, ENV_GLOBAL, bm);
     }
 }
@@ -223,10 +223,6 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t *const *commands, 
     CHECK(commands, );
     CHECK(mode, );
     CHECK(sets_mode, );
-
-    // debug( 0, L"Add mapping from %ls to %ls in mode %ls", escape_string(sequence,
-    // ESCAPE_ALL).c_str(),
-    // escape_string(command, ESCAPE_ALL).c_str(), mode);
 
     // Remove existing mappings with this sequence.
     const wcstring_list_t commands_vector(commands, commands + commands_len);
@@ -372,7 +368,7 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
         // see that until all other commands have also been run.
         int last_status = proc_get_last_status();
         for (const wcstring &cmd : m.commands) {
-            parser_t::principal_parser().eval(cmd.c_str(), io_chain_t(), TOP);
+            parser_t::principal_parser().eval(cmd, io_chain_t(), TOP);
         }
         proc_set_last_status(last_status);
         input_common_next_ch(R_NULL);

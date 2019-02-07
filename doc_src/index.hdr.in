@@ -1097,7 +1097,9 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - @key{Tab} <a href="#completion">completes</a> the current token. @key{Shift, Tab} completes the current token and starts the pager's search mode.
 
-- @key{Alt,&larr;,Left} and @key{Alt,&rarr;,Right} move the cursor one word left or right, or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, @key{Alt,&rarr;,Right} (or @key{Alt,F}) accepts the first word in the suggestion.
+- @key{Alt,&larr;,Left} and @key{Alt,&rarr;,Right} move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, @key{Alt,&rarr;,Right} (or @key{Alt,F}) accepts the first word in the suggestion.
+
+- @key{Shift,&larr;,Left} and @key{Shift,&rarr;,Right} move the cursor one word left or right, without stopping on punctuation.
 
 - @cursor_key{&uarr;,Up} and @cursor_key{&darr;,Down} (or @key{Control,P} and @key{Control,N} for emacs aficionados) search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the <a href='#history'>history</a> section for more information on history searching.
 

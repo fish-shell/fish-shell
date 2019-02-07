@@ -45,6 +45,9 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv \eOA up-or-search
     bind --preset $argv \eOB down-or-search
 
+    bind --preset $argv -k sright forward-bigword
+    bind --preset $argv -k sleft backward-bigword
+
     # Alt-left/Alt-right
     bind --preset $argv \e\eOC nextd-or-forward-word
     bind --preset $argv \e\eOD prevd-or-backward-word

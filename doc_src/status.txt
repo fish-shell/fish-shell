@@ -28,7 +28,7 @@ With no arguments, `status` displays a summary of the current login and job cont
 
 The following operations (sub-commands) are available:
 
-- `is-command-sub` returns 0 if fish is currently executing a command substitution. Also `-c` or `--is-command-substitution`.
+- `is-command-substitution` returns 0 if fish is currently executing a command substitution. Also `-c` or `--is-command-substitution`.
 
 - `is-block` returns 0 if fish is currently executing a block of code. Also `-b` or `--is-block`.
 

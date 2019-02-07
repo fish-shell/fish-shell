@@ -413,6 +413,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
 
 // Note that several long flags share the same short flag. That is okay. The caller is expected
 // to indicate that a max of one of the long flags sharing a short flag is valid.
+// Remember: adjust share/functions/string.fish when `string` options change
 static const struct woption long_options[] = {
     {L"all", no_argument, NULL, 'a'},         {L"chars", required_argument, NULL, 'c'},
     {L"count", required_argument, NULL, 'n'}, {L"entire", no_argument, NULL, 'e'},

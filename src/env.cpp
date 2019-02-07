@@ -315,8 +315,8 @@ bool string_set_contains(const T &set, const wchar_t *val) {
 /// Check if a variable may not be set using the set command.
 static bool is_read_only(const wchar_t *val) {
     const string_set_t env_read_only = {
-        L"PWD",          L"SHLVL",    L"history",  L"status", L"version",
-        L"FISH_VERSION", L"fish_pid", L"hostname", L"_",      L"fish_private_mode"};
+        L"PWD",          L"SHLVL",    L"history",  L"pipestatus", L"status", L"version",
+        L"FISH_VERSION", L"fish_pid", L"hostname", L"_",          L"fish_private_mode"};
     return string_set_contains(env_read_only, val) ||
         (in_private_mode() && wcscmp(L"fish_history", val) == 0);
 }
@@ -329,7 +329,7 @@ static bool variable_should_auto_pathvar(const wcstring &name) {
 }
 
 /// Table of variables whose value is dynamically calculated, such as umask, status, etc.
-static const string_set_t env_electric = {L"history", L"status", L"umask"};
+static const string_set_t env_electric = {L"history", L"pipestatus", L"status", L"umask"};
 
 static bool is_electric(const wcstring &key) { return contains(env_electric, key); }
 
@@ -1407,6 +1407,13 @@ maybe_t<env_var_t> env_stack_t::get(const wcstring &key, env_mode_flags_t mode) 
             wcstring_list_t result;
             if (history) history->get_history(result);
             return env_var_t(L"history", result);
+        } else if (key == L"pipestatus") {
+            auto&& js = proc_get_last_job_statuses();
+            wcstring_list_t result;
+            result.reserve(js->size());
+            for (auto&& i : *js)
+                result.emplace_back(to_string(i));
+            return env_var_t(L"pipestatus", result);
         } else if (key == L"status") {
             return env_var_t(L"status", to_string(proc_get_last_status()));
         } else if (key == L"umask") {

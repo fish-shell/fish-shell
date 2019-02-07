@@ -56,6 +56,9 @@
 /// Status of last process to exit.
 static int last_status = 0;
 
+/// Statuses of last job's processes to exit.
+static std::shared_ptr<std::vector<int>> last_job_statuses{new std::vector<int>{0}};
+
 /// The signals that signify crashes to us.
 static const int crashsignals[] = {SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGSYS};
 
@@ -144,6 +147,20 @@ void proc_set_last_status(int s) {
 }
 
 int proc_get_last_status() { return last_status; }
+
+void proc_set_last_job_statuses(const job_t &last_job) {
+    ASSERT_IS_MAIN_THREAD();
+    std::shared_ptr<std::vector<int>> ljs{new std::vector<int>};
+    ljs->reserve(last_job.processes.size());
+    for (auto &&p : last_job.processes)
+        ljs->emplace_back(p->pid ? proc_format_status(p->status) : p->status);
+    last_job_statuses = std::move(ljs);
+}
+
+std::shared_ptr<std::vector<int>> proc_get_last_job_statuses() {
+    ASSERT_IS_MAIN_THREAD();
+    return last_job_statuses;
+}
 
 // Basic thread safe job IDs. The vector consumed_job_ids has a true value wherever the job ID
 // corresponding to that slot is in use. The job ID corresponding to slot 0 is 1.

@@ -1,0 +1,67 @@
+logmsg "pipestatus variable - builtins only"
+
+false | false | false; echo $pipestatus
+false | false | false; echo $status
+
+true | true | true; echo $pipestatus
+true | true | true; echo $status
+
+false | true | false; echo $pipestatus
+false | true | false; echo $status
+
+true | false | true; echo $pipestatus
+true | false | true; echo $status
+
+logmsg "pipestatus variable - no builtins"
+
+command false | command false | command false; echo $pipestatus
+command false | command false | command false; echo $status
+
+command true | command true | command true; echo $pipestatus
+command true | command true | command true; echo $status
+
+command false | command true | command false; echo $pipestatus
+command false | command true | command false; echo $status
+
+command true | command false | command true; echo $pipestatus
+command true | command false | command true; echo $status
+
+logmsg "pipestatus variable - mixed"
+
+command false | command false | false; echo $pipestatus
+command false | command false |  false; echo $status
+
+command true | true | command true; echo $pipestatus
+command true | true | command true; echo $status
+
+false | command true | command false; echo $pipestatus
+false | command true | command false; echo $status
+
+true | false | command true; echo $pipestatus
+true | false | command true; echo $status
+
+sh -c 'exit 5' | sh -c 'exit 2'; echo $pipestatus
+sh -c 'exit 5' | sh -c 'exit 2'; echo $status
+
+sh -c 'exit 3' | false | sh -c 'exit 6'; echo $pipestatus
+sh -c 'exit 3' | false | sh -c 'exit 6'; echo $status
+
+sh -c 'exit 9' | true | sh -c 'exit 3' | false; echo $pipestatus
+sh -c 'exit 9' | true | sh -c 'exit 3' | false; echo $status
+
+logmsg "pipestatus variable - non-pipe"
+
+true; echo $pipestatus
+true; echo $status
+
+false; echo $pipestatus
+false; echo $status
+
+command true; echo $pipestatus
+command true; echo $status
+
+command false; echo $pipestatus
+command false; echo $status
+
+sh -c 'exit 4'; echo $pipestatus
+sh -c 'exit 4'; echo $status

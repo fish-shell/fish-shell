@@ -31,12 +31,6 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
         return
     end
 
-    # The default escape timeout is 300ms. But for users of Vi bindings that can be slightly
-    # annoying when trying to switch to Vi "normal" mode. So set a shorter timeout in this case
-    # unless the user has explicitly set the delay.
-    set -q fish_escape_delay_ms
-    or set -g fish_escape_delay_ms 100
-
     set -l init_mode insert
     # These are only the special vi-style keys
     # not end/home, we share those.

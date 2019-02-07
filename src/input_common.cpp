@@ -31,7 +31,7 @@
 /// Time in milliseconds to wait for another byte to be available for reading
 /// after \x1B is read before assuming that escape key was pressed, and not an
 /// escape sequence.
-#define WAIT_ON_ESCAPE_DEFAULT 300
+#define WAIT_ON_ESCAPE_DEFAULT 30
 static int wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
 
 /// Characters that have been read and returned by the sequence matching code.

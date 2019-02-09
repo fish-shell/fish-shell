@@ -2,7 +2,8 @@
 
 \subsection builtin-synopsis Synopsis
 \fish{synopsis}
-builtin BUILTINNAME [OPTIONS...]
+builtin [OPTIONS...] BUILTINNAME
+builtin --query BUILTINNAMES...
 \endfish
 
 \subsection builtin-description Description
@@ -12,6 +13,7 @@ builtin BUILTINNAME [OPTIONS...]
 The following parameters are available:
 
 - `-n` or `--names` List the names of all defined builtins
+- `-q` or `--query` tests if any of the specified builtins exists.
 
 
 \subsection builtin-example Example

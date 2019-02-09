@@ -4,6 +4,8 @@
 - None yet.
 
 ## Notable fixes and improvements
+- Add `$pipestatus` support
+
 ### Syntax changes and new commands
 - None yet.
 

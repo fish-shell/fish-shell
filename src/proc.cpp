@@ -152,8 +152,9 @@ void proc_set_last_job_statuses(const job_t &last_job) {
     ASSERT_IS_MAIN_THREAD();
     std::shared_ptr<std::vector<int>> ljs{new std::vector<int>};
     ljs->reserve(last_job.processes.size());
-    for (auto &&p : last_job.processes)
+    for (auto &&p : last_job.processes) {
         ljs->emplace_back(p->pid ? proc_format_status(p->status) : p->status);
+    }
     last_job_statuses = std::move(ljs);
 }
 

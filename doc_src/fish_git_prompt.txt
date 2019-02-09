@@ -77,7 +77,7 @@ Colors used with their respective flags enabled:
 
 Note that all colors can also have a corresponding "_done" color. E.g. $__fish_git_prompt_color_upstream_done, used right _after_ the upstream.
 
-See also __fish_vcs_prompt, which will call all supported vcs-prompt functions, including git, hg and svn.
+See also fish_vcs_prompt, which will call all supported vcs-prompt functions, including git, hg and svn.
 
 \subsection fish_git_prompt-example Example
 

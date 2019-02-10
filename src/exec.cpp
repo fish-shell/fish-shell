@@ -304,8 +304,7 @@ void internal_exec_helper(parser_t &parser, parsed_source_ref_t parsed_source, t
 // To avoid the race between the caller calling tcsetpgrp() and the client checking the
 // foreground process group, we don't use posix_spawn if we're going to foreground the process. (If
 // we use fork(), we can call tcsetpgrp after the fork, before the exec, and avoid the race).
-static bool can_use_posix_spawn_for_job(const std::shared_ptr<job_t> &job,
-                                        const process_t *process) {
+static bool can_use_posix_spawn_for_job(const std::shared_ptr<job_t> &job) {
     if (job->get_flag(job_flag_t::JOB_CONTROL)) {  //!OCLINT(collapsible if statements)
         // We are going to use job control; therefore when we launch this job it will get its own
         // process group ID. But will it be foregrounded?
@@ -642,7 +641,7 @@ static bool exec_external_command(env_stack_t &vars, const std::shared_ptr<job_t
 
 #if FISH_USE_POSIX_SPAWN
     // Prefer to use posix_spawn, since it's faster on some systems like OS X.
-    bool use_posix_spawn = g_use_posix_spawn && can_use_posix_spawn_for_job(j, p);
+    bool use_posix_spawn = g_use_posix_spawn && can_use_posix_spawn_for_job(j);
     if (use_posix_spawn) {
         g_fork_count++;  // spawn counts as a fork+exec
         // Create posix spawn attributes and actions.

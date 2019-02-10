@@ -32,7 +32,7 @@ struct lookup_entry {
 static int block_count = 0;
 
 /// Lookup table used to convert between signal names and signal ids, etc.
-static const struct lookup_entry lookup[] = {
+static const struct lookup_entry signal_table[] = {
 #ifdef SIGHUP
     {SIGHUP, L"SIGHUP", N_(L"Terminal hung up")},
 #endif
@@ -141,7 +141,7 @@ static const struct lookup_entry lookup[] = {
 #ifdef SIGUNUSED
     {SIGUNUSED, L"SIGUNUSED", N_(L"Unused signal")},
 #endif
-    {0, NULL, NULL}};
+};
 
 /// Test if \c name is a string describing the signal named \c canonical.
 static int match_signal_name(const wchar_t *canonical, const wchar_t *name) {
@@ -151,9 +151,9 @@ static int match_signal_name(const wchar_t *canonical, const wchar_t *name) {
 }
 
 int wcs2sig(const wchar_t *str) {
-    for (int i = 0; lookup[i].desc; i++) {
-        if (match_signal_name(lookup[i].name, str)) {
-            return lookup[i].signal;
+    for (const auto &data : signal_table) {
+        if (match_signal_name(data.name, str)) {
+            return data.signal;
         }
     }
 
@@ -163,11 +163,9 @@ int wcs2sig(const wchar_t *str) {
 }
 
 const wchar_t *sig2wcs(int sig) {
-    int i;
-
-    for (i = 0; lookup[i].desc; i++) {
-        if (lookup[i].signal == sig) {
-            return lookup[i].name;
+    for (const auto &data : signal_table) {
+        if (data.signal == sig) {
+            return data.name;
         }
     }
 
@@ -175,11 +173,9 @@ const wchar_t *sig2wcs(int sig) {
 }
 
 const wchar_t *signal_get_desc(int sig) {
-    int i;
-
-    for (i = 0; lookup[i].desc; i++) {
-        if (lookup[i].signal == sig) {
-            return _(lookup[i].desc);
+    for (const auto &data : signal_table) {
+        if (data.signal == sig) {
+            return _(data.desc);
         }
     }
 
@@ -255,20 +251,18 @@ static void handle_sigalarm(int sig, siginfo_t *info, void *context) {
 }
 
 void signal_reset_handlers() {
-    int i;
-
     struct sigaction act;
     sigemptyset(&act.sa_mask);
     act.sa_flags = 0;
     act.sa_handler = SIG_DFL;
 
-    for (i = 0; lookup[i].desc; i++) {
-        if (lookup[i].signal == SIGHUP) {
+    for (const auto &data : signal_table) {
+        if (data.signal == SIGHUP) {
             struct sigaction oact;
             sigaction(SIGHUP, NULL, &oact);
             if (oact.sa_handler == SIG_IGN) continue;
         }
-        sigaction(lookup[i].signal, &act, NULL);
+        sigaction(data.signal, &act, NULL);
     }
 }
 
@@ -382,14 +376,14 @@ void signal_handle(int sig, int do_handle) {
 
 void get_signals_with_handlers(sigset_t *set) {
     sigemptyset(set);
-    for (int i = 0; lookup[i].desc; i++) {
+    for (const auto &data : signal_table) {
         struct sigaction act = {};
-        sigaction(lookup[i].signal, NULL, &act);
+        sigaction(data.signal, NULL, &act);
         // If SIGHUP is being ignored (e.g., because were were run via `nohup`) don't reset it.
         // We don't special case other signals because if they're being ignored that shouldn't
         // affect processes we spawn. They should get the default behavior for those signals.
-        if (lookup[i].signal == SIGHUP && act.sa_handler == SIG_IGN) continue;
-        if (act.sa_handler != SIG_DFL) sigaddset(set, lookup[i].signal);
+        if (data.signal == SIGHUP && act.sa_handler == SIG_IGN) continue;
+        if (act.sa_handler != SIG_DFL) sigaddset(set, data.signal);
     }
 }
 

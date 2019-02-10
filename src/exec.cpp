@@ -1008,7 +1008,6 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     }
 
     j->continue_job(false);
-    proc_set_last_job_statuses(*j);
     return true;
 }
 

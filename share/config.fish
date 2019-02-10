@@ -259,24 +259,10 @@ function __fish_expand_pid_args
     end
 end
 
-function bg
-    builtin bg (__fish_expand_pid_args $argv)
-end
-
-function fg
-    builtin fg (__fish_expand_pid_args $argv)
-end
-
-function kill
-    command kill (__fish_expand_pid_args $argv)
-end
-
-function wait
-    builtin wait (__fish_expand_pid_args $argv)
-end
-
-function disown
-    builtin disown (__fish_expand_pid_args $argv)
+for jobcmd in bg fg kill wait disown
+    function $jobcmd -V jobcmd
+        builtin $jobcmd (__fish_expand_pid_args $argv)
+    end
 end
 
 # As last part of initialization, source the conf directories.

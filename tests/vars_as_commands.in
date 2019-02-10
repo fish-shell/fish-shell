@@ -9,6 +9,9 @@ $CMD1
 set CMD2 echo '(' not expanded again
 $CMD2
 
+# Test using variables with the builtin decorator
+builtin $CMD1
+
 # Test implicit cd
 set CMD3 /usr/bin
 $CMD3 && echo $PWD

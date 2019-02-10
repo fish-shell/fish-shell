@@ -144,6 +144,16 @@ latex_documents = [
 
 # -- Options for manual page output ------------------------------------------
 
+def get_command_description(path):
+    """ Return the description for a command, by parsing its first line """
+    with open(path) as fd:
+        title = fd.readline()
+    if ' - ' not in title:
+        raise SphinxWarning('No description in file %s' % os.path.basename(path))
+    _, desc = title.split(' - ', 1)
+    return desc.strip()
+
+
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
@@ -153,7 +163,7 @@ man_pages = [
 for path in sorted(glob.glob('cmds/*')):
     docname = strip_ext(path)
     cmd = os.path.basename(docname)
-    man_pages.append((docname, cmd, '', '', 1))
+    man_pages.append((docname, cmd, get_command_description(path), '', 1))
 
 
 # -- Options for Texinfo output ----------------------------------------------

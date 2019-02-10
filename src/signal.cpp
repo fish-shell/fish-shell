@@ -182,6 +182,23 @@ const wchar_t *signal_get_desc(int sig) {
     return _(L"Unknown");
 }
 
+/// Store the "main" pid. This allows us to reliably determine if we are in a forked child.
+static const pid_t s_main_pid = getpid();
+
+/// It's possible that we receive a signal after we have forked, but before we have reset the signal
+/// handlers (or even run the pthread_atfork calls). In that event we will do something dumb like
+/// swallow SIGINT. Ensure that doesn't happen. Check if we are the main fish process; if not reset
+/// and re-raise the signal. \return whether we re-raised the signal.
+static bool reraise_if_forked_child(int sig) {
+    // Don't use is_forked_child, that relies on atfork handlers which maybe have not run yet.
+    if (getpid() == s_main_pid) {
+        return false;
+    }
+    signal(sig, SIG_DFL);
+    raise(sig);
+    return true;
+}
+
 /// Standard signal handler.
 static void default_handler(int signal, siginfo_t *info, void *context) {
     UNUSED(info);
@@ -196,6 +213,7 @@ static void default_handler(int signal, siginfo_t *info, void *context) {
 static void handle_winch(int sig, siginfo_t *info, void *context) {
     UNUSED(info);
     UNUSED(context);
+    if (reraise_if_forked_child(sig)) return;
     common_handle_winch(sig);
     default_handler(sig, 0, 0);
 }
@@ -206,6 +224,7 @@ static void handle_winch(int sig, siginfo_t *info, void *context) {
 static void handle_hup(int sig, siginfo_t *info, void *context) {
     UNUSED(info);
     UNUSED(context);
+    if (reraise_if_forked_child(sig)) return;
     if (event_is_signal_observed(SIGHUP)) {
         default_handler(sig, 0, 0);
     } else {
@@ -215,9 +234,9 @@ static void handle_hup(int sig, siginfo_t *info, void *context) {
 
 /// Handle sigterm. The only thing we do is restore the front process ID, then die.
 static void handle_sigterm(int sig, siginfo_t *info, void *context) {
-    UNUSED(sig);
     UNUSED(info);
     UNUSED(context);
+    if (reraise_if_forked_child(sig)) return;
     restore_term_foreground_process_group();
     signal(SIGTERM, SIG_DFL);
     raise(SIGTERM);
@@ -226,18 +245,21 @@ static void handle_sigterm(int sig, siginfo_t *info, void *context) {
 /// Interactive mode ^C handler. Respond to int signal by setting interrupted-flag and stopping all
 /// loops and conditionals.
 static void handle_int(int sig, siginfo_t *info, void *context) {
+    if (reraise_if_forked_child(sig)) return;
     reader_handle_sigint();
     default_handler(sig, info, context);
 }
 
 /// Non-interactive ^C handler.
 static void handle_int_notinteractive(int sig, siginfo_t *info, void *context) {
+    if (reraise_if_forked_child(sig)) return;
     parser_t::skip_all_blocks();
     default_handler(sig, info, context);
 }
 
 /// sigchld handler. Does notification and calls the handler in proc.c.
 static void handle_chld(int sig, siginfo_t *info, void *context) {
+    if (reraise_if_forked_child(sig)) return;
     job_handle_signal(sig, info, context);
     default_handler(sig, info, context);
 }
@@ -245,9 +267,9 @@ static void handle_chld(int sig, siginfo_t *info, void *context) {
 // We have a sigalarm handler that does nothing. This is used in the signal torture test, to verify
 // that we behave correctly when receiving lots of irrelevant signals.
 static void handle_sigalarm(int sig, siginfo_t *info, void *context) {
-    UNUSED(sig);
     UNUSED(info);
     UNUSED(context);
+    if (reraise_if_forked_child(sig)) return;
 }
 
 void signal_reset_handlers() {

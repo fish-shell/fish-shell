@@ -17,6 +17,7 @@
 - New color options for the pager have been added (#5524).
 - The default escape delay (to differentiate between the escape key and an alt-combination) has been reduced to 30ms, down from 300ms for the default mode and 100ms for vi-mode (#3904).
 - In the interest of consistency, `builtin -q` and `command -q` can now be used to query if a builtin or command exists (#5631).
+- The `path_helper` on macOS now only runs in login shells, matching the bash implementation.
 
 ---
 

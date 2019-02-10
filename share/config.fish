@@ -161,47 +161,44 @@ if not set -q __fish_init_2_3_0
     set -U __fish_init_2_3_0
 end
 
-# macOS-ism: Emulate calling path_helper.
-if command -sq /usr/libexec/path_helper
-    # Adapt construct_path from the macOS /usr/libexec/path_helper
-    # executable for fish; see
-    # https://opensource.apple.com/source/shell_cmds/shell_cmds-203/path_helper/path_helper.c.auto.html .
-    function __fish_macos_set_env -d "set an environment variable like path_helper does (macOS only)"
-        set -l result
-
-        for path_file in $argv[2] $argv[3]/*
-            if [ -f $path_file ]
-                while read -l entry
-                    if not contains $entry $result
-                        set -a result $entry
-                    end
-                end <$path_file
-            end
-        end
-
-        for entry in $$argv[1]
-            if not contains $entry $result
-                set result $result $entry
-            end
-        end
-
-        set -xg $argv[1] $result
-    end
-
-    __fish_macos_set_env 'PATH' '/etc/paths' '/etc/paths.d'
-    if [ -n "$MANPATH" ]
-        __fish_macos_set_env 'MANPATH' '/etc/manpaths' '/etc/manpaths.d'
-    end
-    functions -e __fish_macos_set_env
-end
-
-
 #
 # Some things should only be done for login terminals
 # This used to be in etc/config.fish - keep it here to keep the semantics
 #
-
 if status --is-login
+    if command -sq /usr/libexec/path_helper
+        # Adapt construct_path from the macOS /usr/libexec/path_helper
+        # executable for fish; see
+        # https://opensource.apple.com/source/shell_cmds/shell_cmds-203/path_helper/path_helper.c.auto.html .
+        function __fish_macos_set_env -d "set an environment variable like path_helper does (macOS only)"
+            set -l result
+
+            for path_file in $argv[2] $argv[3]/*
+                if [ -f $path_file ]
+                    while read -l entry
+                        if not contains $entry $result
+                            set -a result $entry
+                        end
+                    end <$path_file
+                end
+            end
+
+            for entry in $$argv[1]
+                if not contains $entry $result
+                    set result $result $entry
+                end
+            end
+
+            set -xg $argv[1] $result
+        end
+
+        __fish_macos_set_env 'PATH' '/etc/paths' '/etc/paths.d'
+        if [ -n "$MANPATH" ]
+            __fish_macos_set_env 'MANPATH' '/etc/manpaths' '/etc/manpaths.d'
+        end
+        functions -e __fish_macos_set_env
+    end
+
     #
     # Put linux consoles in unicode mode.
     #

@@ -352,8 +352,8 @@ int proc_get_last_status();
 /// Sets the status of the last job's processes to exit from last_job.
 void proc_set_last_job_statuses(const job_t &last_job);
 
-/// Returns the status of the last job's processes to exit.
-std::shared_ptr<std::vector<int>> proc_get_last_job_statuses();
+/// Returns the statuses of the last job's processes to exit.
+std::vector<int> proc_get_last_job_statuses();
 
 /// Notify the user about stopped or terminated jobs. Delete terminated jobs from the job list.
 ///

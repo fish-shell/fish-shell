@@ -414,7 +414,7 @@ function fish_git_prompt --description "Prompt function for Git"
                 set s $___fish_git_prompt_char_stashstate
             end
 
-            if test "$untracked" != true
+            if test "$untracked" = true
                 set u (__fish_git_prompt_untracked)
             end
         end

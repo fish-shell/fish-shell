@@ -717,8 +717,9 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
     }
 
     // Set the last proc status appropriately.
-    proc_set_last_status(err_code == ENOENT ? STATUS_CMD_UNKNOWN : STATUS_NOT_EXECUTABLE);
-    proc_set_last_job_statuses(proc_get_last_status());
+    int status = err_code == ENOENT ? STATUS_CMD_UNKNOWN : STATUS_NOT_EXECUTABLE;
+    proc_set_last_status(status);
+    proc_set_last_job_statuses({status});
 
     return parse_execution_errored;
 }

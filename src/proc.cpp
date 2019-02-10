@@ -54,7 +54,7 @@
 static int last_status = 0;
 
 /// Statuses of last job's processes to exit - ensure we start off with one entry of 0.
-static std::shared_ptr<std::vector<int>> last_job_statuses = std::make_shared<std::vector<int>>(1);
+static owning_lock<std::vector<int>> last_job_statuses{std::vector<int>(1u, 0)};
 
 /// The signals that signify crashes to us.
 static const int crashsignals[] = {SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGSYS};
@@ -144,30 +144,21 @@ int proc_get_last_status() { return last_status; }
 
 void proc_set_last_job_statuses(const job_t &last_job) {
     ASSERT_IS_MAIN_THREAD();
-    auto ljs = std::make_shared<std::vector<int>>();
-    ljs->reserve(last_job.processes.size());
-    for (auto &&p : last_job.processes) {
-        ljs->emplace_back(p->pid ? proc_format_status(p->status) : p->status);
+    std::vector<int> ljs;
+    ljs.reserve(last_job.processes.size());
+    for (const auto &p : last_job.processes) {
+        ljs.push_back(p->pid ? proc_format_status(p->status) : p->status);
     }
-    last_job_statuses = std::move(ljs);
+    proc_set_last_job_statuses(std::move(ljs));
 }
 
-void proc_set_last_job_statuses(std::shared_ptr<std::vector<int>> job_statuses) {
+void proc_set_last_job_statuses(std::vector<int> statuses) {
     ASSERT_IS_MAIN_THREAD();
-    last_job_statuses = std::move(job_statuses);
+    auto vals = last_job_statuses.acquire();
+    *vals = std::move(statuses);
 }
 
-void proc_set_last_job_statuses(const int job_status) {
-    ASSERT_IS_MAIN_THREAD();
-    auto ljs = std::make_shared<std::vector<int>>(1);
-    (*ljs)[0] = job_status;
-    last_job_statuses = std::move(ljs);
-}
-
-std::shared_ptr<std::vector<int>> proc_get_last_job_statuses() {
-    ASSERT_IS_MAIN_THREAD();
-    return last_job_statuses;
-}
+std::vector<int> proc_get_last_job_statuses() { return *last_job_statuses.acquire(); }
 
 // Basic thread safe job IDs. The vector consumed_job_ids has a true value wherever the job ID
 // corresponding to that slot is in use. The job ID corresponding to slot 0 is 1.

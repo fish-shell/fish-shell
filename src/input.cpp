@@ -367,7 +367,7 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
         // FIXME(snnw): if commands add stuff to input queue (e.g. commandline -f execute), we won't
         // see that until all other commands have also been run.
         int last_status = proc_get_last_status();
-        const auto& last_job_statuses = proc_get_last_job_statuses();
+        auto last_job_statuses = proc_get_last_job_statuses();
         for (const wcstring &cmd : m.commands) {
             parser_t::principal_parser().eval(cmd, io_chain_t(), TOP);
         }

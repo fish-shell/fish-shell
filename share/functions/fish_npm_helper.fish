@@ -7,7 +7,7 @@
 # Install globally with `sudo npm install -g all-the-package-names`. Keep it up to date.
 function __yarn_helper_installed
     # This function takes the command to globally install a package as $argv[1]
-    if not type -q all-the-package-namesS
+    if not type -q all-the-package-names
         if not set -qg __fish_yarn_pkg_info_shown
             set -l old (commandline)
             commandline -r ""

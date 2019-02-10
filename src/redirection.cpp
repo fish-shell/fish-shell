@@ -8,9 +8,6 @@
 /// File descriptor redirection error message.
 #define FD_ERROR "An error occurred while redirecting file descriptor %s"
 
-/// Pipe error message.
-#define LOCAL_PIPE_ERROR "An error occurred while setting up pipe"
-
 #define NOCLOB_ERROR _(L"The file '%s' already exists")
 
 #define FILE_ERROR _(L"An error occurred while redirecting file '%s'")

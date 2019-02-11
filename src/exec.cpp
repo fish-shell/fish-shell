@@ -970,7 +970,11 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
 
     if (j->processes.front()->type == INTERNAL_EXEC) {
         internal_exec(parser.vars(), j.get(), all_ios);
-        DIE("this should be unreachable");
+        // internal_exec only returns if it failed to set up redirections.
+        // In case of an successful exec, this code is not reached.
+        bool status = j->get_flag(job_flag_t::NEGATE) ? 0 : 1;
+        proc_set_last_status(status);
+        return false;
     }
 
     // This loop loops over every process_t in the job, starting it as appropriate. This turns out

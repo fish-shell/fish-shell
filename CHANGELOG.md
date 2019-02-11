@@ -9,17 +9,23 @@ This release of fish fixes a number of major issues discovered in fish 3.0.0.
 - `read --silent` no longer echoes to the tty when run from a non-interactive script (#5519).
 - On macOS, path entries with spaces in `/etc/paths` and `/etc/paths.d` now correctly set path entries with spaces. Likewise, `MANPATH` is correctly set from `/etc/manpaths` and `/etc/manpaths.d` (#5481).
 - fish starts correctly under Cygwin/MSYS2 (#5426).
-- The `pager-toggle-search` binding (Control-S by default) now positions the cursor in the completions list.
+- The `pager-toggle-search` binding (Ctrl-S by default) will now activate the search field, even when the pager is not focused.
 - The error when a command is not found is now printed a single time, instead of once per argument (#5588).
 - Fixes and improvements to the git completions, including printing correct paths with older git versions, fuzzy matching again, reducing unnecessary offers of root paths (starting with `:/`) (#5578, #5574, #5476), and ignoring shell aliases, so enterprising users can set up the wrapping command (via `set -g __fish_git_alias_$command $whatitwraps`) (#5412).
 - Significant performance improvements to core shell functions (#5447) and to the `kill` completions (#5541). 
 - Starting in symbolically-linked working directories works correctly (#5525).
 - The default `fish_title` function no longer contains extra spaces (#5517).
 - The `nim` prompt now works correctly when chosen in the Web-based configuration (#5490).
-- `string` now prints help to stdout, like other builtins (#5495),
-- Improvements to the completions for `configure` (#5518) and `man` (#5566).
+- `string` now prints help to stdout, like other builtins (#5495).
 - Killing the terminal while fish is in vi normal mode will no longer send it spinning and eating CPU. (#5528)
 - A number of crashes have been fixed (#5550, #5548, #5479, #5453).
+- Improvements to the documentation and certain completions.
+
+### Known issues
+
+There is one significant known issue that was not corrected before the release:
+
+- fish does not run correctly under Windows Services for Linux before Windows 10 version 1809/17763, and the message warning of this may not be displayed (#5619).
 
 If you are upgrading from version 2.7.1 or before, please also review the release notes for 3.0.0 and 3.0b1 (included below).
 

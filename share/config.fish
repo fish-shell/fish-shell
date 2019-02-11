@@ -142,12 +142,10 @@ end
 # in UTF-8 (with non-ASCII characters).
 __fish_set_locale
 
-# "." command for compatibility with old fish versions.
-function . --description 'Evaluate contents of file (deprecated, see "source")' --no-scope-shadowing
-    if test (count $argv) -eq 0
-        # Uses tty directly, as isatty depends on "."
-        and tty 0>&0 >/dev/null
-        echo "source: '.' command is deprecated, and doesn't work with STDIN anymore. Did you mean 'source' or './'?" >&2
+# "." alias for source; deprecated
+function . -d 'Evaluate a file (deprecated, use "source")' --no-scope-shadowing --wraps source
+    if [ (count $argv) -eq 0 ] && isatty 0
+        echo "source: using source via '.' is deprecated, and stdin doesn't work."\n"Did you mean 'source' or './'?" >&2
         return 1
     else
         source $argv

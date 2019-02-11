@@ -61,25 +61,21 @@ end
 
 if not set -q fish_function_path
     set fish_function_path $__fish_config_dir/functions $__fish_sysconf_dir/functions $__extra_functionsdir $__fish_data_dir/functions
-end
-
-if not contains -- $__fish_data_dir/functions $fish_function_path
-    set fish_function_path $fish_function_path $__fish_data_dir/functions
+else if not contains -- $__fish_data_dir/functions $fish_function_path
+    set -a fish_function_path $__fish_data_dir/functions
 end
 
 if not set -q fish_complete_path
     set fish_complete_path $__fish_config_dir/completions $__fish_sysconf_dir/completions $__extra_completionsdir $__fish_data_dir/completions $__fish_user_data_dir/generated_completions
-end
-
-if not contains -- $__fish_data_dir/completions $fish_complete_path
-    set fish_complete_path $fish_complete_path $__fish_data_dir/completions
+else if not contains -- $__fish_data_dir/completions $fish_complete_path
+    set -a fish_complete_path $__fish_data_dir/completions
 end
 
 # This cannot be in an autoload-file because `:.fish` is an invalid filename on windows.
-function :
-    # no-op function for compatibility with sh, bash, and others.
+function : -d "no-op function"
+    # for compatibility with sh, bash, and others.
     # Often used to insert a comment into a chain of commands without having
-    # it eat up the remainder of the line, handy in Makefiles.
+    # it eat up the remainder of the line, handy in Makefiles. 
 end
 
 #
@@ -91,9 +87,8 @@ end
 #
 
 if test -d /usr/xpg4/bin
-    if not contains -- /usr/xpg4/bin $PATH
-        set PATH /usr/xpg4/bin $PATH
-    end
+    not contains -- /usr/xpg4/bin $PATH
+    and set PATH /usr/xpg4/bin $PATH
 end
 
 # Add a handler for when fish_user_path changes, so we can apply the same changes to PATH
@@ -111,9 +106,9 @@ function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" -
             if set -l idx (contains --index -- $x $local_path)
                 set -e local_path[$idx]
             else
-                set -g __fish_added_user_paths $__fish_added_user_paths $x
+                set -ga __fish_added_user_paths $x
             end
-            set local_path $x $local_path
+            set -p local_path $x
         end
     end
 
@@ -159,7 +154,7 @@ if not set -q __fish_init_2_3_0
     if set -q fish_user_abbreviations
         set -l fab
         for abbr in $fish_user_abbreviations
-            set fab $fab (string replace -r '^([^ =]+)=(.*)$' '$1 $2' -- $abbr)
+            set -a fab (string replace -r '^([^ =]+)=(.*)$' '$1 $2' -- $abbr)
         end
         set fish_user_abbreviations $fab
     end
@@ -175,10 +170,10 @@ if command -sq /usr/libexec/path_helper
         set -l result
 
         for path_file in $argv[2] $argv[3]/*
-            if test -f $path_file
+            if [ -f $path_file ]
                 while read -l entry
                     if not contains $entry $result
-                        set result $result $entry
+                        set -a result $entry
                     end
                 end <$path_file
             end
@@ -211,11 +206,9 @@ if status --is-login
     # Put linux consoles in unicode mode.
     #
     if test "$TERM" = linux
-        if string match -qir '\.UTF' -- $LANG
-            if command -sq unicode_start
-                unicode_start
-            end
-        end
+        and string match -qir '\.UTF' -- $LANG
+        and command -sq unicode_start
+        unicode_start
     end
 end
 
@@ -239,10 +232,13 @@ function __fish_expand_pid_args
     end
 end
 
-for jobcmd in bg fg kill wait disown
-    function $jobcmd -V jobcmd
-        builtin $jobcmd (__fish_expand_pid_args $argv)
+for jobbltn in bg fg wait disown
+    function $jobbltn -V jobbltn
+        builtin $jobbltn (__fish_expand_pid_args $argv)
     end
+end
+function kill
+    command kill (__fish_expand_pid_args $argv)
 end
 
 # As last part of initialization, source the conf directories.

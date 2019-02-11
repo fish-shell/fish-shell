@@ -5,13 +5,6 @@ Introduction
 
 This is the documentation for ``fish``, the friendly interactive shell. fish is a user friendly commandline shell intended mostly for interactive use. A shell is a program used to execute other programs. For the latest information on fish, please visit the `fish homepage <https://fishsshell.com/>`_.
 
-.. toctree::
-   :glob:
-   :maxdepth: 1
-   
-   cmds/*
-
-
 .. _syntax:
 
 Syntax overview
@@ -317,6 +310,14 @@ Help
 ``fish`` also has man pages for its commands. For example, ``man set`` will show the documentation for ``set`` as a man page.
 
 Help on a specific builtin can also be obtained with the ``-h`` parameter. For instance, to obtain help on the ``fg`` builtin, either type ``fg -h`` or ``help fg``.
+
+Commands
+========
+
+.. toctree::
+   :maxdepth: 1
+   
+   commands
 
 
 Autosuggestions

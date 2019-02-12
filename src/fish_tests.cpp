@@ -318,6 +318,16 @@ static void test_enum_set() {
     do_test(static_cast<unsigned>(test_enum::COUNT) == idx);
 }
 
+static void test_enum_array() {
+    say(L"Testing enum array");
+    enum_array_t<std::string, test_enum> es{};
+    do_test(es.size() == enum_count<test_enum>());
+    es[test_enum::beta] = "abc";
+    do_test(es[test_enum::beta] == "abc");
+    es.at(test_enum::gamma) = "def";
+    do_test(es.at(test_enum::gamma) == "def");
+}
+
 /// Test sane escapes.
 static void test_unescape_sane() {
     const struct test_t {
@@ -5115,6 +5125,7 @@ int main(int argc, char **argv) {
     if (should_test_function("env_vars")) test_env_vars();
     if (should_test_function("str_to_num")) test_str_to_num();
     if (should_test_function("enum")) test_enum_set();
+    if (should_test_function("enum")) test_enum_array();
     if (should_test_function("highlighting")) test_highlighting();
     if (should_test_function("new_parser_ll2")) test_new_parser_ll2();
     if (should_test_function("new_parser_fuzzing"))

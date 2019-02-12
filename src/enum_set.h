@@ -11,10 +11,17 @@
 template <typename T>
 struct enum_info_t {};
 
+/// \return the count of an enum.
 template <typename T>
-class enum_set_t : private std::bitset<static_cast<size_t>(enum_info_t<T>::count)> {
+constexpr size_t enum_count() {
+    return static_cast<size_t>(enum_info_t<T>::count);
+}
+
+/// A bit set indexed by an enum type.
+template <typename T>
+class enum_set_t : private std::bitset<enum_count<T>()> {
    private:
-    using super = std::bitset<static_cast<size_t>(enum_info_t<T>::count)>;
+    using super = std::bitset<enum_count<T>()>;
     static size_t index_of(T t) { return static_cast<size_t>(t); }
 
     explicit enum_set_t(unsigned long raw) : super(raw) {}
@@ -41,6 +48,21 @@ class enum_set_t : private std::bitset<static_cast<size_t>(enum_info_t<T>::count
     bool operator==(const enum_set_t &rhs) const { return super::operator==(rhs); }
 
     bool operator!=(const enum_set_t &rhs) const { return super::operator!=(rhs); }
+};
+
+/// An array of Elem indexed by an enum class.
+template <typename Elem, typename T>
+class enum_array_t : public std::array<Elem, enum_count<T>()> {
+    using super = std::array<Elem, enum_count<T>()>;
+    using base_type_t = typename std::underlying_type<T>::type;
+
+    static int index_of(T t) { return static_cast<base_type_t>(t); }
+
+   public:
+    Elem &at(T t) { return super::at(index_of(t)); }
+    const Elem &at(T t) const { return super::at(index_of(t)); }
+    Elem &operator[](T t) { return super::operator[](index_of(t)); }
+    const Elem &operator[](T t) const { return super::operator[](index_of(t)); }
 };
 
 /// A counting iterator for an enum class.
@@ -81,5 +103,5 @@ class enum_iter_t {
 
    public:
     iterator_t begin() const { return iterator_t{0}; }
-    iterator_t end() const { return iterator_t{static_cast<base_type_t>(enum_info_t<T>::count)}; }
+    iterator_t end() const { return iterator_t{static_cast<base_type_t>(enum_count<T>())}; }
 };

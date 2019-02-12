@@ -69,7 +69,7 @@ Suppressing oclint warnings is more complicated to describe so I'll refer you to
 The following sections discuss the specific rules for the style that should be used when writing fish code. To ensure your changes conform to the style rules you simply need to run
 
 ```
-make style
+build_tools/style.fish
 ```
 
 before committing your change. That will run `git-clang-format` to rewrite only the lines you're modifying.
@@ -79,7 +79,7 @@ If you've already committed your changes that's okay since it will then check th
 If you want to check the style of the entire code base run
 
 ```
-make style-all
+build_tools/style.fish --all
 ```
 
 That command will refuse to restyle any files if you have uncommitted changes.

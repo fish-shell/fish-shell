@@ -94,7 +94,7 @@ void io_buffer_t::run_background_fillthread(autoclose_fd_t readfd) {
             scoped_lock locker(append_lock_);
             ssize_t ret;
             do {
-                char buff[4096];
+                char buff[BUFFER_SIZE];
                 ret = read(fd, buff, sizeof buff);
                 if (ret > 0) {
                     buffer_.append(&buff[0], &buff[ret]);

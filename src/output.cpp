@@ -148,9 +148,7 @@ bool write_color(rgb_color_t color, bool is_fg) {
 /// Since the terminfo string this function emits can potentially cause the screen to flicker, the
 /// function takes care to write as little as possible.
 ///
-/// Possible values for color are any form the FISH_COLOR_* enum and FISH_COLOR_RESET.
-/// FISH_COLOR_RESET will perform an exit_attribute_mode, even if set_color thinks it is already in
-/// FISH_COLOR_NORMAL mode.
+/// Possible values for colors are rgb_color_t colors or special values like rgb_color_t::normal() 
 ///
 /// In order to set the color to normal, three terminfo strings may have to be written.
 ///

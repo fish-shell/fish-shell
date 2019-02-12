@@ -206,6 +206,16 @@ function __fish_git_files
                     set -ql modified_staged
                     and set file "$line[9..-1]"
                     and set desc $staged_modified_desc
+                case '1 MM*'
+                    # Staged-modified with unstaged modifications
+                    # These need to be offered for both kinds of modified.
+                    if set -ql modified
+                        set file "$line[9..-1]"
+                        set desc $modified_desc
+                    else if set -ql modified_staged
+                        set file "$line[9..-1]"
+                        set desc $staged_modified_desc
+                    end
                 case '1 .D*'
                     set -ql deleted
                     and set file "$line[9..-1]"

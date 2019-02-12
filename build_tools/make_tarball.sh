@@ -14,8 +14,7 @@ set -e
 # but to get the documentation in, we need to make a symlink called "fish-VERSION"
 # and tar from that, so that the documentation gets the right prefix
 
-# We need GNU tar as that supports the --mtime option
-# BSD tar supports --mtree but keeping them in sync sounds too hard
+# We need GNU tar as that supports the --mtime and --transform options
 TAR=notfound
 for try in tar gtar gnutar; do
   if $try -Pcf /dev/null --mtime now /dev/null >/dev/null 2>&1; then
@@ -48,26 +47,21 @@ rm -f "$path" "$path".gz
 # git starts the archive
 git archive --format=tar --prefix="$prefix"/ HEAD > "$path"
 
-# tarball out the documentation, generate a configure script and version file
-autoreconf --no-recursive
-./configure --with-doxygen
-make doc share/man
-echo $VERSION > version
-
+# tarball out the documentation, generate a version file
 PREFIX_TMPDIR=`mktemp -d`
 cd $PREFIX_TMPDIR
+echo $VERSION > version
+cmake $wd
+make doc
 
-ln -s "$wd" "$prefix"
-TAR_APPEND="$TAR --append --file=$path --mtime=now --owner=0 --group=0 --mode=g+w,a+rX"
-$TAR_APPEND --no-recursion "$prefix"/user_doc
-$TAR_APPEND "$prefix"/user_doc/html "$prefix"/share/man
-$TAR_APPEND "$prefix"/version
-$TAR_APPEND "$prefix"/configure "$prefix"/config.h.in
-rm "$prefix"/version
-unlink "$prefix"
+TAR_APPEND="$TAR --append --file=$path --mtime=now --owner=0 --group=0 \
+  --mode=g+w,a+rX --transform s/^/$prefix\//"
+$TAR_APPEND --no-recursion user_doc
+$TAR_APPEND user_doc/html user_doc/man
+$TAR_APPEND version
 
 cd -
-rmdir $PREFIX_TMPDIR
+rm -r "$PREFIX_TMPDIR"
 
 # gzip it
 gzip "$path"

@@ -4,6 +4,8 @@
 - The vcs-prompt functions have been renamed to names without double-underscore, so __fish_git_prompt is now fish_git_prompt, __fish_vcs_prompt is now fish_vcs_prompt, __fish_hg_prompt is now fish_hg_prompt and __fish_svn_prompt is now fish_svn_prompt. Shims at the old names have been added, and the variables have kept their old names (#5586).
 
 ## Notable fixes and improvements
+- Fixed infinite recursion triggered if a custom `fish_title` function calls `read` interactively
+
 ### Syntax changes and new commands
 - None yet.
 

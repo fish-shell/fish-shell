@@ -351,6 +351,7 @@ int proc_get_last_status();
 
 /// Sets the status of the last job's processes to exit from last_job.
 void proc_set_last_job_statuses(const job_t &last_job);
+void proc_set_last_job_statuses(std::shared_ptr<std::vector<int>>);
 
 /// Returns the status of the last job's processes to exit.
 std::shared_ptr<std::vector<int>> proc_get_last_job_statuses();

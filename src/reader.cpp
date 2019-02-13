@@ -2365,6 +2365,8 @@ static int read_i() {
     data->prev_end_loop = 0;
 
     while ((!data->end_loop) && (!sanity_check())) {
+        auto saved_job_statuses = proc_get_last_job_statuses();
+
         event_fire_generic(L"fish_prompt");
         run_count++;
 
@@ -2394,9 +2396,17 @@ static int read_i() {
             data->command_line.text.clear();
             data->command_line_changed(&data->command_line);
             wcstring_list_t argv(1, command);
+
             event_fire_generic(L"fish_preexec", &argv);
+
+            proc_set_last_job_statuses(std::move(saved_job_statuses));
             reader_run_command(parser, command);
+            saved_job_statuses = proc_get_last_job_statuses();
+
             event_fire_generic(L"fish_postexec", &argv);
+
+            proc_set_last_job_statuses(std::move(saved_job_statuses));
+
             // Allow any pending history items to be returned in the history array.
             if (data->history) {
                 data->history->resolve_pending();

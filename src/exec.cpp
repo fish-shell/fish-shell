@@ -1018,6 +1018,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
     ASSERT_IS_MAIN_THREAD();
     bool prev_subshell = is_subshell;
     const int prev_status = proc_get_last_status();
+    const auto& prev_job_statuses = proc_get_last_job_statuses();
     bool split_output = false;
 
     const auto ifs = parser.vars().get(L"IFS");
@@ -1044,7 +1045,14 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
 
     // If the caller asked us to preserve the exit status, restore the old status. Otherwise set the
     // status of the subcommand.
-    proc_set_last_status(apply_exit_status ? subcommand_status : prev_status);
+    if (apply_exit_status) {
+        proc_set_last_status(subcommand_status);
+    }
+    else {
+        proc_set_last_job_statuses(std::move(prev_job_statuses));
+        proc_set_last_status(prev_status);
+    }
+
     is_subshell = prev_subshell;
 
     if (lst == NULL || !buffer) {

@@ -158,6 +158,11 @@ void proc_set_last_job_statuses(const job_t &last_job) {
     last_job_statuses = std::move(ljs);
 }
 
+void proc_set_last_job_statuses(std::shared_ptr<std::vector<int>> job_statuses) {
+    ASSERT_IS_MAIN_THREAD();
+    last_job_statuses = std::move(job_statuses);
+}
+
 std::shared_ptr<std::vector<int>> proc_get_last_job_statuses() {
     ASSERT_IS_MAIN_THREAD();
     return last_job_statuses;

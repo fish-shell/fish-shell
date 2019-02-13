@@ -102,7 +102,9 @@ function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" -
 
     set -g __fish_added_user_paths
     if set -q fish_user_paths
-        for x in $fish_user_paths[-1..1]
+        # Explicitly split on ":" because $fish_user_paths might not be a path variable,
+        # but $PATH definitely is.
+        for x in (string split ":" -- $fish_user_paths[-1..1])
             if set -l idx (contains --index -- $x $local_path)
                 set -e local_path[$idx]
             else

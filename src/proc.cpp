@@ -922,15 +922,20 @@ void job_t::continue_job(bool send_sigcont) {
         }
     }
 
-    if (is_foreground()) {
-        if (is_completed()) {
-            // Set $status only if we are in the foreground and the last process in the job has
-            // finished and is not a short-circuited builtin.
-            auto &p = processes.back();
-            if ((WIFEXITED(p->status) || WIFSIGNALED(p->status)) && p->pid) {
-                int status = proc_format_status(p->status);
-                proc_set_last_status(get_flag(job_flag_t::NEGATE) ? !status : status);
-            }
+    if (is_foreground() && is_completed()) {
+        // Set $status only if we are in the foreground and the last process in the job has
+        // finished and is not a short-circuited builtin.
+        bool negate = get_flag(job_flag_t::NEGATE);
+        auto &p = processes.back();
+        if (p->internal_proc_) {
+            // Here the status is synthetic - not associated with a real exited process.
+            // TODO: clean this up, we shouldn't store the process's exit status in an unparsed
+            // state.
+            int status = p->status;
+            proc_set_last_status(negate ? !status : status);
+        } else if ((WIFEXITED(p->status) || WIFSIGNALED(p->status)) && p->pid) {
+            int status = proc_format_status(p->status);
+            proc_set_last_status(negate ? !status : status);
         }
     }
 }

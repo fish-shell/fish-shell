@@ -353,9 +353,11 @@ static void on_process_created(const std::shared_ptr<job_t> &j, pid_t child_pid)
 }
 
 /// Construct an internal process for the process p. In the background, write the data \p outdata to
-/// stdout, respecting the io chain \p ios. For example if target_fd is 1 (stdout), and there is a
-/// dup2 3->1, then we need to write to fd 3. Then exit the internal process.
-static bool run_internal_process(process_t *p, std::string outdata, io_chain_t ios) {
+/// stdout and \p errdata to stderr, respecting the io chain \p ios. For example if target_fd is 1
+/// (stdout), and there is a dup2 3->1, then we need to write to fd 3. Then exit the internal
+/// process.
+static bool run_internal_process(process_t *p, std::string outdata, std::string errdata,
+                                 io_chain_t ios) {
     p->check_generations_before_launch();
 
     // We want both the dup2s and the io_chain_ts to be kept alive by the background thread, because
@@ -366,6 +368,9 @@ static bool run_internal_process(process_t *p, std::string outdata, io_chain_t i
         int src_outfd{-1};
         std::string outdata{};
 
+        int src_errfd{-1};
+        std::string errdata{};
+
         io_chain_t ios{};
         maybe_t<dup2_list_t> dup2s{};
         std::shared_ptr<internal_proc_t> internal_proc{};
@@ -373,10 +378,13 @@ static bool run_internal_process(process_t *p, std::string outdata, io_chain_t i
         int success_status{};
 
         bool skip_out() const { return outdata.empty() || src_outfd < 0; }
+
+        bool skip_err() const { return errdata.empty() || src_errfd < 0; }
     };
 
     auto f = std::make_shared<write_fields_t>();
     f->outdata = std::move(outdata);
+    f->errdata = std::move(errdata);
 
     // Construct and assign the internal process to the real process.
     p->internal_proc_ = std::make_shared<internal_proc_t>();
@@ -394,10 +402,11 @@ static bool run_internal_process(process_t *p, std::string outdata, io_chain_t i
     // Figure out which source fds to write to. If they are closed (unlikely) we just exit
     // successfully.
     f->src_outfd = f->dup2s->fd_for_target_fd(STDOUT_FILENO);
+    f->src_errfd = f->dup2s->fd_for_target_fd(STDERR_FILENO);
 
     // If we have nothing to right we can elide the thread.
     // TODO: support eliding output to /dev/null.
-    if (f->skip_out()) {
+    if (f->skip_out() && f->skip_err()) {
         f->internal_proc->mark_exited(EXIT_SUCCESS);
         return true;
     }
@@ -414,6 +423,15 @@ static bool run_internal_process(process_t *p, std::string outdata, io_chain_t i
         int status = f->success_status;
         if (!f->skip_out()) {
             ssize_t ret = write_loop(f->src_outfd, f->outdata.data(), f->outdata.size());
+            if (ret < 0) {
+                if (errno != EPIPE) {
+                    wperror(L"write");
+                }
+                if (!status) status = 1;
+            }
+        }
+        if (!f->skip_err()) {
+            ssize_t ret = write_loop(f->src_errfd, f->errdata.data(), f->errdata.size());
             if (ret < 0) {
                 if (errno != EPIPE) {
                     wperror(L"write");
@@ -650,26 +668,12 @@ static bool handle_builtin_output(const std::shared_ptr<job_t> &j, process_t *p,
         // in the child.
         //
         // These strings may contain embedded nulls, so don't treat them as C strings.
-        const std::string outbuff_str = wcs2string(stdout_stream.contents());
-        const char *outbuff = outbuff_str.data();
-        size_t outbuff_len = outbuff_str.size();
-
-        const std::string errbuff_str = wcs2string(stderr_stream.contents());
-        const char *errbuff = errbuff_str.data();
-        size_t errbuff_len = errbuff_str.size();
-
-        // Resolve our IO chain to a sequence of dup2s.
-        auto dup2s = dup2_list_t::resolve_chain(*io_chain);
-        if (!dup2s) {
-            return false;
-        }
+        std::string outbuff = wcs2string(stdout_stream.contents());
+        std::string errbuff = wcs2string(stderr_stream.contents());
 
         fflush(stdout);
         fflush(stderr);
-        if (!fork_child_for_process(j, p, *dup2s, false, "internal builtin", [&] {
-                do_builtin_io(outbuff, outbuff_len, errbuff, errbuff_len);
-                exit_without_destructors(p->status);
-            })) {
+        if (!run_internal_process(p, std::move(outbuff), std::move(errbuff), *io_chain)) {
             return false;
         }
     }
@@ -851,7 +855,7 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
 
     std::string buffer_contents = block_output_buffer->buffer().newline_serialized();
     if (!buffer_contents.empty()) {
-        return run_internal_process(p, std::move(buffer_contents), io_chain);
+        return run_internal_process(p, std::move(buffer_contents), {} /*errdata*/, io_chain);
     } else {
         if (p->is_last_in_job) {
             proc_set_last_status(j->get_flag(job_flag_t::NEGATE) ? (!status) : status);

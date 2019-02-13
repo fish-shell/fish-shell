@@ -550,7 +550,7 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
 /// Write specified multibyte string.
 void writembs_check(const char *mbs, const char *mbs_name, bool critical, const char *file, long line) {
     if (mbs != NULL) {
-        tputs(mbs, 1, &writeb);
+        tputs((char *)mbs, 1, &writeb);
     } else if (critical) {
         auto term = env_stack_t::globals().get(L"TERM");
         const wchar_t *fmt =

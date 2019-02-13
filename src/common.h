@@ -5,6 +5,8 @@
 
 #include <errno.h>
 #include <limits.h>
+// Needed for va_list et al.
+#include <stdarg.h> // IWYU pragma: keep
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>  // IWYU pragma: keep
 #endif

@@ -395,7 +395,12 @@ int flock(int fd, int op) {
 // thread-specific locale.
 double fish_compat::wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t loc) {
     // Create and use a new, thread-specific locale
-    locale_t locale = newlocale(LC_NUMERIC, "C", nullptr);
+    // NOTE: We use "C" whatever the passed locale,
+    // and we use the LC_ALL category.
+    //
+    // Empirically, this fails on OpenIndiana/Illumos/Solaris/SunOS if using LC_NUMERIC.
+    // Since we reset it afterwards, it shouldn't matter.
+    locale_t locale = newlocale(LC_ALL, "C", nullptr);
     locale_t prev_locale = uselocale(locale);
     double ret = wcstod(enptr, endptr);
     // Restore the old locale before freeing the locale we created and are still using

@@ -139,7 +139,13 @@ filter() {
     if [ -f "$1" ] ; then
         # grep '-o', '-E' and '-f' are supported by the tools in modern GNU
         # environments, and on OS X.
-        grep -oE -f "$1"
+        #
+        # But not on OpenIndiana/Illumos, so we use ggrep if available.
+        if command -v ggrep >/dev/null 2>&1; then
+            ggrep -oE -f "$1"
+        else
+            grep -oE -f "$1"
+        fi
     else
         cat
     fi

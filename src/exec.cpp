@@ -34,6 +34,7 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "function.h"
 #include "io.h"
+#include "iothread.h"
 #include "parse_tree.h"
 #include "parser.h"
 #include "postfork.h"
@@ -54,16 +55,6 @@
 
 /// Base open mode to pass to calls to open.
 #define OPEN_MASK 0666
-
-/// Called in a forked child.
-static void exec_write_and_exit(int fd, const char *buff, size_t count, int status) {
-    if (write_loop(fd, buff, count) == -1) {
-        debug(0, WRITE_ERROR);
-        wperror(L"write");
-        exit_without_destructors(status);
-    }
-    exit_without_destructors(status);
-}
 
 void exec_close(int fd) {
     ASSERT_IS_MAIN_THREAD();
@@ -359,6 +350,80 @@ static void on_process_created(const std::shared_ptr<job_t> &j, pid_t child_pid)
     } else {
         j->pgid = getpgrp();
     }
+}
+
+/// Construct an internal process for the process p. In the background, write the data \p outdata to
+/// stdout, respecting the io chain \p ios. For example if target_fd is 1 (stdout), and there is a
+/// dup2 3->1, then we need to write to fd 3. Then exit the internal process.
+static bool run_internal_process(process_t *p, std::string outdata, io_chain_t ios) {
+    p->check_generations_before_launch();
+
+    // We want both the dup2s and the io_chain_ts to be kept alive by the background thread, because
+    // they may own an fd that we want to write to. Move them all to a shared_ptr. The strings as
+    // well (they may be long).
+    // Construct a little helper struct to make it simpler to move into our closure without copying.
+    struct write_fields_t {
+        int src_outfd{-1};
+        std::string outdata{};
+
+        io_chain_t ios{};
+        maybe_t<dup2_list_t> dup2s{};
+        std::shared_ptr<internal_proc_t> internal_proc{};
+
+        int success_status{};
+
+        bool skip_out() const { return outdata.empty() || src_outfd < 0; }
+    };
+
+    auto f = std::make_shared<write_fields_t>();
+    f->outdata = std::move(outdata);
+
+    // Construct and assign the internal process to the real process.
+    p->internal_proc_ = std::make_shared<internal_proc_t>();
+    f->internal_proc = p->internal_proc_;
+
+    // Resolve the IO chain.
+    // Note it's important we do this even if we have no out or err data, because we may have been
+    // asked to truncate a file (e.g. `echo -n '' > /tmp/truncateme.txt'). The open() in the dup2
+    // list resolution will ensure this happens.
+    f->dup2s = dup2_list_t::resolve_chain(ios);
+    if (!f->dup2s) {
+        return false;
+    }
+
+    // Figure out which source fds to write to. If they are closed (unlikely) we just exit
+    // successfully.
+    f->src_outfd = f->dup2s->fd_for_target_fd(STDOUT_FILENO);
+
+    // If we have nothing to right we can elide the thread.
+    // TODO: support eliding output to /dev/null.
+    if (f->skip_out()) {
+        f->internal_proc->mark_exited(EXIT_SUCCESS);
+        return true;
+    }
+
+    // Ensure that ios stays alive, it may own fds.
+    f->ios = ios;
+
+    // If our process is a builtin, it will have already set its status value. Make sure we
+    // propagate that if our I/O succeeds and don't read it on a background thread. TODO: have
+    // builtin_run provide this directly, rather than setting it in the process.
+    f->success_status = p->status;
+
+    iothread_perform([f]() {
+        int status = f->success_status;
+        if (!f->skip_out()) {
+            ssize_t ret = write_loop(f->src_outfd, f->outdata.data(), f->outdata.size());
+            if (ret < 0) {
+                if (errno != EPIPE) {
+                    wperror(L"write");
+                }
+                if (!status) status = 1;
+            }
+        }
+        f->internal_proc->mark_exited(status);
+    });
+    return true;
 }
 
 /// Call fork() as part of executing a process \p p in a job \j. Execute \p child_action in the
@@ -784,24 +849,9 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
     io_chain.remove(block_output_bufferfill);
     auto block_output_buffer = io_bufferfill_t::finish(std::move(block_output_bufferfill));
 
-    // Resolve our IO chain to a sequence of dup2s.
-    auto dup2s = dup2_list_t::resolve_chain(io_chain);
-    if (!dup2s) {
-        return false;
-    }
-
-    const std::string buffer_contents = block_output_buffer->buffer().newline_serialized();
-    const char *buffer = buffer_contents.data();
-    size_t count = buffer_contents.size();
-    if (count > 0) {
-        // We don't have to drain threads here because our child process is simple.
-        const char *fork_reason =
-            p->type == INTERNAL_BLOCK_NODE ? "internal block io" : "internal function io";
-        if (!fork_child_for_process(j, p, *dup2s, false, fork_reason, [&] {
-                exec_write_and_exit(STDOUT_FILENO, buffer, count, status);
-            })) {
-            return false;
-        }
+    std::string buffer_contents = block_output_buffer->buffer().newline_serialized();
+    if (!buffer_contents.empty()) {
+        return run_internal_process(p, std::move(buffer_contents), io_chain);
     } else {
         if (p->is_last_in_job) {
             proc_set_last_status(j->get_flag(job_flag_t::NEGATE) ? (!status) : status);

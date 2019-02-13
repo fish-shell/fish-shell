@@ -13,6 +13,7 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
 #include "iothread.h"
+#include "redirection.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 io_data_t::~io_data_t() = default;
@@ -122,7 +123,7 @@ void io_buffer_t::begin_background_fillthread(autoclose_fd_t fd) {
 
     // We want our background thread to own the fd but it's not easy to move into a std::function.
     // Use a shared_ptr.
-    auto fdref = std::make_shared<autoclose_fd_t>(std::move(fd));
+    auto fdref = move_to_sharedptr(std::move(fd));
 
     // Our function to read until the receiver is closed.
     // It's OK to capture 'this' by value because 'this' owns the background thread and joins it

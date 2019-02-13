@@ -247,6 +247,13 @@ bool job_t::signal(int signal) {
     return true;
 }
 
+void internal_proc_t::mark_exited(int status) {
+    assert(!exited() && "Process is already exited");
+    exited_.store(true, std::memory_order_relaxed);
+    status_.store(status, std::memory_order_release);
+    topic_monitor_t::principal().post(topic_t::internal_exit);
+}
+
 static void mark_job_complete(const job_t *j) {
     for (auto &p : j->processes) {
         p->completed = 1;
@@ -374,48 +381,63 @@ static void process_mark_finished_children(bool block_ok) {
     // Get the exit and signal generations of all reapable processes.
     // The exit generation tells us if we have an exit; the signal generation allows for detecting
     // SIGHUP and SIGINT.
+    // Get the gen count of all reapable processes.
+    topic_set_t reaptopics{};
     generation_list_t gens{};
     gens.fill(invalid_generation);
     job_iterator_t jobs;
     while (auto *j = jobs.next()) {
         for (const auto &proc : j->processes) {
-            if (j->can_reap(proc.get())) {
-                gens[topic_t::sigchld] =
-                    std::min(gens[topic_t::sigchld], proc->gens_[topic_t::sigchld]);
+            if (auto mtopic = j->reap_topic_for_process(proc.get())) {
+                topic_t topic = *mtopic;
+                reaptopics.set(topic);
+                gens[topic] = std::min(gens[topic], proc->gens_[topic]);
+
+                reaptopics.set(topic_t::sighupint);
                 gens[topic_t::sighupint] =
                     std::min(gens[topic_t::sighupint], proc->gens_[topic_t::sighupint]);
             }
         }
     }
 
-    if (gens[topic_t::sigchld] == invalid_generation) {
+    if (reaptopics.none()) {
         // No reapable processes, nothing to wait for.
         return;
     }
 
     // Now check for changes, optionally waiting.
-    topic_set_t topics{{topic_t::sigchld, topic_t::sighupint}};
-    auto changed_topics = topic_monitor_t::principal().check(&gens, topics, block_ok);
+    auto changed_topics = topic_monitor_t::principal().check(&gens, reaptopics, block_ok);
     if (changed_topics.none()) return;
 
     // We got some changes. Since we last checked we received SIGCHLD, and or HUP/INT.
     // Update the hup/int generations and reap any reapable processes.
     jobs.reset();
     while (auto *j = jobs.next()) {
-        for (auto &proc : j->processes) {
-            // Update the signalhupint generation so we don't break on old sighupints.
-            proc->gens_[topic_t::sighupint] = gens[topic_t::sighupint];
+        for (const auto &proc : j->processes) {
+            if (auto mtopic = j->reap_topic_for_process(proc.get())) {
+                // Update the signal hup/int gen.
+                proc->gens_[topic_t::sighupint] = gens[topic_t::sighupint];
 
-            // Try reaping processes whose sigchld count is below what was returned.
-            if (changed_topics.get(topic_t::sigchld)) {
-                if (j->can_reap(proc.get()) &&
-                    proc->gens_[topic_t::sigchld] < gens[topic_t::sigchld]) {
-                    proc->gens_[topic_t::sigchld] = gens[topic_t::sigchld];
-                    int status = 0;
-                    auto pid = waitpid(proc->pid, &status, WNOHANG | WUNTRACED);
-                    if (pid > 0) {
-                        debug(4, "Reaped PID %d", pid);
-                        handle_child_status(pid, status);
+                if (proc->gens_[*mtopic] < gens[*mtopic]) {
+                    // Potentially reapable. Update its gen count and try reaping it.
+                    proc->gens_[*mtopic] = gens[*mtopic];
+                    if (proc->internal_proc_) {
+                        // Try reaping an internal process.
+                        if (proc->internal_proc_->exited()) {
+                            proc->status = proc->internal_proc_->get_status();
+                            proc->completed = true;
+                        }
+                    } else if (proc->pid > 0) {
+                        // Try reaping an external process.
+                        int status = -1;
+                        auto pid = waitpid(proc->pid, &status, WNOHANG | WUNTRACED);
+                        if (pid > 0) {
+                            assert(pid == proc->pid && "Unexpcted waitpid() return");
+                            debug(4, "Reaped PID %d", pid);
+                            handle_child_status(pid, status);
+                        }
+                    } else {
+                        assert(0 && "Don't know how to reap this process");
                     }
                 }
             }

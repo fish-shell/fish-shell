@@ -35,8 +35,9 @@
 
 /// The list of topics that may be observed.
 enum class topic_t : uint8_t {
-    sigchld,    // Corresponds to SIGCHLD signal.
-    sighupint,  // Corresponds to both SIGHUP and SIGINT signals.
+    sigchld,        // Corresponds to SIGCHLD signal.
+    sighupint,      // Corresponds to both SIGHUP and SIGINT signals.
+    internal_exit,  // Corresponds to an internal process exit.
     COUNT
 };
 

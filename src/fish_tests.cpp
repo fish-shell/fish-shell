@@ -5106,7 +5106,7 @@ static void test_topic_monitor() {
     constexpr auto t = topic_t::sigchld;
     do_test(gens[t] == 0);
     do_test(monitor.generation_for_topic(t) == 0);
-    auto changed = monitor.check(&gens, {t}, false /* wait */);
+    auto changed = monitor.check(&gens, topic_set_t{t}, false /* wait */);
     do_test(changed.none());
     do_test(gens[t] == 0);
 

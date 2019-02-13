@@ -307,6 +307,12 @@ void vec_append(std::vector<T> &receiver, std::vector<T> &&donator) {
                     std::make_move_iterator(donator.end()));
 }
 
+/// Move an object into a shared_ptr.
+template <typename T>
+std::shared_ptr<T> move_to_sharedptr(T &&v) {
+    return std::make_shared<T>(std::move(v));
+}
+
 /// Print a stack trace to stderr.
 void show_stackframe(const wchar_t msg_level, int frame_count = 100, int skip_levels = 0);
 

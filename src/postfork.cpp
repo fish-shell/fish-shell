@@ -33,9 +33,6 @@
 /// The number of nanoseconds to sleep between attempts to call fork().
 #define FORK_SLEEP_TIME 1000000
 
-/// Base open mode to pass to calls to open.
-#define OPEN_MASK 0666
-
 /// Fork error message.
 #define FORK_ERROR "Could not create child process - exiting"
 

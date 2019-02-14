@@ -25,7 +25,9 @@
 
 # for linguist; let github identify our project as C++ instead of C due to pcre2
 /pcre2-10.32/* linguist-vendored
-/install-sh linguist-vendored
+install-sh linguist-vendored
+config.sub linguist-vendored
+config.guess linguist-vendored
 /m4/* linguist-vendored
 angular.js linguist-vendored
 /doc_src/* linguist-documentation

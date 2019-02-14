@@ -178,7 +178,7 @@ if status --is-login
             for path_file in $argv[2] $argv[3]/*
                 if [ -f $path_file ]
                     while read -l entry
-                        if not contains $entry $result
+                        if not contains -- $entry $result
                             set -a result $entry
                         end
                     end <$path_file
@@ -186,7 +186,7 @@ if status --is-login
             end
 
             for entry in $$argv[1]
-                if not contains $entry $result
+                if not contains -- $entry $result
                     set result $result $entry
                 end
             end

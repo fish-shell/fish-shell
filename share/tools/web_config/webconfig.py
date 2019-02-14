@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from __future__ import unicode_literals
 from __future__ import print_function
 import binascii
@@ -21,6 +19,7 @@ import socket
 import string
 import subprocess
 import sys
+from itertools import chain
 
 FISH_BIN_PATH = False  # will be set later
 IS_PY2 = sys.version_info[0] == 2
@@ -254,7 +253,6 @@ def get_special_ansi_escapes():
 
 
 def append_html_for_ansi_escape(full_val, result, span_open):
-
     # Strip off the initial \x1b[ and terminating m
     val = full_val[2:-1]
 
@@ -271,10 +269,10 @@ def append_html_for_ansi_escape(full_val, result, span_open):
         result.append('<span style="color: ' + html_color + '">')
         return True  # span now open
 
-    # term8 foreground color
-    if val in [str(x) for x in range(30, 38)]:
+    # term16 foreground color
+    if val in (str(x) for x in chain(range(90, 97), range(30, 38))):
         close_span()
-        html_color = html_color_for_ansi_color_index(int(val) - 30)
+        html_color = html_color_for_ansi_color_index(int(val) - (30 if int(val) < 90 else 82))
         result.append('<span style="color: ' + html_color + '">')
         return True  # span now open
 
@@ -284,7 +282,7 @@ def append_html_for_ansi_escape(full_val, result, span_open):
         close_span()
         return False
 
-    # We don't handle bold or underline yet
+    # TODO We don't handle bold, underline, italics, dim, or reverse yet
 
     # Do nothing on failure
     return span_open
@@ -292,9 +290,9 @@ def append_html_for_ansi_escape(full_val, result, span_open):
 
 def strip_ansi(val):
     # Make a half-assed effort to strip ANSI control sequences
-    # We assume that all such sequences start with 0x1b and end with m,
+    # We assume that all such sequences start with 0x1b and end with m or ctrl-o,
     # which catches most cases
-    return re.sub("\x1b[^m]*m", '', val)
+    return re.sub("\x1b[^m]*m\x0f?", '', val)
 
 
 def ansi_prompt_line_width(val):
@@ -704,6 +702,20 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         for line in out.split('\n'):
             comps = line.split(' ', 2)
 
+            # If we don't have "bind", a sequence and a mapping,
+            # it's not a valid binding.
+            if len(comps) < 3:
+                continue
+
+            # Store the "--preset" value for later
+            if comps[1] == '--preset':
+                preset = True
+                # There's possibly a way to do this faster, but it's not important.
+                comps = line.split(' ', 3)[1:]
+            elif comps[1] == '--user':
+                preset = False
+                comps = line.split(' ', 3)[1:]
+            # Check again if we removed the level.
             if len(comps) < 3:
                 continue
 
@@ -730,10 +742,9 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return [binding.get_json_obj() for binding in bindings]
 
     def do_get_history(self):
-        # Use \x1e ("record separator") to distinguish between history items.
-        # The first backslash is so Python passes one backslash to fish.
-        out, err = run_fish_cmd('for val in $history; echo -n $val \\x1e; end')
-        result = out.split(' \x1e')
+        # Use NUL to distinguish between history items.
+        out, err = run_fish_cmd('builtin history -z')
+        result = out.split('\0')
         if result:
             result.pop()  # trim off the trailing element
         return result

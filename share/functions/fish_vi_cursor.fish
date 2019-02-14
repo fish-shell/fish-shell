@@ -32,7 +32,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     # We use the `tput` here just to see if terminfo thinks we can change the cursor.
     # We cannot use that sequence directly as it's not the correct one for konsole and iTerm,
     # and because we may want to change the cursor even though terminfo says we can't (tmux).
-    if not tput Ss >/dev/null 2>/dev/null
+    if begin; not command -sq tput; or not tput Ss >/dev/null 2>/dev/null; end
         # Whitelist tmux...
         and not begin
             set -q TMUX
@@ -107,7 +107,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     or set -g fish_cursor_unknown block blink
 
     echo "
-          function fish_vi_cursor_handle --on-variable fish_bind_mode --on-event fish_postexec
+          function fish_vi_cursor_handle --on-variable fish_bind_mode --on-event fish_postexec --on-event fish_focus_in
               set -l varname fish_cursor_\$fish_bind_mode
               if not set -q \$varname
                 set varname fish_cursor_unknown

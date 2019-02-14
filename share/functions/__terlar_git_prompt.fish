@@ -46,7 +46,7 @@ function __terlar_git_prompt --description 'Write out the git prompt'
     set -l staged
 
     for i in $index
-        if echo $i | grep '^[AMRCD]' >/dev/null
+        if string match -rq '^[AMRCD]' -- $i
             set staged 1
         end
 

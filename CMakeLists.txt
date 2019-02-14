@@ -45,6 +45,9 @@ SOURCE_GROUP("Builtins" REGULAR_EXPRESSION "builtin_.*")
 # Support folders.
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
+# Work around issue where archive-built libs go in the wrong place.
+SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 IF(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
@@ -75,9 +78,9 @@ SET(FISH_SRCS
     src/parse_execution.cpp src/parse_productions.cpp src/parse_tree.cpp
     src/parse_util.cpp src/parser.cpp src/parser_keywords.cpp src/path.cpp
     src/postfork.cpp src/proc.cpp src/reader.cpp src/sanity.cpp src/screen.cpp
-    src/signal.cpp src/tinyexpr.c src/tnode.cpp src/tokenizer.cpp src/utf8.cpp src/util.cpp
+    src/signal.cpp src/tinyexpr.cpp src/tnode.cpp src/tokenizer.cpp src/utf8.cpp src/util.cpp
     src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp src/wutil.cpp
-    src/future_feature_flags.cpp
+    src/future_feature_flags.cpp src/redirection.cpp
 )
 
 # Header files are just globbed.
@@ -105,8 +108,10 @@ ADD_DEFINITIONS(-D_UNICODE=1
 INCLUDE(Version)
 
 # Let fish pick up when we're running out of the build directory without installing
-ADD_DEFINITIONS(-DCMAKE_BINARY_DIR="${CMAKE_BINARY_DIR}")
-ADD_DEFINITIONS(-DCMAKE_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+GET_FILENAME_COMPONENT(REAL_CMAKE_BINARY_DIR "${CMAKE_BINARY_DIR}" REALPATH)
+GET_FILENAME_COMPONENT(REAL_CMAKE_SOURCE_DIR "${CMAKE_SOURCE_DIR}" REALPATH)
+ADD_DEFINITIONS(-DCMAKE_BINARY_DIR="${REAL_CMAKE_BINARY_DIR}")
+ADD_DEFINITIONS(-DCMAKE_SOURCE_DIR="${REAL_CMAKE_SOURCE_DIR}")
 
 # Teach fish_version.o to rebuild when FBVF changes.
 # The standard C++ include detection machinery misses this.
@@ -158,6 +163,9 @@ INCLUDE(cmake/Tests.cmake)
 
 # Set up install.
 INCLUDE(cmake/Install.cmake)
+
+# Mac app.
+INCLUDE(cmake/MacApp.cmake)
 
 INCLUDE(FeatureSummary)
 FEATURE_SUMMARY(WHAT ALL)

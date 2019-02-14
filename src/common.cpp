@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <paths.h>
 #include <pthread.h>
 #include <stdarg.h>
 #include <stddef.h>
@@ -37,6 +38,8 @@
 #endif
 
 #include <algorithm>
+#include <atomic>
+#include <locale>
 #include <memory>  // IWYU pragma: keep
 #include <type_traits>
 
@@ -53,8 +56,11 @@ constexpr wint_t NOT_A_WCHAR = static_cast<wint_t>(WEOF);
 
 struct termios shell_modes;
 
-// Note we foolishly assume that pthread_t is just a primitive. But it might be a struct.
-static pthread_t main_thread_id = 0;
+/// This allows us to determine if we're running on the main thread
+static std::atomic<size_t> thread_id { 0 };
+/// This allows us to notice when we've forked.
+static bool is_forked_proc = false;
+/// This allows us to bypass the main thread checks
 static bool thread_asserts_cfg_for_testing = false;
 
 wchar_t ellipsis_char;
@@ -66,8 +72,6 @@ const wchar_t *program_name;
 int debug_level = 1;         // default maximum debug output level (errors and warnings)
 int debug_stack_frames = 0;  // default number of stack frames to show on debug() calls
 
-/// This allows us to notice when we've forked.
-static pid_t initial_pid = 0;
 
 /// Be able to restore the term's foreground process group.
 /// This is set during startup and not modified after.
@@ -76,7 +80,7 @@ static pid_t initial_fg_process_group = -1;
 /// This struct maintains the current state of the terminal size. It is updated on demand after
 /// receiving a SIGWINCH. Do not touch this struct directly, it's managed with a rwlock. Use
 /// common_get_width()/common_get_height().
-static fish_mutex_t termsize_lock;
+static std::mutex termsize_lock;
 static struct winsize termsize = {USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX};
 static volatile bool termsize_valid = false;
 
@@ -147,7 +151,7 @@ long convert_hex_digit(wchar_t d) {
 #ifdef HAVE_BACKTRACE_SYMBOLS
 // This function produces a stack backtrace with demangled function & method names. It is based on
 // https://gist.github.com/fmela/591333 but adapted to the style of the fish project.
-static const wcstring_list_t __attribute__((noinline))
+[[gnu::noinline]] static const wcstring_list_t
 demangled_backtrace(int max_frames, int skip_levels) {
     void *callstack[128];
     const int n_max_frames = sizeof(callstack) / sizeof(callstack[0]);
@@ -178,8 +182,7 @@ demangled_backtrace(int max_frames, int skip_levels) {
     return backtrace_text;
 }
 
-void __attribute__((noinline))
-show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
+[[gnu::noinline]] void show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
     if (frame_count < 1) return;
 
     // TODO: Decide if this is still needed. I'm commenting it out because it caused me some grief
@@ -198,7 +201,7 @@ show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
 
 #else   // HAVE_BACKTRACE_SYMBOLS
 
-void __attribute__((noinline)) show_stackframe(const wchar_t msg_level, int, int) {
+[[gnu::noinline]] void show_stackframe(const wchar_t msg_level, int, int) {
     debug_shared(msg_level, L"Sorry, but your system does not support backtraces");
 }
 #endif  // HAVE_BACKTRACE_SYMBOLS
@@ -607,18 +610,18 @@ bool should_suppress_stderr_for_tests() {
 }
 
 static void debug_shared(const wchar_t level, const wcstring &msg) {
-    pid_t current_pid = getpid();
-
-    if (current_pid == initial_pid) {
+    pid_t current_pid;
+    if (!is_forked_child()) {
         fwprintf(stderr, L"<%lc> %ls: %ls\n", (unsigned long)level, program_name, msg.c_str());
     } else {
+        current_pid = getpid();
         fwprintf(stderr, L"<%lc> %ls: %d: %ls\n", (unsigned long)level, program_name, current_pid,
                  msg.c_str());
     }
 }
 
 static const wchar_t level_char[] = {L'E', L'W', L'2', L'3', L'4', L'5'};
-void __attribute__((noinline)) debug_impl(int level, const wchar_t *msg, ...) {
+[[gnu::noinline]] void debug_impl(int level, const wchar_t *msg, ...) {
     int errno_old = errno;
     va_list va;
     va_start(va, msg);
@@ -632,7 +635,7 @@ void __attribute__((noinline)) debug_impl(int level, const wchar_t *msg, ...) {
     errno = errno_old;
 }
 
-void __attribute__((noinline)) debug_impl(int level, const char *msg, ...) {
+[[gnu::noinline]] void debug_impl(int level, const char *msg, ...) {
     if (!should_debug(level)) return;
     int errno_old = errno;
     char local_msg[512];
@@ -690,56 +693,52 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
     errno = errno_old;
 }
 
-void format_long_safe(char buff[64], long val) {
-    if (val == 0) {
-        strcpy(buff, "0");
-    } else {
-        // Generate the string in reverse.
-        size_t idx = 0;
-        bool negative = (val < 0);
+// Careful to not negate LLONG_MIN.
+static unsigned long long absolute_value(long long x) {
+    if (x >= 0) return static_cast<unsigned long long>(x);
+    x = -(x + 1);
+    return static_cast<unsigned long long>(x) + 1;
+}
 
-        // Note that we can't just negate val if it's negative, because it may be the most negative
-        // value. We do rely on round-towards-zero division though.
+template <typename CharT>
+void format_safe_impl(CharT *buff, size_t size, unsigned long long val) {
+    size_t idx = 0;
+    if (val == 0) {
+        buff[idx++] = '0';
+    } else {
+        // Generate the string backwards, then reverse it.
         while (val != 0) {
-            long rem = val % 10;
-            buff[idx++] = '0' + (rem < 0 ? -rem : rem);
+            buff[idx++] = (val % 10) + '0';
             val /= 10;
         }
-        if (negative) buff[idx++] = '-';
-        buff[idx] = 0;
+        std::reverse(buff, buff + idx);
+    }
+    buff[idx++] = '\0';
+    assert(idx <= size && "Buffer overflowed");
+}
 
-        size_t left = 0, right = idx - 1;
-        while (left < right) {
-            char tmp = buff[left];
-            buff[left++] = buff[right];
-            buff[right--] = tmp;
-        }
+void format_long_safe(char buff[64], long val) {
+    unsigned long long uval = absolute_value(val);
+    if (val >= 0) {
+        format_safe_impl(buff, 64, uval);
+    } else {
+        buff[0] = '-';
+        format_safe_impl(buff + 1, 63, uval);
     }
 }
 
 void format_long_safe(wchar_t buff[64], long val) {
-    if (val == 0) {
-        wcscpy(buff, L"0");
+    unsigned long long uval = absolute_value(val);
+    if (val >= 0) {
+        format_safe_impl(buff, 64, uval);
     } else {
-        // Generate the string in reverse.
-        size_t idx = 0;
-        bool negative = (val < 0);
-
-        while (val != 0) {
-            long rem = val % 10;
-            buff[idx++] = L'0' + (wchar_t)(rem < 0 ? -rem : rem);
-            val /= 10;
-        }
-        if (negative) buff[idx++] = L'-';
-        buff[idx] = 0;
-
-        size_t left = 0, right = idx - 1;
-        while (left < right) {
-            wchar_t tmp = buff[left];
-            buff[left++] = buff[right];
-            buff[right--] = tmp;
-        }
+        buff[0] = '-';
+        format_safe_impl(buff + 1, 63, uval);
     }
+}
+
+void format_ullong_safe(wchar_t buff[64], unsigned long long val) {
+    return format_safe_impl(buff, 64, val);
 }
 
 void narrow_string_safe(char buff[64], const wchar_t *s) {
@@ -1719,7 +1718,7 @@ void common_handle_winch(int signal) {
 
 /// Validate the new terminal size. Fallback to the env vars if necessary. Ensure the values are
 /// sane and if not fallback to a default of 80x24.
-static void validate_new_termsize(struct winsize *new_termsize) {
+static void validate_new_termsize(struct winsize *new_termsize, const environment_t &vars) {
     if (new_termsize->ws_col == 0 || new_termsize->ws_row == 0) {
 #ifdef HAVE_WINSIZE
         if (shell_is_interactive()) {
@@ -1729,8 +1728,8 @@ static void validate_new_termsize(struct winsize *new_termsize) {
         }
 #endif
         // Fallback to the environment vars.
-        maybe_t<env_var_t> col_var = env_get(L"COLUMNS");
-        maybe_t<env_var_t> row_var = env_get(L"LINES");
+        maybe_t<env_var_t> col_var = vars.get(L"COLUMNS");
+        maybe_t<env_var_t> row_var = vars.get(L"LINES");
         if (!col_var.missing_or_empty() && !row_var.missing_or_empty()) {
             // Both vars have to have valid values.
             int col = fish_wcstoi(col_var->as_string().c_str());
@@ -1755,16 +1754,17 @@ static void validate_new_termsize(struct winsize *new_termsize) {
 }
 
 /// Export the new terminal size as env vars and to the kernel if possible.
-static void export_new_termsize(struct winsize *new_termsize) {
+static void export_new_termsize(struct winsize *new_termsize, env_stack_t &vars) {
     wchar_t buf[64];
 
-    auto cols = env_get(L"COLUMNS", ENV_EXPORT);
+    auto cols = vars.get(L"COLUMNS", ENV_EXPORT);
     swprintf(buf, 64, L"%d", (int)new_termsize->ws_col);
-    env_set_one(L"COLUMNS", ENV_GLOBAL | (cols.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT), buf);
+    vars.set_one(L"COLUMNS", ENV_GLOBAL | (cols.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT),
+                 buf);
 
-    auto lines = env_get(L"LINES", ENV_EXPORT);
+    auto lines = vars.get(L"LINES", ENV_EXPORT);
     swprintf(buf, 64, L"%d", (int)new_termsize->ws_row);
-    env_set_one(L"LINES", ENV_GLOBAL | (lines.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT), buf);
+    vars.set_one(L"LINES", ENV_GLOBAL | (lines.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT), buf);
 
 #ifdef HAVE_WINSIZE
     // Only write the new terminal size if we are in the foreground (#4477)
@@ -1789,9 +1789,9 @@ struct winsize get_current_winsize() {
         return termsize;
     }
 #endif
-
-    validate_new_termsize(&new_termsize);
-    export_new_termsize(&new_termsize);
+    auto &vars = env_stack_t::globals();
+    validate_new_termsize(&new_termsize, vars);
+    export_new_termsize(&new_termsize, vars);
     termsize.ws_col = new_termsize.ws_col;
     termsize.ws_row = new_termsize.ws_row;
     termsize_valid = true;
@@ -1953,6 +1953,36 @@ int string_fuzzy_match_t::compare(const string_fuzzy_match_t &rhs) const {
     return 0;  // equal
 }
 
+template <bool Fuzzy, typename T>
+size_t ifind_impl(const T &haystack, const T &needle) {
+    using char_t = typename T::value_type;
+    std::locale locale;
+
+    auto ieq = [&locale](char_t c1, char_t c2) {
+        if (c1 == c2 || std::toupper(c1, locale) == std::toupper(c2, locale)) return true;
+
+        // In fuzzy matching treat treat `-` and `_` as equal (#3584).
+        if (Fuzzy) {
+            if ((c1 == '-' || c1 == '_') && (c2 == '-' || c2 == '_')) return true;
+        }
+        return false;
+    };
+
+    auto result = std::search(haystack.begin(), haystack.end(), needle.begin(), needle.end(), ieq);
+    if (result != haystack.end()) {
+        return result - haystack.begin();
+    }
+    return T::npos;
+}
+
+size_t ifind(const wcstring &haystack, const wcstring &needle, bool fuzzy) {
+    return fuzzy ? ifind_impl<true>(haystack, needle) : ifind_impl<false>(haystack, needle);
+}
+
+size_t ifind(const std::string &haystack, const std::string &needle, bool fuzzy) {
+    return fuzzy ? ifind_impl<true>(haystack, needle) : ifind_impl<false>(haystack, needle);
+}
+
 wcstring_list_t split_string(const wcstring &val, wchar_t sep) {
     wcstring_list_t out;
     size_t pos = 0, end = val.size();
@@ -2010,7 +2040,7 @@ int create_directory(const wcstring &d) {
     return ok ? 0 : -1;
 }
 
-__attribute__((noinline)) void bugreport() {
+[[gnu::noinline]] void bugreport() {
     debug(0, _(L"This is a bug. Break on 'bugreport' to debug."));
     debug(0, _(L"If you can reproduce it, please report: %s."), PACKAGE_BUGREPORT);
 }
@@ -2157,30 +2187,37 @@ void append_path_component(wcstring &path, const wcstring &component) {
 }
 
 extern "C" {
-__attribute__((noinline)) void debug_thread_error(void) {
+[[gnu::noinline]] void debug_thread_error(void) {
     while (1) sleep(9999999);
 }
 }
 
-void set_main_thread() { main_thread_id = pthread_self(); }
+void set_main_thread() {
+    // Just call is_main_thread() once to force increment of thread_id.
+    bool x = is_main_thread();
+    assert(x && "set_main_thread should be main thread");
+    (void)x;
+}
 
 void configure_thread_assertions_for_testing() { thread_asserts_cfg_for_testing = true; }
 
 bool is_forked_child() {
-    // Just bail if nobody's called setup_fork_guards, e.g. some of our tools.
-    if (!initial_pid) return false;
-
-    bool is_child_of_fork = (getpid() != initial_pid);
-    if (is_child_of_fork) {
-        debug(0, L"Uh-oh: getpid() != initial_pid: %d != %d\n", getpid(), initial_pid);
-        while (1) sleep(10000);
-    }
-    return is_child_of_fork;
+    return is_forked_proc;
 }
 
 void setup_fork_guards() {
-    // Notice when we fork by stashing our pid. This seems simpler than pthread_atfork().
-    initial_pid = getpid();
+    static bool already_initialized = false;
+
+    is_forked_proc = false;
+    if (already_initialized) {
+        // Just mark this process as main and exit
+        return;
+    }
+
+    already_initialized = true;
+    pthread_atfork(nullptr, nullptr, []() {
+        is_forked_proc = true;
+    });
 }
 
 void save_term_foreground_process_group() {
@@ -2198,8 +2235,8 @@ void restore_term_foreground_process_group() {
 }
 
 bool is_main_thread() {
-    assert(main_thread_id != 0);
-    return main_thread_id == pthread_self();
+    static thread_local int local_thread_id = thread_id++;
+    return local_thread_id == 0;
 }
 
 void assert_is_main_thread(const char *who) {
@@ -2226,11 +2263,16 @@ void assert_is_background_thread(const char *who) {
     }
 }
 
-void fish_mutex_t::assert_is_locked(const char *who, const char *caller) const {
-    if (!is_locked_) {
+void assert_is_locked(void *vmutex, const char *who, const char *caller) {
+    std::mutex *mutex = static_cast<std::mutex *>(vmutex);
+
+    // Note that std::mutex.try_lock() is allowed to return false when the mutex isn't
+    // actually locked; fortunately we are checking the opposite so we're safe.
+    if (mutex->try_lock()) {
         debug(0, "%s is not locked when it should be in '%s'", who, caller);
         debug(0, "Break on debug_thread_error to debug.");
         debug_thread_error();
+        mutex->unlock();
     }
 }
 
@@ -2400,3 +2442,25 @@ std::string get_executable_path(const char *argv0) {
     return std::string(argv0 ? argv0 : "");
 }
 
+/// Return a path to a directory where we can store temporary files.
+std::string get_path_to_tmp_dir() {
+    char *env_tmpdir = getenv("TMPDIR");
+    if (env_tmpdir) {
+        return env_tmpdir;
+    }
+#if defined(_CS_DARWIN_USER_TEMP_DIR)
+    char osx_tmpdir[PATH_MAX];
+    size_t n = confstr(_CS_DARWIN_USER_TEMP_DIR, osx_tmpdir, PATH_MAX);
+    if (0 < n && n <= PATH_MAX) {
+        return osx_tmpdir;
+    } else {
+        return "/tmp";
+    }
+#elif defined(P_tmpdir)
+    return P_tmpdir;
+#elif defined(_PATH_TMP)
+    return _PATH_TMP;
+#else
+    return "/tmp";
+#endif
+}

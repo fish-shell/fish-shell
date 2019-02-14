@@ -529,7 +529,7 @@ int main(int argc, char *argv[]) {
     std::vector<highlight_spec_t> colors;
     if (output_type != output_type_plain_text) {
         highlight_shell_no_io(output_wtext, colors, output_wtext.size(), NULL,
-                              env_vars_snapshot_t::current());
+                              env_stack_t::globals());
     }
 
     std::string colored_output;

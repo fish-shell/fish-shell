@@ -30,6 +30,8 @@
 /// Character that separates the completion and description on programmable completions.
 #define PROG_COMPLETE_SEP L'\t'
 
+class environment_t;
+
 enum {
     /// Do not insert space afterwards if this is the only completion. (The default is to try insert
     /// a space).
@@ -172,7 +174,7 @@ void complete_remove_all(const wcstring &cmd, bool cmd_is_path);
 
 /// Find all completions of the command cmd, insert them into out.
 void complete(const wcstring &cmd, std::vector<completion_t> *out_comps,
-              completion_request_flags_t flags);
+              completion_request_flags_t flags, const environment_t &vars);
 
 /// Return a list of all current completions.
 wcstring complete_print();
@@ -194,8 +196,6 @@ void append_completion(std::vector<completion_t> *completions, wcstring comp,
                        wcstring desc = wcstring(), int flags = 0,
                        string_fuzzy_match_t match = string_fuzzy_match_t(fuzzy_match_exact));
 
-/// Function used for testing.
-void complete_set_variable_names(const wcstring_list_t *names);
 
 /// Support for "wrap targets." A wrap target is a command that completes like another command.
 bool complete_add_wrapper(const wcstring &command, const wcstring &wrap_target);
@@ -203,8 +203,6 @@ bool complete_remove_wrapper(const wcstring &command, const wcstring &wrap_targe
 
 /// Returns a list of wrap targets for a given command.
 wcstring_list_t complete_get_wrap_targets(const wcstring &command);
-
-tuple_list<wcstring, wcstring> complete_get_wrap_pairs();
 
 // Observes that fish_complete_path has changed.
 void complete_invalidate_path();

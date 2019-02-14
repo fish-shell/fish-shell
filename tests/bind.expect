@@ -3,7 +3,7 @@ spawn $fish
 expect_prompt
 
 # Fish should start in default-mode (i.e., emacs) bindings. The default escape
-# timeout is 300ms.
+# timeout is 30ms.
 
 # Verify the emacs transpose word (\et) behavior using various delays,
 # including none, after the escape character.
@@ -21,7 +21,7 @@ expect_prompt -re {\r\ndef abc\r\n} {
 # the words.
 send "echo ghi jkl"
 send "\033"
-sleep 0.050
+sleep 0.010
 send "t\r"
 expect_prompt -re {\r\njkl ghi\r\n} {
     puts "emacs transpose words, default timeout: short delay"
@@ -33,7 +33,7 @@ expect_prompt -re {\r\njkl ghi\r\n} {
 # occur and the "t" should become part of the text that is echoed.
 send "echo mno pqr"
 send "\033"
-sleep 0.400
+sleep 0.200
 send "t\r"
 expect_prompt -re {\r\nmno pqrt\r\n} {
     puts "emacs transpose words, default timeout: long delay"
@@ -54,24 +54,12 @@ expect_prompt -re {\r\ndefault\r\npaste} {
 send "set -g fish_key_bindings fish_vi_key_bindings\r"
 expect_prompt
 
-# These vi tests assume the fish_vi_key_bindings default escape timeout of
-# 10ms is in effect; not the 300ms timeout for the default-mode.
-#
-
 # Go through a prompt cycle to let fish catch up, it may be slow due to ASAN
 send "echo success: default escape timeout\r"
 expect_prompt -re {\r\nsuccess: default escape timeout\r\n} {
     puts "prime vi mode, default timeout"
 } unmatched {
     puts stderr "prime vi mode, default timeout"
-}
-
-# Verify the default timeout has been set to the expected value.
-send "echo fish_escape_delay_ms=\$fish_escape_delay_ms\r"
-expect_prompt -re {\r\nfish_escape_delay_ms=100\r\n} {
-    puts "vi-mode default timeout set correctly"
-} unmatched {
-    puts stderr "vi-mode default timeout not set correctly"
 }
 
 send "echo fail: default escape timeout"
@@ -170,9 +158,9 @@ sleep 0.350
 send "ddi"
 send "echo success: lengthened escape timeout\r"
 expect_prompt -re {\r\nsuccess: lengthened escape timeout\r\n} {
-    puts "vi replace line, 100ms timeout: long delay"
+    puts "vi replace line, 200ms timeout: long delay"
 } unmatched {
-    puts stderr "vi replace line, 100ms timeout: long delay"
+    puts stderr "vi replace line, 200ms timeout: long delay"
 }
 
 # Verify that we don't switch to vi normal mode if we don't wait long enough
@@ -183,9 +171,9 @@ sleep 0.050
 send "ddi"
 send "inserted\r"
 expect_prompt -re {\r\nfail: no normal modediinserted\r\n} {
-    puts "vi replace line, 100ms timeout: short delay"
+    puts "vi replace line, 200ms timeout: short delay"
 } unmatched {
-    puts stderr "vi replace line, 100ms timeout: short delay"
+    puts stderr "vi replace line, 200ms timeout: short delay"
 }
 
 # Test 't' binding that contains non-zero arity function (forward-jump) followed
@@ -223,7 +211,7 @@ expect_prompt -re {\r\nfish_escape_delay_ms=200\r\n} {
     puts stderr "default-mode custom timeout not set correctly"
 }
 
-# Reset it to 100ms.
+# Set it to 100ms.
 send "set -g fish_escape_delay_ms 100\r"
 expect_prompt
 

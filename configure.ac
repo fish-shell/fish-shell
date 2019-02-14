@@ -283,7 +283,7 @@ fi
 # Check presense of various header files
 #
 
-AC_CHECK_HEADERS([getopt.h termios.h sys/resource.h term.h ncurses/term.h ncurses.h ncurses/curses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h execinfo.h spawn.h sys/sysctl.h])
+AC_CHECK_HEADERS([getopt.h termios.h sys/resource.h term.h ncurses/term.h ncurses.h ncurses/curses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h execinfo.h spawn.h sys/sysctl.h xlocale.h])
 
 if test x$local_gettext != xno; then
   AC_CHECK_HEADERS([libintl.h])
@@ -322,8 +322,25 @@ AC_CHECK_FUNCS( wcslcpy lrand48_r killpg )
 AC_CHECK_FUNCS( backtrace_symbols getifaddrs )
 AC_CHECK_FUNCS( futimens clock_gettime )
 AC_CHECK_FUNCS( getpwent flock )
-AC_CHECK_FUNCS( dirfd )
 
+AC_MSG_CHECKING([dirfd])
+AC_LINK_IFELSE([
+  AC_LANG_PROGRAM(
+    [
+      #include <dirent.h>
+      DIR *dirp;
+    ], [
+	    return dirfd(dirp);
+    ]
+  )
+  ]
+, [ AC_MSG_RESULT([yes])
+     AC_DEFINE([HAVE_DIRFD], 1, [ Define to 1 if you have the `dirfd' function or macro. ])
+   ],
+   [ AC_MSG_RESULT([no])]
+)
+
+AC_CHECK_DECL( [__NetBSD__], AC_DEFINE([TPARM_VARARGS], 1, [ Make tparm take varargs ]) )
 AC_CHECK_DECL( [mkostemp], [ AC_CHECK_FUNCS([mkostemp]) ] )
 
 #
@@ -554,6 +571,7 @@ AC_COMPILE_IFELSE(
   [
     AC_LANG_PROGRAM(
       [
+    #define TPARM_VARARGS 1
 	#if HAVE_NCURSES_H
 	#include <ncurses.h>
 	#elif HAVE_NCURSES_CURSES_H
@@ -686,7 +704,7 @@ if test "x$included_pcre2" = "xyes"; then
   AC_MSG_NOTICE([using included PCRE2 library])
   # unfortunately these get added to the global configuration
   ac_configure_args="$ac_configure_args --disable-pcre2-8 --enable-pcre2-$WCHAR_T_BITS --disable-shared"
-  AC_CONFIG_SUBDIRS([pcre2-10.22])
+  AC_CONFIG_SUBDIRS([pcre2-10.32])
 
   PCRE2_CXXFLAGS='-I$(PCRE2_DIR)/src'
   PCRE2_LIBS='-L$(PCRE2_LIBDIR) -lpcre2-$(PCRE2_WIDTH)'

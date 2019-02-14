@@ -172,10 +172,10 @@ You can pipe between commands with the usual vertical bar:
 <outp>       1       2      12</outp>
 \endfish
 
-stdin and stdout can be redirected via the familiar &lt; and &gt;. Unlike other shells, stderr is redirected with a caret ^
+stdin and stdout can be redirected via the familiar &lt; and &gt;. stderr is redirected with a &gt;2.
 
 \fish{cli-dark}
->_ grep fish < /etc/shells > ~/output.txt ^ ~/errors.txt
+>_ grep fish < /etc/shells > ~/output.txt 2> ~/errors.txt
 \endfish
 
 
@@ -696,7 +696,7 @@ vim
 If you wish to use fish (or any other shell) as your default shell,
 you need to enter your new shell's executable `/usr/local/bin/fish` in two places:
 - add `/usr/local/bin/fish` to `/etc/shells`
-- change your default shell with `chsh -s` to `/usr/local/bin/fish`
+- change your default shell with `chsh -s /usr/local/bin/fish`
 
 You can use the following commands for this:
 

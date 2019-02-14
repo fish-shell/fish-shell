@@ -1,7 +1,7 @@
 function __fish_detect_screen_socket_dir -d "Detect which folder screen uses"
     set screen_bin screen
     if not set -q __fish_screen_socket_dir
-        set -g __fish_screen_socket_dir (eval $screen_bin -ls __fish_i_don_t_think_this_will_be_matched | string match -r "(?<=No Sockets found in ).*(?=\.)")
+        set -g __fish_screen_socket_dir ($screen_bin -ls __fish_i_don_t_think_this_will_be_matched | string match -r "(?<=No Sockets found in ).*(?=\.)")
     end
 end
 

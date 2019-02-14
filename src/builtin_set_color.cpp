@@ -27,6 +27,7 @@
 #include "env.h"
 #include "io.h"
 #include "output.h"
+#include "parser.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -75,10 +76,10 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Hack in missing italics and dim capabilities omitted from MacOS xterm-256color terminfo
     // Helps Terminal.app/iTerm
     #if __APPLE__
-    const auto term_prog = env_get(L"TERM_PROGRAM");
+    const auto term_prog = parser.vars().get(L"TERM_PROGRAM");
     if (!term_prog.missing_or_empty() && (term_prog->as_string() == L"Apple_Terminal"
         || term_prog->as_string() == L"iTerm.app")) {
-        const auto term = env_get(L"TERM");
+        const auto term = parser.vars().get(L"TERM");
         if (!term.missing_or_empty() && (term->as_string() == L"xterm-256color")) {
             enter_italics_mode = sitm_esc;
             exit_italics_mode = ritm_esc;
@@ -193,7 +194,7 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     output_set_writer(set_color_builtin_outputter);
 
     if (bold && enter_bold_mode) {
-        writembs_nofail(tparm(enter_bold_mode));
+        writembs_nofail(tparm((char *)enter_bold_mode));
     }
 
     if (underline && enter_underline_mode) {
@@ -215,21 +216,18 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (bgcolor != NULL && bg.is_normal()) {
-        write_color(rgb_color_t::black(), false /* not is_fg */);
-        writembs_nofail(tparm(exit_attribute_mode));
+        writembs_nofail(tparm((char *)exit_attribute_mode));
     }
 
     if (!fg.is_none()) {
         if (fg.is_normal() || fg.is_reset()) {
-            write_color(rgb_color_t::black(), true /* is_fg */);
-            writembs_nofail(tparm(exit_attribute_mode));
-        } else {
-            if (!write_color(fg, true /* is_fg */)) {
-                // We need to do *something* or the lack of any output messes up
-                // when the cartesian product here would make "foo" disappear:
-                //  $ echo (set_color foo)bar
-                set_color(rgb_color_t::reset(), rgb_color_t::none());
-            }
+            writembs_nofail(tparm((char *)exit_attribute_mode));
+        } else if (!write_color(fg, true /* is_fg */)) {
+            // We need to do *something* or the lack of any output
+            // with a cartesian product here would make "foo" disappear
+            // on lame terminals:
+            // $ env TERM=vt100 fish -c 'echo (set_color red)"foo"'
+            set_color(rgb_color_t::reset(), rgb_color_t::none());
         }
     }
 

@@ -63,10 +63,10 @@ unsigned char index_for_color(rgb_color_t c) {
     return c.to_term256_index();
 }
 
-static bool write_color_escape(char *todo, unsigned char idx, bool is_fg) {
+static bool write_color_escape(const char *todo, unsigned char idx, bool is_fg) {
     if (term_supports_color_natively(idx)) {
         // Use tparm to emit color escape.
-        writembs(tparm(todo, idx));
+        writembs(tparm((char *)todo, idx));
         return true;
     }
 
@@ -148,9 +148,7 @@ bool write_color(rgb_color_t color, bool is_fg) {
 /// Since the terminfo string this function emits can potentially cause the screen to flicker, the
 /// function takes care to write as little as possible.
 ///
-/// Possible values for color are any form the FISH_COLOR_* enum and FISH_COLOR_RESET.
-/// FISH_COLOR_RESET will perform an exit_attribute_mode, even if set_color thinks it is already in
-/// FISH_COLOR_NORMAL mode.
+/// Possible values for colors are rgb_color_t colors or special values like rgb_color_t::normal() 
 ///
 /// In order to set the color to normal, three terminfo strings may have to be written.
 ///
@@ -332,7 +330,7 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
 
     // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
     if (is_bold && !was_bold && enter_bold_mode && strlen(enter_bold_mode) > 0 && !bg_set) {
-        writembs_nofail(tparm(enter_bold_mode));
+        writembs_nofail(tparm((char *)enter_bold_mode));
         was_bold = is_bold;
     }
 
@@ -550,11 +548,11 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
 }
 
 /// Write specified multibyte string.
-void writembs_check(char *mbs, const char *mbs_name, bool critical, const char *file, long line) {
+void writembs_check(const char *mbs, const char *mbs_name, bool critical, const char *file, long line) {
     if (mbs != NULL) {
         tputs(mbs, 1, &writeb);
     } else if (critical) {
-        auto term = env_get(L"TERM");
+        auto term = env_stack_t::globals().get(L"TERM");
         const wchar_t *fmt =
             _(L"Tried to use terminfo string %s on line %ld of %s, which is "
               L"undefined in terminal of type \"%ls\". Please report this error to %s");

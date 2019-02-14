@@ -10,21 +10,35 @@ function __fish_print_help --description "Print help message for the specified f
 
     # Render help output, save output into the variable 'help'
     set -l help
-    set -l cols $COLUMNS
-    set -l rLL
-    if test -n "$cols"
-        set cols (math $cols - 4) # leave a bit of space on the right
-        set rLL -rLL=$cols[1]n
+    set -l format
+    set -l cols
+    if test -n "$COLUMNS"
+        set cols (math $COLUMNS - 4) # leave a bit of space on the right
     end
-    set -lx GROFF_TMAC_PATH $__fish_data_dir/groff
-    set -l mfish
-    if test -e $GROFF_TMAC_PATH/fish.tmac
-        set mfish -mfish
+
+    # Pick which command we are using to render output or fail if none
+    if command -qs nroff
+        set format nroff -c -man -t
+        if test -e $__fish_data_dir/groff/fish.tmac
+            set -a format -M$__fish_data_dir/groff -mfish
+        end
+        if test -n "$cols"
+            set -a format -rLL={$cols}n
+        end
+    else if command -qs mandoc
+        set format mandoc -c
+        if test -n "$cols"
+            set -a format -O width=$cols
+        end
+    else
+        echo fish: (_ "Cannot format help; no parser found")
+        return 1
     end
+
     if test -e "$__fish_data_dir/man/man1/$item.1"
-        set help (nroff -c -man $mfish -t $rLL "$__fish_data_dir/man/man1/$item.1" 2>/dev/null)
+        set help ($format "$__fish_data_dir/man/man1/$item.1" 2>/dev/null)
     else if test -e "$__fish_data_dir/man/man1/$item.1.gz"
-        set help (gunzip -c "$__fish_data_dir/man/man1/$item.1.gz" 2>/dev/null | nroff -c -man $mfish -t $rLL 2>/dev/null)
+        set help (gunzip -c "$__fish_data_dir/man/man1/$item.1.gz" 2>/dev/null | $format 2>/dev/null)
     end
 
     # The original implementation trimmed off the top 5 lines and bottom 3 lines

@@ -14,7 +14,7 @@
 #define FISH_USE_POSIX_SPAWN HAVE_SPAWN_H
 #endif
 
-class io_chain_t;
+class dup2_list_t;
 class job_t;
 class process_t;
 
@@ -29,11 +29,11 @@ bool maybe_assign_terminal(const job_t *j);
 /// descriptor actions are performed.
 ///
 /// \param p the child process to set up
-/// \param io_chain the IO chain to use
+/// \param dup2 the dup2 list to apply
 ///
 /// \return 0 on sucess, -1 on failiure. When this function returns, signals are always unblocked.
 /// On failiure, signal handlers, io redirections and process group of the process is undefined.
-int setup_child_process(process_t *p, const io_chain_t &io_chain);
+int setup_child_process(process_t *p, const dup2_list_t &dup2s);
 
 /// Call fork(), optionally waiting until we are no longer multithreaded. If the forked child
 /// doesn't do anything that could allocate memory, take a lock, etc. (like call exec), then it's
@@ -48,15 +48,12 @@ bool do_builtin_io(const char *out, size_t outlen, const char *err, size_t errle
 void safe_report_exec_error(int err, const char *actual_cmd, const char *const *argv,
                             const char *const *envv);
 
-/// Runs the process as a keepalive, until the parent process given by parent_pid exits.
-void run_as_keepalive(pid_t parent_pid);
-
 #if FISH_USE_POSIX_SPAWN
 /// Initializes and fills in a posix_spawnattr_t; on success, the caller should destroy it via
 /// posix_spawnattr_destroy.
 bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
-                                        posix_spawn_file_actions_t *actions, job_t *j, process_t *p,
-                                        const io_chain_t &io_chain);
+                                        posix_spawn_file_actions_t *actions, const job_t *j,
+                                        const dup2_list_t &dup2s);
 #endif
 
 #endif

@@ -1,20 +1,20 @@
 function __fish_tmux_sessions -d 'available sessions'
-        tmux list-sessions -F "#S	#{session_windows} windows created: #{session_created_string} [#{session_width}x#{session_height}]#{session_attached}" | sed 's/0$//;s/1$/ (attached)/' 2>/dev/null
+    tmux list-sessions -F "#S	#{session_windows} windows created: #{session_created_string} [#{session_width}x#{session_height}]#{session_attached}" | sed 's/0$//;s/1$/ (attached)/' 2>/dev/null
 end
 
 function __fish_tmux_clients -d 'connected clients'
-        tmux list-clients -F "#{client_tty}	#S: Created: #{client_created_string} [#{client_width}x#{client_height} #{client_termname}]" 2>/dev/null
+    tmux list-clients -F "#{client_tty}	#S: Created: #{client_created_string} [#{client_width}x#{client_height} #{client_termname}]" 2>/dev/null
 end
 
 function __fish_tmux_panes -d 'window panes'
-        #fully qualified pane names
-        tmux list-panes -F '#S:#W.#P	session:window.pane' 2>/dev/null
+    #fully qualified pane names
+    tmux list-panes -F '#S:#W.#P	session:window.pane' 2>/dev/null
 
-        #panes by themselves
-        tmux list-panes -F '#P	pane' 2>/dev/null
+    #panes by themselves
+    tmux list-panes -F '#P	pane' 2>/dev/null
 
-        #windows by themselves
-        tmux list-panes -F '#W	window' 2>/dev/null
+    #windows by themselves
+    tmux list-panes -F '#W	window' 2>/dev/null
 end
 
 #don't allow dirs in the completion list...
@@ -24,17 +24,17 @@ complete -c tmux -x
 #these do not require parameters
 complete -c tmux -n '__fish_use_subcommand' -s 2 -d 'Force tmux to assume the terminal supports 256 colours'
 complete -c tmux -n '__fish_use_subcommand' -s 8 -d 'Like -2, but indicates that the terminal supports 88 colours'
-complete -c tmux -n '__fish_use_subcommand' -s l    -d 'Behave as a login shell'
-complete -c tmux -n '__fish_use_subcommand' -s q    -d 'Set the quiet server option'
-complete -c tmux -n '__fish_use_subcommand' -s u    -d 'Flag explicitly informs tmux that UTF-8 is supported'
-complete -c tmux -n '__fish_use_subcommand' -s v    -d 'Request verbose logging'
-complete -c tmux -n '__fish_use_subcommand' -s V    -d 'Report the tmux version'
+complete -c tmux -n '__fish_use_subcommand' -s l -d 'Behave as a login shell'
+complete -c tmux -n '__fish_use_subcommand' -s q -d 'Set the quiet server option'
+complete -c tmux -n '__fish_use_subcommand' -s u -d 'Flag explicitly informs tmux that UTF-8 is supported'
+complete -c tmux -n '__fish_use_subcommand' -s v -d 'Request verbose logging'
+complete -c tmux -n '__fish_use_subcommand' -s V -d 'Report the tmux version'
 
 #these require parameters
-complete -c tmux -n '__fish_use_subcommand' -xs c   -d 'Execute command using the default shell'
-complete -c tmux -n '__fish_use_subcommand' -rs f   -d 'Alternate config file'
-complete -c tmux -n '__fish_use_subcommand' -rs L   -d 'Specify the name of the server socket to use'
-complete -c tmux -n '__fish_use_subcommand' -rs S   -d 'Full path to server socket. If set, -L is ignored.'
+complete -c tmux -n '__fish_use_subcommand' -xs c -d 'Execute command using the default shell'
+complete -c tmux -n '__fish_use_subcommand' -rs f -d 'Alternate config file'
+complete -c tmux -n '__fish_use_subcommand' -rs L -d 'Specify the name of the server socket to use'
+complete -c tmux -n '__fish_use_subcommand' -rs S -d 'Full path to server socket. If set, -L is ignored.'
 ###############  End:   Front  Flags ###############
 
 ###############  Begin: Clients and Sessions ###############
@@ -75,8 +75,15 @@ complete -c tmux -n '__fish_use_subcommand' -a $locks -d 'lock session'
 
 complete -c tmux -n '__fish_use_subcommand' -a $new -d 'create a new session with name session-name'
 complete -c tmux -n "__fish_seen_subcommand_from $new" -s d -d "don't attach to current window"
+complete -c tmux -n "__fish_seen_subcommand_from $new" -s A -d "attach to existing session if session-name already exists"
+complete -c tmux -n "__fish_seen_subcommand_from $new" -s D -d "if -A is specified, detach other clients attached to the session if it exists"
+complete -c tmux -n "__fish_seen_subcommand_from $new" -s P -d "print information about the new session after creation"
+complete -c tmux -n "__fish_seen_subcommand_from $new" -s E -d "don't apply update-environment option"
+complete -c tmux -n "__fish_seen_subcommand_from $new" -xs c -d 'start-directory'
+complete -c tmux -n "__fish_seen_subcommand_from $new" -xs F -d 'format'
 complete -c tmux -n "__fish_seen_subcommand_from $new" -xs n -d 'window-name'
 complete -c tmux -n "__fish_seen_subcommand_from $new" -xs s -d 'session-name'
+complete -c tmux -n "__fish_seen_subcommand_from $new" -xs t -d 'group-name'
 complete -c tmux -n "__fish_seen_subcommand_from $new" -xs x -d 'width'
 complete -c tmux -n "__fish_seen_subcommand_from $new" -xs y -d 'height'
 

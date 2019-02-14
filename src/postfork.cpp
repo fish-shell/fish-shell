@@ -19,6 +19,7 @@
 #include "iothread.h"
 #include "postfork.h"
 #include "proc.h"
+#include "redirection.h"
 #include "signal.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -32,32 +33,8 @@
 /// The number of nanoseconds to sleep between attempts to call fork().
 #define FORK_SLEEP_TIME 1000000
 
-/// Base open mode to pass to calls to open.
-#define OPEN_MASK 0666
-
 /// Fork error message.
 #define FORK_ERROR "Could not create child process - exiting"
-
-/// File redirection clobbering error message.
-#define NOCLOB_ERROR "The file '%s' already exists"
-
-/// File redirection error message.
-#define FILE_ERROR "An error occurred while redirecting file '%s'"
-
-/// File descriptor redirection error message.
-#define FD_ERROR "An error occurred while redirecting file descriptor %s"
-
-/// Pipe error message.
-#define LOCAL_PIPE_ERROR "An error occurred while setting up pipe"
-
-static bool log_redirections = false;
-
-/// Cover for debug_safe that can take an int. The format string should expect a %s.
-static void debug_safe_int(int level, const char *format, int val) {
-    char buff[128];
-    format_long_safe(buff, val);
-    debug_safe(level, format, buff);
-}
 
 /// Called only by the child to set its own process group (possibly creating a new group in the
 /// process if it is the first in a JOB_CONTROL job.
@@ -175,126 +152,23 @@ bool maybe_assign_terminal(const job_t *j) {
     return true;
 }
 
-/// Set up a childs io redirections. Should only be called by setup_child_process(). Does the
-/// following: First it closes any open file descriptors not related to the child by calling
-/// close_unused_internal_pipes() and closing the universal variable server file descriptor. It then
-/// goes on to perform all the redirections described by \c io.
-///
-/// \param io_chain the list of IO redirections for the child
-///
-/// \return 0 on sucess, -1 on failure
-static int handle_child_io(const io_chain_t &io_chain) {
-    for (size_t idx = 0; idx < io_chain.size(); idx++) {
-        const io_data_t *io = io_chain.at(idx).get();
-
-        if (io->io_mode == IO_FD && io->fd == static_cast<const io_fd_t *>(io)->old_fd) {
-            continue;
-        }
-
-        switch (io->io_mode) {
-            case IO_CLOSE: {
-                if (log_redirections) fwprintf(stderr, L"%d: close %d\n", getpid(), io->fd);
-                if (close(io->fd)) {
-                    debug_safe_int(0, "Failed to close file descriptor %s", io->fd);
-                    safe_perror("close");
-                }
-                break;
+int setup_child_process(process_t *p, const dup2_list_t &dup2s) {
+    for (const auto &act : dup2s.get_actions()) {
+        int err = act.target < 0 ? close(act.src) : dup2(act.src, act.target);
+        if (err < 0) {
+            // We have a null p if this is for the exec (non-fork) path.
+            if (p != nullptr) {
+                debug_safe(4, "redirect_in_child_after_fork failed in setup_child_process");
+                exit_without_destructors(1);
             }
-
-            case IO_FILE: {
-                // Here we definitely do not want to set CLO_EXEC because our child needs access.
-                const io_file_t *io_file = static_cast<const io_file_t *>(io);
-                int tmp = open(io_file->filename_cstr, io_file->flags, OPEN_MASK);
-                if (tmp < 0) {
-                    if ((io_file->flags & O_EXCL) && (errno == EEXIST)) {
-                        debug_safe(1, NOCLOB_ERROR, io_file->filename_cstr);
-                    } else {
-                        debug_safe(1, FILE_ERROR, io_file->filename_cstr);
-                        safe_perror("open");
-                    }
-
-                    return -1;
-                } else if (tmp != io->fd) {
-                    // This call will sometimes fail, but that is ok, this is just a precausion.
-                    close(io->fd);
-
-                    if (dup2(tmp, io->fd) == -1) {
-                        debug_safe_int(1, FD_ERROR, io->fd);
-                        safe_perror("dup2");
-                        exec_close(tmp);
-                        return -1;
-                    }
-                    exec_close(tmp);
-                }
-                break;
-            }
-
-            case IO_FD: {
-                int old_fd = static_cast<const io_fd_t *>(io)->old_fd;
-                if (log_redirections)
-                    fwprintf(stderr, L"%d: fd dup %d to %d\n", getpid(), old_fd, io->fd);
-
-                // This call will sometimes fail, but that is ok, this is just a precausion.
-                close(io->fd);
-
-                if (dup2(old_fd, io->fd) == -1) {
-                    debug_safe_int(1, FD_ERROR, io->fd);
-                    safe_perror("dup2");
-                    return -1;
-                }
-                break;
-            }
-
-            case IO_BUFFER:
-            case IO_PIPE: {
-                const io_pipe_t *io_pipe = static_cast<const io_pipe_t *>(io);
-                // If write_pipe_idx is 0, it means we're connecting to the read end (first pipe
-                // fd). If it's 1, we're connecting to the write end (second pipe fd).
-                unsigned int write_pipe_idx = (io_pipe->is_input ? 0 : 1);
-#if 0
-                debug(0, L"%ls %ls on fd %d (%d %d)", write_pipe?L"write":L"read",
-                      (io->io_mode == IO_BUFFER)?L"buffer":L"pipe", io->fd, io->pipe_fd[0],
-                      io->pipe_fd[1]);
-#endif
-                if (log_redirections)
-                    fwprintf(stderr, L"%d: %s dup %d to %d\n", getpid(),
-                             io->io_mode == IO_BUFFER ? "buffer" : "pipe",
-                             io_pipe->pipe_fd[write_pipe_idx], io->fd);
-                if (dup2(io_pipe->pipe_fd[write_pipe_idx], io->fd) != io->fd) {
-                    debug_safe(1, LOCAL_PIPE_ERROR);
-                    safe_perror("dup2");
-                    return -1;
-                }
-
-                if (io_pipe->pipe_fd[0] >= 0) exec_close(io_pipe->pipe_fd[0]);
-                if (io_pipe->pipe_fd[1] >= 0) exec_close(io_pipe->pipe_fd[1]);
-                break;
-            }
+            return err;
         }
     }
-
+    // Set the handling for job control signals back to the default.
+    signal_reset_handlers();
     return 0;
 }
 
-int setup_child_process(process_t *p, const io_chain_t &io_chain) {
-    bool ok = true;
-
-    if (ok) {
-        // In the case of IO_FILE, this can hang until data is available to read/write!
-        ok = (0 == handle_child_io(io_chain));
-        if (p != 0 && !ok) {
-            debug_safe(4, "handle_child_io failed in setup_child_process");
-            exit_without_destructors(1);
-        }
-    }
-
-    if (ok) {
-        // Set the handling for job control signals back to the default.
-        signal_reset_handlers();
-    }
-
-    return ok ? 0 : -1;
-}
 
 int g_fork_count = 0;
 
@@ -346,9 +220,8 @@ pid_t execute_fork(bool wait_for_threads_to_die) {
 
 #if FISH_USE_POSIX_SPAWN
 bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
-                                        posix_spawn_file_actions_t *actions, job_t *j, process_t *p,
-                                        const io_chain_t &io_chain) {
-    UNUSED(p);
+                                        posix_spawn_file_actions_t *actions, const job_t *j,
+                                        const dup2_list_t &dup2s) {
     // Initialize the output.
     if (posix_spawnattr_init(attr) != 0) {
         return false;
@@ -402,52 +275,13 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
     sigemptyset(&sigmask);
     if (!err && reset_sigmask) err = posix_spawnattr_setsigmask(attr, &sigmask);
 
-    for (size_t idx = 0; idx < io_chain.size(); idx++) {
-        const shared_ptr<const io_data_t> io = io_chain.at(idx);
-
-        if (io->io_mode == IO_FD) {
-            const io_fd_t *io_fd = static_cast<const io_fd_t *>(io.get());
-            if (io->fd == io_fd->old_fd) continue;
-        }
-
-        switch (io->io_mode) {
-            case IO_CLOSE: {
-                if (!err) err = posix_spawn_file_actions_addclose(actions, io->fd);
-                break;
-            }
-
-            case IO_FILE: {
-                const io_file_t *io_file = static_cast<const io_file_t *>(io.get());
-                if (!err)
-                    err = posix_spawn_file_actions_addopen(actions, io->fd, io_file->filename_cstr,
-                                                           io_file->flags /* mode */, OPEN_MASK);
-                break;
-            }
-
-            case IO_FD: {
-                const io_fd_t *io_fd = static_cast<const io_fd_t *>(io.get());
-                if (!err)
-                    err = posix_spawn_file_actions_adddup2(actions, io_fd->old_fd /* from */,
-                                                           io->fd /* to */);
-                break;
-            }
-
-            case IO_BUFFER:
-            case IO_PIPE: {
-                const io_pipe_t *io_pipe = static_cast<const io_pipe_t *>(io.get());
-                unsigned int write_pipe_idx = (io_pipe->is_input ? 0 : 1);
-                int from_fd = io_pipe->pipe_fd[write_pipe_idx];
-                int to_fd = io->fd;
-                if (!err) err = posix_spawn_file_actions_adddup2(actions, from_fd, to_fd);
-
-                if (write_pipe_idx > 0) {
-                    if (!err) err = posix_spawn_file_actions_addclose(actions, io_pipe->pipe_fd[0]);
-                    if (!err) err = posix_spawn_file_actions_addclose(actions, io_pipe->pipe_fd[1]);
-                } else {
-                    if (!err) err = posix_spawn_file_actions_addclose(actions, io_pipe->pipe_fd[0]);
-                }
-                break;
-            }
+    // Apply our dup2s.
+    for (const auto &act : dup2s.get_actions()) {
+        if (err) break;
+        if (act.target < 0) {
+            err = posix_spawn_file_actions_addclose(actions, act.src);
+        } else {
+            err = posix_spawn_file_actions_adddup2(actions, act.src, act.target);
         }
     }
 
@@ -568,16 +402,4 @@ bool do_builtin_io(const char *out, size_t outlen, const char *err, size_t errle
 
     errno = saved_errno;
     return success;
-}
-
-void run_as_keepalive(pid_t parent_pid) {
-    // Run this process as a keepalive. In typical usage the parent process will kill us. However
-    // this may not happen if the parent process exits abruptly, either via kill or exec. What we do
-    // is poll our ppid() and exit when it differs from parent_pid. We can afford to do this with
-    // low frequency because in the great majority of cases, fish will kill(9) us.
-    for (;;) {
-        // Note sleep is async-safe.
-        if (sleep(1)) break;
-        if (getppid() != parent_pid) break;
-    }
 }

@@ -14,23 +14,9 @@
 
 class env_var_t;
 
-/// Constants for various colors as used by the set_color function.
-enum {
-    FISH_COLOR_BLACK,    // 0
-    FISH_COLOR_RED,      // 1
-    FISH_COLOR_GREEN,    // 2
-    FISH_COLOR_YELLOW,   // 3
-    FISH_COLOR_BLUE,     // 4
-    FISH_COLOR_MAGENTA,  // 5
-    FISH_COLOR_CYAN,     // 6
-    FISH_COLOR_WHITE,    // 7
-    FISH_COLOR_NORMAL,   // 8 terminal default
-    FISH_COLOR_RESET     // 9
-};
-
 void set_color(rgb_color_t c, rgb_color_t c2);
 
-void writembs_check(char *mbs, const char *mbs_name, bool critical, const char *file, long line);
+void writembs_check(const char *mbs, const char *mbs_name, bool critical, const char *file, long line);
 #define writembs(mbs) writembs_check((mbs), #mbs, true, __FILE__, __LINE__)
 #define writembs_nofail(mbs) writembs_check((mbs), #mbs, false, __FILE__, __LINE__)
 

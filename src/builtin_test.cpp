@@ -5,10 +5,12 @@
 
 #include <errno.h>
 #include <stdarg.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <wchar.h>
+#include <wctype.h>
 
 #include <cmath>
 #include <memory>
@@ -116,7 +118,7 @@ struct token_info_t {
     unsigned int flags;
 };
 
-const token_info_t * const token_for_string(const wcstring &str) {
+const token_info_t *token_for_string(const wcstring &str) {
     static const std::map<wcstring, const token_info_t> token_infos = {
         {L"", {test_unknown, 0}},
         {L"!", {test_bang, 0}},

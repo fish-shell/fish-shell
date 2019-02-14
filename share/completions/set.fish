@@ -90,7 +90,7 @@ complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument
 complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument -s l -l local' -f -a "(set -l | string match -rv '^_|^fish_' | string replace ' ' \t'Local Variable: ')"
 
 # Color completions
-complete -c set -n '__fish_set_is_color' -x -a '(set_color --print-colors)' -d Color
+complete -c set -n '__fish_set_is_color' -x -a '(set_color --print-colors)'
 complete -c set -n '__fish_set_is_color' -s b -l background -x -a '(set_color --print-colors)' -d "Change background color"
 complete -c set -n '__fish_set_is_color' -s o -l bold -d 'Make font bold'
 

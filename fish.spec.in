@@ -11,13 +11,13 @@ URL:                    https://fishshell.com/
 Source0:                %{name}_@VERSION@.orig.tar.gz
 BuildRequires:          ncurses-devel gettext gcc-c++ autoconf
 
-%if 0%{?rhel_version} && 0%{?rhel_version} && 0%{?rhel_version} < 800
+%if 0%{?rhel} && 0%{?rhel} < 8
 BuildRequires: cmake3
 %else
 BuildRequires: cmake
 %endif
 
-%if 0%{?opensuse_bs} && 0%{?rhel_version} && 0%{?rhel_version} < 700
+%if 0%{?opensuse_bs} && 0%{?rhel} && 0%{?rhel} < 7
 BuildRequires: gcc48 gcc48-c++
 %endif
 
@@ -25,9 +25,14 @@ BuildRequires: gcc48 gcc48-c++
 BuildRequires: pcre2-devel
 %endif
 
+# for tests
+%if 0%{?fedora}
+# Need the en_US.utf-8 locale at a minimum
+BuildRequires: glibc-langpack-en
+%endif
+
 BuildRoot:              %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-Requires:		bc
 Requires:		python
 Requires:		man
 
@@ -41,20 +46,20 @@ is simple but incompatible with other shell languages.
 %setup -q -n %{name}-@VERSION@
 
 %build
-%if 0%{?opensuse_bs} && 0%{?rhel_version} && 0%{?rhel_version} < 700
+%if 0%{?opensuse_bs} && 0%{?rhel} && 0%{?rhel} < 7
 export CC=gcc48
 export CXX=g++48
 EXTRA_CMAKE_FLAGS="-DCURSES_EXTRA_LIBRARY=tinfo"
-%if 0%{?rhel} < 6
-# i686 required for atomic instructions; default is i386
-export CXXFLAGS="$CXXFLAGS -march=i686"
 %endif
-%endif
-# CMake macros on OpenSUSE and Fedora define the wrong sysconfdir arguments
-%if 0%{?rhel_version} && 0%{?rhel_version} < 800
-%cmake3 -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir} $EXTRA_CMAKE_FLAGS
+# CMake macros define -DBUILD_SHARED_LIBS:BOOL=ON, which breaks the
+# bundled PCRE2 static library.
+EXTRA_CMAKE_FLAGS="$EXTRA_CMAKE_FLAGS -DBUILD_SHARED_LIBS:BOOL=OFF"
+# CMake macros define the wrong sysconfdir arguments
+EXTRA_CMAKE_FLAGS="$EXTRA_CMAKE_FLAGS -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir}"
+%if 0%{?rhel} && 0%{?rhel} < 8
+%cmake3 $EXTRA_CMAKE_FLAGS
 %else
-%cmake -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir} $EXTRA_CMAKE_FLAGS
+%cmake $EXTRA_CMAKE_FLAGS
 %endif
 %if 0%{?make_jobs:1}
 %make_jobs
@@ -69,6 +74,13 @@ make %{?_smp_mflags}
 %make_install
 %endif
 %find_lang %{name}
+
+%check
+# OpenSUSE does out-of-tree builds and defines __builddir
+%if 0%{?__builddir:1}
+cd %__builddir
+%endif
+make test SHOW_INTERACTIVE_LOG=1
 
 %clean
 rm -rf $RPM_BUILD_ROOT

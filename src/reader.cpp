@@ -395,7 +395,15 @@ class reader_data_t {
     void pager_selection_changed();
 
     /// Expand abbreviations at the current cursor position, minus backtrack_amt.
-    bool expand_abbreviation_as_necessary(size_t cursor_backtrack) const;
+    static bool expand_abbreviation_as_necessary(size_t cursor_backtrack);
+
+    /// Return the variable set used for e.g. command duration.
+    env_stack_t &vars() { return parser_t::principal_parser().vars(); }
+
+    /// Hackish access to the parser. TODO: rationalize this.
+    parser_t &parser() { return parser_t::principal_parser(); }
+
+    const env_stack_t &vars() const { return parser_t::principal_parser().vars(); }
 
     /// Constructor
     reader_data_t(history_t *hist) : history(hist) {}
@@ -691,7 +699,7 @@ void reader_data_t::pager_selection_changed() {
 
 /// Expand abbreviations at the given cursor position. Does NOT inspect 'data'.
 bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t cursor_pos,
-                                           wcstring *output) {
+                                           const environment_t &vars, wcstring *output) {
     // See if we are at "command position". Get the surrounding command substitution, and get the
     // extent of the first token.
     const wchar_t *const buff = cmdline.c_str();
@@ -742,14 +750,13 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
     bool result = false;
     if (matching_cmd_node) {
         const wcstring token = matching_cmd_node.get_source(subcmd);
-        wcstring abbreviation;
-        if (expand_abbreviation(token, &abbreviation)) {
+        if (auto abbreviation = expand_abbreviation(token, vars)) {
             // There was an abbreviation! Replace the token in the full command. Maintain the
             // relative position of the cursor.
             if (output != NULL) {
                 output->assign(cmdline);
                 source_range_t r = *matching_cmd_node.source_range();
-                output->replace(subcmd_offset + r.start, r.length, abbreviation);
+                output->replace(subcmd_offset + r.start, r.length, *abbreviation);
             }
             result = true;
         }
@@ -760,15 +767,16 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
 /// Expand abbreviations at the current cursor position, minus the given  cursor backtrack. This may
 /// change the command line but does NOT repaint it. This is to allow the caller to coalesce
 /// repaints.
-bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack) const {
+bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack) {
     reader_data_t *data = current_data();
     bool result = false;
     editable_line_t *el = data->active_edit_line();
-    if (this->expand_abbreviations && el == &data->command_line) {
+    if (data->expand_abbreviations && el == &data->command_line) {
         // Try expanding abbreviations.
         wcstring new_cmdline;
         size_t cursor_pos = el->position - mini(el->position, cursor_backtrack);
-        if (reader_expand_abbreviation_in_command(el->text, cursor_pos, &new_cmdline)) {
+        if (reader_expand_abbreviation_in_command(el->text, cursor_pos, data->vars(),
+                                                  &new_cmdline)) {
             // We expanded an abbreviation! The cursor moves by the difference in the command line
             // lengths.
             size_t new_buff_pos = el->position + new_cmdline.size() - el->text.size();
@@ -825,7 +833,8 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
 
     wcstring_list_t lst;
     proc_push_interactive(0);
-    if (exec_subshell(fish_title_command, lst, false /* ignore exit status */) != -1 &&
+    if (exec_subshell(fish_title_command, current_data()->parser(), lst,
+                      false /* ignore exit status */) != -1 &&
         !lst.empty()) {
         fputws(L"\x1B]0;", stdout);
         for (size_t i = 0; i < lst.size(); i++) {
@@ -863,7 +872,8 @@ static void exec_prompt() {
         // Prepend any mode indicator to the left prompt (issue #1988).
         if (function_exists(MODE_PROMPT_FUNCTION_NAME)) {
             wcstring_list_t mode_indicator_list;
-            exec_subshell(MODE_PROMPT_FUNCTION_NAME, mode_indicator_list, apply_exit_status);
+            exec_subshell(MODE_PROMPT_FUNCTION_NAME, data->parser(), mode_indicator_list,
+                          apply_exit_status);
             // We do not support multiple lines in the mode indicator, so just concatenate all of
             // them.
             for (size_t i = 0; i < mode_indicator_list.size(); i++) {
@@ -874,7 +884,7 @@ static void exec_prompt() {
         if (!data->left_prompt.empty()) {
             wcstring_list_t prompt_list;
             // Ignore return status.
-            exec_subshell(data->left_prompt, prompt_list, apply_exit_status);
+            exec_subshell(data->left_prompt, data->parser(), prompt_list, apply_exit_status);
             for (size_t i = 0; i < prompt_list.size(); i++) {
                 if (i > 0) data->left_prompt_buff += L'\n';
                 data->left_prompt_buff += prompt_list.at(i);
@@ -884,7 +894,7 @@ static void exec_prompt() {
         if (!data->right_prompt.empty()) {
             wcstring_list_t prompt_list;
             // Status is ignored.
-            exec_subshell(data->right_prompt, prompt_list, apply_exit_status);
+            exec_subshell(data->right_prompt, data->parser(), prompt_list, apply_exit_status);
             for (size_t i = 0; i < prompt_list.size(); i++) {
                 // Right prompt does not support multiple lines, so just concatenate all of them.
                 data->right_prompt_buff += prompt_list.at(i);
@@ -903,10 +913,12 @@ static void exec_prompt() {
 void reader_init() {
     DIE_ON_FAILURE(pthread_key_create(&generation_count_key, NULL));
 
+    auto &vars = parser_t::principal_parser().vars();
+
     // Ensure this var is present even before an interactive command is run so that if it is used
     // in a function like `fish_prompt` or `fish_right_prompt` it is defined at the time the first
     // prompt is written.
-    env_set_one(ENV_CMD_DURATION, ENV_UNEXPORT, L"0");
+    vars.set_one(ENV_CMD_DURATION, ENV_UNEXPORT, L"0");
 
     // Save the initial terminal mode.
     tcgetattr(STDIN_FILENO, &terminal_mode_on_startup);
@@ -1277,9 +1289,10 @@ struct autosuggestion_result_t {
 // on a background thread) to determine the autosuggestion
 static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer(
     const wcstring &search_string, size_t cursor_pos, history_t *history) {
+    const auto &parser_vars = parser_t::principal_parser().vars();
     const unsigned int generation_count = read_generation_count();
-    const wcstring working_directory(env_get_pwd_slash());
-    env_vars_snapshot_t vars(env_vars_snapshot_t::highlighting_keys);
+    const wcstring working_directory = parser_vars.get_pwd_slash();
+    env_vars_snapshot_t vars(parser_vars, env_vars_snapshot_t::completing_keys);
     // TODO: suspicious use of 'history' here
     // This is safe because histories are immortal, but perhaps
     // this should use shared_ptr
@@ -1329,7 +1342,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
         // Try normal completions.
         completion_request_flags_t complete_flags = COMPLETION_REQUEST_AUTOSUGGESTION;
         std::vector<completion_t> completions;
-        complete(search_string, &completions, complete_flags);
+        complete(search_string, &completions, complete_flags, vars);
         completions_sort_and_prioritize(&completions, complete_flags);
         if (!completions.empty()) {
             const completion_t &comp = completions.at(0);
@@ -1824,7 +1837,7 @@ static void reader_interactive_init() {
     invalidate_termsize();
 
     // For compatibility with fish 2.0's $_, now replaced with `status current-command`
-    env_set_one(L"_", ENV_GLOBAL, L"fish");
+    parser_t::principal_parser().vars().set_one(L"_", ENV_GLOBAL, L"fish");
 }
 
 /// Destroy data for interactive use.
@@ -1997,7 +2010,7 @@ bool reader_get_selection(size_t *start, size_t *len) {
     return result;
 }
 
-void set_env_cmd_duration(struct timeval *after, struct timeval *before) {
+void set_env_cmd_duration(struct timeval *after, struct timeval *before, env_stack_t &vars) {
     time_t secs = after->tv_sec - before->tv_sec;
     suseconds_t usecs = after->tv_usec - before->tv_usec;
     wchar_t buf[16];
@@ -2008,7 +2021,7 @@ void set_env_cmd_duration(struct timeval *after, struct timeval *before) {
     }
 
     swprintf(buf, 16, L"%d", (secs * 1000) + (usecs / 1000));
-    env_set_one(ENV_CMD_DURATION, ENV_UNEXPORT, buf);
+    vars.set_one(ENV_CMD_DURATION, ENV_UNEXPORT, buf);
 }
 
 void reader_run_command(parser_t &parser, const wcstring &cmd) {
@@ -2017,7 +2030,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
     wcstring ft = tok_first(cmd);
 
     // For compatibility with fish 2.0's $_, now replaced with `status current-command`
-    if (!ft.empty()) env_set_one(L"_", ENV_GLOBAL, ft);
+    if (!ft.empty()) parser.vars().set_one(L"_", ENV_GLOBAL, ft);
 
     reader_write_title(cmd);
 
@@ -2032,12 +2045,12 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     // update the execution duration iff a command is requested for execution
     // issue - #4926
-    if (!ft.empty()) set_env_cmd_duration(&time_after, &time_before);
+    if (!ft.empty()) set_env_cmd_duration(&time_after, &time_before, parser.vars());
 
     term_steal();
 
     // For compatibility with fish 2.0's $_, now replaced with `status current-command`
-    env_set_one(L"_", ENV_GLOBAL, program_name);
+    parser.vars().set_one(L"_", ENV_GLOBAL, program_name);
 
 #ifdef HAVE__PROC_SELF_STAT
     proc_update_jiffies();
@@ -2142,14 +2155,15 @@ void reader_import_history_if_necessary() {
         data->history->populate_from_config_path();
     }
 
-    // Import history from bash, etc. if our current history is still empty.
-    if (data->history && data->history->is_empty()) {
+    // Import history from bash, etc. if our current history is still empty and is the default
+    // history.
+    if (data->history && data->history->is_empty() && data->history->is_default()) {
         // Try opening a bash file. We make an effort to respect $HISTFILE; this isn't very complete
         // (AFAIK it doesn't have to be exported), and to really get this right we ought to ask bash
         // itself. But this is better than nothing.
-        const auto var = env_get(L"HISTFILE");
+        const auto var = data->vars().get(L"HISTFILE");
         wcstring path = (var ? var->as_string() : L"~/.bash_history");
-        expand_tilde(path);
+        expand_tilde(path, data->vars());
         FILE *f = wfopen(path, "r");
         if (f) {
             data->history->populate_from_bash(f);
@@ -2201,7 +2215,8 @@ static void highlight_complete(highlight_result_t result) {
 static std::function<highlight_result_t(void)> get_highlight_performer(const wcstring &text,
                                                                        long match_highlight_pos,
                                                                        bool no_io) {
-    env_vars_snapshot_t vars(env_vars_snapshot_t::highlighting_keys);
+    env_vars_snapshot_t vars(parser_t::principal_parser().vars(),
+                             env_vars_snapshot_t::highlighting_keys);
     unsigned int generation_count = read_generation_count();
     highlight_function_t highlight_func =
         no_io ? highlight_shell_no_io : current_data()->highlight_func;
@@ -2337,7 +2352,8 @@ uint32_t reader_run_count() { return run_count; }
 
 /// Read interactively. Read input from stdin while providing editing facilities.
 static int read_i() {
-    reader_push(history_session_id());
+    parser_t &parser = parser_t::principal_parser();
+    reader_push(history_session_id(parser.vars()));
     reader_set_complete_function(&complete);
     reader_set_highlight_function(&highlight_shell);
     reader_set_test_function(&reader_shell_test);
@@ -2345,7 +2361,6 @@ static int read_i() {
     reader_set_expand_abbreviations(true);
     reader_import_history_if_necessary();
 
-    parser_t &parser = parser_t::principal_parser();
     reader_data_t *data = current_data();
     data->prev_end_loop = 0;
 
@@ -2471,12 +2486,20 @@ const wchar_t *reader_readline(int nchars) {
     s_reset(&data->screen, screen_reset_abandon_line);
     reader_repaint();
 
+    const auto &vars = parser_t::principal_parser().vars();
+
     // Get the current terminal modes. These will be restored when the function returns.
     if (tcgetattr(STDIN_FILENO, &old_modes) == -1 && errno == EIO) redirect_tty_output();
     // Set the new modes.
-    if (is_interactive_session) {
-        if (tcsetattr(0, TCSANOW, &shell_modes) == -1) {
-            if (errno == EIO) redirect_tty_output();
+    if (tcsetattr(0, TCSANOW, &shell_modes) == -1) {
+        int err = errno;
+        if (err == EIO) {
+            redirect_tty_output();
+        }
+        // This check is required to work around certain issues with fish's approach to
+        // terminal control when launching interactive processes while in non-interactive
+        // mode. See #4178 for one such example.
+        if (err != ENOTTY || is_interactive_session) {
             wperror(L"tcsetattr");
         }
     }
@@ -2683,7 +2706,7 @@ const wchar_t *reader_readline(int nchars) {
                     complete_flags_t complete_flags = COMPLETION_REQUEST_DEFAULT |
                                                       COMPLETION_REQUEST_DESCRIPTIONS |
                                                       COMPLETION_REQUEST_FUZZY_MATCH;
-                    data->complete_func(buffcpy, &comp, complete_flags);
+                    data->complete_func(buffcpy, &comp, complete_flags, vars);
 
                     // Munge our completions.
                     completions_sort_and_prioritize(&comp);
@@ -2705,10 +2728,15 @@ const wchar_t *reader_readline(int nchars) {
                 break;
             }
             case R_PAGER_TOGGLE_SEARCH: {
-                if (data->is_navigating_pager_contents()) {
+                if (!data->pager.empty()) {
+                    // Toggle search, and begin navigating if we are now searching.
                     bool sfs = data->pager.is_search_field_shown();
                     data->pager.set_search_field_shown(!sfs);
                     data->pager.set_fully_disclosed(true);
+                    if (data->pager.is_search_field_shown() &&
+                        !data->is_navigating_pager_contents()) {
+                        select_completion_in_direction(direction_south);
+                    }
                     reader_repaint_needed();
                 }
                 break;
@@ -2890,7 +2918,8 @@ const wchar_t *reader_readline(int nchars) {
                     // space.
                     const editable_line_t *el = &data->command_line;
                     if (data->history != NULL && !el->empty() && el->text.at(0) != L' ') {
-                        data->history->add_pending_with_file_detection(el->text);
+                        data->history->add_pending_with_file_detection(el->text,
+                                                                       vars.get_pwd_slash());
                     }
                     finished = 1;
                     update_buff_pos(&data->command_line, data->command_line.size());

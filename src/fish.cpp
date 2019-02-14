@@ -84,11 +84,6 @@ static bool get_realpath(std::string &path) {
     return ptr != NULL;
 }
 
-// OS X function for getting the executable path.
-extern "C" {
-int _NSGetExecutablePath(char *buf, uint32_t *bufsize);
-}
-
 static struct config_paths_t determine_config_directory_paths(const char *argv0) {
     struct config_paths_t paths;
     bool done = false;
@@ -184,9 +179,9 @@ static void source_config_in_directory(const wcstring &dir) {
 
     const wcstring cmd = L"builtin source " + escaped_pathname;
     parser_t &parser = parser_t::principal_parser();
-    parser.set_is_within_fish_initialization(true);
+    set_is_within_fish_initialization(true);
     parser.eval(cmd, io_chain_t(), TOP);
-    parser.set_is_within_fish_initialization(false);
+    set_is_within_fish_initialization(false);
 }
 
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
@@ -364,12 +359,13 @@ int main(int argc, char **argv) {
         save_term_foreground_process_group();
     }
 
+    auto &globals = env_stack_t::globals();
     const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
     env_init(&paths);
     // Set features early in case other initialization depends on them.
     // Start with the ones set in the environment, then those set on the command line (so the
     // command line takes precedence).
-    if (auto features_var = env_get(L"fish_features")) {
+    if (auto features_var = globals.get(L"fish_features")) {
         for (const wcstring &s : features_var->as_list()) {
             mutable_fish_features().set_from_string(s);
         }
@@ -382,14 +378,13 @@ int main(int argc, char **argv) {
 
     parser_t &parser = parser_t::principal_parser();
 
-    const io_chain_t empty_ios;
     if (read_init(paths)) {
         // Stomp the exit status of any initialization commands (issue #635).
         proc_set_last_status(STATUS_CMD_OK);
 
         // Run post-config commands specified as arguments, if any.
         if (!opts.postconfig_cmds.empty()) {
-            res = run_command_list(&opts.postconfig_cmds, empty_ios);
+            res = run_command_list(&opts.postconfig_cmds, {});
         }
 
         if (!opts.batch_cmds.empty()) {
@@ -399,11 +394,11 @@ int main(int argc, char **argv) {
                 fish_xdm_login_hack_hack_hack_hack(&opts.batch_cmds, argc - my_optind,
                                                    argv + my_optind);
             }
-            res = run_command_list(&opts.batch_cmds, empty_ios);
+            res = run_command_list(&opts.batch_cmds, {});
             reader_exit(0, 0);
         } else if (my_optind == argc) {
             // Implicitly interactive mode.
-            res = reader_read(STDIN_FILENO, empty_ios);
+            res = reader_read(STDIN_FILENO, {});
         } else {
             char *file = *(argv + (my_optind++));
             int fd = open(file, O_RDONLY);
@@ -417,13 +412,13 @@ int main(int argc, char **argv) {
                 for (char **ptr = argv + my_optind; *ptr; ptr++) {
                     list.push_back(str2wcstring(*ptr));
                 }
-                env_set(L"argv", ENV_DEFAULT, list);
+                parser.vars().set(L"argv", ENV_DEFAULT, list);
 
                 const wcstring rel_filename = str2wcstring(file);
 
                 reader_push_current_filename(rel_filename.c_str());
 
-                res = reader_read(fd, empty_ios);
+                res = reader_read(fd, {});
 
                 if (res) {
                     debug(1, _(L"Error while reading file %ls\n"),
@@ -440,7 +435,10 @@ int main(int argc, char **argv) {
     // TODO: The generic process-exit event is useless and unused.
     // Remove this in future.
     proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, getpid(), exit_status);
-    event_fire_generic(L"fish_exit");
+
+    // Trigger any exit handlers.
+    wcstring_list_t event_args = {to_string(exit_status)};
+    event_fire_generic(L"fish_exit", &event_args);
 
     restore_term_mode();
     restore_term_foreground_process_group();

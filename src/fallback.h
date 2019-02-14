@@ -3,10 +3,6 @@
 
 #include "config.h"
 
-// IWYU likes to recommend adding <term.h> when we want <ncurses.h>. If we add <term.h> it breaks
-// compiling several modules that include this header because they use symbols which are defined as
-// macros in <term.h>.
-// IWYU pragma: no_include <term.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <unistd.h>
@@ -46,7 +42,7 @@ int fish_mkstemp_cloexec(char *);
 /// Under curses, tputs expects an int (*func)(char) as its last parameter, but in ncurses, tputs
 /// expects a int (*func)(int) as its last parameter. tputs_arg_t is defined to always be what tputs
 /// expects. Hopefully.
-#ifdef NCURSES_VERSION
+#if defined(NCURSES_VERSION) || defined(__NetBSD__)
 typedef int tputs_arg_t;
 #else
 typedef char tputs_arg_t;
@@ -63,7 +59,7 @@ struct winsize {
 
 #endif
 
-#ifdef TPARM_SOLARIS_KLUDGE
+#if defined(TPARM_SOLARIS_KLUDGE)
 /// Solaris tparm has a set fixed of paramters in its curses implementation, work around this here.
 #define tparm tparm_solaris_kludge
 char *tparm_solaris_kludge(char *str, long p1 = 0, long p2 = 0, long p3 = 0, long p4 = 0,
@@ -82,9 +78,9 @@ char *tparm_solaris_kludge(char *str, long p1 = 0, long p2 = 0, long p3 = 0, lon
 // We have to explicitly redeclare these as weak,
 // since we are forced to set the MIN_REQUIRED availability macro to 10.7
 // to use libc++, which in turn exposes these as strong
-wchar_t *wcsdup(const wchar_t *) __attribute__((weak_import));
-int wcscasecmp(const wchar_t *, const wchar_t *) __attribute__((weak_import));
-int wcsncasecmp(const wchar_t *, const wchar_t *, size_t n) __attribute__((weak_import));
+[[clang::weak_import]] wchar_t *wcsdup(const wchar_t *);
+[[clang::weak_import]] int wcscasecmp(const wchar_t *, const wchar_t *);
+[[clang::weak_import]] int wcsncasecmp(const wchar_t *, const wchar_t *, size_t n);
 wchar_t *wcsdup_use_weak(const wchar_t *);
 int wcscasecmp_use_weak(const wchar_t *, const wchar_t *);
 int wcsncasecmp_use_weak(const wchar_t *s1, const wchar_t *s2, size_t n);
@@ -199,6 +195,19 @@ int flock(int fd, int op);
 
 #endif
 
-#ifndef wcstod_l
-double wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t loc);
+// NetBSD _has_ wcstod_l, but it's doing some weak linking hullabaloo that I don't get.
+// Since it doesn't have uselocale (yes, the standard function isn't there, the non-standard extension is),
+// we can't try to use the fallback.
+#if !defined(HAVE_WCSTOD_L) && !defined(__NetBSD__)
+// On some platforms if this is incorrectly detected and a system-defined
+// defined version of `wcstod_l` exists, calling `wcstod` from our own
+// `wcstod_l` can call back into `wcstod_l` causing infinite recursion.
+// e.g. FreeBSD defines `wcstod(x, y)` as `wcstod_l(x, y, __get_locale())`.
+// Solution: namespace our implementation to make sure there is no symbol
+// duplication.
+#undef wcstod_l
+namespace fish_compat {
+    double wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t loc);
+}
+#define wcstod_l(x, y, z) fish_compat::wcstod_l(x, y, z)
 #endif

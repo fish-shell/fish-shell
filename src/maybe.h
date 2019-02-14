@@ -2,7 +2,6 @@
 #define FISH_MAYBE_H
 
 #include <cassert>
-#include <utility>
 
 // A none_t is a helper type used to implicitly initialize maybe_t.
 // Example usage:
@@ -51,6 +50,14 @@ class maybe_t {
         if (v.filled) {
             new (storage) T(std::move(v.value()));
         }
+    }
+
+    // Construct a value in-place.
+    template <class... Args>
+    void emplace(Args &&... args) {
+        reset();
+        filled = true;
+        new (storage) T(std::forward<Args>(args)...);
     }
 
     // Access the value.

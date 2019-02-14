@@ -96,31 +96,26 @@ static const struct block_lookup_entry block_lookup[] = {
     {(block_type_t)0, 0, 0}};
 
 // Given a file path, return something nicer. Currently we just "unexpand" tildes.
-static wcstring user_presentable_path(const wcstring &path) {
-    return replace_home_directory_with_tilde(path);
+wcstring parser_t::user_presentable_path(const wcstring &path) const {
+    return replace_home_directory_with_tilde(path, vars());
 }
 
-parser_t::parser_t() : cancellation_requested(false), is_within_fish_initialization(false) {}
+parser_t::parser_t() : variables(env_stack_t::principal()) {}
 
 // Out of line destructor to enable forward declaration of parse_execution_context_t
 parser_t::~parser_t() = default;
 
-static parser_t s_principal_parser;
+parser_t parser_t::principal;
 
 parser_t &parser_t::principal_parser() {
-    ASSERT_IS_NOT_FORKED_CHILD();
     ASSERT_IS_MAIN_THREAD();
-    return s_principal_parser;
-}
-
-void parser_t::set_is_within_fish_initialization(bool flag) {
-    is_within_fish_initialization = flag;
+    return principal;
 }
 
 void parser_t::skip_all_blocks() {
     // Tell all blocks to skip.
     // This may be called from a signal handler!
-    s_principal_parser.cancellation_requested = true;
+    principal.cancellation_requested = true;
 }
 
 // Given a new-allocated block, push it onto our block stack, acquiring ownership
@@ -159,7 +154,7 @@ void parser_t::push_block_int(block_t *new_current) {
     }
 
     if (new_current->type() != TOP) {
-        env_push(type == FUNCTION_CALL);
+        vars().push(type == FUNCTION_CALL);
         new_current->wants_pop_env = true;
     }
 }
@@ -177,7 +172,7 @@ void parser_t::pop_block(const block_t *expected) {
     std::unique_ptr<block_t> old = std::move(block_stack.back());
     block_stack.pop_back();
 
-    if (old->wants_pop_env) env_pop();
+    if (old->wants_pop_env) vars().pop();
 
     // Figure out if `status is-block` should consider us to be in a block now.
     bool new_is_block = false;
@@ -319,6 +314,7 @@ void parser_t::emit_profiling(const char *path) const {
 }
 
 void parser_t::expand_argument_list(const wcstring &arg_list_src, expand_flags_t eflags,
+                                    const environment_t &vars,
                                     std::vector<completion_t> *output_arg_list) {
     assert(output_arg_list != NULL);
 
@@ -335,7 +331,8 @@ void parser_t::expand_argument_list(const wcstring &arg_list_src, expand_flags_t
     tnode_t<grammar::freestanding_argument_list> arg_list(&tree, &tree.at(0));
     while (auto arg = arg_list.next_in_list<grammar::argument>()) {
         const wcstring arg_src = arg.get_source(arg_list_src);
-        if (expand_string(arg_src, output_arg_list, eflags, NULL) == EXPAND_ERROR) {
+        if (expand_string(arg_src, output_arg_list, eflags, vars, NULL /* errors */) ==
+            EXPAND_ERROR) {
             break;  // failed to expand a string
         }
     }
@@ -400,7 +397,7 @@ void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const {
         if (file) {
             append_format(*buff, _(L"\tcalled on line %d of file %ls\n"), b->src_lineno,
                           user_presentable_path(file).c_str());
-        } else if (is_within_fish_initialization) {
+        } else if (is_within_fish_initialization()) {
             append_format(*buff, _(L"\tcalled during startup\n"));
         } else {
             append_format(*buff, _(L"\tcalled on standard input\n"));
@@ -537,7 +534,7 @@ wcstring parser_t::current_line() {
         if (file) {
             append_format(prefix, _(L"%ls (line %d): "), user_presentable_path(file).c_str(),
                           lineno);
-        } else if (is_within_fish_initialization) {
+        } else if (is_within_fish_initialization()) {
             append_format(prefix, L"%ls (line %d): ", _(L"Startup"), lineno);
         } else {
             append_format(prefix, L"%ls (line %d): ", _(L"Standard input"), lineno);

@@ -36,6 +36,7 @@
 #include "io.h"
 #include "iothread.h"
 #include "lru.h"
+#include "parser.h"
 #include "parse_constants.h"
 #include "parse_util.h"
 #include "path.h"
@@ -270,7 +271,7 @@ class history_file_contents_t {
                 ptr += amt;
             }
         }
-        bzero(ptr, remaining);
+        memset(ptr, 0, remaining);
         return true;
     }
 
@@ -1693,6 +1694,8 @@ void history_t::clear() {
     this->clear_file_state();
 }
 
+bool history_t::is_default() const { return name == DFLT_FISH_HISTORY_SESSION_ID; }
+
 bool history_t::is_empty() {
     scoped_lock locker(lock);
 
@@ -1803,9 +1806,6 @@ static bool should_import_bash_history_line(const std::string &line) {
 /// commands. We can't actually parse bash syntax and the bash history file does not unambiguously
 /// encode multiline commands.
 void history_t::populate_from_bash(FILE *stream) {
-    // We do not import bash history if an alternative fish history file is being used.
-    if (history_session_id() != DFLT_FISH_HISTORY_SESSION_ID) return;
-
     // Process the entire history file until EOF is observed.
     bool eof = false;
     while (!eof) {
@@ -1866,10 +1866,10 @@ void history_collection_t::save() {
 void history_save_all() { histories.save(); }
 
 /// Return the prefix for the files to be used for command and read history.
-wcstring history_session_id() {
+wcstring history_session_id(const environment_t &vars) {
     wcstring result = DFLT_FISH_HISTORY_SESSION_ID;
 
-    const auto var = env_get(L"fish_history");
+    const auto var = vars.get(L"fish_history");
     if (var) {
         wcstring session_id = var->as_string();
         if (session_id.empty()) {
@@ -1918,7 +1918,8 @@ static bool string_could_be_path(const wcstring &potential_path) {
     return true;
 }
 
-void history_t::add_pending_with_file_detection(const wcstring &str) {
+void history_t::add_pending_with_file_detection(const wcstring &str,
+                                                const wcstring &working_dir_slash) {
     ASSERT_IS_MAIN_THREAD();
 
     // Find all arguments that look like they could be file paths.
@@ -1967,8 +1968,7 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
 
         // Check for which paths are valid on a background thread,
         // then on the main thread update our history item
-        const wcstring wd = env_get_pwd_slash();
-        iothread_perform([=]() { return valid_paths(potential_paths, wd); },
+        iothread_perform([=]() { return valid_paths(potential_paths, working_dir_slash); },
                          [=](path_list_t validated_paths) {
                              this->set_valid_file_paths(validated_paths, identifier);
                              this->enable_automatic_saving();
@@ -1992,13 +1992,15 @@ void history_t::resolve_pending() {
 }
 
 
-static bool private_mode = false;
+static std::atomic<bool> private_mode{false};
+
 void start_private_mode() {
-    private_mode = true;
-    env_set_one(L"fish_history", ENV_GLOBAL, L"");
-    env_set_one(L"fish_private_mode", ENV_GLOBAL, L"1");
+    private_mode.store(true);
+    auto &vars = parser_t::principal_parser().vars();
+    vars.set_one(L"fish_history", ENV_GLOBAL, L"");
+    vars.set_one(L"fish_private_mode", ENV_GLOBAL, L"1");
 }
 
 bool in_private_mode() {
-    return private_mode;
+    return private_mode.load();
 }

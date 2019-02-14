@@ -118,8 +118,6 @@ class process_t {
     pid_t pid{0};
     /// File descriptor that pipe output should bind to.
     int pipe_write_fd{0};
-    /// File descriptor that the _next_ process pipe input should bind to.
-    int pipe_read_fd{0};
     /// True if process has completed.
     volatile int completed{false};
     /// True if process has stopped.
@@ -354,7 +352,7 @@ int proc_get_last_status();
 /// Notify the user about stopped or terminated jobs. Delete terminated jobs from the job list.
 ///
 /// \param interactive whether interactive jobs should be reaped as well
-int job_reap(bool interactive);
+bool job_reap(bool interactive);
 
 /// Signal handler for SIGCHLD. Mark any processes with relevant information.
 void job_handle_signal(int signal, siginfo_t *info, void *con);
@@ -398,6 +396,12 @@ int proc_format_status(int status);
 
 /// Wait for any process finishing.
 pid_t proc_wait_any();
+
+/// Set and get whether we are in initialization.
+// Hackish. In order to correctly report the origin of code with no associated file, we need to
+// know whether it's run during initialization or not.
+void set_is_within_fish_initialization(bool flag);
+bool is_within_fish_initialization();
 
 /// Terminate all background jobs
 void hup_background_jobs();

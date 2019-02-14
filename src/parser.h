@@ -162,9 +162,7 @@ class parser_t {
 
    private:
     /// Indication that we should skip all blocks.
-    volatile sig_atomic_t cancellation_requested;
-    /// Indicates that we are within the process of initializing fish.
-    bool is_within_fish_initialization;
+    volatile sig_atomic_t cancellation_requested = false;
     /// The current execution context.
     std::unique_ptr<parse_execution_context_t> execution_context;
     /// List of called functions, used to help prevent infinite recursion.
@@ -175,7 +173,8 @@ class parser_t {
     std::vector<std::unique_ptr<block_t>> block_stack;
     /// The 'depth' of the fish call stack.
     int eval_level = -1;
-
+    /// Set of variables for the parser.
+    env_stack_t &variables;
 #if 0
 // TODO: Lint says this isn't used (which is true). Should this be removed?
     /// Gets a description of the block stack, for debugging.
@@ -200,11 +199,20 @@ class parser_t {
     /// every block if it is of type FUNCTION_CALL.
     const wchar_t *is_function(size_t idx = 0) const;
 
+    // Given a file path, return something nicer. Currently we just "unexpand" tildes.
+    wcstring user_presentable_path(const wcstring &path) const;
+
     /// Helper for stack_trace().
     void stack_trace_internal(size_t block_idx, wcstring *out) const;
 
     /// Helper for push_block()
     void push_block_int(block_t *b);
+
+    /// Create a parser.
+    parser_t();
+
+    /// The main parser.
+    static parser_t principal;
 
    public:
     /// Get the "principal" parser, whatever that is.
@@ -213,9 +221,6 @@ class parser_t {
     /// Indicates that execution of all blocks in the principal parser should stop. This is called
     /// from signal handlers!
     static void skip_all_blocks();
-
-    /// Create a parser.
-    parser_t();
 
     /// Global event blocks.
     event_blockage_list_t global_event_blocks;
@@ -245,7 +250,7 @@ class parser_t {
     /// \param flags Some expand flags to use
     /// \param output List to insert output into
     static void expand_argument_list(const wcstring &arg_src, expand_flags_t flags,
-                                     std::vector<completion_t> *output);
+                                     const environment_t &vars, std::vector<completion_t> *output);
 
     /// Returns a string describing the current parser position in the format 'FILENAME (line
     /// LINE_NUMBER): LINE'. Example:
@@ -270,9 +275,9 @@ class parser_t {
     /// Get the list of jobs.
     job_list_t &job_list() { return my_job_list; }
 
-    // Hackish. In order to correctly report the origin of code with no associated file, we need to
-    // know whether it's run during initialization or not.
-    void set_is_within_fish_initialization(bool flag);
+    /// Get the variables.
+    env_stack_t &vars() { return variables; }
+    const env_stack_t &vars() const { return variables; }
 
     /// Pushes a new block created with the given arguments
     /// Returns a pointer to the block. The pointer is valid

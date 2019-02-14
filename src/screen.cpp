@@ -110,21 +110,11 @@ static bool allow_soft_wrap() {
     return auto_right_margin;
 }
 
-/// Does this look like the escape sequence for setting a screen name.
+/// Does this look like the escape sequence for setting a screen name?
 static bool is_screen_name_escape_seq(const wchar_t *code, size_t *resulting_length) {
     if (code[1] != L'k') {
         return false;
     }
-
-#if 0
-    // TODO: Decide if this should be removed or modified to also test for TERM values that begin
-    // with "tmux". See issue #3512.
-    const env_var_t term_name = env_get(L"TERM");
-    if (term_name.missing_or_empty() || !string_prefixes_string(L"screen", term_name)) {
-        return false;
-    }
-#endif
-
     const wchar_t *const screen_name_end_sentinel = L"\x1B\\";
     const wchar_t *screen_name_end = wcsstr(&code[2], screen_name_end_sentinel);
     if (screen_name_end == NULL) {
@@ -214,7 +204,7 @@ static bool is_color_escape_seq(const wchar_t *code, size_t *resulting_length) {
 
     // Detect these terminfo color escapes with parameter value up to max_colors, all of which
     // don't move the cursor.
-    char *const esc[] = {
+    const char *const esc[] = {
         set_a_foreground, set_a_background, set_foreground, set_background,
     };
 
@@ -222,7 +212,7 @@ static bool is_color_escape_seq(const wchar_t *code, size_t *resulting_length) {
         if (!esc[p]) continue;
 
         for (int k = 0; k < max_colors; k++) {
-            size_t esc_seq_len = try_sequence(tparm(esc[p], k), code);
+            size_t esc_seq_len = try_sequence(tparm((char *)esc[p], k), code);
             if (esc_seq_len) {
                 *resulting_length = esc_seq_len;
                 return true;
@@ -237,7 +227,7 @@ static bool is_color_escape_seq(const wchar_t *code, size_t *resulting_length) {
 /// displayed other than the color.
 static bool is_visual_escape_seq(const wchar_t *code, size_t *resulting_length) {
     if (!cur_term) return false;
-    char *const esc2[] = {
+    const char *const esc2[] = {
         enter_bold_mode,      exit_attribute_mode,    enter_underline_mode,  exit_underline_mode,
         enter_standout_mode,  exit_standout_mode,     flash_screen,          enter_subscript_mode,
         exit_subscript_mode,  enter_superscript_mode, exit_superscript_mode, enter_blink_mode,
@@ -250,7 +240,7 @@ static bool is_visual_escape_seq(const wchar_t *code, size_t *resulting_length) 
         if (!esc2[p]) continue;
         // Test both padded and unpadded version, just to be safe. Most versions of tparm don't
         // actually seem to do anything these days.
-        size_t esc_seq_len = maxi(try_sequence(tparm(esc2[p]), code), try_sequence(esc2[p], code));
+        size_t esc_seq_len = maxi(try_sequence(tparm((char *)esc2[p]), code), try_sequence(esc2[p], code));
         if (esc_seq_len) {
             *resulting_length = esc_seq_len;
             return true;
@@ -483,7 +473,7 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
     int i;
     int x_steps, y_steps;
 
-    char *str;
+    const char *str;
     scoped_buffer_t scoped_buffer(b);
 
     y_steps = new_y - s->actual.cursor.y;
@@ -512,7 +502,7 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
         x_steps = 0;
     }
 
-    char *multi_str = NULL;
+    const char *multi_str = NULL;
     if (x_steps < 0) {
         str = cursor_left;
         multi_str = parm_left_cursor;
@@ -526,7 +516,7 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
     bool use_multi =
         multi_str != NULL && multi_str[0] != '\0' && abs(x_steps) * strlen(str) > strlen(multi_str);
     if (use_multi && cur_term) {
-        char *multi_param = tparm(multi_str, abs(x_steps));
+        char *multi_param = tparm((char *)multi_str, abs(x_steps));
         writembs(multi_param);
     } else {
         for (i = 0; i < abs(x_steps); i++) {
@@ -566,7 +556,7 @@ static void s_write_char(screen_t *s, data_buffer_t *b, wchar_t c) {
 }
 
 /// Send the specified string through tputs and append the output to the specified buffer.
-static void s_write_mbs(data_buffer_t *b, char *s) {
+static void s_write_mbs(data_buffer_t *b, const char *s) {
     scoped_buffer_t scoped_buffer(b);
     writembs(s);
 }
@@ -1151,7 +1141,7 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
         if (screen_width > non_space_width) {
             bool justgrey = true;
             if (cur_term && enter_dim_mode) {
-                std::string dim = tparm(enter_dim_mode);
+                std::string dim = tparm((char *)enter_dim_mode);
                 if (!dim.empty()) {
                     // Use dim if they have it, so the color will be based on their actual normal
                     // color and the background of the termianl.
@@ -1162,14 +1152,14 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
             if (cur_term && justgrey && set_a_foreground) {
                 if (max_colors >= 238) {
                     // draw the string in a particular grey
-                    abandon_line_string.append(str2wcstring(tparm(set_a_foreground, 237)));
+                    abandon_line_string.append(str2wcstring(tparm((char *)set_a_foreground, 237)));
                 } else if (max_colors >= 9) {
                     // bright black (the ninth color, looks grey)
-                    abandon_line_string.append(str2wcstring(tparm(set_a_foreground, 8)));
+                    abandon_line_string.append(str2wcstring(tparm((char *)set_a_foreground, 8)));
                 } else if (max_colors >= 2 && enter_bold_mode) {
                     // we might still get that color by setting black and going bold for bright
-                    abandon_line_string.append(str2wcstring(tparm(enter_bold_mode)));
-                    abandon_line_string.append(str2wcstring(tparm(set_a_foreground, 0)));
+                    abandon_line_string.append(str2wcstring(tparm((char *)enter_bold_mode)));
+                    abandon_line_string.append(str2wcstring(tparm((char *)set_a_foreground, 0)));
                 }
             }
 
@@ -1177,7 +1167,7 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
 
             if (cur_term && exit_attribute_mode) {
                 abandon_line_string.append(
-                    str2wcstring(tparm(exit_attribute_mode)));  // normal text ANSI escape sequence
+                        str2wcstring(tparm((char *)exit_attribute_mode)));  // normal text ANSI escape sequence
             }
 
             int newline_glitch_width = term_has_xn ? 0 : 1;

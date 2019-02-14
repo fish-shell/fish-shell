@@ -1,9 +1,82 @@
+# fish next-minor
+
+## Deprecations
+- The vcs-prompt functions have been renamed to names without double-underscore, so __fish_git_prompt is now fish_git_prompt, __fish_vcs_prompt is now fish_vcs_prompt, __fish_hg_prompt is now fish_hg_prompt and __fish_svn_prompt is now fish_svn_prompt. Shims at the old names have been added, and the variables have kept their old names (#5586).
+
+## Notable fixes and improvements
+### Syntax changes and new commands
+- None yet.
+
+### Interactive improvements
+- Major improvements in performance and functionality to the 'sorin' sample prompt (#5411).
+- Added completions for:
+ - nothing yet...
+- Lots of improvements to completions.
+- fish_clipboard_* now supports wayland by means of [wl-clipboard](https://github.com/bugaevc/wl-clipboard).
+- mandoc can now be used to format the output from `--help` if nroff is not installed
+- New color options for the pager have been added (#5524).
+- The default escape delay (to differentiate between the escape key and an alt-combination) has been reduced to 30ms, down from 300ms for the default mode and 100ms for vi-mode (#3904).
+- In the interest of consistency, `builtin -q` and `command -q` can now be used to query if a builtin or command exists (#5631).
+
+---
+
+# fish 3.0.1 (released February 11, 2019)
+
+This release of fish fixes a number of major issues discovered in fish 3.0.0.
+
+### Fixes and improvements
+
+- `exec` does not complain about running foreground jobs when called (#5449).
+- while loops now evaluate to the last executed command in the loop body (or zero if the body was empty), matching POSIX semantics (#4982).
+- `read --silent` no longer echoes to the tty when run from a non-interactive script (#5519).
+- On macOS, path entries with spaces in `/etc/paths` and `/etc/paths.d` now correctly set path entries with spaces. Likewise, `MANPATH` is correctly set from `/etc/manpaths` and `/etc/manpaths.d` (#5481).
+- fish starts correctly under Cygwin/MSYS2 (#5426).
+- The `pager-toggle-search` binding (Ctrl-S by default) will now activate the search field, even when the pager is not focused.
+- The error when a command is not found is now printed a single time, instead of once per argument (#5588).
+- Fixes and improvements to the git completions, including printing correct paths with older git versions, fuzzy matching again, reducing unnecessary offers of root paths (starting with `:/`) (#5578, #5574, #5476), and ignoring shell aliases, so enterprising users can set up the wrapping command (via `set -g __fish_git_alias_$command $whatitwraps`) (#5412).
+- Significant performance improvements to core shell functions (#5447) and to the `kill` completions (#5541).
+- Starting in symbolically-linked working directories works correctly (#5525).
+- The default `fish_title` function no longer contains extra spaces (#5517).
+- The `nim` prompt now works correctly when chosen in the Web-based configuration (#5490).
+- `string` now prints help to stdout, like other builtins (#5495).
+- Killing the terminal while fish is in vi normal mode will no longer send it spinning and eating CPU. (#5528)
+- A number of crashes have been fixed (#5550, #5548, #5479, #5453).
+- Improvements to the documentation and certain completions.
+
+### Known issues
+
+There is one significant known issue that was not corrected before the release:
+
+- fish does not run correctly under Windows Services for Linux before Windows 10 version 1809/17763, and the message warning of this may not be displayed (#5619).
+
+If you are upgrading from version 2.7.1 or before, please also review the release notes for 3.0.0 and 3.0b1 (included below).
+
+---
+
+# fish 3.0.0 (released December 28, 2018)
+
+fish 3 is a major release, which introduces some breaking changes alongside improved functionality. Although most existing scripts will continue to work, they should be reviewed against the list contained in the 3.0b1 release notes below.
+
+Compared to the beta release of fish 3.0b1, fish version 3.0.0:
+
+- builds correctly against musl libc (#5407)
+- handles huge numeric arguments to `test` correctly (#5414)
+- removes the history colouring introduced in 3.0b1, which did not always work correctly
+
+There is one significant known issue which was not able to be corrected before the release:
+
+- fish 3.0.0 builds on Cygwin (#5423), but does not run correctly (#5426) and will result in a hanging terminal when started. Cygwin users are encouraged to continue using 2.7.1 until a release which corrects this is available.
+
+If you are upgrading from version 2.7.1 or before, please also review the release notes for 3.0b1 (included below).
+
+---
+
 # fish 3.0b1 (released December 11, 2018)
 
 fish 3 is a major release, which introduces some breaking changes alongside improved functionality. Although most existing scripts will continue to work, they should be reviewed against the list below.
 
 ## Notable non-backward compatible changes
--  Process and job expansion has largely been removed. `%` will no longer perform these expansions, except for `%self` for the PID of the current shell. Additionally, job management commands (`disown`, `wait`, `bg`, `fg` and `kill`) will expand job specifiers starting with `%` (#4230, #1202).
+- Process and job expansion has largely been removed. `%` will no longer perform these expansions, except for `%self` for the PID of the current shell. Additionally, job management commands (`disown`, `wait`, `bg`, `fg` and `kill`) will expand job specifiers starting with `%` (#4230, #1202).
 - `set x[1] x[2] a b`, to set multiple elements of an array at once, is no longer valid syntax (#4236).
 - A literal `{}` now expands to itself, rather than nothing. This makes working with `find -exec` easier (#1109, #4632).
 - Literally accessing a zero-index is now illegal syntax and is caught by the parser (#4862). (fish indices start at 1)
@@ -57,13 +130,12 @@ A new feature flags mechanism is added for staging deprecations and breaking cha
 - `exec` prompts for confirmation if background jobs are running.
 - `funced` has a new `--save` option to automatically save the edited function after successfully editing (#4668).
 - `functions` has a new ` --handlers` option to show functions registered as event handlers (#4694).
-- `history search` supports globs for wildcard searching (#3136) and has a new `--reverse` option to show entries from oldest to newest (#4375)..
+- `history search` supports globs for wildcard searching (#3136) and has a new `--reverse` option to show entries from oldest to newest (#4375).
 - `jobs` has a new `--quiet` option to silence the output.
 - `read` has a new `--delimiter` option for splitting input into arrays (#4256).
 - `read` writes directly to stdout if called without arguments (#4407).
 - `read` can now read individual lines into separate variables without consuming the input in its entirety via the new `/--line` option.
 - `set` has new `--append` and `--prepend` options (#1326).
-- `set` has a new `--show` option to show lots of information about variables (#4265).
 - `string match` with an empty pattern and `--entire` in glob mode now matches everything instead of nothing (#4971).
 - `string split` supports a new `--no-empty` option to exclude empty strings from the result (#4779).
 - `string` has new subcommands `split0` and `join0` for working with NUL-delimited output.

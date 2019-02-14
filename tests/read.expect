@@ -110,7 +110,9 @@ send "def\n"
 expect "abc then def\r\n"
 expect_prompt
 
-send "r2l </dev/stdin\n"
+# Some systems don't have /dev/stdin - effectively skip the test there.
+# I'd love to warn about it, but I don't know how.
+send "test -r /dev/stdin; and r2l </dev/stdin; or r2l\n"
 expect_read_prompt
 send "ghi\n"
 expect_read_prompt

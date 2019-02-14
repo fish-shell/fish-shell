@@ -12,6 +12,7 @@
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
+#include "parser.h"
 #include "proc.h"
 #include "reader.h"
 #include "tokenizer.h"
@@ -53,12 +54,12 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         // try to locate the job argv[1], since we want to know if this is an ambigous job
         // specification or if this is an malformed job id.
         int pid;
-        int found_job = 0;
+        bool found_job = false;
 
         pid = fish_wcstoi(argv[optind]);
         if (!(errno || pid < 0)) {
             j = job_t::from_pid(pid);
-            if (j) found_job = 1;
+            if (j) found_job = true;
         }
 
         if (found_job) {
@@ -103,7 +104,7 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     const wcstring ft = tok_first(j->command());
     //For compatibility with fish 2.0's $_, now replaced with `status current-command`
-    if (!ft.empty()) env_set_one(L"_", ENV_EXPORT, ft);
+    if (!ft.empty()) parser.vars().set_one(L"_", ENV_EXPORT, ft);
     reader_write_title(j->command());
 
     j->promote();

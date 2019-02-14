@@ -102,7 +102,8 @@ try_unbalanced_block 'if false'
 "wh"'ile' false; "e"nd
 
 # BOM checking (see #1518). But only in UTF8 locales.
-if string match -qi '*utf-8*' -- (locale)
+# (locale guarded because of musl)
+if command -sq locale; and string match -qi '*utf-8*' -- (locale)
     echo \uFEFF"echo bom_test" | source
 else
     echo "echo bom_test" | source

@@ -10,6 +10,7 @@
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
+#include "parser.h"
 #include "path.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -86,7 +87,8 @@ int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_CMD_OK;
     }
 
-    if (!opts.find_path && !opts.all_paths) {
+    // Quiet implies find_path.
+    if (!opts.find_path && !opts.all_paths && !opts.quiet) {
         builtin_print_help(parser, streams, cmd, streams.out);
         return STATUS_INVALID_ARGS;
     }
@@ -95,14 +97,14 @@ int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     for (int idx = optind; argv[idx]; ++idx) {
         const wchar_t *command_name = argv[idx];
         if (opts.all_paths) {
-            wcstring_list_t paths = path_get_paths(command_name);
+            wcstring_list_t paths = path_get_paths(command_name, parser.vars());
             for (auto path : paths) {
                 if (!opts.quiet) streams.out.append_format(L"%ls\n", path.c_str());
                 ++found;
             }
-        } else {
+        } else { // Either find_path explicitly or just quiet.
             wcstring path;
-            if (path_get_path(command_name, &path)) {
+            if (path_get_path(command_name, &path, parser.vars())) {
                 if (!opts.quiet) streams.out.append_format(L"%ls\n", path.c_str());
                 ++found;
             }

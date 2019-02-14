@@ -84,11 +84,6 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 
     bind --preset $argv \ed kill-word
 
-    # Ignore some known-bad control sequences
-    # https://github.com/fish-shell/fish-shell/issues/1917
-    bind --preset $argv \e\[I 'begin;end'
-    bind --preset $argv \e\[O 'begin;end'
-
     # term-specific special bindings
     switch "$TERM"
         case 'rxvt*'

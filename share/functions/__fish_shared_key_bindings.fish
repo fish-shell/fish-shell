@@ -45,6 +45,9 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv \eOA up-or-search
     bind --preset $argv \eOB down-or-search
 
+    bind --preset $argv -k sright forward-bigword
+    bind --preset $argv -k sleft backward-bigword
+
     # Alt-left/Alt-right
     bind --preset $argv \e\eOC nextd-or-forward-word
     bind --preset $argv \e\eOD prevd-or-backward-word
@@ -106,6 +109,16 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # The [meta-e] and [meta-v] keystrokes invoke an external editor on the command buffer.
     bind --preset $argv \ee edit_command_buffer
     bind --preset $argv \ev edit_command_buffer
+
+
+    # Tmux' focus events.
+    # Exclude paste mode because that should get _everything_ literally.
+    for mode in (bind --list-modes | string match -v paste)
+        # We only need the in-focus event currently (to redraw the vi-cursor).
+        bind -M $mode \e\[I 'emit fish_focus_in'
+        bind -M $mode \e\[O false
+        bind -M $mode \e\[\?1004h false
+    end
 
     # Support for "bracketed paste"
     # The way it works is that we acknowledge our support by printing

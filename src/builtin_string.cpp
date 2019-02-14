@@ -413,6 +413,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
 
 // Note that several long flags share the same short flag. That is okay. The caller is expected
 // to indicate that a max of one of the long flags sharing a short flag is valid.
+// Remember: adjust share/functions/string.fish when `string` options change
 static const struct woption long_options[] = {
     {L"all", no_argument, NULL, 'a'},         {L"chars", required_argument, NULL, 'c'},
     {L"count", required_argument, NULL, 'n'}, {L"entire", no_argument, NULL, 'e'},
@@ -622,9 +623,13 @@ class wildcard_matcher_t : public string_matcher_t {
             }
         }
         if (opts.entire) {
-            // If the pattern is empty, this becomes one ANY_STRING that matches everything.
-            if (wcpattern.front() != ANY_STRING) wcpattern.insert(0, 1, ANY_STRING);
-            if (wcpattern.back() != ANY_STRING) wcpattern.push_back(ANY_STRING);
+            if (!wcpattern.empty()) {
+                if (wcpattern.front() != ANY_STRING) wcpattern.insert(0, 1, ANY_STRING);
+                if (wcpattern.back() != ANY_STRING) wcpattern.push_back(ANY_STRING);
+            } else {
+                // If the pattern is empty, this becomes one ANY_STRING that matches everything.
+                wcpattern.push_back(ANY_STRING);
+            }
         }
     }
 
@@ -1301,7 +1306,7 @@ int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (wcscmp(argv[1], L"-h") == 0 || wcscmp(argv[1], L"--help") == 0) {
-        builtin_print_help(parser, streams, L"string", streams.err);
+        builtin_print_help(parser, streams, L"string", streams.out);
         return STATUS_CMD_OK;
     }
 

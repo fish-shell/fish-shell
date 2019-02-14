@@ -172,10 +172,9 @@ complete -c $progname -n "$files" -l machinereadable -d 'Show in machine readabl
 
 # Upgrade options
 # Theoretically, pacman reads packages in all formats that libarchive supports
-# In practice, it's going to be tar.xz or tar.gz
-# Using "pkg.tar.*" here would change __fish_complete_suffix's descriptions to "unknown"
-complete -c $progname -n "$upgrade" -xa '(__fish_complete_suffix pkg.tar.xz)' -d 'Package file'
-complete -c $progname -n "$upgrade" -xa '(__fish_complete_suffix pkg.tar.gz)' -d 'Package file'
+# In practice, it's going to be tar, tar.xz or tar.gz
+# Using "pkg.tar*" here would change __fish_complete_suffix's descriptions to "unknown"
+complete -c $progname -n "$upgrade" -xa '(__fish_complete_suffix pkg.tar\{,.xz,.gz\})' -d 'Package file'
 
 ## Yaourt only stuff
 # Clean options

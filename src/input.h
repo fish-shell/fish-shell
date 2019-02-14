@@ -12,6 +12,8 @@
 
 #define FISH_BIND_MODE_VAR L"fish_bind_mode"
 
+class environment_t;
+
 wcstring describe_char(wint_t c);
 
 /// Set to true when the input subsytem has been initialized.
@@ -74,7 +76,7 @@ bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_
                        wcstring *out_new_mode);
 
 /// Return the current bind mode.
-wcstring input_get_bind_mode();
+wcstring input_get_bind_mode(const environment_t &vars);
 
 /// Set the current bind mode.
 void input_set_bind_mode(const wcstring &bind_mode);

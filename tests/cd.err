@@ -4,3 +4,6 @@
 
 ####################
 # cd symlink completion
+
+####################
+# Virtual PWD inheritance

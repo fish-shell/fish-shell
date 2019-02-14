@@ -162,6 +162,7 @@ static int count_char(const wchar_t *str, wchar_t c) {
 ///
 wcstring builtin_help_get(parser_t &parser, io_streams_t &streams, const wchar_t *name) {
     UNUSED(parser);
+    UNUSED(streams);
     // This won't ever work if no_exec is set.
     if (no_exec) return wcstring();
 
@@ -169,7 +170,7 @@ wcstring builtin_help_get(parser_t &parser, io_streams_t &streams, const wchar_t
     wcstring out;
     const wcstring name_esc = escape_string(name, 1);
     wcstring cmd = format_string(L"__fish_print_help %ls", name_esc.c_str());
-    if (exec_subshell(cmd, lst, false /* don't apply exit status */) >= 0) {
+    if (exec_subshell(cmd, parser, lst, false /* don't apply exit status */) >= 0) {
         for (size_t i = 0; i < lst.size(); i++) {
             out.append(lst.at(i));
             out.push_back(L'\n');
@@ -200,11 +201,11 @@ void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *
         bool is_short = false;
         if (is_stderr) {
             // Interactive mode help to screen - only print synopsis if the rest won't fit.
-            int screen_height, lines;
+            int screen_height, my_lines;
 
             screen_height = common_get_height();
-            lines = count_char(str, L'\n');
-            if (!shell_is_interactive() || (lines > 2 * screen_height / 3)) {
+            my_lines = count_char(str, L'\n');
+            if (!shell_is_interactive() || (my_lines > 2 * screen_height / 3)) {
                 wchar_t *pos;
                 int cut = 0;
                 int i;

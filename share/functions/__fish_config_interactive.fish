@@ -46,7 +46,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         set -q fish_color_param || set -U fish_color_param 00afff
         set -q fish_color_redirection || set -U fish_color_redirection 00afff
         set -q fish_color_comment || set -U fish_color_comment 990000
-        set -q fish_color_errorset -U fish_color_error ff0000
+        set -q fish_color_error || set -U fish_color_error ff0000
         set -q fish_color_escape || set -U fish_color_escape 00a6b2
         set -q fish_color_operator || set -U fish_color_operator 00a6b2
         set -q fish_color_end || set -U fish_color_end 009900
@@ -232,6 +232,21 @@ function __fish_config_interactive -d "Initializations that should be performed 
         # Tell the terminal we support BP. Since we are in __f_c_i, the first fish_prompt
         # has already fired.
         __fish_enable_bracketed_paste
+    end
+
+    # Similarly, enable TMUX's focus reporting when in tmux.
+    # This will be handled by
+    # - The keybindings (reading the sequence and triggering an event)
+    # - Any listeners (like the vi-cursor)
+    if set -q TMUX
+        and not set -q FISH_UNIT_TESTS_RUNNING
+        function __fish_enable_focus --on-event fish_postexec
+            echo -n \e\[\?1004h
+        end
+        function __fish_disable_focus --on-event fish_preexec
+            echo -n \e\[\?1004l
+        end
+        __fish_enable_focus
     end
 
     function __fish_winch_handler --on-signal WINCH -d "Repaint screen when window changes size"

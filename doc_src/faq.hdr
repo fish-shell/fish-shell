@@ -292,7 +292,7 @@ Fish reserves the <a href="http://www.unicode.org/faq/private_use.html">Unicode 
 
 The fish user community extends fish in unique and useful ways via scripts that aren't always appropriate for bundling with the fish package. Typically because they solve a niche problem unlikely to appeal to a broad audience. You can find those extensions, including prompts, themes and useful functions, in various third-party repositories. These include:
 
-- <a href="https://github.com/fisherman/fisherman">Fisherman</a>
+- <a href="https://github.com/jorgebucaran/fisher">Fisher</a>
 - <a href="https://github.com/tuvistavie/fundle">Fundle</a>
 - <a href="https://github.com/oh-my-fish/oh-my-fish">Oh My Fish</a>
 - <a href="https://github.com/justinmayer/tacklebox">Tacklebox</a>

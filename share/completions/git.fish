@@ -121,8 +121,6 @@ function __fish_git_files
     contains -- copied $argv; and set -l copied
     and set -l copied_desc (_ "Copied file")
 
-    set -l dir_desc (_ "Directory")
-
     # A literal "?" for use in `case`.
     set -l q '\\?'
     if status test-feature qmark-noglob
@@ -144,26 +142,20 @@ function __fish_git_files
     # (don't use --ignored=no because that was only added in git 2.16, from Jan 2018.
     set -q ignored; and set -a status_opt --ignored
 
-    # Glob just the current token for performance
-    # and so git shows untracked files (even in untracked dirs) for that.
-    # If the current token is empty, this matches everything in $PWD.
-    set -l files (commandline -ct)
-    # The trailing "**" is necessary to match files inside the given directories.
-    set files "$files*" "$files*/**"
     set -q untracked; and set -a status_opt -unormal
     or set -a status_opt -uno
 
     # We need to set status.relativePaths to true because the porcelain v2 format still honors that,
     # and core.quotePath to false so characters > 0x80 (i.e. non-ASCII) aren't considered special.
     # We explicitly enable globs so we can use that to match the current token.
-    set -l git_opt -c status.relativePaths -c core.quotePath= --glob-pathspecs
+    set -l git_opt -c status.relativePaths -c core.quotePath=
 
     # We pick the v2 format if we can, because it shows relative filenames (if used without "-z").
     # We fall back on the v1 format by reading git's _version_, because trying v2 first is too slow.
     set -l ver (command git --version | string replace -rf 'git version (\d+)\.(\d+)\.?.*' '$1\n$2')
     # Version >= 2.11.* has the v2 format.
     if test "$ver[1]" -gt 2 2>/dev/null; or test "$ver[1]" -eq 2 -a "$ver[2]" -ge 11 2>/dev/null
-        command git $git_opt status --porcelain=2 $status_opt -- $files \
+        command git $git_opt status --porcelain=2 $status_opt \
         | while read -la -d ' ' line
             set -l file
             set -l desc
@@ -214,6 +206,16 @@ function __fish_git_files
                     set -ql modified_staged
                     and set file "$line[9..-1]"
                     and set desc $staged_modified_desc
+                case '1 MM*'
+                    # Staged-modified with unstaged modifications
+                    # These need to be offered for both kinds of modified.
+                    if set -ql modified
+                        set file "$line[9..-1]"
+                        set desc $modified_desc
+                    else if set -ql modified_staged
+                        set file "$line[9..-1]"
+                        set desc $staged_modified_desc
+                    end
                 case '1 .D*'
                     set -ql deleted
                     and set file "$line[9..-1]"
@@ -251,34 +253,29 @@ function __fish_git_files
                 # First the relative filename.
                 printf '%s\t%s\n' "$file" $desc
                 # Now from repo root.
-                set -l fromroot (builtin realpath -- $file 2>/dev/null)
-                and set fromroot (string replace -- "$root/" ":/" "$fromroot")
-                and printf '%s\t%s\n' "$fromroot" $desc
-
-                # And the containing directory.
-                # TODO: We may want to offer the parent, but only if another child of that also has a change.
-                # E.g:
-                # - a/b/c is added
-                # - a/d/e is modified
-                # - a/ should be offered, but only a/b/ and a/d/ are.
-                #
-                # Always offering all parents is overkill however, which is why we don't currently do it.
-                set -l dir (string replace -rf '/[^/]+$' '/' -- $file)
-                and printf '%s\t%s\n' $dir "$dir_desc"
+                # Only do this if the filename isn't a simple child,
+                # or the current token starts with ":"
+                if string match -q '../*' -- $file
+                    or string match -q ':*' -- (commandline -ct)
+                    set -l fromroot (builtin realpath -- $file 2>/dev/null)
+                    and set fromroot (string replace -- "$root/" ":/" "$fromroot")
+                    and printf '%s\t%s\n' "$fromroot" $desc
+                end
             end
         end
     else
         # v1 format logic
         # We need to compute relative paths on our own, which is slow.
         # Pre-remove the root at least, so we have fewer components to deal with.
-        set -l _pwd_list (string replace "$root/" "" -- $PWD | string split /)
+        set -l _pwd_list (string replace "$root/" "" -- $PWD/ | string split /)
+        test -z "$_pwd_list[-1]"; and set -e _pwd_list[-1]
         # Cache the previous relative path because these are sorted, so we can reuse it
         # often for files in the same directory.
         set -l previous
         set -l previousfile
         # Note that we can't use space as a delimiter between status and filename, because
         # the status can contain spaces - " M" is different from "M ".
-        command git $git_opt status --porcelain -z $status_opt -- $files \
+        command git $git_opt status --porcelain -z $status_opt \
         | while read -lz line
             set -l desc
             # The entire line is the "from" from a rename.
@@ -355,9 +352,7 @@ function __fish_git_files
                 # Again: "XY filename", so the filename starts on character 4.
                 set -l relfile (string sub -s 4 -- $line)
 
-                # The filename with ":/" prepended.
-                set -l file (string replace -- "$root/" ":/" "$root/$relfile")
-
+                set -l file
                 # Computing relative path by hand.
                 set -l abs (string split / -- $relfile)
                 # If it's in the same directory, we just need to change the filename.
@@ -365,7 +360,6 @@ function __fish_git_files
                     set previous[-1] $abs[-1]
                 else
                     set -l pwd_list $_pwd_list
-                    set previousfile $abs
                     # Remove common prefix
                     while test "$pwd_list[1]" = "$abs[1]"
                         set -e pwd_list[1]
@@ -375,10 +369,18 @@ function __fish_git_files
                     set previous (string replace -r '.*' '..' -- $pwd_list) $abs
                 end
                 set -a file (string join / -- $previous)
-                printf '%s\n' $file\t$desc
 
-                set -l dir (string replace -rf '/[^/]+$' '/' -- $file)
-                and printf '%s\t%s\n' $dir "$dir_desc"
+                # The filename with ":/" prepended.
+                if string match -q '../*' -- $file
+                    or string match -q ':*' -- (commandline -ct)
+                    set file (string replace -- "$root/" ":/" "$root/$relfile")
+                end
+
+                if test "$root/$relfile" = (pwd -P)/$relfile
+                    set file $relfile
+                end
+
+                printf '%s\n' $file\t$desc
             end
         end
     end
@@ -445,7 +447,13 @@ end
 # So instead, we store the aliases in global variables, named after the alias, containing the command.
 # This is because alias:command is an n:1 mapping (an alias can only have one corresponding command,
 #                                                  but a command can be aliased multiple times)
-git config -z --get-regexp 'alias\..*' | while read -lz alias command
+git config -z --get-regexp 'alias\..*' | while read -lz alias command _
+    # If the command starts with a "!", it's a shell command, run with /bin/sh,
+    # or any other shell defined at git's build time.
+    #
+    # We can't do anything with them, and we run git-config again for listing aliases,
+    # so we skip them here.
+    string match -q '!*' -- $command; and continue
     # Git aliases can contain chars that variable names can't - escape them.
     set alias (string replace 'alias.' '' -- $alias | string escape --style=var)
     set -g __fish_git_alias_$alias $command
@@ -766,8 +774,8 @@ complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcomma
 ### show
 complete -f -c git -n '__fish_git_needs_command' -a show -d 'Shows the last commit of a branch'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_branches)'
-complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_tags)' -d 'Tag'
-complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_commits)'
+complete -f -c git -n '__fish_git_using_command show' -ka '(__fish_git_tags)' -d 'Tag'
+complete -f -c git -n '__fish_git_using_command show' -ka '(__fish_git_commits)'
 complete -f -c git -n '__fish_git_using_command show' -l format -d 'Pretty-print the contents of the commit logs in a given format' -a '(__fish_git_show_opt format)'
 complete -f -c git -n '__fish_git_using_command show' -l abbrev-commit -d 'Show only a partial hexadecimal commit object name'
 complete -f -c git -n '__fish_git_using_command show' -l no-abbrev-commit -d 'Show the full 40-byte hexadecimal commit object name'
@@ -847,7 +855,7 @@ complete -f -c git -n '__fish_git_using_command branch' -l no-merged -d 'List br
 complete -f -c git -n '__fish_git_needs_command' -a cherry-pick -d 'Apply the change introduced by an existing commit'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -a '(__fish_git_branches --no-merged)'
 # TODO: Filter further
-complete -f -c git -n '__fish_git_using_command cherry-pick; and __fish_git_possible_commithash' -a '(__fish_git_commits)'
+complete -f -c git -n '__fish_git_using_command cherry-pick; and __fish_git_possible_commithash' -ka '(__fish_git_commits)'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s e -l edit -d 'Edit the commit message prior to committing'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s x -d 'Append info in generated commit on the origin of the cherry-picked change'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s n -l no-commit -d 'Apply changes without making any commit'
@@ -1272,7 +1280,7 @@ complete -f -c git -n '__fish_git_using_command reset; and not contains -- -- (c
 
 ### revert
 complete -f -c git -n '__fish_git_needs_command' -a revert -d 'Revert an existing commit'
-complete -f -c git -n '__fish_git_using_command revert' -a '(__fish_git_commits)'
+complete -f -c git -n '__fish_git_using_command revert' -ka '(__fish_git_commits)'
 # TODO options
 
 ### rm
@@ -1305,7 +1313,7 @@ complete -f -c git -n '__fish_git_using_command tag' -s d -l delete -d 'Remove a
 complete -f -c git -n '__fish_git_using_command tag' -s v -l verify -d 'Verify signature of a tag'
 complete -f -c git -n '__fish_git_using_command tag' -s f -l force -d 'Force overwriting exising tag'
 complete -f -c git -n '__fish_git_using_command tag' -s l -l list -d 'List tags'
-complete -f -c git -n '__fish_git_using_command tag' -l contains -xa '(__fish_git_commits)' -d 'List tags that contain a commit'
+complete -f -c git -n '__fish_git_using_command tag' -l contains -xka '(__fish_git_commits)' -d 'List tags that contain a commit'
 complete -f -c git -n '__fish_git_using_command tag; and __fish_contains_opt -s d delete -s v verify' -a '(__fish_git_tags)' -d 'Tag'
 # TODO options
 

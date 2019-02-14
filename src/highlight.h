@@ -33,11 +33,23 @@ enum {
     highlight_spec_selection,
 
     // Pager support.
+    // NOTE: pager.cpp relies on these being in this order.
+    highlight_spec_pager_progress,
+    highlight_spec_pager_background,
     highlight_spec_pager_prefix,
     highlight_spec_pager_completion,
     highlight_spec_pager_description,
-    highlight_spec_pager_progress,
-    highlight_spec_pager_secondary,
+    highlight_spec_pager_secondary_background,
+    highlight_spec_pager_secondary_prefix,
+    highlight_spec_pager_secondary_completion,
+    highlight_spec_pager_secondary_description,
+    highlight_spec_pager_selected_background,
+    highlight_spec_pager_selected_prefix,
+    highlight_spec_pager_selected_completion,
+    highlight_spec_pager_selected_description,
+
+    // Used to double check a data structure in highlight.cpp
+    HIGHLIGHT_SPEC_MAX,
 
     HIGHLIGHT_SPEC_PRIMARY_MASK = 0xFF,
 
@@ -75,12 +87,12 @@ class history_item_t;
 /// \param error a list in which a description of each error will be inserted. May be 0, in whcich
 /// case no error descriptions will be generated.
 void highlight_shell(const wcstring &buffstr, std::vector<highlight_spec_t> &color, size_t pos,
-                     wcstring_list_t *error, const env_vars_snapshot_t &vars);
+                     wcstring_list_t *error, const environment_t &vars);
 
 /// Perform a non-blocking shell highlighting. The function will not do any I/O that may block. As a
 /// result, invalid commands may not be detected, etc.
 void highlight_shell_no_io(const wcstring &buffstr, std::vector<highlight_spec_t> &color,
-                           size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
+                           size_t pos, wcstring_list_t *error, const environment_t &vars);
 
 /// Perform syntax highlighting for the text in buff. Matching quotes and paranthesis are
 /// highlighted. The result is stored in the color array as a color_code from the HIGHLIGHT_ enum
@@ -93,7 +105,7 @@ void highlight_shell_no_io(const wcstring &buffstr, std::vector<highlight_spec_t
 /// \param error a list in which a description of each error will be inserted. May be 0, in whcich
 /// case no error descriptions will be generated.
 void highlight_universal(const wcstring &buffstr, std::vector<highlight_spec_t> &color, size_t pos,
-                         wcstring_list_t *error, const env_vars_snapshot_t &vars);
+                         wcstring_list_t *error, const environment_t &vars);
 
 /// Translate from HIGHLIGHT_* to FISH_COLOR_* according to environment variables. Defaults to
 /// FISH_COLOR_NORMAL.
@@ -109,7 +121,7 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background);
 /// reference whether the suggestion is valid or not.
 bool autosuggest_validate_from_history(const history_item_t &item,
                                        const wcstring &working_directory,
-                                       const env_vars_snapshot_t &vars);
+                                       const environment_t &vars);
 
 // Tests whether the specified string cpath is the prefix of anything we could cd to. directories is
 // a list of possible parent directories (typically either the working directory, or the cdpath).
@@ -124,6 +136,6 @@ enum {
 };
 typedef unsigned int path_flags_t;
 bool is_potential_path(const wcstring &const_path, const wcstring_list_t &directories,
-                       path_flags_t flags);
+                       const environment_t &vars, path_flags_t flags);
 
 #endif

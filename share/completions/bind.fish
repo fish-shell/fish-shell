@@ -1,3 +1,47 @@
+function __fish_bind_test1
+    set -l args
+    set -l use_keys no
+    for i in (commandline -poc)
+        switch $i
+            case -k --k --ke --key
+                set use_keys yes
+
+            case "-*"
+
+            case "*"
+                set -a args $i
+        end
+    end
+
+    switch $use_keys
+        case yes
+            switch (count $args)
+                case 1
+                    return 0
+            end
+    end
+    return 1
+end
+
+function __fish_bind_test2
+    set -l args
+    for i in (commandline -poc)
+        switch $i
+            case "-*"
+
+            case "*"
+                set -a args $i
+        end
+    end
+
+    switch (count $args)
+        case 2
+            return 0
+    end
+
+    return 1
+
+end
 
 complete -c bind -s a -l all -d 'Show unavailable key bindings/erase all bindings'
 complete -c bind -s e -l erase -d 'Erase mode'

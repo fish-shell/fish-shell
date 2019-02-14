@@ -115,7 +115,7 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
 int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    int found = 0;
+    bool found = false;
     int mode = JOBS_DEFAULT;
     int print_last = 0;
 
@@ -210,7 +210,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
                 if (j && !j->is_completed() && j->is_constructed()) {
                     builtin_jobs_print(j, mode, false, streams);
-                    found = 1;
+                    found = true;
                 } else {
                     streams.err.append_format(_(L"%ls: No suitable job: %ls\n"), cmd, argv[i]);
                     return STATUS_CMD_ERROR;
@@ -223,7 +223,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 // Ignore unconstructed jobs, i.e. ourself.
                 if (j->is_constructed() && !j->is_completed()) {
                     builtin_jobs_print(j, mode, !found && !streams.out_is_redirected, streams);
-                    found = 1;
+                    found = true;
                 }
             }
         }

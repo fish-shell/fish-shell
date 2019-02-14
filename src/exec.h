@@ -23,16 +23,13 @@ bool exec_job(parser_t &parser, std::shared_ptr<job_t> j);
 /// \param outputs The list to insert output into.
 ///
 /// \return the status of the last job to exit, or -1 if en error was encountered.
-int exec_subshell(const wcstring &cmd, std::vector<wcstring> &outputs, bool preserve_exit_status,
+int exec_subshell(const wcstring &cmd, parser_t &parser, std::vector<wcstring> &outputs,
+                  bool preserve_exit_status, bool is_subcmd = false);
+int exec_subshell(const wcstring &cmd, parser_t &parser, bool preserve_exit_status,
                   bool is_subcmd = false);
-int exec_subshell(const wcstring &cmd, bool preserve_exit_status, bool is_subcmd = false);
 
 /// Loops over close until the syscall was run without being interrupted.
 void exec_close(int fd);
-
-/// Call pipe(), and add resulting fds to open_fds, the list of opened file descriptors for pipes.
-/// The pipes are marked CLO_EXEC.
-int exec_pipe(int fd[2]);
 
 /// Gets the interpreter for a given command.
 char *get_interpreter(const char *command, char *interpreter, size_t buff_size);

@@ -1,0 +1,248 @@
+News about PCRE2 releases
+-------------------------
+
+
+Version 10.32 10-September-2018
+-------------------------------
+
+This is another mainly bugfix and tidying release with a few minor
+enhancements. These are the main ones:
+
+1. pcre2grep now supports the inclusion of binary zeros in patterns that are
+read from files via the -f option.
+
+2. ./configure now supports --enable-jit=auto, which automatically enables JIT
+if the hardware supports it.
+
+3. In pcre2_dfa_match(), internal recursive calls no longer use the stack for
+local workspace and local ovectors. Instead, an initial block of stack is
+reserved, but if this is insufficient, heap memory is used. The heap limit
+parameter now applies to pcre2_dfa_match().
+
+4. Updated to Unicode version 11.0.0.
+
+5. (*ACCEPT:ARG), (*FAIL:ARG), and (*COMMIT:ARG) are now supported.
+
+6. Added support for \N{U+dddd}, but only in Unicode mode.
+
+7. Added support for (?^) to unset all imnsx options.
+
+
+Version 10.31 12-February-2018
+------------------------------
+
+This is mainly a bugfix and tidying release (see ChangeLog for full details).
+However, there are some minor enhancements.
+
+1. New pcre2_config() options: PCRE2_CONFIG_NEVER_BACKSLASH_C and
+PCRE2_CONFIG_COMPILED_WIDTHS.
+
+2. New pcre2_pattern_info() option PCRE2_INFO_EXTRAOPTIONS to retrieve the
+extra compile time options.
+
+3. There are now public names for all the pcre2_compile() error numbers.
+
+4. Added PCRE2_CALLOUT_STARTMATCH and PCRE2_CALLOUT_BACKTRACK bits to a new
+field callout_flags in callout blocks.
+
+
+Version 10.30 14-August-2017
+----------------------------
+
+The full list of changes that includes bugfixes and tidies is, as always, in
+ChangeLog. These are the most important new features:
+
+1. The main interpreter, pcre2_match(), has been refactored into a new version
+that does not use recursive function calls (and therefore the system stack) for
+remembering backtracking positions. This makes --disable-stack-for-recursion a
+NOOP. The new implementation allows backtracking into recursive group calls in
+patterns, making it more compatible with Perl, and also fixes some other
+previously hard-to-do issues. For patterns that have a lot of backtracking, the
+heap is now used, and there is an explicit limit on the amount, settable by
+pcre2_set_heap_limit() or (*LIMIT_HEAP=xxx). The "recursion limit" is retained,
+but is renamed as "depth limit" (though the old names remain for
+compatibility).
+
+There is also a change in the way callouts from pcre2_match() are handled. The
+offset_vector field in the callout block is no longer a pointer to the
+actual ovector that was passed to the matching function in the match data
+block. Instead it points to an internal ovector of a size large enough to hold
+all possible captured substrings in the pattern.
+
+2. The new option PCRE2_ENDANCHORED insists that a pattern match must end at
+the end of the subject.
+
+3. The new option PCRE2_EXTENDED_MORE implements Perl's /xx feature, and
+pcre2test is upgraded to support it. Setting within the pattern by (?xx) is
+also supported.
+
+4. (?n) can be used to set PCRE2_NO_AUTO_CAPTURE, because Perl now has this.
+
+5. Additional compile options in the compile context are now available, and the
+first two are: PCRE2_EXTRA_ALLOW_SURROGATE_ESCAPES and
+PCRE2_EXTRA_BAD_ESCAPE_IS_LITERAL.
+
+6. The newline type PCRE2_NEWLINE_NUL is now available.
+
+7. The match limit value now also applies to pcre2_dfa_match() as there are
+patterns that can use up a lot of resources without necessarily recursing very
+deeply.
+
+8. The option REG_PEND (a GNU extension) is now available for the POSIX
+wrapper. Also there is a new option PCRE2_LITERAL which is used to support
+REG_NOSPEC.
+
+9. PCRE2_EXTRA_MATCH_LINE and PCRE2_EXTRA_MATCH_WORD are implemented for the
+benefit of pcre2grep, and pcre2grep's -F, -w, and -x options are re-implemented
+using PCRE2_LITERAL, PCRE2_EXTRA_MATCH_WORD, and PCRE2_EXTRA_MATCH_LINE. This
+is tidier and also fixes some bugs.
+
+10. The Unicode tables are upgraded from Unicode 8.0.0 to Unicode 10.0.0.
+
+11. There are some experimental functions for converting foreign patterns
+(globs and POSIX patterns) into PCRE2 patterns.
+
+
+Version 10.23 14-February-2017
+------------------------------
+
+1. ChangeLog has the details of a lot of bug fixes and tidies.
+
+2. There has been a major re-factoring of the pcre2_compile.c file. Most syntax
+checking is now done in the pre-pass that identifies capturing groups. This has
+reduced the amount of duplication and made the code tidier. While doing this,
+some minor bugs and Perl incompatibilities were fixed (see ChangeLog for
+details.)
+
+3. Back references are now permitted in lookbehind assertions when there are
+no duplicated group numbers (that is, (?| has not been used), and, if the
+reference is by name, there is only one group of that name. The referenced
+group must, of course be of fixed length.
+
+4. \g{+<number>} (e.g. \g{+2} ) is now supported. It is a "forward back
+reference" and can be useful in repetitions (compare \g{-<number>} ). Perl does
+not recognize this syntax.
+
+5. pcre2grep now automatically expands its buffer up to a maximum set by
+--max-buffer-size.
+
+6. The -t option (grand total) has been added to pcre2grep.
+
+7. A new function called pcre2_code_copy_with_tables() exists to copy a
+compiled pattern along with a private copy of the character tables that is
+uses.
+
+8. A user supplied a number of patches to upgrade pcre2grep under Windows and
+tidy the code.
+
+9. Several updates have been made to pcre2test and test scripts (see
+ChangeLog).
+
+
+Version 10.22 29-July-2016
+--------------------------
+
+1. ChangeLog has the details of a number of bug fixes.
+
+2. The POSIX wrapper function regcomp() did not used to support back references
+and subroutine calls if called with the REG_NOSUB option. It now does.
+
+3. A new function, pcre2_code_copy(), is added, to make a copy of a compiled
+pattern.
+
+4. Support for string callouts is added to pcre2grep.
+
+5. Added the PCRE2_NO_JIT option to pcre2_match().
+
+6. The pcre2_get_error_message() function now returns with a negative error
+code if the error number it is given is unknown.
+
+7. Several updates have been made to pcre2test and test scripts (see
+ChangeLog).
+
+
+Version 10.21 12-January-2016
+-----------------------------
+
+1. Many bugs have been fixed. A large number of them were provoked only by very
+strange pattern input, and were discovered by fuzzers. Some others were
+discovered by code auditing. See ChangeLog for details.
+
+2. The Unicode tables have been updated to Unicode version 8.0.0.
+
+3. For Perl compatibility in EBCDIC environments, ranges such as a-z in a
+class, where both values are literal letters in the same case, omit the
+non-letter EBCDIC code points within the range.
+
+4. There have been a number of enhancements to the pcre2_substitute() function,
+giving more flexibility to replacement facilities. It is now also possible to
+cause the function to return the needed buffer size if the one given is too
+small.
+
+5. The PCRE2_ALT_VERBNAMES option causes the "name" parts of special verbs such
+as (*THEN:name) to be processed for backslashes and to take note of
+PCRE2_EXTENDED.
+
+6. PCRE2_INFO_HASBACKSLASHC makes it possible for a client to find out if a
+pattern uses \C, and --never-backslash-C makes it possible to compile a version
+PCRE2 in which the use of \C is always forbidden.
+
+7. A limit to the length of pattern that can be handled can now be set by
+calling pcre2_set_max_pattern_length().
+
+8. When matching an unanchored pattern, a match can be required to begin within
+a given number of code units after the start of the subject by calling
+pcre2_set_offset_limit().
+
+9. The pcre2test program has been extended to test new facilities, and it can
+now run the tests when LF on its own is not a valid newline sequence.
+
+10. The RunTest script has also been updated to enable more tests to be run.
+
+11. There have been some minor performance enhancements.
+
+
+Version 10.20 30-June-2015
+--------------------------
+
+1. Callouts with string arguments and the pcre2_callout_enumerate() function
+have been implemented.
+
+2. The PCRE2_NEVER_BACKSLASH_C option, which locks out the use of \C, is added.
+
+3. The PCRE2_ALT_CIRCUMFLEX option lets ^ match after a newline at the end of a
+subject in multiline mode.
+
+4. The way named subpatterns are handled has been refactored. The previous
+approach had several bugs.
+
+5. The handling of \c in EBCDIC environments has been changed to conform to the
+perlebcdic document. This is an incompatible change.
+
+6. Bugs have been mended, many of them discovered by fuzzers.
+
+
+Version 10.10 06-March-2015
+---------------------------
+
+1. Serialization and de-serialization functions have been added to the API,
+making it possible to save and restore sets of compiled patterns, though
+restoration must be done in the same environment that was used for compilation.
+
+2. The (*NO_JIT) feature has been added; this makes it possible for a pattern
+creator to specify that JIT is not to be used.
+
+3. A number of bugs have been fixed. In particular, bugs that caused building
+on Windows using CMake to fail have been mended.
+
+
+Version 10.00 05-January-2015
+-----------------------------
+
+Version 10.00 is the first release of PCRE2, a revised API for the PCRE
+library. Changes prior to 10.00 are logged in the ChangeLog file for the old
+API, up to item 20 for release 8.36. New programs are recommended to use the
+new library. Programs that use the original (PCRE1) API will need changing
+before linking with the new library.
+
+****

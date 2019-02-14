@@ -3,28 +3,26 @@
 # This is meant to be run by "make lint" or "make lint-all". It is not meant to
 # be run directly from a shell prompt.
 #
-set cppchecks warning,performance,portability,information,missingInclude
+
+# We don't include "missingInclude" as that doesn't find our config.h.
+# Missing includes will quickly be found by... compiling the thing anyway.
+set cppchecks warning,performance,portability,information #,missingInclude
 set cppcheck_args
 set c_files
 set all no
 set kernel_name (uname -s)
 set machine_type (uname -m)
 
-set -gx CXX $argv[1]
+argparse a/all -- $argv
+set -q argv[1]; and set -gx CXX $argv[1]
 set -e argv[1]
-
-if test "$argv[1]" = "--all"
-    set all yes
-    set cppchecks "$cppchecks,unusedFunction"
-    set -e argv[1]
-end
 
 if test $kernel_name = Linux
     # This is an awful hack. However, the include-what-you-use program spews lots of errors like
     #   /usr/include/unistd.h:226:10: fatal error: 'stddef.h' file not found
     # if we don't explicitly tell it where to find the system headers on Linux. See
     # http://stackoverflow.com/questions/19642590/libtooling-cant-find-stddef-h-nor-other-headers/
-    set -l sys_includes (eval $CXX -v -c src/builtin.cpp 2>&1 | \
+    set -l sys_includes ($CXX -v -c src/builtin.cpp 2>&1 | \
         sed -n -e '/^#include <...> search/,/^End of search list/s/^ *//p')[2..-2]
     set -x CPLUS_INCLUDE_PATH (string join ':' $sys_includes)
 end
@@ -49,8 +47,9 @@ if test "$machine_type" = "x86_64"
     set cppcheck_args -D__x86_64__ -D__LP64__ $cppcheck_args
 end
 
-if test $all = yes
+if set -q _flag_all
     set c_files src/*.cpp
+    set cppchecks "$cppchecks,unusedFunction"
 else
     # We haven't been asked to lint all the source. If there are uncommitted
     # changes lint those, else lint the files in the most recent commit.
@@ -128,26 +127,7 @@ if set -q c_files[1]
         # The stderr to stdout redirection is because oclint, incorrectly writes its final summary
         # counts of the errors detected to stderr. Anyone running this who wants to capture its
         # output will expect those messages to be written to stdout.
-        if test "$kernel_name" = "Darwin"
-            if not test -f compile_commands.json
-                xcodebuild -alltargets >xcodebuild.log
-                oclint-xcodebuild xcodebuild.log >/dev/null
-            end
-            if test $all = yes
-                oclint-json-compilation-database -e '/pcre2-10.22/' -- -enable-global-analysis 2>&1
-            else
-                set i_files
-                for f in $c_files
-                    set i_files $i_files -i $f
-                end
-                echo oclint-json-compilation-database -e '/pcre2-10.22/' $i_files
-                oclint-json-compilation-database -e '/pcre2-10.22/' $i_files 2>&1
-            end
-        else
-            # Presumably we're on Linux or other platform not requiring special
-            # handling for oclint to work.
-            oclint $c_files -- $argv 2>&1
-        end
+        oclint $c_files -- $argv 2>&1
     end
 else
     echo

@@ -866,18 +866,10 @@ void assert_is_not_forked_child(const char *who);
 #define ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(x) assert_is_not_forked_child(x)
 #define ASSERT_IS_NOT_FORKED_CHILD() ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(__FUNCTION__)
 
-/// Detect if we are Windows Subsystem for Linux by inspecting /proc/sys/kernel/osrelease
-/// and checking if "Microsoft" is in the first line.
+/// Determines if we are running under Microsoft's Windows Subsystem for Linux to work around
+/// some known limitations and/or bugs.
 /// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997
-constexpr bool is_windows_subsystem_for_linux() {
-    // This function is called after fork() and before exec() in postfork.cpp. Make sure we
-    // don't allocate any memory here!
-#ifdef WSL
-    return true;
-#else
-    return false;
-#endif
-}
+bool is_windows_subsystem_for_linux();
 
 /// Detect if we are running under Cygwin or Cgywin64
 constexpr bool is_cygwin() {

@@ -31,6 +31,12 @@
 #include <sys/ioctl.h>
 #endif
 
+#ifdef __linux__
+// Includes for WSL detection
+#include <cstring>
+#include <sys/utsname.h>
+#endif
+
 #ifdef __FreeBSD__
 #include <sys/sysctl.h>
 #elif __APPLE__
@@ -146,6 +152,31 @@ long convert_hex_digit(wchar_t d) {
     }
 
     return -1;
+}
+
+bool is_windows_subsystem_for_linux() {
+#if defined(WSL)
+    return true;
+#elif not defined(__linux__)
+    return false;
+#endif
+
+    // We are purposely not using std::call_once as it may invoke locking, which is an unnecessary
+    // overhead since there's no actual race condition here - even if multiple threads call this
+    // routine simultaneously the first time around, we just end up needlessly querying uname(2) one
+    // more time.
+
+    static bool wsl_state = []() {
+        utsname info;
+        uname(&info);
+
+        // Sample utsname.release under WSL: 4.4.0-17763-Microsoft
+        return strstr(info.release, "Microsoft") != nullptr;
+    }();
+
+    // Subsequent calls to this function may take place after fork() and before exec() in
+    // postfork.cpp. Make sure we never dynamically allocate any memory in the fast path!
+    return wsl_state;
 }
 
 #ifdef HAVE_BACKTRACE_SYMBOLS

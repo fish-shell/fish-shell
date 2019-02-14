@@ -1,9 +1,10 @@
 # fish next-minor
 
 ## Deprecations
-- None yet.
+- The vcs-prompt functions have been renamed to names without double-underscore, so __fish_git_prompt is now fish_git_prompt, __fish_vcs_prompt is now fish_vcs_prompt, __fish_hg_prompt is now fish_hg_prompt and __fish_svn_prompt is now fish_svn_prompt. Shims at the old names have been added, and the variables have kept their old names (#5586).
 
 ## Notable fixes and improvements
+- Fixed infinite recursion triggered if a custom `fish_title` function calls `read` interactively
 - Add `$pipestatus` support
 
 ### Syntax changes and new commands
@@ -18,37 +19,44 @@
 - mandoc can now be used to format the output from `--help` if nroff is not installed
 - New color options for the pager have been added (#5524).
 - The default escape delay (to differentiate between the escape key and an alt-combination) has been reduced to 30ms, down from 300ms for the default mode and 100ms for vi-mode (#3904).
+- In the interest of consistency, `builtin -q` and `command -q` can now be used to query if a builtin or command exists (#5631).
+- The `path_helper` on macOS now only runs in login shells, matching the bash implementation.
+- `math` now accepts `--scale=max` for the maximum scale (#5579).
 
+---
 
-=======
-# fish 3.0.1
+# fish 3.0.1 (released February 11, 2019)
+
+This release of fish fixes a number of major issues discovered in fish 3.0.0.
 
 ### Fixes and improvements
 
-- exec now behaves properly inside functions (#5449)
-- while loops now evaluate to the last executed command in the loop body (or zero if the body was empty), matching POSIX semantics.
-- fish does not hang on launch when running under Cygwin/MSYS2
-- The pager-toggle-search binding (by default Control-S) now positions the cursor in the completions list.
-- The error when a command is not found is now printed a single time instead of once per argument. (#5588)
-- The git completions now print correct file paths instead of ../../../ (and so on) with older git versions directly inside a git root. (#5578)
-- The git completions won't suggest :/ paths (relative to the git root) so much anymore. (#5574)
-- The git completions will now fuzzy-match paths again. (#5476)
-- The git completions will ignore shell aliases, so enterprising users can set up the wrapping command (via `set -g __fish_git_alias_$command $whatitwraps`). (#5412)
-- A crash when the user's information can't be read was fixed. (#5550)
-- fish no longer crashes when $hostname or some other non-electric read-only variable is used as a loop variable. (#5548)
-- The "kill" completions won't invoke the same command 25 times anymore, speeding matters up considerably. (#5541)
-- Fish now inherits symlinked paths correctly. (#5525)
-- fish_title had a few spaces removed, saving space. (#5517)
-- The `nim` prompt now works correctly when chosen in fish_config. (#5490)
-- A potential crash in `string match` discovered via GLIBCXX_ASSERTIONS was fixed. (#5479)
-- A crash on FreeBSD related to the wcstod_l function was fixed. (#5453)
-- An assertion that checked getpid() in a tight loop was removed, increasing performance in some cases up to 40%. (#5447)
-- `string` now prints help to stdout, like other builtins. (#5495)
-- The completions for `configure` now correctly offer directories. (#5518)
-- The `man` completions won't interpret the argument as a regex anymore. (#5566)
-- Killing the terminal while fish is in vi-normal mode will no longer send it spinning and eating CPU. (#5528)
-- `brew.fish`: Add `update-reset` subcommand completion
+- `exec` does not complain about running foreground jobs when called (#5449).
+- while loops now evaluate to the last executed command in the loop body (or zero if the body was empty), matching POSIX semantics (#4982).
+- `read --silent` no longer echoes to the tty when run from a non-interactive script (#5519).
+- On macOS, path entries with spaces in `/etc/paths` and `/etc/paths.d` now correctly set path entries with spaces. Likewise, `MANPATH` is correctly set from `/etc/manpaths` and `/etc/manpaths.d` (#5481).
+- fish starts correctly under Cygwin/MSYS2 (#5426).
+- The `pager-toggle-search` binding (Ctrl-S by default) will now activate the search field, even when the pager is not focused.
+- The error when a command is not found is now printed a single time, instead of once per argument (#5588).
+- Fixes and improvements to the git completions, including printing correct paths with older git versions, fuzzy matching again, reducing unnecessary offers of root paths (starting with `:/`) (#5578, #5574, #5476), and ignoring shell aliases, so enterprising users can set up the wrapping command (via `set -g __fish_git_alias_$command $whatitwraps`) (#5412).
+- Significant performance improvements to core shell functions (#5447) and to the `kill` completions (#5541).
+- Starting in symbolically-linked working directories works correctly (#5525).
+- The default `fish_title` function no longer contains extra spaces (#5517).
+- The `nim` prompt now works correctly when chosen in the Web-based configuration (#5490).
+- `string` now prints help to stdout, like other builtins (#5495).
+- Killing the terminal while fish is in vi normal mode will no longer send it spinning and eating CPU. (#5528)
+- A number of crashes have been fixed (#5550, #5548, #5479, #5453).
+- Improvements to the documentation and certain completions.
 
+### Known issues
+
+There is one significant known issue that was not corrected before the release:
+
+- fish does not run correctly under Windows Services for Linux before Windows 10 version 1809/17763, and the message warning of this may not be displayed (#5619).
+
+If you are upgrading from version 2.7.1 or before, please also review the release notes for 3.0.0 and 3.0b1 (included below).
+
+---
 
 # fish 3.0.0 (released December 28, 2018)
 

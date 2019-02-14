@@ -57,7 +57,8 @@ public:
     const std::vector<action_t> &get_actions() const { return actions_; }
 
     /// Produce a dup_fd_list_t from an io_chain. This may not be called before fork().
-    /// The result contains the list of fd actions (dup2 and close), as well as the list of fds opened.
+    /// The result contains the list of fd actions (dup2 and close), as well as the list
+    /// of fds opened.
     static maybe_t<dup2_list_t> resolve_chain(const io_chain_t &);
 };
 

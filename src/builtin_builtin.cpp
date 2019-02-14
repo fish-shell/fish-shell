@@ -17,10 +17,13 @@
 struct builtin_cmd_opts_t {
     bool print_help = false;
     bool list_names = false;
+    bool query = false;
 };
-static const wchar_t *const short_options = L":hn";
+static const wchar_t *const short_options = L":hnq";
 static const struct woption long_options[] = {
-    {L"help", no_argument, NULL, 'h'}, {L"names", no_argument, NULL, 'n'}, {NULL, 0, NULL, 0}};
+    {L"help", no_argument, NULL, 'h'}, {L"names", no_argument, NULL, 'n'},
+    {L"query", no_argument, NULL, 'q'},
+    {NULL, 0, NULL, 0}};
 
 static int parse_cmd_opts(builtin_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {
@@ -35,6 +38,10 @@ static int parse_cmd_opts(builtin_cmd_opts_t &opts, int *optind, int argc, wchar
             }
             case 'n': {
                 opts.list_names = true;
+                break;
+            }
+            case 'q': {
+                opts.query = true;
                 break;
             }
             case ':': {
@@ -71,6 +78,24 @@ int builtin_builtin(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (opts.print_help) {
         builtin_print_help(parser, streams, cmd, streams.out);
         return STATUS_CMD_OK;
+    }
+
+    if (opts.query && opts.list_names) {
+        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
+                                  _(L"--query and --names are mutually exclusive"));
+        return STATUS_INVALID_ARGS;
+    }
+
+    if (opts.query) {
+        wcstring_list_t names = builtin_get_names();
+        retval = STATUS_CMD_ERROR;
+        for (int i = optind; i < argc; i++) {
+            if (contains(names, argv[i])) {
+                retval = STATUS_CMD_OK;
+                break;
+            }
+        }
+        return retval;
     }
 
     if (opts.list_names) {

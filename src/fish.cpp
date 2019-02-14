@@ -84,11 +84,6 @@ static bool get_realpath(std::string &path) {
     return ptr != NULL;
 }
 
-// OS X function for getting the executable path.
-extern "C" {
-int _NSGetExecutablePath(char *buf, uint32_t *bufsize);
-}
-
 static struct config_paths_t determine_config_directory_paths(const char *argv0) {
     struct config_paths_t paths;
     bool done = false;

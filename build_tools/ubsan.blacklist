@@ -1,0 +1,3 @@
+# Ubuntu Xenial (used for Travis CI builds) ships libstdc++ 5.4.0 which contains undefined behaviour
+# See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63345
+object-size:*bits/stl_tree.h

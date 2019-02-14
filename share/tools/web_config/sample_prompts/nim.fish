@@ -10,7 +10,7 @@ function fish_prompt
     # - the current path (with prompt_pwd)
     # - date +%X
     # - the current virtual environment, if any
-    # - the current git status, if any, with __fish_git_prompt
+    # - the current git status, if any, with fish_git_prompt
     # - the current battery state, if any, and if your power cable is unplugged, and if you have "acpi"
     # - current background jobs, if any
 
@@ -79,7 +79,7 @@ function fish_prompt
     and _nim_prompt_wrapper $retc V (basename "$VIRTUAL_ENV")
 
     # git
-    set prompt_git (__fish_git_prompt | string trim -c ' ()')
+    set prompt_git (fish_git_prompt | string trim -c ' ()')
     test -n "$prompt_git"
     and _nim_prompt_wrapper $retc G $prompt_git
 

@@ -464,51 +464,51 @@ static bool does_term_support_setting_title(const environment_t &vars) {
 static void update_fish_color_support(const environment_t &vars) {
     // Detect or infer term256 support. If fish_term256 is set, we respect it;
     // otherwise infer it from the TERM variable or use terminfo.
-    auto fish_term256 = vars.get(L"fish_term256");
-    auto term_var = vars.get(L"TERM");
-    wcstring term = term_var.missing_or_empty() ? L"" : term_var->as_string();
-    bool support_term256 = false;  // default to no support
-    if (!fish_term256.missing_or_empty()) {
+    wcstring term;
+    bool support_term256 = false;
+    bool support_term24bit = false;
+
+    if (auto term_var = vars.get(L"TERM")) term = term_var->as_string();
+
+    if (auto fish_term256 = vars.get(L"fish_term256")) {
+        // $fish_term256
         support_term256 = bool_from_string(fish_term256->as_string());
-        debug(2, L"256 color support determined by 'fish_term256'");
+        debug(2, L"256 color support determined by '$fish_term256'");
     } else if (term.find(L"256color") != wcstring::npos) {
-        // TERM=*256color*: Explicitly supported.
+        // TERM is *256color*: 256 colors explicitly supported
         support_term256 = true;
-        debug(2, L"256 color support enabled for '256color' in TERM");
+        debug(2, L"256 color support enabled for TERM=%ls", term.c_str());
     } else if (term.find(L"xterm") != wcstring::npos) {
-        // Assume that all xterms are 256, except for OS X SnowLeopard
-        const auto prog_var = vars.get(L"TERM_PROGRAM");
-        const auto progver_var = vars.get(L"TERM_PROGRAM_VERSION");
-        wcstring term_program = prog_var.missing_or_empty() ? L"" : prog_var->as_string();
-        if (term_program == L"Apple_Terminal" && !progver_var.missing_or_empty()) {
-            // OS X Lion is version 300+, it has 256 color support
-            if (strtod(wcs2str(progver_var->as_string()), NULL) > 300) {
+        // Assume that all 'xterm's can handle 256, except for Terminal.app from Snow Leopard
+        wcstring term_program, term_version;
+        if (auto tp = vars.get(L"TERM_PROGRAM")) term_program = tp->as_string();
+        if (auto tpv = vars.get(L"TERM_PROGRAM_VERSION")) {
+            if (term_program == L"Apple_Terminal" &&
+                fish_wcstod(tpv->as_string().c_str(), NULL) > 299) {
+                // OS X Lion is version 299+, it has 256 color support (see github Wiki)
                 support_term256 = true;
-                debug(2, L"256 color support enabled for TERM=xterm + modern Terminal.app");
+                debug(2, L"256 color support enabled for TERM=%ls on Terminal.app", term.c_str());
+            } else {
+                support_term256 = true;
+                debug(2, L"256 color support enabled for TERM=%ls", term.c_str());
             }
-        } else {
-            support_term256 = true;
-            debug(2, L"256 color support enabled for TERM=xterm");
         }
     } else if (cur_term != NULL) {
         // See if terminfo happens to identify 256 colors
         support_term256 = (max_colors >= 256);
-        debug(2, L"256 color support: using %d colors per terminfo", max_colors);
-    } else {
-        debug(2, L"256 color support not enabled (yet)");
+        debug(2, L"256 color support: %d colors per terminfo entry for %ls", max_colors, term.c_str());
     }
 
-    auto fish_term24bit = vars.get(L"fish_term24bit");
-    bool support_term24bit;
-    if (!fish_term24bit.missing_or_empty()) {
+    // Handle $fish_term24bit
+    if (auto fish_term24bit = vars.get(L"fish_term24bit")) {
         support_term24bit = bool_from_string(fish_term24bit->as_string());
         debug(2, L"'fish_term24bit' preference: 24-bit color %s",
               support_term24bit ? L"enabled" : L"disabled");
     } else {
         // We don't attempt to infer term24 bit support yet.
-        support_term24bit = false;
+        // XXX: actually, we do, in config.fish.
+        // So we actually change the color mode shortly after startup
     }
-
     color_support_t support = (support_term256 ? color_support_term256 : 0) |
                               (support_term24bit ? color_support_term24bit : 0);
     output_set_color_support(support);

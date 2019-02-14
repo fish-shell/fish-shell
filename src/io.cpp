@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <wchar.h>
 
@@ -94,12 +95,17 @@ void io_buffer_t::run_background_fillthread(autoclose_fd_t readfd) {
             scoped_lock locker(append_lock_);
             ssize_t ret;
             do {
+                errno = 0;
                 char buff[4096];
                 ret = read(fd, buff, sizeof buff);
                 if (ret > 0) {
                     buffer_.append(&buff[0], &buff[ret]);
                 } else if (ret == 0) {
                     shutdown = true;
+                } else if (ret == -1 && errno == 0) {
+                    // No specific error. We assume we just return,
+                    // since that's what we do in read_blocked.
+                    return;
                 } else if (errno != EINTR && errno != EAGAIN) {
                     wperror(L"read");
                     return;

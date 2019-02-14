@@ -5,6 +5,8 @@
 
 #include <errno.h>
 #include <limits.h>
+// Needed for va_list et al.
+#include <stdarg.h> // IWYU pragma: keep
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>  // IWYU pragma: keep
 #endif
@@ -171,9 +173,8 @@ enum selection_direction_t {
 ///
 /// will print the string 'fish: Pi = 3.141', given that debug_level is 1 or higher, and that
 /// program_name is 'fish'.
-void __attribute__((noinline)) debug_impl(int level, const char *msg, ...)
-    __attribute__((format(printf, 2, 3)));
-void __attribute__((noinline)) debug_impl(int level, const wchar_t *msg, ...);
+[[gnu::noinline, gnu::format(printf, 2, 3)]] void debug_impl(int level, const char *msg, ...);
+[[gnu::noinline]] void debug_impl(int level, const wchar_t *msg, ...);
 
 /// The verbosity level of fish. If a call to debug has a severity level higher than \c debug_level,
 /// it will not be printed.
@@ -888,7 +889,7 @@ constexpr bool is_cygwin() {
 }
 
 extern "C" {
-__attribute__((noinline)) void debug_thread_error(void);
+[[gnu::noinline]] void debug_thread_error(void);
 }
 
 /// Converts from wide char to digit in the specified base. If d is not a valid digit in the

@@ -12,11 +12,12 @@ matrix:
             - expect
             - gettext
             - libncurses5-dev
+            - libpcre2-dev
     - os: linux
       compiler: gcc
       addons:
         apt:
-          packages:
+          packages: # Don't use libpcre2-dev here, so that one build uses the vendored code
             - expect
             - gettext
             - lib32ncurses5-dev
@@ -32,6 +33,7 @@ matrix:
             - gettext
             - libncurses5-dev
             - cmake
+            - libpcre2-dev
       env:
         - USE_CMAKE="1" # Dummy value, shows up in the Travis UI only
       script:
@@ -42,19 +44,16 @@ matrix:
     - os: linux
       compiler: clang
       env:
-          - CXXFLAGS="-g -O2 -fno-omit-frame-pointer -fsanitize=address" ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1
-      before_install: export CXX=clang++-3.8
+          - CXXFLAGS="-g -O2 -fno-omit-frame-pointer -fsanitize=undefined -fsanitize=address"
+          - ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1
+          - UBSAN_OPTIONS=print_stacktrace=1:report_error_type=1:suppressions=$TRAVIS_BUILD_DIR/build_tools/ubsan.blacklist
       addons:
         apt:
-          sources:
-            - llvm-toolchain-precise-3.8
-            - ubuntu-toolchain-r-test
           packages:
-            - clang-3.8
-            - llvm-3.8 # for llvm-symbolizer
             - expect
             - gettext
             - libncurses5-dev
+            - libpcre2-dev
     - os: osx
       before_install:
         - brew update

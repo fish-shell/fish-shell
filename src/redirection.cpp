@@ -8,9 +8,6 @@
 /// File descriptor redirection error message.
 #define FD_ERROR "An error occurred while redirecting file descriptor %s"
 
-/// Pipe error message.
-#define LOCAL_PIPE_ERROR "An error occurred while setting up pipe"
-
 #define NOCLOB_ERROR _(L"The file '%s' already exists")
 
 #define FILE_ERROR _(L"An error occurred while redirecting file '%s'")
@@ -40,7 +37,8 @@ maybe_t<dup2_list_t> dup2_list_t::resolve_chain(const io_chain_t &io_chain) {
                     return none();
                 }
 
-                // If by chance we got the file we want, we're done. Otherwise move the fd to an unused place and dup2 it.
+                // If by chance we got the file we want, we're done. Otherwise move the fd to an
+                // unused place and dup2 it.
                 // Note move_fd_to_unused() will close the incoming file_fd.
                 if (file_fd != io_file->fd) {
                     file_fd = move_fd_to_unused(file_fd, io_chain, false /* cloexec */);

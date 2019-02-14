@@ -78,9 +78,9 @@ char *tparm_solaris_kludge(char *str, long p1 = 0, long p2 = 0, long p3 = 0, lon
 // We have to explicitly redeclare these as weak,
 // since we are forced to set the MIN_REQUIRED availability macro to 10.7
 // to use libc++, which in turn exposes these as strong
-wchar_t *wcsdup(const wchar_t *) __attribute__((weak_import));
-int wcscasecmp(const wchar_t *, const wchar_t *) __attribute__((weak_import));
-int wcsncasecmp(const wchar_t *, const wchar_t *, size_t n) __attribute__((weak_import));
+[[clang::weak_import]] wchar_t *wcsdup(const wchar_t *);
+[[clang::weak_import]] int wcscasecmp(const wchar_t *, const wchar_t *);
+[[clang::weak_import]] int wcsncasecmp(const wchar_t *, const wchar_t *, size_t n);
 wchar_t *wcsdup_use_weak(const wchar_t *);
 int wcscasecmp_use_weak(const wchar_t *, const wchar_t *);
 int wcsncasecmp_use_weak(const wchar_t *s1, const wchar_t *s2, size_t n);

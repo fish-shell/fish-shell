@@ -151,7 +151,7 @@ long convert_hex_digit(wchar_t d) {
 #ifdef HAVE_BACKTRACE_SYMBOLS
 // This function produces a stack backtrace with demangled function & method names. It is based on
 // https://gist.github.com/fmela/591333 but adapted to the style of the fish project.
-static const wcstring_list_t __attribute__((noinline))
+[[gnu::noinline]] static const wcstring_list_t
 demangled_backtrace(int max_frames, int skip_levels) {
     void *callstack[128];
     const int n_max_frames = sizeof(callstack) / sizeof(callstack[0]);
@@ -182,8 +182,7 @@ demangled_backtrace(int max_frames, int skip_levels) {
     return backtrace_text;
 }
 
-void __attribute__((noinline))
-show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
+[[gnu::noinline]] void show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
     if (frame_count < 1) return;
 
     // TODO: Decide if this is still needed. I'm commenting it out because it caused me some grief
@@ -202,7 +201,7 @@ show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
 
 #else   // HAVE_BACKTRACE_SYMBOLS
 
-void __attribute__((noinline)) show_stackframe(const wchar_t msg_level, int, int) {
+[[gnu::noinline]] void show_stackframe(const wchar_t msg_level, int, int) {
     debug_shared(msg_level, L"Sorry, but your system does not support backtraces");
 }
 #endif  // HAVE_BACKTRACE_SYMBOLS
@@ -622,7 +621,7 @@ static void debug_shared(const wchar_t level, const wcstring &msg) {
 }
 
 static const wchar_t level_char[] = {L'E', L'W', L'2', L'3', L'4', L'5'};
-void __attribute__((noinline)) debug_impl(int level, const wchar_t *msg, ...) {
+[[gnu::noinline]] void debug_impl(int level, const wchar_t *msg, ...) {
     int errno_old = errno;
     va_list va;
     va_start(va, msg);
@@ -636,7 +635,7 @@ void __attribute__((noinline)) debug_impl(int level, const wchar_t *msg, ...) {
     errno = errno_old;
 }
 
-void __attribute__((noinline)) debug_impl(int level, const char *msg, ...) {
+[[gnu::noinline]] void debug_impl(int level, const char *msg, ...) {
     if (!should_debug(level)) return;
     int errno_old = errno;
     char local_msg[512];
@@ -2041,7 +2040,7 @@ int create_directory(const wcstring &d) {
     return ok ? 0 : -1;
 }
 
-__attribute__((noinline)) void bugreport() {
+[[gnu::noinline]] void bugreport() {
     debug(0, _(L"This is a bug. Break on 'bugreport' to debug."));
     debug(0, _(L"If you can reproduce it, please report: %s."), PACKAGE_BUGREPORT);
 }
@@ -2188,7 +2187,7 @@ void append_path_component(wcstring &path, const wcstring &component) {
 }
 
 extern "C" {
-__attribute__((noinline)) void debug_thread_error(void) {
+[[gnu::noinline]] void debug_thread_error(void) {
     while (1) sleep(9999999);
 }
 }

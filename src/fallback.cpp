@@ -74,7 +74,7 @@ int fish_mkstemp_cloexec(char *name_template) {
 /// building on Linux) these should end up just being stripped, as they are static functions that
 /// are not referenced in this file.
 // cppcheck-suppress unusedFunction
-__attribute__((unused)) static wchar_t *wcsdup_fallback(const wchar_t *in) {
+[[gnu::unused]] static wchar_t *wcsdup_fallback(const wchar_t *in) {
     size_t len = wcslen(in);
     wchar_t *out = (wchar_t *)malloc(sizeof(wchar_t) * (len + 1));
     if (out == 0) {
@@ -85,7 +85,7 @@ __attribute__((unused)) static wchar_t *wcsdup_fallback(const wchar_t *in) {
     return out;
 }
 
-__attribute__((unused)) static int wcscasecmp_fallback(const wchar_t *a, const wchar_t *b) {
+[[gnu::unused]] static int wcscasecmp_fallback(const wchar_t *a, const wchar_t *b) {
     if (*a == 0) {
         return *b == 0 ? 0 : -1;
     } else if (*b == 0) {
@@ -98,7 +98,7 @@ __attribute__((unused)) static int wcscasecmp_fallback(const wchar_t *a, const w
     return wcscasecmp_fallback(a + 1, b + 1);
 }
 
-__attribute__((unused)) static int wcsncasecmp_fallback(const wchar_t *a, const wchar_t *b,
+[[gnu::unused]] static int wcsncasecmp_fallback(const wchar_t *a, const wchar_t *b,
                                                         size_t count) {
     if (count == 0) return 0;
 
@@ -395,7 +395,12 @@ int flock(int fd, int op) {
 // thread-specific locale.
 double fish_compat::wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t loc) {
     // Create and use a new, thread-specific locale
-    locale_t locale = newlocale(LC_NUMERIC, "C", nullptr);
+    // NOTE: We use "C" whatever the passed locale,
+    // and we use the LC_ALL category.
+    //
+    // Empirically, this fails on OpenIndiana/Illumos/Solaris/SunOS if using LC_NUMERIC.
+    // Since we reset it afterwards, it shouldn't matter.
+    locale_t locale = newlocale(LC_ALL, "C", nullptr);
     locale_t prev_locale = uselocale(locale);
     double ret = wcstod(enptr, endptr);
     // Restore the old locale before freeing the locale we created and are still using

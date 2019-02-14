@@ -50,9 +50,6 @@
 #include "util.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-/// Size of buffer for reading buffered output.
-#define BUFFER_SIZE 4096
-
 /// Status of last process to exit.
 static int last_status = 0;
 

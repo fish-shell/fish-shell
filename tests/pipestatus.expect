@@ -6,27 +6,54 @@ spawn $fish
 
 expect_prompt
 
+# no pipe
 send_line "true"
 expect_prompt
 send_line "echo \$pipestatus : \$status"
 expect_prompt "0 : 0" {}
+send_line "false"
+expect_prompt
+send_line "echo \$pipestatus : \$status"
+expect_prompt "1 : 1" {}
 
+# no pipe but negated
+send_line "! true"
+expect_prompt
+send_line "echo \$pipestatus : \$status"
+expect_prompt "0 : 1" {}
+send_line "! false"
+expect_prompt
+send_line "echo \$pipestatus : \$status"
+expect_prompt "1 : 0" {}
+
+# pipe
 send_line "false | true | false"
 expect_prompt
 send_line "echo \$pipestatus : \$status"
 expect_prompt "1 0 1 : 1" {}
 
-send_line "/usr/bin/true | false | true | true"
+# pipe negated
+send_line "! false | true | false"
+expect_prompt
+send_line "echo \$pipestatus : \$status"
+expect_prompt "1 0 1 : 0" {}
+
+# pipe mixed with builtins and external
+send_line "command true | false | true | true"
 expect_prompt
 send_line "echo \$pipestatus : \$status"
 expect_prompt "0 1 0 0 : 0" {}
-
-send_line "/usr/bin/true | /usr/bin/false | /usr/bin/false"
+send_line "command true | command false | command false"
 expect_prompt
 send_line "echo \$pipestatus : \$status"
 expect_prompt "0 1 1 : 1" {}
-
-send_line "sh -c 'exit 3' | /usr/bin/false | sh -c 'exit 5'"
+send_line "sh -c 'exit 3' | command false | sh -c 'exit 5'"
 expect_prompt
 send_line "echo \$pipestatus : \$status"
 expect_prompt "3 1 5 : 5" {}
+
+# negated pipe with mixed builtin and external
+send_line "! sh -c 'exit 3' | command false | sh -c 'exit 5'"
+expect_prompt
+send_line "echo \$pipestatus : \$status"
+expect_prompt "3 1 5 : 0" {}

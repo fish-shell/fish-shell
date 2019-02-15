@@ -236,6 +236,7 @@ for jobbltn in bg fg wait disown
         builtin $jobbltn (__fish_expand_pid_args $argv)
     end
 end
+
 function kill
     command kill (__fish_expand_pid_args $argv)
 end

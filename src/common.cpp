@@ -171,7 +171,17 @@ bool is_windows_subsystem_for_linux() {
         uname(&info);
 
         // Sample utsname.release under WSL: 4.4.0-17763-Microsoft
-        return strstr(info.release, "Microsoft") != nullptr;
+        if (strstr(info.release, "Microsoft") != nullptr) {
+            const char *dash = strchr(info.release, '-');
+            if (dash == nullptr || strtod(dash + 1, nullptr) < 17763) {
+                debug(1, "This version of WSL is not supported and fish will probably not work correctly!\n"
+                        "Please upgrade to Windows 10 1809 (17763) or higher to use fish!");
+            }
+
+            return true;
+        } else {
+            return false;
+        }
     }();
 
     // Subsequent calls to this function may take place after fork() and before exec() in

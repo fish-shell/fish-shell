@@ -31,6 +31,10 @@ class enum_set_t : private std::bitset<enum_count<T>()> {
 
     /*implicit*/ enum_set_t(T v) { set(v); }
 
+    /*implicit*/ enum_set_t(std::initializer_list<T> vs) {
+        for (T v : vs) set(v);
+    }
+
     static enum_set_t from_raw(unsigned long v) { return enum_set_t{v}; }
 
     unsigned long to_raw() const { return super::to_ulong(); }

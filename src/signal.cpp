@@ -231,6 +231,7 @@ static void handle_hup(int sig, siginfo_t *info, void *context) {
     } else {
         reader_exit(1, 1);
     }
+    topic_monitor_t::principal().post(topic_t::sighupint);
 }
 
 /// Handle sigterm. The only thing we do is restore the front process ID, then die.
@@ -249,6 +250,7 @@ static void handle_int(int sig, siginfo_t *info, void *context) {
     if (reraise_if_forked_child(sig)) return;
     reader_handle_sigint();
     default_handler(sig, info, context);
+    topic_monitor_t::principal().post(topic_t::sighupint);
 }
 
 /// Non-interactive ^C handler.

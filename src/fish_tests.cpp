@@ -5102,14 +5102,15 @@ static void test_topic_monitor_torture() {
     say(L"Torture-testing topic monitor");
     topic_monitor_t monitor;
     const size_t thread_count = 64;
-    constexpr auto t = topic_t::sigchld;
+    constexpr auto t1 = topic_t::sigchld;
+    constexpr auto t2 = topic_t::sighupint;
     std::vector<generation_list_t> gens;
     gens.resize(thread_count, generation_list_t{});
     std::atomic<uint32_t> post_count{};
     for (auto &gen : gens) {
         gen = monitor.current_generations();
         post_count += 1;
-        monitor.post(t);
+        monitor.post(t1);
     }
 
     std::atomic<uint32_t> completed{};
@@ -5119,9 +5120,10 @@ static void test_topic_monitor_torture() {
             [&](size_t i) {
                 for (size_t j = 0; j < (1 << 11); j++) {
                     auto before = gens[i];
-                    auto changed = monitor.check(&gens[i], topic_set_t{t}, true /* wait */);
-                    do_test(before[t] < gens[i][t]);
-                    do_test(gens[i][t] <= post_count);
+                    auto changed = monitor.check(&gens[i], topic_set_t{t1, t2}, true /* wait */);
+                    do_test(before[t1] < gens[i][t1]);
+                    do_test(gens[i][t1] <= post_count);
+                    do_test(gens[i][t2] == 0);
                 }
                 auto amt = completed.fetch_add(1, std::memory_order_relaxed);
             },
@@ -5130,7 +5132,7 @@ static void test_topic_monitor_torture() {
 
     while (completed.load(std::memory_order_relaxed) < thread_count) {
         post_count += 1;
-        monitor.post(t);
+        monitor.post(t1);
     }
     for (auto &t : threads) t.join();
 }

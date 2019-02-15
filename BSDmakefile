@@ -7,10 +7,12 @@
 # By default, bmake will try to cd into ./obj before anything else. Don't do that.
 .OBJDIR: ./
 
+CMAKE?=cmake
+
 # Before anything else, test for CMake, which is the only requirement to be able to run
 # this Makefile CMake will perform the remaining dependency tests on its own.
 .BEGIN:
-	@which cmake >/dev/null 2>/dev/null || \
+	@which $(CMAKE) >/dev/null 2>/dev/null || \
 		(echo 'Please install CMake and then re-run the `make` command!' 1>&2 && false)
 
 # Prefer to use ninja, if it is installed
@@ -26,17 +28,17 @@ BUILDFILE=build/Makefile
 PREFIX?=/usr/local
 
 build/fish: build/$(BUILDFILE)
-	cmake --build build
+	$(CMAKE) --build build
 
 build:
 	mkdir -p build
 
 build/$(BUILDFILE): build
-	cd build; cmake .. -G "$(GENERATOR)" -DCMAKE_INSTALL_PREFIX="$(PREFIX)" -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+	cd build; $(CMAKE) .. -G "$(GENERATOR)" -DCMAKE_INSTALL_PREFIX="$(PREFIX)" -DCMAKE_EXPORT_COMPILE_COMMANDS=1
 
 .PHONY: install
 install: build/fish
-	cmake --build build --target install
+	$(CMAKE) --build build --target install
 
 .PHONY: clean
 clean:
@@ -44,7 +46,7 @@ clean:
 
 .PHONY: test
 test: build/fish
-	cmake --build build --target test
+	$(CMAKE) --build build --target test
 
 .PHONY: run
 run: build/fish

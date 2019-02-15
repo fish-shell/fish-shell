@@ -37,7 +37,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
     # usage: __init_uvar VARIABLE VALUES...
     function __init_uvar -d "Sets a universal variable if it's not already set"
-        if not set --query --universal $argv[1]
+        if not set --query $argv[1]
             set --universal $argv
         end
     end

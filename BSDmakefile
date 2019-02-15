@@ -1,15 +1,21 @@
-# by default bmake will cd into ./obj first
+# This is a very basic `make` wrapper around the CMake build toolchain.
+#
+# Supported arguments:
+#   PREFIX: sets the installation prefix
+#   GENERATOR: explicitly specifies the CMake generator to use
+
+# By default, bmake will try to cd into ./obj before anything else. Don't do that.
 .OBJDIR: ./
 
+# Before anything else, test for CMake, which is the only requirement to be able to run
+# this Makefile CMake will perform the remaining dependency tests on its own.
 .BEGIN:
-	# test for cmake, which is the only requirement to be able to run this Makefile
-	# cmake will perform the remaining dependency tests on its own
-	@which cmake >/dev/null 2>/dev/null || (echo 'Please install cmake and then re-run the `make` command!' 1>&2 && false)
+	@which cmake >/dev/null 2>/dev/null || \
+		(echo 'Please install CMake and then re-run the `make` command!' 1>&2 && false)
 
-# Use ninja, if it is installed
-_GENERATOR!=which ninja 2>/dev/null >/dev/null && echo Ninja || echo "'Unix Makefiles'"
+# Prefer to use ninja, if it is installed
+_GENERATOR!=which ninja 2>/dev/null >/dev/null && echo Ninja || echo "Unix Makefiles"
 GENERATOR?=$(_GENERATOR)
-PREFIX?=/usr/local
 
 .if $(GENERATOR) == "Ninja"
 BUILDFILE=build/build.ninja
@@ -17,7 +23,8 @@ BUILDFILE=build/build.ninja
 BUILDFILE=build/Makefile
 .endif
 
-.DEFAULT: build/fish
+PREFIX?=/usr/local
+
 build/fish: build/$(BUILDFILE)
 	cmake --build build
 
@@ -25,7 +32,7 @@ build:
 	mkdir -p build
 
 build/$(BUILDFILE): build
-	cd build; cmake .. -G $(GENERATOR) -DCMAKE_INSTALL_PREFIX=$(PREFIX) -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+	cd build; cmake .. -G "$(GENERATOR)" -DCMAKE_INSTALL_PREFIX="$(PREFIX)" -DCMAKE_EXPORT_COMPILE_COMMANDS=1
 
 .PHONY: install
 install: build/fish

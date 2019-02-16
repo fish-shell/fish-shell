@@ -68,13 +68,13 @@ class process_t {
     io_chain_t process_io_chain;
 
     // No copying.
-    process_t(const process_t &rhs);
-    void operator=(const process_t &rhs);
+    process_t(const process_t &rhs) = delete;
+    void operator=(const process_t &rhs) = delete;
 
    public:
     process_t();
 
-    // Note whether we are the first and/or last in the job
+    /// Note whether we are the first and/or last in the job
     bool is_first_in_job{false};
     bool is_last_in_job{false};
 
@@ -119,13 +119,11 @@ class process_t {
     /// File descriptor that pipe output should bind to.
     int pipe_write_fd{0};
     /// True if process has completed.
-    volatile int completed{false};
+    volatile bool completed{false};
     /// True if process has stopped.
-    volatile int stopped{false};
+    volatile bool stopped{false};
     /// Reported status value.
     volatile int status{0};
-    /// Special flag to tell the evaluation function for count to print the help information.
-    int count_help_magic{0};
 #ifdef HAVE__PROC_SELF_STAT
     /// Last time of cpu time check.
     struct timeval last_time {};

@@ -39,3 +39,26 @@ logmsg "pipestatus variable - negate"
 ! false | true | command false; echo $pipestatus : $status
 ! command true | command false | command true; echo $pipestatus : $status
 ! sh -c 'exit 9' | true | sh -c 'exit 3'; echo $pipestatus : $status
+
+logmsg "pipestatus variable - block"
+
+# these 4 (without pipe) do not work yet - investigating
+# begin; true; end; echo $pipestatus : $status
+# begin; false; end; echo $pipestatus : $status
+# begin; ! true; end; echo $pipestatus : $status
+# begin; ! false; end; echo $pipestatus : $status
+# 0 : 0
+# 1 : 1
+# 1 : 1
+# 0 : 0
+true | begin; true; end; echo $pipestatus : $status
+false | begin; false; end; echo $pipestatus : $status
+true | begin; ! true; end; echo $pipestatus : $status
+false | begin; ! false; end; echo $pipestatus : $status
+begin; true | false; end; echo $pipestatus : $status
+begin; false | true; end; echo $pipestatus : $status
+begin; ! true; end | false ; echo $pipestatus : $status
+begin; ! false; end | true; echo $pipestatus : $status
+begin; sh -c 'exit 3'; end | begin; sh -c 'exit 5'; end; echo $pipestatus : $status
+begin; ! sh -c 'exit 3'; end | begin; sh -c 'exit 5'; end; echo $pipestatus : $status
+begin; ! sh -c 'exit 3'; end | begin; ! sh -c 'exit 5'; end; echo $pipestatus : $status

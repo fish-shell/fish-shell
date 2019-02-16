@@ -57,3 +57,13 @@ send_line "! sh -c 'exit 3' | command false | sh -c 'exit 5'"
 expect_prompt
 send_line "echo \$pipestatus : \$status"
 expect_prompt "3 1 5 : 0" {}
+
+# block
+send_line "command false | begin; command true; end | true"
+expect_prompt
+send_line "echo \$pipestatus : \$status"
+expect_prompt "1 0 0 : 0" {}
+send_line "command false | begin; ! true; end | true"
+expect_prompt
+send_line "echo \$pipestatus : \$status"
+expect_prompt "1 1 0 : 0" {}

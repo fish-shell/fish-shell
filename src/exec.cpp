@@ -766,6 +766,7 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
     }
 
     int status = proc_get_last_status();
+    p->status = status;
 
     // If we have a block output buffer, populate it now.
     if (!block_output_bufferfill) {

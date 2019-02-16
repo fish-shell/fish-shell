@@ -2,8 +2,8 @@
 #define FISH_REDIRECTION_H
 
 #include "common.h"
-#include "maybe.h"
 #include "io.h"
+#include "maybe.h"
 
 #include <vector>
 
@@ -43,7 +43,7 @@ class dup2_list_t {
 
     dup2_list_t() = default;
 
-public:
+   public:
     ~dup2_list_t();
 
     /// Disable copying because we own our fds.

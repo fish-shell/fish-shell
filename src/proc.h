@@ -153,6 +153,13 @@ enum class job_flag_t {
     JOB_CONTROL,
     /// Whether the job wants to own the terminal when in the foreground.
     TERMINAL,
+
+    JOB_FLAG_COUNT
+};
+
+template <>
+struct enum_info_t<job_flag_t> {
+    static constexpr auto count = job_flag_t::JOB_FLAG_COUNT;
 };
 
 typedef int job_id_t;

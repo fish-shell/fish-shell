@@ -286,6 +286,38 @@ static void test_str_to_num() {
              L"converting invalid num to long did not fail");
 }
 
+enum class test_enum { alpha, beta, gamma, COUNT };
+
+template <>
+struct enum_info_t<test_enum> {
+    static constexpr auto count = test_enum::COUNT;
+};
+
+static void test_enum_set() {
+    say(L"Testing enum set");
+    enum_set_t<test_enum> es;
+    do_test(es.none());
+    do_test(!es.any());
+    do_test(es.to_raw() == 0);
+    do_test(es == enum_set_t<test_enum>::from_raw(0));
+    do_test(es != enum_set_t<test_enum>::from_raw(1));
+
+    es.set(test_enum::beta);
+    do_test(es.to_raw() == 2);
+    do_test(es == enum_set_t<test_enum>::from_raw(2));
+    do_test(es == enum_set_t<test_enum>{test_enum::beta});
+    do_test(es != enum_set_t<test_enum>::from_raw(3));
+    do_test(es.any());
+    do_test(!es.none());
+
+    unsigned idx = 0;
+    for (auto v : enum_iter_t<test_enum>{}) {
+        do_test(static_cast<unsigned>(v) == idx);
+        idx++;
+    }
+    do_test(static_cast<unsigned>(test_enum::COUNT) == idx);
+}
+
 /// Test sane escapes.
 static void test_unescape_sane() {
     const struct test_t {
@@ -5082,6 +5114,7 @@ int main(int argc, char **argv) {
     if (should_test_function("wcstring_tok")) test_wcstring_tok();
     if (should_test_function("env_vars")) test_env_vars();
     if (should_test_function("str_to_num")) test_str_to_num();
+    if (should_test_function("enum")) test_enum_set();
     if (should_test_function("highlighting")) test_highlighting();
     if (should_test_function("new_parser_ll2")) test_new_parser_ll2();
     if (should_test_function("new_parser_fuzzing"))

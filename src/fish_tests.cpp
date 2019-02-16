@@ -442,7 +442,7 @@ static char *str2hex(const char *input) {
 /// comes back through double conversion.
 static void test_convert() {
     int i;
-    std::vector<char> sb;
+    std::vector<char> sb {};
 
     say(L"Testing wide/narrow string conversion");
 
@@ -3300,7 +3300,7 @@ class history_tests_t {
 };
 
 static wcstring random_string() {
-    wcstring result;
+    wcstring result = L"";
     size_t max = 1 + rand() % 32;
     while (max--) {
         wchar_t c = 1 + rand() % ESCAPE_TEST_CHAR;

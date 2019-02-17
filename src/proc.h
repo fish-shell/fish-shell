@@ -113,6 +113,11 @@ class process_t {
 
     void set_io_chain(const io_chain_t &chain) { this->process_io_chain = chain; }
 
+    /// Store the current topic generations. That is, right before the process is launched, record
+    /// the generations of all topics; then we can tell which generation values have changed after
+    /// launch. This helps us avoid spurious waitpid calls.
+    void check_generations_before_launch();
+
     /// Actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC.
     wcstring actual_cmd;
 

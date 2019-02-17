@@ -899,6 +899,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
     }
 
     // Execute the process.
+    p->check_generations_before_launch();
     switch (p->type) {
         case INTERNAL_FUNCTION:
         case INTERNAL_BLOCK_NODE: {

@@ -324,7 +324,11 @@ static void handle_child_status(pid_t pid, int status) {
     }
 }
 
-process_t::process_t() {}
+process_t::process_t() = default;
+
+void process_t::check_generations_before_launch() {
+    gens_ = topic_monitor_t::principal().current_generations();
+}
 
 job_t::job_t(job_id_t jobid, io_chain_t bio, std::shared_ptr<job_t> parent)
     : block_io(std::move(bio)),

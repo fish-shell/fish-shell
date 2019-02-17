@@ -41,9 +41,6 @@ int setup_child_process(process_t *p, const dup2_list_t &dup2s);
 /// wait for threads to die.
 pid_t execute_fork(bool wait_for_threads_to_die);
 
-/// Perform output from builtins. Returns true on success.
-bool do_builtin_io(const char *out, size_t outlen, const char *err, size_t errlen);
-
 /// Report an error from failing to exec or posix_spawn a command.
 void safe_report_exec_error(int err, const char *actual_cmd, const char *const *argv,
                             const char *const *envv);

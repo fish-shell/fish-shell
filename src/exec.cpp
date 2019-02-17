@@ -73,12 +73,11 @@ void exec_close(int fd) {
 }
 
 /// Returns true if the redirection is a file redirection to a file other than /dev/null.
-static bool redirection_is_to_real_file(const io_data_t *io) {
+static bool redirection_is_to_real_file(const shared_ptr<io_data_t> &io) {
     bool result = false;
-    if (io != NULL && io->io_mode == io_mode_t::file) {
+    if (io && io->io_mode == io_mode_t::file) {
         // It's a file redirection. Compare the path to /dev/null.
-        const io_file_t *io_file = static_cast<const io_file_t *>(io);
-        const char *path = io_file->filename_cstr;
+        const char *path = static_cast<const io_file_t *>(io.get())->filename_cstr;
         if (strcmp(path, "/dev/null") != 0) {
             // It's not /dev/null.
             result = true;
@@ -588,71 +587,71 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
 static bool handle_builtin_output(const std::shared_ptr<job_t> &j, process_t *p,
                                   io_chain_t *io_chain, const io_streams_t &builtin_io_streams) {
     assert(p->type == INTERNAL_BUILTIN && "Process is not a builtin");
-    // Handle output from builtin commands. In the general case, this means forking of a
-    // worker process, that will write out the contents of the stdout and stderr buffers
-    // to the correct file descriptor. Since forking is expensive, fish tries to avoid
-    // it when possible.
-    bool fork_was_skipped = false;
-
-    const shared_ptr<io_data_t> stdout_io = io_chain->get_io_for_fd(STDOUT_FILENO);
-    const shared_ptr<io_data_t> stderr_io = io_chain->get_io_for_fd(STDERR_FILENO);
 
     const output_stream_t &stdout_stream = builtin_io_streams.out;
     const output_stream_t &stderr_stream = builtin_io_streams.err;
 
-    // If we are outputting to a file, we have to actually do it, even if we have no
-    // output, so that we can truncate the file. Does not apply to /dev/null.
-    bool must_fork = redirection_is_to_real_file(stdout_io.get()) ||
-                     redirection_is_to_real_file(stderr_io.get());
-    if (!must_fork && p->is_last_in_job) {
-        // We are handling reads directly in the main loop. Note that we may still end
-        // up forking.
-        const bool stdout_is_bufferfill =
-            (stdout_io && stdout_io->io_mode == io_mode_t::bufferfill);
-        const std::shared_ptr<io_buffer_t> stdout_buffer =
-            stdout_is_bufferfill ? static_cast<io_bufferfill_t *>(stdout_io.get())->buffer()
-                                 : nullptr;
-        const bool no_stdout_output = stdout_stream.empty();
-        const bool no_stderr_output = stderr_stream.empty();
-        const bool stdout_discarded = stdout_stream.buffer().discarded();
+    // Mark if we discarded output.
+    if (stdout_stream.buffer().discarded()) p->status = STATUS_READ_TOO_MUCH;
 
-        if (!stdout_discarded && no_stdout_output && no_stderr_output) {
-            // The builtin produced no output and is not inside of a pipeline. No
-            // need to fork or even output anything.
-            debug(4, L"Skipping fork: no output for internal builtin '%ls'", p->argv0());
-            fork_was_skipped = true;
-        } else if (no_stderr_output && stdout_buffer) {
-            // The builtin produced no stderr, and its stdout is going to an
-            // internal buffer. There is no need to fork. This helps out the
-            // performance quite a bit in complex completion code.
-            // TODO: we're sloppy about handling explicitly separated output.
-            // Theoretically we could have explicitly separated output on stdout and
-            // also stderr output; in that case we ought to thread the exp-sep output
-            // through to the io buffer. We're getting away with this because the only
-            // thing that can output exp-sep output is `string split0` which doesn't
-            // also produce stderr.
-            debug(4, L"Skipping fork: buffered output for internal builtin '%ls'", p->argv0());
+    // We will try to elide constructing an internal process. However if the output is going to a
+    // real file, we have to do it. For example in `echo -n > file.txt` we proceed to open file.txt
+    // even though there is no output, so that it is properly truncated.
+    const shared_ptr<io_data_t> stdout_io = io_chain->get_io_for_fd(STDOUT_FILENO);
+    const shared_ptr<io_data_t> stderr_io = io_chain->get_io_for_fd(STDERR_FILENO);
+    bool must_use_process =
+        redirection_is_to_real_file(stdout_io) || redirection_is_to_real_file(stderr_io);
 
-            stdout_buffer->append_from_stream(stdout_stream);
-            fork_was_skipped = true;
-        } else if (stdout_io.get() == NULL && stderr_io.get() == NULL) {
-            // We are writing to normal stdout and stderr. Just do it - no need to fork.
-            debug(4, L"Skipping fork: ordinary output for internal builtin '%ls'", p->argv0());
-            const std::string outbuff = wcs2string(stdout_stream.contents());
-            const std::string errbuff = wcs2string(stderr_stream.contents());
-            bool builtin_io_done =
-                do_builtin_io(outbuff.data(), outbuff.size(), errbuff.data(), errbuff.size());
-            if (!builtin_io_done && errno != EPIPE) {
-                redirect_tty_output();  // workaround glibc bug
-                debug(0, "!builtin_io_done and errno != EPIPE");
-                show_stackframe(L'E');
-            }
-            if (stdout_discarded) p->status = STATUS_READ_TOO_MUCH;
-            fork_was_skipped = true;
-        }
+    // If we are directing output to a buffer, then we can just transfer it directly without needing
+    // to write to the bufferfill pipe. Note this is how we handle explicitly separated stdout
+    // output (i.e. string split0) which can't really be sent through a pipe.
+    // TODO: we're sloppy about handling explicitly separated output.
+    // Theoretically we could have explicitly separated output on stdout and also stderr output; in
+    // that case we ought to thread the exp-sep output through to the io buffer. We're getting away
+    // with this because the only thing that can output exp-sep output is `string split0` which
+    // doesn't also produce stderr. Also note that we never send stderr to a buffer, so there's no
+    // need for a similar check for stderr.
+    bool stdout_done = false;
+    if (stdout_io && stdout_io->io_mode == io_mode_t::bufferfill) {
+        auto stdout_buffer = static_cast<io_bufferfill_t *>(stdout_io.get())->buffer();
+        stdout_buffer->append_from_stream(stdout_stream);
+        stdout_done = true;
     }
 
-    if (fork_was_skipped) {
+    // Figure out any data remaining to write. We may have none in which case we can short-circuit.
+    std::string outbuff = stdout_done ? std::string{} : wcs2string(stdout_stream.contents());
+    std::string errbuff = wcs2string(stderr_stream.contents());
+
+    // If we have no redirections for stdout/stderr, just write them directly.
+    if (!stdout_io && !stderr_io) {
+        bool did_err = false;
+        if (write_loop(STDOUT_FILENO, outbuff.data(), outbuff.size()) < 0) {
+            if (errno != EPIPE) {
+                did_err = true;
+                debug(0, "Error while writing to stdout");
+                wperror(L"write_loop");
+            }
+        }
+        if (write_loop(STDERR_FILENO, errbuff.data(), errbuff.size()) < 0) {
+            if (errno != EPIPE && !did_err) {
+                did_err = true;
+                debug(0, "Error while writing to stderr");
+                wperror(L"write_loop");
+            }
+        }
+        if (did_err) {
+            redirect_tty_output();  // workaround glibc bug
+            debug(0, "!builtin_io_done and errno != EPIPE");
+            show_stackframe(L'E');
+        }
+        // Clear the buffers to indicate we finished.
+        outbuff.clear();
+        errbuff.clear();
+    }
+
+    if (!must_use_process && outbuff.empty() && errbuff.empty()) {
+        // We do not need to construct a background process.
+        // TODO: factor this job-status-setting stuff into a single place.
         p->completed = 1;
         if (p->is_last_in_job) {
             debug(4, L"Set status of job %d (%ls) to %d using short circuit", j->job_id,
@@ -661,23 +660,13 @@ static bool handle_builtin_output(const std::shared_ptr<job_t> &j, process_t *p,
             int status = p->status;
             proc_set_last_status(j->get_flag(job_flag_t::NEGATE) ? (!status) : status);
         }
+        return true;
     } else {
-        // Ok, unfortunately, we have to do a real fork. Bummer. We work hard to make
-        // sure we don't have to wait for all our threads to exit, by arranging things
-        // so that we don't have to allocate memory or do anything except system calls
-        // in the child.
-        //
-        // These strings may contain embedded nulls, so don't treat them as C strings.
-        std::string outbuff = wcs2string(stdout_stream.contents());
-        std::string errbuff = wcs2string(stderr_stream.contents());
-
+        // Construct and run our background process.
         fflush(stdout);
         fflush(stderr);
-        if (!run_internal_process(p, std::move(outbuff), std::move(errbuff), *io_chain)) {
-            return false;
-        }
+        return run_internal_process(p, std::move(outbuff), std::move(errbuff), *io_chain);
     }
-    return true;
 }
 
 /// Executes an external command.

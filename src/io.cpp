@@ -31,6 +31,7 @@ void io_pipe_t::print() const {
 void io_bufferfill_t::print() const { fwprintf(stderr, L"bufferfill {%d}\n", write_fd_.fd()); }
 
 void io_buffer_t::append_from_stream(const output_stream_t &stream) {
+    if (stream.empty()) return;
     scoped_lock locker(append_lock_);
     if (buffer_.discarded()) return;
     if (stream.buffer().discarded()) {

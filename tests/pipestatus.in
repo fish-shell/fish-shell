@@ -42,15 +42,10 @@ logmsg "pipestatus variable - negate"
 
 logmsg "pipestatus variable - block"
 
-# these 4 (without pipe) do not work yet - investigating
-# begin; true; end; echo $pipestatus : $status
-# begin; false; end; echo $pipestatus : $status
-# begin; ! true; end; echo $pipestatus : $status
-# begin; ! false; end; echo $pipestatus : $status
-# 0 : 0
-# 1 : 1
-# 1 : 1
-# 0 : 0
+begin; true; end; echo $pipestatus : $status
+begin; false; end; echo $pipestatus : $status
+begin; ! true; end; echo $pipestatus : $status
+begin; ! false; end; echo $pipestatus : $status
 true | begin; true; end; echo $pipestatus : $status
 false | begin; false; end; echo $pipestatus : $status
 true | begin; ! true; end; echo $pipestatus : $status

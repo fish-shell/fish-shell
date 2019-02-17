@@ -54,7 +54,7 @@
 static int last_status = 0;
 
 /// Statuses of last job's processes to exit.
-static std::shared_ptr<std::vector<int>> last_job_statuses{new std::vector<int>{0}};
+static std::shared_ptr<std::vector<int>> last_job_statuses = std::make_shared<std::vector<int>>(0);
 
 /// The signals that signify crashes to us.
 static const int crashsignals[] = {SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGSYS};
@@ -147,7 +147,7 @@ int proc_get_last_status() { return last_status; }
 
 void proc_set_last_job_statuses(const job_t &last_job) {
     ASSERT_IS_MAIN_THREAD();
-    std::shared_ptr<std::vector<int>> ljs{new std::vector<int>};
+    auto ljs = std::make_shared<std::vector<int>>();
     ljs->reserve(last_job.processes.size());
     for (auto &&p : last_job.processes) {
         ljs->emplace_back(p->pid ? proc_format_status(p->status) : p->status);

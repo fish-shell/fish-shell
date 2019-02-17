@@ -263,7 +263,6 @@ static void handle_int_notinteractive(int sig, siginfo_t *info, void *context) {
 /// sigchld handler. Does notification and calls the handler in proc.c.
 static void handle_chld(int sig, siginfo_t *info, void *context) {
     if (reraise_if_forked_child(sig)) return;
-    job_handle_signal(sig, info, context);
     default_handler(sig, info, context);
     topic_monitor_t::principal().post(topic_t::sigchld);
 }

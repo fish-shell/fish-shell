@@ -20,6 +20,7 @@
 #include "io.h"
 #include "parse_tree.h"
 #include "tnode.h"
+#include "topic_monitor.h"
 
 /// Types of processes.
 enum process_type_t {
@@ -114,6 +115,10 @@ class process_t {
 
     /// Actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC.
     wcstring actual_cmd;
+
+    /// Generation counts for reaping.
+    generation_list_t gens_{};
+
     /// Process ID
     pid_t pid{0};
     /// File descriptor that pipe output should bind to.
@@ -199,6 +204,21 @@ class job_t {
 
     /// Sets the command.
     void set_command(const wcstring &cmd) { command_str = cmd; }
+
+    /// \return whether it is OK to reap a given process. Sometimes we want to defer reaping a
+    /// process if it is the group leader and the job is not yet constructed, because then we might
+    /// also reap the process group and then we cannot add new processes to the group.
+    bool can_reap(const process_t *p) const {
+        if (p->pid <= 0) {
+            // Can't reap without a pid.
+            return false;
+        }
+        if (!is_constructed() && pgid > 0 && p->pid == pgid) {
+            // p is the the group leader in an under-construction job.
+            return false;
+        }
+        return true;
+    }
 
     /// Returns a truncated version of the job string. Used when a message has already been emitted
     /// containing the full job string and job id, but using the job id alone would be confusing
@@ -358,9 +378,6 @@ int proc_get_last_status();
 ///
 /// \param interactive whether interactive jobs should be reaped as well
 bool job_reap(bool interactive);
-
-/// Signal handler for SIGCHLD. Mark any processes with relevant information.
-void job_handle_signal(int signal, siginfo_t *info, void *con);
 
 /// Mark a process as failed to execute (and therefore completed).
 void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *p);

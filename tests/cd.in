@@ -46,7 +46,21 @@ mkdir -p $base/realhome
 set fish_path $PWD/../test/root/bin/fish
 ln -s $base/realhome $base/linkhome
 cd $base/linkhome
+set -l real_getcwd (pwd -P)
 env HOME=$base/linkhome $fish_path -c 'echo PWD is $PWD'
+
+# Do not inherit a virtual PWD that fails to resolve to getcwd (#5647)
+
+env HOME=$base/linkhome PWD=/tmp $fish_path -c 'echo $PWD' | read output_pwd
+test (realpath $output_pwd) = $real_getcwd
+and echo "BogusPWD test 1 succeeded"
+or echo "BogusPWD test 1 failed: $output_pwd vs $real_getcwd"
+
+env HOME=$base/linkhome PWD=/path/to/nowhere $fish_path -c 'echo $PWD' | read output_pwd
+test (realpath $output_pwd) = $real_getcwd
+and echo "BogusPWD test 2 succeeded"
+or echo "BogusPWD test 2 failed: $output_pwd vs $real_getcwd"
+
 
 # cd back before removing the test directory again.
 cd $oldpwd

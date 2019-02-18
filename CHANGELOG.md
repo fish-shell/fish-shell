@@ -1,3 +1,12 @@
+# fish 3.0.2
+
+This release of fish contains the following ixes:
+
+### Fixes and improvements
+
+- The PWD environment variable is now ignored if it does not resolve to the true working directory (#5647).
+
+
 # fish 3.0.1 (released February 11, 2019)
 
 This release of fish fixes a number of major issues discovered in fish 3.0.0.

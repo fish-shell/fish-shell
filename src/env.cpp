@@ -960,12 +960,13 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         }
     }
 
-    // initialize the PWD variable if necessary
-    // Note we may inherit a virtual PWD that doesn't match what getcwd would return; respect that.
-    // Note we treat PWD as read-only so it was not set in vars.
-    const char *incoming_pwd = getenv("PWD");
-    if (incoming_pwd && incoming_pwd[0]) {
-        env_set_one(L"PWD",  ENV_EXPORT | ENV_GLOBAL, str2wcstring(incoming_pwd));
+    // Note we may inherit a virtual PWD that doesn't match what getcwd would return; respect that
+    // if and only if it matches getcwd (#5647). Note we treat PWD as read-only so it was not set in
+    // vars.
+    const char *incoming_pwd_cstr = getenv("PWD");
+    wcstring incoming_pwd = incoming_pwd_cstr ? str2wcstring(incoming_pwd_cstr) : wcstring{};
+    if (!incoming_pwd.empty() && paths_are_same_file(incoming_pwd, L".")) {
+        env_set_one(L"PWD", ENV_EXPORT | ENV_GLOBAL, std::move(incoming_pwd));
     } else {
         env_set_pwd_from_getcwd();
     }

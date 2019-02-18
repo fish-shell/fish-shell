@@ -377,8 +377,8 @@ static void test_escape_crazy() {
     bool unescaped_success;
     for (size_t i = 0; i < ESCAPE_TEST_COUNT; i++) {
         random_string.clear();
-        while (rand() % ESCAPE_TEST_LENGTH) {
-            random_string.push_back((rand() % ESCAPE_TEST_CHAR) + 1);
+        while (random() % ESCAPE_TEST_LENGTH) {
+            random_string.push_back((random() % ESCAPE_TEST_CHAR) + 1);
         }
 
         escaped_string = escape_string(random_string, ESCAPE_ALL);
@@ -495,8 +495,8 @@ static void test_convert() {
         char c;
 
         sb.clear();
-        while (rand() % ESCAPE_TEST_LENGTH) {
-            c = rand();
+        while (random() % ESCAPE_TEST_LENGTH) {
+            c = random();
             sb.push_back(c);
         }
         c = 0;
@@ -3369,9 +3369,9 @@ class history_tests_t {
 
 static wcstring random_string() {
     wcstring result = L"";
-    size_t max = 1 + rand() % 32;
+    size_t max = 1 + random() % 32;
     while (max--) {
-        wchar_t c = 1 + rand() % ESCAPE_TEST_CHAR;
+        wchar_t c = 1 + random() % ESCAPE_TEST_CHAR;
         result.push_back(c);
     }
     return result;
@@ -3467,7 +3467,7 @@ void history_tests_t::test_history() {
 
         // Generate some paths.
         path_list_t paths;
-        size_t count = rand() % 6;
+        size_t count = random() % 6;
         while (count--) {
             paths.push_back(random_string());
         }
@@ -5182,7 +5182,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    srand((unsigned int)time(NULL));
+    srandom((unsigned int)time(NULL));
     configure_thread_assertions_for_testing();
 
     // Set the program name to this sentinel value

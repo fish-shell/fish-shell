@@ -829,12 +829,6 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
             fish_title_command.append(
                 escape_string(cmd, ESCAPE_ALL | ESCAPE_NO_QUOTED | ESCAPE_NO_TILDE));
         }
-
-        // `fish_title` is executed in a non-interactive context and attempts at reading
-        // from within that function will cause problems ranging segfaults, SIGTTIN
-        // deadlocks, or infinite loops - we explicitly close the input fd to safeguard
-        // against such a scenario.
-        fish_title_command.append(L"<&-");
     }
 
     wcstring_list_t lst;

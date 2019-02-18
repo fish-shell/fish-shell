@@ -21,3 +21,5 @@ cd:
 ####################
 # Virtual PWD inheritance
 PWD is /tmp/cdcomp_test/linkhome
+BogusPWD test 1 succeeded
+BogusPWD test 2 succeeded

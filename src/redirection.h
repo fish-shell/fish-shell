@@ -60,6 +60,11 @@ class dup2_list_t {
     /// The result contains the list of fd actions (dup2 and close), as well as the list
     /// of fds opened.
     static maybe_t<dup2_list_t> resolve_chain(const io_chain_t &);
+
+    /// \return the fd ultimately dup'd to a target fd, or -1 if the target is closed.
+    /// For example, if target fd is 1, and we have a dup2 chain 5->3 and 3->1, then we will return 5.
+    /// If the target is not referenced in the chain, returns target.
+    int fd_for_target_fd(int target) const;
 };
 
 #endif

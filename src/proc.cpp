@@ -247,6 +247,13 @@ bool job_t::signal(int signal) {
     return true;
 }
 
+void internal_proc_t::mark_exited(int status) {
+    assert(!exited() && "Process is already exited");
+    exited_.store(true, std::memory_order_relaxed);
+    status_.store(status, std::memory_order_release);
+    topic_monitor_t::principal().post(topic_t::internal_exit);
+}
+
 static void mark_job_complete(const job_t *j) {
     for (auto &p : j->processes) {
         p->completed = 1;
@@ -324,7 +331,11 @@ static void handle_child_status(pid_t pid, int status) {
     }
 }
 
-process_t::process_t() {}
+process_t::process_t() = default;
+
+void process_t::check_generations_before_launch() {
+    gens_ = topic_monitor_t::principal().current_generations();
+}
 
 job_t::job_t(job_id_t jobid, io_chain_t bio, std::shared_ptr<job_t> parent)
     : block_io(std::move(bio)),
@@ -361,194 +372,74 @@ void add_disowned_pgid(pid_t pgid) {
     }
 }
 
-/// A static value tracking how many SIGCHLDs we have seen, which is used in a heurstic to
-/// determine if we should call waitpid() at all in `process_mark_finished_children`.
-static volatile process_generation_count_t s_sigchld_generation_cnt = 0;
-
-/// See if any children of a fully constructed job have exited or been killed, and mark them
-/// accordingly. We cannot reap just any child that's exited, (as in, `waitpid(-1,…`) since
-/// that may reap a pgrp leader that has exited but in a job with another process that has yet to
-/// launch and join its pgrp (#5219).
-/// \param block_on_fg when true, blocks waiting for the foreground job to finish.
-/// \return whether the operation completed without incident
-static bool process_mark_finished_children(bool block_on_fg) {
+/// See if any reapable processes have exited, and mark them accordingly.
+/// \param block_ok if no reapable processes have exited, block until one is (or until we receive a
+/// signal).
+static void process_mark_finished_children(bool block_ok) {
     ASSERT_IS_MAIN_THREAD();
 
-    // We can't always use SIGCHLD to determine if waitpid() should be called since it is not
-    // strictly one-SIGCHLD-per-one-child-exited (i.e. multiple exits can share a SIGCHLD call) and
-    // we a) return immediately the first time a dead child is reaped, b) explicitly skip over jobs
-    // that aren't yet fully constructed, so it's possible that we can get SIGCHLD and even find a
-    // killed child in the jobs we are reaping, but also have an exited child process in a job that
-    // hasn't been fully constructed yet - which means we can end up never knowing about the exited
-    // child process in that job if we use SIGCHLD count as the only metric for whether or not
-    // waitpid() is called.
-    // Without this optimization, the slowdown caused by calling waitpid() even just once each time
-    // `process_mark_finished_children()` is called is rather obvious (see the performance-related
-    // discussion in #5219), making it worth the complexity of this heuristic.
+    // Get the exit and signal generations of all reapable processes.
+    // The exit generation tells us if we have an exit; the signal generation allows for detecting
+    // SIGHUP and SIGINT.
+    // Get the gen count of all reapable processes.
+    topic_set_t reaptopics{};
+    generation_list_t gens{};
+    gens.fill(invalid_generation);
+    job_iterator_t jobs;
+    while (auto *j = jobs.next()) {
+        for (const auto &proc : j->processes) {
+            if (auto mtopic = j->reap_topic_for_process(proc.get())) {
+                topic_t topic = *mtopic;
+                reaptopics.set(topic);
+                gens[topic] = std::min(gens[topic], proc->gens_[topic]);
 
-    /// Tracks whether or not we received SIGCHLD without checking all jobs (due to jobs under
-    /// construction), forcing a full waitpid loop.
-    static bool dirty_state = true;
-    static process_generation_count_t last_sigchld_count = -1;
-
-    // If the last time that we received a SIGCHLD we did not waitpid all jobs, we cannot early out.
-    if (!dirty_state && last_sigchld_count == s_sigchld_generation_cnt) {
-        // If we have foreground jobs, we need to block on them below
-        if (!block_on_fg) {
-            // We can assume that no children have exited and that all waitpid calls with
-            // WNOHANG below will confirm that.
-            return true;
+                reaptopics.set(topic_t::sighupint);
+                gens[topic_t::sighupint] =
+                    std::min(gens[topic_t::sighupint], proc->gens_[topic_t::sighupint]);
+            }
         }
     }
 
-    last_sigchld_count = s_sigchld_generation_cnt;
-    bool jobs_skipped = false;
-    bool has_error = false;
-    job_t *job_fg = nullptr;
+    if (reaptopics.none()) {
+        // No reapable processes, nothing to wait for.
+        return;
+    }
 
-    // Reap only processes belonging to fully-constructed jobs to prevent reaping of processes
-    // before others in the same process group have a chance to join their pgrp.
-    job_iterator_t jobs;
-    while (auto j = jobs.next()) {
-        // (A job can have pgrp INVALID_PID if it consists solely of builtins that perform no IO)
-        if (j->pgid == INVALID_PID || !j->is_constructed()) {
-            debug(5, "Skipping wait on incomplete job %d (%ls)", j->job_id, j->preview().c_str());
-            jobs_skipped = true;
-            continue;
-        }
+    // Now check for changes, optionally waiting.
+    auto changed_topics = topic_monitor_t::principal().check(&gens, reaptopics, block_ok);
+    if (changed_topics.none()) return;
 
-        if (j != job_fg && j->is_foreground() && !j->is_stopped() && !j->is_completed()) {
-            // Ensure that we don't have multiple fully constructed foreground jobs.
-            assert((!job_fg || !job_fg->job_chain_is_fully_constructed() ||
-                    !j->job_chain_is_fully_constructed()) &&
-                   "More than one active, fully-constructed foreground job!");
-            job_fg = j;
-        }
+    // We got some changes. Since we last checked we received SIGCHLD, and or HUP/INT.
+    // Update the hup/int generations and reap any reapable processes.
+    jobs.reset();
+    while (auto *j = jobs.next()) {
+        for (const auto &proc : j->processes) {
+            if (auto mtopic = j->reap_topic_for_process(proc.get())) {
+                // Update the signal hup/int gen.
+                proc->gens_[topic_t::sighupint] = gens[topic_t::sighupint];
 
-        // Whether we will wait for uncompleted processes depends on the combination of
-        // `block_on_fg` and the nature of the process. Default is WNOHANG, but if foreground,
-        // constructed, not stopped, *and* block_on_fg is true, then no WNOHANG (i.e. "HANG").
-        int options = WUNTRACED | WNOHANG;
-
-        // We should never block twice in the same go, as `waitpid()' returning could mean one
-        // process completed or many, and there is a race condition when calling `waitpid()` after
-        // the process group exits having reaped all children and terminated the process group and
-        // when a subsequent call to `waitpid()` for the same process group returns immediately if
-        // that process group no longer exists. i.e. it's possible for all processes to have exited
-        // but the process group to remain momentarily valid, in which case calling `waitpid()`
-        // without WNOHANG can cause an infinite wait. Additionally, only wait on external jobs that
-        // spawned new process groups (i.e. JOB_CONTROL). We do not break or return on error as we
-        // wait on only one pgrp at a time and we need to check all pgrps before returning, but we
-        // never wait/block on fg processes after an error has been encountered to give ourselves
-        // (elsewhere) a chance to handle the fallout from process termination, etc.
-        if (!has_error && block_on_fg && j == job_fg) {
-            debug(4, "Waiting on processes from foreground job %d", job_fg->pgid);
-            options &= ~WNOHANG;
-        }
-
-        // Child jobs (produced via execution of functions) share job ids with their not-yet-
-        // fully-constructed parent jobs, so we have to wait on these by individual process id
-        // and not by the shared pgroup. End result is the same, but it just makes more calls
-        // to the kernel.
-        bool wait_by_process = !j->job_chain_is_fully_constructed();
-
-        // Firejail can result in jobs with pgroup 0, in which case we cannot wait by
-        // job id. See discussion in #5295.
-        if (j->pgid == 0) {
-            wait_by_process = true;
-        }
-
-        // Cygwin does some voodoo with regards to process management that I do not understand, but
-        // long story short, we cannot reap processes by their pgroup. The way child processes are
-        // launched under Cygwin is... weird, and outwardly they do not appear to retain information
-        // about their parent process when viewed in Task Manager. Waiting on processes by their
-        // pgroup results in never reaping any, so we just wait on them by process id instead.
-        if (is_cygwin()) {
-            wait_by_process = true;
-        }
-
-        // When waiting on processes individually in a pipeline, we need to enumerate in reverse
-        // order so that the first process we actually wait on (i.e. ~WNOHANG) is the last process
-        // in the IO chain, because that's the one that controls the lifetime of the foreground job
-        // - as long as it is still running, we are in the background and once it exits or is
-        // killed, all previous jobs in the IO pipeline must necessarily terminate as well.
-        auto process = j->processes.rbegin();
-        // waitpid(2) returns 1 process each time, we need to keep calling it until we've reaped all
-        // children of the pgrp in question or else we can't reset the dirty_state flag. In all
-        // cases, calling waitpid(2) is faster than potentially calling select_try() on a process
-        // that has exited, which will force us to wait the full timeout before coming back here and
-        // calling waitpid() again.
-        while (true) {
-            int status;
-            pid_t pid;
-
-            if (wait_by_process) {
-                // If the evaluation of a function resulted in the sharing of a pgroup between the
-                // real job and the job that shouldn't have been created as a separate job AND the
-                // parent job is still under construction (which is the case when continue_job() is
-                // first called on the child job during the recursive call to exec_job() before the
-                // parent job has been fully constructed), we need to call waitpid(2) on the
-                // individual processes of the child job instead of using a catch-all waitpid(2)
-                // call on the job's process group.
-                if (process == j->processes.rend()) {
-                    break;
-                }
-                assert((*process)->pid != INVALID_PID && "Waiting by process on an invalid PID!");
-                if ((*process)->completed) {
-                    // This process has already been waited on to completion
-                    process++;
-                    continue;
-                }
-
-                if ((options & WNOHANG) == 0) {
-                    debug(4, "Waiting on individual process %d: %ls", (*process)->pid, (*process)->argv0());
-                } else {
-                    debug(4, "waitpid with WNOHANG on individual process %d", (*process)->pid);
-                }
-                pid = waitpid((*process)->pid, &status, options);
-
-                process++;
-            } else {
-                // A negative PID passed in to `waitpid()` means wait on any child in that process
-                // group
-                pid = waitpid(-1 * j->pgid, &status, options);
-            }
-
-            if (pid > 0) {
-                // A child process has been reaped
-                debug(4, "Reaped PID %d", pid);
-                handle_child_status(pid, status);
-
-                // Always set WNOHANG (that is, don't hang). Otherwise we might wait on a non-stopped job
-                // that becomes stopped, but we don't refresh our view of the process state before
-                // calling waitpid(2) again here.
-                options |= WNOHANG;
-            } else if (pid == 0 || errno == ECHILD) {
-                // No killed/dead children in this particular process group
-                if (!wait_by_process) {
-                    if ((options & WNOHANG) == 0) {
-                        // This normally implies that the job has completed, but if we try to wait
-                        // on a job that includes a process that changed its own group before we
-                        // enter `waitpid`, we will be waiting forever. See #5596 for such a case.
-                        wait_by_process = true;
-                        continue;
+                if (proc->gens_[*mtopic] < gens[*mtopic]) {
+                    // Potentially reapable. Update its gen count and try reaping it.
+                    proc->gens_[*mtopic] = gens[*mtopic];
+                    if (proc->internal_proc_) {
+                        // Try reaping an internal process.
+                        if (proc->internal_proc_->exited()) {
+                            proc->status = proc->internal_proc_->get_status();
+                            proc->completed = true;
+                        }
+                    } else if (proc->pid > 0) {
+                        // Try reaping an external process.
+                        int status = -1;
+                        auto pid = waitpid(proc->pid, &status, WNOHANG | WUNTRACED);
+                        if (pid > 0) {
+                            assert(pid == proc->pid && "Unexpcted waitpid() return");
+                            debug(4, "Reaped PID %d", pid);
+                            handle_child_status(pid, status);
+                        }
+                    } else {
+                        assert(0 && "Don't know how to reap this process");
                     }
-                    break;
                 }
-            } else {
-                // pid < 0 indicates an error. One likely failure is ECHILD (no children), which is
-                // not an error and is ignored in the branch above. The other likely failure is
-                // EINTR, which means we got a signal, which is considered an error. We absolutely
-                // do not break or return on error, as we need to iterate over all constructed jobs
-                // but we only call waitpid for one pgrp at a time. We do bypass future waits in
-                // case of error, however.
-                has_error = true;
-
-                // Do not audibly complain on interrupt (see #5293)
-                if (errno != EINTR) {
-                    wperror(L"waitpid in process_mark_finished_children");
-                }
-                break;
             }
         }
     }
@@ -559,28 +450,6 @@ static bool process_mark_finished_children(bool block_on_fg) {
     s_disowned_pids.erase(std::remove_if(s_disowned_pids.begin(), s_disowned_pids.end(),
                 [&status](pid_t pid) { return waitpid(pid, &status, WNOHANG) > 0; }),
             s_disowned_pids.end());
-
-    // Yes, the below can be collapsed to a single line, but it's worth being explicit about it with
-    // the comments. Fret not, the compiler will optimize it. (It better!)
-    if (jobs_skipped) {
-        // We received SIGCHLD but were not able to definitely say whether or not all children were
-        // reaped.
-        dirty_state = true;
-    } else {
-        // We can safely assume that no SIGCHLD means we can just return next time around
-        dirty_state = false;
-    }
-
-    return !has_error;
-}
-
-/// This is called from a signal handler. The signal is always SIGCHLD.
-void job_handle_signal(int signal, siginfo_t *info, void *context) {
-    UNUSED(signal);
-    UNUSED(info);
-    UNUSED(context);
-    // This is the only place that this generation count is modified. It's OK if it overflows.
-    s_sigchld_generation_cnt += 1;
 }
 
 /// Given a command like "cat file", truncate it to a reasonable length.
@@ -1053,15 +922,20 @@ void job_t::continue_job(bool send_sigcont) {
         }
     }
 
-    if (is_foreground()) {
-        if (is_completed()) {
-            // Set $status only if we are in the foreground and the last process in the job has
-            // finished and is not a short-circuited builtin.
-            auto &p = processes.back();
-            if ((WIFEXITED(p->status) || WIFSIGNALED(p->status)) && p->pid) {
-                int status = proc_format_status(p->status);
-                proc_set_last_status(get_flag(job_flag_t::NEGATE) ? !status : status);
-            }
+    if (is_foreground() && is_completed()) {
+        // Set $status only if we are in the foreground and the last process in the job has
+        // finished and is not a short-circuited builtin.
+        bool negate = get_flag(job_flag_t::NEGATE);
+        auto &p = processes.back();
+        if (p->internal_proc_) {
+            // Here the status is synthetic - not associated with a real exited process.
+            // TODO: clean this up, we shouldn't store the process's exit status in an unparsed
+            // state.
+            int status = p->status;
+            proc_set_last_status(negate ? !status : status);
+        } else if ((WIFEXITED(p->status) || WIFSIGNALED(p->status)) && p->pid) {
+            int status = proc_format_status(p->status);
+            proc_set_last_status(negate ? !status : status);
         }
     }
 }

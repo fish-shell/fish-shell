@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
+#include <thread>
 
 #include <algorithm>
 #include <array>
@@ -69,6 +70,7 @@
 #include "signal.h"
 #include "tnode.h"
 #include "tokenizer.h"
+#include "topic_monitor.h"
 #include "utf8.h"
 #include "util.h"
 #include "wcstringutil.h"
@@ -284,6 +286,48 @@ static void test_str_to_num() {
     l = fish_wcstol(L"5678", &end, 8);
     do_test1(errno == -1 && l == 375 && *end == L'8',
              L"converting invalid num to long did not fail");
+}
+
+enum class test_enum { alpha, beta, gamma, COUNT };
+
+template <>
+struct enum_info_t<test_enum> {
+    static constexpr auto count = test_enum::COUNT;
+};
+
+static void test_enum_set() {
+    say(L"Testing enum set");
+    enum_set_t<test_enum> es;
+    do_test(es.none());
+    do_test(!es.any());
+    do_test(es.to_raw() == 0);
+    do_test(es == enum_set_t<test_enum>::from_raw(0));
+    do_test(es != enum_set_t<test_enum>::from_raw(1));
+
+    es.set(test_enum::beta);
+    do_test(es.to_raw() == 2);
+    do_test(es == enum_set_t<test_enum>::from_raw(2));
+    do_test(es == enum_set_t<test_enum>{test_enum::beta});
+    do_test(es != enum_set_t<test_enum>::from_raw(3));
+    do_test(es.any());
+    do_test(!es.none());
+
+    unsigned idx = 0;
+    for (auto v : enum_iter_t<test_enum>{}) {
+        do_test(static_cast<unsigned>(v) == idx);
+        idx++;
+    }
+    do_test(static_cast<unsigned>(test_enum::COUNT) == idx);
+}
+
+static void test_enum_array() {
+    say(L"Testing enum array");
+    enum_array_t<std::string, test_enum> es{};
+    do_test(es.size() == enum_count<test_enum>());
+    es[test_enum::beta] = "abc";
+    do_test(es[test_enum::beta] == "abc");
+    es.at(test_enum::gamma) = "def";
+    do_test(es.at(test_enum::gamma) == "def");
 }
 
 /// Test sane escapes.
@@ -2376,6 +2420,30 @@ static void test_dup2s() {
     chain.push_back(make_shared<io_file_t>(2, L"/definitely/not/a/valid/path/for/this/test", 0666));
     list = dup2_list_t::resolve_chain(chain);
     do_test(!list.has_value());
+}
+
+static void test_dup2s_fd_for_target_fd() {
+    using std::make_shared;
+    io_chain_t chain;
+    // note io_fd_t params are backwards from dup2.
+    chain.push_back(make_shared<io_close_t>(10));
+    chain.push_back(make_shared<io_fd_t>(9, 10, true));
+    chain.push_back(make_shared<io_fd_t>(5, 8, true));
+    chain.push_back(make_shared<io_fd_t>(1, 4, true));
+    chain.push_back(make_shared<io_fd_t>(3, 5, true));
+    auto list = dup2_list_t::resolve_chain(chain);
+
+    do_test(list.has_value());
+    do_test(list->fd_for_target_fd(3) == 8);
+    do_test(list->fd_for_target_fd(5) == 8);
+    do_test(list->fd_for_target_fd(8) == 8);
+    do_test(list->fd_for_target_fd(1) == 4);
+    do_test(list->fd_for_target_fd(4) == 4);
+    do_test(list->fd_for_target_fd(100) == 100);
+    do_test(list->fd_for_target_fd(0) == 0);
+    do_test(list->fd_for_target_fd(-1) == -1);
+    do_test(list->fd_for_target_fd(9) == -1);
+    do_test(list->fd_for_target_fd(10) == -1);
 }
 
 /// Testing colors.
@@ -5031,6 +5099,68 @@ void test_normalize_path() {
     do_test(path_normalize_for_cd(L"/abc/def/", L"../ghi/..") == L"/abc/ghi/..");
 }
 
+static void test_topic_monitor() {
+    say(L"Testing topic monitor");
+    topic_monitor_t monitor;
+    generation_list_t gens{};
+    constexpr auto t = topic_t::sigchld;
+    do_test(gens[t] == 0);
+    do_test(monitor.generation_for_topic(t) == 0);
+    auto changed = monitor.check(&gens, topic_set_t{t}, false /* wait */);
+    do_test(changed.none());
+    do_test(gens[t] == 0);
+
+    monitor.post(t);
+    changed = monitor.check(&gens, topic_set_t{t}, true /* wait */);
+    do_test(changed == topic_set_t{t});
+    do_test(gens[t] == 1);
+    do_test(monitor.generation_for_topic(t) == 1);
+
+    monitor.post(t);
+    do_test(monitor.generation_for_topic(t) == 2);
+    changed = monitor.check(&gens, topic_set_t{t}, true /* wait */);
+    do_test(changed == topic_set_t{t});
+}
+
+static void test_topic_monitor_torture() {
+    say(L"Torture-testing topic monitor");
+    topic_monitor_t monitor;
+    const size_t thread_count = 64;
+    constexpr auto t1 = topic_t::sigchld;
+    constexpr auto t2 = topic_t::sighupint;
+    std::vector<generation_list_t> gens;
+    gens.resize(thread_count, generation_list_t{});
+    std::atomic<uint32_t> post_count{};
+    for (auto &gen : gens) {
+        gen = monitor.current_generations();
+        post_count += 1;
+        monitor.post(t1);
+    }
+
+    std::atomic<uint32_t> completed{};
+    std::vector<std::thread> threads;
+    for (size_t i = 0; i < thread_count; i++) {
+        threads.emplace_back(
+            [&](size_t i) {
+                for (size_t j = 0; j < (1 << 11); j++) {
+                    auto before = gens[i];
+                    auto changed = monitor.check(&gens[i], topic_set_t{t1, t2}, true /* wait */);
+                    do_test(before[t1] < gens[i][t1]);
+                    do_test(gens[i][t1] <= post_count);
+                    do_test(gens[i][t2] == 0);
+                }
+                auto amt = completed.fetch_add(1, std::memory_order_relaxed);
+            },
+            i);
+    }
+
+    while (completed.load(std::memory_order_relaxed) < thread_count) {
+        post_count += 1;
+        monitor.post(t1);
+    }
+    for (auto &t : threads) t.join();
+}
+
 /// Main test.
 int main(int argc, char **argv) {
     UNUSED(argc);
@@ -5082,6 +5212,8 @@ int main(int argc, char **argv) {
     if (should_test_function("wcstring_tok")) test_wcstring_tok();
     if (should_test_function("env_vars")) test_env_vars();
     if (should_test_function("str_to_num")) test_str_to_num();
+    if (should_test_function("enum")) test_enum_set();
+    if (should_test_function("enum")) test_enum_array();
     if (should_test_function("highlighting")) test_highlighting();
     if (should_test_function("new_parser_ll2")) test_new_parser_ll2();
     if (should_test_function("new_parser_fuzzing"))
@@ -5115,6 +5247,7 @@ int main(int argc, char **argv) {
     if (should_test_function("test")) test_test();
     if (should_test_function("wcstod")) test_wcstod();
     if (should_test_function("dup2s")) test_dup2s();
+    if (should_test_function("dup2s")) test_dup2s_fd_for_target_fd();
     if (should_test_function("path")) test_path();
     if (should_test_function("pager_navigation")) test_pager_navigation();
     if (should_test_function("pager_layout")) test_pager_layout();
@@ -5148,6 +5281,8 @@ int main(int argc, char **argv) {
     if (should_test_function("maybe")) test_maybe();
     if (should_test_function("layout_cache")) test_layout_cache();
     if (should_test_function("normalize")) test_normalize_path();
+    if (should_test_function("topics")) test_topic_monitor();
+    if (should_test_function("topics")) test_topic_monitor_torture();
     // history_tests_t::test_history_speed();
 
     say(L"Encountered %d errors in low-level tests", err_count);

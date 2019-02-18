@@ -410,28 +410,25 @@ struct io_streams_t {
     output_stream_t err;
 
     // fd representing stdin. This is not closed by the destructor.
-    int stdin_fd;
+    int stdin_fd{-1};
 
     // Whether stdin is "directly redirected," meaning it is the recipient of a pipe (foo | cmd) or
     // direct redirection (cmd < foo.txt). An "indirect redirection" would be e.g. begin ; cmd ; end
     // < foo.txt
-    bool stdin_is_directly_redirected;
+    bool stdin_is_directly_redirected{false};
 
     // Indicates whether stdout and stderr are redirected (e.g. to a file or piped).
-    bool out_is_redirected;
-    bool err_is_redirected;
+    bool out_is_redirected{false};
+    bool err_is_redirected{false};
 
     // Actual IO redirections. This is only used by the source builtin. Unowned.
-    const io_chain_t *io_chain;
+    const io_chain_t *io_chain{nullptr};
 
-    io_streams_t(size_t read_limit)
-        : out(read_limit),
-          err(read_limit),
-          stdin_fd(-1),
-          stdin_is_directly_redirected(false),
-          out_is_redirected(false),
-          err_is_redirected(false),
-          io_chain(NULL) {}
+    // io_streams_t cannot be copied.
+    io_streams_t(const io_streams_t &) = delete;
+    void operator=(const io_streams_t &) = delete;
+
+    explicit io_streams_t(size_t read_limit) : out(read_limit), err(read_limit), stdin_fd(-1) {}
 };
 
 #if 0

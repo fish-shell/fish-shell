@@ -88,3 +88,23 @@ maybe_t<dup2_list_t> dup2_list_t::resolve_chain(const io_chain_t &io_chain) {
     }
     return {std::move(result)};
 }
+
+int dup2_list_t::fd_for_target_fd(int target) const {
+    // Paranoia.
+    if (target < 0) {
+        return target;
+    }
+    // Note we can simply walk our action list backwards, looking for src -> target dups.
+    int cursor = target;
+    for (auto iter = actions_.rbegin(); iter != actions_.rend(); ++iter) {
+        if (iter->target == cursor) {
+            // cursor is replaced by iter->src
+            cursor = iter->src;
+        } else if (iter->src == cursor && iter->target < 0) {
+            // cursor is closed.
+            cursor = -1;
+            break;
+        }
+    }
+    return cursor;
+}

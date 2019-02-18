@@ -15,6 +15,7 @@
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"
+#include "topic_monitor.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// Struct describing an entry for the lookup table used to convert between signal names and signal
@@ -230,6 +231,7 @@ static void handle_hup(int sig, siginfo_t *info, void *context) {
     } else {
         reader_exit(1, 1);
     }
+    topic_monitor_t::principal().post(topic_t::sighupint);
 }
 
 /// Handle sigterm. The only thing we do is restore the front process ID, then die.
@@ -248,6 +250,7 @@ static void handle_int(int sig, siginfo_t *info, void *context) {
     if (reraise_if_forked_child(sig)) return;
     reader_handle_sigint();
     default_handler(sig, info, context);
+    topic_monitor_t::principal().post(topic_t::sighupint);
 }
 
 /// Non-interactive ^C handler.
@@ -260,8 +263,8 @@ static void handle_int_notinteractive(int sig, siginfo_t *info, void *context) {
 /// sigchld handler. Does notification and calls the handler in proc.c.
 static void handle_chld(int sig, siginfo_t *info, void *context) {
     if (reraise_if_forked_child(sig)) return;
-    job_handle_signal(sig, info, context);
     default_handler(sig, info, context);
+    topic_monitor_t::principal().post(topic_t::sigchld);
 }
 
 // We have a sigalarm handler that does nothing. This is used in the signal torture test, to verify

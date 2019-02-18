@@ -20,6 +20,7 @@
 #include "io.h"
 #include "parse_tree.h"
 #include "tnode.h"
+#include "topic_monitor.h"
 
 /// Types of processes.
 enum process_type_t {
@@ -39,6 +40,28 @@ enum {
     JOB_CONTROL_ALL,
     JOB_CONTROL_INTERACTIVE,
     JOB_CONTROL_NONE,
+};
+
+/// A structure representing a "process" internal to fish. This is backed by a pthread instead of a
+/// separate process.
+class internal_proc_t {
+    /// Whether the process has exited.
+    std::atomic<bool> exited_{};
+
+    /// If the process has exited, its status code.
+    std::atomic<int> status_{};
+
+   public:
+    /// \return if this process has exited.
+    bool exited() const { return exited_.load(std::memory_order_relaxed); }
+
+    /// Mark this process as exited, with the given status.
+    void mark_exited(int status);
+
+    int get_status() const {
+        assert(exited() && "Process is not exited");
+        return status_.load(std::memory_order_acquire);
+    }
 };
 
 /// A structure representing a single fish process. Contains variables for tracking process state
@@ -112,10 +135,23 @@ class process_t {
 
     void set_io_chain(const io_chain_t &chain) { this->process_io_chain = chain; }
 
+    /// Store the current topic generations. That is, right before the process is launched, record
+    /// the generations of all topics; then we can tell which generation values have changed after
+    /// launch. This helps us avoid spurious waitpid calls.
+    void check_generations_before_launch();
+
     /// Actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC.
     wcstring actual_cmd;
+
+    /// Generation counts for reaping.
+    generation_list_t gens_{};
+
     /// Process ID
     pid_t pid{0};
+
+    /// If we are an "internal process," that process.
+    std::shared_ptr<internal_proc_t> internal_proc_{};
+
     /// File descriptor that pipe output should bind to.
     int pipe_write_fd{0};
     /// True if process has completed.
@@ -153,6 +189,13 @@ enum class job_flag_t {
     JOB_CONTROL,
     /// Whether the job wants to own the terminal when in the foreground.
     TERMINAL,
+
+    JOB_FLAG_COUNT
+};
+
+template <>
+struct enum_info_t<job_flag_t> {
+    static constexpr auto count = job_flag_t::JOB_FLAG_COUNT;
 };
 
 typedef int job_id_t;
@@ -192,6 +235,31 @@ class job_t {
 
     /// Sets the command.
     void set_command(const wcstring &cmd) { command_str = cmd; }
+
+    /// \return whether it is OK to reap a given process. Sometimes we want to defer reaping a
+    /// process if it is the group leader and the job is not yet constructed, because then we might
+    /// also reap the process group and then we cannot add new processes to the group.
+    bool can_reap(const process_t *p) const {
+        // Internal processes can always be reaped.
+        if (p->internal_proc_) {
+            return true;
+        } else if (p->pid <= 0) {
+            // Can't reap without a pid.
+            return false;
+        } else if (!is_constructed() && pgid > 0 && p->pid == pgid) {
+            // p is the the group leader in an under-construction job.
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    /// \returns the reap topic for a process, which describes the manner in which we are reaped. A
+    /// none returns means don't reap, or perhaps defer reaping.
+    maybe_t<topic_t> reap_topic_for_process(const process_t *p) const {
+        if (p->completed || !can_reap(p)) return none();
+        return p->internal_proc_ ? topic_t::internal_exit : topic_t::sigchld;
+    }
 
     /// Returns a truncated version of the job string. Used when a message has already been emitted
     /// containing the full job string and job id, but using the job id alone would be confusing
@@ -351,9 +419,6 @@ int proc_get_last_status();
 ///
 /// \param interactive whether interactive jobs should be reaped as well
 bool job_reap(bool interactive);
-
-/// Signal handler for SIGCHLD. Mark any processes with relevant information.
-void job_handle_signal(int signal, siginfo_t *info, void *con);
 
 /// Mark a process as failed to execute (and therefore completed).
 void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *p);

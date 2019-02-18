@@ -56,6 +56,14 @@ ELSE()
   SET(FISH_IN_TREE_BUILD FALSE)
 ENDIF()
 
+# NetBSD does weird things with finding libraries,
+# making the tests fail by failing to find pcre.
+#
+# Keep the rpath used to build.
+IF(CMAKE_SYSTEM_NAME STREQUAL NetBSD)
+  SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+ENDIF()
+
 # All objects that the system needs to build fish, except fish.cpp
 SET(FISH_SRCS
     src/autoload.cpp src/builtin.cpp src/builtin_bg.cpp src/builtin_bind.cpp

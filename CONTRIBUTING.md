@@ -165,9 +165,24 @@ However, as I write this there are no places in the code where we use this and I
 
 1. Indent with spaces, not tabs and use four spaces per indent.
 
-1. Comments should always use the C++ style; i.e., each line of the comment should begin with a `//` and should be limited to 100 characters. Comments that do not begin a line should be separated from the previous text by two spaces.
-
-1. Comments that document the purpose of a function or class should begin with three slashes, `///`, so that OS X Xcode (and possibly other IDEs) will extract the comment and show it in the "Quick Help" window when the cursor is on the symbol.
+1. Document the purpose of a function or class with doxygen-style comment blocks. e.g.:
+```
+/**
+ * Sum numbers in a vector.
+ *
+ * @param values Container whose values are summed.
+ * @return sum of `values`, or 0.0 if `values` is empty.
+ */
+double sum(std::vector<double> & const values) {
+    ...
+}
+ */
+ ```
+or
+```
+/// brief description of somefunction()
+void somefunction() {
+```
 
 ## Testing
 

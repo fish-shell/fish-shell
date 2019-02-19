@@ -178,5 +178,20 @@ INCLUDE(cmake/Install.cmake)
 # Mac app.
 INCLUDE(cmake/MacApp.cmake)
 
+# Lint targets
+# This could be implemented as target properties, but the script has the useful feature of only
+# checking the currently-staged commands
+# The generator expressions below rebuild the command line for the fishlib targets
+# CMake does not support the "iquote" flag - https://gitlab.kitware.com/cmake/cmake/issues/15491
+SET(LINT_ARGS "-D$<JOIN:$<TARGET_PROPERTY:fishlib,COMPILE_DEFINITIONS>, -D>" "-I$<JOIN:$<TARGET_PROPERTY:fishlib,INCLUDE_DIRECTORIES>, -I>")
+ADD_CUSTOM_TARGET(lint
+    COMMAND build_tools/lint.fish -- ${LINT_ARGS}
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
+ADD_CUSTOM_TARGET(lint-all
+    COMMAND build_tools/lint.fish --all -- ${LINT_ARGS}
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
+
 INCLUDE(FeatureSummary)
 FEATURE_SUMMARY(WHAT ALL)

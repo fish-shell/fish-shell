@@ -1393,8 +1393,9 @@ static void update_autosuggestion() {
 }
 
 // Accept any autosuggestion by replacing the command line with it. If full is true, take the whole
-// thing; if it's false, then take only the first "word".
-static void accept_autosuggestion(bool full) {
+// thing; if it's false, then respect the passed in style.
+static void accept_autosuggestion(bool full,
+                                  move_word_style_t style = move_word_style_punctuation) {
     reader_data_t *data = current_data();
     if (!data->autosuggestion.empty()) {
         // Accepting an autosuggestion clears the pager.
@@ -1405,8 +1406,8 @@ static void accept_autosuggestion(bool full) {
             // Just take the whole thing.
             data->command_line.text = data->autosuggestion;
         } else {
-            // Accept characters up to a word separator.
-            move_word_state_machine_t state(move_word_style_punctuation);
+            // Accept characters according to the specified style.
+            move_word_state_machine_t state(style);
             for (size_t idx = data->command_line.size(); idx < data->autosuggestion.size(); idx++) {
                 wchar_t wc = data->autosuggestion.at(idx);
                 if (!state.consume_char(wc)) break;
@@ -3038,7 +3039,7 @@ const wchar_t *reader_readline(int nchars) {
                     move_word(el, MOVE_DIR_RIGHT, false /* do not erase */,
                               move_style, false);
                 } else {
-                    accept_autosuggestion(false /* accept only one word */);
+                    accept_autosuggestion(false, move_style);
                 }
                 break;
             }

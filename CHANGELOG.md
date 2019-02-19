@@ -1,4 +1,4 @@
-# fish 3.0.2
+# fish 3.0.2 (released February 19, 2019)
 
 This release of fish fixes an issue discovered in fish 3.0.1.
 

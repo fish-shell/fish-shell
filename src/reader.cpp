@@ -2013,15 +2013,13 @@ bool reader_get_selection(size_t *start, size_t *len) {
 void set_env_cmd_duration(struct timeval *after, struct timeval *before, env_stack_t &vars) {
     time_t secs = after->tv_sec - before->tv_sec;
     suseconds_t usecs = after->tv_usec - before->tv_usec;
-    wchar_t buf[16];
 
     if (after->tv_usec < before->tv_usec) {
         usecs += 1000000;
         secs -= 1;
     }
 
-    swprintf(buf, 16, L"%d", (secs * 1000) + (usecs / 1000));
-    vars.set_one(ENV_CMD_DURATION, ENV_UNEXPORT, buf);
+    vars.set_one(ENV_CMD_DURATION, ENV_UNEXPORT, std::to_wstring((secs * 1000) + (usecs / 1000)));
 }
 
 void reader_run_command(parser_t &parser, const wcstring &cmd) {

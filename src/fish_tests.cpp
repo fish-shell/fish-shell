@@ -1545,7 +1545,7 @@ static void test_lru() {
         auto commajoin = [](const std::vector<int> &vs) {
             wcstring ret;
             for (int v : vs) {
-                append_format(ret, L"%d,", v);
+                ret.append(std::to_wstring(v));
             }
             if (!ret.empty()) ret.pop_back();
             return ret;

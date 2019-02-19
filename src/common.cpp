@@ -1796,16 +1796,13 @@ static void validate_new_termsize(struct winsize *new_termsize, const environmen
 
 /// Export the new terminal size as env vars and to the kernel if possible.
 static void export_new_termsize(struct winsize *new_termsize, env_stack_t &vars) {
-    wchar_t buf[64];
-
     auto cols = vars.get(L"COLUMNS", ENV_EXPORT);
-    swprintf(buf, 64, L"%d", (int)new_termsize->ws_col);
     vars.set_one(L"COLUMNS", ENV_GLOBAL | (cols.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT),
-                 buf);
+                 std::to_wstring(int(new_termsize->ws_col)));
 
     auto lines = vars.get(L"LINES", ENV_EXPORT);
-    swprintf(buf, 64, L"%d", (int)new_termsize->ws_row);
-    vars.set_one(L"LINES", ENV_GLOBAL | (lines.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT), buf);
+    vars.set_one(L"LINES", ENV_GLOBAL | (lines.missing_or_empty() ? ENV_DEFAULT : ENV_EXPORT),
+                 std::to_wstring(int(new_termsize->ws_row)));
 
 #ifdef HAVE_WINSIZE
     // Only write the new terminal size if we are in the foreground (#4477)

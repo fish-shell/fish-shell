@@ -78,7 +78,8 @@ function __fish_yarn_run
   end
 end
 
-complete -c yarn -n '__fish_seen_subcommand_from run' -a "(__fish_yarn_run)"
+# Scripts can be used like normal subcommands, or with `yarn run SCRIPT`.
+complete -c yarn -n '__fish_use_subcommand; or __fish_seen_subcommand_from run' -a "(__fish_yarn_run)"
 
 complete -f -c yarn -n '__fish_use_subcommand' -a tag
 complete -f -c yarn -n '__fish_seen_subcommand_from tag' -a 'add rm ls'

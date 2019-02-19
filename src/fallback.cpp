@@ -282,8 +282,10 @@ int fish_wcswidth(const wchar_t *str, size_t n) { return wcswidth(str, n); }
 int fish_wcwidth(wchar_t wc) {
     // Check for VS16 which selects emoji presentation. This "promotes" a character like U+2764
     // (width 1) to an emoji (probably width 2). So treat it as width 1 so the sums work. See #2652.
-    const int variation_selector_16 = 0xFE0F;
+    // VS15 selects text presentation.
+    const wchar_t variation_selector_16 = L'\uFE0F', variation_selector_15 = L'\uFE0E';
     if (wc == variation_selector_16) return 1;
+    else if (wc == variation_selector_15) return 0;
 
     int width = widechar_wcwidth(wc);
     switch (width) {

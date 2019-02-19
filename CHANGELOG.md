@@ -21,6 +21,7 @@
 - In the interest of consistency, `builtin -q` and `command -q` can now be used to query if a builtin or command exists (#5631).
 - The `path_helper` on macOS now only runs in login shells, matching the bash implementation.
 - `math` now accepts `--scale=max` for the maximum scale (#5579).
+- The `forward-bigword` binding now interacts correctly with autosuggestions (#5336)
 
 ---
 

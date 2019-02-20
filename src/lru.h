@@ -291,8 +291,8 @@ class lru_cache_t {
         }
     };
 
-    iterator begin() const { return iterator(mouth.prev); };
-    iterator end() const { return iterator(&mouth); };
+    iterator begin() const { return iterator(mouth.prev); }
+    iterator end() const { return iterator(&mouth); }
 
     void check_sanity() const {
         // Check linked list sanity

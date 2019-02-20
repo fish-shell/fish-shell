@@ -304,9 +304,9 @@ class job_t {
 
     // Helper functions to check presence of flags on instances of jobs
     /// The job has been fully constructed, i.e. all its member processes have been launched
-    bool is_constructed() const { return get_flag(job_flag_t::CONSTRUCTED); };
+    bool is_constructed() const { return get_flag(job_flag_t::CONSTRUCTED); }
     /// The job was launched in the foreground and has control of the terminal
-    bool is_foreground() const { return get_flag(job_flag_t::FOREGROUND); };
+    bool is_foreground() const { return get_flag(job_flag_t::FOREGROUND); }
     /// The job is complete, i.e. all its member processes have been reaped
     bool is_completed() const;
     /// The job is in a stopped state

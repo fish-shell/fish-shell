@@ -19,7 +19,7 @@
 # script's __git_ps1 function. As such, usage and customization is very
 # similar, although some extra features are provided in this script.
 # Due to differences between bash and fish, the PROMPT_COMMAND style where
-# passing two or three arguments causes the fucnction to set PS1 is not
+# passing two or three arguments causes the function to set PS1 is not
 # supported.  More information on the additional features is found after the
 # bash-compatable documentation.
 #

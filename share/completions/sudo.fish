@@ -7,7 +7,7 @@ function __fish_sudo_print_remaining_args
     set -e tokens[1]
     # These are all the options mentioned in the man page for Todd Miller's "sudo.ws" sudo (in that order).
     # If any other implementation has different options, this should be harmless, since they shouldn't be used anyway.
-    set -l opts A/askpass b/background C/close-from= E/preserve-env=?
+    set -l opts A/askpass b/background C/close-from= E/preserve-env='?'
     # Note that "-h" is both "--host" (which takes an option) and "--help" (which doesn't).
     # But `-h` as `--help` only counts when it's the only argument (`sudo -h`),
     # so any argument completion after that should take it as "--host".

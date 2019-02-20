@@ -129,10 +129,13 @@ SET_SOURCE_FILES_PROPERTIES(src/fish_version.cpp
 
 OPTION(INTERNAL_WCWIDTH "use fallback wcwidth" ON)
 IF(INTERNAL_WCWIDTH)
-    add_definitions(-DHAVE_BROKEN_WCWIDTH=1)
+    ADD_DEFINITIONS(-DHAVE_BROKEN_WCWIDTH=1)
 ELSE()
-    add_definitions(-DHAVE_BROKEN_WCWIDTH=0)
+    ADD_DEFINITIONS(-DHAVE_BROKEN_WCWIDTH=0)
 ENDIF()
+
+# Enable thread-safe errno on Solaris (#5611)
+ADD_DEFINITIONS(-D_REENTRANT)
 
 # Set up PCRE2
 INCLUDE(cmake/PCRE2.cmake)

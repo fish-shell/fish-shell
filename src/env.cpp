@@ -97,7 +97,8 @@ static bool env_initialized = false;
 
 typedef std::unordered_map<wcstring, void (*)(const wcstring &, const wcstring &, env_stack_t &)>
     var_dispatch_table_t;
-static var_dispatch_table_t var_dispatch_table;
+static var_dispatch_table_t create_var_dispatch_table();
+static const var_dispatch_table_t s_var_dispatch_table = create_var_dispatch_table();
 
 /// List of all locale environment variable names that might trigger (re)initializing the locale
 /// subsystem.
@@ -623,8 +624,8 @@ static void react_to_variable_change(const wchar_t *op, const wcstring &key, env
     // call the appropriate functions to put the value of the var into effect.
     if (!env_initialized) return;
 
-    auto dispatch = var_dispatch_table.find(key);
-    if (dispatch != var_dispatch_table.end()) {
+    auto dispatch = s_var_dispatch_table.find(key);
+    if (dispatch != s_var_dispatch_table.end()) {
         (*dispatch->second)(op, key, vars);
     } else if (string_prefixes_string(L"fish_color_", key)) {
         reader_react_to_color_change();
@@ -864,7 +865,8 @@ static void handle_curses_change(const wcstring &op, const wcstring &var_name, e
 
 /// Populate the dispatch table used by `react_to_variable_change()` to efficiently call the
 /// appropriate function to handle a change to a variable.
-static void setup_var_dispatch_table() {
+static var_dispatch_table_t create_var_dispatch_table() {
+    var_dispatch_table_t var_dispatch_table;
     for (const auto &var_name : locale_variables) {
         var_dispatch_table.emplace(var_name, handle_locale_change);
     }
@@ -887,11 +889,10 @@ static void setup_var_dispatch_table() {
     var_dispatch_table.emplace(L"fish_read_limit", handle_read_limit_change);
     var_dispatch_table.emplace(L"fish_history", handle_fish_history_change);
     var_dispatch_table.emplace(L"TZ", handle_tz_change);
+    return var_dispatch_table;
 }
 
 void env_init(const struct config_paths_t *paths /* or NULL */) {
-    setup_var_dispatch_table();
-
     env_stack_t &vars = env_stack_t::globals();
     // Import environment variables. Walk backwards so that the first one out of any duplicates wins
     // (See issue #2784).

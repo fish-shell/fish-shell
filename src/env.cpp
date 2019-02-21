@@ -95,11 +95,6 @@ bool term_has_xn = false;
 /// found in `TERMINFO_DIRS` we don't to call `handle_curses()` before we've imported the latter.
 static bool env_initialized = false;
 
-typedef std::unordered_map<wcstring, void (*)(const wcstring &, const wcstring &, env_stack_t &)>
-    var_dispatch_table_t;
-static var_dispatch_table_t create_var_dispatch_table();
-static const var_dispatch_table_t s_var_dispatch_table = create_var_dispatch_table();
-
 /// List of all locale environment variable names that might trigger (re)initializing the locale
 /// subsystem.
 static const wcstring_list_t locale_variables({L"LANG", L"LANGUAGE", L"LC_ALL", L"LC_ADDRESS",
@@ -111,6 +106,11 @@ static const wcstring_list_t locale_variables({L"LANG", L"LANGUAGE", L"LC_ALL", 
 /// List of all curses environment variable names that might trigger (re)initializing the curses
 /// subsystem.
 static const wcstring_list_t curses_variables({L"TERM", L"TERMINFO", L"TERMINFO_DIRS"});
+
+typedef std::unordered_map<wcstring, void (*)(const wcstring &, const wcstring &, env_stack_t &)>
+    var_dispatch_table_t;
+static var_dispatch_table_t create_var_dispatch_table();
+static const var_dispatch_table_t s_var_dispatch_table = create_var_dispatch_table();
 
 // Some forward declarations to make it easy to logically group the code.
 static void init_locale(const environment_t &vars);

@@ -67,3 +67,13 @@ send_line "command false | begin; ! true; end | true"
 expect_prompt
 send_line "echo \$pipestatus : \$status"
 expect_prompt "1 1 0 : 0" {}
+
+# syntax error
+send_line "syntax terror"
+expect_prompt
+send_line "echo \$pipestatus : \$status"
+expect_prompt "127 : 127" {}
+send_line "syntax | terror"
+expect_prompt
+send_line "echo \$pipestatus : \$status"
+expect_prompt "127 : 127" {}

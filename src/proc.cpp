@@ -475,7 +475,7 @@ static wcstring truncate_command(const wcstring &cmd) {
 
 /// Format information about job status for the user to look at.
 typedef enum { JOB_STOPPED, JOB_ENDED } job_status_t;
-static void format_job_info(const job_t *j, job_status_t status) {
+static void print_job_status(const job_t *j, job_status_t status) {
     const wchar_t *msg = L"Job %d, '%ls' has ended";  // this is the most common status msg
     if (status == JOB_STOPPED) msg = L"Job %d, '%ls' has stopped";
 
@@ -499,7 +499,6 @@ void proc_fire_event(const wchar_t *msg, int type, pid_t pid, int status) {
 
 static bool process_clean_after_marking(bool allow_interactive) {
     ASSERT_IS_MAIN_THREAD();
-    job_t *jnext;
     bool found = false;
 
     // this function may fire an event handler, we do not want to call ourselves recursively (to
@@ -515,12 +514,8 @@ static bool process_clean_after_marking(bool allow_interactive) {
     const bool interactive = allow_interactive && cur_term != NULL;
 
     job_iterator_t jobs;
-    const size_t job_count = jobs.count();
-    jnext = jobs.next();
-    while (jnext) {
-        job_t *j = jnext;
-        jnext = jobs.next();
-
+    const bool only_one_job = jobs.count() == 1;
+    while (job_t *const j = jobs.next()) {
         // If we are reaping only jobs who do not need status messages sent to the console, do not
         // consider reaping jobs that need status messages.
         if ((!j->get_flag(job_flag_t::SKIP_NOTIFICATION)) && (!interactive) &&
@@ -572,14 +567,14 @@ static bool process_clean_after_marking(bool allow_interactive) {
                     // We want to report the job number, unless it's the only job, in which case
                     // we don't need to.
                     const wcstring job_number_desc =
-                        (job_count == 1) ? wcstring() : format_string(_(L"Job %d, "), j->job_id);
+                        only_one_job ? wcstring() : format_string(_(L"Job %d, "), j->job_id);
                     fwprintf(stdout, _(L"%ls: %ls\'%ls\' terminated by signal %ls (%ls)"),
                              program_name, job_number_desc.c_str(),
                              truncate_command(j->command()).c_str(), sig2wcs(WTERMSIG(p->status)),
                              signal_get_desc(WTERMSIG(p->status)));
                 } else {
                     const wcstring job_number_desc =
-                        (job_count == 1) ? wcstring() : format_string(L"from job %d, ", j->job_id);
+                        only_one_job ? wcstring() : format_string(L"from job %d, ", j->job_id);
                     const wchar_t *fmt =
                         _(L"%ls: Process %d, \'%ls\' %ls\'%ls\' terminated by signal %ls (%ls)");
                     fwprintf(stdout, fmt, program_name, p->pid, p->argv0(), job_number_desc.c_str(),
@@ -599,7 +594,7 @@ static bool process_clean_after_marking(bool allow_interactive) {
         if (j->is_completed()) {
             if (!j->is_foreground() && !j->get_flag(job_flag_t::NOTIFIED) &&
                 !j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
-                format_job_info(j, JOB_ENDED);
+                print_job_status(j, JOB_ENDED);
                 found = true;
             }
             // TODO: The generic process-exit event is useless and unused.
@@ -617,7 +612,7 @@ static bool process_clean_after_marking(bool allow_interactive) {
         } else if (j->is_stopped() && !j->get_flag(job_flag_t::NOTIFIED)) {
             // Notify the user about newly stopped jobs.
             if (!j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
-                format_job_info(j, JOB_STOPPED);
+                print_job_status(j, JOB_STOPPED);
                 found = true;
             }
             j->set_flag(job_flag_t::NOTIFIED, true);

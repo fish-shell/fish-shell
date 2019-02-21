@@ -102,7 +102,6 @@ int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     block_t *block = parser.block_at_index(block_idx);
 
     event_blockage_t eb = {};
-    eb.typemask = (1 << EVENT_ANY);
 
     switch (opts.scope) {
         case LOCAL: {

@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <string>
@@ -21,26 +22,65 @@
 #include "signal.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-/// Number of signals that can be queued before an overflow occurs.
-#define SIG_UNHANDLED_MAX 64
+class pending_signals_t {
+    static constexpr size_t SIGNAL_COUNT = NSIG;
 
-/// This struct contains a list of generated signals waiting to be dispatched.
-typedef struct {
-    /// Number of delivered signals.
-    volatile int count;
-    /// Whether signals have been skipped.
-    volatile int overflow;
-    /// Array of signal events.
-    volatile int signal[SIG_UNHANDLED_MAX];
-} signal_list_t;
+    /// A counter that is incremented each time a pending signal is received.
+    std::atomic<uint32_t> counter_{0};
 
-/// The signal event list. Actually two separate lists. One which is active, which is the one that
-/// new events is written to. The inactive one contains the events that are currently beeing
-/// performed.
-static signal_list_t sig_list[2] = {{}, {}};
+    /// List of pending signals.
+    std::array<std::atomic<bool>, SIGNAL_COUNT> received_{};
 
-/// The index of sig_list that is the list of signals currently written to.
-static volatile int active_list = 0;
+    /// The last counter visible in acquire_pending().
+    /// This is not accessed from a signal handler.
+    owning_lock<uint32_t> last_counter_{0};
+
+public:
+    pending_signals_t() = default;
+
+    /// No copying.
+    pending_signals_t(const pending_signals_t &);
+    void operator=(const pending_signals_t &);
+
+    /// Mark a signal as pending. This may be called from a signal handler.
+    /// We expect only one signal handler to execute at once.
+    /// Also note that these may be coalesced.
+    void mark(int which) {
+        if (which >= 0 && static_cast<size_t>(which) < received_.size()) {
+            // Must mark our received first, then pending.
+            received_[which].store(true, std::memory_order_relaxed);
+            uint32_t count = counter_.load(std::memory_order_relaxed);
+            counter_.store(1 + count, std::memory_order_release);
+        }
+    }
+
+    /// \return the list of signals that were set, clearing them.
+    std::bitset<SIGNAL_COUNT> acquire_pending() {
+        auto current = last_counter_.acquire();
+
+        // Check the counter first. If it hasn't changed, no signals have been received.
+        uint32_t count = counter_.load(std::memory_order_acquire);
+        if (count == *current) {
+            return {};
+        }
+
+        // The signal count has changed. Store the new counter and fetch all the signals that are set.
+        *current = count;
+        std::bitset<SIGNAL_COUNT> result{};
+        uint32_t bit = 0;
+        for (auto &signal : received_) {
+            bool val = signal.load(std::memory_order_relaxed);
+            if (val) {
+                result.set(bit);
+                signal.store(false, std::memory_order_relaxed);
+            }
+            bit++;
+        }
+        return result;
+    }
+};
+
+static pending_signals_t s_pending_signals;
 
 typedef std::vector<shared_ptr<event_t>> event_list_t;
 
@@ -300,6 +340,10 @@ bool event_is_signal_observed(int sig) {
 /// event handler, we make sure to optimize the 'no matches' path. This means that nothing is
 /// allocated/initialized unless needed.
 static void event_fire_internal(const event_t &event) {
+    ASSERT_IS_MAIN_THREAD();
+    assert(is_event >= 0 && "is_event should not be negative");
+    scoped_push<decltype(is_event)> inc_event{&is_event, is_event + 1};
+
     // Iterate over all events, adding events that should be fired to a second list. We need
     // to do this in a separate step since an event handler might call event_remove or
     // event_add_handler, which will change the contents of the \c events list.
@@ -358,81 +402,53 @@ static void event_fire_internal(const event_t &event) {
 
 /// Handle all pending signal events.
 static void event_fire_delayed() {
-    // If is_event is one, we are running the event-handler non-recursively.
-    //
-    // When the event handler has called a piece of code that triggers another event, we do not want
-    // to fire delayed events because of concurrency problems.
-    if (!blocked.empty() && is_event == 1) {
-        event_list_t local_blocked;
-        local_blocked.swap(blocked);
-        for (const shared_ptr<event_t> &e : local_blocked) {
-            if (event_is_blocked(*e)) {
-                blocked.push_back(e);
-            } else {
-                event_fire_internal(*e);
+    ASSERT_IS_MAIN_THREAD();
+    // Do not invoke new event handlers from within event handlers.
+    if (is_event)
+        return;
+
+    event_list_t to_send;
+    to_send.swap(blocked);
+    assert(blocked.empty());
+
+    // Append all signal events to to_send.
+    auto signals = s_pending_signals.acquire_pending();
+    if (signals.any()) {
+        for (uint32_t sig=0; sig < signals.size(); sig++) {
+            if (signals.test(sig)) {
+                auto e = std::make_shared<event_t>(EVENT_SIGNAL);
+                e->param1.signal = sig;
+                e->arguments.push_back(sig2wcs(sig));
+                to_send.push_back(std::move(e));
             }
         }
     }
 
-    int al = active_list;
-
-    while (sig_list[al].count > 0) {
-        signal_list_t *lst;
-
-        // Switch signal lists.
-        sig_list[1 - al].count = 0;
-        sig_list[1 - al].overflow = 0;
-        al = 1 - al;
-        active_list = al;
-
-        // Set up.
-        lst = &sig_list[1 - al];
-        if (lst->overflow) {
-            debug(0, _(L"Signal list overflow. Signals have been ignored."));
-        }
-
-        // Send all signals in our private list.
-        for (int i = 0; i < lst->count; i++) {
-            shared_ptr<event_t> e = std::make_shared<event_t>(EVENT_SIGNAL);
-            int signal = lst->signal[i];
-            e->param1.signal = signal;
-            e->arguments.push_back(sig2wcs(signal));
-            if (event_is_blocked(*e)) {
-                blocked.push_back(e);
-            } else {
-                event_fire_internal(*e);
-            }
+    // Fire or re-block all events.
+    for (const auto &evt : to_send) {
+        if (event_is_blocked(*evt)) {
+            blocked.push_back(evt);
+        } else {
+            event_fire_internal(*evt);
         }
     }
 }
 
-void event_fire_signal(int signal) {
-    // This means we are in a signal handler. We must be very careful not do do anything that could
-    // cause a memory allocation or something else that might be bad when in a signal handler.
-    if (sig_list[active_list].count < SIG_UNHANDLED_MAX)
-        sig_list[active_list].signal[sig_list[active_list].count++] = signal;
-    else
-        sig_list[active_list].overflow = 1;
+void event_enqueue_signal(int signal) {
+    // Beware, we are in a signal handler
+    s_pending_signals.mark(signal);
 }
 
 void event_fire(const event_t *event) {
-    if (event && event->type == EVENT_SIGNAL) {
-        event_fire_signal(event->param1.signal);
-    } else {
-        is_event++;
+    // Fire events triggered by signals.
+    event_fire_delayed();
 
-        // Fire events triggered by signals.
-        event_fire_delayed();
-
-        if (event) {
-            if (event_is_blocked(*event)) {
-                blocked.push_back(std::make_shared<event_t>(*event));
-            } else {
-                event_fire_internal(*event);
-            }
+    if (event) {
+        if (event_is_blocked(*event)) {
+            blocked.push_back(std::make_shared<event_t>(*event));
+        } else {
+            event_fire_internal(*event);
         }
-        is_event--;
-        assert(is_event >= 0);
     }
 }
 

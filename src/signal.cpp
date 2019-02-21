@@ -205,7 +205,7 @@ static void default_handler(int signal, siginfo_t *info, void *context) {
     UNUSED(info);
     UNUSED(context);
     if (event_is_signal_observed(signal)) {
-        event_fire_signal(signal);
+        event_enqueue_signal(signal);
     }
 }
 

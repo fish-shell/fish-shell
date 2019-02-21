@@ -120,9 +120,8 @@ bool event_is_signal_observed(int signal);
 /// will be fired.
 void event_fire(const event_t *event);
 
-/// Like event_fire, but takes a signal directly.
-/// May be called from signal handlers
-void event_fire_signal(int signal);
+/// Enqueue a signal event. Invoked from a signal handler.
+void event_enqueue_signal(int signal);
 
 /// Print all events. If type_filter is not none(), only output events with that type.
 void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter);

@@ -80,7 +80,7 @@ bool is_subshell = false;
 bool is_block = false;
 bool is_breakpoint = false;
 bool is_login = false;
-int is_event = false;
+int is_event = 0;
 int job_control_mode = JOB_CONTROL_INTERACTIVE;
 int no_exec = 0;
 

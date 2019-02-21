@@ -280,7 +280,7 @@ Unlike other shells, `fish` stores the exit status of the last command in `$stat
 \endfish
 
 Zero is considered success, and non-zero is failure.
-
+There is also a `$pipestatus` array variable for exit statuses of processes comprising a pipe.
 
 \section tut_exports Exports (Shell Variables)
 

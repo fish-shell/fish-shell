@@ -273,6 +273,7 @@ static void handle_sigalarm(int sig, siginfo_t *info, void *context) {
     UNUSED(info);
     UNUSED(context);
     if (reraise_if_forked_child(sig)) return;
+    default_handler(sig, info, context);
 }
 
 void signal_reset_handlers() {

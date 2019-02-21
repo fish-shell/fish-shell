@@ -1,0 +1,6 @@
+function alarm --on-signal ALRM
+  echo ALRM received
+end
+
+kill -s ALRM $fish_pid
+

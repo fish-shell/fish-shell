@@ -224,7 +224,7 @@ static bool function_remove_ignore_autoload(const wcstring &name, bool tombstone
     if (iter->second.is_autoload && tombstone) function_tombstones.insert(name);
 
     loaded_functions.erase(iter);
-    event_t ev(EVENT_ANY);
+    event_t ev(event_type_t::any);
     ev.function_name = name;
     event_remove(ev);
     return true;

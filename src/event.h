@@ -19,20 +19,20 @@
 #define EVENT_ANY_PID 0
 
 /// Enumeration of event types.
-enum event_type_t {
+enum class event_type_t {
     /// Matches any event type (Not always any event, as the function name may limit the choice as
     /// well.
-    EVENT_ANY,
+    any,
     /// An event triggered by a signal.
-    EVENT_SIGNAL,
+    signal,
     /// An event triggered by a variable update.
-    EVENT_VARIABLE,
+    variable,
     /// An event triggered by a job or process exit.
-    EVENT_EXIT,
+    exit,
     /// An event triggered by a job exit.
-    EVENT_JOB_ID,
+    job_exit,
     /// A generic event.
-    EVENT_GENERIC,
+    generic,
 };
 
 /// The structure which represents an event. The event_t struct has several event-related use-cases:
@@ -47,7 +47,7 @@ enum event_type_t {
 struct event_t {
    public:
     /// Type of event.
-    int type;
+    event_type_t type;
 
     /// The type-specific parameter. The int types are one of the following:
     ///
@@ -73,7 +73,7 @@ struct event_t {
     /// situations, the value of this variable is ignored.
     wcstring_list_t arguments;
 
-    explicit event_t(int t);
+    explicit event_t(event_type_t t);
     ~event_t();
 
     static event_t signal_event(int sig);

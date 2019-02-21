@@ -108,24 +108,24 @@ static int event_match(const event_t &classv, const event_t &instance) {
         return 0;
     }
 
-    if (classv.type == EVENT_ANY) return 1;
+    if (classv.type == event_type_t::any) return 1;
     if (classv.type != instance.type) return 0;
 
     switch (classv.type) {
-        case EVENT_SIGNAL: {
+        case event_type_t::signal: {
             return classv.param1.signal == instance.param1.signal;
         }
-        case EVENT_VARIABLE: {
+        case event_type_t::variable: {
             return instance.str_param1 == classv.str_param1;
         }
-        case EVENT_EXIT: {
+        case event_type_t::exit: {
             if (classv.param1.pid == EVENT_ANY_PID) return 1;
             return classv.param1.pid == instance.param1.pid;
         }
-        case EVENT_JOB_ID: {
+        case event_type_t::job_exit: {
             return classv.param1.job_id == instance.param1.job_id;
         }
-        case EVENT_GENERIC: {
+        case event_type_t::generic: {
             return instance.str_param1 == classv.str_param1;
         }
         default: {
@@ -146,24 +146,24 @@ static int event_is_blocked(const event_t &e) {
 
     size_t idx = 0;
     while ((block = parser.block_at_index(idx++))) {
-        if (event_block_list_blocks_type(block->event_blocks, e.type)) return true;
+        if (event_block_list_blocks_type(block->event_blocks)) return true;
     }
-    return event_block_list_blocks_type(parser.global_event_blocks, e.type);
+    return event_block_list_blocks_type(parser.global_event_blocks);
 }
 
 wcstring event_get_desc(const event_t &e) {
     wcstring result;
     switch (e.type) {
-        case EVENT_SIGNAL: {
+        case event_type_t::signal: {
             result = format_string(_(L"signal handler for %ls (%ls)"), sig2wcs(e.param1.signal),
                                    signal_get_desc(e.param1.signal));
             break;
         }
-        case EVENT_VARIABLE: {
+        case event_type_t::variable: {
             result = format_string(_(L"handler for variable '%ls'"), e.str_param1.c_str());
             break;
         }
-        case EVENT_EXIT: {
+        case event_type_t::exit: {
             if (e.param1.pid > 0) {
                 result = format_string(_(L"exit handler for process %d"), e.param1.pid);
             } else {
@@ -178,7 +178,7 @@ wcstring event_get_desc(const event_t &e) {
             }
             break;
         }
-        case EVENT_JOB_ID: {
+        case event_type_t::job_exit: {
             job_t *j = job_t::from_job_id(e.param1.job_id);
             if (j) {
                 result = format_string(_(L"exit handler for job %d, '%ls'"), j->job_id,
@@ -188,7 +188,7 @@ wcstring event_get_desc(const event_t &e) {
             }
             break;
         }
-        case EVENT_GENERIC: {
+        case event_type_t::generic: {
             result = format_string(_(L"handler for generic event '%ls'"), e.str_param1.c_str());
             break;
         }
@@ -217,11 +217,11 @@ static void show_all_handlers(void) {
 static wcstring event_desc_compact(const event_t &event) {
     wcstring res;
     switch (event.type) {
-        case EVENT_ANY: {
+        case event_type_t::any: {
             res = L"EVENT_ANY";
             break;
         }
-        case EVENT_VARIABLE: {
+        case event_type_t::variable: {
             if (event.str_param1.c_str()) {
                 res = format_string(L"EVENT_VARIABLE($%ls)", event.str_param1.c_str());
             } else {
@@ -229,11 +229,11 @@ static wcstring event_desc_compact(const event_t &event) {
             }
             break;
         }
-        case EVENT_SIGNAL: {
+        case event_type_t::signal: {
             res = format_string(L"EVENT_SIGNAL(%ls)", sig2wcs(event.param1.signal));
             break;
         }
-        case EVENT_EXIT: {
+        case event_type_t::exit: {
             if (event.param1.pid == EVENT_ANY_PID) {
                 res = wcstring(L"EVENT_EXIT([all child processes])");
             } else if (event.param1.pid > 0) {
@@ -249,7 +249,7 @@ static wcstring event_desc_compact(const event_t &event) {
             }
             break;
         }
-        case EVENT_JOB_ID: {
+        case event_type_t::job_exit: {
             job_t *j = job_t::from_job_id(event.param1.job_id);
             if (j)
                 res =
@@ -258,7 +258,7 @@ static wcstring event_desc_compact(const event_t &event) {
                 res = format_string(L"EVENT_JOB_ID(jobid %d)", event.param1.job_id);
             break;
         }
-        case EVENT_GENERIC: {
+        case event_type_t::generic: {
             res = format_string(L"EVENT_GENERIC(%ls)", event.str_param1.c_str());
             break;
         }
@@ -280,7 +280,7 @@ void event_add_handler(const event_t &event) {
     }
 
     shared_ptr<event_t> e = std::make_shared<event_t>(event);
-    if (e->type == EVENT_SIGNAL) {
+    if (e->type == event_type_t::signal) {
         signal_handle(e->param1.signal, 1);
         set_signal_observed(e->param1.signal, true);
     }
@@ -304,7 +304,7 @@ void event_remove(const event_t &criterion) {
 
         // If this event was a signal handler and no other handler handles the specified signal
         // type, do not handle that type of signal any more.
-        if (n->type == EVENT_SIGNAL) {
+        if (n->type == event_type_t::signal) {
             event_t e = event_t::signal_event(n->param1.signal);
             if (event_get(e, NULL) == 1) {
                 signal_handle(e.param1.signal, 0);
@@ -416,7 +416,7 @@ static void event_fire_delayed() {
     if (signals.any()) {
         for (uint32_t sig=0; sig < signals.size(); sig++) {
             if (signals.test(sig)) {
-                auto e = std::make_shared<event_t>(EVENT_SIGNAL);
+                auto e = std::make_shared<event_t>(event_type_t::signal);
                 e->param1.signal = sig;
                 e->arguments.push_back(sig2wcs(sig));
                 to_send.push_back(std::move(e));
@@ -459,13 +459,11 @@ struct event_type_name_t {
     const wchar_t *name;
 };
 
-static const event_type_name_t events_mapping[] = {
-    {EVENT_SIGNAL, L"signal"},
-    {EVENT_VARIABLE, L"variable"},
-    {EVENT_EXIT, L"exit"},
-    {EVENT_JOB_ID, L"job-id"},
-    {EVENT_GENERIC, L"generic"}
-};
+static const event_type_name_t events_mapping[] = {{event_type_t::signal, L"signal"},
+                                                   {event_type_t::variable, L"variable"},
+                                                   {event_type_t::exit, L"exit"},
+                                                   {event_type_t::job_exit, L"job-id"},
+                                                   {event_type_t::generic, L"generic"}};
 
 maybe_t<event_type_t> event_type_for_name(const wcstring &name) {
     for (const auto &em : events_mapping) {
@@ -492,13 +490,15 @@ void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter) {
             [](const shared_ptr<event_t> &e1, const shared_ptr<event_t> &e2) {
                 if (e1->type == e2->type) {
                     switch (e1->type) {
-                        case EVENT_SIGNAL:
+                        case event_type_t::signal:
                             return e1->param1.signal < e2->param1.signal;
-                        case EVENT_JOB_ID:
+                        case event_type_t::exit:
+                            return e1->param1.pid < e2->param1.pid;
+                        case event_type_t::job_exit:
                             return e1->param1.job_id < e2->param1.job_id;
-                        case EVENT_VARIABLE:
-                        case EVENT_ANY:
-                        case EVENT_GENERIC:
+                        case event_type_t::variable:
+                        case event_type_t::any:
+                        case event_type_t::generic:
                             return e1->str_param1 < e2->str_param1;
                     }
                 }
@@ -519,16 +519,16 @@ void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter) {
             streams.out.append_format(L"Event %ls\n", event_name_for_type(*last_type));
         }
         switch (evt->type) {
-            case EVENT_SIGNAL:
+            case event_type_t::signal:
                 streams.out.append_format(L"%ls %ls\n", sig2wcs(evt->param1.signal),
                         evt->function_name.c_str());
                 break;
-            case EVENT_JOB_ID:
+            case event_type_t::job_exit:
                 streams.out.append_format(L"%d %ls\n", evt->param1,
                         evt->function_name.c_str());
                 break;
-            case EVENT_VARIABLE:
-            case EVENT_GENERIC:
+            case event_type_t::variable:
+            case event_type_t::generic:
                 streams.out.append_format(L"%ls %ls\n", evt->str_param1.c_str(),
                         evt->function_name.c_str());
                 break;
@@ -542,30 +542,30 @@ void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter) {
 void event_fire_generic(const wchar_t *name, wcstring_list_t *args) {
     CHECK(name, );
 
-    event_t ev(EVENT_GENERIC);
+    event_t ev(event_type_t::generic);
     ev.str_param1 = name;
     if (args) ev.arguments = *args;
     event_fire(&ev);
 }
 
-event_t::event_t(int t) : type(t), param1(), str_param1(), function_name(), arguments() {}
+event_t::event_t(event_type_t t) : type(t), param1(), str_param1(), function_name(), arguments() {}
 
 event_t::~event_t() = default;
 
 event_t event_t::signal_event(int sig) {
-    event_t event(EVENT_SIGNAL);
+    event_t event(event_type_t::signal);
     event.param1.signal = sig;
     return event;
 }
 
 event_t event_t::variable_event(const wcstring &str) {
-    event_t event(EVENT_VARIABLE);
+    event_t event(event_type_t::variable);
     event.str_param1 = str;
     return event;
 }
 
 event_t event_t::generic_event(const wcstring &str) {
-    event_t event(EVENT_GENERIC);
+    event_t event(event_type_t::generic);
     event.str_param1 = str;
     return event;
 }

@@ -17,6 +17,7 @@
 
 #include "common.h"
 #include "enum_set.h"
+#include "event.h"
 #include "io.h"
 #include "parse_tree.h"
 #include "tnode.h"
@@ -439,7 +440,7 @@ void proc_sanity_check();
 
 /// Send a process/job exit event notification. This function is a convenience wrapper around
 /// event_fire().
-void proc_fire_event(const wchar_t *msg, int type, pid_t pid, int status);
+void proc_fire_event(const wchar_t *msg, event_type_t type, pid_t pid, int status);
 
 /// Initializations.
 void proc_init();

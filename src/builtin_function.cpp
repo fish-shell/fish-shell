@@ -87,7 +87,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
             case 'j':
             case 'p': {
                 pid_t pid;
-                event_t e(EVENT_ANY);
+                event_t e(event_type_t::any);
 
                 if ((opt == 'j') && (wcscasecmp(w.woptarg, L"caller") == 0)) {
                     job_id_t job_id = -1;
@@ -113,11 +113,11 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                             _(L"%ls: Cannot find calling job for event handler"), cmd);
                         return STATUS_INVALID_ARGS;
                     }
-                    e.type = EVENT_JOB_ID;
+                    e.type = event_type_t::job_exit;
                     e.param1.job_id = job_id;
                 } else if ((opt == 'p') && (wcscasecmp(w.woptarg, L"%self") == 0)) {
                     pid = getpid();
-                    e.type = EVENT_EXIT;
+                    e.type = event_type_t::exit;
                     e.param1.pid = pid;
                 } else {
                     pid = fish_wcstoi(w.woptarg);
@@ -127,7 +127,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                         return STATUS_INVALID_ARGS;
                     }
 
-                    e.type = EVENT_EXIT;
+                    e.type = event_type_t::exit;
                     e.param1.pid = (opt == 'j' ? -1 : 1) * abs(pid);
                 }
                 opts.events.push_back(e);

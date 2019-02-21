@@ -107,7 +107,7 @@ void set_proc_had_barrier(bool flag) {
 }
 
 /// The event variable used to send all process event.
-static event_t event(0);
+static event_t event{event_type_t::any};
 
 /// A stack containing the values of is_interactive. Used by proc_push_interactive and
 /// proc_pop_interactive.
@@ -486,7 +486,7 @@ static void print_job_status(const job_t *j, job_status_t status) {
     fwprintf(stdout, L"\n");
 }
 
-void proc_fire_event(const wchar_t *msg, int type, pid_t pid, int status) {
+void proc_fire_event(const wchar_t *msg, event_type_t type, pid_t pid, int status) {
     event.type = type;
     event.param1.pid = pid;
 
@@ -535,7 +535,7 @@ static bool process_clean_after_marking(bool allow_interactive) {
             // Remove this in future.
             // Update: This event is used for cleaning up the psub temporary files and folders.
             // Removing it breaks the psub tests as a result.
-            proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, p->pid,
+            proc_fire_event(L"PROCESS_EXIT", event_type_t::exit, p->pid,
                             (WIFSIGNALED(s) ? -1 : WEXITSTATUS(s)));
 
             // Ignore signal SIGPIPE.We issue it ourselves to the pipe writer when the pipe reader
@@ -604,9 +604,9 @@ static bool process_clean_after_marking(bool allow_interactive) {
             // or jobs that consist entirely of builtins (and hence don't have a process).
             // This causes issues if fish is PID 2, which is quite common on WSL. See #4582.
             if (j->pgid != INVALID_PID) {
-                proc_fire_event(L"JOB_EXIT", EVENT_EXIT, -j->pgid, 0);
+                proc_fire_event(L"JOB_EXIT", event_type_t::exit, -j->pgid, 0);
             }
-            proc_fire_event(L"JOB_EXIT", EVENT_JOB_ID, j->job_id, 0);
+            proc_fire_event(L"JOB_EXIT", event_type_t::job_exit, j->job_id, 0);
 
             job_remove(j);
         } else if (j->is_stopped() && !j->get_flag(job_flag_t::NOTIFIED)) {

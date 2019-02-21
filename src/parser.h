@@ -26,7 +26,7 @@ struct event_blockage_t {
 
 typedef std::list<event_blockage_t> event_blockage_list_t;
 
-inline bool event_block_list_blocks_type(const event_blockage_list_t &ebls, int type) {
+inline bool event_block_list_blocks_type(const event_blockage_list_t &ebls) {
     return !ebls.empty();
 }
 

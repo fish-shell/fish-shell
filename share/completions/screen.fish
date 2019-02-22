@@ -56,8 +56,8 @@ complete -c screen -s c -r -d 'Specify init file'
 complete -c screen -s d -d 'Detach screen' -a '(__fish_complete_screen)' -x
 complete -c screen -s D -d 'Detach screen' -a '(__fish_complete_screen)' -x
 complete -c screen -s r -d 'Reattach session' -a '(__fish_complete_screen)' -x
-complete -c screen -s R -d 'Reattach/create session'
-complete -c screen -o RR -d 'Reattach/create any session'
+complete -c screen -s R -d 'Reattach/create session' -a '(__fish_complete_screen)' -x
+complete -c screen -o RR -d 'Reattach/create any session' -a '(__fish_complete_screen)' -x
 complete -c screen -s e -x -d 'Escape character'
 complete -c screen -s f -d 'Flow control on'
 complete -c screen -o fn -d 'Flow control off'

@@ -50,7 +50,6 @@ end
 # detect socket directory for mac users
 __fish_detect_screen_socket_dir
 
-complete -c screen -x
 complete -c screen -s a -d 'Include all capabilitys'
 complete -c screen -s A -d 'Adapt window size'
 complete -c screen -s c -r -d 'Specify init file'

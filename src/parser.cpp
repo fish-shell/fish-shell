@@ -647,7 +647,6 @@ int parser_t::eval(wcstring cmd, const io_chain_t &io, enum block_type_t block_t
 }
 
 void parser_t::eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type_t block_type) {
-    CHECK_BLOCK(1);
     assert(block_type == TOP || block_type == SUBST);
     if (!ps->tree.empty()) {
         // Execute the first node.
@@ -662,8 +661,6 @@ int parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, const io_chain_
     static_assert(
         std::is_same<T, grammar::statement>::value || std::is_same<T, grammar::job_list>::value,
         "Unexpected node type");
-    CHECK_BLOCK(1);
-
     // Handle cancellation requests. If our block stack is currently empty, then we already did
     // successfully cancel (or there was nothing to cancel); clear the flag. If our block stack is
     // not empty, we are still in the process of cancelling; refuse to evaluate anything.

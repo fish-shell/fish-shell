@@ -483,8 +483,6 @@ static wchar_t input_read_characters_only() {
 }
 
 wint_t input_readch(bool allow_commands) {
-    CHECK_BLOCK(R_NULL);
-
     // Clear the interrupted flag.
     reader_reset_interrupted();
     // Search for sequence in mapping tables.

@@ -63,7 +63,6 @@ int autoload_t::unload(const wcstring &cmd) { return this->evict_node(cmd); }
 
 int autoload_t::load(const wcstring &cmd, bool reload) {
     int res;
-    CHECK_BLOCK(0);
     ASSERT_IS_MAIN_THREAD();
 
     // TODO: Justify this principal_parser.

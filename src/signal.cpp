@@ -29,9 +29,6 @@ struct lookup_entry {
     const wchar_t *desc;
 };
 
-/// The number of signal blocks in place. Increased by signal_block, decreased by signal_unblock.
-static int block_count = 0;
-
 /// Lookup table used to convert between signal names and signal ids, etc.
 static const struct lookup_entry signal_table[] = {
 #ifdef SIGHUP
@@ -413,19 +410,6 @@ void get_signals_with_handlers(sigset_t *set) {
     }
 }
 
-void signal_block() {
-    ASSERT_IS_MAIN_THREAD();
-    sigset_t chldset;
-
-    if (!block_count) {
-        sigfillset(&chldset);
-        DIE_ON_FAILURE(pthread_sigmask(SIG_BLOCK, &chldset, NULL));
-    }
-
-    block_count++;
-    // debug( 0, L"signal block level increased to %d", block_count );
-}
-
 /// Ensure we did not inherit any blocked signals. See issue #3964.
 void signal_unblock_all() {
     sigset_t iset;
@@ -433,21 +417,3 @@ void signal_unblock_all() {
     sigprocmask(SIG_SETMASK, &iset, NULL);
 }
 
-void signal_unblock() {
-    ASSERT_IS_MAIN_THREAD();
-
-    block_count--;
-    if (block_count < 0) {
-        debug(0, _(L"Signal block mismatch"));
-        bugreport();
-        FATAL_EXIT();
-    }
-
-    if (!block_count) {
-        sigset_t chldset;
-        sigfillset(&chldset);
-        DIE_ON_FAILURE(pthread_sigmask(SIG_UNBLOCK, &chldset, 0));
-    }
-}
-
-bool signal_is_blocked() { return static_cast<bool>(block_count); }

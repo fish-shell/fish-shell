@@ -254,18 +254,6 @@ static void event_fire_internal(const event_t &event) {
         }
     }
 
-    // No matches. Time to return.
-    if (fire.empty()) return;
-
-    if (signal_is_blocked()) {
-        // Fix for #608. Don't run event handlers while signals are blocked.
-        input_common_add_callback([event]() {
-            ASSERT_IS_MAIN_THREAD();
-            event_fire(event);
-        });
-        return;
-    }
-
     // Iterate over our list of matching events. Fire the ones that are still present.
     for (const shared_ptr<event_handler_t> &handler : fire) {
         // Only fire if this event is still present

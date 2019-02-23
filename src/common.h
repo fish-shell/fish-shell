@@ -272,19 +272,6 @@ inline bool is_whitespace(const wchar_t *input) { return is_whitespace(wcstring(
 
 [[noreturn]] void __fish_assert(const char *msg, const char *file, size_t line, int error);
 
-/// Check if signals are blocked. If so, print an error message and return from the function
-/// performing this check.
-#define CHECK_BLOCK(retval)
-#if 0
-#define CHECK_BLOCK(retval)                                                \
-    if (signal_is_blocked()) {                                             \
-        debug(0, "function %s called while blocking signals. ", __func__); \
-        bugreport();                                                       \
-        show_stackframe(L'E');                                             \
-        return retval;                                                     \
-    }
-#endif
-
 /// Shorthand for wgettext call in situations where a C-style string is needed (e.g., fwprintf()).
 #define _(wstr) wgettext(wstr).c_str()
 

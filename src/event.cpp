@@ -73,7 +73,6 @@ static int event_match(const event_t &classv, const event_t &instance) {
 
     switch (classv.type) {
         case EVENT_SIGNAL: {
-            if (classv.param1.signal == EVENT_ANY_SIGNAL) return 1;
             return classv.param1.signal == instance.param1.signal;
         }
         case EVENT_VARIABLE: {
@@ -177,8 +176,6 @@ static void show_all_handlers(void) {
 /// function will fire if the \c event is an event handler.
 static wcstring event_desc_compact(const event_t &event) {
     wcstring res;
-    wchar_t const *temp;
-    int sig;
     switch (event.type) {
         case EVENT_ANY: {
             res = L"EVENT_ANY";
@@ -193,15 +190,7 @@ static wcstring event_desc_compact(const event_t &event) {
             break;
         }
         case EVENT_SIGNAL: {
-            sig = event.param1.signal;
-            if (sig == EVENT_ANY_SIGNAL) {
-                temp = L"[all signals]";
-            } else if (sig == 0) {
-                temp = L"not set";
-            } else {
-                temp = sig2wcs(sig);
-            }
-            res = format_string(L"EVENT_SIGNAL(%ls)", temp);
+            res = format_string(L"EVENT_SIGNAL(%ls)", sig2wcs(event.param1.signal));
             break;
         }
         case EVENT_EXIT: {

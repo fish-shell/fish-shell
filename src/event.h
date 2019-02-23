@@ -15,9 +15,6 @@
 #include "common.h"
 #include "io.h"
 
-/// The signal number that is used to match any signal.
-#define EVENT_ANY_SIGNAL -1
-
 /// The process id that is used to match any process id.
 #define EVENT_ANY_PID 0
 

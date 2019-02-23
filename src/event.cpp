@@ -388,6 +388,7 @@ void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter) {
                       case event_type_t::generic:
                           return d1.str_param1 < d2.str_param1;
                   }
+                  DIE("Unreachable");
               });
 
     maybe_t<event_type_t> last_type{};

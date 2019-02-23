@@ -639,12 +639,7 @@ static void universal_callback(env_stack_t *stack, const callback_data_t &cb) {
 
     react_to_variable_change(op, cb.key, *stack);
     stack->mark_changed_exported();
-
-    event_t ev = event_t::variable_event(cb.key);
-    ev.arguments.push_back(L"VARIABLE");
-    ev.arguments.push_back(op);
-    ev.arguments.push_back(cb.key);
-    event_fire(&ev);
+    event_fire(event_t::variable(cb.key, {L"VARIABLE", op, cb.key}));
 }
 
 /// Make sure the PATH variable contains something.
@@ -1256,12 +1251,7 @@ int env_stack_t::set_internal(const wcstring &key, env_mode_flags_t input_var_mo
         }
     }
 
-    event_t ev = event_t::variable_event(key);
-    ev.arguments.reserve(3);
-    ev.arguments.push_back(L"VARIABLE");
-    ev.arguments.push_back(L"SET");
-    ev.arguments.push_back(key);
-    event_fire(&ev);
+    event_fire(event_t::variable(key, {L"VARIABLE", L"SET", key}));
     react_to_variable_change(L"SET", key, *this);
     return ENV_OK;
 }
@@ -1327,12 +1317,7 @@ int env_stack_t::remove(const wcstring &key, int var_mode) {
         }
 
         if (try_remove(first_node, key.c_str(), var_mode)) {
-            event_t ev = event_t::variable_event(key);
-            ev.arguments.push_back(L"VARIABLE");
-            ev.arguments.push_back(L"ERASE");
-            ev.arguments.push_back(key);
-            event_fire(&ev);
-
+            event_fire(event_t::variable(key, {L"VARIABLE", L"ERASE", key}));
             erased = 1;
         }
     }
@@ -1347,11 +1332,7 @@ int env_stack_t::remove(const wcstring &key, int var_mode) {
         }
         if (erased) {
             env_universal_barrier();
-            event_t ev = event_t::variable_event(key);
-            ev.arguments.push_back(L"VARIABLE");
-            ev.arguments.push_back(L"ERASE");
-            ev.arguments.push_back(key);
-            event_fire(&ev);
+            event_fire(event_t::variable(key, {L"VARIABLE", L"ERASE", key}));
         }
 
         if (is_exported) vars_stack().mark_changed_exported();

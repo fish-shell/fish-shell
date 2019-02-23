@@ -44,7 +44,7 @@ struct function_data_t {
     /// Function's metadata fields
     function_properties_t props;
     /// List of all event handlers for this function.
-    std::vector<event_t> events;
+    std::vector<event_description_t> events;
 };
 
 /// Add a function.

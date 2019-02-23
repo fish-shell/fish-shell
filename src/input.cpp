@@ -252,7 +252,7 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t *command, const wc
 /// reader.
 static int interrupt_handler() {
     // Fire any pending events.
-    event_fire(NULL);
+    event_fire_delayed();
     // Reap stray processes, including printing exit status messages.
     if (job_reap(true)) reader_repaint_needed();
     // Tell the reader an event occured.

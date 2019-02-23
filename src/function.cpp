@@ -175,8 +175,8 @@ void function_add(const function_data_t &data, const parser_t &parser) {
     loaded_functions.insert(new_pair);
 
     // Add event handlers.
-    for (const event_t &event : data.events) {
-        event_add_handler(event);
+    for (const event_description_t &ed : data.events) {
+        event_add_handler(std::make_shared<event_handler_t>(ed, data.name));
     }
 }
 
@@ -224,9 +224,7 @@ static bool function_remove_ignore_autoload(const wcstring &name, bool tombstone
     if (iter->second.is_autoload && tombstone) function_tombstones.insert(name);
 
     loaded_functions.erase(iter);
-    event_t ev(event_type_t::any);
-    ev.function_name = name;
-    event_remove(ev);
+    event_remove_function_handlers(name);
     return true;
 }
 

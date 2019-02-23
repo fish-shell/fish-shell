@@ -106,9 +106,6 @@ void set_proc_had_barrier(bool flag) {
     proc_had_barrier = flag;
 }
 
-/// The event variable used to send all process event.
-static event_t event{event_type_t::any};
-
 /// A stack containing the values of is_interactive. Used by proc_push_interactive and
 /// proc_pop_interactive.
 static std::vector<int> interactive_stack;
@@ -487,14 +484,13 @@ static void print_job_status(const job_t *j, job_status_t status) {
 }
 
 void proc_fire_event(const wchar_t *msg, event_type_t type, pid_t pid, int status) {
-    event.type = type;
-    event.param1.pid = pid;
+    event_t event{type};
+    event.desc.param1.pid = pid;
 
     event.arguments.push_back(msg);
     event.arguments.push_back(to_string(pid));
     event.arguments.push_back(to_string(status));
-    event_fire(&event);
-    event.arguments.resize(0);
+    event_fire(event);
 }
 
 static bool process_clean_after_marking(bool allow_interactive) {

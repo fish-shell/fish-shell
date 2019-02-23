@@ -2,5 +2,14 @@ function alarm --on-signal ALRM
   echo ALRM received
 end
 
+
 kill -s ALRM $fish_pid
 
+function anychild --on-process-exit 0
+  # Type and exit status
+  echo $argv[1] $argv[3]
+end
+
+command false
+command true
+command false | command true

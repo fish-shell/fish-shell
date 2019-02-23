@@ -701,10 +701,6 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
         return true;
     }
 
-    // RAII wrappers must have a name so that their scope is tied to the function as it is legal for
-    // the compiler to construct and then immediately deconstruct unnamed objects otherwise.
-    signal_block_t signal_block;
-
     // It may not be safe to call tcsetpgrp if we've already done so, as at that point we are no
     // longer the controlling process group for the terminal and no longer have permission to set
     // the process group that is in control, causing tcsetpgrp to return EPERM, even though that's

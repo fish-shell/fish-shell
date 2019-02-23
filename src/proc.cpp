@@ -821,12 +821,10 @@ static bool terminal_return_from_job(job_t *j) {
         return true;
     }
 
-    signal_block();
     if (tcsetpgrp(STDIN_FILENO, getpgrp()) == -1) {
         if (errno == ENOTTY) redirect_tty_output();
         debug(1, _(L"Could not return shell to foreground"));
         wperror(L"tcsetpgrp");
-        signal_unblock();
         return false;
     }
 
@@ -835,7 +833,6 @@ static bool terminal_return_from_job(job_t *j) {
         if (errno == EIO) redirect_tty_output();
         debug(1, _(L"Could not return shell to foreground"));
         wperror(L"tcgetattr");
-        signal_unblock();
         return false;
     }
 
@@ -853,7 +850,6 @@ return false;
 }
 #endif
 
-    signal_unblock();
     return true;
 }
 

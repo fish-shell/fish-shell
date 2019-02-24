@@ -123,15 +123,15 @@ enum class jump_precision_t { till, to };
 
 /// Any time the contents of a buffer changes, we update the generation count. This allows for our
 /// background threads to notice it and skip doing work that they would otherwise have to do.
-static std::atomic<unsigned int> s_generation_count;
+static std::atomic<unsigned> s_generation;
 
 /// This pthreads generation count is set when an autosuggestion background thread starts up, so it
 /// can easily check if the work it is doing is no longer useful.
-static pthread_key_t generation_count_key;
+static thread_local unsigned s_thread_generation;
 
 /// Helper to get the generation count
-static unsigned int read_generation_count() {
-    return s_generation_count.load(std::memory_order_relaxed);
+static inline unsigned read_generation_count() {
+    return s_generation.load(std::memory_order_relaxed);
 }
 
 static void set_command_line_and_position(editable_line_t *el, const wcstring &new_str, size_t pos);
@@ -673,7 +673,7 @@ void reader_data_t::command_line_changed(const editable_line_t *el) {
         indents.resize(len);
 
         // Update the gen count.
-        s_generation_count++;
+        s_generation.store(1 + read_generation_count(), std::memory_order_relaxed);
     } else if (el == &this->pager.search_field_line) {
         this->pager.refilter_completions();
         this->pager_selection_changed();
@@ -819,8 +819,7 @@ int reader_reading_interrupted() {
 
 bool reader_thread_job_is_stale() {
     ASSERT_IS_BACKGROUND_THREAD();
-    void *current_count = (void *)(uintptr_t)read_generation_count();
-    return current_count != pthread_getspecific(generation_count_key);
+    return read_generation_count() != s_thread_generation;
 }
 
 void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
@@ -916,8 +915,6 @@ static void exec_prompt() {
 }
 
 void reader_init() {
-    DIE_ON_FAILURE(pthread_key_create(&generation_count_key, NULL));
-
     auto &vars = parser_t::principal_parser().vars();
 
     // Ensure this var is present even before an interactive command is run so that if it is used
@@ -1306,12 +1303,11 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
 
         const autosuggestion_result_t nothing = {};
         // If the main thread has moved on, skip all the work.
+        // Otherwise record the generation.
         if (generation_count != read_generation_count()) {
             return nothing;
         }
-
-        DIE_ON_FAILURE(
-            pthread_setspecific(generation_count_key, (void *)(uintptr_t)generation_count));
+        s_thread_generation = generation_count;
 
         // Let's make sure we aren't using the empty string.
         if (search_string.empty()) {
@@ -2223,15 +2219,12 @@ static std::function<highlight_result_t(void)> get_highlight_performer(const wcs
     highlight_function_t highlight_func =
         no_io ? highlight_shell_no_io : current_data()->highlight_func;
     return [=]() -> highlight_result_t {
+        if (text.empty()) return {};
         if (generation_count != read_generation_count()) {
             // The gen count has changed, so don't do anything.
             return {};
         }
-        if (text.empty()) {
-            return {};
-        }
-        DIE_ON_FAILURE(
-            pthread_setspecific(generation_count_key, (void *)(uintptr_t)generation_count));
+        s_thread_generation = generation_count;
         std::vector<highlight_spec_t> colors(text.size(), 0);
         highlight_func(text, colors, match_highlight_pos, NULL /* error */, vars);
         return {std::move(colors), text};

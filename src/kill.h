@@ -19,13 +19,4 @@ const wchar_t *kill_yank_rotate();
 /// Paste from the killring.
 const wchar_t *kill_yank();
 
-/// Sanity check.
-void kill_sanity_check();
-
-/// Initialize the killring.
-void kill_init();
-
-/// Destroy the killring.
-void kill_destroy();
-
 #endif

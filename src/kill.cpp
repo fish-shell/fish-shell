@@ -51,9 +51,3 @@ const wchar_t *kill_yank() {
     }
     return kill_list.front().c_str();
 }
-
-void kill_sanity_check() {}
-
-void kill_init() {}
-
-void kill_destroy() {}

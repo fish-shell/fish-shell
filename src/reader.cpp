@@ -1729,7 +1729,6 @@ static void reader_interactive_init() {
     pid_t shell_pgid;
 
     if (!input_initialized) init_input();
-    kill_init();
     shell_pgid = getpgrp();
 
     // This should enable job control on fish, even if our parent process did not enable it for us.
@@ -1843,7 +1842,6 @@ static void reader_interactive_init() {
 
 /// Destroy data for interactive use.
 static void reader_interactive_destroy() {
-    kill_destroy();
     outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
     input_destroy();
 }

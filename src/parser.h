@@ -147,7 +147,7 @@ struct profile_item_t {
 class parse_execution_context_t;
 class completion_t;
 
-class parser_t {
+class parser_t : public std::enable_shared_from_this<parser_t> {
     friend class parse_execution_context_t;
 
    private:
@@ -202,7 +202,7 @@ class parser_t {
     parser_t();
 
     /// The main parser.
-    static parser_t principal;
+    static std::shared_ptr<parser_t> principal;
 
    public:
     /// Get the "principal" parser, whatever that is.

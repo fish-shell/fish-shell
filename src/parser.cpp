@@ -105,17 +105,17 @@ parser_t::parser_t() : variables(env_stack_t::principal()) {}
 // Out of line destructor to enable forward declaration of parse_execution_context_t
 parser_t::~parser_t() = default;
 
-parser_t parser_t::principal;
+std::shared_ptr<parser_t> parser_t::principal{new parser_t()};
 
 parser_t &parser_t::principal_parser() {
     ASSERT_IS_MAIN_THREAD();
-    return principal;
+    return *principal;
 }
 
 void parser_t::skip_all_blocks() {
     // Tell all blocks to skip.
     // This may be called from a signal handler!
-    principal.cancellation_requested = true;
+    principal->cancellation_requested = true;
 }
 
 // Given a new-allocated block, push it onto our block stack, acquiring ownership

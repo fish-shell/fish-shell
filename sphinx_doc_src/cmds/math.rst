@@ -14,13 +14,13 @@ Description
 
 By default, the output is as a float with trailing zeroes trimmed. To get a fixed representation, the ``--scale`` option can be used, including ``--scale=0`` for integer output.
 
-Keep in mind that parameter expansion takes before expressions are evaluated. This can be very useful in order to perform calculations involving shell variables or the output of command substitutions, but it also means that parenthesis and the asterisk glob character have to be escaped or quoted.
+Keep in mind that parameter expansion takes before expressions are evaluated. This can be very useful in order to perform calculations involving shell variables or the output of command substitutions, but it also means that parenthesis (``()``) and the asterisk (``*``) glob character have to be escaped or quoted.
 
 ``math`` ignores whitespace between arguments and takes its input as multiple arguments (internally joined with a space), so ``math 2 +2`` and ``math "2 +    2"`` work the same. ``math 2 2`` is an error.
 
 The following options are available:
 
-- ``-sN`` or ``--scale=N`` sets the scale of the result. ``N`` must be an integer. A scale of zero causes results to be rounded down to the nearest integer. So ``3/2`` returns ``1`` rather than ``2`` which ``1.5`` would normally round to. This is for compatibility with ``bc`` which was the basis for this command prior to fish 3.0.0. Scale values greater than zero causes the result to be rounded using the usual rules to the specified number of decimal places.
+- ``-sN`` or ``--scale=N`` sets the scale of the result. ``N`` must be an integer or the word "max" for the maximum scale. A scale of zero causes results to be rounded down to the nearest integer. So ``3/2`` returns ``1`` rather than ``2`` which ``1.5`` would normally round to. This is for compatibility with ``bc`` which was the basis for this command prior to fish 3.0.0. Scale values greater than zero causes the result to be rounded using the usual rules to the specified number of decimal places.
 
 Return Values
 -------------
@@ -41,13 +41,13 @@ Operators
 
 - ``+`` for addition and ``-`` for subtraction.
 
-- ``*`` for multiplication, ``/`` for division.
+- ``*`` for multiplication, ``/`` for division. (Note that ``*`` is the glob character and needs to be quoted or escaped.)
 
 - ``^`` for exponentiation.
 
 - ``%`` for modulo.
 
-- ``(`` and ``)`` for grouping.
+- ``(`` and ``)`` for grouping. (These need to be quoted or escaped because ``()`` denotes a command substitution.)
 
 They are all used in an infix manner - ``5 + 2``, not ``+ 5 2``.
 
@@ -105,6 +105,8 @@ Examples
 ``math -s3 10 / 6`` outputs ``1.666``.
 
 ``math "sin(pi)"`` outputs ``0``.
+
+``math 5 \* 2`` or ``math "5 * 2"`` or ``math 5 "*" 2`` all output ``10``.
 
 Compatibility notes
 -------------------

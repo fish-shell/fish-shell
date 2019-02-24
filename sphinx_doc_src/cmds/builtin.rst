@@ -4,7 +4,8 @@ builtin - run a builtin command
 Synopsis
 --------
 
-builtin BUILTINNAME [OPTIONS...]
+builtin [OPTIONS...] BUILTINNAME
+builtin --query BUILTINNAMES...
 
 
 Description
@@ -15,6 +16,7 @@ Description
 The following parameters are available:
 
 - ``-n`` or ``--names`` List the names of all defined builtins
+- ``-q`` or ``--query`` tests if any of the specified builtins exists
 
 
 Example

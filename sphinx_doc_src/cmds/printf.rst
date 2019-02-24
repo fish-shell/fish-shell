@@ -75,6 +75,6 @@ Will print "flounder	fish" (separated with a tab character), followed by a newli
 
 ::
 
-    printf '%s:%d' "Number of bananas in my pocket" 42
+    printf '%s: %d' "Number of bananas in my pocket" 42
 
 Will print "Number of bananas in my pocket: 42", _without_ a newline.

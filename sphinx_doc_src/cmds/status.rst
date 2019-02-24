@@ -13,6 +13,7 @@ status is-command-substitution
 status is-no-job-control
 status is-full-job-control
 status is-interactive-job-control
+status current-command
 status filename
 status fish-path
 status function
@@ -30,7 +31,7 @@ With no arguments, ``status`` displays a summary of the current login and job co
 
 The following operations (sub-commands) are available:
 
-- ``is-command-sub`` returns 0 if fish is currently executing a command substitution. Also ``-c`` or ``--is-command-substitution``.
+- ``is-command-substitution`` returns 0 if fish is currently executing a command substitution. Also ``-c`` or ``--is-command-substitution``.
 
 - ``is-block`` returns 0 if fish is currently executing a block of code. Also ``-b`` or ``--is-block``.
 
@@ -45,6 +46,8 @@ The following operations (sub-commands) are available:
 - ``is-interactive-job-control`` returns 0 if interactive job control is enabled. Also, ``--is-interactive-job-control`` (no short flag).
 
 - ``is-no-job-control`` returns 0 if no job control is enabled. Also ``--is-no-job-control`` (no short flag).
+
+- ``current-command`` prints the name of the currently-running function or command, like the deprecated ``_`` variable.
 
 - ``filename`` prints the filename of the currently running script. Also ``current-filename``, ``-f`` or ``--current-filename``.
 

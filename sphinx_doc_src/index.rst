@@ -156,7 +156,7 @@ Any file descriptor can be redirected in an arbitrary way by prefixing the redir
 - To redirect output of FD N, write ``N>DESTINATION``
 - To append the output of FD N to a file, write ``N>>DESTINATION_FILE``
 
-Example: ``echo Hello 2>output.stderr`` and ``echo Hello 2>output.stderr`` are equivalent, and write the standard error (file descriptor 2) of the target program to ``output.stderr``.
+Example: ``echo Hello 2>output.stderr`` writes the standard error (file descriptor 2) of the target program to ``output.stderr``.
 
 Piping
 ------
@@ -335,8 +335,9 @@ Autosuggestions are a powerful way to quickly summon frequently entered commands
 Tab Completion
 ==============
 
-Tab completion is one of the most time saving features of any modern shell. By tapping the tab key, the user asks ``fish`` to guess the rest of the command or parameter that the user is currently typing. If  ``fish`` can only find one possible completion, ``fish`` will write it out. If there is more than one completion, ``fish`` will write out the longest prefix that all completions have in common. If the completions differ on the first character, a list of all possible completions is printed. The list features descriptions of the completions and if the list doesn't fit the screen, it is scrollable by using the arrow keys, the page up/page down keys, the tab key or the space bar. Once the list has been entered, pressing any other key will start a search. If the list has not been entered, pressing any other key will exit the list and insert the pressed key into the command line.
+Tab completion is one of the most time saving features of any modern shell. By tapping the tab key, the user asks ``fish`` to guess the rest of the command or parameter that the user is currently typing. If  ``fish`` can only find one possible completion, ``fish`` will write it out. If there is more than one completion, ``fish`` will write out the longest prefix that all completions have in common. If the completions differ on the first character, a list of all possible completions is printed. The list features descriptions of the completions and if the list doesn't fit the screen, it is scrollable by using the arrow keys, the page up/page down keys, the tab key or the space bar.
 
+If the list is visible, pressing control-S (or the ``pager-toggle-search`` binding) will allow filtering the list. Shift-tab (or the ``complete-and-search`` binding) will trigger completion with the search field immediately visible.
 These are the general purpose tab completions that ``fish`` provides:
 
 - Completion of commands (builtins, functions and regular programs).
@@ -450,7 +451,7 @@ If a star (``*``) or a question mark (``?``) is present in the parameter, ``fish
 
 - ``*`` can match any string of characters not containing '/'. This includes matching an empty string.
 
-- ``**`` matches any string of characters. This includes matching an empty string. The matched string may include the ``/`` character; that is, it recurses into subdirectories. Note that augmenting this wildcard with other strings will not match files in the current working directory (``$PWD``) if you separate the strings with a slash ("/"). This is unlike other shells such as zsh. For example, ``**\/*.fish`` in zsh will match ``.fish`` files in the PWD but in fish will only match such files in a subdirectory. In fish you should type ``***.fish`` to match files in the PWD as well as subdirectories.
+- ``**`` matches any string of characters. This includes matching an empty string. The matched string may include the ``/`` character; that is, it recurses into subdirectories. Note that augmenting this wildcard with other strings will not match files in the current working directory (``$PWD``) if you separate the strings with a slash ("/"). This is unlike other shells such as zsh. For example, ``**\/*.fish`` in zsh will match ``.fish`` files in the PWD but in fish will only match such files in a subdirectory. In fish you should type ``**.fish`` to match files in the PWD as well as subdirectories.
 
 Other shells, such as zsh, provide a rich glob syntax for restricting the files matched by globs. For example, ``**(.)``, to only match regular files. Fish prefers to defer such features to programs, such as ``find``, rather than reinventing the wheel. Thus, if you want to limit the wildcard expansion to just regular files the fish approach is to define and use a function. For example,
 
@@ -949,7 +950,7 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``fish_ambiguous_width`` controls the computed width of ambiguous East Asian characters. This should be set to 1 if your terminal emulator renders these characters as single-width (typical), or 2 if double-width.
 
-- ``fish_escape_delay_ms`` overrides the default timeout of 300ms (default key bindings) or 10ms (vi key bindings) after seeing an escape character before giving up on matching a key binding. See the documentation for the <a href='bind.html#special-case-escape'>bind</a> builtin command. This delay facilitates using escape as a meta key.
+- ``fish_escape_delay_ms`` overrides the default timeout of 30ms after seeing an escape character before giving up on matching a key binding. See the documentation for the <a href='bind.html#special-case-escape'>bind</a> builtin command. This delay facilitates using escape as a meta key.
 
 - ``fish_greeting``, the greeting message printed on startup.
 
@@ -973,13 +974,15 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 ``fish`` also sends additional information to the user through the values of certain environment variables. The user cannot change the values of most of these variables.
 
-- ``_``, the name of the currently running command.
+- ``_``, the name of the currently running command (though this is deprecated, and the use of ``status current-command`` is preferred).
 
 - ``argv``, an array of arguments to the shell or function. ``argv`` is only defined when inside a function call, or if fish was invoked with a list of arguments, like ``fish myscript.fish foo bar``. This variable can be changed by the user.
 
 - ``history``, an array containing the last commands that were entered.
 
 - ``HOME``, the user's home directory. This variable can be changed by the user.
+
+- ``hostname``, the machine's hostname.
 
 - ``IFS``, the internal field separator that is used for word splitting with the <a href="commands.html#read">read builtin</a>. Setting this to the empty string will also disable line splitting in `command substitution <#expand-command-substitution>`_. This variable can be changed by the user.
 
@@ -1078,15 +1081,31 @@ The following variables are available to change the highlighting colors in fish:
 
 Additionally, the following variables are available to change the highlighting in the completion pager:
 
+- ``fish_pager_color_progress``, the color of the progress bar at the bottom left corner
+
+- ``fish_pager_color_background``, the background color of a line
+
 - ``fish_pager_color_prefix``, the color of the prefix string, i.e. the string that is to be completed
 
 - ``fish_pager_color_completion``, the color of the completion itself
 
 - ``fish_pager_color_description``, the color of the completion description
 
-- ``fish_pager_color_progress``, the color of the progress bar at the bottom left corner
+- ``fish_pager_color_secondary_background``, ``fish_pager_color_background`` of every second unselected completion. Defaults to ``fish_pager_color_background``
 
-- ``fish_pager_color_secondary``, the background color of the every second completion
+- ``fish_pager_color_secondary_ prefix``, ``fish_pager_color_prefix`` of every second unselected completion. Defaults to ``fish_pager_color_prefix``
+
+- ``fish_pager_color_secondary_completion``, ``fish_pager_color_completion`` of every second unselected completion. Defaults to ``fish_pager_color_completion``
+
+- ``fish_pager_color_secondary_description``, ``fish_pager_color_description`` of every second unselected completion. Defaults to ``fish_pager_color_description``
+
+- ``fish_pager_color_selected_background``, ``fish_pager_color_background`` of the selected completion. Defaults to ``fish_color_search_match``
+
+- ``fish_pager_color_selected_prefix``, ``fish_pager_color_prefix`` of the selected completion. Defaults to ``fish_pager_color_prefix``
+
+- ``fish_pager_color_selected_completion``, ``fish_pager_color_completion`` of the selected completion. Defaults to ``fish_pager_color_completion``
+
+- ``fish_pager_color_selected_description``, ``fish_pager_color_description`` of the selected completion. Defaults to ``fish_pager_color_description``
 
 Example:
 
@@ -1142,7 +1161,9 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - @key{Tab} `completes <#completion>`_ the current token. @key{Shift, Tab} completes the current token and starts the pager's search mode.
 
-- @key{Alt,&larr;,Left} and @key{Alt,&rarr;,Right} move the cursor one word left or right, or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, @key{Alt,&rarr;,Right} (or @key{Alt,F}) accepts the first word in the suggestion.
+- @key{Alt,&larr;,Left} and @key{Alt,&rarr;,Right} move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, @key{Alt,&rarr;,Right} (or @key{Alt,F}) accepts the first word in the suggestion.
+
+- @key{Shift,&larr;,Left} and @key{Shift,&rarr;,Right} move the cursor one word left or right, without stopping on punctuation.
 
 - @cursor_key{&uarr;,Up} and @cursor_key{&darr;,Down} (or @key{Control,P} and @key{Control,N} for emacs aficionados) search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the `history <#history>`_ section for more information on history searching.
 
@@ -1352,7 +1373,6 @@ On startup, Fish evaluates a number of configuration files, which can be used to
 
 Configuration files are evaluated in the following order:
 - Configuration shipped with fish, which should not be edited, in ``$__fish_data_dir/config.fish`` (usually ``/usr/share/fish/config.fish`).
-- System-wide configuration files, where administrators can include initialization that should be run for all users on the system - similar to ``/etc/profile`` for POSIX-style shells - in ``$__fish_sysconf_dir``` (usually ``/etc/fish/config.fish``);
 - Configuration snippets in files ending in ``.fish``, in the directories:
   - ``$__fish_config_dir/conf.d`` (by default, ``~/.config/fish/conf.d/``)
   - ``$__fish_sysconf_dir/conf.d`` (by default, ``/etc/fish/conf.d``)
@@ -1361,6 +1381,7 @@ Configuration files are evaluated in the following order:
   If there are multiple files with the same name in these directories, only the first will be executed.
   They are executed in order of their filename, sorted (like globs) in a natural order (i.e. "01" sorts before "2").
 
+- System-wide configuration files, where administrators can include initialization that should be run for all users on the system - similar to ``/etc/profile`` for POSIX-style shells - in ``$__fish_sysconf_dir``` (usually ``/etc/fish/config.fish``);
 - User initialization, usually in `~/.config/fish/config.fish` (controlled by the ``XDG_CONFIG_HOME`` environment variable, and accessible as ``$__fish_config_dir``).
 
 These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.

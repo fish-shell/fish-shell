@@ -432,7 +432,7 @@ static reader_data_t *current_data() {
 static volatile sig_atomic_t is_interactive_read;
 
 /// Flag for ending non-interactive shell.
-static int end_loop = 0;
+static int noni_end_loop = 0;
 
 /// The stack containing names of files that are being parsed.
 static std::stack<const wchar_t *, std::vector<const wchar_t *>> current_filename;
@@ -975,7 +975,7 @@ void reader_exit(int do_exit, int forced) {
     if (reader_data_t *data = current_data_or_null()) {
         data->end_loop = do_exit;
     }
-    end_loop = do_exit;
+    noni_end_loop = do_exit;
     if (forced) exit_forced = true;
 }
 
@@ -2118,7 +2118,7 @@ void reader_pop() {
     if (new_reader == nullptr) {
         reader_interactive_destroy();
     } else {
-        end_loop = 0;
+        noni_end_loop = 0;
         s_reset(&new_reader->screen, screen_reset_abandon_line);
     }
 }
@@ -2279,7 +2279,7 @@ bool shell_is_exiting() {
         reader_data_t *data = current_data_or_null();
         return job_list_is_empty() && data != NULL && data->end_loop;
     }
-    return end_loop;
+    return noni_end_loop;
 }
 
 void reader_bg_job_warning() {
@@ -3520,7 +3520,7 @@ int reader_read(int fd, const io_chain_t &io) {
     // If the exit command was called in a script, only exit the script, not the program.
     reader_data_t *data = current_data_or_null();
     if (data) data->end_loop = 0;
-    end_loop = 0;
+    noni_end_loop = 0;
 
     proc_pop_interactive();
     return res;

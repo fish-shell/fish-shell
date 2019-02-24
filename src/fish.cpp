@@ -395,7 +395,7 @@ int main(int argc, char **argv) {
                                                    argv + my_optind);
             }
             res = run_command_list(&opts.batch_cmds, {});
-            reader_exit(0, 0);
+            reader_set_end_loop(false);
         } else if (my_optind == argc) {
             // Implicitly interactive mode.
             res = reader_read(STDIN_FILENO, {});

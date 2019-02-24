@@ -49,8 +49,11 @@ class editable_line_t {
 /// Read commands from \c fd until encountering EOF.
 int reader_read(int fd, const io_chain_t &io);
 
-/// Tell the shell that it should exit after the currently running command finishes.
-void reader_exit(int do_exit, int force);
+/// Tell the shell whether it should exit after the currently running command finishes.
+void reader_set_end_loop(bool flag);
+
+/// Mark that the reader should forcibly exit. This may be invoked from a signal handler.
+void reader_force_exit();
 
 /// Check that the reader is in a sane state.
 void reader_sanity_check();

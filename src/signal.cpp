@@ -226,7 +226,7 @@ static void handle_hup(int sig, siginfo_t *info, void *context) {
     if (event_is_signal_observed(SIGHUP)) {
         default_handler(sig, 0, 0);
     } else {
-        reader_exit(1, 1);
+        reader_force_exit();
     }
     topic_monitor_t::principal().post(topic_t::sighupint);
 }

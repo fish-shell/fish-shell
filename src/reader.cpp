@@ -356,8 +356,6 @@ class reader_data_t {
     highlight_function_t highlight_func{nullptr};
     /// Function for testing if the string can be returned.
     test_function_t test_func{nullptr};
-    /// When this is true, the reader will exit.
-    bool end_loop{false};
     /// If this is true, exit reader even if there are running jobs. This happens if we press e.g.
     /// ^D twice.
     bool prev_end_loop{false};
@@ -431,9 +429,6 @@ static reader_data_t *current_data() {
 /// handled by the fish interrupt handler.
 static volatile sig_atomic_t is_interactive_read;
 
-/// Flag for ending non-interactive shell.
-static int noni_end_loop = 0;
-
 /// The stack containing names of files that are being parsed.
 static std::stack<const wchar_t *, std::vector<const wchar_t *>> current_filename;
 
@@ -454,8 +449,18 @@ static struct termios tty_modes_for_external_cmds;
 
 static void reader_super_highlight_me_plenty(int highlight_pos_adjust = 0, bool no_io = false);
 
-/// Variable to keep track of forced exits - see \c reader_exit_forced();
-static bool exit_forced;
+/// Tracks a currently pending exit. This may be manipulated from a signal handler.
+struct {
+    /// Whether we should exit the current reader loop.
+    bool end_current_loop{false};
+
+    /// Whether we should exit all reader loops. This is set in response to a HUP signal and it
+    /// latches (once set it is never cleared). This should never be reset to false.
+    volatile bool force{false};
+
+    bool should_exit() const { return end_current_loop || force; }
+
+} s_pending_exit;
 
 /// Give up control of terminal.
 static void term_donate(outputter_t &outp) {
@@ -506,7 +511,7 @@ static void term_steal() {
     invalidate_termsize();
 }
 
-bool reader_exit_forced() { return exit_forced; }
+bool reader_exit_forced() { return s_pending_exit.force; }
 
 /// Given a command line and an autosuggestion, return the string that gets shown to the user.
 wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
@@ -804,7 +809,7 @@ int reader_reading_interrupted() {
     int res = reader_interrupted();
     reader_data_t *data = current_data_or_null();
     if (res && data && data->exit_on_interrupt) {
-        reader_exit(1, 0);
+        reader_set_end_loop(true);
         parser_t::skip_all_blocks();
         // We handled the interrupt ourselves, our caller doesn't need to handle it.
         return 0;
@@ -971,12 +976,12 @@ void restore_term_mode() {
     }
 }
 
-void reader_exit(int do_exit, int forced) {
-    if (reader_data_t *data = current_data_or_null()) {
-        data->end_loop = do_exit;
-    }
-    noni_end_loop = do_exit;
-    if (forced) exit_forced = true;
+/// Exit the current reader loop. This may be invoked from a signal handler.
+void reader_set_end_loop(bool flag) { s_pending_exit.end_current_loop = flag; }
+
+void reader_force_exit() {
+    // Beware, we may be in a signal handler.
+    s_pending_exit.force = true;
 }
 
 void reader_repaint_needed() {
@@ -2116,7 +2121,7 @@ void reader_pop() {
     if (new_reader == nullptr) {
         reader_interactive_destroy();
     } else {
-        noni_end_loop = 0;
+        s_pending_exit.end_current_loop = false;
         s_reset(&new_reader->screen, screen_reset_abandon_line);
     }
 }
@@ -2272,13 +2277,7 @@ static void reader_super_highlight_me_plenty(int match_highlight_pos_adjust, boo
     }
 }
 
-bool shell_is_exiting() {
-    if (shell_is_interactive()) {
-        reader_data_t *data = current_data_or_null();
-        return job_list_is_empty() && data != NULL && data->end_loop;
-    }
-    return noni_end_loop;
-}
+bool shell_is_exiting() { return s_pending_exit.should_exit(); }
 
 void reader_bg_job_warning() {
     fputws(_(L"There are still jobs active:\n"), stdout);
@@ -2320,7 +2319,7 @@ static void handle_end_loop() {
         reader_data_t *data = current_data();
         if (!data->prev_end_loop && bg_jobs) {
             reader_bg_job_warning();
-            reader_exit(0, 0);
+            reader_set_end_loop(false);
             data->prev_end_loop = 1;
             return;
         }
@@ -2361,7 +2360,7 @@ static int read_i() {
     reader_data_t *data = current_data();
     data->prev_end_loop = 0;
 
-    while ((!data->end_loop) && (!sanity_check())) {
+    while (!shell_is_exiting() && (!sanity_check())) {
         event_fire_generic(L"fish_prompt");
         run_count++;
 
@@ -2383,7 +2382,7 @@ static int read_i() {
         // reader_set_buffer during evaluation.
         const wchar_t *tmp = reader_readline(0);
 
-        if (data->end_loop) {
+        if (shell_is_exiting()) {
             handle_end_loop();
         } else if (tmp) {
             const wcstring command = tmp;
@@ -2398,7 +2397,7 @@ static int read_i() {
             if (data->history) {
                 data->history->resolve_pending();
             }
-            if (data->end_loop) {
+            if (shell_is_exiting()) {
                 handle_end_loop();
             } else {
                 data->prev_end_loop = 0;
@@ -2501,7 +2500,7 @@ const wchar_t *reader_readline(int nchars) {
         }
     }
 
-    while (!finished && !data->end_loop) {
+    while (!finished && !shell_is_exiting()) {
         if (0 < nchars && (size_t)nchars <= data->command_line.size()) {
             // We've already hit the specified character limit.
             finished = 1;
@@ -2634,8 +2633,7 @@ const wchar_t *reader_readline(int nchars) {
                 break;
             }
             case R_EOF: {
-                exit_forced = true;
-                data->end_loop = 1;
+                reader_force_exit();
                 break;
             }
             case R_COMPLETE:
@@ -3516,9 +3514,7 @@ int reader_read(int fd, const io_chain_t &io) {
     res = shell_is_interactive() ? read_i() : read_ni(fd, io);
 
     // If the exit command was called in a script, only exit the script, not the program.
-    reader_data_t *data = current_data_or_null();
-    if (data) data->end_loop = 0;
-    noni_end_loop = 0;
+    reader_set_end_loop(false);
 
     proc_pop_interactive();
     return res;

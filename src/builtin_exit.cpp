@@ -88,6 +88,6 @@ int builtin_exit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             return STATUS_INVALID_ARGS;
         }
     }
-    reader_exit(1, 0);
+    reader_set_end_loop(true);
     return retval;
 }

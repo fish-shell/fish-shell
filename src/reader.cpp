@@ -2373,12 +2373,12 @@ static int read_i() {
 
         // Put buff in temporary string and clear buff, so that we can handle a call to
         // reader_set_buffer during evaluation.
-        const wchar_t *tmp = reader_readline(0);
+        maybe_t<wcstring> tmp = reader_readline(0);
 
         if (shell_is_exiting()) {
             handle_end_loop();
         } else if (tmp) {
-            const wcstring command = tmp;
+            const wcstring command = tmp.acquire();
             update_buff_pos(&data->command_line, 0);
             data->command_line.text.clear();
             data->command_line_changed(&data->command_line);
@@ -2448,7 +2448,7 @@ static bool text_ends_in_comment(const wcstring &text) {
     return token.type == TOK_COMMENT;
 }
 
-const wchar_t *reader_readline(int nchars) {
+maybe_t<wcstring> reader_readline(int nchars) {
     wint_t c;
     int last_char = 0;
     size_t yank_len = 0;
@@ -3350,7 +3350,7 @@ const wchar_t *reader_readline(int nchars) {
         outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
     }
 
-    return finished ? data->command_line.text.c_str() : NULL;
+    return finished ? maybe_t<wcstring>{data->command_line.text} : none();
 }
 
 bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el, wchar_t target) {

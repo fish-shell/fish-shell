@@ -144,7 +144,7 @@ bool reader_thread_job_is_stale();
 /// characters even if a full line has not yet been read. Note: the returned value may be longer
 /// than nchars if a single keypress resulted in multiple characters being inserted into the
 /// commandline.
-const wchar_t *reader_readline(int nchars);
+maybe_t<wcstring> reader_readline(int nchars);
 
 /// Push a new reader environment.
 void reader_push(const wcstring &name);

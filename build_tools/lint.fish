@@ -13,19 +13,7 @@ set all no
 set kernel_name (uname -s)
 set machine_type (uname -m)
 
-argparse -s a/all -- $argv
-set -q argv[1]; and set -gx CXX $argv[1]
-set -e argv[1]
-
-if test $kernel_name = Linux
-    # This is an awful hack. However, the include-what-you-use program spews lots of errors like
-    #   /usr/include/unistd.h:226:10: fatal error: 'stddef.h' file not found
-    # if we don't explicitly tell it where to find the system headers on Linux. See
-    # http://stackoverflow.com/questions/19642590/libtooling-cant-find-stddef-h-nor-other-headers/
-    set -l sys_includes ($CXX -v -c src/builtin.cpp 2>&1 | \
-        sed -n -e '/^#include <...> search/,/^End of search list/s/^ *//p')[2..-2]
-    set -x CPLUS_INCLUDE_PATH (string join ':' $sys_includes)
-end
+argparse a/all -- $argv
 
 # We only want -D and -I options to be passed thru to cppcheck.
 for arg in $argv

@@ -160,7 +160,7 @@ Installation
 
 Instructions for installing fish are on the `fish homepage <https://fishshell.com/>`_. Search that page for "Go fish". 
 
-To install the development version of *fish* see the instructions at the `project's GitHub page <https://github.com/fish-shell/fish-shell`_.
+To install the development version of *fish* see the instructions at the `project's GitHub page <https://github.com/fish-shell/fish-shell>`_.
 
 Default Shell
 -------------
@@ -169,12 +169,12 @@ You can make *fish* your default shell by adding *fish*'s  executable in two pla
 - add ``/usr/local/bin/fish``  to  ``/etc/shells``
 - change your default shell with ``chsh -s`` to ``/usr/local/bin/fish``
 
-For for detailed instructions see <a href="tutorial.html#tut_switching_to_fish">Switching to *fish*</a>.
+For for detailed instructions see `Switching to fish <tutorial.html#tut_switching_to_fish>`_.
 
 Uninstalling
 ------------
 
-For uninstalling *fish*: see <a href="faq.html#faq-uninstalling">FAQ: Uninstalling *fish*</a>
+For uninstalling *fish*: see `FAQ: Uninstalling fish <faq.html#faq-uninstalling>`_.
 
 Starting and Exiting
 --------------------

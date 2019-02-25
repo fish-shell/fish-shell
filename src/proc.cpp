@@ -554,7 +554,7 @@ static bool process_clean_after_marking(bool allow_interactive) {
             // Update: This event is used for cleaning up the psub temporary files and folders.
             // Removing it breaks the psub tests as a result.
             proc_fire_event(L"PROCESS_EXIT", event_type_t::exit, p->pid,
-                            (WIFSIGNALED(s) ? -1 : WEXITSTATUS(s)));
+                            (s.signal_exited() ? -1 : s.exit_code()));
 
             // Ignore signal SIGPIPE.We issue it ourselves to the pipe writer when the pipe reader
             // dies.
@@ -567,7 +567,7 @@ static bool process_clean_after_marking(bool allow_interactive) {
             if (proc_is_job) j->set_flag(job_flag_t::NOTIFIED, true);
             // Always report crashes.
             if (j->get_flag(job_flag_t::SKIP_NOTIFICATION) &&
-                !contains(crashsignals, WTERMSIG(p->status))) {
+                !contains(crashsignals, s.signal_code())) {
                 continue;
             }
 
@@ -580,7 +580,7 @@ static bool process_clean_after_marking(bool allow_interactive) {
             // signals. If echoctl is on, then the terminal will have written ^C to the console.
             // If off, it won't have. We don't echo ^C either way, so as to respect the user's
             // preference.
-            if (WTERMSIG(p->status) != SIGINT || !j->is_foreground()) {
+            if (s.signal_code() != SIGINT || !j->is_foreground()) {
                 if (proc_is_job) {
                     // We want to report the job number, unless it's the only job, in which case
                     // we don't need to.
@@ -588,16 +588,16 @@ static bool process_clean_after_marking(bool allow_interactive) {
                         only_one_job ? wcstring() : format_string(_(L"Job %d, "), j->job_id);
                     fwprintf(stdout, _(L"%ls: %ls\'%ls\' terminated by signal %ls (%ls)"),
                              program_name, job_number_desc.c_str(),
-                             truncate_command(j->command()).c_str(), sig2wcs(WTERMSIG(p->status)),
-                             signal_get_desc(WTERMSIG(p->status)));
+                             truncate_command(j->command()).c_str(), sig2wcs(s.signal_code()),
+                             signal_get_desc(s.signal_code()));
                 } else {
                     const wcstring job_number_desc =
                         only_one_job ? wcstring() : format_string(L"from job %d, ", j->job_id);
                     const wchar_t *fmt =
                         _(L"%ls: Process %d, \'%ls\' %ls\'%ls\' terminated by signal %ls (%ls)");
                     fwprintf(stdout, fmt, program_name, p->pid, p->argv0(), job_number_desc.c_str(),
-                             truncate_command(j->command()).c_str(), sig2wcs(WTERMSIG(p->status)),
-                             signal_get_desc(WTERMSIG(p->status)));
+                             truncate_command(j->command()).c_str(), sig2wcs(s.signal_code()),
+                             signal_get_desc(s.signal_code()));
                 }
 
                 if (clr_eol) outputter_t::stdoutput().term_puts(clr_eol, 1);

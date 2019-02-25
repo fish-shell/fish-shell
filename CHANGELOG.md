@@ -23,6 +23,9 @@
 - The `path_helper` on macOS now only runs in login shells, matching the bash implementation.
 - `math` now accepts `--scale=max` for the maximum scale (#5579).
 - The `forward-bigword` binding now interacts correctly with autosuggestions (#5336)
+- Added completions for
+  - `cf`
+  - `bosh`
 
 ---
 

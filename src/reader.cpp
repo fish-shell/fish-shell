@@ -966,7 +966,7 @@ void reader_init() {
 /// Restore the term mode if we own the terminal. It's important we do this before
 /// restore_foreground_process_group, otherwise we won't think we own the terminal.
 void restore_term_mode() {
-    if (getpid() != tcgetpgrp(STDIN_FILENO)) return;
+    if (getpgrp() != tcgetpgrp(STDIN_FILENO)) return;
 
     if (tcsetattr(STDIN_FILENO, TCSANOW, &terminal_mode_on_startup) == -1 && errno == EIO) {
         redirect_tty_output();

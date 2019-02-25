@@ -137,34 +137,6 @@ FISH_TESTS_OBJS := $(FISH_OBJS) obj/fish_tests.o
 FISH_ALL_OBJS := $(sort $(FISH_OBJS) $(FISH_INDENT_OBJS) $(FISH_TESTS_OBJS) $(FISH_KEYREAD_OBJS) obj/fish.o)
 
 #
-# Files containing user documentation
-#
-
-#
-# These files are the source files, they contain a few @FOO@-style substitutions
-# Note that this order defines the order that they appear in the documentation
-#
-HDR_FILES_SRC := doc_src/index.hdr.in doc_src/tutorial.hdr doc_src/design.hdr doc_src/license.hdr doc_src/commands.hdr.in doc_src/faq.hdr
-
-#
-# These are the generated result files
-#
-HDR_FILES := $(HDR_FILES_SRC:.hdr.in=.hdr)
-
-# Use a pattern rule so that Make knows to only issue one invocation
-# per http://www.gnu.org/software/make/manual/make.html#Pattern-Intro
-
-#
-# Files containing documentation for external commands.
-#
-HELP_SRC := $(wildcard doc_src/*.txt)
-
-#
-# HTML includes needed for HTML help
-#
-HTML_SRC := doc_src/user_doc.header.html doc_src/user_doc.footer.html doc_src/user_doc.css
-
-#
 # Files in the test directory
 #
 TEST_IN := $(wildcard tests/test*.in)
@@ -185,23 +157,6 @@ FUNCTIONS_DIR_FILES := $(wildcard share/functions/*.fish)
 PROGRAMS := fish fish_indent fish_key_reader
 
 #
-# Manual pages to install
-#
-MANUALS := $(addsuffix .1, $(addprefix share/man/man1/, $(PROGRAMS)))
-HELP_MANPAGES = $(wildcard share/man/man1/*.1)
-
-# Determine which man pages we don't want to install
-# On OS X, don't install a man page for open, since we defeat fish's open
-# function on OS X.
-# This is also done in build_tools/build_documentation.sh, but because the
-# tarball includes this page, we need to skip it in the Makefile too (see
-# https://github.com/fish-shell/fish-shell/issues/2561).
-ifeq ($(shell uname), Darwin)
-	CONDEMNED_PAGES := open.1
-	HELP_MANPAGES = $(filter-out share/man/man1/open.1, $(wildcard share/man/man1/*.1))
-endif
-
-#
 # All translation message catalogs, filter files based on LINGUAS.
 #
 TRANSLATIONS_SRC := $(wildcard po/*.po)
@@ -214,17 +169,6 @@ ifdef LINGUAS
 endif
 else
 	TRANSLATIONS :=
-endif
-
-#
-# If Doxygen is not available, don't attempt to build the documentation
-#
-ifeq ($(HAVE_DOXYGEN), 1)
-  user_doc=doc
-  share_man=share/man
-else
-  user_doc=
-  share_man=
 endif
 
 
@@ -260,7 +204,7 @@ show-%:
 #
 # Make everything needed for installing fish
 #
-all: show-CXX show-CXXFLAGS $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc share/__fish_build_paths.fish
+all: show-CXX show-CXXFLAGS $(PROGRAMS) $(TRANSLATIONS) fish.pc share/__fish_build_paths.fish
 ifneq (,$(findstring install,$(MAKECMDGOALS)))
 # Fish has been built, but if the goal was 'install', we aren't done yet and this output isnt't desirable
 	@echo "$(green)fish has now been built.$(sgr0)"
@@ -301,26 +245,9 @@ prof: LDFLAGS += -pg
 prof: all
 .PHONY: prof
 
-#
-# User documentation, describing the features of the fish shell.
-#
-# Depend on the sources (*.hdr.in) and manually make the intermediate *.hdr
-# and doc.h files if needed. The sed command deletes everything including and
-# after the first -, for simpler version numbers. Cleans up the user_doc/html
-# directory once Doxygen is done.
-#
-doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter
-	@echo "  doxygen  $(em)user_doc$(sgr0)"
-	$v env FISH_BUILD_VERSION=$(FISH_BUILD_VERSION) ./build_tools/build_user_doc.sh Doxyfile.user ./lexicon_filter
-
-#
-# PDF version of the source code documentation.
-#
-doc/refman.pdf: doc
-	@echo "  MAKE     $(em)doc/latex$(sgr0)"
-	$v cd doc/latex
-	$v $(MAKE) V=$(V)
-	$v mv refman.pdf ..
+doc:
+	@echo "Docs build from autotools is no longer supported - use CMake to build documentation"
+	@false
 
 #
 # Prep the environment for running the unit tests. When specifying DESTDIR on
@@ -392,58 +319,11 @@ test_interactive: $(call filter_up_to,test_interactive,$(active_test_goals))
 .PHONY: test_interactive
 
 
-#
-# commands.hdr collects documentation on all commands, functions and
-# builtins
-#
-doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in build_tools/build_commands_hdr.sh
-	build_tools/build_commands_hdr.sh ${HELP_SRC} < doc_src/commands.hdr.in > $@
-
 toc.txt: $(HDR_FILES:index.hdr=index.hdr.in) build_tools/build_toc_txt.sh | show-SED
 	FISH_BUILD_VERSION=${FISH_BUILD_VERSION} build_tools/build_toc_txt.sh \
 	    $(HDR_FILES:index.hdr=index.hdr.in) > toc.txt
 
-doc_src/index.hdr: toc.txt doc_src/index.hdr.in | show-AWK
-	@echo "  AWK CAT  $(em)$@$(sgr0)"
-	$v build_tools/build_index_hdr.sh toc.txt < $@.in > $@
 
-#
-# Compile Doxygen Input Filter from the lexicon. This is an executable sed
-# script as Doxygen opens it via popen()(3) Input (doc.h) is piped through and
-# matching words inside /fish../endfish blocks are marked up, contextually,
-# with custom Doxygen commands in the form of @word_type{content}. These are
-# trapped by ALIASES in the various Doxyfiles, allowing the content to be
-# transformed depending on output type (HTML, man page, developer docs). In
-# HTML, a style context can be applied through the /fish{style} block and
-# providing suitable CSS in user_doc.css.in
-#
-lexicon_filter: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) \
-                lexicon_filter.in build_tools/build_lexicon_filter.sh \
-                share/functions/__fish_config_interactive.fish
-	$v build_tools/build_lexicon_filter.sh share/functions/ share/completions/ lexicon_filter.in $(SED) > $@
-	$v chmod a+x lexicon_filter
-
-#
-# doc.h is a compilation of the various snipptes of text used both for
-# the user documentation and for internal help functions into a single
-# file that can be parsed by Doxygen to generate the user
-# documentation.
-#
-doc.h: $(HDR_FILES)
-	@echo " HDR_FILES $(em)$@$(sgr0)"
-	$v cat $(HDR_FILES) >$@
-
-#
-# This rule creates complete doxygen headers from each of the various
-# snipptes of text used both for the user documentation and for
-# internal help functions, that can be parsed to Doxygen to generate
-# the internal help function text.
-#
-%.doxygen:%.txt
-	@echo "  cat *     $(em)$@$(sgr0)"
-	$v echo  "/** \page " `basename $*` >$@;
-	$v cat $*.txt >>$@;
-	$v echo "*/" >>$@
 
 #
 # Depend on Makefile because I don't see a better way of rebuilding
@@ -497,39 +377,6 @@ ifdef EXTRA_PCRE2
 src/builtin_string.cpp: $(PCRE2_H)
 endif
 
-#
-# Generate the internal help functions by making doxygen create
-# man-pages. The convertion path looks like this:
-#
-#   .txt file
-#       ||
-#     (make)
-#       ||
-#       \/
-#  .doxygen file
-#       ||
-#    (doxygen)
-#       ||
-#       \/
-#    roff file
-#       ||
-# (__fish_print_help)
-#       ||
-#       \/
-#   formated text
-#   with escape
-#    sequences
-#
-#
-# There ought to be something simpler.
-#
-share/man: $(HELP_SRC) lexicon_filter | show-FISH_BUILD_VERSION show-SED
-	-$v $(MKDIR_P) share/man
-	@echo "  doxygen  $(em)$@$(sgr0)"
-	$v touch share/man
-	-$v rm -Rf share/man/man1
-	$v echo "$(dim)" && FISH_BUILD_VERSION=${FISH_BUILD_VERSION} INPUT_FILTER=./lexicon_filter \
-	                    build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share;
 
 #
 # The build rules for installing/uninstalling fish

@@ -147,7 +147,7 @@ void proc_set_last_job_statuses(const job_t &last_job) {
     std::vector<int> ljs;
     ljs.reserve(last_job.processes.size());
     for (const auto &p : last_job.processes) {
-        ljs.push_back(p->pid ? proc_format_status(p->status) : p->status);
+        ljs.push_back(p->status.status_value());
     }
     proc_set_last_job_statuses(std::move(ljs));
 }
@@ -265,10 +265,10 @@ bool job_t::signal(int signal) {
     return true;
 }
 
-void internal_proc_t::mark_exited(int status) {
+void internal_proc_t::mark_exited(proc_status_t status) {
     assert(!exited() && "Process is already exited");
-    exited_.store(true, std::memory_order_relaxed);
-    status_.store(status, std::memory_order_release);
+    status_.store(status, std::memory_order_relaxed);
+    exited_.store(true, std::memory_order_release);
     topic_monitor_t::principal().post(topic_t::internal_exit);
 }
 
@@ -279,14 +279,14 @@ static void mark_job_complete(const job_t *j) {
 }
 
 /// Store the status of the process pid that was returned by waitpid.
-static void mark_process_status(process_t *p, int status) {
+static void mark_process_status(process_t *p, proc_status_t status) {
     // debug( 0, L"Process %ls %ls", p->argv[0], WIFSTOPPED (status)?L"stopped":(WIFEXITED( status
     // )?L"exited":(WIFSIGNALED( status )?L"signaled to exit":L"BLARGH")) );
     p->status = status;
 
-    if (WIFSTOPPED(status)) {
+    if (status.stopped()) {
         p->stopped = 1;
-    } else if (WIFSIGNALED(status) || WIFEXITED(status)) {
+    } else if (status.signal_exited() || status.normal_exited()) {
         p->completed = 1;
     } else {
         // This should never be reached.
@@ -311,7 +311,7 @@ void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process
 ///
 /// \param pid the pid of the process whose status changes
 /// \param status the status as returned by wait
-static void handle_child_status(pid_t pid, int status) {
+static void handle_child_status(pid_t pid, proc_status_t status) {
     job_t *j = NULL;
     const process_t *found_proc = NULL;
 
@@ -329,7 +329,8 @@ static void handle_child_status(pid_t pid, int status) {
     }
 
     // If the child process was not killed by a signal or other than SIGINT or SIGQUIT we're done.
-    if (!WIFSIGNALED(status) || (WTERMSIG(status) != SIGINT && WTERMSIG(status) != SIGQUIT)) {
+    if (!status.signal_exited() ||
+        (status.signal_code() != SIGINT && status.signal_code() != SIGQUIT)) {
         return;
     }
 
@@ -345,7 +346,7 @@ static void handle_child_status(pid_t pid, int status) {
         act.sa_handler = SIG_DFL;
         sigaction(SIGINT, &act, 0);
         sigaction(SIGQUIT, &act, 0);
-        kill(getpid(), WTERMSIG(status));
+        kill(getpid(), status.signal_code());
     }
 }
 
@@ -452,7 +453,7 @@ static void process_mark_finished_children(bool block_ok) {
                         if (pid > 0) {
                             assert(pid == proc->pid && "Unexpcted waitpid() return");
                             debug(4, "Reaped PID %d", pid);
-                            handle_child_status(pid, status);
+                            handle_child_status(pid, proc_status_t::from_waitpid(status));
                         }
                     } else {
                         assert(0 && "Don't know how to reap this process");
@@ -542,12 +543,11 @@ static bool process_clean_after_marking(bool allow_interactive) {
         }
 
         for (const process_ptr_t &p : j->processes) {
-            int s;
             if (!p->completed) continue;
 
             if (!p->pid) continue;
 
-            s = p->status;
+            auto s = p->status;
 
             // TODO: The generic process-exit event is useless and unused.
             // Remove this in future.
@@ -558,7 +558,7 @@ static bool process_clean_after_marking(bool allow_interactive) {
 
             // Ignore signal SIGPIPE.We issue it ourselves to the pipe writer when the pipe reader
             // dies.
-            if (!WIFSIGNALED(s) || WTERMSIG(s) == SIGPIPE) {
+            if (!s.signal_exited() || s.signal_code() == SIGPIPE) {
                 continue;
             }
 
@@ -604,7 +604,8 @@ static bool process_clean_after_marking(bool allow_interactive) {
                 fwprintf(stdout, L"\n");
             }
             found = false;
-            p->status = 0;  // clear status so it is not reported more than once
+            p->status = proc_status_t::from_exit_code(
+                0);  // clear status so it is not reported more than once
         }
 
         // If all processes have completed, tell the user the job has completed and delete it from
@@ -932,26 +933,11 @@ void job_t::continue_job(bool send_sigcont) {
         // finished and is not a short-circuited builtin.
         bool negate = get_flag(job_flag_t::NEGATE);
         auto &p = processes.back();
-        if (p->internal_proc_) {
-            // Here the status is synthetic - not associated with a real exited process.
-            // TODO: clean this up, we shouldn't store the process's exit status in an unparsed
-            // state.
-            int status = p->status;
-            proc_set_last_status(negate ? !status : status);
-        } else if ((WIFEXITED(p->status) || WIFSIGNALED(p->status)) && p->pid) {
-            int status = proc_format_status(p->status);
-            proc_set_last_status(negate ? !status : status);
+        if (p->status.normal_exited() || p->status.signal_exited()) {
+            int status_code = p->status.status_value();
+            proc_set_last_status(negate ? !status_code : status_code);
         }
     }
-}
-
-int proc_format_status(int status) {
-    if (WIFSIGNALED(status)) {
-        return 128 + WTERMSIG(status);
-    } else if (WIFEXITED(status)) {
-        return WEXITSTATUS(status);
-    }
-    return status;
 }
 
 void proc_sanity_check() {
@@ -1012,7 +998,7 @@ pid_t proc_wait_any() {
     int pid_status;
     pid_t pid = waitpid(-1, &pid_status, WUNTRACED);
     if (pid == -1) return -1;
-    handle_child_status(pid, pid_status);
+    handle_child_status(pid, proc_status_t::from_waitpid(pid_status));
     process_clean_after_marking(is_interactive);
     return pid;
 }

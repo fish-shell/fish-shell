@@ -43,6 +43,72 @@ enum {
     JOB_CONTROL_NONE,
 };
 
+/// A proc_status_t is a value type that encapsulates logic around exited vs stopped vs signaled,
+/// etc.
+class proc_status_t {
+    int status_{};
+
+    explicit proc_status_t(int status) : status_(status) {}
+
+    /// Encode a return value \p ret and signal \p sig into a status value like waitpid() does.
+    static constexpr int w_exitcode(int ret, int sig) {
+#ifdef W_EXITCODE
+        return W_EXITCODE(ret, sig);
+#else
+        return ((ret) << 8 | (sig));
+#endif
+    }
+
+   public:
+    proc_status_t() = default;
+
+    /// Construct from a status returned from a waitpid call.
+    static proc_status_t from_waitpid(int status) { return proc_status_t(status); }
+
+    /// Construct directly from an exit code.
+    static proc_status_t from_exit_code(int ret) {
+        // Some paranoia.
+        constexpr int zerocode = w_exitcode(0, 0);
+        static_assert(WIFEXITED(zerocode), "Synthetic exit status not reported as exited");
+        return proc_status_t(w_exitcode(ret, 0 /* sig */));
+    }
+
+    /// \return if we are stopped (as in SIGSTOP).
+    bool stopped() const { return WIFSTOPPED(status_); }
+
+    /// \return if we exited normally (not a signal).
+    bool normal_exited() const { return WIFEXITED(status_); }
+
+    /// \return if we exited because of a signal.
+    bool signal_exited() const { return WIFSIGNALED(status_); }
+
+    /// \return the signal code, given that we signal exited.
+    int signal_code() const {
+        assert(signal_exited() && "Process is not signal exited");
+        return WTERMSIG(status_);
+    }
+
+    /// \return the exit code, given that we normal exited.
+    int exit_code() const {
+        assert(normal_exited() && "Process is not normal exited");
+        return WEXITSTATUS(status_);
+    }
+
+    /// \return if this status represents success.
+    bool is_success() const { return normal_exited() && exit_code() == EXIT_SUCCESS; }
+
+    /// \return the value appropriate to populate $status.
+    int status_value() const {
+        if (signal_exited()) {
+            return 128 + signal_code();
+        } else if (normal_exited()) {
+            return exit_code();
+        } else {
+            DIE("Process is not exited");
+        }
+    }
+};
+
 /// A structure representing a "process" internal to fish. This is backed by a pthread instead of a
 /// separate process.
 class internal_proc_t {
@@ -50,18 +116,18 @@ class internal_proc_t {
     std::atomic<bool> exited_{};
 
     /// If the process has exited, its status code.
-    std::atomic<int> status_{};
+    std::atomic<proc_status_t> status_{};
 
    public:
     /// \return if this process has exited.
-    bool exited() const { return exited_.load(std::memory_order_relaxed); }
+    bool exited() const { return exited_.load(std::memory_order_acquire); }
 
     /// Mark this process as exited, with the given status.
-    void mark_exited(int status);
+    void mark_exited(proc_status_t status);
 
-    int get_status() const {
+    proc_status_t get_status() const {
         assert(exited() && "Process is not exited");
-        return status_.load(std::memory_order_acquire);
+        return status_.load(std::memory_order_relaxed);
     }
 };
 
@@ -160,7 +226,7 @@ class process_t {
     /// True if process has stopped.
     volatile bool stopped{false};
     /// Reported status value.
-    volatile int status{0};
+    proc_status_t status{};
 #ifdef HAVE__PROC_SELF_STAT
     /// Last time of cpu time check.
     struct timeval last_time {};
@@ -460,10 +526,6 @@ void proc_push_interactive(int value);
 
 /// Set is_interactive flag to the previous value. If needed, update signal handlers.
 void proc_pop_interactive();
-
-/// Format an exit status code as returned by e.g. wait into a fish exit code number as accepted by
-/// proc_set_last_status.
-int proc_format_status(int status);
 
 /// Wait for any process finishing.
 pid_t proc_wait_any();

@@ -374,7 +374,7 @@ static bool run_internal_process(process_t *p, std::string outdata, std::string 
         maybe_t<dup2_list_t> dup2s{};
         std::shared_ptr<internal_proc_t> internal_proc{};
 
-        int success_status{};
+        proc_status_t success_status{};
 
         bool skip_out() const { return outdata.empty() || src_outfd < 0; }
 
@@ -403,10 +403,10 @@ static bool run_internal_process(process_t *p, std::string outdata, std::string 
     f->src_outfd = f->dup2s->fd_for_target_fd(STDOUT_FILENO);
     f->src_errfd = f->dup2s->fd_for_target_fd(STDERR_FILENO);
 
-    // If we have nothing to right we can elide the thread.
+    // If we have nothing to write we can elide the thread.
     // TODO: support eliding output to /dev/null.
     if (f->skip_out() && f->skip_err()) {
-        f->internal_proc->mark_exited(EXIT_SUCCESS);
+        f->internal_proc->mark_exited(proc_status_t::from_exit_code(EXIT_SUCCESS));
         return true;
     }
 
@@ -419,14 +419,16 @@ static bool run_internal_process(process_t *p, std::string outdata, std::string 
     f->success_status = p->status;
 
     iothread_perform([f]() {
-        int status = f->success_status;
+        proc_status_t status = f->success_status;
         if (!f->skip_out()) {
             ssize_t ret = write_loop(f->src_outfd, f->outdata.data(), f->outdata.size());
             if (ret < 0) {
                 if (errno != EPIPE) {
                     wperror(L"write");
                 }
-                if (!status) status = 1;
+                if (status.is_success()) {
+                    status = proc_status_t::from_exit_code(1);
+                }
             }
         }
         if (!f->skip_err()) {
@@ -435,7 +437,9 @@ static bool run_internal_process(process_t *p, std::string outdata, std::string 
                 if (errno != EPIPE) {
                     wperror(L"write");
                 }
-                if (!status) status = 1;
+                if (status.is_success()) {
+                    status = proc_status_t::from_exit_code(1);
+                }
             }
         }
         f->internal_proc->mark_exited(status);
@@ -592,7 +596,9 @@ static bool handle_builtin_output(const std::shared_ptr<job_t> &j, process_t *p,
     const output_stream_t &stderr_stream = builtin_io_streams.err;
 
     // Mark if we discarded output.
-    if (stdout_stream.buffer().discarded()) p->status = STATUS_READ_TOO_MUCH;
+    if (stdout_stream.buffer().discarded()) {
+        p->status = proc_status_t::from_exit_code(STATUS_READ_TOO_MUCH);
+    }
 
     // We will try to elide constructing an internal process. However if the output is going to a
     // real file, we have to do it. For example in `echo -n > file.txt` we proceed to open file.txt
@@ -657,8 +663,8 @@ static bool handle_builtin_output(const std::shared_ptr<job_t> &j, process_t *p,
             debug(4, L"Set status of job %d (%ls) to %d using short circuit", j->job_id,
                   j->preview().c_str(), p->status);
 
-            int status = p->status;
-            proc_set_last_status(j->get_flag(job_flag_t::NEGATE) ? (!status) : status);
+            int status_value = p->status.status_value();
+            proc_set_last_status(j->get_flag(job_flag_t::NEGATE) ? (!status_value) : status_value);
         }
         return true;
     } else {
@@ -824,7 +830,9 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
     }
 
     int status = proc_get_last_status();
-    p->status = status;
+    // FIXME: setting the status this way is dangerous nonsense, we need to decode the status
+    // properly if it was a signal.
+    p->status = proc_status_t::from_exit_code(status);
 
     // If we have a block output buffer, populate it now.
     if (!block_output_bufferfill) {

@@ -496,17 +496,17 @@ static const wchar_t *const help_builtins[] = {L"for", L"while",  L"function", L
 static bool cmd_needs_help(const wchar_t *cmd) { return contains(help_builtins, cmd); }
 
 /// Execute a builtin command
-int builtin_run(parser_t &parser, int job_pgid, wchar_t **argv, io_streams_t &streams) {
+proc_status_t builtin_run(parser_t &parser, int job_pgid, wchar_t **argv, io_streams_t &streams) {
     UNUSED(parser);
     UNUSED(streams);
-    if (argv == NULL || argv[0] == NULL) return STATUS_INVALID_ARGS;
+    if (argv == NULL || argv[0] == NULL) return proc_status_t::from_exit_code(STATUS_INVALID_ARGS);
 
     // We can be handed a keyword by the parser as if it was a command. This happens when the user
     // follows the keyword by `-h` or `--help`. Since it isn't really a builtin command we need to
     // handle displaying help for it here.
     if (argv[1] && !argv[2] && parse_util_argument_is_help(argv[1]) && cmd_needs_help(argv[0])) {
         builtin_print_help(parser, streams, argv[0], streams.out);
-        return STATUS_CMD_OK;
+        return proc_status_t::from_exit_code(STATUS_CMD_OK);
     }
 
     if (const builtin_data_t *data = builtin_lookup(argv[0])) {
@@ -518,11 +518,11 @@ int builtin_run(parser_t &parser, int job_pgid, wchar_t **argv, io_streams_t &st
         if (pgroup_to_restore >= 0) {
             tcsetpgrp(STDIN_FILENO, pgroup_to_restore);
         }
-        return ret;
+        return proc_status_t::from_exit_code(ret);
     }
 
     debug(0, UNKNOWN_BUILTIN_ERR_MSG, argv[0]);
-    return STATUS_CMD_ERROR;
+    return proc_status_t::from_exit_code(STATUS_CMD_ERROR);
 }
 
 /// Returns a list of all builtin names.

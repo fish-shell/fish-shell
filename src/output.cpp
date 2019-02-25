@@ -296,7 +296,8 @@ void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
 
     // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
     if (is_bold && !was_bold && enter_bold_mode && strlen(enter_bold_mode) > 0 && !bg_set) {
-        writembs_nofail(*this, tparm(enter_bold_mode));
+        // The unconst cast is for NetBSD's benefit. DO NOT REMOVE!
+        writembs_nofail(*this, tparm((char *)enter_bold_mode));
         was_bold = is_bold;
     }
 

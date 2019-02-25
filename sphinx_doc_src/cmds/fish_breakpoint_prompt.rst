@@ -1,12 +1,12 @@
-fish_breakpoint_prompt - define the appearance of the command line prompt when in the context of a ``breakpoint`` command
-=========================================================================================================================
+fish_breakpoint_prompt - define the prompt when stopped at a breakpoint
+=======================================================================
 
 Synopsis
 --------
 
-function fish_breakpoint_prompt
-    ...
-end
+    function fish_breakpoint_prompt
+        ...
+    end
 
 
 Description
@@ -22,11 +22,7 @@ The exit status of commands within ``fish_breakpoint_prompt`` will not modify th
 Example
 -------
 
-A simple prompt that is a simplified version of the default debugging prompt:
-
-
-
-::
+A simple prompt that is a simplified version of the default debugging prompt::
 
     function fish_breakpoint_prompt -d "Write out the debug prompt"
         set -l function (status current-function)

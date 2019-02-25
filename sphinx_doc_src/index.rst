@@ -521,6 +521,7 @@ Commands
    commands
    design
    tutorial
+   faq
 
 
 Autosuggestions

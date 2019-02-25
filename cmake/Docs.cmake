@@ -1,5 +1,3 @@
-FIND_PACKAGE(Doxygen 1.8.7)
-
 FIND_PROGRAM(SPHINX_EXECUTABLE NAMES sphinx-build
     HINTS
     $ENV{SPHINX_DIR}
@@ -35,14 +33,14 @@ ADD_CUSTOM_TARGET(sphinx-manpages
         "${SPHINX_MANPAGE_DIR}"
     COMMENT "Building man pages with Sphinx")
 
-IF(DOXYGEN_FOUND)
-    OPTION(BUILD_DOCS "build documentation (requires Doxygen)" ON)
-ELSE(DOXYGEN_FOUND)
-    OPTION(BUILD_DOCS "build documentation (requires Doxygen)" OFF)
-ENDIF(DOXYGEN_FOUND)
+IF(SPHINX_EXECUTABLE)
+    OPTION(BUILD_DOCS "build documentation (requires Sphinx)" ON)
+ELSE(SPHINX_EXECUTABLE)
+    OPTION(BUILD_DOCS "build documentation (requires Sphinx)" OFF)
+ENDIF(SPHINX_EXECUTABLE)
 
-IF(BUILD_DOCS AND NOT DOXYGEN_FOUND)
-    MESSAGE(FATAL_ERROR "build documentation selected, but Doxygen could not be found")
+IF(BUILD_DOCS AND NOT SPHINX_EXECUTABLE)
+    MESSAGE(FATAL_ERROR "build documentation selected, but sphinx-build could not be found")
 ENDIF()
 
 IF(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/user_doc/html

@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <stddef.h>
 #include <sys/time.h>  // IWYU pragma: keep
+#include <sys/wait.h>
 #include <termios.h>
 #include <unistd.h>
 

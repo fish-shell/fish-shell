@@ -274,7 +274,6 @@ static std::string ansi_colorize(const wcstring &text,
                                  const std::vector<highlight_spec_t> &colors) {
     assert(colors.size() == text.size());
     outputter_t outp;
-    const auto &vars = env_stack_t::globals();
 
     highlight_spec_t last_color = highlight_spec_normal;
     for (size_t i = 0; i < text.size(); i++) {

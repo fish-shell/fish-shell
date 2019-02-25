@@ -30,6 +30,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <memory>
 #include <string>
 #include <vector>
+#include <stack>
+#include <tuple>
 
 #include "color.h"
 #include "common.h"
@@ -97,7 +99,7 @@ struct prettifier_t {
 
     prettifier_t(const wcstring &source, bool do_indent) : source(source), do_indent(do_indent) {}
 
-    void prettify_node_recursive(const parse_node_tree_t &tree,
+    void prettify_node_nrecursive(const parse_node_tree_t &tree,
                                  node_offset_t node_idx, indent_t node_indent,
                                  parse_token_type_t parent_type);
 
@@ -160,68 +162,82 @@ static void dump_node(indent_t node_indent, const parse_node_t &node, const wcst
              token_type_description(node.type), prevc_str, source_txt.c_str(), nextc_str);
 }
 
-void prettifier_t::prettify_node_recursive(const parse_node_tree_t &tree,
-                                    node_offset_t node_idx, indent_t node_indent,
-                                    parse_token_type_t parent_type) {
-    const parse_node_t &node = tree.at(node_idx);
-    const parse_token_type_t node_type = node.type;
-    const parse_token_type_t prev_node_type =
-        node_idx > 0 ? tree.at(node_idx - 1).type : token_type_invalid;
+void prettifier_t::prettify_node_nrecursive(const parse_node_tree_t &tree,
+                                            node_offset_t node_idx, indent_t node_indent,
+                                            parse_token_type_t parent_type) {
 
-    // Increment the indent if we are either a root job_list, or root case_item_list, or in an if or
-    // while header (#1665).
-    const bool is_root_job_list = node_type == symbol_job_list && parent_type != symbol_job_list;
-    const bool is_root_case_list =
-        node_type == symbol_case_item_list && parent_type != symbol_case_item_list;
-    const bool is_if_while_header =
-        (node_type == symbol_job_conjunction || node_type == symbol_andor_job_list) &&
-        (parent_type == symbol_if_clause || parent_type == symbol_while_header);
+    using call_tuple_t = std::tuple<node_offset_t, indent_t, parse_token_type_t>;
+    std::stack<call_tuple_t> explicit_stack;
+    explicit_stack.push(std::make_tuple(node_idx, node_indent, parent_type));
+    while(!explicit_stack.empty()){
 
-    if (is_root_job_list || is_root_case_list || is_if_while_header) {
-        node_indent += 1;
-    }
+        call_tuple_t arguments = explicit_stack.top();
+        explicit_stack.pop();
+        auto node_idx = std::get<0>(arguments);
+        auto node_indent = std::get<1>(arguments);
+        auto parent_type = std::get<2>(arguments);
 
-    if (dump_parse_tree) dump_node(node_indent, node, source);
+        const parse_node_t &node = tree.at(node_idx);
+        const parse_token_type_t node_type = node.type;
+        const parse_token_type_t prev_node_type =
+                node_idx > 0 ? tree.at(node_idx - 1).type : token_type_invalid;
 
-    // Prepend any escaped newline.
-    maybe_prepend_escaped_newline(node);
+        // Increment the indent if we are either a root job_list, or root case_item_list, or in an if or
+        // while header (#1665).
+        const bool is_root_job_list = node_type == symbol_job_list && parent_type != symbol_job_list;
+        const bool is_root_case_list =
+                node_type == symbol_case_item_list && parent_type != symbol_case_item_list;
+        const bool is_if_while_header =
+                (node_type == symbol_job_conjunction || node_type == symbol_andor_job_list) &&
+                (parent_type == symbol_if_clause || parent_type == symbol_while_header);
 
-    // handle comments, which come before the text
-    if (node.has_comments()) {
-        auto comment_nodes = tree.comment_nodes_for_node(node);
-        for (const auto &comment : comment_nodes) {
-            maybe_prepend_escaped_newline(*comment.node());
-            append_whitespace(node_indent);
-            auto source_range = comment.source_range();
-            output.append(source, source_range->start, source_range->length);
-            needs_continuation_newline = true;
+        if (is_root_job_list || is_root_case_list || is_if_while_header) {
+            node_indent += 1;
         }
-    }
 
-    if (node_type == parse_token_type_end) {
-        append_newline();
-    } else if ((node_type >= FIRST_PARSE_TOKEN_TYPE && node_type <= LAST_PARSE_TOKEN_TYPE) ||
-               node_type == parse_special_type_parse_error) {
-        if (node.keyword != parse_keyword_none) {
-            append_whitespace(node_indent);
-            output.append(keyword_description(node.keyword));
-            has_new_line = false;
-        } else if (node.has_source()) {
-            // Some type representing a particular token.
-            if (prev_node_type != parse_token_type_redirection) {
+        if (dump_parse_tree) dump_node(node_indent, node, source);
+
+        // Prepend any escaped newline.
+        maybe_prepend_escaped_newline(node);
+
+        // handle comments, which come before the text
+        if (node.has_comments()) {
+            auto comment_nodes = tree.comment_nodes_for_node(node);
+            for (const auto &comment : comment_nodes) {
+                maybe_prepend_escaped_newline(*comment.node());
                 append_whitespace(node_indent);
+                auto source_range = comment.source_range();
+                output.append(source, source_range->start, source_range->length);
+                needs_continuation_newline = true;
             }
-            output.append(source, node.source_start, node.source_length);
-            has_new_line = false;
         }
-    }
 
-    // Recurse to all our children.
-    for (node_offset_t idx = 0; idx < node.child_count; idx++) {
-        // Note: We pass our type to our child, which becomes its parent node type.
-        // Note: While node.child_start could be -1 (NODE_OFFSET_INVALID) the addition is safe
-        // because we won't execute this call in that case since node.child_count should be zero.
-        prettify_node_recursive(tree, node.child_start + idx, node_indent, node_type);
+        if (node_type == parse_token_type_end) {
+            append_newline();
+        } else if ((node_type >= FIRST_PARSE_TOKEN_TYPE && node_type <= LAST_PARSE_TOKEN_TYPE) ||
+                   node_type == parse_special_type_parse_error) {
+            if (node.keyword != parse_keyword_none) {
+                append_whitespace(node_indent);
+                output.append(keyword_description(node.keyword));
+                has_new_line = false;
+            } else if (node.has_source()) {
+                // Some type representing a particular token.
+                if (prev_node_type != parse_token_type_redirection) {
+                    append_whitespace(node_indent);
+                }
+                output.append(source, node.source_start, node.source_length);
+                has_new_line = false;
+            }
+        }
+
+        // Put all children in stack in reversed order
+        // This way they will be processed in correct order.
+        for (node_offset_t idx = node.child_count; idx > 0; idx--) {
+            // Note: We pass our type to our child, which becomes its parent node type.
+            // Note: While node.child_start could be -1 (NODE_OFFSET_INVALID) the addition is safe
+            // because we won't execute this call in that case since node.child_count should be zero.
+            explicit_stack.push(std::make_tuple(node.child_start + (idx - 1), node_indent, node_type));
+        }
     }
 }
 
@@ -246,7 +262,7 @@ static wcstring prettify(const wcstring &src, bool do_indent) {
         const parse_node_t &node = parse_tree.at(i);
         if (node.parent == NODE_OFFSET_INVALID || node.type == parse_special_type_parse_error) {
             // A root node.
-            prettifier.prettify_node_recursive(parse_tree, i, 0, symbol_job_list);
+            prettifier.prettify_node_nrecursive(parse_tree, i, 0, symbol_job_list);
         }
     }
     return std::move(prettifier.output);

@@ -153,8 +153,8 @@ INSTALL(DIRECTORY share/groff
 
 # $v test -z "$(wildcard share/man/man1/*.1)" || $(INSTALL) -m 644 $(filter-out $(addprefix share/man/man1/, $(CONDEMNED_PAGES)), $(wildcard share/man/man1/*.1)) $(DESTDIR)$(datadir)/fish/man/man1/
 # CONDEMNED_PAGE is managed by the conditional above
-# Building the man pages is optional: if doxygen isn't installed, they're not built
-INSTALL(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/share/man/man1/
+# Building the man pages is optional: if sphinx isn't installed, they're not built
+INSTALL(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/
         DESTINATION ${rel_datadir}/fish/man/man1
         FILES_MATCHING
         PATTERN "*.1"

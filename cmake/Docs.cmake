@@ -30,7 +30,8 @@ ADD_CUSTOM_TARGET(sphinx-manpages
         -c "${SPHINX_SRC_DIR}"
         -d "${SPHINX_CACHE_DIR}"
         "${SPHINX_SRC_DIR}"
-        "${SPHINX_MANPAGE_DIR}"
+        # TODO: This only works if we only have section 1 manpages.
+        "${SPHINX_MANPAGE_DIR}/man1"
     COMMENT "Building man pages with Sphinx")
 
 IF(SPHINX_EXECUTABLE)

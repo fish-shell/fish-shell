@@ -519,6 +519,7 @@ Commands
    :maxdepth: 1
    
    commands
+   design
    tutorial
 
 

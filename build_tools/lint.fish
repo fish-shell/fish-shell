@@ -13,7 +13,7 @@ set all no
 set kernel_name (uname -s)
 set machine_type (uname -m)
 
-argparse a/all -- $argv
+argparse -s a/all -- $argv
 set -q argv[1]; and set -gx CXX $argv[1]
 set -e argv[1]
 

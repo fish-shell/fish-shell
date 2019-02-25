@@ -278,7 +278,7 @@ void internal_exec_helper(parser_t &parser, parsed_source_ref_t parsed_source, t
 
     // Did the transmogrification fail - if so, set error status and return.
     if (!transmorgrified) {
-        proc_set_last_status(STATUS_EXEC_FAIL);
+        proc_set_last_statuses(statuses_t::just(STATUS_EXEC_FAIL));
         return;
     }
 
@@ -662,9 +662,7 @@ static bool handle_builtin_output(const std::shared_ptr<job_t> &j, process_t *p,
         if (p->is_last_in_job) {
             debug(4, L"Set status of job %d (%ls) to %d using short circuit", j->job_id,
                   j->preview().c_str(), p->status);
-
-            int status_value = p->status.status_value();
-            proc_set_last_status(j->get_flag(job_flag_t::NEGATE) ? (!status_value) : status_value);
+            proc_set_last_statuses(j->get_statuses());
         }
         return true;
     } else {
@@ -838,10 +836,10 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
     if (!block_output_bufferfill) {
         // No buffer, so we exit directly. This means we have to manually set the exit
         // status.
-        if (p->is_last_in_job) {
-            proc_set_last_status(j->get_flag(job_flag_t::NEGATE) ? (!status) : status);
-        }
         p->completed = 1;
+        if (p->is_last_in_job) {
+            proc_set_last_statuses(j->get_statuses());
+        }
         return true;
     }
     assert(block_output_bufferfill && "Must have a block output bufferfiller");
@@ -856,7 +854,7 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
         return run_internal_process(p, std::move(buffer_contents), {} /*errdata*/, io_chain);
     } else {
         if (p->is_last_in_job) {
-            proc_set_last_status(j->get_flag(job_flag_t::NEGATE) ? (!status) : status);
+            proc_set_last_statuses(j->get_statuses());
         }
         p->completed = 1;
     }
@@ -1026,7 +1024,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
         // internal_exec only returns if it failed to set up redirections.
         // In case of an successful exec, this code is not reached.
         bool status = j->get_flag(job_flag_t::NEGATE) ? 0 : 1;
-        proc_set_last_status(status);
+        proc_set_last_statuses(statuses_t::just(status));
         return false;
     }
 
@@ -1065,7 +1063,6 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     }
 
     j->continue_job(false);
-    proc_set_last_job_statuses(*j);
     return true;
 }
 
@@ -1073,8 +1070,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
                                   bool apply_exit_status, bool is_subcmd) {
     ASSERT_IS_MAIN_THREAD();
     bool prev_subshell = is_subshell;
-    const int prev_status = proc_get_last_status();
-    auto prev_job_statuses = proc_get_last_job_statuses();
+    auto prev_statuses = proc_get_last_statuses();
     bool split_output = false;
 
     const auto ifs = parser.vars().get(L"IFS");
@@ -1083,7 +1079,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
     }
 
     is_subshell = true;
-    int subcommand_status = -1;  // assume the worst
+    auto subcommand_statuses = statuses_t::just(-1);  // assume the worst
 
     // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may
     // be null.
@@ -1092,27 +1088,27 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
     if (auto bufferfill = io_bufferfill_t::create(io_chain_t{}, read_limit)) {
         parser_t &parser = parser_t::principal_parser();
         if (parser.eval(cmd, io_chain_t{bufferfill}, SUBST) == 0) {
-            subcommand_status = proc_get_last_status();
+            subcommand_statuses = proc_get_last_statuses();
         }
         buffer = io_bufferfill_t::finish(std::move(bufferfill));
     }
 
-    if (buffer && buffer->buffer().discarded()) subcommand_status = STATUS_READ_TOO_MUCH;
+    if (buffer && buffer->buffer().discarded()) {
+        subcommand_statuses = statuses_t::just(STATUS_READ_TOO_MUCH);
+    }
 
     // If the caller asked us to preserve the exit status, restore the old status. Otherwise set the
     // status of the subcommand.
     if (apply_exit_status) {
-        proc_set_last_status(subcommand_status);
-    }
-    else {
-        proc_set_last_job_statuses(std::move(prev_job_statuses));
-        proc_set_last_status(prev_status);
+        proc_set_last_statuses(subcommand_statuses);
+    } else {
+        proc_set_last_statuses(std::move(prev_statuses));
     }
 
     is_subshell = prev_subshell;
 
     if (lst == NULL || !buffer) {
-        return subcommand_status;
+        return subcommand_statuses.status;
     }
     // Walk over all the elements.
     for (const auto &elem : buffer->buffer().elements()) {
@@ -1151,7 +1147,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
         }
     }
 
-    return subcommand_status;
+    return subcommand_statuses.status;
 }
 
 int exec_subshell(const wcstring &cmd, parser_t &parser, std::vector<wcstring> &outputs,

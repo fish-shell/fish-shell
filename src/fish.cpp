@@ -380,7 +380,7 @@ int main(int argc, char **argv) {
 
     if (read_init(paths)) {
         // Stomp the exit status of any initialization commands (issue #635).
-        proc_set_last_status(STATUS_CMD_OK);
+        proc_set_last_statuses(statuses_t::just(STATUS_CMD_OK));
 
         // Run post-config commands specified as arguments, if any.
         if (!opts.postconfig_cmds.empty()) {

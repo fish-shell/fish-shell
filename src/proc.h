@@ -261,6 +261,23 @@ enum class job_flag_t {
     JOB_FLAG_COUNT
 };
 
+/// A collection of status and pipestatus.
+struct statuses_t {
+    /// Status of the last job to exit.
+    int status{0};
+
+    /// Pipestatus value.
+    std::vector<int> pipestatus{};
+
+    /// Return a statuses for a single process status.
+    static statuses_t just(int s) {
+        statuses_t result{};
+        result.status = s;
+        result.pipestatus.push_back(s);
+        return result;
+    }
+};
+
 template <>
 struct enum_info_t<job_flag_t> {
     static constexpr auto count = job_flag_t::JOB_FLAG_COUNT;
@@ -401,6 +418,9 @@ class job_t {
     /// \return true on success, false on failure.
     bool signal(int signal);
 
+    /// \returns the statuses for this job.
+    statuses_t get_statuses() const;
+
     /// Return the job instance matching this unique job id.
     /// If id is 0 or less, return the last job used.
     static job_t *from_job_id(job_id_t id);
@@ -478,17 +498,11 @@ extern int job_control_mode;
 extern int no_exec;
 
 /// Sets the status of the last process to exit.
-void proc_set_last_status(int s);
+void proc_set_last_statuses(statuses_t s);
 
 /// Returns the status of the last process to exit.
 int proc_get_last_status();
-
-/// Sets the status of the last job's processes to exit from last_job.
-void proc_set_last_job_statuses(const job_t &last_job);
-void proc_set_last_job_statuses(std::vector<int> statuses);
-
-/// Returns the statuses of the last job's processes to exit.
-std::vector<int> proc_get_last_job_statuses();
+statuses_t proc_get_last_statuses();
 
 /// Notify the user about stopped or terminated jobs. Delete terminated jobs from the job list.
 ///

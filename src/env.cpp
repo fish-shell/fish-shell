@@ -1392,10 +1392,10 @@ maybe_t<env_var_t> env_stack_t::get(const wcstring &key, env_mode_flags_t mode) 
             if (history) history->get_history(result);
             return env_var_t(L"history", result);
         } else if (key == L"pipestatus") {
-            const auto js = proc_get_last_job_statuses();
+            const auto js = proc_get_last_statuses();
             wcstring_list_t result;
-            result.reserve(js.size());
-            for (int i : js) {
+            result.reserve(js.pipestatus.size());
+            for (int i : js.pipestatus) {
                 result.push_back(to_string(i));
             }
             return env_var_t(L"pipestatus", std::move(result));

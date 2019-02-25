@@ -49,11 +49,8 @@
 #include "util.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-/// Status of last process to exit.
-static int last_status = 0;
-
 /// Statuses of last job's processes to exit - ensure we start off with one entry of 0.
-static owning_lock<std::vector<int>> last_job_statuses{std::vector<int>(1u, 0)};
+static owning_lock<statuses_t> last_statuses{statuses_t::just(0)};
 
 /// The signals that signify crashes to us.
 static const int crashsignals[] = {SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGSYS};
@@ -134,30 +131,14 @@ void proc_destroy() {
     }
 }
 
-void proc_set_last_status(int s) {
+void proc_set_last_statuses(statuses_t s) {
     ASSERT_IS_MAIN_THREAD();
-    last_status = s;
+    *last_statuses.acquire() = std::move(s);
 }
 
-int proc_get_last_status() { return last_status; }
+int proc_get_last_status() { return last_statuses.acquire()->status; }
 
-void proc_set_last_job_statuses(const job_t &last_job) {
-    ASSERT_IS_MAIN_THREAD();
-    std::vector<int> ljs;
-    ljs.reserve(last_job.processes.size());
-    for (const auto &p : last_job.processes) {
-        ljs.push_back(p->status.status_value());
-    }
-    proc_set_last_job_statuses(std::move(ljs));
-}
-
-void proc_set_last_job_statuses(std::vector<int> statuses) {
-    ASSERT_IS_MAIN_THREAD();
-    auto vals = last_job_statuses.acquire();
-    *vals = std::move(statuses);
-}
-
-std::vector<int> proc_get_last_job_statuses() { return *last_job_statuses.acquire(); }
+statuses_t proc_get_last_statuses() { return *last_statuses.acquire(); }
 
 // Basic thread safe job IDs. The vector consumed_job_ids has a true value wherever the job ID
 // corresponding to that slot is in use. The job ID corresponding to slot 0 is 1.
@@ -262,6 +243,17 @@ bool job_t::signal(int signal) {
     }
 
     return true;
+}
+
+statuses_t job_t::get_statuses() const {
+    statuses_t st{};
+    st.pipestatus.reserve(processes.size());
+    for (const auto &p : processes) {
+        st.pipestatus.push_back(p->status.status_value());
+    }
+    int laststatus = st.pipestatus.back();
+    st.status = (get_flag(job_flag_t::NEGATE) ? !laststatus : laststatus);
+    return st;
 }
 
 void internal_proc_t::mark_exited(proc_status_t status) {
@@ -651,12 +643,12 @@ bool job_reap(bool allow_interactive) {
     process_mark_finished_children(false);
 
     // Preserve the exit status.
-    const int saved_status = proc_get_last_status();
+    auto saved_statuses = proc_get_last_statuses();
 
     found = process_clean_after_marking(allow_interactive);
 
     // Restore the exit status.
-    proc_set_last_status(saved_status);
+    proc_set_last_statuses(std::move(saved_statuses));
 
     return found;
 }
@@ -930,11 +922,9 @@ void job_t::continue_job(bool send_sigcont) {
     if (is_foreground() && is_completed()) {
         // Set $status only if we are in the foreground and the last process in the job has
         // finished and is not a short-circuited builtin.
-        bool negate = get_flag(job_flag_t::NEGATE);
         auto &p = processes.back();
         if (p->status.normal_exited() || p->status.signal_exited()) {
-            int status_code = p->status.status_value();
-            proc_set_last_status(negate ? !status_code : status_code);
+            proc_set_last_statuses(get_statuses());
         }
     }
 }

@@ -33,7 +33,7 @@ Shell Standards
 
 A shell is an interface to the operating system that reads from the commandline of a terminal. A shell's task is to identify and interpret commands. The commands can come from different applications and can be written in different programming languages.
 
-This can only work smoothly if shells adapt to some common standards. For shells there is the POSIX standard, see `Command-line interpreters  <https://en.wikipedia.org/wiki/Command-line_interface#Command-line_interpreter>`_. ``fish`` tries to satisfy the POSIX standard wherever it does not get into the way of its own design principles, see <a href="design.html">``fish`` Design</a>.
+This can only work smoothly if shells adapt to some common standards. For shells there is the POSIX standard, see `Command-line interpreters  <https://en.wikipedia.org/wiki/Command-line_interface#Command-line_interpreter>`_. ``fish`` tries to satisfy the POSIX standard wherever it does not get into the way of its own design principles, see `Design <design.html>`_.
 
 Manual Pages
 ------------
@@ -70,7 +70,7 @@ The pattern below is a basic pattern:
 
 For external **commands** the executable is usually stored on file and the file path must be included in the variable ``$PATH``, so that the file can be found: see `Special Variables`_.
 
-**Options** come in two forms: a short name, that is a hyphen with a single letter; or a long name, consisting of two hyphens with words connected by hyphens. Example: ``-h`` and ``--help`` are often used to print a help message. Options are a fixed set, described in the manual pages of the command, see <a href="#man-page">Manual Pages</a>
+**Options** come in two forms: a short name, that is a hyphen with a single letter; or a long name, consisting of two hyphens with words connected by hyphens. Example: ``-h`` and ``--help`` are often used to print a help message. Options are a fixed set, described in the manual pages of the command, see `Manual Pages <#man-page>`_.
 
 **Arguments** are the arbitrary input part of a command: often it is a file or directory name, sometimes it is a string or a list.
 
@@ -398,11 +398,11 @@ will start the emacs text editor in the background.
 Job control
 -----------
 
-Most programs allow you to suspend the program's execution and return control to ``fish`` by pressing @key{Control,Z} (also referred to as ``^Z``). Once back at the ``fish`` commandline, you can start other programs and do anything you want. If you then want you can go back to the suspended command by using the <a href="commands.html#fg">``fg``</a> (foreground) command.
+Most programs allow you to suspend the program's execution and return control to ``fish`` by pressing @key{Control,Z} (also referred to as ``^Z``). Once back at the ``fish`` commandline, you can start other programs and do anything you want. If you then want you can go back to the suspended command by using the `fg <cmds/fg.html>`_ (foreground) command.
 
-If you instead want to put a suspended job into the background, use the <a href="commands.html#bg">``bg``</a> command.
+If you instead want to put a suspended job into the background, use the `bg <cmds/bg.html>`_ command.
 
-To get a listing of all currently started jobs, use the <a href="commands.html#jobs">``jobs``</a> command.
+To get a listing of all currently started jobs, use the `jobs <cmds/jobs.html>`_ command.
 
 
 .. _syntax-function:
@@ -418,7 +418,7 @@ For example, the following is a function definition that calls the command ``ls`
       ls -l $argv
   end
 
-The first line tells fish that a function by the name of ``ll`` is to be defined. To use it, simply write ``ll`` on the commandline. The second line tells fish that the command ``ls -l $argv`` should be called when ``ll`` is invoked. '``$argv``' is an array variable, which always contains all arguments sent to the function. In the example above, these are simply passed on to the ``ls`` command. For more information on functions, see the documentation for the <a href='commands.html#function'>function</a> builtin.
+The first line tells fish that a function by the name of ``ll`` is to be defined. To use it, simply write ``ll`` on the commandline. The second line tells fish that the command ``ls -l $argv`` should be called when ``ll`` is invoked. '``$argv``' is an array variable, which always contains all arguments sent to the function. In the example above, these are simply passed on to the ``ls`` command. For more information on functions, see the documentation for the `function <cmds/function.html>`_ builtin.
 
 .. _syntax-function-wrappers:
 
@@ -439,7 +439,7 @@ There are a few important things that need to be noted about aliases:
 
 - Autoloading isn't applicable to aliases. Since, by definition, the function is created at the time the alias command is executed. You cannot autoload aliases.
 
-To easily create a function of this form, you can use the <a href="commands.html#alias">alias</a> command.
+To easily create a function of this form, you can use the `alias <cmds/alias.html>`_ command.
 
 .. _syntax-function-autoloading:
 
@@ -462,7 +462,7 @@ This wide search may be confusing. If you are unsure, your functions probably be
 
 It is very important that function definition files only contain the definition for the specified function and nothing else. Otherwise, it is possible that autoloading a function files requires that the function already be loaded, which creates a circular dependency.
 
-Autoloading also won't work for <a href=#event>event handlers</a>, since fish cannot know that a function is supposed to be executed when an event occurs when it hasn't yet loaded the function. See the `event handlers <#event>`_ section for more information.
+Autoloading also won't work for `event handlers <#event>`_, since fish cannot know that a function is supposed to be executed when an event occurs when it hasn't yet loaded the function. See the `event handlers <#event>`_ section for more information.
 
 Autoloading is not applicable to functions created by the ``alias`` command. For functions simple enough that you prefer to use the ``alias`` command to define them you'll need to put those commands in your ``~/.config/fish/config.fish`` script or some other script run when the shell starts.
 
@@ -473,11 +473,11 @@ If you are developing another program, you may wish to install functions which a
 Conditional execution of code and flow control
 ----------------------------------------------
 
-There are four fish builtins that let you execute commands only if a specific criterion is met. These builtins are <a href="commands.html#if">``if``</a>, <a href="commands.html#switch">``switch``</a>, <a href="commands.html#and">``and``</a> and <a href="commands.html#or">``or``</a>.
+There are four fish builtins that let you execute commands only if a specific criterion is met. These builtins are `if <cmds/if.html>`_, `switch <cmds/switch.html>`_, `and <cmds/and.html>`_ and `or <cmds/or.html>`_.
 
-The ``switch`` command is used to execute one of possibly many blocks of commands depending on the value of a string. See the documentation for <a href="commands.html#switch">switch</a> for more information.
+The ``switch`` command is used to execute one of possibly many blocks of commands depending on the value of a string. See the documentation for `switch <cmds/switch.html>`_ for more information.
 
-The other conditionals use the `exit status <#variables-status>`_ of a command to decide if a command or a block of commands should be executed. See the documentation for <a href="commands.html#if">``if``</a>, <a href="commands.html#and">``and``</a> and <a href="commands.html#or">``or``</a> for more information.
+The other conditionals use the `exit status <#variables-status>`_ of a command to decide if a command or a block of commands should be executed. See the documentation for `if <cmds/if.html>`_, `and <cmds/and.html>`_ and `or <cmds/or.html>`_ for more information.
 
 .. _syntax-words:
 
@@ -506,7 +506,7 @@ This is a short explanation of some of the commonly used words in fish.
 Help
 ====
 
-``fish`` has an extensive help system. Use the <a href="commands.html#help">``help``</a> command to obtain help on a specific subject or command. For instance, writing ``help syntax`` displays the `syntax section <#syntax>`_ of this documentation.
+``fish`` has an extensive help system. Use the `help <cmds/help.html>`_ command to obtain help on a specific subject or command. For instance, writing ``help syntax`` displays the `syntax section <#syntax>`_ of this documentation.
 
 ``fish`` also has man pages for its commands. For example, ``man set`` will show the documentation for ``set`` as a man page.
 
@@ -580,7 +580,7 @@ To provide a list of possible completions for myprog, use the ``-a`` switch. If 
   complete -c myprog -s o -l output -a "yes no"
 
 
-There are also special switches for specifying that a switch requires an argument, to disable filename completion, to create completions that are only available in some combinations, etc..  For a complete description of the various switches accepted by the ``complete`` command, see the documentation for the <a href="commands.html#complete">complete</a> builtin, or write ``complete --help`` inside the ``fish`` shell.
+There are also special switches for specifying that a switch requires an argument, to disable filename completion, to create completions that are only available in some combinations, etc..  For a complete description of the various switches accepted by the ``complete`` command, see the documentation for the `complete <cmds/complete.html>`_ builtin, or write ``complete --help`` inside the ``fish`` shell.
 
 For examples of how to write your own complex completions, study the completions in ``/usr/share/fish/completions``. (The exact path depends on your chosen installation prefix and may be slightly different)
 
@@ -681,7 +681,7 @@ Examples:
 
 - ``**`` matches any files and directories in the current directory and all of its subdirectories.
 
-Note that for most commands, if any wildcard fails to expand, the command is not executed, ```$status`` <#variables-status>`_ is set to nonzero, and a warning is printed. This behavior is consistent with setting ``shopt -s failglob`` in bash. There are exactly 3 exceptions, namely <a href="commands.html#set">``set``</a>, <a href="commands.html#count">``count``</a> and <a href="commands.html#for">``for``</a>. Their globs are permitted to expand to zero arguments, as with ``shopt -s nullglob`` in bash.
+Note that for most commands, if any wildcard fails to expand, the command is not executed, ```$status`` <#variables-status>`_ is set to nonzero, and a warning is printed. This behavior is consistent with setting ``shopt -s failglob`` in bash. There are exactly 3 exceptions, namely `set <cmds/set.html>`_, `count <cmds/count.html>`_ and `for <cmds/for.html>`_. Their globs are permitted to expand to zero arguments, as with ``shopt -s nullglob`` in bash.
 
 Examples::
 
@@ -964,7 +964,7 @@ Shell variables
 
 Shell variables are named pieces of data, which can be created, deleted and their values changed and used by the user.  Variables may optionally be "exported", so that a copy of the variable is available to any subprocesses the shell creates. An exported variable is referred to as an "environment variable".
 
-To set a variable value, use the <a href="commands.html#set">``set`` command</a>. A variable name can not be empty and can contain only letters, digits, and underscores. It may begin and end with any of those characters.
+To set a variable value, use the `set <cmds/set.html>`_ command</a>. A variable name can not be empty and can contain only letters, digits, and underscores. It may begin and end with any of those characters.
 
 Example:
 
@@ -1016,7 +1016,7 @@ To see universal variables in action, start two fish sessions side by side, and 
 
 `Universal variables <#variables-universal>`_ are stored in the file ``.config/fish/fishd.MACHINE_ID``, where MACHINE_ID is typically your MAC address. Do not edit this file directly, as your edits may be overwritten. Edit them through fish scripts or by using fish interactively instead.
 
-Do not append to universal variables in <a href="index.html#initialization">config.fish</a>, because these variables will then get longer with each new shell instance. Instead, simply set them once at the command line.
+Do not append to universal variables in `config.fish <#initialization>`_, because these variables will then get longer with each new shell instance. Instead, simply set them once at the command line.
 
 
 .. _variables-functions:
@@ -1153,7 +1153,7 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``fish_ambiguous_width`` controls the computed width of ambiguous East Asian characters. This should be set to 1 if your terminal emulator renders these characters as single-width (typical), or 2 if double-width.
 
-- ``fish_escape_delay_ms`` overrides the default timeout of 30ms after seeing an escape character before giving up on matching a key binding. See the documentation for the <a href='commands.html#special-case-escape'>bind</a> builtin command. This delay facilitates using escape as a meta key.
+- ``fish_escape_delay_ms`` overrides the default timeout of 30ms after seeing an escape character before giving up on matching a key binding. See the documentation for the `bind <cmds/special.html-case-escape>`_ builtin command. This delay facilitates using escape as a meta key.
 
 - ``fish_greeting``, the greeting message printed on startup.
 
@@ -1165,7 +1165,7 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``fish_user_paths``, an array of directories that are prepended to ``PATH``. This can be a universal variable.
 
-- ``umask``, the current file creation mask. The preferred way to change the umask variable is through the <a href="commands.html#umask">umask function</a>. An attempt to set umask to an invalid value will always fail.
+- ``umask``, the current file creation mask. The preferred way to change the umask variable is through the `umask <cmds/umask.html>`_ function. An attempt to set umask to an invalid value will always fail.
 
 - ``BROWSER``, the user's preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
 
@@ -1187,7 +1187,7 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``hostname``, the machine's hostname.
 
-- ``IFS``, the internal field separator that is used for word splitting with the <a href="commands.html#read">read builtin</a>. Setting this to the empty string will also disable line splitting in `command substitution <#expand-command-substitution>`_. This variable can be changed by the user.
+- ``IFS``, the internal field separator that is used for word splitting with the `read <cmds/read.html>`_ builtin. Setting this to the empty string will also disable line splitting in `command substitution <#expand-command-substitution>`_. This variable can be changed by the user.
 
 - ``PWD``, the current working directory.
 
@@ -1244,7 +1244,7 @@ If a process exits through a signal, the exit status will be 128 plus the number
 Variables for changing highlighting colors
 ------------------------------------------
 
-The colors used by fish for syntax highlighting can be configured by changing the values of a various variables. The value of these variables can be one of the colors accepted by the <a href='commands.html#set_color'>set_color</a> command. The ``--bold`` or ``-b`` switches accepted by ``set_color`` are also accepted.
+The colors used by fish for syntax highlighting can be configured by changing the values of a various variables. The value of these variables can be one of the colors accepted by the `set_color <cmds/set.html_color>`_ command. The ``--bold`` or ``-b`` switches accepted by ``set_color`` are also accepted.
 
 The following variables are available to change the highlighting colors in fish:
 
@@ -1424,7 +1424,7 @@ Emacs mode commands
 - @key{Alt,t} transposes the last two words
 
 
-You can change these key bindings using the <a href="commands.html#bind">bind</a> builtin command.
+You can change these key bindings using the `bind <cmds/bind.html">`_ builtin.
 
 
 .. _vi-mode:
@@ -1447,7 +1447,7 @@ It is also possible to add all emacs-mode bindings to vi-mode by using something
     end
 
 
-When in vi-mode, the <a href="fish_mode_prompt.html">``fish_mode_prompt``</a> function will display a mode indicator to the left of the prompt. The ``fish_vi_cursor`` function will be used to change the cursor's shape depending on the mode in supported terminals. To disable this feature, override it with an empty function. To display the mode elsewhere (like in your right prompt), use the output of the ``fish_default_mode_prompt`` function.
+When in vi-mode, the `fish_mode_prompt <cmds/fish_mode_prompt.html>`_ function will display a mode indicator to the left of the prompt. The ``fish_vi_cursor`` function will be used to change the cursor's shape depending on the mode in supported terminals. To disable this feature, override it with an empty function. To display the mode elsewhere (like in your right prompt), use the output of the ``fish_default_mode_prompt`` function.
 
 .. _vi-mode-command:
 
@@ -1564,7 +1564,7 @@ Normally when ``fish`` starts a program, this program will be put in the foregro
 
 -# By pressing @key{Control,Z}, the user stops a currently running foreground  program and returns control to ``fish``. Some programs do not support this feature, or remap it to another key. GNU Emacs uses @key{Control,X} @key{z} to stop running.
 
--# By using the <a href="commands.html#fg">``fg``</a> and <a href="commands.html#bg">``bg``</a> builtin commands, the user can send any currently running job into the foreground or background.
+-# By using the `bg <cmds/bg.html>`_ and `fg <cmds/fg.html>`_ builtin commands, the user can send any currently running job into the foreground or background.
 
 Note that functions cannot be started in the background. Functions that are stopped and then restarted in the background using the ``bg`` command will not execute correctly.
 
@@ -1660,7 +1660,7 @@ Detected errors include:
 
 When the cursor is over a parenthesis or a quote, ``fish`` also highlights its matching quote or parenthesis.
 
-To customize the syntax highlighting, you can set the environment variables listed in the <a href='index.html#variables-color'>Variables for changing highlighting colors</a> section.
+To customize the syntax highlighting, you can set the environment variables listed in the `Variables for changing highlighting colors <index.html#variables-color>`_ section.
 
 .. _title:
 
@@ -1689,7 +1689,7 @@ To show the last command in the title::
 Programmable prompt
 -------------------
 
-When fish waits for input, it will display a prompt by evaluating the ``fish_prompt`` and `fish_right_prompt` functions. The output of the former is displayed on the left and the latter's output on the right side of the terminal. The output of ``fish_mode_prompt`` will be prepended on the left, though the default function only does this when in <a href="index.html#vi-mode">vi-mode</a>.
+When fish waits for input, it will display a prompt by evaluating the ``fish_prompt`` and `fish_right_prompt` functions. The output of the former is displayed on the left and the latter's output on the right side of the terminal. The output of ``fish_mode_prompt`` will be prepended on the left, though the default function only does this when in `vi-mode <index.html#vi-mode>`_.
 
 .. _greeting:
 
@@ -1726,9 +1726,9 @@ To specify a signal handler for the WINCH signal, write::
         echo Got WINCH signal!
     end
 
-Please note that event handlers only become active when a function is loaded, which means you might need to otherwise <a href='commands.html#source'>source</a> or execute a function instead of relying on <a href=#syntax-function-autoloading>autoloading</a>. One approach is to put it into your <a href="index.html#initialization">initialization file</a>.
+Please note that event handlers only become active when a function is loaded, which means you might need to otherwise `source <cmds/source.html>`_ or execute a function instead of relying on `autoloading <#syntax-function-autoloading>`_. One approach is to put it into your `initialization file <#initialization>`_.
 
-For more information on how to define new event handlers, see the documentation for the <a href='commands.html#function'>function</a> command.
+For more information on how to define new event handlers, see the documentation for the `function <cmds/function.html>`_ command.
 
 
 .. _debugging:
@@ -1740,7 +1740,7 @@ Fish includes a built in debugging facility. The debugger allows you to stop exe
 
 To start a debug session simply run the builtin command ``breakpoint`` at the point in a function or script where you wish to gain control. Also, the default action of the TRAP signal is to call this builtin. So a running script can be debugged by sending it the TRAP signal with the ``kill`` command. Once in the debugger, it is easy to insert new breakpoints by using the funced function to edit the definition of a function.
 
-Note: At the moment the debug prompt is identical to your normal fish prompt. This can make it hard to recognize that you've entered a debug session. <a hread="https://github.com/fish-shell/fish-shell/issues/1310">Issue 1310</a> is open to improve this.
+Note: At the moment the debug prompt is identical to your normal fish prompt. This can make it hard to recognize that you've entered a debug session. `Issue 1310 <https://github.com/fish-shell/fish-shell/issues/1310>`_ is open to improve this.
 
 
 .. _more-help:
@@ -1750,7 +1750,7 @@ Further help and development
 
 If you have a question not answered by this documentation, there are several avenues for help:
 
-- The official mailing list at <a href='https://lists.sourceforge.net/lists/listinfo/fish-users'>fish-users@lists.sourceforge.net</a>
+- The official mailing list at `fish-users@lists.sourceforge.net <https://lists.sourceforge.net/lists/listinfo/fish-users>`_
 
 - The Internet Relay Chat channel, \#fish on ``irc.oftc.net``
 

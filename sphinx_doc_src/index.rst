@@ -1193,6 +1193,8 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``status``, the `exit status <#variables-status>`_ of the last foreground job to exit. If the job was terminated through a signal, the exit status will be 128 plus the signal number.
 
+- ``pipestatus``, an array of exit statuses of all processes that made up the last executed pipe.
+
 - ``USER``, the current username. This variable can be changed by the user.
 
 - ``CMD_DURATION``, the runtime of the last command in milliseconds.

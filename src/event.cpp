@@ -275,6 +275,7 @@ static void event_fire_internal(const event_t &event) {
         // non-interactive.
         proc_push_interactive(0);
         int prev_status = proc_get_last_status();
+        const auto& saved_job_statuses = proc_get_last_job_statuses();
         parser_t &parser = parser_t::principal_parser();
 
         event_block_t *b = parser.push_block<event_block_t>(event);
@@ -282,6 +283,7 @@ static void event_fire_internal(const event_t &event) {
         parser.pop_block(b);
         proc_pop_interactive();
         proc_set_last_status(prev_status);
+        proc_set_last_job_statuses(std::move(saved_job_statuses));
     }
 }
 

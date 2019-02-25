@@ -5,6 +5,7 @@
 
 ## Notable fixes and improvements
 - Fixed infinite recursion triggered if a custom `fish_title` function calls `read` interactively
+- Add `$pipestatus` support
 
 ### Syntax changes and new commands
 - None yet.

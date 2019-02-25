@@ -522,6 +522,7 @@ Commands
    design
    tutorial
    faq
+   license
 
 
 Autosuggestions

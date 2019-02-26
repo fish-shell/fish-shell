@@ -29,6 +29,19 @@
 
 ---
 
+# fish 3.0.2 (released February 19, 2019)
+
+This release of fish fixes an issue discovered in fish 3.0.1.
+
+### Fixes and improvements
+
+- The PWD environment variable is now ignored if it does not resolve to the true working directory, fixing strange behaviour in terminals started by editors and IDEs (#5647).
+
+If you are upgrading from version 2.7.1 or before, please also review the release notes for 3.0.1,
+3.0.0 and 3.0b1 (included below).
+
+---
+
 # fish 3.0.1 (released February 11, 2019)
 
 This release of fish fixes a number of major issues discovered in fish 3.0.0.

@@ -368,6 +368,9 @@ count (echo -ne 'abc\x00def\x00ghi\x00\x00' | string split0)
 count (echo -ne 'abc\x00def\x00ghi' | string split0)
 count (echo -ne 'abc\ndef\x00ghi\x00' | string split0)
 count (echo -ne 'abc\ndef\nghi' | string split0)
+# #5701 - split0 always returned 1
+echo -ne 'a\x00b' | string split0
+and echo Split something
 
 logmsg string join0
 set tmp beta alpha\ngamma

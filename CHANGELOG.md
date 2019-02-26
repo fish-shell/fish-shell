@@ -6,6 +6,7 @@
 ## Notable fixes and improvements
 - Fixed infinite recursion triggered if a custom `fish_title` function calls `read` interactively
 - Add `$pipestatus` support
+- `string split0` now returns 0 if it split something (#5701).
 
 ### Syntax changes and new commands
 - None yet.

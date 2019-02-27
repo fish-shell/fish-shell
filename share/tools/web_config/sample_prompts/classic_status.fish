@@ -7,15 +7,9 @@ function fish_prompt --description "Write out the prompt"
     set -l last_status $status
 
     # only output $pipestatus if there was a pipe and any part of it had non-zero exit status
-    # TODO maybe have a common function that returns true if all array elements match a certain value?
-    if test (count $last_pipestatus) -gt 1
-        for pstat in $last_pipestatus
-            if test $pstat -ne 0
-                set -l last_pipestatus_string (string join "|" (__fish_pipestatus_with_signal $last_pipestatus))
-                printf "%s[%s]%s " (set_color yellow --bold) $last_pipestatus_string (set_color normal)
-                break
-            end
-        end
+    if test (count $last_pipestatus) -gt 1 && string match -qvr '^0$' $last_pipestatus
+        set -l last_pipestatus_string (string join "|" (__fish_pipestatus_with_signal $last_pipestatus))
+        printf "%s[%s]%s " (set_color yellow --bold) $last_pipestatus_string (set_color normal)
     end
 
     if test $last_status -ne 0

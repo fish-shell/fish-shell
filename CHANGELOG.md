@@ -28,6 +28,9 @@
   - `cf`
   - `bosh`
 
+### For distributors and developers
+- The autotools-based build system and legacy Xcode build systems have been removed, leaving only the CMake build system. All distributors and developers must migrate to the CMake build.
+
 ---
 
 # fish 3.0.2 (released February 19, 2019)

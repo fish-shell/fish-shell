@@ -38,16 +38,6 @@ Desktop.ini
 Thumbs.db
 ehthumbs.db
 
-
-# These file names can appear anywhere in the hierarchy. They tend to be OS
-# or build system artifacts.
-autom4te.cache
-aclocal.m4
-Makefile
-config.h
-config.cache
-config.h.in
-config.status
 messages.pot
 .directory
 .fuse_hidden*
@@ -55,7 +45,6 @@ messages.pot
 
 # Directories that only contain transitory files from building and testing.
 /doc/
-/obj/
 /share/man/
 /share/doc/
 /test/
@@ -67,8 +56,6 @@ messages.pot
 /command_list.txt
 /command_list_toc.txt
 /compile_commands.json
-/confdefs.h
-/configure
 /doc.h
 /fish
 /fish.pc
@@ -85,7 +72,6 @@ fish-build-version-witness.txt
 # from building and testing.
 /doc_src/commands.hdr
 /doc_src/index.hdr
-/pcre2-*/configure.lineno
 /po/*.gmo
 /share/__fish_build_paths.fish
 /share/pkgconfig

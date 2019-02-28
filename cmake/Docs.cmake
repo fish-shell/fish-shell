@@ -72,9 +72,6 @@ ELSEIF(HAVE_PREBUILT_DOCS)
         # Out of tree build - link the prebuilt documentation to the build tree
         ADD_CUSTOM_TARGET(link_doc ALL)
         ADD_CUSTOM_COMMAND(TARGET link_doc
-            COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/share/man ${CMAKE_CURRENT_BINARY_DIR}/share/man
-            POST_BUILD)
-        ADD_CUSTOM_COMMAND(TARGET link_doc
             COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/user_doc ${CMAKE_CURRENT_BINARY_DIR}/user_doc
             POST_BUILD)
     ENDIF()

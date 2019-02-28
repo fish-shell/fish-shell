@@ -6,11 +6,7 @@ function fish_prompt --description "Write out the prompt"
     set -l last_pipestatus $pipestatus
     set -l last_status $status
 
-    # only output $pipestatus if there was a pipe and any part of it had non-zero exit status
-    if test (count $last_pipestatus) -gt 1 && string match -qvr '^0$' $last_pipestatus
-        set -l last_pipestatus_string (string join "|" (__fish_pipestatus_with_signal $last_pipestatus))
-        printf "%s[%s]%s " (set_color yellow --bold) $last_pipestatus_string (set_color normal)
-    end
+    __fish_print_pipestatus "[" "] " "|" (set_color yellow) (set_color --bold yellow) $last_pipestatus
 
     if test $last_status -ne 0
         printf "%s(%s)%s " (set_color red --bold) (__fish_status_to_signal $last_status) (set_color normal)

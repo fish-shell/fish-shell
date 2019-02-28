@@ -37,9 +37,9 @@ SET(extra_confdir
     CACHE STRING "Path for extra configuration")
 
 # These are the man pages that go in system manpath; all manpages go in the fish-specific manpath.
-SET(MANUALS ${CMAKE_CURRENT_BINARY_DIR}/share/man/man1/fish.1
-            ${CMAKE_CURRENT_BINARY_DIR}/share/man/man1/fish_indent.1
-            ${CMAKE_CURRENT_BINARY_DIR}/share/man/man1/fish_key_reader.1)
+SET(MANUALS ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/fish.1
+            ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/fish_indent.1
+            ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/fish_key_reader.1)
 
 # Determine which man page we don't want to install.
 # On OS X, don't install a man page for open, since we defeat fish's open
@@ -187,7 +187,7 @@ INSTALL(DIRECTORY share/tools/web_config
 #   $(INSTALL) -m 644 $$i $(DESTDIR)$(mandir)/man1/; \
 #   true; \
 # done;
-# Building the man pages is optional: if doxygen isn't installed, they're not built
+# Building the man pages is optional: if Sphinx isn't installed, they're not built
 INSTALL(FILES ${MANUALS} DESTINATION ${mandir}/man1/ OPTIONAL)
 
 #install-doc: $(user_doc)

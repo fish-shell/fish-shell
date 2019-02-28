@@ -41,8 +41,6 @@ matrix:
       before_install:
         - brew update
         - brew install pcre2 # use system PCRE2
-      env:
-          - CXXFLAGS="-g -O2 -lstdc++"
   fast_finish: true
 
 script:

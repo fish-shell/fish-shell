@@ -12,8 +12,8 @@ function __fish_print_pipestatus --description "Print pipestatus for prompt"
     if set -q argv[2] && string match -qvr '^0$' $argv
         set -l sep (set_color normal){$brace_sep_color}{$separator}(set_color normal){$status_color}
         set -l last_pipestatus_string (string join "$sep" (__fish_pipestatus_with_signal $argv))
-        printf "%s%s%s%s%s%s%s%s%s" $brace_sep_color $left_brace (set_color normal) \
-               $status_color $last_pipestatus_string (set_color normal) $brace_sep_color \
-               $right_brace (set_color normal)
+        printf "%s%s%s%s%s%s%s%s%s%s" (set_color normal )$brace_sep_color $left_brace \
+               (set_color normal) $status_color $last_pipestatus_string (set_color normal) \
+               $brace_sep_color $right_brace (set_color normal)
     end
 end

@@ -1101,7 +1101,7 @@ bool history_search_t::go_backwards() {
 
     size_t index = current_index_;
     while (++index < max_index) {
-        if (main_thread ? reader_interrupted() : reader_thread_job_is_stale()) {
+        if (main_thread ? reader_test_and_clear_interrupted() : reader_thread_job_is_stale()) {
             return false;
         }
 

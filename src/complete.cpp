@@ -1253,7 +1253,8 @@ bool completer_t::try_complete_user(const wcstring &str) {
     setpwent();
     // cppcheck-suppress getpwentCalled
     while (struct passwd *pw = getpwent()) {
-        bool interrupted = is_main_thread() ? reader_interrupted() : reader_thread_job_is_stale();
+        bool interrupted =
+            is_main_thread() ? reader_test_and_clear_interrupted() : reader_thread_job_is_stale();
         if (interrupted) {
             break;
         }

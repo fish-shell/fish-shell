@@ -595,8 +595,8 @@ static bool process_clean_after_marking(bool allow_interactive) {
                 fwprintf(stdout, L"\n");
             }
             found = false;
-            p->status = proc_status_t::from_exit_code(
-                0);  // clear status so it is not reported more than once
+            // clear status so it is not reported more than once
+            p->status = proc_status_t::from_exit_code(0);
         }
 
         // If all processes have completed, tell the user the job has completed and delete it from

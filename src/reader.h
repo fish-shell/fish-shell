@@ -123,7 +123,7 @@ bool reader_get_selection(size_t *start, size_t *len);
 
 /// Return the value of the interrupted flag, which is set by the sigint handler, and clear it if it
 /// was set.
-int reader_interrupted();
+bool reader_test_and_clear_interrupted();
 
 /// Clear the interrupted flag unconditionally without handling anything. The flag could have been
 /// set e.g. when an interrupt arrived just as we were ending an earlier \c reader_readline

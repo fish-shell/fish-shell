@@ -84,13 +84,13 @@ The following optional features also have specific requirements:
 
 If you wish to use fish as your default shell, use the following command:
 
-	chsh -s /usr/local/bin/fish
+	chsh -s `which fish`
 
-`chsh` will prompt you for your password and change your default shell. (Substitute `/usr/local/bin/fish` with whatever path fish was installed to, if it differs.)
+`chsh` will prompt you for your password and change your default shell. ``which fish`` is simply the path where fish is installed.
 
 Use the following command if fish isn't already added to `/etc/shells` to permit fish to be your login shell:
 
-    echo /usr/local/bin/fish | sudo tee -a /etc/shells
+    echo `which fish` | sudo tee -a /etc/shells
 
 To switch your default shell back, you can run `chsh -s /bin/bash` (substituting `/bin/bash` with `/bin/tcsh` or `/bin/zsh` as appropriate).
 

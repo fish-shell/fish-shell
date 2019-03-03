@@ -134,10 +134,6 @@ static inline unsigned read_generation_count() {
     return s_generation.load(std::memory_order_relaxed);
 }
 
-class reader_data_t;
-static void set_command_line_and_position(reader_data_t *data, editable_line_t *el,
-                                          const wcstring &new_str, size_t pos);
-
 void editable_line_t::insert_string(const wcstring &str, size_t start, size_t len) {
     // Clamp the range to something valid.
     size_t string_length = str.size();
@@ -391,11 +387,16 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     /// The line that is currently being edited. Typically the command line, but may be the search
     /// field.
-    editable_line_t *active_edit_line() {
+    const editable_line_t *active_edit_line() const {
         if (this->is_navigating_pager_contents() && this->pager.is_search_field_shown()) {
             return &this->pager.search_field_line;
         }
         return &this->command_line;
+    }
+
+    editable_line_t *active_edit_line() {
+        const auto *cthis = this;
+        return const_cast<editable_line_t *>(cthis->active_edit_line());
     }
 
     /// Do what we need to do whenever our command line changes.
@@ -438,6 +439,9 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     void mark_repaint_needed() { repaint_needed = true; }
 
+    void completion_insert(const wchar_t *val, complete_flags_t flags);
+
+    bool can_autosuggest() const;
     void autosuggest_completed(autosuggestion_result_t result);
     void update_autosuggestion();
     void accept_autosuggestion(bool full, move_word_style_t style = move_word_style_punctuation);
@@ -445,10 +449,19 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     void highlight_complete(highlight_result_t result);
     void exec_prompt();
-};
 
-/// Sets the command line contents, without clearing the pager.
-static void reader_set_buffer_maintaining_pager(reader_data_t *data, const wcstring &b, size_t pos);
+    bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el,
+              wchar_t target);
+
+    bool handle_completions(const std::vector<completion_t> &comp,
+                            bool cont_after_prefix_insertion);
+
+    void set_command_line_and_position(editable_line_t *el, const wcstring &new_str, size_t pos);
+    void replace_current_token(const wcstring &new_token);
+    void update_command_line_from_history_search();
+    void set_buffer_maintaining_pager(const wcstring &b, size_t pos);
+    void remove_backward();
+};
 
 /// The stack of current interactive reading contexts.
 static std::vector<std::shared_ptr<reader_data_t>> reader_data_stack;
@@ -478,8 +491,6 @@ static volatile sig_atomic_t interrupted = 0;
 // Prototypes for a bunch of functions defined later on.
 static bool is_backslashed(const wcstring &str, size_t pos);
 static wchar_t unescaped_quote(const wcstring &str, size_t pos);
-static bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el,
-                 wchar_t target);
 
 /// Mode on startup, which we restore on exit.
 static struct termios terminal_mode_on_startup;
@@ -730,7 +741,7 @@ void reader_data_t::pager_selection_changed() {
             completion_apply_to_command_line(completion->completion, completion->flags,
                                              this->cycle_command_line, &cursor_pos, false);
     }
-    reader_set_buffer_maintaining_pager(this, new_cmd_line, cursor_pos);
+    set_buffer_maintaining_pager(new_cmd_line, cursor_pos);
 
     // Trigger repaint (see issue #765).
     reader_repaint_needed();
@@ -1117,9 +1128,8 @@ static bool command_ends_paging(wchar_t c, bool focused_on_search_field) {
 
 /// Remove the previous character in the character buffer and on the screen using syntax
 /// highlighting, etc.
-static void remove_backward() {
-    reader_data_t *data = current_data();
-    editable_line_t *el = data->active_edit_line();
+void reader_data_t::remove_backward() {
+    editable_line_t *el = active_edit_line();
 
     if (el->position <= 0) return;
 
@@ -1127,16 +1137,15 @@ static void remove_backward() {
     // width at least 1.
     int width;
     do {
-        data->update_buff_pos(el, el->position - 1);
+        update_buff_pos(el, el->position - 1);
         width = fish_wcwidth(el->text.at(el->position));
         el->text.erase(el->position, 1);
     } while (width == 0 && el->position > 0);
-    data->command_line_changed(el);
-    data->suppress_autosuggestion = true;
+    command_line_changed(el);
+    suppress_autosuggestion = true;
 
-    data->super_highlight_me_plenty();
-
-    reader_repaint_needed();
+    super_highlight_me_plenty();
+    mark_repaint_needed();
 }
 
 /// Insert the characters of the string into the command line buffer and print them to the screen
@@ -1298,13 +1307,12 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
 /// \param val the string to insert
 /// \param flags A union of all flags describing the completion to insert. See the completion_t
 /// struct for more information on possible values.
-static void completion_insert(const wchar_t *val, complete_flags_t flags) {
-    reader_data_t *data = current_data();
-    editable_line_t *el = data->active_edit_line();
+void reader_data_t::completion_insert(const wchar_t *val, complete_flags_t flags) {
+    editable_line_t *el = active_edit_line();
     size_t cursor = el->position;
     wcstring new_command_line = completion_apply_to_command_line(val, flags, el->text, &cursor,
                                                                  false /* not append only */);
-    reader_set_buffer_maintaining_pager(data, new_command_line, cursor);
+    set_buffer_maintaining_pager(new_command_line, cursor);
 }
 
 // Returns a function that can be invoked (potentially
@@ -1377,15 +1385,13 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
     };
 }
 
-static bool can_autosuggest() {
+bool reader_data_t::can_autosuggest() const {
     // We autosuggest if suppress_autosuggestion is not set, if we're not doing a history search,
     // and our command line contains a non-whitespace character.
-    reader_data_t *data = current_data();
-    const editable_line_t *el = data->active_edit_line();
+    const editable_line_t *el = active_edit_line();
     const wchar_t *whitespace = L" \t\r\n\v";
-    return data->allow_autosuggestion && !data->suppress_autosuggestion &&
-           data->history_search.is_at_end() && el == &data->command_line &&
-           el->text.find_first_not_of(whitespace) != wcstring::npos;
+    return allow_autosuggestion && !suppress_autosuggestion && history_search.is_at_end() &&
+           el == &command_line && el->text.find_first_not_of(whitespace) != wcstring::npos;
 }
 
 // Called after an autosuggestion has been computed on a background thread
@@ -1538,12 +1544,11 @@ static fuzzy_match_type_t get_best_match_type(const std::vector<completion_t> &c
 /// completions after inserting it.
 ///
 /// Return true if we inserted text into the command line, false if we did not.
-static bool handle_completions(const std::vector<completion_t> &comp,
-                               bool cont_after_prefix_insertion) {
+bool reader_data_t::handle_completions(const std::vector<completion_t> &comp,
+                                       bool cont_after_prefix_insertion) {
     bool done = false;
     bool success = false;
-    reader_data_t *data = current_data();
-    const editable_line_t *el = &data->command_line;
+    const editable_line_t *el = &command_line;
     const wchar_t *begin, *end, *buff = el->text.c_str();
 
     parse_util_token_extent(buff, el->position, &begin, 0, 0, 0);
@@ -1683,12 +1688,12 @@ static bool handle_completions(const std::vector<completion_t> &comp,
     wchar_t quote;
     parse_util_get_parameter_info(el->text, el->position, &quote, NULL, NULL);
     // Update the pager data.
-    data->pager.set_prefix(prefix);
-    data->pager.set_completions(surviving_completions);
+    pager.set_prefix(prefix);
+    pager.set_completions(surviving_completions);
     // Invalidate our rendering.
-    data->current_page_rendering = page_rendering_t();
+    current_page_rendering = page_rendering_t();
     // Modify the command line to reflect the new pager.
-    data->pager_selection_changed();
+    pager_selection_changed();
     reader_repaint_needed();
     return false;
 }
@@ -1874,16 +1879,16 @@ void reader_sanity_check() {
 }
 
 /// Set the specified string as the current buffer.
-static void set_command_line_and_position(reader_data_t *data, editable_line_t *el,
-                                          const wcstring &new_str, size_t pos) {
+void reader_data_t::set_command_line_and_position(editable_line_t *el, const wcstring &new_str,
+                                                  size_t pos) {
     el->text = new_str;
-    data->update_buff_pos(el, pos);
-    data->command_line_changed(el);
-    data->super_highlight_me_plenty();
-    reader_repaint_needed();
+    update_buff_pos(el, pos);
+    command_line_changed(el);
+    super_highlight_me_plenty();
+    mark_repaint_needed();
 }
 
-static void reader_replace_current_token(const wcstring &new_token) {
+void reader_data_t::replace_current_token(const wcstring &new_token) {
     const wchar_t *begin, *end;
     size_t new_pos;
 
@@ -1901,18 +1906,17 @@ static void reader_replace_current_token(const wcstring &new_token) {
     new_buff.append(end);
     new_pos = (begin - buff) + new_token.size();
 
-    set_command_line_and_position(data, el, new_buff, new_pos);
+    set_command_line_and_position(el, new_buff, new_pos);
 }
 
 /// Apply the history search to the command line.
-static void update_command_line_from_history_search() {
-    reader_data_t *data = current_data();
-    wcstring new_text = data->history_search.is_at_end() ? data->history_search.search_string()
-                                                         : data->history_search.current_result();
-    if (data->history_search.by_token()) {
-        reader_replace_current_token(new_text);
-    } else if (data->history_search.by_line()) {
-        set_command_line_and_position(data, &data->command_line, new_text, new_text.size());
+void reader_data_t::update_command_line_from_history_search() {
+    wcstring new_text = history_search.is_at_end() ? history_search.search_string()
+                                                   : history_search.current_result();
+    if (history_search.by_token()) {
+        replace_current_token(new_text);
+    } else if (history_search.by_line()) {
+        set_command_line_and_position(&command_line, new_text, new_text.size());
     }
 }
 
@@ -1978,22 +1982,21 @@ history_t *reader_get_history() {
 }
 
 /// Sets the command line contents, without clearing the pager.
-static void reader_set_buffer_maintaining_pager(reader_data_t *data, const wcstring &b,
-                                                size_t pos) {
+void reader_data_t::set_buffer_maintaining_pager(const wcstring &b, size_t pos) {
     // Callers like to pass us pointers into ourselves, so be careful! I don't know if we can use
     // operator= with a pointer to our interior, so use an intermediate.
     size_t command_line_len = b.size();
-    data->command_line.text = b;
-    data->command_line_changed(&data->command_line);
+    command_line.text = b;
+    command_line_changed(&command_line);
 
     // Don't set a position past the command line length.
     if (pos > command_line_len) pos = command_line_len;  //!OCLINT(parameter reassignment)
 
-    data->update_buff_pos(&data->command_line, pos);
+    update_buff_pos(&command_line, pos);
 
     // Clear history search and pager contents.
-    data->history_search.reset();
-    data->super_highlight_me_plenty();
+    history_search.reset();
+    super_highlight_me_plenty();
     reader_repaint_needed();
 }
 
@@ -2003,7 +2006,7 @@ void reader_set_buffer(const wcstring &b, size_t pos) {
     if (!data) return;
 
     data->clear_pager();
-    reader_set_buffer_maintaining_pager(data, b, pos);
+    data->set_buffer_maintaining_pager(b, pos);
 }
 
 size_t reader_get_cursor_pos() {
@@ -2570,8 +2573,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
 
         // Restore the text.
         if (c == R_CANCEL && is_navigating_pager_contents()) {
-            set_command_line_and_position(this, &command_line, cycle_command_line,
-                                          cycle_cursor_pos);
+            set_command_line_and_position(&command_line, cycle_command_line, cycle_cursor_pos);
         }
 
         // Clear the pager if necessary.
@@ -3141,7 +3143,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 if (el->position > 0) {
                     wcstring local_cmd = el->text;
                     std::swap(local_cmd.at(el->position), local_cmd.at(el->position - 1));
-                    set_command_line_and_position(this, el, local_cmd, el->position + 1);
+                    set_command_line_and_position(el, local_cmd, el->position + 1);
                 }
                 break;
             }
@@ -3182,7 +3184,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                     new_buff.append(prev);
                     new_buff.append(trail);
                     // Put cursor right after the second token.
-                    set_command_line_and_position(this, el, new_buff, tok_end - buff);
+                    set_command_line_and_position(el, new_buff, tok_end - buff);
                 }
                 break;
             }
@@ -3357,15 +3359,13 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
     return finished ? maybe_t<wcstring>{command_line.text} : none();
 }
 
-maybe_t<wcstring> reader_readline(int nchars) { return current_data()->readline(nchars); }
-
-bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el, wchar_t target) {
-    reader_data_t *data = current_data_or_null();
+bool reader_data_t::jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el,
+                         wchar_t target) {
     bool success = false;
 
-    data->last_jump_target = target;
-    data->last_jump_direction = dir;
-    data->last_jump_precision = precision;
+    last_jump_target = target;
+    last_jump_direction = dir;
+    last_jump_precision = precision;
 
     switch (dir) {
         case jump_direction_t::backward: {
@@ -3376,7 +3376,7 @@ bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el,
                     if (precision == jump_precision_t::till) {
                         tmp_pos = std::min(el->size() - 1, tmp_pos + 1);
                     }
-                    data->update_buff_pos(el, tmp_pos);
+                    update_buff_pos(el, tmp_pos);
                     success = true;
                     break;
                 }
@@ -3389,7 +3389,7 @@ bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el,
                     if (precision == jump_precision_t::till && tmp_pos) {
                         tmp_pos--;
                     }
-                    data->update_buff_pos(el, tmp_pos);
+                    update_buff_pos(el, tmp_pos);
                     success = true;
                     break;
                 }
@@ -3400,6 +3400,8 @@ bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el,
 
     return success;
 }
+
+maybe_t<wcstring> reader_readline(int nchars) { return current_data()->readline(nchars); }
 
 bool reader_is_in_search_mode() {
     reader_data_t *data = current_data_or_null();

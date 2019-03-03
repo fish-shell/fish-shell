@@ -305,7 +305,7 @@ class reader_history_search_t {
 
 /// A struct describing the state of the interactive reader. These states can be stacked, in case
 /// reader_readline() calls are nested. This happens when the 'read' builtin is used.
-class reader_data_t {
+class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
    public:
     /// String containing the whole current commandline.
     editable_line_t command_line;
@@ -435,7 +435,7 @@ class reader_data_t {
 static void reader_set_buffer_maintaining_pager(reader_data_t *data, const wcstring &b, size_t pos);
 
 /// The stack of current interactive reading contexts.
-static std::vector<std::unique_ptr<reader_data_t>> reader_data_stack;
+static std::vector<std::shared_ptr<reader_data_t>> reader_data_stack;
 
 /// Access the top level reader data.
 static reader_data_t *current_data_or_null() {
@@ -2102,7 +2102,7 @@ void reader_change_history(const wcstring &name) {
 
 void reader_push(const wcstring &name) {
     history_t *hist = &history_t::history_with_name(name);
-    reader_data_stack.push_back(make_unique<reader_data_t>(hist));
+    reader_data_stack.push_back(std::make_shared<reader_data_t>(hist));
     reader_data_t *data = current_data();
     data->command_line_changed(&data->command_line);
     if (reader_data_stack.size() == 1) {

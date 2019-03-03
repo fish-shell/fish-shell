@@ -542,8 +542,8 @@ void proc_push_interactive(int value);
 /// Set is_interactive flag to the previous value. If needed, update signal handlers.
 void proc_pop_interactive();
 
-/// Wait for any process finishing.
-pid_t proc_wait_any();
+/// Wait for any process finishing, or receipt of a signal.
+void proc_wait_any();
 
 /// Set and get whether we are in initialization.
 // Hackish. In order to correctly report the origin of code with no associated file, we need to

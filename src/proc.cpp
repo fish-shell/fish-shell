@@ -983,13 +983,10 @@ void proc_pop_interactive() {
     if (is_interactive != old) signal_set_handlers();
 }
 
-pid_t proc_wait_any() {
-    int pid_status;
-    pid_t pid = waitpid(-1, &pid_status, WUNTRACED);
-    if (pid == -1) return -1;
-    handle_child_status(pid, proc_status_t::from_waitpid(pid_status));
+void proc_wait_any() {
+    ASSERT_IS_MAIN_THREAD();
+    process_mark_finished_children(true /* block_ok */);
     process_clean_after_marking(is_interactive);
-    return pid;
 }
 
 void hup_background_jobs() {

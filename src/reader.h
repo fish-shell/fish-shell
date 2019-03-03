@@ -121,6 +121,9 @@ size_t reader_get_cursor_pos();
 /// selection, true otherwise.
 bool reader_get_selection(size_t *start, size_t *len);
 
+/// Return the value of the interrupted flag, which is set by the sigint handler.
+bool reader_test_interrupted();
+
 /// Return the value of the interrupted flag, which is set by the sigint handler, and clear it if it
 /// was set.
 bool reader_test_and_clear_interrupted();

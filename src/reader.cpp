@@ -797,6 +797,8 @@ bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack) {
 
 void reader_reset_interrupted() { interrupted = 0; }
 
+bool reader_test_interrupted() { return interrupted != 0; }
+
 bool reader_test_and_clear_interrupted() {
     int res = interrupted;
     if (res) {

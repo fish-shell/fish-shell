@@ -13,6 +13,7 @@
 #include <termios.h>
 
 #include <algorithm>
+#include <atomic>
 #include <memory>
 #include <string>
 #include <vector>
@@ -153,9 +154,6 @@ static std::vector<terminfo_mapping_t> terminfo_mappings;
 /// List of all terminfo mappings.
 static std::vector<terminfo_mapping_t> mappings;
 
-/// Set to true when the input subsystem has been initialized.
-bool input_initialized = false;
-
 /// Initialize terminfo.
 static void init_input_terminfo();
 
@@ -263,9 +261,15 @@ static int interrupt_handler() {
     return R_NULL;
 }
 
+static std::atomic<bool> input_initialized{false};
+
 /// Set up arrays used by readch to detect escape sequences for special keys and perform related
 /// initializations for our input subsystem.
 void init_input() {
+    ASSERT_IS_MAIN_THREAD();
+    if (input_initialized.load(std::memory_order_relaxed)) return;
+    input_initialized.store(true, std::memory_order_relaxed);
+
     input_common_init(&interrupt_handler);
     init_input_terminfo();
 
@@ -285,14 +289,6 @@ void init_input() {
         input_mapping_add(L"\x1B[C", L"forward-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
         input_mapping_add(L"\x1B[D", L"backward-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
     }
-
-    input_initialized = true;
-}
-
-void input_destroy() {
-    if (!input_initialized) return;
-    input_initialized = false;
-    input_common_destroy();
 }
 
 void input_function_push_arg(wchar_t arg) {

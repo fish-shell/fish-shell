@@ -16,15 +16,9 @@ class environment_t;
 
 wcstring describe_char(wint_t c);
 
-/// Set to true when the input subsytem has been initialized.
-extern bool input_initialized;
-
 /// Set up arrays used by readch to detect escape sequences for special keys and perform related
 /// initializations for our input subsystem.
 void init_input();
-
-/// free up memory used by terminal functions.
-void input_destroy();
 
 /// Read a character from fd 0. Try to convert some escape sequences into character constants, but
 /// do not permanently block the escape character.

@@ -298,7 +298,6 @@ static void setup_and_process_keys(bool continuous_mode) {
     process_input(continuous_mode);
     restore_term_mode();
     restore_term_foreground_process_group();
-    input_destroy();
 }
 
 static bool parse_debug_level_flag() {

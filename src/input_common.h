@@ -85,9 +85,6 @@ enum {
 /// Init the library.
 void input_common_init(int (*ih)());
 
-/// Free memory used by the library.
-void input_common_destroy();
-
 /// Adjust the escape timeout.
 void update_wait_on_escape_ms(const environment_t &vars);
 

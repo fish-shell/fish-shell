@@ -223,9 +223,9 @@ class process_t {
     /// File descriptor that pipe output should bind to.
     int pipe_write_fd{0};
     /// True if process has completed.
-    volatile bool completed{false};
+    bool completed{false};
     /// True if process has stopped.
-    volatile bool stopped{false};
+    bool stopped{false};
     /// Reported status value.
     proc_status_t status{};
 #ifdef HAVE__PROC_SELF_STAT

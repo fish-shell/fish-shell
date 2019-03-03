@@ -269,23 +269,6 @@ static void mark_job_complete(const job_t *j) {
     }
 }
 
-/// Store the status of the process pid that was returned by waitpid.
-static void mark_process_status(process_t *p, proc_status_t status) {
-    // debug( 0, L"Process %ls %ls", p->argv[0], WIFSTOPPED (status)?L"stopped":(WIFEXITED( status
-    // )?L"exited":(WIFSIGNALED( status )?L"signaled to exit":L"BLARGH")) );
-    p->status = status;
-
-    if (status.stopped()) {
-        p->stopped = 1;
-    } else if (status.signal_exited() || status.normal_exited()) {
-        p->completed = 1;
-    } else {
-        // This should never be reached.
-        p->completed = 1;
-        debug(1, "Process %ld exited abnormally", (long)p->pid);
-    }
-}
-
 void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *failed_proc) {
     // The given process failed to even lift off (e.g. posix_spawn failed) and so doesn't have a
     // valid pid. Mark it and everything after it as dead.
@@ -298,46 +281,33 @@ void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process
     }
 }
 
-/// Handle status update for child \c pid.
-///
-/// \param pid the pid of the process whose status changes
-/// \param status the status as returned by wait
-static void handle_child_status(pid_t pid, proc_status_t status) {
-    job_t *j = NULL;
-    const process_t *found_proc = NULL;
-
-    job_iterator_t jobs;
-    while (!found_proc && (j = jobs.next())) {
-        process_t *prev = NULL;
-        for (process_ptr_t &p : j->processes) {
-            if (pid == p->pid) {
-                mark_process_status(p.get(), status);
-                found_proc = p.get();
-                break;
-            }
-            prev = p.get();
-        }
-    }
-
-    // If the child process was not killed by a signal or other than SIGINT or SIGQUIT we're done.
-    if (!status.signal_exited() ||
-        (status.signal_code() != SIGINT && status.signal_code() != SIGQUIT)) {
-        return;
-    }
-
-    if (is_interactive_session) {
-        // In an interactive session, tell the principal parser to skip all blocks we're executing
-        // so control-C returns control to the user.
-        if (found_proc) parser_t::skip_all_blocks();
+/// Set the status of \p proc to \p status.
+static void handle_child_status(process_t *proc, proc_status_t status) {
+    proc->status = status;
+    if (status.stopped()) {
+        proc->stopped = true;
     } else {
-        // Deliver the SIGINT or SIGQUIT signal to ourself since we're not interactive.
-        struct sigaction act;
-        sigemptyset(&act.sa_mask);
-        act.sa_flags = 0;
-        act.sa_handler = SIG_DFL;
-        sigaction(SIGINT, &act, 0);
-        sigaction(SIGQUIT, &act, 0);
-        kill(getpid(), status.signal_code());
+        proc->completed = true;
+    }
+
+    // If the child was killed by SIGINT or SIGQUIT, then treat it as if we received that signal.
+    if (status.signal_exited()) {
+        int sig = status.signal_code();
+        if (sig == SIGINT || sig == SIGQUIT) {
+            if (is_interactive_session) {
+                // In an interactive session, tell the principal parser to skip all blocks we're
+                // executing so control-C returns control to the user.
+                parser_t::skip_all_blocks();
+            } else {
+                // Deliver the SIGINT or SIGQUIT signal to ourself since we're not interactive.
+                struct sigaction act;
+                sigemptyset(&act.sa_mask);
+                act.sa_flags = 0;
+                act.sa_handler = SIG_DFL;
+                sigaction(sig, &act, 0);
+                kill(getpid(), sig);
+            }
+        }
     }
 }
 
@@ -444,7 +414,7 @@ static void process_mark_finished_children(bool block_ok) {
                         if (pid > 0) {
                             assert(pid == proc->pid && "Unexpcted waitpid() return");
                             debug(4, "Reaped PID %d", pid);
-                            handle_child_status(pid, proc_status_t::from_waitpid(status));
+                            handle_child_status(proc.get(), proc_status_t::from_waitpid(status));
                         }
                     } else {
                         assert(0 && "Don't know how to reap this process");

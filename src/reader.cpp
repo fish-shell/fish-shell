@@ -134,7 +134,9 @@ static inline unsigned read_generation_count() {
     return s_generation.load(std::memory_order_relaxed);
 }
 
-static void set_command_line_and_position(editable_line_t *el, const wcstring &new_str, size_t pos);
+class reader_data_t;
+static void set_command_line_and_position(reader_data_t *data, editable_line_t *el,
+                                          const wcstring &new_str, size_t pos);
 
 void editable_line_t::insert_string(const wcstring &str, size_t start, size_t len) {
     // Clamp the range to something valid.
@@ -1858,9 +1860,8 @@ void reader_sanity_check() {
 }
 
 /// Set the specified string as the current buffer.
-static void set_command_line_and_position(editable_line_t *el, const wcstring &new_str,
-                                          size_t pos) {
-    reader_data_t *data = current_data();
+static void set_command_line_and_position(reader_data_t *data, editable_line_t *el,
+                                          const wcstring &new_str, size_t pos) {
     el->text = new_str;
     update_buff_pos(el, pos);
     data->command_line_changed(el);
@@ -1886,7 +1887,7 @@ static void reader_replace_current_token(const wcstring &new_token) {
     new_buff.append(end);
     new_pos = (begin - buff) + new_token.size();
 
-    set_command_line_and_position(el, new_buff, new_pos);
+    set_command_line_and_position(data, el, new_buff, new_pos);
 }
 
 /// Apply the history search to the command line.
@@ -1897,7 +1898,7 @@ static void update_command_line_from_history_search() {
     if (data->history_search.by_token()) {
         reader_replace_current_token(new_text);
     } else if (data->history_search.by_line()) {
-        set_command_line_and_position(&data->command_line, new_text, new_text.size());
+        set_command_line_and_position(data, &data->command_line, new_text, new_text.size());
     }
 }
 
@@ -2561,7 +2562,7 @@ maybe_t<wcstring> reader_readline(int nchars) {
 
         // Restore the text.
         if (c == R_CANCEL && data->is_navigating_pager_contents()) {
-            set_command_line_and_position(&data->command_line, data->cycle_command_line,
+            set_command_line_and_position(data, &data->command_line, data->cycle_command_line,
                                           data->cycle_cursor_pos);
         }
 
@@ -3136,7 +3137,7 @@ maybe_t<wcstring> reader_readline(int nchars) {
                 if (el->position > 0) {
                     wcstring local_cmd = el->text;
                     std::swap(local_cmd.at(el->position), local_cmd.at(el->position - 1));
-                    set_command_line_and_position(el, local_cmd, el->position + 1);
+                    set_command_line_and_position(data, el, local_cmd, el->position + 1);
                 }
                 break;
             }
@@ -3177,7 +3178,7 @@ maybe_t<wcstring> reader_readline(int nchars) {
                     new_buff.append(prev);
                     new_buff.append(trail);
                     // Put cursor right after the second token.
-                    set_command_line_and_position(el, new_buff, tok_end - buff);
+                    set_command_line_and_position(data, el, new_buff, tok_end - buff);
                 }
                 break;
             }

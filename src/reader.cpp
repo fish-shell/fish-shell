@@ -411,7 +411,7 @@ class reader_data_t {
 static void reader_set_buffer_maintaining_pager(const wcstring &b, size_t pos);
 
 /// Clears the pager.
-static void clear_pager();
+static void clear_pager(reader_data_t *data);
 
 /// The stack of current interactive reading contexts.
 static std::vector<std::unique_ptr<reader_data_t>> reader_data_stack;
@@ -1402,7 +1402,7 @@ static void accept_autosuggestion(bool full,
     reader_data_t *data = current_data();
     if (!data->autosuggestion.empty()) {
         // Accepting an autosuggestion clears the pager.
-        clear_pager();
+        clear_pager(data);
 
         // Accept the autosuggestion.
         if (full) {
@@ -1425,12 +1425,10 @@ static void accept_autosuggestion(bool full,
 }
 
 // Ensure we have no pager contents.
-static void clear_pager() {
-    if (reader_data_t *data = current_data_or_null()) {
-        data->pager.clear();
-        data->current_page_rendering = page_rendering_t();
-        reader_repaint_needed();
-    }
+static void clear_pager(reader_data_t *data) {
+    data->pager.clear();
+    data->current_page_rendering = page_rendering_t();
+    reader_repaint_needed();
 }
 
 static void select_completion_in_direction(enum selection_direction_t dir) {
@@ -1990,7 +1988,7 @@ void reader_set_buffer(const wcstring &b, size_t pos) {
     reader_data_t *data = current_data_or_null();
     if (!data) return;
 
-    clear_pager();
+    clear_pager(data);
     reader_set_buffer_maintaining_pager(b, pos);
 }
 
@@ -2543,7 +2541,7 @@ maybe_t<wcstring> reader_readline(int nchars) {
 
                 // End paging upon inserting into the normal command line.
                 if (el == &data->command_line) {
-                    clear_pager();
+                    clear_pager(data);
                 }
                 last_char = c;
             }
@@ -2570,7 +2568,7 @@ maybe_t<wcstring> reader_readline(int nchars) {
         // Clear the pager if necessary.
         bool focused_on_search_field = (data->active_edit_line() == &data->pager.search_field_line);
         if (command_ends_paging(c, focused_on_search_field)) {
-            clear_pager();
+            clear_pager(data);
         }
         // fwprintf(stderr, L"\n\nchar: %ls\n\n", describe_char(c).c_str());
 
@@ -2845,7 +2843,7 @@ maybe_t<wcstring> reader_readline(int nchars) {
             case R_EXECUTE: {
                 // If the user hits return while navigating the pager, it only clears the pager.
                 if (data->is_navigating_pager_contents()) {
-                    clear_pager();
+                    clear_pager(data);
                     break;
                 }
 
@@ -2854,7 +2852,7 @@ maybe_t<wcstring> reader_readline(int nchars) {
 
                 // The user may have hit return with pager contents, but while not navigating them.
                 // Clear the pager in that event.
-                clear_pager();
+                clear_pager(data);
 
                 // We only execute the command line.
                 editable_line_t *el = &data->command_line;
@@ -3310,7 +3308,7 @@ maybe_t<wcstring> reader_readline(int nchars) {
 
                     // End paging upon inserting into the normal command line.
                     if (el == &data->command_line) {
-                        clear_pager();
+                        clear_pager(data);
                     }
                 } else {
                     // This can happen if the user presses a control char we don't recognize. No

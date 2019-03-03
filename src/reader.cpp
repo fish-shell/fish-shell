@@ -301,6 +301,11 @@ class reader_history_search_t {
     }
 };
 
+struct autosuggestion_result_t {
+    wcstring suggestion;
+    wcstring search_string;
+};
+
 }  // namespace
 
 /// A struct describing the state of the interactive reader. These states can be stacked, in case
@@ -428,7 +433,10 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     void mark_repaint_needed() { repaint_needed = true; }
 
+    void autosuggest_completed(autosuggestion_result_t result);
+    void update_autosuggestion();
     void accept_autosuggestion(bool full, move_word_style_t style = move_word_style_punctuation);
+    void super_highlight_me_plenty(int highlight_pos_adjust = 0, bool no_io = false);
 };
 
 /// Sets the command line contents, without clearing the pager.
@@ -470,8 +478,6 @@ static struct termios terminal_mode_on_startup;
 
 /// Mode we use to execute programs.
 static struct termios tty_modes_for_external_cmds;
-
-static void reader_super_highlight_me_plenty(int highlight_pos_adjust = 0, bool no_io = false);
 
 /// Tracks a currently pending exit. This may be manipulated from a signal handler.
 struct {
@@ -651,7 +657,7 @@ void reader_data_t::kill(editable_line_t *el, size_t begin_idx, size_t length, i
     el->text.erase(begin_idx, length);
     command_line_changed(el);
 
-    reader_super_highlight_me_plenty();
+    super_highlight_me_plenty();
     repaint();
 }
 
@@ -1121,7 +1127,7 @@ static void remove_backward() {
     data->command_line_changed(el);
     data->suppress_autosuggestion = true;
 
-    reader_super_highlight_me_plenty();
+    data->super_highlight_me_plenty();
 
     reader_repaint_needed();
 }
@@ -1172,7 +1178,7 @@ bool reader_data_t::insert_string(editable_line_t *el, const wcstring &str,
         // Syntax highlight. Note we must have that buff_pos > 0 because we just added something
         // nonzero to its length.
         assert(el->position > 0);
-        reader_super_highlight_me_plenty(-1);
+        super_highlight_me_plenty(-1);
     }
 
     repaint();
@@ -1294,11 +1300,6 @@ static void completion_insert(const wchar_t *val, complete_flags_t flags) {
     reader_set_buffer_maintaining_pager(data, new_command_line, cursor);
 }
 
-struct autosuggestion_result_t {
-    wcstring suggestion;
-    wcstring search_string;
-};
-
 // Returns a function that can be invoked (potentially
 // on a background thread) to determine the autosuggestion
 static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer(
@@ -1381,27 +1382,28 @@ static bool can_autosuggest() {
 }
 
 // Called after an autosuggestion has been computed on a background thread
-static void autosuggest_completed(autosuggestion_result_t result) {
-    reader_data_t *data = current_data();
+void reader_data_t::autosuggest_completed(autosuggestion_result_t result) {
     if (!result.suggestion.empty() && can_autosuggest() &&
-        result.search_string == data->command_line.text &&
+        result.search_string == command_line.text &&
         string_prefixes_string_case_insensitive(result.search_string, result.suggestion)) {
         // Autosuggestion is active and the search term has not changed, so we're good to go.
-        data->autosuggestion = std::move(result.suggestion);
+        autosuggestion = std::move(result.suggestion);
         sanity_check();
-        data->repaint();
+        repaint();
     }
 }
 
-static void update_autosuggestion() {
+void reader_data_t::update_autosuggestion() {
     // Updates autosuggestion. We look for an autosuggestion if the command line is non-empty and if
     // we're not doing a history search.
-    reader_data_t *data = current_data();
-    data->autosuggestion.clear();
+    autosuggestion.clear();
     if (can_autosuggest()) {
-        const editable_line_t *el = data->active_edit_line();
-        auto performer = get_autosuggestion_performer(el->text, el->position, data->history);
-        iothread_perform(performer, &autosuggest_completed);
+        const editable_line_t *el = active_edit_line();
+        auto performer = get_autosuggestion_performer(el->text, el->position, history);
+        auto shared_this = this->shared_from_this();
+        iothread_perform(performer, [shared_this](autosuggestion_result_t result) {
+            shared_this->autosuggest_completed(std::move(result));
+        });
     }
 }
 
@@ -1427,7 +1429,7 @@ void reader_data_t::accept_autosuggestion(bool full, move_word_style_t style) {
         }
         update_buff_pos(&command_line, command_line.size());
         command_line_changed(&command_line);
-        reader_super_highlight_me_plenty();
+        super_highlight_me_plenty();
         repaint();
     }
 }
@@ -1468,7 +1470,7 @@ static void reader_flash() {
     pollint.tv_nsec = 100 * 1000000;
     nanosleep(&pollint, NULL);
 
-    reader_super_highlight_me_plenty();
+    data->super_highlight_me_plenty();
 
     data->repaint();
 }
@@ -1870,7 +1872,7 @@ static void set_command_line_and_position(reader_data_t *data, editable_line_t *
     el->text = new_str;
     data->update_buff_pos(el, pos);
     data->command_line_changed(el);
-    reader_super_highlight_me_plenty();
+    data->super_highlight_me_plenty();
     reader_repaint_needed();
 }
 
@@ -1984,7 +1986,7 @@ static void reader_set_buffer_maintaining_pager(reader_data_t *data, const wcstr
 
     // Clear history search and pager contents.
     data->history_search.reset();
-    reader_super_highlight_me_plenty();
+    data->super_highlight_me_plenty();
     reader_repaint_needed();
 }
 
@@ -2243,7 +2245,7 @@ static std::function<highlight_result_t(void)> get_highlight_performer(const wcs
 ///        This is added to the current cursor position and may be negative.
 /// \param no_io if true, do a highlight that does not perform I/O, synchronously. If false, perform
 ///        an asynchronous highlight in the background, which may perform disk I/O.
-static void reader_super_highlight_me_plenty(int match_highlight_pos_adjust, bool no_io) {
+void reader_data_t::super_highlight_me_plenty(int match_highlight_pos_adjust, bool no_io) {
     reader_data_t *data = current_data();
     const editable_line_t *el = &data->command_line;
     assert(el != NULL);
@@ -2474,7 +2476,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
 
     exec_prompt();
 
-    reader_super_highlight_me_plenty();
+    super_highlight_me_plenty();
     s_reset(&screen, screen_reset_abandon_line);
     repaint();
 
@@ -2897,7 +2899,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                         // syntax highlighting, but a synchronous variant that performs no I/O, so
                         // as not to block the user.
                         bool skip_io = (command_test_result == 0);
-                        reader_super_highlight_me_plenty(0, skip_io);
+                        super_highlight_me_plenty(0, skip_io);
                     }
                 }
 
@@ -3211,7 +3213,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                     capitalized_first = capitalized_first || make_uppercase;
                 }
                 command_line_changed(el);
-                reader_super_highlight_me_plenty();
+                super_highlight_me_plenty();
                 reader_repaint_needed();
                 break;
             }

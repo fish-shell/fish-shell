@@ -145,6 +145,13 @@ void editable_line_t::insert_string(const wcstring &str, size_t start, size_t le
 
 namespace {
 
+/// Test if the given string contains error. Since this is the error detection for general purpose,
+/// there are no invalid strings, so this function always returns false.
+parser_test_error_bits_t default_test(const wcstring &b) {
+    UNUSED(b);
+    return 0;
+}
+
 /// Encapsulation of the reader's history search functionality.
 class reader_history_search_t {
    public:
@@ -361,9 +368,9 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// Function for tab completion.
     complete_function_t complete_func{nullptr};
     /// Function for syntax highlighting.
-    highlight_function_t highlight_func{nullptr};
+    highlight_function_t highlight_func{highlight_universal};
     /// Function for testing if the string can be returned.
-    test_function_t test_func{nullptr};
+    test_function_t test_func{default_test};
     /// If this is true, exit reader even if there are running jobs. This happens if we press e.g.
     /// ^D twice.
     bool prev_end_loop{false};
@@ -408,6 +415,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// Expand abbreviations at the current cursor position, minus backtrack_amt.
     bool expand_abbreviation_as_necessary(size_t cursor_backtrack);
 
+    void repaint_if_needed();
+
     /// Return the variable set used for e.g. command duration.
     env_stack_t &vars() { return parser_t::principal_parser().vars(); }
 
@@ -436,6 +445,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     maybe_t<wcstring> readline(int nchars);
 
     void clear_pager();
+    void select_completion_in_direction(enum selection_direction_t dir);
+    void flash();
 
     void mark_repaint_needed() { repaint_needed = true; }
 
@@ -447,6 +458,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void accept_autosuggestion(bool full, move_word_style_t style = move_word_style_punctuation);
     void super_highlight_me_plenty(int highlight_pos_adjust = 0, bool no_io = false);
 
+    void highlight_search();
     void highlight_complete(highlight_result_t result);
     void exec_prompt();
 
@@ -456,27 +468,13 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     bool handle_completions(const std::vector<completion_t> &comp,
                             bool cont_after_prefix_insertion);
 
+    void sanity_check() const;
     void set_command_line_and_position(editable_line_t *el, const wcstring &new_str, size_t pos);
     void replace_current_token(const wcstring &new_token);
     void update_command_line_from_history_search();
     void set_buffer_maintaining_pager(const wcstring &b, size_t pos);
     void remove_backward();
 };
-
-/// The stack of current interactive reading contexts.
-static std::vector<std::shared_ptr<reader_data_t>> reader_data_stack;
-
-/// Access the top level reader data.
-static reader_data_t *current_data_or_null() {
-    ASSERT_IS_MAIN_THREAD();
-    return reader_data_stack.empty() ? nullptr : reader_data_stack.back().get();
-}
-
-static reader_data_t *current_data() {
-    ASSERT_IS_MAIN_THREAD();
-    assert(!reader_data_stack.empty() && "no current reader");
-    return reader_data_stack.back().get();
-}
 
 /// This flag is set to true when fish is interactively reading from stdin. It changes how a ^C is
 /// handled by the fish interrupt handler.
@@ -525,20 +523,6 @@ static void term_donate(outputter_t &outp) {
             }
         } else
             break;
-    }
-}
-
-/// Update the cursor position.
-void reader_data_t::update_buff_pos(editable_line_t *el, size_t buff_pos) {
-    el->position = buff_pos;
-    if (el == &command_line && sel_active) {
-        if (sel_begin_pos <= buff_pos) {
-            sel_start_pos = sel_begin_pos;
-            sel_stop_pos = buff_pos;
-        } else {
-            sel_start_pos = buff_pos;
-            sel_stop_pos = sel_begin_pos;
-        }
     }
 }
 
@@ -598,6 +582,20 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
         }
     }
     return full_line;
+}
+
+/// Update the cursor position.
+void reader_data_t::update_buff_pos(editable_line_t *el, size_t buff_pos) {
+    el->position = buff_pos;
+    if (el == &command_line && sel_active) {
+        if (sel_begin_pos <= buff_pos) {
+            sel_start_pos = sel_begin_pos;
+            sel_stop_pos = buff_pos;
+        } else {
+            sel_start_pos = buff_pos;
+            sel_stop_pos = sel_begin_pos;
+        }
+    }
 }
 
 /// Repaint the entire commandline. This means reset and clear the commandline, write the prompt,
@@ -838,6 +836,21 @@ bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack) {
     return result;
 }
 
+void reader_data_t::repaint_if_needed() {
+    bool needs_reset = screen_reset_needed;
+    bool needs_repaint = needs_reset || repaint_needed;
+
+    if (needs_reset) {
+        exec_prompt();
+        s_reset(&screen, screen_reset_current_line_and_prompt);
+        screen_reset_needed = false;
+    }
+
+    if (needs_repaint) {
+        repaint();  // reader_repaint clears repaint_needed
+    }
+}
+
 void reader_reset_interrupted() { interrupted = 0; }
 
 bool reader_test_interrupted() { return interrupted != 0; }
@@ -848,18 +861,6 @@ bool reader_test_and_clear_interrupted() {
         interrupted = 0;
     }
     return res != 0;
-}
-
-int reader_reading_interrupted() {
-    int res = reader_test_and_clear_interrupted();
-    reader_data_t *data = current_data_or_null();
-    if (res && data && data->exit_on_interrupt) {
-        reader_set_end_loop(true);
-        parser_t::skip_all_blocks();
-        // We handled the interrupt ourselves, our caller doesn't need to handle it.
-        return 0;
-    }
-    return res;
 }
 
 bool reader_thread_job_is_stale() {
@@ -882,7 +883,7 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
 
     wcstring_list_t lst;
     proc_push_interactive(0);
-    if (exec_subshell(fish_title_command, current_data()->parser(), lst,
+    if (exec_subshell(fish_title_command, parser_t::principal_parser(), lst,
                       false /* ignore exit status */) != -1 &&
         !lst.empty()) {
         fputws(L"\x1B]0;", stdout);
@@ -1023,41 +1024,6 @@ void reader_set_end_loop(bool flag) { s_pending_exit.end_current_loop = flag; }
 void reader_force_exit() {
     // Beware, we may be in a signal handler.
     s_pending_exit.force = true;
-}
-
-void reader_repaint_needed() {
-    if (reader_data_t *data = current_data_or_null()) {
-        data->repaint_needed = true;
-    }
-}
-
-void reader_repaint_if_needed() {
-    reader_data_t *data = current_data_or_null();
-    if (!data) return;
-
-    bool needs_reset = data->screen_reset_needed;
-    bool needs_repaint = needs_reset || data->repaint_needed;
-
-    if (needs_reset) {
-        data->exec_prompt();
-        s_reset(&data->screen, screen_reset_current_line_and_prompt);
-        data->screen_reset_needed = false;
-    }
-
-    if (needs_repaint) {
-        data->repaint();  // reader_repaint clears repaint_needed
-    }
-}
-
-void reader_react_to_color_change() {
-    reader_data_t *data = current_data_or_null();
-    if (!data) return;
-
-    if (!data->repaint_needed || !data->screen_reset_needed) {
-        data->repaint_needed = true;
-        data->screen_reset_needed = true;
-        input_common_add_callback(reader_repaint_if_needed);
-    }
 }
 
 /// Indicates if the given command char ends paging.
@@ -1454,38 +1420,34 @@ void reader_data_t::clear_pager() {
     mark_repaint_needed();
 }
 
-static void select_completion_in_direction(enum selection_direction_t dir) {
-    reader_data_t *data = current_data();
-    bool selection_changed =
-        data->pager.select_next_completion_in_direction(dir, data->current_page_rendering);
+void reader_data_t::select_completion_in_direction(enum selection_direction_t dir) {
+    bool selection_changed = pager.select_next_completion_in_direction(dir, current_page_rendering);
     if (selection_changed) {
-        data->pager_selection_changed();
+        pager_selection_changed();
     }
 }
 
 /// Flash the screen. This function changes the color of the current line momentarily and sends a
 /// BEL to maybe flash the screen or emite a sound, depending on how it is configured.
-static void reader_flash() {
+void reader_data_t::flash() {
     struct timespec pollint;
-    reader_data_t *data = current_data();
-    editable_line_t *el = &data->command_line;
+    editable_line_t *el = &command_line;
     for (size_t i = 0; i < el->position; i++) {
-        data->colors.at(i) = highlight_spec_search_match << 16;
+        colors.at(i) = highlight_spec_search_match << 16;
     }
 
-    data->repaint();
+    repaint();
     ignore_result(write(STDOUT_FILENO, "\a", 1));
     // The write above changed the timestamp of stdout; ensure we don't therefore reset our screen.
     // See #3693.
-    s_save_status(&data->screen);
+    s_save_status(&screen);
 
     pollint.tv_sec = 0;
     pollint.tv_nsec = 100 * 1000000;
     nanosleep(&pollint, NULL);
 
-    data->super_highlight_me_plenty();
-
-    data->repaint();
+    super_highlight_me_plenty();
+    repaint();
 }
 
 /// Characters that may not be part of a token that is to be replaced by a case insensitive
@@ -1560,7 +1522,7 @@ bool reader_data_t::handle_completions(const std::vector<completion_t> &comp,
     size_t size = comp.size();
     if (size == 0) {
         // No suitable completions found, flash screen and return.
-        reader_flash();
+        flash();
         done = true;
         success = false;
     } else if (size == 1) {
@@ -1868,14 +1830,10 @@ static void reader_interactive_destroy() {
     outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
 }
 
-void reader_sanity_check() {
-    // Note: 'data' is non-null if we are interactive, except in the testing environment.
-    reader_data_t *data = current_data_or_null();
-    if (shell_is_interactive() && data != NULL) {
-        if (data->command_line.position > data->command_line.size()) sanity_lose();
-        if (data->colors.size() != data->command_line.size()) sanity_lose();
-        if (data->indents.size() != data->command_line.size()) sanity_lose();
-    }
+void reader_data_t::sanity_check() const {
+    if (command_line.position > command_line.size()) sanity_lose();
+    if (colors.size() != command_line.size()) sanity_lose();
+    if (indents.size() != command_line.size()) sanity_lose();
 }
 
 /// Set the specified string as the current buffer.
@@ -1893,8 +1851,7 @@ void reader_data_t::replace_current_token(const wcstring &new_token) {
     size_t new_pos;
 
     // Find current token.
-    reader_data_t *data = current_data();
-    editable_line_t *el = data->active_edit_line();
+    editable_line_t *el = active_edit_line();
     const wchar_t *buff = el->text.c_str();
     parse_util_token_extent(buff, el->position, &begin, &end, 0, 0);
 
@@ -1969,18 +1926,6 @@ void reader_data_t::move_word(editable_line_t *el, bool move_right, bool erase,
     }
 }
 
-const wchar_t *reader_get_buffer() {
-    ASSERT_IS_MAIN_THREAD();
-    reader_data_t *data = current_data_or_null();
-    return data ? data->command_line.text.c_str() : NULL;
-}
-
-history_t *reader_get_history() {
-    ASSERT_IS_MAIN_THREAD();
-    reader_data_t *data = current_data_or_null();
-    return data ? data->history : NULL;
-}
-
 /// Sets the command line contents, without clearing the pager.
 void reader_data_t::set_buffer_maintaining_pager(const wcstring &b, size_t pos) {
     // Callers like to pass us pointers into ourselves, so be careful! I don't know if we can use
@@ -1998,33 +1943,6 @@ void reader_data_t::set_buffer_maintaining_pager(const wcstring &b, size_t pos) 
     history_search.reset();
     super_highlight_me_plenty();
     reader_repaint_needed();
-}
-
-/// Sets the command line contents, clearing the pager.
-void reader_set_buffer(const wcstring &b, size_t pos) {
-    reader_data_t *data = current_data_or_null();
-    if (!data) return;
-
-    data->clear_pager();
-    data->set_buffer_maintaining_pager(b, pos);
-}
-
-size_t reader_get_cursor_pos() {
-    reader_data_t *data = current_data_or_null();
-    if (!data) return (size_t)-1;
-
-    return data->command_line.position;
-}
-
-bool reader_get_selection(size_t *start, size_t *len) {
-    bool result = false;
-    reader_data_t *data = current_data_or_null();
-    if (data != NULL && data->sel_active) {
-        *start = data->sel_start_pos;
-        *len = std::min(data->sel_stop_pos - data->sel_start_pos, data->command_line.size());
-        result = true;
-    }
-    return result;
 }
 
 void set_env_cmd_duration(struct timeval *after, struct timeval *before, env_stack_t &vars) {
@@ -2096,11 +2014,112 @@ parser_test_error_bits_t reader_shell_test(const wcstring &b) {
     return res;
 }
 
-/// Test if the given string contains error. Since this is the error detection for general purpose,
-/// there are no invalid strings, so this function always returns false.
-static parser_test_error_bits_t default_test(const wcstring &b) {
-    UNUSED(b);
-    return 0;
+/// Called to set the highlight flag for search results.
+void reader_data_t::highlight_search() {
+    if (history_search.is_at_end()) {
+        return;
+    }
+    const wcstring &needle = history_search.search_string();
+    const editable_line_t *el = &command_line;
+    size_t match_pos = el->text.find(needle);
+    if (match_pos != wcstring::npos) {
+        size_t end = match_pos + needle.size();
+        for (size_t i = match_pos; i < end; i++) {
+            colors.at(i) |= (highlight_spec_search_match << 16);
+        }
+    }
+}
+
+void reader_data_t::highlight_complete(highlight_result_t result) {
+    ASSERT_IS_MAIN_THREAD();
+    if (result.text == command_line.text) {
+        // The data hasn't changed, so swap in our colors. The colors may not have changed, so do
+        // nothing if they have not.
+        assert(result.colors.size() == command_line.size());
+        if (colors != result.colors) {
+            colors = std::move(result.colors);
+            sanity_check();
+            highlight_search();
+            repaint();
+        }
+    }
+}
+
+// Given text, bracket matching position, and whether IO is allowed,
+// return a function that performs highlighting. The function may be invoked on a background thread.
+static std::function<highlight_result_t(void)> get_highlight_performer(
+    const wcstring &text, long match_highlight_pos, highlight_function_t highlight_func) {
+    env_vars_snapshot_t vars(parser_t::principal_parser().vars(),
+                             env_vars_snapshot_t::highlighting_keys);
+    unsigned int generation_count = read_generation_count();
+    return [=]() -> highlight_result_t {
+        if (text.empty()) return {};
+        if (generation_count != read_generation_count()) {
+            // The gen count has changed, so don't do anything.
+            return {};
+        }
+        s_thread_generation = generation_count;
+        std::vector<highlight_spec_t> colors(text.size(), 0);
+        highlight_func(text, colors, match_highlight_pos, NULL /* error */, vars);
+        return {std::move(colors), text};
+    };
+}
+
+/// Call specified external highlighting function and then do search highlighting. Lastly, clear the
+/// background color under the cursor to avoid repaint issues on terminals where e.g. syntax
+/// highlighting maykes characters under the sursor unreadable.
+///
+/// \param match_highlight_pos_adjust the adjustment to the position to use for bracket matching.
+///        This is added to the current cursor position and may be negative.
+/// \param no_io if true, do a highlight that does not perform I/O, synchronously. If false, perform
+///        an asynchronous highlight in the background, which may perform disk I/O.
+void reader_data_t::super_highlight_me_plenty(int match_highlight_pos_adjust, bool no_io) {
+    const editable_line_t *el = &command_line;
+    assert(el != NULL);
+    long match_highlight_pos = (long)el->position + match_highlight_pos_adjust;
+    assert(match_highlight_pos >= 0);
+
+    sanity_check();
+
+    auto highlight_performer = get_highlight_performer(
+        el->text, match_highlight_pos, no_io ? highlight_shell_no_io : highlight_func);
+    if (no_io) {
+        // Highlighting without IO, we just do it.
+        highlight_complete(highlight_performer());
+    } else {
+        // Highlighting including I/O proceeds in the background.
+        auto shared_this = this->shared_from_this();
+        iothread_perform(highlight_performer, [shared_this](highlight_result_t result) {
+            shared_this->highlight_complete(std::move(result));
+        });
+    }
+    highlight_search();
+
+    // Here's a hack. Check to see if our autosuggestion still applies; if so, don't recompute it.
+    // Since the autosuggestion computation is asynchronous, this avoids "flashing" as you type into
+    // the autosuggestion.
+    const wcstring &cmd = el->text, &suggest = autosuggestion;
+    if (can_autosuggest() && !suggest.empty() &&
+        string_prefixes_string_case_insensitive(cmd, suggest)) {
+        ;  // the autosuggestion is still reasonable, so do nothing
+    } else {
+        update_autosuggestion();
+    }
+}
+
+/// The stack of current interactive reading contexts.
+static std::vector<std::shared_ptr<reader_data_t>> reader_data_stack;
+
+/// Access the top level reader data.
+static reader_data_t *current_data_or_null() {
+    ASSERT_IS_MAIN_THREAD();
+    return reader_data_stack.empty() ? nullptr : reader_data_stack.back().get();
+}
+
+static reader_data_t *current_data() {
+    ASSERT_IS_MAIN_THREAD();
+    assert(!reader_data_stack.empty() && "no current reader");
+    return reader_data_stack.back().get();
 }
 
 void reader_change_history(const wcstring &name) {
@@ -2122,9 +2141,6 @@ void reader_push(const wcstring &name) {
     }
 
     data->exec_prompt();
-    reader_set_highlight_function(&highlight_universal);
-    reader_set_test_function(&default_test);
-    reader_set_left_prompt(L"");
 }
 
 void reader_pop() {
@@ -2184,102 +2200,6 @@ void reader_import_history_if_necessary() {
             data->history->populate_from_bash(f);
             fclose(f);
         }
-    }
-}
-
-/// Called to set the highlight flag for search results.
-static void highlight_search(reader_data_t *data) {
-    if (data->history_search.is_at_end()) {
-        return;
-    }
-    const wcstring &needle = data->history_search.search_string();
-    const editable_line_t *el = &data->command_line;
-    size_t match_pos = el->text.find(needle);
-    if (match_pos != wcstring::npos) {
-        size_t end = match_pos + needle.size();
-        for (size_t i = match_pos; i < end; i++) {
-            data->colors.at(i) |= (highlight_spec_search_match << 16);
-        }
-    }
-}
-
-void reader_data_t::highlight_complete(highlight_result_t result) {
-    ASSERT_IS_MAIN_THREAD();
-    if (result.text == command_line.text) {
-        // The data hasn't changed, so swap in our colors. The colors may not have changed, so do
-        // nothing if they have not.
-        assert(result.colors.size() == command_line.size());
-        if (colors != result.colors) {
-            colors = std::move(result.colors);
-            sanity_check();
-            highlight_search(this);
-            repaint();
-        }
-    }
-}
-
-// Given text, bracket matching position, and whether IO is allowed,
-// return a function that performs highlighting. The function may be invoked on a background thread.
-static std::function<highlight_result_t(void)> get_highlight_performer(const wcstring &text,
-                                                                       long match_highlight_pos,
-                                                                       bool no_io) {
-    env_vars_snapshot_t vars(parser_t::principal_parser().vars(),
-                             env_vars_snapshot_t::highlighting_keys);
-    unsigned int generation_count = read_generation_count();
-    highlight_function_t highlight_func =
-        no_io ? highlight_shell_no_io : current_data()->highlight_func;
-    return [=]() -> highlight_result_t {
-        if (text.empty()) return {};
-        if (generation_count != read_generation_count()) {
-            // The gen count has changed, so don't do anything.
-            return {};
-        }
-        s_thread_generation = generation_count;
-        std::vector<highlight_spec_t> colors(text.size(), 0);
-        highlight_func(text, colors, match_highlight_pos, NULL /* error */, vars);
-        return {std::move(colors), text};
-    };
-}
-
-/// Call specified external highlighting function and then do search highlighting. Lastly, clear the
-/// background color under the cursor to avoid repaint issues on terminals where e.g. syntax
-/// highlighting maykes characters under the sursor unreadable.
-///
-/// \param match_highlight_pos_adjust the adjustment to the position to use for bracket matching.
-///        This is added to the current cursor position and may be negative.
-/// \param no_io if true, do a highlight that does not perform I/O, synchronously. If false, perform
-///        an asynchronous highlight in the background, which may perform disk I/O.
-void reader_data_t::super_highlight_me_plenty(int match_highlight_pos_adjust, bool no_io) {
-    reader_data_t *data = current_data();
-    const editable_line_t *el = &data->command_line;
-    assert(el != NULL);
-    long match_highlight_pos = (long)el->position + match_highlight_pos_adjust;
-    assert(match_highlight_pos >= 0);
-
-    reader_sanity_check();
-
-    auto highlight_performer = get_highlight_performer(el->text, match_highlight_pos, no_io);
-    if (no_io) {
-        // Highlighting without IO, we just do it.
-        highlight_complete(highlight_performer());
-    } else {
-        // Highlighting including I/O proceeds in the background.
-        auto shared_this = this->shared_from_this();
-        iothread_perform(highlight_performer, [shared_this](highlight_result_t result) {
-            shared_this->highlight_complete(std::move(result));
-        });
-    }
-    highlight_search(data);
-
-    // Here's a hack. Check to see if our autosuggestion still applies; if so, don't recompute it.
-    // Since the autosuggestion computation is asynchronous, this avoids "flashing" as you type into
-    // the autosuggestion.
-    const wcstring &cmd = el->text, &suggest = data->autosuggestion;
-    if (can_autosuggest() && !suggest.empty() &&
-        string_prefixes_string_case_insensitive(cmd, suggest)) {
-        ;  // the autosuggestion is still reasonable, so do nothing
-    } else {
-        update_autosuggestion();
     }
 }
 
@@ -3333,7 +3253,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
 
         last_char = c;
 
-        reader_repaint_if_needed();
+        repaint_if_needed();
     }
 
     ignore_result(write(STDOUT_FILENO, "\n", 1));
@@ -3411,6 +3331,86 @@ bool reader_is_in_search_mode() {
 bool reader_has_pager_contents() {
     reader_data_t *data = current_data_or_null();
     return data && !data->current_page_rendering.screen_data.empty();
+}
+
+int reader_reading_interrupted() {
+    int res = reader_test_and_clear_interrupted();
+    reader_data_t *data = current_data_or_null();
+    if (res && data && data->exit_on_interrupt) {
+        reader_set_end_loop(true);
+        parser_t::skip_all_blocks();
+        // We handled the interrupt ourselves, our caller doesn't need to handle it.
+        return 0;
+    }
+    return res;
+}
+
+void reader_repaint_needed() {
+    if (reader_data_t *data = current_data_or_null()) {
+        data->mark_repaint_needed();
+    }
+}
+
+void reader_repaint_if_needed() {
+    if (reader_data_t *data = current_data_or_null()) {
+        data->repaint_if_needed();
+    }
+}
+
+void reader_react_to_color_change() {
+    reader_data_t *data = current_data_or_null();
+    if (!data) return;
+
+    if (!data->repaint_needed || !data->screen_reset_needed) {
+        data->repaint_needed = true;
+        data->screen_reset_needed = true;
+        input_common_add_callback(reader_repaint_if_needed);
+    }
+}
+
+const wchar_t *reader_get_buffer() {
+    ASSERT_IS_MAIN_THREAD();
+    reader_data_t *data = current_data_or_null();
+    return data ? data->command_line.text.c_str() : NULL;
+}
+
+history_t *reader_get_history() {
+    ASSERT_IS_MAIN_THREAD();
+    reader_data_t *data = current_data_or_null();
+    return data ? data->history : NULL;
+}
+
+void reader_sanity_check() {
+    if (reader_data_t *data = current_data_or_null()) {
+        data->sanity_check();
+    }
+}
+
+/// Sets the command line contents, clearing the pager.
+void reader_set_buffer(const wcstring &b, size_t pos) {
+    reader_data_t *data = current_data_or_null();
+    if (!data) return;
+
+    data->clear_pager();
+    data->set_buffer_maintaining_pager(b, pos);
+}
+
+size_t reader_get_cursor_pos() {
+    reader_data_t *data = current_data_or_null();
+    if (!data) return (size_t)-1;
+
+    return data->command_line.position;
+}
+
+bool reader_get_selection(size_t *start, size_t *len) {
+    bool result = false;
+    reader_data_t *data = current_data_or_null();
+    if (data != NULL && data->sel_active) {
+        *start = data->sel_start_pos;
+        *len = std::min(data->sel_stop_pos - data->sel_start_pos, data->command_line.size());
+        result = true;
+    }
+    return result;
 }
 
 /// Read non-interactively.  Read input from stdin without displaying the prompt, using syntax

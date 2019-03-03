@@ -2172,8 +2172,7 @@ void reader_import_history_if_necessary() {
 }
 
 /// Called to set the highlight flag for search results.
-static void highlight_search() {
-    reader_data_t *data = current_data();
+static void highlight_search(reader_data_t *data) {
     if (data->history_search.is_at_end()) {
         return;
     }
@@ -2203,7 +2202,7 @@ static void highlight_complete(highlight_result_t result) {
         if (data->colors != result.colors) {
             data->colors = std::move(result.colors);
             sanity_check();
-            highlight_search();
+            highlight_search(data);
             reader_repaint();
         }
     }
@@ -2257,7 +2256,7 @@ static void reader_super_highlight_me_plenty(int match_highlight_pos_adjust, boo
         // Highlighting including I/O proceeds in the background.
         iothread_perform(highlight_performer, &highlight_complete);
     }
-    highlight_search();
+    highlight_search(data);
 
     // Here's a hack. Check to see if our autosuggestion still applies; if so, don't recompute it.
     // Since the autosuggestion computation is asynchronous, this avoids "flashing" as you type into

@@ -168,7 +168,7 @@ complete -c emerge -s u -l update
 complete -c emerge -s k -l usepkg       -d "Use binary pkg if available"
 complete -c emerge -s K -l usepkgonly   -d "Only use binary pkgs"
 complete -c emerge -s v -l verbose      -d "Run in verbose mode"
-# verbose-conflicts
+complete -c emerge      -l verbose-conflicts -d "Verbose slot conflicts"
 # verbose-slot-rebuilds
 complete -c emerge      -l with-bdeps   -d "Pull in build time dependencies" \
 	-xa "y n"

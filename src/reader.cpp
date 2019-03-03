@@ -444,6 +444,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void super_highlight_me_plenty(int highlight_pos_adjust = 0, bool no_io = false);
 
     void highlight_complete(highlight_result_t result);
+    void exec_prompt();
 };
 
 /// Sets the command line contents, without clearing the pager.
@@ -888,12 +889,11 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
     }
 }
 
-/// Reexecute the prompt command. The output is inserted into data->prompt_buff.
-static void exec_prompt() {
+/// Reexecute the prompt command. The output is inserted into prompt_buff.
+void reader_data_t::exec_prompt() {
     // Clear existing prompts.
-    reader_data_t *data = current_data();
-    data->left_prompt_buff.clear();
-    data->right_prompt_buff.clear();
+    left_prompt_buff.clear();
+    right_prompt_buff.clear();
 
     // Do not allow the exit status of the prompts to leak through.
     const bool apply_exit_status = false;
@@ -903,38 +903,38 @@ static void exec_prompt() {
     (void)get_current_winsize();
 
     // If we have any prompts, they must be run non-interactively.
-    if (data->left_prompt.size() || data->right_prompt.size()) {
+    if (left_prompt.size() || right_prompt.size()) {
         proc_push_interactive(0);
 
         // Prepend any mode indicator to the left prompt (issue #1988).
         if (function_exists(MODE_PROMPT_FUNCTION_NAME)) {
             wcstring_list_t mode_indicator_list;
-            exec_subshell(MODE_PROMPT_FUNCTION_NAME, data->parser(), mode_indicator_list,
+            exec_subshell(MODE_PROMPT_FUNCTION_NAME, parser(), mode_indicator_list,
                           apply_exit_status);
             // We do not support multiple lines in the mode indicator, so just concatenate all of
             // them.
             for (size_t i = 0; i < mode_indicator_list.size(); i++) {
-                data->left_prompt_buff += mode_indicator_list.at(i);
+                left_prompt_buff += mode_indicator_list.at(i);
             }
         }
 
-        if (!data->left_prompt.empty()) {
+        if (!left_prompt.empty()) {
             wcstring_list_t prompt_list;
             // Ignore return status.
-            exec_subshell(data->left_prompt, data->parser(), prompt_list, apply_exit_status);
+            exec_subshell(left_prompt, parser(), prompt_list, apply_exit_status);
             for (size_t i = 0; i < prompt_list.size(); i++) {
-                if (i > 0) data->left_prompt_buff += L'\n';
-                data->left_prompt_buff += prompt_list.at(i);
+                if (i > 0) left_prompt_buff += L'\n';
+                left_prompt_buff += prompt_list.at(i);
             }
         }
 
-        if (!data->right_prompt.empty()) {
+        if (!right_prompt.empty()) {
             wcstring_list_t prompt_list;
             // Status is ignored.
-            exec_subshell(data->right_prompt, data->parser(), prompt_list, apply_exit_status);
+            exec_subshell(right_prompt, parser(), prompt_list, apply_exit_status);
             for (size_t i = 0; i < prompt_list.size(); i++) {
                 // Right prompt does not support multiple lines, so just concatenate all of them.
-                data->right_prompt_buff += prompt_list.at(i);
+                right_prompt_buff += prompt_list.at(i);
             }
         }
 
@@ -1028,7 +1028,7 @@ void reader_repaint_if_needed() {
     bool needs_repaint = needs_reset || data->repaint_needed;
 
     if (needs_reset) {
-        exec_prompt();
+        data->exec_prompt();
         s_reset(&data->screen, screen_reset_current_line_and_prompt);
         data->screen_reset_needed = false;
     }
@@ -2118,7 +2118,7 @@ void reader_push(const wcstring &name) {
         reader_interactive_init();
     }
 
-    exec_prompt();
+    data->exec_prompt();
     reader_set_highlight_function(&highlight_universal);
     reader_set_test_function(&default_test);
     reader_set_left_prompt(L"");

@@ -410,7 +410,7 @@ class reader_data_t {
 };
 
 /// Sets the command line contents, without clearing the pager.
-static void reader_set_buffer_maintaining_pager(const wcstring &b, size_t pos);
+static void reader_set_buffer_maintaining_pager(reader_data_t *data, const wcstring &b, size_t pos);
 
 /// Clears the pager.
 static void clear_pager(reader_data_t *data);
@@ -698,7 +698,7 @@ void reader_data_t::pager_selection_changed() {
             completion_apply_to_command_line(completion->completion, completion->flags,
                                              this->cycle_command_line, &cursor_pos, false);
     }
-    reader_set_buffer_maintaining_pager(new_cmd_line, cursor_pos);
+    reader_set_buffer_maintaining_pager(this, new_cmd_line, cursor_pos);
 
     // Trigger repaint (see issue #765).
     reader_repaint_needed();
@@ -1283,7 +1283,7 @@ static void completion_insert(const wchar_t *val, complete_flags_t flags) {
     size_t cursor = el->position;
     wcstring new_command_line = completion_apply_to_command_line(val, flags, el->text, &cursor,
                                                                  false /* not append only */);
-    reader_set_buffer_maintaining_pager(new_command_line, cursor);
+    reader_set_buffer_maintaining_pager(data, new_command_line, cursor);
 }
 
 struct autosuggestion_result_t {
@@ -1965,8 +1965,8 @@ history_t *reader_get_history() {
 }
 
 /// Sets the command line contents, without clearing the pager.
-static void reader_set_buffer_maintaining_pager(const wcstring &b, size_t pos) {
-    reader_data_t *data = current_data();
+static void reader_set_buffer_maintaining_pager(reader_data_t *data, const wcstring &b,
+                                                size_t pos) {
     // Callers like to pass us pointers into ourselves, so be careful! I don't know if we can use
     // operator= with a pointer to our interior, so use an intermediate.
     size_t command_line_len = b.size();
@@ -1990,7 +1990,7 @@ void reader_set_buffer(const wcstring &b, size_t pos) {
     if (!data) return;
 
     clear_pager(data);
-    reader_set_buffer_maintaining_pager(b, pos);
+    reader_set_buffer_maintaining_pager(data, b, pos);
 }
 
 size_t reader_get_cursor_pos() {

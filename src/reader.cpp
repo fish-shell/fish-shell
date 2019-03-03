@@ -306,6 +306,11 @@ struct autosuggestion_result_t {
     wcstring search_string;
 };
 
+struct highlight_result_t {
+    std::vector<highlight_spec_t> colors;
+    wcstring text;
+};
+
 }  // namespace
 
 /// A struct describing the state of the interactive reader. These states can be stacked, in case
@@ -437,6 +442,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void update_autosuggestion();
     void accept_autosuggestion(bool full, move_word_style_t style = move_word_style_punctuation);
     void super_highlight_me_plenty(int highlight_pos_adjust = 0, bool no_io = false);
+
+    void highlight_complete(highlight_result_t result);
 };
 
 /// Sets the command line contents, without clearing the pager.
@@ -2193,23 +2200,17 @@ static void highlight_search(reader_data_t *data) {
     }
 }
 
-struct highlight_result_t {
-    std::vector<highlight_spec_t> colors;
-    wcstring text;
-};
-
-static void highlight_complete(highlight_result_t result) {
+void reader_data_t::highlight_complete(highlight_result_t result) {
     ASSERT_IS_MAIN_THREAD();
-    reader_data_t *data = current_data();
-    if (result.text == data->command_line.text) {
+    if (result.text == command_line.text) {
         // The data hasn't changed, so swap in our colors. The colors may not have changed, so do
         // nothing if they have not.
-        assert(result.colors.size() == data->command_line.size());
-        if (data->colors != result.colors) {
-            data->colors = std::move(result.colors);
+        assert(result.colors.size() == command_line.size());
+        if (colors != result.colors) {
+            colors = std::move(result.colors);
             sanity_check();
-            highlight_search(data);
-            data->repaint();
+            highlight_search(this);
+            repaint();
         }
     }
 }
@@ -2260,7 +2261,10 @@ void reader_data_t::super_highlight_me_plenty(int match_highlight_pos_adjust, bo
         highlight_complete(highlight_performer());
     } else {
         // Highlighting including I/O proceeds in the background.
-        iothread_perform(highlight_performer, &highlight_complete);
+        auto shared_this = this->shared_from_this();
+        iothread_perform(highlight_performer, [shared_this](highlight_result_t result) {
+            shared_this->highlight_complete(std::move(result));
+        });
     }
     highlight_search(data);
 

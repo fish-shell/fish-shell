@@ -426,9 +426,9 @@ class reader_data_t {
 
     void clear_pager();
 
-    void mark_repaint_needed() {
-        repaint_needed = true;
-    }
+    void mark_repaint_needed() { repaint_needed = true; }
+
+    void accept_autosuggestion(bool full, move_word_style_t style = move_word_style_punctuation);
 };
 
 /// Sets the command line contents, without clearing the pager.
@@ -1407,30 +1407,28 @@ static void update_autosuggestion() {
 
 // Accept any autosuggestion by replacing the command line with it. If full is true, take the whole
 // thing; if it's false, then respect the passed in style.
-static void accept_autosuggestion(bool full,
-                                  move_word_style_t style = move_word_style_punctuation) {
-    reader_data_t *data = current_data();
-    if (!data->autosuggestion.empty()) {
+void reader_data_t::accept_autosuggestion(bool full, move_word_style_t style) {
+    if (!autosuggestion.empty()) {
         // Accepting an autosuggestion clears the pager.
-        data->clear_pager();
+        clear_pager();
 
         // Accept the autosuggestion.
         if (full) {
             // Just take the whole thing.
-            data->command_line.text = data->autosuggestion;
+            command_line.text = autosuggestion;
         } else {
             // Accept characters according to the specified style.
             move_word_state_machine_t state(style);
-            for (size_t idx = data->command_line.size(); idx < data->autosuggestion.size(); idx++) {
-                wchar_t wc = data->autosuggestion.at(idx);
+            for (size_t idx = command_line.size(); idx < autosuggestion.size(); idx++) {
+                wchar_t wc = autosuggestion.at(idx);
                 if (!state.consume_char(wc)) break;
-                data->command_line.text.push_back(wc);
+                command_line.text.push_back(wc);
             }
         }
-        data->update_buff_pos(&data->command_line, data->command_line.size());
-        data->command_line_changed(&data->command_line);
+        update_buff_pos(&command_line, command_line.size());
+        command_line_changed(&command_line);
         reader_super_highlight_me_plenty();
-        data->repaint();
+        repaint();
     }
 }
 

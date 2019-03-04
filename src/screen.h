@@ -169,9 +169,9 @@ class screen_t {
 /// \param pager_data any pager data, to append to the screen
 /// \param cursor_is_within_pager whether the position is within the pager line (first line)
 void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_prompt,
-             const wcstring &commandline, size_t explicit_len, const highlight_spec_t *colors,
-             const int *indent, size_t cursor_pos, const page_rendering_t &pager_data,
-             bool cursor_is_within_pager);
+             const wcstring &commandline, size_t explicit_len,
+             const std::vector<highlight_spec_t> &colors, const std::vector<int> &indent,
+             size_t cursor_pos, const page_rendering_t &pager_data, bool cursor_is_within_pager);
 
 /// This function resets the screen buffers internal knowledge about the contents of the screen. Use
 /// this function when some other function than s_write has written to the screen.

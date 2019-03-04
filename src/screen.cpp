@@ -802,7 +802,8 @@ static size_t truncation_offset_for_width(const std::vector<size_t> &width_by_of
 static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
                                       const wcstring &left_prompt_str,
                                       const wcstring &right_prompt_str, const wcstring &commandline,
-                                      const wcstring &autosuggestion_str, const int *indent) {
+                                      const wcstring &autosuggestion_str,
+                                      const std::vector<int> &indent) {
     UNUSED(s);
     screen_layout_t result = {};
 
@@ -847,7 +848,7 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
         if (c == L'\n') {
             // Make a new line.
             command_lines.push_back(wcstring());
-            line_widths.push_back(indent[i] * INDENT_STEP);
+            line_widths.push_back(indent.at(i) * INDENT_STEP);
         } else {
             command_lines.back() += c;
             line_widths.back() += fish_wcwidth_min_0(c);
@@ -951,12 +952,10 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
 }
 
 void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_prompt,
-             const wcstring &commandline, size_t explicit_len, const highlight_spec_t *colors,
-             const int *indent, size_t cursor_pos, const page_rendering_t &pager,
-             bool cursor_is_within_pager) {
+             const wcstring &commandline, size_t explicit_len,
+             const std::vector<highlight_spec_t> &colors, const std::vector<int> &indent,
+             size_t cursor_pos, const page_rendering_t &pager, bool cursor_is_within_pager) {
     screen_data_t::cursor_t cursor_arr;
-    CHECK(s, );
-    CHECK(indent, );
 
     // Turn the command line into the explicit portion and the autosuggestion.
     const wcstring explicit_command_line = commandline.substr(0, explicit_len);

@@ -638,8 +638,8 @@ void reader_data_t::repaint() {
     bool focused_on_pager = active_edit_line() == &pager.search_field_line;
     size_t cursor_position = focused_on_pager ? pager.cursor_position() : cmd_line->position;
 
-    s_write(&screen, left_prompt_buff, right_prompt_buff, full_line, cmd_line->size(), &colors[0],
-            &indents[0], cursor_position, current_page_rendering, focused_on_pager);
+    s_write(&screen, left_prompt_buff, right_prompt_buff, full_line, cmd_line->size(), colors,
+            indents, cursor_position, current_page_rendering, focused_on_pager);
 
     repaint_needed = false;
 }

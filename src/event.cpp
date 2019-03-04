@@ -183,7 +183,7 @@ wcstring event_get_desc(const event_t &evt) {
             return format_string(_(L"handler for generic event '%ls'"), ed.str_param1.c_str());
         }
         default:
-            assert(0 && "Unknown event type");
+            DIE("Unknown event type");
     }
 }
 

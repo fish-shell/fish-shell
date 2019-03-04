@@ -376,8 +376,6 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     bool prev_end_loop{false};
     /// The current contents of the top item in the kill ring.
     wcstring kill_item;
-    /// Pointer to previous reader_data.
-    reader_data_t *next{nullptr};
     /// Keep track of whether any internal code has done something which is known to require a
     /// repaint.
     bool repaint_needed{false};

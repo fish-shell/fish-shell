@@ -4242,9 +4242,9 @@ static void test_highlighting() {
     // Here are the components of our source and the colors we expect those to be.
     struct highlight_component_t {
         const wchar_t *txt;
-        int color;
+        highlight_spec_t color;
         bool nospace;
-        highlight_component_t(const wchar_t *txt, int color, bool nospace = false)
+        highlight_component_t(const wchar_t *txt, highlight_spec_t color, bool nospace = false)
             : txt(txt), color(color), nospace(nospace) {}
     };
     const bool ns = true;
@@ -4252,182 +4252,184 @@ static void test_highlighting() {
     using highlight_component_list_t = std::vector<highlight_component_t>;
     std::vector<highlight_component_list_t> highlight_tests;
 
-    highlight_tests.push_back(
-        {{L"echo", highlight_spec_command},
-         {L"test/fish_highlight_test/foo", highlight_spec_param | highlight_modifier_valid_path},
-         {L"&", highlight_spec_statement_terminator}});
+    highlight_spec_t param_valid_path{highlight_role_t::param};
+    param_valid_path.valid_path = true;
+
+    highlight_tests.push_back({{L"echo", highlight_role_t::command},
+                               {L"test/fish_highlight_test/foo", param_valid_path},
+                               {L"&", highlight_role_t::statement_terminator}});
 
     highlight_tests.push_back({
-        {L"command", highlight_spec_command},
-        {L"echo", highlight_spec_command},
-        {L"abc", highlight_spec_param},
-        {L"test/fish_highlight_test/foo", highlight_spec_param | highlight_modifier_valid_path},
-        {L"&", highlight_spec_statement_terminator},
+        {L"command", highlight_role_t::command},
+        {L"echo", highlight_role_t::command},
+        {L"abc", highlight_role_t::param},
+        {L"test/fish_highlight_test/foo", param_valid_path},
+        {L"&", highlight_role_t::statement_terminator},
     });
 
     highlight_tests.push_back({
-        {L"if command ls", highlight_spec_command},
-        {L"; ", highlight_spec_statement_terminator},
-        {L"echo", highlight_spec_command},
-        {L"abc", highlight_spec_param},
-        {L"; ", highlight_spec_statement_terminator},
-        {L"/bin/definitely_not_a_command", highlight_spec_error},
-        {L"; ", highlight_spec_statement_terminator},
-        {L"end", highlight_spec_command},
+        {L"if command ls", highlight_role_t::command},
+        {L"; ", highlight_role_t::statement_terminator},
+        {L"echo", highlight_role_t::command},
+        {L"abc", highlight_role_t::param},
+        {L"; ", highlight_role_t::statement_terminator},
+        {L"/bin/definitely_not_a_command", highlight_role_t::error},
+        {L"; ", highlight_role_t::statement_terminator},
+        {L"end", highlight_role_t::command},
     });
 
     // Verify that cd shows errors for non-directories.
     highlight_tests.push_back({
-        {L"cd", highlight_spec_command},
-        {L"test/fish_highlight_test", highlight_spec_param | highlight_modifier_valid_path},
+        {L"cd", highlight_role_t::command},
+        {L"test/fish_highlight_test", param_valid_path},
     });
 
     highlight_tests.push_back({
-        {L"cd", highlight_spec_command},
-        {L"test/fish_highlight_test/foo", highlight_spec_error},
+        {L"cd", highlight_role_t::command},
+        {L"test/fish_highlight_test/foo", highlight_role_t::error},
     });
 
     highlight_tests.push_back({
-        {L"cd", highlight_spec_command},
-        {L"--help", highlight_spec_param},
-        {L"-h", highlight_spec_param},
-        {L"definitely_not_a_directory", highlight_spec_error},
+        {L"cd", highlight_role_t::command},
+        {L"--help", highlight_role_t::param},
+        {L"-h", highlight_role_t::param},
+        {L"definitely_not_a_directory", highlight_role_t::error},
     });
 
     // Command substitutions.
     highlight_tests.push_back({
-        {L"echo", highlight_spec_command},
-        {L"param1", highlight_spec_param},
-        {L"(", highlight_spec_operator},
-        {L"ls", highlight_spec_command},
-        {L"param2", highlight_spec_param},
-        {L")", highlight_spec_operator},
-        {L"|", highlight_spec_statement_terminator},
-        {L"cat", highlight_spec_command},
+        {L"echo", highlight_role_t::command},
+        {L"param1", highlight_role_t::param},
+        {L"(", highlight_role_t::operat},
+        {L"ls", highlight_role_t::command},
+        {L"param2", highlight_role_t::param},
+        {L")", highlight_role_t::operat},
+        {L"|", highlight_role_t::statement_terminator},
+        {L"cat", highlight_role_t::command},
     });
 
     // Redirections substitutions.
     highlight_tests.push_back({
-        {L"echo", highlight_spec_command},
-        {L"param1", highlight_spec_param},
+        {L"echo", highlight_role_t::command},
+        {L"param1", highlight_role_t::param},
 
         // Input redirection.
-        {L"<", highlight_spec_redirection},
-        {L"/bin/echo", highlight_spec_redirection},
+        {L"<", highlight_role_t::redirection},
+        {L"/bin/echo", highlight_role_t::redirection},
 
         // Output redirection to a valid fd.
-        {L"1>&2", highlight_spec_redirection},
+        {L"1>&2", highlight_role_t::redirection},
 
         // Output redirection to an invalid fd.
-        {L"2>&", highlight_spec_redirection},
-        {L"LOL", highlight_spec_error},
+        {L"2>&", highlight_role_t::redirection},
+        {L"LOL", highlight_role_t::error},
 
         // Just a param, not a redirection.
-        {L"test/blah", highlight_spec_param},
+        {L"test/blah", highlight_role_t::param},
 
         // Input redirection from directory.
-        {L"<", highlight_spec_redirection},
-        {L"test/", highlight_spec_error},
+        {L"<", highlight_role_t::redirection},
+        {L"test/", highlight_role_t::error},
 
         // Output redirection to an invalid path.
-        {L"3>", highlight_spec_redirection},
-        {L"/not/a/valid/path/nope", highlight_spec_error},
+        {L"3>", highlight_role_t::redirection},
+        {L"/not/a/valid/path/nope", highlight_role_t::error},
 
         // Output redirection to directory.
-        {L"3>", highlight_spec_redirection},
-        {L"test/nope/", highlight_spec_error},
+        {L"3>", highlight_role_t::redirection},
+        {L"test/nope/", highlight_role_t::error},
 
         // Redirections to overflow fd.
-        {L"99999999999999999999>&2", highlight_spec_error},
-        {L"2>&", highlight_spec_redirection},
-        {L"99999999999999999999", highlight_spec_error},
+        {L"99999999999999999999>&2", highlight_role_t::error},
+        {L"2>&", highlight_role_t::redirection},
+        {L"99999999999999999999", highlight_role_t::error},
 
         // Output redirection containing a command substitution.
-        {L"4>", highlight_spec_redirection},
-        {L"(", highlight_spec_operator},
-        {L"echo", highlight_spec_command},
-        {L"test/somewhere", highlight_spec_param},
-        {L")", highlight_spec_operator},
+        {L"4>", highlight_role_t::redirection},
+        {L"(", highlight_role_t::operat},
+        {L"echo", highlight_role_t::command},
+        {L"test/somewhere", highlight_role_t::param},
+        {L")", highlight_role_t::operat},
 
         // Just another param.
-        {L"param2", highlight_spec_param},
+        {L"param2", highlight_role_t::param},
     });
 
     highlight_tests.push_back({
-        {L"end", highlight_spec_error},
-        {L";", highlight_spec_statement_terminator},
-        {L"if", highlight_spec_command},
-        {L"end", highlight_spec_error},
+        {L"end", highlight_role_t::error},
+        {L";", highlight_role_t::statement_terminator},
+        {L"if", highlight_role_t::command},
+        {L"end", highlight_role_t::error},
     });
 
     highlight_tests.push_back({
-        {L"echo", highlight_spec_command},
-        {L"'single_quote", highlight_spec_error},
+        {L"echo", highlight_role_t::command},
+        {L"'single_quote", highlight_role_t::error},
     });
 
     highlight_tests.push_back({
-        {L"echo", highlight_spec_command},
-        {L"$foo", highlight_spec_operator},
-        {L"\"", highlight_spec_quote},
-        {L"$bar", highlight_spec_operator},
-        {L"\"", highlight_spec_quote},
-        {L"$baz[", highlight_spec_operator},
-        {L"1 2..3", highlight_spec_param},
-        {L"]", highlight_spec_operator},
+        {L"echo", highlight_role_t::command},
+        {L"$foo", highlight_role_t::operat},
+        {L"\"", highlight_role_t::quote},
+        {L"$bar", highlight_role_t::operat},
+        {L"\"", highlight_role_t::quote},
+        {L"$baz[", highlight_role_t::operat},
+        {L"1 2..3", highlight_role_t::param},
+        {L"]", highlight_role_t::operat},
     });
 
     highlight_tests.push_back({
-        {L"for", highlight_spec_command},
-        {L"i", highlight_spec_param},
-        {L"in", highlight_spec_command},
-        {L"1 2 3", highlight_spec_param},
-        {L";", highlight_spec_statement_terminator},
-        {L"end", highlight_spec_command},
+        {L"for", highlight_role_t::command},
+        {L"i", highlight_role_t::param},
+        {L"in", highlight_role_t::command},
+        {L"1 2 3", highlight_role_t::param},
+        {L";", highlight_role_t::statement_terminator},
+        {L"end", highlight_role_t::command},
     });
 
     highlight_tests.push_back({
-        {L"echo", highlight_spec_command},
-        {L"$$foo[", highlight_spec_operator},
-        {L"1", highlight_spec_param},
-        {L"][", highlight_spec_operator},
-        {L"2", highlight_spec_param},
-        {L"]", highlight_spec_operator},
-        {L"[3]", highlight_spec_param},  // two dollar signs, so last one is not an expansion
+        {L"echo", highlight_role_t::command},
+        {L"$$foo[", highlight_role_t::operat},
+        {L"1", highlight_role_t::param},
+        {L"][", highlight_role_t::operat},
+        {L"2", highlight_role_t::param},
+        {L"]", highlight_role_t::operat},
+        {L"[3]", highlight_role_t::param},  // two dollar signs, so last one is not an expansion
     });
 
     highlight_tests.push_back({
-        {L"cat", highlight_spec_command},
-        {L"/dev/null", highlight_spec_param},
-        {L"|", highlight_spec_statement_terminator},
+        {L"cat", highlight_role_t::command},
+        {L"/dev/null", highlight_role_t::param},
+        {L"|", highlight_role_t::statement_terminator},
         // This is bogus, but we used to use "less" here and that doesn't have to be installed.
-        {L"cat", highlight_spec_command},
-        {L"2>", highlight_spec_redirection},
+        {L"cat", highlight_role_t::command},
+        {L"2>", highlight_role_t::redirection},
     });
 
     highlight_tests.push_back({
-        {L"if", highlight_spec_command},
-        {L"true", highlight_spec_command},
-        {L"&&", highlight_spec_operator},
-        {L"false", highlight_spec_command},
-        {L";", highlight_spec_statement_terminator},
-        {L"or", highlight_spec_operator},
-        {L"false", highlight_spec_command},
-        {L"||", highlight_spec_operator},
-        {L"true", highlight_spec_command},
-        {L";", highlight_spec_statement_terminator},
-        {L"and", highlight_spec_operator},
-        {L"not", highlight_spec_operator},
-        {L"!", highlight_spec_operator},
-        {L"true", highlight_spec_command},
-        {L";", highlight_spec_statement_terminator},
-        {L"end", highlight_spec_command},
+        {L"if", highlight_role_t::command},
+        {L"true", highlight_role_t::command},
+        {L"&&", highlight_role_t::operat},
+        {L"false", highlight_role_t::command},
+        {L";", highlight_role_t::statement_terminator},
+        {L"or", highlight_role_t::operat},
+        {L"false", highlight_role_t::command},
+        {L"||", highlight_role_t::operat},
+        {L"true", highlight_role_t::command},
+        {L";", highlight_role_t::statement_terminator},
+        {L"and", highlight_role_t::operat},
+        {L"not", highlight_role_t::operat},
+        {L"!", highlight_role_t::operat},
+        {L"true", highlight_role_t::command},
+        {L";", highlight_role_t::statement_terminator},
+        {L"end", highlight_role_t::command},
     });
 
     highlight_tests.push_back({
-        {L"echo", highlight_spec_command},
-        {L"%self", highlight_spec_operator},
-        {L"not%self", highlight_spec_param},
-        {L"self%not", highlight_spec_param},
+        {L"echo", highlight_role_t::command},
+        {L"%self", highlight_role_t::operat},
+        {L"not%self", highlight_role_t::param},
+        {L"self%not", highlight_role_t::param},
     });
 
     auto &vars = parser_t::principal_parser().vars();
@@ -4435,21 +4437,21 @@ static void test_highlighting() {
     vars.set(L"VARIABLE_IN_COMMAND", ENV_LOCAL, {L"a"});
     vars.set(L"VARIABLE_IN_COMMAND2", ENV_LOCAL, {L"at"});
     highlight_tests.push_back(
-        {{L"/bin/ca", highlight_spec_command, ns}, {L"*", highlight_spec_operator, ns}});
+        {{L"/bin/ca", highlight_role_t::command, ns}, {L"*", highlight_role_t::operat, ns}});
 
-    highlight_tests.push_back({{L"/bin/c", highlight_spec_command, ns},
-                               {L"{$VARIABLE_IN_COMMAND}", highlight_spec_operator, ns},
-                               {L"*", highlight_spec_operator, ns}});
+    highlight_tests.push_back({{L"/bin/c", highlight_role_t::command, ns},
+                               {L"{$VARIABLE_IN_COMMAND}", highlight_role_t::operat, ns},
+                               {L"*", highlight_role_t::operat, ns}});
 
-    highlight_tests.push_back({{L"/bin/c", highlight_spec_command, ns},
-                               {L"{$VARIABLE_IN_COMMAND}", highlight_spec_operator, ns},
-                               {L"*", highlight_spec_operator, ns}});
+    highlight_tests.push_back({{L"/bin/c", highlight_role_t::command, ns},
+                               {L"{$VARIABLE_IN_COMMAND}", highlight_role_t::operat, ns},
+                               {L"*", highlight_role_t::operat, ns}});
 
-    highlight_tests.push_back({{L"/bin/c", highlight_spec_command, ns},
-                               {L"$VARIABLE_IN_COMMAND2", highlight_spec_operator, ns}});
+    highlight_tests.push_back({{L"/bin/c", highlight_role_t::command, ns},
+                               {L"$VARIABLE_IN_COMMAND2", highlight_role_t::operat, ns}});
 
-    highlight_tests.push_back({{L"$EMPTY_VARIABLE", highlight_spec_error}});
-    highlight_tests.push_back({{L"\"$EMPTY_VARIABLE\"", highlight_spec_error}});
+    highlight_tests.push_back({{L"$EMPTY_VARIABLE", highlight_role_t::error}});
+    highlight_tests.push_back({{L"\"$EMPTY_VARIABLE\"", highlight_role_t::error}});
 
     for (const highlight_component_list_t &components : highlight_tests) {
         // Generate the text.
@@ -4458,7 +4460,7 @@ static void test_highlighting() {
         for (const highlight_component_t &comp : components) {
             if (!text.empty() && !comp.nospace) {
                 text.push_back(L' ');
-                expected_colors.push_back(0);
+                expected_colors.push_back(highlight_spec_t{});
             }
             text.append(comp.txt);
             expected_colors.resize(text.size(), comp.color);

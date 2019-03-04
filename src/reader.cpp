@@ -617,10 +617,10 @@ void reader_data_t::repaint() {
     if (len < 1) len = 1;
 
     std::vector<highlight_spec_t> colors = this->colors;
-    colors.resize(len, highlight_spec_autosuggestion);
+    colors.resize(len, highlight_role_t::autosuggestion);
 
     if (sel_active) {
-        highlight_spec_t selection_color = highlight_make_background(highlight_spec_selection);
+        highlight_spec_t selection_color = {highlight_role_t::normal, highlight_role_t::selection};
         for (size_t i = sel_start_pos; i < std::min(len, sel_stop_pos); i++) {
             colors[i] = selection_color;
         }
@@ -1433,7 +1433,7 @@ void reader_data_t::flash() {
     struct timespec pollint;
     editable_line_t *el = &command_line;
     for (size_t i = 0; i < el->position; i++) {
-        colors.at(i) = highlight_spec_search_match << 16;
+        colors.at(i) = highlight_spec_t::make_background(highlight_role_t::search_match);
     }
 
     repaint();
@@ -2025,7 +2025,7 @@ void reader_data_t::highlight_search() {
     if (match_pos != wcstring::npos) {
         size_t end = match_pos + needle.size();
         for (size_t i = match_pos; i < end; i++) {
-            colors.at(i) |= (highlight_spec_search_match << 16);
+            colors.at(i).background = highlight_role_t::search_match;
         }
     }
 }
@@ -2059,7 +2059,7 @@ static std::function<highlight_result_t(void)> get_highlight_performer(
             return {};
         }
         s_thread_generation = generation_count;
-        std::vector<highlight_spec_t> colors(text.size(), 0);
+        std::vector<highlight_spec_t> colors(text.size(), highlight_spec_t{});
         highlight_func(text, colors, match_highlight_pos, NULL /* error */, vars);
         return {std::move(colors), text};
     };

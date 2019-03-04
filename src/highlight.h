@@ -11,66 +11,64 @@
 #include "common.h"
 #include "env.h"
 
-// Internally, we specify highlight colors using a set of bits. Each highlight_spec is a 32 bit
-// uint. We divide this into low 16 (foreground) and high 16 (background). Each half we further
-// subdivide into low 8 (primary) and high 8 (modifiers). The primary is not a bitmask; specify
-// exactly one. The modifiers are a bitmask; specify any number.
-enum {
-    // The following values are mutually exclusive; specify at most one.
-    highlight_spec_normal = 0,            // normal text
-    highlight_spec_error,                 // error
-    highlight_spec_command,               // command
-    highlight_spec_statement_terminator,  // process separator
-    highlight_spec_param,                 // command parameter (argument)
-    highlight_spec_comment,               // comment
-    highlight_spec_match,                 // matching parenthesis, etc.
-    highlight_spec_search_match,          // search match
-    highlight_spec_operator,              // operator
-    highlight_spec_escape,                // escape sequences
-    highlight_spec_quote,                 // quoted string
-    highlight_spec_redirection,           // redirection
-    highlight_spec_autosuggestion,        // autosuggestion
-    highlight_spec_selection,
+/// Describes the role of a span of text.
+enum class highlight_role_t : uint8_t {
+    normal = 0,            // normal text
+    error,                 // error
+    command,               // command
+    statement_terminator,  // process separator
+    param,                 // command parameter (argument)
+    comment,               // comment
+    match,                 // matching parenthesis, etc.
+    search_match,          // search match
+    operat,                // operator
+    escape,                // escape sequences
+    quote,                 // quoted string
+    redirection,           // redirection
+    autosuggestion,        // autosuggestion
+    selection,
 
     // Pager support.
     // NOTE: pager.cpp relies on these being in this order.
-    highlight_spec_pager_progress,
-    highlight_spec_pager_background,
-    highlight_spec_pager_prefix,
-    highlight_spec_pager_completion,
-    highlight_spec_pager_description,
-    highlight_spec_pager_secondary_background,
-    highlight_spec_pager_secondary_prefix,
-    highlight_spec_pager_secondary_completion,
-    highlight_spec_pager_secondary_description,
-    highlight_spec_pager_selected_background,
-    highlight_spec_pager_selected_prefix,
-    highlight_spec_pager_selected_completion,
-    highlight_spec_pager_selected_description,
-
-    // Used to double check a data structure in highlight.cpp
-    HIGHLIGHT_SPEC_MAX,
-
-    HIGHLIGHT_SPEC_PRIMARY_MASK = 0xFF,
-
-    // The following values are modifiers.
-    highlight_modifier_valid_path = 0x100,
-    highlight_modifier_force_underline = 0x200,
-    /* Very special value */
-    highlight_spec_invalid = 0xFFFF
-
+    pager_progress,
+    pager_background,
+    pager_prefix,
+    pager_completion,
+    pager_description,
+    pager_secondary_background,
+    pager_secondary_prefix,
+    pager_secondary_completion,
+    pager_secondary_description,
+    pager_selected_background,
+    pager_selected_prefix,
+    pager_selected_completion,
+    pager_selected_description,
 };
-typedef uint32_t highlight_spec_t;
 
-inline highlight_spec_t highlight_get_primary(highlight_spec_t val) {
-    return val & HIGHLIGHT_SPEC_PRIMARY_MASK;
-}
+/// Simply value type describing how a character should be highlighted..
+struct highlight_spec_t {
+    highlight_role_t foreground{highlight_role_t::normal};
+    highlight_role_t background{highlight_role_t::normal};
+    bool valid_path{false};
+    bool force_underline{false};
 
-inline highlight_spec_t highlight_make_background(highlight_spec_t val) {
-    assert(val >> 16 ==
-           0);  // should have nothing in upper bits, otherwise this is already a background
-    return val << 16;
-}
+    highlight_spec_t() = default;
+
+    /* implicit */ highlight_spec_t(highlight_role_t fg,
+                                    highlight_role_t bg = highlight_role_t::normal)
+        : foreground(fg), background(bg) {}
+
+    bool operator==(const highlight_spec_t &rhs) const {
+        return foreground == rhs.foreground && background == rhs.background &&
+               valid_path == rhs.valid_path && force_underline == rhs.force_underline;
+    }
+
+    bool operator!=(const highlight_spec_t &rhs) const { return !(*this == rhs); }
+
+    static highlight_spec_t make_background(highlight_role_t bg_role) {
+        return highlight_spec_t{highlight_role_t::normal, bg_role};
+    }
+};
 
 class history_item_t;
 
@@ -104,14 +102,8 @@ void highlight_shell_no_io(const wcstring &buffstr, std::vector<highlight_spec_t
 void highlight_universal(const wcstring &buffstr, std::vector<highlight_spec_t> &color, size_t pos,
                          wcstring_list_t *error, const environment_t &vars);
 
-/// Translate from HIGHLIGHT_* to FISH_COLOR_* according to environment variables. Defaults to
-/// FISH_COLOR_NORMAL.
-///
-/// Example:
-///
-/// If the environment variable FISH_FISH_COLOR_ERROR is set to 'red', a call to
-/// highlight_get_color( highlight_error) will return FISH_COLOR_RED.
-rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background);
+/// \return an RGB color for a given highlight spec.
+rgb_color_t highlight_get_color(const highlight_spec_t &highlight, bool is_background);
 
 /// Given a command 'str' from the history, try to determine whether we ought to suggest it by
 /// specially recognizing the command. Returns true if we validated the command. If so, returns by

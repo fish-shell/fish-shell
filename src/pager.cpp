@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
@@ -137,20 +138,25 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
         assert(comp_width <= width);
     }
 
-    int offset = selected
-        ? (highlight_spec_pager_selected_background - highlight_spec_pager_background)
-        : (secondary
-                ? (highlight_spec_pager_secondary_background - highlight_spec_pager_background)
-                : 0);
-    highlight_spec_t bg_color = highlight_spec_pager_background + offset;
-    highlight_spec_t prefix_fg = highlight_spec_pager_prefix + offset;
-    highlight_spec_t comp_fg = highlight_spec_pager_completion + offset;
-    highlight_spec_t desc_fg = highlight_spec_pager_description + offset;
+    auto modify_role = [=](highlight_role_t role) -> highlight_role_t {
+        using uint_t = typename std::underlying_type<highlight_role_t>::type;
+        uint_t base = static_cast<uint_t>(role);
+        if (selected) {
+            base += static_cast<uint_t>(highlight_role_t::pager_selected_background) -
+                    static_cast<uint_t>(highlight_role_t::pager_background);
+        } else if (secondary) {
+            base += static_cast<uint_t>(highlight_role_t::pager_secondary_background) -
+                    static_cast<uint_t>(highlight_role_t::pager_background);
+        }
+        return static_cast<highlight_role_t>(base);
+    };
 
-    auto bg = highlight_make_background(bg_color);
-    auto prefix_col = prefix_fg | bg;
-    auto comp_col = comp_fg | bg;
-    auto desc_col = desc_fg | bg;
+    highlight_role_t bg_role = modify_role(highlight_role_t::pager_background);
+    highlight_spec_t bg = {highlight_role_t::normal, bg_role};
+    highlight_spec_t prefix_col = {modify_role(highlight_role_t::pager_prefix), bg_role};
+    highlight_spec_t comp_col = {modify_role(highlight_role_t::pager_completion), bg_role};
+    highlight_spec_t desc_col = {modify_role(highlight_role_t::pager_description), bg_role};
+
     // Print the completion part
     size_t comp_remaining = comp_width;
     for (size_t i = 0; i < c->comp.size(); i++) {
@@ -179,7 +185,7 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
         }
 
         assert(desc_remaining >= 2);
-        auto paren_col = highlight_spec_pager_completion | bg;
+        highlight_spec_t paren_col = {highlight_role_t::pager_completion, bg_role};
         desc_remaining -= print_max(L"(", paren_col, 1, false, &line_data);
         desc_remaining -= print_max(c->desc, desc_col, desc_remaining - 1, false, &line_data);
         desc_remaining -= print_max(L")", paren_col, 1, false, &line_data);
@@ -226,7 +232,7 @@ void pager_t::completion_print(size_t cols, const size_t *width_by_column, size_
 
             // If there's more to come, append two spaces.
             if (col + 1 < cols) {
-                line.append(PAGER_SPACER_STRING, 0);
+                line.append(PAGER_SPACER_STRING, highlight_spec_t{});
             }
 
             // Append this to the real line.
@@ -503,8 +509,8 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
 
     if (!progress_text.empty()) {
         line_t &line = rendering->screen_data.add_line();
-        highlight_spec_t spec = highlight_spec_pager_progress |
-                                highlight_make_background(highlight_spec_pager_progress);
+        highlight_spec_t spec = {highlight_role_t::pager_progress,
+                                 highlight_role_t::pager_progress};
         print_max(progress_text, spec, term_width, true /* has_more */, &line);
     }
 
@@ -521,11 +527,14 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     line_t *search_field = &rendering->screen_data.insert_line_at_index(0);
 
     // We limit the width to term_width - 1.
+    highlight_spec_t underline{};
+    underline.force_underline = true;
+
     size_t search_field_remaining = term_width - 1;
-    search_field_remaining -= print_max(SEARCH_FIELD_PROMPT, highlight_spec_normal,
+    search_field_remaining -= print_max(SEARCH_FIELD_PROMPT, highlight_role_t::normal,
                                         search_field_remaining, false, search_field);
-    search_field_remaining -= print_max(search_field_text, highlight_modifier_force_underline,
-                                        search_field_remaining, false, search_field);
+    search_field_remaining -=
+        print_max(search_field_text, underline, search_field_remaining, false, search_field);
     return true;
 }
 

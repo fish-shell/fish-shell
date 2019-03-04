@@ -275,7 +275,7 @@ static std::string ansi_colorize(const wcstring &text,
     assert(colors.size() == text.size());
     outputter_t outp;
 
-    highlight_spec_t last_color = highlight_spec_normal;
+    highlight_spec_t last_color = highlight_role_t::normal;
     for (size_t i = 0; i < text.size(); i++) {
         highlight_spec_t color = colors.at(i);
         if (color != last_color) {
@@ -292,47 +292,47 @@ static std::string ansi_colorize(const wcstring &text,
 /// for the various colors.
 static const wchar_t *html_class_name_for_color(highlight_spec_t spec) {
 #define P(x) L"fish_color_" #x
-    switch (spec & HIGHLIGHT_SPEC_PRIMARY_MASK) {
-        case highlight_spec_normal: {
+    switch (spec.foreground) {
+        case highlight_role_t::normal: {
             return P(normal);
         }
-        case highlight_spec_error: {
+        case highlight_role_t::error: {
             return P(error);
         }
-        case highlight_spec_command: {
+        case highlight_role_t::command: {
             return P(command);
         }
-        case highlight_spec_statement_terminator: {
+        case highlight_role_t::statement_terminator: {
             return P(statement_terminator);
         }
-        case highlight_spec_param: {
+        case highlight_role_t::param: {
             return P(param);
         }
-        case highlight_spec_comment: {
+        case highlight_role_t::comment: {
             return P(comment);
         }
-        case highlight_spec_match: {
+        case highlight_role_t::match: {
             return P(match);
         }
-        case highlight_spec_search_match: {
+        case highlight_role_t::search_match: {
             return P(search_match);
         }
-        case highlight_spec_operator: {
+        case highlight_role_t::operat: {
             return P(operator);
         }
-        case highlight_spec_escape: {
+        case highlight_role_t::escape: {
             return P(escape);
         }
-        case highlight_spec_quote: {
+        case highlight_role_t::quote: {
             return P(quote);
         }
-        case highlight_spec_redirection: {
+        case highlight_role_t::redirection: {
             return P(redirection);
         }
-        case highlight_spec_autosuggestion: {
+        case highlight_role_t::autosuggestion: {
             return P(autosuggestion);
         }
-        case highlight_spec_selection: {
+        case highlight_role_t::selection: {
             return P(selection);
         }
         default: { return P(other); }
@@ -347,7 +347,7 @@ static std::string html_colorize(const wcstring &text,
 
     assert(colors.size() == text.size());
     wcstring html = L"<pre><code>";
-    highlight_spec_t last_color = highlight_spec_normal;
+    highlight_spec_t last_color = highlight_role_t::normal;
     for (size_t i = 0; i < text.size(); i++) {
         // Handle colors.
         highlight_spec_t color = colors.at(i);

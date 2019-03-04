@@ -376,7 +376,8 @@ static void s_check_status(screen_t *s) {
 
 /// Appends a character to the end of the line that the output cursor is on. This function
 /// automatically handles linebreaks and lines longer than the screen width.
-static void s_desired_append_char(screen_t *s, wchar_t b, int c, int indent, size_t prompt_width) {
+static void s_desired_append_char(screen_t *s, wchar_t b, highlight_spec_t c, int indent,
+                                  size_t prompt_width) {
     int line_no = s->desired.cursor.y;
 
     if (b == L'\n') {
@@ -386,7 +387,7 @@ static void s_desired_append_char(screen_t *s, wchar_t b, int c, int indent, siz
         s->desired.cursor.y++;
         s->desired.cursor.x = 0;
         for (size_t i = 0; i < prompt_width + indent * INDENT_STEP; i++) {
-            s_desired_append_char(s, L' ', 0, indent, prompt_width);
+            s_desired_append_char(s, L' ', highlight_spec_t{}, indent, prompt_width);
         }
     } else if (b == L'\r') {
         line_t &current = s->desired.line(line_no);
@@ -512,10 +513,7 @@ static void s_move(screen_t *s, int new_x, int new_y) {
 /// Set the pen color for the terminal.
 static void s_set_color(screen_t *s, const environment_t &vars, highlight_spec_t c) {
     UNUSED(s);
-
-    unsigned int uc = (unsigned int)c;
-    s->outp().set_color(highlight_get_color(uc & 0xfff, false),
-                        highlight_get_color((uc >> 16) & 0xffff, true));
+    s->outp().set_color(highlight_get_color(c, false), highlight_get_color(c, true));
 }
 
 /// Convert a wide character to a multibyte string and append it to the buffer.
@@ -723,7 +721,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
             clear_remainder = prev_width > current_width;
         }
         if (clear_remainder && clr_eol) {
-            s_set_color(scr, vars, 0xffffffff);
+            s_set_color(scr, vars, highlight_spec_t{});
             s_move(scr, current_width, (int)i);
             s_write_mbs(scr, clr_eol);
         }
@@ -731,7 +729,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         // Output any rprompt if this is the first line.
         if (i == 0 && right_prompt_width > 0) {  //!OCLINT(Use early exit/continue)
             s_move(scr, (int)(screen_width - right_prompt_width), (int)i);
-            s_set_color(scr, vars, 0xffffffff);
+            s_set_color(scr, vars, highlight_spec_t{});
             s_write_str(scr, right_prompt.c_str());
             scr->actual.cursor.x += right_prompt_width;
 
@@ -751,7 +749,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
 
     // Clear remaining lines (if any) if we haven't cleared the screen.
     if (!has_cleared_screen && scr->desired.line_count() < lines_with_stuff && clr_eol) {
-        s_set_color(scr, vars, 0xffffffff);
+        s_set_color(scr, vars, highlight_spec_t{});
         for (size_t i = scr->desired.line_count(); i < lines_with_stuff; i++) {
             s_move(scr, 0, (int)i);
             s_write_mbs(scr, clr_eol);
@@ -759,7 +757,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
     }
 
     s_move(scr, scr->desired.cursor.x, scr->desired.cursor.y);
-    s_set_color(scr, vars, 0xffffffff);
+    s_set_color(scr, vars, highlight_spec_t{});
 
     // We have now synced our actual screen against our desired screen. Note that this is a big
     // assignment!
@@ -999,13 +997,13 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
 
     // Append spaces for the left prompt.
     for (size_t i = 0; i < layout.left_prompt_space; i++) {
-        s_desired_append_char(s, L' ', 0, 0, layout.left_prompt_space);
+        s_desired_append_char(s, L' ', highlight_spec_t{}, 0, layout.left_prompt_space);
     }
 
     // If overflowing, give the prompt its own line to improve the situation.
     size_t first_line_prompt_space = layout.left_prompt_space;
     if (layout.prompts_get_own_line) {
-        s_desired_append_char(s, L'\n', 0, 0, 0);
+        s_desired_append_char(s, L'\n', highlight_spec_t{}, 0, 0);
         first_line_prompt_space = 0;
     }
 

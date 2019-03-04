@@ -5147,11 +5147,13 @@ static void test_topic_monitor_torture() {
                 for (size_t j = 0; j < (1 << 11); j++) {
                     auto before = gens[i];
                     auto changed = monitor.check(&gens[i], topic_set_t{t1, t2}, true /* wait */);
+                    (void)changed;
                     do_test(before[t1] < gens[i][t1]);
                     do_test(gens[i][t1] <= post_count);
                     do_test(gens[i][t2] == 0);
                 }
                 auto amt = completed.fetch_add(1, std::memory_order_relaxed);
+                (void)amt;
             },
             i);
     }

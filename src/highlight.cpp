@@ -297,9 +297,7 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background) 
     const auto &vars = env_stack_t::principal();
     rgb_color_t result = rgb_color_t::normal();
 
-    // If sloppy_background is set, then we look at the foreground color even if is_background is
-    // set.
-    bool treat_as_background = is_background && !(highlight & highlight_modifier_sloppy_background);
+    bool treat_as_background = is_background;
 
     // Get the primary variable.
     size_t idx = highlight_get_primary(highlight);

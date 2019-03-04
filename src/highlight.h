@@ -56,9 +56,6 @@ enum {
     // The following values are modifiers.
     highlight_modifier_valid_path = 0x100,
     highlight_modifier_force_underline = 0x200,
-    // Hackish, indicates that we should treat a foreground color as background, per certain
-    // historical behavior.
-    highlight_modifier_sloppy_background = 0x300,
     /* Very special value */
     highlight_spec_invalid = 0xFFFF
 

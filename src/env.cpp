@@ -561,16 +561,22 @@ static void guess_emoji_width() {
         version = strtod(narrow_version.c_str(), NULL);
     }
 
-    // iTerm2 defaults to Unicode 8 sizes.
-    // See https://gitlab.com/gnachman/iterm2/wikis/unicodeversionswitching
 
     if (term == L"Apple_Terminal" && version >= 400) {
         // Apple Terminal on High Sierra
         g_guessed_fish_emoji_width = 2;
         debug(2, "default emoji width: 2 for %ls", term.c_str());
-    } else {
+    } else if (term == L"iTerm.app") {
+        // iTerm2 defaults to Unicode 8 sizes.
+        // See https://gitlab.com/gnachman/iterm2/wikis/unicodeversionswitching
         g_guessed_fish_emoji_width = 1;
         debug(2, "default emoji width: 1");
+    } else {
+        // Default to whatever system wcwidth says to U+1F603,
+        // but only if it's at least 1.
+        int w = wcwidth(L'😃');
+        g_guessed_fish_emoji_width = w > 0 ? w : 1;
+        debug(2, "default emoji width: %d", g_guessed_fish_emoji_width);
     }
 }
 
@@ -849,6 +855,8 @@ static void handle_locale_change(const wcstring &op, const wcstring &var_name, e
     UNUSED(op);
     UNUSED(var_name);
     init_locale(vars);
+    // We need to re-guess emoji width because the locale might have changed to a multibyte one.
+    guess_emoji_width();
 }
 
 static void handle_curses_change(const wcstring &op, const wcstring &var_name, env_stack_t &vars) {

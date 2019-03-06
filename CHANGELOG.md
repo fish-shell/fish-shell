@@ -27,6 +27,7 @@
 - `printf` prints what it can when input hasn't been fully converted to a number, but still prints an error (#5532).
 - `complete -C foo` now works instead of erroring out and requiring `complete -Cfoo`.
 - `argparse` now defaults to showing the current function name (instead of `argparse`) in its errors, making `--name` often superfluous (#5835).
+- `argparse` learned a new `--ignore-unknown` flag to keep unrecognized options, allowing multiple argparse passes to parse options (#5367).
 
 ### Interactive improvements
 - Major improvements in performance and functionality to the 'sorin' sample prompt (#5411).

@@ -33,6 +33,8 @@ The following ``argparse`` options are available. They must appear before all OP
 
 - ``-X`` or ``--max-args`` is followed by an integer that defines the maximum number of acceptable non-option arguments. The default is infinity.
 
+- ``-i`` or ``--ignore-unknown`` ignores unknown options, keeping them and their arguments in $argv instead.
+
 - ``-s`` or ``--stop-nonopt`` causes scanning the arguments to stop as soon as the first non-option argument is seen. Using this arg is equivalent to calling the C function ``getopt_long()`` with the short options starting with a ``+`` symbol. This is sometimes known as "POSIXLY CORRECT". If this flag is not used then arguments are reordered (i.e., permuted) so that all non-option arguments are moved after option arguments. This mode has several uses but the main one is to implement a command that has subcommands.
 
 - ``-h`` or ``--help`` displays help about using this command.

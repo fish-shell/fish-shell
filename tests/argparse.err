@@ -112,3 +112,6 @@ Standard input (line 353):
     argparse a/alpha -- --banana
     ^
 in function 'notargparse'
+
+####################
+# Ignoring unknown options

@@ -44,6 +44,7 @@ struct option_spec_t {
 using option_spec_ref_t = std::unique_ptr<option_spec_t>;
 
 struct argparse_cmd_opts_t {
+    bool ignore_unknown = false;
     bool print_help = false;
     bool stop_nonopt = false;
     size_t min_args = 0;
@@ -57,8 +58,9 @@ struct argparse_cmd_opts_t {
     std::vector<std::vector<wchar_t>> exclusive_flag_sets;
 };
 
-static const wchar_t *const short_options = L"+:hn:sx:N:X:";
+static const wchar_t *const short_options = L"+:hn:six:N:X:";
 static const struct woption long_options[] = {{L"stop-nonopt", no_argument, NULL, 's'},
+                                              {L"ignore-unknown", no_argument, NULL, 'i'},
                                               {L"name", required_argument, NULL, 'n'},
                                               {L"exclusive", required_argument, NULL, 'x'},
                                               {L"help", no_argument, NULL, 'h'},
@@ -352,6 +354,10 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                 opts.stop_nonopt = true;
                 break;
             }
+            case 'i': {
+                opts.ignore_unknown = true;
+                break;
+            }
             case 'x': {
                 // Just save the raw string here. Later, when we have all the short and long flag
                 // definitions we'll parse these strings into a more useful data structure.
@@ -536,7 +542,7 @@ static int handle_flag(parser_t &parser, const argparse_cmd_opts_t &opts, option
     return STATUS_CMD_OK;
 }
 
-static int argparse_parse_flags(parser_t &parser, const argparse_cmd_opts_t &opts,
+static int argparse_parse_flags(parser_t &parser, argparse_cmd_opts_t &opts,
                                 const wchar_t *short_options, const woption *long_options,
                                 const wchar_t *cmd, int argc, wchar_t **argv, int *optind,
                                 io_streams_t &streams) {
@@ -547,16 +553,14 @@ static int argparse_parse_flags(parser_t &parser, const argparse_cmd_opts_t &opt
         if (opt == ':') {
             builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
             return STATUS_INVALID_ARGS;
-        }
-
-        if (opt == '?') {
+        } else if (opt == '?') {
             // It's not a recognized flag. See if it's an implicit int flag.
             const wchar_t *arg_contents = argv[w.woptind - 1] + 1;
             int retval = STATUS_CMD_OK;
             if (is_implicit_int(opts, arg_contents)) {
                 retval = validate_and_store_implicit_int(parser, opts, arg_contents, w, long_idx,
                                                          streams);
-            } else {
+            } else if (!opts.ignore_unknown) {
                 streams.err.append_format(BUILTIN_ERR_UNKNOWN, cmd, argv[w.woptind - 1]);
                 // We don't use builtin_print_error_trailer as that
                 // says to use the cmd help,
@@ -565,11 +569,24 @@ static int argparse_parse_flags(parser_t &parser, const argparse_cmd_opts_t &opt
                 // Plus this particular error is not an error in argparse usage.
                 streams.err.append(parser.current_line());
                 retval = STATUS_INVALID_ARGS;
+            } else {
+                // Any unrecognized option is put back if ignore_unknown is used.
+                // This allows reusing the same argv in multiple argparse calls,
+                // or just ignoring the error (e.g. in completions).
+                opts.argv.push_back(arg_contents - 1);
             }
             if (retval != STATUS_CMD_OK) return retval;
             long_idx = -1;
             continue;
+        } else if (opt == 1) {
+            // A non-option argument.
+            // We use `-` as the first option-string-char to disable GNU getopt's reordering,
+            // otherwise we'd get ignored options first and normal arguments later.
+            // E.g. `argparse -i -- -t tango -w` needs to keep `-t tango -w` in $argv, not `-t -w tango`.
+            opts.argv.push_back(argv[w.woptind - 1]);
+            continue;
         }
+
 
         // It's a recognized flag.
         auto found = opts.options.find(opt);
@@ -591,7 +608,8 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
                                parser_t &parser, io_streams_t &streams) {
     if (args.empty()) return STATUS_CMD_OK;
 
-    wcstring short_options = opts.stop_nonopt ? L"+:" : L":";
+    // "+" means stop at nonopt, "-" means give nonoptions the option character code `1`, and don't reorder.
+    wcstring short_options = opts.stop_nonopt ? L"+:" : L"-";
     std::vector<woption> long_options;
     populate_option_strings(opts, &short_options, &long_options);
 
@@ -614,7 +632,11 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
     retval = check_for_mutually_exclusive_flags(opts, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    for (int i = optind; argv[i]; i++) opts.argv.push_back(argv[i]);
+    if (opts.stop_nonopt) {
+        for (int i = optind; argv[i]; i++) {
+            opts.argv.push_back(argv[i]);
+        }
+    }
 
     return STATUS_CMD_OK;
 }

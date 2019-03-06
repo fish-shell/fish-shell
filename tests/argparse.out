@@ -132,3 +132,8 @@ expected argparse return status 57
 
 ####################
 # Errors use function name by default
+
+####################
+# Ignoring unknown options
+-t tango --wurst
+alpha aaaa

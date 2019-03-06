@@ -179,3 +179,10 @@ end
 notargparse
 
 true
+
+logmsg Ignoring unknown options
+argparse -i a=+ b=+ -- -a alpha -b bravo -t tango -a aaaa --wurst
+or echo unexpected argparse return status $status >&2
+# The unknown options are removed _entirely_.
+echo $argv
+echo $_flag_a

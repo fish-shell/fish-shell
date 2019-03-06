@@ -1,13 +1,13 @@
-set -l systemd_version (systemctl --version | string match "systemd*" | string replace -r "\D*(\d+)"  '$1')
+set -l systemd_version (systemctl --version | string match "systemd*" | string replace -r "\D*(\d+)\D.*"  '$1')
 set -l commands list-units list-sockets start stop reload restart try-restart reload-or-restart reload-or-try-restart \
 isolate kill is-active is-failed status show get-cgroup-attr set-cgroup-attr unset-cgroup-attr set-cgroup help \
 reset-failed list-unit-files enable disable is-enabled reenable preset mask unmask link load list-jobs cancel dump \
 list-dependencies snapshot delete daemon-reload daemon-reexec show-environment set-environment unset-environment \
 default rescue emergency halt poweroff reboot kexec exit suspend hibernate hybrid-sleep switch-root list-timers \
 set-property
-if test $systemd_version -gt 208
+if test $systemd_version -gt 208 2>/dev/null
     set commands $commands cat
-    if test $systemd_version -gt 217
+    if test $systemd_version -gt 217 2>/dev/null
         set commands $commands edit
     end
 end
@@ -79,7 +79,7 @@ complete -f -c systemctl -l version -d 'Print a short version and exit'
 complete -f -c systemctl -l no-pager -d 'Do not pipe output into a pager'
 
 # New options since systemd 220
-if test $systemd_version -gt 219
+if test $systemd_version -gt 219 2>/dev/null
     complete -f -c systemctl -l firmware-setup -n "__fish_seen_subcommand_from reboot" -d "Reboot to EFI setup"
     complete -f -c systemctl -l now -n "__fish_seen_subcommand_from enable" -d "Also start unit"
     complete -f -c systemctl -l now -n "__fish_seen_subcommand_from disable mask" -d "Also stop unit"

@@ -105,17 +105,17 @@ parser_t::parser_t() : variables(env_stack_t::principal()) {}
 // Out of line destructor to enable forward declaration of parse_execution_context_t
 parser_t::~parser_t() = default;
 
-parser_t parser_t::principal;
+std::shared_ptr<parser_t> parser_t::principal{new parser_t()};
 
 parser_t &parser_t::principal_parser() {
     ASSERT_IS_MAIN_THREAD();
-    return principal;
+    return *principal;
 }
 
 void parser_t::skip_all_blocks() {
     // Tell all blocks to skip.
     // This may be called from a signal handler!
-    principal.cancellation_requested = true;
+    principal->cancellation_requested = true;
 }
 
 // Given a new-allocated block, push it onto our block stack, acquiring ownership
@@ -647,7 +647,6 @@ int parser_t::eval(wcstring cmd, const io_chain_t &io, enum block_type_t block_t
 }
 
 void parser_t::eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type_t block_type) {
-    CHECK_BLOCK(1);
     assert(block_type == TOP || block_type == SUBST);
     if (!ps->tree.empty()) {
         // Execute the first node.
@@ -662,8 +661,6 @@ int parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, const io_chain_
     static_assert(
         std::is_same<T, grammar::statement>::value || std::is_same<T, grammar::job_list>::value,
         "Unexpected node type");
-    CHECK_BLOCK(1);
-
     // Handle cancellation requests. If our block stack is currently empty, then we already did
     // successfully cancel (or there was nothing to cancel); clear the flag. If our block stack is
     // not empty, we are still in the process of cancelling; refuse to evaluate anything.

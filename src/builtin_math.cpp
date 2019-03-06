@@ -48,11 +48,16 @@ static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
             case 's': {
-                opts.scale = fish_wcstoi(w.woptarg);
-                if (errno || opts.scale < 0 || opts.scale > 15) {
-                    streams.err.append_format(_(L"%ls: '%ls' is not a valid scale value\n"), cmd,
-                                              w.woptarg);
-                    return STATUS_INVALID_ARGS;
+                // "max" is the special value that tells us to pick the maximum scale.
+                if (wcscmp(w.woptarg, L"max") == 0) {
+                    opts.scale = 15;
+                } else {
+                    opts.scale = fish_wcstoi(w.woptarg);
+                    if (errno || opts.scale < 0 || opts.scale > 15) {
+                        streams.err.append_format(_(L"%ls: '%ls' is not a valid scale value\n"), cmd,
+                                                  w.woptarg);
+                        return STATUS_INVALID_ARGS;
+                    }
                 }
                 break;
             }

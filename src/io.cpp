@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <wchar.h>
 
@@ -12,6 +13,7 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
 #include "iothread.h"
+#include "redirection.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 io_data_t::~io_data_t() = default;
@@ -29,6 +31,7 @@ void io_pipe_t::print() const {
 void io_bufferfill_t::print() const { fwprintf(stderr, L"bufferfill {%d}\n", write_fd_.fd()); }
 
 void io_buffer_t::append_from_stream(const output_stream_t &stream) {
+    if (stream.empty()) return;
     scoped_lock locker(append_lock_);
     if (buffer_.discarded()) return;
     if (stream.buffer().discarded()) {
@@ -94,12 +97,17 @@ void io_buffer_t::run_background_fillthread(autoclose_fd_t readfd) {
             scoped_lock locker(append_lock_);
             ssize_t ret;
             do {
+                errno = 0;
                 char buff[4096];
                 ret = read(fd, buff, sizeof buff);
                 if (ret > 0) {
                     buffer_.append(&buff[0], &buff[ret]);
                 } else if (ret == 0) {
                     shutdown = true;
+                } else if (ret == -1 && errno == 0) {
+                    // No specific error. We assume we just return,
+                    // since that's what we do in read_blocked.
+                    return;
                 } else if (errno != EINTR && errno != EAGAIN) {
                     wperror(L"read");
                     return;
@@ -116,7 +124,7 @@ void io_buffer_t::begin_background_fillthread(autoclose_fd_t fd) {
 
     // We want our background thread to own the fd but it's not easy to move into a std::function.
     // Use a shared_ptr.
-    auto fdref = std::make_shared<autoclose_fd_t>(std::move(fd));
+    auto fdref = move_to_sharedptr(std::move(fd));
 
     // Our function to read until the receiver is closed.
     // It's OK to capture 'this' by value because 'this' owns the background thread and joins it

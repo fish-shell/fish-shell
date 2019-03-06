@@ -215,7 +215,7 @@ DEF_ALT(job_decorator) {
 
 // A job_conjunction is a job followed by a continuation.
 DEF(job_conjunction) produces_sequence<job, job_conjunction_continuation> {
-    BODY(job_conjunction);
+    BODY(job_conjunction)
 };
 
 DEF_ALT(job_conjunction_continuation) {
@@ -280,7 +280,7 @@ DEF_ALT(case_item_list) {
 };
 
 DEF(case_item) produces_sequence<keyword<parse_keyword_case>, argument_list, tok_end, job_list> {
-    BODY(case_item);
+    BODY(case_item)
 };
 
 DEF(block_statement)
@@ -298,7 +298,7 @@ DEF_ALT(block_header) {
 DEF(for_header)
 produces_sequence<keyword<parse_keyword_for>, tok_string, keyword<parse_keyword_in>, argument_list,
                   tok_end> {
-    BODY(for_header);
+    BODY(for_header)
 };
 
 DEF(while_header)

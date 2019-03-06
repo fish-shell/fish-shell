@@ -12,6 +12,18 @@ function man --description "Format and display the on-line manual pages"
     set -l manpath
     if set -q MANPATH
         set manpath $MANPATH
+    else if set -l p (command man -p 2>/dev/null)
+        # NetBSD's man uses "-p" to print the path.
+        # FreeBSD's man also has a "-p" option, but that requires an argument.
+        # Other mans (men?) don't seem to have it.
+        #
+        # Unfortunately NetBSD prints things like "/usr/share/man/man1",
+        # while not allowing them as $MANPATH components.
+        # What it needs is just "/usr/share/man".
+        #
+        # So we strip the last component.
+        # This leaves a few wrong directories, but that should be harmless.
+        set manpath (string replace -r '[^/]+$' '' $p)
     else
         set manpath ''
     end

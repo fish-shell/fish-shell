@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
+#include <thread>
 
 #include <algorithm>
 #include <array>
@@ -69,6 +70,7 @@
 #include "signal.h"
 #include "tnode.h"
 #include "tokenizer.h"
+#include "topic_monitor.h"
 #include "utf8.h"
 #include "util.h"
 #include "wcstringutil.h"
@@ -286,6 +288,48 @@ static void test_str_to_num() {
              L"converting invalid num to long did not fail");
 }
 
+enum class test_enum { alpha, beta, gamma, COUNT };
+
+template <>
+struct enum_info_t<test_enum> {
+    static constexpr auto count = test_enum::COUNT;
+};
+
+static void test_enum_set() {
+    say(L"Testing enum set");
+    enum_set_t<test_enum> es;
+    do_test(es.none());
+    do_test(!es.any());
+    do_test(es.to_raw() == 0);
+    do_test(es == enum_set_t<test_enum>::from_raw(0));
+    do_test(es != enum_set_t<test_enum>::from_raw(1));
+
+    es.set(test_enum::beta);
+    do_test(es.to_raw() == 2);
+    do_test(es == enum_set_t<test_enum>::from_raw(2));
+    do_test(es == enum_set_t<test_enum>{test_enum::beta});
+    do_test(es != enum_set_t<test_enum>::from_raw(3));
+    do_test(es.any());
+    do_test(!es.none());
+
+    unsigned idx = 0;
+    for (auto v : enum_iter_t<test_enum>{}) {
+        do_test(static_cast<unsigned>(v) == idx);
+        idx++;
+    }
+    do_test(static_cast<unsigned>(test_enum::COUNT) == idx);
+}
+
+static void test_enum_array() {
+    say(L"Testing enum array");
+    enum_array_t<std::string, test_enum> es{};
+    do_test(es.size() == enum_count<test_enum>());
+    es[test_enum::beta] = "abc";
+    do_test(es[test_enum::beta] == "abc");
+    es.at(test_enum::gamma) = "def";
+    do_test(es.at(test_enum::gamma) == "def");
+}
+
 /// Test sane escapes.
 static void test_unescape_sane() {
     const struct test_t {
@@ -333,8 +377,8 @@ static void test_escape_crazy() {
     bool unescaped_success;
     for (size_t i = 0; i < ESCAPE_TEST_COUNT; i++) {
         random_string.clear();
-        while (rand() % ESCAPE_TEST_LENGTH) {
-            random_string.push_back((rand() % ESCAPE_TEST_CHAR) + 1);
+        while (random() % ESCAPE_TEST_LENGTH) {
+            random_string.push_back((random() % ESCAPE_TEST_CHAR) + 1);
         }
 
         escaped_string = escape_string(random_string, ESCAPE_ALL);
@@ -442,7 +486,7 @@ static char *str2hex(const char *input) {
 /// comes back through double conversion.
 static void test_convert() {
     int i;
-    std::vector<char> sb;
+    std::vector<char> sb {};
 
     say(L"Testing wide/narrow string conversion");
 
@@ -451,8 +495,8 @@ static void test_convert() {
         char c;
 
         sb.clear();
-        while (rand() % ESCAPE_TEST_LENGTH) {
-            c = rand();
+        while (random() % ESCAPE_TEST_LENGTH) {
+            c = random();
             sb.push_back(c);
         }
         c = 0;
@@ -2378,6 +2422,30 @@ static void test_dup2s() {
     do_test(!list.has_value());
 }
 
+static void test_dup2s_fd_for_target_fd() {
+    using std::make_shared;
+    io_chain_t chain;
+    // note io_fd_t params are backwards from dup2.
+    chain.push_back(make_shared<io_close_t>(10));
+    chain.push_back(make_shared<io_fd_t>(9, 10, true));
+    chain.push_back(make_shared<io_fd_t>(5, 8, true));
+    chain.push_back(make_shared<io_fd_t>(1, 4, true));
+    chain.push_back(make_shared<io_fd_t>(3, 5, true));
+    auto list = dup2_list_t::resolve_chain(chain);
+
+    do_test(list.has_value());
+    do_test(list->fd_for_target_fd(3) == 8);
+    do_test(list->fd_for_target_fd(5) == 8);
+    do_test(list->fd_for_target_fd(8) == 8);
+    do_test(list->fd_for_target_fd(1) == 4);
+    do_test(list->fd_for_target_fd(4) == 4);
+    do_test(list->fd_for_target_fd(100) == 100);
+    do_test(list->fd_for_target_fd(0) == 0);
+    do_test(list->fd_for_target_fd(-1) == -1);
+    do_test(list->fd_for_target_fd(9) == -1);
+    do_test(list->fd_for_target_fd(10) == -1);
+}
+
 /// Testing colors.
 static void test_colors() {
     say(L"Testing colors");
@@ -3300,10 +3368,10 @@ class history_tests_t {
 };
 
 static wcstring random_string() {
-    wcstring result;
-    size_t max = 1 + rand() % 32;
+    wcstring result = L"";
+    size_t max = 1 + random() % 32;
     while (max--) {
-        wchar_t c = 1 + rand() % ESCAPE_TEST_CHAR;
+        wchar_t c = 1 + random() % ESCAPE_TEST_CHAR;
         result.push_back(c);
     }
     return result;
@@ -3399,7 +3467,7 @@ void history_tests_t::test_history() {
 
         // Generate some paths.
         path_list_t paths;
-        size_t count = rand() % 6;
+        size_t count = random() % 6;
         while (count--) {
             paths.push_back(random_string());
         }
@@ -4174,9 +4242,9 @@ static void test_highlighting() {
     // Here are the components of our source and the colors we expect those to be.
     struct highlight_component_t {
         const wchar_t *txt;
-        int color;
+        highlight_spec_t color;
         bool nospace;
-        highlight_component_t(const wchar_t *txt, int color, bool nospace = false)
+        highlight_component_t(const wchar_t *txt, highlight_spec_t color, bool nospace = false)
             : txt(txt), color(color), nospace(nospace) {}
     };
     const bool ns = true;
@@ -4184,182 +4252,184 @@ static void test_highlighting() {
     using highlight_component_list_t = std::vector<highlight_component_t>;
     std::vector<highlight_component_list_t> highlight_tests;
 
-    highlight_tests.push_back(
-        {{L"echo", highlight_spec_command},
-         {L"test/fish_highlight_test/foo", highlight_spec_param | highlight_modifier_valid_path},
-         {L"&", highlight_spec_statement_terminator}});
+    highlight_spec_t param_valid_path{highlight_role_t::param};
+    param_valid_path.valid_path = true;
+
+    highlight_tests.push_back({{L"echo", highlight_role_t::command},
+                               {L"test/fish_highlight_test/foo", param_valid_path},
+                               {L"&", highlight_role_t::statement_terminator}});
 
     highlight_tests.push_back({
-        {L"command", highlight_spec_command},
-        {L"echo", highlight_spec_command},
-        {L"abc", highlight_spec_param},
-        {L"test/fish_highlight_test/foo", highlight_spec_param | highlight_modifier_valid_path},
-        {L"&", highlight_spec_statement_terminator},
+        {L"command", highlight_role_t::command},
+        {L"echo", highlight_role_t::command},
+        {L"abc", highlight_role_t::param},
+        {L"test/fish_highlight_test/foo", param_valid_path},
+        {L"&", highlight_role_t::statement_terminator},
     });
 
     highlight_tests.push_back({
-        {L"if command ls", highlight_spec_command},
-        {L"; ", highlight_spec_statement_terminator},
-        {L"echo", highlight_spec_command},
-        {L"abc", highlight_spec_param},
-        {L"; ", highlight_spec_statement_terminator},
-        {L"/bin/definitely_not_a_command", highlight_spec_error},
-        {L"; ", highlight_spec_statement_terminator},
-        {L"end", highlight_spec_command},
+        {L"if command ls", highlight_role_t::command},
+        {L"; ", highlight_role_t::statement_terminator},
+        {L"echo", highlight_role_t::command},
+        {L"abc", highlight_role_t::param},
+        {L"; ", highlight_role_t::statement_terminator},
+        {L"/bin/definitely_not_a_command", highlight_role_t::error},
+        {L"; ", highlight_role_t::statement_terminator},
+        {L"end", highlight_role_t::command},
     });
 
     // Verify that cd shows errors for non-directories.
     highlight_tests.push_back({
-        {L"cd", highlight_spec_command},
-        {L"test/fish_highlight_test", highlight_spec_param | highlight_modifier_valid_path},
+        {L"cd", highlight_role_t::command},
+        {L"test/fish_highlight_test", param_valid_path},
     });
 
     highlight_tests.push_back({
-        {L"cd", highlight_spec_command},
-        {L"test/fish_highlight_test/foo", highlight_spec_error},
+        {L"cd", highlight_role_t::command},
+        {L"test/fish_highlight_test/foo", highlight_role_t::error},
     });
 
     highlight_tests.push_back({
-        {L"cd", highlight_spec_command},
-        {L"--help", highlight_spec_param},
-        {L"-h", highlight_spec_param},
-        {L"definitely_not_a_directory", highlight_spec_error},
+        {L"cd", highlight_role_t::command},
+        {L"--help", highlight_role_t::param},
+        {L"-h", highlight_role_t::param},
+        {L"definitely_not_a_directory", highlight_role_t::error},
     });
 
     // Command substitutions.
     highlight_tests.push_back({
-        {L"echo", highlight_spec_command},
-        {L"param1", highlight_spec_param},
-        {L"(", highlight_spec_operator},
-        {L"ls", highlight_spec_command},
-        {L"param2", highlight_spec_param},
-        {L")", highlight_spec_operator},
-        {L"|", highlight_spec_statement_terminator},
-        {L"cat", highlight_spec_command},
+        {L"echo", highlight_role_t::command},
+        {L"param1", highlight_role_t::param},
+        {L"(", highlight_role_t::operat},
+        {L"ls", highlight_role_t::command},
+        {L"param2", highlight_role_t::param},
+        {L")", highlight_role_t::operat},
+        {L"|", highlight_role_t::statement_terminator},
+        {L"cat", highlight_role_t::command},
     });
 
     // Redirections substitutions.
     highlight_tests.push_back({
-        {L"echo", highlight_spec_command},
-        {L"param1", highlight_spec_param},
+        {L"echo", highlight_role_t::command},
+        {L"param1", highlight_role_t::param},
 
         // Input redirection.
-        {L"<", highlight_spec_redirection},
-        {L"/bin/echo", highlight_spec_redirection},
+        {L"<", highlight_role_t::redirection},
+        {L"/bin/echo", highlight_role_t::redirection},
 
         // Output redirection to a valid fd.
-        {L"1>&2", highlight_spec_redirection},
+        {L"1>&2", highlight_role_t::redirection},
 
         // Output redirection to an invalid fd.
-        {L"2>&", highlight_spec_redirection},
-        {L"LOL", highlight_spec_error},
+        {L"2>&", highlight_role_t::redirection},
+        {L"LOL", highlight_role_t::error},
 
         // Just a param, not a redirection.
-        {L"test/blah", highlight_spec_param},
+        {L"test/blah", highlight_role_t::param},
 
         // Input redirection from directory.
-        {L"<", highlight_spec_redirection},
-        {L"test/", highlight_spec_error},
+        {L"<", highlight_role_t::redirection},
+        {L"test/", highlight_role_t::error},
 
         // Output redirection to an invalid path.
-        {L"3>", highlight_spec_redirection},
-        {L"/not/a/valid/path/nope", highlight_spec_error},
+        {L"3>", highlight_role_t::redirection},
+        {L"/not/a/valid/path/nope", highlight_role_t::error},
 
         // Output redirection to directory.
-        {L"3>", highlight_spec_redirection},
-        {L"test/nope/", highlight_spec_error},
+        {L"3>", highlight_role_t::redirection},
+        {L"test/nope/", highlight_role_t::error},
 
         // Redirections to overflow fd.
-        {L"99999999999999999999>&2", highlight_spec_error},
-        {L"2>&", highlight_spec_redirection},
-        {L"99999999999999999999", highlight_spec_error},
+        {L"99999999999999999999>&2", highlight_role_t::error},
+        {L"2>&", highlight_role_t::redirection},
+        {L"99999999999999999999", highlight_role_t::error},
 
         // Output redirection containing a command substitution.
-        {L"4>", highlight_spec_redirection},
-        {L"(", highlight_spec_operator},
-        {L"echo", highlight_spec_command},
-        {L"test/somewhere", highlight_spec_param},
-        {L")", highlight_spec_operator},
+        {L"4>", highlight_role_t::redirection},
+        {L"(", highlight_role_t::operat},
+        {L"echo", highlight_role_t::command},
+        {L"test/somewhere", highlight_role_t::param},
+        {L")", highlight_role_t::operat},
 
         // Just another param.
-        {L"param2", highlight_spec_param},
+        {L"param2", highlight_role_t::param},
     });
 
     highlight_tests.push_back({
-        {L"end", highlight_spec_error},
-        {L";", highlight_spec_statement_terminator},
-        {L"if", highlight_spec_command},
-        {L"end", highlight_spec_error},
+        {L"end", highlight_role_t::error},
+        {L";", highlight_role_t::statement_terminator},
+        {L"if", highlight_role_t::command},
+        {L"end", highlight_role_t::error},
     });
 
     highlight_tests.push_back({
-        {L"echo", highlight_spec_command},
-        {L"'single_quote", highlight_spec_error},
+        {L"echo", highlight_role_t::command},
+        {L"'single_quote", highlight_role_t::error},
     });
 
     highlight_tests.push_back({
-        {L"echo", highlight_spec_command},
-        {L"$foo", highlight_spec_operator},
-        {L"\"", highlight_spec_quote},
-        {L"$bar", highlight_spec_operator},
-        {L"\"", highlight_spec_quote},
-        {L"$baz[", highlight_spec_operator},
-        {L"1 2..3", highlight_spec_param},
-        {L"]", highlight_spec_operator},
+        {L"echo", highlight_role_t::command},
+        {L"$foo", highlight_role_t::operat},
+        {L"\"", highlight_role_t::quote},
+        {L"$bar", highlight_role_t::operat},
+        {L"\"", highlight_role_t::quote},
+        {L"$baz[", highlight_role_t::operat},
+        {L"1 2..3", highlight_role_t::param},
+        {L"]", highlight_role_t::operat},
     });
 
     highlight_tests.push_back({
-        {L"for", highlight_spec_command},
-        {L"i", highlight_spec_param},
-        {L"in", highlight_spec_command},
-        {L"1 2 3", highlight_spec_param},
-        {L";", highlight_spec_statement_terminator},
-        {L"end", highlight_spec_command},
+        {L"for", highlight_role_t::command},
+        {L"i", highlight_role_t::param},
+        {L"in", highlight_role_t::command},
+        {L"1 2 3", highlight_role_t::param},
+        {L";", highlight_role_t::statement_terminator},
+        {L"end", highlight_role_t::command},
     });
 
     highlight_tests.push_back({
-        {L"echo", highlight_spec_command},
-        {L"$$foo[", highlight_spec_operator},
-        {L"1", highlight_spec_param},
-        {L"][", highlight_spec_operator},
-        {L"2", highlight_spec_param},
-        {L"]", highlight_spec_operator},
-        {L"[3]", highlight_spec_param},  // two dollar signs, so last one is not an expansion
+        {L"echo", highlight_role_t::command},
+        {L"$$foo[", highlight_role_t::operat},
+        {L"1", highlight_role_t::param},
+        {L"][", highlight_role_t::operat},
+        {L"2", highlight_role_t::param},
+        {L"]", highlight_role_t::operat},
+        {L"[3]", highlight_role_t::param},  // two dollar signs, so last one is not an expansion
     });
 
     highlight_tests.push_back({
-        {L"cat", highlight_spec_command},
-        {L"/dev/null", highlight_spec_param},
-        {L"|", highlight_spec_statement_terminator},
+        {L"cat", highlight_role_t::command},
+        {L"/dev/null", highlight_role_t::param},
+        {L"|", highlight_role_t::statement_terminator},
         // This is bogus, but we used to use "less" here and that doesn't have to be installed.
-        {L"cat", highlight_spec_command},
-        {L"2>", highlight_spec_redirection},
+        {L"cat", highlight_role_t::command},
+        {L"2>", highlight_role_t::redirection},
     });
 
     highlight_tests.push_back({
-        {L"if", highlight_spec_command},
-        {L"true", highlight_spec_command},
-        {L"&&", highlight_spec_operator},
-        {L"false", highlight_spec_command},
-        {L";", highlight_spec_statement_terminator},
-        {L"or", highlight_spec_operator},
-        {L"false", highlight_spec_command},
-        {L"||", highlight_spec_operator},
-        {L"true", highlight_spec_command},
-        {L";", highlight_spec_statement_terminator},
-        {L"and", highlight_spec_operator},
-        {L"not", highlight_spec_operator},
-        {L"!", highlight_spec_operator},
-        {L"true", highlight_spec_command},
-        {L";", highlight_spec_statement_terminator},
-        {L"end", highlight_spec_command},
+        {L"if", highlight_role_t::command},
+        {L"true", highlight_role_t::command},
+        {L"&&", highlight_role_t::operat},
+        {L"false", highlight_role_t::command},
+        {L";", highlight_role_t::statement_terminator},
+        {L"or", highlight_role_t::operat},
+        {L"false", highlight_role_t::command},
+        {L"||", highlight_role_t::operat},
+        {L"true", highlight_role_t::command},
+        {L";", highlight_role_t::statement_terminator},
+        {L"and", highlight_role_t::operat},
+        {L"not", highlight_role_t::operat},
+        {L"!", highlight_role_t::operat},
+        {L"true", highlight_role_t::command},
+        {L";", highlight_role_t::statement_terminator},
+        {L"end", highlight_role_t::command},
     });
 
     highlight_tests.push_back({
-        {L"echo", highlight_spec_command},
-        {L"%self", highlight_spec_operator},
-        {L"not%self", highlight_spec_param},
-        {L"self%not", highlight_spec_param},
+        {L"echo", highlight_role_t::command},
+        {L"%self", highlight_role_t::operat},
+        {L"not%self", highlight_role_t::param},
+        {L"self%not", highlight_role_t::param},
     });
 
     auto &vars = parser_t::principal_parser().vars();
@@ -4367,21 +4437,21 @@ static void test_highlighting() {
     vars.set(L"VARIABLE_IN_COMMAND", ENV_LOCAL, {L"a"});
     vars.set(L"VARIABLE_IN_COMMAND2", ENV_LOCAL, {L"at"});
     highlight_tests.push_back(
-        {{L"/bin/ca", highlight_spec_command, ns}, {L"*", highlight_spec_operator, ns}});
+        {{L"/bin/ca", highlight_role_t::command, ns}, {L"*", highlight_role_t::operat, ns}});
 
-    highlight_tests.push_back({{L"/bin/c", highlight_spec_command, ns},
-                               {L"{$VARIABLE_IN_COMMAND}", highlight_spec_operator, ns},
-                               {L"*", highlight_spec_operator, ns}});
+    highlight_tests.push_back({{L"/bin/c", highlight_role_t::command, ns},
+                               {L"{$VARIABLE_IN_COMMAND}", highlight_role_t::operat, ns},
+                               {L"*", highlight_role_t::operat, ns}});
 
-    highlight_tests.push_back({{L"/bin/c", highlight_spec_command, ns},
-                               {L"{$VARIABLE_IN_COMMAND}", highlight_spec_operator, ns},
-                               {L"*", highlight_spec_operator, ns}});
+    highlight_tests.push_back({{L"/bin/c", highlight_role_t::command, ns},
+                               {L"{$VARIABLE_IN_COMMAND}", highlight_role_t::operat, ns},
+                               {L"*", highlight_role_t::operat, ns}});
 
-    highlight_tests.push_back({{L"/bin/c", highlight_spec_command, ns},
-                               {L"$VARIABLE_IN_COMMAND2", highlight_spec_operator, ns}});
+    highlight_tests.push_back({{L"/bin/c", highlight_role_t::command, ns},
+                               {L"$VARIABLE_IN_COMMAND2", highlight_role_t::operat, ns}});
 
-    highlight_tests.push_back({{L"$EMPTY_VARIABLE", highlight_spec_error}});
-    highlight_tests.push_back({{L"\"$EMPTY_VARIABLE\"", highlight_spec_error}});
+    highlight_tests.push_back({{L"$EMPTY_VARIABLE", highlight_role_t::error}});
+    highlight_tests.push_back({{L"\"$EMPTY_VARIABLE\"", highlight_role_t::error}});
 
     for (const highlight_component_list_t &components : highlight_tests) {
         // Generate the text.
@@ -4390,7 +4460,7 @@ static void test_highlighting() {
         for (const highlight_component_t &comp : components) {
             if (!text.empty() && !comp.nospace) {
                 text.push_back(L' ');
-                expected_colors.push_back(0);
+                expected_colors.push_back(highlight_spec_t{});
             }
             text.append(comp.txt);
             expected_colors.resize(text.size(), comp.color);
@@ -5031,6 +5101,70 @@ void test_normalize_path() {
     do_test(path_normalize_for_cd(L"/abc/def/", L"../ghi/..") == L"/abc/ghi/..");
 }
 
+static void test_topic_monitor() {
+    say(L"Testing topic monitor");
+    topic_monitor_t monitor;
+    generation_list_t gens{};
+    constexpr auto t = topic_t::sigchld;
+    do_test(gens[t] == 0);
+    do_test(monitor.generation_for_topic(t) == 0);
+    auto changed = monitor.check(&gens, topic_set_t{t}, false /* wait */);
+    do_test(changed.none());
+    do_test(gens[t] == 0);
+
+    monitor.post(t);
+    changed = monitor.check(&gens, topic_set_t{t}, true /* wait */);
+    do_test(changed == topic_set_t{t});
+    do_test(gens[t] == 1);
+    do_test(monitor.generation_for_topic(t) == 1);
+
+    monitor.post(t);
+    do_test(monitor.generation_for_topic(t) == 2);
+    changed = monitor.check(&gens, topic_set_t{t}, true /* wait */);
+    do_test(changed == topic_set_t{t});
+}
+
+static void test_topic_monitor_torture() {
+    say(L"Torture-testing topic monitor");
+    topic_monitor_t monitor;
+    const size_t thread_count = 64;
+    constexpr auto t1 = topic_t::sigchld;
+    constexpr auto t2 = topic_t::sighupint;
+    std::vector<generation_list_t> gens;
+    gens.resize(thread_count, generation_list_t{});
+    std::atomic<uint32_t> post_count{};
+    for (auto &gen : gens) {
+        gen = monitor.current_generations();
+        post_count += 1;
+        monitor.post(t1);
+    }
+
+    std::atomic<uint32_t> completed{};
+    std::vector<std::thread> threads;
+    for (size_t i = 0; i < thread_count; i++) {
+        threads.emplace_back(
+            [&](size_t i) {
+                for (size_t j = 0; j < (1 << 11); j++) {
+                    auto before = gens[i];
+                    auto changed = monitor.check(&gens[i], topic_set_t{t1, t2}, true /* wait */);
+                    (void)changed;
+                    do_test(before[t1] < gens[i][t1]);
+                    do_test(gens[i][t1] <= post_count);
+                    do_test(gens[i][t2] == 0);
+                }
+                auto amt = completed.fetch_add(1, std::memory_order_relaxed);
+                (void)amt;
+            },
+            i);
+    }
+
+    while (completed.load(std::memory_order_relaxed) < thread_count) {
+        post_count += 1;
+        monitor.post(t1);
+    }
+    for (auto &t : threads) t.join();
+}
+
 /// Main test.
 int main(int argc, char **argv) {
     UNUSED(argc);
@@ -5052,7 +5186,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    srand((unsigned int)time(NULL));
+    srandom((unsigned int)time(NULL));
     configure_thread_assertions_for_testing();
 
     // Set the program name to this sentinel value
@@ -5082,6 +5216,8 @@ int main(int argc, char **argv) {
     if (should_test_function("wcstring_tok")) test_wcstring_tok();
     if (should_test_function("env_vars")) test_env_vars();
     if (should_test_function("str_to_num")) test_str_to_num();
+    if (should_test_function("enum")) test_enum_set();
+    if (should_test_function("enum")) test_enum_array();
     if (should_test_function("highlighting")) test_highlighting();
     if (should_test_function("new_parser_ll2")) test_new_parser_ll2();
     if (should_test_function("new_parser_fuzzing"))
@@ -5115,6 +5251,7 @@ int main(int argc, char **argv) {
     if (should_test_function("test")) test_test();
     if (should_test_function("wcstod")) test_wcstod();
     if (should_test_function("dup2s")) test_dup2s();
+    if (should_test_function("dup2s")) test_dup2s_fd_for_target_fd();
     if (should_test_function("path")) test_path();
     if (should_test_function("pager_navigation")) test_pager_navigation();
     if (should_test_function("pager_layout")) test_pager_layout();
@@ -5148,6 +5285,8 @@ int main(int argc, char **argv) {
     if (should_test_function("maybe")) test_maybe();
     if (should_test_function("layout_cache")) test_layout_cache();
     if (should_test_function("normalize")) test_normalize_path();
+    if (should_test_function("topics")) test_topic_monitor();
+    if (should_test_function("topics")) test_topic_monitor_torture();
     // history_tests_t::test_history_speed();
 
     say(L"Encountered %d errors in low-level tests", err_count);

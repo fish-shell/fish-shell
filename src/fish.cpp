@@ -380,7 +380,7 @@ int main(int argc, char **argv) {
 
     if (read_init(paths)) {
         // Stomp the exit status of any initialization commands (issue #635).
-        proc_set_last_status(STATUS_CMD_OK);
+        proc_set_last_statuses(statuses_t::just(STATUS_CMD_OK));
 
         // Run post-config commands specified as arguments, if any.
         if (!opts.postconfig_cmds.empty()) {
@@ -395,7 +395,7 @@ int main(int argc, char **argv) {
                                                    argv + my_optind);
             }
             res = run_command_list(&opts.batch_cmds, {});
-            reader_exit(0, 0);
+            reader_set_end_loop(false);
         } else if (my_optind == argc) {
             // Implicitly interactive mode.
             res = reader_read(STDIN_FILENO, {});
@@ -434,7 +434,7 @@ int main(int argc, char **argv) {
 
     // TODO: The generic process-exit event is useless and unused.
     // Remove this in future.
-    proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, getpid(), exit_status);
+    proc_fire_event(L"PROCESS_EXIT", event_type_t::exit, getpid(), exit_status);
 
     // Trigger any exit handlers.
     wcstring_list_t event_args = {to_string(exit_status)};

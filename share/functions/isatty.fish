@@ -27,5 +27,7 @@ function isatty -d "Tests if a file descriptor is a tty"
 
     # Use `command test` because `builtin test` doesn't open the regular fd's.
     # See https://github.com/fish-shell/fish-shell/issues/1228
-    command test -t "$fd"
+    # Too often `command test` is some bogus Go binary, I don't know why. Use [ because
+    # it's less likely to be something surprising. See #5665
+    command [ -t "$fd" ]
 end

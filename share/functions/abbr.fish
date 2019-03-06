@@ -1,7 +1,7 @@
 function abbr --description "Manage abbreviations"
-    set -l options --stop-nonopt --exclusive 'a,r,e,l,s' --exclusive 'g,U'
-    set -a options 'h/help' 'a/add' 'r/rename' 'e/erase' 'l/list' 's/show'
-    set -a options 'g/global' 'U/universal'
+    set -l options --stop-nonopt --exclusive 'a,r,e,l,s,q' --exclusive 'g,U'
+    set -a options h/help a/add r/rename e/erase l/list s/show q/query
+    set -a options g/global U/universal
 
     argparse -n abbr $options -- $argv
     or return
@@ -20,6 +20,7 @@ function abbr --description "Manage abbreviations"
         and not set -q _flag_erase[1]
         and not set -q _flag_list[1]
         and not set -q _flag_show[1]
+        and not set -q _flag_query[1]
         if set -q argv[1]
             set _flag_add --add
         else
@@ -49,6 +50,17 @@ function abbr --description "Manage abbreviations"
     else if set -q _flag_show[1]
         __fish_abbr_show $argv
         return
+    else if set -q _flag_query[1]
+        # "--query": Check if abbrs exist.
+        # If we don't have an argument, it's an automatic failure.
+        set -q argv[1]; or return 1
+        set -l escaped _fish_abbr_(string escape --style=var -- $argv)
+        # We return 0 if any arg exists, whereas `set -q` returns the number of undefined arguments.
+        # But we should be consistent with `type -q` and `command -q`.
+        for var in $escaped
+            set -q $escaped; and return 0
+        end
+        return 1
     else
         printf ( _ "%s: Could not figure out what to do!\n" ) abbr >&2
         return 127

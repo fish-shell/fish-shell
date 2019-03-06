@@ -110,10 +110,14 @@ class screen_data_t {
     bool empty() const { return line_datas.empty(); }
 };
 
+class outputter_t;
+
 /// The class representing the current and desired screen contents.
 class screen_t {
+    outputter_t &outp_;
+
    public:
-    /// Constructor
+    /// Constructor.
     screen_t();
 
     /// The internal representation of the desired screen contents.
@@ -144,6 +148,9 @@ class screen_t {
     /// These status buffers are used to check if any output has occurred other than from fish's
     /// main loop, in which case we need to redraw.
     struct stat prev_buff_1, prev_buff_2, post_buff_1, post_buff_2;
+
+    /// \return the outputter for this screen.
+    outputter_t &outp() { return outp_; }
 };
 
 /// This is the main function for the screen putput library. It is used to define the desired
@@ -162,9 +169,9 @@ class screen_t {
 /// \param pager_data any pager data, to append to the screen
 /// \param cursor_is_within_pager whether the position is within the pager line (first line)
 void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_prompt,
-             const wcstring &commandline, size_t explicit_len, const highlight_spec_t *colors,
-             const int *indent, size_t cursor_pos, const page_rendering_t &pager_data,
-             bool cursor_is_within_pager);
+             const wcstring &commandline, size_t explicit_len,
+             const std::vector<highlight_spec_t> &colors, const std::vector<int> &indent,
+             size_t cursor_pos, const page_rendering_t &pager_data, bool cursor_is_within_pager);
 
 /// This function resets the screen buffers internal knowledge about the contents of the screen. Use
 /// this function when some other function than s_write has written to the screen.
@@ -197,8 +204,8 @@ enum screen_reset_mode_t {
 
 void s_reset(screen_t *s, screen_reset_mode_t mode);
 
-/// Issues an immediate clr_eos, returning if it existed.
-bool screen_force_clear_to_end();
+/// Issues an immediate clr_eos.
+void screen_force_clear_to_end();
 
 /// Returns the length of an escape code. Exposed for testing purposes only.
 size_t escape_code_length(const wchar_t *code);

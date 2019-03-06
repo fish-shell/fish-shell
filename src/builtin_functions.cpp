@@ -126,10 +126,7 @@ static wcstring functions_def(const wcstring &name) {
     wcstring desc, def;
     function_get_desc(name, desc);
     function_get_definition(name, def);
-    event_t search(EVENT_ANY);
-    search.function_name = name;
-    std::vector<std::shared_ptr<event_t>> ev;
-    event_get(search, &ev);
+    std::vector<std::shared_ptr<event_handler_t>> ev = event_get_function_handlers(name);
 
     out.append(L"function ");
 
@@ -153,29 +150,30 @@ static wcstring functions_def(const wcstring &name) {
     }
 
     for (const auto &next : ev) {
-        switch (next->type) {
-            case EVENT_SIGNAL: {
-                append_format(out, L" --on-signal %ls", sig2wcs(next->param1.signal));
+        const event_description_t &d = next->desc;
+        switch (d.type) {
+            case event_type_t::signal: {
+                append_format(out, L" --on-signal %ls", sig2wcs(d.param1.signal));
                 break;
             }
-            case EVENT_VARIABLE: {
-                append_format(out, L" --on-variable %ls", next->str_param1.c_str());
+            case event_type_t::variable: {
+                append_format(out, L" --on-variable %ls", d.str_param1.c_str());
                 break;
             }
-            case EVENT_EXIT: {
-                if (next->param1.pid > 0)
-                    append_format(out, L" --on-process-exit %d", next->param1.pid);
+            case event_type_t::exit: {
+                if (d.param1.pid > 0)
+                    append_format(out, L" --on-process-exit %d", d.param1.pid);
                 else
-                    append_format(out, L" --on-job-exit %d", -next->param1.pid);
+                    append_format(out, L" --on-job-exit %d", -d.param1.pid);
                 break;
             }
-            case EVENT_JOB_ID: {
-                const job_t *j = job_t::from_job_id(next->param1.job_id);
+            case event_type_t::job_exit: {
+                const job_t *j = job_t::from_job_id(d.param1.job_id);
                 if (j) append_format(out, L" --on-job-exit %d", j->pgid);
                 break;
             }
-            case EVENT_GENERIC: {
-                append_format(out, L" --on-event %ls", next->str_param1.c_str());
+            case event_type_t::generic: {
+                append_format(out, L" --on-event %ls", d.str_param1.c_str());
                 break;
             }
             default: {

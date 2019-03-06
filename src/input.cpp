@@ -13,6 +13,7 @@
 #include <termios.h>
 
 #include <algorithm>
+#include <atomic>
 #include <memory>
 #include <string>
 #include <vector>
@@ -153,9 +154,6 @@ static std::vector<terminfo_mapping_t> terminfo_mappings;
 /// List of all terminfo mappings.
 static std::vector<terminfo_mapping_t> mappings;
 
-/// Set to true when the input subsystem has been initialized.
-bool input_initialized = false;
-
 /// Initialize terminfo.
 static void init_input_terminfo();
 
@@ -252,7 +250,7 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t *command, const wc
 /// reader.
 static int interrupt_handler() {
     // Fire any pending events.
-    event_fire(NULL);
+    event_fire_delayed();
     // Reap stray processes, including printing exit status messages.
     if (job_reap(true)) reader_repaint_needed();
     // Tell the reader an event occured.
@@ -263,9 +261,15 @@ static int interrupt_handler() {
     return R_NULL;
 }
 
+static std::atomic<bool> input_initialized{false};
+
 /// Set up arrays used by readch to detect escape sequences for special keys and perform related
 /// initializations for our input subsystem.
 void init_input() {
+    ASSERT_IS_MAIN_THREAD();
+    if (input_initialized.load(std::memory_order_relaxed)) return;
+    input_initialized.store(true, std::memory_order_relaxed);
+
     input_common_init(&interrupt_handler);
     init_input_terminfo();
 
@@ -285,14 +289,6 @@ void init_input() {
         input_mapping_add(L"\x1B[C", L"forward-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
         input_mapping_add(L"\x1B[D", L"backward-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
     }
-
-    input_initialized = true;
-}
-
-void input_destroy() {
-    if (!input_initialized) return;
-    input_initialized = false;
-    input_common_destroy();
 }
 
 void input_function_push_arg(wchar_t arg) {
@@ -366,11 +362,11 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
         //
         // FIXME(snnw): if commands add stuff to input queue (e.g. commandline -f execute), we won't
         // see that until all other commands have also been run.
-        int last_status = proc_get_last_status();
+        auto last_statuses = proc_get_last_statuses();
         for (const wcstring &cmd : m.commands) {
             parser_t::principal_parser().eval(cmd, io_chain_t(), TOP);
         }
-        proc_set_last_status(last_status);
+        proc_set_last_statuses(std::move(last_statuses));
         input_common_next_ch(R_NULL);
     } else {
         // Invalid binding, mixed commands and functions.  We would need to execute these one by
@@ -483,8 +479,6 @@ static wchar_t input_read_characters_only() {
 }
 
 wint_t input_readch(bool allow_commands) {
-    CHECK_BLOCK(R_NULL);
-
     // Clear the interrupted flag.
     reader_reset_interrupted();
     // Search for sequence in mapping tables.

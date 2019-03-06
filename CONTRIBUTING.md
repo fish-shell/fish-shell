@@ -69,7 +69,7 @@ Suppressing oclint warnings is more complicated to describe so I'll refer you to
 The following sections discuss the specific rules for the style that should be used when writing fish code. To ensure your changes conform to the style rules you simply need to run
 
 ```
-make style
+build_tools/style.fish
 ```
 
 before committing your change. That will run `git-clang-format` to rewrite only the lines you're modifying.
@@ -79,7 +79,7 @@ If you've already committed your changes that's okay since it will then check th
 If you want to check the style of the entire code base run
 
 ```
-make style-all
+build_tools/style.fish --all
 ```
 
 That command will refuse to restyle any files if you have uncommitted changes.
@@ -165,9 +165,24 @@ However, as I write this there are no places in the code where we use this and I
 
 1. Indent with spaces, not tabs and use four spaces per indent.
 
-1. Comments should always use the C++ style; i.e., each line of the comment should begin with a `//` and should be limited to 100 characters. Comments that do not begin a line should be separated from the previous text by two spaces.
-
-1. Comments that document the purpose of a function or class should begin with three slashes, `///`, so that OS X Xcode (and possibly other IDEs) will extract the comment and show it in the "Quick Help" window when the cursor is on the symbol.
+1. Document the purpose of a function or class with doxygen-style comment blocks. e.g.:
+```
+/**
+ * Sum numbers in a vector.
+ *
+ * @param values Container whose values are summed.
+ * @return sum of `values`, or 0.0 if `values` is empty.
+ */
+double sum(std::vector<double> & const values) {
+    ...
+}
+ */
+ ```
+or
+```
+/// brief description of somefunction()
+void somefunction() {
+```
 
 ## Testing
 

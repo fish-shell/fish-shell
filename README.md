@@ -101,16 +101,14 @@ To switch your default shell back, you can run `chsh -s /bin/bash` (substituting
 Compiling fish requires:
 
 * a C++11 compiler (g++ 4.8 or later, or clang 3.3 or later)
-* any of CMake, GNU Make, or (on macOS only) Xcode
+* CMake (version 3.2 or later)
 * a curses implementation such as ncurses (headers and libraries)
 * PCRE2 (headers and libraries) - a copy is included with fish
 * gettext (headers and libraries) - optional, for translation support
 
-Additionally, if compiling fish with GNU Make from git (that is, not from an officially released tarball), `autoconf` 2.60+ and `automake` 1.13+ are required. Doxygen (1.8.7 or later) is also optionally required to build the documentation from a cloned git repository.
+Doxygen (1.8.7 or later) is also optionally required to build the documentation from a cloned git repository.
 
-### Building from source (all platforms)
-
-#### Using CMake (preferred)
+### Building from source (all platforms) - Makefile generator
 
 ```bash
 mkdir build; cd build
@@ -119,14 +117,14 @@ make
 sudo make install
 ```
 
-#### Using autotools
+### Building from source (macOS) - Xcode
 
 ```bash
-autoreconf --no-recursive #if building from Git
-./configure
-make
-sudo make install
+mkdir build; cd build
+cmake .. -G Xcode
 ```
+
+An Xcode project will now be available in the `build` subdirectory.
 
 ### Help, it didn't build!
 
@@ -134,7 +132,7 @@ If fish reports that it could not find curses, try installing a curses developme
 
 On Debian or Ubuntu you want:
 
-    sudo apt-get install build-essential ncurses-dev libncurses5-dev gettext autoconf
+    sudo apt-get install build-essential cmake ncurses-dev libncurses5-dev libpcre2-dev gettext
 
 On RedHat, CentOS, or Amazon EC2:
 

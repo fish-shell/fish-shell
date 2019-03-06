@@ -5,6 +5,8 @@
 
 #include <errno.h>
 #include <limits.h>
+// Needed for va_list et al.
+#include <stdarg.h> // IWYU pragma: keep
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>  // IWYU pragma: keep
 #endif
@@ -270,19 +272,6 @@ inline bool is_whitespace(const wchar_t *input) { return is_whitespace(wcstring(
 
 [[noreturn]] void __fish_assert(const char *msg, const char *file, size_t line, int error);
 
-/// Check if signals are blocked. If so, print an error message and return from the function
-/// performing this check.
-#define CHECK_BLOCK(retval)
-#if 0
-#define CHECK_BLOCK(retval)                                                \
-    if (signal_is_blocked()) {                                             \
-        debug(0, "function %s called while blocking signals. ", __func__); \
-        bugreport();                                                       \
-        show_stackframe(L'E');                                             \
-        return retval;                                                     \
-    }
-#endif
-
 /// Shorthand for wgettext call in situations where a C-style string is needed (e.g., fwprintf()).
 #define _(wstr) wgettext(wstr).c_str()
 
@@ -303,6 +292,12 @@ template <typename T>
 void vec_append(std::vector<T> &receiver, std::vector<T> &&donator) {
     receiver.insert(receiver.end(), std::make_move_iterator(donator.begin()),
                     std::make_move_iterator(donator.end()));
+}
+
+/// Move an object into a shared_ptr.
+template <typename T>
+std::shared_ptr<T> move_to_sharedptr(T &&v) {
+    return std::make_shared<T>(std::move(v));
 }
 
 /// Print a stack trace to stderr.
@@ -864,18 +859,10 @@ void assert_is_not_forked_child(const char *who);
 #define ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(x) assert_is_not_forked_child(x)
 #define ASSERT_IS_NOT_FORKED_CHILD() ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(__FUNCTION__)
 
-/// Detect if we are Windows Subsystem for Linux by inspecting /proc/sys/kernel/osrelease
-/// and checking if "Microsoft" is in the first line.
+/// Determines if we are running under Microsoft's Windows Subsystem for Linux to work around
+/// some known limitations and/or bugs.
 /// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997
-constexpr bool is_windows_subsystem_for_linux() {
-    // This function is called after fork() and before exec() in postfork.cpp. Make sure we
-    // don't allocate any memory here!
-#ifdef WSL
-    return true;
-#else
-    return false;
-#endif
-}
+bool is_windows_subsystem_for_linux();
 
 /// Detect if we are running under Cygwin or Cgywin64
 constexpr bool is_cygwin() {

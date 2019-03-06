@@ -5,6 +5,9 @@
 VERSION=`git describe --always --dirty 2>/dev/null`
 if test -z "$VERSION" ; then
   echo "Could not get version from git"
+  if test -f version; then
+    VERSION=`cat version`
+  fi
 fi
 
 echo "Version is $VERSION"

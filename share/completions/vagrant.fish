@@ -1,136 +1,162 @@
-# vagrant autocompletion
+# Completions for vagrant, a vm/container management thing.
+# Docs are at https://www.vagrantup.com/docs/cli/.
+#
+# Apparently options can only come after commands, with the exception of "-v" and "-h", which are effectively commands.
+set -l commands box cloud connect destroy \
+docker-{exec,logs,run} \
+global-status halt help init list-commands login \
+package plugin provision push rdp reload resume \
+rsync rsync-auto share snapshot ssh ssh-config \
+status suspend up version \
+port powershell winrm{,-config}
 
-function __fish_vagrant_no_command -d 'Test if vagrant has yet to be given the main command'
-    set -l cmd (commandline -opc)
-    test (count $cmd) -eq 1
+set -l box_commands add help list outdated prune remove repackage update
+set -l cloud_commands auth box search provider publish version
+set -l plugin_commands install license list uninstall update
+set -l snapshot_commands delete list pop push restore save
+
+function __fish_print_vagrant_state
+    # Find a .vagrant file/directory above $PWD
+    set -l root
+    set -l dir (pwd -P)
+    while test $dir != "/"
+        if test -d $dir.vagrant -o -f $dir.vagrant
+            echo $dir.vagrant
+            return 0
+        end
+        # Go up one directory
+        set dir (string replace -r '[^/]*/?$' '' $dir)
+    end
+    return 1
 end
 
-function __fish_vagrant_using_command
-    set -l cmd (commandline -opc)
-    set -q cmd[2]
-    and test "$argv[1]" = $cmd[2]
-end
-
-function __fish_vagrant_using_command_and_no_subcommand
-    set -l cmd (commandline -opc)
-    test (count $cmd) -eq 2
-    and test "$argv[1]" = "$cmd[2]"
-end
-
-function __fish_vagrant_using_subcommand --argument-names cmd_main cmd_sub
-    set -l cmd (commandline -opc)
-    set -q cmd[3]
-    and test "$cmd_main" = $cmd[2] -a "$cmd_sub" = $cmd[3]
-end
-
-function __fish_vagrant_boxes -d 'Lists all available Vagrant boxes'
-    command vagrant box list | while read -l name _
-        echo $name
+function __fish_vagrant_machines
+    if set -l state (__fish_print_vagrant_state)
+        test -d "$state"; or return
+        set -l machines $state/machines/*
+        string replace -- $state/machines/ '' $machines
     end
 end
 
-# --version and --help are always active
-complete -c vagrant -f -s v -l version -d 'Print the version and exit'
-complete -c vagrant -f -s h -l help -d 'Print the help and exit'
+function __fish_vagrant_running_machines
+    # List running machines
+    # The annoying thing here is that
+    # we could get IDs via `vagrant global-status`,
+    # but that doesn't have proper output and takes 0.5s.
+    #
+    # It seems like the data is available in $VAGRANT_HOME/data/machine-index/index, but it's in json, and that's unparseable with regex, and we can't expect jq to be installed.
+    if set -l state (__fish_print_vagrant_state)
+        # TODO: stub
+        if test -f "$state"
+            string replace -f '"active":' '' < $state | string split ,
+        else
+        end
+    end
+end
 
-# box
-complete -c vagrant -f -n '__fish_vagrant_no_command' -a 'box' -d 'Manages boxes'
-complete -c vagrant -n '__fish_vagrant_using_command_and_no_subcommand box' -a add -d 'Adds a box'
-complete -c vagrant -f -n '__fish_vagrant_using_command_and_no_subcommand box' -a list -d 'Lists all the installed boxes'
-complete -c vagrant -f -n '__fish_vagrant_using_command_and_no_subcommand box' -a remove -d 'Removes a box from Vagrant'
-complete -c vagrant -f -n '__fish_vagrant_using_command_and_no_subcommand box' -a repackage -d 'Repackages the given box for redistribution'
-complete -c vagrant -f -n '__fish_vagrant_using_subcommand box add' -l provider -d 'Verifies the box with the given provider'
-complete -c vagrant -f -n '__fish_vagrant_using_subcommand box remove' -a '(__fish_vagrant_boxes)'
+function __fish_vagrant_boxes
+    set -l vhome $VAGRANT_HOME/boxes
+    set -q vhome[1]; or set vhome ~/.vagrant.d/boxes
+    set -l boxes $vhome/*
+    string replace -- $vhome/ '' $boxes | string replace -- -VAGRANTSLASH- /
+end
 
-# connect
-complete -c vagrant -f -n '__fish_vagrant_no_command' -a 'connect' -d 'Connect to a remotely shared Vagrant environment'
-complete -c vagrant -f -n '__fish_vagrant_using_command connect' -l disable-static-ip -d 'No static IP, only a SOCKS proxy'
-complete -c vagrant -f -n '__fish_vagrant_using_command connect' -l static-ip -r -d 'Manually override static IP chosen'
-complete -c vagrant -f -n '__fish_vagrant_using_command connect' -l ssh -d 'SSH into the remote machine'
+function __fish_vagrant_need_command -V commands
+    argparse -s h/help v/version -- (commandline -opc)[2..-1] 2>/dev/null
+    or return
+    if set -q _flag_help[1]; or set -q _flag_help[1]
+        return 1
+    end
+    if set -q argv[1]
+        echo $argv
+        return 1
+    end
+    return 0
+end
 
+function __fish_vagrant_using_command
+    set -l cmd (__fish_vagrant_need_command)
+    contains -- $cmd[1] $argv
+end
 
-# destroy
-complete -c vagrant -f -n '__fish_vagrant_no_command' -a 'destroy' -d 'Destroys the running machine'
-complete -c vagrant -f -n '__fish_vagrant_using_command destroy' -s f -l force -d 'Destroy without confirmation'
+function __fish_vagrant_box_need_command
+    set -l cmd (__fish_vagrant_need_command)
+    test "$cmd[1]" = "box" 2>/dev/null
+    or return 1
+    set -e cmd[1]
 
-# global-status
-complete -c vagrant -f -n '__fish_vagrant_no_command' -a 'global-status' -d 'Global status of Vagrant environments'
-complete -c vagrant -f -n '__fish_vagrant_using_command global-status' -l prune -d 'Prune invalid entries'
+    # Not all of these are valid for all subcommands, but that's not important here.
+    # Yes, none of these have a short version.
+    set -l opts b-box-version= c-cacert= C-capath= 1-cert= 2-clean f-force i-insecure p-provider=
+    set -a opts 3-checksum= 4-checksum-type= n-name=
+    set -a opts g-global d-dry-run a-all B-box
+    argparse -s $opts -- $cmd 2>/dev/null
+    or return 1
+    if set -q argv[1]
+        echo $argv
+        return 1
+    end
+    return 0
+end
 
-# gem
-complete -c vagrant -f -n '__fish_vagrant_no_command' -a 'gem' -d 'Install Vagrant plugins through ruby gems'
+function __fish_vagrant_box_using_command
+    not set -l cmd (__fish_vagrant_box_need_command)
+    and contains -- $cmd[1] $argv
+end
 
-# halt
-complete -c vagrant -f -n '__fish_vagrant_no_command' -a 'halt' -d 'Shuts down the running machine'
-complete -c vagrant -f -n '__fish_vagrant_using_command halt' -s f -l force -d 'Force shut down'
+function __fish_vagrant_cloud_need_command
+    set -l cmd (__fish_vagrant_need_command)
+    test "$cmd[1]" = "cloud" 2>/dev/null
+    or return 1
+    set -e cmd[1]
 
-# init
-complete -c vagrant -f -n '__fish_vagrant_no_command' -a 'init' -d 'Initializes the Vagrant environment'
-complete -c vagrant -f -n '__fish_vagrant_using_command init' -a '(__fish_vagrant_boxes)'
+    set -l opts c-check l-logout t-token d-description= s-short-description= p-private b-box-version=
+    set -a opts f-force r-release u-url v-version-description= P-page= S-short= o-order= L-limit= 1-sort-by=
+    argparse -s $opts -- $cmd 2>/dev/null
+    or return 1
+    if set -q argv[1]
+        echo $argv
+        return 1
+    end
+    return 0
+end
 
-# login
-complete -c vagrant -f -n '__fish_vagrant_no_command' -a 'login' -d 'Log in to Vagrant Cloud'
-complete -c vagrant -f -n '__fish_vagrant_using_command login ' -s c -l check -d "Only checks if you're logged in"
-complete -c vagrant -f -n '__fish_vagrant_using_command login ' -s k -l logout -d "Logs you out if you're logged in"
+function __fish_vagrant_cloud_using_command
+    not set -l cmd (__fish_vagrant_cloud_need_command)
+    and contains -- $cmd[1] $argv
+end
 
-# package
-complete -c vagrant -n '__fish_vagrant_no_command' -a 'package' -d 'Packages a running machine into a reusable box'
-complete -c vagrant -n '__fish_vagrant_using_command package' -l base -d 'Name or UUID of the virtual machine'
-complete -c vagrant -n '__fish_vagrant_using_command package' -l output -d 'Output file name'
-complete -c vagrant -n '__fish_vagrant_using_command package' -l include -r -d 'Additional files to package with the box'
-complete -c vagrant -n '__fish_vagrant_using_command package' -l vagrantfile -r -d 'Include the given Vagrantfile with the box'
-
-# plugin
-complete -c vagrant -n '__fish_vagrant_no_command' -a 'plugin' -d 'Manages plugins'
-complete -c vagrant -n '__fish_vagrant_using_command plugin' -a install -r -d 'Installs a plugin'
-complete -c vagrant -n '__fish_vagrant_using_command plugin' -a license -r -d 'Installs a license for a proprietary Vagrant plugin'
-complete -c vagrant -f -n '__fish_vagrant_using_command plugin' -a list -d 'Lists installed plugins'
-complete -c vagrant -n '__fish_vagrant_using_command plugin' -a uninstall -r -d 'Uninstall the given plugin'
-
-# provision
-complete -c vagrant -n '__fish_vagrant_no_command' -a 'provision' -d 'Runs configured provisioners on the running machine'
-complete -c vagrant -n '__fish_vagrant_using_command provision' -l provision-with -r -d 'Run only the given provisioners'
-
-# rdp
-complete -c vagrant -n '__fish_vagrant_no_command' -a 'rdp' -d 'Connects to machine via RDP'
-
-# reload
-complete -c vagrant -f -n '__fish_vagrant_no_command' -a 'reload' -d 'Restarts the running machine'
-complete -c vagrant -f -n '__fish_vagrant_using_command reload' -l no-provision -r -d 'Provisioners will not run'
-complete -c vagrant -f -n '__fish_vagrant_using_command reload' -l provision-with -r -d 'Run only the given provisioners'
-
-# resume
-complete -c vagrant -x -n '__fish_vagrant_no_command' -a 'resume' -d 'Resumes a previously suspended machine'
-
-# share
-complete -c vagrant -n '__fish_vagrant_no_command' -a 'share' -d 'Share your Vagrant environment with anyone in the world'
-complete -c vagrant -n '__fish_vagrant_using_command share' -l disable-http -d 'Disable publicly visible HTTP endpoint'
-complete -c vagrant -n '__fish_vagrant_using_command share' -l domain -r -d 'Domain the share name will be a subdomain of'
-complete -c vagrant -n '__fish_vagrant_using_command share' -l http -r -d 'Local HTTP port to forward to'
-complete -c vagrant -n '__fish_vagrant_using_command share' -l https -r -d 'Local HTTPS port to forward to'
-complete -c vagrant -n '__fish_vagrant_using_command share' -l name -r -d 'Specific name for the share'
-complete -c vagrant -n '__fish_vagrant_using_command share' -l ssh -d "Allow 'vagrant connect --ssh' access"
-complete -c vagrant -n '__fish_vagrant_using_command share' -l ssh-no-password -d "Key won't be encrypted with --ssh"
-complete -c vagrant -n '__fish_vagrant_using_command share' -l ssh-port -r -d 'Specific port for SSH when using --ssh'
-complete -c vagrant -n '__fish_vagrant_using_command share' -l ssh-once -d "Allow 'vagrant connect --ssh' only one time"
-
-# ssh
-complete -c vagrant -f -n '__fish_vagrant_no_command' -a 'ssh' -d 'SSH into a running machine'
-complete -c vagrant -f -n '__fish_vagrant_using_command ssh' -s c -l command -r -d 'Executes a single SSH command'
-complete -c vagrant -f -n '__fish_vagrant_using_command ssh' -s p -l plain -r -d 'Does not authenticate'
-
-# ssh-config
-complete -c vagrant -f -n '__fish_vagrant_no_command' -a 'ssh-config' -d 'Outputs configuration for an SSH config file'
-complete -c vagrant -f -n '__fish_vagrant_using_command ssh-config' -l host -r -d 'Name of the host for the outputted configuration'
-
-# status
-complete -c vagrant -x -n '__fish_vagrant_no_command' -a 'status' -d 'Status of the machines Vagrant is managing'
-
-# suspend
-complete -c vagrant -x -n '__fish_vagrant_no_command' -a 'suspend' -d 'Suspends the running machine'
-
-# up
-complete -c vagrant -f -n '__fish_vagrant_no_command' -a 'up' -d 'Creates and configures guest machines'
-complete -c vagrant -f -n '__fish_vagrant_using_command up' -l provision -d 'Enable provision'
-complete -c vagrant -f -n '__fish_vagrant_using_command up' -l no-provision -d 'Disable provision'
-complete -c vagrant -f -n '__fish_vagrant_using_command up' -l provision-with -r -d 'Enable only certain provisioners, by type'
+complete -c vagrant -n "__fish_vagrant_need_command" -fa box -d 'Manage boxes: installation, removal, etc.'
+complete -c vagrant -n "__fish_vagrant_using_command box; and __fish_vagrant_box_need_command" -fa "$box_commands"
+complete -c vagrant -n "__fish_vagrant_need_command" -fa cloud -d 'Manage Vagrant Cloud'
+complete -c vagrant -n "__fish_vagrant_using_command cloud; and __fish_vagrant_cloud_need_command" -fa "$cloud_commands"
+complete -c vagrant -n "__fish_vagrant_need_command" -fa connect
+complete -c vagrant -n "__fish_vagrant_need_command" -fa destroy -d 'Stop and delete all traces of the vagrant machine'
+complete -c vagrant -n "__fish_vagrant_need_command" -fa docker-exec
+complete -c vagrant -n "__fish_vagrant_need_command" -fa docker-logs
+complete -c vagrant -n "__fish_vagrant_need_command" -fa docker-run
+complete -c vagrant -n "__fish_vagrant_need_command" -fa global-status -d 'Show status Vagrant environments for this user'
+complete -c vagrant -n "__fish_vagrant_need_command" -fa halt -d 'Stop a machine'
+complete -c vagrant -n "__fish_vagrant_need_command" -fa help -d 'Show help for a subcommand'
+complete -c vagrant -n "__fish_vagrant_need_command" -fa init -d 'Initialize a new Vagrant env by creating a Vagrantfile'
+complete -c vagrant -n "__fish_vagrant_using_command init" -fa '(__fish_vagrant_boxes)'
+complete -c vagrant -n "__fish_vagrant_need_command" -fa list-commands
+complete -c vagrant -n "__fish_vagrant_need_command" -fa login
+complete -c vagrant -n "__fish_vagrant_need_command" -fa package -d 'Package a running vagrant environment into a box'
+complete -c vagrant -n "__fish_vagrant_need_command" -fa plugin -d 'Manages plugins: install, uninstall, update, etc.'
+complete -c vagrant -n "__fish_vagrant_need_command" -fa provision
+complete -c vagrant -n "__fish_vagrant_need_command" -fa push
+complete -c vagrant -n "__fish_vagrant_need_command" -fa rdp
+complete -c vagrant -n "__fish_vagrant_need_command" -fa reload
+complete -c vagrant -n "__fish_vagrant_need_command" -fa resume
+complete -c vagrant -n "__fish_vagrant_need_command" -fa rsync
+complete -c vagrant -n "__fish_vagrant_need_command" -fa rsync-auto
+complete -c vagrant -n "__fish_vagrant_need_command" -fa share
+complete -c vagrant -n "__fish_vagrant_need_command" -fa snapshot
+complete -c vagrant -n "__fish_vagrant_need_command" -fa ssh -d 'Connect to a machine via SSH'
+complete -c vagrant -n "__fish_vagrant_need_command" -fa ssh-config -d 'Print ssh config to connect to machine'
+complete -c vagrant -n "__fish_vagrant_need_command" -fa status -d 'Print status of a machine'
+complete -c vagrant -n "__fish_vagrant_need_command" -fa suspend -d 'Suspend a machine'
+complete -c vagrant -n "__fish_vagrant_need_command" -fa up -d 'Start and provision the environment'
+complete -c vagrant -n "__fish_vagrant_using_command up" -fa '(__fish_vagrant_machines)'
+complete -c vagrant -n "__fish_vagrant_need_command" -fa version -d 'Print current and latest version'

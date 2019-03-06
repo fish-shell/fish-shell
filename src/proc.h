@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <stddef.h>
 #include <sys/time.h>  // IWYU pragma: keep
+#include <sys/wait.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -17,9 +18,11 @@
 
 #include "common.h"
 #include "enum_set.h"
+#include "event.h"
 #include "io.h"
 #include "parse_tree.h"
 #include "tnode.h"
+#include "topic_monitor.h"
 
 /// Types of processes.
 enum process_type_t {
@@ -39,6 +42,94 @@ enum {
     JOB_CONTROL_ALL,
     JOB_CONTROL_INTERACTIVE,
     JOB_CONTROL_NONE,
+};
+
+/// A proc_status_t is a value type that encapsulates logic around exited vs stopped vs signaled,
+/// etc.
+class proc_status_t {
+    int status_{};
+
+    explicit proc_status_t(int status) : status_(status) {}
+
+    /// Encode a return value \p ret and signal \p sig into a status value like waitpid() does.
+    static constexpr int w_exitcode(int ret, int sig) {
+#ifdef W_EXITCODE
+        return W_EXITCODE(ret, sig);
+#else
+        return ((ret) << 8 | (sig));
+#endif
+    }
+
+   public:
+    proc_status_t() = default;
+
+    /// Construct from a status returned from a waitpid call.
+    static proc_status_t from_waitpid(int status) { return proc_status_t(status); }
+
+    /// Construct directly from an exit code.
+    static proc_status_t from_exit_code(int ret) {
+        // Some paranoia.
+        constexpr int zerocode = w_exitcode(0, 0);
+        static_assert(WIFEXITED(zerocode), "Synthetic exit status not reported as exited");
+        return proc_status_t(w_exitcode(ret, 0 /* sig */));
+    }
+
+    /// \return if we are stopped (as in SIGSTOP).
+    bool stopped() const { return WIFSTOPPED(status_); }
+
+    /// \return if we exited normally (not a signal).
+    bool normal_exited() const { return WIFEXITED(status_); }
+
+    /// \return if we exited because of a signal.
+    bool signal_exited() const { return WIFSIGNALED(status_); }
+
+    /// \return the signal code, given that we signal exited.
+    int signal_code() const {
+        assert(signal_exited() && "Process is not signal exited");
+        return WTERMSIG(status_);
+    }
+
+    /// \return the exit code, given that we normal exited.
+    int exit_code() const {
+        assert(normal_exited() && "Process is not normal exited");
+        return WEXITSTATUS(status_);
+    }
+
+    /// \return if this status represents success.
+    bool is_success() const { return normal_exited() && exit_code() == EXIT_SUCCESS; }
+
+    /// \return the value appropriate to populate $status.
+    int status_value() const {
+        if (signal_exited()) {
+            return 128 + signal_code();
+        } else if (normal_exited()) {
+            return exit_code();
+        } else {
+            DIE("Process is not exited");
+        }
+    }
+};
+
+/// A structure representing a "process" internal to fish. This is backed by a pthread instead of a
+/// separate process.
+class internal_proc_t {
+    /// Whether the process has exited.
+    std::atomic<bool> exited_{};
+
+    /// If the process has exited, its status code.
+    std::atomic<proc_status_t> status_{};
+
+   public:
+    /// \return if this process has exited.
+    bool exited() const { return exited_.load(std::memory_order_acquire); }
+
+    /// Mark this process as exited, with the given status.
+    void mark_exited(proc_status_t status);
+
+    proc_status_t get_status() const {
+        assert(exited() && "Process is not exited");
+        return status_.load(std::memory_order_relaxed);
+    }
 };
 
 /// A structure representing a single fish process. Contains variables for tracking process state
@@ -68,13 +159,13 @@ class process_t {
     io_chain_t process_io_chain;
 
     // No copying.
-    process_t(const process_t &rhs);
-    void operator=(const process_t &rhs);
+    process_t(const process_t &rhs) = delete;
+    void operator=(const process_t &rhs) = delete;
 
    public:
     process_t();
 
-    // Note whether we are the first and/or last in the job
+    /// Note whether we are the first and/or last in the job
     bool is_first_in_job{false};
     bool is_last_in_job{false};
 
@@ -112,20 +203,31 @@ class process_t {
 
     void set_io_chain(const io_chain_t &chain) { this->process_io_chain = chain; }
 
+    /// Store the current topic generations. That is, right before the process is launched, record
+    /// the generations of all topics; then we can tell which generation values have changed after
+    /// launch. This helps us avoid spurious waitpid calls.
+    void check_generations_before_launch();
+
     /// Actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC.
     wcstring actual_cmd;
+
+    /// Generation counts for reaping.
+    generation_list_t gens_{};
+
     /// Process ID
     pid_t pid{0};
+
+    /// If we are an "internal process," that process.
+    std::shared_ptr<internal_proc_t> internal_proc_{};
+
     /// File descriptor that pipe output should bind to.
     int pipe_write_fd{0};
     /// True if process has completed.
-    volatile int completed{false};
+    bool completed{false};
     /// True if process has stopped.
-    volatile int stopped{false};
+    bool stopped{false};
     /// Reported status value.
-    volatile int status{0};
-    /// Special flag to tell the evaluation function for count to print the help information.
-    int count_help_magic{0};
+    proc_status_t status{};
 #ifdef HAVE__PROC_SELF_STAT
     /// Last time of cpu time check.
     struct timeval last_time {};
@@ -155,6 +257,30 @@ enum class job_flag_t {
     JOB_CONTROL,
     /// Whether the job wants to own the terminal when in the foreground.
     TERMINAL,
+
+    JOB_FLAG_COUNT
+};
+
+/// A collection of status and pipestatus.
+struct statuses_t {
+    /// Status of the last job to exit.
+    int status{0};
+
+    /// Pipestatus value.
+    std::vector<int> pipestatus{};
+
+    /// Return a statuses for a single process status.
+    static statuses_t just(int s) {
+        statuses_t result{};
+        result.status = s;
+        result.pipestatus.push_back(s);
+        return result;
+    }
+};
+
+template <>
+struct enum_info_t<job_flag_t> {
+    static constexpr auto count = job_flag_t::JOB_FLAG_COUNT;
 };
 
 typedef int job_id_t;
@@ -194,6 +320,31 @@ class job_t {
 
     /// Sets the command.
     void set_command(const wcstring &cmd) { command_str = cmd; }
+
+    /// \return whether it is OK to reap a given process. Sometimes we want to defer reaping a
+    /// process if it is the group leader and the job is not yet constructed, because then we might
+    /// also reap the process group and then we cannot add new processes to the group.
+    bool can_reap(const process_t *p) const {
+        // Internal processes can always be reaped.
+        if (p->internal_proc_) {
+            return true;
+        } else if (p->pid <= 0) {
+            // Can't reap without a pid.
+            return false;
+        } else if (!is_constructed() && pgid > 0 && p->pid == pgid) {
+            // p is the the group leader in an under-construction job.
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    /// \returns the reap topic for a process, which describes the manner in which we are reaped. A
+    /// none returns means don't reap, or perhaps defer reaping.
+    maybe_t<topic_t> reap_topic_for_process(const process_t *p) const {
+        if (p->completed || !can_reap(p)) return none();
+        return p->internal_proc_ ? topic_t::internal_exit : topic_t::sigchld;
+    }
 
     /// Returns a truncated version of the job string. Used when a message has already been emitted
     /// containing the full job string and job id, but using the job id alone would be confusing
@@ -238,9 +389,9 @@ class job_t {
 
     // Helper functions to check presence of flags on instances of jobs
     /// The job has been fully constructed, i.e. all its member processes have been launched
-    bool is_constructed() const { return get_flag(job_flag_t::CONSTRUCTED); };
+    bool is_constructed() const { return get_flag(job_flag_t::CONSTRUCTED); }
     /// The job was launched in the foreground and has control of the terminal
-    bool is_foreground() const { return get_flag(job_flag_t::FOREGROUND); };
+    bool is_foreground() const { return get_flag(job_flag_t::FOREGROUND); }
     /// The job is complete, i.e. all its member processes have been reaped
     bool is_completed() const;
     /// The job is in a stopped state
@@ -266,6 +417,9 @@ class job_t {
     /// Send the specified signal to all processes in this job.
     /// \return true on success, false on failure.
     bool signal(int signal);
+
+    /// \returns the statuses for this job.
+    statuses_t get_statuses() const;
 
     /// Return the job instance matching this unique job id.
     /// If id is 0 or less, return the last job used.
@@ -344,18 +498,16 @@ extern int job_control_mode;
 extern int no_exec;
 
 /// Sets the status of the last process to exit.
-void proc_set_last_status(int s);
+void proc_set_last_statuses(statuses_t s);
 
 /// Returns the status of the last process to exit.
 int proc_get_last_status();
+statuses_t proc_get_last_statuses();
 
 /// Notify the user about stopped or terminated jobs. Delete terminated jobs from the job list.
 ///
 /// \param interactive whether interactive jobs should be reaped as well
 bool job_reap(bool interactive);
-
-/// Signal handler for SIGCHLD. Mark any processes with relevant information.
-void job_handle_signal(int signal, siginfo_t *info, void *con);
 
 /// Mark a process as failed to execute (and therefore completed).
 void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *p);
@@ -376,7 +528,7 @@ void proc_sanity_check();
 
 /// Send a process/job exit event notification. This function is a convenience wrapper around
 /// event_fire().
-void proc_fire_event(const wchar_t *msg, int type, pid_t pid, int status);
+void proc_fire_event(const wchar_t *msg, event_type_t type, pid_t pid, int status);
 
 /// Initializations.
 void proc_init();
@@ -390,12 +542,8 @@ void proc_push_interactive(int value);
 /// Set is_interactive flag to the previous value. If needed, update signal handlers.
 void proc_pop_interactive();
 
-/// Format an exit status code as returned by e.g. wait into a fish exit code number as accepted by
-/// proc_set_last_status.
-int proc_format_status(int status);
-
-/// Wait for any process finishing.
-pid_t proc_wait_any();
+/// Wait for any process finishing, or receipt of a signal.
+void proc_wait_any();
 
 /// Set and get whether we are in initialization.
 // Hackish. In order to correctly report the origin of code with no associated file, we need to

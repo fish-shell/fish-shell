@@ -56,6 +56,14 @@ ELSE()
   SET(FISH_IN_TREE_BUILD FALSE)
 ENDIF()
 
+# NetBSD does weird things with finding libraries,
+# making the tests fail by failing to find pcre.
+#
+# Keep the rpath used to build.
+IF(CMAKE_SYSTEM_NAME STREQUAL NetBSD)
+  SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+ENDIF()
+
 # All objects that the system needs to build fish, except fish.cpp
 SET(FISH_SRCS
     src/autoload.cpp src/builtin.cpp src/builtin_bg.cpp src/builtin_bind.cpp
@@ -80,7 +88,7 @@ SET(FISH_SRCS
     src/postfork.cpp src/proc.cpp src/reader.cpp src/sanity.cpp src/screen.cpp
     src/signal.cpp src/tinyexpr.cpp src/tnode.cpp src/tokenizer.cpp src/utf8.cpp src/util.cpp
     src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp src/wutil.cpp
-    src/future_feature_flags.cpp src/redirection.cpp
+    src/future_feature_flags.cpp src/redirection.cpp src/topic_monitor.cpp
 )
 
 # Header files are just globbed.
@@ -121,10 +129,13 @@ SET_SOURCE_FILES_PROPERTIES(src/fish_version.cpp
 
 OPTION(INTERNAL_WCWIDTH "use fallback wcwidth" ON)
 IF(INTERNAL_WCWIDTH)
-    add_definitions(-DHAVE_BROKEN_WCWIDTH=1)
+    ADD_DEFINITIONS(-DHAVE_BROKEN_WCWIDTH=1)
 ELSE()
-    add_definitions(-DHAVE_BROKEN_WCWIDTH=0)
+    ADD_DEFINITIONS(-DHAVE_BROKEN_WCWIDTH=0)
 ENDIF()
+
+# Enable thread-safe errno on Solaris (#5611)
+ADD_DEFINITIONS(-D_REENTRANT)
 
 # Set up PCRE2
 INCLUDE(cmake/PCRE2.cmake)
@@ -166,6 +177,21 @@ INCLUDE(cmake/Install.cmake)
 
 # Mac app.
 INCLUDE(cmake/MacApp.cmake)
+
+# Lint targets
+# This could be implemented as target properties, but the script has the useful feature of only
+# checking the currently-staged commands
+# The generator expressions below rebuild the command line for the fishlib targets
+# CMake does not support the "iquote" flag - https://gitlab.kitware.com/cmake/cmake/issues/15491
+SET(LINT_ARGS "-D$<JOIN:$<TARGET_PROPERTY:fishlib,COMPILE_DEFINITIONS>, -D>" "-I$<JOIN:$<TARGET_PROPERTY:fishlib,INCLUDE_DIRECTORIES>, -I>")
+ADD_CUSTOM_TARGET(lint
+    COMMAND build_tools/lint.fish -- ${LINT_ARGS}
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
+ADD_CUSTOM_TARGET(lint-all
+    COMMAND build_tools/lint.fish --all -- ${LINT_ARGS}
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
 
 INCLUDE(FeatureSummary)
 FEATURE_SUMMARY(WHAT ALL)

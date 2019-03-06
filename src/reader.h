@@ -49,8 +49,11 @@ class editable_line_t {
 /// Read commands from \c fd until encountering EOF.
 int reader_read(int fd, const io_chain_t &io);
 
-/// Tell the shell that it should exit after the currently running command finishes.
-void reader_exit(int do_exit, int force);
+/// Tell the shell whether it should exit after the currently running command finishes.
+void reader_set_end_loop(bool flag);
+
+/// Mark that the reader should forcibly exit. This may be invoked from a signal handler.
+void reader_force_exit();
 
 /// Check that the reader is in a sane state.
 void reader_sanity_check();
@@ -118,9 +121,12 @@ size_t reader_get_cursor_pos();
 /// selection, true otherwise.
 bool reader_get_selection(size_t *start, size_t *len);
 
+/// Return the value of the interrupted flag, which is set by the sigint handler.
+bool reader_test_interrupted();
+
 /// Return the value of the interrupted flag, which is set by the sigint handler, and clear it if it
 /// was set.
-int reader_interrupted();
+bool reader_test_and_clear_interrupted();
 
 /// Clear the interrupted flag unconditionally without handling anything. The flag could have been
 /// set e.g. when an interrupt arrived just as we were ending an earlier \c reader_readline
@@ -141,7 +147,7 @@ bool reader_thread_job_is_stale();
 /// characters even if a full line has not yet been read. Note: the returned value may be longer
 /// than nchars if a single keypress resulted in multiple characters being inserted into the
 /// commandline.
-const wchar_t *reader_readline(int nchars);
+maybe_t<wcstring> reader_readline(int nchars);
 
 /// Push a new reader environment.
 void reader_push(const wcstring &name);

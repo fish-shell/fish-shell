@@ -95,10 +95,6 @@ bool term_has_xn = false;
 /// found in `TERMINFO_DIRS` we don't to call `handle_curses()` before we've imported the latter.
 static bool env_initialized = false;
 
-typedef std::unordered_map<wcstring, void (*)(const wcstring &, const wcstring &, env_stack_t &)>
-    var_dispatch_table_t;
-static var_dispatch_table_t var_dispatch_table;
-
 /// List of all locale environment variable names that might trigger (re)initializing the locale
 /// subsystem.
 static const wcstring_list_t locale_variables({L"LANG", L"LANGUAGE", L"LC_ALL", L"LC_ADDRESS",
@@ -110,6 +106,11 @@ static const wcstring_list_t locale_variables({L"LANG", L"LANGUAGE", L"LC_ALL", 
 /// List of all curses environment variable names that might trigger (re)initializing the curses
 /// subsystem.
 static const wcstring_list_t curses_variables({L"TERM", L"TERMINFO", L"TERMINFO_DIRS"});
+
+typedef std::unordered_map<wcstring, void (*)(const wcstring &, const wcstring &, env_stack_t &)>
+    var_dispatch_table_t;
+static var_dispatch_table_t create_var_dispatch_table();
+static const var_dispatch_table_t s_var_dispatch_table = create_var_dispatch_table();
 
 // Some forward declarations to make it easy to logically group the code.
 static void init_locale(const environment_t &vars);
@@ -315,8 +316,8 @@ bool string_set_contains(const T &set, const wchar_t *val) {
 /// Check if a variable may not be set using the set command.
 static bool is_read_only(const wchar_t *val) {
     const string_set_t env_read_only = {
-        L"PWD",          L"SHLVL",    L"history",  L"status", L"version",
-        L"FISH_VERSION", L"fish_pid", L"hostname", L"_",      L"fish_private_mode"};
+        L"PWD",          L"SHLVL",    L"history",  L"pipestatus", L"status", L"version",
+        L"FISH_VERSION", L"fish_pid", L"hostname", L"_",          L"fish_private_mode"};
     return string_set_contains(env_read_only, val) ||
         (in_private_mode() && wcscmp(L"fish_history", val) == 0);
 }
@@ -329,7 +330,7 @@ static bool variable_should_auto_pathvar(const wcstring &name) {
 }
 
 /// Table of variables whose value is dynamically calculated, such as umask, status, etc.
-static const string_set_t env_electric = {L"history", L"status", L"umask"};
+static const string_set_t env_electric = {L"history", L"pipestatus", L"status", L"umask"};
 
 static bool is_electric(const wcstring &key) { return contains(env_electric, key); }
 
@@ -623,8 +624,8 @@ static void react_to_variable_change(const wchar_t *op, const wcstring &key, env
     // call the appropriate functions to put the value of the var into effect.
     if (!env_initialized) return;
 
-    auto dispatch = var_dispatch_table.find(key);
-    if (dispatch != var_dispatch_table.end()) {
+    auto dispatch = s_var_dispatch_table.find(key);
+    if (dispatch != s_var_dispatch_table.end()) {
         (*dispatch->second)(op, key, vars);
     } else if (string_prefixes_string(L"fish_color_", key)) {
         reader_react_to_color_change();
@@ -638,12 +639,7 @@ static void universal_callback(env_stack_t *stack, const callback_data_t &cb) {
 
     react_to_variable_change(op, cb.key, *stack);
     stack->mark_changed_exported();
-
-    event_t ev = event_t::variable_event(cb.key);
-    ev.arguments.push_back(L"VARIABLE");
-    ev.arguments.push_back(op);
-    ev.arguments.push_back(cb.key);
-    event_fire(&ev);
+    event_fire(event_t::variable(cb.key, {L"VARIABLE", op, cb.key}));
 }
 
 /// Make sure the PATH variable contains something.
@@ -864,7 +860,8 @@ static void handle_curses_change(const wcstring &op, const wcstring &var_name, e
 
 /// Populate the dispatch table used by `react_to_variable_change()` to efficiently call the
 /// appropriate function to handle a change to a variable.
-static void setup_var_dispatch_table() {
+static var_dispatch_table_t create_var_dispatch_table() {
+    var_dispatch_table_t var_dispatch_table;
     for (const auto &var_name : locale_variables) {
         var_dispatch_table.emplace(var_name, handle_locale_change);
     }
@@ -887,11 +884,10 @@ static void setup_var_dispatch_table() {
     var_dispatch_table.emplace(L"fish_read_limit", handle_read_limit_change);
     var_dispatch_table.emplace(L"fish_history", handle_fish_history_change);
     var_dispatch_table.emplace(L"TZ", handle_tz_change);
+    return var_dispatch_table;
 }
 
 void env_init(const struct config_paths_t *paths /* or NULL */) {
-    setup_var_dispatch_table();
-
     env_stack_t &vars = env_stack_t::globals();
     // Import environment variables. Walk backwards so that the first one out of any duplicates wins
     // (See issue #2784).
@@ -1014,11 +1010,13 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     }
 
     // initialize the PWD variable if necessary
-    // Note we may inherit a virtual PWD that doesn't match what getcwd would return; respect that.
-    // Note we treat PWD as read-only so it was not set in vars.
-    const char *incoming_pwd = getenv("PWD");
-    if (incoming_pwd && incoming_pwd[0]) {
-        vars.set_one(L"PWD",  ENV_EXPORT | ENV_GLOBAL, str2wcstring(incoming_pwd));
+    // Note we may inherit a virtual PWD that doesn't match what getcwd would return; respect that
+    // if and only if it matches getcwd (#5647). Note we treat PWD as read-only so it was not set in
+    // vars.
+    const char *incoming_pwd_cstr = getenv("PWD");
+    wcstring incoming_pwd = incoming_pwd_cstr ? str2wcstring(incoming_pwd_cstr) : wcstring{};
+    if (!incoming_pwd.empty() && paths_are_same_file(incoming_pwd, L".")) {
+        vars.set_one(L"PWD", ENV_EXPORT | ENV_GLOBAL, incoming_pwd);
     } else {
         vars.set_pwd_from_getcwd();
     }
@@ -1253,12 +1251,7 @@ int env_stack_t::set_internal(const wcstring &key, env_mode_flags_t input_var_mo
         }
     }
 
-    event_t ev = event_t::variable_event(key);
-    ev.arguments.reserve(3);
-    ev.arguments.push_back(L"VARIABLE");
-    ev.arguments.push_back(L"SET");
-    ev.arguments.push_back(key);
-    event_fire(&ev);
+    event_fire(event_t::variable(key, {L"VARIABLE", L"SET", key}));
     react_to_variable_change(L"SET", key, *this);
     return ENV_OK;
 }
@@ -1324,12 +1317,7 @@ int env_stack_t::remove(const wcstring &key, int var_mode) {
         }
 
         if (try_remove(first_node, key.c_str(), var_mode)) {
-            event_t ev = event_t::variable_event(key);
-            ev.arguments.push_back(L"VARIABLE");
-            ev.arguments.push_back(L"ERASE");
-            ev.arguments.push_back(key);
-            event_fire(&ev);
-
+            event_fire(event_t::variable(key, {L"VARIABLE", L"ERASE", key}));
             erased = 1;
         }
     }
@@ -1344,11 +1332,7 @@ int env_stack_t::remove(const wcstring &key, int var_mode) {
         }
         if (erased) {
             env_universal_barrier();
-            event_t ev = event_t::variable_event(key);
-            ev.arguments.push_back(L"VARIABLE");
-            ev.arguments.push_back(L"ERASE");
-            ev.arguments.push_back(key);
-            event_fire(&ev);
+            event_fire(event_t::variable(key, {L"VARIABLE", L"ERASE", key}));
         }
 
         if (is_exported) vars_stack().mark_changed_exported();
@@ -1407,6 +1391,14 @@ maybe_t<env_var_t> env_stack_t::get(const wcstring &key, env_mode_flags_t mode) 
             wcstring_list_t result;
             if (history) history->get_history(result);
             return env_var_t(L"history", result);
+        } else if (key == L"pipestatus") {
+            const auto js = proc_get_last_statuses();
+            wcstring_list_t result;
+            result.reserve(js.pipestatus.size());
+            for (int i : js.pipestatus) {
+                result.push_back(to_string(i));
+            }
+            return env_var_t(L"pipestatus", std::move(result));
         } else if (key == L"status") {
             return env_var_t(L"status", to_string(proc_get_last_status()));
         } else if (key == L"umask") {

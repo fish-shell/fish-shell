@@ -21,7 +21,7 @@ end
 
 function __fish_complete_screen_general_list -d "Get the socket list"
     set -l escaped (string escape --style=regex $argv)
-    screen -list | string match -r '^\t.*\(.*\)\s*\('$escaped'\)\s*$'| string replace -r '\t(.*)\s+\((.*)\)\s*\((.*)\)' '$1\t$2 $3'
+    screen -list | string match -r '^\t.*\('$escaped'\)\s*$' | string replace -r '\t(.*)\s+(\(.*\))?\s*\((.*)\)' '$1\t$3'
 end
 
 function __fish_complete_screen_detached -d "Print a list of detached screen sessions"
@@ -50,15 +50,14 @@ end
 # detect socket directory for mac users
 __fish_detect_screen_socket_dir
 
-complete -c screen -x
 complete -c screen -s a -d 'Include all capabilitys'
 complete -c screen -s A -d 'Adapt window size'
 complete -c screen -s c -r -d 'Specify init file'
 complete -c screen -s d -d 'Detach screen' -a '(__fish_complete_screen)' -x
 complete -c screen -s D -d 'Detach screen' -a '(__fish_complete_screen)' -x
 complete -c screen -s r -d 'Reattach session' -a '(__fish_complete_screen)' -x
-complete -c screen -s R -d 'Reattach/create session'
-complete -c screen -o RR -d 'Reattach/create any session'
+complete -c screen -s R -d 'Reattach/create session' -a '(__fish_complete_screen)' -x
+complete -c screen -o RR -d 'Reattach/create any session' -a '(__fish_complete_screen)' -x
 complete -c screen -s e -x -d 'Escape character'
 complete -c screen -s f -d 'Flow control on'
 complete -c screen -o fn -d 'Flow control off'

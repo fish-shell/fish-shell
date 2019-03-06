@@ -4,6 +4,9 @@
 - The vcs-prompt functions have been renamed to names without double-underscore, so __fish_git_prompt is now fish_git_prompt, __fish_vcs_prompt is now fish_vcs_prompt, __fish_hg_prompt is now fish_hg_prompt and __fish_svn_prompt is now fish_svn_prompt. Shims at the old names have been added, and the variables have kept their old names (#5586).
 
 ## Notable fixes and improvements
+- Add `$pipestatus` support
+- `string split0` now returns 0 if it split something (#5701).
+
 ### Syntax changes and new commands
 - None yet.
 
@@ -17,6 +20,28 @@
 - New color options for the pager have been added (#5524).
 - The default escape delay (to differentiate between the escape key and an alt-combination) has been reduced to 30ms, down from 300ms for the default mode and 100ms for vi-mode (#3904).
 - In the interest of consistency, `builtin -q` and `command -q` can now be used to query if a builtin or command exists (#5631).
+- The `path_helper` on macOS now only runs in login shells, matching the bash implementation.
+- `math` now accepts `--scale=max` for the maximum scale (#5579).
+- The `forward-bigword` binding now interacts correctly with autosuggestions (#5336)
+- Added completions for
+  - `cf`
+  - `bosh`
+
+### For distributors and developers
+- The autotools-based build system and legacy Xcode build systems have been removed, leaving only the CMake build system. All distributors and developers must migrate to the CMake build.
+
+---
+
+# fish 3.0.2 (released February 19, 2019)
+
+This release of fish fixes an issue discovered in fish 3.0.1.
+
+### Fixes and improvements
+
+- The PWD environment variable is now ignored if it does not resolve to the true working directory, fixing strange behaviour in terminals started by editors and IDEs (#5647).
+
+If you are upgrading from version 2.7.1 or before, please also review the release notes for 3.0.1,
+3.0.0 and 3.0b1 (included below).
 
 ---
 

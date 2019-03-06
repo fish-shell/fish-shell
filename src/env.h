@@ -95,7 +95,7 @@ class env_var_t {
 
     env_var_t() = default;
 
-    bool empty() const { return vals.empty() || (vals.size() == 1 && vals[0].empty()); };
+    bool empty() const { return vals.empty() || (vals.size() == 1 && vals[0].empty()); }
     bool read_only() const { return flags & flag_read_only; }
     bool exports() const { return flags & flag_export; }
     bool is_pathvar() const { return flags & flag_pathvar; }

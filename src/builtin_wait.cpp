@@ -6,6 +6,7 @@
 #include "builtin_wait.h"
 #include "common.h"
 #include "proc.h"
+#include "reader.h"
 #include "wgetopt.h"
 #include "wutil.h"
 
@@ -73,10 +74,10 @@ static int wait_for_backgrounds(bool any_flag) {
     size_t jobs_len = jobs.count();
 
     while ((!any_flag && !all_jobs_finished()) || (any_flag && !any_jobs_finished(jobs_len))) {
-        pid_t pid = proc_wait_any();
-        if (pid == -1 && errno == EINTR) {
+        if (reader_test_interrupted()) {
             return 128 + SIGINT;
         }
+        proc_wait_any();
     }
     return 0;
 }
@@ -112,10 +113,10 @@ static bool any_specified_jobs_finished(const std::vector<job_id_t> &ids) {
 static int wait_for_backgrounds_specified(const std::vector<job_id_t> &ids, bool any_flag) {
     while ((!any_flag && !all_specified_jobs_finished(ids)) ||
            (any_flag && !any_specified_jobs_finished(ids))) {
-        pid_t pid = proc_wait_any();
-        if (pid == -1 && errno == EINTR) {
+        if (reader_test_interrupted()) {
             return 128 + SIGINT;
         }
+        proc_wait_any();
     }
     return 0;
 }

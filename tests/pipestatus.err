@@ -1,0 +1,18 @@
+
+####################
+# pipestatus variable - builtins only
+
+####################
+# pipestatus variable - no builtins
+
+####################
+# pipestatus variable - mixed
+
+####################
+# pipestatus variable - non-pipe
+
+####################
+# pipestatus variable - negate
+
+####################
+# pipestatus variable - block

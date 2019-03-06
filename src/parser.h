@@ -20,24 +20,14 @@
 
 class io_chain_t;
 
-/// event_blockage_t represents a block on events of the specified type.
+/// event_blockage_t represents a block on events.
 struct event_blockage_t {
-    /// The types of events to block. This is interpreted as a bitset whete the value is 1 for every
-    /// bit corresponding to a blocked event type. For example, if EVENT_VARIABLE type events should
-    /// be blocked, (type & 1<<EVENT_BLOCKED) should be set.
-    ///
-    /// Note that EVENT_ANY can be used to specify any event.
-    unsigned int typemask;
 };
 
 typedef std::list<event_blockage_t> event_blockage_list_t;
 
-inline bool event_block_list_blocks_type(const event_blockage_list_t &ebls, int type) {
-    for (event_blockage_list_t::const_iterator iter = ebls.begin(); iter != ebls.end(); ++iter) {
-        if (iter->typemask & (1 << EVENT_ANY)) return true;
-        if (iter->typemask & (1 << type)) return true;
-    }
-    return false;
+inline bool event_block_list_blocks_type(const event_blockage_list_t &ebls) {
+    return !ebls.empty();
 }
 
 /// Types of blocks.
@@ -157,7 +147,7 @@ struct profile_item_t {
 class parse_execution_context_t;
 class completion_t;
 
-class parser_t {
+class parser_t : public std::enable_shared_from_this<parser_t> {
     friend class parse_execution_context_t;
 
    private:
@@ -212,7 +202,7 @@ class parser_t {
     parser_t();
 
     /// The main parser.
-    static parser_t principal;
+    static std::shared_ptr<parser_t> principal;
 
    public:
     /// Get the "principal" parser, whatever that is.

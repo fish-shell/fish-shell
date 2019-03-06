@@ -15,42 +15,30 @@
 #include "common.h"
 #include "io.h"
 
-/// The signal number that is used to match any signal.
-#define EVENT_ANY_SIGNAL -1
-
 /// The process id that is used to match any process id.
 #define EVENT_ANY_PID 0
 
 /// Enumeration of event types.
-enum event_type_t {
+enum class event_type_t {
     /// Matches any event type (Not always any event, as the function name may limit the choice as
     /// well.
-    EVENT_ANY,
+    any,
     /// An event triggered by a signal.
-    EVENT_SIGNAL,
+    signal,
     /// An event triggered by a variable update.
-    EVENT_VARIABLE,
+    variable,
     /// An event triggered by a job or process exit.
-    EVENT_EXIT,
+    exit,
     /// An event triggered by a job exit.
-    EVENT_JOB_ID,
+    job_exit,
     /// A generic event.
-    EVENT_GENERIC,
+    generic,
 };
 
-/// The structure which represents an event. The event_t struct has several event-related use-cases:
-///
-/// - When used as a parameter to event_add, it represents a class of events, and function_name is
-/// the name of the function which will be called whenever an event matching the specified class
-/// occurs. This is also how events are stored internally.
-///
-/// - When used as a parameter to event_get, event_remove and event_fire, it represents a class of
-/// events, and if the function_name field is non-zero, only events which call the specified
-/// function will be returned.
-struct event_t {
-   public:
-    /// Type of event.
-    int type;
+/// Properties of an event.
+struct event_description_t {
+    /// The event type.
+    event_type_t type;
 
     /// The type-specific parameter. The int types are one of the following:
     ///
@@ -61,71 +49,68 @@ struct event_t {
         int signal;
         int job_id;
         pid_t pid;
-    } param1;
+    } param1{};
 
     /// The string types are one of the following:
     ///
     /// variable: Variable name for variable-type events.
     /// param: The parameter describing this generic event.
-    wcstring str_param1;
+    wcstring str_param1{};
 
-    /// The name of the event handler function.
-    wcstring function_name;
+    explicit event_description_t(event_type_t t) : type(t) {}
+    static event_description_t signal(int sig);
+    static event_description_t variable(wcstring str);
+    static event_description_t generic(wcstring str);
+};
 
-    /// The argument list. Only used when sending a new event using event_fire. In all other
-    /// situations, the value of this variable is ignored.
-    wcstring_list_t arguments;
+/// Represents a handler for an event.
+struct event_handler_t {
+    /// Properties of the event to match.
+    event_description_t desc;
 
-    explicit event_t(int t);
-    ~event_t();
+    /// Name of the function to invoke.
+    wcstring function_name{};
 
-    static event_t signal_event(int sig);
-    static event_t variable_event(const wcstring &str);
-    static event_t generic_event(const wcstring &str);
+    explicit event_handler_t(event_type_t t) : desc(t) {}
+    event_handler_t(event_description_t d, wcstring name)
+        : desc(d), function_name(std::move(name)) {}
+};
+using event_handler_list_t = std::vector<std::shared_ptr<event_handler_t>>;
+
+/// Represents a event that is fired, or capable of being fired.
+struct event_t {
+    /// Properties of the event.
+    event_description_t desc;
+
+    /// Arguments to any handler.
+    wcstring_list_t arguments{};
+
+    event_t(event_type_t t) : desc(t) {}
+
+    static event_t variable(wcstring name, wcstring_list_t args);
 };
 
 /// Add an event handler.
-///
-/// May not be called by a signal handler, since it may allocate new memory.
-void event_add_handler(const event_t &event);
+void event_add_handler(std::shared_ptr<event_handler_t> eh);
 
-/// Remove all events matching the specified criterion.
-///
-/// May not be called by a signal handler, since it may free allocated memory.
-void event_remove(const event_t &event);
+/// Remove all events for the given function name.
+void event_remove_function_handlers(const wcstring &name);
 
-/// Return all events which match the specified event class
-///
-/// This function is safe to call from a signal handler _ONLY_ if the out parameter is null.
-///
-/// \param criterion Is the class of events to return. If the criterion has a non-null
-/// function_name, only events which trigger the specified function will return.
-/// \param out the list to add events to. May be 0, in which case no events will be added, but the
-/// result count will still be valid
-///
-/// \return the number of found matches
-int event_get(const event_t &criterion, std::vector<std::shared_ptr<event_t>> *out);
+/// Return all event handlers for the given function.
+event_handler_list_t event_get_function_handlers(const wcstring &name);
 
 /// Returns whether an event listener is registered for the given signal. This is safe to call from
 /// a signal handler.
 bool event_is_signal_observed(int signal);
 
-/// Fire the specified event. The function_name field of the event must be set to 0. If the event is
-/// of type EVENT_SIGNAL, no the event is queued, and will be dispatched the next time event_fire is
-/// called. If event is a null-pointer, all pending events are dispatched.
-///
-/// This function is safe to call from a signal handler _ONLY_ if the event parameter is for a
-/// signal. Signal events not be fired, by the call to event_fire, instead they will be fired the
-/// next time event_fire is called with anull argument. This is needed to make sure that no code
-/// evaluation is ever performed by a signal handler.
-///
-/// \param event the specific event whose handlers should fire. If null, then all delayed events
-/// will be fired.
-void event_fire(const event_t *event);
+/// Fire the specified event \p event.
+void event_fire(const event_t &event);
 
-/// Like event_fire, but takes a signal directly.
-/// May be called from signal handlers
-void event_fire_signal(int signal);
+/// Fire all delayed eents.
+void event_fire_delayed();
+
+/// Enqueue a signal event. Invoked from a signal handler.
+void event_enqueue_signal(int signal);
 
 /// Print all events. If type_filter is not none(), only output events with that type.
 void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter);
@@ -134,7 +119,7 @@ void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter);
 wcstring event_get_desc(const event_t &e);
 
 /// Fire a generic event with the specified name.
-void event_fire_generic(const wchar_t *name, wcstring_list_t *args = NULL);
+void event_fire_generic(const wchar_t *name, const wcstring_list_t *args = NULL);
 
 /// Return the event type for a given name, or none.
 maybe_t<event_type_t> event_type_for_name(const wcstring &name);

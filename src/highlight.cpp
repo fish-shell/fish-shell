@@ -39,71 +39,127 @@ namespace g = grammar;
 
 #define CURSOR_POSITION_INVALID ((size_t)(-1))
 
-/// Number of elements in the highlight_var array.
-#define VAR_COUNT (sizeof(highlight_var) / sizeof(wchar_t *))
-static const wchar_t *const highlight_var[] = {
-    [highlight_spec_normal]                       = L"fish_color_normal",
-    [highlight_spec_error]                        = L"fish_color_error",
-    [highlight_spec_command]                      = L"fish_color_command",
-    [highlight_spec_statement_terminator]         = L"fish_color_end",
-    [highlight_spec_param]                        = L"fish_color_param",
-    [highlight_spec_comment]                      = L"fish_color_comment",
-    [highlight_spec_match]                        = L"fish_color_match",
-    [highlight_spec_search_match]                 = L"fish_color_search_match",
-    [highlight_spec_operator]                     = L"fish_color_operator",
-    [highlight_spec_escape]                       = L"fish_color_escape",
-    [highlight_spec_quote]                        = L"fish_color_quote",
-    [highlight_spec_redirection]                  = L"fish_color_redirection",
-    [highlight_spec_autosuggestion]               = L"fish_color_autosuggestion",
-    [highlight_spec_selection]                    = L"fish_color_selection",
-    [highlight_spec_pager_progress]               = L"fish_pager_color_progress",
-    [highlight_spec_pager_background]             = L"fish_pager_color_background",
-    [highlight_spec_pager_prefix]                 = L"fish_pager_color_prefix",
-    [highlight_spec_pager_completion]             = L"fish_pager_color_completion",
-    [highlight_spec_pager_description]            = L"fish_pager_color_description",
-    [highlight_spec_pager_secondary_background]   = L"fish_pager_color_secondary_background",
-    [highlight_spec_pager_secondary_prefix]       = L"fish_pager_color_secondary_prefix",
-    [highlight_spec_pager_secondary_completion]   = L"fish_pager_color_secondary_completion",
-    [highlight_spec_pager_secondary_description]  = L"fish_pager_color_secondary_description",
-    [highlight_spec_pager_selected_background]    = L"fish_pager_color_selected_background",
-    [highlight_spec_pager_selected_prefix]        = L"fish_pager_color_selected_prefix",
-    [highlight_spec_pager_selected_completion]    = L"fish_pager_color_selected_completion",
-    [highlight_spec_pager_selected_description]   = L"fish_pager_color_selected_description",
-};
-static_assert(VAR_COUNT == HIGHLIGHT_SPEC_MAX, "Every color spec has a corresponding env var");
+static const wchar_t *get_highlight_var_name(highlight_role_t role) {
+    switch (role) {
+        case highlight_role_t::normal:
+            return L"fish_color_normal";
+        case highlight_role_t::error:
+            return L"fish_color_error";
+        case highlight_role_t::command:
+            return L"fish_color_command";
+        case highlight_role_t::statement_terminator:
+            return L"fish_color_end";
+        case highlight_role_t::param:
+            return L"fish_color_param";
+        case highlight_role_t::comment:
+            return L"fish_color_comment";
+        case highlight_role_t::match:
+            return L"fish_color_match";
+        case highlight_role_t::search_match:
+            return L"fish_color_search_match";
+        case highlight_role_t::operat:
+            return L"fish_color_operator";
+        case highlight_role_t::escape:
+            return L"fish_color_escape";
+        case highlight_role_t::quote:
+            return L"fish_color_quote";
+        case highlight_role_t::redirection:
+            return L"fish_color_redirection";
+        case highlight_role_t::autosuggestion:
+            return L"fish_color_autosuggestion";
+        case highlight_role_t::selection:
+            return L"fish_color_selection";
+        case highlight_role_t::pager_progress:
+            return L"fish_pager_color_progress";
+        case highlight_role_t::pager_background:
+            return L"fish_pager_color_background";
+        case highlight_role_t::pager_prefix:
+            return L"fish_pager_color_prefix";
+        case highlight_role_t::pager_completion:
+            return L"fish_pager_color_completion";
+        case highlight_role_t::pager_description:
+            return L"fish_pager_color_description";
+        case highlight_role_t::pager_secondary_background:
+            return L"fish_pager_color_secondary_background";
+        case highlight_role_t::pager_secondary_prefix:
+            return L"fish_pager_color_secondary_prefix";
+        case highlight_role_t::pager_secondary_completion:
+            return L"fish_pager_color_secondary_completion";
+        case highlight_role_t::pager_secondary_description:
+            return L"fish_pager_color_secondary_description";
+        case highlight_role_t::pager_selected_background:
+            return L"fish_pager_color_selected_background";
+        case highlight_role_t::pager_selected_prefix:
+            return L"fish_pager_color_selected_prefix";
+        case highlight_role_t::pager_selected_completion:
+            return L"fish_pager_color_selected_completion";
+        case highlight_role_t::pager_selected_description:
+            return L"fish_pager_color_selected_description";
+    }
+    DIE("invalid highlight role");
+}
 
 // Table used to fetch fallback highlights in case the specified one
 // wasn't set.
-static const highlight_spec_t fallbacks[] = {
-    [highlight_spec_normal]                       = highlight_spec_normal,
-    [highlight_spec_error]                        = highlight_spec_normal,
-    [highlight_spec_command]                      = highlight_spec_normal,
-    [highlight_spec_statement_terminator]         = highlight_spec_normal,
-    [highlight_spec_param]                        = highlight_spec_normal,
-    [highlight_spec_comment]                      = highlight_spec_normal,
-    [highlight_spec_match]                        = highlight_spec_normal,
-    [highlight_spec_search_match]                 = highlight_spec_normal,
-    [highlight_spec_operator]                     = highlight_spec_normal,
-    [highlight_spec_escape]                       = highlight_spec_normal,
-    [highlight_spec_quote]                        = highlight_spec_normal,
-    [highlight_spec_redirection]                  = highlight_spec_normal,
-    [highlight_spec_autosuggestion]               = highlight_spec_normal,
-    [highlight_spec_selection]                    = highlight_spec_normal,
-    [highlight_spec_pager_progress]               = highlight_spec_normal,
-    [highlight_spec_pager_background]             = highlight_spec_normal,
-    [highlight_spec_pager_prefix]                 = highlight_spec_normal,
-    [highlight_spec_pager_completion]             = highlight_spec_normal,
-    [highlight_spec_pager_description]            = highlight_spec_normal,
-    [highlight_spec_pager_secondary_background]   = highlight_spec_pager_background,
-    [highlight_spec_pager_secondary_prefix]       = highlight_spec_pager_prefix,
-    [highlight_spec_pager_secondary_completion]   = highlight_spec_pager_completion,
-    [highlight_spec_pager_secondary_description]  = highlight_spec_pager_description,
-    [highlight_spec_pager_selected_background]    = highlight_spec_search_match,
-    [highlight_spec_pager_selected_prefix]        = highlight_spec_pager_prefix,
-    [highlight_spec_pager_selected_completion]    = highlight_spec_pager_completion,
-    [highlight_spec_pager_selected_description]   = highlight_spec_pager_description,
-};
-static_assert(sizeof(fallbacks) / sizeof(fallbacks[0]) == HIGHLIGHT_SPEC_MAX, "No missing fallbacks");
+static highlight_role_t get_fallback(highlight_role_t role) {
+    switch (role) {
+        case highlight_role_t::normal:
+            return highlight_role_t::normal;
+        case highlight_role_t::error:
+            return highlight_role_t::normal;
+        case highlight_role_t::command:
+            return highlight_role_t::normal;
+        case highlight_role_t::statement_terminator:
+            return highlight_role_t::normal;
+        case highlight_role_t::param:
+            return highlight_role_t::normal;
+        case highlight_role_t::comment:
+            return highlight_role_t::normal;
+        case highlight_role_t::match:
+            return highlight_role_t::normal;
+        case highlight_role_t::search_match:
+            return highlight_role_t::normal;
+        case highlight_role_t::operat:
+            return highlight_role_t::normal;
+        case highlight_role_t::escape:
+            return highlight_role_t::normal;
+        case highlight_role_t::quote:
+            return highlight_role_t::normal;
+        case highlight_role_t::redirection:
+            return highlight_role_t::normal;
+        case highlight_role_t::autosuggestion:
+            return highlight_role_t::normal;
+        case highlight_role_t::selection:
+            return highlight_role_t::normal;
+        case highlight_role_t::pager_progress:
+            return highlight_role_t::normal;
+        case highlight_role_t::pager_background:
+            return highlight_role_t::normal;
+        case highlight_role_t::pager_prefix:
+            return highlight_role_t::normal;
+        case highlight_role_t::pager_completion:
+            return highlight_role_t::normal;
+        case highlight_role_t::pager_description:
+            return highlight_role_t::normal;
+        case highlight_role_t::pager_secondary_background:
+            return highlight_role_t::pager_background;
+        case highlight_role_t::pager_secondary_prefix:
+            return highlight_role_t::pager_prefix;
+        case highlight_role_t::pager_secondary_completion:
+            return highlight_role_t::pager_completion;
+        case highlight_role_t::pager_secondary_description:
+            return highlight_role_t::pager_description;
+        case highlight_role_t::pager_selected_background:
+            return highlight_role_t::search_match;
+        case highlight_role_t::pager_selected_prefix:
+            return highlight_role_t::pager_prefix;
+        case highlight_role_t::pager_selected_completion:
+            return highlight_role_t::pager_completion;
+        case highlight_role_t::pager_selected_description:
+            return highlight_role_t::pager_description;
+    }
+    DIE("invalid highlight role");
+}
 
 /// Determine if the filesystem containing the given fd is case insensitive for lookups regardless
 /// of whether it preserves the case when saving a pathname.
@@ -292,32 +348,19 @@ static bool plain_statement_get_expanded_command(const wcstring &src,
     return err == EXPAND_OK || err == EXPAND_WILDCARD_MATCH;
 }
 
-rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background) {
+rgb_color_t highlight_get_color(const highlight_spec_t &highlight, bool is_background) {
     // TODO: rationalize this principal_vars.
     const auto &vars = env_stack_t::principal();
     rgb_color_t result = rgb_color_t::normal();
+    highlight_role_t role = is_background ? highlight.background : highlight.foreground;
 
-    // If sloppy_background is set, then we look at the foreground color even if is_background is
-    // set.
-    bool treat_as_background = is_background && !(highlight & highlight_modifier_sloppy_background);
-
-    // Get the primary variable.
-    size_t idx = highlight_get_primary(highlight);
-    if (idx >= VAR_COUNT) {
-        return rgb_color_t::normal();
-    }
-
-    auto var = vars.get(highlight_var[idx]);
-
-    // debug( 1, L"%d -> %d -> %ls", highlight, idx, val );
-
-    if (!var) var = vars.get(highlight_var[fallbacks[idx]]);
-    if (!var) var = vars.get(highlight_var[0]);
-
-    if (var) result = parse_color(*var, treat_as_background);
+    auto var = vars.get(get_highlight_var_name(role));
+    if (!var) var = vars.get(get_highlight_var_name(get_fallback(role)));
+    if (!var) var = vars.get(get_highlight_var_name(highlight_role_t::normal));
+    if (var) result = parse_color(*var, is_background);
 
     // Handle modifiers.
-    if (highlight & highlight_modifier_valid_path) {
+    if (!is_background && highlight.valid_path) {
         auto var2 = vars.get(L"fish_color_valid_path");
         if (var2) {
             rgb_color_t result2 = parse_color(*var2, is_background);
@@ -333,7 +376,7 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background) 
         }
     }
 
-    if (highlight & highlight_modifier_force_underline) {
+    if (!is_background && highlight.force_underline) {
         result.set_underline(true);
     }
 
@@ -437,9 +480,9 @@ static size_t color_variable(const wchar_t *in, size_t in_len,
         // Our color depends on the next char.
         wchar_t next = in[idx + 1];
         if (next == L'$' || valid_var_name_char(next)) {
-            colors[idx] = highlight_spec_operator;
+            colors[idx] = highlight_role_t::operat;
         } else {
-            colors[idx] = highlight_spec_error;
+            colors[idx] = highlight_role_t::error;
         }
         idx++;
         dollar_count++;
@@ -447,7 +490,7 @@ static size_t color_variable(const wchar_t *in, size_t in_len,
 
     // Handle a sequence of variable characters.
     while (valid_var_name_char(in[idx])) {
-        colors[idx++] = highlight_spec_operator;
+        colors[idx++] = highlight_role_t::operat;
     }
 
     // Handle a slice, up to dollar_count of them. Note that we currently don't do any validation of
@@ -458,8 +501,8 @@ static size_t color_variable(const wchar_t *in, size_t in_len,
         if (located == 1) {
             size_t slice_begin_idx = slice_begin - in, slice_end_idx = slice_end - in;
             assert(slice_end_idx > slice_begin_idx);
-            colors[slice_begin_idx] = highlight_spec_operator;
-            colors[slice_end_idx] = highlight_spec_operator;
+            colors[slice_begin_idx] = highlight_role_t::operat;
+            colors[slice_end_idx] = highlight_role_t::operat;
             idx = slice_end_idx + 1;
         } else if (located == 0) {
             // not a slice
@@ -470,7 +513,7 @@ static size_t color_variable(const wchar_t *in, size_t in_len,
             // double-quoted string that doesn't happen. As such, color the variable + the slice
             // start red. Coloring any more than that looks bad, unless we're willing to try and
             // detect where the double-quoted string ends, and I'd rather not do that.
-            std::fill(colors, colors + idx + 1, (highlight_spec_t)highlight_spec_error);
+            std::fill(colors, colors + idx + 1, highlight_role_t::error);
             break;
         }
     }
@@ -482,14 +525,14 @@ static size_t color_variable(const wchar_t *in, size_t in_len,
 static void color_string_internal(const wcstring &buffstr, highlight_spec_t base_color,
                                   std::vector<highlight_spec_t>::iterator colors) {
     // Clarify what we expect.
-    assert((base_color == highlight_spec_param || base_color == highlight_spec_command) &&
+    assert((base_color == highlight_role_t::param || base_color == highlight_role_t::command) &&
            "Unexpected base color");
     const size_t buff_len = buffstr.size();
     std::fill(colors, colors + buff_len, base_color);
 
     // Hacky support for %self which must be an unquoted literal argument.
     if (buffstr == PROCESS_EXPAND_SELF_STR) {
-        std::fill_n(colors, wcslen(PROCESS_EXPAND_SELF_STR), highlight_spec_operator);
+        std::fill_n(colors, wcslen(PROCESS_EXPAND_SELF_STR), highlight_role_t::operat);
         return;
     }
 
@@ -500,7 +543,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
         switch (mode) {
             case e_unquoted: {
                 if (c == L'\\') {
-                    int fill_color = highlight_spec_escape;  // may be set to highlight_error
+                    auto fill_color = highlight_role_t::escape;  // may be set to highlight_error
                     const size_t backslash_pos = in_pos;
                     size_t fill_end = backslash_pos;
 
@@ -510,7 +553,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
 
                     if (escaped_char == L'\0') {
                         fill_end = in_pos;
-                        fill_color = highlight_spec_error;
+                        fill_color = highlight_role_t::error;
                     } else if (wcschr(L"~%", escaped_char)) {
                         if (in_pos == 1) {
                             fill_end = in_pos + 1;
@@ -573,7 +616,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                         fill_end = in_pos;
 
                         // It's an error if we exceeded the max value.
-                        if (res > max_val) fill_color = highlight_spec_error;
+                        if (res > max_val) fill_color = highlight_role_t::error;
 
                         // Subtract one from in_pos, so that the increment in the loop will move to
                         // the next character.
@@ -586,7 +629,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                     switch (c) {
                         case L'~': {
                             if (in_pos == 0) {
-                                colors[in_pos] = highlight_spec_operator;
+                                colors[in_pos] = highlight_role_t::operat;
                             }
                             break;
                         }
@@ -600,39 +643,39 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                         }
                         case L'?': {
                             if (!feature_test(features_t::qmark_noglob)) {
-                                colors[in_pos] = highlight_spec_operator;
+                                colors[in_pos] = highlight_role_t::operat;
                             }
                             break;
                         }
                         case L'*':
                         case L'(':
                         case L')': {
-                            colors[in_pos] = highlight_spec_operator;
+                            colors[in_pos] = highlight_role_t::operat;
                             break;
                         }
                         case L'{': {
-                            colors[in_pos] = highlight_spec_operator;
+                            colors[in_pos] = highlight_role_t::operat;
                             bracket_count++;
                             break;
                         }
                         case L'}': {
-                            colors[in_pos] = highlight_spec_operator;
+                            colors[in_pos] = highlight_role_t::operat;
                             bracket_count--;
                             break;
                         }
                         case L',': {
                             if (bracket_count > 0) {
-                                colors[in_pos] = highlight_spec_operator;
+                                colors[in_pos] = highlight_role_t::operat;
                             }
                             break;
                         }
                         case L'\'': {
-                            colors[in_pos] = highlight_spec_quote;
+                            colors[in_pos] = highlight_role_t::quote;
                             mode = e_single_quoted;
                             break;
                         }
                         case L'\"': {
-                            colors[in_pos] = highlight_spec_quote;
+                            colors[in_pos] = highlight_role_t::quote;
                             mode = e_double_quoted;
                             break;
                         }
@@ -645,14 +688,14 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
             }
             // Mode 1 means single quoted string, i.e 'foo'.
             case e_single_quoted: {
-                colors[in_pos] = highlight_spec_quote;
+                colors[in_pos] = highlight_role_t::quote;
                 if (c == L'\\') {
                     // backslash
                     if (in_pos + 1 < buff_len) {
                         const wchar_t escaped_char = buffstr.at(in_pos + 1);
                         if (escaped_char == L'\\' || escaped_char == L'\'') {
-                            colors[in_pos] = highlight_spec_escape;      // backslash
-                            colors[in_pos + 1] = highlight_spec_escape;  // escaped char
+                            colors[in_pos] = highlight_role_t::escape;      // backslash
+                            colors[in_pos + 1] = highlight_role_t::escape;  // escaped char
                             in_pos += 1;                                 // skip over backslash
                         }
                     }
@@ -666,7 +709,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                 // Slices are colored in advance, past `in_pos`, and we don't want to overwrite
                 // that.
                 if (colors[in_pos] == base_color) {
-                    colors[in_pos] = highlight_spec_quote;
+                    colors[in_pos] = highlight_role_t::quote;
                 }
                 switch (c) {
                     case L'"': {
@@ -678,8 +721,8 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                         if (in_pos + 1 < buff_len) {
                             const wchar_t escaped_char = buffstr.at(in_pos + 1);
                             if (wcschr(L"\\\"\n$", escaped_char)) {
-                                colors[in_pos] = highlight_spec_escape;      // backslash
-                                colors[in_pos + 1] = highlight_spec_escape;  // escaped char
+                                colors[in_pos] = highlight_role_t::escape;      // backslash
+                                colors[in_pos + 1] = highlight_role_t::escape;  // escaped char
                                 in_pos += 1;                                 // skip over backslash
                             }
                         }
@@ -780,7 +823,7 @@ void highlighter_t::color_command(tnode_t<g::tok_string> node) {
     // Get an iterator to the colors associated with the argument.
     const size_t arg_start = source_range->start;
     const color_array_t::iterator colors = color_array.begin() + arg_start;
-    color_string_internal(cmd_str, highlight_spec_command, colors);
+    color_string_internal(cmd_str, highlight_role_t::command, colors);
 }
 
 // node does not necessarily have type symbol_argument here.
@@ -795,7 +838,7 @@ void highlighter_t::color_argument(tnode_t<g::tok_string> node) {
     const color_array_t::iterator arg_colors = color_array.begin() + arg_start;
 
     // Color this argument without concern for command substitutions.
-    color_string_internal(arg_str, highlight_spec_param, arg_colors);
+    color_string_internal(arg_str, highlight_role_t::param, arg_colors);
 
     // Now do command substitutions.
     size_t cmdsub_cursor = 0, cmdsub_start = 0, cmdsub_end = 0;
@@ -816,9 +859,9 @@ void highlighter_t::color_argument(tnode_t<g::tok_string> node) {
         // Highlight the parens. The open paren must exist; the closed paren may not if it was
         // incomplete.
         assert(cmdsub_start < arg_str.size());
-        this->color_array.at(arg_subcmd_start) = highlight_spec_operator;
+        this->color_array.at(arg_subcmd_start) = highlight_role_t::operat;
         if (arg_subcmd_end < this->buff.size())
-            this->color_array.at(arg_subcmd_end) = highlight_spec_operator;
+            this->color_array.at(arg_subcmd_end) = highlight_role_t::operat;
 
         // Compute the cursor's position within the cmdsub. We must be past the open paren (hence >)
         // but can be at the end of the string or closed paren (hence <=).
@@ -888,7 +931,7 @@ void highlighter_t::color_arguments(const std::vector<tnode_t<g::argument>> &arg
                                string_prefixes_string(param, L"-h");
                 if (!is_help && this->io_ok &&
                     !is_potential_cd_path(param, working_directory, vars, PATH_EXPAND_TILDE)) {
-                    this->color_node(arg, highlight_spec_error);
+                    this->color_node(arg, highlight_role_t::error);
                 }
             }
         }
@@ -907,7 +950,7 @@ void highlighter_t::color_redirection(tnode_t<g::redirection> redirection_node) 
             redirection_type(redirection_node, this->buff, nullptr, &target);
 
         // We may get a missing redirection type if the redirection is invalid.
-        auto hl = redirect_type ? highlight_spec_redirection : highlight_spec_error;
+        auto hl = redirect_type ? highlight_role_t::redirection : highlight_role_t::error;
         this->color_node(redir_prim, hl);
 
         // Check if the argument contains a command substitution. If so, highlight it as a param
@@ -1001,7 +1044,7 @@ void highlighter_t::color_redirection(tnode_t<g::redirection> redirection_node) 
             }
 
             if (redir_target) {
-                auto hl = target_is_valid ? highlight_spec_redirection : highlight_spec_error;
+                auto hl = target_is_valid ? highlight_role_t::redirection : highlight_role_t::error;
                 this->color_node(redir_target, hl);
             }
         }
@@ -1082,7 +1125,7 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
     if (length == 0) return color_array;
 
     // Start out at zero.
-    std::fill(this->color_array.begin(), this->color_array.end(), 0);
+    std::fill(this->color_array.begin(), this->color_array.end(), highlight_spec_t{});
 
     // Walk the node tree.
     for (const parse_node_t &node : parse_tree) {
@@ -1096,15 +1139,15 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
             case symbol_case_item:
             case symbol_decorated_statement:
             case symbol_if_statement: {
-                this->color_children(node, parse_token_type_string, highlight_spec_command);
+                this->color_children(node, parse_token_type_string, highlight_role_t::command);
                 break;
             }
             case symbol_switch_statement: {
                 tnode_t<g::switch_statement> switchn(&parse_tree, &node);
                 auto literal_switch = switchn.child<0>();
                 auto switch_arg = switchn.child<1>();
-                this->color_node(literal_switch, highlight_spec_command);
-                this->color_node(switch_arg, highlight_spec_param);
+                this->color_node(literal_switch, highlight_role_t::command);
+                this->color_node(switch_arg, highlight_role_t::param);
                 break;
             }
             case symbol_for_header: {
@@ -1112,8 +1155,8 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
                 // Color the 'for' and 'in' as commands.
                 auto literal_for = fhead.child<0>();
                 auto literal_in = fhead.child<2>();
-                this->color_node(literal_for, highlight_spec_command);
-                this->color_node(literal_in, highlight_spec_command);
+                this->color_node(literal_for, highlight_role_t::command);
+                this->color_node(literal_in, highlight_role_t::command);
 
                 // Color the variable name as a parameter.
                 this->color_argument(fhead.child<1>());
@@ -1122,22 +1165,22 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
 
             case parse_token_type_andand:
             case parse_token_type_oror:
-                this->color_node(node, highlight_spec_operator);
+                this->color_node(node, highlight_role_t::operat);
                 break;
 
             case symbol_not_statement:
-                this->color_children(node, parse_token_type_string, highlight_spec_operator);
+                this->color_children(node, parse_token_type_string, highlight_role_t::operat);
                 break;
 
             case symbol_job_decorator:
-                this->color_node(node, highlight_spec_operator);
+                this->color_node(node, highlight_role_t::operat);
                 break;
 
             case parse_token_type_pipe:
             case parse_token_type_background:
             case parse_token_type_end:
             case symbol_optional_background: {
-                this->color_node(node, highlight_spec_statement_terminator);
+                this->color_node(node, highlight_role_t::statement_terminator);
                 break;
             }
             case symbol_plain_statement: {
@@ -1168,7 +1211,7 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
                     }
                 }
                 if (!is_valid_cmd) {
-                    this->color_node(*cmd_node, highlight_spec_error);
+                    this->color_node(*cmd_node, highlight_role_t::error);
                 } else {
                     this->color_command(cmd_node);
                 }
@@ -1192,16 +1235,16 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
                 break;
             }
             case symbol_end_command: {
-                this->color_node(node, highlight_spec_command);
+                this->color_node(node, highlight_role_t::command);
                 break;
             }
             case parse_special_type_parse_error:
             case parse_special_type_tokenizer_error: {
-                this->color_node(node, highlight_spec_error);
+                this->color_node(node, highlight_role_t::error);
                 break;
             }
             case parse_special_type_comment: {
-                this->color_node(node, highlight_spec_comment);
+                this->color_node(node, highlight_role_t::comment);
                 break;
             }
             default: { break; }
@@ -1227,10 +1270,10 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
             node_is_potential_path(buff, node, vars, working_directory)) {
             // It is, underline it.
             for (size_t i = node.source_start; i < node.source_start + node.source_length; i++) {
-                // Don't color highlight_spec_error because it looks dorky. For example,
+                // Don't color highlight_role_t::error because it looks dorky. For example,
                 // trying to cd into a non-directory would show an underline and also red.
-                if (highlight_get_primary(this->color_array.at(i)) != highlight_spec_error) {
-                    this->color_array.at(i) |= highlight_modifier_valid_path;
+                if (this->color_array.at(i).foreground != highlight_role_t::error) {
+                    this->color_array.at(i).valid_path = true;
                 }
             }
         }
@@ -1297,10 +1340,8 @@ static void highlight_universal_internal(const wcstring &buffstr,
                                 pos1 = lst.back();
                                 pos2 = str - buff;
                                 if (pos1 == pos || pos2 == pos) {
-                                    color.at(pos1) |=
-                                        highlight_make_background(highlight_spec_match);
-                                    color.at(pos2) |=
-                                        highlight_make_background(highlight_spec_match);
+                                    color.at(pos1).background = highlight_role_t::match;
+                                    color.at(pos2).background = highlight_role_t::match;
                                     match_found = true;
                                 }
                                 prev_q = *str == L'\"' ? L'\'' : L'\"';
@@ -1320,7 +1361,7 @@ static void highlight_universal_internal(const wcstring &buffstr,
                 str++;
             }
 
-            if (!match_found) color.at(pos) = highlight_make_background(highlight_spec_error);
+            if (!match_found) color.at(pos).background = highlight_role_t::error;
         }
 
         // Highlight matching parenthesis.
@@ -1337,14 +1378,15 @@ static void highlight_universal_internal(const wcstring &buffstr,
                 if (test_char == dec_char) level--;
                 if (level == 0) {
                     long pos2 = i;
-                    color.at(pos) |= highlight_spec_match << 16;
-                    color.at(pos2) |= highlight_spec_match << 16;
+                    color.at(pos).background = highlight_role_t::match;
+                    color.at(pos2).background = highlight_role_t::match;
                     match_found = true;
                     break;
                 }
             }
 
-            if (!match_found) color[pos] = highlight_make_background(highlight_spec_error);
+            if (!match_found)
+                color.at(pos) = highlight_spec_t::make_background(highlight_role_t::error);
         }
     }
 }
@@ -1354,6 +1396,6 @@ void highlight_universal(const wcstring &buff, std::vector<highlight_spec_t> &co
     UNUSED(error);
     UNUSED(vars);
     assert(buff.size() == color.size());
-    std::fill(color.begin(), color.end(), 0);
+    std::fill(color.begin(), color.end(), highlight_spec_t{});
     highlight_universal_internal(buff, color, pos);
 }

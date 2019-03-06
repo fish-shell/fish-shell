@@ -13,7 +13,7 @@ function __fish_ipset_needs_setname
 end
 
 function __fish_ipset_list_sets
-	set -l ipset_list (ipset list --name)
+	set -l ipset_list (ipset list --name 2>/dev/null)
 	if not __fish_seen_subcommand_from $ipset_list
 		echo $ipset_list
 	end
@@ -27,7 +27,7 @@ complete -c ipset --no-files --condition __fish_ipset_nosubcommand -a 'x' -d 'De
 complete -c ipset --no-files --condition __fish_ipset_nosubcommand -a 'destroy' -d 'Destroy the specified set or all sets'
 complete -c ipset --no-files --condition __fish_ipset_nosubcommand -a 'list' -d 'a'
 
-complete -c ipset --no-files --condition __fish_ipset_needs_setname -a (__fish_ipset_list_sets)
+complete -c ipset --no-files --condition __fish_ipset_needs_setname -a '(__fish_ipset_list_sets)'
 
 complete -c ipset --no-files -s '!' -o 'exist' -d 'Ignore errors'
 complete -c ipset --no-files -s 'o' -o 'output' -a 'plain save xml' -d 'Output format to the list command'

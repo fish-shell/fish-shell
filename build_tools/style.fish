@@ -1,8 +1,5 @@
 #!/usr/bin/env fish
 #
-# This is meant to be run by "make style" or "make style-all". It is not meant to
-# be run directly from a shell prompt although it can be.
-#
 # This runs C++ files and fish scripts (*.fish) through their respective code
 # formatting programs.
 #

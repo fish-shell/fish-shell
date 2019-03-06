@@ -35,53 +35,62 @@ function __fish_config_interactive -d "Initializations that should be performed 
         set -g fish_greeting $fish_greeting.\n$line
     end
 
+    # usage: __init_uvar VARIABLE VALUES...
+    function __init_uvar -d "Sets a universal variable if it's not already set"
+        if not set --query $argv[1]
+            set --universal $argv
+        end
+    end
+
     #
     # If we are starting up for the first time, set various defaults.
     #
     # bump this to 2_4_0 when rolling release if anything changes after 9/10/2016
     if not set -q __fish_init_2_39_8
+
         # Regular syntax highlighting colors
-        set -q fish_color_normal || set -U fish_color_normal normal
-        set -q fish_color_command || set -U fish_color_command 005fd7
-        set -q fish_color_param || set -U fish_color_param 00afff
-        set -q fish_color_redirection || set -U fish_color_redirection 00afff
-        set -q fish_color_comment || set -U fish_color_comment 990000
-        set -q fish_color_error || set -U fish_color_error ff0000
-        set -q fish_color_escape || set -U fish_color_escape 00a6b2
-        set -q fish_color_operator || set -U fish_color_operator 00a6b2
-        set -q fish_color_end || set -U fish_color_end 009900
-        set -q fish_color_quote || set -U fish_color_quote 999900
-        set -q fish_color_autosuggestion || set -U fish_color_autosuggestion 555 brblack
-        set -q fish_color_user || set -U fish_color_user brgreen
+        __init_uvar fish_color_normal normal
+        __init_uvar fish_color_command 005fd7
+        __init_uvar fish_color_param 00afff
+        __init_uvar fish_color_redirection 00afff
+        __init_uvar fish_color_comment 990000
+        __init_uvar fish_color_error ff0000
+        __init_uvar fish_color_escape 00a6b2
+        __init_uvar fish_color_operator 00a6b2
+        __init_uvar fish_color_end 009900
+        __init_uvar fish_color_quote 999900
+        __init_uvar fish_color_autosuggestion 555 brblack
+        __init_uvar fish_color_user brgreen
 
-        set -q fish_color_host || set -U fish_color_host normal
-        set -q fish_color_valid_path || set -U fish_color_valid_path --underline
+        __init_uvar fish_color_host normal
+        __init_uvar fish_color_valid_path --underline
 
-        set -q fish_color_cwd || set -U fish_color_cwd green
-        set -q fish_color_cwd_root || set -U fish_color_cwd_root red
+        __init_uvar fish_color_cwd green
+        __init_uvar fish_color_cwd_root red
 
         # Background color for matching quotes and parenthesis
-        set -q fish_color_match || set -U fish_color_match --background=brblue
+        __init_uvar fish_color_match --background=brblue
 
         # Background color for search matches
-        set -q fish_color_search_match || set -U fish_color_search_match bryellow --background=brblack
+        __init_uvar fish_color_search_match bryellow --background=brblack
 
         # Background color for selections
-        set -q fish_color_selection || set -U fish_color_selection white --bold --background=brblack
+        __init_uvar fish_color_selection white --bold --background=brblack
 
-        # XXX fish_color_cancel was added in 2.6, but this was added to post-2.3 initialization when 2.4 and 2.5 were already released
-        set -q fish_color_cancel || set -U fish_color_cancel -r
+        # XXX fish_color_cancel was added in 2.6, but this was added to post-2.3 initialization
+        # when 2.4 and 2.5 were already released
+        __init_uvar fish_color_cancel -r
 
         # Pager colors
-        set -q fish_pager_color_prefix || set -U fish_pager_color_prefix white --bold --underline
-        set -q fish_pager_color_completion || set -U fish_pager_color_completion
-        set -q fish_pager_color_description || set -U fish_pager_color_description B3A06D yellow
-        set -q fish_pager_color_progress || set -U fish_pager_color_progress brwhite --background=cyan
+        __init_uvar fish_pager_color_prefix white --bold --underline
+        __init_uvar fish_pager_color_completion
+        __init_uvar fish_pager_color_description B3A06D yellow
+        __init_uvar fish_pager_color_progress brwhite --background=cyan
 
         #
         # Directory history colors
         #
-        set -q fish_color_history_current || set -U fish_color_history_current --bold
+        __init_uvar fish_color_history_current --bold
 
         set -U __fish_init_2_39_8
     end
@@ -119,7 +128,8 @@ function __fish_config_interactive -d "Initializations that should be performed 
         else
             # The greeting used to be skipped when fish_greeting was empty (not just undefined)
             # Keep it that way to not print superfluous newlines on old configuration
-            test -n "$fish_greeting" && echo $fish_greeting
+            test -n "$fish_greeting"
+            and echo $fish_greeting
         end
     end
 
@@ -164,9 +174,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Reload key bindings when binding variable change
     function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings
         # Make sure some key bindings are set
-        if not set -q fish_key_bindings
-            set -U fish_key_bindings fish_default_key_bindings
-        end
+        __init_uvar fish_key_bindings fish_default_key_bindings
 
         # Do nothing if the key bindings didn't actually change.
         # This could be because the variable was set to the existing value

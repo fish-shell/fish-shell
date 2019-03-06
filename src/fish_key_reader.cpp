@@ -205,7 +205,7 @@ static void process_input(bool continuous_mode) {
     fwprintf(stderr, L"Press a key\n\n");
     while (keep_running) {
         wchar_t wc;
-        if (reader_interrupted()) {
+        if (reader_test_and_clear_interrupted()) {
             wc = shell_modes.c_cc[VINTR];
         } else {
             wc = input_common_readch(true);
@@ -298,7 +298,6 @@ static void setup_and_process_keys(bool continuous_mode) {
     process_input(continuous_mode);
     restore_term_mode();
     restore_term_foreground_process_group();
-    input_destroy();
 }
 
 static bool parse_debug_level_flag() {

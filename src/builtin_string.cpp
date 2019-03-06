@@ -75,8 +75,8 @@ class arg_iterator_t {
     int argidx_;
     // If not using argv, a string to store bytes that have been read but not yet returned.
     std::string buffer_;
-    // If set, when reading from a stream, split on zeros instead of newlines.
-    const bool split0_;
+    // If set, when reading from a stream, split on newlines.
+    const bool split_;
     // Backing storage for the next() string.
     wcstring storage_;
     const io_streams_t &streams_;
@@ -85,10 +85,9 @@ class arg_iterator_t {
     /// not. On true, the string is stored in storage_.
     bool get_arg_stdin() {
         assert(string_args_from_stdin(streams_) && "should not be reading from stdin");
-        // Read in chunks from fd until buffer has a line (or zero if split0_ is set).
-        const char sep = split0_ ? '\0' : '\n';
+        // Read in chunks from fd until buffer has a line (or the end if split_ is unset).
         size_t pos;
-        while ((pos = buffer_.find(sep)) == std::string::npos) {
+        while (!split_ || (pos = buffer_.find('\n')) == std::string::npos) {
             char buf[STRING_CHUNK_SIZE];
             long n = read_blocked(streams_.stdin_fd, buf, STRING_CHUNK_SIZE);
             if (n == 0) {
@@ -118,8 +117,8 @@ class arg_iterator_t {
 
    public:
     arg_iterator_t(const wchar_t *const *argv, int argidx, const io_streams_t &streams,
-                   bool split0 = false)
-        : argv_(argv), argidx_(argidx), split0_(split0), streams_(streams) {}
+                   bool split = true)
+        : argv_(argv), argidx_(argidx), split_(split), streams_(streams) {}
 
     const wcstring *nextstr() {
         if (string_args_from_stdin(streams_)) {
@@ -1073,7 +1072,7 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
 
     wcstring_list_t splits;
     size_t arg_count = 0;
-    arg_iterator_t aiter(argv, optind, streams, is_split0);
+    arg_iterator_t aiter(argv, optind, streams, !is_split0);
     while (const wcstring *arg = aiter.nextstr()) {
         if (opts.right) {
             split_about(arg->rbegin(), arg->rend(), sep.rbegin(), sep.rend(), &splits, opts.max,
@@ -1095,6 +1094,13 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
 
     const size_t split_count = splits.size();
     if (!opts.quiet) {
+        if (is_split0 && splits.size()) {
+            // split0 ignores a trailing \0, so a\0b\0 is two elements.
+            // In contrast to split, where a\nb\n is three - "a", "b" and "".
+            //
+            // Remove the last element if it is empty.
+            if (splits.back().empty()) splits.pop_back();
+        }
         auto &buff = streams.out.buffer();
         for (const wcstring &split : splits) {
             buff.append(split, separation_type_t::explicitly);

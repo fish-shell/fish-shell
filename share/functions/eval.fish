@@ -17,6 +17,12 @@ function eval -S -d "Evaluate parameters as a command"
         end
     end
 
+    if not string length -q -- $argv
+        # If the argument is empty, eval should return 0 for compatibility with other shells.
+        # See #5692.
+        return 0
+    end
+
     # If we are in an interactive shell, eval should enable full
     # job control since it should behave like the real code was
     # executed.  If we don't do this, commands that expect to be

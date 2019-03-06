@@ -54,7 +54,7 @@ struct read_cmd_opts_t {
     bool one_line = false;
 };
 
-static const wchar_t *const short_options = L":ac:d:ghiLlm:n:p:suxzP:UR:LB";
+static const wchar_t *const short_options = L":ac:d:ghiLlm:n:p:sSuxzP:UR:LB";
 static const struct woption long_options[] = {
     {L"array", no_argument, NULL, 'a'},
     {L"command", required_argument, NULL, 'c'},
@@ -202,7 +202,6 @@ static int read_interactive(wcstring &buff, int nchars, bool shell, bool silent,
                             const wchar_t *prompt, const wchar_t *right_prompt,
                             const wchar_t *commandline) {
     int exit_res = STATUS_CMD_OK;
-    const wchar_t *line;
 
     // TODO: rationalize this.
     const auto &vars = env_stack_t::principal();
@@ -227,17 +226,16 @@ static int read_interactive(wcstring &buff, int nchars, bool shell, bool silent,
     proc_push_interactive(1);
 
     event_fire_generic(L"fish_prompt");
-    line = reader_readline(nchars);
+    auto mline = reader_readline(nchars);
     proc_pop_interactive();
-    if (line) {
-        if (0 < nchars && (size_t)nchars < wcslen(line)) {
+    if (mline) {
+        buff = mline.acquire();
+        if (nchars > 0 && (size_t)nchars < buff.size()) {
             // Line may be longer than nchars if a keybinding used `commandline -i`
             // note: we're deliberately throwing away the tail of the commandline.
             // It shouldn't be unread because it was produced with `commandline -i`,
             // not typed.
-            buff = wcstring(line, nchars);
-        } else {
-            buff = wcstring(line);
+            buff.resize(nchars);
         }
     } else {
         exit_res = STATUS_CMD_ERROR;

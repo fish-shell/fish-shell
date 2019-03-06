@@ -29,7 +29,7 @@ struct function_cmd_opts_t {
     bool print_help = false;
     bool shadow_scope = true;
     wcstring description = L"";
-    std::vector<event_t> events;
+    std::vector<event_description_t> events;
     wcstring_list_t named_arguments;
     wcstring_list_t inherit_vars;
     wcstring_list_t wrap_targets;
@@ -68,7 +68,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                     streams.err.append_format(_(L"%ls: Unknown signal '%ls'"), cmd, w.woptarg);
                     return STATUS_INVALID_ARGS;
                 }
-                opts.events.push_back(event_t::signal_event(sig));
+                opts.events.push_back(event_description_t::signal(sig));
                 break;
             }
             case 'v': {
@@ -77,17 +77,17 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                     return STATUS_INVALID_ARGS;
                 }
 
-                opts.events.push_back(event_t::variable_event(w.woptarg));
+                opts.events.push_back(event_description_t::variable(w.woptarg));
                 break;
             }
             case 'e': {
-                opts.events.push_back(event_t::generic_event(w.woptarg));
+                opts.events.push_back(event_description_t::generic(w.woptarg));
                 break;
             }
             case 'j':
             case 'p': {
                 pid_t pid;
-                event_t e(EVENT_ANY);
+                event_description_t e(event_type_t::any);
 
                 if ((opt == 'j') && (wcscasecmp(w.woptarg, L"caller") == 0)) {
                     job_id_t job_id = -1;
@@ -113,11 +113,11 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                             _(L"%ls: Cannot find calling job for event handler"), cmd);
                         return STATUS_INVALID_ARGS;
                     }
-                    e.type = EVENT_JOB_ID;
+                    e.type = event_type_t::job_exit;
                     e.param1.job_id = job_id;
                 } else if ((opt == 'p') && (wcscasecmp(w.woptarg, L"%self") == 0)) {
                     pid = getpid();
-                    e.type = EVENT_EXIT;
+                    e.type = event_type_t::exit;
                     e.param1.pid = pid;
                 } else {
                     pid = fish_wcstoi(w.woptarg);
@@ -127,7 +127,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                         return STATUS_INVALID_ARGS;
                     }
 
-                    e.type = EVENT_EXIT;
+                    e.type = event_type_t::exit;
                     e.param1.pid = (opt == 'j' ? -1 : 1) * abs(pid);
                 }
                 opts.events.push_back(e);
@@ -251,15 +251,10 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     d.name = function_name;
     if (!opts.description.empty()) d.description = opts.description;
     // d.description = opts.description;
-    d.events.swap(opts.events);
+    d.events = std::move(opts.events);
     d.props.shadow_scope = opts.shadow_scope;
     d.props.named_arguments = std::move(opts.named_arguments);
     d.inherit_vars = std::move(opts.inherit_vars);
-
-    for (size_t i = 0; i < d.events.size(); i++) {
-        event_t &e = d.events.at(i);
-        e.function_name = d.name;
-    }
 
     d.props.parsed_source = source;
     d.props.body_node = body;

@@ -30,6 +30,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <memory>
 #include <string>
 #include <vector>
+#include <stack>
+#include <tuple>
 
 #include "color.h"
 #include "common.h"
@@ -97,7 +99,7 @@ struct prettifier_t {
 
     prettifier_t(const wcstring &source, bool do_indent) : source(source), do_indent(do_indent) {}
 
-    void prettify_node_recursive(const parse_node_tree_t &tree,
+    void prettify_node_nrecursive(const parse_node_tree_t &tree,
                                  node_offset_t node_idx, indent_t node_indent,
                                  parse_token_type_t parent_type);
 
@@ -160,68 +162,82 @@ static void dump_node(indent_t node_indent, const parse_node_t &node, const wcst
              token_type_description(node.type), prevc_str, source_txt.c_str(), nextc_str);
 }
 
-void prettifier_t::prettify_node_recursive(const parse_node_tree_t &tree,
-                                    node_offset_t node_idx, indent_t node_indent,
-                                    parse_token_type_t parent_type) {
-    const parse_node_t &node = tree.at(node_idx);
-    const parse_token_type_t node_type = node.type;
-    const parse_token_type_t prev_node_type =
-        node_idx > 0 ? tree.at(node_idx - 1).type : token_type_invalid;
+void prettifier_t::prettify_node_nrecursive(const parse_node_tree_t &tree,
+                                            node_offset_t node_idx, indent_t node_indent,
+                                            parse_token_type_t parent_type) {
 
-    // Increment the indent if we are either a root job_list, or root case_item_list, or in an if or
-    // while header (#1665).
-    const bool is_root_job_list = node_type == symbol_job_list && parent_type != symbol_job_list;
-    const bool is_root_case_list =
-        node_type == symbol_case_item_list && parent_type != symbol_case_item_list;
-    const bool is_if_while_header =
-        (node_type == symbol_job_conjunction || node_type == symbol_andor_job_list) &&
-        (parent_type == symbol_if_clause || parent_type == symbol_while_header);
+    using call_tuple_t = std::tuple<node_offset_t, indent_t, parse_token_type_t>;
+    std::stack<call_tuple_t> explicit_stack;
+    explicit_stack.push(std::make_tuple(node_idx, node_indent, parent_type));
+    while(!explicit_stack.empty()){
 
-    if (is_root_job_list || is_root_case_list || is_if_while_header) {
-        node_indent += 1;
-    }
+        call_tuple_t arguments = explicit_stack.top();
+        explicit_stack.pop();
+        auto node_idx = std::get<0>(arguments);
+        auto node_indent = std::get<1>(arguments);
+        auto parent_type = std::get<2>(arguments);
 
-    if (dump_parse_tree) dump_node(node_indent, node, source);
+        const parse_node_t &node = tree.at(node_idx);
+        const parse_token_type_t node_type = node.type;
+        const parse_token_type_t prev_node_type =
+                node_idx > 0 ? tree.at(node_idx - 1).type : token_type_invalid;
 
-    // Prepend any escaped newline.
-    maybe_prepend_escaped_newline(node);
+        // Increment the indent if we are either a root job_list, or root case_item_list, or in an if or
+        // while header (#1665).
+        const bool is_root_job_list = node_type == symbol_job_list && parent_type != symbol_job_list;
+        const bool is_root_case_list =
+                node_type == symbol_case_item_list && parent_type != symbol_case_item_list;
+        const bool is_if_while_header =
+                (node_type == symbol_job_conjunction || node_type == symbol_andor_job_list) &&
+                (parent_type == symbol_if_clause || parent_type == symbol_while_header);
 
-    // handle comments, which come before the text
-    if (node.has_comments()) {
-        auto comment_nodes = tree.comment_nodes_for_node(node);
-        for (const auto &comment : comment_nodes) {
-            maybe_prepend_escaped_newline(*comment.node());
-            append_whitespace(node_indent);
-            auto source_range = comment.source_range();
-            output.append(source, source_range->start, source_range->length);
-            needs_continuation_newline = true;
+        if (is_root_job_list || is_root_case_list || is_if_while_header) {
+            node_indent += 1;
         }
-    }
 
-    if (node_type == parse_token_type_end) {
-        append_newline();
-    } else if ((node_type >= FIRST_PARSE_TOKEN_TYPE && node_type <= LAST_PARSE_TOKEN_TYPE) ||
-               node_type == parse_special_type_parse_error) {
-        if (node.keyword != parse_keyword_none) {
-            append_whitespace(node_indent);
-            output.append(keyword_description(node.keyword));
-            has_new_line = false;
-        } else if (node.has_source()) {
-            // Some type representing a particular token.
-            if (prev_node_type != parse_token_type_redirection) {
+        if (dump_parse_tree) dump_node(node_indent, node, source);
+
+        // Prepend any escaped newline.
+        maybe_prepend_escaped_newline(node);
+
+        // handle comments, which come before the text
+        if (node.has_comments()) {
+            auto comment_nodes = tree.comment_nodes_for_node(node);
+            for (const auto &comment : comment_nodes) {
+                maybe_prepend_escaped_newline(*comment.node());
                 append_whitespace(node_indent);
+                auto source_range = comment.source_range();
+                output.append(source, source_range->start, source_range->length);
+                needs_continuation_newline = true;
             }
-            output.append(source, node.source_start, node.source_length);
-            has_new_line = false;
         }
-    }
 
-    // Recurse to all our children.
-    for (node_offset_t idx = 0; idx < node.child_count; idx++) {
-        // Note: We pass our type to our child, which becomes its parent node type.
-        // Note: While node.child_start could be -1 (NODE_OFFSET_INVALID) the addition is safe
-        // because we won't execute this call in that case since node.child_count should be zero.
-        prettify_node_recursive(tree, node.child_start + idx, node_indent, node_type);
+        if (node_type == parse_token_type_end) {
+            append_newline();
+        } else if ((node_type >= FIRST_PARSE_TOKEN_TYPE && node_type <= LAST_PARSE_TOKEN_TYPE) ||
+                   node_type == parse_special_type_parse_error) {
+            if (node.keyword != parse_keyword_none) {
+                append_whitespace(node_indent);
+                output.append(keyword_description(node.keyword));
+                has_new_line = false;
+            } else if (node.has_source()) {
+                // Some type representing a particular token.
+                if (prev_node_type != parse_token_type_redirection) {
+                    append_whitespace(node_indent);
+                }
+                output.append(source, node.source_start, node.source_length);
+                has_new_line = false;
+            }
+        }
+
+        // Put all children in stack in reversed order
+        // This way they will be processed in correct order.
+        for (node_offset_t idx = node.child_count; idx > 0; idx--) {
+            // Note: We pass our type to our child, which becomes its parent node type.
+            // Note: While node.child_start could be -1 (NODE_OFFSET_INVALID) the addition is safe
+            // because we won't execute this call in that case since node.child_count should be zero.
+            explicit_stack.push(std::make_tuple(node.child_start + (idx - 1), node_indent, node_type));
+        }
     }
 }
 
@@ -246,17 +262,10 @@ static wcstring prettify(const wcstring &src, bool do_indent) {
         const parse_node_t &node = parse_tree.at(i);
         if (node.parent == NODE_OFFSET_INVALID || node.type == parse_special_type_parse_error) {
             // A root node.
-            prettifier.prettify_node_recursive(parse_tree, i, 0, symbol_job_list);
+            prettifier.prettify_node_nrecursive(parse_tree, i, 0, symbol_job_list);
         }
     }
     return std::move(prettifier.output);
-}
-
-// Helper for output_set_writer
-static std::string output_receiver;
-static int write_to_output_receiver(char c) {
-    output_receiver.push_back(c);
-    return 0;
 }
 
 /// Given a string and list of colors of the same size, return the string with ANSI escape sequences
@@ -264,72 +273,66 @@ static int write_to_output_receiver(char c) {
 static std::string ansi_colorize(const wcstring &text,
                                  const std::vector<highlight_spec_t> &colors) {
     assert(colors.size() == text.size());
-    assert(output_receiver.empty());
+    outputter_t outp;
 
-    int (*saved)(char) = output_get_writer();
-    output_set_writer(write_to_output_receiver);
-
-    highlight_spec_t last_color = highlight_spec_normal;
+    highlight_spec_t last_color = highlight_role_t::normal;
     for (size_t i = 0; i < text.size(); i++) {
         highlight_spec_t color = colors.at(i);
         if (color != last_color) {
-            set_color(highlight_get_color(color, false), rgb_color_t::normal());
+            outp.set_color(highlight_get_color(color, false), rgb_color_t::normal());
             last_color = color;
         }
-        writech(text.at(i));
+        outp.writech(text.at(i));
     }
-    set_color(rgb_color_t::normal(), rgb_color_t::normal());
-    output_set_writer(saved);
-    std::string result;
-    result.swap(output_receiver);
-    return result;
+    outp.set_color(rgb_color_t::normal(), rgb_color_t::normal());
+    return outp.contents();
 }
 
 /// Given a string and list of colors of the same size, return the string with HTML span elements
 /// for the various colors.
 static const wchar_t *html_class_name_for_color(highlight_spec_t spec) {
 #define P(x) L"fish_color_" #x
-    switch (spec & HIGHLIGHT_SPEC_PRIMARY_MASK) {
-        case highlight_spec_normal: {
+    switch (spec.foreground) {
+        case highlight_role_t::normal: {
             return P(normal);
         }
-        case highlight_spec_error: {
+        case highlight_role_t::error: {
             return P(error);
         }
-        case highlight_spec_command: {
+        case highlight_role_t::command: {
             return P(command);
         }
-        case highlight_spec_statement_terminator: {
+        case highlight_role_t::statement_terminator: {
             return P(statement_terminator);
         }
-        case highlight_spec_param: {
+        case highlight_role_t::param: {
             return P(param);
         }
-        case highlight_spec_comment: {
+        case highlight_role_t::comment: {
             return P(comment);
         }
-        case highlight_spec_match: {
+        case highlight_role_t::match: {
             return P(match);
         }
-        case highlight_spec_search_match: {
+        case highlight_role_t::search_match: {
             return P(search_match);
         }
-        case highlight_spec_operator: {
+        case highlight_role_t::operat: {
             return P(operator);
         }
-        case highlight_spec_escape: {
+        case highlight_role_t::escape: {
             return P(escape);
         }
-        case highlight_spec_quote: {
+        case highlight_role_t::quote: {
             return P(quote);
         }
-        case highlight_spec_redirection: {
+        case highlight_role_t::redirection: {
             return P(redirection);
         }
-        case highlight_spec_autosuggestion: {
+        case highlight_role_t::autosuggestion: {
             return P(autosuggestion);
         }
-        case highlight_spec_selection: {
+        case highlight_role_t::selection: {
             return P(selection);
         }
         default: { return P(other); }
@@ -344,7 +347,7 @@ static std::string html_colorize(const wcstring &text,
 
     assert(colors.size() == text.size());
     wcstring html = L"<pre><code>";
-    highlight_spec_t last_color = highlight_spec_normal;
+    highlight_spec_t last_color = highlight_role_t::normal;
     for (size_t i = 0; i < text.size(); i++) {
         // Handle colors.
         highlight_spec_t color = colors.at(i);

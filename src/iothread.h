@@ -2,6 +2,7 @@
 #ifndef FISH_IOTHREAD_H
 #define FISH_IOTHREAD_H
 
+#include <pthread.h>
 #include <functional>
 #include <type_traits>
 

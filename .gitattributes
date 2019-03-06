@@ -6,6 +6,7 @@
 # let git show off diff hunk headers, help git diff -L:
 # https://git-scm.com/docs/gitattributes
 *.cpp diff=cpp
+*.h diff=cpp
 *.py diff=py
 # add a [diff "fish"] to git config with pattern
 *.fish diff=fish
@@ -18,12 +19,12 @@
 /debian/* export-ignore
 /.github export-ignore
 /.github/* export-ignore
+/.builds export-ignore
+/.builds/* export-ignore
+/.travis.yml export-ignore
 
 # for linguist; let github identify our project as C++ instead of C due to pcre2
-/pcre2-10.32/ linguist-vendored
 /pcre2-10.32/* linguist-vendored
-/muparser-2.2.5/ linguist-vendored
-/muparser-2.2.5/* linguist-vendored
 angular.js linguist-vendored
 /doc_src/* linguist-documentation
 *.fish linguist-language=fish

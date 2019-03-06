@@ -282,8 +282,10 @@ int fish_wcswidth(const wchar_t *str, size_t n) { return wcswidth(str, n); }
 int fish_wcwidth(wchar_t wc) {
     // Check for VS16 which selects emoji presentation. This "promotes" a character like U+2764
     // (width 1) to an emoji (probably width 2). So treat it as width 1 so the sums work. See #2652.
-    const int variation_selector_16 = 0xFE0F;
+    // VS15 selects text presentation.
+    const wchar_t variation_selector_16 = L'\uFE0F', variation_selector_15 = L'\uFE0E';
     if (wc == variation_selector_16) return 1;
+    else if (wc == variation_selector_15) return 0;
 
     int width = widechar_wcwidth(wc);
     switch (width) {
@@ -394,13 +396,9 @@ int flock(int fd, int op) {
 // For platforms without wcstod_l C extension, wrap wcstod after changing the
 // thread-specific locale.
 double fish_compat::wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t loc) {
-    // Create and use a new, thread-specific locale
-    locale_t locale = newlocale(LC_NUMERIC, "C", nullptr);
-    locale_t prev_locale = uselocale(locale);
+    locale_t prev_locale = uselocale(loc);
     double ret = wcstod(enptr, endptr);
-    // Restore the old locale before freeing the locale we created and are still using
     uselocale(prev_locale);
-    freelocale(locale);
     return ret;
 }
 #endif // defined(wcstod_l)

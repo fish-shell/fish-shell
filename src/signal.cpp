@@ -15,6 +15,7 @@
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"
+#include "topic_monitor.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// Struct describing an entry for the lookup table used to convert between signal names and signal
@@ -27,9 +28,6 @@ struct lookup_entry {
     /// Signal description.
     const wchar_t *desc;
 };
-
-/// The number of signal blocks in place. Increased by signal_block, decreased by signal_unblock.
-static int block_count = 0;
 
 /// Lookup table used to convert between signal names and signal ids, etc.
 static const struct lookup_entry signal_table[] = {
@@ -204,7 +202,7 @@ static void default_handler(int signal, siginfo_t *info, void *context) {
     UNUSED(info);
     UNUSED(context);
     if (event_is_signal_observed(signal)) {
-        event_fire_signal(signal);
+        event_enqueue_signal(signal);
     }
 }
 
@@ -228,8 +226,9 @@ static void handle_hup(int sig, siginfo_t *info, void *context) {
     if (event_is_signal_observed(SIGHUP)) {
         default_handler(sig, 0, 0);
     } else {
-        reader_exit(1, 1);
+        reader_force_exit();
     }
+    topic_monitor_t::principal().post(topic_t::sighupint);
 }
 
 /// Handle sigterm. The only thing we do is restore the front process ID, then die.
@@ -248,6 +247,7 @@ static void handle_int(int sig, siginfo_t *info, void *context) {
     if (reraise_if_forked_child(sig)) return;
     reader_handle_sigint();
     default_handler(sig, info, context);
+    topic_monitor_t::principal().post(topic_t::sighupint);
 }
 
 /// Non-interactive ^C handler.
@@ -260,8 +260,8 @@ static void handle_int_notinteractive(int sig, siginfo_t *info, void *context) {
 /// sigchld handler. Does notification and calls the handler in proc.c.
 static void handle_chld(int sig, siginfo_t *info, void *context) {
     if (reraise_if_forked_child(sig)) return;
-    job_handle_signal(sig, info, context);
     default_handler(sig, info, context);
+    topic_monitor_t::principal().post(topic_t::sigchld);
 }
 
 // We have a sigalarm handler that does nothing. This is used in the signal torture test, to verify
@@ -270,6 +270,7 @@ static void handle_sigalarm(int sig, siginfo_t *info, void *context) {
     UNUSED(info);
     UNUSED(context);
     if (reraise_if_forked_child(sig)) return;
+    default_handler(sig, info, context);
 }
 
 void signal_reset_handlers() {
@@ -409,19 +410,6 @@ void get_signals_with_handlers(sigset_t *set) {
     }
 }
 
-void signal_block() {
-    ASSERT_IS_MAIN_THREAD();
-    sigset_t chldset;
-
-    if (!block_count) {
-        sigfillset(&chldset);
-        DIE_ON_FAILURE(pthread_sigmask(SIG_BLOCK, &chldset, NULL));
-    }
-
-    block_count++;
-    // debug( 0, L"signal block level increased to %d", block_count );
-}
-
 /// Ensure we did not inherit any blocked signals. See issue #3964.
 void signal_unblock_all() {
     sigset_t iset;
@@ -429,21 +417,3 @@ void signal_unblock_all() {
     sigprocmask(SIG_SETMASK, &iset, NULL);
 }
 
-void signal_unblock() {
-    ASSERT_IS_MAIN_THREAD();
-
-    block_count--;
-    if (block_count < 0) {
-        debug(0, _(L"Signal block mismatch"));
-        bugreport();
-        FATAL_EXIT();
-    }
-
-    if (!block_count) {
-        sigset_t chldset;
-        sigfillset(&chldset);
-        DIE_ON_FAILURE(pthread_sigmask(SIG_UNBLOCK, &chldset, 0));
-    }
-}
-
-bool signal_is_blocked() { return static_cast<bool>(block_count); }

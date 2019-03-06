@@ -39,8 +39,8 @@ int main(int argc, char** argv) {
                                  "tr_TR.UTF-8", "uk_UA.UTF-8", "uz_UZ.UTF-8", "wa_BE.UTF-8", "xh_ZA.UTF-8", "yi_US.UTF-8",
                                  "zh_CN.UTF-8", "zh_HK.UTF-8", "zh_SG.UTF-8", "zh_TW.UTF-8", "zu_ZA.UTF-8"
         };
-        for (auto loc : locales) {
-            auto ret = setlocale(LC_ALL, loc);
+        for (const char *loc : locales) {
+            const char *ret = setlocale(LC_ALL, loc);
             if (ret) break;
         }
     }

@@ -410,7 +410,7 @@ void outputter_t::writestr(const wchar_t *str) {
         buffer = new char[len];
     }
     wcstombs(buffer, str, len);
-    this->writestr(buffer);
+    this->writestr(buffer, len);
     if (buffer != static_buffer) delete[] buffer;
 }
 

@@ -395,12 +395,6 @@ int outputter_t::writech(wint_t ch) {
 void outputter_t::writestr(const wchar_t *str) {
     assert(str && "Empty input string");
 
-    if (MB_CUR_MAX == 1) {
-        // Single-byte locale (C/POSIX/ISO-8859).
-        this->writestr(str);
-        return;
-    }
-
     size_t len = wcstombs(0, str, 0);  // figure amount of space needed
     if (len == (size_t)-1) {
         debug(1, L"Tried to print invalid wide character string");

@@ -33,7 +33,7 @@ if not command -sq seq
         end
 
         for i in $from $step $to
-            if not string match -rq '^-?[0-9]*([0-9]*|\.[0-9]+)$' $i
+            if not string match -rq -- '^-?[0-9]*([0-9]*|\.[0-9]+)$' $i
                 printf (_ "%s: '%s' is not a number\n") seq $i
                 return 1
             end
@@ -43,13 +43,13 @@ if not command -sq seq
             set -l i $from
             while test $i -le $to
                 echo $i
-                set i (math $i + $step)
+                set i (math -- $i + $step)
             end
         else
             set -l i $from
             while test $i -ge $to
                 echo $i
-                set i (math $i + $step)
+                set i (math -- $i + $step)
             end
         end
     end

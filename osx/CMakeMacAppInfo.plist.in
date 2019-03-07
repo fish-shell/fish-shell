@@ -24,6 +24,8 @@
 	<string>public.app-category.productivity</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>10.6</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>A Terminal window with the fish shell running in it will be opened.</string>
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>

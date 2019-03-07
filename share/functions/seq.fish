@@ -39,10 +39,18 @@ if not command -sq seq
             end
         end
 
-        if [ $step -ge 0 ]
-            echo "for( i=$from; i<=$to ; i+=$step ) i;" | bc
+        if test $step -ge 0
+            set -l i $from
+            while test $i -le $to
+                echo $i
+                set i (math $i + $step)
+            end
         else
-            echo "for( i=$from; i>=$to ; i+=$step ) i;" | bc
+            set -l i $from
+            while test $i -ge $to
+                echo $i
+                set i (math $i + $step)
+            end
         end
     end
 end

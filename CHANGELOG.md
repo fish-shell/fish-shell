@@ -12,9 +12,6 @@
 
 ### Interactive improvements
 - Major improvements in performance and functionality to the 'sorin' sample prompt (#5411).
-- Added completions for:
- - nothing yet...
-- Lots of improvements to completions.
 - fish_clipboard_* now supports wayland by means of [wl-clipboard](https://github.com/bugaevc/wl-clipboard).
 - mandoc can now be used to format the output from `--help` if nroff is not installed
 - New color options for the pager have been added (#5524).
@@ -23,12 +20,16 @@
 - The `path_helper` on macOS now only runs in login shells, matching the bash implementation.
 - `math` now accepts `--scale=max` for the maximum scale (#5579).
 - The `forward-bigword` binding now interacts correctly with autosuggestions (#5336)
+- Fish now tries to guess if the system supports Unicode 9 (and displays emoji as wide), hopefully making setting $fish_emoji_width superfluous in most cases (#5722).
+- Lots of improvements to completions.
 - Added completions for
   - `cf`
   - `bosh`
+  - `vagrant`
 
 ### For distributors and developers
 - The autotools-based build system and legacy Xcode build systems have been removed, leaving only the CMake build system. All distributors and developers must migrate to the CMake build.
+- The doxygen-based documenation system has been removed and replaced with one based on sphinx. All distributors and developers must migrate to that.
 
 ---
 

@@ -272,7 +272,6 @@ function __fish_git_files
         # Cache the previous relative path because these are sorted, so we can reuse it
         # often for files in the same directory.
         set -l previous
-        set -l previousfile
         # Note that we can't use space as a delimiter between status and filename, because
         # the status can contain spaces - " M" is different from "M ".
         command git $git_opt status --porcelain -z $status_opt \
@@ -356,8 +355,14 @@ function __fish_git_files
                 # Computing relative path by hand.
                 set -l abs (string split / -- $relfile)
                 # If it's in the same directory, we just need to change the filename.
-                if test "$abs[1..-2]" = "$previousfile[1..-2]"
-                    set previous[-1] $abs[-1]
+                if test "$abs[1..-2]" = "$previous[1..-2]"
+                    # If we didn't have a previous file, and the current file is in the current directory,
+                    # this would error out.
+                    #
+                    # See #5728.
+                    set -q previous[1]
+                    and set previous[-1] $abs[-1]
+                    or set previous $abs
                 else
                     set -l pwd_list $_pwd_list
                     # Remove common prefix

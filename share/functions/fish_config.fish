@@ -1,11 +1,7 @@
 function fish_config --description "Launch fish's web based configuration"
     set -lx __fish_bin_dir $__fish_bin_dir
-    if command -sq python3
-        python3 "$__fish_data_dir/tools/web_config/webconfig.py" $argv
-    else if command -sq python2
-        python2 "$__fish_data_dir/tools/web_config/webconfig.py" $argv
-    else if command -sq python
-        python "$__fish_data_dir/tools/web_config/webconfig.py" $argv
+    if set -l python (__fish_anypython)
+        $python "$__fish_data_dir/tools/web_config/webconfig.py" $argv
     else
     	echo (set_color $fish_color_error)Cannot launch the web configuration tool:(set_color normal)
     	echo (set_color -o)fish_config(set_color normal) requires Python.

@@ -1,10 +1,18 @@
-    # If seq is not installed, then define a function that invokes __fish_fallback_seq
+# If seq is not installed, then define a function that invokes __fish_fallback_seq
 # We can't call type here because that also calls seq
 
 if not command -sq seq
-    # No seq command
-    function seq --description "Print sequences of numbers"
-        __fish_fallback_seq $argv
+    if command -sq gseq
+        # No seq provided by the OS, but GNU coreutils was apparently installed, fantastic
+        function seq --description "Print sequences of numbers (gseq)"
+            gseq $argv
+        end
+        exit
+    else
+        # No seq command
+        function seq --description "Print sequences of numbers"
+            __fish_fallback_seq $argv
+        end
     end
 
     function __fish_fallback_seq --description "Fallback implementation of the seq command"

@@ -112,6 +112,28 @@ You can also declare a local variable in a block::
     end
 
 
+How do I check whether a variable is defined?
+---------------------------------------------
+
+Use ``set -q var``.  For example, ``if set -q var; echo variable defined; end``.  To check multiple variables you can combine with ``and`` and ``or`` like so::
+
+    if set -q var1; or set -q var2
+        echo either variable defined
+    end
+
+Keep in mind that a defined variabled could be empty. Both of these commands define an empty variable: ``set var`` and ``set var ""``.
+
+
+How do I check whether a variable is not empty?
+-----------------------------------------------
+
+Use ``string length -q -- $var``.  For example, ``if string length -q -- $var; echo not empty; end``.  Note that ``string length`` will interpret a list of multiple variables as a disjunction (meaning any/or)::
+
+    if string length -q -- $var1 $var2 $var3
+        echo at least one of these variables is not empty
+    end
+
+
 Why doesn't ``set -Ux`` (exported universal variables) seem to work?
 --------------------------------------------------------------------
 A global variable of the same name already exists.

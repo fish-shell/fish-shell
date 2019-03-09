@@ -84,10 +84,19 @@ function __fish_parse_npm_run_completions
 end
 
 function __fish_npm_run
-    # Like above, only try to call npm if there's a command by that name to facilitate aliases that call nvm.
-    if command -sq jq; and test -e package.json
-        jq -r '.scripts | to_entries[] | .key,.value' <package.json | __fish_parse_npm_run_completions
+    # Complete `npm run` scripts
+    # These are stored in package.json, which we need a tool to read.
+    # python is very probably installed (we use it for other things!),
+    # jq is slower but also a common tool,
+    # npm is dog-slow and might check for updates online!
+    if test -e package.json; and set -l python (__fish_anypython)
+        # Warning: That weird indentation is necessary, because python.
+        $python -c 'import json, sys; data = json.load(sys.stdin);
+for k,v in data["scripts"].items(): print(k + "\t" + v[:18])' <package.json 2>/dev/null
+    else if command -sq jq; and test -e package.json
+        jq -r '.scripts | to_entries | map("\(.key)\t\(.value | tostring | .[0:20])") | .[]' package.json
     else if command -sq npm
+        # Like above, only try to call npm if there's a command by that name to facilitate aliases that call nvm.
         command npm run | string match -r -v '^[^ ]|^$' | string trim | __fish_parse_npm_run_completions
     end
 end

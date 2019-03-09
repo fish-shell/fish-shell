@@ -44,13 +44,19 @@ function __bower_matching_pkgs
 	bower search (commandline -ct) | string match -r "\S+[^\s]" | string match -v "Search"
 end
 
-# Output of `bower list` is a) slow, b) convoluted. Use `jq` instead.
+# Output of `bower list` is a) slow, b) convoluted. Use `python` or `jq` instead.
 function __bower_list_installed
-	if not type -q jq
+	if not test -e bower.json
 		return 1
 	end
 
-	if not test -e bower.json
+    if set -l python (__fish_anypython)
+        $python -c 'import json, sys; data = json.load(sys.stdin);
+for k,v in data["dependencies"].items(): print(k + "\t" + v[:18])' bower.json 2>/dev/null
+        return
+    end
+
+	if not type -q jq
 		return 1
 	end
 

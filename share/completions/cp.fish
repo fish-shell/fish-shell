@@ -41,27 +41,27 @@ else # BSD/macOS
 	else
 		complete -c cp -s R -d "Copy directories recursively"
 	end
-	complete -c cp -s H -d "with -R: Follow symlinks in cp arguments"
-	complete -c cp -s L -d "with -R: Follow all symlinks"
-	complete -c cp -s P -d "with -R: Don't follow symlinks (default)"
+	complete -c cp -s H -d "-R: Follow symlink arguments"
+	complete -c cp -s L -d "-R: Follow all symlinks"
+	complete -c cp -s P -d "-R: Don't follow symlinks (default)"
 
-	complete -c cp -s f -d "Replace destination without confirmation"
+	complete -c cp -s f -d "Don't confirm to overwrite"
 	complete -c cp -s i -d "Prompt before overwrite"
 	not contains "$uname" SunOS OpenBSD NetBSD
-		and complete -c cp -s n -d "Don't overwrite existing files"
+		and complete -c cp -s n -d "Don't overwrite existing"
 
-	complete -c cp -s p -d "Preserve attributes of source file"
+	complete -c cp -s p -d "Preserve attributes of source"
 	if [ "$uname" = SunOS ]
 		exit 0
 	end
-	complete -c cp -s v -d "Print file names as files are copied"
+	complete -c cp -s v -d "Print filenames as they're copied"
 	if [ "$uname" = OpenBSD ]
 		exit 0
 	end
 	complete -c cp -s a -d "Archive mode (-pPR)"
 	if [ "$uname" = Darwin ]
 		complete -c cp -s c -d "Clone using clonefile(2)"
-		complete -c cp -s X -d "Do not copy xattrs or resource forks"
+		complete -c cp -s X -d "Omit xattrs, resource forks"
 		exit 0
 	end
 	complete -c cp -s l -d "Hard link instead of copying"
@@ -69,7 +69,7 @@ else # BSD/macOS
 		complete -c cp -s N -d "Don't copy file flags"
 		exit 0
 	end
-	complete -c cp -s x -d "Don't traverse file system mount points"
+	complete -c cp -s x -d "Don't traverse mount points"
 	if [ "$uname" = FreeBSD ]
 		complete -c cp -s s -d "Symlink instead of copying"
 	end

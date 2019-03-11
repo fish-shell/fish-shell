@@ -176,6 +176,7 @@ static wcstring functions_def(const wcstring &name) {
                 append_format(out, L" --on-event %ls", d.str_param1.c_str());
                 break;
             }
+            case event_type_t::any:
             default: {
                 DIE("unexpected next->type");
                 break;

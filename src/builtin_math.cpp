@@ -131,9 +131,9 @@ static const wchar_t *math_get_arg(int *argidx, wchar_t **argv, wcstring *storag
 
 static wcstring math_describe_error(te_error_t& error) {
     if (error.position == 0) return L"NO ERROR?!?";
-    assert(error.type != TE_ERROR_NONE && L"Error has no position");
 
     switch(error.type) {
+        case TE_ERROR_NONE: DIE("Error has no position");
         case TE_ERROR_UNKNOWN_VARIABLE: return _(L"Unknown variable");
         case TE_ERROR_MISSING_CLOSING_PAREN: return _(L"Missing closing parenthesis");
         case TE_ERROR_MISSING_OPENING_PAREN: return _(L"Missing opening parenthesis");

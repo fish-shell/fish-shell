@@ -120,7 +120,8 @@ static bool handler_matches(const event_handler_t &classv, const event_t &instan
         case event_type_t::generic: {
             return classv.desc.str_param1 == instance.desc.str_param1;
         }
-        default: {
+        case event_type_t::any: {
+        default:
             DIE("unexpected classv.type");
             return false;
         }
@@ -165,7 +166,7 @@ wcstring event_get_desc(const event_t &evt) {
                                          -ed.param1.pid);
                 }
             }
-            assert(0 && "Unreachable");
+            DIE("Unreachable");
         }
 
         case event_type_t::job_exit: {
@@ -182,6 +183,7 @@ wcstring event_get_desc(const event_t &evt) {
         case event_type_t::generic: {
             return format_string(_(L"handler for generic event '%ls'"), ed.str_param1.c_str());
         }
+        case event_type_t::any: { DIE("Unreachable"); }
         default:
             DIE("Unknown event type");
     }
@@ -409,6 +411,7 @@ void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter) {
                 streams.out.append_format(L"%ls %ls\n", sig2wcs(evt->desc.param1.signal),
                                           evt->function_name.c_str());
                 break;
+            case event_type_t::exit:
             case event_type_t::job_exit:
                 streams.out.append_format(L"%d %ls\n", evt->desc.param1,
                                           evt->function_name.c_str());
@@ -418,6 +421,7 @@ void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter) {
                 streams.out.append_format(L"%ls %ls\n", evt->desc.str_param1.c_str(),
                                           evt->function_name.c_str());
                 break;
+            case event_type_t::any: DIE("Unreachable");
             default:
                 streams.out.append_format(L"%ls\n", evt->function_name.c_str());
                 break;

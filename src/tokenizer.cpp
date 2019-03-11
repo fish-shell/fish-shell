@@ -408,7 +408,10 @@ int oflags_for_redirection_type(redirection_type_t type) {
         case redirection_type_t::input: {
             return O_RDONLY;
         }
-        default: { return -1; }
+        case redirection_type_t::fd:
+        default: {
+            return -1;
+        }
     }
 }
 

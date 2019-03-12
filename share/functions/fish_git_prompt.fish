@@ -102,6 +102,7 @@
 #     invalidstate    (✖)
 #     stagedstate     (●)
 #     untrackedfiles  (…)
+#     stashstate      (⚑)
 #     cleanstate      (✔)
 #
 #
@@ -401,7 +402,7 @@ function fish_git_prompt --description "Prompt function for Git"
                 and test "$dirty" != false
                 and test "$untracked" != false
             end
-            set informative_status "$space"(__fish_git_prompt_informative_status)
+            set informative_status "$space"(__fish_git_prompt_informative_status $git_dir)
         else
             # This has to be set explicitly.
             if test "$dirty" = true
@@ -517,6 +518,9 @@ function __fish_git_prompt_dirty --description "fish_git_prompt helper, tells wh
 end
 
 set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles
+if set -q __fish_git_prompt_showstashstate
+    set -a ___fish_git_prompt_status_order stashstate
+end
 
 function __fish_git_prompt_informative_status
 
@@ -530,11 +534,16 @@ function __fish_git_prompt_informative_status
     set -l invalidstate (count (string match -r "U" -- $stagedFiles))
     set -l stagedstate (math $x - $invalidstate)
     set -l untrackedfiles (command git ls-files --others --exclude-standard | wc -l | string trim)
+    set -l stashstate 0
+    set -l stashfile "$argv[1]/logs/refs/stash"
+    if set -q __fish_git_prompt_showstashstate; and test -e "$stashfile"
+        set stashstate (wc -l $stashfile | string match -r '\d+')
+    end
 
     set -l info
 
     # If `math` fails for some reason, assume the state is clean - it's the simpler path
-    set -l state (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles 2>/dev/null)
+    set -l state (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles + $stashstate 2>/dev/null)
     if test -z "$state"
         or test "$state" = 0
         set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done
@@ -686,7 +695,7 @@ function __fish_git_prompt_validate_chars --description "fish_git_prompt helper,
     __fish_git_prompt_set_char __fish_git_prompt_char_dirtystate '*' '✚'
     __fish_git_prompt_set_char __fish_git_prompt_char_invalidstate '#' '✖'
     __fish_git_prompt_set_char __fish_git_prompt_char_stagedstate '+' '●'
-    __fish_git_prompt_set_char __fish_git_prompt_char_stashstate '$'
+    __fish_git_prompt_set_char __fish_git_prompt_char_stashstate '$' '⚑'
     __fish_git_prompt_set_char __fish_git_prompt_char_stateseparator ' ' '|'
     __fish_git_prompt_set_char __fish_git_prompt_char_untrackedfiles '%' '…'
     __fish_git_prompt_set_char __fish_git_prompt_char_upstream_ahead '>' '↑'
@@ -778,7 +787,7 @@ function __fish_git_prompt_repaint $varargs --description "Event handler, repain
     if status --is-interactive
         if test $argv[3] = __fish_git_prompt_show_informative_status
             # Clear characters that have different defaults with/without informative status
-            for name in cleanstate dirtystate invalidstate stagedstate stateseparator untrackedfiles upstream_ahead upstream_behind
+            for name in cleanstate dirtystate invalidstate stagedstate stashstate stateseparator untrackedfiles upstream_ahead upstream_behind
                 set -e ___fish_git_prompt_char_$name
             end
         end

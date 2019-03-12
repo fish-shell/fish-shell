@@ -27,6 +27,7 @@
   - `cf`
   - `bosh`
   - `vagrant`
+- The git prompt in informative mode now shows the number of stashes if enabled.
 
 ### For distributors and developers
 - The autotools-based build system and legacy Xcode build systems have been removed, leaving only the CMake build system. All distributors and developers must migrate to the CMake build.

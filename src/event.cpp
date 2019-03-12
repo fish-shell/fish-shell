@@ -120,8 +120,8 @@ static bool handler_matches(const event_handler_t &classv, const event_t &instan
         case event_type_t::generic: {
             return classv.desc.str_param1 == instance.desc.str_param1;
         }
-        case event_type_t::any: {
-        default:
+        case event_type_t::any:
+        default: {
             DIE("unexpected classv.type");
             return false;
         }

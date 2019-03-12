@@ -99,9 +99,8 @@ struct prettifier_t {
 
     prettifier_t(const wcstring &source, bool do_indent) : source(source), do_indent(do_indent) {}
 
-    void prettify_node_nrecursive(const parse_node_tree_t &tree,
-                                 node_offset_t node_idx, indent_t node_indent,
-                                 parse_token_type_t parent_type);
+    void prettify_node(const parse_node_tree_t &tree, node_offset_t node_idx, indent_t node_indent,
+                       parse_token_type_t parent_type);
 
     void maybe_prepend_escaped_newline(const parse_node_t &node) {
         if (node.has_preceding_escaped_newline()) {
@@ -162,20 +161,23 @@ static void dump_node(indent_t node_indent, const parse_node_t &node, const wcst
              token_type_description(node.type), prevc_str, source_txt.c_str(), nextc_str);
 }
 
-void prettifier_t::prettify_node_nrecursive(const parse_node_tree_t &tree,
-                                            node_offset_t node_idx, indent_t node_indent,
-                                            parse_token_type_t parent_type) {
+void prettifier_t::prettify_node(const parse_node_tree_t &tree, node_offset_t node_idx,
+                                 indent_t node_indent, parse_token_type_t parent_type) {
+    // Use an explicit stack to avoid stack overflow.
+    struct pending_node_t {
+        node_offset_t index;
+        indent_t indent;
+        parse_token_type_t parent_type;
+    };
+    std::stack<pending_node_t> pending_node_stack;
 
-    using call_tuple_t = std::tuple<node_offset_t, indent_t, parse_token_type_t>;
-    std::stack<call_tuple_t> explicit_stack;
-    explicit_stack.push(std::make_tuple(node_idx, node_indent, parent_type));
-    while(!explicit_stack.empty()){
-
-        call_tuple_t arguments = explicit_stack.top();
-        explicit_stack.pop();
-        auto node_idx = std::get<0>(arguments);
-        auto node_indent = std::get<1>(arguments);
-        auto parent_type = std::get<2>(arguments);
+    pending_node_stack.push({node_idx, node_indent, parent_type});
+    while (!pending_node_stack.empty()) {
+        pending_node_t args = pending_node_stack.top();
+        pending_node_stack.pop();
+        auto node_idx = args.index;
+        auto node_indent = args.indent;
+        auto parent_type = args.parent_type;
 
         const parse_node_t &node = tree.at(node_idx);
         const parse_token_type_t node_type = node.type;
@@ -236,7 +238,7 @@ void prettifier_t::prettify_node_nrecursive(const parse_node_tree_t &tree,
             // Note: We pass our type to our child, which becomes its parent node type.
             // Note: While node.child_start could be -1 (NODE_OFFSET_INVALID) the addition is safe
             // because we won't execute this call in that case since node.child_count should be zero.
-            explicit_stack.push(std::make_tuple(node.child_start + (idx - 1), node_indent, node_type));
+            pending_node_stack.push({node.child_start + (idx - 1), node_indent, node_type});
         }
     }
 }
@@ -262,7 +264,7 @@ static wcstring prettify(const wcstring &src, bool do_indent) {
         const parse_node_t &node = parse_tree.at(i);
         if (node.parent == NODE_OFFSET_INVALID || node.type == parse_special_type_parse_error) {
             // A root node.
-            prettifier.prettify_node_nrecursive(parse_tree, i, 0, symbol_job_list);
+            prettifier.prettify_node(parse_tree, i, 0, symbol_job_list);
         }
     }
     return std::move(prettifier.output);

@@ -287,6 +287,9 @@ int fish_wcwidth(wchar_t wc) {
     if (wc == variation_selector_16) return 1;
     else if (wc == variation_selector_15) return 0;
 
+    // Korean Hangul Jamo median vowels and final consonants.
+    // These are effectively combiners, so we handle them like combiners.
+    if (wc >= L'\u1160' && wc <= L'\u11FF') return wcwidth(wc);
     int width = widechar_wcwidth(wc);
     switch (width) {
         case widechar_nonprint:

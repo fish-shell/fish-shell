@@ -33,7 +33,6 @@
 
 #ifdef __linux__
 // Includes for WSL detection
-#include <cstring>
 #include <sys/utsname.h>
 #endif
 

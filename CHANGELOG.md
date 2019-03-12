@@ -22,6 +22,7 @@
 - `math` now accepts `--scale=max` for the maximum scale (#5579).
 - The `forward-bigword` binding now interacts correctly with autosuggestions (#5336)
 - Fish now tries to guess if the system supports Unicode 9 (and displays emoji as wide), hopefully making setting $fish_emoji_width superfluous in most cases (#5722).
+- `complete --do-complete` now also does fuzzy matches (#5467).
 - Lots of improvements to completions.
 - Added completions for
   - `cf`

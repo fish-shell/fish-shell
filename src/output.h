@@ -69,7 +69,7 @@ class outputter_t {
     }
 
     /// Write a narrow NUL-terminated string.
-    void writestr(const char *str) { writestr(str, strlen(str)); }
+    void writestr(const char *str) { writestr(str, std::strlen(str)); }
 
     /// Write a narrow character.
     void push_back(char c) {

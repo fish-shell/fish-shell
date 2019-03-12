@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <cwchar>
 
 #include "builtin.h"
@@ -43,7 +43,7 @@ int builtin_realpath(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             // realpath() just couldn't do it. Report the error and make it clear
             // this is an error from our builtin, not the system's realpath.
             streams.err.append_format(L"builtin %ls: %ls: %s\n", cmd, argv[optind],
-                                      strerror(errno));
+                                      std::strerror(errno));
         } else {
             // Who knows. Probably a bug in our wrealpath() implementation.
             streams.err.append_format(_(L"builtin %ls: Invalid path: %ls\n"), cmd, argv[optind]);

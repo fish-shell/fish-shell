@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
@@ -411,7 +411,7 @@ static void init_locale(const environment_t &vars) {
     debug(5, L"old LC_MESSAGES locale: '%s'", old_msg_locale);
     debug(5, L"new LC_MESSAGES locale: '%s'", new_msg_locale);
 #ifdef HAVE__NL_MSG_CAT_CNTR
-    if (strcmp(old_msg_locale, new_msg_locale)) {
+    if (std::strcmp(old_msg_locale, new_msg_locale)) {
         // Make change known to GNU gettext.
         extern int _nl_msg_cat_cntr;
         _nl_msg_cat_cntr++;
@@ -455,7 +455,7 @@ static bool does_term_support_setting_title(const environment_t &vars) {
 
         char buf[PATH_MAX];
         int retval = ttyname_r(STDIN_FILENO, buf, PATH_MAX);
-        if (retval != 0 || strstr(buf, "tty") || strstr(buf, "/vc/")) return false;
+        if (retval != 0 || std::strstr(buf, "tty") || std::strstr(buf, "/vc/")) return false;
     }
 
     return true;

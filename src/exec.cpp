@@ -14,7 +14,7 @@
 #include <spawn.h>
 #endif
 #include <stdio.h>
-#include <string.h>
+#include <cstring>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <stack>
@@ -78,7 +78,7 @@ static bool redirection_is_to_real_file(const shared_ptr<io_data_t> &io) {
     if (io && io->io_mode == io_mode_t::file) {
         // It's a file redirection. Compare the path to /dev/null.
         const char *path = static_cast<const io_file_t *>(io.get())->filename_cstr;
-        if (strcmp(path, "/dev/null") != 0) {
+        if (std::strcmp(path, "/dev/null") != 0) {
             // It's not /dev/null.
             result = true;
         }
@@ -104,9 +104,9 @@ char *get_interpreter(const char *command, char *interpreter, size_t buff_size) 
         close(fd);
     }
 
-    if (strncmp(interpreter, "#! /", 4) == 0) {
+    if (std::strncmp(interpreter, "#! /", 4) == 0) {
         return interpreter + 3;
-    } else if (strncmp(interpreter, "#!/", 3) == 0) {
+    } else if (std::strncmp(interpreter, "#!/", 3) == 0) {
         return interpreter + 2;
     }
 
@@ -1126,7 +1126,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
             const char *cursor = begin;
             while (cursor < end) {
                 // Look for the next separator.
-                const char *stop = (const char *)memchr(cursor, '\n', end - cursor);
+                const char *stop = (const char *)std::memchr(cursor, '\n', end - cursor);
                 const bool hit_separator = (stop != NULL);
                 if (!hit_separator) {
                     // If it's not found, just use the end.

@@ -14,7 +14,7 @@
 #include <stdarg.h>  // IWYU pragma: keep
 #include <stdio.h>   // IWYU pragma: keep
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <sys/stat.h>   // IWYU pragma: keep
 #include <sys/types.h>  // IWYU pragma: keep
 #include <unistd.h>
@@ -81,7 +81,7 @@ int fish_mkstemp_cloexec(char *name_template) {
         return 0;
     }
 
-    memcpy(out, in, sizeof(wchar_t) * (len + 1));
+    std::memcpy(out, in, sizeof(wchar_t) * (len + 1));
     return out;
 }
 

@@ -6,7 +6,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <unistd.h>
 #include <cwchar>
 
@@ -319,7 +319,7 @@ static int read_one_char_at_a_time(int fd, wcstring &buff, int nchars, bool spli
             } else {
                 size_t sz = std::mbrtowc(&res, &b, 1, &state);
                 if (sz == (size_t)-1) {
-                    memset(&state, 0, sizeof(state));
+                    std::memset(&state, 0, sizeof(state));
                 } else if (sz != (size_t)-2) {
                     finished = true;
                 }

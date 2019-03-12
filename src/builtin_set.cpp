@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <cwchar>
@@ -295,7 +295,7 @@ static bool validate_path_warning_on_colons(const wchar_t *cmd,
             any_success = true;
         } else if (looks_like_colon_sep) {
             streams.err.append_format(BUILTIN_SET_PATH_ERROR, cmd, key, dir.c_str(),
-                                      strerror(errno));
+                                      std::strerror(errno));
             streams.err.append_format(BUILTIN_SET_PATH_HINT, cmd, key, key,
                                       std::wcschr(dir.c_str(), L':') + 1);
         }

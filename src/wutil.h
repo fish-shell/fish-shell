@@ -59,7 +59,7 @@ void wperror(const wchar_t *s);
 /// Async-safe version of perror().
 void safe_perror(const char *message);
 
-/// Async-safe version of strerror().
+/// Async-safe version of std::strerror().
 const char *safe_strerror(int err);
 
 /// Wide character version of getcwd().

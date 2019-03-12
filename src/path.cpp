@@ -4,7 +4,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
-#include <string.h>
+#include <cstring>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <cwchar>
@@ -272,7 +272,7 @@ static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &
         const wchar_t *env_var = using_xdg ? xdg_var.c_str() : L"HOME";
         debug(0, _(L"Unable to locate %ls directory derived from $%ls: '%ls'."), which_dir.c_str(),
               env_var, path.c_str());
-        debug(0, _(L"The error was '%s'."), strerror(saved_errno));
+        debug(0, _(L"The error was '%s'."), std::strerror(saved_errno));
         debug(0, _(L"Please set $%ls to a directory where you have write access."), env_var);
     }
     ignore_result(write(STDERR_FILENO, "\n", 1));

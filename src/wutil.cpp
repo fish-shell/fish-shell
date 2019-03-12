@@ -10,7 +10,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <sys/stat.h>
 #if defined(__linux__)
 #include <sys/statfs.h>
@@ -130,7 +130,7 @@ const wcstring wgetcwd() {
         return str2wcstring(res);
     }
 
-    debug(0, _(L"getcwd() failed with errno %d/%s"), errno, strerror(errno));
+    debug(0, _(L"getcwd() failed with errno %d/%s"), errno, std::strerror(errno));
     return wcstring();
 }
 
@@ -262,7 +262,7 @@ void wperror(const wchar_t *s) {
     if (s[0] != L'\0') {
         std::fwprintf(stderr, L"%ls: ", s);
     }
-    std::fwprintf(stderr, L"%s\n", strerror(e));
+    std::fwprintf(stderr, L"%s\n", std::strerror(e));
 }
 
 int make_fd_nonblocking(int fd) {
@@ -318,7 +318,7 @@ int fd_check_is_remote(int fd) {
 }
 
 static inline void safe_append(char *buffer, const char *s, size_t buffsize) {
-    strncat(buffer, s, buffsize - strlen(buffer) - 1);
+    std::strncat(buffer, s, buffsize - std::strlen(buffer) - 1);
 }
 
 // In general, strerror is not async-safe, and therefore we cannot use it directly. So instead we
@@ -328,7 +328,7 @@ const char *safe_strerror(int err) {
 #if defined(__UCLIBC__)
     // uClibc does not have sys_errlist, however, its strerror is believed to be async-safe.
     // See issue #808.
-    return strerror(err);
+    return std::strerror(err);
 #elif defined(HAVE__SYS__ERRS) || defined(HAVE_SYS_ERRLIST)
 #ifdef HAVE_SYS_ERRLIST
     if (err >= 0 && err < sys_nerr && sys_errlist[err] != NULL) {
@@ -373,7 +373,7 @@ void safe_perror(const char *message) {
     safe_append(buff, safe_strerror(err), sizeof buff);
     safe_append(buff, "\n", sizeof buff);
 
-    ignore_result(write(STDERR_FILENO, buff, strlen(buff)));
+    ignore_result(write(STDERR_FILENO, buff, std::strlen(buff)));
     errno = err;
 }
 

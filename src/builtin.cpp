@@ -19,7 +19,7 @@
 
 #include <errno.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <unistd.h>
 #include <cwchar>
 
@@ -97,7 +97,7 @@ int builtin_count_args(const wchar_t *const *argv) {
 /// This function works like wperror, but it prints its result into the streams.err string instead
 /// to stderr. Used by the builtin commands.
 void builtin_wperror(const wchar_t *s, io_streams_t &streams) {
-    char *err = strerror(errno);
+    char *err = std::strerror(errno);
     if (s != NULL) {
         streams.err.append(s);
         streams.err.append(L": ");

@@ -2,7 +2,7 @@
 #include "config.h"
 
 #include <errno.h>
-#include <string.h>
+#include <cstring>
 #include <unistd.h>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
@@ -205,7 +205,7 @@ wchar_t input_common_readch(int timed) {
 
             switch (sz) {
                 case (size_t)(-1): {
-                    memset(&state, '\0', sizeof(state));
+                    std::memset(&state, '\0', sizeof(state));
                     debug(2, L"Illegal input");
                     return R_NULL;
                 }

@@ -10,7 +10,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <time.h>
 #include <unistd.h>
 #include <cwchar>
@@ -460,7 +460,7 @@ static void s_move(screen_t *s, int new_x, int new_y) {
 
     y_steps = new_y - s->actual.cursor.y;
 
-    if (y_steps > 0 && (strcmp(cursor_down, "\n") == 0)) {
+    if (y_steps > 0 && (std::strcmp(cursor_down, "\n") == 0)) {
         // This is very strange - it seems some (all?) consoles use a simple newline as the cursor
         // down escape. This will of course move the cursor to the beginning of the line as well as
         // moving it down one step. The cursor_up does not have this behaviour...
@@ -496,7 +496,7 @@ static void s_move(screen_t *s, int new_x, int new_y) {
     // Use the bulk ('multi') output for cursor movement if it is supported and it would be shorter
     // Note that this is required to avoid some visual glitches in iTerm (issue #1448).
     bool use_multi =
-        multi_str != NULL && multi_str[0] != '\0' && abs(x_steps) * strlen(str) > strlen(multi_str);
+        multi_str != NULL && multi_str[0] != '\0' && abs(x_steps) * std::strlen(str) > std::strlen(multi_str);
     if (use_multi && cur_term) {
         char *multi_param = tparm((char *)multi_str, abs(x_steps));
         writembs(outp, multi_param);

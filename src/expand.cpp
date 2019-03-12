@@ -7,7 +7,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <unistd.h>
 #include <cwchar>
 #include <wctype.h>
@@ -1156,7 +1156,7 @@ expand_error_t expand_to_command_and_args(const wcstring &instr, const environme
 
 static std::string escape_single_quoted_hack_hack_hack_hack(const char *str) {
     std::string result;
-    size_t len = strlen(str);
+    size_t len = std::strlen(str);
     result.reserve(len + 2);
     result.push_back('\'');
     for (size_t i = 0; i < len; i++) {

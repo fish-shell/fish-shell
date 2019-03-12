@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <wctype.h>
 
 #include <cwchar>
@@ -63,7 +63,7 @@ static wcstring read_file(FILE *f) {
                     // Illegal byte sequence. Try to skip past it.
                     clearerr(f);
                     int ch = fgetc(f); // for printing the warning, and seeks forward 1 byte.
-                    debug(1, "%s (byte=%X)", strerror(errno), ch);
+                    debug(1, "%s (byte=%X)", std::strerror(errno), ch);
                     ret = 1;
                     continue;
                 } else {
@@ -518,7 +518,7 @@ int main(int argc, char *argv[]) {
             fclose(fh);
             output_location = *argv;
         } else {
-            std::fwprintf(stderr, _(L"Opening \"%s\" failed: %s\n"), *argv, strerror(errno));
+            std::fwprintf(stderr, _(L"Opening \"%s\" failed: %s\n"), *argv, std::strerror(errno));
             exit(1);
         }
     } else {
@@ -549,7 +549,7 @@ int main(int argc, char *argv[]) {
                 exit(0);
             } else {
                 std::fwprintf(stderr, _(L"Opening \"%s\" failed: %s\n"), output_location,
-                         strerror(errno));
+                         std::strerror(errno));
                 exit(1);
             }
             break;

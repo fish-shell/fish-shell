@@ -26,7 +26,7 @@
 #include "tinyexpr.h"
 #include <stdlib.h>
 #include <math.h>
-#include <string.h>
+#include <cstring>
 #include <stdio.h>
 #include <limits.h>
 
@@ -96,9 +96,9 @@ static te_expr *new_expr(const int type, const te_expr *parameters[]) {
     te_expr *ret = (te_expr *)malloc(size);
     // This sets float to 0, which depends on the implementation.
     // We rely on IEEE-754 floats anyway, so it's okay.
-    memset(ret, 0, size);
+    std::memset(ret, 0, size);
     if (arity && parameters) {
-        memcpy(ret->parameters, parameters, psize);
+        std::memcpy(ret->parameters, parameters, psize);
     }
     ret->type = type;
     return ret;
@@ -192,10 +192,10 @@ static const te_builtin *find_builtin(const char *name, int len) {
     const te_builtin *found = std::lower_bound(std::begin(functions), end, name,
                                                 [len](const te_builtin &lhs, const char *rhs) {
                                                     // The length is important because that's where the parens start
-                                                    return strncmp(lhs.name, rhs, len) < 0;
+                                                    return std::strncmp(lhs.name, rhs, len) < 0;
                                                 });
     // We need to compare again because we might have gotten the first "larger" element.
-    if (found != end && strncmp(found->name, name, len) == 0) return found;
+    if (found != end && std::strncmp(found->name, name, len) == 0) return found;
     return NULL;
 }
 

@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <cwchar>
@@ -69,9 +69,9 @@ class fish_cmd_opts_t {
 static const char *s_profiling_output_filename = NULL;
 
 static bool has_suffix(const std::string &path, const char *suffix, bool ignore_case) {
-    size_t pathlen = path.size(), suffixlen = strlen(suffix);
+    size_t pathlen = path.size(), suffixlen = std::strlen(suffix);
     return pathlen >= suffixlen &&
-           !(ignore_case ? strcasecmp : strcmp)(path.c_str() + pathlen - suffixlen, suffix);
+           !(ignore_case ? strcasecmp : std::strcmp)(path.c_str() + pathlen - suffixlen, suffix);
 }
 
 /// Modifies the given path by calling realpath. Returns true if realpath succeeded, false
@@ -122,7 +122,7 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
                 bool seems_installed = (suffix == installed_suffix);
 
                 wcstring base_path = str2wcstring(exec_path);
-                base_path.resize(base_path.size() - strlen(suffix));
+                base_path.resize(base_path.size() - std::strlen(suffix));
 
                 paths.data = base_path + (seems_installed ? L"/share/fish" : L"/share");
                 paths.sysconf = base_path + (seems_installed ? L"/etc/fish" : L"/etc");

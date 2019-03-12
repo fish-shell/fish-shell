@@ -17,7 +17,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #ifdef __CYGWIN__
 #include <sys/mman.h>
 #endif
@@ -123,7 +123,7 @@ static maybe_t<wcstring> default_vars_path() {
 /// On success, updates the cursor to just past the command.
 static bool match(const wchar_t **inout_cursor, const char *cmd) {
     const wchar_t *cursor = *inout_cursor;
-    size_t len = strlen(cmd);
+    size_t len = std::strlen(cmd);
     if (!std::equal(cmd, cmd + len, cursor)) {
         return false;
     }
@@ -445,7 +445,7 @@ bool env_universal_t::write_to_fd(int fd, const wcstring &path) {
     bool success = true;
     std::string contents = serialize_with_vars(vars);
     if (write_loop(fd, contents.data(), contents.size()) < 0) {
-        const char *error = strerror(errno);
+        const char *error = std::strerror(errno);
         debug(0, _(L"Unable to write to universal variables file '%ls': %s"), path.c_str(), error);
         success = false;
     }
@@ -460,7 +460,7 @@ bool env_universal_t::write_to_fd(int fd, const wcstring &path) {
 bool env_universal_t::move_new_vars_file_into_place(const wcstring &src, const wcstring &dst) {
     int ret = wrename(src, dst);
     if (ret != 0) {
-        const char *error = strerror(errno);
+        const char *error = std::strerror(errno);
         debug(0, _(L"Unable to rename file from '%ls' to '%ls': %s"), src.c_str(), dst.c_str(),
               error);
     }
@@ -521,7 +521,7 @@ bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *o
     }
 
     if (!success) {
-        const char *error = strerror(saved_errno);
+        const char *error = std::strerror(saved_errno);
         debug(0, _(L"Unable to open temporary file '%ls': %s"), out_path->c_str(), error);
     }
     return success;
@@ -583,7 +583,7 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd) {
                 continue;
             }
 #endif
-            const char *error = strerror(errno);
+            const char *error = std::strerror(errno);
             debug(0, _(L"Unable to open universal variable file '%ls': %s"), path.c_str(), error);
             break;
         }
@@ -801,7 +801,7 @@ uvar_format_t env_universal_t::format_for_contents(const std::string &s) {
         if (sscanf(line.c_str(), "# VERSION: %64s", versionbuf) != 1) continue;
 
         // Try reading the version.
-        if (!strcmp(versionbuf, UVARS_VERSION_3_0)) {
+        if (!std::strcmp(versionbuf, UVARS_VERSION_3_0)) {
             return uvar_format_t::fish_3_0;
         } else {
             // Unknown future version.
@@ -946,7 +946,7 @@ static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN],
         strncpy((char *)r.ifr_name, interface, sizeof r.ifr_name - 1);
         r.ifr_name[sizeof r.ifr_name - 1] = 0;
         if (ioctl(dummy, SIOCGIFHWADDR, &r) >= 0) {
-            memcpy(macaddr, r.ifr_hwaddr.sa_data, MAC_ADDRESS_MAX_LEN);
+            std::memcpy(macaddr, r.ifr_hwaddr.sa_data, MAC_ADDRESS_MAX_LEN);
             result = true;
         }
         close(dummy);
@@ -978,7 +978,7 @@ static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN],
 
             size_t alen = sdl.sdl_alen;
             if (alen > MAC_ADDRESS_MAX_LEN) alen = MAC_ADDRESS_MAX_LEN;
-            memcpy(macaddr, sdl.sdl_data + sdl.sdl_nlen, alen);
+            std::memcpy(macaddr, sdl.sdl_data + sdl.sdl_nlen, alen);
             ok = true;
             break;
         }
@@ -1053,7 +1053,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
         bool errored = false;
         int fd = shm_open(path, O_RDWR | O_CREAT, 0600);
         if (fd < 0) {
-            const char *error = strerror(errno);
+            const char *error = std::strerror(errno);
             debug(0, _(L"Unable to open shared memory with path '%s': %s"), path, error);
             errored = true;
         }
@@ -1063,7 +1063,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
         if (!errored) {
             struct stat buf = {};
             if (fstat(fd, &buf) < 0) {
-                const char *error = strerror(errno);
+                const char *error = std::strerror(errno);
                 debug(0, _(L"Unable to fstat shared memory object with path '%s': %s"), path,
                       error);
                 errored = true;
@@ -1074,7 +1074,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
         // Set the size, if it's too small.
         bool set_size = !errored && size < (off_t)sizeof(universal_notifier_shmem_t);
         if (set_size && ftruncate(fd, sizeof(universal_notifier_shmem_t)) < 0) {
-            const char *error = strerror(errno);
+            const char *error = std::strerror(errno);
             debug(0, _(L"Unable to truncate shared memory object with path '%s': %s"), path, error);
             errored = true;
         }
@@ -1084,7 +1084,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
             void *addr = mmap(NULL, sizeof(universal_notifier_shmem_t), PROT_READ | PROT_WRITE,
                               MAP_SHARED, fd, 0);
             if (addr == MAP_FAILED) {
-                const char *error = strerror(errno);
+                const char *error = std::strerror(errno);
                 debug(0, _(L"Unable to memory map shared memory object with path '%s': %s"), path,
                       error);
                 this->region = NULL;
@@ -1489,7 +1489,7 @@ void universal_notifier_named_pipe_t::make_pipe(const wchar_t *test_path) {
 
     int mkfifo_status = mkfifo(narrow_path.c_str(), 0600);
     if (mkfifo_status == -1 && errno != EEXIST) {
-        const char *error = strerror(errno);
+        const char *error = std::strerror(errno);
         const wchar_t *errmsg = _(L"Unable to make a pipe for universal variables using '%ls': %s");
         debug(0, errmsg, vars_path.c_str(), error);
         pipe_fd = -1;
@@ -1498,7 +1498,7 @@ void universal_notifier_named_pipe_t::make_pipe(const wchar_t *test_path) {
 
     int fd = wopen_cloexec(vars_path, O_RDWR | O_NONBLOCK, 0600);
     if (fd < 0) {
-        const char *error = strerror(errno);
+        const char *error = std::strerror(errno);
         const wchar_t *errmsg = _(L"Unable to open a pipe for universal variables using '%ls': %s");
         debug(0, errmsg, vars_path.c_str(), error);
         pipe_fd = -1;

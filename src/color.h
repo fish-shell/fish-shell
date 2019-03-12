@@ -2,7 +2,7 @@
 #ifndef FISH_COLOR_H
 #define FISH_COLOR_H
 
-#include <string.h>
+#include <cstring>
 
 #include <string>
 
@@ -159,7 +159,7 @@ class rgb_color_t {
 
     /// Compare two colors for equality.
     bool operator==(const rgb_color_t &other) const {
-        return type == other.type && !memcmp(&data, &other.data, sizeof data);
+        return type == other.type && !std::memcmp(&data, &other.data, sizeof data);
     }
 
     /// Compare two colors for inequality.

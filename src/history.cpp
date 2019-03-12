@@ -8,7 +8,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <cstdint>
 // We need the sys/file.h for the flock() declaration on Linux but not OS X.
 #include <sys/file.h>  // IWYU pragma: keep
@@ -75,10 +75,10 @@ static constexpr int max_save_tries = 1024;
 
 namespace {
 
+static size_t safe_strlen(const char *s) { return s ? std::strlen(s) : 0; }
 /// Helper class for certain output. This is basically a string that allows us to ensure we only
 /// flush at record boundaries, and avoids the copying of ostringstream. Have you ever tried to
 /// implement your own streambuf? Total insanity.
-static size_t safe_strlen(const char *s) { return s ? strlen(s) : 0; }
 class history_output_buffer_t {
     std::vector<char> buffer;
 
@@ -271,7 +271,7 @@ class history_file_contents_t {
                 ptr += amt;
             }
         }
-        memset(ptr, 0, remaining);
+        std::memset(ptr, 0, remaining);
         return true;
     }
 
@@ -350,7 +350,7 @@ static size_t read_line(const char *base, size_t cursor, size_t len, std::string
     // Locate the newline.
     assert(cursor <= len);
     const char *start = base + cursor;
-    const char *a_newline = (char *)memchr(start, '\n', len - cursor);
+    const char *a_newline = (char *)std::memchr(start, '\n', len - cursor);
     if (a_newline != NULL) {  // we found a newline
         result.assign(start, a_newline - start);
         // Return the amount to advance the cursor; skip over the newline.
@@ -513,7 +513,7 @@ static history_item_t decode_item_fish_2_0(const char *base, size_t len) {
                 size_t advance = read_line(base, cursor, len, line);
                 if (trim_leading_spaces(line) <= indent) break;
 
-                if (strncmp(line.c_str(), "- ", 2)) break;
+                if (std::strncmp(line.c_str(), "- ", 2)) break;
 
                 // We're going to consume this line.
                 cursor += advance;
@@ -636,7 +636,7 @@ static bool parse_timestamp(const char *str, time_t *out_when) {
 
     // Look for "when:".
     size_t when_len = 5;
-    if (strncmp(cursor, "when:", when_len) != 0) return false;
+    if (std::strncmp(cursor, "when:", when_len) != 0) return false;
     cursor += when_len;
 
     // Advance past spaces.
@@ -661,7 +661,7 @@ static const char *next_line(const char *start, size_t length) {
     const char *const end = start + length;
 
     // Skip past the next newline.
-    const char *nextline = (const char *)memchr(start, '\n', length);
+    const char *nextline = (const char *)std::memchr(start, '\n', length);
     if (!nextline || nextline >= end) {
         return NULL;
     }
@@ -671,7 +671,7 @@ static const char *next_line(const char *start, size_t length) {
     }
 
     // Make sure this new line is itself "newline terminated". If it's not, return NULL.
-    const char *next_newline = (const char *)memchr(nextline, '\n', end - nextline);
+    const char *next_newline = (const char *)std::memchr(nextline, '\n', end - nextline);
     if (!next_newline) {
         return NULL;
     }
@@ -694,7 +694,7 @@ static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &conten
         const char *line_start = contents.address_at(cursor);
 
         // Advance the cursor to the next line.
-        const char *a_newline = (const char *)memchr(line_start, '\n', length - cursor);
+        const char *a_newline = (const char *)std::memchr(line_start, '\n', length - cursor);
         if (a_newline == NULL) break;
 
         // Advance the cursor past this line. +1 is for the newline.
@@ -707,26 +707,26 @@ static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &conten
         if (a_newline - line_start < 3) continue;
 
         // Try to be a little YAML compatible. Skip lines with leading %, ---, or ...
-        if (!memcmp(line_start, "%", 1) || !memcmp(line_start, "---", 3) ||
-            !memcmp(line_start, "...", 3))
+        if (!std::memcmp(line_start, "%", 1) || !std::memcmp(line_start, "---", 3) ||
+            !std::memcmp(line_start, "...", 3))
             continue;
 
         // Hackish: fish 1.x rewriting a fish 2.0 history file can produce lines with lots of
         // leading "- cmd: - cmd: - cmd:". Trim all but one leading "- cmd:".
         const char *double_cmd = "- cmd: - cmd: ";
-        const size_t double_cmd_len = strlen(double_cmd);
+        const size_t double_cmd_len = std::strlen(double_cmd);
         while ((size_t)(a_newline - line_start) > double_cmd_len &&
-               !memcmp(line_start, double_cmd, double_cmd_len)) {
+               !std::memcmp(line_start, double_cmd, double_cmd_len)) {
             // Skip over just one of the - cmd. In the end there will be just one left.
-            line_start += strlen("- cmd: ");
+            line_start += std::strlen("- cmd: ");
         }
 
         // Hackish: fish 1.x rewriting a fish 2.0 history file can produce commands like "when:
         // 123456". Ignore those.
         const char *cmd_when = "- cmd:    when:";
-        const size_t cmd_when_len = strlen(cmd_when);
+        const size_t cmd_when_len = std::strlen(cmd_when);
         if ((size_t)(a_newline - line_start) >= cmd_when_len &&
-            !memcmp(line_start, cmd_when, cmd_when_len)) {
+            !std::memcmp(line_start, cmd_when, cmd_when_len)) {
             continue;
         }
 
@@ -1141,7 +1141,7 @@ wcstring history_search_t::current_string() const {
 }
 
 static void replace_all(std::string *str, const char *needle, const char *replacement) {
-    size_t needle_len = strlen(needle), replacement_len = strlen(replacement);
+    size_t needle_len = std::strlen(needle), replacement_len = std::strlen(replacement);
     size_t offset = 0;
     while ((offset = str->find(needle, offset)) != std::string::npos) {
         str->replace(offset, needle_len, replacement);
@@ -1820,7 +1820,7 @@ void history_t::populate_from_bash(FILE *stream) {
             }
 
             // Deal with the newline if present.
-            char *a_newline = strchr(buff, '\n');
+            char *a_newline = std::strchr(buff, '\n');
             if (a_newline) *a_newline = '\0';
             line.append(buff);
             if (a_newline) break;

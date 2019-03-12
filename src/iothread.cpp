@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
-#include <string.h>
+#include <cstring>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <sys/types.h>

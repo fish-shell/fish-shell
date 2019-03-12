@@ -5,7 +5,7 @@
 
 #include <errno.h>
 #include <stdarg.h>
-#include <string.h>
+#include <cstring>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -675,7 +675,7 @@ static bool parse_number(const wcstring &arg, number_t *number, wcstring_list_t 
             errors.push_back(format_string(_(L"Integer %lld in '%ls' followed by non-digit"),
                                            integral, argcs));
         } else {
-            errors.push_back(format_string(L"%s: '%ls'", strerror(errno), argcs));
+            errors.push_back(format_string(L"%s: '%ls'", std::strerror(errno), argcs));
         }
         return false;
     }

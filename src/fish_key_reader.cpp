@@ -14,7 +14,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <termios.h>
 #include <unistd.h>
 #include <cwchar>
@@ -62,7 +62,7 @@ static bool should_exit(wchar_t wc) {
         std::fwprintf(stderr, L"Press [ctrl-%c] again to exit\n", shell_modes.c_cc[VEOF] + 0x40);
         return false;
     }
-    return memcmp(recent_chars, "exit", 4) == 0 || memcmp(recent_chars, "quit", 4) == 0;
+    return std::memcmp(recent_chars, "exit", 4) == 0 || std::memcmp(recent_chars, "quit", 4) == 0;
 }
 
 /// Return the name if the recent sequence of characters matches a known terminfo sequence.
@@ -265,7 +265,7 @@ static void install_our_signal_handlers() {
 
     for (int signo = 1; signo < 32; signo++) {
         if (sigaction(signo, &new_sa, &old_sa) != -1) {
-            memcpy(&old_sigactions[signo], &old_sa, sizeof(old_sa));
+            std::memcpy(&old_sigactions[signo], &old_sa, sizeof(old_sa));
             if (old_sa.sa_handler == SIG_IGN) {
                 debug(3, "signal #%d (%ls) was being ignored", signo, sig2wcs(signo));
             }

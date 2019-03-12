@@ -14,7 +14,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <sys/select.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -89,7 +89,7 @@ static bool should_test_function(const char *func_name) {
         result = true;
     } else {
         for (size_t i = 0; s_arguments[i] != NULL; i++) {
-            if (!strncmp(func_name, s_arguments[i], strlen(s_arguments[i]))) {
+            if (!std::strncmp(func_name, s_arguments[i], std::strlen(s_arguments[i]))) {
                 // Prefix match.
                 result = true;
                 break;
@@ -448,14 +448,14 @@ static void test_format() {
     for (i = 0; i < sizeof tests / sizeof *tests; i++) {
         char buff[128];
         format_size_safe(buff, tests[i].val);
-        do_test(!strcmp(buff, tests[i].expected));
+        do_test(!std::strcmp(buff, tests[i].expected));
     }
 
     for (int j = -129; j <= 129; j++) {
         char buff1[128], buff2[128];
         format_long_safe(buff1, j);
         sprintf(buff2, "%d", j);
-        do_test(!strcmp(buff1, buff2));
+        do_test(!std::strcmp(buff1, buff2));
 
         wchar_t wbuf1[128], wbuf2[128];
         format_long_safe(wbuf1, j);
@@ -467,12 +467,12 @@ static void test_format() {
     char buff1[128], buff2[128];
     format_long_safe(buff1, q);
     sprintf(buff2, "%ld", q);
-    do_test(!strcmp(buff1, buff2));
+    do_test(!std::strcmp(buff1, buff2));
 }
 
 /// Helper to convert a narrow string to a sequence of hex digits.
 static char *str2hex(const char *input) {
-    char *output = (char *)malloc(5 * strlen(input) + 1);
+    char *output = (char *)malloc(5 * std::strlen(input) + 1);
     char *p = output;
     for (; *input; input++) {
         sprintf(p, "0x%02X ", (int)*input & 0xFF);
@@ -511,12 +511,12 @@ static void test_convert() {
                 L"wcs2str");
         }
 
-        if (strcmp(o, n)) {
+        if (std::strcmp(o, n)) {
             char *o2 = str2hex(o);
             char *n2 = str2hex(n);
             err(L"Line %d - %d: Conversion cycle of string:\n%4d chars: %s\n"
                 L"produced different string:\n%4d chars: %s",
-                __LINE__, i, strlen(o), o2, strlen(n), n2);
+                __LINE__, i, std::strlen(o), o2, std::strlen(n), n2);
             free(o2);
             free(n2);
         }
@@ -1258,7 +1258,7 @@ static void test_utf82wchar(const char *src, size_t slen, const wchar_t *dst, si
 
     if (res != size) {
         err(L"u2w: %s: FAILED (rv: %lu, must be %lu)", descr, size, res);
-    } else if (mem && memcmp(mem, dst, size * sizeof(*mem)) != 0) {
+    } else if (mem && std::memcmp(mem, dst, size * sizeof(*mem)) != 0) {
         err(L"u2w: %s: BROKEN", descr);
     }
 
@@ -1303,7 +1303,7 @@ static void test_wchar2utf8(const wchar_t *src, size_t slen, const char *dst, si
     size = wchar_to_utf8(src, slen, mem, dlen, flags);
     if (res != size) {
         err(L"w2u: %s: FAILED (rv: %lu, must be %lu)", descr, size, res);
-    } else if (dst && memcmp(mem, dst, size) != 0) {
+    } else if (dst && std::memcmp(mem, dst, size) != 0) {
         err(L"w2u: %s: BROKEN", descr);
     }
 
@@ -1459,7 +1459,7 @@ static void test_escape_sequences() {
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
     if (escape_code_length(L"\x1B[2J") != 4)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1B[38;5;123mABC") != strlen("\x1B[38;5;123m"))
+    if (escape_code_length(L"\x1B[38;5;123mABC") != std::strlen("\x1B[38;5;123m"))
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
     if (escape_code_length(L"\x1B@") != 2)
         err(L"test_escape_sequences failed on line %d\n", __LINE__);
@@ -3230,7 +3230,7 @@ static void test_universal_ok_to_save() {
     const char *contents = "# VERSION: 99999.99\n";
     FILE *fp = wfopen(UVARS_TEST_PATH, "w");
     assert(fp && "Failed to open UVARS_TEST_PATH for writing");
-    fwrite(contents, strlen(contents), 1, fp);
+    fwrite(contents, std::strlen(contents), 1, fp);
     fclose(fp);
 
     file_id_t before_id = file_id_for_path(UVARS_TEST_PATH);
@@ -5176,7 +5176,7 @@ int main(int argc, char **argv) {
             perror("getcwd");
             exit(-1);
         }
-        if (!strcmp(wd, "/")) {
+        if (!std::strcmp(wd, "/")) {
             std::fwprintf(stderr,
                      L"Unable to find 'tests' directory, which should contain file test.fish\n");
             exit(EXIT_FAILURE);

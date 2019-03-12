@@ -57,7 +57,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <sys/types.h>
 #include <cwchar>
 #include <wctype.h>
@@ -238,7 +238,7 @@ void builtin_printf_state_t::verify_numeric(const wchar_t *s, const wchar_t *end
         if (errcode == ERANGE) {
             this->fatal_error(L"%ls: %ls", s, _(L"Number out of range"));
         } else {
-            this->fatal_error(L"%ls: %s", s, strerror(errcode));
+            this->fatal_error(L"%ls: %s", s, std::strerror(errcode));
         }
     } else if (*end) {
         if (s == end)

@@ -5,7 +5,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
-#include <string.h>
+#include <cstring>
 #include <time.h>
 #include <memory>
 #if FISH_USE_POSIX_SPAWN
@@ -308,11 +308,11 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
             size_t sz = 0;
             const char *const *p;
             for (p = argv; *p; p++) {
-                sz += strlen(*p) + 1;
+                sz += std::strlen(*p) + 1;
             }
 
             for (p = envv; *p; p++) {
-                sz += strlen(*p) + 1;
+                sz += std::strlen(*p) + 1;
             }
 
             format_size_safe(sz1, sz);

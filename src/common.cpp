@@ -14,7 +14,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <termios.h>
@@ -141,7 +141,7 @@ long convert_digit(wchar_t d, int base) {
 }
 
 /// Test whether the char is a valid hex digit as used by the `escape_string_*()` functions.
-static bool is_hex_digit(int c) { return strchr("0123456789ABCDEF", c) != NULL; }
+static bool is_hex_digit(int c) { return std::strchr("0123456789ABCDEF", c) != NULL; }
 
 /// This is a specialization of `convert_digit()` that only handles base 16 and only uppercase.
 long convert_hex_digit(wchar_t d) {
@@ -170,8 +170,8 @@ bool is_windows_subsystem_for_linux() {
         uname(&info);
 
         // Sample utsname.release under WSL: 4.4.0-17763-Microsoft
-        if (strstr(info.release, "Microsoft") != nullptr) {
-            const char *dash = strchr(info.release, '-');
+        if (std::strstr(info.release, "Microsoft") != nullptr) {
+            const char *dash = std::strchr(info.release, '-');
             if (dash == nullptr || strtod(dash + 1, nullptr) < 17763) {
                 debug(1, "This version of WSL is not supported and fish will probably not work correctly!\n"
                         "Please upgrade to Windows 10 1809 (17763) or higher to use fish!");
@@ -346,11 +346,11 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
             wc = ENCODE_DIRECT_BASE + (unsigned char)in[in_pos];
             result.push_back(wc);
             in_pos++;
-            memset(&state, 0, sizeof state);
+            std::memset(&state, 0, sizeof state);
         } else if (ret == 0) {  // embedded null byte!
             result.push_back(L'\0');
             in_pos++;
-            memset(&state, 0, sizeof state);
+            std::memset(&state, 0, sizeof state);
         } else {  // normal case
             result.push_back(wc);
             in_pos += ret;
@@ -362,7 +362,7 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
 
 wcstring str2wcstring(const char *in, size_t len) { return str2wcs_internal(in, len); }
 
-wcstring str2wcstring(const char *in) { return str2wcs_internal(in, strlen(in)); }
+wcstring str2wcstring(const char *in) { return str2wcs_internal(in, std::strlen(in)); }
 
 wcstring str2wcstring(const std::string &in) {
     // Handles embedded nulls!
@@ -423,11 +423,11 @@ std::string wcs2string(const wcstring &input) {
             converted[0] = wc;
             result.append(converted, 1);
         } else {
-            memset(converted, 0, sizeof converted);
+            std::memset(converted, 0, sizeof converted);
             size_t len = std::wcrtomb(converted, wc, &state);
             if (len == (size_t)-1) {
                 debug(1, L"Wide character U+%4X has no narrow representation", wc);
-                memset(&state, 0, sizeof(state));
+                std::memset(&state, 0, sizeof(state));
             } else {
                 result.append(converted, len);
             }
@@ -467,7 +467,7 @@ static char *wcs2str_internal(const wchar_t *in, char *out) {
             size_t len = std::wcrtomb(&out[out_pos], in[in_pos], &state);
             if (len == (size_t)-1) {
                 debug(1, L"Wide character U+%4X has no narrow representation", in[in_pos]);
-                memset(&state, 0, sizeof(state));
+                std::memset(&state, 0, sizeof(state));
             } else {
                 out_pos += len;
             }
@@ -707,8 +707,8 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
     size_t param_idx = 0;
     const char *cursor = msg;
     while (*cursor != '\0') {
-        const char *end = strchr(cursor, '%');
-        if (end == NULL) end = cursor + strlen(cursor);
+        const char *end = std::strchr(cursor, '%');
+        if (end == NULL) end = cursor + std::strlen(cursor);
 
         ignore_result(write(STDERR_FILENO, cursor, end - cursor));
 
@@ -717,7 +717,7 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
             assert(param_idx < sizeof params / sizeof *params);
             const char *format = params[param_idx++];
             if (!format) format = "(null)";
-            ignore_result(write(STDERR_FILENO, format, strlen(format)));
+            ignore_result(write(STDERR_FILENO, format, std::strlen(format)));
             cursor = end + 2;
         } else if (end[0] == '\0') {
             // Must be at the end of the string.
@@ -2138,7 +2138,7 @@ void append_str(char *buff, const char *str, size_t *inout_idx, size_t max_len) 
 void format_size_safe(char buff[128], unsigned long long sz) {
     const size_t buff_size = 128;
     const size_t max_len = buff_size - 1;  // need to leave room for a null terminator
-    memset(buff, 0, buff_size);
+    std::memset(buff, 0, buff_size);
     size_t idx = 0;
     const char *const sz_name[] = {"kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB", NULL};
     if (sz < 1) {
@@ -2403,7 +2403,7 @@ void redirect_tty_output() {
 [[noreturn]] void __fish_assert(const char *msg, const char *file, size_t line, int error) {
     if (error) {
         debug(0, L"%s:%zu: failed assertion: %s: errno %d (%s)", file, line, msg, error,
-              strerror(error));
+              std::strerror(error));
     } else {
         debug(0, L"%s:%zu: failed assertion: %s", file, line, msg);
     }

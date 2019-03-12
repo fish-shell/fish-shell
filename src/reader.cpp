@@ -23,7 +23,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
@@ -969,13 +969,13 @@ void reader_init() {
     tcgetattr(STDIN_FILENO, &terminal_mode_on_startup);
 
     // Set the mode used for program execution, initialized to the current mode.
-    memcpy(&tty_modes_for_external_cmds, &terminal_mode_on_startup,
+    std::memcpy(&tty_modes_for_external_cmds, &terminal_mode_on_startup,
            sizeof tty_modes_for_external_cmds);
     tty_modes_for_external_cmds.c_iflag &= ~IXON;   // disable flow control
     tty_modes_for_external_cmds.c_iflag &= ~IXOFF;  // disable flow control
 
     // Set the mode used for the terminal, initialized to the current mode.
-    memcpy(&shell_modes, &terminal_mode_on_startup, sizeof shell_modes);
+    std::memcpy(&shell_modes, &terminal_mode_on_startup, sizeof shell_modes);
 
     shell_modes.c_iflag &= ~ICRNL;  // disable mapping CR (\cM) to NL (\cJ)
     shell_modes.c_iflag &= ~INLCR;  // disable mapping NL (\cJ) to CR (\cM)
@@ -2447,7 +2447,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                                                      (size_t)READAHEAD_MAX)
                                           : READAHEAD_MAX;
 
-                memset(arr, 0, sizeof(arr));
+                std::memset(arr, 0, sizeof(arr));
                 arr[0] = c;
 
                 for (i = 1; i < limit; ++i) {

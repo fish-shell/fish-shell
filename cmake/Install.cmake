@@ -53,9 +53,7 @@ ENDIF()
 # Define a function to help us create directories.
 FUNCTION(FISH_CREATE_DIRS)
   FOREACH(dir ${ARGV})
-      IF(NOT EXISTS ${CMAKE_INSTALL_PREFIX}/${dir})
-        INSTALL(DIRECTORY DESTINATION ${dir})
-      ENDIF()
+    INSTALL(DIRECTORY DESTINATION ${dir})
   ENDFOREACH(dir)
 ENDFUNCTION(FISH_CREATE_DIRS)
 
@@ -113,9 +111,9 @@ INSTALL(FILES share/config.fish
 # -$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir)
 # -$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir)
 # -$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir)
-FISH_CREATE_DIRS(${rel_datadir}/pkgconfig)
 # Don't try too hard to create these directories as they may be outside our writeable area
 # https://github.com/Homebrew/homebrew-core/pull/2813
+FISH_TRY_CREATE_DIRS(${rel_datadir}/pkgconfig)
 FISH_TRY_CREATE_DIRS(${extra_completionsdir} ${extra_functionsdir} ${extra_confdir})
 
 # @echo "Installing pkgconfig file"

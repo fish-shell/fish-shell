@@ -434,9 +434,12 @@ static inline bool match_type_requires_full_replacement(fuzzy_match_type_t t) {
         case fuzzy_match_substring:
         case fuzzy_match_substring_case_insensitive:
         case fuzzy_match_subsequence_insertions_only:
-        case fuzzy_match_none:
-         {
+        case fuzzy_match_none: {
             return true;
+        }
+        default: {
+            DIE("Unreachable");
+            return false;
         }
     }
 }
@@ -454,6 +457,10 @@ static inline bool match_type_shares_prefix(fuzzy_match_type_t t) {
         case fuzzy_match_substring_case_insensitive:
         case fuzzy_match_subsequence_insertions_only:
         case fuzzy_match_none: {
+            return false;
+        }
+        default: {
+            DIE("Unreachabe");
             return false;
         }
     }

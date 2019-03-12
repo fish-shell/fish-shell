@@ -4,7 +4,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <algorithm>
 #include <string>
@@ -407,17 +407,17 @@ class parse_ll_t {
         bool logit = false;
         if (logit) {
             int count = 0;
-            fwprintf(stderr, L"Applying production:\n");
+            std::fwprintf(stderr, L"Applying production:\n");
             for (int i = 0;; i++) {
                 production_element_t elem = production[i];
                 if (!production_element_is_valid(elem)) break;  // all done, bail out
                 parse_token_type_t type = production_element_type(elem);
                 parse_keyword_t keyword = production_element_keyword(elem);
-                fwprintf(stderr, L"\t%ls <%ls>\n", token_type_description(type),
+                std::fwprintf(stderr, L"\t%ls <%ls>\n", token_type_description(type),
                          keyword_description(keyword));
                 count++;
             }
-            if (!count) fwprintf(stderr, L"\t<empty>\n");
+            if (!count) std::fwprintf(stderr, L"\t<empty>\n");
         }
 
         // Get the parent index. But we can't get the parent parse node yet, since it may be made
@@ -524,9 +524,9 @@ void parse_ll_t::dump_stack(void) const {
         }
     }
 
-    fwprintf(stderr, L"Stack dump (%zu elements):\n", symbol_stack.size());
+    std::fwprintf(stderr, L"Stack dump (%zu elements):\n", symbol_stack.size());
     for (size_t idx = 0; idx < stack_lines.size(); idx++) {
-        fwprintf(stderr, L"    %ls\n", stack_lines.at(idx).c_str());
+        std::fwprintf(stderr, L"    %ls\n", stack_lines.at(idx).c_str());
     }
 }
 #endif

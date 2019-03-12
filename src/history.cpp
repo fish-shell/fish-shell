@@ -16,7 +16,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 #include <wctype.h>
 
 #include <algorithm>
@@ -422,7 +422,7 @@ static history_item_t decode_item_fish_1_x(const char *begin, size_t length) {
             c = (unsigned char)*pos;
             res = 1;
         } else {
-            res = mbrtowc(&c, pos, end - pos, &state);
+            res = std::mbrtowc(&c, pos, end - pos, &state);
         }
 
         if (res == (size_t)-1) {

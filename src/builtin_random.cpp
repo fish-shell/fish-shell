@@ -3,7 +3,7 @@
 
 #include <errno.h>
 #include <stdint.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <algorithm>
 #include <random>
@@ -45,7 +45,7 @@ int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     long long start, end;
     unsigned long long step;
     bool choice = false;
-    if (arg_count >= 1 && !wcscmp(argv[optind], L"choice")) {
+    if (arg_count >= 1 && !std::wcscmp(argv[optind], L"choice")) {
         if (arg_count == 1) {
             streams.err.append_format(L"%ls: nothing to choose from\n", cmd);
             return STATUS_INVALID_ARGS;

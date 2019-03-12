@@ -2,7 +2,7 @@
 #ifndef FISH_BUILTIN_COMMANDLINE_H
 #define FISH_BUILTIN_COMMANDLINE_H
 
-#include <wchar.h>
+#include <cwchar>
 #include <cstring>
 
 class parser_t;

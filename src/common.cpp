@@ -19,7 +19,7 @@
 #include <sys/time.h>
 #include <termios.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 #include <wctype.h>
 #ifdef HAVE_EXECINFO_H
 #include <execinfo.h>
@@ -231,7 +231,7 @@ demangled_backtrace(int max_frames, int skip_levels) {
     // if this check is not done.
     //
     // Hack to avoid showing backtraces in the tester.
-    // if (program_name && !wcscmp(program_name, L"(ignore)")) return;
+    // if (program_name && !std::wcscmp(program_name, L"(ignore)")) return;
 
     debug_shared(msg_level, L"Backtrace:");
     std::vector<wcstring> bt = demangled_backtrace(frame_count, skip_levels + 2);
@@ -254,7 +254,7 @@ int fgetws2(wcstring *s, FILE *f) {
     while (1) {
         errno = 0;
 
-        c = fgetwc(f);
+        c = std::fgetwc(f);
         if (errno == EILSEQ || errno == EINTR) {
             continue;
         }
@@ -309,17 +309,17 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
         wchar_t wc = 0;
 
         if ((in[in_pos] & 0xF8) == 0xF8) {
-            // Protect against broken mbrtowc() implementations which attempt to encode UTF-8
+            // Protect against broken std::mbrtowc() implementations which attempt to encode UTF-8
             // sequences longer than four bytes (e.g., OS X Snow Leopard).
             use_encode_direct = true;
         } else if (sizeof(wchar_t) == 2 &&  //!OCLINT(constant if expression)
                    (in[in_pos] & 0xF8) == 0xF0) {
             // Assume we are in a UTF-16 environment (e.g., Cygwin) using a UTF-8 encoding.
             // The bits set check will be true for a four byte UTF-8 sequence that requires
-            // two UTF-16 chars. Something that doesn't work with our simple use of mbrtowc().
+            // two UTF-16 chars. Something that doesn't work with our simple use of std::mbrtowc().
             use_encode_direct = true;
         } else {
-            ret = mbrtowc(&wc, &in[in_pos], in_len - in_pos, &state);
+            ret = std::mbrtowc(&wc, &in[in_pos], in_len - in_pos, &state);
             // Determine whether to encode this character with our crazy scheme.
             if (wc >= ENCODE_DIRECT_BASE && wc < ENCODE_DIRECT_BASE + 256) {
                 use_encode_direct = true;
@@ -398,7 +398,7 @@ char *wcs2str(const wchar_t *in, size_t len) {
     return out;
 }
 
-char *wcs2str(const wchar_t *in) { return wcs2str(in, wcslen(in)); }
+char *wcs2str(const wchar_t *in) { return wcs2str(in, std::wcslen(in)); }
 char *wcs2str(const wcstring &in) { return wcs2str(in.c_str(), in.length()); }
 
 /// This function is distinguished from wcs2str_internal in that it allows embedded null bytes.
@@ -424,7 +424,7 @@ std::string wcs2string(const wcstring &input) {
             result.append(converted, 1);
         } else {
             memset(converted, 0, sizeof converted);
-            size_t len = wcrtomb(converted, wc, &state);
+            size_t len = std::wcrtomb(converted, wc, &state);
             if (len == (size_t)-1) {
                 debug(1, L"Wide character U+%4X has no narrow representation", wc);
                 memset(&state, 0, sizeof(state));
@@ -464,7 +464,7 @@ static char *wcs2str_internal(const wchar_t *in, char *out) {
                 out[out_pos++] = (unsigned char)in[in_pos];
             }
         } else {
-            size_t len = wcrtomb(&out[out_pos], in[in_pos], &state);
+            size_t len = std::wcrtomb(&out[out_pos], in[in_pos], &state);
             if (len == (size_t)-1) {
                 debug(1, L"Wide character U+%4X has no narrow representation", in[in_pos]);
                 memset(&state, 0, sizeof(state));
@@ -484,7 +484,7 @@ static bool can_be_encoded(wchar_t wc) {
     char converted[MB_LEN_MAX];
     mbstate_t state = {};
 
-    return wcrtomb(converted, wc, &state) != (size_t)-1;
+    return std::wcrtomb(converted, wc, &state) != (size_t)-1;
 }
 
 wcstring format_string(const wchar_t *format, ...) {
@@ -528,7 +528,7 @@ void append_formatv(wcstring &target, const wchar_t *format, va_list va_orig) {
         // Try printing.
         va_list va;
         va_copy(va, va_orig);
-        status = vswprintf(buff, size / sizeof(wchar_t), format, va);
+        status = std::vswprintf(buff, size / sizeof(wchar_t), format, va);
         va_end(va);
     }
 
@@ -647,16 +647,16 @@ ssize_t read_loop(int fd, void *buff, size_t count) {
 /// like `debug()`. It is only intended to supress diagnostic noise from testing things like the
 /// fish parser where we expect a lot of diagnostic messages due to testing error conditions.
 bool should_suppress_stderr_for_tests() {
-    return program_name && !wcscmp(program_name, TESTS_PROGRAM_NAME);
+    return program_name && !std::wcscmp(program_name, TESTS_PROGRAM_NAME);
 }
 
 static void debug_shared(const wchar_t level, const wcstring &msg) {
     pid_t current_pid;
     if (!is_forked_child()) {
-        fwprintf(stderr, L"<%lc> %ls: %ls\n", (unsigned long)level, program_name, msg.c_str());
+        std::fwprintf(stderr, L"<%lc> %ls: %ls\n", (unsigned long)level, program_name, msg.c_str());
     } else {
         current_pid = getpid();
-        fwprintf(stderr, L"<%lc> %ls: %d: %ls\n", (unsigned long)level, program_name, current_pid,
+        std::fwprintf(stderr, L"<%lc> %ls: %d: %ls\n", (unsigned long)level, program_name, current_pid,
                  msg.c_str());
     }
 }
@@ -810,7 +810,7 @@ wcstring reformat_for_screen(const wcstring &msg) {
             int tok_width = 0;
 
             // Tokenize on whitespace, and also calculate the width of the token.
-            while (*pos && (!wcschr(L" \n\r\t", *pos))) {
+            while (*pos && (!std::wcschr(L" \n\r\t", *pos))) {
                 // Check is token is wider than one line. If so we mark it as an overflow and break
                 // the token.
                 if ((tok_width + fish_wcwidth(*pos)) > (screen_width - 1)) {
@@ -1178,7 +1178,7 @@ wcstring escape_string(const wchar_t *in, escape_flags_t flags, escape_string_st
 
     switch (style) {
         case STRING_STYLE_SCRIPT: {
-            escape_string_script(in, wcslen(in), result, flags);
+            escape_string_script(in, std::wcslen(in), result, flags);
             break;
         }
         case STRING_STYLE_URL: {
@@ -1493,10 +1493,10 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     // Note that this only recognizes %self if the string is literally %self.
                     // %self/foo will NOT match this.
                     if (unescape_special && input_position == 0 &&
-                        !wcscmp(input, PROCESS_EXPAND_SELF_STR)) {
+                        !std::wcscmp(input, PROCESS_EXPAND_SELF_STR)) {
                         to_append_or_none = PROCESS_EXPAND_SELF;
                         input_position +=
-                            wcslen(PROCESS_EXPAND_SELF_STR) - 1;  // skip over 'self' part.
+                            std::wcslen(PROCESS_EXPAND_SELF_STR) - 1;  // skip over 'self' part.
                     }
                     break;
                 }
@@ -1691,7 +1691,7 @@ bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t es
     bool success = false;
     switch (style) {
         case STRING_STYLE_SCRIPT: {
-            success = unescape_string_internal(input, wcslen(input), output, escape_special);
+            success = unescape_string_internal(input, std::wcslen(input), output, escape_special);
             break;
         }
         case STRING_STYLE_URL: {
@@ -1884,7 +1884,7 @@ bool string_suffixes_string(const wcstring &proposed_suffix, const wcstring &val
 }
 
 bool string_suffixes_string(const wchar_t *proposed_suffix, const wcstring &value) {
-    size_t suffix_size = wcslen(proposed_suffix);
+    size_t suffix_size = std::wcslen(proposed_suffix);
     return suffix_size <= value.size() &&
            value.compare(value.size() - suffix_size, suffix_size, proposed_suffix) == 0;
 }

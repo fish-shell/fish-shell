@@ -2,7 +2,7 @@
 
 // IWYU pragma: no_include <cstddef>
 #include <stddef.h>
-#include <wchar.h>
+#include <cwchar>
 #include <wctype.h>
 
 #include <algorithm>
@@ -852,7 +852,7 @@ void pager_t::set_search_field_shown(bool flag) { this->search_field_shown = fla
 bool pager_t::is_search_field_shown() const { return this->search_field_shown; }
 
 size_t pager_t::cursor_position() const {
-    size_t result = wcslen(SEARCH_FIELD_PROMPT) + this->search_field_line.position;
+    size_t result = std::wcslen(SEARCH_FIELD_PROMPT) + this->search_field_line.position;
     // Clamp it to the right edge.
     if (available_term_width > 0 && result + 1 > available_term_width) {
         result = available_term_width - 1;

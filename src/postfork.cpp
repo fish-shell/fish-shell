@@ -11,7 +11,7 @@
 #if FISH_USE_POSIX_SPAWN
 #include <spawn.h>
 #endif
-#include <wchar.h>
+#include <cwchar>
 
 #include "common.h"
 #include "exec.h"

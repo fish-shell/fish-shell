@@ -5,7 +5,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 #include <wctype.h>
 
 #include <string>
@@ -223,7 +223,7 @@ tok_t tokenizer_t::read_string() {
                 this->buff = end;
             } else {
                 const wchar_t *error_loc = this->buff;
-                this->buff += wcslen(this->buff);
+                this->buff += std::wcslen(this->buff);
                 if ((!this->accept_unfinished)) {
                     return this->call_error(tokenizer_error_t::unterminated_quote, buff_start,
                                             error_loc);
@@ -637,7 +637,7 @@ bool move_word_state_machine_t::consume_char_punctuation(wchar_t c) {
 bool move_word_state_machine_t::is_path_component_character(wchar_t c) {
     // Always treat separators as first. All this does is ensure that we treat ^ as a string
     // character instead of as stderr redirection, which I hypothesize is usually what is desired.
-    return tok_is_string_character(c, true) && !wcschr(L"/={,}'\"", c);
+    return tok_is_string_character(c, true) && !std::wcschr(L"/={,}'\"", c);
 }
 
 bool move_word_state_machine_t::consume_char_path_components(wchar_t c) {
@@ -650,7 +650,7 @@ bool move_word_state_machine_t::consume_char_path_components(wchar_t c) {
         s_end
     };
 
-    // fwprintf(stdout, L"state %d, consume '%lc'\n", state, c);
+    // std::fwprintf(stdout, L"state %d, consume '%lc'\n", state, c);
     bool consumed = false;
     while (state != s_end && !consumed) {
         switch (state) {

@@ -246,7 +246,7 @@ void iothread_drain_all() {
     }
 #if TIME_DRAIN
     double after = timef();
-    fwprintf(stdout, L"(Waited %.02f msec for %d thread(s) to drain)\n", 1000 * (after - now),
+    std::fwprintf(stdout, L"(Waited %.02f msec for %d thread(s) to drain)\n", 1000 * (after - now),
              thread_count);
 #endif
 }

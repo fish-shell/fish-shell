@@ -2,7 +2,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <stdio.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <algorithm>
 #include <memory>
@@ -275,19 +275,19 @@ static void print_profile(const std::vector<std::unique_ptr<profile_item_t>> &it
             continue;
         }
 
-        if (fwprintf(out, L"%d\t%d\t", my_time, me->parse + me->exec) < 0) {
+        if (std::fwprintf(out, L"%d\t%d\t", my_time, me->parse + me->exec) < 0) {
             wperror(L"fwprintf");
             return;
         }
 
         for (i = 0; i < me->level; i++) {
-            if (fwprintf(out, L"-") < 0) {
+            if (std::fwprintf(out, L"-") < 0) {
                 wperror(L"fwprintf");
                 return;
             }
         }
 
-        if (fwprintf(out, L"> %ls\n", me->cmd.c_str()) < 0) {
+        if (std::fwprintf(out, L"> %ls\n", me->cmd.c_str()) < 0) {
             wperror(L"fwprintf");
             return;
         }
@@ -301,7 +301,7 @@ void parser_t::emit_profiling(const char *path) const {
     if (!f) {
         debug(1, _(L"Could not write profiling information to file '%s'"), path);
     } else {
-        if (fwprintf(f, _(L"Time\tSum\tCommand\n"), profile_items.size()) < 0) {
+        if (std::fwprintf(f, _(L"Time\tSum\tCommand\n"), profile_items.size()) < 0) {
             wperror(L"fwprintf");
         } else {
             print_profile(profile_items, f);
@@ -639,7 +639,7 @@ int parser_t::eval(wcstring cmd, const io_chain_t &io, enum block_type_t block_t
         this->get_backtrace(cmd, error_list, backtrace_and_desc);
 
         // Print it.
-        fwprintf(stderr, L"%ls\n", backtrace_and_desc.c_str());
+        std::fwprintf(stderr, L"%ls\n", backtrace_and_desc.c_str());
         return 1;
     }
     this->eval(ps, io, block_type);

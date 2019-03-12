@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include "builtin.h"
 #include "common.h"
@@ -86,7 +86,7 @@ static void replace_part(const wchar_t *begin, const wchar_t *end, const wchar_t
     switch (append_mode) {
         case REPLACE_MODE: {
             out.append(insert);
-            out_pos = wcslen(insert) + (begin - buff);
+            out_pos = std::wcslen(insert) + (begin - buff);
             break;
         }
         case APPEND_MODE: {
@@ -99,7 +99,7 @@ static void replace_part(const wchar_t *begin, const wchar_t *end, const wchar_t
             out.append(begin, cursor);
             out.append(insert);
             out.append(begin + cursor, end - begin - cursor);
-            out_pos += wcslen(insert);
+            out_pos += std::wcslen(insert);
             break;
         }
         default: {
@@ -125,7 +125,7 @@ static void write_part(const wchar_t *begin, const wchar_t *end, int cut_at_curs
     size_t pos = cursor_pos - (begin - buffer);
 
     if (tokenize) {
-        // fwprintf( stderr, L"Subshell: %ls, end char %lc\n", buff, *end );
+        // std::fwprintf( stderr, L"Subshell: %ls, end char %lc\n", buff, *end );
         wcstring out;
         wcstring buff(begin, end - begin);
         tokenizer_t tok(buff.c_str(), TOK_ACCEPT_UNFINISHED);
@@ -267,7 +267,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             }
             case 'I': {
                 current_buffer = w.woptarg;
-                current_cursor_pos = wcslen(w.woptarg);
+                current_cursor_pos = std::wcslen(w.woptarg);
                 break;
             }
             case 'C': {
@@ -424,7 +424,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     switch (buffer_part) {
         case STRING_MODE: {
             begin = current_buffer;
-            end = begin + wcslen(begin);
+            end = begin + std::wcslen(begin);
             break;
         }
         case PROCESS_MODE: {

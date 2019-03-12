@@ -7,7 +7,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <memory>
 #include <string>

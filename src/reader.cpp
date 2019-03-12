@@ -32,7 +32,7 @@
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 #include <wctype.h>
 
 #include <algorithm>
@@ -564,7 +564,7 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
         parse_util_token_extent(cmd, cmdline.size() - 1, &begin, NULL, NULL, NULL);
         bool last_token_contains_uppercase = false;
         if (begin) {
-            const wchar_t *end = begin + wcslen(begin);
+            const wchar_t *end = begin + std::wcslen(begin);
             last_token_contains_uppercase = (std::find_if(begin, end, iswupper) != end);
         }
         if (!last_token_contains_uppercase) {
@@ -884,9 +884,9 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
     if (exec_subshell(fish_title_command, parser_t::principal_parser(), lst,
                       false /* ignore exit status */) != -1 &&
         !lst.empty()) {
-        fputws(L"\x1B]0;", stdout);
+        std::fputws(L"\x1B]0;", stdout);
         for (size_t i = 0; i < lst.size(); i++) {
-            fputws(lst.at(i).c_str(), stdout);
+            std::fputws(lst.at(i).c_str(), stdout);
         }
         ignore_result(write(STDOUT_FILENO, "\a", 1));
     }
@@ -1146,7 +1146,7 @@ bool reader_data_t::insert_string(editable_line_t *el, const wcstring &str,
         // space). Expand abbreviations.
         if (has_expansion_triggering_char && allow_expand_abbreviations) {
             assert(range_end > 0);
-            assert(wcschr(expansion_triggering_chars, str.at(range_end - 1)));
+            assert(std::wcschr(expansion_triggering_chars, str.at(range_end - 1)));
             expand_abbreviation_as_necessary(1);
         }
         cursor = range_end;
@@ -1330,7 +1330,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
         if (!cursor_at_end && iswspace(last_char)) return nothing;
 
         // On the other hand, if the line ends with a quote, don't go dumping stuff after the quote.
-        if (wcschr(L"'\"", last_char) && cursor_at_end) return nothing;
+        if (std::wcschr(L"'\"", last_char) && cursor_at_end) return nothing;
 
         // Try normal completions.
         completion_request_flags_t complete_flags = COMPLETION_REQUEST_AUTOSUGGESTION;
@@ -1467,7 +1467,7 @@ static bool reader_can_replace(const wcstring &in, int flags) {
 
     // Test characters that have a special meaning in any character position.
     while (*str) {
-        if (wcschr(REPLACE_UNCLEAN, *str)) return false;
+        if (std::wcschr(REPLACE_UNCLEAN, *str)) return false;
         str++;
     }
 
@@ -2007,7 +2007,7 @@ parser_test_error_bits_t reader_shell_test(const wcstring &b) {
         if (!string_suffixes_string(L"\n", error_desc)) {
             error_desc.push_back(L'\n');
         }
-        fwprintf(stderr, L"\n%ls", error_desc.c_str());
+        std::fwprintf(stderr, L"\n%ls", error_desc.c_str());
     }
     return res;
 }
@@ -2204,13 +2204,13 @@ void reader_import_history_if_necessary() {
 bool shell_is_exiting() { return s_pending_exit.should_exit(); }
 
 void reader_bg_job_warning() {
-    fputws(_(L"There are still jobs active:\n"), stdout);
-    fputws(_(L"\n   PID  Command\n"), stdout);
+    std::fputws(_(L"There are still jobs active:\n"), stdout);
+    std::fputws(_(L"\n   PID  Command\n"), stdout);
 
     job_iterator_t jobs;
     while (job_t *j = jobs.next()) {
         if (!j->is_completed()) {
-            fwprintf(stdout, L"%6d  %ls\n", j->processes[0]->pid, j->command_wcstr());
+            std::fwprintf(stdout, L"%6d  %ls\n", j->processes[0]->pid, j->command_wcstr());
         }
     }
     fputws(L"\n", stdout);
@@ -2438,7 +2438,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
             is_interactive_read = 1;
             c = input_readch();
             is_interactive_read = was_interactive_read;
-            // fwprintf(stderr, L"C: %lx\n", (long)c);
+            // std::fwprintf(stderr, L"C: %lx\n", (long)c);
 
             if (((!fish_reserved_codepoint(c))) && (c > 31) && (c != 127) && can_read(0)) {
                 wchar_t arr[READAHEAD_MAX + 1];
@@ -2499,7 +2499,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
         if (command_ends_paging(c, focused_on_search_field)) {
             clear_pager();
         }
-        // fwprintf(stderr, L"\n\nchar: %ls\n\n", describe_char(c).c_str());
+        // std::fwprintf(stderr, L"\n\nchar: %ls\n\n", describe_char(c).c_str());
 
         switch (c) {
             // Go to beginning of line.
@@ -2618,7 +2618,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                     // up to the end of the token we're completing.
                     const wcstring buffcpy = wcstring(cmdsub_begin, token_end);
 
-                    // fwprintf(stderr, L"Complete (%ls)\n", buffcpy.c_str());
+                    // std::fwprintf(stderr, L"Complete (%ls)\n", buffcpy.c_str());
                     complete_flags_t complete_flags = COMPLETION_REQUEST_DEFAULT |
                                                       COMPLETION_REQUEST_DESCRIPTIONS |
                                                       COMPLETION_REQUEST_FUZZY_MATCH;
@@ -2727,7 +2727,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
             case R_YANK: {
                 yank_str = kill_yank();
                 insert_string(active_edit_line(), yank_str);
-                yank_len = wcslen(yank_str);
+                yank_len = std::wcslen(yank_str);
                 break;
             }
             case R_YANK_POP: {
@@ -2736,7 +2736,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
 
                     yank_str = kill_yank_rotate();
                     insert_string(active_edit_line(), yank_str);
-                    yank_len = wcslen(yank_str);
+                    yank_len = std::wcslen(yank_str);
                 }
                 break;
             }
@@ -3476,7 +3476,7 @@ static int read_ni(int fd, const io_chain_t &io) {
         } else {
             wcstring sb;
             parser.get_backtrace(str, errors, sb);
-            fwprintf(stderr, L"%ls", sb.c_str());
+            std::fwprintf(stderr, L"%ls", sb.c_str());
             res = 1;
         }
     } else {

@@ -14,7 +14,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 
 #if HAVE_CURSES_H
 #include <curses.h>
@@ -308,7 +308,7 @@ using string_set_t = const wchar_t *const[];
 template <typename T>
 bool string_set_contains(const T &set, const wchar_t *val) {
     for (const wchar_t *entry : set) {
-        if (!wcscmp(val, entry)) return true;
+        if (!std::wcscmp(val, entry)) return true;
     }
     return false;
 }
@@ -319,7 +319,7 @@ static bool is_read_only(const wchar_t *val) {
         L"PWD",          L"SHLVL",    L"history",  L"pipestatus", L"status", L"version",
         L"FISH_VERSION", L"fish_pid", L"hostname", L"_",          L"fish_private_mode"};
     return string_set_contains(env_read_only, val) ||
-        (in_private_mode() && wcscmp(L"fish_history", val) == 0);
+        (in_private_mode() && std::wcscmp(L"fish_history", val) == 0);
 }
 
 static bool is_read_only(const wcstring &val) { return is_read_only(val.c_str()); }
@@ -443,15 +443,15 @@ static bool does_term_support_setting_title(const environment_t &vars) {
     const wcstring term_str = term_var->as_string();
     const wchar_t *term = term_str.c_str();
     bool recognized = contains(title_terms, term_var->as_string());
-    if (!recognized) recognized = !wcsncmp(term, L"xterm-", wcslen(L"xterm-"));
-    if (!recognized) recognized = !wcsncmp(term, L"screen-", wcslen(L"screen-"));
-    if (!recognized) recognized = !wcsncmp(term, L"tmux-", wcslen(L"tmux-"));
+    if (!recognized) recognized = !std::wcsncmp(term, L"xterm-", std::wcslen(L"xterm-"));
+    if (!recognized) recognized = !std::wcsncmp(term, L"screen-", std::wcslen(L"screen-"));
+    if (!recognized) recognized = !std::wcsncmp(term, L"tmux-", std::wcslen(L"tmux-"));
     if (!recognized) {
-        if (wcscmp(term, L"linux") == 0) return false;
-        if (wcscmp(term, L"dumb") == 0) return false;
+        if (std::wcscmp(term, L"linux") == 0) return false;
+        if (std::wcscmp(term, L"dumb") == 0) return false;
         // NetBSD
-        if (wcscmp(term, L"vt100") == 0) return false;
-        if (wcscmp(term, L"wsvt25") == 0) return false;
+        if (std::wcscmp(term, L"vt100") == 0) return false;
+        if (std::wcscmp(term, L"wsvt25") == 0) return false;
 
         char buf[PATH_MAX];
         int retval = ttyname_r(STDIN_FILENO, buf, PATH_MAX);

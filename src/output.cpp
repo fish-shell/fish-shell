@@ -17,7 +17,7 @@
 #include <ncurses/term.h>
 #endif
 #include <limits.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <memory>
 #include <string>
@@ -379,7 +379,7 @@ int outputter_t::writech(wint_t ch) {
         len = 1;
     } else {
         mbstate_t state = {};
-        len = wcrtomb(buff, ch, &state);
+        len = std::wcrtomb(buff, ch, &state);
         if (len == (size_t)-1) {
             return 1;
         }
@@ -389,7 +389,7 @@ int outputter_t::writech(wint_t ch) {
 }
 
 /// Write a wide character string to stdout. This should not be used to output things like warning
-/// messages; just use debug() or fwprintf() for that. It should only be used to output user
+/// messages; just use debug() or std::fwprintf() for that. It should only be used to output user
 /// supplied strings that might contain literal bytes; e.g., "\342\224\214" from issue #1894. This
 /// is needed because those strings may contain chars specially encoded using ENCODE_DIRECT_BASE.
 void outputter_t::writestr(const wchar_t *str) {
@@ -508,7 +508,7 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
 
 #if 0
     wcstring desc = result.description();
-    fwprintf(stdout, L"Parsed %ls from %ls (%s)\n", desc.c_str(), val.c_str(),
+    std::fwprintf(stdout, L"Parsed %ls from %ls (%s)\n", desc.c_str(), val.c_str(),
              is_background ? "background" : "foreground");
 #endif
 

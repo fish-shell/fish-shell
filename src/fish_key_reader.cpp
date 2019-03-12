@@ -17,7 +17,7 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <memory>
 #include <string>
@@ -54,12 +54,12 @@ static bool should_exit(wchar_t wc) {
     recent_chars[3] = c;
     if (c == shell_modes.c_cc[VINTR]) {
         if (recent_chars[2] == shell_modes.c_cc[VINTR]) return true;
-        fwprintf(stderr, L"Press [ctrl-%c] again to exit\n", shell_modes.c_cc[VINTR] + 0x40);
+        std::fwprintf(stderr, L"Press [ctrl-%c] again to exit\n", shell_modes.c_cc[VINTR] + 0x40);
         return false;
     }
     if (c == shell_modes.c_cc[VEOF]) {
         if (recent_chars[2] == shell_modes.c_cc[VEOF]) return true;
-        fwprintf(stderr, L"Press [ctrl-%c] again to exit\n", shell_modes.c_cc[VEOF] + 0x40);
+        std::fwprintf(stderr, L"Press [ctrl-%c] again to exit\n", shell_modes.c_cc[VEOF] + 0x40);
         return false;
     }
     return memcmp(recent_chars, "exit", 4) == 0 || memcmp(recent_chars, "quit", 4) == 0;
@@ -93,41 +93,41 @@ static char *sequence_name(wchar_t wc) {
 
 /// Return true if the character must be escaped when used in the sequence of chars to be bound in
 /// a `bind` command.
-static bool must_escape(wchar_t wc) { return wcschr(L"[]()<>{}*\\?$#;&|'\"", wc) != NULL; }
+static bool must_escape(wchar_t wc) { return std::wcschr(L"[]()<>{}*\\?$#;&|'\"", wc) != NULL; }
 
 static void ctrl_to_symbol(wchar_t *buf, int buf_len, wchar_t wc, bool bind_friendly) {
     if (ctrl_symbolic_names[wc]) {
         if (bind_friendly) {
-            swprintf(buf, buf_len, L"%ls", ctrl_symbolic_names[wc]);
+            std::swprintf(buf, buf_len, L"%ls", ctrl_symbolic_names[wc]);
         } else {
-            swprintf(buf, buf_len, L"\\c%c  (or %ls)", wc + 0x40, ctrl_symbolic_names[wc]);
+            std::swprintf(buf, buf_len, L"\\c%c  (or %ls)", wc + 0x40, ctrl_symbolic_names[wc]);
         }
     } else {
-        swprintf(buf, buf_len, L"\\c%c", wc + 0x40);
+        std::swprintf(buf, buf_len, L"\\c%c", wc + 0x40);
     }
 }
 
 static void space_to_symbol(wchar_t *buf, int buf_len, wchar_t wc, bool bind_friendly) {
     if (bind_friendly) {
-        swprintf(buf, buf_len, L"\\x%X", wc);
+        std::swprintf(buf, buf_len, L"\\x%X", wc);
     } else {
-        swprintf(buf, buf_len, L"\\x%X  (aka \"space\")", wc);
+        std::swprintf(buf, buf_len, L"\\x%X  (aka \"space\")", wc);
     }
 }
 
 static void del_to_symbol(wchar_t *buf, int buf_len, wchar_t wc, bool bind_friendly) {
     if (bind_friendly) {
-        swprintf(buf, buf_len, L"\\x%X", wc);
+        std::swprintf(buf, buf_len, L"\\x%X", wc);
     } else {
-        swprintf(buf, buf_len, L"\\x%X  (aka \"del\")", wc);
+        std::swprintf(buf, buf_len, L"\\x%X  (aka \"del\")", wc);
     }
 }
 
 static void ascii_printable_to_symbol(wchar_t *buf, int buf_len, wchar_t wc, bool bind_friendly) {
     if (bind_friendly && must_escape(wc)) {
-        swprintf(buf, buf_len, L"\\%c", wc);
+        std::swprintf(buf, buf_len, L"\\%c", wc);
     } else {
-        swprintf(buf, buf_len, L"%c", wc);
+        std::swprintf(buf, buf_len, L"%c", wc);
     }
 }
 
@@ -145,9 +145,9 @@ static wchar_t *char_to_symbol(wchar_t wc, bool bind_friendly) {
     } else if (wc < 0x80) {  // ASCII characters that are not control characters
         ascii_printable_to_symbol(buf, sizeof(buf) / sizeof(*buf), wc, bind_friendly);
     } else if (wc <= 0xFFFF) {  // BMP Unicode chararacter
-        swprintf(buf, sizeof(buf) / sizeof(*buf), L"\\u%04X", wc);
+        std::swprintf(buf, sizeof(buf) / sizeof(*buf), L"\\u%04X", wc);
     } else {  // Non-BMP Unicode chararacter
-        swprintf(buf, sizeof(buf) / sizeof(*buf), L"\\U%06X", wc);
+        std::swprintf(buf, sizeof(buf) / sizeof(*buf), L"\\U%06X", wc);
     }
 
     return buf;
@@ -159,23 +159,23 @@ static void add_char_to_bind_command(wchar_t wc, std::vector<wchar_t> &bind_char
 
 static void output_bind_command(std::vector<wchar_t> &bind_chars) {
     if (bind_chars.size()) {
-        fputws(L"bind ", stdout);
+        std::fputws(L"bind ", stdout);
         for (size_t i = 0; i < bind_chars.size(); i++) {
-            fputws(char_to_symbol(bind_chars[i], true), stdout);
+            std::fputws(char_to_symbol(bind_chars[i], true), stdout);
         }
-        fputws(L" 'do something'\n", stdout);
+        std::fputws(L" 'do something'\n", stdout);
         bind_chars.clear();
     }
 }
 
 static void output_info_about_char(wchar_t wc) {
-    fwprintf(stderr, L"hex: %4X  char: %ls\n", wc, char_to_symbol(wc, false));
+    std::fwprintf(stderr, L"hex: %4X  char: %ls\n", wc, char_to_symbol(wc, false));
 }
 
 static bool output_matching_key_name(wchar_t wc) {
     char *name = sequence_name(wc);
     if (name) {
-        fwprintf(stdout, L"bind -k %s 'do something'\n", name);
+        std::fwprintf(stdout, L"bind -k %s 'do something'\n", name);
         free(name);
         return true;
     }
@@ -187,11 +187,11 @@ static double output_elapsed_time(double prev_tstamp, bool first_char_seen) {
     double now = timef();
     long long int delta_tstamp_us = 1000000 * (now - prev_tstamp);
 
-    if (delta_tstamp_us >= 200000 && first_char_seen) fputwc(L'\n', stderr);
+    if (delta_tstamp_us >= 200000 && first_char_seen) std::fputwc(L'\n', stderr);
     if (delta_tstamp_us >= 1000000) {
-        fwprintf(stderr, L"              ");
+        std::fwprintf(stderr, L"              ");
     } else {
-        fwprintf(stderr, L"(%3lld.%03lld ms)  ", delta_tstamp_us / 1000, delta_tstamp_us % 1000);
+        std::fwprintf(stderr, L"(%3lld.%03lld ms)  ", delta_tstamp_us / 1000, delta_tstamp_us % 1000);
     }
     return now;
 }
@@ -202,7 +202,7 @@ static void process_input(bool continuous_mode) {
     double prev_tstamp = 0.0;
     std::vector<wchar_t> bind_chars;
 
-    fwprintf(stderr, L"Press a key\n\n");
+    std::fwprintf(stderr, L"Press a key\n\n");
     while (keep_running) {
         wchar_t wc;
         if (reader_test_and_clear_interrupted()) {
@@ -226,7 +226,7 @@ static void process_input(bool continuous_mode) {
         }
 
         if (should_exit(wc)) {
-            fwprintf(stderr, L"\nExiting at your request.\n");
+            std::fwprintf(stderr, L"\nExiting at your request.\n");
             break;
         }
 
@@ -238,7 +238,7 @@ static void process_input(bool continuous_mode) {
 /// Otherwise just report receipt of the signal.
 static struct sigaction old_sigactions[32];
 static void signal_handler(int signo, siginfo_t *siginfo, void *siginfo_arg) {
-    fwprintf(stdout, _(L"signal #%d (%ls) received\n"), signo, sig2wcs(signo));
+    std::fwprintf(stdout, _(L"signal #%d (%ls) received\n"), signo, sig2wcs(signo));
     if (signo == SIGHUP || signo == SIGTERM || signo == SIGABRT || signo == SIGSEGV) {
         keep_running = false;
     }
@@ -288,11 +288,11 @@ static void setup_and_process_keys(bool continuous_mode) {
     install_our_signal_handlers();
 
     if (continuous_mode) {
-        fwprintf(stderr, L"\n");
-        fwprintf(stderr, L"To terminate this program type \"exit\" or \"quit\" in this window,\n");
-        fwprintf(stderr, L"or press [ctrl-%c] or [ctrl-%c] twice in a row.\n",
+        std::fwprintf(stderr, L"\n");
+        std::fwprintf(stderr, L"To terminate this program type \"exit\" or \"quit\" in this window,\n");
+        std::fwprintf(stderr, L"or press [ctrl-%c] or [ctrl-%c] twice in a row.\n",
                  shell_modes.c_cc[VINTR] + 0x40, shell_modes.c_cc[VEOF] + 0x40);
-        fwprintf(stderr, L"\n");
+        std::fwprintf(stderr, L"\n");
     }
 
     process_input(continuous_mode);
@@ -308,7 +308,7 @@ static bool parse_debug_level_flag() {
     if (tmp >= 0 && tmp <= 10 && !*end && !errno) {
         debug_level = (int)tmp;
     } else {
-        fwprintf(stderr, _(L"Invalid value '%s' for debug-level flag\n"), optarg);
+        std::fwprintf(stderr, _(L"Invalid value '%s' for debug-level flag\n"), optarg);
         return false;
     }
 
@@ -322,7 +322,7 @@ static bool parse_debug_frames_flag() {
     if (tmp > 0 && tmp <= 128 && !*end && !errno) {
         debug_stack_frames = (int)tmp;
     } else {
-        fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag\n"), optarg);
+        std::fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag\n"), optarg);
         return false;
     }
 
@@ -359,7 +359,7 @@ static bool parse_flags(int argc, char **argv, bool *continuous_mode) {
                 break;
             }
             case 'v': {
-                fwprintf(stdout, L"%s\n", get_fish_version());
+                std::fwprintf(stdout, L"%s\n", get_fish_version());
                 return false;
             }
             default: {
@@ -374,7 +374,7 @@ static bool parse_flags(int argc, char **argv, bool *continuous_mode) {
 
     argc -= optind;
     if (argc != 0) {
-        fwprintf(stderr, L"Expected no arguments, got %d\n", argc);
+        std::fwprintf(stderr, L"Expected no arguments, got %d\n", argc);
         return false;
     }
 
@@ -388,7 +388,7 @@ int main(int argc, char **argv) {
     if (!parse_flags(argc, argv, &continuous_mode)) return 1;
 
     if (!isatty(STDIN_FILENO)) {
-        fwprintf(stderr, L"Stdin must be attached to a tty.\n");
+        std::fwprintf(stderr, L"Stdin must be attached to a tty.\n");
         return 1;
     }
 

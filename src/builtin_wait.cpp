@@ -134,11 +134,11 @@ static bool iswnumeric(const wchar_t *n) {
 /// See if the process described by \c proc matches the commandline \c cmd.
 static bool match_pid(const wcstring &cmd, const wchar_t *proc) {
     // Don't wait for itself
-    if (wcscmp(proc, L"wait") == 0) return false;
+    if (std::wcscmp(proc, L"wait") == 0) return false;
 
     // Get the command to match against. We're only interested in the last path component.
     const wcstring base_cmd = wbasename(cmd);
-    return wcscmp(proc, base_cmd.c_str()) == 0;
+    return std::wcscmp(proc, base_cmd.c_str()) == 0;
 }
 
 /// It should search the job list for something matching the given proc.

@@ -8,7 +8,7 @@
 #include <pthread.h>
 #include <pwd.h>
 #include <stddef.h>
-#include <wchar.h>
+#include <cwchar>
 #include <wctype.h>
 
 #include <algorithm>
@@ -203,7 +203,7 @@ static complete_flags_t resolve_auto_space(const wcstring &comp, complete_flags_
     if (flags & COMPLETE_AUTO_SPACE) {
         new_flags &= ~COMPLETE_AUTO_SPACE;
         size_t len = comp.size();
-        if (len > 0 && (wcschr(L"/=@:", comp.at(len - 1)) != 0)) new_flags |= COMPLETE_NO_SPACE;
+        if (len > 0 && (std::wcschr(L"/=@:", comp.at(len - 1)) != 0)) new_flags |= COMPLETE_NO_SPACE;
     }
     return new_flags;
 }
@@ -402,7 +402,7 @@ void append_completion(std::vector<completion_t> *completions, wcstring comp, wc
 /// after a completion run to make sure that there are no stale completions.
 bool completer_t::condition_test(const wcstring &condition) {
     if (condition.empty()) {
-        // fwprintf( stderr, L"No condition specified\n" );
+        // std::fwprintf( stderr, L"No condition specified\n" );
         return true;
     }
 
@@ -1238,10 +1238,10 @@ bool completer_t::try_complete_user(const wcstring &str) {
     const wchar_t *cmd = str.c_str();
     const wchar_t *first_char = cmd;
 
-    if (*first_char != L'~' || wcschr(first_char, L'/')) return false;
+    if (*first_char != L'~' || std::wcschr(first_char, L'/')) return false;
 
     const wchar_t *user_name = first_char + 1;
-    const wchar_t *name_end = wcschr(user_name, L'~');
+    const wchar_t *name_end = std::wcschr(user_name, L'~');
     if (name_end) return false;
 
     double start_time = timef();
@@ -1260,7 +1260,7 @@ bool completer_t::try_complete_user(const wcstring &str) {
         }
         const wcstring pw_name_str = str2wcstring(pw->pw_name);
         const wchar_t *pw_name = pw_name_str.c_str();
-        if (wcsncmp(user_name, pw_name, name_len) == 0) {
+        if (std::wcsncmp(user_name, pw_name, name_len) == 0) {
             wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
             // Append a user name
             append_completion(&this->completions, &pw_name[name_len], desc, COMPLETE_NO_SPACE);

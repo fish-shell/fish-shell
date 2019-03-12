@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <algorithm>
 #include <memory>
@@ -76,11 +76,11 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 bool builtin_data_t::operator<(const wcstring &other) const {
-    return wcscmp(this->name, other.c_str()) < 0;
+    return std::wcscmp(this->name, other.c_str()) < 0;
 }
 
 bool builtin_data_t::operator<(const builtin_data_t *other) const {
-    return wcscmp(this->name, other->name) < 0;
+    return std::wcscmp(this->name, other->name) < 0;
 }
 
 /// Counts the number of arguments in the specified null-terminated array
@@ -215,7 +215,7 @@ void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *
                 // First move down 4 lines.
                 pos = str;
                 for (i = 0; (i < 4) && pos && *pos; i++) {
-                    pos = wcschr(pos + 1, L'\n');
+                    pos = std::wcschr(pos + 1, L'\n');
                 }
 
                 if (pos && *pos) {
@@ -311,7 +311,7 @@ static int builtin_count(parser_t &parser, io_streams_t &streams, wchar_t **argv
 /// This function handles both the 'continue' and the 'break' builtins that are used for loop
 /// control.
 static int builtin_break_continue(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    int is_break = (wcscmp(argv[0], L"break") == 0);
+    int is_break = (std::wcscmp(argv[0], L"break") == 0);
     int argc = builtin_count_args(argv);
 
     if (argc != 1) {
@@ -482,7 +482,7 @@ void builtin_init() {
     for (size_t i = 0; i < BUILTIN_COUNT; i++) {
         const wchar_t *name = builtin_datas[i].name;
         intern_static(name);
-        assert((i == 0 || wcscmp(builtin_datas[i - 1].name, name) < 0) &&
+        assert((i == 0 || std::wcscmp(builtin_datas[i - 1].name, name) < 0) &&
                "builtins are not sorted alphabetically");
     }
 }

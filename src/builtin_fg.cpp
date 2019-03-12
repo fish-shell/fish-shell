@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include "builtin.h"
 #include "builtin_fg.h"
@@ -99,7 +99,7 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     } else {
         // If we aren't redirecting, send output to real stderr, since stuff in sb_err won't get
         // printed until the command finishes.
-        fwprintf(stderr, FG_MSG, j->job_id, j->command_wcstr());
+        std::fwprintf(stderr, FG_MSG, j->job_id, j->command_wcstr());
     }
 
     const wcstring ft = tok_first(j->command());

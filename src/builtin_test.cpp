@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 #include <wctype.h>
 
 #include <cmath>
@@ -817,7 +817,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     // Whether we are invoked with bracket '[' or not.
     wchar_t *program_name = argv[0];
-    const bool is_bracket = !wcscmp(program_name, L"[");
+    const bool is_bracket = !std::wcscmp(program_name, L"[");
 
     size_t argc = 0;
     while (argv[argc + 1]) argc++;
@@ -825,7 +825,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // If we're bracket, the last argument ought to be ]; we ignore it. Note that argc is the number
     // of arguments after the command name; thus argv[argc] is the last argument.
     if (is_bracket) {
-        if (!wcscmp(argv[argc], L"]")) {
+        if (!std::wcscmp(argv[argc], L"]")) {
             // Ignore the closing bracket from now on.
             argc--;
         } else {

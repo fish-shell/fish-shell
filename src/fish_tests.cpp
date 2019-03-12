@@ -23,7 +23,7 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 #include <wctype.h>
 #include <thread>
 
@@ -114,9 +114,9 @@ static int err_count = 0;
 static void say(const wchar_t *fmt, ...) {
     va_list va;
     va_start(va, fmt);
-    vfwprintf(stdout, fmt, va);
+    std::vfwprintf(stdout, fmt, va);
     va_end(va);
-    fwprintf(stdout, L"\n");
+    std::fwprintf(stdout, L"\n");
 }
 
 /// Print formatted error string.
@@ -130,18 +130,18 @@ static void err(const wchar_t *blah, ...) {
 
     // Show errors in red.
     if (colorize) {
-        fputws(L"\x1B[31m", stdout);
+        std::fputws(L"\x1B[31m", stdout);
     }
-    fwprintf(stdout, L"Error: ");
-    vfwprintf(stdout, blah, va);
+    std::fwprintf(stdout, L"Error: ");
+    std::vfwprintf(stdout, blah, va);
     va_end(va);
 
     // Return to normal color.
     if (colorize) {
-        fputws(L"\x1B[0m", stdout);
+        std::fputws(L"\x1B[0m", stdout);
     }
 
-    fwprintf(stdout, L"\n");
+    std::fwprintf(stdout, L"\n");
 }
 
 /// Joins a wcstring_list_t via commas.
@@ -459,8 +459,8 @@ static void test_format() {
 
         wchar_t wbuf1[128], wbuf2[128];
         format_long_safe(wbuf1, j);
-        swprintf(wbuf2, 128, L"%d", j);
-        do_test(!wcscmp(wbuf1, wbuf2));
+        std::swprintf(wbuf2, 128, L"%d", j);
+        do_test(!std::wcscmp(wbuf1, wbuf2));
     }
 
     long q = LONG_MIN;
@@ -599,12 +599,12 @@ static void test_tokenizer() {
         while (t.next(&token)) {
             if (i >= sizeof types / sizeof *types) {
                 err(L"Too many tokens returned from tokenizer");
-                fwprintf(stdout, L"Got excess token type %ld\n", (long)token.type);
+                std::fwprintf(stdout, L"Got excess token type %ld\n", (long)token.type);
                 break;
             }
             if (types[i] != token.type) {
                 err(L"Tokenization error:");
-                fwprintf(stdout,
+                std::fwprintf(stdout,
                          L"Token number %zu of string \n'%ls'\n, expected type %ld, got token type "
                          L"%ld\n",
                          i + 1, str, (long)types[i], (long)token.type);
@@ -1132,29 +1132,29 @@ static void test_parse_util_cmdsubst_extent() {
     const wchar_t *begin = NULL, *end = NULL;
 
     parse_util_cmdsubst_extent(a, 0, &begin, &end);
-    if (begin != a || end != begin + wcslen(begin)) {
+    if (begin != a || end != begin + std::wcslen(begin)) {
         err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
     }
     parse_util_cmdsubst_extent(a, 1, &begin, &end);
-    if (begin != a || end != begin + wcslen(begin)) {
+    if (begin != a || end != begin + std::wcslen(begin)) {
         err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
     }
     parse_util_cmdsubst_extent(a, 2, &begin, &end);
-    if (begin != a || end != begin + wcslen(begin)) {
+    if (begin != a || end != begin + std::wcslen(begin)) {
         err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
     }
     parse_util_cmdsubst_extent(a, 3, &begin, &end);
-    if (begin != a || end != begin + wcslen(begin)) {
+    if (begin != a || end != begin + std::wcslen(begin)) {
         err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
     }
 
     parse_util_cmdsubst_extent(a, 8, &begin, &end);
-    if (begin != a + wcslen(L"echo (")) {
+    if (begin != a + std::wcslen(L"echo (")) {
         err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
     }
 
     parse_util_cmdsubst_extent(a, 17, &begin, &end);
-    if (begin != a + wcslen(L"echo (echo (")) {
+    if (begin != a + std::wcslen(L"echo (echo (")) {
         err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
     }
 }
@@ -1864,43 +1864,43 @@ static void test_abbreviations() {
     if (!expanded) err(L"Command not expanded on line %ld", (long)__LINE__);
 
     expanded =
-        reader_expand_abbreviation_in_command(L"gc somebranch", wcslen(L"gc"), vars, &result);
+        reader_expand_abbreviation_in_command(L"gc somebranch", std::wcslen(L"gc"), vars, &result);
     if (!expanded) err(L"gc not expanded");
     if (result != L"git checkout somebranch")
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
 
     // Space separation.
     expanded =
-        reader_expand_abbreviation_in_command(L"gx somebranch", wcslen(L"gc"), vars, &result);
+        reader_expand_abbreviation_in_command(L"gx somebranch", std::wcslen(L"gc"), vars, &result);
     if (!expanded) err(L"gx not expanded");
     if (result != L"git checkout somebranch")
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
 
     expanded = reader_expand_abbreviation_in_command(L"echo hi ; gc somebranch",
-                                                     wcslen(L"echo hi ; g"), vars, &result);
+                                                     std::wcslen(L"echo hi ; g"), vars, &result);
     if (!expanded) err(L"gc not expanded on line %ld", (long)__LINE__);
     if (result != L"echo hi ; git checkout somebranch")
         err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
     expanded = reader_expand_abbreviation_in_command(
-        L"echo (echo (echo (echo (gc ", wcslen(L"echo (echo (echo (echo (gc"), vars, &result);
+        L"echo (echo (echo (echo (gc ", std::wcslen(L"echo (echo (echo (echo (gc"), vars, &result);
     if (!expanded) err(L"gc not expanded on line %ld", (long)__LINE__);
     if (result != L"echo (echo (echo (echo (git checkout ")
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
 
     // If commands should be expanded.
-    expanded = reader_expand_abbreviation_in_command(L"if gc", wcslen(L"if gc"), vars, &result);
+    expanded = reader_expand_abbreviation_in_command(L"if gc", std::wcslen(L"if gc"), vars, &result);
     if (!expanded) err(L"gc not expanded on line %ld", (long)__LINE__);
     if (result != L"if git checkout")
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
 
     // Others should not be.
-    expanded = reader_expand_abbreviation_in_command(L"of gc", wcslen(L"of gc"), vars, &result);
+    expanded = reader_expand_abbreviation_in_command(L"of gc", std::wcslen(L"of gc"), vars, &result);
     if (expanded) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
     // Others should not be.
     expanded =
-        reader_expand_abbreviation_in_command(L"command gc", wcslen(L"command gc"), vars, &result);
+        reader_expand_abbreviation_in_command(L"command gc", std::wcslen(L"command gc"), vars, &result);
     if (expanded) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
     vars.pop();
@@ -2042,10 +2042,10 @@ struct pager_layout_testcase_t {
 
             wcstring text = sd.line(0).to_string();
             if (text != expected) {
-                fwprintf(stderr, L"width %zu got %zu<%ls>, expected %zu<%ls>\n", this->width,
+                std::fwprintf(stderr, L"width %zu got %zu<%ls>, expected %zu<%ls>\n", this->width,
                          text.length(), text.c_str(), expected.length(), expected.c_str());
                 for (size_t i = 0; i < std::max(text.length(), expected.length()); i++) {
-                    fwprintf(stderr, L"i %zu got <%lx> expected <%lx>\n", i,
+                    std::fwprintf(stderr, L"i %zu got <%lx> expected <%lx>\n", i,
                              i >= text.length() ? 0xffff : text[i],
                              i >= expected.length() ? 0xffff : expected[i]);
                 }
@@ -2137,7 +2137,7 @@ static void test_1_word_motion(word_motion_t motion, move_word_style_t style,
         size_t char_idx = (motion == word_motion_left ? idx - 1 : idx);
         wchar_t wc = command.at(char_idx);
         bool will_stop = !sm.consume_char(wc);
-        // fwprintf(stdout, L"idx %lu, looking at %lu (%c): %d\n", idx, char_idx, (char)wc,
+        // std::fwprintf(stdout, L"idx %lu, looking at %lu (%c): %d\n", idx, char_idx, (char)wc,
         //          will_stop);
         bool expected_stop = (stops.count(idx) > 0);
         if (will_stop != expected_stop) {
@@ -2384,7 +2384,7 @@ static void test_wcstod() {
     auto tod_test = [](const wchar_t *a, const char *b) {
         char *narrow_end = nullptr;
         wchar_t *wide_end = nullptr;
-        double val1 = wcstod(a, &wide_end);
+        double val1 = std::wcstod(a, &wide_end);
         double val2 = strtod(b, &narrow_end);
         do_test((std::isnan(val1) && std::isnan(val2)) || fabs(val1 - val2) <= __DBL_EPSILON__);
         do_test(wide_end - a == narrow_end - b);
@@ -2699,7 +2699,7 @@ static void test_1_completion(wcstring line, const wcstring &completion, complet
     wcstring result =
         completion_apply_to_command_line(completion, flags, line, &cursor_pos, append_only);
     if (result != expected) {
-        fwprintf(stderr, L"line %ld: %ls + %ls -> [%ls], expected [%ls]\n", source_line,
+        std::fwprintf(stderr, L"line %ld: %ls + %ls -> [%ls], expected [%ls]\n", source_line,
                  line.c_str(), completion.c_str(), result.c_str(), expected.c_str());
     }
     do_test(result == expected);
@@ -2743,12 +2743,12 @@ static void perform_one_autosuggestion_cd_test(const wcstring &command, const wc
     bool expects_error = (expected == L"<error>");
 
     if (comps.empty() && !expects_error) {
-        fwprintf(stderr, L"line %ld: autosuggest_suggest_special() failed for command %ls\n", line,
+        std::fwprintf(stderr, L"line %ld: autosuggest_suggest_special() failed for command %ls\n", line,
                  command.c_str());
         do_test_from(!comps.empty(), line);
         return;
     } else if (!comps.empty() && expects_error) {
-        fwprintf(stderr,
+        std::fwprintf(stderr,
                  L"line %ld: autosuggest_suggest_special() was expected to fail but did not, "
                  L"for command %ls\n",
                  line, command.c_str());
@@ -2760,12 +2760,12 @@ static void perform_one_autosuggestion_cd_test(const wcstring &command, const wc
         const completion_t &suggestion = comps.at(0);
 
         if (suggestion.completion != expected) {
-            fwprintf(
+            std::fwprintf(
                 stderr,
                 L"line %ld: complete() for cd returned the wrong expected string for command %ls\n",
                 line, command.c_str());
-            fwprintf(stderr, L"  actual: %ls\n", suggestion.completion.c_str());
-            fwprintf(stderr, L"expected: %ls\n", expected.c_str());
+            std::fwprintf(stderr, L"  actual: %ls\n", suggestion.completion.c_str());
+            std::fwprintf(stderr, L"expected: %ls\n", expected.c_str());
             do_test_from(suggestion.completion == expected, line);
         }
     }
@@ -2779,12 +2779,12 @@ static void perform_one_completion_cd_test(const wcstring &command, const wcstri
     bool expects_error = (expected == L"<error>");
 
     if (comps.empty() && !expects_error) {
-        fwprintf(stderr, L"line %ld: autosuggest_suggest_special() failed for command %ls\n", line,
+        std::fwprintf(stderr, L"line %ld: autosuggest_suggest_special() failed for command %ls\n", line,
                  command.c_str());
         do_test_from(!comps.empty(), line);
         return;
     } else if (!comps.empty() && expects_error) {
-        fwprintf(stderr,
+        std::fwprintf(stderr,
                  L"line %ld: autosuggest_suggest_special() was expected to fail but did not, "
                  L"for command %ls\n",
                  line, command.c_str());
@@ -2796,12 +2796,12 @@ static void perform_one_completion_cd_test(const wcstring &command, const wcstri
         const completion_t &suggestion = comps.at(0);
 
         if (suggestion.completion != expected) {
-            fwprintf(stderr,
+            std::fwprintf(stderr,
                      L"line %ld: complete() for cd tab completion returned the wrong expected "
                      L"string for command %ls\n",
                      line, command.c_str());
-            fwprintf(stderr, L"  actual: %ls\n", suggestion.completion.c_str());
-            fwprintf(stderr, L"expected: %ls\n", expected.c_str());
+            std::fwprintf(stderr, L"  actual: %ls\n", suggestion.completion.c_str());
+            std::fwprintf(stderr, L"expected: %ls\n", expected.c_str());
             do_test_from(suggestion.completion == expected, line);
         }
     }
@@ -2918,9 +2918,9 @@ static void perform_one_autosuggestion_should_ignore_test(const wcstring &comman
     do_test(comps.empty());
     if (!comps.empty()) {
         const wcstring &suggestion = comps.front().completion;
-        fwprintf(stderr, L"line %ld: complete() expected to return nothing for %ls\n", line,
+        std::fwprintf(stderr, L"line %ld: complete() expected to return nothing for %ls\n", line,
                  command.c_str());
-        fwprintf(stderr, L"  instead got: %ls\n", suggestion.c_str());
+        std::fwprintf(stderr, L"  instead got: %ls\n", suggestion.c_str());
     }
 }
 
@@ -3862,7 +3862,7 @@ void history_tests_t::test_history_speed(void)
         if (stop >= end)
             break;
     }
-    fwprintf(stdout, L"%lu items - %.2f msec per item\n", (unsigned long)count,
+    std::fwprintf(stdout, L"%lu items - %.2f msec per item\n", (unsigned long)count,
              (stop - start) * 1E6 / count);
     hist->clear();
 }
@@ -3945,7 +3945,7 @@ static void test_new_parser_fuzzing() {
     bool log_it = true;
     unsigned long max_len = 5;
     for (unsigned long len = 0; len < max_len; len++) {
-        if (log_it) fwprintf(stderr, L"%lu / %lu...", len, max_len);
+        if (log_it) std::fwprintf(stderr, L"%lu / %lu...", len, max_len);
 
         // We wish to look at all permutations of 4 elements of 'fuzzes' (with replacement).
         // Construct an int and keep incrementing it.
@@ -3954,7 +3954,7 @@ static void test_new_parser_fuzzing() {
                                       &src)) {
             parse_tree_from_string(src, parse_flag_continue_after_error, &node_tree, &errors);
         }
-        if (log_it) fwprintf(stderr, L"done (%lu)\n", permutation);
+        if (log_it) std::fwprintf(stderr, L"done (%lu)\n", permutation);
     }
     double end = timef();
     if (log_it) say(L"All fuzzed in %f seconds!", end - start);
@@ -4136,9 +4136,9 @@ static void test_new_parser_errors() {
 static wcstring_list_t separate_by_format_specifiers(const wchar_t *format) {
     wcstring_list_t result;
     const wchar_t *cursor = format;
-    const wchar_t *end = format + wcslen(format);
+    const wchar_t *end = format + std::wcslen(format);
     while (cursor < end) {
-        const wchar_t *next_specifier = wcschr(cursor, '%');
+        const wchar_t *next_specifier = std::wcschr(cursor, '%');
         if (next_specifier == NULL) {
             next_specifier = end;
         }
@@ -4157,7 +4157,7 @@ static wcstring_list_t separate_by_format_specifiers(const wchar_t *format) {
 
         cursor++;
         // Flag
-        if (wcschr(L"#0- +'", *cursor)) cursor++;
+        if (std::wcschr(L"#0- +'", *cursor)) cursor++;
         // Minimum field width
         while (iswdigit(*cursor)) cursor++;
         // Precision
@@ -4166,9 +4166,9 @@ static wcstring_list_t separate_by_format_specifiers(const wchar_t *format) {
             while (iswdigit(*cursor)) cursor++;
         }
         // Length modifier
-        if (!wcsncmp(cursor, L"ll", 2) || !wcsncmp(cursor, L"hh", 2)) {
+        if (!std::wcsncmp(cursor, L"ll", 2) || !std::wcsncmp(cursor, L"hh", 2)) {
             cursor += 2;
-        } else if (wcschr(L"hljtzqL", *cursor)) {
+        } else if (std::wcschr(L"hljtzqL", *cursor)) {
             cursor++;
         }
         // The format specifier itself. We allow any character except NUL.
@@ -5177,7 +5177,7 @@ int main(int argc, char **argv) {
             exit(-1);
         }
         if (!strcmp(wd, "/")) {
-            fwprintf(stderr,
+            std::fwprintf(stderr,
                      L"Unable to find 'tests' directory, which should contain file test.fish\n");
             exit(EXIT_FAILURE);
         }

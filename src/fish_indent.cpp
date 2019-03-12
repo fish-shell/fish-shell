@@ -24,9 +24,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <wchar.h>
 #include <wctype.h>
 
+#include <cwchar>
 #include <memory>
 #include <string>
 #include <vector>
@@ -55,7 +55,7 @@ static int ret = 0;
 static wcstring read_file(FILE *f) {
     wcstring result;
     while (1) {
-        wint_t c = fgetwc(f);
+        wint_t c = std::fgetwc(f);
 
         if (c == WEOF) {
             if (ferror(f)) {
@@ -157,7 +157,7 @@ static void dump_node(indent_t node_indent, const parse_node_t &node, const wcst
         nextc_str[1] = L'c';
         nextc_str[2] = nextc + '@';
     }
-    fwprintf(stderr, L"{off %4u, len %4u, indent %2u, kw %ls, %ls} [%ls|%ls|%ls]\n",
+    std::fwprintf(stderr, L"{off %4u, len %4u, indent %2u, kw %ls, %ls} [%ls|%ls|%ls]\n",
              node.source_start, node.source_length, node_indent, keyword_description(node.keyword),
              token_type_description(node.type), prevc_str, source_txt.c_str(), nextc_str);
 }
@@ -252,7 +252,7 @@ static wcstring prettify(const wcstring &src, bool do_indent) {
 
     if (dump_parse_tree) {
         const wcstring dump = parse_dump_tree(parse_tree, src);
-        fwprintf(stderr, L"%ls\n", dump.c_str());
+        std::fwprintf(stderr, L"%ls\n", dump.c_str());
     }
 
     // We may have a forest of disconnected trees on a parse failure. We have to handle all nodes
@@ -442,7 +442,7 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case 'v': {
-                fwprintf(stderr, _(L"%ls, version %s\n"), program_name, get_fish_version());
+                std::fwprintf(stderr, _(L"%ls, version %s\n"), program_name, get_fish_version());
                 exit(0);
                 break;
             }
@@ -472,7 +472,7 @@ int main(int argc, char *argv[]) {
                 if (tmp >= 0 && tmp <= 10 && !*end && !errno) {
                     debug_level = (int)tmp;
                 } else {
-                    fwprintf(stderr, _(L"Invalid value '%s' for debug-level flag"), optarg);
+                    std::fwprintf(stderr, _(L"Invalid value '%s' for debug-level flag"), optarg);
                     exit(1);
                 }
                 break;
@@ -487,7 +487,7 @@ int main(int argc, char *argv[]) {
                 if (tmp > 0 && tmp <= 128 && !*end && !errno) {
                     debug_stack_frames = (int)tmp;
                 } else {
-                    fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag"), optarg);
+                    std::fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag"), optarg);
                     exit(1);
                 }
                 break;
@@ -506,7 +506,7 @@ int main(int argc, char *argv[]) {
     wcstring src;
     if (argc == 0) {
         if (output_type == output_type_file) {
-            fwprintf(stderr, _(L"Expected file path to read/write for -w:\n\n $ %ls -w foo.fish\n"),
+            std::fwprintf(stderr, _(L"Expected file path to read/write for -w:\n\n $ %ls -w foo.fish\n"),
                      program_name);
             exit(1);
         }
@@ -518,11 +518,11 @@ int main(int argc, char *argv[]) {
             fclose(fh);
             output_location = *argv;
         } else {
-            fwprintf(stderr, _(L"Opening \"%s\" failed: %s\n"), *argv, strerror(errno));
+            std::fwprintf(stderr, _(L"Opening \"%s\" failed: %s\n"), *argv, strerror(errno));
             exit(1);
         }
     } else {
-        fwprintf(stderr, _(L"Too many arguments\n"));
+        std::fwprintf(stderr, _(L"Too many arguments\n"));
         exit(1);
     }
 
@@ -544,11 +544,11 @@ int main(int argc, char *argv[]) {
         case output_type_file: {
             FILE *fh = fopen(output_location, "w");
             if (fh) {
-                fputws(output_wtext.c_str(), fh);
+                std::fputws(output_wtext.c_str(), fh);
                 fclose(fh);
                 exit(0);
             } else {
-                fwprintf(stderr, _(L"Opening \"%s\" failed: %s\n"), output_location,
+                std::fwprintf(stderr, _(L"Opening \"%s\" failed: %s\n"), output_location,
                          strerror(errno));
                 exit(1);
             }
@@ -564,6 +564,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    fputws(str2wcstring(colored_output).c_str(), stdout);
+    std::fputws(str2wcstring(colored_output).c_str(), stdout);
     return ret;
 }

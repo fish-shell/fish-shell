@@ -49,7 +49,7 @@ static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
         switch (opt) {
             case 's': {
                 // "max" is the special value that tells us to pick the maximum scale.
-                if (wcscmp(w.woptarg, L"max") == 0) {
+                if (std::wcscmp(w.woptarg, L"max") == 0) {
                     opts.scale = 15;
                 } else {
                     opts.scale = fish_wcstoi(w.woptarg);
@@ -162,7 +162,7 @@ static wcstring format_double(double v, const math_cmd_opts_t &opts) {
         while (ret.back() == L'0') {
             ret.pop_back();
         }
-        if (!wcschr(digits, ret.back())) {
+        if (!std::wcschr(digits, ret.back())) {
             ret.pop_back();
         }
     }

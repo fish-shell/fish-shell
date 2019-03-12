@@ -2,7 +2,7 @@
 #ifndef FISH_BUILTIN_JOBS_H
 #define FISH_BUILTIN_JOBS_H
 
-#include <wchar.h>
+#include <cwchar>
 
 #include <cstring>
 

@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include "common.h"
 #include "exec.h"
@@ -18,17 +18,17 @@
 
 io_data_t::~io_data_t() = default;
 
-void io_close_t::print() const { fwprintf(stderr, L"close %d\n", fd); }
+void io_close_t::print() const { std::fwprintf(stderr, L"close %d\n", fd); }
 
-void io_fd_t::print() const { fwprintf(stderr, L"FD map %d -> %d\n", old_fd, fd); }
+void io_fd_t::print() const { std::fwprintf(stderr, L"FD map %d -> %d\n", old_fd, fd); }
 
-void io_file_t::print() const { fwprintf(stderr, L"file (%s)\n", filename_cstr); }
+void io_file_t::print() const { std::fwprintf(stderr, L"file (%s)\n", filename_cstr); }
 
 void io_pipe_t::print() const {
-    fwprintf(stderr, L"pipe {%d} (input: %s)\n", pipe_fd(), is_input_ ? "yes" : "no");
+    std::fwprintf(stderr, L"pipe {%d} (input: %s)\n", pipe_fd(), is_input_ ? "yes" : "no");
 }
 
-void io_bufferfill_t::print() const { fwprintf(stderr, L"bufferfill {%d}\n", write_fd_.fd()); }
+void io_bufferfill_t::print() const { std::fwprintf(stderr, L"bufferfill {%d}\n", write_fd_.fd()); }
 
 void io_buffer_t::append_from_stream(const output_stream_t &stream) {
     if (stream.empty()) return;
@@ -223,21 +223,21 @@ void io_print(const io_chain_t &chain)
 {
     if (chain.empty())
     {
-        fwprintf(stderr, L"Empty chain %p\n", &chain);
+        std::fwprintf(stderr, L"Empty chain %p\n", &chain);
         return;
     }
 
-    fwprintf(stderr, L"Chain %p (%ld items):\n", &chain, (long)chain.size());
+    std::fwprintf(stderr, L"Chain %p (%ld items):\n", &chain, (long)chain.size());
     for (size_t i=0; i < chain.size(); i++)
     {
         const shared_ptr<io_data_t> &io = chain.at(i);
         if (io.get() == NULL)
         {
-            fwprintf(stderr, L"\t(null)\n");
+            std::fwprintf(stderr, L"\t(null)\n");
         }
         else
         {
-            fwprintf(stderr, L"\t%lu: fd:%d, ", (unsigned long)i, io->fd);
+            std::fwprintf(stderr, L"\t%lu: fd:%d, ", (unsigned long)i, io->fd);
             io->print();
         }
     }

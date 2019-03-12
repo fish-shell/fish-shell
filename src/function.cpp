@@ -8,7 +8,7 @@
 #include <dirent.h>
 #include <pthread.h>
 #include <stddef.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <algorithm>
 #include <map>
@@ -122,8 +122,8 @@ static void autoload_names(std::unordered_set<wcstring> &names, int get_hidden) 
             const wchar_t *suffix;
             if (!get_hidden && fn[0] == L'_') continue;
 
-            suffix = wcsrchr(fn, L'.');
-            if (suffix && (wcscmp(suffix, L".fish") == 0)) {
+            suffix = std::wcsrchr(fn, L'.');
+            if (suffix && (std::wcscmp(suffix, L".fish") == 0)) {
                 wcstring name(fn, suffix - fn);
                 names.insert(name);
             }

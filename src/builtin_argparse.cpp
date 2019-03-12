@@ -6,7 +6,7 @@
 #include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <algorithm>
 #include <memory>
@@ -316,7 +316,7 @@ static int collect_option_specs(argparse_cmd_opts_t &opts, int *optind, int argc
     wchar_t *cmd = argv[0];
 
     while (true) {
-        if (wcscmp(L"--", argv[*optind]) == 0) {
+        if (std::wcscmp(L"--", argv[*optind]) == 0) {
             ++*optind;
             break;
         }
@@ -401,7 +401,7 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
 
     if (opts.print_help) return STATUS_CMD_OK;
 
-    if (argc == w.woptind || wcscmp(L"--", argv[w.woptind - 1]) == 0) {
+    if (argc == w.woptind || std::wcscmp(L"--", argv[w.woptind - 1]) == 0) {
         // The user didn't specify any option specs.
         streams.err.append_format(_(L"%ls: No option specs were provided\n"), cmd);
         return STATUS_INVALID_ARGS;

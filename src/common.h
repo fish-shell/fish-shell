@@ -272,7 +272,7 @@ inline bool is_whitespace(const wchar_t *input) { return is_whitespace(wcstring(
 
 [[noreturn]] void __fish_assert(const char *msg, const char *file, size_t line, int error);
 
-/// Shorthand for wgettext call in situations where a C-style string is needed (e.g., fwprintf()).
+/// Shorthand for wgettext call in situations where a C-style string is needed (e.g., std::fwprintf()).
 #define _(wstr) wgettext(wstr).c_str()
 
 /// Noop, used to tell xgettext that a string should be translated. Use this when a string cannot be
@@ -555,7 +555,7 @@ inline bool bool_from_string(const std::string &x) {
     }
 }
 
-inline bool bool_from_string(const wcstring &x) { return !x.empty() && wcschr(L"YTyt1", x.at(0)); }
+inline bool bool_from_string(const wcstring &x) { return !x.empty() && std::wcschr(L"YTyt1", x.at(0)); }
 
 wchar_t **make_null_terminated_array(const wcstring_list_t &lst);
 char **make_null_terminated_array(const std::vector<std::string> &lst);
@@ -933,7 +933,7 @@ static T str_to_enum(const wchar_t *name, const enum_map<T> map[], int len) {
 
     while (left < right) {
         size_t mid = left + (right - left) / 2;
-        int cmp = wcscmp(name, map[mid].str);
+        int cmp = std::wcscmp(name, map[mid].str);
         if (cmp < 0) {
             right = mid;  // name was smaller than mid
         } else if (cmp > 0) {

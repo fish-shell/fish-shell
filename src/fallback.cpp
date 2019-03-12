@@ -18,7 +18,7 @@
 #include <sys/stat.h>   // IWYU pragma: keep
 #include <sys/types.h>  // IWYU pragma: keep
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 #include <wctype.h>
 #include <algorithm>
 #if HAVE_GETTEXT
@@ -37,7 +37,7 @@
 #include <ncurses/term.h>
 #endif
 #include <signal.h>  // IWYU pragma: keep
-#include <wchar.h>   // IWYU pragma: keep
+#include <cwchar>   // IWYU pragma: keep
 
 #include "common.h"    // IWYU pragma: keep
 #include "fallback.h"  // IWYU pragma: keep
@@ -75,7 +75,7 @@ int fish_mkstemp_cloexec(char *name_template) {
 /// are not referenced in this file.
 // cppcheck-suppress unusedFunction
 [[gnu::unused]] static wchar_t *wcsdup_fallback(const wchar_t *in) {
-    size_t len = wcslen(in);
+    size_t len = std::wcslen(in);
     wchar_t *out = (wchar_t *)malloc(sizeof(wchar_t) * (len + 1));
     if (out == 0) {
         return 0;
@@ -397,7 +397,7 @@ int flock(int fd, int op) {
 // thread-specific locale.
 double fish_compat::wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t loc) {
     locale_t prev_locale = uselocale(loc);
-    double ret = wcstod(enptr, endptr);
+    double ret = std::wcstod(enptr, endptr);
     uselocale(prev_locale);
     return ret;
 }

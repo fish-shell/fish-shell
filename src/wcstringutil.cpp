@@ -39,7 +39,7 @@ wcstring truncate(const wcstring &input, int max_len, ellipsis_type etype) {
         return input.substr(0, max_len);
     }
     if (etype == ellipsis_type::Prettiest) {
-        return input.substr(0, max_len - wcslen(ellipsis_str)).append(ellipsis_str);
+        return input.substr(0, max_len - std::wcslen(ellipsis_str)).append(ellipsis_str);
     }
     wcstring output = input.substr(0, max_len - 1);
     output.push_back(ellipsis_char);

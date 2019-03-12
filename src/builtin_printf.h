@@ -2,7 +2,7 @@
 #ifndef FISH_BUILTIN_PRINTF_H
 #define FISH_BUILTIN_PRINTF_H
 
-#include <wchar.h>
+#include <cwchar>
 
 #include <cstring>
 

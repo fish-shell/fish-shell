@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include "builtin.h"
 #include "builtin_source.h"
@@ -39,7 +39,7 @@ int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     struct stat buf;
     const wchar_t *fn, *fn_intern;
 
-    if (argc == optind || wcscmp(argv[optind], L"-") == 0) {
+    if (argc == optind || std::wcscmp(argv[optind], L"-") == 0) {
         // Either a bare `source` which means to implicitly read from stdin or an explicit `-`.
         if (argc == optind && isatty(streams.stdin_fd)) {
             // Don't implicitly read from the terminal.

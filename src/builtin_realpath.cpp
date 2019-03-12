@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include "builtin.h"
 #include "builtin_realpath.h"

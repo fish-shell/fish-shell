@@ -6,7 +6,7 @@
 
 #include <stdarg.h>
 #include <stdlib.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <memory>
 #include <string>
@@ -117,7 +117,7 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
 
     for (pos = const_cast<wchar_t *>(in); *pos; pos++) {
         if (prev != '\\') {
-            if (wcschr(L"\'\"", *pos)) {
+            if (std::wcschr(L"\'\"", *pos)) {
                 wchar_t *q_end = quote_end(pos);
                 if (q_end && *q_end) {
                     pos = q_end;
@@ -165,7 +165,7 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
     }
 
     if (end) {
-        *end = paran_count ? (wchar_t *)in + wcslen(in) : paran_end;
+        *end = paran_count ? (wchar_t *)in + std::wcslen(in) : paran_end;
     }
 
     return 1;
@@ -239,7 +239,7 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
 
     CHECK(buff, );
 
-    const size_t bufflen = wcslen(buff);
+    const size_t bufflen = std::wcslen(buff);
     assert(cursor_pos <= bufflen);
 
     // ap and bp are the beginning and end of the tightest command substitition found so far.
@@ -360,7 +360,7 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
     // pos is equivalent to cursor_pos within the range of the command substitution {begin, end}.
     size_t offset_within_cmdsubst = cursor_pos - (cmdsubst_begin - buff);
 
-    size_t bufflen = wcslen(buff);
+    size_t bufflen = std::wcslen(buff);
 
     a = cmdsubst_begin + offset_within_cmdsubst;
     b = a;
@@ -462,7 +462,7 @@ static wchar_t get_quote(const wcstring &cmd_str, size_t len) {
         } else {
             if (cmd[i] == L'\'' || cmd[i] == L'\"') {
                 const wchar_t *end = quote_end(&cmd[i]);
-                // fwprintf( stderr, L"Jump %d\n",  end-cmd );
+                // std::fwprintf( stderr, L"Jump %d\n",  end-cmd );
                 if ((end == 0) || (!*end) || (end > cmd + len)) {
                     res = cmd[i];
                     break;
@@ -500,7 +500,7 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
     bool finished = cmdlen != 0;
     if (finished) {
         finished = (quote == NULL);
-        if (finished && wcschr(L" \t\n\r", cmd_tmp[cmdlen - 1])) {
+        if (finished && std::wcschr(L" \t\n\r", cmd_tmp[cmdlen - 1])) {
             finished = cmdlen > 1 && cmd_tmp[cmdlen - 2] == L'\\';
         }
     }
@@ -509,7 +509,7 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
 
     if (offset != 0) {
         if (finished) {
-            while ((cmd_tmp[prev_pos] != 0) && (wcschr(L";|", cmd_tmp[prev_pos]) != 0)) prev_pos++;
+            while ((cmd_tmp[prev_pos] != 0) && (std::wcschr(L";|", cmd_tmp[prev_pos]) != 0)) prev_pos++;
             *offset = prev_pos;
         } else {
             *offset = pos;
@@ -729,7 +729,7 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
             // indentation level if a new line starts with whitespace.
             size_t prev_char_idx = i;
             while (prev_char_idx--) {
-                if (!wcschr(L" \n\t\r", src.at(prev_char_idx))) break;
+                if (!std::wcschr(L" \n\t\r", src.at(prev_char_idx))) break;
                 indents.at(prev_char_idx) = last_indent;
             }
         }
@@ -739,7 +739,7 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
     // indented even if it is empty.
     size_t suffix_idx = src_size;
     while (suffix_idx--) {
-        if (!wcschr(L" \n\t\r", src.at(suffix_idx))) break;
+        if (!std::wcschr(L" \n\t\r", src.at(suffix_idx))) break;
         indents.at(suffix_idx) = last_trailing_indent;
     }
 
@@ -771,7 +771,7 @@ static int parser_is_pipe_forbidden(const wcstring &word) {
 }
 
 bool parse_util_argument_is_help(const wchar_t *s) {
-    return wcscmp(L"-h", s) == 0 || wcscmp(L"--help", s) == 0;
+    return std::wcscmp(L"-h", s) == 0 || std::wcscmp(L"--help", s) == 0;
 }
 
 /// Check if the first argument under the given node is --help.

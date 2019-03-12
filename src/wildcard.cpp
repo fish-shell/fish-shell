@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <memory>
 #include <string>
@@ -82,7 +82,7 @@ static bool wildcard_has_impl(const wchar_t *str, size_t len, bool internal) {
 
 bool wildcard_has(const wchar_t *str, bool internal) {
     assert(str != NULL);
-    return wildcard_has_impl(str, wcslen(str), internal);
+    return wildcard_has_impl(str, std::wcslen(str), internal);
 }
 
 bool wildcard_has(const wcstring &str, bool internal) {
@@ -99,9 +99,9 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const
                                                        bool leading_dots_fail_to_match) {
     // Hackish fix for issue #270. Prevent wildcards from matching . or .., but we must still allow
     // literal matches.
-    if (leading_dots_fail_to_match && (!wcscmp(str, L".") || !wcscmp(str, L".."))) {
+    if (leading_dots_fail_to_match && (!std::wcscmp(str, L".") || !std::wcscmp(str, L".."))) {
         // The string is '.' or '..'. Return true if the wildcard exactly matches.
-        return wcscmp(str, wc) ? fuzzy_match_none : fuzzy_match_exact;
+        return std::wcscmp(str, wc) ? fuzzy_match_none : fuzzy_match_exact;
     }
 
     // Near Linear implementation as proposed here https://research.swtch.com/glob.
@@ -235,8 +235,8 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
 
         // If we are not replacing the token, be careful to only store the part of the string after
         // the wildcard.
-        assert(!full_replacement || wcslen(wc) <= wcslen(str));
-        wcstring out_completion = full_replacement ? params.orig : str + wcslen(wc);
+        assert(!full_replacement || std::wcslen(wc) <= std::wcslen(str));
+        wcstring out_completion = full_replacement ? params.orig : str + std::wcslen(wc);
         wcstring out_desc = resolve_description(params.orig, &out_completion, params.expand_flags,
                                                 params.desc_func);
 
@@ -248,7 +248,7 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
     } else if (next_wc_char_pos > 0) {
         // Here we have a non-wildcard prefix. Note that we don't do fuzzy matching for stuff before
         // a wildcard, so just do case comparison and then recurse.
-        if (wcsncmp(str, wc, next_wc_char_pos) == 0) {
+        if (std::wcsncmp(str, wc, next_wc_char_pos) == 0) {
             // Normal match.
             return wildcard_complete_internal(str + next_wc_char_pos, wc + next_wc_char_pos, params,
                                               flags, out);
@@ -822,8 +822,8 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
     }
 
     // Get the current segment and compute interesting properties about it.
-    const size_t wc_len = wcslen(wc);
-    const wchar_t *const next_slash = wcschr(wc, L'/');
+    const size_t wc_len = std::wcslen(wc);
+    const wchar_t *const next_slash = std::wcschr(wc, L'/');
     const bool is_last_segment = (next_slash == NULL);
     const size_t wc_segment_len = next_slash ? next_slash - wc : wc_len;
     const wcstring wc_segment = wcstring(wc, wc_segment_len);

@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <deque>
 #include <list>
@@ -165,7 +165,7 @@ void update_wait_on_escape_ms(const environment_t &vars) {
 
     long tmp = fish_wcstol(escape_time_ms->as_string().c_str());
     if (errno || tmp < 10 || tmp >= 5000) {
-        fwprintf(stderr,
+        std::fwprintf(stderr,
                  L"ignoring fish_escape_delay_ms: value '%ls' "
                  L"is not an integer or is < 10 or >= 5000 ms\n",
                  escape_time_ms->as_string().c_str());
@@ -201,7 +201,7 @@ wchar_t input_common_readch(int timed) {
             }
 
             char bb = b;
-            size_t sz = mbrtowc(&res, &bb, 1, &state);
+            size_t sz = std::mbrtowc(&res, &bb, 1, &state);
 
             switch (sz) {
                 case (size_t)(-1): {

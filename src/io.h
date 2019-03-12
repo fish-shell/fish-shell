@@ -383,7 +383,7 @@ class output_stream_t {
 
     const separated_buffer_t<wcstring> &buffer() const { return buffer_; }
 
-    void append(const wchar_t *s) { append(s, wcslen(s)); }
+    void append(const wchar_t *s) { append(s, std::wcslen(s)); }
 
     void append(wchar_t s) { append(&s, 1); }
 

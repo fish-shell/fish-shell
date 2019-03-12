@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 #include <wctype.h>
 
 #ifdef HAVE_SYS_SYSCTL_H
@@ -74,7 +74,7 @@ static bool expand_is_clean(const wcstring &in) {
     if (in.empty()) return true;
 
     // Test characters that have a special meaning in the first character position.
-    if (wcschr(UNCLEAN_FIRST, in.at(0)) != NULL) return false;
+    if (std::wcschr(UNCLEAN_FIRST, in.at(0)) != NULL) return false;
 
     // Test characters that have a special meaning in any character position.
     return in.find_first_of(UNCLEAN) == wcstring::npos;
@@ -572,7 +572,7 @@ static expand_error_t expand_braces(const wcstring &instr, expand_flags_t flags,
     }
 
     length_preceding_braces = (brace_begin - in);
-    length_following_braces = wcslen(brace_end) - 1;
+    length_following_braces = std::wcslen(brace_end) - 1;
     tot_len = length_preceding_braces + length_following_braces;
     item_begin = brace_begin + 1;
     for (const wchar_t *pos = (brace_begin + 1); true; pos++) {
@@ -1218,7 +1218,7 @@ maybe_t<wcstring> expand_abbreviation(const wcstring &src) {
 std::map<wcstring, wcstring> get_abbreviations() {
     // TODO: try to make this cheaper
     const auto &vars = env_stack_t::principal();
-    const size_t fish_abbr_len = wcslen(L"_fish_abbr_");
+    const size_t fish_abbr_len = std::wcslen(L"_fish_abbr_");
     auto names = vars.get_names(0);
     std::map<wcstring, wcstring> result;
     for (const wcstring &name : names) {

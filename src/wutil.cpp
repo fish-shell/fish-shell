@@ -19,7 +19,7 @@
 #include <sys/statvfs.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 #include <wctype.h>
 
 #include <string>
@@ -260,9 +260,9 @@ int wunlink(const wcstring &file_name) {
 void wperror(const wchar_t *s) {
     int e = errno;
     if (s[0] != L'\0') {
-        fwprintf(stderr, L"%ls: ", s);
+        std::fwprintf(stderr, L"%ls: ", s);
     }
-    fwprintf(stderr, L"%s\n", strerror(e));
+    std::fwprintf(stderr, L"%s\n", strerror(e));
 }
 
 int make_fd_nonblocking(int fd) {
@@ -604,7 +604,7 @@ int fish_iswgraph(wint_t wc) {
 /// Convenience variants on fish_wcwswidth().
 ///
 /// See fallback.h for the normal definitions.
-int fish_wcswidth(const wchar_t *str) { return fish_wcswidth(str, wcslen(str)); }
+int fish_wcswidth(const wchar_t *str) { return fish_wcswidth(str, std::wcslen(str)); }
 
 /// Convenience variants on fish_wcwswidth().
 ///
@@ -635,7 +635,7 @@ int fish_wcstoi(const wchar_t *str, const wchar_t **endptr, int base) {
 
     errno = 0;
     wchar_t *_endptr;
-    long result = wcstol(str, &_endptr, base);
+    long result = std::wcstol(str, &_endptr, base);
     if (result > INT_MAX) {
         result = INT_MAX;
         errno = ERANGE;
@@ -673,7 +673,7 @@ long fish_wcstol(const wchar_t *str, const wchar_t **endptr, int base) {
 
     errno = 0;
     wchar_t *_endptr;
-    long result = wcstol(str, &_endptr, base);
+    long result = std::wcstol(str, &_endptr, base);
     while (iswspace(*_endptr)) ++_endptr;  // skip trailing whitespace
     if (!errno && *_endptr) {
         if (_endptr == str) {
@@ -704,7 +704,7 @@ long long fish_wcstoll(const wchar_t *str, const wchar_t **endptr, int base) {
 
     errno = 0;
     wchar_t *_endptr;
-    long long result = wcstoll(str, &_endptr, base);
+    long long result = std::wcstoll(str, &_endptr, base);
     while (iswspace(*_endptr)) ++_endptr;  // skip trailing whitespace
     if (!errno && *_endptr) {
         if (_endptr == str) {
@@ -737,7 +737,7 @@ unsigned long long fish_wcstoull(const wchar_t *str, const wchar_t **endptr, int
 
     errno = 0;
     wchar_t *_endptr;
-    unsigned long long result = wcstoull(str, &_endptr, base);
+    unsigned long long result = std::wcstoull(str, &_endptr, base);
     while (iswspace(*_endptr)) ++_endptr;  // skip trailing whitespace
     if (!errno && *_endptr) {
         if (_endptr == str) {
@@ -755,7 +755,7 @@ unsigned long long fish_wcstoull(const wchar_t *str, const wchar_t **endptr, int
 double fish_wcstod(const wchar_t *str, wchar_t **endptr) {
     // The "fast path." If we're all ASCII and we fit inline, use strtod().
     char narrow[128];
-    size_t len = wcslen(str);
+    size_t len = std::wcslen(str);
     size_t len_plus_0 = 1 + len;
     auto is_digit = [](wchar_t c) { return '0' <= c && c <= '9'; };
     if (len_plus_0 <= sizeof narrow && std::all_of(str, str + len, is_digit)) {

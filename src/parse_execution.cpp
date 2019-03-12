@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 #include <wctype.h>
 
 #include <algorithm>
@@ -628,7 +628,7 @@ parse_execution_result_t parse_execution_context_t::report_errors(
 
         // Print it.
         if (!should_suppress_stderr_for_tests()) {
-            fwprintf(stderr, L"%ls", backtrace_and_desc.c_str());
+            std::fwprintf(stderr, L"%ls", backtrace_and_desc.c_str());
         }
     }
     return parse_execution_errored;
@@ -673,7 +673,7 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
     // status to 127, which is the standard number used by other shells like bash and zsh.
 
     const wchar_t *const cmd = cmd_str.c_str();
-    const wchar_t *const equals_ptr = wcschr(cmd, L'=');
+    const wchar_t *const equals_ptr = std::wcschr(cmd, L'=');
     if (equals_ptr != NULL) {
         // Try to figure out if this is a pure variable assignment (foo=bar), or if this appears to
         // be running a command (foo=bar ruby...).

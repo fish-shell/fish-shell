@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <stddef.h>
 #include <sys/time.h>
-#include <wchar.h>
+#include <cwchar>
 #include <wctype.h>
 
 #include "common.h"
@@ -85,7 +85,7 @@ int wcsfilecmp(const wchar_t *a, const wchar_t *b) {
             // names are literally identical because that won't occur given how this function is
             // used. And even if it were to occur (due to being reused in some other context) it
             // would be so rare that it isn't worth optimizing for.
-            retval = wcscmp(orig_a, orig_b);
+            retval = std::wcscmp(orig_a, orig_b);
             return retval < 0 ? -1 : retval == 0 ? 0 : 1;
         }
         return -1;  // string a is a prefix of b and b is longer

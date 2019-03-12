@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <memory>
 #include <string>
@@ -250,7 +250,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 if (tmp >= 0 && tmp <= 10 && !*end && !errno) {
                     debug_level = (int)tmp;
                 } else {
-                    fwprintf(stderr, _(L"Invalid value '%s' for debug-level flag"), optarg);
+                    std::fwprintf(stderr, _(L"Invalid value '%s' for debug-level flag"), optarg);
                     exit(1);
                 }
                 break;
@@ -285,7 +285,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 break;
             }
             case 'v': {
-                fwprintf(stdout, _(L"%s, version %s\n"), PACKAGE_NAME, get_fish_version());
+                std::fwprintf(stdout, _(L"%s, version %s\n"), PACKAGE_NAME, get_fish_version());
                 exit(0);
                 break;
             }
@@ -299,7 +299,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 if (tmp > 0 && tmp <= 128 && !*end && !errno) {
                     debug_stack_frames = (int)tmp;
                 } else {
-                    fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag"), optarg);
+                    std::fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag"), optarg);
                     exit(1);
                 }
                 break;

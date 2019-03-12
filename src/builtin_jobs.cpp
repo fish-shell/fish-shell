@@ -40,7 +40,7 @@ static int cpu_use(const job_t *j) {
         double t1 = 1000000.0 * p->last_time.tv_sec + p->last_time.tv_usec;
         double t2 = 1000000.0 * t.tv_sec + t.tv_usec;
 
-        // fwprintf( stderr, L"t1 %f t2 %f p1 %d p2 %d\n", t1, t2, jiffies, p->last_jiffies );
+        // std::fwprintf( stderr, L"t1 %f t2 %f p1 %d p2 %d\n", t1, t2, jiffies, p->last_jiffies );
         u += ((double)(jiffies - p->last_jiffies)) / (t2 - t1);
     }
     return u * 1000000;

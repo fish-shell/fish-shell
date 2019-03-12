@@ -7,7 +7,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <algorithm>
 #include <iterator>
@@ -275,7 +275,7 @@ static bool validate_path_warning_on_colons(const wchar_t *cmd,
             continue;
         }
 
-        const wchar_t *colon = wcschr(dir.c_str(), L':');
+        const wchar_t *colon = std::wcschr(dir.c_str(), L':');
         bool looks_like_colon_sep = colon && colon[1];
         if (!looks_like_colon_sep && any_success) {
             // Once we have one valid entry, skip the remaining ones unless we might warn.
@@ -297,7 +297,7 @@ static bool validate_path_warning_on_colons(const wchar_t *cmd,
             streams.err.append_format(BUILTIN_SET_PATH_ERROR, cmd, key, dir.c_str(),
                                       strerror(errno));
             streams.err.append_format(BUILTIN_SET_PATH_HINT, cmd, key, key,
-                                      wcschr(dir.c_str(), L':') + 1);
+                                      std::wcschr(dir.c_str(), L':') + 1);
         }
     }
     return any_success;
@@ -365,7 +365,7 @@ static int env_set_reporting_errors(const wchar_t *cmd, const wchar_t *key, int 
 ///   is modified to omit the index expression leaving just the var name.
 static int parse_index(std::vector<long> &indexes, wchar_t *src, int scope, io_streams_t &streams,
                        const environment_t &vars) {
-    wchar_t *p = wcschr(src, L'[');
+    wchar_t *p = std::wcschr(src, L'[');
     if (!p) return 0;  // no slices so nothing for us to do
     *p = L'\0';        // split the var name from the indexes/slices
     p++;
@@ -609,7 +609,7 @@ static int builtin_set_show(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, 
                 continue;
             }
 
-            if (wcschr(arg, L'[')) {
+            if (std::wcschr(arg, L'[')) {
                 streams.err.append_format(
                     _(L"%ls: `set --show` does not allow slices with the var names\n"), cmd);
                 builtin_print_help(parser, streams, cmd, streams.err);

@@ -10,7 +10,7 @@
 // between the weak linking of `wcsdup` and `wcscasecmp` via `#define`s below and the declarations
 // in <wchar.h>. At least on OS X if we don't do this we get compilation errors do to the macro
 // substitution if wchar.h is included after this header.
-#include <wchar.h>  // IWYU pragma: keep
+#include <cwchar>  // IWYU pragma: keep
 
 /// The column width of ambiguous East Asian characters.
 extern int g_fish_ambiguous_width;
@@ -137,7 +137,7 @@ wchar_t *wcsndup(const wchar_t *in, size_t c);
 
 #ifndef HAVE_WCSLCPY
 /// Copy src to string dst of size siz.  At most siz-1 characters will be copied.  Always NUL
-/// terminates (unless siz == 0).  Returns wcslen(src); if retval >= siz, truncation occurred.
+/// terminates (unless siz == 0).  Returns std::wcslen(src); if retval >= siz, truncation occurred.
 ///
 /// This is the OpenBSD strlcpy function, modified for wide characters, and renamed to reflect this
 /// change.

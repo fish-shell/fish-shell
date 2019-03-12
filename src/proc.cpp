@@ -11,7 +11,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 #include <wctype.h>
 
 #if HAVE_TERM_H
@@ -441,7 +441,7 @@ static wcstring truncate_command(const wcstring &cmd) {
     }
 
     // Truncation required.
-    const size_t ellipsis_length = wcslen(ellipsis_str);  // no need for wcwidth
+    const size_t ellipsis_length = std::wcslen(ellipsis_str);  // no need for wcwidth
     size_t trunc_length = max_len - ellipsis_length;
     // Eat trailing whitespace.
     while (trunc_length > 0 && iswspace(cmd.at(trunc_length - 1))) {
@@ -547,7 +547,7 @@ static bool process_clean_after_marking(bool allow_interactive) {
                     // we don't need to.
                     const wcstring job_number_desc =
                         only_one_job ? wcstring() : format_string(_(L"Job %d, "), j->job_id);
-                    fwprintf(stdout, _(L"%ls: %ls\'%ls\' terminated by signal %ls (%ls)"),
+                    std::fwprintf(stdout, _(L"%ls: %ls\'%ls\' terminated by signal %ls (%ls)"),
                              program_name, job_number_desc.c_str(),
                              truncate_command(j->command()).c_str(), sig2wcs(s.signal_code()),
                              signal_get_desc(s.signal_code()));
@@ -556,13 +556,13 @@ static bool process_clean_after_marking(bool allow_interactive) {
                         only_one_job ? wcstring() : format_string(L"from job %d, ", j->job_id);
                     const wchar_t *fmt =
                         _(L"%ls: Process %d, \'%ls\' %ls\'%ls\' terminated by signal %ls (%ls)");
-                    fwprintf(stdout, fmt, program_name, p->pid, p->argv0(), job_number_desc.c_str(),
+                    std::fwprintf(stdout, fmt, program_name, p->pid, p->argv0(), job_number_desc.c_str(),
                              truncate_command(j->command()).c_str(), sig2wcs(s.signal_code()),
                              signal_get_desc(s.signal_code()));
                 }
 
                 if (clr_eol) outputter_t::stdoutput().term_puts(clr_eol, 1);
-                fwprintf(stdout, L"\n");
+                std::fwprintf(stdout, L"\n");
             }
             found = false;
             // clear status so it is not reported more than once
@@ -641,7 +641,7 @@ unsigned long proc_get_jiffies(process_t *p) {
         wchan, nswap, cnswap;
     char comm[1024];
 
-    swprintf(fn, FN_SIZE, L"/proc/%d/stat", p->pid);
+    std::swprintf(fn, FN_SIZE, L"/proc/%d/stat", p->pid);
     FILE *f = wfopen(fn, "r");
     if (!f) return 0;
 

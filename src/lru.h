@@ -2,7 +2,7 @@
 #ifndef FISH_LRU_H
 #define FISH_LRU_H
 
-#include <wchar.h>
+#include <cwchar>
 
 #include <unordered_map>
 

@@ -59,7 +59,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include <wchar.h>
+#include <cwchar>
 #include <wctype.h>
 
 #include "builtin.h"
@@ -255,17 +255,17 @@ static T raw_string_to_scalar_type(const wchar_t *s, wchar_t **end);
 // #626
 template <>
 intmax_t raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
-    return wcstoll(s, end, 0);
+    return std::wcstoll(s, end, 0);
 }
 
 template <>
 uintmax_t raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
-    return wcstoull(s, end, 0);
+    return std::wcstoull(s, end, 0);
 }
 
 template <>
 long double raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
-    double val = wcstod(s, end);
+    double val = std::wcstod(s, end);
     if (**end == L'\0') return val;
     // The conversion using the user's locale failed. That may be due to the string not being a
     // valid floating point value. It could also be due to the locale using different separator
@@ -358,7 +358,7 @@ long builtin_printf_state_t::print_esc(const wchar_t *escstart, bool octal_0) {
              ++esc_length, ++p)
             esc_value = esc_value * 8 + octal_to_bin(*p);
         this->append_output(ENCODE_DIRECT_BASE + esc_value % 256);
-    } else if (*p && wcschr(L"\"\\abcefnrtv", *p)) {
+    } else if (*p && std::wcschr(L"\"\\abcefnrtv", *p)) {
         print_esc_char(*p++);
     } else if (*p == L'u' || *p == L'U') {
         wchar_t esc_char = *p;

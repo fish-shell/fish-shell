@@ -28,7 +28,7 @@
 #include <sys/time.h>   // IWYU pragma: keep
 #include <sys/types.h>  // IWYU pragma: keep
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <atomic>
 #include <map>
@@ -136,7 +136,7 @@ static bool match(const wchar_t **inout_cursor, const char *cmd) {
 static bool is_universal_safe_to_encode_directly(wchar_t c) {
     if (c < 32 || c > 128) return false;
 
-    return iswalnum(c) || wcschr(L"/_", c);
+    return iswalnum(c) || std::wcschr(L"/_", c);
 }
 
 /// Escape specified string.
@@ -850,7 +850,7 @@ static const wchar_t *skip_spaces(const wchar_t *str) {
 bool env_universal_t::populate_1_variable(const wchar_t *input, env_var_t::env_var_flags_t flags,
                                           var_table_t *vars, wcstring *storage) {
     const wchar_t *str = skip_spaces(input);
-    const wchar_t *colon = wcschr(str, L':');
+    const wchar_t *colon = std::wcschr(str, L':');
     if (!colon) return false;
 
     // Parse out the value into storage, and decode it into a variable.

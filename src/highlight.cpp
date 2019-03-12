@@ -6,7 +6,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <algorithm>
 #include <memory>
@@ -532,7 +532,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
 
     // Hacky support for %self which must be an unquoted literal argument.
     if (buffstr == PROCESS_EXPAND_SELF_STR) {
-        std::fill_n(colors, wcslen(PROCESS_EXPAND_SELF_STR), highlight_role_t::operat);
+        std::fill_n(colors, std::wcslen(PROCESS_EXPAND_SELF_STR), highlight_role_t::operat);
         return;
     }
 
@@ -554,7 +554,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                     if (escaped_char == L'\0') {
                         fill_end = in_pos;
                         fill_color = highlight_role_t::error;
-                    } else if (wcschr(L"~%", escaped_char)) {
+                    } else if (std::wcschr(L"~%", escaped_char)) {
                         if (in_pos == 1) {
                             fill_end = in_pos + 1;
                         }
@@ -562,12 +562,12 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                         if (bracket_count) {
                             fill_end = in_pos + 1;
                         }
-                    } else if (wcschr(L"abefnrtv*?$(){}[]'\"<>^ \\#;|&", escaped_char)) {
+                    } else if (std::wcschr(L"abefnrtv*?$(){}[]'\"<>^ \\#;|&", escaped_char)) {
                         fill_end = in_pos + 1;
-                    } else if (wcschr(L"c", escaped_char)) {
+                    } else if (std::wcschr(L"c", escaped_char)) {
                         // Like \ci. So highlight three characters.
                         fill_end = in_pos + 1;
-                    } else if (wcschr(L"uUxX01234567", escaped_char)) {
+                    } else if (std::wcschr(L"uUxX01234567", escaped_char)) {
                         long long res = 0;
                         int chars = 2;
                         int base = 16;
@@ -720,7 +720,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                         // Backslash
                         if (in_pos + 1 < buff_len) {
                             const wchar_t escaped_char = buffstr.at(in_pos + 1);
-                            if (wcschr(L"\\\"\n$", escaped_char)) {
+                            if (std::wcschr(L"\\\"\n$", escaped_char)) {
                                 colors[in_pos] = highlight_role_t::escape;      // backslash
                                 colors[in_pos + 1] = highlight_role_t::escape;  // escaped char
                                 in_pos += 1;                                 // skip over backslash
@@ -1366,9 +1366,9 @@ static void highlight_universal_internal(const wcstring &buffstr,
 
         // Highlight matching parenthesis.
         const wchar_t c = buffstr.at(pos);
-        if (wcschr(L"()[]{}", c)) {
-            int step = wcschr(L"({[", c) ? 1 : -1;
-            wchar_t dec_char = *(wcschr(L"()[]{}", c) + step);
+        if (std::wcschr(L"()[]{}", c)) {
+            int step = std::wcschr(L"({[", c) ? 1 : -1;
+            wchar_t dec_char = *(std::wcschr(L"()[]{}", c) + step);
             wchar_t inc_char = c;
             int level = 0;
             bool match_found = false;

@@ -2,7 +2,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include "builtin.h"
 #include "builtin_contains.h"
@@ -75,7 +75,7 @@ int builtin_contains(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         streams.err.append_format(_(L"%ls: Key not specified\n"), cmd);
     } else {
         for (int i = optind + 1; i < argc; i++) {
-            if (!wcscmp(needle, argv[i])) {
+            if (!std::wcscmp(needle, argv[i])) {
                 if (opts.print_index) streams.out.append_format(L"%d\n", i - optind);
                 return STATUS_CMD_OK;
             }

@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <algorithm>
 #include <memory>
@@ -222,7 +222,7 @@ static int read_interactive(wcstring &buff, int nchars, bool shell, bool silent,
     reader_set_exit_on_interrupt(true);
     reader_set_silent_status(silent);
 
-    reader_set_buffer(commandline, wcslen(commandline));
+    reader_set_buffer(commandline, std::wcslen(commandline));
     proc_push_interactive(1);
 
     event_fire_generic(L"fish_prompt");
@@ -317,7 +317,7 @@ static int read_one_char_at_a_time(int fd, wcstring &buff, int nchars, bool spli
                 res = (unsigned char)b;
                 finished = true;
             } else {
-                size_t sz = mbrtowc(&res, &b, 1, &state);
+                size_t sz = std::mbrtowc(&res, &b, 1, &state);
                 if (sz == (size_t)-1) {
                     memset(&state, 0, sizeof(state));
                 } else if (sz != (size_t)-2) {

@@ -2,7 +2,7 @@
 #include "config.h"
 
 #include <errno.h>
-#include <wchar.h>
+#include <cwchar>
 #include <wctype.h>
 #if HAVE_TERM_H
 #include <curses.h>
@@ -746,7 +746,7 @@ bool input_terminfo_get_sequence(const wchar_t *name, wcstring *out_seq) {
 
     for (size_t i = 0; i < terminfo_mappings.size(); i++) {
         const terminfo_mapping_t &m = terminfo_mappings.at(i);
-        if (!wcscmp(name, m.name)) {
+        if (!std::wcscmp(name, m.name)) {
             res = m.seq;
             err = EILSEQ;
             break;

@@ -2,7 +2,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <stddef.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <memory>
 #include <string>
@@ -49,7 +49,7 @@ static void builtin_complete_add2(const wchar_t *cmd, int cmd_type, const wchar_
                      comp, desc, flags);
     }
 
-    if (old_opt.empty() && gnu_opt.empty() && wcslen(short_opt) == 0) {
+    if (old_opt.empty() && gnu_opt.empty() && std::wcslen(short_opt) == 0) {
         complete_add(cmd, cmd_type, wcstring(), option_type_args_only, result_mode, condition, comp,
                      desc, flags);
     }
@@ -274,7 +274,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_INVALID_ARGS;
     }
 
-    if (condition && wcslen(condition)) {
+    if (condition && std::wcslen(condition)) {
         const wcstring condition_string = condition;
         parse_error_list_t errors;
         if (parse_util_detect_errors(condition_string, &errors,
@@ -289,7 +289,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
     }
 
-    if (comp && wcslen(comp)) {
+    if (comp && std::wcslen(comp)) {
         wcstring prefix;
         prefix.append(cmd);
         prefix.append(L": ");

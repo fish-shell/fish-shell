@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <algorithm>
 #include <map>
@@ -247,7 +247,7 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
     }
 
     if (metadata_as_comments) {
-        if (wcscmp(path, L"stdin")) {
+        if (std::wcscmp(path, L"stdin")) {
             streams.out.append_format(L"# Defined in %ls @ line %d\n", path, line_number);
         }
     } else {

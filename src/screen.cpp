@@ -13,7 +13,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-#include <wchar.h>
+#include <cwchar>
 
 #if HAVE_CURSES_H
 #include <curses.h>
@@ -101,12 +101,12 @@ static bool is_screen_name_escape_seq(const wchar_t *code, size_t *resulting_len
         return false;
     }
     const wchar_t *const screen_name_end_sentinel = L"\x1B\\";
-    const wchar_t *screen_name_end = wcsstr(&code[2], screen_name_end_sentinel);
+    const wchar_t *screen_name_end = std::wcsstr(&code[2], screen_name_end_sentinel);
     if (screen_name_end == NULL) {
         // Consider just <esc>k to be the code.
         *resulting_length = 2;
     } else {
-        const wchar_t *escape_sequence_end = screen_name_end + wcslen(screen_name_end_sentinel);
+        const wchar_t *escape_sequence_end = screen_name_end + std::wcslen(screen_name_end_sentinel);
         *resulting_length = escape_sequence_end - code;
     }
     return true;
@@ -403,7 +403,7 @@ static void s_desired_append_char(screen_t *s, wchar_t b, highlight_spec_t c, in
         if ((s->desired.cursor.x + cw) > screen_width) {
             // Current line is soft wrapped (assuming we support it).
             s->desired.line(s->desired.cursor.y).is_soft_wrapped = true;
-            // fwprintf(stderr, L"\n\n1 Soft wrapping %d\n\n", s->desired.cursor.y);
+            // std::fwprintf(stderr, L"\n\n1 Soft wrapping %d\n\n", s->desired.cursor.y);
 
             line_no = (int)s->desired.line_count();
             s->desired.add_line();
@@ -863,7 +863,7 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
 
     // Compute the width of the autosuggestion at all possible truncation offsets.
     std::vector<size_t> autosuggest_truncated_widths;
-    autosuggest_truncated_widths.reserve(1 + wcslen(autosuggestion));
+    autosuggest_truncated_widths.reserve(1 + std::wcslen(autosuggestion));
     size_t autosuggest_total_width = 0;
     for (size_t i = 0; autosuggestion[i] != L'\0'; i++) {
         autosuggest_truncated_widths.push_back(autosuggest_total_width);

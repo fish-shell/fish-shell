@@ -2,7 +2,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <stddef.h>
-#include <wchar.h>
+#include <cwchar>
 
 #include <string>
 
@@ -77,11 +77,11 @@ const enum_map<status_cmd_t> status_enum_map[] = {
 enum { TEST_FEATURE_ON, TEST_FEATURE_OFF, TEST_FEATURE_NOT_RECOGNIZED };
 
 int job_control_str_to_mode(const wchar_t *mode, wchar_t *cmd, io_streams_t &streams) {
-    if (wcscmp(mode, L"full") == 0) {
+    if (std::wcscmp(mode, L"full") == 0) {
         return JOB_CONTROL_ALL;
-    } else if (wcscmp(mode, L"interactive") == 0) {
+    } else if (std::wcscmp(mode, L"interactive") == 0) {
         return JOB_CONTROL_INTERACTIVE;
-    } else if (wcscmp(mode, L"none") == 0) {
+    } else if (std::wcscmp(mode, L"none") == 0) {
         return JOB_CONTROL_NONE;
     }
     streams.err.append_format(L"%ls: Invalid job control mode '%ls'\n", cmd, mode);
@@ -127,7 +127,7 @@ static bool set_status_cmd(wchar_t *const cmd, status_cmd_opts_t &opts, status_c
         wchar_t err_text[1024];
         const wchar_t *subcmd_str1 = enum_to_str(opts.status_cmd, status_enum_map);
         const wchar_t *subcmd_str2 = enum_to_str(sub_cmd, status_enum_map);
-        swprintf(err_text, sizeof(err_text) / sizeof(wchar_t),
+        std::swprintf(err_text, sizeof(err_text) / sizeof(wchar_t),
                  _(L"you cannot do both '%ls' and '%ls' in the same invocation"), subcmd_str1,
                  subcmd_str2);
         streams.err.append_format(BUILTIN_ERR_COMBO2, cmd, err_text);

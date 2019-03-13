@@ -659,7 +659,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
         // Cardinal directions. We have a completion index; we wish to compute its row and column.
         size_t current_row = this->get_selected_row(rendering);
         size_t current_col = this->get_selected_column(rendering);
-        size_t page_height = std::max(rendering.term_height - 1, 1UL);
+        size_t page_height = std::max(rendering.term_height - 1, (size_t)1);
 
         switch (direction) {
             case direction_page_north: {

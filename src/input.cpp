@@ -227,8 +227,7 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t *const *commands, 
 
     auto& ml = user ? mapping_list : preset_mapping_list;
 
-    for (size_t i = 0; i < ml.size(); i++) {
-        input_mapping_t &m = ml.at(i);
+    for (input_mapping_t& m : ml) {
         if (m.seq == sequence && m.mode == mode) {
             m.commands = commands_vector;
             m.sets_mode = sets_mode;
@@ -744,8 +743,7 @@ bool input_terminfo_get_sequence(const wchar_t *name, wcstring *out_seq) {
     const char *res = 0;
     int err = ENOENT;
 
-    for (size_t i = 0; i < terminfo_mappings.size(); i++) {
-        const terminfo_mapping_t &m = terminfo_mappings.at(i);
+    for (const terminfo_mapping_t &m : terminfo_mappings) {
         if (!std::wcscmp(name, m.name)) {
             res = m.seq;
             err = EILSEQ;
@@ -765,9 +763,7 @@ bool input_terminfo_get_sequence(const wchar_t *name, wcstring *out_seq) {
 bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name) {
     assert(input_initialized);
 
-    for (size_t i = 0; i < terminfo_mappings.size(); i++) {
-        terminfo_mapping_t &m = terminfo_mappings.at(i);
-
+    for (const terminfo_mapping_t &m : terminfo_mappings) {
         if (!m.seq) {
             continue;
         }
@@ -787,9 +783,7 @@ wcstring_list_t input_terminfo_get_names(bool skip_null) {
     wcstring_list_t result;
     result.reserve(terminfo_mappings.size());
 
-    for (size_t i = 0; i < terminfo_mappings.size(); i++) {
-        terminfo_mapping_t &m = terminfo_mappings.at(i);
-
+    for (const terminfo_mapping_t &m : terminfo_mappings) {
         if (skip_null && !m.seq) {
             continue;
         }

@@ -28,6 +28,11 @@ function fish_clipboard_paste
     if __fish_commandline_is_singlequoted
         set data (string replace -ra "(['\\\])" '\\\\\\\$1' -- $data)
     end
+    if not string length -q -- (commandline -c)
+        # If we're at the beginning of the first line, trim whitespace from the start,
+        # so we don't trigger ignoring history.
+        set data (string trim -l -- $data)
+    end
     if test -n "$data"
         commandline -i -- $data
     end

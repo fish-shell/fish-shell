@@ -20,6 +20,7 @@ ADD_CUSTOM_TARGET(sphinx-docs
         -d "${SPHINX_CACHE_DIR}"
         "${SPHINX_SRC_DIR}"
         "${SPHINX_HTML_DIR}"
+    DEPENDS sphinx_doc_src/fish_indent_lexer.py
     COMMENT "Building HTML documentation with Sphinx")
 
 ADD_CUSTOM_TARGET(sphinx-manpages

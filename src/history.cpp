@@ -608,17 +608,13 @@ static void append_yaml_to_buffer(const wcstring &wcmd, time_t timestamp,
     std::string cmd = wcs2string(wcmd);
     escape_yaml(&cmd);
     buffer->append("- cmd: ", cmd.c_str(), "\n");
-
-    char timestamp_str[96];
-    snprintf(timestamp_str, sizeof timestamp_str, "%ld", (long)timestamp);
-    buffer->append("  when: ", timestamp_str, "\n");
+    buffer->append("  when: ", std::to_string(timestamp).c_str(), "\n");
 
     if (!required_paths.empty()) {
         buffer->append("  paths:\n");
 
-        for (path_list_t::const_iterator iter = required_paths.begin();
-             iter != required_paths.end(); ++iter) {
-            std::string path = wcs2string(*iter);
+        for (auto const &wpath : required_paths) {
+            std::string path = wcs2string(wpath);
             escape_yaml(&path);
             buffer->append("    - ", path.c_str(), "\n");
         }

@@ -25,7 +25,6 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "input_common.h"
 #include "iothread.h"
-#include "util.h"
 #include "wutil.h"
 
 /// Time in milliseconds to wait for another byte to be available for reading
@@ -82,7 +81,7 @@ static wint_t readb() {
         FD_SET(0, &fdset);
         if (ioport > 0) {
             FD_SET(ioport, &fdset);
-            fd_max = maxi(fd_max, ioport);
+            fd_max = std::max(fd_max, ioport);
         }
 
         // Get our uvar notifier.
@@ -92,7 +91,7 @@ static wint_t readb() {
         int notifier_fd = notifier.notification_fd();
         if (notifier_fd > 0) {
             FD_SET(notifier_fd, &fdset);
-            fd_max = maxi(fd_max, notifier_fd);
+            fd_max = std::max(fd_max, notifier_fd);
         }
 
         // Get its suggested delay (possibly none).

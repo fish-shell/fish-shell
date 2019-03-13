@@ -9,7 +9,6 @@
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
-#include "util.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -81,7 +80,7 @@ static void print_all(int hard, io_streams_t &streams) {
     int w = 0;
 
     for (i = 0; resource_arr[i].desc; i++) {
-        w = maxi(w, fish_wcswidth(resource_arr[i].desc));
+        w = std::max(w, fish_wcswidth(resource_arr[i].desc));
     }
 
     for (i = 0; resource_arr[i].desc; i++) {

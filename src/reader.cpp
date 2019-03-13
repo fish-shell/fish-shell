@@ -73,7 +73,6 @@
 #include "signal.h"
 #include "tnode.h"
 #include "tokenizer.h"
-#include "util.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 // Name of the variable that tells how long it took, in milliseconds, for the previous
@@ -137,8 +136,9 @@ static inline unsigned read_generation_count() {
 void editable_line_t::insert_string(const wcstring &str, size_t start, size_t len) {
     // Clamp the range to something valid.
     size_t string_length = str.size();
-    start = mini(start, string_length);      //!OCLINT(parameter reassignment)
-    len = mini(len, string_length - start);  //!OCLINT(parameter reassignment)
+
+    start = std::min(start, string_length);      //!OCLINT(parameter reassignment)
+    len = std::min(len, string_length - start);  //!OCLINT(parameter reassignment)
     this->text.insert(this->position, str, start, len);
     this->position += len;
 }
@@ -631,8 +631,8 @@ void reader_data_t::repaint() {
     // term size, minus the number of lines consumed by our string. (Note this doesn't yet consider
     // wrapping).
     int full_line_count = 1 + std::count(full_line.begin(), full_line.end(), '\n');
-    pager.set_term_size(maxi(1, common_get_width()),
-                        maxi(1, common_get_height() - full_line_count));
+    pager.set_term_size(std::max(1, common_get_width()),
+                        std::max(1, common_get_height() - full_line_count));
     pager.update_rendering(&current_page_rendering);
 
     bool focused_on_pager = active_edit_line() == &pager.search_field_line;
@@ -665,7 +665,7 @@ void reader_data_t::kill(editable_line_t *el, size_t begin_idx, size_t length, i
     if (el->position > begin_idx) {
         // Move the buff position back by the number of characters we deleted, but don't go past
         // buff_pos.
-        size_t backtrack = mini(el->position - begin_idx, length);
+        size_t backtrack = std::min(el->position - begin_idx, length);
         update_buff_pos(el, el->position - backtrack);
     }
 
@@ -816,10 +816,12 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
 bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack) {
     bool result = false;
     editable_line_t *el = active_edit_line();
+
     if (expand_abbreviations && el == &command_line) {
         // Try expanding abbreviations.
         wcstring new_cmdline;
-        size_t cursor_pos = el->position - mini(el->position, cursor_backtrack);
+        size_t cursor_pos = el->position - std::min(el->position, cursor_backtrack);
+
         if (reader_expand_abbreviation_in_command(el->text, cursor_pos, vars(), &new_cmdline)) {
             // We expanded an abbreviation! The cursor moves by the difference in the command line
             // lengths.
@@ -1585,7 +1587,8 @@ bool reader_data_t::handle_completions(const std::vector<completion_t> &comp,
                 first = false;
             } else {
                 // Determine the shared prefix length.
-                size_t idx, max = mini(common_prefix.size(), el.completion.size());
+                size_t idx, max = std::min(common_prefix.size(), el.completion.size());
+
                 for (idx = 0; idx < max; idx++) {
                     wchar_t ac = common_prefix.at(idx), bc = el.completion.at(idx);
                     bool matches = (ac == bc);
@@ -2689,7 +2692,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 // If we landed on a newline, don't delete it.
                 if (*begin == L'\n') begin++;
                 assert(end >= begin);
-                size_t len = maxi<size_t>(end - begin, 1);
+                size_t len = std::max<size_t>(end - begin, 1);
                 begin = end - len;
                 kill(el, begin - buff, len, KILL_PREPEND, last_char != R_BACKWARD_KILL_LINE);
                 break;

@@ -41,7 +41,6 @@
 
 #include "common.h"    // IWYU pragma: keep
 #include "fallback.h"  // IWYU pragma: keep
-#include "util.h"      // IWYU pragma: keep
 
 #if defined(TPARM_SOLARIS_KLUDGE)
 #undef tparm

@@ -39,7 +39,6 @@
 #include "output.h"
 #include "pager.h"
 #include "screen.h"
-#include "util.h"
 
 /// The number of characters to indent new blocks.
 #define INDENT_STEP 4u
@@ -86,7 +85,7 @@ static size_t next_tab_stop(size_t current_line_width) {
 }
 
 /// Like fish_wcwidth, but returns 0 for control characters instead of -1.
-static int fish_wcwidth_min_0(wchar_t widechar) { return maxi(0, fish_wcwidth(widechar)); }
+static int fish_wcwidth_min_0(wchar_t widechar) { return std::max(0, fish_wcwidth(widechar)); }
 
 /// Whether we permit soft wrapping. If so, in some cases we don't explicitly move to the second
 /// physical line on a wrapped logical line; instead we just output it.
@@ -225,7 +224,8 @@ static bool is_visual_escape_seq(const wchar_t *code, size_t *resulting_length) 
         if (!esc2[p]) continue;
         // Test both padded and unpadded version, just to be safe. Most versions of tparm don't
         // actually seem to do anything these days.
-        size_t esc_seq_len = maxi(try_sequence(tparm((char *)esc2[p]), code), try_sequence(esc2[p], code));
+        size_t esc_seq_len =
+            std::max(try_sequence(tparm((char *)esc2[p]), code), try_sequence(esc2[p], code));
         if (esc_seq_len) {
             *resulting_length = esc_seq_len;
             return true;
@@ -615,7 +615,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
 
     // Determine how many lines have stuff on them; we need to clear lines with stuff that we don't
     // want.
-    const size_t lines_with_stuff = maxi(actual_lines_before_reset, scr->actual.line_count());
+    const size_t lines_with_stuff = std::max(actual_lines_before_reset, scr->actual.line_count());
 
     if (left_prompt != scr->actual_left_prompt) {
         s_move(scr, 0, 0);
@@ -657,7 +657,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
                     }
                 }
                 if (next_line_will_change) {
-                    skip_remaining = mini(skip_remaining, (size_t)(scr->actual_width - 2));
+                    skip_remaining = std::min(skip_remaining, (size_t)(scr->actual_width - 2));
                 }
             }
         }
@@ -1073,7 +1073,8 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
     // underneath the cursor when resizing a window wider such that it reduces our desired line
     // count.
     if (!abandon_line) {
-        s->actual_lines_before_reset = maxi(s->actual_lines_before_reset, s->actual.line_count());
+        s->actual_lines_before_reset =
+            std::max(s->actual_lines_before_reset, s->actual.line_count());
     }
 
     if (repaint_prompt && !abandon_line) {

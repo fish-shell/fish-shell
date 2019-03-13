@@ -18,7 +18,6 @@
 #include "pager.h"
 #include "reader.h"
 #include "screen.h"
-#include "util.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 typedef pager_t::comp_t comp_t;
@@ -422,7 +421,7 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
         this->available_term_height - 1 -
         (search_field_shown ? 1 : 0);  // we always subtract 1 to make room for a comment row
     if (!this->fully_disclosed) {
-        term_height = mini(term_height, (size_t)PAGER_UNDISCLOSED_MAX_ROWS);
+        term_height = std::min(term_height, (size_t)PAGER_UNDISCLOSED_MAX_ROWS);
     }
 
     size_t row_count = divide_round_up(lst.size(), cols);
@@ -478,7 +477,7 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
         // suggested_start_row.
         assert(row_count > term_height);
         size_t last_starting_row = row_count - term_height;
-        start_row = mini(suggested_start_row, last_starting_row);
+        start_row = std::min(suggested_start_row, last_starting_row);
         stop_row = start_row + term_height;
         assert(start_row <= last_starting_row);
     }
@@ -660,7 +659,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
         // Cardinal directions. We have a completion index; we wish to compute its row and column.
         size_t current_row = this->get_selected_row(rendering);
         size_t current_col = this->get_selected_column(rendering);
-        size_t page_height = maxi(rendering.term_height - 1, (size_t)1);
+        size_t page_height = std::max(rendering.term_height - 1, 1UL);
 
         switch (direction) {
             case direction_page_north: {

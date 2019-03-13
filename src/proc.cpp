@@ -46,7 +46,6 @@
 #include "reader.h"
 #include "sanity.h"
 #include "signal.h"
-#include "util.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// Statuses of last job's processes to exit - ensure we start off with one entry of 0.

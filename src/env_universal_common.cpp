@@ -1365,7 +1365,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
 
         // Now return the smaller of the two values. If we get ULONG_MAX, it means there's no more
         // need to poll; in that case return 0.
-        unsigned long result = mini(readback_delay, polling_delay);
+        unsigned long result = std::min(readback_delay, polling_delay);
         if (result == ULONG_MAX) {
             result = 0;
         }
@@ -1378,7 +1378,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
             // Read back what we wrote. We do nothing with the value.
             while (this->readback_amount > 0) {
                 char buff[64];
-                size_t amt_to_read = mini(this->readback_amount, sizeof buff);
+                size_t amt_to_read = std::min(this->readback_amount, sizeof(buff));
                 ignore_result(read(this->pipe_fd, buff, amt_to_read));
                 this->readback_amount -= amt_to_read;
             }

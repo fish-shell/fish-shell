@@ -22,7 +22,6 @@
 #include "parser.h"
 #include "tnode.h"
 #include "tokenizer.h"
-#include "util.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 

@@ -15,7 +15,6 @@
 #include "proc.h"
 #include "reader.h"
 #include "tokenizer.h"
-#include "util.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -398,7 +397,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             }
 
             current_buffer = reader_get_buffer();
-            new_pos = maxi(0L, mini(new_pos, (long)wcslen(current_buffer)));
+            new_pos = std::max(0L, std::min(new_pos, (long)std::wcslen(current_buffer)));
             reader_set_buffer(current_buffer, (size_t)new_pos);
         } else {
             streams.out.append_format(L"%lu\n", (unsigned long)reader_get_cursor_pos());

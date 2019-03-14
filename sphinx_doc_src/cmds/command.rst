@@ -14,7 +14,7 @@ Description
 
 The following options are available:
 
-- ``-a`` or ``--all`` returns all the external commands that are found in ``$PATH`` in the order they are found.
+- ``-a`` or ``--all`` returns all the external COMMANDNAMEs that are found in ``$PATH`` in the order they are found.
 
 - ``-q`` or ``--quiet``, silences the output and prints nothing, setting only the exit code. Implies ``--search``.
 

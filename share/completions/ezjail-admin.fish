@@ -3,11 +3,11 @@ function __fish_complete_jails
 end
 
 function __fish_complete_running_jails
-    ezjail-admin list | tail +3 | grep '^.R' | awk '{ print $4 }'
+    ezjail-admin list | tail +3 | string match -r '^.R' | awk '{ print $4 }'
 end
 
 function __fish_complete_stopped_jails
-    ezjail-admin list | tail +3 | grep '^.S' | awk '{ print $4 }'
+    ezjail-admin list | tail +3 | string match -r '^.S' | awk '{ print $4 }'
 end
 
 # archive

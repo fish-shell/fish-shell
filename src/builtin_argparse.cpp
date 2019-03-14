@@ -105,9 +105,7 @@ static int check_for_mutually_exclusive_flags(const argparse_cmd_opts_t &opts,
                         // We want the flag order to be deterministic. Primarily to make unit
                         // testing easier.
                         if (flag1 > flag2) {
-                            wcstring tmp(flag1);
-                            flag1 = flag2;
-                            flag2 = tmp;
+                            std::swap(flag1, flag2);
                         }
                         streams.err.append_format(
                             _(L"%ls: Mutually exclusive flags '%ls' and `%ls` seen\n"),

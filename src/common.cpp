@@ -2415,7 +2415,7 @@ bool valid_var_name_char(wchar_t chr) { return fish_iswalnum(chr) || chr == L'_'
 
 /// Test if the given string is a valid variable name.
 bool valid_var_name(const wcstring &str) {
-    return std::find_if(str.begin(), str.end(), valid_var_name_char) == str.end();
+    return std::find_if_not(str.begin(), str.end(), valid_var_name_char) == str.end();
 }
 
 /// Test if the string is a valid function name.

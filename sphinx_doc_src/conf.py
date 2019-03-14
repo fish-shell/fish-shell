@@ -8,12 +8,23 @@
 
 import glob
 import os.path
+import pygments
 
 # -- Helper functions --------------------------------------------------------
 
 def strip_ext(path):
     """ Remove the extension from a path. """
     return os.path.splitext(path)[0]
+
+# -- Load our Pygments lexer -------------------------------------------------
+def setup(app):
+    from sphinx.highlighting import lexers
+    this_dir = os.path.dirname(os.path.realpath(__file__))
+    fish_indent_lexer = pygments.lexers.load_lexer_from_file(
+        os.path.join(this_dir, 'fish_indent_lexer.py'),
+        lexername='FishIndentLexer')
+    lexers['fish-docs-samples'] = fish_indent_lexer
+
 
 # -- Path setup --------------------------------------------------------------
 

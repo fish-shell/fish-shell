@@ -1,4 +1,4 @@
-.. highlight:: fish
+.. highlight:: fish-docs-samples
 
 Tutorial
 ========

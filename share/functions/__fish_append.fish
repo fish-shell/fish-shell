@@ -1,7 +1,7 @@
-function __fish_append -d "Internal completion function for appending string to the commandline" --argument separator
+function __fish_append -d "Internal completion function for appending string to the commandline" --argument sep
     set -e argv[1]
-    set str (commandline -tc| sed -ne "s/\(.*$separator\)[^$separator]*/\1/p"|sed -e "s/--.*=//")
-    printf "%s\n" "$str"$argv "$str"(printf "%s\n" $argv|sed -e "s/\(\t\|\$\)/,\1/")
+    set str (commandline -tc | string replace -rf "(.*$sep)[^$sep]*" '$1' | string replace -r -- '--.*=' '')
+    printf "%s\n" "$str"$argv
 end
 
 

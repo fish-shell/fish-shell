@@ -135,7 +135,7 @@ wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars) {
     }
 
     auto path_var = vars.get(L"PATH");
-    std::vector<wcstring> pathsv;
+    wcstring_list_t pathsv;
     if (path_var) path_var->to_list(pathsv);
     for (auto path : pathsv) {
         if (path.empty()) continue;

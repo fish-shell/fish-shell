@@ -1150,7 +1150,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
     return subcommand_statuses.status;
 }
 
-int exec_subshell(const wcstring &cmd, parser_t &parser, std::vector<wcstring> &outputs,
+int exec_subshell(const wcstring &cmd, parser_t &parser, wcstring_list_t &outputs,
                   bool apply_exit_status, bool is_subcmd) {
     ASSERT_IS_MAIN_THREAD();
     return exec_subshell_internal(cmd, parser, &outputs, apply_exit_status, is_subcmd);

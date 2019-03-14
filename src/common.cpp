@@ -198,7 +198,7 @@ demangled_backtrace(int max_frames, int skip_levels) {
     int n_frames = backtrace(callstack, n_max_frames);
     char **symbols = backtrace_symbols(callstack, n_frames);
     wchar_t text[1024];
-    std::vector<wcstring> backtrace_text;
+    wcstring_list_t backtrace_text;
 
     if (skip_levels + max_frames < n_frames) n_frames = skip_levels + max_frames;
 

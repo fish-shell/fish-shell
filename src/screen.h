@@ -222,7 +222,7 @@ class layout_cache_t {
    private:
     // Cached escape sequences we've already detected in the prompt and similar strings, ordered
     // lexicographically.
-    std::vector<wcstring> esc_cache_;
+    wcstring_list_t esc_cache_;
 
     // LRU-list of prompts and their layouts.
     // Use a list so we can promote to the front on a cache hit.

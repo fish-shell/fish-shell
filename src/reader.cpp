@@ -196,7 +196,7 @@ class reader_history_search_t {
             tokenizer_t tok(text.c_str(), TOK_ACCEPT_UNFINISHED);
             tok_t token;
 
-            std::vector<wcstring> local_tokens;
+            wcstring_list_t local_tokens;
             while (tok.next(&token)) {
                 if (token.type != TOK_STRING) continue;
                 wcstring text = tok.text_of(token);

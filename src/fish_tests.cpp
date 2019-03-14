@@ -3012,10 +3012,10 @@ static void test_line_iterator() {
     do_test((lines1 == std::vector<std::string>{"Alpha", "Beta", "Gamma", "", "Delta"}));
 
     wcstring text2 = L"\n\nAlpha\nBeta\nGamma\n\nDelta";
-    std::vector<wcstring> lines2;
+    wcstring_list_t lines2;
     line_iterator_t<wcstring> iter2(text2);
     while (iter2.next()) lines2.push_back(iter2.line());
-    do_test((lines2 == std::vector<wcstring>{L"", L"", L"Alpha", L"Beta", L"Gamma", L"", L"Delta"}));
+    do_test((lines2 == wcstring_list_t{L"", L"", L"Alpha", L"Beta", L"Gamma", L"", L"Delta"}));
 }
 
 #define UVARS_PER_THREAD 8

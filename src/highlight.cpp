@@ -322,7 +322,7 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
     } else {
         // Get the CDPATH.
         auto cdpath = vars.get(L"CDPATH");
-        std::vector<wcstring> pathsv =
+        wcstring_list_t pathsv =
             cdpath.missing_or_empty() ? wcstring_list_t{L"."} : cdpath->as_list();
 
         for (auto next_path : pathsv) {

@@ -53,7 +53,7 @@ struct bind_cmd_opts_t {
 /// Returns false if no binding with that sequence and mode exists.
 bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bool user,
                                   io_streams_t &streams) {
-    std::vector<wcstring> ecmds;
+    wcstring_list_t ecmds;
     wcstring sets_mode;
 
     if (!input_mapping_get(seq, bind_mode, &ecmds, user, &sets_mode)) {

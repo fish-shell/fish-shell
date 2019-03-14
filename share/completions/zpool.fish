@@ -37,20 +37,21 @@ function __fish_zpool_using_command # zpool command whose completions are looked
 end
 
 function __fish_zpool_list_used_vdevs -a pool
-    if test -z "$pool"
-        zpool list -H -v | grep -E "^\s" | cut -f2 | grep -x -E -v "(spare|log|cache|mirror|raidz.?)"
-    else
-        zpool list -H -v $pool | grep -E "^\s" | cut -f2 | grep -x -E -v "(spare|log|cache|mirror|raidz.?)"
-    end
+    # See discussion and variants discussed at
+    # https://github.com/fish-shell/fish-shell/pull/5743#pullrequestreview-217432149
+    zpool list -Hv | string replace -rf "^\t([^\t]+).*" '$1' | string match -rv '^(spare|log|cache|mirror|raidz.?)'
 end
 
 function __fish_zpool_list_available_vdevs
     if test $OS = 'Linux'
-        find /dev -type b | cut -d'/' -f3
+        find /dev -type b | string replace '/dev/' ''
     else if test $OS = 'FreeBSD'
-        for i in (camcontrol devlist | cut -d "(" -f 2 | cut -d "," -f 1); ls /dev | grep "^$i"; end
+        for i in (camcontrol devlist | cut -d "(" -f 2 | cut -d "," -f 1)
+            set -l files /dev/*
+            string replace /dev/ '' -- $files | string match -r "^$i"
+        end
     else if test $OS = 'SunOS'
-        ls /dev/dsk
+        find /dev/dsk -type b | string replace '/dev/' ''
     end
 end
 
@@ -88,11 +89,10 @@ function __fish_zpool_complete_vdevs
                 return
             case "" # Au cas où
                 echo "" > /dev/null
-            case "*"
-                if echo "$i" | grep -q -E '^((-.*)|(.*(=|,).*))$' # The token is an option or an option argument; as no option uses a vdev as its argument, we can abandon commandline parsing
-                    __fish_zpool_list_vdev_types
-                    return
-                end
+            case "-*" "*=*" "*,*"
+                # The token is an option or an option argument; as no option uses a vdev as its argument, we can abandon commandline parsing
+                __fish_zpool_list_vdev_types
+                return
         end
         set tokens (math $tokens+1)
     end
@@ -126,7 +126,7 @@ function __fish_zpool_list_ro_properties
         echo -e "bootsize\t"(_ "System boot partition size")
     end
     echo -e "capacity\t"(_ "Usage percentage of pool")
-    echo -e "dedupratio\t"(_ "Deduplication ratio") 
+    echo -e "dedupratio\t"(_ "Deduplication ratio")
     echo -e "expandsize\t"(_ "Amount of uninitialized space within the pool")
     echo -e "fragmentation\t"(_ "Fragmentation percentage of pool")
     echo -e "free\t"(_ "Free pool space")
@@ -136,7 +136,7 @@ function __fish_zpool_list_ro_properties
     echo -e "size\t"(_ "Total pool space")
     echo -e "used\t"(_ "Used pool space")
     # Unsupported features
-    for i in (zpool list -o all | head -n1 | tr -s "[:blank:]" | tr ' ' '\n' | tr "[:upper:]" "[:lower:]" | grep unsupported); echo $i; end
+    zpool list -o all | head -n1 | string replace -ra ' +' '\n' | string lower | string match -r unsupported
 end
 
 function __fish_zpool_list_device_properties
@@ -167,11 +167,7 @@ function __fish_zpool_list_rw_properties
     echo -e "listsnaps\t"(_ "Display snapshots even if 'zfs list' does not use '-t'")" (on, off)"
     echo -e "version\t"(_ "On-disk version of pool")" (VERSION)"
     # Feature properties
-    for featureLong in (zpool list -o all | tr -s "[:blank:]" | tr ' ' '\n' | tr "[:upper:]" "[:lower:]" | grep '^feature@')
-        set -l featureShort (echo $featureLong | sed -e 's/feature@\(.*\)/\1/g')
-        set featureLong (echo -e "$featureLong\t")
-        printf (_ "%sEnable the %s feature\n") $featureLong $featureShort
-    end
+    zpool list -o all | string replace -ra ' +' '\n' | string lower | string replace -rf '^feature@(.*)' '$1'
 end
 
 complete -c zpool -f -n '__fish_zpool_needs_command' -s '?' -d 'Display a help message'

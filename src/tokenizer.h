@@ -61,7 +61,7 @@ enum class tokenizer_error_t {
 };
 
 /// Get the error message for an error \p err.
-wcstring tokenizer_get_error_message(tokenizer_error_t err);
+const wchar_t *tokenizer_get_error_message(tokenizer_error_t err);
 
 struct tok_t {
     // The type of the token.

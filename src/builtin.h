@@ -83,7 +83,7 @@ proc_status_t builtin_run(parser_t &parser, int job_pgrp, wchar_t **argv, io_str
 
 wcstring_list_t builtin_get_names();
 void builtin_get_names(std::vector<completion_t> *list);
-wcstring builtin_get_desc(const wcstring &b);
+const wchar_t *builtin_get_desc(const wcstring &b);
 
 /// Support for setting and removing transient command lines. This is used by
 /// 'complete -C' in order to make the commandline builtin operate on the string

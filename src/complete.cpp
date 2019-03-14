@@ -508,7 +508,7 @@ static void parse_cmd_string(const wcstring &str, wcstring *path, wcstring *cmd,
                              const environment_t &vars) {
     if (!path_get_path(str, path, vars)) {
         /// Use the empty string as the 'path' for commands that can not be found.
-        *path = L"";
+        path->clear();
     }
 
     // Make sure the path is not included in the command.
@@ -1150,8 +1150,8 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
             auto var = vars.get(env_name);
             if (!var) continue;
 
-            wcstring value = expand_escape_variable(*var);
             if (this->type() != COMPLETE_AUTOSUGGEST) {
+                wcstring value = expand_escape_variable(*var);
                 desc = format_string(COMPLETE_VAR_DESC_VAL, value.c_str());
             }
         }
@@ -1493,7 +1493,7 @@ void completer_t::perform() {
                 bool cursor_in_whitespace =
                     !plain_statement.location_in_or_at_end_of_source_range(pos);
                 if (cursor_in_whitespace) {
-                    current_argument = L"";
+                    current_argument.clear();
                     previous_argument = matching_arg;
                 } else {
                     current_argument = matching_arg;

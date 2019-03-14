@@ -1008,13 +1008,13 @@ bool regex_replacer_t::replace_matches(const wcstring &arg) {
         }
     }
 
-    wcstring outstr(output, outlen);
     bool rc = true;
     if (pcre2_rc < 0) {
         string_error(streams, _(L"%ls: Regular expression substitute error: %ls\n"), argv0,
                      pcre2_strerror(pcre2_rc).c_str());
         rc = false;
     } else {
+        wcstring outstr(output, outlen);
         bool replacement_occurred = pcre2_rc > 0;
         if (!opts.quiet && (!opts.filter || replacement_occurred)) {
             streams.out.append(outstr);

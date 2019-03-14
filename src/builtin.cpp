@@ -545,8 +545,8 @@ void builtin_get_names(std::vector<completion_t> *list) {
 }
 
 /// Return a one-line description of the specified builtin.
-wcstring builtin_get_desc(const wcstring &name) {
-    wcstring result;
+const wchar_t *builtin_get_desc(const wcstring &name) {
+    const wchar_t *result;
     const builtin_data_t *builtin = builtin_lookup(name);
     if (builtin) {
         result = _(builtin->desc);

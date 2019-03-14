@@ -234,7 +234,7 @@ void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
         if (c == c2) c = (c2 == rgb_color_t::white()) ? rgb_color_t::black() : rgb_color_t::white();
     }
 
-    if ((enter_bold_mode != 0) && (std::strlen(enter_bold_mode) > 0)) {
+    if (enter_bold_mode && enter_bold_mode[0] != '\0') {
         if (bg_set && !last_bg_set) {
             // Background color changed and is set, so we enter bold mode to make reading easier.
             // This means bold mode is _always_ on when the background color is set.
@@ -295,7 +295,7 @@ void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
     }
 
     // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
-    if (is_bold && !was_bold && enter_bold_mode && std::strlen(enter_bold_mode) > 0 && !bg_set) {
+    if (is_bold && !was_bold && enter_bold_mode && enter_bold_mode[0] != '\0' && !bg_set) {
         // The unconst cast is for NetBSD's benefit. DO NOT REMOVE!
         writembs_nofail(*this, tparm((char *)enter_bold_mode));
         was_bold = is_bold;
@@ -310,27 +310,27 @@ void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
     }
     was_underline = is_underline;
 
-    if (was_italics && !is_italics && enter_italics_mode && std::strlen(enter_italics_mode) > 0) {
+    if (was_italics && !is_italics && enter_italics_mode && enter_italics_mode[0] != '\0') {
         writembs_nofail(*this, exit_italics_mode);
         was_italics = is_italics;
     }
 
-    if (!was_italics && is_italics && enter_italics_mode && std::strlen(enter_italics_mode) > 0) {
+    if (!was_italics && is_italics && enter_italics_mode && enter_italics_mode[0] != '\0') {
         writembs_nofail(*this, enter_italics_mode);
         was_italics = is_italics;
     }
 
-    if (is_dim && !was_dim && enter_dim_mode && std::strlen(enter_dim_mode) > 0) {
+    if (is_dim && !was_dim && enter_dim_mode && enter_dim_mode[0] != '\0') {
         writembs_nofail(*this, enter_dim_mode);
         was_dim = is_dim;
     }
 
     if (is_reverse && !was_reverse) {
         // Some terms do not have a reverse mode set, so standout mode is a fallback.
-        if (enter_reverse_mode && std::strlen(enter_reverse_mode) > 0) {
+        if (enter_reverse_mode && enter_reverse_mode[0] != '\0') {
             writembs_nofail(*this, enter_reverse_mode);
             was_reverse = is_reverse;
-        } else if (enter_standout_mode && std::strlen(enter_standout_mode) > 0) {
+        } else if (enter_standout_mode && enter_standout_mode[0] != '\0') {
             writembs_nofail(*this, enter_standout_mode);
             was_reverse = is_reverse;
         }

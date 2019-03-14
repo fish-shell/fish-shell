@@ -2668,7 +2668,7 @@ static void test_complete() {
     do_test((completions.at(1).flags & COMPLETE_NO_SPACE) != 0);
 
     // Test wraps.
-    do_test(comma_join(complete_get_wrap_targets(L"wrapper1")) == L"");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper1")).empty());
     complete_add_wrapper(L"wrapper1", L"wrapper2");
     do_test(comma_join(complete_get_wrap_targets(L"wrapper1")) == L"wrapper2");
     complete_add_wrapper(L"wrapper2", L"wrapper3");
@@ -2679,7 +2679,7 @@ static void test_complete() {
     do_test(comma_join(complete_get_wrap_targets(L"wrapper2")) == L"wrapper3");
     do_test(comma_join(complete_get_wrap_targets(L"wrapper3")) == L"wrapper1");
     complete_remove_wrapper(L"wrapper1", L"wrapper2");
-    do_test(comma_join(complete_get_wrap_targets(L"wrapper1")) == L"");
+    do_test(comma_join(complete_get_wrap_targets(L"wrapper1")).empty());
     do_test(comma_join(complete_get_wrap_targets(L"wrapper2")) == L"wrapper3");
     do_test(comma_join(complete_get_wrap_targets(L"wrapper3")) == L"wrapper1");
 }

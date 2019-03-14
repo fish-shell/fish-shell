@@ -371,7 +371,7 @@ static size_t trim_leading_spaces(std::string &str) {
 
 static bool extract_prefix_and_unescape_yaml(std::string *key, std::string *value,
                                              const std::string &line) {
-    size_t where = line.find(":");
+    size_t where = line.find(':');
     if (where != std::string::npos) {
         key->assign(line, 0, where);
 
@@ -1868,7 +1868,7 @@ wcstring history_session_id(const environment_t &vars) {
     if (var) {
         wcstring session_id = var->as_string();
         if (session_id.empty()) {
-            result = L"";
+            result.clear();
         } else if (session_id == L"default") {
             ;  // using the default value
         } else if (valid_var_name(session_id)) {

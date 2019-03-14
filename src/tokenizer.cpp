@@ -17,7 +17,8 @@
 #include "tokenizer.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-wcstring tokenizer_get_error_message(tokenizer_error_t err) {
+// _(s) is already wgettext(s).c_str(), so let's not convert back to wcstring
+const wchar_t * tokenizer_get_error_message(tokenizer_error_t err) {
     switch (err) {
         case tokenizer_error_t::none:
             return L"";
@@ -47,7 +48,7 @@ wcstring tokenizer_get_error_message(tokenizer_error_t err) {
             return _(L"Unexpected ')' found, expecting '}'");
     }
     assert(0 && "Unexpected tokenizer error");
-    return NULL;
+    return nullptr;
 }
 
 // Whether carets redirect stderr.

@@ -481,7 +481,7 @@ static void update_fish_color_support(const environment_t &vars) {
         debug(2, L"256 color support enabled for TERM=%ls", term.c_str());
     } else if (term.find(L"xterm") != wcstring::npos) {
         // Assume that all 'xterm's can handle 256, except for Terminal.app from Snow Leopard
-        wcstring term_program, term_version;
+        wcstring term_program;
         if (auto tp = vars.get(L"TERM_PROGRAM")) term_program = tp->as_string();
         if (auto tpv = vars.get(L"TERM_PROGRAM_VERSION")) {
             if (term_program == L"Apple_Terminal" &&
@@ -821,7 +821,7 @@ static void handle_fish_history_change(const wcstring &op, const wcstring &var_n
                                        env_stack_t &vars) {
     UNUSED(op);
     UNUSED(var_name);
-    reader_change_history(history_session_id(vars).c_str());
+    reader_change_history(history_session_id(vars));
 }
 
 static void handle_function_path_change(const wcstring &op, const wcstring &var_name,

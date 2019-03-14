@@ -448,8 +448,7 @@ static int validate_arg(parser_t &parser, const argparse_cmd_opts_t &opts, optio
     if (is_long_flag) {
         vars.set_one(var_name_prefix + L"name", ENV_LOCAL, opt_spec->long_flag);
     } else {
-        vars.set_one(var_name_prefix + L"name", ENV_LOCAL,
-                     wcstring(1, opt_spec->short_flag).c_str());
+        vars.set_one(var_name_prefix + L"name", ENV_LOCAL, wcstring(1, opt_spec->short_flag));
     }
     vars.set_one(var_name_prefix + L"value", ENV_LOCAL, woptarg);
 

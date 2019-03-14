@@ -49,7 +49,7 @@ static void builtin_complete_add2(const wchar_t *cmd, int cmd_type, const wchar_
                      comp, desc, flags);
     }
 
-    if (old_opt.empty() && gnu_opt.empty() && std::wcslen(short_opt) == 0) {
+    if (old_opt.empty() && gnu_opt.empty() && short_opt[0] == L'\0') {
         complete_add(cmd, cmd_type, wcstring(), option_type_args_only, result_mode, condition, comp,
                      desc, flags);
     }

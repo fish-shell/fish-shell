@@ -39,7 +39,7 @@ static owning_lock<std::unordered_map<wcstring, wcstring>> wgettext_map;
 bool wreaddir_resolving(DIR *dir, const wcstring &dir_path, wcstring &out_name, bool *out_is_dir) {
     struct dirent *result = readdir(dir);
     if (!result) {
-        out_name = L"";
+        out_name.clear();
         return false;
     }
 
@@ -85,7 +85,7 @@ bool wreaddir_resolving(DIR *dir, const wcstring &dir_path, wcstring &out_name, 
 bool wreaddir(DIR *dir, wcstring &out_name) {
     struct dirent *result = readdir(dir);
     if (!result) {
-        out_name = L"";
+        out_name.clear();
         return false;
     }
 

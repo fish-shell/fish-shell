@@ -129,7 +129,7 @@ static const wchar_t *math_get_arg(int *argidx, wchar_t **argv, wcstring *storag
     return math_get_arg_argv(argidx, argv);
 }
 
-static wcstring math_describe_error(te_error_t& error) {
+static const wchar_t *math_describe_error(te_error_t& error) {
     if (error.position == 0) return L"NO ERROR?!?";
 
     switch(error.type) {
@@ -210,7 +210,7 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
             streams.out.push_back(L'\n');
         }
     } else {
-        streams.err.append_format(L"%ls: Error: %ls\n", cmd, math_describe_error(error).c_str());
+        streams.err.append_format(L"%ls: Error: %ls\n", cmd, math_describe_error(error));
         streams.err.append_format(L"'%ls'\n", expression.c_str());
         streams.err.append_format(L"%*ls%ls\n", error.position - 1, L" ",L"^");
         retval = STATUS_CMD_ERROR;

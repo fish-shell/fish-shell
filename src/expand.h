@@ -102,6 +102,7 @@ enum expand_error_t {
 
 /// The string represented by PROCESS_EXPAND_SELF
 #define PROCESS_EXPAND_SELF_STR L"%self"
+#define PROCESS_EXPAND_SELF_STR_LEN 5
 
 /// Perform various forms of expansion on in, such as tilde expansion (\~USER becomes the users home
 /// directory), variable expansion (\$VAR_NAME becomes the value of the environment variable

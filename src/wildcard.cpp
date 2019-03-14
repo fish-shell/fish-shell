@@ -336,7 +336,7 @@ bool wildcard_match(const wcstring &str, const wcstring &wc, bool leading_dots_f
 /// \param stat_res The result of calling stat on the file
 /// \param buf The struct buf output of calling stat on the file
 /// \param err The errno value after a failed stat call on the file.
-static wcstring file_get_desc(const wcstring &filename, int lstat_res, const struct stat &lbuf,
+static const wchar_t *file_get_desc(const wcstring &filename, int lstat_res, const struct stat &lbuf,
                               int stat_res, const struct stat &buf, int err) {
     if (lstat_res) {
         return COMPLETE_FILE_DESC;
@@ -929,14 +929,12 @@ int wildcard_expand_string(const wcstring &wc, const wcstring &working_directory
     // Check for a leading slash. If we find one, we have an absolute path: the prefix is empty, the
     // base dir is /, and the wildcard is the remainder. If we don't find one, the prefix is the
     // working directory, the base dir is empty.
-    wcstring prefix, base_dir, effective_wc;
+    wcstring prefix = L"", base_dir = L"", effective_wc;
     if (string_prefixes_string(L"/", wc)) {
-        prefix = L"";
         base_dir = L"/";
         effective_wc = wc.substr(1);
     } else {
         prefix = working_directory;
-        base_dir = L"";
         effective_wc = wc;
     }
 

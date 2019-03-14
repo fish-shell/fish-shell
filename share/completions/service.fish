@@ -19,7 +19,6 @@ else if test -d /etc/init.d # SysV on Debian and other linuxen
 	__fish_complete_static_service_actions $service_commands
 else # FreeBSD
 	# Use the output of `service -v foo` to retrieve the list of service-specific verbs
-	# We can safely use `sed` here because this is platform-specific
 	complete -c service -n "not __fish_is_first_token" -xa "(__fish_complete_freebsd_service_actions)"
 end
 

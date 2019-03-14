@@ -78,7 +78,7 @@ function __fish_svn_prompt_parse_status --argument flag_status_string --descript
         # resolve the name of the variable for the character representing the current status type
         set -l flag_index (contains -i $flag_type $__fish_svn_prompt_flag_names)
         # check to see if the status string for this column contains the character representing the current status type
-        if test (echo $flag_status_string | grep -c $__fish_svn_prompt_chars[$flag_index]) -eq 1
+        if test (count (string match $__fish_svn_prompt_chars[$flag_index] -- $flag_status_string)) -eq 1
             # if it does, then get the names of the variables for the display character and colour to format it with
             set -l flag_var_display __fish_svn_prompt_char_{$flag_type}_display
             set -l flag_var_color __fish_svn_prompt_char_{$flag_type}_color

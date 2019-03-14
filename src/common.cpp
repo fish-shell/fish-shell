@@ -225,18 +225,8 @@ demangled_backtrace(int max_frames, int skip_levels) {
 [[gnu::noinline]] void show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
     if (frame_count < 1) return;
 
-    // TODO: Decide if this is still needed. I'm commenting it out because it caused me some grief
-    // while trying to debug a test failure. And the tests run just fine without spurious failures
-    // if this check is not done.
-    //
-    // Hack to avoid showing backtraces in the tester.
-    // if (program_name && !std::wcscmp(program_name, L"(ignore)")) return;
-
-    debug_shared(msg_level, L"Backtrace:");
-    std::vector<wcstring> bt = demangled_backtrace(frame_count, skip_levels + 2);
-    for (int i = 0; (size_t)i < bt.size(); i++) {
-        debug_shared(msg_level, bt[i]);
-    }
+    wcstring_list_t bt = demangled_backtrace(frame_count, skip_levels + 2);
+    debug_shared(msg_level, L"Backtrace:\n" + join_strings(bt, L'\n') + L'\n');
 }
 
 #else   // HAVE_BACKTRACE_SYMBOLS

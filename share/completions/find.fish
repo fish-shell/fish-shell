@@ -20,7 +20,7 @@ complete -c find -o mindepth -d "Do not apply any tests or actions at levels les
 complete -c find -o mount -o xdev -d "Don't descend directories on other  filesystems"
 complete -c find -o noignore_readdir_race -d "Print error messages for files that are deleted while running find"
 complete -c find -o noleaf -d "Do not optimize by assuming that  directories  contain  2  fewer subdirectories  than  their  hard  link  count"
-complete -c find -o regextype -d "Specify regular expression type" -a "emacs posix-awk posix-basic posiz-egrep posix-extended"
+complete -c find -o regextype -d "Specify regular expression type" -a "emacs posix-awk posix-basic posix-egrep posix-extended"
 complete -c find -o version -l version -d "Display version and exit"
 complete -c find -o warn -d "Turn warnings on"
 complete -c find -o nowarn -d "Turn warnings off"

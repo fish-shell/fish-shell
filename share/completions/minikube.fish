@@ -67,7 +67,7 @@ end
 
 function __minikube_list_addons
     if set -q argv[1]
-        minikube addons list | grep $argv[1] | string replace -r -- "- ([^:]*): .*" '$1'
+        minikube addons list | string match -- "*$argv[1]*" | string replace -r -- "- ([^:]*): .*" '$1'
     else
         minikube addons list | string replace -r -- "- ([^:]*): .*" '$1'
     end

@@ -16,6 +16,7 @@
 - In the interest of consistency, `builtin -q` and `command -q` can now be used to query if a builtin or command exists (#5631).
 - `math` now accepts `--scale=max` for the maximum scale (#5579).
 - `complete --do-complete` now also does fuzzy matches (#5467).
+- `count` now also counts lines fed on stdin (#5744).
 
 ### Interactive improvements
 - Major improvements in performance and functionality to the 'sorin' sample prompt (#5411).

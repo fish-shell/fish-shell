@@ -181,8 +181,7 @@ wcstring expand_escape_variable(const env_var_t &var) {
 /// Parse an array slicing specification Returns 0 on success. If a parse error occurs, returns the
 /// index of the bad token. Note that 0 can never be a bad index because the string always starts
 /// with [.
-static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx,
-                          std::vector<size_t> &source_positions, size_t array_size) {
+static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx, size_t array_size) {
     const long size = (long)array_size;
     size_t pos = 1;  // skip past the opening square brace
 
@@ -255,7 +254,6 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
             for (long jjj = i1; jjj * direction <= i2 * direction; jjj += direction) {
                 // debug(0, L"Expand range [subst]: %i\n", jjj);
                 idx.push_back(jjj);
-                source_positions.push_back(number_start);
             }
             continue;
         }
@@ -263,7 +261,6 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
         // debug( 0, L"Push idx %d", tmp );
         literal_zero_index = literal_zero_index && tmp == 0;
         idx.push_back(i1);
-        source_positions.push_back(i1_src_pos);
     }
 
     if (literal_zero_index && zero_index != -1) {
@@ -365,9 +362,7 @@ static bool expand_variables(wcstring instr, std::vector<completion_t> *out, siz
     size_t var_name_and_slice_stop = var_name_stop;
     bool all_values = true;
     const size_t slice_start = var_name_stop;
-    // List of indexes, and parallel array of source positions of each index in the variable list.
     std::vector<long> var_idx_list;
-    std::vector<size_t> var_pos_list;
     if (slice_start < insize && instr.at(slice_start) == L'[') {
         all_values = false;
         const wchar_t *in = instr.c_str();
@@ -380,8 +375,7 @@ static bool expand_variables(wcstring instr, std::vector<completion_t> *out, siz
         } else if (history) {
             effective_val_count = history->size();
         }
-        size_t bad_pos = parse_slice(in + slice_start, &slice_end, var_idx_list, var_pos_list,
-                                     effective_val_count);
+        size_t bad_pos = parse_slice(in + slice_start, &slice_end, var_idx_list, effective_val_count);
         if (bad_pos != 0) {
             if (in[slice_start + bad_pos] == L'0') {
                 append_syntax_error(errors, slice_start + bad_pos,
@@ -657,13 +651,12 @@ static bool expand_cmdsubst(const wcstring &input, std::vector<completion_t> *ou
     tail_begin = paren_end + 1;
     if (*tail_begin == L'[') {
         std::vector<long> slice_idx;
-        std::vector<size_t> slice_source_positions;
         const wchar_t *const slice_begin = tail_begin;
         wchar_t *slice_end;
         size_t bad_pos;
 
         bad_pos =
-            parse_slice(slice_begin, &slice_end, slice_idx, slice_source_positions, sub_res.size());
+            parse_slice(slice_begin, &slice_end, slice_idx, sub_res.size());
         if (bad_pos != 0) {
             append_syntax_error(errors, slice_begin - in + bad_pos, L"Invalid index value");
             return false;

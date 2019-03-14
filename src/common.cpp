@@ -2414,21 +2414,13 @@ void redirect_tty_output() {
 bool valid_var_name_char(wchar_t chr) { return fish_iswalnum(chr) || chr == L'_'; }
 
 /// Test if the given string is a valid variable name.
-bool valid_var_name(const wchar_t *str) {
-    if (str[0] == L'\0') return false;
-    while (*str) {
-        if (!valid_var_name_char(*str)) return false;
-        str++;
-    }
-    return true;
+bool valid_var_name(const wcstring &str) {
+    return std::find_if(str.begin(), str.end(), valid_var_name_char) == str.end();
 }
-
-/// Test if the given string is a valid variable name.
-bool valid_var_name(const wcstring &str) { return valid_var_name(str.c_str()); }
 
 /// Test if the string is a valid function name.
 bool valid_func_name(const wcstring &str) {
-    if (str.size() == 0) return false;
+    if (str.empty()) return false;
     if (str.at(0) == L'-') return false;
     if (str.find_first_of(L'/') != wcstring::npos) return false;
     return true;

@@ -971,7 +971,6 @@ void invalidate_termsize(bool invalidate_vars = false);
 struct winsize get_current_winsize();
 
 bool valid_var_name_char(wchar_t chr);
-bool valid_var_name(const wchar_t *str);
 bool valid_var_name(const wcstring &str);
 bool valid_func_name(const wcstring &str);
 

@@ -86,7 +86,7 @@ complete -c set -n '__fish_seen_argument -s e -l erase; and not __fish_seen_argu
 complete -c set -n '__fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s U -s g -l local -l global -l Universal' -f -a "(set -U | string match -rv '^_|^fish_' | string replace ' ' \tUniversal\ Variable:\ )"
 # Complete scope-specific variables for `set --erase`
 complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument -s g -l global' -f -a "(set -g | string match -rv '^_|^fish_' | string replace ' ' \t'Global Variable: ')"
-complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument -s U -l universal' -f -a "(set -u | string match -rv '^_|^fish_' | string replace ' ' \t'Universal Variable: ')"
+complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument -s U -l universal' -f -a "(set -U | string match -rv '^_|^fish_' | string replace ' ' \t'Universal Variable: ')"
 complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument -s l -l local' -f -a "(set -l | string match -rv '^_|^fish_' | string replace ' ' \t'Local Variable: ')"
 
 # Color completions

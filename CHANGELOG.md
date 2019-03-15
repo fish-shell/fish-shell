@@ -4,6 +4,7 @@
 - The vcs-prompt functions have been renamed to names without double-underscore, so __fish_git_prompt is now fish_git_prompt, __fish_vcs_prompt is now fish_vcs_prompt, __fish_hg_prompt is now fish_hg_prompt and __fish_svn_prompt is now fish_svn_prompt. Shims at the old names have been added, and the variables have kept their old names (#5586).
 
 ## Notable Fixes and improvements
+- `string replace` had an additional round of escaping in the replacement (not the match!), so escaping backslashes would require `string replace -ra '([ab])' '\\\\\\\$1' a`. A new feature flag `string-replace-fewer-backslashes` can be used to disable this, so that it becomes `string replace -ra '([ab])' '\\\\$1' a` (#5556).
 - Add `$pipestatus` support
 - macOS Mojave: fish.app can actually run (#5727), 10.14.4's Terminal.app no longer causes an error on launch (#5725)
 

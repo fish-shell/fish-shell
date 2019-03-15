@@ -1,3 +1,15 @@
+function __fish_print_ninja_tools
+    echo list
+    if test -f build.ninja
+        ninja -t list | string match -v '*:' | string replace -r '\s+(\w+).*' '$1'
+    end
+end
+
+function __fish_print_ninja_targets
+    if test -f build.ninja
+        ninja -t targets 2>/dev/null | string replace -r ':.*' ''
+    end
+end
 complete -c ninja -f -a '(__fish_print_ninja_targets)' -d target
 complete -x -c ninja -s t -x -a "(__fish_print_ninja_tools)" -d subtool
 complete -x -c ninja -s C -x -a "(__fish_complete_directories (commandline -ct))" -d "change to specified directory"

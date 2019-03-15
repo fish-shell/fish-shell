@@ -1,3 +1,18 @@
+function __fish_print_xrandr_outputs --description 'Print xrandr outputs'
+	xrandr | string replace -r --filter '^(\S+)\s+(.*)$' '$1\t$2' | string match -v -e Screen
+end
+
+function __fish_print_xrandr_modes --description 'Print xrandr modes'
+	set -l output
+	xrandr | string match -v -r '^(Screen|\s{4,})' | while read line
+		switch $line
+		case '  *'
+			string trim $line | string replace -r '^(\S+)\s+(.*)$' "\$1\t\$2 [$output]"
+		case '*'
+			set output (string match -r '^\S+' $line)
+		end
+	end
+end
 complete -c xrandr -l verbose -d 'Be more verbose'
 complete -c xrandr -l dryrun  -d 'Make no changes'
 complete -c xrandr -l nograb  -d 'Apply modifications without grabbing the screen'

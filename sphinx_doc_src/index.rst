@@ -1627,8 +1627,14 @@ You can see the current list of features via ``status features``::
     > status features
     stderr-nocaret  on     3.0      ^ no longer redirects stderr
     qmark-noglob    off    3.0      ? no longer globs
+    string-replace-fewer-backslashes        off     3.1     string replace -r needs fewer backslashes in the replacement
 
-There are two breaking changes in fish 3.0: caret ``^`` no longer redirects stderr, and question mark ``?`` is no longer a glob. These changes are off by default. They can be enabled on a per session basis::
+There are two breaking changes in fish 3.0: caret ``^`` no longer redirects stderr, and question mark ``?`` is no longer a glob.
+
+There is one breaking change in fish 3.1: ``string replace -r`` does a superfluous round of escaping for the replacement, so escaping backslashes would look like ``string replace -ra '([ab])' '\\\\\\\$1' a``. This flag removes that if turned on, so ``'\\\\$1'`` is enough.
+
+
+These changes are off by default. They can be enabled on a per session basis::
 
     > fish --features qmark-noglob,stderr-nocaret
 
@@ -1638,6 +1644,11 @@ or opted into globally for a user::
 
     > set -U fish_features stderr-nocaret qmark-noglob
 
+Features will only be set on startup, so this variable will only take effect if it is universal or exported.
+
+You can also use the version as a group, so ``3.0`` is equivalent to "stderr-nocaret" and "qmark-noglob".
+
+Prefixing a feature with ``no-`` turns it off instead.
 .. _other:
 
 Other features

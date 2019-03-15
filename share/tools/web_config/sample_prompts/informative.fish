@@ -4,6 +4,7 @@
 
 function fish_prompt --description 'Write out the prompt'
     #Save the return status of the previous command
+    set -l last_pipestatus $pipestatus
     set stat $status
 
     if not set -q __fish_prompt_normal
@@ -39,8 +40,8 @@ function fish_prompt --description 'Write out the prompt'
             if not set -q __fish_prompt_cwd
                 set -g __fish_prompt_cwd (set_color $fish_color_cwd)
             end
-
-            printf '[%s] %s%s@%s %s%s %s(%s)%s \f\r> ' (date "+%H:%M:%S") "$__fish_color_blue" $USER (prompt_hostname) "$__fish_prompt_cwd" "$PWD" "$__fish_color_status" "$stat" "$__fish_prompt_normal"
+            set -l pipestatus_string (__fish_print_pipestatus "[" "] " "|" (set_color yellow) (set_color --bold yellow) $last_pipestatus)
+            printf '[%s] %s%s@%s %s%s %s%s(%s)%s \f\r> ' (date "+%H:%M:%S") "$__fish_color_blue" $USER (prompt_hostname) "$__fish_prompt_cwd" "$PWD" "$pipestatus_string" "$__fish_color_status" "$stat" "$__fish_prompt_normal"
 
     end
 end

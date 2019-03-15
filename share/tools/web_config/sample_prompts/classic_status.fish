@@ -3,10 +3,13 @@
 
 function fish_prompt --description "Write out the prompt"
     # Save our status
+    set -l last_pipestatus $pipestatus
     set -l last_status $status
 
+    __fish_print_pipestatus "[" "] " "|" (set_color yellow) (set_color --bold yellow) $last_pipestatus
+
     if test $last_status -ne 0
-        printf "%s(%d)%s " (set_color red --bold) $last_status (set_color normal)
+        printf "%s(%s)%s " (set_color red --bold) (__fish_status_to_signal $last_status) (set_color normal)
     end
 
     set -l color_cwd

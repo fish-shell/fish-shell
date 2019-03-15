@@ -9,6 +9,7 @@
 
 #include "builtin_bind.h"
 #include "common.h"
+#include "input_common.h"
 
 #define FISH_BIND_MODE_VAR L"fish_bind_mode"
 
@@ -32,11 +33,11 @@ void init_input();
 /// The argument determines whether fish commands are allowed to be run as bindings. If false, when
 /// a character is encountered that would invoke a fish command, it is unread and R_NULL is
 /// returned.
-wint_t input_readch(bool allow_commands = true);
+char_event_t input_readch(bool allow_commands = true);
 
 /// Enqueue a character or a readline function to the queue of unread characters that input_readch
 /// will return before actually reading from fd 0.
-void input_queue_ch(wint_t ch);
+void input_queue_ch(char_event_t ch);
 
 /// Add a key mapping from the specified sequence to the specified command.
 ///

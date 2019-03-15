@@ -2996,9 +2996,12 @@ static void test_input() {
     }
 
     // Now test.
-    wint_t c = input_readch();
-    if (c != R_DOWN_LINE) {
-        err(L"Expected to read char R_DOWN_LINE, but instead got %ls\n", describe_char(c).c_str());
+    auto evt = input_readch();
+    if (!evt.is_char()) {
+        err(L"Event is not a char");
+    } else if (evt.get_char() != R_DOWN_LINE) {
+        err(L"Expected to read char R_DOWN_LINE, but instead got %ls\n",
+            describe_char(evt.get_char()).c_str());
     }
 }
 

@@ -51,6 +51,9 @@ struct input_mapping_t {
         static unsigned int s_last_input_map_spec_order = 0;
         specification_order = ++s_last_input_map_spec_order;
     }
+
+    /// \return true if this is a generic mapping, i.e. acts as a fallback.
+    bool is_generic() const { return seq.empty(); }
 };
 
 /// A struct representing the mapping from a terminfo key name to a terminfo character sequence.
@@ -297,17 +300,19 @@ wchar_t input_function_pop_arg() { return input_function_args[--input_function_a
 
 void input_function_push_args(int code) {
     int arity = input_function_arity(code);
-    std::vector<wchar_t> skipped;
+    std::vector<char_event_t> skipped;
 
     for (int i = 0; i < arity; i++) {
-        wchar_t arg;
-
         // Skip and queue up any function codes. See issue #2357.
-        while ((arg = input_common_readch(0)) >= R_BEGIN_INPUT_FUNCTIONS &&
-               arg < R_END_INPUT_FUNCTIONS) {
-            skipped.push_back(arg);
+        wchar_t arg{};
+        for (;;) {
+            auto evt = input_common_readch();
+            if (evt.is_char() && !evt.is_readline()) {
+                arg = evt.get_char();
+                break;
+            }
+            skipped.push_back(evt);
         }
-
         input_function_push_arg(arg);
     }
 
@@ -384,15 +389,13 @@ static bool input_mapping_is_match(const input_mapping_t &m) {
 
     bool timed = false;
     for (size_t i = 0; i < str.size(); ++i) {
-        wchar_t read = input_common_readch(timed);
-
-        if (read != str[i]) {
-            // We didn't match the bind sequence/input mapping, (it timed out or they entered something else)
-            // Undo consumption of the read characters since we didn't match the bind sequence and abort.
-            input_common_next_ch(read);
-            while (i--) {
-                input_common_next_ch(str[i]);
-            }
+        auto evt = timed ? input_common_readch_timed() : input_common_readch();
+        if (!evt.is_char() || evt.get_char() != str[i]) {
+            // We didn't match the bind sequence/input mapping, (it timed out or they entered
+            // something else) Undo consumption of the read characters since we didn't match the
+            // bind sequence and abort.
+            input_common_next_ch(evt);
+            while (i--) input_common_next_ch(str[i]);
             return false;
         }
 
@@ -404,87 +407,77 @@ static bool input_mapping_is_match(const input_mapping_t &m) {
     return true;
 }
 
-void input_queue_ch(wint_t ch) { input_common_queue_ch(ch); }
+void input_queue_ch(char_event_t ch) { input_common_queue_ch(ch); }
 
-static void input_mapping_execute_matching_or_generic(bool allow_commands) {
+/// \return the first mapping that matches, walking first over the user's mapping list, then the
+/// preset list. \return null if nothing matches.
+static const input_mapping_t *find_mapping() {
     const input_mapping_t *generic = NULL;
-
     const auto &vars = parser_t::principal_parser().vars();
     const wcstring bind_mode = input_get_bind_mode(vars);
 
-    for (auto& m : mapping_list) {
-        if (m.mode != bind_mode) {
-            continue;
-        }
+    const auto lists = {&mapping_list, &preset_mapping_list};
+    for (const auto *listp : lists) {
+        for (const auto &m : *listp) {
+            if (m.mode != bind_mode) {
+                continue;
+            }
 
-        if (m.seq.length() == 0) {
-            generic = &m;
-        } else if (input_mapping_is_match(m)) {
-            input_mapping_execute(m, allow_commands);
-            return;
-        }
-    }
-
-    // HACK: This is ugly duplication.
-    for (auto& m : preset_mapping_list) {
-        if (m.mode != bind_mode) {
-            continue;
-        }
-
-        if (m.seq.length() == 0) {
-            // Only use this generic if the user list didn't have one.
-            if (!generic) generic = &m;
-        } else if (input_mapping_is_match(m)) {
-            input_mapping_execute(m, allow_commands);
-            return;
+            if (m.is_generic()) {
+                if (!generic) generic = &m;
+            } else if (input_mapping_is_match(m)) {
+                return &m;
+            }
         }
     }
+    return generic;
+}
 
-    if (generic) {
-        input_mapping_execute(*generic, allow_commands);
+static void input_mapping_execute_matching_or_generic(bool allow_commands) {
+    const input_mapping_t *mapping = find_mapping();
+    if (mapping) {
+        input_mapping_execute(*mapping, allow_commands);
     } else {
         debug(2, L"no generic found, ignoring char...");
-        wchar_t c = input_common_readch(0);
-        if (c == R_EOF) {
-            input_common_next_ch(c);
+        auto evt = input_common_readch();
+        if (evt.is_char() && evt.get_char() == R_EOF) {
+            input_common_next_ch(evt);
         }
     }
 }
 
 /// Helper function. Picks through the queue of incoming characters until we get to one that's not a
 /// readline function.
-static wchar_t input_read_characters_only() {
-    std::vector<wchar_t> functions_to_put_back;
-    wchar_t char_to_return;
+static char_event_t input_read_characters_only() {
+    std::vector<char_event_t> saved_events;
+    char_event_t char_to_return{0};
     for (;;) {
-        char_to_return = input_common_readch(0);
-        bool is_readline_function =
-            (char_to_return >= R_BEGIN_INPUT_FUNCTIONS && char_to_return < R_END_INPUT_FUNCTIONS);
-        // R_NULL and R_EOF are more control characters than readline functions, so check specially
-        // for those.
-        if (!is_readline_function || char_to_return == R_NULL || char_to_return == R_EOF) {
-            break;
+        auto evt = input_common_readch();
+        if (evt.is_char()) {
+            auto c = evt.get_char();
+            if (!evt.is_readline() || c == R_NULL || c == R_EOF) {
+                char_to_return = evt;
+                break;
+            }
         }
-        // This is a readline function; save it off for later re-enqueing and try again.
-        functions_to_put_back.push_back(char_to_return);
+        saved_events.push_back(evt);
     }
     // Restore any readline functions, in reverse to preserve their original order.
-    size_t idx = functions_to_put_back.size();
-    while (idx--) {
-        input_common_next_ch(functions_to_put_back.at(idx));
+    for (auto iter = saved_events.rbegin(); iter != saved_events.rend(); ++iter) {
+        input_common_next_ch(*iter);
     }
     return char_to_return;
 }
 
-wint_t input_readch(bool allow_commands) {
+char_event_t input_readch(bool allow_commands) {
     // Clear the interrupted flag.
     reader_reset_interrupted();
     // Search for sequence in mapping tables.
     while (true) {
-        wchar_t c = input_common_readch(0);
+        auto evt = input_common_readch();
 
-        if (c >= R_BEGIN_INPUT_FUNCTIONS && c < R_END_INPUT_FUNCTIONS) {
-            switch (c) {
+        if (evt.is_readline()) {
+            switch (evt.get_char()) {
                 case R_SELF_INSERT: {
                     // Issue #1595: ensure we only insert characters, not readline functions. The
                     // common case is that this will be empty.
@@ -494,21 +487,20 @@ wint_t input_readch(bool allow_commands) {
                     if (input_function_status) {
                         return input_readch();
                     }
-                    c = input_common_readch(0);
-                    while (c >= R_BEGIN_INPUT_FUNCTIONS && c < R_END_INPUT_FUNCTIONS) {
-                        c = input_common_readch(0);
-                    }
-                    input_common_next_ch(c);
+                    do {
+                        evt = input_common_readch();
+                    } while (evt.is_readline());
+                    input_common_next_ch(evt);
                     return input_readch();
                 }
-                default: { return c; }
+                default: { return evt; }
             }
-        } else if (c == R_EOF) {
+        } else if (evt.is_char() && evt.get_char() == R_EOF) {
             // If we have R_EOF, we need to immediately quit.
             // There's no need to go through the input functions.
-            return R_EOF;
+            return evt;
         } else {
-            input_common_next_ch(c);
+            input_common_next_ch(evt);
             input_mapping_execute_matching_or_generic(allow_commands);
             // Regarding allow_commands, we're in a loop, but if a fish command
             // is executed, R_NULL is unread, so the next pass through the loop

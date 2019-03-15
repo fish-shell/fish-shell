@@ -2382,8 +2382,14 @@ static bool text_ends_in_comment(const wcstring &text) {
     return token.type == TOK_COMMENT;
 }
 
+/// \return true if an event is a normal character that should be inserted into the buffer.
+static bool event_is_normal_char(const char_event_t &evt) {
+    if (!evt.is_char()) return false;
+    auto c = evt.get_char();
+    return !fish_reserved_codepoint(c) && c > 31 && c != 127;
+}
+
 maybe_t<wcstring> reader_data_t::readline(int nchars) {
-    wint_t c;
     int last_char = 0;
     size_t yank_len = 0;
     const wchar_t *yank_str;
@@ -2436,37 +2442,44 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
         // Sometimes strange input sequences seem to generate a zero byte. I believe these simply
         // mean a character was pressed but it should be ignored. (Example: Trying to add a tilde
         // (~) to digit).
+        maybe_t<char_event_t> event_needing_handling{};
         while (1) {
             int was_interactive_read = is_interactive_read;
             is_interactive_read = 1;
-            c = input_readch();
+            event_needing_handling = input_readch();
             is_interactive_read = was_interactive_read;
             // std::fwprintf(stderr, L"C: %lx\n", (long)c);
 
-            if (((!fish_reserved_codepoint(c))) && (c > 31) && (c != 127) && can_read(0)) {
-                wchar_t arr[READAHEAD_MAX + 1];
-                size_t i;
+            if (event_is_normal_char(*event_needing_handling) && can_read(STDIN_FILENO)) {
+                // This is a normal character input.
+                // We are going to handle it directly, accumulating more.
+                // Clear 'mevt' to mark that we handled this.
+                char_event_t evt = event_needing_handling.acquire();
                 size_t limit = 0 < nchars ? std::min((size_t)nchars - command_line.size(),
                                                      (size_t)READAHEAD_MAX)
                                           : READAHEAD_MAX;
 
-                std::memset(arr, 0, sizeof(arr));
-                arr[0] = c;
+                wchar_t arr[READAHEAD_MAX + 1] = {};
+                arr[0] = evt.get_char();
+                last_char = arr[0];
 
-                for (i = 1; i < limit; ++i) {
+                for (size_t i = 1; i < limit; ++i) {
                     if (!can_read(0)) {
-                        c = 0;
                         break;
                     }
                     // Only allow commands on the first key; otherwise, we might have data we
                     // need to insert on the commandline that the commmand might need to be able
                     // to see.
-                    c = input_readch(false);
-                    if (!fish_reserved_codepoint(c) && c > 31 && c != 127) {
-                        arr[i] = c;
-                        c = 0;
-                    } else
+                    auto next_event = input_readch(false);
+                    if (event_is_normal_char(next_event)) {
+                        arr[i] = next_event.get_char();
+                        last_char = arr[i];
+                    } else {
+                        // We need to process this in the outer loop.
+                        assert(!event_needing_handling && "Should not have an unhandled event");
+                        event_needing_handling = next_event;
                         break;
+                    }
                 }
 
                 editable_line_t *el = active_edit_line();
@@ -2476,16 +2489,23 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 if (el == &command_line) {
                     clear_pager();
                 }
-                last_char = c;
             }
 
-            if (c != 0) break;
+            // If there's still an event that we were unable to handle, then end the coalescing
+            // loop.
+            if (event_needing_handling.has_value()) break;
 
             if (0 < nchars && (size_t)nchars <= command_line.size()) {
-                c = R_NULL;
+                event_needing_handling.reset();
                 break;
             }
         }
+
+        if (!event_needing_handling) {
+            event_needing_handling = R_NULL;
+        }
+        assert(event_needing_handling->is_char() && "Should have a char event");
+        wchar_t c = event_needing_handling->get_char();
 
         // If we get something other than a repaint, then stop coalescing them.
         if (c != R_REPAINT) coalescing_repaints = false;

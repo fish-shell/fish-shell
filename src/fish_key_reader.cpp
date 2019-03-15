@@ -208,9 +208,10 @@ static void process_input(bool continuous_mode) {
         if (reader_test_and_clear_interrupted()) {
             wc = shell_modes.c_cc[VINTR];
         } else {
-            wc = input_common_readch(true);
+            auto mwc = input_common_readch_timed(true);
+            wc = mwc.is_char() ? mwc.get_char() : R_EOF;
         }
-        if (wc == R_TIMEOUT || wc == R_EOF) {
+        if (wc == R_EOF) {
             output_bind_command(bind_chars);
             if (first_char_seen && !continuous_mode) {
                 return;

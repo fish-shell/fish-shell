@@ -1494,8 +1494,8 @@ complete -f -c git -n '__fish_git_using_command config' -s f -l file -d 'Read co
 complete -f -c git -n '__fish_git_using_command config' -l blob -d 'Read config from blob' -ra '(__fish_complete_suffix '')'
 
 # If no argument is specified, it's as if --get was used
-complete -c git -n '__fish_git_using_command config and __fish_is_token_n 3' -fa '(__fish_git_config_keys)'
-complete -f -c git -n '__fish_git_using_command config and __fish_is_first_arg' -l get -d 'Get config with name' -ra '(__fish_git_config_keys)'
+complete -c git -n '__fish_git_using_command config; and __fish_is_token_n 3' -fa '(__fish_git_config_keys)'
+complete -f -c git -n '__fish_git_using_command config; and __fish_is_first_arg' -l get -d 'Get config with name' -ra '(__fish_git_config_keys)'
 complete -f -c git -n '__fish_git_using_command config' -l get -d 'Get config with name' -ra '(__fish_git_config_keys)'
 complete -f -c git -n '__fish_git_using_command config' -l get-all -d 'Get all values matching key' -a '(__fish_git_config_keys)'
 complete -f -c git -n '__fish_git_using_command config' -l get-urlmatch -d 'Get value specific for the section url' -r
@@ -1518,7 +1518,7 @@ complete -f -c git -n '__fish_git_using_command config' -s z -l null -d 'Termina
 complete -f -c git -n '__fish_git_using_command config' -l name-only -d 'Show variable names only'
 complete -f -c git -n '__fish_git_using_command config' -l includes -d 'Respect include directives'
 complete -f -c git -n '__fish_git_using_command config' -l show-origin -d 'Show origin of configuration'
-complete -f -c git -n '__fish_git_using_command config and __fish_seen_argument --get' -l default -d 'Use default value when missing entry'
+complete -f -c git -n '__fish_git_using_command config; and __fish_seen_argument --get' -l default -d 'Use default value when missing entry'
 
 
 

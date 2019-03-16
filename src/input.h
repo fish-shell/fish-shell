@@ -31,8 +31,8 @@ void init_input();
 /// key press, and is returned as such.
 ///
 /// The argument determines whether fish commands are allowed to be run as bindings. If false, when
-/// a character is encountered that would invoke a fish command, it is unread and R_NULL is
-/// returned.
+/// a character is encountered that would invoke a fish command, it is unread and
+/// char_event_type_t::check_exit is returned.
 char_event_t input_readch(bool allow_commands = true);
 
 /// Enqueue a character or a readline function to the queue of unread characters that input_readch

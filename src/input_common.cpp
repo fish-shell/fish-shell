@@ -50,10 +50,12 @@ static char_event_t lookahead_pop() {
 }
 
 /// \return the next lookahead char, or none if none. Discards timeouts.
-static maybe_t<wchar_t> lookahead_pop_char() {
+static maybe_t<char_event_t> lookahead_pop_evt() {
     while (has_lookahead()) {
         auto evt = lookahead_pop();
-        if (evt.is_char()) return evt.get_char();
+        if (! evt.is_timeout()) {
+            return evt;
+        }
     }
     return none();
 }
@@ -116,7 +118,7 @@ static char_event_t readb() {
                 if (interrupt_handler) {
                     if (auto interrupt_evt = interrupt_handler()) {
                         return *interrupt_evt;
-                    } else if (auto mc = lookahead_pop_char()) {
+                    } else if (auto mc = lookahead_pop_evt()) {
                         return *mc;
                     }
                 }
@@ -142,7 +144,7 @@ static char_event_t readb() {
 
             if (ioport > 0 && FD_ISSET(ioport, &fdset)) {
                 iothread_service_completion();
-                if (auto mc = lookahead_pop_char()) {
+                if (auto mc = lookahead_pop_evt()) {
                     return *mc;
                 }
             }
@@ -183,7 +185,7 @@ void update_wait_on_escape_ms(const environment_t &vars) {
 }
 
 char_event_t input_common_readch() {
-    if (auto mc = lookahead_pop_char()) {
+    if (auto mc = lookahead_pop_evt()) {
         return *mc;
     }
     wchar_t res;
@@ -208,7 +210,7 @@ char_event_t input_common_readch() {
             case (size_t)(-1): {
                 std::memset(&state, '\0', sizeof(state));
                 debug(2, L"Illegal input");
-                return R_NULL;
+                return char_event_type_t::check_exit;
             }
             case (size_t)(-2): {
                 break;

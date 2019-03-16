@@ -2501,7 +2501,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
             }
         }
 
-        if (!event_needing_handling) {
+        if (!event_needing_handling || event_needing_handling->is_check_exit()) {
             event_needing_handling = R_NULL;
         } else if (event_needing_handling->is_eof()) {
             reader_force_exit();

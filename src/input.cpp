@@ -348,12 +348,12 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
     }
 
     if (has_commands && !allow_commands) {
-        // We don't want to run commands yet. Put the characters back and return R_NULL.
+        // We don't want to run commands yet. Put the characters back and return check_exit.
         for (wcstring::const_reverse_iterator it = m.seq.rbegin(), end = m.seq.rend(); it != end;
              ++it) {
             input_common_next_ch(*it);
         }
-        input_common_next_ch(R_NULL);
+        input_common_next_ch(char_event_type_t::check_exit);
         return;  // skip the input_set_bind_mode
     } else if (has_functions && !has_commands) {
         // Functions are added at the head of the input queue.
@@ -374,11 +374,11 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
             parser_t::principal_parser().eval(cmd, io_chain_t(), TOP);
         }
         proc_set_last_statuses(std::move(last_statuses));
-        input_common_next_ch(R_NULL);
+        input_common_next_ch(char_event_type_t::check_exit);
     } else {
         // Invalid binding, mixed commands and functions.  We would need to execute these one by
         // one.
-        input_common_next_ch(R_NULL);
+        input_common_next_ch(char_event_type_t::check_exit);
     }
 
     // Empty bind mode indicates to not reset the mode (#2871)
@@ -504,9 +504,9 @@ char_event_t input_readch(bool allow_commands) {
         } else {
             input_common_next_ch(evt);
             input_mapping_execute_matching_or_generic(allow_commands);
-            // Regarding allow_commands, we're in a loop, but if a fish command
-            // is executed, R_NULL is unread, so the next pass through the loop
-            // we'll break out and return it.
+            // Regarding allow_commands, we're in a loop, but if a fish command is executed,
+            // check_exit is unread, so the next pass through the loop we'll break out and return
+            // it.
         }
     }
 }

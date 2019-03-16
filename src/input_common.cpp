@@ -69,8 +69,7 @@ void input_common_init(interrupt_func_t func) { interrupt_handler = func; }
 
 /// Internal function used by input_common_readch to read one byte from fd 0. This function should
 /// only be called by input_common_readch().
-/// \return the char, or none() on EOF.
-static maybe_t<wint_t> readb() {
+static char_event_t readb() {
     // do_loop must be set on every path through the loop; leaving it uninitialized allows the
     // static analyzer to assist in catching mistakes.
     unsigned char arr[1];
@@ -125,7 +124,7 @@ static maybe_t<wint_t> readb() {
                 do_loop = true;
             } else {
                 // The terminal has been closed.
-                return none();
+                return char_event_type_t::eof;
             }
         } else {
             // Assume we loop unless we see a character in stdin.
@@ -151,7 +150,7 @@ static maybe_t<wint_t> readb() {
             if (FD_ISSET(STDIN_FILENO, &fdset)) {
                 if (read_blocked(0, arr, 1) != 1) {
                     // The teminal has been closed.
-                    return none();
+                    return char_event_type_t::eof;
                 }
 
                 // We read from stdin, so don't loop.
@@ -190,13 +189,12 @@ char_event_t input_common_readch() {
     wchar_t res;
     mbstate_t state = {};
     while (1) {
-        auto mb = readb();
-        if (!mb) {
-            // EOF
-            return char_event_type_t::eof;
+        auto evt = readb();
+        if (!evt.is_char() || evt.is_readline()) {
+            return evt;
         }
-        wint_t b = *mb;
 
+        wint_t b = evt.get_char();
         if (b >= R_NULL && b < R_END_INPUT_FUNCTIONS) return b;
 
         if (MB_CUR_MAX == 1) {

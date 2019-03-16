@@ -447,28 +447,24 @@ static void input_mapping_execute_matching_or_generic(bool allow_commands) {
 }
 
 /// Helper function. Picks through the queue of incoming characters until we get to one that's not a
-/// readline function, or EOF.
-static char_event_t input_read_characters_eof_only() {
+/// readline function.
+static char_event_t input_read_characters_no_readline() {
     std::vector<char_event_t> saved_events;
-    char_event_t char_to_return{0};
+    char_event_t evt_to_return{0};
     for (;;) {
         auto evt = input_common_readch();
-        if (evt.is_eof()) {
-            return evt;
-        } else if (evt.is_char()) {
-            auto c = evt.get_char();
-            if (!evt.is_readline() || c == R_NULL) {
-                char_to_return = evt;
-                break;
-            }
+        if (evt.is_readline()) {
+            saved_events.push_back(evt);
+        } else {
+            evt_to_return = evt;
+            break;
         }
-        saved_events.push_back(evt);
     }
     // Restore any readline functions, in reverse to preserve their original order.
     for (auto iter = saved_events.rbegin(); iter != saved_events.rend(); ++iter) {
         input_common_next_ch(*iter);
     }
-    return char_to_return;
+    return evt_to_return;
 }
 
 char_event_t input_readch(bool allow_commands) {
@@ -483,7 +479,7 @@ char_event_t input_readch(bool allow_commands) {
                 case R_SELF_INSERT: {
                     // Issue #1595: ensure we only insert characters, not readline functions. The
                     // common case is that this will be empty.
-                    return input_read_characters_eof_only();
+                    return input_read_characters_no_readline();
                 }
                 case R_AND: {
                     if (input_function_status) {

@@ -63,6 +63,9 @@ int wcsfilecmp(const wchar_t *a, const wchar_t *b) {
 
         wint_t al = towupper(*a);
         wint_t bl = towupper(*b);
+        if (al == L'-') al += 48;
+        if (bl == L'-') bl += 48;
+
         if (al < bl) {
             retval = -1;
             break;

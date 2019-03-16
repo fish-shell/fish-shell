@@ -249,7 +249,7 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t *command, const wc
 
 /// Handle interruptions to key reading by reaping finshed jobs and propagating the interrupt to the
 /// reader.
-static maybe_t<int> interrupt_handler() {
+static maybe_t<char_event_t> interrupt_handler() {
     // Fire any pending events.
     event_fire_delayed();
     // Reap stray processes, including printing exit status messages.
@@ -260,10 +260,10 @@ static maybe_t<int> interrupt_handler() {
         if (vintr == 0) {
             return none();
         }
-        return vintr;
+        return char_event_t{vintr};
     }
 
-    return R_NULL;
+    return char_event_t{R_NULL};
 }
 
 static std::atomic<bool> input_initialized{false};

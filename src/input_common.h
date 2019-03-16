@@ -122,8 +122,12 @@ class char_event_t {
     }
 };
 
-/// Init the library.
-void input_common_init(int (*ih)());
+/// A type of function invoked on interrupt.
+/// \return the event which is to be returned to the reader loop, or none if VINTR is 0.
+using interrupt_func_t = maybe_t<int> (*)();
+
+/// Init the library with an interrupt function.
+void input_common_init(interrupt_func_t func);
 
 /// Adjust the escape timeout.
 class environment_t;

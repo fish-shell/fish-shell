@@ -63,9 +63,9 @@ static void lookahead_push_back(char_event_t c) { lookahead_list.push_back(c); }
 static void lookahead_push_front(char_event_t c) { lookahead_list.push_front(c); }
 
 /// Callback function for handling interrupts on reading.
-static int (*interrupt_handler)();
+static interrupt_func_t interrupt_handler;
 
-void input_common_init(int (*ih)()) { interrupt_handler = ih; }
+void input_common_init(interrupt_func_t func) { interrupt_handler = func; }
 
 /// Internal function used by input_common_readch to read one byte from fd 0. This function should
 /// only be called by input_common_readch().
@@ -115,9 +115,9 @@ static maybe_t<wint_t> readb() {
         if (res == -1) {
             if (errno == EINTR || errno == EAGAIN) {
                 if (interrupt_handler) {
-                    int res = interrupt_handler();
-                    if (res) return res;
-                    if (auto mc = lookahead_pop_char()) {
+                    if (auto interrupt_evt = interrupt_handler()) {
+                        return *interrupt_evt;
+                    } else if (auto mc = lookahead_pop_char()) {
                         return *mc;
                     }
                 }

@@ -249,14 +249,18 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t *command, const wc
 
 /// Handle interruptions to key reading by reaping finshed jobs and propagating the interrupt to the
 /// reader.
-static int interrupt_handler() {
+static maybe_t<int> interrupt_handler() {
     // Fire any pending events.
     event_fire_delayed();
     // Reap stray processes, including printing exit status messages.
     if (job_reap(true)) reader_repaint_needed();
     // Tell the reader an event occured.
     if (reader_reading_interrupted()) {
-        return shell_modes.c_cc[VINTR];
+        auto vintr = shell_modes.c_cc[VINTR];
+        if (vintr == 0) {
+            return none();
+        }
+        return vintr;
     }
 
     return R_NULL;

@@ -206,7 +206,6 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
             }
         }
 
-        const size_t i1_src_pos = pos;
         const wchar_t *end;
         long tmp = fish_wcstol(&in[pos], &end);
         // We don't test `*end` as is typically done because we expect it to not be the null char.
@@ -223,7 +222,6 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
             pos += 2;
             while (in[pos] == INTERNAL_SEPARATOR) pos++;
 
-            const size_t number_start = pos;
             long tmp1 = fish_wcstol(&in[pos], &end);
             // Ignore the case of errno==-1 because it means the end char wasn't the null char.
             if (errno > 0) {

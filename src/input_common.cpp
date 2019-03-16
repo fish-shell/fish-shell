@@ -197,8 +197,6 @@ char_event_t input_common_readch() {
         }
 
         wint_t b = evt.get_char();
-        if (b >= R_NULL && b < R_END_INPUT_FUNCTIONS) return b;
-
         if (MB_CUR_MAX == 1) {
             return b;  // single-byte locale, all values are legal
         }

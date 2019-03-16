@@ -1044,7 +1044,6 @@ static bool command_ends_paging(wchar_t c, bool focused_on_search_field) {
         case R_FORWARD_CHAR:
         case R_UP_LINE:
         case R_DOWN_LINE:
-        case R_NULL:
         case R_REPAINT:
         case R_SUPPRESS_AUTOSUGGESTION:
         case R_BEGINNING_OF_HISTORY:
@@ -2502,7 +2501,8 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
         }
 
         if (!event_needing_handling || event_needing_handling->is_check_exit()) {
-            event_needing_handling = R_NULL;
+            repaint_if_needed();
+            continue;
         } else if (event_needing_handling->is_eof()) {
             reader_force_exit();
             continue;
@@ -2560,9 +2560,6 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
             case R_END_OF_BUFFER: {
                 update_buff_pos(&command_line, command_line.size());
                 reader_repaint_needed();
-                break;
-            }
-            case R_NULL: {
                 break;
             }
             case R_CANCEL: {
@@ -3267,7 +3264,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
 
         if ((c != R_HISTORY_SEARCH_BACKWARD) && (c != R_HISTORY_SEARCH_FORWARD) &&
             (c != R_HISTORY_TOKEN_SEARCH_BACKWARD) && (c != R_HISTORY_TOKEN_SEARCH_FORWARD) &&
-            (c != R_NULL) && (c != R_REPAINT) && (c != R_FORCE_REPAINT)) {
+            (c != R_REPAINT) && (c != R_FORCE_REPAINT)) {
             history_search.reset();
         }
 

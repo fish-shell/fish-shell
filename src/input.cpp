@@ -263,7 +263,7 @@ static maybe_t<char_event_t> interrupt_handler() {
         return char_event_t{vintr};
     }
 
-    return char_event_t{R_NULL};
+    return char_event_t{char_event_type_t::check_exit};
 }
 
 static std::atomic<bool> input_initialized{false};

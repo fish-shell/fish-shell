@@ -204,14 +204,13 @@ static void process_input(bool continuous_mode) {
 
     std::fwprintf(stderr, L"Press a key\n\n");
     while (keep_running) {
-        wchar_t wc;
+        char_event_t evt{0};
         if (reader_test_and_clear_interrupted()) {
-            wc = shell_modes.c_cc[VINTR];
+            evt = char_event_t{shell_modes.c_cc[VINTR]};
         } else {
-            auto mwc = input_common_readch_timed(true);
-            wc = mwc.is_char() ? mwc.get_char() : R_EOF;
+            evt = input_common_readch_timed(true);
         }
-        if (wc == R_EOF) {
+        if (!evt.is_char()) {
             output_bind_command(bind_chars);
             if (first_char_seen && !continuous_mode) {
                 return;
@@ -219,6 +218,7 @@ static void process_input(bool continuous_mode) {
             continue;
         }
 
+        wchar_t wc = evt.get_char();
         prev_tstamp = output_elapsed_time(prev_tstamp, first_char_seen);
         add_char_to_bind_command(wc, bind_chars);
         output_info_about_char(wc);

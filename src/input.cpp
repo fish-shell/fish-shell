@@ -440,22 +440,24 @@ static void input_mapping_execute_matching_or_generic(bool allow_commands) {
     } else {
         debug(2, L"no generic found, ignoring char...");
         auto evt = input_common_readch();
-        if (evt.is_char() && evt.get_char() == R_EOF) {
+        if (evt.is_eof()) {
             input_common_next_ch(evt);
         }
     }
 }
 
 /// Helper function. Picks through the queue of incoming characters until we get to one that's not a
-/// readline function.
-static char_event_t input_read_characters_only() {
+/// readline function, or EOF.
+static char_event_t input_read_characters_eof_only() {
     std::vector<char_event_t> saved_events;
     char_event_t char_to_return{0};
     for (;;) {
         auto evt = input_common_readch();
-        if (evt.is_char()) {
+        if (evt.is_eof()) {
+            return evt;
+        } else if (evt.is_char()) {
             auto c = evt.get_char();
-            if (!evt.is_readline() || c == R_NULL || c == R_EOF) {
+            if (!evt.is_readline() || c == R_NULL) {
                 char_to_return = evt;
                 break;
             }
@@ -481,7 +483,7 @@ char_event_t input_readch(bool allow_commands) {
                 case R_SELF_INSERT: {
                     // Issue #1595: ensure we only insert characters, not readline functions. The
                     // common case is that this will be empty.
-                    return input_read_characters_only();
+                    return input_read_characters_eof_only();
                 }
                 case R_AND: {
                     if (input_function_status) {
@@ -495,8 +497,8 @@ char_event_t input_readch(bool allow_commands) {
                 }
                 default: { return evt; }
             }
-        } else if (evt.is_char() && evt.get_char() == R_EOF) {
-            // If we have R_EOF, we need to immediately quit.
+        } else if (evt.is_eof()) {
+            // If we have EOF, we need to immediately quit.
             // There's no need to go through the input functions.
             return evt;
         } else {

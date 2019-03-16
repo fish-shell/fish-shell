@@ -14,7 +14,6 @@ enum {
     // R_NULL is sometimes returned by the input when a character was requested but none could be
     // delivered, or when an exception happened.
     R_NULL = R_MIN,
-    R_EOF,
 
     R_BEGINNING_OF_LINE,
     R_END_OF_LINE,
@@ -88,6 +87,9 @@ enum class char_event_type_t {
 
     /// A timeout was hit.
     timeout,
+
+    /// end-of-file was reached.
+    eof
 };
 
 class char_event_t {
@@ -100,6 +102,8 @@ class char_event_t {
     bool is_timeout() const { return type == char_event_type_t::timeout; }
 
     bool is_char() const { return type == char_event_type_t::charc; }
+
+    bool is_eof() const { return type == char_event_type_t::eof; }
 
     bool is_readline() const {
         return is_char() && c_ >= R_BEGIN_INPUT_FUNCTIONS && c_ < R_END_INPUT_FUNCTIONS;

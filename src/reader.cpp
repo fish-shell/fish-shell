@@ -2503,6 +2503,9 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
 
         if (!event_needing_handling) {
             event_needing_handling = R_NULL;
+        } else if (event_needing_handling->is_eof()) {
+            reader_force_exit();
+            continue;
         }
         assert(event_needing_handling->is_char() && "Should have a char event");
         wchar_t c = event_needing_handling->get_char();
@@ -2575,10 +2578,6 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                     screen_reset_needed = false;
                     repaint();
                 }
-                break;
-            }
-            case R_EOF: {
-                reader_force_exit();
                 break;
             }
             case R_COMPLETE:

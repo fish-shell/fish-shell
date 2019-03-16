@@ -82,6 +82,9 @@ enum class char_event_type_t {
     /// A character was entered.
     charc,
 
+    /// A readline event.
+    readline,
+
     /// A timeout was hit.
     timeout,
 
@@ -94,7 +97,7 @@ enum class char_event_type_t {
 };
 
 class char_event_t {
-    /// Set if the type is charc.
+    /// Set if the type is charc or readline.
     wchar_t c_;
 
    public:
@@ -108,19 +111,26 @@ class char_event_t {
 
     bool is_check_exit() const { return type == char_event_type_t::check_exit; }
 
-    bool is_readline() const {
-        return is_char() && c_ >= R_BEGIN_INPUT_FUNCTIONS && c_ < R_END_INPUT_FUNCTIONS;
-    }
+    bool is_readline() const { return type == char_event_type_t::readline; }
 
     wchar_t get_char() const {
         assert(type == char_event_type_t::charc && "Not a char type");
         return c_;
     }
 
-    /* implicit */ char_event_t(wchar_t c) : c_(c), type(char_event_type_t::charc) {}
+    wchar_t get_readline() const {
+        assert(type == char_event_type_t::readline && "Not a readline type");
+        return c_;
+    }
+
+    /* implicit */ char_event_t(wchar_t c)
+        : c_(c),
+          type(R_BEGIN_INPUT_FUNCTIONS <= c && c < R_END_INPUT_FUNCTIONS
+                   ? char_event_type_t::readline
+                   : char_event_type_t::charc) {}
 
     /* implicit */ char_event_t(char_event_type_t type) : c_(0), type(type) {
-        assert(type != char_event_type_t::charc &&
+        assert(type != char_event_type_t::charc && type != char_event_type_t::readline &&
                "Cannot create a char event with this constructor");
     }
 };

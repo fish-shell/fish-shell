@@ -2997,11 +2997,11 @@ static void test_input() {
 
     // Now test.
     auto evt = input_readch();
-    if (!evt.is_char()) {
-        err(L"Event is not a char");
-    } else if (evt.get_char() != R_DOWN_LINE) {
+    if (!evt.is_readline()) {
+        err(L"Event is not a readline");
+    } else if (evt.get_readline() != R_DOWN_LINE) {
         err(L"Expected to read char R_DOWN_LINE, but instead got %ls\n",
-            describe_char(evt.get_char()).c_str());
+            describe_char(evt.get_readline()).c_str());
     }
 }
 

@@ -2507,8 +2507,10 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
             reader_force_exit();
             continue;
         }
-        assert(event_needing_handling->is_char() && "Should have a char event");
-        wchar_t c = event_needing_handling->get_char();
+        assert((event_needing_handling->is_char() || event_needing_handling->is_readline()) &&
+               "Should have a char or readline");
+        wchar_t c = event_needing_handling->is_char() ? event_needing_handling->get_char()
+                                                      : event_needing_handling->get_readline();
 
         // If we get something other than a repaint, then stop coalescing them.
         if (c != R_REPAINT) coalescing_repaints = false;

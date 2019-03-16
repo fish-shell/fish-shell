@@ -311,7 +311,7 @@ void input_function_push_args(int code) {
         wchar_t arg{};
         for (;;) {
             auto evt = input_common_readch();
-            if (evt.is_char() && !evt.is_readline()) {
+            if (evt.is_char()) {
                 arg = evt.get_char();
                 break;
             }
@@ -479,7 +479,7 @@ char_event_t input_readch(bool allow_commands) {
         auto evt = input_common_readch();
 
         if (evt.is_readline()) {
-            switch (evt.get_char()) {
+            switch (evt.get_readline()) {
                 case R_SELF_INSERT: {
                     // Issue #1595: ensure we only insert characters, not readline functions. The
                     // common case is that this will be empty.

@@ -192,7 +192,7 @@ char_event_t input_common_readch() {
     mbstate_t state = {};
     while (1) {
         auto evt = readb();
-        if (!evt.is_char() || evt.is_readline()) {
+        if (!evt.is_char()) {
             return evt;
         }
 
@@ -239,7 +239,7 @@ char_event_t input_common_readch_timed(bool dequeue_timeouts) {
         if (!dequeue_timeouts) lookahead_push_front(char_event_type_t::timeout);
         return char_event_type_t::timeout;
     }
-    return result.get_char();
+    return result;
 }
 
 void input_common_queue_ch(char_event_t ch) { lookahead_push_back(ch); }

@@ -61,8 +61,8 @@ int wcsfilecmp(const wchar_t *a, const wchar_t *b) {
             if (retval || *a == 0 || *b == 0) break;
         }
 
-        wint_t al = towlower(*a);
-        wint_t bl = towlower(*b);
+        wint_t al = towupper(*a);
+        wint_t bl = towupper(*b);
         if (al < bl) {
             retval = -1;
             break;

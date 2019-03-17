@@ -222,7 +222,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// \param block_type The type of block to push on the block stack
     ///
     /// \return 0 on success, 1 on a parse error.
-    int eval(wcstring cmd, const io_chain_t &io, enum block_type_t block_type);
+    int eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type);
 
     /// Evaluate the parsed source ps.
     void eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type_t block_type);

@@ -734,8 +734,6 @@ parse_execution_result_t parse_execution_context_t::expand_command(
 
     // Get the unexpanded command string. We expect to always get it here.
     wcstring unexp_cmd = *command_for_plain_statement(statement, pstree->src);
-    wcstring cmd;
-    wcstring_list_t args;
 
     // Expand the string to produce completions, and report errors.
     expand_error_t expand_err =
@@ -879,7 +877,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
     proc->type = process_type;
     proc->set_argv(cmd_args);
     proc->set_io_chain(process_io_chain);
-    proc->actual_cmd = path_to_external_command;
+    proc->actual_cmd = std::move(path_to_external_command);
     return parse_execution_success;
 }
 

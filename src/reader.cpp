@@ -3263,6 +3263,19 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 reader_repaint_needed();
                 break;
             }
+
+                // Some commands should have been handled internally by input_readch().
+            case rl::R_SELF_INSERT: {
+                DIE("self-insert should have been handled by input_readch");
+            }
+            case rl::R_AND: {
+                DIE("self-insert should have been handled by input_readch");
+            }
+            case rl::R_VI_ARG_DIGIT:
+            case rl::R_VI_DELETE_TO: {
+                // TODO: what needs to happen with these?
+                break;
+            }
         }
 
         if (ordinary_char) {

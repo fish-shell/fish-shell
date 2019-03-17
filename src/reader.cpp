@@ -2391,7 +2391,6 @@ static bool event_is_normal_char(const char_event_t &evt) {
 maybe_t<wcstring> reader_data_t::readline(int nchars) {
     int last_char = 0;
     size_t yank_len = 0;
-    const wchar_t *yank_str;
     bool comp_empty = true;
     std::vector<completion_t> comp;
     int finished = 0;
@@ -2746,18 +2745,18 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 break;
             }
             case R_YANK: {
-                yank_str = kill_yank();
+                wcstring yank_str = kill_yank();
                 insert_string(active_edit_line(), yank_str);
-                yank_len = std::wcslen(yank_str);
+                yank_len = yank_str.size();
                 break;
             }
             case R_YANK_POP: {
                 if (yank_len) {
                     for (size_t i = 0; i < yank_len; i++) remove_backward();
 
-                    yank_str = kill_yank_rotate();
+                    wcstring yank_str = kill_yank_rotate();
                     insert_string(active_edit_line(), yank_str);
-                    yank_len = std::wcslen(yank_str);
+                    yank_len = yank_str.size();
                 }
                 break;
             }

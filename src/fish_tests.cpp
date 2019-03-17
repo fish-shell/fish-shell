@@ -2999,9 +2999,8 @@ static void test_input() {
     auto evt = input_readch();
     if (!evt.is_readline()) {
         err(L"Event is not a readline");
-    } else if (evt.get_readline() != R_DOWN_LINE) {
-        err(L"Expected to read char R_DOWN_LINE, but instead got %ls\n",
-            describe_char(evt.get_readline()).c_str());
+    } else if (evt.get_readline() != readline_cmd_t::R_DOWN_LINE) {
+        err(L"Expected to read char R_DOWN_LINE");
     }
 }
 

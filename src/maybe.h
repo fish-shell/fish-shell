@@ -203,6 +203,12 @@ class maybe_t : private maybe_detail::conditionally_copyable_t<T> {
     }
 
     bool operator!=(const maybe_t &rhs) const { return !(*this == rhs); }
+
+    bool operator==(const T &rhs) const { return this->has_value() && this->value() == rhs; }
+
+    bool operator!=(const T &rhs) const { return !(*this == rhs); }
+
+    ~maybe_t() { reset(); }
 };
 
 #endif

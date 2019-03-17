@@ -1027,67 +1027,83 @@ void reader_force_exit() {
 }
 
 /// Indicates if the given command char ends paging.
-static bool command_ends_paging(wchar_t c, bool focused_on_search_field) {
+static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) {
+    using rl = readline_cmd_t;
     switch (c) {
-        case R_HISTORY_SEARCH_BACKWARD:
-        case R_HISTORY_SEARCH_FORWARD:
-        case R_HISTORY_TOKEN_SEARCH_BACKWARD:
-        case R_HISTORY_TOKEN_SEARCH_FORWARD:
-        case R_ACCEPT_AUTOSUGGESTION:
-        case R_CANCEL: {
+        case rl::R_HISTORY_SEARCH_BACKWARD:
+        case rl::R_HISTORY_SEARCH_FORWARD:
+        case rl::R_HISTORY_TOKEN_SEARCH_BACKWARD:
+        case rl::R_HISTORY_TOKEN_SEARCH_FORWARD:
+        case rl::R_ACCEPT_AUTOSUGGESTION:
+        case rl::R_CANCEL: {
             // These commands always end paging.
             return true;
         }
-        case R_COMPLETE:
-        case R_COMPLETE_AND_SEARCH:
-        case R_BACKWARD_CHAR:
-        case R_FORWARD_CHAR:
-        case R_UP_LINE:
-        case R_DOWN_LINE:
-        case R_REPAINT:
-        case R_SUPPRESS_AUTOSUGGESTION:
-        case R_BEGINNING_OF_HISTORY:
-        case R_END_OF_HISTORY: {
+        case rl::R_COMPLETE:
+        case rl::R_COMPLETE_AND_SEARCH:
+        case rl::R_BACKWARD_CHAR:
+        case rl::R_FORWARD_CHAR:
+        case rl::R_UP_LINE:
+        case rl::R_DOWN_LINE:
+        case rl::R_REPAINT:
+        case rl::R_SUPPRESS_AUTOSUGGESTION:
+        case rl::R_BEGINNING_OF_HISTORY:
+        case rl::R_END_OF_HISTORY: {
             // These commands never end paging.
             return false;
         }
-        case R_EXECUTE: {
+        case rl::R_EXECUTE: {
             // R_EXECUTE does end paging, but only executes if it was not paging. So it's handled
             // specially.
             return false;
         }
-        case R_BEGINNING_OF_LINE:
-        case R_END_OF_LINE:
-        case R_FORWARD_WORD:
-        case R_BACKWARD_WORD:
-        case R_FORWARD_BIGWORD:
-        case R_BACKWARD_BIGWORD:
-        case R_DELETE_CHAR:
-        case R_BACKWARD_DELETE_CHAR:
-        case R_KILL_LINE:
-        case R_YANK:
-        case R_YANK_POP:
-        case R_BACKWARD_KILL_LINE:
-        case R_KILL_WHOLE_LINE:
-        case R_KILL_WORD:
-        case R_KILL_BIGWORD:
-        case R_BACKWARD_KILL_WORD:
-        case R_BACKWARD_KILL_PATH_COMPONENT:
-        case R_BACKWARD_KILL_BIGWORD:
-        case R_SELF_INSERT:
-        case R_TRANSPOSE_CHARS:
-        case R_TRANSPOSE_WORDS:
-        case R_UPCASE_WORD:
-        case R_DOWNCASE_WORD:
-        case R_CAPITALIZE_WORD:
-        case R_VI_ARG_DIGIT:
-        case R_VI_DELETE_TO:
-        case R_BEGINNING_OF_BUFFER:
-        case R_END_OF_BUFFER: {
+        case rl::R_BEGINNING_OF_LINE:
+        case rl::R_END_OF_LINE:
+        case rl::R_FORWARD_WORD:
+        case rl::R_BACKWARD_WORD:
+        case rl::R_FORWARD_BIGWORD:
+        case rl::R_BACKWARD_BIGWORD:
+        case rl::R_DELETE_CHAR:
+        case rl::R_BACKWARD_DELETE_CHAR:
+        case rl::R_KILL_LINE:
+        case rl::R_YANK:
+        case rl::R_YANK_POP:
+        case rl::R_BACKWARD_KILL_LINE:
+        case rl::R_KILL_WHOLE_LINE:
+        case rl::R_KILL_WORD:
+        case rl::R_KILL_BIGWORD:
+        case rl::R_BACKWARD_KILL_WORD:
+        case rl::R_BACKWARD_KILL_PATH_COMPONENT:
+        case rl::R_BACKWARD_KILL_BIGWORD:
+        case rl::R_SELF_INSERT:
+        case rl::R_TRANSPOSE_CHARS:
+        case rl::R_TRANSPOSE_WORDS:
+        case rl::R_UPCASE_WORD:
+        case rl::R_DOWNCASE_WORD:
+        case rl::R_CAPITALIZE_WORD:
+        case rl::R_VI_ARG_DIGIT:
+        case rl::R_VI_DELETE_TO:
+        case rl::R_BEGINNING_OF_BUFFER:
+        case rl::R_END_OF_BUFFER:
             // These commands operate on the search field if that's where the focus is.
             return !focused_on_search_field;
-        }
-        default: { return false; }
+        default:
+            return false;
+    }
+}
+
+/// Indicates if the given command ends the history search.
+static bool command_ends_history_search(readline_cmd_t c) {
+    switch (c) {
+        case readline_cmd_t::R_HISTORY_SEARCH_BACKWARD:
+        case readline_cmd_t::R_HISTORY_SEARCH_FORWARD:
+        case readline_cmd_t::R_HISTORY_TOKEN_SEARCH_BACKWARD:
+        case readline_cmd_t::R_HISTORY_TOKEN_SEARCH_FORWARD:
+        case readline_cmd_t::R_REPAINT:
+        case readline_cmd_t::R_FORCE_REPAINT:
+            return false;
+        default:
+            return true;
     }
 }
 
@@ -2389,7 +2405,8 @@ static bool event_is_normal_char(const char_event_t &evt) {
 }
 
 maybe_t<wcstring> reader_data_t::readline(int nchars) {
-    int last_char = 0;
+    using rl = readline_cmd_t;
+    maybe_t<readline_cmd_t> last_cmd{};
     size_t yank_len = 0;
     bool comp_empty = true;
     std::vector<completion_t> comp;
@@ -2459,7 +2476,6 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
 
                 wchar_t arr[READAHEAD_MAX + 1] = {};
                 arr[0] = evt.get_char();
-                last_char = arr[0];
 
                 for (size_t i = 1; i < limit; ++i) {
                     if (!can_read(0)) {
@@ -2471,7 +2487,6 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                     auto next_event = input_readch(false);
                     if (event_is_normal_char(next_event)) {
                         arr[i] = next_event.get_char();
-                        last_char = arr[i];
                     } else {
                         // We need to process this in the outer loop.
                         assert(!event_needing_handling && "Should not have an unhandled event");
@@ -2487,6 +2502,9 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 if (el == &command_line) {
                     clear_pager();
                 }
+
+                // Since we handled a normal character, we don't have a last command.
+                last_cmd.reset();
             }
 
             // If there's still an event that we were unable to handle, then end the coalescing
@@ -2508,29 +2526,38 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
         }
         assert((event_needing_handling->is_char() || event_needing_handling->is_readline()) &&
                "Should have a char or readline");
-        wchar_t c = event_needing_handling->is_char() ? event_needing_handling->get_char()
-                                                      : event_needing_handling->get_readline();
+        maybe_t<readline_cmd_t> readline_cmd{};
+        maybe_t<wchar_t> ordinary_char{};
+        if (event_needing_handling->is_readline()) {
+            readline_cmd = event_needing_handling->get_readline();
+        } else {
+            ordinary_char = event_needing_handling->get_char();
+        }
 
         // If we get something other than a repaint, then stop coalescing them.
-        if (c != R_REPAINT) coalescing_repaints = false;
+        if (readline_cmd != rl::R_REPAINT) coalescing_repaints = false;
 
-        if (last_char != R_YANK && last_char != R_YANK_POP) yank_len = 0;
+        if (last_cmd != rl::R_YANK && last_cmd != rl::R_YANK_POP) {
+            yank_len = 0;
+        }
 
         // Restore the text.
-        if (c == R_CANCEL && is_navigating_pager_contents()) {
-            set_command_line_and_position(&command_line, cycle_command_line, cycle_cursor_pos);
+        if (readline_cmd) {
+            if (*readline_cmd == rl::R_CANCEL && is_navigating_pager_contents()) {
+                set_command_line_and_position(&command_line, cycle_command_line, cycle_cursor_pos);
+            }
+
+            // Clear the pager if necessary.
+            bool focused_on_search_field = (active_edit_line() == &pager.search_field_line);
+            if (command_ends_paging(*readline_cmd, focused_on_search_field)) {
+                clear_pager();
+            }
         }
 
-        // Clear the pager if necessary.
-        bool focused_on_search_field = (active_edit_line() == &pager.search_field_line);
-        if (command_ends_paging(c, focused_on_search_field)) {
-            clear_pager();
-        }
-        // std::fwprintf(stderr, L"\n\nchar: %ls\n\n", describe_char(c).c_str());
-
+        readline_cmd_t c = readline_cmd ? *readline_cmd : static_cast<readline_cmd_t>(0);
         switch (c) {
             // Go to beginning of line.
-            case R_BEGINNING_OF_LINE: {
+            case rl::R_BEGINNING_OF_LINE: {
                 editable_line_t *el = active_edit_line();
                 while (el->position > 0 && el->text.at(el->position - 1) != L'\n') {
                     update_buff_pos(el, el->position - 1);
@@ -2539,7 +2566,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 reader_repaint_needed();
                 break;
             }
-            case R_END_OF_LINE: {
+            case rl::R_END_OF_LINE: {
                 editable_line_t *el = active_edit_line();
                 if (el->position < el->size()) {
                     const wchar_t *buff = el->text.c_str();
@@ -2553,22 +2580,22 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 reader_repaint_needed();
                 break;
             }
-            case R_BEGINNING_OF_BUFFER: {
+            case rl::R_BEGINNING_OF_BUFFER: {
                 update_buff_pos(&command_line, 0);
                 reader_repaint_needed();
                 break;
             }
-            case R_END_OF_BUFFER: {
+            case rl::R_END_OF_BUFFER: {
                 update_buff_pos(&command_line, command_line.size());
                 reader_repaint_needed();
                 break;
             }
-            case R_CANCEL: {
+            case rl::R_CANCEL: {
                 // The only thing we can cancel right now is paging, which we handled up above.
                 break;
             }
-            case R_FORCE_REPAINT:
-            case R_REPAINT: {
+            case rl::R_FORCE_REPAINT:
+            case rl::R_REPAINT: {
                 if (!coalescing_repaints) {
                     coalescing_repaints = true;
                     exec_prompt();
@@ -2578,21 +2605,21 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 }
                 break;
             }
-            case R_COMPLETE:
-            case R_COMPLETE_AND_SEARCH: {
+            case rl::R_COMPLETE:
+            case rl::R_COMPLETE_AND_SEARCH: {
                 if (!complete_func) break;
 
                 // Use the command line only; it doesn't make sense to complete in any other line.
                 editable_line_t *el = &command_line;
-                if (is_navigating_pager_contents() || (!comp_empty && last_char == R_COMPLETE)) {
+                if (is_navigating_pager_contents() || (!comp_empty && last_cmd == rl::R_COMPLETE)) {
                     // The user typed R_COMPLETE more than once in a row. If we are not yet fully
                     // disclosed, then become so; otherwise cycle through our available completions.
                     if (current_page_rendering.remaining_to_disclose > 0) {
                         pager.set_fully_disclosed(true);
                         reader_repaint_needed();
                     } else {
-                        select_completion_in_direction(c == R_COMPLETE ? direction_next
-                                                                       : direction_prev);
+                        select_completion_in_direction(c == rl::R_COMPLETE ? direction_next
+                                                                           : direction_prev);
                     }
                 } else {
                     // Either the user hit tab only once, or we had no visible completion list.
@@ -2651,11 +2678,11 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                     cycle_command_line = el->text;
                     cycle_cursor_pos = el->position;
 
-                    bool cont_after_prefix_insertion = (c == R_COMPLETE_AND_SEARCH);
+                    bool cont_after_prefix_insertion = (c == rl::R_COMPLETE_AND_SEARCH);
                     comp_empty = handle_completions(comp, cont_after_prefix_insertion);
 
                     // Show the search field if requested and if we printed a list of completions.
-                    if (c == R_COMPLETE_AND_SEARCH && !comp_empty && !pager.empty()) {
+                    if (c == rl::R_COMPLETE_AND_SEARCH && !comp_empty && !pager.empty()) {
                         pager.set_search_field_shown(true);
                         select_completion_in_direction(direction_next);
                         reader_repaint_needed();
@@ -2663,7 +2690,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 }
                 break;
             }
-            case R_PAGER_TOGGLE_SEARCH: {
+            case rl::R_PAGER_TOGGLE_SEARCH: {
                 if (!pager.empty()) {
                     // Toggle search, and begin navigating if we are now searching.
                     bool sfs = pager.is_search_field_shown();
@@ -2676,7 +2703,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 }
                 break;
             }
-            case R_KILL_LINE: {
+            case rl::R_KILL_LINE: {
                 editable_line_t *el = active_edit_line();
                 const wchar_t *buff = el->text.c_str();
                 const wchar_t *begin = &buff[el->position];
@@ -2688,11 +2715,11 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
 
                 size_t len = end - begin;
                 if (len) {
-                    kill(el, begin - buff, len, KILL_APPEND, last_char != R_KILL_LINE);
+                    kill(el, begin - buff, len, KILL_APPEND, last_cmd != rl::R_KILL_LINE);
                 }
                 break;
             }
-            case R_BACKWARD_KILL_LINE: {
+            case rl::R_BACKWARD_KILL_LINE: {
                 editable_line_t *el = active_edit_line();
                 if (el->position <= 0) {
                     break;
@@ -2711,10 +2738,10 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 assert(end >= begin);
                 size_t len = std::max<size_t>(end - begin, 1);
                 begin = end - len;
-                kill(el, begin - buff, len, KILL_PREPEND, last_char != R_BACKWARD_KILL_LINE);
+                kill(el, begin - buff, len, KILL_PREPEND, last_cmd != rl::R_BACKWARD_KILL_LINE);
                 break;
             }
-            case R_KILL_WHOLE_LINE: {
+            case rl::R_KILL_WHOLE_LINE: {
                 // We match the emacs behavior here: "kills the entire line including the following
                 // newline".
                 editable_line_t *el = active_edit_line();
@@ -2740,17 +2767,17 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 assert(end >= begin);
 
                 if (end > begin) {
-                    kill(el, begin, end - begin, KILL_APPEND, last_char != R_KILL_WHOLE_LINE);
+                    kill(el, begin, end - begin, KILL_APPEND, last_cmd != rl::R_KILL_WHOLE_LINE);
                 }
                 break;
             }
-            case R_YANK: {
+            case rl::R_YANK: {
                 wcstring yank_str = kill_yank();
                 insert_string(active_edit_line(), yank_str);
                 yank_len = yank_str.size();
                 break;
             }
-            case R_YANK_POP: {
+            case rl::R_YANK_POP: {
                 if (yank_len) {
                     for (size_t i = 0; i < yank_len; i++) remove_backward();
 
@@ -2760,21 +2787,11 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 }
                 break;
             }
-            // Escape was pressed.
-            case L'\x1B': {
-                if (history_search.active()) {
-                    history_search.go_to_end();
-                    update_command_line_from_history_search();
-                    history_search.reset();
-                }
-                assert(!history_search.active());
-                break;
-            }
-            case R_BACKWARD_DELETE_CHAR: {
+            case rl::R_BACKWARD_DELETE_CHAR: {
                 remove_backward();
                 break;
             }
-            case R_DELETE_CHAR: {
+            case rl::R_DELETE_CHAR: {
                 // Remove the current character in the character buffer and on the screen using
                 // syntax highlighting, etc.
                 editable_line_t *el = active_edit_line();
@@ -2784,9 +2801,9 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 }
                 break;
             }
-            // Evaluate. If the current command is unfinished, or if the charater is escaped using a
-            // backslash, insert a newline.
-            case R_EXECUTE: {
+                // Evaluate. If the current command is unfinished, or if the charater is escaped
+                // using a backslash, insert a newline.
+            case rl::R_EXECUTE: {
                 // If the user hits return while navigating the pager, it only clears the pager.
                 if (is_navigating_pager_contents()) {
                     clear_pager();
@@ -2870,14 +2887,14 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 break;
             }
 
-            case R_HISTORY_SEARCH_BACKWARD:
-            case R_HISTORY_TOKEN_SEARCH_BACKWARD:
-            case R_HISTORY_SEARCH_FORWARD:
-            case R_HISTORY_TOKEN_SEARCH_FORWARD: {
+            case rl::R_HISTORY_SEARCH_BACKWARD:
+            case rl::R_HISTORY_TOKEN_SEARCH_BACKWARD:
+            case rl::R_HISTORY_SEARCH_FORWARD:
+            case rl::R_HISTORY_TOKEN_SEARCH_FORWARD: {
                 if (history_search.is_at_end()) {
                     const editable_line_t *el = &command_line;
-                    bool by_token = (c == R_HISTORY_TOKEN_SEARCH_BACKWARD) ||
-                                    (c == R_HISTORY_TOKEN_SEARCH_FORWARD);
+                    bool by_token = (c == rl::R_HISTORY_TOKEN_SEARCH_BACKWARD) ||
+                                    (c == rl::R_HISTORY_TOKEN_SEARCH_FORWARD);
                     if (by_token) {
                         // Searching by token.
                         const wchar_t *begin, *end;
@@ -2904,16 +2921,16 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                     }
                 }
                 if (history_search.active()) {
-                    history_search_direction_t dir =
-                        (c == R_HISTORY_SEARCH_BACKWARD || c == R_HISTORY_TOKEN_SEARCH_BACKWARD)
-                            ? history_search_direction_t::backward
-                            : history_search_direction_t::forward;
+                    history_search_direction_t dir = (c == rl::R_HISTORY_SEARCH_BACKWARD ||
+                                                      c == rl::R_HISTORY_TOKEN_SEARCH_BACKWARD)
+                                                         ? history_search_direction_t::backward
+                                                         : history_search_direction_t::forward;
                     history_search.move_in_direction(dir);
                     update_command_line_from_history_search();
                 }
                 break;
             }
-            case R_BACKWARD_CHAR: {
+            case rl::R_BACKWARD_CHAR: {
                 editable_line_t *el = active_edit_line();
                 if (is_navigating_pager_contents()) {
                     select_completion_in_direction(direction_west);
@@ -2923,7 +2940,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 }
                 break;
             }
-            case R_FORWARD_CHAR: {
+            case rl::R_FORWARD_CHAR: {
                 editable_line_t *el = active_edit_line();
                 if (is_navigating_pager_contents()) {
                     select_completion_in_direction(direction_east);
@@ -2935,51 +2952,54 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 }
                 break;
             }
-            case R_BACKWARD_KILL_WORD:
-            case R_BACKWARD_KILL_PATH_COMPONENT:
-            case R_BACKWARD_KILL_BIGWORD: {
+            case rl::R_BACKWARD_KILL_WORD:
+            case rl::R_BACKWARD_KILL_PATH_COMPONENT:
+            case rl::R_BACKWARD_KILL_BIGWORD: {
                 move_word_style_t style =
-                    (c == R_BACKWARD_KILL_BIGWORD
+                    (c == rl::R_BACKWARD_KILL_BIGWORD
                          ? move_word_style_whitespace
-                         : c == R_BACKWARD_KILL_PATH_COMPONENT ? move_word_style_path_components
-                                                               : move_word_style_punctuation);
+                         : c == rl::R_BACKWARD_KILL_PATH_COMPONENT ? move_word_style_path_components
+                                                                   : move_word_style_punctuation);
                 // Is this the same killring item as the last kill?
-                bool newv = (last_char != R_BACKWARD_KILL_WORD &&
-                             last_char != R_BACKWARD_KILL_PATH_COMPONENT &&
-                             last_char != R_BACKWARD_KILL_BIGWORD);
+                bool newv = (last_cmd != rl::R_BACKWARD_KILL_WORD &&
+                             last_cmd != rl::R_BACKWARD_KILL_PATH_COMPONENT &&
+                             last_cmd != rl::R_BACKWARD_KILL_BIGWORD);
                 move_word(active_edit_line(), MOVE_DIR_LEFT, true /* erase */, style, newv);
                 break;
             }
-            case R_KILL_WORD:
-            case R_KILL_BIGWORD: {
-                // The "bigword" functions differ only in that they move to the next whitespace, not punctuation.
-                auto move_style = (c == R_KILL_WORD) ? move_word_style_punctuation : move_word_style_whitespace;
+            case rl::R_KILL_WORD:
+            case rl::R_KILL_BIGWORD: {
+                // The "bigword" functions differ only in that they move to the next whitespace, not
+                // punctuation.
+                auto move_style = (c == rl::R_KILL_WORD) ? move_word_style_punctuation
+                                                         : move_word_style_whitespace;
                 move_word(active_edit_line(), MOVE_DIR_RIGHT, true /* erase */, move_style,
-                          last_char != c /* same kill item if same movement */);
+                          last_cmd != c /* same kill item if same movement */);
                 break;
             }
-            case R_BACKWARD_WORD:
-            case R_BACKWARD_BIGWORD: {
-                auto move_style = (c == R_BACKWARD_WORD) ? move_word_style_punctuation : move_word_style_whitespace;
+            case rl::R_BACKWARD_WORD:
+            case rl::R_BACKWARD_BIGWORD: {
+                auto move_style = (c == rl::R_BACKWARD_WORD) ? move_word_style_punctuation
+                                                             : move_word_style_whitespace;
                 move_word(active_edit_line(), MOVE_DIR_LEFT, false /* do not erase */, move_style,
                           false);
                 break;
             }
-            case R_FORWARD_WORD:
-            case R_FORWARD_BIGWORD: {
-                auto move_style = (c == R_FORWARD_WORD) ? move_word_style_punctuation : move_word_style_whitespace;
+            case rl::R_FORWARD_WORD:
+            case rl::R_FORWARD_BIGWORD: {
+                auto move_style = (c == rl::R_FORWARD_WORD) ? move_word_style_punctuation
+                                                            : move_word_style_whitespace;
                 editable_line_t *el = active_edit_line();
                 if (el->position < el->size()) {
-                    move_word(el, MOVE_DIR_RIGHT, false /* do not erase */,
-                              move_style, false);
+                    move_word(el, MOVE_DIR_RIGHT, false /* do not erase */, move_style, false);
                 } else {
                     accept_autosuggestion(false, move_style);
                 }
                 break;
             }
-            case R_BEGINNING_OF_HISTORY:
-            case R_END_OF_HISTORY: {
-                bool up = (c == R_BEGINNING_OF_HISTORY);
+            case rl::R_BEGINNING_OF_HISTORY:
+            case rl::R_END_OF_HISTORY: {
+                bool up = (c == rl::R_BEGINNING_OF_HISTORY);
                 if (is_navigating_pager_contents()) {
                     select_completion_in_direction(up ? direction_page_north
                                                       : direction_page_south);
@@ -2993,12 +3013,12 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 }
                 break;
             }
-            case R_UP_LINE:
-            case R_DOWN_LINE: {
+            case rl::R_UP_LINE:
+            case rl::R_DOWN_LINE: {
                 if (is_navigating_pager_contents()) {
                     // We are already navigating pager contents.
                     selection_direction_t direction;
-                    if (c == R_DOWN_LINE) {
+                    if (c == rl::R_DOWN_LINE) {
                         // Down arrow is always south.
                         direction = direction_south;
                     } else if (selection_is_at_top()) {
@@ -3013,15 +3033,15 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                     select_completion_in_direction(direction);
                 } else if (!pager.empty()) {
                     // We pressed a direction with a non-empty pager, begin navigation.
-                    select_completion_in_direction(c == R_DOWN_LINE ? direction_south
-                                                                    : direction_north);
+                    select_completion_in_direction(c == rl::R_DOWN_LINE ? direction_south
+                                                                        : direction_north);
                 } else {
                     // Not navigating the pager contents.
                     editable_line_t *el = active_edit_line();
                     int line_old = parse_util_get_line_from_offset(el->text, el->position);
                     int line_new;
 
-                    if (c == R_UP_LINE)
+                    if (c == rl::R_UP_LINE)
                         line_new = line_old - 1;
                     else
                         line_new = line_old + 1;
@@ -3055,17 +3075,17 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 }
                 break;
             }
-            case R_SUPPRESS_AUTOSUGGESTION: {
+            case rl::R_SUPPRESS_AUTOSUGGESTION: {
                 suppress_autosuggestion = true;
                 autosuggestion.clear();
                 reader_repaint_needed();
                 break;
             }
-            case R_ACCEPT_AUTOSUGGESTION: {
+            case rl::R_ACCEPT_AUTOSUGGESTION: {
                 accept_autosuggestion(true);
                 break;
             }
-            case R_TRANSPOSE_CHARS: {
+            case rl::R_TRANSPOSE_CHARS: {
                 editable_line_t *el = active_edit_line();
                 if (el->size() < 2) {
                     break;
@@ -3085,7 +3105,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 }
                 break;
             }
-            case R_TRANSPOSE_WORDS: {
+            case rl::R_TRANSPOSE_WORDS: {
                 editable_line_t *el = active_edit_line();
                 size_t len = el->size();
                 const wchar_t *buff = el->text.c_str();
@@ -3126,9 +3146,9 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 }
                 break;
             }
-            case R_UPCASE_WORD:
-            case R_DOWNCASE_WORD:
-            case R_CAPITALIZE_WORD: {
+            case rl::R_UPCASE_WORD:
+            case rl::R_DOWNCASE_WORD:
+            case rl::R_CAPITALIZE_WORD: {
                 editable_line_t *el = active_edit_line();
                 // For capitalize_word, whether we've capitalized a character so far.
                 bool capitalized_first = false;
@@ -3142,10 +3162,10 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                     // We always change the case; this decides whether we go uppercase (true) or
                     // lowercase (false).
                     bool make_uppercase;
-                    if (c == R_CAPITALIZE_WORD)
+                    if (c == rl::R_CAPITALIZE_WORD)
                         make_uppercase = !capitalized_first && iswalnum(chr);
                     else
-                        make_uppercase = (c == R_UPCASE_WORD);
+                        make_uppercase = (c == rl::R_UPCASE_WORD);
 
                     // Apply the operation and then record what we did.
                     if (make_uppercase)
@@ -3161,11 +3181,11 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 reader_repaint_needed();
                 break;
             }
-            case R_BEGIN_SELECTION:
-            case R_END_SELECTION: {
+            case rl::R_BEGIN_SELECTION:
+            case rl::R_END_SELECTION: {
                 sel_start_pos = command_line.position;
                 sel_stop_pos = command_line.position;
-                if (c == R_BEGIN_SELECTION) {
+                if (c == rl::R_BEGIN_SELECTION) {
                     sel_active = true;
                     sel_begin_pos = command_line.position;
                 } else {
@@ -3174,7 +3194,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
 
                 break;
             }
-            case R_SWAP_SELECTION_START_STOP: {
+            case rl::R_SWAP_SELECTION_START_STOP: {
                 if (!sel_active) break;
                 size_t tmp = sel_begin_pos;
                 sel_begin_pos = command_line.position;
@@ -3183,22 +3203,24 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 update_buff_pos(el, tmp);
                 break;
             }
-            case R_KILL_SELECTION: {
-                bool newv = (last_char != R_KILL_SELECTION);
+            case rl::R_KILL_SELECTION: {
+                bool newv = (last_cmd != rl::R_KILL_SELECTION);
                 size_t start, len;
                 if (reader_get_selection(&start, &len)) {
                     kill(&command_line, start, len, KILL_APPEND, newv);
                 }
                 break;
             }
-            case R_FORWARD_JUMP:
-            case R_BACKWARD_JUMP:
-            case R_FORWARD_JUMP_TILL:
-            case R_BACKWARD_JUMP_TILL: {
-                auto direction = (c == R_FORWARD_JUMP || c == R_FORWARD_JUMP_TILL) ?
-                    jump_direction_t::forward : jump_direction_t::backward;
-                auto precision = (c == R_FORWARD_JUMP || c == R_BACKWARD_JUMP) ?
-                    jump_precision_t::to : jump_precision_t::till;
+            case rl::R_FORWARD_JUMP:
+            case rl::R_BACKWARD_JUMP:
+            case rl::R_FORWARD_JUMP_TILL:
+            case rl::R_BACKWARD_JUMP_TILL: {
+                auto direction = (c == rl::R_FORWARD_JUMP || c == rl::R_FORWARD_JUMP_TILL)
+                                     ? jump_direction_t::forward
+                                     : jump_direction_t::backward;
+                auto precision = (c == rl::R_FORWARD_JUMP || c == rl::R_BACKWARD_JUMP)
+                                     ? jump_precision_t::to
+                                     : jump_precision_t::till;
                 editable_line_t *el = active_edit_line();
                 wchar_t target = input_function_pop_arg();
                 bool success = jump(direction, precision, el, target);
@@ -3207,7 +3229,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 reader_repaint_needed();
                 break;
             }
-            case R_REPEAT_JUMP: {
+            case rl::R_REPEAT_JUMP: {
                 editable_line_t *el = active_edit_line();
                 bool success = false;
 
@@ -3219,7 +3241,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 reader_repaint_needed();
                 break;
             }
-            case R_REVERSE_REPEAT_JUMP: {
+            case rl::R_REVERSE_REPEAT_JUMP: {
                 editable_line_t *el = active_edit_line();
                 bool success = false;
                 jump_direction_t original_dir, dir;
@@ -3241,36 +3263,41 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 reader_repaint_needed();
                 break;
             }
-            default: {
-                // Other, if a normal character, we add it to the command.
-                if (!fish_reserved_codepoint(c) && (c >= L' ' || c == L'\n' || c == L'\r') &&
-                    c != 0x7F) {
-                    // Regular character.
-                    editable_line_t *el = active_edit_line();
-                    bool allow_expand_abbreviations = (el == &command_line);
-                    insert_char(active_edit_line(), c, allow_expand_abbreviations);
+        }
 
-                    // End paging upon inserting into the normal command line.
-                    if (el == &command_line) {
-                        clear_pager();
-                    }
-                } else {
-                    // This can happen if the user presses a control char we don't recognize. No
-                    // reason to report this to the user unless they've enabled debugging output.
-                    debug(2, _(L"Unknown key binding 0x%X"), c);
+        if (ordinary_char) {
+            wchar_t c = *ordinary_char;
+
+            if (c == L'\x1B') {
+                // Escape was pressed.
+                if (history_search.active()) {
+                    history_search.go_to_end();
+                    update_command_line_from_history_search();
+                    history_search.reset();
                 }
-                break;
+                assert(!history_search.active());
+            } else if (!fish_reserved_codepoint(c) && (c >= L' ' || c == L'\n' || c == L'\r') &&
+                       c != 0x7F) {
+                // Regular character.
+                editable_line_t *el = active_edit_line();
+                bool allow_expand_abbreviations = (el == &command_line);
+                insert_char(active_edit_line(), c, allow_expand_abbreviations);
+
+                // End paging upon inserting into the normal command line.
+                if (el == &command_line) {
+                    clear_pager();
+                }
+            } else {
+                // This can happen if the user presses a control char we don't recognize. No
+                // reason to report this to the user unless they've enabled debugging output.
+                debug(2, _(L"Unknown key binding 0x%X"), c);
             }
         }
 
-        if ((c != R_HISTORY_SEARCH_BACKWARD) && (c != R_HISTORY_SEARCH_FORWARD) &&
-            (c != R_HISTORY_TOKEN_SEARCH_BACKWARD) && (c != R_HISTORY_TOKEN_SEARCH_FORWARD) &&
-            (c != R_REPAINT) && (c != R_FORCE_REPAINT)) {
+        if (!readline_cmd || command_ends_history_search(*readline_cmd)) {
             history_search.reset();
         }
-
-        last_char = c;
-
+        last_cmd = readline_cmd;
         repaint_if_needed();
     }
 

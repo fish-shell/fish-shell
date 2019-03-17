@@ -9,10 +9,8 @@
 #include "common.h"
 #include "maybe.h"
 
-enum {
-    R_MIN = INPUT_COMMON_BASE,
-
-    R_BEGINNING_OF_LINE = R_MIN,
+enum class readline_cmd_t {
+    R_BEGINNING_OF_LINE = INPUT_COMMON_BASE,
     R_END_OF_LINE,
     R_FORWARD_CHAR,
     R_BACKWARD_CHAR,
@@ -70,15 +68,16 @@ enum {
     R_CANCEL,
     R_REPEAT_JUMP,
     R_REVERSE_REPEAT_JUMP,
+};
 
-    // The range of key codes for inputrc-style keyboard functions that are passed on to the caller
-    // of input_read().
-    R_BEGIN_INPUT_FUNCTIONS = R_BEGINNING_OF_LINE,
-    R_END_INPUT_FUNCTIONS = R_REVERSE_REPEAT_JUMP + 1
+// The range of key codes for inputrc-style keyboard functions.
+enum {
+    R_BEGIN_INPUT_FUNCTIONS = static_cast<int>(readline_cmd_t::R_BEGINNING_OF_LINE),
+    R_END_INPUT_FUNCTIONS = static_cast<int>(readline_cmd_t::R_REVERSE_REPEAT_JUMP) + 1
 };
 
 /// Represents an event on the character input stream.
-enum class char_event_type_t {
+enum class char_event_type_t : uint8_t {
     /// A character was entered.
     charc,
 
@@ -97,8 +96,13 @@ enum class char_event_type_t {
 };
 
 class char_event_t {
-    /// Set if the type is charc or readline.
-    wchar_t c_;
+    union {
+        /// Set if the type is charc.
+        wchar_t c;
+
+        /// Set if the type is readline.
+        readline_cmd_t rl;
+    } v_{};
 
    public:
     char_event_type_t type;
@@ -115,21 +119,21 @@ class char_event_t {
 
     wchar_t get_char() const {
         assert(type == char_event_type_t::charc && "Not a char type");
-        return c_;
+        return v_.c;
     }
 
-    wchar_t get_readline() const {
+    readline_cmd_t get_readline() const {
         assert(type == char_event_type_t::readline && "Not a readline type");
-        return c_;
+        return v_.rl;
     }
 
-    /* implicit */ char_event_t(wchar_t c)
-        : c_(c),
-          type(R_BEGIN_INPUT_FUNCTIONS <= c && c < R_END_INPUT_FUNCTIONS
-                   ? char_event_type_t::readline
-                   : char_event_type_t::charc) {}
+    /* implicit */ char_event_t(wchar_t c) : type(char_event_type_t::charc) { v_.c = c; }
 
-    /* implicit */ char_event_t(char_event_type_t type) : c_(0), type(type) {
+    /* implicit */ char_event_t(readline_cmd_t rl) : type(char_event_type_t::readline) {
+        v_.rl = rl;
+    }
+
+    /* implicit */ char_event_t(char_event_type_t type) : type(type) {
         assert(type != char_event_type_t::charc && type != char_event_type_t::readline &&
                "Cannot create a char event with this constructor");
     }

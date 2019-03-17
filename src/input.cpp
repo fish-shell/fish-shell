@@ -67,68 +67,69 @@ static constexpr size_t input_function_count = R_END_INPUT_FUNCTIONS - R_BEGIN_I
 /// Input function metadata. This list should be kept in sync with the key code list in
 /// input_common.h.
 struct input_function_metadata_t {
-    wchar_t code;
+    readline_cmd_t code;
     const wchar_t *name;
 };
+
 static const input_function_metadata_t input_function_metadata[] = {
-    {R_BEGINNING_OF_LINE, L"beginning-of-line"},
-    {R_END_OF_LINE, L"end-of-line"},
-    {R_FORWARD_CHAR, L"forward-char"},
-    {R_BACKWARD_CHAR, L"backward-char"},
-    {R_FORWARD_WORD, L"forward-word"},
-    {R_BACKWARD_WORD, L"backward-word"},
-    {R_FORWARD_BIGWORD, L"forward-bigword"},
-    {R_BACKWARD_BIGWORD, L"backward-bigword"},
-    {R_HISTORY_SEARCH_BACKWARD, L"history-search-backward"},
-    {R_HISTORY_SEARCH_FORWARD, L"history-search-forward"},
-    {R_DELETE_CHAR, L"delete-char"},
-    {R_BACKWARD_DELETE_CHAR, L"backward-delete-char"},
-    {R_KILL_LINE, L"kill-line"},
-    {R_YANK, L"yank"},
-    {R_YANK_POP, L"yank-pop"},
-    {R_COMPLETE, L"complete"},
-    {R_COMPLETE_AND_SEARCH, L"complete-and-search"},
-    {R_PAGER_TOGGLE_SEARCH, L"pager-toggle-search"},
-    {R_BEGINNING_OF_HISTORY, L"beginning-of-history"},
-    {R_END_OF_HISTORY, L"end-of-history"},
-    {R_BACKWARD_KILL_LINE, L"backward-kill-line"},
-    {R_KILL_WHOLE_LINE, L"kill-whole-line"},
-    {R_KILL_WORD, L"kill-word"},
-    {R_KILL_BIGWORD, L"kill-bigword"},
-    {R_BACKWARD_KILL_WORD, L"backward-kill-word"},
-    {R_BACKWARD_KILL_PATH_COMPONENT, L"backward-kill-path-component"},
-    {R_BACKWARD_KILL_BIGWORD, L"backward-kill-bigword"},
-    {R_HISTORY_TOKEN_SEARCH_BACKWARD, L"history-token-search-backward"},
-    {R_HISTORY_TOKEN_SEARCH_FORWARD, L"history-token-search-forward"},
-    {R_SELF_INSERT, L"self-insert"},
-    {R_TRANSPOSE_CHARS, L"transpose-chars"},
-    {R_TRANSPOSE_WORDS, L"transpose-words"},
-    {R_UPCASE_WORD, L"upcase-word"},
-    {R_DOWNCASE_WORD, L"downcase-word"},
-    {R_CAPITALIZE_WORD, L"capitalize-word"},
-    {R_VI_ARG_DIGIT, L"vi-arg-digit"},
-    {R_VI_DELETE_TO, L"vi-delete-to"},
-    {R_EXECUTE, L"execute"},
-    {R_BEGINNING_OF_BUFFER, L"beginning-of-buffer"},
-    {R_END_OF_BUFFER, L"end-of-buffer"},
-    {R_REPAINT, L"repaint"},
-    {R_FORCE_REPAINT, L"force-repaint"},
-    {R_UP_LINE, L"up-line"},
-    {R_DOWN_LINE, L"down-line"},
-    {R_SUPPRESS_AUTOSUGGESTION, L"suppress-autosuggestion"},
-    {R_ACCEPT_AUTOSUGGESTION, L"accept-autosuggestion"},
-    {R_BEGIN_SELECTION, L"begin-selection"},
-    {R_SWAP_SELECTION_START_STOP, L"swap-selection-start-stop"},
-    {R_END_SELECTION, L"end-selection"},
-    {R_KILL_SELECTION, L"kill-selection"},
-    {R_FORWARD_JUMP, L"forward-jump"},
-    {R_BACKWARD_JUMP, L"backward-jump"},
-    {R_FORWARD_JUMP_TILL, L"forward-jump-till"},
-    {R_BACKWARD_JUMP_TILL, L"backward-jump-till"},
-    {R_REPEAT_JUMP, L"repeat-jump"},
-    {R_REVERSE_REPEAT_JUMP, L"repeat-jump-reverse"},
-    {R_AND, L"and"},
-    {R_CANCEL, L"cancel"}};
+    {readline_cmd_t::R_BEGINNING_OF_LINE, L"beginning-of-line"},
+    {readline_cmd_t::R_END_OF_LINE, L"end-of-line"},
+    {readline_cmd_t::R_FORWARD_CHAR, L"forward-char"},
+    {readline_cmd_t::R_BACKWARD_CHAR, L"backward-char"},
+    {readline_cmd_t::R_FORWARD_WORD, L"forward-word"},
+    {readline_cmd_t::R_BACKWARD_WORD, L"backward-word"},
+    {readline_cmd_t::R_FORWARD_BIGWORD, L"forward-bigword"},
+    {readline_cmd_t::R_BACKWARD_BIGWORD, L"backward-bigword"},
+    {readline_cmd_t::R_HISTORY_SEARCH_BACKWARD, L"history-search-backward"},
+    {readline_cmd_t::R_HISTORY_SEARCH_FORWARD, L"history-search-forward"},
+    {readline_cmd_t::R_DELETE_CHAR, L"delete-char"},
+    {readline_cmd_t::R_BACKWARD_DELETE_CHAR, L"backward-delete-char"},
+    {readline_cmd_t::R_KILL_LINE, L"kill-line"},
+    {readline_cmd_t::R_YANK, L"yank"},
+    {readline_cmd_t::R_YANK_POP, L"yank-pop"},
+    {readline_cmd_t::R_COMPLETE, L"complete"},
+    {readline_cmd_t::R_COMPLETE_AND_SEARCH, L"complete-and-search"},
+    {readline_cmd_t::R_PAGER_TOGGLE_SEARCH, L"pager-toggle-search"},
+    {readline_cmd_t::R_BEGINNING_OF_HISTORY, L"beginning-of-history"},
+    {readline_cmd_t::R_END_OF_HISTORY, L"end-of-history"},
+    {readline_cmd_t::R_BACKWARD_KILL_LINE, L"backward-kill-line"},
+    {readline_cmd_t::R_KILL_WHOLE_LINE, L"kill-whole-line"},
+    {readline_cmd_t::R_KILL_WORD, L"kill-word"},
+    {readline_cmd_t::R_KILL_BIGWORD, L"kill-bigword"},
+    {readline_cmd_t::R_BACKWARD_KILL_WORD, L"backward-kill-word"},
+    {readline_cmd_t::R_BACKWARD_KILL_PATH_COMPONENT, L"backward-kill-path-component"},
+    {readline_cmd_t::R_BACKWARD_KILL_BIGWORD, L"backward-kill-bigword"},
+    {readline_cmd_t::R_HISTORY_TOKEN_SEARCH_BACKWARD, L"history-token-search-backward"},
+    {readline_cmd_t::R_HISTORY_TOKEN_SEARCH_FORWARD, L"history-token-search-forward"},
+    {readline_cmd_t::R_SELF_INSERT, L"self-insert"},
+    {readline_cmd_t::R_TRANSPOSE_CHARS, L"transpose-chars"},
+    {readline_cmd_t::R_TRANSPOSE_WORDS, L"transpose-words"},
+    {readline_cmd_t::R_UPCASE_WORD, L"upcase-word"},
+    {readline_cmd_t::R_DOWNCASE_WORD, L"downcase-word"},
+    {readline_cmd_t::R_CAPITALIZE_WORD, L"capitalize-word"},
+    {readline_cmd_t::R_VI_ARG_DIGIT, L"vi-arg-digit"},
+    {readline_cmd_t::R_VI_DELETE_TO, L"vi-delete-to"},
+    {readline_cmd_t::R_EXECUTE, L"execute"},
+    {readline_cmd_t::R_BEGINNING_OF_BUFFER, L"beginning-of-buffer"},
+    {readline_cmd_t::R_END_OF_BUFFER, L"end-of-buffer"},
+    {readline_cmd_t::R_REPAINT, L"repaint"},
+    {readline_cmd_t::R_FORCE_REPAINT, L"force-repaint"},
+    {readline_cmd_t::R_UP_LINE, L"up-line"},
+    {readline_cmd_t::R_DOWN_LINE, L"down-line"},
+    {readline_cmd_t::R_SUPPRESS_AUTOSUGGESTION, L"suppress-autosuggestion"},
+    {readline_cmd_t::R_ACCEPT_AUTOSUGGESTION, L"accept-autosuggestion"},
+    {readline_cmd_t::R_BEGIN_SELECTION, L"begin-selection"},
+    {readline_cmd_t::R_SWAP_SELECTION_START_STOP, L"swap-selection-start-stop"},
+    {readline_cmd_t::R_END_SELECTION, L"end-selection"},
+    {readline_cmd_t::R_KILL_SELECTION, L"kill-selection"},
+    {readline_cmd_t::R_FORWARD_JUMP, L"forward-jump"},
+    {readline_cmd_t::R_BACKWARD_JUMP, L"backward-jump"},
+    {readline_cmd_t::R_FORWARD_JUMP_TILL, L"forward-jump-till"},
+    {readline_cmd_t::R_BACKWARD_JUMP_TILL, L"backward-jump-till"},
+    {readline_cmd_t::R_REPEAT_JUMP, L"repeat-jump"},
+    {readline_cmd_t::R_REVERSE_REPEAT_JUMP, L"repeat-jump-reverse"},
+    {readline_cmd_t::R_AND, L"and"},
+    {readline_cmd_t::R_CANCEL, L"cancel"}};
 
 static_assert(sizeof(input_function_metadata) / sizeof(input_function_metadata[0]) ==
                   input_function_count,
@@ -182,12 +183,12 @@ void input_set_bind_mode(const wcstring &bm) {
 }
 
 /// Returns the arity of a given input function.
-static int input_function_arity(int function) {
+static int input_function_arity(readline_cmd_t function) {
     switch (function) {
-        case R_FORWARD_JUMP:
-        case R_BACKWARD_JUMP:
-        case R_FORWARD_JUMP_TILL:
-        case R_BACKWARD_JUMP_TILL:
+        case readline_cmd_t::R_FORWARD_JUMP:
+        case readline_cmd_t::R_BACKWARD_JUMP:
+        case readline_cmd_t::R_FORWARD_JUMP_TILL:
+        case readline_cmd_t::R_BACKWARD_JUMP_TILL:
             return 1;
         default:
             return 0;
@@ -302,7 +303,7 @@ void input_function_push_arg(wchar_t arg) {
 
 wchar_t input_function_pop_arg() { return input_function_args[--input_function_args_index]; }
 
-void input_function_push_args(int code) {
+void input_function_push_args(readline_cmd_t code) {
     int arity = input_function_arity(code);
     std::vector<char_event_t> skipped;
 
@@ -360,7 +361,7 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
         for (wcstring_list_t::const_reverse_iterator it = m.commands.rbegin(),
                                                      end = m.commands.rend();
              it != end; ++it) {
-            wchar_t code = input_function_get_code(*it).value();
+            readline_cmd_t code = input_function_get_code(*it).value();
             input_function_push_args(code);
             input_common_next_ch(code);
         }
@@ -480,12 +481,12 @@ char_event_t input_readch(bool allow_commands) {
 
         if (evt.is_readline()) {
             switch (evt.get_readline()) {
-                case R_SELF_INSERT: {
+                case readline_cmd_t::R_SELF_INSERT: {
                     // Issue #1595: ensure we only insert characters, not readline functions. The
                     // common case is that this will be empty.
                     return input_read_characters_no_readline();
                 }
-                case R_AND: {
+                case readline_cmd_t::R_AND: {
                     if (input_function_status) {
                         return input_readch();
                     }
@@ -794,7 +795,7 @@ wcstring_list_t input_function_get_names() {
     return result;
 }
 
-maybe_t<wchar_t> input_function_get_code(const wcstring &name) {
+maybe_t<readline_cmd_t> input_function_get_code(const wcstring &name) {
     for (const auto &md : input_function_metadata) {
         if (name == md.name) {
             return md.code;

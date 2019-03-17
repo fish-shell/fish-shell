@@ -2404,18 +2404,34 @@ static bool event_is_normal_char(const char_event_t &evt) {
     return !fish_reserved_codepoint(c) && c > 31 && c != 127;
 }
 
+/// readline_loop_state_t encapsulates the state used in a readline loop.
+/// It is always stack allocated transient. This state should not be "publicly visible;" public
+/// state should be in reader_data_t.
+struct readline_loop_state_t {
+    /// The last command that was executed.
+    maybe_t<readline_cmd_t> last_cmd{};
+
+    /// If the last command was a yank, the length of yanking that occurred.
+    size_t yank_len{0};
+
+    /// If set, it means nothing has been inserted into the command line via completion machinery.
+    bool comp_empty{true};
+
+    /// List of completions.
+    std::vector<completion_t> comp;
+
+    /// Whether we are skipping redundant repaints.
+    bool coalescing_repaints = false;
+
+    /// Whether the loop has finished, due to reaching the character limit or through executing a
+    /// command.
+    bool finished{false};
+};
+
 maybe_t<wcstring> reader_data_t::readline(int nchars) {
     using rl = readline_cmd_t;
-    maybe_t<readline_cmd_t> last_cmd{};
-    size_t yank_len = 0;
-    bool comp_empty = true;
-    std::vector<completion_t> comp;
-    int finished = 0;
+    readline_loop_state_t rls{};
     struct termios old_modes;
-
-    // Coalesce redundant repaints. When we get a repaint, we set this to true, and skip repaints
-    // until we get something else.
-    bool coalescing_repaints = false;
 
     // The command line before completion.
     cycle_command_line.clear();
@@ -2433,6 +2449,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
 
     // Get the current terminal modes. These will be restored when the function returns.
     if (tcgetattr(STDIN_FILENO, &old_modes) == -1 && errno == EIO) redirect_tty_output();
+
     // Set the new modes.
     if (tcsetattr(0, TCSANOW, &shell_modes) == -1) {
         int err = errno;
@@ -2447,10 +2464,10 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
         }
     }
 
-    while (!finished && !shell_is_exiting()) {
+    while (!rls.finished && !shell_is_exiting()) {
         if (0 < nchars && (size_t)nchars <= command_line.size()) {
             // We've already hit the specified character limit.
-            finished = 1;
+            rls.finished = true;
             break;
         }
 
@@ -2504,7 +2521,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 }
 
                 // Since we handled a normal character, we don't have a last command.
-                last_cmd.reset();
+                rls.last_cmd.reset();
             }
 
             // If there's still an event that we were unable to handle, then end the coalescing
@@ -2535,10 +2552,10 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
         }
 
         // If we get something other than a repaint, then stop coalescing them.
-        if (readline_cmd != rl::R_REPAINT) coalescing_repaints = false;
+        if (readline_cmd != rl::R_REPAINT) rls.coalescing_repaints = false;
 
-        if (last_cmd != rl::R_YANK && last_cmd != rl::R_YANK_POP) {
-            yank_len = 0;
+        if (rls.last_cmd != rl::R_YANK && rls.last_cmd != rl::R_YANK_POP) {
+            rls.yank_len = 0;
         }
 
         // Restore the text.
@@ -2596,8 +2613,8 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
             }
             case rl::R_FORCE_REPAINT:
             case rl::R_REPAINT: {
-                if (!coalescing_repaints) {
-                    coalescing_repaints = true;
+                if (!rls.coalescing_repaints) {
+                    rls.coalescing_repaints = true;
                     exec_prompt();
                     s_reset(&screen, screen_reset_current_line_and_prompt);
                     screen_reset_needed = false;
@@ -2611,7 +2628,8 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
 
                 // Use the command line only; it doesn't make sense to complete in any other line.
                 editable_line_t *el = &command_line;
-                if (is_navigating_pager_contents() || (!comp_empty && last_cmd == rl::R_COMPLETE)) {
+                if (is_navigating_pager_contents() ||
+                    (!rls.comp_empty && rls.last_cmd == rl::R_COMPLETE)) {
                     // The user typed R_COMPLETE more than once in a row. If we are not yet fully
                     // disclosed, then become so; otherwise cycle through our available completions.
                     if (current_page_rendering.remaining_to_disclose > 0) {
@@ -2633,7 +2651,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                     const wchar_t *const buff = el->text.c_str();
 
                     // Clear the completion list.
-                    comp.clear();
+                    rls.comp.clear();
 
                     // Figure out the extent of the command substitution surrounding the cursor.
                     // This is because we only look at the current command substitution to form
@@ -2669,20 +2687,20 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                     complete_flags_t complete_flags = COMPLETION_REQUEST_DEFAULT |
                                                       COMPLETION_REQUEST_DESCRIPTIONS |
                                                       COMPLETION_REQUEST_FUZZY_MATCH;
-                    complete_func(buffcpy, &comp, complete_flags, vars);
+                    complete_func(buffcpy, &rls.comp, complete_flags, vars);
 
                     // Munge our completions.
-                    completions_sort_and_prioritize(&comp);
+                    completions_sort_and_prioritize(&rls.comp);
 
                     // Record our cycle_command_line.
                     cycle_command_line = el->text;
                     cycle_cursor_pos = el->position;
 
                     bool cont_after_prefix_insertion = (c == rl::R_COMPLETE_AND_SEARCH);
-                    comp_empty = handle_completions(comp, cont_after_prefix_insertion);
+                    rls.comp_empty = handle_completions(rls.comp, cont_after_prefix_insertion);
 
                     // Show the search field if requested and if we printed a list of completions.
-                    if (c == rl::R_COMPLETE_AND_SEARCH && !comp_empty && !pager.empty()) {
+                    if (c == rl::R_COMPLETE_AND_SEARCH && !rls.comp_empty && !pager.empty()) {
                         pager.set_search_field_shown(true);
                         select_completion_in_direction(direction_next);
                         reader_repaint_needed();
@@ -2715,7 +2733,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
 
                 size_t len = end - begin;
                 if (len) {
-                    kill(el, begin - buff, len, KILL_APPEND, last_cmd != rl::R_KILL_LINE);
+                    kill(el, begin - buff, len, KILL_APPEND, rls.last_cmd != rl::R_KILL_LINE);
                 }
                 break;
             }
@@ -2738,7 +2756,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 assert(end >= begin);
                 size_t len = std::max<size_t>(end - begin, 1);
                 begin = end - len;
-                kill(el, begin - buff, len, KILL_PREPEND, last_cmd != rl::R_BACKWARD_KILL_LINE);
+                kill(el, begin - buff, len, KILL_PREPEND, rls.last_cmd != rl::R_BACKWARD_KILL_LINE);
                 break;
             }
             case rl::R_KILL_WHOLE_LINE: {
@@ -2767,23 +2785,24 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 assert(end >= begin);
 
                 if (end > begin) {
-                    kill(el, begin, end - begin, KILL_APPEND, last_cmd != rl::R_KILL_WHOLE_LINE);
+                    kill(el, begin, end - begin, KILL_APPEND,
+                         rls.last_cmd != rl::R_KILL_WHOLE_LINE);
                 }
                 break;
             }
             case rl::R_YANK: {
                 wcstring yank_str = kill_yank();
                 insert_string(active_edit_line(), yank_str);
-                yank_len = yank_str.size();
+                rls.yank_len = yank_str.size();
                 break;
             }
             case rl::R_YANK_POP: {
-                if (yank_len) {
-                    for (size_t i = 0; i < yank_len; i++) remove_backward();
+                if (rls.yank_len) {
+                    for (size_t i = 0; i < rls.yank_len; i++) remove_backward();
 
                     wcstring yank_str = kill_yank_rotate();
                     insert_string(active_edit_line(), yank_str);
-                    yank_len = yank_str.size();
+                    rls.yank_len = yank_str.size();
                 }
                 break;
             }
@@ -2871,7 +2890,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                     if (history != NULL && !el->empty() && el->text.at(0) != L' ') {
                         history->add_pending_with_file_detection(el->text, vars.get_pwd_slash());
                     }
-                    finished = 1;
+                    rls.finished = true;
                     update_buff_pos(&command_line, command_line.size());
                     repaint();
                 } else if (command_test_result == PARSER_TEST_INCOMPLETE) {
@@ -2961,9 +2980,9 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                          : c == rl::R_BACKWARD_KILL_PATH_COMPONENT ? move_word_style_path_components
                                                                    : move_word_style_punctuation);
                 // Is this the same killring item as the last kill?
-                bool newv = (last_cmd != rl::R_BACKWARD_KILL_WORD &&
-                             last_cmd != rl::R_BACKWARD_KILL_PATH_COMPONENT &&
-                             last_cmd != rl::R_BACKWARD_KILL_BIGWORD);
+                bool newv = (rls.last_cmd != rl::R_BACKWARD_KILL_WORD &&
+                             rls.last_cmd != rl::R_BACKWARD_KILL_PATH_COMPONENT &&
+                             rls.last_cmd != rl::R_BACKWARD_KILL_BIGWORD);
                 move_word(active_edit_line(), MOVE_DIR_LEFT, true /* erase */, style, newv);
                 break;
             }
@@ -2974,7 +2993,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 auto move_style = (c == rl::R_KILL_WORD) ? move_word_style_punctuation
                                                          : move_word_style_whitespace;
                 move_word(active_edit_line(), MOVE_DIR_RIGHT, true /* erase */, move_style,
-                          last_cmd != c /* same kill item if same movement */);
+                          rls.last_cmd != c /* same kill item if same movement */);
                 break;
             }
             case rl::R_BACKWARD_WORD:
@@ -3204,7 +3223,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
                 break;
             }
             case rl::R_KILL_SELECTION: {
-                bool newv = (last_cmd != rl::R_KILL_SELECTION);
+                bool newv = (rls.last_cmd != rl::R_KILL_SELECTION);
                 size_t start, len;
                 if (reader_get_selection(&start, &len)) {
                     kill(&command_line, start, len, KILL_APPEND, newv);
@@ -3310,7 +3329,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
         if (!readline_cmd || command_ends_history_search(*readline_cmd)) {
             history_search.reset();
         }
-        last_cmd = readline_cmd;
+        rls.last_cmd = readline_cmd;
         repaint_if_needed();
     }
 
@@ -3334,7 +3353,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
         outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
     }
 
-    return finished ? maybe_t<wcstring>{command_line.text} : none();
+    return rls.finished ? maybe_t<wcstring>{command_line.text} : none();
 }
 
 bool reader_data_t::jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el,

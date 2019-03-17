@@ -335,7 +335,7 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
     bool has_commands = false, has_functions = false;
 
     for (const wcstring &cmd : m.commands) {
-        if (input_function_get_code(cmd) != INPUT_CODE_NONE)
+        if (input_function_get_code(cmd))
             has_functions = true;
         else
             has_commands = true;
@@ -360,7 +360,7 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
         for (wcstring_list_t::const_reverse_iterator it = m.commands.rbegin(),
                                                      end = m.commands.rend();
              it != end; ++it) {
-            wchar_t code = input_function_get_code(*it);
+            wchar_t code = input_function_get_code(*it).value();
             input_function_push_args(code);
             input_common_next_ch(code);
         }
@@ -794,11 +794,11 @@ wcstring_list_t input_function_get_names() {
     return result;
 }
 
-wchar_t input_function_get_code(const wcstring &name) {
+maybe_t<wchar_t> input_function_get_code(const wcstring &name) {
     for (const auto &md : input_function_metadata) {
         if (name == md.name) {
             return md.code;
         }
     }
-    return INPUT_CODE_NONE;
+    return none();
 }

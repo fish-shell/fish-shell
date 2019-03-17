@@ -325,11 +325,10 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         }
 
         for (i = w.woptind; i < argc; i++) {
-            wchar_t c = input_function_get_code(argv[i]);
-            if (c != INPUT_CODE_NONE) {
+            if (auto mc = input_function_get_code(argv[i])) {
                 // input_unreadch inserts the specified keypress or readline function at the back of
                 // the queue of unused keypresses.
-                input_queue_ch(c);
+                input_queue_ch(*mc);
             } else {
                 streams.err.append_format(_(L"%ls: Unknown input function '%ls'"), cmd, argv[i]);
                 builtin_print_help(parser, streams, cmd, streams.err);

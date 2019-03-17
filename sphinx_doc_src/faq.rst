@@ -133,6 +133,12 @@ Use ``string length -q -- $var``.  For example, ``if string length -q -- $var; e
         echo at least one of these variables is not empty
     end
 
+Alternatively, use ``test -n "$var"``, but remember that **the variable must be double-quoted**.  For example, ``if test -n "$var"; echo not empty; end``. The ``test`` command provides its own and (-a) and or (-o)::
+
+    if test -n "$var1" -o -n "$var2" -o -n "$var3"
+        echo at least one of these variables is not empty
+    end
+
 
 Why doesn't ``set -Ux`` (exported universal variables) seem to work?
 --------------------------------------------------------------------

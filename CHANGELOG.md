@@ -18,6 +18,7 @@
 - `math` now accepts `--scale=max` for the maximum scale (#5579).
 - `complete --do-complete` now also does fuzzy matches (#5467).
 - `count` now also counts lines fed on stdin (#5744).
+- `printf` prints what it can when input hasn't been fully converted to a number, but still prints an error (#5532).
 
 ### Interactive improvements
 - Major improvements in performance and functionality to the 'sorin' sample prompt (#5411).

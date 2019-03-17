@@ -90,7 +90,9 @@ struct builtin_printf_state_t {
 
     int print_formatted(const wchar_t *format, int argc, wchar_t **argv);
 
+    void nonfatal_error(const wchar_t *fmt, ...);
     void fatal_error(const wchar_t *format, ...);
+
 
     long print_esc(const wchar_t *escstart, bool octal_0);
     void print_esc_string(const wchar_t *str);
@@ -193,6 +195,22 @@ static int octal_to_bin(wchar_t c) {
     }
 }
 
+void builtin_printf_state_t::nonfatal_error(const wchar_t *fmt, ...) {
+    // Don't error twice.
+    if (early_exit) return;
+
+    va_list va;
+    va_start(va, fmt);
+    wcstring errstr = vformat_string(fmt, va);
+    va_end(va);
+    streams.err.append(errstr);
+    if (!string_suffixes_string(L"\n", errstr)) streams.err.push_back(L'\n');
+
+    // We set the exit code to error, because one occured,
+    // but we don't do an early exit so we still print what we can.
+    this->exit_code = STATUS_CMD_ERROR;
+}
+
 void builtin_printf_state_t::fatal_error(const wchar_t *fmt, ...) {
     // Don't error twice.
     if (early_exit) return;
@@ -207,7 +225,6 @@ void builtin_printf_state_t::fatal_error(const wchar_t *fmt, ...) {
     this->exit_code = STATUS_CMD_ERROR;
     this->early_exit = true;
 }
-
 void builtin_printf_state_t::append_output(wchar_t c) {
     // Don't output if we're done.
     if (early_exit) return;
@@ -241,10 +258,12 @@ void builtin_printf_state_t::verify_numeric(const wchar_t *s, const wchar_t *end
             this->fatal_error(L"%ls: %s", s, std::strerror(errcode));
         }
     } else if (*end) {
-        if (s == end)
+        if (s == end) {
             this->fatal_error(_(L"%ls: expected a numeric value"), s);
-        else
-            this->fatal_error(_(L"%ls: value not completely converted"), s);
+        } else {
+            // This isn't entirely fatal - the value should still be printed.
+            this->nonfatal_error(_(L"%ls: value not completely converted"), s);
+        }
     }
 }
 

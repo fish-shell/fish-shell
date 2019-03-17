@@ -5015,6 +5015,22 @@ void test_maybe() {
     std::string res = acquire_test.acquire();
     do_test(!acquire_test);
     do_test(res == "def");
+
+    // maybe_t<T> should be copyable iff T is copyable.
+    using copyable = std::shared_ptr<int>;
+    using noncopyable = std::unique_ptr<int>;
+    do_test(std::is_copy_assignable<maybe_t<copyable>>::value == true);
+    do_test(std::is_copy_constructible<maybe_t<copyable>>::value == true);
+    do_test(std::is_copy_assignable<maybe_t<noncopyable>>::value == false);
+    do_test(std::is_copy_constructible<maybe_t<noncopyable>>::value == false);
+
+    maybe_t<std::string> c1{"abc"};
+    maybe_t<std::string> c2 = c1;
+    do_test(c1.value() == "abc");
+    do_test(c2.value() == "abc");
+    c2 = c1;
+    do_test(c1.value() == "abc");
+    do_test(c2.value() == "abc");
 }
 
 void test_layout_cache() {

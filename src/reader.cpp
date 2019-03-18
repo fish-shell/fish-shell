@@ -105,7 +105,7 @@
 /// The maximum number of characters to read from the keyboard without repainting. Note that this
 /// readahead will only occur if new characters are available for reading, fish will never block for
 /// more input without repainting.
-#define READAHEAD_MAX 256
+static constexpr size_t READAHEAD_MAX = 256;
 
 /// A mode for calling the reader_kill function. In this mode, the new string is appended to the
 /// current contents of the kill buffer.
@@ -316,6 +316,8 @@ struct highlight_result_t {
 
 }  // namespace
 
+struct readline_loop_state_t;
+
 /// A struct describing the state of the interactive reader. These states can be stacked, in case
 /// reader_readline() calls are nested. This happens when the 'read' builtin is used.
 class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
@@ -441,6 +443,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
                    bool newv);
 
     maybe_t<wcstring> readline(int nchars);
+    maybe_t<char_event_t> read_normal_chars(readline_loop_state_t &rls);
 
     void clear_pager();
     void select_completion_in_direction(enum selection_direction_t dir);
@@ -2426,12 +2429,71 @@ struct readline_loop_state_t {
     /// Whether the loop has finished, due to reaching the character limit or through executing a
     /// command.
     bool finished{false};
+
+    /// Maximum number of characters to read.
+    size_t nchars{std::numeric_limits<size_t>::max()};
 };
 
-maybe_t<wcstring> reader_data_t::readline(int nchars) {
+/// Read normal characters, inserting them into the command line.
+/// \return the next unhandled event.
+maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rls) {
+    int was_interactive_read = is_interactive_read;
+    is_interactive_read = 1;
+    maybe_t<char_event_t> event_needing_handling = input_readch();
+    is_interactive_read = was_interactive_read;
+
+    if (!event_is_normal_char(*event_needing_handling) || !can_read(STDIN_FILENO))
+        return event_needing_handling;
+
+    // This is a normal character input.
+    // We are going to handle it directly, accumulating more.
+    char_event_t evt = event_needing_handling.acquire();
+    size_t limit = std::min(rls.nchars - command_line.size(), READAHEAD_MAX);
+
+    wchar_t arr[READAHEAD_MAX + 1] = {};
+    arr[0] = evt.get_char();
+
+    for (size_t i = 1; i < limit; ++i) {
+        if (!can_read(0)) {
+            break;
+        }
+        // Only allow commands on the first key; otherwise, we might have data we
+        // need to insert on the commandline that the commmand might need to be able
+        // to see.
+        auto next_event = input_readch(false);
+        if (event_is_normal_char(next_event)) {
+            arr[i] = next_event.get_char();
+        } else {
+            // We need to process this in the outer loop.
+            assert(!event_needing_handling && "Should not have an unhandled event");
+            event_needing_handling = next_event;
+            break;
+        }
+    }
+
+    editable_line_t *el = active_edit_line();
+    insert_string(el, arr, true);
+
+    // End paging upon inserting into the normal command line.
+    if (el == &command_line) {
+        clear_pager();
+    }
+
+    // Since we handled a normal character, we don't have a last command.
+    rls.last_cmd.reset();
+    return event_needing_handling;
+}
+
+maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     using rl = readline_cmd_t;
     readline_loop_state_t rls{};
     struct termios old_modes;
+
+    // If nchars_or_0 is positive, then that's the maximum number of chars. Otherwise keep it at
+    // SIZE_MAX.
+    if (nchars_or_0 > 0) {
+        rls.nchars = static_cast<size_t>(nchars_or_0);
+    }
 
     // The command line before completion.
     cycle_command_line.clear();
@@ -2465,70 +2527,18 @@ maybe_t<wcstring> reader_data_t::readline(int nchars) {
     }
 
     while (!rls.finished && !shell_is_exiting()) {
-        if (0 < nchars && (size_t)nchars <= command_line.size()) {
+        if (rls.nchars <= command_line.size()) {
             // We've already hit the specified character limit.
             rls.finished = true;
             break;
         }
 
-        // Sometimes strange input sequences seem to generate a zero byte. I believe these simply
-        // mean a character was pressed but it should be ignored. (Example: Trying to add a tilde
-        // (~) to digit).
         maybe_t<char_event_t> event_needing_handling{};
         while (1) {
-            int was_interactive_read = is_interactive_read;
-            is_interactive_read = 1;
-            event_needing_handling = input_readch();
-            is_interactive_read = was_interactive_read;
-            // std::fwprintf(stderr, L"C: %lx\n", (long)c);
-
-            if (event_is_normal_char(*event_needing_handling) && can_read(STDIN_FILENO)) {
-                // This is a normal character input.
-                // We are going to handle it directly, accumulating more.
-                // Clear 'mevt' to mark that we handled this.
-                char_event_t evt = event_needing_handling.acquire();
-                size_t limit = 0 < nchars ? std::min((size_t)nchars - command_line.size(),
-                                                     (size_t)READAHEAD_MAX)
-                                          : READAHEAD_MAX;
-
-                wchar_t arr[READAHEAD_MAX + 1] = {};
-                arr[0] = evt.get_char();
-
-                for (size_t i = 1; i < limit; ++i) {
-                    if (!can_read(0)) {
-                        break;
-                    }
-                    // Only allow commands on the first key; otherwise, we might have data we
-                    // need to insert on the commandline that the commmand might need to be able
-                    // to see.
-                    auto next_event = input_readch(false);
-                    if (event_is_normal_char(next_event)) {
-                        arr[i] = next_event.get_char();
-                    } else {
-                        // We need to process this in the outer loop.
-                        assert(!event_needing_handling && "Should not have an unhandled event");
-                        event_needing_handling = next_event;
-                        break;
-                    }
-                }
-
-                editable_line_t *el = active_edit_line();
-                insert_string(el, arr, true);
-
-                // End paging upon inserting into the normal command line.
-                if (el == &command_line) {
-                    clear_pager();
-                }
-
-                // Since we handled a normal character, we don't have a last command.
-                rls.last_cmd.reset();
-            }
-
-            // If there's still an event that we were unable to handle, then end the coalescing
-            // loop.
+            event_needing_handling = read_normal_chars(rls);
             if (event_needing_handling.has_value()) break;
 
-            if (0 < nchars && (size_t)nchars <= command_line.size()) {
+            if (rls.nchars <= command_line.size()) {
                 event_needing_handling.reset();
                 break;
             }

@@ -452,9 +452,10 @@ Fish automatically searches through any directories in the array variable ``$fis
 
 By default, Fish searches the following for functions, using the first available file that it finds:
 - A directory for end-users to keep their own functions, usually ``~/.config/fish/functions`` (controlled by the ``XDG_CONFIG_HOME`` environment variable).
-- A directory for systems administrators to install functions for all users on the system, usually ``/etc/fish/functions``.
+- A directory for systems administrators to install functions for all users on the system, usually ``/etc/fish/functions`` (really ``$__fish_sysconfdir/functions``).
 - A directory for third-party software vendors to ship their own functions for their software, usually ``/usr/share/fish/vendor_functions.d``.
-- The functions shipped with fish, usually installed in ``/usr/share/fish/functions``.
+  (set at compile time; by default, ``$__fish_data_dir/vendor_functions.d``)
+- The functions shipped with fish, usually installed in ``/usr/share/fish/functions`` (really ``$__fish_data_dir/functions``).
 
 These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.
 
@@ -1581,7 +1582,7 @@ Configuration files are evaluated in the following order:
 - Configuration snippets in files ending in ``.fish``, in the directories:
   - ``$__fish_config_dir/conf.d`` (by default, ``~/.config/fish/conf.d/``)
   - ``$__fish_sysconf_dir/conf.d`` (by default, ``/etc/fish/conf.d``)
-  - ``/usr/share/fish/vendor_conf.d`` (set at compile time; by default, ``$__fish_data_dir/conf.d``)
+  - ``/usr/share/fish/vendor_conf.d`` (set at compile time; by default, ``$__fish_data_dir/vendor_conf.d``)
 
   If there are multiple files with the same name in these directories, only the first will be executed.
   They are executed in order of their filename, sorted (like globs) in a natural order (i.e. "01" sorts before "2").

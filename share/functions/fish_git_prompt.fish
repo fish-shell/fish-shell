@@ -281,7 +281,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
     end
 
     # Find how many commits we are ahead/behind our upstream
-    set count (command git rev-list --count --left-right $upstream...HEAD 2>/dev/null)
+    set count (command git rev-list --count --left-right $upstream...HEAD 2>/dev/null | string replace \t " ")
 
     # calculate the result
     if test -n "$verbose"
@@ -295,11 +295,11 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
         echo $count | read -l behind ahead
         switch "$count"
             case '' # no upstream
-            case "0	0" # equal to upstream
+            case "0 0" # equal to upstream
                 echo "$prefix$___fish_git_prompt_char_upstream_equal"
-            case "0	*" # ahead of upstream
+            case "0 *" # ahead of upstream
                 echo "$prefix$___fish_git_prompt_char_upstream_ahead$ahead"
-            case "*	0" # behind upstream
+            case "* 0" # behind upstream
                 echo "$prefix$___fish_git_prompt_char_upstream_behind$behind"
             case '*' # diverged from upstream
                 echo "$prefix$___fish_git_prompt_char_upstream_diverged$ahead-$behind"
@@ -311,10 +311,10 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
         echo $count | read -l behind ahead
         switch "$count"
             case '' # no upstream
-            case "0	0" # equal to upstream
-            case "0	*" # ahead of upstream
+            case "0 0" # equal to upstream
+            case "0 *" # ahead of upstream
                 echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
-            case "*	0" # behind upstream
+            case "* 0" # behind upstream
                 echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
             case '*' # diverged from upstream
                 echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead$___fish_git_prompt_char_upstream_behind$behind"
@@ -322,11 +322,11 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
     else
         switch "$count"
             case '' # no upstream
-            case "0	0" # equal to upstream
+            case "0 0" # equal to upstream
                 echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_equal"
-            case "0	*" # ahead of upstream
+            case "0 *" # ahead of upstream
                 echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead"
-            case "*	0" # behind upstream
+            case "* 0" # behind upstream
                 echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind"
             case '*' # diverged from upstream
                 echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_diverged"

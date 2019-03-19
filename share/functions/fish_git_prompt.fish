@@ -332,6 +332,9 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
                 echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_diverged"
         end
     end
+
+    # For the return status
+    test "$count" = "0 0"
 end
 
 function fish_git_prompt --description "Prompt function for Git"

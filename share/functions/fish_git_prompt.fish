@@ -289,7 +289,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
         set -l prefix "$___fish_git_prompt_char_upstream_prefix"
         # Using two underscore version to check if user explicitly set to nothing
         if not set -q __fish_git_prompt_char_upstream_prefix
-            set -l prefix " "
+            set prefix " "
         end
 
         echo $count | read -l behind ahead

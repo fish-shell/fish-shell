@@ -473,10 +473,9 @@ static bool process_clean_after_marking(bool allow_interactive) {
     // don't try to print in that case (#3222)
     const bool interactive = allow_interactive && cur_term != NULL;
 
-    bool erased = false;
+    static std::vector<job_t *> erase_list;
     const bool only_one_job = jobs().size() == 1;
-    for (auto itr = jobs().begin(); itr != jobs().end(); itr = erased ? itr : itr + 1, erased = false) {
-        job_t *j = itr->get();
+    for (const auto &j : jobs()) {
         // If we are reaping only jobs who do not need status messages sent to the console, do not
         // consider reaping jobs that need status messages.
         if ((!j->get_flag(job_flag_t::SKIP_NOTIFICATION)) && (!interactive) &&
@@ -554,7 +553,7 @@ static bool process_clean_after_marking(bool allow_interactive) {
         if (j->is_completed()) {
             if (!j->is_foreground() && !j->get_flag(job_flag_t::NOTIFIED) &&
                 !j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
-                print_job_status(j, JOB_ENDED);
+                print_job_status(j.get(), JOB_ENDED);
                 found = true;
             }
             // TODO: The generic process-exit event is useless and unused.
@@ -568,22 +567,52 @@ static bool process_clean_after_marking(bool allow_interactive) {
             }
             proc_fire_event(L"JOB_EXIT", event_type_t::job_exit, j->job_id, 0);
 
-            itr = jobs().erase(itr);
-            erased = true;
+            erase_list.push_back(j.get());
         } else if (j->is_stopped() && !j->get_flag(job_flag_t::NOTIFIED)) {
             // Notify the user about newly stopped jobs.
             if (!j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
-                print_job_status(j, JOB_STOPPED);
+                print_job_status(j.get(), JOB_STOPPED);
                 found = true;
             }
             j->set_flag(job_flag_t::NOTIFIED, true);
         }
     }
 
-    if (found) fflush(stdout);
+    if (!erase_list.empty()) {
+        // The intersection of the two lists is typically O(m*n), but we know the order
+        // of the entries in erase_list is the same as their matches in jobs(), so we can
+        // use that to our advantage.
+        auto to_erase = erase_list.begin();
+        jobs().erase(std::remove_if(jobs().begin(), jobs().end(),
+                    [&to_erase](const shared_ptr<job_t> &j) {
+            if (to_erase == erase_list.end()) {
+                return false;
+            }
+            if (*to_erase == j.get()) {
+                ++to_erase;
+                return true;
+            }
+            return false;
+        }), jobs().end());
+
+        if (should_debug(2)) {
+            // Assertions prevent the application from continuing in case of invalid state. If we
+            // did not remove all objects from the list, it's not bad enough to abort and die, but
+            // leave this check here so that we can be alerted to the situtaion if running at a
+            // higher debug level. Or just remove it. But I wouldn't want to be the person that has
+            // to debug this without even this soft assertion in place when some C++ standard
+            // library decides to make std::remove_if iterate backwards or in random order!
+            assert(to_erase == erase_list.end()
+                && "Not all jobs slated for erasure have been erased!");
+        }
+    }
+    erase_list.clear();
+
+    if (found) {
+        fflush(stdout);
+    }
 
     locked = false;
-
     return found;
 }
 

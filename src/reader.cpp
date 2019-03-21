@@ -3277,44 +3277,35 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         }
         assert((event_needing_handling->is_char() || event_needing_handling->is_readline()) &&
                "Should have a char or readline");
-        maybe_t<readline_cmd_t> readline_cmd{};
-        maybe_t<wchar_t> ordinary_char{};
-        if (event_needing_handling->is_readline()) {
-            readline_cmd = event_needing_handling->get_readline();
-        } else {
-            ordinary_char = event_needing_handling->get_char();
-        }
-
-        // If we get something other than a repaint, then stop coalescing them.
-        if (readline_cmd != rl::R_REPAINT) rls.coalescing_repaints = false;
 
         if (rls.last_cmd != rl::R_YANK && rls.last_cmd != rl::R_YANK_POP) {
             rls.yank_len = 0;
         }
 
-        // Restore the text.
-        if (readline_cmd) {
-            if (*readline_cmd == rl::R_CANCEL && is_navigating_pager_contents()) {
+        if (event_needing_handling->is_readline()) {
+            readline_cmd_t readline_cmd = event_needing_handling->get_readline();
+            // If we get something other than a repaint, then stop coalescing them.
+            if (readline_cmd != rl::R_REPAINT) rls.coalescing_repaints = false;
+
+            if (readline_cmd == rl::R_CANCEL && is_navigating_pager_contents()) {
                 set_command_line_and_position(&command_line, cycle_command_line, cycle_cursor_pos);
             }
 
             // Clear the pager if necessary.
             bool focused_on_search_field = (active_edit_line() == &pager.search_field_line);
-            if (command_ends_paging(*readline_cmd, focused_on_search_field)) {
+            if (command_ends_paging(readline_cmd, focused_on_search_field)) {
                 clear_pager();
             }
 
-            handle_readline_command(*readline_cmd, rls);
+            handle_readline_command(readline_cmd, rls);
 
-            if (!readline_cmd || command_ends_history_search(*readline_cmd)) {
+            if (command_ends_history_search(readline_cmd)) {
                 history_search.reset();
             }
             rls.last_cmd = readline_cmd;
-        }
-
-        if (ordinary_char) {
-            wchar_t c = *ordinary_char;
-
+        } else {
+            // Ordinary char.
+            wchar_t c = event_needing_handling->get_char();
             if (c == L'\x1B') {
                 // Escape was pressed.
                 if (history_search.active()) {
@@ -3339,6 +3330,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
                 // reason to report this to the user unless they've enabled debugging output.
                 debug(2, _(L"Unknown key binding 0x%X"), c);
             }
+            rls.last_cmd = none();
         }
 
         repaint_if_needed();

@@ -597,7 +597,7 @@ job_t *parser_t::job_get_from_pid(pid_t pid) const {
         return 0;
     }
 
-    for (auto job : jobs()) {
+    for (const auto &job : jobs()) {
         if (job->pgid == pgid) {
             for (const process_ptr_t &p : job->processes) {
                 if (p->pid == pid) {

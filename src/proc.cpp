@@ -107,7 +107,7 @@ void job_t::promote() {
 }
 
 void proc_destroy() {
-    for (const auto job : jobs()) {
+    for (const auto &job : jobs()) {
         debug(2, L"freeing leaked job %ls", job->command_wcstr());
     }
     jobs().clear();
@@ -372,7 +372,7 @@ static void process_mark_finished_children(bool block_ok) {
 
     // We got some changes. Since we last checked we received SIGCHLD, and or HUP/INT.
     // Update the hup/int generations and reap any reapable processes.
-    for (const auto j : jobs()) {
+    for (const auto &j : jobs()) {
         for (const auto &proc : j->processes) {
             if (auto mtopic = j->reap_topic_for_process(proc.get())) {
                 // Update the signal hup/int gen.
@@ -645,7 +645,7 @@ unsigned long proc_get_jiffies(process_t *p) {
 
 /// Update the CPU time for all jobs.
 void proc_update_jiffies() {
-    for (auto job : jobs()) {
+    for (const auto &job : jobs()) {
         for (process_ptr_t &p : job->processes) {
             gettimeofday(&p->last_time, 0);
             p->last_jiffies = proc_get_jiffies(p.get());
@@ -880,7 +880,7 @@ void job_t::continue_job(bool send_sigcont) {
 void proc_sanity_check() {
     const job_t *fg_job = NULL;
 
-    for (const auto j : jobs()) {
+    for (const auto &j : jobs()) {
         if (!j->is_constructed()) continue;
 
         // More than one foreground job?
@@ -937,7 +937,7 @@ void proc_wait_any() {
 }
 
 void hup_background_jobs() {
-    for (auto j : jobs()) {
+    for (const auto &j : jobs()) {
         // Make sure we don't try to SIGHUP the calling builtin
         if (j->pgid == INVALID_PID || !j->get_flag(job_flag_t::JOB_CONTROL)) {
             continue;

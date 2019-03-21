@@ -65,7 +65,7 @@ int builtin_disown(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         // Foreground jobs can be disowned.
         // Even jobs that aren't under job control can be disowned!
         job_t *job = nullptr;
-        for (auto j : jobs()) {
+        for (const auto &j : jobs()) {
             if (j->is_constructed() && (!j->is_completed())) {
                 job = j.get();
                 break;
@@ -104,7 +104,7 @@ int builtin_disown(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
 
         // Disown all target jobs
-        for (auto j : jobs) {
+        for (const auto &j : jobs) {
             retval |= disown_job(cmd, parser, streams, j);
         }
     }

@@ -16,7 +16,7 @@
 /// If a specified process has already finished but the job hasn't, parser_t::job_get_from_pid()
 /// doesn't work properly, so use this function in wait command.
 static job_id_t get_job_id_from_pid(pid_t pid) {
-    for (auto j : jobs()) {
+    for (const auto &j : jobs()) {
         if (j->pgid == pid) {
             return j->job_id;
         }
@@ -31,7 +31,7 @@ static job_id_t get_job_id_from_pid(pid_t pid) {
 }
 
 static bool all_jobs_finished() {
-    for (auto j : jobs()) {
+    for (const auto &j : jobs()) {
         // If any job is not completed, return false.
         // If there are stopped jobs, they are ignored.
         if (j->is_constructed() && !j->is_completed() && !j->is_stopped()) {
@@ -48,7 +48,7 @@ static bool any_jobs_finished(size_t jobs_len) {
     if (jobs_len != jobs().size()) {
         return true;
     }
-    for (auto j : jobs()) {
+    for (const auto &j : jobs()) {
         // If any job is completed, return true.
         if (j->is_constructed() && (j->is_completed() || j->is_stopped())) {
             return true;
@@ -139,7 +139,7 @@ static bool match_pid(const wcstring &cmd, const wchar_t *proc) {
 static bool find_job_by_name(const wchar_t *proc, std::vector<job_id_t> &ids) {
     bool found = false;
 
-    for (const auto j : jobs()) {
+    for (const auto &j : jobs()) {
         if (j->command_is_empty()) continue;
 
         if (match_pid(j->command(), proc)) {

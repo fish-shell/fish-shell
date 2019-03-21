@@ -38,7 +38,7 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         // Select last constructed job (i.e. first job in the job queue) that can be brought
         // to the foreground.
 
-        for (auto j : jobs()) {
+        for (const auto &j : jobs()) {
             if (j->is_constructed() && (!j->is_completed()) &&
                 ((j->is_stopped() || (!j->is_foreground())) &&
                  j->get_flag(job_flag_t::JOB_CONTROL))) {

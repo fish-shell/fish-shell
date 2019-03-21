@@ -127,7 +127,7 @@ bool outputter_t::write_color(rgb_color_t color, bool is_fg) {
 /// Since the terminfo string this function emits can potentially cause the screen to flicker, the
 /// function takes care to write as little as possible.
 ///
-/// Possible values for colors are rgb_color_t colors or special values like rgb_color_t::normal() 
+/// Possible values for colors are rgb_color_t colors or special values like rgb_color_t::normal()
 ///
 /// In order to set the color to normal, three terminfo strings may have to be written.
 ///
@@ -411,8 +411,9 @@ void outputter_t::writestr(const wchar_t *str) {
     } else {
         buffer = new char[len];
     }
-    wcstombs(buffer, str, len);
-    this->writestr(buffer, len);
+
+    int new_len = wcstombs(buffer, str, len);
+    this->writestr(buffer, new_len);
     if (buffer != static_buffer) delete[] buffer;
 }
 

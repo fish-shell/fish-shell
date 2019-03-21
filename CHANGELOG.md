@@ -25,6 +25,7 @@
 - fish_clipboard_* now supports wayland by means of [wl-clipboard](https://github.com/bugaevc/wl-clipboard).
 - Pasting will now strip leading spaces if they would trigger history ignoring (#4327).
 - New color options for the pager have been added (#5524).
+- Better detection and support for using fish from the system console, where limited colors and special characters are supported (#5552 and others)
 - The default escape delay (to differentiate between the escape key and an alt-combination) has been reduced to 30ms, down from 300ms for the default mode and 100ms for vi-mode (#3904).
 - The `path_helper` on macOS now only runs in login shells, matching the bash implementation.
 - The `forward-bigword` binding now interacts correctly with autosuggestions (#5336)

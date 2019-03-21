@@ -279,6 +279,13 @@ int fish_wcswidth(const wchar_t *str, size_t n) { return wcswidth(str, n); }
 #include "widecharwidth/widechar_width.h"
 
 int fish_wcwidth(wchar_t wc) {
+    // The system version of wcwidth should accurately reflect the ability to represent characters
+    // in the console session, but knows nothing about the capabilities of other terminal emulators
+    // or ttys. Use it from the start only if we are logged in to the physical console.
+    if (is_console_session()) {
+        return wcwidth(wc);
+    }
+
     // Check for VS16 which selects emoji presentation. This "promotes" a character like U+2764
     // (width 1) to an emoji (probably width 2). So treat it as width 1 so the sums work. See #2652.
     // VS15 selects text presentation.
@@ -292,6 +299,7 @@ int fish_wcwidth(wchar_t wc) {
     // we take the position that the typical way for them to show up is composed.
     if (wc >= L'\u1160' && wc <= L'\u11FF') return 0;
     int width = widechar_wcwidth(wc);
+
     switch (width) {
         case widechar_nonprint:
         case widechar_combining:

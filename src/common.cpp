@@ -70,7 +70,8 @@ static bool thread_asserts_cfg_for_testing = false;
 
 wchar_t ellipsis_char;
 const wchar_t *ellipsis_str = nullptr;
-wchar_t omitted_newline_char;
+const wchar_t *omitted_newline_str;
+int omitted_newline_width;
 wchar_t obfuscation_read_char;
 bool g_profiling_active = false;
 const wchar_t *program_name;
@@ -576,13 +577,25 @@ void fish_setlocale() {
         ellipsis_char = L'$';  // "horizontal ellipsis"
         ellipsis_str = L"...";
     }
+
     if (is_windows_subsystem_for_linux()) {
         // neither of \u23CE and \u25CF can be displayed in the default fonts on Windows, though
         // they can be *encoded* just fine. Use alternative glyphs.
-        omitted_newline_char = can_be_encoded(L'\u00b6') ? L'\u00b6' : L'~';   // "pilcrow"
-        obfuscation_read_char = can_be_encoded(L'\u2022') ? L'\u2022' : L'*';  // "bullet"
+        omitted_newline_str = L"\u00b6";   // "pilcrow"
+        omitted_newline_width = 1;
+        obfuscation_read_char = L'\u2022'; // "bullet"
+    } else if (is_console_session()) {
+        omitted_newline_str = L"^J";
+        omitted_newline_width = 2;
+        obfuscation_read_char = L'*';
     } else {
-        omitted_newline_char = can_be_encoded(L'\u23CE') ? L'\u23CE' : L'~';   // "return"
+        if (can_be_encoded(L'\u23CE')) {
+            omitted_newline_str = L"\u23CE";
+            omitted_newline_width = 1;
+        } else {
+            omitted_newline_str = L"^J";
+            omitted_newline_width = 2;
+        }
         obfuscation_read_char = can_be_encoded(L'\u25CF') ? L'\u25CF' : L'#';  // "black circle"
     }
 }
@@ -2481,4 +2494,28 @@ std::string get_path_to_tmp_dir() {
 #else
     return "/tmp";
 #endif
+}
+
+// This function attempts to distinguish between a console session (at the actual login vty) and a
+// session within a terminal emulator inside a desktop environment or over SSH. Unfortunately
+// there are few values of $TERM that we can interpret as being exclusively console sessions, and
+// most common operating systems do not use them. The value is cached for the duration of the fish
+// session. We err on the side of assuming it's not a console session. This approach isn't
+// bullet-proof and that's OK.
+bool is_console_session() {
+    static bool console_session = []() {
+        ASSERT_IS_MAIN_THREAD();
+
+        const char *tty_name = ttyname(0);
+        auto len = strlen("/dev/tty");
+        const char *TERM = getenv("TERM");
+        return
+            // Test that the tty matches /dev/(console|dcons|tty[uv\d])
+            tty_name && ((strncmp(tty_name, "/dev/tty", len) == 0 &&
+            (tty_name[len] == 'u' || tty_name[len] == 'v' || isdigit(tty_name[len])))
+            || strcmp(tty_name, "/dev/dcons") == 0 || strcmp(tty_name, "/dev/console") == 0)
+            // and that $TERM is simple, e.g. `xterm` or `vt100`, not `xterm-something`
+            && (!TERM || !strchr(TERM, '-') || !strcmp(TERM, "sun-color"));
+    }();
+    return console_session;
 }

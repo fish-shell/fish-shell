@@ -1102,7 +1102,7 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
 
         // Don't need to check for fish_wcwidth errors; this is done when setting up
         // omitted_newline_char in common.cpp.
-        int non_space_width = fish_wcwidth(omitted_newline_char);
+        int non_space_width = omitted_newline_width;
         // We do `>` rather than `>=` because the code below might require one extra space.
         if (screen_width > non_space_width) {
             bool justgrey = true;
@@ -1129,7 +1129,7 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
                 }
             }
 
-            abandon_line_string.push_back(omitted_newline_char);
+            abandon_line_string.append(omitted_newline_str);
 
             if (cur_term && exit_attribute_mode) {
                 abandon_line_string.append(
@@ -1141,7 +1141,7 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
         }
 
         abandon_line_string.push_back(L'\r');
-        abandon_line_string.push_back(omitted_newline_char);
+        abandon_line_string.append(omitted_newline_str);
         // Now we are certainly on a new line. But we may have dropped the omitted newline char on
         // it. So append enough spaces to overwrite the omitted newline char, and then clear all the
         // spaces from the new line.

@@ -72,6 +72,19 @@ function help --description 'Show help for the fish shell'
             else if type -q xdg-open; and set -q -x DISPLAY
                 set fish_browser xdg-open
             end
+
+            # Try to find cmd.exe via $PATH or one of the paths that it's often at.
+            #
+            # We use this instead of xdg-open because that's useless without a backend
+            # like wsl-open which we'll check in a minute.
+            if set -l cmd (command -s cmd.exe /mnt/c/Windows/System32/cmd.exe)
+                # Use the first of these.
+                set fish_browser $cmd[1]
+            end
+
+            if type -q wsl-open
+                set fish_browser wsl-open
+            end
         end
     end
 
@@ -119,11 +132,6 @@ function help --description 'Show help for the fish shell'
             set fish_help_page "index.html"
     end
 
-    set -l wsl 0
-    if uname -a | string match -qr Microsoft
-        set wsl 1
-    end
-
     set -l page_url
     if test -f $__fish_help_dir/index.html
         # Help is installed, use it
@@ -155,8 +163,9 @@ function help --description 'Show help for the fish shell'
         end
     end
 
-    if test $wsl -eq 1
-        cmd.exe /c "start $page_url"
+    # cmd.exe needs more coaxing.
+    if string match -qr 'cmd.exe$' -- $fish_browser[1]
+        $fish_browser /c "start $page_url"
     # If browser is known to be graphical, put into background
     else if contains -- $fish_browser[1] $graphical_browsers
         switch $fish_browser[1]

@@ -15,30 +15,28 @@ function help --description 'Show help for the fish shell'
     set -a help_topics expand-command-substitution expand-process
 
     #
-    # Find a suitable browser for viewing the help pages. This is needed
-    # by the help function defined below.
-    #
-    set -l fish_browser
-    set -l graphical_browsers htmlview x-www-browser firefox galeon mozilla konqueror epiphany opera netscape rekonq google-chrome chromium-browser
+    # Find a suitable browser for viewing the help pages.
+    # The first thing we try is $fish_help_browser.
+    set -l fish_browser $fish_help_browser
+
+    # A list of graphical browsers we know about.
+    set -l graphical_browsers htmlview x-www-browser firefox galeon mozilla
+    set -a graphical_browsers konqueror epiphany opera netscape rekonq google-chrome chromium-browser
 
     # On mac we may have to write a temporary file that redirects to the desired
     # help page, since `open` will drop fragments from file URIs (issue #4480).
     set -l need_trampoline
 
-    if set -q fish_help_browser[1]
-        # User has set a fish-specific help browser. This overrides the
-        # browser that may be defined by $BROWSER. The fish_help_browser
-        # variable may be an array containing a browser name plus options.
-        set fish_browser $fish_help_browser
-    else
-        set -l text_browsers htmlview www-browser links elinks lynx w3m
-
+    if not set -q fish_browser[1]
         if set -q BROWSER
             # User has manually set a preferred browser, so we respect that
             set fish_browser $BROWSER
         else
+            # No browser set up, inferring.
+            # We check a bunch and use the last we find.
+
             # Check for a text-based browser.
-            for i in $text_browsers
+            for i in htmlview www-browser links elinks lynx w3m
                 if type -q -f $i
                     set fish_browser $i
                     break
@@ -47,7 +45,7 @@ function help --description 'Show help for the fish shell'
 
             # If we are in a graphical environment, check if there is a graphical
             # browser to use instead.
-            if test "$DISPLAY" -a \( "$XAUTHORITY" = "$HOME/.Xauthority" -o "$XAUTHORITY" = "" \)
+            if test -n "$DISPLAY" -a \( "$XAUTHORITY" = "$HOME/.Xauthority" -o "$XAUTHORITY" = "" \)
                 for i in $graphical_browsers
                     if type -q -f $i
                         set fish_browser $i
@@ -69,6 +67,7 @@ function help --description 'Show help for the fish shell'
             # which might not have a backend to use.
             if command -sq open
                 set fish_browser open
+                # The open command needs a trampoline because the macOS version can't handle #-fragments.
                 set need_trampoline 1
             end
         end

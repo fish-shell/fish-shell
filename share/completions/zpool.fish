@@ -163,7 +163,7 @@ function __fish_zpool_list_rw_properties
     echo -e "listsnaps\t"(_ "Display snapshots even if 'zfs list' does not use '-t'")" (on, off)"
     echo -e "version\t"(_ "On-disk version of pool")" (VERSION)"
     # Feature properties
-    zpool list -o all | string replace -ra ' +' '\n' | string lower | string replace -rf '^feature@(.*)' '$1\tEnable this feature'
+    zpool list -o all | string replace -ra ' +' '\n' | string lower | string replace -rf '^feature@(.*)' '$1'
 end
 
 complete -c zpool -f -n '__fish_zpool_needs_command' -s '?' -d 'Display a help message'

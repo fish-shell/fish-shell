@@ -65,12 +65,11 @@ function help --description 'Show help for the fish shell'
                 set fish_browser xdg-open
             end
 
-            # On OS X, we go through open by default
-            if test (uname) = Darwin
-                if type -q open
-                    set fish_browser open
-                    set need_trampoline 1
-                end
+            # If we have an open _command_ we use it - otherwise it's our function,
+            # which might not have a backend to use.
+            if command -sq open
+                set fish_browser open
+                set need_trampoline 1
             end
         end
     end

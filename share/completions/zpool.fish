@@ -44,10 +44,7 @@ function __fish_zpool_list_available_vdevs
     if test $OS = 'Linux'
         find /dev -type b | string replace '/dev/' ''
     else if test $OS = 'FreeBSD'
-        for i in (camcontrol devlist | cut -d "(" -f 2 | cut -d "," -f 1)
-            set -l files /dev/*
-            string replace /dev/ '' -- $files | string match -r "^$i"
-        end
+        sysctl -an kern.disks
     else if test $OS = 'SunOS'
         set -l files /dev/dsk/*
         string replace /dev/dsk/ '' -- $files

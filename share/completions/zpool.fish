@@ -37,7 +37,7 @@ function __fish_zpool_using_command # zpool command whose completions are looked
 end
 
 function __fish_zpool_list_used_vdevs -a pool
-    zpool list -H -v $pool | string replace -rf '^\s' '' | string match -rf '^(spare|log|cache|mirror|raidz.?)'
+    zpool list -H -v $pool | string replace -rf '^\s' '' | string match -rv '^(spare|log|cache|mirror|raidz.?)'
 end
 
 function __fish_zpool_list_available_vdevs

@@ -926,7 +926,7 @@ void env_universal_t::parse_message_2x_internal(const wcstring &msgstr, var_tabl
 }
 
 /// Maximum length of hostname. Longer hostnames are truncated.
-#define HOSTNAME_LEN 32
+#define HOSTNAME_LEN 255
 
 /// Length of a MAC address.
 #define MAC_ADDRESS_MAX_LEN 6

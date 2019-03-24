@@ -38,10 +38,10 @@ enum process_type_t {
     INTERNAL_EXEC
 };
 
-enum {
-    JOB_CONTROL_ALL,
-    JOB_CONTROL_INTERACTIVE,
-    JOB_CONTROL_NONE,
+enum class job_control_t {
+    all,
+    interactive,
+    none,
 };
 
 /// A proc_status_t is a value type that encapsulates logic around exited vs stopped vs signaled,
@@ -489,8 +489,8 @@ void set_proc_had_barrier(bool flag);
 
 /// The current job control mode.
 ///
-/// Must be one of JOB_CONTROL_ALL, JOB_CONTROL_INTERACTIVE and JOB_CONTROL_NONE.
-extern int job_control_mode;
+/// Must be one of job_control_t::all, job_control_t::interactive and job_control_t::none.
+extern job_control_t job_control_mode;
 
 /// If this flag is set, fish will never fork or run execve. It is used to put fish into a syntax
 /// verifier mode where fish tries to validate the syntax of a file but doesn't actually do

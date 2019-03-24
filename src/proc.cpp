@@ -79,7 +79,7 @@ bool is_block = false;
 bool is_breakpoint = false;
 bool is_login = false;
 int is_event = 0;
-int job_control_mode = JOB_CONTROL_INTERACTIVE;
+job_control_t job_control_mode = job_control_t::interactive;
 int no_exec = 0;
 
 static int is_interactive = -1;

@@ -1207,8 +1207,8 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
     shared_ptr<job_t> job = std::make_shared<job_t>(acquire_job_id(), block_io, parent_job);
     job->tmodes = tmodes;
     job->set_flag(job_flag_t::JOB_CONTROL,
-                  (job_control_mode == JOB_CONTROL_ALL) ||
-                      ((job_control_mode == JOB_CONTROL_INTERACTIVE) && shell_is_interactive()));
+                  (job_control_mode == job_control_t::all) ||
+                      ((job_control_mode == job_control_t::interactive) && shell_is_interactive()));
 
     job->set_flag(job_flag_t::FOREGROUND, !job_node_is_background(job_node));
 

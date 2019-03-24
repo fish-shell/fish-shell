@@ -76,24 +76,25 @@ const enum_map<status_cmd_t> status_enum_map[] = {
 /// Values that may be returned from the test-feature option to status.
 enum { TEST_FEATURE_ON, TEST_FEATURE_OFF, TEST_FEATURE_NOT_RECOGNIZED };
 
-int job_control_str_to_mode(const wchar_t *mode, wchar_t *cmd, io_streams_t &streams) {
+static maybe_t<job_control_t> job_control_str_to_mode(const wchar_t *mode, wchar_t *cmd,
+                                                      io_streams_t &streams) {
     if (std::wcscmp(mode, L"full") == 0) {
-        return JOB_CONTROL_ALL;
+        return job_control_t::all;
     } else if (std::wcscmp(mode, L"interactive") == 0) {
-        return JOB_CONTROL_INTERACTIVE;
+        return job_control_t::interactive;
     } else if (std::wcscmp(mode, L"none") == 0) {
-        return JOB_CONTROL_NONE;
+        return job_control_t::none;
     }
     streams.err.append_format(L"%ls: Invalid job control mode '%ls'\n", cmd, mode);
-    return -1;
+    return none();
 }
 
 struct status_cmd_opts_t {
-    bool print_help = false;
-    int level = 1;
-    int new_job_control_mode = -1;
-    const wchar_t *feature_name;
-    status_cmd_t status_cmd = STATUS_UNDEF;
+    bool print_help{false};
+    int level{1};
+    maybe_t<job_control_t> new_job_control_mode{};
+    const wchar_t *feature_name{};
+    status_cmd_t status_cmd{STATUS_UNDEF};
 };
 
 /// Note: Do not add new flags that represent subcommands. We're encouraging people to switch to
@@ -230,10 +231,11 @@ static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
                 if (!set_status_cmd(cmd, opts, STATUS_SET_JOB_CONTROL, streams)) {
                     return STATUS_CMD_ERROR;
                 }
-                opts.new_job_control_mode = job_control_str_to_mode(w.woptarg, cmd, streams);
-                if (opts.new_job_control_mode == -1) {
+                auto job_mode = job_control_str_to_mode(w.woptarg, cmd, streams);
+                if (!job_mode) {
                     return STATUS_CMD_ERROR;
                 }
+                opts.new_job_control_mode = job_mode;
                 break;
             }
             case 't': {
@@ -309,14 +311,14 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
             streams.out.append_format(
                 _(L"Job control: %ls\n"),
-                job_control_mode == JOB_CONTROL_INTERACTIVE
+                job_control_mode == job_control_t::interactive
                     ? _(L"Only on interactive jobs")
-                    : (job_control_mode == JOB_CONTROL_NONE ? _(L"Never") : _(L"Always")));
+                    : (job_control_mode == job_control_t::none ? _(L"Never") : _(L"Always")));
             streams.out.append(parser.stack_trace());
             break;
         }
         case STATUS_SET_JOB_CONTROL: {
-            if (opts.new_job_control_mode != -1) {
+            if (opts.new_job_control_mode) {
                 // Flag form was used.
                 CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
             } else {
@@ -326,12 +328,14 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                                               args.size());
                     return STATUS_INVALID_ARGS;
                 }
-                opts.new_job_control_mode = job_control_str_to_mode(args[0].c_str(), cmd, streams);
-                if (opts.new_job_control_mode == -1) {
+                auto new_mode = job_control_str_to_mode(args[0].c_str(), cmd, streams);
+                if (!new_mode) {
                     return STATUS_CMD_ERROR;
                 }
+                opts.new_job_control_mode = new_mode;
             }
-            job_control_mode = opts.new_job_control_mode;
+            assert(opts.new_job_control_mode && "Should have a new mode");
+            job_control_mode = *opts.new_job_control_mode;
             break;
         }
         case STATUS_FEATURES: {
@@ -403,17 +407,17 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
         case STATUS_IS_FULL_JOB_CTRL: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = job_control_mode != JOB_CONTROL_ALL;
+            retval = job_control_mode != job_control_t::all;
             break;
         }
         case STATUS_IS_INTERACTIVE_JOB_CTRL: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = job_control_mode != JOB_CONTROL_INTERACTIVE;
+            retval = job_control_mode != job_control_t::interactive;
             break;
         }
         case STATUS_IS_NO_JOB_CTRL: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = job_control_mode != JOB_CONTROL_NONE;
+            retval = job_control_mode != job_control_t::none;
             break;
         }
         case STATUS_STACK_TRACE: {

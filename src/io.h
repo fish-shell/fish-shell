@@ -352,6 +352,10 @@ struct autoclose_pipes_t {
 
     /// Write end of the pipe.
     autoclose_fd_t write;
+
+    autoclose_pipes_t() = default;
+    autoclose_pipes_t(autoclose_fd_t r, autoclose_fd_t w)
+        : read(std::move(r)), write(std::move(w)) {}
 };
 /// Call pipe(), populating autoclose fds, avoiding conflicts.
 /// The pipes are marked CLO_EXEC.

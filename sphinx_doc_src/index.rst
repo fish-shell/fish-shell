@@ -398,7 +398,7 @@ will start the emacs text editor in the background.
 Job control
 -----------
 
-Most programs allow you to suspend the program's execution and return control to ``fish`` by pressing @key{Control,Z} (also referred to as ``^Z``). Once back at the ``fish`` commandline, you can start other programs and do anything you want. If you then want you can go back to the suspended command by using the `fg <cmds/fg.html>`_ (foreground) command.
+Most programs allow you to suspend the program's execution and return control to ``fish`` by pressing :kbd:`Control+Z` (also referred to as ``^Z``). Once back at the ``fish`` commandline, you can start other programs and do anything you want. If you then want you can go back to the suspended command by using the `fg <cmds/fg.html>`_ (foreground) command.
 
 If you instead want to put a suspended job into the background, use the `bg <cmds/bg.html>`_ command.
 
@@ -518,7 +518,7 @@ Autosuggestions
 
 fish suggests commands as you type, based on command history, completions, and valid file paths. As you type commands, you will see a suggestion offered after the cursor, in a muted gray color (which can be changed with the ``fish_color_autosuggestion`` variable).
 
-To accept the autosuggestion (replacing the command line contents), press right arrow or @key{Control,F}. To accept the first suggested word, press @key{Alt,&rarr;,Right} or @key{Alt,F}. If the autosuggestion is not what you want, just ignore it: it won't execute unless you accept it.
+To accept the autosuggestion (replacing the command line contents), press right arrow or :kbd:`Control+F`. To accept the first suggested word, press :kbd:`Alt+&rarr;,Right` or :kbd:`Alt+F`. If the autosuggestion is not what you want, just ignore it: it won't execute unless you accept it.
 
 Autosuggestions are a powerful way to quickly summon frequently entered commands, by typing the first few characters. They are also an efficient technique for navigating through directory hierarchies.
 
@@ -1352,64 +1352,64 @@ Shared bindings
 
 Some bindings are shared between emacs- and vi-mode because they aren't text editing bindings or because what Vi/Vim does for a particular key doesn't make sense for a shell.
 
-- @key{Tab} `completes <#completion>`_ the current token. @key{Shift, Tab} completes the current token and starts the pager's search mode.
+- :kbd:`Tab` `completes <#completion>`_ the current token. :kbd:`Shift, Tab` completes the current token and starts the pager's search mode.
 
-- @key{Alt,&larr;,Left} and @key{Alt,&rarr;,Right} move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, @key{Alt,&rarr;,Right} (or @key{Alt,F}) accepts the first word in the suggestion.
+- :kbd:`Alt+&larr;,Left` and :kbd:`Alt+&rarr;,Right` move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`Alt+&rarr;,Right` (or :kbd:`Alt+F`) accepts the first word in the suggestion.
 
-- @key{Shift,&larr;,Left} and @key{Shift,&rarr;,Right} move the cursor one word left or right, without stopping on punctuation.
+- :kbd:`Shift,&larr;,Left` and :kbd:`Shift,&rarr;,Right` move the cursor one word left or right, without stopping on punctuation.
 
-- @cursor_key{&uarr;,Up} and @cursor_key{&darr;,Down} (or @key{Control,P} and @key{Control,N} for emacs aficionados) search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the `history <#history>`_ section for more information on history searching.
+- @cursor_key{&uarr;,Up} and @cursor_key{&darr;,Down} (or :kbd:`Control+P` and :kbd:`Control+N` for emacs aficionados) search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the `history <#history>`_ section for more information on history searching.
 
-- @key{Alt,&uarr;,Up} and @key{Alt,&darr;,Down} search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the `history <#history>`_ section for more information on history searching.
+- :kbd:`Alt+&uarr;,Up` and :kbd:`Alt+&darr;,Down` search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the `history <#history>`_ section for more information on history searching.
 
-- @key{Control,C} cancels the entire line.
+- :kbd:`Control+C` cancels the entire line.
 
-- @key{Control,D} delete one character to the right of the cursor. If the command line is empty, @key{Control,D} will exit fish.
+- :kbd:`Control+D` delete one character to the right of the cursor. If the command line is empty, :kbd:`Control+D` will exit fish.
 
-- @key{Control,U} moves contents from the beginning of line to the cursor to the `killring <#killring>`_.
+- :kbd:`Control+U` moves contents from the beginning of line to the cursor to the `killring <#killring>`_.
 
-- @key{Control,L} clears and repaints the screen.
+- :kbd:`Control+L` clears and repaints the screen.
 
-- @key{Control,W} moves the previous path component (everything up to the previous "/") to the `killring <#killring>`_.
+- :kbd:`Control+W` moves the previous path component (everything up to the previous "/") to the `killring <#killring>`_.
 
-- @key{Control,X} copies the current buffer to the system's clipboard, @key{Control,V} inserts the clipboard contents.
+- :kbd:`Control+X` copies the current buffer to the system's clipboard, :kbd:`Control+V` inserts the clipboard contents.
 
-- @key{Alt,d} moves the next word to the `killring <#killring>`_.
+- :kbd:`Alt+d` moves the next word to the `killring <#killring>`_.
 
-- @key{Alt,h} (or @key{F1}) shows the manual page for the current command, if one exists.
+- :kbd:`Alt+h` (or :kbd:`F1`) shows the manual page for the current command, if one exists.
 
-- @key{Alt,l} lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed.
+- :kbd:`Alt+l` lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed.
 
-- @key{Alt,p} adds the string '``| less;``' to the end of the job under the cursor. The result is that the output of the command will be paged.
+- :kbd:`Alt+p` adds the string '``| less;``' to the end of the job under the cursor. The result is that the output of the command will be paged.
 
-- @key{Alt,w} prints a short description of the command under the cursor.
+- :kbd:`Alt+w` prints a short description of the command under the cursor.
 
-- @key{Alt,e} edit the current command line in an external editor. The editor is chosen from the first available of the ``$VISUAL`` or ``$EDITOR`` variables.
+- :kbd:`Alt+e` edit the current command line in an external editor. The editor is chosen from the first available of the ``$VISUAL`` or ``$EDITOR`` variables.
 
-- @key{Alt,v} Same as @key{Alt,e}.
+- :kbd:`Alt+v` Same as :kbd:`Alt+e`.
 
 .. _emacs-mode:
 
 Emacs mode commands
 -------------------
 
-- @key{Home} or @key{Control,A} moves the cursor to the beginning of the line.
+- :kbd:`Home` or :kbd:`Control+A` moves the cursor to the beginning of the line.
 
-- @key{End} or @key{Control,E} moves to the end of line. If the cursor is already at the end of the line, and an autosuggestion is available, @key{End} or @key{Control,E} accepts the autosuggestion.
+- :kbd:`End` or :kbd:`Control+E` moves to the end of line. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`End` or :kbd:`Control+E` accepts the autosuggestion.
 
-- @cursor_key{&larr;,Left} (or @key{Control,B}) and @cursor_key{&rarr;,Right} (or @key{Control,F}) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, the @cursor_key{&rarr;,Right} key and the @key{Control,F} combination accept the suggestion.
+- @cursor_key{&larr;,Left} (or :kbd:`Control+B`) and @cursor_key{&rarr;,Right} (or :kbd:`Control+F`) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, the @cursor_key{&rarr;,Right} key and the :kbd:`Control+F` combination accept the suggestion.
 
-- @key{Delete} and @key{Backspace} removes one character forwards or backwards respectively.
+- :kbd:`Delete` and :kbd:`Backspace` removes one character forwards or backwards respectively.
 
-- @key{Control,K} moves contents from the cursor to the end of line to the `killring <#killring>`_.
+- :kbd:`Control+K` moves contents from the cursor to the end of line to the `killring <#killring>`_.
 
-- @key{Alt,c} capitalizes the current word.
+- :kbd:`Alt+c` capitalizes the current word.
 
-- @key{Alt,u} makes the current word uppercase.
+- :kbd:`Alt+u` makes the current word uppercase.
 
-- @key{Control,t} transposes the last two characters
+- :kbd:`Control+t` transposes the last two characters
 
-- @key{Alt,t} transposes the last two words
+- :kbd:`Alt+t` transposes the last two words
 
 
 You can change these key bindings using the `bind <cmds/bind.html">`_ builtin.
@@ -1420,7 +1420,7 @@ You can change these key bindings using the `bind <cmds/bind.html">`_ builtin.
 Vi mode commands
 ----------------
 
-Vi mode allows for the use of Vi-like commands at the prompt. Initially, `insert mode <#vi-mode-insert>`_ is active. @key{Escape} enters `command mode <#vi-mode-command>`_. The commands available in command, insert and visual mode are described below. Vi mode shares `some bindings <#shared-binds>`_ with `Emacs mode <#emacs-mode>`_.
+Vi mode allows for the use of Vi-like commands at the prompt. Initially, `insert mode <#vi-mode-insert>`_ is active. :kbd:`Escape` enters `command mode <#vi-mode-command>`_. The commands available in command, insert and visual mode are described below. Vi mode shares `some bindings <#shared-binds>`_ with `Emacs mode <#emacs-mode>`_.
 
 It is also possible to add all emacs-mode bindings to vi-mode by using something like::
 
@@ -1444,40 +1444,40 @@ Command mode
 
 Command mode is also known as normal mode.
 
-- @key{h} moves the cursor left.
+- :kbd:`h` moves the cursor left.
 
-- @key{l} moves the cursor right.
+- :kbd:`l` moves the cursor right.
 
-- @key{i} enters `insert mode <#vi-mode-insert>`_ at the current cursor position.
+- :kbd:`i` enters `insert mode <#vi-mode-insert>`_ at the current cursor position.
 
-- @key{v} enters `visual mode <#vi-mode-visual>`_ at the current cursor position.
+- :kbd:`v` enters `visual mode <#vi-mode-visual>`_ at the current cursor position.
 
-- @key{a} enters `insert mode <#vi-mode-insert>`_ after the current cursor position.
+- :kbd:`a` enters `insert mode <#vi-mode-insert>`_ after the current cursor position.
 
-- @key{Shift,A} enters `insert mode <#vi-mode-insert>`_ at the end of the line.
+- :kbd:`Shift,A` enters `insert mode <#vi-mode-insert>`_ at the end of the line.
 
-- @key{0} (zero) moves the cursor to beginning of line (remaining in command mode).
+- :kbd:`0` (zero) moves the cursor to beginning of line (remaining in command mode).
 
-- @key{d}@key{d} deletes the current line and moves it to the `killring <#killring>`_.
+- :kbd:`d`:kbd:`d` deletes the current line and moves it to the `killring <#killring>`_.
 
-- @key{Shift,D} deletes text after the current cursor position and moves it to the `killring <#killring>`_.
+- :kbd:`Shift,D` deletes text after the current cursor position and moves it to the `killring <#killring>`_.
 
-- @key{p} pastes text from the `killring <#killring>`_.
+- :kbd:`p` pastes text from the `killring <#killring>`_.
 
-- @key{u} search history backwards.
+- :kbd:`u` search history backwards.
 
-- @key{[} and @key{]} search the command history for the previous/next token containing the token under the cursor before the search was started. See the `history <#history>`_ section for more information on history searching.
+- :kbd:`[` and :kbd:`]` search the command history for the previous/next token containing the token under the cursor before the search was started. See the `history <#history>`_ section for more information on history searching.
 
-- @key{Backspace} moves the cursor left.
+- :kbd:`Backspace` moves the cursor left.
 
 .. _vi-mode-insert:
 
 Insert mode
 -----------
 
-- @key{Escape} enters `command mode <#vi-mode-command>`_.
+- :kbd:`Escape` enters `command mode <#vi-mode-command>`_.
 
-- @key{Backspace} removes one character to the left.
+- :kbd:`Backspace` removes one character to the left.
 
 .. _vi-mode-visual:
 
@@ -1486,20 +1486,20 @@ Visual mode
 
 - @cursor_key{&larr;,Left} and @cursor_key{&rarr;,Right} extend the selection backward/forward by one character.
 
-- @key{b} and @key{w} extend the selection backward/forward by one word.
+- :kbd:`b` and :kbd:`w` extend the selection backward/forward by one word.
 
-- @key{d} and @key{x} move the selection to the `killring <#killring>`_ and enter `command mode <#vi-mode-command>`_.
+- :kbd:`d` and :kbd:`x` move the selection to the `killring <#killring>`_ and enter `command mode <#vi-mode-command>`_.
 
-- @key{Escape} and @key{Control,C} enter `command mode <#vi-mode-command>`_.
+- :kbd:`Escape` and :kbd:`Control+C` enter `command mode <#vi-mode-command>`_.
 
 .. _killring:
 
 Copy and paste (Kill Ring)
 --------------------------
 
-``fish`` uses an Emacs style kill ring for copy and paste functionality. Use @key{Control,K} to cut from the current cursor position to the end of the line. The string that is cut (a.k.a. killed) is inserted into a linked list of kills, called the kill ring. To paste the latest value from the kill ring use @key{Control,Y}. After pasting, use @key{Alt,Y} to rotate to the previous kill.
+``fish`` uses an Emacs style kill ring for copy and paste functionality. Use :kbd:`Control+K` to cut from the current cursor position to the end of the line. The string that is cut (a.k.a. killed) is inserted into a linked list of kills, called the kill ring. To paste the latest value from the kill ring use :kbd:`Control+Y`. After pasting, use :kbd:`Alt+Y` to rotate to the previous kill.
 
-Copy and paste from outside are also supported, both via the @key{Control,X} / @key{Control,V} bindings and via the terminal's paste function, for which fish enables "Bracketed Paste Mode". When pasting inside single quotes, pasted single quotes and backslashes are automatically escaped so that the result can be used as a single token simply by closing the quote after.
+Copy and paste from outside are also supported, both via the :kbd:`Control+X` / :kbd:`Control+V` bindings and via the terminal's paste function, for which fish enables "Bracketed Paste Mode". When pasting inside single quotes, pasted single quotes and backslashes are automatically escaped so that the result can be used as a single token simply by closing the quote after.
 
 .. _history-search:
 
@@ -1508,7 +1508,7 @@ Searchable history
 
 After a command has been entered, it is inserted at the end of a history list. Any duplicate history items are automatically removed. By pressing the up and down keys, the user can search forwards and backwards in the history. If the current command line is not empty when starting a history search, only the commands containing the string entered into the command line are shown.
 
-By pressing @key{Alt,&uarr;,Up} and @key{Alt,&darr;,Down}, a history search is also performed, but instead of searching for a complete commandline, each commandline is broken into separate elements just like it would be before execution, and the history is searched for an element matching that under the cursor.
+By pressing :kbd:`Alt+&uarr;,Up` and :kbd:`Alt+&darr;,Down`, a history search is also performed, but instead of searching for a complete commandline, each commandline is broken into separate elements just like it would be before execution, and the history is searched for an element matching that under the cursor.
 
 History searches can be aborted by pressing the escape key.
 
@@ -1523,7 +1523,7 @@ Examples:
 
 To search for previous entries containing the word 'make', type ``make`` in the console and press the up key.
 
-If the commandline reads ``cd m``, place the cursor over the ``m`` character and press @key{Alt,&uarr;,Up} to search for previously typed words containing 'm'.
+If the commandline reads ``cd m``, place the cursor over the ``m`` character and press :kbd:`Alt+&uarr;,Up` to search for previously typed words containing 'm'.
 
 
 .. _multiline:
@@ -1533,11 +1533,11 @@ Multiline editing
 
 The fish commandline editor can be used to work on commands that are several lines long. There are three ways to make a command span more than a single line:
 
-- Pressing the @key{Enter} key while a block of commands is unclosed, such as when one or more block commands such as ``for``, ``begin`` or ``if`` do not have a corresponding ``end`` command.
+- Pressing the :kbd:`Enter` key while a block of commands is unclosed, such as when one or more block commands such as ``for``, ``begin`` or ``if`` do not have a corresponding ``end`` command.
 
-- Pressing @key{Alt,Enter} instead of pressing the @key{Enter} key.
+- Pressing :kbd:`Alt+Enter` instead of pressing the :kbd:`Enter` key.
 
-- By inserting a backslash (``\``) character before pressing the @key{Enter} key, escaping the newline.
+- By inserting a backslash (``\``) character before pressing the :kbd:`Enter` key, escaping the newline.
 
 The fish commandline editor works exactly the same in single line mode and in multiline mode. To move between lines use the left and right arrow keys and other such keyboard shortcuts.
 
@@ -1550,7 +1550,7 @@ Normally when ``fish`` starts a program, this program will be put in the foregro
 
 -# By ending a command with the ``&`` (ampersand) symbol, the user tells ``fish`` to put the specified command into the background. A background process will be run simultaneous with ``fish``. ``fish`` will retain control of the terminal, so the program will not be able to read from the keyboard.
 
--# By pressing @key{Control,Z}, the user stops a currently running foreground  program and returns control to ``fish``. Some programs do not support this feature, or remap it to another key. GNU Emacs uses @key{Control,X} @key{z} to stop running.
+-# By pressing :kbd:`Control+Z`, the user stops a currently running foreground  program and returns control to ``fish``. Some programs do not support this feature, or remap it to another key. GNU Emacs uses :kbd:`Control+X` :kbd:`z` to stop running.
 
 -# By using the `bg <cmds/bg.html>`_ and `fg <cmds/fg.html>`_ builtin commands, the user can send any currently running job into the foreground or background.
 

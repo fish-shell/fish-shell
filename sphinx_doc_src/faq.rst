@@ -235,11 +235,11 @@ Fish history recall is very simple yet effective:
 
   - If the line you want is far back in the history, type any part of the line and then press Up one or more times.  This will constrain the recall to lines that include this text, and you will get to the line you want much faster.  This replaces "!vi", "!?bar.c" and the like.
 
-- @key{Alt,&uarr;,Up} recalls individual arguments, starting from the last argument in the last line executed.  A single press replaces "!$", later presses replace "!!:4" and the like.
+- :kbd:`Alt+&uarr;,Up` recalls individual arguments, starting from the last argument in the last line executed.  A single press replaces "!$", later presses replace "!!:4" and the like.
 
-  - If the argument you want is far back in history (e.g. 2 lines back - that's a lot of words!), type any part of it and then press @key{Alt,&uarr;,Up}.  This will show only arguments containing that part and you will get what you want much faster.  Try it out, this is very convenient!
+  - If the argument you want is far back in history (e.g. 2 lines back - that's a lot of words!), type any part of it and then press :kbd:`Alt+&uarr;,Up`.  This will show only arguments containing that part and you will get what you want much faster.  Try it out, this is very convenient!
 
-  - If you want to reuse several arguments from the same line ("!!:3*" and the like), consider recalling the whole line and removing what you don't need (@key{Alt,D} and @key{Alt,Backspace} are your friends).
+  - If you want to reuse several arguments from the same line ("!!:3*" and the like), consider recalling the whole line and removing what you don't need (:kbd:`Alt+D` and :kbd:`Alt+Backspace` are your friends).
 
 See <a href='index.html#editor'>documentation</a> for more details about line editing in fish.
 

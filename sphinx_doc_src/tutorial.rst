@@ -123,7 +123,7 @@ Especially powerful is the recursive wildcard ** which searches directories recu
     <outp>/var/run/sntp.log</outp>
 
 
-If that directory traversal is taking a long time, you can @key{Control,C} out of it.
+If that directory traversal is taking a long time, you can :kbd:`Control+C` out of it.
 
 
 Pipes and Redirections
@@ -163,21 +163,21 @@ And history too. Type a command once, and you can re-summon it by just typing a 
     >_ <eror>r<</eror><s>___sync -avze ssh . myname@somelonghost.com:/some/long/path/doo/dee/doo/dee/doo</s>
 
 
-To accept the autosuggestion, hit @cursor_key{&rarr;,right arrow} or @key{Control,F}. To accept a single word of the autosuggestion, @key{Alt,&rarr;} (right arrow). If the autosuggestion is not what you want, just ignore it.
+To accept the autosuggestion, hit @cursor_key{&rarr;,right arrow} or :kbd:`Control+F`. To accept a single word of the autosuggestion, :kbd:`Alt+&rarr;` (right arrow). If the autosuggestion is not what you want, just ignore it.
 
 Tab Completions
 ---------------
 
 ``fish`` comes with a rich set of tab completions, that work "out of the box."
 
-Press @key{Tab}, and ``fish`` will attempt to complete the command, argument, or path::
+Press :kbd:`Tab`, and ``fish`` will attempt to complete the command, argument, or path::
 
-    >_ <eror>/pri</eror> @key{Tab} &rarr; /private/
+    >_ <eror>/pri</eror> :kbd:`Tab` &rarr; /private/
 
 
 If there's more than one possibility, it will list them::
 
-    >_ <eror>~/stuff/s</eror> @key{Tab}
+    >_ <eror>~/stuff/s</eror> :kbd:`Tab`
     <outp><mtch>~/stuff/s</outp>cript.sh  <i>(Executable, 4.8kB)</i>  \mtch{~/stuff/s</mtch>ources/  <i>(Directory)</i>}
 
 
@@ -185,8 +185,8 @@ Hit tab again to cycle through the possibilities.
 
 ``fish`` can also complete many commands, like git branches::
 
-    >_ git merge pr @key{Tab} &rarr; git merge prompt_designer
-    >_ git checkout b @key{Tab}
+    >_ git merge pr :kbd:`Tab` &rarr; git merge prompt_designer
+    >_ git checkout b :kbd:`Tab`
     <outp><mtch>b</outp>uiltin_list_io_merge <i>(Branch)</i> \mtch{b</mtch>uiltin_set_color <i>(Branch)</i> <mtch>b</mtch>usted_events <i>(Tag)</i>}
 
 

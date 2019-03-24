@@ -3329,8 +3329,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
                        c != 0x7F) {
                 // Regular character.
                 editable_line_t *el = active_edit_line();
-                bool allow_expand_abbreviations = (el == &command_line);
-                insert_char(active_edit_line(), c, allow_expand_abbreviations);
+                insert_char(active_edit_line(), c);
 
                 // End paging upon inserting into the normal command line.
                 if (el == &command_line) {

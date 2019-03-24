@@ -129,6 +129,7 @@ static const input_function_metadata_t input_function_metadata[] = {
     {readline_cmd_t::repeat_jump, L"repeat-jump"},
     {readline_cmd_t::reverse_repeat_jump, L"repeat-jump-reverse"},
     {readline_cmd_t::func_and, L"and"},
+    {readline_cmd_t::expand_abbr, L"expand-abbr"},
     {readline_cmd_t::cancel, L"cancel"}};
 
 static_assert(sizeof(input_function_metadata) / sizeof(input_function_metadata[0]) ==

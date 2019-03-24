@@ -190,6 +190,15 @@ function __fish_git_files
                     set -ql added
                     and set file "$line[9..-1]"
                     and set desc $added_desc
+                case "1 AM*"
+                    # Added files with additional modifications
+                    if set -ql added
+                        set file "$line[9..-1]"
+                        set desc $added_desc
+                    else if set -ql modified
+                        set file "$line[9..-1]"
+                        set desc $modified_desc
+                    end
                 case '1 .M*'
                     # Modified
                     # From the docs: "Ordinary changed entries have the following format:"

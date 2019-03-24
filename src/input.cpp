@@ -51,6 +51,9 @@ struct input_mapping_t {
         static unsigned int s_last_input_map_spec_order = 0;
         specification_order = ++s_last_input_map_spec_order;
     }
+
+    /// \return true if this is a generic mapping, i.e. acts as a fallback.
+    bool is_generic() const { return seq.empty(); }
 };
 
 /// A struct representing the mapping from a terminfo key name to a terminfo character sequence.
@@ -64,68 +67,69 @@ static constexpr size_t input_function_count = R_END_INPUT_FUNCTIONS - R_BEGIN_I
 /// Input function metadata. This list should be kept in sync with the key code list in
 /// input_common.h.
 struct input_function_metadata_t {
-    wchar_t code;
+    readline_cmd_t code;
     const wchar_t *name;
 };
+
 static const input_function_metadata_t input_function_metadata[] = {
-    {R_BEGINNING_OF_LINE, L"beginning-of-line"},
-    {R_END_OF_LINE, L"end-of-line"},
-    {R_FORWARD_CHAR, L"forward-char"},
-    {R_BACKWARD_CHAR, L"backward-char"},
-    {R_FORWARD_WORD, L"forward-word"},
-    {R_BACKWARD_WORD, L"backward-word"},
-    {R_FORWARD_BIGWORD, L"forward-bigword"},
-    {R_BACKWARD_BIGWORD, L"backward-bigword"},
-    {R_HISTORY_SEARCH_BACKWARD, L"history-search-backward"},
-    {R_HISTORY_SEARCH_FORWARD, L"history-search-forward"},
-    {R_DELETE_CHAR, L"delete-char"},
-    {R_BACKWARD_DELETE_CHAR, L"backward-delete-char"},
-    {R_KILL_LINE, L"kill-line"},
-    {R_YANK, L"yank"},
-    {R_YANK_POP, L"yank-pop"},
-    {R_COMPLETE, L"complete"},
-    {R_COMPLETE_AND_SEARCH, L"complete-and-search"},
-    {R_PAGER_TOGGLE_SEARCH, L"pager-toggle-search"},
-    {R_BEGINNING_OF_HISTORY, L"beginning-of-history"},
-    {R_END_OF_HISTORY, L"end-of-history"},
-    {R_BACKWARD_KILL_LINE, L"backward-kill-line"},
-    {R_KILL_WHOLE_LINE, L"kill-whole-line"},
-    {R_KILL_WORD, L"kill-word"},
-    {R_KILL_BIGWORD, L"kill-bigword"},
-    {R_BACKWARD_KILL_WORD, L"backward-kill-word"},
-    {R_BACKWARD_KILL_PATH_COMPONENT, L"backward-kill-path-component"},
-    {R_BACKWARD_KILL_BIGWORD, L"backward-kill-bigword"},
-    {R_HISTORY_TOKEN_SEARCH_BACKWARD, L"history-token-search-backward"},
-    {R_HISTORY_TOKEN_SEARCH_FORWARD, L"history-token-search-forward"},
-    {R_SELF_INSERT, L"self-insert"},
-    {R_TRANSPOSE_CHARS, L"transpose-chars"},
-    {R_TRANSPOSE_WORDS, L"transpose-words"},
-    {R_UPCASE_WORD, L"upcase-word"},
-    {R_DOWNCASE_WORD, L"downcase-word"},
-    {R_CAPITALIZE_WORD, L"capitalize-word"},
-    {R_VI_ARG_DIGIT, L"vi-arg-digit"},
-    {R_VI_DELETE_TO, L"vi-delete-to"},
-    {R_EXECUTE, L"execute"},
-    {R_BEGINNING_OF_BUFFER, L"beginning-of-buffer"},
-    {R_END_OF_BUFFER, L"end-of-buffer"},
-    {R_REPAINT, L"repaint"},
-    {R_FORCE_REPAINT, L"force-repaint"},
-    {R_UP_LINE, L"up-line"},
-    {R_DOWN_LINE, L"down-line"},
-    {R_SUPPRESS_AUTOSUGGESTION, L"suppress-autosuggestion"},
-    {R_ACCEPT_AUTOSUGGESTION, L"accept-autosuggestion"},
-    {R_BEGIN_SELECTION, L"begin-selection"},
-    {R_SWAP_SELECTION_START_STOP, L"swap-selection-start-stop"},
-    {R_END_SELECTION, L"end-selection"},
-    {R_KILL_SELECTION, L"kill-selection"},
-    {R_FORWARD_JUMP, L"forward-jump"},
-    {R_BACKWARD_JUMP, L"backward-jump"},
-    {R_FORWARD_JUMP_TILL, L"forward-jump-till"},
-    {R_BACKWARD_JUMP_TILL, L"backward-jump-till"},
-    {R_REPEAT_JUMP, L"repeat-jump"},
-    {R_REVERSE_REPEAT_JUMP, L"repeat-jump-reverse"},
-    {R_AND, L"and"},
-    {R_CANCEL, L"cancel"}};
+    {readline_cmd_t::beginning_of_line, L"beginning-of-line"},
+    {readline_cmd_t::end_of_line, L"end-of-line"},
+    {readline_cmd_t::forward_char, L"forward-char"},
+    {readline_cmd_t::backward_char, L"backward-char"},
+    {readline_cmd_t::forward_word, L"forward-word"},
+    {readline_cmd_t::backward_word, L"backward-word"},
+    {readline_cmd_t::forward_bigword, L"forward-bigword"},
+    {readline_cmd_t::backward_bigword, L"backward-bigword"},
+    {readline_cmd_t::history_search_backward, L"history-search-backward"},
+    {readline_cmd_t::history_search_forward, L"history-search-forward"},
+    {readline_cmd_t::delete_char, L"delete-char"},
+    {readline_cmd_t::backward_delete_char, L"backward-delete-char"},
+    {readline_cmd_t::kill_line, L"kill-line"},
+    {readline_cmd_t::yank, L"yank"},
+    {readline_cmd_t::yank_POP, L"yank-pop"},
+    {readline_cmd_t::complete, L"complete"},
+    {readline_cmd_t::complete_AND_SEARCH, L"complete-and-search"},
+    {readline_cmd_t::pager_toggle_search, L"pager-toggle-search"},
+    {readline_cmd_t::beginning_of_history, L"beginning-of-history"},
+    {readline_cmd_t::end_of_history, L"end-of-history"},
+    {readline_cmd_t::backward_kill_line, L"backward-kill-line"},
+    {readline_cmd_t::kill_whole_line, L"kill-whole-line"},
+    {readline_cmd_t::kill_word, L"kill-word"},
+    {readline_cmd_t::kill_bigword, L"kill-bigword"},
+    {readline_cmd_t::backward_kill_word, L"backward-kill-word"},
+    {readline_cmd_t::backward_kill_path_component, L"backward-kill-path-component"},
+    {readline_cmd_t::backward_kill_bigword, L"backward-kill-bigword"},
+    {readline_cmd_t::history_token_search_backward, L"history-token-search-backward"},
+    {readline_cmd_t::history_token_search_forward, L"history-token-search-forward"},
+    {readline_cmd_t::self_insert, L"self-insert"},
+    {readline_cmd_t::transpose_chars, L"transpose-chars"},
+    {readline_cmd_t::transpose_words, L"transpose-words"},
+    {readline_cmd_t::upcase_word, L"upcase-word"},
+    {readline_cmd_t::downcase_word, L"downcase-word"},
+    {readline_cmd_t::capitalize_word, L"capitalize-word"},
+    {readline_cmd_t::vi_arg_digit, L"vi-arg-digit"},
+    {readline_cmd_t::vi_delete_to, L"vi-delete-to"},
+    {readline_cmd_t::execute, L"execute"},
+    {readline_cmd_t::beginning_of_buffer, L"beginning-of-buffer"},
+    {readline_cmd_t::end_of_buffer, L"end-of-buffer"},
+    {readline_cmd_t::repaint, L"repaint"},
+    {readline_cmd_t::force_repaint, L"force-repaint"},
+    {readline_cmd_t::up_line, L"up-line"},
+    {readline_cmd_t::down_line, L"down-line"},
+    {readline_cmd_t::suppress_autosuggestion, L"suppress-autosuggestion"},
+    {readline_cmd_t::accept_autosuggestion, L"accept-autosuggestion"},
+    {readline_cmd_t::begin_selection, L"begin-selection"},
+    {readline_cmd_t::swap_selection_start_stop, L"swap-selection-start-stop"},
+    {readline_cmd_t::end_selection, L"end-selection"},
+    {readline_cmd_t::kill_selection, L"kill-selection"},
+    {readline_cmd_t::forward_jump, L"forward-jump"},
+    {readline_cmd_t::backward_jump, L"backward-jump"},
+    {readline_cmd_t::forward_jump_till, L"forward-jump-till"},
+    {readline_cmd_t::backward_jump_till, L"backward-jump-till"},
+    {readline_cmd_t::repeat_jump, L"repeat-jump"},
+    {readline_cmd_t::reverse_repeat_jump, L"repeat-jump-reverse"},
+    {readline_cmd_t::func_and, L"and"},
+    {readline_cmd_t::cancel, L"cancel"}};
 
 static_assert(sizeof(input_function_metadata) / sizeof(input_function_metadata[0]) ==
                   input_function_count,
@@ -179,12 +183,12 @@ void input_set_bind_mode(const wcstring &bm) {
 }
 
 /// Returns the arity of a given input function.
-static int input_function_arity(int function) {
+static int input_function_arity(readline_cmd_t function) {
     switch (function) {
-        case R_FORWARD_JUMP:
-        case R_BACKWARD_JUMP:
-        case R_FORWARD_JUMP_TILL:
-        case R_BACKWARD_JUMP_TILL:
+        case readline_cmd_t::forward_jump:
+        case readline_cmd_t::backward_jump:
+        case readline_cmd_t::forward_jump_till:
+        case readline_cmd_t::backward_jump_till:
             return 1;
         default:
             return 0;
@@ -246,17 +250,21 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t *command, const wc
 
 /// Handle interruptions to key reading by reaping finshed jobs and propagating the interrupt to the
 /// reader.
-static int interrupt_handler() {
+static maybe_t<char_event_t> interrupt_handler() {
     // Fire any pending events.
     event_fire_delayed();
     // Reap stray processes, including printing exit status messages.
     if (job_reap(true)) reader_repaint_needed();
     // Tell the reader an event occured.
     if (reader_reading_interrupted()) {
-        return shell_modes.c_cc[VINTR];
+        auto vintr = shell_modes.c_cc[VINTR];
+        if (vintr == 0) {
+            return none();
+        }
+        return char_event_t{vintr};
     }
 
-    return R_NULL;
+    return char_event_t{char_event_type_t::check_exit};
 }
 
 static std::atomic<bool> input_initialized{false};
@@ -295,19 +303,21 @@ void input_function_push_arg(wchar_t arg) {
 
 wchar_t input_function_pop_arg() { return input_function_args[--input_function_args_index]; }
 
-void input_function_push_args(int code) {
+void input_function_push_args(readline_cmd_t code) {
     int arity = input_function_arity(code);
-    std::vector<wchar_t> skipped;
+    std::vector<char_event_t> skipped;
 
     for (int i = 0; i < arity; i++) {
-        wchar_t arg;
-
         // Skip and queue up any function codes. See issue #2357.
-        while ((arg = input_common_readch(0)) >= R_BEGIN_INPUT_FUNCTIONS &&
-               arg < R_END_INPUT_FUNCTIONS) {
-            skipped.push_back(arg);
+        wchar_t arg{};
+        for (;;) {
+            auto evt = input_common_readch();
+            if (evt.is_char()) {
+                arg = evt.get_char();
+                break;
+            }
+            skipped.push_back(evt);
         }
-
         input_function_push_arg(arg);
     }
 
@@ -326,7 +336,7 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
     bool has_commands = false, has_functions = false;
 
     for (const wcstring &cmd : m.commands) {
-        if (input_function_get_code(cmd) != INPUT_CODE_NONE)
+        if (input_function_get_code(cmd))
             has_functions = true;
         else
             has_commands = true;
@@ -339,19 +349,19 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
     }
 
     if (has_commands && !allow_commands) {
-        // We don't want to run commands yet. Put the characters back and return R_NULL.
+        // We don't want to run commands yet. Put the characters back and return check_exit.
         for (wcstring::const_reverse_iterator it = m.seq.rbegin(), end = m.seq.rend(); it != end;
              ++it) {
             input_common_next_ch(*it);
         }
-        input_common_next_ch(R_NULL);
+        input_common_next_ch(char_event_type_t::check_exit);
         return;  // skip the input_set_bind_mode
     } else if (has_functions && !has_commands) {
         // Functions are added at the head of the input queue.
         for (wcstring_list_t::const_reverse_iterator it = m.commands.rbegin(),
                                                      end = m.commands.rend();
              it != end; ++it) {
-            wchar_t code = input_function_get_code(*it);
+            readline_cmd_t code = input_function_get_code(*it).value();
             input_function_push_args(code);
             input_common_next_ch(code);
         }
@@ -365,11 +375,11 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
             parser_t::principal_parser().eval(cmd, io_chain_t(), TOP);
         }
         proc_set_last_statuses(std::move(last_statuses));
-        input_common_next_ch(R_NULL);
+        input_common_next_ch(char_event_type_t::check_exit);
     } else {
         // Invalid binding, mixed commands and functions.  We would need to execute these one by
         // one.
-        input_common_next_ch(R_NULL);
+        input_common_next_ch(char_event_type_t::check_exit);
     }
 
     // Empty bind mode indicates to not reset the mode (#2871)
@@ -384,15 +394,13 @@ static bool input_mapping_is_match(const input_mapping_t &m) {
 
     bool timed = false;
     for (size_t i = 0; i < str.size(); ++i) {
-        wchar_t read = input_common_readch(timed);
-
-        if (read != str[i]) {
-            // We didn't match the bind sequence/input mapping, (it timed out or they entered something else)
-            // Undo consumption of the read characters since we didn't match the bind sequence and abort.
-            input_common_next_ch(read);
-            while (i--) {
-                input_common_next_ch(str[i]);
-            }
+        auto evt = timed ? input_common_readch_timed() : input_common_readch();
+        if (!evt.is_char() || evt.get_char() != str[i]) {
+            // We didn't match the bind sequence/input mapping, (it timed out or they entered
+            // something else) Undo consumption of the read characters since we didn't match the
+            // bind sequence and abort.
+            input_common_next_ch(evt);
+            while (i--) input_common_next_ch(str[i]);
             return false;
         }
 
@@ -404,115 +412,102 @@ static bool input_mapping_is_match(const input_mapping_t &m) {
     return true;
 }
 
-void input_queue_ch(wint_t ch) { input_common_queue_ch(ch); }
+void input_queue_ch(char_event_t ch) { input_common_queue_ch(ch); }
 
-static void input_mapping_execute_matching_or_generic(bool allow_commands) {
+/// \return the first mapping that matches, walking first over the user's mapping list, then the
+/// preset list. \return null if nothing matches.
+static const input_mapping_t *find_mapping() {
     const input_mapping_t *generic = NULL;
-
     const auto &vars = parser_t::principal_parser().vars();
     const wcstring bind_mode = input_get_bind_mode(vars);
 
-    for (auto& m : mapping_list) {
-        if (m.mode != bind_mode) {
-            continue;
-        }
+    const auto lists = {&mapping_list, &preset_mapping_list};
+    for (const auto *listp : lists) {
+        for (const auto &m : *listp) {
+            if (m.mode != bind_mode) {
+                continue;
+            }
 
-        if (m.seq.length() == 0) {
-            generic = &m;
-        } else if (input_mapping_is_match(m)) {
-            input_mapping_execute(m, allow_commands);
-            return;
-        }
-    }
-
-    // HACK: This is ugly duplication.
-    for (auto& m : preset_mapping_list) {
-        if (m.mode != bind_mode) {
-            continue;
-        }
-
-        if (m.seq.length() == 0) {
-            // Only use this generic if the user list didn't have one.
-            if (!generic) generic = &m;
-        } else if (input_mapping_is_match(m)) {
-            input_mapping_execute(m, allow_commands);
-            return;
+            if (m.is_generic()) {
+                if (!generic) generic = &m;
+            } else if (input_mapping_is_match(m)) {
+                return &m;
+            }
         }
     }
+    return generic;
+}
 
-    if (generic) {
-        input_mapping_execute(*generic, allow_commands);
+static void input_mapping_execute_matching_or_generic(bool allow_commands) {
+    const input_mapping_t *mapping = find_mapping();
+    if (mapping) {
+        input_mapping_execute(*mapping, allow_commands);
     } else {
         debug(2, L"no generic found, ignoring char...");
-        wchar_t c = input_common_readch(0);
-        if (c == R_EOF) {
-            input_common_next_ch(c);
+        auto evt = input_common_readch();
+        if (evt.is_eof()) {
+            input_common_next_ch(evt);
         }
     }
 }
 
 /// Helper function. Picks through the queue of incoming characters until we get to one that's not a
 /// readline function.
-static wchar_t input_read_characters_only() {
-    std::vector<wchar_t> functions_to_put_back;
-    wchar_t char_to_return;
+static char_event_t input_read_characters_no_readline() {
+    std::vector<char_event_t> saved_events;
+    char_event_t evt_to_return{0};
     for (;;) {
-        char_to_return = input_common_readch(0);
-        bool is_readline_function =
-            (char_to_return >= R_BEGIN_INPUT_FUNCTIONS && char_to_return < R_END_INPUT_FUNCTIONS);
-        // R_NULL and R_EOF are more control characters than readline functions, so check specially
-        // for those.
-        if (!is_readline_function || char_to_return == R_NULL || char_to_return == R_EOF) {
+        auto evt = input_common_readch();
+        if (evt.is_readline()) {
+            saved_events.push_back(evt);
+        } else {
+            evt_to_return = evt;
             break;
         }
-        // This is a readline function; save it off for later re-enqueing and try again.
-        functions_to_put_back.push_back(char_to_return);
     }
     // Restore any readline functions, in reverse to preserve their original order.
-    size_t idx = functions_to_put_back.size();
-    while (idx--) {
-        input_common_next_ch(functions_to_put_back.at(idx));
+    for (auto iter = saved_events.rbegin(); iter != saved_events.rend(); ++iter) {
+        input_common_next_ch(*iter);
     }
-    return char_to_return;
+    return evt_to_return;
 }
 
-wint_t input_readch(bool allow_commands) {
+char_event_t input_readch(bool allow_commands) {
     // Clear the interrupted flag.
     reader_reset_interrupted();
     // Search for sequence in mapping tables.
     while (true) {
-        wchar_t c = input_common_readch(0);
+        auto evt = input_common_readch();
 
-        if (c >= R_BEGIN_INPUT_FUNCTIONS && c < R_END_INPUT_FUNCTIONS) {
-            switch (c) {
-                case R_SELF_INSERT: {
+        if (evt.is_readline()) {
+            switch (evt.get_readline()) {
+                case readline_cmd_t::self_insert: {
                     // Issue #1595: ensure we only insert characters, not readline functions. The
                     // common case is that this will be empty.
-                    return input_read_characters_only();
+                    return input_read_characters_no_readline();
                 }
-                case R_AND: {
+                case readline_cmd_t::func_and: {
                     if (input_function_status) {
                         return input_readch();
                     }
-                    c = input_common_readch(0);
-                    while (c >= R_BEGIN_INPUT_FUNCTIONS && c < R_END_INPUT_FUNCTIONS) {
-                        c = input_common_readch(0);
-                    }
-                    input_common_next_ch(c);
+                    do {
+                        evt = input_common_readch();
+                    } while (evt.is_readline());
+                    input_common_next_ch(evt);
                     return input_readch();
                 }
-                default: { return c; }
+                default: { return evt; }
             }
-        } else if (c == R_EOF) {
-            // If we have R_EOF, we need to immediately quit.
+        } else if (evt.is_eof()) {
+            // If we have EOF, we need to immediately quit.
             // There's no need to go through the input functions.
-            return R_EOF;
+            return evt;
         } else {
-            input_common_next_ch(c);
+            input_common_next_ch(evt);
             input_mapping_execute_matching_or_generic(allow_commands);
-            // Regarding allow_commands, we're in a loop, but if a fish command
-            // is executed, R_NULL is unread, so the next pass through the loop
-            // we'll break out and return it.
+            // Regarding allow_commands, we're in a loop, but if a fish command is executed,
+            // check_exit is unread, so the next pass through the loop we'll break out and return
+            // it.
         }
     }
 }
@@ -800,11 +795,11 @@ wcstring_list_t input_function_get_names() {
     return result;
 }
 
-wchar_t input_function_get_code(const wcstring &name) {
+maybe_t<readline_cmd_t> input_function_get_code(const wcstring &name) {
     for (const auto &md : input_function_metadata) {
         if (name == md.name) {
             return md.code;
         }
     }
-    return INPUT_CODE_NONE;
+    return none();
 }

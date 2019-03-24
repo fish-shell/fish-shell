@@ -87,8 +87,6 @@ typedef std::vector<wcstring> wcstring_list_t;
 // on Mac OS X. See http://www.unicode.org/faq/private_use.html.
 #define ENCODE_DIRECT_BASE (wchar_t)0xF600
 #define ENCODE_DIRECT_END (ENCODE_DIRECT_BASE + 256)
-#define INPUT_COMMON_BASE (wchar_t)0xF700
-#define INPUT_COMMON_END (INPUT_COMMON_BASE + 64)
 
 // NAME_MAX is not defined on Solaris
 #if !defined(NAME_MAX)

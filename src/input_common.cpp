@@ -33,8 +33,8 @@
 #define WAIT_ON_ESCAPE_DEFAULT 30
 static int wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
 
-/// Characters that have been read and returned by the sequence matching code.
-static std::deque<wchar_t> lookahead_list;
+/// Events which have been read and returned by the sequence matching code.
+static std::deque<char_event_t> lookahead_list;
 
 // Queue of pairs of (function pointer, argument) to be invoked. Expected to be mostly empty.
 typedef std::list<std::function<void(void)>> callback_queue_t;
@@ -43,26 +43,35 @@ static void input_flush_callbacks();
 
 static bool has_lookahead() { return !lookahead_list.empty(); }
 
-static wint_t lookahead_pop() {
-    wint_t result = lookahead_list.front();
+static char_event_t lookahead_pop() {
+    auto result = lookahead_list.front();
     lookahead_list.pop_front();
     return result;
 }
 
-static void lookahead_push_back(wint_t c) { lookahead_list.push_back(c); }
+/// \return the next lookahead char, or none if none. Discards timeouts.
+static maybe_t<char_event_t> lookahead_pop_evt() {
+    while (has_lookahead()) {
+        auto evt = lookahead_pop();
+        if (! evt.is_timeout()) {
+            return evt;
+        }
+    }
+    return none();
+}
 
-static void lookahead_push_front(wint_t c) { lookahead_list.push_front(c); }
+static void lookahead_push_back(char_event_t c) { lookahead_list.push_back(c); }
 
-static wint_t lookahead_front() { return lookahead_list.front(); }
+static void lookahead_push_front(char_event_t c) { lookahead_list.push_front(c); }
 
 /// Callback function for handling interrupts on reading.
-static int (*interrupt_handler)();
+static interrupt_func_t interrupt_handler;
 
-void input_common_init(int (*ih)()) { interrupt_handler = ih; }
+void input_common_init(interrupt_func_t func) { interrupt_handler = func; }
 
 /// Internal function used by input_common_readch to read one byte from fd 0. This function should
 /// only be called by input_common_readch().
-static wint_t readb() {
+static char_event_t readb() {
     // do_loop must be set on every path through the loop; leaving it uninitialized allows the
     // static analyzer to assist in catching mistakes.
     unsigned char arr[1];
@@ -107,15 +116,17 @@ static wint_t readb() {
         if (res == -1) {
             if (errno == EINTR || errno == EAGAIN) {
                 if (interrupt_handler) {
-                    int res = interrupt_handler();
-                    if (res) return res;
-                    if (has_lookahead()) return lookahead_pop();
+                    if (auto interrupt_evt = interrupt_handler()) {
+                        return *interrupt_evt;
+                    } else if (auto mc = lookahead_pop_evt()) {
+                        return *mc;
+                    }
                 }
 
                 do_loop = true;
             } else {
-                // The terminal has been closed. Save and exit.
-                return R_EOF;
+                // The terminal has been closed.
+                return char_event_type_t::eof;
             }
         } else {
             // Assume we loop unless we see a character in stdin.
@@ -133,15 +144,15 @@ static wint_t readb() {
 
             if (ioport > 0 && FD_ISSET(ioport, &fdset)) {
                 iothread_service_completion();
-                if (has_lookahead()) {
-                    return lookahead_pop();
+                if (auto mc = lookahead_pop_evt()) {
+                    return *mc;
                 }
             }
 
             if (FD_ISSET(STDIN_FILENO, &fdset)) {
                 if (read_blocked(0, arr, 1) != 1) {
-                    // The teminal has been closed. Save and exit.
-                    return R_EOF;
+                    // The teminal has been closed.
+                    return char_event_type_t::eof;
                 }
 
                 // We read from stdin, so don't loop.
@@ -173,63 +184,67 @@ void update_wait_on_escape_ms(const environment_t &vars) {
     }
 }
 
-wchar_t input_common_readch(int timed) {
-    if (!has_lookahead()) {
-        if (timed) {
-            fd_set fds;
-            FD_ZERO(&fds);
-            FD_SET(0, &fds);
-            struct timeval tm = {wait_on_escape_ms / 1000, 1000 * (wait_on_escape_ms % 1000)};
-            int count = select(1, &fds, 0, 0, &tm);
-            if (count <= 0) {
-                return R_TIMEOUT;
-            }
+char_event_t input_common_readch() {
+    if (auto mc = lookahead_pop_evt()) {
+        return *mc;
+    }
+    wchar_t res;
+    mbstate_t state = {};
+    while (1) {
+        auto evt = readb();
+        if (!evt.is_char()) {
+            return evt;
         }
 
-        wchar_t res;
-        mbstate_t state = {};
-
-        while (1) {
-            wint_t b = readb();
-
-            if (b >= R_NULL && b < R_END_INPUT_FUNCTIONS) return b;
-
-            if (MB_CUR_MAX == 1) {
-                // return (unsigned char)b;  // single-byte locale, all values are legal
-                return b;  // single-byte locale, all values are legal
-            }
-
-            char bb = b;
-            size_t sz = std::mbrtowc(&res, &bb, 1, &state);
-
-            switch (sz) {
-                case (size_t)(-1): {
-                    std::memset(&state, '\0', sizeof(state));
-                    debug(2, L"Illegal input");
-                    return R_NULL;
-                }
-                case (size_t)(-2): {
-                    break;
-                }
-                case 0: {
-                    return 0;
-                }
-                default: { return res; }
-            }
-        }
-    } else {
-        if (!timed) {
-            while (has_lookahead() && lookahead_front() == R_TIMEOUT) lookahead_pop();
-            if (!has_lookahead()) return input_common_readch(0);
+        wint_t b = evt.get_char();
+        if (MB_CUR_MAX == 1) {
+            return b;  // single-byte locale, all values are legal
         }
 
-        return lookahead_pop();
+        char bb = b;
+        size_t sz = std::mbrtowc(&res, &bb, 1, &state);
+
+        switch (sz) {
+            case (size_t)(-1): {
+                std::memset(&state, '\0', sizeof(state));
+                debug(2, L"Illegal input");
+                return char_event_type_t::check_exit;
+            }
+            case (size_t)(-2): {
+                break;
+            }
+            case 0: {
+                return 0;
+            }
+            default: { return res; }
+        }
     }
 }
 
-void input_common_queue_ch(wint_t ch) { lookahead_push_back(ch); }
+char_event_t input_common_readch_timed(bool dequeue_timeouts) {
+    char_event_t result{char_event_type_t::timeout};
+    if (has_lookahead()) {
+        result = lookahead_pop();
+    } else {
+        fd_set fds;
+        FD_ZERO(&fds);
+        FD_SET(STDIN_FILENO, &fds);
+        struct timeval tm = {wait_on_escape_ms / 1000, 1000 * (wait_on_escape_ms % 1000)};
+        if (select(1, &fds, 0, 0, &tm) > 0) {
+            result = input_common_readch();
+        }
+    }
+    // If we got a timeout, either through dequeuing or creating, ensure it stays on the queue.
+    if (result.is_timeout()) {
+        if (!dequeue_timeouts) lookahead_push_front(char_event_type_t::timeout);
+        return char_event_type_t::timeout;
+    }
+    return result;
+}
 
-void input_common_next_ch(wint_t ch) { lookahead_push_front(ch); }
+void input_common_queue_ch(char_event_t ch) { lookahead_push_back(ch); }
+
+void input_common_next_ch(char_event_t ch) { lookahead_push_front(ch); }
 
 void input_common_add_callback(std::function<void(void)> callback) {
     ASSERT_IS_MAIN_THREAD();

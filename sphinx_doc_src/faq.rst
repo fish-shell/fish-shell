@@ -31,7 +31,7 @@ You can also use the Web configuration tool, <a href="commands.html#fish_config"
 
 How do I run a command from history?
 ------------------------------------
-Type some part of the command, and then hit the @cursor_key{&uarr;,up} or @cursor_key{&darr;,down} arrow keys to navigate through history matches.
+Type some part of the command, and then hit the :kbd:`↑` (up) or :kbd:`↓` (down) arrow keys to navigate through history matches.
 
 
 How do I run a subcommand? The backtick doesn't work!
@@ -231,13 +231,13 @@ Because history substitution is an awkward interface that was invented before in
 
 Fish history recall is very simple yet effective:
 
-- As in any modern shell, the Up arrow, @cursor_key{&uarr;,Up} recalls whole lines, starting from the last line executed.  A single press replaces "!!", later presses replace "!-3" and the like.
+- As in any modern shell, the Up arrow, :kbd:`↑` recalls whole lines, starting from the last line executed.  A single press replaces "!!", later presses replace "!-3" and the like.
 
   - If the line you want is far back in the history, type any part of the line and then press Up one or more times.  This will constrain the recall to lines that include this text, and you will get to the line you want much faster.  This replaces "!vi", "!?bar.c" and the like.
 
-- :kbd:`Alt+&uarr;,Up` recalls individual arguments, starting from the last argument in the last line executed.  A single press replaces "!$", later presses replace "!!:4" and the like.
+- :kbd:`Alt+↑,Up` recalls individual arguments, starting from the last argument in the last line executed.  A single press replaces "!$", later presses replace "!!:4" and the like.
 
-  - If the argument you want is far back in history (e.g. 2 lines back - that's a lot of words!), type any part of it and then press :kbd:`Alt+&uarr;,Up`.  This will show only arguments containing that part and you will get what you want much faster.  Try it out, this is very convenient!
+  - If the argument you want is far back in history (e.g. 2 lines back - that's a lot of words!), type any part of it and then press :kbd:`Alt+↑,Up`.  This will show only arguments containing that part and you will get what you want much faster.  Try it out, this is very convenient!
 
   - If you want to reuse several arguments from the same line ("!!:3*" and the like), consider recalling the whole line and removing what you don't need (:kbd:`Alt+D` and :kbd:`Alt+Backspace` are your friends).
 

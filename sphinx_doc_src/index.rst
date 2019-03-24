@@ -92,7 +92,7 @@ Commands versus Programs
 
 **Programs** in other languages can often be regarded as black boxes: they get complex input and return complex output. Sometimes they produce side effects such as writing to a file or reporting an error, but the emphasis is on: arguments in and return values out: 
 
-Arguments &rarr; |Program| &rarr; Return Values
+Arguments → |Program| → Return Values
 
 **Shell commands** are different:
 
@@ -102,7 +102,7 @@ Arguments &rarr; |Program| &rarr; Return Values
 
 <table with=100%>
 <tr><td>Input Stream &rArr;<td rowspan="2">|Shell Command|<td>&rArr; Output Stream
-<tr><td>switch and data as arguments &rarr;<td>&rarr; exit code
+<tr><td>switch and data as arguments →<td>→ exit code
 </table>
 
 This leads to another way of programming and especially of combining commands:
@@ -518,7 +518,7 @@ Autosuggestions
 
 fish suggests commands as you type, based on command history, completions, and valid file paths. As you type commands, you will see a suggestion offered after the cursor, in a muted gray color (which can be changed with the ``fish_color_autosuggestion`` variable).
 
-To accept the autosuggestion (replacing the command line contents), press right arrow or :kbd:`Control+F`. To accept the first suggested word, press :kbd:`Alt+&rarr;,Right` or :kbd:`Alt+F`. If the autosuggestion is not what you want, just ignore it: it won't execute unless you accept it.
+To accept the autosuggestion (replacing the command line contents), press right arrow or :kbd:`Control+F`. To accept the first suggested word, press :kbd:`Alt+→,Right` or :kbd:`Alt+F`. If the autosuggestion is not what you want, just ignore it: it won't execute unless you accept it.
 
 Autosuggestions are a powerful way to quickly summon frequently entered commands, by typing the first few characters. They are also an efficient technique for navigating through directory hierarchies.
 
@@ -1354,13 +1354,13 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - :kbd:`Tab` `completes <#completion>`_ the current token. :kbd:`Shift, Tab` completes the current token and starts the pager's search mode.
 
-- :kbd:`Alt+&larr;,Left` and :kbd:`Alt+&rarr;,Right` move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`Alt+&rarr;,Right` (or :kbd:`Alt+F`) accepts the first word in the suggestion.
+- :kbd:`Alt+←,Left` and :kbd:`Alt+→,Right` move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`Alt+→,Right` (or :kbd:`Alt+F`) accepts the first word in the suggestion.
 
-- :kbd:`Shift,&larr;,Left` and :kbd:`Shift,&rarr;,Right` move the cursor one word left or right, without stopping on punctuation.
+- :kbd:`Shift,←,Left` and :kbd:`Shift,→,Right` move the cursor one word left or right, without stopping on punctuation.
 
-- @cursor_key{&uarr;,Up} and @cursor_key{&darr;,Down} (or :kbd:`Control+P` and :kbd:`Control+N` for emacs aficionados) search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the `history <#history>`_ section for more information on history searching.
+- @cursor_key{↑,Up} and @cursor_key{↓,Down} (or :kbd:`Control+P` and :kbd:`Control+N` for emacs aficionados) search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the `history <#history>`_ section for more information on history searching.
 
-- :kbd:`Alt+&uarr;,Up` and :kbd:`Alt+&darr;,Down` search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the `history <#history>`_ section for more information on history searching.
+- :kbd:`Alt+↑,Up` and :kbd:`Alt+↓,Down` search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the `history <#history>`_ section for more information on history searching.
 
 - :kbd:`Control+C` cancels the entire line.
 
@@ -1397,7 +1397,7 @@ Emacs mode commands
 
 - :kbd:`End` or :kbd:`Control+E` moves to the end of line. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`End` or :kbd:`Control+E` accepts the autosuggestion.
 
-- @cursor_key{&larr;,Left} (or :kbd:`Control+B`) and @cursor_key{&rarr;,Right} (or :kbd:`Control+F`) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, the @cursor_key{&rarr;,Right} key and the :kbd:`Control+F` combination accept the suggestion.
+- @cursor_key{←,Left} (or :kbd:`Control+B`) and @cursor_key{→,Right} (or :kbd:`Control+F`) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, the @cursor_key{→,Right} key and the :kbd:`Control+F` combination accept the suggestion.
 
 - :kbd:`Delete` and :kbd:`Backspace` removes one character forwards or backwards respectively.
 
@@ -1484,7 +1484,7 @@ Insert mode
 Visual mode
 -----------
 
-- @cursor_key{&larr;,Left} and @cursor_key{&rarr;,Right} extend the selection backward/forward by one character.
+- @cursor_key{←,Left} and @cursor_key{→,Right} extend the selection backward/forward by one character.
 
 - :kbd:`b` and :kbd:`w` extend the selection backward/forward by one word.
 
@@ -1508,7 +1508,7 @@ Searchable history
 
 After a command has been entered, it is inserted at the end of a history list. Any duplicate history items are automatically removed. By pressing the up and down keys, the user can search forwards and backwards in the history. If the current command line is not empty when starting a history search, only the commands containing the string entered into the command line are shown.
 
-By pressing :kbd:`Alt+&uarr;,Up` and :kbd:`Alt+&darr;,Down`, a history search is also performed, but instead of searching for a complete commandline, each commandline is broken into separate elements just like it would be before execution, and the history is searched for an element matching that under the cursor.
+By pressing :kbd:`Alt+↑,Up` and :kbd:`Alt+↓,Down`, a history search is also performed, but instead of searching for a complete commandline, each commandline is broken into separate elements just like it would be before execution, and the history is searched for an element matching that under the cursor.
 
 History searches can be aborted by pressing the escape key.
 
@@ -1523,7 +1523,7 @@ Examples:
 
 To search for previous entries containing the word 'make', type ``make`` in the console and press the up key.
 
-If the commandline reads ``cd m``, place the cursor over the ``m`` character and press :kbd:`Alt+&uarr;,Up` to search for previously typed words containing 'm'.
+If the commandline reads ``cd m``, place the cursor over the ``m`` character and press :kbd:`Alt+↑,Up` to search for previously typed words containing 'm'.
 
 
 .. _multiline:

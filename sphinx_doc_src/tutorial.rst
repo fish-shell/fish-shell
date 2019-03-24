@@ -163,7 +163,7 @@ And history too. Type a command once, and you can re-summon it by just typing a 
     >_ <eror>r<</eror><s>___sync -avze ssh . myname@somelonghost.com:/some/long/path/doo/dee/doo/dee/doo</s>
 
 
-To accept the autosuggestion, hit @cursor_key{&rarr;,right arrow} or :kbd:`Control+F`. To accept a single word of the autosuggestion, :kbd:`Alt+&rarr;` (right arrow). If the autosuggestion is not what you want, just ignore it.
+To accept the autosuggestion, hit @cursor_key{→,right arrow} or :kbd:`Control+F`. To accept a single word of the autosuggestion, :kbd:`Alt+→` (right arrow). If the autosuggestion is not what you want, just ignore it.
 
 Tab Completions
 ---------------
@@ -172,7 +172,7 @@ Tab Completions
 
 Press :kbd:`Tab`, and ``fish`` will attempt to complete the command, argument, or path::
 
-    >_ <eror>/pri</eror> :kbd:`Tab` &rarr; /private/
+    >_ <eror>/pri</eror> :kbd:`Tab` → /private/
 
 
 If there's more than one possibility, it will list them::
@@ -185,7 +185,7 @@ Hit tab again to cycle through the possibilities.
 
 ``fish`` can also complete many commands, like git branches::
 
-    >_ git merge pr :kbd:`Tab` &rarr; git merge prompt_designer
+    >_ git merge pr :kbd:`Tab` → git merge prompt_designer
     >_ git checkout b :kbd:`Tab`
     <outp><mtch>b</outp>uiltin_list_io_merge <i>(Branch)</i> \mtch{b</mtch>uiltin_set_color <i>(Branch)</i> <mtch>b</mtch>usted_events <i>(Tag)</i>}
 

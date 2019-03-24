@@ -143,9 +143,9 @@ tnode_t<g::plain_statement> parse_execution_context_t::infinite_recursive_statem
     return infinite_recursive_statement;
 }
 
-enum process_type_t parse_execution_context_t::process_type_for_command(
+process_type_t parse_execution_context_t::process_type_for_command(
     tnode_t<grammar::plain_statement> statement, const wcstring &cmd) const {
-    enum process_type_t process_type = EXTERNAL;
+    enum process_type_t process_type = process_type_t::external;
 
     // Determine the process type, which depends on the statement decoration (command, builtin,
     // etc).
@@ -153,19 +153,19 @@ enum process_type_t parse_execution_context_t::process_type_for_command(
 
     if (decoration == parse_statement_decoration_exec) {
         // Always exec.
-        process_type = INTERNAL_EXEC;
+        process_type = process_type_t::exec;
     } else if (decoration == parse_statement_decoration_command) {
         // Always a command.
-        process_type = EXTERNAL;
+        process_type = process_type_t::external;
     } else if (decoration == parse_statement_decoration_builtin) {
         // What happens if this builtin is not valid?
-        process_type = INTERNAL_BUILTIN;
+        process_type = process_type_t::builtin;
     } else if (function_exists(cmd)) {
-        process_type = INTERNAL_FUNCTION;
+        process_type = process_type_t::function;
     } else if (builtin_exists(cmd)) {
-        process_type = INTERNAL_BUILTIN;
+        process_type = process_type_t::builtin;
     } else {
-        process_type = EXTERNAL;
+        process_type = process_type_t::external;
     }
     return process_type;
 }
@@ -775,7 +775,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
     enum process_type_t process_type = process_type_for_command(statement, cmd);
 
     // Check for stack overflow.
-    if (process_type == INTERNAL_FUNCTION &&
+    if (process_type == process_type_t::function &&
         parser->forbidden_function.size() > FISH_MAX_STACK_DEPTH) {
         this->report_error(statement, CALL_STACK_LIMIT_EXCEEDED_ERR_MSG);
         return parse_execution_errored;
@@ -783,7 +783,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
 
     // Protect against exec with background processes running
     static uint32_t last_exec_run_counter =  -1;
-    if (process_type == INTERNAL_EXEC && shell_is_interactive()) {
+    if (process_type == process_type_t::exec && shell_is_interactive()) {
         job_iterator_t jobs;
         bool have_bg = false;
         const job_t *bg = nullptr;
@@ -811,7 +811,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
     }
 
     wcstring path_to_external_command;
-    if (process_type == EXTERNAL || process_type == INTERNAL_EXEC) {
+    if (process_type == process_type_t::external || process_type == process_type_t::exec) {
         // Determine the actual command. This may be an implicit cd.
         bool has_command = path_get_path(cmd, &path_to_external_command, parser->vars());
 
@@ -847,7 +847,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
         path_to_external_command.clear();
 
         // If we have defined a wrapper around cd, use it, otherwise use the cd builtin.
-        process_type = function_exists(L"cd") ? INTERNAL_FUNCTION : INTERNAL_BUILTIN;
+        process_type = function_exists(L"cd") ? process_type_t::function : process_type_t::builtin;
     } else {
         // Not implicit cd.
         const globspec_t glob_behavior = (cmd == L"set" || cmd == L"count") ? nullglob : failglob;
@@ -1006,8 +1006,8 @@ template <typename Type>
 parse_execution_result_t parse_execution_context_t::populate_block_process(
     job_t *job, process_t *proc, tnode_t<g::statement> statement,
     tnode_t<Type> specific_statement) {
-    // We handle block statements by creating INTERNAL_BLOCK_NODE, that will bounce back to us when
-    // it's time to execute them.
+    // We handle block statements by creating process_type_t::block_node, that will bounce back to
+    // us when it's time to execute them.
     UNUSED(job);
     static_assert(Type::token == symbol_block_statement || Type::token == symbol_if_statement ||
                       Type::token == symbol_switch_statement,
@@ -1022,7 +1022,7 @@ parse_execution_result_t parse_execution_context_t::populate_block_process(
     bool errored = !this->determine_io_chain(arguments, &process_io_chain);
     if (errored) return parse_execution_errored;
 
-    proc->type = INTERNAL_BLOCK_NODE;
+    proc->type = process_type_t::block_node;
     proc->block_node_source = pstree;
     proc->internal_block_node = statement;
     proc->set_io_chain(process_io_chain);
@@ -1245,7 +1245,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
         // Check to see if this contained any external commands.
         bool job_contained_external_command = false;
         for (const auto &proc : job->processes) {
-            if (proc->type == EXTERNAL) {
+            if (proc->type == process_type_t::external) {
                 job_contained_external_command = true;
                 break;
             }

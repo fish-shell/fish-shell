@@ -25,17 +25,17 @@
 #include "topic_monitor.h"
 
 /// Types of processes.
-enum process_type_t {
+enum class process_type_t {
     /// A regular external command.
-    EXTERNAL,
+    external,
     /// A builtin command.
-    INTERNAL_BUILTIN,
+    builtin,
     /// A shellscript function.
-    INTERNAL_FUNCTION,
+    function,
     /// A block of commands, represented as a node.
-    INTERNAL_BLOCK_NODE,
+    block_node,
     /// The exec builtin.
-    INTERNAL_EXEC
+    exec,
 };
 
 enum class job_control_t {
@@ -137,21 +137,22 @@ class internal_proc_t {
 /// process, an internal builtin which may or may not spawn a fake IO process during execution, a
 /// shellscript function or a block of commands to be evaluated by calling eval. Lastly, this
 /// process can be the result of an exec command. The role of this process_t is determined by the
-/// type field, which can be one of EXTERNAL, INTERNAL_BUILTIN, INTERNAL_FUNCTION, INTERNAL_EXEC.
+/// type field, which can be one of process_type_t::external, process_type_t::builtin,
+/// process_type_t::function, process_type_t::exec.
 ///
 /// The process_t contains information on how the process should be started, such as command name
 /// and arguments, as well as runtime information on the status of the actual physical process which
 /// represents it. Shellscript functions, builtins and blocks of code may all need to spawn an
 /// external process that handles the piping and redirecting of IO for them.
 ///
-/// If the process is of type EXTERNAL or INTERNAL_EXEC, argv is the argument array and actual_cmd
-/// is the absolute path of the command to execute.
+/// If the process is of type process_type_t::external or process_type_t::exec, argv is the argument
+/// array and actual_cmd is the absolute path of the command to execute.
 ///
-/// If the process is of type INTERNAL_BUILTIN, argv is the argument vector, and argv[0] is the name
-/// of the builtin command.
+/// If the process is of type process_type_t::builtin, argv is the argument vector, and argv[0] is
+/// the name of the builtin command.
 ///
-/// If the process is of type INTERNAL_FUNCTION, argv is the argument vector, and argv[0] is the
-/// name of the shellscript function.
+/// If the process is of type process_type_t::function, argv is the argument vector, and argv[0] is
+/// the name of the shellscript function.
 class process_t {
    private:
     null_terminated_array_t<wchar_t> argv_array;
@@ -169,9 +170,8 @@ class process_t {
     bool is_first_in_job{false};
     bool is_last_in_job{false};
 
-    /// Type of process. Can be one of \c EXTERNAL, \c INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c
-    /// INTERNAL_EXEC.
-    enum process_type_t type { EXTERNAL };
+    /// Type of process.
+    process_type_t type{process_type_t::external};
 
     /// For internal block processes only, the node offset of the statement.
     /// This is always either block, ifs, or switchs, never boolean or decorated.
@@ -208,7 +208,7 @@ class process_t {
     /// launch. This helps us avoid spurious waitpid calls.
     void check_generations_before_launch();
 
-    /// Actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC.
+    /// Actual command to pass to exec in case of process_type_t::external or process_type_t::exec.
     wcstring actual_cmd;
 
     /// Generation counts for reaping.

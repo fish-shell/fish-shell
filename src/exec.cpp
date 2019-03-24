@@ -488,7 +488,7 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
 static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<job_t> &j,
                                        process_t *p, const io_pipe_t *pipe_read,
                                        const io_chain_t &proc_io_chain, io_streams_t &streams) {
-    assert(p->type == INTERNAL_BUILTIN && "Process must be a builtin");
+    assert(p->type == process_type_t::builtin && "Process must be a builtin");
     int local_builtin_stdin = STDIN_FILENO;
     autoclose_fd_t locally_opened_stdin{};
 
@@ -590,7 +590,7 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
 /// given in io_chain.
 static bool handle_builtin_output(const std::shared_ptr<job_t> &j, process_t *p,
                                   io_chain_t *io_chain, const io_streams_t &builtin_io_streams) {
-    assert(p->type == INTERNAL_BUILTIN && "Process is not a builtin");
+    assert(p->type == process_type_t::builtin && "Process is not a builtin");
 
     const output_stream_t &stdout_stream = builtin_io_streams.out;
     const output_stream_t &stderr_stream = builtin_io_streams.err;
@@ -677,7 +677,7 @@ static bool handle_builtin_output(const std::shared_ptr<job_t> &j, process_t *p,
 /// \return true on success, false if there is an exec error.
 static bool exec_external_command(env_stack_t &vars, const std::shared_ptr<job_t> &j,
                                   process_t *p, const io_chain_t &proc_io_chain) {
-    assert(p->type == EXTERNAL && "Process is not external");
+    assert(p->type == process_type_t::external && "Process is not external");
     // Get argv and envv before we fork.
     null_terminated_array_t<char> argv_array;
     convert_wide_array_to_narrow(p->get_argv_array(), &argv_array);
@@ -786,7 +786,7 @@ static bool exec_external_command(env_stack_t &vars, const std::shared_ptr<job_t
 /// our pipes. \return true on success, false on error.
 static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> j, process_t *p,
                                        const io_chain_t &user_ios, io_chain_t io_chain) {
-    assert((p->type == INTERNAL_FUNCTION || p->type == INTERNAL_BLOCK_NODE) &&
+    assert((p->type == process_type_t::function || p->type == process_type_t::block_node) &&
            "Unexpected process type");
 
     // Create an output buffer if we're piping to another process.
@@ -802,7 +802,7 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
         io_chain.push_back(block_output_bufferfill);
     }
 
-    if (p->type == INTERNAL_FUNCTION) {
+    if (p->type == process_type_t::function) {
         const wcstring func_name = p->argv0();
         auto props = function_get_properties(func_name);
         if (!props) {
@@ -822,7 +822,7 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
         parser.allow_function();
         parser.pop_block(fb);
     } else {
-        assert(p->type == INTERNAL_BLOCK_NODE);
+        assert(p->type == process_type_t::block_node);
         assert(p->block_node_source && p->internal_block_node && "Process is missing node info");
         internal_exec_helper(parser, p->block_node_source, p->internal_block_node, io_chain, j);
     }
@@ -939,7 +939,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
     // to generate it, since that result would not get written back to the parent. This call
     // could be safely removed, but it would result in slightly lower performance - at least on
     // uniprocessor systems.
-    if (p->type == EXTERNAL) {
+    if (p->type == process_type_t::external) {
         // Apply universal barrier so we have the most recent uvar changes
         if (!get_proc_had_barrier()) {
             set_proc_had_barrier(true);
@@ -951,15 +951,15 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
     // Execute the process.
     p->check_generations_before_launch();
     switch (p->type) {
-        case INTERNAL_FUNCTION:
-        case INTERNAL_BLOCK_NODE: {
+        case process_type_t::function:
+        case process_type_t::block_node: {
             if (!exec_block_or_func_process(parser, j, p, all_ios, process_net_io_chain)) {
                 return false;
             }
             break;
         }
 
-        case INTERNAL_BUILTIN: {
+        case process_type_t::builtin: {
             io_streams_t builtin_io_streams{stdout_read_limit};
             if (!exec_internal_builtin_proc(parser, j, p, pipe_read.get(), process_net_io_chain,
                                             builtin_io_streams)) {
@@ -971,16 +971,17 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
             break;
         }
 
-        case EXTERNAL: {
+        case process_type_t::external: {
             if (!exec_external_command(parser.vars(), j, p, process_net_io_chain)) {
                 return false;
             }
             break;
         }
 
-        case INTERNAL_EXEC: {
+        case process_type_t::exec: {
             // We should have handled exec up above.
-            DIE("INTERNAL_EXEC process found in pipeline, where it should never be. Aborting.");
+            DIE("process_type_t::exec process found in pipeline, where it should never be. "
+                "Aborting.");
             break;
         }
     }
@@ -1002,7 +1003,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     const std::shared_ptr<job_t> parent_job = j->get_parent();
 
     // Perhaps inherit our parent's pgid and job control flag.
-    if (parent_job && j->processes.front()->type == EXTERNAL) {
+    if (parent_job && j->processes.front()->type == process_type_t::external) {
         if (parent_job->pgid != INVALID_PID) {
             j->pgid = parent_job->pgid;
             j->set_flag(job_flag_t::JOB_CONTROL, true);
@@ -1019,7 +1020,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
         }
     }
 
-    if (j->processes.front()->type == INTERNAL_EXEC) {
+    if (j->processes.front()->type == process_type_t::exec) {
         internal_exec(parser.vars(), j.get(), all_ios);
         // internal_exec only returns if it failed to set up redirections.
         // In case of an successful exec, this code is not reached.

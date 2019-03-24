@@ -917,7 +917,7 @@ void proc_sanity_check() {
 
         for (const process_ptr_t &p : j->processes) {
             // Internal block nodes do not have argv - see issue #1545.
-            bool null_ok = (p->type == INTERNAL_BLOCK_NODE);
+            bool null_ok = (p->type == process_type_t::block_node);
             validate_pointer(p->get_argv(), _(L"Process argument list"), null_ok);
             validate_pointer(p->argv0(), _(L"Process name"), null_ok);
 

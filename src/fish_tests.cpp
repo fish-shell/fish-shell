@@ -2999,8 +2999,8 @@ static void test_input() {
     auto evt = input_readch();
     if (!evt.is_readline()) {
         err(L"Event is not a readline");
-    } else if (evt.get_readline() != readline_cmd_t::R_DOWN_LINE) {
-        err(L"Expected to read char R_DOWN_LINE");
+    } else if (evt.get_readline() != readline_cmd_t::down_line) {
+        err(L"Expected to read char down_line");
     }
 }
 

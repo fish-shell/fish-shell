@@ -16,7 +16,8 @@ If a vcs isn't installed, the respective function does nothing.
 
 For more information, see their documentation.
 
-\subsection fish_vcs_prompt-example Example
+Example
+-------
 
 A simple prompt that displays vcs info::
 

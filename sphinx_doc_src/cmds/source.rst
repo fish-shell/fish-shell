@@ -31,6 +31,7 @@ Example
     # Causes fish to re-read its initialization file.
 
 
-\subsection Caveats
+Caveats
+-------
 
 In fish versions prior to 2.3.0 the ``$argv`` variable would have a single element (the name of the sourced file) if no arguments are present. Otherwise it would contain arguments without the name of the sourced file. That behavior was very confusing and unlike other shells such as bash and zsh.

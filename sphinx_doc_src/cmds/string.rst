@@ -59,7 +59,8 @@ The following subcommands are available.
 
 ``string join`` joins its STRING arguments into a single string separated by SEP, which can be an empty string. Exit status: 0 if at least one join was performed, or 1 otherwise.
 
-\subsection string-join0 "join0" subcommand
+"join0" subcommand
+------------------
 
 ``string join`` joins its STRING arguments into a single string separated by the zero byte (NUL), and adds a trailing NUL. This is most useful in conjunction with tools that accept NUL-delimited input, such as ``sort -z``. Exit status: 0 if at least one join was performed, or 1 otherwise.
 
@@ -113,7 +114,8 @@ Exit status: 0 if at least one replacement was performed, or 1 otherwise.
 
 See also ``read --delimiter``.
 
-\subsection string-split0 "split0" subcommand
+"split0" subcommand
+-------------------
 
 ``string split0`` splits each STRING on the zero byte (NUL). Options are the same as ``string split`` except that no separator is given.
 
@@ -344,7 +346,8 @@ Match Regex Examples
     <outp>0xBadC0de</outp>
 
 
-\subsection string-example-split0 NUL Delimited Examples
+NUL Delimited Examples
+----------------------
 
 
 

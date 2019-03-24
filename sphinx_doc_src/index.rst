@@ -513,19 +513,6 @@ Help
 
 Help on a specific builtin can also be obtained with the ``-h`` parameter. For instance, to obtain help on the ``fg`` builtin, either type ``fg -h`` or ``help fg``.
 
-Commands
-========
-
-.. toctree::
-   :maxdepth: 1
-   
-   commands
-   design
-   tutorial
-   faq
-   license
-
-
 Autosuggestions
 ===============
 

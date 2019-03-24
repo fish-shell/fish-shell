@@ -430,13 +430,12 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void update_buff_pos(editable_line_t *el, size_t buff_pos);
     void repaint();
     void kill(editable_line_t *el, size_t begin_idx, size_t length, int mode, int newv);
-    bool insert_string(editable_line_t *el, const wcstring &str,
-                       bool allow_expand_abbreviations = false);
+    bool insert_string(editable_line_t *el, const wcstring &str);
 
     /// Insert the character into the command line buffer and print it to the screen using syntax
     /// highlighting, etc.
-    bool insert_char(editable_line_t *el, wchar_t c, bool allow_expand_abbreviations = false) {
-        return insert_string(el, wcstring{c}, allow_expand_abbreviations);
+    bool insert_char(editable_line_t *el, wchar_t c) {
+        return insert_string(el, wcstring{c});
     }
 
     void move_word(editable_line_t *el, bool move_right, bool erase, enum move_word_style_t style,
@@ -1134,43 +1133,21 @@ void reader_data_t::remove_backward() {
 }
 
 /// Insert the characters of the string into the command line buffer and print them to the screen
-/// using syntax highlighting, etc. Optionally also expand abbreviations, after space characters.
+/// using syntax highlighting, etc.
 /// Returns true if the string changed.
-bool reader_data_t::insert_string(editable_line_t *el, const wcstring &str,
-                                  bool allow_expand_abbreviations) {
+bool reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
     size_t len = str.size();
     if (len == 0) return false;
 
-    // Start inserting. If we are expanding abbreviations, we have to do this after every space (see
-    // #1434), so look for spaces. We try to do this efficiently (rather than the simpler character
-    // at a time) to avoid expensive work in command_line_changed().
+    // Start inserting.
     size_t cursor = 0;
     while (cursor < len) {
-        // Determine the position of the next expansion-triggering char (possibly none), and the end
-        // of the range we wish to insert.
-        const wchar_t *expansion_triggering_chars = L" ;|&^><";
-        size_t char_triggering_expansion_pos =
-            allow_expand_abbreviations ? str.find_first_of(expansion_triggering_chars, cursor)
-                                       : wcstring::npos;
-        bool has_expansion_triggering_char = (char_triggering_expansion_pos != wcstring::npos);
-        size_t range_end =
-            (has_expansion_triggering_char ? char_triggering_expansion_pos + 1 : len);
-
         // Insert from the cursor up to but not including the range end.
-        assert(range_end > cursor);
-        el->insert_string(str, cursor, range_end - cursor);
+        el->insert_string(str, cursor, len - cursor);
 
         update_buff_pos(el, el->position);
         command_line_changed(el);
-
-        // If we got an expansion trigger, then the last character we inserted was it (i.e. was a
-        // space). Expand abbreviations.
-        if (has_expansion_triggering_char && allow_expand_abbreviations) {
-            assert(range_end > 0);
-            assert(std::wcschr(expansion_triggering_chars, str.at(range_end - 1)));
-            expand_abbreviation_as_necessary(1);
-        }
-        cursor = range_end;
+        cursor = len;
     }
 
     if (el == &command_line) {
@@ -2473,7 +2450,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
     }
 
     editable_line_t *el = active_edit_line();
-    insert_string(el, arr, true);
+    insert_string(el, arr);
 
     // End paging upon inserting into the normal command line.
     if (el == &command_line) {

@@ -10,7 +10,7 @@
 #include "maybe.h"
 
 enum class readline_cmd_t {
-    beginning_of_line = INPUT_COMMON_BASE,
+    beginning_of_line,
     end_of_line,
     forward_char,
     backward_char,

@@ -2382,8 +2382,7 @@ char **make_null_terminated_array(const std::vector<std::string> &lst) {
 // TODO: Actually implement the replacement as documented above.
 bool fish_reserved_codepoint(wchar_t c) {
     return (c >= RESERVED_CHAR_BASE && c < RESERVED_CHAR_END) ||
-           (c >= ENCODE_DIRECT_BASE && c < ENCODE_DIRECT_END) ||
-           (c >= INPUT_COMMON_BASE && c < INPUT_COMMON_END);
+           (c >= ENCODE_DIRECT_BASE && c < ENCODE_DIRECT_END);
 }
 
 /// Reopen stdin, stdout and/or stderr on /dev/null. This is invoked when we find that our tty has

@@ -7,6 +7,7 @@
 - `string replace` had an additional round of escaping in the replacement (not the match!), so escaping backslashes would require `string replace -ra '([ab])' '\\\\\\\$1' a`. A new feature flag `string-replace-fewer-backslashes` can be used to disable this, so that it becomes `string replace -ra '([ab])' '\\\\$1' a` (#5556).
 - Add `$pipestatus` support
 - macOS Mojave: fish.app can actually run (#5727), 10.14.4's Terminal.app no longer causes an error on launch (#5725)
+- fish no longer requires buffering for the last function in a pipeline.
 
 ### Syntax changes and new commands
 - None yet.

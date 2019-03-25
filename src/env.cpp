@@ -136,7 +136,13 @@ class env_node_t {
 
     maybe_t<env_var_t> find_entry(const wcstring &key);
 
-    bool contains_any_of(const wcstring_list_t &vars) const;
+    /// Return whether this node contains any of the entries in the vars list.
+    bool contains_any_of(const wcstring_list_t &vars) const {
+        for (const auto &v : vars) {
+            if (env.count(v)) return true;
+        }
+        return false;
+    }
 };
 
 using env_node_ref_t = std::shared_ptr<env_node_t>;
@@ -175,18 +181,80 @@ struct var_stack_t {
 
     // Pushes a new node onto our stack
     // Optionally creates a new scope for the node
-    void push(bool new_scope);
+    void push(bool new_scope) {
+        auto node = std::make_shared<env_node_t>(new_scope);
+
+        // Copy local-exported variables.
+        auto top_node = top;
+        // Only if we introduce a new shadowing scope; i.e. not if it's just `begin; end` or
+        // "--no-scope-shadowing".
+        if (new_scope && top_node != this->global_env) {
+            for (const auto &var : top_node->env) {
+                if (var.second.exports()) node->env.insert(var);
+            }
+        }
+
+        node->next = this->top;
+        this->top = node;
+        if (new_scope && local_scope_exports(this->top)) {
+            this->mark_changed_exported();
+        }
+    }
 
     // Pops the top node if it's not global
-    void pop();
+    void pop() {
+        // Don't pop the top-most, global, level.
+        if (top == this->global_env) {
+            debug(0, _(L"Tried to pop empty environment stack."));
+            sanity_lose();
+            return;
+        }
+
+        bool locale_changed = top->contains_any_of(locale_variables);
+        bool curses_changed = top->contains_any_of(curses_variables);
+
+        if (top->new_scope) {  //!OCLINT(collapsible if statements)
+            if (top->exportv || local_scope_exports(top->next)) {
+                this->mark_changed_exported();
+            }
+        }
+
+        // Actually do the pop!
+        env_node_ref_t old_top = this->top;
+        this->top = old_top->next;
+        for (const auto &entry_pair : old_top->env) {
+            const env_var_t &var = entry_pair.second;
+            if (var.exports()) {
+                this->mark_changed_exported();
+                break;
+            }
+        }
+
+        // TODO: instantize this locale and curses
+        const auto &vars = env_stack_t::principal();
+        if (locale_changed) init_locale(vars);
+        if (curses_changed) init_curses(vars);
+    }
 
     // Returns the next scope to search for a given node, respecting the new_scope flag.
     // Returns an empty pointer if we're done.
-    env_node_ref_t next_scope_to_search(const env_node_ref_t &node) const;
+    env_node_ref_t next_scope_to_search(const env_node_ref_t &node) const {
+        assert(node != NULL);
+        if (node == this->global_env) {
+            return nullptr;
+        }
+        return node->new_scope ? this->global_env : node->next;
+    }
 
     // Returns the scope used for unspecified scopes. An unspecified scope is either the topmost
     // shadowing scope, or the global scope if none. This implements the default behavior of `set`.
-    env_node_ref_t resolve_unspecified_scope();
+    env_node_ref_t resolve_unspecified_scope() {
+        env_node_ref_t node = this->top;
+        while (node && !node->new_scope) {
+            node = node->next;
+        }
+        return node ? node : this->global_env;
+    }
 
     /// Copy this vars_stack.
     var_stack_t clone() const {
@@ -201,99 +269,11 @@ struct var_stack_t {
     void get_exported(const env_node_t *n, var_table_t &h) const;
 
     /// Returns the global variable set.
-    static env_node_ref_t globals();
+    static env_node_ref_t globals() {
+        static env_node_ref_t s_globals{std::make_shared<env_node_t>(false)};
+        return s_globals;
+    }
 };
-
-env_node_ref_t var_stack_t::globals() {
-    static env_node_ref_t s_globals{std::make_shared<env_node_t>(false)};
-    return s_globals;
-}
-
-void var_stack_t::push(bool new_scope) {
-    auto node = std::make_shared<env_node_t>(new_scope);
-
-    // Copy local-exported variables.
-    auto top_node = top;
-    // Only if we introduce a new shadowing scope; i.e. not if it's just `begin; end` or
-    // "--no-scope-shadowing".
-    if (new_scope && top_node != this->global_env) {
-        for (const auto &var : top_node->env) {
-            if (var.second.exports()) node->env.insert(var);
-        }
-    }
-
-    node->next = this->top;
-    this->top = node;
-    if (new_scope && local_scope_exports(this->top)) {
-        this->mark_changed_exported();
-    }
-}
-
-/// Return true if if the node contains any of the entries in the vars list.
-bool env_node_t::contains_any_of(const wcstring_list_t &vars) const {
-    for (const auto &v : vars) {
-        if (env.count(v)) return true;
-    }
-    return false;
-}
-
-void var_stack_t::pop() {
-    // Don't pop the top-most, global, level.
-    if (top == this->global_env) {
-        debug(0, _(L"Tried to pop empty environment stack."));
-        sanity_lose();
-        return;
-    }
-
-    bool locale_changed = top->contains_any_of(locale_variables);
-    bool curses_changed = top->contains_any_of(curses_variables);
-
-    if (top->new_scope) {  //!OCLINT(collapsible if statements)
-        if (top->exportv || local_scope_exports(top->next)) {
-            this->mark_changed_exported();
-        }
-    }
-
-    // Actually do the pop!
-    env_node_ref_t old_top = this->top;
-    this->top = old_top->next;
-    for (const auto &entry_pair : old_top->env) {
-        const env_var_t &var = entry_pair.second;
-        if (var.exports()) {
-            this->mark_changed_exported();
-            break;
-        }
-    }
-
-    // TODO: instantize this locale and curses
-    const auto &vars = env_stack_t::principal();
-    if (locale_changed) init_locale(vars);
-    if (curses_changed) init_curses(vars);
-}
-
-env_node_ref_t var_stack_t::next_scope_to_search(const env_node_ref_t &node) const {
-    assert(node != NULL);
-    if (node == this->global_env) {
-        return nullptr;
-    }
-    return node->new_scope ? this->global_env : node->next;
-}
-
-env_node_ref_t var_stack_t::resolve_unspecified_scope() {
-    env_node_ref_t node = this->top;
-    while (node && !node->new_scope) {
-        node = node->next;
-    }
-    return node ? node : this->global_env;
-}
-
-env_stack_t::env_stack_t() : vars_(make_unique<var_stack_t>()) {}
-env_stack_t::env_stack_t(std::unique_ptr<var_stack_t> vars) : vars_(std::move(vars)) {}
-
-// Get the variable stack
-var_stack_t &env_stack_t::vars_stack() { return *vars_; }
-
-const var_stack_t &env_stack_t::vars_stack() const { return *vars_; }
 
 /// Universal variables global instance. Initialized in env_init.
 static env_universal_t *s_universal_variables = NULL;
@@ -333,6 +313,14 @@ static bool variable_should_auto_pathvar(const wcstring &name) {
 static const string_set_t env_electric = {L"history", L"pipestatus", L"status", L"umask"};
 
 static bool is_electric(const wcstring &key) { return contains(env_electric, key); }
+
+env_stack_t::env_stack_t() : vars_(make_unique<var_stack_t>()) {}
+env_stack_t::env_stack_t(std::unique_ptr<var_stack_t> vars) : vars_(std::move(vars)) {}
+
+// Get the variable stack
+var_stack_t &env_stack_t::vars_stack() { return *vars_; }
+
+const var_stack_t &env_stack_t::vars_stack() const { return *vars_; }
 
 maybe_t<env_var_t> env_node_t::find_entry(const wcstring &key) {
     var_table_t::const_iterator entry = env.find(key);

@@ -783,15 +783,18 @@ static bool exec_external_command(env_stack_t &vars, const std::shared_ptr<job_t
 
 /// Execute a block node or function "process".
 /// \p user_ios contains the list of user-specified ios, used so we can avoid stomping on them with
-/// our pipes. \return true on success, false on error.
+/// our pipes.
+/// \p allow_buffering if true, permit buffering the output.
+/// \return true on success, false on error.
 static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> j, process_t *p,
-                                       const io_chain_t &user_ios, io_chain_t io_chain) {
+                                       const io_chain_t &user_ios, io_chain_t io_chain,
+                                       bool allow_buffering) {
     assert((p->type == process_type_t::function || p->type == process_type_t::block_node) &&
            "Unexpected process type");
 
     // Create an output buffer if we're piping to another process.
     shared_ptr<io_bufferfill_t> block_output_bufferfill{};
-    if (!p->is_last_in_job) {
+    if (!p->is_last_in_job && allow_buffering) {
         // Be careful to handle failure, e.g. too many open fds.
         block_output_bufferfill = io_bufferfill_t::create(user_ios);
         if (!block_output_bufferfill) {
@@ -863,12 +866,13 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
 
 /// Executes a process \p in job \j, using the pipes \p pipes (which may have invalid fds if this is
 /// the first or last process).
-/// deferred_pipes represents the pipes from our deferred process; if set ensure they get closed in
-/// any child.
-/// \returns true on success, false on exec error.
+/// \p deferred_pipes represents the pipes from our deferred process; if set ensure they get closed
+/// in any child. If \p is_deferred_run is true, then this is a deferred run; this affects how
+/// certain buffering works. \returns true on success, false on exec error.
 static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<job_t> j,
                                 autoclose_pipes_t pipes, const io_chain_t &all_ios,
-                                const autoclose_pipes_t &deferred_pipes, size_t stdout_read_limit) {
+                                const autoclose_pipes_t &deferred_pipes, size_t stdout_read_limit,
+                                bool is_deferred_run = false) {
     // The write pipe (destined for stdout) needs to occur before redirections. For example,
     // with a redirection like this:
     //
@@ -942,7 +946,11 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
     switch (p->type) {
         case process_type_t::function:
         case process_type_t::block_node: {
-            if (!exec_block_or_func_process(parser, j, p, all_ios, process_net_io_chain)) {
+            // Allow buffering unless this is a deferred run. If deferred, then processes after us
+            // were already launched, so they are ready to receive (or reject) our output.
+            bool allow_buffering = !is_deferred_run;
+            if (!exec_block_or_func_process(parser, j, p, all_ios, process_net_io_chain,
+                                            allow_buffering)) {
                 return false;
             }
             break;
@@ -1096,7 +1104,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     if (!exec_error && deferred_process) {
         assert(deferred_pipes.write.valid() && "Deferred process should always have a write pipe");
         if (!exec_process_in_job(parser, deferred_process, j, std::move(deferred_pipes), all_ios,
-                                 {}, stdout_read_limit)) {
+                                 {}, stdout_read_limit, true)) {
             exec_error = true;
         }
     }

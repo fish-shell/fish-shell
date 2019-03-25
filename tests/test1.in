@@ -109,7 +109,7 @@ end
 echo Test 5 $sta
 
 logmsg Verify that we can turn stderr into stdout and then pipe it
-# Note that the order here seems unspecified - 'errput' appears before 'output', why?
+# Note that the order here has historically been unspecified - 'errput' could conceivably appear before 'output'.
 begin ; echo output ; echo errput 1>&2  ; end 2>&1 | tee ../test/temp/tee_test.txt ; cat ../test/temp/tee_test.txt
 
 logmsg "Test that trailing ^ doesn't trigger redirection, see #1873"

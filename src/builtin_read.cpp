@@ -198,13 +198,12 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
 
 /// Read from the tty. This is only valid when the stream is stdin and it is attached to a tty and
 /// we weren't asked to split on null characters.
-static int read_interactive(wcstring &buff, int nchars, bool shell, bool silent,
+static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool shell, bool silent,
                             const wchar_t *prompt, const wchar_t *right_prompt,
                             const wchar_t *commandline) {
     int exit_res = STATUS_CMD_OK;
 
-    // TODO: rationalize this.
-    const auto &vars = env_stack_t::principal();
+    const auto &vars = parser.vars();
     wcstring read_history_ID = history_session_id(vars);
     if (!read_history_ID.empty()) read_history_ID += L"_read";
     reader_push(read_history_ID);
@@ -469,8 +468,8 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         int stream_stdin_is_a_tty = isatty(streams.stdin_fd);
         if (stream_stdin_is_a_tty && !opts.split_null) {
             // Read interactively using reader_readline(). This does not support splitting on null.
-            exit_res = read_interactive(buff, opts.nchars, opts.shell, opts.silent, opts.prompt,
-                                        opts.right_prompt, opts.commandline);
+            exit_res = read_interactive(parser, buff, opts.nchars, opts.shell, opts.silent,
+                                        opts.prompt, opts.right_prompt, opts.commandline);
         } else if (!opts.nchars && !stream_stdin_is_a_tty &&
                    lseek(streams.stdin_fd, 0, SEEK_CUR) != -1) {
             exit_res = read_in_chunks(streams.stdin_fd, buff, opts.split_null);

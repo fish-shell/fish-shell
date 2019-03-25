@@ -1239,17 +1239,16 @@ int env_stack_t::set_internal(const wcstring &key, env_mode_flags_t input_var_mo
                 has_changed_new = true;
             }
 
-            var.set_vals(std::move(val));
-            var.set_pathvar(var_mode & ENV_PATHVAR);
-            var.set_read_only(is_read_only(key));
+            var = var.setting_vals(std::move(val))
+                      .setting_exports(var_mode & ENV_EXPORT)
+                      .setting_pathvar(var_mode & ENV_PATHVAR)
+                      .setting_read_only(is_read_only(key));
 
             if (var_mode & ENV_EXPORT) {
                 // The new variable is exported.
-                var.set_exports(true);
                 node->exportv = true;
                 has_changed_new = true;
             } else {
-                var.set_exports(false);
                 // Set the node's exported when it changes something about exports
                 // (also when it redefines a variable to not be exported).
                 node->exportv = has_changed_old != has_changed_new;
@@ -1351,24 +1350,26 @@ int env_stack_t::remove(const wcstring &key, int var_mode) {
     return erased ? ENV_OK : ENV_NOT_FOUND;
 }
 
-const wcstring_list_t &env_var_t::as_list() const { return vals; }
+const wcstring_list_t &env_var_t::as_list() const { return *vals_; }
 
 wchar_t env_var_t::get_delimiter() const {
     return is_pathvar() ? PATH_ARRAY_SEP : NONPATH_ARRAY_SEP;
 }
 
 /// Return a string representation of the var.
-wcstring env_var_t::as_string() const {
-    return join_strings(vals, get_delimiter());
-}
+wcstring env_var_t::as_string() const { return join_strings(*vals_, get_delimiter()); }
 
-void env_var_t::to_list(wcstring_list_t &out) const {
-    out = vals;
-}
+void env_var_t::to_list(wcstring_list_t &out) const { out = *vals_; }
 
 env_var_t::env_var_flags_t env_var_t::flags_for(const wchar_t *name) {
     env_var_flags_t result = 0;
     if (is_read_only(name)) result |= flag_read_only;
+    return result;
+}
+
+/// \return a singleton empty list, to avoid unnecessary allocations in env_var_t.
+std::shared_ptr<const wcstring_list_t> env_var_t::empty_list() {
+    static const auto result = std::make_shared<const wcstring_list_t>();
     return result;
 }
 

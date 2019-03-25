@@ -66,13 +66,22 @@ void env_init(const struct config_paths_t *paths = NULL);
 /// routines.
 void misc_init();
 
+/// env_var_t is an immutable value-type data structure representing the value of an environment
+/// variable.
 class env_var_t {
    public:
     using env_var_flags_t = uint8_t;
 
    private:
-    wcstring_list_t vals;  // list of values assigned to the var
-    env_var_flags_t flags;
+    env_var_t(std::shared_ptr<const wcstring_list_t> vals, env_var_flags_t flags)
+        : vals_(std::move(vals)), flags_(flags) {}
+
+    /// The list of values in this variable.
+    /// shared_ptr allows for cheap copying.
+    std::shared_ptr<const wcstring_list_t> vals_{empty_list()};
+
+    /// Flag in this variable.
+    env_var_flags_t flags_{};
 
    public:
     enum {
@@ -82,24 +91,27 @@ class env_var_t {
     };
 
     // Constructors.
+    env_var_t() = default;
     env_var_t(const env_var_t &) = default;
     env_var_t(env_var_t &&) = default;
-    env_var_t(wcstring_list_t vals, env_var_flags_t flags) : vals(std::move(vals)), flags(flags) {}
+
+    env_var_t(wcstring_list_t vals, env_var_flags_t flags)
+        : env_var_t(std::make_shared<wcstring_list_t>(std::move(vals)), flags) {}
+
     env_var_t(wcstring val, env_var_flags_t flags)
         : env_var_t(wcstring_list_t{std::move(val)}, flags) {}
 
     // Constructors that infer the flags from a name.
     env_var_t(const wchar_t *name, wcstring_list_t vals)
         : env_var_t(std::move(vals), flags_for(name)) {}
+
     env_var_t(const wchar_t *name, wcstring val) : env_var_t(std::move(val), flags_for(name)) {}
 
-    env_var_t() = default;
-
-    bool empty() const { return vals.empty() || (vals.size() == 1 && vals[0].empty()); }
-    bool read_only() const { return flags & flag_read_only; }
-    bool exports() const { return flags & flag_export; }
-    bool is_pathvar() const { return flags & flag_pathvar; }
-    env_var_flags_t get_flags() const { return flags; }
+    bool empty() const { return vals_->empty() || (vals_->size() == 1 && vals_->front().empty()); }
+    bool read_only() const { return flags_ & flag_read_only; }
+    bool exports() const { return flags_ & flag_export; }
+    bool is_pathvar() const { return flags_ & flag_pathvar; }
+    env_var_flags_t get_flags() const { return flags_; }
 
     wcstring as_string() const;
     void to_list(wcstring_list_t &out) const;
@@ -108,38 +120,50 @@ class env_var_t {
     /// \return the character used when delimiting quoted expansion.
     wchar_t get_delimiter() const;
 
-    void set_vals(wcstring_list_t v) { vals = std::move(v); }
+    /// \return a copy of this variable with new values.
+    env_var_t setting_vals(wcstring_list_t vals) const {
+        return env_var_t{std::move(vals), flags_};
+    }
 
-    void set_exports(bool exportv) {
+    env_var_t setting_exports(bool exportv) const {
+        env_var_flags_t flags = flags_;
         if (exportv) {
             flags |= flag_export;
         } else {
             flags &= ~flag_export;
         }
+        return env_var_t{vals_, flags};
     }
 
-    void set_pathvar(bool pathvar) {
+    env_var_t setting_pathvar(bool pathvar) const {
+        env_var_flags_t flags = flags_;
         if (pathvar) {
             flags |= flag_pathvar;
         } else {
             flags &= ~flag_pathvar;
         }
+        return env_var_t{vals_, flags};
     }
 
-    void set_read_only(bool read_only) {
+    env_var_t setting_read_only(bool read_only) const {
+        env_var_flags_t flags = flags_;
         if (read_only) {
             flags |= flag_read_only;
         } else {
             flags &= ~flag_read_only;
         }
+        return env_var_t{vals_, flags};
     }
 
     static env_var_flags_t flags_for(const wchar_t *name);
+    static std::shared_ptr<const wcstring_list_t> empty_list();
 
     env_var_t &operator=(const env_var_t &var) = default;
     env_var_t &operator=(env_var_t &&) = default;
 
-    bool operator==(const env_var_t &rhs) const { return vals == rhs.vals && flags == rhs.flags; }
+    bool operator==(const env_var_t &rhs) const {
+        return *vals_ == *rhs.vals_ && flags_ == rhs.flags_;
+    }
     bool operator!=(const env_var_t &rhs) const { return ! (*this == rhs); }
 };
 

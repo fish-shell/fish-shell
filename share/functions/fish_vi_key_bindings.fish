@@ -54,7 +54,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M insert \n execute
 
     bind -s --preset -M insert "" self-insert
-    # Space accepts suggestions.
+    # Space expands abbrs _and_ inserts itself.
     bind -s --preset -M insert " " 'commandline -i " "; commandline -f expand-abbr'
 
 

@@ -864,7 +864,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (!eval_errors.empty()) {
         if (!should_suppress_stderr_for_tests()) {
             for (size_t i = 0; i < eval_errors.size(); i++) {
-                streams.err.append_format(L"\t%ls\n", eval_errors.at(i).c_str());
+                streams.err.append_format(L"%ls\n", eval_errors.at(i).c_str());
             }
         }
         return STATUS_INVALID_ARGS;

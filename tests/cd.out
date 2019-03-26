@@ -23,3 +23,9 @@ cd:
 PWD is /tmp/cdcomp_test/linkhome
 BogusPWD test 1 succeeded
 BogusPWD test 2 succeeded
+
+####################
+# CDPATH
+Gone to linkhome via CDPATH
+Gone to base
+Gone to linkhome via implicit . in CDPATH

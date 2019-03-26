@@ -173,9 +173,8 @@ maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
         if (auto cdpaths = env_vars.get(L"CDPATH")) {
             cdpathsv = cdpaths->as_list();
         }
-        if (cdpathsv.empty()) {
-            cdpathsv.push_back(L".");
-        }
+        // Always append $PWD
+        cdpathsv.push_back(L".");
         for (wcstring next_path : cdpathsv) {
             if (next_path.empty()) next_path = L".";
             if (next_path == L"." && !wd.empty()) {

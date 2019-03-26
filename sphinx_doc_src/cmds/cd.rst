@@ -13,7 +13,7 @@ Description
 
 If ``DIRECTORY`` is supplied, it will become the new directory. If no parameter is given, the contents of the ``HOME`` environment variable will be used.
 
-If ``DIRECTORY`` is a relative path, the paths found in the ``CDPATH`` environment variable array will be tried as prefixes for the specified path.
+If ``DIRECTORY`` is a relative path, the paths found in the ``CDPATH`` list will be tried as prefixes for the specified path, in addition to $PWD.
 
 Note that the shell will attempt to change directory without requiring ``cd`` if the name of a directory is provided (starting with ``.``, ``/`` or ``~``, or ending with ``/``).
 

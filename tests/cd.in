@@ -62,6 +62,16 @@ test (realpath $output_pwd) = $real_getcwd
 and echo "BogusPWD test 2 succeeded"
 or echo "BogusPWD test 2 failed: $output_pwd vs $real_getcwd"
 
+# $CDPATH
+logmsg CDPATH
+set -g CDPATH $base
+cd linkhome
+test $PWD = $base/linkhome; and echo Gone to linkhome via CDPATH
+set -g CDPATH /tmp
+cd $base
+test $PWD = $base; and echo Gone to base
+cd linkhome
+test $PWD = $base/linkhome; and echo Gone to linkhome via implicit . in CDPATH
 
 # cd back before removing the test directory again.
 cd $oldpwd

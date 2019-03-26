@@ -8,6 +8,7 @@
 - Add `$pipestatus` support
 - macOS Mojave: fish.app can actually run (#5727), 10.14.4's Terminal.app no longer causes an error on launch (#5725)
 - fish no longer requires buffering for the last function in a pipeline.
+- cd now always checks the current directory, even if $CDPATH does not include it or "." (#4484).
 
 ### Syntax changes and new commands
 - None yet.

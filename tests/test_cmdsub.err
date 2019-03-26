@@ -18,10 +18,8 @@ fish: Too much data emitted by command substitution so it was discarded
 in function 'subme'
 	called on standard input
 	with parameter list '513'
-
 in command substitution
 	called on standard input
-
 
 ####################
 # Make sure output from builtins outside of command substitution is not affected

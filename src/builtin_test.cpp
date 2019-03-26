@@ -21,6 +21,7 @@
 #include "builtin.h"
 #include "common.h"
 #include "io.h"
+#include "parser.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 using std::unique_ptr;
@@ -830,6 +831,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             argc--;
         } else {
             streams.err.append(L"[: the last argument must be ']'\n");
+            builtin_print_error_trailer(parser, streams.err, program_name);
             return STATUS_INVALID_ARGS;
         }
     }
@@ -848,14 +850,8 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wcstring err;
     unique_ptr<expression> expr = test_parser::parse_args(args, err, program_name);
     if (!expr) {
-#if 0
-        streams.err.append(L"Oops! test was given args:\n");
-        for (size_t i=0; i < argc; i++) {
-            streams.err.append_format(L"\t%ls\n", args.at(i).c_str());
-        }
-        streams.err.append_format(L"and returned parse error: %ls\n", err.c_str());
-#endif
         streams.err.append(err);
+        builtin_print_error_trailer(parser, streams.err, program_name);
         return STATUS_CMD_ERROR;
     }
 
@@ -866,6 +862,9 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             for (size_t i = 0; i < eval_errors.size(); i++) {
                 streams.err.append_format(L"%ls\n", eval_errors.at(i).c_str());
             }
+            // Add a backtrace but not the "see help" message
+            // because this isn't about passing the wrong options.
+            streams.err.append(parser.current_line());
         }
         return STATUS_INVALID_ARGS;
     }

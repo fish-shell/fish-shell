@@ -187,92 +187,29 @@ wcstring builtin_help_get(parser_t &parser, io_streams_t &streams, const wchar_t
 ///
 void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                         output_stream_t &b) {
-    bool is_stderr = &b == &streams.err;
-    if (is_stderr) {
-        b.append(parser.current_line());
-    }
-
-    const wcstring h = builtin_help_get(parser, streams, cmd);
-
-    if (!h.size()) return;
-
-    wchar_t *str = wcsdup(h.c_str());
-    if (str) {
-        bool is_short = false;
-        if (is_stderr) {
-            // Interactive mode help to screen - only print synopsis if the rest won't fit.
-            int screen_height, my_lines;
-
-            screen_height = common_get_height();
-            my_lines = count_char(str, L'\n');
-            if (!shell_is_interactive() || (my_lines > 2 * screen_height / 3)) {
-                wchar_t *pos;
-                int cut = 0;
-                int i;
-
-                is_short = true;
-
-                // First move down 4 lines.
-                pos = str;
-                for (i = 0; (i < 4) && pos && *pos; i++) {
-                    pos = std::wcschr(pos + 1, L'\n');
-                }
-
-                if (pos && *pos) {
-                    // Then find the next empty line.
-                    for (; *pos; pos++) {
-                        if (*pos != L'\n') {
-                            continue;
-                        }
-
-                        int is_empty = 1;
-                        wchar_t *pos2;
-                        for (pos2 = pos + 1; *pos2; pos2++) {
-                            if (*pos2 == L'\n') break;
-
-                            if (*pos2 != L'\t' && *pos2 != L' ') {
-                                is_empty = 0;
-                                break;
-                            }
-                        }
-                        if (is_empty) {
-                            // And cut it.
-                            *(pos2 + 1) = L'\0';
-                            cut = 1;
-                            break;
-                        }
-                    }
-                }
-
-                // We did not find a good place to cut message to shorten it - so we make sure we
-                // don't print anything.
-                if (!cut) {
-                    *str = 0;
-                }
-            }
-        }
-
-        b.append(str);
-        if (is_short) {
-            b.append_format(_(L"%ls: Type 'help %ls' for related documentation\n\n"), cmd, cmd);
-        }
-
-        free(str);
-    }
+    b.append(builtin_help_get(parser, streams, cmd));
 }
 
 /// Perform error reporting for encounter with unknown option.
 void builtin_unknown_option(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                             const wchar_t *opt) {
     streams.err.append_format(BUILTIN_ERR_UNKNOWN, cmd, opt);
-    builtin_print_help(parser, streams, cmd, streams.err);
+    builtin_print_error_trailer(parser, streams.err, cmd);
 }
 
 /// Perform error reporting for encounter with missing argument.
 void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                               const wchar_t *opt) {
     streams.err.append_format(BUILTIN_ERR_MISSING, cmd, opt);
-    builtin_print_help(parser, streams, cmd, streams.err);
+    builtin_print_error_trailer(parser, streams.err, cmd);
+}
+
+/// Print the backtrace and call for help that we use at the end of error messages.
+void builtin_print_error_trailer(parser_t &parser, output_stream_t &b, const wchar_t *cmd) {
+    b.append(L"\n");
+    b.append(parser.current_line());
+    b.append(L"\n");
+    b.append_format(_(L"(Type 'help %ls' for related documentation)\n"), cmd);
 }
 
 /// A generic bultin that only supports showing a help message. This is only a placeholder that

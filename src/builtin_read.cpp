@@ -130,13 +130,13 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                     if (errno == ERANGE) {
                         streams.err.append_format(_(L"%ls: Argument '%ls' is out of range\n"), cmd,
                                                   w.woptarg);
-                        builtin_print_help(parser, streams, cmd, streams.err);
+                        builtin_print_error_trailer(parser, streams.err, cmd);
                         return STATUS_INVALID_ARGS;
                     }
 
                     streams.err.append_format(_(L"%ls: Argument '%ls' must be an integer\n"), cmd,
                                               w.woptarg);
-                    builtin_print_help(parser, streams, cmd, streams.err);
+                    builtin_print_error_trailer(parser, streams.err, cmd);
                     return STATUS_INVALID_ARGS;
                 }
                 break;
@@ -351,7 +351,7 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
                               const wchar_t *const *argv, parser_t &parser, io_streams_t &streams) {
     if (opts.prompt && opts.prompt_str) {
         streams.err.append_format(_(L"%ls: Options %ls and %ls cannot be used together\n"), cmd, L"-p", L"-P");
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -373,7 +373,7 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
 
     if ((opts.place & ENV_UNEXPORT) && (opts.place & ENV_EXPORT)) {
         streams.err.append_format(BUILTIN_ERR_EXPUNEXP, cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -381,7 +381,7 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
             (opts.place & ENV_UNIVERSAL ? 1 : 0) >
         1) {
         streams.err.append_format(BUILTIN_ERR_GLOCAL, cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -404,7 +404,7 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
     for (int i = 0; i < argc; i++) {
         if (!valid_var_name(argv[i])) {
             streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, argv[i]);
-            builtin_print_help(parser, streams, cmd, streams.err);
+            builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
         }
     }

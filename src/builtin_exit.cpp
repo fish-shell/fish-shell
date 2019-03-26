@@ -73,7 +73,7 @@ int builtin_exit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (optind + 1 < argc) {
         streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -84,7 +84,7 @@ int builtin_exit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         if (errno) {
             streams.err.append_format(_(L"%ls: Argument '%ls' must be an integer\n"), cmd,
                                       argv[optind]);
-            builtin_print_help(parser, streams, cmd, streams.err);
+            builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
         }
     }

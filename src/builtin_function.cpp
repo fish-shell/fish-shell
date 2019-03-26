@@ -230,7 +230,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_CMD_OK;
     }
 

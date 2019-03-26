@@ -282,7 +282,7 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     bool describe = opts.description ? true : false;
     if (describe + opts.erase + opts.list + opts.query + opts.copy > 1) {
         streams.err.append_format(_(L"%ls: Invalid combination of options\n"), cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -296,14 +296,14 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         if (argc - optind != 1) {
             streams.err.append_format(_(L"%ls: Expected exactly one function name\n"), cmd);
-            builtin_print_help(parser, streams, cmd, streams.err);
+            builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
         }
 
         func = argv[optind];
         if (!function_exists(func)) {
             streams.err.append_format(_(L"%ls: Function '%ls' does not exist\n"), cmd, func);
-            builtin_print_help(parser, streams, cmd, streams.err);
+            builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_CMD_ERROR;
         }
 
@@ -370,7 +370,7 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append_format(_(L"%ls: Expected exactly two names (current function name, "
                                         L"and new function name)\n"),
                                       cmd);
-            builtin_print_help(parser, streams, cmd, streams.err);
+            builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
         }
         current_func = argv[optind];
@@ -379,14 +379,14 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         if (!function_exists(current_func)) {
             streams.err.append_format(_(L"%ls: Function '%ls' does not exist\n"), cmd,
                                       current_func.c_str());
-            builtin_print_help(parser, streams, cmd, streams.err);
+            builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_CMD_ERROR;
         }
 
         if (!valid_func_name(new_func) || parser_keywords_is_reserved(new_func)) {
             streams.err.append_format(_(L"%ls: Illegal function name '%ls'\n"), cmd,
                                       new_func.c_str());
-            builtin_print_help(parser, streams, cmd, streams.err);
+            builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
         }
 
@@ -395,7 +395,7 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append_format(
                 _(L"%ls: Function '%ls' already exists. Cannot create copy '%ls'\n"), cmd,
                 new_func.c_str(), current_func.c_str());
-            builtin_print_help(parser, streams, cmd, streams.err);
+            builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_CMD_ERROR;
         }
 

@@ -175,42 +175,42 @@ static int validate_cmd_opts(const wchar_t *cmd, set_cmd_opts_t &opts,  //!OCLIN
     // Can't query and erase or list.
     if (opts.query && (opts.erase || opts.list)) {
         streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
     // We can't both list and erase variables.
     if (opts.erase && opts.list) {
         streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
     // Variables can only have one scope.
     if (opts.local + opts.global + opts.universal > 1) {
         streams.err.append_format(BUILTIN_ERR_GLOCAL, cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
     // Variables can only have one export status.
     if (opts.exportv && opts.unexport) {
         streams.err.append_format(BUILTIN_ERR_EXPUNEXP, cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
     // Variables can only have one path status.
     if (opts.pathvar && opts.unpathvar) {
         streams.err.append_format(BUILTIN_ERR_EXPUNEXP, cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
     // Trying to erase and (un)export at the same time doesn't make sense.
     if (opts.erase && (opts.exportv || opts.unexport)) {
         streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -218,13 +218,13 @@ static int validate_cmd_opts(const wchar_t *cmd, set_cmd_opts_t &opts,  //!OCLIN
     if (opts.show &&
         (opts.local || opts.global || opts.erase || opts.list || opts.exportv || opts.universal)) {
         streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
     if (argc == 0 && opts.erase) {
         streams.err.append_format(BUILTIN_SET_ERASE_NO_VAR, cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -519,7 +519,7 @@ static int builtin_set_query(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
         int idx_count = parse_index(indexes, dest, scope, streams, parser.vars());
         if (idx_count == -1) {
             free(dest);
-            builtin_print_help(parser, streams, cmd, streams.err);
+            builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_CMD_ERROR;
         }
 
@@ -612,7 +612,7 @@ static int builtin_set_show(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, 
             if (std::wcschr(arg, L'[')) {
                 streams.err.append_format(
                     _(L"%ls: `set --show` does not allow slices with the var names\n"), cmd);
-                builtin_print_help(parser, streams, cmd, streams.err);
+                builtin_print_error_trailer(parser, streams.err, cmd);
                 return STATUS_CMD_ERROR;
             }
 
@@ -631,7 +631,7 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
                              parser_t &parser, io_streams_t &streams) {
     if (argc != 1) {
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, L"--erase", 1, argc);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_CMD_ERROR;
     }
 
@@ -641,14 +641,14 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
     std::vector<long> indexes;
     int idx_count = parse_index(indexes, dest, scope, streams, parser.vars());
     if (idx_count == -1) {
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_CMD_ERROR;
     }
 
     int retval;
     if (!valid_var_name(dest)) {
         streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, dest);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -709,7 +709,7 @@ static int set_var_slices(const wchar_t *cmd, set_cmd_opts_t &opts, const wchar_
     if (opts.append || opts.prepend) {
         streams.err.append_format(
             L"%ls: Cannot use --append or --prepend when assigning to a slice", cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -740,7 +740,7 @@ static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, w
                            parser_t &parser, io_streams_t &streams) {
     if (argc == 0) {
         streams.err.append_format(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -752,13 +752,13 @@ static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, w
     std::vector<long> indexes;
     int idx_count = parse_index(indexes, varname, scope, streams, parser.vars());
     if (idx_count == -1) {
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
     if (!valid_var_name(varname)) {
         streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, varname);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 

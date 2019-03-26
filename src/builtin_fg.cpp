@@ -68,14 +68,14 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append_format(_(L"%ls: '%ls' is not a job\n"), cmd, argv[optind]);
         }
 
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
 
         j = 0;
     } else {
         int pid = abs(fish_wcstoi(argv[optind]));
         if (errno) {
             streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, argv[optind]);
-            builtin_print_help(parser, streams, cmd, streams.err);
+            builtin_print_error_trailer(parser, streams.err, cmd);
         } else {
             j = job_t::from_pid(pid);
             if (!j || !j->is_constructed() || j->is_completed()) {

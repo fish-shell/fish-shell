@@ -19,7 +19,7 @@
 static int disown_job(const wchar_t *cmd, parser_t &parser, io_streams_t &streams, job_t *j) {
     if (j == 0) {
         streams.err.append_format(_(L"%ls: Unknown job '%ls'\n"), L"bg");
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 

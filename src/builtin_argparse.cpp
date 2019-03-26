@@ -548,7 +548,13 @@ static int argparse_parse_flags(parser_t &parser, const argparse_cmd_opts_t &opt
                 retval = validate_and_store_implicit_int(parser, opts, arg_contents, w, long_idx,
                                                          streams);
             } else {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+                streams.err.append_format(BUILTIN_ERR_UNKNOWN, cmd, argv[w.woptind - 1]);
+                // We don't use builtin_print_error_trailer as that
+                // says to use the cmd help,
+                // which doesn't work if it's a command that does not belong to fish.
+                //
+                // Plus this particular error is not an error in argparse usage.
+                streams.err.append(parser.current_line());
                 retval = STATUS_INVALID_ARGS;
             }
             if (retval != STATUS_CMD_OK) return retval;

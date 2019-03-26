@@ -115,6 +115,8 @@ void builtin_unknown_option(parser_t &parser, io_streams_t &streams, const wchar
 void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                               const wchar_t *opt);
 
+void builtin_print_error_trailer(parser_t &parser, output_stream_t &b, const wchar_t *cmd);
+
 void builtin_wperror(const wchar_t *s, io_streams_t &streams);
 
 struct help_only_cmd_opts_t {

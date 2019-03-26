@@ -379,7 +379,21 @@ void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const {
             case FUNCTION_CALL:
             case FUNCTION_CALL_NO_SHADOW: {
                 const function_block_t *fb = static_cast<const function_block_t *>(b);
-                append_format(*buff, _(L"in function '%ls'\n"), fb->name.c_str());
+                append_format(*buff, _(L"in function '%ls'"), fb->name.c_str());
+                const process_t *const process = fb->process;
+                // Print arguments on the same line.
+                if (process->argv(1)) {
+                    wcstring tmp;
+
+                    for (i = 1; process->argv(i); i++) {
+                        if (i > 1) tmp.push_back(L' ');
+                        tmp.append(process->argv(i));
+                    }
+                    // TODO: Escape these.
+                    append_format(*buff, _(L" with arguments '%ls'\n"), tmp.c_str());
+                } else {
+                    buff->append(L"\n");
+                }
                 break;
             }
             case SUBST: {
@@ -402,19 +416,6 @@ void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const {
             append_format(*buff, _(L"\tcalled on standard input\n"));
         }
 
-        if (b->type() == FUNCTION_CALL) {
-            const function_block_t *fb = static_cast<const function_block_t *>(b);
-            const process_t *const process = fb->process;
-            if (process->argv(1)) {
-                wcstring tmp;
-
-                for (i = 1; process->argv(i); i++) {
-                    if (i > 1) tmp.push_back(L' ');
-                    tmp.append(process->argv(i));
-                }
-                append_format(*buff, _(L"\twith parameter list '%ls'\n"), tmp.c_str());
-            }
-        }
     }
 
     // Recursively print the next block.

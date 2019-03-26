@@ -207,8 +207,12 @@ void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wch
 /// Print the backtrace and call for help that we use at the end of error messages.
 void builtin_print_error_trailer(parser_t &parser, output_stream_t &b, const wchar_t *cmd) {
     b.append(L"\n");
-    b.append(parser.current_line());
-    b.append(L"\n");
+    const wcstring stacktrace = parser.current_line();
+    // Don't print two empty lines if we don't have a stacktrace.
+    if (!stacktrace.empty()) {
+        b.append(stacktrace);
+        b.append(L"\n");
+    }
     b.append_format(_(L"(Type 'help %ls' for related documentation)\n"), cmd);
 }
 

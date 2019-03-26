@@ -387,7 +387,13 @@ void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const {
 
                     for (i = 1; process->argv(i); i++) {
                         if (i > 1) tmp.push_back(L' ');
-                        tmp.append(process->argv(i));
+                        // We can't quote the arguments because we print this in quotes.
+                        // As a special-case, add the empty argument as "".
+                        if (process->argv(i)[0]) {
+                            tmp.append(escape_string(process->argv(i), ESCAPE_ALL | ESCAPE_NO_QUOTED));
+                        } else {
+                            tmp.append(L"\"\"");
+                        }
                     }
                     // TODO: Escape these.
                     append_format(*buff, _(L" with arguments '%ls'\n"), tmp.c_str());

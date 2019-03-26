@@ -405,6 +405,7 @@ void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const {
             }
         }
 
+        // Print where the function is called.
         const wchar_t *file = b->src_filename;
 
         if (file) {
@@ -413,9 +414,9 @@ void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const {
         } else if (is_within_fish_initialization()) {
             append_format(*buff, _(L"\tcalled during startup\n"));
         } else {
-            append_format(*buff, _(L"\tcalled on standard input\n"));
+            // This one is way too noisy
+            // append_format(*buff, _(L"\tcalled on standard input\n"));
         }
-
     }
 
     // Recursively print the next block.

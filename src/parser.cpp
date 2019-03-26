@@ -416,8 +416,6 @@ void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const {
                 append_format(*buff, _(L"\twith parameter list '%ls'\n"), tmp.c_str());
             }
         }
-
-        append_format(*buff, L"\n");
     }
 
     // Recursively print the next block.

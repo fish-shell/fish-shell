@@ -4,4 +4,3 @@ syntax-error
 ^
 from sourcing file $XDG_CONFIG_HOME/fish/config.fish
 	called during startup
-

@@ -54,6 +54,16 @@ function help --description 'Show help for the fish shell'
                 end
             end
 
+            # If we have an open _command_ we use it - otherwise it's our function,
+            # which might not have a backend to use.
+            # Note that we prefer xdg-open, because this open might also be a symlink to "openvt"
+            # like it is on Debian.
+            if command -sq open
+                set fish_browser open
+                # The open command needs a trampoline because the macOS version can't handle #-fragments.
+                set need_trampoline 1
+            end
+
             # If the OS appears to be Windows (graphical), try to use cygstart
             if type -q cygstart
                 set fish_browser cygstart
@@ -61,14 +71,6 @@ function help --description 'Show help for the fish shell'
             # but only if an X session is running
             else if type -q xdg-open; and set -q -x DISPLAY
                 set fish_browser xdg-open
-            end
-
-            # If we have an open _command_ we use it - otherwise it's our function,
-            # which might not have a backend to use.
-            if command -sq open
-                set fish_browser open
-                # The open command needs a trampoline because the macOS version can't handle #-fragments.
-                set need_trampoline 1
             end
         end
     end

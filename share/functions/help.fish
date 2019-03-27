@@ -105,11 +105,11 @@ function help --description 'Show help for the fish shell'
 
     switch "$fish_help_item"
         case "."
-            set fish_help_page "commands.html\#source"
+            set fish_help_page "cmds/source.html"
         case globbing
             set fish_help_page "index.html\#expand"
         case (__fish_print_commands)
-            set fish_help_page "commands.html\#$fish_help_item"
+            set fish_help_page "cmds/$fish_help_item.html"
         case $help_topics
             set fish_help_page "index.html\#$fish_help_item"
         case 'tut_*'

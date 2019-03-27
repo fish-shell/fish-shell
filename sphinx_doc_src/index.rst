@@ -1409,7 +1409,7 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - :kbd:`Shift,←,Left` and :kbd:`Shift,→,Right` move the cursor one word left or right, without stopping on punctuation.
 
-- @cursor_key{↑,Up} and @cursor_key{↓,Down} (or :kbd:`Control+P` and :kbd:`Control+N` for emacs aficionados) search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the `history <#history>`_ section for more information on history searching.
+- :kbd:`↑` (Up) and :kbd:`↓` (Down) (or :kbd:`Control+P` and :kbd:`Control+N` for emacs aficionados) search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the `history <#history>`_ section for more information on history searching.
 
 - :kbd:`Alt+↑,Up` and :kbd:`Alt+↓,Down` search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the `history <#history>`_ section for more information on history searching.
 
@@ -1448,7 +1448,7 @@ Emacs mode commands
 
 - :kbd:`End` or :kbd:`Control+E` moves to the end of line. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`End` or :kbd:`Control+E` accepts the autosuggestion.
 
-- @cursor_key{←,Left} (or :kbd:`Control+B`) and @cursor_key{→,Right} (or :kbd:`Control+F`) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, the @cursor_key{→,Right} key and the :kbd:`Control+F` combination accept the suggestion.
+- :kbd:`←` (Left) (or :kbd:`Control+B`) and :kbd:`→` (Right) (or :kbd:`Control+F`) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, the :kbd:`→` (Right) key and the :kbd:`Control+F` combination accept the suggestion.
 
 - :kbd:`Delete` and :kbd:`Backspace` removes one character forwards or backwards respectively.
 
@@ -1535,7 +1535,7 @@ Insert mode
 Visual mode
 -----------
 
-- @cursor_key{←,Left} and @cursor_key{→,Right} extend the selection backward/forward by one character.
+- :kbd:`←` (Left) and :kbd:`→` (Right) extend the selection backward/forward by one character.
 
 - :kbd:`b` and :kbd:`w` extend the selection backward/forward by one word.
 

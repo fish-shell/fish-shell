@@ -163,7 +163,7 @@ And history too. Type a command once, and you can re-summon it by just typing a 
     >_ <eror>r<</eror><s>___sync -avze ssh . myname@somelonghost.com:/some/long/path/doo/dee/doo/dee/doo</s>
 
 
-To accept the autosuggestion, hit @cursor_key{→,right arrow} or :kbd:`Control+F`. To accept a single word of the autosuggestion, :kbd:`Alt+→` (right arrow). If the autosuggestion is not what you want, just ignore it.
+To accept the autosuggestion, hit :kbd:`→` (right arrow) or :kbd:`Control+F`. To accept a single word of the autosuggestion, :kbd:`Alt+→` (right arrow). If the autosuggestion is not what you want, just ignore it.
 
 Tab Completions
 ---------------

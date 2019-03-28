@@ -10,13 +10,13 @@ For obvious reasons, it requires having git installed.
 
 There are numerous configuration options, either as fish variables or git config variables. If a git config variable is supported, it will be used if set, and the fish variable will only be used if it isn't.
 
-- $__fish_git_prompt_show_informative_status or the git config option "bash.showInformativeStatus" can be set to enable the "informative" display, which will show a large amount of information - the number of untracked files, dirty files, unpushed/unpulled commits, etc... In large repositories, this can take a lot of time, so it is recommended to disable it there, via ``git config bash.showInformativeStatus false``.
+- ``$__fish_git_prompt_show_informative_status`` or the git config option "bash.showInformativeStatus" can be set to enable the "informative" display, which will show a large amount of information - the number of untracked files, dirty files, unpushed/unpulled commits, etc... In large repositories, this can take a lot of time, so it is recommended to disable it there, via ``git config bash.showInformativeStatus false``.
 
-- $__fish_git_prompt_showdirtystate or the git config option "bash.showDirtyState" can be set to show if the repository is "dirty", i.e. has uncommitted changes.
+- ``$__fish_git_prompt_showdirtystate`` or the git config option "bash.showDirtyState" can be set to show if the repository is "dirty", i.e. has uncommitted changes.
 
-- $__fish_git_prompt_showuntrackedfiles or the git config option "bash.showUntrackedFiles" can be set to show if the repository has untracked files (that aren't ignored).
+- ``$__fish_git_prompt_showuntrackedfiles`` or the git config option "bash.showUntrackedFiles" can be set to show if the repository has untracked files (that aren't ignored).
 
-- $__fish_git_prompt_showupstream can be set to a number of values to determine how changes between HEAD and upstream are shown:
+- ``$__fish_git_prompt_showupstream`` can be set to a number of values to determine how changes between HEAD and upstream are shown:
 
      verbose        show number of commits ahead/behind (+/-) upstream
      name           if verbose, then also show the upstream abbrev name
@@ -25,62 +25,68 @@ There are numerous configuration options, either as fish variables or git config
      svn            always compare HEAD to your SVN upstream
      none           disables (useful with show_informative_status)
 
-- $__fish_git_prompt_showstashstate can be set to display the state of the stash.
+- ``$__fish_git_prompt_showstashstate`` can be set to display the state of the stash.
 
-- $__fish_git_prompt_shorten_branch_len can be set to the number of characters that the branch name will be shortened to.
+- ``$__fish_git_prompt_shorten_branch_len`` can be set to the number of characters that the branch name will be shortened to.
 
-- $__fish_git_prompt_describe_style can be set to a number of styles that describe the current HEAD:
+- ``$__fish_git_prompt_describe_style`` can be set to a number of styles that describe the current HEAD:
 
      contains
      branch
      describe
      default
 
-- $__fish_git_prompt_showcolorhints can be set to enable coloring for certain things.
+- ``$__fish_git_prompt_showcolorhints`` can be set to enable coloring for certain things.
 
-A number of variables set characters and color used to indicate things. Many of these have a different default if used with informative status enabled. The normal default is given first, then the informative default if it is different. If no default for the colors is given, they default to $__fish_git_prompt_color.
+A number of variables set characters and color used to indicate things. Many of these have a different default if used with informative status enabled. The normal default is given first, then the informative default if it is different. If no default for the colors is given, they default to ``$__fish_git_prompt_color``.
 
-- $__fish_git_prompt_char_stateseparator (' ', |)
-- $__fish_git_prompt_color (nothing)
-- $__fish_git_prompt_color_prefix
-- $__fish_git_prompt_color_suffix
-- $__fish_git_prompt_color_bare
-- $__fish_git_prompt_color_merging
+- ``$__fish_git_prompt_char_stateseparator`` (' ', |)
+- ``$__fish_git_prompt_color`` ('')
+- ``$__fish_git_prompt_color_prefix``
+- ``$__fish_git_prompt_color_suffix``
+- ``$__fish_git_prompt_color_bare``
+- ``$__fish_git_prompt_color_merging``
 
-Some variables are only used in some modes, like when informative status is enabled (by setting $__fish_git_prompt_show_informative_status):
-- $__fish_git_prompt_char_cleanstate (✔)
-- $__fish_git_prompt_color_cleanstate
+Some variables are only used in some modes, like when informative status is enabled (by setting ``$__fish_git_prompt_show_informative_status``):
+
+- ``$__fish_git_prompt_char_cleanstate`` (✔)
+- ``$__fish_git_prompt_color_cleanstate``
 
 Variables used with showdirtystate:
-- $__fish_git_prompt_char_dirtystate (*, ✚)
-- $__fish_git_prompt_char_invalidstate (#, ✖)
-- $__fish_git_prompt_char_stagedstate (+, ●)
-- $__fish_git_prompt_color_dirtystate (red with showcolorhints, same as color_flags otherwise)
-- $__fish_git_prompt_color_invalidstate
-- $__fish_git_prompt_color_stagedstate (green with showcolorhints, color_flags otherwise)
+
+- ``$__fish_git_prompt_char_dirtystate`` (*, ✚)
+- ``$__fish_git_prompt_char_invalidstate`` (#, ✖)
+- ``$__fish_git_prompt_char_stagedstate`` (+, ●)
+- ``$__fish_git_prompt_color_dirtystate`` (red with showcolorhints, same as color_flags otherwise)
+- ``$__fish_git_prompt_color_invalidstate``
+- ``$__fish_git_prompt_color_stagedstate`` (green with showcolorhints, color_flags otherwise)
 
 Variables used with showstashstate:
-- $__fish_git_prompt_char_stashstate ($, ⚑)
-- $__fish_git_prompt_color_stashstate (same as color_flags)
+
+- ``$__fish_git_prompt_char_stashstate`` (``$``, ⚑)
+- ``$__fish_git_prompt_color_stashstate`` (same as color_flags)
 
 Variables used with showuntrackedfiles:
-- $__fish_git_prompt_char_untrackedfiles (%, …)
-- $__fish_git_prompt_color_untrackedfiles (same as color_flags)
+
+- ``$__fish_git_prompt_char_untrackedfiles`` (%, …)
+- ``$__fish_git_prompt_color_untrackedfiles`` (same as color_flags)
 
 Variables used with showupstream (also implied by informative status):
-- $__fish_git_prompt_char_upstream_ahead (>, ↑)
-- $__fish_git_prompt_char_upstream_behind (<, ↓)
-- $__fish_git_prompt_char_upstream_diverged (<>)
-- $__fish_git_prompt_char_upstream_equal (=)
-- $__fish_git_prompt_char_upstream_prefix ('')
-- $__fish_git_prompt_color_upstream
+
+- ``$__fish_git_prompt_char_upstream_ahead`` (>, ↑)
+- ``$__fish_git_prompt_char_upstream_behind`` (<, ↓)
+- ``$__fish_git_prompt_char_upstream_diverged`` (<>)
+- ``$__fish_git_prompt_char_upstream_equal`` (=)
+- ``$__fish_git_prompt_char_upstream_prefix`` ('')
+- ``$__fish_git_prompt_color_upstream``
 
 Colors used with showcolorhints:
-- $__fish_git_prompt_color_branch (green)
-- $__fish_git_prompt_color_branch_detached (red)
-- $__fish_git_prompt_color_flags (--bold blue)
 
-Note that all colors can also have a corresponding "_done" color. E.g. $__fish_git_prompt_color_upstream_done, used right _after_ the upstream.
+- ``$__fish_git_prompt_color_branch`` (green)
+- ``$__fish_git_prompt_color_branch_detached`` (red)
+- ``$__fish_git_prompt_color_flags`` (--bold blue)
+
+Note that all colors can also have a corresponding "_done" color. E.g. ``$__fish_git_prompt_color_upstream_done``, used right _after_ the upstream.
 
 See also fish_vcs_prompt, which will call all supported vcs-prompt functions, including git, hg and svn.
 

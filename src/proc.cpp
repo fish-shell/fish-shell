@@ -491,13 +491,6 @@ static bool process_clean_after_marking(bool allow_interactive) {
             }
 
             auto s = p->status;
-            // TODO: The generic process-exit event is useless and unused.
-            // Remove this in future.
-            // Update: This event is used for cleaning up the psub temporary files and folders.
-            // Removing it breaks the psub tests as a result.
-            proc_fire_event(L"PROCESS_EXIT", event_type_t::exit, p->pid,
-                            (s.signal_exited() ? -1 : s.exit_code()));
-
             // Ignore signal SIGPIPE.We issue it ourselves to the pipe writer when the pipe reader
             // dies.
             if (!s.signal_exited() || s.signal_code() == SIGPIPE) {
@@ -557,15 +550,6 @@ static bool process_clean_after_marking(bool allow_interactive) {
                 !j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
                 print_job_status(j.get(), JOB_ENDED);
                 found = true;
-            }
-            // TODO: The generic process-exit event is useless and unused.
-            // Remove this in future.
-            // Don't fire the exit-event for jobs with pgid INVALID_PID.
-            // That's our "sentinel" pgid, for jobs that don't (yet) have a pgid,
-            // or jobs that consist entirely of builtins (and hence don't have a process).
-            // This causes issues if fish is PID 2, which is quite common on WSL. See #4582.
-            if (j->pgid != INVALID_PID) {
-                proc_fire_event(L"JOB_EXIT", event_type_t::exit, -j->pgid, 0);
             }
 
             erase_list.push_back(j);

@@ -38,48 +38,47 @@ There are numerous configuration options, either as fish variables or git config
 
 - $__fish_git_prompt_showcolorhints can be set to enable coloring for certain things.
 
-A number of variables to set characters and color used to indicate things. Many of these have a different default if used with informative status enabled.
+A number of variables set characters and color used to indicate things. Many of these have a different default if used with informative status enabled. The normal default is given first, then the informative default if it is different. If no default for the colors is given, they default to $__fish_git_prompt_color.
 
-- $__fish_git_prompt_char_stateseparator
-- $__fish_git_prompt_color
+- $__fish_git_prompt_char_stateseparator (' ', |)
+- $__fish_git_prompt_color (nothing)
 - $__fish_git_prompt_color_prefix
 - $__fish_git_prompt_color_suffix
 - $__fish_git_prompt_color_bare
 - $__fish_git_prompt_color_merging
 
 Some variables are only used in some modes, like when informative status is enabled (by setting $__fish_git_prompt_show_informative_status):
-- $__fish_git_prompt_char_cleanstate
+- $__fish_git_prompt_char_cleanstate (✔)
 - $__fish_git_prompt_color_cleanstate
 
 Variables used with showdirtystate:
-- $__fish_git_prompt_char_dirtystate
-- $__fish_git_prompt_char_invalidstate
-- $__fish_git_prompt_char_stagedstate
-- $__fish_git_prompt_color_dirtystate
+- $__fish_git_prompt_char_dirtystate (*, ✚)
+- $__fish_git_prompt_char_invalidstate (#, ✖)
+- $__fish_git_prompt_char_stagedstate (+, ●)
+- $__fish_git_prompt_color_dirtystate (red with showcolorhints, same as color_flags otherwise)
 - $__fish_git_prompt_color_invalidstate
-- $__fish_git_prompt_color_stagedstate
+- $__fish_git_prompt_color_stagedstate (green with showcolorhints, color_flags otherwise)
 
 Variables used with showstashstate:
-- $__fish_git_prompt_char_stashstate
-- $__fish_git_prompt_color_stashstate
+- $__fish_git_prompt_char_stashstate ($, ⚑)
+- $__fish_git_prompt_color_stashstate (same as color_flags)
 
 Variables used with showuntrackedfiles:
-- $__fish_git_prompt_char_untrackedfiles
-- $__fish_git_prompt_color_untrackedfiles
+- $__fish_git_prompt_char_untrackedfiles (%, …)
+- $__fish_git_prompt_color_untrackedfiles (same as color_flags)
 
 Variables used with showupstream (also implied by informative status):
-- $__fish_git_prompt_char_upstream_ahead
-- $__fish_git_prompt_char_upstream_behind
-- $__fish_git_prompt_char_upstream_diverged
-- $__fish_git_prompt_char_upstream_equal
-- $__fish_git_prompt_char_upstream_prefix
+- $__fish_git_prompt_char_upstream_ahead (>, ↑)
+- $__fish_git_prompt_char_upstream_behind (<, ↓)
+- $__fish_git_prompt_char_upstream_diverged (<>)
+- $__fish_git_prompt_char_upstream_equal (=)
+- $__fish_git_prompt_char_upstream_prefix ('')
 - $__fish_git_prompt_color_upstream
 
 Colors used with showcolorhints:
-- $__fish_git_prompt_color_branch
-- $__fish_git_prompt_color_branch_detached
-- $__fish_git_prompt_color_dirtystate
-- $__fish_git_prompt_color_flags
+- $__fish_git_prompt_color_branch (green)
+- $__fish_git_prompt_color_branch_detached (red)
+- $__fish_git_prompt_color_flags (--bold blue)
 
 Note that all colors can also have a corresponding "_done" color. E.g. $__fish_git_prompt_color_upstream_done, used right _after_ the upstream.
 

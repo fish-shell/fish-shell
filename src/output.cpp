@@ -180,7 +180,7 @@ void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
         was_italics = false;
         was_dim = false;
         was_reverse = false;
-        // If we exit attibute mode, we must first set a color, or previously coloured text might
+        // If we exit attibute mode, we must first set a color, or previously colored text might
         // lose it's color. Terminals are weird...
         write_foreground_color(*this, 0);
         writembs(*this, exit_attribute_mode);

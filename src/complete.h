@@ -73,7 +73,7 @@ class completion_t {
     wcstring description;
     /// The type of fuzzy match.
     string_fuzzy_match_t match;
-    /// Flags determining the completion behaviour.
+    /// Flags determining the completion behavior.
     ///
     /// Determines whether a space should be inserted after this completion if it is the only
     /// possible completion using the COMPLETE_NO_SPACE flag. The COMPLETE_NO_CASE can be used to

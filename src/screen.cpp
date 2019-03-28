@@ -463,7 +463,7 @@ static void s_move(screen_t *s, int new_x, int new_y) {
     if (y_steps > 0 && (std::strcmp(cursor_down, "\n") == 0)) {
         // This is very strange - it seems some (all?) consoles use a simple newline as the cursor
         // down escape. This will of course move the cursor to the beginning of the line as well as
-        // moving it down one step. The cursor_up does not have this behaviour...
+        // moving it down one step. The cursor_up does not have this behavior...
         s->actual.cursor.x = 0;
     }
 

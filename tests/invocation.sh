@@ -245,10 +245,10 @@ test_file() (
     mv -f "${test_stderr}.new" "${test_stderr}"
 
     # Check the results
-    if ! diff "${test_stdout}" "${want_stdout}" >/dev/null 2>/dev/null ; then
+    if ! diff "${want_stdout}" "${test_stdout}" >/dev/null 2>/dev/null ; then
         out_status=1
     fi
-    if ! diff "${test_stderr}" "${want_stderr}" >/dev/null 2>/dev/null ; then
+    if ! diff "${want_stderr}" "${test_stderr}" >/dev/null 2>/dev/null ; then
         err_status=1
     fi
 
@@ -264,11 +264,11 @@ test_file() (
 
         if [ "$out_status" != '0' ] ; then
             say "$term_yellow" "Output differs for file $file. Diff follows:"
-            "$difftool" -u "${test_stdout}" "${want_stdout}"
+            "$difftool" -u "${want_stdout}" "${test_stdout}"
         fi
         if [ "$err_status" != '0' ] ; then
             say "$term_yellow" "Error output differs for file $file. Diff follows:"
-            "$difftool" -u "${test_stderr}" "${want_stderr}"
+            "$difftool" -u  "${want_stderr}" "${test_stderr}"
         fi
         rc=1
     fi

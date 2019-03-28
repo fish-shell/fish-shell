@@ -55,11 +55,11 @@ function test_file
         say red "fail"
         if test $out_status -ne 0
             say yellow "Output differs for file $file. Diff follows:"
-            colordiff -u $base.tmp.out $base.out
+            colordiff -u $base.out $base.tmp.out
         end
         if test $err_status -ne 0
             say yellow "Error output differs for file $file. Diff follows:"
-            colordiff -u $base.tmp.err $base.err
+            colordiff -u $base.err $base.tmp.err
         end
         if test $exit_status -ne 0
             say yellow "Exit status differs for file $file."

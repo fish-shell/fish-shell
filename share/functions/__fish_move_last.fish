@@ -6,7 +6,8 @@ function __fish_move_last -d "Move the last element of a directory history from 
 
     if test $size_src = 0
         # Cannot make this step
-        printf (_ "Hit end of history…\n")
+        # Print a bel, which is the character to print for notifications like these.
+        printf \a
         return 1
     end
 

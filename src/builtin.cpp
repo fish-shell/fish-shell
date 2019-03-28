@@ -143,15 +143,6 @@ int parse_help_only_cmd_opts(struct help_only_cmd_opts_t &opts, int *optind, int
     return STATUS_CMD_OK;
 }
 
-/// Count the number of times the specified character occurs in the specified string.
-static int count_char(const wchar_t *str, wchar_t c) {
-    int res = 0;
-    for (; *str; str++) {
-        res += (*str == c);
-    }
-    return res;
-}
-
 /// Obtain help/usage information for the specified builtin from manpage in subshell
 ///
 /// @param  name

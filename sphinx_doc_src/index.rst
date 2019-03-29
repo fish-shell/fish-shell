@@ -92,7 +92,7 @@ Commands versus Programs
 
 **Programs** in other languages can often be regarded as black boxes: they get complex input and return complex output. Sometimes they produce side effects such as writing to a file or reporting an error, but the emphasis is on: arguments in and return values out: 
 
-Arguments → |Program| → Return Values
+Arguments → Program → Return Values
 
 **Shell commands** are different:
 
@@ -1185,13 +1185,13 @@ Special variables
 
 The user can change the settings of ``fish`` by changing the values of certain variables.
 
-- A large number of variable starting with the prefixes ``fish_color`` and ``fish_pager_color``. See `Variables for changing highlighting colors <#variables-color>`_ for more information.
+- A large number of variable starting with the prefixes ``fish_color`` and ``fish_pager_color``. See `Variables for changing highlighting colors <#variables-color>`__ for more information.
 
 - ``fish_emoji_width`` controls the computed width of certain characters, in particular emoji, whose rendered width varies across terminal emulators. This should be set to 1 if your terminal emulator renders emoji single-width, or 2 if double-width. Set this only if you see graphical glitching when printing emoji.
 
 - ``fish_ambiguous_width`` controls the computed width of ambiguous East Asian characters. This should be set to 1 if your terminal emulator renders these characters as single-width (typical), or 2 if double-width.
 
-- ``fish_escape_delay_ms`` overrides the default timeout of 30ms after seeing an escape character before giving up on matching a key binding. See the documentation for the `bind <cmds/special.html-case-escape>`_ builtin command. This delay facilitates using escape as a meta key.
+- ``fish_escape_delay_ms`` overrides the default timeout of 30ms after seeing an escape character before giving up on matching a key binding. See the documentation for the `bind <cmds/bind.html#special-case-escape>`__ builtin command. This delay facilitates using escape as a meta key.
 
 - ``fish_greeting``, the greeting message printed on startup.
 
@@ -1416,15 +1416,15 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - :kbd:`Control+D` delete one character to the right of the cursor. If the command line is empty, :kbd:`Control+D` will exit fish.
 
-- :kbd:`Control+U` moves contents from the beginning of line to the cursor to the `killring <#killring>`_.
+- :kbd:`Control+U` moves contents from the beginning of line to the cursor to the `killring <#killring>`__.
 
 - :kbd:`Control+L` clears and repaints the screen.
 
-- :kbd:`Control+W` moves the previous path component (everything up to the previous "/") to the `killring <#killring>`_.
+- :kbd:`Control+W` moves the previous path component (everything up to the previous "/") to the `killring <#killring>`__.
 
 - :kbd:`Control+X` copies the current buffer to the system's clipboard, :kbd:`Control+V` inserts the clipboard contents.
 
-- :kbd:`Alt+d` moves the next word to the `killring <#killring>`_.
+- :kbd:`Alt+d` moves the next word to the `killring <#killring>`__.
 
 - :kbd:`Alt+h` (or :kbd:`F1`) shows the manual page for the current command, if one exists.
 
@@ -1451,7 +1451,7 @@ Emacs mode commands
 
 - :kbd:`Delete` and :kbd:`Backspace` removes one character forwards or backwards respectively.
 
-- :kbd:`Control+K` moves contents from the cursor to the end of line to the `killring <#killring>`_.
+- :kbd:`Control+K` moves contents from the cursor to the end of line to the `killring <#killring>`__.
 
 - :kbd:`Alt+c` capitalizes the current word.
 
@@ -1462,7 +1462,7 @@ Emacs mode commands
 - :kbd:`Alt+t` transposes the last two words
 
 
-You can change these key bindings using the `bind <cmds/bind.html">`_ builtin.
+You can change these key bindings using the `bind <cmds/bind.html">`__ builtin.
 
 
 .. _vi-mode:
@@ -1508,11 +1508,11 @@ Command mode is also known as normal mode.
 
 - :kbd:`0` (zero) moves the cursor to beginning of line (remaining in command mode).
 
-- :kbd:`d`:kbd:`d` deletes the current line and moves it to the `killring <#killring>`_.
+- :kbd:`d`:kbd:`d` deletes the current line and moves it to the `killring <#killring>`__.
 
-- :kbd:`Shift,D` deletes text after the current cursor position and moves it to the `killring <#killring>`_.
+- :kbd:`Shift,D` deletes text after the current cursor position and moves it to the `killring <#killring>`__.
 
-- :kbd:`p` pastes text from the `killring <#killring>`_.
+- :kbd:`p` pastes text from the `killring <#killring>`__.
 
 - :kbd:`u` search history backwards.
 
@@ -1538,7 +1538,7 @@ Visual mode
 
 - :kbd:`b` and :kbd:`w` extend the selection backward/forward by one word.
 
-- :kbd:`d` and :kbd:`x` move the selection to the `killring <#killring>`_ and enter `command mode <#vi-mode-command>`_.
+- :kbd:`d` and :kbd:`x` move the selection to the `killring <#killring>`__ and enter `command mode <#vi-mode-command>`__.
 
 - :kbd:`Escape` and :kbd:`Control+C` enter `command mode <#vi-mode-command>`_.
 
@@ -1615,8 +1615,11 @@ Initialization files
 On startup, Fish evaluates a number of configuration files, which can be used to control the behavior of the shell. The location of these configuration variables is controlled by a number of environment variables, and their default or usual location is given below.
 
 Configuration files are evaluated in the following order:
-- Configuration shipped with fish, which should not be edited, in ``$__fish_data_dir/config.fish`` (usually ``/usr/share/fish/config.fish`).
+
+- Configuration shipped with fish, which should not be edited, in ``$__fish_data_dir/config.fish`` (usually ``/usr/share/fish/config.fish``).
+
 - Configuration snippets in files ending in ``.fish``, in the directories:
+
   - ``$__fish_config_dir/conf.d`` (by default, ``~/.config/fish/conf.d/``)
   - ``$__fish_sysconf_dir/conf.d`` (by default, ``/etc/fish/conf.d``)
   - ``/usr/share/fish/vendor_conf.d`` (set at compile time; by default, ``$__fish_data_dir/vendor_conf.d``)
@@ -1709,7 +1712,7 @@ Detected errors include:
 
 When the cursor is over a parenthesis or a quote, ``fish`` also highlights its matching quote or parenthesis.
 
-To customize the syntax highlighting, you can set the environment variables listed in the `Variables for changing highlighting colors <index.html#variables-color>`_ section.
+To customize the syntax highlighting, you can set the environment variables listed in the `Variables for changing highlighting colors <#variables-color>`__ section.
 
 .. _title:
 
@@ -1738,7 +1741,7 @@ To show the last command in the title::
 Programmable prompt
 -------------------
 
-When fish waits for input, it will display a prompt by evaluating the ``fish_prompt`` and `fish_right_prompt` functions. The output of the former is displayed on the left and the latter's output on the right side of the terminal. The output of ``fish_mode_prompt`` will be prepended on the left, though the default function only does this when in `vi-mode <index.html#vi-mode>`_.
+When fish waits for input, it will display a prompt by evaluating the ``fish_prompt`` and `fish_right_prompt` functions. The output of the former is displayed on the left and the latter's output on the right side of the terminal. The output of ``fish_mode_prompt`` will be prepended on the left, though the default function only does this when in `vi-mode <#vi-mode>`__.
 
 .. _greeting:
 
@@ -1752,7 +1755,7 @@ If a function named ``fish_greeting`` exists, it will be run when entering inter
 Private mode
 -------------
 
-fish supports launching in private mode via ``fish --private`` (or ``fish -P`` for short). In private mode, old history is not available and any interactive commands you execute will not be appended to the global history file, making it useful both for avoiding inadvertently leaking personal information (e.g. for screencasts) and when dealing with sensitive information to prevent it being persisted to disk. You can query the global variable `fish_private_mode`` (``if set -q fish_private_mode ...`) if you would like to respect the user's wish for privacy and alter the behavior of your own fish scripts.
+fish supports launching in private mode via ``fish --private`` (or ``fish -P`` for short). In private mode, old history is not available and any interactive commands you execute will not be appended to the global history file, making it useful both for avoiding inadvertently leaking personal information (e.g. for screencasts) and when dealing with sensitive information to prevent it being persisted to disk. You can query the global variable `fish_private_mode`` (``if set -q fish_private_mode ...``) if you would like to respect the user's wish for privacy and alter the behavior of your own fish scripts.
 
 .. _event:
 

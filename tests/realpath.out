@@ -8,4 +8,3 @@ nonexistent-file in PWD correctly converted
 fish-symlink handled correctly
 fish-symlink/nonexistent-file-relative-to-a-symlink correctly converted
 fish-symlink/symlink_file handled correctly
-pwd-resolved-to-itself

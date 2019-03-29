@@ -1808,3 +1808,16 @@ If you have a question not answered by this documentation, there are several ave
 
 
 If you have an improvement for fish, you can submit it via the mailing list or the GitHub page.
+
+.. _other_pages:
+
+Other help pages
+================
+.. toctree::
+   :maxdepth: 1
+
+   commands
+   design
+   tutorial
+   faq
+   license

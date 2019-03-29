@@ -177,6 +177,7 @@ Both the ``match`` and ``replace`` subcommand support regular expressions when u
 In general, special characters are special by default, so ``a+`` matches one or more "a"s, while ``a\+`` matches an "a" and then a "+". ``(a+)`` matches one or more "a"s in a capturing group (``(?:XXXX)`` denotes a non-capturing group). For the replacement parameter of ``replace``, ``$n`` refers to the n-th group of the match. In the match parameter, ``\n`` (e.g. ``\1``) refers back to groups.
 
 Some features include repetitions:
+
 - ``*`` refers to 0 or more repetitions of the previous expression
 - ``+`` 1 or more
 - ``?`` 0 or 1.
@@ -185,6 +186,7 @@ Some features include repetitions:
 - ``{n,}`` n or more
 
 Character classes, some of the more important:
+
 - ``.`` any character except newline
 - ``\d`` a decimal digit and ``\D``, not a decimal digit
 - ``\s`` whitespace and ``\S``, not whitespace
@@ -210,12 +212,14 @@ Character classes, some of the more important:
 - ``[[:xdigit:]]`` : "hexadecimal digit"
 
 Groups:
+
 - ``(...)`` is a capturing group
 - ``(?:...)`` is a non-capturing group
 - ``\n`` is a backreference (where n is the number of the group, starting with 1)
 - ``$n`` is a reference from the replacement expression to a group in the match expression.
 
 And some other things:
+
 - ``\b`` denotes a word boundary, ``\B`` is not a word boundary.
 - ``^`` is the start of the string or line, ``$`` the end.
 - ``|`` is "alternation", i.e. the "or".

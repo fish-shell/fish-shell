@@ -944,6 +944,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
     // Execute the process.
     p->check_generations_before_launch();
     switch (p->type) {
+        case process_type_t::eval: /* so long as `eval` is a function */
         case process_type_t::function:
         case process_type_t::block_node: {
             // Allow buffering unless this is a deferred run. If deferred, then processes after us

@@ -314,6 +314,10 @@ RESOLVE(decorated_statement) {
             *out_tag = parse_statement_decoration_exec;
             return production_for<execs>();
         }
+        case parse_keyword_eval: {
+            *out_tag = parse_statement_decoration_eval;
+            return production_for<evals>();
+        }
         default: {
             *out_tag = parse_statement_decoration_none;
             return production_for<plains>();

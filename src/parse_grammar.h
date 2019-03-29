@@ -334,6 +334,8 @@ DEF_ALT(decorated_statement) {
     using cmds = seq<keyword<parse_keyword_command>, plain_statement>;
     using builtins = seq<keyword<parse_keyword_builtin>, plain_statement>;
     using execs = seq<keyword<parse_keyword_exec>, plain_statement>;
+    // using evals = seq<keyword<parse_keyword_eval>, plain_statement>;
+    using evals = single<plain_statement>; /* so long as `eval` is a function */
     ALT_BODY(decorated_statement, plains, cmds, builtins, execs);
 };
 

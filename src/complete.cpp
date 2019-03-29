@@ -1465,6 +1465,14 @@ void completer_t::perform() {
                 use_abbr = false;
                 break;
             }
+            case parse_statement_decoration_eval: {
+                use_command = true;
+                use_function = true;
+                use_builtin = true;
+                use_implicit_cd = false;
+                use_abbr = false;
+                break;
+            }
         }
 
         if (cmd_node.location_in_or_at_end_of_source_range(pos)) {

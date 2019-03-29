@@ -97,7 +97,6 @@ const enum_map<parse_token_type_t> token_enum_map[] = {
 //
 // IMPORTANT: These enums must start at zero.
 enum parse_keyword_t {
-    parse_keyword_none = 0,
     parse_keyword_and,
     parse_keyword_begin,
     parse_keyword_builtin,
@@ -105,13 +104,15 @@ enum parse_keyword_t {
     parse_keyword_command,
     parse_keyword_else,
     parse_keyword_end,
+    parse_keyword_eval,
+    parse_keyword_exclam,
     parse_keyword_exec,
     parse_keyword_for,
     parse_keyword_function,
     parse_keyword_if,
     parse_keyword_in,
+    parse_keyword_none,
     parse_keyword_not,
-    parse_keyword_exclam,
     parse_keyword_or,
     parse_keyword_switch,
     parse_keyword_while,
@@ -125,6 +126,7 @@ const enum_map<parse_keyword_t> keyword_enum_map[] = {{parse_keyword_exclam, L"!
                                                       {parse_keyword_command, L"command"},
                                                       {parse_keyword_else, L"else"},
                                                       {parse_keyword_end, L"end"},
+                                                      {parse_keyword_eval, L"eval"},
                                                       {parse_keyword_exec, L"exec"},
                                                       {parse_keyword_for, L"for"},
                                                       {parse_keyword_function, L"function"},
@@ -144,7 +146,8 @@ enum parse_statement_decoration_t {
     parse_statement_decoration_none,
     parse_statement_decoration_command,
     parse_statement_decoration_builtin,
-    parse_statement_decoration_exec
+    parse_statement_decoration_exec,
+    parse_statement_decoration_eval,
 };
 
 // Boolean statement types, stored in node tag.

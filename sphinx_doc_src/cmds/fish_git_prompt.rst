@@ -40,7 +40,7 @@ There are numerous configuration options, either as fish variables or git config
 
 A number of variables set characters and color used to indicate things. Many of these have a different default if used with informative status enabled. The normal default is given first, then the informative default if it is different. If no default for the colors is given, they default to ``$__fish_git_prompt_color``.
 
-- ``$__fish_git_prompt_char_stateseparator`` (' ', |)
+- ``$__fish_git_prompt_char_stateseparator`` (' ', `|`)
 - ``$__fish_git_prompt_color`` ('')
 - ``$__fish_git_prompt_color_prefix``
 - ``$__fish_git_prompt_color_suffix``
@@ -54,7 +54,7 @@ Some variables are only used in some modes, like when informative status is enab
 
 Variables used with showdirtystate:
 
-- ``$__fish_git_prompt_char_dirtystate`` (*, ✚)
+- ``$__fish_git_prompt_char_dirtystate`` (`*`, ✚)
 - ``$__fish_git_prompt_char_invalidstate`` (#, ✖)
 - ``$__fish_git_prompt_char_stagedstate`` (+, ●)
 - ``$__fish_git_prompt_color_dirtystate`` (red with showcolorhints, same as color_flags otherwise)

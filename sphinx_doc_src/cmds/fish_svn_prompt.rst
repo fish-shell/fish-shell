@@ -13,7 +13,6 @@ There are numerous configuration options:
 
 
 - $__fish_svn_prompt_color_revision, the colour of the revision number to display in the prompt
-# setting the prompt status separator character
 - $__fish_svn_prompt_char_separator, the separator between status characters
 
 And

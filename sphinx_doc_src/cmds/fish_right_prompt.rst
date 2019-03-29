@@ -4,9 +4,11 @@ fish_right_prompt - define the appearance of the right-side command line prompt
 Synopsis
 --------
 
-function fish_right_prompt
-    ...
-end
+::
+
+  function fish_right_prompt
+      ...
+  end
 
 
 Description

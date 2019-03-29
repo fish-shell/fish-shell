@@ -453,8 +453,7 @@ Fish automatically searches through any directories in the array variable ``$fis
 By default, Fish searches the following for functions, using the first available file that it finds:
 - A directory for end-users to keep their own functions, usually ``~/.config/fish/functions`` (controlled by the ``XDG_CONFIG_HOME`` environment variable).
 - A directory for systems administrators to install functions for all users on the system, usually ``/etc/fish/functions`` (really ``$__fish_sysconfdir/functions``).
-- A directory for third-party software vendors to ship their own functions for their software, usually ``/usr/share/fish/vendor_functions.d``.
-  (set at compile time; by default, ``$__fish_data_dir/vendor_functions.d``)
+- A directory for third-party software vendors to ship their own functions for their software, usually ``/usr/share/fish/vendor_functions.d``. (set at compile time; by default, ``$__fish_data_dir/vendor_functions.d``)
 - The functions shipped with fish, usually installed in ``/usr/share/fish/functions`` (really ``$__fish_data_dir/functions``).
 
 These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.

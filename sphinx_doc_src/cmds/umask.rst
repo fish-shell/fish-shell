@@ -14,7 +14,7 @@ Description
 
 The umask may be expressed either as an octal number, which represents the rights that will be removed by default, or symbolically, which represents the only rights that will be granted by default.
 
-Access rights are explained in the manual page for the ``chmod``(1) program.
+Access rights are explained in the manual page for the ``chmod(1)`` program.
 
 With no parameters, the current file creation mode mask is printed as an octal number.
 

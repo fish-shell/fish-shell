@@ -4,7 +4,7 @@ disown - remove a process from the list of jobs
 Synopsis
 --------
 
-disown [ PID ... ]
+``disown [ PID ... ]``
 
 
 Description
@@ -14,7 +14,7 @@ Description
 
 Jobs in the list of jobs are sent a hang-up signal when fish terminates, which usually causes the job to terminate; ``disown`` allows these processes to continue regardless.
 
-If no process is specified, the most recently-used job is removed (like ``bg`` and ``fg``).  If one or more ``PID``s are specified, jobs with the specified process IDs are removed from the job list. Invalid jobs are ignored and a warning is printed.
+If no process is specified, the most recently-used job is removed (like ``bg`` and ``fg``).  If one or more PIDs are specified, jobs with the specified process IDs are removed from the job list. Invalid jobs are ignored and a warning is printed.
 
 If a job is stopped, it is sent a signal to continue running, and a warning is printed. It is not possible to use the ``bg`` builtin to continue a job once it has been disowned.
 

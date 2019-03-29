@@ -4,9 +4,11 @@ fish_prompt - define the appearance of the command line prompt
 Synopsis
 --------
 
-function fish_prompt
-    ...
-end
+::
+
+  function fish_prompt
+      ...
+  end
 
 
 Description

@@ -993,21 +993,21 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
 // This should show the output as it comes, not buffer until the end.
 // Any such process (only one per job) will be called the "deferred" process.
 static process_t *get_deferred_process(const shared_ptr<job_t> &j) {
-    process_t *last_internal = nullptr;
-    for (const auto &p : j->processes) {
+    // By enumerating in reverse order, we can avoid walking the entire list
+    for (auto i = j->processes.rbegin(); i != j->processes.rend(); ++i) {
+        const auto &p = *i;
         if (p->type == process_type_t::exec) {
             // No tail reordering for execs.
             return nullptr;
         } else if (p->type != process_type_t::external) {
-            last_internal = p.get();
+            if (p->is_last_in_job) {
+                return nullptr;
+            }
+            debug(1, "Deferring execution of %ls", p->argv0());
+            return p.get();
         }
     }
-    if (last_internal && !last_internal->is_last_in_job) {
-        // This is the last internal process, and it pipes to an external process.
-        return last_internal;
-    } else {
-        return nullptr;
-    }
+    return nullptr;
 }
 
 bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
@@ -1086,16 +1086,16 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
             }
             pipe_next_read = std::move(pipes->read);
             proc_pipes.write = std::move(pipes->write);
-        }
 
-        if (p.get() == deferred_process) {
-            deferred_pipes = std::move(proc_pipes);
-        } else {
-            if (!exec_process_in_job(parser, p.get(), j, std::move(proc_pipes), all_ios,
-                                     deferred_pipes, stdout_read_limit)) {
-                exec_error = true;
-                break;
+            // The deferred process can never be the last in the job
+            if (p.get() == deferred_process) {
+                deferred_pipes = std::move(proc_pipes);
             }
+        }
+        if (!exec_process_in_job(parser, p.get(), j, std::move(proc_pipes), all_ios, deferred_pipes,
+                                 stdout_read_limit)) {
+            exec_error = true;
+            break;
         }
     }
     pipe_next_read.close();

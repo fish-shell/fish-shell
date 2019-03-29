@@ -19,7 +19,7 @@ Description
 - ``NAME`` is the name of the alias
 - ``DEFINITION`` is the actual command to execute. The string ``$argv`` will be appended.
 
-You cannot create an alias to a function with the same name. Note that spaces need to be escaped in the call to ``alias`` just like at the command line, _even inside quoted parts_.
+You cannot create an alias to a function with the same name. Note that spaces need to be escaped in the call to ``alias`` just like at the command line, *even inside quoted parts*.
 
 The following options are available:
 

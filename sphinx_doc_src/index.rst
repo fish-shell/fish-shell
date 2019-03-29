@@ -1375,7 +1375,7 @@ Builtin commands
 
 Many other shells have a large library of builtin commands. Most of these commands are also available as standalone commands, but have been implemented in the shell anyway. To avoid code duplication, and to avoid the confusion of subtly differing versions of the same command, ``fish`` generally only implements builtins for actions which cannot be performed by a regular command.
 
-For a list of all builtins, functions and commands shipped with fish, see the `table of contents <#toc-commands>`_. The documentation is also available by using the ``--help`` switch of the command.
+For a list of all builtins, functions and commands shipped with fish, see the `list of commands <commands.html>`_. The documentation is also available by using the ``--help`` switch of the command.
 
 .. _editor:
 

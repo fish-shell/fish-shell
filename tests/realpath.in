@@ -73,13 +73,4 @@ else
     echo "fish-symlink/symlink_file not handled correctly: $real_path != expected_real_path" >&2
 end
 
-# The $PWD should undergo no further transformations because it should already
-# be a "realpath".
-set -l real_path (builtin realpath $PWD)
-if test "$real_path" = "$PWD"
-    echo "pwd-resolved-to-itself"
-else
-    echo "unexpected pwd-resolved-to-itself failure: $real_path != $PWD" >&2
-end
-
 exit 0

@@ -3267,6 +3267,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         }
 
         if (!event_needing_handling || event_needing_handling->is_check_exit()) {
+            rls.coalescing_repaints = false;
             repaint_if_needed();
             continue;
         } else if (event_needing_handling->is_eof()) {

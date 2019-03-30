@@ -2,7 +2,7 @@
 
 # Script to generate a tarball
 # We use git to output a tree. But we also want to build the user documentation
-# and put that in the tarball, so that nobody needs to have doxygen installed
+# and put that in the tarball, so that nobody needs to have sphinx installed
 # to build it.
 # Outputs to $FISH_ARTEFACT_PATH or ~/fish_built by default
 

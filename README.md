@@ -105,7 +105,7 @@ Compiling fish requires:
 * PCRE2 (headers and libraries) - a copy is included with fish
 * gettext (headers and libraries) - optional, for translation support
 
-Doxygen (1.8.7 or later) is also optionally required to build the documentation from a cloned git repository.
+Sphinx is also optionally required to build the documentation from a cloned git repository.
 
 ### Building from source (all platforms) - Makefile generator
 

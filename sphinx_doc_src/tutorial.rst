@@ -338,7 +338,7 @@ You can iterate over a list (or a slice) with a for loop::
     <outp>entry: /usr/local/bin</outp>
 
 
-Lists adjacent to other lists or strings are expanded as <a href="index.html#cartesian-product">cartesian products</a> unless quoted (see <a href="index.html#expand-variable">Variable expansion</a>)::
+Lists adjacent to other lists or strings are expanded as `cartesian products <index#cartesian-product>`__ unless quoted (see `Variable expansion <index#expand-variable>`__)::
 
     >_ set a 1 2 3
     >_ set 1 a b c
@@ -350,7 +350,7 @@ Lists adjacent to other lists or strings are expanded as <a href="index.html#car
     <outp>1 2 3 banana</outp>
 
 
-This is similar to <a href="index.html#expand-brace">Brace expansion</a>.
+This is similar to `Brace expansion <index#expand-brace>`__.
 
 Command Substitutions
 ---------------------
@@ -445,7 +445,7 @@ Use ``if``, ``else if``, and ``else`` to conditionally execute code, based on th
     end
 
 
-To compare strings or numbers or check file properties (whether a file exists or is writeable and such), use <a href="commands.html#test">test</a>, like
+To compare strings or numbers or check file properties (whether a file exists or is writeable and such), use `test <cmds/test.html>`__, like
 
 
 
@@ -650,7 +650,7 @@ This is the preferred way to define your prompt as well::
     end
 
 
-See the documentation for <a href="commands.html#funced">funced</a> and <a href="commands.html#funcsave">funcsave</a> for ways to create these files automatically.
+See the documentation for `funced <cmds/funced.html>`__ and `funcsave <cmds/funcsave.html>`__ for ways to create these files automatically.
 
 Universal Variables
 -------------------

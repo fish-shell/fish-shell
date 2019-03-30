@@ -719,7 +719,7 @@ Examples:
 
 - ``**`` matches any files and directories in the current directory and all of its subdirectories.
 
-Note that for most commands, if any wildcard fails to expand, the command is not executed, ```$status`` <#variables-status>`_ is set to nonzero, and a warning is printed. This behavior is consistent with setting ``shopt -s failglob`` in bash. There are exactly 3 exceptions, namely `set <cmds/set.html>`_, `count <cmds/count.html>`_ and `for <cmds/for.html>`_. Their globs are permitted to expand to zero arguments, as with ``shopt -s nullglob`` in bash.
+Note that for most commands, if any wildcard fails to expand, the command is not executed, `$status <#variables-status>`_ is set to nonzero, and a warning is printed. This behavior is consistent with setting ``shopt -s failglob`` in bash. There are exactly 3 exceptions, namely `set <cmds/set.html>`_, `count <cmds/count.html>`_ and `for <cmds/for.html>`_. Their globs are permitted to expand to zero arguments, as with ``shopt -s nullglob`` in bash.
 
 Examples::
 
@@ -1191,7 +1191,7 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``fish_ambiguous_width`` controls the computed width of ambiguous East Asian characters. This should be set to 1 if your terminal emulator renders these characters as single-width (typical), or 2 if double-width.
 
-- ``fish_escape_delay_ms`` overrides the default timeout of 30ms after seeing an escape character before giving up on matching a key binding. See the documentation for the `bind <cmds/bind.html#special-case-escape>`__ builtin command. This delay facilitates using escape as a meta key.
+- ``fish_escape_delay_ms`` overrides the default timeout of 30ms after seeing an escape character before giving up on matching a key binding. See the documentation for the `bind <cmds/bind.html#special-case-the-escape-character>`__ builtin command. This delay facilitates using escape as a meta key.
 
 - ``fish_greeting``, the greeting message printed on startup.
 
@@ -1627,7 +1627,7 @@ Configuration files are evaluated in the following order:
   If there are multiple files with the same name in these directories, only the first will be executed.
   They are executed in order of their filename, sorted (like globs) in a natural order (i.e. "01" sorts before "2").
 
-- System-wide configuration files, where administrators can include initialization that should be run for all users on the system - similar to ``/etc/profile`` for POSIX-style shells - in ``$__fish_sysconf_dir``` (usually ``/etc/fish/config.fish``);
+- System-wide configuration files, where administrators can include initialization that should be run for all users on the system - similar to ``/etc/profile`` for POSIX-style shells - in ``$__fish_sysconf_dir` (usually /etc/fish/config.fish``);
 - User initialization, usually in `~/.config/fish/config.fish` (controlled by the ``XDG_CONFIG_HOME`` environment variable, and accessible as ``$__fish_config_dir``).
 
 These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.

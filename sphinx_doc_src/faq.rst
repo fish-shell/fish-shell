@@ -3,7 +3,7 @@ Frequently asked questions
 
 How do I set or clear an environment variable?
 ----------------------------------------------
-Use the <a href="commands.html#set">``set``</a> command::
+Use the `set <cmds/set.html>`__ command::
 
     set -x key value
     set -e key
@@ -26,7 +26,7 @@ The prompt is the output of the ``fish_prompt`` function. Put it in ``~/.config/
     end
 
 
-You can also use the Web configuration tool, <a href="commands.html#fish_config">``fish_config``</a>, to preview and choose from a gallery of sample prompts.
+You can also use the Web configuration tool, `fish_config <cmds/fish_config.html>`__, to preview and choose from a gallery of sample prompts.
 
 
 How do I run a command from history?
@@ -93,7 +93,7 @@ If you are just interested in success or failure, you can run the command direct
     end
 
 
-See the documentation for <a href="commands.html#test">``test``</a> and <a href="commands.html#if">``if``</a> for more information.
+See the documentation for `test <cmds/test.html>`__ and `if <cmds/if.html>`__ for more information.
 
 ~~
 How do I set an environment variable for just one command?
@@ -154,7 +154,7 @@ variables.
 This means that the global value takes precedence over the universal value.
 
 To avoid this problem, consider changing the setting which fish inherits. If this is not possible,
-add a statement to your <a href="index.html#">user initialization file</a> (usually
+add a statement to your `user initialization file <index#initialization-files>`__ (usually
 ``~/.config/fish/config.fish``)::
 
     set -gx EDITOR vim
@@ -162,12 +162,12 @@ add a statement to your <a href="index.html#">user initialization file</a> (usua
 
 How do I customize my syntax highlighting colors?
 -------------------------------------------------
-Use the web configuration tool, <a href="commands.html#fish_config">``fish_config``</a>, or alter the <a href="index.html#variables-color">``fish_color`` family of environment variables</a>.
+Use the web configuration tool, `fish_config <cmds/fish_config.html>`__, or alter the `fish_color family of environment variables <index#variables-color>`__.
 
 ~~
 How do I update man page completions?
 -------------------------------------
-Use the <a href="commands.html#fish_update_completions">``fish_update_completions``</a> command.
+Use the `fish_update_completions <cmds/fish_update_completions.html>`__ command.
 
 ~~
 I accidentally entered a directory path and fish changed directory. What happened?
@@ -177,7 +177,7 @@ If fish is unable to locate a command with a given name, and it starts with '``.
 
 The open command doesn't work.
 ------------------------------
-The ``open`` command uses the MIME type database and the ``.desktop`` files used by Gnome and KDE to identify filetypes and default actions. If at least one of these environments is installed, but the open command is not working, this probably means that the relevant files are installed in a non-standard location. Consider <a href="index.html#more-help">asking for more help</a>.
+The ``open`` command uses the MIME type database and the ``.desktop`` files used by Gnome and KDE to identify filetypes and default actions. If at least one of these environments is installed, but the open command is not working, this probably means that the relevant files are installed in a non-standard location. Consider `asking for more help <index#more-help>`__.
 
 
 How do I make fish my default shell?

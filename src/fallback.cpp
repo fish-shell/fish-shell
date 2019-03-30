@@ -267,15 +267,6 @@ int fish_get_emoji_width(wchar_t c) {
 
 // Big hack to use our versions of wcswidth where we know them to be broken, which is
 // EVERYWHERE (https://github.com/fish-shell/fish-shell/issues/2199)
-#ifndef HAVE_BROKEN_WCWIDTH
-#define HAVE_BROKEN_WCWIDTH 1
-#endif
-
-#if !HAVE_BROKEN_WCWIDTH
-int fish_wcwidth(wchar_t wc) { return wcwidth(wc); }
-int fish_wcswidth(const wchar_t *str, size_t n) { return wcswidth(str, n); }
-#else
-
 #include "widecharwidth/widechar_width.h"
 
 int fish_wcwidth(wchar_t wc) {
@@ -331,8 +322,6 @@ int fish_wcswidth(const wchar_t *str, size_t n) {
     }
     return result;
 }
-
-#endif  // HAVE_BROKEN_WCWIDTH
 
 #ifndef HAVE_FLOCK
 /*	$NetBSD: flock.c,v 1.6 2008/04/28 20:24:12 martin Exp $	*/

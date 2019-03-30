@@ -10,6 +10,7 @@
 - fish no longer requires buffering for the last function in a pipeline.
 - cd now always checks the current directory, even if $CDPATH does not include it or "." (#4484).
 - Error messages no longer include a (rather large) help summary and the stacktrace has been shortened (#3404, #5434).
+- $PATH is no longer reordered in child fishes (#5456).
 
 ### Syntax changes and new commands
 - None yet.

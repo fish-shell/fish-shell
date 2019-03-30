@@ -13,7 +13,7 @@ Synopsis
 Description
 -----------
 
-This command provides a way to produce option specifications suitable for use with the <a href="#argparse">``argparse``</a> command. You can, of course, write the option specs by hand without using this command. But you might prefer to use this for the clarity it provides.
+This command provides a way to produce option specifications suitable for use with the `argparse <cmds/argparse.html>`__ command. You can, of course, write the option specs by hand without using this command. But you might prefer to use this for the clarity it provides.
 
 The following ``argparse`` options are available:
 

@@ -419,7 +419,7 @@ fish also supports ``and``, ``or``, and ``not``. The first two are job modifiers
     <outp>Backup failed</outp>
 
 
-As mentioned in <a href="#tut_semicolon">the section on the semicolon</a>, this can also be written in multiple lines, like so::
+As mentioned in `the section on the semicolon <#tut_semicolon>`__, this can also be written in multiple lines, like so::
 
     cp file1.txt file1_bak.txt && cp file2.txt file2_bak.txt
     and echo "Backup successful"
@@ -464,7 +464,7 @@ To compare strings or numbers or check file properties (whether a file exists or
     end
 
 
-<a href="#tut_combiners">Combiners</a> can also be used to make more complex conditions, like
+`Combiners <#tut_combiners>`__ can also be used to make more complex conditions, like
 
 
 

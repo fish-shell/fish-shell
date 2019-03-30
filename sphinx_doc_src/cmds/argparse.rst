@@ -10,9 +10,9 @@ argparse [OPTIONS] OPTION_SPEC... -- [ARG...]
 Description
 -----------
 
-This command makes it easy for fish scripts and functions to handle arguments in a manner 100% identical to how fish builtin commands handle their arguments. You pass a sequence of arguments that define the options recognized, followed by a literal ``--``, then the arguments to be parsed (which might also include a literal ``--``). More on this in the <a href="#argparse-usage">usage</a> section below.
+This command makes it easy for fish scripts and functions to handle arguments in a manner 100% identical to how fish builtin commands handle their arguments. You pass a sequence of arguments that define the options recognized, followed by a literal ``--``, then the arguments to be parsed (which might also include a literal ``--``). More on this in the `usage <#argparse-usage>`__ section below.
 
-Each OPTION_SPEC can be written in the domain specific language <a href="#argparse-option-specs">described below</a> or created using the companion <a href="#fish-opt">``fish_opt``</a> command. All OPTION_SPECs must appear after any argparse flags and before the ``--`` that separates them from the arguments to be parsed.
+Each OPTION_SPEC can be written in the `domain specific language <#argparse-option-specs>`__ described below or created using the companion `fish_opt <cmds/fish-opt.html>`__ command. All OPTION_SPECs must appear after any argparse flags and before the ``--`` that separates them from the arguments to be parsed.
 
 Each option that is seen in the ARG list will result in a var name of the form ``_flag_X``, where ``X`` is the short flag letter and the long flag name. The OPTION_SPEC always requires a short flag even if it can't be used. So there will always be ``_flag_X`` var set using the short flag letter if the corresponding short or long flag is seen. The long flag name var (e.g., ``_flag_help``) will only be defined, obviously, if the OPTION_SPEC includes a long flag name.
 
@@ -48,7 +48,7 @@ Using this command involves passing two sets of arguments separated by ``--``. T
     or return
 
 
-If ``$argv`` is empty then there is nothing to parse and ``argparse`` returns zero to indicate success. If ``$argv`` is not empty then it is checked for flags ``-h``, ``--help``, ``-n`` and ``--name``. If they are found they are removed from the arguments and local variables (more on this <a href="argparse-local-variables">below</a>) are set so the script can determine which options were seen. Assuming ``$argv`` doesn't have any errors, such as a missing mandatory value for an option, then ``argparse`` exits with status zero. Otherwise it writes appropriate error messages to stderr and exits with a status of one.
+If ``$argv`` is empty then there is nothing to parse and ``argparse`` returns zero to indicate success. If ``$argv`` is not empty then it is checked for flags ``-h``, ``--help``, ``-n`` and ``--name``. If they are found they are removed from the arguments and local variables (more on this `below <argparse-local-variables>`__) are set so the script can determine which options were seen. Assuming ``$argv`` doesn't have any errors, such as a missing mandatory value for an option, then ``argparse`` exits with status zero. Otherwise it writes appropriate error messages to stderr and exits with a status of one.
 
 The ``--`` argument is required. You do not have to include any arguments after the ``--`` but you must include the ``--``. For example, this is acceptable:
 
@@ -91,9 +91,9 @@ Each option specification is a string composed of
 
 - ``=+`` if it requires a value and each instance of the flag is saved.
 
-- Optionally a ``!`` followed by fish script to validate the value. Typically this will be a function to run. If the return status is zero the value for the flag is valid. If non-zero the value is invalid. Any error messages should be written to stdout (not stderr). See the section on <a href="#arparse-validation">Flag Value Validation</a> for more information.
+- Optionally a ``!`` followed by fish script to validate the value. Typically this will be a function to run. If the return status is zero the value for the flag is valid. If non-zero the value is invalid. Any error messages should be written to stdout (not stderr). See the section on `Flag Value Validation <#arparse-validation>`__ for more information.
 
-See the <a href="#fish-opt">``fish_opt``</a> command for a friendlier but more verbose way to create option specifications.
+See the `fish_opt <cmds/fish-opt.html>`__ command for a friendlier but more verbose way to create option specifications.
 
 In the following examples if a flag is not seen when parsing the arguments then the corresponding _flag_X var(s) will not be set.
 

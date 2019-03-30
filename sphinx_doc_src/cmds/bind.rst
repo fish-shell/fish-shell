@@ -22,7 +22,7 @@ Description
 
 ``bind`` adds a binding for the specified key sequence to the specified command.
 
-SEQUENCE is the character sequence to bind to. These should be written as <a href="index.html#escapes">fish escape sequences</a>. For example, because pressing the Alt key and another character sends that character prefixed with an escape character, Alt-based key bindings can be written using the ``\e`` escape. For example, :kbd:`Alt+w` can be written as ``\ew``. The control character can be written in much the same way using the ``\c`` escape, for example :kbd:`Control+X` (^X) can be written as ``\cx``. Note that Alt-based key bindings are case sensitive and Control-based key bindings are not. This is a constraint of text-based terminals, not ``fish``.
+SEQUENCE is the character sequence to bind to. These should be written as `fish escape sequences <index.html#escapes>`__. For example, because pressing the Alt key and another character sends that character prefixed with an escape character, Alt-based key bindings can be written using the ``\e`` escape. For example, :kbd:`Alt+w` can be written as ``\ew``. The control character can be written in much the same way using the ``\c`` escape, for example :kbd:`Control+X` (^X) can be written as ``\cx``. Note that Alt-based key bindings are case sensitive and Control-based key bindings are not. This is a constraint of text-based terminals, not ``fish``.
 
 The default key binding can be set by specifying a ``SEQUENCE`` of the empty string (that is, ``''`` ). It will be used whenever no other binding matches. For most key bindings, it makes sense to use the ``self-insert`` function (i.e. ``````bind '' self-insert``````) as the default keybinding. This will insert any keystrokes not specifically bound to into the editor. Non- printable characters are ignored by the editor, so this will not result in control sequences being printable.
 
@@ -30,7 +30,7 @@ If the ``-k`` switch is used, the name of the key (such as 'down', 'up' or 'back
 
 ``COMMAND`` can be any fish command, but it can also be one of a set of special input functions. These include functions for moving the cursor, operating on the kill-ring, performing tab completion, etc. Use ``bind --function-names`` for a complete list of these input functions.
 
-When ``COMMAND`` is a shellscript command, it is a good practice to put the actual code into a <a href="#function">function</a> and simply bind to the function name. This way it becomes significantly easier to test the function while editing, and the result is usually more readable as well.
+When ``COMMAND`` is a shellscript command, it is a good practice to put the actual code into a `function <#function>`__ and simply bind to the function name. This way it becomes significantly easier to test the function while editing, and the result is usually more readable as well.
 
 If a script produces output, it should finish by calling ``commandline -f repaint`` to tell fish that a repaint is in order.
 
@@ -38,7 +38,7 @@ When multiple ``COMMAND``s are provided, they are all run in the specified order
 
 If no ``SEQUENCE`` is provided, all bindings (or just the bindings in the specified ``MODE``) are printed. If ``SEQUENCE`` is provided without ``COMMAND``, just the binding matching that sequence is printed.
 
-To save custom keybindings, put the ``bind`` statements into <a href="index.html#initialization">config.fish</a>. Alternatively, fish also automatically executes a function called ``fish_user_key_bindings`` if it exists.
+To save custom keybindings, put the ``bind`` statements into `config.fish <index.html#initialization>`__. Alternatively, fish also automatically executes a function called ``fish_user_key_bindings`` if it exists.
 
 Key bindings may use "modes", which mimics Vi's modal input behavior. The default mode is "default", and every bind applies to a single mode. The mode can be viewed/changed with the ``$fish_bind_mode`` variable.
 

@@ -241,7 +241,7 @@ Fish history recall is very simple yet effective:
 
   - If you want to reuse several arguments from the same line ("!!:3*" and the like), consider recalling the whole line and removing what you don't need (:kbd:`Alt+D` and :kbd:`Alt+Backspace` are your friends).
 
-See <a href='index.html#editor'>documentation</a> for more details about line editing in fish.
+See `documentation <index.html#editor>`__ for more details about line editing in fish.
 
 
 How can I use ``-`` as a shortcut for ``cd -``?
@@ -266,7 +266,7 @@ Next, do the following (assuming fish was installed to /usr/local)::
 
 Unicode private-use characters reserved by fish
 -----------------------------------------------
-Fish reserves the <a href="http://www.unicode.org/faq/private_use.html">Unicode private-use character range</a> from U+F600 thru U+F73F for internal use. Any attempt to feed characters in that range to fish will result in them being replaced by the Unicode "replacement character" U+FFFD. This includes both interactive input as well as any file read by fish (but not programs run by fish).
+Fish reserves the `Unicode private-use character range <http://www.unicode.org/faq/private_use.html>`__ from U+F600 thru U+F73F for internal use. Any attempt to feed characters in that range to fish will result in them being replaced by the Unicode "replacement character" U+FFFD. This includes both interactive input as well as any file read by fish (but not programs run by fish).
 
 
 Where can I find extra tools for fish?

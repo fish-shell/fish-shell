@@ -20,7 +20,7 @@ The following options are available:
 
 - ``-d DESCRIPTION`` or ``--description=DESCRIPTION`` is a description of what the function does, suitable as a completion description.
 
-- ``-w WRAPPED_COMMAND`` or ``--wraps=WRAPPED_COMMAND`` causes the function to inherit completions from the given wrapped command. See the documentation for <a href="#complete">``complete``</a> for more information.
+- ``-w WRAPPED_COMMAND`` or ``--wraps=WRAPPED_COMMAND`` causes the function to inherit completions from the given wrapped command. See the documentation for `complete <cmds/complete.html>`__ for more information.
 
 - ``-e`` or ``--on-event EVENT_NAME`` tells fish to run this function when the specified named event is emitted. Fish internally generates named events e.g. when showing the prompt.
 
@@ -39,9 +39,9 @@ The following options are available:
 
 - ``-V`` or ``--inherit-variable NAME`` snapshots the value of the variable ``NAME`` and defines a local variable with that same name and value when the function is defined. This is similar to a closure in other languages like Python but a bit different. Note the word "snapshot" in the first sentence. If you change the value of the variable after defining the function, even if you do so in the same scope (typically another function) the new value will not be used by the function you just created using this option. See the ``function notify`` example below for how this might be used.
 
-If the user enters any additional arguments after the function, they are inserted into the environment <a href="index.html#variables-arrays">variable array</a> ``$argv``. If the ``--argument-names`` option is provided, the arguments are also assigned to names specified in that option.
+If the user enters any additional arguments after the function, they are inserted into the environment `variable array <index.html#variables-arrays>`__ ``$argv``. If the ``--argument-names`` option is provided, the arguments are also assigned to names specified in that option.
 
-By using one of the event handler switches, a function can be made to run automatically at specific events. The user may generate new events using the <a href="#emit">emit</a> builtin. Fish generates the following named events:
+By using one of the event handler switches, a function can be made to run automatically at specific events. The user may generate new events using the `emit <cmds/emit.html>`__ builtin. Fish generates the following named events:
 
 - ``fish_prompt``, which is emitted whenever a new fish prompt is about to be displayed.
 

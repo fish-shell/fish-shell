@@ -146,15 +146,14 @@ A global variable of the same name already exists.
 
 Environment variables such as ``EDITOR`` or ``TZ`` can be set universally using ``set -Ux``.  However, if
 there is an environment variable already set before fish starts (such as by login scripts or system
-administrators), it is imported into fish as a global variable. The <a
-href="index.html#variables-scope">variable scopes</a> are searched from the "inside out", which
+administrators), it is imported into fish as a global variable. The :ref:`variable scopes <variables-scope>` are searched from the "inside out", which
 means that local variables are checked first, followed by global variables, and finally universal
 variables.
 
 This means that the global value takes precedence over the universal value.
 
 To avoid this problem, consider changing the setting which fish inherits. If this is not possible,
-add a statement to your `user initialization file <index#initialization-files>`__ (usually
+add a statement to your :ref:`user initialization file <initialization>` (usually
 ``~/.config/fish/config.fish``)::
 
     set -gx EDITOR vim

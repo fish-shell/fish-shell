@@ -27,8 +27,7 @@ Synopsis
 Description
 -----------
 
-For an introduction to specifying completions, see <a
-href='index.html#completion-own'>Writing your own completions</a> in
+For an introduction to specifying completions, see :ref:`Writing your own completions <completion-own>` in
 the fish manual.
 
 - ``COMMAND`` is the name of the command for which to add a completion.

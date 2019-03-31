@@ -1,3 +1,5 @@
+.. _cmd-funcsave:
+
 funcsave - save the definition of a function to the user's autoload directory
 =============================================================================
 

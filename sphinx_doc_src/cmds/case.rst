@@ -1,3 +1,5 @@
+.. _cmd-case:
+
 case - conditionally execute a block of commands
 ================================================
 

@@ -1,3 +1,5 @@
+.. _cmd-exit:
+
 exit - exit the shell
 =====================
 

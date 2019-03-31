@@ -1,3 +1,5 @@
+.. _cmd-umask:
+
 umask - set or get the file creation mode mask
 ==============================================
 

@@ -1,3 +1,5 @@
+.. _cmd-type:
+
 type - indicate how a command would be interpreted
 ==================================================
 

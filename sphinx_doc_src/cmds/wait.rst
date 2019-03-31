@@ -1,3 +1,5 @@
+.. _cmd-wait:
+
 wait - wait for jobs to complete
 ================================
 

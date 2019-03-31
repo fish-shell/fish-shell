@@ -1,3 +1,5 @@
+.. _cmd-switch:
+
 switch - conditionally execute a block of commands
 ==================================================
 

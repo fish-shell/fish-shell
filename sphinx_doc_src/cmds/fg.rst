@@ -1,3 +1,5 @@
+.. _cmd-fg:
+
 fg - bring job to foreground
 ============================
 

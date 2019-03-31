@@ -1,3 +1,5 @@
+.. _cmd-popd:
+
 popd - move through directory stack
 ===================================
 

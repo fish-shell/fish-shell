@@ -1,3 +1,5 @@
+.. _cmd-exec:
+
 exec - execute command in current process
 =========================================
 

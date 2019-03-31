@@ -1,3 +1,5 @@
+.. _cmd-set_color:
+
 set_color - set the terminal color
 ==================================
 

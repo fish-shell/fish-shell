@@ -1,3 +1,5 @@
+.. _cmd-dirs:
+
 dirs - print directory stack
 ============================
 

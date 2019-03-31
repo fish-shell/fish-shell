@@ -1,3 +1,5 @@
+.. _cmd-and:
+
 and - conditionally execute a command
 =====================================
 

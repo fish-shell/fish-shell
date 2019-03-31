@@ -1,3 +1,5 @@
+.. _cmd-string:
+
 string - manipulate strings
 ===========================
 

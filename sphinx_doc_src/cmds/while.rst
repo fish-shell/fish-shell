@@ -1,3 +1,5 @@
+.. _cmd-while:
+
 while - perform a command multiple times
 ========================================
 

@@ -1,3 +1,5 @@
+.. _cmd-jobs:
+
 jobs - print currently running jobs
 ===================================
 

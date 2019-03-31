@@ -1,3 +1,5 @@
+.. _cmd-fish_git_prompt:
+
 fish_git_prompt - output git information for use in a prompt
 ============================================================
 

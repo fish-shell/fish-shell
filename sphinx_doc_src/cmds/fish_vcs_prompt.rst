@@ -1,3 +1,5 @@
+.. _cmd-fish_vcs_prompt:
+
 fish_vcs_prompt - output vcs information for use in a prompt
 ============================================================
 

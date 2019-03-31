@@ -1,3 +1,5 @@
+.. _cmd-argparse:
+
 argparse - parse options passed to a fish script or function
 ============================================================
 

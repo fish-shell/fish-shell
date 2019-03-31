@@ -1,3 +1,5 @@
+.. _cmd-disown:
+
 disown - remove a process from the list of jobs
 ===============================================
 

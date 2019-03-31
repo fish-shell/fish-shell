@@ -1,3 +1,5 @@
+.. _cmd-emit:
+
 emit - Emit a generic event
 ===========================
 

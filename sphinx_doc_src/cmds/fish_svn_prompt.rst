@@ -1,3 +1,5 @@
+.. _cmd-fish_svn_prompt:
+
 fish_svn_prompt - output svn information for use in a prompt
 ============================================================
 

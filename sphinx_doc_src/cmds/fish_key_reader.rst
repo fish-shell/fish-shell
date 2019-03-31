@@ -1,3 +1,5 @@
+.. _cmd-fish_key_reader:
+
 fish_key_reader - explore what characters keyboard keys send
 ============================================================
 

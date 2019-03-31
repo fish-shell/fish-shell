@@ -1,3 +1,5 @@
+.. _cmd-begin:
+
 begin - start a new block of code
 =================================
 

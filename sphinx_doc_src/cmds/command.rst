@@ -1,3 +1,5 @@
+.. _cmd-command:
+
 command - run a program
 =======================
 

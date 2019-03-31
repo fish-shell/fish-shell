@@ -1,3 +1,5 @@
+.. _cmd-continue:
+
 continue - skip the remainder of the current iteration of the current inner loop
 ================================================================================
 

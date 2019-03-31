@@ -1,3 +1,5 @@
+.. _cmd-contains:
+
 contains - test if a word is present in a list
 ==============================================
 

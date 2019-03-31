@@ -1,3 +1,5 @@
+.. _cmd-break:
+
 break - stop the current inner loop
 ===================================
 

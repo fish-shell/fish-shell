@@ -1,3 +1,5 @@
+.. _cmd-fish_right_prompt:
+
 fish_right_prompt - define the appearance of the right-side command line prompt
 ===============================================================================
 

@@ -1,3 +1,5 @@
+.. _cmd-status:
+
 status - query fish runtime information
 =======================================
 

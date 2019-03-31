@@ -1,3 +1,5 @@
+.. _cmd-else:
+
 else - execute command if a condition is not met
 ================================================
 

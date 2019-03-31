@@ -1,3 +1,5 @@
+.. _cmd-builtin:
+
 builtin - run a builtin command
 ===============================
 

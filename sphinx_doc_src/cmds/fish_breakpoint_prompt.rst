@@ -1,3 +1,5 @@
+.. _cmd-fish_breakpoint_prompt:
+
 fish_breakpoint_prompt - define the prompt when stopped at a breakpoint
 =======================================================================
 

@@ -1,3 +1,5 @@
+.. _cmd-fish_hg_prompt:
+
 fish_hg_prompt - output mercurial information for use in a prompt
 =================================================================
 

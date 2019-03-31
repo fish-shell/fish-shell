@@ -1,3 +1,5 @@
+.. _cmd-abbr:
+
 abbr - manage fish abbreviations
 ================================
 

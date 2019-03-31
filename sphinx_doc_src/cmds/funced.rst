@@ -1,3 +1,5 @@
+.. _cmd-funced:
+
 funced - edit a function interactively
 ======================================
 

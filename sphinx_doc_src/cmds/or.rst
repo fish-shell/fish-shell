@@ -1,3 +1,5 @@
+.. _cmd-or:
+
 or - conditionally execute a command
 ====================================
 

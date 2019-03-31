@@ -1,3 +1,5 @@
+.. _cmd-printf:
+
 printf - display text according to a format string
 ==================================================
 

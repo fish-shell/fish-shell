@@ -1,3 +1,5 @@
+.. _cmd-read:
+
 read - read line of input into variables
 ========================================
 

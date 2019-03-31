@@ -1,3 +1,5 @@
+.. _cmd-fish:
+
 fish - the friendly interactive shell
 =====================================
 

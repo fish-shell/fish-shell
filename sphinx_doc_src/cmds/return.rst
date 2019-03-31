@@ -1,3 +1,5 @@
+.. _cmd-return:
+
 return - stop the current inner function
 ========================================
 

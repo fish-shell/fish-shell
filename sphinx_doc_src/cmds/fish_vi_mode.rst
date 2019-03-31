@@ -1,3 +1,5 @@
+.. _cmd-fish_vi_mode:
+
 fish_vi_mode - Enable vi mode
 =============================
 

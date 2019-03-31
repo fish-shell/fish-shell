@@ -1,3 +1,5 @@
+.. _cmd-complete:
+
 complete - edit command specific tab-completions
 ================================================
 

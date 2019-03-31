@@ -1,3 +1,5 @@
+.. _cmd-fish_opt:
+
 fish_opt - create an option spec for the argparse command
 =========================================================
 

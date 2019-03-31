@@ -1,3 +1,5 @@
+.. _cmd-echo:
+
 echo - display a line of text
 =============================
 

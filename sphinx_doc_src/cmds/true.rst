@@ -1,3 +1,5 @@
+.. _cmd-true:
+
 true - return a successful result
 =================================
 

@@ -1,3 +1,5 @@
+.. _cmd-block:
+
 block - temporarily block delivery of events
 ============================================
 

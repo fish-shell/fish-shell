@@ -1,3 +1,5 @@
+.. _cmd-bind:
+
 bind - handle fish key bindings
 ===============================
 

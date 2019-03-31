@@ -1,3 +1,5 @@
+.. _cmd-fish_indent:
+
 fish_indent - indenter and prettifier
 =====================================
 

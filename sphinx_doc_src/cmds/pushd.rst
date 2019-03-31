@@ -12,7 +12,7 @@ pushd [DIRECTORY]
 Description
 -----------
 
-The ``pushd`` function adds ``DIRECTORY`` to the top of the directory stack and makes it the current working directory. <a href="#popd">``popd``</a> will pop it off and return to the original directory.
+The ``pushd`` function adds ``DIRECTORY`` to the top of the directory stack and makes it the current working directory. :ref:`popd <cmd-popd>` will pop it off and return to the original directory.
 
 Without arguments, it exchanges the top two directories in the stack.
 

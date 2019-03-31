@@ -16,7 +16,7 @@ Description
 
 The exit status of the while loop is the exit status of the last iteration of the ``COMMANDS`` executed, or 0 if none were executed. (This matches other shells and is POSIX-compatible.)
 
-You can use <a href="#and">``and``</a> or <a href="#or">``or``</a> for complex conditions. Even more complex control can be achieved with ``while true`` containing a <a href="#break">break</a>.
+You can use :ref:`and <cmd-and>` or :ref:`or <cmd-or>` for complex conditions. Even more complex control can be achieved with ``while true`` containing a :ref:`break <cmd-break>`.
 
 Example
 -------

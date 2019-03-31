@@ -17,7 +17,7 @@ Description
 
 ``if`` will execute the command ``CONDITION``. If the condition's exit status is 0, the commands ``COMMANDS_TRUE`` will execute.  If the exit status is not 0 and ``else`` is given, ``COMMANDS_FALSE`` will be executed.
 
-You can use <a href="#and">``and``</a> or <a href="#or">``or``</a> in the condition. See the second example below.
+You can use :ref:`and <cmd-and>` or :ref:`or <cmd-or>` in the condition. See the second example below.
 
 The exit status of the last foreground command to exit can always be accessed using the <a href="index.html#variables-status">$status</a> variable.
 

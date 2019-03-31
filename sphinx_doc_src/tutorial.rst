@@ -597,7 +597,7 @@ To remove /usr/local/bin from ``$PATH``, you can write::
     >_ set PATH (string match -v /usr/local/bin $PATH)
 
 
-You can do so directly in ``config.fish``, like you might do in other shells with ``.profile``. See [this example](#path_example).
+You can do so directly in ``config.fish``, like you might do in other shells with ``.profile``. See :ref:`this example <path_example>`.
 
 A faster way is to modify the ``$fish_user_paths`` [universal variable](#tut_universal), which is automatically prepended to ``$PATH``. For example, to permanently add ``/usr/local/bin`` to your ``$PATH``, you could write::
 
@@ -613,8 +613,7 @@ Startup (Where's .bashrc?)
 
 It is possible to directly create functions and variables in ``config.fish`` file, using the commands shown above. For example:
 
-<a name="path_example"></a>
-
+.. _path_example:
 
 ::
 

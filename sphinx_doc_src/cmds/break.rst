@@ -12,7 +12,7 @@ LOOP_CONSTRUCT; [COMMANDS...] break; [COMMANDS...] end
 Description
 -----------
 
-``break`` halts a currently running loop, such as a `switch <cmds/switch.html>`__, `for <cmds/for.html>`__ or `while <cmds/while.html>`__ loop. It is usually added inside of a conditional block such as an `if <cmds/if.html>`__ block.
+``break`` halts a currently running loop, such as a :ref:`switch <cmd-switch>`, :ref:`for <cmd-for>` or :ref:`while <cmd-while>` loop. It is usually added inside of a conditional block such as an :ref:`if <cmd-if>` block.
 
 There are no parameters for ``break``.
 

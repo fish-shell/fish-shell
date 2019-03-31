@@ -3,7 +3,7 @@ Frequently asked questions
 
 How do I set or clear an environment variable?
 ----------------------------------------------
-Use the `set <cmds/set.html>`__ command::
+Use the :ref:`set <cmd-set>` command::
 
     set -x key value
     set -e key
@@ -26,7 +26,7 @@ The prompt is the output of the ``fish_prompt`` function. Put it in ``~/.config/
     end
 
 
-You can also use the Web configuration tool, `fish_config <cmds/fish_config.html>`__, to preview and choose from a gallery of sample prompts.
+You can also use the Web configuration tool, :ref:`fish_config <cmd-fish_config>`, to preview and choose from a gallery of sample prompts.
 
 
 How do I run a command from history?
@@ -93,7 +93,7 @@ If you are just interested in success or failure, you can run the command direct
     end
 
 
-See the documentation for `test <cmds/test.html>`__ and `if <cmds/if.html>`__ for more information.
+See the documentation for :ref:`test <cmd-test>` and :ref:`if <cmd-if>` for more information.
 
 ~~
 How do I set an environment variable for just one command?
@@ -162,12 +162,12 @@ add a statement to your `user initialization file <index#initialization-files>`_
 
 How do I customize my syntax highlighting colors?
 -------------------------------------------------
-Use the web configuration tool, `fish_config <cmds/fish_config.html>`__, or alter the `fish_color family of environment variables <index#variables-color>`__.
+Use the web configuration tool, :ref:`fish_config <cmd-fish_config>`, or alter the `fish_color family of environment variables <index#variables-color>`__.
 
 ~~
 How do I update man page completions?
 -------------------------------------
-Use the `fish_update_completions <cmds/fish_update_completions.html>`__ command.
+Use the :ref:`fish_update_completions <cmd-fish_update_completions>` command.
 
 ~~
 I accidentally entered a directory path and fish changed directory. What happened?

@@ -445,7 +445,7 @@ Use ``if``, ``else if``, and ``else`` to conditionally execute code, based on th
     end
 
 
-To compare strings or numbers or check file properties (whether a file exists or is writeable and such), use `test <cmds/test.html>`__, like
+To compare strings or numbers or check file properties (whether a file exists or is writeable and such), use :ref:`test <cmd-test>`, like
 
 
 
@@ -650,7 +650,7 @@ This is the preferred way to define your prompt as well::
     end
 
 
-See the documentation for `funced <cmds/funced.html>`__ and `funcsave <cmds/funcsave.html>`__ for ways to create these files automatically.
+See the documentation for :ref:`funced <cmd-funced>` and :ref:`funcsave <cmd-funcsave>` for ways to create these files automatically.
 
 Universal Variables
 -------------------

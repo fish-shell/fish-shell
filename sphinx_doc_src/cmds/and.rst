@@ -14,7 +14,7 @@ Description
 
 ``and`` is used to execute a command if the previous command was successful (returned a status of 0).
 
-``and`` statements may be used as part of the condition in an `while <cmds/while.html>`__ or `if <cmds/if.html>`__ block.
+``and`` statements may be used as part of the condition in an :ref:`while <cmd-while>` or :ref:`if <cmd-if>` block.
 
 ``and`` does not change the current exit status itself, but the command it runs most likely will. The exit status of the last foreground command to exit can always be accessed using the `$status <index.html#variables-status>`__ variable.
 

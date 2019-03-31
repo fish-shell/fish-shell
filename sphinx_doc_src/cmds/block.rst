@@ -12,7 +12,7 @@ block [OPTIONS...]
 Description
 -----------
 
-``block`` prevents events triggered by ``fish`` or the `emit <cmds/emit.html>`__ command from being delivered and acted upon while the block is in place.
+``block`` prevents events triggered by ``fish`` or the :ref:`emit <cmd-emit>` command from being delivered and acted upon while the block is in place.
 
 In functions, ``block`` can be useful while performing work that should not be interrupted by the shell.
 

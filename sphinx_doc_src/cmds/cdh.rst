@@ -20,4 +20,4 @@ Note that the ``cd`` command limits directory history to the 25 most recently vi
 See Also
 --------
 
-See also the <a href="commands.html#prevd">``prevd``</a> and <a href="commands.html#pushd">``pushd``</a> commands which also work with the recent ``cd`` history and are provided for compatibility with other shells.
+See also the :ref:`prevd <cmd-prevd>` and :ref:`pushd <cmd-pushd>` commands which also work with the recent ``cd`` history and are provided for compatibility with other shells.

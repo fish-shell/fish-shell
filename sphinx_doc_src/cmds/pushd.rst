@@ -22,7 +22,7 @@ Without arguments, it exchanges the top two directories in the stack.
 
 See also ``dirs`` and ``dirs -c``.
 
-You may be interested in the <a href="commands.html#cdh">``cdh``</a> command which provides a more intuitive way to navigate to recently visited directories.
+You may be interested in the :ref:`cdh <cmd-cdh>` command which provides a more intuitive way to navigate to recently visited directories.
 
 Example
 -------

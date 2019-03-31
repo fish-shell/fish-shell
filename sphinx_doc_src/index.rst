@@ -629,7 +629,7 @@ Useful functions for writing completions
 
 ``fish`` ships with several functions that are very useful when writing command specific completions. Most of these functions name begins with the string '``__fish_``'. Such functions are internal to ``fish`` and their name and interface may change in future fish versions. Still, some of them may be very useful when writing completions. A few of these functions are described here. Be aware that they may be removed or changed in future versions of fish.
 
-Functions beginning with the string ``__fish_print_`` print a newline separated list of strings. For example, ``__fish_print_filesystems` prints a list of all known file systems. Functions beginning with ``__fish_complete_``` print out a newline separated list of completions with descriptions. The description is separated from the completion by a tab character.
+Functions beginning with the string ``__fish_print_`` print a newline separated list of strings. For example, ``__fish_print_filesystems`` prints a list of all known file systems. Functions beginning with ``__fish_complete_`` print out a newline separated list of completions with descriptions. The description is separated from the completion by a tab character.
 
 - ``__fish_complete_directories STRING DESCRIPTION`` performs path completion on STRING, allowing only directories, and giving them the description DESCRIPTION.
 
@@ -645,7 +645,7 @@ Functions beginning with the string ``__fish_print_`` print a newline separated 
 
 - ``__fish_print_filesystems`` prints a list of all known file systems. Currently, this is a static list, and not dependent on what file systems the host operating system actually understands.
 
-- ``__fish_print_hostnames` prints a list of all known hostnames. This functions searches the fstab for nfs servers, ssh for known hosts and checks the ``/etc/hosts``` file.
+- ``__fish_print_hostnames`` prints a list of all known hostnames. This functions searches the fstab for nfs servers, ssh for known hosts and checks the ``/etc/hosts`` file.
 
 - ``__fish_print_interfaces`` prints a list of all known network interfaces.
 

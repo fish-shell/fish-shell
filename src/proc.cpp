@@ -463,7 +463,7 @@ static bool process_clean_after_marking(bool allow_interactive) {
 
     // This function may fire an event handler, we do not want to call ourselves recursively (to
     // avoid infinite recursion).
-    static bool locked = false;
+    static std::atomic<bool> locked { false };
     if (locked) {
         return false;
     }

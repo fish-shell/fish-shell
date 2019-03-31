@@ -101,11 +101,6 @@ Arguments → Program → Return Values
 - the arguments become options or switches paired with data: the switches influence the behaviour of the command
 - the return value shrinks to an **exit code**: this exit code is 0 when the command executes normally and between 1 and 255 otherwise.
 
-<table with=100%>
-<tr><td>Input Stream &rArr;<td rowspan="2">|Shell Command|<td>&rArr; Output Stream
-<tr><td>switch and data as arguments →<td>→ exit code
-</table>
-
 This leads to another way of programming and especially of combining commands:
 
 There are two ways to combine shell commands:

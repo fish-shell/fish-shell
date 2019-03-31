@@ -19,7 +19,7 @@ Description
 
 You can use :ref:`and <cmd-and>` or :ref:`or <cmd-or>` in the condition. See the second example below.
 
-The exit status of the last foreground command to exit can always be accessed using the <a href="index.html#variables-status">$status</a> variable.
+The exit status of the last foreground command to exit can always be accessed using the :ref:`$status <variables-status>` variable.
 
 Example
 -------

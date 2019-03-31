@@ -18,7 +18,7 @@ set ( -S | --show ) [SCOPE_OPTIONS] [VARIABLE_NAME]...
 Description
 -----------
 
-``set`` manipulates <a href="index.html#variables">shell variables</a>.
+``set`` manipulates :ref:`shell variables <variables>`.
 
 If set is called with no arguments, the names and values of all shell variables are printed in sorted order. If some of the scope or export flags have been given, only the variables matching the specified scope are printed.
 

@@ -12,7 +12,7 @@ fish [OPTIONS] [-c command] [FILE [ARGUMENTS...]]
 Description
 -----------
 
-``fish`` is a command-line shell written mainly with interactive use in mind. The full manual is available <a href='index.html'>in HTML</a> by using the :ref:`help <cmd-help>` command from inside fish.
+``fish`` is a command-line shell written mainly with interactive use in mind. The :ref:`full manual <intro>` is available in HTML by using the :ref:`help <cmd-help>` command from inside fish.
 
 The following options are available:
 

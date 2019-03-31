@@ -696,4 +696,4 @@ with ``/bin/bash``, ``/bin/tcsh`` or ``/bin/zsh`` as appropriate in the steps ab
 Ready for more?
 ---------------
 
-If you want to learn more about fish, there is <a href="index.html">lots of detailed documentation</a>, an <a href="https://lists.sourceforge.net/lists/listinfo/fish-users">official mailing list</a>, the IRC channel \#fish on ``irc.oftc.net``, and the <a href="https://github.com/fish-shell/fish-shell/">github page</a>.
+If you want to learn more about fish, there is :ref:`lots of detailed documentation <intro>`, an `official mailing list <https://lists.sourceforge.net/lists/listinfo/fish-users>`__, the IRC channel \#fish on ``irc.oftc.net``, and the `github page <https://github.com/fish-shell/fish-shell/>`__.

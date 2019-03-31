@@ -1,4 +1,5 @@
 .. highlight:: fish
+.. _intro:
 
 Introduction
 ============

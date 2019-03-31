@@ -464,10 +464,9 @@ static bool process_clean_after_marking(bool allow_interactive) {
     // This function may fire an event handler, we do not want to call ourselves recursively (to
     // avoid infinite recursion).
     static std::atomic<bool> locked { false };
-    if (locked) {
+    if (locked.exchange(true, std::memory_order::memory_order_relaxed)) {
         return false;
     }
-    locked = true;
 
     // This may be invoked in an exit handler, after the TERM has been torn down
     // Don't try to print in that case (#3222)

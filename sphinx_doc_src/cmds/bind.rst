@@ -138,7 +138,7 @@ The following special input functions are available:
 
 - ``repaint`` reexecutes the prompt functions and redraws the prompt. Multiple successive repaints are coalesced.
 
-- ``repaint-mode`` reexecutes the fish_mode_prompt function and redraws the prompt. This is useful for vi-mode.
+- ``repaint-mode`` reexecutes the fish_mode_prompt function and redraws the prompt. This is useful for vi-mode. If no fish_mode_prompt exists, it acts like a normal repaint.
 
 - ``suppress-autosuggestion``, remove the current autosuggestion
 

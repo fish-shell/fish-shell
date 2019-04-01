@@ -2514,11 +2514,15 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             // Repaint the mode-prompt only if it exists.
             // This is an optimization basically exclusively for vi-mode, since the prompt
             // may sometimes take a while but when switching the mode all we care about is the mode-prompt.
-            exec_mode_prompt();
-            s_reset(&screen, screen_reset_current_line_and_prompt);
-            screen_reset_needed = false;
-            repaint();
-            break;
+            if (function_exists(MODE_PROMPT_FUNCTION_NAME)) {
+                exec_mode_prompt();
+                s_reset(&screen, screen_reset_current_line_and_prompt);
+                screen_reset_needed = false;
+                repaint();
+                break;
+            }
+            // If it doesn't exist, we repaint as normal.
+            /* fallthrough */
         }
         case rl::force_repaint:
         case rl::repaint: {

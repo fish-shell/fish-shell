@@ -789,7 +789,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     vars.set_one(FISH_BIND_MODE_VAR, ENV_GLOBAL, DEFAULT_BIND_MODE);
 
     // Allow changes to variables to produce events.
-    env_dispatch_mark_initialization_finished();
+    env_dispatch_init();
 
     // Set up universal variables. The empty string means to use the default path.
     assert(s_universal_variables == NULL);

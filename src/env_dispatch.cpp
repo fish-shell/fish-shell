@@ -82,19 +82,53 @@ extern const wcstring_list_t locale_variables({L"LANG", L"LANGUAGE", L"LC_ALL", 
 /// subsystem.
 extern const wcstring_list_t curses_variables({L"TERM", L"TERMINFO", L"TERMINFO_DIRS"});
 
-typedef std::unordered_map<wcstring, void (*)(const wcstring &, const wcstring &, env_stack_t &)>
-    var_dispatch_table_t;
-static var_dispatch_table_t create_var_dispatch_table();
-static const var_dispatch_table_t s_var_dispatch_table = create_var_dispatch_table();
+class var_dispatch_table_t {
+    using named_callback_t = std::function<void(const wcstring &, const wcstring &, env_stack_t &)>;
+    std::unordered_map<wcstring, named_callback_t> named_table_;
 
-/// This is used to ensure that we don't perform any callbacks from `env_dispatch_var_change()`
-/// when we're importing environment variables in `env_init()`. That's because we don't have any
-/// control over the order in which the vars are imported and some of them work in combination.
-/// For example, `TERMINFO_DIRS` and `TERM`. If the user has set `TERM` to a custom value that is
-/// found in `TERMINFO_DIRS` we don't to call `handle_curses()` before we've imported the latter.
-static bool env_initialized = false;
+    using anon_callback_t = std::function<void(env_stack_t &)>;
+    std::unordered_map<wcstring, anon_callback_t> anon_table_;
 
-void env_dispatch_mark_initialization_finished() { env_initialized = true; }
+    bool observes_var(const wcstring &name) {
+        return named_table_.count(name) || anon_table_.count(name);
+    }
+
+   public:
+    /// Add a callback for the given variable, which expects the name.
+    /// We must not already be observing this variable.
+    void add(wcstring name, named_callback_t cb) {
+        assert(!observes_var(name) && "Already observing that variable");
+        named_table_.emplace(std::move(name), std::move(cb));
+    }
+
+    /// Add a callback for the given variable, which ignores the name.
+    /// We must not already be observing this variable.
+    void add(wcstring name, anon_callback_t cb) {
+        assert(!observes_var(name) && "Already observing that variable");
+        anon_table_.emplace(std::move(name), std::move(cb));
+    }
+
+    void dispatch(const wchar_t *op, const wcstring &key, env_stack_t &vars) const {
+        auto named = named_table_.find(key);
+        if (named != named_table_.end()) {
+            named->second(op, key, vars);
+        }
+        auto anon = anon_table_.find(key);
+        if (anon != anon_table_.end()) {
+            anon->second(vars);
+        }
+    }
+};
+
+// return a new-ly allocated dispatch table, running those dispatch functions which should be
+// initialized.
+static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table();
+
+// A pointer to the variable dispatch table. This is allocated with new() and deliberately leaked to
+// avoid shutdown destructors. This is set during startup and should not be modified after.
+static const var_dispatch_table_t *s_var_dispatch_table;
+
+void env_dispatch_init() { s_var_dispatch_table = create_dispatch_table().release(); }
 
 /// Properly sets all timezone information.
 static void handle_timezone(const wchar_t *env_var_name, const environment_t &vars) {
@@ -145,17 +179,14 @@ void guess_emoji_width() {
 
 /// React to modifying the given variable.
 void env_dispatch_var_change(const wchar_t *op, const wcstring &key, env_stack_t &vars) {
-    // Don't do any of this until `env_init()` has run. We only want to do this in response to
-    // variables set by the user; e.g., in a script like *config.fish* or interactively or as part
-    // of loading the universal variables for the first time. Variables we import from the
-    // environment or that are otherwise set by fish before this gets called have to explicitly
-    // call the appropriate functions to put the value of the var into effect.
-    if (!env_initialized) return;
+    ASSERT_IS_MAIN_THREAD();
+    // Do nothing if not yet fully initialized.
+    if (!s_var_dispatch_table) return;
 
-    auto dispatch = s_var_dispatch_table.find(key);
-    if (dispatch != s_var_dispatch_table.end()) {
-        (*dispatch->second)(op, key, vars);
-    } else if (string_prefixes_string(L"fish_color_", key)) {
+    s_var_dispatch_table->dispatch(op, key, vars);
+
+    // Eww.
+    if (string_prefixes_string(L"fish_color_", key)) {
         reader_react_to_color_change();
     }
 }
@@ -280,29 +311,30 @@ static void handle_curses_change(const wcstring &op, const wcstring &var_name, e
 
 /// Populate the dispatch table used by `env_dispatch_var_change()` to efficiently call the
 /// appropriate function to handle a change to a variable.
-static var_dispatch_table_t create_var_dispatch_table() {
-    var_dispatch_table_t var_dispatch_table;
+/// Note this returns a new-allocated value that we expect to leak.
+static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table() {
+    auto var_dispatch_table = make_unique<var_dispatch_table_t>();
     for (const auto &var_name : locale_variables) {
-        var_dispatch_table.emplace(var_name, handle_locale_change);
+        var_dispatch_table->add(var_name, handle_locale_change);
     }
 
     for (const auto &var_name : curses_variables) {
-        var_dispatch_table.emplace(var_name, handle_curses_change);
+        var_dispatch_table->add(var_name, handle_curses_change);
     }
 
-    var_dispatch_table.emplace(L"PATH", handle_magic_colon_var_change);
-    var_dispatch_table.emplace(L"CDPATH", handle_magic_colon_var_change);
-    var_dispatch_table.emplace(L"fish_term256", handle_fish_term_change);
-    var_dispatch_table.emplace(L"fish_term24bit", handle_fish_term_change);
-    var_dispatch_table.emplace(L"fish_escape_delay_ms", handle_escape_delay_change);
-    var_dispatch_table.emplace(L"fish_emoji_width", handle_change_emoji_width);
-    var_dispatch_table.emplace(L"fish_ambiguous_width", handle_change_ambiguous_width);
-    var_dispatch_table.emplace(L"LINES", handle_term_size_change);
-    var_dispatch_table.emplace(L"COLUMNS", handle_term_size_change);
-    var_dispatch_table.emplace(L"fish_complete_path", handle_complete_path_change);
-    var_dispatch_table.emplace(L"fish_function_path", handle_function_path_change);
-    var_dispatch_table.emplace(L"fish_read_limit", handle_read_limit_change);
-    var_dispatch_table.emplace(L"fish_history", handle_fish_history_change);
-    var_dispatch_table.emplace(L"TZ", handle_tz_change);
+    var_dispatch_table->add(L"PATH", handle_magic_colon_var_change);
+    var_dispatch_table->add(L"CDPATH", handle_magic_colon_var_change);
+    var_dispatch_table->add(L"fish_term256", handle_fish_term_change);
+    var_dispatch_table->add(L"fish_term24bit", handle_fish_term_change);
+    var_dispatch_table->add(L"fish_escape_delay_ms", handle_escape_delay_change);
+    var_dispatch_table->add(L"fish_emoji_width", handle_change_emoji_width);
+    var_dispatch_table->add(L"fish_ambiguous_width", handle_change_ambiguous_width);
+    var_dispatch_table->add(L"LINES", handle_term_size_change);
+    var_dispatch_table->add(L"COLUMNS", handle_term_size_change);
+    var_dispatch_table->add(L"fish_complete_path", handle_complete_path_change);
+    var_dispatch_table->add(L"fish_function_path", handle_function_path_change);
+    var_dispatch_table->add(L"fish_read_limit", handle_read_limit_change);
+    var_dispatch_table->add(L"fish_history", handle_fish_history_change);
+    var_dispatch_table->add(L"TZ", handle_tz_change);
     return var_dispatch_table;
 }

@@ -10,7 +10,8 @@
 #include <memory>
 
 /// Initialize variable dispatch.
-void env_dispatch_init();
+class environment_t;
+void env_dispatch_init(const environment_t &vars);
 
 class env_stack_t;
 void env_dispatch_var_change(const wchar_t *op, const wcstring &key, env_stack_t &vars);

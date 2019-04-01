@@ -120,6 +120,9 @@ class var_dispatch_table_t {
     }
 };
 
+// Run those dispatch functions which want to be run at startup.
+static void run_inits(const environment_t &vars);
+
 // return a new-ly allocated dispatch table, running those dispatch functions which should be
 // initialized.
 static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table();
@@ -128,7 +131,12 @@ static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table();
 // avoid shutdown destructors. This is set during startup and should not be modified after.
 static const var_dispatch_table_t *s_var_dispatch_table;
 
-void env_dispatch_init() { s_var_dispatch_table = create_dispatch_table().release(); }
+void env_dispatch_init(const environment_t &vars) {
+    run_inits(vars);
+    // Note this deliberately leaks; the dispatch table is immortal.
+    // Via this construct we can avoid invoking destructors at shutdown.
+    s_var_dispatch_table = create_dispatch_table().release();
+}
 
 /// Properly sets all timezone information.
 static void handle_timezone(const wchar_t *env_var_name, const environment_t &vars) {
@@ -146,9 +154,15 @@ static void handle_timezone(const wchar_t *env_var_name, const environment_t &va
 }
 
 /// Update the value of g_guessed_fish_emoji_width
-void guess_emoji_width() {
+static void guess_emoji_width(const environment_t &vars) {
+    if (auto width_str = vars.get(L"fish_emoji_width")) {
+        int new_width = fish_wcstol(width_str->as_string().c_str());
+        g_fish_emoji_width = std::max(0, new_width);
+        debug(2, "'fish_emoji_width' preference: %d, overwriting default", g_fish_emoji_width);
+        return;
+    }
+
     wcstring term;
-    auto &vars = env_stack_t::globals();
     if (auto term_var = vars.get(L"TERM_PROGRAM")) {
         term = term_var->as_string();
     }
@@ -215,25 +229,6 @@ static void handle_fish_term_change(const wcstring &op, const wcstring &var_name
     reader_react_to_color_change();
 }
 
-static void handle_escape_delay_change(const wcstring &op, const wcstring &var_name,
-                                       env_stack_t &vars) {
-    UNUSED(op);
-    UNUSED(var_name);
-    update_wait_on_escape_ms(vars);
-}
-
-static void handle_change_emoji_width(const wcstring &op, const wcstring &var_name,
-                                      env_stack_t &vars) {
-    (void)op;
-    (void)var_name;
-    int new_width = 0;
-    if (auto width_str = vars.get(L"fish_emoji_width")) {
-        new_width = fish_wcstol(width_str->as_string().c_str());
-    }
-    g_fish_emoji_width = std::max(0, new_width);
-    debug(2, "'fish_emoji_width' preference: %d, overwriting default", g_fish_emoji_width);
-}
-
 static void handle_change_ambiguous_width(const wcstring &op, const wcstring &var_name,
                                           env_stack_t &vars) {
     (void)op;
@@ -294,18 +289,14 @@ static void handle_magic_colon_var_change(const wcstring &op, const wcstring &va
     fix_colon_delimited_var(var_name, vars);
 }
 
-static void handle_locale_change(const wcstring &op, const wcstring &var_name, env_stack_t &vars) {
-    UNUSED(op);
-    UNUSED(var_name);
+static void handle_locale_change(const environment_t &vars) {
     init_locale(vars);
     // We need to re-guess emoji width because the locale might have changed to a multibyte one.
-    guess_emoji_width();
+    guess_emoji_width(vars);
 }
 
-static void handle_curses_change(const wcstring &op, const wcstring &var_name, env_stack_t &vars) {
-    UNUSED(op);
-    UNUSED(var_name);
-    guess_emoji_width();
+static void handle_curses_change(const environment_t &vars) {
+    guess_emoji_width(vars);
     init_curses(vars);
 }
 
@@ -326,8 +317,8 @@ static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table() {
     var_dispatch_table->add(L"CDPATH", handle_magic_colon_var_change);
     var_dispatch_table->add(L"fish_term256", handle_fish_term_change);
     var_dispatch_table->add(L"fish_term24bit", handle_fish_term_change);
-    var_dispatch_table->add(L"fish_escape_delay_ms", handle_escape_delay_change);
-    var_dispatch_table->add(L"fish_emoji_width", handle_change_emoji_width);
+    var_dispatch_table->add(L"fish_escape_delay_ms", update_wait_on_escape_ms);
+    var_dispatch_table->add(L"fish_emoji_width", guess_emoji_width);
     var_dispatch_table->add(L"fish_ambiguous_width", handle_change_ambiguous_width);
     var_dispatch_table->add(L"LINES", handle_term_size_change);
     var_dispatch_table->add(L"COLUMNS", handle_term_size_change);
@@ -337,4 +328,11 @@ static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table() {
     var_dispatch_table->add(L"fish_history", handle_fish_history_change);
     var_dispatch_table->add(L"TZ", handle_tz_change);
     return var_dispatch_table;
+}
+
+static void run_inits(const environment_t &vars) {
+    // This is the subset of those dispatch functions which want to be run at startup.
+    handle_locale_change(vars);
+    handle_curses_change(vars);
+    update_wait_on_escape_ms(vars);
 }

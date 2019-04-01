@@ -127,13 +127,6 @@ SET_SOURCE_FILES_PROPERTIES(src/fish_version.cpp
                             PROPERTIES OBJECT_DEPENDS
                             ${CMAKE_CURRENT_BINARY_DIR}/${FBVF})
 
-OPTION(INTERNAL_WCWIDTH "use fallback wcwidth" ON)
-IF(INTERNAL_WCWIDTH)
-    ADD_DEFINITIONS(-DHAVE_BROKEN_WCWIDTH=1)
-ELSE()
-    ADD_DEFINITIONS(-DHAVE_BROKEN_WCWIDTH=0)
-ENDIF()
-
 # Enable thread-safe errno on Solaris (#5611)
 ADD_DEFINITIONS(-D_REENTRANT)
 

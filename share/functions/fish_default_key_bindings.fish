@@ -31,6 +31,9 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
     bind --preset $argv "" self-insert
     or exit # protect against invalid $argv
 
+    # Space expands abbrs _and_ inserts itself.
+    bind --preset $argv " " 'commandline -i " "; commandline -f expand-abbr'
+
     bind --preset $argv \n execute
     bind --preset $argv \r execute
 

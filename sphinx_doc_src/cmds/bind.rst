@@ -112,6 +112,8 @@ The following special input functions are available:
 
 - ``end-selection``, end selecting text
 
+- ``expand-abbr`` expands any abbreviation currently under the cursor
+
 - ``forward-bigword``, move one whitespace-delimited word to the right
 
 - ``forward-char``, move one character to the right

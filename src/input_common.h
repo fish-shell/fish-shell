@@ -65,6 +65,7 @@ enum class readline_cmd_t {
     forward_jump_till,
     backward_jump_till,
     func_and,
+    expand_abbr,
     cancel,
     repeat_jump,
     reverse_repeat_jump,

@@ -50,6 +50,7 @@ enum class readline_cmd_t {
     execute,
     beginning_of_buffer,
     end_of_buffer,
+    repaint_mode,
     repaint,
     force_repaint,
     up_line,

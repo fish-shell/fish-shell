@@ -357,6 +357,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     wcstring right_prompt;
     /// The output of the last evaluation of the prompt command.
     wcstring left_prompt_buff;
+    wcstring mode_prompt_buff;
     /// The output of the last evaluation of the right prompt command.
     wcstring right_prompt_buff;
     /// Completion support.
@@ -461,6 +462,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     void highlight_search();
     void highlight_complete(highlight_result_t result);
+    void exec_mode_prompt();
     void exec_prompt();
 
     bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el,
@@ -641,7 +643,8 @@ void reader_data_t::repaint() {
     bool focused_on_pager = active_edit_line() == &pager.search_field_line;
     size_t cursor_position = focused_on_pager ? pager.cursor_position() : cmd_line->position;
 
-    s_write(&screen, left_prompt_buff, right_prompt_buff, full_line, cmd_line->size(), colors,
+    // Prepend the mode prompt to the left prompt.
+    s_write(&screen, mode_prompt_buff + left_prompt_buff, right_prompt_buff, full_line, cmd_line->size(), colors,
             indents, cursor_position, current_page_rendering, focused_on_pager);
 
     repaint_needed = false;
@@ -904,6 +907,20 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
     }
 }
 
+void reader_data_t::exec_mode_prompt() {
+    mode_prompt_buff.clear();
+    if (function_exists(MODE_PROMPT_FUNCTION_NAME)) {
+        wcstring_list_t mode_indicator_list;
+        exec_subshell(MODE_PROMPT_FUNCTION_NAME, parser(), mode_indicator_list,
+                      false);
+        // We do not support multiple lines in the mode indicator, so just concatenate all of
+        // them.
+        for (size_t i = 0; i < mode_indicator_list.size(); i++) {
+            mode_prompt_buff += mode_indicator_list.at(i);
+        }
+    }
+}
+
 /// Reexecute the prompt command. The output is inserted into prompt_buff.
 void reader_data_t::exec_prompt() {
     // Clear existing prompts.
@@ -921,17 +938,7 @@ void reader_data_t::exec_prompt() {
     if (left_prompt.size() || right_prompt.size()) {
         proc_push_interactive(0);
 
-        // Prepend any mode indicator to the left prompt (issue #1988).
-        if (function_exists(MODE_PROMPT_FUNCTION_NAME)) {
-            wcstring_list_t mode_indicator_list;
-            exec_subshell(MODE_PROMPT_FUNCTION_NAME, parser(), mode_indicator_list,
-                          apply_exit_status);
-            // We do not support multiple lines in the mode indicator, so just concatenate all of
-            // them.
-            for (size_t i = 0; i < mode_indicator_list.size(); i++) {
-                left_prompt_buff += mode_indicator_list.at(i);
-            }
-        }
+        exec_mode_prompt();
 
         if (!left_prompt.empty()) {
             wcstring_list_t prompt_list;
@@ -2501,6 +2508,16 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::cancel: {
             // The only thing we can cancel right now is paging, which we handled up above.
+            break;
+        }
+        case rl::repaint_mode: {
+            // Repaint the mode-prompt only if it exists.
+            // This is an optimization basically exclusively for vi-mode, since the prompt
+            // may sometimes take a while but when switching the mode all we care about is the mode-prompt.
+            exec_mode_prompt();
+            s_reset(&screen, screen_reset_current_line_and_prompt);
+            screen_reset_needed = false;
+            repaint();
             break;
         }
         case rl::force_repaint:

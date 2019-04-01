@@ -63,7 +63,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Add a way to switch from insert to normal (command) mode.
     # Note if we are paging, we want to stay in insert mode
     # See #2871
-    bind -s --preset -M insert \e "if commandline -P; commandline -f cancel; else; set fish_bind_mode default; commandline -f backward-char force-repaint; end"
+    bind -s --preset -M insert \e "if commandline -P; commandline -f cancel; else; set fish_bind_mode default; commandline -f backward-char repaint-mode; end"
 
     # Default (command) mode
     bind -s --preset :q exit
@@ -72,14 +72,14 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M default l forward-char
     bind -s --preset -m insert \n execute
     bind -s --preset -m insert \r execute
-    bind -s --preset -m insert i force-repaint
-    bind -s --preset -m insert I beginning-of-line force-repaint
-    bind -s --preset -m insert a forward-char force-repaint
-    bind -s --preset -m insert A end-of-line force-repaint
-    bind -s --preset -m visual v begin-selection force-repaint
+    bind -s --preset -m insert i repaint-mode
+    bind -s --preset -m insert I beginning-of-line repaint-mode
+    bind -s --preset -m insert a forward-char repaint-mode
+    bind -s --preset -m insert A end-of-line repaint-mode
+    bind -s --preset -m visual v begin-selection repaint-mode
 
-    #bind -s --preset -m insert o "commandline -a \n" down-line force-repaint
-    #bind -s --preset -m insert O beginning-of-line "commandline -i \n" up-line force-repaint # doesn't work
+    #bind -s --preset -m insert o "commandline -a \n" down-line repaint-mode
+    #bind -s --preset -m insert O beginning-of-line "commandline -i \n" up-line repaint-mode # doesn't work
 
     bind -s --preset gg beginning-of-buffer
     bind -s --preset G end-of-buffer
@@ -154,24 +154,24 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset dF begin-selection backward-jump kill-selection end-selection
     bind -s --preset dT begin-selection backward-jump forward-char kill-selection end-selection
 
-    bind -s --preset -m insert s delete-char force-repaint
-    bind -s --preset -m insert S kill-whole-line force-repaint
-    bind -s --preset -m insert cc kill-whole-line force-repaint
-    bind -s --preset -m insert C kill-line force-repaint
-    bind -s --preset -m insert c\$ kill-line force-repaint
-    bind -s --preset -m insert c\^ backward-kill-line force-repaint
-    bind -s --preset -m insert cw kill-word force-repaint
-    bind -s --preset -m insert cW kill-bigword force-repaint
-    bind -s --preset -m insert ciw forward-char forward-char backward-word kill-word force-repaint
-    bind -s --preset -m insert ciW forward-char forward-char backward-bigword kill-bigword force-repaint
-    bind -s --preset -m insert caw forward-char forward-char backward-word kill-word force-repaint
-    bind -s --preset -m insert caW forward-char forward-char backward-bigword kill-bigword force-repaint
-    bind -s --preset -m insert ce kill-word force-repaint
-    bind -s --preset -m insert cE kill-bigword force-repaint
-    bind -s --preset -m insert cb backward-kill-word force-repaint
-    bind -s --preset -m insert cB backward-kill-bigword force-repaint
-    bind -s --preset -m insert cge backward-kill-word force-repaint
-    bind -s --preset -m insert cgE backward-kill-bigword force-repaint
+    bind -s --preset -m insert s delete-char repaint-mode
+    bind -s --preset -m insert S kill-whole-line repaint-mode
+    bind -s --preset -m insert cc kill-whole-line repaint-mode
+    bind -s --preset -m insert C kill-line repaint-mode
+    bind -s --preset -m insert c\$ kill-line repaint-mode
+    bind -s --preset -m insert c\^ backward-kill-line repaint-mode
+    bind -s --preset -m insert cw kill-word repaint-mode
+    bind -s --preset -m insert cW kill-bigword repaint-mode
+    bind -s --preset -m insert ciw forward-char forward-char backward-word kill-word repaint-mode
+    bind -s --preset -m insert ciW forward-char forward-char backward-bigword kill-bigword repaint-mode
+    bind -s --preset -m insert caw forward-char forward-char backward-word kill-word repaint-mode
+    bind -s --preset -m insert caW forward-char forward-char backward-bigword kill-bigword repaint-mode
+    bind -s --preset -m insert ce kill-word repaint-mode
+    bind -s --preset -m insert cE kill-bigword repaint-mode
+    bind -s --preset -m insert cb backward-kill-word repaint-mode
+    bind -s --preset -m insert cB backward-kill-bigword repaint-mode
+    bind -s --preset -m insert cge backward-kill-word repaint-mode
+    bind -s --preset -m insert cgE backward-kill-bigword repaint-mode
 
     bind -s --preset '~' capitalize-word
     bind -s --preset gu downcase-word
@@ -215,9 +215,9 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     #
     # Lowercase r, enters replace_one mode
     #
-    bind -s --preset -m replace_one r force-repaint
-    bind -s --preset -M replace_one -m default '' delete-char self-insert backward-char force-repaint
-    bind -s --preset -M replace_one -m default \e cancel force-repaint
+    bind -s --preset -m replace_one r repaint-mode
+    bind -s --preset -M replace_one -m default '' delete-char self-insert backward-char repaint-mode
+    bind -s --preset -M replace_one -m default \e cancel repaint-mode
 
     #
     # visual mode
@@ -236,7 +236,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M visual W forward-bigword
     bind -s --preset -M visual e forward-word
     bind -s --preset -M visual E forward-bigword
-    bind -s --preset -M visual o swap-selection-start-stop force-repaint
+    bind -s --preset -M visual o swap-selection-start-stop repaint-mode
 
     bind -s --preset -M visual f forward-jump
     bind -s --preset -M visual t forward-jump-till
@@ -250,15 +250,15 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
         bind -s --preset -M visual $key beginning-of-line
     end
 
-    bind -s --preset -M visual -m insert c kill-selection end-selection force-repaint
-    bind -s --preset -M visual -m default d kill-selection end-selection force-repaint
-    bind -s --preset -M visual -m default x kill-selection end-selection force-repaint
-    bind -s --preset -M visual -m default X kill-whole-line end-selection force-repaint
-    bind -s --preset -M visual -m default y kill-selection yank end-selection force-repaint
-    bind -s --preset -M visual -m default '"*y' "commandline -s | xsel -p; commandline -f end-selection force-repaint"
+    bind -s --preset -M visual -m insert c kill-selection end-selection repaint-mode
+    bind -s --preset -M visual -m default d kill-selection end-selection repaint-mode
+    bind -s --preset -M visual -m default x kill-selection end-selection repaint-mode
+    bind -s --preset -M visual -m default X kill-whole-line end-selection repaint-mode
+    bind -s --preset -M visual -m default y kill-selection yank end-selection repaint-mode
+    bind -s --preset -M visual -m default '"*y' "commandline -s | xsel -p; commandline -f end-selection repaint-mode"
 
-    bind -s --preset -M visual -m default \cc end-selection force-repaint
-    bind -s --preset -M visual -m default \e end-selection force-repaint
+    bind -s --preset -M visual -m default \cc end-selection repaint-mode
+    bind -s --preset -M visual -m default \e end-selection repaint-mode
 
     # Make it easy to turn an unexecuted command into a comment in the shell history. Also, remove
     # the commenting chars so the command can be further edited then executed.

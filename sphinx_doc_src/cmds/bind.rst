@@ -136,6 +136,10 @@ The following special input functions are available:
 
 - ``pager-toggle-search``, toggles the search field if the completions pager is visible.
 
+- ``repaint`` reexecutes the prompt functions and redraws the prompt. Multiple successive repaints are coalesced.
+
+- ``repaint-mode`` reexecutes the fish_mode_prompt function and redraws the prompt. This is useful for vi-mode.
+
 - ``suppress-autosuggestion``, remove the current autosuggestion
 
 - ``swap-selection-start-stop``, go to the other end of the highlighted text without changing the selection

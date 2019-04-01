@@ -112,6 +112,7 @@ static const input_function_metadata_t input_function_metadata[] = {
     {readline_cmd_t::execute, L"execute"},
     {readline_cmd_t::beginning_of_buffer, L"beginning-of-buffer"},
     {readline_cmd_t::end_of_buffer, L"end-of-buffer"},
+    {readline_cmd_t::repaint_mode, L"repaint-mode"},
     {readline_cmd_t::repaint, L"repaint"},
     {readline_cmd_t::force_repaint, L"force-repaint"},
     {readline_cmd_t::up_line, L"up-line"},

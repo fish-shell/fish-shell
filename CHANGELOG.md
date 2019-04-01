@@ -45,6 +45,7 @@
 ### For distributors and developers
 - The autotools-based build system and legacy Xcode build systems have been removed, leaving only the CMake build system. All distributors and developers must migrate to the CMake build.
 - The doxygen-based documentation system has been removed and replaced with one based on sphinx. All distributors and developers must migrate to that.
+- The INTERNAL_WCWIDTH build option to use the system wcwidth has been removed. We believe our wcwidth is a better choice, as it has a number of configuration options that the other path never gained (#5777).
 
 ---
 

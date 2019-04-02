@@ -9,6 +9,7 @@
 import glob
 import os.path
 import pygments
+from sphinx.errors import SphinxError, SphinxWarning
 
 # -- Helper functions --------------------------------------------------------
 

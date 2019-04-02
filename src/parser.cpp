@@ -618,7 +618,7 @@ profile_item_t *parser_t::create_profile_item() {
     return result;
 }
 
-int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type) {
+int parser_t::eval(wcstring cmd, const io_chain_t &io, enum block_type_t block_type) {
     // Parse the source into a tree, if we can.
     parse_error_list_t error_list;
     parsed_source_ref_t ps = parse_source(cmd, parse_flag_none, &error_list);

@@ -235,7 +235,7 @@ If you are familiar with these, it is useful to know how ``string`` differs from
 
 In contrast to these classics, ``string`` reads input either from stdin or as arguments. ``string`` also does not deal with files, so it requires redirections to be used with them.
 
-In contrast to ``grep``, ``string``\ s `match` and `replace` default to glob-mode. If set to regex-mode, they use PCRE regular expressions, which is comparable to ``grep``\ s `-P` option. `match` defaults to printing just the match, which is like ``grep`` with `-o` (use `--entire` to enable grep-like behavior).
+In contrast to ``grep``, ``string``\ s `match` defaults to glob-mode, whie `replace` defaults to literal matching. If set to regex-mode, they use PCRE regular expressions, which is comparable to ``grep``\ s `-P` option. `match` defaults to printing just the match, which is like ``grep`` with `-o` (use `--entire` to enable grep-like behavior).
 
 Like ``sed``\ s `s/` command, ``string replace`` still prints strings that don't match. ``sed``\ s `-n` in combination with a `/p` modifier or command is like ``string replace -f``.
 

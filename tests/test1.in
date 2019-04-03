@@ -110,7 +110,7 @@ echo Test 5 $sta
 
 logmsg Verify that we can turn stderr into stdout and then pipe it
 # Note that the order here has historically been unspecified - 'errput' could conceivably appear before 'output'.
-begin ; echo output ; echo errput 1>&2  ; end 2>&1 | tee ../test/temp/tee_test.txt ; cat ../test/temp/tee_test.txt
+begin ; echo output ; echo errput 1>&2  ; end 2>&1 | sort | tee ../test/temp/tee_test.txt ; cat ../test/temp/tee_test.txt
 
 logmsg "Test that trailing ^ doesn't trigger redirection, see #1873"
 echo caret_no_redirect 12345^

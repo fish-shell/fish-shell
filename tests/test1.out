@@ -44,10 +44,10 @@ Test 5 pass
 
 ####################
 # Verify that we can turn stderr into stdout and then pipe it
-output
 errput
 output
 errput
+output
 
 ####################
 # Test that trailing ^ doesn't trigger redirection, see #1873

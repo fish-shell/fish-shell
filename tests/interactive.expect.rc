@@ -5,6 +5,7 @@ log_file -noappend interactive.tmp.log
 
 set fish ../test/root/bin/fish
 set fish_key_reader ../test/root/bin/fish_key_reader
+set fish_test_helper ../test/root/bin/fish_test_helper
 
 set timeout 5
 

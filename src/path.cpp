@@ -185,7 +185,7 @@ maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
             expand_tilde(next_path, env_vars);
             if (next_path.empty()) continue;
 
-            wcstring whole_path = next_path;
+            wcstring whole_path = std::move(next_path);
             append_path_component(whole_path, dir);
             paths.push_back(whole_path);
         }

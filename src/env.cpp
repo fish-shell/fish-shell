@@ -195,7 +195,7 @@ struct var_stack_t {
         }
 
         node->next = this->top;
-        this->top = node;
+        this->top = std::move(node);
         if (new_scope && local_scope_exports(this->top)) {
             this->mark_changed_exported();
         }
@@ -1160,7 +1160,7 @@ int env_stack_t::set_internal(const wcstring &key, env_mode_flags_t input_var_mo
         bool has_changed_new = false;
         env_node_ref_t preexisting_node = get_node(key);
         maybe_t<env_var_t::env_var_flags_t> preexisting_flags{};
-        if (preexisting_node != NULL) {
+        if (preexisting_node != nullptr) {
             var_table_t::const_iterator result = preexisting_node->env.find(key);
             assert(result != preexisting_node->env.end());
             preexisting_flags = result->second.get_flags();
@@ -1174,8 +1174,8 @@ int env_stack_t::set_internal(const wcstring &key, env_mode_flags_t input_var_mo
             node = vars_stack().global_env;
         } else if (var_mode & ENV_LOCAL) {
             node = vars_stack().top;
-        } else if (preexisting_node != NULL) {
-            node = preexisting_node;
+        } else if (preexisting_node != nullptr) {
+            node = std::move(preexisting_node);
             if ((var_mode & (ENV_EXPORT | ENV_UNEXPORT)) == 0) {
                 // Use existing entry's exportv status.
                 if (preexisting_flags && (*preexisting_flags & env_var_t::flag_export)) {

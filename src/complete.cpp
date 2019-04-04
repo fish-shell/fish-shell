@@ -1124,7 +1124,6 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
     size_t varlen = str.length() - start_offset;
     bool res = false;
 
-    const wcstring_list_t names = vars.get_names(0);
     for (const wcstring &env_name : vars.get_names(0)) {
         string_fuzzy_match_t match =
             string_fuzzy_match_string(var, env_name, this->max_fuzzy_match_type());

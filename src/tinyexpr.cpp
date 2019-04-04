@@ -67,11 +67,10 @@ typedef struct te_builtin {
 } te_builtin;
 
 typedef struct state {
+    union {double value; const void *function;};
     const char *start;
     const char *next;
     int type;
-    union {double value; const void *function;};
-
     te_error_type_t error;
 } state;
 

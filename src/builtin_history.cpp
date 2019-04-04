@@ -28,12 +28,12 @@ static const enum_map<hist_cmd_t> hist_enum_map[] = {
     {HIST_SAVE, L"save"},   {HIST_SEARCH, L"search"}, {HIST_UNDEF, NULL}};
 
 struct history_cmd_opts_t {
-    bool print_help = false;
     hist_cmd_t hist_cmd = HIST_UNDEF;
     history_search_type_t search_type = (history_search_type_t)-1;
-    size_t max_items = SIZE_MAX;
-    bool history_search_type_defined = false;
     const wchar_t *show_time_format = NULL;
+    size_t max_items = SIZE_MAX;
+    bool print_help = false;
+    bool history_search_type_defined = false;
     bool case_sensitive = false;
     bool null_terminate = false;
     bool reverse = false;

@@ -45,9 +45,6 @@ Cambridge, MA 02139, USA.  */
 
 class wgetopter_t {
    private:
-    bool initialized = false;
-    bool missing_arg_return_colon = false;
-
     void exchange(wchar_t **argv);
     void _wgetopt_initialize(const wchar_t *optstring);
     int _wgetopt_internal(int argc, wchar_t **argv, const wchar_t *optstring,
@@ -60,6 +57,8 @@ class wgetopter_t {
                                                   int *exact, int *ambig, int *indfound);
     void _update_long_opt(int argc, wchar_t **argv, const struct woption *pfound, wchar_t *nameend,
                           int *longind, int option_index, int *retval);
+    bool initialized = false;
+    bool missing_arg_return_colon = false;
 
    public:
     // For communication from `getopt' to the caller. When `getopt' finds an option that takes an
@@ -68,6 +67,13 @@ class wgetopter_t {
     wchar_t *woptarg = nullptr;
 
     const wchar_t *shortopts = nullptr;
+
+    // The next char to be scanned in the option-element in which the last option character we
+    // returned was found. This allows us to pick up the scan where we left off.
+    //
+    // If this is zero, or a null string, it means resume the scan by advancing to the next
+    // ARGV-element.
+    wchar_t *nextchar = nullptr;
 
     // Index in ARGV of the next element to be scanned. This is used for communication to and from
     // the caller and for communication between successive calls to `getopt'.
@@ -82,13 +88,6 @@ class wgetopter_t {
 
     // XXX 1003.2 says this must be 1 before any call.
     int woptind = 0;
-
-    // The next char to be scanned in the option-element in which the last option character we
-    // returned was found. This allows us to pick up the scan where we left off.
-    //
-    // If this is zero, or a null string, it means resume the scan by advancing to the next
-    // ARGV-element.
-    wchar_t *nextchar = nullptr;
 
     // Callers store zero here to inhibit the error message for unrecognized options.
     int wopterr = 0;

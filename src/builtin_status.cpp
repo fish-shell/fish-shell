@@ -90,11 +90,11 @@ static maybe_t<job_control_t> job_control_str_to_mode(const wchar_t *mode, wchar
 }
 
 struct status_cmd_opts_t {
-    bool print_help{false};
     int level{1};
     maybe_t<job_control_t> new_job_control_mode{};
     const wchar_t *feature_name{};
     status_cmd_t status_cmd{STATUS_UNDEF};
+    bool print_help{false};
 };
 
 /// Note: Do not add new flags that represent subcommands. We're encouraging people to switch to

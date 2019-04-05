@@ -124,24 +124,11 @@ static void append_cmdsub_error(parse_error_list_t *errors, size_t source_start,
 
 /// Test if the specified string does not contain character which can not be used inside a quoted
 /// string.
-static int is_quotable(const wchar_t *str) {
-    switch (*str) {
-        case 0: {
-            return 1;
-        }
-        case L'\n':
-        case L'\t':
-        case L'\r':
-        case L'\b':
-        case L'\x1B': {
-            return 0;
-        }
-        default: { return is_quotable(str + 1); }
-    }
-    return 0;
+static bool is_quotable(const wchar_t *str) {
+    return !std::wcspbrk(str, L"\n\t\r\b\x1B");
 }
 
-static int is_quotable(const wcstring &str) { return is_quotable(str.c_str()); }
+static bool is_quotable(const wcstring &str) { return is_quotable(str.c_str()); }
 
 wcstring expand_escape_variable(const env_var_t &var) {
     wcstring buff;
@@ -1115,6 +1102,7 @@ expand_error_t expand_to_command_and_args(const wcstring &instr, const environme
                                           parse_error_list_t *errors) {
     // Fast path.
     if (expand_is_clean(instr)) {
+
         *out_cmd = instr;
         return EXPAND_OK;
     }

@@ -286,6 +286,9 @@ static void setup_and_process_keys(bool continuous_mode) {
     proc_push_interactive(1);
     env_init();
     reader_init();
+    // We need to set the shell-modes for ICRNL,
+    // in fish-proper this is done once a command is run.
+    tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes);
     install_our_signal_handlers();
 
     if (continuous_mode) {

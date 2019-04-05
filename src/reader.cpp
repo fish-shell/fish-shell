@@ -1001,18 +1001,6 @@ void reader_init() {
     shell_modes.c_cc[VMIN] = 1;
     shell_modes.c_cc[VTIME] = 0;
 
-    // We don't use term_steal because this can fail if fd 0 isn't associated with a tty and this
-    // function is run regardless of whether stdin is tied to a tty. This is harmless in that case.
-    // We do it unconditionally because disabling ICRNL mode (see above) needs to be done at the
-    // earliest possible moment. Doing it here means it will be done within approximately 1 ms of
-    // the start of the shell rather than 250 ms (or more) when reader_interactive_init is
-    // eventually called.
-    //
-    // TODO: Remove this condition when issue #2315 and #1041 are addressed.
-    if (is_interactive_session) {
-        tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes);
-    }
-
     // We do this not because we actually need the window size but for its side-effect of correctly
     // setting the COLUMNS and LINES env vars.
     get_current_winsize();

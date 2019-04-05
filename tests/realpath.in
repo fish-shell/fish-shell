@@ -11,7 +11,7 @@ end
 
 # A non-existent file relative to $PWD succeeds.
 set -l real_path (builtin realpath nonexistent-file)
-if test "$real_path" = "$PWD/nonexistent-file"
+if test "$real_path" = (realpath $PWD)"/nonexistent-file"
     echo nonexistent-file in PWD correctly converted
 end
 

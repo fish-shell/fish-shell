@@ -1483,6 +1483,8 @@ It is also possible to add all emacs-mode bindings to vi-mode by using something
 
 When in vi-mode, the `fish_mode_prompt <cmds/fish_mode_prompt.html>`_ function will display a mode indicator to the left of the prompt. The ``fish_vi_cursor`` function will be used to change the cursor's shape depending on the mode in supported terminals. To disable this feature, override it with an empty function. To display the mode elsewhere (like in your right prompt), use the output of the ``fish_default_mode_prompt`` function.
 
+When a binding switches the mode, it will repaint the mode-prompt if it exists, and the rest of the prompt only if it doesn't. So if you want a mode-indicator in your ``fish_prompt``, you need to erase ``fish_mode_prompt`` e.g. by adding an empty file at `~/.config/fish/functions/fish_mode_prompt.fish`. (Bindings that change the mode are supposed to call the `repaint-mode` bind function, see :ref:`bind <cmd-bind>`)
+
 .. _vi-mode-command:
 
 Command mode

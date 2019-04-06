@@ -1571,6 +1571,7 @@ complete -f -c git -n '__fish_git_using_command help' -a clean -d 'Remove untrac
 complete -f -c git -n '__fish_git_using_command help' -a clone -d 'Clone a repository into a new directory'
 complete -f -c git -n '__fish_git_using_command help' -a commit -d 'Record changes to the repository'
 complete -f -c git -n '__fish_git_using_command help' -a config -d 'Set and read git configuration variables'
+complete -f -c git -n '__fish_git_using_command help' -a describe -d 'Give an object a human readable name based on an available ref'
 complete -f -c git -n '__fish_git_using_command help' -a diff -d 'Show changes between commits, commit and working tree, etc'
 complete -f -c git -n '__fish_git_using_command help' -a difftool -d 'Open diffs in a visual tool'
 complete -f -c git -n '__fish_git_using_command help' -a fetch -d 'Download objects and refs from another repository'
@@ -1579,7 +1580,9 @@ complete -f -c git -n '__fish_git_using_command help' -a format-patch -d 'Genera
 complete -f -c git -n '__fish_git_using_command help' -a grep -d 'Print lines matching a pattern'
 complete -f -c git -n '__fish_git_using_command help' -a init -d 'Create an empty git repository or reinitialize an existing one'
 complete -f -c git -n '__fish_git_using_command help' -a log -d 'Show commit logs'
+complete -f -c git -n '__fish_git_using_command help' -a ls-files -d 'Show information about files in the index and the working tree'
 complete -f -c git -n '__fish_git_using_command help' -a merge -d 'Join two or more development histories together'
+complete -f -c git -n '__fish_git_using_command help' -a merge-base -d 'Find as good common ancestors as possible for a merge'
 complete -f -c git -n '__fish_git_using_command help' -a mergetool -d 'Run merge conflict resolution tools to resolve merge conflicts'
 complete -f -c git -n '__fish_git_using_command help' -a mv -d 'Move or rename a file, a directory, or a symlink'
 complete -f -c git -n '__fish_git_using_command help' -a prune -d 'Prune all unreachable objects from the object database'
@@ -1597,6 +1600,7 @@ complete -f -c git -n '__fish_git_using_command help' -a status -d 'Show the wor
 complete -f -c git -n '__fish_git_using_command help' -a submodule -d 'Initialize, update or inspect submodules'
 complete -f -c git -n '__fish_git_using_command help' -a tag -d 'Create, list, delete or verify a tag object signed with GPG'
 complete -f -c git -n '__fish_git_using_command help' -a whatchanged -d 'Show logs with difference each commit introduces'
+complete -f -c git -n '__fish_git_using_command help' -a worktree -d 'Manage multiple working trees'
 
 # Complete both options and possible parameters to `git config`
 complete -f -c git -n '__fish_git_using_command config' -l global -d 'Get/set global configuration'

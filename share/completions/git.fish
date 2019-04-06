@@ -900,6 +900,27 @@ complete -f -c git -n '__fish_git_using_command commit' -l fixup -d 'Fixup commi
 complete -f -c git -n '__fish_git_using_command commit; and __fish_contains_opt fixup' -k -a '(__fish_git_recent_commits)'
 # TODO options
 
+### describe
+complete -c git -n '__fish_git_needs_command' -a describe -d 'Give an object a human readable name based on an available ref'
+complete -k -f -c git -n '__fish_git_using_command describe' -a '(__fish_git_branches)'
+complete -k -f -c git -n '__fish_git_using_command describe' -a '(__fish_git_heads)' -d 'Head'
+complete -k -f -c git -n '__fish_git_using_command describe' -a '(__fish_git_tags)' -d 'Tag'
+complete -k -f -c git -n '__fish_git_using_command describe' -a '(__fish_git_unique_remote_branches)' -d 'Unique Remote Branch'
+complete -f -c git -n '__fish_git_using_command describe' -l dirty -d 'Describe the state of the working tree'
+complete -f -c git -n '__fish_git_using_command describe' -l broken -d 'Describe the state of the working tree'
+complete -f -c git -n '__fish_git_using_command describe' -l all -d 'Use any ref found in refs/ namespace'
+complete -f -c git -n '__fish_git_using_command describe' -l tags -d 'Use any tag found in refs/tags namespace'
+complete -f -c git -n '__fish_git_using_command describe' -l contains -d 'Find the tag that comes after the commit'
+complete -f -c git -n '__fish_git_using_command describe' -l abbrev -d 'Use <n> digits, or as many digits as needed to form a unique object name'
+complete -f -c git -n '__fish_git_using_command describe' -l candidates -d 'Consider up to <n> candidates'
+complete -f -c git -n '__fish_git_using_command describe' -l exact-match -d 'Only output exact matches'
+complete -f -c git -n '__fish_git_using_command describe' -l debug -d 'Verbosely display information about the searching strategy'
+complete -f -c git -n '__fish_git_using_command describe' -l long -d 'Always output the long format'
+complete -f -c git -n '__fish_git_using_command describe' -l match -d 'Only consider tags matching the given glob pattern'
+complete -f -c git -n '__fish_git_using_command describe' -l exclude -d 'Do not consider tags matching the given glob pattern'
+complete -f -c git -n '__fish_git_using_command describe' -l always -d 'Show uniquely abbreviated commit object as fallback'
+complete -f -c git -n '__fish_git_using_command describe' -l first-parent -d 'Follow only the first parent commit upon seeing a merge commit'
+
 ### diff
 complete -c git -n '__fish_git_needs_command' -a diff -d 'Show changes between commits, commit and working tree, etc'
 complete -c git -n '__fish_git_using_command diff' -a '(__fish_git_ranges)'

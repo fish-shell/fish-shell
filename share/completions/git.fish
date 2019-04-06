@@ -911,7 +911,8 @@ complete -c git -n '__fish_git_using_command diff' -s 1 -l base -d 'Compare the 
 complete -c git -n '__fish_git_using_command diff' -s 2 -l ours -d 'Compare the working tree with the "our branch"'
 complete -c git -n '__fish_git_using_command diff' -s 3 -l theirs -d 'Compare the working tree with the "their branch"'
 complete -c git -n '__fish_git_using_command diff' -s 0 -d 'Omit diff output for unmerged entries and just show "Unmerged"'
-complete -f -c git -n '__fish_git_using_command diff' -a '(__fish_git_files modified deleted)'
+complete -c git -n '__fish_git_using_command diff; and not __fish_contains_opt cached' -fa '(__fish_git_files modified deleted)'
+complete -c git -n '__fish_git_using_command diff; and __fish_contains_opt cached' -fa '(__fish_git_files modified-staged deleted-staged)'
 
 ### Function to list available tools for git difftool and mergetool
 

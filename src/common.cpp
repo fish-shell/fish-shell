@@ -78,7 +78,6 @@ const wchar_t *program_name;
 int debug_level = 1;         // default maximum debug output level (errors and warnings)
 int debug_stack_frames = 0;  // default number of stack frames to show on debug() calls
 
-
 /// Be able to restore the term's foreground process group.
 /// This is set during startup and not modified after.
 static pid_t initial_fg_process_group = -1;
@@ -92,24 +91,6 @@ static volatile bool termsize_valid = false;
 
 static char *wcs2str_internal(const wchar_t *in, char *out);
 static void debug_shared(const wchar_t msg_level, const wcstring &msg);
-
-bool is_whitespace(wchar_t c) {
-    switch (c) {
-        case ' ':
-        case '\t':
-        case '\r':
-        case '\n':
-        case '\v':
-            return true;
-        default:
-            return false;
-    }
-}
-
-bool is_whitespace(const wcstring &input) {
-    bool (*pred)(wchar_t c) = is_whitespace;
-    return std::all_of(input.begin(), input.end(), pred);
-}
 
 #if defined(OS_IS_CYGWIN) || defined(WSL)
 // MS Windows tty devices do not currently have either a read or write timestamp. Those

@@ -1181,6 +1181,12 @@ Special variables
 
 The user can change the settings of ``fish`` by changing the values of certain variables.
 
+- ``PATH``, an array of directories in which to search for commands
+
+- ``CDPATH``, an array of directories in which to search for the new directory for the ``cd`` builtin.
+
+- ``LANG``, ``LC_ALL``, ``LC_COLLATE``, ``LC_CTYPE``, ``LC_MESSAGES``, ``LC_MONETARY``, ``LC_NUMERIC`` and ``LC_TIME`` set the language option for the shell and subprograms. See the section `Locale variables <#variables-locale>`_ for more information.
+
 - A large number of variable starting with the prefixes ``fish_color`` and ``fish_pager_color``. See `Variables for changing highlighting colors <#variables-color>`__ for more information.
 
 - ``fish_emoji_width`` controls the computed width of certain characters, in particular emoji, whose rendered width varies across terminal emulators. This should be set to 1 if your terminal emulator renders emoji single-width, or 2 if double-width. Set this only if you see graphical glitching when printing emoji.
@@ -1202,12 +1208,6 @@ The user can change the settings of ``fish`` by changing the values of certain v
 - ``umask``, the current file creation mask. The preferred way to change the umask variable is through the `umask <cmds/umask.html>`_ function. An attempt to set umask to an invalid value will always fail.
 
 - ``BROWSER``, the user's preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
-
-- ``CDPATH``, an array of directories in which to search for the new directory for the ``cd`` builtin.
-
-- ``LANG``, ``LC_ALL``, ``LC_COLLATE``, ``LC_CTYPE``, ``LC_MESSAGES``, ``LC_MONETARY``, ``LC_NUMERIC`` and ``LC_TIME`` set the language option for the shell and subprograms. See the section `Locale variables <#variables-locale>`_ for more information.
-
-- ``PATH``, an array of directories in which to search for commands
 
 ``fish`` also sends additional information to the user through the values of certain environment variables. The user cannot change the values of most of these variables.
 

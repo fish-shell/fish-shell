@@ -243,7 +243,9 @@ Switches differ between commands and are documented in the manual page for each 
 Quotes
 ------
 
-Sometimes features such as `parameter expansion <#expand>`_ and `character escapes <#escapes>`_ get in the way. When that happens, the user can write a parameter within quotes, either ``'`` (single quote) or ``"`` (double quote). There is one important difference between single quoted and double quoted strings: When using double quoted string, `variable expansion <#expand-variable>`_ still takes place. Other than that, no other kind of expansion (including `brace expansion <#expand-brace>`_ and parameter expansion) will take place, the parameter may contain spaces, and escape sequences are ignored. The only backslash escape accepted within single quotes is ``\'``, which escapes a single quote and ``\\``, which escapes the backslash symbol. The only backslash escapes accepted within double quotes are ``\"``, which escapes a double quote, ``\$``, which escapes a dollar character, ``\`` followed by a newline, which deletes the backslash and the newline, and lastly ``\\``, which escapes the backslash symbol. Single quotes have no special meaning within double quotes and vice versa.
+Sometimes features such as `parameter expansion <#expand>`_ and `character escapes <#escapes>`_ get in the way. When that happens, the user can write a parameter within quotes, either ``'`` (single quote) or ``"`` (double quote). There is one important difference between single quoted and double quoted strings: When using double quoted string, `variable expansion <#expand-variable>`_ still takes place. Other than that, no other kind of expansion (including `brace expansion <#expand-brace>`_ and parameter expansion) will take place, the parameter may contain spaces, and escape sequences are ignored.
+
+The only backslash escape accepted within single quotes is ``\'``, which escapes a single quote and ``\\``, which escapes the backslash symbol. The only backslash escapes accepted within double quotes are ``\"``, which escapes a double quote, ``\$``, which escapes a dollar character, ``\`` followed by a newline, which deletes the backslash and the newline, and lastly ``\\``, which escapes the backslash symbol. Single quotes have no special meaning within double quotes and vice versa.
 
 Example::
 
@@ -447,6 +449,7 @@ Functions can be defined on the commandline or in a configuration file, but they
 Fish automatically searches through any directories in the array variable ``$fish_function_path``, and any functions defined are automatically loaded when needed. A function definition file must have a filename consisting of the name of the function plus the suffix '``.fish``'.
 
 By default, Fish searches the following for functions, using the first available file that it finds:
+
 - A directory for end-users to keep their own functions, usually ``~/.config/fish/functions`` (controlled by the ``XDG_CONFIG_HOME`` environment variable).
 - A directory for systems administrators to install functions for all users on the system, usually ``/etc/fish/functions`` (really ``$__fish_sysconfdir/functions``).
 - A directory for third-party software vendors to ship their own functions for their software, usually ``/usr/share/fish/vendor_functions.d``. (set at compile time; by default, ``$__fish_data_dir/vendor_functions.d``)
@@ -655,6 +658,7 @@ Where to put completions
 Completions can be defined on the commandline or in a configuration file, but they can also be automatically loaded. Fish automatically searches through any directories in the array variable ``$fish_complete_path``, and any completions defined are automatically loaded when needed. A completion file must have a filename consisting of the name of the command to complete and the suffix '``.fish``'.
 
 By default, Fish searches the following for completions, using the first available file that it finds:
+
 - A directory for end-users to keep their own completions, usually ``~/.config/fish/completions`` (controlled by the ``XDG_CONFIG_HOME`` environment variable);
 - A directory for systems administrators to install completions for all users on the system, usually ``/etc/fish/completions``;
 - A directory for third-party software vendors to ship their own completions for their software, usually ``/usr/share/fish/vendor_completions.d``;

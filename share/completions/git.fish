@@ -512,6 +512,10 @@ function __fish_git_stash_not_using_subcommand
     return 0
 end
 
+function __fish_git_complete_worktrees
+    command git worktree list --porcelain | string match -er '^worktree' | string replace -r '^worktree\s*' ''
+end
+
 function __fish_git_complete_stashes
     command git stash list --format=%gd:%gs 2>/dev/null | string replace ":" \t
 end
@@ -1392,6 +1396,46 @@ complete -f -c git -n '__fish_git_using_command tag' -s l -l list -d 'List tags'
 complete -f -c git -n '__fish_git_using_command tag' -l contains -xka '(__fish_git_commits)' -d 'List tags that contain a commit'
 complete -f -c git -n '__fish_git_using_command tag; and __fish_contains_opt -s d delete -s v verify' -a '(__fish_git_tags)' -d 'Tag'
 # TODO options
+
+### worktree
+set -l git_worktree_commands add list lock move prune remove unlock
+complete -c git -n '__fish_git_needs_command' -a worktree -d 'Manage multiple working trees'
+complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a add -d 'Create a working tree'
+complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a list -d 'List details of each worktree'
+complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a lock -d 'Unlock a working tree'
+complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a move -d 'Move a working tree to a new location'
+complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a prune -d 'Prune working tree information in $GIT_DIR/worktrees'
+complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a remove -d 'Remove a working tree'
+complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $git_worktree_commands" -a unlock -d 'Unlock a working tree'
+
+complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add move remove' -s f -l force -d 'Override safeguards'
+
+complete -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add'
+complete -k -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -a '(__fish_git_branches)'
+complete -k -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -a '(__fish_git_heads)' -d 'Head'
+complete -k -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -a '(__fish_git_tags)' -d 'Tag'
+complete -k -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -a '(__fish_git_unique_remote_branches)' -d 'Unique Remote Branch'
+complete -x -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -s b -d 'Create a new branch'
+complete -x -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -s B -d 'Create a new branch even if it already exists'
+complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -l detach -d 'Detach HEAD in the new working tree'
+complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -l checkout -d 'Checkout <commit-ish> after creating working tree'
+complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -l no-checkout -d 'Suppress checkout'
+complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -l guess-remote
+complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -l no-guess-remote
+complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -l track -d 'Mark <commit-ish> as "upstream" from the new branch'
+complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -l no-track -d 'Don\'t mark <commit-ish> as "upstream" from the new branch'
+complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -l lock -d 'Lock working tree after creation'
+complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -s q -l quiet -d 'Suppress feedback messages'
+complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from list' -l porcelain -d 'Output in an easy-to-parse format for scripts'
+complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from lock' -a '(__fish_git_complete_worktrees)'
+complete -x -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from lock' -l reason -d 'An explanation why the working tree is locked'
+complete -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from move' -a '(__fish_git_complete_worktrees)'
+complete -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from move'
+complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from prune' -s n -l dry-run -d 'Do not remove anything'
+complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from prune' -s v -l verbose -d 'Report all removals'
+complete -x -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from prune' -l expire -d 'Only expire unused working trees older than <time>'
+complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from remove' -a '(__fish_git_complete_worktrees)'
+complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from unlock' -a '(__fish_git_complete_worktrees)'
 
 ### stash
 complete -c git -n '__fish_git_needs_command' -a stash -d 'Stash away changes'

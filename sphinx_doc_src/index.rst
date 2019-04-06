@@ -170,7 +170,7 @@ For for detailed instructions see `Switching to fish <tutorial.html#tut_switchin
 Uninstalling
 ------------
 
-For uninstalling *fish*: see `FAQ: Uninstalling fish <faq.html#faq-uninstalling>`_.
+For uninstalling *fish*: see :ref:`FAQ: Uninstalling fish <faq-uninstalling>`.
 
 Starting and Exiting
 --------------------

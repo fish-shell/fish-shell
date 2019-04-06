@@ -249,6 +249,7 @@ In fish versions prior to 2.5.0 it was possible to create a function named ``-``
 
     abbr -a -- - 'cd -'
 
+.. _faq-uninstalling:
 
 Uninstalling fish
 -----------------

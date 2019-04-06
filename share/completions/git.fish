@@ -72,6 +72,11 @@ function __fish_git_remotes
     command git remote 2>/dev/null
 end
 
+function __fish_git_worktrees
+    command git worktree list 2>/dev/null \
+    | string replace -r '\s(.*)\s\[(.*)\]' '\t$2'
+end
+
 function __fish_git_files
     # A function to show various kinds of files git knows about,
     # by parsing `git status --porcelain`.
@@ -1454,6 +1459,35 @@ complete -f -c git -n '__fish_git_using_command blame' -s s -d 'Suppress the aut
 complete -f -c git -n '__fish_git_using_command blame' -s e -l show-email -d 'Show the author email instead of author name'
 complete -f -c git -n '__fish_git_using_command blame' -s w -d 'Ignore whitespace changes'
 
+### git worktree
+set -l worktreecommands add list lock move prune remove unlock
+complete -f -c git -n '__fish_git_needs_command' -a worktree -d 'Manage multiple working trees'
+complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $worktreecommands" -a add -d 'Create <path> and checkout <commit-ish> into it'
+complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $worktreecommands" -a list -d 'List details of each worktree'
+complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $worktreecommands" -a lock -d 'Lock a working tree'
+complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $worktreecommands" -a move -d 'Move a working tree to a new location'
+complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $worktreecommands" -a prune -d 'Prune working tree information'
+complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $worktreecommands" -a remove -d 'Remove a working tree'
+complete -f -c git -n "__fish_git_using_command worktree; and not __fish_seen_subcommand_from $worktreecommands" -a unlock -d 'Unlock a working tree'
+complete -f -c git -n "__fish_git_using_command worktree; and __fish_seen_subcommand_from add" -s f -l force -d 'Force to create a new working tree'
+complete -f -c git -n "__fish_git_using_command worktree; and __fish_seen_subcommand_from add" -l detach -d 'Detach HEAD in the new working tree'
+complete -f -c git -n "__fish_git_using_command worktree; and __fish_seen_subcommand_from add" -l checkout -d 'Check out <commit-ish>'
+complete -f -c git -n "__fish_git_using_command worktree; and __fish_seen_subcommand_from add" -l no-checkout -d 'Suppress checkout'
+complete -f -c git -n "__fish_git_using_command worktree; and __fish_seen_subcommand_from add" -l lock -d 'Keep the working tree locked after creation'
+complete -f -c git -n "__fish_git_using_command worktree; and __fish_seen_subcommand_from add" -s b -d 'Create a new branch'
+complete -f -c git -n "__fish_git_using_command worktree; and __fish_seen_subcommand_from add" -k -a '(__fish_git_commits)'
+complete -f -c git -n "__fish_git_using_command worktree; and __fish_seen_subcommand_from add" -k -a '(__fish_git_branches)'
+complete -f -c git -n "__fish_git_using_command worktree; and __fish_seen_subcommand_from list" -l porcelain -d 'Output in an easy-to-parse format for scripts'
+complete -f -c git -n "__fish_git_using_command worktree; and __fish_seen_subcommand_from lock" -l reason -d 'An explanation why the working tree is locked'
+complete -f -c git -n "__fish_git_using_command worktree; and __fish_seen_subcommand_from lock" -xa '(__fish_git_worktrees)'
+complete -f -c git -n "__fish_git_using_command worktree; and __fish_seen_subcommand_from move" -a '(__fish_git_worktrees)'
+complete -f -c git -n "__fish_git_using_command worktree; and __fish_seen_subcommand_from prune" -s n -l dry-run -d 'Just report what it would remove'
+complete -f -c git -n "__fish_git_using_command worktree; and __fish_seen_subcommand_from prune" -s v -l verbose -d 'Report all removal'
+complete -f -c git -n "__fish_git_using_command worktree; and __fish_seen_subcommand_from prune" -l expire -d 'Only expire unused working trees older than <time>'
+complete -f -c git -n "__fish_git_using_command worktree; and __fish_seen_subcommand_from remove" -s f -l force -d 'Force to remove an unclean working tree'
+complete -f -c git -n "__fish_git_using_command worktree; and __fish_seen_subcommand_from remove" -a '(__fish_git_worktrees)'
+complete -f -c git -n "__fish_git_using_command worktree; and __fish_seen_subcommand_from unlock" -a '(__fish_git_worktrees)'
+
 ### help
 complete -f -c git -n '__fish_git_using_command help' -a '(__fish_git_help_all_concepts)'
 complete -f -c git -n '__fish_git_using_command help' -a add -d 'Add file contents to the index'
@@ -1494,6 +1528,7 @@ complete -f -c git -n '__fish_git_using_command help' -a status -d 'Show the wor
 complete -f -c git -n '__fish_git_using_command help' -a submodule -d 'Initialize, update or inspect submodules'
 complete -f -c git -n '__fish_git_using_command help' -a tag -d 'Create, list, delete or verify a tag object signed with GPG'
 complete -f -c git -n '__fish_git_using_command help' -a whatchanged -d 'Show logs with difference each commit introduces'
+complete -f -c git -n '__fish_git_using_command help' -a worktree -d 'Manage multiple working trees'
 
 # Complete both options and possible parameters to `git config`
 complete -f -c git -n '__fish_git_using_command config' -l global -d 'Get/set global configuration'

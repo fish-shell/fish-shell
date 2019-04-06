@@ -93,7 +93,8 @@ pygments_style = None
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#
+# !!! If you change this you also need to update the @import at the top
+# of _static/fish-syntax-style.css
 html_theme = 'nature'
 
 # Theme options are theme-specific and customize the look and feel of a theme

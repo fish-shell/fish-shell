@@ -1135,6 +1135,35 @@ complete -c git -n '__fish_git_using_command log' -l no-prefix
 complete -x -c git -n '__fish_git_using_command log' -l line-prefix
 complete -c git -n '__fish_git_using_command log' -l ita-invisible-in-index
 
+### ls-files
+complete -c git -n '__fish_git_needs_command' -a ls-files -d 'Show information about files in the index and the working tree'
+complete -c git -n '__fish_git_using_command ls-files'
+complete -c git -n '__fish_git_using_command ls-files' -s c -l cached -d 'Show cached files in the output'
+complete -c git -n '__fish_git_using_command ls-files' -s d -l deleted -d 'Show deleted files in the output'
+complete -c git -n '__fish_git_using_command ls-files' -s m -l modified -d 'Show modified files in the output'
+complete -c git -n '__fish_git_using_command ls-files' -s o -l others -d 'Show other (i.e. untracked) files in the output'
+complete -c git -n '__fish_git_using_command ls-files' -s i -l ignored -d 'Show only ignored files in the output'
+complete -c git -n '__fish_git_using_command ls-files' -s s -l staged -d "Show staged contents' mode bits, object name and stage number in the output"
+complete -c git -n '__fish_git_using_command ls-files' -l directory -d 'If a whole directory is classified as "other", show just its name'
+complete -c git -n '__fish_git_using_command ls-files' -l no-empty-directory -d 'Do not list empty directories'
+complete -c git -n '__fish_git_using_command ls-files' -s u -l unmerged -d 'Show unmerged files in the output'
+complete -c git -n '__fish_git_using_command ls-files' -s k -l killed -d 'Show files on the filesystem that need to be removed for checkout-index to succeed'
+complete -c git -n '__fish_git_using_command ls-files' -s z -d '\0 line termination on output and do not quote filenames'
+complete -c git -n '__fish_git_using_command ls-files' -s x -l exclude -d 'Skip untracked files matching pattern'
+complete -c git -n '__fish_git_using_command ls-files' -s X -l exclude-from -d 'Read exclude patterns from <file>; 1 per line'
+complete -c git -n '__fish_git_using_command ls-files' -l exclude-per-directory -d 'Read additional exclude patterns that apply only to the directory and its subdirectories in <file>'
+complete -c git -n '__fish_git_using_command ls-files' -l exclude-standard -d 'Add the standard Git exclusions'
+complete -c git -n '__fish_git_using_command ls-files' -l error-unmatch -d 'If any <file> does not appear in the index, treat this as an error'
+complete -c git -n '__fish_git_using_command ls-files' -l with-tree
+complete -c git -n '__fish_git_using_command ls-files' -s t -d 'Identifies the file status'
+complete -c git -n '__fish_git_using_command ls-files' -s v -d 'Similar to -t but use lowercase letters for files that are marked as assume unchanged'
+complete -c git -n '__fish_git_using_command ls-files' -s f -d 'Similar to -t but use lowercase letters for files that are marked as fsmonitor valid'
+complete -c git -n '__fish_git_using_command ls-files' -l full-name -d 'Force paths to be output relative to the project top directory'
+complete -c git -n '__fish_git_using_command ls-files' -l recurse-submodules -d 'Recursively calls ls-files on each submodule in the repository'
+complete -c git -n '__fish_git_using_command ls-files' -l abbrev -d 'Show only a partial prefix'
+complete -c git -n '__fish_git_using_command ls-files' -l debug -d 'After each line that describes a file, add more data about its cache entry'
+complete -c git -n '__fish_git_using_command ls-files' -l eol -d 'Show <eolinfo> and <eolattr> of files'
+
 ### merge
 complete -f -c git -n '__fish_git_needs_command' -a merge -d 'Join two or more development histories together'
 complete -f -c git -n '__fish_git_using_command merge' -a '(__fish_git_branches)'

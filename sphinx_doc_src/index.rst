@@ -233,7 +233,7 @@ Here is a list of some useful commands:
 - ``open``, open files with the default application associated with each filetype
 - ``less``, list the contents of files
 
-Commands and parameters are separated by the space character '&nbsp;'. Every command ends with either a newline (i.e. by pressing the return key) or a semicolon '``;``'. More than one command can be written on the same line by separating them with semicolons.
+Commands and parameters are separated by the space character `' '`. Every command ends with either a newline (i.e. by pressing the return key) or a semicolon '``;``'. More than one command can be written on the same line by separating them with semicolons.
 
 A switch is a very common special type of argument. Switches almost always start with one or more hyphens '``-``' and alter the way a command operates. For example, the '``ls``' command usually lists all the files and directories in the current working directory, but by using the '``-l``' switch, the behavior of '``ls``' is changed to not only display the filename, but also the size, permissions, owner and modification time of each file.
 

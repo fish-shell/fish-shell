@@ -135,7 +135,7 @@ You can pipe between commands with the usual vertical bar::
     <outp>       1       2      12</outp>
 
 
-stdin and stdout can be redirected via the familiar &lt; and &gt;. stderr is redirected with a 2&gt;.
+stdin and stdout can be redirected via the familiar `<` and `<`. stderr is redirected with a `2>`.
 
 
 
@@ -408,7 +408,7 @@ To write them on the same line, use the semicolon (";"). That means the followin
 Combiners (And, Or, Not)
 ------------------------
 
-fish supports the familiar ``&amp;&amp;`` and ``||`` to combine commands, and ``!`` to negate them::
+fish supports the familiar ``&&`` and ``||`` to combine commands, and ``!`` to negate them::
 
     >_ ./configure && make && sudo make install
 

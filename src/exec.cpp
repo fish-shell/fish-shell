@@ -1021,6 +1021,9 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
         return true;
     }
 
+    // Check to see if we should reclaim the foreground pgrp after the job finishes or stops.
+    const bool reclaim_foreground_pgrp = (tcgetpgrp(STDIN_FILENO) == getpgrp());
+
     const std::shared_ptr<job_t> parent_job = j->get_parent();
 
     // Perhaps inherit our parent's pgid and job control flag.
@@ -1120,7 +1123,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
         return false;
     }
 
-    j->continue_job(false);
+    j->continue_job(reclaim_foreground_pgrp, false);
     return true;
 }
 

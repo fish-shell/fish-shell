@@ -827,7 +827,7 @@ return false;
     return true;
 }
 
-void job_t::continue_job(bool send_sigcont) {
+void job_t::continue_job(bool reclaim_foreground_pgrp, bool send_sigcont) {
     // Put job first in the job list.
     promote();
     set_flag(job_flag_t::NOTIFIED, false);
@@ -839,7 +839,7 @@ void job_t::continue_job(bool send_sigcont) {
     // Make sure we retake control of the terminal before leaving this function.
     bool term_transferred = false;
     cleanup_t take_term_back([&]() {
-        if (term_transferred) {
+        if (term_transferred && reclaim_foreground_pgrp) {
             terminal_return_from_job(this);
         }
     });

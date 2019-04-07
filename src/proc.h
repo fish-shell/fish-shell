@@ -408,8 +408,10 @@ class job_t {
     /// saved terminal modes and send the process group a SIGCONT signal to wake it up before we
     /// block.
     ///
-    /// \param send_sigcont Whether SIGCONT should be sent to the job if it is in the foreground.
-    void continue_job(bool send_sigcont);
+    /// \param reclaim_foreground_pgrp whether, when the job finishes or stops, to reclaim the
+    /// foreground pgrp (via tcsetpgrp). \param send_sigcont Whether SIGCONT should be sent to the
+    /// job if it is in the foreground.
+    void continue_job(bool reclaim_foreground_pgrp, bool send_sigcont);
 
     /// Promotes the job to the front of the job list.
     void promote();

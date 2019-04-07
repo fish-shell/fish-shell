@@ -30,7 +30,7 @@ static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j) {
                               j->command_wcstr());
     j->promote();
     j->set_flag(job_flag_t::FOREGROUND, false);
-    j->continue_job(j->is_stopped());
+    j->continue_job(true, j->is_stopped());
     return STATUS_CMD_OK;
 }
 

@@ -176,14 +176,9 @@ FILE *wfopen(const wcstring &path, const char *mode) {
 }
 
 bool set_cloexec(int fd) {
-    int flags = fcntl(fd, F_GETFD, 0);
-    if (flags < 0) {
-        return false;
-    }
-    if (flags & FD_CLOEXEC) {
-        return true;
-    }
-    return fcntl(fd, F_SETFD, flags | FD_CLOEXEC) >= 0;
+    int flags = fcntl(fd, F_SETFD, flags | FD_CLOEXEC);
+    if (flags == -1) return false;
+    return true;
 }
 
 static int wopen_internal(const wcstring &pathname, int flags, mode_t mode, bool cloexec) {

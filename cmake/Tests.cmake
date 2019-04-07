@@ -44,14 +44,17 @@ ADD_DEPENDENCIES(test test_low_level tests_dir)
 
 # Make the directory in which to run tests.
 # Also symlink fish to where the tests expect it to be.
+# Lastly put fish_test_helper there too.
 ADD_CUSTOM_TARGET(tests_buildroot_target
                   COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_INSTALL_DIR}
                   COMMAND DESTDIR=${TEST_INSTALL_DIR} ${CMAKE_COMMAND}
                           --build ${CMAKE_CURRENT_BINARY_DIR} --target install
+                  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/fish_test_helper
+                          ${TEST_INSTALL_DIR}/${CMAKE_INSTALL_PREFIX}/bin
                   COMMAND ${CMAKE_COMMAND} -E create_symlink
                           ${TEST_INSTALL_DIR}/${CMAKE_INSTALL_PREFIX}
                           ${TEST_ROOT_DIR}
-                  DEPENDS fish)
+                  DEPENDS fish fish_test_helper)
 
 IF(NOT FISH_IN_TREE_BUILD)
   # We need to symlink share/functions for the tests.

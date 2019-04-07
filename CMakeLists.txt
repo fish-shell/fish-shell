@@ -162,6 +162,9 @@ ADD_EXECUTABLE(fish_key_reader
                src/fish_key_reader.cpp src/print_help.cpp)
 FISH_LINK_DEPS(fish_key_reader)
 
+# A helper for running tests.
+ADD_EXECUTABLE(fish_test_helper src/fish_test_helper.cpp)
+
 # Set up tests.
 INCLUDE(cmake/Tests.cmake)
 

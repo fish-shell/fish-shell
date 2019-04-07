@@ -1027,11 +1027,9 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     const std::shared_ptr<job_t> parent_job = j->get_parent();
 
     // Perhaps inherit our parent's pgid and job control flag.
-    if (parent_job && j->processes.front()->type == process_type_t::external) {
-        if (parent_job->pgid != INVALID_PID) {
-            j->pgid = parent_job->pgid;
-            j->set_flag(job_flag_t::JOB_CONTROL, true);
-        }
+    if (parent_job && parent_job->pgid != INVALID_PID) {
+        j->pgid = parent_job->pgid;
+        j->set_flag(job_flag_t::JOB_CONTROL, true);
     }
 
     size_t stdout_read_limit = 0;

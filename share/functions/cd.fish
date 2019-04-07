@@ -41,7 +41,13 @@ function cd --description "Change directory"
         or set -l dirprev
         set -q dirprev[$MAX_DIR_HIST]
         and set -e dirprev[1]
-        set -g -a dirprev $previous
+
+        # If dirprev is set as a universal variable, honour its scope.
+        # Otherwise, set it as a global variable.
+        set -U -q dirprev
+        and set -U -a dirprev $previous
+        or set -g -a dirprev $previous
+
         set -e dirnext
         set -g __fish_cd_direction prev
     end

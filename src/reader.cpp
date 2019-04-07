@@ -3180,7 +3180,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
 
         case rl::expand_abbr: {
-            editable_line_t *el = active_edit_line();
             if (expand_abbreviation_as_necessary(1)) {
                 super_highlight_me_plenty();
                 mark_repaint_needed();

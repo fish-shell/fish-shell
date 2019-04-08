@@ -81,7 +81,6 @@ size_t read_byte_limit = READ_BYTE_LIMIT;
 static const wchar_t PATH_ARRAY_SEP = L':';
 static const wchar_t NONPATH_ARRAY_SEP = L' ';
 
-bool g_use_posix_spawn = false;  // will usually be set to true
 bool curses_initialized = false;
 
 /// Does the terminal have the "eat_newline_glitch".
@@ -778,11 +777,6 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     }
     vars.set_termsize();    // initialize the terminal size variables
     vars.set_read_limit();  // initialize the read_byte_limit
-
-    // Set g_use_posix_spawn. Default to true.
-    auto use_posix_spawn = vars.get(L"fish_use_posix_spawn");
-    g_use_posix_spawn =
-        use_posix_spawn.missing_or_empty() ? true : bool_from_string(use_posix_spawn->as_string());
 
     // Set fish_bind_mode to "default".
     vars.set_one(FISH_BIND_MODE_VAR, ENV_GLOBAL, DEFAULT_BIND_MODE);

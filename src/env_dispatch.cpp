@@ -300,6 +300,13 @@ static void handle_curses_change(const environment_t &vars) {
     init_curses(vars);
 }
 
+static void handle_fish_use_posix_spawn_change(const environment_t &vars) {
+    // note this defaults to true
+    auto use_posix_spawn = vars.get(L"fish_use_posix_spawn");
+    g_use_posix_spawn =
+        use_posix_spawn.missing_or_empty() ? true : bool_from_string(use_posix_spawn->as_string());
+}
+
 /// Populate the dispatch table used by `env_dispatch_var_change()` to efficiently call the
 /// appropriate function to handle a change to a variable.
 /// Note this returns a new-allocated value that we expect to leak.
@@ -327,6 +334,7 @@ static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table() {
     var_dispatch_table->add(L"fish_read_limit", handle_read_limit_change);
     var_dispatch_table->add(L"fish_history", handle_fish_history_change);
     var_dispatch_table->add(L"TZ", handle_tz_change);
+    var_dispatch_table->add(L"fish_use_posix_spawn", handle_fish_use_posix_spawn_change);
     return var_dispatch_table;
 }
 
@@ -336,3 +344,6 @@ static void run_inits(const environment_t &vars) {
     handle_curses_change(vars);
     update_wait_on_escape_ms(vars);
 }
+
+// Miscellaneous variables.
+bool g_use_posix_spawn = false;

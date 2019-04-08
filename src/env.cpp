@@ -179,31 +179,8 @@ struct var_stack_t {
     // \return the popped node.
     env_node_ref_t pop() {
         assert(top != this->global_env && "Cannot pop global node");
-
-        bool locale_changed = top->contains_any_of(locale_variables);
-        bool curses_changed = top->contains_any_of(curses_variables);
-
-        if (top->new_scope) {  //!OCLINT(collapsible if statements)
-            if (top->exportv || local_scope_exports(top->next)) {
-                this->mark_changed_exported();
-            }
-        }
-
-        // Actually do the pop!
         env_node_ref_t old_top = this->top;
         this->top = old_top->next;
-        for (const auto &entry_pair : old_top->env) {
-            const env_var_t &var = entry_pair.second;
-            if (var.exports()) {
-                this->mark_changed_exported();
-                break;
-            }
-        }
-
-        // TODO: instantize this locale and curses
-        const auto &vars = env_stack_t::principal();
-        if (locale_changed) init_locale(vars);
-        if (curses_changed) init_curses(vars);
         return old_top;
     }
 
@@ -232,11 +209,13 @@ struct var_stack_t {
         return var_stack_t(*this);
     }
 
+    /// return true if the topomst local scope exports a variable.
+    bool local_scope_exports(const env_node_ref_t &n) const;
+
    private:
     /// Copy constructor. This does not copy the export array; it just allows it to be regenerated.
     var_stack_t(const var_stack_t &rhs) : top(rhs.top), global_env(rhs.global_env) {}
 
-    bool local_scope_exports(const env_node_ref_t &n) const;
     void get_exported(const env_node_t *n, var_table_t &h) const;
 
     /// Returns the global variable set.
@@ -1209,7 +1188,29 @@ bool var_stack_t::local_scope_exports(const env_node_ref_t &n) const {
 
 void env_stack_t::push(bool new_scope) { vars_stack().push(new_scope); }
 
-void env_stack_t::pop() { vars_stack().pop(); }
+void env_stack_t::pop() {
+    auto &vars = vars_stack();
+    auto old_node = vars.pop();
+    if (old_node->contains_any_of(locale_variables)) {
+        init_locale(*this);
+    }
+
+    if (old_node->contains_any_of(curses_variables)) {
+        init_curses(*this);
+    }
+
+    if (old_node->new_scope && (old_node->exportv || vars.local_scope_exports(old_node->next))) {
+        vars.mark_changed_exported();
+    }
+
+    for (const auto &entry_pair : old_node->env) {
+        const env_var_t &var = entry_pair.second;
+        if (var.exports()) {
+            vars.mark_changed_exported();
+            break;
+        }
+    }
+}
 
 /// Function used with to insert keys of one table into a set::set<wcstring>.
 static void add_key_to_string_set(const var_table_t &envs, std::set<wcstring> *str_set,

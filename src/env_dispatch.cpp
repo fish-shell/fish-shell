@@ -83,7 +83,7 @@ extern const wcstring_list_t locale_variables({L"LANG", L"LANGUAGE", L"LC_ALL", 
 extern const wcstring_list_t curses_variables({L"TERM", L"TERMINFO", L"TERMINFO_DIRS"});
 
 class var_dispatch_table_t {
-    using named_callback_t = std::function<void(const wcstring &, const wcstring &, env_stack_t &)>;
+    using named_callback_t = std::function<void(const wcstring &, env_stack_t &)>;
     std::unordered_map<wcstring, named_callback_t> named_table_;
 
     using anon_callback_t = std::function<void(env_stack_t &)>;
@@ -108,10 +108,10 @@ class var_dispatch_table_t {
         anon_table_.emplace(std::move(name), std::move(cb));
     }
 
-    void dispatch(const wchar_t *op, const wcstring &key, env_stack_t &vars) const {
+    void dispatch(const wcstring &key, env_stack_t &vars) const {
         auto named = named_table_.find(key);
         if (named != named_table_.end()) {
-            named->second(op, key, vars);
+            named->second(key, vars);
         }
         auto anon = anon_table_.find(key);
         if (anon != anon_table_.end()) {
@@ -192,12 +192,12 @@ static void guess_emoji_width(const environment_t &vars) {
 }
 
 /// React to modifying the given variable.
-void env_dispatch_var_change(const wchar_t *op, const wcstring &key, env_stack_t &vars) {
+void env_dispatch_var_change(const wcstring &key, env_stack_t &vars) {
     ASSERT_IS_MAIN_THREAD();
     // Do nothing if not yet fully initialized.
     if (!s_var_dispatch_table) return;
 
-    s_var_dispatch_table->dispatch(op, key, vars);
+    s_var_dispatch_table->dispatch(key, vars);
 
     // Eww.
     if (string_prefixes_string(L"fish_color_", key)) {
@@ -210,7 +210,7 @@ void env_dispatch_var_change(const wchar_t *op, const wcstring &key, env_stack_t
 static void universal_callback(env_stack_t *stack, const callback_data_t &cb) {
     const wchar_t *op = cb.is_erase() ? L"ERASE" : L"SET";
 
-    env_dispatch_var_change(op, cb.key, *stack);
+    env_dispatch_var_change(cb.key, *stack);
     stack->mark_changed_exported();
     event_fire(event_t::variable(cb.key, {L"VARIABLE", op, cb.key}));
 }
@@ -221,18 +221,14 @@ void env_universal_callbacks(env_stack_t *stack, const callback_data_list_t &cal
     }
 }
 
-static void handle_fish_term_change(const wcstring &op, const wcstring &var_name,
-                                    env_stack_t &vars) {
-    UNUSED(op);
+static void handle_fish_term_change(const wcstring &var_name, env_stack_t &vars) {
     UNUSED(var_name);
     update_fish_color_support(vars);
     reader_react_to_color_change();
 }
 
-static void handle_change_ambiguous_width(const wcstring &op, const wcstring &var_name,
-                                          env_stack_t &vars) {
-    (void)op;
-    (void)var_name;
+static void handle_change_ambiguous_width(const wcstring &var_name, env_stack_t &vars) {
+    UNUSED(var_name);
     int new_width = 1;
     if (auto width_str = vars.get(L"fish_ambiguous_width")) {
         new_width = fish_wcstol(width_str->as_string().c_str());
@@ -240,52 +236,39 @@ static void handle_change_ambiguous_width(const wcstring &op, const wcstring &va
     g_fish_ambiguous_width = std::max(0, new_width);
 }
 
-static void handle_term_size_change(const wcstring &op, const wcstring &var_name,
-                                    env_stack_t &vars) {
-    UNUSED(op);
+static void handle_term_size_change(const wcstring &var_name, env_stack_t &vars) {
     UNUSED(var_name);
     UNUSED(vars);
     invalidate_termsize(true);  // force fish to update its idea of the terminal size plus vars
 }
 
-static void handle_read_limit_change(const wcstring &op, const wcstring &var_name,
-                                     env_stack_t &vars) {
-    UNUSED(op);
+static void handle_read_limit_change(const wcstring &var_name, env_stack_t &vars) {
     UNUSED(var_name);
     vars.set_read_limit();
 }
 
-static void handle_fish_history_change(const wcstring &op, const wcstring &var_name,
-                                       env_stack_t &vars) {
-    UNUSED(op);
+static void handle_fish_history_change(const wcstring &var_name, env_stack_t &vars) {
     UNUSED(var_name);
     reader_change_history(history_session_id(vars));
 }
 
-static void handle_function_path_change(const wcstring &op, const wcstring &var_name,
-                                        env_stack_t &vars) {
-    UNUSED(op);
+static void handle_function_path_change(const wcstring &var_name, env_stack_t &vars) {
     UNUSED(var_name);
     UNUSED(vars);
     function_invalidate_path();
 }
 
-static void handle_complete_path_change(const wcstring &op, const wcstring &var_name,
-                                        env_stack_t &vars) {
-    UNUSED(op);
+static void handle_complete_path_change(const wcstring &var_name, env_stack_t &vars) {
     UNUSED(var_name);
     UNUSED(vars);
     complete_invalidate_path();
 }
 
-static void handle_tz_change(const wcstring &op, const wcstring &var_name, env_stack_t &vars) {
-    UNUSED(op);
+static void handle_tz_change(const wcstring &var_name, env_stack_t &vars) {
     handle_timezone(var_name.c_str(), vars);
 }
 
-static void handle_magic_colon_var_change(const wcstring &op, const wcstring &var_name,
-                                          env_stack_t &vars) {
-    UNUSED(op);
+static void handle_magic_colon_var_change(const wcstring &var_name, env_stack_t &vars) {
     fix_colon_delimited_var(var_name, vars);
 }
 

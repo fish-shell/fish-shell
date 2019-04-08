@@ -972,7 +972,7 @@ int env_stack_t::set_internal(const wcstring &key, env_mode_flags_t input_var_mo
     }
 
     event_fire(event_t::variable(key, {L"VARIABLE", L"SET", key}));
-    env_dispatch_var_change(L"SET", key, *this);
+    env_dispatch_var_change(key, *this);
     return ENV_OK;
 }
 
@@ -1058,7 +1058,7 @@ int env_stack_t::remove(const wcstring &key, int var_mode) {
         if (is_exported) vars_stack().mark_changed_exported();
     }
 
-    env_dispatch_var_change(L"ERASE", key, *this);
+    env_dispatch_var_change(key, *this);
 
     return erased ? ENV_OK : ENV_NOT_FOUND;
 }

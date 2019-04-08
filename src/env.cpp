@@ -95,7 +95,7 @@ class env_node_t {
     /// Does this node imply a new variable scope? If yes, all non-global variables below this one
     /// in the stack are invisible. If new_scope is set for the global variable node, the universe
     /// will explode.
-    bool new_scope;
+    const bool new_scope;
     /// Does this node contain any variables which are exported to subshells
     /// or does it redefine any variables to not be exported?
     bool exportv = false;
@@ -104,7 +104,11 @@ class env_node_t {
 
     env_node_t(bool is_new_scope) : new_scope(is_new_scope) {}
 
-    maybe_t<env_var_t> find_entry(const wcstring &key);
+    maybe_t<env_var_t> find_entry(const wcstring &key) {
+        auto it = env.find(key);
+        if (it != env.end()) return it->second;
+        return none();
+    }
 
     /// Return whether this node contains any of the entries in the vars list.
     bool contains_any_of(const wcstring_list_t &vars) const {
@@ -304,12 +308,6 @@ void env_stack_t::universal_barrier() {
 var_stack_t &env_stack_t::vars_stack() { return *vars_; }
 
 const var_stack_t &env_stack_t::vars_stack() const { return *vars_; }
-
-maybe_t<env_var_t> env_node_t::find_entry(const wcstring &key) {
-    var_table_t::const_iterator entry = env.find(key);
-    if (entry != env.end()) return entry->second;
-    return none();
-}
 
 /// Return the current umask value.
 static mode_t get_umask() {

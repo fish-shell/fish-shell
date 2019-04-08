@@ -175,14 +175,10 @@ struct var_stack_t {
         }
     }
 
-    // Pops the top node if it's not global
-    void pop() {
-        // Don't pop the top-most, global, level.
-        if (top == this->global_env) {
-            debug(0, _(L"Tried to pop empty environment stack."));
-            sanity_lose();
-            return;
-        }
+    // Pops the top node, asserting it's not global.
+    // \return the popped node.
+    env_node_ref_t pop() {
+        assert(top != this->global_env && "Cannot pop global node");
 
         bool locale_changed = top->contains_any_of(locale_variables);
         bool curses_changed = top->contains_any_of(curses_variables);
@@ -208,6 +204,7 @@ struct var_stack_t {
         const auto &vars = env_stack_t::principal();
         if (locale_changed) init_locale(vars);
         if (curses_changed) init_curses(vars);
+        return old_top;
     }
 
     // Returns the next scope to search for a given node, respecting the new_scope flag.

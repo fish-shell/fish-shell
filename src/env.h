@@ -268,9 +268,6 @@ class env_stack_t final : public environment_t {
     /// Sets up argv as the given null terminated array of strings.
     void set_argv(const wchar_t *const *argv);
 
-    /// Update the read_byte_limit variable.
-    void set_read_limit();
-
     /// Mark that exported variables have changed.
     void mark_changed_exported();
 

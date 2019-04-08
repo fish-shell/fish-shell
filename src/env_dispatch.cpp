@@ -247,8 +247,6 @@ static void handle_term_size_change(env_stack_t &vars) {
     invalidate_termsize(true);  // force fish to update its idea of the terminal size plus vars
 }
 
-static void handle_read_limit_change(env_stack_t &vars) { vars.set_read_limit(); }
-
 static void handle_fish_history_change(env_stack_t &vars) {
     reader_change_history(history_session_id(vars));
 }
@@ -289,6 +287,20 @@ static void handle_fish_use_posix_spawn_change(const environment_t &vars) {
         use_posix_spawn.missing_or_empty() ? true : bool_from_string(use_posix_spawn->as_string());
 }
 
+/// Allow the user to override the limit on how much data the `read` command will process.
+/// This is primarily for testing but could be used by users in special situations.
+static void handle_read_limit_change(const environment_t &vars) {
+    auto read_byte_limit_var = vars.get(L"fish_read_limit");
+    if (!read_byte_limit_var.missing_or_empty()) {
+        size_t limit = fish_wcstoull(read_byte_limit_var->as_string().c_str());
+        if (errno) {
+            debug(1, "Ignoring fish_read_limit since it is not valid");
+        } else {
+            read_byte_limit = limit;
+        }
+    }
+}
+
 /// Populate the dispatch table used by `env_dispatch_var_change()` to efficiently call the
 /// appropriate function to handle a change to a variable.
 /// Note this returns a new-allocated value that we expect to leak.
@@ -326,6 +338,7 @@ static void run_inits(const environment_t &vars) {
     init_curses(vars);
     guess_emoji_width(vars);
     update_wait_on_escape_ms(vars);
+    handle_read_limit_change(vars);
 }
 
 /// Updates our idea of whether we support term256 and term24bit (see issue #10222).
@@ -524,3 +537,7 @@ bool term_supports_setting_title() { return can_set_term_title; }
 
 /// Miscellaneous variables.
 bool g_use_posix_spawn = false;
+
+// Limit `read` to 10 MiB (bytes not wide chars) by default. This can be overridden by the
+// fish_read_limit variable.
+size_t read_byte_limit = 10 * 1024 * 1024;

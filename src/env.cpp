@@ -58,11 +58,6 @@
 /// At init, we read all the environment variables from this array.
 extern char **environ;
 
-// Limit `read` to 10 MiB (bytes not wide chars) by default. This can be overridden by the
-// fish_read_limit variable.
-#define READ_BYTE_LIMIT 10 * 1024 * 1024
-size_t read_byte_limit = READ_BYTE_LIMIT;
-
 /// The character used to delimit path and non-path variables in exporting and in string expansion.
 static const wchar_t PATH_ARRAY_SEP = L':';
 static const wchar_t NONPATH_ARRAY_SEP = L' ';
@@ -349,20 +344,6 @@ void env_stack_t::set_pwd_from_getcwd() {
     set_one(L"PWD", ENV_EXPORT | ENV_GLOBAL, cwd);
 }
 
-/// Allow the user to override the limit on how much data the `read` command will process.
-/// This is primarily for testing but could be used by users in special situations.
-void env_stack_t::set_read_limit() {
-    auto read_byte_limit_var = this->get(L"fish_read_limit");
-    if (!read_byte_limit_var.missing_or_empty()) {
-        size_t limit = fish_wcstoull(read_byte_limit_var->as_string().c_str());
-        if (errno) {
-            debug(1, "Ignoring fish_read_limit since it is not valid");
-        } else {
-            read_byte_limit = limit;
-        }
-    }
-}
-
 void env_stack_t::mark_changed_exported() { vars_stack().mark_changed_exported(); }
 
 wcstring environment_t::get_pwd_slash() const {
@@ -537,7 +518,6 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         vars.set_pwd_from_getcwd();
     }
     vars.set_termsize();    // initialize the terminal size variables
-    vars.set_read_limit();  // initialize the read_byte_limit
 
     // Set fish_bind_mode to "default".
     vars.set_one(FISH_BIND_MODE_VAR, ENV_GLOBAL, DEFAULT_BIND_MODE);

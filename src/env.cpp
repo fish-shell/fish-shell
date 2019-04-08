@@ -3,8 +3,6 @@
 
 #include <errno.h>
 #include <limits.h>
-#include <locale.h>
-#include <pthread.h>
 #include <pwd.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -15,19 +13,6 @@
 #include <time.h>
 #include <unistd.h>
 #include <cwchar>
-
-#if HAVE_CURSES_H
-#include <curses.h>
-#elif HAVE_NCURSES_H
-#include <ncurses.h>
-#elif HAVE_NCURSES_CURSES_H
-#include <ncurses/curses.h>
-#endif
-#if HAVE_TERM_H
-#include <term.h>
-#elif HAVE_NCURSES_TERM_H
-#include <ncurses/term.h>
-#endif
 
 #include <algorithm>
 #include <iterator>
@@ -40,8 +25,8 @@
 
 #include "builtin_bind.h"
 #include "common.h"
-#include "complete.h"
 #include "env.h"
+#include "env_dispatch.h"
 #include "env_universal_common.h"
 #include "event.h"
 #include "expand.h"
@@ -73,48 +58,14 @@
 /// At init, we read all the environment variables from this array.
 extern char **environ;
 
-// Limit `read` to 10 MiB (bytes not wide chars) by default. This can be overridden by the
-// fish_read_limit variable.
-#define READ_BYTE_LIMIT 10 * 1024 * 1024
-size_t read_byte_limit = READ_BYTE_LIMIT;
-
 /// The character used to delimit path and non-path variables in exporting and in string expansion.
 static const wchar_t PATH_ARRAY_SEP = L':';
 static const wchar_t NONPATH_ARRAY_SEP = L' ';
 
-bool g_use_posix_spawn = false;  // will usually be set to true
 bool curses_initialized = false;
 
 /// Does the terminal have the "eat_newline_glitch".
 bool term_has_xn = false;
-
-/// This is used to ensure that we don't perform any callbacks from `react_to_variable_change()`
-/// when we're importing environment variables in `env_init()`. That's because we don't have any
-/// control over the order in which the vars are imported and some of them work in combination.
-/// For example, `TERMINFO_DIRS` and `TERM`. If the user has set `TERM` to a custom value that is
-/// found in `TERMINFO_DIRS` we don't to call `handle_curses()` before we've imported the latter.
-static bool env_initialized = false;
-
-/// List of all locale environment variable names that might trigger (re)initializing the locale
-/// subsystem.
-static const wcstring_list_t locale_variables({L"LANG", L"LANGUAGE", L"LC_ALL", L"LC_ADDRESS",
-                                               L"LC_COLLATE", L"LC_CTYPE", L"LC_IDENTIFICATION",
-                                               L"LC_MEASUREMENT", L"LC_MESSAGES", L"LC_MONETARY",
-                                               L"LC_NAME", L"LC_NUMERIC", L"LC_PAPER",
-                                               L"LC_TELEPHONE", L"LC_TIME"});
-
-/// List of all curses environment variable names that might trigger (re)initializing the curses
-/// subsystem.
-static const wcstring_list_t curses_variables({L"TERM", L"TERMINFO", L"TERMINFO_DIRS"});
-
-typedef std::unordered_map<wcstring, void (*)(const wcstring &, const wcstring &, env_stack_t &)>
-    var_dispatch_table_t;
-static var_dispatch_table_t create_var_dispatch_table();
-static const var_dispatch_table_t s_var_dispatch_table = create_var_dispatch_table();
-
-// Some forward declarations to make it easy to logically group the code.
-static void init_locale(const environment_t &vars);
-static void init_curses(const environment_t &vars);
 
 // Struct representing one level in the function variable stack.
 // Only our variable stack should create and destroy these
@@ -125,7 +76,7 @@ class env_node_t {
     /// Does this node imply a new variable scope? If yes, all non-global variables below this one
     /// in the stack are invisible. If new_scope is set for the global variable node, the universe
     /// will explode.
-    bool new_scope;
+    const bool new_scope;
     /// Does this node contain any variables which are exported to subshells
     /// or does it redefine any variables to not be exported?
     bool exportv = false;
@@ -134,7 +85,11 @@ class env_node_t {
 
     env_node_t(bool is_new_scope) : new_scope(is_new_scope) {}
 
-    maybe_t<env_var_t> find_entry(const wcstring &key);
+    maybe_t<env_var_t> find_entry(const wcstring &key) {
+        auto it = env.find(key);
+        if (it != env.end()) return it->second;
+        return none();
+    }
 
     /// Return whether this node contains any of the entries in the vars list.
     bool contains_any_of(const wcstring_list_t &vars) const {
@@ -201,39 +156,13 @@ struct var_stack_t {
         }
     }
 
-    // Pops the top node if it's not global
-    void pop() {
-        // Don't pop the top-most, global, level.
-        if (top == this->global_env) {
-            debug(0, _(L"Tried to pop empty environment stack."));
-            sanity_lose();
-            return;
-        }
-
-        bool locale_changed = top->contains_any_of(locale_variables);
-        bool curses_changed = top->contains_any_of(curses_variables);
-
-        if (top->new_scope) {  //!OCLINT(collapsible if statements)
-            if (top->exportv || local_scope_exports(top->next)) {
-                this->mark_changed_exported();
-            }
-        }
-
-        // Actually do the pop!
+    // Pops the top node, asserting it's not global.
+    // \return the popped node.
+    env_node_ref_t pop() {
+        assert(top != this->global_env && "Cannot pop global node");
         env_node_ref_t old_top = this->top;
         this->top = old_top->next;
-        for (const auto &entry_pair : old_top->env) {
-            const env_var_t &var = entry_pair.second;
-            if (var.exports()) {
-                this->mark_changed_exported();
-                break;
-            }
-        }
-
-        // TODO: instantize this locale and curses
-        const auto &vars = env_stack_t::principal();
-        if (locale_changed) init_locale(vars);
-        if (curses_changed) init_curses(vars);
+        return old_top;
     }
 
     // Returns the next scope to search for a given node, respecting the new_scope flag.
@@ -261,11 +190,13 @@ struct var_stack_t {
         return var_stack_t(*this);
     }
 
+    /// return true if the topomst local scope exports a variable.
+    bool local_scope_exports(const env_node_ref_t &n) const;
+
    private:
     /// Copy constructor. This does not copy the export array; it just allows it to be regenerated.
     var_stack_t(const var_stack_t &rhs) : top(rhs.top), global_env(rhs.global_env) {}
 
-    bool local_scope_exports(const env_node_ref_t &n) const;
     void get_exported(const env_node_t *n, var_table_t &h) const;
 
     /// Returns the global variable set.
@@ -285,24 +216,13 @@ static env_universal_t *uvars() { return s_universal_variables; }
 // so we don't bother to sort them.
 using string_set_t = const wchar_t *const[];
 
-template <typename T>
-bool string_set_contains(const T &set, const wchar_t *val) {
-    for (const wchar_t *entry : set) {
-        if (!std::wcscmp(val, entry)) return true;
-    }
-    return false;
-}
-
 /// Check if a variable may not be set using the set command.
-static bool is_read_only(const wchar_t *val) {
-    const string_set_t env_read_only = {
-        L"PWD",          L"SHLVL",    L"history",  L"pipestatus", L"status", L"version",
+static bool is_read_only(const wcstring &key) {
+    static const string_set_t env_read_only = {
+        L"PWD",          L"SHLVL",    L"history",  L"pipestatus", L"status",           L"version",
         L"FISH_VERSION", L"fish_pid", L"hostname", L"_",          L"fish_private_mode"};
-    return string_set_contains(env_read_only, val) ||
-        (in_private_mode() && std::wcscmp(L"fish_history", val) == 0);
+    return contains(env_read_only, key) || (in_private_mode() && key == L"fish_history");
 }
-
-static bool is_read_only(const wcstring &val) { return is_read_only(val.c_str()); }
 
 /// Return true if a variable should become a path variable by default. See #436.
 static bool variable_should_auto_pathvar(const wcstring &name) {
@@ -317,16 +237,23 @@ static bool is_electric(const wcstring &key) { return contains(env_electric, key
 env_stack_t::env_stack_t() : vars_(make_unique<var_stack_t>()) {}
 env_stack_t::env_stack_t(std::unique_ptr<var_stack_t> vars) : vars_(std::move(vars)) {}
 
+void env_stack_t::universal_barrier() {
+    ASSERT_IS_MAIN_THREAD();
+    if (!uvars()) return;
+
+    callback_data_list_t callbacks;
+    bool changed = uvars()->sync(callbacks);
+    if (changed) {
+        universal_notifier_t::default_notifier().post_notification();
+    }
+
+    env_universal_callbacks(this, callbacks);
+}
+
 // Get the variable stack
 var_stack_t &env_stack_t::vars_stack() { return *vars_; }
 
 const var_stack_t &env_stack_t::vars_stack() const { return *vars_; }
-
-maybe_t<env_var_t> env_node_t::find_entry(const wcstring &key) {
-    var_table_t::const_iterator entry = env.find(key);
-    if (entry != env.end()) return entry->second;
-    return none();
-}
 
 /// Return the current umask value.
 static mode_t get_umask() {
@@ -336,25 +263,11 @@ static mode_t get_umask() {
     return res;
 }
 
-/// Properly sets all timezone information.
-static void handle_timezone(const wchar_t *env_var_name, const environment_t &vars) {
-    const auto var = vars.get(env_var_name, ENV_DEFAULT);
-    debug(2, L"handle_timezone() current timezone var: |%ls| => |%ls|", env_var_name,
-          !var ? L"MISSING" : var->as_string().c_str());
-    const std::string &name = wcs2string(env_var_name);
-    if (var.missing_or_empty()) {
-        unsetenv(name.c_str());
-    } else {
-        const std::string value = wcs2string(var->as_string());
-        setenv(name.c_str(), value.c_str(), 1);
-    }
-    tzset();
-}
 
 /// Some env vars contain a list of paths where an empty path element is equivalent to ".".
 /// Unfortunately that convention causes problems for fish scripts. So this function replaces the
 /// empty path element with an explicit ".". See issue #3914.
-static void fix_colon_delimited_var(const wcstring &var_name, env_stack_t &vars) {
+void fix_colon_delimited_var(const wcstring &var_name, env_stack_t &vars) {
     const auto paths = vars.get(var_name);
     if (paths.missing_or_empty()) return;
 
@@ -372,268 +285,12 @@ static void fix_colon_delimited_var(const wcstring &var_name, env_stack_t &vars)
     }
 }
 
-/// Initialize the locale subsystem.
-static void init_locale(const environment_t &vars) {
-    // We have to make a copy because the subsequent setlocale() call to change the locale will
-    // invalidate the pointer from the this setlocale() call.
-    char *old_msg_locale = strdup(setlocale(LC_MESSAGES, NULL));
-
-    for (const auto &var_name : locale_variables) {
-        const auto var = vars.get(var_name, ENV_EXPORT);
-        const std::string &name = wcs2string(var_name);
-        if (var.missing_or_empty()) {
-            debug(5, L"locale var %s missing or empty", name.c_str());
-            unsetenv(name.c_str());
-        } else {
-            const std::string value = wcs2string(var->as_string());
-            debug(5, L"locale var %s='%s'", name.c_str(), value.c_str());
-            setenv(name.c_str(), value.c_str(), 1);
-        }
-    }
-
-    char *locale = setlocale(LC_ALL, "");
-    fish_setlocale();
-    debug(5, L"init_locale() setlocale(): '%s'", locale);
-
-    const char *new_msg_locale = setlocale(LC_MESSAGES, NULL);
-    debug(5, L"old LC_MESSAGES locale: '%s'", old_msg_locale);
-    debug(5, L"new LC_MESSAGES locale: '%s'", new_msg_locale);
-#ifdef HAVE__NL_MSG_CAT_CNTR
-    if (std::strcmp(old_msg_locale, new_msg_locale)) {
-        // Make change known to GNU gettext.
-        extern int _nl_msg_cat_cntr;
-        _nl_msg_cat_cntr++;
-    }
-#endif
-    free(old_msg_locale);
-}
-
-/// True if we think we can set the terminal title else false.
-static bool can_set_term_title = false;
-
-/// Returns true if we think the terminal supports setting its title.
-bool term_supports_setting_title() { return can_set_term_title; }
-
-/// This is a pretty lame heuristic for detecting terminals that do not support setting the
-/// title. If we recognise the terminal name as that of a virtual terminal, we assume it supports
-/// setting the title. If we recognise it as that of a console, we assume it does not support
-/// setting the title. Otherwise we check the ttyname and see if we believe it is a virtual
-/// terminal.
-///
-/// One situation in which this breaks down is with screen, since screen supports setting the
-/// terminal title if the underlying terminal does so, but will print garbage on terminals that
-/// don't. Since we can't see the underlying terminal below screen there is no way to fix this.
-static const wchar_t *const title_terms[] = {L"xterm", L"screen", L"tmux", L"nxterm", L"rxvt"};
-static bool does_term_support_setting_title(const environment_t &vars) {
-    const auto term_var = vars.get(L"TERM");
-    if (term_var.missing_or_empty()) return false;
-
-    const wcstring term_str = term_var->as_string();
-    const wchar_t *term = term_str.c_str();
-    bool recognized = contains(title_terms, term_var->as_string());
-    if (!recognized) recognized = !std::wcsncmp(term, L"xterm-", std::wcslen(L"xterm-"));
-    if (!recognized) recognized = !std::wcsncmp(term, L"screen-", std::wcslen(L"screen-"));
-    if (!recognized) recognized = !std::wcsncmp(term, L"tmux-", std::wcslen(L"tmux-"));
-    if (!recognized) {
-        if (std::wcscmp(term, L"linux") == 0) return false;
-        if (std::wcscmp(term, L"dumb") == 0) return false;
-        // NetBSD
-        if (std::wcscmp(term, L"vt100") == 0) return false;
-        if (std::wcscmp(term, L"wsvt25") == 0) return false;
-
-        char buf[PATH_MAX];
-        int retval = ttyname_r(STDIN_FILENO, buf, PATH_MAX);
-        if (retval != 0 || std::strstr(buf, "tty") || std::strstr(buf, "/vc/")) return false;
-    }
-
-    return true;
-}
-
-/// Updates our idea of whether we support term256 and term24bit (see issue #10222).
-static void update_fish_color_support(const environment_t &vars) {
-    // Detect or infer term256 support. If fish_term256 is set, we respect it;
-    // otherwise infer it from the TERM variable or use terminfo.
-    wcstring term;
-    bool support_term256 = false;
-    bool support_term24bit = false;
-
-    if (auto term_var = vars.get(L"TERM")) term = term_var->as_string();
-
-    if (auto fish_term256 = vars.get(L"fish_term256")) {
-        // $fish_term256
-        support_term256 = bool_from_string(fish_term256->as_string());
-        debug(2, L"256 color support determined by '$fish_term256'");
-    } else if (term.find(L"256color") != wcstring::npos) {
-        // TERM is *256color*: 256 colors explicitly supported
-        support_term256 = true;
-        debug(2, L"256 color support enabled for TERM=%ls", term.c_str());
-    } else if (term.find(L"xterm") != wcstring::npos) {
-        // Assume that all 'xterm's can handle 256, except for Terminal.app from Snow Leopard
-        wcstring term_program;
-        if (auto tp = vars.get(L"TERM_PROGRAM")) term_program = tp->as_string();
-        if (auto tpv = vars.get(L"TERM_PROGRAM_VERSION")) {
-            if (term_program == L"Apple_Terminal" &&
-                fish_wcstod(tpv->as_string().c_str(), NULL) > 299) {
-                // OS X Lion is version 299+, it has 256 color support (see github Wiki)
-                support_term256 = true;
-                debug(2, L"256 color support enabled for TERM=%ls on Terminal.app", term.c_str());
-            } else {
-                support_term256 = true;
-                debug(2, L"256 color support enabled for TERM=%ls", term.c_str());
-            }
-        }
-    } else if (cur_term != NULL) {
-        // See if terminfo happens to identify 256 colors
-        support_term256 = (max_colors >= 256);
-        debug(2, L"256 color support: %d colors per terminfo entry for %ls", max_colors, term.c_str());
-    }
-
-    // Handle $fish_term24bit
-    if (auto fish_term24bit = vars.get(L"fish_term24bit")) {
-        support_term24bit = bool_from_string(fish_term24bit->as_string());
-        debug(2, L"'fish_term24bit' preference: 24-bit color %s",
-              support_term24bit ? L"enabled" : L"disabled");
-    } else {
-        // We don't attempt to infer term24 bit support yet.
-        // XXX: actually, we do, in config.fish.
-        // So we actually change the color mode shortly after startup
-    }
-    color_support_t support = (support_term256 ? color_support_term256 : 0) |
-                              (support_term24bit ? color_support_term24bit : 0);
-    output_set_color_support(support);
-}
-
-// Try to initialize the terminfo/curses subsystem using our fallback terminal name. Do not set
-// `TERM` to our fallback. We're only doing this in the hope of getting a minimally functional
-// shell. If we launch an external command that uses TERM it should get the same value we were
-// given, if any.
-static bool initialize_curses_using_fallback(const char *term) {
-    // If $TERM is already set to the fallback name we're about to use there isn't any point in
-    // seeing if the fallback name can be used.
-    auto &vars = env_stack_t::globals();
-    auto term_var = vars.get(L"TERM");
-    if (term_var.missing_or_empty()) return false;
-
-    auto term_env = wcs2string(term_var->as_string());
-    if (term_env == DEFAULT_TERM1 || term_env == DEFAULT_TERM2) return false;
-
-    if (is_interactive_session) debug(1, _(L"Using fallback terminal type '%s'."), term);
-
-    int err_ret;
-    if (setupterm((char *)term, STDOUT_FILENO, &err_ret) == OK) return true;
-    if (is_interactive_session) {
-        debug(1, _(L"Could not set up terminal using the fallback terminal type '%s'."), term);
-    }
-    return false;
-}
-
 /// Ensure the content of the magic path env vars is reasonable. Specifically, that empty path
 /// elements are converted to explicit "." to make the vars easier to use in fish scripts.
 static void init_path_vars() {
     // Do not replace empties in MATHPATH - see #4158.
     fix_colon_delimited_var(L"PATH", env_stack_t::globals());
     fix_colon_delimited_var(L"CDPATH", env_stack_t::globals());
-}
-
-/// Update the value of g_guessed_fish_emoji_width
-static void guess_emoji_width() {
-    wcstring term;
-    auto &vars = env_stack_t::globals();
-    if (auto term_var = vars.get(L"TERM_PROGRAM")) {
-        term = term_var->as_string();
-    }
-
-    double version = 0;
-    if (auto version_var = vars.get(L"TERM_PROGRAM_VERSION")) {
-        std::string narrow_version = wcs2string(version_var->as_string());
-        version = strtod(narrow_version.c_str(), NULL);
-    }
-
-
-    if (term == L"Apple_Terminal" && version >= 400) {
-        // Apple Terminal on High Sierra
-        g_guessed_fish_emoji_width = 2;
-        debug(2, "default emoji width: 2 for %ls", term.c_str());
-    } else if (term == L"iTerm.app") {
-        // iTerm2 defaults to Unicode 8 sizes.
-        // See https://gitlab.com/gnachman/iterm2/wikis/unicodeversionswitching
-        g_guessed_fish_emoji_width = 1;
-        debug(2, "default emoji width: 1");
-    } else {
-        // Default to whatever system wcwidth says to U+1F603,
-        // but only if it's at least 1.
-        int w = wcwidth(L'😃');
-        g_guessed_fish_emoji_width = w > 0 ? w : 1;
-        debug(2, "default emoji width: %d", g_guessed_fish_emoji_width);
-    }
-}
-
-/// Initialize the curses subsystem.
-static void init_curses(const environment_t &vars) {
-    for (const auto &var_name : curses_variables) {
-        std::string name = wcs2string(var_name);
-        const auto var = vars.get(var_name, ENV_EXPORT);
-        if (var.missing_or_empty()) {
-            debug(2, L"curses var %s missing or empty", name.c_str());
-            unsetenv(name.c_str());
-        } else {
-            std::string value = wcs2string(var->as_string());
-            debug(2, L"curses var %s='%s'", name.c_str(), value.c_str());
-            setenv(name.c_str(), value.c_str(), 1);
-        }
-    }
-
-    int err_ret;
-    if (setupterm(NULL, STDOUT_FILENO, &err_ret) == ERR) {
-        auto term = vars.get(L"TERM");
-        if (is_interactive_session) {
-            debug(1, _(L"Could not set up terminal."));
-            if (term.missing_or_empty()) {
-                debug(1, _(L"TERM environment variable not set."));
-            } else {
-                debug(1, _(L"TERM environment variable set to '%ls'."), term->as_string().c_str());
-                debug(1, _(L"Check that this terminal type is supported on this system."));
-            }
-        }
-
-        if (!initialize_curses_using_fallback(DEFAULT_TERM1)) {
-            initialize_curses_using_fallback(DEFAULT_TERM2);
-        }
-    }
-
-    can_set_term_title = does_term_support_setting_title(vars);
-    term_has_xn = tigetflag((char *)"xenl") == 1;  // does terminal have the eat_newline_glitch
-    update_fish_color_support(vars);
-    // Invalidate the cached escape sequences since they may no longer be valid.
-    cached_layouts.clear();
-    curses_initialized = true;
-}
-
-/// React to modifying the given variable.
-static void react_to_variable_change(const wchar_t *op, const wcstring &key, env_stack_t &vars) {
-    // Don't do any of this until `env_init()` has run. We only want to do this in response to
-    // variables set by the user; e.g., in a script like *config.fish* or interactively or as part
-    // of loading the universal variables for the first time. Variables we import from the
-    // environment or that are otherwise set by fish before this gets called have to explicitly
-    // call the appropriate functions to put the value of the var into effect.
-    if (!env_initialized) return;
-
-    auto dispatch = s_var_dispatch_table.find(key);
-    if (dispatch != s_var_dispatch_table.end()) {
-        (*dispatch->second)(op, key, vars);
-    } else if (string_prefixes_string(L"fish_color_", key)) {
-        reader_react_to_color_change();
-    }
-}
-
-/// Universal variable callback function. This function makes sure the proper events are triggered
-/// when an event occurs.
-static void universal_callback(env_stack_t *stack, const callback_data_t &cb) {
-    const wchar_t *op = cb.is_erase() ? L"ERASE" : L"SET";
-
-    react_to_variable_change(op, cb.key, *stack);
-    stack->mark_changed_exported();
-    event_fire(event_t::variable(cb.key, {L"VARIABLE", op, cb.key}));
 }
 
 /// Make sure the PATH variable contains something.
@@ -674,20 +331,6 @@ void env_stack_t::set_pwd_from_getcwd() {
         return;
     }
     set_one(L"PWD", ENV_EXPORT | ENV_GLOBAL, cwd);
-}
-
-/// Allow the user to override the limit on how much data the `read` command will process.
-/// This is primarily for testing but could be used by users in special situations.
-void env_stack_t::set_read_limit() {
-    auto read_byte_limit_var = this->get(L"fish_read_limit");
-    if (!read_byte_limit_var.missing_or_empty()) {
-        size_t limit = fish_wcstoull(read_byte_limit_var->as_string().c_str());
-        if (errno) {
-            debug(1, "Ignoring fish_read_limit since it is not valid");
-        } else {
-            read_byte_limit = limit;
-        }
-    }
 }
 
 void env_stack_t::mark_changed_exported() { vars_stack().mark_changed_exported(); }
@@ -733,155 +376,6 @@ void misc_init() {
     }
 }
 
-static void env_universal_callbacks(env_stack_t *stack, const callback_data_list_t &callbacks) {
-    for (const callback_data_t &cb : callbacks) {
-        universal_callback(stack, cb);
-    }
-}
-
-void env_stack_t::universal_barrier() {
-    ASSERT_IS_MAIN_THREAD();
-    if (!uvars()) return;
-
-    callback_data_list_t callbacks;
-    bool changed = uvars()->sync(callbacks);
-    if (changed) {
-        universal_notifier_t::default_notifier().post_notification();
-    }
-
-    env_universal_callbacks(this, callbacks);
-}
-
-static void handle_fish_term_change(const wcstring &op, const wcstring &var_name,
-                                    env_stack_t &vars) {
-    UNUSED(op);
-    UNUSED(var_name);
-    update_fish_color_support(vars);
-    reader_react_to_color_change();
-}
-
-static void handle_escape_delay_change(const wcstring &op, const wcstring &var_name,
-                                       env_stack_t &vars) {
-    UNUSED(op);
-    UNUSED(var_name);
-    update_wait_on_escape_ms(vars);
-}
-
-static void handle_change_emoji_width(const wcstring &op, const wcstring &var_name,
-                                      env_stack_t &vars) {
-    (void)op;
-    (void)var_name;
-    int new_width = 0;
-    if (auto width_str = vars.get(L"fish_emoji_width")) {
-        new_width = fish_wcstol(width_str->as_string().c_str());
-    }
-    g_fish_emoji_width = std::max(0, new_width);
-    debug(2, "'fish_emoji_width' preference: %d, overwriting default", g_fish_emoji_width);
-}
-
-static void handle_change_ambiguous_width(const wcstring &op, const wcstring &var_name,
-                                          env_stack_t &vars) {
-    (void)op;
-    (void)var_name;
-    int new_width = 1;
-    if (auto width_str = vars.get(L"fish_ambiguous_width")) {
-        new_width = fish_wcstol(width_str->as_string().c_str());
-    }
-    g_fish_ambiguous_width = std::max(0, new_width);
-}
-
-static void handle_term_size_change(const wcstring &op, const wcstring &var_name,
-                                    env_stack_t &vars) {
-    UNUSED(op);
-    UNUSED(var_name);
-    UNUSED(vars);
-    invalidate_termsize(true);  // force fish to update its idea of the terminal size plus vars
-}
-
-static void handle_read_limit_change(const wcstring &op, const wcstring &var_name,
-                                     env_stack_t &vars) {
-    UNUSED(op);
-    UNUSED(var_name);
-    vars.set_read_limit();
-}
-
-static void handle_fish_history_change(const wcstring &op, const wcstring &var_name,
-                                       env_stack_t &vars) {
-    UNUSED(op);
-    UNUSED(var_name);
-    reader_change_history(history_session_id(vars));
-}
-
-static void handle_function_path_change(const wcstring &op, const wcstring &var_name,
-                                        env_stack_t &vars) {
-    UNUSED(op);
-    UNUSED(var_name);
-    UNUSED(vars);
-    function_invalidate_path();
-}
-
-static void handle_complete_path_change(const wcstring &op, const wcstring &var_name,
-                                        env_stack_t &vars) {
-    UNUSED(op);
-    UNUSED(var_name);
-    UNUSED(vars);
-    complete_invalidate_path();
-}
-
-static void handle_tz_change(const wcstring &op, const wcstring &var_name, env_stack_t &vars) {
-    UNUSED(op);
-    handle_timezone(var_name.c_str(), vars);
-}
-
-static void handle_magic_colon_var_change(const wcstring &op, const wcstring &var_name,
-                                          env_stack_t &vars) {
-    UNUSED(op);
-    fix_colon_delimited_var(var_name, vars);
-}
-
-static void handle_locale_change(const wcstring &op, const wcstring &var_name, env_stack_t &vars) {
-    UNUSED(op);
-    UNUSED(var_name);
-    init_locale(vars);
-    // We need to re-guess emoji width because the locale might have changed to a multibyte one.
-    guess_emoji_width();
-}
-
-static void handle_curses_change(const wcstring &op, const wcstring &var_name, env_stack_t &vars) {
-    UNUSED(op);
-    UNUSED(var_name);
-    guess_emoji_width();
-    init_curses(vars);
-}
-
-/// Populate the dispatch table used by `react_to_variable_change()` to efficiently call the
-/// appropriate function to handle a change to a variable.
-static var_dispatch_table_t create_var_dispatch_table() {
-    var_dispatch_table_t var_dispatch_table;
-    for (const auto &var_name : locale_variables) {
-        var_dispatch_table.emplace(var_name, handle_locale_change);
-    }
-
-    for (const auto &var_name : curses_variables) {
-        var_dispatch_table.emplace(var_name, handle_curses_change);
-    }
-
-    var_dispatch_table.emplace(L"PATH", handle_magic_colon_var_change);
-    var_dispatch_table.emplace(L"CDPATH", handle_magic_colon_var_change);
-    var_dispatch_table.emplace(L"fish_term256", handle_fish_term_change);
-    var_dispatch_table.emplace(L"fish_term24bit", handle_fish_term_change);
-    var_dispatch_table.emplace(L"fish_escape_delay_ms", handle_escape_delay_change);
-    var_dispatch_table.emplace(L"fish_emoji_width", handle_change_emoji_width);
-    var_dispatch_table.emplace(L"fish_ambiguous_width", handle_change_ambiguous_width);
-    var_dispatch_table.emplace(L"LINES", handle_term_size_change);
-    var_dispatch_table.emplace(L"COLUMNS", handle_term_size_change);
-    var_dispatch_table.emplace(L"fish_complete_path", handle_complete_path_change);
-    var_dispatch_table.emplace(L"fish_function_path", handle_function_path_change);
-    var_dispatch_table.emplace(L"fish_read_limit", handle_read_limit_change);
-    var_dispatch_table.emplace(L"fish_history", handle_fish_history_change);
-    var_dispatch_table.emplace(L"TZ", handle_tz_change);
-    return var_dispatch_table;
-}
 
 void env_init(const struct config_paths_t *paths /* or NULL */) {
     env_stack_t &vars = env_stack_t::globals();
@@ -922,11 +416,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     path_get_data(user_data_dir);
     vars.set_one(FISH_USER_DATA_DIR, ENV_GLOBAL, user_data_dir);
 
-    init_locale(vars);
-    init_curses(vars);
-    init_input();
     init_path_vars();
-    guess_emoji_width();
 
     // Set up the USER and PATH variables
     setup_path();
@@ -1017,21 +507,14 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         vars.set_pwd_from_getcwd();
     }
     vars.set_termsize();    // initialize the terminal size variables
-    vars.set_read_limit();  // initialize the read_byte_limit
-
-    // Set g_use_posix_spawn. Default to true.
-    auto use_posix_spawn = vars.get(L"fish_use_posix_spawn");
-    g_use_posix_spawn =
-        use_posix_spawn.missing_or_empty() ? true : bool_from_string(use_posix_spawn->as_string());
 
     // Set fish_bind_mode to "default".
     vars.set_one(FISH_BIND_MODE_VAR, ENV_GLOBAL, DEFAULT_BIND_MODE);
 
-    // This is somewhat subtle. At this point we consider our environment to be sufficiently
-    // initialized that we can react to changes to variables. Prior to doing this we expect that the
-    // code for setting vars that might have side-effects will do whatever
-    // `react_to_variable_change()` would do for that var.
-    env_initialized = true;
+    // Allow changes to variables to produce events.
+    env_dispatch_init(vars);
+
+    init_input();
 
     // Set up universal variables. The empty string means to use the default path.
     assert(s_universal_variables == NULL);
@@ -1247,7 +730,7 @@ int env_stack_t::set_internal(const wcstring &key, env_mode_flags_t input_var_mo
     }
 
     event_fire(event_t::variable(key, {L"VARIABLE", L"SET", key}));
-    react_to_variable_change(L"SET", key, *this);
+    env_dispatch_var_change(key, *this);
     return ENV_OK;
 }
 
@@ -1333,7 +816,7 @@ int env_stack_t::remove(const wcstring &key, int var_mode) {
         if (is_exported) vars_stack().mark_changed_exported();
     }
 
-    react_to_variable_change(L"ERASE", key, *this);
+    env_dispatch_var_change(key, *this);
 
     return erased ? ENV_OK : ENV_NOT_FOUND;
 }
@@ -1463,7 +946,24 @@ bool var_stack_t::local_scope_exports(const env_node_ref_t &n) const {
 
 void env_stack_t::push(bool new_scope) { vars_stack().push(new_scope); }
 
-void env_stack_t::pop() { vars_stack().pop(); }
+void env_stack_t::pop() {
+    auto &vars = vars_stack();
+    auto old_node = vars.pop();
+
+    // Maybe exported variables have changed.
+    if (old_node->exportv) {
+        // This node exported or unexported a variable.
+        vars.mark_changed_exported();
+    } else if (old_node->new_scope && vars.local_scope_exports(old_node->next)) {
+        // This node was a local scope, so it shadowed exports from its parent.
+        vars.mark_changed_exported();
+    }
+
+    // TODO: we would like to coalesce locale / curses changes, so that we only re-initialize once.
+    for (const auto &kv : old_node->env) {
+        env_dispatch_var_change(kv.first, *this);
+    }
+}
 
 /// Function used with to insert keys of one table into a set::set<wcstring>.
 static void add_key_to_string_set(const var_table_t &envs, std::set<wcstring> *str_set,

@@ -268,9 +268,6 @@ class env_stack_t final : public environment_t {
     /// Sets up argv as the given null terminated array of strings.
     void set_argv(const wchar_t *const *argv);
 
-    /// Update the read_byte_limit variable.
-    void set_read_limit();
-
     /// Mark that exported variables have changed.
     void mark_changed_exported();
 
@@ -316,4 +313,8 @@ bool term_supports_setting_title();
 
 /// Gets a path appropriate for runtime storage
 wcstring env_get_runtime_path();
+
+/// Replace empty path elements with "." - see #3914.
+void fix_colon_delimited_var(const wcstring &var_name, env_stack_t &vars);
+
 #endif

@@ -78,7 +78,7 @@ SET(FISH_SRCS
     src/builtin_return.cpp src/builtin_set.cpp src/builtin_set_color.cpp
     src/builtin_source.cpp src/builtin_status.cpp src/builtin_string.cpp
     src/builtin_test.cpp src/builtin_ulimit.cpp src/builtin_wait.cpp
-    src/color.cpp src/common.cpp src/complete.cpp src/env.cpp
+    src/color.cpp src/common.cpp src/complete.cpp src/env.cpp src/env_dispatch.cpp
     src/env_universal_common.cpp src/event.cpp src/exec.cpp src/expand.cpp
     src/fallback.cpp src/fish_version.cpp src/function.cpp src/highlight.cpp
     src/history.cpp src/input.cpp src/input_common.cpp src/intern.cpp src/io.cpp

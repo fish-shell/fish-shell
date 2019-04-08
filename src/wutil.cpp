@@ -176,7 +176,7 @@ FILE *wfopen(const wcstring &path, const char *mode) {
 }
 
 bool set_cloexec(int fd) {
-    int flags = fcntl(fd, F_SETFD, flags | FD_CLOEXEC);
+    int flags = fcntl(fd, F_SETFD, FD_CLOEXEC);
     if (flags == -1) return false;
     return true;
 }

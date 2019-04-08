@@ -1191,24 +1191,19 @@ void env_stack_t::push(bool new_scope) { vars_stack().push(new_scope); }
 void env_stack_t::pop() {
     auto &vars = vars_stack();
     auto old_node = vars.pop();
-    if (old_node->contains_any_of(locale_variables)) {
-        init_locale(*this);
-    }
 
-    if (old_node->contains_any_of(curses_variables)) {
-        init_curses(*this);
-    }
-
-    if (old_node->new_scope && (old_node->exportv || vars.local_scope_exports(old_node->next))) {
+    // Maybe exported variables have changed.
+    if (old_node->exportv) {
+        // This node exported or unexported a variable.
+        vars.mark_changed_exported();
+    } else if (old_node->new_scope && vars.local_scope_exports(old_node->next)) {
+        // This node was a local scope, so it shadowed exports from its parent.
         vars.mark_changed_exported();
     }
 
-    for (const auto &entry_pair : old_node->env) {
-        const env_var_t &var = entry_pair.second;
-        if (var.exports()) {
-            vars.mark_changed_exported();
-            break;
-        }
+    // TODO: we would like to coalesce locale / curses changes, so that we only re-initialize once.
+    for (const auto &kv : old_node->env) {
+        env_dispatch_var_change(kv.first, *this);
     }
 }
 

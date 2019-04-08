@@ -72,7 +72,7 @@
 
 /// List of all locale environment variable names that might trigger (re)initializing the locale
 /// subsystem.
-extern const wcstring_list_t locale_variables({L"LANG", L"LANGUAGE", L"LC_ALL", L"LC_ADDRESS",
+static const wcstring_list_t locale_variables({L"LANG", L"LANGUAGE", L"LC_ALL", L"LC_ADDRESS",
                                                L"LC_COLLATE", L"LC_CTYPE", L"LC_IDENTIFICATION",
                                                L"LC_MEASUREMENT", L"LC_MESSAGES", L"LC_MONETARY",
                                                L"LC_NAME", L"LC_NUMERIC", L"LC_PAPER",
@@ -80,7 +80,7 @@ extern const wcstring_list_t locale_variables({L"LANG", L"LANGUAGE", L"LC_ALL", 
 
 /// List of all curses environment variable names that might trigger (re)initializing the curses
 /// subsystem.
-extern const wcstring_list_t curses_variables({L"TERM", L"TERMINFO", L"TERMINFO_DIRS"});
+static const wcstring_list_t curses_variables({L"TERM", L"TERMINFO", L"TERMINFO_DIRS"});
 
 class var_dispatch_table_t {
     using named_callback_t = std::function<void(const wcstring &, env_stack_t &)>;
@@ -119,6 +119,14 @@ class var_dispatch_table_t {
         }
     }
 };
+
+// Forward declarations.
+static void init_curses(const environment_t &vars);
+static void init_locale(const environment_t &vars);
+static void update_fish_color_support(const environment_t &vars);
+
+/// True if we think we can set the terminal title.
+static bool can_set_term_title = false;
 
 // Run those dispatch functions which want to be run at startup.
 static void run_inits(const environment_t &vars);
@@ -314,10 +322,205 @@ static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table() {
 
 static void run_inits(const environment_t &vars) {
     // This is the subset of those dispatch functions which want to be run at startup.
-    handle_locale_change(vars);
-    handle_curses_change(vars);
+    init_locale(vars);
+    init_curses(vars);
+    guess_emoji_width(vars);
     update_wait_on_escape_ms(vars);
 }
 
-// Miscellaneous variables.
+/// Updates our idea of whether we support term256 and term24bit (see issue #10222).
+static void update_fish_color_support(const environment_t &vars) {
+    // Detect or infer term256 support. If fish_term256 is set, we respect it;
+    // otherwise infer it from the TERM variable or use terminfo.
+    wcstring term;
+    bool support_term256 = false;
+    bool support_term24bit = false;
+
+    if (auto term_var = vars.get(L"TERM")) term = term_var->as_string();
+
+    if (auto fish_term256 = vars.get(L"fish_term256")) {
+        // $fish_term256
+        support_term256 = bool_from_string(fish_term256->as_string());
+        debug(2, L"256 color support determined by '$fish_term256'");
+    } else if (term.find(L"256color") != wcstring::npos) {
+        // TERM is *256color*: 256 colors explicitly supported
+        support_term256 = true;
+        debug(2, L"256 color support enabled for TERM=%ls", term.c_str());
+    } else if (term.find(L"xterm") != wcstring::npos) {
+        // Assume that all 'xterm's can handle 256, except for Terminal.app from Snow Leopard
+        wcstring term_program;
+        if (auto tp = vars.get(L"TERM_PROGRAM")) term_program = tp->as_string();
+        if (auto tpv = vars.get(L"TERM_PROGRAM_VERSION")) {
+            if (term_program == L"Apple_Terminal" &&
+                fish_wcstod(tpv->as_string().c_str(), NULL) > 299) {
+                // OS X Lion is version 299+, it has 256 color support (see github Wiki)
+                support_term256 = true;
+                debug(2, L"256 color support enabled for TERM=%ls on Terminal.app", term.c_str());
+            } else {
+                support_term256 = true;
+                debug(2, L"256 color support enabled for TERM=%ls", term.c_str());
+            }
+        }
+    } else if (cur_term != NULL) {
+        // See if terminfo happens to identify 256 colors
+        support_term256 = (max_colors >= 256);
+        debug(2, L"256 color support: %d colors per terminfo entry for %ls", max_colors,
+              term.c_str());
+    }
+
+    // Handle $fish_term24bit
+    if (auto fish_term24bit = vars.get(L"fish_term24bit")) {
+        support_term24bit = bool_from_string(fish_term24bit->as_string());
+        debug(2, L"'fish_term24bit' preference: 24-bit color %s",
+              support_term24bit ? L"enabled" : L"disabled");
+    } else {
+        // We don't attempt to infer term24 bit support yet.
+        // XXX: actually, we do, in config.fish.
+        // So we actually change the color mode shortly after startup
+    }
+    color_support_t support = (support_term256 ? color_support_term256 : 0) |
+                              (support_term24bit ? color_support_term24bit : 0);
+    output_set_color_support(support);
+}
+
+// Try to initialize the terminfo/curses subsystem using our fallback terminal name. Do not set
+// `TERM` to our fallback. We're only doing this in the hope of getting a minimally functional
+// shell. If we launch an external command that uses TERM it should get the same value we were
+// given, if any.
+static bool initialize_curses_using_fallback(const char *term) {
+    // If $TERM is already set to the fallback name we're about to use there isn't any point in
+    // seeing if the fallback name can be used.
+    auto &vars = env_stack_t::globals();
+    auto term_var = vars.get(L"TERM");
+    if (term_var.missing_or_empty()) return false;
+
+    auto term_env = wcs2string(term_var->as_string());
+    if (term_env == DEFAULT_TERM1 || term_env == DEFAULT_TERM2) return false;
+
+    if (is_interactive_session) debug(1, _(L"Using fallback terminal type '%s'."), term);
+
+    int err_ret;
+    if (setupterm((char *)term, STDOUT_FILENO, &err_ret) == OK) return true;
+    if (is_interactive_session) {
+        debug(1, _(L"Could not set up terminal using the fallback terminal type '%s'."), term);
+    }
+    return false;
+}
+
+/// This is a pretty lame heuristic for detecting terminals that do not support setting the
+/// title. If we recognise the terminal name as that of a virtual terminal, we assume it supports
+/// setting the title. If we recognise it as that of a console, we assume it does not support
+/// setting the title. Otherwise we check the ttyname and see if we believe it is a virtual
+/// terminal.
+///
+/// One situation in which this breaks down is with screen, since screen supports setting the
+/// terminal title if the underlying terminal does so, but will print garbage on terminals that
+/// don't. Since we can't see the underlying terminal below screen there is no way to fix this.
+static const wchar_t *const title_terms[] = {L"xterm", L"screen", L"tmux", L"nxterm", L"rxvt"};
+static bool does_term_support_setting_title(const environment_t &vars) {
+    const auto term_var = vars.get(L"TERM");
+    if (term_var.missing_or_empty()) return false;
+
+    const wcstring term_str = term_var->as_string();
+    const wchar_t *term = term_str.c_str();
+    bool recognized = contains(title_terms, term_var->as_string());
+    if (!recognized) recognized = !std::wcsncmp(term, L"xterm-", std::wcslen(L"xterm-"));
+    if (!recognized) recognized = !std::wcsncmp(term, L"screen-", std::wcslen(L"screen-"));
+    if (!recognized) recognized = !std::wcsncmp(term, L"tmux-", std::wcslen(L"tmux-"));
+    if (!recognized) {
+        if (std::wcscmp(term, L"linux") == 0) return false;
+        if (std::wcscmp(term, L"dumb") == 0) return false;
+        // NetBSD
+        if (std::wcscmp(term, L"vt100") == 0) return false;
+        if (std::wcscmp(term, L"wsvt25") == 0) return false;
+
+        char buf[PATH_MAX];
+        int retval = ttyname_r(STDIN_FILENO, buf, PATH_MAX);
+        if (retval != 0 || std::strstr(buf, "tty") || std::strstr(buf, "/vc/")) return false;
+    }
+
+    return true;
+}
+
+/// Initialize the curses subsystem.
+static void init_curses(const environment_t &vars) {
+    for (const auto &var_name : curses_variables) {
+        std::string name = wcs2string(var_name);
+        const auto var = vars.get(var_name, ENV_EXPORT);
+        if (var.missing_or_empty()) {
+            debug(2, L"curses var %s missing or empty", name.c_str());
+            unsetenv(name.c_str());
+        } else {
+            std::string value = wcs2string(var->as_string());
+            debug(2, L"curses var %s='%s'", name.c_str(), value.c_str());
+            setenv(name.c_str(), value.c_str(), 1);
+        }
+    }
+
+    int err_ret;
+    if (setupterm(NULL, STDOUT_FILENO, &err_ret) == ERR) {
+        auto term = vars.get(L"TERM");
+        if (is_interactive_session) {
+            debug(1, _(L"Could not set up terminal."));
+            if (term.missing_or_empty()) {
+                debug(1, _(L"TERM environment variable not set."));
+            } else {
+                debug(1, _(L"TERM environment variable set to '%ls'."), term->as_string().c_str());
+                debug(1, _(L"Check that this terminal type is supported on this system."));
+            }
+        }
+
+        if (!initialize_curses_using_fallback(DEFAULT_TERM1)) {
+            initialize_curses_using_fallback(DEFAULT_TERM2);
+        }
+    }
+
+    can_set_term_title = does_term_support_setting_title(vars);
+    term_has_xn = tigetflag((char *)"xenl") == 1;  // does terminal have the eat_newline_glitch
+    update_fish_color_support(vars);
+    // Invalidate the cached escape sequences since they may no longer be valid.
+    cached_layouts.clear();
+    curses_initialized = true;
+}
+
+/// Initialize the locale subsystem.
+static void init_locale(const environment_t &vars) {
+    // We have to make a copy because the subsequent setlocale() call to change the locale will
+    // invalidate the pointer from the this setlocale() call.
+    char *old_msg_locale = strdup(setlocale(LC_MESSAGES, NULL));
+
+    for (const auto &var_name : locale_variables) {
+        const auto var = vars.get(var_name, ENV_EXPORT);
+        const std::string &name = wcs2string(var_name);
+        if (var.missing_or_empty()) {
+            debug(5, L"locale var %s missing or empty", name.c_str());
+            unsetenv(name.c_str());
+        } else {
+            const std::string value = wcs2string(var->as_string());
+            debug(5, L"locale var %s='%s'", name.c_str(), value.c_str());
+            setenv(name.c_str(), value.c_str(), 1);
+        }
+    }
+
+    char *locale = setlocale(LC_ALL, "");
+    fish_setlocale();
+    debug(5, L"init_locale() setlocale(): '%s'", locale);
+
+    const char *new_msg_locale = setlocale(LC_MESSAGES, NULL);
+    debug(5, L"old LC_MESSAGES locale: '%s'", old_msg_locale);
+    debug(5, L"new LC_MESSAGES locale: '%s'", new_msg_locale);
+#ifdef HAVE__NL_MSG_CAT_CNTR
+    if (std::strcmp(old_msg_locale, new_msg_locale)) {
+        // Make change known to GNU gettext.
+        extern int _nl_msg_cat_cntr;
+        _nl_msg_cat_cntr++;
+    }
+#endif
+    free(old_msg_locale);
+}
+
+/// Returns true if we think the terminal supports setting its title.
+bool term_supports_setting_title() { return can_set_term_title; }
+
+/// Miscellaneous variables.
 bool g_use_posix_spawn = false;

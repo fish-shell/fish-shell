@@ -320,9 +320,4 @@ wcstring env_get_runtime_path();
 /// Replace empty path elements with "." - see #3914.
 void fix_colon_delimited_var(const wcstring &var_name, env_stack_t &vars);
 
-// Temporararily exposed so that env_dispatch can call these.
-void init_locale(const environment_t &vars);
-void init_curses(const environment_t &vars);
-void update_fish_color_support(const environment_t &vars);
-
 #endif

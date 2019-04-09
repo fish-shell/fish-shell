@@ -1,3 +1,11 @@
+# fish 3.0.3 (released ???)
+
+This release of fish fixes a number of major issues since fish 3.0.2.
+
+If you are upgrading from version 2.7.1 or before, please also review the release notes for 3.0.2, 3.0.1, 3.0.0 and 3.0b1 (included below).
+
+---
+
 # fish 3.0.2 (released February 19, 2019)
 
 This release of fish fixes an issue discovered in fish 3.0.1.

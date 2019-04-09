@@ -135,17 +135,10 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
     #
     # This event handler makes sure the prompt is repainted when
-    # fish_color_cwd changes value. Like all event handlers, it can't be
+    # fish_color_cwd{,_root} changes value. Like all event handlers, it can't be
     # autoloaded.
     #
-    function __fish_repaint --on-variable fish_color_cwd --description "Event handler, repaints the prompt when fish_color_cwd changes"
-        if status --is-interactive
-            set -e __fish_prompt_cwd
-            commandline -f repaint 2>/dev/null
-        end
-    end
-
-    function __fish_repaint_root --on-variable fish_color_cwd_root --description "Event handler, repaints the prompt when fish_color_cwd_root changes"
+    function __fish_repaint -v fish_color_cwd -v fish_color_cwd_root -d "Event handler, repaints the prompt when fish_color_cwd* changes"
         if status --is-interactive
             set -e __fish_prompt_cwd
             commandline -f repaint 2>/dev/null

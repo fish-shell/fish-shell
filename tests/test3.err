@@ -1,3 +1,10 @@
 
 ####################
 # Path universal variables
+
+####################
+# Variable names in other commands
+fish: for: Variable name 'a,b' is not valid. See `help identifiers`.
+
+for a,b in y 1 z 3; echo $a,$b; end
+    ^

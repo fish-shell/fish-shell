@@ -40,7 +40,7 @@ def setup(app):
 # -- Project information -----------------------------------------------------
 
 project = 'fish-shell'
-copyright = '2018, fish-shell developers'
+copyright = '2019, fish-shell developers'
 author = 'fish-shell developers'
 
 # The short X.Y version

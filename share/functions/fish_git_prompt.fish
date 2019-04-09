@@ -661,7 +661,7 @@ function __fish_git_prompt_operation_branch_bare --description "fish_git_prompt 
                     set branch unknown
                 end
             end
-            set branch "($branch)"
+            set branch "$__fish_git_prompt_char_branch_prefix$branch$__fish_git_prompt_char_branch_suffix"
         end
     end
 
@@ -703,6 +703,8 @@ end
 
 function __fish_git_prompt_validate_chars --description "fish_git_prompt helper, checks char variables"
 
+    __fish_git_prompt_set_char __fish_git_prompt_char_branch_prefix '('
+    __fish_git_prompt_set_char __fish_git_prompt_char_branch_suffix ')'
     __fish_git_prompt_set_char __fish_git_prompt_char_cleanstate '✔'
     __fish_git_prompt_set_char __fish_git_prompt_char_dirtystate '*' '✚'
     __fish_git_prompt_set_char __fish_git_prompt_char_invalidstate '#' '✖'

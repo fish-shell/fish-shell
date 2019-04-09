@@ -780,7 +780,7 @@ A literal "{}" will not be used as a brace expansion::
     # Outputs foo-{}
 
     echo foo-{$undefinedvar}
-    # Output is an empty line - see `the cartesian product section <#cartesian-product>`_
+    # Output is an empty line - see :ref:`the cartesian product section <cartesian-product>`
 
 
 If there is nothing between a brace and a comma or two commas, it's interpreted as an empty element.
@@ -820,7 +820,7 @@ Note that without the quotes or braces, fish will try to expand a variable calle
 The latter syntax ``{$WORD}`` works by exploiting `brace expansion <#expand-brace>`_.
 
 
-In these cases, the expansion eliminates the string, as a result of the implicit `cartesian product <#cartesian-product>`_.
+In these cases, the expansion eliminates the string, as a result of the implicit :ref:`cartesian product <cartesian-product>`.
 
 If, in the example above, $WORD is undefined or an empty list, the "s" is not printed. However, it is printed, if $WORD is the empty string.
 
@@ -828,7 +828,7 @@ Unlike all other expanions, variable expansion also happens in double quoted str
 
 Outside of double quotes, variables will expand to as many arguments as they have elements. That means an empty list will expand to nothing, a variable with one element will expand to that element, and a variable with multiple elements will expand to each of those elements separately.
 
-When two unquoted expansions directly follow each other, you need to watch out for expansions that expand to nothing. This includes undefined variables and empty lists, but also command substitutions with no output. See the `cartesian product <#cartesian-product>`_ section for more information.
+When two unquoted expansions directly follow each other, you need to watch out for expansions that expand to nothing. This includes undefined variables and empty lists, but also command substitutions with no output. See the :ref:`cartesian product <cartesian-product>` section for more information.
 
 The ``$`` symbol can also be used multiple times, as a kind of "dereference" operator (the ``*`` in C or C++), like in the following code::
 

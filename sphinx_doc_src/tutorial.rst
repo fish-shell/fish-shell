@@ -338,7 +338,7 @@ You can iterate over a list (or a slice) with a for loop::
     <outp>entry: /usr/local/bin</outp>
 
 
-Lists adjacent to other lists or strings are expanded as `cartesian products <index#cartesian-product>`__ unless quoted (see `Variable expansion <index#expand-variable>`__)::
+Lists adjacent to other lists or strings are expanded as :ref:`cartesian products <cartesian-product>` unless quoted (see :ref:`Variable expansion <expand-variable>`)::
 
     >_ set a 1 2 3
     >_ set 1 a b c

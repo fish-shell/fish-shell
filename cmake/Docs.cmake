@@ -13,13 +13,17 @@ SET(SPHINX_CACHE_DIR "${SPHINX_ROOT_DIR}/doctrees")
 SET(SPHINX_HTML_DIR "${SPHINX_ROOT_DIR}/html")
 SET(SPHINX_MANPAGE_DIR "${SPHINX_ROOT_DIR}/man")
 
+# sphinx-docs uses fish_indent for highlighting.
+# Prepend the output dir of fish_indent to PATH.
 ADD_CUSTOM_TARGET(sphinx-docs
-    ${SPHINX_EXECUTABLE}
+    env PATH="$<TARGET_FILE_DIR:fish_indent>:$$PATH"
+        ${SPHINX_EXECUTABLE}
         -q -b html
         -c "${SPHINX_SRC_DIR}"
         -d "${SPHINX_CACHE_DIR}"
         "${SPHINX_SRC_DIR}"
         "${SPHINX_HTML_DIR}"
+    DEPENDS sphinx_doc_src/fish_indent_lexer.py fish_indent
     COMMENT "Building HTML documentation with Sphinx")
 
 ADD_CUSTOM_TARGET(sphinx-manpages

@@ -243,6 +243,86 @@ void prettifier_t::prettify_node(const parse_node_tree_t &tree, node_offset_t no
     }
 }
 
+static const char *highlight_role_to_string(highlight_role_t role) {
+#define TEST_ROLE(x)          \
+    case highlight_role_t::x: \
+        return #x;
+    switch (role) {
+        TEST_ROLE(normal)
+        TEST_ROLE(error)
+        TEST_ROLE(command)
+        TEST_ROLE(statement_terminator)
+        TEST_ROLE(param)
+        TEST_ROLE(comment)
+        TEST_ROLE(match)
+        TEST_ROLE(search_match)
+        TEST_ROLE(operat)
+        TEST_ROLE(escape)
+        TEST_ROLE(quote)
+        TEST_ROLE(redirection)
+        TEST_ROLE(autosuggestion)
+        TEST_ROLE(selection)
+        TEST_ROLE(pager_progress)
+        TEST_ROLE(pager_background)
+        TEST_ROLE(pager_prefix)
+        TEST_ROLE(pager_completion)
+        TEST_ROLE(pager_description)
+        TEST_ROLE(pager_secondary_background)
+        TEST_ROLE(pager_secondary_prefix)
+        TEST_ROLE(pager_secondary_completion)
+        TEST_ROLE(pager_secondary_description)
+        TEST_ROLE(pager_selected_background)
+        TEST_ROLE(pager_selected_prefix)
+        TEST_ROLE(pager_selected_completion)
+        TEST_ROLE(pager_selected_description)
+    }
+#undef TEST_ROLE
+}
+
+// Entry point for Pygments CSV output.
+// Our output is a newline-separated string.
+// Each line is of the form `start,end,role`
+// start and end is the half-open token range, value is a string from highlight_role_t.
+// Example:
+// 3,7,command
+static std::string make_pygments_csv(const wcstring &src) {
+    const size_t len = src.size();
+    std::vector<highlight_spec_t> colors;
+    highlight_shell_no_io(src, colors, src.size(), nullptr, env_stack_t::globals());
+    assert(colors.size() == len && "Colors and src should have same size");
+
+    struct token_range_t {
+        unsigned long start;
+        unsigned long end;
+        highlight_role_t role;
+    };
+
+    std::vector<token_range_t> token_ranges;
+    for (size_t i = 0; i < len; i++) {
+        highlight_role_t role = colors.at(i).foreground;
+        // See if we can extend the last range.
+        if (!token_ranges.empty()) {
+            auto &last = token_ranges.back();
+            if (last.role == role && last.end == i) {
+                last.end = i + 1;
+                continue;
+            }
+        }
+        // We need a new range.
+        token_ranges.push_back(token_range_t{i, i + 1, role});
+    }
+
+    // Now render these to a string.
+    std::string result;
+    for (const auto &range : token_ranges) {
+        char buff[128];
+        snprintf(buff, sizeof buff, "%lu,%lu,%s\n", range.start, range.end,
+                 highlight_role_to_string(range.role));
+        result.append(buff);
+    }
+    return result;
+}
+
 // Entry point for prettification.
 static wcstring prettify(const wcstring &src, bool do_indent) {
     parse_node_tree_t parse_tree;
@@ -414,6 +494,7 @@ int main(int argc, char *argv[]) {
         output_type_plain_text,
         output_type_file,
         output_type_ansi,
+        output_type_pygments_csv,
         output_type_html
     } output_type = output_type_plain_text;
     const char *output_location = "";
@@ -429,6 +510,7 @@ int main(int argc, char *argv[]) {
                                        {"write", no_argument, NULL, 'w'},
                                        {"html", no_argument, NULL, 1},
                                        {"ansi", no_argument, NULL, 2},
+                                       {"pygments", no_argument, NULL, 3},
                                        {NULL, 0, NULL, 0}};
 
     int opt;
@@ -462,6 +544,10 @@ int main(int argc, char *argv[]) {
             }
             case 2: {
                 output_type = output_type_ansi;
+                break;
+            }
+            case 3: {
+                output_type = output_type_pygments_csv;
                 break;
             }
             case 'd': {
@@ -528,6 +614,12 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
+    if (output_type == output_type_pygments_csv) {
+        std::string output = make_pygments_csv(src);
+        fputs(output.c_str(), stdout);
+        return EXIT_SUCCESS;
+    }
+
     const wcstring output_wtext = prettify(src, do_indent);
 
     // Maybe colorize.
@@ -562,6 +654,10 @@ int main(int argc, char *argv[]) {
         }
         case output_type_html: {
             colored_output = html_colorize(output_wtext, colors);
+            break;
+        }
+        case output_type_pygments_csv: {
+            DIE("pygments_csv should have been handled above");
             break;
         }
     }

@@ -133,9 +133,6 @@ ADD_DEFINITIONS(-D_REENTRANT)
 # Set up PCRE2
 INCLUDE(cmake/PCRE2.cmake)
 
-# Set up the docs.
-INCLUDE(cmake/Docs.cmake)
-
 # Define a function to link dependencies.
 FUNCTION(FISH_LINK_DEPS target)
   TARGET_LINK_LIBRARIES(${target} fishlib)
@@ -161,6 +158,9 @@ FISH_LINK_DEPS(fish_indent)
 ADD_EXECUTABLE(fish_key_reader
                src/fish_key_reader.cpp src/print_help.cpp)
 FISH_LINK_DEPS(fish_key_reader)
+
+# Set up the docs.
+INCLUDE(cmake/Docs.cmake)
 
 # A helper for running tests.
 ADD_EXECUTABLE(fish_test_helper src/fish_test_helper.cpp)

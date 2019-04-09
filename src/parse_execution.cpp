@@ -397,7 +397,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
     }
 
     if (!valid_var_name(for_var_name)) {
-        report_error(var_name_node, L"invalid var name: %ls", for_var_name.c_str());
+        report_error(var_name_node, BUILTIN_ERR_VARNAME, L"for", for_var_name.c_str());
         return parse_execution_errored;
     }
 

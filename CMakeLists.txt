@@ -168,6 +168,9 @@ ADD_EXECUTABLE(fish_test_helper src/fish_test_helper.cpp)
 # Set up tests.
 INCLUDE(cmake/Tests.cmake)
 
+# Benchmarking support.
+INCLUDE(cmake/Benchmark.cmake)
+
 # Set up install.
 INCLUDE(cmake/Install.cmake)
 

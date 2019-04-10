@@ -88,6 +88,11 @@ Colors used with showcolorhints:
 - ``$__fish_git_prompt_color_branch_detached`` (red)
 - ``$__fish_git_prompt_color_flags`` (--bold blue)
 
+Variables used to surround the prompt, defaults to brackets `(master|✔)`:
+
+- ``$__fish_git_prompt_char_branch_prefix`` ('', `(`)
+- ``$__fish_git_prompt_char_branch_suffix`` ('', `)`)
+
 Note that all colors can also have a corresponding "_done" color. E.g. ``$__fish_git_prompt_color_upstream_done``, used right _after_ the upstream.
 
 See also fish_vcs_prompt, which will call all supported vcs-prompt functions, including git, hg and svn.

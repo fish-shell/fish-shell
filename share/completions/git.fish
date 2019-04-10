@@ -513,7 +513,7 @@ function __fish_git_stash_not_using_subcommand
 end
 
 function __fish_git_complete_worktrees
-    command git worktree list --porcelain | string match -er '^worktree' | string replace -r '^worktree\s*' ''
+    command git worktree list --porcelain | string replace --regex --filter '^worktree\s*' ''
 end
 
 function __fish_git_complete_stashes

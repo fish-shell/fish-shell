@@ -774,7 +774,7 @@ Examples::
   mv *.{c,h} src/
   # Moves all files with the suffix '.c' or '.h' to the subdirectory src.
 
-A literal "{}" will not be used as a brace expansion::
+A literal "{}" will not be used as a brace expansion, but if after expansion there is nothing between the braces, the argument will be removed::
 
     echo foo-{}
     # Outputs foo-{}
@@ -786,6 +786,7 @@ A literal "{}" will not be used as a brace expansion::
 If there is nothing between a brace and a comma or two commas, it's interpreted as an empty element.
 
 So::
+
     echo {,,/usr}/bin
     # Output /bin /bin /usr/bin
 

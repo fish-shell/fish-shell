@@ -239,6 +239,29 @@ A switch is a very common special type of argument. Switches almost always start
 
 Switches differ between commands and are documented in the manual page for each command. Some switches are common to most command though, for example '``--help``' will usually display a help text, '``-i``' will often turn on interactive prompting before taking action, while '``-f``' will turn it off.
 
+.. _syntax-words:
+
+Some common words
+-----------------
+
+This is a short explanation of some of the commonly used words in fish.
+
+- **argument** a parameter given to a command
+
+- **builtin** a command that is implemented in the shell. Builtins are commands that are so closely tied to the shell that it is impossible to implement them as external commands.
+
+- **command** a program that the shell can run.
+
+- **function** a block of commands that can be called as if they were a single command. By using functions, it is possible to string together multiple smaller commands into one more advanced command.
+
+- **job** a running pipeline or command
+
+- **pipeline** a set of commands stringed together so that the output of one command is the input of the next command
+
+- **redirection** an operation that changes one of the input/output streams associated with a job
+
+- **switch** a special flag sent as an argument to a command that will alter the behavior of the command. A switch almost always begins with one or two hyphens.
+
 
 Quotes
 ------
@@ -477,29 +500,6 @@ There are four fish builtins that let you execute commands only if a specific cr
 The ``switch`` command is used to execute one of possibly many blocks of commands depending on the value of a string. See the documentation for :ref:`switch <cmd-switch>` for more information.
 
 The other conditionals use the `exit status <#variables-status>`_ of a command to decide if a command or a block of commands should be executed. See their documentation for more information.
-
-.. _syntax-words:
-
-Some common words
------------------
-
-This is a short explanation of some of the commonly used words in fish.
-
-- **argument** a parameter given to a command
-
-- **builtin** a command that is implemented in the shell. Builtins are commands that are so closely tied to the shell that it is impossible to implement them as external commands.
-
-- **command** a program that the shell can run.
-
-- **function** a block of commands that can be called as if they were a single command. By using functions, it is possible to string together multiple smaller commands into one more advanced command.
-
-- **job** a running pipeline or command
-
-- **pipeline** a set of commands stringed together so that the output of one command is the input of the next command
-
-- **redirection** an operation that changes one of the input/output streams associated with a job
-
-- **switch** a special flag sent as an argument to a command that will alter the behavior of the command. A switch almost always begins with one or two hyphens.
 
 
 Help

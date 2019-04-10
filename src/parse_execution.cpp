@@ -1274,9 +1274,10 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
             remove_job(job.get());
         }
 
-        // Only external commands require a new fishd barrier.
+        // Update universal vaiables on external conmmands.
+        // TODO: justify this, why not on every command?
         if (job_contained_external_command) {
-            set_proc_had_barrier(false);
+            parser->vars().universal_barrier();
         }
     }
 

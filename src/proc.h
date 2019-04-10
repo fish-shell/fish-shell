@@ -467,15 +467,6 @@ bool job_list_is_empty(void);
 /// A helper function to more easily access the job list
 job_list_t &jobs();
 
-/// Whether a universal variable barrier roundtrip has already been made for the currently executing
-/// command. Such a roundtrip only needs to be done once on a given command, unless a universal
-/// variable value is changed. Once this has been done, this variable is set to 1, so that no more
-/// roundtrips need to be done.
-///
-/// Both setting it to one when it should be zero and the opposite may cause concurrency bugs.
-bool get_proc_had_barrier();
-void set_proc_had_barrier(bool flag);
-
 /// The current job control mode.
 ///
 /// Must be one of job_control_t::all, job_control_t::interactive and job_control_t::none.

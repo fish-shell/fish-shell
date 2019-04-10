@@ -658,10 +658,6 @@ int env_stack_t::set_internal(const wcstring &key, env_mode_flags_t input_var_mo
                 }
             }
         } else {
-            if (!get_proc_had_barrier()) {
-                set_proc_had_barrier(true);
-                env_universal_barrier();
-            }
             if (uvars() && uvars()->get(key)) {
                 // Modifying an existing universal variable.
                 env_set_internal_universal(key, std::move(val), var_mode, this);
@@ -907,13 +903,6 @@ maybe_t<env_var_t> env_stack_t::get(const wcstring &key, env_mode_flags_t mode) 
 
     if (!search_universal) return none();
 
-    // Another hack. Only do a universal barrier on the main thread (since it can change variable
-    // values). Make sure we do this outside the env_lock because it may itself call `get()`.
-    if (is_main_thread() && !get_proc_had_barrier()) {
-        set_proc_had_barrier(true);
-        env_universal_barrier();
-    }
-
     // Okay, we couldn't find a local or global var given the requirements. If there is a matching
     // universal var return that.
     if (uvars()) {
@@ -926,7 +915,7 @@ maybe_t<env_var_t> env_stack_t::get(const wcstring &key, env_mode_flags_t mode) 
     return none();
 }
 
-void env_universal_barrier() { env_stack_t::principal().universal_barrier(); }
+void env_universal_barrier() {env_stack_t::principal().universal_barrier(); }
 
 /// Returns true if the specified scope or any non-shadowed non-global subscopes contain an exported
 /// variable.

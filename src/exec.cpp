@@ -926,20 +926,6 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
         }
     }
 
-    // This call is used so the global environment variable array is regenerated, if needed,
-    // before the fork. That way, we avoid a lot of duplicate work where EVERY child would need
-    // to generate it, since that result would not get written back to the parent. This call
-    // could be safely removed, but it would result in slightly lower performance - at least on
-    // uniprocessor systems.
-    if (p->type == process_type_t::external) {
-        // Apply universal barrier so we have the most recent uvar changes
-        if (!get_proc_had_barrier()) {
-            set_proc_had_barrier(true);
-            env_universal_barrier();
-        }
-        parser.vars().export_arr();
-    }
-
     // Execute the process.
     p->check_generations_before_launch();
     switch (p->type) {

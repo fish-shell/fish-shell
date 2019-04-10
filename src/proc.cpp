@@ -75,24 +75,12 @@ int no_exec = 0;
 
 static int is_interactive = -1;
 
-static bool proc_had_barrier = false;
-
 bool shell_is_interactive() {
     ASSERT_IS_MAIN_THREAD();
     // is_interactive is statically initialized to -1. Ensure it has been dynamically set
     // before we're called.
     assert(is_interactive != -1);
     return is_interactive > 0;
-}
-
-bool get_proc_had_barrier() {
-    ASSERT_IS_MAIN_THREAD();
-    return proc_had_barrier;
-}
-
-void set_proc_had_barrier(bool flag) {
-    ASSERT_IS_MAIN_THREAD();
-    proc_had_barrier = flag;
 }
 
 /// A stack containing the values of is_interactive. Used by proc_push_interactive and

@@ -6,6 +6,6 @@ test_function
 # Future Feature Flags
 stderr-nocaret	off	3.0	^ no longer redirects stderr
 qmark-noglob	off	3.0	? no longer globs
-string-replace-fewer-backslashes	off	3.1	string replace -r needs fewer backslashes in the replacement
+regex-slashless	off	3.1	fewer \'s in string replace -r
 1
 2

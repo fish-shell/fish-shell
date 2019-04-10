@@ -1,1 +1,1 @@
---features 'string-replace-fewer-backslashes' -C 'string replace -ra "\\\\" "\\\\\\\\" -- "a\b\c"'
+--features 'regex-slashless' -C 'string replace -ra "\\\\" "\\\\\\\\" -- "a\b\c"'

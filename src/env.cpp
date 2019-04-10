@@ -836,6 +836,39 @@ std::shared_ptr<const wcstring_list_t> env_var_t::empty_list() {
     return result;
 }
 
+/// \return a the value of a variable for \p key, which must be electric (computed).
+static maybe_t<env_var_t> get_electric(const wcstring &key, const environment_t &vars) {
+    if (key == L"history") {
+        // Big hack. We only allow getting the history on the main thread. Note that history_t
+        // may ask for an environment variable, so don't take the lock here (we don't need it).
+        if (!is_main_thread()) {
+            return none();
+        }
+
+        history_t *history = reader_get_history();
+        if (!history) {
+            history = &history_t::history_with_name(history_session_id(vars));
+        }
+        wcstring_list_t result;
+        if (history) history->get_history(result);
+        return env_var_t(L"history", result);
+    } else if (key == L"pipestatus") {
+        const auto js = proc_get_last_statuses();
+        wcstring_list_t result;
+        result.reserve(js.pipestatus.size());
+        for (int i : js.pipestatus) {
+            result.push_back(to_string(i));
+        }
+        return env_var_t(L"pipestatus", std::move(result));
+    } else if (key == L"status") {
+        return env_var_t(L"status", to_string(proc_get_last_status()));
+    } else if (key == L"umask") {
+        return env_var_t(L"umask", format_string(L"0%0.3o", get_umask()));
+    }
+    // We should never get here unless the electric var list is out of sync with the above code.
+    DIE("unrecognized electric var name");
+}
+
 maybe_t<env_var_t> env_stack_t::get(const wcstring &key, env_mode_flags_t mode) const {
     const bool has_scope = mode & (ENV_LOCAL | ENV_GLOBAL | ENV_UNIVERSAL);
     const bool search_local = !has_scope || (mode & ENV_LOCAL);
@@ -849,35 +882,7 @@ maybe_t<env_var_t> env_stack_t::get(const wcstring &key, env_mode_flags_t mode) 
     // that in env_stack_t::set().
     if (is_electric(key)) {
         if (!search_global) return none();
-        if (key == L"history") {
-            // Big hack. We only allow getting the history on the main thread. Note that history_t
-            // may ask for an environment variable, so don't take the lock here (we don't need it).
-            if (!is_main_thread()) {
-                return none();
-            }
-
-            history_t *history = reader_get_history();
-            if (!history) {
-                history = &history_t::history_with_name(history_session_id(*this));
-            }
-            wcstring_list_t result;
-            if (history) history->get_history(result);
-            return env_var_t(L"history", result);
-        } else if (key == L"pipestatus") {
-            const auto js = proc_get_last_statuses();
-            wcstring_list_t result;
-            result.reserve(js.pipestatus.size());
-            for (int i : js.pipestatus) {
-                result.push_back(to_string(i));
-            }
-            return env_var_t(L"pipestatus", std::move(result));
-        } else if (key == L"status") {
-            return env_var_t(L"status", to_string(proc_get_last_status()));
-        } else if (key == L"umask") {
-            return env_var_t(L"umask", format_string(L"0%0.3o", get_umask()));
-        }
-        // We should never get here unless the electric var list is out of sync with the above code.
-        DIE("unerecognized electric var name");
+        return get_electric(key, *this);
     }
 
     if (search_local || search_global) {

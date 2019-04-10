@@ -31,6 +31,9 @@
 /* Define to 1 if you have the `getpwent' function. */
 #cmakedefine HAVE_GETPWENT 1
 
+/* Define to 1 if you have the 'getrusage' function. */
+#cmakedefine HAVE_GETRUSAGE 1
+
 /* Define to 1 if you have the `gettext' function. */
 #cmakedefine HAVE_GETTEXT 1
 

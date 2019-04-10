@@ -30,6 +30,8 @@ The following options are available:
 
 - ``-p`` or ``--profile=PROFILE_FILE`` when fish exits, output timing information on all executed commands to the specified file
 
+- ``--print-rusage-self`` when fish exits, output stats from getrusage
+
 - ``-v`` or ``--version`` display version and exit
 
 - ``-D`` or ``--debug-stack-frames=DEBUG_LEVEL`` specify how many stack frames to display when debug messages are written. The default is zero. A value of 3 or 4 is usually sufficient to gain insight into how a given debug call was reached but you can specify a value up to 128.

@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <stdio.h>
 #include <stdlib.h>
 #include <cstring>
+#include <sys/resource.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <cwchar>
@@ -63,10 +64,44 @@ class fish_cmd_opts_t {
     std::vector<std::string> batch_cmds;
     // Commands to execute after the shell's config has been read.
     std::vector<std::string> postconfig_cmds;
+    /// Whether to print rusage-self stats after execution.
+    bool print_rusage_self{false};
 };
 
 /// If we are doing profiling, the filename to output to.
 static const char *s_profiling_output_filename = NULL;
+
+/// \return a timeval converted to milliseconds.
+long long tv_to_msec(const struct timeval &tv) {
+    long long msec = (long long)tv.tv_sec * 1000; // milliseconds per second
+    msec += tv.tv_usec / 1000; // microseconds per millisecond
+    return msec;
+}
+
+static void print_rusage_self(FILE *fp) {
+#ifndef HAVE_GETRUSAGE
+    fprintf(fp, "getrusage() not supported on this platform");
+    return;
+#else
+    struct rusage rs;
+    if (getrusage(RUSAGE_SELF, &rs)) {
+        perror("getrusage");
+        return;
+    }
+#if defined(__APPLE__) && defined(__MACH__)
+    // Macs use bytes.
+    long rss_kb = rs.ru_maxrss / 1024;
+#else
+    // Everyone else uses KB.
+    long rss_kb = rs.ru_maxrss;
+#endif
+    fprintf(fp, "  rusage self:\n");
+    fprintf(fp, "      user time: %llu ms\n", tv_to_msec(rs.ru_utime));
+    fprintf(fp, "       sys time: %llu ms\n", tv_to_msec(rs.ru_stime));
+    fprintf(fp, "        max rss: %ld kb\n", rss_kb);
+    fprintf(fp, "        signals: %ld\n", rs.ru_nsignals);
+#endif
+}
 
 static bool has_suffix(const std::string &path, const char *suffix, bool ignore_case) {
     size_t pathlen = path.size(), suffixlen = std::strlen(suffix);
@@ -223,6 +258,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                                               {"interactive", no_argument, NULL, 'i'},
                                               {"login", no_argument, NULL, 'l'},
                                               {"no-execute", no_argument, NULL, 'n'},
+                                              {"print-rusage-self", no_argument, NULL, 1},
                                               {"profile", required_argument, NULL, 'p'},
                                               {"private", no_argument, NULL, 'P'},
                                               {"help", no_argument, NULL, 'h'},
@@ -273,6 +309,10 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
             }
             case 'n': {
                 no_exec = 1;
+                break;
+            }
+            case 1: {
+                opts->print_rusage_self = true;
                 break;
             }
             case 'p': {
@@ -450,6 +490,9 @@ int main(int argc, char **argv) {
 
     history_save_all();
     proc_destroy();
+    if (opts.print_rusage_self) {
+        print_rusage_self(stderr);
+    }
     exit_without_destructors(exit_status);
     return EXIT_FAILURE;  // above line should always exit
 }

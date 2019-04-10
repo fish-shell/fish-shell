@@ -81,9 +81,10 @@ class env_node_t {
     /// or does it redefine any variables to not be exported?
     bool exportv = false;
     /// Pointer to next level.
-    std::shared_ptr<env_node_t> next;
+    const std::shared_ptr<env_node_t> next;
 
-    env_node_t(bool is_new_scope) : new_scope(is_new_scope) {}
+    env_node_t(bool is_new_scope, std::shared_ptr<env_node_t> next_scope)
+        : new_scope(is_new_scope), next(std::move(next_scope)) {}
 
     maybe_t<env_var_t> find_entry(const wcstring &key) {
         auto it = env.find(key);
@@ -107,7 +108,7 @@ struct var_stack_t {
     env_node_ref_t top;
 
     // Bottom node on the function stack.
-    env_node_ref_t global_env;
+    const env_node_ref_t global_env;
 
     // Exported variable array used by execv.
     maybe_t<null_terminated_array_t<char>> export_array;
@@ -129,7 +130,7 @@ struct var_stack_t {
     // Pushes a new node onto our stack
     // Optionally creates a new scope for the node
     void push(bool new_scope) {
-        auto node = std::make_shared<env_node_t>(new_scope);
+        auto node = std::make_shared<env_node_t>(new_scope, this->top);
 
         // Copy local-exported variables.
         auto top_node = top;
@@ -141,7 +142,6 @@ struct var_stack_t {
             }
         }
 
-        node->next = this->top;
         this->top = std::move(node);
         if (new_scope && local_scope_exports(this->top)) {
             this->mark_changed_exported();
@@ -193,7 +193,7 @@ struct var_stack_t {
 
     /// Returns the global variable set.
     static env_node_ref_t globals() {
-        static env_node_ref_t s_globals{std::make_shared<env_node_t>(false)};
+        static env_node_ref_t s_globals{std::make_shared<env_node_t>(false, nullptr)};
         return s_globals;
     }
 };

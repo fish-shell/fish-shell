@@ -25,10 +25,10 @@ PHONY: .begin
 		 (echo 'Please install CMake and then re-run the `make` command!' 1>&2 && false)
 
 build/fish: build/$(BUILDFILE)
-	cmake --build build
+	$(CMAKE) --build build
 
 build/$(BUILDFILE): build
-	cd build; cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -G "$(GENERATOR)" -DCMAKE_INSTALL_PREFIX="$(PREFIX)" -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+	cd build; $(CMAKE) .. -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -G "$(GENERATOR)" -DCMAKE_INSTALL_PREFIX="$(PREFIX)" -DCMAKE_EXPORT_COMPILE_COMMANDS=1
 
 build:
 	mkdir -p build

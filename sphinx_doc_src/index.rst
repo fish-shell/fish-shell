@@ -1549,9 +1549,12 @@ Visual mode
 Copy and paste (Kill Ring)
 --------------------------
 
-``fish`` uses an Emacs style kill ring for copy and paste functionality. Use :kbd:`Control+K` to cut from the current cursor position to the end of the line. The string that is cut (a.k.a. killed) is inserted into a linked list of kills, called the kill ring. To paste the latest value from the kill ring use :kbd:`Control+Y`. After pasting, use :kbd:`Alt+Y` to rotate to the previous kill.
+``fish`` uses an Emacs-style kill ring for copy and paste functionality. For example, use :kbd:`Control+K` (`kill-line`) to cut from the current cursor position to the end of the line. The string that is cut (a.k.a. killed in emacs-ese) is inserted into a list of kills, called the kill ring. To paste the latest value from the kill ring (emacs calls this "yanking") use :kbd:`Control+Y` (the `yank` input function). After pasting, use :kbd:`Alt+Y` (`yank-pop`) to rotate to the previous kill.
 
-Copy and paste from outside are also supported, both via the :kbd:`Control+X` / :kbd:`Control+V` bindings and via the terminal's paste function, for which fish enables "Bracketed Paste Mode". When pasting inside single quotes, pasted single quotes and backslashes are automatically escaped so that the result can be used as a single token simply by closing the quote after.
+Copy and paste from outside are also supported, both via the :kbd:`Control+X` / :kbd:`Control+V` bindings (the `fish_clipboard_copy` and `fish_clipboard_paste` functions [#]_) and via the terminal's paste function, for which fish enables "Bracketed Paste Mode", so it can tell a paste from manually entered text.
+In addition, when pasting inside single quotes, pasted single quotes and backslashes are automatically escaped so that the result can be used as a single token simply by closing the quote after.
+
+.. [#] These rely on external tools. Currently xsel, xclip, wl-copy/wl-paste and pbcopy/pbpaste are supported.
 
 .. _history-search:
 

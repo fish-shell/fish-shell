@@ -76,6 +76,9 @@ void io_buffer_t::run_background_fillthread(autoclose_fd_t readfd) {
         FD_ZERO(&fds);
         FD_SET(fd, &fds);
         int ret = select(fd + 1, &fds, NULL, NULL, &tv);
+        // select(2) is allowed to (and does) update `tv` to indicate how much time was left, so we
+        // need to restore the desired value each time.
+        tv.tv_usec = poll_timeout_usec;
         readable = ret > 0;
         if (ret < 0 && errno != EINTR) {
             // Surprising error.

@@ -52,6 +52,7 @@ function __fish_print_help --description "Print help message for the specified f
     # blank line, to duplicate the default behavior of `man`, or more accurately,
     # the `-s` flag to `less` that `man` passes.
     set -l state blank
+    set -l have_name
     for line in $help
         # categorize the line
         set -l line_type
@@ -69,24 +70,32 @@ function __fish_print_help --description "Print help message for the specified f
             case ''
                 set line_type blank
             case '*'
+                # Remove man's bolding
+                set -l name (string replace -ra '(.)'\b'.' '$1' -- $line)
+                # We start after we have the name
+                contains -- $name NAME; and set have_name 1; and continue
+                # We ignore the SYNOPSIS header
+                contains -- $name SYNOPSIS; and continue
+                # Everything after COPYRIGHT is useless
+                contains -- $name COPYRIGHT; and break
+
                 # not leading space, and not empty, so must contain a non-space
                 # in the first column. That makes it a header/footer.
                 set line_type meta
         end
 
+        set -q have_name[1]; or continue
         switch $state
             case normal
                 switch $line_type
-                    case normal
+                    case normal meta
                         printf "%s\n" $line
                     case blank
                         set state blank
-                    case meta
-                        # skip it
                 end
             case blank
                 switch $line_type
-                    case normal
+                    case normal meta
                         echo # print the blank line
                         printf "%s\n" $line
                         set state normal

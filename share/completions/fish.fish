@@ -21,4 +21,6 @@ function __fish_complete_features
     printf "%s\n" "$arg_comma"$features #TODO: remove existing args
 end
 complete -c fish -s f -l features -d "Run with comma-separated feature flags enabled" -a "(__fish_complete_features)" -x
+complete -c fish -l print-rusage-self -d "Print stats from getrusage at exit" -f
+
 complete -c fish -x -a "(__fish_complete_suffix .fish)"

@@ -21,7 +21,7 @@ all: .begin build/fish
 
 PHONY: .begin
 .begin:
-	@which ninja > /dev/null 2> /dev/null || \
+	@which $(CMAKE) > /dev/null 2> /dev/null || \
 		 (echo 'Please install CMake and then re-run the `make` command!' 1>&2 && false)
 
 build/fish: build/$(BUILDFILE)

@@ -900,12 +900,9 @@ maybe_t<env_var_t> env_stack_t::get(const wcstring &key, env_mode_flags_t mode) 
             env = vars_stack().next_scope_to_search(env);
         }
     }
-
-    if (!search_universal) return none();
-
     // Okay, we couldn't find a local or global var given the requirements. If there is a matching
     // universal var return that.
-    if (uvars()) {
+    if (search_universal && uvars()) {
         auto var = uvars()->get(key);
         if (var && (var->exports() ? search_exported : search_unexported)) {
             return var;

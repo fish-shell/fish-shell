@@ -280,7 +280,7 @@ Some characters can not be written directly on the command line. For these chara
 - ``\$`` escapes the dollar character
 - ``\\`` escapes the backslash character
 - ``\*`` escapes the star character
-- ``\?`` escapes the question mark character
+- ``\?`` escapes the question mark character (this is not necessary if the `qmark-noglob` :ref:`feature flag<featureflags>` is enabled)
 - ``\~`` escapes the tilde character
 - ``\#`` escapes the hash character
 - ``\(`` escapes the left parenthesis character
@@ -535,7 +535,7 @@ These are the general purpose tab completions that ``fish`` provides:
 
 - Completion of usernames for tilde expansion.
 
-- Completion of filenames, even on strings with wildcards such as '``*``', '``**``' and '``?``'.
+- Completion of filenames, even on strings with wildcards such as '``*``' and '``**``'.
 
 ``fish`` provides a large number of program specific completions. Most of these completions are simple options like the ``-l`` option for ``ls``, but some are more advanced. The latter include:
 
@@ -688,11 +688,11 @@ Wildcards
 
 If a star (``*``) or a question mark (``?``) is present in the parameter, ``fish`` attempts to match the given parameter to any files in such a way that:
 
-- ``?`` can match any single character except '/'.
-
 - ``*`` can match any string of characters not containing '/'. This includes matching an empty string.
 
 - ``**`` matches any string of characters. This includes matching an empty string. The matched string may include the ``/`` character; that is, it recurses into subdirectories. Note that augmenting this wildcard with other strings will not match files in the current working directory (``$PWD``) if you separate the strings with a slash ("/"). This is unlike other shells such as zsh. For example, ``**\/*.fish`` in zsh will match ``.fish`` files in the PWD but in fish will only match such files in a subdirectory. In fish you should type ``**.fish`` to match files in the PWD as well as subdirectories.
+
+- ``?`` can match any single character except '/'. This is deprecated and can be disabled via the `qmark-noglob` :ref:`feature flag<featureflags>`, so `?` will just be an ordinary character.
 
 Other shells, such as zsh, provide a rich glob syntax for restricting the files matched by globs. For example, ``**(.)``, to only match regular files. Fish prefers to defer such features to programs, such as ``find``, rather than reinventing the wheel. Thus, if you want to limit the wildcard expansion to just regular files the fish approach is to define and use a function. For example,
 

@@ -396,11 +396,11 @@ will start the emacs text editor in the background.
 Job control
 -----------
 
-Most programs allow you to suspend the program's execution and return control to ``fish`` by pressing :kbd:`Control+Z` (also referred to as ``^Z``). Once back at the ``fish`` commandline, you can start other programs and do anything you want. If you then want you can go back to the suspended command by using the `fg <cmds/fg.html>`_ (foreground) command.
+Most programs allow you to suspend the program's execution and return control to ``fish`` by pressing :kbd:`Control+Z` (also referred to as ``^Z``). Once back at the ``fish`` commandline, you can start other programs and do anything you want. If you then want you can go back to the suspended command by using the :ref:`fg <cmd-fg>` (foreground) command.
 
-If you instead want to put a suspended job into the background, use the `bg <cmds/bg.html>`_ command.
+If you instead want to put a suspended job into the background, use the :ref:`bg <cmd-bg>` command.
 
-To get a listing of all currently started jobs, use the `jobs <cmds/jobs.html>`_ command.
+To get a listing of all currently started jobs, use the :ref:`jobs <cmd-jobs>` command.
 
 
 .. _syntax-function:
@@ -437,7 +437,7 @@ There are a few important things that need to be noted about aliases:
 
 - Autoloading isn't applicable to aliases. Since, by definition, the function is created at the time the alias command is executed. You cannot autoload aliases.
 
-To easily create a function of this form, you can use the `alias <cmds/alias.html>`_ command.
+To easily create a function of this form, you can use the :ref:`alias <cmd-alias>` command.
 
 .. _syntax-function-autoloading:
 
@@ -472,11 +472,11 @@ If you are developing another program, you may wish to install functions which a
 Conditional execution of code and flow control
 ----------------------------------------------
 
-There are four fish builtins that let you execute commands only if a specific criterion is met. These builtins are `if <cmds/if.html>`_, `switch <cmds/switch.html>`_, `and <cmds/and.html>`_ and `or <cmds/or.html>`_.
+There are four fish builtins that let you execute commands only if a specific criterion is met. These builtins are :ref:`if <cmd-if>`, :ref:`switch <cmd-switch>`, :ref:`and <cmd-and>` and :ref:`or <cmd-or>`.
 
-The ``switch`` command is used to execute one of possibly many blocks of commands depending on the value of a string. See the documentation for `switch <cmds/switch.html>`_ for more information.
+The ``switch`` command is used to execute one of possibly many blocks of commands depending on the value of a string. See the documentation for :ref:`switch <cmd-switch>` for more information.
 
-The other conditionals use the `exit status <#variables-status>`_ of a command to decide if a command or a block of commands should be executed. See the documentation for `if <cmds/if.html>`_, `and <cmds/and.html>`_ and `or <cmds/or.html>`_ for more information.
+The other conditionals use the `exit status <#variables-status>`_ of a command to decide if a command or a block of commands should be executed. See their documentation for more information.
 
 .. _syntax-words:
 
@@ -505,7 +505,7 @@ This is a short explanation of some of the commonly used words in fish.
 Help
 ====
 
-``fish`` has an extensive help system. Use the `help <cmds/help.html>`_ command to obtain help on a specific subject or command. For instance, writing ``help syntax`` displays the `syntax section <#syntax>`_ of this documentation.
+``fish`` has an extensive help system. Use the :ref:`help <cmd-help>` command to obtain help on a specific subject or command. For instance, writing ``help syntax`` displays the `syntax section <#syntax>`_ of this documentation.
 
 ``fish`` also has man pages for its commands. For example, ``man set`` will show the documentation for ``set`` as a man page.
 

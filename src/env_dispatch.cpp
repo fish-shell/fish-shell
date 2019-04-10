@@ -329,7 +329,9 @@ static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table() {
     var_dispatch_table->add(L"fish_history", handle_fish_history_change);
     var_dispatch_table->add(L"TZ", handle_tz_change);
     var_dispatch_table->add(L"fish_use_posix_spawn", handle_fish_use_posix_spawn_change);
-    return var_dispatch_table;
+
+    // This std::move is required to avoid a build error on old versions of libc++ (#5801)
+    return std::move(var_dispatch_table);
 }
 
 static void run_inits(const environment_t &vars) {

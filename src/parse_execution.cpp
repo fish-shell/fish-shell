@@ -1269,6 +1269,11 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
             remove_job(job.get());
         }
 
+        // This job was disowned during its own execution or the execution of its subjobs
+        if (job->get_flag(job_flag_t::PENDING_REMOVAL)) {
+            remove_job(job.get());
+        }
+
         // Only external commands require a new fishd barrier.
         if (job_contained_external_command) {
             set_proc_had_barrier(false);

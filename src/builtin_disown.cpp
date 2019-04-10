@@ -17,7 +17,7 @@
 
 /// Helper for builtin_disown.
 static int disown_job(const wchar_t *cmd, parser_t &parser, io_streams_t &streams, job_t *j) {
-    if (j == 0) {
+    if (j == nullptr) {
         streams.err.append_format(_(L"%ls: Unknown job '%ls'\n"), L"bg");
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
@@ -31,17 +31,13 @@ static int disown_job(const wchar_t *cmd, parser_t &parser, io_streams_t &stream
         streams.err.append_format(fmt, cmd, j->job_id, j->command_wcstr());
     }
 
-    for (auto itr = jobs().begin(); itr != jobs().end(); ++itr) {
-        auto job = itr->get();
-        if (job == j) {
-            pid_t pgid = j->pgid;
-            add_disowned_pgid(pgid);
-            jobs().erase(itr);
-            return STATUS_CMD_OK;
-        }
-    }
+    // We cannot directly remove the job from the jobs() list as `disown` might be called
+    // within the context of a subjob which will cause the parent job to crash in exec_job().
+    // Instead, we set a flag and the parser removes the job from the jobs list later.
+    j->set_flag(job_flag_t::PENDING_REMOVAL, true);
+    add_disowned_pgid(j->pgid);
 
-    return STATUS_CMD_ERROR;
+    return STATUS_CMD_OK;
 }
 
 /// Builtin for removing jobs from the job list.

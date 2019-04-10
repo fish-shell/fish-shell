@@ -175,7 +175,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (print_last) {
         // Ignore unconstructed jobs, i.e. ourself.
         for (const auto &j : jobs()) {
-            if (j->is_constructed() && !j->is_completed()) {
+            if (j->is_visible()) {
                 builtin_jobs_print(j.get(), mode, !streams.out_is_redirected, streams);
                 return STATUS_CMD_ERROR;
             }
@@ -217,7 +217,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         } else {
             for (const auto &j : jobs()) {
                 // Ignore unconstructed jobs, i.e. ourself.
-                if (j->is_constructed() && !j->is_completed()) {
+                if (j->is_visible()) {
                     builtin_jobs_print(j.get(), mode, !found && !streams.out_is_redirected, streams);
                     found = true;
                 }

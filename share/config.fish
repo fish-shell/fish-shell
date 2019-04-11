@@ -181,7 +181,8 @@ if status --is-login
                 if [ -f $path_file ]
                     while read -l entry
                         if not contains -- $entry $result
-                            set -a result $entry
+                            test -n "$entry"
+                            and set -a result $entry
                         end
                     end <$path_file
                 end

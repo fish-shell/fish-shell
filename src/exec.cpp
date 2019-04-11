@@ -6,7 +6,6 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <numeric>
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif

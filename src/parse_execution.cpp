@@ -151,22 +151,30 @@ process_type_t parse_execution_context_t::process_type_for_command(
     // etc).
     enum parse_statement_decoration_t decoration = get_decoration(statement);
 
-    if (decoration == parse_statement_decoration_exec) {
-        // Always exec.
-        process_type = process_type_t::exec;
-    } else if (decoration == parse_statement_decoration_command) {
-        // Always a command.
-        process_type = process_type_t::external;
-    } else if (decoration == parse_statement_decoration_builtin) {
-        // What happens if this builtin is not valid?
-        process_type = process_type_t::builtin;
-    } else if (function_exists(cmd)) {
-        process_type = process_type_t::function;
-    } else if (builtin_exists(cmd)) {
-        process_type = process_type_t::builtin;
-    } else {
-        process_type = process_type_t::external;
+    switch (decoration) {
+        case parse_statement_decoration_exec:
+            process_type = process_type_t::exec;
+            break;
+        case parse_statement_decoration_command:
+            process_type = process_type_t::external;
+            break;
+        case parse_statement_decoration_builtin:
+            process_type = process_type_t::builtin;
+            break;
+        case parse_statement_decoration_eval:
+            process_type = process_type_t::eval;
+            break;
+        case parse_statement_decoration_none:
+            if (function_exists(cmd)) {
+                process_type = process_type_t::function;
+            } else if (builtin_exists(cmd)) {
+                process_type = process_type_t::builtin;
+            } else {
+                process_type = process_type_t::external;
+            }
+            break;
     }
+
     return process_type;
 }
 

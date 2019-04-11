@@ -477,6 +477,9 @@ static bool process_clean_after_marking(bool allow_interactive) {
     static std::vector<shared_ptr<job_t>> erase_list;
     const bool only_one_job = jobs().size() == 1;
     for (const auto &j : jobs()) {
+        if (!j->is_constructed()) {
+            continue;
+        }
         // If we are reaping only jobs who do not need status messages sent to the console, do not
         // consider reaping jobs that need status messages.
         if ((!j->get_flag(job_flag_t::SKIP_NOTIFICATION)) && (!interactive) &&

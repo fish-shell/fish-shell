@@ -1469,8 +1469,8 @@ void completer_t::perform() {
                 use_command = true;
                 use_function = true;
                 use_builtin = true;
-                use_implicit_cd = false;
-                use_abbr = false;
+                use_implicit_cd = true;
+                use_abbr = true;
                 break;
             }
         }

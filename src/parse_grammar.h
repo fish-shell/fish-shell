@@ -334,9 +334,16 @@ DEF_ALT(decorated_statement) {
     using cmds = seq<keyword<parse_keyword_command>, plain_statement>;
     using builtins = seq<keyword<parse_keyword_builtin>, plain_statement>;
     using execs = seq<keyword<parse_keyword_exec>, plain_statement>;
-    // using evals = seq<keyword<parse_keyword_eval>, plain_statement>;
-    using evals = single<plain_statement>; /* so long as `eval` is a function */
-    ALT_BODY(decorated_statement, plains, cmds, builtins, execs);
+    // Ideally, `evals` should be defined as `seq<keyword<parse_keyword_eval>,
+    // arguments_or_redirections_list`, but other parts of the code have the logic hard coded to
+    // search for a process at the head of a statement, and bug out if we do that.
+    // We also can't define `evals` as a `seq<keyword<parse_keyword_eval>, plain_statement>` because
+    // `expand.cpp` hard-codes its "command substitution at the head of a statement is not allowed"
+    // check without any way of telling it to perform the substitution anyway. Our solution is to
+    // create an empty function called `eval` that never actually gets executed and convert a
+    // decorated statement `eval ...` into a plain statement `eval ...`
+    using evals = seq<plain_statement>;
+    ALT_BODY(decorated_statement, plains, cmds, builtins, execs, evals);
 };
 
 DEF(plain_statement)

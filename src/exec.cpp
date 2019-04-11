@@ -6,6 +6,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <numeric>
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
@@ -903,6 +904,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
 
     // The IO chain for this process.
     io_chain_t process_net_io_chain = j->block_io_chain();
+    auto cached_status = proc_get_last_status();
 
     if (pipes.write.valid()) {
         process_net_io_chain.push_back(std::make_shared<io_pipe_t>(
@@ -944,7 +946,6 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
     // Execute the process.
     p->check_generations_before_launch();
     switch (p->type) {
-        case process_type_t::eval: /* so long as `eval` is a function */
         case process_type_t::function:
         case process_type_t::block_node: {
             // Allow buffering unless this is a deferred run. If deferred, then processes after us
@@ -980,6 +981,29 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
             // We should have handled exec up above.
             DIE("process_type_t::exec process found in pipeline, where it should never be. "
                 "Aborting.");
+            break;
+        }
+
+        case process_type_t::eval: {
+            // int eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type);
+            bool has_args = false;
+            wcstring new_cmd;
+            for (const wchar_t * const* arg = p->get_argv() + 1; *arg != nullptr; ++arg) {
+                has_args = true;
+                new_cmd += L' ';
+                new_cmd += *arg;
+            }
+
+            // `eval` is not supposed to error or do anything at all if no arguments are provided,
+            // or if it is used to execute a function that wouldn't have changed the status code
+            // (e.g. an empty function) if it were executed normally.
+            j->processes[0]->completed = true;
+            p->status = proc_status_t::from_exit_code(cached_status);
+
+            if (has_args) {
+                parser.eval(new_cmd.c_str(), process_net_io_chain, block_type_t::TOP);
+                p->status = proc_status_t::from_exit_code(proc_get_last_status());
+            }
             break;
         }
     }

@@ -185,7 +185,7 @@ static int parse_util_locate_brackets_range(const wcstring &str, size_t *inout_c
                                             size_t *out_end, bool accept_incomplete,
                                             wchar_t open_type, wchar_t close_type) {
     // Clear the return values.
-    out_contents->clear();
+    if (out_contents != nullptr) out_contents->clear();
     *out_start = 0;
     *out_end = str.size();
 
@@ -213,7 +213,9 @@ static int parse_util_locate_brackets_range(const wcstring &str, size_t *inout_c
 
     // Assign the substring to the out_contents.
     const wchar_t *interior_begin = bracket_range_begin + 1;
-    out_contents->assign(interior_begin, bracket_range_end - interior_begin);
+    if (out_contents != nullptr) {
+        out_contents->assign(interior_begin, bracket_range_end - interior_begin);
+    }
 
     // Return the start and end.
     *out_start = bracket_range_begin - buff;
@@ -1134,6 +1136,7 @@ static bool detect_errors_in_plain_statement(const wcstring &buff_src,
         if (expand_to_command_and_args(*unexp_command, null_environment_t{}, &command, nullptr,
                                        parse_errors) == EXPAND_ERROR) {
             errored = true;
+            parse_error_offset_source_start(parse_errors, source_start);
         }
 
         // Check that pipes are sound.

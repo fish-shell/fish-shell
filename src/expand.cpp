@@ -879,13 +879,16 @@ static expand_error_t expand_stage_cmdsubst(wcstring input, std::vector<completi
                                             parse_error_list_t *errors) {
     UNUSED(vars);
     if (EXPAND_SKIP_CMDSUBST & flags) {
-        wchar_t *begin, *end;
-        if (parse_util_locate_cmdsubst(input.c_str(), &begin, &end, true) == 0) {
-            append_completion(out, std::move(input));
-        } else {
-            append_cmdsub_error(errors, SOURCE_LOCATION_UNKNOWN,
-                                L"Command substitutions not allowed");
-            return EXPAND_ERROR;
+        size_t cur = 0, start = 0, end;
+        switch (parse_util_locate_cmdsubst_range(input, &cur, nullptr, &start, &end, true)) {
+            case 0:
+                append_completion(out, std::move(input));
+                break;
+            case 1: /* fallthroughs intentional */
+               append_cmdsub_error(errors, start, L"Command substitutions not allowed");
+            case -1:
+            default:
+                return EXPAND_ERROR;
         }
     } else {
         bool cmdsubst_ok = expand_cmdsubst(std::move(input), out, errors);

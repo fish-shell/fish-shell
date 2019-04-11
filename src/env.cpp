@@ -90,14 +90,6 @@ class env_node_t {
         if (it != env.end()) return it->second;
         return none();
     }
-
-    /// Return whether this node contains any of the entries in the vars list.
-    bool contains_any_of(const wcstring_list_t &vars) const {
-        for (const auto &v : vars) {
-            if (env.count(v)) return true;
-        }
-        return false;
-    }
 };
 
 using env_node_ref_t = std::shared_ptr<env_node_t>;

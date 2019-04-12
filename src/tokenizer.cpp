@@ -196,8 +196,8 @@ tok_t tokenizer_t::read_string() {
             }
             switch (brace_offsets.size()) {
                 case 0:
-                    return this->call_error(tokenizer_error_t::closing_unopened_brace, this->start,
-                                            this->buff);
+                    return this->call_error(tokenizer_error_t::closing_unopened_brace, this->buff,
+                                            this->start + wcslen(this->start));
                 case 1:
                     mode &= ~(tok_modes::curly_braces);
                 default:

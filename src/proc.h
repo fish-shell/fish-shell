@@ -36,8 +36,6 @@ enum class process_type_t {
     block_node,
     /// The exec builtin.
     exec,
-    /// A literal evaluation
-    eval,
 };
 
 enum class job_control_t {

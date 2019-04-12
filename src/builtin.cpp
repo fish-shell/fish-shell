@@ -41,6 +41,7 @@
 #include "builtin_disown.h"
 #include "builtin_echo.h"
 #include "builtin_emit.h"
+#include "builtin_eval.h"
 #include "builtin_exit.h"
 #include "builtin_fg.h"
 #include "builtin_functions.h"
@@ -381,6 +382,7 @@ static const builtin_data_t builtin_datas[] = {
     {L"else", &builtin_generic, N_(L"Evaluate block if condition is false")},
     {L"emit", &builtin_emit, N_(L"Emit an event")},
     {L"end", &builtin_generic, N_(L"End a block of commands")},
+    {L"eval", &builtin_eval, N_(L"Evaluate a string as a statement")},
     {L"exec", &builtin_generic, N_(L"Run command in current process")},
     {L"exit", &builtin_exit, N_(L"Exit the shell")},
     {L"false", &builtin_false, N_(L"Return an unsuccessful result")},

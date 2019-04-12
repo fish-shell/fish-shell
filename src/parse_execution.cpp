@@ -161,9 +161,6 @@ process_type_t parse_execution_context_t::process_type_for_command(
         case parse_statement_decoration_builtin:
             process_type = process_type_t::builtin;
             break;
-        case parse_statement_decoration_eval:
-            process_type = process_type_t::eval;
-            break;
         case parse_statement_decoration_none:
             if (function_exists(cmd)) {
                 process_type = process_type_t::function;

@@ -275,6 +275,8 @@ static const char *highlight_role_to_string(highlight_role_t role) {
         TEST_ROLE(pager_selected_prefix)
         TEST_ROLE(pager_selected_completion)
         TEST_ROLE(pager_selected_description)
+        default:
+            DIE("UNKNOWN ROLE");
     }
 #undef TEST_ROLE
 }

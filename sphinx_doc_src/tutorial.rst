@@ -172,7 +172,7 @@ Tab Completions
 
 Press :kbd:`Tab`, and ``fish`` will attempt to complete the command, argument, or path::
 
-    >_ <eror>/pri</eror> :kbd:`Tab` → /private/
+    >_ <eror>/pri</eror> :kbd:`Tab` => /private/
 
 
 If there's more than one possibility, it will list them::
@@ -185,7 +185,7 @@ Hit tab again to cycle through the possibilities.
 
 ``fish`` can also complete many commands, like git branches::
 
-    >_ git merge pr :kbd:`Tab` → git merge prompt_designer
+    >_ git merge pr :kbd:`Tab` => git merge prompt_designer
     >_ git checkout b :kbd:`Tab`
     <outp><mtch>b</outp>uiltin_list_io_merge <i>(Branch)</i> \mtch{b</mtch>uiltin_set_color <i>(Branch)</i> <mtch>b</mtch>usted_events <i>(Tag)</i>}
 

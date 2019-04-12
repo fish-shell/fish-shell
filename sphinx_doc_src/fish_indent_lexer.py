@@ -89,11 +89,11 @@ def tokenize_fish_command(code, offset):
         ["fish_indent", "--pygments"],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
-        universal_newlines=True,
+        universal_newlines=False,
     )
-    stdout, _ = proc.communicate(code)
+    stdout, _ = proc.communicate(code.encode('utf-8'))
     result = []
-    for line in stdout.splitlines():
+    for line in stdout.decode('utf-8').splitlines():
         start, end, role = line.split(",")
         start, end = int(start), int(end)
         value = code[start:end]

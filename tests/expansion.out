@@ -87,3 +87,6 @@ Not a path: ONE:TWO:THREE 1
 As a path: ONE:TWO:THREE 3
 Appended path: ONE:TWO:THREE:FOUR 4
 Back to normal variable: ONE TWO THREE FOUR 4
+
+####################
+# Test fatal syntax errors

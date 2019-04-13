@@ -1,4 +1,4 @@
-// Functions for executing the jobs builtin.
+// Functions for executing the eval builtin.
 #include "config.h"  // IWYU pragma: keep
 
 #include <errno.h>
@@ -18,28 +18,26 @@
 
 class parser_t;
 
-/// The jobs builtin. Used for printing running jobs. Defined in builtin_jobs.c.
+/// Implementation of eval builtin.
 int builtin_eval(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
 
     wcstring new_cmd;
     for (size_t i = 1; i < argc; ++i) {
-        new_cmd += L' ';
+        if (i > 1) new_cmd += L' ';
         new_cmd += argv[i];
     }
 
     // debug(1, "new_cmd: %ls", new_cmd.c_str());
 
-    auto status = proc_get_last_status();
+    int status = STATUS_CMD_OK;
     if (argc > 1) {
         if (parser.eval(new_cmd.c_str(), *streams.io_chain, block_type_t::TOP) != 0) {
-            return STATUS_CMD_ERROR;
+            // This indicates a parse error; nothing actually got executed.
+            status = STATUS_CMD_ERROR;
+        } else {
+            status = proc_get_last_status();
         }
-        status = proc_get_last_status();
-    } else {
-        status = STATUS_CMD_OK;
     }
-
     return status;
 }

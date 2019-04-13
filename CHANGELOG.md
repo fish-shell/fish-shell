@@ -36,6 +36,7 @@ shares the same argument scope as `eval` rather than being executed in a new sco
 - The `path_helper` on macOS now only runs in login shells, matching the bash implementation.
 - The `forward-bigword` binding now interacts correctly with autosuggestions (#5336)
 - Fish now tries to guess if the system supports Unicode 9 (and displays emoji as wide), hopefully making setting $fish_emoji_width superfluous in most cases (#5722).
+- The locale is now reloaded when the `LOCPATH` variable is changed (#5815).
 - Lots of improvements to completions.
 - Added completions for
   - `cf`

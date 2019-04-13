@@ -76,7 +76,7 @@ static const wcstring_list_t locale_variables({L"LANG", L"LANGUAGE", L"LC_ALL", 
                                                L"LC_COLLATE", L"LC_CTYPE", L"LC_IDENTIFICATION",
                                                L"LC_MEASUREMENT", L"LC_MESSAGES", L"LC_MONETARY",
                                                L"LC_NAME", L"LC_NUMERIC", L"LC_PAPER",
-                                               L"LC_TELEPHONE", L"LC_TIME"});
+                                               L"LC_TELEPHONE", L"LC_TIME", L"LOCPATH"});
 
 /// List of all curses environment variable names that might trigger (re)initializing the curses
 /// subsystem.

@@ -225,7 +225,8 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     int eval(wcstring cmd, const io_chain_t &io, enum block_type_t block_type);
 
     /// Evaluate the parsed source ps.
-    void eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type_t block_type);
+    /// \return 0 on success, 1 on a parse error.
+    int eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type_t block_type);
 
     /// Evaluates a node.
     /// The node type must be grammar::statement or grammar::job_list.

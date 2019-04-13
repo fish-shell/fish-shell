@@ -1291,7 +1291,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
     }
 
     job_reap(false);  // clean up jobs
-    return parse_execution_success;
+    return populated_job ? parse_execution_success : parse_execution_errored;
 }
 
 parse_execution_result_t parse_execution_context_t::run_job_conjunction(

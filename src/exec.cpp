@@ -903,8 +903,6 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
 
     // The IO chain for this process.
     io_chain_t process_net_io_chain = j->block_io_chain();
-    auto cached_status = proc_get_last_status();
-
     if (pipes.write.valid()) {
         process_net_io_chain.push_back(std::make_shared<io_pipe_t>(
             p->pipe_write_fd, false /* not input */, std::move(pipes.write)));

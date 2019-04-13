@@ -7,3 +7,6 @@ status: Invalid job control mode '1none'
 
 ####################
 # Future Feature Flags
+
+####################
+# Ensure $status isn't reset before a function is executed

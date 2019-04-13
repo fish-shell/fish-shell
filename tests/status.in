@@ -48,3 +48,10 @@ logmsg Future Feature Flags
 status features
 status test-feature stderr-nocaret ; echo $status
 status test-feature not-a-feature ; echo $status
+
+logmsg 'Ensure $status isn\'t reset before a function is executed'
+function echo_last
+	echo $status
+end
+
+false; echo_last; echo $status #1

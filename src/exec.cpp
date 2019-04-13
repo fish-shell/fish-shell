@@ -864,6 +864,14 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
     return true;
 }
 
+// The number of overall "command" executions, for whatever definition of "command". Its delta
+// is used to determine the number of recursive `exec_process_in_job()` invocations.
+static size_t exec_count = 0;
+
+size_t exec_get_exec_count() {
+    return exec_count;
+}
+
 /// Executes a process \p in job \j, using the pipes \p pipes (which may have invalid fds if this is
 /// the first or last process).
 /// \p deferred_pipes represents the pipes from our deferred process; if set ensure they get closed
@@ -926,9 +934,6 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
         }
     }
 
-    // The number of overall "command" executions, for whatever definition of "command". Its delta
-    // is used to determine the number of recursive `exec_process_in_job()` invocations.
-    static size_t exec_count = 0;
     if (p->type != process_type_t::block_node) {
         // An simple `begin ... end` should not be considered an execution of a command.
         exec_count++;

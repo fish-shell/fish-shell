@@ -257,10 +257,12 @@ bool function_get_definition(const wcstring &name, wcstring &out_definition) {
     return func != NULL;
 }
 
-std::map<wcstring, env_var_t> function_get_inherit_vars(const wcstring &name) {
+const std::map<wcstring, env_var_t> &function_get_inherit_vars(const wcstring &name) {
+    static const std::map<wcstring, env_var_t> empty_inherit_vars;
+
     scoped_rlock locker(functions_lock);
     const function_info_t *func = function_get(name);
-    return func ? func->inherit_vars : std::map<wcstring, env_var_t>();
+    return func ? func->inherit_vars : empty_inherit_vars;
 }
 
 bool function_get_desc(const wcstring &name, wcstring &out_desc) {

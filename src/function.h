@@ -102,7 +102,7 @@ int function_get_definition_lineno(const wcstring &name);
 
 /// Returns a mapping of all variables of the specified function that were inherited from the scope
 /// of the function definition to their values.
-std::map<wcstring, env_var_t> function_get_inherit_vars(const wcstring &name);
+const std::map<wcstring, env_var_t> &function_get_inherit_vars(const wcstring &name);
 
 /// Creates a new function using the same definition as the specified function. Returns true if copy
 /// is successful.

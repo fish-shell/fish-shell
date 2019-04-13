@@ -199,7 +199,7 @@ static wcstring functions_def(const wcstring &name) {
     }
 
     // Output any inherited variables as `set -l` lines.
-    std::map<wcstring, env_var_t> inherit_vars = function_get_inherit_vars(name);
+    const std::map<wcstring, env_var_t> &inherit_vars = function_get_inherit_vars(name);
     for (const auto &kv : inherit_vars) {
         wcstring_list_t lst;
         kv.second.to_list(lst);

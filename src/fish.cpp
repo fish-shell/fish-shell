@@ -441,14 +441,13 @@ int main(int argc, char **argv) {
             res = reader_read(STDIN_FILENO, {});
         } else {
             char *file = *(argv + (my_optind++));
-#if defined(O_CLOEXEC)
-            int fd = open(file, O_RDONLY | O_CLOEXEC);
-#else
             int fd = open(file, O_RDONLY);
-#endif
             if (fd == -1) {
                 perror(file);
             } else {
+                // OK to not do this atomically since we cannot have gone multithreaded yet.
+                set_cloexec(fd);
+
                 wcstring_list_t list;
                 for (char **ptr = argv + my_optind; *ptr; ptr++) {
                     list.push_back(str2wcstring(*ptr));

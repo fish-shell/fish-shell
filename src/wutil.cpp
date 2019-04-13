@@ -176,9 +176,16 @@ FILE *wfopen(const wcstring &path, const char *mode) {
 }
 
 bool set_cloexec(int fd) {
-    int flags = fcntl(fd, F_SETFD, FD_CLOEXEC);
-    if (flags == -1) return false;
-    return true;
+    // Note we don't want to overwrite existing flags like O_NONBLOCK which may be set. So fetch the
+    // existing flags and OR in our new one.
+    int flags = fcntl(fd, F_GETFD, 0);
+    if (flags < 0) {
+        return false;
+    }
+    if (flags & FD_CLOEXEC) {
+        return true;
+    }
+    return fcntl(fd, F_SETFD, flags | FD_CLOEXEC) >= 0;
 }
 
 static int wopen_internal(const wcstring &pathname, int flags, mode_t mode, bool cloexec) {

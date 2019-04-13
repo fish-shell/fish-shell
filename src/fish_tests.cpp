@@ -2330,8 +2330,8 @@ static void test_test() {
     //  it would be false.
     do_test(run_test_test(0, L"0 = 0 -o 0 = 1 -a 0 = 2"));
     do_test(run_test_test(0, L"-n 5 -o 0 = 1 -a 0 = 2"));
-    do_test(run_test_test(1, L"( 0 = 0 -o  0 = 1 ) -a 0 = 2"));
-    do_test(run_test_test(0, L"0 = 0 -o ( 0 = 1 -a 0 = 2 )"));
+    do_test(run_test_test(1, L"\\( 0 = 0 -o  0 = 1 \\) -a 0 = 2"));
+    do_test(run_test_test(0, L"0 = 0 -o \\( 0 = 1 -a 0 = 2 \\)"));
 
     // A few lame tests for permissions; these need to be a lot more complete.
     do_test(run_test_test(0, L"-e /bin/ls"));

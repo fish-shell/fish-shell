@@ -9,6 +9,7 @@
 #include <time.h>
 #include <locale.h>
 #include <string>
+#include <wctype.h>
 
 #ifdef HAVE_XLOCALE_H
 #include <xlocale.h>

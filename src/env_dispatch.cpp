@@ -4,13 +4,8 @@
 #include <errno.h>
 #include <limits.h>
 #include <locale.h>
-#include <pthread.h>
-#include <pwd.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 #include <cstring>
@@ -30,32 +25,26 @@
 #endif
 
 #include <algorithm>
-#include <iterator>
-#include <set>
-#include <type_traits>
+#include <assert.h>
+#include <functional>
+#include <memory>
+#include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
-#include <vector>
 
-#include "builtin_bind.h"
 #include "common.h"
 #include "complete.h"
 #include "env.h"
 #include "env_universal_common.h"
 #include "event.h"
-#include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "fish_version.h"
 #include "function.h"
 #include "history.h"
-#include "input.h"
 #include "input_common.h"
+#include "maybe.h"
 #include "output.h"
-#include "path.h"
 #include "proc.h"
 #include "reader.h"
-#include "sanity.h"
 #include "screen.h"
 #include "wutil.h"  // IWYU pragma: keep
 

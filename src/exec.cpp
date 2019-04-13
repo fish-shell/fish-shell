@@ -813,7 +813,7 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
             return false;
         }
 
-        const std::map<wcstring, env_var_t> &inherit_vars = function_get_inherit_vars(func_name);
+        const std::map<wcstring, env_var_t> inherit_vars = function_get_inherit_vars(func_name);
 
         function_block_t *fb =
             parser.push_block<function_block_t>(p, func_name, props->shadow_scope);

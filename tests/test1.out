@@ -37,9 +37,7 @@ Test 3b pass
 Test 4 pass
 
 ####################
-# Ensure eval doesn't unnecessarily mess with the exit status
-1
-0
+# Testing builtin status
 Test 5 pass
 
 ####################

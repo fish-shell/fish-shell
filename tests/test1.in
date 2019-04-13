@@ -92,10 +92,7 @@ else
 end
 echo Test 4 $sta
 
-logmsg "Ensure eval doesn't unnecessarily mess with the exit status"
-function empty_func ; end
-false ; eval empty_func ; echo $status
-true ; eval empty_func ; echo $status
+logmsg "Testing builtin status"
 
 function test_builtin_status
 	return 1

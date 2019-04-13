@@ -95,6 +95,9 @@ class env_node_t {
 
 using env_node_ref_t = std::shared_ptr<env_node_t>;
 
+// This is a big dorky lock we take around everything that might modify an env_node_t. Fine grained
+// locking is annoying here because env_nodes may be shared between env_stacks, so each node would
+// need its own lock.
 static std::mutex env_lock;
 
 // A class wrapping up a variable stack
@@ -631,6 +634,7 @@ int env_stack_t::set_internal(const wcstring &key, env_mode_flags_t input_var_mo
             env_set_internal_universal(key, std::move(val), var_mode, this);
         }
     } else {
+        scoped_lock locker(env_lock);
         // Determine the node.
         bool has_changed_new = false;
         env_node_ref_t preexisting_node = get_node(key);

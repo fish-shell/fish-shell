@@ -11,8 +11,8 @@
 - cd now always checks the current directory, even if $CDPATH does not include it or "." (#4484).
 - Error messages no longer include a (rather large) help summary and the stacktrace has been shortened (#3404, #5434).
 - $PATH is no longer reordered in child fishes (#5456).
-- `eval` is now implemented internally rather than being a function; as such, the evaluated code now
-shares the same argument scope as `eval` rather than being executed in a new scope (#4443).
+- `eval` is now implemented internally rather than being a function; as such, the evaluated code now shares the same argument scope as `eval` rather than being executed in a new scope (#4443).
+- An issue resulting in a certain class of parser errors not resulting in a non-zero `$status` has been corrected (3e055f).
 
 ### Syntax changes and new commands
 - None yet.

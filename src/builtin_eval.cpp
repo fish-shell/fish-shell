@@ -32,7 +32,7 @@ int builtin_eval(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     int status = STATUS_CMD_OK;
     if (argc > 1) {
-        if (parser.eval(new_cmd.c_str(), *streams.io_chain, block_type_t::TOP) != 0) {
+        if (parser.eval(std::move(new_cmd), *streams.io_chain, block_type_t::TOP) != 0) {
             // This indicates a parse error; nothing actually got executed.
             status = STATUS_CMD_ERROR;
         } else {

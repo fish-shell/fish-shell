@@ -926,6 +926,14 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
         }
     }
 
+    // The number of overall "command" executions, for whatever definition of "command". Its delta
+    // is used to determine the number of recursive `exec_process_in_job()` invocations.
+    static size_t exec_count = 0;
+    if (p->type != process_type_t::block_node) {
+        // An simple `begin ... end` should not be considered an execution of a command.
+        exec_count++;
+    }
+
     // Execute the process.
     p->check_generations_before_launch();
     switch (p->type) {
@@ -934,10 +942,19 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
             // Allow buffering unless this is a deferred run. If deferred, then processes after us
             // were already launched, so they are ready to receive (or reject) our output.
             bool allow_buffering = !is_deferred_run;
+            auto cached_exec_count = exec_count;
             if (!exec_block_or_func_process(parser, j, p, all_ios, process_net_io_chain,
                                             allow_buffering)) {
                 return false;
             }
+
+            // Functions are basically treated as named blocks, and this is the only place we can
+            // distinguish between them. A block by default does not touch $status, on the other
+            // hand, calling an empty function should clear $status.
+            if (exec_count == cached_exec_count && p->type == process_type_t::function) {
+                p->status = proc_status_t::from_exit_code(0);
+            }
+
             break;
         }
 

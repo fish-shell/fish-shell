@@ -166,6 +166,7 @@ class env_var_t {
     }
     bool operator!=(const env_var_t &rhs) const { return ! (*this == rhs); }
 };
+typedef std::map<wcstring, env_var_t> var_table_t;
 
 /// An environment is read-only access to variable values.
 class environment_t {
@@ -191,9 +192,6 @@ class null_environment_t : public environment_t {
     maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
     wcstring_list_t get_names(int flags) const override;
 };
-
-/// Synchronizes all universal variable changes: writes everything out, reads stuff in.
-void env_universal_barrier();
 
 /// A environment stack of scopes. This is the main class that tracks fish variables.
 struct var_stack_t;
@@ -304,9 +302,10 @@ class env_vars_snapshot_t : public environment_t {
 extern int g_fork_count;
 extern bool g_use_posix_spawn;
 
-typedef std::map<wcstring, env_var_t> var_table_t;
-
 extern bool term_has_xn;  // does the terminal have the "eat_newline_glitch"
+
+/// Synchronizes all universal variable changes: writes everything out, reads stuff in.
+void env_universal_barrier();
 
 /// Returns true if we think the terminal supports setting its title.
 bool term_supports_setting_title();

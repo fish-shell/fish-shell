@@ -2914,7 +2914,7 @@ static void test_autosuggest_suggest_special() {
 
 static void perform_one_autosuggestion_should_ignore_test(const wcstring &command, long line) {
     completion_list_t comps;
-    complete(command, &comps, COMPLETION_REQUEST_AUTOSUGGESTION, env_vars_snapshot_t{});
+    complete(command, &comps, COMPLETION_REQUEST_AUTOSUGGESTION, null_environment_t{});
     do_test(comps.empty());
     if (!comps.empty()) {
         const wcstring &suggestion = comps.front().completion;

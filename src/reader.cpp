@@ -1276,10 +1276,9 @@ void reader_data_t::completion_insert(const wchar_t *val, complete_flags_t flags
 // on a background thread) to determine the autosuggestion
 static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer(
     const wcstring &search_string, size_t cursor_pos, history_t *history) {
-    const auto &parser_vars = parser_t::principal_parser().vars();
     const unsigned int generation_count = read_generation_count();
-    const wcstring working_directory = parser_vars.get_pwd_slash();
-    env_vars_snapshot_t vars(parser_vars, env_vars_snapshot_t::completing_keys);
+    auto vars = parser_t::principal_parser().vars().snapshot();
+    const wcstring working_directory = vars->get_pwd_slash();
     // TODO: suspicious use of 'history' here
     // This is safe because histories are immortal, but perhaps
     // this should use shared_ptr
@@ -1306,7 +1305,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
             // Skip items with newlines because they make terrible autosuggestions.
             if (item.str().find('\n') != wcstring::npos) continue;
 
-            if (autosuggest_validate_from_history(item, working_directory, vars)) {
+            if (autosuggest_validate_from_history(item, working_directory, *vars)) {
                 // The command autosuggestion was handled specially, so we're done.
                 return {searcher.current_string(), search_string};
             }
@@ -1328,7 +1327,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
         // Try normal completions.
         completion_request_flags_t complete_flags = COMPLETION_REQUEST_AUTOSUGGESTION;
         std::vector<completion_t> completions;
-        complete(search_string, &completions, complete_flags, vars);
+        complete(search_string, &completions, complete_flags, *vars);
         completions_sort_and_prioritize(&completions, complete_flags);
         if (!completions.empty()) {
             const completion_t &comp = completions.at(0);
@@ -2041,8 +2040,7 @@ void reader_data_t::highlight_complete(highlight_result_t result) {
 // return a function that performs highlighting. The function may be invoked on a background thread.
 static std::function<highlight_result_t(void)> get_highlight_performer(
     const wcstring &text, long match_highlight_pos, highlight_function_t highlight_func) {
-    env_vars_snapshot_t vars(parser_t::principal_parser().vars(),
-                             env_vars_snapshot_t::highlighting_keys);
+    auto vars = parser_t::principal_parser().vars().snapshot();
     unsigned int generation_count = read_generation_count();
     return [=]() -> highlight_result_t {
         if (text.empty()) return {};
@@ -2052,7 +2050,7 @@ static std::function<highlight_result_t(void)> get_highlight_performer(
         }
         s_thread_generation = generation_count;
         std::vector<highlight_spec_t> colors(text.size(), highlight_spec_t{});
-        highlight_func(text, colors, match_highlight_pos, NULL /* error */, vars);
+        highlight_func(text, colors, match_highlight_pos, NULL /* error */, *vars);
         return {std::move(colors), text};
     };
 }

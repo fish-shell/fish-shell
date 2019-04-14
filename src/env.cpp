@@ -181,7 +181,6 @@ wcstring environment_t::get_pwd_slash() const {
     return pwd;
 }
 
-null_environment_t::null_environment_t() = default;
 null_environment_t::~null_environment_t() = default;
 maybe_t<env_var_t> null_environment_t::get(const wcstring &key, env_mode_flags_t mode) const {
     UNUSED(key);
@@ -1139,39 +1138,6 @@ env_stack_t &env_stack_t::globals() {
     static env_stack_t s_global;
     return s_global;
 }
-
-env_vars_snapshot_t::env_vars_snapshot_t(const environment_t &source, const wchar_t *const *keys) {
-    ASSERT_IS_MAIN_THREAD();
-    wcstring key;
-    for (size_t i = 0; keys[i]; i++) {
-        key.assign(keys[i]);
-        const auto var = source.get(key);
-        if (var) {
-            vars[key] = std::move(*var);
-        }
-    }
-    names = source.get_names(0);
-}
-
-env_vars_snapshot_t::~env_vars_snapshot_t() = default;
-
-maybe_t<env_var_t> env_vars_snapshot_t::get(const wcstring &key, env_mode_flags_t mode) const {
-    UNUSED(mode);
-    auto iter = vars.find(key);
-    if (iter == vars.end()) return none();
-    return iter->second;
-}
-
-wcstring_list_t env_vars_snapshot_t::get_names(int flags) const {
-    UNUSED(flags);
-    return names;
-}
-
-const wchar_t *const env_vars_snapshot_t::highlighting_keys[] = {
-    L"PATH", L"CDPATH", L"fish_function_path", L"PWD", L"HOME", NULL};
-
-const wchar_t *const env_vars_snapshot_t::completing_keys[] = {
-    L"PATH", L"CDPATH", L"fish_function_path", L"PWD", L"HOME", NULL};
 
 #if defined(__APPLE__) || defined(__CYGWIN__)
 static int check_runtime_path(const char *path) {

@@ -186,7 +186,7 @@ class environment_t {
 /// The null environment contains nothing.
 class null_environment_t : public environment_t {
    public:
-    null_environment_t();
+    null_environment_t() = default;
     ~null_environment_t() override;
 
     maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
@@ -294,28 +294,6 @@ class env_stack_t final : public env_scoped_t {
     // Access a variable stack that only represents globals.
     // Do not push or pop from this.
     static env_stack_t &globals();
-};
-
-class env_vars_snapshot_t : public environment_t {
-    std::map<wcstring, env_var_t> vars;
-    wcstring_list_t names;
-
-   public:
-    env_vars_snapshot_t() = default;
-    env_vars_snapshot_t(const env_vars_snapshot_t &) = default;
-    env_vars_snapshot_t &operator=(const env_vars_snapshot_t &) = default;
-    env_vars_snapshot_t(const environment_t &source, const wchar_t *const *keys);
-    ~env_vars_snapshot_t() override;
-
-    maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
-
-    wcstring_list_t get_names(int flags) const override;
-
-    // Vars necessary for highlighting.
-    static const wchar_t *const highlighting_keys[];
-
-    // Vars necessary for completion.
-    static const wchar_t *const completing_keys[];
 };
 
 extern int g_fork_count;

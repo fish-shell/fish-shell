@@ -216,8 +216,10 @@ static const string_set_t env_electric = {L"history", L"pipestatus", L"status", 
 
 static bool is_electric(const wcstring &key) { return contains(env_electric, key); }
 
-env_stack_t::env_stack_t() : vars_(make_unique<var_stack_t>()) {}
-env_stack_t::env_stack_t(std::unique_ptr<var_stack_t> vars) : vars_(std::move(vars)) {}
+env_scoped_t::env_scoped_t() : env_scoped_t(make_unique<var_stack_t>()) {}
+env_scoped_t::env_scoped_t(std::unique_ptr<var_stack_t> vars) : vars_(std::move(vars)) {}
+env_scoped_t::env_scoped_t(env_scoped_t &&) = default;
+env_scoped_t::~env_scoped_t() = default;
 
 void env_stack_t::universal_barrier() {
     ASSERT_IS_MAIN_THREAD();
@@ -233,9 +235,9 @@ void env_stack_t::universal_barrier() {
 }
 
 // Get the variable stack
-var_stack_t &env_stack_t::vars_stack() { return *vars_; }
+var_stack_t &env_scoped_t::vars_stack() { return *vars_; }
 
-const var_stack_t &env_stack_t::vars_stack() const { return *vars_; }
+const var_stack_t &env_scoped_t::vars_stack() const { return *vars_; }
 
 /// Return the current umask value.
 static mode_t get_umask() {
@@ -856,7 +858,7 @@ static maybe_t<env_var_t> get_electric(const wcstring &key, const environment_t 
     DIE("unrecognized electric var name");
 }
 
-maybe_t<env_var_t> env_stack_t::get(const wcstring &key, env_mode_flags_t mode) const {
+maybe_t<env_var_t> env_scoped_t::get(const wcstring &key, env_mode_flags_t mode) const {
     const bool has_scope = mode & (ENV_LOCAL | ENV_GLOBAL | ENV_UNIVERSAL);
     const bool search_local = !has_scope || (mode & ENV_LOCAL);
     const bool search_global = !has_scope || (mode & ENV_GLOBAL);
@@ -953,7 +955,7 @@ static void add_key_to_string_set(const var_table_t &envs, std::set<wcstring> *s
     }
 }
 
-wcstring_list_t env_stack_t::get_names(int flags) const {
+wcstring_list_t env_scoped_t::get_names(int flags) const {
     scoped_lock locker(env_lock);
 
     wcstring_list_t result;

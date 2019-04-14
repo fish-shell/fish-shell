@@ -193,12 +193,35 @@ class null_environment_t : public environment_t {
     wcstring_list_t get_names(int flags) const override;
 };
 
-/// A environment stack of scopes. This is the main class that tracks fish variables.
+/// An environment stack of scopes.
+/// The base implementation provides read-only access.
 struct var_stack_t;
 class env_node_t;
-class env_stack_t final : public environment_t {
-    friend class parser_t;
+class env_scoped_t : public environment_t {
+   private:
     std::unique_ptr<var_stack_t> vars_;
+
+   protected:
+    var_stack_t &vars_stack();
+    const var_stack_t &vars_stack() const;
+
+    explicit env_scoped_t(std::unique_ptr<var_stack_t> vars_);
+    env_scoped_t();
+    env_scoped_t(env_scoped_t &&);
+
+   public:
+    /// Gets the variable with the specified name, or none() if it does not exist.
+    maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
+
+    /// Returns all variable names.
+    wcstring_list_t get_names(int flags) const override;
+
+    ~env_scoped_t() override;
+};
+
+/// A mutable env_scoped_t, that allows scopes to be pushed and popped.
+class env_stack_t final : public env_scoped_t {
+    friend class parser_t;
 
     int set_internal(const wcstring &key, env_mode_flags_t var_mode, wcstring_list_t val);
 
@@ -207,18 +230,11 @@ class env_stack_t final : public environment_t {
 
     static env_stack_t make_principal();
 
-    var_stack_t &vars_stack();
-    const var_stack_t &vars_stack() const;
-
-    explicit env_stack_t(std::unique_ptr<var_stack_t> vars_);
-    env_stack_t();
+    using env_scoped_t::env_scoped_t;
     ~env_stack_t() override;
-
     env_stack_t(env_stack_t &&);
 
    public:
-    /// Gets the variable with the specified name, or none() if it does not exist.
-    maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
 
     /// Sets the variable with the specified name to the given values.
     int set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);
@@ -253,9 +269,6 @@ class env_stack_t final : public environment_t {
 
     /// Returns an array containing all exported variables in a format suitable for execv
     const char *const *export_arr();
-
-    /// Returns all variable names.
-    wcstring_list_t get_names(int flags) const override;
 
     /// Update the termsize variable.
     void set_termsize();

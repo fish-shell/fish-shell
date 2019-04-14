@@ -305,6 +305,15 @@ struct var_stack_t {
         return var_stack_t(*this);
     }
 
+    /// Snapshot this vars_stack. That is, return a new vars_stack that has copies of all local
+    /// variables. Note that this drops all shadowed nodes: only the currently executing function is
+    /// copied. Global variables are referenced, not copied; this is both because there are a lot of
+    /// global varibables so copying would be expensive, and some (electrics) are computed so cannot
+    /// be effectively copied.
+    std::unique_ptr<var_stack_t> snapshot() const {
+        return make_unique<var_stack_t>(snapshot_node(top), global_env);
+    }
+
     /// \return true if the topomst local scope exports a variable.
     bool local_scope_exports(const env_node_ref_t &n) const;
 
@@ -321,6 +330,24 @@ struct var_stack_t {
     var_stack_t(const var_stack_t &rhs) : top(rhs.top), global_env(rhs.global_env) {}
 
     void get_exported(const env_node_t *n, var_table_t &h) const;
+
+    /// Recursive helper for snapshot(). Snapshot a node and its unshadows parents, returning it.
+    env_node_ref_t snapshot_node(const env_node_ref_t &node) const {
+        assert(node && "null node in snapshot_node");
+        // If we are global, re-use the global node. If we reach a new scope, jump to globals; we
+        // don't snapshot shadowed scopes, because the snapshot is intended to be read-only and so
+        // there would be no way to access them.
+        if (node == global_env) {
+            return node;
+        }
+        auto next = snapshot_node(node->new_scope ? global_env : node->next);
+        auto result = std::make_shared<env_node_t>(node->new_scope, next);
+        // Copy over variables.
+        // Note assigning env is a potentially big copy.
+        result->exportv = node->exportv;
+        result->env = node->env;
+        return result;
+    }
 
     /// \return the global variable set.
     /// Note that this is the only place where we talk about a single global variable set; each
@@ -456,6 +483,10 @@ maybe_t<env_var_t> env_scoped_t::get(const wcstring &key, env_mode_flags_t mode)
     }
 
     return none();
+}
+
+std::shared_ptr<environment_t> env_scoped_t::snapshot() const {
+    return std::shared_ptr<env_scoped_t>(new env_scoped_t(vars_->snapshot()));
 }
 
 env_scoped_t::env_scoped_t() : env_scoped_t(var_stack_t::create()) {}

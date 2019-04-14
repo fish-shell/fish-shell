@@ -216,6 +216,12 @@ class env_scoped_t : public environment_t {
     /// Returns all variable names.
     wcstring_list_t get_names(int flags) const override;
 
+    /// Snapshot this environment. This means returning a read-only copy. Local variables are copied
+    /// but globals are shared (i.e. changes to global will be visible to this snapshot). This
+    /// returns a shared_ptr for convenience, since the most common reason to snapshot is because
+    /// you want to read from another thread.
+    std::shared_ptr<environment_t> snapshot() const;
+
     ~env_scoped_t() override;
 };
 

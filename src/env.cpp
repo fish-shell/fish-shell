@@ -247,12 +247,8 @@ struct var_stack_t {
 
     void update_export_array_if_necessary();
 
-    var_stack_t() : top(globals()), global_env(globals()) {
-        // Add a toplevel local scope on top of the global scope. This local scope will persist
-        // throughout the lifetime of the fish process, and it will ensure that `set -l` commands
-        // run at the command-line don't affect the global scope.
-        push(false);
-    }
+    var_stack_t(env_node_ref_t top, env_node_ref_t global_env)
+        : top(std::move(top)), global_env(std::move(global_env)) {}
 
     // Pushes a new node onto our stack
     // Optionally creates a new scope for the node
@@ -309,8 +305,16 @@ struct var_stack_t {
         return var_stack_t(*this);
     }
 
-    /// return true if the topomst local scope exports a variable.
+    /// \return true if the topomst local scope exports a variable.
     bool local_scope_exports(const env_node_ref_t &n) const;
+
+    /// \return a new stack with a single top level local scope.
+    // This local scope will persist throughout the lifetime of the fish process, and it will ensure
+    // that `set -l` commands run at the command-line don't affect the global scope.
+    static std::unique_ptr<var_stack_t> create() {
+        auto locals = std::make_shared<env_node_t>(false, globals());
+        return make_unique<var_stack_t>(std::move(locals), globals());
+    }
 
    private:
     /// Copy constructor. This does not copy the export array; it just allows it to be regenerated.
@@ -318,7 +322,10 @@ struct var_stack_t {
 
     void get_exported(const env_node_t *n, var_table_t &h) const;
 
-    /// Returns the global variable set.
+    /// \return the global variable set.
+    /// Note that this is the only place where we talk about a single global variable set; each
+    /// var_stack_t has its own reference to globals and could potentially have a different global
+    /// set.
     static env_node_ref_t globals() {
         static env_node_ref_t s_globals{std::make_shared<env_node_t>(false, nullptr)};
         return s_globals;
@@ -451,7 +458,7 @@ maybe_t<env_var_t> env_scoped_t::get(const wcstring &key, env_mode_flags_t mode)
     return none();
 }
 
-env_scoped_t::env_scoped_t() : env_scoped_t(make_unique<var_stack_t>()) {}
+env_scoped_t::env_scoped_t() : env_scoped_t(var_stack_t::create()) {}
 env_scoped_t::env_scoped_t(std::unique_ptr<var_stack_t> vars) : vars_(std::move(vars)) {}
 env_scoped_t::env_scoped_t(env_scoped_t &&) = default;
 env_scoped_t::~env_scoped_t() = default;

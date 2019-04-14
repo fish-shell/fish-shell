@@ -54,6 +54,150 @@ bool curses_initialized = false;
 /// Does the terminal have the "eat_newline_glitch".
 bool term_has_xn = false;
 
+/// Universal variables global instance. Initialized in env_init.
+static env_universal_t *s_universal_variables = NULL;
+
+/// Getter for universal variables.
+static env_universal_t *uvars() { return s_universal_variables; }
+
+void env_universal_barrier() { env_stack_t::principal().universal_barrier(); }
+
+// A typedef for a set of constant strings. Note our sets are typically on the order of 6 elements,
+// so we don't bother to sort them.
+using string_set_t = const wchar_t *const[];
+
+/// Check if a variable may not be set using the set command.
+static bool is_read_only(const wcstring &key) {
+    static const string_set_t env_read_only = {
+        L"PWD",          L"SHLVL",    L"history",  L"pipestatus", L"status",           L"version",
+        L"FISH_VERSION", L"fish_pid", L"hostname", L"_",          L"fish_private_mode"};
+    return contains(env_read_only, key) || (in_private_mode() && key == L"fish_history");
+}
+
+/// Return true if a variable should become a path variable by default. See #436.
+static bool variable_should_auto_pathvar(const wcstring &name) {
+    return string_suffixes_string(L"PATH", name);
+}
+
+/// Table of variables whose value is dynamically calculated, such as umask, status, etc.
+static const string_set_t env_electric = {L"history", L"pipestatus", L"status", L"umask"};
+
+static bool is_electric(const wcstring &key) { return contains(env_electric, key); }
+
+/// \return a the value of a variable for \p key, which must be electric (computed).
+static maybe_t<env_var_t> get_electric(const wcstring &key, const environment_t &vars) {
+    if (key == L"history") {
+        // Big hack. We only allow getting the history on the main thread. Note that history_t
+        // may ask for an environment variable, so don't take the lock here (we don't need it).
+        if (!is_main_thread()) {
+            return none();
+        }
+
+        history_t *history = reader_get_history();
+        if (!history) {
+            history = &history_t::history_with_name(history_session_id(vars));
+        }
+        wcstring_list_t result;
+        if (history) history->get_history(result);
+        return env_var_t(L"history", result);
+    } else if (key == L"pipestatus") {
+        const auto js = proc_get_last_statuses();
+        wcstring_list_t result;
+        result.reserve(js.pipestatus.size());
+        for (int i : js.pipestatus) {
+            result.push_back(to_string(i));
+        }
+        return env_var_t(L"pipestatus", std::move(result));
+    } else if (key == L"status") {
+        return env_var_t(L"status", to_string(proc_get_last_status()));
+    } else if (key == L"umask") {
+        // note umask() is an absurd API: you call it to set the value and it returns the old value.
+        // Thus we have to call it twice, to reset the value. TODO: lock!
+        mode_t res = umask(0);
+        umask(res);
+        return env_var_t(L"umask", format_string(L"0%0.3o", res));
+    }
+    // We should never get here unless the electric var list is out of sync with the above code.
+    DIE("unrecognized electric var name");
+}
+
+/// Some env vars contain a list of paths where an empty path element is equivalent to ".".
+/// Unfortunately that convention causes problems for fish scripts. So this function replaces the
+/// empty path element with an explicit ".". See issue #3914.
+void fix_colon_delimited_var(const wcstring &var_name, env_stack_t &vars) {
+    const auto paths = vars.get(var_name);
+    if (paths.missing_or_empty()) return;
+
+    // See if there's any empties.
+    const wcstring empty = wcstring();
+    const wcstring_list_t &strs = paths->as_list();
+    if (contains(strs, empty)) {
+        // Copy the list and replace empties with L"."
+        wcstring_list_t newstrs = strs;
+        std::replace(newstrs.begin(), newstrs.end(), empty, wcstring(L"."));
+        int retval = vars.set(var_name, ENV_DEFAULT | ENV_USER, std::move(newstrs));
+        if (retval != ENV_OK) {
+            debug(0, L"fix_colon_delimited_var failed unexpectedly with retval %d", retval);
+        }
+    }
+}
+
+const wcstring_list_t &env_var_t::as_list() const { return *vals_; }
+
+wchar_t env_var_t::get_delimiter() const {
+    return is_pathvar() ? PATH_ARRAY_SEP : NONPATH_ARRAY_SEP;
+}
+
+/// Return a string representation of the var.
+wcstring env_var_t::as_string() const { return join_strings(*vals_, get_delimiter()); }
+
+void env_var_t::to_list(wcstring_list_t &out) const { out = *vals_; }
+
+env_var_t::env_var_flags_t env_var_t::flags_for(const wchar_t *name) {
+    env_var_flags_t result = 0;
+    if (is_read_only(name)) result |= flag_read_only;
+    return result;
+}
+
+/// \return a singleton empty list, to avoid unnecessary allocations in env_var_t.
+std::shared_ptr<const wcstring_list_t> env_var_t::empty_list() {
+    static const auto result = std::make_shared<const wcstring_list_t>();
+    return result;
+}
+
+environment_t::~environment_t() = default;
+
+wcstring environment_t::get_pwd_slash() const {
+    // Return "/" if PWD is missing.
+    // See https://github.com/fish-shell/fish-shell/issues/5080
+    auto pwd_var = get(L"PWD");
+    wcstring pwd;
+    if (!pwd_var.missing_or_empty()) {
+        pwd = pwd_var->as_string();
+    }
+    if (!string_suffixes_string(L"/", pwd)) {
+        pwd.push_back(L'/');
+    }
+    return pwd;
+}
+
+null_environment_t::null_environment_t() = default;
+null_environment_t::~null_environment_t() = default;
+maybe_t<env_var_t> null_environment_t::get(const wcstring &key, env_mode_flags_t mode) const {
+    UNUSED(key);
+    UNUSED(mode);
+    return none();
+}
+wcstring_list_t null_environment_t::get_names(int flags) const {
+    UNUSED(flags);
+    return {};
+}
+
+// This is a big dorky lock we take around everything that might read from or modify an env_node_t.
+// Fine grained locking is annoying here because env_nodes may be shared between env_stacks, so each
+// node would need its own lock.
+static std::mutex env_lock;
+
 // Struct representing one level in the function variable stack.
 // Only our variable stack should create and destroy these
 class env_node_t {
@@ -79,18 +223,11 @@ class env_node_t {
         return none();
     }
 };
-
 using env_node_ref_t = std::shared_ptr<env_node_t>;
 
-// This is a big dorky lock we take around everything that might modify an env_node_t. Fine grained
-// locking is annoying here because env_nodes may be shared between env_stacks, so each node would
-// need its own lock.
-static std::mutex env_lock;
-
-// A class wrapping up a variable stack
-// Currently there is only one variable stack in fish,
-// but we can imagine having separate (linked) stacks
-// if we introduce multiple threads of execution
+// A class wrapping up a variable stack.
+// This forms a linekd list of env_node_t, and also maintains the export array for exported
+// environment variables.
 struct var_stack_t {
     var_stack_t(var_stack_t &&) = default;
 
@@ -188,33 +325,131 @@ struct var_stack_t {
     }
 };
 
-/// Universal variables global instance. Initialized in env_init.
-static env_universal_t *s_universal_variables = NULL;
+/// Get list of all exported variables.
+void var_stack_t::get_exported(const env_node_t *n, var_table_t &h) const {
+    if (!n) return;
 
-/// Getter for universal variables.
-static env_universal_t *uvars() { return s_universal_variables; }
+    if (n->new_scope) {
+        get_exported(global_env.get(), h);
+    } else {
+        get_exported(n->next.get(), h);
+    }
 
-// A typedef for a set of constant strings. Note our sets are typically on the order of 6 elements,
-// so we don't bother to sort them.
-using string_set_t = const wchar_t *const[];
+    var_table_t::const_iterator iter;
+    for (iter = n->env.begin(); iter != n->env.end(); ++iter) {
+        const wcstring &key = iter->first;
+        const env_var_t var = iter->second;
 
-/// Check if a variable may not be set using the set command.
-static bool is_read_only(const wcstring &key) {
-    static const string_set_t env_read_only = {
-        L"PWD",          L"SHLVL",    L"history",  L"pipestatus", L"status",           L"version",
-        L"FISH_VERSION", L"fish_pid", L"hostname", L"_",          L"fish_private_mode"};
-    return contains(env_read_only, key) || (in_private_mode() && key == L"fish_history");
+        if (var.exports()) {
+            // Export the variable. Don't use std::map::insert here, since we need to overwrite
+            // existing values from previous scopes.
+            h[key] = var;
+        } else {
+            // We need to erase from the map if we are not exporting, since a lower scope may have
+            // exported. See #2132.
+            h.erase(key);
+        }
+    }
 }
 
-/// Return true if a variable should become a path variable by default. See #436.
-static bool variable_should_auto_pathvar(const wcstring &name) {
-    return string_suffixes_string(L"PATH", name);
+/// Returns true if the specified scope or any non-shadowed non-global subscopes contain an exported
+/// variable.
+bool var_stack_t::local_scope_exports(const env_node_ref_t &n) const {
+    assert(n != nullptr);
+    if (n == global_env) return false;
+
+    if (n->exportv) return true;
+
+    if (n->new_scope) return false;
+
+    return local_scope_exports(n->next);
 }
 
-/// Table of variables whose value is dynamically calculated, such as umask, status, etc.
-static const string_set_t env_electric = {L"history", L"pipestatus", L"status", L"umask"};
+void var_stack_t::update_export_array_if_necessary() {
+    if (!this->has_changed_exported()) {
+        return;
+    }
 
-static bool is_electric(const wcstring &key) { return contains(env_electric, key); }
+    debug(4, L"export_arr() recalc");
+    var_table_t vals;
+    get_exported(this->top.get(), vals);
+
+    if (uvars()) {
+        const wcstring_list_t uni = uvars()->get_names(true, false);
+        for (const wcstring &key : uni) {
+            auto var = uvars()->get(key);
+
+            if (!var.missing_or_empty()) {
+                // Note that std::map::insert does NOT overwrite a value already in the map,
+                // which we depend on here.
+                vals.insert(std::pair<wcstring, env_var_t>(key, *var));
+            }
+        }
+    }
+
+    // Construct the export list: a list of strings of the form key=value.
+    std::vector<std::string> export_list;
+    export_list.reserve(vals.size());
+    for (const auto &kv : vals) {
+        std::string str = wcs2string(kv.first);
+        str.push_back('=');
+        str.append(wcs2string(kv.second.as_string()));
+        export_list.push_back(std::move(str));
+    }
+    export_array.emplace(export_list);
+}
+
+// Get the variable stack
+var_stack_t &env_scoped_t::vars_stack() { return *vars_; }
+const var_stack_t &env_scoped_t::vars_stack() const { return *vars_; }
+
+// Read a variable respecting the given mode.
+maybe_t<env_var_t> env_scoped_t::get(const wcstring &key, env_mode_flags_t mode) const {
+    const bool has_scope = mode & (ENV_LOCAL | ENV_GLOBAL | ENV_UNIVERSAL);
+    const bool search_local = !has_scope || (mode & ENV_LOCAL);
+    const bool search_global = !has_scope || (mode & ENV_GLOBAL);
+    const bool search_universal = !has_scope || (mode & ENV_UNIVERSAL);
+
+    const bool search_exported = (mode & ENV_EXPORT) || !(mode & ENV_UNEXPORT);
+    const bool search_unexported = (mode & ENV_UNEXPORT) || !(mode & ENV_EXPORT);
+
+    // Make the assumption that electric keys can't be shadowed elsewhere, since we currently block
+    // that in env_stack_t::set().
+    if (is_electric(key)) {
+        if (!search_global) return none();
+        return get_electric(key, *this);
+    }
+
+    if (search_local || search_global) {
+        scoped_lock locker(env_lock);  // lock around a local region
+        env_node_ref_t env = search_local ? vars_stack().top : vars_stack().global_env;
+
+        while (env != NULL) {
+            if (env == vars_stack().global_env && !search_global) {
+                break;
+            }
+
+            var_table_t::const_iterator result = env->env.find(key);
+            if (result != env->env.end()) {
+                const env_var_t &var = result->second;
+                if (var.exports() ? search_exported : search_unexported) {
+                    return var;
+                }
+            }
+            env = vars_stack().next_scope_to_search(env);
+        }
+    }
+    // Okay, we couldn't find a local or global var given the requirements. If there is a matching
+    // universal var return that.
+    if (search_universal && uvars()) {
+        auto var = uvars()->get(key);
+        if (var && (var->exports() ? search_exported : search_unexported)) {
+            return var;
+        }
+    }
+
+    return none();
+}
 
 env_scoped_t::env_scoped_t() : env_scoped_t(make_unique<var_stack_t>()) {}
 env_scoped_t::env_scoped_t(std::unique_ptr<var_stack_t> vars) : vars_(std::move(vars)) {}
@@ -232,66 +467,6 @@ void env_stack_t::universal_barrier() {
     }
 
     env_universal_callbacks(this, callbacks);
-}
-
-// Get the variable stack
-var_stack_t &env_scoped_t::vars_stack() { return *vars_; }
-
-const var_stack_t &env_scoped_t::vars_stack() const { return *vars_; }
-
-/// Return the current umask value.
-static mode_t get_umask() {
-    mode_t res;
-    res = umask(0);
-    umask(res);
-    return res;
-}
-
-
-/// Some env vars contain a list of paths where an empty path element is equivalent to ".".
-/// Unfortunately that convention causes problems for fish scripts. So this function replaces the
-/// empty path element with an explicit ".". See issue #3914.
-void fix_colon_delimited_var(const wcstring &var_name, env_stack_t &vars) {
-    const auto paths = vars.get(var_name);
-    if (paths.missing_or_empty()) return;
-
-    // See if there's any empties.
-    const wcstring empty = wcstring();
-    const wcstring_list_t &strs = paths->as_list();
-    if (contains(strs, empty)) {
-        // Copy the list and replace empties with L"."
-        wcstring_list_t newstrs = strs;
-        std::replace(newstrs.begin(), newstrs.end(), empty, wcstring(L"."));
-        int retval = vars.set(var_name, ENV_DEFAULT | ENV_USER, std::move(newstrs));
-        if (retval != ENV_OK) {
-            debug(0, L"fix_colon_delimited_var failed unexpectedly with retval %d", retval);
-        }
-    }
-}
-
-/// Ensure the content of the magic path env vars is reasonable. Specifically, that empty path
-/// elements are converted to explicit "." to make the vars easier to use in fish scripts.
-static void init_path_vars() {
-    // Do not replace empties in MATHPATH - see #4158.
-    fix_colon_delimited_var(L"PATH", env_stack_t::globals());
-    fix_colon_delimited_var(L"CDPATH", env_stack_t::globals());
-}
-
-/// Make sure the PATH variable contains something.
-static void setup_path() {
-    auto &vars = env_stack_t::globals();
-    const auto path = vars.get(L"PATH");
-    if (path.missing_or_empty()) {
-#if defined(_CS_PATH)
-        // _CS_PATH: colon-separated paths to find POSIX utilities
-        std::string cspath;
-        cspath.resize(confstr(_CS_PATH, nullptr, 0));
-        confstr(_CS_PATH, &cspath[0], cspath.length());
-#else
-        std::string cspath = "/usr/bin:/bin"; // I doubt this is even necessary
-#endif
-        vars.set_one(L"PATH", ENV_GLOBAL | ENV_EXPORT, str2wcstring(cspath));
-    }
 }
 
 /// If they don't already exist initialize the `COLUMNS` and `LINES` env vars to reasonable
@@ -318,20 +493,6 @@ void env_stack_t::set_pwd_from_getcwd() {
 }
 
 void env_stack_t::mark_changed_exported() { vars_stack().mark_changed_exported(); }
-
-wcstring environment_t::get_pwd_slash() const {
-    // Return "/" if PWD is missing.
-    // See https://github.com/fish-shell/fish-shell/issues/5080
-    auto pwd_var = get(L"PWD");
-    wcstring pwd;
-    if (!pwd_var.missing_or_empty()) {
-        pwd = pwd_var->as_string();
-    }
-    if (!string_suffixes_string(L"/", pwd)) {
-        pwd.push_back(L'/');
-    }
-    return pwd;
-}
 
 /// Set up the USER variable.
 static void setup_user(bool force) {
@@ -360,6 +521,30 @@ void misc_init() {
     }
 }
 
+/// Ensure the content of the magic path env vars is reasonable. Specifically, that empty path
+/// elements are converted to explicit "." to make the vars easier to use in fish scripts.
+static void init_path_vars() {
+    // Do not replace empties in MATHPATH - see #4158.
+    fix_colon_delimited_var(L"PATH", env_stack_t::globals());
+    fix_colon_delimited_var(L"CDPATH", env_stack_t::globals());
+}
+
+/// Make sure the PATH variable contains something.
+static void setup_path() {
+    auto &vars = env_stack_t::globals();
+    const auto path = vars.get(L"PATH");
+    if (path.missing_or_empty()) {
+#if defined(_CS_PATH)
+        // _CS_PATH: colon-separated paths to find POSIX utilities
+        std::string cspath;
+        cspath.resize(confstr(_CS_PATH, nullptr, 0));
+        confstr(_CS_PATH, &cspath[0], cspath.length());
+#else
+        std::string cspath = "/usr/bin:/bin";  // I doubt this is even necessary
+#endif
+        vars.set_one(L"PATH", ENV_GLOBAL | ENV_EXPORT, str2wcstring(cspath));
+    }
+}
 
 void env_init(const struct config_paths_t *paths /* or NULL */) {
     env_stack_t &vars = env_stack_t::globals();
@@ -802,124 +987,6 @@ int env_stack_t::remove(const wcstring &key, int var_mode) {
     return erased ? ENV_OK : ENV_NOT_FOUND;
 }
 
-const wcstring_list_t &env_var_t::as_list() const { return *vals_; }
-
-wchar_t env_var_t::get_delimiter() const {
-    return is_pathvar() ? PATH_ARRAY_SEP : NONPATH_ARRAY_SEP;
-}
-
-/// Return a string representation of the var.
-wcstring env_var_t::as_string() const { return join_strings(*vals_, get_delimiter()); }
-
-void env_var_t::to_list(wcstring_list_t &out) const { out = *vals_; }
-
-env_var_t::env_var_flags_t env_var_t::flags_for(const wchar_t *name) {
-    env_var_flags_t result = 0;
-    if (is_read_only(name)) result |= flag_read_only;
-    return result;
-}
-
-/// \return a singleton empty list, to avoid unnecessary allocations in env_var_t.
-std::shared_ptr<const wcstring_list_t> env_var_t::empty_list() {
-    static const auto result = std::make_shared<const wcstring_list_t>();
-    return result;
-}
-
-/// \return a the value of a variable for \p key, which must be electric (computed).
-static maybe_t<env_var_t> get_electric(const wcstring &key, const environment_t &vars) {
-    if (key == L"history") {
-        // Big hack. We only allow getting the history on the main thread. Note that history_t
-        // may ask for an environment variable, so don't take the lock here (we don't need it).
-        if (!is_main_thread()) {
-            return none();
-        }
-
-        history_t *history = reader_get_history();
-        if (!history) {
-            history = &history_t::history_with_name(history_session_id(vars));
-        }
-        wcstring_list_t result;
-        if (history) history->get_history(result);
-        return env_var_t(L"history", result);
-    } else if (key == L"pipestatus") {
-        const auto js = proc_get_last_statuses();
-        wcstring_list_t result;
-        result.reserve(js.pipestatus.size());
-        for (int i : js.pipestatus) {
-            result.push_back(to_string(i));
-        }
-        return env_var_t(L"pipestatus", std::move(result));
-    } else if (key == L"status") {
-        return env_var_t(L"status", to_string(proc_get_last_status()));
-    } else if (key == L"umask") {
-        return env_var_t(L"umask", format_string(L"0%0.3o", get_umask()));
-    }
-    // We should never get here unless the electric var list is out of sync with the above code.
-    DIE("unrecognized electric var name");
-}
-
-maybe_t<env_var_t> env_scoped_t::get(const wcstring &key, env_mode_flags_t mode) const {
-    const bool has_scope = mode & (ENV_LOCAL | ENV_GLOBAL | ENV_UNIVERSAL);
-    const bool search_local = !has_scope || (mode & ENV_LOCAL);
-    const bool search_global = !has_scope || (mode & ENV_GLOBAL);
-    const bool search_universal = !has_scope || (mode & ENV_UNIVERSAL);
-
-    const bool search_exported = (mode & ENV_EXPORT) || !(mode & ENV_UNEXPORT);
-    const bool search_unexported = (mode & ENV_UNEXPORT) || !(mode & ENV_EXPORT);
-
-    // Make the assumption that electric keys can't be shadowed elsewhere, since we currently block
-    // that in env_stack_t::set().
-    if (is_electric(key)) {
-        if (!search_global) return none();
-        return get_electric(key, *this);
-    }
-
-    if (search_local || search_global) {
-        scoped_lock locker(env_lock);  // lock around a local region
-        env_node_ref_t env = search_local ? vars_stack().top : vars_stack().global_env;
-
-        while (env != NULL) {
-            if (env == vars_stack().global_env && !search_global) {
-                break;
-            }
-
-            var_table_t::const_iterator result = env->env.find(key);
-            if (result != env->env.end()) {
-                const env_var_t &var = result->second;
-                if (var.exports() ? search_exported : search_unexported) {
-                    return var;
-                }
-            }
-            env = vars_stack().next_scope_to_search(env);
-        }
-    }
-    // Okay, we couldn't find a local or global var given the requirements. If there is a matching
-    // universal var return that.
-    if (search_universal && uvars()) {
-        auto var = uvars()->get(key);
-        if (var && (var->exports() ? search_exported : search_unexported)) {
-            return var;
-        }
-    }
-
-    return none();
-}
-
-void env_universal_barrier() {env_stack_t::principal().universal_barrier(); }
-
-/// Returns true if the specified scope or any non-shadowed non-global subscopes contain an exported
-/// variable.
-bool var_stack_t::local_scope_exports(const env_node_ref_t &n) const {
-    assert(n != nullptr);
-    if (n == global_env) return false;
-
-    if (n->exportv) return true;
-
-    if (n->new_scope) return false;
-
-    return local_scope_exports(n->next);
-}
-
 void env_stack_t::push(bool new_scope) { vars_stack().push(new_scope); }
 
 void env_stack_t::pop() {
@@ -941,20 +1008,6 @@ void env_stack_t::pop() {
     }
 }
 
-/// Function used with to insert keys of one table into a set::set<wcstring>.
-static void add_key_to_string_set(const var_table_t &envs, std::set<wcstring> *str_set,
-                                  bool show_exported, bool show_unexported) {
-    var_table_t::const_iterator iter;
-    for (iter = envs.begin(); iter != envs.end(); ++iter) {
-        const env_var_t &var = iter->second;
-
-        if ((var.exports() && show_exported) || (!var.exports() && show_unexported)) {
-            // Insert this key.
-            str_set->insert(iter->first);
-        }
-    }
-}
-
 wcstring_list_t env_scoped_t::get_names(int flags) const {
     scoped_lock locker(env_lock);
 
@@ -968,6 +1021,17 @@ wcstring_list_t env_scoped_t::get_names(int flags) const {
     const bool show_exported = (flags & ENV_EXPORT) || !(flags & ENV_UNEXPORT);
     const bool show_unexported = (flags & ENV_UNEXPORT) || !(flags & ENV_EXPORT);
 
+    // Helper to add the names of variables from \p envs to names, respecting show_exported and
+    // show_unexported.
+    auto add_keys = [&](const var_table_t &envs) {
+        for (const auto &kv : envs) {
+            const env_var_t &var = kv.second;
+            if (var.exports() ? show_exported : show_unexported) {
+                names.insert(kv.first);
+            }
+        }
+    };
+
     if (!show_local && !show_global && !show_universal) {
         show_local = show_universal = show_global = 1;
     }
@@ -975,8 +1039,7 @@ wcstring_list_t env_scoped_t::get_names(int flags) const {
     if (show_local) {
         while (n) {
             if (n == vars_stack().global_env) break;
-
-            add_key_to_string_set(n->env, &names, show_exported, show_unexported);
+            add_keys(n->env);
             if (n->new_scope)
                 break;
             else
@@ -985,7 +1048,7 @@ wcstring_list_t env_scoped_t::get_names(int flags) const {
     }
 
     if (show_global) {
-        add_key_to_string_set(vars_stack().global_env->env, &names, show_exported, show_unexported);
+        add_keys(vars_stack().global_env->env);
         if (show_unexported) {
             result.insert(result.end(), std::begin(env_electric), std::end(env_electric));
         }
@@ -998,76 +1061,6 @@ wcstring_list_t env_scoped_t::get_names(int flags) const {
 
     result.insert(result.end(), names.begin(), names.end());
     return result;
-}
-
-/// Get list of all exported variables.
-void var_stack_t::get_exported(const env_node_t *n, var_table_t &h) const {
-    if (!n) return;
-
-    if (n->new_scope) {
-        get_exported(global_env.get(), h);
-    } else {
-        get_exported(n->next.get(), h);
-    }
-
-    var_table_t::const_iterator iter;
-    for (iter = n->env.begin(); iter != n->env.end(); ++iter) {
-        const wcstring &key = iter->first;
-        const env_var_t var = iter->second;
-
-        if (var.exports()) {
-            // Export the variable. Don't use std::map::insert here, since we need to overwrite
-            // existing values from previous scopes.
-            h[key] = var;
-        } else {
-            // We need to erase from the map if we are not exporting, since a lower scope may have
-            // exported. See #2132.
-            h.erase(key);
-        }
-    }
-}
-
-// Given a map from key to value, return a vector of strings of the form key=value
-static std::vector<std::string> get_export_list(const var_table_t &envs) {
-    std::vector<std::string> result;
-    result.reserve(envs.size());
-    for (const auto &kv : envs) {
-        std::string ks = wcs2string(kv.first);
-        std::string vs = wcs2string(kv.second.as_string());
-        // Create and append a string of the form ks=vs
-        std::string str;
-        str.reserve(ks.size() + 1 + vs.size());
-        str.append(ks);
-        str.append("=");
-        str.append(vs);
-        result.push_back(std::move(str));
-    }
-    return result;
-}
-
-void var_stack_t::update_export_array_if_necessary() {
-    if (!this->has_changed_exported()) {
-        return;
-    }
-
-    debug(4, L"export_arr() recalc");
-    var_table_t vals;
-    get_exported(this->top.get(), vals);
-
-    if (uvars()) {
-        const wcstring_list_t uni = uvars()->get_names(true, false);
-        for (const wcstring &key : uni) {
-            auto var = uvars()->get(key);
-
-            if (!var.missing_or_empty()) {
-                // Note that std::map::insert does NOT overwrite a value already in the map,
-                // which we depend on here.
-                vals.insert(std::pair<wcstring, env_var_t>(key, *var));
-            }
-        }
-    }
-
-    export_array.emplace(get_export_list(vals));
 }
 
 const char *const *env_stack_t::export_arr() {
@@ -1090,21 +1083,8 @@ void env_stack_t::set_argv(const wchar_t *const *argv) {
     }
 }
 
-environment_t::~environment_t() = default;
 env_stack_t::~env_stack_t() = default;
 env_stack_t::env_stack_t(env_stack_t &&) = default;
-
-null_environment_t::null_environment_t() = default;
-null_environment_t::~null_environment_t() = default;
-maybe_t<env_var_t> null_environment_t::get(const wcstring &key, env_mode_flags_t mode) const {
-    UNUSED(key);
-    UNUSED(mode);
-    return none();
-}
-wcstring_list_t null_environment_t::get_names(int flags) const {
-    UNUSED(flags);
-    return {};
-}
 
 env_stack_t env_stack_t::make_principal() {
     const env_stack_t &gl = env_stack_t::globals();

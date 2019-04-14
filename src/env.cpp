@@ -112,9 +112,14 @@ static maybe_t<env_var_t> get_electric(const wcstring &key, const environment_t 
         return env_var_t(L"status", to_string(proc_get_last_status()));
     } else if (key == L"umask") {
         // note umask() is an absurd API: you call it to set the value and it returns the old value.
-        // Thus we have to call it twice, to reset the value. TODO: lock!
-        mode_t res = umask(0);
-        umask(res);
+        // Thus we have to call it twice, to reset the value.
+        // We need to lock since otherwise this races.
+        // Guess what the umask is; if we guess right we don't need to reset it.
+        static std::mutex umask_lock;
+        scoped_lock locker(umask_lock);
+        int guess = 022;
+        mode_t res = umask(guess);
+        if (res != guess) umask(res);
         return env_var_t(L"umask", format_string(L"0%0.3o", res));
     }
     // We should never get here unless the electric var list is out of sync with the above code.

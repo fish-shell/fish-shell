@@ -72,9 +72,9 @@ complete -c set -n '__fish_is_first_token' -s S -l show -d "Show variable"
 #TODO: add CPP code to generate list of read-only variables and exclude them from the following completions
 
 # Complete using preexisting variable names
-complete -c set -n '__fish_is_first_token; and not __fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s g -s U -l local -l global -l universal' -x -a "(set -l | string match -rv '^__' | string replace ' ' \t'Local Variable: ')"
-complete -c set -n '__fish_is_first_token; and not __fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s g -s U -l local -l global -l universal' -x -a "(set -g | string match -rv '^__' | string replace ' ' \t'Global Variable: ')"
-complete -c set -n '__fish_is_first_token; and not __fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s g -s U -l local -l global -l universal' -x -a "(set -U | string match -rv '^__' | string replace ' ' \t'Universal Variable: ')"
+complete -c set -n '__fish_is_first_token; and not __fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s g -s U -l local -l global -l universal' -x -a "(set -l | string replace ' ' \t'Local Variable: ')"
+complete -c set -n '__fish_is_first_token; and not __fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s g -s U -l local -l global -l universal' -x -a "(set -g | string replace ' ' \t'Global Variable: ')"
+complete -c set -n '__fish_is_first_token; and not __fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s g -s U -l local -l global -l universal' -x -a "(set -U | string replace ' ' \t'Universal Variable: ')"
 # Complete scope-specific variables
 complete -c set -n '__fish_is_first_token; and __fish_seen_argument -s l -l local' -x -a "(set -l | string match -rv '^__' | string replace ' ' \t'Local Variable: ')"
 complete -c set -n '__fish_is_first_token; and __fish_seen_argument -s g -l global' -x -a "(set -g | string match -rv '^__' | string replace ' ' \t'Global Variable: ')"

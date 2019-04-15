@@ -493,7 +493,6 @@ std::shared_ptr<environment_t> env_scoped_t::snapshot() const {
     return std::shared_ptr<env_scoped_t>(new env_scoped_t(vars_->snapshot()));
 }
 
-env_scoped_t::env_scoped_t() : env_scoped_t(var_stack_t::create()) {}
 env_scoped_t::env_scoped_t(std::unique_ptr<var_stack_t> vars) : vars_(std::move(vars)) {}
 env_scoped_t::env_scoped_t(env_scoped_t &&) = default;
 env_scoped_t::~env_scoped_t() = default;
@@ -1140,7 +1139,7 @@ env_stack_t &env_stack_t::principal() {
 }
 
 env_stack_t &env_stack_t::globals() {
-    static env_stack_t s_global;
+    static env_stack_t s_global(var_stack_t::create());
     return s_global;
 }
 

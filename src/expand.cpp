@@ -1197,9 +1197,8 @@ maybe_t<wcstring> expand_abbreviation(const wcstring &src) {
     return expand_abbreviation(src, env_stack_t::principal());
 }
 
-std::map<wcstring, wcstring> get_abbreviations() {
+std::map<wcstring, wcstring> get_abbreviations(const environment_t &vars) {
     // TODO: try to make this cheaper
-    const auto &vars = env_stack_t::principal();
     const size_t fish_abbr_len = std::wcslen(L"_fish_abbr_");
     auto names = vars.get_names(0);
     std::map<wcstring, wcstring> result;
@@ -1210,4 +1209,3 @@ std::map<wcstring, wcstring> get_abbreviations() {
     }
     return result;
 }
-

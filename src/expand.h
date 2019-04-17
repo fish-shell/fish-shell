@@ -165,7 +165,7 @@ maybe_t<wcstring> expand_abbreviation(const wcstring &src, const environment_t &
 maybe_t<wcstring> expand_abbreviation(const wcstring &src);
 
 /// \return a snapshot of all abbreviations as a map abbreviation->expansion.
-std::map<wcstring, wcstring> get_abbreviations();
+std::map<wcstring, wcstring> get_abbreviations(const environment_t &vars);
 
 // Terrible hacks
 bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc,

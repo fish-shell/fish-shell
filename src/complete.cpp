@@ -707,7 +707,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
 }
 
 void completer_t::complete_abbr(const wcstring &cmd) {
-    std::map<wcstring, wcstring> abbrs = get_abbreviations();
+    std::map<wcstring, wcstring> abbrs = get_abbreviations(vars);
     std::vector<completion_t> possible_comp;
     possible_comp.reserve(abbrs.size());
     for (const auto &kv : abbrs) {

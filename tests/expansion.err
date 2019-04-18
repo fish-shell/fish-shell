@@ -39,3 +39,6 @@ fish: Unexpected '}' for unopened brace expansion
 echo {}}
        ^
 
+fish: Command substitutions not allowed
+command (asd)
+^

@@ -14,9 +14,10 @@ disown foo
 disown (jobs -p)
 or exit 0
 
+# Verify `jobs` output within a function lists background jobs
 # https://github.com/fish-shell/fish-shell/issues/5824
 function foo
-    sleep 1 &
-	jobs -c
+    sleep 0.2 &
+    jobs -c
 end
 foo

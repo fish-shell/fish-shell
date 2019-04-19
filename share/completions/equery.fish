@@ -130,5 +130,5 @@ complete -c equery -n '__fish_seen_subcommand_from u uses' -s a -l all          
 complete -c equery -n '__fish_seen_subcommand_from u uses' -s i -l ignore-l10n       -d "Don't show l10n USE flags"
 
 # which
-complete -c equery -n '__fish_seen_subcommand_from w which' -s m -l include-masked      -d "Return highest version ebuild available"
-complete -c equery -n '__fish_seen_subcommand_from w which' -s e -l ebuild              -d "Print the ebuild"
+complete -c equery -n '__fish_seen_subcommand_from w which' -s m -l include-masked   -d "Return highest version ebuild available"
+complete -c equery -n '__fish_seen_subcommand_from w which' -s e -l ebuild           -d "Print the ebuild"

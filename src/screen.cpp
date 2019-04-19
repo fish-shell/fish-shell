@@ -463,17 +463,20 @@ static void s_move(screen_t *s, int new_x, int new_y) {
 
     y_steps = new_y - s->actual.cursor.y;
 
-    if (y_steps > 0 && (std::strcmp(cursor_down, "\n") == 0)) {
-        // This is very strange - it seems some (all?) consoles use a simple newline as the cursor
-        // down escape. This will of course move the cursor to the beginning of the line as well as
-        // moving it down one step. The cursor_up does not have this behavior...
-        s->actual.cursor.x = 0;
-    }
-
     if (y_steps < 0) {
         str = cursor_up;
     } else {
         str = cursor_down;
+        if ((shell_modes.c_iflag & ONLCR) != 0
+            && std::strcmp(str, "\n") == 0) { // See GitHub issue #4505.
+            // Most consoles use a simple newline as the cursor down escape.
+            // If ONLCR is enabled (which it normally is) this will of course
+            // also move the cursor to the beginning of the line.
+            if (std::strcmp(cursor_up, "\x1B[A") == 0) // If VT-style terminal
+                str = "\x1B[B"; // ... use real cursor-down
+            else
+                s->actual.cursor.x = 0;
+        }
     }
 
     for (i = 0; i < abs(y_steps); i++) {

@@ -462,17 +462,17 @@ static void s_move(screen_t *s, int new_x, int new_y) {
 
     if (y_steps < 0) {
         str = cursor_up;
-    } else {
+    } else if (y_steps > 0) {
         str = cursor_down;
-        if ((shell_modes.c_iflag & ONLCR) != 0
+        if ((shell_modes.c_oflag & ONLCR) != 0
             && std::strcmp(str, "\n") == 0) { // See GitHub issue #4505.
             // Most consoles use a simple newline as the cursor down escape.
             // If ONLCR is enabled (which it normally is) this will of course
             // also move the cursor to the beginning of the line.
-            if (std::strcmp(cursor_up, "\x1B[A") == 0) // If VT-style terminal
-                str = "\x1B[B"; // ... use real cursor-down
-            else
-                s->actual.cursor.x = 0;
+            // We could do:
+            // if (std::strcmp(cursor_up, "\x1B[A") == 0) str = "\x1B[B";
+            // else ... but that doesn't work for unknown reasons.
+            s->actual.cursor.x = 0;
         }
     }
 

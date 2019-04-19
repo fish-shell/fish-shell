@@ -111,9 +111,11 @@ static bool is_screen_name_escape_seq(const wchar_t *code, size_t *resulting_len
     return true;
 }
 
-/// iTerm2 escape codes: CSI followed by ], terminated by either BEL or escape + backslash.
-/// See https://code.google.com/p/iterm2/wiki/ProprietaryEscapeCodes.
-static bool is_iterm2_escape_seq(const wchar_t *code, size_t *resulting_length) {
+/// Operating System Command (OSC) escape codes, used by iTerm2 and others:
+/// ESC followed by ], terminated by either BEL or escape + backslash.
+/// See https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
+/// and https://code.google.com/p/iterm2/wiki/ProprietaryEscapeCodes.
+static bool is_osc_escape_seq(const wchar_t *code, size_t *resulting_length) {
     bool found = false;
     if (code[1] == ']') {
         // Start at 2 to skip over <esc>].
@@ -248,7 +250,7 @@ size_t escape_code_length(const wchar_t *code) {
     bool found = is_color_escape_seq(code, &esc_seq_len);
     if (!found) found = is_visual_escape_seq(code, &esc_seq_len);
     if (!found) found = is_screen_name_escape_seq(code, &esc_seq_len);
-    if (!found) found = is_iterm2_escape_seq(code, &esc_seq_len);
+    if (!found) found = is_osc_escape_seq(code, &esc_seq_len);
     if (!found) found = is_single_byte_escape_seq(code, &esc_seq_len);
     if (!found) found = is_csi_style_escape_seq(code, &esc_seq_len);
     if (!found) found = is_two_byte_escape_seq(code, &esc_seq_len);
@@ -429,7 +431,6 @@ static void s_desired_append_char(screen_t *s, wchar_t b, highlight_spec_t c, in
 /// The actual_cursor field of the specified screen_t will be updated.
 ///
 /// \param s the screen to operate on
-/// \param b the buffer to send the output escape codes to
 /// \param new_x the new x position
 /// \param new_y the new y position
 static void s_move(screen_t *s, int new_x, int new_y) {

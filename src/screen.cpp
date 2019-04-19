@@ -114,7 +114,7 @@ static bool is_screen_name_escape_seq(const wchar_t *code, size_t *resulting_len
 /// Operating System Command (OSC) escape codes, used by iTerm2 and others:
 /// ESC followed by ], terminated by either BEL or escape + backslash.
 /// See https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
-/// and https://code.google.com/p/iterm2/wiki/ProprietaryEscapeCodes.
+/// and https://iterm2.com/documentation-escape-codes.html .
 static bool is_osc_escape_seq(const wchar_t *code, size_t *resulting_length) {
     bool found = false;
     if (code[1] == ']') {

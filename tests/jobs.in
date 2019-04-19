@@ -13,3 +13,10 @@ jobs -c
 disown foo
 disown (jobs -p)
 or exit 0
+
+# https://github.com/fish-shell/fish-shell/issues/5824
+function foo
+    sleep 1 &
+	jobs -c
+end
+foo

@@ -455,50 +455,82 @@ static void s_move(screen_t *s, int new_x, int new_y) {
 
     auto &outp = s->outp();
 
-    int x_steps = new_x - s->actual.cursor.x;
-    int y_steps = new_y - s->actual.cursor.y;
 
-    const char *str = "";
-    if (y_steps < 0) {
-        str = cursor_up;
-    } else if (y_steps > 0) {
-        str = cursor_down;
+    // This block sets the y
+    {
+        int y_steps = new_y - s->actual.cursor.y;
+        const char *str = nullptr;
+
+        if (y_steps < 0) {
+            str = cursor_up;
+        } else if (y_steps > 0) {
+            str = cursor_down;
+        }
+
+        if (y_steps != 0) {
+            // Combine the string and call writembs once to avoid repeated syscall overhead
+            int steps = abs(y_steps);
+            if (steps == 1) {
+                writembs(outp, str);
+            } else {
+                int step_size = strlen(str);
+                size_t size = steps * step_size + 1;
+                char *output = (char *) alloca(size);
+                for (size_t i = 0; i < size; i += step_size) {
+                    memcpy(output + i, str, step_size);
+                }
+                output[size - 1] = '\0';
+                writembs(outp, output);
+            }
+        }
+        s->actual.cursor.y = new_y;
     }
 
-    for (int i = 0; i < abs(y_steps); i++) {
-        writembs(outp, str);
-    }
+    // This block sets the x
+    {
+        int x_steps = new_x - s->actual.cursor.x;
 
-    // If we're moving to the x-zero, we can skip individual x-steps by simply issuing CR
-    if (x_steps && new_x == 0) {
-        outp.push_back('\r');
-        x_steps = 0;
-    }
+        const char *str = nullptr;
+        const char *multi_str = nullptr;
 
-    const char *multi_str = NULL;
-    if (x_steps < 0) {
-        str = cursor_left;
-        multi_str = parm_left_cursor;
-    } else if (x_steps > 0) {
-        str = cursor_right;
-        multi_str = parm_right_cursor;
-    }
+        // If we're moving to the x-zero, we can skip individual x-steps by simply issuing CR
+        if (x_steps && new_x == 0) {
+            outp.push_back('\r');
+            x_steps = 0;
+        } else if (x_steps < 0) {
+            str = cursor_left;
+            multi_str = parm_left_cursor;
+        } else if (x_steps > 0) {
+            str = cursor_right;
+            multi_str = parm_right_cursor;
+        }
 
-    // Use the bulk ('multi') output for cursor movement if it is supported and it would be shorter
-    // Note that this is required to avoid some visual glitches in iTerm (issue #1448).
-    bool use_multi =
-        multi_str != NULL && multi_str[0] != '\0' && abs(x_steps) * std::strlen(str) > std::strlen(multi_str);
-    if (use_multi && cur_term) {
-        char *multi_param = tparm((char *)multi_str, abs(x_steps));
-        writembs(outp, multi_param);
-    } else {
-        for (int i = 0; i < abs(x_steps); i++) {
-            writembs(outp, str);
+        if (x_steps != 0) {
+            // Use the bulk ('multi') output for cursor movement if it is supported and shorter
+            // Note that this is required to avoid some visual glitches in iTerm (issue #1448).
+            int steps = abs(x_steps);
+            int step_size = strlen(str);
+            bool use_multi = multi_str && steps * step_size > std::strlen(multi_str);
+            if (use_multi && cur_term) {
+                char *multi_param = tparm((char *)multi_str, steps);
+                writembs(outp, multi_param);
+            } else {
+                // Combine the string and call writembs once to avoid repeated syscall overhead
+                if (steps == 1) {
+                    writembs(outp, str);
+                } else {
+                    size_t size = steps * step_size + 1;
+                    char *output = (char *) alloca(size);
+                    for (size_t i = 0; i < size; i += step_size) {
+                        memcpy(output + i, str, step_size);
+                    }
+                    output[size - 1] = '\0';
+                    writembs(outp, output);
+                }
+            }
+            s->actual.cursor.x = new_x;
         }
     }
-
-    s->actual.cursor.x = new_x;
-    s->actual.cursor.y = new_y;
 }
 
 /// Set the pen color for the terminal.

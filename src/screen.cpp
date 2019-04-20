@@ -453,33 +453,23 @@ static void s_move(screen_t *s, int new_x, int new_y) {
         s->actual.cursor.x = 0;
     }
 
-    int i;
-    int x_steps, y_steps;
-
-    const char *str;
     auto &outp = s->outp();
 
-    y_steps = new_y - s->actual.cursor.y;
+    int x_steps = new_x - s->actual.cursor.x;
+    int y_steps = new_y - s->actual.cursor.y;
 
-    if (y_steps > 0 && (std::strcmp(cursor_down, "\n") == 0)) {
-        // This is very strange - it seems some (all?) consoles use a simple newline as the cursor
-        // down escape. This will of course move the cursor to the beginning of the line as well as
-        // moving it down one step. The cursor_up does not have this behavior...
-        s->actual.cursor.x = 0;
-    }
-
+    const char *str = "";
     if (y_steps < 0) {
         str = cursor_up;
-    } else {
+    } else if (y_steps > 0) {
         str = cursor_down;
     }
 
-    for (i = 0; i < abs(y_steps); i++) {
+    for (int i = 0; i < abs(y_steps); i++) {
         writembs(outp, str);
     }
 
-    x_steps = new_x - s->actual.cursor.x;
-
+    // If we're moving to the x-zero, we can skip individual x-steps by simply issuing CR
     if (x_steps && new_x == 0) {
         outp.push_back('\r');
         x_steps = 0;
@@ -489,7 +479,7 @@ static void s_move(screen_t *s, int new_x, int new_y) {
     if (x_steps < 0) {
         str = cursor_left;
         multi_str = parm_left_cursor;
-    } else {
+    } else if (x_steps > 0) {
         str = cursor_right;
         multi_str = parm_right_cursor;
     }
@@ -502,7 +492,7 @@ static void s_move(screen_t *s, int new_x, int new_y) {
         char *multi_param = tparm((char *)multi_str, abs(x_steps));
         writembs(outp, multi_param);
     } else {
-        for (i = 0; i < abs(x_steps); i++) {
+        for (int i = 0; i < abs(x_steps); i++) {
             writembs(outp, str);
         }
     }

@@ -26,7 +26,6 @@
 static const int kAutoloadStalenessInterval = 15;
 
 file_access_attempt_t access_file(const wcstring &path, int mode) {
-    // std::fwprintf(stderr, L"Touch %ls\n", path.c_str());
     file_access_attempt_t result = {};
     struct stat statbuf;
     if (wstat(path, &statbuf)) {
@@ -42,7 +41,6 @@ file_access_attempt_t access_file(const wcstring &path, int mode) {
 
     // Note that we record the last checked time after the call, on the assumption that in a slow
     // filesystem, the lag comes before the kernel check, not after.
-    result.stale = false;
     result.last_checked = time(NULL);
     return result;
 }

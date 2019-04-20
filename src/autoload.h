@@ -11,6 +11,7 @@
 #include "common.h"
 #include "env.h"
 #include "lru.h"
+#include "wutil.h"
 
 /// Record of an attempt to access a file.
 struct file_access_attempt_t {
@@ -20,8 +21,6 @@ struct file_access_attempt_t {
     time_t last_checked;
     /// Whether or not we believe we can access this file
     bool accessible;
-    /// The access attempt is stale
-    bool stale;
     /// If we cannot access the file, the error code encountered.
     int error;
 };

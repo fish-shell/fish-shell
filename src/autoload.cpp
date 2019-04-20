@@ -27,20 +27,10 @@ static const int kAutoloadStalenessInterval = 15;
 
 file_access_attempt_t access_file(const wcstring &path, int mode) {
     file_access_attempt_t result = {};
-    struct stat statbuf;
-    if (wstat(path, &statbuf)) {
-        result.error = errno;
-    } else {
-        result.mod_time = statbuf.st_mtime;
-        if (waccess(path, mode)) {
-            result.error = errno;
-        } else {
-            result.accessible = true;
-        }
+    file_id_t file_id = file_id_for_path(path);
+    if (file_id != kInvalidFileID && 0 == waccess(path, mode)) {
+        result.file_id = file_id;
     }
-
-    // Note that we record the last checked time after the call, on the assumption that in a slow
-    // filesystem, the lag comes before the kernel check, not after.
     result.last_checked = time(NULL);
     return result;
 }
@@ -178,7 +168,7 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
 
         // If we can use this function, return whether we were able to access it.
         if (use_cached(func, really_load, allow_stale_functions)) {
-            return func->access.accessible;
+            return func->access.accessible();
         }
     }
 
@@ -194,7 +184,7 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
         wcstring path = next + L"/" + cmd + L".fish";
 
         const file_access_attempt_t access = access_file(path, R_OK);
-        if (!access.accessible) {
+        if (!access.accessible()) {
             continue;
         }
 
@@ -205,7 +195,7 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
         // Generate the source if we need to load it.
         bool need_to_load_function =
             really_load &&
-            (func == NULL || func->access.mod_time != access.mod_time || !func->is_loaded);
+            (func == NULL || func->access.file_id != access.file_id || !func->is_loaded);
         if (need_to_load_function) {
             // Generate the script source.
             script_source = L"source " + escape_string(path, ESCAPE_ALL);

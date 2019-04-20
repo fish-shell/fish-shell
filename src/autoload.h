@@ -15,14 +15,16 @@
 
 /// Record of an attempt to access a file.
 struct file_access_attempt_t {
-    /// Modification time of the file
-    time_t mod_time;
-    /// When we last checked the file
+    /// If filled, the file ID of the checked file.
+    /// Otherwise the file did not exist or was otherwise inaccessible.
+    /// Note that this will never contain kInvalidFileID.
+    maybe_t<file_id_t> file_id;
+
+    /// When we last checked the file.
     time_t last_checked;
-    /// Whether or not we believe we can access this file
-    bool accessible;
-    /// If we cannot access the file, the error code encountered.
-    int error;
+
+    /// Whether or not we believe we can access this file.
+    bool accessible() const { return file_id.has_value(); }
 };
 file_access_attempt_t access_file(const wcstring &path, int mode);
 

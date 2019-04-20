@@ -10,7 +10,7 @@
 
 // Least-recently-used cache class.
 //
-// This a map from wcstring to CONTENTS, that will evict entries when the count exceeds the maximum.
+// This a map from wcstring to Contents, that will evict entries when the count exceeds the maximum.
 // It uses CRTP to inform clients when entries are evicted. This uses the classic LRU cache
 // structure: a dictionary mapping keys to nodes, where the nodes also form a linked list. Our
 // linked list is circular and has a sentinel node (the "mouth" - picture a snake swallowing its
@@ -19,7 +19,7 @@
 // having a "back pointer": they store an iterator to the entry in the map containing the node. This
 // allows us, given a node, to immediately locate the node and its key in the dictionary. This
 // allows us to avoid duplicating the key in the node.
-template <class DERIVED, class CONTENTS>
+template <class Derived, class Contents>
 class lru_cache_t {
     struct lru_node_t;
     struct lru_link_t {
@@ -40,9 +40,9 @@ class lru_cache_t {
         const wcstring *key = NULL;
 
         // The value from the client
-        CONTENTS value;
+        Contents value;
 
-        explicit lru_node_t(const CONTENTS &v) : value(std::move(v)) {}
+        explicit lru_node_t(const Contents &v) : value(std::move(v)) {}
     };
 
     typedef typename std::unordered_map<wcstring, lru_node_t>::iterator node_iter_t;
@@ -91,13 +91,13 @@ class lru_cache_t {
         // Pull out our key and value
         // Note we copy the key in case the map needs it to erase the node
         wcstring key = *node->key;
-        CONTENTS value(std::move(node->value));
+        Contents value(std::move(node->value));
 
         // Remove us from the map. This deallocates node!
         node_map.erase(iter);
 
         // Tell ourselves what we did
-        DERIVED *dthis = static_cast<DERIVED *>(this);
+        Derived *dthis = static_cast<Derived *>(this);
         dthis->entry_was_evicted(std::move(key), std::move(value));
     }
 
@@ -109,7 +109,7 @@ class lru_cache_t {
 
     // CRTP callback for when a node is evicted.
     // Clients can implement this
-    void entry_was_evicted(wcstring key, CONTENTS value) {
+    void entry_was_evicted(wcstring key, Contents value) {
         UNUSED(key);
         UNUSED(value);
     }
@@ -185,7 +185,7 @@ class lru_cache_t {
 
     // Returns the value for a given key, or NULL.
     // This counts as a "use" and so promotes the node
-    CONTENTS *get(const wcstring &key) {
+    Contents *get(const wcstring &key) {
         auto where = this->node_map.find(key);
         if (where == this->node_map.end()) {
             // not found
@@ -205,7 +205,7 @@ class lru_cache_t {
 
     // Adds a node under the given key. Returns true if the node was added, false if the node was
     // not because a node with that key is already in the set.
-    bool insert(wcstring key, CONTENTS value) {
+    bool insert(wcstring key, Contents value) {
         if (!this->insert_no_eviction(std::move(key), std::move(value))) {
             return false;
         }
@@ -218,7 +218,7 @@ class lru_cache_t {
 
     // Adds a node under the given key without triggering eviction. Returns true if the node was
     // added, false if the node was not because a node with that key is already in the set.
-    bool insert_no_eviction(wcstring key, CONTENTS value) {
+    bool insert_no_eviction(wcstring key, Contents value) {
         // Try inserting; return false if it was already in the set.
         auto iter_inserted = this->node_map.emplace(std::move(key), lru_node_t(std::move(value)));
         if (!iter_inserted.second) {
@@ -279,7 +279,7 @@ class lru_cache_t {
         const lru_link_t *node;
 
        public:
-        typedef std::pair<const wcstring &, const CONTENTS &> value_type;
+        typedef std::pair<const wcstring &, const Contents &> value_type;
 
         explicit iterator(const lru_link_t *val) : node(val) {}
         void operator++() { node = node->prev; }

@@ -252,7 +252,11 @@ function __fish_config_interactive -d "Initializations that should be performed 
         function __fish_disable_focus --on-event fish_preexec
             echo -n \e\[\?1004l
         end
-        __fish_enable_focus
+        # Note: Don't call this initially because, even though we're in a fish_prompt event,
+        # tmux reacts sooo quickly that we'll still get a sequence before we're prepared for it.
+        # So this means that we won't get focus events until you've run at least one command, but that's preferable
+        # to always seeing `^[[I` when starting fish.
+        # __fish_enable_focus
     end
 
     function __fish_winch_handler --on-signal WINCH -d "Repaint screen when window changes size"

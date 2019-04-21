@@ -114,9 +114,9 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # Exclude paste mode because that should get _everything_ literally.
     for mode in (bind --list-modes | string match -v paste)
         # We only need the in-focus event currently (to redraw the vi-cursor).
-        bind -M $mode \e\[I 'emit fish_focus_in'
-        bind -M $mode \e\[O false
-        bind -M $mode \e\[\?1004h false
+        bind --preset -M $mode \e\[I 'emit fish_focus_in'
+        bind --preset -M $mode \e\[O false
+        bind --preset -M $mode \e\[\?1004h false
     end
 
     # Support for "bracketed paste"

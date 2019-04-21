@@ -103,6 +103,6 @@ function __fish_print_help --description "Print help message for the specified f
                         # skip it
                 end
         end
-    end | ul # post-process with `ul`, to interpret the old-style grotty escapes
-    echo # print a trailing blank line
+    end | string replace -ra '^       ' '' | ul # post-process with `ul`, to interpret the old-style grotty escapes
+    printf '%s'\n $manual[2..-1];
 end

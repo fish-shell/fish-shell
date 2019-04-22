@@ -41,6 +41,7 @@ complete -c ssh -s X -d "Enable X11 forwarding"
 complete -c ssh -s L -d "Locally forwarded ports"
 complete -c ssh -s R -d "Remotely forwarded ports"
 complete -c ssh -s D -d "Dynamic port forwarding"
+complete -c ssh -s c -d "Encryption cipher" -xa "(ssh -Q cipher)"
 
 # Also look up hosts from the history
 function __ssh_history_completions --argument limit

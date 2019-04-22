@@ -35,16 +35,11 @@ file_access_attempt_t access_file(const wcstring &path, int mode) {
     return result;
 }
 
-autoload_t::autoload_t(wcstring env_var_name_var,
-                       command_removed_function_t cmd_removed_callback)
-    : env_var_name(std::move(env_var_name_var)), command_removed(cmd_removed_callback) {}
+autoload_t::autoload_t(wcstring env_var_name_var) : env_var_name(std::move(env_var_name_var)) {}
 
 void autoload_t::entry_was_evicted(wcstring key, autoload_function_t node) {
     // This should only ever happen on the main thread.
     ASSERT_IS_MAIN_THREAD();
-
-    // Tell ourselves that the command was removed if it was loaded.
-    if (node.is_loaded) this->command_removed(std::move(key));
 }
 
 int autoload_t::unload(const wcstring &cmd) { return this->evict_node(cmd); }
@@ -200,10 +195,8 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
             // Generate the script source.
             script_source = L"source " + escape_string(path, ESCAPE_ALL);
 
-            // Remove any loaded command because we are going to reload it. Note that this
-            // will deadlock if command_removed calls back into us.
-            if (func && func->is_loaded) {
-                command_removed(cmd);
+            // Mark that our function is no longer a placeholder, because we will load it.
+            if (func) {
                 func->is_placeholder = false;
             }
 

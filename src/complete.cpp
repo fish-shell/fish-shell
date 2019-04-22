@@ -380,13 +380,8 @@ class completer_t {
     std::vector<completion_t> acquire_completions() { return std::move(completions); }
 };
 
-// Callback when an autoloaded completion is removed.
-static void autoloaded_completion_removed(const wcstring &cmd) {
-    complete_remove_all(cmd, false /* not a path */);
-}
-
 // Autoloader for completions
-static autoload_t completion_autoloader(L"fish_complete_path", autoloaded_completion_removed);
+static autoload_t completion_autoloader(L"fish_complete_path");
 
 /// Create a new completion entry.
 void append_completion(std::vector<completion_t> *completions, wcstring comp, wcstring desc,

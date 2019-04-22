@@ -62,15 +62,8 @@ static std::unordered_set<wcstring> function_tombstones;
 /// Lock for functions.
 static std::recursive_mutex functions_lock;
 
-static bool function_remove_ignore_autoload(const wcstring &name, bool tombstone = true);
-
-/// Callback when an autoloaded function is removed.
-void autoloaded_function_removed(const wcstring &cmd) {
-    function_remove_ignore_autoload(cmd, false);
-}
-
 // Function autoloader
-static autoload_t function_autoloader(L"fish_function_path", autoloaded_function_removed);
+static autoload_t function_autoloader(L"fish_function_path");
 
 /// Kludgy flag set by the load function in order to tell function_add that the function being
 /// defined is autoloaded. There should be a better way to do this...
@@ -211,7 +204,7 @@ int function_exists_no_autoload(const wcstring &cmd, const environment_t &vars) 
            function_autoloader.can_load(cmd, vars);
 }
 
-static bool function_remove_ignore_autoload(const wcstring &name, bool tombstone) {
+static bool function_remove_ignore_autoload(const wcstring &name) {
     // Note: the lock may be held at this point, but is recursive.
     scoped_rlock locker(functions_lock);
 
@@ -220,8 +213,8 @@ static bool function_remove_ignore_autoload(const wcstring &name, bool tombstone
     // Not found.  Not erasing.
     if (iter == loaded_functions.end()) return false;
 
-    // Removing an auto-loaded function.  Prevent it from being auto-reloaded.
-    if (iter->second.is_autoload && tombstone) function_tombstones.insert(name);
+    // If we are removing an auto-loaded function, prevent it from being auto-reloaded.
+    if (iter->second.is_autoload) function_tombstones.insert(name);
 
     loaded_functions.erase(iter);
     event_remove_function_handlers(name);

@@ -994,7 +994,7 @@ void reader_init() {
     shell_modes.c_iflag &= ~IXON;   // disable flow control
     shell_modes.c_iflag &= ~IXOFF;  // disable flow control
 
-    shell_modes.c_iflag &= ~ONLCR;  // disable return to x0 on \n
+    shell_modes.c_oflag &= ~ONLCR;  // disable return to x0 on \n
 
     shell_modes.c_lflag &= ~ICANON;  // turn off canonical mode
     shell_modes.c_lflag &= ~ECHO;    // turn off echo mode

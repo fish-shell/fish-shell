@@ -438,23 +438,31 @@ static void s_move(screen_t *s, int new_x, int new_y) {
 
     const scoped_buffer_t buffering(*s);
 
-    // If we are at the end of our window, then either the cursor stuck to the edge or it didn't. We
-    // don't know! We can fix it up though.
-    if (s->actual.cursor.x == common_get_width()) {
-        // Either issue a cr to go back to the beginning of this line, or a nl to go to the
-        // beginning of the next one, depending on what we think is more efficient.
-        if (new_y <= s->actual.cursor.y) {
-            s->outp().push_back('\r');
+    // If we are at (past) the end of our window. Terminals differ in their handling of an input at
+    // this point. Some with am flag will autowrap to the next line.
+
+    int screen_width = common_get_width();
+    if (s->actual.cursor.x >= screen_width) {
+        if (!term_has_am) {
+            // The cursor remains stuck at the last column of the window. We don't need to do
+            // anything, we just needed to know where it was.
+            s->actual.cursor.x = screen_width - 1;
         } else {
-            s->outp().push_back('\n');
+            if (term_has_xn) {
+                // Terminal will sometimes wrap, sometimes not, depending on what comes next.
+                // CRNL at this point will always move to x0 on the following line.
+                s->outp().push_back('\r');
+                s->outp().push_back('\n');
+            } else {
+                // The cursor definitely wrapped to the next line
+            }
+            // In both cases:
+            s->actual.cursor.x = 0;
             s->actual.cursor.y++;
         }
-        // Either way we're not in the first column.
-        s->actual.cursor.x = 0;
     }
 
     auto &outp = s->outp();
-
 
     // This block sets the y
     {
@@ -528,8 +536,8 @@ static void s_move(screen_t *s, int new_x, int new_y) {
                     writembs(outp, output);
                 }
             }
-            s->actual.cursor.x = new_x;
         }
+        s->actual.cursor.x = new_x;
     }
 }
 

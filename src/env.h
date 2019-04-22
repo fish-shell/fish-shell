@@ -299,7 +299,8 @@ class env_stack_t final : public env_scoped_t {
 extern int g_fork_count;
 extern bool g_use_posix_spawn;
 
-extern bool term_has_xn;  // does the terminal have the "eat_newline_glitch"
+extern bool term_has_am;  // does the terminal have the "eat_newline_glitch" part 1
+extern bool term_has_xn;  // does the terminal have the "eat_newline_glitch" part 2
 
 /// Synchronizes all universal variable changes: writes everything out, reads stuff in.
 void env_universal_barrier();

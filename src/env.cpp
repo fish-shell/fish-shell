@@ -53,6 +53,8 @@ bool curses_initialized = false;
 
 /// Does the terminal have the "eat_newline_glitch".
 bool term_has_xn = false;
+/// Does the terminal have the "eat_newline_glitch".
+bool term_has_am = false;
 
 /// Universal variables global instance. Initialized in env_init.
 static env_universal_t *s_universal_variables = NULL;

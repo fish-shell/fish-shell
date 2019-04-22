@@ -1592,7 +1592,7 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
     wchar_t *arg;
     parse_error_list_t errors;
 
-    if (expand_string(in, &output, flags, pwd_environment_t{}, &errors) == EXPAND_ERROR) {
+    if (expand_string(in, &output, flags, pwd_environment_t{}, &errors) == expand_result_t::error) {
         if (errors.empty()) {
             err(L"Bug: Parse error reported but no error text found.");
         } else {

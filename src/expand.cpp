@@ -470,8 +470,8 @@ static bool expand_variables(wcstring instr, std::vector<completion_t> *out, siz
 }
 
 /// Perform brace expansion.
-static expand_error_t expand_braces(const wcstring &instr, expand_flags_t flags,
-                                    std::vector<completion_t> *out, parse_error_list_t *errors) {
+static expand_result_t expand_braces(const wcstring &instr, expand_flags_t flags,
+                                     std::vector<completion_t> *out, parse_error_list_t *errors) {
     bool syntax_error = false;
     int brace_count = 0;
 
@@ -542,12 +542,12 @@ static expand_error_t expand_braces(const wcstring &instr, expand_flags_t flags,
 
     if (syntax_error) {
         append_syntax_error(errors, SOURCE_LOCATION_UNKNOWN, _(L"Mismatched braces"));
-        return EXPAND_ERROR;
+        return expand_result_t::error;
     }
 
     if (brace_begin == NULL) {
         append_completion(out, instr);
-        return EXPAND_OK;
+        return expand_result_t::ok;
     }
 
     length_preceding_braces = (brace_begin - in);
@@ -585,7 +585,7 @@ static expand_error_t expand_braces(const wcstring &instr, expand_flags_t flags,
             brace_count--;
         }
     }
-    return EXPAND_OK;
+    return expand_result_t::ok;
 }
 
 /// Perform cmdsubst expansion.
@@ -880,24 +880,24 @@ class expander_t {
     /// An expansion stage is a member function pointer.
     /// It accepts the input string (transferring ownership) and returns the list of output
     /// completions by reference. It may return an error, which halts expansion.
-    using stage_t = expand_error_t (expander_t::*)(wcstring, std::vector<completion_t> *);
+    using stage_t = expand_result_t (expander_t::*)(wcstring, std::vector<completion_t> *);
 
-    expand_error_t stage_cmdsubst(wcstring input, std::vector<completion_t> *out);
-    expand_error_t stage_variables(wcstring input, std::vector<completion_t> *out);
-    expand_error_t stage_braces(wcstring input, std::vector<completion_t> *out);
-    expand_error_t stage_home_and_self(wcstring input, std::vector<completion_t> *out);
-    expand_error_t stage_wildcards(wcstring path_to_expand, std::vector<completion_t> *out);
+    expand_result_t stage_cmdsubst(wcstring input, std::vector<completion_t> *out);
+    expand_result_t stage_variables(wcstring input, std::vector<completion_t> *out);
+    expand_result_t stage_braces(wcstring input, std::vector<completion_t> *out);
+    expand_result_t stage_home_and_self(wcstring input, std::vector<completion_t> *out);
+    expand_result_t stage_wildcards(wcstring path_to_expand, std::vector<completion_t> *out);
 
     expander_t(const environment_t &vars, expand_flags_t flags, parse_error_list_t *errors)
         : vars(vars), flags(flags), errors(errors) {}
 
    public:
-    static expand_error_t expand_string(wcstring input, std::vector<completion_t> *out_completions,
-                                        expand_flags_t flags, const environment_t &vars,
-                                        parse_error_list_t *errors);
+    static expand_result_t expand_string(wcstring input, std::vector<completion_t> *out_completions,
+                                         expand_flags_t flags, const environment_t &vars,
+                                         parse_error_list_t *errors);
 };
 
-expand_error_t expander_t::stage_cmdsubst(wcstring input, std::vector<completion_t> *out) {
+expand_result_t expander_t::stage_cmdsubst(wcstring input, std::vector<completion_t> *out) {
     if (EXPAND_SKIP_CMDSUBST & flags) {
         size_t cur = 0, start = 0, end;
         switch (parse_util_locate_cmdsubst_range(input, &cur, nullptr, &start, &end, true)) {
@@ -908,17 +908,17 @@ expand_error_t expander_t::stage_cmdsubst(wcstring input, std::vector<completion
                append_cmdsub_error(errors, start, L"Command substitutions not allowed");
             case -1:
             default:
-                return EXPAND_ERROR;
+                return expand_result_t::error;
         }
     } else {
         bool cmdsubst_ok = expand_cmdsubst(std::move(input), out, errors);
-        if (!cmdsubst_ok) return EXPAND_ERROR;
+        if (!cmdsubst_ok) return expand_result_t::error;
     }
 
-    return EXPAND_OK;
+    return expand_result_t::ok;
 }
 
-expand_error_t expander_t::stage_variables(wcstring input, std::vector<completion_t> *out) {
+expand_result_t expander_t::stage_variables(wcstring input, std::vector<completion_t> *out) {
     // We accept incomplete strings here, since complete uses expand_string to expand incomplete
     // strings from the commandline.
     wcstring next;
@@ -934,29 +934,29 @@ expand_error_t expander_t::stage_variables(wcstring input, std::vector<completio
     } else {
         size_t size = next.size();
         if (!expand_variables(std::move(next), out, size, vars, errors)) {
-            return EXPAND_ERROR;
+            return expand_result_t::error;
         }
     }
-    return EXPAND_OK;
+    return expand_result_t::ok;
 }
 
-expand_error_t expander_t::stage_braces(wcstring input, std::vector<completion_t> *out) {
+expand_result_t expander_t::stage_braces(wcstring input, std::vector<completion_t> *out) {
     UNUSED(vars);
     return expand_braces(input, flags, out, errors);
 }
 
-expand_error_t expander_t::stage_home_and_self(wcstring input, std::vector<completion_t> *out) {
+expand_result_t expander_t::stage_home_and_self(wcstring input, std::vector<completion_t> *out) {
     if (!(EXPAND_SKIP_HOME_DIRECTORIES & flags)) {
         expand_home_directory(input, vars);
     }
     expand_percent_self(input);
     append_completion(out, std::move(input));
-    return EXPAND_OK;
+    return expand_result_t::ok;
 }
 
-expand_error_t expander_t::stage_wildcards(wcstring path_to_expand,
-                                           std::vector<completion_t> *out) {
-    expand_error_t result = EXPAND_OK;
+expand_result_t expander_t::stage_wildcards(wcstring path_to_expand,
+                                            std::vector<completion_t> *out) {
+    expand_result_t result = expand_result_t::ok;
 
     remove_internal_separator(&path_to_expand, flags & EXPAND_SKIP_WILDCARDS);
     const bool has_wildcard = wildcard_has(path_to_expand, true /* internal, i.e. ANY_STRING */);
@@ -1017,17 +1017,17 @@ expand_error_t expander_t::stage_wildcards(wcstring path_to_expand,
             }
         }
 
-        result = EXPAND_WILDCARD_NO_MATCH;
+        result = expand_result_t::wildcard_no_match;
         std::vector<completion_t> expanded;
         for (size_t wd_idx = 0; wd_idx < effective_working_dirs.size(); wd_idx++) {
             int local_wc_res = wildcard_expand_string(
                 path_to_expand, effective_working_dirs.at(wd_idx), flags, &expanded);
             if (local_wc_res > 0) {
                 // Something matched,so overall we matched.
-                result = EXPAND_WILDCARD_MATCH;
+                result = expand_result_t::wildcard_match;
             } else if (local_wc_res < 0) {
                 // Cancellation
-                result = EXPAND_ERROR;
+                result = expand_result_t::error;
                 break;
             }
         }
@@ -1045,13 +1045,14 @@ expand_error_t expander_t::stage_wildcards(wcstring path_to_expand,
     return result;
 }
 
-expand_error_t expander_t::expand_string(wcstring input, std::vector<completion_t> *out_completions,
-                                         expand_flags_t flags, const environment_t &vars,
-                                         parse_error_list_t *errors) {
+expand_result_t expander_t::expand_string(wcstring input,
+                                          std::vector<completion_t> *out_completions,
+                                          expand_flags_t flags, const environment_t &vars,
+                                          parse_error_list_t *errors) {
     // Early out. If we're not completing, and there's no magic in the input, we're done.
     if (!(flags & EXPAND_FOR_COMPLETIONS) && expand_is_clean(input)) {
         append_completion(out_completions, std::move(input));
-        return EXPAND_OK;
+        return expand_result_t::ok;
     }
 
     expander_t expand(vars, flags, errors);
@@ -1065,18 +1066,18 @@ expand_error_t expander_t::expand_string(wcstring input, std::vector<completion_
     std::vector<completion_t> completions, output_storage;
     append_completion(&completions, input);
 
-    expand_error_t total_result = EXPAND_OK;
+    expand_result_t total_result = expand_result_t::ok;
     for (stage_t stage : stages) {
         for (completion_t &comp : completions) {
-            expand_error_t this_result =
+            expand_result_t this_result =
                 (expand.*stage)(std::move(comp.completion), &output_storage);
             // If this_result was no match, but total_result is that we have a match, then don't
             // change it.
-            if (!(this_result == EXPAND_WILDCARD_NO_MATCH &&
-                  total_result == EXPAND_WILDCARD_MATCH)) {
+            if (!(this_result == expand_result_t::wildcard_no_match &&
+                  total_result == expand_result_t::wildcard_match)) {
                 total_result = this_result;
             }
-            if (total_result == EXPAND_ERROR) {
+            if (total_result == expand_result_t::error) {
                 break;
             }
         }
@@ -1084,12 +1085,12 @@ expand_error_t expander_t::expand_string(wcstring input, std::vector<completion_
         // Output becomes our next stage's input.
         completions.swap(output_storage);
         output_storage.clear();
-        if (total_result == EXPAND_ERROR) {
+        if (total_result == expand_result_t::error) {
             break;
         }
     }
 
-    if (total_result != EXPAND_ERROR) {
+    if (total_result != expand_result_t::error) {
         // Hack to un-expand tildes (see #647).
         if (!(flags & EXPAND_SKIP_HOME_DIRECTORIES)) {
             unexpand_tildes(input, vars, &completions);
@@ -1102,9 +1103,9 @@ expand_error_t expander_t::expand_string(wcstring input, std::vector<completion_
 }
 }  // namespace
 
-expand_error_t expand_string(wcstring input, std::vector<completion_t> *out_completions,
-                             expand_flags_t flags, const environment_t &vars,
-                             parse_error_list_t *errors) {
+expand_result_t expand_string(wcstring input, std::vector<completion_t> *out_completions,
+                              expand_flags_t flags, const environment_t &vars,
+                              parse_error_list_t *errors) {
     return expander_t::expand_string(std::move(input), out_completions, flags, vars, errors);
 }
 
@@ -1116,7 +1117,8 @@ bool expand_one(wcstring &string, expand_flags_t flags, const environment_t &var
         return true;
     }
 
-    if (expand_string(string, &completions, flags | EXPAND_NO_DESCRIPTIONS, vars, errors) &&
+    if (expand_string(string, &completions, flags | EXPAND_NO_DESCRIPTIONS, vars, errors) !=
+            expand_result_t::error &&
         completions.size() == 1) {
         string = std::move(completions.at(0).completion);
         return true;
@@ -1124,21 +1126,21 @@ bool expand_one(wcstring &string, expand_flags_t flags, const environment_t &var
     return false;
 }
 
-expand_error_t expand_to_command_and_args(const wcstring &instr, const environment_t &vars,
-                                          wcstring *out_cmd, wcstring_list_t *out_args,
-                                          parse_error_list_t *errors) {
+expand_result_t expand_to_command_and_args(const wcstring &instr, const environment_t &vars,
+                                           wcstring *out_cmd, wcstring_list_t *out_args,
+                                           parse_error_list_t *errors) {
     // Fast path.
     if (expand_is_clean(instr)) {
 
         *out_cmd = instr;
-        return EXPAND_OK;
+        return expand_result_t::ok;
     }
 
     std::vector<completion_t> completions;
-    expand_error_t expand_err = expand_string(
+    expand_result_t expand_err = expand_string(
         instr, &completions, EXPAND_SKIP_CMDSUBST | EXPAND_NO_DESCRIPTIONS | EXPAND_SKIP_JOBS, vars,
         errors);
-    if (expand_err == EXPAND_OK || expand_err == EXPAND_WILDCARD_MATCH) {
+    if (expand_err == expand_result_t::ok || expand_err == expand_result_t::wildcard_match) {
         // The first completion is the command, any remaning are arguments.
         bool first = true;
         for (auto &comp : completions) {

@@ -332,7 +332,7 @@ void parser_t::expand_argument_list(const wcstring &arg_list_src, expand_flags_t
     while (auto arg = arg_list.next_in_list<grammar::argument>()) {
         const wcstring arg_src = arg.get_source(arg_list_src);
         if (expand_string(arg_src, output_arg_list, eflags, vars, NULL /* errors */) ==
-            EXPAND_ERROR) {
+            expand_result_t::error) {
             break;  // failed to expand a string
         }
     }

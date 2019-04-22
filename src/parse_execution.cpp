@@ -449,21 +449,21 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
     // Expand it. We need to offset any errors by the position of the string.
     std::vector<completion_t> switch_values_expanded;
     parse_error_list_t errors;
-    int expand_ret = expand_string(switch_value, &switch_values_expanded, EXPAND_NO_DESCRIPTIONS,
-                                   parser->vars(), &errors);
+    auto expand_ret = expand_string(switch_value, &switch_values_expanded, EXPAND_NO_DESCRIPTIONS,
+                                    parser->vars(), &errors);
     parse_error_offset_source_start(&errors, switch_value_n.source_range()->start);
 
     switch (expand_ret) {
-        case EXPAND_ERROR: {
+        case expand_result_t::error: {
             result = report_errors(errors);
             break;
         }
-        case EXPAND_WILDCARD_NO_MATCH: {
+        case expand_result_t::wildcard_no_match: {
             result = report_unmatched_wildcard_error(switch_value_n);
             break;
         }
-        case EXPAND_WILDCARD_MATCH:
-        case EXPAND_OK: {
+        case expand_result_t::wildcard_match:
+        case expand_result_t::ok: {
             break;
         }
         default: {
@@ -746,15 +746,15 @@ parse_execution_result_t parse_execution_context_t::expand_command(
     wcstring unexp_cmd = *command_for_plain_statement(statement, pstree->src);
 
     // Expand the string to produce completions, and report errors.
-    expand_error_t expand_err =
+    expand_result_t expand_err =
         expand_to_command_and_args(unexp_cmd, parser->vars(), out_cmd, out_args, &errors);
-    if (expand_err == EXPAND_ERROR) {
+    if (expand_err == expand_result_t::error) {
         proc_set_last_statuses(statuses_t::just(STATUS_ILLEGAL_CMD));
         return report_errors(errors);
-    } else if (expand_err == EXPAND_WILDCARD_NO_MATCH) {
+    } else if (expand_err == expand_result_t::wildcard_no_match) {
         return report_unmatched_wildcard_error(statement);
     }
-    assert(expand_err == EXPAND_OK || expand_err == EXPAND_WILDCARD_MATCH);
+    assert(expand_err == expand_result_t::ok || expand_err == expand_result_t::wildcard_match);
 
     // Complain if the resulting expansion was empty, or expanded to an empty string.
     if (out_cmd->empty()) {
@@ -906,15 +906,15 @@ parse_execution_result_t parse_execution_context_t::expand_arguments_from_nodes(
         // Expand this string.
         parse_error_list_t errors;
         arg_expanded.clear();
-        int expand_ret =
+        auto expand_ret =
             expand_string(arg_str, &arg_expanded, EXPAND_NO_DESCRIPTIONS, parser->vars(), &errors);
         parse_error_offset_source_start(&errors, arg_node.source_range()->start);
         switch (expand_ret) {
-            case EXPAND_ERROR: {
+            case expand_result_t::error: {
                 this->report_errors(errors);
                 return parse_execution_errored;
             }
-            case EXPAND_WILDCARD_NO_MATCH: {
+            case expand_result_t::wildcard_no_match: {
                 if (glob_behavior == failglob) {
                     // Report the unmatched wildcard error and stop processing.
                     report_unmatched_wildcard_error(arg_node);
@@ -922,8 +922,8 @@ parse_execution_result_t parse_execution_context_t::expand_arguments_from_nodes(
                 }
                 break;
             }
-            case EXPAND_WILDCARD_MATCH:
-            case EXPAND_OK: {
+            case expand_result_t::wildcard_match:
+            case expand_result_t::ok: {
                 break;
             }
             default: {

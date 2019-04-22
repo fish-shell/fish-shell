@@ -1134,7 +1134,7 @@ static bool detect_errors_in_plain_statement(const wcstring &buff_src,
         wcstring command;
         // Check that we can expand the command.
         if (expand_to_command_and_args(*unexp_command, null_environment_t{}, &command, nullptr,
-                                       parse_errors) == EXPAND_ERROR) {
+                                       parse_errors) == expand_result_t::error) {
             errored = true;
             parse_error_offset_source_start(parse_errors, source_start);
         }

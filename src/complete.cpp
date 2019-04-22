@@ -665,11 +665,11 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
 
     if (use_command) {
         // Append all possible executables
-        expand_error_t result = expand_string(str_cmd, &this->completions,
-                                              EXPAND_SPECIAL_FOR_COMMAND | EXPAND_FOR_COMPLETIONS |
-                                                  EXECUTABLES_ONLY | this->expand_flags(),
-                                              vars, NULL);
-        if (result != EXPAND_ERROR && this->wants_descriptions()) {
+        expand_result_t result = expand_string(str_cmd, &this->completions,
+                                               EXPAND_SPECIAL_FOR_COMMAND | EXPAND_FOR_COMPLETIONS |
+                                                   EXECUTABLES_ONLY | this->expand_flags(),
+                                               vars, NULL);
+        if (result != expand_result_t::error && this->wants_descriptions()) {
             this->complete_cmd_desc(str_cmd);
         }
     }
@@ -677,7 +677,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
     if (use_implicit_cd) {
         // We don't really care if this succeeds or fails. If it succeeds this->completions will be
         // updated with choices for the user.
-        expand_error_t ignore =
+        expand_result_t ignore =
             // Append all matching directories
             expand_string(str_cmd, &this->completions,
                           EXPAND_FOR_COMPLETIONS | DIRECTORIES_ONLY | this->expand_flags(), vars,
@@ -1092,7 +1092,8 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
         // See #4954.
         const wcstring sep_string = wcstring(str, sep_index + 1);
         std::vector<completion_t> local_completions;
-        if (expand_string(sep_string, &local_completions, flags, vars, NULL) == EXPAND_ERROR) {
+        if (expand_string(sep_string, &local_completions, flags, vars, NULL) ==
+            expand_result_t::error) {
             debug(3, L"Error while expanding string '%ls'", sep_string.c_str());
         }
 
@@ -1111,7 +1112,7 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
         // consider relaxing this if there was a preceding double-dash argument.
         if (string_prefixes_string(L"-", str)) flags &= ~EXPAND_FUZZY_MATCH;
 
-        if (expand_string(str, &this->completions, flags, vars, NULL) == EXPAND_ERROR) {
+        if (expand_string(str, &this->completions, flags, vars, NULL) == expand_result_t::error) {
             debug(3, L"Error while expanding string '%ls'", str.c_str());
         }
     }

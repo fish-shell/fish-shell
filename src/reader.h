@@ -182,6 +182,9 @@ void reader_set_test_function(test_function_t func);
 /// Specify string of shell commands to be run in order to generate the prompt.
 void reader_set_left_prompt(const wcstring &prompt);
 
+/// Specify string of shell commands to be run in order to generate the continuation prompt.
+void reader_set_continuation_prompt(const wcstring &prompt);
+
 /// Specify string of shell commands to be run in order to generate the right prompt.
 void reader_set_right_prompt(const wcstring &prompt);
 

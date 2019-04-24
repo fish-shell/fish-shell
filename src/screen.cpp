@@ -34,10 +34,12 @@
 
 #include "common.h"
 #include "env.h"
+#include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "highlight.h"
 #include "output.h"
 #include "pager.h"
+#include "parser.h"
 #include "screen.h"
 
 /// The number of characters to indent new blocks.
@@ -387,7 +389,28 @@ static void s_desired_append_char(screen_t *s, wchar_t b, highlight_spec_t c, in
         s->desired.line(s->desired.cursor.y).is_soft_wrapped = false;
         s->desired.cursor.y++;
         s->desired.cursor.x = 0;
-        for (size_t i = 0; i < prompt_width + indent * INDENT_STEP; i++) {
+        while (s->left_prompts.size() <= s->desired.cursor.y + LEFT_PROMPT_IN_ARRAY ) {
+            if (s->continuation_prompt.empty()) {
+                wcstring lprompt;
+                for (size_t j = 0; j < prompt_width; j++)
+                    lprompt.push_back(L' ');
+                s->left_prompts.push_back(lprompt);
+                s->left_prompt_widths.push_back(prompt_width);
+            } else {
+                wcstring cmd = s->continuation_prompt;
+                char argbuf[50];
+                sprintf(argbuf, " %d %d",
+                        prompt_width, s->left_prompts.size());
+                cmd += str2wcstring(argbuf);
+                wcstring lprompt = exec_command_string(cmd, parser_t::principal_parser());
+                const size_t lprompt_width =
+                    calc_prompt_layout(lprompt, cached_layouts).last_line_width;
+                s->left_prompts.push_back(lprompt);
+                s->left_prompt_widths.push_back(lprompt_width);
+            }
+        }
+        size_t spaces = s->left_prompt_widths[s->desired.cursor.y + LEFT_PROMPT_IN_ARRAY - 1];
+        for (size_t i = 0; i < spaces + indent * INDENT_STEP; i++) {
             s_desired_append_char(s, L' ', highlight_spec_t{}, indent, prompt_width);
         }
     } else if (b == L'\r') {
@@ -617,17 +640,27 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
     // want.
     const size_t lines_with_stuff = std::max(actual_lines_before_reset, scr->actual.line_count());
 
+#if ! LEFT_PROMPT_IN_ARRAY
     if (left_prompt != scr->actual_left_prompt) {
         s_move(scr, 0, 0);
         s_write_str(scr, left_prompt.c_str());
         scr->actual_left_prompt = left_prompt;
         scr->actual.cursor.x = (int)left_prompt_width;
     }
+#endif
 
     for (size_t i = 0; i < scr->desired.line_count(); i++) {
+        size_t start_pos;
+        if (LEFT_PROMPT_IN_ARRAY || i > 0) {
+            s_move(scr, 0, i);
+            s_write_str(scr, scr->left_prompts[i].c_str());
+            start_pos = scr->left_prompt_widths[i];
+            scr->actual.cursor.x = start_pos;
+        }
+        else
+            start_pos = left_prompt_width;
         const line_t &o_line = scr->desired.line(i);
         line_t &s_line = scr->actual.create_line(i);
-        size_t start_pos = i == 0 ? left_prompt_width : 0;
         int current_width = 0;
 
         // If this is the last line, maybe we should clear the screen.

@@ -27,6 +27,9 @@
 
 class page_rendering_t;
 
+// LEFT_PROMPT_IN_ARRAY==1 might be cleaner but needs work
+#define LEFT_PROMPT_IN_ARRAY 0
+
 /// A class representing a single line of a screen.
 struct line_t {
     std::vector<wchar_t> text;
@@ -124,8 +127,12 @@ class screen_t {
     screen_data_t desired;
     /// The internal representation of the actual screen contents.
     screen_data_t actual;
+#if ! LEFT_PROMPT_IN_ARRAY
     /// A string containing the prompt which was last printed to the screen.
-    wcstring actual_left_prompt;
+    wcstring actual_left_prompt; // FIXME maybe replace with left_prompts[0]
+#endif
+    std::vector<wcstring> left_prompts;
+    std::vector<size_t> left_prompt_widths;
     /// Last right prompt width.
     size_t last_right_prompt_width;
     /// The actual width of the screen at the time of the last screen write.
@@ -148,6 +155,10 @@ class screen_t {
     /// These status buffers are used to check if any output has occurred other than from fish's
     /// main loop, in which case we need to redraw.
     struct stat prev_buff_1, prev_buff_2, post_buff_1, post_buff_2;
+    /// The prompt commands.
+    wcstring left_prompt;
+    wcstring continuation_prompt;
+    wcstring right_prompt;
 
     /// \return the outputter for this screen.
     outputter_t &outp() { return outp_; }

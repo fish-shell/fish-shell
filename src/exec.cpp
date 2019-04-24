@@ -1226,3 +1226,15 @@ int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status,
     ASSERT_IS_MAIN_THREAD();
     return exec_subshell_internal(cmd, parser, NULL, apply_exit_status, is_subcmd);
 }
+
+wcstring exec_command_string(const wcstring &cmd, parser_t &parser,
+    bool add_newlines) {
+    wcstring_list_t output_list;
+    wcstring output;
+    exec_subshell(cmd, parser,output_list, false);
+    for (size_t i = 0; i < output_list .size(); i++) {
+        if (add_newlines && i > 0) output += L'\n';
+        output += output_list.at(i);
+    }
+    return output;
+}

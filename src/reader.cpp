@@ -90,6 +90,9 @@
 /// The name of the function that prints the fish prompt.
 #define LEFT_PROMPT_FUNCTION_NAME L"fish_prompt"
 
+/// The name of the function that prints the secondary (continuation) prompt.
+#define CONTINUATION_PROMPT_FUNCTION_NAME L"fish_continuation_prompt"
+
 /// The name of the function that prints the fish right prompt (RPROMPT).
 #define RIGHT_PROMPT_FUNCTION_NAME L"fish_right_prompt"
 
@@ -352,9 +355,6 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     size_t sel_start_pos{0};
     /// The stop position of the current selection, if one.
     size_t sel_stop_pos{0};
-    /// The prompt commands.
-    wcstring left_prompt;
-    wcstring right_prompt;
     /// The output of the last evaluation of the prompt command.
     wcstring left_prompt_buff;
     wcstring mode_prompt_buff;
@@ -910,14 +910,8 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
 void reader_data_t::exec_mode_prompt() {
     mode_prompt_buff.clear();
     if (function_exists(MODE_PROMPT_FUNCTION_NAME)) {
-        wcstring_list_t mode_indicator_list;
-        exec_subshell(MODE_PROMPT_FUNCTION_NAME, parser(), mode_indicator_list,
-                      false);
-        // We do not support multiple lines in the mode indicator, so just concatenate all of
-        // them.
-        for (size_t i = 0; i < mode_indicator_list.size(); i++) {
-            mode_prompt_buff += mode_indicator_list.at(i);
-        }
+        mode_prompt_buff =
+            exec_command_string(MODE_PROMPT_FUNCTION_NAME, parser());
     }
 }
 
@@ -926,42 +920,35 @@ void reader_data_t::exec_prompt() {
     // Clear existing prompts.
     left_prompt_buff.clear();
     right_prompt_buff.clear();
-
-    // Do not allow the exit status of the prompts to leak through.
-    const bool apply_exit_status = false;
+    screen.left_prompts.clear();
+    screen.left_prompt_widths.clear();
 
     // HACK: Query winsize again because it might have changed.
     // This allows prompts to react to $COLUMNS.
     (void)get_current_winsize();
 
     // If we have any prompts, they must be run non-interactively.
-    if (left_prompt.size() || right_prompt.size()) {
+    if (screen.left_prompt.size() || screen.right_prompt.size()) {
         proc_push_interactive(0);
 
         exec_mode_prompt();
 
-        if (!left_prompt.empty()) {
-            wcstring_list_t prompt_list;
-            // Ignore return status.
-            exec_subshell(left_prompt, parser(), prompt_list, apply_exit_status);
-            for (size_t i = 0; i < prompt_list.size(); i++) {
-                if (i > 0) left_prompt_buff += L'\n';
-                left_prompt_buff += prompt_list.at(i);
-            }
+        if (!screen.left_prompt.empty()) {
+            left_prompt_buff = exec_command_string(screen.left_prompt, parser(), true);
         }
 
-        if (!right_prompt.empty()) {
-            wcstring_list_t prompt_list;
-            // Status is ignored.
-            exec_subshell(right_prompt, parser(), prompt_list, apply_exit_status);
-            for (size_t i = 0; i < prompt_list.size(); i++) {
-                // Right prompt does not support multiple lines, so just concatenate all of them.
-                right_prompt_buff += prompt_list.at(i);
-            }
+        if (!screen.right_prompt.empty()) {
+            right_prompt_buff = exec_command_string(screen.right_prompt, parser());
         }
 
         proc_pop_interactive();
     }
+#if LEFT_PROMPT_IN_ARRAY
+    screen.left_prompts.push_back(left_prompt_buff);
+    // duplicated
+    prompt_layout_t left_prompt_layout = calc_prompt_layout(left_prompt_buff, cached_layouts);
+    screen.left_prompt_widths.push_back(left_prompt_layout.last_line_width);
+#endif
 
     // Write the screen title. Do not reset the cursor position: exec_prompt is called when there
     // may still be output on the line from the previous command (#2499) and we need our PROMPT_SP
@@ -2146,11 +2133,15 @@ void reader_pop() {
 }
 
 void reader_set_left_prompt(const wcstring &new_prompt) {
-    current_data()->left_prompt = new_prompt;
+    current_data()->screen.left_prompt = new_prompt;
+}
+
+void reader_set_continuation_prompt(const wcstring &new_prompt) {
+    current_data()->screen.continuation_prompt = new_prompt;
 }
 
 void reader_set_right_prompt(const wcstring &new_prompt) {
-    current_data()->right_prompt = new_prompt;
+    current_data()->screen.right_prompt = new_prompt;
 }
 
 void reader_set_allow_autosuggesting(bool flag) { current_data()->allow_autosuggestion = flag; }
@@ -2286,6 +2277,11 @@ static int read_i() {
             reader_set_left_prompt(DEFAULT_PROMPT);
         }
 
+        if (function_exists(CONTINUATION_PROMPT_FUNCTION_NAME)) {
+            reader_set_continuation_prompt(CONTINUATION_PROMPT_FUNCTION_NAME);
+        } else {
+            reader_set_continuation_prompt(L"");
+        }
         if (function_exists(RIGHT_PROMPT_FUNCTION_NAME)) {
             reader_set_right_prompt(RIGHT_PROMPT_FUNCTION_NAME);
         } else {
@@ -2457,6 +2453,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
 void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_state_t &rls) {
     const auto &vars = parser_t::principal_parser().vars();
     using rl = readline_cmd_t;
+
     switch (c) {
         // Go to beginning of line.
         case rl::beginning_of_line: {
@@ -3204,6 +3201,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
 maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     using rl = readline_cmd_t;
+
     readline_loop_state_t rls{};
     struct termios old_modes;
 

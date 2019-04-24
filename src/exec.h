@@ -28,6 +28,8 @@ int exec_subshell(const wcstring &cmd, parser_t &parser, wcstring_list_t &output
 int exec_subshell(const wcstring &cmd, parser_t &parser, bool preserve_exit_status,
                   bool is_subcmd = false);
 
+wcstring exec_command_string(const wcstring &cmd, parser_t &parser, bool add_newlines = false);
+
 /// Loops over close until the syscall was run without being interrupted.
 void exec_close(int fd);
 

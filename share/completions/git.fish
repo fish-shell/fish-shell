@@ -400,6 +400,39 @@ function __fish_git_files
     end
 end
 
+# Lists files included in the index of a commit, branch, or tag (not necessarily HEAD)
+function __fish_git_rev_files
+    set -l rev $argv[1]
+    set -l path $argv[2]
+
+    # Strip any partial files from the path before handing it to `git show`
+    set -l path (string replace -r -- '(.*/|).*' '$1' $path)
+
+    # List files in $rev's index, skipping the "tree ..." header, but appending
+    # the parent path, which git does not include in the output (and fish requires)
+    printf "$path%s\n" (git show $rev:$path | sed '1,2d')
+end
+
+# Provides __fish_git_rev_files completions for the current token
+function __fish_git_complete_rev_files
+    set -l split (string split -m 1 ":" (commandline -ot))
+    set -l rev $split[1]
+    set -l path $split[2]
+
+    printf "$rev:%s\n" (__fish_git_rev_files $rev $path)
+end
+
+# Determines whether we can/should complete with __fish_git_rev_files
+function __fish_git_needs_rev_files
+    # git (as of 2.20) accepts the rev:path syntax for a number of subcommands,
+    # but then doesn't emit the expected (or any?) output, e.g. `git log master:foo`
+    #
+    # This definitely works with `git show` to retrieve a copy of a file as it exists
+    # in the index of revision $rev, it should be updated to include others as they
+    # are identified.
+    __fish_git_using_command show; and string match -r ".+:" -- (commandline -ot)
+end
+
 function __fish_git_ranges
     set -l both (commandline -ot | string split "..")
     set -l from $both[1]
@@ -797,6 +830,7 @@ complete -f -c git -n '__fish_git_needs_command' -a show -d 'Shows the last comm
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command show' -ka '(__fish_git_tags)' -d 'Tag'
 complete -f -c git -n '__fish_git_using_command show' -ka '(__fish_git_commits)'
+complete -f -c git -n '__fish_git_needs_rev_files' -xa '(__fish_git_complete_rev_files)'
 complete -f -c git -n '__fish_git_using_command show' -l format -d 'Pretty-print the contents of the commit logs in a given format' -a '(__fish_git_show_opt format)'
 complete -f -c git -n '__fish_git_using_command show' -l abbrev-commit -d 'Show only a partial hexadecimal commit object name'
 complete -f -c git -n '__fish_git_using_command show' -l no-abbrev-commit -d 'Show the full 40-byte hexadecimal commit object name'

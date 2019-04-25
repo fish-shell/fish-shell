@@ -20,8 +20,6 @@ struct completion_mode_t {
     bool requires_param{false};
 };
 
-/// Separator between completion and description.
-#define COMPLETE_SEP L'\004'
 /// Character that separates the completion and description on programmable completions.
 #define PROG_COMPLETE_SEP L'\t'
 

@@ -27,86 +27,82 @@
 // complete_add function only accepts one short switch and one long switch.
 
 /// Silly function.
-static void builtin_complete_add2(const wchar_t *cmd, int cmd_type, const wchar_t *short_opt,
-                                  const wcstring_list_t &gnu_opt, const wcstring_list_t &old_opt,
+static void builtin_complete_add2(const wchar_t *cmd, bool cmd_is_path, const wchar_t *short_opt,
+                                  const wcstring_list_t &gnu_opts, const wcstring_list_t &old_opts,
                                   int result_mode, const wchar_t *condition, const wchar_t *comp,
                                   const wchar_t *desc, int flags) {
-    size_t i;
-    const wchar_t *s;
-
-    for (s = short_opt; *s; s++) {
-        complete_add(cmd, cmd_type, wcstring(1, *s), option_type_short, result_mode, condition,
+    for (const wchar_t *s = short_opt; *s; s++) {
+        complete_add(cmd, cmd_is_path, wcstring{*s}, option_type_short, result_mode, condition,
                      comp, desc, flags);
     }
 
-    for (i = 0; i < gnu_opt.size(); i++) {
-        complete_add(cmd, cmd_type, gnu_opt.at(i), option_type_double_long, result_mode, condition,
+    for (const wcstring &gnu_opt : gnu_opts) {
+        complete_add(cmd, cmd_is_path, gnu_opt, option_type_double_long, result_mode, condition,
                      comp, desc, flags);
     }
 
-    for (i = 0; i < old_opt.size(); i++) {
-        complete_add(cmd, cmd_type, old_opt.at(i), option_type_single_long, result_mode, condition,
+    for (const wcstring &old_opt : old_opts) {
+        complete_add(cmd, cmd_is_path, old_opt, option_type_single_long, result_mode, condition,
                      comp, desc, flags);
     }
 
-    if (old_opt.empty() && gnu_opt.empty() && short_opt[0] == L'\0') {
-        complete_add(cmd, cmd_type, wcstring(), option_type_args_only, result_mode, condition, comp,
-                     desc, flags);
+    if (old_opts.empty() && gnu_opts.empty() && short_opt[0] == L'\0') {
+        complete_add(cmd, cmd_is_path, wcstring(), option_type_args_only, result_mode, condition,
+                     comp, desc, flags);
     }
 }
 
 /// Silly function.
-static void builtin_complete_add(const wcstring_list_t &cmd, const wcstring_list_t &path,
+static void builtin_complete_add(const wcstring_list_t &cmds, const wcstring_list_t &paths,
                                  const wchar_t *short_opt, wcstring_list_t &gnu_opt,
                                  wcstring_list_t &old_opt, int result_mode,
                                  const wchar_t *condition, const wchar_t *comp, const wchar_t *desc,
                                  int flags) {
-    for (size_t i = 0; i < cmd.size(); i++) {
-        builtin_complete_add2(cmd.at(i).c_str(), COMMAND, short_opt, gnu_opt, old_opt, result_mode,
-                              condition, comp, desc, flags);
+    for (const wcstring &cmd : cmds) {
+        builtin_complete_add2(cmd.c_str(), false /* not path */, short_opt, gnu_opt, old_opt,
+                              result_mode, condition, comp, desc, flags);
     }
 
-    for (size_t i = 0; i < path.size(); i++) {
-        builtin_complete_add2(path.at(i).c_str(), PATH, short_opt, gnu_opt, old_opt, result_mode,
-                              condition, comp, desc, flags);
+    for (const wcstring &path : paths) {
+        builtin_complete_add2(path.c_str(), true /* is path */, short_opt, gnu_opt, old_opt,
+                              result_mode, condition, comp, desc, flags);
     }
 }
 
-static void builtin_complete_remove_cmd(const wcstring &cmd, int cmd_type, const wchar_t *short_opt,
-                                        const wcstring_list_t &gnu_opt,
+static void builtin_complete_remove_cmd(const wcstring &cmd, bool cmd_is_path,
+                                        const wchar_t *short_opt, const wcstring_list_t &gnu_opt,
                                         const wcstring_list_t &old_opt) {
     bool removed = false;
-    size_t i;
-    for (i = 0; short_opt[i] != L'\0'; i++) {
-        complete_remove(cmd, cmd_type, wcstring(1, short_opt[i]), option_type_short);
+    for (const wchar_t *s = short_opt; *s; s++) {
+        complete_remove(cmd, cmd_is_path, wcstring{*s}, option_type_short);
         removed = true;
     }
 
-    for (i = 0; i < old_opt.size(); i++) {
-        complete_remove(cmd, cmd_type, old_opt.at(i), option_type_single_long);
+    for (const wcstring &opt : old_opt) {
+        complete_remove(cmd, cmd_is_path, opt, option_type_single_long);
         removed = true;
     }
 
-    for (i = 0; i < gnu_opt.size(); i++) {
-        complete_remove(cmd, cmd_type, gnu_opt.at(i), option_type_double_long);
+    for (const wcstring &opt : gnu_opt) {
+        complete_remove(cmd, cmd_is_path, opt, option_type_double_long);
         removed = true;
     }
 
     if (!removed) {
         // This means that all loops were empty.
-        complete_remove_all(cmd, cmd_type);
+        complete_remove_all(cmd, cmd_is_path);
     }
 }
 
-static void builtin_complete_remove(const wcstring_list_t &cmd, const wcstring_list_t &path,
+static void builtin_complete_remove(const wcstring_list_t &cmds, const wcstring_list_t &paths,
                                     const wchar_t *short_opt, const wcstring_list_t &gnu_opt,
                                     const wcstring_list_t &old_opt) {
-    for (size_t i = 0; i < cmd.size(); i++) {
-        builtin_complete_remove_cmd(cmd.at(i), COMMAND, short_opt, gnu_opt, old_opt);
+    for (const wcstring &cmd : cmds) {
+        builtin_complete_remove_cmd(cmd, false /* not path */, short_opt, gnu_opt, old_opt);
     }
 
-    for (size_t i = 0; i < path.size(); i++) {
-        builtin_complete_remove_cmd(path.at(i), PATH, short_opt, gnu_opt, old_opt);
+    for (const wcstring &path : paths) {
+        builtin_complete_remove_cmd(path, true /* is path */, short_opt, gnu_opt, old_opt);
     }
 }
 

@@ -21,10 +21,7 @@
 /// Only use the argument list specifies with completion after option. This is the same as (NO_FILES
 /// | NO_COMMON).
 #define EXCLUSIVE 3
-/// Command is a path.
-#define PATH 1
-/// Command is not a path.
-#define COMMAND 0
+
 /// Separator between completion and description.
 #define COMPLETE_SEP L'\004'
 /// Character that separates the completion and description on programmable completions.

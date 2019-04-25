@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "common.h"
+#include "enum_set.h"
 #include "maybe.h"
 #include "parse_constants.h"
 
@@ -21,43 +22,51 @@ class environment_t;
 class env_var_t;
 class environment_t;
 
-enum {
+enum class expand_flag {
     /// Flag specifying that cmdsubst expansion should be skipped.
-    EXPAND_SKIP_CMDSUBST = 1 << 0,
+    EXPAND_SKIP_CMDSUBST,
     /// Flag specifying that variable expansion should be skipped.
-    EXPAND_SKIP_VARIABLES = 1 << 1,
+    EXPAND_SKIP_VARIABLES,
     /// Flag specifying that wildcard expansion should be skipped.
-    EXPAND_SKIP_WILDCARDS = 1 << 2,
+    EXPAND_SKIP_WILDCARDS,
     /// The expansion is being done for tab or auto completions. Returned completions may have the
     /// wildcard as a prefix instead of a match.
-    EXPAND_FOR_COMPLETIONS = 1 << 3,
+    EXPAND_FOR_COMPLETIONS,
     /// Only match files that are executable by the current user.
-    EXECUTABLES_ONLY = 1 << 4,
+    EXECUTABLES_ONLY,
     /// Only match directories.
-    DIRECTORIES_ONLY = 1 << 5,
+    DIRECTORIES_ONLY,
     /// Don't generate descriptions.
-    EXPAND_NO_DESCRIPTIONS = 1 << 6,
+    EXPAND_NO_DESCRIPTIONS,
     /// Don't expand jobs (but you can still expand processes). This is because
     /// job expansion is not thread safe.
-    EXPAND_SKIP_JOBS = 1 << 7,
+    EXPAND_SKIP_JOBS,
     /// Don't expand home directories.
-    EXPAND_SKIP_HOME_DIRECTORIES = 1 << 8,
+    EXPAND_SKIP_HOME_DIRECTORIES,
     /// Allow fuzzy matching.
-    EXPAND_FUZZY_MATCH = 1 << 9,
+    EXPAND_FUZZY_MATCH,
     /// Disallow directory abbreviations like /u/l/b for /usr/local/bin. Only applicable if
     /// EXPAND_FUZZY_MATCH is set.
-    EXPAND_NO_FUZZY_DIRECTORIES = 1 << 10,
+    EXPAND_NO_FUZZY_DIRECTORIES,
     /// Do expansions specifically to support cd. This means using CDPATH as a list of potential
     /// working directories, and to use logical instead of physical paths.
-    EXPAND_SPECIAL_FOR_CD = 1 << 11,
+    EXPAND_SPECIAL_FOR_CD,
     /// Do expansions specifically for cd autosuggestion. This is to differentiate between cd
     /// completions and cd autosuggestions.
-    EXPAND_SPECIAL_FOR_CD_AUTOSUGGEST = 1 << 12,
+    EXPAND_SPECIAL_FOR_CD_AUTOSUGGEST,
     /// Do expansions specifically to support external command completions. This means using PATH as
     /// a list of potential working directories.
-    EXPAND_SPECIAL_FOR_COMMAND = 1 << 13
+    EXPAND_SPECIAL_FOR_COMMAND,
+
+    COUNT,
 };
-typedef int expand_flags_t;
+
+template <>
+struct enum_info_t<expand_flag> {
+    static constexpr auto count = expand_flag::COUNT;
+};
+
+using expand_flags_t = enum_set_t<expand_flag>;
 
 class completion_t;
 

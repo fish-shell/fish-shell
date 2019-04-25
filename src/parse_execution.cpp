@@ -127,7 +127,10 @@ tnode_t<g::plain_statement> parse_execution_context_t::infinite_recursive_statem
                 .try_get_child<g::plain_statement, 0>();
         if (plain_statement) {
             maybe_t<wcstring> cmd = command_for_plain_statement(plain_statement, pstree->src);
-            if (cmd && expand_one(*cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, nullenv) &&
+            if (cmd &&
+                expand_one(*cmd,
+                           {expand_flag::EXPAND_SKIP_CMDSUBST, expand_flag::EXPAND_SKIP_VARIABLES},
+                           nullenv) &&
                 cmd == forbidden_function_name) {
                 // This is it.
                 infinite_recursive_statement = plain_statement;
@@ -376,7 +379,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
     // in just one.
     tnode_t<g::tok_string> var_name_node = header.child<1>();
     wcstring for_var_name = get_source(var_name_node);
-    if (!expand_one(for_var_name, 0, parser->vars())) {
+    if (!expand_one(for_var_name, expand_flags_t{}, parser->vars())) {
         report_error(var_name_node, FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG, for_var_name.c_str());
         return parse_execution_errored;
     }
@@ -449,8 +452,8 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
     // Expand it. We need to offset any errors by the position of the string.
     std::vector<completion_t> switch_values_expanded;
     parse_error_list_t errors;
-    auto expand_ret = expand_string(switch_value, &switch_values_expanded, EXPAND_NO_DESCRIPTIONS,
-                                    parser->vars(), &errors);
+    auto expand_ret = expand_string(switch_value, &switch_values_expanded,
+                                    expand_flag::EXPAND_NO_DESCRIPTIONS, parser->vars(), &errors);
     parse_error_offset_source_start(&errors, switch_value_n.source_range()->start);
 
     switch (expand_ret) {
@@ -906,8 +909,8 @@ parse_execution_result_t parse_execution_context_t::expand_arguments_from_nodes(
         // Expand this string.
         parse_error_list_t errors;
         arg_expanded.clear();
-        auto expand_ret =
-            expand_string(arg_str, &arg_expanded, EXPAND_NO_DESCRIPTIONS, parser->vars(), &errors);
+        auto expand_ret = expand_string(arg_str, &arg_expanded, expand_flag::EXPAND_NO_DESCRIPTIONS,
+                                        parser->vars(), &errors);
         parse_error_offset_source_start(&errors, arg_node.source_range()->start);
         switch (expand_ret) {
             case expand_result_t::error: {
@@ -956,7 +959,8 @@ bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redir
 
         // PCA: I can't justify this EXPAND_SKIP_VARIABLES flag. It was like this when I got here.
         bool target_expanded =
-            expand_one(target, no_exec ? EXPAND_SKIP_VARIABLES : 0, parser->vars());
+            expand_one(target, no_exec ? expand_flag::EXPAND_SKIP_VARIABLES : expand_flags_t{},
+                       parser->vars());
         if (!target_expanded || target.empty()) {
             // TODO: Improve this error message.
             errored =

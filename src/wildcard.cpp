@@ -167,7 +167,7 @@ static wcstring resolve_description(const wcstring &full_completion, wcstring *c
         completion->resize(complete_sep_loc);
         return description;
     }
-    if (expand_flags & EXPAND_NO_DESCRIPTIONS) return {};
+    if (expand_flags & expand_flag::EXPAND_NO_DESCRIPTIONS) return {};
     return desc_func ? desc_func(full_completion) : wcstring{};
 }
 
@@ -219,7 +219,7 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
 
         // If we're allowing fuzzy match, any match is OK. Otherwise we require a prefix match.
         bool match_acceptable;
-        if (params.expand_flags & EXPAND_FUZZY_MATCH) {
+        if (params.expand_flags & expand_flag::EXPAND_FUZZY_MATCH) {
             match_acceptable = match.type != fuzzy_match_none;
         } else {
             match_acceptable = match_type_shares_prefix(match.type);
@@ -415,12 +415,12 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
     const bool is_directory = stat_res == 0 && S_ISDIR(stat_buf.st_mode);
     const bool is_executable = stat_res == 0 && S_ISREG(stat_buf.st_mode);
 
-    const bool need_directory = expand_flags & DIRECTORIES_ONLY;
+    const bool need_directory = expand_flags & expand_flag::DIRECTORIES_ONLY;
     if (need_directory && !is_directory) {
         return false;
     }
 
-    const bool executables_only = expand_flags & EXECUTABLES_ONLY;
+    const bool executables_only = expand_flags & expand_flag::EXECUTABLES_ONLY;
     if (executables_only && (!is_executable || waccess(filepath, X_OK) != 0)) {
         return false;
     }
@@ -432,7 +432,7 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
 
     // Compute the description.
     wcstring desc;
-    if (!(expand_flags & EXPAND_NO_DESCRIPTIONS)) {
+    if (!(expand_flags & expand_flag::EXPAND_NO_DESCRIPTIONS)) {
         desc = file_get_desc(filepath, lstat_res, lstat_buf, stat_res, stat_buf, stat_errno);
 
         if (file_size >= 0) {
@@ -507,8 +507,7 @@ class wildcard_expander_t {
 
     void add_expansion_result(const wcstring &result) {
         // This function is only for the non-completions case.
-        assert(!static_cast<bool>(this->flags &
-                                  EXPAND_FOR_COMPLETIONS));  //!OCLINT(multiple unary operator)
+        assert(!(this->flags & expand_flag::EXPAND_FOR_COMPLETIONS));
         if (this->completion_set.insert(result).second) {
             append_completion(this->resolved_completions, result);
             this->did_add = true;
@@ -569,13 +568,13 @@ class wildcard_expander_t {
     void try_add_completion_result(const wcstring &filepath, const wcstring &filename,
                                    const wcstring &wildcard, const wcstring &prefix) {
         // This function is only for the completions case.
-        assert(this->flags & EXPAND_FOR_COMPLETIONS);
+        assert(this->flags & expand_flag::EXPAND_FOR_COMPLETIONS);
 
         wcstring abs_path = this->working_directory;
         append_path_component(abs_path, filepath);
 
         // We must normalize the path to allow 'cd ..' to operate on logical paths.
-        if (flags & EXPAND_SPECIAL_FOR_CD) abs_path = normalize_path(abs_path);
+        if (flags & expand_flag::EXPAND_SPECIAL_FOR_CD) abs_path = normalize_path(abs_path);
 
         size_t before = this->resolved_completions->size();
         if (wildcard_test_flags_then_complete(abs_path, filename, wildcard.c_str(), this->flags,
@@ -597,7 +596,7 @@ class wildcard_expander_t {
             // hierarchy we can, and then appending any components to each new result.
             // Only descend deepest unique for cd autosuggest and not for cd tab completion
             // (issue #4402).
-            if (flags & EXPAND_SPECIAL_FOR_CD_AUTOSUGGEST) {
+            if (flags & expand_flag::EXPAND_SPECIAL_FOR_CD_AUTOSUGGEST) {
                 wcstring unique_hierarchy = this->descend_unique_hierarchy(abs_path);
                 if (!unique_hierarchy.empty()) {
                     for (size_t i = before; i < after; i++) {
@@ -615,7 +614,7 @@ class wildcard_expander_t {
     DIR *open_dir(const wcstring &base_dir) const {
         wcstring path = this->working_directory;
         append_path_component(path, base_dir);
-        if (flags & EXPAND_SPECIAL_FOR_CD) {
+        if (flags & expand_flag::EXPAND_SPECIAL_FOR_CD) {
             // cd operates on logical paths.
             // for example, cd ../<tab> should complete "without resolving symlinks".
             path = normalize_path(path);
@@ -661,7 +660,7 @@ void wildcard_expander_t::expand_trailing_slash(const wcstring &base_dir, const 
         return;
     }
 
-    if (!(flags & EXPAND_FOR_COMPLETIONS)) {
+    if (!(flags & expand_flag::EXPAND_FOR_COMPLETIONS)) {
         // Trailing slash and not accepting incomplete, e.g. `echo /xyz/`. Insert this file if it
         // exists.
         if (waccess(base_dir, F_OK) == 0) {
@@ -784,7 +783,7 @@ void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, DIR *bas
                                               const wcstring &wc, const wcstring &prefix) {
     wcstring name_str;
     while (wreaddir(base_dir_fp, name_str)) {
-        if (flags & EXPAND_FOR_COMPLETIONS) {
+        if (flags & expand_flag::EXPAND_FOR_COMPLETIONS) {
             this->try_add_completion_result(base_dir + name_str, name_str, wc, prefix);
         } else {
             // Normal wildcard expansion, not for completions.
@@ -855,11 +854,11 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
         // Maybe try a fuzzy match (#94) if nothing was found with the literal match. Respect
         // EXPAND_NO_DIRECTORY_ABBREVIATIONS (issue #2413).
         // Don't do fuzzy matches if the literal segment was valid (#3211)
-        bool allow_fuzzy = (this->flags & (EXPAND_FUZZY_MATCH | EXPAND_NO_FUZZY_DIRECTORIES)) ==
-                           EXPAND_FUZZY_MATCH;
+        bool allow_fuzzy = this->flags.get(expand_flag::EXPAND_FUZZY_MATCH) &&
+                           !this->flags.get(expand_flag::EXPAND_NO_FUZZY_DIRECTORIES);
         if (allow_fuzzy && this->resolved_completions->size() == before &&
             waccess(intermediate_dirpath, F_OK) != 0) {
-            assert(this->flags & EXPAND_FOR_COMPLETIONS);
+            assert(this->flags & expand_flag::EXPAND_FOR_COMPLETIONS);
             DIR *base_dir_fd = open_dir(base_dir);
             if (base_dir_fd != NULL) {
                 this->expand_literal_intermediate_segment_with_fuzz(
@@ -905,13 +904,15 @@ int wildcard_expand_string(const wcstring &wc, const wcstring &working_directory
                            expand_flags_t flags, std::vector<completion_t> *output) {
     assert(output != NULL);
     // Fuzzy matching only if we're doing completions.
-    assert((flags & (EXPAND_FUZZY_MATCH | EXPAND_FOR_COMPLETIONS)) != EXPAND_FUZZY_MATCH);
+    assert(flags.get(expand_flag::EXPAND_FOR_COMPLETIONS) ||
+           !flags.get(expand_flag::EXPAND_FUZZY_MATCH));
 
-    // EXPAND_SPECIAL_FOR_CD requires DIRECTORIES_ONLY and EXPAND_FOR_COMPLETIONS and
-    // EXPAND_NO_DESCRIPTIONS.
-    assert(!(flags & EXPAND_SPECIAL_FOR_CD) ||
-           ((flags & DIRECTORIES_ONLY) && (flags & EXPAND_FOR_COMPLETIONS) &&
-            (flags & EXPAND_NO_DESCRIPTIONS)));
+    // expand_flag::EXPAND_SPECIAL_FOR_CD requires expand_flag::DIRECTORIES_ONLY and
+    // expand_flag::EXPAND_FOR_COMPLETIONS and expand_flag::EXPAND_NO_DESCRIPTIONS.
+    assert(!(flags.get(expand_flag::EXPAND_SPECIAL_FOR_CD)) ||
+           ((flags.get(expand_flag::DIRECTORIES_ONLY)) &&
+            (flags.get(expand_flag::EXPAND_FOR_COMPLETIONS)) &&
+            (flags.get(expand_flag::EXPAND_NO_DESCRIPTIONS))));
 
     // Hackish fix for issue #1631. We are about to call c_str(), which will produce a string
     // truncated at any embedded nulls. We could fix this by passing around the size, etc. However

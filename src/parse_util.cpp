@@ -1197,7 +1197,7 @@ static bool detect_errors_in_plain_statement(const wcstring &buff_src,
 
         // Check that we don't do an invalid builtin (issue #1252).
         if (!errored && decoration == parse_statement_decoration_builtin &&
-            expand_one(*unexp_command, 0, null_environment_t{}, parse_errors) &&
+            expand_one(*unexp_command, expand_flags_t{}, null_environment_t{}, parse_errors) &&
             !builtin_exists(*unexp_command)) {
             errored = append_syntax_error(parse_errors, source_start, UNKNOWN_BUILTIN_ERR_MSG,
                                           unexp_command->c_str());

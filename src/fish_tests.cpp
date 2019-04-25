@@ -305,12 +305,20 @@ static void test_enum_set() {
     do_test(es != enum_set_t<test_enum>::from_raw(1));
 
     es.set(test_enum::beta);
+    do_test(es.get(test_enum::beta));
+    do_test(!es.get(test_enum::alpha));
+    do_test(es & test_enum::beta);
+    do_test(!(es & test_enum::alpha));
     do_test(es.to_raw() == 2);
     do_test(es == enum_set_t<test_enum>::from_raw(2));
     do_test(es == enum_set_t<test_enum>{test_enum::beta});
     do_test(es != enum_set_t<test_enum>::from_raw(3));
     do_test(es.any());
     do_test(!es.none());
+
+    do_test((enum_set_t<test_enum>{test_enum::beta} | test_enum::alpha).to_raw() == 3);
+    do_test((enum_set_t<test_enum>{test_enum::beta} | enum_set_t<test_enum>{test_enum::alpha})
+                .to_raw() == 3);
 
     unsigned idx = 0;
     for (auto v : enum_iter_t<test_enum>{}) {
@@ -970,7 +978,8 @@ static void test_parser() {
 
     say(L"Testing eval_args");
     completion_list_t comps;
-    parser_t::expand_argument_list(L"alpha 'beta gamma' delta", 0, null_environment_t{}, &comps);
+    parser_t::expand_argument_list(L"alpha 'beta gamma' delta", expand_flags_t{},
+                                   null_environment_t{}, &comps);
     do_test(comps.size() == 3);
     do_test(comps.at(0).completion == L"alpha");
     do_test(comps.at(1).completion == L"beta gamma");
@@ -1656,13 +1665,15 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
 /// Test globbing and other parameter expansion.
 static void test_expand() {
     say(L"Testing parameter expansion");
+    const expand_flags_t noflags{};
 
-    expand_test(L"foo", 0, L"foo", 0, L"Strings do not expand to themselves");
-    expand_test(L"a{b,c,d}e", 0, L"abe", L"ace", L"ade", 0, L"Bracket expansion is broken");
-    expand_test(L"a*", EXPAND_SKIP_WILDCARDS, L"a*", 0, L"Cannot skip wildcard expansion");
-    expand_test(L"/bin/l\\0", EXPAND_FOR_COMPLETIONS, 0,
+    expand_test(L"foo", noflags, L"foo", 0, L"Strings do not expand to themselves");
+    expand_test(L"a{b,c,d}e", noflags, L"abe", L"ace", L"ade", 0, L"Bracket expansion is broken");
+    expand_test(L"a*", expand_flag::EXPAND_SKIP_WILDCARDS, L"a*", 0,
+                L"Cannot skip wildcard expansion");
+    expand_test(L"/bin/l\\0", expand_flag::EXPAND_FOR_COMPLETIONS, 0,
                 L"Failed to handle null escape in expansion");
-    expand_test(L"foo\\$bar", EXPAND_SKIP_VARIABLES, L"foo$bar", 0,
+    expand_test(L"foo\\$bar", expand_flag::EXPAND_SKIP_VARIABLES, L"foo$bar", 0,
                 L"Failed to handle dollar sign in variable-skipping expansion");
 
     // bb
@@ -1700,89 +1711,91 @@ static void test_expand() {
     // (https://github.com/fish-shell/fish-shell/issues/270). But it does have to match literal
     // components (e.g. "./*" has to match the same as "*".
     const wchar_t *const wnull = NULL;
-    expand_test(L"test/fish_expand_test/.*", 0, L"test/fish_expand_test/.foo", wnull,
+    expand_test(L"test/fish_expand_test/.*", noflags, L"test/fish_expand_test/.foo", wnull,
                 L"Expansion not correctly handling dotfiles");
 
-    expand_test(L"test/fish_expand_test/./.*", 0, L"test/fish_expand_test/./.foo", wnull,
+    expand_test(L"test/fish_expand_test/./.*", noflags, L"test/fish_expand_test/./.foo", wnull,
                 L"Expansion not correctly handling literal path components in dotfiles");
 
-    expand_test(L"test/fish_expand_test/*/xxx", 0, L"test/fish_expand_test/bax/xxx",
+    expand_test(L"test/fish_expand_test/*/xxx", noflags, L"test/fish_expand_test/bax/xxx",
                 L"test/fish_expand_test/baz/xxx", wnull, L"Glob did the wrong thing 1");
 
-    expand_test(L"test/fish_expand_test/*z/xxx", 0, L"test/fish_expand_test/baz/xxx", wnull,
+    expand_test(L"test/fish_expand_test/*z/xxx", noflags, L"test/fish_expand_test/baz/xxx", wnull,
                 L"Glob did the wrong thing 2");
 
-    expand_test(L"test/fish_expand_test/**z/xxx", 0, L"test/fish_expand_test/baz/xxx", wnull,
+    expand_test(L"test/fish_expand_test/**z/xxx", noflags, L"test/fish_expand_test/baz/xxx", wnull,
                 L"Glob did the wrong thing 3");
 
-    expand_test(L"test/fish_expand_test////baz/xxx", 0, L"test/fish_expand_test////baz/xxx", wnull,
-                L"Glob did the wrong thing 3");
+    expand_test(L"test/fish_expand_test////baz/xxx", noflags, L"test/fish_expand_test////baz/xxx",
+                wnull, L"Glob did the wrong thing 3");
 
-    expand_test(L"test/fish_expand_test/b**", 0, L"test/fish_expand_test/bb",
+    expand_test(L"test/fish_expand_test/b**", noflags, L"test/fish_expand_test/bb",
                 L"test/fish_expand_test/bb/x", L"test/fish_expand_test/bar",
                 L"test/fish_expand_test/bax", L"test/fish_expand_test/bax/xxx",
                 L"test/fish_expand_test/baz", L"test/fish_expand_test/baz/xxx",
                 L"test/fish_expand_test/baz/yyy", wnull, L"Glob did the wrong thing 4");
 
     // A trailing slash should only produce directories.
-    expand_test(L"test/fish_expand_test/b*/", 0, L"test/fish_expand_test/bb/",
+    expand_test(L"test/fish_expand_test/b*/", noflags, L"test/fish_expand_test/bb/",
                 L"test/fish_expand_test/baz/", L"test/fish_expand_test/bax/", wnull,
                 L"Glob did the wrong thing 5");
 
-    expand_test(L"test/fish_expand_test/b**/", 0, L"test/fish_expand_test/bb/",
+    expand_test(L"test/fish_expand_test/b**/", noflags, L"test/fish_expand_test/bb/",
                 L"test/fish_expand_test/baz/", L"test/fish_expand_test/bax/", wnull,
                 L"Glob did the wrong thing 6");
 
-    expand_test(L"test/fish_expand_test/**/q", 0, L"test/fish_expand_test/lol/nub/q", wnull,
+    expand_test(L"test/fish_expand_test/**/q", noflags, L"test/fish_expand_test/lol/nub/q", wnull,
                 L"Glob did the wrong thing 7");
 
-    expand_test(L"test/fish_expand_test/BA", EXPAND_FOR_COMPLETIONS, L"test/fish_expand_test/bar",
-                L"test/fish_expand_test/bax/", L"test/fish_expand_test/baz/", wnull,
-                L"Case insensitive test did the wrong thing");
+    expand_test(L"test/fish_expand_test/BA", expand_flag::EXPAND_FOR_COMPLETIONS,
+                L"test/fish_expand_test/bar", L"test/fish_expand_test/bax/",
+                L"test/fish_expand_test/baz/", wnull, L"Case insensitive test did the wrong thing");
 
-    expand_test(L"test/fish_expand_test/BA", EXPAND_FOR_COMPLETIONS, L"test/fish_expand_test/bar",
-                L"test/fish_expand_test/bax/", L"test/fish_expand_test/baz/", wnull,
-                L"Case insensitive test did the wrong thing");
+    expand_test(L"test/fish_expand_test/BA", expand_flag::EXPAND_FOR_COMPLETIONS,
+                L"test/fish_expand_test/bar", L"test/fish_expand_test/bax/",
+                L"test/fish_expand_test/baz/", wnull, L"Case insensitive test did the wrong thing");
 
-    expand_test(L"test/fish_expand_test/bb/yyy", EXPAND_FOR_COMPLETIONS,
+    expand_test(L"test/fish_expand_test/bb/yyy", expand_flag::EXPAND_FOR_COMPLETIONS,
                 /* nothing! */ wnull, L"Wrong fuzzy matching 1");
 
-    expand_test(L"test/fish_expand_test/bb/x", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH, L"",
-                wnull,  // we just expect the empty string since this is an exact match
-                L"Wrong fuzzy matching 2");
+    expand_test(
+        L"test/fish_expand_test/bb/x",
+        expand_flags_t{expand_flag::EXPAND_FOR_COMPLETIONS, expand_flag::EXPAND_FUZZY_MATCH}, L"",
+        wnull,  // we just expect the empty string since this is an exact match
+        L"Wrong fuzzy matching 2");
 
     // Some vswprintfs refuse to append ANY_STRING in a format specifiers, so don't use
     // format_string here.
+    const expand_flags_t fuzzy_comp{expand_flag::EXPAND_FOR_COMPLETIONS,
+                                    expand_flag::EXPAND_FUZZY_MATCH};
     const wcstring any_str_str(1, ANY_STRING);
-    expand_test(L"test/fish_expand_test/b/xx*", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
+    expand_test(L"test/fish_expand_test/b/xx*", fuzzy_comp,
                 (L"test/fish_expand_test/bax/xx" + any_str_str).c_str(),
                 (L"test/fish_expand_test/baz/xx" + any_str_str).c_str(), wnull,
                 L"Wrong fuzzy matching 3");
 
-    expand_test(L"test/fish_expand_test/b/yyy", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
-                L"test/fish_expand_test/baz/yyy", wnull, L"Wrong fuzzy matching 4");
+    expand_test(L"test/fish_expand_test/b/yyy", fuzzy_comp, L"test/fish_expand_test/baz/yyy", wnull,
+                L"Wrong fuzzy matching 4");
 
-    expand_test(L"test/fish_expand_test/aa/x", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
-                L"test/fish_expand_test/aaa2/x", wnull, L"Wrong fuzzy matching 5");
+    expand_test(L"test/fish_expand_test/aa/x", fuzzy_comp, L"test/fish_expand_test/aaa2/x", wnull,
+                L"Wrong fuzzy matching 5");
 
-    expand_test(L"test/fish_expand_test/aaa/x", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH, wnull,
+    expand_test(L"test/fish_expand_test/aaa/x", fuzzy_comp, wnull,
                 L"Wrong fuzzy matching 6 - shouldn't remove valid directory names (#3211)");
 
-    if (!expand_test(L"test/fish_expand_test/.*", 0, L"test/fish_expand_test/.foo", 0)) {
+    if (!expand_test(L"test/fish_expand_test/.*", noflags, L"test/fish_expand_test/.foo", 0)) {
         err(L"Expansion not correctly handling dotfiles");
     }
-    if (!expand_test(L"test/fish_expand_test/./.*", 0, L"test/fish_expand_test/./.foo", 0)) {
+    if (!expand_test(L"test/fish_expand_test/./.*", noflags, L"test/fish_expand_test/./.foo", 0)) {
         err(L"Expansion not correctly handling literal path components in dotfiles");
     }
 
     if (!pushd("test/fish_expand_test")) return;
 
-    expand_test(L"b/xx", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH, L"bax/xxx", L"baz/xxx", wnull,
-                L"Wrong fuzzy matching 5");
+    expand_test(L"b/xx", fuzzy_comp, L"bax/xxx", L"baz/xxx", wnull, L"Wrong fuzzy matching 5");
 
     // multiple slashes with fuzzy matching - #3185
-    expand_test(L"l///n", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH, L"lol///nub/", wnull,
-                L"Wrong fuzzy matching 6");
+    expand_test(L"l///n", fuzzy_comp, L"lol///nub/", wnull, L"Wrong fuzzy matching 6");
 
     popd();
 }
@@ -2255,7 +2268,7 @@ static bool run_test_test(int expected, const wcstring &str) {
 
     // We need to tokenize the string in the same manner a normal shell would do. This is because we
     // need to test things like quoted strings that have leading and trailing whitespace.
-    parser_t::expand_argument_list(str, 0, null_environment_t{}, &comps);
+    parser_t::expand_argument_list(str, expand_flags_t{}, null_environment_t{}, &comps);
     for (completion_list_t::const_iterator it = comps.begin(), end = comps.end(); it != end; ++it) {
         argv.push_back(it->completion);
     }

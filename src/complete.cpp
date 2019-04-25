@@ -360,10 +360,10 @@ class completer_t {
         // Never do command substitution in autosuggestions. Sadly, we also can't yet do job
         // expansion because it's not thread safe.
         expand_flags_t result{};
-        if (this->type() == COMPLETE_AUTOSUGGEST) result |= expand_flag::EXPAND_SKIP_CMDSUBST;
+        if (this->type() == COMPLETE_AUTOSUGGEST) result |= expand_flag::skip_cmdsubst;
 
         // Allow fuzzy matching.
-        if (this->fuzzy()) result |= expand_flag::EXPAND_FUZZY_MATCH;
+        if (this->fuzzy()) result |= expand_flag::fuzzy_match;
 
         return result;
     }
@@ -546,8 +546,7 @@ void completer_t::complete_strings(const wcstring &wc_escaped, const description
                                    complete_flags_t flags) {
     wcstring tmp = wc_escaped;
     if (!expand_one(tmp,
-                    this->expand_flags() | expand_flag::EXPAND_SKIP_CMDSUBST |
-                        expand_flag::EXPAND_SKIP_WILDCARDS,
+                    this->expand_flags() | expand_flag::skip_cmdsubst | expand_flag::skip_wildcards,
                     vars))
         return;
 
@@ -670,8 +669,8 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
         // Append all possible executables
         expand_result_t result =
             expand_string(str_cmd, &this->completions,
-                          this->expand_flags() | expand_flag::EXPAND_SPECIAL_FOR_COMMAND |
-                              expand_flag::EXPAND_FOR_COMPLETIONS | expand_flag::EXECUTABLES_ONLY,
+                          this->expand_flags() | expand_flag::special_for_command |
+                              expand_flag::for_completions | expand_flag::executables_only,
                           vars, NULL);
         if (result != expand_result_t::error && this->wants_descriptions()) {
             this->complete_cmd_desc(str_cmd);
@@ -683,10 +682,10 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
         // updated with choices for the user.
         expand_result_t ignore =
             // Append all matching directories
-            expand_string(str_cmd, &this->completions,
-                          this->expand_flags() | expand_flag::EXPAND_FOR_COMPLETIONS |
-                              expand_flag::DIRECTORIES_ONLY,
-                          vars, NULL);
+            expand_string(
+                str_cmd, &this->completions,
+                this->expand_flags() | expand_flag::for_completions | expand_flag::directories_only,
+                vars, NULL);
         UNUSED(ignore);
     }
 
@@ -754,8 +753,8 @@ void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
 
     expand_flags_t eflags{};
     if (is_autosuggest) {
-        eflags |= expand_flag::EXPAND_NO_DESCRIPTIONS;
-        eflags |= expand_flag::EXPAND_SKIP_CMDSUBST;
+        eflags |= expand_flag::no_descriptions;
+        eflags |= expand_flag::skip_cmdsubst;
     }
 
     std::vector<completion_t> possible_comp;
@@ -1067,22 +1066,21 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
 /// Perform generic (not command-specific) expansions on the specified string.
 void completer_t::complete_param_expand(const wcstring &str, bool do_file,
                                         bool handle_as_special_cd) {
-    expand_flags_t flags = this->expand_flags() | expand_flag::EXPAND_SKIP_CMDSUBST |
-                           expand_flag::EXPAND_FOR_COMPLETIONS;
+    expand_flags_t flags =
+        this->expand_flags() | expand_flag::skip_cmdsubst | expand_flag::for_completions;
 
-    if (!do_file) flags |= expand_flag::EXPAND_SKIP_WILDCARDS;
+    if (!do_file) flags |= expand_flag::skip_wildcards;
 
     if (handle_as_special_cd && do_file) {
         if (this->type() == COMPLETE_AUTOSUGGEST) {
-            flags |= expand_flag::EXPAND_SPECIAL_FOR_CD_AUTOSUGGEST;
+            flags |= expand_flag::special_for_cd_autosuggestion;
         }
-        flags |= expand_flags_t{expand_flag::DIRECTORIES_ONLY, expand_flag::EXPAND_SPECIAL_FOR_CD,
-                                expand_flag::EXPAND_NO_DESCRIPTIONS};
+        flags |= expand_flags_t{expand_flag::directories_only, expand_flag::special_for_cd,
+                                expand_flag::no_descriptions};
     }
 
     // Squelch file descriptions per issue #254.
-    if (this->type() == COMPLETE_AUTOSUGGEST || do_file)
-        flags |= expand_flag::EXPAND_NO_DESCRIPTIONS;
+    if (this->type() == COMPLETE_AUTOSUGGEST || do_file) flags |= expand_flag::no_descriptions;
 
     // We have the following cases:
     //
@@ -1119,7 +1117,7 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
     if (complete_from_start) {
         // Don't do fuzzy matching for files if the string begins with a dash (issue #568). We could
         // consider relaxing this if there was a preceding double-dash argument.
-        if (string_prefixes_string(L"-", str)) flags.clear(expand_flag::EXPAND_FUZZY_MATCH);
+        if (string_prefixes_string(L"-", str)) flags.clear(expand_flag::fuzzy_match);
 
         if (expand_string(str, &this->completions, flags, vars, NULL) == expand_result_t::error) {
             debug(3, L"Error while expanding string '%ls'", str.c_str());

@@ -432,7 +432,7 @@ bool autosuggest_validate_from_history(const history_item_t &item,
 
     if (parsed_command == L"cd" && !cd_dir.empty()) {
         // We can possibly handle this specially.
-        if (expand_one(cd_dir, expand_flag::EXPAND_SKIP_CMDSUBST, vars)) {
+        if (expand_one(cd_dir, expand_flag::skip_cmdsubst, vars)) {
             handled = true;
             bool is_help =
                 string_prefixes_string(cd_dir, L"--help") || string_prefixes_string(cd_dir, L"-h");
@@ -926,7 +926,7 @@ void highlighter_t::color_arguments(const std::vector<tnode_t<g::argument>> &arg
         if (cmd_is_cd) {
             // Mark this as an error if it's not 'help' and not a valid cd path.
             wcstring param = arg.get_source(this->buff);
-            if (expand_one(param, expand_flag::EXPAND_SKIP_CMDSUBST, vars)) {
+            if (expand_one(param, expand_flag::skip_cmdsubst, vars)) {
                 bool is_help = string_prefixes_string(param, L"--help") ||
                                string_prefixes_string(param, L"-h");
                 if (!is_help && this->io_ok &&
@@ -969,7 +969,7 @@ void highlighter_t::color_redirection(tnode_t<g::redirection> redirection_node) 
                 // I/O is disallowed, so we don't have much hope of catching anything but gross
                 // errors. Assume it's valid.
                 target_is_valid = true;
-            } else if (!expand_one(target, expand_flag::EXPAND_SKIP_CMDSUBST, vars)) {
+            } else if (!expand_one(target, expand_flag::skip_cmdsubst, vars)) {
                 // Could not be expanded.
                 target_is_valid = false;
             } else {

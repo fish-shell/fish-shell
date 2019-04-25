@@ -22,41 +22,41 @@ class environment_t;
 class env_var_t;
 class environment_t;
 
+/// Set of flags controlling expansions.
 enum class expand_flag {
-    /// Flag specifying that cmdsubst expansion should be skipped.
-    EXPAND_SKIP_CMDSUBST,
-    /// Flag specifying that variable expansion should be skipped.
-    EXPAND_SKIP_VARIABLES,
-    /// Flag specifying that wildcard expansion should be skipped.
-    EXPAND_SKIP_WILDCARDS,
+    /// Skip command substitutions.
+    skip_cmdsubst,
+    /// Skip variable expansion.
+    skip_variables,
+    /// Skip wildcard expansion.
+    skip_wildcards,
     /// The expansion is being done for tab or auto completions. Returned completions may have the
     /// wildcard as a prefix instead of a match.
-    EXPAND_FOR_COMPLETIONS,
+    for_completions,
     /// Only match files that are executable by the current user.
-    EXECUTABLES_ONLY,
+    executables_only,
     /// Only match directories.
-    DIRECTORIES_ONLY,
+    directories_only,
     /// Don't generate descriptions.
-    EXPAND_NO_DESCRIPTIONS,
-    /// Don't expand jobs (but you can still expand processes). This is because
-    /// job expansion is not thread safe.
-    EXPAND_SKIP_JOBS,
+    no_descriptions,
+    /// Don't expand jobs (but still expand processes).
+    skip_jobs,
     /// Don't expand home directories.
-    EXPAND_SKIP_HOME_DIRECTORIES,
+    skip_home_directories,
     /// Allow fuzzy matching.
-    EXPAND_FUZZY_MATCH,
+    fuzzy_match,
     /// Disallow directory abbreviations like /u/l/b for /usr/local/bin. Only applicable if
-    /// EXPAND_FUZZY_MATCH is set.
-    EXPAND_NO_FUZZY_DIRECTORIES,
+    /// fuzzy_match is set.
+    no_fuzzy_directories,
     /// Do expansions specifically to support cd. This means using CDPATH as a list of potential
     /// working directories, and to use logical instead of physical paths.
-    EXPAND_SPECIAL_FOR_CD,
+    special_for_cd,
     /// Do expansions specifically for cd autosuggestion. This is to differentiate between cd
     /// completions and cd autosuggestions.
-    EXPAND_SPECIAL_FOR_CD_AUTOSUGGEST,
+    special_for_cd_autosuggestion,
     /// Do expansions specifically to support external command completions. This means using PATH as
     /// a list of potential working directories.
-    EXPAND_SPECIAL_FOR_COMMAND,
+    special_for_command,
 
     COUNT,
 };
@@ -123,7 +123,7 @@ enum class expand_result_t {
 /// \param input The parameter to expand
 /// \param output The list to which the result will be appended.
 /// \param flags Specifies if any expansion pass should be skipped. Legal values are any combination
-/// of EXPAND_SKIP_CMDSUBST EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
+/// of skip_cmdsubst skip_variables and skip_wildcards
 /// \param vars variables used during expansion.
 /// \param errors Resulting errors, or NULL to ignore
 ///
@@ -139,7 +139,7 @@ __warn_unused expand_result_t expand_string(wcstring input, std::vector<completi
 ///
 /// \param inout_str The parameter to expand in-place
 /// \param flags Specifies if any expansion pass should be skipped. Legal values are any combination
-/// of EXPAND_SKIP_CMDSUBST EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
+/// of skip_cmdsubst skip_variables and skip_wildcards
 /// \param errors Resulting errors, or NULL to ignore
 ///
 /// \return Whether expansion succeded

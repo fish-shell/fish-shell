@@ -37,8 +37,8 @@ enum {
 ///
 /// \param wc The wildcard string
 /// \param working_directory The working directory
-/// \param flags flags for the search. Can be any combination of EXPAND_FOR_COMPLETIONS and
-/// EXECUTABLES_ONLY
+/// \param flags flags for the search. Can be any combination of for_completions and
+/// executables_only
 /// \param out The list in which to put the output
 ///
 /// \return 1 if matches where found, 0 otherwise. Return -1 on abort (I.e. ^C was pressed).

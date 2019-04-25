@@ -1669,11 +1669,10 @@ static void test_expand() {
 
     expand_test(L"foo", noflags, L"foo", 0, L"Strings do not expand to themselves");
     expand_test(L"a{b,c,d}e", noflags, L"abe", L"ace", L"ade", 0, L"Bracket expansion is broken");
-    expand_test(L"a*", expand_flag::EXPAND_SKIP_WILDCARDS, L"a*", 0,
-                L"Cannot skip wildcard expansion");
-    expand_test(L"/bin/l\\0", expand_flag::EXPAND_FOR_COMPLETIONS, 0,
+    expand_test(L"a*", expand_flag::skip_wildcards, L"a*", 0, L"Cannot skip wildcard expansion");
+    expand_test(L"/bin/l\\0", expand_flag::for_completions, 0,
                 L"Failed to handle null escape in expansion");
-    expand_test(L"foo\\$bar", expand_flag::EXPAND_SKIP_VARIABLES, L"foo$bar", 0,
+    expand_test(L"foo\\$bar", expand_flag::skip_variables, L"foo$bar", 0,
                 L"Failed to handle dollar sign in variable-skipping expansion");
 
     // bb
@@ -1747,27 +1746,25 @@ static void test_expand() {
     expand_test(L"test/fish_expand_test/**/q", noflags, L"test/fish_expand_test/lol/nub/q", wnull,
                 L"Glob did the wrong thing 7");
 
-    expand_test(L"test/fish_expand_test/BA", expand_flag::EXPAND_FOR_COMPLETIONS,
+    expand_test(L"test/fish_expand_test/BA", expand_flag::for_completions,
                 L"test/fish_expand_test/bar", L"test/fish_expand_test/bax/",
                 L"test/fish_expand_test/baz/", wnull, L"Case insensitive test did the wrong thing");
 
-    expand_test(L"test/fish_expand_test/BA", expand_flag::EXPAND_FOR_COMPLETIONS,
+    expand_test(L"test/fish_expand_test/BA", expand_flag::for_completions,
                 L"test/fish_expand_test/bar", L"test/fish_expand_test/bax/",
                 L"test/fish_expand_test/baz/", wnull, L"Case insensitive test did the wrong thing");
 
-    expand_test(L"test/fish_expand_test/bb/yyy", expand_flag::EXPAND_FOR_COMPLETIONS,
+    expand_test(L"test/fish_expand_test/bb/yyy", expand_flag::for_completions,
                 /* nothing! */ wnull, L"Wrong fuzzy matching 1");
 
-    expand_test(
-        L"test/fish_expand_test/bb/x",
-        expand_flags_t{expand_flag::EXPAND_FOR_COMPLETIONS, expand_flag::EXPAND_FUZZY_MATCH}, L"",
-        wnull,  // we just expect the empty string since this is an exact match
-        L"Wrong fuzzy matching 2");
+    expand_test(L"test/fish_expand_test/bb/x",
+                expand_flags_t{expand_flag::for_completions, expand_flag::fuzzy_match}, L"",
+                wnull,  // we just expect the empty string since this is an exact match
+                L"Wrong fuzzy matching 2");
 
     // Some vswprintfs refuse to append ANY_STRING in a format specifiers, so don't use
     // format_string here.
-    const expand_flags_t fuzzy_comp{expand_flag::EXPAND_FOR_COMPLETIONS,
-                                    expand_flag::EXPAND_FUZZY_MATCH};
+    const expand_flags_t fuzzy_comp{expand_flag::for_completions, expand_flag::fuzzy_match};
     const wcstring any_str_str(1, ANY_STRING);
     expand_test(L"test/fish_expand_test/b/xx*", fuzzy_comp,
                 (L"test/fish_expand_test/bax/xx" + any_str_str).c_str(),

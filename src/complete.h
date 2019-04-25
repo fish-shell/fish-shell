@@ -12,15 +12,13 @@
 
 #include "common.h"
 
-/// Use all completions.
-#define SHARED 0
-/// Do not use file completion.
-#define NO_FILES 1
-/// Require a parameter after completion.
-#define NO_COMMON 2
-/// Only use the argument list specifies with completion after option. This is the same as (NO_FILES
-/// | NO_COMMON).
-#define EXCLUSIVE 3
+struct completion_mode_t {
+    /// If set, skip file completions.
+    bool no_files{false};
+
+    /// If set, require a parameter after completion.
+    bool requires_param{false};
+};
 
 /// Separator between completion and description.
 #define COMPLETE_SEP L'\004'
@@ -148,19 +146,16 @@ void completions_sort_and_prioritize(std::vector<completion_t> *comps,
 /// \param option The name of an option.
 /// \param option_type The type of option: can be option_type_short (-x),
 ///        option_type_single_long (-foo), option_type_double_long (--bar).
-/// \param result_mode Whether to search further completions when this completion has been
-/// succesfully matched. If result_mode is SHARED, any other completions may also be used. If
-/// result_mode is NO_FILES, file completion should not be used, but other completions may be used.
-/// If result_mode is NO_COMMON, on option may follow it - only a parameter. If result_mode is
-/// EXCLUSIVE, no option may follow it, and file completion is not performed.
+/// \param result_mode Controls how to search further completions when this completion has been
+/// succesfully matched.
 /// \param comp A space separated list of completions which may contain subshells.
 /// \param desc A description of the completion.
 /// \param condition a command to be run to check it this completion should be used. If \c condition
 /// is empty, the completion is always used.
 /// \param flags A set of completion flags
 void complete_add(const wchar_t *cmd, bool cmd_is_path, const wcstring &option,
-                  complete_option_type_t option_type, int result_mode, const wchar_t *condition,
-                  const wchar_t *comp, const wchar_t *desc, int flags);
+                  complete_option_type_t option_type, completion_mode_t result_mode,
+                  const wchar_t *condition, const wchar_t *comp, const wchar_t *desc, int flags);
 
 /// Remove a previously defined completion.
 void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &option,

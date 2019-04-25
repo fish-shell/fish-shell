@@ -97,9 +97,8 @@ typedef struct complete_entry_opt {
     wcstring desc;
     // Condition under which to use the option.
     wcstring condition;
-    // Must be one of the values SHARED, NO_FILES, NO_COMMON, EXCLUSIVE, and determines how
-    // completions should be performed on the argument after the switch.
-    int result_mode;
+    // Determines how completions should be performed on the argument after the switch.
+    completion_mode_t result_mode;
     // Completion flags.
     complete_flags_t flags;
 
@@ -440,8 +439,9 @@ static completion_entry_t &complete_get_exact_entry(completion_entry_set_t &comp
 }
 
 void complete_add(const wchar_t *cmd, bool cmd_is_path, const wcstring &option,
-                  complete_option_type_t option_type, int result_mode, const wchar_t *condition,
-                  const wchar_t *comp, const wchar_t *desc, complete_flags_t flags) {
+                  complete_option_type_t option_type, completion_mode_t result_mode,
+                  const wchar_t *condition, const wchar_t *comp, const wchar_t *desc,
+                  complete_flags_t flags) {
     CHECK(cmd, );
     // option should be empty iff the option type is arguments only.
     assert(option.empty() == (option_type == option_type_args_only));
@@ -852,7 +852,7 @@ static bool short_ok(const wcstring &arg, const complete_entry_opt_t *entry,
                 break;
             }
         }
-        if (match == NULL || (match->result_mode & NO_COMMON)) {
+        if (match == NULL || (match->result_mode.requires_param)) {
             result = false;
             break;
         }
@@ -946,8 +946,8 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
                 for (const complete_entry_opt_t &o : options) {
                     const wchar_t *arg = param_match2(&o, str.c_str());
                     if (arg != NULL && this->condition_test(o.condition)) {
-                        if (o.result_mode & NO_COMMON) use_common = false;
-                        if (o.result_mode & NO_FILES) use_files = false;
+                        if (o.result_mode.requires_param) use_common = false;
+                        if (o.result_mode.no_files) use_files = false;
                         complete_from_args(arg, o.comp, o.localized_desc(), o.flags);
                     }
                 }
@@ -962,8 +962,8 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
                     if (o.type == option_type_single_long && param_match(&o, popt.c_str()) &&
                         this->condition_test(o.condition)) {
                         old_style_match = true;
-                        if (o.result_mode & NO_COMMON) use_common = false;
-                        if (o.result_mode & NO_FILES) use_files = false;
+                        if (o.result_mode.requires_param) use_common = false;
+                        if (o.result_mode.no_files) use_files = false;
                         complete_from_args(str, o.comp, o.localized_desc(), o.flags);
                     }
                 }
@@ -976,12 +976,12 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
                         // token, so that it can be differed from a regular argument.
                         // Here we are testing the previous argument for a GNU-style match,
                         // to see how we should complete the current argument
-                        if (o.type == option_type_double_long && !(o.result_mode & NO_COMMON))
+                        if (o.type == option_type_double_long && !o.result_mode.requires_param)
                             continue;
 
                         if (param_match(&o, popt.c_str()) && this->condition_test(o.condition)) {
-                            if (o.result_mode & NO_COMMON) use_common = false;
-                            if (o.result_mode & NO_FILES) use_files = false;
+                            if (o.result_mode.requires_param) use_common = false;
+                            if (o.result_mode.no_files) use_files = false;
                             complete_from_args(str, o.comp, o.localized_desc(), o.flags);
                         }
                     }
@@ -998,7 +998,7 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
             // If this entry is for the base command, check if any of the arguments match.
             if (!this->condition_test(o.condition)) continue;
             if (o.option.empty()) {
-                use_files = use_files && ((o.result_mode & NO_FILES) == 0);
+                use_files = use_files && ((o.result_mode.no_files) == 0);
                 complete_from_args(str, o.comp, o.localized_desc(), o.flags);
             }
 
@@ -1043,7 +1043,7 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
             }
 
             has_arg = !o.comp.empty();
-            req_arg = (o.result_mode & NO_COMMON);
+            req_arg = o.result_mode.requires_param;
 
             if (o.type == option_type_double_long && (has_arg && !req_arg)) {
                 // Optional arguments to a switch can only be handled using the '=', so we add it as
@@ -1616,10 +1616,15 @@ wcstring complete_print() {
     for (const completion_entry_t &e : all_completions) {
         const option_list_t &options = e.get_options();
         for (const complete_entry_opt_t &o : options) {
-            const wchar_t *modestr[] = {L"", L" --no-files", L" --require-parameter",
-                                        L" --exclusive"};
-
-            append_format(out, L"complete%ls", modestr[o.result_mode]);
+            const wchar_t *modestr = L"";
+            if (o.result_mode.no_files && o.result_mode.requires_param) {
+                modestr = L" --exclusive";
+            } else if (o.result_mode.no_files) {
+                modestr = L" --no-files";
+            } else if (o.result_mode.requires_param) {
+                modestr = L" --require-parameter";
+            }
+            append_format(out, L"complete%ls", modestr);
 
             append_switch(out, e.cmd_is_path ? L"path" : L"command",
                           escape_string(e.cmd, ESCAPE_ALL));

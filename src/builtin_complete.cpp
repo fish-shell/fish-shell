@@ -29,8 +29,8 @@
 /// Silly function.
 static void builtin_complete_add2(const wchar_t *cmd, bool cmd_is_path, const wchar_t *short_opt,
                                   const wcstring_list_t &gnu_opts, const wcstring_list_t &old_opts,
-                                  int result_mode, const wchar_t *condition, const wchar_t *comp,
-                                  const wchar_t *desc, int flags) {
+                                  completion_mode_t result_mode, const wchar_t *condition,
+                                  const wchar_t *comp, const wchar_t *desc, int flags) {
     for (const wchar_t *s = short_opt; *s; s++) {
         complete_add(cmd, cmd_is_path, wcstring{*s}, option_type_short, result_mode, condition,
                      comp, desc, flags);
@@ -55,7 +55,7 @@ static void builtin_complete_add2(const wchar_t *cmd, bool cmd_is_path, const wc
 /// Silly function.
 static void builtin_complete_add(const wcstring_list_t &cmds, const wcstring_list_t &paths,
                                  const wchar_t *short_opt, wcstring_list_t &gnu_opt,
-                                 wcstring_list_t &old_opt, int result_mode,
+                                 wcstring_list_t &old_opt, completion_mode_t result_mode,
                                  const wchar_t *condition, const wchar_t *comp, const wchar_t *desc,
                                  int flags) {
     for (const wcstring &cmd : cmds) {
@@ -114,7 +114,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    int result_mode = SHARED;
+    completion_mode_t result_mode{};
     int remove = 0;
     wcstring short_opt;
     wcstring_list_t gnu_opt, old_opt;
@@ -152,15 +152,16 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         switch (opt) {
             case 'x': {
-                result_mode |= EXCLUSIVE;
+                result_mode.no_files = true;
+                result_mode.requires_param = true;
                 break;
             }
             case 'f': {
-                result_mode |= NO_FILES;
+                result_mode.no_files = true;
                 break;
             }
             case 'r': {
-                result_mode |= NO_COMMON;
+                result_mode.requires_param = true;
                 break;
             }
             case 'k': {

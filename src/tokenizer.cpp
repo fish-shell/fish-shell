@@ -638,7 +638,7 @@ bool move_word_state_machine_t::consume_char_punctuation(wchar_t c) {
 bool move_word_state_machine_t::is_path_component_character(wchar_t c) {
     // Always treat separators as first. All this does is ensure that we treat ^ as a string
     // character instead of as stderr redirection, which I hypothesize is usually what is desired.
-    return tok_is_string_character(c, true) && !std::wcschr(L"/={,}'\"", c);
+    return tok_is_string_character(c, true) && !std::wcschr(L"/={,}'\":@", c);
 }
 
 bool move_word_state_machine_t::consume_char_path_components(wchar_t c) {

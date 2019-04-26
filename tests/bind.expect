@@ -271,3 +271,20 @@ expect_prompt -re {ctrl-o seen} {
 } unmatched {
     puts stderr "ctrl-o not seen"
 }
+
+# \x17 is ctrl-w.
+send "echo git@github.com:fish-shell/fish-shell"
+send "\x17\x17\r"
+expect_prompt -re {git@github.com:} {
+    puts "ctrl-w stops at :"
+} unmatched {
+    puts stderr "ctrl-w does not stop at :"
+}
+
+send "echo git@github.com:fish-shell/fish-shell"
+send "\x17\x17\x17\r"
+expect_prompt -re {git@} {
+    puts "ctrl-w stops at @"
+} unmatched {
+    puts stderr "ctrl-w does not stop at @"
+}

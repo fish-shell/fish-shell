@@ -120,6 +120,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wcstring_list_t gnu_opt, old_opt;
     const wchar_t *comp = L"", *desc = L"", *condition = L"";
     bool do_complete = false;
+    bool have_do_complete_param = false;
     wcstring do_complete_param;
     wcstring_list_t cmd_to_complete;
     wcstring_list_t path;
@@ -236,14 +237,8 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             case 'C': {
                 do_complete = true;
-                const wchar_t *arg = w.woptarg ? w.woptarg : reader_get_buffer();
-                if (arg == NULL) {
-                    // This corresponds to using 'complete -C' in non-interactive mode.
-                    // See #2361.
-                    builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
-                    return STATUS_INVALID_ARGS;
-                }
-                do_complete_param = arg;
+                have_do_complete_param = w.woptarg != NULL;
+                if (have_do_complete_param) do_complete_param = w.woptarg;
                 break;
             }
             case 'h': {
@@ -266,9 +261,17 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (w.woptind != argc) {
-        streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd);
-        builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        // Use one left-over arg as the do-complete argument
+        // to enable `complete -C "git check"`.
+        if (do_complete && !have_do_complete_param && argc == w.woptind + 1) {
+
+            do_complete_param = argv[argc - 1];
+            have_do_complete_param = true;
+        } else {
+            streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd);
+            builtin_print_error_trailer(parser, streams.err, cmd);
+            return STATUS_INVALID_ARGS;
+        }
     }
 
     if (condition && std::wcslen(condition)) {
@@ -302,6 +305,17 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (do_complete) {
+        if (!have_do_complete_param) {
+            // No argument given, try to use the current commandline.
+            const wchar_t* cmd = reader_get_buffer();
+            if (cmd == NULL) {
+                // This corresponds to using 'complete -C' in non-interactive mode.
+                // See #2361    .
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
+            }
+            do_complete_param = cmd;
+        }
         const wchar_t *token;
 
         parse_util_token_extent(do_complete_param.c_str(), do_complete_param.size(), &token, 0, 0,

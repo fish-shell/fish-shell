@@ -46,6 +46,7 @@
 - The git prompt in informative mode now shows the number of stashes if enabled.
 - The nextd and prevd functions no longer print "Hit end of history", instead using a BEL.
 - If fish_mode_prompt exists, vi-mode will only execute it on mode-switch instead of the entire prompt. This should make it much more responsive with slow prompts (#5783).
+- The path-component bindings (like ctrl-w) now also stop at ":" and "@" because those are used to denote user and host in ssh-likes (#5841).
 
 ### For distributors and developers
 - The autotools-based build system and legacy Xcode build systems have been removed, leaving only the CMake build system. All distributors and developers must migrate to the CMake build.

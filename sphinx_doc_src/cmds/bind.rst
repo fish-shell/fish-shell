@@ -80,9 +80,9 @@ The following special input functions are available:
 
 - ``backward-kill-line``, move everything from the beginning of the line to the cursor to the killring
 
-- ``backward-kill-path-component``, move one path component to the left of the cursor (everything from the last "/" or whitespace exclusive) to the killring
+- ``backward-kill-path-component``, move one path component to the left of the cursor to the killring. A path component is everything likely to belong to a path component, i.e. not any of the following: `/={,}'\":@ |;<>&`, plus newlines and tabs.
 
-- ``backward-kill-word``, move the word to the left of the cursor to the killring
+- ``backward-kill-word``, move the word to the left of the cursor to the killring. The "word" here is everything up to punctuation or whitespace.
 
 - ``backward-word``, move one word to the left
 
@@ -162,7 +162,7 @@ Examples
 
 ::
 
-    bind <asis>\\cd</asis> 'exit'
+    bind \cd 'exit'
 
 Causes ``fish`` to exit when :kbd:`Control+D` is pressed.
 
@@ -179,7 +179,7 @@ Performs a history search when the :kbd:`Page Up` key is pressed.
 ::
 
     set -g fish_key_bindings fish_vi_key_bindings
-    bind -M insert \\cc kill-whole-line force-repaint
+    bind -M insert \cc kill-whole-line force-repaint
 
 Turns on Vi key bindings and rebinds :kbd:`Control+C` to clear the input line.
 

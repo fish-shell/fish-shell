@@ -198,6 +198,12 @@ file_access_attempt_t access_file(const wcstring &path, int mode) {
     return result;
 }
 
+void autoloader_t::perform_autoload(const wcstring &path) {
+    wcstring script_source = L"source " + escape_string(path, ESCAPE_ALL);
+    exec_subshell(script_source, parser_t::principal_parser(),
+                  false /* do not apply exit status */);
+}
+
 autoload_t::autoload_t(wcstring env_var_name_var) : env_var_name(std::move(env_var_name_var)) {}
 
 void autoload_t::entry_was_evicted(wcstring key, autoload_function_t node) {

@@ -54,6 +54,11 @@ class autoloader_t {
     /// code; it is the caller's responsibility to load the file.
     maybe_t<wcstring> resolve_command(const wcstring &cmd, const environment_t &env);
 
+    /// Helper to actually perform an autoload.
+    /// This is a static function because it executes fish script, and so must be called without
+    /// holding any particular locks.
+    static void perform_autoload(const wcstring &path);
+
     /// Mark that a command previously returned from path_to_autoload is finished autoloading.
     void mark_autoload_finished(const wcstring &cmd) {
         size_t amt = current_autoloading_.erase(cmd);

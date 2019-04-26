@@ -379,7 +379,7 @@ Match Regex Examples
     <outp>cat4</outp>
     <outp>dog4</outp>
     
-    >_ string match -r '(\\d\\d?):(\\d\\d):(\\d\\d)' <asis>2:34:56</asis>
+    >_ string match -r '(\\d\\d?):(\\d\\d):(\\d\\d)' 2:34:56
     <outp>2:34:56</outp>
     <outp>2</outp>
     <outp>34</outp>

@@ -22,7 +22,7 @@ which means you are all set up and can start using fish::
     > fish
     <outp>Welcome to fish, the friendly interactive shell</outp>
     <outp>Type <span class="cwd">help</span> for instructions on how to use fish</outp>
-    <asis>you@hostname</asis> ~>____
+    you@hostname ~>____
 
 
 This prompt that you see above is the ``fish`` default prompt: it shows your username, hostname, and working directory.

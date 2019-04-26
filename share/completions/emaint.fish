@@ -19,7 +19,7 @@ complete -c emaint -n '__fish_use_subcommand' -xa 'world'       -d 'Check and fi
 
 ## Local opts
 # logs
-complete -c emaint -n '__fish_seen_subcommand_from logs' -s t -l time      -d "Delete logs older than NUM of days" \
+complete -c emaint -n '__fish_seen_subcommand_from logs' -s t -l time      -d "Delete logs older than NUM days" \
 	-xa "(seq 0 365)"
 complete -c emaint -n '__fish_seen_subcommand_from logs' -s p -l pretend   -d "Output logs that would be deleted"
 complete -c emaint -n '__fish_seen_subcommand_from logs' -s C -l clean     -d "Cleans out logs more than 7 days old"

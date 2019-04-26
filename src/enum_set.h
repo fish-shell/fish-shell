@@ -1,5 +1,7 @@
-#pragma once
+#ifndef FISH_ENUM_SET_H
+#define FISH_ENUM_SET_H
 
+#include <array>
 #include <bitset>
 #include <cassert>
 #include <iterator>
@@ -136,3 +138,5 @@ class enum_iter_t {
     iterator_t begin() const { return iterator_t{0}; }
     iterator_t end() const { return iterator_t{static_cast<base_type_t>(enum_count<T>())}; }
 };
+
+#endif

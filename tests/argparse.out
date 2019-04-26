@@ -129,3 +129,6 @@ expected argparse return status 57
 
 ####################
 # Explicit int flag validation
+
+####################
+# Errors use function name by default

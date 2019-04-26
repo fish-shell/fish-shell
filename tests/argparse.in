@@ -171,3 +171,11 @@ argparse 'm/max=!_validate_int --min 0 --max 1' -- argle --max=0 bargle
 or echo unexpected argparse return status $status >&2
 argparse 'm/max=!_validate_int --min 0 --max 1' -- argle --max=1 bargle
 or echo unexpected argparse return status $status >&2
+
+logmsg Errors use function name by default
+function notargparse
+    argparse a/alpha -- --banana
+end
+notargparse
+
+true

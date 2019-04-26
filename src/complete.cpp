@@ -1378,9 +1378,7 @@ void completer_t::perform() {
 
     // If we are completing a variable name or a tilde expansion user name, we do that and return.
     // No need for any other completions.
-    // Unconditionally complete variables and processes. This is a little weird since we will
-    // happily complete variables even in e.g. command position, despite the fact that they are
-    // invalid there. */
+    // Unconditionally complete variables and processes.
     const wcstring current_token = tok_begin;
     if (try_complete_variable(current_token) || try_complete_user(current_token)) {
         return;

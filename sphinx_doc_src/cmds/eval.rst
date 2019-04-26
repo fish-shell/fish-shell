@@ -15,16 +15,17 @@ Description
 
 If your command does not need access to stdin, consider using ``source`` instead.
 
+If no piping or other compound shell constructs are required, variable-expansion-as-command, as in  ``set cmd ls; $cmd``, is also an option.
+
+
 Example
 -------
 
-The following code will call the ls command. Note that ``fish`` does not support the use of shell variables as direct commands; ``eval`` can be used to work around this.
-
-
+The following code will call the ls command and truncate each filename to the first 12 characters.
 
 ::
 
-    set cmd ls
+    set cmd ls \| cut -c 1-12
     eval $cmd
 
 

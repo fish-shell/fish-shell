@@ -13,6 +13,71 @@
 #include "lru.h"
 #include "wutil.h"
 
+class autoload_file_cache_t;
+class environment_t;
+
+/// autoloader_t is a class that knows how to autoload .fish files from a list of directories. This
+/// is used by autoloading functions and completions. It maintains a file cache, which is
+/// responsible for potentially cached accesses of files, and then a list of files that have
+/// actually been autoloaded. A client may request a file to autoload given a command name, and may
+/// be returned a path which it is expected to source.
+/// autoloader_t does not have any internal locks; it is the responsibility of the caller to lock
+/// it.
+class autoloader_t {
+    /// The environment variable whose paths we observe.
+    const wcstring env_var_name_;
+
+    /// A map from command to the files we have autoloaded.
+    std::unordered_map<wcstring, file_id_t> autoloaded_files_;
+
+    /// The list of commands that we are currently autoloading.
+    std::unordered_set<wcstring> current_autoloading_;
+
+    /// The autoload cache.
+    /// This is a unique_ptr because want to change it if the value of our environment variable
+    /// changes. This is never null (but it may be a cache with no paths).
+    std::unique_ptr<autoload_file_cache_t> cache_;
+
+   public:
+    /// Construct an autoloader that loads from the paths given by \p env_var_name.
+    explicit autoloader_t(wcstring env_var_name);
+
+    ~autoloader_t();
+
+    /// Given a command, get a path to autoload.
+    /// For example, if the environment variable is 'fish_function_path' and the command is 'foo',
+    /// this will look for a file 'foo.fish' in one of the directories given by fish_function_path.
+    /// If there is no such file, OR if the file has been previously resolved and is now unchanged,
+    /// this will return none. But if the file is either new or changed, this will return the path.
+    /// After returning a path, the command is marked in-progress until the caller calls
+    /// mark_autoload_finished() with the same command. Note this does not actually execute any
+    /// code; it is the caller's responsibility to load the file.
+    maybe_t<wcstring> resolve_command(const wcstring &cmd, const environment_t &env);
+
+    /// Mark that a command previously returned from path_to_autoload is finished autoloading.
+    void mark_autoload_finished(const wcstring &cmd) {
+        size_t amt = current_autoloading_.erase(cmd);
+        assert(amt > 0 && "cmd was not being autoloaded");
+        (void)amt;
+    }
+
+    /// \return whether a command is currently being autoloaded.
+    bool autoload_in_progress(const wcstring &cmd) const {
+        return current_autoloading_.count(cmd) > 0;
+    }
+
+    /// \return whether a command could potentially be autoloaded.
+    /// This does not actually mark the command as being autoloaded.
+    bool can_autoload(const wcstring &cmd);
+
+    /// Mark that all autoloaded files have been forgotten.
+    /// Future calls to path_to_autoload() will return previously-returned paths.
+    void clear() {
+        // Note there is no reason to invalidate the cache here.
+        autoloaded_files_.clear();
+    }
+};
+
 /// Record of an attempt to access a file.
 struct file_access_attempt_t {
     /// If filled, the file ID of the checked file.
@@ -40,8 +105,6 @@ struct autoload_function_t {
     /// is_loaded must be false.
     bool is_placeholder;
 };
-
-class environment_t;
 
 /// Class representing a path from which we can autoload and the autoloaded contents.
 class autoload_t : public lru_cache_t<autoload_t, autoload_function_t> {

@@ -70,6 +70,9 @@ class autoload_file_cache_t {
     /// Initialize with a set of directories.
     explicit autoload_file_cache_t(wcstring_list_t dirs) : dirs_(std::move(dirs)) {}
 
+    /// Initialize with empty directories.
+    autoload_file_cache_t() = default;
+
     /// \return the directories.
     const wcstring_list_t &dirs() const { return dirs_; }
 
@@ -143,6 +146,46 @@ maybe_t<autoloadable_file_t> autoload_file_cache_t::check(const wcstring &cmd, b
         (void)ins;
     }
     return file;
+}
+
+autoloader_t::autoloader_t(wcstring env_var_name)
+    : env_var_name_(std::move(env_var_name)), cache_(make_unique<autoload_file_cache_t>()) {}
+
+autoloader_t::~autoloader_t() = default;
+
+bool autoloader_t::can_autoload(const wcstring &cmd) {
+    return cache_->check(cmd, true /* allow stale */).has_value();
+}
+
+maybe_t<wcstring> autoloader_t::resolve_command(const wcstring &cmd, const environment_t &env) {
+    // Are we currently in the process of autoloading this?
+    if (current_autoloading_.count(cmd) > 0) return none();
+
+    // Check to see if our paths have changed. If so, replace our cache.
+    // Note we don't have to modify autoloadable_files_. We'll naturally detect if those have
+    // changed when we query the cache.
+    maybe_t<env_var_t> mvar = env.get(env_var_name_);
+    const wcstring_list_t empty;
+    const wcstring_list_t &paths = mvar ? mvar->as_list() : empty;
+    if (paths != cache_->dirs()) {
+        cache_ = make_unique<autoload_file_cache_t>(paths);
+    }
+
+    // Do we have an entry to load?
+    auto mfile = cache_->check(cmd);
+    if (!mfile) return none();
+
+    // Is this file the same as what we previously autoloaded?
+    auto iter = autoloaded_files_.find(cmd);
+    if (iter != autoloaded_files_.end() && iter->second == mfile->file_id) {
+        // The file has been autoloaded and is unchanged.
+        return none();
+    }
+
+    // We're going to (tell our caller to) autoload this command.
+    current_autoloading_.insert(cmd);
+    autoloaded_files_[cmd] = mfile->file_id;
+    return std::move(mfile->path);
 }
 
 file_access_attempt_t access_file(const wcstring &path, int mode) {

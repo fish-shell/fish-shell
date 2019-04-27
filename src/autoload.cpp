@@ -151,10 +151,22 @@ maybe_t<autoloadable_file_t> autoload_file_cache_t::check(const wcstring &cmd, b
 autoloader_t::autoloader_t(wcstring env_var_name)
     : env_var_name_(std::move(env_var_name)), cache_(make_unique<autoload_file_cache_t>()) {}
 
+autoloader_t::autoloader_t(autoloader_t &&) = default;
 autoloader_t::~autoloader_t() = default;
 
 bool autoloader_t::can_autoload(const wcstring &cmd) {
     return cache_->check(cmd, true /* allow stale */).has_value();
+}
+
+wcstring_list_t autoloader_t::get_autoloaded_commands() const {
+    wcstring_list_t result;
+    result.reserve(autoloaded_files_.size());
+    for (const auto &kv : autoloaded_files_) {
+        result.push_back(kv.first);
+    }
+    // Sort the output to make it easier to test.
+    std::sort(result.begin(), result.end());
+    return result;
 }
 
 maybe_t<wcstring> autoloader_t::resolve_command(const wcstring &cmd, const environment_t &env) {

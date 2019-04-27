@@ -42,6 +42,7 @@ class autoloader_t {
     /// Construct an autoloader that loads from the paths given by \p env_var_name.
     explicit autoloader_t(wcstring env_var_name);
 
+    autoloader_t(autoloader_t &&);
     ~autoloader_t();
 
     /// Given a command, get a path to autoload.
@@ -74,6 +75,9 @@ class autoloader_t {
     /// \return whether a command could potentially be autoloaded.
     /// This does not actually mark the command as being autoloaded.
     bool can_autoload(const wcstring &cmd);
+
+    /// \return the names of all commands that have been autoloaded.
+    wcstring_list_t get_autoloaded_commands() const;
 
     /// Mark that all autoloaded files have been forgotten.
     /// Future calls to path_to_autoload() will return previously-returned paths.

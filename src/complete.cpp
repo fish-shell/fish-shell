@@ -380,8 +380,8 @@ class completer_t {
     std::vector<completion_t> acquire_completions() { return std::move(completions); }
 };
 
-// Autoloader for completions
-static autoload_t completion_autoloader(L"fish_complete_path");
+// Autoloader for completions.
+static owning_lock<autoloader_t> completion_autoloader{autoloader_t(L"fish_complete_path")};
 
 /// Create a new completion entry.
 void append_completion(std::vector<completion_t> *completions, wcstring comp, wcstring desc,
@@ -860,7 +860,16 @@ static void complete_load(const wcstring &name, bool reload) {
     // We have to load this as a function, since it may define a --wraps or signature.
     // See issue #2466.
     function_load(name);
-    completion_autoloader.load(name, reload);
+
+    // It's important to NOT hold the lock around completion loading.
+    // We need to take the lock to decide what to load, drop it to perform the load, then reacquire
+    // it.
+    const environment_t &vars = parser_t::principal_parser().vars();
+    maybe_t<wcstring> path_to_load = completion_autoloader.acquire()->resolve_command(name, vars);
+    if (path_to_load) {
+        autoloader_t::perform_autoload(*path_to_load);
+        completion_autoloader.acquire()->mark_autoload_finished(name);
+    }
 }
 
 /// complete_param: Given a command, find completions for the argument str of command cmd_orig with
@@ -1659,7 +1668,15 @@ wcstring complete_print() {
     return out;
 }
 
-void complete_invalidate_path() { completion_autoloader.invalidate(); }
+void complete_invalidate_path() {
+    // TODO: here we unload all completions for commands that are loaded by the autoloader. We also
+    // unload any completions that the user may specified on the command line. We should in
+    // principle track those completions loaded by the autoloader alone.
+    wcstring_list_t cmds = completion_autoloader.acquire()->get_autoloaded_commands();
+    for (const wcstring &cmd : cmds) {
+        complete_remove_all(cmd, false /* not a path */);
+    }
+}
 
 /// Add a new target that wraps a command. Example: __fish_XYZ (function) wraps XYZ (target).
 bool complete_add_wrapper(const wcstring &command, const wcstring &new_target) {

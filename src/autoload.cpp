@@ -144,6 +144,11 @@ autoload_t::autoload_t(wcstring env_var_name)
 autoload_t::autoload_t(autoload_t &&) = default;
 autoload_t::~autoload_t() = default;
 
+void autoload_t::invalidate_cache() {
+    auto cache = make_unique<autoload_file_cache_t>(cache_->dirs());
+    cache_ = std::move(cache);
+}
+
 bool autoload_t::can_autoload(const wcstring &cmd) {
     return cache_->check(cmd, true /* allow stale */).has_value();
 }
@@ -160,15 +165,17 @@ wcstring_list_t autoload_t::get_autoloaded_commands() const {
 }
 
 maybe_t<wcstring> autoload_t::resolve_command(const wcstring &cmd, const environment_t &env) {
+    maybe_t<env_var_t> mvar = env.get(env_var_name_);
+    return resolve_command(cmd, mvar ? mvar->as_list() : wcstring_list_t{});
+}
+
+maybe_t<wcstring> autoload_t::resolve_command(const wcstring &cmd, const wcstring_list_t &paths) {
     // Are we currently in the process of autoloading this?
     if (current_autoloading_.count(cmd) > 0) return none();
 
     // Check to see if our paths have changed. If so, replace our cache.
     // Note we don't have to modify autoloadable_files_. We'll naturally detect if those have
     // changed when we query the cache.
-    maybe_t<env_var_t> mvar = env.get(env_var_name_);
-    const wcstring_list_t empty;
-    const wcstring_list_t &paths = mvar ? mvar->as_list() : empty;
     if (paths != cache_->dirs()) {
         cache_ = make_unique<autoload_file_cache_t>(paths);
     }

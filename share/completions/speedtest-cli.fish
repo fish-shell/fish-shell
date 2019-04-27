@@ -18,5 +18,3 @@ complete -c speedtest-cli -l timeout -d 'HTTP timeout in seconds' -rf
 complete -c speedtest-cli -l secure -d 'Use HTTPS instead of HTTP with speedtest.net operated servers'
 complete -c speedtest-cli -l no-pre-allocate -d 'Do not pre allocate upload data'
 complete -c speedtest-cli -l version -d 'Show the version number and exit'
-
-complete -c speedtest -w speedtest-cli

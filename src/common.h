@@ -648,7 +648,7 @@ class acquired_lock {
 
 // A lock that owns a piece of data
 // Access to the data is only provided by taking the lock
-template <typename DATA>
+template <typename Data>
 class owning_lock {
     // No copying
     owning_lock &operator=(const scoped_lock &) = delete;
@@ -657,13 +657,13 @@ class owning_lock {
     owning_lock &operator=(owning_lock &&) = default;
 
     std::mutex lock;
-    DATA data;
+    Data data;
 
    public:
-    owning_lock(DATA &&d) : data(std::move(d)) {}
+    owning_lock(Data &&d) : data(std::move(d)) {}
     owning_lock() : data() {}
 
-    acquired_lock<DATA> acquire() { return {lock, &data}; }
+    acquired_lock<Data> acquire() { return {lock, &data}; }
 };
 
 /// A scoped manager to save the current value of some variable, and optionally set it to a new

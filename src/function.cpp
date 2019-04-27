@@ -63,7 +63,7 @@ struct function_set_t {
     std::unordered_set<wcstring> autoload_tombstones;
 
     /// The autoloader for our functions.
-    autoloader_t autoloader{L"fish_function_path"};
+    autoload_t autoloader{L"fish_function_path"};
 
     /// Remove a function.
     /// \return true if successful, false if it doesn't exist.
@@ -112,7 +112,7 @@ static void try_autoload(const wcstring &name) {
     // Release the lock and perform any autoload, then reacquire the lock and clean up.
     if (path_to_autoload) {
         // Crucially, the lock is acquired *after* do_autoload_file_at_path().
-        autoloader_t::perform_autoload(*path_to_autoload);
+        autoload_t::perform_autoload(*path_to_autoload);
         function_set.acquire()->autoloader.mark_autoload_finished(name);
     }
 }

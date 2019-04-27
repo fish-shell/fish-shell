@@ -381,7 +381,7 @@ class completer_t {
 };
 
 // Autoloader for completions.
-static owning_lock<autoloader_t> completion_autoloader{autoloader_t(L"fish_complete_path")};
+static owning_lock<autoload_t> completion_autoloader{autoload_t(L"fish_complete_path")};
 
 /// Create a new completion entry.
 void append_completion(std::vector<completion_t> *completions, wcstring comp, wcstring desc,
@@ -867,7 +867,7 @@ static void complete_load(const wcstring &name, bool reload) {
     const environment_t &vars = parser_t::principal_parser().vars();
     maybe_t<wcstring> path_to_load = completion_autoloader.acquire()->resolve_command(name, vars);
     if (path_to_load) {
-        autoloader_t::perform_autoload(*path_to_load);
+        autoload_t::perform_autoload(*path_to_load);
         completion_autoloader.acquire()->mark_autoload_finished(name);
     }
 }

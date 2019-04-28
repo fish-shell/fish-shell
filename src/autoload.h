@@ -16,6 +16,7 @@
 class autoload_file_cache_t;
 class environment_t;
 class parser_t;
+struct autoload_tester_t;
 
 /// autoload_t is a class that knows how to autoload .fish files from a list of directories. This
 /// is used by autoloading functions and completions. It maintains a file cache, which is
@@ -38,6 +39,16 @@ class autoload_t {
     /// This is a unique_ptr because want to change it if the value of our environment variable
     /// changes. This is never null (but it may be a cache with no paths).
     std::unique_ptr<autoload_file_cache_t> cache_;
+
+    /// Invalidate any underlying cache.
+    /// This is exposed for testing.
+    void invalidate_cache();
+
+    /// Like resolve_autoload(), but accepts the paths directly.
+    /// This is exposed for testing.
+    maybe_t<wcstring> resolve_command(const wcstring &cmd, const wcstring_list_t &paths);
+
+    friend autoload_tester_t;
 
    public:
     /// Construct an autoloader that loads from the paths given by \p env_var_name.
@@ -77,7 +88,8 @@ class autoload_t {
     /// This does not actually mark the command as being autoloaded.
     bool can_autoload(const wcstring &cmd);
 
-    /// \return the names of all commands that have been autoloaded.
+    /// \return the names of all commands that have been autoloaded. Note this includes "in-flight"
+    /// commands.
     wcstring_list_t get_autoloaded_commands() const;
 
     /// Mark that all autoloaded files have been forgotten.

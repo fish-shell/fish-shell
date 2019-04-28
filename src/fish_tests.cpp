@@ -38,6 +38,7 @@
 #include <utility>
 #include <vector>
 
+#include "autoload.h"
 #include "builtin.h"
 #include "color.h"
 #include "common.h"
@@ -2470,6 +2471,78 @@ static void test_colors() {
     do_test(rgb_color_t(L"magenta").is_named());
     do_test(rgb_color_t(L"MaGeNTa").is_named());
     do_test(rgb_color_t(L"mooganta").is_none());
+}
+
+// This class allows accessing private bits of autoload_t.
+struct autoload_tester_t {
+    static void run(const wchar_t *fmt, ...) {
+        va_list va;
+        va_start(va, fmt);
+        wcstring cmd = vformat_string(fmt, va);
+        va_end(va);
+
+        int status = system(wcs2string(cmd).c_str());
+        do_test(status == 0);
+    }
+
+    static void run_test() {
+        char t1[] = "/tmp/fish_test_autoload.XXXXXX";
+        wcstring p1 = str2wcstring(mkdtemp(t1));
+        char t2[] = "/tmp/fish_test_autoload.XXXXXX";
+        wcstring p2 = str2wcstring(mkdtemp(t2));
+
+        const wcstring_list_t paths = {p1, p2};
+
+        autoload_t autoload(L"test_var");
+        do_test(!autoload.resolve_command(L"file1", paths));
+        do_test(!autoload.resolve_command(L"nothing", paths));
+        do_test(autoload.get_autoloaded_commands().empty());
+
+        run(L"touch %ls/file1.fish", p1.c_str());
+        run(L"touch %ls/file2.fish", p2.c_str());
+        autoload.invalidate_cache();
+
+        do_test(!autoload.autoload_in_progress(L"file1"));
+        do_test(autoload.resolve_command(L"file1", paths));
+        do_test(!autoload.resolve_command(L"file1", paths));
+        do_test(autoload.autoload_in_progress(L"file1"));
+        do_test(autoload.get_autoloaded_commands() == wcstring_list_t{L"file1"});
+        autoload.mark_autoload_finished(L"file1");
+        do_test(!autoload.autoload_in_progress(L"file1"));
+        do_test(autoload.get_autoloaded_commands() == wcstring_list_t{L"file1"});
+
+        do_test(!autoload.resolve_command(L"file1", paths));
+        do_test(!autoload.resolve_command(L"nothing", paths));
+        do_test(autoload.resolve_command(L"file2", paths));
+        do_test(!autoload.resolve_command(L"file2", paths));
+        autoload.mark_autoload_finished(L"file2");
+        do_test(!autoload.resolve_command(L"file2", paths));
+        do_test((autoload.get_autoloaded_commands() == wcstring_list_t{L"file1", L"file2"}));
+
+        autoload.clear();
+        do_test(autoload.resolve_command(L"file1", paths));
+        autoload.mark_autoload_finished(L"file1");
+        do_test(!autoload.resolve_command(L"file1", paths));
+        do_test(!autoload.resolve_command(L"nothing", paths));
+        do_test(autoload.resolve_command(L"file2", paths));
+        do_test(!autoload.resolve_command(L"file2", paths));
+        autoload.mark_autoload_finished(L"file2");
+
+        do_test(!autoload.resolve_command(L"file1", paths));
+        run(L"touch %ls/file1.fish", p1.c_str());
+        autoload.invalidate_cache();
+        do_test(autoload.resolve_command(L"file1", paths));
+        autoload.mark_autoload_finished(L"file1");
+
+        run(L"rm -Rf %ls", p1.c_str());
+        run(L"rm -Rf %ls", p2.c_str());
+
+    }
+};
+
+static void test_autoload() {
+    say(L"Testing autoload");
+    autoload_tester_t::run_test();
 }
 
 static void test_complete() {
@@ -5289,6 +5362,7 @@ int main(int argc, char **argv) {
     if (should_test_function("is_potential_path")) test_is_potential_path();
     if (should_test_function("colors")) test_colors();
     if (should_test_function("complete")) test_complete();
+    if (should_test_function("autoload")) test_autoload();
     if (should_test_function("input")) test_input();
     if (should_test_function("line_iterator")) test_line_iterator();
     if (should_test_function("universal")) test_universal();

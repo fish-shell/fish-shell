@@ -53,6 +53,7 @@
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "future_feature_flags.h"
+#include "global_safety.h"
 #include "proc.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -64,19 +65,32 @@ struct termios shell_modes;
 /// This allows us to determine if we're running on the main thread
 static std::atomic<size_t> thread_id { 0 };
 /// This allows us to notice when we've forked.
-static bool is_forked_proc = false;
+static relaxed_atomic_bool_t is_forked_proc{false};
 /// This allows us to bypass the main thread checks
-static bool thread_asserts_cfg_for_testing = false;
+static relaxed_atomic_bool_t thread_asserts_cfg_for_testing{false};
 
-wchar_t ellipsis_char;
-const wchar_t *ellipsis_str = nullptr;
-const wchar_t *omitted_newline_str;
-int omitted_newline_width;
-wchar_t obfuscation_read_char;
+static relaxed_atomic_t<wchar_t> ellipsis_char;
+wchar_t get_ellipsis_char() { return ellipsis_char; }
+
+static relaxed_atomic_t<const wchar_t *> ellipsis_str;
+const wchar_t *get_ellipsis_str() { return ellipsis_str; }
+
+static relaxed_atomic_t<const wchar_t *> omitted_newline_str;
+const wchar_t *get_omitted_newline_str() { return omitted_newline_str; }
+
+static relaxed_atomic_t<int> omitted_newline_width;
+int get_omitted_newline_width() { return omitted_newline_width; }
+
+static relaxed_atomic_t<wchar_t> obfuscation_read_char;
+wchar_t get_obfuscation_read_char() { return obfuscation_read_char; }
+
 bool g_profiling_active = false;
 const wchar_t *program_name;
 std::atomic<int> debug_level{1};  // default maximum debug output level (errors and warnings)
-int debug_stack_frames = 0;  // default number of stack frames to show on debug() calls
+
+static relaxed_atomic_t<int> debug_stack_frames{0};
+void set_debug_stack_frames(int v) { debug_stack_frames = v; }
+int get_debug_stack_frames() { return debug_stack_frames; }
 
 /// Be able to restore the term's foreground process group.
 /// This is set during startup and not modified after.

@@ -6,6 +6,7 @@
 
 #include "common.h"
 
+#include <atomic>
 #include <cassert>
 
 // fish is multithreaded. Global (which includes function and file-level statics) when used naively
@@ -69,5 +70,21 @@ class latch_t : detail::fixed_t {
         value_ = new T(std::forward<Args>(args)...);
     }
 };
+
+/// An atomic type that always use relaxed reads.
+template <typename T>
+class relaxed_atomic_t {
+    std::atomic<T> value_{};
+
+   public:
+    relaxed_atomic_t() = default;
+    relaxed_atomic_t(T value) : value_(value) {}
+
+    operator T() const { return value_.load(std::memory_order_relaxed); }
+
+    void operator=(T v) { return value_.store(v, std::memory_order_relaxed); }
+};
+
+using relaxed_atomic_bool_t = relaxed_atomic_t<bool>;
 
 #endif

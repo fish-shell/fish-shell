@@ -794,6 +794,7 @@ static wcstring truncate_string(const wcstring &str) {
     wcstring result(str, 0, max_len);
     if (str.size() > max_len) {
         // Truncate!
+        wchar_t ellipsis_char = get_ellipsis_char();
         if (ellipsis_char == L'\x2026') {
             result.at(max_len - 1) = ellipsis_char;
         } else {

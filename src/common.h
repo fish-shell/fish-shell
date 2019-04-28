@@ -176,20 +176,22 @@ extern struct termios shell_modes;
 
 /// The character to use where the text has been truncated. Is an ellipsis on unicode system and a $
 /// on other systems.
-extern wchar_t ellipsis_char;
+wchar_t get_ellipsis_char();
+
 /// The character or string to use where text has been truncated (ellipsis if possible, otherwise
 /// ...)
-extern const wchar_t *ellipsis_str;
+const wchar_t *get_ellipsis_str();
 
 /// Character representing an omitted newline at the end of text.
-extern const wchar_t *omitted_newline_str;
-extern int omitted_newline_width;
+const wchar_t *get_omitted_newline_str();
+int get_omitted_newline_width();
 
 /// Character used for the silent mode of the read command
-extern wchar_t obfuscation_read_char;
+wchar_t get_obfuscation_read_char();
 
 /// How many stack frames to show when a debug() call is made.
-extern int debug_stack_frames;
+int get_debug_stack_frames();
+void set_debug_stack_frames(int);
 
 /// Profiling flag. True if commands should be profiled.
 extern bool g_profiling_active;

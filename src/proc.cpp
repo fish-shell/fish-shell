@@ -410,6 +410,7 @@ static wcstring truncate_command(const wcstring &cmd) {
     }
 
     // Truncation required.
+    const wchar_t *ellipsis_str = get_ellipsis_str();
     const size_t ellipsis_length = std::wcslen(ellipsis_str);  // no need for wcwidth
     size_t trunc_length = max_len - ellipsis_length;
     // Eat trailing whitespace.

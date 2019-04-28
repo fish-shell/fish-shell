@@ -89,9 +89,10 @@ static size_t print_max(const wcstring &str, highlight_spec_t color, size_t max,
 
         if (width_c > remaining) break;
 
+        wchar_t ellipsis = get_ellipsis_char();
         if ((width_c == remaining) && (has_more || i + 1 < str.size())) {
-            line->append(ellipsis_char, color);
-            int ellipsis_width = fish_wcwidth(ellipsis_char);
+            line->append(ellipsis, color);
+            int ellipsis_width = fish_wcwidth(ellipsis);
             remaining -= std::min(remaining, size_t(ellipsis_width));
             break;
         }
@@ -493,7 +494,7 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     wcstring progress_text;
     assert(rendering->remaining_to_disclose != 1);
     if (rendering->remaining_to_disclose > 1) {
-        progress_text = format_string(_(L"%lsand %lu more rows"), ellipsis_str,
+        progress_text = format_string(_(L"%lsand %lu more rows"), get_ellipsis_str(),
                                       (unsigned long)rendering->remaining_to_disclose);
     } else if (start_row > 0 || stop_row < row_count) {
         // We have a scrollable interface. The +1 here is because we are zero indexed, but want

@@ -2047,6 +2047,7 @@ struct pager_layout_testcase_t {
             wcstring expected = this->expected;
 
             // hack: handle the case where ellipsis is not L'\x2026'
+            wchar_t ellipsis_char = get_ellipsis_char();
             if (ellipsis_char != L'\x2026') {
                 std::replace(expected.begin(), expected.end(), L'\x2026', ellipsis_char);
             }

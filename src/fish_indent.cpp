@@ -575,7 +575,7 @@ int main(int argc, char *argv[]) {
                 tmp = strtol(optarg, &end, 10);
 
                 if (tmp > 0 && tmp <= 128 && !*end && !errno) {
-                    debug_stack_frames = (int)tmp;
+                    set_debug_stack_frames((int)tmp);
                 } else {
                     std::fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag"), optarg);
                     exit(1);

@@ -610,7 +610,7 @@ void reader_data_t::repaint() {
 
     wcstring full_line;
     if (silent) {
-        full_line = wcstring(cmd_line->text.length(), obfuscation_read_char);
+        full_line = wcstring(cmd_line->text.length(), get_obfuscation_read_char());
     } else {
         // Combine the command and autosuggestion into one string.
         full_line = combine_command_and_autosuggestion(cmd_line->text, autosuggestion);
@@ -1633,7 +1633,7 @@ bool reader_data_t::handle_completions(const std::vector<completion_t> &comp,
         prefix.append(el->text, prefix_start, len);
     } else {
         // Append just the end of the string.
-        prefix = wcstring(&ellipsis_char, 1);
+        prefix = wcstring{get_ellipsis_char()};
         prefix.append(el->text, prefix_start + len - PREFIX_MAX_LEN, PREFIX_MAX_LEN);
     }
 

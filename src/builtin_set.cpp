@@ -494,7 +494,7 @@ static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, 
                 streams.out.append(L" ");
                 streams.out.append(val);
 
-                if (shorten) streams.out.push_back(ellipsis_char);
+                if (shorten) streams.out.push_back(get_ellipsis_char());
             }
         }
 

@@ -24,6 +24,7 @@
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fish_version.h"
+#include "global_safety.h"
 #include "history.h"
 #include "input.h"
 #include "path.h"
@@ -55,7 +56,7 @@ bool curses_initialized = false;
 bool term_has_xn = false;
 
 /// Universal variables global instance. Initialized in env_init.
-static env_universal_t *s_universal_variables = NULL;
+static latch_t<env_universal_t> s_universal_variables;
 
 /// Getter for universal variables.
 static env_universal_t *uvars() { return s_universal_variables; }
@@ -734,8 +735,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     path_emit_config_directory_errors(vars);
 
     // Set up universal variables. The empty string means to use the default path.
-    assert(s_universal_variables == NULL);
-    s_universal_variables = new env_universal_t(L"");
+    s_universal_variables.emplace(L"");
     callback_data_list_t callbacks;
     s_universal_variables->initialize(callbacks);
     env_universal_callbacks(&env_stack_t::principal(), callbacks);

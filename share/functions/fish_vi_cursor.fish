@@ -28,7 +28,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     # - The "Ss" entry isn't a thing in macOS' old and crusty terminfo
     # - It is set for xterm, and everyone and their dog claims to be xterm
     #
-    # So we just don't care about $TERM _at all_ - it is useless for our purposes.
+    # So we just don't care about $TERM, unless it is one of the few terminals that actually have their own entry.
     #
     # Note: Previous versions also checked $TMUX, and made sure that then $TERM was screen* or tmux*.
     # We don't care, since we *cannot* handle term-in-a-terms 100% correctly.
@@ -36,6 +36,9 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
         and not set -q ITERM_PROFILE
         and not set -q VTE_VERSION # which version is already checked above
         and not set -q XTERM_VERSION
+        and not string match -rq '^st(-.*)$' -- $TERM
+        and not string match -q 'xterm-kitty*' -- $TERM
+        and not string match -q 'rxvt*' -- $TERM
         return
     end
 

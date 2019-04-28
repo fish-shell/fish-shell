@@ -15,6 +15,7 @@
 #include <queue>
 
 #include "common.h"
+#include "global_safety.h"
 #include "iothread.h"
 #include "wutil.h"
 
@@ -81,23 +82,22 @@ static std::condition_variable s_main_thread_performer_cond;  // protects the ma
 /// stack-allocated on the requesting thread.
 static owning_lock<std::queue<main_thread_request_t *>> s_main_thread_request_queue;
 
-// Notifying pipes.
-static int s_read_pipe, s_write_pipe;
+// Pipes used for notifying.
+struct notify_pipes_t {
+    int read;
+    int write;
+};
 
-static void iothread_init() {
-    static bool inited = false;
-    if (!inited) {
-        inited = true;
-
-        // Initialize the completion pipes.
+/// \return the (immortal) set of pipes used for notifying of completions.
+static const notify_pipes_t &get_notify_pipes() {
+    static const notify_pipes_t s_notify_pipes = [] {
         int pipes[2] = {0, 0};
         assert_with_errno(pipe(pipes) != -1);
-        s_read_pipe = pipes[0];
-        s_write_pipe = pipes[1];
-
-        set_cloexec(s_read_pipe);
-        set_cloexec(s_write_pipe);
-    }
+        set_cloexec(pipes[0]);
+        set_cloexec(pipes[1]);
+        return notify_pipes_t{pipes[0], pipes[1]};
+    }();
+    return s_notify_pipes;
 }
 
 static bool dequeue_spawn_request(spawn_request_t *result) {
@@ -132,7 +132,8 @@ static void *iothread_worker(void *unused) {
             // Enqueue the result, and tell the main thread about it.
             enqueue_thread_result(std::move(req));
             const char wakeup_byte = IO_SERVICE_RESULT_QUEUE;
-            assert_with_errno(write_loop(s_write_pipe, &wakeup_byte, sizeof wakeup_byte) != -1);
+            int notify_fd = get_notify_pipes().write;
+            assert_with_errno(write_loop(notify_fd, &wakeup_byte, sizeof wakeup_byte) != -1);
         }
     }
 
@@ -166,7 +167,6 @@ static void iothread_spawn() {
 int iothread_perform_impl(void_function_t &&func, void_function_t &&completion) {
     ASSERT_IS_MAIN_THREAD();
     ASSERT_IS_NOT_FORKED_CHILD();
-    iothread_init();
 
     struct spawn_request_t req(std::move(func), std::move(completion));
     int local_thread_count = -1;
@@ -189,10 +189,7 @@ int iothread_perform_impl(void_function_t &&func, void_function_t &&completion) 
     return local_thread_count;
 }
 
-int iothread_port() {
-    iothread_init();
-    return s_read_pipe;
-}
+int iothread_port() { return get_notify_pipes().read; }
 
 void iothread_service_completion() {
     ASSERT_IS_MAIN_THREAD();
@@ -316,7 +313,8 @@ void iothread_perform_on_main(void_function_t &&func) {
 
     // Tell the pipe.
     const char wakeup_byte = IO_SERVICE_MAIN_THREAD_REQUEST_QUEUE;
-    assert_with_errno(write_loop(s_write_pipe, &wakeup_byte, sizeof wakeup_byte) != -1);
+    int notify_fd = get_notify_pipes().write;
+    assert_with_errno(write_loop(notify_fd, &wakeup_byte, sizeof wakeup_byte) != -1);
 
     // Wait on the condition, until we're done.
     std::unique_lock<std::mutex> perform_lock(s_main_thread_performer_lock);

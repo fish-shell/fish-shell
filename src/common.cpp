@@ -94,7 +94,7 @@ int get_debug_stack_frames() { return debug_stack_frames; }
 
 /// Be able to restore the term's foreground process group.
 /// This is set during startup and not modified after.
-static pid_t initial_fg_process_group = -1;
+static relaxed_atomic_t<pid_t> initial_fg_process_group{-1};
 
 /// This struct maintains the current state of the terminal size. It is updated on demand after
 /// receiving a SIGWINCH. Do not touch this struct directly, it's managed with a rwlock. Use
@@ -2240,18 +2240,10 @@ bool is_forked_child() {
 }
 
 void setup_fork_guards() {
-    static bool already_initialized = false;
-
     is_forked_proc = false;
-    if (already_initialized) {
-        // Just mark this process as main and exit
-        return;
-    }
-
-    already_initialized = true;
-    pthread_atfork(nullptr, nullptr, []() {
-        is_forked_proc = true;
-    });
+    static std::once_flag fork_guard_flag;
+    std::call_once(fork_guard_flag,
+                   [] { pthread_atfork(nullptr, nullptr, [] { is_forked_proc = true; }); });
 }
 
 void save_term_foreground_process_group() {
@@ -2497,7 +2489,7 @@ std::string get_path_to_tmp_dir() {
 // session. We err on the side of assuming it's not a console session. This approach isn't
 // bullet-proof and that's OK.
 bool is_console_session() {
-    static bool console_session = []() {
+    static const bool console_session = []() {
         ASSERT_IS_MAIN_THREAD();
 
         const char *tty_name = ttyname(0);

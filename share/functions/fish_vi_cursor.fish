@@ -29,6 +29,13 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
         return
     end
 
+    # Similarly, XTerm can do it since v280.
+    # Other terminals that set TERM=xterm don't set XTERM_VERSION.
+    if set -q XTERM_VERSION
+        and not test (string replace -r "XTerm\((\d+)\)" '$1' -- "$XTERM_VERSION") -ge 280 2>/dev/null
+        return
+    end
+
     # We use the `tput` here just to see if terminfo thinks we can change the cursor.
     # We cannot use that sequence directly as it's not the correct one for konsole and iTerm,
     # and because we may want to change the cursor even though terminfo says we can't (tmux).
@@ -39,13 +46,11 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
         and not begin
             set -q TMUX
             # ...in a supporting term...
-            and begin set -q KONSOLE_PROFILE_NAME
+            and begin
+                set -q KONSOLE_PROFILE_NAME
                 or set -q ITERM_PROFILE
                 or set -q VTE_VERSION # which version is already checked above
-                or begin
-                    set -q XTERM_VERSION
-                    and test (string replace -r "XTerm\((\d+)\)" '$1' -- $XTERM_VERSION) -ge 280
-                end
+                or set -q XTERM_VERSION
             end
             # .. unless an unsupporting terminal has been started in tmux inside a supporting one
             and begin string match -q "screen*" -- $TERM
@@ -63,8 +68,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
             and not begin set -q KONSOLE_PROFILE_NAME
                 or set -q ITERM_PROFILE
                 or set -q VTE_VERSION # which version is already checked above
-                # If $XTERM_VERSION is undefined, this will return 1 and print an error. Silence it.
-                or test (string replace -r "XTerm\((\d+)\)" '$1' -- $XTERM_VERSION) -ge 280 2>/dev/null
+                or set -q XTERM_VERSION
             end
         end
 

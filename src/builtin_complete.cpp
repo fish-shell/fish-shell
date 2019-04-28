@@ -110,7 +110,6 @@ static void builtin_complete_remove(const wcstring_list_t &cmds, const wcstring_
 // complete.cpp for any heavy lifting.
 int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     ASSERT_IS_MAIN_THREAD();
-    static int recursion_level = 0;
 
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
@@ -325,8 +324,8 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         // argument, not the reader buffer.
         builtin_commandline_scoped_transient_t temp_buffer(do_complete_param);
 
-        if (recursion_level < 1) {
-            recursion_level++;
+        if (parser.libdata().builtin_complete_recursion_level < 1) {
+            parser.libdata().builtin_complete_recursion_level++;
 
             std::vector<completion_t> comp;
             complete(do_complete_param, &comp, completion_request_t::fuzzy_match, parser.vars(),
@@ -364,7 +363,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 streams.out.push_back(L'\n');
             }
 
-            recursion_level--;
+            parser.libdata().builtin_complete_recursion_level--;
         }
     } else if (cmd_to_complete.empty() && path.empty()) {
         // No arguments specified, meaning we print the definitions of all specified completions

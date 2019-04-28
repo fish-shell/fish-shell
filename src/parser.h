@@ -151,6 +151,9 @@ class completion_t;
 struct library_data_t {
     /// A counter incremented every time a command executes.
     uint64_t exec_count{0};
+
+    /// Number of recursive calls to builtin_complete().
+    uint32_t builtin_complete_recursion_level{0};
 };
 
 class parser_t : public std::enable_shared_from_this<parser_t> {

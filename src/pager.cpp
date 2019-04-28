@@ -39,24 +39,24 @@ typedef std::vector<comp_t> comp_info_list_t;
 /// Text we use for the search field.
 #define SEARCH_FIELD_PROMPT _(L"search: ")
 
-inline bool selection_direction_is_cardinal(selection_direction_t dir) {
+inline bool selection_direction_is_cardinal(selection_motion_t dir) {
     switch (dir) {
-        case direction_north:
-        case direction_east:
-        case direction_south:
-        case direction_west:
-        case direction_page_north:
-        case direction_page_south: {
+        case selection_motion_t::north:
+        case selection_motion_t::east:
+        case selection_motion_t::south:
+        case selection_motion_t::west:
+        case selection_motion_t::page_north:
+        case selection_motion_t::page_south: {
             return true;
         }
-        case direction_next:
-        case direction_prev:
-        case direction_deselect: {
+        case selection_motion_t::next:
+        case selection_motion_t::prev:
+        case selection_motion_t::deselect: {
             return false;
         }
     }
 
-    DIE("should never reach this statement");
+    DIE("unreachable");
 }
 
 /// Returns numer / denom, rounding up. As a "courtesy" 0/0 is 0.
@@ -601,7 +601,7 @@ pager_t::pager_t()
 
 bool pager_t::empty() const { return unfiltered_completion_infos.empty(); }
 
-bool pager_t::select_next_completion_in_direction(selection_direction_t direction,
+bool pager_t::select_next_completion_in_direction(selection_motion_t direction,
                                                   const page_rendering_t &rendering) {
     // Must have something to select.
     if (this->completion_infos.empty()) {
@@ -611,24 +611,24 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
     // Handle the case of nothing selected yet.
     if (selected_completion_idx == PAGER_SELECTION_NONE) {
         switch (direction) {
-            case direction_south:
-            case direction_page_south:
-            case direction_next:
-            case direction_north:
-            case direction_prev: {
+            case selection_motion_t::south:
+            case selection_motion_t::page_south:
+            case selection_motion_t::next:
+            case selection_motion_t::north:
+            case selection_motion_t::prev: {
                 // These directions do something sane.
-                if (direction == direction_prev
-                    || direction == direction_north) {
+                if (direction == selection_motion_t::prev ||
+                    direction == selection_motion_t::north) {
                     selected_completion_idx = completion_infos.size() - 1;
                 } else {
                     selected_completion_idx = 0;
                 }
                 return true;
             }
-            case direction_page_north:
-            case direction_east:
-            case direction_west:
-            case direction_deselect: {
+            case selection_motion_t::page_north:
+            case selection_motion_t::east:
+            case selection_motion_t::west:
+            case selection_motion_t::deselect: {
                 // These do nothing.
                 return false;
             }
@@ -639,14 +639,14 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
     size_t new_selected_completion_idx;
     if (!selection_direction_is_cardinal(direction)) {
         // Next, previous, or deselect, all easy.
-        if (direction == direction_deselect) {
+        if (direction == selection_motion_t::deselect) {
             new_selected_completion_idx = PAGER_SELECTION_NONE;
-        } else if (direction == direction_next) {
+        } else if (direction == selection_motion_t::next) {
             new_selected_completion_idx = selected_completion_idx + 1;
             if (new_selected_completion_idx >= completion_infos.size()) {
                 new_selected_completion_idx = 0;
             }
-        } else if (direction == direction_prev) {
+        } else if (direction == selection_motion_t::prev) {
             if (selected_completion_idx == 0) {
                 new_selected_completion_idx = completion_infos.size() - 1;
             } else {
@@ -662,7 +662,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
         size_t page_height = std::max(rendering.term_height - 1, (size_t)1);
 
         switch (direction) {
-            case direction_page_north: {
+            case selection_motion_t::page_north: {
                 if (current_row > page_height) {
                     current_row = current_row - page_height;
                 } else {
@@ -670,7 +670,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
                 }
                 break;
             }
-            case direction_north: {
+            case selection_motion_t::north: {
                 // Go up a whole row. If we cycle, go to the previous column.
                 if (current_row > 0) {
                     current_row--;
@@ -684,7 +684,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
                 }
                 break;
             }
-            case direction_page_south: {
+            case selection_motion_t::page_south: {
                 if (current_row + page_height < rendering.rows) {
                     current_row += page_height;
                 } else {
@@ -695,7 +695,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
                 }
                 break;
             }
-            case direction_south: {
+            case selection_motion_t::south: {
                 // Go down, unless we are in the last row.
                 // If we go over the last element, wrap to the first.
                 if (current_row + 1 < rendering.rows &&
@@ -707,7 +707,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
                 }
                 break;
             }
-            case direction_east: {
+            case selection_motion_t::east: {
                 // Go east, wrapping to the next row. There is no "row memory," so if we run off the
                 // end, wrap.
                 if (current_col + 1 < rendering.cols &&
@@ -719,7 +719,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
                 }
                 break;
             }
-            case direction_west: {
+            case selection_motion_t::west: {
                 // Go west, wrapping to the previous row.
                 if (current_col > 0) {
                     current_col--;

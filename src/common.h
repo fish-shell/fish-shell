@@ -137,24 +137,6 @@ enum {
 };
 typedef unsigned int escape_flags_t;
 
-// Directions.
-enum selection_direction_t {
-    // Visual directions.
-    direction_north,
-    direction_east,
-    direction_south,
-    direction_west,
-    direction_page_north,
-    direction_page_south,
-
-    // Logical directions.
-    direction_next,
-    direction_prev,
-
-    // Special value that means deselect.
-    direction_deselect
-};
-
 /// Issue a debug message with printf-style string formating and automatic line breaking. The string
 /// will begin with the string \c program_name, followed by a colon and a whitespace.
 ///

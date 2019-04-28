@@ -1977,47 +1977,47 @@ static void test_pager_navigation() {
 
     // Here are navigation directions and where we expect the selection to be.
     const struct {
-        selection_direction_t dir;
+        selection_motion_t dir;
         size_t sel;
     } cmds[] = {
         // Tab completion to get into the list.
-        {direction_next, 0},
+        {selection_motion_t::next, 0},
 
         // Westward motion in upper left goes to the last filled column in the last row.
-        {direction_west, 15},
+        {selection_motion_t::west, 15},
         // East goes back.
-        {direction_east, 0},
+        {selection_motion_t::east, 0},
 
         // "Next" motion goes down the column.
-        {direction_next, 1},
-        {direction_next, 2},
+        {selection_motion_t::next, 1},
+        {selection_motion_t::next, 2},
 
-        {direction_west, 17},
-        {direction_east, 2},
-        {direction_east, 6},
-        {direction_east, 10},
-        {direction_east, 14},
-        {direction_east, 18},
+        {selection_motion_t::west, 17},
+        {selection_motion_t::east, 2},
+        {selection_motion_t::east, 6},
+        {selection_motion_t::east, 10},
+        {selection_motion_t::east, 14},
+        {selection_motion_t::east, 18},
 
-        {direction_west, 14},
-        {direction_east, 18},
+        {selection_motion_t::west, 14},
+        {selection_motion_t::east, 18},
 
         // Eastward motion wraps back to the upper left, westward goes to the prior column.
-        {direction_east, 3},
-        {direction_east, 7},
-        {direction_east, 11},
-        {direction_east, 15},
+        {selection_motion_t::east, 3},
+        {selection_motion_t::east, 7},
+        {selection_motion_t::east, 11},
+        {selection_motion_t::east, 15},
 
         // Pages.
-        {direction_page_north, 12},
-        {direction_page_south, 15},
-        {direction_page_north, 12},
-        {direction_east, 16},
-        {direction_page_south, 18},
-        {direction_east, 3},
-        {direction_north, 2},
-        {direction_page_north, 0},
-        {direction_page_south, 3},
+        {selection_motion_t::page_north, 12},
+        {selection_motion_t::page_south, 15},
+        {selection_motion_t::page_north, 12},
+        {selection_motion_t::east, 16},
+        {selection_motion_t::page_south, 18},
+        {selection_motion_t::east, 3},
+        {selection_motion_t::north, 2},
+        {selection_motion_t::page_north, 0},
+        {selection_motion_t::page_south, 3},
 
     };
     for (size_t i = 0; i < sizeof cmds / sizeof *cmds; i++) {

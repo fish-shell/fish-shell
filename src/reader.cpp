@@ -447,7 +447,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void handle_readline_command(readline_cmd_t cmd, readline_loop_state_t &rls);
 
     void clear_pager();
-    void select_completion_in_direction(enum selection_direction_t dir);
+    void select_completion_in_direction(selection_motion_t dir);
     void flash();
 
     void mark_repaint_needed() { repaint_needed = true; }
@@ -1410,7 +1410,7 @@ void reader_data_t::clear_pager() {
     mark_repaint_needed();
 }
 
-void reader_data_t::select_completion_in_direction(enum selection_direction_t dir) {
+void reader_data_t::select_completion_in_direction(selection_motion_t dir) {
     bool selection_changed = pager.select_next_completion_in_direction(dir, current_page_rendering);
     if (selection_changed) {
         pager_selection_changed();
@@ -2535,8 +2535,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                     pager.set_fully_disclosed(true);
                     reader_repaint_needed();
                 } else {
-                    select_completion_in_direction(c == rl::complete ? direction_next
-                                                                       : direction_prev);
+                    select_completion_in_direction(c == rl::complete ? selection_motion_t::next
+                                                                     : selection_motion_t::prev);
                 }
             } else {
                 // Either the user hit tab only once, or we had no visible completion list.
@@ -2601,7 +2601,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // Show the search field if requested and if we printed a list of completions.
                 if (c == rl::complete_AND_SEARCH && !rls.comp_empty && !pager.empty()) {
                     pager.set_search_field_shown(true);
-                    select_completion_in_direction(direction_next);
+                    select_completion_in_direction(selection_motion_t::next);
                     reader_repaint_needed();
                 }
             }
@@ -2614,7 +2614,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 pager.set_search_field_shown(!sfs);
                 pager.set_fully_disclosed(true);
                 if (pager.is_search_field_shown() && !is_navigating_pager_contents()) {
-                    select_completion_in_direction(direction_south);
+                    select_completion_in_direction(selection_motion_t::south);
                 }
                 reader_repaint_needed();
             }
@@ -2848,7 +2848,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::backward_char: {
             editable_line_t *el = active_edit_line();
             if (is_navigating_pager_contents()) {
-                select_completion_in_direction(direction_west);
+                select_completion_in_direction(selection_motion_t::west);
             } else if (el->position > 0) {
                 update_buff_pos(el, el->position - 1);
                 reader_repaint_needed();
@@ -2858,7 +2858,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::forward_char: {
             editable_line_t *el = active_edit_line();
             if (is_navigating_pager_contents()) {
-                select_completion_in_direction(direction_east);
+                select_completion_in_direction(selection_motion_t::east);
             } else if (el->position < el->size()) {
                 update_buff_pos(el, el->position + 1);
                 reader_repaint_needed();
@@ -2916,7 +2916,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::end_of_history: {
             bool up = (c == rl::beginning_of_history);
             if (is_navigating_pager_contents()) {
-                select_completion_in_direction(up ? direction_page_north : direction_page_south);
+                select_completion_in_direction(up ? selection_motion_t::page_north
+                                                  : selection_motion_t::page_south);
             } else {
                 if (up) {
                     history_search.go_to_beginning();
@@ -2931,24 +2932,24 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::down_line: {
             if (is_navigating_pager_contents()) {
                 // We are already navigating pager contents.
-                selection_direction_t direction;
+                selection_motion_t direction;
                 if (c == rl::down_line) {
                     // Down arrow is always south.
-                    direction = direction_south;
+                    direction = selection_motion_t::south;
                 } else if (selection_is_at_top()) {
                     // Up arrow, but we are in the first column and first row. End navigation.
-                    direction = direction_deselect;
+                    direction = selection_motion_t::deselect;
                 } else {
                     // Up arrow, go north.
-                    direction = direction_north;
+                    direction = selection_motion_t::north;
                 }
 
                 // Now do the selection.
                 select_completion_in_direction(direction);
             } else if (!pager.empty()) {
                 // We pressed a direction with a non-empty pager, begin navigation.
-                select_completion_in_direction(c == rl::down_line ? direction_south
-                                                                    : direction_north);
+                select_completion_in_direction(c == rl::down_line ? selection_motion_t::south
+                                                                  : selection_motion_t::north);
             } else {
                 // Not navigating the pager contents.
                 editable_line_t *el = active_edit_line();

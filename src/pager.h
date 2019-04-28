@@ -36,6 +36,23 @@ class page_rendering_t {
     page_rendering_t();
 };
 
+enum class selection_motion_t {
+    // Visual directions.
+    north,
+    east,
+    south,
+    west,
+    page_north,
+    page_south,
+
+    // Logical directions.
+    next,
+    prev,
+
+    // Special value that means deselect.
+    deselect
+};
+
 // The space between adjacent completions.
 #define PAGER_SPACER_STRING L"  "
 #define PAGER_SPACER_STRING_WIDTH 2
@@ -136,7 +153,7 @@ class pager_t {
 
     // Changes the selected completion in the given direction according to the layout of the given
     // rendering. Returns true if the selection changed.
-    bool select_next_completion_in_direction(selection_direction_t direction,
+    bool select_next_completion_in_direction(selection_motion_t direction,
                                              const page_rendering_t &rendering);
 
     // Returns the currently selected completion for the given rendering.

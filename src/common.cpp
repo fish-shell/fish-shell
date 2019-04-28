@@ -97,11 +97,11 @@ int get_debug_stack_frames() { return debug_stack_frames; }
 static relaxed_atomic_t<pid_t> initial_fg_process_group{-1};
 
 /// This struct maintains the current state of the terminal size. It is updated on demand after
-/// receiving a SIGWINCH. Do not touch this struct directly, it's managed with a rwlock. Use
-/// common_get_width()/common_get_height().
-static std::mutex termsize_lock;
-static struct winsize termsize = {USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX};
-static volatile bool termsize_valid = false;
+/// receiving a SIGWINCH. Use common_get_width()/common_get_height() to read it lazily.
+static constexpr struct winsize k_invalid_termsize = {USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX};
+static relaxed_atomic_t<struct winsize> s_termsize(k_invalid_termsize);
+
+static relaxed_atomic_bool_t s_termsize_valid{false};
 
 static char *wcs2str_internal(const wchar_t *in, char *out);
 static void debug_shared(const wchar_t msg_level, const wcstring &msg);
@@ -1738,20 +1738,17 @@ bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t e
 /// COLUMNS or LINES variables are changed. This is also invoked when the shell regains control of
 /// the tty since it is possible the terminal size changed while an external command was running.
 void invalidate_termsize(bool invalidate_vars) {
-    termsize_valid = false;
+    s_termsize_valid = false;
     if (invalidate_vars) {
+        struct winsize termsize = s_termsize;
         termsize.ws_col = termsize.ws_row = USHRT_MAX;
+        termsize = s_termsize;
     }
 }
 
 /// Handle SIGWINCH. This is also invoked when the shell regains control of the tty since it is
 /// possible the terminal size changed while an external command was running.
-void common_handle_winch(int signal) {
-    // Don't run ioctl() here. Technically it's not safe to use in signals although in practice it
-    // is safe on every platform I've used. But we want to be conservative on such matters.
-    UNUSED(signal);
-    invalidate_termsize(false);
-}
+void common_handle_winch(int signal) { s_termsize_valid = false; }
 
 /// Validate the new terminal size. Fallback to the env vars if necessary. Ensure the values are
 /// sane and if not fallback to a default of 80x24.
@@ -1810,16 +1807,15 @@ static void export_new_termsize(struct winsize *new_termsize, env_stack_t &vars)
 
 /// Updates termsize as needed, and returns a copy of the winsize.
 struct winsize get_current_winsize() {
-    scoped_lock guard(termsize_lock);
-
-    if (termsize_valid) return termsize;
+    struct winsize termsize = s_termsize;
+    if (s_termsize_valid) return termsize;
 
     struct winsize new_termsize = {0, 0, 0, 0};
 #ifdef HAVE_WINSIZE
     errno = 0;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &new_termsize) != -1 &&
         new_termsize.ws_col == termsize.ws_col && new_termsize.ws_row == termsize.ws_row) {
-        termsize_valid = true;
+        s_termsize_valid = true;
         return termsize;
     }
 #endif
@@ -1828,7 +1824,8 @@ struct winsize get_current_winsize() {
     export_new_termsize(&new_termsize, vars);
     termsize.ws_col = new_termsize.ws_col;
     termsize.ws_row = new_termsize.ws_row;
-    termsize_valid = true;
+    s_termsize = termsize;
+    s_termsize_valid = true;
     return termsize;
 }
 

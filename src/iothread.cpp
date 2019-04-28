@@ -76,8 +76,10 @@ static owning_lock<std::queue<spawn_request_t>> s_result_queue;
 // "Do on main thread" support.
 static std::mutex s_main_thread_performer_lock;               // protects the main thread requests
 static std::condition_variable s_main_thread_performer_cond;  // protects the main thread requests
-static std::mutex s_main_thread_request_q_lock;               // protects the queue
-static std::queue<main_thread_request_t *> s_main_thread_request_queue;
+
+/// The queue of main thread requests. This queue contains pointers to structs that are
+/// stack-allocated on the requesting thread.
+static owning_lock<std::queue<main_thread_request_t *>> s_main_thread_request_queue;
 
 // Notifying pipes.
 static int s_read_pipe, s_write_pipe;
@@ -257,10 +259,7 @@ static void iothread_service_main_thread_requests() {
 
     // Move the queue to a local variable.
     std::queue<main_thread_request_t *> request_queue;
-    {
-        scoped_lock queue_lock(s_main_thread_request_q_lock);
-        request_queue.swap(s_main_thread_request_queue);
-    }
+    s_main_thread_request_queue.acquire()->swap(request_queue);
 
     if (!request_queue.empty()) {
         // Perform each of the functions. Note we are NOT responsible for deleting these. They are
@@ -312,12 +311,8 @@ void iothread_perform_on_main(void_function_t &&func) {
     // Make a new request. Note we are synchronous, so this can be stack allocated!
     main_thread_request_t req(std::move(func));
 
-    // Append it. Do not delete the nested scope as it is crucial to the proper functioning of this
-    // code by virtue of the lock management.
-    {
-        scoped_lock queue_lock(s_main_thread_request_q_lock);
-        s_main_thread_request_queue.push(&req);
-    }
+    // Append it. Ensure we don't hold the lock after.
+    s_main_thread_request_queue.acquire()->push(&req);
 
     // Tell the pipe.
     const char wakeup_byte = IO_SERVICE_MAIN_THREAD_REQUEST_QUEUE;

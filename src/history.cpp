@@ -210,16 +210,6 @@ class history_lru_cache_t : public lru_cache_t<history_lru_cache_t, history_lru_
     }
 };
 
-// The set of histories
-// Note that histories are currently immortal
-class history_collection_t {
-    owning_lock<std::map<wcstring, std::unique_ptr<history_t>>> histories;
-
-   public:
-    history_t &get_creating(const wcstring &name);
-    void save();
-};
-
 }  // anonymous namespace
 
 // history_file_contents_t holds the read-only contents of a file.
@@ -332,7 +322,8 @@ class history_file_contents_t {
     }
 };
 
-static history_collection_t histories;
+/// The set of all histories.
+static owning_lock<std::map<wcstring, std::unique_ptr<history_t>>> s_histories;
 
 static wcstring history_filename(const wcstring &name, const wcstring &suffix);
 
@@ -816,20 +807,16 @@ static size_t offset_of_next_item(const history_file_contents_t &contents, size_
     return size_t(-1);
 }
 
-history_t &history_collection_t::get_creating(const wcstring &name) {
+history_t &history_t::history_with_name(const wcstring &name) {
     // Return a history for the given name, creating it if necessary
     // Note that histories are currently never deleted, so we can return a reference to them without
     // using something like shared_ptr
-    auto hs = histories.acquire();
+    auto hs = s_histories.acquire();
     std::unique_ptr<history_t> &hist = (*hs)[name];
     if (!hist) {
         hist = make_unique<history_t>(name);
     }
     return *hist;
-}
-
-history_t &history_t::history_with_name(const wcstring &name) {
-    return histories.get_creating(name);
 }
 
 history_t::history_t(wcstring pname)
@@ -1850,15 +1837,12 @@ void history_t::incorporate_external_changes() {
     }
 }
 
-void history_collection_t::save() {
-    // Save all histories
-    auto hists = histories.acquire();
-    for (auto &p : *hists) {
+void history_save_all() {
+    auto histories = s_histories.acquire();
+    for (auto &p : *histories) {
         p.second->save();
     }
 }
-
-void history_save_all() { histories.save(); }
 
 /// Return the prefix for the files to be used for command and read history.
 wcstring history_session_id(const environment_t &vars) {

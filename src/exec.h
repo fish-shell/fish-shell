@@ -31,9 +31,6 @@ int exec_subshell(const wcstring &cmd, parser_t &parser, bool preserve_exit_stat
 /// Loops over close until the syscall was run without being interrupted.
 void exec_close(int fd);
 
-/// Returns the number of executions. May roll over.
-size_t exec_get_exec_count();
-
 /// Gets the interpreter for a given command.
 char *get_interpreter(const char *command, char *interpreter, size_t buff_size);
 

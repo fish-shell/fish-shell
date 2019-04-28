@@ -147,6 +147,12 @@ struct profile_item_t {
 class parse_execution_context_t;
 class completion_t;
 
+/// Miscelleneous data used to avoid recursion and others.
+struct library_data_t {
+    /// A counter incremented every time a command executes.
+    uint64_t exec_count{0};
+};
+
 class parser_t : public std::enable_shared_from_this<parser_t> {
     friend class parse_execution_context_t;
 
@@ -165,11 +171,8 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     int eval_level = -1;
     /// Set of variables for the parser.
     env_stack_t &variables;
-#if 0
-// TODO: Lint says this isn't used (which is true). Should this be removed?
-    /// Gets a description of the block stack, for debugging.
-    wcstring block_stack_description() const;
-#endif
+    /// Miscellaneous library data.
+    library_data_t library_data{};
 
     /// List of profile items
     /// These are pointers because we return pointers to them to callers,
@@ -268,6 +271,10 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Get the variables.
     env_stack_t &vars() { return variables; }
     const env_stack_t &vars() const { return variables; }
+
+    /// Get the library data.
+    library_data_t &libdata() { return library_data; }
+    const library_data_t &libdata() const { return library_data; }
 
     /// Pushes a new block created with the given arguments
     /// Returns a pointer to the block. The pointer is valid

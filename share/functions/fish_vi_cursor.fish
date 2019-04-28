@@ -1,11 +1,10 @@
 function fish_vi_cursor -d 'Set cursor shape for different vi modes'
-    # Check hard if we are in a supporting terminal.
-
     # If we're not interactive, there is effectively no bind mode.
     if not status is-interactive
         return
     end
 
+    # Emacs Makes All Cursors Suck
     if set -q INSIDE_EMACS
         return
     end
@@ -45,33 +44,31 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
     set -l terminal $argv[1]
     set -q terminal[1]
     or set terminal auto
-    set -l uses_echo
 
     set -l function
     switch "$terminal"
         case auto
+            # TODO: Konsole as of 18.08 knows the xterm sequences,
+            # but there's still bugs with it (as of konsole 19.04.0).
+            #
+            # If it is fixed, we'd have to read $KONSOLE_VERSION for a while,
+            # though that was only introduced in 18.08 as well.
             if set -q KONSOLE_PROFILE_NAME
                 set function __fish_cursor_konsole
-                set uses_echo 1
             else if set -q ITERM_PROFILE
                 set function __fish_cursor_1337
-                set uses_echo 1
             else
                 set function __fish_cursor_xterm
-                set uses_echo 1
             end
         case konsole
             set function __fish_cursor_konsole
-            set uses_echo 1
         case xterm
             set function __fish_cursor_xterm
-            set uses_echo 1
     end
 
     set -l tmux_prefix
     set -l tmux_postfix
     if set -q TMUX
-        and set -q uses_echo[1]
         set tmux_prefix echo -ne "'\ePtmux;\e'"
         set tmux_postfix echo -ne "'\e\\\\'"
     end

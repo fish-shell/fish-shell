@@ -67,12 +67,7 @@ void input_common_init(interrupt_func_t func) { interrupt_handler = func; }
 /// Internal function used by input_common_readch to read one byte from fd 0. This function should
 /// only be called by input_common_readch().
 static char_event_t readb() {
-    // do_loop must be set on every path through the loop; leaving it uninitialized allows the
-    // static analyzer to assist in catching mistakes.
-    unsigned char arr[1];
-    bool do_loop;
-
-    do {
+    for (;;) {
         fd_set fdset;
         int fd_max = 0;
         int ioport = iothread_port();
@@ -114,16 +109,11 @@ static char_event_t readb() {
                         return *mc;
                     }
                 }
-
-                do_loop = true;
             } else {
                 // The terminal has been closed.
                 return char_event_type_t::eof;
             }
         } else {
-            // Assume we loop unless we see a character in stdin.
-            do_loop = true;
-
             // Check to see if we want a universal variable barrier.
             bool barrier_from_poll = notifier.poll();
             bool barrier_from_readability = false;
@@ -147,18 +137,17 @@ static char_event_t readb() {
             }
 
             if (FD_ISSET(STDIN_FILENO, &fdset)) {
+                unsigned char arr[1];
                 if (read_blocked(0, arr, 1) != 1) {
                     // The teminal has been closed.
                     return char_event_type_t::eof;
                 }
 
                 // We read from stdin, so don't loop.
-                do_loop = false;
+                return arr[0];
             }
         }
-    } while (do_loop);
-
-    return arr[0];
+    }
 }
 
 // Update the wait_on_escape_ms value in response to the fish_escape_delay_ms user variable being

@@ -22,6 +22,7 @@
 #include "env.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "global_safety.h"
 #include "input.h"
 #include "input_common.h"
 #include "io.h"
@@ -147,20 +148,18 @@ wcstring describe_char(wint_t c) {
 }
 
 /// Mappings for the current input mode.
-static std::vector<input_mapping_t> mapping_list;
-static std::vector<input_mapping_t> preset_mapping_list;
+using mapping_list_t = std::vector<input_mapping_t>;
+static mainthread_t<mapping_list_t> s_mapping_list;
+static mainthread_t<mapping_list_t> s_preset_mapping_list;
 
 /// Terminfo map list.
-static std::vector<terminfo_mapping_t> terminfo_mappings;
+static latch_t<std::vector<terminfo_mapping_t>> s_terminfo_mappings;
 
 #define TERMINFO_ADD(key) \
     { (L## #key) + 4, key }
 
-/// List of all terminfo mappings.
-static std::vector<terminfo_mapping_t> mappings;
-
-/// Initialize terminfo.
-static void init_input_terminfo();
+/// \return the input terminfo.
+static std::vector<terminfo_mapping_t> create_input_terminfo();
 
 static wchar_t input_function_args[MAX_INPUT_FUNCTION_ARGS];
 static bool input_function_status;
@@ -212,10 +211,8 @@ static bool specification_order_is_less_than(const input_mapping_t &m1, const in
 /// Inserts an input mapping at the correct position. We sort them in descending order by length, so
 /// that we test longer sequences first.
 static void input_mapping_insert_sorted(const input_mapping_t &new_mapping, bool user = true) {
-    auto& ml = user ? mapping_list : preset_mapping_list;
-
-    std::vector<input_mapping_t>::iterator loc = std::lower_bound(
-        ml.begin(), ml.end(), new_mapping, length_is_greater_than);
+    mapping_list_t &ml = user ? s_mapping_list : s_preset_mapping_list;
+    auto loc = std::lower_bound(ml.begin(), ml.end(), new_mapping, length_is_greater_than);
     ml.insert(loc, new_mapping);
 }
 
@@ -230,7 +227,7 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t *const *commands, 
     // Remove existing mappings with this sequence.
     const wcstring_list_t commands_vector(commands, commands + commands_len);
 
-    auto& ml = user ? mapping_list : preset_mapping_list;
+    mapping_list_t &ml = user ? s_mapping_list : s_preset_mapping_list;
 
     for (input_mapping_t& m : ml) {
         if (m.seq == sequence && m.mode == mode) {
@@ -279,9 +276,10 @@ void init_input() {
     input_initialized.store(true, std::memory_order_relaxed);
 
     input_common_init(&interrupt_handler);
-    init_input_terminfo();
+    s_terminfo_mappings = create_input_terminfo();
 
     // If we have no keybindings, add a few simple defaults.
+    mapping_list_t &preset_mapping_list = s_preset_mapping_list;
     if (preset_mapping_list.empty()) {
         input_mapping_add(L"", L"self-insert", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
         input_mapping_add(L"\n", L"execute", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
@@ -423,9 +421,10 @@ static const input_mapping_t *find_mapping() {
     const auto &vars = parser_t::principal_parser().vars();
     const wcstring bind_mode = input_get_bind_mode(vars);
 
-    const auto lists = {&mapping_list, &preset_mapping_list};
+    const auto lists = {&s_mapping_list, &s_preset_mapping_list};
     for (const auto *listp : lists) {
-        for (const auto &m : *listp) {
+        const mapping_list_t &ml = *listp;
+        for (const auto &m : ml) {
             if (m.mode != bind_mode) {
                 continue;
             }
@@ -517,7 +516,7 @@ char_event_t input_readch(bool allow_commands) {
 std::vector<input_mapping_name_t> input_mapping_get_names(bool user) {
     // Sort the mappings by the user specification order, so we can return them in the same order
     // that the user specified them in.
-    std::vector<input_mapping_t> local_list = user ? mapping_list : preset_mapping_list;
+    std::vector<input_mapping_t> local_list = user ? s_mapping_list : s_preset_mapping_list;
     std::sort(local_list.begin(), local_list.end(), specification_order_is_less_than);
     std::vector<input_mapping_name_t> result;
     result.reserve(local_list.size());
@@ -531,7 +530,7 @@ std::vector<input_mapping_name_t> input_mapping_get_names(bool user) {
 
 void input_mapping_clear(const wchar_t *mode, bool user) {
     ASSERT_IS_MAIN_THREAD();
-    auto &ml = user ? mapping_list : preset_mapping_list;
+    mapping_list_t &ml = user ? s_mapping_list : s_preset_mapping_list;
     auto should_erase = [=](const input_mapping_t &m) { return mode == NULL || mode == m.mode; };
     ml.erase(std::remove_if(ml.begin(), ml.end(), should_erase), ml.end());
 }
@@ -539,7 +538,7 @@ void input_mapping_clear(const wchar_t *mode, bool user) {
 bool input_mapping_erase(const wcstring &sequence, const wcstring &mode, bool user) {
     ASSERT_IS_MAIN_THREAD();
     bool result = false;
-    auto& ml = user ? mapping_list : preset_mapping_list;
+    mapping_list_t &ml = user ? s_mapping_list : s_preset_mapping_list;
     for (std::vector<input_mapping_t>::iterator it = ml.begin(), end = ml.end();
          it != end; ++it) {
         if (sequence == it->seq && mode == it->mode) {
@@ -554,7 +553,7 @@ bool input_mapping_erase(const wcstring &sequence, const wcstring &mode, bool us
 bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds, bool user,
                        wcstring *out_sets_mode) {
     bool result = false;
-    auto& ml = user ? mapping_list : preset_mapping_list;
+    mapping_list_t &ml = user ? s_mapping_list : s_preset_mapping_list;
     for (const input_mapping_t &m : ml) {
         if (sequence == m.seq && mode == m.mode) {
             *out_cmds = m.commands;
@@ -566,11 +565,11 @@ bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_
     return result;
 }
 
-/// Add all terminfo mappings and cache other terminfo facts we care about.
-static void init_input_terminfo() {
+/// Create a list of terminfo mappings.
+static std::vector<terminfo_mapping_t> create_input_terminfo() {
     assert(curses_initialized);
-    if (!cur_term) return;  // setupterm() failed so we can't referency any key definitions
-    const terminfo_mapping_t tinfos[] = {
+    if (!cur_term) return {};  // setupterm() failed so we can't referency any key definitions
+    return {
         TERMINFO_ADD(key_a1),
         TERMINFO_ADD(key_a3),
         TERMINFO_ADD(key_b2),
@@ -726,9 +725,6 @@ static void init_input_terminfo() {
         TERMINFO_ADD(key_undo),
         TERMINFO_ADD(key_up)
     };
-    const size_t count = sizeof tinfos / sizeof *tinfos;
-    terminfo_mappings.reserve(terminfo_mappings.size() + count);
-    terminfo_mappings.insert(terminfo_mappings.end(), tinfos, tinfos + count);
 }
 
 bool input_terminfo_get_sequence(const wchar_t *name, wcstring *out_seq) {
@@ -739,7 +735,7 @@ bool input_terminfo_get_sequence(const wchar_t *name, wcstring *out_seq) {
     const char *res = 0;
     int err = ENOENT;
 
-    for (const terminfo_mapping_t &m : terminfo_mappings) {
+    for (const terminfo_mapping_t &m : *s_terminfo_mappings) {
         if (!std::wcscmp(name, m.name)) {
             res = m.seq;
             err = EILSEQ;
@@ -759,7 +755,7 @@ bool input_terminfo_get_sequence(const wchar_t *name, wcstring *out_seq) {
 bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name) {
     assert(input_initialized);
 
-    for (const terminfo_mapping_t &m : terminfo_mappings) {
+    for (const terminfo_mapping_t &m : *s_terminfo_mappings) {
         if (!m.seq) {
             continue;
         }
@@ -777,9 +773,9 @@ bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name) {
 wcstring_list_t input_terminfo_get_names(bool skip_null) {
     assert(input_initialized);
     wcstring_list_t result;
-    result.reserve(terminfo_mappings.size());
-
-    for (const terminfo_mapping_t &m : terminfo_mappings) {
+    const auto &mappings = *s_terminfo_mappings;
+    result.reserve(mappings.size());
+    for (const terminfo_mapping_t &m : mappings) {
         if (skip_null && !m.seq) {
             continue;
         }

@@ -133,7 +133,7 @@ void env_dispatch_init(const environment_t &vars) {
     run_inits(vars);
     // Note this deliberately leaks; the dispatch table is immortal.
     // Via this construct we can avoid invoking destructors at shutdown.
-    s_var_dispatch_table = create_dispatch_table().release();
+    s_var_dispatch_table = create_dispatch_table();
 }
 
 /// Properly sets all timezone information.

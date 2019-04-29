@@ -63,17 +63,19 @@ class latch_t : detail::fixed_t {
     T *operator->() { return value_; }
     const T *operator->() const { return value_; }
 
-    void operator=(T *value) {
+    void operator=(std::unique_ptr<T> value) {
         ASSERT_IS_MAIN_THREAD();
         assert(value_ == nullptr && "Latch variable initialized multiple times");
         assert(value != nullptr && "Latch variable initialized with null");
-        value_ = value;
+        // Note: deliberate leak.
+        value_ = value.release();
     }
+
+    void operator=(T &&value) { *this = make_unique<T>(std::move(value)); }
 
     template <typename... Args>
     void emplace(Args &&... args) {
-        // Note: deliberate leak.
-        *this = new T(std::forward<Args>(args)...);
+        *this = make_unique<T>(std::forward<Args>(args)...);
     }
 };
 

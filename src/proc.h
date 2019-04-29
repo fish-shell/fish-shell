@@ -255,10 +255,8 @@ enum class job_flag_t {
     JOB_CONTROL,
     /// Whether the job wants to own the terminal when in the foreground.
     TERMINAL,
-    /// This job needs to be removed from the list of jobs for one reason or another (killed,
-    /// completed, disowned, etc). This flag is set rather than directly manipulating the jobs
-    /// list.
-    PENDING_REMOVAL,
+    /// This job is disowned, and should be removed from the active jobs list.
+    DISOWN_REQUESTED,
 
     JOB_FLAG_COUNT
 };
@@ -399,7 +397,9 @@ class job_t {
     /// The job is in a stopped state
     bool is_stopped() const;
     /// The job is OK to be externally visible, e.g. to the user via `jobs`
-    bool is_visible() const { return !is_completed() && is_constructed() && !get_flag(job_flag_t::PENDING_REMOVAL); };
+    bool is_visible() const {
+        return !is_completed() && is_constructed() && !get_flag(job_flag_t::DISOWN_REQUESTED);
+    };
 
     /// \return the parent job, or nullptr.
     const std::shared_ptr<job_t> get_parent() const { return parent_job; }

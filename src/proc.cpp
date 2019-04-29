@@ -537,7 +537,7 @@ static bool process_clean_after_marking(bool allow_interactive) {
         // If the process has been previously flagged for removal, add it to the erase list without
         // any further processing, but do not remove any jobs until their parent jobs have completed
         // processing.
-        if (j->get_flag(job_flag_t::PENDING_REMOVAL) && j->job_chain_is_fully_constructed()) {
+        if (j->get_flag(job_flag_t::DISOWN_REQUESTED) && j->job_chain_is_fully_constructed()) {
             erase_list.push_back(j);
         }
         // If all processes have completed, tell the user the job has completed and delete it from

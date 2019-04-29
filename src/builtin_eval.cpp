@@ -3,9 +3,6 @@
 
 #include <errno.h>
 #include <stddef.h>
-#ifdef HAVE__PROC_SELF_STAT
-#include <sys/time.h>
-#endif
 
 #include "builtin.h"
 #include "common.h"

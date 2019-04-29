@@ -127,9 +127,6 @@
 /* Define to 1 if the _nl_msg_cat_cntr symbol is exported. */
 #cmakedefine HAVE__NL_MSG_CAT_CNTR 1
 
-/* Define to 1 if you have the file `/proc/self/stat'. */
-#cmakedefine HAVE__PROC_SELF_STAT 1
-
 /* Define to 1 if the _sys_errs array is available. */
 #cmakedefine HAVE__SYS__ERRS 1
 

@@ -3,9 +3,7 @@
 
 #include <errno.h>
 #include <stddef.h>
-#ifdef HAVE__PROC_SELF_STAT
 #include <sys/time.h>
-#endif
 
 #include "builtin.h"
 #include "common.h"
@@ -26,7 +24,6 @@ enum {
     JOBS_PRINT_NOTHING,    // print nothing (exit status only)
 };
 
-#ifdef HAVE__PROC_SELF_STAT
 /// Calculates the cpu usage (in percent) of the specified job.
 static int cpu_use(const job_t *j) {
     double u = 0;
@@ -45,7 +42,6 @@ static int cpu_use(const job_t *j) {
     }
     return u * 1000000;
 }
-#endif
 
 /// Print information about the specified job.
 static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_t &streams) {
@@ -57,17 +53,18 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
             if (header) {
                 // Print table header before first job.
                 streams.out.append(_(L"Job\tGroup\t"));
-#ifdef HAVE__PROC_SELF_STAT
-                streams.out.append(_(L"CPU\t"));
-#endif
+                if (have_proc_stat) {
+                    streams.out.append(_(L"CPU\t"));
+                }
                 streams.out.append(_(L"State\tCommand\n"));
             }
 
             streams.out.append_format(L"%d\t%d\t", j->job_id, j->pgid);
 
-#ifdef HAVE__PROC_SELF_STAT
-            streams.out.append_format(L"%d%%\t", cpu_use(j));
-#endif
+            if (have_proc_stat) {
+                streams.out.append_format(L"%d%%\t", cpu_use(j));
+            }
+
             streams.out.append(j->is_stopped() ? _(L"stopped") : _(L"running"));
             streams.out.append(L"\t");
             streams.out.append(j->command_wcstr());

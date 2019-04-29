@@ -460,6 +460,70 @@ void remove_disowned_jobs(job_list_t &jobs) {
     }
 }
 
+/// Given a a process in a job, print the status message for the process as appropriate, and then
+/// mark the status code so we don't print again. \return true if we printed a status message, false
+/// if not.
+static bool try_clean_process_in_job(process_t *p, job_t *j, bool only_one_job) {
+    if (!p->completed || !p->pid) {
+        return false;
+    }
+
+    auto s = p->status;
+    // Ignore signal SIGPIPE.We issue it ourselves to the pipe writer when the pipe reader
+    // dies.
+    if (!s.signal_exited() || s.signal_code() == SIGPIPE) {
+        return false;
+    }
+
+    int proc_is_job = (p->is_first_in_job && p->is_last_in_job);
+    if (proc_is_job) j->set_flag(job_flag_t::NOTIFIED, true);
+
+    // Handle signals other than SIGPIPE.
+    // Always report crashes.
+    if (j->get_flag(job_flag_t::SKIP_NOTIFICATION) && !contains(crashsignals, s.signal_code())) {
+        return false;
+    }
+
+    // Print nothing if we get SIGINT in the foreground process group, to avoid spamming
+    // obvious stuff on the console (#1119). If we get SIGINT for the foreground
+    // process, assume the user typed ^C and can see it working. It's possible they
+    // didn't, and the signal was delivered via pkill, etc., but the SIGINT/SIGTERM
+    // distinction is precisely to allow INT to be from a UI
+    // and TERM to be programmatic, so this assumption is keeping with the design of
+    // signals. If echoctl is on, then the terminal will have written ^C to the console.
+    // If off, it won't have. We don't echo ^C either way, so as to respect the user's
+    // preference.
+    bool printed = false;
+    if (s.signal_code() != SIGINT || !j->is_foreground()) {
+        if (proc_is_job) {
+            // We want to report the job number, unless it's the only job, in which case
+            // we don't need to.
+            const wcstring job_number_desc =
+                only_one_job ? wcstring() : format_string(_(L"Job %d, "), j->job_id);
+            std::fwprintf(stdout, _(L"%ls: %ls\'%ls\' terminated by signal %ls (%ls)"),
+                          program_name, job_number_desc.c_str(),
+                          truncate_command(j->command()).c_str(), sig2wcs(s.signal_code()),
+                          signal_get_desc(s.signal_code()));
+        } else {
+            const wcstring job_number_desc =
+                only_one_job ? wcstring() : format_string(L"from job %d, ", j->job_id);
+            const wchar_t *fmt =
+                _(L"%ls: Process %d, \'%ls\' %ls\'%ls\' terminated by signal %ls (%ls)");
+            std::fwprintf(stdout, fmt, program_name, p->pid, p->argv0(), job_number_desc.c_str(),
+                          truncate_command(j->command()).c_str(), sig2wcs(s.signal_code()),
+                          signal_get_desc(s.signal_code()));
+        }
+
+        if (clr_eol) outputter_t::stdoutput().term_puts(clr_eol, 1);
+        std::fwprintf(stdout, L"\n");
+        printed = true;
+    }
+    // Clear status so it is not reported more than once.
+    // TODO: this seems like a clumsy way to ensure that.
+    p->status = proc_status_t::from_exit_code(0);
+    return printed;
+}
+
 /// Remove completed jobs from the job list, printing status messages as appropriate.
 /// \return whether something was printed.
 static bool process_clean_after_marking(bool allow_interactive) {
@@ -495,62 +559,10 @@ static bool process_clean_after_marking(bool allow_interactive) {
             continue;
         }
 
-        for (const process_ptr_t &p : j->processes) {
-            if (!p->completed || !p->pid) {
-                continue;
-            }
-
-            auto s = p->status;
-            // Ignore signal SIGPIPE.We issue it ourselves to the pipe writer when the pipe reader
-            // dies.
-            if (!s.signal_exited() || s.signal_code() == SIGPIPE) {
-                continue;
-            }
-
-            // Handle signals other than SIGPIPE.
-            int proc_is_job = (p->is_first_in_job && p->is_last_in_job);
-            if (proc_is_job) j->set_flag(job_flag_t::NOTIFIED, true);
-            // Always report crashes.
-            if (j->get_flag(job_flag_t::SKIP_NOTIFICATION) &&
-                !contains(crashsignals, s.signal_code())) {
-                continue;
-            }
-
-            // Print nothing if we get SIGINT in the foreground process group, to avoid spamming
-            // obvious stuff on the console (#1119). If we get SIGINT for the foreground
-            // process, assume the user typed ^C and can see it working. It's possible they
-            // didn't, and the signal was delivered via pkill, etc., but the SIGINT/SIGTERM
-            // distinction is precisely to allow INT to be from a UI
-            // and TERM to be programmatic, so this assumption is keeping with the design of
-            // signals. If echoctl is on, then the terminal will have written ^C to the console.
-            // If off, it won't have. We don't echo ^C either way, so as to respect the user's
-            // preference.
-            if (s.signal_code() != SIGINT || !j->is_foreground()) {
-                if (proc_is_job) {
-                    // We want to report the job number, unless it's the only job, in which case
-                    // we don't need to.
-                    const wcstring job_number_desc =
-                        only_one_job ? wcstring() : format_string(_(L"Job %d, "), j->job_id);
-                    std::fwprintf(stdout, _(L"%ls: %ls\'%ls\' terminated by signal %ls (%ls)"),
-                             program_name, job_number_desc.c_str(),
-                             truncate_command(j->command()).c_str(), sig2wcs(s.signal_code()),
-                             signal_get_desc(s.signal_code()));
-                } else {
-                    const wcstring job_number_desc =
-                        only_one_job ? wcstring() : format_string(L"from job %d, ", j->job_id);
-                    const wchar_t *fmt =
-                        _(L"%ls: Process %d, \'%ls\' %ls\'%ls\' terminated by signal %ls (%ls)");
-                    std::fwprintf(stdout, fmt, program_name, p->pid, p->argv0(), job_number_desc.c_str(),
-                             truncate_command(j->command()).c_str(), sig2wcs(s.signal_code()),
-                             signal_get_desc(s.signal_code()));
-                }
-
-                if (clr_eol) outputter_t::stdoutput().term_puts(clr_eol, 1);
-                std::fwprintf(stdout, L"\n");
+        for (process_ptr_t &p : j->processes) {
+            if (try_clean_process_in_job(p.get(), j.get(), only_one_job)) {
                 printed = true;
             }
-            // clear status so it is not reported more than once
-            p->status = proc_status_t::from_exit_code(0);
         }
 
         // If all processes have completed, tell the user the job has completed and delete it from

@@ -446,6 +446,20 @@ void proc_fire_event(const wchar_t *msg, event_type_t type, pid_t pid, int statu
     event_fire(event);
 }
 
+/// Remove all disowned jobs whose job chain is fully constructed (that is, do not erase disowned
+/// jobs that still have an in-flight parent job). Note we never print statuses for such jobs.
+void remove_disowned_jobs(job_list_t &jobs) {
+    auto iter = jobs.begin();
+    while (iter != jobs.end()) {
+        const auto &j = *iter;
+        if (j->get_flag(job_flag_t::DISOWN_REQUESTED) && j->job_chain_is_fully_constructed()) {
+            iter = jobs.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+}
+
 static bool process_clean_after_marking(bool allow_interactive) {
     ASSERT_IS_MAIN_THREAD();
     bool found = false;
@@ -460,6 +474,9 @@ static bool process_clean_after_marking(bool allow_interactive) {
     // This may be invoked in an exit handler, after the TERM has been torn down
     // Don't try to print in that case (#3222)
     const bool interactive = allow_interactive && cur_term != NULL;
+
+    // Remove all disowned jobs.
+    remove_disowned_jobs(jobs());
 
     // If we ever drop the `static bool locked` above, this should be changed to a local or
     // thread-local vector instead of a static vector. It is only static to reduce heap allocations.
@@ -534,15 +551,9 @@ static bool process_clean_after_marking(bool allow_interactive) {
             p->status = proc_status_t::from_exit_code(0);
         }
 
-        // If the process has been previously flagged for removal, add it to the erase list without
-        // any further processing, but do not remove any jobs until their parent jobs have completed
-        // processing.
-        if (j->get_flag(job_flag_t::DISOWN_REQUESTED) && j->job_chain_is_fully_constructed()) {
-            erase_list.push_back(j);
-        }
         // If all processes have completed, tell the user the job has completed and delete it from
         // the active job list.
-        else if (j->is_completed()) {
+        if (j->is_completed()) {
             if (!j->is_foreground() && !j->get_flag(job_flag_t::NOTIFIED) &&
                 !j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
                 print_job_status(j.get(), JOB_ENDED);

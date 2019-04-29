@@ -57,7 +57,7 @@ enum history_search_type_t {
     HISTORY_SEARCH_TYPE_PREFIX_GLOB
 };
 
-typedef uint32_t history_identifier_t;
+typedef uint64_t history_identifier_t;
 
 class history_item_t {
     friend class history_t;

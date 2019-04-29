@@ -74,18 +74,18 @@ end
 function decl_is_threadsafe
     set -l vardecl $argv[1]
     # decls starting with 'const ' or containing ' const ' are assumed safe.
-    string match -q --regex '(^| )const ' $vardecl
+    string match -q --regex '(^|\\*| )const ' $vardecl
     and return 0
 
     # Ordinary types indicating a safe variable.
-    set safes relaxed_atomic_bool_t std::mutex std::condition_variable
+    set safes relaxed_atomic_bool_t std::mutex std::condition_variable std::once_flag sig_atomic_t
     for safe in $safes
         string match -q "*$safe*" $vardecl
         and return 0
     end
 
     # Template types indicate a safe variable.
-    set safes owning_lock mainthread_t std::atomic relaxed_atomic_t
+    set safes owning_lock mainthread_t std::atomic relaxed_atomic_t latch_t
     for safe in $safes
         string match -q "*$safe<*" $vardecl
         and return 0

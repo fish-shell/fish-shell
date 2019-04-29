@@ -53,6 +53,7 @@
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "function.h"
+#include "global_safety.h"
 #include "highlight.h"
 #include "history.h"
 #include "input.h"
@@ -500,17 +501,15 @@ static struct termios terminal_mode_on_startup;
 static struct termios tty_modes_for_external_cmds;
 
 /// Tracks a currently pending exit. This may be manipulated from a signal handler.
-struct {
-    /// Whether we should exit the current reader loop.
-    bool end_current_loop{false};
 
-    /// Whether we should exit all reader loops. This is set in response to a HUP signal and it
-    /// latches (once set it is never cleared). This should never be reset to false.
-    volatile bool force{false};
+/// Whether we should exit the current reader loop.
+static relaxed_atomic_bool_t s_end_current_loop{false};
 
-    bool should_exit() const { return end_current_loop || force; }
+/// Whether we should exit all reader loops. This is set in response to a HUP signal and it
+/// latches (once set it is never cleared). This should never be reset to false.
+static volatile sig_atomic_t s_exit_forced{false};
 
-} s_pending_exit;
+static bool should_exit() { return s_end_current_loop || s_exit_forced; }
 
 /// Give up control of terminal.
 static void term_donate(outputter_t &outp) {
@@ -546,7 +545,7 @@ static void term_steal() {
     invalidate_termsize();
 }
 
-bool reader_exit_forced() { return s_pending_exit.force; }
+bool reader_exit_forced() { return s_exit_forced; }
 
 /// Given a command line and an autosuggestion, return the string that gets shown to the user.
 wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
@@ -1016,11 +1015,11 @@ void restore_term_mode() {
 }
 
 /// Exit the current reader loop. This may be invoked from a signal handler.
-void reader_set_end_loop(bool flag) { s_pending_exit.end_current_loop = flag; }
+void reader_set_end_loop(bool flag) { s_end_current_loop = flag; }
 
 void reader_force_exit() {
     // Beware, we may be in a signal handler.
-    s_pending_exit.force = true;
+    s_exit_forced = true;
 }
 
 /// Indicates if the given command char ends paging.
@@ -2139,7 +2138,7 @@ void reader_pop() {
     if (new_reader == nullptr) {
         reader_interactive_destroy();
     } else {
-        s_pending_exit.end_current_loop = false;
+        s_end_current_loop = false;
         s_reset(&new_reader->screen, screen_reset_abandon_line);
     }
 }
@@ -2192,7 +2191,7 @@ void reader_import_history_if_necessary() {
     }
 }
 
-bool shell_is_exiting() { return s_pending_exit.should_exit(); }
+bool shell_is_exiting() { return should_exit(); }
 
 void reader_bg_job_warning() {
     std::fputws(_(L"There are still jobs active:\n"), stdout);
@@ -2254,10 +2253,10 @@ static bool selection_is_at_top() {
     return true;
 }
 
-static uint32_t run_count = 0;
+static relaxed_atomic_t<uint64_t> run_count{0};
 
 /// Returns the current interactive loop count
-uint32_t reader_run_count() { return run_count; }
+uint64_t reader_run_count() { return run_count; }
 
 /// Read interactively. Read input from stdin while providing editing facilities.
 static int read_i() {

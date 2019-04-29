@@ -5,6 +5,7 @@
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "global_safety.h"
 #include "history.h"
 #include "kill.h"
 #include "proc.h"
@@ -12,7 +13,7 @@
 #include "sanity.h"
 
 /// Status from earlier sanity checks.
-static bool insane = false;
+static relaxed_atomic_bool_t insane{false};
 
 void sanity_lose() {
     debug(0, _(L"Errors detected, shutting down. Break on sanity_lose() to debug."));

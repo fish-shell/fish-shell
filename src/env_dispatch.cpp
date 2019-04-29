@@ -39,6 +39,7 @@
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "function.h"
+#include "global_safety.h"
 #include "history.h"
 #include "input_common.h"
 #include "maybe.h"
@@ -115,7 +116,7 @@ static void init_locale(const environment_t &vars);
 static void update_fish_color_support(const environment_t &vars);
 
 /// True if we think we can set the terminal title.
-static bool can_set_term_title = false;
+static relaxed_atomic_bool_t can_set_term_title{false};
 
 // Run those dispatch functions which want to be run at startup.
 static void run_inits(const environment_t &vars);
@@ -126,7 +127,7 @@ static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table();
 
 // A pointer to the variable dispatch table. This is allocated with new() and deliberately leaked to
 // avoid shutdown destructors. This is set during startup and should not be modified after.
-static const var_dispatch_table_t *s_var_dispatch_table;
+static latch_t<const var_dispatch_table_t> s_var_dispatch_table;
 
 void env_dispatch_init(const environment_t &vars) {
     run_inits(vars);

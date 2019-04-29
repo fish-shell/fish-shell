@@ -236,6 +236,6 @@ void reader_bg_job_warning();
 
 /// Return the current interactive reads loop count. Useful for determining how many commands have
 /// been executed between invocations of code.
-uint32_t reader_run_count();
+uint64_t reader_run_count();
 
 #endif

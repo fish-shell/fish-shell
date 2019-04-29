@@ -63,11 +63,17 @@ class latch_t : detail::fixed_t {
     T *operator->() { return value_; }
     const T *operator->() const { return value_; }
 
-    template <typename... Args>
-    void emplace(Args &&... args) {
+    void operator=(T *value) {
         ASSERT_IS_MAIN_THREAD();
         assert(value_ == nullptr && "Latch variable initialized multiple times");
-        value_ = new T(std::forward<Args>(args)...);
+        assert(value != nullptr && "Latch variable initialized with null");
+        value_ = value;
+    }
+
+    template <typename... Args>
+    void emplace(Args &&... args) {
+        // Note: deliberate leak.
+        *this = new T(std::forward<Args>(args)...);
     }
 };
 
@@ -83,6 +89,12 @@ class relaxed_atomic_t {
     operator T() const { return value_.load(std::memory_order_relaxed); }
 
     void operator=(T v) { return value_.store(v, std::memory_order_relaxed); }
+
+    // postincrement
+    T operator++(int) { return value_.fetch_add(1, std::memory_order_relaxed); }
+
+    // preincrement
+    T operator++() { return 1 + value_.fetch_add(1, std::memory_order_relaxed); }
 };
 
 using relaxed_atomic_bool_t = relaxed_atomic_t<bool>;

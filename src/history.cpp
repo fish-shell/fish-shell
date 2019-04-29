@@ -31,13 +31,14 @@
 #include "common.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "global_safety.h"
 #include "history.h"
 #include "io.h"
 #include "iothread.h"
 #include "lru.h"
-#include "parser.h"
 #include "parse_constants.h"
 #include "parse_util.h"
+#include "parser.h"
 #include "path.h"
 #include "reader.h"
 #include "tnode.h"
@@ -858,7 +859,7 @@ void history_t::save_internal_unless_disabled() {
     // the counter.
     const int kVacuumFrequency = 25;
     if (countdown_to_vacuum < 0) {
-        static unsigned int seed = (unsigned int)time(NULL);
+        unsigned int seed = (unsigned int)time(NULL);
         // Generate a number in the range [0, kVacuumFrequency).
         countdown_to_vacuum = rand_r(&seed) / (RAND_MAX / kVacuumFrequency + 1);
     }
@@ -1939,8 +1940,8 @@ void history_t::add_pending_with_file_detection(const wcstring &str,
     history_identifier_t identifier = 0;
     if (!potential_paths.empty() && !impending_exit) {
         // Grab the next identifier.
-        static history_identifier_t sLastIdentifier = 0;
-        identifier = ++sLastIdentifier;
+        static relaxed_atomic_t<history_identifier_t> s_last_identifier{0};
+        identifier = ++s_last_identifier;
 
         // Prevent saving until we're done, so we have time to get the paths.
         this->disable_automatic_saving();

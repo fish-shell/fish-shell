@@ -795,7 +795,6 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
     }
 
     // Protect against exec with background processes running
-    static uint32_t last_exec_run_counter =  -1;
     if (process_type == process_type_t::exec && shell_is_interactive()) {
         bool have_bg = false;
         for (const auto &bg : jobs()) {
@@ -809,13 +808,13 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
         }
 
         if (have_bg) {
-            /* debug(1, "Background jobs remain! run_counter: %u, last_exec_run_count: %u", reader_run_count(), last_exec_run_counter); */
-            if (isatty(STDIN_FILENO) && reader_run_count() - 1 != last_exec_run_counter) {
+            uint64_t current_run_count = reader_run_count();
+            uint64_t &last_exec_run_count = parser->libdata().last_exec_run_counter;
+            if (isatty(STDIN_FILENO) && current_run_count - 1 != last_exec_run_count) {
                 reader_bg_job_warning();
-                last_exec_run_counter = reader_run_count();
+                last_exec_run_count = current_run_count;
                 return parse_execution_errored;
-            }
-            else {
+            } else {
                 hup_background_jobs();
             }
         }

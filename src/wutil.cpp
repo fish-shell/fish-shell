@@ -7,7 +7,6 @@
 #include <fcntl.h>
 #include <libgen.h>
 #include <limits.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <cstring>
@@ -22,6 +21,7 @@
 #include <cwchar>
 #include <wctype.h>
 
+#include <atomic>
 #include <string>
 #include <unordered_map>
 
@@ -534,8 +534,8 @@ static void wgettext_really_init() {
 /// For wgettext: Internal init function. Automatically called when a translation is first
 /// requested.
 static void wgettext_init_if_necessary() {
-    static pthread_once_t once = PTHREAD_ONCE_INIT;
-    pthread_once(&once, wgettext_really_init);
+    static std::once_flag s_wgettext_init{};
+    std::call_once(s_wgettext_init, wgettext_really_init);
 }
 
 const wcstring &wgettext(const wchar_t *in) {
@@ -614,7 +614,7 @@ int fish_wcswidth(const wchar_t *str) { return fish_wcswidth(str, std::wcslen(st
 int fish_wcswidth(const wcstring &str) { return fish_wcswidth(str.c_str(), str.size()); }
 
 locale_t fish_c_locale() {
-    static locale_t loc = newlocale(LC_ALL_MASK, "C", NULL);
+    static const locale_t loc = newlocale(LC_ALL_MASK, "C", NULL);
     return loc;
 }
 

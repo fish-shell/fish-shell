@@ -152,6 +152,9 @@ struct library_data_t {
     /// A counter incremented every time a command executes.
     uint64_t exec_count{0};
 
+    /// Last reader run count.
+    uint64_t last_exec_run_counter{UINT64_MAX};
+
     /// Number of recursive calls to builtin_complete().
     uint32_t builtin_complete_recursion_level{0};
 };

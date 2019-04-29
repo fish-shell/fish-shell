@@ -167,8 +167,8 @@ env_var_t::env_var_flags_t env_var_t::flags_for(const wchar_t *name) {
 
 /// \return a singleton empty list, to avoid unnecessary allocations in env_var_t.
 std::shared_ptr<const wcstring_list_t> env_var_t::empty_list() {
-    static const auto result = std::make_shared<const wcstring_list_t>();
-    return result;
+    static const auto s_empty_result = std::make_shared<const wcstring_list_t>();
+    return s_empty_result;
 }
 
 environment_t::~environment_t() = default;

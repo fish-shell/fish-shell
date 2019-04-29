@@ -115,3 +115,6 @@ in function 'notargparse'
 
 ####################
 # Ignoring unknown options
+
+####################
+# Check for crash when last option is unknown

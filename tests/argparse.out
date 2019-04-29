@@ -137,3 +137,6 @@ expected argparse return status 57
 # Ignoring unknown options
 -t tango --wurst
 alpha aaaa
+
+####################
+# Check for crash when last option is unknown

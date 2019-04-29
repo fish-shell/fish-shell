@@ -186,3 +186,6 @@ or echo unexpected argparse return status $status >&2
 # The unknown options are removed _entirely_.
 echo $argv
 echo $_flag_a
+
+logmsg Check for crash when last option is unknown
+argparse -i b/break -- "-b kubectl get pods -l name=foo"

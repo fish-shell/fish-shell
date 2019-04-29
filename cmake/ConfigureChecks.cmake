@@ -128,9 +128,6 @@ IF(STRUCT_WINSIZE GREATER -1 AND HAVE_TIOCGWINSZ EQUAL 1)
 ENDIF()
 CMAKE_POP_CHECK_STATE()
 
-IF(EXISTS "/proc/self/stat")
-  SET(HAVE__PROC_SELF_STAT 1)
-ENDIF()
 CHECK_TYPE_SIZE("wchar_t[8]" WCHAR_T_BITS LANGUAGE CXX)
 
 # Solaris, NetBSD and X/Open-conforming systems have a fixed-args tparm

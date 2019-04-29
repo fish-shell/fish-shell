@@ -72,6 +72,7 @@ bool is_login = false;
 int is_event = 0;
 job_control_t job_control_mode = job_control_t::interactive;
 int no_exec = 0;
+bool have_proc_stat = false;
 
 static int is_interactive = -1;
 
@@ -617,13 +618,12 @@ bool job_reap(bool allow_interactive) {
     return found;
 }
 
-#ifdef HAVE__PROC_SELF_STAT
-
 /// Maximum length of a /proc/[PID]/stat filename.
 #define FN_SIZE 256
 
 /// Get the CPU time for the specified process.
 unsigned long proc_get_jiffies(process_t *p) {
+    if (! have_proc_stat) return 0;
     if (p->pid <= 0) return 0;
 
     wchar_t fn[FN_SIZE];
@@ -665,8 +665,6 @@ void proc_update_jiffies() {
         }
     }
 }
-
-#endif
 
 // Return control of the terminal to a job's process group. restore_attrs is true if we are restoring
 // a previously-stopped job, in which case we need to restore terminal attributes.

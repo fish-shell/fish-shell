@@ -228,12 +228,10 @@ class process_t {
     bool stopped{false};
     /// Reported status value.
     proc_status_t status{};
-#ifdef HAVE__PROC_SELF_STAT
     /// Last time of cpu time check.
     struct timeval last_time {};
     /// Number of jiffies spent in process at last cpu time check.
     unsigned long last_jiffies{0};
-#endif
 };
 
 typedef std::unique_ptr<process_t> process_ptr_t;
@@ -492,7 +490,6 @@ bool job_reap(bool interactive);
 /// Mark a process as failed to execute (and therefore completed).
 void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *p);
 
-#ifdef HAVE__PROC_SELF_STAT
 /// Use the procfs filesystem to look up how many jiffies of cpu time was used by this process. This
 /// function is only available on systems with the procfs file entry 'stat', i.e. Linux.
 unsigned long proc_get_jiffies(process_t *p);
@@ -500,7 +497,6 @@ unsigned long proc_get_jiffies(process_t *p);
 /// Update process time usage for all processes by calling the proc_get_jiffies function for every
 /// process of every job.
 void proc_update_jiffies();
-#endif
 
 /// Perform a set of simple sanity checks on the job list. This includes making sure that only one
 /// job is in the foreground, that every process is in a valid state, etc.
@@ -554,5 +550,7 @@ void add_disowned_pgid(pid_t pgid);
 /// -1 should not be used; it is a possible return value of the getpgid()
 ///   function
 enum { INVALID_PID  = -2 };
+
+extern bool have_proc_stat;
 
 #endif

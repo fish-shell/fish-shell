@@ -574,6 +574,8 @@ static int argparse_parse_flags(parser_t &parser, argparse_cmd_opts_t &opts,
                 // This allows reusing the same argv in multiple argparse calls,
                 // or just ignoring the error (e.g. in completions).
                 opts.argv.push_back(arg_contents - 1);
+                // Work around weirdness with wgetopt, which crashes if we `continue` here.
+                if (w.woptind == argc) break;
             }
             if (retval != STATUS_CMD_OK) return retval;
             long_idx = -1;

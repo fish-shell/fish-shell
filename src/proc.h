@@ -482,9 +482,9 @@ void proc_set_last_statuses(statuses_t s);
 int proc_get_last_status();
 statuses_t proc_get_last_statuses();
 
-/// Notify the user about stopped or terminated jobs. Delete terminated jobs from the job list.
-///
-/// \param interactive whether interactive jobs should be reaped as well
+/// Notify the user about stopped or terminated jobs, and delete completed jobs from the job list.
+/// If \p interactive is set, allow reaping interactive jobs; otherwise skip them.
+/// \return whether text was printed to stdout.
 bool job_reap(bool interactive);
 
 /// Mark a process as failed to execute (and therefore completed).

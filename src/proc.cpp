@@ -460,9 +460,11 @@ void remove_disowned_jobs(job_list_t &jobs) {
     }
 }
 
+/// Remove completed jobs from the job list, printing status messages as appropriate.
+/// \return whether something was printed.
 static bool process_clean_after_marking(bool allow_interactive) {
     ASSERT_IS_MAIN_THREAD();
-    bool found = false;
+    bool printed = false;
 
     // This function may fire an event handler, we do not want to call ourselves recursively (to
     // avoid infinite recursion).
@@ -545,8 +547,8 @@ static bool process_clean_after_marking(bool allow_interactive) {
 
                 if (clr_eol) outputter_t::stdoutput().term_puts(clr_eol, 1);
                 std::fwprintf(stdout, L"\n");
+                printed = true;
             }
-            found = false;
             // clear status so it is not reported more than once
             p->status = proc_status_t::from_exit_code(0);
         }
@@ -557,7 +559,7 @@ static bool process_clean_after_marking(bool allow_interactive) {
             if (!j->is_foreground() && !j->get_flag(job_flag_t::NOTIFIED) &&
                 !j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
                 print_job_status(j.get(), JOB_ENDED);
-                found = true;
+                printed = true;
             }
 
             erase_list.push_back(j);
@@ -565,7 +567,7 @@ static bool process_clean_after_marking(bool allow_interactive) {
             // Notify the user about newly stopped jobs.
             if (!j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
                 print_job_status(j.get(), JOB_STOPPED);
-                found = true;
+                printed = true;
             }
             j->set_flag(job_flag_t::NOTIFIED, true);
         }
@@ -604,29 +606,27 @@ static bool process_clean_after_marking(bool allow_interactive) {
 
     erase_list.clear();
 
-    if (found) {
+    if (printed) {
         fflush(stdout);
     }
 
     locked = false;
-    return found;
+    return printed;
 }
 
 bool job_reap(bool allow_interactive) {
     ASSERT_IS_MAIN_THREAD();
-    bool found = false;
-
     process_mark_finished_children(false);
 
     // Preserve the exit status.
     auto saved_statuses = proc_get_last_statuses();
 
-    found = process_clean_after_marking(allow_interactive);
+    bool printed = process_clean_after_marking(allow_interactive);
 
     // Restore the exit status.
     proc_set_last_statuses(std::move(saved_statuses));
 
-    return found;
+    return printed;
 }
 
 /// Maximum length of a /proc/[PID]/stat filename.

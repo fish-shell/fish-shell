@@ -1618,7 +1618,7 @@ Note that functions cannot be started in the background. Functions that are stop
 Initialization files
 ====================
 
-On startup, Fish evaluates a number of configuration files, which can be used to control the behavior of the shell. The location of these configuration variables is controlled by a number of environment variables, and their default or usual location is given below.
+On startup, Fish evaluates a number of configuration files, which can be used to control the behavior of the shell. The location of these is controlled by a number of environment variables, and their default or usual location is given below.
 
 Configuration files are evaluated in the following order:
 

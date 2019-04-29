@@ -61,7 +61,7 @@ static latch_t<env_universal_t> s_universal_variables;
 /// Getter for universal variables.
 static env_universal_t *uvars() { return s_universal_variables; }
 
-void env_universal_barrier() { env_stack_t::principal().universal_barrier(); }
+bool env_universal_barrier() { return env_stack_t::principal().universal_barrier(); }
 
 // A typedef for a set of constant strings. Note our sets are typically on the order of 6 elements,
 // so we don't bother to sort them.
@@ -498,9 +498,9 @@ env_scoped_t::env_scoped_t(std::unique_ptr<var_stack_t> vars) : vars_(std::move(
 env_scoped_t::env_scoped_t(env_scoped_t &&) = default;
 env_scoped_t::~env_scoped_t() = default;
 
-void env_stack_t::universal_barrier() {
+bool env_stack_t::universal_barrier() {
     ASSERT_IS_MAIN_THREAD();
-    if (!uvars()) return;
+    if (!uvars()) return false;
 
     callback_data_list_t callbacks;
     bool changed = uvars()->sync(callbacks);
@@ -509,6 +509,7 @@ void env_stack_t::universal_barrier() {
     }
 
     env_universal_callbacks(this, callbacks);
+    return changed || !callbacks.empty();
 }
 
 /// If they don't already exist initialize the `COLUMNS` and `LINES` env vars to reasonable

@@ -36,11 +36,6 @@ static int wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
 /// Events which have been read and returned by the sequence matching code.
 static std::deque<char_event_t> lookahead_list;
 
-// Queue of pairs of (function pointer, argument) to be invoked. Expected to be mostly empty.
-typedef std::list<std::function<void(void)>> callback_queue_t;
-static callback_queue_t callback_queue;
-static void input_flush_callbacks();
-
 static bool has_lookahead() { return !lookahead_list.empty(); }
 
 static char_event_t lookahead_pop() {
@@ -78,9 +73,6 @@ static char_event_t readb() {
     bool do_loop;
 
     do {
-        // Flush callbacks.
-        input_flush_callbacks();
-
         fd_set fdset;
         int fd_max = 0;
         int ioport = iothread_port();
@@ -139,7 +131,12 @@ static char_event_t readb() {
                 barrier_from_readability = notifier.notification_fd_became_readable(notifier_fd);
             }
             if (barrier_from_poll || barrier_from_readability) {
-                env_universal_barrier();
+                if (env_universal_barrier()) {
+                    // A variable change may have triggered a repaint, etc.
+                    if (auto mc = lookahead_pop_evt()) {
+                        return *mc;
+                    }
+                }
             }
 
             if (ioport > 0 && FD_ISSET(ioport, &fdset)) {
@@ -245,19 +242,3 @@ char_event_t input_common_readch_timed(bool dequeue_timeouts) {
 void input_common_queue_ch(char_event_t ch) { lookahead_push_back(ch); }
 
 void input_common_next_ch(char_event_t ch) { lookahead_push_front(ch); }
-
-void input_common_add_callback(std::function<void(void)> callback) {
-    ASSERT_IS_MAIN_THREAD();
-    callback_queue.push_back(std::move(callback));
-}
-
-static void input_flush_callbacks() {
-    // We move the queue into a local variable, so that events queued up during a callback don't get
-    // fired until next round.
-    ASSERT_IS_MAIN_THREAD();
-    callback_queue_t local_queue;
-    std::swap(local_queue, callback_queue);
-    for (auto &f : local_queue) {
-        f();
-    }
-}

@@ -3436,7 +3436,7 @@ void reader_react_to_color_change() {
     if (!data->repaint_needed || !data->screen_reset_needed) {
         data->repaint_needed = true;
         data->screen_reset_needed = true;
-        input_common_add_callback(reader_repaint_if_needed);
+        input_common_queue_ch(readline_cmd_t::repaint);
     }
 }
 

@@ -271,7 +271,8 @@ class env_stack_t final : public env_scoped_t {
     void pop();
 
     /// Synchronizes all universal variable changes: writes everything out, reads stuff in.
-    void universal_barrier();
+    /// \return true if something changed, false otherwise.
+    bool universal_barrier();
 
     /// Returns an array containing all exported variables in a format suitable for execv
     const char *const *export_arr();
@@ -302,7 +303,8 @@ extern bool g_use_posix_spawn;
 extern bool term_has_xn;  // does the terminal have the "eat_newline_glitch"
 
 /// Synchronizes all universal variable changes: writes everything out, reads stuff in.
-void env_universal_barrier();
+/// \return true if any value changed.
+bool env_universal_barrier();
 
 /// Returns true if we think the terminal supports setting its title.
 bool term_supports_setting_title();

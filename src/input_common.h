@@ -2,12 +2,10 @@
 #ifndef INPUT_COMMON_H
 #define INPUT_COMMON_H
 
-#include <stddef.h>
-
-#include <functional>
-
 #include "common.h"
 #include "maybe.h"
+
+#include <stddef.h>
 
 enum class readline_cmd_t {
     beginning_of_line,
@@ -171,9 +169,5 @@ void input_common_queue_ch(char_event_t ch);
 /// will be the first character returned by input_readch (unless this function is called more than
 /// once).
 void input_common_next_ch(char_event_t ch);
-
-/// Adds a callback to be invoked at the next turn of the "event loop." The callback function will
-/// be invoked and passed arg.
-void input_common_add_callback(std::function<void(void)>);
 
 #endif

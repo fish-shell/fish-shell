@@ -1,4 +1,4 @@
-.. highlight:: fish-docs-samples
+.. _commands:
 
 Commands
 ============

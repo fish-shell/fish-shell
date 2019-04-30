@@ -121,7 +121,7 @@ class FishIndentLexer(Lexer):
         else:
             # We have a prompt line.
             # Use a regexp because it will maintain string indexes for us.
-            regex = re.compile(r"^(>\s*)?(.*\n?)", re.MULTILINE)
+            regex = re.compile(r"^(>_?\s*)?(.*\n?)", re.MULTILINE)
             for m in regex.finditer(input_text):
                 if m.group(1):
                     # Prompt line; highlight via fish syntax.

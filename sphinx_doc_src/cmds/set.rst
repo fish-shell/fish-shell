@@ -40,6 +40,9 @@ The following options control variable scope:
 
 - ``-u`` or ``--unexport`` causes the specified shell variable to NOT be exported to child processes
 
+- ``--path`` causes the specified variable to be treated as a path variable, meaning it will automatically be split on colons,  and joined using colons when quoted (`echo "$PATH"`) or exported.
+
+- ``--unpath`` causes the specified variable to not be treated as a path variable. Variables with a name ending in "PATH" are automatically path variables, so this can be used to treat such a variable normally.
 
 The following options are available:
 

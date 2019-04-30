@@ -72,6 +72,8 @@ def run_fish_cmd(text):
         # Fish makes the same assumption in config.fish
         env = os.environ.copy()
         env.update(LC_CTYPE="en_US.UTF-8", LANG="en_US.UTF-8")
+
+    print("$ " + text)
     p = subprocess.Popen([FISH_BIN_PATH], stdin=subprocess.PIPE,
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                          env=env)
@@ -234,7 +236,7 @@ def get_special_ansi_escapes():
         # Helper function to get a value for a tparm
         def get_tparm(key):
             val = None
-            key = curses.tigetstr("sgr0")
+            key = curses.tigetstr(key)
             if key:
                 val = curses.tparm(key)
             if val:
@@ -1096,7 +1098,7 @@ redirect_template_html = """
 fish_bin_dir = os.environ.get('__fish_bin_dir')
 fish_bin_path = None
 if not fish_bin_dir:
-    print('The __fish_bin_dir environment variable is not set. '
+    print('The $__fish_bin_dir environment variable is not set. '
           'Looking in $PATH...')
     # distutils.spawn is terribly broken, because it looks in wd before PATH,
     # and doesn't actually validate that the file is even executable
@@ -1194,7 +1196,11 @@ f.close()
 # Open temporary file as URL
 # Use open on macOS >= 10.12.5 to work around #4035.
 fileurl = 'file://' + filename
-print("Web config started at '%s'. Hit enter to stop." % fileurl)
+
+esc = get_special_ansi_escapes()
+print("Web config started at %s%s%s" % (esc['underline'], fileurl, esc['exit_attribute_mode']))
+print("%sHit ENTER to stop.%s" % (esc['bold'], esc['exit_attribute_mode']))
+
 if isMacOS10_12_5_OrLater():
     subprocess.check_call(['open', fileurl])
 elif is_wsl():

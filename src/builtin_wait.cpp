@@ -64,14 +64,14 @@ static bool any_jobs_finished(size_t jobs_len) {
     return false;
 }
 
-static int wait_for_backgrounds(bool any_flag) {
+static int wait_for_backgrounds(parser_t &parser, bool any_flag) {
     size_t jobs_len = jobs().size();
 
     while ((!any_flag && !all_jobs_finished()) || (any_flag && !any_jobs_finished(jobs_len))) {
         if (reader_test_interrupted()) {
             return 128 + SIGINT;
         }
-        proc_wait_any();
+        proc_wait_any(parser);
     }
     return 0;
 }
@@ -104,13 +104,14 @@ static bool any_specified_jobs_finished(const std::vector<job_id_t> &ids) {
     return false;
 }
 
-static int wait_for_backgrounds_specified(const std::vector<job_id_t> &ids, bool any_flag) {
+static int wait_for_backgrounds_specified(parser_t &parser, const std::vector<job_id_t> &ids,
+                                          bool any_flag) {
     while ((!any_flag && !all_specified_jobs_finished(ids)) ||
            (any_flag && !any_specified_jobs_finished(ids))) {
         if (reader_test_interrupted()) {
             return 128 + SIGINT;
         }
-        proc_wait_any();
+        proc_wait_any(parser);
     }
     return 0;
 }
@@ -204,7 +205,7 @@ int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (w.woptind == argc) {
         // no jobs specified
-        retval = wait_for_backgrounds(any_flag);
+        retval = wait_for_backgrounds(parser, any_flag);
     } else {
         // jobs specified
         std::vector<job_id_t> waited_job_ids;
@@ -236,7 +237,7 @@ int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         if (waited_job_ids.empty()) return STATUS_INVALID_ARGS;
 
-        retval = wait_for_backgrounds_specified(waited_job_ids, any_flag);
+        retval = wait_for_backgrounds_specified(parser, waited_job_ids, any_flag);
     }
 
     return retval;

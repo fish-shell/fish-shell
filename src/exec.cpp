@@ -286,7 +286,7 @@ void internal_exec_helper(parser_t &parser, parsed_source_ref_t parsed_source, t
 
     morphed_chain.clear();
     io_cleanup_fds(opened_fds);
-    job_reap(false);
+    job_reap(parser, false);
 }
 
 // Returns whether we can use posix spawn for a given process in a given job.

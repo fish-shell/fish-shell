@@ -1294,7 +1294,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
         profile_item->skipped = !populated_job;
     }
 
-    job_reap(false);  // clean up jobs
+    job_reap(*parser, false);  // clean up jobs
     return populated_job ? parse_execution_success : parse_execution_errored;
 }
 

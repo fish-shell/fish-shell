@@ -157,6 +157,9 @@ struct library_data_t {
 
     /// Number of recursive calls to builtin_complete().
     uint32_t builtin_complete_recursion_level{0};
+
+    /// Whether we are currently cleaning processes.
+    bool is_cleaning_procs{false};
 };
 
 class parser_t : public std::enable_shared_from_this<parser_t> {

@@ -483,9 +483,10 @@ int proc_get_last_status();
 statuses_t proc_get_last_statuses();
 
 /// Notify the user about stopped or terminated jobs, and delete completed jobs from the job list.
-/// If \p interactive is set, allow reaping interactive jobs; otherwise skip them.
+/// If \p interactive is set, allow removing interactive jobs; otherwise skip them.
 /// \return whether text was printed to stdout.
-bool job_reap(bool interactive);
+class parser_t;
+bool job_reap(parser_t &parser, bool interactive);
 
 /// Mark a process as failed to execute (and therefore completed).
 void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *p);
@@ -518,7 +519,7 @@ void proc_push_interactive(int value);
 void proc_pop_interactive();
 
 /// Wait for any process finishing, or receipt of a signal.
-void proc_wait_any();
+void proc_wait_any(parser_t &parser);
 
 /// Set and get whether we are in initialization.
 // Hackish. In order to correctly report the origin of code with no associated file, we need to

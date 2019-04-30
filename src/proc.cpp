@@ -551,16 +551,17 @@ static bool job_wants_message(const shared_ptr<job_t> &j, bool print_for_foregro
 
 /// Remove completed jobs from the job list, printing status messages as appropriate.
 /// \return whether something was printed.
-static bool process_clean_after_marking(bool allow_interactive) {
+static bool process_clean_after_marking(parser_t &parser, bool allow_interactive) {
     ASSERT_IS_MAIN_THREAD();
     bool printed = false;
 
     // This function may fire an event handler, we do not want to call ourselves recursively (to
     // avoid infinite recursion).
-    static std::atomic<bool> locked { false };
-    if (locked.exchange(true, std::memory_order::memory_order_relaxed)) {
+    if (parser.libdata().is_cleaning_procs) {
         return false;
     }
+    parser.libdata().is_cleaning_procs = true;
+    const cleanup_t cleanup([&] { parser.libdata().is_cleaning_procs = false; });
 
     // This may be invoked in an exit handler, after the TERM has been torn down
     // Don't try to print in that case (#3222)
@@ -628,18 +629,17 @@ static bool process_clean_after_marking(bool allow_interactive) {
         fflush(stdout);
     }
 
-    locked = false;
     return printed;
 }
 
-bool job_reap(bool allow_interactive) {
+bool job_reap(parser_t &parser, bool allow_interactive) {
     ASSERT_IS_MAIN_THREAD();
     process_mark_finished_children(false);
 
     // Preserve the exit status.
     auto saved_statuses = proc_get_last_statuses();
 
-    bool printed = process_clean_after_marking(allow_interactive);
+    bool printed = process_clean_after_marking(parser, allow_interactive);
 
     // Restore the exit status.
     proc_set_last_statuses(std::move(saved_statuses));
@@ -970,10 +970,10 @@ void proc_pop_interactive() {
     if (is_interactive != old) signal_set_handlers();
 }
 
-void proc_wait_any() {
+void proc_wait_any(parser_t &parser) {
     ASSERT_IS_MAIN_THREAD();
     process_mark_finished_children(true /* block_ok */);
-    process_clean_after_marking(is_interactive);
+    process_clean_after_marking(parser, is_interactive);
 }
 
 void hup_background_jobs() {

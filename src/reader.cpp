@@ -1961,7 +1961,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
     gettimeofday(&time_before, NULL);
 
     parser.eval(cmd, io_chain_t(), TOP);
-    job_reap(true);
+    job_reap(parser, true);
 
     gettimeofday(&time_after, NULL);
 

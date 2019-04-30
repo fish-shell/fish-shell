@@ -26,6 +26,8 @@ def setup(app):
         lexername='FishIndentLexer')
     lexers['fish-docs-samples'] = fish_indent_lexer
 
+# The default language to assume
+highlight_language = 'fish-docs-samples'
 
 # -- Path setup --------------------------------------------------------------
 

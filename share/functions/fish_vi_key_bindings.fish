@@ -47,7 +47,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Inherit shared key bindings.
     # Do this first so vi-bindings win over default.
     for mode in insert default visual
-        __fish_shared_key_bindings -M $mode
+        __fish_shared_key_bindings -s -M $mode
     end
 
     bind -s --preset -M insert \r execute

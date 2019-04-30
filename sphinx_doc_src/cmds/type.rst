@@ -39,5 +39,5 @@ Example
 ::
 
     >_ type fg
-    <outp>fg is a builtin</outp>
+    fg is a builtin
 

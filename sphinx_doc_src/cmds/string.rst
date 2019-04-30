@@ -249,7 +249,7 @@ Examples
 ::
 
     >_ string length 'hello, world'
-    <outp>12</outp>
+    12
     
     >_ set str foo
     >_ string length -q $str; echo $status
@@ -262,13 +262,13 @@ Examples
 ::
 
     >_ string sub --length 2 abcde
-    <outp>ab</outp>
+    ab
     
     >_ string sub -s 2 -l 2 abcde
-    <outp>bc</outp>
+    bc
     
     >_ string sub --start=-2 abcde
-    <outp>de</outp>
+    de
 
 
 
@@ -276,17 +276,17 @@ Examples
 ::
 
     >_ string split . example.com
-    <outp>example</outp>
-    <outp>com</outp>
+    example
+    com
     
     >_ string split -r -m1 / /usr/local/bin/fish
-    <outp>/usr/local/bin</outp>
-    <outp>fish</outp>
+    /usr/local/bin
+    fish
     
     >_ string split '' abc
-    <outp>a</outp>
-    <outp>b</outp>
-    <outp>c</outp>
+    a
+    b
+    c
 
 
 
@@ -294,7 +294,7 @@ Examples
 ::
 
     >_ seq 3 | string join ...
-    <outp>1...2...3</outp>
+    1...2...3
 
 
 
@@ -302,11 +302,11 @@ Examples
 ::
 
     >_ string trim ' abc  '
-    <outp>abc</outp>
+    abc
     
     >_ string trim --right --chars=yz xyzzy zany
-    <outp>x</outp>
-    <outp>zan</outp>
+    x
+    zan
 
 
 
@@ -333,32 +333,32 @@ Match Glob Examples
 ::
 
     >_ string match '?' a
-    <outp>a</outp>
+    a
     
     >_ string match 'a*b' axxb
-    <outp>axxb</outp>
+    axxb
     
     >_ string match -i 'a??B' Axxb
-    <outp>Axxb</outp>
+    Axxb
     
     >_ echo 'ok?' | string match '*\\?'
-    <outp>ok?</outp>
+    ok?
     
     # Note that only the second STRING will match here.
     >_ string match 'foo' 'foo1' 'foo' 'foo2'
-    <outp>foo</outp>
+    foo
     
     >_ string match -e 'foo' 'foo1' 'foo' 'foo2'
-    <outp>foo1
+    foo1
     foo
     foo2
-    </outp>
+    
     
     >_ string match 'foo?' 'foo1' 'foo' 'foo2'
-    <outp>foo1
+    foo1
     foo
     foo2
-    </outp>
+    
 
 
 Match Regex Examples
@@ -369,35 +369,35 @@ Match Regex Examples
 ::
 
     >_ string match -r 'cat|dog|fish' 'nice dog'
-    <outp>dog</outp>
+    dog
     
     >_ string match -r -v "c.*[12]" {cat,dog}(seq 1 4)
-    <outp>dog1</outp>
-    <outp>dog2</outp>
-    <outp>cat3</outp>
-    <outp>dog3</outp>
-    <outp>cat4</outp>
-    <outp>dog4</outp>
+    dog1
+    dog2
+    cat3
+    dog3
+    cat4
+    dog4
     
     >_ string match -r '(\\d\\d?):(\\d\\d):(\\d\\d)' 2:34:56
-    <outp>2:34:56</outp>
-    <outp>2</outp>
-    <outp>34</outp>
-    <outp>56</outp>
+    2:34:56
+    2
+    34
+    56
     
     >_ string match -r '^(\\w{{2,4}})\\g1$' papa mud murmur
-    <outp>papa</outp>
-    <outp>pa</outp>
-    <outp>murmur</outp>
-    <outp>mur</outp>
+    papa
+    pa
+    murmur
+    mur
     
     >_ string match -r -a -n at ratatat
-    <outp>2 2</outp>
-    <outp>4 2</outp>
-    <outp>6 2</outp>
+    2 2
+    4 2
+    6 2
     
     >_ string match -r -i '0x[0-9a-f]{{1,8}}' 'int magic = 0xBadC0de;'
-    <outp>0xBadC0de</outp>
+    0xBadC0de
 
 
 NUL Delimited Examples
@@ -409,13 +409,13 @@ NUL Delimited Examples
 
     >_ # Count files in a directory, without being confused by newlines.
     >_ count (find . -print0 | string split0)
-    <outp>42</outp>
+    42
     
     >_ # Sort a list of elements which may contain newlines
     >_ set foo beta alpha\\ngamma
     >_ set foo (string join0 $foo | sort -z | string split0)
     >_ string escape $foo[1]
-    <outp>alpha\\ngamma</outp>
+    alpha\\ngamma
 
 
 Replace Literal Examples
@@ -426,15 +426,15 @@ Replace Literal Examples
 ::
 
     >_ string replace is was 'blue is my favorite'
-    <outp>blue was my favorite</outp>
+    blue was my favorite
     
     >_ string replace 3rd last 1st 2nd 3rd
-    <outp>1st</outp>
-    <outp>2nd</outp>
-    <outp>last</outp>
+    1st
+    2nd
+    last
     
     >_ string replace -a ' ' _ 'spaces to underscores'
-    <outp>spaces_to_underscores</outp>
+    spaces_to_underscores
 
 
 Replace Regex Examples
@@ -445,14 +445,14 @@ Replace Regex Examples
 ::
 
     >_ string replace -r -a '[^\\d.]+' ' ' '0 one two 3.14 four 5x'
-    <outp>0 3.14 5</outp>
+    0 3.14 5
     
     >_ string replace -r '(\\w+)\\s+(\\w+)' '$2 $1 $$' 'left right'
-    <outp>right left $</outp>
+    right left $
     
     >_ string replace -r '\\s*newline\\s*' '\\n' 'put a newline here'
-    <outp>put a</outp>
-    <outp>here</outp>
+    put a
+    here
 
 
 Repeat Examples
@@ -463,14 +463,14 @@ Repeat Examples
 ::
 
     >_ string repeat -n 2 'foo '
-    <outp>foo foo</outp>
+    foo foo
     
     >_ echo foo | string repeat -n 2
-    <outp>foofoo</outp>
+    foofoo
     
     >_ string repeat -n 2 -m 5 'foo'
-    <outp>foofo</outp>
+    foofo
     
     >_ string repeat -m 5 'foo'
-    <outp>foofo</outp>
+    foofo
 

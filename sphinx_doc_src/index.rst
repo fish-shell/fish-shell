@@ -857,25 +857,25 @@ Lists adjacent to other lists or strings are expanded as cartesian products:
 Examples::
 
     >_ echo {good,bad}" apples"
-    <outp>good apples bad apples</outp>
+    good apples bad apples
 
     >_ set -l a x y z
     >_ set -l b 1 2 3
 
     >_ echo $a$b
-    <outp>x1 y1 z1 x2 y2 z2 x3 y3 z3</outp>
+    x1 y1 z1 x2 y2 z2 x3 y3 z3
 
     >_ echo $a"-"$b
-    <outp>x-1 y-1 z-1 x-2 y-2 z-2 x-3 y-3 z-3</outp>
+    x-1 y-1 z-1 x-2 y-2 z-2 x-3 y-3 z-3
 
     >_ echo {x,y,z}$b
-    <outp>x1 y1 z1 x2 y2 z2 x3 y3 z3</outp>
+    x1 y1 z1 x2 y2 z2 x3 y3 z3
 
     >_ echo {$b}word
-    <outp>1word 2word 3word</outp>
+    1word 2word 3word
 
     >_ echo {$c}word
-    <outp># Output is an empty line</outp>
+    # Output is an empty line
 
 Be careful when you try to use braces to separate variable names from text. The problem shown above can be avoided by wrapping the variable in double quotes instead of braces (``echo "$c"word``).
 
@@ -887,7 +887,7 @@ E.g.
 
     >_ echo (printf '%s' '')banana # the printf prints literally nothing
     >_ echo (printf '%s\n' '')banana # the printf prints just a newline, so the command substitution expands to an empty string
-    <outp>banana</outp>
+    banana
     # After command substitution, the previous line looks like:
     >_ echo ""banana
 
@@ -895,7 +895,7 @@ Examples::
 
     >_ set b 1 2 3
     >_ echo (echo x)$b
-    <outp>x1 x2 x3</outp>
+    x1 x2 x3
 
 .. _expand-index-range:
 
@@ -1148,10 +1148,10 @@ When an array is exported as an environment variable, it is either space or colo
     set -x smurf blue small
     set -x smurf_PATH forest mushroom
     env | grep smurf
-    <outp>
+    
     # smurf=blue small
     # smurf_PATH=forest:mushroom
-    </outp>
+    
 
 
 ``fish`` automatically creates arrays from all environment variables whose name ends in PATH, by splitting them on colons. Other variables are not automatically split.
@@ -1169,12 +1169,12 @@ PATH variables act as normal arrays, except they are are implicitly joined and s
 
     set MYPATH 1 2 3
     echo "$MYPATH"
-    <outp># 1:2:3</outp>
+    # 1:2:3
     set MYPATH "$MYPATH:4:5"
     echo $MYPATH
     # 1 2 3 4 5
     echo "$MYPATH"
-    <outp># 1:2:3:4:5</outp>
+    # 1:2:3:4:5
 
 Variables can be marked or unmarked as PATH variables via the ``--path`` and ``--unpath`` options to ``set``.
 

@@ -25,16 +25,16 @@ Examples
 
     >_ cd ~/
     >_ echo $PWD
-    <outp>/home/alfa</outp>
+    /home/alfa
     
     >_ prompt_pwd
-    <outp>~</outp>
+    ~
     
     >_ cd /tmp/banana/sausage/with/mustard
     >_ prompt_pwd
-    <outp>/t/b/s/w/mustard</outp>
+    /t/b/s/w/mustard
     
     >_ set -g fish_prompt_pwd_dir_length 3
     >_ prompt_pwd
-    <outp>/tmp/ban/sau/wit/mustard</outp>
+    /tmp/ban/sau/wit/mustard
 

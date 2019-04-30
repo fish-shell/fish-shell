@@ -309,6 +309,7 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 streams.out.append_format(_(L"This is not a login shell\n"));
             }
 
+            auto job_control_mode = get_job_control_mode();
             streams.out.append_format(
                 _(L"Job control: %ls\n"),
                 job_control_mode == job_control_t::interactive
@@ -335,7 +336,7 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 opts.new_job_control_mode = new_mode;
             }
             assert(opts.new_job_control_mode && "Should have a new mode");
-            job_control_mode = *opts.new_job_control_mode;
+            set_job_control_mode(*opts.new_job_control_mode);
             break;
         }
         case STATUS_FEATURES: {
@@ -407,17 +408,17 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
         case STATUS_IS_FULL_JOB_CTRL: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = job_control_mode != job_control_t::all;
+            retval = get_job_control_mode() != job_control_t::all;
             break;
         }
         case STATUS_IS_INTERACTIVE_JOB_CTRL: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = job_control_mode != job_control_t::interactive;
+            retval = get_job_control_mode() != job_control_t::interactive;
             break;
         }
         case STATUS_IS_NO_JOB_CTRL: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = job_control_mode != job_control_t::none;
+            retval = get_job_control_mode() != job_control_t::none;
             break;
         }
         case STATUS_STACK_TRACE: {

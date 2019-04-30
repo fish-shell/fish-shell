@@ -468,7 +468,8 @@ job_list_t &jobs();
 /// The current job control mode.
 ///
 /// Must be one of job_control_t::all, job_control_t::interactive and job_control_t::none.
-extern job_control_t job_control_mode;
+job_control_t get_job_control_mode();
+void set_job_control_mode(job_control_t mode);
 
 /// If this flag is set, fish will never fork or run execve. It is used to put fish into a syntax
 /// verifier mode where fish tries to validate the syntax of a file but doesn't actually do

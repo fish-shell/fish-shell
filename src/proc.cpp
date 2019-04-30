@@ -38,6 +38,7 @@
 #include "common.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "global_safety.h"
 #include "io.h"
 #include "output.h"
 #include "parse_tree.h"
@@ -70,9 +71,14 @@ bool is_block = false;
 bool is_breakpoint = false;
 bool is_login = false;
 int is_event = 0;
-job_control_t job_control_mode = job_control_t::interactive;
 int no_exec = 0;
 bool have_proc_stat = false;
+
+static relaxed_atomic_t<job_control_t> job_control_mode{job_control_t::interactive};
+
+job_control_t get_job_control_mode() { return job_control_mode; }
+
+void set_job_control_mode(job_control_t mode) { job_control_mode = mode; }
 
 static int is_interactive = -1;
 

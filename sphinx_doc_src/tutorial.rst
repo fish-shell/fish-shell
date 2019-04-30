@@ -21,7 +21,7 @@ which means you are all set up and can start using fish::
 
     > fish
     Welcome to fish, the friendly interactive shell
-    Type <span class="cwd">help</span> for instructions on how to use fish
+    Type help for instructions on how to use fish
     you@hostname ~>____
 
 
@@ -37,7 +37,7 @@ Learning fish
 
 This tutorial assumes a basic understanding of command line shells and Unix commands, and that you have a working copy of ``fish``.
 
-If you have a strong understanding of other shells, and want to know what ``fish`` does differently, search for the magic phrase <em>unlike other shells</em>, which is used to call out important differences.
+If you have a strong understanding of other shells, and want to know what ``fish`` does differently, search for the magic phrase *unlike other shells*, which is used to call out important differences.
 
 
 Running Commands
@@ -260,7 +260,7 @@ Unlike other shells, ``fish`` does not have an export command. Instead, a variab
 
     >_ set -x MyVariable SomeValue
     >_ env | grep MyVariable
-    <m>MyVariable=SomeValue</m>
+    MyVariable=SomeValue
 
 
 You can erase a variable with ``-e`` or ``--erase``
@@ -370,7 +370,7 @@ A common idiom is to capture the output of a command in a variable::
 
 Command substitutions are not expanded within quotes. Instead, you can temporarily close the quotes, add the command substitution, and reopen them, all in the same argument::
 
-    >_ touch <i class="quote">"testing_"</i>(date +%s)<i class="quote">".txt"</i>
+    >_ touch "testing_"(date +%s)".txt"
     >_ ls *.txt
     testing_1360099791.txt
 
@@ -531,7 +531,7 @@ Loops
 While loops::
 
     >_ while true
-        echo <i class="quote">"Loop forever"</i>
+        echo "Loop forever"
     end
     Loop forever
     Loop forever
@@ -564,7 +564,7 @@ You can define your own prompt::
     >_ function fish_prompt
         echo "New Prompt % "
     end
-    <asis>New Prompt % </asis>___
+    New Prompt % 
 
 
 Multiple lines are OK. Colors can be set via ``set_color``, passing it named ANSI colors, or hex RGB values::

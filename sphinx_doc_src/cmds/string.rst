@@ -314,7 +314,7 @@ Examples
 ::
 
     >_ echo \\x07 | string escape
-    <bs>cg</bs>
+    cg
 
 
 
@@ -322,7 +322,7 @@ Examples
 ::
 
     >_ string escape --style=var 'a1 b2'\\u6161
-    <bs>a1_20b2__c_E6_85_A1</bs>
+    a1_20b2__c_E6_85_A1
 
 
 Match Glob Examples

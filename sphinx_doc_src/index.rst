@@ -113,7 +113,7 @@ Example::
     >ls -l | grep "my topic"
 
 
-- Commands can pass on all their output as a chunk</b>: the output stream of one command is bundled and taken as data argument for the second command. This is called command substitution, see `Command Substitution`_.
+- Commands can pass on all their output as a chunk: the output stream of one command is bundled and taken as data argument for the second command. This is called command substitution, see `Command Substitution`_.
 
 Example::
 
@@ -1003,7 +1003,7 @@ Shell variables
 
 Shell variables are named pieces of data, which can be created, deleted and their values changed and used by the user.  Variables may optionally be "exported", so that a copy of the variable is available to any subprocesses the shell creates. An exported variable is referred to as an "environment variable".
 
-To set a variable value, use the `set <cmds/set.html>`_ command</a>. A variable name can not be empty and can contain only letters, digits, and underscores. It may begin and end with any of those characters.
+To set a variable value, use the :ref:`set <cmd-set>` command. A variable name can not be empty and can contain only letters, digits, and underscores. It may begin and end with any of those characters.
 
 Example:
 

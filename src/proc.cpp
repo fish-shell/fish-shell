@@ -568,10 +568,6 @@ static bool process_clean_after_marking(bool allow_interactive) {
     // Remove all disowned jobs.
     remove_disowned_jobs(jobs());
 
-    // If we ever drop the `static bool locked` above, this should be changed to a local or
-    // thread-local vector instead of a static vector. It is only static to reduce heap allocations.
-    static std::vector<shared_ptr<job_t>> erase_list;
-
     // Accumulate exit events into a new list, which we fire after the list manipulation is
     // complete.
     std::vector<event_t> exit_events;
@@ -614,45 +610,18 @@ static bool process_clean_after_marking(bool allow_interactive) {
             exit_events.push_back(
                 proc_create_event(L"JOB_EXIT", event_type_t::job_exit, j->job_id, 0));
         }
-
-        // Remove us from the job list if we're complete.
-        if (j->is_completed()) {
-            erase_list.push_back(j);
-        }
     }
 
-    if (!erase_list.empty()) {
-        // The intersection of the two lists is typically O(m*n), but we know the order
-        // of the entries in erase_list is the same as their matches in jobs(), so we can
-        // use that to our advantage.
-        auto to_erase = erase_list.begin();
-        jobs().erase(std::remove_if(jobs().begin(), jobs().end(),
-                    [&to_erase](const shared_ptr<job_t> &j) {
-            if (to_erase != erase_list.end() && *to_erase == j) {
-                ++to_erase;
-                return true;
-            }
-            return false;
-        }), jobs().end());
-
-        if (should_debug(2)) {
-            // Assertions prevent the application from continuing in case of invalid state. If we
-            // did not remove all objects from the list, it's not bad enough to abort and die, but
-            // leave this check here so that we can be alerted to the situtaion if running at a
-            // higher debug level. Or just remove it. But I wouldn't want to be the person that has
-            // to debug this without even this soft assertion in place when some C++ standard
-            // library decides to make std::remove_if iterate backwards or in random order!
-            assert(to_erase == erase_list.end()
-                && "Not all jobs slated for erasure have been erased!");
-        }
-    }
+    // Remove completed jobs.
+    // Do this before calling out to user code in the event handler below, to ensure an event
+    // handler doesn't remove jobs on our behalf.
+    auto is_complete = [](const shared_ptr<job_t> &j) { return j->is_completed(); };
+    jobs().erase(std::remove_if(jobs().begin(), jobs().end(), is_complete), jobs().end());
 
     // Post pending exit events.
     for (const auto &evt : exit_events) {
         event_fire(evt);
     }
-
-    erase_list.clear();
 
     if (printed) {
         fflush(stdout);

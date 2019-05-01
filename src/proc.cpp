@@ -436,14 +436,14 @@ static void print_job_status(const job_t *j, job_status_t status) {
     outp.flush_to(STDOUT_FILENO);
 }
 
-void proc_fire_event(const wchar_t *msg, event_type_t type, pid_t pid, int status) {
+event_t proc_create_event(const wchar_t *msg, event_type_t type, pid_t pid, int status) {
     event_t event{type};
     event.desc.param1.pid = pid;
 
     event.arguments.push_back(msg);
     event.arguments.push_back(to_string(pid));
     event.arguments.push_back(to_string(status));
-    event_fire(event);
+    return event;
 }
 
 /// Remove all disowned jobs whose job chain is fully constructed (that is, do not erase disowned
@@ -461,16 +461,21 @@ void remove_disowned_jobs(job_list_t &jobs) {
 }
 
 /// Given a a process in a job, print the status message for the process as appropriate, and then
-/// mark the status code so we don't print again. \return true if we printed a status message, false
-/// if not.
-static bool try_clean_process_in_job(process_t *p, job_t *j, bool only_one_job) {
+/// mark the status code so we don't print again. Populate any events into \p exit_events.
+/// \return true if we printed a status message, false if not.
+static bool try_clean_process_in_job(process_t *p, job_t *j, std::vector<event_t> *exit_events,
+                                     bool only_one_job) {
     if (!p->completed || !p->pid) {
         return false;
     }
 
     auto s = p->status;
-    // Ignore signal SIGPIPE.We issue it ourselves to the pipe writer when the pipe reader
-    // dies.
+
+    // Add an exit event.
+    exit_events->push_back(proc_create_event(L"PROCESS_EXIT", event_type_t::exit, p->pid,
+                                             s.normal_exited() ? s.exit_code() : -1));
+
+    // Ignore SIGPIPE. We issue it ourselves to the pipe writer when the pipe reader dies.
     if (!s.signal_exited() || s.signal_code() == SIGPIPE) {
         return false;
     }
@@ -566,6 +571,12 @@ static bool process_clean_after_marking(bool allow_interactive) {
     // If we ever drop the `static bool locked` above, this should be changed to a local or
     // thread-local vector instead of a static vector. It is only static to reduce heap allocations.
     static std::vector<shared_ptr<job_t>> erase_list;
+
+    // Accumulate exit events into a new list, which we fire after the list manipulation is
+    // complete.
+    std::vector<event_t> exit_events;
+
+    // Print status messages for completed or stopped jobs.
     const bool only_one_job = jobs().size() == 1;
     for (const auto &j : jobs()) {
         // Skip unconstructed jobs.
@@ -582,7 +593,7 @@ static bool process_clean_after_marking(bool allow_interactive) {
         // Note this may print the message on behalf of the job, affecting the result of
         // job_wants_message().
         for (process_ptr_t &p : j->processes) {
-            if (try_clean_process_in_job(p.get(), j.get(), only_one_job)) {
+            if (try_clean_process_in_job(p.get(), j.get(), &exit_events, only_one_job)) {
                 printed = true;
             }
         }
@@ -592,6 +603,16 @@ static bool process_clean_after_marking(bool allow_interactive) {
             print_job_status(j.get(), j->is_completed() ? JOB_ENDED : JOB_STOPPED);
             j->set_flag(job_flag_t::NOTIFIED, true);
             printed = true;
+        }
+
+        // Prepare events for completed jobs.
+        if (j->is_completed()) {
+            if (j->pgid != INVALID_PID) {
+                exit_events.push_back(
+                    proc_create_event(L"JOB_EXIT", event_type_t::exit, -j->pgid, 0));
+            }
+            exit_events.push_back(
+                proc_create_event(L"JOB_EXIT", event_type_t::job_exit, j->job_id, 0));
         }
 
         // Remove us from the job list if we're complete.
@@ -626,9 +647,9 @@ static bool process_clean_after_marking(bool allow_interactive) {
         }
     }
 
-    // Only now notify any listeners of the job exit, so that the contract isn't violated
-    for (const auto &j : erase_list) {
-        proc_fire_event(L"JOB_EXIT", event_type_t::job_exit, j->job_id, 0);
+    // Post pending exit events.
+    for (const auto &evt : exit_events) {
+        event_fire(evt);
     }
 
     erase_list.clear();

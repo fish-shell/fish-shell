@@ -474,7 +474,7 @@ int main(int argc, char **argv) {
 
     // TODO: The generic process-exit event is useless and unused.
     // Remove this in future.
-    proc_fire_event(L"PROCESS_EXIT", event_type_t::exit, getpid(), exit_status);
+    event_fire(proc_create_event(L"PROCESS_EXIT", event_type_t::exit, getpid(), exit_status));
 
     // Trigger any exit handlers.
     wcstring_list_t event_args = {to_string(exit_status)};

@@ -502,9 +502,8 @@ void proc_update_jiffies();
 /// job is in the foreground, that every process is in a valid state, etc.
 void proc_sanity_check();
 
-/// Send a process/job exit event notification. This function is a convenience wrapper around
-/// event_fire().
-void proc_fire_event(const wchar_t *msg, event_type_t type, pid_t pid, int status);
+/// Create a process/job exit event notification.
+event_t proc_create_event(const wchar_t *msg, event_type_t type, pid_t pid, int status);
 
 /// Initializations.
 void proc_init();

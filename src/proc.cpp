@@ -524,6 +524,25 @@ static bool try_clean_process_in_job(process_t *p, job_t *j, bool only_one_job) 
     return printed;
 }
 
+/// \return whether this job wants a status message printed when it stops or completes.
+/// If \p print_stopped_foregrounds is set, then treat stopped foreground jobs as wanting a message.
+/// This should conceptually always be true and we only sometimes leave it as false to allow job IDs
+/// to be more aggressively reclaimed. TODO: rationalize this!
+static bool job_wants_message(const shared_ptr<job_t> &j, bool print_for_foreground_stops = true) {
+    // Did we already print a status message?
+    if (j->get_flag(job_flag_t::NOTIFIED)) return false;
+
+    // Do we just skip notifications?
+    if (j->get_flag(job_flag_t::SKIP_NOTIFICATION)) return false;
+
+    // Are we foreground?
+    // The idea here is to not print status messages for jobs that execute in the foreground (i.e.
+    // without & and without being `bg`).
+    if (j->is_foreground()) return false;
+
+    return true;
+}
+
 /// Remove completed jobs from the job list, printing status messages as appropriate.
 /// \return whether something was printed.
 static bool process_clean_after_marking(bool allow_interactive) {
@@ -549,39 +568,35 @@ static bool process_clean_after_marking(bool allow_interactive) {
     static std::vector<shared_ptr<job_t>> erase_list;
     const bool only_one_job = jobs().size() == 1;
     for (const auto &j : jobs()) {
+        // Skip unconstructed jobs.
         if (!j->is_constructed()) {
             continue;
         }
-        // If we are reaping only jobs who do not need status messages sent to the console, do not
-        // consider reaping jobs that need status messages.
-        if ((!j->get_flag(job_flag_t::SKIP_NOTIFICATION)) && (!interactive) &&
-            (!j->is_foreground())) {
+
+        // If we are not interactive, skip cleaning jobs that want to print an interactive message.
+        if (!interactive && job_wants_message(j, false)) {
             continue;
         }
 
+        // Clean processes within the job.
+        // Note this may print the message on behalf of the job, affecting the result of
+        // job_wants_message().
         for (process_ptr_t &p : j->processes) {
             if (try_clean_process_in_job(p.get(), j.get(), only_one_job)) {
                 printed = true;
             }
         }
 
-        // If all processes have completed, tell the user the job has completed and delete it from
-        // the active job list.
-        if (j->is_completed()) {
-            if (!j->is_foreground() && !j->get_flag(job_flag_t::NOTIFIED) &&
-                !j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
-                print_job_status(j.get(), JOB_ENDED);
-                printed = true;
-            }
-
-            erase_list.push_back(j);
-        } else if (j->is_stopped() && !j->get_flag(job_flag_t::NOTIFIED)) {
-            // Notify the user about newly stopped jobs.
-            if (!j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
-                print_job_status(j.get(), JOB_STOPPED);
-                printed = true;
-            }
+        // Print the message if we need to.
+        if (job_wants_message(j) && (j->is_completed() || j->is_stopped())) {
+            print_job_status(j.get(), j->is_completed() ? JOB_ENDED : JOB_STOPPED);
             j->set_flag(job_flag_t::NOTIFIED, true);
+            printed = true;
+        }
+
+        // Remove us from the job list if we're complete.
+        if (j->is_completed()) {
+            erase_list.push_back(j);
         }
     }
 

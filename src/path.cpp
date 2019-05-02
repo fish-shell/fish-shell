@@ -258,8 +258,9 @@ static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &
                                      int saved_errno) {
     auto &vars = env_stack_t::globals();
     wcstring warning_var_name = L"_FISH_WARNED_" + which_dir;
-    auto var = vars.get(warning_var_name, ENV_GLOBAL | ENV_EXPORT);
-    if (!var) return;
+    if (vars.get(warning_var_name, ENV_GLOBAL | ENV_EXPORT)) {
+        return;
+    }
     vars.set_one(warning_var_name, ENV_GLOBAL | ENV_EXPORT, L"1");
 
     debug(0, custom_error_msg.c_str());

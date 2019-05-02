@@ -730,6 +730,9 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
 
     init_input();
 
+    // Complain about invalid config paths.
+    path_emit_config_directory_errors(vars);
+
     // Set up universal variables. The empty string means to use the default path.
     assert(s_universal_variables == NULL);
     s_universal_variables = new env_universal_t(L"");

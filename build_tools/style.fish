@@ -55,14 +55,16 @@ else
     set python_files (string match -r '^.*\.py$' -- $files)
 end
 
+set -l red (set_color red)
+set -l green (set_color green)
+set -l blue (set_color blue)
+set -l normal (set_color normal)
+
 # Run the C++ reformatter if we have any C++ files.
 if set -q c_files[1]
     if test $git_clang_format = yes
         if type -q git-clang-format
-            echo
-            echo ========================================
-            echo Running git-clang-format
-            echo ========================================
+            echo === Running "$red"git-clang-format"$normal"
             git add $c_files
             git-clang-format
         else
@@ -71,10 +73,7 @@ if set -q c_files[1]
             echo
         end
     else if type -q clang-format
-        echo
-        echo ========================================
-        echo Running clang-format
-        echo ========================================
+        echo === Running "$red"clang-format"$normal"
         for file in $c_files
             cp $file $file.new # preserves mode bits
             clang-format $file >$file.new
@@ -98,10 +97,7 @@ if set -q fish_files[1]
         make fish_indent
         set PATH . $PATH
     end
-    echo
-    echo ========================================
-    echo Running fish_indent
-    echo ========================================
+    echo === Running "$green"fish_indent"$normal"
     for file in $fish_files
         cp $file $file.new # preserves mode bits
         fish_indent <$file >$file.new
@@ -120,10 +116,7 @@ if set -q python_files[1]
         echo Please install "`black`" to style python
         echo
     else
-        echo
-        echo ========================================
-        echo Running black
-        echo ========================================
+        echo === Running "$blue"black"$normal"
         black $python_files
     end
 end

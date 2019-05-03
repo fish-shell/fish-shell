@@ -634,10 +634,8 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
     retval = check_for_mutually_exclusive_flags(opts, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    if (opts.stop_nonopt) {
-        for (int i = optind; argv[i]; i++) {
-            opts.argv.push_back(argv[i]);
-        }
+    for (int i = optind; argv[i]; i++) {
+        opts.argv.push_back(argv[i]);
     }
 
     return STATUS_CMD_OK;

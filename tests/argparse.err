@@ -118,3 +118,6 @@ in function 'notargparse'
 
 ####################
 # Check for crash when last option is unknown
+
+####################
+# Checking arguments after --

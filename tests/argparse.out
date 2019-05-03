@@ -140,3 +140,9 @@ alpha aaaa
 
 ####################
 # Check for crash when last option is unknown
+
+####################
+# Checking arguments after --
+a
+b
+-a

@@ -7,10 +7,10 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <cstring>
 #include <unistd.h>
-#include <cwchar>
 #include <wctype.h>
+#include <cstring>
+#include <cwchar>
 
 #ifdef HAVE_SYS_SYSCTL_H
 #include <sys/sysctl.h>  // IWYU pragma: keep
@@ -124,9 +124,7 @@ static void append_cmdsub_error(parse_error_list_t *errors, size_t source_start,
 
 /// Test if the specified string does not contain character which can not be used inside a quoted
 /// string.
-static bool is_quotable(const wchar_t *str) {
-    return !std::wcspbrk(str, L"\n\t\r\b\x1B");
-}
+static bool is_quotable(const wchar_t *str) { return !std::wcspbrk(str, L"\n\t\r\b\x1B"); }
 
 static bool is_quotable(const wcstring &str) { return is_quotable(str.c_str()); }
 
@@ -168,7 +166,8 @@ wcstring expand_escape_variable(const env_var_t &var) {
 /// Parse an array slicing specification Returns 0 on success. If a parse error occurs, returns the
 /// index of the bad token. Note that 0 can never be a bad index because the string always starts
 /// with [.
-static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx, size_t array_size) {
+static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx,
+                          size_t array_size) {
     const long size = (long)array_size;
     size_t pos = 1;  // skip past the opening square brace
 
@@ -360,11 +359,12 @@ static bool expand_variables(wcstring instr, std::vector<completion_t> *out, siz
         } else if (history) {
             effective_val_count = history->size();
         }
-        size_t bad_pos = parse_slice(in + slice_start, &slice_end, var_idx_list, effective_val_count);
+        size_t bad_pos =
+            parse_slice(in + slice_start, &slice_end, var_idx_list, effective_val_count);
         if (bad_pos != 0) {
             if (in[slice_start + bad_pos] == L'0') {
                 append_syntax_error(errors, slice_start + bad_pos,
-                        L"array indices start at 1, not 0.");
+                                    L"array indices start at 1, not 0.");
             } else {
                 append_syntax_error(errors, slice_start + bad_pos, L"Invalid index value");
             }
@@ -640,8 +640,7 @@ static bool expand_cmdsubst(const wcstring &input, std::vector<completion_t> *ou
         wchar_t *slice_end;
         size_t bad_pos;
 
-        bad_pos =
-            parse_slice(slice_begin, &slice_end, slice_idx, sub_res.size());
+        bad_pos = parse_slice(slice_begin, &slice_end, slice_idx, sub_res.size());
         if (bad_pos != 0) {
             append_syntax_error(errors, slice_begin - in + bad_pos, L"Invalid index value");
             return false;
@@ -905,7 +904,7 @@ expand_result_t expander_t::stage_cmdsubst(wcstring input, std::vector<completio
                 append_completion(out, std::move(input));
                 break;
             case 1: /* fallthroughs intentional */
-               append_cmdsub_error(errors, start, L"Command substitutions not allowed");
+                append_cmdsub_error(errors, start, L"Command substitutions not allowed");
             case -1:
             default:
                 return expand_result_t::error;
@@ -1132,7 +1131,6 @@ expand_result_t expand_to_command_and_args(const wcstring &instr, const environm
                                            parse_error_list_t *errors) {
     // Fast path.
     if (expand_is_clean(instr)) {
-
         *out_cmd = instr;
         return expand_result_t::ok;
     }

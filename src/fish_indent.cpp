@@ -23,15 +23,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <cstring>
 #include <wctype.h>
+#include <cstring>
 
 #include <cwchar>
 #include <memory>
-#include <string>
-#include <vector>
 #include <stack>
+#include <string>
 #include <tuple>
+#include <vector>
 
 #include "color.h"
 #include "common.h"
@@ -62,7 +62,7 @@ static wcstring read_file(FILE *f) {
                 if (errno == EILSEQ) {
                     // Illegal byte sequence. Try to skip past it.
                     clearerr(f);
-                    int ch = fgetc(f); // for printing the warning, and seeks forward 1 byte.
+                    int ch = fgetc(f);  // for printing the warning, and seeks forward 1 byte.
                     debug(1, "%s (byte=%X)", std::strerror(errno), ch);
                     ret = 1;
                     continue;
@@ -116,8 +116,8 @@ struct prettifier_t {
         line_continuation_indent = is_continuation ? 1 : 0;
     }
 
-    // Append whitespace as necessary. If we have a newline, append the appropriate indent. Otherwise,
-    // append a space.
+    // Append whitespace as necessary. If we have a newline, append the appropriate indent.
+    // Otherwise, append a space.
     void append_whitespace(indent_t node_indent) {
         if (needs_continuation_newline) {
             append_newline(true);
@@ -128,7 +128,6 @@ struct prettifier_t {
             output.append((node_indent + line_continuation_indent) * SPACES_PER_INDENT, L' ');
         }
     }
-
 };
 
 // Dump a parse tree node in a form helpful to someone debugging the behavior of this program.
@@ -157,8 +156,9 @@ static void dump_node(indent_t node_indent, const parse_node_t &node, const wcst
         nextc_str[2] = nextc + '@';
     }
     std::fwprintf(stderr, L"{off %4u, len %4u, indent %2u, kw %ls, %ls} [%ls|%ls|%ls]\n",
-             node.source_start, node.source_length, node_indent, keyword_description(node.keyword),
-             token_type_description(node.type), prevc_str, source_txt.c_str(), nextc_str);
+                  node.source_start, node.source_length, node_indent,
+                  keyword_description(node.keyword), token_type_description(node.type), prevc_str,
+                  source_txt.c_str(), nextc_str);
 }
 
 void prettifier_t::prettify_node(const parse_node_tree_t &tree, node_offset_t node_idx,
@@ -182,16 +182,17 @@ void prettifier_t::prettify_node(const parse_node_tree_t &tree, node_offset_t no
         const parse_node_t &node = tree.at(node_idx);
         const parse_token_type_t node_type = node.type;
         const parse_token_type_t prev_node_type =
-                node_idx > 0 ? tree.at(node_idx - 1).type : token_type_invalid;
+            node_idx > 0 ? tree.at(node_idx - 1).type : token_type_invalid;
 
-        // Increment the indent if we are either a root job_list, or root case_item_list, or in an if or
-        // while header (#1665).
-        const bool is_root_job_list = node_type == symbol_job_list && parent_type != symbol_job_list;
+        // Increment the indent if we are either a root job_list, or root case_item_list, or in an
+        // if or while header (#1665).
+        const bool is_root_job_list =
+            node_type == symbol_job_list && parent_type != symbol_job_list;
         const bool is_root_case_list =
-                node_type == symbol_case_item_list && parent_type != symbol_case_item_list;
+            node_type == symbol_case_item_list && parent_type != symbol_case_item_list;
         const bool is_if_while_header =
-                (node_type == symbol_job_conjunction || node_type == symbol_andor_job_list) &&
-                (parent_type == symbol_if_clause || parent_type == symbol_while_header);
+            (node_type == symbol_job_conjunction || node_type == symbol_andor_job_list) &&
+            (parent_type == symbol_if_clause || parent_type == symbol_while_header);
 
         if (is_root_job_list || is_root_case_list || is_if_while_header) {
             node_indent += 1;
@@ -237,7 +238,8 @@ void prettifier_t::prettify_node(const parse_node_tree_t &tree, node_offset_t no
         for (node_offset_t idx = node.child_count; idx > 0; idx--) {
             // Note: We pass our type to our child, which becomes its parent node type.
             // Note: While node.child_start could be -1 (NODE_OFFSET_INVALID) the addition is safe
-            // because we won't execute this call in that case since node.child_count should be zero.
+            // because we won't execute this call in that case since node.child_count should be
+            // zero.
             pending_node_stack.push({node.child_start + (idx - 1), node_indent, node_type});
         }
     }
@@ -419,7 +421,9 @@ static const wchar_t *html_class_name_for_color(highlight_spec_t spec) {
         case highlight_role_t::selection: {
             return P(selection);
         }
-        default: { return P(other); }
+        default: {
+            return P(other);
+        }
     }
 }
 
@@ -577,7 +581,8 @@ int main(int argc, char *argv[]) {
                 if (tmp > 0 && tmp <= 128 && !*end && !errno) {
                     debug_stack_frames = (int)tmp;
                 } else {
-                    std::fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag"), optarg);
+                    std::fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag"),
+                                  optarg);
                     exit(1);
                 }
                 break;
@@ -596,8 +601,9 @@ int main(int argc, char *argv[]) {
     wcstring src;
     if (argc == 0) {
         if (output_type == output_type_file) {
-            std::fwprintf(stderr, _(L"Expected file path to read/write for -w:\n\n $ %ls -w foo.fish\n"),
-                     program_name);
+            std::fwprintf(stderr,
+                          _(L"Expected file path to read/write for -w:\n\n $ %ls -w foo.fish\n"),
+                          program_name);
             exit(1);
         }
         src = read_file(stdin);
@@ -645,7 +651,7 @@ int main(int argc, char *argv[]) {
                 exit(0);
             } else {
                 std::fwprintf(stderr, _(L"Opening \"%s\" failed: %s\n"), output_location,
-                         std::strerror(errno));
+                              std::strerror(errno));
                 exit(1);
             }
             break;

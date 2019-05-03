@@ -57,7 +57,9 @@ RESOLVE(job_list) {
         case parse_token_type_terminate: {
             return production_for<empty>();  // no more commands, just transition to empty
         }
-        default: { return NO_PRODUCTION; }
+        default: {
+            return NO_PRODUCTION;
+        }
     }
 }
 
@@ -166,7 +168,9 @@ RESOLVE(statement) {
                     return NO_PRODUCTION;
                 }
                 // All other keywords fall through to decorated statement.
-                default: { return production_for<decorated>(); }
+                default: {
+                    return production_for<decorated>();
+                }
             }
             break;
         }
@@ -176,7 +180,9 @@ RESOLVE(statement) {
         case parse_token_type_terminate: {
             return NO_PRODUCTION;
         }
-        default: { return NO_PRODUCTION; }
+        default: {
+            return NO_PRODUCTION;
+        }
     }
 }
 
@@ -188,7 +194,9 @@ RESOLVE(else_clause) {
         case parse_keyword_else: {
             return production_for<else_cont>();
         }
-        default: { return production_for<empty>(); }
+        default: {
+            return production_for<empty>();
+        }
     }
 }
 
@@ -200,7 +208,9 @@ RESOLVE(else_continuation) {
         case parse_keyword_if: {
             return production_for<else_if>();
         }
-        default: { return production_for<else_only>(); }
+        default: {
+            return production_for<else_only>();
+        }
     }
 }
 
@@ -252,7 +262,9 @@ RESOLVE(argument_list) {
         case parse_token_type_string: {
             return production_for<arg>();
         }
-        default: { return production_for<empty>(); }
+        default: {
+            return production_for<empty>();
+        }
     }
 }
 
@@ -267,7 +279,9 @@ RESOLVE(freestanding_argument_list) {
         case parse_token_type_end: {
             return production_for<semicolon>();
         }
-        default: { return production_for<empty>(); }
+        default: {
+            return production_for<empty>();
+        }
     }
 }
 
@@ -288,12 +302,13 @@ RESOLVE(block_header) {
         case parse_keyword_begin: {
             return production_for<beginh>();
         }
-        default: { return NO_PRODUCTION; }
+        default: {
+            return NO_PRODUCTION;
+        }
     }
 }
 
 RESOLVE(decorated_statement) {
-
     // If this is e.g. 'command --help' then the command is 'command' and not a decoration. If the
     // second token is not a string, then this is a naked 'command' and we should execute it as
     // undecorated.
@@ -356,7 +371,6 @@ RESOLVE(optional_background) {
         }
     }
 }
-
 
 const production_element_t *parse_productions::production_for_token(parse_token_type_t node_type,
                                                                     const parse_token_t &input1,

@@ -328,7 +328,9 @@ static void job_or_process_extent(const wchar_t *buff, size_t cursor_pos, const 
                 }
                 break;
             }
-            default: { break; }
+            default: {
+                break;
+            }
         }
     }
 
@@ -510,7 +512,8 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
 
     if (offset != 0) {
         if (finished) {
-            while ((cmd_tmp[prev_pos] != 0) && (std::wcschr(L";|", cmd_tmp[prev_pos]) != 0)) prev_pos++;
+            while ((cmd_tmp[prev_pos] != 0) && (std::wcschr(L";|", cmd_tmp[prev_pos]) != 0))
+                prev_pos++;
             *offset = prev_pos;
         } else {
             *offset = pos;
@@ -674,8 +677,9 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
     // foo ; cas', we get an invalid parse tree (since 'cas' is not valid) but we indent it as if it
     // were a case item list.
     parse_node_tree_t tree;
-    parse_tree_from_string(src, parse_flag_continue_after_error | parse_flag_include_comments |
-                                    parse_flag_accept_incomplete_tokens,
+    parse_tree_from_string(src,
+                           parse_flag_continue_after_error | parse_flag_include_comments |
+                               parse_flag_accept_incomplete_tokens,
                            &tree, NULL /* errors */);
 
     // Start indenting at the first node. If we have a parse error, we'll have to start indenting
@@ -825,7 +829,9 @@ static const wchar_t *error_format_for_character(wchar_t wc) {
         case VARIABLE_EXPAND_EMPTY: {
             return ERROR_NOT_PID;
         }
-        default: { return ERROR_BAD_VAR_CHAR1; }
+        default: {
+            return ERROR_BAD_VAR_CHAR1;
+        }
     }
 }
 

@@ -14,13 +14,13 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <cstring>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <termios.h>
 #include <unistd.h>
-#include <cwchar>
 #include <wctype.h>
+#include <cstring>
+#include <cwchar>
 #ifdef HAVE_EXECINFO_H
 #include <execinfo.h>
 #endif
@@ -62,7 +62,7 @@ constexpr wint_t NOT_A_WCHAR = static_cast<wint_t>(WEOF);
 struct termios shell_modes;
 
 /// This allows us to determine if we're running on the main thread
-static std::atomic<size_t> thread_id { 0 };
+static std::atomic<size_t> thread_id{0};
 /// This allows us to notice when we've forked.
 static bool is_forked_proc = false;
 /// This allows us to bypass the main thread checks
@@ -154,8 +154,10 @@ bool is_windows_subsystem_for_linux() {
         if (std::strstr(info.release, "Microsoft") != nullptr) {
             const char *dash = std::strchr(info.release, '-');
             if (dash == nullptr || strtod(dash + 1, nullptr) < 17763) {
-                debug(1, "This version of WSL is not supported and fish will probably not work correctly!\n"
-                        "Please upgrade to Windows 10 1809 (17763) or higher to use fish!");
+                debug(1,
+                      "This version of WSL is not supported and fish will probably not work "
+                      "correctly!\n"
+                      "Please upgrade to Windows 10 1809 (17763) or higher to use fish!");
             }
 
             return true;
@@ -173,8 +175,8 @@ bool is_windows_subsystem_for_linux() {
 #ifdef HAVE_BACKTRACE_SYMBOLS
 // This function produces a stack backtrace with demangled function & method names. It is based on
 // https://gist.github.com/fmela/591333 but adapted to the style of the fish project.
-[[gnu::noinline]] static const wcstring_list_t
-demangled_backtrace(int max_frames, int skip_levels) {
+[[gnu::noinline]] static const wcstring_list_t demangled_backtrace(int max_frames,
+                                                                   int skip_levels) {
     void *callstack[128];
     const int n_max_frames = sizeof(callstack) / sizeof(callstack[0]);
     int n_frames = backtrace(callstack, n_max_frames);
@@ -562,9 +564,9 @@ void fish_setlocale() {
     if (is_windows_subsystem_for_linux()) {
         // neither of \u23CE and \u25CF can be displayed in the default fonts on Windows, though
         // they can be *encoded* just fine. Use alternative glyphs.
-        omitted_newline_str = L"\u00b6";   // "pilcrow"
+        omitted_newline_str = L"\u00b6";  // "pilcrow"
         omitted_newline_width = 1;
-        obfuscation_read_char = L'\u2022'; // "bullet"
+        obfuscation_read_char = L'\u2022';  // "bullet"
     } else if (is_console_session()) {
         omitted_newline_str = L"^J";
         omitted_newline_width = 2;
@@ -639,8 +641,8 @@ static void debug_shared(const wchar_t level, const wcstring &msg) {
         std::fwprintf(stderr, L"<%lc> %ls: %ls\n", (unsigned long)level, program_name, msg.c_str());
     } else {
         current_pid = getpid();
-        std::fwprintf(stderr, L"<%lc> %ls: %d: %ls\n", (unsigned long)level, program_name, current_pid,
-                 msg.c_str());
+        std::fwprintf(stderr, L"<%lc> %ls: %d: %ls\n", (unsigned long)level, program_name,
+                      current_pid, msg.c_str());
     }
 }
 
@@ -1125,7 +1127,7 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
 /// \param in is the raw string to be searched for literally when substituted in a PCRE2 expression.
 static wcstring escape_string_pcre2(const wcstring &in) {
     wcstring out;
-    out.reserve(in.size() * 1.3); // a wild guess
+    out.reserve(in.size() * 1.3);  // a wild guess
 
     for (auto c : in) {
         switch (c) {
@@ -1142,8 +1144,9 @@ static wcstring escape_string_pcre2(const wcstring &in) {
             case L'}':
             case L'\\':
             case L'|':
-            // these two only *need* to be escaped within a character class, and technically it makes
-            // no sense to ever use process substitution output to compose a character class, but...
+            // these two only *need* to be escaped within a character class, and technically it
+            // makes no sense to ever use process substitution output to compose a character class,
+            // but...
             case L'-':
             case L']':
                 out.push_back('\\');
@@ -1638,7 +1641,9 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     }
                     break;
                 }
-                default: { break; }
+                default: {
+                    break;
+                }
             }
         }
 
@@ -2221,9 +2226,7 @@ void set_main_thread() {
 
 void configure_thread_assertions_for_testing() { thread_asserts_cfg_for_testing = true; }
 
-bool is_forked_child() {
-    return is_forked_proc;
-}
+bool is_forked_child() { return is_forked_proc; }
 
 void setup_fork_guards() {
     static bool already_initialized = false;
@@ -2235,9 +2238,7 @@ void setup_fork_guards() {
     }
 
     already_initialized = true;
-    pthread_atfork(nullptr, nullptr, []() {
-        is_forked_proc = true;
-    });
+    pthread_atfork(nullptr, nullptr, []() { is_forked_proc = true; });
 }
 
 void save_term_foreground_process_group() {
@@ -2423,12 +2424,11 @@ std::string get_executable_path(const char *argv0) {
     // Linux compatibility layer. Per sysctl(3), passing in a process ID of -1 returns
     // the value for the current process.
     size_t buff_size = sizeof buff;
-    int name[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
+    int name[] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
     int result = sysctl(name, sizeof(name) / sizeof(int), buff, &buff_size, nullptr, 0);
     if (result != 0) {
         wperror(L"sysctl KERN_PROC_PATHNAME");
-    }
-    else {
+    } else {
         return std::string(buff);
     }
 #else
@@ -2491,9 +2491,10 @@ bool is_console_session() {
         const char *TERM = getenv("TERM");
         return
             // Test that the tty matches /dev/(console|dcons|tty[uv\d])
-            tty_name && ((strncmp(tty_name, "/dev/tty", len) == 0 &&
-            (tty_name[len] == 'u' || tty_name[len] == 'v' || isdigit(tty_name[len])))
-            || strcmp(tty_name, "/dev/dcons") == 0 || strcmp(tty_name, "/dev/console") == 0)
+            tty_name &&
+            ((strncmp(tty_name, "/dev/tty", len) == 0 &&
+              (tty_name[len] == 'u' || tty_name[len] == 'v' || isdigit(tty_name[len]))) ||
+             strcmp(tty_name, "/dev/dcons") == 0 || strcmp(tty_name, "/dev/console") == 0)
             // and that $TERM is simple, e.g. `xterm` or `vt100`, not `xterm-something`
             && (!TERM || !strchr(TERM, '-') || !strcmp(TERM, "sun-color"));
     }();

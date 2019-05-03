@@ -76,42 +76,40 @@ class separated_buffer_t {
     separated_buffer_t(const separated_buffer_t &) = delete;
     void operator=(const separated_buffer_t &) = delete;
 
-public:
- /// Construct a separated_buffer_t with the given buffer limit \p limit, or 0 for no limit.
- separated_buffer_t(size_t limit) : buffer_limit_(limit) {}
+   public:
+    /// Construct a separated_buffer_t with the given buffer limit \p limit, or 0 for no limit.
+    separated_buffer_t(size_t limit) : buffer_limit_(limit) {}
 
- /// \return the buffer limit size, or 0 for no limit.
- size_t limit() const { return buffer_limit_; }
+    /// \return the buffer limit size, or 0 for no limit.
+    size_t limit() const { return buffer_limit_; }
 
- /// \return the contents size.
- size_t size() const { return contents_size_; }
+    /// \return the contents size.
+    size_t size() const { return contents_size_; }
 
- /// \return whether the output has been discarded.
- bool discarded() const { return discard; }
+    /// \return whether the output has been discarded.
+    bool discarded() const { return discard; }
 
- /// Mark the contents as discarded.
- void set_discard() {
-     elements_.clear();
-     contents_size_ = 0;
-     discard = true;
- }
+    /// Mark the contents as discarded.
+    void set_discard() {
+        elements_.clear();
+        contents_size_ = 0;
+        discard = true;
+    }
 
- void reset_discard() {
-     discard = false;
- }
+    void reset_discard() { discard = false; }
 
- /// Serialize the contents to a single string, where explicitly separated elements have a
- /// newline appended.
- StringType newline_serialized() const {
-     StringType result;
-     result.reserve(size());
-     for (const auto &elem : elements_) {
-         result.append(elem.contents);
-         if (elem.is_explicitly_separated()) {
-             result.push_back('\n');
-         }
-     }
-     return result;
+    /// Serialize the contents to a single string, where explicitly separated elements have a
+    /// newline appended.
+    StringType newline_serialized() const {
+        StringType result;
+        result.reserve(size());
+        for (const auto &elem : elements_) {
+            result.append(elem.contents);
+            if (elem.is_explicitly_separated()) {
+                result.push_back('\n');
+            }
+        }
+        return result;
     }
 
     /// \return the list of elements.
@@ -122,7 +120,8 @@ public:
     void append(Iterator begin, Iterator end, separation_type_t sep = separation_type_t::inferred) {
         if (!try_add_size(std::distance(begin, end))) return;
         // Try merging with the last element.
-        if (sep == separation_type_t::inferred && !elements_.empty() && !elements_.back().is_explicitly_separated()) {
+        if (sep == separation_type_t::inferred && !elements_.empty() &&
+            !elements_.back().is_explicitly_separated()) {
             elements_.back().contents.append(begin, end);
         } else {
             elements_.emplace_back(StringType(begin, end), sep);

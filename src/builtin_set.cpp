@@ -4,9 +4,9 @@
 #include <errno.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <cstring>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <cstring>
 #include <cwchar>
 
 #include <algorithm>
@@ -304,8 +304,7 @@ static bool validate_path_warning_on_colons(const wchar_t *cmd,
 }
 
 static void handle_env_return(int retval, const wchar_t *cmd, const wchar_t *key,
-        io_streams_t &streams) {
-
+                              io_streams_t &streams) {
     switch (retval) {
         case ENV_OK: {
             break;
@@ -317,19 +316,18 @@ static void handle_env_return(int retval, const wchar_t *cmd, const wchar_t *key
         }
         case ENV_SCOPE: {
             streams.err.append_format(
-                _(L"%ls: Tried to modify the special variable '%ls' with the wrong scope\n"),
-                cmd, key);
+                _(L"%ls: Tried to modify the special variable '%ls' with the wrong scope\n"), cmd,
+                key);
             break;
         }
         case ENV_INVALID: {
             streams.err.append_format(
-                _(L"%ls: Tried to modify the special variable '%ls' to an invalid value\n"),
-                cmd, key);
+                _(L"%ls: Tried to modify the special variable '%ls' to an invalid value\n"), cmd,
+                key);
             break;
         }
         case ENV_NOT_FOUND: {
-            streams.err.append_format(
-                _(L"%ls: The variable '%ls' does not exist\n"), cmd, key);
+            streams.err.append_format(_(L"%ls: The variable '%ls' does not exist\n"), cmd, key);
             break;
         }
         default: {
@@ -579,8 +577,7 @@ static void show_scope(const wchar_t *var_name, int scope, io_streams_t &streams
             if (i >= 50 && i < vals.size() - 50) continue;
         }
         const wcstring value = vals[i];
-        const wcstring escaped_val =
-            escape_string(value, ESCAPE_NO_QUOTED, STRING_STYLE_SCRIPT);
+        const wcstring escaped_val = escape_string(value, ESCAPE_NO_QUOTED, STRING_STYLE_SCRIPT);
         streams.out.append_format(_(L"$%ls[%d]: length=%d value=|%ls|\n"), var_name, i + 1,
                                   value.size(), escaped_val.c_str());
     }

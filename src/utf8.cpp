@@ -139,7 +139,9 @@ static int __utf8_forbitten(unsigned char octet) {
         case 0xff: {
             return -1;
         }
-        default: { return 0; }
+        default: {
+            return 0;
+        }
     }
 }
 

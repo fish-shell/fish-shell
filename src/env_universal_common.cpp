@@ -43,8 +43,8 @@
 #include "path.h"
 #include "utf8.h"
 #include "util.h"  // IWYU pragma: keep
-#include "wutil.h"
 #include "wcstringutil.h"
+#include "wutil.h"
 
 #if __APPLE__
 #define FISH_NOTIFYD_AVAILABLE 1
@@ -229,7 +229,7 @@ static bool append_file_entry(env_var_t::env_var_flags_t flags, const wcstring &
 }
 
 /// Encoding of a null string.
-static const wchar_t * const ENV_NULL = L"\x1d";
+static const wchar_t *const ENV_NULL = L"\x1d";
 
 /// Character used to separate arrays in universal variables file.
 /// This is 30, the ASCII record separator.
@@ -433,7 +433,8 @@ std::string env_universal_t::serialize_with_vars(const var_table_t &vars) {
         // variable; soldier on.
         const wcstring &key = kv.first;
         const env_var_t &var = kv.second;
-        append_file_entry(var.get_flags(), key, encode_serialized(var.as_list()), &contents, &storage);
+        append_file_entry(var.get_flags(), key, encode_serialized(var.as_list()), &contents,
+                          &storage);
     }
     return contents;
 }
@@ -902,7 +903,7 @@ void env_universal_t::parse_message_30_internal(const wcstring &msgstr, var_tabl
 
 /// Parse message msg per fish 2.x format.
 void env_universal_t::parse_message_2x_internal(const wcstring &msgstr, var_table_t *vars,
-                                             wcstring *storage) {
+                                                wcstring *storage) {
     namespace f2x = fish2x_uvars;
     const wchar_t *const msg = msgstr.c_str();
     const wchar_t *cursor = msg;
@@ -996,8 +997,9 @@ static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN]) { return
 
 /// Function to get an identifier based on the hostname.
 bool get_hostname_identifier(wcstring &result) {
-    //The behavior of gethostname if the buffer size is insufficient differs by implementation and libc version
-    //Work around this by using a "guaranteed" sufficient buffer size then truncating the result.
+    // The behavior of gethostname if the buffer size is insufficient differs by implementation and
+    // libc version Work around this by using a "guaranteed" sufficient buffer size then truncating
+    // the result.
     bool success = false;
     char hostname[256] = {};
     if (gethostname(hostname, sizeof(hostname)) == 0) {

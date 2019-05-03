@@ -14,9 +14,9 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <cstring>
 #include <termios.h>
 #include <unistd.h>
+#include <cstring>
 #include <cwchar>
 
 #include <memory>
@@ -191,7 +191,8 @@ static double output_elapsed_time(double prev_tstamp, bool first_char_seen) {
     if (delta_tstamp_us >= 1000000) {
         std::fwprintf(stderr, L"              ");
     } else {
-        std::fwprintf(stderr, L"(%3lld.%03lld ms)  ", delta_tstamp_us / 1000, delta_tstamp_us % 1000);
+        std::fwprintf(stderr, L"(%3lld.%03lld ms)  ", delta_tstamp_us / 1000,
+                      delta_tstamp_us % 1000);
     }
     return now;
 }
@@ -293,9 +294,10 @@ static void setup_and_process_keys(bool continuous_mode) {
 
     if (continuous_mode) {
         std::fwprintf(stderr, L"\n");
-        std::fwprintf(stderr, L"To terminate this program type \"exit\" or \"quit\" in this window,\n");
+        std::fwprintf(stderr,
+                      L"To terminate this program type \"exit\" or \"quit\" in this window,\n");
         std::fwprintf(stderr, L"or press [ctrl-%c] or [ctrl-%c] twice in a row.\n",
-                 shell_modes.c_cc[VINTR] + 0x40, shell_modes.c_cc[VEOF] + 0x40);
+                      shell_modes.c_cc[VINTR] + 0x40, shell_modes.c_cc[VEOF] + 0x40);
         std::fwprintf(stderr, L"\n");
     }
 

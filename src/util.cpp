@@ -4,8 +4,8 @@
 #include <errno.h>
 #include <stddef.h>
 #include <sys/time.h>
-#include <cwchar>
 #include <wctype.h>
+#include <cwchar>
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep

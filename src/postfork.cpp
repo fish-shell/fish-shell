@@ -5,8 +5,8 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
-#include <cstring>
 #include <time.h>
+#include <cstring>
 #include <memory>
 #if FISH_USE_POSIX_SPAWN
 #include <spawn.h>
@@ -49,18 +49,18 @@ bool child_set_group(job_t *j, process_t *p) {
             // Put a cap on how many times we retry so we are never stuck here
             if (i < 100) {
                 if (errno == EPERM) {
-                    // The setpgid(2) man page says that EPERM is returned only if attempts are made to
-                    // move processes into groups across session boundaries (which can never be the case
-                    // in fish, anywhere) or to change the process group ID of a session leader (again,
-                    // can never be the case). I'm pretty sure this is a WSL bug, as we see the same
-                    // with tcsetpgrp(2) in other places and it disappears on retry.
+                    // The setpgid(2) man page says that EPERM is returned only if attempts are made
+                    // to move processes into groups across session boundaries (which can never be
+                    // the case in fish, anywhere) or to change the process group ID of a session
+                    // leader (again, can never be the case). I'm pretty sure this is a WSL bug, as
+                    // we see the same with tcsetpgrp(2) in other places and it disappears on retry.
                     debug_safe(2, "setpgid(2) returned EPERM. Retrying");
                     continue;
                 } else if (errno == EINTR) {
-                    // I don't think signals are blocked here. The parent (fish) redirected the signal
-                    // handlers and `setup_child_process()` calls `signal_reset_handlers()` after we're
-                    // done here (and not `signal_unblock()`). We're already in a loop, so let's just
-                    // handle EINTR just in case.
+                    // I don't think signals are blocked here. The parent (fish) redirected the
+                    // signal handlers and `setup_child_process()` calls `signal_reset_handlers()`
+                    // after we're done here (and not `signal_unblock()`). We're already in a loop,
+                    // so let's just handle EINTR just in case.
                     continue;
                 }
             }
@@ -84,8 +84,10 @@ bool child_set_group(job_t *j, process_t *p) {
                 pid_buff, argv0, job_id_buff, command, getpgid_buff, job_pgid_buff);
 
             if (is_windows_subsystem_for_linux() && errno == EPERM) {
-                debug_safe(1, "Please update to Windows 10 1809/17763 or higher to address known issues "
-                        "with process groups and zombie processes.");
+                debug_safe(
+                    1,
+                    "Please update to Windows 10 1809/17763 or higher to address known issues "
+                    "with process groups and zombie processes.");
             }
 
             safe_perror("setpgid");
@@ -107,8 +109,8 @@ bool child_set_group(job_t *j, process_t *p) {
 /// if it's to run in the foreground.
 bool set_child_group(job_t *j, pid_t child_pid) {
     if (j->get_flag(job_flag_t::JOB_CONTROL)) {
-        assert (j->pgid != INVALID_PID
-                && "set_child_group called with JOB_CONTROL before job pgid determined!");
+        assert(j->pgid != INVALID_PID &&
+               "set_child_group called with JOB_CONTROL before job pgid determined!");
 
         // The parent sets the child's group. This incurs the well-known unavoidable race with the
         // child exiting, so ignore ESRCH and EPERM (in case the pid was recycled).
@@ -117,14 +119,13 @@ bool set_child_group(job_t *j, pid_t child_pid) {
             if (errno != ESRCH && errno != EPERM && errno != EACCES) {
                 safe_perror("setpgid");
                 return false;
-            }
-            else {
+            } else {
                 // Just in case it's ever not right to ignore the setpgid call, (i.e. if this
                 // ever leads to a terminal hang due if both this setpgid call AND posix_spawn's
                 // internal setpgid calls failed), write to the debug log so a future developer
                 // doesn't go crazy trying to track this down.
-                debug(2, "Error %d while calling setpgid for child %d (probably harmless)",
-                        errno, child_pid);
+                debug(2, "Error %d while calling setpgid for child %d (probably harmless)", errno,
+                      child_pid);
             }
         }
     } else {
@@ -168,7 +169,6 @@ int setup_child_process(process_t *p, const dup2_list_t &dup2s) {
     signal_reset_handlers();
     return 0;
 }
-
 
 int g_fork_count = 0;
 

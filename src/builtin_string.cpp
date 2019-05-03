@@ -11,8 +11,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <cwchar>
 #include <wctype.h>
+#include <cwchar>
 
 #include <algorithm>
 #include <cwctype>

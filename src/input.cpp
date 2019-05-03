@@ -2,8 +2,8 @@
 #include "config.h"
 
 #include <errno.h>
-#include <cwchar>
 #include <wctype.h>
+#include <cwchar>
 #if HAVE_TERM_H
 #include <curses.h>
 #include <term.h>
@@ -212,10 +212,10 @@ static bool specification_order_is_less_than(const input_mapping_t &m1, const in
 /// Inserts an input mapping at the correct position. We sort them in descending order by length, so
 /// that we test longer sequences first.
 static void input_mapping_insert_sorted(const input_mapping_t &new_mapping, bool user = true) {
-    auto& ml = user ? mapping_list : preset_mapping_list;
+    auto &ml = user ? mapping_list : preset_mapping_list;
 
-    std::vector<input_mapping_t>::iterator loc = std::lower_bound(
-        ml.begin(), ml.end(), new_mapping, length_is_greater_than);
+    std::vector<input_mapping_t>::iterator loc =
+        std::lower_bound(ml.begin(), ml.end(), new_mapping, length_is_greater_than);
     ml.insert(loc, new_mapping);
 }
 
@@ -230,9 +230,9 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t *const *commands, 
     // Remove existing mappings with this sequence.
     const wcstring_list_t commands_vector(commands, commands + commands_len);
 
-    auto& ml = user ? mapping_list : preset_mapping_list;
+    auto &ml = user ? mapping_list : preset_mapping_list;
 
-    for (input_mapping_t& m : ml) {
+    for (input_mapping_t &m : ml) {
         if (m.seq == sequence && m.mode == mode) {
             m.commands = commands_vector;
             m.sets_mode = sets_mode;
@@ -290,7 +290,8 @@ void init_input() {
         input_mapping_add(L"\x3", L"commandline ''", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
         input_mapping_add(L"\x4", L"exit", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
         input_mapping_add(L"\x5", L"bind", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
-        input_mapping_add(L"\x7f", L"backward-delete-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        input_mapping_add(L"\x7f", L"backward-delete-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE,
+                          false);
         // Arrows - can't have functions, so *-or-search isn't available.
         input_mapping_add(L"\x1B[A", L"up-line", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
         input_mapping_add(L"\x1B[B", L"down-line", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
@@ -498,7 +499,9 @@ char_event_t input_readch(bool allow_commands) {
                     input_common_next_ch(evt);
                     return input_readch();
                 }
-                default: { return evt; }
+                default: {
+                    return evt;
+                }
             }
         } else if (evt.is_eof()) {
             // If we have EOF, we need to immediately quit.
@@ -539,9 +542,8 @@ void input_mapping_clear(const wchar_t *mode, bool user) {
 bool input_mapping_erase(const wcstring &sequence, const wcstring &mode, bool user) {
     ASSERT_IS_MAIN_THREAD();
     bool result = false;
-    auto& ml = user ? mapping_list : preset_mapping_list;
-    for (std::vector<input_mapping_t>::iterator it = ml.begin(), end = ml.end();
-         it != end; ++it) {
+    auto &ml = user ? mapping_list : preset_mapping_list;
+    for (std::vector<input_mapping_t>::iterator it = ml.begin(), end = ml.end(); it != end; ++it) {
         if (sequence == it->seq && mode == it->mode) {
             ml.erase(it);
             result = true;
@@ -551,10 +553,10 @@ bool input_mapping_erase(const wcstring &sequence, const wcstring &mode, bool us
     return result;
 }
 
-bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds, bool user,
-                       wcstring *out_sets_mode) {
+bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds,
+                       bool user, wcstring *out_sets_mode) {
     bool result = false;
-    auto& ml = user ? mapping_list : preset_mapping_list;
+    auto &ml = user ? mapping_list : preset_mapping_list;
     for (const input_mapping_t &m : ml) {
         if (sequence == m.seq && mode == m.mode) {
             *out_cmds = m.commands;

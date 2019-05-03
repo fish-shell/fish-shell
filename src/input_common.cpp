@@ -2,8 +2,8 @@
 #include "config.h"
 
 #include <errno.h>
-#include <cstring>
 #include <unistd.h>
+#include <cstring>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
@@ -53,7 +53,7 @@ static char_event_t lookahead_pop() {
 static maybe_t<char_event_t> lookahead_pop_evt() {
     while (has_lookahead()) {
         auto evt = lookahead_pop();
-        if (! evt.is_timeout()) {
+        if (!evt.is_timeout()) {
             return evt;
         }
     }
@@ -176,9 +176,9 @@ void update_wait_on_escape_ms(const environment_t &vars) {
     long tmp = fish_wcstol(escape_time_ms->as_string().c_str());
     if (errno || tmp < 10 || tmp >= 5000) {
         std::fwprintf(stderr,
-                 L"ignoring fish_escape_delay_ms: value '%ls' "
-                 L"is not an integer or is < 10 or >= 5000 ms\n",
-                 escape_time_ms->as_string().c_str());
+                      L"ignoring fish_escape_delay_ms: value '%ls' "
+                      L"is not an integer or is < 10 or >= 5000 ms\n",
+                      escape_time_ms->as_string().c_str());
     } else {
         wait_on_escape_ms = (int)tmp;
     }
@@ -216,7 +216,9 @@ char_event_t input_common_readch() {
             case 0: {
                 return 0;
             }
-            default: { return res; }
+            default: {
+                return res;
+            }
         }
     }
 }

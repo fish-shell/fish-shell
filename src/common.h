@@ -6,7 +6,7 @@
 #include <errno.h>
 #include <limits.h>
 // Needed for va_list et al.
-#include <stdarg.h> // IWYU pragma: keep
+#include <stdarg.h>  // IWYU pragma: keep
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>  // IWYU pragma: keep
 #endif
@@ -245,7 +245,8 @@ extern const bool has_working_tty_timestamps;
 
 [[noreturn]] void __fish_assert(const char *msg, const char *file, size_t line, int error);
 
-/// Shorthand for wgettext call in situations where a C-style string is needed (e.g., std::fwprintf()).
+/// Shorthand for wgettext call in situations where a C-style string is needed (e.g.,
+/// std::fwprintf()).
 #define _(wstr) wgettext(wstr).c_str()
 
 /// Noop, used to tell xgettext that a string should be translated. Use this when a string cannot be
@@ -345,26 +346,22 @@ class line_iterator_t {
     // The current location in the iteration.
     typename Collection::const_iterator current;
 
-public:
+   public:
     /// Construct from a collection (presumably std::string or std::wcstring).
     line_iterator_t(const Collection &coll) : coll(coll), current(coll.cbegin()) {}
 
     /// Access the storage in which the last line was stored.
-    const Collection &line() const {
-        return storage;
-    }
+    const Collection &line() const { return storage; }
 
     /// Advances to the next line. \return true on success, false if we have exhausted the string.
     bool next() {
-        if (current == coll.end())
-            return false;
+        if (current == coll.end()) return false;
         auto newline_or_end = std::find(current, coll.cend(), '\n');
         storage.assign(current, newline_or_end);
         current = newline_or_end;
 
         // Skip the newline.
-        if (current != coll.cend())
-            ++current;
+        if (current != coll.cend()) ++current;
         return true;
     }
 };
@@ -528,7 +525,9 @@ inline bool bool_from_string(const std::string &x) {
     }
 }
 
-inline bool bool_from_string(const wcstring &x) { return !x.empty() && std::wcschr(L"YTyt1", x.at(0)); }
+inline bool bool_from_string(const wcstring &x) {
+    return !x.empty() && std::wcschr(L"YTyt1", x.at(0));
+}
 
 wchar_t **make_null_terminated_array(const wcstring_list_t &lst);
 char **make_null_terminated_array(const std::vector<std::string> &lst);
@@ -1011,16 +1010,14 @@ std::string get_executable_path(const char *fallback);
 /// A RAII wrapper for resources that don't recur, so we don't have to create a separate RAII
 /// wrapper for each function. Avoids needing to call "return cleanup()" or similar / everywhere.
 struct cleanup_t {
-private:
+   private:
     const std::function<void()> cleanup;
-public:
-    cleanup_t(std::function<void()> exit_actions)
-        : cleanup{std::move(exit_actions)} {}
-    ~cleanup_t() {
-        cleanup();
-    }
+
+   public:
+    cleanup_t(std::function<void()> exit_actions) : cleanup{std::move(exit_actions)} {}
+    ~cleanup_t() { cleanup(); }
 };
 
 bool is_console_session();
 
-#endif // FISH_COMMON_H
+#endif  // FISH_COMMON_H

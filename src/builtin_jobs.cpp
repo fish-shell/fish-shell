@@ -21,7 +21,7 @@ enum {
     JOBS_PRINT_PID,      // print pid of each process in job
     JOBS_PRINT_COMMAND,  // print command name of each process in job
     JOBS_PRINT_GROUP,    // print group id of job
-    JOBS_PRINT_NOTHING,    // print nothing (exit status only)
+    JOBS_PRINT_NOTHING,  // print nothing (exit status only)
 };
 
 /// Calculates the cpu usage (in percent) of the specified job.
@@ -117,14 +117,13 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int print_last = 0;
 
     static const wchar_t *const short_options = L":cghlpq";
-    static const struct woption long_options[] = {
-        {L"command", no_argument, NULL, 'c'},
-        {L"group", no_argument, NULL, 'g'},
-        {L"help", no_argument, NULL, 'h'},
-        {L"last", no_argument, NULL, 'l'},
-        {L"pid", no_argument, NULL, 'p'},
-        {L"quiet", no_argument, NULL, 'q'},
-        {nullptr, 0, NULL, 0}};
+    static const struct woption long_options[] = {{L"command", no_argument, NULL, 'c'},
+                                                  {L"group", no_argument, NULL, 'g'},
+                                                  {L"help", no_argument, NULL, 'h'},
+                                                  {L"last", no_argument, NULL, 'l'},
+                                                  {L"pid", no_argument, NULL, 'p'},
+                                                  {L"quiet", no_argument, NULL, 'q'},
+                                                  {nullptr, 0, NULL, 0}};
 
     int opt;
     wgetopter_t w;
@@ -189,15 +188,16 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                     int jobId = -1;
                     jobId = fish_wcstoi(argv[i] + 1);
                     if (errno || jobId < -1) {
-                        streams.err.append_format(_(L"%ls: '%ls' is not a valid job id"), cmd, argv[i]);
+                        streams.err.append_format(_(L"%ls: '%ls' is not a valid job id"), cmd,
+                                                  argv[i]);
                         return STATUS_INVALID_ARGS;
                     }
                     j = job_t::from_job_id(jobId);
-                }
-                else {
+                } else {
                     int pid = fish_wcstoi(argv[i]);
                     if (errno || pid < 0) {
-                        streams.err.append_format(_(L"%ls: '%ls' is not a valid process id\n"), cmd, argv[i]);
+                        streams.err.append_format(_(L"%ls: '%ls' is not a valid process id\n"), cmd,
+                                                  argv[i]);
                         return STATUS_INVALID_ARGS;
                     }
                     j = job_t::from_pid(pid);
@@ -215,7 +215,8 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             for (const auto &j : jobs()) {
                 // Ignore unconstructed jobs, i.e. ourself.
                 if (j->is_visible()) {
-                    builtin_jobs_print(j.get(), mode, !found && !streams.out_is_redirected, streams);
+                    builtin_jobs_print(j.get(), mode, !found && !streams.out_is_redirected,
+                                       streams);
                     found = true;
                 }
             }

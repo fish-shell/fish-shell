@@ -21,8 +21,7 @@
 class io_chain_t;
 
 /// event_blockage_t represents a block on events.
-struct event_blockage_t {
-};
+struct event_blockage_t {};
 
 typedef std::list<event_blockage_t> event_blockage_list_t;
 

@@ -416,4 +416,3 @@ void signal_unblock_all() {
     sigemptyset(&iset);
     sigprocmask(SIG_SETMASK, &iset, NULL);
 }
-

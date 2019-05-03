@@ -14,8 +14,8 @@
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
-#include <cwchar>
 #include <wctype.h>
+#include <cwchar>
 
 #include <algorithm>
 #include <memory>
@@ -698,8 +698,7 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
 
             // Looks like a command.
             this->report_error(statement, ERROR_BAD_EQUALS_IN_COMMAND5, argument.c_str(),
-                               name_str.c_str(), val_str.c_str(), argument.c_str(),
-                               ellipsis_str);
+                               name_str.c_str(), val_str.c_str(), argument.c_str(), ellipsis_str);
         } else {
             wcstring assigned_val = reconstruct_orig_str(val_str);
             this->report_error(statement, ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, name_str.c_str(),
@@ -794,7 +793,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
     }
 
     // Protect against exec with background processes running
-    static uint32_t last_exec_run_counter =  -1;
+    static uint32_t last_exec_run_counter = -1;
     if (process_type == process_type_t::exec && shell_is_interactive()) {
         bool have_bg = false;
         for (const auto &bg : jobs()) {
@@ -808,13 +807,13 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
         }
 
         if (have_bg) {
-            /* debug(1, "Background jobs remain! run_counter: %u, last_exec_run_count: %u", reader_run_count(), last_exec_run_counter); */
+            /* debug(1, "Background jobs remain! run_counter: %u, last_exec_run_count: %u",
+             * reader_run_count(), last_exec_run_counter); */
             if (isatty(STDIN_FILENO) && reader_run_count() - 1 != last_exec_run_counter) {
                 reader_bg_job_warning();
                 last_exec_run_counter = reader_run_count();
                 return parse_execution_errored;
-            }
-            else {
+            } else {
                 hup_background_jobs();
             }
         }
@@ -1311,7 +1310,7 @@ parse_execution_result_t parse_execution_context_t::run_job_conjunction(
             assert((conj == parse_bool_and || conj == parse_bool_or) && "Unexpected conjunction");
             skip = should_skip(conj);
         }
-        if (! skip) {
+        if (!skip) {
             result = run_1_job(cursor.child<0>(), associated_block);
         }
         continuation = cursor.child<1>();

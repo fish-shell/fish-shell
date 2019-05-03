@@ -4,8 +4,8 @@
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <cstring>
 #include <unistd.h>
+#include <cstring>
 #include <cwchar>
 
 #include "common.h"
@@ -49,7 +49,8 @@ void io_buffer_t::run_background_fillthread(autoclose_fd_t readfd) {
     // 3. read until EAGAIN (would block), appending
     // 4. release the lock
     // The purpose of holding the lock around the read calls is to ensure that data from background
-    // processes isn't weirdly interspersed with data directly transferred (from a builtin to a buffer).
+    // processes isn't weirdly interspersed with data directly transferred (from a builtin to a
+    // buffer).
 
     const int fd = readfd.fd();
 
@@ -90,7 +91,7 @@ void io_buffer_t::run_background_fillthread(autoclose_fd_t readfd) {
         // It's important that if select() indicated we were readable, that we call select() again
         // allowing it to time out. Note the typical case is that the fd will be closed, in which
         // case select will return immediately.
-        if (! readable) {
+        if (!readable) {
             shutdown = this->shutdown_fillthread_.load(std::memory_order_relaxed);
         }
 
@@ -191,7 +192,7 @@ io_pipe_t::~io_pipe_t() = default;
 io_bufferfill_t::~io_bufferfill_t() = default;
 
 io_buffer_t::~io_buffer_t() {
-    assert(! fillthread_ && "io_buffer_t destroyed with outstanding fillthread");
+    assert(!fillthread_ && "io_buffer_t destroyed with outstanding fillthread");
 }
 
 void io_chain_t::remove(const shared_ptr<const io_data_t> &element) {
@@ -246,7 +247,6 @@ void io_print(const io_chain_t &chain)
     }
 }
 #endif
-
 
 int move_fd_to_unused(int fd, const io_chain_t &io_chain, bool cloexec) {
     if (fd < 0 || io_chain.get_io_for_fd(fd).get() == NULL) {

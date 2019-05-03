@@ -214,9 +214,7 @@ DEF_ALT(job_decorator) {
 };
 
 // A job_conjunction is a job followed by a continuation.
-DEF(job_conjunction) produces_sequence<job, job_conjunction_continuation> {
-    BODY(job_conjunction)
-};
+DEF(job_conjunction) produces_sequence<job, job_conjunction_continuation>{BODY(job_conjunction)};
 
 DEF_ALT(job_conjunction_continuation) {
     using andands = seq<tok_andand, optional_newlines, job_conjunction>;
@@ -279,9 +277,8 @@ DEF_ALT(case_item_list) {
     ALT_BODY(case_item_list, empty, case_items, blank_line);
 };
 
-DEF(case_item) produces_sequence<keyword<parse_keyword_case>, argument_list, tok_end, job_list> {
-    BODY(case_item)
-};
+DEF(case_item)
+produces_sequence<keyword<parse_keyword_case>, argument_list, tok_end, job_list>{BODY(case_item)};
 
 DEF(block_statement)
 produces_sequence<block_header, job_list, end_command, arguments_or_redirections_list>{
@@ -297,9 +294,7 @@ DEF_ALT(block_header) {
 
 DEF(for_header)
 produces_sequence<keyword<parse_keyword_for>, tok_string, keyword<parse_keyword_in>, argument_list,
-                  tok_end> {
-    BODY(for_header)
-};
+                  tok_end>{BODY(for_header)};
 
 DEF(while_header)
 produces_sequence<keyword<parse_keyword_while>, job_conjunction, tok_end, andor_job_list>{

@@ -127,7 +127,8 @@ class parse_execution_context_t {
                             io_chain_t *out_chain);
 
     parse_execution_result_t run_1_job(tnode_t<grammar::job> job, const block_t *associated_block);
-    parse_execution_result_t run_job_conjunction(tnode_t<grammar::job_conjunction> job_conj, const block_t *associated_block);
+    parse_execution_result_t run_job_conjunction(tnode_t<grammar::job_conjunction> job_conj,
+                                                 const block_t *associated_block);
     template <typename Type>
     parse_execution_result_t run_job_list(tnode_t<Type> job_list_node,
                                           const block_t *associated_block);

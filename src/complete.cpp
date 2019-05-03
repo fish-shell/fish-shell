@@ -8,8 +8,8 @@
 #include <pthread.h>
 #include <pwd.h>
 #include <stddef.h>
-#include <cwchar>
 #include <wctype.h>
+#include <cwchar>
 
 #include <algorithm>
 #include <atomic>
@@ -180,13 +180,9 @@ static bool compare_completions_by_order(const completion_entry_t &p1,
     return p1.order < p2.order;
 }
 
-void completion_entry_t::add_option(const complete_entry_opt_t &opt) {
-    options.push_front(opt);
-}
+void completion_entry_t::add_option(const complete_entry_opt_t &opt) { options.push_front(opt); }
 
-const option_list_t &completion_entry_t::get_options() const {
-    return options;
-}
+const option_list_t &completion_entry_t::get_options() const { return options; }
 
 description_func_t const_desc(const wcstring &s) {
     return [=](const wcstring &ignored) {
@@ -202,7 +198,8 @@ static complete_flags_t resolve_auto_space(const wcstring &comp, complete_flags_
     if (flags & COMPLETE_AUTO_SPACE) {
         new_flags &= ~COMPLETE_AUTO_SPACE;
         size_t len = comp.size();
-        if (len > 0 && (std::wcschr(L"/=@:", comp.at(len - 1)) != 0)) new_flags |= COMPLETE_NO_SPACE;
+        if (len > 0 && (std::wcschr(L"/=@:", comp.at(len - 1)) != 0))
+            new_flags |= COMPLETE_NO_SPACE;
     }
     return new_flags;
 }

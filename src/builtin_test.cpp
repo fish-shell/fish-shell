@@ -5,12 +5,12 @@
 
 #include <errno.h>
 #include <stdarg.h>
-#include <cstring>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <cwchar>
 #include <wctype.h>
+#include <cstring>
+#include <cwchar>
 
 #include <cmath>
 #include <memory>
@@ -24,8 +24,8 @@
 #include "parser.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-using std::unique_ptr;
 using std::move;
+using std::unique_ptr;
 
 namespace {
 namespace test_expressions {
@@ -530,7 +530,9 @@ unique_ptr<expression> test_parser::parse_expression(unsigned int start, unsigne
         case 4: {
             return parse_4_arg_expression(start, end);
         }
-        default: { return parse_combining_expression(start, end); }
+        default: {
+            return parse_combining_expression(start, end);
+        }
     }
 }
 
@@ -673,8 +675,8 @@ static bool parse_number(const wcstring &arg, number_t *number, wcstring_list_t 
         // We could not parse a float or an int.
         // Check for special fish_wcsto* value or show standard EINVAL/ERANGE error.
         if (errno == -1) {
-            errors.push_back(format_string(_(L"Integer %lld in '%ls' followed by non-digit"),
-                                           integral, argcs));
+            errors.push_back(
+                format_string(_(L"Integer %lld in '%ls' followed by non-digit"), integral, argcs));
         } else {
             errors.push_back(format_string(L"%s: '%ls'", std::strerror(errno), argcs));
         }

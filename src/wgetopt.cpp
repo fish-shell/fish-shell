@@ -39,8 +39,8 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <stdio.h>
-#include <cwchar>
 #include <cstring>
+#include <cwchar>
 
 // This version of `getopt' appears to the caller like standard Unix `getopt' but it behaves
 // differently for the user, since it allows the user to intersperse the options with the other
@@ -237,7 +237,7 @@ int wgetopter_t::_handle_short_opt(int argc, wchar_t **argv) {
             if (wopterr) {
                 // 1003.2 specifies the format of this message.
                 std::fwprintf(stderr, _(L"%ls: Option requires an argument -- %lc\n"), argv[0],
-                         (wint_t)c);
+                              (wint_t)c);
             }
             woptopt = c;
             c = missing_arg_return_colon ? ':' : '?';
@@ -263,12 +263,12 @@ void wgetopter_t::_update_long_opt(int argc, wchar_t **argv, const struct woptio
         else {
             if (wopterr) {
                 if (argv[woptind - 1][1] == '-')  // --option
-                    std::fwprintf(stderr, _(L"%ls: Option '--%ls' doesn't allow an argument\n"), argv[0],
-                             pfound->name);
+                    std::fwprintf(stderr, _(L"%ls: Option '--%ls' doesn't allow an argument\n"),
+                                  argv[0], pfound->name);
                 else
                     // +option or -option
                     std::fwprintf(stderr, _(L"%ls: Option '%lc%ls' doesn't allow an argument\n"),
-                             argv[0], argv[woptind - 1][0], pfound->name);
+                                  argv[0], argv[woptind - 1][0], pfound->name);
             }
             nextchar += std::wcslen(nextchar);
             *retval = '?';
@@ -280,7 +280,7 @@ void wgetopter_t::_update_long_opt(int argc, wchar_t **argv, const struct woptio
         else {
             if (wopterr)
                 std::fwprintf(stderr, _(L"%ls: Option '%ls' requires an argument\n"), argv[0],
-                         argv[woptind - 1]);
+                              argv[woptind - 1]);
             nextchar += std::wcslen(nextchar);
             *retval = missing_arg_return_colon ? ':' : '?';
             return;
@@ -365,7 +365,7 @@ bool wgetopter_t::_handle_long_opt(int argc, wchar_t **argv, const struct woptio
             else
                 // +option or -option
                 std::fwprintf(stderr, _(L"%ls: Unrecognized option '%lc%ls'\n"), argv[0],
-                         argv[woptind][0], nextchar);
+                              argv[woptind][0], nextchar);
         }
         nextchar = (wchar_t *)L"";
         woptind++;

@@ -57,10 +57,10 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <cstring>
 #include <sys/types.h>
-#include <cwchar>
 #include <wctype.h>
+#include <cstring>
+#include <cwchar>
 
 #include "builtin.h"
 #include "common.h"
@@ -92,7 +92,6 @@ struct builtin_printf_state_t {
 
     void nonfatal_error(const wchar_t *fmt, ...);
     void fatal_error(const wchar_t *format, ...);
-
 
     long print_esc(const wchar_t *escstart, bool octal_0);
     void print_esc_string(const wchar_t *str);
@@ -161,7 +160,9 @@ static int hex_to_bin(const wchar_t &c) {
         case L'F': {
             return 15;
         }
-        default: { return -1; }
+        default: {
+            return -1;
+        }
     }
 }
 
@@ -191,7 +192,9 @@ static int octal_to_bin(wchar_t c) {
         case L'7': {
             return 7;
         }
-        default: { return -1; }
+        default: {
+            return -1;
+        }
     }
 }
 
@@ -472,7 +475,9 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
             fmt.append(L"l");
             break;
         }
-        default: { break; }
+        default: {
+            break;
+        }
     }
 
     // Append the conversion itself.

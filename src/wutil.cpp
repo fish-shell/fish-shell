@@ -10,8 +10,8 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <cstring>
 #include <sys/stat.h>
+#include <cstring>
 #if defined(__linux__)
 #include <sys/statfs.h>
 #endif
@@ -19,8 +19,8 @@
 #include <sys/statvfs.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <cwchar>
 #include <wctype.h>
+#include <cwchar>
 
 #include <string>
 #include <unordered_map>
@@ -231,13 +231,9 @@ dir_t::~dir_t() {
     }
 }
 
-bool dir_t::valid() const {
-    return this->dir != nullptr;
-}
+bool dir_t::valid() const { return this->dir != nullptr; }
 
-bool dir_t::read(wcstring &name) {
-    return wreaddir(this->dir, name);
-}
+bool dir_t::read(wcstring &name) { return wreaddir(this->dir, name); }
 
 int wstat(const wcstring &file_name, struct stat *buf) {
     const cstring tmp = wcs2string(file_name);
@@ -289,7 +285,9 @@ int make_fd_blocking(int fd) {
 
 int fd_check_is_remote(int fd) {
 #if defined(__linux__)
-    struct statfs buf{0};
+    struct statfs buf {
+        0
+    };
     if (fstatfs(fd, &buf) < 0) {
         return -1;
     }

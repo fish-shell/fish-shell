@@ -18,7 +18,7 @@ struct echo_cmd_opts_t {
     bool interpret_special_chars = false;
 };
 static const wchar_t *const short_options = L"+:Eens";
-static const struct woption * const long_options = NULL;
+static const struct woption *const long_options = NULL;
 
 static int parse_cmd_opts(echo_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {
@@ -89,7 +89,9 @@ static unsigned int builtin_echo_digit(wchar_t wc, unsigned int base) {
             return 6;
         case L'7':
             return 7;
-        default: { break; }
+        default: {
+            break;
+        }
     }
 
     if (base != 16) return UINT_MAX;
@@ -117,7 +119,9 @@ static unsigned int builtin_echo_digit(wchar_t wc, unsigned int base) {
         case L'f':
         case L'F':
             return 15;
-        default: { break; }
+        default: {
+            break;
+        }
     }
 
     return UINT_MAX;

@@ -54,8 +54,8 @@ static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                 } else {
                     opts.scale = fish_wcstoi(w.woptarg);
                     if (errno || opts.scale < 0 || opts.scale > 15) {
-                        streams.err.append_format(_(L"%ls: '%ls' is not a valid scale value\n"), cmd,
-                                                  w.woptarg);
+                        streams.err.append_format(_(L"%ls: '%ls' is not a valid scale value\n"),
+                                                  cmd, w.woptarg);
                         return STATUS_INVALID_ARGS;
                     }
                 }
@@ -129,19 +129,28 @@ static const wchar_t *math_get_arg(int *argidx, wchar_t **argv, wcstring *storag
     return math_get_arg_argv(argidx, argv);
 }
 
-static const wchar_t *math_describe_error(te_error_t& error) {
+static const wchar_t *math_describe_error(te_error_t &error) {
     if (error.position == 0) return L"NO ERROR?!?";
 
-    switch(error.type) {
-        case TE_ERROR_NONE: DIE("Error has no position");
-        case TE_ERROR_UNKNOWN_VARIABLE: return _(L"Unknown variable");
-        case TE_ERROR_MISSING_CLOSING_PAREN: return _(L"Missing closing parenthesis");
-        case TE_ERROR_MISSING_OPENING_PAREN: return _(L"Missing opening parenthesis");
-        case TE_ERROR_TOO_FEW_ARGS: return _(L"Too few arguments");
-        case TE_ERROR_TOO_MANY_ARGS: return _(L"Too many arguments");
-        case TE_ERROR_MISSING_OPERATOR: return _(L"Missing operator");
-        case TE_ERROR_UNKNOWN: return _(L"Expression is bogus");
-        default: return L"Unknown error";
+    switch (error.type) {
+        case TE_ERROR_NONE:
+            DIE("Error has no position");
+        case TE_ERROR_UNKNOWN_VARIABLE:
+            return _(L"Unknown variable");
+        case TE_ERROR_MISSING_CLOSING_PAREN:
+            return _(L"Missing closing parenthesis");
+        case TE_ERROR_MISSING_OPENING_PAREN:
+            return _(L"Missing opening parenthesis");
+        case TE_ERROR_TOO_FEW_ARGS:
+            return _(L"Too few arguments");
+        case TE_ERROR_TOO_MANY_ARGS:
+            return _(L"Too many arguments");
+        case TE_ERROR_MISSING_OPERATOR:
+            return _(L"Missing operator");
+        case TE_ERROR_UNKNOWN:
+            return _(L"Expression is bogus");
+        default:
+            return L"Unknown error";
     }
 }
 
@@ -212,7 +221,7 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
     } else {
         streams.err.append_format(L"%ls: Error: %ls\n", cmd, math_describe_error(error));
         streams.err.append_format(L"'%ls'\n", expression.c_str());
-        streams.err.append_format(L"%*ls%ls\n", error.position - 1, L" ",L"^");
+        streams.err.append_format(L"%*ls%ls\n", error.position - 1, L" ", L"^");
         retval = STATUS_CMD_ERROR;
     }
     setlocale(LC_NUMERIC, saved_locale);

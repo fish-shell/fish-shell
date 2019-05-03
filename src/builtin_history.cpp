@@ -68,8 +68,8 @@ static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
         const wchar_t *subcmd_str1 = enum_to_str(*hist_cmd, hist_enum_map);
         const wchar_t *subcmd_str2 = enum_to_str(sub_cmd, hist_enum_map);
         std::swprintf(err_text, sizeof(err_text) / sizeof(wchar_t),
-                 _(L"you cannot do both '%ls' and '%ls' in the same invocation"), subcmd_str1,
-                 subcmd_str2);
+                      _(L"you cannot do both '%ls' and '%ls' in the same invocation"), subcmd_str1,
+                      subcmd_str2);
         streams.err.append_format(BUILTIN_ERR_COMBO2, cmd, err_text);
         return false;
     }

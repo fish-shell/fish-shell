@@ -352,8 +352,7 @@ class job_t {
     /// untruncated job string when we don't care what the job is, only which of the currently
     /// running jobs it is.
     wcstring preview() const {
-        if (processes.empty())
-            return L"";
+        if (processes.empty()) return L"";
         // Note argv0 may be empty in e.g. a block process.
         const wchar_t *argv0 = processes.front()->argv0();
         wcstring result = argv0 ? argv0 : L"null";
@@ -532,8 +531,9 @@ void hup_background_jobs();
 /// Give ownership of the terminal to the specified job.
 ///
 /// \param j The job to give the terminal to.
-/// \param restore_attrs If this variable is set, we are giving back control to a job that was previously
-/// stopped. In that case, we need to set the terminal attributes to those saved in the job.
+/// \param restore_attrs If this variable is set, we are giving back control to a job that was
+/// previously stopped. In that case, we need to set the terminal attributes to those saved in the
+/// job.
 bool terminal_give_to_job(const job_t *j, bool restore_attrs);
 
 /// Given that we are about to run a builtin, acquire the terminal if it is owned by the given job.
@@ -548,7 +548,7 @@ void add_disowned_pgid(pid_t pgid);
 ///   the Linux kernel will use it for kernel processes.
 /// -1 should not be used; it is a possible return value of the getpgid()
 ///   function
-enum { INVALID_PID  = -2 };
+enum { INVALID_PID = -2 };
 
 extern bool have_proc_stat;
 

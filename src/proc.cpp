@@ -6,13 +6,13 @@
 // IWYU pragma: no_include <__bit_reference>
 #include "config.h"
 
-#include <atomic>
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <cwchar>
 #include <wctype.h>
+#include <atomic>
+#include <cwchar>
 
 #if HAVE_TERM_H
 #include <curses.h>
@@ -59,7 +59,7 @@ bool job_list_is_empty() {
     return parser_t::principal_parser().job_list().empty();
 }
 
-job_list_t& jobs() {
+job_list_t &jobs() {
     ASSERT_IS_MAIN_THREAD();
     return parser_t::principal_parser().job_list();
 }
@@ -336,7 +336,7 @@ static void process_mark_finished_children(bool block_ok) {
     topic_set_t reaptopics{};
     generation_list_t gens{};
     gens.fill(invalid_generation);
-    for (const auto j: jobs()) {
+    for (const auto j : jobs()) {
         for (const auto &proc : j->processes) {
             if (auto mtopic = j->reap_topic_for_process(proc.get())) {
                 topic_t topic = *mtopic;
@@ -396,9 +396,10 @@ static void process_mark_finished_children(bool block_ok) {
     // Poll disowned processes/process groups, but do nothing with the result. Only used to avoid
     // zombie processes. Entries have already been converted to negative for process groups.
     int status;
-    s_disowned_pids.erase(std::remove_if(s_disowned_pids.begin(), s_disowned_pids.end(),
-                [&status](pid_t pid) { return waitpid(pid, &status, WNOHANG) > 0; }),
-            s_disowned_pids.end());
+    s_disowned_pids.erase(
+        std::remove_if(s_disowned_pids.begin(), s_disowned_pids.end(),
+                       [&status](pid_t pid) { return waitpid(pid, &status, WNOHANG) > 0; }),
+        s_disowned_pids.end());
 }
 
 /// Given a command like "cat file", truncate it to a reasonable length.
@@ -556,7 +557,7 @@ static bool process_clean_after_marking(bool allow_interactive) {
 
     // This function may fire an event handler, we do not want to call ourselves recursively (to
     // avoid infinite recursion).
-    static std::atomic<bool> locked { false };
+    static std::atomic<bool> locked{false};
     if (locked.exchange(true, std::memory_order::memory_order_relaxed)) {
         return false;
     }
@@ -651,7 +652,7 @@ bool job_reap(bool allow_interactive) {
 
 /// Get the CPU time for the specified process.
 unsigned long proc_get_jiffies(process_t *p) {
-    if (! have_proc_stat) return 0;
+    if (!have_proc_stat) return 0;
     if (p->pid <= 0) return 0;
 
     wchar_t fn[FN_SIZE];
@@ -694,8 +695,8 @@ void proc_update_jiffies() {
     }
 }
 
-// Return control of the terminal to a job's process group. restore_attrs is true if we are restoring
-// a previously-stopped job, in which case we need to restore terminal attributes.
+// Return control of the terminal to a job's process group. restore_attrs is true if we are
+// restoring a previously-stopped job, in which case we need to restore terminal attributes.
 bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
     if (j->pgid == 0) {
         debug(2, "terminal_give_to_job() returning early due to no process group");

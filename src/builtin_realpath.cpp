@@ -30,7 +30,7 @@ int builtin_realpath(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_CMD_OK;
     }
 
-    if (optind + 1 != argc) { // TODO: allow arbitrary args. `realpath *` should print many paths
+    if (optind + 1 != argc) {  // TODO: allow arbitrary args. `realpath *` should print many paths
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, cmd, 1, argc - optind);
         builtin_print_help(parser, streams, cmd, streams.out);
         return STATUS_INVALID_ARGS;

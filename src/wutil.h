@@ -3,13 +3,13 @@
 #define FISH_WUTIL_H
 
 #include <dirent.h>
+#include <locale.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <time.h>
-#include <locale.h>
-#include <string>
 #include <wctype.h>
+#include <string>
 
 #ifdef HAVE_XLOCALE_H
 #include <xlocale.h>
@@ -181,16 +181,16 @@ struct dir_t {
 #ifndef HASH_FILE_ID
 #define HASH_FILE_ID 1
 namespace std {
-    template<>
-    struct hash<file_id_t> {
-        size_t operator()(const file_id_t &f) const {
-            std::hash<decltype(f.device)> hasher1;
-            std::hash<decltype(f.inode)> hasher2;
+template <>
+struct hash<file_id_t> {
+    size_t operator()(const file_id_t &f) const {
+        std::hash<decltype(f.device)> hasher1;
+        std::hash<decltype(f.inode)> hasher2;
 
-            return hasher1(f.device) ^ hasher2(f.inode);
-        }
-    };
-}
+        return hasher1(f.device) ^ hasher2(f.inode);
+    }
+};
+}  // namespace std
 #endif
 
 file_id_t file_id_for_fd(int fd);

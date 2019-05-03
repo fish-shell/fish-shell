@@ -264,7 +264,6 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         // Use one left-over arg as the do-complete argument
         // to enable `complete -C "git check"`.
         if (do_complete && !have_do_complete_param && argc == w.woptind + 1) {
-
             do_complete_param = argv[argc - 1];
             have_do_complete_param = true;
         } else {
@@ -307,7 +306,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (do_complete) {
         if (!have_do_complete_param) {
             // No argument given, try to use the current commandline.
-            const wchar_t* cmd = reader_get_buffer();
+            const wchar_t *cmd = reader_get_buffer();
             if (cmd == NULL) {
                 // This corresponds to using 'complete -C' in non-interactive mode.
                 // See #2361    .

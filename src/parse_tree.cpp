@@ -178,7 +178,9 @@ static wcstring token_type_user_presentable_description(
             return L"end of the statement";
         case parse_token_type_terminate:
             return L"end of the input";
-        default: { return format_string(L"a %ls", token_type_description(type)); }
+        default: {
+            return format_string(L"a %ls", token_type_description(type));
+        }
     }
 }
 
@@ -202,7 +204,9 @@ static wcstring block_type_user_presentable_description(parse_token_type_t type)
         case symbol_switch_statement: {
             return L"switch statement";
         }
-        default: { return token_type_description(type); }
+        default: {
+            return token_type_description(type);
+        }
     }
 }
 
@@ -414,7 +418,7 @@ class parse_ll_t {
                 parse_token_type_t type = production_element_type(elem);
                 parse_keyword_t keyword = production_element_keyword(elem);
                 std::fwprintf(stderr, L"\t%ls <%ls>\n", token_type_description(type),
-                         keyword_description(keyword));
+                              keyword_description(keyword));
                 count++;
             }
             if (!count) std::fwprintf(stderr, L"\t<empty>\n");
@@ -690,8 +694,7 @@ void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &sta
 void parse_ll_t::report_tokenizer_error(const tok_t &tok) {
     parse_error_code_t parse_error_code = parse_error_from_tokenizer_error(tok.error);
     this->parse_error_at_location(tok.offset, tok.length, tok.offset + tok.error_offset,
-                                  parse_error_code, L"%ls",
-                                  tokenizer_get_error_message(tok.error));
+                                  parse_error_code, L"%ls", tokenizer_get_error_message(tok.error));
 }
 
 void parse_ll_t::parse_error_unexpected_token(const wchar_t *expected, parse_token_t token) {
@@ -730,7 +733,9 @@ static bool type_is_terminal_type(parse_token_type_t type) {
         case parse_token_type_terminate: {
             return true;
         }
-        default: { return false; }
+        default: {
+            return false;
+        }
     }
 }
 

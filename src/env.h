@@ -164,7 +164,7 @@ class env_var_t {
     bool operator==(const env_var_t &rhs) const {
         return *vals_ == *rhs.vals_ && flags_ == rhs.flags_;
     }
-    bool operator!=(const env_var_t &rhs) const { return ! (*this == rhs); }
+    bool operator!=(const env_var_t &rhs) const { return !(*this == rhs); }
 };
 typedef std::map<wcstring, env_var_t> var_table_t;
 
@@ -241,7 +241,6 @@ class env_stack_t final : public env_scoped_t {
     env_stack_t(env_stack_t &&);
 
    public:
-
     /// Sets the variable with the specified name to the given values.
     int set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);
 

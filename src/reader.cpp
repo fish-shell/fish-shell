@@ -32,8 +32,8 @@
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
-#include <cwchar>
 #include <wctype.h>
+#include <cwchar>
 
 #include <algorithm>
 #include <atomic>
@@ -435,9 +435,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     /// Insert the character into the command line buffer and print it to the screen using syntax
     /// highlighting, etc.
-    bool insert_char(editable_line_t *el, wchar_t c) {
-        return insert_string(el, wcstring{c});
-    }
+    bool insert_char(editable_line_t *el, wchar_t c) { return insert_string(el, wcstring{c}); }
 
     void move_word(editable_line_t *el, bool move_right, bool erase, enum move_word_style_t style,
                    bool newv);
@@ -644,8 +642,9 @@ void reader_data_t::repaint() {
     size_t cursor_position = focused_on_pager ? pager.cursor_position() : cmd_line->position;
 
     // Prepend the mode prompt to the left prompt.
-    s_write(&screen, mode_prompt_buff + left_prompt_buff, right_prompt_buff, full_line, cmd_line->size(), colors,
-            indents, cursor_position, current_page_rendering, focused_on_pager);
+    s_write(&screen, mode_prompt_buff + left_prompt_buff, right_prompt_buff, full_line,
+            cmd_line->size(), colors, indents, cursor_position, current_page_rendering,
+            focused_on_pager);
 
     repaint_needed = false;
 }
@@ -911,8 +910,7 @@ void reader_data_t::exec_mode_prompt() {
     mode_prompt_buff.clear();
     if (function_exists(MODE_PROMPT_FUNCTION_NAME)) {
         wcstring_list_t mode_indicator_list;
-        exec_subshell(MODE_PROMPT_FUNCTION_NAME, parser(), mode_indicator_list,
-                      false);
+        exec_subshell(MODE_PROMPT_FUNCTION_NAME, parser(), mode_indicator_list, false);
         // We do not support multiple lines in the mode indicator, so just concatenate all of
         // them.
         for (size_t i = 0; i < mode_indicator_list.size(); i++) {
@@ -982,7 +980,7 @@ void reader_init() {
 
     // Set the mode used for program execution, initialized to the current mode.
     std::memcpy(&tty_modes_for_external_cmds, &terminal_mode_on_startup,
-           sizeof tty_modes_for_external_cmds);
+                sizeof tty_modes_for_external_cmds);
     tty_modes_for_external_cmds.c_iflag &= ~IXON;   // disable flow control
     tty_modes_for_external_cmds.c_iflag &= ~IXOFF;  // disable flow control
 
@@ -1778,7 +1776,6 @@ static void reader_interactive_init() {
         signal_set_handlers();
     }
 
-
     // It shouldn't be necessary to place fish in its own process group and force control
     // of the terminal, but that works around fish being started with an invalid pgroup,
     // such as when launched via firejail (#5295)
@@ -2499,7 +2496,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::repaint_mode: {
             // Repaint the mode-prompt only if it exists.
             // This is an optimization basically exclusively for vi-mode, since the prompt
-            // may sometimes take a while but when switching the mode all we care about is the mode-prompt.
+            // may sometimes take a while but when switching the mode all we care about is the
+            // mode-prompt.
             if (function_exists(MODE_PROMPT_FUNCTION_NAME)) {
                 exec_mode_prompt();
                 s_reset(&screen, screen_reset_current_line_and_prompt);
@@ -2874,7 +2872,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 (c == rl::backward_kill_bigword
                      ? move_word_style_whitespace
                      : c == rl::backward_kill_path_component ? move_word_style_path_components
-                                                               : move_word_style_punctuation);
+                                                             : move_word_style_punctuation);
             // Is this the same killring item as the last kill?
             bool newv = (rls.last_cmd != rl::backward_kill_word &&
                          rls.last_cmd != rl::backward_kill_path_component &&
@@ -2894,16 +2892,16 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::backward_word:
         case rl::backward_bigword: {
-            auto move_style = (c == rl::backward_word) ? move_word_style_punctuation
-                                                         : move_word_style_whitespace;
+            auto move_style =
+                (c == rl::backward_word) ? move_word_style_punctuation : move_word_style_whitespace;
             move_word(active_edit_line(), MOVE_DIR_LEFT, false /* do not erase */, move_style,
                       false);
             break;
         }
         case rl::forward_word:
         case rl::forward_bigword: {
-            auto move_style = (c == rl::forward_word) ? move_word_style_punctuation
-                                                        : move_word_style_whitespace;
+            auto move_style =
+                (c == rl::forward_word) ? move_word_style_punctuation : move_word_style_whitespace;
             editable_line_t *el = active_edit_line();
             if (el->position < el->size()) {
                 move_word(el, MOVE_DIR_RIGHT, false /* do not erase */, move_style, false);

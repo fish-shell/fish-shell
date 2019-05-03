@@ -5,7 +5,8 @@
 #
 set git_clang_format no
 set c_files
-set f_files
+set fish_files
+set python_files
 set all no
 
 if test "$argv[1]" = "--all"
@@ -30,7 +31,8 @@ if test $all = yes
     # For now we don't restyle all fish scripts other than completion scripts. That's because people
     # really like to vertically align the elements of the `complete` command and fish_indent
     # currently does not honor that whitespace.
-    set f_files (printf '%s\n' share/***.fish | grep -v /completions/)
+    set fish_files (printf '%s\n' share/***.fish | grep -v /completions/)
+    set python_files **.py
 else
     # We haven't been asked to reformat all the source. If there are uncommitted changes reformat
     # those using `git clang-format`. Else reformat the files in the most recent commit.
@@ -50,7 +52,8 @@ else
         and set c_files $c_files $file
     end
     # Extract just the fish files.
-    set f_files (string match -r '^.*\.fish$' -- $files)
+    set fish_files (string match -r '^.*\.fish$' -- $files)
+    set python_files (string match -r '^.*\.py$' -- $files)
 end
 
 # Run the C++ reformatter if we have any C++ files.
@@ -91,7 +94,7 @@ if set -q c_files[1]
 end
 
 # Run the fish reformatter if we have any fish files.
-if set -q f_files[1]
+if set -q fish_files[1]
     if not type -q fish_indent
         make fish_indent
         set PATH . $PATH
@@ -100,7 +103,7 @@ if set -q f_files[1]
     echo ========================================
     echo Running fish_indent
     echo ========================================
-    for file in $f_files
+    for file in $fish_files
         cp $file $file.new # preserves mode bits
         fish_indent <$file >$file.new
         if cmp --quiet $file $file.new
@@ -109,5 +112,19 @@ if set -q f_files[1]
             echo $file was NOT correctly formatted
             mv $file.new $file
         end
+    end
+end
+
+if set -q python_files[1]
+    if not type -q black
+        echo
+        echo Please install "`black`" to style python
+        echo
+    else
+        echo
+        echo ========================================
+        echo Running black
+        echo ========================================
+        black $python_files
     end
 end

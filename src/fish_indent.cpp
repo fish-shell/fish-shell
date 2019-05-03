@@ -91,6 +91,9 @@ struct prettifier_t {
     // Whether we are at the beginning of a new line.
     bool has_new_line = true;
 
+    // Whether the last token was a semicolon.
+    bool last_was_semicolon = false;
+
     // Whether we need to append a continuation new line before continuing.
     bool needs_continuation_newline = false;
 
@@ -216,9 +219,22 @@ void prettifier_t::prettify_node(const parse_node_tree_t &tree, node_offset_t no
         }
 
         if (node_type == parse_token_type_end) {
-            append_newline();
+            // For historical reasons, semicolon also get "TOK_END".
+            // We need to distinguish between them, because otherwise `a;;;;` gets extra lines
+            // instead of the semicolons. Semicolons are just ignored, unless they are followed by a
+            // command. So `echo;` removes the semicolon, but `echo; echo` removes it and adds a
+            // newline.
+            if (node.get_source(source) == L"\n") {
+                append_newline();
+            } else {
+                last_was_semicolon = true;
+            }
         } else if ((node_type >= FIRST_PARSE_TOKEN_TYPE && node_type <= LAST_PARSE_TOKEN_TYPE) ||
                    node_type == parse_special_type_parse_error) {
+            if (last_was_semicolon) {
+                append_newline();
+                last_was_semicolon = false;
+            }
             if (node.keyword != parse_keyword_none) {
                 append_whitespace(node_indent);
                 output.append(keyword_description(node.keyword));

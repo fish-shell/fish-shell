@@ -123,3 +123,6 @@ echo hi |
 
 echo bye
 ' | ../test/root/bin/fish_indent
+
+echo 'a;;;;;;' | ../test/root/bin/fish_indent
+echo 'echo; echo' | ../test/root/bin/fish_indent

@@ -22,8 +22,10 @@ function __fish_complete_env_subcommand
     return 1
 end
 
+# Files aren't useful with env. They are correctly suggested with the command.
+complete -c env -f
 
-complete -c env -a "(__fish_complete_env_subcommand)" -d "Command"
+complete -c env -a "(__fish_complete_env_subcommand)" # -d "Command"
 
 complete -c env -n 'not __fish_complete_env_subcommand' -a "(set -n)=" -x -d "Redefine variable"
 complete -c env -n 'not __fish_complete_env_subcommand' -s i -l ignore-environment -d "Start with an empty environment"

@@ -91,9 +91,9 @@ def tokenize_fish_command(code, offset):
         stdout=subprocess.PIPE,
         universal_newlines=False,
     )
-    stdout, _ = proc.communicate(code.encode('utf-8'))
+    stdout, _ = proc.communicate(code.encode("utf-8"))
     result = []
-    for line in stdout.decode('utf-8').splitlines():
+    for line in stdout.decode("utf-8").splitlines():
         start, end, role = line.split(",")
         start, end = int(start), int(end)
         value = code[start:end]

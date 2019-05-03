@@ -454,7 +454,8 @@ function fish_git_prompt --description "Prompt function for Git"
     set b (string replace refs/heads/ '' -- $b)
     set -q __fish_git_prompt_shorten_branch_char_suffix
     or set -l __fish_git_prompt_shorten_branch_char_suffix "…"
-    if string match -qr '^\d+$' "$__fish_git_prompt_shorten_branch_len"; and test (string length "$b") -gt $__fish_git_prompt_shorten_branch_len
+    if string match -qr '^\d+$' "$__fish_git_prompt_shorten_branch_len"
+        and test (string length "$b") -gt $__fish_git_prompt_shorten_branch_len
         set b (string sub -l "$__fish_git_prompt_shorten_branch_len" "$b")"$__fish_git_prompt_shorten_branch_char_suffix"
     end
     if test -n "$b"
@@ -548,7 +549,8 @@ function __fish_git_prompt_informative_status
     set -l untrackedfiles (command git ls-files --others --exclude-standard | count)
     set -l stashstate 0
     set -l stashfile "$argv[1]/logs/refs/stash"
-    if set -q __fish_git_prompt_showstashstate; and test -e "$stashfile"
+    if set -q __fish_git_prompt_showstashstate
+        and test -e "$stashfile"
         set stashstate (count < $stashfile)
     end
 

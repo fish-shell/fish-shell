@@ -3,7 +3,7 @@
 complete -f -c dpkg-reconfigure -a '(__fish_print_packages)' -d 'Package'
 
 # Support flags
-complete -x -f -c dpkg-reconfigure -s h -l help     -d 'Display help'
+complete -x -f -c dpkg-reconfigure -s h -l help -d 'Display help'
 
 # General options
 complete -f -c dpkg-reconfigure -s f -l frontend -r -a "dialog readline noninteractive gnome kde editor web" -d 'Set configuration frontend'

@@ -1,4 +1,4 @@
-if tail --version > /dev/null 2>/dev/null
+if tail --version >/dev/null 2>/dev/null
     complete -c tail -s c -l bytes -x -d 'output the last K bytes; alternatively, use -c +K to output bytes starting with the Kth of each file'
     complete -c tail -s f -l follow -a 'name descriptor' -d 'output appended data as the file grows; -f -l follow, and --follow=descriptor are equivalent'
     complete -c tail -s F -d 'same as --follow=name --retry'
@@ -18,5 +18,5 @@ else # OSX and similar - no longopts (and fewer shortopts)
     complete -c tail -s F -d 'Like -f, but also follow renamed or rotated files'
     complete -c tail -s n -x -d 'output the last K lines, instead of the last 10 - or only K lines with -r'
     complete -c tail -s q -d 'never output headers giving file names'
-	complete -c tail -s r -d 'Display input in reverse order' # Only in OSX
+    complete -c tail -s r -d 'Display input in reverse order' # Only in OSX
 end

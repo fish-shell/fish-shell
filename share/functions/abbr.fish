@@ -53,12 +53,14 @@ function abbr --description "Manage abbreviations"
     else if set -q _flag_query[1]
         # "--query": Check if abbrs exist.
         # If we don't have an argument, it's an automatic failure.
-        set -q argv[1]; or return 1
+        set -q argv[1]
+        or return 1
         set -l escaped _fish_abbr_(string escape --style=var -- $argv)
         # We return 0 if any arg exists, whereas `set -q` returns the number of undefined arguments.
         # But we should be consistent with `type -q` and `command -q`.
         for var in $escaped
-            set -q $escaped; and return 0
+            set -q $escaped
+            and return 0
         end
         return 1
     else

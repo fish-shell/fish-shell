@@ -20,7 +20,7 @@ switch (uname)
         set OS "FreeBSD"
     case SunOS
         set OS "SunOS"
-    # Others?
+        # Others?
     case "*"
         set OS "unknown"
 end
@@ -110,7 +110,7 @@ function __fish_zfs_list_permissions
     echo -e "userused"
     # The remaining code of the function is almost a duplicate of __fish_complete_zfs_rw_properties and __fish_complete_zfs_ro_properties, but almost only, hence the duplication
     # RO properties
-    echo -e "volblocksize\t"(_ "Volume block size") 
+    echo -e "volblocksize\t"(_ "Volume block size")
     # R/W properties
     echo -e "aclinherit\t"(_ "Inheritance of ACL entries")" (discard, noallow, restricted, passthrough, passthrough-x)"
     echo -e "atime\t"(_ "Update access time on read")" (on, off)"
@@ -195,7 +195,9 @@ function __fish_zfs_list_permissions
         echo -e "casesensitivity\t"(_ "Case sensitivity")" (sensitive, insensitive, mixed)"
     end
     # Permissions set; if none are found, or if permission sets are not supported, no output is expected, even an error
-    for i in (zpool list -o name -H); zfs allow $i; end | string match -r '@[[:alnum:]]*' | sort -u
+    for i in (zpool list -o name -H)
+        zfs allow $i
+    end | string match -r '@[[:alnum:]]*' | sort -u
 end
 
 complete -c zfs -f -n '__fish_zfs_needs_command' -s '?' -a '?' -d 'Display a help message'

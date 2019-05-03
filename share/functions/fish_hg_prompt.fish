@@ -16,7 +16,7 @@ set -g fish_prompt_hg_status_modified '*'
 set -g fish_prompt_hg_status_copied '⇒'
 set -g fish_prompt_hg_status_deleted '✖'
 set -g fish_prompt_hg_status_untracked '?'
-set -g fish_prompt_hg_status_unmerged '!'
+set -g fish_prompt_hg_status_unmerged !
 
 set -g fish_prompt_hg_status_order added modified copied deleted untracked unmerged
 

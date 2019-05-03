@@ -1,27 +1,28 @@
 function __fish_composer_needs_command
-  set cmd (commandline -opc)
+    set cmd (commandline -opc)
 
-  if [ (count $cmd) -eq 1 ]
-    return 0
-  end
+    if [ (count $cmd) -eq 1 ]
+        return 0
+    end
 
-  return 1
+    return 1
 end
 
 function __fish_composer_using_command
-  set cmd (commandline -opc)
+    set cmd (commandline -opc)
 
-  if [ (count $cmd) -gt 1 ]
-    if [ $argv[1] = $cmd[2] ]
-      return 0
+    if [ (count $cmd) -gt 1 ]
+        if [ $argv[1] = $cmd[2] ]
+            return 0
+        end
     end
-  end
 
-  return 1
+    return 1
 end
 
 function __fish_composer_required_packages
-    test -f composer.json; or return
+    test -f composer.json
+    or return
     echo "
 import json
 json_data = open('composer.json')
@@ -33,7 +34,8 @@ print \"\n\".join(packages)
 end
 
 function __fish_composer_installed_packages
-    test -f composer.lock; or return
+    test -f composer.lock
+    or return
     echo "
 import json
 json_data = open('composer.lock')
@@ -49,7 +51,8 @@ print \"\n\".join(installed_packages)
 end
 
 function __fish_composer_scripts
-    test -f composer.json; or return
+    test -f composer.json
+    or return
     echo "
 import json
 json_data = open('composer.json')

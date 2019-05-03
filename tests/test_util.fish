@@ -15,7 +15,8 @@ if set -q argv[2]
 end
 
 function die
-    set -q argv[1]; and echo $argv[1] >&2
+    set -q argv[1]
+    and echo $argv[1] >&2
     exit 1
 end
 
@@ -27,11 +28,11 @@ if not set -q __fish_is_running_tests
     # Set up our test environment and re-run the original script.
     set -l script $argv[1]
     switch $script
-    case '/*'
-        # path is absolute
-    case '*'
-        # path is relative, make it absolute
-        set script $PWD/$script
+        case '/*'
+            # path is absolute
+        case '*'
+            # path is relative, make it absolute
+            set script $PWD/$script
     end
 
     begin
@@ -42,16 +43,22 @@ if not set -q __fish_is_running_tests
 
     set -lx XDG_DATA_HOME ../test/data
     rm -rf $XDG_DATA_HOME/fish
-    mkdir -p $XDG_DATA_HOME/fish; or die
+    mkdir -p $XDG_DATA_HOME/fish
+    or die
 
     set -lx XDG_CONFIG_HOME ../test/home
     rm -rf $XDG_CONFIG_HOME/fish
-    mkdir -p $XDG_CONFIG_HOME/fish; or die
-    ln -s $PWD/test_functions $XDG_CONFIG_HOME/fish/functions; or die
+    mkdir -p $XDG_CONFIG_HOME/fish
+    or die
+    ln -s $PWD/test_functions $XDG_CONFIG_HOME/fish/functions
+    or die
 
-    set -l escaped_parent (dirname $PWD | sed -e 's/[\'\\\\]/\\\\&/g'); or die
-    set -l escaped_config (printf '%s/fish' $XDG_CONFIG_HOME | sed -e 's/[\'\\\\]/\\\\&/g'); or die
-    printf 'set fish_function_path \'%s/functions\' \'%s/share/functions\'\n' $escaped_config $escaped_parent > $XDG_CONFIG_HOME/fish/config.fish; or die
+    set -l escaped_parent (dirname $PWD | sed -e 's/[\'\\\\]/\\\\&/g')
+    or die
+    set -l escaped_config (printf '%s/fish' $XDG_CONFIG_HOME | sed -e 's/[\'\\\\]/\\\\&/g')
+    or die
+    printf 'set fish_function_path \'%s/functions\' \'%s/share/functions\'\n' $escaped_config $escaped_parent >$XDG_CONFIG_HOME/fish/config.fish
+    or die
     set -xl __fish_is_running_tests $XDG_CONFIG_HOME
 
     # Set locale information for consistent tests. Fish should work with a lot of locales but the
@@ -108,9 +115,13 @@ function say -V suppress_color
         return 1
     end
 
-    if begin; test -n "$suppress_color"; or set_color $color_flags $argv[1]; end
+    if begin
+            test -n "$suppress_color"
+            or set_color $color_flags $argv[1]
+        end
         printf '%s' $argv[2..-1]
-        test -z "$suppress_color"; and set_color normal
+        test -z "$suppress_color"
+        and set_color normal
         if test -z "$suppress_newline"
             echo
         end

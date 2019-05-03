@@ -100,25 +100,38 @@ function __fish_git_files
 
     # Cache the translated descriptions so we don't have to get it
     # once per file.
-    contains -- unmerged $argv; and set -l unmerged
+    contains -- unmerged $argv
+    and set -l unmerged
     and set -l unmerged_desc (_ "Unmerged File")
-    contains -- added $argv; or contains -- all-staged $argv; and set -l added
+    contains -- added $argv
+    or contains -- all-staged $argv
+    and set -l added
     and set -l added_desc (_ "Added file")
-    contains -- modified $argv; and set -l modified
+    contains -- modified $argv
+    and set -l modified
     and set -l modified_desc (_ "Modified file")
-    contains -- untracked $argv; and set -l untracked
+    contains -- untracked $argv
+    and set -l untracked
     and set -l untracked_desc (_ "Untracked file")
-    contains -- modified-staged $argv; or contains -- all-staged $argv; and set -l modified_staged
+    contains -- modified-staged $argv
+    or contains -- all-staged $argv
+    and set -l modified_staged
     and set -l staged_modified_desc (_ "Staged modified file")
-    contains -- deleted $argv; and set -l deleted
+    contains -- deleted $argv
+    and set -l deleted
     and set -l deleted_desc (_ "Deleted file")
-    contains -- deleted-staged $argv; or contains -- all-staged $argv; and set -l deleted_staged
+    contains -- deleted-staged $argv
+    or contains -- all-staged $argv
+    and set -l deleted_staged
     and set -l staged_deleted_desc (_ "Staged deleted file")
-    contains -- ignored $argv; and set -l ignored
+    contains -- ignored $argv
+    and set -l ignored
     and set -l ignored_desc (_ "Ignored file")
-    contains -- renamed $argv; and set -l renamed
+    contains -- renamed $argv
+    and set -l renamed
     and set -l renamed_desc (_ "Renamed file")
-    contains -- copied $argv; and set -l copied
+    contains -- copied $argv
+    and set -l copied
     and set -l copied_desc (_ "Copied file")
 
     # A literal "?" for use in `case`.
@@ -140,9 +153,11 @@ function __fish_git_files
 
     # If we aren't looking for ignored files, let git status skip them.
     # (don't use --ignored=no because that was only added in git 2.16, from Jan 2018.
-    set -q ignored; and set -a status_opt --ignored
+    set -q ignored
+    and set -a status_opt --ignored
 
-    set -q untracked; and set -a status_opt -unormal
+    set -q untracked
+    and set -a status_opt -unormal
     or set -a status_opt -uno
 
     # We need to set status.relativePaths to true because the porcelain v2 format still honors that,
@@ -154,9 +169,10 @@ function __fish_git_files
     # We fall back on the v1 format by reading git's _version_, because trying v2 first is too slow.
     set -l ver (command git --version | string replace -rf 'git version (\d+)\.(\d+)\.?.*' '$1\n$2')
     # Version >= 2.11.* has the v2 format.
-    if test "$ver[1]" -gt 2 2>/dev/null; or test "$ver[1]" -eq 2 -a "$ver[2]" -ge 11 2>/dev/null
+    if test "$ver[1]" -gt 2 2>/dev/null
+        or test "$ver[1]" -eq 2 -a "$ver[2]" -ge 11 2>/dev/null
         command git $git_opt status --porcelain=2 $status_opt \
-        | while read -la -d ' ' line
+            | while read -la -d ' ' line
             set -l file
             set -l desc
             # The basic status format is "XY", where X is "our" state (meaning the staging area),
@@ -234,7 +250,8 @@ function __fish_git_files
                     # There is both X unmodified and Y either M or D ("not updated")
                     # and Y is D and X is unmodified or [MARC] ("deleted in work tree").
                     # For our purposes, we assume this is a staged deletion.
-                    set -ql deleted-staged; or set -ql all-staged
+                    set -ql deleted-staged
+                    or set -ql all-staged
                     and set file "$line[9..-1]"
                     and set desc $staged_deleted_desc
                 case "$q"' *'
@@ -277,14 +294,15 @@ function __fish_git_files
         # We need to compute relative paths on our own, which is slow.
         # Pre-remove the root at least, so we have fewer components to deal with.
         set -l _pwd_list (string replace "$root/" "" -- $PWD/ | string split /)
-        test -z "$_pwd_list[-1]"; and set -e _pwd_list[-1]
+        test -z "$_pwd_list[-1]"
+        and set -e _pwd_list[-1]
         # Cache the previous relative path because these are sorted, so we can reuse it
         # often for files in the same directory.
         set -l previous
         # Note that we can't use space as a delimiter between status and filename, because
         # the status can contain spaces - " M" is different from "M ".
         command git $git_opt status --porcelain -z $status_opt \
-        | while read -lz line
+            | while read -lz line
             set -l desc
             # The entire line is the "from" from a rename.
             if set -q use_next[1]
@@ -430,7 +448,8 @@ function __fish_git_needs_rev_files
     # This definitely works with `git show` to retrieve a copy of a file as it exists
     # in the index of revision $rev, it should be updated to include others as they
     # are identified.
-    __fish_git_using_command show; and string match -r ".+:" -- (commandline -ot)
+    __fish_git_using_command show
+    and string match -r ".+:" -- (commandline -ot)
 end
 
 function __fish_git_ranges
@@ -458,18 +477,22 @@ function __fish_git_needs_command
     # Git has tons of options, but fortunately only a few can appear before the command.
     # They are listed here.
     set -l opts h-help p P-paginate N-no-pager b-bare o-no-replace-objects \
-    l-literal-pathspecs g-glob-pathspecs O-noglob-pathspecs i-icase-pathspecs \
-    e-exec-path= G-git-dir= c= C= v-version H-html-path \
-    m-man-path I-info-path w-work-tree= a-namespace= s-super-prefix=
+        l-literal-pathspecs g-glob-pathspecs O-noglob-pathspecs i-icase-pathspecs \
+        e-exec-path= G-git-dir= c= C= v-version H-html-path \
+        m-man-path I-info-path w-work-tree= a-namespace= s-super-prefix=
     set cmd (commandline -opc)
     set -e cmd[1]
     argparse -s $opts -- $cmd 2>/dev/null
     or return 0
     # These flags function as commands, effectively.
-    set -q _flag_version; and return 1
-    set -q _flag_html_path; and return 1
-    set -q _flag_man_path; and return 1
-    set -q _flag_info_path; and return 1
+    set -q _flag_version
+    and return 1
+    set -q _flag_html_path
+    and return 1
+    set -q _flag_man_path
+    and return 1
+    set -q _flag_info_path
+    and return 1
     if set -q argv[1]
         # Also print the command, so this can be used to figure out what it is.
         echo $argv[1]
@@ -500,7 +523,8 @@ git config -z --get-regexp 'alias\..*' | while read -lz alias command _
     #
     # We can't do anything with them, and we run git-config again for listing aliases,
     # so we skip them here.
-    string match -q '!*' -- $command; and continue
+    string match -q '!*' -- $command
+    and continue
     # Git aliases can contain chars that variable names can't - escape them.
     set alias (string replace 'alias.' '' -- $alias | string escape --style=var)
     set -g __fish_git_alias_$alias $command

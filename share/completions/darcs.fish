@@ -41,35 +41,35 @@ complete -c darcs -n '__fish_use_subcommand' -x -a repair -d 'Repair a corrupted
 complete -c darcs -n '__fish_use_subcommand' -x -a convert -d 'Convert repositories between various formats'
 
 function __fish_darcs_use_show_command
-  set -l cmd (commandline -poc)
-  set -e cmd[1]
+    set -l cmd (commandline -poc)
+    set -e cmd[1]
 
-  if contains 'show' $cmd
-    for i in $cmd
-      switch $i
-        case contents
-          return 1
-        case dependencies
-          return 1
-        case files
-          return 1
-        case index
-          return 1
-        case pristine
-          return 1
-        case repo
-          return 1
-        case authors
-          return 1
-        case tags
-          return 1
-        case patch-index
-          return 1
-      end
+    if contains 'show' $cmd
+        for i in $cmd
+            switch $i
+                case contents
+                    return 1
+                case dependencies
+                    return 1
+                case files
+                    return 1
+                case index
+                    return 1
+                case pristine
+                    return 1
+                case repo
+                    return 1
+                case authors
+                    return 1
+                case tags
+                    return 1
+                case patch-index
+                    return 1
+            end
+        end
+        return 0
     end
-    return 0
-  end
-  return 1
+    return 1
 end
 
 complete -c darcs -n '__fish_darcs_use_show_command' -x -a contents -d 'Outputs a specific version of a file'
@@ -83,39 +83,39 @@ complete -c darcs -n '__fish_darcs_use_show_command' -x -a tags -d 'Show all tag
 complete -c darcs -n '__fish_darcs_use_show_command' -x -a patch-index -d 'Check integrity of patch index'
 
 function __fish_darcs_use_optimize_command
-  set -l cmd (commandline -poc)
-  set -e cmd[1]
+    set -l cmd (commandline -poc)
+    set -e cmd[1]
 
-  if contains 'optimize' $cmd
-    for i in $cmd
-      switch $i
-        case clean
-          return 1
-        case http
-          return 1
-        case reorder
-          return 1
-        case enable-patch-index
-          return 1
-        case disable-patch-index
-          return 1
-        case compress
-          return 1
-        case uncompress
-          return 1
-        case relink
-          return 1
-        case pristine
-          return 1
-        case upgrade
-          return 1
-        case cache
-          return 1
-      end
+    if contains 'optimize' $cmd
+        for i in $cmd
+            switch $i
+                case clean
+                    return 1
+                case http
+                    return 1
+                case reorder
+                    return 1
+                case enable-patch-index
+                    return 1
+                case disable-patch-index
+                    return 1
+                case compress
+                    return 1
+                case uncompress
+                    return 1
+                case relink
+                    return 1
+                case pristine
+                    return 1
+                case upgrade
+                    return 1
+                case cache
+                    return 1
+            end
+        end
+        return 0
     end
-    return 0
-  end
-  return 1
+    return 1
 end
 
 complete -c darcs -n '__fish_darcs_use_optimize_command' -x -a clean -d 'Garbage collect pristine, inventories and patches'
@@ -132,23 +132,23 @@ complete -c darcs -n '__fish_darcs_use_optimize_command' -x -a cache -d 'Garbage
 
 
 function __fish_darcs_use_convert_command
-  set -l cmd (commandline -poc)
-  set -e cmd[1]
+    set -l cmd (commandline -poc)
+    set -e cmd[1]
 
-  if contains 'convert' $cmd
-    for i in $cmd
-      switch $i
-        case darcs-2
-          return 1
-        case export
-          return 1
-        case import
-          return 1
-      end
+    if contains 'convert' $cmd
+        for i in $cmd
+            switch $i
+                case darcs-2
+                    return 1
+                case export
+                    return 1
+                case import
+                    return 1
+            end
+        end
+        return 0
     end
-    return 0
-  end
-  return 1
+    return 1
 end
 
 complete -c darcs -l 'help' -d 'Show a brief description of the command and its options'

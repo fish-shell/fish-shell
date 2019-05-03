@@ -6,7 +6,7 @@
 set -l uname (uname -s)
 complete -c ls -s C -d "Force multi-column output"
 test "$uname" != SunOS
-    and complete -c ls -s S -d "Sort by size"
+and complete -c ls -s S -d "Sort by size"
 complete -c ls -s m -d "Comma-separated format, fills across screen"
 complete -c ls -s x -d "Multi-column output, horizontally listed"
 complete -c ls -s 1 -d "List one entry per line"
@@ -107,7 +107,7 @@ else
 
     complete -c ls -s i -d "Show inode numbers for files"
     test "$uname" != SunOS
-        and complete -c ls -s k -d "for -s: Display sizes in kB, not blocks" # GNU sets block size with -k
+    and complete -c ls -s k -d "for -s: Display sizes in kB, not blocks" # GNU sets block size with -k
     complete -c ls -s q -d "Replace non-graphic characters with '?'"
     complete -c ls -s r -d "Reverse sort order"
     complete -c ls -s s -d "Show file sizes"
@@ -116,8 +116,8 @@ else
     complete -c ls -s l -d "Long listing format"
     complete -c ls -s n -d "Long format, numerical UIDs and GIDs"
     contains "$uname" FreeBSD NetBSD OpenBSD DragonFly
-        and complete -c ls -o o -d "Long format, show file flags" # annoying BSD
-        or complete -c ls -s o -d "Long format, omit group names" # annoying POSIX
+    and complete -c ls -o o -d "Long format, show file flags" # annoying BSD
+    or complete -c ls -s o -d "Long format, omit group names" # annoying POSIX
 
     complete -c ls -s A -d "Show hidden except . and .."
     complete -c ls -s a -d "Show hidden entries"
@@ -129,7 +129,7 @@ else
 
     complete -c ls -s L -d "Follow all symlinks Cancels -P option"
     test "$uname" != NetBSD
-        and complete -c ls -s H -d "Follow symlink given on commandline" # not present on netbsd
+    and complete -c ls -s H -d "Follow symlink given on commandline" # not present on netbsd
 
     complete -c ls -s R -d "Recursively list subdirectories"
     complete -c ls -s d -d "List directories, not their content"

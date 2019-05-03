@@ -1,11 +1,11 @@
 
 function __fish_obnam_nosubcommand
-	if __fish_seen_subcommand_from add-key backup client-keys clients diff dump-repo force-lock forget fsck \
-		generations genids help help-all kdirstat list-errors list-formats list-keys list-toplevels \
-		ls mount nagios-last-backup-age remove-client remove-key restore verify
-		return 1
-	end
-	return 0
+    if __fish_seen_subcommand_from add-key backup client-keys clients diff dump-repo force-lock forget fsck \
+            generations genids help help-all kdirstat list-errors list-formats list-keys list-toplevels \
+            ls mount nagios-last-backup-age remove-client remove-key restore verify
+        return 1
+    end
+    return 0
 end
 
 complete -c obnam --no-files --condition __fish_obnam_nosubcommand -a 'add-key' -d 'Add a key to the repository'
@@ -47,38 +47,38 @@ complete -c obnam --no-files -l generation -d 'Which generation to restore'
 complete -c obnam --no-files -s h -l help -d 'Show this help message and exit'
 complete -c obnam --no-files -l keep -d 'Policy for what generations to keep when forgetting.'
 complete -c obnam --no-files -l lock-timeout -d 'Wait TIMEOUT seconds for an existing lock'
-complete -c obnam            -l output -d 'Write output to FILE instead of STDOUT'
+complete -c obnam -l output -d 'Write output to FILE instead of STDOUT'
 complete -c obnam --no-files -l pretend -l dry-run -l no-act -d 'Do not actually change anything'
 complete -c obnam --no-files -l no-pretend -l no-dry-run -l no-no-act -d 'Actually commit changes'
 complete -c obnam --no-files -l quiet -d 'Show only errors, no progress updates'
 complete -c obnam --no-files -l no-quiet -d 'Show errors and progress updates'
-complete -c obnam       -s r -l repository -d 'Name of backup repository'
+complete -c obnam -s r -l repository -d 'Name of backup repository'
 complete -c obnam --no-files -l repository-format -a '6 green-albatross-20160813' -d 'Use FORMAT for new repositories'
-complete -c obnam            -l to -d 'Where to restore / mount to'
+complete -c obnam -l to -d 'Where to restore / mount to'
 complete -c obnam --no-files -l verbose -d 'Be more verbose'
 complete -c obnam --no-files -l no-verbose -d 'Do not be verbose'
 complete -c obnam --no-files -l verify-randomly -d 'Verify N files randomly from the backup'
 complete -c obnam --no-files -l version -d 'Show version number and exit'
-complete -c obnam            -l warn-age -d 'For nagios-last-backup-age: maximum age'
+complete -c obnam -l warn-age -d 'For nagios-last-backup-age: maximum age'
 
 # Backing up
 complete -c obnam --no-files -l checkpoint -d 'Make a checkpoint after a given SIZE'
 complete -c obnam --no-files -l deduplicate -a 'fatalist never verify' -d 'Deduplicate mode'
-complete -c obnam            -l exclude -d 'REGEXP for pathnames to exclude'
+complete -c obnam -l exclude -d 'REGEXP for pathnames to exclude'
 complete -c obnam --no-files -l exclude-caches -d 'Exclude directories tagged as cache'
 complete -c obnam --no-files -l no-exclude-caches -d 'Include directories tagged as cache'
-complete -c obnam            -l exclude-from -d 'Read exclude patterns from FILE'
+complete -c obnam -l exclude-from -d 'Read exclude patterns from FILE'
 complete -c obnam --no-files -l include -d 'REGEXP for pathnames to include, even if matches --exclude'
 complete -c obnam --no-files -l leave-checkpoints -d 'Leave checkpoint generations at the end of backup'
 complete -c obnam --no-files -l no-leave-checkpoints -d 'Omit checkpoint generations at the end of backup'
 complete -c obnam --no-files -l one-file-system -d 'Do not follow mount points'
 complete -c obnam --no-files -l no-one-file-system -d 'Follow mount points'
-complete -c obnam            -l root -d 'What to backup'
+complete -c obnam -l root -d 'What to backup'
 complete -c obnam --no-files -l small-files-in-btree -d 'Put small files directly into the B-tree'
 complete -c obnam --no-files -l no-small-files-in-btree -d 'No not put small files into the B-tree'
 
 # Configuration files and settings
-complete -c obnam            -l config -d 'Add FILE to config files'
+complete -c obnam -l config -d 'Add FILE to config files'
 complete -c obnam --no-files -l dump-config -d 'Write out the current configuration'
 complete -c obnam --no-files -l dump-setting-names -d 'Write out setting names'
 complete -c obnam --no-files -l help-all -d 'Show all options'
@@ -89,11 +89,11 @@ complete -c obnam --no-files -l no-default-configs -d 'Clear list of configurati
 complete -c obnam --no-files -l crash-limit -d 'Artificially crash the program after COUNTER files'
 complete -c obnam --no-files -l pretend-time -d 'Pretend it is TIMESTAMP'
 complete -c obnam --no-files -l testing-fail-matching -d 'Simulate failures for files that match REGEXP'
-complete -c obnam            -l trace -d 'FILENAME pattern for trace debugging'
+complete -c obnam -l trace -d 'FILENAME pattern for trace debugging'
 
 # Encryption
 complete -c obnam --no-files -l encrypt-with -d 'PGP key with which to encrypt'
-complete -c obnam            -l gnupghome -d 'Home directory for GPG'
+complete -c obnam -l gnupghome -d 'Home directory for GPG'
 complete -c obnam --no-files -l key-details -d 'Show additional user IDs'
 complete -c obnam --no-files -l no-key-details -d 'Do not show additional user IDs'
 complete -c obnam --no-files -l keyid -d 'PGP key id'
@@ -125,7 +125,7 @@ complete -c obnam --no-files -l fsck-skip-shared-b-trees -d 'Do not check shared
 complete -c obnam --no-files -l no-fsck-skip-shared-b-trees -d 'Check shared B-trees'
 
 # Logging
-complete -c obnam            -l log -a 'syslog' -d 'Write log to FILE or syslog'
+complete -c obnam -l log -a 'syslog' -d 'Write log to FILE or syslog'
 complete -c obnam --no-files -l log-keep -d 'Keep last N logs (10)'
 complete -c obnam --no-files -l log-level -a 'debug info warning error critical fatal' -d 'Log at LEVEL'
 complete -c obnam --no-files -l log-max -d 'Rotate logs larger than SIZE'
@@ -157,7 +157,7 @@ complete -c obnam --no-files -l dir-cache-size -d 'In-memory cache SIZE for dir 
 # SSH/SFTP
 complete -c obnam --no-files -l pure-paramiko -d 'Use only paramiko, no openssh'
 complete -c obnam --no-files -l no-pure-paramiko -d 'Use openssh if available'
-complete -c obnam            -l ssh-command -d 'Executable to be used instead of "ssh"'
+complete -c obnam -l ssh-command -d 'Executable to be used instead of "ssh"'
 complete -c obnam --no-files -l ssh-host-keys-check -a 'no yes ask ssh-config' -d 'ssh host key check'
-complete -c obnam            -l ssh-key -d 'Use FILENAME as the ssh RSA key'
-complete -c obnam            -l ssh-known-hosts -a '~/.ssh/known_hosts' -d 'FILENAME of the known_hosts file'
+complete -c obnam -l ssh-key -d 'Use FILENAME as the ssh RSA key'
+complete -c obnam -l ssh-known-hosts -a '~/.ssh/known_hosts' -d 'FILENAME of the known_hosts file'

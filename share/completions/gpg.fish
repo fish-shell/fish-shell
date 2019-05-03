@@ -20,46 +20,46 @@
 #
 
 function __fish_complete_gpg_user_id -d "Complete using gpg user ids"
-	# gpg doesn't seem to like it when you use the whole key name as a
-	# completion, so we skip the <EMAIL> part and use it a s a
-	# description.
-	# It also replaces colons with \x3a
-	gpg --list-keys --with-colon|cut -d : -f 10 | sed -ne 's/\\\x3a/:/g' -e 's/\(.*\) <\(.*\)>/\1'\t'\2/p'
+    # gpg doesn't seem to like it when you use the whole key name as a
+    # completion, so we skip the <EMAIL> part and use it a s a
+    # description.
+    # It also replaces colons with \x3a
+    gpg --list-keys --with-colon | cut -d : -f 10 | sed -ne 's/\\\x3a/:/g' -e 's/\(.*\) <\(.*\)>/\1'\t'\2/p'
 end
 
 function __fish_complete_gpg_key_id -d 'Complete using gpg key ids'
-	# Use user_id as the description
-	set -l lastid
-	gpg --list-keys --with-colons | while read garbage
-		switch $garbage
-			case "uid*"
-				echo $garbage | cut -d ":" -f 10 | sed -e "s/\\\x3a/:/g" | read lastid
-			case "*"
-				echo $garbage | cut -d ":" -f 5 | read fingerprint
-		end
-		printf "%s\t%s\n" $fingerprint $lastid
-	end
+    # Use user_id as the description
+    set -l lastid
+    gpg --list-keys --with-colons | while read garbage
+        switch $garbage
+            case "uid*"
+                echo $garbage | cut -d ":" -f 10 | sed -e "s/\\\x3a/:/g" | read lastid
+            case "*"
+                echo $garbage | cut -d ":" -f 5 | read fingerprint
+        end
+        printf "%s\t%s\n" $fingerprint $lastid
+    end
 end
 
 function __fish_print_gpg_algo -d "Complete using all algorithms of the type specified in argv[1] supported by gpg. argv[1] is a regexp"
-	# Set a known locale, so that the output format of 'gpg --version'
-	# is at least somewhat predictable. The locale will automatically
-	# expire when the function goes out of scope, and the original locale
-	# will take effect again.
-	set -lx LC_ALL C
+    # Set a known locale, so that the output format of 'gpg --version'
+    # is at least somewhat predictable. The locale will automatically
+    # expire when the function goes out of scope, and the original locale
+    # will take effect again.
+    set -lx LC_ALL C
 
-	# sed script explained:
-	# in the line that matches "$argv:"
-	# 	define label 'loop'
-	# 	if the line ends with a ','
-	# 		add next line to buffer
-	#		transliterate '\n' with ' '
-	#		goto loop
-	# 	remove everything until the first ':' of the line
-	# 	remove all blanks
-	# 	transliterate ',' with '\n' (OSX apparently doesn't like '\n' on RHS of the s-command)
-	# 	print result
-	gpg --version | sed -ne "/$argv:/"'{:loop; /,$/{N; y!\n! !; b loop}; s!^[^:]*:!!; s![ ]*!!g; y!,!\n!; p}'
+    # sed script explained:
+    # in the line that matches "$argv:"
+    # 	define label 'loop'
+    # 	if the line ends with a ','
+    # 		add next line to buffer
+    #		transliterate '\n' with ' '
+    #		goto loop
+    # 	remove everything until the first ':' of the line
+    # 	remove all blanks
+    # 	transliterate ',' with '\n' (OSX apparently doesn't like '\n' on RHS of the s-command)
+    # 	print result
+    gpg --version | sed -ne "/$argv:/"'{:loop; /,$/{N; y!\n! !; b loop}; s!^[^:]*:!!; s![ ]*!!g; y!,!\n!; p}'
 end
 
 

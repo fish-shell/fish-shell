@@ -41,7 +41,7 @@ complete -f -c arc -n '__fish_arc_needs_command' -l conduit-token -d 'Specify th
 complete -f -c arc -n '__fish_arc_needs_command' -l conduit-version -d 'Force a version'
 complete -f -c arc -n '__fish_arc_needs_command' -l conduit-timeout -d 'Sets the timeout'
 complete -f -c arc -n '__fish_arc_needs_command' -l config -d 'Sets a config'
-complete -f -c arc -n '__fish_arc_needs_command'  -l skip-arcconfig -d 'Skip the working copy configuration file'
+complete -f -c arc -n '__fish_arc_needs_command' -l skip-arcconfig -d 'Skip the working copy configuration file'
 complete -c arc -n '__fish_arc_needs_command' -l arcrc-file -d 'Use provided file instead of ~/.arcrc'
 
 ### shell-complete

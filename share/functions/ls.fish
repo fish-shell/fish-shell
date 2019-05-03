@@ -16,7 +16,7 @@ for opt in --color=auto -G --color -F
             command ls $opt $argv
         end
 
-        if [ $opt = --color=auto ] &&! set -qx LS_COLORS && set -l cmd (command -s {g,}dircolors)[1]
+        if [ $opt = --color=auto ] && ! set -qx LS_COLORS && set -l cmd (command -s {g,}dircolors)[1]
             set -l colorfile
             for file in ~/.dir_colors ~/.dircolors /etc/DIR_COLORS
                 if test -f $file

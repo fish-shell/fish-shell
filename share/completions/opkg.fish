@@ -2,7 +2,7 @@
 
 function __fish_opkg_no_subcommand -d 'Test if opkg has yet to be given the subcommand'
     for i in (commandline -opc)
-        if contains -- $i update upgrade install configure remove flag list list-installed list-upgradable list-changed-conffiles files search find info status download compare-versions print-architecture depends whatdepends whatdependsrec whatrecommends whatsuggests whatprovides whatconflicts  whatreplaces
+        if contains -- $i update upgrade install configure remove flag list list-installed list-upgradable list-changed-conffiles files search find info status download compare-versions print-architecture depends whatdepends whatdependsrec whatrecommends whatsuggests whatprovides whatconflicts whatreplaces
             return 1
         end
     end

@@ -3,12 +3,12 @@
 #
 # Apparently options can only come after commands, with the exception of "-v" and "-h", which are effectively commands.
 set -l commands box cloud connect destroy \
-docker-{exec,logs,run} \
-global-status halt help init list-commands login \
-package plugin provision push rdp reload resume \
-rsync rsync-auto share snapshot ssh ssh-config \
-status suspend up version \
-port powershell winrm{,-config}
+    docker-{exec,logs,run} \
+    global-status halt help init list-commands login \
+    package plugin provision push rdp reload resume \
+    rsync rsync-auto share snapshot ssh ssh-config \
+    status suspend up version \
+    port powershell winrm{,-config}
 
 set -l box_commands add help list outdated prune remove repackage update
 set -l cloud_commands auth box search provider publish version
@@ -32,7 +32,8 @@ end
 
 function __fish_vagrant_machines
     if set -l state (__fish_print_vagrant_state)
-        test -d "$state"; or return
+        test -d "$state"
+        or return
         set -l machines $state/machines/*
         string replace -- $state/machines/ '' $machines
     end
@@ -48,7 +49,7 @@ function __fish_vagrant_running_machines
     if set -l state (__fish_print_vagrant_state)
         # TODO: stub
         if test -f "$state"
-            string replace -f '"active":' '' < $state | string split ,
+            string replace -f '"active":' '' <$state | string split ,
         else
         end
     end
@@ -56,7 +57,8 @@ end
 
 function __fish_vagrant_boxes
     set -l vhome $VAGRANT_HOME/boxes
-    set -q vhome[1]; or set vhome ~/.vagrant.d/boxes
+    set -q vhome[1]
+    or set vhome ~/.vagrant.d/boxes
     set -l boxes $vhome/*
     string replace -- $vhome/ '' $boxes | string replace -- -VAGRANTSLASH- /
 end
@@ -64,7 +66,8 @@ end
 function __fish_vagrant_need_command -V commands
     argparse -s h/help v/version -- (commandline -opc)[2..-1] 2>/dev/null
     or return
-    if set -q _flag_help[1]; or set -q _flag_help[1]
+    if set -q _flag_help[1]
+        or set -q _flag_help[1]
         return 1
     end
     if set -q argv[1]

@@ -14,7 +14,7 @@ switch (uname)
         set OS "FreeBSD"
     case SunOS
         set OS "SunOS"
-    # Others?
+        # Others?
     case "*"
         set OS "unknown"
 end
@@ -80,12 +80,12 @@ function __fish_zpool_complete_vdevs
                     __fish_zpool_list_vdev_types
                 end
                 return
-            # Here, we accept any possible zpool command; this way, the developper will not have to augment or reduce the list when adding the current function to or removing it from the completions for the said command
+                # Here, we accept any possible zpool command; this way, the developper will not have to augment or reduce the list when adding the current function to or removing it from the completions for the said command
             case \? add attach clear create destroy detach events get history import iostat labelclear list offline online reguid reopen remove replace scrub set split status upgrade
                 __fish_zpool_list_vdev_types
                 return
             case "" # Au cas où
-                echo "" > /dev/null
+                echo "" >/dev/null
             case "-*" "*=*" "*,*"
                 # The token is an option or an option argument; as no option uses a vdev as its argument, we can abandon commandline parsing
                 __fish_zpool_list_vdev_types

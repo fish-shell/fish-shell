@@ -52,7 +52,8 @@ else
     # Extract just the C/C++ files that exist.
     set c_files
     for file in (string match -r '.*\.c(?:pp)?$' -- $files)
-        test -f $file; and set c_files $c_files $file
+        test -f $file
+        and set c_files $c_files $file
     end
 end
 

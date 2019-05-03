@@ -71,15 +71,17 @@ complete -f -c yarn -n '__fish_use_subcommand' -a remove
 complete -f -c yarn -n '__fish_use_subcommand' -a run
 
 function __fish_yarn_run
-    if test -e package.json; and set -l python (__fish_anypython)
+    if test -e package.json
+        and set -l python (__fish_anypython)
         # Warning: That weird indentation is necessary, because python.
         $python -c 'import json, sys; data = json.load(sys.stdin);
 for k,v in data["scripts"].items(): print(k + "\t" + v[:18])' <package.json 2>/dev/null
-    else if test -e package.json; and type -q jq
+    else if test -e package.json
+        and type -q jq
         jq -r '.scripts | to_entries | map("\(.key)\t\(.value | tostring | .[0:20])") | .[]' package.json
     else if type -q jq
         # Yarn is quite slow and still requires `jq` because the normal format is unusable.
-        command yarn run --json 2> /dev/null | jq -r '.data.hints? | to_entries | map("\(.key)\t\(.value | tostring |.[0:20])") | .[]'
+        command yarn run --json 2>/dev/null | jq -r '.data.hints? | to_entries | map("\(.key)\t\(.value | tostring |.[0:20])") | .[]'
     end
 end
 

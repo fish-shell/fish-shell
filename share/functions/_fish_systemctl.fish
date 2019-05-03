@@ -33,23 +33,30 @@ function _fish_systemctl --description 'Call systemctl with some options from th
             help reset-failed list-dependencies list-units revert add-{wants,requires} edit
         case enable
             # This will only work for "list-unit-files", but won't print an error for "list-units".
-            set -q _flag_state; or set _flag_state disabled
+            set -q _flag_state
+            or set _flag_state disabled
         case disable
-            set -q _flag_state; or set _flag_state enabled
+            set -q _flag_state
+            or set _flag_state enabled
         case start
             # Running `start` on an already started unit isn't an _error_, but useless.
-            set -q _flag_state; or set _flag_state dead,failed
+            set -q _flag_state
+            or set _flag_state dead,failed
         case mask
-            set -q _flag_state; or set _flag_state loaded
+            set -q _flag_state
+            or set _flag_state loaded
         case unmask
-            set -q _flag_state; or set _flag_state masked
+            set -q _flag_state
+            or set _flag_state masked
         case stop kill
             # TODO: Is "kill" useful on other unit types?
             # Running as the catch-all, "mounted" for .mount units, "active" for .target.
-            set -q _flag_state; or set _flag_state running,mounted,active
+            set -q _flag_state
+            or set _flag_state running,mounted,active
         case isolate set-default
             # These only take one unit.
-            set -q argv[1]; and return
+            set -q argv[1]
+            and return
         case list-sockets
             set _flag_type socket
         case list-timers
@@ -65,11 +72,16 @@ function _fish_systemctl --description 'Call systemctl with some options from th
     end
 
     # Add the flags back so we can pass them to our systemctl invocations.
-    set -q _flag_type; and set passflags $passflags --type=$_flag_type
-    set -q _flag_state; and set passflags $passflags --state=$_flag_state
-    set -q _flag_property; and set passflags $passflags --property=$_flag_property
-    set -q _flag_machine; and set passflags $passflags --machine=$_flag_machine
-    set -q _flag_host; and set passflags $passflags --host=$_flag_host
+    set -q _flag_type
+    and set passflags $passflags --type=$_flag_type
+    set -q _flag_state
+    and set passflags $passflags --state=$_flag_state
+    set -q _flag_property
+    and set passflags $passflags --property=$_flag_property
+    set -q _flag_machine
+    and set passflags $passflags --machine=$_flag_machine
+    set -q _flag_host
+    and set passflags $passflags --host=$_flag_host
 
     # Output looks like
     # systemd-tmpfiles-clean.timer      [more whitespace] loaded    active     waiting   Daily Cleanup[...]

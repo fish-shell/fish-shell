@@ -46,7 +46,8 @@ else
     # Extract just the C/C++ files that exist.
     set c_files
     for file in (string match -r '^.*\.(?:c|cpp|h)$' -- $files)
-        test -f $file; and set c_files $c_files $file
+        test -f $file
+        and set c_files $c_files $file
     end
     # Extract just the fish files.
     set f_files (string match -r '^.*\.fish$' -- $files)

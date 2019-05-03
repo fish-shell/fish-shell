@@ -4,4 +4,4 @@
 
 complete -p '*clang++*' -n '__fish_should_complete_switches' -xa '(__fish_clang_complete)'
 complete -p '*clang++*' -n 'not __fish_should_complete_switches' \
-	-xa '(__fish_complete_suffix \'{.o,.out,.c,.cpp,.so,.dylib}\')'
+    -xa '(__fish_complete_suffix \'{.o,.out,.c,.cpp,.so,.dylib}\')'

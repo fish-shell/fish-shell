@@ -14,7 +14,7 @@ complete -f -c pacmd -n "__fish_seen_subcommand_from describe-module" -a '(__fis
 complete -f -c pacmd -n "__fish_seen_subcommand_from kill-client" -a '(__fish_pa_complete_type clients | string match -r "^[0-9].*")' # match because this only takes an index
 
 for t in client sink-input source-output
-	complete -f -c pacmd -n "__fish_seen_subcommand_from kill-$t" -a '(__fish_pa_complete_type '$t's | string match -r "^[0-9].*")' # match because this only takes an index
+    complete -f -c pacmd -n "__fish_seen_subcommand_from kill-$t" -a '(__fish_pa_complete_type '$t's | string match -r "^[0-9].*")' # match because this only takes an index
 end
 
 complete -f -c pactl -n "__fish_seen_subcommand_from suspend" -a '0 false off' -d "Resume"

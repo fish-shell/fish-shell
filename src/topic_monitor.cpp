@@ -6,6 +6,17 @@
 
 #include <unistd.h>
 
+// Whoof. Thread Sanitizer swallows signals and replays them at its leisure, at the point where
+// instrumented code makes certain blocking calls. But tsan cannot interrupt a signal call, so
+// if we're blocked in read() (like the topic monitor wants to be!), we'll never receive SIGCHLD
+// and so deadlock. So if tsan is enabled, we mark our fd as non-blocking (so reads will never
+// block) and use use select() to poll it.
+#if defined(__has_feature)
+#if __has_feature(thread_sanitizer)
+#define TOPIC_MONITOR_TSAN_WORKAROUND 1
+#endif
+#endif
+
 /// Implementation of the principal monitor. This uses new (and leaks) to avoid registering a
 /// pointless at-exit handler for the dtor.
 static topic_monitor_t *const s_principal = new topic_monitor_t();
@@ -25,6 +36,10 @@ topic_monitor_t::topic_monitor_t() {
     // Make sure that our write side doesn't block, else we risk hanging in a signal handler.
     // The read end must block to avoid spinning in await.
     DIE_ON_FAILURE(make_fd_nonblocking(pipes_.write.fd()));
+
+#if TOPIC_MONITOR_TSAN_WORKAROUND
+    DIE_ON_FAILURE(make_fd_nonblocking(pipes_.read.fd()));
+#endif
 }
 
 topic_monitor_t::~topic_monitor_t() = default;
@@ -74,8 +89,18 @@ void topic_monitor_t::await_metagen(generation_t mgen) {
     // Read until the metagen changes. It may already have changed.
     // Note because changes are coalesced, we can read a lot, potentially draining the pipe.
     while (mgen == current_metagen()) {
+        int fd = pipes_.read.fd();
+#if TOPIC_MONITOR_TSAN_WORKAROUND
+        // Under tsan our notifying pipe is non-blocking, so we would busy-loop on the read() call
+        // until data is available (that is, fish would use 100% cpu while waiting for processes).
+        // The select prevents that.
+        fd_set fds;
+        FD_ZERO(&fds);
+        FD_SET(fd, &fds);
+        (void)select(fd + 1, &fds, nullptr, nullptr, nullptr /* timeout */);
+#endif
         uint8_t ignored[PIPE_BUF];
-        (void)read(pipes_.read.fd(), ignored, sizeof ignored);
+        (void)read(fd, ignored, sizeof ignored);
     }
 
     // Release the lock and wake up the remaining waiters.

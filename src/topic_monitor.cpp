@@ -16,6 +16,9 @@
 #define TOPIC_MONITOR_TSAN_WORKAROUND 1
 #endif
 #endif
+#if __SANITIZE_THREAD__
+#define TOPIC_MONITOR_TSAN_WORKAROUND 1
+#endif
 
 /// Implementation of the principal monitor. This uses new (and leaks) to avoid registering a
 /// pointless at-exit handler for the dtor.

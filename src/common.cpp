@@ -75,7 +75,7 @@ int omitted_newline_width;
 wchar_t obfuscation_read_char;
 bool g_profiling_active = false;
 const wchar_t *program_name;
-int debug_level = 1;         // default maximum debug output level (errors and warnings)
+std::atomic<int> debug_level{1};  // default maximum debug output level (errors and warnings)
 int debug_stack_frames = 0;  // default number of stack frames to show on debug() calls
 
 /// Be able to restore the term's foreground process group.

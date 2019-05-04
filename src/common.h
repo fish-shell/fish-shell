@@ -12,6 +12,7 @@
 #endif
 
 #include <algorithm>
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -158,9 +159,9 @@ typedef unsigned int escape_flags_t;
 
 /// The verbosity level of fish. If a call to debug has a severity level higher than \c debug_level,
 /// it will not be printed.
-extern int debug_level;
+extern std::atomic<int> debug_level;
 
-inline bool should_debug(int level) { return level <= debug_level; }
+inline bool should_debug(int level) { return level <= debug_level.load(std::memory_order_relaxed); }
 
 #define debug(level, ...)                                            \
     do {                                                             \

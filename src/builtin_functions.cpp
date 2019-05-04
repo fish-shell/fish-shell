@@ -204,8 +204,9 @@ static wcstring functions_def(const wcstring &name) {
         wcstring_list_t lst;
         kv.second.to_list(lst);
 
-        // This forced tab is crummy, but we don't know what indentation style the function uses.
-        append_format(out, L"\n\tset -l %ls", kv.first.c_str());
+        // We don't know what indentation style the function uses,
+        // so we do what fish_indent would.
+        append_format(out, L"\n    set -l %ls", kv.first.c_str());
         for (const auto &arg : lst) {
             wcstring earg = escape_string(arg, ESCAPE_ALL);
             out.push_back(L' ');
@@ -213,8 +214,8 @@ static wcstring functions_def(const wcstring &name) {
         }
     }
 
-    // This forced tab is sort of crummy - not all functions start with a tab.
-    append_format(out, L"\n\t%ls", def.c_str());
+    // More forced indentation.
+    append_format(out, L"\n    %ls", def.c_str());
 
     // Append a newline before the 'end', unless there already is one there.
     if (!string_suffixes_string(L"\n", def)) {

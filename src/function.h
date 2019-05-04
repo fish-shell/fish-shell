@@ -27,7 +27,7 @@ struct function_properties_t {
     wcstring_list_t named_arguments;
 
     /// Set to true if invoking this function shadows the variables of the underlying function.
-    bool shadow_scope;
+    bool shadow_scope{true};
 };
 
 /// Structure describing a function. This is used by the parser to store data on a function while

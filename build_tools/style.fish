@@ -28,10 +28,7 @@ if test $all = yes
         exit 1
     end
     set c_files src/*.h src/*.cpp src/*.c
-    # For now we don't restyle all fish scripts other than completion scripts. That's because people
-    # really like to vertically align the elements of the `complete` command and fish_indent
-    # currently does not honor that whitespace.
-    set fish_files (printf '%s\n' share/***.fish | grep -v /completions/)
+    set fish_files (printf '%s\n' share/***.fish)
     set python_files **.py
 else
     # We haven't been asked to reformat all the source. If there are uncommitted changes reformat

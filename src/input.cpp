@@ -267,14 +267,14 @@ static maybe_t<char_event_t> interrupt_handler() {
     return char_event_t{char_event_type_t::check_exit};
 }
 
-static std::atomic<bool> input_initialized{false};
+static relaxed_atomic_bool_t s_input_initialized{false};
 
 /// Set up arrays used by readch to detect escape sequences for special keys and perform related
 /// initializations for our input subsystem.
 void init_input() {
     ASSERT_IS_MAIN_THREAD();
-    if (input_initialized.load(std::memory_order_relaxed)) return;
-    input_initialized.store(true, std::memory_order_relaxed);
+    if (s_input_initialized) return;
+    s_input_initialized = true;
 
     input_common_init(&interrupt_handler);
     s_terminfo_mappings = create_input_terminfo();
@@ -730,7 +730,7 @@ static std::vector<terminfo_mapping_t> create_input_terminfo() {
 
 bool input_terminfo_get_sequence(const wchar_t *name, wcstring *out_seq) {
     ASSERT_IS_MAIN_THREAD();
-    assert(input_initialized);
+    assert(s_input_initialized);
     CHECK(name, 0);
 
     const char *res = 0;
@@ -754,7 +754,7 @@ bool input_terminfo_get_sequence(const wchar_t *name, wcstring *out_seq) {
 }
 
 bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name) {
-    assert(input_initialized);
+    assert(s_input_initialized);
 
     for (const terminfo_mapping_t &m : *s_terminfo_mappings) {
         if (!m.seq) {
@@ -772,7 +772,7 @@ bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name) {
 }
 
 wcstring_list_t input_terminfo_get_names(bool skip_null) {
-    assert(input_initialized);
+    assert(s_input_initialized);
     wcstring_list_t result;
     const auto &mappings = *s_terminfo_mappings;
     result.reserve(mappings.size());

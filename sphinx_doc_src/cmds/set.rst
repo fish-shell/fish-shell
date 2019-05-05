@@ -57,9 +57,9 @@ The following options are available:
 - ``-L`` or ``--long`` do not abbreviate long values when printing set variables
 
 
-If a variable is set to more than one value, the variable will be an array with the specified elements. If a variable is set to zero elements, it will become an array with zero elements.
+If a variable is set to more than one value, the variable will be a list with the specified elements. If a variable is set to zero elements, it will become a list with zero elements.
 
-If the variable name is one or more array elements, such as ``PATH[1 3 7]``, only those array elements specified will be changed. If you specify a negative index when expanding or assigning to an array variable, the index will be calculated from the end of the array. For example, the index -1 means the last index of an array.
+If the variable name is one or more list elements, such as ``PATH[1 3 7]``, only those list elements specified will be changed. If you specify a negative index when expanding or assigning to a list variable, the index will be calculated from the end of the list. For example, the index -1 means the last index of a list.
 
 The scoping rules when creating or updating a variable are:
 
@@ -81,7 +81,7 @@ The exporting rules when creating or updating a variable are identical to the sc
 
 In query mode, the scope to be examined can be specified.
 
-In erase mode, if variable indices are specified, only the specified slices of the array variable will be erased.
+In erase mode, if variable indices are specified, only the specified slices of the list variable will be erased.
 
 ``set`` requires all options to come before any other arguments. For example, ``set flags -l`` will have the effect of setting the value of the variable ``flags`` to '-l', not making the variable local.
 
@@ -110,7 +110,7 @@ Examples
     # Removes the variable $smurf
     set -e smurf
     
-    # Changes the fourth element of the $PATH array to ~/bin
+    # Changes the fourth element of the $PATH list to ~/bin
     set PATH[4] ~/bin
     
     # Outputs the path to Python if ``type -p`` returns true.

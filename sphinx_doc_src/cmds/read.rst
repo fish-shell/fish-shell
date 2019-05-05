@@ -43,7 +43,7 @@ The following options are available:
 
 - ``-x`` or ``--export`` exports the variables to child processes.
 
-- ``-a`` or ``--array`` stores the result as an array in a single variable.
+- ``-a`` or ``--array`` stores the result as a list in a single variable.
 
 - ``-z`` or ``--null`` marks the end of the line with the NUL character, instead of newline. This also
   disables interactive mode.
@@ -62,7 +62,7 @@ If no variable names are provided, ``read`` enters a special case that simply pr
 
 When running in this mode, ``read`` does not split the input in any way and text is redirected to standard output without any further processing or manipulation.
 
-If ``-a`` or ``--array`` is provided, only one variable name is allowed and the tokens are stored as an array in this variable.
+If ``-a`` or ``--array`` is provided, only one variable name is allowed and the tokens are stored as a list in this variable.
 
 See the documentation for ``set`` for more details on the scoping rules for variables.
 

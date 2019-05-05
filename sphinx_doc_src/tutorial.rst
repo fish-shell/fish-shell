@@ -246,7 +246,7 @@ Unlike other shells, ``fish`` stores the exit status of the last command in ``$s
     1
 
 
-Zero is considered success, and non-zero is failure. There is also a ``$pipestatus`` array variable for the exit statues of processes in a pipe.
+Zero is considered success, and non-zero is failure. There is also a ``$pipestatus`` list variable for the exit statues of processes in a pipe.
 
 
 Exports (Shell Variables)

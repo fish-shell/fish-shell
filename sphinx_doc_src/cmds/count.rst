@@ -1,6 +1,6 @@
 .. _cmd-count:
 
-count - count the number of elements of an array
+count - count the number of elements of a list
 ================================================
 
 Synopsis
@@ -14,7 +14,7 @@ count < FILE
 Description
 -----------
 
-``count`` prints the number of arguments that were passed to it, plus the number of newlines passed to it via stdin. This is usually used to find out how many elements an environment variable array contains, or how many lines there are in a text file.
+``count`` prints the number of arguments that were passed to it, plus the number of newlines passed to it via stdin. This is usually used to find out how many elements an environment variable list contains, or how many lines there are in a text file.
 
 ``count`` does not accept any options, not even ``-h`` or ``--help``.
 

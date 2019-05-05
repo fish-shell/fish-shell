@@ -439,7 +439,7 @@ For example, the following is a function definition that calls the command ``ls`
       ls -l $argv
   end
 
-The first line tells fish that a function by the name of ``ll`` is to be defined. To use it, simply write ``ll`` on the commandline. The second line tells fish that the command ``ls -l $argv`` should be called when ``ll`` is invoked. '``$argv``' is an array variable, which always contains all arguments sent to the function. In the example above, these are simply passed on to the ``ls`` command. For more information on functions, see the documentation for the :ref:`function <cmd-function>` builtin.
+The first line tells fish that a function by the name of ``ll`` is to be defined. To use it, simply write ``ll`` on the commandline. The second line tells fish that the command ``ls -l $argv`` should be called when ``ll`` is invoked. '``$argv``' is a list variable, which always contains all arguments sent to the function. In the example above, these are simply passed on to the ``ls`` command. For more information on functions, see the documentation for the :ref:`function <cmd-function>` builtin.
 
 .. _syntax-function-wrappers:
 
@@ -469,7 +469,7 @@ Autoloading functions
 
 Functions can be defined on the commandline or in a configuration file, but they can also be automatically loaded. This method of defining functions has several advantages. An autoloaded function becomes available automatically to all running shells. If the function definition is changed, all running shells will automatically reload the altered version. Startup time and memory usage is improved, etc.
 
-Fish automatically searches through any directories in the array variable ``$fish_function_path``, and any functions defined are automatically loaded when needed. A function definition file must have a filename consisting of the name of the function plus the suffix '``.fish``'.
+Fish automatically searches through any directories in the list variable ``$fish_function_path``, and any functions defined are automatically loaded when needed. A function definition file must have a filename consisting of the name of the function plus the suffix '``.fish``'.
 
 By default, Fish searches the following for functions, using the first available file that it finds:
 
@@ -655,7 +655,7 @@ Functions beginning with the string ``__fish_print_`` print a newline separated 
 Where to put completions
 ------------------------
 
-Completions can be defined on the commandline or in a configuration file, but they can also be automatically loaded. Fish automatically searches through any directories in the array variable ``$fish_complete_path``, and any completions defined are automatically loaded when needed. A completion file must have a filename consisting of the name of the command to complete and the suffix '``.fish``'.
+Completions can be defined on the commandline or in a configuration file, but they can also be automatically loaded. Fish automatically searches through any directories in the list variable ``$fish_complete_path``, and any completions defined are automatically loaded when needed. A completion file must have a filename consisting of the name of the command to complete and the suffix '``.fish``'.
 
 By default, Fish searches the following for completions, using the first available file that it finds:
 
@@ -756,7 +756,7 @@ Examples::
 
     begin; set -l IFS; set data (cat data.txt); end
     # Set the ``data`` variable to the contents of 'data.txt'
-    # without splitting it into an array.
+    # without splitting it into a list.
 
 
 .. _expand-brace:
@@ -844,7 +844,7 @@ The ``$`` symbol can also be used multiple times, as a kind of "dereference" ope
     # 20
     # 30
 
-When using this feature together with array brackets, the brackets will always match the innermost ``$`` dereference. Thus, ``$$foo[5]`` will always mean the fifth element of the ``foo`` variable should be dereferenced, not the fifth element of the doubly dereferenced variable ``foo``. The latter can instead be expressed as ``$$foo[1][5]``.
+When using this feature together with list brackets, the brackets will always match the innermost ``$`` dereference. Thus, ``$$foo[5]`` will always mean the fifth element of the ``foo`` variable should be dereferenced, not the fifth element of the doubly dereferenced variable ``foo``. The latter can instead be expressed as ``$$foo[1][5]``.
 
 
 .. _cartesian-product:
@@ -902,7 +902,7 @@ Examples::
 Index range expansion
 ---------------------
 
-Both command substitution and shell variable expansion support accessing only specific items by providing a set of indices in square brackets. It's often needed to access a sequence of elements. To do this, use the range operator '``..``' for this. A range '``a..b``', where range limits 'a' and 'b' are integer numbers, is expanded into a sequence of indices '``a a+1 a+2 ... b``' or '``a a-1 a-2 ... b``' depending on which of 'a' or 'b' is higher. The negative range limits are calculated from the end of the array or command substitution. Note that invalid indexes for either end are silently clamped to one or the size of the array as appropriate.
+Both command substitution and shell variable expansion support accessing only specific items by providing a set of indices in square brackets. It's often needed to access a sequence of elements. To do this, use the range operator '``..``' for this. A range '``a..b``', where range limits 'a' and 'b' are integer numbers, is expanded into a sequence of indices '``a a+1 a+2 ... b``' or '``a a-1 a-2 ... b``' depending on which of 'a' or 'b' is higher. The negative range limits are calculated from the end of the list or command substitution. Note that invalid indexes for either end are silently clamped to one or the size of the list as appropriate.
 
 Range expansion will go in reverse if the end element is earlier in the list than the start and forward if the end is later than the start, unless exactly one of the given indices is negative. This is to enable clamping without changing direction if the list has fewer elements than expected.
 
@@ -1103,18 +1103,18 @@ Variables can be explicitly set to be exported with the ``-x`` or ``--export`` s
 
 -# If a variable has global scope, it is accessible read-write to functions whether it is exported or not.
 
-.. _variables-arrays:
+.. _variables-lists:
 
-Arrays
+Lists
 -------
 
-``fish`` can store a list of multiple strings inside of a variable. To access one element of an array, use the index of the element inside of square brackets, like this:
+``fish`` can store a list (or an "array" if you wish) of multiple strings inside of a variable. To access one element of a list, use the index of the element inside of square brackets, like this:
 
 ``echo $PATH[3]``
 
-Note that array indices start at 1 in ``fish``, not 0, as is more common in other languages. This is because many common Unix tools like ``seq`` are more suited to such use. An invalid index is silently ignored resulting in no value being substituted (not an empty string).
+Note that list indices start at 1 in ``fish``, not 0, as is more common in other languages. This is because many common Unix tools like ``seq`` are more suited to such use. An invalid index is silently ignored resulting in no value being substituted (not an empty string).
 
-If you do not use any brackets, all the elements of the array will be written as separate items. This means you can easily iterate over an array using this syntax::
+If you do not use any brackets, all the elements of the list will be written as separate items. This means you can easily iterate over a list using this syntax::
 
     for i in $PATH; echo $i is in the path; end
 
@@ -1122,9 +1122,9 @@ To create a variable ``smurf``, containing the items ``blue`` and ``small``, sim
 
     set smurf blue small
 
-It is also possible to set or erase individual elements of an array::
+It is also possible to set or erase individual elements of a list::
 
-    # Set smurf to be an array with the elements 'blue' and 'small'
+    # Set smurf to be a list with the elements 'blue' and 'small'
     set smurf blue small
 
     # Change the second element of smurf to 'evil'
@@ -1137,13 +1137,13 @@ It is also possible to set or erase individual elements of an array::
     echo $smurf
 
 
-If you specify a negative index when expanding or assigning to an array variable, the index will be calculated from the end of the array. For example, the index -1 means the last index of an array.
+If you specify a negative index when expanding or assigning to a list variable, the index will be calculated from the end of the list. For example, the index -1 means the last index of a list.
 
 A range of indices can be specified, see `index range expansion <#expand-index-range>`_ for details.
 
-All arrays are one-dimensional and cannot contain other arrays, although it is possible to fake nested arrays using the dereferencing rules of `variable expansion <#expand-variable>`_.
+All lists are one-dimensional and cannot contain other lists, although it is possible to fake nested lists using the dereferencing rules of `variable expansion <#expand-variable>`_.
 
-When an array is exported as an environment variable, it is either space or colon delimited, depending on whether it is a path variable::
+When a list is exported as an environment variable, it is either space or colon delimited, depending on whether it is a path variable::
 
     set -x smurf blue small
     set -x smurf_PATH forest mushroom
@@ -1154,7 +1154,7 @@ When an array is exported as an environment variable, it is either space or colo
     
 
 
-``fish`` automatically creates arrays from all environment variables whose name ends in PATH, by splitting them on colons. Other variables are not automatically split.
+``fish`` automatically creates lists from all environment variables whose name ends in PATH, by splitting them on colons. Other variables are not automatically split.
 
 .. _variables-path:
 
@@ -1163,7 +1163,7 @@ PATH variables
 
 Path variables are a special kind of variable used to support colon-delimited path lists including PATH, CDPATH, MANPATH, PYTHONPATH, etc. All variables that end in ``PATH`` (case-sensitive) become PATH variables.
 
-PATH variables act as normal arrays, except they are are implicitly joined and split on colons.
+PATH variables act as normal lists, except they are are implicitly joined and split on colons.
 
 ::
 
@@ -1186,9 +1186,9 @@ Special variables
 
 The user can change the settings of ``fish`` by changing the values of certain variables.
 
-- ``PATH``, an array of directories in which to search for commands
+- ``PATH``, a list of directories in which to search for commands
 
-- ``CDPATH``, an array of directories in which to search for the new directory for the ``cd`` builtin.
+- ``CDPATH``, a list of directories in which to search for the new directory for the ``cd`` builtin.
 
 - ``LANG``, ``LC_ALL``, ``LC_COLLATE``, ``LC_CTYPE``, ``LC_MESSAGES``, ``LC_MONETARY``, ``LC_NUMERIC`` and ``LC_TIME`` set the language option for the shell and subprograms. See the section `Locale variables <#variables-locale>`_ for more information.
 
@@ -1208,7 +1208,7 @@ The user can change the settings of ``fish`` by changing the values of certain v
   empty string, history is not saved to disk (but is still available within the interactive
   session).
 
-- ``fish_user_paths``, an array of directories that are prepended to ``PATH``. This can be a universal variable.
+- ``fish_user_paths``, a list of directories that are prepended to ``PATH``. This can be a universal variable.
 
 - ``umask``, the current file creation mask. The preferred way to change the umask variable is through the :ref:`umask <cmd-umask>` function. An attempt to set umask to an invalid value will always fail.
 
@@ -1218,9 +1218,9 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``_``, the name of the currently running command (though this is deprecated, and the use of ``status current-command`` is preferred).
 
-- ``argv``, an array of arguments to the shell or function. ``argv`` is only defined when inside a function call, or if fish was invoked with a list of arguments, like ``fish myscript.fish foo bar``. This variable can be changed by the user.
+- ``argv``, a list of arguments to the shell or function. ``argv`` is only defined when inside a function call, or if fish was invoked with a list of arguments, like ``fish myscript.fish foo bar``. This variable can be changed by the user.
 
-- ``history``, an array containing the last commands that were entered.
+- ``history``, a list containing the last commands that were entered.
 
 - ``HOME``, the user's home directory. This variable can be changed by the user.
 
@@ -1232,7 +1232,7 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``status``, the `exit status <#variables-status>`_ of the last foreground job to exit. If the job was terminated through a signal, the exit status will be 128 plus the signal number.
 
-- ``pipestatus``, an array of exit statuses of all processes that made up the last executed pipe.
+- ``pipestatus``, a list of exit statuses of all processes that made up the last executed pipe.
 
 - ``USER``, the current username. This variable can be changed by the user.
 

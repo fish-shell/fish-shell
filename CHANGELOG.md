@@ -28,6 +28,8 @@
 - `complete -C foo` now works instead of erroring out and requiring `complete -Cfoo`.
 - `argparse` now defaults to showing the current function name (instead of `argparse`) in its errors, making `--name` often superfluous (#5835).
 - `argparse` learned a new `--ignore-unknown` flag to keep unrecognized options, allowing multiple argparse passes to parse options (#5367).
+- `fish_indent` now handles semicolons better, including leaving them in place for `; and` and `; or` instead of breaking the line.
+- `test` (aka `[`) now prints a stacktrace on error, making the offending call easier to find (#5771).
 
 ### Interactive improvements
 - Major improvements in performance and functionality to the 'sorin' sample prompt (#5411).

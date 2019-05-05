@@ -23,6 +23,7 @@
 #include "env.h"
 #include "env_universal_common.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "global_safety.h"
 #include "input_common.h"
 #include "iothread.h"
 #include "wutil.h"
@@ -33,31 +34,35 @@
 #define WAIT_ON_ESCAPE_DEFAULT 30
 static int wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
 
-/// Events which have been read and returned by the sequence matching code.
-static std::deque<char_event_t> lookahead_list;
+struct input_lookahead_t {
+    /// Events which have been read and returned by the sequence matching code.
+    std::deque<char_event_t> lookahead_list;
 
-static bool has_lookahead() { return !lookahead_list.empty(); }
+    bool has_lookahead() const { return !lookahead_list.empty(); }
 
-static char_event_t lookahead_pop() {
-    auto result = lookahead_list.front();
-    lookahead_list.pop_front();
-    return result;
-}
-
-/// \return the next lookahead char, or none if none. Discards timeouts.
-static maybe_t<char_event_t> lookahead_pop_evt() {
-    while (has_lookahead()) {
-        auto evt = lookahead_pop();
-        if (! evt.is_timeout()) {
-            return evt;
-        }
+    char_event_t pop() {
+        auto result = lookahead_list.front();
+        lookahead_list.pop_front();
+        return result;
     }
-    return none();
-}
 
-static void lookahead_push_back(char_event_t c) { lookahead_list.push_back(c); }
+    /// \return the next lookahead char, or none if none. Discards timeouts.
+    maybe_t<char_event_t> pop_evt() {
+        while (has_lookahead()) {
+            auto evt = pop();
+            if (!evt.is_timeout()) {
+                return evt;
+            }
+        }
+        return none();
+    }
 
-static void lookahead_push_front(char_event_t c) { lookahead_list.push_front(c); }
+    void push_back(char_event_t c) { lookahead_list.push_back(c); }
+
+    void push_front(char_event_t c) { lookahead_list.push_front(c); }
+};
+
+static mainthread_t<input_lookahead_t> s_lookahead;
 
 /// Callback function for handling interrupts on reading.
 static interrupt_func_t interrupt_handler;
@@ -105,7 +110,7 @@ static char_event_t readb() {
                 if (interrupt_handler) {
                     if (auto interrupt_evt = interrupt_handler()) {
                         return *interrupt_evt;
-                    } else if (auto mc = lookahead_pop_evt()) {
+                    } else if (auto mc = s_lookahead->pop_evt()) {
                         return *mc;
                     }
                 }
@@ -123,7 +128,7 @@ static char_event_t readb() {
             if (barrier_from_poll || barrier_from_readability) {
                 if (env_universal_barrier()) {
                     // A variable change may have triggered a repaint, etc.
-                    if (auto mc = lookahead_pop_evt()) {
+                    if (auto mc = s_lookahead->pop_evt()) {
                         return *mc;
                     }
                 }
@@ -131,7 +136,7 @@ static char_event_t readb() {
 
             if (ioport > 0 && FD_ISSET(ioport, &fdset)) {
                 iothread_service_completion();
-                if (auto mc = lookahead_pop_evt()) {
+                if (auto mc = s_lookahead->pop_evt()) {
                     return *mc;
                 }
             }
@@ -171,7 +176,8 @@ void update_wait_on_escape_ms(const environment_t &vars) {
 }
 
 char_event_t input_common_readch() {
-    if (auto mc = lookahead_pop_evt()) {
+    ASSERT_IS_MAIN_THREAD();
+    if (auto mc = s_lookahead->pop_evt()) {
         return *mc;
     }
     wchar_t res;
@@ -209,8 +215,8 @@ char_event_t input_common_readch() {
 
 char_event_t input_common_readch_timed(bool dequeue_timeouts) {
     char_event_t result{char_event_type_t::timeout};
-    if (has_lookahead()) {
-        result = lookahead_pop();
+    if (s_lookahead->has_lookahead()) {
+        result = s_lookahead->pop();
     } else {
         fd_set fds;
         FD_ZERO(&fds);
@@ -222,12 +228,12 @@ char_event_t input_common_readch_timed(bool dequeue_timeouts) {
     }
     // If we got a timeout, either through dequeuing or creating, ensure it stays on the queue.
     if (result.is_timeout()) {
-        if (!dequeue_timeouts) lookahead_push_front(char_event_type_t::timeout);
+        if (!dequeue_timeouts) s_lookahead->push_front(char_event_type_t::timeout);
         return char_event_type_t::timeout;
     }
     return result;
 }
 
-void input_common_queue_ch(char_event_t ch) { lookahead_push_back(ch); }
+void input_common_queue_ch(char_event_t ch) { s_lookahead->push_back(ch); }
 
-void input_common_next_ch(char_event_t ch) { lookahead_push_front(ch); }
+void input_common_next_ch(char_event_t ch) { s_lookahead->push_front(ch); }

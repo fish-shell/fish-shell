@@ -34,6 +34,11 @@ class mainthread_t : detail::fixed_t {
     mainthread_t(T value) : value_(std::move(value)) {}
     mainthread_t() = default;
 
+    T *operator->() {
+        ASSERT_IS_MAIN_THREAD();
+        return &value_;
+    }
+
     operator T &() {
         ASSERT_IS_MAIN_THREAD();
         return value_;

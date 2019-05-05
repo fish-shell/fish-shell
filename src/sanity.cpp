@@ -20,12 +20,6 @@ void sanity_lose() {
     insane = true;
 }
 
-bool sanity_check() {
-    if (!insane) reader_sanity_check();
-    if (!insane) proc_sanity_check();
-    return insane;
-}
-
 void validate_pointer(const void *ptr, const wchar_t *err, int null_ok) {
     // Test if the pointer data crosses a segment boundary.
     if ((0x00000003l & (intptr_t)ptr) != 0) {

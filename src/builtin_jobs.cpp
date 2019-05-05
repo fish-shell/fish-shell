@@ -9,6 +9,7 @@
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
+#include "parser.h"
 #include "proc.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -170,7 +171,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (print_last) {
         // Ignore unconstructed jobs, i.e. ourself.
-        for (const auto &j : jobs()) {
+        for (const auto &j : parser.jobs()) {
             if (j->is_visible()) {
                 builtin_jobs_print(j.get(), mode, !streams.out_is_redirected, streams);
                 return STATUS_CMD_ERROR;
@@ -212,7 +213,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 }
             }
         } else {
-            for (const auto &j : jobs()) {
+            for (const auto &j : parser.jobs()) {
                 // Ignore unconstructed jobs, i.e. ourself.
                 if (j->is_visible()) {
                     builtin_jobs_print(j.get(), mode, !found && !streams.out_is_redirected,

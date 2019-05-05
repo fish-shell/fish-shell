@@ -153,6 +153,7 @@ class internal_proc_t {
 ///
 /// If the process is of type process_type_t::function, argv is the argument vector, and argv[0] is
 /// the name of the shellscript function.
+class parser_t;
 class process_t {
    private:
     null_terminated_array_t<wchar_t> argv_array;
@@ -406,7 +407,6 @@ class job_t {
     /// \return whether this job and its parent chain are fully constructed.
     bool job_chain_is_fully_constructed() const;
 
-    // (This function would just be called `continue` but that's obviously a reserved keyword)
     /// Resume a (possibly) stopped job. Puts job in the foreground.  If cont is true, restore the
     /// saved terminal modes and send the process group a SIGCONT signal to wake it up before we
     /// block.
@@ -414,10 +414,7 @@ class job_t {
     /// \param reclaim_foreground_pgrp whether, when the job finishes or stops, to reclaim the
     /// foreground pgrp (via tcsetpgrp). \param send_sigcont Whether SIGCONT should be sent to the
     /// job if it is in the foreground.
-    void continue_job(bool reclaim_foreground_pgrp, bool send_sigcont);
-
-    /// Promotes the job to the front of the job list.
-    void promote();
+    void continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool send_sigcont);
 
     /// Send the specified signal to all processes in this job.
     /// \return true on success, false on failure.
@@ -459,11 +456,6 @@ extern int is_event;
 // List of jobs.
 typedef std::deque<shared_ptr<job_t>> job_list_t;
 
-bool job_list_is_empty(void);
-
-/// A helper function to more easily access the job list
-job_list_t &jobs();
-
 /// The current job control mode.
 ///
 /// Must be one of job_control_t::all, job_control_t::interactive and job_control_t::none.
@@ -497,20 +489,17 @@ unsigned long proc_get_jiffies(process_t *p);
 
 /// Update process time usage for all processes by calling the proc_get_jiffies function for every
 /// process of every job.
-void proc_update_jiffies();
+void proc_update_jiffies(parser_t &parser);
 
 /// Perform a set of simple sanity checks on the job list. This includes making sure that only one
 /// job is in the foreground, that every process is in a valid state, etc.
-void proc_sanity_check();
+void proc_sanity_check(const parser_t &parser);
 
 /// Create a process/job exit event notification.
 event_t proc_create_event(const wchar_t *msg, event_type_t type, pid_t pid, int status);
 
 /// Initializations.
 void proc_init();
-
-/// Clean up before exiting.
-void proc_destroy();
 
 /// Set new value for is_interactive flag, saving previous value. If needed, update signal handlers.
 void proc_push_interactive(int value);
@@ -528,7 +517,7 @@ void set_is_within_fish_initialization(bool flag);
 bool is_within_fish_initialization();
 
 /// Terminate all background jobs
-void hup_background_jobs();
+void hup_background_jobs(const parser_t &parser);
 
 /// Give ownership of the terminal to the specified job.
 ///

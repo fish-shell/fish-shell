@@ -491,7 +491,6 @@ int main(int argc, char **argv) {
     }
 
     history_save_all();
-    proc_destroy();
     if (opts.print_rusage_self) {
         print_rusage_self(stderr);
     }

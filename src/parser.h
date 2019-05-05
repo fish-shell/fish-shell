@@ -172,7 +172,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// List of called functions, used to help prevent infinite recursion.
     wcstring_list_t forbidden_function;
     /// The jobs associated with this parser.
-    job_list_t my_job_list;
+    job_list_t job_list;
     /// The list of blocks
     std::vector<std::unique_ptr<block_t>> block_stack;
     /// The 'depth' of the fish call stack.
@@ -274,7 +274,8 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     size_t block_count() const { return block_stack.size(); }
 
     /// Get the list of jobs.
-    job_list_t &job_list() { return my_job_list; }
+    job_list_t &jobs() { return job_list; }
+    const job_list_t &jobs() const { return job_list; }
 
     /// Get the variables.
     env_stack_t &vars() { return variables; }

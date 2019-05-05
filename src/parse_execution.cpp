@@ -797,7 +797,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
     // Protect against exec with background processes running
     if (process_type == process_type_t::exec && shell_is_interactive()) {
         bool have_bg = false;
-        for (const auto &bg : jobs()) {
+        for (const auto &bg : parser->jobs()) {
             // The assumption here is that if it is a foreground job,
             // it's related to us.
             // This stops us from asking if we're doing `exec` inside a function.
@@ -811,11 +811,11 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
             uint64_t current_run_count = reader_run_count();
             uint64_t &last_exec_run_count = parser->libdata().last_exec_run_counter;
             if (isatty(STDIN_FILENO) && current_run_count - 1 != last_exec_run_count) {
-                reader_bg_job_warning();
+                reader_bg_job_warning(*parser);
                 last_exec_run_count = current_run_count;
                 return parse_execution_errored;
             } else {
-                hup_background_jobs();
+                hup_background_jobs(*parser);
             }
         }
     }
@@ -1142,10 +1142,10 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
     return result;
 }
 
-static bool remove_job(job_t *job) {
-    for (auto j = jobs().begin(); j != jobs().end(); ++j) {
+static bool remove_job(parser_t &parser, job_t *job) {
+    for (auto j = parser.jobs().begin(); j != parser.jobs().end(); ++j) {
         if (j->get() == job) {
-            jobs().erase(j);
+            parser.jobs().erase(j);
             return true;
         }
     }
@@ -1276,7 +1276,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
 
         // Actually execute the job.
         if (!exec_job(*this->parser, job)) {
-            remove_job(job.get());
+            remove_job(*this->parser, job.get());
         }
 
         // Update universal vaiables on external conmmands.

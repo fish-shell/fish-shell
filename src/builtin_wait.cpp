@@ -5,6 +5,7 @@
 #include "builtin.h"
 #include "builtin_wait.h"
 #include "common.h"
+#include "parser.h"
 #include "proc.h"
 #include "reader.h"
 #include "wgetopt.h"
@@ -15,8 +16,8 @@
 /// Return the job id to which the process with pid belongs.
 /// If a specified process has already finished but the job hasn't, parser_t::job_get_from_pid()
 /// doesn't work properly, so use this function in wait command.
-static job_id_t get_job_id_from_pid(pid_t pid) {
-    for (const auto &j : jobs()) {
+static job_id_t get_job_id_from_pid(pid_t pid, const parser_t &parser) {
+    for (const auto &j : parser.jobs()) {
         if (j->pgid == pid) {
             return j->job_id;
         }
@@ -30,8 +31,8 @@ static job_id_t get_job_id_from_pid(pid_t pid) {
     return 0;
 }
 
-static bool all_jobs_finished() {
-    for (const auto &j : jobs()) {
+static bool all_jobs_finished(const parser_t &parser) {
+    for (const auto &j : parser.jobs()) {
         // If any job is not completed, return false.
         // If there are stopped jobs, they are ignored.
         if (j->is_constructed() && !j->is_completed() && !j->is_stopped()) {
@@ -41,14 +42,14 @@ static bool all_jobs_finished() {
     return true;
 }
 
-static bool any_jobs_finished(size_t jobs_len) {
+static bool any_jobs_finished(size_t jobs_len, const parser_t &parser) {
     bool no_jobs_running = true;
 
     // If any job is removed from list, return true.
-    if (jobs_len != jobs().size()) {
+    if (jobs_len != parser.jobs().size()) {
         return true;
     }
-    for (const auto &j : jobs()) {
+    for (const auto &j : parser.jobs()) {
         // If any job is completed, return true.
         if (j->is_constructed() && (j->is_completed() || j->is_stopped())) {
             return true;
@@ -65,9 +66,10 @@ static bool any_jobs_finished(size_t jobs_len) {
 }
 
 static int wait_for_backgrounds(parser_t &parser, bool any_flag) {
-    size_t jobs_len = jobs().size();
+    size_t jobs_len = parser.jobs().size();
 
-    while ((!any_flag && !all_jobs_finished()) || (any_flag && !any_jobs_finished(jobs_len))) {
+    while ((!any_flag && !all_jobs_finished(parser)) ||
+           (any_flag && !any_jobs_finished(jobs_len, parser))) {
         if (reader_test_interrupted()) {
             return 128 + SIGINT;
         }
@@ -137,10 +139,11 @@ static bool match_pid(const wcstring &cmd, const wchar_t *proc) {
 }
 
 /// It should search the job list for something matching the given proc.
-static bool find_job_by_name(const wchar_t *proc, std::vector<job_id_t> &ids) {
+static bool find_job_by_name(const wchar_t *proc, std::vector<job_id_t> &ids,
+                             const parser_t &parser) {
     bool found = false;
 
-    for (const auto &j : jobs()) {
+    for (const auto &j : parser.jobs()) {
         if (j->command_is_empty()) continue;
 
         if (match_pid(j->command(), proc)) {
@@ -219,7 +222,7 @@ int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                                               argv[i]);
                     continue;
                 }
-                if (job_id_t id = get_job_id_from_pid(pid)) {
+                if (job_id_t id = get_job_id_from_pid(pid, parser)) {
                     waited_job_ids.push_back(id);
                 } else {
                     streams.err.append_format(
@@ -227,7 +230,7 @@ int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 }
             } else {
                 // argument is process name
-                if (!find_job_by_name(argv[i], waited_job_ids)) {
+                if (!find_job_by_name(argv[i], waited_job_ids, parser)) {
                     streams.err.append_format(
                         _(L"%ls: Could not find child processes with the name '%ls'\n"), cmd,
                         argv[i]);

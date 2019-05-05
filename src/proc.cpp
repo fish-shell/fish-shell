@@ -55,16 +55,6 @@ static owning_lock<statuses_t> last_statuses{statuses_t::just(0)};
 /// The signals that signify crashes to us.
 static const int crashsignals[] = {SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGSYS};
 
-bool job_list_is_empty() {
-    ASSERT_IS_MAIN_THREAD();
-    return parser_t::principal_parser().job_list().empty();
-}
-
-job_list_t &jobs() {
-    ASSERT_IS_MAIN_THREAD();
-    return parser_t::principal_parser().job_list();
-}
-
 bool is_interactive_session = false;
 bool is_subshell = false;
 bool is_block = false;
@@ -95,18 +85,6 @@ bool shell_is_interactive() {
 static std::vector<int> interactive_stack;
 
 void proc_init() { proc_push_interactive(0); }
-
-void job_t::promote() {
-    ASSERT_IS_MAIN_THREAD();
-    parser_t::principal_parser().job_promote(this);
-}
-
-void proc_destroy() {
-    for (const auto &job : jobs()) {
-        debug(2, L"freeing leaked job %ls", job->command_wcstr());
-    }
-    jobs().clear();
-}
 
 void proc_set_last_statuses(statuses_t s) {
     ASSERT_IS_MAIN_THREAD();
@@ -332,7 +310,7 @@ void add_disowned_pgid(pid_t pgid) {
 /// See if any reapable processes have exited, and mark them accordingly.
 /// \param block_ok if no reapable processes have exited, block until one is (or until we receive a
 /// signal).
-static void process_mark_finished_children(bool block_ok) {
+static void process_mark_finished_children(parser_t &parser, bool block_ok) {
     ASSERT_IS_MAIN_THREAD();
 
     // Get the exit and signal generations of all reapable processes.
@@ -342,7 +320,7 @@ static void process_mark_finished_children(bool block_ok) {
     topic_set_t reaptopics{};
     generation_list_t gens{};
     gens.fill(invalid_generation);
-    for (const auto j : jobs()) {
+    for (const auto &j : parser.jobs()) {
         for (const auto &proc : j->processes) {
             if (auto mtopic = j->reap_topic_for_process(proc.get())) {
                 topic_t topic = *mtopic;
@@ -367,7 +345,7 @@ static void process_mark_finished_children(bool block_ok) {
 
     // We got some changes. Since we last checked we received SIGCHLD, and or HUP/INT.
     // Update the hup/int generations and reap any reapable processes.
-    for (const auto &j : jobs()) {
+    for (const auto &j : parser.jobs()) {
         for (const auto &proc : j->processes) {
             if (auto mtopic = j->reap_topic_for_process(proc.get())) {
                 // Update the signal hup/int gen.
@@ -575,15 +553,15 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
     const bool interactive = allow_interactive && cur_term != NULL;
 
     // Remove all disowned jobs.
-    remove_disowned_jobs(jobs());
+    remove_disowned_jobs(parser.jobs());
 
     // Accumulate exit events into a new list, which we fire after the list manipulation is
     // complete.
     std::vector<event_t> exit_events;
 
     // Print status messages for completed or stopped jobs.
-    const bool only_one_job = jobs().size() == 1;
-    for (const auto &j : jobs()) {
+    const bool only_one_job = parser.jobs().size() == 1;
+    for (const auto &j : parser.jobs()) {
         // Skip unconstructed jobs.
         if (!j->is_constructed()) {
             continue;
@@ -625,7 +603,8 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
     // Do this before calling out to user code in the event handler below, to ensure an event
     // handler doesn't remove jobs on our behalf.
     auto is_complete = [](const shared_ptr<job_t> &j) { return j->is_completed(); };
-    jobs().erase(std::remove_if(jobs().begin(), jobs().end(), is_complete), jobs().end());
+    auto &jobs = parser.jobs();
+    jobs.erase(std::remove_if(jobs.begin(), jobs.end(), is_complete), jobs.end());
 
     // Post pending exit events.
     for (const auto &evt : exit_events) {
@@ -641,7 +620,7 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
 
 bool job_reap(parser_t &parser, bool allow_interactive) {
     ASSERT_IS_MAIN_THREAD();
-    process_mark_finished_children(false);
+    process_mark_finished_children(parser, false);
 
     // Preserve the exit status.
     auto saved_statuses = proc_get_last_statuses();
@@ -693,8 +672,8 @@ unsigned long proc_get_jiffies(process_t *p) {
 }
 
 /// Update the CPU time for all jobs.
-void proc_update_jiffies() {
-    for (const auto &job : jobs()) {
+void proc_update_jiffies(parser_t &parser) {
+    for (const auto &job : parser.jobs()) {
         for (process_ptr_t &p : job->processes) {
             gettimeofday(&p->last_time, 0);
             p->last_jiffies = proc_get_jiffies(p.get());
@@ -858,9 +837,9 @@ return false;
     return true;
 }
 
-void job_t::continue_job(bool reclaim_foreground_pgrp, bool send_sigcont) {
+void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool send_sigcont) {
     // Put job first in the job list.
-    promote();
+    parser.job_promote(this);
     set_flag(job_flag_t::NOTIFIED, false);
 
     debug(4, L"%ls job %d, gid %d (%ls), %ls, %ls", send_sigcont ? L"Continue" : L"Start", job_id,
@@ -909,7 +888,7 @@ void job_t::continue_job(bool reclaim_foreground_pgrp, bool send_sigcont) {
         if (is_foreground()) {
             // Wait for the status of our own job to change.
             while (!reader_exit_forced() && !is_stopped() && !is_completed()) {
-                process_mark_finished_children(true);
+                process_mark_finished_children(parser, true);
             }
         }
     }
@@ -924,10 +903,10 @@ void job_t::continue_job(bool reclaim_foreground_pgrp, bool send_sigcont) {
     }
 }
 
-void proc_sanity_check() {
+void proc_sanity_check(const parser_t &parser) {
     const job_t *fg_job = NULL;
 
-    for (const auto &j : jobs()) {
+    for (const auto &j : parser.jobs()) {
         if (!j->is_constructed()) continue;
 
         // More than one foreground job?
@@ -979,12 +958,13 @@ void proc_pop_interactive() {
 
 void proc_wait_any(parser_t &parser) {
     ASSERT_IS_MAIN_THREAD();
-    process_mark_finished_children(true /* block_ok */);
+    process_mark_finished_children(parser, true /* block_ok */);
     process_clean_after_marking(parser, is_interactive);
 }
 
-void hup_background_jobs() {
-    for (const auto &j : jobs()) {
+void hup_background_jobs(const parser_t &parser) {
+    // TODO: we should probably hup all jobs across all parsers here.
+    for (const auto &j : parser.jobs()) {
         // Make sure we don't try to SIGHUP the calling builtin
         if (j->pgid == INVALID_PID || !j->get_flag(job_flag_t::JOB_CONTROL)) {
             continue;

@@ -1972,7 +1972,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
     parser.vars().set_one(L"_", ENV_GLOBAL, program_name);
 
     if (have_proc_stat) {
-        proc_update_jiffies();
+        proc_update_jiffies(parser);
     }
 }
 
@@ -2190,11 +2190,11 @@ void reader_import_history_if_necessary() {
 
 bool shell_is_exiting() { return should_exit(); }
 
-void reader_bg_job_warning() {
+void reader_bg_job_warning(const parser_t &parser) {
     std::fputws(_(L"There are still jobs active:\n"), stdout);
     std::fputws(_(L"\n   PID  Command\n"), stdout);
 
-    for (const auto &j : jobs()) {
+    for (const auto &j : parser.jobs()) {
         if (!j->is_completed()) {
             std::fwprintf(stdout, L"%6d  %ls\n", j->processes[0]->pid, j->command_wcstr());
         }
@@ -2206,9 +2206,8 @@ void reader_bg_job_warning() {
 
 /// This function is called when the main loop notices that end_loop has been set while in
 /// interactive mode. It checks if it is ok to exit.
-static void handle_end_loop() {
+static void handle_end_loop(const parser_t &parser) {
     if (!reader_exit_forced()) {
-        const parser_t &parser = parser_t::principal_parser();
         for (size_t i = 0; i < parser.block_count(); i++) {
             if (parser.block_at_index(i)->type() == BREAKPOINT) {
                 // We're executing within a breakpoint so we do not want to terminate the shell and
@@ -2218,7 +2217,7 @@ static void handle_end_loop() {
         }
 
         bool bg_jobs = false;
-        for (const auto &j : jobs()) {
+        for (const auto &j : parser.jobs()) {
             if (!j->is_completed()) {
                 bg_jobs = true;
                 break;
@@ -2227,7 +2226,7 @@ static void handle_end_loop() {
 
         reader_data_t *data = current_data();
         if (!data->prev_end_loop && bg_jobs) {
-            reader_bg_job_warning();
+            reader_bg_job_warning(parser);
             reader_set_end_loop(false);
             data->prev_end_loop = 1;
             return;
@@ -2235,7 +2234,7 @@ static void handle_end_loop() {
     }
 
     // Kill remaining jobs before exiting.
-    hup_background_jobs();
+    hup_background_jobs(parser);
 }
 
 static bool selection_is_at_top() {
@@ -2269,7 +2268,7 @@ static int read_i() {
     reader_data_t *data = current_data();
     data->prev_end_loop = 0;
 
-    while (!shell_is_exiting() && (!sanity_check())) {
+    while (!shell_is_exiting()) {
         event_fire_generic(L"fish_prompt");
         run_count++;
 
@@ -2292,7 +2291,7 @@ static int read_i() {
         maybe_t<wcstring> tmp = reader_readline(0);
 
         if (shell_is_exiting()) {
-            handle_end_loop();
+            handle_end_loop(parser);
         } else if (tmp) {
             const wcstring command = tmp.acquire();
             data->update_buff_pos(&data->command_line, 0);
@@ -2307,7 +2306,7 @@ static int read_i() {
                 data->history->resolve_pending();
             }
             if (shell_is_exiting()) {
-                handle_end_loop();
+                handle_end_loop(parser);
             } else {
                 data->prev_end_loop = 0;
             }

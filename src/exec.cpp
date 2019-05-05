@@ -1120,7 +1120,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
         return false;
     }
 
-    j->continue_job(reclaim_foreground_pgrp, false);
+    j->continue_job(parser, reclaim_foreground_pgrp, false);
     return true;
 }
 

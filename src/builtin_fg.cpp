@@ -38,7 +38,7 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         // Select last constructed job (i.e. first job in the job queue) that can be brought
         // to the foreground.
 
-        for (const auto &j : jobs()) {
+        for (const auto &j : parser.jobs()) {
             if (j->is_constructed() && (!j->is_completed()) &&
                 ((j->is_stopped() || (!j->is_foreground())) &&
                  j->get_flag(job_flag_t::JOB_CONTROL))) {
@@ -103,9 +103,9 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (!ft.empty()) parser.vars().set_one(L"_", ENV_EXPORT, ft);
     reader_write_title(job->command(), parser);
 
-    job->promote();
+    parser.job_promote(job);
     job->set_flag(job_flag_t::FOREGROUND, true);
 
-    job->continue_job(true, job->is_stopped());
+    job->continue_job(parser, true, job->is_stopped());
     return STATUS_CMD_OK;
 }

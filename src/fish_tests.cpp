@@ -5327,8 +5327,6 @@ int main(int argc, char **argv) {
     say(L"Encountered %d errors in low-level tests", err_count);
     if (s_test_run_count == 0) say(L"*** No Tests Were Actually Run! ***");
 
-    proc_destroy();
-
     if (err_count != 0) {
         return 1;
     }

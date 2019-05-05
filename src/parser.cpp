@@ -571,24 +571,24 @@ wcstring parser_t::current_line() {
 void parser_t::job_add(shared_ptr<job_t> job) {
     assert(job != NULL);
     assert(!job->processes.empty());
-    this->my_job_list.push_front(std::move(job));
+    job_list.push_front(std::move(job));
 }
 
 void parser_t::job_promote(job_t *job) {
     job_list_t::iterator loc;
-    for (loc = my_job_list.begin(); loc != my_job_list.end(); ++loc) {
+    for (loc = job_list.begin(); loc != job_list.end(); ++loc) {
         if (loc->get() == job) {
             break;
         }
     }
-    assert(loc != my_job_list.end());
+    assert(loc != job_list.end());
 
     // Move the job to the beginning.
-    std::rotate(my_job_list.begin(), loc, my_job_list.end());
+    std::rotate(job_list.begin(), loc, job_list.end());
 }
 
 job_t *parser_t::job_get(job_id_t id) {
-    for (const auto &job : my_job_list) {
+    for (const auto &job : job_list) {
         if (id <= 0 || job->job_id == id) return job.get();
     }
     return NULL;

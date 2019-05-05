@@ -240,7 +240,7 @@ struct var_stack_t {
     env_node_ref_t top;
 
     // Bottom node on the function stack.
-    const env_node_ref_t global_env;
+    const env_node_ref_t global;
 
     // Exported variable array used by execv.
     maybe_t<null_terminated_array_t<char>> export_array;
@@ -252,8 +252,8 @@ struct var_stack_t {
 
     void update_export_array_if_necessary();
 
-    var_stack_t(env_node_ref_t top, env_node_ref_t global_env)
-        : top(std::move(top)), global_env(std::move(global_env)) {}
+    var_stack_t(env_node_ref_t top, env_node_ref_t global)
+        : top(std::move(top)), global(std::move(global)) {}
 
     // Pushes a new node onto our stack
     // Optionally creates a new scope for the node
@@ -264,14 +264,14 @@ struct var_stack_t {
         auto top_node = top;
         // Only if we introduce a new shadowing scope; i.e. not if it's just `begin; end` or
         // "--no-scope-shadowing".
-        if (new_scope && top_node != this->global_env) {
+        if (new_scope && top_node != this->global) {
             for (const auto &var : top_node->env) {
                 if (var.second.exports()) node->env.insert(var);
             }
         }
 
         this->top = std::move(node);
-        if (new_scope && local_scope_exports(this->top)) {
+        if (new_scope && local_scope_exports()) {
             this->mark_changed_exported();
         }
     }
@@ -279,7 +279,7 @@ struct var_stack_t {
     // Pops the top node, asserting it's not global.
     // \return the popped node.
     env_node_ref_t pop() {
-        assert(top != this->global_env && "Cannot pop global node");
+        assert(top != this->global && "Cannot pop global node");
         env_node_ref_t old_top = this->top;
         this->top = old_top->next;
         return old_top;
@@ -289,10 +289,10 @@ struct var_stack_t {
     // Returns an empty pointer if we're done.
     env_node_ref_t next_scope_to_search(const env_node_ref_t &node) const {
         assert(node != NULL);
-        if (node == this->global_env) {
+        if (node == this->global) {
             return nullptr;
         }
-        return node->new_scope ? this->global_env : node->next;
+        return node->new_scope ? this->global : node->next;
     }
 
     // Returns the scope used for unspecified scopes. An unspecified scope is either the topmost
@@ -302,7 +302,7 @@ struct var_stack_t {
         while (node && !node->new_scope) {
             node = node->next;
         }
-        return node ? node : this->global_env;
+        return node ? node : this->global;
     }
 
     /// Copy this vars_stack.
@@ -314,11 +314,11 @@ struct var_stack_t {
     /// global varibables so copying would be expensive, and some (electrics) are computed so cannot
     /// be effectively copied.
     std::unique_ptr<var_stack_t> snapshot() const {
-        return make_unique<var_stack_t>(snapshot_node(top), global_env);
+        return make_unique<var_stack_t>(snapshot_node(top), global);
     }
 
-    /// \return true if the topomst local scope exports a variable.
-    bool local_scope_exports(const env_node_ref_t &n) const;
+    /// \return true if the topmost local scope exports a variable.
+    bool local_scope_exports() const;
 
     /// \return a new stack with a single top level local scope.
     // This local scope will persist throughout the lifetime of the fish process, and it will ensure
@@ -330,9 +330,11 @@ struct var_stack_t {
 
    private:
     /// Copy constructor. This does not copy the export array; it just allows it to be regenerated.
-    var_stack_t(const var_stack_t &rhs) : top(rhs.top), global_env(rhs.global_env) {}
+    var_stack_t(const var_stack_t &rhs) : top(rhs.top), global(rhs.global) {}
 
-    void get_exported(const env_node_t *n, var_table_t &h) const;
+    /// Populate the table \p h with exported variables. This is recursive because it must start
+    /// with globals.
+    void get_exported(const shared_ptr<env_node_t> &n, var_table_t &h) const;
 
     /// Recursive helper for snapshot(). Snapshot a node and its unshadows parents, returning it.
     env_node_ref_t snapshot_node(const env_node_ref_t &node) const {
@@ -340,10 +342,10 @@ struct var_stack_t {
         // If we are global, re-use the global node. If we reach a new scope, jump to globals; we
         // don't snapshot shadowed scopes, because the snapshot is intended to be read-only and so
         // there would be no way to access them.
-        if (node == global_env) {
+        if (node == global) {
             return node;
         }
-        auto next = snapshot_node(node->new_scope ? global_env : node->next);
+        auto next = snapshot_node(next_scope_to_search(node));
         auto result = std::make_shared<env_node_t>(node->new_scope, next);
         // Copy over variables.
         // Note assigning env is a potentially big copy.
@@ -362,21 +364,15 @@ struct var_stack_t {
     }
 };
 
-/// Get list of all exported variables.
-void var_stack_t::get_exported(const env_node_t *n, var_table_t &h) const {
+void var_stack_t::get_exported(const std::shared_ptr<env_node_t> &n, var_table_t &h) const {
     if (!n) return;
 
-    if (n->new_scope) {
-        get_exported(global_env.get(), h);
-    } else {
-        get_exported(n->next.get(), h);
-    }
+    // Allow parent scopes to populate first, since we may want to overwrite those results.
+    get_exported(next_scope_to_search(n), h);
 
-    var_table_t::const_iterator iter;
-    for (iter = n->env.begin(); iter != n->env.end(); ++iter) {
-        const wcstring &key = iter->first;
-        const env_var_t var = iter->second;
-
+    for (const auto &kv : n->env) {
+        const wcstring &key = kv.first;
+        const env_var_t &var = kv.second;
         if (var.exports()) {
             // Export the variable. Don't use std::map::insert here, since we need to overwrite
             // existing values from previous scopes.
@@ -391,15 +387,11 @@ void var_stack_t::get_exported(const env_node_t *n, var_table_t &h) const {
 
 /// Returns true if the specified scope or any non-shadowed non-global subscopes contain an exported
 /// variable.
-bool var_stack_t::local_scope_exports(const env_node_ref_t &n) const {
-    assert(n != nullptr);
-    if (n == global_env) return false;
-
-    if (n->exportv) return true;
-
-    if (n->new_scope) return false;
-
-    return local_scope_exports(n->next);
+bool var_stack_t::local_scope_exports() const {
+    for (auto n = top; n != global; n = next_scope_to_search(n)) {
+        if (n->exportv) return true;
+    }
+    return false;
 }
 
 void var_stack_t::update_export_array_if_necessary() {
@@ -409,7 +401,7 @@ void var_stack_t::update_export_array_if_necessary() {
 
     debug(4, L"export_arr() recalc");
     var_table_t vals;
-    get_exported(this->top.get(), vals);
+    get_exported(this->top, vals);
 
     if (uvars()) {
         const wcstring_list_t uni = uvars()->get_names(true, false);
@@ -459,10 +451,10 @@ maybe_t<env_var_t> env_scoped_t::get(const wcstring &key, env_mode_flags_t mode)
 
     if (search_local || search_global) {
         scoped_lock locker(env_lock);  // lock around a local region
-        env_node_ref_t env = search_local ? vars_stack().top : vars_stack().global_env;
+        env_node_ref_t env = search_local ? vars_stack().top : vars_stack().global;
 
         while (env != NULL) {
-            if (env == vars_stack().global_env && !search_global) {
+            if (env == vars_stack().global && !search_global) {
                 break;
             }
 
@@ -872,7 +864,7 @@ int env_stack_t::set_internal(const wcstring &key, env_mode_flags_t input_var_mo
 
         env_node_ref_t node = nullptr;
         if (var_mode & ENV_GLOBAL) {
-            node = vars_stack().global_env;
+            node = vars_stack().global;
         } else if (var_mode & ENV_LOCAL) {
             node = vars_stack().top;
         } else if (preexisting_node != nullptr) {
@@ -967,48 +959,36 @@ int env_stack_t::set_empty(const wcstring &key, env_mode_flags_t mode) {
 
 /// Attempt to remove/free the specified key/value pair from the specified map.
 ///
-/// \return zero if the variable was not found, non-zero otherwise
-bool env_stack_t::try_remove(env_node_ref_t n, const wchar_t *key, int var_mode) {
-    if (n == nullptr) {
-        return false;
-    }
-
-    var_table_t::iterator result = n->env.find(key);
-    if (result != n->env.end()) {
-        if (result->second.exports()) {
-            mark_changed_exported();
+/// \return whether the variable was erased.
+bool env_stack_t::try_remove(const env_node_ref_t &start, const wcstring &key, int var_mode) {
+    auto &vars = vars_stack();
+    for (auto n = start; n != nullptr; n = vars.next_scope_to_search(n)) {
+        if ((var_mode & ENV_LOCAL) && n == vars.global) {
+            return false;
         }
-        n->env.erase(result);
-        return true;
+        auto result = n->env.find(key);
+        if (result != n->env.end()) {
+            if (result->second.exports()) {
+                mark_changed_exported();
+            }
+            n->env.erase(result);
+            return true;
+        }
     }
-
-    if (var_mode & ENV_LOCAL) {
-        return false;
-    }
-
-    if (n->new_scope) {
-        return try_remove(vars_stack().global_env, key, var_mode);
-    }
-    return try_remove(n->next, key, var_mode);
+    return false;
 }
 
 int env_stack_t::remove(const wcstring &key, int var_mode) {
     ASSERT_IS_MAIN_THREAD();
-    env_node_ref_t first_node{};
     int erased = 0;
 
     if ((var_mode & ENV_USER) && is_read_only(key)) {
         return ENV_SCOPE;
     }
 
-    first_node = vars_stack().top;
-
     if (!(var_mode & ENV_UNIVERSAL)) {
-        if (var_mode & ENV_GLOBAL) {
-            first_node = vars_stack().global_env;
-        }
-
-        if (try_remove(first_node, key.c_str(), var_mode)) {
+        auto first_node = (var_mode & ENV_GLOBAL) ? vars_stack().global : vars_stack().top;
+        if (try_remove(first_node, key, var_mode)) {
             event_fire(event_t::variable(key, {L"VARIABLE", L"ERASE", key}));
             erased = 1;
         }
@@ -1045,7 +1025,7 @@ void env_stack_t::pop() {
     if (old_node->exportv) {
         // This node exported or unexported a variable.
         vars.mark_changed_exported();
-    } else if (old_node->new_scope && vars.local_scope_exports(old_node->next)) {
+    } else if (old_node->new_scope && vars.local_scope_exports()) {
         // This node was a local scope, so it shadowed exports from its parent.
         vars.mark_changed_exported();
     }
@@ -1065,7 +1045,6 @@ wcstring_list_t env_scoped_t::get_names(int flags) const {
     int show_global = flags & ENV_GLOBAL;
     int show_universal = flags & ENV_UNIVERSAL;
 
-    env_node_ref_t n = vars_stack().top;
     const bool show_exported = (flags & ENV_EXPORT) || !(flags & ENV_UNEXPORT);
     const bool show_unexported = (flags & ENV_UNEXPORT) || !(flags & ENV_EXPORT);
 
@@ -1084,19 +1063,17 @@ wcstring_list_t env_scoped_t::get_names(int flags) const {
         show_local = show_universal = show_global = 1;
     }
 
+    const auto &vars = vars_stack();
     if (show_local) {
-        while (n) {
-            if (n == vars_stack().global_env) break;
-            add_keys(n->env);
-            if (n->new_scope)
-                break;
-            else
-                n = n->next;
+        auto cursor = vars.top;
+        while (cursor && cursor != vars.global) {
+            add_keys(cursor->env);
+            cursor = vars.next_scope_to_search(cursor);
         }
     }
 
     if (show_global) {
-        add_keys(vars_stack().global_env->env);
+        add_keys(vars.global->env);
         if (show_unexported) {
             result.insert(result.end(), std::begin(env_electric), std::end(env_electric));
         }

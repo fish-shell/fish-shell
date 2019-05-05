@@ -231,7 +231,7 @@ class env_stack_t final : public env_scoped_t {
 
     int set_internal(const wcstring &key, env_mode_flags_t var_mode, wcstring_list_t val);
 
-    bool try_remove(std::shared_ptr<env_node_t> n, const wchar_t *key, int var_mode);
+    bool try_remove(const std::shared_ptr<env_node_t> &n, const wcstring &key, int var_mode);
     std::shared_ptr<env_node_t> get_node(const wcstring &key);
 
     static env_stack_t make_principal();

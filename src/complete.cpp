@@ -287,7 +287,7 @@ void completions_sort_and_prioritize(std::vector<completion_t> *comps,
 
     // Lastly, if this is for an autosuggestion, prefer to avoid completions that duplicate
     // arguments.
-    if (flags & COMPLETION_REQUEST_AUTOSUGGESTION)
+    if (flags & completion_request_t::autosuggestion)
         stable_sort(comps->begin(), comps->end(), compare_completions_by_duplicate_arguments);
 }
 
@@ -313,18 +313,17 @@ class completer_t {
     enum complete_type_t { COMPLETE_DEFAULT, COMPLETE_AUTOSUGGEST };
 
     complete_type_t type() const {
-        return flags & COMPLETION_REQUEST_AUTOSUGGESTION ? COMPLETE_AUTOSUGGEST : COMPLETE_DEFAULT;
+        return (flags & completion_request_t::autosuggestion) ? COMPLETE_AUTOSUGGEST
+                                                              : COMPLETE_DEFAULT;
     }
 
-    bool wants_descriptions() const {
-        return static_cast<bool>(flags & COMPLETION_REQUEST_DESCRIPTIONS);
-    }
+    bool wants_descriptions() const { return flags & completion_request_t::descriptions; }
 
-    bool fuzzy() const { return static_cast<bool>(flags & COMPLETION_REQUEST_FUZZY_MATCH); }
+    bool fuzzy() const { return flags & completion_request_t::fuzzy_match; }
 
     fuzzy_match_type_t max_fuzzy_match_type() const {
         // If we are doing fuzzy matching, request all types; if not request only prefix matching.
-        if (flags & COMPLETION_REQUEST_FUZZY_MATCH) return fuzzy_match_none;
+        if (fuzzy()) return fuzzy_match_none;
         return fuzzy_match_prefix_case_insensitive;
     }
 
@@ -1226,7 +1225,7 @@ bool completer_t::try_complete_variable(const wcstring &str) {
 
     // Now complete if we have a variable start. Note the variable text may be empty; in that case
     // don't generate an autosuggestion, but do allow tab completion.
-    bool allow_empty = !(this->flags & COMPLETION_REQUEST_AUTOSUGGESTION);
+    bool allow_empty = !(this->flags & completion_request_t::autosuggestion);
     bool text_is_empty = (variable_start == len);
     bool result = false;
     if (variable_start != wcstring::npos && (allow_empty || !text_is_empty)) {
@@ -1414,7 +1413,7 @@ void completer_t::perform() {
         // first of the sequence of nodes without source locations at the very end of the parse
         // tree).
         bool do_file = true;
-        if (flags & COMPLETION_REQUEST_AUTOSUGGESTION) {
+        if (flags & completion_request_t::autosuggestion) {
             if (position_in_statement < pos) {
                 do_file = false;
             } else if (pos > 0) {
@@ -1551,7 +1550,7 @@ void completer_t::perform() {
                         // buitin_commandline will refer to the wrapped command. But not if
                         // we're doing autosuggestions.
                         std::unique_ptr<builtin_commandline_scoped_transient_t> bcst;
-                        if (depth > 0 && !(flags & COMPLETION_REQUEST_AUTOSUGGESTION)) {
+                        if (depth > 0 && !(flags & completion_request_t::autosuggestion)) {
                             bcst = make_unique<builtin_commandline_scoped_transient_t>(cmdline);
                         }
                         // Now invoke any custom completions for this command.
@@ -1567,7 +1566,7 @@ void completer_t::perform() {
                 handle_as_special_cd = (current_command_unescape == L"cd");
 
                 // And if we're autosuggesting, and the token is empty, don't do file suggestions.
-                if ((flags & COMPLETION_REQUEST_AUTOSUGGESTION) &&
+                if ((flags & completion_request_t::autosuggestion) &&
                     current_argument_unescape.empty()) {
                     do_file = false;
                 }

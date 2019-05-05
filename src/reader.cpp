@@ -1325,7 +1325,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
         if (std::wcschr(L"'\"", last_char) && cursor_at_end) return nothing;
 
         // Try normal completions.
-        completion_request_flags_t complete_flags = COMPLETION_REQUEST_AUTOSUGGESTION;
+        completion_request_flags_t complete_flags = completion_request_t::autosuggestion;
         std::vector<completion_t> completions;
         complete(search_string, &completions, complete_flags, *vars);
         completions_sort_and_prioritize(&completions, complete_flags);
@@ -2583,9 +2583,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 const wcstring buffcpy = wcstring(cmdsub_begin, token_end);
 
                 // std::fwprintf(stderr, L"Complete (%ls)\n", buffcpy.c_str());
-                complete_flags_t complete_flags = COMPLETION_REQUEST_DEFAULT |
-                                                  COMPLETION_REQUEST_DESCRIPTIONS |
-                                                  COMPLETION_REQUEST_FUZZY_MATCH;
+                completion_request_flags_t complete_flags = {completion_request_t::descriptions,
+                                                             completion_request_t::fuzzy_match};
                 complete_func(buffcpy, &rls.comp, complete_flags, vars);
 
                 // Munge our completions.

@@ -12,6 +12,8 @@
 
 #include "common.h"
 
+#include "enum_set.h"
+
 struct completion_mode_t {
     /// If set, skip file completions.
     bool no_files{false};
@@ -99,14 +101,19 @@ class completion_t {
     void prepend_token_prefix(const wcstring &prefix);
 };
 
-enum {
-    COMPLETION_REQUEST_DEFAULT = 0,
-    COMPLETION_REQUEST_AUTOSUGGESTION = 1
-                                        << 0,  // indicates the completion is for an autosuggestion
-    COMPLETION_REQUEST_DESCRIPTIONS = 1 << 1,  // indicates that we want descriptions
-    COMPLETION_REQUEST_FUZZY_MATCH = 1 << 2    // indicates that we don't require a prefix match
+enum class completion_request_t {
+    autosuggestion,  // indicates the completion is for an autosuggestion
+    descriptions,    // indicates that we want descriptions
+    fuzzy_match,     // indicates that we don't require a prefix match
+    COUNT
 };
-typedef uint32_t completion_request_flags_t;
+
+template <>
+struct enum_info_t<completion_request_t> {
+    static constexpr auto count = completion_request_t::COUNT;
+};
+
+using completion_request_flags_t = enum_set_t<completion_request_t>;
 
 enum complete_option_type_t {
     option_type_args_only,    // no option
@@ -118,7 +125,7 @@ enum complete_option_type_t {
 /// Sorts and remove any duplicate completions in the completion list, then puts them in priority
 /// order.
 void completions_sort_and_prioritize(std::vector<completion_t> *comps,
-                                     completion_request_flags_t flags = COMPLETION_REQUEST_DEFAULT);
+                                     completion_request_flags_t flags = {});
 
 /// Add a completion.
 ///

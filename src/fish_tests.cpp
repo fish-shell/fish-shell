@@ -760,6 +760,8 @@ static parser_test_error_bits_t detect_argument_errors(const wcstring &src) {
 static void test_parser() {
     say(L"Testing parser");
 
+    auto parser = parser_t::principal_parser().shared();
+
     say(L"Testing block nesting");
     if (!parse_util_detect_errors(L"if; end")) {
         err(L"Incomplete if statement undetected");
@@ -963,23 +965,20 @@ static void test_parser() {
     // Ensure that we don't crash on infinite self recursion and mutual recursion. These must use
     // the principal parser because we cannot yet execute jobs on other parsers.
     say(L"Testing recursion detection");
-    parser_t::principal_parser().eval(L"function recursive ; recursive ; end ; recursive; ",
-                                      io_chain_t(), TOP);
+    parser->eval(L"function recursive ; recursive ; end ; recursive; ", io_chain_t(), TOP);
 #if 0
     // This is disabled since it produces a long backtrace. We should find a way to either visually
     // compress the backtrace, or disable error spewing.
-    parser_t::principal_parser().eval(L"function recursive1 ; recursive2 ; end ; "
+    parser->.eval(L"function recursive1 ; recursive2 ; end ; "
             L"function recursive2 ; recursive1 ; end ; recursive1; ", io_chain_t(), TOP);
 #endif
 
     say(L"Testing empty function name");
-    parser_t::principal_parser().eval(L"function '' ; echo fail; exit 42 ; end ; ''", io_chain_t(),
-                                      TOP);
+    parser->eval(L"function '' ; echo fail; exit 42 ; end ; ''", io_chain_t(), TOP);
 
     say(L"Testing eval_args");
-    completion_list_t comps;
-    parser_t::expand_argument_list(L"alpha 'beta gamma' delta", expand_flags_t{},
-                                   null_environment_t{}, &comps);
+    completion_list_t comps = parser_t::expand_argument_list(
+        L"alpha 'beta gamma' delta", expand_flags_t{}, parser->vars(), parser);
     do_test(comps.size() == 3);
     do_test(comps.at(0).completion == L"alpha");
     do_test(comps.at(1).completion == L"beta gamma");
@@ -1600,8 +1599,10 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
     bool res = true;
     wchar_t *arg;
     parse_error_list_t errors;
+    auto parser = parser_t::principal_parser().shared();
 
-    if (expand_string(in, &output, flags, pwd_environment_t{}, &errors) == expand_result_t::error) {
+    if (expand_string(in, &output, flags, pwd_environment_t{}, parser, &errors) ==
+        expand_result_t::error) {
         if (errors.empty()) {
             err(L"Bug: Parse error reported but no error text found.");
         } else {
@@ -2259,15 +2260,15 @@ static bool run_one_test_test(int expected, wcstring_list_t &lst, bool bracket) 
 }
 
 static bool run_test_test(int expected, const wcstring &str) {
-    using namespace std;
-    wcstring_list_t argv;
-    completion_list_t comps;
-
     // We need to tokenize the string in the same manner a normal shell would do. This is because we
     // need to test things like quoted strings that have leading and trailing whitespace.
-    parser_t::expand_argument_list(str, expand_flags_t{}, null_environment_t{}, &comps);
-    for (completion_list_t::const_iterator it = comps.begin(), end = comps.end(); it != end; ++it) {
-        argv.push_back(it->completion);
+    auto parser = parser_t::principal_parser().shared();
+    completion_list_t comps =
+        parser_t::expand_argument_list(str, expand_flags_t{}, null_environment_t{}, parser);
+
+    wcstring_list_t argv;
+    for (const auto &c : comps) {
+        argv.push_back(c.completion);
     }
 
     bool bracket = run_one_test_test(expected, argv, true);

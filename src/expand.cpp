@@ -589,7 +589,7 @@ static expand_result_t expand_braces(const wcstring &instr, expand_flags_t flags
 }
 
 /// Perform cmdsubst expansion.
-static bool expand_cmdsubst(const wcstring &input, std::vector<completion_t> *out_list,
+static bool expand_cmdsubst(wcstring input, parser_t &parser, std::vector<completion_t> *out_list,
                             parse_error_list_t *errors) {
     wchar_t *paren_begin = nullptr, *paren_end = nullptr;
     wchar_t *tail_begin = nullptr;
@@ -603,7 +603,7 @@ static bool expand_cmdsubst(const wcstring &input, std::vector<completion_t> *ou
             return false;
         }
         case 0: {
-            append_completion(out_list, input);
+            append_completion(out_list, std::move(input));
             return true;
         }
         case 1: {
@@ -617,8 +617,6 @@ static bool expand_cmdsubst(const wcstring &input, std::vector<completion_t> *ou
 
     wcstring_list_t sub_res;
     const wcstring subcmd(paren_begin + 1, paren_end - paren_begin - 1);
-    // TODO: justify this parser_t::principal_parser
-    auto &parser = parser_t::principal_parser();
     if (exec_subshell(subcmd, parser, sub_res, true /* apply_exit_status */,
                       true /* is_subcmd */) == -1) {
         append_cmdsub_error(errors, SOURCE_LOCATION_UNKNOWN,
@@ -667,7 +665,7 @@ static bool expand_cmdsubst(const wcstring &input, std::vector<completion_t> *ou
     // Recursively call ourselves to expand any remaining command substitutions. The result of this
     // recursive call using the tail of the string is inserted into the tail_expand array list
     std::vector<completion_t> tail_expand;
-    expand_cmdsubst(tail_begin, &tail_expand, errors);  // TODO: offset error locations
+    expand_cmdsubst(tail_begin, parser, &tail_expand, errors);  // TODO: offset error locations
 
     // Combine the result of the current command substitution with the result of the recursive tail
     // expansion.
@@ -871,6 +869,9 @@ class expander_t {
     /// Variables to use in expansion.
     const environment_t &vars;
 
+    /// The parser for expanding command substitutions, or nullptr if not enabled.
+    std::shared_ptr<parser_t> parser;
+
     /// Flags to use during expansion.
     const expand_flags_t flags;
 
@@ -888,12 +889,14 @@ class expander_t {
     expand_result_t stage_home_and_self(wcstring input, std::vector<completion_t> *out);
     expand_result_t stage_wildcards(wcstring path_to_expand, std::vector<completion_t> *out);
 
-    expander_t(const environment_t &vars, expand_flags_t flags, parse_error_list_t *errors)
-        : vars(vars), flags(flags), errors(errors) {}
+    expander_t(const environment_t &vars, const std::shared_ptr<parser_t> &parser,
+               expand_flags_t flags, parse_error_list_t *errors)
+        : vars(vars), parser(parser), flags(flags), errors(errors) {}
 
    public:
     static expand_result_t expand_string(wcstring input, std::vector<completion_t> *out_completions,
                                          expand_flags_t flags, const environment_t &vars,
+                                         const std::shared_ptr<parser_t> &parser,
                                          parse_error_list_t *errors);
 };
 
@@ -911,7 +914,8 @@ expand_result_t expander_t::stage_cmdsubst(wcstring input, std::vector<completio
                 return expand_result_t::error;
         }
     } else {
-        bool cmdsubst_ok = expand_cmdsubst(std::move(input), out, errors);
+        assert(parser && "Must have a parser to expand command substitutions");
+        bool cmdsubst_ok = expand_cmdsubst(std::move(input), *parser, out, errors);
         if (!cmdsubst_ok) return expand_result_t::error;
     }
 
@@ -1049,14 +1053,17 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand,
 expand_result_t expander_t::expand_string(wcstring input,
                                           std::vector<completion_t> *out_completions,
                                           expand_flags_t flags, const environment_t &vars,
+                                          const std::shared_ptr<parser_t> &parser,
                                           parse_error_list_t *errors) {
+    assert(((flags & expand_flag::skip_cmdsubst) || parser) &&
+           "Must have a parser if not skipping command substitutions");
     // Early out. If we're not completing, and there's no magic in the input, we're done.
     if (!(flags & expand_flag::for_completions) && expand_is_clean(input)) {
         append_completion(out_completions, std::move(input));
         return expand_result_t::ok;
     }
 
-    expander_t expand(vars, flags, errors);
+    expander_t expand(vars, parser, flags, errors);
 
     // Our expansion stages.
     const stage_t stages[] = {&expander_t::stage_cmdsubst, &expander_t::stage_variables,
@@ -1106,20 +1113,21 @@ expand_result_t expander_t::expand_string(wcstring input,
 
 expand_result_t expand_string(wcstring input, std::vector<completion_t> *out_completions,
                               expand_flags_t flags, const environment_t &vars,
-                              parse_error_list_t *errors) {
-    return expander_t::expand_string(std::move(input), out_completions, flags, vars, errors);
+                              const shared_ptr<parser_t> &parser, parse_error_list_t *errors) {
+    return expander_t::expand_string(std::move(input), out_completions, flags, vars, parser,
+                                     errors);
 }
 
 bool expand_one(wcstring &string, expand_flags_t flags, const environment_t &vars,
-                parse_error_list_t *errors) {
+                const shared_ptr<parser_t> &parser, parse_error_list_t *errors) {
     std::vector<completion_t> completions;
 
     if (!flags.get(expand_flag::for_completions) && expand_is_clean(string)) {
         return true;
     }
 
-    if (expand_string(string, &completions, flags | expand_flag::no_descriptions, vars, errors) !=
-            expand_result_t::error &&
+    if (expand_string(string, &completions, flags | expand_flag::no_descriptions, vars, parser,
+                      errors) != expand_result_t::error &&
         completions.size() == 1) {
         string = std::move(completions.at(0).completion);
         return true;
@@ -1141,7 +1149,7 @@ expand_result_t expand_to_command_and_args(const wcstring &instr, const environm
     expand_result_t expand_err = expand_string(
         instr, &completions,
         {expand_flag::skip_cmdsubst, expand_flag::no_descriptions, expand_flag::skip_jobs}, vars,
-        errors);
+        nullptr, errors);
     if (expand_err == expand_result_t::ok || expand_err == expand_result_t::wildcard_match) {
         // The first completion is the command, any remaning are arguments.
         bool first = true;

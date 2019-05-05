@@ -125,13 +125,16 @@ enum class expand_result_t {
 /// \param flags Specifies if any expansion pass should be skipped. Legal values are any combination
 /// of skip_cmdsubst skip_variables and skip_wildcards
 /// \param vars variables used during expansion.
+/// \param parser the parser to use for command substitutions, or nullptr to disable.
 /// \param errors Resulting errors, or NULL to ignore
 ///
 /// \return An expand_result_t.
 /// wildcard_no_match and wildcard_match are normal exit conditions used only on
 /// strings containing wildcards to tell if the wildcard produced any matches.
+class parser_t;
 __warn_unused expand_result_t expand_string(wcstring input, std::vector<completion_t> *output,
                                             expand_flags_t flags, const environment_t &vars,
+                                            const std::shared_ptr<parser_t> &parser,
                                             parse_error_list_t *errors);
 
 /// expand_one is identical to expand_string, except it will fail if in expands to more than one
@@ -140,11 +143,12 @@ __warn_unused expand_result_t expand_string(wcstring input, std::vector<completi
 /// \param inout_str The parameter to expand in-place
 /// \param flags Specifies if any expansion pass should be skipped. Legal values are any combination
 /// of skip_cmdsubst skip_variables and skip_wildcards
+/// \param parser the parser to use for command substitutions, or nullptr to disable.
 /// \param errors Resulting errors, or NULL to ignore
 ///
 /// \return Whether expansion succeded
 bool expand_one(wcstring &inout_str, expand_flags_t flags, const environment_t &vars,
-                parse_error_list_t *errors = NULL);
+                const std::shared_ptr<parser_t> &parser, parse_error_list_t *errors = NULL);
 
 /// Expand a command string like $HOME/bin/cmd into a command and list of arguments.
 /// Return the command and arguments by reference.

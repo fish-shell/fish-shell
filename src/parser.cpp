@@ -313,29 +313,30 @@ void parser_t::emit_profiling(const char *path) const {
     }
 }
 
-void parser_t::expand_argument_list(const wcstring &arg_list_src, expand_flags_t eflags,
-                                    const environment_t &vars,
-                                    std::vector<completion_t> *output_arg_list) {
-    assert(output_arg_list != NULL);
-
+std::vector<completion_t> parser_t::expand_argument_list(const wcstring &arg_list_src,
+                                                         expand_flags_t eflags,
+                                                         const environment_t &vars,
+                                                         const std::shared_ptr<parser_t> &parser) {
     // Parse the string as an argument list.
     parse_node_tree_t tree;
     if (!parse_tree_from_string(arg_list_src, parse_flag_none, &tree, NULL /* errors */,
                                 symbol_freestanding_argument_list)) {
         // Failed to parse. Here we expect to have reported any errors in test_args.
-        return;
+        return {};
     }
 
     // Get the root argument list and extract arguments from it.
-    assert(!tree.empty());  //!OCLINT(multiple unary operator)
+    std::vector<completion_t> result;
+    assert(!tree.empty());
     tnode_t<grammar::freestanding_argument_list> arg_list(&tree, &tree.at(0));
     while (auto arg = arg_list.next_in_list<grammar::argument>()) {
         const wcstring arg_src = arg.get_source(arg_list_src);
-        if (expand_string(arg_src, output_arg_list, eflags, vars, NULL /* errors */) ==
+        if (expand_string(arg_src, &result, eflags, vars, parser, NULL /* errors */) ==
             expand_result_t::error) {
             break;  // failed to expand a string
         }
     }
+    return result;
 }
 
 wcstring parser_t::stack_trace() const {

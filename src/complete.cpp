@@ -543,7 +543,7 @@ void completer_t::complete_strings(const wcstring &wc_escaped, const description
     wcstring tmp = wc_escaped;
     if (!expand_one(tmp,
                     this->expand_flags() | expand_flag::skip_cmdsubst | expand_flag::skip_wildcards,
-                    vars))
+                    vars, parser))
         return;
 
     const wcstring wc = parse_util_unescape_wildcards(tmp);
@@ -666,7 +666,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
             expand_string(str_cmd, &this->completions,
                           this->expand_flags() | expand_flag::special_for_command |
                               expand_flag::for_completions | expand_flag::executables_only,
-                          vars, NULL);
+                          vars, parser, NULL);
         if (result != expand_result_t::error && this->wants_descriptions()) {
             this->complete_cmd_desc(str_cmd);
         }
@@ -680,7 +680,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
             expand_string(
                 str_cmd, &this->completions,
                 this->expand_flags() | expand_flag::for_completions | expand_flag::directories_only,
-                vars, NULL);
+                vars, parser, NULL);
         UNUSED(ignore);
     }
 
@@ -752,8 +752,8 @@ void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
         eflags |= expand_flag::skip_cmdsubst;
     }
 
-    std::vector<completion_t> possible_comp;
-    parser_t::expand_argument_list(args, eflags, vars, &possible_comp);
+    std::vector<completion_t> possible_comp =
+        parser_t::expand_argument_list(args, eflags, vars, parser);
 
     if (!is_autosuggest) {
         proc_pop_interactive();
@@ -1103,7 +1103,7 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
         // See #4954.
         const wcstring sep_string = wcstring(str, sep_index + 1);
         std::vector<completion_t> local_completions;
-        if (expand_string(sep_string, &local_completions, flags, vars, NULL) ==
+        if (expand_string(sep_string, &local_completions, flags, vars, parser, NULL) ==
             expand_result_t::error) {
             debug(3, L"Error while expanding string '%ls'", sep_string.c_str());
         }
@@ -1123,7 +1123,8 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
         // consider relaxing this if there was a preceding double-dash argument.
         if (string_prefixes_string(L"-", str)) flags.clear(expand_flag::fuzzy_match);
 
-        if (expand_string(str, &this->completions, flags, vars, NULL) == expand_result_t::error) {
+        if (expand_string(str, &this->completions, flags, vars, parser, NULL) ==
+            expand_result_t::error) {
             debug(3, L"Error while expanding string '%ls'", str.c_str());
         }
     }

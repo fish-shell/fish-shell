@@ -247,12 +247,16 @@ static bool compare_completions_by_duplicate_arguments(const completion_t &a,
     return ad < bd;
 }
 
-template <class Iterator, class HashFunction>
-static Iterator unique_unsorted(Iterator begin, Iterator end, HashFunction hash) {
-    typedef typename std::iterator_traits<Iterator>::value_type T;
-
-    std::unordered_set<size_t> temp;
-    return std::remove_if(begin, end, [&](const T &val) { return !temp.insert(hash(val)).second; });
+/// Unique the list of completions, without perturbing their order.
+static void unique_completions_retaining_order(std::vector<completion_t> *comps) {
+    std::unordered_set<wcstring> seen;
+    seen.reserve(comps->size());
+    auto pred = [&seen](const completion_t &c) {
+        // Remove (return true) if insertion fails.
+        bool inserted = seen.insert(c.completion).second;
+        return !inserted;
+    };
+    comps->erase(std::remove_if(comps->begin(), comps->end(), pred), comps->end());
 }
 
 void completions_sort_and_prioritize(std::vector<completion_t> *comps,
@@ -274,13 +278,11 @@ void completions_sort_and_prioritize(std::vector<completion_t> *comps,
                        [&](const completion_t &comp) { return comp.match.type > best_type; }),
         comps->end());
 
-    // Sort, provided COMPLETION_DONT_SORT isn't set
+    // Sort, provided COMPLETE_DONT_SORT isn't set.
     stable_sort(comps->begin(), comps->end(), completion_t::is_naturally_less_than);
-    // Deduplicate both sorted and unsorted results
-    comps->erase(
-        unique_unsorted(comps->begin(), comps->end(),
-                        [](const completion_t &c) { return std::hash<wcstring>{}(c.completion); }),
-        comps->end());
+
+    // Deduplicate both sorted and unsorted results.
+    unique_completions_retaining_order(comps);
 
     // Sort the remainder by match type. They're already sorted alphabetically.
     stable_sort(comps->begin(), comps->end(), compare_completions_by_match_type);

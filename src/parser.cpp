@@ -344,6 +344,8 @@ wcstring parser_t::stack_trace() const {
     return trace;
 }
 
+std::shared_ptr<parser_t> parser_t::shared() { return shared_from_this(); }
+
 void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const {
     // Check if we should end the recursion.
     if (block_idx >= this->block_count()) return;

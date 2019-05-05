@@ -328,6 +328,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Return a string representing the current stack trace.
     wcstring stack_trace() const;
 
+    /// \return a shared pointer reference to this parser.
+    std::shared_ptr<parser_t> shared();
+
     ~parser_t();
 };
 

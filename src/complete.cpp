@@ -296,13 +296,17 @@ class completer_t {
     /// Environment inside which we are completing.
     const environment_t &vars;
 
+    /// The parser used for condition testing and subshell expansion.
+    /// If null, these features are disabled.
+    std::shared_ptr<parser_t> parser;
+
     /// The command to complete.
     const wcstring cmd;
 
     /// Flags associated with the completion request.
     const completion_request_flags_t flags;
 
-    /// The output cmopletions.
+    /// The output completions.
     std::vector<completion_t> completions;
 
     /// Table of completions conditions that have already been tested and the corresponding test
@@ -371,8 +375,9 @@ class completer_t {
     void mark_completions_duplicating_arguments(const wcstring &prefix, const arg_list_t &args);
 
    public:
-    completer_t(const environment_t &vars, wcstring c, completion_request_flags_t f)
-        : vars(vars), cmd(std::move(c)), flags(f) {}
+    completer_t(const environment_t &vars, const std::shared_ptr<parser_t> &parser, wcstring c,
+                completion_request_flags_t f)
+        : vars(vars), parser(parser), cmd(std::move(c)), flags(f) {}
 
     void perform();
 
@@ -398,21 +403,16 @@ bool completer_t::condition_test(const wcstring &condition) {
         // std::fwprintf( stderr, L"No condition specified\n" );
         return true;
     }
-
-    if (this->type() == COMPLETE_AUTOSUGGEST) {
-        // Autosuggestion can't support conditions.
+    if (!parser) {
         return false;
     }
 
     ASSERT_IS_MAIN_THREAD();
-
     bool test_res;
     condition_cache_t::iterator cached_entry = condition_cache.find(condition);
     if (cached_entry == condition_cache.end()) {
         // Compute new value and reinsert it.
-        // TODO: rationalize this principal_parser.
-        test_res = (0 == exec_subshell(condition, parser_t::principal_parser(),
-                                       false /* don't apply exit status */));
+        test_res = (0 == exec_subshell(condition, *parser, false /* don't apply exit status */));
         condition_cache[condition] = test_res;
     } else {
         // Use the old value.
@@ -559,6 +559,7 @@ void completer_t::complete_strings(const wcstring &wc_escaped, const description
 /// for the executable.
 void completer_t::complete_cmd_desc(const wcstring &str) {
     ASSERT_IS_MAIN_THREAD();
+    if (!parser) return;
 
     wcstring cmd;
     size_t pos = str.find_last_of(L'/');
@@ -596,9 +597,7 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
     // search if we know the location of the whatis database. This can take some time on slower
     // systems with a large set of manuals, but it should be ok since apropos is only called once.
     wcstring_list_t list;
-    // TODO: justify this use of parser_t::principal_parser.
-    if (exec_subshell(lookup_cmd, parser_t::principal_parser(), list,
-                      false /* don't apply exit status */) != -1) {
+    if (exec_subshell(lookup_cmd, *parser, list, false /* don't apply exit status */) != -1) {
         std::unordered_map<wcstring, wcstring> lookup;
         lookup.reserve(list.size());
 
@@ -1582,14 +1581,15 @@ void completer_t::perform() {
 }
 
 void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_comps,
-              completion_request_flags_t flags, const environment_t &vars) {
+              completion_request_flags_t flags, const environment_t &vars,
+              const std::shared_ptr<parser_t> &parser) {
     // Determine the innermost subcommand.
     const wchar_t *cmdsubst_begin, *cmdsubst_end;
     parse_util_cmdsubst_extent(cmd_with_subcmds.c_str(), cmd_with_subcmds.size(), &cmdsubst_begin,
                                &cmdsubst_end);
     assert(cmdsubst_begin != NULL && cmdsubst_end != NULL && cmdsubst_end >= cmdsubst_begin);
     wcstring cmd = wcstring(cmdsubst_begin, cmdsubst_end - cmdsubst_begin);
-    completer_t completer(vars, std::move(cmd), flags);
+    completer_t completer(vars, parser, std::move(cmd), flags);
     completer.perform();
     *out_comps = completer.acquire_completions();
 }

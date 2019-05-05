@@ -36,7 +36,6 @@ function hello_world
     echo sup
     echo hello
 
-
     echo hello
 end
 
@@ -128,3 +127,10 @@ echo bye
 a
 echo
 echo
+a; and b
+a
+and b
+a
+and b
+a
+b

@@ -224,17 +224,27 @@ void prettifier_t::prettify_node(const parse_node_tree_t &tree, node_offset_t no
             // instead of the semicolons. Semicolons are just ignored, unless they are followed by a
             // command. So `echo;` removes the semicolon, but `echo; echo` removes it and adds a
             // newline.
+            last_was_semicolon = false;
             if (node.get_source(source) == L"\n") {
                 append_newline();
-            } else {
+            } else if (!has_new_line) {
+                // The semicolon is only useful if we haven't just had a newline.
                 last_was_semicolon = true;
             }
         } else if ((node_type >= FIRST_PARSE_TOKEN_TYPE && node_type <= LAST_PARSE_TOKEN_TYPE) ||
                    node_type == parse_special_type_parse_error) {
             if (last_was_semicolon) {
-                append_newline();
+                // We keep the semicolon for `; and` and `; or`,
+                // others we turn into newlines.
+                if (node.keyword != parse_keyword_and
+                    && node.keyword != parse_keyword_or) {
+                    append_newline();
+                } else {
+                    output.push_back(L';');
+                }
                 last_was_semicolon = false;
             }
+
             if (node.keyword != parse_keyword_none) {
                 append_whitespace(node_indent);
                 output.append(keyword_description(node.keyword));

@@ -52,7 +52,7 @@ struct bind_cmd_opts_t {
 /// List a single key binding.
 /// Returns false if no binding with that sequence and mode exists.
 bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bool user,
-                                  io_streams_t &streams) {
+                              io_streams_t &streams) {
     wcstring_list_t ecmds;
     wcstring sets_mode;
 
@@ -102,8 +102,8 @@ bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bo
 
 // Overload with both kinds of bindings.
 // Returns false only if neither exists.
-bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bool user, bool preset,
-                                  io_streams_t &streams) {
+bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bool user,
+                              bool preset, io_streams_t &streams) {
     bool retval = false;
     if (preset) {
         retval |= list_one(seq, bind_mode, false, streams);
@@ -151,7 +151,8 @@ void builtin_bind_t::function_names(io_streams_t &streams) {
 }
 
 /// Wraps input_terminfo_get_sequence(), appending the correct error messages as needed.
-bool builtin_bind_t::get_terminfo_sequence(const wchar_t *seq, wcstring *out_seq, io_streams_t &streams) {
+bool builtin_bind_t::get_terminfo_sequence(const wchar_t *seq, wcstring *out_seq,
+                                           io_streams_t &streams) {
     if (input_terminfo_get_sequence(seq, out_seq)) {
         return true;
     }
@@ -159,7 +160,8 @@ bool builtin_bind_t::get_terminfo_sequence(const wchar_t *seq, wcstring *out_seq
     wcstring eseq = escape_string(seq, 0);
     if (!opts->silent) {
         if (errno == ENOENT) {
-            streams.err.append_format(_(L"%ls: No key with name '%ls' found\n"), L"bind", eseq.c_str());
+            streams.err.append_format(_(L"%ls: No key with name '%ls' found\n"), L"bind",
+                                      eseq.c_str());
         } else if (errno == EILSEQ) {
             streams.err.append_format(_(L"%ls: Key with name '%ls' does not have any mapping\n"),
                                       L"bind", eseq.c_str());
@@ -174,7 +176,7 @@ bool builtin_bind_t::get_terminfo_sequence(const wchar_t *seq, wcstring *out_seq
 /// Add specified key binding.
 bool builtin_bind_t::add(const wchar_t *seq, const wchar_t *const *cmds, size_t cmds_len,
                          const wchar_t *mode, const wchar_t *sets_mode, bool terminfo, bool user,
-                             io_streams_t &streams) {
+                         io_streams_t &streams) {
     if (terminfo) {
         wcstring seq2;
         if (get_terminfo_sequence(seq, &seq2, streams)) {
@@ -202,8 +204,8 @@ bool builtin_bind_t::add(const wchar_t *seq, const wchar_t *const *cmds, size_t 
 /// @param  use_terminfo
 ///    Whether to look use terminfo -k name
 ///
-bool builtin_bind_t::erase(wchar_t **seq, bool all, const wchar_t *mode, bool use_terminfo, bool user,
-                               io_streams_t &streams) {
+bool builtin_bind_t::erase(wchar_t **seq, bool all, const wchar_t *mode, bool use_terminfo,
+                           bool user, io_streams_t &streams) {
     if (all) {
         input_mapping_clear(mode, user);
         return false;
@@ -228,8 +230,7 @@ bool builtin_bind_t::erase(wchar_t **seq, bool all, const wchar_t *mode, bool us
     return res;
 }
 
-bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv,
-                                io_streams_t &streams) {
+bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int arg_count = argc - optind;
 
@@ -242,8 +243,9 @@ bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv,
     } else {
         // Inserting both on the other hand makes no sense.
         if (opts->have_preset && opts->have_user) {
-            streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
-                                      L"--preset and --user can not be used together when inserting bindings.");
+            streams.err.append_format(
+                BUILTIN_ERR_COMBO2, cmd,
+                L"--preset and --user can not be used together when inserting bindings.");
             return true;
         }
     }
@@ -314,7 +316,7 @@ void builtin_bind_t::list_modes(io_streams_t &streams) {
 }
 
 int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
-                          int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
+                   int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     static const wchar_t *const short_options = L":aehkKfM:Lm:s";
     static const struct woption long_options[] = {{L"all", no_argument, NULL, 'a'},

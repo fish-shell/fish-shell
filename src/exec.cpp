@@ -14,9 +14,9 @@
 #include <spawn.h>
 #endif
 #include <stdio.h>
-#include <cstring>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <cstring>
 #include <stack>
 
 #include <algorithm>
@@ -675,8 +675,8 @@ static bool handle_builtin_output(const std::shared_ptr<job_t> &j, process_t *p,
 
 /// Executes an external command.
 /// \return true on success, false if there is an exec error.
-static bool exec_external_command(env_stack_t &vars, const std::shared_ptr<job_t> &j,
-                                  process_t *p, const io_chain_t &proc_io_chain) {
+static bool exec_external_command(env_stack_t &vars, const std::shared_ptr<job_t> &j, process_t *p,
+                                  const io_chain_t &proc_io_chain) {
     assert(p->type == process_type_t::external && "Process is not external");
     // Get argv and envv before we fork.
     null_terminated_array_t<char> argv_array;
@@ -684,8 +684,7 @@ static bool exec_external_command(env_stack_t &vars, const std::shared_ptr<job_t
 
     // Convert our IO chain to a dup2 sequence.
     auto dup2s = dup2_list_t::resolve_chain(proc_io_chain);
-    if (! dup2s)
-        return false;
+    if (!dup2s) return false;
 
     // Ensure that stdin is blocking before we hand it off (see issue #176). It's a
     // little strange that we only do this with stdin and not with stdout or stderr.

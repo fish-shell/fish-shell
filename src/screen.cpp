@@ -10,9 +10,9 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <cstring>
 #include <time.h>
 #include <unistd.h>
+#include <cstring>
 #include <cwchar>
 
 #if HAVE_CURSES_H
@@ -105,7 +105,8 @@ static bool is_screen_name_escape_seq(const wchar_t *code, size_t *resulting_len
         // Consider just <esc>k to be the code.
         *resulting_length = 2;
     } else {
-        const wchar_t *escape_sequence_end = screen_name_end + std::wcslen(screen_name_end_sentinel);
+        const wchar_t *escape_sequence_end =
+            screen_name_end + std::wcslen(screen_name_end_sentinel);
         *resulting_length = escape_sequence_end - code;
     }
     return true;
@@ -191,7 +192,10 @@ static bool is_color_escape_seq(const wchar_t *code, size_t *resulting_length) {
     // Detect these terminfo color escapes with parameter value up to max_colors, all of which
     // don't move the cursor.
     const char *const esc[] = {
-        set_a_foreground, set_a_background, set_foreground, set_background,
+        set_a_foreground,
+        set_a_background,
+        set_foreground,
+        set_background,
     };
 
     for (size_t p = 0; p < sizeof esc / sizeof *esc; p++) {
@@ -214,12 +218,11 @@ static bool is_color_escape_seq(const wchar_t *code, size_t *resulting_length) {
 static bool is_visual_escape_seq(const wchar_t *code, size_t *resulting_length) {
     if (!cur_term) return false;
     const char *const esc2[] = {
-        enter_bold_mode,      exit_attribute_mode,    enter_underline_mode,   exit_underline_mode,
-        enter_standout_mode,  exit_standout_mode,     enter_blink_mode,       enter_protected_mode,
-        enter_italics_mode,   exit_italics_mode,      enter_reverse_mode,     enter_shadow_mode,
-        exit_shadow_mode,     enter_standout_mode,    exit_standout_mode,     enter_secure_mode,
-        enter_dim_mode,       enter_blink_mode,       enter_alt_charset_mode, exit_alt_charset_mode
-    };
+        enter_bold_mode,     exit_attribute_mode, enter_underline_mode,   exit_underline_mode,
+        enter_standout_mode, exit_standout_mode,  enter_blink_mode,       enter_protected_mode,
+        enter_italics_mode,  exit_italics_mode,   enter_reverse_mode,     enter_shadow_mode,
+        exit_shadow_mode,    enter_standout_mode, exit_standout_mode,     enter_secure_mode,
+        enter_dim_mode,      enter_blink_mode,    enter_alt_charset_mode, exit_alt_charset_mode};
 
     for (size_t p = 0; p < sizeof esc2 / sizeof *esc2; p++) {
         if (!esc2[p]) continue;
@@ -237,8 +240,8 @@ static bool is_visual_escape_seq(const wchar_t *code, size_t *resulting_length) 
 }
 
 /// Returns the number of characters in the escape code starting at 'code'. We only handle sequences
-/// that begin with \x1B. If it doesn't we return zero. We also return zero if we don't recognize the
-/// escape sequence based on querying terminfo and other heuristics.
+/// that begin with \x1B. If it doesn't we return zero. We also return zero if we don't recognize
+/// the escape sequence based on querying terminfo and other heuristics.
 size_t escape_code_length(const wchar_t *code) {
     assert(code != NULL);
     if (*code != L'\x1B') return 0;
@@ -495,8 +498,8 @@ static void s_move(screen_t *s, int new_x, int new_y) {
 
     // Use the bulk ('multi') output for cursor movement if it is supported and it would be shorter
     // Note that this is required to avoid some visual glitches in iTerm (issue #1448).
-    bool use_multi =
-        multi_str != NULL && multi_str[0] != '\0' && abs(x_steps) * std::strlen(str) > std::strlen(multi_str);
+    bool use_multi = multi_str != NULL && multi_str[0] != '\0' &&
+                     abs(x_steps) * std::strlen(str) > std::strlen(multi_str);
     if (use_multi && cur_term) {
         char *multi_param = tparm((char *)multi_str, abs(x_steps));
         writembs(outp, multi_param);
@@ -1132,8 +1135,8 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
             abandon_line_string.append(get_omitted_newline_str());
 
             if (cur_term && exit_attribute_mode) {
-                abandon_line_string.append(
-                        str2wcstring(tparm((char *)exit_attribute_mode)));  // normal text ANSI escape sequence
+                abandon_line_string.append(str2wcstring(
+                    tparm((char *)exit_attribute_mode)));  // normal text ANSI escape sequence
             }
 
             int newline_glitch_width = term_has_xn ? 0 : 1;

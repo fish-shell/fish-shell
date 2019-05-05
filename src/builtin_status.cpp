@@ -102,24 +102,25 @@ struct status_cmd_opts_t {
 /// least until fish 3.0 and possibly longer to avoid breaking everyones config.fish and other
 /// scripts.
 static const wchar_t *const short_options = L":L:cbilfnhj:t";
-static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
-          {L"current-filename", no_argument, NULL, 'f'},
-          {L"current-line-number", no_argument, NULL, 'n'},
-          {L"filename", no_argument, NULL, 'f'},
-          {L"fish-path", no_argument, NULL, STATUS_FISH_PATH},
-          {L"is-block", no_argument, NULL, 'b'},
-          {L"is-command-substitution", no_argument, NULL, 'c'},
-          {L"is-full-job-control", no_argument, NULL, STATUS_IS_FULL_JOB_CTRL},
-          {L"is-interactive", no_argument, NULL, 'i'},
-          {L"is-interactive-job-control", no_argument, NULL, STATUS_IS_INTERACTIVE_JOB_CTRL},
-          {L"is-login", no_argument, NULL, 'l'},
-          {L"is-no-job-control", no_argument, NULL, STATUS_IS_NO_JOB_CTRL},
-          {L"job-control", required_argument, NULL, 'j'},
-          {L"level", required_argument, NULL, 'L'},
-          {L"line", no_argument, NULL, 'n'},
-          {L"line-number", no_argument, NULL, 'n'},
-          {L"print-stack-trace", no_argument, NULL, 't'},
-          {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {
+    {L"help", no_argument, NULL, 'h'},
+    {L"current-filename", no_argument, NULL, 'f'},
+    {L"current-line-number", no_argument, NULL, 'n'},
+    {L"filename", no_argument, NULL, 'f'},
+    {L"fish-path", no_argument, NULL, STATUS_FISH_PATH},
+    {L"is-block", no_argument, NULL, 'b'},
+    {L"is-command-substitution", no_argument, NULL, 'c'},
+    {L"is-full-job-control", no_argument, NULL, STATUS_IS_FULL_JOB_CTRL},
+    {L"is-interactive", no_argument, NULL, 'i'},
+    {L"is-interactive-job-control", no_argument, NULL, STATUS_IS_INTERACTIVE_JOB_CTRL},
+    {L"is-login", no_argument, NULL, 'l'},
+    {L"is-no-job-control", no_argument, NULL, STATUS_IS_NO_JOB_CTRL},
+    {L"job-control", required_argument, NULL, 'j'},
+    {L"level", required_argument, NULL, 'L'},
+    {L"line", no_argument, NULL, 'n'},
+    {L"line-number", no_argument, NULL, 'n'},
+    {L"print-stack-trace", no_argument, NULL, 't'},
+    {NULL, 0, NULL, 0}};
 
 /// Remember the status subcommand and disallow selecting more than one status subcommand.
 static bool set_status_cmd(wchar_t *const cmd, status_cmd_opts_t &opts, status_cmd_t sub_cmd,
@@ -129,8 +130,8 @@ static bool set_status_cmd(wchar_t *const cmd, status_cmd_opts_t &opts, status_c
         const wchar_t *subcmd_str1 = enum_to_str(opts.status_cmd, status_enum_map);
         const wchar_t *subcmd_str2 = enum_to_str(sub_cmd, status_enum_map);
         std::swprintf(err_text, sizeof(err_text) / sizeof(wchar_t),
-                 _(L"you cannot do both '%ls' and '%ls' in the same invocation"), subcmd_str1,
-                 subcmd_str2);
+                      _(L"you cannot do both '%ls' and '%ls' in the same invocation"), subcmd_str1,
+                      subcmd_str2);
         streams.err.append_format(BUILTIN_ERR_COMBO2, cmd, err_text);
         return false;
     }

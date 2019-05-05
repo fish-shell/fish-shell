@@ -94,7 +94,7 @@ function __fish_complete_suffix -d "Complete using files"
 
     if set -q files[1]
         if string match -qr -- . "$desc"
-           set desc "\t$desc"
+            set desc "\t$desc"
         end
         if string match -qr -- . "$prefix"
             # Ideally, only replace in the beginning of the string, but we have no

@@ -696,7 +696,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                         if (escaped_char == L'\\' || escaped_char == L'\'') {
                             colors[in_pos] = highlight_role_t::escape;      // backslash
                             colors[in_pos + 1] = highlight_role_t::escape;  // escaped char
-                            in_pos += 1;                                 // skip over backslash
+                            in_pos += 1;                                    // skip over backslash
                         }
                     }
                 } else if (c == L'\'') {
@@ -723,7 +723,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                             if (std::wcschr(L"\\\"\n$", escaped_char)) {
                                 colors[in_pos] = highlight_role_t::escape;      // backslash
                                 colors[in_pos + 1] = highlight_role_t::escape;  // escaped char
-                                in_pos += 1;                                 // skip over backslash
+                                in_pos += 1;  // skip over backslash
                             }
                         }
                         break;
@@ -1247,7 +1247,9 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
                 this->color_node(node, highlight_role_t::comment);
                 break;
             }
-            default: { break; }
+            default: {
+                break;
+            }
         }
     }
 

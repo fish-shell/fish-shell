@@ -239,7 +239,8 @@ parse_statement_decoration_t get_decoration(tnode_t<grammar::plain_statement> st
 /// Return the type for a boolean statement.
 enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::job_decorator> stmt);
 
-enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::job_conjunction_continuation> stmt);
+enum parse_bool_statement_type_t bool_statement_type(
+    tnode_t<grammar::job_conjunction_continuation> stmt);
 
 /// Given a redirection, get the redirection type (or none) and target (file path, or fd).
 maybe_t<redirection_type_t> redirection_type(tnode_t<grammar::redirection> redirection,

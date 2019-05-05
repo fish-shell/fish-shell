@@ -37,7 +37,7 @@ set -g __fish_svn_prompt_char_unversioned_external_color --underline cyan
 set -g __fish_svn_prompt_char_unversioned_display '?'
 set -g __fish_svn_prompt_char_unversioned_color purple
 
-set -g __fish_svn_prompt_char_missing_display '!'
+set -g __fish_svn_prompt_char_missing_display !
 set -g __fish_svn_prompt_char_missing_color yellow
 
 set -g __fish_svn_prompt_char_versioned_obstructed_display '~'

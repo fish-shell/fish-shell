@@ -13,7 +13,7 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 /// The pwd builtin. Respect -P to resolve symbolic links. Respect -L to not do that (the default).
-static const wchar_t * const short_options = L"LPh";
+static const wchar_t *const short_options = L"LPh";
 static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
                                               {NULL, 0, NULL, 0}};
 int builtin_pwd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {

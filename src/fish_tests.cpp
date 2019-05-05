@@ -14,7 +14,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <cstring>
 #include <sys/select.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -23,8 +22,9 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
-#include <cwchar>
 #include <wctype.h>
+#include <cstring>
+#include <cwchar>
 #include <thread>
 
 #include <algorithm>
@@ -494,7 +494,7 @@ static char *str2hex(const char *input) {
 /// comes back through double conversion.
 static void test_convert() {
     int i;
-    std::vector<char> sb {};
+    std::vector<char> sb{};
 
     say(L"Testing wide/narrow string conversion");
 
@@ -612,10 +612,11 @@ static void test_tokenizer() {
             }
             if (types[i] != token.type) {
                 err(L"Tokenization error:");
-                std::fwprintf(stdout,
-                         L"Token number %zu of string \n'%ls'\n, expected type %ld, got token type "
-                         L"%ld\n",
-                         i + 1, str, (long)types[i], (long)token.type);
+                std::fwprintf(
+                    stdout,
+                    L"Token number %zu of string \n'%ls'\n, expected type %ld, got token type "
+                    L"%ld\n",
+                    i + 1, str, (long)types[i], (long)token.type);
             }
             i++;
         }
@@ -734,9 +735,7 @@ static void test_pthread() {
     say(L"Testing pthreads");
     pthread_t result = {};
     int val = 3;
-    bool made = make_pthread(&result, [&val](){
-        val += 2;
-    });
+    bool made = make_pthread(&result, [&val]() { val += 2; });
     do_test(made);
     void *ignore = nullptr;
     int ret = pthread_join(result, &ignore);
@@ -1900,18 +1899,20 @@ static void test_abbreviations() {
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
 
     // If commands should be expanded.
-    expanded = reader_expand_abbreviation_in_command(L"if gc", std::wcslen(L"if gc"), vars, &result);
+    expanded =
+        reader_expand_abbreviation_in_command(L"if gc", std::wcslen(L"if gc"), vars, &result);
     if (!expanded) err(L"gc not expanded on line %ld", (long)__LINE__);
     if (result != L"if git checkout")
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
 
     // Others should not be.
-    expanded = reader_expand_abbreviation_in_command(L"of gc", std::wcslen(L"of gc"), vars, &result);
+    expanded =
+        reader_expand_abbreviation_in_command(L"of gc", std::wcslen(L"of gc"), vars, &result);
     if (expanded) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
     // Others should not be.
-    expanded =
-        reader_expand_abbreviation_in_command(L"command gc", std::wcslen(L"command gc"), vars, &result);
+    expanded = reader_expand_abbreviation_in_command(L"command gc", std::wcslen(L"command gc"),
+                                                     vars, &result);
     if (expanded) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
     vars.pop();
@@ -2055,11 +2056,11 @@ struct pager_layout_testcase_t {
             wcstring text = sd.line(0).to_string();
             if (text != expected) {
                 std::fwprintf(stderr, L"width %zu got %zu<%ls>, expected %zu<%ls>\n", this->width,
-                         text.length(), text.c_str(), expected.length(), expected.c_str());
+                              text.length(), text.c_str(), expected.length(), expected.c_str());
                 for (size_t i = 0; i < std::max(text.length(), expected.length()); i++) {
                     std::fwprintf(stderr, L"i %zu got <%lx> expected <%lx>\n", i,
-                             i >= text.length() ? 0xffff : text[i],
-                             i >= expected.length() ? 0xffff : expected[i]);
+                                  i >= text.length() ? 0xffff : text[i],
+                                  i >= expected.length() ? 0xffff : expected[i]);
                 }
             }
             do_test(text == expected);
@@ -2252,8 +2253,7 @@ static bool run_one_test_test(int expected, wcstring_list_t &lst, bool bracket) 
     io_streams_t streams(0);
     int result = builtin_test(parser, streams, argv);
 
-    if (expected != result)
-        err(L"expected builtin_test() to return %d, got %d", expected, result);
+    if (expected != result) err(L"expected builtin_test() to return %d, got %d", expected, result);
 
     delete[] argv;
 
@@ -2716,7 +2716,7 @@ static void test_1_completion(wcstring line, const wcstring &completion, complet
         completion_apply_to_command_line(completion, flags, line, &cursor_pos, append_only);
     if (result != expected) {
         std::fwprintf(stderr, L"line %ld: %ls + %ls -> [%ls], expected [%ls]\n", source_line,
-                 line.c_str(), completion.c_str(), result.c_str(), expected.c_str());
+                      line.c_str(), completion.c_str(), result.c_str(), expected.c_str());
     }
     do_test(result == expected);
     do_test(cursor_pos == out_cursor_pos);
@@ -2759,15 +2759,15 @@ static void perform_one_autosuggestion_cd_test(const wcstring &command, const wc
     bool expects_error = (expected == L"<error>");
 
     if (comps.empty() && !expects_error) {
-        std::fwprintf(stderr, L"line %ld: autosuggest_suggest_special() failed for command %ls\n", line,
-                 command.c_str());
+        std::fwprintf(stderr, L"line %ld: autosuggest_suggest_special() failed for command %ls\n",
+                      line, command.c_str());
         do_test_from(!comps.empty(), line);
         return;
     } else if (!comps.empty() && expects_error) {
         std::fwprintf(stderr,
-                 L"line %ld: autosuggest_suggest_special() was expected to fail but did not, "
-                 L"for command %ls\n",
-                 line, command.c_str());
+                      L"line %ld: autosuggest_suggest_special() was expected to fail but did not, "
+                      L"for command %ls\n",
+                      line, command.c_str());
         do_test_from(comps.empty(), line);
     }
 
@@ -2795,15 +2795,15 @@ static void perform_one_completion_cd_test(const wcstring &command, const wcstri
     bool expects_error = (expected == L"<error>");
 
     if (comps.empty() && !expects_error) {
-        std::fwprintf(stderr, L"line %ld: autosuggest_suggest_special() failed for command %ls\n", line,
-                 command.c_str());
+        std::fwprintf(stderr, L"line %ld: autosuggest_suggest_special() failed for command %ls\n",
+                      line, command.c_str());
         do_test_from(!comps.empty(), line);
         return;
     } else if (!comps.empty() && expects_error) {
         std::fwprintf(stderr,
-                 L"line %ld: autosuggest_suggest_special() was expected to fail but did not, "
-                 L"for command %ls\n",
-                 line, command.c_str());
+                      L"line %ld: autosuggest_suggest_special() was expected to fail but did not, "
+                      L"for command %ls\n",
+                      line, command.c_str());
         do_test_from(comps.empty(), line);
     }
 
@@ -2813,9 +2813,9 @@ static void perform_one_completion_cd_test(const wcstring &command, const wcstri
 
         if (suggestion.completion != expected) {
             std::fwprintf(stderr,
-                     L"line %ld: complete() for cd tab completion returned the wrong expected "
-                     L"string for command %ls\n",
-                     line, command.c_str());
+                          L"line %ld: complete() for cd tab completion returned the wrong expected "
+                          L"string for command %ls\n",
+                          line, command.c_str());
             std::fwprintf(stderr, L"  actual: %ls\n", suggestion.completion.c_str());
             std::fwprintf(stderr, L"expected: %ls\n", expected.c_str());
             do_test_from(suggestion.completion == expected, line);
@@ -2935,7 +2935,7 @@ static void perform_one_autosuggestion_should_ignore_test(const wcstring &comman
     if (!comps.empty()) {
         const wcstring &suggestion = comps.front().completion;
         std::fwprintf(stderr, L"line %ld: complete() expected to return nothing for %ls\n", line,
-                 command.c_str());
+                      command.c_str());
         std::fwprintf(stderr, L"  instead got: %ls\n", suggestion.c_str());
     }
 }
@@ -3194,8 +3194,8 @@ static void test_universal_callbacks() {
     // Change uvars1.
     uvars1.set(L"alpha", env_var_t{L"2", noflags});                // changes value
     uvars1.set(L"beta", env_var_t{L"1", env_var_t::flag_export});  // changes export
-    uvars1.remove(L"delta");                // erases value
-    uvars1.set(L"epsilon", env_var_t{L"1", noflags});  // changes nothing
+    uvars1.remove(L"delta");                                       // erases value
+    uvars1.set(L"epsilon", env_var_t{L"1", noflags});              // changes nothing
     uvars1.sync(callbacks);
 
     // Change uvars2. It should treat its value as correct and ignore changes from uvars1.
@@ -4547,7 +4547,7 @@ static void test_pcre2_escape() {
 
     // all the following are intended to be ultimately matched literally - even if they don't look
     // like that's the intent - so we escape them.
-    const wchar_t * const tests[][2] = {
+    const wchar_t *const tests[][2] = {
         {L".ext", L"\\.ext"},
         {L"{word}", L"\\{word\\}"},
         {L"hola-mundo", L"hola\\-mundo"},
@@ -4558,7 +4558,8 @@ static void test_pcre2_escape() {
     for (const auto &test : tests) {
         auto escaped = escape_string(test[0], 0, STRING_STYLE_REGEX);
         if (escaped != test[1]) {
-            err(L"pcre2_escape error: pcre2_escape(%ls) -> %ls, expected %ls", test[0], escaped.c_str(), test[1]);
+            err(L"pcre2_escape error: pcre2_escape(%ls) -> %ls, expected %ls", test[0],
+                escaped.c_str(), test[1]);
         }
     }
 }
@@ -4947,9 +4948,9 @@ static void test_env_vars() {
     env_var_t v2 = {wcstring_list_t{L"abc"}, env_var_t::flag_export};
     env_var_t v3 = {wcstring_list_t{L"abc"}, 0};
     env_var_t v4 = {wcstring_list_t{L"abc", L"def"}, env_var_t::flag_export};
-    do_test(v1 == v2 && ! (v1 != v2));
-    do_test(v1 != v3 && ! (v1 == v3));
-    do_test(v1 != v4 && ! (v1 == v4));
+    do_test(v1 == v2 && !(v1 != v2));
+    do_test(v1 != v3 && !(v1 == v3));
+    do_test(v1 != v4 && !(v1 == v4));
 }
 
 static void test_illegal_command_exit_code() {
@@ -5211,8 +5212,8 @@ int main(int argc, char **argv) {
             exit(-1);
         }
         if (!std::strcmp(wd, "/")) {
-            std::fwprintf(stderr,
-                     L"Unable to find 'tests' directory, which should contain file test.fish\n");
+            std::fwprintf(
+                stderr, L"Unable to find 'tests' directory, which should contain file test.fish\n");
             exit(EXIT_FAILURE);
         }
         if (chdir(dirname(wd)) < 0) {

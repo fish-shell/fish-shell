@@ -79,7 +79,9 @@ static int parse_hex_digit(wchar_t x) {
         case L'F': {
             return 0xF;
         }
-        default: { return -1; }
+        default: {
+            return -1;
+        }
     }
 }
 
@@ -329,7 +331,9 @@ wcstring rgb_color_t::description() const {
         case type_normal: {
             return L"normal";
         }
-        default: { break; }
+        default: {
+            break;
+        }
     }
     DIE("unknown color type");
 }

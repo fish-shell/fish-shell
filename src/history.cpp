@@ -8,8 +8,8 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <cstring>
 #include <cstdint>
+#include <cstring>
 // We need the sys/file.h for the flock() declaration on Linux but not OS X.
 #include <sys/file.h>  // IWYU pragma: keep
 #include <sys/mman.h>
@@ -554,7 +554,6 @@ bool history_item_t::merge(const history_item_t &item) {
 
 history_item_t::history_item_t(const wcstring &str, time_t when, history_identifier_t ident)
     : creation_timestamp(when), identifier(ident) {
-
     contents = trim(str);
     contents_lower.reserve(contents.size());
     for (const auto &c : contents) {
@@ -1971,7 +1970,6 @@ void history_t::resolve_pending() {
     this->has_pending_item = false;
 }
 
-
 static std::atomic<bool> private_mode{false};
 
 void start_private_mode() {
@@ -1981,6 +1979,4 @@ void start_private_mode() {
     vars.set_one(L"fish_private_mode", ENV_GLOBAL, L"1");
 }
 
-bool in_private_mode() {
-    return private_mode.load();
-}
+bool in_private_mode() { return private_mode.load(); }

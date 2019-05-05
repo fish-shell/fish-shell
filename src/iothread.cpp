@@ -4,12 +4,12 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
-#include <cstring>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <atomic>
+#include <cstring>
 
 #include <condition_variable>
 #include <queue>
@@ -246,7 +246,7 @@ void iothread_drain_all() {
 #if TIME_DRAIN
     double after = timef();
     std::fwprintf(stdout, L"(Waited %.02f msec for %d thread(s) to drain)\n", 1000 * (after - now),
-             thread_count);
+                  thread_count);
 #endif
 }
 

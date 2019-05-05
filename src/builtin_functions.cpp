@@ -40,13 +40,18 @@ struct functions_cmd_opts_t {
     wchar_t *description = NULL;
 };
 static const wchar_t *const short_options = L":HDacd:ehnqv";
-static const struct woption long_options[] = {
-    {L"erase", no_argument, NULL, 'e'},   {L"description", required_argument, NULL, 'd'},
-    {L"names", no_argument, NULL, 'n'},   {L"all", no_argument, NULL, 'a'},
-    {L"help", no_argument, NULL, 'h'},    {L"query", no_argument, NULL, 'q'},
-    {L"copy", no_argument, NULL, 'c'},    {L"details", no_argument, NULL, 'D'},
-    {L"verbose", no_argument, NULL, 'v'}, {L"handlers", no_argument, NULL, 'H'},
-    {L"handlers-type", required_argument, NULL, 't'}, {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {{L"erase", no_argument, NULL, 'e'},
+                                              {L"description", required_argument, NULL, 'd'},
+                                              {L"names", no_argument, NULL, 'n'},
+                                              {L"all", no_argument, NULL, 'a'},
+                                              {L"help", no_argument, NULL, 'h'},
+                                              {L"query", no_argument, NULL, 'q'},
+                                              {L"copy", no_argument, NULL, 'c'},
+                                              {L"details", no_argument, NULL, 'D'},
+                                              {L"verbose", no_argument, NULL, 'v'},
+                                              {L"handlers", no_argument, NULL, 'H'},
+                                              {L"handlers-type", required_argument, NULL, 't'},
+                                              {NULL, 0, NULL, 0}};
 
 static int parse_cmd_opts(functions_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
@@ -327,9 +332,10 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         maybe_t<event_type_t> type_filter;
         if (opts.handlers_type) {
             type_filter = event_type_for_name(opts.handlers_type);
-            if (! type_filter) {
-                streams.err.append_format(_(L"%ls: Expected generic | variable | signal | exit | job-id for --handlers-type\n"),
-                        cmd);
+            if (!type_filter) {
+                streams.err.append_format(_(L"%ls: Expected generic | variable | signal | exit | "
+                                            L"job-id for --handlers-type\n"),
+                                          cmd);
                 return STATUS_INVALID_ARGS;
             }
         }

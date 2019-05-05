@@ -102,7 +102,7 @@ int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 if (!opts.quiet) streams.out.append_format(L"%ls\n", path.c_str());
                 ++found;
             }
-        } else { // Either find_path explicitly or just quiet.
+        } else {  // Either find_path explicitly or just quiet.
             wcstring path;
             if (path_get_path(command_name, &path, parser.vars())) {
                 if (!opts.quiet) streams.out.append_format(L"%ls\n", path.c_str());

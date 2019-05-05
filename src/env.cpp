@@ -306,9 +306,7 @@ struct var_stack_t {
     }
 
     /// Copy this vars_stack.
-    var_stack_t clone() const {
-        return var_stack_t(*this);
-    }
+    var_stack_t clone() const { return var_stack_t(*this); }
 
     /// Snapshot this vars_stack. That is, return a new vars_stack that has copies of all local
     /// variables. Note that this drops all shadowed nodes: only the currently executing function is
@@ -610,7 +608,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
             vars.set_empty(key_and_val, ENV_EXPORT | ENV_GLOBAL);
         } else {
             key.assign(key_and_val, 0, eql);
-            val.assign(key_and_val, eql+1, wcstring::npos);
+            val.assign(key_and_val, eql + 1, wcstring::npos);
             if (is_read_only(key) || is_electric(key)) continue;
             vars.set(key, ENV_EXPORT | ENV_GLOBAL, {val});
         }
@@ -722,7 +720,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     } else {
         vars.set_pwd_from_getcwd();
     }
-    vars.set_termsize();    // initialize the terminal size variables
+    vars.set_termsize();  // initialize the terminal size variables
 
     // Set fish_bind_mode to "default".
     vars.set_one(FISH_BIND_MODE_VAR, ENV_GLOBAL, DEFAULT_BIND_MODE);
@@ -822,7 +820,8 @@ static void env_set_internal_universal(const wcstring &key, wcstring_list_t val,
 /// * ENV_SCOPE, the variable cannot be set in the given scope. This applies to readonly/electric
 /// variables set from the local or universal scopes, or set as exported.
 /// * ENV_INVALID, the variable value was invalid. This applies only to special variables.
-int env_stack_t::set_internal(const wcstring &key, env_mode_flags_t input_var_mode, wcstring_list_t val) {
+int env_stack_t::set_internal(const wcstring &key, env_mode_flags_t input_var_mode,
+                              wcstring_list_t val) {
     ASSERT_IS_MAIN_THREAD();
     env_mode_flags_t var_mode = input_var_mode;
     bool has_changed_old = vars_stack().has_changed_exported();

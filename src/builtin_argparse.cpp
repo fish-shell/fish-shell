@@ -59,14 +59,11 @@ struct argparse_cmd_opts_t {
 };
 
 static const wchar_t *const short_options = L"+:hn:six:N:X:";
-static const struct woption long_options[] = {{L"stop-nonopt", no_argument, NULL, 's'},
-                                              {L"ignore-unknown", no_argument, NULL, 'i'},
-                                              {L"name", required_argument, NULL, 'n'},
-                                              {L"exclusive", required_argument, NULL, 'x'},
-                                              {L"help", no_argument, NULL, 'h'},
-                                              {L"min-args", required_argument, NULL, 'N'},
-                                              {L"max-args", required_argument, NULL, 'X'},
-                                              {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {
+    {L"stop-nonopt", no_argument, NULL, 's'},    {L"ignore-unknown", no_argument, NULL, 'i'},
+    {L"name", required_argument, NULL, 'n'},     {L"exclusive", required_argument, NULL, 'x'},
+    {L"help", no_argument, NULL, 'h'},           {L"min-args", required_argument, NULL, 'N'},
+    {L"max-args", required_argument, NULL, 'X'}, {NULL, 0, NULL, 0}};
 
 // Check if any pair of mutually exclusive options was seen. Note that since every option must have
 // a short name we only need to check those.
@@ -584,11 +581,11 @@ static int argparse_parse_flags(parser_t &parser, argparse_cmd_opts_t &opts,
             // A non-option argument.
             // We use `-` as the first option-string-char to disable GNU getopt's reordering,
             // otherwise we'd get ignored options first and normal arguments later.
-            // E.g. `argparse -i -- -t tango -w` needs to keep `-t tango -w` in $argv, not `-t -w tango`.
+            // E.g. `argparse -i -- -t tango -w` needs to keep `-t tango -w` in $argv, not `-t -w
+            // tango`.
             opts.argv.push_back(argv[w.woptind - 1]);
             continue;
         }
-
 
         // It's a recognized flag.
         auto found = opts.options.find(opt);
@@ -610,7 +607,8 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
                                parser_t &parser, io_streams_t &streams) {
     if (args.empty()) return STATUS_CMD_OK;
 
-    // "+" means stop at nonopt, "-" means give nonoptions the option character code `1`, and don't reorder.
+    // "+" means stop at nonopt, "-" means give nonoptions the option character code `1`, and don't
+    // reorder.
     wcstring short_options = opts.stop_nonopt ? L"+:" : L"-";
     std::vector<woption> long_options;
     populate_option_strings(opts, &short_options, &long_options);

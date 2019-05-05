@@ -173,8 +173,8 @@ static wcstring resolve_description(const wcstring &full_completion, wcstring *c
 
 // A transient parameter pack needed by wildcard_complete.
 struct wc_complete_pack_t {
-    const wcstring &orig;                     // the original string, transient
-    const description_func_t &desc_func;      // function for generating descriptions
+    const wcstring &orig;                 // the original string, transient
+    const description_func_t &desc_func;  // function for generating descriptions
     expand_flags_t expand_flags;
     wc_complete_pack_t(const wcstring &str, const description_func_t &df, expand_flags_t fl)
         : orig(str), desc_func(df), expand_flags(fl) {}
@@ -336,8 +336,9 @@ bool wildcard_match(const wcstring &str, const wcstring &wc, bool leading_dots_f
 /// \param stat_res The result of calling stat on the file
 /// \param buf The struct buf output of calling stat on the file
 /// \param err The errno value after a failed stat call on the file.
-static const wchar_t *file_get_desc(const wcstring &filename, int lstat_res, const struct stat &lbuf,
-                              int stat_res, const struct stat &buf, int err) {
+static const wchar_t *file_get_desc(const wcstring &filename, int lstat_res,
+                                    const struct stat &lbuf, int stat_res, const struct stat &buf,
+                                    int err) {
     if (lstat_res) {
         return COMPLETE_FILE_DESC;
     }

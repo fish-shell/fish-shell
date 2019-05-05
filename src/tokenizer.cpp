@@ -5,8 +5,8 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <unistd.h>
-#include <cwchar>
 #include <wctype.h>
+#include <cwchar>
 
 #include <string>
 #include <type_traits>
@@ -18,7 +18,7 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 // _(s) is already wgettext(s).c_str(), so let's not convert back to wcstring
-const wchar_t * tokenizer_get_error_message(tokenizer_error_t err) {
+const wchar_t *tokenizer_get_error_message(tokenizer_error_t err) {
     switch (err) {
         case tokenizer_error_t::none:
             return L"";
@@ -112,7 +112,9 @@ static bool tok_is_string_character(wchar_t c, bool is_first) {
             // Conditional separator.
             return !caret_redirs() || !is_first;
         }
-        default: { return true; }
+        default: {
+            return true;
+        }
     }
 }
 
@@ -629,7 +631,9 @@ bool move_word_state_machine_t::consume_char_punctuation(wchar_t c) {
                 break;
             }
             case s_end:
-            default: { break; }
+            default: {
+                break;
+            }
         }
     }
     return consumed;
@@ -697,7 +701,9 @@ bool move_word_state_machine_t::consume_char_path_components(wchar_t c) {
                 break;
             }
             case s_end:
-            default: { break; }
+            default: {
+                break;
+            }
         }
     }
     return consumed;
@@ -731,7 +737,9 @@ bool move_word_state_machine_t::consume_char_whitespace(wchar_t c) {
                 break;
             }
             case s_end:
-            default: { break; }
+            default: {
+                break;
+            }
         }
     }
     return consumed;

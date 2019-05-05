@@ -35,7 +35,7 @@ class pending_signals_t {
     /// This is not accessed from a signal handler.
     owning_lock<uint32_t> last_counter_{0};
 
-public:
+   public:
     pending_signals_t() = default;
 
     /// No copying.
@@ -64,7 +64,8 @@ public:
             return {};
         }
 
-        // The signal count has changed. Store the new counter and fetch all the signals that are set.
+        // The signal count has changed. Store the new counter and fetch all the signals that are
+        // set.
         *current = count;
         std::bitset<SIGNAL_COUNT> result{};
         uint32_t bit = 0;
@@ -183,7 +184,9 @@ wcstring event_get_desc(const event_t &evt) {
         case event_type_t::generic: {
             return format_string(_(L"handler for generic event '%ls'"), ed.str_param1.c_str());
         }
-        case event_type_t::any: { DIE("Unreachable"); }
+        case event_type_t::any: {
+            DIE("Unreachable");
+        }
         default:
             DIE("Unknown event type");
     }
@@ -291,8 +294,7 @@ static void event_fire_internal(const event_t &event) {
 void event_fire_delayed() {
     ASSERT_IS_MAIN_THREAD();
     // Do not invoke new event handlers from within event handlers.
-    if (is_event)
-        return;
+    if (is_event) return;
 
     event_list_t to_send;
     to_send.swap(blocked);
@@ -301,7 +303,7 @@ void event_fire_delayed() {
     // Append all signal events to to_send.
     auto signals = s_pending_signals.acquire_pending();
     if (signals.any()) {
-        for (uint32_t sig=0; sig < signals.size(); sig++) {
+        for (uint32_t sig = 0; sig < signals.size(); sig++) {
             if (signals.test(sig)) {
                 auto e = std::make_shared<event_t>(event_type_t::signal);
                 e->desc.param1.signal = sig;
@@ -368,7 +370,6 @@ static const wchar_t *event_name_for_type(event_type_t type) {
     return L"";
 }
 
-
 void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter) {
     event_handler_list_t tmp = s_event_handlers;
     std::sort(tmp.begin(), tmp.end(),
@@ -401,8 +402,7 @@ void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter) {
         }
 
         if (!last_type || *last_type != evt->desc.type) {
-            if (last_type)
-                streams.out.append(L"\n");
+            if (last_type) streams.out.append(L"\n");
             last_type = static_cast<event_type_t>(evt->desc.type);
             streams.out.append_format(L"Event %ls\n", event_name_for_type(*last_type));
         }
@@ -421,7 +421,8 @@ void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter) {
                 streams.out.append_format(L"%ls %ls\n", evt->desc.str_param1.c_str(),
                                           evt->function_name.c_str());
                 break;
-            case event_type_t::any: DIE("Unreachable");
+            case event_type_t::any:
+                DIE("Unreachable");
             default:
                 streams.out.append_format(L"%ls\n", evt->function_name.c_str());
                 break;

@@ -28,11 +28,11 @@ constexpr source_offset_t SOURCE_OFFSET_INVALID = static_cast<source_offset_t>(-
 /// A struct representing the token type that we use internally.
 struct parse_token_t {
     enum parse_token_type_t type;  // The type of the token as represented by the parser
-    enum parse_keyword_t keyword{parse_keyword_none};  // Any keyword represented by this token
-    bool has_dash_prefix{false};          // Hackish: whether the source contains a dash prefix
-    bool is_help_argument{false};         // Hackish: whether the source looks like '-h' or '--help'
-    bool is_newline{false};               // Hackish: if TOK_END, whether the source is a newline.
-    bool preceding_escaped_nl{false};     // Whether there was an escaped newline preceding this token.
+    enum parse_keyword_t keyword { parse_keyword_none };  // Any keyword represented by this token
+    bool has_dash_prefix{false};       // Hackish: whether the source contains a dash prefix
+    bool is_help_argument{false};      // Hackish: whether the source looks like '-h' or '--help'
+    bool is_newline{false};            // Hackish: if TOK_END, whether the source is a newline.
+    bool preceding_escaped_nl{false};  // Whether there was an escaped newline preceding this token.
     source_offset_t source_start{SOURCE_OFFSET_INVALID};
     source_offset_t source_length{0};
 
@@ -130,9 +130,7 @@ class parse_node_t {
     }
 
     /// Indicate if the node has comment nodes.
-    bool has_comments() const {
-        return this->flags & parse_node_flag_has_comments;
-    }
+    bool has_comments() const { return this->flags & parse_node_flag_has_comments; }
 
     /// Indicates if we have a preceding escaped newline.
     bool has_preceding_escaped_newline() const {

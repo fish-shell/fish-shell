@@ -19,7 +19,7 @@ function __fish_complete_man
     set -l exclude_fish_commands
     # Only include fish commands when section is empty or 1
     if test -z "$section" -o "$section" = "1"
-      set -e exclude_fish_commands
+        set -e exclude_fish_commands
     end
 
     set section $section"[^)]*"
@@ -71,8 +71,8 @@ function __fish_complete_man
 
         # Fish commands are not given by apropos
         if not set -ql exclude_fish_commands
-          set -l files $__fish_data_dir/man/man1/*.1
-          string replace -r '.*/([^/]+)\.1$' '$1\t1: fish command' -- $files
+            set -l files $__fish_data_dir/man/man1/*.1
+            string replace -r '.*/([^/]+)\.1$' '$1\t1: fish command' -- $files
         end
     else
         return 1

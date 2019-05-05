@@ -63,12 +63,13 @@ std::vector<input_mapping_name_t> input_mapping_get_names(bool user = true);
 void input_mapping_clear(const wchar_t *mode = NULL, bool user = true);
 
 /// Erase binding for specified key sequence.
-bool input_mapping_erase(const wcstring &sequence, const wcstring &mode = DEFAULT_BIND_MODE, bool user = true);
+bool input_mapping_erase(const wcstring &sequence, const wcstring &mode = DEFAULT_BIND_MODE,
+                         bool user = true);
 
 /// Gets the command bound to the specified key sequence in the specified mode. Returns true if it
 /// exists, false if not.
-bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds, bool user,
-                       wcstring *out_new_mode);
+bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds,
+                       bool user, wcstring *out_new_mode);
 
 /// Return the current bind mode.
 wcstring input_get_bind_mode(const environment_t &vars);

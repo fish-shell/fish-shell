@@ -14,8 +14,8 @@
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
-#include <cwchar>
 #include <wctype.h>
+#include <cwchar>
 
 #include <algorithm>
 #include <memory>
@@ -1314,7 +1314,7 @@ parse_execution_result_t parse_execution_context_t::run_job_conjunction(
             assert((conj == parse_bool_and || conj == parse_bool_or) && "Unexpected conjunction");
             skip = should_skip(conj);
         }
-        if (! skip) {
+        if (!skip) {
             result = run_1_job(cursor.child<0>(), associated_block);
         }
         continuation = cursor.child<1>();

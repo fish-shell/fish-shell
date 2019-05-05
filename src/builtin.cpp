@@ -19,8 +19,8 @@
 
 #include <errno.h>
 #include <stdlib.h>
-#include <cstring>
 #include <unistd.h>
+#include <cstring>
 #include <cwchar>
 
 #include <algorithm>

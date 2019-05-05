@@ -393,7 +393,8 @@ void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const {
                         // We can't quote the arguments because we print this in quotes.
                         // As a special-case, add the empty argument as "".
                         if (process->argv(i)[0]) {
-                            tmp.append(escape_string(process->argv(i), ESCAPE_ALL | ESCAPE_NO_QUOTED));
+                            tmp.append(
+                                escape_string(process->argv(i), ESCAPE_ALL | ESCAPE_NO_QUOTED));
                         } else {
                             tmp.append(L"\"\"");
                         }

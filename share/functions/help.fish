@@ -67,9 +67,10 @@ function help --description 'Show help for the fish shell'
             # If the OS appears to be Windows (graphical), try to use cygstart
             if type -q cygstart
                 set fish_browser cygstart
-            # If xdg-open is available, just use that
-            # but only if an X session is running
-            else if type -q xdg-open; and set -q -x DISPLAY
+                # If xdg-open is available, just use that
+                # but only if an X session is running
+            else if type -q xdg-open
+                and set -q -x DISPLAY
                 set fish_browser xdg-open
             end
 
@@ -158,7 +159,7 @@ function help --description 'Show help for the fish shell'
             or set -l TMPDIR /tmp
             set -l tmpdir (mktemp -d $TMPDIR/help.XXXXXX)
             set -l tmpname $tmpdir/help.html
-            echo '<meta http-equiv="refresh" content="0;URL=\''$clean_url'\'" />' > $tmpname
+            echo '<meta http-equiv="refresh" content="0;URL=\''$clean_url'\'" />' >$tmpname
             set page_url file://$tmpname
         end
     end
@@ -166,7 +167,7 @@ function help --description 'Show help for the fish shell'
     # cmd.exe needs more coaxing.
     if string match -qr 'cmd.exe$' -- $fish_browser[1]
         $fish_browser /c "start $page_url"
-    # If browser is known to be graphical, put into background
+        # If browser is known to be graphical, put into background
     else if contains -- $fish_browser[1] $graphical_browsers
         switch $fish_browser[1]
             case 'htmlview' 'x-www-browser'

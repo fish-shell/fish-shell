@@ -2,8 +2,8 @@
 
 // IWYU pragma: no_include <cstddef>
 #include <stddef.h>
-#include <cwchar>
 #include <wctype.h>
+#include <cwchar>
 
 #include <algorithm>
 #include <numeric>
@@ -163,12 +163,11 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
         const wcstring &comp = c->comp.at(i);
 
         if (i > 0) {
-            comp_remaining -= print_max(PAGER_SPACER_STRING, bg, comp_remaining,
-                                        true /* has_more */, &line_data);
+            comp_remaining -=
+                print_max(PAGER_SPACER_STRING, bg, comp_remaining, true /* has_more */, &line_data);
         }
 
-        comp_remaining -=
-            print_max(prefix, prefix_col, comp_remaining, !comp.empty(), &line_data);
+        comp_remaining -= print_max(prefix, prefix_col, comp_remaining, !comp.empty(), &line_data);
         comp_remaining -=
             print_max(comp, comp_col, comp_remaining, i + 1 < c->comp.size(), &line_data);
     }

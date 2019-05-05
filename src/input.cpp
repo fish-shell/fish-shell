@@ -2,8 +2,8 @@
 #include "config.h"
 
 #include <errno.h>
-#include <cwchar>
 #include <wctype.h>
+#include <cwchar>
 #if HAVE_TERM_H
 #include <curses.h>
 #include <term.h>
@@ -229,7 +229,7 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t *const *commands, 
 
     mapping_list_t &ml = user ? s_mapping_list : s_preset_mapping_list;
 
-    for (input_mapping_t& m : ml) {
+    for (input_mapping_t &m : ml) {
         if (m.seq == sequence && m.mode == mode) {
             m.commands = commands_vector;
             m.sets_mode = sets_mode;
@@ -289,7 +289,8 @@ void init_input() {
         input_mapping_add(L"\x3", L"commandline ''", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
         input_mapping_add(L"\x4", L"exit", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
         input_mapping_add(L"\x5", L"bind", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
-        input_mapping_add(L"\x7f", L"backward-delete-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
+        input_mapping_add(L"\x7f", L"backward-delete-char", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE,
+                          false);
         // Arrows - can't have functions, so *-or-search isn't available.
         input_mapping_add(L"\x1B[A", L"up-line", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
         input_mapping_add(L"\x1B[B", L"down-line", DEFAULT_BIND_MODE, DEFAULT_BIND_MODE, false);
@@ -498,7 +499,9 @@ char_event_t input_readch(bool allow_commands) {
                     input_common_next_ch(evt);
                     return input_readch();
                 }
-                default: { return evt; }
+                default: {
+                    return evt;
+                }
             }
         } else if (evt.is_eof()) {
             // If we have EOF, we need to immediately quit.
@@ -540,8 +543,7 @@ bool input_mapping_erase(const wcstring &sequence, const wcstring &mode, bool us
     ASSERT_IS_MAIN_THREAD();
     bool result = false;
     mapping_list_t &ml = user ? s_mapping_list : s_preset_mapping_list;
-    for (std::vector<input_mapping_t>::iterator it = ml.begin(), end = ml.end();
-         it != end; ++it) {
+    for (std::vector<input_mapping_t>::iterator it = ml.begin(), end = ml.end(); it != end; ++it) {
         if (sequence == it->seq && mode == it->mode) {
             ml.erase(it);
             result = true;
@@ -551,8 +553,8 @@ bool input_mapping_erase(const wcstring &sequence, const wcstring &mode, bool us
     return result;
 }
 
-bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds, bool user,
-                       wcstring *out_sets_mode) {
+bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds,
+                       bool user, wcstring *out_sets_mode) {
     bool result = false;
     mapping_list_t &ml = user ? s_mapping_list : s_preset_mapping_list;
     for (const input_mapping_t &m : ml) {
@@ -571,52 +573,21 @@ static std::vector<terminfo_mapping_t> create_input_terminfo() {
     assert(curses_initialized);
     if (!cur_term) return {};  // setupterm() failed so we can't referency any key definitions
     return {
-        TERMINFO_ADD(key_a1),
-        TERMINFO_ADD(key_a3),
-        TERMINFO_ADD(key_b2),
-        TERMINFO_ADD(key_backspace),
-        TERMINFO_ADD(key_beg),
-        TERMINFO_ADD(key_btab),
-        TERMINFO_ADD(key_c1),
-        TERMINFO_ADD(key_c3),
-        TERMINFO_ADD(key_cancel),
-        TERMINFO_ADD(key_catab),
-        TERMINFO_ADD(key_clear),
-        TERMINFO_ADD(key_close),
-        TERMINFO_ADD(key_command),
-        TERMINFO_ADD(key_copy),
-        TERMINFO_ADD(key_create),
-        TERMINFO_ADD(key_ctab),
-        TERMINFO_ADD(key_dc),
-        TERMINFO_ADD(key_dl),
-        TERMINFO_ADD(key_down),
-        TERMINFO_ADD(key_eic),
-        TERMINFO_ADD(key_end),
-        TERMINFO_ADD(key_enter),
-        TERMINFO_ADD(key_eol),
-        TERMINFO_ADD(key_eos),
-        TERMINFO_ADD(key_exit),
-        TERMINFO_ADD(key_f0),
-        TERMINFO_ADD(key_f1),
-        TERMINFO_ADD(key_f2),
-        TERMINFO_ADD(key_f3),
-        TERMINFO_ADD(key_f4),
-        TERMINFO_ADD(key_f5),
-        TERMINFO_ADD(key_f6),
-        TERMINFO_ADD(key_f7),
-        TERMINFO_ADD(key_f8),
-        TERMINFO_ADD(key_f9),
-        TERMINFO_ADD(key_f10),
-        TERMINFO_ADD(key_f11),
-        TERMINFO_ADD(key_f12),
-        TERMINFO_ADD(key_f13),
-        TERMINFO_ADD(key_f14),
-        TERMINFO_ADD(key_f15),
-        TERMINFO_ADD(key_f16),
-        TERMINFO_ADD(key_f17),
-        TERMINFO_ADD(key_f18),
-        TERMINFO_ADD(key_f19),
-        TERMINFO_ADD(key_f20),
+        TERMINFO_ADD(key_a1), TERMINFO_ADD(key_a3), TERMINFO_ADD(key_b2),
+            TERMINFO_ADD(key_backspace), TERMINFO_ADD(key_beg), TERMINFO_ADD(key_btab),
+            TERMINFO_ADD(key_c1), TERMINFO_ADD(key_c3), TERMINFO_ADD(key_cancel),
+            TERMINFO_ADD(key_catab), TERMINFO_ADD(key_clear), TERMINFO_ADD(key_close),
+            TERMINFO_ADD(key_command), TERMINFO_ADD(key_copy), TERMINFO_ADD(key_create),
+            TERMINFO_ADD(key_ctab), TERMINFO_ADD(key_dc), TERMINFO_ADD(key_dl),
+            TERMINFO_ADD(key_down), TERMINFO_ADD(key_eic), TERMINFO_ADD(key_end),
+            TERMINFO_ADD(key_enter), TERMINFO_ADD(key_eol), TERMINFO_ADD(key_eos),
+            TERMINFO_ADD(key_exit), TERMINFO_ADD(key_f0), TERMINFO_ADD(key_f1),
+            TERMINFO_ADD(key_f2), TERMINFO_ADD(key_f3), TERMINFO_ADD(key_f4), TERMINFO_ADD(key_f5),
+            TERMINFO_ADD(key_f6), TERMINFO_ADD(key_f7), TERMINFO_ADD(key_f8), TERMINFO_ADD(key_f9),
+            TERMINFO_ADD(key_f10), TERMINFO_ADD(key_f11), TERMINFO_ADD(key_f12),
+            TERMINFO_ADD(key_f13), TERMINFO_ADD(key_f14), TERMINFO_ADD(key_f15),
+            TERMINFO_ADD(key_f16), TERMINFO_ADD(key_f17), TERMINFO_ADD(key_f18),
+            TERMINFO_ADD(key_f19), TERMINFO_ADD(key_f20),
 #if 0
         // I know of no keyboard with more than 20 function keys, so adding the rest here makes very
         // little sense, since it will take up a lot of room in any listings (like tab completions),
@@ -665,66 +636,26 @@ static std::vector<terminfo_mapping_t> create_input_terminfo() {
         TERMINFO_ADD(key_f62),
         TERMINFO_ADD(key_f63),
 #endif
-        TERMINFO_ADD(key_find),
-        TERMINFO_ADD(key_help),
-        TERMINFO_ADD(key_home),
-        TERMINFO_ADD(key_ic),
-        TERMINFO_ADD(key_il),
-        TERMINFO_ADD(key_left),
-        TERMINFO_ADD(key_ll),
-        TERMINFO_ADD(key_mark),
-        TERMINFO_ADD(key_message),
-        TERMINFO_ADD(key_move),
-        TERMINFO_ADD(key_next),
-        TERMINFO_ADD(key_npage),
-        TERMINFO_ADD(key_open),
-        TERMINFO_ADD(key_options),
-        TERMINFO_ADD(key_ppage),
-        TERMINFO_ADD(key_previous),
-        TERMINFO_ADD(key_print),
-        TERMINFO_ADD(key_redo),
-        TERMINFO_ADD(key_reference),
-        TERMINFO_ADD(key_refresh),
-        TERMINFO_ADD(key_replace),
-        TERMINFO_ADD(key_restart),
-        TERMINFO_ADD(key_resume),
-        TERMINFO_ADD(key_right),
-        TERMINFO_ADD(key_save),
-        TERMINFO_ADD(key_sbeg),
-        TERMINFO_ADD(key_scancel),
-        TERMINFO_ADD(key_scommand),
-        TERMINFO_ADD(key_scopy),
-        TERMINFO_ADD(key_screate),
-        TERMINFO_ADD(key_sdc),
-        TERMINFO_ADD(key_sdl),
-        TERMINFO_ADD(key_select),
-        TERMINFO_ADD(key_send),
-        TERMINFO_ADD(key_seol),
-        TERMINFO_ADD(key_sexit),
-        TERMINFO_ADD(key_sf),
-        TERMINFO_ADD(key_sfind),
-        TERMINFO_ADD(key_shelp),
-        TERMINFO_ADD(key_shome),
-        TERMINFO_ADD(key_sic),
-        TERMINFO_ADD(key_sleft),
-        TERMINFO_ADD(key_smessage),
-        TERMINFO_ADD(key_smove),
-        TERMINFO_ADD(key_snext),
-        TERMINFO_ADD(key_soptions),
-        TERMINFO_ADD(key_sprevious),
-        TERMINFO_ADD(key_sprint),
-        TERMINFO_ADD(key_sr),
-        TERMINFO_ADD(key_sredo),
-        TERMINFO_ADD(key_sreplace),
-        TERMINFO_ADD(key_sright),
-        TERMINFO_ADD(key_srsume),
-        TERMINFO_ADD(key_ssave),
-        TERMINFO_ADD(key_ssuspend),
-        TERMINFO_ADD(key_stab),
-        TERMINFO_ADD(key_sundo),
-        TERMINFO_ADD(key_suspend),
-        TERMINFO_ADD(key_undo),
-        TERMINFO_ADD(key_up)
+            TERMINFO_ADD(key_find), TERMINFO_ADD(key_help), TERMINFO_ADD(key_home),
+            TERMINFO_ADD(key_ic), TERMINFO_ADD(key_il), TERMINFO_ADD(key_left),
+            TERMINFO_ADD(key_ll), TERMINFO_ADD(key_mark), TERMINFO_ADD(key_message),
+            TERMINFO_ADD(key_move), TERMINFO_ADD(key_next), TERMINFO_ADD(key_npage),
+            TERMINFO_ADD(key_open), TERMINFO_ADD(key_options), TERMINFO_ADD(key_ppage),
+            TERMINFO_ADD(key_previous), TERMINFO_ADD(key_print), TERMINFO_ADD(key_redo),
+            TERMINFO_ADD(key_reference), TERMINFO_ADD(key_refresh), TERMINFO_ADD(key_replace),
+            TERMINFO_ADD(key_restart), TERMINFO_ADD(key_resume), TERMINFO_ADD(key_right),
+            TERMINFO_ADD(key_save), TERMINFO_ADD(key_sbeg), TERMINFO_ADD(key_scancel),
+            TERMINFO_ADD(key_scommand), TERMINFO_ADD(key_scopy), TERMINFO_ADD(key_screate),
+            TERMINFO_ADD(key_sdc), TERMINFO_ADD(key_sdl), TERMINFO_ADD(key_select),
+            TERMINFO_ADD(key_send), TERMINFO_ADD(key_seol), TERMINFO_ADD(key_sexit),
+            TERMINFO_ADD(key_sf), TERMINFO_ADD(key_sfind), TERMINFO_ADD(key_shelp),
+            TERMINFO_ADD(key_shome), TERMINFO_ADD(key_sic), TERMINFO_ADD(key_sleft),
+            TERMINFO_ADD(key_smessage), TERMINFO_ADD(key_smove), TERMINFO_ADD(key_snext),
+            TERMINFO_ADD(key_soptions), TERMINFO_ADD(key_sprevious), TERMINFO_ADD(key_sprint),
+            TERMINFO_ADD(key_sr), TERMINFO_ADD(key_sredo), TERMINFO_ADD(key_sreplace),
+            TERMINFO_ADD(key_sright), TERMINFO_ADD(key_srsume), TERMINFO_ADD(key_ssave),
+            TERMINFO_ADD(key_ssuspend), TERMINFO_ADD(key_stab), TERMINFO_ADD(key_sundo),
+            TERMINFO_ADD(key_suspend), TERMINFO_ADD(key_undo), TERMINFO_ADD(key_up)
     };
 }
 

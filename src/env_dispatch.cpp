@@ -24,8 +24,8 @@
 #include <ncurses/term.h>
 #endif
 
-#include <algorithm>
 #include <assert.h>
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <string>

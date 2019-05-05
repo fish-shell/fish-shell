@@ -18,7 +18,7 @@ typedef std::pair<wcstring::size_type, wcstring::size_type> wcstring_range;
 ///         This will be (npos, npos) when it's done. In the form of (pos, npos)
 ///         when the token is already known to be the final token.
 /// @note The final token may not necessarily return (pos, npos).
-wcstring_range wcstring_tok(wcstring& str, const wcstring& needle,
+wcstring_range wcstring_tok(wcstring &str, const wcstring &needle,
                             wcstring_range last = wcstring_range(0, 0));
 
 /// Given iterators into a string (forward or reverse), splits the haystack iterators
@@ -29,7 +29,7 @@ wcstring_range wcstring_tok(wcstring& str, const wcstring& needle,
 /// Max output entries will be max + 1 (after max splits)
 template <typename ITER>
 void split_about(ITER haystack_start, ITER haystack_end, ITER needle_start, ITER needle_end,
-                 wcstring_list_t* output, long max = LONG_MAX, bool no_empty = false) {
+                 wcstring_list_t *output, long max = LONG_MAX, bool no_empty = false) {
     long remaining = max;
     ITER haystack_cursor = haystack_start;
     while (remaining > 0 && haystack_cursor != haystack_end) {
@@ -57,13 +57,14 @@ void split_about(ITER haystack_start, ITER haystack_end, ITER needle_start, ITER
 
 enum class ellipsis_type {
     None,
-    //Prefer niceness over minimalness
+    // Prefer niceness over minimalness
     Prettiest,
-    //Make every character count ($ instead of ...)
+    // Make every character count ($ instead of ...)
     Shortest,
 };
 
-wcstring truncate(const wcstring &input, int max_len, ellipsis_type etype = ellipsis_type::Prettiest);
+wcstring truncate(const wcstring &input, int max_len,
+                  ellipsis_type etype = ellipsis_type::Prettiest);
 wcstring trim(const wcstring &input);
 wcstring trim(const wcstring &input, const wchar_t *any_of);
 

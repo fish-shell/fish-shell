@@ -27,10 +27,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <cstring>
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <cstring>
 #include <cwchar>
 
 #include <memory>
@@ -73,8 +73,8 @@ static const char *s_profiling_output_filename = NULL;
 
 /// \return a timeval converted to milliseconds.
 long long tv_to_msec(const struct timeval &tv) {
-    long long msec = (long long)tv.tv_sec * 1000; // milliseconds per second
-    msec += tv.tv_usec / 1000; // microseconds per millisecond
+    long long msec = (long long)tv.tv_sec * 1000;  // milliseconds per second
+    msec += tv.tv_usec / 1000;                     // microseconds per millisecond
     return msec;
 }
 
@@ -130,7 +130,9 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
 #ifdef CMAKE_BINARY_DIR
         // Detect if we're running right out of the CMAKE build directory
         if (string_prefixes_string(CMAKE_BINARY_DIR, exec_path.c_str())) {
-            debug(2, "Running out of build directory, using paths relative to CMAKE_SOURCE_DIR:\n %s", CMAKE_SOURCE_DIR);
+            debug(2,
+                  "Running out of build directory, using paths relative to CMAKE_SOURCE_DIR:\n %s",
+                  CMAKE_SOURCE_DIR);
 
             done = true;
             paths.data = wcstring{L"" CMAKE_SOURCE_DIR} + L"/share";
@@ -249,7 +251,7 @@ int run_command_list(std::vector<std::string> *cmds, const io_chain_t &io) {
 
 /// Parse the argument list, return the index of the first non-flag arguments.
 static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
-    static const char * const short_opts = "+hPilnvc:C:p:d:f:D:";
+    static const char *const short_opts = "+hPilnvc:C:p:d:f:D:";
     static const struct option long_opts[] = {{"command", required_argument, NULL, 'c'},
                                               {"init-command", required_argument, NULL, 'C'},
                                               {"features", required_argument, NULL, 'f'},
@@ -339,7 +341,8 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 if (tmp > 0 && tmp <= 128 && !*end && !errno) {
                     set_debug_stack_frames((int)tmp);
                 } else {
-                    std::fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag"), optarg);
+                    std::fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag"),
+                                  optarg);
                     exit(1);
                 }
                 break;

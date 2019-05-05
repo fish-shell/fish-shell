@@ -14,13 +14,13 @@
 #include <stdarg.h>  // IWYU pragma: keep
 #include <stdio.h>   // IWYU pragma: keep
 #include <stdlib.h>
-#include <cstring>
 #include <sys/stat.h>   // IWYU pragma: keep
 #include <sys/types.h>  // IWYU pragma: keep
 #include <unistd.h>
-#include <cwchar>
 #include <wctype.h>
 #include <algorithm>
+#include <cstring>
+#include <cwchar>
 #if HAVE_GETTEXT
 #include <libintl.h>
 #endif
@@ -37,7 +37,7 @@
 #include <ncurses/term.h>
 #endif
 #include <signal.h>  // IWYU pragma: keep
-#include <cwchar>   // IWYU pragma: keep
+#include <cwchar>    // IWYU pragma: keep
 
 #include "common.h"    // IWYU pragma: keep
 #include "fallback.h"  // IWYU pragma: keep
@@ -45,8 +45,8 @@
 #if defined(TPARM_SOLARIS_KLUDGE)
 #undef tparm
 
-char *tparm_solaris_kludge(char *str, long p1, long p2, long p3, long p4,
-                           long p5, long p6, long p7, long p8, long p9) {
+char *tparm_solaris_kludge(char *str, long p1, long p2, long p3, long p4, long p5, long p6, long p7,
+                           long p8, long p9) {
     return tparm(str, p1, p2, p3, p4, p5, p6, p7, p8, p9);
 }
 
@@ -97,8 +97,7 @@ int fish_mkstemp_cloexec(char *name_template) {
     return wcscasecmp_fallback(a + 1, b + 1);
 }
 
-[[gnu::unused]] static int wcsncasecmp_fallback(const wchar_t *a, const wchar_t *b,
-                                                        size_t count) {
+[[gnu::unused]] static int wcsncasecmp_fallback(const wchar_t *a, const wchar_t *b, size_t count) {
     if (count == 0) return 0;
 
     if (*a == 0) {
@@ -281,8 +280,10 @@ int fish_wcwidth(wchar_t wc) {
     // (width 1) to an emoji (probably width 2). So treat it as width 1 so the sums work. See #2652.
     // VS15 selects text presentation.
     const wchar_t variation_selector_16 = L'\uFE0F', variation_selector_15 = L'\uFE0E';
-    if (wc == variation_selector_16) return 1;
-    else if (wc == variation_selector_15) return 0;
+    if (wc == variation_selector_16)
+        return 1;
+    else if (wc == variation_selector_15)
+        return 0;
 
     // Korean Hangul Jamo median vowels and final consonants.
     // These can either appear in combined form, taking 0 width themselves,
@@ -403,4 +404,4 @@ double fish_compat::wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t lo
     uselocale(prev_locale);
     return ret;
 }
-#endif // defined(wcstod_l)
+#endif  // defined(wcstod_l)

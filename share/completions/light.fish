@@ -2,7 +2,7 @@
 # See: https://github.com/haikarainen/light
 
 function __fish_print_light_controllers
-  command light -L
+    command light -L
 end
 
 complete -c light -s h -d 'Print help and exit'

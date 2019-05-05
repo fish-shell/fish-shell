@@ -3,12 +3,12 @@
 #
 # Apparently options can only come after commands, with the exception of "-v" and "-h", which are effectively commands.
 set -l commands box cloud connect destroy \
-docker-{exec,logs,run} \
-global-status halt help init list-commands login \
-package plugin provision push rdp reload resume \
-rsync rsync-auto share snapshot ssh ssh-config \
-status suspend up version \
-port powershell winrm{,-config}
+    docker-{exec,logs,run} \
+    global-status halt help init list-commands login \
+    package plugin provision push rdp reload resume \
+    rsync rsync-auto share snapshot ssh ssh-config \
+    status suspend up version \
+    port powershell winrm{,-config}
 
 set -l box_commands add help list outdated prune remove repackage update
 set -l cloud_commands auth box search provider publish version
@@ -48,7 +48,7 @@ function __fish_vagrant_running_machines
     if set -l state (__fish_print_vagrant_state)
         # TODO: stub
         if test -f "$state"
-            string replace -f '"active":' '' < $state | string split ,
+            string replace -f '"active":' '' <$state | string split ,
         else
         end
     end

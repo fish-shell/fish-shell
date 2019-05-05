@@ -6,7 +6,7 @@
 # Check if vi exists at all ( needed for vi --version )
 if type -q vi
     # Check if vi is really vim
-    if vi --version > /dev/null 2>/dev/null
+    if vi --version >/dev/null 2>/dev/null
         complete -c vi -w vim
     else
         complete -c vi -s s -d 'Suppress all interactive user feedback'

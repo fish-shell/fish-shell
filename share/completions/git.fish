@@ -156,7 +156,7 @@ function __fish_git_files
     # Version >= 2.11.* has the v2 format.
     if test "$ver[1]" -gt 2 2>/dev/null; or test "$ver[1]" -eq 2 -a "$ver[2]" -ge 11 2>/dev/null
         command git $git_opt status --porcelain=2 $status_opt \
-        | while read -la -d ' ' line
+            | while read -la -d ' ' line
             set -l file
             set -l desc
             # The basic status format is "XY", where X is "our" state (meaning the staging area),
@@ -284,7 +284,7 @@ function __fish_git_files
         # Note that we can't use space as a delimiter between status and filename, because
         # the status can contain spaces - " M" is different from "M ".
         command git $git_opt status --porcelain -z $status_opt \
-        | while read -lz line
+            | while read -lz line
             set -l desc
             # The entire line is the "from" from a rename.
             if set -q use_next[1]
@@ -458,9 +458,9 @@ function __fish_git_needs_command
     # Git has tons of options, but fortunately only a few can appear before the command.
     # They are listed here.
     set -l opts h-help p P-paginate N-no-pager b-bare o-no-replace-objects \
-    l-literal-pathspecs g-glob-pathspecs O-noglob-pathspecs i-icase-pathspecs \
-    e-exec-path= G-git-dir= c= C= v-version H-html-path \
-    m-man-path I-info-path w-work-tree= a-namespace= s-super-prefix=
+        l-literal-pathspecs g-glob-pathspecs O-noglob-pathspecs i-icase-pathspecs \
+        e-exec-path= G-git-dir= c= C= v-version H-html-path \
+        m-man-path I-info-path w-work-tree= a-namespace= s-super-prefix=
     set cmd (commandline -opc)
     set -e cmd[1]
     argparse -s $opts -- $cmd 2>/dev/null

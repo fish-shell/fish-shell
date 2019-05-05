@@ -114,13 +114,13 @@ complete -f -c npm -n '__fish_npm_using_command cache' -a 'ls' -d 'Show the data
 
 # config
 for c in 'c' 'config'
-  complete -f -c npm -n "__fish_npm_needs_command" -a "$c" -d 'Manage the npm configuration files'
-  complete -f -c npm -n "__fish_npm_using_command $c" -a 'set' -d 'Sets the config key to the value'
-  complete -f -c npm -n "__fish_npm_using_command $c" -a 'get' -d 'Echo the config value to stdout'
-  complete -f -c npm -n "__fish_npm_using_command $c" -a 'delete' -d 'Deletes the key from all configuration files'
-  complete -f -c npm -n "__fish_npm_using_command $c" -a 'list' -d 'Show all the config settings'
-  complete -f -c npm -n "__fish_npm_using_command $c" -a 'ls' -d 'Show all the config settings'
-  complete -f -c npm -n "__fish_npm_using_command $c" -a 'edit' -d 'Opens the config file in an editor'
+    complete -f -c npm -n "__fish_npm_needs_command" -a "$c" -d 'Manage the npm configuration files'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a 'set' -d 'Sets the config key to the value'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a 'get' -d 'Echo the config value to stdout'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a 'delete' -d 'Deletes the key from all configuration files'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a 'list' -d 'Show all the config settings'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a 'ls' -d 'Show all the config settings'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a 'edit' -d 'Opens the config file in an editor'
 end
 # get, set also exist as shorthands
 complete -f -c npm -n "__fish_npm_needs_command" -a 'get' -d 'Echo the config value to stdout'
@@ -136,12 +136,12 @@ end
 
 # list
 for c in 'la' 'list' 'll' 'ls'
-  complete -f -c npm -n '__fish_npm_needs_command' -a "$c" -d 'List installed packages'
-  complete -f -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'List packages in the global install prefix instead of in the current project'
-  complete -f -c npm -n "__fish_npm_using_command $c" -l json -d 'Show information in JSON format'
-  complete -f -c npm -n "__fish_npm_using_command $c" -l long -d 'Show extended information'
-  complete -f -c npm -n "__fish_npm_using_command $c" -l parseable -d 'Show parseable output instead of tree view'
-  complete -x -c npm -n "__fish_npm_using_command $c" -l depth -d 'Max display depth of the dependency tree'
+    complete -f -c npm -n '__fish_npm_needs_command' -a "$c" -d 'List installed packages'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'List packages in the global install prefix instead of in the current project'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l json -d 'Show information in JSON format'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l long -d 'Show extended information'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l parseable -d 'Show parseable output instead of tree view'
+    complete -x -c npm -n "__fish_npm_using_command $c" -l depth -d 'Max display depth of the dependency tree'
 end
 
 # owner

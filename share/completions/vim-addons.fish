@@ -5,13 +5,13 @@
 # Adrien Grellier <adrien.grellier@laposte.net>
 #
 
-function __fish_vim-addons_subcommand  -d 'Test if vim-addons has yet to be given the subcommand'
-	for i in (commandline -opc)
-		if contains -- $i list status install remove disable amend files show
-			return 1
-		end
-	end
-	return 0
+function __fish_vim-addons_subcommand -d 'Test if vim-addons has yet to be given the subcommand'
+    for i in (commandline -opc)
+        if contains -- $i list status install remove disable amend files show
+            return 1
+        end
+    end
+    return 0
 end
 
 # Commands
@@ -43,12 +43,12 @@ complete -c vim-addons -n "contains show (commandline -poc)" -a "(vim-addons lis
 
 # Options
 # --------
-complete -c vim-addons -s h -l help         -d "show this usage message and exit"
-complete -c vim-addons -s q -l query        -d "be quiet and make the output more parseable"
+complete -c vim-addons -s h -l help -d "show this usage message and exit"
+complete -c vim-addons -s q -l query -d "be quiet and make the output more parseable"
 complete -c vim-addons -s r -l registry-dir -d "set the registry directory"
-complete -c vim-addons -s s -l source-dir   -d "set the addons source directory"
-complete -c vim-addons -s t -l target-dir   -d "set the addons target directory"
-complete -c vim-addons -s v -l verbose      -d "increase verbosity"
-complete -c vim-addons -s y -l system-dir   -d "set the system-wide target directory"
-complete -c vim-addons -s w -l system-wide  -d "set target directory to the system-wide one"
+complete -c vim-addons -s s -l source-dir -d "set the addons source directory"
+complete -c vim-addons -s t -l target-dir -d "set the addons target directory"
+complete -c vim-addons -s v -l verbose -d "increase verbosity"
+complete -c vim-addons -s y -l system-dir -d "set the system-wide target directory"
+complete -c vim-addons -s w -l system-wide -d "set target directory to the system-wide one"
 

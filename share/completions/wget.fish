@@ -20,7 +20,7 @@ complete -c wget -l bind-adress -d "Bind address on local machine" -xa "(__fish_
 complete -c wget -s t -l tries -d "Set number of retries to number" -xa "0 1 2 4 8 16 32 64 128"
 complete -c wget -s O -l output-document -d "Concatenate output to file" -r
 complete -c wget -l no-clobber -d "Never overwrite files with same name"
-complete -c wget -o nc  -d "Never overwrite files with same name"
+complete -c wget -o nc -d "Never overwrite files with same name"
 complete -c wget -s c -l continue -d "Continue getting a partially-downloaded file"
 complete -c wget -l progress -d "Select progress meter type" -a "
 	dot\t'Print one dot for every kB of data, 50 dots per line'
@@ -129,5 +129,5 @@ complete -c wget -s L -l relative -d "Follow relative links only"
 complete -c wget -s I -l include-directories -d "Specify a comma-separated list of directories you wish to follow" -x
 complete -c wget -s X -l exclude-directories -d "Specify a comma-separated list of directories you wish to exclude" -x
 complete -c wget -l no-parent -d "Do not ever ascend to the parent directory"
-complete -c wget -o np  -d "Do not ever ascend to the parent directory"
+complete -c wget -o np -d "Do not ever ascend to the parent directory"
 

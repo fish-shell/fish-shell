@@ -30,12 +30,12 @@ complete -r -c apt-cache -s c -l config-file -d "Specify config file"
 complete -x -c apt-cache -s o -l option -d "Specify options"
 
 function __fish_apt-cache_use_package -d 'Test if apt command should have packages as potential completion'
-	for i in (commandline -opc)
-		if contains -- $i contains show showpkg showsrc depends rdepends dotty policy
-			return 0
-		end
-	end
-	return 1
+    for i in (commandline -opc)
+        if contains -- $i contains show showpkg showsrc depends rdepends dotty policy
+            return 0
+        end
+    end
+    return 1
 end
 
 complete -c apt-cache -n '__fish_apt-cache_use_package' -a '(__fish_print_packages)' -d 'Package'

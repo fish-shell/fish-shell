@@ -7,13 +7,13 @@
 # Retrieve the likely compile-time PREFIX for openocd based off of where the binary
 # is located. e.g. if openocd is /usr/local/bin/openocd return /usr/local
 function __fish_openocd_prefix
-	string replace "/bin/openocd" "" (which openocd)
+    string replace "/bin/openocd" "" (which openocd)
 end
 
 # The results of this function are as if __fish_complete_suffix were called
 # while cd'd into the openocd scripts directory
 function __fish_complete_openocd_path
-	__fish_complete_suffix (commandline -ct) "$argv[1]" "$argv[2]" (__fish_openocd_prefix)/share/openocd/scripts
+    __fish_complete_suffix (commandline -ct) "$argv[1]" "$argv[2]" (__fish_openocd_prefix)/share/openocd/scripts
 end
 
 complete -c openocd -f # at no point does openocd take arbitrary arguments

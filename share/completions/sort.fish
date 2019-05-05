@@ -8,7 +8,7 @@ complete -c sort -s h -l human-numeric-sort -d "Compare human readable numbers [
 complete -c sort -s M -l month-sort -d "Compare month names"
 complete -c sort -s n -l numeric-sort -d "Compare string numerical value"
 complete -c sort -s R -l random-sort -d "Sort by random hash of keys"
-complete -c sort      -l random-source -d "Get random bytes from FILE"
+complete -c sort -l random-source -d "Get random bytes from FILE"
 complete -c sort -s r -l reverse -d "Reverse results"
 complete -c sort -s c -l check -d "Only check if sorted"
 complete -c sort -s k -l key -d "Define key"

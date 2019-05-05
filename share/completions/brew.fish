@@ -1,34 +1,34 @@
 function __fish_brew_get_cmd
-  for c in (commandline -opc)
-    if not string match -q -- '-*' $c
-      echo $c
+    for c in (commandline -opc)
+        if not string match -q -- '-*' $c
+            echo $c
+        end
     end
-  end
 end
 
 function __fish_brew_needs_command
-  set cmd (__fish_brew_get_cmd)
-  if not set -q cmd[2]
-    return 0
-  end
-  return 1
+    set cmd (__fish_brew_get_cmd)
+    if not set -q cmd[2]
+        return 0
+    end
+    return 1
 end
 
 function __fish_brew_using_command
-  set index 2
+    set index 2
 
-  if set -q argv[2]
-    set index $argv[2]
-  end
-
-  set cmd (__fish_brew_get_cmd)
-
-  if set -q cmd[$index]
-    if [ $argv[1] = $cmd[$index] ]
-      return 0
+    if set -q argv[2]
+        set index $argv[2]
     end
-  end
-  return 1
+
+    set cmd (__fish_brew_get_cmd)
+
+    if set -q cmd[$index]
+        if [ $argv[1] = $cmd[$index] ]
+            return 0
+        end
+    end
+    return 1
 end
 
 function __fish_brew_formulae
@@ -74,32 +74,32 @@ end
 ########
 
 function __fish_brew_is_subcommand_cask
-  if __fish_brew_using_command cask
-    for action in $argv
-      if __fish_brew_using_command $action 3
-        return 0
-      end
+    if __fish_brew_using_command cask
+        for action in $argv
+            if __fish_brew_using_command $action 3
+                return 0
+            end
+        end
     end
-  end
-  return 1
+    return 1
 end
 
 function __fish_brew_needs_cask_action
-  if __fish_brew_using_command cask
-    set cmd (__fish_brew_get_cmd)
-    if not set -q cmd[3]
-      return 0
+    if __fish_brew_using_command cask
+        set cmd (__fish_brew_get_cmd)
+        if not set -q cmd[3]
+            return 0
+        end
     end
-  end
-  return 1
+    return 1
 end
 
 function __fish_brew_casks
-  brew search --casks
+    brew search --casks
 end
 
 function __fish_brew_casks_installed
-  brew cask list
+    brew cask list
 end
 
 
@@ -108,28 +108,28 @@ end
 ############
 
 function __fish_brew_is_subcommand_services
-  if __fish_brew_using_command services
-    for action in $argv
-      if __fish_brew_using_command $action 3
-        return 0
-      end
+    if __fish_brew_using_command services
+        for action in $argv
+            if __fish_brew_using_command $action 3
+                return 0
+            end
+        end
     end
-  end
-  return 1
+    return 1
 end
 
 function __fish_brew_needs_services_action
-  if __fish_brew_using_command services
-    set cmd (__fish_brew_get_cmd)
-    if not set -q cmd[3]
-      return 0
+    if __fish_brew_using_command services
+        set cmd (__fish_brew_get_cmd)
+        if not set -q cmd[3]
+            return 0
+        end
     end
-  end
-  return 1
+    return 1
 end
 
 function __fish_brew_services
-  brew services list | awk '{if (NR>1) print $1}'
+    brew services list | awk '{if (NR>1) print $1}'
 end
 
 

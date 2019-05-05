@@ -2,11 +2,11 @@
 
 set -l skin tool
 if type -q valgrind; and valgrind --version 2>/dev/null | string match -qr -- '-2\.[012]\.'
-	# In older versions of Valgrind, the skin selection option was
+    # In older versions of Valgrind, the skin selection option was
     # '--skin'
-	# But someone decided that it would be fun to change this to
+    # But someone decided that it would be fun to change this to
     # '--tool' for no good reason
-	set skin skin
+    set skin skin
 end
 
 complete -xc valgrind -l $skin -d "Skin" -a "
@@ -18,14 +18,14 @@ complete -xc valgrind -l $skin -d "Skin" -a "
 "
 
 function __fish_valgrind_skin --argument tool -V skin
-	set -l cmd (commandline -cpo)
-	# Quote $cmd so the tokens are separated with a space
-	if string match -qr -- "--$skin(=| )$tool" "$cmd"
-		return 0
+    set -l cmd (commandline -cpo)
+    # Quote $cmd so the tokens are separated with a space
+    if string match -qr -- "--$skin(=| )$tool" "$cmd"
+        return 0
     end
-	# memcheck is the default tool/skin
-	test $tool = memcheck
-	and not string match -- $skin $cmd
+    # memcheck is the default tool/skin
+    test $tool = memcheck
+    and not string match -- $skin $cmd
 end
 
 complete -c valgrind -l help -d "Display help and exit"

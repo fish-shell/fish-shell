@@ -1,7 +1,7 @@
 complete -c feh -l action -s A -x -d "Specify a shell command as action to perform on the image"
 
 for i in (seq 1 9)
-	complete -c feh -l action$i -x -d "Extra action triggered with number key "$i
+    complete -c feh -l action$i -x -d "Extra action triggered with number key "$i
 end
 
 complete -c feh -l auto-zoom -s Z -d "Zoom pictures to screen size"

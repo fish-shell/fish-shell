@@ -9,7 +9,7 @@ function __fish_complete_gsettings_args
     set -e cmd[1]
 
     if set -q cmd[2]
-    and string match -q -- '--schemadir' $cmd[1]
+        and string match -q -- '--schemadir' $cmd[1]
         # TODO: This needs to support proper expansion of paths (~, variables, etc.)
         set schemadir --schemadir $cmd[2]
         set -e cmd[1..2]
@@ -56,15 +56,15 @@ function __fish_complete_gsettings_args
         set -l key_type $range[1]
         set -e range[1]
         switch $key_type
-        case 'type b'
-            echo true
-            echo false
-        case 'enum'
-            string join \n $range
-        case '*'
-            # If no sensible suggestions can be made, just use the current value.
-            # It gives a good indication on the expected format and is likely already close to what the user wants.
-            gsettings $schemadir get $schema $key 2>/dev/null
+            case 'type b'
+                echo true
+                echo false
+            case 'enum'
+                string join \n $range
+            case '*'
+                # If no sensible suggestions can be made, just use the current value.
+                # It gives a good indication on the expected format and is likely already close to what the user wants.
+                gsettings $schemadir get $schema $key 2>/dev/null
         end
         return 0
     end

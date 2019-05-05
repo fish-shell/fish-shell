@@ -1,11 +1,11 @@
 # s3cmd
 
 function __s3cmd_is_remote_path
-	commandline -pct | string match -q -r -- "^s3://.*"
+    commandline -pct | string match -q -r -- "^s3://.*"
 end
 
 function __s3cmd_is_valid_remote_path
-	commandline -pct | string match -q -r -- "^s3://.*?/.*"
+    commandline -pct | string match -q -r -- "^s3://.*?/.*"
 end
 
 # Completions to allow for autocomplete of remote paths

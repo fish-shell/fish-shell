@@ -21,7 +21,7 @@ complete -c quilt -a mail -r -d "Create  mail  messages  from all patches in the
 complete -c quilt -a new -r -d "Create a new patch with the specified file name, and  insert  it after the topmost patch"
 complete -c quilt -a next -r -d "Print  the  name  of  the next patch after the specified or topmost patch in the series file"
 complete -c quilt -a patches -r -d "Print the list of patches that modify the specified file"
-complete -c quilt -a pop -r -d  "Remove  patch(es) from the stack of applied  patches"
+complete -c quilt -a pop -r -d "Remove  patch(es) from the stack of applied  patches"
 complete -c quilt -a previous -r -d "Print the name of the previous patch before the specified or topmost patch in the series file"
 complete -c quilt -a push -r -d "Apply patch(es) from the series file"
 complete -c quilt -a refresh -r -d "Refreshes the specified patch, or the topmost patch by default"

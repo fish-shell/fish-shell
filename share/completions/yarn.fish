@@ -79,7 +79,7 @@ for k,v in data["scripts"].items(): print(k + "\t" + v[:18])' <package.json 2>/d
         jq -r '.scripts | to_entries | map("\(.key)\t\(.value | tostring | .[0:20])") | .[]' package.json
     else if type -q jq
         # Yarn is quite slow and still requires `jq` because the normal format is unusable.
-        command yarn run --json 2> /dev/null | jq -r '.data.hints? | to_entries | map("\(.key)\t\(.value | tostring |.[0:20])") | .[]'
+        command yarn run --json 2>/dev/null | jq -r '.data.hints? | to_entries | map("\(.key)\t\(.value | tostring |.[0:20])") | .[]'
     end
 end
 

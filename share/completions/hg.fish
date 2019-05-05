@@ -375,7 +375,7 @@ function __fish_hg_using_command --argument-names cmd
 end
 
 function __fish_hg_needs_command
-    not __fish_hg_get_command > /dev/null
+    not __fish_hg_get_command >/dev/null
 end
 
 # global options

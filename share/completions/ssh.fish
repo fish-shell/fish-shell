@@ -45,11 +45,11 @@ complete -c ssh -s c -d "Encryption cipher" -xa "(ssh -Q cipher)"
 
 # Also look up hosts from the history
 function __ssh_history_completions --argument limit
-	if string match -q ""
-		set limit 100
-	end
+    if string match -q ""
+        set limit 100
+    end
 
-	history --prefix ssh | sed -n "s/.* \([A-Za-z0-9._:-]\+@[A-Za-z0-9._:-]\+\).*/\1/p" | head -n $limit
+    history --prefix ssh | sed -n "s/.* \([A-Za-z0-9._:-]\+@[A-Za-z0-9._:-]\+\).*/\1/p" | head -n $limit
 end
 
 complete -k -c ssh -a '(__ssh_history_completions 100)' -f -d "Remote"

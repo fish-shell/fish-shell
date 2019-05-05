@@ -4,6 +4,12 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
         return
     end
 
+    # This is hard to test in expect, since the exact sequences depend on the environment.
+    # Instead disable it.
+    if set -q FISH_UNIT_TESTS_RUNNING
+        return
+    end
+
     # Emacs Makes All Cursors Suck
     if set -q INSIDE_EMACS
         return

@@ -8,8 +8,7 @@ function __fish_describe_command -d "Command used to find descriptions for comma
     # TODO: stop interpolating argv into regex, and remove this hack.
     string match --quiet --regex '^[a-zA-Z0-9_ ]+$' -- "$argv"
     or return
-    type -q apropos
-    or return
+    type -q apropos; or return
     apropos $argv 2>/dev/null | awk -v FS=" +- +" '{
 		split($1, names, ", ");
 		for (name in names)

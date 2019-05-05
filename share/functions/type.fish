@@ -62,7 +62,6 @@ function type --description 'Print the type of a command'
                             case "n/a"
                             case "stdin"
                                 break
-
                             case "*"
                                 echo $func_path
                         end

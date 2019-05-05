@@ -73,23 +73,18 @@ function __fish_print_help --description "Print help message for the specified f
                 # Remove man's bolding
                 set -l name (string replace -ra '(.)'\b'.' '$1' -- $line)
                 # We start after we have the name
-                contains -- $name NAME
-                and set have_name 1
-                and continue
+                contains -- $name NAME; and set have_name 1; and continue
                 # We ignore the SYNOPSIS header
-                contains -- $name SYNOPSIS
-                and continue
+                contains -- $name SYNOPSIS; and continue
                 # Everything after COPYRIGHT is useless
-                contains -- $name COPYRIGHT
-                and break
+                contains -- $name COPYRIGHT; and break
 
                 # not leading space, and not empty, so must contain a non-space
                 # in the first column. That makes it a header/footer.
                 set line_type meta
         end
 
-        set -q have_name[1]
-        or continue
+        set -q have_name[1]; or continue
         switch $state
             case normal
                 switch $line_type

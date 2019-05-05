@@ -101,7 +101,7 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const wcstring ft = tok_first(job->command());
     //For compatibility with fish 2.0's $_, now replaced with `status current-command`
     if (!ft.empty()) parser.vars().set_one(L"_", ENV_EXPORT, ft);
-    reader_write_title(job->command());
+    reader_write_title(job->command(), parser);
 
     job->promote();
     job->set_flag(job_flag_t::FOREGROUND, true);

@@ -190,8 +190,7 @@ maybe_t<wcstring> autoload_t::resolve_command(const wcstring &cmd, const environ
     return std::move(mfile->path);
 }
 
-void autoload_t::perform_autoload(const wcstring &path) {
+void autoload_t::perform_autoload(const wcstring &path, parser_t &parser) {
     wcstring script_source = L"source " + escape_string(path, ESCAPE_ALL);
-    exec_subshell(script_source, parser_t::principal_parser(),
-                  false /* do not apply exit status */);
+    exec_subshell(script_source, parser, false /* do not apply exit status */);
 }

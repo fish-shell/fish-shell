@@ -164,7 +164,7 @@ process_type_t parse_execution_context_t::process_type_for_command(
             process_type = process_type_t::builtin;
             break;
         case parse_statement_decoration_none:
-            if (function_exists(cmd)) {
+            if (function_exists(cmd, *parser)) {
                 process_type = process_type_t::function;
             } else if (builtin_exists(cmd)) {
                 process_type = process_type_t::builtin;
@@ -858,7 +858,8 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
         path_to_external_command.clear();
 
         // If we have defined a wrapper around cd, use it, otherwise use the cd builtin.
-        process_type = function_exists(L"cd") ? process_type_t::function : process_type_t::builtin;
+        process_type =
+            function_exists(L"cd", *parser) ? process_type_t::function : process_type_t::builtin;
     } else {
         // Not implicit cd.
         const globspec_t glob_behavior = (cmd == L"set" || cmd == L"count") ? nullglob : failglob;

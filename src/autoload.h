@@ -15,6 +15,7 @@
 
 class autoload_file_cache_t;
 class environment_t;
+class parser_t;
 
 /// autoload_t is a class that knows how to autoload .fish files from a list of directories. This
 /// is used by autoloading functions and completions. It maintains a file cache, which is
@@ -58,7 +59,7 @@ class autoload_t {
     /// Helper to actually perform an autoload.
     /// This is a static function because it executes fish script, and so must be called without
     /// holding any particular locks.
-    static void perform_autoload(const wcstring &path);
+    static void perform_autoload(const wcstring &path, parser_t &parser);
 
     /// Mark that a command previously returned from path_to_autoload is finished autoloading.
     void mark_autoload_finished(const wcstring &cmd) {

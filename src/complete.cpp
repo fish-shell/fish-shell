@@ -859,7 +859,8 @@ static bool short_ok(const wcstring &arg, const complete_entry_opt_t *entry,
 static void complete_load(const wcstring &name, bool reload) {
     // We have to load this as a function, since it may define a --wraps or signature.
     // See issue #2466.
-    function_load(name);
+    auto &parser = parser_t::principal_parser();
+    function_load(name, parser);
 
     // It's important to NOT hold the lock around completion loading.
     // We need to take the lock to decide what to load, drop it to perform the load, then reacquire
@@ -867,7 +868,7 @@ static void complete_load(const wcstring &name, bool reload) {
     const environment_t &vars = parser_t::principal_parser().vars();
     maybe_t<wcstring> path_to_load = completion_autoloader.acquire()->resolve_command(name, vars);
     if (path_to_load) {
-        autoload_t::perform_autoload(*path_to_load);
+        autoload_t::perform_autoload(*path_to_load, parser);
         completion_autoloader.acquire()->mark_autoload_finished(name);
     }
 }

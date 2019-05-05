@@ -96,7 +96,7 @@ bool function_set_t::allow_autoload(const wcstring &name) const {
 /// Make sure that if the specified function is a dynamically loaded function, it has been fully
 /// loaded.
 /// Note this executes fish script code.
-static void try_autoload(const wcstring &name) {
+static void try_autoload(const wcstring &name, parser_t &parser) {
     ASSERT_IS_MAIN_THREAD();
     maybe_t<wcstring> path_to_autoload;
     // Note we can't autoload while holding the funcset lock.
@@ -104,15 +104,14 @@ static void try_autoload(const wcstring &name) {
     {
         auto funcset = function_set.acquire();
         if (funcset->allow_autoload(name)) {
-            const environment_t &vars = parser_t::principal_parser().vars();
-            path_to_autoload = funcset->autoloader.resolve_command(name, vars);
+            path_to_autoload = funcset->autoloader.resolve_command(name, parser.vars());
         }
     }
 
     // Release the lock and perform any autoload, then reacquire the lock and clean up.
     if (path_to_autoload) {
         // Crucially, the lock is acquired *after* do_autoload_file_at_path().
-        autoload_t::perform_autoload(*path_to_autoload);
+        autoload_t::perform_autoload(*path_to_autoload, parser);
         function_set.acquire()->autoloader.mark_autoload_finished(name);
     }
 }
@@ -212,18 +211,18 @@ std::shared_ptr<const function_properties_t> function_get_properties(const wcstr
     return nullptr;
 }
 
-int function_exists(const wcstring &cmd) {
+int function_exists(const wcstring &cmd, parser_t &parser) {
     ASSERT_IS_MAIN_THREAD();
     if (parser_keywords_is_reserved(cmd)) return 0;
-    try_autoload(cmd);
+    try_autoload(cmd, parser);
     auto funcset = function_set.acquire();
     return funcset->funcs.find(cmd) != funcset->funcs.end();
 }
 
-void function_load(const wcstring &cmd) {
+void function_load(const wcstring &cmd, parser_t &parser) {
     ASSERT_IS_MAIN_THREAD();
     if (!parser_keywords_is_reserved(cmd)) {
-        try_autoload(cmd);
+        try_autoload(cmd, parser);
     }
 }
 
@@ -279,9 +278,9 @@ bool function_get_desc(const wcstring &name, wcstring &out_desc) {
     return false;
 }
 
-void function_set_desc(const wcstring &name, const wcstring &desc) {
+void function_set_desc(const wcstring &name, const wcstring &desc, parser_t &parser) {
     ASSERT_IS_MAIN_THREAD();
-    try_autoload(name);
+    try_autoload(name, parser);
     auto funcset = function_set.acquire();
     auto iter = funcset->funcs.find(name);
     if (iter != funcset->funcs.end()) {

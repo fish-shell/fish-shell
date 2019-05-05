@@ -82,8 +82,9 @@ void reader_pop_current_filename();
 /// executing and just after it finishes.
 ///
 /// \param cmd Command line string passed to \c fish_title if is defined.
+/// \param parser The parser to use for autoloading fish_title.
 /// \param reset_cursor_position If set, issue a \r so the line driver knows where we are
-void reader_write_title(const wcstring &cmd, bool reset_cursor_position = true);
+void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor_position = true);
 
 /// Call this function to tell the reader that a repaint is needed, and should be performed when
 /// possible.

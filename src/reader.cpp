@@ -874,11 +874,11 @@ bool reader_thread_job_is_stale() {
     return read_generation_count() != s_thread_generation;
 }
 
-void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
+void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor_position) {
     if (!term_supports_setting_title()) return;
 
     wcstring fish_title_command = DEFAULT_TITLE;
-    if (function_exists(L"fish_title")) {
+    if (function_exists(L"fish_title", parser)) {
         fish_title_command = L"fish_title";
         if (!cmd.empty()) {
             fish_title_command.append(L" ");
@@ -889,8 +889,7 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
 
     wcstring_list_t lst;
     proc_push_interactive(0);
-    if (exec_subshell(fish_title_command, parser_t::principal_parser(), lst,
-                      false /* ignore exit status */) != -1 &&
+    if (exec_subshell(fish_title_command, parser, lst, false /* ignore exit status */) != -1 &&
         !lst.empty()) {
         std::fputws(L"\x1B]0;", stdout);
         for (size_t i = 0; i < lst.size(); i++) {
@@ -909,7 +908,7 @@ void reader_write_title(const wcstring &cmd, bool reset_cursor_position) {
 
 void reader_data_t::exec_mode_prompt() {
     mode_prompt_buff.clear();
-    if (function_exists(MODE_PROMPT_FUNCTION_NAME)) {
+    if (function_exists(MODE_PROMPT_FUNCTION_NAME, parser())) {
         wcstring_list_t mode_indicator_list;
         exec_subshell(MODE_PROMPT_FUNCTION_NAME, parser(), mode_indicator_list,
                       false);
@@ -966,7 +965,7 @@ void reader_data_t::exec_prompt() {
     // Write the screen title. Do not reset the cursor position: exec_prompt is called when there
     // may still be output on the line from the previous command (#2499) and we need our PROMPT_SP
     // hack to work.
-    reader_write_title(L"", false);
+    reader_write_title(L"", parser(), false);
 }
 
 void reader_init() {
@@ -1957,7 +1956,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
     if (!ft.empty()) parser.vars().set_one(L"_", ENV_GLOBAL, ft);
 
     outputter_t &outp = outputter_t::stdoutput();
-    reader_write_title(cmd);
+    reader_write_title(cmd, parser);
     term_donate(outp);
 
     gettimeofday(&time_before, NULL);
@@ -2278,15 +2277,15 @@ static int read_i() {
         event_fire_generic(L"fish_prompt");
         run_count++;
 
-        if (is_breakpoint && function_exists(DEBUG_PROMPT_FUNCTION_NAME)) {
+        if (is_breakpoint && function_exists(DEBUG_PROMPT_FUNCTION_NAME, parser)) {
             reader_set_left_prompt(DEBUG_PROMPT_FUNCTION_NAME);
-        } else if (function_exists(LEFT_PROMPT_FUNCTION_NAME)) {
+        } else if (function_exists(LEFT_PROMPT_FUNCTION_NAME, parser)) {
             reader_set_left_prompt(LEFT_PROMPT_FUNCTION_NAME);
         } else {
             reader_set_left_prompt(DEFAULT_PROMPT);
         }
 
-        if (function_exists(RIGHT_PROMPT_FUNCTION_NAME)) {
+        if (function_exists(RIGHT_PROMPT_FUNCTION_NAME, parser)) {
             reader_set_right_prompt(RIGHT_PROMPT_FUNCTION_NAME);
         } else {
             reader_set_right_prompt(L"");
@@ -2500,7 +2499,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             // Repaint the mode-prompt only if it exists.
             // This is an optimization basically exclusively for vi-mode, since the prompt
             // may sometimes take a while but when switching the mode all we care about is the mode-prompt.
-            if (function_exists(MODE_PROMPT_FUNCTION_NAME)) {
+            if (function_exists(MODE_PROMPT_FUNCTION_NAME, parser())) {
                 exec_mode_prompt();
                 s_reset(&screen, screen_reset_current_line_and_prompt);
                 screen_reset_needed = false;

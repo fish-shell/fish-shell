@@ -225,14 +225,14 @@ static wcstring functions_def(const wcstring &name) {
 }
 
 static int report_function_metadata(const wchar_t *funcname, bool verbose, io_streams_t &streams,
-                                    bool metadata_as_comments) {
+                                    parser_t &parser, bool metadata_as_comments) {
     const wchar_t *path = L"n/a";
     const wchar_t *autoloaded = L"n/a";
     const wchar_t *shadows_scope = L"n/a";
     wcstring description = L"n/a";
     int line_number = 0;
 
-    if (function_exists(funcname)) {
+    if (function_exists(funcname, parser)) {
         auto props = function_get_properties(funcname);
         path = function_get_definition_file(funcname);
         if (path) {
@@ -301,13 +301,13 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
 
         func = argv[optind];
-        if (!function_exists(func)) {
+        if (!function_exists(func, parser)) {
             streams.err.append_format(_(L"%ls: Function '%ls' does not exist\n"), cmd, func);
             builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_CMD_ERROR;
         }
 
-        function_set_desc(func, opts.description);
+        function_set_desc(func, opts.description, parser);
         return STATUS_CMD_OK;
     }
 
@@ -319,7 +319,7 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
 
         const wchar_t *funcname = argv[optind];
-        return report_function_metadata(funcname, opts.verbose, streams, false);
+        return report_function_metadata(funcname, opts.verbose, streams, parser, false);
     }
 
     if (opts.handlers) {
@@ -376,7 +376,7 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         current_func = argv[optind];
         new_func = argv[optind + 1];
 
-        if (!function_exists(current_func)) {
+        if (!function_exists(current_func, parser)) {
             streams.err.append_format(_(L"%ls: Function '%ls' does not exist\n"), cmd,
                                       current_func.c_str());
             builtin_print_error_trailer(parser, streams.err, cmd);
@@ -391,7 +391,7 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
 
         // Keep things simple: don't allow existing names to be copy targets.
-        if (function_exists(new_func)) {
+        if (function_exists(new_func, parser)) {
             streams.err.append_format(
                 _(L"%ls: Function '%ls' already exists. Cannot create copy '%ls'\n"), cmd,
                 new_func.c_str(), current_func.c_str());
@@ -405,13 +405,13 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     int res = STATUS_CMD_OK;
     for (int i = optind; i < argc; i++) {
-        if (!function_exists(argv[i])) {
+        if (!function_exists(argv[i], parser)) {
             res++;
         } else {
             if (!opts.query) {
                 if (i != optind) streams.out.append(L"\n");
                 const wchar_t *funcname = argv[optind];
-                report_function_metadata(funcname, opts.verbose, streams, true);
+                report_function_metadata(funcname, opts.verbose, streams, parser, true);
                 streams.out.append(functions_def(funcname));
             }
         }

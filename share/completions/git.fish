@@ -190,6 +190,15 @@ function __fish_git_files
                     set -ql added
                     and set file "$line[9..-1]"
                     and set desc $added_desc
+                case '1 AD*'
+                    # Added files that were since deleted
+                    if set -ql added
+                        set file "$line[9..-1]"
+                        set desc $added_desc
+                    else if set -ql deleted
+                        set file "$line[9..-1]"
+                        set desc $deleted_desc
+                    end
                 case "1 AM*"
                     # Added files with additional modifications
                     if set -ql added
@@ -321,7 +330,23 @@ function __fish_git_files
                 case 'C ' CM CD
                     set use_next copied
                     continue
-                case 'A ' AM AD
+                case AM
+                    if set -ql added
+                        set file "$line[9..-1]"
+                        set desc $added_desc
+                    else if set -ql modified
+                        set file "$line[9..-1]"
+                        set desc $modified_desc
+                    end
+                case AD
+                    if set -ql added
+                        set file "$line[9..-1]"
+                        set desc $added_desc
+                    else if set -ql deleted
+                        set file "$line[9..-1]"
+                        set desc $deleted_desc
+                    end
+                case 'A '
                     # Additions are only shown here if they are staged.
                     # Otherwise it's an untracked file.
                     set -ql added

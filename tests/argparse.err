@@ -121,3 +121,8 @@ in function 'notargparse'
 
 ####################
 # Checking arguments after --
+
+####################
+# Checking validation for short flags only
+argparse: Value 'banana' for flag 'o' is not an integer
+argparse: Value '-o' for flag 'i' is not an integer

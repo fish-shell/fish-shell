@@ -195,3 +195,12 @@ begin
     argparse a/alpha -- a --alpha -- b -a
     printf '%s\n' $argv
 end
+
+# #5864 - short flag only with same validation function.
+logmsg Checking validation for short flags only
+argparse 'i=!_validate_int' 'o=!_validate_int' -- -i 2 -o banana
+argparse 'i=!_validate_int' 'o=!_validate_int' -- -i -o banana
+begin
+    argparse 'i=!_validate_int' 'o=!_validate_int' -- -i 2 -o 3
+    set -l
+end

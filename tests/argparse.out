@@ -146,3 +146,15 @@ alpha aaaa
 a
 b
 -a
+
+####################
+# Checking validation for short flags only
+_flag_a 'alpha'  'aaaa'
+_flag_b -b
+_flag_break -b
+_flag_i 2
+_flag_m 1
+_flag_max 1
+_flag_o 3
+argv
+saved_status 57

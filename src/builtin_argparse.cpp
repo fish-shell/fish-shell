@@ -181,6 +181,8 @@ static bool parse_flag_modifiers(const argparse_cmd_opts_t &opts, const option_s
     if (*s == L'!') {
         s++;
         opt_spec->validation_command = wcstring(s);
+        // Move cursor to the end so we don't expect a long flag.
+        while (*s) s++;
     } else if (*s) {
         streams.err.append_format(BUILTIN_ERR_INVALID_OPT_SPEC, opts.name.c_str(),
                                   option_spec.c_str(), *s);

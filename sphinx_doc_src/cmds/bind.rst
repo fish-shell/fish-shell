@@ -102,7 +102,11 @@ The following special input functions are available:
 
 - ``delete-char``, delete one character to the right of the cursor
 
+- ``disable-highlighting`` turns off syntax-highlighting
+
 - ``downcase-word``, make the current word lowercase
+
+- ``enable-highlighting`` turns syntax-highlighting on
 
 - ``end-of-buffer``, moves to the end of the buffer, i.e. the end of the first line
 

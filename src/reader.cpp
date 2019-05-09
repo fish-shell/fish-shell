@@ -337,6 +337,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     bool suppress_autosuggestion{false};
     /// Whether abbreviations are expanded.
     bool expand_abbreviations{false};
+    /// Whether highlighting is enabled.
+    bool highlighting{true};
     /// Silent mode used for password input on the read command
     bool silent{false};
     /// The representation of the current screen contents.
@@ -2051,6 +2053,7 @@ static std::function<highlight_result_t(void)> get_highlight_performer(
 /// \param no_io if true, do a highlight that does not perform I/O, synchronously. If false, perform
 ///        an asynchronous highlight in the background, which may perform disk I/O.
 void reader_data_t::super_highlight_me_plenty(int match_highlight_pos_adjust, bool no_io) {
+    if (!highlighting) return;
     const editable_line_t *el = &command_line;
     assert(el != NULL);
     long match_highlight_pos = (long)el->position + match_highlight_pos_adjust;
@@ -2506,6 +2509,12 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 screen_reset_needed = false;
                 repaint();
             }
+            break;
+        }
+        case rl::disable_highlighting:
+        case rl::enable_highlighting: {
+            highlighting = c == rl::enable_highlighting;
+            super_highlight_me_plenty();
             break;
         }
         case rl::complete:

@@ -116,6 +116,8 @@ static const input_function_metadata_t input_function_metadata[] = {
     {readline_cmd_t::repaint_mode, L"repaint-mode"},
     {readline_cmd_t::repaint, L"repaint"},
     {readline_cmd_t::force_repaint, L"force-repaint"},
+    {readline_cmd_t::enable_highlighting, L"enable-highlighting"},
+    {readline_cmd_t::disable_highlighting, L"disable-highlighting"},
     {readline_cmd_t::up_line, L"up-line"},
     {readline_cmd_t::down_line, L"down-line"},
     {readline_cmd_t::suppress_autosuggestion, L"suppress-autosuggestion"},

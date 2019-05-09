@@ -170,6 +170,7 @@ function __fish_commandline_insert_escaped --description 'Insert the first arg e
 end
 
 function __fish_start_bracketed_paste
+    commandline -f disable-highlighting
     # Save the last bind mode so we can restore it.
     set -g __fish_last_bind_mode $fish_bind_mode
     # If the token is currently single-quoted,
@@ -179,6 +180,7 @@ function __fish_start_bracketed_paste
 end
 
 function __fish_stop_bracketed_paste
+    commandline -f enable-highlighting
     # Restore the last bind mode.
     set fish_bind_mode $__fish_last_bind_mode
     set -e __fish_paste_quoted

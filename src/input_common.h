@@ -51,6 +51,8 @@ enum class readline_cmd_t {
     repaint_mode,
     repaint,
     force_repaint,
+    enable_highlighting,
+    disable_highlighting,
     up_line,
     down_line,
     suppress_autosuggestion,

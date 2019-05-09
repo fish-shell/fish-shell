@@ -1127,19 +1127,11 @@ void reader_data_t::remove_backward() {
 /// using syntax highlighting, etc.
 /// Returns true if the string changed.
 bool reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
-    size_t len = str.size();
-    if (len == 0) return false;
+    if (str.empty()) return false;
 
-    // Start inserting.
-    size_t cursor = 0;
-    while (cursor < len) {
-        // Insert from the cursor up to but not including the range end.
-        el->insert_string(str, cursor, len - cursor);
-
-        update_buff_pos(el, el->position);
-        command_line_changed(el);
-        cursor = len;
-    }
+    el->insert_string(str, 0, str.size());
+    update_buff_pos(el, el->position);
+    command_line_changed(el);
 
     if (el == &command_line) {
         suppress_autosuggestion = false;

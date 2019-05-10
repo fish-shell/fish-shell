@@ -552,14 +552,25 @@ static size_t line_shared_prefix(const line_t &a, const line_t &b) {
     size_t idx, max = std::min(a.size(), b.size());
     for (idx = 0; idx < max; idx++) {
         wchar_t ac = a.char_at(idx), bc = b.char_at(idx);
-        if (fish_wcwidth(ac) < 1 || fish_wcwidth(bc) < 1) {
-            // Possible combining mark, return one index prior.
-            if (idx > 0) idx--;
-            break;
-        }
 
         // We're done if the text or colors are different.
-        if (ac != bc || a.color_at(idx) != b.color_at(idx)) break;
+        if (ac != bc || a.color_at(idx) != b.color_at(idx)) {
+            if (idx > 0) {
+                const line_t *c = nullptr;
+                // Possible combining mark, go back until we hit _two_ printable characters or idx of 0.
+                if (fish_wcwidth(a.char_at(idx)) < 1) {
+                    c = &a;
+                } else if (fish_wcwidth(b.char_at(idx)) < 1) {
+                    c = &b;
+                }
+
+                if (c) {
+                    while (idx > 1 && (fish_wcwidth(c->char_at(idx - 1)) < 1 || fish_wcwidth(c->char_at(idx)) < 1)) idx--;
+                    if (idx == 1 && fish_wcwidth(c->char_at(idx)) < 1) idx = 0;
+                }
+            }
+            break;
+        }
     }
     return idx;
 }

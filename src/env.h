@@ -193,78 +193,30 @@ class null_environment_t : public environment_t {
     wcstring_list_t get_names(int flags) const override;
 };
 
-/// An environment stack of scopes.
-/// The base implementation provides read-only access.
-struct var_stack_t;
-class env_node_t;
-class env_scoped_t : public environment_t {
-   private:
-    std::unique_ptr<var_stack_t> vars_;
-
-    /// A struct wrapping up parser-local variables. These are conceptually variables that differ in
-    /// different fish internal processes.
-    struct perproc_data_t {
-        wcstring pwd;
-    };
-
-    /// The per-process data.
-    perproc_data_t perproc_data_{};
-
-   protected:
-    var_stack_t &vars_stack();
-    const var_stack_t &vars_stack() const;
-
-    explicit env_scoped_t(std::unique_ptr<var_stack_t> vars_);
-    env_scoped_t();
-    env_scoped_t(env_scoped_t &&);
-
-    /// Read-write access to the perproc data.
-    perproc_data_t &perproc_data() { return perproc_data_; }
-
-   public:
-    /// Read-only access to the perproc data.
-    const perproc_data_t &perproc_data() const { return perproc_data_; }
-
-    /// Gets the variable with the specified name, or none() if it does not exist.
-    maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
-
-    /// Returns all variable names.
-    wcstring_list_t get_names(int flags) const override;
-
-    /// Snapshot this environment. This means returning a read-only copy. Local variables are copied
-    /// but globals are shared (i.e. changes to global will be visible to this snapshot). This
-    /// returns a shared_ptr for convenience, since the most common reason to snapshot is because
-    /// you want to read from another thread.
-    std::shared_ptr<environment_t> snapshot() const;
-
-    ~env_scoped_t() override;
-};
-
-/// A mutable env_scoped_t, that allows scopes to be pushed and popped.
-class env_stack_t final : public env_scoped_t {
+/// A mutable environment which allows scopes to be pushed and popped.
+class env_stack_impl_t;
+class env_stack_t final : public environment_t {
     friend class parser_t;
 
-    int set_internal(const wcstring &key, env_mode_flags_t var_mode, wcstring_list_t val);
+    /// The implementation. Do not access this directly.
+    const std::unique_ptr<env_stack_impl_t> impl_;
 
-    bool try_remove(const std::shared_ptr<env_node_t> &n, const wcstring &key, int var_mode);
-    std::shared_ptr<env_node_t> get_node(const wcstring &key);
+    /// All environment stacks are guarded by a global lock.
+    acquired_lock<env_stack_impl_t> acquire_impl();
+    acquired_lock<const env_stack_impl_t> acquire_impl() const;
 
-    maybe_t<env_var_t> get_perproc(const wcstring &key) const;
+    explicit env_stack_t(std::unique_ptr<env_stack_impl_t> impl);
 
-    static env_stack_t make_principal();
-
-    using env_scoped_t::env_scoped_t;
+   public:
     ~env_stack_t() override;
     env_stack_t(env_stack_t &&);
 
-    /// Given that we have determined that \p key is an unspecial key, set the variable in the right
-    /// scope in the variable stack.
-    void set_scoped_internal(const wcstring &key, env_mode_flags_t var_mode, wcstring_list_t val);
+    /// Implementation of environment_t.
+    maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
 
-    /// Set the pwd.
-    int set_pwd(wcstring_list_t pwds);
+    /// Implementation of environment_t.
+    wcstring_list_t get_names(int flags) const override;
 
-   public:
     /// Sets the variable with the specified name to the given values.
     int set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);
 
@@ -297,8 +249,14 @@ class env_stack_t final : public env_scoped_t {
     /// \return true if something changed, false otherwise.
     bool universal_barrier();
 
-    /// Returns an array containing all exported variables in a format suitable for execv
-    const char *const *export_arr();
+    /// Returns an array containing all exported variables in a format suitable for execv.
+    std::shared_ptr<const null_terminated_array_t<char>> export_arr();
+
+    /// Snapshot this environment. This means returning a read-only copy. Local variables are copied
+    /// but globals are shared (i.e. changes to global will be visible to this snapshot). This
+    /// returns a shared_ptr for convenience, since the most common reason to snapshot is because
+    /// you want to read from another thread.
+    std::shared_ptr<environment_t> snapshot() const;
 
     /// Update the termsize variable.
     void set_termsize();

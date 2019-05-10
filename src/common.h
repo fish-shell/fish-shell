@@ -607,15 +607,15 @@ typedef std::lock_guard<std::recursive_mutex> scoped_rlock;
 // Or for simple cases:
 //   name.acquire().value = "derp"
 //
-template <typename DATA>
+template <typename Data>
 class acquired_lock {
     std::unique_lock<std::mutex> lock;
-    acquired_lock(std::mutex &lk, DATA *v) : lock(lk), value(v) {}
+    acquired_lock(std::mutex &lk, Data *v) : lock(lk), value(v) {}
 
     template <typename T>
     friend class owning_lock;
 
-    DATA *value;
+    Data *value;
 
    public:
     // No copying, move construction only
@@ -624,10 +624,14 @@ class acquired_lock {
     acquired_lock(acquired_lock &&) = default;
     acquired_lock &operator=(acquired_lock &&) = default;
 
-    DATA *operator->() { return value; }
-    const DATA *operator->() const { return value; }
-    DATA &operator*() { return *value; }
-    const DATA &operator*() const { return *value; }
+    Data *operator->() { return value; }
+    const Data *operator->() const { return value; }
+    Data &operator*() { return *value; }
+    const Data &operator*() const { return *value; }
+
+    /// Create from a global lock.
+    /// This is used in weird cases where a global lock protects more than one piece of data.
+    static acquired_lock from_global(std::mutex &lk, Data *v) { return acquired_lock{lk, v}; }
 };
 
 // A lock that owns a piece of data

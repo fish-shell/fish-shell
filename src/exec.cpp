@@ -169,7 +169,8 @@ static void launch_process_nofork(env_stack_t &vars, process_t *p) {
     null_terminated_array_t<char> argv_array;
     convert_wide_array_to_narrow(p->get_argv_array(), &argv_array);
 
-    const char *const *envv = vars.export_arr();
+    auto export_vars = vars.export_arr();
+    const char *const *envv = export_vars->get();
     char *actual_cmd = wcs2str(p->actual_cmd);
 
     // Ensure the terminal modes are what they were before we changed them.
@@ -693,8 +694,10 @@ static bool exec_external_command(env_stack_t &vars, const std::shared_ptr<job_t
     // (/dev/tty?).
     make_fd_blocking(STDIN_FILENO);
 
+    auto export_arr = vars.export_arr();
+    ;
     const char *const *argv = argv_array.get();
-    const char *const *envv = vars.export_arr();
+    const char *const *envv = export_arr->get();
 
     std::string actual_cmd_str = wcs2string(p->actual_cmd);
     const char *actual_cmd = actual_cmd_str.c_str();

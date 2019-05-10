@@ -857,34 +857,31 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
     // Now we should definitely fit.
     assert(left_prompt_width + right_prompt_width < screen_width);
 
-    // Convert commandline to a list of lines and their widths.
-    wcstring_list_t command_lines(1);
-    std::vector<size_t> line_widths(1);
+    // Get the width of the first line, and if there is more than one line.
+    bool multiline = false;
+    size_t first_line_width = 0;
     for (size_t i = 0; i < commandline.size(); i++) {
         wchar_t c = commandline.at(i);
         if (c == L'\n') {
-            // Make a new line.
-            command_lines.push_back(wcstring());
-            line_widths.push_back(indent.at(i) * INDENT_STEP);
+            multiline = true;
+            break;
         } else {
-            command_lines.back() += c;
-            line_widths.back() += fish_wcwidth_min_0(c);
+            first_line_width += fish_wcwidth_min_0(c);
         }
     }
-    const size_t first_command_line_width = line_widths.at(0);
+    const size_t first_command_line_width = first_line_width;
 
     // If we have more than one line, ensure we have no autosuggestion.
-    if (command_lines.size() > 1) {
-        autosuggestion = L"";
-    }
-
-    // Compute the width of the autosuggestion at all possible truncation offsets.
-    std::vector<size_t> autosuggest_truncated_widths;
-    autosuggest_truncated_widths.reserve(1 + std::wcslen(autosuggestion));
     size_t autosuggest_total_width = 0;
-    for (size_t i = 0; autosuggestion[i] != L'\0'; i++) {
-        autosuggest_truncated_widths.push_back(autosuggest_total_width);
-        autosuggest_total_width += fish_wcwidth_min_0(autosuggestion[i]);
+    std::vector<size_t> autosuggest_truncated_widths;
+    if (multiline) {
+        autosuggestion = L"";
+    } else {
+        autosuggest_truncated_widths.reserve(1 + autosuggestion_str.size());
+        for (size_t i = 0; autosuggestion[i] != L'\0'; i++) {
+            autosuggest_truncated_widths.push_back(autosuggest_total_width);
+            autosuggest_total_width += fish_wcwidth_min_0(autosuggestion[i]);
+        }
     }
 
     // Here are the layouts we try in turn:

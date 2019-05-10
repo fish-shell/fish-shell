@@ -54,7 +54,7 @@ the fish manual.
 
 - ``-a OPTION_ARGUMENTS`` or ``--arguments=OPTION_ARGUMENTS`` adds the specified option arguments to the completions list.
 
-- ``-k`` or ``--keep-order`` preserves the order of the ``OPTION_ARGUMENTS`` specified via ``-a`` or ``--arguments`` instead of sorting alphabetically.
+- ``-k`` or ``--keep-order`` preserves the order of the ``OPTION_ARGUMENTS`` specified via ``-a`` or ``--arguments`` instead of sorting alphabetically. Multiple ``complete`` calls with ``-k`` result in arguments of the later ones displayed first.
 
 - ``-f`` or ``--no-files`` specifies that the options specified by this completion may not be followed by a filename.
 

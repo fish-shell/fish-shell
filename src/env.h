@@ -201,6 +201,15 @@ class env_scoped_t : public environment_t {
    private:
     std::unique_ptr<var_stack_t> vars_;
 
+    /// A struct wrapping up parser-local variables. These are conceptually variables that differ in
+    /// different fish internal processes.
+    struct perproc_data_t {
+        wcstring pwd;
+    };
+
+    /// The per-process data.
+    perproc_data_t perproc_data_{};
+
    protected:
     var_stack_t &vars_stack();
     const var_stack_t &vars_stack() const;
@@ -209,7 +218,13 @@ class env_scoped_t : public environment_t {
     env_scoped_t();
     env_scoped_t(env_scoped_t &&);
 
+    /// Read-write access to the perproc data.
+    perproc_data_t &perproc_data() { return perproc_data_; }
+
    public:
+    /// Read-only access to the perproc data.
+    const perproc_data_t &perproc_data() const { return perproc_data_; }
+
     /// Gets the variable with the specified name, or none() if it does not exist.
     maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
 
@@ -234,6 +249,8 @@ class env_stack_t final : public env_scoped_t {
     bool try_remove(const std::shared_ptr<env_node_t> &n, const wcstring &key, int var_mode);
     std::shared_ptr<env_node_t> get_node(const wcstring &key);
 
+    maybe_t<env_var_t> get_perproc(const wcstring &key) const;
+
     static env_stack_t make_principal();
 
     using env_scoped_t::env_scoped_t;
@@ -243,6 +260,9 @@ class env_stack_t final : public env_scoped_t {
     /// Given that we have determined that \p key is an unspecial key, set the variable in the right
     /// scope in the variable stack.
     void set_scoped_internal(const wcstring &key, env_mode_flags_t var_mode, wcstring_list_t val);
+
+    /// Set the pwd.
+    int set_pwd(wcstring_list_t pwds);
 
    public:
     /// Sets the variable with the specified name to the given values.

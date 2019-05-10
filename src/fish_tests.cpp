@@ -4953,6 +4953,38 @@ static void test_env_vars() {
     do_test(v1 != v4 && !(v1 == v4));
 }
 
+static void test_env_snapshot() {
+    if (system("mkdir -p test/fish_env_snapshot_test/")) err(L"mkdir failed");
+    bool pushed = pushd("test/fish_env_snapshot_test");
+    do_test(pushed);
+    auto &vars = parser_t::principal_parser().vars();
+    vars.push(true);
+    wcstring before_pwd = vars.get(L"PWD")->as_string();
+    vars.set(L"test_env_snapshot_var", 0, {L"before"});
+    const auto snapshot = vars.snapshot();
+    vars.set(L"PWD", 0, {L"/newdir"});
+    vars.set(L"test_env_snapshot_var", 0, {L"after"});
+    vars.set(L"test_env_snapshot_var_2", 0, {L"after"});
+
+    // vars should be unaffected by the snapshot
+    do_test(vars.get(L"PWD")->as_string() == L"/newdir");
+    do_test(vars.get(L"test_env_snapshot_var")->as_string() == L"after");
+    do_test(vars.get(L"test_env_snapshot_var_2")->as_string() == L"after");
+
+    // snapshot should have old values of vars
+    do_test(snapshot->get(L"PWD")->as_string() == before_pwd);
+    do_test(snapshot->get(L"test_env_snapshot_var")->as_string() == L"before");
+    do_test(snapshot->get(L"test_env_snapshot_var_2") == none());
+
+    // snapshots see global var changes except for perproc like PWD
+    vars.set(L"test_env_snapshot_var_3", ENV_GLOBAL, {L"reallyglobal"});
+    do_test(vars.get(L"test_env_snapshot_var_3")->as_string() == L"reallyglobal");
+    do_test(snapshot->get(L"test_env_snapshot_var_3")->as_string() == L"reallyglobal");
+
+    vars.pop();
+    popd();
+}
+
 static void test_illegal_command_exit_code() {
     say(L"Testing illegal command exit code");
 
@@ -5250,6 +5282,7 @@ int main(int argc, char **argv) {
     if (should_test_function("utility_functions")) test_utility_functions();
     if (should_test_function("wcstring_tok")) test_wcstring_tok();
     if (should_test_function("env_vars")) test_env_vars();
+    if (should_test_function("env")) test_env_snapshot();
     if (should_test_function("str_to_num")) test_str_to_num();
     if (should_test_function("enum")) test_enum_set();
     if (should_test_function("enum")) test_enum_array();

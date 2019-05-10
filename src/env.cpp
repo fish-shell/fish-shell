@@ -81,13 +81,21 @@ static bool variable_should_auto_pathvar(const wcstring &name) {
 }
 
 /// Table of variables whose value is dynamically calculated, such as umask, status, etc.
-static const string_set_t env_electric = {L"history", L"pipestatus", L"status", L"umask"};
+static const string_set_t env_electric = {L"history", L"pipestatus", L"status", L"umask", L"PWD"};
 
 static bool is_electric(const wcstring &key) { return contains(env_electric, key); }
 
+// This is a big dorky lock we take around everything that might read from or modify an env_node_t.
+// Fine grained locking is annoying here because env_nodes may be shared between env_stacks, so each
+// node would need its own lock.
+static std::mutex env_lock;
+
 /// \return a the value of a variable for \p key, which must be electric (computed).
-static maybe_t<env_var_t> get_electric(const wcstring &key, const environment_t &vars) {
-    if (key == L"history") {
+static maybe_t<env_var_t> get_electric(const wcstring &key, const env_scoped_t &vars) {
+    scoped_lock locker(env_lock);
+    if (key == L"PWD") {
+        return env_var_t(vars.perproc_data().pwd, env_var_t::flag_export);
+    } else if (key == L"history") {
         // Big hack. We only allow getting the history on the main thread. Note that history_t
         // may ask for an environment variable, so don't take the lock here (we don't need it).
         if (!is_main_thread()) {
@@ -114,10 +122,8 @@ static maybe_t<env_var_t> get_electric(const wcstring &key, const environment_t 
     } else if (key == L"umask") {
         // note umask() is an absurd API: you call it to set the value and it returns the old value.
         // Thus we have to call it twice, to reset the value.
-        // We need to lock since otherwise this races.
+        // The env_lock protects against races.
         // Guess what the umask is; if we guess right we don't need to reset it.
-        static std::mutex umask_lock;
-        scoped_lock locker(umask_lock);
         int guess = 022;
         mode_t res = umask(guess);
         if (res != guess) umask(res);
@@ -198,11 +204,6 @@ wcstring_list_t null_environment_t::get_names(int flags) const {
     return {};
 }
 
-// This is a big dorky lock we take around everything that might read from or modify an env_node_t.
-// Fine grained locking is annoying here because env_nodes may be shared between env_stacks, so each
-// node would need its own lock.
-static std::mutex env_lock;
-
 // Struct representing one level in the function variable stack.
 // Only our variable stack should create and destroy these
 class env_node_t {
@@ -250,7 +251,7 @@ struct var_stack_t {
 
     bool has_changed_exported() const { return !export_array; }
 
-    void update_export_array_if_necessary();
+    void update_export_array_if_necessary(const wcstring &pwd);
 
     var_stack_t(env_node_ref_t top, env_node_ref_t global)
         : top(std::move(top)), global(std::move(global)) {}
@@ -394,7 +395,7 @@ bool var_stack_t::local_scope_exports() const {
     return false;
 }
 
-void var_stack_t::update_export_array_if_necessary() {
+void var_stack_t::update_export_array_if_necessary(const wcstring &pwd) {
     if (!this->has_changed_exported()) {
         return;
     }
@@ -416,6 +417,9 @@ void var_stack_t::update_export_array_if_necessary() {
         }
     }
 
+    // Dorky way to add the single exported electric variable.
+    vals[L"PWD"] = env_var_t(L"PWD", pwd);
+
     // Construct the export list: a list of strings of the form key=value.
     std::vector<std::string> export_list;
     export_list.reserve(vals.size());
@@ -431,6 +435,21 @@ void var_stack_t::update_export_array_if_necessary() {
 // Get the variable stack
 var_stack_t &env_scoped_t::vars_stack() { return *vars_; }
 const var_stack_t &env_scoped_t::vars_stack() const { return *vars_; }
+
+/// Add the names of electric variables, respecting show_exported and show_unexported.
+static void add_electric_names(wcstring_list_t *result, bool show_exported, bool show_unexported) {
+    // As of now PWD is the only exported electric variable.
+    if (show_exported) {
+        result->push_back(L"PWD");
+    }
+    if (show_unexported) {
+        for (const wchar_t *var : env_electric) {
+            if (!wcscmp(var, L"PWD")) {
+                result->push_back(var);
+            }
+        }
+    }
+}
 
 // Read a variable respecting the given mode.
 maybe_t<env_var_t> env_scoped_t::get(const wcstring &key, env_mode_flags_t mode) const {
@@ -481,7 +500,9 @@ maybe_t<env_var_t> env_scoped_t::get(const wcstring &key, env_mode_flags_t mode)
 }
 
 std::shared_ptr<environment_t> env_scoped_t::snapshot() const {
-    return std::shared_ptr<env_scoped_t>(new env_scoped_t(vars_->snapshot()));
+    auto ret = std::shared_ptr<env_scoped_t>(new env_scoped_t(vars_->snapshot()));
+    ret->perproc_data_ = this->perproc_data_;
+    return ret;
 }
 
 env_scoped_t::env_scoped_t(std::unique_ptr<var_stack_t> vars) : vars_(std::move(vars)) {}
@@ -584,7 +605,7 @@ static void setup_path() {
 }
 
 void env_init(const struct config_paths_t *paths /* or NULL */) {
-    env_stack_t &vars = env_stack_t::globals();
+    env_stack_t &vars = env_stack_t::principal();
     // Import environment variables. Walk backwards so that the first one out of any duplicates wins
     // (See issue #2784).
     wcstring key, val;
@@ -796,6 +817,18 @@ static void env_set_internal_universal(const wcstring &key, wcstring_list_t val,
     }
 }
 
+int env_stack_t::set_pwd(wcstring_list_t pwds) {
+    // PWD cannot be set by the user, only by builtin_cd.
+    // So we require that we have exactly one element.
+    assert(pwds.size() == 1 && "Should have exactly one element in PWD");
+    wcstring &pwd = pwds.front();
+    if (pwd != perproc_data().pwd) {
+        perproc_data().pwd = std::move(pwd);
+        vars_stack().mark_changed_exported();
+    }
+    return ENV_OK;
+}
+
 void env_stack_t::set_scoped_internal(const wcstring &key, env_mode_flags_t var_mode,
                                       wcstring_list_t val) {
     scoped_lock locker(env_lock);
@@ -934,6 +967,9 @@ int env_stack_t::set_internal(const wcstring &key, env_mode_flags_t input_var_mo
     if (key == L"umask") {  // set new umask
         scoped_lock locker(env_lock);
         return set_umask(val);
+    } else if (key == L"PWD") {
+        scoped_lock locker(env_lock);
+        return this->set_pwd(std::move(val));
     }
 
     if (var_mode & ENV_UNIVERSAL) {
@@ -1085,9 +1121,7 @@ wcstring_list_t env_scoped_t::get_names(int flags) const {
 
     if (show_global) {
         add_keys(vars.global->env);
-        if (show_unexported) {
-            result.insert(result.end(), std::begin(env_electric), std::end(env_electric));
-        }
+        add_electric_names(&result, show_exported, show_unexported);
     }
 
     if (show_universal && uvars()) {
@@ -1102,7 +1136,8 @@ wcstring_list_t env_scoped_t::get_names(int flags) const {
 const char *const *env_stack_t::export_arr() {
     ASSERT_IS_MAIN_THREAD();
     ASSERT_IS_NOT_FORKED_CHILD();
-    vars_stack().update_export_array_if_necessary();
+    const wcstring &pwd = perproc_data().pwd;
+    vars_stack().update_export_array_if_necessary(pwd);
     assert(vars_stack().export_array && "Should have export array");
     return vars_stack().export_array->get();
 }

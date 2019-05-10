@@ -240,6 +240,10 @@ class env_stack_t final : public env_scoped_t {
     ~env_stack_t() override;
     env_stack_t(env_stack_t &&);
 
+    /// Given that we have determined that \p key is an unspecial key, set the variable in the right
+    /// scope in the variable stack.
+    void set_scoped_internal(const wcstring &key, env_mode_flags_t var_mode, wcstring_list_t val);
+
    public:
     /// Sets the variable with the specified name to the given values.
     int set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);
@@ -278,9 +282,6 @@ class env_stack_t final : public env_scoped_t {
 
     /// Update the termsize variable.
     void set_termsize();
-
-    /// Update the PWD variable directory.
-    bool set_pwd();
 
     /// Sets up argv as the given null terminated array of strings.
     void set_argv(const wchar_t *const *argv);

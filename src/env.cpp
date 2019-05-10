@@ -796,6 +796,98 @@ static void env_set_internal_universal(const wcstring &key, wcstring_list_t val,
     }
 }
 
+void env_stack_t::set_scoped_internal(const wcstring &key, env_mode_flags_t var_mode,
+                                      wcstring_list_t val) {
+    scoped_lock locker(env_lock);
+    bool has_changed_old = vars_stack().has_changed_exported();
+    bool done = false;
+
+    // Determine the node.
+    bool has_changed_new = false;
+    env_node_ref_t preexisting_node = get_node(key);
+    maybe_t<env_var_t::env_var_flags_t> preexisting_flags{};
+    if (preexisting_node != nullptr) {
+        var_table_t::const_iterator result = preexisting_node->env.find(key);
+        assert(result != preexisting_node->env.end());
+        preexisting_flags = result->second.get_flags();
+        if (*preexisting_flags & env_var_t::flag_export) {
+            has_changed_new = true;
+        }
+    }
+
+    env_node_ref_t node = nullptr;
+    if (var_mode & ENV_GLOBAL) {
+        node = vars_stack().global;
+    } else if (var_mode & ENV_LOCAL) {
+        node = vars_stack().top;
+    } else if (preexisting_node != nullptr) {
+        node = std::move(preexisting_node);
+        if ((var_mode & (ENV_EXPORT | ENV_UNEXPORT)) == 0) {
+            // Use existing entry's exportv status.
+            if (preexisting_flags && (*preexisting_flags & env_var_t::flag_export)) {
+                var_mode |= ENV_EXPORT;
+            }
+        }
+    } else {
+        if (uvars() && uvars()->get(key)) {
+            // Modifying an existing universal variable.
+            env_set_internal_universal(key, std::move(val), var_mode, this);
+            done = true;
+        } else {
+            // New variable with unspecified scope
+            node = vars_stack().resolve_unspecified_scope();
+        }
+    }
+
+    if (!done) {
+        // Resolve if we should mark ourselves as a path variable or not.
+        // If there's an existing variable, use its path flag; otherwise infer it.
+        if ((var_mode & (ENV_PATHVAR | ENV_UNPATHVAR)) == 0) {
+            bool should_pathvar = false;
+            if (preexisting_flags) {
+                should_pathvar = *preexisting_flags & env_var_t::flag_pathvar;
+            } else {
+                should_pathvar = variable_should_auto_pathvar(key);
+            }
+            var_mode |= should_pathvar ? ENV_PATHVAR : ENV_UNPATHVAR;
+        }
+
+        // Split about ':' if it's a path variable.
+        if (var_mode & ENV_PATHVAR) {
+            wcstring_list_t split_val;
+            for (const wcstring &str : val) {
+                vec_append(split_val, split_string(str, PATH_ARRAY_SEP));
+            }
+            val = std::move(split_val);
+        }
+
+        // Set the entry in the node. Note that operator[] accesses the existing entry, or
+        // creates a new one.
+        env_var_t &var = node->env[key];
+        if (var.exports()) {
+            // This variable already existed, and was exported.
+            has_changed_new = true;
+        }
+
+        var = var.setting_vals(std::move(val))
+                  .setting_exports(var_mode & ENV_EXPORT)
+                  .setting_pathvar(var_mode & ENV_PATHVAR)
+                  .setting_read_only(is_read_only(key));
+
+        if (var_mode & ENV_EXPORT) {
+            // The new variable is exported.
+            node->exportv = true;
+            has_changed_new = true;
+        } else {
+            // Set the node's exported when it changes something about exports
+            // (also when it redefines a variable to not be exported).
+            node->exportv = has_changed_old != has_changed_new;
+        }
+
+        if (has_changed_old || has_changed_new) vars_stack().mark_changed_exported();
+    }
+}
+
 /// Set the value of the environment variable whose name matches key to val.
 ///
 /// \param key The key
@@ -816,8 +908,6 @@ int env_stack_t::set_internal(const wcstring &key, env_mode_flags_t input_var_mo
                               wcstring_list_t val) {
     ASSERT_IS_MAIN_THREAD();
     env_mode_flags_t var_mode = input_var_mode;
-    bool has_changed_old = vars_stack().has_changed_exported();
-    int done = 0;
 
     if (val.size() == 1 && (key == L"PWD" || key == L"HOME")) {
         // Canonicalize our path; if it changes, recurse and try again.
@@ -828,111 +918,32 @@ int env_stack_t::set_internal(const wcstring &key, env_mode_flags_t input_var_mo
         }
     }
 
+    // Yucky set of random checks.
     if ((var_mode & ENV_LOCAL || var_mode & ENV_UNIVERSAL) &&
         (is_read_only(key) || is_electric(key))) {
         return ENV_SCOPE;
     }
-    if ((var_mode & ENV_EXPORT) && is_electric(key)) {
+    if ((var_mode & ENV_EXPORT) && is_electric(key) && key != L"PWD") {
         return ENV_SCOPE;
     }
     if ((var_mode & ENV_USER) && is_read_only(key)) {
         return ENV_PERM;
     }
 
+    // Handle special case electric variables.
     if (key == L"umask") {  // set new umask
+        scoped_lock locker(env_lock);
         return set_umask(val);
     }
 
     if (var_mode & ENV_UNIVERSAL) {
+        // Set this as a universal variable.
         if (uvars()) {
             env_set_internal_universal(key, std::move(val), var_mode, this);
         }
     } else {
-        scoped_lock locker(env_lock);
-        // Determine the node.
-        bool has_changed_new = false;
-        env_node_ref_t preexisting_node = get_node(key);
-        maybe_t<env_var_t::env_var_flags_t> preexisting_flags{};
-        if (preexisting_node != nullptr) {
-            var_table_t::const_iterator result = preexisting_node->env.find(key);
-            assert(result != preexisting_node->env.end());
-            preexisting_flags = result->second.get_flags();
-            if (*preexisting_flags & env_var_t::flag_export) {
-                has_changed_new = true;
-            }
-        }
-
-        env_node_ref_t node = nullptr;
-        if (var_mode & ENV_GLOBAL) {
-            node = vars_stack().global;
-        } else if (var_mode & ENV_LOCAL) {
-            node = vars_stack().top;
-        } else if (preexisting_node != nullptr) {
-            node = std::move(preexisting_node);
-            if ((var_mode & (ENV_EXPORT | ENV_UNEXPORT)) == 0) {
-                // Use existing entry's exportv status.
-                if (preexisting_flags && (*preexisting_flags & env_var_t::flag_export)) {
-                    var_mode |= ENV_EXPORT;
-                }
-            }
-        } else {
-            if (uvars() && uvars()->get(key)) {
-                // Modifying an existing universal variable.
-                env_set_internal_universal(key, std::move(val), var_mode, this);
-                done = true;
-            } else {
-                // New variable with unspecified scope
-                node = vars_stack().resolve_unspecified_scope();
-            }
-        }
-
-        if (!done) {
-            // Resolve if we should mark ourselves as a path variable or not.
-            // If there's an existing variable, use its path flag; otherwise infer it.
-            if ((var_mode & (ENV_PATHVAR | ENV_UNPATHVAR)) == 0) {
-                bool should_pathvar = false;
-                if (preexisting_flags) {
-                    should_pathvar = *preexisting_flags & env_var_t::flag_pathvar;
-                } else {
-                    should_pathvar = variable_should_auto_pathvar(key);
-                }
-                var_mode |= should_pathvar ? ENV_PATHVAR : ENV_UNPATHVAR;
-            }
-
-            // Split about ':' if it's a path variable.
-            if (var_mode & ENV_PATHVAR) {
-                wcstring_list_t split_val;
-                for (const wcstring &str : val) {
-                    vec_append(split_val, split_string(str, PATH_ARRAY_SEP));
-                }
-                val = std::move(split_val);
-            }
-
-            // Set the entry in the node. Note that operator[] accesses the existing entry, or
-            // creates a new one.
-            env_var_t &var = node->env[key];
-            if (var.exports()) {
-                // This variable already existed, and was exported.
-                has_changed_new = true;
-            }
-
-            var = var.setting_vals(std::move(val))
-                      .setting_exports(var_mode & ENV_EXPORT)
-                      .setting_pathvar(var_mode & ENV_PATHVAR)
-                      .setting_read_only(is_read_only(key));
-
-            if (var_mode & ENV_EXPORT) {
-                // The new variable is exported.
-                node->exportv = true;
-                has_changed_new = true;
-            } else {
-                // Set the node's exported when it changes something about exports
-                // (also when it redefines a variable to not be exported).
-                node->exportv = has_changed_old != has_changed_new;
-            }
-
-            if (has_changed_old || has_changed_new) vars_stack().mark_changed_exported();
-        }
+        // Unspecial variable, set it in the right scope.
+        set_scoped_internal(key, var_mode, std::move(val));
     }
 
     event_fire(event_t::variable(key, {L"VARIABLE", L"SET", key}));

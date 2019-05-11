@@ -654,11 +654,11 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         // Note that skip_remaining is a width, not a character count.
         size_t skip_remaining = start_pos;
 
+        const size_t shared_prefix = line_shared_prefix(o_line, s_line);
         if (!should_clear_screen_this_line) {
             // Compute how much we should skip. At a minimum we skip over the prompt. But also skip
             // over the shared prefix of what we want to output now, and what we output before, to
             // avoid repeatedly outputting it.
-            const size_t shared_prefix = line_shared_prefix(o_line, s_line);
             if (shared_prefix > 0) {
                 size_t prefix_width = fish_wcswidth(&o_line.text.at(0), shared_prefix);
                 if (prefix_width > skip_remaining) skip_remaining = prefix_width;
@@ -734,9 +734,13 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         } else if (right_prompt_width < scr->last_right_prompt_width) {
             clear_remainder = true;
         } else {
-            int prev_width =
-                s_line.text.empty() ? 0 : fish_wcswidth(&s_line.text.at(0), s_line.text.size());
-            clear_remainder = prev_width > current_width;
+            // This wcswidth shows up strong in the profile.
+            // Only do it if the previous line could conceivably be wider.
+            // That means if it is a prefix of the current one we can skip it.
+            if (s_line.text.size() != shared_prefix) {
+                int prev_width = fish_wcswidth(&s_line.text.at(0), s_line.text.size());
+                clear_remainder = prev_width > current_width;
+            }
         }
         if (clear_remainder && clr_eol) {
             s_set_color(scr, vars, highlight_spec_t{});

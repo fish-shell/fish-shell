@@ -35,7 +35,7 @@ function fish_clipboard_paste
     if not string length -q -- (commandline -c)
         # If we're at the beginning of the first line, trim whitespace from the start,
         # so we don't trigger ignoring history.
-        set data (string trim -l -- $data)
+        set data[1] (string trim -l -- $data[1])
     end
     if test -n "$data"
         commandline -i -- $data

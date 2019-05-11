@@ -269,6 +269,10 @@ int fish_get_emoji_width(wchar_t c) {
 #include "widecharwidth/widechar_width.h"
 
 int fish_wcwidth(wchar_t wc) {
+    // Normal ASCII characters.
+    // These are the most common case, so it's worth checking them first.
+    if (wc < 0x7f && wc >= 0x20) return 1;
+
     // The system version of wcwidth should accurately reflect the ability to represent characters
     // in the console session, but knows nothing about the capabilities of other terminal emulators
     // or ttys. Use it from the start only if we are logged in to the physical console.

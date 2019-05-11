@@ -381,7 +381,7 @@ static void s_check_status(screen_t *s) {
 /// Appends a character to the end of the line that the output cursor is on. This function
 /// automatically handles linebreaks and lines longer than the screen width.
 static void s_desired_append_char(screen_t *s, wchar_t b, highlight_spec_t c, int indent,
-                                  size_t prompt_width) {
+                                  size_t prompt_width, size_t bwidth) {
     int line_no = s->desired.cursor.y;
 
     if (b == L'\n') {
@@ -391,7 +391,7 @@ static void s_desired_append_char(screen_t *s, wchar_t b, highlight_spec_t c, in
         s->desired.cursor.y++;
         s->desired.cursor.x = 0;
         for (size_t i = 0; i < prompt_width + indent * INDENT_STEP; i++) {
-            s_desired_append_char(s, L' ', highlight_spec_t{}, indent, prompt_width);
+            s_desired_append_char(s, L' ', highlight_spec_t{}, indent, prompt_width, 1);
         }
     } else if (b == L'\r') {
         line_t &current = s->desired.line(line_no);
@@ -399,7 +399,7 @@ static void s_desired_append_char(screen_t *s, wchar_t b, highlight_spec_t c, in
         s->desired.cursor.x = 0;
     } else {
         int screen_width = common_get_width();
-        int cw = fish_wcwidth_min_0(b);
+        int cw = bwidth;
 
         s->desired.create_line(line_no);
 
@@ -523,9 +523,9 @@ static void s_set_color(screen_t *s, const environment_t &vars, highlight_spec_t
 }
 
 /// Convert a wide character to a multibyte string and append it to the buffer.
-static void s_write_char(screen_t *s, wchar_t c) {
+static void s_write_char(screen_t *s, wchar_t c, size_t width) {
     scoped_buffer_t outp(*s);
-    s->actual.cursor.x += fish_wcwidth_min_0(c);
+    s->actual.cursor.x += width;
     s->outp().writech(c);
     if (s->actual.cursor.x == s->actual_width && allow_soft_wrap()) {
         s->soft_wrap_location.x = 0;
@@ -710,8 +710,9 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
             perform_any_impending_soft_wrap(scr, current_width, (int)i);
             s_move(scr, current_width, (int)i);
             s_set_color(scr, vars, o_line.color_at(j));
-            s_write_char(scr, o_line.char_at(j));
-            current_width += fish_wcwidth_min_0(o_line.char_at(j));
+            auto width = fish_wcwidth_min_0(o_line.char_at(j));
+            s_write_char(scr, o_line.char_at(j), width);
+            current_width += width;
         }
 
         // Clear the screen if we have not done so yet.
@@ -1010,13 +1011,13 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
 
     // Append spaces for the left prompt.
     for (size_t i = 0; i < layout.left_prompt_space; i++) {
-        s_desired_append_char(s, L' ', highlight_spec_t{}, 0, layout.left_prompt_space);
+        s_desired_append_char(s, L' ', highlight_spec_t{}, 0, layout.left_prompt_space, 1);
     }
 
     // If overflowing, give the prompt its own line to improve the situation.
     size_t first_line_prompt_space = layout.left_prompt_space;
     if (layout.prompts_get_own_line) {
-        s_desired_append_char(s, L'\n', highlight_spec_t{}, 0, 0);
+        s_desired_append_char(s, L'\n', highlight_spec_t{}, 0, 0, 0);
         first_line_prompt_space = 0;
     }
 
@@ -1031,7 +1032,7 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
             cursor_arr = s->desired.cursor;
         }
         s_desired_append_char(s, effective_commandline.at(i), colors[i], indent[i],
-                              first_line_prompt_space);
+                              first_line_prompt_space, fish_wcwidth_min_0(effective_commandline.at(i)));
     }
 
     // Cursor may have been at the end too.

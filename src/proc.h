@@ -517,6 +517,6 @@ void add_disowned_pgid(pid_t pgid);
 ///   function
 enum { INVALID_PID = -2 };
 
-extern bool have_proc_stat;
+bool have_proc_stat();
 
 #endif

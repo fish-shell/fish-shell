@@ -54,7 +54,7 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
             if (header) {
                 // Print table header before first job.
                 streams.out.append(_(L"Job\tGroup\t"));
-                if (have_proc_stat) {
+                if (have_proc_stat()) {
                     streams.out.append(_(L"CPU\t"));
                 }
                 streams.out.append(_(L"State\tCommand\n"));
@@ -62,7 +62,7 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
 
             streams.out.append_format(L"%d\t%d\t", j->job_id, j->pgid);
 
-            if (have_proc_stat) {
+            if (have_proc_stat()) {
                 streams.out.append_format(L"%d%%\t", cpu_use(j));
             }
 

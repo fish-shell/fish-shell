@@ -219,10 +219,6 @@ void misc_init() {
         fflush(stdout);
         setvbuf(stdout, NULL, _IONBF, 0);
     }
-    // Check for /proc/self/stat to see if we are running with Linux-style procfs
-    if (access("/proc/self/stat", R_OK) == 0) {
-        have_proc_stat = true;
-    }
 }
 
 /// Ensure the content of the magic path env vars is reasonable. Specifically, that empty path

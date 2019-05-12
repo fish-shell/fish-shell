@@ -1963,7 +1963,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
     // For compatibility with fish 2.0's $_, now replaced with `status current-command`
     parser.vars().set_one(L"_", ENV_GLOBAL, program_name);
 
-    if (have_proc_stat) {
+    if (have_proc_stat()) {
         proc_update_jiffies(parser);
     }
 }

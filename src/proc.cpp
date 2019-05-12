@@ -59,7 +59,12 @@ bool is_breakpoint = false;
 bool is_login = false;
 int is_event = 0;
 int no_exec = 0;
-bool have_proc_stat = false;
+
+bool have_proc_stat() {
+    // Check for /proc/self/stat to see if we are running with Linux-style procfs.
+    static const bool s_result = (access("/proc/self/stat", R_OK) == 0);
+    return s_result;
+}
 
 static relaxed_atomic_t<job_control_t> job_control_mode{job_control_t::interactive};
 
@@ -623,7 +628,7 @@ bool job_reap(parser_t &parser, bool allow_interactive) {
 
 /// Get the CPU time for the specified process.
 unsigned long proc_get_jiffies(process_t *p) {
-    if (!have_proc_stat) return 0;
+    if (!have_proc_stat()) return 0;
     if (p->pid <= 0) return 0;
 
     wchar_t fn[FN_SIZE];

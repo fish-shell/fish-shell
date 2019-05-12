@@ -138,7 +138,6 @@ void parser_t::push_block_int(block_t *new_current) {
         new_current->skip = false;
     }
 
-    new_current->job = nullptr;
     new_current->loop_status = LOOP_NORMAL;
 
     // Push it onto our stack. This acquires ownership because of unique_ptr.

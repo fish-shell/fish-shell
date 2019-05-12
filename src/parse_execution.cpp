@@ -1240,27 +1240,28 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
     job->set_flag(job_flag_t::SKIP_NOTIFICATION,
                   is_subshell || is_block || is_event || !shell_is_interactive());
 
-    // Tell the current block what its job is. This has to happen before we populate it (#1394).
-    parser->current_block()->job = job;
+    // We are about to populate a job. One possible argument to the job is a command substitution
+    // which may be interested in the job that's populating it, via '--on-job-exit caller'. Record
+    // the job ID here.
+    auto &libdata = parser->libdata();
+    const auto saved_caller_jid = libdata.caller_job_id;
+    libdata.caller_job_id = job->job_id;
 
     // Populate the job. This may fail for reasons like command_not_found. If this fails, an error
     // will have been printed.
     parse_execution_result_t pop_result =
         this->populate_job_from_job_node(job.get(), job_node, associated_block);
 
-    // Clean up the job on failure or cancellation.
-    bool populated_job = (pop_result == parse_execution_success);
-    if (!populated_job || this->should_cancel_execution(associated_block)) {
-        assert(parser->current_block()->job == job);
-        parser->current_block()->job = NULL;
-        populated_job = false;
-    }
+    assert(libdata.caller_job_id == job->job_id && "Caller job ID unexpectedly changed");
+    parser->libdata().caller_job_id = saved_caller_jid;
 
     // Store time it took to 'parse' the command.
     if (profile_item != NULL) {
         parse_time = get_time();
     }
 
+    // Clean up the job on failure or cancellation.
+    bool populated_job = (pop_result == parse_execution_success);
     if (populated_job) {
         // Success. Give the job to the parser - it will clean it up.
         parser->job_add(job);

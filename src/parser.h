@@ -67,8 +67,6 @@ struct block_t {
     bool skip{false};
     /// Status for the current loop block. Can be any of the values from the loop_status enum.
     enum loop_status_t loop_status { LOOP_NORMAL };
-    /// The job that is currently evaluated in the specified block.
-    shared_ptr<job_t> job{};
     /// Name of file that created this block. This string is intern'd.
     const wchar_t *src_filename{nullptr};
     /// Line number where this block was created.
@@ -159,6 +157,10 @@ struct library_data_t {
 
     /// Whether we are currently cleaning processes.
     bool is_cleaning_procs{false};
+
+    /// The job id of the job being populated.
+    /// This supports the '--on-job-exit caller' feature.
+    job_id_t caller_job_id{-1};
 };
 
 class parser_t : public std::enable_shared_from_this<parser_t> {

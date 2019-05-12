@@ -377,7 +377,6 @@ int main(int argc, char **argv) {
     setup_fork_guards();
     signal_unblock_all();
     setlocale(LC_ALL, "");
-    fish_setlocale();
 
     // struct stat tmp;
     // stat("----------FISH_HIT_MAIN----------", &tmp);

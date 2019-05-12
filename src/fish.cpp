@@ -310,7 +310,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 break;
             }
             case 'n': {
-                no_exec = 1;
+                set_no_exec(true);
                 break;
             }
             case 1: {
@@ -390,9 +390,9 @@ int main(int argc, char **argv) {
     my_optind = fish_parse_opt(argc, argv, &opts);
 
     // No-exec is prohibited when in interactive mode.
-    if (is_interactive_session && no_exec) {
+    if (is_interactive_session && no_exec()) {
         debug(1, _(L"Can not use the no-execute mode when running an interactive session"));
-        no_exec = 0;
+        set_no_exec(false);
     }
 
     // Only save (and therefore restore) the fg process group if we are interactive. See issues

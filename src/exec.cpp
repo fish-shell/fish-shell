@@ -1019,7 +1019,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     bool exec_error = false;
 
     // If fish was invoked with -n or --no-execute, then no_exec will be set and we do nothing.
-    if (no_exec) {
+    if (no_exec()) {
         return true;
     }
 

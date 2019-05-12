@@ -601,7 +601,7 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
 
         // no_exec means that fish was invoked with -n or --no-execute. If set, we allow the loop to
         // not-execute once so its contents can be checked, and then break.
-        if (no_exec) {
+        if (no_exec()) {
             break;
         }
     }
@@ -959,7 +959,7 @@ bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redir
 
         // PCA: I can't justify this skip_variables flag. It was like this when I got here.
         bool target_expanded =
-            expand_one(target, no_exec ? expand_flag::skip_variables : expand_flags_t{},
+            expand_one(target, no_exec() ? expand_flag::skip_variables : expand_flags_t{},
                        parser->vars(), parser->shared());
         if (!target_expanded || target.empty()) {
             // TODO: Improve this error message.

@@ -448,7 +448,8 @@ void set_job_control_mode(job_control_t mode);
 /// If this flag is set, fish will never fork or run execve. It is used to put fish into a syntax
 /// verifier mode where fish tries to validate the syntax of a file but doesn't actually do
 /// anything.
-extern int no_exec;
+bool no_exec();
+void set_no_exec(bool flag);
 
 /// Notify the user about stopped or terminated jobs, and delete completed jobs from the job list.
 /// If \p interactive is set, allow removing interactive jobs; otherwise skip them.

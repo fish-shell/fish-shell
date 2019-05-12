@@ -58,7 +58,10 @@ bool is_block = false;
 bool is_breakpoint = false;
 bool is_login = false;
 int is_event = 0;
-int no_exec = 0;
+
+static relaxed_atomic_bool_t s_no_exec;
+bool no_exec() { return s_no_exec; }
+void set_no_exec(bool flag) { s_no_exec = flag; }
 
 bool have_proc_stat() {
     // Check for /proc/self/stat to see if we are running with Linux-style procfs.

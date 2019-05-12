@@ -1,7 +1,7 @@
 # Apache Ant (1.9.5) completion for Fish Shell.
 
 # completion for ant targets
-complete -x -c ant -a "(__fish_complete_ant_targets)"
+complete -x -c ant -a "(__fish_complete_ant_targets (commandline -co))"
 
 # Script Options:
 complete -f -c ant -l help -l h -d 'print help message and ant help'

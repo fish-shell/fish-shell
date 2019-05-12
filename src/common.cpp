@@ -99,7 +99,7 @@ static relaxed_atomic_t<pid_t> initial_fg_process_group{-1};
 /// This struct maintains the current state of the terminal size. It is updated on demand after
 /// receiving a SIGWINCH. Use common_get_width()/common_get_height() to read it lazily.
 static constexpr struct winsize k_invalid_termsize = {USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX};
-static relaxed_atomic_t<struct winsize> s_termsize(k_invalid_termsize);
+static owning_lock<struct winsize> s_termsize{k_invalid_termsize};
 
 static relaxed_atomic_bool_t s_termsize_valid{false};
 
@@ -1745,9 +1745,8 @@ bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t e
 void invalidate_termsize(bool invalidate_vars) {
     s_termsize_valid = false;
     if (invalidate_vars) {
-        struct winsize termsize = s_termsize;
-        termsize.ws_col = termsize.ws_row = USHRT_MAX;
-        termsize = s_termsize;
+        auto termsize = s_termsize.acquire();
+        termsize->ws_col = termsize->ws_row = USHRT_MAX;
     }
 }
 
@@ -1810,27 +1809,38 @@ static void export_new_termsize(struct winsize *new_termsize, env_stack_t &vars)
 #endif
 }
 
-/// Updates termsize as needed, and returns a copy of the winsize.
-struct winsize get_current_winsize() {
-    struct winsize termsize = s_termsize;
-    if (s_termsize_valid) return termsize;
+/// Get the current termsize, lazily computing it. Return by reference if it changed.
+static struct winsize get_current_winsize_prim(bool *changed, const environment_t &vars) {
+    auto termsize = s_termsize.acquire();
+    if (s_termsize_valid) return *termsize;
 
     struct winsize new_termsize = {0, 0, 0, 0};
 #ifdef HAVE_WINSIZE
     errno = 0;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &new_termsize) != -1 &&
-        new_termsize.ws_col == termsize.ws_col && new_termsize.ws_row == termsize.ws_row) {
+        new_termsize.ws_col == termsize->ws_col && new_termsize.ws_row == termsize->ws_row) {
         s_termsize_valid = true;
-        return termsize;
+        return *termsize;
     }
 #endif
-    auto &vars = env_stack_t::globals();
     validate_new_termsize(&new_termsize, vars);
-    export_new_termsize(&new_termsize, vars);
-    termsize.ws_col = new_termsize.ws_col;
-    termsize.ws_row = new_termsize.ws_row;
-    s_termsize = termsize;
+    termsize->ws_col = new_termsize.ws_col;
+    termsize->ws_row = new_termsize.ws_row;
+    *changed = true;
     s_termsize_valid = true;
+    return *termsize;
+}
+
+/// Updates termsize as needed, and returns a copy of the winsize.
+struct winsize get_current_winsize() {
+    bool changed = false;
+    auto &vars = env_stack_t::globals();
+    struct winsize termsize = get_current_winsize_prim(&changed, vars);
+    if (changed) {
+        // TODO: this may call us reentrantly through the environment dispatch mechanism. We need to
+        // rationalize this.
+        export_new_termsize(&termsize, vars);
+    }
     return termsize;
 }
 

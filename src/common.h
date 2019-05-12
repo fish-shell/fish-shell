@@ -649,6 +649,7 @@ class owning_lock {
 
    public:
     owning_lock(Data &&d) : data(std::move(d)) {}
+    owning_lock(const Data &d) : data(d) {}
     owning_lock() : data() {}
 
     acquired_lock<Data> acquire() { return {lock, &data}; }

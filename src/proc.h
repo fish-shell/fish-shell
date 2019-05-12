@@ -415,7 +415,7 @@ class job_t {
 };
 
 /// Whether we are reading from the keyboard right now.
-bool shell_is_interactive(void);
+bool shell_is_interactive();
 
 /// Whether we are running a subshell command.
 extern bool is_subshell;
@@ -427,10 +427,18 @@ extern bool is_block;
 extern bool is_breakpoint;
 
 /// Whether this shell is attached to the keyboard at all.
-extern bool is_interactive_session;
+bool is_interactive_session();
+void set_interactive_session(bool flag);
 
 /// Whether we are a login shell.
-extern bool is_login;
+bool get_login();
+void mark_login();
+
+/// If this flag is set, fish will never fork or run execve. It is used to put fish into a syntax
+/// verifier mode where fish tries to validate the syntax of a file but doesn't actually do
+/// anything.
+bool no_exec();
+void mark_no_exec();
 
 /// Whether we are running an event handler. This is not a bool because we keep count of the event
 /// nesting level.
@@ -444,12 +452,6 @@ typedef std::deque<shared_ptr<job_t>> job_list_t;
 /// Must be one of job_control_t::all, job_control_t::interactive and job_control_t::none.
 job_control_t get_job_control_mode();
 void set_job_control_mode(job_control_t mode);
-
-/// If this flag is set, fish will never fork or run execve. It is used to put fish into a syntax
-/// verifier mode where fish tries to validate the syntax of a file but doesn't actually do
-/// anything.
-bool no_exec();
-void set_no_exec(bool flag);
 
 /// Notify the user about stopped or terminated jobs, and delete completed jobs from the job list.
 /// If \p interactive is set, allow removing interactive jobs; otherwise skip them.

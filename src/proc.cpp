@@ -52,16 +52,22 @@
 /// The signals that signify crashes to us.
 static const int crashsignals[] = {SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGSYS};
 
-bool is_interactive_session = false;
 bool is_subshell = false;
 bool is_block = false;
 bool is_breakpoint = false;
-bool is_login = false;
 int is_event = 0;
 
-static relaxed_atomic_bool_t s_no_exec;
+static relaxed_atomic_bool_t s_is_interactive_session{false};
+bool is_interactive_session() { return s_is_interactive_session; }
+void set_interactive_session(bool flag) { s_is_interactive_session = flag; }
+
+static relaxed_atomic_bool_t s_is_login{false};
+bool get_login() { return s_is_login; }
+void mark_login() { s_is_login = true; }
+
+static relaxed_atomic_bool_t s_no_exec{false};
 bool no_exec() { return s_no_exec; }
-void set_no_exec(bool flag) { s_no_exec = flag; }
+void mark_no_exec() { s_no_exec = true; }
 
 bool have_proc_stat() {
     // Check for /proc/self/stat to see if we are running with Linux-style procfs.
@@ -245,7 +251,7 @@ static void handle_child_status(process_t *proc, proc_status_t status) {
     if (status.signal_exited()) {
         int sig = status.signal_code();
         if (sig == SIGINT || sig == SIGQUIT) {
-            if (is_interactive_session) {
+            if (is_interactive_session()) {
                 // In an interactive session, tell the principal parser to skip all blocks we're
                 // executing so control-C returns control to the user.
                 parser_t::skip_all_blocks();

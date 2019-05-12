@@ -1731,7 +1731,7 @@ static void reader_interactive_init() {
                 owner = tcgetpgrp(STDIN_FILENO);
             }
             if (owner == -1 && errno == ENOTTY) {
-                if (!is_interactive_session) {
+                if (!is_interactive_session()) {
                     // It's OK if we're not able to take control of the terminal. We handle
                     // the fallout from this in a few other places.
                     break;
@@ -3229,7 +3229,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         // This check is required to work around certain issues with fish's approach to
         // terminal control when launching interactive processes while in non-interactive
         // mode. See #4178 for one such example.
-        if (err != ENOTTY || is_interactive_session) {
+        if (err != ENOTTY || is_interactive_session()) {
             wperror(L"tcsetattr");
         }
     }
@@ -3333,7 +3333,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     if (!reader_exit_forced()) {
         // The order of the two conditions below is important. Try to restore the mode
         // in all cases, but only complain if interactive.
-        if (tcsetattr(0, TCSANOW, &old_modes) == -1 && is_interactive_session) {
+        if (tcsetattr(0, TCSANOW, &old_modes) == -1 && is_interactive_session()) {
             if (errno == EIO) redirect_tty_output();
             wperror(L"tcsetattr");  // return to previous mode
         }

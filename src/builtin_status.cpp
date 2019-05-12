@@ -304,7 +304,7 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     switch (opts.status_cmd) {
         case STATUS_UNDEF: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            if (is_login) {
+            if (get_login()) {
                 streams.out.append_format(_(L"This is a login shell\n"));
             } else {
                 streams.out.append_format(_(L"This is not a login shell\n"));
@@ -384,7 +384,7 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
         case STATUS_IS_INTERACTIVE: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = !is_interactive_session;
+            retval = !is_interactive_session();
             break;
         }
         case STATUS_IS_COMMAND_SUB: {
@@ -404,7 +404,7 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
         case STATUS_IS_LOGIN: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = !is_login;
+            retval = !get_login();
             break;
         }
         case STATUS_IS_FULL_JOB_CTRL: {

@@ -66,6 +66,12 @@ class fish_cmd_opts_t {
     std::vector<std::string> postconfig_cmds;
     /// Whether to print rusage-self stats after execution.
     bool print_rusage_self{false};
+    /// Whether no-exec is set.
+    bool no_exec{false};
+    /// Whether this is a login shell.
+    bool is_login{false};
+    /// Whether this is an interactive session.
+    bool is_interactive_session{false};
 };
 
 /// If we are doing profiling, the filename to output to.
@@ -302,15 +308,15 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 break;
             }
             case 'i': {
-                is_interactive_session = true;
+                opts->is_interactive_session = true;
                 break;
             }
             case 'l': {
-                is_login = true;
+                opts->is_login = true;
                 break;
             }
             case 'n': {
-                set_no_exec(true);
+                opts->no_exec = true;
                 break;
             }
             case 1: {
@@ -356,13 +362,13 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
     }
 
     // If our command name begins with a dash that implies we're a login shell.
-    is_login |= argv[0][0] == '-';
+    opts->is_login |= argv[0][0] == '-';
 
     // We are an interactive session if we have not been given an explicit
     // command or file to execute and stdin is a tty. Note that the -i or
     // --interactive options also force interactive mode.
     if (opts->batch_cmds.size() == 0 && optind == argc && isatty(STDIN_FILENO)) {
-        is_interactive_session = 1;
+        set_interactive_session(true);
     }
 
     return optind;
@@ -386,18 +392,23 @@ int main(int argc, char **argv) {
         argv = (char **)dummy_argv;  //!OCLINT(parameter reassignment)
         argc = 1;                    //!OCLINT(parameter reassignment)
     }
-    fish_cmd_opts_t opts;
+    fish_cmd_opts_t opts{};
     my_optind = fish_parse_opt(argc, argv, &opts);
 
     // No-exec is prohibited when in interactive mode.
-    if (is_interactive_session && no_exec()) {
+    if (opts.is_interactive_session && opts.no_exec) {
         debug(1, _(L"Can not use the no-execute mode when running an interactive session"));
-        set_no_exec(false);
+        opts.no_exec = false;
     }
+
+    // Apply our options.
+    if (opts.is_login) mark_login();
+    if (opts.no_exec) mark_no_exec();
+    if (opts.is_interactive_session) set_interactive_session(true);
 
     // Only save (and therefore restore) the fg process group if we are interactive. See issues
     // #197 and #1002.
-    if (is_interactive_session) {
+    if (is_interactive_session()) {
         save_term_foreground_process_group();
     }
 
@@ -430,7 +441,7 @@ int main(int argc, char **argv) {
 
         if (!opts.batch_cmds.empty()) {
             // Run the commands specified as arguments, if any.
-            if (is_login) {
+            if (get_login()) {
                 // Do something nasty to support OpenSUSE assuming we're bash. This may modify cmds.
                 fish_xdm_login_hack_hack_hack_hack(&opts.batch_cmds, argc - my_optind,
                                                    argv + my_optind);

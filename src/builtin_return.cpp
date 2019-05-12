@@ -78,7 +78,7 @@ int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (optind == argc) {
-        retval = proc_get_last_status();
+        retval = parser.get_last_status();
     } else {
         retval = fish_wcstoi(argv[1]);
         if (errno) {

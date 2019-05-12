@@ -279,14 +279,14 @@ static void event_fire_internal(const event_t &event) {
         // Event handlers are not part of the main flow of code, so they are marked as
         // non-interactive.
         proc_push_interactive(0);
-        auto prev_statuses = proc_get_last_statuses();
         parser_t &parser = parser_t::principal_parser();
+        auto prev_statuses = parser.get_last_statuses();
 
         event_block_t *b = parser.push_block<event_block_t>(event);
         parser.eval(buffer, io_chain_t(), TOP);
         parser.pop_block(b);
         proc_pop_interactive();
-        proc_set_last_statuses(std::move(prev_statuses));
+        parser.set_last_statuses(std::move(prev_statuses));
     }
 }
 

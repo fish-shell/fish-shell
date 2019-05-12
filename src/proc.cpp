@@ -49,9 +49,6 @@
 #include "signal.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-/// Statuses of last job's processes to exit - ensure we start off with one entry of 0.
-static owning_lock<statuses_t> last_statuses{statuses_t::just(0)};
-
 /// The signals that signify crashes to us.
 static const int crashsignals[] = {SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGSYS};
 
@@ -85,15 +82,6 @@ bool shell_is_interactive() {
 static std::vector<int> interactive_stack;
 
 void proc_init() { proc_push_interactive(0); }
-
-void proc_set_last_statuses(statuses_t s) {
-    ASSERT_IS_MAIN_THREAD();
-    *last_statuses.acquire() = std::move(s);
-}
-
-int proc_get_last_status() { return last_statuses.acquire()->status; }
-
-statuses_t proc_get_last_statuses() { return *last_statuses.acquire(); }
 
 // Basic thread safe job IDs. The vector consumed_job_ids has a true value wherever the job ID
 // corresponding to that slot is in use. The job ID corresponding to slot 0 is 1.
@@ -623,12 +611,12 @@ bool job_reap(parser_t &parser, bool allow_interactive) {
     process_mark_finished_children(parser, false);
 
     // Preserve the exit status.
-    auto saved_statuses = proc_get_last_statuses();
+    auto saved_statuses = parser.get_last_statuses();
 
     bool printed = process_clean_after_marking(parser, allow_interactive);
 
     // Restore the exit status.
-    proc_set_last_statuses(std::move(saved_statuses));
+    parser.set_last_statuses(std::move(saved_statuses));
 
     return printed;
 }
@@ -898,7 +886,7 @@ void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool se
         // finished and is not a short-circuited builtin.
         auto &p = processes.back();
         if (p->status.normal_exited() || p->status.signal_exited()) {
-            proc_set_last_statuses(get_statuses());
+            parser.set_last_statuses(get_statuses());
         }
     }
 }

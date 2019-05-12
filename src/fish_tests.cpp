@@ -5014,7 +5014,7 @@ static void test_illegal_command_exit_code() {
     for (const auto &test : tests) {
         res = parser.eval(test.txt, empty_ios, TOP);
 
-        int exit_status = proc_get_last_status();
+        int exit_status = parser.get_last_status();
         if (exit_status != test.result) {
             err(L"command '%ls': expected exit code %d, got %d", test.txt, test.result,
                 exit_status);

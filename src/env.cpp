@@ -496,7 +496,8 @@ class env_scoped_impl_t : public environment_t {
     /// A struct wrapping up parser-local variables. These are conceptually variables that differ in
     /// different fish internal processes.
     struct perproc_data_t {
-        wcstring pwd;
+        wcstring pwd{};
+        statuses_t statuses{statuses_t::just(0)};
     };
 
    public:
@@ -647,7 +648,7 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key,
         if (history) history->get_history(result);
         return env_var_t(L"history", std::move(result));
     } else if (key == L"pipestatus") {
-        const auto js = proc_get_last_statuses();
+        const auto &js = perproc_data().statuses;
         wcstring_list_t result;
         result.reserve(js.pipestatus.size());
         for (int i : js.pipestatus) {
@@ -655,7 +656,8 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key,
         }
         return env_var_t(L"pipestatus", std::move(result));
     } else if (key == L"status") {
-        return env_var_t(L"status", to_string(proc_get_last_status()));
+        const auto &js = perproc_data().statuses;
+        return env_var_t(L"status", to_string(js.status));
     } else if (key == L"umask") {
         // note umask() is an absurd API: you call it to set the value and it returns the old
         // value. Thus we have to call it twice, to reset the value. The env_lock protects
@@ -1163,6 +1165,16 @@ bool env_stack_t::universal_barrier() {
 
     env_universal_callbacks(this, callbacks);
     return changed || !callbacks.empty();
+}
+
+statuses_t env_stack_t::get_last_statuses() const {
+    return acquire_impl()->perproc_data().statuses;
+}
+
+int env_stack_t::get_last_status() const { return acquire_impl()->perproc_data().statuses.status; }
+
+void env_stack_t::set_last_statuses(statuses_t s) {
+    acquire_impl()->perproc_data().statuses = std::move(s);
 }
 
 /// If they don't already exist initialize the `COLUMNS` and `LINES` env vars to reasonable

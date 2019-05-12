@@ -88,7 +88,7 @@ int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         streams.err.append_format(_(L"%ls: Error while reading file '%ls'\n"), cmd,
                                   fn_intern == intern_static(L"-") ? L"<stdin>" : fn_intern);
     } else {
-        retval = proc_get_last_status();
+        retval = parser.get_last_status();
     }
 
     // Do not close fd after calling reader_read. reader_read automatically closes it before calling

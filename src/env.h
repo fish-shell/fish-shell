@@ -59,6 +59,23 @@ struct config_paths_t {
     wcstring bin;      // e.g., /usr/local/bin
 };
 
+/// A collection of status and pipestatus.
+struct statuses_t {
+    /// Status of the last job to exit.
+    int status{0};
+
+    /// Pipestatus value.
+    std::vector<int> pipestatus{};
+
+    /// Return a statuses for a single process status.
+    static statuses_t just(int s) {
+        statuses_t result{};
+        result.status = s;
+        result.pipestatus.push_back(s);
+        return result;
+    }
+};
+
 /// Initialize environment variable data.
 void env_init(const struct config_paths_t *paths = NULL);
 
@@ -257,6 +274,12 @@ class env_stack_t final : public environment_t {
     /// returns a shared_ptr for convenience, since the most common reason to snapshot is because
     /// you want to read from another thread.
     std::shared_ptr<environment_t> snapshot() const;
+
+    /// Helpers to get and set the proc statuses.
+    /// These correspond to $status and $pipestatus.
+    statuses_t get_last_statuses() const;
+    int get_last_status() const;
+    void set_last_statuses(statuses_t s);
 
     /// Update the termsize variable.
     void set_termsize();

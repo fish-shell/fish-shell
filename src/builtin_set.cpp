@@ -778,7 +778,7 @@ static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, w
 
 /// The set builtin creates, updates, and erases (removes, deletes) variables.
 int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
-    const int incoming_exit_status = proc_get_last_status();
+    const int incoming_exit_status = parser.get_last_status();
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
     set_cmd_opts_t opts;

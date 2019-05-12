@@ -262,23 +262,6 @@ enum class job_flag_t {
     JOB_FLAG_COUNT
 };
 
-/// A collection of status and pipestatus.
-struct statuses_t {
-    /// Status of the last job to exit.
-    int status{0};
-
-    /// Pipestatus value.
-    std::vector<int> pipestatus{};
-
-    /// Return a statuses for a single process status.
-    static statuses_t just(int s) {
-        statuses_t result{};
-        result.status = s;
-        result.pipestatus.push_back(s);
-        return result;
-    }
-};
-
 template <>
 struct enum_info_t<job_flag_t> {
     static constexpr auto count = job_flag_t::JOB_FLAG_COUNT;
@@ -466,13 +449,6 @@ void set_job_control_mode(job_control_t mode);
 /// verifier mode where fish tries to validate the syntax of a file but doesn't actually do
 /// anything.
 extern int no_exec;
-
-/// Sets the status of the last process to exit.
-void proc_set_last_statuses(statuses_t s);
-
-/// Returns the status of the last process to exit.
-int proc_get_last_status();
-statuses_t proc_get_last_statuses();
 
 /// Notify the user about stopped or terminated jobs, and delete completed jobs from the job list.
 /// If \p interactive is set, allow removing interactive jobs; otherwise skip them.

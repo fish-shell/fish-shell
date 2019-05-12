@@ -422,7 +422,7 @@ int main(int argc, char **argv) {
 
     if (read_init(paths)) {
         // Stomp the exit status of any initialization commands (issue #635).
-        proc_set_last_statuses(statuses_t::just(STATUS_CMD_OK));
+        parser.set_last_statuses(statuses_t::just(STATUS_CMD_OK));
 
         // Run post-config commands specified as arguments, if any.
         if (!opts.postconfig_cmds.empty()) {
@@ -472,7 +472,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    int exit_status = res ? STATUS_CMD_UNKNOWN : proc_get_last_status();
+    int exit_status = res ? STATUS_CMD_UNKNOWN : parser.get_last_status();
 
     // TODO: The generic process-exit event is useless and unused.
     // Remove this in future.

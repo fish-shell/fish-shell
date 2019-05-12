@@ -624,7 +624,7 @@ static bool expand_cmdsubst(wcstring input, parser_t &parser, std::vector<comple
         return false;
     }
 
-    if (proc_get_last_status() == STATUS_READ_TOO_MUCH) {
+    if (parser.get_last_status() == STATUS_READ_TOO_MUCH) {
         append_cmdsub_error(
             errors, in - paren_begin,
             _(L"Too much data emitted by command substitution so it was discarded\n"));
@@ -698,7 +698,7 @@ static bool expand_cmdsubst(wcstring input, parser_t &parser, std::vector<comple
         }
     }
 
-    if (proc_get_last_status() == STATUS_READ_TOO_MUCH) return false;
+    if (parser.get_last_status() == STATUS_READ_TOO_MUCH) return false;
     return true;
 }
 

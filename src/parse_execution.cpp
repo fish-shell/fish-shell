@@ -258,7 +258,7 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
             cond_ret = run_job_list(condition_boolean_tail, associated_block);
         }
         const bool take_branch =
-            (cond_ret == parse_execution_success) && proc_get_last_status() == EXIT_SUCCESS;
+            (cond_ret == parse_execution_success) && parser->get_last_status() == EXIT_SUCCESS;
 
         if (take_branch) {
             // Condition succeeded.
@@ -268,7 +268,7 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
         auto else_cont = else_clause.try_get_child<g::else_continuation, 1>();
         if (!else_cont) {
             // 'if' condition failed, no else clause, return 0, we're done.
-            proc_set_last_statuses(statuses_t::just(STATUS_CMD_OK));
+            parser->set_last_statuses(statuses_t::just(STATUS_CMD_OK));
             break;
         } else {
             // We have an 'else continuation' (either else-if or else).
@@ -296,7 +296,7 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
         parser->pop_block(ib);
     } else {
         // No job list means no sucessful conditions, so return 0 (issue #1443).
-        proc_set_last_statuses(statuses_t::just(STATUS_CMD_OK));
+        parser->set_last_statuses(statuses_t::just(STATUS_CMD_OK));
     }
 
     // It's possible there's a last-minute cancellation (issue #1297).
@@ -332,7 +332,7 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(
     }
     io_streams_t streams(0);  // no limit on the amount of output from builtin_function()
     int err = builtin_function(*parser, streams, arguments, pstree, body);
-    proc_set_last_statuses(statuses_t::just(err));
+    parser->set_last_statuses(statuses_t::just(err));
 
     if (!streams.err.empty()) {
         this->report_error(header, L"%ls", streams.err.contents().c_str());
@@ -557,7 +557,7 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
         // Save off the exit status if it came from the loop body. We'll restore it if the condition
         // is false.
         auto cond_saved_status =
-            first_cond_check ? statuses_t::just(EXIT_SUCCESS) : proc_get_last_statuses();
+            first_cond_check ? statuses_t::just(EXIT_SUCCESS) : parser->get_last_statuses();
         first_cond_check = false;
 
         // Check the condition.
@@ -572,8 +572,8 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
         // exit the loop.
         if (cond_ret != parse_execution_success) {
             break;
-        } else if (proc_get_last_status() != EXIT_SUCCESS) {
-            proc_set_last_statuses(cond_saved_status);
+        } else if (parser->get_last_status() != EXIT_SUCCESS) {
+            parser->set_last_statuses(cond_saved_status);
             break;
         }
 
@@ -650,7 +650,7 @@ parse_execution_result_t parse_execution_context_t::report_errors(
 /// Reports an unmatched wildcard error and returns parse_execution_errored.
 parse_execution_result_t parse_execution_context_t::report_unmatched_wildcard_error(
     const parse_node_t &unmatched_wildcard) const {
-    proc_set_last_statuses(statuses_t::just(STATUS_UNMATCHED_WILDCARD));
+    parser->set_last_statuses(statuses_t::just(STATUS_UNMATCHED_WILDCARD));
     report_error(unmatched_wildcard, WILDCARD_ERR_MSG, get_source(unmatched_wildcard).c_str());
     return parse_execution_errored;
 }
@@ -732,7 +732,7 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
 
     // Set the last proc status appropriately.
     int status = err_code == ENOENT ? STATUS_CMD_UNKNOWN : STATUS_NOT_EXECUTABLE;
-    proc_set_last_statuses(statuses_t::just(status));
+    parser->set_last_statuses(statuses_t::just(status));
 
     return parse_execution_errored;
 }
@@ -752,7 +752,7 @@ parse_execution_result_t parse_execution_context_t::expand_command(
     expand_result_t expand_err =
         expand_to_command_and_args(unexp_cmd, parser->vars(), out_cmd, out_args, &errors);
     if (expand_err == expand_result_t::error) {
-        proc_set_last_statuses(statuses_t::just(STATUS_ILLEGAL_CMD));
+        parser->set_last_statuses(statuses_t::just(STATUS_ILLEGAL_CMD));
         return report_errors(errors);
     } else if (expand_err == expand_result_t::wildcard_no_match) {
         return report_unmatched_wildcard_error(statement);
@@ -1327,10 +1327,10 @@ bool parse_execution_context_t::should_skip(parse_bool_statement_type_t type) co
     switch (type) {
         case parse_bool_and:
             // AND. Skip if the last job failed.
-            return proc_get_last_status() != 0;
+            return parser->get_last_status() != 0;
         case parse_bool_or:
             // OR. Skip if the last job succeeded.
-            return proc_get_last_status() == 0;
+            return parser->get_last_status() == 0;
         default:
             return false;
     }

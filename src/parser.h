@@ -285,6 +285,11 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     library_data_t &libdata() { return library_data; }
     const library_data_t &libdata() const { return library_data; }
 
+    /// Get and set the last proc statuses.
+    int get_last_status() const { return vars().get_last_status(); }
+    statuses_t get_last_statuses() const { return vars().get_last_statuses(); }
+    void set_last_statuses(statuses_t s) { vars().set_last_statuses(std::move(s)); }
+
     /// Pushes a new block created with the given arguments
     /// Returns a pointer to the block. The pointer is valid
     /// until the call to pop_block()

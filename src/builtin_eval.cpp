@@ -35,7 +35,7 @@ int builtin_eval(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             // where we have an argument but nothing is executed.
             status = STATUS_CMD_OK;
         } else {
-            status = proc_get_last_status();
+            status = parser.get_last_status();
         }
     }
 

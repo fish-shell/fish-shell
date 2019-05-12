@@ -63,28 +63,61 @@ static env_universal_t *uvars() { return s_universal_variables; }
 
 bool env_universal_barrier() { return env_stack_t::principal().universal_barrier(); }
 
-// A typedef for a set of constant strings. Note our sets are typically on the order of 6 elements,
-// so we don't bother to sort them.
-using string_set_t = const wchar_t *const[];
+struct electric_var_t {
+    enum {
+        freadonly = 1 << 0,  // May not be modified by the user.
+        fcomputed = 1 << 1,  // Value is dynamically computed.
+        fexports = 1 << 2,   // Exported to child processes.
+    };
+    const wchar_t *name;
+    uint32_t flags;
+
+    bool readonly() const { return flags & freadonly; }
+
+    bool computed() const { return flags & fcomputed; }
+
+    bool exports() const { return flags & fexports; }
+
+    static const electric_var_t *for_name(const wcstring &name);
+};
+
+static const electric_var_t electric_variables[] = {
+    {L"PWD", electric_var_t::freadonly | electric_var_t::fcomputed | electric_var_t::fexports},
+    {L"SHLVL", electric_var_t::freadonly | electric_var_t::fexports},
+    {L"history", electric_var_t::freadonly | electric_var_t::fcomputed},
+    {L"pipestatus", electric_var_t::freadonly | electric_var_t::fcomputed},
+    {L"status", electric_var_t::freadonly | electric_var_t::fcomputed},
+    {L"version", electric_var_t::freadonly},
+    {L"FISH_VERSION", electric_var_t::freadonly},
+    {L"fish_pid", electric_var_t::freadonly},
+    {L"hostname", electric_var_t::freadonly},
+    {L"_", electric_var_t::freadonly},
+    {L"fish_private_mode", electric_var_t::freadonly},
+    {L"umask", electric_var_t::fcomputed},
+};
+
+const electric_var_t *electric_var_t::for_name(const wcstring &name) {
+    for (const auto &var : electric_variables) {
+        if (name == var.name) {
+            return &var;
+        }
+    }
+    return nullptr;
+}
 
 /// Check if a variable may not be set using the set command.
 static bool is_read_only(const wcstring &key) {
-    static const string_set_t env_read_only = {
-        L"PWD",          L"SHLVL",    L"history",  L"pipestatus", L"status",           L"version",
-        L"FISH_VERSION", L"fish_pid", L"hostname", L"_",          L"fish_private_mode"};
-    return contains(env_read_only, key) || (in_private_mode() && key == L"fish_history");
+    if (const auto *ev = electric_var_t::for_name(key)) {
+        return ev->readonly();
+    }
+    // Hack.
+    return in_private_mode() && key == L"fish_history";
 }
 
 /// Return true if a variable should become a path variable by default. See #436.
 static bool variable_should_auto_pathvar(const wcstring &name) {
     return string_suffixes_string(L"PATH", name);
 }
-
-/// Table of variables whose value is dynamically calculated, such as umask, status, etc.
-static const string_set_t env_electric = {L"history", L"pipestatus", L"status", L"umask", L"PWD"};
-
-static bool is_electric(const wcstring &key) { return contains(env_electric, key); }
-
 // This is a big dorky lock we take around everything that might read from or modify an env_node_t.
 // Fine grained locking is annoying here because env_nodes may be shared between env_stacks, so each
 // node would need its own lock.
@@ -230,13 +263,15 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
         size_t eql = key_and_val.find(L'=');
         if (eql == wcstring::npos) {
             // No equal-sign found so treat it as a defined var that has no value(s).
-            if (is_read_only(key_and_val) || is_electric(key_and_val)) continue;
-            vars.set_empty(key_and_val, ENV_EXPORT | ENV_GLOBAL);
+            if (!electric_var_t::for_name(key_and_val)) {
+                vars.set_empty(key_and_val, ENV_EXPORT | ENV_GLOBAL);
+            }
         } else {
             key.assign(key_and_val, 0, eql);
             val.assign(key_and_val, eql + 1, wcstring::npos);
-            if (is_read_only(key) || is_electric(key)) continue;
-            vars.set(key, ENV_EXPORT | ENV_GLOBAL, {val});
+            if (!electric_var_t::for_name(key)) {
+                vars.set(key, ENV_EXPORT | ENV_GLOBAL, {val});
+            }
         }
     }
 
@@ -513,7 +548,7 @@ class env_scoped_impl_t : public environment_t {
     // populated. A maybe_t<maybe_t<...>> is a bridge too far.
     // These may populate result with none() if a variable is present which does not match the
     // query.
-    maybe_t<env_var_t> try_get_electric(const wcstring &key, const query_t &query) const;
+    maybe_t<env_var_t> try_get_computed(const wcstring &key, const query_t &query) const;
     maybe_t<env_var_t> try_get_local(const wcstring &key, const query_t &query) const;
     maybe_t<env_var_t> try_get_global(const wcstring &key, const query_t &query) const;
     maybe_t<env_var_t> try_get_universal(const wcstring &key, const query_t &query) const;
@@ -566,7 +601,7 @@ std::shared_ptr<const null_terminated_array_t<char>> env_scoped_impl_t::create_e
         }
     }
 
-    // Dorky way to add the single exported electric variable.
+    // Dorky way to add our single exported computed variable.
     vals[L"PWD"] = env_var_t(L"PWD", perproc_data().pwd);
 
     // Construct the export list: a list of strings of the form key=value.
@@ -589,10 +624,10 @@ std::shared_ptr<const null_terminated_array_t<char>> env_scoped_impl_t::export_a
     return export_array_;
 }
 
-maybe_t<env_var_t> env_scoped_impl_t::try_get_electric(const wcstring &key,
+maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key,
                                                        const query_t &query) const {
-    // Electric variables are read only and only global.
-    if (!is_electric(key)) {
+    const electric_var_t *ev = electric_var_t::for_name(key);
+    if (!(ev && ev->computed())) {
         return none();
     }
     if (key == L"PWD") {
@@ -631,7 +666,7 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_electric(const wcstring &key,
         return env_var_t(L"umask", format_string(L"0%0.3o", res));
     }
     // We should never get here unless the electric var list is out of sync with the above code.
-    DIE("unrecognized electric var name");
+    DIE("unrecognized computed var name");
 }
 
 maybe_t<env_var_t> env_scoped_impl_t::try_get_local(const wcstring &key,
@@ -669,7 +704,7 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_universal(const wcstring &key,
 maybe_t<env_var_t> env_scoped_impl_t::get(const wcstring &key, env_mode_flags_t mode) const {
     const query_t query(mode);
 
-    maybe_t<env_var_t> result = try_get_electric(key, query);
+    maybe_t<env_var_t> result = try_get_computed(key, query);
     if (!result && query.local) {
         result = try_get_local(key, query);
     }
@@ -709,10 +744,9 @@ wcstring_list_t env_scoped_impl_t::get_names(int flags) const {
     if (query.global) {
         add_keys(globals_->env);
         // Add electrics.
-        for (const wchar_t *var : env_electric) {
-            bool is_pwd = !wcscmp(var, L"PWD");
-            if (is_pwd ? query.exports : query.unexports) {
-                names.insert(var);
+        for (const auto &ev : electric_variables) {
+            if (ev.exports() ? query.exports : query.unexports) {
+                names.insert(ev.name);
             }
         }
     }
@@ -932,32 +966,29 @@ void env_stack_impl_t::set_in_node(env_node_ref_t node, const wcstring &key, wcs
 
 maybe_t<int> env_stack_impl_t::try_set_electric(const wcstring &key, const query_t &query,
                                                 wcstring_list_t &val) {
-    bool readonly = is_read_only(key);
-    bool electric = is_electric(key);
+    const electric_var_t *ev = electric_var_t::for_name(key);
+    if (!ev) {
+        return none();
+    }
 
-    if (!readonly && !electric) return none();
-
-    // If a variable is readonly or electric, it may only be set in the global scope.
-    if (query.has_scope && (readonly || electric)) {
-        if (query.local || query.universal) {
-            return ENV_SCOPE;
-        }
+    // If a variable is electric, it may only be set in the global scope.
+    if (query.has_scope && !query.global) {
+        return ENV_SCOPE;
     }
 
     // If the variable is read-only, the user may not set it.
-    if (query.user && readonly) {
+    if (query.user && ev->readonly()) {
         return ENV_PERM;
     }
 
-    // Be picky about exporting. For now only PWD and SHLVL may be exported.
-    bool wants_export = (key == L"PWD" || key == L"SHLVL");
-    if (electric && query.has_export_unexport) {
-        if (wants_export ? query.unexports : query.exports) {
+    // Be picky about exporting.
+    if (query.has_export_unexport) {
+        if (ev->exports() ? query.unexports : query.exports) {
             return ENV_SCOPE;
         }
     }
 
-    // Handle special electric variables.
+    // Handle computed mutable electric variables.
     if (key == L"umask") {
         return set_umask(val);
     } else if (key == L"PWD") {
@@ -972,8 +1003,8 @@ maybe_t<int> env_stack_impl_t::try_set_electric(const wcstring &key, const query
 
     // Decide on the mode and set it in the global scope.
     var_flags_t flags{};
-    flags.exports = wants_export;
-    flags.parent_exports = wants_export;
+    flags.exports = ev->exports();
+    flags.parent_exports = ev->exports();
     flags.pathvar = false;
     set_in_node(globals_, key, std::move(val), flags);
     return ENV_OK;

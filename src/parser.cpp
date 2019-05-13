@@ -145,11 +145,11 @@ void parser_t::push_block_int(block_t *new_current) {
 
     // Types TOP and SUBST are not considered blocks for the purposes of `status is-block`.
     if (type != TOP && type != SUBST) {
-        is_block = true;
+        libdata().is_block = true;
     }
 
     if (type == BREAKPOINT) {
-        is_breakpoint = true;
+        libdata().is_breakpoint = true;
     }
 
     if (new_current->type() != TOP) {
@@ -182,7 +182,7 @@ void parser_t::pop_block(const block_t *expected) {
             break;
         }
     }
-    is_block = new_is_block;
+    libdata().is_block = new_is_block;
 
     // Are we still in a breakpoint?
     bool new_is_breakpoint = false;
@@ -193,7 +193,7 @@ void parser_t::pop_block(const block_t *expected) {
             break;
         }
     }
-    is_breakpoint = new_is_breakpoint;
+    libdata().is_breakpoint = new_is_breakpoint;
 }
 
 const wchar_t *parser_t::get_block_desc(int block) const {

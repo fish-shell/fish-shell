@@ -389,17 +389,17 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
         case STATUS_IS_COMMAND_SUB: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = !is_subshell;
+            retval = parser.libdata().is_subshell ? 0 : 1;
             break;
         }
         case STATUS_IS_BLOCK: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = !is_block;
+            retval = parser.libdata().is_block ? 0 : 1;
             break;
         }
         case STATUS_IS_BREAKPOINT: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = !is_breakpoint;
+            retval = parser.libdata().is_breakpoint ? 0 : 1;
             break;
         }
         case STATUS_IS_LOGIN: {

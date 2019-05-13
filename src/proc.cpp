@@ -52,11 +52,6 @@
 /// The signals that signify crashes to us.
 static const int crashsignals[] = {SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGSYS};
 
-bool is_subshell = false;
-bool is_block = false;
-bool is_breakpoint = false;
-int is_event = 0;
-
 static relaxed_atomic_bool_t s_is_interactive_session{false};
 bool is_interactive_session() { return s_is_interactive_session; }
 void set_interactive_session(bool flag) { s_is_interactive_session = flag; }

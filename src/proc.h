@@ -417,15 +417,6 @@ class job_t {
 /// Whether we are reading from the keyboard right now.
 bool shell_is_interactive();
 
-/// Whether we are running a subshell command.
-extern bool is_subshell;
-
-/// Whether we are running a block of commands.
-extern bool is_block;
-
-/// Whether we are running due to a `breakpoint` command.
-extern bool is_breakpoint;
-
 /// Whether this shell is attached to the keyboard at all.
 bool is_interactive_session();
 void set_interactive_session(bool flag);
@@ -439,10 +430,6 @@ void mark_login();
 /// anything.
 bool no_exec();
 void mark_no_exec();
-
-/// Whether we are running an event handler. This is not a bool because we keep count of the event
-/// nesting level.
-extern int is_event;
 
 // List of jobs.
 typedef std::deque<shared_ptr<job_t>> job_list_t;

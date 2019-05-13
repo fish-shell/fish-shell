@@ -248,8 +248,9 @@ bool event_is_signal_observed(int sig) {
 /// allocated/initialized unless needed.
 static void event_fire_internal(const event_t &event) {
     ASSERT_IS_MAIN_THREAD();
-    assert(is_event >= 0 && "is_event should not be negative");
-    scoped_push<decltype(is_event)> inc_event{&is_event, is_event + 1};
+    auto &ld = parser_t::principal_parser().libdata();
+    assert(ld.is_event >= 0 && "is_event should not be negative");
+    scoped_push<decltype(ld.is_event)> inc_event{&ld.is_event, ld.is_event + 1};
 
     // Capture the event handlers that match this event.
     event_handler_list_t fire;
@@ -293,9 +294,13 @@ static void event_fire_internal(const event_t &event) {
 
 /// Handle all pending signal events.
 void event_fire_delayed() {
-    ASSERT_IS_MAIN_THREAD();
+    // Hack: only allow events on the main thread.
+    // TODO: rationalize how events work with multiple threads.
+    if (!is_main_thread()) return;
+
+    auto &parser = parser_t::principal_parser();
     // Do not invoke new event handlers from within event handlers.
-    if (is_event) return;
+    if (parser.libdata().is_event) return;
 
     event_list_t to_send;
     to_send.swap(blocked);
@@ -330,6 +335,10 @@ void event_enqueue_signal(int signal) {
 }
 
 void event_fire(const event_t &event) {
+    // Hack: only allow events on the main thread.
+    // TODO: rationalize how events work with multiple threads.
+    if (!is_main_thread()) return;
+
     // Fire events triggered by signals.
     event_fire_delayed();
 

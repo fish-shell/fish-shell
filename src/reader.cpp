@@ -2264,7 +2264,7 @@ static int read_i() {
         event_fire_generic(L"fish_prompt");
         run_count++;
 
-        if (is_breakpoint && function_exists(DEBUG_PROMPT_FUNCTION_NAME, parser)) {
+        if (parser.libdata().is_breakpoint && function_exists(DEBUG_PROMPT_FUNCTION_NAME, parser)) {
             reader_set_left_prompt(DEBUG_PROMPT_FUNCTION_NAME);
         } else if (function_exists(LEFT_PROMPT_FUNCTION_NAME, parser)) {
             reader_set_left_prompt(LEFT_PROMPT_FUNCTION_NAME);

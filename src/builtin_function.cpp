@@ -92,7 +92,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                 if ((opt == 'j') && (wcscasecmp(w.woptarg, L"caller") == 0)) {
                     job_id_t job_id = -1;
 
-                    if (is_subshell) {
+                    if (parser.libdata().is_subshell) {
                         job_id = parser.libdata().caller_job_id;
                     }
 

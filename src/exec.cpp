@@ -1130,7 +1130,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
 static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstring_list_t *lst,
                                   bool apply_exit_status, bool is_subcmd) {
     ASSERT_IS_MAIN_THREAD();
-    bool prev_subshell = is_subshell;
+    bool prev_subshell = parser.libdata().is_subshell;
     auto prev_statuses = parser.get_last_statuses();
     bool split_output = false;
 
@@ -1139,7 +1139,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
         split_output = true;
     }
 
-    is_subshell = true;
+    parser.libdata().is_subshell = true;
     auto subcommand_statuses = statuses_t::just(-1);  // assume the worst
 
     // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may
@@ -1165,7 +1165,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
         parser.set_last_statuses(std::move(prev_statuses));
     }
 
-    is_subshell = prev_subshell;
+    parser.libdata().is_subshell = prev_subshell;
 
     if (lst == NULL || !buffer) {
         return subcommand_statuses.status;

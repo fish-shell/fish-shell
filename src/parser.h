@@ -161,6 +161,19 @@ struct library_data_t {
     /// The job id of the job being populated.
     /// This supports the '--on-job-exit caller' feature.
     job_id_t caller_job_id{-1};
+
+    /// Whether we are running a subshell command.
+    bool is_subshell{false};
+
+    /// Whether we are running a block of commands.
+    bool is_block{false};
+
+    /// Whether we are running due to a `breakpoint` command.
+    bool is_breakpoint{false};
+
+    /// Whether we are running an event handler. This is not a bool because we keep count of the
+    /// event nesting level.
+    int is_event{0};
 };
 
 class parser_t : public std::enable_shared_from_this<parser_t> {

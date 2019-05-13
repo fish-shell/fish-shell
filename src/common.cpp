@@ -1843,6 +1843,10 @@ struct winsize get_current_winsize() {
         // TODO: this may call us reentrantly through the environment dispatch mechanism. We need to
         // rationalize this.
         export_new_termsize(&termsize, vars);
+        // Hack: due to the dispatch the termsize may have just become invalid. Stomp it back to
+        // valid. What a mess.
+        *s_termsize.acquire() = termsize;
+        s_termsize_valid = true;
     }
     return termsize;
 }

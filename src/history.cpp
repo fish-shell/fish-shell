@@ -1749,16 +1749,15 @@ void history_t::populate_from_config_path() {
 }
 
 /// Decide whether we ought to import a bash history line into fish. This is a very crude heuristic.
-static bool should_import_bash_history_line(const std::string &line) {
+static bool should_import_bash_history_line(const wcstring &line) {
     if (line.empty()) return false;
 
     parse_node_tree_t parse_tree;
-    wcstring wide_line = str2wcstring(line);
-    if (!parse_tree_from_string(wide_line, parse_flag_none, &parse_tree, NULL)) return false;
+    if (!parse_tree_from_string(line, parse_flag_none, &parse_tree, NULL)) return false;
 
     // In doing this test do not allow incomplete strings. Hence the "false" argument.
     parse_error_list_t errors;
-    parse_util_detect_errors(wide_line, &errors, false);
+    parse_util_detect_errors(line, &errors, false);
     if (!errors.empty()) return false;
 
     // The following are Very naive tests!
@@ -1770,17 +1769,17 @@ static bool should_import_bash_history_line(const std::string &line) {
     if (line.find('`') != std::string::npos) return false;
 
     // Skip lines with [[...]] and ((...)) since we don't handle those constructs.
-    if (line.find("[[") != std::string::npos) return false;
-    if (line.find("]]") != std::string::npos) return false;
-    if (line.find("((") != std::string::npos) return false;
-    if (line.find("))") != std::string::npos) return false;
+    if (line.find(L"[[") != std::string::npos) return false;
+    if (line.find(L"]]") != std::string::npos) return false;
+    if (line.find(L"((") != std::string::npos) return false;
+    if (line.find(L"))") != std::string::npos) return false;
 
     // Temporarily skip lines with && and ||
-    if (line.find("&&") != std::string::npos) return false;
-    if (line.find("||") != std::string::npos) return false;
+    if (line.find(L"&&") != std::string::npos) return false;
+    if (line.find(L"||") != std::string::npos) return false;
 
     // Skip lines that end with a backslash. We do not handle multiline commands from bash history.
-    if (line.back() == '\\') return false;
+    if (line.back() == L'\\') return false;
 
     return true;
 }
@@ -1810,8 +1809,9 @@ void history_t::populate_from_bash(FILE *stream) {
             if (a_newline) break;
         }
 
+        wcstring wide_line = str2wcstring(line);
         // Add this line if it doesn't contain anything we know we can't handle.
-        if (should_import_bash_history_line(line)) this->add(str2wcstring(line));
+        if (should_import_bash_history_line(wide_line)) this->add(wide_line);
     }
 }
 

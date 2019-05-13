@@ -1285,14 +1285,16 @@ bool history_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) const {
 // Returns the fd of an opened temporary file, or -1 on failure
 static int create_temporary_file(const wcstring &name_template, wcstring *out_path) {
     int out_fd = -1;
+    char *narrow_str = nullptr;
     for (size_t attempt = 0; attempt < 10 && out_fd == -1; attempt++) {
-        char *narrow_str = wcs2str(name_template);
+        narrow_str = wcs2str(name_template);
         out_fd = fish_mkstemp_cloexec(narrow_str);
-        if (out_fd >= 0) {
-            *out_path = str2wcstring(narrow_str);
-        }
-        free(narrow_str);
     }
+
+    if (out_fd >= 0) {
+        *out_path = str2wcstring(narrow_str);
+    }
+    free(narrow_str);
     return out_fd;
 }
 

@@ -511,15 +511,17 @@ bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *o
     int saved_errno;
     const wcstring tmp_name_template = directory + L"/fishd.tmp.XXXXXX";
 
+    char *narrow_str = nullptr;
     for (size_t attempt = 0; attempt < 10 && !success; attempt++) {
-        char *narrow_str = wcs2str(tmp_name_template);
+        narrow_str = wcs2str(tmp_name_template);
         int result_fd = fish_mkstemp_cloexec(narrow_str);
         saved_errno = errno;
         success = result_fd != -1;
         *out_fd = result_fd;
-        *out_path = str2wcstring(narrow_str);
-        free(narrow_str);
     }
+
+    *out_path = str2wcstring(narrow_str);
+    free(narrow_str);
 
     if (!success) {
         const char *error = std::strerror(saved_errno);

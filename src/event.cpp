@@ -131,6 +131,7 @@ static bool handler_matches(const event_handler_t &classv, const event_t &instan
 
 /// Test if specified event is blocked.
 static int event_is_blocked(const event_t &e) {
+    (void)e;
     const block_t *block;
     parser_t &parser = parser_t::principal_parser();
 

@@ -19,7 +19,7 @@ int builtin_eval(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int argc = builtin_count_args(argv);
 
     wcstring new_cmd;
-    for (size_t i = 1; i < argc; ++i) {
+    for (int i = 1; i < argc; ++i) {
         if (i > 1) new_cmd += L' ';
         new_cmd += argv[i];
     }

@@ -504,10 +504,7 @@ static bool try_clean_process_in_job(process_t *p, job_t *j, std::vector<event_t
 }
 
 /// \return whether this job wants a status message printed when it stops or completes.
-/// If \p print_stopped_foregrounds is set, then treat stopped foreground jobs as wanting a message.
-/// This should conceptually always be true and we only sometimes leave it as false to allow job IDs
-/// to be more aggressively reclaimed. TODO: rationalize this!
-static bool job_wants_message(const shared_ptr<job_t> &j, bool print_for_foreground_stops = true) {
+static bool job_wants_message(const shared_ptr<job_t> &j) {
     // Did we already print a status message?
     if (j->get_flag(job_flag_t::NOTIFIED)) return false;
 
@@ -556,7 +553,7 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
         }
 
         // If we are not interactive, skip cleaning jobs that want to print an interactive message.
-        if (!interactive && job_wants_message(j, false)) {
+        if (!interactive && job_wants_message(j)) {
             continue;
         }
 

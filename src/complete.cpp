@@ -72,8 +72,6 @@ static const wchar_t *C_(const wcstring &s) {
 static const wcstring &C_(const wcstring &s) { return s; }
 #endif
 
-static void complete_load(const wcstring &name, bool reload);
-
 /// Struct describing a completion option entry.
 ///
 /// If option is empty, the comp field must not be empty and contains a list of arguments to the
@@ -858,7 +856,7 @@ static bool short_ok(const wcstring &arg, const complete_entry_opt_t *entry,
 }
 
 /// Load command-specific completions for the specified command.
-static void complete_load(const wcstring &name, bool reload) {
+static void complete_load(const wcstring &name) {
     // We have to load this as a function, since it may define a --wraps or signature.
     // See issue #2466.
     auto &parser = parser_t::principal_parser();
@@ -926,7 +924,7 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
         // and automatic completions ("gi" autosuggestion provider -> git)
         debug(4, "Skipping completions for non-existent head\n");
     } else {
-        run_on_main_thread([&]() { complete_load(cmd, true); });
+        run_on_main_thread([&]() { complete_load(cmd); });
     }
 
     // Make a list of lists of all options that we care about.

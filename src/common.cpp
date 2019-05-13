@@ -1752,7 +1752,10 @@ void invalidate_termsize(bool invalidate_vars) {
 
 /// Handle SIGWINCH. This is also invoked when the shell regains control of the tty since it is
 /// possible the terminal size changed while an external command was running.
-void common_handle_winch(int signal) { s_termsize_valid = false; }
+void common_handle_winch(int signal) {
+    (void)signal;
+    s_termsize_valid = false;
+}
 
 /// Validate the new terminal size. Fallback to the env vars if necessary. Ensure the values are
 /// sane and if not fallback to a default of 80x24.

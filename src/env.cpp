@@ -549,10 +549,10 @@ class env_scoped_impl_t : public environment_t {
     // populated. A maybe_t<maybe_t<...>> is a bridge too far.
     // These may populate result with none() if a variable is present which does not match the
     // query.
-    maybe_t<env_var_t> try_get_computed(const wcstring &key, const query_t &query) const;
-    maybe_t<env_var_t> try_get_local(const wcstring &key, const query_t &query) const;
-    maybe_t<env_var_t> try_get_global(const wcstring &key, const query_t &query) const;
-    maybe_t<env_var_t> try_get_universal(const wcstring &key, const query_t &query) const;
+    maybe_t<env_var_t> try_get_computed(const wcstring &key) const;
+    maybe_t<env_var_t> try_get_local(const wcstring &key) const;
+    maybe_t<env_var_t> try_get_global(const wcstring &key) const;
+    maybe_t<env_var_t> try_get_universal(const wcstring &key) const;
 
     /// \return a newly allocated export array.
     std::shared_ptr<const null_terminated_array_t<char>> create_export_array() const;
@@ -625,8 +625,7 @@ std::shared_ptr<const null_terminated_array_t<char>> env_scoped_impl_t::export_a
     return export_array_;
 }
 
-maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key,
-                                                       const query_t &query) const {
+maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key) const {
     const electric_var_t *ev = electric_var_t::for_name(key);
     if (!(ev && ev->computed())) {
         return none();
@@ -671,8 +670,7 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key,
     DIE("unrecognized computed var name");
 }
 
-maybe_t<env_var_t> env_scoped_impl_t::try_get_local(const wcstring &key,
-                                                    const query_t &query) const {
+maybe_t<env_var_t> env_scoped_impl_t::try_get_local(const wcstring &key) const {
     auto cursor = locals_;
     while (cursor) {
         auto where = cursor->env.find(key);
@@ -684,8 +682,7 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_local(const wcstring &key,
     return none();
 }
 
-maybe_t<env_var_t> env_scoped_impl_t::try_get_global(const wcstring &key,
-                                                     const query_t &query) const {
+maybe_t<env_var_t> env_scoped_impl_t::try_get_global(const wcstring &key) const {
     auto where = globals_->env.find(key);
     if (where != globals_->env.end()) {
         return where->second;
@@ -693,8 +690,7 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_global(const wcstring &key,
     return none();
 }
 
-maybe_t<env_var_t> env_scoped_impl_t::try_get_universal(const wcstring &key,
-                                                        const query_t &query) const {
+maybe_t<env_var_t> env_scoped_impl_t::try_get_universal(const wcstring &key) const {
     if (!uvars()) return none();
     auto var = uvars()->get(key);
     if (var) {
@@ -706,15 +702,15 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_universal(const wcstring &key,
 maybe_t<env_var_t> env_scoped_impl_t::get(const wcstring &key, env_mode_flags_t mode) const {
     const query_t query(mode);
 
-    maybe_t<env_var_t> result = try_get_computed(key, query);
+    maybe_t<env_var_t> result = try_get_computed(key);
     if (!result && query.local) {
-        result = try_get_local(key, query);
+        result = try_get_local(key);
     }
     if (!result && query.global) {
-        result = try_get_global(key, query);
+        result = try_get_global(key);
     }
     if (!result && query.universal) {
-        result = try_get_universal(key, query);
+        result = try_get_universal(key);
     }
     // If the user requested only exported or unexported variables, enforce that here.
     if (result && !query.export_matches(*result)) {

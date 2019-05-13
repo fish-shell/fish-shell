@@ -519,6 +519,7 @@ static void s_move(screen_t *s, int new_x, int new_y) {
 /// Set the pen color for the terminal.
 static void s_set_color(screen_t *s, const environment_t &vars, highlight_spec_t c) {
     UNUSED(s);
+    UNUSED(vars);
     s->outp().set_color(highlight_get_color(c, false), highlight_get_color(c, true));
 }
 
@@ -824,8 +825,7 @@ static size_t truncation_offset_for_width(const std::vector<size_t> &width_by_of
 static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
                                       const wcstring &left_prompt_str,
                                       const wcstring &right_prompt_str, const wcstring &commandline,
-                                      const wcstring &autosuggestion_str,
-                                      const std::vector<int> &indent) {
+                                      const wcstring &autosuggestion_str) {
     UNUSED(s);
     screen_layout_t result = {};
 
@@ -1003,7 +1003,7 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
 
     // Compute a layout.
     const screen_layout_t layout = compute_layout(s, screen_width, left_prompt, right_prompt,
-                                                  explicit_command_line, autosuggestion, indent);
+                                                  explicit_command_line, autosuggestion);
 
     // Determine whether, if we have an autosuggestion, it was truncated.
     s->autosuggestion_is_truncated =

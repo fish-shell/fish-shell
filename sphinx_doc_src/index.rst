@@ -52,7 +52,7 @@ This convention helps to make sure help can be found on commands no matter where
 Command Syntax
 --------------
 
-Shells also support some common syntax for executing commands. That way a command can be started in the same way, regardless of the application, where it comes from, and the shell, where it is executed in. 
+Shells also support some common syntax for executing commands. That way a command can be started in the same way, regardless of the application, where it comes from, and the shell, where it is executed in.
 
 The pattern below is a basic pattern:
 
@@ -91,7 +91,7 @@ Example:
 Commands versus Programs
 ------------------------
 
-**Programs** in other languages can often be regarded as black boxes: they get complex input and return complex output. Sometimes they produce side effects such as writing to a file or reporting an error, but the emphasis is on: arguments in and return values out: 
+**Programs** in other languages can often be regarded as black boxes: they get complex input and return complex output. Sometimes they produce side effects such as writing to a file or reporting an error, but the emphasis is on: arguments in and return values out:
 
 Arguments → Program → Return Values
 
@@ -126,7 +126,7 @@ Shebang Line
 
 Since script for shell commands can be written in many different languages, they need to carry information about what interpreter is needed to execute them: For this they are expected to have a first line, the shebang line, which names an executable for this purpose:
 
-Example: 
+Example:
 
 A scripts written in ``bash`` it would need a first line like this::
 
@@ -154,7 +154,7 @@ This section is on how to install, uninstall, start and exit a *fish* shell and 
 Installation
 ------------
 
-Instructions for installing fish are on the `fish homepage <https://fishshell.com/>`_. Search that page for "Go fish". 
+Instructions for installing fish are on the `fish homepage <https://fishshell.com/>`_. Search that page for "Go fish".
 
 To install the development version of *fish* see the instructions at the `project's GitHub page <https://github.com/fish-shell/fish-shell>`_.
 
@@ -199,7 +199,7 @@ Consider, that ``bash`` is also a command. With ``man bash`` you can see that th
     > bash -c SomeBashCommand
 
 
-or ``bash`` without a switch, opens a *bash* shell that you can use and ``exit`` afterwards. 
+or ``bash`` without a switch, opens a *bash* shell that you can use and ``exit`` afterwards.
 
 
 .. _syntax:
@@ -951,7 +951,7 @@ Variables can be used as indices for expansion of variables, like so::
 However using variables as indices for command substitution is currently not supported, so::
 
     echo (seq 5)[$index] # This won't work
-    
+
     set sequence (seq 5) # It needs to be written on two lines like this.
     echo $sequence[$index] # returns '2'
 
@@ -1148,10 +1148,10 @@ When a list is exported as an environment variable, it is either space or colon 
     set -x smurf blue small
     set -x smurf_PATH forest mushroom
     env | grep smurf
-    
+
     # smurf=blue small
     # smurf_PATH=forest:mushroom
-    
+
 
 
 ``fish`` automatically creates lists from all environment variables whose name ends in PATH, by splitting them on colons. Other variables are not automatically split.
@@ -1421,7 +1421,7 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - :kbd:`Control+L` clears and repaints the screen.
 
-- :kbd:`Control+W` moves the previous path component (everything up to the previous "/") to the `killring <#killring>`__.
+- :kbd:`Control+W` moves the previous path component (everything up to the previous "/", ":" or "@") to the `killring <#killring>`__.
 
 - :kbd:`Control+X` copies the current buffer to the system's clipboard, :kbd:`Control+V` inserts the clipboard contents.
 

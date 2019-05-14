@@ -2483,18 +2483,21 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             break;
         }
         case rl::repaint_mode: {
-            // Repaint the mode-prompt only if it exists.
+            // Repaint the mode-prompt only if possible.
             // This is an optimization basically exclusively for vi-mode, since the prompt
             // may sometimes take a while but when switching the mode all we care about is the
             // mode-prompt.
-            if (function_exists(MODE_PROMPT_FUNCTION_NAME, parser())) {
-                exec_mode_prompt();
+            //
+            // Because some users set `fish_mode_prompt` to an empty function and display the mode elsewhere,
+            // we detect if the mode output is empty.
+            exec_mode_prompt();
+            if(!mode_prompt_buff.empty()) {
                 s_reset(&screen, screen_reset_current_line_and_prompt);
                 screen_reset_needed = false;
                 repaint();
                 break;
             }
-            // If it doesn't exist, we repaint as normal.
+            // Else we repaint as normal.
             /* fallthrough */
         }
         case rl::force_repaint:

@@ -38,6 +38,7 @@
 #include "common.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
 #include "global_safety.h"
 #include "io.h"
 #include "output.h"
@@ -842,8 +843,9 @@ void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool se
     parser.job_promote(this);
     set_flag(job_flag_t::NOTIFIED, false);
 
-    debug(4, L"%ls job %d, gid %d (%ls), %ls, %ls", send_sigcont ? L"Continue" : L"Start", job_id,
-          pgid, command_wcstr(), is_completed() ? L"COMPLETED" : L"UNCOMPLETED",
+    FLOGF(proc_job_run, L"%ls job %d, gid %d (%ls), %ls, %ls",
+          send_sigcont ? L"Continue" : L"Start", job_id, pgid, command_wcstr(),
+          is_completed() ? L"COMPLETED" : L"UNCOMPLETED",
           is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
 
     // Make sure we retake control of the terminal before leaving this function.

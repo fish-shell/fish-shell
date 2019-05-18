@@ -32,6 +32,7 @@
 #include "env.h"
 #include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
 #include "function.h"
 #include "io.h"
 #include "iothread.h"
@@ -639,8 +640,8 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
         // TODO: factor this job-status-setting stuff into a single place.
         p->completed = 1;
         if (p->is_last_in_job) {
-            debug(4, L"Set status of job %d (%ls) to %d using short circuit", j->job_id,
-                  j->preview().c_str(), p->status);
+            FLOGF(exec_job_status, L"Set status of job %d (%ls) to %d using short circuit",
+                  j->job_id, j->preview().c_str(), p->status);
             parser.set_last_statuses(j->get_statuses());
         }
         return true;
@@ -1096,8 +1097,8 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
         }
     }
 
-    debug(3, L"Created job %d from command '%ls' with pgrp %d", j->job_id, j->command_wcstr(),
-          j->pgid);
+    FLOG(exec_job_exec, "Executed job", j->job_id, "from command", j->command_wcstr(), "with pgrp",
+         j->pgid);
 
     j->set_flag(job_flag_t::CONSTRUCTED, true);
     if (!j->is_foreground()) {

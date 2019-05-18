@@ -48,6 +48,12 @@ class category_list_t {
     category_t error{L"error", L"Serious unexpected errors (on by default)", true};
 
     category_t debug{L"debug", L"Debugging aid (on by default)", true};
+
+    category_t exec_job_status{L"exec-job-status", L"Jobs changing status"};
+
+    category_t exec_job_exec{L"exec-job-exec", L"Jobs being executed"};
+
+    category_t proc_job_run{L"proc-job-run", L"Jobs getting started or continued"};
 };
 
 /// The class responsible for logging.

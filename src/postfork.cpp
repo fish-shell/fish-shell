@@ -15,6 +15,7 @@
 
 #include "common.h"
 #include "exec.h"
+#include "flog.h"
 #include "io.h"
 #include "iothread.h"
 #include "postfork.h"
@@ -143,7 +144,7 @@ bool maybe_assign_terminal(const job_t *j) {
             // this can cause an EPERM error. In addition, if we've given control of the terminal to
             // a process group, attempting to call tcsetpgrp from the background will cause SIGTTOU
             // to be sent to everything in our process group (unless we handle it).
-            debug(4, L"Process group %d already has control of terminal\n", j->pgid);
+            FLOGF(proc_termowner, L"Process group %d already has control of terminal", j->pgid);
         } else {
             // No need to duplicate the code here, a function already exists that does just this.
             return terminal_give_to_job(j, false /*new job, so not continuing*/);

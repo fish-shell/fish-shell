@@ -57,6 +57,7 @@ class category_list_t {
 
     category_t proc_job_run{L"proc-job-run", L"Jobs getting started or continued"};
 
+    category_t proc_termowner{L"proc-termowner", L"Terminal ownership events"};
 };
 
 /// The class responsible for logging.

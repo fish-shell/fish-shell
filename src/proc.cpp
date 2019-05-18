@@ -686,7 +686,7 @@ void proc_update_jiffies(parser_t &parser) {
 // restoring a previously-stopped job, in which case we need to restore terminal attributes.
 bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
     if (j->pgid == 0) {
-        debug(2, "terminal_give_to_job() returning early due to no process group");
+        FLOG(proc_termowner, "terminal_give_to_job() returning early due to no process group");
         return true;
     }
 
@@ -701,10 +701,10 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
     // to hand over control of the terminal to this process group, which is a no-op if it's already
     // been done.
     if (j->pgid == INVALID_PID || tcgetpgrp(STDIN_FILENO) == j->pgid) {
-        debug(4, L"Process group %d already has control of terminal\n", j->pgid);
+        FLOGF(proc_termowner, L"Process group %d already has control of terminal", j->pgid);
     } else {
-        debug(4,
-              L"Attempting to bring process group to foreground via tcsetpgrp for job->pgid %d\n",
+        FLOGF(proc_termowner,
+              L"Attempting to bring process group to foreground via tcsetpgrp for job->pgid %d",
               j->pgid);
 
         // The tcsetpgrp(2) man page says that EPERM is thrown if "pgrp has a supported value, but
@@ -717,7 +717,7 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
         // guarantee the process isn't going to exit while we wait (which would cause us to possibly
         // block indefinitely).
         while (tcsetpgrp(STDIN_FILENO, j->pgid) != 0) {
-            debug(3, "tcsetpgrp failed: %d", errno);
+            FLOGF(proc_termowner, "tcsetpgrp failed: %d", errno);
 
             bool pgroup_terminated = false;
             // No need to test for EINTR as we are blocking signals

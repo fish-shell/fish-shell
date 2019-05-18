@@ -16,7 +16,7 @@
 - fish now underlines every valid entered path instead of just the last one.
 
 ### Syntax changes and new commands
-- None yet.
+- Brace expansion now only takes place if the braces include a "," or a variable expansion, so things like `git reset HEAD@{0}` now work (#5869).
 
 ### Scripting improvements
 - `string split0` now returns 0 if it split something (#5701).

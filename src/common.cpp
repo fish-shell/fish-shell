@@ -1448,6 +1448,11 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
     const bool unescape_special = static_cast<bool>(flags & UNESCAPE_SPECIAL);
     const bool allow_incomplete = static_cast<bool>(flags & UNESCAPE_INCOMPLETE);
 
+    // The positions of open braces.
+    std::vector<size_t> braces;
+    // The positions of variable expansions or brace ","s.
+    // We only read braces as expanders if there's a variable expansion or "," in them.
+    std::vector<size_t> vars_or_seps;
     bool brace_text_start = false;
     int brace_count = 0;
 
@@ -1456,7 +1461,6 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
         mode_unquoted,
         mode_single_quotes,
         mode_double_quotes,
-        mode_braces
     } mode = mode_unquoted;
 
     for (size_t input_position = 0; input_position < input_len && !errored; input_position++) {
@@ -1523,6 +1527,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                 case L'$': {
                     if (unescape_special) {
                         to_append_or_none = VARIABLE_EXPAND;
+                        vars_or_seps.push_back(input_position);
                     }
                     break;
                 }
@@ -1530,6 +1535,8 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     if (unescape_special) {
                         brace_count++;
                         to_append_or_none = BRACE_BEGIN;
+                        // We need to store where the brace *ends up* in the output because of NOT_A_WCHAR.
+                        braces.push_back(result.size());
                     }
                     break;
                 }
@@ -1544,6 +1551,25 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                         brace_count--;
                         brace_text_start = brace_text_start && brace_count > 0;
                         to_append_or_none = BRACE_END;
+                        if (braces.size()) {
+                            // If we didn't have a var or separator since the last '{',
+                            // put the literal back.
+                            if (!vars_or_seps.size() || vars_or_seps.back() < braces.back()) {
+                                result[braces.back()] = L'{';
+                                // We also need to turn all spaces back.
+                                for (size_t i = braces.back() + 1; i < result.size(); i++) {
+                                    if (result[i] == BRACE_SPACE) result[i] = L' ';
+                                }
+                                to_append_or_none = L'}';
+                            }
+
+                            // Remove all seps inside the current brace pair, so if we have a surrounding pair
+                            // we only get seps inside *that*.
+                            if (vars_or_seps.size()) {
+                                while(vars_or_seps.size() && vars_or_seps.back() > braces.back()) vars_or_seps.pop_back();
+                            }
+                            braces.pop_back();
+                        }
                     }
                     break;
                 }
@@ -1551,6 +1577,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     if (unescape_special && brace_count > 0) {
                         to_append_or_none = BRACE_SEP;
                         brace_text_start = false;
+                        vars_or_seps.push_back(input_position);
                     }
                     break;
                 }
@@ -1652,6 +1679,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                 case '$': {
                     if (unescape_special) {
                         to_append_or_none = VARIABLE_EXPAND_SINGLE;
+                        vars_or_seps.push_back(input_position);
                     }
                     break;
                 }

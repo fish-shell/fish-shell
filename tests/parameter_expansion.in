@@ -15,7 +15,7 @@ for phrase in {good\,,   beautiful ,morning}; echo -n "$phrase "; end | string t
 for phrase in {goodbye\,,\ cruel\ ,world\n}; echo -n $phrase; end;
 
 # whitespace within entries converted to spaces in a single entry
-for foo in { hello
+for foo in {a, hello
 world }
 	echo \'$foo\'
 end
@@ -31,4 +31,5 @@ end
 # subshells with expansion
 for name in (for name in {Beth, Amy}; printf "$name\n"; end); printf "$name\n"; end
 
+echo {{a,b}}
 # vim: set ft=fish:

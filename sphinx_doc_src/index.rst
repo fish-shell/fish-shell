@@ -764,31 +764,41 @@ Examples::
 Brace expansion
 ---------------
 
-A comma separated list of characters enclosed in curly braces will be expanded so each element of the list becomes a new parameter.
+A comma separated list of characters enclosed in curly braces will be expanded so each element of the list becomes a new parameter. This is useful to save on typing, and to separate a variable name from surrounding text.
 
 Examples::
 
-  echo input.{c,h,txt}
-  # Outputs 'input.c input.h input.txt'
+  > echo input.{c,h,txt}
+  input.c input.h input.txt
 
-  mv *.{c,h} src/
+  > mv *.{c,h} src/
   # Moves all files with the suffix '.c' or '.h' to the subdirectory src.
 
-A literal "{}" will not be used as a brace expansion, but if after expansion there is nothing between the braces, the argument will be removed::
+  > cp file{,.bak}
+  # Make a copy of `file` at `file.bak`.
 
-    echo foo-{}
-    # Outputs foo-{}
+  > set -l dogs hot cool cute
+  > echo {$dogs}dog
+  hotdog cooldog cutedog
 
-    echo foo-{$undefinedvar}
-    # Output is an empty line - see :ref:`the cartesian product section <cartesian-product>`
+If two braces do not contain a "," or a variable expansion, they will not be expanded in this manner::
 
+    > echo foo-{}
+    foo-{}
+    > git reset --hard HEAD@{2}
+    # passes "HEAD@{2}" to git
+    > echo {{a,b}}
+    {a} {b} # because the inner brace pair is expanded, but the outer isn't.
 
-If there is nothing between a brace and a comma or two commas, it's interpreted as an empty element.
+If after expansion there is nothing between the braces, the argument will be removed (see :ref:`the cartesian product section <cartesian-product>`)::
 
-So::
+    > echo foo-{$undefinedvar}
+    # Output is an empty line, just like a bare `echo`.
 
-    echo {,,/usr}/bin
-    # Output /bin /bin /usr/bin
+If there is nothing between a brace and a comma or two commas, it's interpreted as an empty element::
+
+    > echo {,,/usr}/bin
+    /bin /bin /usr/bin
 
 To use a "," as an element, `quote <#quotes>`_ or `escape <#escapes>`_ it.
 

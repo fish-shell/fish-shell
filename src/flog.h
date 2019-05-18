@@ -53,7 +53,10 @@ class category_list_t {
 
     category_t exec_job_exec{L"exec-job-exec", L"Jobs being executed"};
 
+    category_t exec_fork{L"exec-fork", L"Calls to fork()"};
+
     category_t proc_job_run{L"proc-job-run", L"Jobs getting started or continued"};
+
 };
 
 /// The class responsible for logging.

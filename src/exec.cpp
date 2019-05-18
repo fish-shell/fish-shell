@@ -452,7 +452,7 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
 
     // This is the parent process. Store away information on the child, and
     // possibly give it control over the terminal.
-    debug(4, L"Fork #%d, pid %d: %s for '%ls'", g_fork_count, pid, fork_type, p->argv0());
+    FLOGF(exec_fork, L"Fork #%d, pid %d: %s for '%ls'", g_fork_count, pid, fork_type, p->argv0());
 
     p->pid = pid;
     on_process_created(job, p->pid);
@@ -715,7 +715,7 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
 
         // A 0 pid means we failed to posix_spawn. Since we have no pid, we'll never get
         // told when it's exited, so we have to mark the process as failed.
-        debug(4, L"Fork #%d, pid %d: spawn external command '%s' from '%ls'", g_fork_count, pid,
+        FLOGF(exec_fork, L"Fork #%d, pid %d: spawn external command '%s' from '%ls'", g_fork_count, pid,
               actual_cmd, file ? file : L"<no file>");
         if (pid == 0) {
             job_mark_process_as_failed(j, p);

@@ -58,6 +58,8 @@ class category_list_t {
     category_t proc_job_run{L"proc-job-run", L"Jobs getting started or continued"};
 
     category_t proc_termowner{L"proc-termowner", L"Terminal ownership events"};
+
+    category_t env_locale{L"env-locale", L"Changes to locale variables"};
 };
 
 /// The class responsible for logging.

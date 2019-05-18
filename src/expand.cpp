@@ -542,7 +542,7 @@ static expand_result_t expand_braces(const wcstring &instr, expand_flags_t flags
     }
 
     length_preceding_braces = (brace_begin - in);
-    length_following_braces = std::wcslen(brace_end) - 1;
+    length_following_braces = instr.size() - (brace_end - in) - 1;
     tot_len = length_preceding_braces + length_following_braces;
     item_begin = brace_begin + 1;
     for (const wchar_t *pos = (brace_begin + 1); true; pos++) {

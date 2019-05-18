@@ -531,15 +531,6 @@ static expand_result_t expand_braces(const wcstring &instr, expand_flags_t flags
         }
     }
 
-    // Expand a literal "{}" to itself because it is useless otherwise,
-    // and this eases e.g. `find -exec {}`. See #1109.
-    if (brace_begin + 1 == brace_end) {
-        wcstring newstr = instr;
-        newstr.at(brace_begin - in) = L'{';
-        newstr.at(brace_end - in) = L'}';
-        return expand_braces(newstr, flags, out, errors);
-    }
-
     if (syntax_error) {
         append_syntax_error(errors, SOURCE_LOCATION_UNKNOWN, _(L"Mismatched braces"));
         return expand_result_t::error;

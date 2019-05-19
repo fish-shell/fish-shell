@@ -353,7 +353,8 @@ void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const {
     if (b->type() == EVENT) {
         // This is an event handler.
         const event_block_t *eb = static_cast<const event_block_t *>(b);
-        wcstring description = event_get_desc(eb->event);
+        assert(eb->event && "Should have an event");
+        wcstring description = event_get_desc(*eb->event);
         append_format(*buff, _(L"in event handler: %ls\n"), description.c_str());
 
         // Stop recursing at event handler. No reason to believe that any other code is relevant.
@@ -836,7 +837,7 @@ wcstring block_t::description() const {
 
 if_block_t::if_block_t() : block_t(IF) {}
 
-event_block_t::event_block_t(const event_t &evt) : block_t(EVENT), event(evt) {}
+event_block_t::event_block_t(const event_t &evt) : block_t(EVENT) { this->event = evt; }
 
 function_block_t::function_block_t(wcstring name, wcstring_list_t args, bool shadows)
     : block_t(shadows ? FUNCTION_CALL : FUNCTION_CALL_NO_SHADOW) {

@@ -84,6 +84,9 @@ struct block_t {
     // Otherwise nothing.
     const wchar_t *sourced_file{};
 
+    // If this is an event block, the event. Otherwise ignored.
+    maybe_t<event_t> event;
+
     block_type_t type() const { return this->block_type; }
 
     /// Description of the block, for debugging.
@@ -98,7 +101,6 @@ struct if_block_t : public block_t {
 };
 
 struct event_block_t : public block_t {
-    event_t const event;
     explicit event_block_t(const event_t &evt);
 };
 

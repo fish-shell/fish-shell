@@ -369,7 +369,7 @@ void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const {
         switch (b->type()) {
             case SOURCE: {
                 const source_block_t *sb = static_cast<const source_block_t *>(b);
-                const wchar_t *source_dest = sb->source_file;
+                const wchar_t *source_dest = sb->sourced_file;
                 append_format(*buff, _(L"from sourcing file %ls\n"),
                               user_presentable_path(source_dest).c_str());
                 break;
@@ -503,7 +503,7 @@ const wchar_t *parser_t::current_filename() const {
             return function_get_definition_file(fb->function_name);
         } else if (b->type() == SOURCE) {
             const source_block_t *sb = static_cast<const source_block_t *>(b);
-            return sb->source_file;
+            return sb->sourced_file;
         }
     }
 
@@ -844,7 +844,7 @@ function_block_t::function_block_t(wcstring name, wcstring_list_t args, bool sha
     this->function_args = std::move(args);
 }
 
-source_block_t::source_block_t(const wchar_t *src) : block_t(SOURCE), source_file(src) {}
+source_block_t::source_block_t(const wchar_t *src) : block_t(SOURCE) { this->sourced_file = src; }
 
 for_block_t::for_block_t() : block_t(FOR) {}
 

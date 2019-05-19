@@ -80,6 +80,10 @@ struct block_t {
     wcstring function_name{};
     wcstring_list_t function_args{};
 
+    // If this is a source block, the source'd file, interned.
+    // Otherwise nothing.
+    const wchar_t *sourced_file{};
+
     block_type_t type() const { return this->block_type; }
 
     /// Description of the block, for debugging.
@@ -103,7 +107,6 @@ struct function_block_t : public block_t {
 };
 
 struct source_block_t : public block_t {
-    const wchar_t *const source_file;
     explicit source_block_t(const wchar_t *src);
 };
 

@@ -10,7 +10,7 @@ if test "$TRAVIS_OS_NAME" = osx
 end
 
 # This is a list of flakey tests that often succeed when rerun.
-set -l TESTS_TO_RETRY bind.expect
+set -l TESTS_TO_RETRY bind.expect pipeline.expect
 
 # Set this var to modify behavior of the code being tests. Such as avoiding running
 # `fish_update_completions` when running tests.

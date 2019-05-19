@@ -288,7 +288,7 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
 
     // Execute any job list we got.
     if (job_list_to_execute) {
-        if_block_t *ib = parser->push_block<if_block_t>();
+        block_t *ib = parser->push_block(block_t::if_block());
         run_job_list(job_list_to_execute, ib);
         if (should_cancel_execution(ib)) {
             result = parse_execution_cancelled;
@@ -311,7 +311,7 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
 parse_execution_result_t parse_execution_context_t::run_begin_statement(
     tnode_t<g::job_list> contents) {
     // Basic begin/end block. Push a scope block, run jobs, pop it
-    scope_block_t *sb = parser->push_block<scope_block_t>(BEGIN);
+    block_t *sb = parser->push_block(block_t::scope_block(BEGIN));
     parse_execution_result_t ret = run_job_list(contents, sb);
     parser->pop_block(sb);
 
@@ -408,7 +408,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
         return parse_execution_errored;
     }
 
-    for_block_t *fb = parser->push_block<for_block_t>();
+    block_t *fb = parser->push_block(block_t::for_block());
 
     // Now drive the for loop.
     for (const wcstring &val : arguments) {
@@ -486,7 +486,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
 
     const wcstring &switch_value_expanded = switch_values_expanded.at(0).completion;
 
-    switch_block_t *sb = parser->push_block<switch_block_t>();
+    block_t *sb = parser->push_block(block_t::switch_block());
 
     // Expand case statements.
     tnode_t<g::case_item_list> case_item_list = statement.child<3>();
@@ -585,7 +585,7 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
         // Push a while block and then check its cancellation reason.
         auto &ld = parser->libdata();
         ld.loop_status = loop_status_t::normals;
-        while_block_t *wb = parser->push_block<while_block_t>();
+        block_t *wb = parser->push_block(block_t::while_block());
         this->run_job_list(contents, wb);
         auto cancel_reason = this->cancellation_reason(wb);
         parser->pop_block(wb);

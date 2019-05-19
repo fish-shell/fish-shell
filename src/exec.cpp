@@ -822,8 +822,8 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
         wcstring_list_t argv = p->get_argv_array().to_list();
         // Remove the function name from argv.
         if (!argv.empty()) argv.erase(argv.begin());
-        function_block_t *fb =
-            parser.push_block<function_block_t>(func_name, argv, props->shadow_scope);
+        block_t *fb =
+            parser.push_block(block_t::function_block(func_name, argv, props->shadow_scope));
         function_prepare_environment(parser.vars(), func_name, std::move(argv), inherit_vars);
         parser.forbid_function(func_name);
 

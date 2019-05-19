@@ -73,7 +73,7 @@ int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         fn_intern = intern(argv[optind]);
     }
 
-    const source_block_t *sb = parser.push_block<source_block_t>(fn_intern);
+    const block_t *sb = parser.push_block(block_t::source_block(fn_intern));
     reader_push_current_filename(fn_intern);
 
     // This is slightly subtle. If this is a bare `source` with no args then `argv + optind` already

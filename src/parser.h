@@ -92,6 +92,17 @@ struct block_t {
     /// Description of the block, for debugging.
     wcstring description() const;
 
+    /// Entry points for creating blocks.
+    static block_t if_block();
+    static block_t event_block(event_t evt);
+    static block_t function_block(wcstring name, wcstring_list_t args, bool shadows);
+    static block_t source_block(const wchar_t *src);
+    static block_t for_block();
+    static block_t while_block();
+    static block_t switch_block();
+    static block_t scope_block(block_type_t type);
+    static block_t breakpoint_block();
+
     /// Destructor
     virtual ~block_t();
 };
@@ -230,9 +241,6 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Helper for stack_trace().
     void stack_trace_internal(size_t block_idx, wcstring *out) const;
 
-    /// Helper for push_block()
-    void push_block_int(block_t *b);
-
     /// Create a parser.
     parser_t();
 
@@ -314,15 +322,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     statuses_t get_last_statuses() const { return vars().get_last_statuses(); }
     void set_last_statuses(statuses_t s) { vars().set_last_statuses(std::move(s)); }
 
-    /// Pushes a new block created with the given arguments
-    /// Returns a pointer to the block. The pointer is valid
-    /// until the call to pop_block()
-    template <typename BLOCKTYPE, typename... Args>
-    BLOCKTYPE *push_block(Args &&... args) {
-        BLOCKTYPE *ret = new BLOCKTYPE(std::forward<Args>(args)...);
-        this->push_block_int(ret);
-        return ret;
-    }
+    /// Pushes a new block. Returns a pointer to the block, stored in the parser. The pointer is
+    /// valid until the call to pop_block()
+    block_t *push_block(block_t &&b);
 
     /// Remove the outermost block, asserting it's the given one.
     void pop_block(const block_t *b);

@@ -119,7 +119,8 @@ void parser_t::skip_all_blocks() {
 }
 
 // Given a new-allocated block, push it onto our block stack, acquiring ownership
-void parser_t::push_block_int(block_t *new_current) {
+block_t *parser_t::push_block(block_t &&block) {
+    std::unique_ptr<block_t> new_current = make_unique<block_t>(std::move(block));
     const enum block_type_t type = new_current->type();
     new_current->src_lineno = parser_t::get_lineno();
 
@@ -138,9 +139,6 @@ void parser_t::push_block_int(block_t *new_current) {
         new_current->skip = false;
     }
 
-    // Push it onto our stack. This acquires ownership because of unique_ptr.
-    this->block_stack.emplace_back(new_current);
-
     // Types TOP and SUBST are not considered blocks for the purposes of `status is-block`.
     if (type != TOP && type != SUBST) {
         libdata().is_block = true;
@@ -154,6 +152,10 @@ void parser_t::push_block_int(block_t *new_current) {
         vars().push(type == FUNCTION_CALL);
         new_current->wants_pop_env = true;
     }
+
+    // Push it onto our stack and return it.
+    this->block_stack.push_back(std::move(new_current));
+    return this->block_stack.back().get();
 }
 
 void parser_t::pop_block(const block_t *expected) {
@@ -666,7 +668,7 @@ int parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, const io_chain_
     job_reap(*this, false);  // not sure why we reap jobs here
 
     // Start it up
-    scope_block_t *scope_block = this->push_block<scope_block_t>(block_type);
+    block_t *scope_block = this->push_block(block_t::scope_block(block_type));
 
     // Create and set a new execution context.
     using exc_ctx_ref_t = std::unique_ptr<parse_execution_context_t>;
@@ -834,6 +836,36 @@ wcstring block_t::description() const {
 }
 
 // Various block constructors.
+
+block_t block_t::if_block() { return block_t(IF); }
+
+block_t block_t::event_block(event_t evt) {
+    block_t b{EVENT};
+    b.event = std::move(evt);
+    return b;
+}
+
+block_t block_t::function_block(wcstring name, wcstring_list_t args, bool shadows) {
+    block_t b{shadows ? FUNCTION_CALL : FUNCTION_CALL_NO_SHADOW};
+    b.function_name = std::move(name);
+    b.function_args = std::move(args);
+    return b;
+}
+
+block_t block_t::source_block(const wchar_t *src) {
+    block_t b{SOURCE};
+    b.sourced_file = src;
+    return b;
+}
+
+block_t block_t::for_block() { return block_t{FOR}; }
+block_t block_t::while_block() { return block_t{WHILE}; }
+block_t block_t::switch_block() { return block_t{SWITCH}; }
+block_t block_t::scope_block(block_type_t type) {
+    assert((type == BEGIN || type == TOP || type == SUBST) && "Invalid scope type");
+    return block_t(type);
+}
+block_t block_t::breakpoint_block() { return block_t(BREAKPOINT); }
 
 if_block_t::if_block_t() : block_t(IF) {}
 

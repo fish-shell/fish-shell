@@ -13,6 +13,7 @@
 - $PATH is no longer reordered in child fishes (#5456).
 - `eval` is now implemented internally rather than being a function; as such, the evaluated code now shares the same argument scope as `eval` rather than being executed in a new scope (#4443).
 - An issue resulting in a certain class of parser errors not resulting in a non-zero `$status` has been corrected (3e055f).
+- fish now underlines every valid entered path instead of just the last one.
 
 ### Syntax changes and new commands
 - None yet.

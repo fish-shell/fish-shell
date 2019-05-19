@@ -4418,7 +4418,7 @@ static void test_highlighting() {
 
     highlight_tests.push_back({
         {L"cat", highlight_role_t::command},
-        {L"/dev/null", highlight_role_t::param},
+        {L"/dev/null", param_valid_path},
         {L"|", highlight_role_t::statement_terminator},
         // This is bogus, but we used to use "less" here and that doesn't have to be installed.
         {L"cat", highlight_role_t::command},

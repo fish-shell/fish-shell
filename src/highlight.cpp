@@ -1265,11 +1265,8 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
         // Must be an argument with source.
         if (node.type != symbol_argument || !node.has_source()) continue;
 
-        // See if this node contains the cursor. We check <= source_length so that, when backspacing
-        // (and the cursor is just beyond the last token), we may still underline it.
-        if (this->cursor_pos >= node.source_start &&
-            this->cursor_pos - node.source_start <= node.source_length &&
-            node_is_potential_path(buff, node, vars, working_directory)) {
+        // Underline every valid path.
+        if (node_is_potential_path(buff, node, vars, working_directory)) {
             // It is, underline it.
             for (size_t i = node.source_start; i < node.source_start + node.source_length; i++) {
                 // Don't color highlight_role_t::error because it looks dorky. For example,

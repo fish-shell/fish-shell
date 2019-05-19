@@ -817,9 +817,14 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
 
         const std::map<wcstring, env_var_t> inherit_vars = function_get_inherit_vars(func_name);
 
+        // TODO: we want to store the args in both the function block and the environment.
+        // Find a way to share memory here?
+        wcstring_list_t argv = p->get_argv_array().to_list();
+        // Remove the function name from argv.
+        if (!argv.empty()) argv.erase(argv.begin());
         function_block_t *fb =
-            parser.push_block<function_block_t>(p, func_name, props->shadow_scope);
-        function_prepare_environment(parser.vars(), func_name, p->get_argv() + 1, inherit_vars);
+            parser.push_block<function_block_t>(func_name, argv, props->shadow_scope);
+        function_prepare_environment(parser.vars(), func_name, std::move(argv), inherit_vars);
         parser.forbid_function(func_name);
 
         internal_exec_helper(parser, props->parsed_source, props->body_node, io_chain, j);

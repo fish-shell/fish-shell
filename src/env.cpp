@@ -1257,17 +1257,7 @@ std::shared_ptr<const null_terminated_array_t<char>> env_stack_t::export_arr() {
 
 std::shared_ptr<environment_t> env_stack_t::snapshot() const { return acquire_impl()->snapshot(); }
 
-void env_stack_t::set_argv(const wchar_t *const *argv) {
-    if (argv && *argv) {
-        wcstring_list_t list;
-        for (auto arg = argv; *arg; arg++) {
-            list.emplace_back(*arg);
-        }
-        set(L"argv", ENV_LOCAL, std::move(list));
-    } else {
-        set_empty(L"argv", ENV_LOCAL);
-    }
-}
+void env_stack_t::set_argv(wcstring_list_t argv) { set(L"argv", ENV_LOCAL, std::move(argv)); }
 
 void env_stack_t::push(bool new_scope) {
     auto impl = acquire_impl();

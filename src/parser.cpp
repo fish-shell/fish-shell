@@ -368,8 +368,6 @@ void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const {
     if (b->type() == FUNCTION_CALL || b->type() == FUNCTION_CALL_NO_SHADOW || b->type() == SOURCE ||
         b->type() == SUBST) {
         // These types of blocks should be printed.
-        int i;
-
         switch (b->type()) {
             case SOURCE: {
                 const source_block_t *sb = static_cast<const source_block_t *>(b);
@@ -382,27 +380,23 @@ void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const {
             case FUNCTION_CALL_NO_SHADOW: {
                 const function_block_t *fb = static_cast<const function_block_t *>(b);
                 append_format(*buff, _(L"in function '%ls'"), fb->name.c_str());
-                const process_t *const process = fb->process;
                 // Print arguments on the same line.
-                if (process->argv(1)) {
-                    wcstring tmp;
-
-                    for (i = 1; process->argv(i); i++) {
-                        if (i > 1) tmp.push_back(L' ');
-                        // We can't quote the arguments because we print this in quotes.
-                        // As a special-case, add the empty argument as "".
-                        if (process->argv(i)[0]) {
-                            tmp.append(
-                                escape_string(process->argv(i), ESCAPE_ALL | ESCAPE_NO_QUOTED));
-                        } else {
-                            tmp.append(L"\"\"");
-                        }
+                wcstring args_str;
+                for (const wcstring &arg : fb->args) {
+                    if (!args_str.empty()) args_str.push_back(L' ');
+                    // We can't quote the arguments because we print this in quotes.
+                    // As a special-case, add the empty argument as "".
+                    if (!arg.empty()) {
+                        args_str.append(escape_string(arg, ESCAPE_ALL | ESCAPE_NO_QUOTED));
+                    } else {
+                        args_str.append(L"\"\"");
                     }
-                    // TODO: Escape these.
-                    append_format(*buff, _(L" with arguments '%ls'\n"), tmp.c_str());
-                } else {
-                    buff->append(L"\n");
                 }
+                if (!args_str.empty()) {
+                    // TODO: Escape these.
+                    append_format(*buff, _(L" with arguments '%ls'"), args_str.c_str());
+                }
+                buff->push_back('\n');
                 break;
             }
             case SUBST: {
@@ -846,8 +840,10 @@ if_block_t::if_block_t() : block_t(IF) {}
 
 event_block_t::event_block_t(const event_t &evt) : block_t(EVENT), event(evt) {}
 
-function_block_t::function_block_t(const process_t *p, wcstring n, bool shadows)
-    : block_t(shadows ? FUNCTION_CALL : FUNCTION_CALL_NO_SHADOW), process(p), name(std::move(n)) {}
+function_block_t::function_block_t(wcstring name, wcstring_list_t args, bool shadows)
+    : block_t(shadows ? FUNCTION_CALL : FUNCTION_CALL_NO_SHADOW),
+      name(std::move(name)),
+      args(std::move(args)) {}
 
 source_block_t::source_block_t(const wchar_t *src) : block_t(SOURCE), source_file(src) {}
 

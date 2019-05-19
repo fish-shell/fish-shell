@@ -78,7 +78,9 @@ int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     // This is slightly subtle. If this is a bare `source` with no args then `argv + optind` already
     // points to the end of argv. Otherwise we want to skip the file name to get to the args if any.
-    parser.vars().set_argv(argv + optind + (argc == optind ? 0 : 1));
+    wcstring_list_t argv_list =
+        null_terminated_array_t<wchar_t>::to_list(argv + optind + (argc == optind ? 0 : 1));
+    parser.vars().set_argv(std::move(argv_list));
 
     retval = reader_read(fd, streams.io_chain ? *streams.io_chain : io_chain_t());
 

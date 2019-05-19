@@ -371,17 +371,16 @@ void function_invalidate_path() {
 // 1. argv
 // 2. named arguments
 // 3. inherited variables
-void function_prepare_environment(env_stack_t &vars, const wcstring &name,
-                                  const wchar_t *const *argv,
+void function_prepare_environment(env_stack_t &vars, const wcstring &name, wcstring_list_t argv,
                                   const std::map<wcstring, env_var_t> &inherited_vars) {
     vars.set_argv(argv);
     auto props = function_get_properties(name);
     if (props && !props->named_arguments.empty()) {
-        const wchar_t *const *arg = argv;
+        auto argv_iter = argv.cbegin();
         for (const wcstring &named_arg : props->named_arguments) {
-            if (*arg) {
-                vars.set_one(named_arg, ENV_LOCAL | ENV_USER, *arg);
-                arg++;
+            if (argv_iter != argv.cend()) {
+                vars.set_one(named_arg, ENV_LOCAL | ENV_USER, std::move(*argv_iter));
+                ++argv_iter;
             } else {
                 vars.set_empty(named_arg, ENV_LOCAL | ENV_USER);
             }

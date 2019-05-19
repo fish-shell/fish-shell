@@ -96,9 +96,9 @@ struct event_block_t : public block_t {
 };
 
 struct function_block_t : public block_t {
-    const process_t *process;
     wcstring name;
-    function_block_t(const process_t *p, wcstring n, bool shadows);
+    wcstring_list_t args;
+    function_block_t(wcstring name, wcstring_list_t args, bool shadows);
 };
 
 struct source_block_t : public block_t {

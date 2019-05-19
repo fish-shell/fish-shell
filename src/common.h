@@ -584,6 +584,18 @@ class null_terminated_array_t {
         this->array = make_null_terminated_array(argv);
     }
 
+    /// Convert from a null terminated list to a vector of strings.
+    static string_list_t to_list(const CharType_t *const *arr) {
+        string_list_t result;
+        for (const auto *cursor = arr; cursor && *cursor; cursor++) {
+            result.push_back(*cursor);
+        }
+        return result;
+    }
+
+    /// Instance method.
+    string_list_t to_list() const { return to_list(array); }
+
     const CharType_t *const *get() const { return array; }
     CharType_t **get() { return array; }
 

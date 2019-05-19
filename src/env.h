@@ -284,8 +284,8 @@ class env_stack_t final : public environment_t {
     /// Update the termsize variable.
     void set_termsize();
 
-    /// Sets up argv as the given null terminated array of strings.
-    void set_argv(const wchar_t *const *argv);
+    /// Sets up argv as the given list of strings.
+    void set_argv(wcstring_list_t argv);
 
     /// Mark that exported variables have changed.
     void mark_changed_exported();

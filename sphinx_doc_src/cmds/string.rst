@@ -132,6 +132,8 @@ If you specify the ``-f`` or ``--filter`` flag then each input string is printed
 
 Exit status: 0 if at least one replacement was performed, or 1 otherwise.
 
+.. _cmd-string-split:
+
 "split" subcommand
 ------------------
 
@@ -140,6 +142,8 @@ Exit status: 0 if at least one replacement was performed, or 1 otherwise.
 ``string split`` splits each STRING on the separator SEP, which can be an empty string. If ``-m`` or ``--max`` is specified, at most MAX splits are done on each STRING. If ``-r`` or ``--right`` is given, splitting is performed right-to-left. This is useful in combination with ``-m`` or ``--max``. With ``-n`` or ``--no-empty``, empty results are excluded from consideration (e.g. ``hello\n\nworld`` would expand to two strings and not three). Exit status: 0 if at least one split was performed, or 1 otherwise.
 
 See also ``read --delimiter``.
+
+.. _cmd-string-split0:
 
 "split0" subcommand
 -------------------

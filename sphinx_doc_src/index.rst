@@ -739,6 +739,8 @@ Command substitution
 
 The output of a series of commands can be used as the parameters to another command. If a parameter contains a set of parenthesis, the text enclosed by the parenthesis will be interpreted as a list of commands. On expansion, this list is executed, and substituted by the output. If the output is more than one line long, each line will be expanded to a new parameter. Setting ``IFS`` to the empty string will disable line splitting.
 
+If the output is piped to :ref:`string split <cmd-string-split>` or `string split0 <cmd-string-split0>` as the last step, those splits are used as they appear and no additional splitting on newlines takes place.
+
 The exit status of the last run command substitution is available in the `status <#variables-status>`_ variable if the substitution occurs in the context of a ``set`` command.
 
 Only part of the output can be used, see `index range expansion <#expand-index-range>`_ for details.
@@ -758,6 +760,8 @@ Examples::
     # Set the ``data`` variable to the contents of 'data.txt'
     # without splitting it into a list.
 
+    set data (cat data | string split0)
+    # Set ``$data`` to the contents of data, splitting on NUL-bytes.
 
 .. _expand-brace:
 

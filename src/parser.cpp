@@ -377,10 +377,10 @@ void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const {
             case FUNCTION_CALL:
             case FUNCTION_CALL_NO_SHADOW: {
                 const function_block_t *fb = static_cast<const function_block_t *>(b);
-                append_format(*buff, _(L"in function '%ls'"), fb->name.c_str());
+                append_format(*buff, _(L"in function '%ls'"), fb->function_name.c_str());
                 // Print arguments on the same line.
                 wcstring args_str;
-                for (const wcstring &arg : fb->args) {
+                for (const wcstring &arg : fb->function_args) {
                     if (!args_str.empty()) args_str.push_back(L' ');
                     // We can't quote the arguments because we print this in quotes.
                     // As a special-case, add the empty argument as "".
@@ -437,7 +437,7 @@ const wchar_t *parser_t::is_function(size_t idx) const {
         const block_t *b = this->block_at_index(block_idx);
         if (b->type() == FUNCTION_CALL || b->type() == FUNCTION_CALL_NO_SHADOW) {
             const function_block_t *fb = static_cast<const function_block_t *>(b);
-            result = fb->name.c_str();
+            result = fb->function_name.c_str();
             break;
         } else if (b->type() == SOURCE) {
             // If a function sources a file, obviously that function's offset doesn't contribute.
@@ -500,7 +500,7 @@ const wchar_t *parser_t::current_filename() const {
         const block_t *b = this->block_at_index(i);
         if (b->type() == FUNCTION_CALL || b->type() == FUNCTION_CALL_NO_SHADOW) {
             const function_block_t *fb = static_cast<const function_block_t *>(b);
-            return function_get_definition_file(fb->name);
+            return function_get_definition_file(fb->function_name);
         } else if (b->type() == SOURCE) {
             const source_block_t *sb = static_cast<const source_block_t *>(b);
             return sb->source_file;
@@ -839,9 +839,10 @@ if_block_t::if_block_t() : block_t(IF) {}
 event_block_t::event_block_t(const event_t &evt) : block_t(EVENT), event(evt) {}
 
 function_block_t::function_block_t(wcstring name, wcstring_list_t args, bool shadows)
-    : block_t(shadows ? FUNCTION_CALL : FUNCTION_CALL_NO_SHADOW),
-      name(std::move(name)),
-      args(std::move(args)) {}
+    : block_t(shadows ? FUNCTION_CALL : FUNCTION_CALL_NO_SHADOW) {
+    this->function_name = std::move(name);
+    this->function_args = std::move(args);
+}
 
 source_block_t::source_block_t(const wchar_t *src) : block_t(SOURCE), source_file(src) {}
 

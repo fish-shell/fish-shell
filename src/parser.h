@@ -75,6 +75,11 @@ struct block_t {
     /// List of event blocks.
     event_blockage_list_t event_blocks{};
 
+    // If this is a function block, the function name and arguments.
+    // Otherwise empty.
+    wcstring function_name{};
+    wcstring_list_t function_args{};
+
     block_type_t type() const { return this->block_type; }
 
     /// Description of the block, for debugging.
@@ -94,8 +99,6 @@ struct event_block_t : public block_t {
 };
 
 struct function_block_t : public block_t {
-    wcstring name;
-    wcstring_list_t args;
     function_block_t(wcstring name, wcstring_list_t args, bool shadows);
 };
 

@@ -192,7 +192,7 @@ parse_execution_context_t::cancellation_reason(const block_t *block) const {
     if (block && block->skip) {
         return execution_cancellation_skip;
     }
-    if (block && block->loop_status != LOOP_NORMAL) {
+    if (parser->libdata().loop_status != loop_status_t::normals) {
         return execution_cancellation_loop_control;
     }
     return execution_cancellation_none;
@@ -421,16 +421,15 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
         assert(retval == ENV_OK && "for loop variable should have been successfully set");
         (void)retval;
 
-        fb->loop_status = LOOP_NORMAL;
+        auto &ld = parser->libdata();
+        ld.loop_status = loop_status_t::normals;
         this->run_job_list(block_contents, fb);
 
         if (this->cancellation_reason(fb) == execution_cancellation_loop_control) {
             // Handle break or continue.
-            if (fb->loop_status == LOOP_CONTINUE) {
-                // Reset the loop state.
-                fb->loop_status = LOOP_NORMAL;
-                continue;
-            } else if (fb->loop_status == LOOP_BREAK) {
+            bool do_break = (ld.loop_status == loop_status_t::breaks);
+            ld.loop_status = loop_status_t::normals;
+            if (do_break) {
                 break;
             }
         }
@@ -584,17 +583,18 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
         }
 
         // Push a while block and then check its cancellation reason.
+        auto &ld = parser->libdata();
+        ld.loop_status = loop_status_t::normals;
         while_block_t *wb = parser->push_block<while_block_t>();
         this->run_job_list(contents, wb);
-        auto loop_status = wb->loop_status;
         auto cancel_reason = this->cancellation_reason(wb);
         parser->pop_block(wb);
 
         if (cancel_reason == execution_cancellation_loop_control) {
             // Handle break or continue.
-            if (loop_status == LOOP_CONTINUE) {
+            if (ld.loop_status == loop_status_t::continues) {
                 continue;
-            } else if (loop_status == LOOP_BREAK) {
+            } else if (ld.loop_status == loop_status_t::breaks) {
                 break;
             }
         }

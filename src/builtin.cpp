@@ -276,29 +276,21 @@ static int builtin_break_continue(parser_t &parser, io_streams_t &streams, wchar
         return STATUS_INVALID_ARGS;
     }
 
-    // Find the index of the enclosing for or while loop. Recall that incrementing loop_idx goes
-    // 'up' to outer blocks.
-    size_t loop_idx;
-    for (loop_idx = 0; loop_idx < parser.block_count(); loop_idx++) {
+    // Paranoia: ensure we have a real loop.
+    bool has_loop = false;
+    for (size_t loop_idx = 0; loop_idx < parser.block_count() && !has_loop; loop_idx++) {
         const block_t *b = parser.block_at_index(loop_idx);
-        if (b->type() == WHILE || b->type() == FOR) break;
+        if (b->type() == WHILE || b->type() == FOR) has_loop = true;
+        if (b->type() == FUNCTION_CALL) break;
     }
-
-    if (loop_idx >= parser.block_count()) {
+    if (!has_loop) {
         streams.err.append_format(_(L"%ls: Not inside of loop\n"), argv[0]);
         builtin_print_help(parser, streams, argv[0], streams.err);
         return STATUS_CMD_ERROR;
     }
 
-    // Skip blocks interior to the loop (but not the loop itself)
-    size_t block_idx = loop_idx;
-    while (block_idx--) {
-        parser.block_at_index(block_idx)->skip = true;
-    }
-
-    // Mark the loop's status
-    block_t *loop_block = parser.block_at_index(loop_idx);
-    loop_block->loop_status = is_break ? LOOP_BREAK : LOOP_CONTINUE;
+    // Mark the status in the libdata.
+    parser.libdata().loop_status = is_break ? loop_status_t::breaks : loop_status_t::continues;
     return STATUS_CMD_OK;
 }
 

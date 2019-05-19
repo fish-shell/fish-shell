@@ -46,10 +46,10 @@ enum block_type_t {
 };
 
 /// Possible states for a loop.
-enum loop_status_t {
-    LOOP_NORMAL,    /// current loop block executed as normal
-    LOOP_BREAK,     /// current loop block should be removed
-    LOOP_CONTINUE,  /// current loop block should be skipped
+enum class loop_status_t {
+    normals,    /// current loop block executed as normal
+    breaks,     /// current loop block should be removed
+    continues,  /// current loop block should be skipped
 };
 
 /// block_t represents a block of commands.
@@ -65,8 +65,6 @@ struct block_t {
    public:
     /// Whether execution of the commands in this block should be skipped.
     bool skip{false};
-    /// Status for the current loop block. Can be any of the values from the loop_status enum.
-    enum loop_status_t loop_status { LOOP_NORMAL };
     /// Name of file that created this block. This string is intern'd.
     const wchar_t *src_filename{nullptr};
     /// Line number where this block was created.
@@ -174,6 +172,9 @@ struct library_data_t {
     /// Whether we are running an event handler. This is not a bool because we keep count of the
     /// event nesting level.
     int is_event{0};
+
+    /// Whether we should break or continue the current loop.
+    enum loop_status_t loop_status { loop_status_t::normals };
 };
 
 class parser_t : public std::enable_shared_from_this<parser_t> {

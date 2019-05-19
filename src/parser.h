@@ -53,12 +53,10 @@ enum class loop_status_t {
 };
 
 /// block_t represents a block of commands.
-struct block_t {
-   protected:
-    /// Protected constructor. Use one of the subclasses below.
+class block_t {
+    /// Construct from a block type.
     explicit block_t(block_type_t t);
 
-   private:
     /// Type of block.
     const block_type_t block_type;
 
@@ -103,44 +101,7 @@ struct block_t {
     static block_t scope_block(block_type_t type);
     static block_t breakpoint_block();
 
-    /// Destructor
-    virtual ~block_t();
-};
-
-struct if_block_t : public block_t {
-    if_block_t();
-};
-
-struct event_block_t : public block_t {
-    explicit event_block_t(const event_t &evt);
-};
-
-struct function_block_t : public block_t {
-    function_block_t(wcstring name, wcstring_list_t args, bool shadows);
-};
-
-struct source_block_t : public block_t {
-    explicit source_block_t(const wchar_t *src);
-};
-
-struct for_block_t : public block_t {
-    for_block_t();
-};
-
-struct while_block_t : public block_t {
-    while_block_t();
-};
-
-struct switch_block_t : public block_t {
-    switch_block_t();
-};
-
-struct scope_block_t : public block_t {
-    explicit scope_block_t(block_type_t type);  // must be BEGIN, TOP or SUBST
-};
-
-struct breakpoint_block_t : public block_t {
-    breakpoint_block_t();
+    ~block_t();
 };
 
 struct profile_item_t {

@@ -10,8 +10,8 @@
 #include "parse_tree.h"
 #include "proc.h"
 
+class block_t;
 class parser_t;
-struct block_t;
 
 enum parse_execution_result_t {
     /// The job was successfully executed (though it have failed on its own).

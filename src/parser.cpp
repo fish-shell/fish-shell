@@ -354,9 +354,8 @@ void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const {
 
     if (b->type() == EVENT) {
         // This is an event handler.
-        const event_block_t *eb = static_cast<const event_block_t *>(b);
-        assert(eb->event && "Should have an event");
-        wcstring description = event_get_desc(*eb->event);
+        assert(b->event && "Should have an event");
+        wcstring description = event_get_desc(*b->event);
         append_format(*buff, _(L"in event handler: %ls\n"), description.c_str());
 
         // Stop recursing at event handler. No reason to believe that any other code is relevant.
@@ -371,19 +370,17 @@ void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const {
         // These types of blocks should be printed.
         switch (b->type()) {
             case SOURCE: {
-                const source_block_t *sb = static_cast<const source_block_t *>(b);
-                const wchar_t *source_dest = sb->sourced_file;
+                const wchar_t *source_dest = b->sourced_file;
                 append_format(*buff, _(L"from sourcing file %ls\n"),
                               user_presentable_path(source_dest).c_str());
                 break;
             }
             case FUNCTION_CALL:
             case FUNCTION_CALL_NO_SHADOW: {
-                const function_block_t *fb = static_cast<const function_block_t *>(b);
-                append_format(*buff, _(L"in function '%ls'"), fb->function_name.c_str());
+                append_format(*buff, _(L"in function '%ls'"), b->function_name.c_str());
                 // Print arguments on the same line.
                 wcstring args_str;
-                for (const wcstring &arg : fb->function_args) {
+                for (const wcstring &arg : b->function_args) {
                     if (!args_str.empty()) args_str.push_back(L' ');
                     // We can't quote the arguments because we print this in quotes.
                     // As a special-case, add the empty argument as "".
@@ -439,8 +436,7 @@ const wchar_t *parser_t::is_function(size_t idx) const {
     for (size_t block_idx = idx; block_idx < this->block_count(); block_idx++) {
         const block_t *b = this->block_at_index(block_idx);
         if (b->type() == FUNCTION_CALL || b->type() == FUNCTION_CALL_NO_SHADOW) {
-            const function_block_t *fb = static_cast<const function_block_t *>(b);
-            result = fb->function_name.c_str();
+            result = b->function_name.c_str();
             break;
         } else if (b->type() == SOURCE) {
             // If a function sources a file, obviously that function's offset doesn't contribute.
@@ -502,11 +498,9 @@ const wchar_t *parser_t::current_filename() const {
     for (size_t i = 0; i < this->block_count(); i++) {
         const block_t *b = this->block_at_index(i);
         if (b->type() == FUNCTION_CALL || b->type() == FUNCTION_CALL_NO_SHADOW) {
-            const function_block_t *fb = static_cast<const function_block_t *>(b);
-            return function_get_definition_file(fb->function_name);
+            return function_get_definition_file(b->function_name);
         } else if (b->type() == SOURCE) {
-            const source_block_t *sb = static_cast<const source_block_t *>(b);
-            return sb->sourced_file;
+            return b->sourced_file;
         }
     }
 
@@ -866,27 +860,3 @@ block_t block_t::scope_block(block_type_t type) {
     return block_t(type);
 }
 block_t block_t::breakpoint_block() { return block_t(BREAKPOINT); }
-
-if_block_t::if_block_t() : block_t(IF) {}
-
-event_block_t::event_block_t(const event_t &evt) : block_t(EVENT) { this->event = evt; }
-
-function_block_t::function_block_t(wcstring name, wcstring_list_t args, bool shadows)
-    : block_t(shadows ? FUNCTION_CALL : FUNCTION_CALL_NO_SHADOW) {
-    this->function_name = std::move(name);
-    this->function_args = std::move(args);
-}
-
-source_block_t::source_block_t(const wchar_t *src) : block_t(SOURCE) { this->sourced_file = src; }
-
-for_block_t::for_block_t() : block_t(FOR) {}
-
-while_block_t::while_block_t() : block_t(WHILE) {}
-
-switch_block_t::switch_block_t() : block_t(SWITCH) {}
-
-scope_block_t::scope_block_t(block_type_t type) : block_t(type) {
-    assert(type == BEGIN || type == TOP || type == SUBST);
-}
-
-breakpoint_block_t::breakpoint_block_t() : block_t(BREAKPOINT) {}

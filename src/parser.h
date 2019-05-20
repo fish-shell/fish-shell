@@ -174,7 +174,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// The 'depth' of the fish call stack.
     int eval_level = -1;
     /// Set of variables for the parser.
-    env_stack_t &variables;
+    const std::shared_ptr<env_stack_t> variables;
     /// Miscellaneous library data.
     library_data_t library_data{};
 
@@ -204,6 +204,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     /// Create a parser.
     parser_t();
+    parser_t(std::shared_ptr<env_stack_t> vars);
 
     /// The main parser.
     static std::shared_ptr<parser_t> principal;
@@ -271,8 +272,8 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     const job_list_t &jobs() const { return job_list; }
 
     /// Get the variables.
-    env_stack_t &vars() { return variables; }
-    const env_stack_t &vars() const { return variables; }
+    env_stack_t &vars() { return *variables; }
+    const env_stack_t &vars() const { return *variables; }
 
     /// Get the library data.
     library_data_t &libdata() { return library_data; }

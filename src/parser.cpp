@@ -100,7 +100,11 @@ wcstring parser_t::user_presentable_path(const wcstring &path) const {
     return replace_home_directory_with_tilde(path, vars());
 }
 
-parser_t::parser_t() : variables(env_stack_t::principal()) {}
+parser_t::parser_t(std::shared_ptr<env_stack_t> vars) : variables(std::move(vars)) {
+    assert(variables.get() && "Null variables in parser initializer");
+}
+
+parser_t::parser_t() : parser_t(env_stack_t::principal_ref()) {}
 
 // Out of line destructor to enable forward declaration of parse_execution_context_t
 parser_t::~parser_t() = default;

@@ -291,7 +291,8 @@ class env_stack_t final : public environment_t {
     void mark_changed_exported();
 
     // Compatibility hack; access the "environment stack" from back when there was just one.
-    static env_stack_t &principal();
+    static const std::shared_ptr<env_stack_t> &principal_ref();
+    static env_stack_t &principal() { return *principal_ref(); }
 
     // Access a variable stack that only represents globals.
     // Do not push or pop from this.

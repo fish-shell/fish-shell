@@ -124,23 +124,23 @@ void parser_t::skip_all_blocks() {
 
 // Given a new-allocated block, push it onto our block stack, acquiring ownership
 block_t *parser_t::push_block(block_t &&block) {
-    std::unique_ptr<block_t> new_current = make_unique<block_t>(std::move(block));
-    const enum block_type_t type = new_current->type();
-    new_current->src_lineno = parser_t::get_lineno();
+    block_t new_current{std::move(block)};
+    const enum block_type_t type = new_current.type();
+    new_current.src_lineno = parser_t::get_lineno();
 
     const wchar_t *filename = parser_t::current_filename();
     if (filename != NULL) {
-        new_current->src_filename = intern(filename);
+        new_current.src_filename = intern(filename);
     }
 
     // New blocks should be skipped if the outer block is skipped, except TOP and SUBST block, which
     // open up new environments.
     const block_t *old_current = this->current_block();
-    new_current->skip = old_current && old_current->skip;
+    new_current.skip = old_current && old_current->skip;
 
     // Type TOP and SUBST are never skipped.
     if (type == TOP || type == SUBST) {
-        new_current->skip = false;
+        new_current.skip = false;
     }
 
     // Types TOP and SUBST are not considered blocks for the purposes of `status is-block`.
@@ -152,14 +152,15 @@ block_t *parser_t::push_block(block_t &&block) {
         libdata().is_breakpoint = true;
     }
 
-    if (new_current->type() != TOP) {
+    if (new_current.type() != TOP) {
         vars().push(type == FUNCTION_CALL);
-        new_current->wants_pop_env = true;
+        new_current.wants_pop_env = true;
     }
 
-    // Push it onto our stack and return it.
+    // Push it onto our stack and return a pointer to it.
+    // Note that deques do not move their contents so this is safe.
     this->block_stack.push_back(std::move(new_current));
-    return this->block_stack.back().get();
+    return &this->block_stack.back();
 }
 
 void parser_t::pop_block(const block_t *expected) {
@@ -170,17 +171,16 @@ void parser_t::pop_block(const block_t *expected) {
         return;
     }
 
-    // acquire ownership out of the block stack
-    // this will trigger deletion when it goes out of scope
-    std::unique_ptr<block_t> old = std::move(block_stack.back());
+    // Acquire ownership out of the block stack.
+    block_t old = std::move(block_stack.back());
     block_stack.pop_back();
 
-    if (old->wants_pop_env) vars().pop();
+    if (old.wants_pop_env) vars().pop();
 
     // Figure out if `status is-block` should consider us to be in a block now.
     bool new_is_block = false;
     for (const auto &b : block_stack) {
-        const enum block_type_t type = b->type();
+        const enum block_type_t type = b.type();
         if (type != TOP && type != SUBST) {
             new_is_block = true;
             break;
@@ -191,7 +191,7 @@ void parser_t::pop_block(const block_t *expected) {
     // Are we still in a breakpoint?
     bool new_is_breakpoint = false;
     for (const auto &b : block_stack) {
-        const enum block_type_t type = b->type();
+        const enum block_type_t type = b.type();
         if (type == BREAKPOINT) {
             new_is_breakpoint = true;
             break;
@@ -232,15 +232,15 @@ wcstring parser_t::block_stack_description() const {
 const block_t *parser_t::block_at_index(size_t idx) const {
     // Zero corresponds to the last element in our vector.
     size_t count = block_stack.size();
-    return idx < count ? block_stack.at(count - idx - 1).get() : NULL;
+    return idx < count ? &block_stack.at(count - idx - 1) : NULL;
 }
 
 block_t *parser_t::block_at_index(size_t idx) {
     size_t count = block_stack.size();
-    return idx < count ? block_stack.at(count - idx - 1).get() : NULL;
+    return idx < count ? &block_stack.at(count - idx - 1) : NULL;
 }
 
-block_t *parser_t::current_block() { return block_stack.empty() ? NULL : block_stack.back().get(); }
+block_t *parser_t::current_block() { return block_stack.empty() ? NULL : &block_stack.back(); }
 
 void parser_t::forbid_function(const wcstring &function) { forbidden_function.push_back(function); }
 
@@ -458,7 +458,7 @@ const wchar_t *parser_t::get_function_name(int level) {
         // isn't one return the function name for the current level.
         int idx = 0;
         for (const auto &b : block_stack) {
-            const enum block_type_t type = b->type();
+            const enum block_type_t type = b.type();
             if (type == BREAKPOINT) {
                 return this->is_function(idx);
             }
@@ -473,7 +473,7 @@ const wchar_t *parser_t::get_function_name(int level) {
     // Return the function name for the specific function stack frame.
     int idx = 0;
     for (const auto &b : block_stack) {
-        const enum block_type_t type = b->type();
+        const enum block_type_t type = b.type();
         if (type == FUNCTION_CALL || type == FUNCTION_CALL_NO_SHADOW) {
             if (--level == 0) return this->is_function(idx);
         }

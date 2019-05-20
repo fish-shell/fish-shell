@@ -169,8 +169,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     wcstring_list_t forbidden_function;
     /// The jobs associated with this parser.
     job_list_t job_list;
-    /// The list of blocks
-    std::vector<std::unique_ptr<block_t>> block_stack;
+    /// The list of blocks. This is a deque because we give out raw pointers to callers, who hold
+    /// them across manipulating this stack.
+    std::deque<block_t> block_stack;
     /// The 'depth' of the fish call stack.
     int eval_level = -1;
     /// Set of variables for the parser.

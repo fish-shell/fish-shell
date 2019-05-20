@@ -376,7 +376,7 @@ static void update_fish_color_support(const environment_t &vars) {
     // Handle $fish_term24bit
     if (auto fish_term24bit = vars.get(L"fish_term24bit")) {
         support_term24bit = bool_from_string(fish_term24bit->as_string());
-        debug(2, L"'fish_term24bit' preference: 24-bit color %s",
+        debug(2, L"'fish_term24bit' preference: 24-bit color %ls",
               support_term24bit ? L"enabled" : L"disabled");
     } else {
         // We don't attempt to infer term24 bit support yet.

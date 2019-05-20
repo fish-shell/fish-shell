@@ -245,11 +245,7 @@ void prettifier_t::prettify_node(const parse_node_tree_t &tree, node_offset_t no
                 last_was_semicolon = false;
             }
 
-            if (node.keyword != parse_keyword_none) {
-                append_whitespace(node_indent);
-                output.append(keyword_description(node.keyword));
-                has_new_line = false;
-            } else if (node.has_source()) {
+            if (node.has_source()) {
                 // Some type representing a particular token.
                 if (prev_node_type != parse_token_type_redirection) {
                     append_whitespace(node_indent);

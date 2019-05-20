@@ -95,16 +95,7 @@ if set -q fish_files[1]
         set PATH . $PATH
     end
     echo === Running "$green"fish_indent"$normal"
-    for file in $fish_files
-        cp $file $file.new # preserves mode bits
-        fish_indent <$file >$file.new
-        if cmp --quiet $file $file.new
-            rm $file.new
-        else
-            echo $file was NOT correctly formatted
-            mv $file.new $file
-        end
-    end
+    fish_indent -w -- $fish_files
 end
 
 if set -q python_files[1]

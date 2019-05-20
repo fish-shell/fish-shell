@@ -133,16 +133,6 @@ block_t *parser_t::push_block(block_t &&block) {
         new_current.src_filename = intern(filename);
     }
 
-    // New blocks should be skipped if the outer block is skipped, except TOP and SUBST block, which
-    // open up new environments.
-    const block_t *old_current = this->current_block();
-    new_current.skip = old_current && old_current->skip;
-
-    // Type TOP and SUBST are never skipped.
-    if (type == TOP || type == SUBST) {
-        new_current.skip = false;
-    }
-
     // Types TOP and SUBST are not considered blocks for the purposes of `status is-block`.
     if (type != TOP && type != SUBST) {
         libdata().is_block = true;

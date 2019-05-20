@@ -102,11 +102,8 @@ int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_CMD_ERROR;
     }
 
-    // Skip everything up to and including the function block.
-    for (size_t i = 0; i <= function_block_idx; i++) {
-        block_t *b = parser.block_at_index(i);
-        b->skip = true;
-    }
+    // Mark a return in the libdata.
+    parser.libdata().returning = true;
 
     return retval;
 }

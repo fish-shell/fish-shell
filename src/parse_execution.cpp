@@ -189,10 +189,11 @@ parse_execution_context_t::cancellation_reason(const block_t *block) const {
     if (parser && parser->cancellation_requested) {
         return execution_cancellation_skip;
     }
-    if (block && block->skip) {
+    const auto &ld = parser->libdata();
+    if (ld.returning) {
         return execution_cancellation_skip;
     }
-    if (parser->libdata().loop_status != loop_status_t::normals) {
+    if (ld.loop_status != loop_status_t::normals) {
         return execution_cancellation_loop_control;
     }
     return execution_cancellation_none;

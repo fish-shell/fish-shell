@@ -61,8 +61,6 @@ class block_t {
     const block_type_t block_type;
 
    public:
-    /// Whether execution of the commands in this block should be skipped.
-    bool skip{false};
     /// Name of file that created this block. This string is intern'd.
     const wchar_t *src_filename{nullptr};
     /// Line number where this block was created.
@@ -155,6 +153,9 @@ struct library_data_t {
 
     /// Whether we should break or continue the current loop.
     enum loop_status_t loop_status { loop_status_t::normals };
+
+    /// Whether we should return from the current function.
+    bool returning{false};
 };
 
 class parser_t : public std::enable_shared_from_this<parser_t> {

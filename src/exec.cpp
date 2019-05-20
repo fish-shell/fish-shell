@@ -831,6 +831,9 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
 
         parser.allow_function();
         parser.pop_block(fb);
+
+        // If we returned due to a return statement, then stop returning now.
+        parser.libdata().returning = false;
     } else {
         assert(p->type == process_type_t::block_node);
         assert(p->block_node_source && p->internal_block_node && "Process is missing node info");

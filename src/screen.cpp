@@ -823,15 +823,19 @@ static size_t truncation_offset_for_width(const std::vector<size_t> &width_by_of
 }
 
 static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
-                                      wcstring left_prompt,
-                                      wcstring right_prompt, const wcstring &commandline,
-                                      wcstring autosuggestion) {
+                                      const wcstring &left_prompt_str,
+                                      const wcstring &right_prompt_str, const wcstring &commandline,
+                                      const wcstring &autosuggestion_str) {
     UNUSED(s);
     screen_layout_t result = {};
 
     // Start by ensuring that the prompts themselves can fit.
-    prompt_layout_t left_prompt_layout = calc_prompt_layout(left_prompt, cached_layouts);
-    prompt_layout_t right_prompt_layout = calc_prompt_layout(right_prompt, cached_layouts);
+    const wchar_t *left_prompt = left_prompt_str.c_str();
+    const wchar_t *right_prompt = right_prompt_str.c_str();
+    const wchar_t *autosuggestion = autosuggestion_str.c_str();
+
+    prompt_layout_t left_prompt_layout = calc_prompt_layout(left_prompt_str, cached_layouts);
+    prompt_layout_t right_prompt_layout = calc_prompt_layout(right_prompt_str, cached_layouts);
 
     size_t left_prompt_width = left_prompt_layout.last_line_width;
     size_t right_prompt_width = right_prompt_layout.last_line_width;
@@ -878,7 +882,7 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
     if (multiline) {
         autosuggestion = L"";
     } else {
-        autosuggest_truncated_widths.reserve(1 + autosuggestion.size());
+        autosuggest_truncated_widths.reserve(1 + autosuggestion_str.size());
         for (size_t i = 0; autosuggestion[i] != L'\0'; i++) {
             autosuggest_truncated_widths.push_back(autosuggest_total_width);
             autosuggest_total_width += fish_wcwidth_min_0(autosuggestion[i]);
@@ -909,10 +913,10 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
         calculated_width = left_prompt_width + right_prompt_width + first_command_line_width +
                            autosuggest_total_width;
         if (calculated_width < screen_width) {
-            result.left_prompt = std::move(left_prompt);
+            result.left_prompt = left_prompt;
             result.left_prompt_space = left_prompt_width;
-            result.right_prompt = std::move(right_prompt);
-            result.autosuggestion = std::move(autosuggestion);
+            result.right_prompt = right_prompt;
+            result.autosuggestion = autosuggestion;
             done = true;
         }
     }
@@ -922,9 +926,9 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
     if (!done) {
         calculated_width = left_prompt_width + right_prompt_width + first_command_line_width;
         if (calculated_width < screen_width) {
-            result.left_prompt = std::move(left_prompt);
+            result.left_prompt = left_prompt;
             result.left_prompt_space = left_prompt_width;
-            result.right_prompt = std::move(right_prompt);
+            result.right_prompt = right_prompt;
 
             // Need at least two characters to show an autosuggestion.
             size_t available_autosuggest_space =
@@ -943,7 +947,7 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
     if (!done) {
         calculated_width = left_prompt_width + first_command_line_width;
         if (calculated_width < screen_width) {
-            result.left_prompt = std::move(left_prompt);
+            result.left_prompt = left_prompt;
             result.left_prompt_space = left_prompt_width;
             done = true;
         }
@@ -951,7 +955,7 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
 
     // Case 4
     if (!done) {
-        result.left_prompt = std::move(left_prompt);
+        result.left_prompt = left_prompt;
         result.left_prompt_space = left_prompt_width;
         // See remark about for why we can't use the right prompt here result.right_prompt =
         // right_prompt. If the command wraps, and the prompt is not short, place the command on its

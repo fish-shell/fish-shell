@@ -72,6 +72,9 @@ cd $base
 test $PWD = $base; and echo Gone to base
 cd linkhome
 test $PWD = $base/linkhome; and echo Gone to linkhome via implicit . in CDPATH
+set -g CDPATH ./
+cd $base
+test $PWD = $base; and echo No crash with ./ CDPATH
 
 # cd back before removing the test directory again.
 cd $oldpwd

@@ -179,9 +179,14 @@ maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
             if (next_path.empty()) next_path = L".";
             if (next_path == L"." && !wd.empty()) {
                 // next_path is just '.', and we have a working directory, so use the wd instead.
-                // TODO: if next_path starts with ./ we need to replace the . with the wd.
                 next_path = wd;
             }
+
+            // If next_path starts with ./ we need to replace the . with the wd.
+            if (string_prefixes_string(L"./", next_path) && !wd.empty()) {
+                next_path = next_path.replace(0, 2, wd);
+            }
+
             expand_tilde(next_path, env_vars);
             if (next_path.empty()) continue;
 

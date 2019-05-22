@@ -255,6 +255,7 @@ static void handle_int_notinteractive(int sig, siginfo_t *info, void *context) {
     if (reraise_if_forked_child(sig)) return;
     parser_t::skip_all_blocks();
     default_handler(sig, info, context);
+    topic_monitor_t::principal().post(topic_t::sighupint);
 }
 
 /// sigchld handler. Does notification and calls the handler in proc.c.

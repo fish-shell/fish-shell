@@ -2269,7 +2269,11 @@ void append_path_component(wcstring &path, const wcstring &component) {
 
 extern "C" {
 [[gnu::noinline]] void debug_thread_error(void) {
-    while (1) sleep(9999999);
+    // Wait for a SIGINT. We can't use sigsuspend() because the signal may be delivered on another
+    // thread.
+    auto &tm = topic_monitor_t::principal();
+    auto gens = tm.current_generations();
+    tm.check(&gens, {topic_t::sighupint}, true /* wait */);
 }
 }
 

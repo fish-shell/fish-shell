@@ -621,17 +621,16 @@ int main(int argc, char *argv[]) {
     argv += optind;
 
     wcstring src;
-    if (argc == 0) {
-        if (output_type == output_type_file) {
-            std::fwprintf(stderr,
-                          _(L"Expected file path to read/write for -w:\n\n $ %ls -w foo.fish\n"),
-                          program_name);
-            exit(1);
-        }
-        src = read_file(stdin);
-    } else {
-        ret = EXIT_SUCCESS;
-        for (int i; i < argc; i++) {
+    for (int i = 0; i < argc || (argc == 0 && i == 0) ; i++) {
+        if (argc == 0 && i == 0) {
+            if (output_type == output_type_file) {
+                std::fwprintf(stderr,
+                              _(L"Expected file path to read/write for -w:\n\n $ %ls -w foo.fish\n"),
+                              program_name);
+                exit(1);
+            }
+            src = read_file(stdin);
+        } else {
             FILE *fh = fopen(argv[i], "r");
             if (fh) {
                 src = read_file(fh);
@@ -641,55 +640,55 @@ int main(int argc, char *argv[]) {
                 std::fwprintf(stderr, _(L"Opening \"%s\" failed: %s\n"), *argv, std::strerror(errno));
                 exit(1);
             }
-
-            if (output_type == output_type_pygments_csv) {
-                std::string output = make_pygments_csv(src);
-                fputs(output.c_str(), stdout);
-            }
-
-            const wcstring output_wtext = prettify(src, do_indent);
-
-            // Maybe colorize.
-            std::vector<highlight_spec_t> colors;
-            if (output_type != output_type_plain_text) {
-                highlight_shell_no_io(output_wtext, colors, output_wtext.size(), NULL,
-                                      env_stack_t::globals());
-            }
-
-            std::string colored_output;
-            switch (output_type) {
-            case output_type_plain_text: {
-                colored_output = no_colorize(output_wtext);
-                break;
-            }
-            case output_type_file: {
-                FILE *fh = fopen(output_location, "w");
-                if (fh) {
-                    std::fputws(output_wtext.c_str(), fh);
-                    fclose(fh);
-                } else {
-                    std::fwprintf(stderr, _(L"Opening \"%s\" failed: %s\n"), output_location,
-                                  std::strerror(errno));
-                    exit(1);
-                }
-                break;
-            }
-            case output_type_ansi: {
-                colored_output = ansi_colorize(output_wtext, colors);
-                break;
-            }
-            case output_type_html: {
-                colored_output = html_colorize(output_wtext, colors);
-                break;
-            }
-            case output_type_pygments_csv: {
-                DIE("pygments_csv should have been handled above");
-                break;
-            }
-            }
-
-            std::fputws(str2wcstring(colored_output).c_str(), stdout);
         }
+
+        if (output_type == output_type_pygments_csv) {
+            std::string output = make_pygments_csv(src);
+            fputs(output.c_str(), stdout);
+        }
+
+        const wcstring output_wtext = prettify(src, do_indent);
+
+        // Maybe colorize.
+        std::vector<highlight_spec_t> colors;
+        if (output_type != output_type_plain_text) {
+            highlight_shell_no_io(output_wtext, colors, output_wtext.size(), NULL,
+                                  env_stack_t::globals());
+        }
+
+        std::string colored_output;
+        switch (output_type) {
+        case output_type_plain_text: {
+            colored_output = no_colorize(output_wtext);
+            break;
+        }
+        case output_type_file: {
+            FILE *fh = fopen(output_location, "w");
+            if (fh) {
+                std::fputws(output_wtext.c_str(), fh);
+                fclose(fh);
+            } else {
+                std::fwprintf(stderr, _(L"Opening \"%s\" failed: %s\n"), output_location,
+                              std::strerror(errno));
+                exit(1);
+            }
+            break;
+        }
+        case output_type_ansi: {
+            colored_output = ansi_colorize(output_wtext, colors);
+            break;
+        }
+        case output_type_html: {
+            colored_output = html_colorize(output_wtext, colors);
+            break;
+        }
+        case output_type_pygments_csv: {
+            DIE("pygments_csv should have been handled above");
+            break;
+        }
+        }
+
+        std::fputws(str2wcstring(colored_output).c_str(), stdout);
     }
     return 0;
 }

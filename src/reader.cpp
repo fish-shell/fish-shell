@@ -482,9 +482,6 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 /// handled by the fish interrupt handler.
 static volatile sig_atomic_t is_interactive_read;
 
-/// The stack containing names of files that are being parsed.
-static std::stack<const wchar_t *, std::vector<const wchar_t *>> current_filename;
-
 /// This variable is set to true by the signal handler when ^C is pressed.
 static volatile sig_atomic_t interrupted = 0;
 
@@ -687,21 +684,6 @@ void reader_handle_sigint() {
     }
 
     interrupted = 1;
-}
-
-const wchar_t *reader_current_filename() {
-    ASSERT_IS_MAIN_THREAD();
-    return current_filename.empty() ? NULL : current_filename.top();
-}
-
-void reader_push_current_filename(const wchar_t *fn) {
-    ASSERT_IS_MAIN_THREAD();
-    current_filename.push(intern(fn));
-}
-
-void reader_pop_current_filename() {
-    ASSERT_IS_MAIN_THREAD();
-    current_filename.pop();
 }
 
 /// Make sure buffers are large enough to hold the current string length.

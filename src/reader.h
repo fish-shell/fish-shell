@@ -64,19 +64,8 @@ void reader_init();
 /// Restore the term mode at startup.
 void restore_term_mode();
 
-/// Returns the filename of the file currently read.
-const wchar_t *reader_current_filename();
-
-/// Push a new filename on the stack of read files.
-///
-/// \param fn The fileanme to push
-void reader_push_current_filename(const wchar_t *fn);
-
 /// Change the history file for the current command reading context.
 void reader_change_history(const wcstring &name);
-
-/// Pop the current filename from the stack of read files.
-void reader_pop_current_filename();
 
 /// Write the title to the titlebar. This function is called just before a new application starts
 /// executing and just after it finishes.

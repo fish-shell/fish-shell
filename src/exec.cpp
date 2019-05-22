@@ -676,7 +676,7 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
 
 /// Executes an external command.
 /// \return true on success, false if there is an exec error.
-static bool exec_external_command(env_stack_t &vars, const std::shared_ptr<job_t> &j, process_t *p,
+static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t> &j, process_t *p,
                                   const io_chain_t &proc_io_chain) {
     assert(p->type == process_type_t::external && "Process is not external");
     // Get argv and envv before we fork.
@@ -694,14 +694,13 @@ static bool exec_external_command(env_stack_t &vars, const std::shared_ptr<job_t
     // (/dev/tty?).
     make_fd_blocking(STDIN_FILENO);
 
-    auto export_arr = vars.export_arr();
-    ;
+    auto export_arr = parser.vars().export_arr();
     const char *const *argv = argv_array.get();
     const char *const *envv = export_arr->get();
 
     std::string actual_cmd_str = wcs2string(p->actual_cmd);
     const char *actual_cmd = actual_cmd_str.c_str();
-    const wchar_t *file = reader_current_filename();
+    const wchar_t *file = parser.libdata().current_filename;
 
 #if FISH_USE_POSIX_SPAWN
     // Prefer to use posix_spawn, since it's faster on some systems like OS X.
@@ -979,7 +978,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
         }
 
         case process_type_t::external: {
-            if (!exec_external_command(parser.vars(), j, p, process_net_io_chain)) {
+            if (!exec_external_command(parser, j, p, process_net_io_chain)) {
                 return false;
             }
             break;

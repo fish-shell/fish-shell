@@ -498,12 +498,8 @@ const wchar_t *parser_t::current_filename() const {
         }
     }
 
-    // We query a global array for the current file name, but only do that if we are the principal
-    // parser.
-    if (this == &principal_parser()) {
-        return reader_current_filename();
-    }
-    return NULL;
+    // Fall back to the file being sourced.
+    return libdata().current_filename;
 }
 
 wcstring parser_t::current_line() {

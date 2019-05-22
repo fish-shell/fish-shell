@@ -156,6 +156,10 @@ struct library_data_t {
 
     /// Whether we should return from the current function.
     bool returning{false};
+
+    /// The current filename we are evaluating, either from builtin source or on the command line.
+    /// This is an intern'd string.
+    const wchar_t *current_filename{};
 };
 
 class parser_t : public std::enable_shared_from_this<parser_t> {

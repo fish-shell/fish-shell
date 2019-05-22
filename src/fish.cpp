@@ -47,6 +47,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "function.h"
 #include "future_feature_flags.h"
 #include "history.h"
+#include "intern.h"
 #include "io.h"
 #include "parser.h"
 #include "path.h"
@@ -466,18 +467,15 @@ int main(int argc, char **argv) {
                 }
                 parser.vars().set(L"argv", ENV_DEFAULT, list);
 
-                const wcstring rel_filename = str2wcstring(file);
-
-                reader_push_current_filename(rel_filename.c_str());
-
+                auto &ld = parser.libdata();
+                wcstring rel_filename = str2wcstring(file);
+                scoped_push<const wchar_t *> filename_push{&ld.current_filename,
+                                                           intern(rel_filename.c_str())};
                 res = reader_read(fd, {});
-
                 if (res) {
                     debug(1, _(L"Error while reading file %ls\n"),
-                          reader_current_filename() ? reader_current_filename()
-                                                    : _(L"Standard input"));
+                          ld.current_filename ? ld.current_filename : _(L"Standard input"));
                 }
-                reader_pop_current_filename();
             }
         }
     }

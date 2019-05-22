@@ -74,7 +74,8 @@ int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     const block_t *sb = parser.push_block(block_t::source_block(fn_intern));
-    reader_push_current_filename(fn_intern);
+    auto &ld = parser.libdata();
+    scoped_push<const wchar_t *> filename_push{&ld.current_filename, fn_intern};
 
     // This is slightly subtle. If this is a bare `source` with no args then `argv + optind` already
     // points to the end of argv. Otherwise we want to skip the file name to get to the args if any.
@@ -95,6 +96,5 @@ int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     // Do not close fd after calling reader_read. reader_read automatically closes it before calling
     // eval.
-    reader_pop_current_filename();
     return retval;
 }

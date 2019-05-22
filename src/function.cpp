@@ -190,7 +190,7 @@ void function_add(const function_data_t &data, const parser_t &parser) {
     bool is_autoload = funcset->autoloader.autoload_in_progress(data.name);
 
     // Create and store a new function.
-    const wchar_t *filename = reader_current_filename();
+    const wchar_t *filename = parser.libdata().current_filename;
     auto ins = funcset->funcs.emplace(data.name,
                                       function_info_t(data, parser.vars(), filename, is_autoload));
     assert(ins.second && "Function should not already be present in the table");

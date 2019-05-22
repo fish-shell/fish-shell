@@ -1357,3 +1357,15 @@ wcstring env_get_runtime_path() {
     }
     return result;
 }
+
+static std::mutex s_setenv_lock{};
+
+void setenv_lock(const char *name, const char *value, int overwrite) {
+    scoped_lock locker(s_setenv_lock);
+    setenv(name, value, overwrite);
+}
+
+void unsetenv_lock(const char *name) {
+    scoped_lock locker(s_setenv_lock);
+    unsetenv(name);
+}

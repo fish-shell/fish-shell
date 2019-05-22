@@ -143,10 +143,10 @@ static void handle_timezone(const wchar_t *env_var_name, const environment_t &va
           !var ? L"MISSING" : var->as_string().c_str());
     const std::string &name = wcs2string(env_var_name);
     if (var.missing_or_empty()) {
-        unsetenv(name.c_str());
+        unsetenv_lock(name.c_str());
     } else {
         const std::string value = wcs2string(var->as_string());
-        setenv(name.c_str(), value.c_str(), 1);
+        setenv_lock(name.c_str(), value.c_str(), 1);
     }
     tzset();
 }
@@ -454,11 +454,11 @@ static void init_curses(const environment_t &vars) {
         const auto var = vars.get(var_name, ENV_EXPORT);
         if (var.missing_or_empty()) {
             debug(2, L"curses var %s missing or empty", name.c_str());
-            unsetenv(name.c_str());
+            unsetenv_lock(name.c_str());
         } else {
             std::string value = wcs2string(var->as_string());
             debug(2, L"curses var %s='%s'", name.c_str(), value.c_str());
-            setenv(name.c_str(), value.c_str(), 1);
+            setenv_lock(name.c_str(), value.c_str(), 1);
         }
     }
 
@@ -499,11 +499,11 @@ static void init_locale(const environment_t &vars) {
         const std::string &name = wcs2string(var_name);
         if (var.missing_or_empty()) {
             debug(5, L"locale var %s missing or empty", name.c_str());
-            unsetenv(name.c_str());
+            unsetenv_lock(name.c_str());
         } else {
             const std::string value = wcs2string(var->as_string());
             debug(5, L"locale var %s='%s'", name.c_str(), value.c_str());
-            setenv(name.c_str(), value.c_str(), 1);
+            setenv_lock(name.c_str(), value.c_str(), 1);
         }
     }
 

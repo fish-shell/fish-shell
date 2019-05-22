@@ -317,4 +317,10 @@ wcstring env_get_runtime_path();
 /// Replace empty path elements with "." - see #3914.
 void fix_colon_delimited_var(const wcstring &var_name, env_stack_t &vars);
 
+/// A wrapper around setenv() and unsetenv() which use a lock.
+/// In general setenv() and getenv() are highly incompatible with threads. This makes it only
+/// slightly safer.
+void setenv_lock(const char *name, const char *value, int overwrite);
+void unsetenv_lock(const char *name);
+
 #endif

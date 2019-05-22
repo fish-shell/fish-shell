@@ -1217,13 +1217,12 @@ maybe_t<wcstring> expand_abbreviation(const wcstring &src, const environment_t &
 }
 
 std::map<wcstring, wcstring> get_abbreviations(const environment_t &vars) {
-    // TODO: try to make this cheaper
-    const size_t fish_abbr_len = std::wcslen(L"_fish_abbr_");
+    const wcstring prefix = L"_fish_abbr_";
     auto names = vars.get_names(0);
     std::map<wcstring, wcstring> result;
     for (const wcstring &name : names) {
-        if (string_prefixes_string(L"_fish_abbr_", name)) {
-            result[name.substr(fish_abbr_len)] = vars.get(name)->as_string();
+        if (string_prefixes_string(prefix, name)) {
+            result[name.substr(prefix.size())] = vars.get(name)->as_string();
         }
     }
     return result;

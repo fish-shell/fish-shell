@@ -182,19 +182,14 @@ static void launch_process_nofork(env_stack_t &vars, process_t *p) {
 /// Check if the IO redirection chains contains redirections for the specified file descriptor.
 static int has_fd(const io_chain_t &d, int fd) { return io_chain_get(d, fd).get() != NULL; }
 
-/// Close a list of fds.
-static void io_cleanup_fds(const std::vector<int> &opened_fds) {
-    std::for_each(opened_fds.begin(), opened_fds.end(), close);
-}
-
 /// Make a copy of the specified io redirection chain, but change file redirection into fd
 /// redirection. This makes the redirection chain suitable for use as block-level io, since the file
 /// won't be repeatedly reopened for every command in the block, which would reset the cursor
 /// position.
 ///
 /// \return true on success, false on failure. Returns the output chain and opened_fds by reference.
-static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain,
-                            std::vector<int> *out_opened_fds) {
+static bool resolve_file_redirections_to_fds(const io_chain_t &in_chain, io_chain_t *out_chain,
+                                             std::vector<autoclose_fd_t> *out_opened_fds) {
     ASSERT_IS_MAIN_THREAD();
     assert(out_chain != NULL && out_opened_fds != NULL);
     assert(out_chain->empty());
@@ -206,58 +201,45 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain,
 
     bool success = true;
 
+    // All of the FDs that we create.
+    std::vector<autoclose_fd_t> opened_fds{};
+
     // Make our chain of redirections.
     io_chain_t result_chain;
 
-    // In the event we can't finish transmorgrifying, we'll have to close all the files we opened.
-    std::vector<int> opened_fds;
-
-    for (size_t idx = 0; idx < in_chain.size(); idx++) {
-        const shared_ptr<io_data_t> &in = in_chain.at(idx);
-        shared_ptr<io_data_t> out;  // gets allocated via new
-
+    for (const shared_ptr<io_data_t> &in : in_chain) {
         switch (in->io_mode) {
             case io_mode_t::pipe:
             case io_mode_t::bufferfill:
             case io_mode_t::fd:
             case io_mode_t::close: {
-                // These redirections don't need transmogrification. They can be passed through.
-                out = in;
+                result_chain.push_back(in);
                 break;
             }
             case io_mode_t::file: {
-                // Transmogrify file redirections.
-                int fd;
+                // We have a path-based redireciton. Resolve it to a file.
                 io_file_t *in_file = static_cast<io_file_t *>(in.get());
-                if ((fd = open(in_file->filename_cstr, in_file->flags, OPEN_MASK)) == -1) {
+                int fd = open(in_file->filename_cstr, in_file->flags, OPEN_MASK);
+                if (fd < 0) {
                     debug(1, FILE_ERROR, in_file->filename_cstr);
-
                     wperror(L"open");
                     success = false;
                     break;
                 }
 
-                opened_fds.push_back(fd);
-                out.reset(new io_fd_t(in->fd, fd, false));
+                opened_fds.push_back(autoclose_fd_t(fd));
+                result_chain.push_back(std::make_shared<io_fd_t>(in->fd, fd, false));
                 break;
             }
         }
-
-        if (out.get() != NULL) result_chain.push_back(out);
-
-        // Don't go any further if we failed.
         if (!success) {
             break;
         }
     }
 
-    // Now either return success, or clean up.
     if (success) {
         *out_chain = std::move(result_chain);
         *out_opened_fds = std::move(opened_fds);
-    } else {
-        result_chain.clear();
-        io_cleanup_fds(opened_fds);
     }
     return success;
 }
@@ -274,11 +256,8 @@ void internal_exec_helper(parser_t &parser, parsed_source_ref_t parsed_source, t
     assert(parsed_source && node && "exec_helper missing source or without node");
 
     io_chain_t morphed_chain;
-    std::vector<int> opened_fds;
-    bool transmorgrified = io_transmogrify(ios, &morphed_chain, &opened_fds);
-
-    // Did the transmogrification fail - if so, set error status and return.
-    if (!transmorgrified) {
+    std::vector<autoclose_fd_t> opened_fds;
+    if (!resolve_file_redirections_to_fds(ios, &morphed_chain, &opened_fds)) {
         parser.set_last_statuses(statuses_t::just(STATUS_EXEC_FAIL));
         return;
     }
@@ -286,7 +265,6 @@ void internal_exec_helper(parser_t &parser, parsed_source_ref_t parsed_source, t
     parser.eval_node(parsed_source, node, morphed_chain, TOP, parent_job);
 
     morphed_chain.clear();
-    io_cleanup_fds(opened_fds);
     job_reap(parser, false);
 }
 

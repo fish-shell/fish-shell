@@ -292,7 +292,7 @@ typedef unsigned int process_generation_count_t;
 
 /// A list of pids/pgids that have been disowned. They are kept around until either they exit or
 /// we exit. Poll these from time-to-time to prevent zombie processes from happening (#5342).
-static std::vector<pid_t> s_disowned_pids;
+static owning_lock<std::vector<pid_t>> s_disowned_pids;
 
 void add_disowned_pgid(pid_t pgid) {
     // NEVER add our own (or an invalid) pgid as they are not unique to only
@@ -300,8 +300,19 @@ void add_disowned_pgid(pid_t pgid) {
     if (pgid != getpgrp() && pgid > 0) {
         // waitpid(2) is signalled to wait on a process group rather than a
         // process id by using the negative of its value.
-        s_disowned_pids.push_back(pgid * -1);
+        s_disowned_pids.acquire()->push_back(pgid * -1);
     }
+}
+
+// Reap any pids in our disowned list that have exited. This is used to avoid zombies.
+static void reap_disowned_pids() {
+    auto disowned_pids = s_disowned_pids.acquire();
+    auto try_reap1 = [](pid_t pid) {
+        int status;
+        return waitpid(pid, &status, WNOHANG) > 0;
+    };
+    disowned_pids->erase(std::remove_if(disowned_pids->begin(), disowned_pids->end(), try_reap1),
+                         disowned_pids->end());
 }
 
 /// See if any reapable processes have exited, and mark them accordingly.
@@ -374,13 +385,8 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
         }
     }
 
-    // Poll disowned processes/process groups, but do nothing with the result. Only used to avoid
-    // zombie processes. Entries have already been converted to negative for process groups.
-    int status;
-    s_disowned_pids.erase(
-        std::remove_if(s_disowned_pids.begin(), s_disowned_pids.end(),
-                       [&status](pid_t pid) { return waitpid(pid, &status, WNOHANG) > 0; }),
-        s_disowned_pids.end());
+    // Remove any zombies.
+    reap_disowned_pids();
 }
 
 /// Given a command like "cat file", truncate it to a reasonable length.

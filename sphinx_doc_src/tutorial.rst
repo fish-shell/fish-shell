@@ -573,8 +573,7 @@ Multiple lines are OK. Colors can be set via ``set_color``, passing it named ANS
           set_color purple
           date "+%m/%d/%y"
           set_color FF0
-          echo (pwd) '>'
-          set_color normal
+          echo (pwd) '>' (set_color normal)
       end
     <span style="color: purple">02/06/13</span>
     <span style="color: #FF0">/home/tutorial ></span>___

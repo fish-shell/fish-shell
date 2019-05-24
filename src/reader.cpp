@@ -3267,8 +3267,13 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
             handle_readline_command(readline_cmd, rls);
 
             if (command_ends_history_search(readline_cmd)) {
-                history_search.reset();
+                if (history_search.active()) {
+                    history_search.go_to_end();
+                    update_command_line_from_history_search();
+                    history_search.reset();
+                }
             }
+
             rls.last_cmd = readline_cmd;
         } else {
             // Ordinary char.

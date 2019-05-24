@@ -135,7 +135,9 @@ wcstring expand_escape_variable(const env_var_t &var) {
         const wcstring &el = lst.at(j);
         if (j) buff.append(L"  ");
 
-        if (is_quotable(el)) {
+        // We want to use quotes if we have more than one string, or the string contains a space.
+        bool prefer_quotes = lst.size() > 1 || el.find(L' ') != wcstring::npos;
+        if (prefer_quotes && is_quotable(el)) {
             buff.append(L"'");
             buff.append(el);
             buff.append(L"'");

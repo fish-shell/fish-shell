@@ -3278,16 +3278,8 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         } else {
             // Ordinary char.
             wchar_t c = event_needing_handling->get_char();
-            if (c == L'\x1B') {
-                // Escape was pressed.
-                if (history_search.active()) {
-                    history_search.go_to_end();
-                    update_command_line_from_history_search();
-                    history_search.reset();
-                }
-                assert(!history_search.active());
-            } else if (!fish_reserved_codepoint(c) && (c >= L' ' || c == L'\n' || c == L'\r') &&
-                       c != 0x7F) {
+            if (!fish_reserved_codepoint(c) && (c >= L' ' || c == L'\n' || c == L'\r') &&
+                c != 0x7F) {
                 // Regular character.
                 editable_line_t *el = active_edit_line();
                 insert_char(active_edit_line(), c);

@@ -593,10 +593,12 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
 
         if (cancel_reason == execution_cancellation_loop_control) {
             // Handle break or continue.
-            if (ld.loop_status == loop_status_t::continues) {
-                continue;
-            } else if (ld.loop_status == loop_status_t::breaks) {
+            bool do_break = (ld.loop_status == loop_status_t::breaks);
+            ld.loop_status = loop_status_t::normals;
+            if (do_break) {
                 break;
+            } else {
+                continue;
             }
         }
 

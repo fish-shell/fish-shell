@@ -593,7 +593,7 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
     }
 
     wcstring lookup_cmd(L"__fish_describe_command ");
-    lookup_cmd.append(escape_string(cmd, 1));
+    lookup_cmd.append(escape_string(cmd, ESCAPE_ALL));
 
     // First locate a list of possible descriptions using a single call to apropos or a direct
     // search if we know the location of the whatis database. This can take some time on slower
@@ -1603,7 +1603,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
 static void append_switch(wcstring &out, const wcstring &opt, const wcstring &argument) {
     if (argument.empty()) return;
 
-    wcstring esc = escape_string(argument, 1);
+    wcstring esc = escape_string(argument, ESCAPE_ALL);
     append_format(out, L" --%ls %ls", opt.c_str(), esc.c_str());
 }
 

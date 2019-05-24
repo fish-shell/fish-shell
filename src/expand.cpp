@@ -124,39 +124,23 @@ static void append_cmdsub_error(parse_error_list_t *errors, size_t source_start,
 
 /// Test if the specified string does not contain character which can not be used inside a quoted
 /// string.
-static bool is_quotable(const wchar_t *str) { return !std::wcspbrk(str, L"\n\t\r\b\x1B"); }
-
-static bool is_quotable(const wcstring &str) { return is_quotable(str.c_str()); }
+static bool is_quotable(const wcstring &str) { return str.find_first_of(L"\n\t\r\b\x1B") == wcstring::npos; }
 
 wcstring expand_escape_variable(const env_var_t &var) {
     wcstring buff;
     wcstring_list_t lst;
 
     var.to_list(lst);
-    if (lst.size() == 0) {
-        ;  // empty list expands to nothing
-    } else if (lst.size() == 1) {
-        const wcstring &el = lst.at(0);
+    for (size_t j = 0; j < lst.size(); j++) {
+        const wcstring &el = lst.at(j);
+        if (j) buff.append(L"  ");
 
-        if (el.find(L' ') != wcstring::npos && is_quotable(el)) {
+        if (is_quotable(el)) {
             buff.append(L"'");
             buff.append(el);
             buff.append(L"'");
         } else {
             buff.append(escape_string(el, 1));
-        }
-    } else {
-        for (size_t j = 0; j < lst.size(); j++) {
-            const wcstring &el = lst.at(j);
-            if (j) buff.append(L"  ");
-
-            if (is_quotable(el)) {
-                buff.append(L"'");
-                buff.append(el);
-                buff.append(L"'");
-            } else {
-                buff.append(escape_string(el, 1));
-            }
         }
     }
 

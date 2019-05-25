@@ -93,7 +93,6 @@ echo < stdin >>appended yes 2>&1 no > stdout maybe 2>&    4 | cat 2>| cat
 ' | $indent
 
 echo \nTest normalization of keywords
-# issue 2921
 echo -n '
 i\
 f true

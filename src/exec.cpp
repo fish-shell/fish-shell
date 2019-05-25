@@ -1019,19 +1019,6 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
         j->set_flag(job_flag_t::JOB_CONTROL, true);
     }
 
-    // If there's a builtin in the pipeline,
-    // we let the whole job stay in our pgroup.
-    // This fixes `builtin history | less`, and still lets `read | cat` and `cat | read` work.
-    // (Note that bash forks for the builtin in these cases, but that's also why its `read` often can't communicate variables back)
-    if (j->pgid == INVALID_PID) {
-        for (const auto& proc : j->processes) {
-            if (proc->type == process_type_t::builtin) {
-                j->pgid = getpgrp();
-                break;
-            }
-        }
-    }
-
     size_t stdout_read_limit = 0;
     io_chain_t all_ios = j->all_io_redirections();
 

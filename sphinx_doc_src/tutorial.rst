@@ -567,6 +567,9 @@ You can define your own prompt::
     New Prompt % 
 
 
+.. role:: purple
+.. role:: yellow
+
 Multiple lines are OK. Colors can be set via ``set_color``, passing it named ANSI colors, or hex RGB values::
 
     >_ function fish_prompt
@@ -575,9 +578,11 @@ Multiple lines are OK. Colors can be set via ``set_color``, passing it named ANS
           set_color FF0
           echo (pwd) '>' (set_color normal)
       end
-    <span style="color: purple">02/06/13</span>
-    <span style="color: #FF0">/home/tutorial ></span>___
 
+will look like
+
+| :purple:`02/06/13`
+| :yellow:`/home/tutorial >`
 
 You can choose among some sample prompts by running ``fish_config prompt``. ``fish`` also supports RPROMPT through ``fish_right_prompt``.
 

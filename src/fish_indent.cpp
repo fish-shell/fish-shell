@@ -645,6 +645,7 @@ int main(int argc, char *argv[]) {
         if (output_type == output_type_pygments_csv) {
             std::string output = make_pygments_csv(src);
             fputs(output.c_str(), stdout);
+            continue;
         }
 
         const wcstring output_wtext = prettify(src, do_indent);

@@ -58,3 +58,11 @@ a:b a b
 
 ####################
 # Variable names in other commands
+
+####################
+# Global vs Universal Unspecified Scopes
+global-vs-universal 1: universal
+global-vs-universal 2: global
+global-vs-universal 3: global2
+global-vs-universal 4: universal
+global-vs-universal 5: 

@@ -1087,16 +1087,19 @@ int env_stack_impl_t::set(const wcstring &key, env_mode_flags_t mode, wcstring_l
         } else {
             DIE("Unknown scope");
         }
+    } else if (env_node_ref_t node = find_in_chain(locals_, key)) {
+        // Existing local variable.
+        set_in_node(node, key, std::move(val), flags);
+    } else if (env_node_ref_t node = find_in_chain(globals_, key)) {
+        // Existing global variable.
+        set_in_node(node, key, std::move(val), flags);
     } else if (uvars() && uvars()->get(key)) {
-        // Modifying an existing universal variable.
+        // Existing universal variable.
         set_universal(key, std::move(val), query);
         *out_needs_uvar_sync = true;
     } else {
-        // The user did not request any scope.
-        // Find the scope.
-        env_node_ref_t node = find_in_chain(locals_, key);
-        if (!node) node = find_in_chain(globals_, key);
-        if (!node) node = resolve_unspecified_scope();
+        // Unspecified scope with no existing variables.
+        auto node = resolve_unspecified_scope();
         assert(node && "Should always resolve some scope");
         set_in_node(node, key, std::move(val), flags);
     }

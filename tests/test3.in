@@ -330,4 +330,20 @@ logmsg Variable names in other commands
 # Test invalid variable names in loops (#5800)
 for a,b in y 1 z 3; echo $a,$b; end
 
+logmsg Global vs Universal Unspecified Scopes
+set -U __fish_test_global_vs_universal universal
+echo "global-vs-universal 1: $__fish_test_global_vs_universal"
+
+set -g __fish_test_global_vs_universal global
+echo "global-vs-universal 2: $__fish_test_global_vs_universal"
+
+set __fish_test_global_vs_universal global2
+echo "global-vs-universal 3: $__fish_test_global_vs_universal"
+
+set -e -g __fish_test_global_vs_universal
+echo "global-vs-universal 4: $__fish_test_global_vs_universal"
+
+set -e -U __fish_test_global_vs_universal
+echo "global-vs-universal 5: $__fish_test_global_vs_universal"
+
 true

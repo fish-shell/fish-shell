@@ -478,10 +478,6 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void remove_backward();
 };
 
-/// This flag is set to true when fish is interactively reading from stdin. It changes how a ^C is
-/// handled by the fish interrupt handler.
-static volatile sig_atomic_t is_interactive_read;
-
 /// This variable is set to true by the signal handler when ^C is pressed.
 static volatile sig_atomic_t interrupted = 0;
 
@@ -679,10 +675,7 @@ void reader_data_t::kill(editable_line_t *el, size_t begin_idx, size_t length, i
 
 // This is called from a signal handler!
 void reader_handle_sigint() {
-    if (!is_interactive_read) {
-        parser_t::skip_all_blocks();
-    }
-
+    parser_t::skip_all_blocks();
     interrupted = 1;
 }
 
@@ -2374,10 +2367,7 @@ struct readline_loop_state_t {
 /// Read normal characters, inserting them into the command line.
 /// \return the next unhandled event.
 maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rls) {
-    int was_interactive_read = is_interactive_read;
-    is_interactive_read = 1;
     maybe_t<char_event_t> event_needing_handling = input_readch();
-    is_interactive_read = was_interactive_read;
 
     if (!event_is_normal_char(*event_needing_handling) || !can_read(STDIN_FILENO))
         return event_needing_handling;

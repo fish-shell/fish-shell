@@ -431,3 +431,10 @@ bool sigint_checker_t::check() {
     this->gen_ = gen;
     return changed;
 }
+
+void sigint_checker_t::wait() {
+    auto &tm = topic_monitor_t::principal();
+    generation_list_t gens{};
+    gens[topic_t::sighupint] = this->gen_;
+    tm.check(&gens, {topic_t::sighupint}, true /* wait */);
+}

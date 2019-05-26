@@ -42,6 +42,9 @@ class sigint_checker_t {
     /// Check if a sigint has been delivered since the last call to check(), or since the detector
     /// was created.
     bool check();
+
+    /// Wait until a sigint is delivered.
+    void wait();
 };
 
 #endif

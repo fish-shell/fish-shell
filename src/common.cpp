@@ -55,6 +55,7 @@
 #include "future_feature_flags.h"
 #include "global_safety.h"
 #include "proc.h"
+#include "signal.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -2271,9 +2272,8 @@ extern "C" {
 [[gnu::noinline]] void debug_thread_error(void) {
     // Wait for a SIGINT. We can't use sigsuspend() because the signal may be delivered on another
     // thread.
-    auto &tm = topic_monitor_t::principal();
-    auto gens = tm.current_generations();
-    tm.check(&gens, {topic_t::sighupint}, true /* wait */);
+    sigint_checker_t sigint;
+    sigint.wait();
 }
 }
 

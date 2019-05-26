@@ -292,7 +292,6 @@ static void set_interactive_handlers() {
     // Interactive mode. Ignore interactive signals.  We are a shell, we know what is best for
     // the user.
     act.sa_handler = SIG_IGN;
-    sigaction(SIGQUIT, &act, NULL);
     sigaction(SIGTSTP, &act, NULL);
     sigaction(SIGTTOU, &act, NULL);
 
@@ -325,15 +324,6 @@ static void set_interactive_handlers() {
 #endif
 }
 
-static void set_non_interactive_handlers() {
-    struct sigaction act;
-    act.sa_flags = 0;
-    sigemptyset(&act.sa_mask);
-
-    act.sa_handler = SIG_IGN;
-    sigaction(SIGQUIT, &act, 0);
-}
-
 /// Sets up appropriate signal handlers.
 void signal_set_handlers() {
     struct sigaction act;
@@ -345,6 +335,10 @@ void signal_set_handlers() {
     act.sa_sigaction = nullptr;
     act.sa_handler = SIG_IGN;
     sigaction(SIGPIPE, &act, 0);
+
+    // Ignore SIGQUIT.
+    act.sa_handler = SIG_IGN;
+    sigaction(SIGQUIT, &act, 0);
 
     // Apply our SIGINT handler.
     act.sa_sigaction = &handle_int;
@@ -362,8 +356,6 @@ void signal_set_handlers() {
 
     if (shell_is_interactive()) {
         set_interactive_handlers();
-    } else {
-        set_non_interactive_handlers();
     }
 }
 

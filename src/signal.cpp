@@ -15,6 +15,7 @@
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"
+#include "signal.h"
 #include "topic_monitor.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -416,4 +417,17 @@ void signal_unblock_all() {
     sigset_t iset;
     sigemptyset(&iset);
     sigprocmask(SIG_SETMASK, &iset, NULL);
+}
+
+sigint_checker_t::sigint_checker_t() {
+    // Call check() to update our generation.
+    check();
+}
+
+bool sigint_checker_t::check() {
+    auto &tm = topic_monitor_t::principal();
+    generation_t gen = tm.generation_for_topic(topic_t::sighupint);
+    bool changed = this->gen_ != gen;
+    this->gen_ = gen;
+    return changed;
 }

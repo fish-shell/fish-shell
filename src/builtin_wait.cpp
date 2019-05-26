@@ -7,7 +7,7 @@
 #include "common.h"
 #include "parser.h"
 #include "proc.h"
-#include "reader.h"
+#include "signal.h"
 #include "wgetopt.h"
 #include "wutil.h"
 
@@ -66,11 +66,11 @@ static bool any_jobs_finished(size_t jobs_len, const parser_t &parser) {
 }
 
 static int wait_for_backgrounds(parser_t &parser, bool any_flag) {
+    sigint_checker_t sigint;
     size_t jobs_len = parser.jobs().size();
-
     while ((!any_flag && !all_jobs_finished(parser)) ||
            (any_flag && !any_jobs_finished(jobs_len, parser))) {
-        if (reader_test_interrupted()) {
+        if (sigint.check()) {
             return 128 + SIGINT;
         }
         proc_wait_any(parser);
@@ -108,9 +108,10 @@ static bool any_specified_jobs_finished(const std::vector<job_id_t> &ids) {
 
 static int wait_for_backgrounds_specified(parser_t &parser, const std::vector<job_id_t> &ids,
                                           bool any_flag) {
+    sigint_checker_t sigint;
     while ((!any_flag && !all_specified_jobs_finished(ids)) ||
            (any_flag && !any_specified_jobs_finished(ids))) {
-        if (reader_test_interrupted()) {
+        if (sigint.check()) {
             return 128 + SIGINT;
         }
         proc_wait_any(parser);

@@ -32,4 +32,16 @@ void signal_unblock_all();
 /// Returns signals with non-default handlers.
 void get_signals_with_handlers(sigset_t *set);
 
+/// A sigint_detector_t can be used to check if a SIGINT (or SIGHUP) has been delivered.
+class sigint_checker_t {
+    uint64_t gen_{0};
+
+   public:
+    sigint_checker_t();
+
+    /// Check if a sigint has been delivered since the last call to check(), or since the detector
+    /// was created.
+    bool check();
+};
+
 #endif

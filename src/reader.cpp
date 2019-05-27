@@ -1738,7 +1738,7 @@ static void reader_interactive_init() {
             }
         }
 
-        signal_set_handlers();
+        signal_set_handlers(shell_is_interactive());
     }
 
     // It shouldn't be necessary to place fish in its own process group and force control

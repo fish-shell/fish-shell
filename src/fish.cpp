@@ -451,7 +451,7 @@ int main(int argc, char **argv) {
             reader_set_end_loop(false);
         } else if (my_optind == argc) {
             // Implicitly interactive mode.
-            res = reader_read(STDIN_FILENO, {});
+            res = reader_read(parser, STDIN_FILENO, {});
         } else {
             char *file = *(argv + (my_optind++));
             int fd = open(file, O_RDONLY);
@@ -471,7 +471,7 @@ int main(int argc, char **argv) {
                 wcstring rel_filename = str2wcstring(file);
                 scoped_push<const wchar_t *> filename_push{&ld.current_filename,
                                                            intern(rel_filename.c_str())};
-                res = reader_read(fd, {});
+                res = reader_read(parser, fd, {});
                 if (res) {
                     debug(1, _(L"Error while reading file %ls\n"),
                           ld.current_filename ? ld.current_filename : _(L"Standard input"));

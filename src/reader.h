@@ -47,7 +47,7 @@ class editable_line_t {
 };
 
 /// Read commands from \c fd until encountering EOF.
-int reader_read(int fd, const io_chain_t &io);
+int reader_read(parser_t &parser, int fd, const io_chain_t &io);
 
 /// Tell the shell whether it should exit after the currently running command finishes.
 void reader_set_end_loop(bool flag);
@@ -140,7 +140,7 @@ bool reader_thread_job_is_stale();
 maybe_t<wcstring> reader_readline(int nchars);
 
 /// Push a new reader environment.
-void reader_push(const wcstring &name);
+void reader_push(parser_t &parser, const wcstring &name);
 
 /// Return to previous reader environment.
 void reader_pop();
@@ -152,11 +152,11 @@ typedef void (*complete_function_t)(const wcstring &, std::vector<completion_t> 
 void reader_set_complete_function(complete_function_t);
 
 /// The type of a highlight function.
-typedef void (*highlight_function_t)(const wcstring &, std::vector<highlight_spec_t> &, size_t,
-                                     wcstring_list_t *, const environment_t &vars);
+using highlight_function_t = void (*)(const wcstring &, std::vector<highlight_spec_t> &, size_t,
+                                      wcstring_list_t *, const environment_t &vars);
 
 /// Function type for testing if a string is valid for the reader to return.
-using test_function_t = parser_test_error_bits_t (*)(const wcstring &);
+using test_function_t = parser_test_error_bits_t (*)(parser_t &, const wcstring &);
 
 /// Specify function for syntax highlighting. The function must take these arguments:
 ///
@@ -198,7 +198,7 @@ bool reader_exit_forced();
 
 /// Test if the given shell command contains errors. Uses parser_test for testing. Suitable for
 /// reader_set_test_function().
-parser_test_error_bits_t reader_shell_test(const wcstring &);
+parser_test_error_bits_t reader_shell_test(parser_t &parser, const wcstring &);
 
 /// Test whether the interactive reader is in search mode.
 bool reader_is_in_search_mode();

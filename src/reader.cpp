@@ -148,7 +148,7 @@ namespace {
 
 /// Test if the given string contains error. Since this is the error detection for general purpose,
 /// there are no invalid strings, so this function always returns false.
-parser_test_error_bits_t default_test(const wcstring &b) {
+parser_test_error_bits_t default_test(parser_t &parser, const wcstring &b) {
     UNUSED(b);
     return 0;
 }
@@ -323,6 +323,8 @@ struct readline_loop_state_t;
 /// reader_readline() calls are nested. This happens when the 'read' builtin is used.
 class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
    public:
+    /// The parser being used.
+    std::shared_ptr<parser_t> parser_ref;
     /// String containing the whole current commandline.
     editable_line_t command_line;
     /// String containing the autosuggestion.
@@ -420,14 +422,14 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void repaint_if_needed();
 
     /// Return the variable set used for e.g. command duration.
-    env_stack_t &vars() { return parser_t::principal_parser().vars(); }
+    env_stack_t &vars() { return parser_ref->vars(); }
+    const env_stack_t &vars() const { return parser_ref->vars(); }
 
-    /// Hackish access to the parser. TODO: rationalize this.
-    parser_t &parser() { return parser_t::principal_parser(); }
+    /// Access the parser.
+    parser_t &parser() { return *parser_ref; }
 
-    const env_stack_t &vars() const { return parser_t::principal_parser().vars(); }
-
-    reader_data_t(history_t *hist) : history(hist) {}
+    reader_data_t(std::shared_ptr<parser_t> parser, history_t *hist)
+        : parser_ref(std::move(parser)), history(hist) {}
 
     void update_buff_pos(editable_line_t *el, size_t buff_pos);
     void repaint();
@@ -1238,9 +1240,9 @@ void reader_data_t::completion_insert(const wchar_t *val, complete_flags_t flags
 // Returns a function that can be invoked (potentially
 // on a background thread) to determine the autosuggestion
 static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer(
-    const wcstring &search_string, size_t cursor_pos, history_t *history) {
+    parser_t &parser, const wcstring &search_string, size_t cursor_pos, history_t *history) {
     const unsigned int generation_count = read_generation_count();
-    auto vars = parser_t::principal_parser().vars().snapshot();
+    auto vars = parser.vars().snapshot();
     const wcstring working_directory = vars->get_pwd_slash();
     // TODO: suspicious use of 'history' here
     // This is safe because histories are immortal, but perhaps
@@ -1331,7 +1333,7 @@ void reader_data_t::update_autosuggestion() {
     autosuggestion.clear();
     if (can_autosuggest()) {
         const editable_line_t *el = active_edit_line();
-        auto performer = get_autosuggestion_performer(el->text, el->position, history);
+        auto performer = get_autosuggestion_performer(parser(), el->text, el->position, history);
         auto shared_this = this->shared_from_this();
         iothread_perform(performer, [shared_this](autosuggestion_result_t result) {
             shared_this->autosuggest_completed(std::move(result));
@@ -1943,7 +1945,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
     }
 }
 
-parser_test_error_bits_t reader_shell_test(const wcstring &b) {
+parser_test_error_bits_t reader_shell_test(parser_t &parser, const wcstring &b) {
     wcstring bstr = b;
 
     // Append a newline, to act as a statement terminator.
@@ -1955,7 +1957,7 @@ parser_test_error_bits_t reader_shell_test(const wcstring &b) {
 
     if (res & PARSER_TEST_ERROR) {
         wcstring error_desc;
-        parser_t::principal_parser().get_backtrace(bstr, errors, error_desc);
+        parser.get_backtrace(bstr, errors, error_desc);
 
         // Ensure we end with a newline. Also add an initial newline, because it's likely the user
         // just hit enter and so there's junk on the current line.
@@ -2001,8 +2003,9 @@ void reader_data_t::highlight_complete(highlight_result_t result) {
 // Given text, bracket matching position, and whether IO is allowed,
 // return a function that performs highlighting. The function may be invoked on a background thread.
 static std::function<highlight_result_t(void)> get_highlight_performer(
-    const wcstring &text, long match_highlight_pos, highlight_function_t highlight_func) {
-    auto vars = parser_t::principal_parser().vars().snapshot();
+    parser_t &parser, const wcstring &text, long match_highlight_pos,
+    highlight_function_t highlight_func) {
+    auto vars = parser.vars().snapshot();
     unsigned int generation_count = read_generation_count();
     return [=]() -> highlight_result_t {
         if (text.empty()) return {};
@@ -2034,7 +2037,7 @@ void reader_data_t::super_highlight_me_plenty(int match_highlight_pos_adjust, bo
     sanity_check();
 
     auto highlight_performer = get_highlight_performer(
-        el->text, match_highlight_pos, no_io ? highlight_shell_no_io : highlight_func);
+        parser(), el->text, match_highlight_pos, no_io ? highlight_shell_no_io : highlight_func);
     if (no_io) {
         // Highlighting without IO, we just do it.
         highlight_complete(highlight_performer());
@@ -2083,9 +2086,9 @@ void reader_change_history(const wcstring &name) {
     }
 }
 
-void reader_push(const wcstring &name) {
+void reader_push(parser_t &parser, const wcstring &name) {
     history_t *hist = &history_t::history_with_name(name);
-    reader_data_stack.push_back(std::make_shared<reader_data_t>(hist));
+    reader_data_stack.push_back(std::make_shared<reader_data_t>(parser.shared(), hist));
     reader_data_t *data = current_data();
     data->command_line_changed(&data->command_line);
     if (reader_data_stack.size() == 1) {
@@ -2222,9 +2225,8 @@ static relaxed_atomic_t<uint64_t> run_count{0};
 uint64_t reader_run_count() { return run_count; }
 
 /// Read interactively. Read input from stdin while providing editing facilities.
-static int read_i() {
-    parser_t &parser = parser_t::principal_parser();
-    reader_push(history_session_id(parser.vars()));
+static int read_i(parser_t &parser) {
+    reader_push(parser, history_session_id(parser.vars()));
     reader_set_complete_function(&complete);
     reader_set_highlight_function(&highlight_shell);
     reader_set_test_function(&reader_shell_test);
@@ -2413,7 +2415,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
 
 /// Handle a readline command \p c, updating the state \p rls.
 void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_state_t &rls) {
-    const auto &vars = parser_t::principal_parser().vars();
+    const auto &vars = this->vars();
     using rl = readline_cmd_t;
     switch (c) {
         // Go to beginning of line.
@@ -2460,10 +2462,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             // may sometimes take a while but when switching the mode all we care about is the
             // mode-prompt.
             //
-            // Because some users set `fish_mode_prompt` to an empty function and display the mode elsewhere,
-            // we detect if the mode output is empty.
+            // Because some users set `fish_mode_prompt` to an empty function and display the mode
+            // elsewhere, we detect if the mode output is empty.
             exec_mode_prompt();
-            if(!mode_prompt_buff.empty()) {
+            if (!mode_prompt_buff.empty()) {
                 s_reset(&screen, screen_reset_current_line_and_prompt);
                 screen_reset_needed = false;
                 repaint();
@@ -2547,9 +2549,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // std::fwprintf(stderr, L"Complete (%ls)\n", buffcpy.c_str());
                 completion_request_flags_t complete_flags = {completion_request_t::descriptions,
                                                              completion_request_t::fuzzy_match};
-                // TODO: eliminate this principal_parser.
-                complete_func(buffcpy, &rls.comp, complete_flags, vars,
-                              parser_t::principal_parser().shared());
+                complete_func(buffcpy, &rls.comp, complete_flags, vars, parser_ref);
 
                 // Munge our completions.
                 completions_sort_and_prioritize(&rls.comp);
@@ -2725,7 +2725,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
 
             // See if this command is valid.
-            int command_test_result = test_func(el->text);
+            int command_test_result = test_func(parser(), el->text);
             if (command_test_result == 0 || command_test_result == PARSER_TEST_INCOMPLETE) {
                 // This command is valid, but an abbreviation may make it invalid. If so, we
                 // will have to test again.
@@ -2733,7 +2733,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 if (abbreviation_expanded) {
                     // It's our reponsibility to rehighlight and repaint. But everything we do
                     // below triggers a repaint.
-                    command_test_result = test_func(el->text.c_str());
+                    command_test_result = test_func(parser(), el->text.c_str());
 
                     // If the command is OK, then we're going to execute it. We still want to do
                     // syntax highlighting, but a synchronous variant that performs no I/O, so
@@ -3257,7 +3257,8 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
             handle_readline_command(readline_cmd, rls);
 
             if (command_ends_history_search(readline_cmd)) {
-                // "cancel" means to abort the whole thing, other ending commands mean to finish the search.
+                // "cancel" means to abort the whole thing, other ending commands mean to finish the
+                // search.
                 if (history_search.active() && readline_cmd == rl::cancel) {
                     history_search.go_to_end();
                     update_command_line_from_history_search();
@@ -3449,8 +3450,7 @@ bool reader_get_selection(size_t *start, size_t *len) {
 
 /// Read non-interactively.  Read input from stdin without displaying the prompt, using syntax
 /// highlighting. This is used for reading scripts and init files.
-static int read_ni(int fd, const io_chain_t &io) {
-    parser_t &parser = parser_t::principal_parser();
+static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
     FILE *in_stream;
     wchar_t *buff = 0;
     std::vector<char> acc;
@@ -3524,7 +3524,7 @@ static int read_ni(int fd, const io_chain_t &io) {
     return res;
 }
 
-int reader_read(int fd, const io_chain_t &io) {
+int reader_read(parser_t &parser, int fd, const io_chain_t &io) {
     int res;
 
     // If reader_read is called recursively through the '.' builtin, we need to preserve
@@ -3546,7 +3546,7 @@ int reader_read(int fd, const io_chain_t &io) {
     }
     proc_push_interactive(inter);
 
-    res = shell_is_interactive() ? read_i() : read_ni(fd, io);
+    res = shell_is_interactive() ? read_i(parser) : read_ni(parser, fd, io);
 
     // If the exit command was called in a script, only exit the script, not the program.
     reader_set_end_loop(false);

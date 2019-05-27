@@ -83,7 +83,7 @@ int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         null_terminated_array_t<wchar_t>::to_list(argv + optind + (argc == optind ? 0 : 1));
     parser.vars().set_argv(std::move(argv_list));
 
-    retval = reader_read(fd, streams.io_chain ? *streams.io_chain : io_chain_t());
+    retval = reader_read(parser, fd, streams.io_chain ? *streams.io_chain : io_chain_t());
 
     parser.pop_block(sb);
 

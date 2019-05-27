@@ -13,6 +13,7 @@
 
 #include "common.h"
 #include "fallback.h"
+#include "flog.h"
 #include "parse_constants.h"
 #include "parse_productions.h"
 #include "parse_tree.h"
@@ -256,7 +257,7 @@ static inline parse_token_type_t parse_token_type_from_tokenizer_token(
         case TOK_COMMENT:
             return parse_special_type_comment;
     }
-    debug(0, "Bad token type %d passed to %s", (int)tokenizer_token_type, __FUNCTION__);
+    FLOG(error, "Bad token type %d passed to %s", (int)tokenizer_token_type, __FUNCTION__);
     DIE("bad token type");
     return token_type_invalid;
 }

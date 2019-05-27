@@ -914,8 +914,8 @@ void proc_sanity_check(const parser_t &parser) {
         // More than one foreground job?
         if (j->is_foreground() && !(j->is_stopped() || j->is_completed())) {
             if (fg_job) {
-                debug(0, _(L"More than one job in foreground: job 1: '%ls' job 2: '%ls'"),
-                      fg_job->command_wcstr(), j->command_wcstr());
+                FLOG(error, _(L"More than one job in foreground: job 1: '%ls' job 2: '%ls'"),
+                     fg_job->command_wcstr(), j->command_wcstr());
                 sanity_lose();
             }
             fg_job = j.get();
@@ -928,14 +928,14 @@ void proc_sanity_check(const parser_t &parser) {
             validate_pointer(p->argv0(), _(L"Process name"), null_ok);
 
             if ((p->stopped & (~0x00000001)) != 0) {
-                debug(0, _(L"Job '%ls', process '%ls' has inconsistent state \'stopped\'=%d"),
-                      j->command_wcstr(), p->argv0(), p->stopped);
+                FLOG(error, _(L"Job '%ls', process '%ls' has inconsistent state \'stopped\'=%d"),
+                     j->command_wcstr(), p->argv0(), p->stopped);
                 sanity_lose();
             }
 
             if ((p->completed & (~0x00000001)) != 0) {
-                debug(0, _(L"Job '%ls', process '%ls' has inconsistent state \'completed\'=%d"),
-                      j->command_wcstr(), p->argv0(), p->completed);
+                FLOG(error, _(L"Job '%ls', process '%ls' has inconsistent state \'completed\'=%d"),
+                     j->command_wcstr(), p->argv0(), p->completed);
                 sanity_lose();
             }
         }

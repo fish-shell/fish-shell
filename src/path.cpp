@@ -18,6 +18,7 @@
 #include "env.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
 #include "path.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -267,17 +268,17 @@ static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &
     }
     vars.set_one(warning_var_name, ENV_GLOBAL | ENV_EXPORT, L"1");
 
-    debug(0, custom_error_msg.c_str());
+    FLOG(error, custom_error_msg.c_str());
     if (path.empty()) {
-        debug(0, _(L"Unable to locate the %ls directory."), which_dir.c_str());
-        debug(0, _(L"Please set the %ls or HOME environment variable before starting fish."),
-              xdg_var.c_str());
+        FLOG(error, _(L"Unable to locate the %ls directory."), which_dir.c_str());
+        FLOG(error, _(L"Please set the %ls or HOME environment variable before starting fish."),
+             xdg_var.c_str());
     } else {
         const wchar_t *env_var = using_xdg ? xdg_var.c_str() : L"HOME";
-        debug(0, _(L"Unable to locate %ls directory derived from $%ls: '%ls'."), which_dir.c_str(),
-              env_var, path.c_str());
-        debug(0, _(L"The error was '%s'."), std::strerror(saved_errno));
-        debug(0, _(L"Please set $%ls to a directory where you have write access."), env_var);
+        FLOG(error, _(L"Unable to locate %ls directory derived from $%ls: '%ls'."),
+             which_dir.c_str(), env_var, path.c_str());
+        FLOG(error, _(L"The error was '%s'."), std::strerror(saved_errno));
+        FLOG(error, _(L"Please set $%ls to a directory where you have write access."), env_var);
     }
     ignore_result(write(STDERR_FILENO, "\n", 1));
 }

@@ -243,7 +243,7 @@ tok_t tokenizer_t::read_string() {
         } else {
             msg.push_back(L'\n');
         }
-        debug(0, msg.c_str(), c, c, int(mode_begin), int(mode));
+        FLOG(error, msg.c_str(), c, c, int(mode_begin), int(mode));
 #endif
 
         this->buff++;

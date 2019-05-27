@@ -62,7 +62,7 @@ void exec_close(int fd) {
 
     // This may be called in a child of fork(), so don't allocate memory.
     if (fd < 0) {
-        debug(0, L"Called close on invalid file descriptor ");
+        FLOG(error, L"Called close on invalid file descriptor ");
         return;
     }
 
@@ -614,20 +614,20 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
         if (write_loop(STDOUT_FILENO, outbuff.data(), outbuff.size()) < 0) {
             if (errno != EPIPE) {
                 did_err = true;
-                debug(0, "Error while writing to stdout");
+                FLOG(error, "Error while writing to stdout");
                 wperror(L"write_loop");
             }
         }
         if (write_loop(STDERR_FILENO, errbuff.data(), errbuff.size()) < 0) {
             if (errno != EPIPE && !did_err) {
                 did_err = true;
-                debug(0, "Error while writing to stderr");
+                FLOG(error, "Error while writing to stderr");
                 wperror(L"write_loop");
             }
         }
         if (did_err) {
             redirect_tty_output();  // workaround glibc bug
-            debug(0, "!builtin_io_done and errno != EPIPE");
+            FLOG(error, "!builtin_io_done and errno != EPIPE");
             show_stackframe(L'E');
         }
         // Clear the buffers to indicate we finished.
@@ -789,7 +789,7 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
         const wcstring func_name = p->argv0();
         auto props = function_get_properties(func_name);
         if (!props) {
-            debug(0, _(L"Unknown function '%ls'"), p->argv0());
+            FLOG(error, _(L"Unknown function '%ls'"), p->argv0());
             return false;
         }
 

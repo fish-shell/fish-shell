@@ -904,7 +904,7 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
         }
     };
 
-    // debug(0, L"\nThinking about looking up completions for %ls\n", cmd.c_str());
+    // FLOG(error, L"\nThinking about looking up completions for %ls\n", cmd.c_str());
     bool head_exists = builtin_exists(cmd);
     // Only reload environment variables if builtin_exists returned false, as an optimization
     if (head_exists == false) {

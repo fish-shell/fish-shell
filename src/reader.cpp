@@ -52,6 +52,7 @@
 #include "exec.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
 #include "function.h"
 #include "global_safety.h"
 #include "highlight.h"
@@ -1749,7 +1750,7 @@ static void reader_interactive_init() {
     if (shell_pgid == 0) {
         shell_pgid = getpid();
         if (setpgid(shell_pgid, shell_pgid) < 0) {
-            debug(0, _(L"Failed to assign shell to its own process group"));
+            FLOG(error, _(L"Failed to assign shell to its own process group"));
             wperror(L"setpgid");
             exit_without_destructors(1);
         }
@@ -1759,7 +1760,7 @@ static void reader_interactive_init() {
             if (errno == ENOTTY) {
                 redirect_tty_output();
             }
-            debug(0, _(L"Failed to take control of the terminal"));
+            FLOG(error, _(L"Failed to take control of the terminal"));
             wperror(L"tcsetpgrp");
             exit_without_destructors(1);
         }

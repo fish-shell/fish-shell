@@ -24,6 +24,7 @@
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fish_version.h"
+#include "flog.h"
 #include "global_safety.h"
 #include "history.h"
 #include "input.h"
@@ -139,7 +140,7 @@ void fix_colon_delimited_var(const wcstring &var_name, env_stack_t &vars) {
         std::replace(newstrs.begin(), newstrs.end(), empty, wcstring(L"."));
         int retval = vars.set(var_name, ENV_DEFAULT | ENV_USER, std::move(newstrs));
         if (retval != ENV_OK) {
-            debug(0, L"fix_colon_delimited_var failed unexpectedly with retval %d", retval);
+            FLOG(error, L"fix_colon_delimited_var failed unexpectedly with retval %d", retval);
         }
     }
 }
@@ -1351,8 +1352,8 @@ wcstring env_get_runtime_path() {
         }
 
         if (!uname || check_runtime_path(tmpdir.c_str()) != 0) {
-            debug(0, L"Runtime path not available.");
-            debug(0, L"Try deleting the directory %s and restarting fish.", tmpdir.c_str());
+            FLOG(error, L"Runtime path not available.");
+            FLOG(error, L"Try deleting the directory %s and restarting fish.", tmpdir.c_str());
             return result;
         }
 

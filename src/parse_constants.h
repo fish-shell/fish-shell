@@ -8,7 +8,7 @@
 #define PARSE_ASSERT(a) assert(a)
 #define PARSER_DIE()                  \
     do {                              \
-        debug(0, "Parser dying!");    \
+        FLOG(error, "Parser dying!"); \
         exit_without_destructors(-1); \
     } while (0)
 

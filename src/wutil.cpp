@@ -27,6 +27,7 @@
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
 #include "wutil.h"     // IWYU pragma: keep
 
 typedef std::string cstring;
@@ -130,7 +131,7 @@ const wcstring wgetcwd() {
         return str2wcstring(res);
     }
 
-    debug(0, _(L"getcwd() failed with errno %d/%s"), errno, std::strerror(errno));
+    FLOG(error, _(L"getcwd() failed with errno %d/%s"), errno, std::strerror(errno));
     return wcstring();
 }
 

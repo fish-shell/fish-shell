@@ -15,6 +15,7 @@
 #include <queue>
 
 #include "common.h"
+#include "flog.h"
 #include "global_safety.h"
 #include "iothread.h"
 #include "wutil.h"
@@ -201,7 +202,7 @@ void iothread_service_completion() {
     } else if (wakeup_byte == IO_SERVICE_RESULT_QUEUE) {
         iothread_service_result_queue();
     } else {
-        debug(0, "Unknown wakeup byte %02x in %s", wakeup_byte, __FUNCTION__);
+        FLOG(error, "Unknown wakeup byte %02x in %s", wakeup_byte, __FUNCTION__);
     }
 }
 

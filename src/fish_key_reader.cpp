@@ -29,6 +29,7 @@
 #include "fish_version.h"
 #include "input.h"
 #include "input_common.h"
+#include "parser.h"
 #include "print_help.h"
 #include "proc.h"
 #include "reader.h"
@@ -285,9 +286,10 @@ static void setup_and_process_keys(bool continuous_mode) {
     set_interactive_session(true);  // by definition this program is interactive
     set_main_thread();
     setup_fork_guards();
-    proc_push_interactive(1);
     env_init();
     reader_init();
+    parser_t &parser = parser_t::principal_parser();
+    scoped_push<bool> interactive{&parser.libdata().is_interactive, true};
     // We need to set the shell-modes for ICRNL,
     // in fish-proper this is done once a command is run.
     tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes);

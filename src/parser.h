@@ -152,6 +152,9 @@ struct library_data_t {
     /// event nesting level.
     int is_event{0};
 
+    /// Whether we are currently interactive.
+    bool is_interactive{false};
+
     /// Whether we should break or continue the current loop.
     enum loop_status_t loop_status { loop_status_t::normals };
 
@@ -351,6 +354,10 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// reader_current_filename, e.g. if we are evaulating a function defined in a different file
     /// than the one curently read.
     const wchar_t *current_filename() const;
+
+    /// Return if we are interactive, which means we are executing a command that the user typed in
+    /// (and not, say, a prompt).
+    bool is_interactive() const { return libdata().is_interactive; }
 
     /// Return a string representing the current stack trace.
     wcstring stack_trace() const;

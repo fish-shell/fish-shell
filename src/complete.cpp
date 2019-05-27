@@ -748,10 +748,10 @@ void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
                                      const wcstring &desc, complete_flags_t flags) {
     bool is_autosuggest = (this->type() == COMPLETE_AUTOSUGGEST);
 
-    // If type is COMPLETE_AUTOSUGGEST, it means we're on a background thread, so don't call
-    // proc_push_interactive.
-    if (!is_autosuggest) {
-        proc_push_interactive(0);
+    bool saved_interactive = false;
+    if (parser) {
+        saved_interactive = parser->libdata().is_interactive;
+        parser->libdata().is_interactive = false;
     }
 
     expand_flags_t eflags{};
@@ -763,8 +763,8 @@ void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
     std::vector<completion_t> possible_comp =
         parser_t::expand_argument_list(args, eflags, vars, parser);
 
-    if (!is_autosuggest) {
-        proc_pop_interactive();
+    if (parser) {
+        parser->libdata().is_interactive = saved_interactive;
     }
 
     this->complete_strings(escape_string(str, ESCAPE_ALL), const_desc(desc), possible_comp, flags);

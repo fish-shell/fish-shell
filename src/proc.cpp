@@ -77,21 +77,7 @@ job_control_t get_job_control_mode() { return job_control_mode; }
 
 void set_job_control_mode(job_control_t mode) { job_control_mode = mode; }
 
-static int is_interactive = -1;
-
-bool shell_is_interactive() {
-    ASSERT_IS_MAIN_THREAD();
-    // is_interactive is statically initialized to -1. Ensure it has been dynamically set
-    // before we're called.
-    assert(is_interactive != -1);
-    return is_interactive > 0;
-}
-
-/// A stack containing the values of is_interactive. Used by proc_push_interactive and
-/// proc_pop_interactive.
-static std::vector<int> interactive_stack;
-
-void proc_init() { proc_push_interactive(0); }
+void proc_init() { signal_set_handlers_once(false); }
 
 // Basic thread safe job IDs. The vector consumed_job_ids has a true value wherever the job ID
 // corresponding to that slot is in use. The job ID corresponding to slot 0 is 1.
@@ -860,7 +846,7 @@ void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool se
     FLOGF(proc_job_run, L"%ls job %d, gid %d (%ls), %ls, %ls",
           send_sigcont ? L"Continue" : L"Start", job_id, pgid, command_wcstr(),
           is_completed() ? L"COMPLETED" : L"UNCOMPLETED",
-          is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
+          parser.libdata().is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
 
     // Make sure we retake control of the terminal before leaving this function.
     bool term_transferred = false;
@@ -956,26 +942,10 @@ void proc_sanity_check(const parser_t &parser) {
     }
 }
 
-void proc_push_interactive(int value) {
-    ASSERT_IS_MAIN_THREAD();
-    int old = is_interactive;
-    interactive_stack.push_back(is_interactive);
-    is_interactive = value;
-    if (old != value) signal_set_handlers();
-}
-
-void proc_pop_interactive() {
-    ASSERT_IS_MAIN_THREAD();
-    int old = is_interactive;
-    is_interactive = interactive_stack.back();
-    interactive_stack.pop_back();
-    if (is_interactive != old) signal_set_handlers();
-}
-
 void proc_wait_any(parser_t &parser) {
     ASSERT_IS_MAIN_THREAD();
     process_mark_finished_children(parser, true /* block_ok */);
-    process_clean_after_marking(parser, is_interactive);
+    process_clean_after_marking(parser, parser.libdata().is_interactive);
 }
 
 void hup_background_jobs(const parser_t &parser) {

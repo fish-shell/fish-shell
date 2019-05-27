@@ -212,11 +212,11 @@ static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool s
     reader_set_silent_status(silent);
 
     reader_set_buffer(commandline, std::wcslen(commandline));
-    proc_push_interactive(1);
+    scoped_push<bool> interactive{&parser.libdata().is_interactive, true};
 
     event_fire_generic(parser, L"fish_prompt");
     auto mline = reader_readline(nchars);
-    proc_pop_interactive();
+    interactive.restore();
     if (mline) {
         buff = mline.acquire();
         if (nchars > 0 && (size_t)nchars < buff.size()) {

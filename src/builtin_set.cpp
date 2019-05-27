@@ -234,10 +234,10 @@ static int validate_cmd_opts(const wchar_t *cmd, set_cmd_opts_t &opts,  //!OCLIN
 // Check if we are setting a uvar and a global of the same name exists. See
 // https://github.com/fish-shell/fish-shell/issues/806
 static int check_global_scope_exists(const wchar_t *cmd, set_cmd_opts_t &opts, const wchar_t *dest,
-                                     io_streams_t &streams, const environment_t &vars) {
+                                     io_streams_t &streams, const parser_t &parser) {
     if (opts.universal) {
-        auto global_dest = vars.get(dest, ENV_GLOBAL);
-        if (global_dest && shell_is_interactive()) {
+        auto global_dest = parser.vars().get(dest, ENV_GLOBAL);
+        if (global_dest && parser.is_interactive()) {
             streams.err.append_format(BUILTIN_SET_UVAR_ERR, cmd, dest);
         }
     }
@@ -673,7 +673,7 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
     }
 
     if (retval != STATUS_CMD_OK) return retval;
-    return check_global_scope_exists(cmd, opts, dest, streams, parser.vars());
+    return check_global_scope_exists(cmd, opts, dest, streams, parser);
 }
 
 /// This handles the common case of setting the entire var to a set of values.
@@ -785,7 +785,7 @@ static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, w
     }
 
     if (retval != STATUS_CMD_OK) return retval;
-    return check_global_scope_exists(cmd, opts, varname, streams, parser.vars());
+    return check_global_scope_exists(cmd, opts, varname, streams, parser);
 }
 
 /// The set builtin creates, updates, and erases (removes, deletes) variables.

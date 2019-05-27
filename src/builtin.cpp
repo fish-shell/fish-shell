@@ -304,7 +304,7 @@ static int builtin_breakpoint(parser_t &parser, io_streams_t &streams, wchar_t *
     }
 
     // If we're not interactive then we can't enter the debugger. So treat this command as a no-op.
-    if (!shell_is_interactive()) {
+    if (!parser.is_interactive()) {
         return STATUS_CMD_ERROR;
     }
 

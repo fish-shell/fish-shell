@@ -61,7 +61,7 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                                       cmd, dir_in.c_str());
         }
 
-        if (!shell_is_interactive()) streams.err.append(parser.current_line());
+        if (!parser.is_interactive()) streams.err.append(parser.current_line());
 
         return STATUS_CMD_ERROR;
     }
@@ -84,7 +84,7 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append_format(_(L"%ls: '%ls' is not a directory\n"), cmd, dir_in.c_str());
         }
 
-        if (!shell_is_interactive()) {
+        if (!parser.is_interactive()) {
             streams.err.append(parser.current_line());
         }
 

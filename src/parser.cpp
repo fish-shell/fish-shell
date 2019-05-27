@@ -524,7 +524,7 @@ wcstring parser_t::current_line() {
     wcstring prefix;
 
     // If we are not going to print a stack trace, at least print the line number and filename.
-    if (!shell_is_interactive() || is_function()) {
+    if (!is_interactive() || is_function()) {
         if (file) {
             append_format(prefix, _(L"%ls (line %d): "), user_presentable_path(file).c_str(),
                           lineno);
@@ -535,8 +535,7 @@ wcstring parser_t::current_line() {
         }
     }
 
-    bool is_interactive = shell_is_interactive();
-    bool skip_caret = is_interactive && !is_function();
+    bool skip_caret = is_interactive() && !is_function();
 
     // Use an error with empty text.
     assert(source_offset >= 0);
@@ -544,7 +543,7 @@ wcstring parser_t::current_line() {
     empty_error.source_start = source_offset;
 
     wcstring line_info = empty_error.describe_with_prefix(execution_context->get_source(), prefix,
-                                                          is_interactive, skip_caret);
+                                                          is_interactive(), skip_caret);
     if (!line_info.empty()) {
         line_info.push_back(L'\n');
     }
@@ -721,8 +720,6 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
     if (!errors.empty()) {
         const parse_error_t &err = errors.at(0);
 
-        const bool is_interactive = shell_is_interactive();
-
         // Determine if we want to try to print a caret to point at the source error. The
         // err.source_start <= src.size() check is due to the nasty way that slices work, which is
         // by rewriting the source.
@@ -734,7 +731,7 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
 
             // Don't include the caret if we're interactive, this is the first line of text, and our
             // source is at its beginning, because then it's obvious.
-            skip_caret = (is_interactive && which_line == 1 && err.source_start == 0);
+            skip_caret = (is_interactive() && which_line == 1 && err.source_start == 0);
         }
 
         wcstring prefix;
@@ -751,7 +748,7 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
         }
 
         const wcstring description =
-            err.describe_with_prefix(src, prefix, is_interactive, skip_caret);
+            err.describe_with_prefix(src, prefix, is_interactive(), skip_caret);
         if (!description.empty()) {
             output.append(description);
             output.push_back(L'\n');

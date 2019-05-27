@@ -276,13 +276,12 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
 
         // Event handlers are not part of the main flow of code, so they are marked as
         // non-interactive.
-        proc_push_interactive(0);
+        scoped_push<bool> interactive{&ld.is_interactive, false};
         auto prev_statuses = parser.get_last_statuses();
 
         block_t *b = parser.push_block(block_t::event_block(event));
         parser.eval(buffer, io_chain_t(), TOP);
         parser.pop_block(b);
-        proc_pop_interactive();
         parser.set_last_statuses(std::move(prev_statuses));
     }
 }

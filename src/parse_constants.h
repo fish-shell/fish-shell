@@ -187,9 +187,9 @@ struct parse_error_t {
     /// Offset and length of the token in the source code that triggered this error.
     size_t source_start;
     size_t source_length;
-    /// Return a string describing the error, suitable for presentation to the user. If skip_caret
-    /// is false, the offending line with a caret is printed as well.
-    wcstring describe(const wcstring &src) const;
+    /// Return a string describing the error, suitable for presentation to the user. If
+    /// is_interactive is true, the offending line with a caret is printed as well.
+    wcstring describe(const wcstring &src, bool is_interactive) const;
     /// Return a string describing the error, suitable for presentation to the user, with the given
     /// prefix. If skip_caret is false, the offending line with a caret is printed as well.
     wcstring describe_with_prefix(const wcstring &src, const wcstring &prefix, bool is_interactive,

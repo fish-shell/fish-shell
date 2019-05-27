@@ -291,7 +291,8 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                                       condition);
             for (size_t i = 0; i < errors.size(); i++) {
                 streams.err.append_format(L"\n%ls: ", cmd);
-                streams.err.append(errors.at(i).describe(condition_string));
+                streams.err.append(
+                    errors.at(i).describe(condition_string, parser.is_interactive()));
             }
             return STATUS_CMD_ERROR;
         }

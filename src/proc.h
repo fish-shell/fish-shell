@@ -456,9 +456,6 @@ class job_t {
     static job_t *from_pid(pid_t pid);
 };
 
-/// Whether we are reading from the keyboard right now.
-bool shell_is_interactive();
-
 /// Whether this shell is attached to the keyboard at all.
 bool is_interactive_session();
 void set_interactive_session(bool flag);
@@ -508,12 +505,6 @@ event_t proc_create_event(const wchar_t *msg, event_type_t type, pid_t pid, int 
 
 /// Initializations.
 void proc_init();
-
-/// Set new value for is_interactive flag, saving previous value. If needed, update signal handlers.
-void proc_push_interactive(int value);
-
-/// Set is_interactive flag to the previous value. If needed, update signal handlers.
-void proc_pop_interactive();
 
 /// Wait for any process finishing, or receipt of a signal.
 void proc_wait_any(parser_t &parser);

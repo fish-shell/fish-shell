@@ -1013,8 +1013,9 @@ static void test_cancellation() {
 
     // Enable fish's signal handling here. We need to make this interactive for fish to install its
     // signal handlers.
-    proc_push_interactive(1);
-    signal_set_handlers();
+    parser_t &parser = parser_t::principal_parser();
+    scoped_push<bool> interactive{&parser.libdata().is_interactive, true};
+    signal_set_handlers(true);
 
     // This tests that we can correctly ctrl-C out of certain loop constructs, and that nothing gets
     // printed if we do.
@@ -1040,7 +1041,7 @@ static void test_cancellation() {
     set_interactive_session(iis);
 
     // Restore signal handling.
-    proc_pop_interactive();
+    interactive.restore();
     signal_reset_handlers();
 
     // Ensure that we don't think we should cancel.
@@ -1613,7 +1614,7 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
         if (errors.empty()) {
             err(L"Bug: Parse error reported but no error text found.");
         } else {
-            err(L"%ls", errors.at(0).describe(wcstring(in)).c_str());
+            err(L"%ls", errors.at(0).describe(in, parser->is_interactive()).c_str());
         }
         return false;
     }
@@ -4237,7 +4238,7 @@ static void test_new_parser_errors() {
                 L"code %lu",
                 src.c_str(), expected_code, (unsigned long)errors.at(0).code);
             for (size_t i = 0; i < errors.size(); i++) {
-                err(L"\t\t%ls", errors.at(i).describe(src).c_str());
+                err(L"\t\t%ls", errors.at(i).describe(src, true).c_str());
             }
         }
     }

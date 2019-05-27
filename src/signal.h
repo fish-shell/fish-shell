@@ -17,7 +17,10 @@ const wchar_t *signal_get_desc(int sig);
 void signal_reset_handlers();
 
 /// Set signal handlers to fish default handlers.
-void signal_set_handlers();
+void signal_set_handlers(bool interactive);
+
+/// Latch function. This sets signal handlers, but only the first time it is called.
+void signal_set_handlers_once(bool interactive);
 
 /// Tell fish what to do on the specified signal.
 ///

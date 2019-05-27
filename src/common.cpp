@@ -56,6 +56,7 @@
 #include "future_feature_flags.h"
 #include "global_safety.h"
 #include "iothread.h"
+#include "parser.h"
 #include "proc.h"
 #include "signal.h"
 #include "wildcard.h"
@@ -1791,7 +1792,8 @@ void common_handle_winch(int signal) {
 static void validate_new_termsize(struct winsize *new_termsize, const environment_t &vars) {
     if (new_termsize->ws_col == 0 || new_termsize->ws_row == 0) {
 #ifdef HAVE_WINSIZE
-        if (shell_is_interactive()) {
+        // Highly hackish. This seems like it should be moved.
+        if (is_main_thread() && parser_t::principal_parser().is_interactive()) {
             debug(1, _(L"Current terminal parameters have rows and/or columns set to zero."));
             debug(1, _(L"The stty command can be used to correct this "
                        L"(e.g., stty rows 80 columns 24)."));
@@ -1814,7 +1816,8 @@ static void validate_new_termsize(struct winsize *new_termsize, const environmen
     }
 
     if (new_termsize->ws_col < MIN_TERM_COL || new_termsize->ws_row < MIN_TERM_ROW) {
-        if (shell_is_interactive()) {
+        // Also highly hackisk.
+        if (is_main_thread() && parser_t::principal_parser().is_interactive()) {
             debug(1, _(L"Current terminal parameters set terminal size to unreasonable value."));
             debug(1, _(L"Defaulting terminal size to 80x24."));
         }

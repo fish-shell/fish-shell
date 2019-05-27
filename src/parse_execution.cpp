@@ -800,7 +800,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
     }
 
     // Protect against exec with background processes running
-    if (process_type == process_type_t::exec && shell_is_interactive()) {
+    if (process_type == process_type_t::exec && parser->is_interactive()) {
         bool have_bg = false;
         for (const auto &bg : parser->jobs()) {
             // The assumption here is that if it is a foreground job,
@@ -1165,7 +1165,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
 
     // Get terminal modes.
     struct termios tmodes = {};
-    if (shell_is_interactive() && tcgetattr(STDIN_FILENO, &tmodes)) {
+    if (parser->is_interactive() && tcgetattr(STDIN_FILENO, &tmodes)) {
         // Need real error handling here.
         wperror(L"tcgetattr");
         return parse_execution_errored;
@@ -1236,13 +1236,13 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
     auto job_control_mode = get_job_control_mode();
     bool wants_job_control =
         (job_control_mode == job_control_t::all) ||
-        ((job_control_mode == job_control_t::interactive) && shell_is_interactive());
+        ((job_control_mode == job_control_t::interactive) && parser->is_interactive());
 
     job_t::properties_t props{};
     props.foreground = !job_node_is_background(job_node);
     props.wants_terminal = wants_job_control && !ld.is_event;
     props.skip_notification =
-        ld.is_subshell || ld.is_block || ld.is_event || !shell_is_interactive();
+        ld.is_subshell || ld.is_block || ld.is_event || !parser->is_interactive();
     props.from_event_handler = ld.is_event;
 
     shared_ptr<job_t> job = std::make_shared<job_t>(acquire_job_id(), props, block_io, parent_job);

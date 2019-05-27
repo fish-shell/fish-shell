@@ -856,6 +856,8 @@ bool reader_thread_job_is_stale() {
 void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor_position) {
     if (!term_supports_setting_title()) return;
 
+    scoped_push<bool> noninteractive{&parser.libdata().is_interactive, false};
+
     wcstring fish_title_command = DEFAULT_TITLE;
     if (function_exists(L"fish_title", parser)) {
         fish_title_command = L"fish_title";
@@ -867,7 +869,6 @@ void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor
     }
 
     wcstring_list_t lst;
-    proc_push_interactive(0);
     if (exec_subshell(fish_title_command, parser, lst, false /* ignore exit status */) != -1 &&
         !lst.empty()) {
         std::fputws(L"\x1B]0;", stdout);
@@ -877,7 +878,6 @@ void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor
         ignore_result(write(STDOUT_FILENO, "\a", 1));
     }
 
-    proc_pop_interactive();
     outputter_t::stdoutput().set_color(rgb_color_t::reset(), rgb_color_t::reset());
     if (reset_cursor_position && !lst.empty()) {
         // Put the cursor back at the beginning of the line (issue #2453).
@@ -913,7 +913,7 @@ void reader_data_t::exec_prompt() {
 
     // If we have any prompts, they must be run non-interactively.
     if (left_prompt.size() || right_prompt.size()) {
-        proc_push_interactive(0);
+        scoped_push<bool> noninteractive{&parser().libdata().is_interactive, false};
 
         exec_mode_prompt();
 
@@ -936,8 +936,6 @@ void reader_data_t::exec_prompt() {
                 right_prompt_buff += prompt_list.at(i);
             }
         }
-
-        proc_pop_interactive();
     }
 
     // Write the screen title. Do not reset the cursor position: exec_prompt is called when there
@@ -1670,7 +1668,7 @@ static bool check_for_orphaned_process(unsigned long loop_count, pid_t shell_pgi
 }
 
 /// Initialize data for interactive use.
-static void reader_interactive_init() {
+static void reader_interactive_init(parser_t &parser) {
     // See if we are running interactively.
     pid_t shell_pgid;
 
@@ -1745,7 +1743,7 @@ static void reader_interactive_init() {
             }
         }
 
-        signal_set_handlers();
+        signal_set_handlers(parser.is_interactive());
     }
 
     // It shouldn't be necessary to place fish in its own process group and force control
@@ -1782,7 +1780,7 @@ static void reader_interactive_init() {
     invalidate_termsize();
 
     // For compatibility with fish 2.0's $_, now replaced with `status current-command`
-    parser_t::principal_parser().vars().set_one(L"_", ENV_GLOBAL, L"fish");
+    parser.vars().set_one(L"_", ENV_GLOBAL, L"fish");
 }
 
 /// Destroy data for interactive use.
@@ -2097,7 +2095,7 @@ void reader_push(parser_t &parser, const wcstring &name) {
     reader_data_t *data = current_data();
     data->command_line_changed(&data->command_line);
     if (reader_data_stack.size() == 1) {
-        reader_interactive_init();
+        reader_interactive_init(parser);
     }
 
     data->exec_prompt();
@@ -3544,7 +3542,7 @@ int reader_read(parser_t &parser, int fd, const io_chain_t &io) {
     // If reader_read is called recursively through the '.' builtin, we need to preserve
     // is_interactive. This, and signal handler setup is handled by
     // proc_push_interactive/proc_pop_interactive.
-    int inter = 0;
+    bool interactive = false;
     // This block is a hack to work around https://sourceware.org/bugzilla/show_bug.cgi?id=20632.
     // See also, commit 396bf12. Without the need for this workaround we would just write:
     // int inter = ((fd == STDIN_FILENO) && isatty(STDIN_FILENO));
@@ -3552,19 +3550,20 @@ int reader_read(parser_t &parser, int fd, const io_chain_t &io) {
         struct termios t;
         int a_tty = isatty(STDIN_FILENO);
         if (a_tty) {
-            inter = 1;
+            interactive = true;
         } else if (tcgetattr(STDIN_FILENO, &t) == -1 && errno == EIO) {
             redirect_tty_output();
-            inter = 1;
+            interactive = true;
         }
     }
-    proc_push_interactive(inter);
 
-    res = shell_is_interactive() ? read_i(parser) : read_ni(parser, fd, io);
+    scoped_push<bool> interactive_push{&parser.libdata().is_interactive, interactive};
+    signal_set_handlers_once(interactive);
+
+    res = parser.is_interactive() ? read_i(parser) : read_ni(parser, fd, io);
 
     // If the exit command was called in a script, only exit the script, not the program.
     reader_set_end_loop(false);
 
-    proc_pop_interactive();
     return res;
 }

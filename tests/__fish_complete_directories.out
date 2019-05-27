@@ -1,10 +1,10 @@
 # __fish_complete_directories test/z
 # __fish_complete_directories test/d
 test/data/	Directory
-# __fish_complete_directories test/data
-test/data/	Directory
 test/buildroot/	Directory
 test/fish_expand_test/	Directory
+# __fish_complete_directories test/data
+test/data/	Directory
 # __fish_complete_directories test/data/
 test/data/abc/	Directory
 test/data/abcd/	Directory

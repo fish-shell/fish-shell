@@ -12,9 +12,10 @@ function __fish_complete_directories -d "Complete directory prefixes" --argument
         set comp (commandline -ct)
     end
 
-    # Inherit support for completing expansions from __fish_complete_suffix
-    # Supports completing expressions like ~/foo or x$bar, etc.
-    set -l dirs (__fish_complete_suffix $comp /)
+    # HACK: We call into the file completions by using a non-existent command.
+    # If we used e.g. `ls`, we'd run the risk of completing its options or another kind of argument.
+    # But since we default to file completions, if something doesn't have another completion...
+    set -l dirs (complete -C"nonexistentcommandooheehoohaahaahdingdongwallawallabingbang $comp" | string match -r '.*/$')
 
     if set -q dirs[1]
         printf "%s\t$desc\n" $dirs

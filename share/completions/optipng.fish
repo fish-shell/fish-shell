@@ -38,4 +38,4 @@ complete -x -c optipng -n '__fish_should_complete_switches' -a '-log\t"log messa
 
 complete -x -c optipng -n 'not __fish_prev_arg_in -out -dir -log' \
     -a '(__fish_complete_suffix ".{png,PNG,pnm,PNM,tiff,TIFF,bmp,BMP}")'
-complete -x -c optipng -n '__fish_prev_arg_in -dir' -a '(__fish_complete_suffix \'{}\')' # hack to list directories only
+complete -x -c optipng -n '__fish_prev_arg_in -dir' -a '(__fish_complete_directories)'

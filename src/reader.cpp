@@ -316,6 +316,37 @@ struct highlight_result_t {
     wcstring text;
 };
 
+struct undo_list_t {
+    std::deque<wcstring> lines;
+    std::deque<size_t> positions;
+    bool coalesce = false;
+    void push_back(wcstring line, size_t pos) {
+        lines.push_back(line);
+        positions.push_back(pos);
+    }
+    void push_front(wcstring line, size_t pos) {
+        lines.push_front(line);
+        positions.push_front(pos);
+    }
+    void pop_back() {
+        lines.pop_back();
+        positions.pop_back();
+    }
+    void pop_front() {
+        lines.pop_front();
+        positions.pop_front();
+    }
+    bool empty() {
+        return lines.empty();
+    }
+    wcstring back() {
+        return lines.back();
+    }
+    wcstring front() {
+        return lines.front();
+    }
+};
+
 }  // namespace
 
 struct readline_loop_state_t;
@@ -328,6 +359,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     std::shared_ptr<parser_t> parser_ref;
     /// String containing the whole current commandline.
     editable_line_t command_line;
+    undo_list_t undo;
+    undo_list_t redo;
     /// String containing the autosuggestion.
     wcstring autosuggestion;
     /// Current pager.
@@ -395,6 +428,25 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     jump_direction_t last_jump_direction{jump_direction_t::forward};
     jump_precision_t last_jump_precision{jump_precision_t::to};
 
+    void add_undo(wcstring str, size_t pos, bool coalesce = false) {
+        if (undo.empty() || undo.back() != str) {
+            // If the previous entry was a coalescing one (e.g. self-insert'ed),
+            // we squash them together.
+            //
+            // Note that we do not care about the new entry because
+            // we make undo entries *before* executing the command.
+            if (undo.coalesce && !undo.empty()) {
+                undo.pop_back();
+            }
+            undo.push_back(str,pos);
+            undo.coalesce = coalesce;
+        }
+    }
+
+    void add_undo(bool coalesce = false) {
+        add_undo(command_line.text, command_line.position, coalesce);
+    }
+
     bool is_navigating_pager_contents() const { return this->pager.is_navigating_contents(); }
 
     /// The line that is currently being edited. Typically the command line, but may be the search
@@ -435,11 +487,11 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void update_buff_pos(editable_line_t *el, size_t buff_pos);
     void repaint();
     void kill(editable_line_t *el, size_t begin_idx, size_t length, int mode, int newv);
-    bool insert_string(editable_line_t *el, const wcstring &str);
+    bool insert_string(editable_line_t *el, const wcstring &str, bool coalesce = false);
 
     /// Insert the character into the command line buffer and print it to the screen using syntax
     /// highlighting, etc.
-    bool insert_char(editable_line_t *el, wchar_t c) { return insert_string(el, wcstring{c}); }
+    bool insert_char(editable_line_t *el, wchar_t c) { return insert_string(el, wcstring{c}, true); }
 
     void move_word(editable_line_t *el, bool move_right, bool erase, enum move_word_style_t style,
                    bool newv);
@@ -646,6 +698,11 @@ void reader_data_t::repaint() {
 
 /// Internal helper function for handling killing parts of text.
 void reader_data_t::kill(editable_line_t *el, size_t begin_idx, size_t length, int mode, int newv) {
+    if (length == 0) return;
+    if (el == &command_line) {
+        // Add undo item, coalesce for single-character kills.
+        add_undo(length < 2);
+    }
     const wchar_t *begin = el->text.c_str() + begin_idx;
     if (newv) {
         kill_item = wcstring(begin, length);
@@ -1086,6 +1143,10 @@ void reader_data_t::remove_backward() {
 
     if (el->position <= 0) return;
 
+    if (el == &command_line) {
+        add_undo(true);
+    }
+
     // Fake composed character sequences by continuing to delete until we delete a character of
     // width at least 1.
     int width;
@@ -1104,9 +1165,13 @@ void reader_data_t::remove_backward() {
 /// Insert the characters of the string into the command line buffer and print them to the screen
 /// using syntax highlighting, etc.
 /// Returns true if the string changed.
-bool reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
+bool reader_data_t::insert_string(editable_line_t *el, const wcstring &str, bool coalesce) {
     if (str.empty()) return false;
 
+    // Add an undo element, but coalesce those for normal text insertion.
+    if (el == &command_line) {
+        add_undo(coalesce);
+    }
     el->insert_string(str, 0, str.size());
     update_buff_pos(el, el->position);
     command_line_changed(el);
@@ -2402,7 +2467,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
     }
 
     editable_line_t *el = active_edit_line();
-    insert_string(el, arr);
+    insert_string(el, arr, true);
 
     // End paging upon inserting into the normal command line.
     if (el == &command_line) {
@@ -2554,6 +2619,11 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
                 // Munge our completions.
                 completions_sort_and_prioritize(&rls.comp);
+
+                // handle_completions returns true if it inserted the command immediately.
+                if (!rls.comp.empty()) {
+                    add_undo();
+                }
 
                 // Record our cycle_command_line.
                 cycle_command_line = el->text;
@@ -2732,6 +2802,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // will have to test again.
                 bool abbreviation_expanded = expand_abbreviation_as_necessary(1);
                 if (abbreviation_expanded) {
+                    add_undo();
                     // It's our reponsibility to rehighlight and repaint. But everything we do
                     // below triggers a repaint.
                     command_test_result = test_func(parser(), el->text.c_str());
@@ -3144,6 +3215,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
         case rl::expand_abbr: {
             if (expand_abbreviation_as_necessary(1)) {
+                add_undo();
                 super_highlight_me_plenty();
                 mark_repaint_needed();
                 input_function_set_status(true);
@@ -3162,6 +3234,38 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::vi_arg_digit:
         case rl::vi_delete_to: {
             // TODO: what needs to happen with these?
+            break;
+        }
+        case rl::redo:
+        case rl::undo: {
+            // Redo is basically reversed - we go front to back, where undo goes back to front.
+            // So all the redo operations use front, all the undo ones use back.
+            bool is_undo = c == rl::undo;
+            undo_list_t &ul = is_undo ? undo : redo;
+            undo_list_t &rl = is_undo ? redo : undo;
+            // If we were just inserting normal text,
+            // then the last undo entry is just before the last letter, waiting to be coalesced.
+            if (is_undo && !undo.empty() && undo.coalesce) {
+                undo.pop_back();
+            }
+            if (!ul.empty()) {
+                wcstring old = command_line.text;
+                size_t pos = command_line.position;
+                command_line.text = is_undo ? ul.back() : ul.front();
+                update_buff_pos(&command_line, is_undo ? ul.positions.back() : ul.positions.front());
+                command_line_changed(&command_line);
+                super_highlight_me_plenty();
+                // TODO: Is this necessary?
+                repaint();
+                // Put back into the other stack, e.g. from undo to redo.
+                if (c == rl::undo) {
+                    rl.push_front(old, pos);
+                    ul.pop_back();
+                } else {
+                    rl.push_back(old, pos);
+                    ul.pop_front();
+                }
+            }
             break;
         }
     }

@@ -324,8 +324,12 @@ struct undo_list_t {
         if (coalesce && !empty()) {
             pop_back();
         }
-        lines.push_back(line);
-        positions.push_back(pos);
+        // Ignore duplicated sequences - fully deduplicating would be weird,
+        // but so would an undo that doesn't change anything.
+        if (empty() || back() != line) {
+            lines.push_back(line);
+            positions.push_back(pos);
+        }
         coalesce = new_coalesce;
     }
     void pop_back() {
@@ -427,9 +431,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     jump_precision_t last_jump_precision{jump_precision_t::to};
 
     void add_undo(wcstring str, size_t pos, bool coalesce = false) {
-        if (undo.empty() || undo.back() != str) {
-            undo.push_back(str, pos, coalesce);
-        }
+        undo.push_back(str, pos, coalesce);
     }
 
     void add_undo(bool coalesce = false) {

@@ -27,6 +27,7 @@
 #include "common.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
 #include "output.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -528,7 +529,7 @@ void writembs_check(outputter_t &outp, const char *mbs, const char *mbs_name, bo
         const wchar_t *fmt =
             _(L"Tried to use terminfo string %s on line %ld of %s, which is "
               L"undefined in terminal of type \"%ls\". Please report this error to %s");
-        debug(0, fmt, mbs_name, line, file, term ? term->as_string().c_str() : L"",
-              PACKAGE_BUGREPORT);
+        FLOG(error, fmt, mbs_name, line, file, term ? term->as_string().c_str() : L"",
+             PACKAGE_BUGREPORT);
     }
 }

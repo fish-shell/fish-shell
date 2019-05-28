@@ -14,6 +14,7 @@
 - `eval` is now implemented internally rather than being a function; as such, the evaluated code now shares the same argument scope as `eval` rather than being executed in a new scope (#4443).
 - An issue resulting in a certain class of parser errors not resulting in a non-zero `$status` has been corrected (3e055f).
 - fish now underlines every valid entered path instead of just the last one.
+- The `--debug` option has been extended to allow specifying categories. Categories may be listed via `fish --print-debug-categories`.
 
 ### Syntax changes and new commands
 - Brace expansion now only takes place if the braces include a "," or a variable expansion, so things like `git reset HEAD@{0}` now work (#5869).

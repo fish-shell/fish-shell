@@ -38,6 +38,7 @@
 #include "common.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
 #include "global_safety.h"
 #include "io.h"
 #include "output.h"
@@ -685,7 +686,7 @@ void proc_update_jiffies(parser_t &parser) {
 // restoring a previously-stopped job, in which case we need to restore terminal attributes.
 bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
     if (j->pgid == 0) {
-        debug(2, "terminal_give_to_job() returning early due to no process group");
+        FLOG(proc_termowner, "terminal_give_to_job() returning early due to no process group");
         return true;
     }
 
@@ -700,10 +701,10 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
     // to hand over control of the terminal to this process group, which is a no-op if it's already
     // been done.
     if (j->pgid == INVALID_PID || tcgetpgrp(STDIN_FILENO) == j->pgid) {
-        debug(4, L"Process group %d already has control of terminal\n", j->pgid);
+        FLOGF(proc_termowner, L"Process group %d already has control of terminal", j->pgid);
     } else {
-        debug(4,
-              L"Attempting to bring process group to foreground via tcsetpgrp for job->pgid %d\n",
+        FLOGF(proc_termowner,
+              L"Attempting to bring process group to foreground via tcsetpgrp for job->pgid %d",
               j->pgid);
 
         // The tcsetpgrp(2) man page says that EPERM is thrown if "pgrp has a supported value, but
@@ -716,7 +717,7 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
         // guarantee the process isn't going to exit while we wait (which would cause us to possibly
         // block indefinitely).
         while (tcsetpgrp(STDIN_FILENO, j->pgid) != 0) {
-            debug(3, "tcsetpgrp failed: %d", errno);
+            FLOGF(proc_termowner, "tcsetpgrp failed: %d", errno);
 
             bool pgroup_terminated = false;
             // No need to test for EINTR as we are blocking signals
@@ -842,8 +843,9 @@ void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool se
     parser.job_promote(this);
     set_flag(job_flag_t::NOTIFIED, false);
 
-    debug(4, L"%ls job %d, gid %d (%ls), %ls, %ls", send_sigcont ? L"Continue" : L"Start", job_id,
-          pgid, command_wcstr(), is_completed() ? L"COMPLETED" : L"UNCOMPLETED",
+    FLOGF(proc_job_run, L"%ls job %d, gid %d (%ls), %ls, %ls",
+          send_sigcont ? L"Continue" : L"Start", job_id, pgid, command_wcstr(),
+          is_completed() ? L"COMPLETED" : L"UNCOMPLETED",
           is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
 
     // Make sure we retake control of the terminal before leaving this function.
@@ -912,8 +914,8 @@ void proc_sanity_check(const parser_t &parser) {
         // More than one foreground job?
         if (j->is_foreground() && !(j->is_stopped() || j->is_completed())) {
             if (fg_job) {
-                debug(0, _(L"More than one job in foreground: job 1: '%ls' job 2: '%ls'"),
-                      fg_job->command_wcstr(), j->command_wcstr());
+                FLOG(error, _(L"More than one job in foreground: job 1: '%ls' job 2: '%ls'"),
+                     fg_job->command_wcstr(), j->command_wcstr());
                 sanity_lose();
             }
             fg_job = j.get();
@@ -926,14 +928,14 @@ void proc_sanity_check(const parser_t &parser) {
             validate_pointer(p->argv0(), _(L"Process name"), null_ok);
 
             if ((p->stopped & (~0x00000001)) != 0) {
-                debug(0, _(L"Job '%ls', process '%ls' has inconsistent state \'stopped\'=%d"),
-                      j->command_wcstr(), p->argv0(), p->stopped);
+                FLOG(error, _(L"Job '%ls', process '%ls' has inconsistent state \'stopped\'=%d"),
+                     j->command_wcstr(), p->argv0(), p->stopped);
                 sanity_lose();
             }
 
             if ((p->completed & (~0x00000001)) != 0) {
-                debug(0, _(L"Job '%ls', process '%ls' has inconsistent state \'completed\'=%d"),
-                      j->command_wcstr(), p->argv0(), p->completed);
+                FLOG(error, _(L"Job '%ls', process '%ls' has inconsistent state \'completed\'=%d"),
+                     j->command_wcstr(), p->argv0(), p->completed);
                 sanity_lose();
             }
         }

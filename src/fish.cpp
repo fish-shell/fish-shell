@@ -44,6 +44,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "fish_version.h"
+#include "flog.h"
 #include "function.h"
 #include "future_feature_flags.h"
 #include "history.h"
@@ -61,6 +62,8 @@ class fish_cmd_opts_t {
    public:
     // Future feature flags values string
     wcstring features;
+    // File path for debug output.
+    std::string debug_output;
     // Commands to be executed in place of interactive shell.
     std::vector<std::string> batch_cmds;
     // Commands to execute after the shell's config has been read.
@@ -263,11 +266,13 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                                               {"init-command", required_argument, NULL, 'C'},
                                               {"features", required_argument, NULL, 'f'},
                                               {"debug-level", required_argument, NULL, 'd'},
+                                              {"debug-output", required_argument, NULL, 'o'},
                                               {"debug-stack-frames", required_argument, NULL, 'D'},
                                               {"interactive", no_argument, NULL, 'i'},
                                               {"login", no_argument, NULL, 'l'},
                                               {"no-execute", no_argument, NULL, 'n'},
                                               {"print-rusage-self", no_argument, NULL, 1},
+                                              {"print-debug-categories", no_argument, NULL, 2},
                                               {"profile", required_argument, NULL, 'p'},
                                               {"private", no_argument, NULL, 'P'},
                                               {"help", no_argument, NULL, 'h'},
@@ -295,9 +300,12 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 if (tmp >= 0 && tmp <= 10 && !*end && !errno) {
                     debug_level = (int)tmp;
                 } else {
-                    std::fwprintf(stderr, _(L"Invalid value '%s' for debug-level flag"), optarg);
-                    exit(1);
+                    activate_flog_categories_by_pattern(str2wcstring(optarg));
                 }
+                break;
+            }
+            case 'o': {
+                opts->debug_output = optarg;
                 break;
             }
             case 'f': {
@@ -322,6 +330,22 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
             }
             case 1: {
                 opts->print_rusage_self = true;
+                break;
+            }
+            case 2: {
+                auto cats = get_flog_categories();
+                // Compute width of longest name.
+                int name_width = 0;
+                for (const auto *cat : cats) {
+                    name_width = std::max(name_width, (int)wcslen(cat->name));
+                }
+                // A little extra space.
+                name_width += 2;
+                for (const auto *cat : cats) {
+                    // Negating the name width left-justifies.
+                    printf("%*ls %ls\n", -name_width, cat->name, _(cat->description));
+                }
+                exit(0);
                 break;
             }
             case 'p': {
@@ -395,6 +419,20 @@ int main(int argc, char **argv) {
     }
     fish_cmd_opts_t opts{};
     my_optind = fish_parse_opt(argc, argv, &opts);
+
+    // Direct any debug output right away.
+    FILE *debug_output = nullptr;
+    if (!opts.debug_output.empty()) {
+        debug_output = fopen(opts.debug_output.c_str(), "w");
+        if (!debug_output) {
+            fprintf(stderr, "Could not open file %s\n", opts.debug_output.c_str());
+            perror("fopen");
+            exit(-1);
+        }
+        set_cloexec(fileno(debug_output));
+        setlinebuf(debug_output);
+        set_flog_output_file(debug_output);
+    }
 
     // No-exec is prohibited when in interactive mode.
     if (opts.is_interactive_session && opts.no_exec) {
@@ -500,6 +538,9 @@ int main(int argc, char **argv) {
     history_save_all();
     if (opts.print_rusage_self) {
         print_rusage_self(stderr);
+    }
+    if (debug_output) {
+        fclose(debug_output);
     }
     exit_without_destructors(exit_status);
     return EXIT_FAILURE;  // above line should always exit

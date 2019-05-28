@@ -32,6 +32,7 @@
 #include "env.h"
 #include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
 #include "function.h"
 #include "io.h"
 #include "iothread.h"
@@ -61,7 +62,7 @@ void exec_close(int fd) {
 
     // This may be called in a child of fork(), so don't allocate memory.
     if (fd < 0) {
-        debug(0, L"Called close on invalid file descriptor ");
+        FLOG(error, L"Called close on invalid file descriptor ");
         return;
     }
 
@@ -451,7 +452,7 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
 
     // This is the parent process. Store away information on the child, and
     // possibly give it control over the terminal.
-    debug(4, L"Fork #%d, pid %d: %s for '%ls'", g_fork_count, pid, fork_type, p->argv0());
+    FLOGF(exec_fork, L"Fork #%d, pid %d: %s for '%ls'", g_fork_count, pid, fork_type, p->argv0());
 
     p->pid = pid;
     on_process_created(job, p->pid);
@@ -613,20 +614,20 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
         if (write_loop(STDOUT_FILENO, outbuff.data(), outbuff.size()) < 0) {
             if (errno != EPIPE) {
                 did_err = true;
-                debug(0, "Error while writing to stdout");
+                FLOG(error, "Error while writing to stdout");
                 wperror(L"write_loop");
             }
         }
         if (write_loop(STDERR_FILENO, errbuff.data(), errbuff.size()) < 0) {
             if (errno != EPIPE && !did_err) {
                 did_err = true;
-                debug(0, "Error while writing to stderr");
+                FLOG(error, "Error while writing to stderr");
                 wperror(L"write_loop");
             }
         }
         if (did_err) {
             redirect_tty_output();  // workaround glibc bug
-            debug(0, "!builtin_io_done and errno != EPIPE");
+            FLOG(error, "!builtin_io_done and errno != EPIPE");
             show_stackframe(L'E');
         }
         // Clear the buffers to indicate we finished.
@@ -639,8 +640,8 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
         // TODO: factor this job-status-setting stuff into a single place.
         p->completed = 1;
         if (p->is_last_in_job) {
-            debug(4, L"Set status of job %d (%ls) to %d using short circuit", j->job_id,
-                  j->preview().c_str(), p->status);
+            FLOGF(exec_job_status, L"Set status of job %d (%ls) to %d using short circuit",
+                  j->job_id, j->preview().c_str(), p->status);
             parser.set_last_statuses(j->get_statuses());
         }
         return true;
@@ -714,7 +715,7 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
 
         // A 0 pid means we failed to posix_spawn. Since we have no pid, we'll never get
         // told when it's exited, so we have to mark the process as failed.
-        debug(4, L"Fork #%d, pid %d: spawn external command '%s' from '%ls'", g_fork_count, pid,
+        FLOGF(exec_fork, L"Fork #%d, pid %d: spawn external command '%s' from '%ls'", g_fork_count, pid,
               actual_cmd, file ? file : L"<no file>");
         if (pid == 0) {
             job_mark_process_as_failed(j, p);
@@ -788,7 +789,7 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
         const wcstring func_name = p->argv0();
         auto props = function_get_properties(func_name);
         if (!props) {
-            debug(0, _(L"Unknown function '%ls'"), p->argv0());
+            FLOG(error, _(L"Unknown function '%ls'"), p->argv0());
             return false;
         }
 
@@ -1096,8 +1097,8 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
         }
     }
 
-    debug(3, L"Created job %d from command '%ls' with pgrp %d", j->job_id, j->command_wcstr(),
-          j->pgid);
+    FLOG(exec_job_exec, "Executed job", j->job_id, "from command", j->command_wcstr(), "with pgrp",
+         j->pgid);
 
     j->set_flag(job_flag_t::CONSTRUCTED, true);
     if (!j->is_foreground()) {

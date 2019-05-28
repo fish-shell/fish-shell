@@ -38,6 +38,7 @@
 #include "env_universal_common.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
 #include "function.h"
 #include "global_safety.h"
 #include "history.h"
@@ -498,22 +499,22 @@ static void init_locale(const environment_t &vars) {
         const auto var = vars.get(var_name, ENV_EXPORT);
         const std::string &name = wcs2string(var_name);
         if (var.missing_or_empty()) {
-            debug(5, L"locale var %s missing or empty", name.c_str());
+            FLOGF(env_locale, L"locale var %s missing or empty", name.c_str());
             unsetenv_lock(name.c_str());
         } else {
             const std::string value = wcs2string(var->as_string());
-            debug(5, L"locale var %s='%s'", name.c_str(), value.c_str());
+            FLOGF(env_locale, L"locale var %s='%s'", name.c_str(), value.c_str());
             setenv_lock(name.c_str(), value.c_str(), 1);
         }
     }
 
     char *locale = setlocale(LC_ALL, "");
     fish_setlocale();
-    debug(5, L"init_locale() setlocale(): '%s'", locale);
+    FLOGF(env_locale, L"init_locale() setlocale(): '%s'", locale);
 
     const char *new_msg_locale = setlocale(LC_MESSAGES, NULL);
-    debug(5, L"old LC_MESSAGES locale: '%s'", old_msg_locale);
-    debug(5, L"new LC_MESSAGES locale: '%s'", new_msg_locale);
+    FLOGF(env_locale, L"old LC_MESSAGES locale: '%s'", old_msg_locale);
+    FLOGF(env_locale, L"new LC_MESSAGES locale: '%s'", new_msg_locale);
 #ifdef HAVE__NL_MSG_CAT_CNTR
     if (std::strcmp(old_msg_locale, new_msg_locale)) {
         // Make change known to GNU gettext.

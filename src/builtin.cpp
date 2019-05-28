@@ -66,6 +66,7 @@
 #include "complete.h"
 #include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
 #include "intern.h"
 #include "io.h"
 #include "parse_constants.h"
@@ -469,7 +470,7 @@ proc_status_t builtin_run(parser_t &parser, int job_pgid, wchar_t **argv, io_str
         return proc_status_t::from_exit_code(ret);
     }
 
-    debug(0, UNKNOWN_BUILTIN_ERR_MSG, argv[0]);
+    FLOGF(error, UNKNOWN_BUILTIN_ERR_MSG, argv[0]);
     return proc_status_t::from_exit_code(STATUS_CMD_ERROR);
 }
 

@@ -52,6 +52,7 @@
 #include "env.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
 #include "future_feature_flags.h"
 #include "global_safety.h"
 #include "proc.h"
@@ -2121,8 +2122,8 @@ int create_directory(const wcstring &d) {
 }
 
 [[gnu::noinline]] void bugreport() {
-    debug(0, _(L"This is a bug. Break on 'bugreport' to debug."));
-    debug(0, _(L"If you can reproduce it, please report: %s."), PACKAGE_BUGREPORT);
+    FLOG(error, _(L"This is a bug. Break on 'bugreport' to debug."));
+    FLOG(error, _(L"If you can reproduce it, please report: "), PACKAGE_BUGREPORT, '.');
 }
 
 wcstring format_size(long long sz) {
@@ -2314,24 +2315,24 @@ bool is_main_thread() {
 
 void assert_is_main_thread(const char *who) {
     if (!is_main_thread() && !thread_asserts_cfg_for_testing) {
-        debug(0, "%s called off of main thread.", who);
-        debug(0, "Break on debug_thread_error to debug.");
+        FLOGF(error, "%s called off of main thread.", who);
+        FLOGF(error, "Break on debug_thread_error to debug.");
         debug_thread_error();
     }
 }
 
 void assert_is_not_forked_child(const char *who) {
     if (is_forked_child()) {
-        debug(0, "%s called in a forked child.", who);
-        debug(0, "Break on debug_thread_error to debug.");
+        FLOGF(error, "%s called in a forked child.", who);
+        FLOGF(error, "Break on debug_thread_error to debug.");
         debug_thread_error();
     }
 }
 
 void assert_is_background_thread(const char *who) {
     if (is_main_thread() && !thread_asserts_cfg_for_testing) {
-        debug(0, "%s called on the main thread (may block!).", who);
-        debug(0, "Break on debug_thread_error to debug.");
+        FLOGF(error, "%s called on the main thread (may block!).", who);
+        FLOGF(error, "Break on debug_thread_error to debug.");
         debug_thread_error();
     }
 }
@@ -2342,8 +2343,8 @@ void assert_is_locked(void *vmutex, const char *who, const char *caller) {
     // Note that std::mutex.try_lock() is allowed to return false when the mutex isn't
     // actually locked; fortunately we are checking the opposite so we're safe.
     if (mutex->try_lock()) {
-        debug(0, "%s is not locked when it should be in '%s'", who, caller);
-        debug(0, "Break on debug_thread_error to debug.");
+        FLOGF(error, "%s is not locked when it should be in '%s'", who, caller);
+        FLOGF(error, "Break on debug_thread_error to debug.");
         debug_thread_error();
         mutex->unlock();
     }
@@ -2436,10 +2437,10 @@ void redirect_tty_output() {
 /// Display a failed assertion message, dump a stack trace if possible, then die.
 [[noreturn]] void __fish_assert(const char *msg, const char *file, size_t line, int error) {
     if (error) {
-        debug(0, L"%s:%zu: failed assertion: %s: errno %d (%s)", file, line, msg, error,
-              std::strerror(error));
+        FLOG(error, L"%s:%zu: failed assertion: %s: errno %d (%s)", file, line, msg, error,
+             std::strerror(error));
     } else {
-        debug(0, L"%s:%zu: failed assertion: %s", file, line, msg);
+        FLOG(error, L"%s:%zu: failed assertion: %s", file, line, msg);
     }
     show_stackframe(L'E', 99, 1);
     abort();

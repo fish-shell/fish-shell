@@ -5,6 +5,7 @@
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
 #include "global_safety.h"
 #include "history.h"
 #include "kill.h"
@@ -16,19 +17,19 @@
 static relaxed_atomic_bool_t insane{false};
 
 void sanity_lose() {
-    debug(0, _(L"Errors detected, shutting down. Break on sanity_lose() to debug."));
+    FLOG(error, _(L"Errors detected, shutting down. Break on sanity_lose() to debug."));
     insane = true;
 }
 
 void validate_pointer(const void *ptr, const wchar_t *err, int null_ok) {
     // Test if the pointer data crosses a segment boundary.
     if ((0x00000003l & (intptr_t)ptr) != 0) {
-        debug(0, _(L"The pointer '%ls' is invalid"), err);
+        FLOG(error, _(L"The pointer '%ls' is invalid"), err);
         sanity_lose();
     }
 
     if ((!null_ok) && (ptr == 0)) {
-        debug(0, _(L"The pointer '%ls' is null"), err);
+        FLOG(error, _(L"The pointer '%ls' is null"), err);
         sanity_lose();
     }
 }

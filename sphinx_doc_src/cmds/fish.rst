@@ -22,6 +22,8 @@ The following options are available:
 
 - ``-d`` or ``--debug-level=DEBUG_LEVEL`` specify the verbosity level of fish. A higher number means higher verbosity. The default level is 1.
 
+- ``-o`` or ``--debug-output=path`` Specify a file path to receive the debug output. The default is stderr.
+
 - ``-i`` or ``--interactive`` specify that fish is to run in interactive mode
 
 - ``-l`` or ``--login`` specify that fish is to run as a login shell
@@ -31,6 +33,8 @@ The following options are available:
 - ``-p`` or ``--profile=PROFILE_FILE`` when fish exits, output timing information on all executed commands to the specified file
 
 - ``--print-rusage-self`` when fish exits, output stats from getrusage
+
+- ``--print-debug-categories`` outputs the list of debug categories, and then exits.
 
 - ``-v`` or ``--version`` display version and exit
 

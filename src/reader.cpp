@@ -3051,6 +3051,9 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             // Drag the character before the cursor forward over the character at the cursor,
             // moving the cursor forward as well.
             if (el->position > 0) {
+                if (el == &command_line) {
+                    add_undo();
+                }
                 wcstring local_cmd = el->text;
                 std::swap(local_cmd.at(el->position), local_cmd.at(el->position - 1));
                 set_command_line_and_position(el, local_cmd, el->position + 1);
@@ -3081,6 +3084,9 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
             // Make sure we have two tokens.
             if (prev_begin < prev_end && tok_begin < tok_end && tok_begin > prev_begin) {
+                if (el == &command_line) {
+                    add_undo();
+                }
                 const wcstring prev(prev_begin, prev_end - prev_begin);
                 const wcstring sep(prev_end, tok_begin - prev_end);
                 const wcstring tok(tok_begin, tok_end - tok_begin);
@@ -3107,6 +3113,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             // We apply the operation from the current location to the end of the word.
             size_t pos = el->position;
             move_word(el, MOVE_DIR_RIGHT, false, move_word_style_punctuation, false);
+            wcstring old = el->text;
+            size_t oldpos = pos;
             for (; pos < el->position; pos++) {
                 wchar_t chr = el->text.at(pos);
 
@@ -3126,6 +3134,9 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
                 command_line.text.at(pos) = chr;
                 capitalized_first = capitalized_first || make_uppercase;
+            }
+            if (capitalized_first && el == &command_line) {
+                add_undo(old, oldpos);
             }
             command_line_changed(el);
             super_highlight_me_plenty();

@@ -438,7 +438,7 @@ void complete_add(const wchar_t *cmd, bool cmd_is_path, const wcstring &option,
                   complete_option_type_t option_type, completion_mode_t result_mode,
                   const wchar_t *condition, const wchar_t *comp, const wchar_t *desc,
                   complete_flags_t flags) {
-    CHECK(cmd, );
+    assert(cmd && "Null command");
     // option should be empty iff the option type is arguments only.
     assert(option.empty() == (option_type == option_type_args_only));
 

@@ -1060,7 +1060,7 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
     s_save_status(s);
 }
 void s_reset(screen_t *s, screen_reset_mode_t mode) {
-    CHECK(s, );
+    assert(s && "Null screen");
 
     bool abandon_line = false, repaint_prompt = false, clear_to_eos = false;
     switch (mode) {

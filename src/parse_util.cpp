@@ -112,7 +112,7 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
 
     wchar_t *paran_begin = 0, *paran_end = 0;
 
-    CHECK(in, 0);
+    assert(in && "null parameter");
 
     for (pos = const_cast<wchar_t *>(in); *pos; pos++) {
         if (prev != '\\') {
@@ -236,9 +236,8 @@ int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_o
 
 void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **a,
                                 const wchar_t **b) {
+    assert(buff && "Null buffer");
     const wchar_t *const cursor = buff + cursor_pos;
-
-    CHECK(buff, );
 
     const size_t bufflen = std::wcslen(buff);
     assert(cursor_pos <= bufflen);
@@ -285,11 +284,10 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
 /// Get the beginning and end of the job or process definition under the cursor.
 static void job_or_process_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **a,
                                   const wchar_t **b, int process) {
+    assert(buff && "Null buffer");
     const wchar_t *begin, *end;
     wchar_t *buffcpy;
     int finished = 0;
-
-    CHECK(buff, );
 
     if (a) *a = 0;
     if (b) *b = 0;
@@ -349,9 +347,8 @@ void parse_util_job_extent(const wchar_t *buff, size_t pos, const wchar_t **a, c
 void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **tok_begin,
                              const wchar_t **tok_end, const wchar_t **prev_begin,
                              const wchar_t **prev_end) {
+    assert(buff && "Null buffer");
     const wchar_t *a = NULL, *b = NULL, *pa = NULL, *pb = NULL;
-
-    CHECK(buff, );
 
     const wchar_t *cmdsubst_begin, *cmdsubst_end;
     parse_util_cmdsubst_extent(buff, cursor_pos, &cmdsubst_begin, &cmdsubst_end);

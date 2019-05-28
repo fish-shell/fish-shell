@@ -126,7 +126,7 @@ static int parse_cmd_opts(functions_cmd_opts_t &opts, int *optind,  //!OCLINT(hi
 
 /// Return a definition of the specified function. Used by the functions builtin.
 static wcstring functions_def(const wcstring &name) {
-    CHECK(!name.empty(), L"");  //!OCLINT(multiple unary operator)
+    assert(!name.empty() && "Empty name");
     wcstring out;
     wcstring desc, def;
     function_get_desc(name, desc);

@@ -441,7 +441,7 @@ void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter) {
 }
 
 void event_fire_generic(const wchar_t *name, const wcstring_list_t *args) {
-    CHECK(name, );
+    assert(name && "Null name");
 
     event_t ev(event_type_t::generic);
     ev.desc.str_param1 = name;

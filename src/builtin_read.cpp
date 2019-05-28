@@ -274,7 +274,10 @@ static int read_in_chunks(int fd, wcstring &buff, bool split_null) {
         if (bytes_consumed < bytes_read) {
             // We found a splitter. The +1 because we need to treat the splitter as consumed, but
             // not append it to the string.
-            CHECK(lseek(fd, bytes_consumed - bytes_read + 1, SEEK_CUR) != -1, STATUS_CMD_ERROR)
+            if (lseek(fd, bytes_consumed - bytes_read + 1, SEEK_CUR) == -1) {
+                wperror(L"lseek");
+                return STATUS_CMD_ERROR;
+            }
             finished = true;
         } else if (str.size() > read_byte_limit) {
             exit_res = STATUS_READ_TOO_MUCH;

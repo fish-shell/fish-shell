@@ -202,17 +202,6 @@ extern const wchar_t *program_name;
 /// Set to false if it's been determined we can't trust the last modified timestamp on the tty.
 extern const bool has_working_tty_timestamps;
 
-/// This macro is used to check that an argument is true. It is a bit like a non-fatal form of
-/// assert. Instead of exiting on failure, the current function is ended at once. The second
-/// parameter is the return value of the current function on failure.
-#define CHECK(arg, retval)                                                               \
-    if (!(arg)) {                                                                        \
-        debug(0, "function %s called with false value for argument %s", __func__, #arg); \
-        bugreport();                                                                     \
-        show_stackframe(L'E');                                                           \
-        return retval;                                                                   \
-    }
-
 // Pause for input, then exit the program. If supported, print a backtrace first.
 // The `return` will never be run  but silences oclint warnings. Especially when this is called
 // from within a `switch` block. As of the time I'm writing this oclint doesn't recognize the

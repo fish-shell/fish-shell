@@ -431,9 +431,7 @@ std::string wcs2string(const wcstring &input) {
 /// This function decodes illegal character sequences in a reversible way using the private use
 /// area.
 static char *wcs2str_internal(const wchar_t *in, char *out) {
-    CHECK(in, 0);
-    CHECK(out, 0);
-
+    assert(in && out && "in and out must not be null");
     size_t in_pos = 0;
     size_t out_pos = 0;
     mbstate_t state = {};

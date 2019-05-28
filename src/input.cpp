@@ -219,11 +219,7 @@ static void input_mapping_insert_sorted(const input_mapping_t &new_mapping, bool
 /// Adds an input mapping.
 void input_mapping_add(const wchar_t *sequence, const wchar_t *const *commands, size_t commands_len,
                        const wchar_t *mode, const wchar_t *sets_mode, bool user) {
-    CHECK(sequence, );
-    CHECK(commands, );
-    CHECK(mode, );
-    CHECK(sets_mode, );
-
+    assert(sequence && commands && mode && sets_mode && "Null parameter");
     // Remove existing mappings with this sequence.
     const wcstring_list_t commands_vector(commands, commands + commands_len);
 
@@ -663,7 +659,7 @@ static std::vector<terminfo_mapping_t> create_input_terminfo() {
 bool input_terminfo_get_sequence(const wchar_t *name, wcstring *out_seq) {
     ASSERT_IS_MAIN_THREAD();
     assert(s_input_initialized);
-    CHECK(name, 0);
+    assert(name && "null name");
 
     const char *res = 0;
     int err = ENOENT;

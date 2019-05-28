@@ -614,20 +614,20 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
         if (write_loop(STDOUT_FILENO, outbuff.data(), outbuff.size()) < 0) {
             if (errno != EPIPE) {
                 did_err = true;
-                FLOG(error, "Error while writing to stdout");
+                FLOG(error, L"Error while writing to stdout");
                 wperror(L"write_loop");
             }
         }
         if (write_loop(STDERR_FILENO, errbuff.data(), errbuff.size()) < 0) {
             if (errno != EPIPE && !did_err) {
                 did_err = true;
-                FLOG(error, "Error while writing to stderr");
+                FLOG(error, L"Error while writing to stderr");
                 wperror(L"write_loop");
             }
         }
         if (did_err) {
             redirect_tty_output();  // workaround glibc bug
-            FLOG(error, "!builtin_io_done and errno != EPIPE");
+            FLOG(error, L"!builtin_io_done and errno != EPIPE");
             show_stackframe(L'E');
         }
         // Clear the buffers to indicate we finished.
@@ -1097,7 +1097,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
         }
     }
 
-    FLOG(exec_job_exec, "Executed job", j->job_id, "from command", j->command_wcstr(), "with pgrp",
+    FLOGF(exec_job_exec, L"Executed job %d from command '%ls' with pgrp %d", j->job_id, j->command_wcstr(),
          j->pgid);
 
     j->set_flag(job_flag_t::CONSTRUCTED, true);

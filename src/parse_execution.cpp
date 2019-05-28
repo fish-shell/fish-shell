@@ -1231,7 +1231,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
     }
 
     shared_ptr<job_t> job = std::make_shared<job_t>(acquire_job_id(), block_io, parent_job);
-    auto &ld = parser_t::principal_parser().libdata();
+    auto &ld = parser->libdata();
     job->tmodes = tmodes;
     auto job_control_mode = get_job_control_mode();
     job->set_flag(job_flag_t::JOB_CONTROL,

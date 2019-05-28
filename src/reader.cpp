@@ -319,19 +319,14 @@ struct highlight_result_t {
 struct undo_list_t {
     std::deque<wcstring> lines;
     std::deque<size_t> positions;
-    wcstring pending = L"";
-    size_t pending_pos = 0;
     bool coalesce = false;
-    void push_back(wcstring line, size_t pos, bool coalesce = false) {
-        if (!coalesce) {
-            lines.push_back(pending);
-            positions.push_back(pending_pos);
-            lines.push_back(line);
-            positions.push_back(pos);
-        } else {
-            pending = line;
-            pending_pos = pos;
+    void push_back(wcstring line, size_t pos, bool new_coalesce = false) {
+        if (coalesce && !empty()) {
+            pop_back();
         }
+        lines.push_back(line);
+        positions.push_back(pos);
+        coalesce = new_coalesce;
     }
     void pop_back() {
         lines.pop_back();
@@ -346,8 +341,6 @@ struct undo_list_t {
     void clear() {
         lines.clear();
         positions.clear();
-        pending = L"";
-        pending_pos = 0;
         coalesce = false;
     }
 };

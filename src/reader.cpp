@@ -3273,7 +3273,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // TODO: Is this necessary?
                 repaint();
                 // Put back into the other stack, e.g. from undo to redo.
-                if (c == rl::undo) {
+                if (is_undo) {
                     rl.push_front(old, pos);
                     ul.pop_back();
                 } else {

@@ -885,8 +885,9 @@ expand_result_t expander_t::stage_cmdsubst(wcstring input, std::vector<completio
             case 0:
                 append_completion(out, std::move(input));
                 break;
-            case 1: /* fallthroughs intentional */
+            case 1:
                 append_cmdsub_error(errors, start, L"Command substitutions not allowed");
+               /* intentionally falls through */
             case -1:
             default:
                 return expand_result_t::error;

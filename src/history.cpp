@@ -31,6 +31,7 @@
 #include "common.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
 #include "global_safety.h"
 #include "history.h"
 #include "io.h"
@@ -1860,7 +1861,7 @@ wcstring history_session_id(const environment_t &vars) {
         } else if (valid_var_name(session_id)) {
             result = session_id;
         } else {
-            debug(0,
+            FLOGF(error,
                   _(L"History session ID '%ls' is not a valid variable name. "
                     L"Falling back to `%ls`."),
                   session_id.c_str(), result.c_str());

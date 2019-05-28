@@ -59,6 +59,8 @@ class category_list_t {
 
     category_t proc_termowner{L"proc-termowner", L"Terminal ownership events"};
 
+    category_t proc_internal_proc{L"proc-internal-proc", L"Internal (non-forked) process events"};
+
     category_t env_locale{L"env-locale", L"Changes to locale variables"};
 };
 

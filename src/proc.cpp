@@ -214,7 +214,16 @@ void internal_proc_t::mark_exited(proc_status_t status) {
     status_.store(status, std::memory_order_relaxed);
     exited_.store(true, std::memory_order_release);
     topic_monitor_t::principal().post(topic_t::internal_exit);
+    FLOG(proc_internal_proc, "Internal proc", internal_proc_id_, "exited with status",
+         status.status_value());
 }
+
+static int64_t next_proc_id() {
+    static std::atomic<uint64_t> s_next{};
+    return ++s_next;
+}
+
+internal_proc_t::internal_proc_t() : internal_proc_id_(next_proc_id()) {}
 
 static void mark_job_complete(const job_t *j) {
     for (auto &p : j->processes) {

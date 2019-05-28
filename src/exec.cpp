@@ -369,6 +369,9 @@ static bool run_internal_process(process_t *p, std::string outdata, std::string 
     p->internal_proc_ = std::make_shared<internal_proc_t>();
     f->internal_proc = p->internal_proc_;
 
+    FLOGF(proc_internal_proc, "Created internal proc %llu to write output for proc '%ls'",
+          p->internal_proc_->get_id(), p->argv0());
+
     // Resolve the IO chain.
     // Note it's important we do this even if we have no out or err data, because we may have been
     // asked to truncate a file (e.g. `echo -n '' > /tmp/truncateme.txt'). The open() in the dup2

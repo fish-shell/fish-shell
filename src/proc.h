@@ -113,6 +113,10 @@ class proc_status_t {
 /// A structure representing a "process" internal to fish. This is backed by a pthread instead of a
 /// separate process.
 class internal_proc_t {
+    /// An identifier for internal processes.
+    /// This is used for logging purposes only.
+    const uint64_t internal_proc_id_;
+
     /// Whether the process has exited.
     std::atomic<bool> exited_{};
 
@@ -130,6 +134,10 @@ class internal_proc_t {
         assert(exited() && "Process is not exited");
         return status_.load(std::memory_order_relaxed);
     }
+
+    uint64_t get_id() const { return internal_proc_id_; }
+
+    internal_proc_t();
 };
 
 /// A structure representing a single fish process. Contains variables for tracking process state

@@ -495,13 +495,15 @@ inline wcstring to_string(long x) {
     return wcstring(buff);
 }
 
-inline wcstring to_string(int x) { return to_string(static_cast<long>(x)); }
-
-inline wcstring to_string(size_t x) {
+inline wcstring to_string(unsigned long long x) {
     wchar_t buff[64];
     format_ullong_safe(buff, x);
     return wcstring(buff);
 }
+
+inline wcstring to_string(int x) { return to_string(static_cast<long>(x)); }
+
+inline wcstring to_string(size_t x) { return to_string(static_cast<unsigned long long>(x)); }
 
 inline bool bool_from_string(const std::string &x) {
     if (x.empty()) return false;

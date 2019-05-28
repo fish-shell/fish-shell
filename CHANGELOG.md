@@ -12,7 +12,7 @@
 - Error messages no longer include a (rather large) help summary and the stacktrace has been shortened (#3404, #5434).
 - $PATH is no longer reordered in child fishes (#5456).
 - `eval` is now implemented internally rather than being a function; as such, the evaluated code now shares the same argument scope as `eval` rather than being executed in a new scope (#4443).
-- An issue resulting in a certain class of parser errors not resulting in a non-zero `$status` has been corrected (3e055f).
+- Some parser errors did not set `$status` to non-zero. This has been corrected (b2a1da602f79878f4b0adc4881216c928a542608).
 - fish now underlines every valid entered path instead of just the last one.
 - The `--debug` option has been extended to allow specifying categories. Categories may be listed via `fish --print-debug-categories`.
 

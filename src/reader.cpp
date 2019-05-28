@@ -3256,6 +3256,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // Put back into the other stack, e.g. from undo to redo.
                 rl.push_back(old, pos);
                 ul.pop_back();
+            } else {
+                flash();
             }
             break;
         }

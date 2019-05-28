@@ -478,11 +478,11 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void update_buff_pos(editable_line_t *el, size_t buff_pos);
     void repaint();
     void kill(editable_line_t *el, size_t begin_idx, size_t length, int mode, int newv);
-    bool insert_string(editable_line_t *el, const wcstring &str, bool coalesce = false);
+    bool insert_string(editable_line_t *el, const wcstring &str);
 
     /// Insert the character into the command line buffer and print it to the screen using syntax
     /// highlighting, etc.
-    bool insert_char(editable_line_t *el, wchar_t c) { return insert_string(el, wcstring{c}, true); }
+    bool insert_char(editable_line_t *el, wchar_t c) { return insert_string(el, wcstring{c}); }
 
     void move_word(editable_line_t *el, bool move_right, bool erase, enum move_word_style_t style,
                    bool newv);
@@ -1152,13 +1152,9 @@ void reader_data_t::remove_backward() {
 /// Insert the characters of the string into the command line buffer and print them to the screen
 /// using syntax highlighting, etc.
 /// Returns true if the string changed.
-bool reader_data_t::insert_string(editable_line_t *el, const wcstring &str, bool coalesce) {
+bool reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
     if (str.empty()) return false;
 
-    // Add an undo element, but coalesce those for normal text insertion.
-    if (el == &command_line) {
-        add_undo(coalesce);
-    }
     el->insert_string(str, 0, str.size());
     update_buff_pos(el, el->position);
     command_line_changed(el);
@@ -2457,7 +2453,11 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
     }
 
     editable_line_t *el = active_edit_line();
-    insert_string(el, arr, true);
+    if (el == &command_line) {
+        // Only coalesce undos if this not the first insert.
+        add_undo(!rls.last_cmd);
+    }
+    insert_string(el, arr);
 
     // End paging upon inserting into the normal command line.
     if (el == &command_line) {
@@ -3377,6 +3377,9 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
                 c != 0x7F) {
                 // Regular character.
                 editable_line_t *el = active_edit_line();
+                if (el == &command_line) {
+                    add_undo(!rls.last_cmd);
+                }
                 insert_char(active_edit_line(), c);
 
                 // End paging upon inserting into the normal command line.

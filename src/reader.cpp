@@ -319,10 +319,25 @@ struct highlight_result_t {
 struct undo_list_t {
     std::deque<wcstring> lines;
     std::deque<size_t> positions;
+    wcstring pending;
+    size_t pending_pos;
+    bool have_pending = false;
     bool coalesce = false;
-    void push_back(wcstring line, size_t pos) {
-        lines.push_back(line);
-        positions.push_back(pos);
+    void push_back(wcstring line, size_t pos, bool coalesce = false) {
+        if (!coalesce && have_pending) {
+            lines.push_back(pending);
+            positions.push_back(pending_pos);
+            have_pending = false;
+        }
+        if (coalesce) {
+            pending = line;
+            pending_pos = pos;
+            have_pending = true;
+        }
+        if (!coalesce) {
+            lines.push_back(line);
+            positions.push_back(pos);
+        }
     }
     void push_front(wcstring line, size_t pos) {
         lines.push_front(line);
@@ -430,16 +445,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     void add_undo(wcstring str, size_t pos, bool coalesce = false) {
         if (undo.empty() || undo.back() != str) {
-            // If the previous entry was a coalescing one (e.g. self-insert'ed),
-            // we squash them together.
-            //
-            // Note that we do not care about the new entry because
-            // we make undo entries *before* executing the command.
-            if (undo.coalesce && !undo.empty()) {
-                undo.pop_back();
-            }
-            undo.push_back(str,pos);
-            undo.coalesce = coalesce;
+            undo.push_back(str, pos, coalesce);
         }
     }
 
@@ -3257,11 +3263,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             bool is_undo = c == rl::undo;
             undo_list_t &ul = is_undo ? undo : redo;
             undo_list_t &rl = is_undo ? redo : undo;
-            // If we were just inserting normal text,
-            // then the last undo entry is just before the last letter, waiting to be coalesced.
-            if (is_undo && !undo.empty() && undo.coalesce) {
-                undo.pop_back();
-            }
             if (!ul.empty()) {
                 wcstring old = command_line.text;
                 size_t pos = command_line.position;

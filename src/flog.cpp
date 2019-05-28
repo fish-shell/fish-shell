@@ -43,9 +43,9 @@ void logger_t::log_fmt(const category_t &cat, const wchar_t *fmt, ...) {
     va_list va;
     va_start(va, fmt);
     log1(cat.name);
-    log1(": ");
+    log1(L": ");
     std::vfwprintf(file_, fmt, va);
-    log1('\n');
+    log1(L'\n');
     va_end(va);
 }
 

@@ -73,7 +73,10 @@ static void apply_one_wildcard(const wcstring &wc_esc, bool sense) {
     }
 }
 
-void activate_flog_categories_by_pattern(const wcstring &wc) {
+void activate_flog_categories_by_pattern(const wcstring &inwc) {
+    // Normalize underscores to dashes, allowing the user to be sloppy.
+    wcstring wc = inwc;
+    std::replace(wc.begin(), wc.end(), L'_', L'-');
     for (const wcstring &s : split_string(wc, L',')) {
         if (string_prefixes_string(s, L"-")) {
             apply_one_wildcard(s.substr(1), false);

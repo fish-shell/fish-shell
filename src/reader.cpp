@@ -691,8 +691,7 @@ void reader_data_t::repaint() {
 void reader_data_t::kill(editable_line_t *el, size_t begin_idx, size_t length, int mode, int newv) {
     if (length == 0) return;
     if (el == &command_line) {
-        // Add undo item, coalesce for single-character kills.
-        add_undo(length < 2);
+        add_undo();
     }
     const wchar_t *begin = el->text.c_str() + begin_idx;
     if (newv) {
@@ -2731,7 +2730,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::backward_delete_char: {
             editable_line_t *el = active_edit_line();
             if (el == &command_line) {
-                add_undo();
+                // If this is the first backward-delete, add a full undo entry.
+                add_undo(rls.last_cmd == c);
             }
 
             remove_backward();
@@ -2742,6 +2742,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             // syntax highlighting, etc.
             editable_line_t *el = active_edit_line();
             if (el->position < el->size()) {
+                if (el == &command_line) {
+                    // If this is the first delete, add a full undo entry.
+                    add_undo(rls.last_cmd == c);
+                }
                 update_buff_pos(el, el->position + 1);
                 remove_backward();
             }

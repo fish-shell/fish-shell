@@ -1189,7 +1189,7 @@ void env_stack_t::set_termsize() {
 void env_stack_t::set_pwd_from_getcwd() {
     wcstring cwd = wgetcwd();
     if (cwd.empty()) {
-        debug(0,
+        FLOG(error,
               _(L"Could not determine current working directory. Is your locale set correctly?"));
         return;
     }

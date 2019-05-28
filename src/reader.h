@@ -101,7 +101,7 @@ history_t *reader_get_history();
 /// \param b the new buffer value
 /// \param p the cursor position. If \c p is larger than the length of the command line, the cursor
 /// is placed on the last character.
-void reader_set_buffer(const wcstring &b, size_t p = -1);
+void reader_set_buffer(const wcstring &b, size_t p = -1, bool coalesce = false);
 
 /// Get the current cursor position in the command line. If interactive mode is uninitialized,
 /// return (size_t)-1.

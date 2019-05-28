@@ -107,7 +107,8 @@ static void replace_part(const wchar_t *begin, const wchar_t *end, const wchar_t
         }
     }
     out.append(end);
-    reader_set_buffer(out, out_pos);
+    // If we append or insert, the edits should be coalesced in the undo stack.
+    reader_set_buffer(out, out_pos, append_mode != REPLACE_MODE);
 }
 
 /// Output the specified selection.

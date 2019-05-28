@@ -529,7 +529,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void set_command_line_and_position(editable_line_t *el, const wcstring &new_str, size_t pos);
     void replace_current_token(const wcstring &new_token);
     void update_command_line_from_history_search();
-    void set_buffer_maintaining_pager(const wcstring &b, size_t pos);
+    void set_buffer_maintaining_pager(const wcstring &b, size_t pos, bool coalesce = false);
     void remove_backward();
 };
 
@@ -1950,7 +1950,8 @@ void reader_data_t::move_word(editable_line_t *el, bool move_right, bool erase,
 }
 
 /// Sets the command line contents, without clearing the pager.
-void reader_data_t::set_buffer_maintaining_pager(const wcstring &b, size_t pos) {
+void reader_data_t::set_buffer_maintaining_pager(const wcstring &b, size_t pos, bool coalesce) {
+    add_undo(coalesce);
     // Callers like to pass us pointers into ourselves, so be careful! I don't know if we can use
     // operator= with a pointer to our interior, so use an intermediate.
     size_t command_line_len = b.size();
@@ -3540,12 +3541,12 @@ void reader_sanity_check() {
 }
 
 /// Sets the command line contents, clearing the pager.
-void reader_set_buffer(const wcstring &b, size_t pos) {
+void reader_set_buffer(const wcstring &b, size_t pos, bool coalesce) {
     reader_data_t *data = current_data_or_null();
     if (!data) return;
 
     data->clear_pager();
-    data->set_buffer_maintaining_pager(b, pos);
+    data->set_buffer_maintaining_pager(b, pos, coalesce);
 }
 
 size_t reader_get_cursor_pos() {

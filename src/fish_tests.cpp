@@ -1208,6 +1208,7 @@ static struct wcsfilecmp_test {
                         {L"a0", L"a00", -1},
                         {L"a00b", L"a0b", -1},
                         {L"a0b", L"a00b", 1},
+                        {L"a-b", L"azb", 1},
                         {NULL, NULL, 0}};
 
 /// Verify the behavior of the `wcsfilecmp()` function.

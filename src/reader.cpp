@@ -339,26 +339,15 @@ struct undo_list_t {
             positions.push_back(pos);
         }
     }
-    void push_front(wcstring line, size_t pos) {
-        lines.push_front(line);
-        positions.push_front(pos);
-    }
     void pop_back() {
         lines.pop_back();
         positions.pop_back();
-    }
-    void pop_front() {
-        lines.pop_front();
-        positions.pop_front();
     }
     bool empty() {
         return lines.empty();
     }
     wcstring back() {
         return lines.back();
-    }
-    wcstring front() {
-        return lines.front();
     }
 };
 
@@ -3258,28 +3247,21 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::redo:
         case rl::undo: {
-            // Redo is basically reversed - we go front to back, where undo goes back to front.
-            // So all the redo operations use front, all the undo ones use back.
             bool is_undo = c == rl::undo;
             undo_list_t &ul = is_undo ? undo : redo;
             undo_list_t &rl = is_undo ? redo : undo;
             if (!ul.empty()) {
                 wcstring old = command_line.text;
                 size_t pos = command_line.position;
-                command_line.text = is_undo ? ul.back() : ul.front();
-                update_buff_pos(&command_line, is_undo ? ul.positions.back() : ul.positions.front());
+                command_line.text = ul.back();
+                update_buff_pos(&command_line, ul.positions.back());
                 command_line_changed(&command_line);
                 super_highlight_me_plenty();
                 // TODO: Is this necessary?
                 repaint();
                 // Put back into the other stack, e.g. from undo to redo.
-                if (is_undo) {
-                    rl.push_front(old, pos);
-                    ul.pop_back();
-                } else {
-                    rl.push_back(old, pos);
-                    ul.pop_front();
-                }
+                rl.push_back(old, pos);
+                ul.pop_back();
             }
             break;
         }

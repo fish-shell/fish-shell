@@ -343,6 +343,13 @@ struct undo_list_t {
     wcstring back() {
         return lines.back();
     }
+    void clear() {
+        lines.clear();
+        positions.clear();
+        pending = L"";
+        pending_pos = 0;
+        coalesce = false;
+    }
 };
 
 }  // namespace
@@ -2811,6 +2818,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // Finished command, execute it. Don't add items that start with a leading
                 // space.
                 const editable_line_t *el = &command_line;
+                undo.clear();
+                redo.clear();
                 if (history != NULL && !el->empty() && el->text.at(0) != L' ') {
                     history->add_pending_with_file_detection(el->text, vars.get_pwd_slash());
                 }

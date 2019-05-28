@@ -62,8 +62,9 @@ int wcsfilecmp(const wchar_t *a, const wchar_t *b) {
 
         wint_t al = towupper(*a);
         wint_t bl = towupper(*b);
-        if (al == L'-') al += 48;
-        if (bl == L'-') bl += 48;
+        // Sort dashes after Z - see #5634
+        if (al == L'-') al = L'[';
+        if (bl == L'-') bl = L'[';
 
         if (al < bl) {
             retval = -1;

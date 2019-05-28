@@ -339,7 +339,25 @@ struct undo_list_t {
     bool empty() {
         return lines.empty();
     }
+    size_t pos_back() {
+        if (coalesce) {
+            if (positions.size() > 1) {
+                return *(positions.end() - 2);
+            }
+            return 0;
+        }
+        return positions.back();
+    }
+
     wcstring back() {
+        if (coalesce) {
+            // Skip a pending entry
+            if (lines.size() > 1) {
+                wcstring ntl = *(lines.end() - 2);
+                return *(lines.end() - 2);
+            }
+            return L"";
+        }
         return lines.back();
     }
     void clear() {
@@ -3257,7 +3275,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 wcstring old = command_line.text;
                 size_t pos = command_line.position;
                 command_line.text = ul.back();
-                update_buff_pos(&command_line, ul.positions.back());
+                update_buff_pos(&command_line, ul.pos_back());
                 command_line_changed(&command_line);
                 super_highlight_me_plenty();
                 // TODO: Is this necessary?

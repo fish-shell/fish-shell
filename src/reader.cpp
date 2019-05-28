@@ -1134,10 +1134,6 @@ void reader_data_t::remove_backward() {
 
     if (el->position <= 0) return;
 
-    if (el == &command_line) {
-        add_undo(true);
-    }
-
     // Fake composed character sequences by continuing to delete until we delete a character of
     // width at least 1.
     int width;
@@ -2733,6 +2729,11 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             break;
         }
         case rl::backward_delete_char: {
+            editable_line_t *el = active_edit_line();
+            if (el == &command_line) {
+                add_undo();
+            }
+
             remove_backward();
             break;
         }

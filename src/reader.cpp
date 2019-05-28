@@ -1414,6 +1414,8 @@ void reader_data_t::accept_autosuggestion(bool full, move_word_style_t style) {
         // Accepting an autosuggestion clears the pager.
         clear_pager();
 
+        add_undo();
+
         // Accept the autosuggestion.
         if (full) {
             // Just take the whole thing.

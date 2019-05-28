@@ -4,17 +4,17 @@
 - The vcs-prompt functions have been renamed to names without double-underscore, so __fish_git_prompt is now fish_git_prompt, __fish_vcs_prompt is now fish_vcs_prompt, __fish_hg_prompt is now fish_hg_prompt and __fish_svn_prompt is now fish_svn_prompt. Shims at the old names have been added, and the variables have kept their old names (#5586).
 
 ## Notable Fixes and improvements
-- `string replace` had an additional round of escaping in the replacement (not the match!), so escaping backslashes would require `string replace -ra '([ab])' '\\\\\\\$1' a`. A new feature flag `string-replace-fewer-backslashes` can be used to disable this, so that it becomes `string replace -ra '([ab])' '\\\\$1' a` (#5556).
-- Add `$pipestatus` support
-- macOS Mojave: fish.app can actually run (#5727), 10.14.4's Terminal.app no longer causes an error on launch (#5725)
 - fish no longer requires buffering for the last function in a pipeline.
-- cd now always checks the current directory, even if $CDPATH does not include it or "." (#4484).
-- Error messages no longer include a (rather large) help summary and the stacktrace has been shortened (#3404, #5434).
+- Add `$pipestatus` support
 - $PATH is no longer reordered in child fishes (#5456).
 - `eval` is now implemented internally rather than being a function; as such, the evaluated code now shares the same argument scope as `eval` rather than being executed in a new scope (#4443).
-- Some parser errors did not set `$status` to non-zero. This has been corrected (b2a1da602f79878f4b0adc4881216c928a542608).
+- macOS Mojave: fish.app can actually run (#5727), 10.14.4's Terminal.app no longer causes an error on launch (#5725)
+- cd now always checks the current directory, even if $CDPATH does not include it or "." (#4484).
+- Error messages no longer include a (rather large) help summary and the stacktrace has been shortened (#3404, #5434).
 - fish now underlines every valid entered path instead of just the last one.
 - The `--debug` option has been extended to allow specifying categories. Categories may be listed via `fish --print-debug-categories`.
+- `string replace` had an additional round of escaping in the replacement (not the match!), so escaping backslashes would require `string replace -ra '([ab])' '\\\\\\\$1' a`. A new feature flag `string-replace-fewer-backslashes` can be used to disable this, so that it becomes `string replace -ra '([ab])' '\\\\$1' a` (#5556).
+- Some parser errors did not set `$status` to non-zero. This has been corrected (b2a1da602f79878f4b0adc4881216c928a542608).
 
 ### Syntax changes and new commands
 - Brace expansion now only takes place if the braces include a "," or a variable expansion, so things like `git reset HEAD@{0}` now work (#5869).

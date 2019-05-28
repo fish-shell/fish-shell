@@ -124,7 +124,9 @@ static void append_cmdsub_error(parse_error_list_t *errors, size_t source_start,
 
 /// Test if the specified string does not contain character which can not be used inside a quoted
 /// string.
-static bool is_quotable(const wcstring &str) { return str.find_first_of(L"\n\t\r\b\x1B") == wcstring::npos; }
+static bool is_quotable(const wcstring &str) {
+    return str.find_first_of(L"\n\t\r\b\x1B") == wcstring::npos;
+}
 
 wcstring expand_escape_variable(const env_var_t &var) {
     wcstring buff;

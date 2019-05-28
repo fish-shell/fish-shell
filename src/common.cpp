@@ -1535,7 +1535,8 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     if (unescape_special) {
                         brace_count++;
                         to_append_or_none = BRACE_BEGIN;
-                        // We need to store where the brace *ends up* in the output because of NOT_A_WCHAR.
+                        // We need to store where the brace *ends up* in the output because of
+                        // NOT_A_WCHAR.
                         braces.push_back(result.size());
                     }
                     break;
@@ -1563,10 +1564,11 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                                 to_append_or_none = L'}';
                             }
 
-                            // Remove all seps inside the current brace pair, so if we have a surrounding pair
-                            // we only get seps inside *that*.
+                            // Remove all seps inside the current brace pair, so if we have a
+                            // surrounding pair we only get seps inside *that*.
                             if (vars_or_seps.size()) {
-                                while(vars_or_seps.size() && vars_or_seps.back() > braces.back()) vars_or_seps.pop_back();
+                                while (vars_or_seps.size() && vars_or_seps.back() > braces.back())
+                                    vars_or_seps.pop_back();
                             }
                             braces.pop_back();
                         }

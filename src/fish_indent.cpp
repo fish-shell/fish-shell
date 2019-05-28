@@ -236,8 +236,7 @@ void prettifier_t::prettify_node(const parse_node_tree_t &tree, node_offset_t no
             if (last_was_semicolon) {
                 // We keep the semicolon for `; and` and `; or`,
                 // others we turn into newlines.
-                if (node.keyword != parse_keyword_and
-                    && node.keyword != parse_keyword_or) {
+                if (node.keyword != parse_keyword_and && node.keyword != parse_keyword_or) {
                     append_newline();
                 } else {
                     output.push_back(L';');
@@ -621,12 +620,12 @@ int main(int argc, char *argv[]) {
     argv += optind;
 
     wcstring src;
-    for (int i = 0; i < argc || (argc == 0 && i == 0) ; i++) {
+    for (int i = 0; i < argc || (argc == 0 && i == 0); i++) {
         if (argc == 0 && i == 0) {
             if (output_type == output_type_file) {
-                std::fwprintf(stderr,
-                              _(L"Expected file path to read/write for -w:\n\n $ %ls -w foo.fish\n"),
-                              program_name);
+                std::fwprintf(
+                    stderr, _(L"Expected file path to read/write for -w:\n\n $ %ls -w foo.fish\n"),
+                    program_name);
                 exit(1);
             }
             src = read_file(stdin);
@@ -637,7 +636,8 @@ int main(int argc, char *argv[]) {
                 fclose(fh);
                 output_location = argv[i];
             } else {
-                std::fwprintf(stderr, _(L"Opening \"%s\" failed: %s\n"), *argv, std::strerror(errno));
+                std::fwprintf(stderr, _(L"Opening \"%s\" failed: %s\n"), *argv,
+                              std::strerror(errno));
                 exit(1);
             }
         }
@@ -659,34 +659,34 @@ int main(int argc, char *argv[]) {
 
         std::string colored_output;
         switch (output_type) {
-        case output_type_plain_text: {
-            colored_output = no_colorize(output_wtext);
-            break;
-        }
-        case output_type_file: {
-            FILE *fh = fopen(output_location, "w");
-            if (fh) {
-                std::fputws(output_wtext.c_str(), fh);
-                fclose(fh);
-            } else {
-                std::fwprintf(stderr, _(L"Opening \"%s\" failed: %s\n"), output_location,
-                              std::strerror(errno));
-                exit(1);
+            case output_type_plain_text: {
+                colored_output = no_colorize(output_wtext);
+                break;
             }
-            break;
-        }
-        case output_type_ansi: {
-            colored_output = ansi_colorize(output_wtext, colors);
-            break;
-        }
-        case output_type_html: {
-            colored_output = html_colorize(output_wtext, colors);
-            break;
-        }
-        case output_type_pygments_csv: {
-            DIE("pygments_csv should have been handled above");
-            break;
-        }
+            case output_type_file: {
+                FILE *fh = fopen(output_location, "w");
+                if (fh) {
+                    std::fputws(output_wtext.c_str(), fh);
+                    fclose(fh);
+                } else {
+                    std::fwprintf(stderr, _(L"Opening \"%s\" failed: %s\n"), output_location,
+                                  std::strerror(errno));
+                    exit(1);
+                }
+                break;
+            }
+            case output_type_ansi: {
+                colored_output = ansi_colorize(output_wtext, colors);
+                break;
+            }
+            case output_type_html: {
+                colored_output = html_colorize(output_wtext, colors);
+                break;
+            }
+            case output_type_pygments_csv: {
+                DIE("pygments_csv should have been handled above");
+                break;
+            }
         }
 
         std::fputws(str2wcstring(colored_output).c_str(), stdout);

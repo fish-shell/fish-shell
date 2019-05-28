@@ -28,7 +28,7 @@
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
-#include "wutil.h"     // IWYU pragma: keep
+#include "wutil.h"  // IWYU pragma: keep
 
 typedef std::string cstring;
 

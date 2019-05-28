@@ -467,8 +467,8 @@ static void s_move(screen_t *s, int new_x, int new_y) {
         str = cursor_up;
     } else if (y_steps > 0) {
         str = cursor_down;
-        if ((shell_modes.c_oflag & ONLCR) != 0
-            && std::strcmp(str, "\n") == 0) { // See GitHub issue #4505.
+        if ((shell_modes.c_oflag & ONLCR) != 0 &&
+            std::strcmp(str, "\n") == 0) {  // See GitHub issue #4505.
             // Most consoles use a simple newline as the cursor down escape.
             // If ONLCR is enabled (which it normally is) this will of course
             // also move the cursor to the beginning of the line.
@@ -558,7 +558,8 @@ static size_t line_shared_prefix(const line_t &a, const line_t &b) {
         if (ac != bc || a.color_at(idx) != b.color_at(idx)) {
             if (idx > 0) {
                 const line_t *c = nullptr;
-                // Possible combining mark, go back until we hit _two_ printable characters or idx of 0.
+                // Possible combining mark, go back until we hit _two_ printable characters or idx
+                // of 0.
                 if (fish_wcwidth(a.char_at(idx)) < 1) {
                     c = &a;
                 } else if (fish_wcwidth(b.char_at(idx)) < 1) {
@@ -566,7 +567,9 @@ static size_t line_shared_prefix(const line_t &a, const line_t &b) {
                 }
 
                 if (c) {
-                    while (idx > 1 && (fish_wcwidth(c->char_at(idx - 1)) < 1 || fish_wcwidth(c->char_at(idx)) < 1)) idx--;
+                    while (idx > 1 && (fish_wcwidth(c->char_at(idx - 1)) < 1 ||
+                                       fish_wcwidth(c->char_at(idx)) < 1))
+                        idx--;
                     if (idx == 1 && fish_wcwidth(c->char_at(idx)) < 1) idx = 0;
                 }
             }
@@ -1036,7 +1039,8 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
             cursor_arr = s->desired.cursor;
         }
         s_desired_append_char(s, effective_commandline.at(i), colors[i], indent[i],
-                              first_line_prompt_space, fish_wcwidth_min_0(effective_commandline.at(i)));
+                              first_line_prompt_space,
+                              fish_wcwidth_min_0(effective_commandline.at(i)));
     }
 
     // Cursor may have been at the end too.

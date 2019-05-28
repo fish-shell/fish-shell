@@ -715,8 +715,8 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
 
         // A 0 pid means we failed to posix_spawn. Since we have no pid, we'll never get
         // told when it's exited, so we have to mark the process as failed.
-        FLOGF(exec_fork, L"Fork #%d, pid %d: spawn external command '%s' from '%ls'", g_fork_count, pid,
-              actual_cmd, file ? file : L"<no file>");
+        FLOGF(exec_fork, L"Fork #%d, pid %d: spawn external command '%s' from '%ls'", g_fork_count,
+              pid, actual_cmd, file ? file : L"<no file>");
         if (pid == 0) {
             job_mark_process_as_failed(j, p);
             return false;

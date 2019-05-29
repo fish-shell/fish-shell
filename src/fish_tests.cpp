@@ -1573,6 +1573,7 @@ struct pwd_environment_t : public environment_t {
 
     virtual maybe_t<env_var_t> get(const wcstring &key,
                                    env_mode_flags_t mode = ENV_DEFAULT) const override {
+        UNUSED(mode);
         if (key == L"PWD") {
             return env_var_t{wgetcwd(), 0};
         }
@@ -1583,7 +1584,7 @@ struct pwd_environment_t : public environment_t {
         return {};
     }
 
-    wcstring_list_t get_names(int flags) const override { return {L"PWD"}; }
+    wcstring_list_t get_names(int flags) const override { UNUSED(flags); return {L"PWD"}; }
 };
 
 /// Perform parameter expansion and test if the output equals the zero-terminated parameter list
@@ -2483,11 +2484,13 @@ static void test_complete() {
 
     struct test_complete_vars_t : environment_t {
         wcstring_list_t get_names(int flags) const override {
+            UNUSED(flags);
             return {L"Foo1", L"Foo2", L"Foo3", L"Bar1", L"Bar2", L"Bar3"};
         }
 
         maybe_t<env_var_t> get(const wcstring &key,
                                env_mode_flags_t mode = ENV_DEFAULT) const override {
+            UNUSED(mode);
             if (key == L"PWD") {
                 return env_var_t{wgetcwd(), 0};
             }
@@ -5010,6 +5013,7 @@ static void test_illegal_command_exit_code() {
     };
 
     int res = 0;
+    UNUSED(res);
     const io_chain_t empty_ios;
     parser_t &parser = parser_t::principal_parser();
 
@@ -5115,7 +5119,7 @@ void test_layout_cache() {
     for (size_t i = 0; i < layout_cache_t::prompt_cache_max_size; i++) {
         wcstring input = std::to_wstring(i);
         do_test(!seqs.find_prompt_layout(input));
-        seqs.add_prompt_layout(input, {i});
+        seqs.add_prompt_layout(input, {i, 0, 0});
         do_test(seqs.find_prompt_layout(input)->line_count == i);
     }
 
@@ -5125,7 +5129,7 @@ void test_layout_cache() {
             do_test(seqs.find_prompt_layout(std::to_wstring(i))->line_count == i);
     }
 
-    seqs.add_prompt_layout(L"whatever", {100});
+    seqs.add_prompt_layout(L"whatever", {100, 0, 0});
     do_test(!seqs.find_prompt_layout(std::to_wstring(expected_evictee)));
     do_test(seqs.find_prompt_layout(L"whatever")->line_count == 100);
 }

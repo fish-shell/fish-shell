@@ -150,6 +150,7 @@ namespace {
 /// Test if the given string contains error. Since this is the error detection for general purpose,
 /// there are no invalid strings, so this function always returns false.
 parser_test_error_bits_t default_test(parser_t &parser, const wcstring &b) {
+    UNUSED(parser);
     UNUSED(b);
     return 0;
 }

@@ -184,6 +184,7 @@ bool parse_execution_context_t::should_cancel_execution(const block_t *block) co
 
 parse_execution_context_t::execution_cancellation_reason_t
 parse_execution_context_t::cancellation_reason(const block_t *block) const {
+    UNUSED(block);
     if (shell_is_exiting()) {
         return execution_cancellation_exit;
     }

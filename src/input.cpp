@@ -63,7 +63,7 @@ struct terminfo_mapping_t {
     const char *seq;      // character sequence generated on keypress
 };
 
-static constexpr size_t input_function_count = R_END_INPUT_FUNCTIONS - R_BEGIN_INPUT_FUNCTIONS;
+static constexpr size_t input_function_count = R_END_INPUT_FUNCTIONS;
 
 /// Input function metadata. This list should be kept in sync with the key code list in
 /// input_common.h.
@@ -140,9 +140,8 @@ static_assert(sizeof(input_function_metadata) / sizeof(input_function_metadata[0
               "input_function_metadata?");
 
 wcstring describe_char(wint_t c) {
-    if (c >= R_BEGIN_INPUT_FUNCTIONS && c < R_END_INPUT_FUNCTIONS) {
-        size_t idx = c - R_BEGIN_INPUT_FUNCTIONS;
-        return format_string(L"%02x (%ls)", c, input_function_metadata[idx].name);
+    if (c < R_END_INPUT_FUNCTIONS) {
+        return format_string(L"%02x (%ls)", c, input_function_metadata[c].name);
     }
     return format_string(L"%02x", c);
 }

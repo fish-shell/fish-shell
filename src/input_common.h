@@ -67,12 +67,12 @@ enum class readline_cmd_t {
     expand_abbr,
     cancel,
     repeat_jump,
-    reverse_repeat_jump,
+    // NOTE: This one has to be last.
+    reverse_repeat_jump
 };
 
 // The range of key codes for inputrc-style keyboard functions.
 enum {
-    R_BEGIN_INPUT_FUNCTIONS = static_cast<int>(readline_cmd_t::beginning_of_line),
     R_END_INPUT_FUNCTIONS = static_cast<int>(readline_cmd_t::reverse_repeat_jump) + 1
 };
 

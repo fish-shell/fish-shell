@@ -802,6 +802,8 @@ function __fish_git_prompt_repaint $varargs --description "Event handler, repain
             for name in cleanstate dirtystate invalidstate stagedstate stashstate stateseparator untrackedfiles upstream_ahead upstream_behind
                 set -e ___fish_git_prompt_char_$name
             end
+            # Clear init so we reset the chars next time.
+            set -e ___fish_git_prompt_init
         end
 
         commandline -f repaint 2>/dev/null

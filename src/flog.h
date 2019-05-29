@@ -62,6 +62,8 @@ class category_list_t {
     category_t proc_internal_proc{L"proc-internal-proc", L"Internal (non-forked) process events"};
 
     category_t env_locale{L"env-locale", L"Changes to locale variables"};
+
+    category_t topic_monitor{L"topic-monitor", L"Internal details of the topic monitor"};
 };
 
 /// The class responsible for logging.

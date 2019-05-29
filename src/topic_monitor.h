@@ -109,28 +109,7 @@ class topic_monitor_t {
     void await_metagen(generation_t gen);
 
     /// Return the current generation list, opportunistically applying any pending updates.
-    generation_list_t updated_gens() {
-        auto current_gens = current_gen_.acquire();
-
-        // Atomically acquire the pending updates, swapping in 0.
-        // If there are no pending updates (likely), just return.
-        // Otherwise CAS in 0 and update our topics.
-        const auto relaxed = std::memory_order_relaxed;
-        topic_set_raw_t raw;
-        bool cas_success;
-        do {
-            raw = pending_updates_.load(relaxed);
-            if (raw == 0) return *current_gens;
-            cas_success = pending_updates_.compare_exchange_weak(raw, 0, relaxed, relaxed);
-        } while (!cas_success);
-
-        // Update the current generation with our topics and return it.
-        auto topics = topic_set_t::from_raw(raw);
-        for (topic_t topic : topic_iter_t{}) {
-            current_gens->at(topic) += topics.get(topic) ? 1 : 0;
-        }
-        return *current_gens;
-    }
+    generation_list_t updated_gens();
 
     /// \return the metagen for the current topic generation list.
     inline generation_t current_metagen() { return metagen_for(updated_gens()); }

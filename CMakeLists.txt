@@ -34,7 +34,8 @@ endif()
 # - implicit fallthrough because that does not recognize some cases where it's desired (and I *really* want this one!)
 # - comment because we use a bunch of those, and they're not really all that harmful.
 # - address, because that occurs for our mkostemp check (weak-linking requires us to compare `&mkostemp == nullptr`).
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-implicit-fallthrough -Wno-comment -Wno-address")
+# - strict-aliasing, because on old GCCs (*Travis*) those are triggered by maybe.h, so you get it every time it is included.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-implicit-fallthrough -Wno-comment -Wno-address -Wno-strict-aliasing")
 
 # Disable exception handling.
 ADD_COMPILE_OPTIONS(-fno-exceptions)

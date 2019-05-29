@@ -72,7 +72,6 @@ typedef struct te_expr {
     te_expr *parameters[];
 } te_expr;
 
-// TODO: Rename since variables have been removed.
 typedef struct te_builtin {
     const char *name;
     const void *address;
@@ -185,7 +184,7 @@ static const te_builtin functions[] = {
     {"log10", (const void *)(te_fun1)log10, TE_FUNCTION1},
     {"ncr", (const void *)(te_fun2)ncr, TE_FUNCTION2},
     {"npr", (const void *)(te_fun2)npr, TE_FUNCTION2},
-    {"pi", (const void *)(te_fun1)pi, TE_FUNCTION0},
+    {"pi", (const void *)(te_fun0)pi, TE_FUNCTION0},
     {"pow", (const void *)(te_fun2)pow, TE_FUNCTION2},
     {"round", (const void *)(te_fun1)round, TE_FUNCTION1},
     {"sin", (const void *)(te_fun1)sin, TE_FUNCTION1},

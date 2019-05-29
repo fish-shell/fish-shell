@@ -286,9 +286,7 @@ int make_fd_blocking(int fd) {
 
 int fd_check_is_remote(int fd) {
 #if defined(__linux__)
-    struct statfs buf {
-        0
-    };
+    struct statfs buf {};
     if (fstatfs(fd, &buf) < 0) {
         return -1;
     }

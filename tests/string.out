@@ -275,6 +275,13 @@ dXf
 jkX
 
 ####################
+# string match -r with empty capture groups
+=r
+
+=
+r
+
+####################
 # string match -r "[" "a[sd"
 
 ####################

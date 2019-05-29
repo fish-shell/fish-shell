@@ -177,6 +177,9 @@
 # string replace --regex -f "\d" X 1bc axc 2 d3f jk4 xyz
 
 ####################
+# string match -r with empty capture groups
+
+####################
 # string match -r "[" "a[sd"
 string match: Regular expression compile error: missing terminating ] for character class
 string match: [

@@ -203,6 +203,10 @@ or echo Unexpected exit status at line (status --current-line-number)
 string replace --regex -f "Z" X 1bc axc 2 d3f jk4 xyz
 and echo Unexpected exit status at line (status --current-line-number)
 
+# From https://github.com/fish-shell/fish-shell/issues/5201
+logmsg 'string match -r with empty capture groups'
+string match -r '^([ugoa]*)([=+-]?)([rwx]*)$' '=r'
+
 # test some failure cases
 logmsg 'string match -r "[" "a[sd"'
 string match -r "[" "a[sd"; and echo "unexpected exit 0"

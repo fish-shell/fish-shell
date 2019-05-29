@@ -70,7 +70,7 @@ When ``read`` reaches the end-of-file (EOF) instead of the terminator, the exit 
 Otherwise, it is set to 0.
 
 In order to protect the shell from consuming too many system resources, ``read`` will only consume a
-maximum of 10 MiB (1048576 bytes); if the terminator is not reached before this limit then VARIABLE
+maximum of 100 MiB (104857600 bytes); if the terminator is not reached before this limit then VARIABLE
 is set to empty and the exit status is set to 122. This limit can be altered with the
 ``fish_read_limit`` variable. If set to 0 (zero), the limit is removed.
 

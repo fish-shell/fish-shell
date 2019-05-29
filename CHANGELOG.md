@@ -32,6 +32,7 @@
 - `argparse` learned a new `--ignore-unknown` flag to keep unrecognized options, allowing multiple argparse passes to parse options (#5367).
 - `fish_indent` now handles semicolons better, including leaving them in place for `; and` and `; or` instead of breaking the line.
 - `test` (aka `[`) now prints a stacktrace on error, making the offending call easier to find (#5771).
+- The default read limit has been increased to 100MiB (#5267).
 
 ### Interactive improvements
 - Major improvements in performance and functionality to the 'sorin' sample prompt (#5411).

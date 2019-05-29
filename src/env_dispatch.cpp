@@ -531,6 +531,6 @@ bool term_supports_setting_title() { return can_set_term_title; }
 /// Miscellaneous variables.
 bool g_use_posix_spawn = false;
 
-// Limit `read` to 10 MiB (bytes not wide chars) by default. This can be overridden by the
+// Limit `read` to 100 MiB (bytes not wide chars) by default. This can be overridden by the
 // fish_read_limit variable.
-size_t read_byte_limit = 10 * 1024 * 1024;
+size_t read_byte_limit = 100 * 1024 * 1024;

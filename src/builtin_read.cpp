@@ -63,7 +63,6 @@ static const struct woption long_options[] = {{L"array", no_argument, NULL, 'a'}
                                               {L"help", no_argument, NULL, 'h'},
                                               {L"line", no_argument, NULL, 'L'},
                                               {L"local", no_argument, NULL, 'l'},
-                                              {L"mode-name", required_argument, NULL, 'm'},
                                               {L"nchars", required_argument, NULL, 'n'},
                                               {L"null", no_argument, NULL, 'z'},
                                               {L"prompt", required_argument, NULL, 'p'},
@@ -115,12 +114,6 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
             }
             case L'l': {
                 opts.place |= ENV_LOCAL;
-                break;
-            }
-            case L'm': {
-                streams.err.append_format(_(L"%ls: flags '--mode-name' / '-m' are now ignored. "
-                                            L"Set fish_history instead.\n"),
-                                          cmd);
                 break;
             }
             case L'n': {

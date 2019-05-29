@@ -103,25 +103,23 @@ function history --description "display or manipulate interactive command histor
 
         case delete # interactively delete history
             # TODO: Fix this to deal with history entries that have multiple lines.
+            set -l searchterm $argv
             if not set -q argv[1]
-                printf (_ "You must specify at least one search term when deleting entries\n") >&2
-                return 1
+                read -P"Search term: " searchterm
             end
 
             test -z "$search_mode"
             and set search_mode "--contains"
 
             if test $search_mode = "--exact"
-                builtin history delete $search_mode $_flag_case_sensitive $argv
+                builtin history delete $search_mode $_flag_case_sensitive $searchterm
                 return
             end
 
             # TODO: Fix this so that requesting history entries with a timestamp works:
             #   set -l found_items (builtin history search $search_mode $show_time -- $argv)
             set -l found_items
-            builtin history search $search_mode $_flag_case_sensitive --null -- $argv | while read -lz x
-                set found_items $found_items $x
-            end
+            set found_items (builtin history search $search_mode $_flag_case_sensitive --null -- $searchterm | string split0)
             if set -q found_items[1]
                 set -l found_items_count (count $found_items)
                 for i in (seq $found_items_count)

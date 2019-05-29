@@ -626,7 +626,7 @@ bool combining_expression::evaluate(wcstring_list_t &errors) {
     }
 
     errors.push_back(format_string(L"Unknown token type in %s", __func__));
-    return STATUS_INVALID_ARGS;
+    return false;
 }
 
 bool parenthetical_expression::evaluate(wcstring_list_t &errors) {

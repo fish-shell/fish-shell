@@ -686,7 +686,7 @@ void proc_update_jiffies(parser_t &parser) {
 // restoring a previously-stopped job, in which case we need to restore terminal attributes.
 bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
     if (j->pgid == 0) {
-        FLOG(proc_termowner, "terminal_give_to_job() returning early due to no process group");
+        FLOG(proc_termowner, L"terminal_give_to_job() returning early due to no process group");
         return true;
     }
 
@@ -717,7 +717,7 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
         // guarantee the process isn't going to exit while we wait (which would cause us to possibly
         // block indefinitely).
         while (tcsetpgrp(STDIN_FILENO, j->pgid) != 0) {
-            FLOGF(proc_termowner, "tcsetpgrp failed: %d", errno);
+            FLOGF(proc_termowner, L"tcsetpgrp failed: %d", errno);
 
             bool pgroup_terminated = false;
             // No need to test for EINTR as we are blocking signals

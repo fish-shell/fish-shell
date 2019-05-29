@@ -636,7 +636,7 @@ parse_execution_result_t parse_execution_context_t::report_errors(
     const parse_error_list_t &error_list) const {
     if (!parser->cancellation_requested) {
         if (error_list.empty()) {
-            FLOG(error, "Error reported but no error text found.");
+            FLOG(error, L"Error reported but no error text found.");
         }
 
         // Get a backtrace.

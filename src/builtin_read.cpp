@@ -202,10 +202,8 @@ static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool s
                             const wchar_t *commandline) {
     int exit_res = STATUS_CMD_OK;
 
-    const auto &vars = parser.vars();
-    wcstring read_history_ID = history_session_id(vars);
-    if (!read_history_ID.empty()) read_history_ID += L"_read";
-    reader_push(parser, read_history_ID);
+    // Don't keep history
+    reader_push(parser, L"");
 
     reader_set_left_prompt(prompt);
     reader_set_right_prompt(right_prompt);

@@ -357,6 +357,8 @@ bool make_pthread(pthread_t *result, void *(*func)(void *), void *param) {
 using void_func_t = std::function<void(void)>;
 
 static void *func_invoker(void *param) {
+    // Acquire a thread id for this thread.
+    (void)thread_id();
     void_func_t *vf = static_cast<void_func_t *>(param);
     (*vf)();
     delete vf;
@@ -372,4 +374,16 @@ bool make_pthread(pthread_t *result, void_func_t &&func) {
     // Thread spawning failed, clean up our heap allocation.
     delete vf;
     return false;
+}
+
+static uint64_t next_thread_id() {
+    // Note 0 is an invalid thread id.
+    static owning_lock<uint64_t> s_last_thread_id{};
+    auto tid = s_last_thread_id.acquire();
+    return ++*tid;
+}
+
+uint64_t thread_id() {
+    static thread_local uint64_t tl_tid = next_thread_id();
+    return tl_tid;
 }

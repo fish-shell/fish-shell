@@ -82,4 +82,8 @@ void iothread_perform_on_main(std::function<void(void)> &&func);
 bool make_pthread(pthread_t *result, void *(*func)(void *), void *param);
 bool make_pthread(pthread_t *result, std::function<void(void)> &&func);
 
+/// \returns a thread ID for this thread.
+/// Thread IDs are never repeated.
+uint64_t thread_id();
+
 #endif

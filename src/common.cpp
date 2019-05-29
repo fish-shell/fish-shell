@@ -55,6 +55,7 @@
 #include "flog.h"
 #include "future_feature_flags.h"
 #include "global_safety.h"
+#include "iothread.h"
 #include "proc.h"
 #include "signal.h"
 #include "wildcard.h"
@@ -64,8 +65,6 @@ constexpr wint_t NOT_A_WCHAR = static_cast<wint_t>(WEOF);
 
 struct termios shell_modes;
 
-/// This allows us to determine if we're running on the main thread
-static std::atomic<size_t> thread_id{0};
 /// This allows us to notice when we've forked.
 static relaxed_atomic_bool_t is_forked_proc{false};
 /// This allows us to bypass the main thread checks
@@ -2279,10 +2278,10 @@ extern "C" {
 }
 
 void set_main_thread() {
-    // Just call is_main_thread() once to force increment of thread_id.
-    bool x = is_main_thread();
-    assert(x && "set_main_thread should be main thread");
-    (void)x;
+    // Just call thread_id() once to force increment of thread_id.
+    uint64_t tid = thread_id();
+    assert(tid == 1 && "main thread should have thread ID 1");
+    (void)tid;
 }
 
 void configure_thread_assertions_for_testing() { thread_asserts_cfg_for_testing = true; }
@@ -2310,10 +2309,7 @@ void restore_term_foreground_process_group() {
     }
 }
 
-bool is_main_thread() {
-    static thread_local int local_thread_id = thread_id++;
-    return local_thread_id == 0;
-}
+bool is_main_thread() { return thread_id() == 1; }
 
 void assert_is_main_thread(const char *who) {
     if (!is_main_thread() && !thread_asserts_cfg_for_testing) {

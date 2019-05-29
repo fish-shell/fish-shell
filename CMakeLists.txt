@@ -34,7 +34,7 @@ endif()
 # - implicit fallthrough because that does not recognize some cases where it's desired (and I *really* want this one!)
 # - comment because we use a bunch of those, and they're not really all that harmful.
 # - address, because that occurs for our mkostemp check (weak-linking requires us to compare `&mkostemp == nullptr`).
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wimplicit-fallthrough=0 -Wno-comment -Wno-address")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-implicit-fallthrough -Wno-comment -Wno-address")
 
 # Disable exception handling.
 ADD_COMPILE_OPTIONS(-fno-exceptions)

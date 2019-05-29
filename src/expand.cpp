@@ -214,7 +214,7 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
             // If only the beginning is negative, always go reverse.
             // If only the end, always go forward.
             // Prevents `[x..-1]` from going reverse if less than x elements are there.
-            if (tmp1 > -1 != tmp > -1) {
+            if ((tmp1 > -1) != (tmp > -1)) {
                 direction = tmp1 > -1 ? -1 : 1;
             } else {
                 // Clamp to array size when not forcing direction

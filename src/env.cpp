@@ -658,7 +658,7 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key) cons
         // note umask() is an absurd API: you call it to set the value and it returns the old
         // value. Thus we have to call it twice, to reset the value. The env_lock protects
         // against races. Guess what the umask is; if we guess right we don't need to reset it.
-        int guess = 022;
+        mode_t guess = 022;
         mode_t res = umask(guess);
         if (res != guess) umask(res);
         return env_var_t(L"umask", format_string(L"0%0.3o", res));

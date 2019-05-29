@@ -78,7 +78,7 @@ void activate_flog_categories_by_pattern(const wcstring &inwc) {
     wcstring wc = inwc;
     std::replace(wc.begin(), wc.end(), L'_', L'-');
     for (const wcstring &s : split_string(wc, L',')) {
-        if (string_prefixes_string(s, L"-")) {
+        if (string_prefixes_string(L"-", s)) {
             apply_one_wildcard(s.substr(1), false);
         } else {
             apply_one_wildcard(s, true);

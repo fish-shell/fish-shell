@@ -1382,7 +1382,7 @@ parse_execution_result_t parse_execution_context_t::eval_node(tnode_t<g::stateme
     } else if (auto switchstat = statement.try_get_child<g::switch_statement, 0>()) {
         status = this->run_switch_statement(switchstat);
     } else {
-        FLOGF(error, "Unexpected node %ls found in %s", statement.node()->describe().c_str(),
+        FLOGF(error, L"Unexpected node %ls found in %s", statement.node()->describe().c_str(),
              __FUNCTION__);
         abort();
     }

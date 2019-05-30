@@ -214,7 +214,7 @@ void internal_proc_t::mark_exited(proc_status_t status) {
     status_.store(status, std::memory_order_relaxed);
     exited_.store(true, std::memory_order_release);
     topic_monitor_t::principal().post(topic_t::internal_exit);
-    FLOG(proc_internal_proc, "Internal proc", internal_proc_id_, "exited with status",
+    FLOG(proc_internal_proc, L"Internal proc", internal_proc_id_, L"exited with status",
          status.status_value());
 }
 

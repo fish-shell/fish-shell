@@ -378,7 +378,7 @@ const production_element_t *parse_productions::production_for_token(parse_token_
                                                                     const parse_token_t &input2,
                                                                     parse_node_tag_t *out_tag) {
     // this is **extremely** chatty
-    debug(6, "Resolving production for %ls with input token <%ls>",
+    debug(6, L"Resolving production for %ls with input token <%ls>",
           token_type_description(node_type), input1.describe().c_str());
 
     // Fetch the function to resolve the list of productions.
@@ -403,7 +403,7 @@ const production_element_t *parse_productions::production_for_token(parse_token_
         case parse_token_type_oror:
         case parse_token_type_end:
         case parse_token_type_terminate: {
-            FLOGF(error, "Terminal token type %ls passed to %s", token_type_description(node_type),
+            FLOGF(error, L"Terminal token type %ls passed to %s", token_type_description(node_type),
                  __FUNCTION__);
             PARSER_DIE();
             break;
@@ -411,13 +411,13 @@ const production_element_t *parse_productions::production_for_token(parse_token_
         case parse_special_type_parse_error:
         case parse_special_type_tokenizer_error:
         case parse_special_type_comment: {
-            FLOGF(error, "Special type %ls passed to %s\n", token_type_description(node_type),
+            FLOGF(error, L"Special type %ls passed to %s\n", token_type_description(node_type),
                  __FUNCTION__);
             PARSER_DIE();
             break;
         }
         case token_type_invalid: {
-            FLOGF(error, "token_type_invalid passed to %s", __FUNCTION__);
+            FLOGF(error, L"token_type_invalid passed to %s", __FUNCTION__);
             PARSER_DIE();
             break;
         }
@@ -426,7 +426,7 @@ const production_element_t *parse_productions::production_for_token(parse_token_
 
     const production_element_t *result = resolver(input1, input2, out_tag);
     if (result == NULL) {
-        debug(5, "Node type '%ls' has no production for input '%ls' (in %s)",
+        debug(5, L"Node type '%ls' has no production for input '%ls' (in %s)",
               token_type_description(node_type), input1.describe().c_str(), __FUNCTION__);
     }
 

@@ -369,7 +369,7 @@ static bool run_internal_process(process_t *p, std::string outdata, std::string 
     p->internal_proc_ = std::make_shared<internal_proc_t>();
     f->internal_proc = p->internal_proc_;
 
-    FLOGF(proc_internal_proc, "Created internal proc %llu to write output for proc '%ls'",
+    FLOGF(proc_internal_proc, L"Created internal proc %llu to write output for proc '%ls'",
           p->internal_proc_->get_id(), p->argv0());
 
     // Resolve the IO chain.

@@ -2124,7 +2124,7 @@ int create_directory(const wcstring &d) {
 
 [[gnu::noinline]] void bugreport() {
     FLOG(error, _(L"This is a bug. Break on 'bugreport' to debug."));
-    FLOG(error, _(L"If you can reproduce it, please report: "), PACKAGE_BUGREPORT, '.');
+    FLOG(error, _(L"If you can reproduce it, please report: "), PACKAGE_BUGREPORT, L'.');
 }
 
 wcstring format_size(long long sz) {
@@ -2313,24 +2313,24 @@ bool is_main_thread() { return thread_id() == 1; }
 
 void assert_is_main_thread(const char *who) {
     if (!is_main_thread() && !thread_asserts_cfg_for_testing) {
-        FLOGF(error, "%s called off of main thread.", who);
-        FLOGF(error, "Break on debug_thread_error to debug.");
+        FLOGF(error, L"%s called off of main thread.", who);
+        FLOGF(error, L"Break on debug_thread_error to debug.");
         debug_thread_error();
     }
 }
 
 void assert_is_not_forked_child(const char *who) {
     if (is_forked_child()) {
-        FLOGF(error, "%s called in a forked child.", who);
-        FLOGF(error, "Break on debug_thread_error to debug.");
+        FLOGF(error, L"%s called in a forked child.", who);
+        FLOG(error, L"Break on debug_thread_error to debug.");
         debug_thread_error();
     }
 }
 
 void assert_is_background_thread(const char *who) {
     if (is_main_thread() && !thread_asserts_cfg_for_testing) {
-        FLOGF(error, "%s called on the main thread (may block!).", who);
-        FLOGF(error, "Break on debug_thread_error to debug.");
+        FLOGF(error, L"%s called on the main thread (may block!).", who);
+        FLOG(error, L"Break on debug_thread_error to debug.");
         debug_thread_error();
     }
 }
@@ -2341,8 +2341,8 @@ void assert_is_locked(void *vmutex, const char *who, const char *caller) {
     // Note that std::mutex.try_lock() is allowed to return false when the mutex isn't
     // actually locked; fortunately we are checking the opposite so we're safe.
     if (mutex->try_lock()) {
-        FLOGF(error, "%s is not locked when it should be in '%s'", who, caller);
-        FLOGF(error, "Break on debug_thread_error to debug.");
+        FLOGF(error, L"%s is not locked when it should be in '%s'", who, caller);
+        FLOG(error, L"Break on debug_thread_error to debug.");
         debug_thread_error();
         mutex->unlock();
     }

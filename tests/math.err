@@ -34,3 +34,9 @@ math: Error: Result is infinite
 '2^999999'
 math: Error: Result is infinite
 '1 / 0'
+
+####################
+# Validate x as multiplier
+math: Error: Unknown variable
+'2 x4'
+    ^

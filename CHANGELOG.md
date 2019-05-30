@@ -28,6 +28,7 @@
 - `count` now also counts lines fed on stdin (#5744).
 - `printf` prints what it can when input hasn't been fully converted to a number, but still prints an error (#5532).
 - `complete -C foo` now works instead of erroring out and requiring `complete -Cfoo`.
+- `complete` gained a new `--force-files` (short `-F`) switch to reenable file completions. This allows `sudo -E` and `pacman -Qo` to complete correctly (#5646).
 - `argparse` now defaults to showing the current function name (instead of `argparse`) in its errors, making `--name` often superfluous (#5835).
 - `argparse` learned a new `--ignore-unknown` flag to keep unrecognized options, allowing multiple argparse passes to parse options (#5367).
 - `fish_indent` now handles semicolons better, including leaving them in place for `; and` and `; or` instead of breaking the line.

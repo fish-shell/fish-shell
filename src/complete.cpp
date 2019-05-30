@@ -886,7 +886,7 @@ static void complete_load(const wcstring &name) {
 /// Insert results into comp_out. Return true to perform file completion, false to disable it.
 bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
                                  const wcstring &str, bool use_switches) {
-    bool use_common = 1, use_files = 1;
+    bool use_common = true, use_files = true, has_force = false;
 
     wcstring cmd, path;
     parse_cmd_string(cmd_orig, &path, &cmd, vars);
@@ -955,6 +955,7 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
                     if (arg != NULL && this->condition_test(o.condition)) {
                         if (o.result_mode.requires_param) use_common = false;
                         if (o.result_mode.no_files) use_files = false;
+                        if (o.result_mode.force_files) has_force = true;
                         complete_from_args(arg, o.comp, o.localized_desc(), o.flags);
                     }
                 }
@@ -971,6 +972,7 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
                         old_style_match = true;
                         if (o.result_mode.requires_param) use_common = false;
                         if (o.result_mode.no_files) use_files = false;
+                        if (o.result_mode.force_files) has_force = true;
                         complete_from_args(str, o.comp, o.localized_desc(), o.flags);
                     }
                 }
@@ -989,6 +991,7 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
                         if (param_match(&o, popt.c_str()) && this->condition_test(o.condition)) {
                             if (o.result_mode.requires_param) use_common = false;
                             if (o.result_mode.no_files) use_files = false;
+                            if (o.result_mode.force_files) has_force = true;
                             complete_from_args(str, o.comp, o.localized_desc(), o.flags);
                         }
                     }
@@ -1005,7 +1008,7 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
             // If this entry is for the base command, check if any of the arguments match.
             if (!this->condition_test(o.condition)) continue;
             if (o.option.empty()) {
-                use_files = use_files && ((o.result_mode.no_files) == 0);
+                use_files = use_files && (!(o.result_mode.no_files));
                 complete_from_args(str, o.comp, o.localized_desc(), o.flags);
             }
 
@@ -1067,7 +1070,7 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
         }
     }
 
-    return use_files;
+    return has_force || use_files;
 }
 
 /// Perform generic (not command-specific) expansions on the specified string.
@@ -1628,6 +1631,8 @@ wcstring complete_print() {
                 modestr = L" --exclusive";
             } else if (o.result_mode.no_files) {
                 modestr = L" --no-files";
+            } else if (o.result_mode.force_files) {
+                modestr = L" --force-files";
             } else if (o.result_mode.requires_param) {
                 modestr = L" --require-parameter";
             }

@@ -27,3 +27,8 @@ complete -C'myalias2 call3 '
 function t --wraps t; echo t; end
 complete -c t -fa '(t)'
 complete -C't '
+
+# Ensure file completion happens even though it was disabled above.
+complete -c t -l fileoption -rF
+# Only match this file because I don't want to touch this any time we add a test file.
+complete -C't --fileoption ' | string match complete.in

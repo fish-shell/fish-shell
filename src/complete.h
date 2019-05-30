@@ -17,6 +17,7 @@
 struct completion_mode_t {
     /// If set, skip file completions.
     bool no_files{false};
+    bool force_files{false};
 
     /// If set, require a parameter after completion.
     bool requires_param{false};

@@ -126,9 +126,10 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wcstring_list_t wrap_targets;
     bool preserve_order = false;
 
-    static const wchar_t *const short_options = L":a:c:p:s:l:o:d:frxeuAn:C::w:hk";
+    static const wchar_t *const short_options = L":a:c:p:s:l:o:d:fFrxeuAn:C::w:hk";
     static const struct woption long_options[] = {{L"exclusive", no_argument, NULL, 'x'},
                                                   {L"no-files", no_argument, NULL, 'f'},
+                                                  {L"force-files", no_argument, NULL, 'F'},
                                                   {L"require-parameter", no_argument, NULL, 'r'},
                                                   {L"path", required_argument, NULL, 'p'},
                                                   {L"command", required_argument, NULL, 'c'},
@@ -159,6 +160,9 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             case 'f': {
                 result_mode.no_files = true;
                 break;
+            }
+            case 'F': {
+                result_mode.force_files = true;
             }
             case 'r': {
                 result_mode.requires_param = true;
@@ -257,6 +261,11 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 break;
             }
         }
+    }
+
+    if (result_mode.no_files && result_mode.force_files) {
+        streams.err.append_format(BUILTIN_ERR_COMBO2, L"complete", L"'--no-files' and '--force-files'");
+        return STATUS_INVALID_ARGS;
     }
 
     if (w.woptind != argc) {

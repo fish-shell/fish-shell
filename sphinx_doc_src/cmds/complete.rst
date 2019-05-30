@@ -16,6 +16,7 @@ Synopsis
           [( -a | --arguments ) OPTION_ARGUMENTS]
           [( -k | --keep-order )]
           [( -f | --no-files )]
+          [( -F | --force-files )]
           [( -r | --require-parameter )]
           [( -x | --exclusive )]
           [( -w | --wraps ) WRAPPED_COMMAND]...
@@ -56,9 +57,11 @@ the fish manual.
 
 - ``-k`` or ``--keep-order`` preserves the order of the ``OPTION_ARGUMENTS`` specified via ``-a`` or ``--arguments`` instead of sorting alphabetically. Multiple ``complete`` calls with ``-k`` result in arguments of the later ones displayed first.
 
-- ``-f`` or ``--no-files`` specifies that the options specified by this completion may not be followed by a filename.
+- ``-f`` or ``--no-files`` says that the options specified by this completion may not be followed by a filename.
 
-- ``-r`` or ``--require-parameter`` specifies that the options specified by this completion always must have an option argument, i.e. may not be followed by another option.
+- ``-F`` or ``--force-files`` says that the options specified by this completion may be followed by a filename, even if another applicable ``complete`` specified ``--no-files``.
+
+- ``-r`` or ``--require-parameter`` says that the options specified by this completion must have an option argument, i.e. may not be followed by another option.
 
 - ``-x`` or ``--exclusive`` implies both ``-r`` and ``-f``.
 

@@ -13,3 +13,4 @@ arg2 call2
 complete_test_alpha1 arg1 call3 
 complete_test_alpha1 arg2 call3 
 t
+complete.in

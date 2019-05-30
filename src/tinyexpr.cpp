@@ -233,7 +233,10 @@ void next_token(state *s) {
             s->type = TOK_NUMBER;
         } else {
             /* Look for a variable or builtin function call. */
-            if (s->next[0] >= 'a' && s->next[0] <= 'z') {
+            // But not when it's an "x" followed by whitespace
+            // - that's the alternative multiplication operator.
+            if (s->next[0] >= 'a' && s->next[0] <= 'z' &&
+                !(s->next[0] == 'x' && isspace(s->next[1]))) {
                 const char *start;
                 start = s->next;
                 while ((s->next[0] >= 'a' && s->next[0] <= 'z') ||
@@ -269,7 +272,9 @@ void next_token(state *s) {
                         s->type = TOK_INFIX;
                         s->function = (const void *)(te_fun2)sub;
                         break;
+                    case 'x':
                     case '*':
+                        // We've already checked for whitespace above.
                         s->type = TOK_INFIX;
                         s->function = (const void *)(te_fun2)mul;
                         break;

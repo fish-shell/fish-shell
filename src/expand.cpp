@@ -224,7 +224,7 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
             }
             // debug( 0, L"Push range idx %d %d", i1, i2 );
             for (long jjj = i1; jjj * direction <= i2 * direction; jjj += direction) {
-                // FLOG(error, L"Expand range [subst]: %i\n", jjj);
+                // FLOGF(error, L"Expand range [subst]: %i\n", jjj);
                 idx.push_back(jjj);
             }
             continue;

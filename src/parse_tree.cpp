@@ -257,7 +257,7 @@ static inline parse_token_type_t parse_token_type_from_tokenizer_token(
         case TOK_COMMENT:
             return parse_special_type_comment;
     }
-    FLOG(error, "Bad token type %d passed to %s", (int)tokenizer_token_type, __FUNCTION__);
+    FLOGF(error, "Bad token type %d passed to %s", (int)tokenizer_token_type, __FUNCTION__);
     DIE("bad token type");
     return token_type_invalid;
 }

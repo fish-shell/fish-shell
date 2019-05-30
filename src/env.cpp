@@ -140,7 +140,7 @@ void fix_colon_delimited_var(const wcstring &var_name, env_stack_t &vars) {
         std::replace(newstrs.begin(), newstrs.end(), empty, wcstring(L"."));
         int retval = vars.set(var_name, ENV_DEFAULT | ENV_USER, std::move(newstrs));
         if (retval != ENV_OK) {
-            FLOG(error, L"fix_colon_delimited_var failed unexpectedly with retval %d", retval);
+            FLOGF(error, L"fix_colon_delimited_var failed unexpectedly with retval %d", retval);
         }
     }
 }
@@ -1353,7 +1353,7 @@ wcstring env_get_runtime_path() {
 
         if (!uname || check_runtime_path(tmpdir.c_str()) != 0) {
             FLOG(error, L"Runtime path not available.");
-            FLOG(error, L"Try deleting the directory %s and restarting fish.", tmpdir.c_str());
+            FLOGF(error, L"Try deleting the directory %s and restarting fish.", tmpdir.c_str());
             return result;
         }
 

@@ -270,15 +270,15 @@ static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &
 
     FLOG(error, custom_error_msg.c_str());
     if (path.empty()) {
-        FLOG(error, _(L"Unable to locate the %ls directory."), which_dir.c_str());
-        FLOG(error, _(L"Please set the %ls or HOME environment variable before starting fish."),
+        FLOGF(error, _(L"Unable to locate the %ls directory."), which_dir.c_str());
+        FLOGF(error, _(L"Please set the %ls or HOME environment variable before starting fish."),
              xdg_var.c_str());
     } else {
         const wchar_t *env_var = using_xdg ? xdg_var.c_str() : L"HOME";
-        FLOG(error, _(L"Unable to locate %ls directory derived from $%ls: '%ls'."),
+        FLOGF(error, _(L"Unable to locate %ls directory derived from $%ls: '%ls'."),
              which_dir.c_str(), env_var, path.c_str());
-        FLOG(error, _(L"The error was '%s'."), std::strerror(saved_errno));
-        FLOG(error, _(L"Please set $%ls to a directory where you have write access."), env_var);
+        FLOGF(error, _(L"The error was '%s'."), std::strerror(saved_errno));
+        FLOGF(error, _(L"Please set $%ls to a directory where you have write access."), env_var);
     }
     ignore_result(write(STDERR_FILENO, "\n", 1));
 }

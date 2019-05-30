@@ -202,7 +202,7 @@ void iothread_service_completion() {
     } else if (wakeup_byte == IO_SERVICE_RESULT_QUEUE) {
         iothread_service_result_queue();
     } else {
-        FLOG(error, "Unknown wakeup byte %02x in %s", wakeup_byte, __FUNCTION__);
+        FLOGF(error, "Unknown wakeup byte %02x in %s", wakeup_byte, __FUNCTION__);
     }
 }
 

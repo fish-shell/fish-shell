@@ -792,7 +792,7 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
         const wcstring func_name = p->argv0();
         auto props = function_get_properties(func_name);
         if (!props) {
-            FLOG(error, _(L"Unknown function '%ls'"), p->argv0());
+            FLOGF(error, _(L"Unknown function '%ls'"), p->argv0());
             return false;
         }
 

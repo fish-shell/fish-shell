@@ -24,12 +24,12 @@ void sanity_lose() {
 void validate_pointer(const void *ptr, const wchar_t *err, int null_ok) {
     // Test if the pointer data crosses a segment boundary.
     if ((0x00000003l & (intptr_t)ptr) != 0) {
-        FLOG(error, _(L"The pointer '%ls' is invalid"), err);
+        FLOGF(error, _(L"The pointer '%ls' is invalid"), err);
         sanity_lose();
     }
 
     if ((!null_ok) && (ptr == 0)) {
-        FLOG(error, _(L"The pointer '%ls' is null"), err);
+        FLOGF(error, _(L"The pointer '%ls' is null"), err);
         sanity_lose();
     }
 }

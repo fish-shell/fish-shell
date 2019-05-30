@@ -131,7 +131,7 @@ const wcstring wgetcwd() {
         return str2wcstring(res);
     }
 
-    FLOG(error, _(L"getcwd() failed with errno %d/%s"), errno, std::strerror(errno));
+    FLOGF(error, _(L"getcwd() failed with errno %d/%s"), errno, std::strerror(errno));
     return wcstring();
 }
 

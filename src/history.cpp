@@ -1238,7 +1238,7 @@ bool history_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) const {
             const history_item_t old_item = decode_item(*local_file, offset);
 
             if (old_item.empty() || deleted_items.count(old_item.str()) > 0) {
-                // FLOG(error, L"Item is deleted : %s\n", old_item.str().c_str());
+                // FLOGF(error, L"Item is deleted : %s\n", old_item.str().c_str());
                 continue;
             }
             // Add this old item.

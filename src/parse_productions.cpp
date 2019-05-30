@@ -403,7 +403,7 @@ const production_element_t *parse_productions::production_for_token(parse_token_
         case parse_token_type_oror:
         case parse_token_type_end:
         case parse_token_type_terminate: {
-            FLOG(error, "Terminal token type %ls passed to %s", token_type_description(node_type),
+            FLOGF(error, "Terminal token type %ls passed to %s", token_type_description(node_type),
                  __FUNCTION__);
             PARSER_DIE();
             break;
@@ -411,13 +411,13 @@ const production_element_t *parse_productions::production_for_token(parse_token_
         case parse_special_type_parse_error:
         case parse_special_type_tokenizer_error:
         case parse_special_type_comment: {
-            FLOG(error, "Special type %ls passed to %s\n", token_type_description(node_type),
+            FLOGF(error, "Special type %ls passed to %s\n", token_type_description(node_type),
                  __FUNCTION__);
             PARSER_DIE();
             break;
         }
         case token_type_invalid: {
-            FLOG(error, "token_type_invalid passed to %s", __FUNCTION__);
+            FLOGF(error, "token_type_invalid passed to %s", __FUNCTION__);
             PARSER_DIE();
             break;
         }

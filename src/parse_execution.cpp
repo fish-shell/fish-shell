@@ -360,7 +360,7 @@ parse_execution_result_t parse_execution_context_t::run_block_statement(
     } else if (auto header = bheader.try_get_child<g::begin_header, 0>()) {
         ret = run_begin_statement(contents);
     } else {
-        FLOG(error, L"Unexpected block header: %ls\n", bheader.node()->describe().c_str());
+        FLOGF(error, L"Unexpected block header: %ls\n", bheader.node()->describe().c_str());
         PARSER_DIE();
     }
     return ret;
@@ -1078,7 +1078,7 @@ parse_execution_result_t parse_execution_context_t::populate_job_process(
             break;
         }
         default: {
-            FLOG(error, L"'%ls' not handled by new parser yet.",
+            FLOGF(error, L"'%ls' not handled by new parser yet.",
                  specific_statement.describe().c_str());
             PARSER_DIE();
             break;
@@ -1382,7 +1382,7 @@ parse_execution_result_t parse_execution_context_t::eval_node(tnode_t<g::stateme
     } else if (auto switchstat = statement.try_get_child<g::switch_statement, 0>()) {
         status = this->run_switch_statement(switchstat);
     } else {
-        FLOG(error, "Unexpected node %ls found in %s", statement.node()->describe().c_str(),
+        FLOGF(error, "Unexpected node %ls found in %s", statement.node()->describe().c_str(),
              __FUNCTION__);
         abort();
     }

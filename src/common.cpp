@@ -2435,10 +2435,10 @@ void redirect_tty_output() {
 /// Display a failed assertion message, dump a stack trace if possible, then die.
 [[noreturn]] void __fish_assert(const char *msg, const char *file, size_t line, int error) {
     if (error) {
-        FLOG(error, L"%s:%zu: failed assertion: %s: errno %d (%s)", file, line, msg, error,
+        FLOGF(error, L"%s:%zu: failed assertion: %s: errno %d (%s)", file, line, msg, error,
              std::strerror(error));
     } else {
-        FLOG(error, L"%s:%zu: failed assertion: %s", file, line, msg);
+        FLOGF(error, L"%s:%zu: failed assertion: %s", file, line, msg);
     }
     show_stackframe(L'E', 99, 1);
     abort();

@@ -196,11 +196,11 @@ static bool append_file_entry(env_var_t::env_var_flags_t flags, const wcstring &
 
     // Append variable name like "fish_color_cwd".
     if (!valid_var_name(key_in)) {
-        FLOG(error, L"Illegal variable name: '%ls'", key_in.c_str());
+        FLOGF(error, L"Illegal variable name: '%ls'", key_in.c_str());
         success = false;
     }
     if (success && !append_utf8(key_in, result, storage)) {
-        FLOG(error, L"Could not convert %ls to narrow character string", key_in.c_str());
+        FLOGF(error, L"Could not convert %ls to narrow character string", key_in.c_str());
         success = false;
     }
 
@@ -211,7 +211,7 @@ static bool append_file_entry(env_var_t::env_var_flags_t flags, const wcstring &
 
     // Append value.
     if (success && !append_utf8(full_escape(val_in), result, storage)) {
-        FLOG(error, L"Could not convert %ls to narrow character string", val_in.c_str());
+        FLOGF(error, L"Could not convert %ls to narrow character string", val_in.c_str());
         success = false;
     }
 
@@ -448,7 +448,7 @@ bool env_universal_t::write_to_fd(int fd, const wcstring &path) {
     std::string contents = serialize_with_vars(vars);
     if (write_loop(fd, contents.data(), contents.size()) < 0) {
         const char *error = std::strerror(errno);
-        FLOG(error, _(L"Unable to write to universal variables file '%ls': %s"), path.c_str(),
+        FLOGF(error, _(L"Unable to write to universal variables file '%ls': %s"), path.c_str(),
              error);
         success = false;
     }
@@ -464,7 +464,7 @@ bool env_universal_t::move_new_vars_file_into_place(const wcstring &src, const w
     int ret = wrename(src, dst);
     if (ret != 0) {
         const char *error = std::strerror(errno);
-        FLOG(error, _(L"Unable to rename file from '%ls' to '%ls': %s"), src.c_str(), dst.c_str(),
+        FLOGF(error, _(L"Unable to rename file from '%ls' to '%ls': %s"), src.c_str(), dst.c_str(),
              error);
     }
     return ret == 0;
@@ -527,7 +527,7 @@ bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *o
 
     if (!success) {
         const char *error = std::strerror(saved_errno);
-        FLOG(error, _(L"Unable to open temporary file '%ls': %s"), out_path->c_str(), error);
+        FLOGF(error, _(L"Unable to open temporary file '%ls': %s"), out_path->c_str(), error);
     }
     return success;
 }
@@ -589,7 +589,7 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd) {
             }
 #endif
             const char *error = std::strerror(errno);
-            FLOG(error, _(L"Unable to open universal variable file '%ls': %s"), path.c_str(),
+            FLOGF(error, _(L"Unable to open universal variable file '%ls': %s"), path.c_str(),
                  error);
             break;
         }
@@ -1061,7 +1061,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
         int fd = shm_open(path, O_RDWR | O_CREAT, 0600);
         if (fd < 0) {
             const char *error = std::strerror(errno);
-            FLOG(error, _(L"Unable to open shared memory with path '%s': %s"), path, error);
+            FLOGF(error, _(L"Unable to open shared memory with path '%s': %s"), path, error);
             errored = true;
         }
 
@@ -1071,7 +1071,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
             struct stat buf = {};
             if (fstat(fd, &buf) < 0) {
                 const char *error = std::strerror(errno);
-                FLOG(error, _(L"Unable to fstat shared memory object with path '%s': %s"), path,
+                FLOGF(error, _(L"Unable to fstat shared memory object with path '%s': %s"), path,
                      error);
                 errored = true;
             }
@@ -1082,7 +1082,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
         bool set_size = !errored && size < (off_t)sizeof(universal_notifier_shmem_t);
         if (set_size && ftruncate(fd, sizeof(universal_notifier_shmem_t)) < 0) {
             const char *error = std::strerror(errno);
-            FLOG(error, _(L"Unable to truncate shared memory object with path '%s': %s"), path,
+            FLOGF(error, _(L"Unable to truncate shared memory object with path '%s': %s"), path,
                  error);
             errored = true;
         }
@@ -1093,7 +1093,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
                               MAP_SHARED, fd, 0);
             if (addr == MAP_FAILED) {
                 const char *error = std::strerror(errno);
-                FLOG(error, _(L"Unable to memory map shared memory object with path '%s': %s"),
+                FLOGF(error, _(L"Unable to memory map shared memory object with path '%s': %s"),
                      path, error);
                 this->region = NULL;
             } else {

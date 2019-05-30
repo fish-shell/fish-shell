@@ -1499,7 +1499,7 @@ void universal_notifier_named_pipe_t::make_pipe(const wchar_t *test_path) {
     if (mkfifo_status == -1 && errno != EEXIST) {
         const char *error = std::strerror(errno);
         const wchar_t *errmsg = _(L"Unable to make a pipe for universal variables using '%ls': %s");
-        FLOG(error, errmsg, vars_path.c_str(), error);
+        FLOGF(error, errmsg, vars_path.c_str(), error);
         pipe_fd = -1;
         return;
     }
@@ -1508,7 +1508,7 @@ void universal_notifier_named_pipe_t::make_pipe(const wchar_t *test_path) {
     if (fd < 0) {
         const char *error = std::strerror(errno);
         const wchar_t *errmsg = _(L"Unable to open a pipe for universal variables using '%ls': %s");
-        FLOG(error, errmsg, vars_path.c_str(), error);
+        FLOGF(error, errmsg, vars_path.c_str(), error);
         pipe_fd = -1;
         return;
     }

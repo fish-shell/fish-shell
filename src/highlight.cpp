@@ -43,6 +43,8 @@ static const wchar_t *get_highlight_var_name(highlight_role_t role) {
     switch (role) {
         case highlight_role_t::normal:
             return L"fish_color_normal";
+        case highlight_role_t::spacer:
+            return L"fish_color_spacer";
         case highlight_role_t::error:
             return L"fish_color_error";
         case highlight_role_t::command:
@@ -104,6 +106,8 @@ static const wchar_t *get_highlight_var_name(highlight_role_t role) {
 static highlight_role_t get_fallback(highlight_role_t role) {
     switch (role) {
         case highlight_role_t::normal:
+            return highlight_role_t::normal;
+        case highlight_role_t::spacer:
             return highlight_role_t::normal;
         case highlight_role_t::error:
             return highlight_role_t::normal;

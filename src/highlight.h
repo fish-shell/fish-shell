@@ -43,6 +43,8 @@ enum class highlight_role_t : uint8_t {
     pager_selected_prefix,
     pager_selected_completion,
     pager_selected_description,
+
+    spacer,
 };
 
 /// Simply value type describing how a character should be highlighted..

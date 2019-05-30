@@ -391,7 +391,7 @@ static void s_desired_append_char(screen_t *s, wchar_t b, highlight_spec_t c, in
         s->desired.cursor.y++;
         s->desired.cursor.x = 0;
         for (size_t i = 0; i < prompt_width + indent * INDENT_STEP; i++) {
-            s_desired_append_char(s, L' ', highlight_spec_t{}, indent, prompt_width, 1);
+            s_desired_append_char(s, L' ', highlight_spec_t(highlight_role_t::spacer), indent, prompt_width, 1);
         }
     } else if (b == L'\r') {
         line_t &current = s->desired.line(line_no);
@@ -658,7 +658,20 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         // Note that skip_remaining is a width, not a character count.
         size_t skip_remaining = start_pos;
 
-        const size_t shared_prefix = line_shared_prefix(o_line, s_line);
+        size_t shared_prefix = line_shared_prefix(o_line, s_line);
+
+        size_t o_initial_spacer = 0;
+        while (shared_prefix + o_initial_spacer < o_line.size()
+               && o_line.color_at(shared_prefix + o_initial_spacer).foreground == highlight_role_t::spacer)
+            o_initial_spacer++;
+        size_t s_initial_spacer = 0;
+        while (shared_prefix + s_initial_spacer < s_line.size()
+               && s_line.color_at(shared_prefix + s_initial_spacer).foreground == highlight_role_t::spacer)
+            s_initial_spacer++;
+        if (o_initial_spacer > s_initial_spacer
+            && shared_prefix + s_initial_spacer == s_line.size())
+            s_initial_spacer = o_initial_spacer;
+
         if (!should_clear_screen_this_line) {
             // Compute how much we should skip. At a minimum we skip over the prompt. But also skip
             // over the shared prefix of what we want to output now, and what we output before, to
@@ -696,6 +709,14 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         for (; j < o_line.size(); j++) {
             int width = fish_wcwidth_min_0(o_line.char_at(j));
             if (width > 0) break;
+        }
+
+        // FIXME handle case when o_initial_spacer > s_initial_spacer,
+        // perhaps by clearing the line or erase character (ECH)
+        if (o_initial_spacer <= s_initial_spacer
+            && current_width < shared_prefix + o_initial_spacer) {
+            current_width = j = shared_prefix + o_initial_spacer;
+            s_move(scr, j, i);
         }
 
         // Now actually output stuff.

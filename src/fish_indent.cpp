@@ -298,6 +298,7 @@ static const char *highlight_role_to_string(highlight_role_t role) {
         TEST_ROLE(pager_selected_prefix)
         TEST_ROLE(pager_selected_completion)
         TEST_ROLE(pager_selected_description)
+        TEST_ROLE(spacer);
         default:
             DIE("UNKNOWN ROLE");
     }
@@ -402,6 +403,9 @@ static const wchar_t *html_class_name_for_color(highlight_spec_t spec) {
     switch (spec.foreground) {
         case highlight_role_t::normal: {
             return P(normal);
+        }
+        case highlight_role_t::spacer: {
+            return P(spacer);
         }
         case highlight_role_t::error: {
             return P(error);

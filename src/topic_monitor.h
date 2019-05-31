@@ -11,7 +11,6 @@
 #include <condition_variable>
 #include <limits>
 #include <numeric>
-#include <queue>
 
 /** Topic monitoring support. Topics are conceptually "a thing that can happen." For example,
  delivery of a SIGINT, a child process exits, etc. It is possible to post to a topic, which means
@@ -73,46 +72,51 @@ class topic_monitor_t {
     static_assert(sizeof(topic_set_raw_t) * CHAR_BIT >= enum_count<topic_t>(),
                   "topic_set_raw is too small");
 
-    /// The current topic generation list, protected by a mutex. Note this may be opportunistically
-    /// updated at the point it is queried.
-    owning_lock<generation_list_t> current_gen_{{}};
+    // Some stuff that needs to be protected by the same lock.
+    struct data_t {
+        /// The current generation list.
+        generation_list_t current_gens{};
+
+        /// Whether there is a thread currently reading from the notifier pipe.
+        bool has_reader{false};
+    };
+    owning_lock<data_t> data_{};
+
+    /// Condition variable for broadcasting notifications.
+    /// This is associated with data_'s mutex.
+    std::condition_variable data_notifier_{};
 
     /// The set of topics which have pending increments.
     /// This is managed via atomics.
     std::atomic<topic_set_raw_t> pending_updates_{};
 
-    /// When a topic set is queried in a blocking way, the waiters are put into a queue. The waiter
-    /// with the smallest metagen is responsible for announcing the change to the rest of the
-    /// waiters. (The metagen is just the sum of the current generations.) Note that this is a
-    /// max-heap that defaults to std::less; by using std::greater it becomes a min heap. This is
-    /// protected by wait_queue_lock_.
-    std::priority_queue<generation_t, std::vector<generation_t>, std::greater<generation_t>>
-        wait_queue_;
-
-    /// Mutex guarding the wait queue.
-    std::mutex wait_queue_lock_{};
-
-    /// Condition variable for broadcasting notifications.
-    std::condition_variable wait_queue_notifier_{};
-
-    /// Pipes used to communicate changes from the signal handler.
+    /// Self-pipes used to communicate changes.
+    /// The writer is a signal handler.
+    /// "The reader" refers to a thread that wants to wait for changes. Only one thread can be the
+    /// reader at a given time.
     autoclose_pipes_t pipes_;
 
-    /// \return the metagen for a topic generation list.
-    /// The metagen is simply the sum of topic generations. Note it is monotone.
-    static inline generation_t metagen_for(const generation_list_t &lst) {
-        return std::accumulate(lst.begin(), lst.end(), generation_t{0});
-    }
+    /// Apply any pending updates to the data.
+    /// This accepts data because it must be locked.
+    /// \return the updated generation list.
+    generation_list_t updated_gens_in_data(acquired_lock<data_t> &data);
 
-    /// Wait for the current metagen to become different from \p gen.
-    /// If it is already different, return immediately.
-    void await_metagen(generation_t gen);
+    /// Given a list of input generations, attempt to update them to something newer.
+    /// If \p gens is older, then just return those by reference, and directly return false (not
+    /// becoming the reader).
+    /// If \p gens is current and there is not a reader, then do not update \p gens and return true,
+    /// indicating we should become the reader. Now it is our responsibility to read from the pipes
+    /// and notify on a change via the condition variable.
+    /// If \p gens is current, and there is already a reader, then wait until the reader notifies us
+    /// and try again.
+    bool try_update_gens_maybe_becoming_reader(generation_list_t *gens);
 
-    /// Return the current generation list, opportunistically applying any pending updates.
+    /// Wait for some entry in the list of generations to change.
+    /// \return the new gens.
+    generation_list_t await_gens(const generation_list_t &input_gens);
+
+    /// \return the current generation list, opportunistically applying any pending updates.
     generation_list_t updated_gens();
-
-    /// \return the metagen for the current topic generation list.
-    inline generation_t current_metagen() { return metagen_for(updated_gens()); }
 
    public:
     topic_monitor_t();

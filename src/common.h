@@ -635,6 +635,9 @@ class acquired_lock {
     /// Create from a global lock.
     /// This is used in weird cases where a global lock protects more than one piece of data.
     static acquired_lock from_global(std::mutex &lk, Data *v) { return acquired_lock{lk, v}; }
+
+    /// \return a reference to the lock, for use with a condition variable.
+    std::unique_lock<std::mutex> &get_lock() { return lock; }
 };
 
 // A lock that owns a piece of data

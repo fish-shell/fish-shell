@@ -34,10 +34,16 @@ logger_t::logger_t() : file_(stderr) {}
 owning_lock<logger_t> g_logger;
 
 void logger_t::log1(const wchar_t *s) { std::fputws(s, file_); }
-void logger_t::log1(const char *s) { std::fputs(s, file_); }
+
+void logger_t::log1(const char *s) {
+    // Note glibc prohibits mixing narrow and wide I/O, so always use wide-printing functions.
+    // See #5900.
+    std::fwprintf(file_, L"%s", s);
+}
 
 void logger_t::log1(wchar_t c) { std::fputwc(c, file_); }
-void logger_t::log1(char c) { std::fputc(c, file_); }
+
+void logger_t::log1(char c) { std::fwprintf(file_, L"%c", c); }
 
 void logger_t::log_fmt(const category_t &cat, const wchar_t *fmt, ...) {
     va_list va;

@@ -39,12 +39,13 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
     // looking for a matching command.
     if (cmd.find(L'/') != wcstring::npos) {
-        if (waccess(cmd, X_OK) != 0) {
+        std::string narrow = wcs2string(cmd);
+        if (access(narrow.c_str(), X_OK) != 0) {
             return false;
         }
 
         struct stat buff;
-        if (wstat(cmd, &buff)) {
+        if (stat(narrow.c_str(), &buff)) {
             return false;
         }
         if (S_ISREG(buff.st_mode)) {
@@ -66,9 +67,10 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
     for (auto next_path : *pathsv) {
         if (next_path.empty()) continue;
         append_path_component(next_path, cmd);
-        if (waccess(next_path, X_OK) == 0) {
+        std::string narrow = wcs2string(next_path);
+        if (access(narrow.c_str(), X_OK) == 0) {
             struct stat buff;
-            if (wstat(next_path, &buff) == -1) {
+            if (stat(narrow.c_str(), &buff) == -1) {
                 if (errno != EACCES) {
                     wperror(L"stat");
                 }

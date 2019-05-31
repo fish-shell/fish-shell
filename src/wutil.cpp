@@ -189,20 +189,19 @@ bool set_cloexec(int fd) {
     return fcntl(fd, F_SETFD, flags | FD_CLOEXEC) >= 0;
 }
 
-static int wopen_internal(const wcstring &pathname, int flags, mode_t mode, bool cloexec) {
+int open_cloexec(const std::string &cstring, int flags, mode_t mode, bool cloexec) {
     ASSERT_IS_NOT_FORKED_CHILD();
-    cstring tmp = wcs2string(pathname);
     int fd;
 
 #ifdef O_CLOEXEC
     // Prefer to use O_CLOEXEC. It has to both be defined and nonzero.
     if (cloexec) {
-        fd = open(tmp.c_str(), flags | O_CLOEXEC, mode);
+        fd = open(cstring.c_str(), flags | O_CLOEXEC, mode);
     } else {
-        fd = open(tmp.c_str(), flags, mode);
+        fd = open(cstring.c_str(), flags, mode);
     }
 #else
-    fd = open(tmp.c_str(), flags, mode);
+    fd = open(cstring.c_str(), flags, mode);
     if (fd >= 0 && !set_cloexec(fd)) {
         close(fd);
         fd = -1;
@@ -212,7 +211,8 @@ static int wopen_internal(const wcstring &pathname, int flags, mode_t mode, bool
 }
 
 int wopen_cloexec(const wcstring &pathname, int flags, mode_t mode) {
-    return wopen_internal(pathname, flags, mode, true);
+    cstring tmp = wcs2string(pathname);
+    return open_cloexec(tmp, flags, mode, true);
 }
 
 DIR *wopendir(const wcstring &name) {
@@ -810,6 +810,15 @@ file_id_t file_id_for_path(const wcstring &path) {
     file_id_t result = kInvalidFileID;
     struct stat buf = {};
     if (0 == wstat(path, &buf)) {
+        result = file_id_t::from_stat(buf);
+    }
+    return result;
+}
+
+file_id_t file_id_for_path(const std::string &path) {
+    file_id_t result = kInvalidFileID;
+    struct stat buf = {};
+    if (0 == stat(path.c_str(), &buf)) {
         result = file_id_t::from_stat(buf);
     }
     return result;

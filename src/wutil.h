@@ -28,6 +28,9 @@ bool set_cloexec(int fd);
 /// possible).
 int wopen_cloexec(const wcstring &pathname, int flags, mode_t mode = 0);
 
+/// Narrow version of wopen_cloexec.
+int open_cloexec(const std::string &cstring, int flags, mode_t mode = 0, bool cloexec = true);
+
 /// Mark an fd as nonblocking; returns errno or 0 on success.
 int make_fd_nonblocking(int fd);
 
@@ -195,6 +198,7 @@ struct hash<file_id_t> {
 
 file_id_t file_id_for_fd(int fd);
 file_id_t file_id_for_path(const wcstring &path);
+file_id_t file_id_for_path(const std::string &path);
 
 extern const file_id_t kInvalidFileID;
 

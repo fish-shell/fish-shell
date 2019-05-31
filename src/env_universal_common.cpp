@@ -248,7 +248,7 @@ static wcstring encode_serialized(const wcstring_list_t &vals) {
     return join_strings(vals, UVAR_ARRAY_SEP);
 }
 
-env_universal_t::env_universal_t(wcstring path) : explicit_vars_path(std::move(path)) {}
+env_universal_t::env_universal_t(wcstring path) : narrow_vars_path(wcs2string(path)), explicit_vars_path(std::move(path)) {}
 
 maybe_t<env_var_t> env_universal_t::get(const wcstring &name) const {
     var_table_t::const_iterator where = vars.find(name);
@@ -401,7 +401,7 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t &callbacks) {
     }
 }
 
-bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t &callbacks) {
+bool env_universal_t::load_from_path(const std::string &path, callback_data_list_t &callbacks) {
     ASSERT_IS_LOCKED(lock);
 
     // Check to see if the file is unchanged. We do this again in load_from_fd, but this avoids
@@ -412,7 +412,7 @@ bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t 
     }
 
     bool result = false;
-    int fd = wopen_cloexec(path, O_RDONLY);
+    int fd = open_cloexec(path, O_RDONLY);
     if (fd >= 0) {
         debug(5, L"universal log reading from file");
         this->load_from_fd(fd, callbacks);
@@ -422,6 +422,10 @@ bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t 
     return result;
 }
 
+bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t &callbacks) {
+    std::string tmp = wcs2string(path);
+    return load_from_path(tmp, callbacks);
+}
 /// Serialize the contents to a string.
 std::string env_universal_t::serialize_with_vars(const var_table_t &vars) {
     std::string storage;
@@ -473,7 +477,7 @@ bool env_universal_t::move_new_vars_file_into_place(const wcstring &src, const w
 bool env_universal_t::initialize(callback_data_list_t &callbacks) {
     scoped_lock locker(lock);
     if (!explicit_vars_path.empty()) {
-        return load_from_path(explicit_vars_path, callbacks);
+        return load_from_path(narrow_vars_path, callbacks);
     }
 
     // Get the variables path; if there is none (e.g. HOME is bogus) it's hopeless.
@@ -498,6 +502,11 @@ bool env_universal_t::initialize(callback_data_list_t &callbacks) {
                 }
             }
         }
+    }
+    // If we succeeded, we store the *default path*, not the legacy one.
+    if (success) {
+        explicit_vars_path = *vars_path;
+        narrow_vars_path = wcs2string(*vars_path);
     }
     return success;
 }
@@ -554,7 +563,7 @@ static bool lock_uvar_file(int fd) {
     return check_duration(start_time);
 }
 
-bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd) {
+bool env_universal_t::open_and_acquire_lock(const std::string &path, int *out_fd) {
     // Attempt to open the file for reading at the given path, atomically acquiring a lock. On BSD,
     // we can use O_EXLOCK. On Linux, we open the file, take a lock, and then compare fstat() to
     // stat(); if they match, it means that the file was not replaced before we acquired the lock.
@@ -575,7 +584,7 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd) {
     int fd = -1;
     while (fd == -1) {
         double start_time = timef();
-        fd = wopen_cloexec(path, flags, 0644);
+        fd = open_cloexec(path, flags, 0644);
         if (fd == -1) {
             if (errno == EINTR) continue;  // signaled; try again
 #ifdef O_EXLOCK
@@ -652,25 +661,28 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
     // instances of fish will not be able to obtain it. This seems to be a greater risk than that of
     // data loss on lockless NFS. Users who put their home directory on lockless NFS are playing
     // with fire anyways.
-    wcstring vars_path = explicit_vars_path;
-    if (vars_path.empty()) {
-        if (auto default_path = default_vars_path()) {
-            vars_path = default_path.acquire();
+    if (explicit_vars_path.empty()) {
+        // Initialize the vars path from the default one.
+        // In some cases we don't "initialize()" before, so we're doing that now.
+        // This should only happen once.
+        // FIXME: Why don't we initialize()?
+        auto def_vars_path = default_vars_path();
+        if (!def_vars_path) {
+            debug(2, L"No universal variable path available");
+            return false;
         }
-    }
-    if (vars_path.empty()) {
-        debug(2, L"No universal variable path available");
-        return false;
+        explicit_vars_path = *def_vars_path;
+        narrow_vars_path = wcs2string(explicit_vars_path);
     }
 
     // If we have no changes, just load.
     if (modified.empty()) {
-        this->load_from_path(vars_path, callbacks);
+        this->load_from_path(narrow_path, callbacks);
         debug(5, L"universal log no modifications");
         return false;
     }
 
-    const wcstring directory = wdirname(vars_path);
+    const wcstring directory = wdirname(explicit_vars_path);
     bool success = true;
     int vars_fd = -1;
 
@@ -678,7 +690,7 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
 
     // Open the file.
     if (success) {
-        success = this->open_and_acquire_lock(vars_path, &vars_fd);
+        success = this->open_and_acquire_lock(narrow_vars_path, &vars_fd);
         if (!success) debug(5, L"universal log open_and_acquire_lock() failed");
     }
 

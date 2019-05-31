@@ -45,14 +45,17 @@ class env_universal_t {
     // vars indicates a deleted value.
     std::unordered_set<wcstring> modified;
 
+    std::string narrow_vars_path;
     // Path that we save to. If empty, use the default.
-    const wcstring explicit_vars_path;
+    wcstring explicit_vars_path;
+
 
     // Whether it's OK to save. This may be set to false if we discover that a future version of
     // fish wrote the uvars contents.
     bool ok_to_save{true};
 
     mutable std::mutex lock;
+    bool load_from_path(const std::string &path, callback_data_list_t &callbacks);
     bool load_from_path(const wcstring &path, callback_data_list_t &callbacks);
     void load_from_fd(int fd, callback_data_list_t &callbacks);
 
@@ -60,7 +63,7 @@ class env_universal_t {
     bool remove_internal(const wcstring &name);
 
     // Functions concerned with saving.
-    bool open_and_acquire_lock(const wcstring &path, int *out_fd);
+    bool open_and_acquire_lock(const std::string &path, int *out_fd);
     bool open_temporary_file(const wcstring &directory, wcstring *out_path, int *out_fd);
     bool write_to_fd(int fd, const wcstring &path);
     bool move_new_vars_file_into_place(const wcstring &src, const wcstring &dst);

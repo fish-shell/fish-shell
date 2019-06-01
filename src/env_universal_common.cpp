@@ -677,7 +677,7 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
 
     // If we have no changes, just load.
     if (modified.empty()) {
-        this->load_from_path(narrow_path, callbacks);
+        this->load_from_path(narrow_vars_path, callbacks);
         debug(5, L"universal log no modifications");
         return false;
     }
@@ -701,7 +701,7 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
     }
 
     if (success && ok_to_save) {
-        success = this->save(directory, vars_path);
+        success = this->save(directory, explicit_vars_path);
     }
 
     // Clean up.

@@ -101,12 +101,6 @@ bool input_mapping_erase(const wcstring &sequence, const wcstring &mode = DEFAUL
 bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds,
                        bool user, wcstring *out_new_mode);
 
-/// Return the current bind mode.
-wcstring input_get_bind_mode(const environment_t &vars);
-
-/// Set the current bind mode.
-void input_set_bind_mode(const wcstring &bind_mode);
-
 /// Sets the return status of the most recently executed input function.
 void input_function_set_status(bool status);
 

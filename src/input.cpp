@@ -161,17 +161,15 @@ static latch_t<std::vector<terminfo_mapping_t>> s_terminfo_mappings;
 static std::vector<terminfo_mapping_t> create_input_terminfo();
 
 /// Return the current bind mode.
-wcstring input_get_bind_mode(const environment_t &vars) {
+static wcstring input_get_bind_mode(const environment_t &vars) {
     auto mode = vars.get(FISH_BIND_MODE_VAR);
     return mode ? mode->as_string() : DEFAULT_BIND_MODE;
 }
 
 /// Set the current bind mode.
-void input_set_bind_mode(const wcstring &bm) {
+static void input_set_bind_mode(env_stack_t &vars, const wcstring &bm) {
     // Only set this if it differs to not execute variable handlers all the time.
     // modes may not be empty - empty is a sentinel value meaning to not change the mode
-    ASSERT_IS_MAIN_THREAD();
-    auto &vars = parser_t::principal_parser().vars();
     assert(!bm.empty());
     if (input_get_bind_mode(vars) != bm) {
         vars.set_one(FISH_BIND_MODE_VAR, ENV_GLOBAL, bm);
@@ -339,7 +337,7 @@ void inputter_t::mapping_execute(const input_mapping_t &m, bool allow_commands) 
 
     // !has_functions && !has_commands: only set bind mode
     if (!has_commands && !has_functions) {
-        if (!m.sets_mode.empty()) input_set_bind_mode(m.sets_mode);
+        if (!m.sets_mode.empty()) input_set_bind_mode(parser_->vars(), m.sets_mode);
         return;
     }
 
@@ -378,7 +376,7 @@ void inputter_t::mapping_execute(const input_mapping_t &m, bool allow_commands) 
     }
 
     // Empty bind mode indicates to not reset the mode (#2871)
-    if (!m.sets_mode.empty()) input_set_bind_mode(m.sets_mode);
+    if (!m.sets_mode.empty()) input_set_bind_mode(parser_->vars(), m.sets_mode);
 }
 
 /// Try reading the specified function mapping.

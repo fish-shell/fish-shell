@@ -345,6 +345,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     bool silent{false};
     /// The representation of the current screen contents.
     screen_t screen;
+    /// The source of input events.
+    inputter_t inputter;
     /// The history.
     history_t *history{nullptr};
     /// The history search.
@@ -2371,7 +2373,7 @@ struct readline_loop_state_t {
 /// Read normal characters, inserting them into the command line.
 /// \return the next unhandled event.
 maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rls) {
-    maybe_t<char_event_t> event_needing_handling = input_readch();
+    maybe_t<char_event_t> event_needing_handling = inputter.readch();
 
     if (!event_is_normal_char(*event_needing_handling) || !can_read(STDIN_FILENO))
         return event_needing_handling;
@@ -2391,7 +2393,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
         // Only allow commands on the first key; otherwise, we might have data we
         // need to insert on the commandline that the commmand might need to be able
         // to see.
-        auto next_event = input_readch(false);
+        auto next_event = inputter.readch(false);
         if (event_is_normal_char(next_event)) {
             arr[i] = next_event.get_char();
         } else {
@@ -3101,10 +3103,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                                  ? jump_precision_t::to
                                  : jump_precision_t::till;
             editable_line_t *el = active_edit_line();
-            wchar_t target = input_function_pop_arg();
+            wchar_t target = inputter.function_pop_arg();
             bool success = jump(direction, precision, el, target);
 
-            input_function_set_status(success);
+            inputter.function_set_status(success);
             reader_repaint_needed();
             break;
         }
@@ -3116,7 +3118,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 success = jump(last_jump_direction, last_jump_precision, el, last_jump_target);
             }
 
-            input_function_set_status(success);
+            inputter.function_set_status(success);
             reader_repaint_needed();
             break;
         }
@@ -3138,7 +3140,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
             last_jump_direction = original_dir;
 
-            input_function_set_status(success);
+            inputter.function_set_status(success);
             reader_repaint_needed();
             break;
         }
@@ -3147,9 +3149,9 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             if (expand_abbreviation_as_necessary(1)) {
                 super_highlight_me_plenty();
                 mark_repaint_needed();
-                input_function_set_status(true);
+                inputter.function_set_status(true);
             } else {
-                input_function_set_status(false);
+                inputter.function_set_status(false);
             }
             break;
         }
@@ -3394,6 +3396,12 @@ void reader_repaint_if_needed() {
     }
 }
 
+void reader_queue_ch(const char_event_t &ch) {
+    if (reader_data_t *data = current_data_or_null()) {
+        data->inputter.queue_ch(ch);
+    }
+}
+
 void reader_react_to_color_change() {
     reader_data_t *data = current_data_or_null();
     if (!data) return;
@@ -3401,7 +3409,7 @@ void reader_react_to_color_change() {
     if (!data->repaint_needed || !data->screen_reset_needed) {
         data->repaint_needed = true;
         data->screen_reset_needed = true;
-        input_common_queue_ch(readline_cmd_t::repaint);
+        data->inputter.queue_ch(readline_cmd_t::repaint);
     }
 }
 

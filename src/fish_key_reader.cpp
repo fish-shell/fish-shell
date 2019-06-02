@@ -201,6 +201,7 @@ static double output_elapsed_time(double prev_tstamp, bool first_char_seen) {
 static void process_input(bool continuous_mode) {
     bool first_char_seen = false;
     double prev_tstamp = 0.0;
+    input_event_queue_t queue;
     std::vector<wchar_t> bind_chars;
 
     std::fwprintf(stderr, L"Press a key\n\n");
@@ -209,7 +210,7 @@ static void process_input(bool continuous_mode) {
         if (reader_test_and_clear_interrupted()) {
             evt = char_event_t{shell_modes.c_cc[VINTR]};
         } else {
-            evt = input_common_readch_timed(true);
+            evt = queue.readch_timed(true);
         }
         if (!evt.is_char()) {
             output_bind_command(bind_chars);

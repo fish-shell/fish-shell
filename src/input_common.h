@@ -6,6 +6,7 @@
 #include "maybe.h"
 
 #include <stddef.h>
+#include <queue>
 
 enum class readline_cmd_t {
     beginning_of_line,
@@ -150,24 +151,40 @@ void input_common_init(interrupt_func_t func);
 class environment_t;
 void update_wait_on_escape_ms(const environment_t &vars);
 
-/// Function used by input_readch to read bytes from stdin until enough bytes have been read to
-/// convert them to a wchar_t. Conversion is done using mbrtowc. If a character has previously been
-/// read and then 'unread' using \c input_common_unreadch, that character is returned.
-/// This function never returns a timeout.
-char_event_t input_common_readch();
+/// A class which knows how to produce a stream of input events.
+class input_event_queue_t {
+    std::deque<char_event_t> queue_;
 
-/// Like input_common_readch(), except it will wait at most WAIT_ON_ESCAPE milliseconds for a
-/// character to be available for reading.
-/// If \p dequeue_timeouts is set, remove any timeout from the queue; otherwise retain them.
-char_event_t input_common_readch_timed(bool dequeue_timeouts = false);
+    /// \return if we have any lookahead.
+    bool has_lookahead() { return !queue_.empty(); }
 
-/// Enqueue a character or a readline function to the queue of unread characters that input_readch
-/// will return before actually reading from fd 0.
-void input_common_queue_ch(char_event_t ch);
+    /// \return the next event in the queue.
+    char_event_t pop();
 
-/// Add a character or a readline function to the front of the queue of unread characters.  This
-/// will be the first character returned by input_readch (unless this function is called more than
-/// once).
-void input_common_next_ch(char_event_t ch);
+    /// \return the next event in the queue, discarding timeouts.
+    maybe_t<char_event_t> pop_discard_timeouts();
+
+    char_event_t readb();
+
+   public:
+    /// Function used by input_readch to read bytes from stdin until enough bytes have been read to
+    /// convert them to a wchar_t. Conversion is done using mbrtowc. If a character has previously
+    /// been read and then 'unread' using \c input_common_unreadch, that character is returned. This
+    /// function never returns a timeout.
+    char_event_t readch();
+
+    /// Like readch(), except it will wait at most WAIT_ON_ESCAPE milliseconds for a
+    /// character to be available for reading.
+    /// If \p dequeue_timeouts is set, remove any timeout from the queue; otherwise retain them.
+    char_event_t readch_timed(bool dequeue_timeouts = false);
+
+    /// Enqueue a character or a readline function to the queue of unread characters that
+    /// readch will return before actually reading from fd 0.
+    void push_back(char_event_t ch);
+
+    /// Add a character or a readline function to the front of the queue of unread characters.  This
+    /// will be the next character returned by readch.
+    void push_front(char_event_t ch);
+};
 
 #endif

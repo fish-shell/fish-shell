@@ -3003,6 +3003,7 @@ static bool history_contains(const std::unique_ptr<history_t> &history, const wc
 
 static void test_input() {
     say(L"Testing input");
+    inputter_t input{};
     // Ensure sequences are order independent. Here we add two bindings where the first is a prefix
     // of the second, and then emit the second key list. The second binding should be invoked, not
     // the first!
@@ -3013,11 +3014,11 @@ static void test_input() {
 
     // Push the desired binding to the queue.
     for (size_t idx = 0; idx < desired_binding.size(); idx++) {
-        input_queue_ch(desired_binding.at(idx));
+        input.queue_ch(desired_binding.at(idx));
     }
 
     // Now test.
-    auto evt = input_readch();
+    auto evt = input.readch();
     if (!evt.is_readline()) {
         err(L"Event is not a readline");
     } else if (evt.get_readline() != readline_cmd_t::down_line) {

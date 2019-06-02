@@ -160,10 +160,6 @@ static latch_t<std::vector<terminfo_mapping_t>> s_terminfo_mappings;
 /// \return the input terminfo.
 static std::vector<terminfo_mapping_t> create_input_terminfo();
 
-static wchar_t input_function_args[MAX_INPUT_FUNCTION_ARGS];
-static bool input_function_status;
-static int input_function_args_index = 0;
-
 /// Return the current bind mode.
 wcstring input_get_bind_mode(const environment_t &vars) {
     auto mode = vars.get(FISH_BIND_MODE_VAR);
@@ -194,9 +190,6 @@ static int input_function_arity(readline_cmd_t function) {
             return 0;
     }
 }
-
-/// Sets the return status of the most recently executed input function.
-void input_function_set_status(bool status) { input_function_status = status; }
 
 /// Helper function to compare the lengths of sequences.
 static bool length_is_greater_than(const input_mapping_t &m1, const input_mapping_t &m2) {
@@ -294,13 +287,16 @@ void init_input() {
     }
 }
 
-void input_function_push_arg(wchar_t arg) {
-    input_function_args[input_function_args_index++] = arg;
+void inputter_t::function_push_arg(wchar_t arg) { input_function_args_.push_back(arg); }
+
+wchar_t inputter_t::function_pop_arg() {
+    assert(!input_function_args_.empty() && "function_pop_arg underflow");
+    auto result = input_function_args_.back();
+    input_function_args_.pop_back();
+    return result;
 }
 
-wchar_t input_function_pop_arg() { return input_function_args[--input_function_args_index]; }
-
-void input_function_push_args(readline_cmd_t code) {
+void inputter_t::function_push_args(readline_cmd_t code) {
     int arity = input_function_arity(code);
     std::vector<char_event_t> skipped;
 
@@ -308,26 +304,26 @@ void input_function_push_args(readline_cmd_t code) {
         // Skip and queue up any function codes. See issue #2357.
         wchar_t arg{};
         for (;;) {
-            auto evt = input_common_readch();
+            auto evt = event_queue_.readch();
             if (evt.is_char()) {
                 arg = evt.get_char();
                 break;
             }
             skipped.push_back(evt);
         }
-        input_function_push_arg(arg);
+        function_push_arg(arg);
     }
 
     // Push the function codes back into the input stream.
     size_t idx = skipped.size();
     while (idx--) {
-        input_common_next_ch(skipped.at(idx));
+        event_queue_.push_front(skipped.at(idx));
     }
 }
 
 /// Perform the action of the specified binding. allow_commands controls whether fish commands
 /// should be executed, or should be deferred until later.
-static void input_mapping_execute(const input_mapping_t &m, bool allow_commands) {
+void inputter_t::mapping_execute(const input_mapping_t &m, bool allow_commands) {
     // has_functions: there are functions that need to be put on the input queue
     // has_commands: there are shell commands that need to be evaluated
     bool has_commands = false, has_functions = false;
@@ -349,9 +345,9 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
         // We don't want to run commands yet. Put the characters back and return check_exit.
         for (wcstring::const_reverse_iterator it = m.seq.rbegin(), end = m.seq.rend(); it != end;
              ++it) {
-            input_common_next_ch(*it);
+            event_queue_.push_front(*it);
         }
-        input_common_next_ch(char_event_type_t::check_exit);
+        event_queue_.push_front(char_event_type_t::check_exit);
         return;  // skip the input_set_bind_mode
     } else if (has_functions && !has_commands) {
         // Functions are added at the head of the input queue.
@@ -359,8 +355,8 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
                                                      end = m.commands.rend();
              it != end; ++it) {
             readline_cmd_t code = input_function_get_code(*it).value();
-            input_function_push_args(code);
-            input_common_next_ch(code);
+            function_push_args(code);
+            event_queue_.push_front(code);
         }
     } else if (has_commands && !has_functions) {
         // Execute all commands.
@@ -373,11 +369,11 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
             parser.eval(cmd, io_chain_t(), TOP);
         }
         parser.set_last_statuses(std::move(last_statuses));
-        input_common_next_ch(char_event_type_t::check_exit);
+        event_queue_.push_front(char_event_type_t::check_exit);
     } else {
         // Invalid binding, mixed commands and functions.  We would need to execute these one by
         // one.
-        input_common_next_ch(char_event_type_t::check_exit);
+        event_queue_.push_front(char_event_type_t::check_exit);
     }
 
     // Empty bind mode indicates to not reset the mode (#2871)
@@ -385,20 +381,20 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
 }
 
 /// Try reading the specified function mapping.
-static bool input_mapping_is_match(const input_mapping_t &m) {
+bool inputter_t::mapping_is_match(const input_mapping_t &m) {
     const wcstring &str = m.seq;
 
     assert(str.size() > 0 && "zero-length input string passed to input_mapping_is_match!");
 
     bool timed = false;
     for (size_t i = 0; i < str.size(); ++i) {
-        auto evt = timed ? input_common_readch_timed() : input_common_readch();
+        auto evt = timed ? event_queue_.readch_timed() : event_queue_.readch();
         if (!evt.is_char() || evt.get_char() != str[i]) {
             // We didn't match the bind sequence/input mapping, (it timed out or they entered
             // something else) Undo consumption of the read characters since we didn't match the
             // bind sequence and abort.
-            input_common_next_ch(evt);
-            while (i--) input_common_next_ch(str[i]);
+            event_queue_.push_front(evt);
+            while (i--) event_queue_.push_front(str[i]);
             return false;
         }
 
@@ -410,11 +406,13 @@ static bool input_mapping_is_match(const input_mapping_t &m) {
     return true;
 }
 
-void input_queue_ch(char_event_t ch) { input_common_queue_ch(ch); }
+void inputter_t::queue_ch(char_event_t ch) { event_queue_.push_back(ch); }
+
+void inputter_t::push_front(char_event_t ch) { event_queue_.push_front(ch); }
 
 /// \return the first mapping that matches, walking first over the user's mapping list, then the
 /// preset list. \return null if nothing matches.
-static const input_mapping_t *find_mapping() {
+const input_mapping_t *inputter_t::find_mapping() {
     const input_mapping_t *generic = NULL;
     const auto &vars = parser_t::principal_parser().vars();
     const wcstring bind_mode = input_get_bind_mode(vars);
@@ -429,7 +427,7 @@ static const input_mapping_t *find_mapping() {
 
             if (m.is_generic()) {
                 if (!generic) generic = &m;
-            } else if (input_mapping_is_match(m)) {
+            } else if (mapping_is_match(m)) {
                 return &m;
             }
         }
@@ -437,26 +435,26 @@ static const input_mapping_t *find_mapping() {
     return generic;
 }
 
-static void input_mapping_execute_matching_or_generic(bool allow_commands) {
+void inputter_t::mapping_execute_matching_or_generic(bool allow_commands) {
     const input_mapping_t *mapping = find_mapping();
     if (mapping) {
-        input_mapping_execute(*mapping, allow_commands);
+        mapping_execute(*mapping, allow_commands);
     } else {
         debug(2, L"no generic found, ignoring char...");
-        auto evt = input_common_readch();
+        auto evt = event_queue_.readch();
         if (evt.is_eof()) {
-            input_common_next_ch(evt);
+            event_queue_.push_front(evt);
         }
     }
 }
 
 /// Helper function. Picks through the queue of incoming characters until we get to one that's not a
 /// readline function.
-static char_event_t input_read_characters_no_readline() {
+char_event_t inputter_t::read_characters_no_readline() {
     std::vector<char_event_t> saved_events;
     char_event_t evt_to_return{0};
     for (;;) {
-        auto evt = input_common_readch();
+        auto evt = event_queue_.readch();
         if (evt.is_readline()) {
             saved_events.push_back(evt);
         } else {
@@ -466,34 +464,34 @@ static char_event_t input_read_characters_no_readline() {
     }
     // Restore any readline functions, in reverse to preserve their original order.
     for (auto iter = saved_events.rbegin(); iter != saved_events.rend(); ++iter) {
-        input_common_next_ch(*iter);
+        event_queue_.push_front(*iter);
     }
     return evt_to_return;
 }
 
-char_event_t input_readch(bool allow_commands) {
+char_event_t inputter_t::readch(bool allow_commands) {
     // Clear the interrupted flag.
     reader_reset_interrupted();
     // Search for sequence in mapping tables.
     while (true) {
-        auto evt = input_common_readch();
+        auto evt = event_queue_.readch();
 
         if (evt.is_readline()) {
             switch (evt.get_readline()) {
                 case readline_cmd_t::self_insert: {
                     // Issue #1595: ensure we only insert characters, not readline functions. The
                     // common case is that this will be empty.
-                    return input_read_characters_no_readline();
+                    return read_characters_no_readline();
                 }
                 case readline_cmd_t::func_and: {
-                    if (input_function_status) {
-                        return input_readch();
+                    if (function_status_) {
+                        return readch();
                     }
                     do {
-                        evt = input_common_readch();
+                        evt = event_queue_.readch();
                     } while (evt.is_readline());
-                    input_common_next_ch(evt);
-                    return input_readch();
+                    event_queue_.push_front(evt);
+                    return readch();
                 }
                 default: {
                     return evt;
@@ -504,8 +502,8 @@ char_event_t input_readch(bool allow_commands) {
             // There's no need to go through the input functions.
             return evt;
         } else {
-            input_common_next_ch(evt);
-            input_mapping_execute_matching_or_generic(allow_commands);
+            event_queue_.push_front(evt);
+            mapping_execute_matching_or_generic(allow_commands);
             // Regarding allow_commands, we're in a loop, but if a fish command is executed,
             // check_exit is unread, so the next pass through the loop we'll break out and return
             // it.

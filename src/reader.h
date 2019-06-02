@@ -85,6 +85,10 @@ void reader_react_to_color_change();
 /// Repaint immediately if needed.
 void reader_repaint_if_needed();
 
+/// Enqueue an event to the back of the reader's input queue.
+class char_event_t;
+void reader_queue_ch(const char_event_t &ch);
+
 /// Run the specified command with the correct terminal modes, and while taking care to perform job
 /// notification, set the title, etc.
 void reader_run_command(const wcstring &buff);

@@ -433,7 +433,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     parser_t &parser() { return *parser_ref; }
 
     reader_data_t(std::shared_ptr<parser_t> parser, history_t *hist)
-        : parser_ref(std::move(parser)), history(hist) {}
+        : parser_ref(std::move(parser)), inputter(*parser_ref), history(hist) {}
 
     void update_buff_pos(editable_line_t *el, size_t buff_pos);
     void repaint();

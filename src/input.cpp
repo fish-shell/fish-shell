@@ -287,6 +287,8 @@ void init_input() {
     }
 }
 
+inputter_t::inputter_t(parser_t &parser) : parser_(parser.shared()) {}
+
 void inputter_t::function_push_arg(wchar_t arg) { input_function_args_.push_back(arg); }
 
 wchar_t inputter_t::function_pop_arg() {
@@ -363,12 +365,11 @@ void inputter_t::mapping_execute(const input_mapping_t &m, bool allow_commands) 
         //
         // FIXME(snnw): if commands add stuff to input queue (e.g. commandline -f execute), we won't
         // see that until all other commands have also been run.
-        auto &parser = parser_t::principal_parser();
-        auto last_statuses = parser.get_last_statuses();
+        auto last_statuses = parser_->get_last_statuses();
         for (const wcstring &cmd : m.commands) {
-            parser.eval(cmd, io_chain_t(), TOP);
+            parser_->eval(cmd, io_chain_t(), TOP);
         }
-        parser.set_last_statuses(std::move(last_statuses));
+        parser_->set_last_statuses(std::move(last_statuses));
         event_queue_.push_front(char_event_type_t::check_exit);
     } else {
         // Invalid binding, mixed commands and functions.  We would need to execute these one by
@@ -414,7 +415,7 @@ void inputter_t::push_front(char_event_t ch) { event_queue_.push_front(ch); }
 /// preset list. \return null if nothing matches.
 const input_mapping_t *inputter_t::find_mapping() {
     const input_mapping_t *generic = NULL;
-    const auto &vars = parser_t::principal_parser().vars();
+    const auto &vars = parser_->vars();
     const wcstring bind_mode = input_get_bind_mode(vars);
 
     const auto lists = {&s_mapping_list, &s_preset_mapping_list};

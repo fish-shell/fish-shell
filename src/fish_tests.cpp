@@ -3003,7 +3003,7 @@ static bool history_contains(const std::unique_ptr<history_t> &history, const wc
 
 static void test_input() {
     say(L"Testing input");
-    inputter_t input{};
+    inputter_t input{parser_t::principal_parser()};
     // Ensure sequences are order independent. Here we add two bindings where the first is a prefix
     // of the second, and then emit the second key list. The second binding should be invoked, not
     // the first!

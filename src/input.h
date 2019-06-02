@@ -27,6 +27,9 @@ class inputter_t {
     std::vector<wchar_t> input_function_args_{};
     bool function_status_{false};
 
+    // We need a parser to evaluate bindings.
+    const std::shared_ptr<parser_t> parser_;
+
     void function_push_arg(wchar_t arg);
     void function_push_args(readline_cmd_t code);
     void mapping_execute(const input_mapping_t &m, bool allow_commands);
@@ -36,7 +39,7 @@ class inputter_t {
     char_event_t read_characters_no_readline();
 
    public:
-    inputter_t() = default;
+    inputter_t(parser_t &parser);
 
     /// Read a character from fd 0. Try to convert some escape sequences into character constants,
     /// but do not permanently block the escape character.

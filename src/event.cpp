@@ -87,9 +87,9 @@ static pending_signals_t s_pending_signals;
 static event_handler_list_t s_event_handlers;
 
 /// Variables (one per signal) set when a signal is observed. This is inspected by a signal handler.
-static volatile bool s_observed_signals[NSIG] = {};
+static volatile sig_atomic_t s_observed_signals[NSIG] = {};
+
 static void set_signal_observed(int sig, bool val) {
-    ASSERT_IS_MAIN_THREAD();
     if (sig >= 0 && (size_t)sig < sizeof s_observed_signals / sizeof *s_observed_signals) {
         s_observed_signals[sig] = val;
     }

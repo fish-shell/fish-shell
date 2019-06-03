@@ -2242,7 +2242,7 @@ static int read_i(parser_t &parser) {
     data->prev_end_loop = 0;
 
     while (!shell_is_exiting()) {
-        event_fire_generic(L"fish_prompt");
+        event_fire_generic(parser, L"fish_prompt");
         run_count++;
 
         if (parser.libdata().is_breakpoint && function_exists(DEBUG_PROMPT_FUNCTION_NAME, parser)) {
@@ -2271,9 +2271,9 @@ static int read_i(parser_t &parser) {
             data->command_line.text.clear();
             data->command_line_changed(&data->command_line);
             wcstring_list_t argv(1, command);
-            event_fire_generic(L"fish_preexec", &argv);
+            event_fire_generic(parser, L"fish_preexec", &argv);
             reader_run_command(parser, command);
-            event_fire_generic(L"fish_postexec", &argv);
+            event_fire_generic(parser, L"fish_postexec", &argv);
             // Allow any pending history items to be returned in the history array.
             if (data->history) {
                 data->history->resolve_pending();

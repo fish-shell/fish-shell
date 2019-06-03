@@ -90,6 +90,8 @@ struct event_t {
     static event_t variable(wcstring name, wcstring_list_t args);
 };
 
+class parser_t;
+
 /// Add an event handler.
 void event_add_handler(std::shared_ptr<event_handler_t> eh);
 
@@ -103,11 +105,11 @@ event_handler_list_t event_get_function_handlers(const wcstring &name);
 /// a signal handler.
 bool event_is_signal_observed(int signal);
 
-/// Fire the specified event \p event.
-void event_fire(const event_t &event);
+/// Fire the specified event \p event, executing it on \p parser.
+void event_fire(parser_t &parser, const event_t &event);
 
-/// Fire all delayed eents.
-void event_fire_delayed();
+/// Fire all delayed events attached to the given parser.
+void event_fire_delayed(parser_t &parser);
 
 /// Enqueue a signal event. Invoked from a signal handler.
 void event_enqueue_signal(int signal);
@@ -119,7 +121,7 @@ void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter);
 wcstring event_get_desc(const event_t &e);
 
 /// Fire a generic event with the specified name.
-void event_fire_generic(const wchar_t *name, const wcstring_list_t *args = NULL);
+void event_fire_generic(parser_t &parser, const wchar_t *name, const wcstring_list_t *args = NULL);
 
 /// Return the event type for a given name, or none.
 maybe_t<event_type_t> event_type_for_name(const wcstring &name);

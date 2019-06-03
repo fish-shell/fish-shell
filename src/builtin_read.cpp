@@ -223,7 +223,7 @@ static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool s
     reader_set_buffer(commandline, std::wcslen(commandline));
     proc_push_interactive(1);
 
-    event_fire_generic(L"fish_prompt");
+    event_fire_generic(parser, L"fish_prompt");
     auto mline = reader_readline(nchars);
     proc_pop_interactive();
     if (mline) {

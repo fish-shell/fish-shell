@@ -241,14 +241,16 @@ void input_mapping_set_t::add(const wchar_t *sequence, const wchar_t *command, c
     input_mapping_set_t::add(sequence, &command, 1, mode, sets_mode, user);
 }
 
-/// Handle interruptions to key reading by reaping finshed jobs and propagating the interrupt to the
-/// reader.
+/// Handle interruptions to key reading by reaping finished jobs and propagating the interrupt to
+/// the reader.
 static maybe_t<char_event_t> interrupt_handler() {
     // Fire any pending events.
-    event_fire_delayed();
+    // TODO: eliminate this principal_parser().
+    auto &parser = parser_t::principal_parser();
+    event_fire_delayed(parser);
     // Reap stray processes, including printing exit status messages.
     // TODO: shouldn't need this parser here.
-    if (job_reap(parser_t::principal_parser(), true)) reader_repaint_needed();
+    if (job_reap(parser, true)) reader_repaint_needed();
     // Tell the reader an event occured.
     if (reader_reading_interrupted()) {
         auto vintr = shell_modes.c_cc[VINTR];

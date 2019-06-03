@@ -87,6 +87,10 @@ int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_CMD_ERROR;
     }
 
-    parser.vars().set_one(L"PWD", ENV_EXPORT | ENV_GLOBAL, std::move(norm_dir));
+    std::vector<event_t> evts;
+    parser.vars().set_one(L"PWD", ENV_EXPORT | ENV_GLOBAL, std::move(norm_dir), &evts);
+    for (const auto &evt : evts) {
+        event_fire(parser, evt);
+    }
     return STATUS_CMD_OK;
 }

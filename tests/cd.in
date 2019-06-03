@@ -79,3 +79,10 @@ test $PWD = $base; and echo No crash with ./ CDPATH
 # cd back before removing the test directory again.
 cd $oldpwd
 rm -Rf $base
+
+logmsg on-variable PWD
+# Verify that PWD on-variable events are sent
+function __fish_test_changed_pwd --on-variable PWD
+   echo "Changed to $PWD"
+end
+cd /

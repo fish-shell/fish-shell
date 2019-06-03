@@ -30,3 +30,7 @@ Gone to linkhome via CDPATH
 Gone to base
 Gone to linkhome via implicit . in CDPATH
 No crash with ./ CDPATH
+
+####################
+# on-variable PWD
+Changed to /

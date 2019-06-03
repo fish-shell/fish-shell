@@ -45,6 +45,7 @@
 #include "input_common.h"
 #include "maybe.h"
 #include "output.h"
+#include "parser.h"
 #include "proc.h"
 #include "reader.h"
 #include "screen.h"
@@ -211,7 +212,9 @@ static void universal_callback(env_stack_t *stack, const callback_data_t &cb) {
 
     env_dispatch_var_change(cb.key, *stack);
     stack->mark_changed_exported();
-    event_fire(event_t::variable(cb.key, {L"VARIABLE", op, cb.key}));
+
+    // TODO: eliminate this principal_parser. Need to rationalize how multiple threads work here.
+    event_fire(parser_t::principal_parser(), event_t::variable(cb.key, {L"VARIABLE", op, cb.key}));
 }
 
 void env_universal_callbacks(env_stack_t *stack, const callback_data_list_t &callbacks) {

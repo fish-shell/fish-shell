@@ -1212,7 +1212,8 @@ maybe_t<env_var_t> env_stack_t::get(const wcstring &key, env_mode_flags_t mode) 
 
 wcstring_list_t env_stack_t::get_names(int flags) const { return acquire_impl()->get_names(flags); }
 
-int env_stack_t::set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals) {
+int env_stack_t::set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals,
+                     std::vector<event_t> *out_events) {
     // Historical behavior.
     if (vals.size() == 1 && (key == L"PWD" || key == L"HOME")) {
         path_make_canonical(vals.front());
@@ -1223,7 +1224,9 @@ int env_stack_t::set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t
     if (ret == ENV_OK) {
         // Important to not hold the lock here.
         env_dispatch_var_change(key, *this);
-        event_fire(event_t::variable(key, {L"VARIABLE", L"SET", key}));
+        if (out_events) {
+            out_events->push_back(event_t::variable(key, {L"VARIABLE", L"SET", key}));
+        }
     }
     if (needs_uvar_sync) {
         universal_barrier();
@@ -1231,23 +1234,27 @@ int env_stack_t::set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t
     return ret;
 }
 
-int env_stack_t::set_one(const wcstring &key, env_mode_flags_t mode, wcstring val) {
+int env_stack_t::set_one(const wcstring &key, env_mode_flags_t mode, wcstring val,
+                         std::vector<event_t> *out_events) {
     wcstring_list_t vals;
     vals.push_back(std::move(val));
-    return set(key, mode, std::move(vals));
+    return set(key, mode, std::move(vals), out_events);
 }
 
-int env_stack_t::set_empty(const wcstring &key, env_mode_flags_t mode) {
-    return set(key, mode, {});
+int env_stack_t::set_empty(const wcstring &key, env_mode_flags_t mode,
+                           std::vector<event_t> *out_events) {
+    return set(key, mode, {}, out_events);
 }
 
-int env_stack_t::remove(const wcstring &key, int mode) {
+int env_stack_t::remove(const wcstring &key, int mode, std::vector<event_t> *out_events) {
     bool needs_uvar_sync = false;
     int ret = acquire_impl()->remove(key, mode, &needs_uvar_sync);
     if (ret == ENV_OK) {
         // Important to not hold the lock here.
         env_dispatch_var_change(key, *this);
-        event_fire(event_t::variable(key, {L"VARIABLE", L"ERASE", key}));
+        if (out_events) {
+            out_events->push_back(event_t::variable(key, {L"VARIABLE", L"ERASE", key}));
+        }
     }
     if (needs_uvar_sync) {
         universal_barrier();

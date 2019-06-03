@@ -31,6 +31,6 @@ int builtin_emit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     const wchar_t *eventname = argv[optind];
     wcstring_list_t args(argv + optind + 1, argv + argc);
-    event_fire_generic(eventname, &args);
+    event_fire_generic(parser, eventname, &args);
     return STATUS_CMD_OK;
 }

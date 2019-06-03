@@ -341,12 +341,12 @@ static void handle_env_return(int retval, const wchar_t *cmd, const wchar_t *key
 /// description of the problem to stderr.
 static int env_set_reporting_errors(const wchar_t *cmd, const wchar_t *key, int scope,
                                     const wcstring_list_t &list, io_streams_t &streams,
-                                    env_stack_t &vars) {
+                                    env_stack_t &vars, std::vector<event_t> *evts) {
     if (is_path_variable(key) && !validate_path_warning_on_colons(cmd, key, list, streams, vars)) {
         return STATUS_CMD_ERROR;
     }
 
-    int retval = vars.set(key, scope | ENV_USER, list);
+    int retval = vars.set(key, scope | ENV_USER, list, evts);
     handle_env_return(retval, cmd, key, streams);
 
     return retval;
@@ -649,8 +649,9 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
         return STATUS_INVALID_ARGS;
     }
 
+    std::vector<event_t> evts;
     if (idx_count == 0) {  // unset the var
-        retval = parser.vars().remove(dest, scope);
+        retval = parser.vars().remove(dest, scope, &evts);
         // When a non-existent-variable is unset, return ENV_NOT_FOUND as $status
         // but do not emit any errors at the console as a compromise between user
         // friendliness and correctness.
@@ -663,7 +664,12 @@ static int builtin_set_erase(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
         wcstring_list_t result;
         dest_var->to_list(result);
         erase_values(result, indexes);
-        retval = env_set_reporting_errors(cmd, dest, scope, result, streams, parser.vars());
+        retval = env_set_reporting_errors(cmd, dest, scope, result, streams, parser.vars(), &evts);
+    }
+
+    // Fire any events.
+    for (const auto &evt : evts) {
+        event_fire(parser, evt);
     }
 
     if (retval != STATUS_CMD_OK) return retval;
@@ -675,7 +681,6 @@ static int set_var_array(const wchar_t *cmd, set_cmd_opts_t &opts, const wchar_t
                          wcstring_list_t &new_values, int argc, wchar_t **argv, parser_t &parser,
                          io_streams_t &streams) {
     UNUSED(cmd);
-    UNUSED(parser);
     UNUSED(streams);
 
     if (opts.prepend || opts.append) {
@@ -771,7 +776,14 @@ static int builtin_set_set(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, w
     }
     if (retval != STATUS_CMD_OK) return retval;
 
-    retval = env_set_reporting_errors(cmd, varname, scope, new_values, streams, parser.vars());
+    std::vector<event_t> evts;
+    retval =
+        env_set_reporting_errors(cmd, varname, scope, new_values, streams, parser.vars(), &evts);
+    // Fire any events.
+    for (const auto &evt : evts) {
+        event_fire(parser, evt);
+    }
+
     if (retval != STATUS_CMD_OK) return retval;
     return check_global_scope_exists(cmd, opts, varname, streams, parser.vars());
 }

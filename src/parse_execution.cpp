@@ -729,7 +729,7 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
             event_args.insert(event_args.begin(), cmd_str);
         }
 
-        event_fire_generic(L"fish_command_not_found", &event_args);
+        event_fire_generic(*parser, L"fish_command_not_found", &event_args);
 
         // Here we want to report an error (so it shows a backtrace), but with no text.
         this->report_error(statement, L"");

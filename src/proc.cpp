@@ -618,7 +618,7 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
 
     // Post pending exit events.
     for (const auto &evt : exit_events) {
-        event_fire(evt);
+        event_fire(parser, evt);
     }
 
     if (printed) {

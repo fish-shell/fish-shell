@@ -119,6 +119,7 @@ struct profile_item_t {
 
 class parse_execution_context_t;
 class completion_t;
+struct event_t;
 
 /// Miscelleneous data used to avoid recursion and others.
 struct library_data_t {
@@ -160,6 +161,9 @@ struct library_data_t {
     /// The current filename we are evaluating, either from builtin source or on the command line.
     /// This is an intern'd string.
     const wchar_t *current_filename{};
+
+    /// List of events that have been sent but have not yet been delivered because they are blocked.
+    std::vector<shared_ptr<event_t>> blocked_events;
 };
 
 class parser_t : public std::enable_shared_from_this<parser_t> {

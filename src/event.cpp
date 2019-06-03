@@ -86,10 +86,6 @@ static pending_signals_t s_pending_signals;
 /// List of event handlers.
 static event_handler_list_t s_event_handlers;
 
-/// List of events that have been sent but have not yet been delivered because they are blocked.
-using event_list_t = std::vector<shared_ptr<event_t>>;
-static event_list_t blocked;
-
 /// Variables (one per signal) set when a signal is observed. This is inspected by a signal handler.
 static volatile bool s_observed_signals[NSIG] = {};
 static void set_signal_observed(int sig, bool val) {
@@ -130,11 +126,9 @@ static bool handler_matches(const event_handler_t &classv, const event_t &instan
 }
 
 /// Test if specified event is blocked.
-static int event_is_blocked(const event_t &e) {
+static int event_is_blocked(parser_t &parser, const event_t &e) {
     (void)e;
     const block_t *block;
-    parser_t &parser = parser_t::principal_parser();
-
     size_t idx = 0;
     while ((block = parser.block_at_index(idx++))) {
         if (event_block_list_blocks_type(block->event_blocks)) return true;
@@ -246,9 +240,8 @@ bool event_is_signal_observed(int sig) {
 /// Perform the specified event. Since almost all event firings will not be matched by even a single
 /// event handler, we make sure to optimize the 'no matches' path. This means that nothing is
 /// allocated/initialized unless needed.
-static void event_fire_internal(const event_t &event) {
-    ASSERT_IS_MAIN_THREAD();
-    auto &ld = parser_t::principal_parser().libdata();
+static void event_fire_internal(parser_t &parser, const event_t &event) {
+    auto &ld = parser.libdata();
     assert(ld.is_event >= 0 && "is_event should not be negative");
     scoped_push<decltype(ld.is_event)> inc_event{&ld.is_event, ld.is_event + 1};
 
@@ -293,18 +286,14 @@ static void event_fire_internal(const event_t &event) {
 }
 
 /// Handle all pending signal events.
-void event_fire_delayed() {
-    // Hack: only allow events on the main thread.
-    // TODO: rationalize how events work with multiple threads.
-    if (!is_main_thread()) return;
-
-    auto &parser = parser_t::principal_parser();
+void event_fire_delayed(parser_t &parser) {
+    auto &ld = parser.libdata();
     // Do not invoke new event handlers from within event handlers.
-    if (parser.libdata().is_event) return;
+    if (ld.is_event) return;
 
-    event_list_t to_send;
-    to_send.swap(blocked);
-    assert(blocked.empty());
+    std::vector<shared_ptr<event_t>> to_send;
+    to_send.swap(ld.blocked_events);
+    assert(ld.blocked_events.empty());
 
     // Append all signal events to to_send.
     auto signals = s_pending_signals.acquire_pending();
@@ -321,10 +310,10 @@ void event_fire_delayed() {
 
     // Fire or re-block all events.
     for (const auto &evt : to_send) {
-        if (event_is_blocked(*evt)) {
-            blocked.push_back(evt);
+        if (event_is_blocked(parser, *evt)) {
+            ld.blocked_events.push_back(evt);
         } else {
-            event_fire_internal(*evt);
+            event_fire_internal(parser, *evt);
         }
     }
 }
@@ -334,18 +323,14 @@ void event_enqueue_signal(int signal) {
     s_pending_signals.mark(signal);
 }
 
-void event_fire(const event_t &event) {
-    // Hack: only allow events on the main thread.
-    // TODO: rationalize how events work with multiple threads.
-    if (!is_main_thread()) return;
-
+void event_fire(parser_t &parser, const event_t &event) {
     // Fire events triggered by signals.
-    event_fire_delayed();
+    event_fire_delayed(parser);
 
-    if (event_is_blocked(event)) {
-        blocked.push_back(std::make_shared<event_t>(event));
+    if (event_is_blocked(parser, event)) {
+        parser.libdata().blocked_events.push_back(std::make_shared<event_t>(event));
     } else {
-        event_fire_internal(event);
+        event_fire_internal(parser, event);
     }
 }
 
@@ -440,13 +425,13 @@ void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter) {
     }
 }
 
-void event_fire_generic(const wchar_t *name, const wcstring_list_t *args) {
+void event_fire_generic(parser_t &parser, const wchar_t *name, const wcstring_list_t *args) {
     assert(name && "Null name");
 
     event_t ev(event_type_t::generic);
     ev.desc.str_param1 = name;
     if (args) ev.arguments = *args;
-    event_fire(ev);
+    event_fire(parser, ev);
 }
 
 event_description_t event_description_t::signal(int sig) {

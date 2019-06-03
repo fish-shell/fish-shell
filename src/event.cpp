@@ -84,7 +84,7 @@ class pending_signals_t {
 static pending_signals_t s_pending_signals;
 
 /// List of event handlers.
-static event_handler_list_t s_event_handlers;
+static owning_lock<event_handler_list_t> s_event_handlers;
 
 /// Variables (one per signal) set when a signal is observed. This is inspected by a signal handler.
 static volatile sig_atomic_t s_observed_signals[NSIG] = {};
@@ -204,23 +204,23 @@ void event_add_handler(std::shared_ptr<event_handler_t> eh) {
         set_signal_observed(eh->desc.param1.signal, true);
     }
 
-    s_event_handlers.push_back(std::move(eh));
+    s_event_handlers.acquire()->push_back(std::move(eh));
 }
 
 void event_remove_function_handlers(const wcstring &name) {
-    ASSERT_IS_MAIN_THREAD();
-    auto begin = s_event_handlers.begin(), end = s_event_handlers.end();
-    s_event_handlers.erase(std::remove_if(begin, end,
-                                          [&](const shared_ptr<event_handler_t> &eh) {
-                                              return eh->function_name == name;
-                                          }),
-                           end);
+    auto handlers = s_event_handlers.acquire();
+    auto begin = handlers->begin(), end = handlers->end();
+    handlers->erase(std::remove_if(begin, end,
+                                   [&](const shared_ptr<event_handler_t> &eh) {
+                                       return eh->function_name == name;
+                                   }),
+                    end);
 }
 
 event_handler_list_t event_get_function_handlers(const wcstring &name) {
-    ASSERT_IS_MAIN_THREAD();
+    auto handlers = s_event_handlers.acquire();
     event_handler_list_t result;
-    for (const shared_ptr<event_handler_t> &eh : s_event_handlers) {
+    for (const shared_ptr<event_handler_t> &eh : *handlers) {
         if (eh->function_name == name) {
             result.push_back(eh);
         }
@@ -247,7 +247,7 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
 
     // Capture the event handlers that match this event.
     event_handler_list_t fire;
-    for (const auto &handler : s_event_handlers) {
+    for (const auto &handler : *s_event_handlers.acquire()) {
         // Check if this event is a match.
         if (handler_matches(*handler, event)) {
             fire.push_back(handler);
@@ -256,8 +256,11 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
 
     // Iterate over our list of matching events. Fire the ones that are still present.
     for (const shared_ptr<event_handler_t> &handler : fire) {
-        // Only fire if this event is still present
-        if (!contains(s_event_handlers, handler)) {
+        // Only fire if this event is still present.
+        // TODO: this is kind of crazy. We want to support removing (and thereby suppressing) an
+        // event handler from another, but we also don't want to hold the lock across callouts. How
+        // can we make this less silly?
+        if (!contains(*s_event_handlers.acquire(), handler)) {
             continue;
         }
 
@@ -365,7 +368,7 @@ static const wchar_t *event_name_for_type(event_type_t type) {
 }
 
 void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter) {
-    event_handler_list_t tmp = s_event_handlers;
+    event_handler_list_t tmp = *s_event_handlers.acquire();
     std::sort(tmp.begin(), tmp.end(),
               [](const shared_ptr<event_handler_t> &e1, const shared_ptr<event_handler_t> &e2) {
                   const event_description_t &d1 = e1->desc;

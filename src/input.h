@@ -7,13 +7,13 @@
 
 #include <vector>
 
-#include "builtin_bind.h"
 #include "common.h"
 #include "input_common.h"
 
 #define FISH_BIND_MODE_VAR L"fish_bind_mode"
+#define DEFAULT_BIND_MODE L"default"
 
-class environment_t;
+class parser_t;
 
 wcstring describe_char(wint_t c);
 

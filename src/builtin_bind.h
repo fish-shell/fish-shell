@@ -4,8 +4,6 @@
 
 #include "common.h"
 
-#define DEFAULT_BIND_MODE L"default"
-
 class parser_t;
 struct io_streams_t;
 struct bind_cmd_opts_t;

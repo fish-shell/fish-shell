@@ -438,7 +438,7 @@ end
 complete -c zypper -n '__fish_zypper_is_subcommand_se' -l search-descriptions -s d -d 'Search also in package summaries and descriptions'
 complete -c zypper -n '__fish_zypper_is_subcommand_se' -l case-sensitive -s C -d 'Perform case-sensitive search'
 complete -c zypper -n '__fish_zypper_is_subcommand_se' -l installed-only -s i -d 'Show only packages that are already installed'
-complete -c zypper -n '__fish_zypper_is_subcommand_se' -l uninstalled-only -s u -d 'Show only packages that are not currently installed'
+complete -c zypper -n '__fish_zypper_is_subcommand_se' -l not-installed-only -s u -d 'Show only packages that are not currently installed'
 complete -c zypper -n '__fish_zypper_is_subcommand_se' -l type -s t -r -a "$__fish_zypper_package_types" -d 'Search only for packages of the specified type'
 complete -c zypper -n '__fish_zypper_is_subcommand_se' -l repo -s r -r -a "(__fish_zypper_print_repos -e)" -d 'Search only in the specified repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_se' -l details -s s -d 'Show each available version in each repository on a separate line'
@@ -481,7 +481,7 @@ end
 
 complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l repo -s r -r -a "(__fish_zypper_print_repos -e)" -d 'Just another means to specify repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l installed-only -s i -d 'Show only installed packages'
-complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l uninstalled-only -s u -d 'Show only packages which are not installed'
+complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l not-installed-only -s u -d 'Show only packages which are not installed'
 complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l orphaned -d 'Show packages which are orphaned (without repository)'
 complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l suggested -d 'Show packages which are suggested'
 complete -c zypper -n '__fish_zypper_is_subcommand_pa' -l recommended -d 'Show packages which are recommended'
@@ -495,7 +495,7 @@ end
 
 complete -c zypper -n '__fish_zypper_is_subcommand_pt' -l repo -s r -r -a "(__fish_zypper_print_repos -e)" -d 'Just another means to specify repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_pt' -l installed-only -s i -d 'Show only installed patterns'
-complete -c zypper -n '__fish_zypper_is_subcommand_pt' -l uninstalled-only -s u -d 'Show only patterns which are not installed'
+complete -c zypper -n '__fish_zypper_is_subcommand_pt' -l not-installed-only -s u -d 'Show only patterns which are not installed'
 
 function __fish_zypper_is_subcommand_pd
     __fish_zypper_cmd_in_array products pd
@@ -503,7 +503,7 @@ end
 
 complete -c zypper -n '__fish_zypper_is_subcommand_pd' -l repo -s r -r -a "(__fish_zypper_print_repos -e)" -d 'Just another means to specify repository'
 complete -c zypper -n '__fish_zypper_is_subcommand_pd' -l installed-only -s i -d 'Show only installed products'
-complete -c zypper -n '__fish_zypper_is_subcommand_pd' -l uninstalled-only -s u -d 'Show only products which are not installed'
+complete -c zypper -n '__fish_zypper_is_subcommand_pd' -l not-installed-only -s u -d 'Show only products which are not installed'
 
 function __fish_zypper_is_subcommand_al
     __fish_zypper_cmd_in_array addlock al

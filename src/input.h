@@ -35,7 +35,7 @@ class inputter_t {
     void mapping_execute(const input_mapping_t &m, bool allow_commands);
     void mapping_execute_matching_or_generic(bool allow_commands);
     bool mapping_is_match(const input_mapping_t &m);
-    const input_mapping_t *find_mapping();
+    maybe_t<input_mapping_t> find_mapping();
     char_event_t read_characters_no_readline();
 
    public:
@@ -69,40 +69,60 @@ class inputter_t {
     wchar_t function_pop_arg();
 };
 
-/// Add a key mapping from the specified sequence to the specified command.
-///
-/// \param sequence the sequence to bind
-/// \param command an input function that will be run whenever the key sequence occurs
-void input_mapping_add(const wchar_t *sequence, const wchar_t *command,
-                       const wchar_t *mode = DEFAULT_BIND_MODE,
-                       const wchar_t *new_mode = DEFAULT_BIND_MODE, bool user = true);
-
-void input_mapping_add(const wchar_t *sequence, const wchar_t *const *commands, size_t commands_len,
-                       const wchar_t *mode = DEFAULT_BIND_MODE,
-                       const wchar_t *new_mode = DEFAULT_BIND_MODE, bool user = true);
-
 struct input_mapping_name_t {
     wcstring seq;
     wcstring mode;
 };
 
-/// Returns all mapping names and modes.
-std::vector<input_mapping_name_t> input_mapping_get_names(bool user = true);
+/// The input mapping set is the set of mappings from character sequences to commands.
+class input_mapping_set_t {
+    friend acquired_lock<input_mapping_set_t> input_mappings();
+    friend void init_input();
 
-/// Erase all bindings
-void input_mapping_clear(const wchar_t *mode = NULL, bool user = true);
+    using mapping_list_t = std::vector<input_mapping_t>;
 
-/// Erase binding for specified key sequence.
-bool input_mapping_erase(const wcstring &sequence, const wcstring &mode = DEFAULT_BIND_MODE,
-                         bool user = true);
+    mapping_list_t mapping_list_;
+    mapping_list_t preset_mapping_list_;
+    std::shared_ptr<const mapping_list_t> all_mappings_cache_;
 
-/// Gets the command bound to the specified key sequence in the specified mode. Returns true if it
-/// exists, false if not.
-bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds,
-                       bool user, wcstring *out_new_mode);
+    input_mapping_set_t();
 
-/// Sets the return status of the most recently executed input function.
-void input_function_set_status(bool status);
+   public:
+    ~input_mapping_set_t();
+
+    /// Erase all bindings.
+    void clear(const wchar_t *mode = NULL, bool user = true);
+
+    /// Erase binding for specified key sequence.
+    bool erase(const wcstring &sequence, const wcstring &mode = DEFAULT_BIND_MODE,
+               bool user = true);
+
+    /// Gets the command bound to the specified key sequence in the specified mode. Returns true if
+    /// it exists, false if not.
+    bool get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds, bool user,
+             wcstring *out_new_mode);
+
+    /// Returns all mapping names and modes.
+    std::vector<input_mapping_name_t> get_names(bool user = true) const;
+
+    /// Add a key mapping from the specified sequence to the specified command.
+    ///
+    /// \param sequence the sequence to bind
+    /// \param command an input function that will be run whenever the key sequence occurs
+    void add(const wchar_t *sequence, const wchar_t *command,
+             const wchar_t *mode = DEFAULT_BIND_MODE, const wchar_t *new_mode = DEFAULT_BIND_MODE,
+             bool user = true);
+
+    void add(const wchar_t *sequence, const wchar_t *const *commands, size_t commands_len,
+             const wchar_t *mode = DEFAULT_BIND_MODE, const wchar_t *new_mode = DEFAULT_BIND_MODE,
+             bool user = true);
+
+    /// \return a snapshot of the list of input mappings.
+    std::shared_ptr<const mapping_list_t> all_mappings();
+};
+
+/// Access the singleton input mapping set.
+acquired_lock<input_mapping_set_t> input_mappings();
 
 /// Return the sequence for the terminfo variable of the specified name.
 ///

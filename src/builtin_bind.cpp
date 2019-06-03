@@ -56,7 +56,7 @@ bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bo
     wcstring_list_t ecmds;
     wcstring sets_mode;
 
-    if (!input_mapping_get(seq, bind_mode, &ecmds, user, &sets_mode)) {
+    if (!input_mappings_->get(seq, bind_mode, &ecmds, user, &sets_mode)) {
         return false;
     }
 
@@ -116,7 +116,7 @@ bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bo
 
 /// List all current key bindings.
 void builtin_bind_t::list(const wchar_t *bind_mode, bool user, io_streams_t &streams) {
-    const std::vector<input_mapping_name_t> lst = input_mapping_get_names(user);
+    const std::vector<input_mapping_name_t> lst = input_mappings_->get_names(user);
 
     for (const input_mapping_name_t &binding : lst) {
         if (bind_mode && bind_mode != binding.mode) {
@@ -180,13 +180,13 @@ bool builtin_bind_t::add(const wchar_t *seq, const wchar_t *const *cmds, size_t 
     if (terminfo) {
         wcstring seq2;
         if (get_terminfo_sequence(seq, &seq2, streams)) {
-            input_mapping_add(seq2.c_str(), cmds, cmds_len, mode, sets_mode, user);
+            input_mappings_->add(seq2.c_str(), cmds, cmds_len, mode, sets_mode, user);
         } else {
             return true;
         }
 
     } else {
-        input_mapping_add(seq, cmds, cmds_len, mode, sets_mode, user);
+        input_mappings_->add(seq, cmds, cmds_len, mode, sets_mode, user);
     }
 
     return false;
@@ -207,7 +207,7 @@ bool builtin_bind_t::add(const wchar_t *seq, const wchar_t *const *cmds, size_t 
 bool builtin_bind_t::erase(wchar_t **seq, bool all, const wchar_t *mode, bool use_terminfo,
                            bool user, io_streams_t &streams) {
     if (all) {
-        input_mapping_clear(mode, user);
+        input_mappings_->clear(mode, user);
         return false;
     }
 
@@ -218,12 +218,12 @@ bool builtin_bind_t::erase(wchar_t **seq, bool all, const wchar_t *mode, bool us
         if (use_terminfo) {
             wcstring seq2;
             if (get_terminfo_sequence(*seq++, &seq2, streams)) {
-                input_mapping_erase(seq2, mode, user);
+                input_mappings_->erase(seq2, mode, user);
             } else {
                 res = true;
             }
         } else {
-            input_mapping_erase(*seq++, mode, user);
+            input_mappings_->erase(*seq++, mode, user);
         }
     }
 
@@ -297,8 +297,8 @@ bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv, io_streams_t &
 /// List all current bind modes.
 void builtin_bind_t::list_modes(io_streams_t &streams) {
     // List all known modes, even if they are only in preset bindings.
-    const std::vector<input_mapping_name_t> lst = input_mapping_get_names(true);
-    const std::vector<input_mapping_name_t> preset_lst = input_mapping_get_names(false);
+    const std::vector<input_mapping_name_t> lst = input_mappings_->get_names(true);
+    const std::vector<input_mapping_name_t> preset_lst = input_mappings_->get_names(false);
     // A set accomplishes two things for us here:
     // - It removes duplicates (no twenty "default" entries).
     // - It sorts it, which makes it nicer on the user.

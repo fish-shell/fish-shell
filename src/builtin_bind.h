@@ -3,6 +3,7 @@
 #define FISH_BUILTIN_BIND_H
 
 #include "common.h"
+#include "input.h"
 
 class parser_t;
 struct io_streams_t;
@@ -12,8 +13,15 @@ class builtin_bind_t {
    public:
     int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv);
 
+    builtin_bind_t() : input_mappings_(input_mappings()) {}
+
    private:
     bind_cmd_opts_t *opts;
+
+    /// Note that builtin_bind_t holds the singleton lock.
+    /// It must not call out to anything which can execute fish shell code or attempt to acquire the
+    /// lock again.
+    acquired_lock<input_mapping_set_t> input_mappings_;
 
     void list(const wchar_t *bind_mode, bool user, io_streams_t &streams);
     void key_names(bool all, io_streams_t &streams);

@@ -3009,8 +3009,12 @@ static void test_input() {
     // the first!
     wcstring prefix_binding = L"qqqqqqqa";
     wcstring desired_binding = prefix_binding + L'a';
-    input_mapping_add(prefix_binding.c_str(), L"up-line");
-    input_mapping_add(desired_binding.c_str(), L"down-line");
+
+    {
+        auto input_mapping = input_mappings();
+        input_mapping->add(prefix_binding.c_str(), L"up-line");
+        input_mapping->add(desired_binding.c_str(), L"down-line");
+    }
 
     // Push the desired binding to the queue.
     for (size_t idx = 0; idx < desired_binding.size(); idx++) {

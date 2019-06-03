@@ -57,6 +57,9 @@
 /// Base open mode to pass to calls to open.
 #define OPEN_MASK 0666
 
+/// Number of calls to fork() or posix_spawn().
+static relaxed_atomic_t<int> s_fork_count{0};
+
 void exec_close(int fd) {
     ASSERT_IS_MAIN_THREAD();
 
@@ -455,7 +458,9 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
 
     // This is the parent process. Store away information on the child, and
     // possibly give it control over the terminal.
-    FLOGF(exec_fork, L"Fork #%d, pid %d: %s for '%ls'", g_fork_count, pid, fork_type, p->argv0());
+    s_fork_count++;
+    FLOGF(exec_fork, L"Fork #%d, pid %d: %s for '%ls'", int(s_fork_count), pid, fork_type,
+          p->argv0());
 
     p->pid = pid;
     on_process_created(job, p->pid);
@@ -688,7 +693,7 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
     // Prefer to use posix_spawn, since it's faster on some systems like OS X.
     bool use_posix_spawn = g_use_posix_spawn && can_use_posix_spawn_for_job(j);
     if (use_posix_spawn) {
-        g_fork_count++;  // spawn counts as a fork+exec
+        s_fork_count++;  // spawn counts as a fork+exec
         // Create posix spawn attributes and actions.
         pid_t pid = 0;
         posix_spawnattr_t attr = posix_spawnattr_t();
@@ -718,8 +723,8 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
 
         // A 0 pid means we failed to posix_spawn. Since we have no pid, we'll never get
         // told when it's exited, so we have to mark the process as failed.
-        FLOGF(exec_fork, L"Fork #%d, pid %d: spawn external command '%s' from '%ls'", g_fork_count,
-              pid, actual_cmd, file ? file : L"<no file>");
+        FLOGF(exec_fork, L"Fork #%d, pid %d: spawn external command '%s' from '%ls'",
+              int(s_fork_count), pid, actual_cmd, file ? file : L"<no file>");
         if (pid == 0) {
             job_mark_process_as_failed(j, p);
             return false;
@@ -1100,8 +1105,8 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
         }
     }
 
-    FLOGF(exec_job_exec, L"Executed job %d from command '%ls' with pgrp %d", j->job_id, j->command_wcstr(),
-         j->pgid);
+    FLOGF(exec_job_exec, L"Executed job %d from command '%ls' with pgrp %d", j->job_id,
+          j->command_wcstr(), j->pgid);
 
     j->set_flag(job_flag_t::CONSTRUCTED, true);
     if (!j->is_foreground()) {

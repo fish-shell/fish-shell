@@ -308,7 +308,6 @@ class env_stack_t final : public environment_t {
     static env_stack_t &globals();
 };
 
-extern int g_fork_count;
 extern bool g_use_posix_spawn;
 
 extern bool term_has_xn;  // does the terminal have the "eat_newline_glitch"

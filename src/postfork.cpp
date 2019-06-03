@@ -171,8 +171,6 @@ int setup_child_process(process_t *p, const dup2_list_t &dup2s) {
     return 0;
 }
 
-int g_fork_count = 0;
-
 /// This function is a wrapper around fork. If the fork calls fails with EAGAIN, it is retried
 /// FORK_LAPS times, with a very slight delay between each lap. If fork fails even then, the process
 /// will exit with an error message.
@@ -190,8 +188,6 @@ pid_t execute_fork(bool wait_for_threads_to_die) {
     pid_t pid;
     struct timespec pollint;
     int i;
-
-    g_fork_count++;
 
     for (i = 0; i < FORK_LAPS; i++) {
         pid = fork();

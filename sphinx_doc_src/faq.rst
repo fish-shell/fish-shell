@@ -95,7 +95,6 @@ If you are just interested in success or failure, you can run the command direct
 
 See the documentation for :ref:`test <cmd-test>` and :ref:`if <cmd-if>` for more information.
 
-~~
 How do I set an environment variable for just one command?
 ----------------------------------------------------------
 ``SOME_VAR=1 command`` produces an error: ``Unknown command "SOME_VAR=1"``.
@@ -163,12 +162,10 @@ How do I customize my syntax highlighting colors?
 -------------------------------------------------
 Use the web configuration tool, :ref:`fish_config <cmd-fish_config>`, or alter the `fish_color family of environment variables <index#variables-color>`__.
 
-~~
 How do I update man page completions?
 -------------------------------------
 Use the :ref:`fish_update_completions <cmd-fish_update_completions>` command.
 
-~~
 I accidentally entered a directory path and fish changed directory. What happened?
 ----------------------------------------------------------------------------------
 If fish is unable to locate a command with a given name, and it starts with '``.``', '``/``' or '``~``', fish will test if a directory of that name exists. If it does, it is implicitly assumed that you want to change working directory. For example, the fastest way to switch to your home directory is to simply press ``~`` and enter.

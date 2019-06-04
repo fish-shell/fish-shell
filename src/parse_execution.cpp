@@ -1079,7 +1079,7 @@ parse_execution_result_t parse_execution_context_t::populate_job_process(
         }
         default: {
             FLOGF(error, L"'%ls' not handled by new parser yet.",
-                 specific_statement.describe().c_str());
+                  specific_statement.describe().c_str());
             PARSER_DIE();
             break;
         }
@@ -1383,7 +1383,7 @@ parse_execution_result_t parse_execution_context_t::eval_node(tnode_t<g::stateme
         status = this->run_switch_statement(switchstat);
     } else {
         FLOGF(error, L"Unexpected node %ls found in %s", statement.node()->describe().c_str(),
-             __FUNCTION__);
+              __FUNCTION__);
         abort();
     }
     return status;

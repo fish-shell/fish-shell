@@ -6,10 +6,10 @@
 #include "config.h"
 
 #define PARSE_ASSERT(a) assert(a)
-#define PARSER_DIE()                  \
-    do {                              \
+#define PARSER_DIE()                   \
+    do {                               \
         FLOG(error, L"Parser dying!"); \
-        exit_without_destructors(-1); \
+        exit_without_destructors(-1);  \
     } while (0)
 
 // IMPORTANT: If the following enum table is modified you must also update token_enum_map below.

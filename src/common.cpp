@@ -2436,7 +2436,7 @@ void redirect_tty_output() {
 [[noreturn]] void __fish_assert(const char *msg, const char *file, size_t line, int error) {
     if (error) {
         FLOGF(error, L"%s:%zu: failed assertion: %s: errno %d (%s)", file, line, msg, error,
-             std::strerror(error));
+              std::strerror(error));
     } else {
         FLOGF(error, L"%s:%zu: failed assertion: %s", file, line, msg);
     }

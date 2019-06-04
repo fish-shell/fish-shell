@@ -73,9 +73,7 @@ enum class readline_cmd_t {
 };
 
 // The range of key codes for inputrc-style keyboard functions.
-enum {
-    R_END_INPUT_FUNCTIONS = static_cast<int>(readline_cmd_t::reverse_repeat_jump) + 1
-};
+enum { R_END_INPUT_FUNCTIONS = static_cast<int>(readline_cmd_t::reverse_repeat_jump) + 1 };
 
 /// Represents an event on the character input stream.
 enum class char_event_type_t : uint8_t {

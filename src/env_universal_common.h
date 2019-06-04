@@ -49,7 +49,6 @@ class env_universal_t {
     // Path that we save to. If empty, use the default.
     wcstring explicit_vars_path;
 
-
     // Whether it's OK to save. This may be set to false if we discover that a future version of
     // fish wrote the uvars contents.
     bool ok_to_save{true};

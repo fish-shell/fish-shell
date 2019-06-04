@@ -248,7 +248,8 @@ static wcstring encode_serialized(const wcstring_list_t &vals) {
     return join_strings(vals, UVAR_ARRAY_SEP);
 }
 
-env_universal_t::env_universal_t(wcstring path) : narrow_vars_path(wcs2string(path)), explicit_vars_path(std::move(path)) {}
+env_universal_t::env_universal_t(wcstring path)
+    : narrow_vars_path(wcs2string(path)), explicit_vars_path(std::move(path)) {}
 
 maybe_t<env_var_t> env_universal_t::get(const wcstring &name) const {
     var_table_t::const_iterator where = vars.find(name);
@@ -453,7 +454,7 @@ bool env_universal_t::write_to_fd(int fd, const wcstring &path) {
     if (write_loop(fd, contents.data(), contents.size()) < 0) {
         const char *error = std::strerror(errno);
         FLOGF(error, _(L"Unable to write to universal variables file '%ls': %s"), path.c_str(),
-             error);
+              error);
         success = false;
     }
 
@@ -469,7 +470,7 @@ bool env_universal_t::move_new_vars_file_into_place(const wcstring &src, const w
     if (ret != 0) {
         const char *error = std::strerror(errno);
         FLOGF(error, _(L"Unable to rename file from '%ls' to '%ls': %s"), src.c_str(), dst.c_str(),
-             error);
+              error);
     }
     return ret == 0;
 }
@@ -599,7 +600,7 @@ bool env_universal_t::open_and_acquire_lock(const std::string &path, int *out_fd
 #endif
             const char *error = std::strerror(errno);
             FLOGF(error, _(L"Unable to open universal variable file '%ls': %s"), path.c_str(),
-                 error);
+                  error);
             break;
         }
 
@@ -1084,7 +1085,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
             if (fstat(fd, &buf) < 0) {
                 const char *error = std::strerror(errno);
                 FLOGF(error, _(L"Unable to fstat shared memory object with path '%s': %s"), path,
-                     error);
+                      error);
                 errored = true;
             }
             size = buf.st_size;
@@ -1095,7 +1096,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
         if (set_size && ftruncate(fd, sizeof(universal_notifier_shmem_t)) < 0) {
             const char *error = std::strerror(errno);
             FLOGF(error, _(L"Unable to truncate shared memory object with path '%s': %s"), path,
-                 error);
+                  error);
             errored = true;
         }
 
@@ -1106,7 +1107,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
             if (addr == MAP_FAILED) {
                 const char *error = std::strerror(errno);
                 FLOGF(error, _(L"Unable to memory map shared memory object with path '%s': %s"),
-                     path, error);
+                      path, error);
                 this->region = NULL;
             } else {
                 this->region = static_cast<universal_notifier_shmem_t *>(addr);

@@ -1584,7 +1584,10 @@ struct pwd_environment_t : public environment_t {
         return {};
     }
 
-    wcstring_list_t get_names(int flags) const override { UNUSED(flags); return {L"PWD"}; }
+    wcstring_list_t get_names(int flags) const override {
+        UNUSED(flags);
+        return {L"PWD"};
+    }
 };
 
 /// Perform parameter expansion and test if the output equals the zero-terminated parameter list

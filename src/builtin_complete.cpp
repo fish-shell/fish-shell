@@ -264,7 +264,8 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (result_mode.no_files && result_mode.force_files) {
-        streams.err.append_format(BUILTIN_ERR_COMBO2, L"complete", L"'--no-files' and '--force-files'");
+        streams.err.append_format(BUILTIN_ERR_COMBO2, L"complete",
+                                  L"'--no-files' and '--force-files'");
         return STATUS_INVALID_ARGS;
     }
 

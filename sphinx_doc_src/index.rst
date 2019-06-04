@@ -1103,7 +1103,7 @@ For example::
 Exporting variables
 -------------------
 
-Variables in fish can be "exported", so they will be inherited by any commands started by fish.
+Variables in fish can be "exported", so they will be inherited by any commands started by fish. In particular, this is necessary for variables used to configure external commands like $LESS or $GOPATH, but also for variables that contain general system settings like $PATH or $LANGUAGE. If an external command needs to know a variable, it needs to be exported.
 
 Variables can be explicitly set to be exported with the ``-x`` or ``--export`` switch, or not exported with the ``-u`` or ``--unexport`` switch.  The exporting rules when setting a variable are identical to the scoping rules for variables:
 
@@ -1111,7 +1111,7 @@ Variables can be explicitly set to be exported with the ``-x`` or ``--export`` s
 
 - If a variable is not explicitly set to be exported or not exported, but has been previously defined, the previous exporting rule for the variable is kept.
 
-- Otherwise, the variable will not be exported.
+- Otherwise, by default, the variable will not be exported.
 
 - If a variable has local scope and is exported, any function called receives a _copy_ of it, so any changes it makes to the variable disappear once the function returns.
 

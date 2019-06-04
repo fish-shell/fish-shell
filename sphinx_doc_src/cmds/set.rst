@@ -63,20 +63,20 @@ If the variable name is one or more list elements, such as ``PATH[1 3 7]``, only
 
 The scoping rules when creating or updating a variable are:
 
--# Variables may be explicitly set to universal, global or local. Variables with the same name in different scopes will not be changed.
+- Variables may be explicitly set to universal, global or local. Variables with the same name in different scopes will not be changed.
 
--# If a variable is not explicitly set to be either universal, global or local, but has been previously defined, the previous variable scope is used.
+- If a variable is not explicitly set to be either universal, global or local, but has been previously defined, the previous variable scope is used.
 
--# If a variable is not explicitly set to be either universal, global or local and has never before been defined, the variable will be local to the currently executing function. Note that this is different from using the ``-l`` or ``--local`` flag. If one of those flags is used, the variable will be local to the most inner currently executing block, while without these the variable will be local to the function. If no function is executing, the variable will be global.
+- If a variable is not explicitly set to be either universal, global or local and has never before been defined, the variable will be local to the currently executing function. Note that this is different from using the ``-l`` or ``--local`` flag. If one of those flags is used, the variable will be local to the most inner currently executing block, while without these the variable will be local to the function. If no function is executing, the variable will be global.
 
 
 The exporting rules when creating or updating a variable are identical to the scoping rules for variables:
 
--# Variables may be explicitly set to either exported or not exported. When an exported variable goes out of scope, it is unexported.
+- Variables may be explicitly set to either exported or not exported. When an exported variable goes out of scope, it is unexported.
 
--# If a variable is not explicitly set to be exported or not exported, but has been previously defined, the previous exporting rule for the variable is kept.
+- If a variable is not explicitly set to be exported or not exported, but has been previously defined, the previous exporting rule for the variable is kept.
 
--# If a variable is not explicitly set to be either exported or unexported and has never before been defined, the variable will not be exported.
+- If a variable is not explicitly set to be either exported or unexported and has never before been defined, the variable will not be exported.
 
 
 In query mode, the scope to be examined can be specified.

@@ -30,11 +30,11 @@ The following options are available:
 
 - ``-D`` or ``--details`` reports the path name where each function is defined or could be autoloaded, ``stdin`` if the function was defined interactively or on the command line or by reading stdin, and ``n/a`` if the function isn't available. If the ``--verbose`` option is also specified then five lines are written:
 
-    -# the pathname as already described,
-    -# ``autoloaded``, ``not-autoloaded`` or ``n/a``,
-    -# the line number within the file or zero if not applicable,
-    -# ``scope-shadowing`` if the function shadows the vars in the calling function (the normal case if it wasn't defined with ``--no-scope-shadowing``), else ``no-scope-shadowing``, or ``n/a`` if the function isn't defined,
-    -# the function description minimally escaped so it is a single line or ``n/a`` if the function isn't defined.
+    - the pathname as already described,
+    - ``autoloaded``, ``not-autoloaded`` or ``n/a``,
+    - the line number within the file or zero if not applicable,
+    - ``scope-shadowing`` if the function shadows the vars in the calling function (the normal case if it wasn't defined with ``--no-scope-shadowing``), else ``no-scope-shadowing``, or ``n/a`` if the function isn't defined,
+    - the function description minimally escaped so it is a single line or ``n/a`` if the function isn't defined.
 
 You should not assume that only five lines will be written since we may add additional information to the output in the future.
 

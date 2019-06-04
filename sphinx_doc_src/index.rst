@@ -1038,11 +1038,11 @@ There are three kinds of variables in fish: universal, global and local variable
 
 Variables can be explicitly set to be universal with the ``-U`` or ``--universal`` switch, global with the ``-g`` or ``--global`` switch, or local with the ``-l`` or ``--local`` switch.  The scoping rules when creating or updating a variable are:
 
-- If a variable is explicitly set to either universal, global or local, that setting will be honored. If a variable of the same name exists in a different scope, that variable will not be changed.
+- If a variable is explicitly set to a scope (universal, global or local), that setting will be honored. If a variable of the same name exists in a different scope, that variable will not be changed.
 
-- If a variable is not explicitly set to be either universal, global or local, but has been previously defined, the variable scope is not changed.
+- If a variable is not explicitly set to a scope, but has been previously defined, the variable scope is not changed.
 
-- If a variable is not explicitly set to be either universal, global or local and has never before been defined, the variable will be local to the currently executing function. Note that this is different from using the ``-l`` or ``--local`` flag. If one of those flags is used, the variable will be local to the most inner currently executing block, while without these the variable will be local to the function. If no function is executing, the variable will be global.
+- If a variable is not explicitly set to a scope and has not been defined, the variable will be local to the currently executing function. Note that this is different from using the ``-l`` or ``--local`` flag. If one of those flags is used, the variable will be local to the most inner currently executing block, while without these the variable will be local to the function. If no function is executing, the variable will be global.
 
 There may be many variables with the same name, but different scopes. When using a variable, the variable scope will be searched from the inside out, i.e. a local variable will be used rather than a global variable with the same name, a global variable will be used rather than a universal variable with the same name.
 
@@ -1103,19 +1103,21 @@ For example::
 Exporting variables
 -------------------
 
-Variables in fish can be exported. This means the variable will be inherited by any commands started by fish. It is convention that exported variables are in uppercase and unexported variables are in lowercase.
+Variables in fish can be "exported", so they will be inherited by any commands started by fish.
 
-Variables can be explicitly set to be exported with the ``-x`` or ``--export`` switch, or not exported with the ``-u`` or ``--unexport`` switch.  The exporting rules when creating or updating a variable are identical to the scoping rules for variables:
+Variables can be explicitly set to be exported with the ``-x`` or ``--export`` switch, or not exported with the ``-u`` or ``--unexport`` switch.  The exporting rules when setting a variable are identical to the scoping rules for variables:
 
--# If a variable is explicitly set to either be exported or not exported, that setting will be honored.
+- If a variable is explicitly set to either be exported or not exported, that setting will be honored.
 
--# If a variable is not explicitly set to be exported or not exported, but has been previously defined, the previous exporting rule for the variable is kept.
+- If a variable is not explicitly set to be exported or not exported, but has been previously defined, the previous exporting rule for the variable is kept.
 
--# If a variable is not explicitly set to be either exported or not exported and has never before been defined, the variable will not be exported.
+- Otherwise, the variable will not be exported.
 
--# If a variable has local scope and is exported, any function called receives a _copy_ of it, so any changes it makes to the variable disappear once the function returns.
+- If a variable has local scope and is exported, any function called receives a _copy_ of it, so any changes it makes to the variable disappear once the function returns.
 
--# If a variable has global scope, it is accessible read-write to functions whether it is exported or not.
+- Global variables are accessible to functions whether they are exported or not.
+
+As a naming convention, exported variables are in uppercase and unexported variables are in lowercase.
 
 .. _variables-lists:
 
@@ -1618,11 +1620,11 @@ Running multiple programs
 
 Normally when ``fish`` starts a program, this program will be put in the foreground, meaning it will take control of the terminal and ``fish`` will be stopped until the program finishes. Sometimes this is not desirable. For example, you may wish to start an application with a graphical user interface from the terminal, and then be able to continue using the shell. In such cases, there are several ways in which the user can change fish's behavior.
 
--# By ending a command with the ``&`` (ampersand) symbol, the user tells ``fish`` to put the specified command into the background. A background process will be run simultaneous with ``fish``. ``fish`` will retain control of the terminal, so the program will not be able to read from the keyboard.
+- By ending a command with the ``&`` (ampersand) symbol, the user tells ``fish`` to put the specified command into the background. A background process will be run simultaneous with ``fish``. ``fish`` will retain control of the terminal, so the program will not be able to read from the keyboard.
 
--# By pressing :kbd:`Control+Z`, the user stops a currently running foreground  program and returns control to ``fish``. Some programs do not support this feature, or remap it to another key. GNU Emacs uses :kbd:`Control+X` :kbd:`z` to stop running.
+- By pressing :kbd:`Control+Z`, the user stops a currently running foreground  program and returns control to ``fish``. Some programs do not support this feature, or remap it to another key. GNU Emacs uses :kbd:`Control+X` :kbd:`z` to stop running.
 
--# By using the :ref:`bg <cmd-bg>` and :ref:`fg <cmd-fg>` builtin commands, the user can send any currently running job into the foreground or background.
+- By using the :ref:`bg <cmd-bg>` and :ref:`fg <cmd-fg>` builtin commands, the user can send any currently running job into the foreground or background.
 
 Note that functions cannot be started in the background. Functions that are stopped and then restarted in the background using the ``bg`` command will not execute correctly.
 

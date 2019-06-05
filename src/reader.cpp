@@ -1010,6 +1010,7 @@ static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) 
         case rl::history_token_search_backward:
         case rl::history_token_search_forward:
         case rl::accept_autosuggestion:
+        case rl::delete_or_exit:
         case rl::cancel: {
             // These commands always end paging.
             return true;
@@ -2454,6 +2455,17 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::end_of_buffer: {
             update_buff_pos(&command_line, command_line.size());
             reader_repaint_needed();
+            break;
+        }
+        case rl::delete_or_exit: {
+            if (!command_line.text.empty()) {
+                command_line.position = 0;
+                command_line.text = L"";
+                update_buff_pos(&command_line, 0);
+                reader_repaint_needed();
+            } else {
+                reader_set_end_loop(true);
+            }
             break;
         }
         case rl::cancel: {

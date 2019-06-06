@@ -255,6 +255,8 @@ To give a variable to an external command, it needs to be "exported". Unlike oth
 It can also be unexported with ``--unexport`` or ``-u``.
 
 
+.. _tut_lists:
+
 Lists
 -----
 
@@ -589,7 +591,7 @@ You can choose among some sample prompts by running ``fish_config prompt``. ``fi
 $PATH
 -----
 
-``$PATH`` is an environment variable containing the directories that ``fish`` searches for commands. Unlike other shells, $PATH is a [list](#tut_lists), not a colon-delimited string.
+``$PATH`` is an environment variable containing the directories that ``fish`` searches for commands. Unlike other shells, $PATH is a :ref:`list <tut_lists>`, not a colon-delimited string.
 
 To prepend /usr/local/bin and /usr/sbin to ``$PATH``, you can write::
 

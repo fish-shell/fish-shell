@@ -383,6 +383,8 @@ To write them on the same line, use the semicolon (";"). That means the followin
 Exit Status
 -----------
 
+When a command exits, it returns a status code as a natural number. This indicates how the command fared - 0 usually means success, while the others signify kinds of failure. For instance fish's ``set --query`` returns the number of variables it queried that weren't set - ``set --query PATH`` usually returns 0, ``set --query arglbargl boogagoogoo`` usually returns 2.
+
 Unlike other shells, ``fish`` stores the exit status of the last command in ``$status`` instead of ``$?``.
 
 
@@ -393,8 +395,11 @@ Unlike other shells, ``fish`` stores the exit status of the last command in ``$s
     1
 
 
-Zero is considered success, and non-zero is failure. There is also a ``$pipestatus`` list variable for the exit statues of processes in a pipe.
+This indicates how the command fared - 0 usually means success, while the others signify kinds of failure. For instance fish's ``set --query`` returns the number of variables it queried that weren't set - ``set --query PATH`` usually returns 0, ``set --query arglbargl boogagoogoo`` usually returns 2.
 
+There is also a ``$pipestatus`` list variable for the exit statuses [#]_ of processes in a pipe.
+
+.. [#] or "stati" if you prefer, or "statūs" if you've time-travelled from ancient Rome or work as a latin teacher
 
 Combiners (And, Or, Not)
 ------------------------

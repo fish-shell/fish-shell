@@ -410,6 +410,7 @@ fish supports the familiar ``&&`` and ``||`` to combine commands, and ``!`` to n
 
     >_ ./configure && make && sudo make install
 
+Here, `make` is only executed if `./configure` succeeds (returns 0), and `sudo make install` is only executed if both `./configure` and `make` succeed.
 
 fish also supports ``and``, ``or``, and ``not``. The first two are job modifiers and have lower precedence. Example usage::
 
@@ -458,6 +459,13 @@ To compare strings or numbers or check file properties (whether a file exists or
         echo $number is five or less
     end
 
+    # or
+
+    if test -e /etc/hosts # is true if the path /etc/hosts exists - it could be a file or directory or symlink (or possibly something else).
+        echo We most likely have a hosts file
+    else
+        echo We do not have a hosts file
+    end
 
 `Combiners <#tut_combiners>`__ can also be used to make more complex conditions, like
 
@@ -529,7 +537,7 @@ While loops::
     Loop forever
     Loop forever
     Loop forever
-    ...
+    ... # yes, this really will loop forever. Unless you abort it with ctrl-c.
 
 
 For loops can be used to iterate over a list. For example, a list of files::
@@ -581,7 +589,7 @@ You can choose among some sample prompts by running ``fish_config prompt``. ``fi
 $PATH
 -----
 
-``$PATH`` is an environment variable containing the directories in which ``fish`` searches for commands. Unlike other shells, $PATH is a [list](#tut_lists), not a colon-delimited string.
+``$PATH`` is an environment variable containing the directories that ``fish`` searches for commands. Unlike other shells, $PATH is a [list](#tut_lists), not a colon-delimited string.
 
 To prepend /usr/local/bin and /usr/sbin to ``$PATH``, you can write::
 
@@ -592,6 +600,12 @@ To remove /usr/local/bin from ``$PATH``, you can write::
 
     >_ set PATH (string match -v /usr/local/bin $PATH)
 
+For compatibility with other shells and external commands, $PATH is a :ref:`path variable<variables-path>`, and so will be joined with colons (not spaces) when you quote it:
+
+    >_ echo "$PATH"
+    /usr/local/sbin:/usr/local/bin:/usr/bin
+
+and it will be exported like that, and when fish starts it splits the $PATH it receives into a list on colon.
 
 You can do so directly in ``config.fish``, like you might do in other shells with ``.profile``. See :ref:`this example <path_example>`.
 
@@ -623,6 +637,8 @@ It is possible to directly create functions and variables in ``config.fish`` fil
 
 
 However, it is more common and efficient to use  autoloading functions and universal variables.
+
+If you want to organize your configuration, fish also reads commands in .fish files in ``~/.config/fish/conf.d/``. See :ref:`initialization <initialization>` for the details.
 
 Autoloading Functions
 ---------------------

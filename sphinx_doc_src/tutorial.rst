@@ -209,7 +209,7 @@ Variable substitution also occurs in double quotes, but not single quotes::
     My current directory is $PWD
 
 
-Unlike other shells, ``fish`` has no dedicated syntax for setting variables. Instead it has an ordinary command: ``set``, which takes a variable name, and then its value.
+Unlike other shells, ``fish`` has no dedicated `VARIABLE=VALUE` syntax for setting variables. Instead it has an ordinary command: ``set``, which takes a variable name, and then its value.
 
 
 

@@ -211,8 +211,6 @@ Variable substitution also occurs in double quotes, but not single quotes::
 
 Unlike other shells, ``fish`` has no dedicated `VARIABLE=VALUE` syntax for setting variables. Instead it has an ordinary command: ``set``, which takes a variable name, and then its value.
 
-
-
 ::
 
     >_ set name 'Mister Noodle'
@@ -358,7 +356,6 @@ Command substitutions are not expanded within quotes. Instead, you can temporari
 Unlike other shells, fish does not split command substitutions on any whitespace (like spaces or tabs), only newlines. This can be an issue with commands like ``pkg-config`` that print what is meant to be multiple arguments on a single line. To split it on spaces too, use ``string split``.
 
 
-
 ::
 
     >_ printf '%s\n' (pkg-config --libs gio-2.0)
@@ -367,7 +364,6 @@ Unlike other shells, fish does not split command substitutions on any whitespace
     -lgio-2.0
     -lgobject-2.0
     -lglib-2.0
-
 
 
 Separating Commands (Semicolon)
@@ -384,12 +380,10 @@ To write them on the same line, use the semicolon (";"). That means the followin
     echo chips
 
 
-
 Exit Status
 -----------
 
 Unlike other shells, ``fish`` stores the exit status of the last command in ``$status`` instead of ``$?``.
-
 
 
 ::
@@ -423,12 +417,10 @@ As mentioned in `the section on the semicolon <#tut_semicolon>`__, this can also
     or echo "Backup failed"
 
 
-
 Conditionals (If, Else, Switch)
 -------------------------------
 
 Use ``if``, ``else if``, and ``else`` to conditionally execute code, based on the exit status of a command.
-
 
 
 ::
@@ -443,7 +435,6 @@ Use ``if``, ``else if``, and ``else`` to conditionally execute code, based on th
 
 
 To compare strings or numbers or check file properties (whether a file exists or is writeable and such), use :ref:`test <cmd-test>`, like
-
 
 
 ::
@@ -462,7 +453,6 @@ To compare strings or numbers or check file properties (whether a file exists or
 
 
 `Combiners <#tut_combiners>`__ can also be used to make more complex conditions, like
-
 
 
 ::
@@ -521,7 +511,6 @@ You can see the source for any function by passing its name to ``functions``::
     end
 
 
-
 Loops
 -----
 
@@ -548,7 +537,6 @@ Iterating over a list of numbers can be done with ``seq``::
     >_ for x in (seq 5)
         touch file_$x.txt
     end
-
 
 
 Prompt

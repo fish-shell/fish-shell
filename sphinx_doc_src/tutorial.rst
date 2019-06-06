@@ -49,6 +49,8 @@ Running Commands
     hello world
 
 
+This runs the command `echo` with the arguments `hello` and `world`.
+
 You can include a literal space in an argument with a backslash, or by using single or double quotes::
 
     >_ mkdir My\ Files
@@ -201,7 +203,7 @@ Like other shells, a dollar sign performs variable substitution::
     My home directory is /home/tutorial
 
 
-Variable substitution also occurs in double quotes, but not single quotes::
+Variable substitution also happens in double quotes, but not single quotes::
 
     >_ echo "My current directory is $PWD"
     My current directory is /home/tutorial

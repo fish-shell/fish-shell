@@ -231,24 +231,7 @@ Unlike other shells, variables are not further split after substitution::
 
 In bash, this would have created two directories "Mister" and "Noodle". In ``fish``, it created only one: the variable had the value "Mister Noodle", so that is the argument that was passed to ``mkdir``, spaces and all. Other shells use the term "arrays", rather than lists.
 
-
-Exports (Shell Variables)
--------------------------
-
-Unlike other shells, ``fish`` does not have an export command. Instead, a variable is exported via an option to ``set``, either ``--export`` or just ``-x``.
-
-
-
-::
-
-    >_ set -x MyVariable SomeValue
-    >_ env | grep MyVariable
-    MyVariable=SomeValue
-
-
-You can erase a variable with ``-e`` or ``--erase``
-
-
+You can erase (or "delete") a variable with ``-e`` or ``--erase``
 
 ::
 
@@ -256,6 +239,20 @@ You can erase a variable with ``-e`` or ``--erase``
     >_ env | grep MyVariable
     (no output)
 
+Exports (Shell Variables)
+-------------------------
+
+Sometimes you need to have a variable available to an external command, often as a setting. For example many programs like `git` or `man` read the `$PAGER` variable to figure out your preferred pager (the program that lets you scroll text). Other variables used like this include `$BROWSER`, `$LANG` (to configure your language) and `$PATH`. You'll note these are written in ALLCAPS, but that's just a convention.
+
+To give a variable to an external command, it needs to be "exported". Unlike other shells, ``fish`` does not have an export command. Instead, a variable is exported via an option to ``set``, either ``--export`` or just ``-x``.
+
+::
+
+    >_ set -x MyVariable SomeValue
+    >_ env | grep MyVariable
+    MyVariable=SomeValue
+
+It can also be unexported with ``--unexport`` or ``-u``.
 
 
 Lists

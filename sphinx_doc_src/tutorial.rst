@@ -232,23 +232,6 @@ Unlike other shells, variables are not further split after substitution::
 In bash, this would have created two directories "Mister" and "Noodle". In ``fish``, it created only one: the variable had the value "Mister Noodle", so that is the argument that was passed to ``mkdir``, spaces and all. Other shells use the term "arrays", rather than lists.
 
 
-Exit Status
------------
-
-Unlike other shells, ``fish`` stores the exit status of the last command in ``$status`` instead of ``$?``.
-
-
-
-::
-
-    >_ false
-    >_ echo $status
-    1
-
-
-Zero is considered success, and non-zero is failure. There is also a ``$pipestatus`` list variable for the exit statues of processes in a pipe.
-
-
 Exports (Shell Variables)
 -------------------------
 
@@ -403,6 +386,23 @@ To write them on the same line, use the semicolon (";"). That means the followin
     echo fish
     echo chips
 
+
+
+Exit Status
+-----------
+
+Unlike other shells, ``fish`` stores the exit status of the last command in ``$status`` instead of ``$?``.
+
+
+
+::
+
+    >_ false
+    >_ echo $status
+    1
+
+
+Zero is considered success, and non-zero is failure. There is also a ``$pipestatus`` list variable for the exit statues of processes in a pipe.
 
 
 Combiners (And, Or, Not)

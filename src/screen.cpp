@@ -699,17 +699,21 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         }
 
         // Now actually output stuff.
-        for (; j < o_line.size(); j++) {
+        for (; ; j++) {
+            bool done = j >= o_line.size();
+            // Clear the screen if we have not done so yet.
             // If we are about to output into the last column, clear the screen first. If we clear
             // the screen after we output into the last column, it can erase the last character due
             // to the sticky right cursor. If we clear the screen too early, we can defeat soft
             // wrapping.
-            if (j + 1 == (size_t)screen_width && should_clear_screen_this_line &&
-                !has_cleared_screen) {
+            if (should_clear_screen_this_line && !has_cleared_screen
+                && (done || j + 1 == (size_t)screen_width)) {
                 s_move(scr, current_width, (int)i);
                 s_write_mbs(scr, clr_eos);
                 has_cleared_screen = true;
             }
+            if (done)
+                break;
 
             perform_any_impending_soft_wrap(scr, current_width, (int)i);
             s_move(scr, current_width, (int)i);
@@ -717,13 +721,6 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
             auto width = fish_wcwidth_min_0(o_line.char_at(j));
             s_write_char(scr, o_line.char_at(j), width);
             current_width += width;
-        }
-
-        // Clear the screen if we have not done so yet.
-        if (should_clear_screen_this_line && !has_cleared_screen) {
-            s_move(scr, current_width, (int)i);
-            s_write_mbs(scr, clr_eos);
-            has_cleared_screen = true;
         }
 
         bool clear_remainder = false;

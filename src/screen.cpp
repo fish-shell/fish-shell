@@ -388,9 +388,12 @@ static void s_desired_append_char(screen_t *s, wchar_t b, highlight_spec_t c, in
         // Current line is definitely hard wrapped.
         s->desired.create_line(s->desired.line_count());
         s->desired.line(s->desired.cursor.y).is_soft_wrapped = false;
-        s->desired.cursor.y++;
+        int line_no = ++s->desired.cursor.y;
         s->desired.cursor.x = 0;
-        for (size_t i = 0; i < prompt_width + indent * INDENT_STEP; i++) {
+        size_t indentation = prompt_width + indent * INDENT_STEP;
+        line_t &line = s->desired.line(line_no);
+        line.indentation = indentation;
+        for (size_t i = 0; i < indentation; i++) {
             s_desired_append_char(s, L' ', highlight_spec_t{}, indent, prompt_width, 1);
         }
     } else if (b == L'\r') {
@@ -650,6 +653,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         line_t &s_line = scr->actual.create_line(i);
         size_t start_pos = i == 0 ? left_prompt_width : 0;
         int current_width = 0;
+        bool has_cleared_line = false;
 
         // If this is the last line, maybe we should clear the screen.
         const bool should_clear_screen_this_line =
@@ -659,13 +663,28 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         size_t skip_remaining = start_pos;
 
         const size_t shared_prefix = line_shared_prefix(o_line, s_line);
+        size_t skip_prefix = shared_prefix;
+        if (shared_prefix < o_line.indentation) {
+            if (o_line.indentation > s_line.indentation
+                && s_line.indentation != s_line.size()
+                && !has_cleared_screen && clr_eol && clr_eos) {
+                s_set_color(scr, vars, highlight_spec_t{});
+                s_move(scr, 0, (int)i);
+                s_write_mbs(scr,
+                            should_clear_screen_this_line ? clr_eos : clr_eol);
+                has_cleared_screen = should_clear_screen_this_line;
+                has_cleared_line = true;
+            }
+            skip_prefix = o_line.indentation;
+        }
         if (!should_clear_screen_this_line) {
             // Compute how much we should skip. At a minimum we skip over the prompt. But also skip
             // over the shared prefix of what we want to output now, and what we output before, to
             // avoid repeatedly outputting it.
-            if (shared_prefix > 0) {
-                size_t prefix_width = fish_wcswidth(&o_line.text.at(0), shared_prefix);
-                if (prefix_width > skip_remaining) skip_remaining = prefix_width;
+            if (skip_prefix > 0) {
+                size_t skip_width = shared_prefix < skip_prefix ? skip_prefix
+                    : fish_wcswidth(&o_line.text.at(0), shared_prefix);
+                if (skip_width > skip_remaining) skip_remaining = skip_width;
             }
 
             // If we're soft wrapped, and if we're going to change the first character of the next
@@ -727,7 +746,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         // Clear the remainder of the line if we need to clear and if we didn't write to the end of
         // the line. If we did write to the end of the line, the "sticky right edge" (as part of
         // auto_right_margin) means that we'll be clearing the last character we wrote!
-        if (has_cleared_screen) {
+        if (has_cleared_screen || has_cleared_line) {
             // Already cleared everything.
             clear_remainder = false;
         } else if (need_clear_lines && current_width < screen_width) {

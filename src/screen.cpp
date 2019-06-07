@@ -135,7 +135,7 @@ static bool is_osc_escape_seq(const wchar_t *code, size_t *resulting_length) {
     return found;
 }
 
-/// Generic VT100 one byte sequence: CSI followed by something in the range @ through _.
+/// Generic VT100 three byte sequence: CSI followed by something in the range @ through _.
 static bool is_single_byte_escape_seq(const wchar_t *code, size_t *resulting_length) {
     bool found = false;
     if (code[1] == L'[' && (code[2] >= L'@' && code[2] <= L'_')) {

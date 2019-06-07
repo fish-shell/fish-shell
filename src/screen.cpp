@@ -136,7 +136,7 @@ static bool is_osc_escape_seq(const wchar_t *code, size_t *resulting_length) {
 }
 
 /// Generic VT100 three byte sequence: CSI followed by something in the range @ through _.
-static bool is_single_byte_escape_seq(const wchar_t *code, size_t *resulting_length) {
+static bool is_three_byte_escape_seq(const wchar_t *code, size_t *resulting_length) {
     bool found = false;
     if (code[1] == L'[' && (code[2] >= L'@' && code[2] <= L'_')) {
         *resulting_length = 3;
@@ -253,7 +253,7 @@ size_t escape_code_length(const wchar_t *code) {
     if (!found) found = is_visual_escape_seq(code, &esc_seq_len);
     if (!found) found = is_screen_name_escape_seq(code, &esc_seq_len);
     if (!found) found = is_osc_escape_seq(code, &esc_seq_len);
-    if (!found) found = is_single_byte_escape_seq(code, &esc_seq_len);
+    if (!found) found = is_three_byte_escape_seq(code, &esc_seq_len);
     if (!found) found = is_csi_style_escape_seq(code, &esc_seq_len);
     if (!found) found = is_two_byte_escape_seq(code, &esc_seq_len);
     if (found) cached_layouts.add_escape_code(wcstring(code, esc_seq_len));

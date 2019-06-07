@@ -32,8 +32,9 @@ struct line_t {
     std::vector<wchar_t> text;
     std::vector<highlight_spec_t> colors;
     bool is_soft_wrapped;
+    size_t indentation;
 
-    line_t() : text(), colors(), is_soft_wrapped(false) {}
+    line_t() : text(), colors(), is_soft_wrapped(false), indentation(0) {}
 
     void clear(void) {
         text.clear();

@@ -1,14 +1,23 @@
+function __fish_ffprobe_help_type
+    printf '%s\t%s\n' long "Print more options"
+    printf '%s\t%s\n' full "Print all options"
+
+    for help_type in decoder encoder demuxer muxer filter
+        set -l regex
+
+        if test $help_type = "filter"
+            set regex '\S+\s+(\S+)\s+\S+\s+(\S+)'
+        else
+            set regex '\S+\s+(\S+)\s+(\S+)'
+        end
+
+        printf '%s\n' $help_type=(ffprobe -loglevel quiet -"$help_type"s | string trim | string match -rv '=|:$|^-' | string replace -rf "$regex" '$1\t$2')
+    end
+end
+
 # Main options
 complete -c ffprobe -s L -d "Show license"
-complete -x -c ffprobe -s h -s "?" -o help -l help -a "
-long
-full
-(ffprobe -loglevel quiet -decoders | grep -v -e '=' -e ':\$' -e '^\s-' | sed 's/[\t ]/\t/g' | cut -f 3 | sed 's/^/decoder=/g')
-(ffprobe -loglevel quiet -encoders | grep -v -e '=' -e ':\$' -e '^\s-' | sed 's/[\t ]/\t/g' | cut -f 3 | sed 's/^/encoder=/g')
-(ffprobe -loglevel quiet -demuxers | grep -v -e '=' -e ':\$' -e '^\s-' | sed 's/[\t ]/\t/g' | cut -f 4 | sed 's/^/demuxer=/g')
-(ffprobe -loglevel quiet -muxers | grep -v -e '=' -e ':\$' -e '^\s-' | sed 's/[\t ]/\t/g' | cut -f 4 | sed 's/^/muxer=/g')
-(ffprobe -loglevel quiet -filters | grep -v -e '=' -e ':\$' -e '^\s-' | sed 's/[\t ]/\t/g' | cut -f 3 | sed 's/^/filter=/g')
-" -d "Show help"
+complete -x -c ffprobe -s h -s "?" -o help -l help -a "(__fish_ffprobe_help_type)" -d "Show help"
 complete -c ffprobe -o version -d "Show version"
 complete -c ffprobe -o buildconf -d "Show build configuration"
 complete -c ffprobe -o formats -d "Show available formats"

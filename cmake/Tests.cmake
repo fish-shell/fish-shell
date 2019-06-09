@@ -26,6 +26,9 @@ IF(NOT FISH_IN_TREE_BUILD)
     ADD_DEPENDENCIES(fish_tests tests_dir)
 ENDIF()
 
+# Copy littlecheck.py
+CONFIGURE_FILE(build_tools/littlecheck.py littlecheck.py COPYONLY)
+
 # Create the 'test' target.
 # Set a policy so CMake stops complaining about the name 'test'.
 CMAKE_POLICY(PUSH)

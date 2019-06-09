@@ -1557,14 +1557,18 @@ void completer_t::perform() {
                         // Perhaps set a transient commandline so that custom completions
                         // buitin_commandline will refer to the wrapped command. But not if
                         // we're doing autosuggestions.
-                        std::unique_ptr<builtin_commandline_scoped_transient_t> bcst;
-                        if (depth > 0 && !(flags & completion_request_t::autosuggestion)) {
-                            bcst = make_unique<builtin_commandline_scoped_transient_t>(cmdline);
+                        bool wants_transient =
+                            depth > 0 && !(flags & completion_request_t::autosuggestion);
+                        if (wants_transient) {
+                            parser->libdata().transient_commandlines.push_back(cmdline);
                         }
                         // Now invoke any custom completions for this command.
                         if (!complete_param(cmd, previous_argument_unescape,
                                             current_argument_unescape, !had_ddash)) {
                             do_file = false;
+                        }
+                        if (wants_transient) {
+                            parser->libdata().transient_commandlines.pop_back();
                         }
                     };
                     walk_wrap_chain(cmd, *cmd_node.source_range(), receiver);

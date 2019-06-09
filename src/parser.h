@@ -163,7 +163,12 @@ struct library_data_t {
     const wchar_t *current_filename{};
 
     /// List of events that have been sent but have not yet been delivered because they are blocked.
-    std::vector<shared_ptr<event_t>> blocked_events;
+    std::vector<shared_ptr<event_t>> blocked_events{};
+
+    /// A stack of fake values to be returned by builtin_commandline. This is used by the completion
+    /// machinery when wrapping: e.g. if `tig` wraps `git` then git completions need to see git on
+    /// the command line.
+    wcstring_list_t transient_commandlines{};
 };
 
 class parser_t : public std::enable_shared_from_this<parser_t> {

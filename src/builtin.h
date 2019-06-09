@@ -85,24 +85,6 @@ wcstring_list_t builtin_get_names();
 void builtin_get_names(std::vector<completion_t> *list);
 const wchar_t *builtin_get_desc(const wcstring &b);
 
-/// Support for setting and removing transient command lines. This is used by
-/// 'complete -C' in order to make the commandline builtin operate on the string
-/// to complete instead of operating on whatever is to be completed. It's also
-/// used by completion wrappers, to allow a command to appear as the command
-/// being wrapped for the purposes of completion.
-///
-/// Instantiating an instance of builtin_commandline_scoped_transient_t pushes
-/// the command as the new transient commandline. The destructor removes it. It
-/// will assert if construction/destruction does not happen in a stack-like
-/// (LIFO) order.
-class builtin_commandline_scoped_transient_t {
-    size_t token;
-
-   public:
-    explicit builtin_commandline_scoped_transient_t(const wcstring &cmd);
-    ~builtin_commandline_scoped_transient_t();
-};
-
 wcstring builtin_help_get(parser_t &parser, const wchar_t *cmd);
 
 void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,

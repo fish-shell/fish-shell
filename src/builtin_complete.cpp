@@ -329,9 +329,10 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         parse_util_token_extent(do_complete_param.c_str(), do_complete_param.size(), &token, 0, 0,
                                 0);
 
-        // Create a scoped transient command line, so that bulitin_commandline will see our
+        // Create a scoped transient command line, so that builtin_commandline will see our
         // argument, not the reader buffer.
-        builtin_commandline_scoped_transient_t temp_buffer(do_complete_param);
+        parser.libdata().transient_commandlines.push_back(do_complete_param);
+        cleanup_t remove_transient([&] { parser.libdata().transient_commandlines.pop_back(); });
 
         if (parser.libdata().builtin_complete_recursion_level < 1) {
             parser.libdata().builtin_complete_recursion_level++;

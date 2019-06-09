@@ -12,6 +12,7 @@
 #include "input.h"
 #include "io.h"
 #include "parse_util.h"
+#include "parser.h"
 #include "proc.h"
 #include "reader.h"
 #include "tokenizer.h"
@@ -34,36 +35,6 @@ enum {
     INSERT_MODE,       // insert at cursor position
     APPEND_MODE        // insert at end of current token/command/buffer
 };
-
-static owning_lock<wcstring_list_t> &get_transient_stack() {
-    ASSERT_IS_MAIN_THREAD();
-    static owning_lock<wcstring_list_t> s_transient_stack;
-    return s_transient_stack;
-}
-
-static bool get_top_transient(wcstring *out_result) {
-    auto stack = get_transient_stack().acquire();
-    if (stack->empty()) {
-        return false;
-    }
-    out_result->assign(stack->back());
-    return true;
-}
-
-builtin_commandline_scoped_transient_t::builtin_commandline_scoped_transient_t(
-    const wcstring &cmd) {
-    ASSERT_IS_MAIN_THREAD();
-    auto stack = get_transient_stack().acquire();
-    stack->push_back(cmd);
-    this->token = stack->size();
-}
-
-builtin_commandline_scoped_transient_t::~builtin_commandline_scoped_transient_t() {
-    ASSERT_IS_MAIN_THREAD();
-    auto stack = get_transient_stack().acquire();
-    assert(this->token == stack->size());
-    stack->pop_back();
-}
 
 /// Replace/append/insert the selection with/at/after the specified string.
 ///
@@ -178,8 +149,10 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     int paging_mode = 0;
     const wchar_t *begin = NULL, *end = NULL;
 
+    const auto &ld = parser.libdata();
     wcstring transient_commandline;
-    if (get_top_transient(&transient_commandline)) {
+    if (!ld.transient_commandlines.empty()) {
+        transient_commandline = ld.transient_commandlines.back();
         current_buffer = transient_commandline.c_str();
         current_cursor_pos = transient_commandline.size();
     } else {

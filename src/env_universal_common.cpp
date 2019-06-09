@@ -265,36 +265,31 @@ maybe_t<env_var_t::env_var_flags_t> env_universal_t::get_flags(const wcstring &n
     return none();
 }
 
-void env_universal_t::set_internal(const wcstring &key, const env_var_t &var, bool overwrite) {
+void env_universal_t::set_internal(const wcstring &key, const env_var_t &var) {
     ASSERT_IS_LOCKED(lock);
-    if (!overwrite && this->modified.find(key) != this->modified.end()) {
-        // This value has been modified and we're not overwriting it. Skip it.
-        return;
-    }
-
     env_var_t &entry = vars[key];
     if (entry != var) {
         entry = var;
-
-        // If we are overwriting, then this is now modified.
-        if (overwrite) {
-            this->modified.insert(key);
-        }
+        this->modified.insert(key);
+        if (entry.exports()) export_generation += 1;
     }
 }
 
 void env_universal_t::set(const wcstring &key, env_var_t var) {
     scoped_lock locker(lock);
-    this->set_internal(key, std::move(var), true /* overwrite */);
+    this->set_internal(key, std::move(var));
 }
 
 bool env_universal_t::remove_internal(const wcstring &key) {
     ASSERT_IS_LOCKED(lock);
-    size_t erased = this->vars.erase(key);
-    if (erased > 0) {
+    auto iter = this->vars.find(key);
+    if (iter != this->vars.end()) {
+        if (iter->second.exports()) export_generation += 1;
+        this->vars.erase(iter);
         this->modified.insert(key);
+        return true;
     }
-    return erased > 0;
+    return false;
 }
 
 bool env_universal_t::remove(const wcstring &key) {
@@ -317,27 +312,27 @@ wcstring_list_t env_universal_t::get_names(bool show_exported, bool show_unexpor
 }
 
 // Given a variable table, generate callbacks representing the difference between our vars and the
-// new vars.
-void env_universal_t::generate_callbacks(const var_table_t &new_vars,
-                                         callback_data_list_t &callbacks) const {
+// new vars. Update our exports generation.
+void env_universal_t::generate_callbacks_and_update_exports(const var_table_t &new_vars,
+                                                            callback_data_list_t &callbacks) {
     // Construct callbacks for erased values.
-    for (var_table_t::const_iterator iter = this->vars.begin(); iter != this->vars.end(); ++iter) {
-        const wcstring &key = iter->first;
-
+    for (const auto &kv : this->vars) {
+        const wcstring &key = kv.first;
         // Skip modified values.
-        if (this->modified.find(key) != this->modified.end()) {
+        if (this->modified.count(key)) {
             continue;
         }
 
         // If the value is not present in new_vars, it has been erased.
-        if (new_vars.find(key) == new_vars.end()) {
+        if (new_vars.count(key) == 0) {
             callbacks.push_back(callback_data_t(key, none()));
+            if (kv.second.exports()) export_generation += 1;
         }
     }
 
     // Construct callbacks for newly inserted or changed values.
-    for (var_table_t::const_iterator iter = new_vars.begin(); iter != new_vars.end(); ++iter) {
-        const wcstring &key = iter->first;
+    for (const auto &kv : new_vars) {
+        const wcstring &key = kv.first;
 
         // Skip modified values.
         if (this->modified.find(key) != this->modified.end()) {
@@ -345,10 +340,15 @@ void env_universal_t::generate_callbacks(const var_table_t &new_vars,
         }
 
         // See if the value has changed.
-        const env_var_t &new_entry = iter->second;
+        const env_var_t &new_entry = kv.second;
         var_table_t::const_iterator existing = this->vars.find(key);
-        if (existing == this->vars.end() || existing->second.exports() != new_entry.exports() ||
-            existing->second != new_entry) {
+
+        bool old_exports = (existing != this->vars.end() && existing->second.exports());
+        bool export_changed = (old_exports != new_entry.exports());
+        if (export_changed) {
+            export_generation += 1;
+        }
+        if (existing == this->vars.end() || export_changed || existing->second != new_entry) {
             // Value has changed.
             callbacks.push_back(callback_data_t(key, new_entry.as_string()));
         }
@@ -393,8 +393,8 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t &callbacks) {
             ok_to_save = false;
         }
 
-        // Announce changes.
-        this->generate_callbacks(new_vars, callbacks);
+        // Announce changes and update our exports generation.
+        this->generate_callbacks_and_update_exports(new_vars, callbacks);
 
         // Acquire the new variables.
         this->acquire_variables(new_vars);
@@ -427,6 +427,12 @@ bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t 
     std::string tmp = wcs2string(path);
     return load_from_path(tmp, callbacks);
 }
+
+uint64_t env_universal_t::get_export_generation() const {
+    scoped_lock locker(lock);
+    return export_generation;
+}
+
 /// Serialize the contents to a string.
 std::string env_universal_t::serialize_with_vars(const var_table_t &vars) {
     std::string storage;

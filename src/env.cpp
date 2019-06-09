@@ -565,6 +565,9 @@ class env_scoped_impl_t : public environment_t {
     /// Invoke a function on the current (nonzero) export generations, in order.
     template <typename Func>
     void enumerate_generations(const Func &func) const {
+        // Our uvars generation count doesn't come from next_export_generation(), so always supply
+        // it even if it's 0.
+        func(uvars() ? uvars()->get_export_generation() : 0);
         if (globals_->exports()) func(globals_->export_gen);
         for (auto node = locals_; node; node = node->next) {
             if (node->exports()) func(node->export_gen);
@@ -1085,10 +1088,6 @@ void env_stack_impl_t::set_universal(const wcstring &key, wcstring_list_t val,
     env_var_t new_var{val, varflags};
 
     uvars()->set(key, new_var);
-    if (new_var.exports() || (oldvar && oldvar->exports())) {
-        // TODO: we need to use a generation count here, other parsers care about this.
-        export_array_.reset();
-    }
 }
 
 int env_stack_impl_t::set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t val,
@@ -1160,10 +1159,6 @@ int env_stack_impl_t::remove(const wcstring &key, int mode, bool *out_needs_uvar
         if (!uvars()) return false;
         auto flags = uvars()->get_flags(key);
         if (!flags) return false;
-        if (*flags & env_var_t::flag_export) {
-            // TODO: need to use a generation count here.
-            export_array_.reset();
-        }
         *out_needs_uvar_sync = true;
         return uvars()->remove(key);
     };

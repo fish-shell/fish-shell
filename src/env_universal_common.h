@@ -28,7 +28,7 @@ struct callback_data_t {
     bool is_erase() const { return !val.has_value(); }
 };
 
-typedef std::vector<struct callback_data_t> callback_data_list_t;
+typedef std::vector<callback_data_t> callback_data_list_t;
 
 // List of fish universal variable formats.
 // This is exposed for testing.
@@ -49,6 +49,9 @@ class env_universal_t {
     // Path that we save to. If empty, use the default.
     wcstring explicit_vars_path;
 
+    // A generation count which is incremented every time an exported variable is modified.
+    uint64_t export_generation{1};
+
     // Whether it's OK to save. This may be set to false if we discover that a future version of
     // fish wrote the uvars contents.
     bool ok_to_save{true};
@@ -58,7 +61,7 @@ class env_universal_t {
     bool load_from_path(const wcstring &path, callback_data_list_t &callbacks);
     void load_from_fd(int fd, callback_data_list_t &callbacks);
 
-    void set_internal(const wcstring &key, const env_var_t &var, bool overwrite);
+    void set_internal(const wcstring &key, const env_var_t &var);
     bool remove_internal(const wcstring &name);
 
     // Functions concerned with saving.
@@ -71,8 +74,9 @@ class env_universal_t {
     file_id_t last_read_file = kInvalidFileID;
 
     // Given a variable table, generate callbacks representing the difference between our vars and
-    // the new vars.
-    void generate_callbacks(const var_table_t &new_vars, callback_data_list_t &callbacks) const;
+    // the new vars. Also update our exports generation count as necessary.
+    void generate_callbacks_and_update_exports(const var_table_t &new_vars,
+                                               callback_data_list_t &callbacks);
 
     // Given a variable table, copy unmodified values into self. May destructively modify
     // vars_to_acquire.
@@ -127,6 +131,9 @@ class env_universal_t {
 
     /// Exposed for testing only.
     bool is_ok_to_save() const { return ok_to_save; }
+
+    /// Access the export generation.
+    uint64_t get_export_generation() const;
 };
 
 /// The "universal notifier" is an object responsible for broadcasting and receiving universal

@@ -34,3 +34,6 @@ No crash with ./ CDPATH
 ####################
 # on-variable PWD
 Changed to /
+
+####################
+# cd concurrency

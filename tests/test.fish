@@ -15,7 +15,7 @@ cd (dirname (status -f))
 if set -q argv[1]
     set files_to_test $argv.in
 else
-    set files_to_test *.in
+    set files_to_test *.in checks/*.fish
 end
 
 # These env vars should not be inherited from the user environment because they can affect the
@@ -29,7 +29,7 @@ or exit
 
 say -o cyan "Testing high level script functionality"
 
-function test_file
+function test_in_file
     set -l file $argv[1]
     set -l base (basename $file .in)
 
@@ -69,10 +69,24 @@ function test_file
     end
 end
 
+function test_littlecheck_file
+    set -l file $argv[1]
+    echo "Testing file $file"
+    ../littlecheck.py -s fish=../test/root/bin/fish $file
+end
+
 set -l failed
 for i in $files_to_test
-    if not test_file $i
-        set failed $failed $i
+    if string match --quiet '*.fish' $i
+        if not test_littlecheck_file $i
+            # littlecheck test
+            set failed $failed $i
+        end
+    else
+        # .in test
+        if not test_in_file $i
+            set failed $failed $i
+        end
     end
 end
 

@@ -63,6 +63,8 @@ class category_list_t {
 
     category_t env_locale{L"env-locale", L"Changes to locale variables"};
 
+    category_t env_export{L"env-export", L"Changes to exported variables"};
+
     category_t topic_monitor{L"topic-monitor", L"Internal details of the topic monitor"};
 };
 

@@ -581,7 +581,7 @@ std::shared_ptr<const null_terminated_array_t<char>> env_scoped_impl_t::create_e
     const {
     var_table_t table;
 
-    debug(4, L"create_export_array() recalc");
+    FLOG(env_export, L"create_export_array() recalc");
     var_table_t vals;
     get_exported(this->globals_, vals);
     get_exported(this->locals_, vals);

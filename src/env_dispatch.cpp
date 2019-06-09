@@ -211,7 +211,6 @@ static void universal_callback(env_stack_t *stack, const callback_data_t &cb) {
     const wchar_t *op = cb.is_erase() ? L"ERASE" : L"SET";
 
     env_dispatch_var_change(cb.key, *stack);
-    stack->mark_changed_exported();
 
     // TODO: eliminate this principal_parser. Need to rationalize how multiple threads work here.
     event_fire(parser_t::principal_parser(), event_t::variable(cb.key, {L"VARIABLE", op, cb.key}));

@@ -296,9 +296,6 @@ class env_stack_t final : public environment_t {
     /// Sets up argv as the given list of strings.
     void set_argv(wcstring_list_t argv);
 
-    /// Mark that exported variables have changed.
-    void mark_changed_exported();
-
     // Compatibility hack; access the "environment stack" from back when there was just one.
     static const std::shared_ptr<env_stack_t> &principal_ref();
     static env_stack_t &principal() { return *principal_ref(); }

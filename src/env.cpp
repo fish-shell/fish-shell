@@ -124,6 +124,17 @@ static bool variable_should_auto_pathvar(const wcstring &name) {
 // node would need its own lock.
 static std::mutex env_lock;
 
+/// We cache our null-terminated export list. However an exported variable may change for lots of
+/// reasons: popping a scope, a modified universal variable, etc. We thus have a monotone counter.
+/// Every time an exported variable changes in a node, it acquires the next generation. 0 is a
+/// sentinel that indicates that the node contains no exported variables.
+using export_generation_t = uint64_t;
+static export_generation_t next_export_generation() {
+    static owning_lock<export_generation_t> s_gen;
+    auto val = s_gen.acquire();
+    return ++*val;
+}
+
 /// Some env vars contain a list of paths where an empty path element is equivalent to ".".
 /// Unfortunately that convention causes problems for fish scripts. So this function replaces the
 /// empty path element with an explicit ".". See issue #3914.
@@ -471,9 +482,9 @@ class env_node_t {
     /// in the stack are invisible. If new_scope is set for the global variable node, the universe
     /// will explode.
     const bool new_scope;
-    /// Does this node contain any variables which are exported to subshells
-    /// or does it redefine any variables to not be exported?
-    bool exportv = false;
+    /// The export generation. If this is nonzero, then we contain a variable that is exported to
+    /// subshells, or redefines a variable to not be exported.
+    export_generation_t export_gen = 0;
     /// Pointer to next level.
     const std::shared_ptr<env_node_t> next;
 
@@ -485,6 +496,10 @@ class env_node_t {
         if (it != env.end()) return it->second;
         return none();
     }
+
+    bool exports() const { return export_gen > 0; }
+
+    void changed_exported() { export_gen = next_export_generation(); }
 };
 }  // namespace
 
@@ -533,13 +548,9 @@ class env_scoped_impl_t : public environment_t {
     // Exported variable array used by execv.
     std::shared_ptr<const null_terminated_array_t<char>> export_array_{};
 
-    /// \return true if the local scope exports.
-    bool local_scope_exports() const {
-        for (auto cursor = locals_; cursor; cursor = cursor->next) {
-            if (cursor->exportv) return true;
-        }
-        return false;
-    }
+    // Cached list of export generations corresponding to the above export_array_.
+    // If this differs from the current export generations then we need to regenerate the array.
+    std::vector<export_generation_t> export_array_generations_{};
 
    private:
     // These "try" methods return true on success, false on failure. On a true return, \p result is
@@ -550,6 +561,18 @@ class env_scoped_impl_t : public environment_t {
     maybe_t<env_var_t> try_get_local(const wcstring &key) const;
     maybe_t<env_var_t> try_get_global(const wcstring &key) const;
     maybe_t<env_var_t> try_get_universal(const wcstring &key) const;
+
+    /// Invoke a function on the current (nonzero) export generations, in order.
+    template <typename Func>
+    void enumerate_generations(const Func &func) const {
+        if (globals_->exports()) func(globals_->export_gen);
+        for (auto node = locals_; node; node = node->next) {
+            if (node->exports()) func(node->export_gen);
+        }
+    }
+
+    /// \return whether the current export array is empty or out-of-date.
+    bool export_array_needs_regeneration() const;
 
     /// \return a newly allocated export array.
     std::shared_ptr<const null_terminated_array_t<char>> create_export_array() const;
@@ -575,6 +598,28 @@ static void get_exported(const env_node_ref_t &n, var_table_t &table) {
             table.erase(key);
         }
     }
+}
+
+bool env_scoped_impl_t::export_array_needs_regeneration() const {
+    // Check if our export array is stale. If we don't have one, it's obviously stale. Otherwise,
+    // compare our cached generations with the current generations. If they don't match exactly then
+    // our generation list is stale.
+    if (!export_array_) return true;
+
+    bool mismatch = false;
+    auto cursor = export_array_generations_.begin();
+    auto end = export_array_generations_.end();
+    enumerate_generations([&](export_generation_t gen) {
+        if (cursor != end && *cursor == gen) {
+            ++cursor;
+        } else {
+            mismatch = true;
+        }
+    });
+    if (cursor != end) {
+        mismatch = true;
+    }
+    return mismatch;
 }
 
 std::shared_ptr<const null_terminated_array_t<char>> env_scoped_impl_t::create_export_array()
@@ -616,8 +661,13 @@ std::shared_ptr<const null_terminated_array_t<char>> env_scoped_impl_t::create_e
 
 std::shared_ptr<const null_terminated_array_t<char>> env_scoped_impl_t::export_array() {
     ASSERT_IS_NOT_FORKED_CHILD();
-    if (!export_array_) {
+    if (export_array_needs_regeneration()) {
         export_array_ = create_export_array();
+
+        // Update our export array generations.
+        export_array_generations_.clear();
+        enumerate_generations(
+            [this](export_generation_t gen) { export_array_generations_.push_back(gen); });
     }
     return export_array_;
 }
@@ -764,7 +814,7 @@ static env_node_ref_t copy_node_chain(const env_node_ref_t &node) {
     auto result = std::make_shared<env_node_t>(node->new_scope, next);
     // Copy over variables.
     // Note assigning env is a potentially big copy.
-    result->exportv = node->exportv;
+    result->export_gen = node->export_gen;
     result->env = node->env;
     return result;
 }
@@ -796,9 +846,6 @@ class env_stack_impl_t final : public env_scoped_impl_t {
     /// Pop the variable stack.
     /// \return the popped node.
     env_node_ref_t pop();
-
-    /// Mark that our export list needs to be regenerated.
-    void mark_changed_exported() { export_array_.reset(); }
 
     /// \return a new impl representing global variables, with a single local scope.
     static std::unique_ptr<env_stack_impl_t> create() {
@@ -835,15 +882,12 @@ class env_stack_impl_t final : public env_scoped_impl_t {
         return nullptr;
     }
 
-    /// Remove a variable from the chain \p node, updating the export bit as necessary.
+    /// Remove a variable from the chain \p node.
     /// \return true if the variable was found and removed.
-    bool remove_from_chain(env_node_ref_t node, const wcstring &key) {
+    bool remove_from_chain(env_node_ref_t node, const wcstring &key) const {
         for (auto cursor = node; cursor; cursor = cursor->next) {
             auto iter = cursor->env.find(key);
             if (iter != cursor->env.end()) {
-                if (iter->second.exports()) {
-                    mark_changed_exported();
-                }
                 cursor->env.erase(iter);
                 return true;
             }
@@ -896,7 +940,7 @@ void env_stack_impl_t::push_shadowing() {
     for (const auto &var : locals_->env) {
         if (var.second.exports()) {
             node->env.insert(var);
-            node->exportv = true;
+            node->changed_exported();
         }
     }
     this->shadowed_locals_.push_back(std::move(locals_));
@@ -904,20 +948,16 @@ void env_stack_impl_t::push_shadowing() {
 }
 
 env_node_ref_t env_stack_impl_t::pop() {
-    bool changed_exports = locals_->exportv;
     auto popped = std::move(locals_);
     if (popped->next) {
         // Pop the inner scope.
         locals_ = popped->next;
-        changed_exports = changed_exports || local_scope_exports();
     } else {
         // Exhausted the inner scopes, put back a shadowing scope.
         assert(!shadowed_locals_.empty() && "Attempt to pop last local scope");
         locals_ = std::move(shadowed_locals_.back());
         shadowed_locals_.pop_back();
-        changed_exports = changed_exports || local_scope_exports();
     }
-    if (changed_exports) mark_changed_exported();
     assert(locals_ && "Attempt to pop first local scope");
     return popped;
 }
@@ -954,8 +994,7 @@ void env_stack_impl_t::set_in_node(env_node_ref_t node, const wcstring &key, wcs
     // Perhaps mark that this node contains an exported variable, or shadows an exported variable.
     // If so regenerate the export list.
     if (res_exports || flags.parent_exports) {
-        node->exportv = true;
-        mark_changed_exported();
+        node->changed_exported();
     }
 }
 
@@ -991,7 +1030,7 @@ maybe_t<int> env_stack_impl_t::try_set_electric(const wcstring &key, const query
         wcstring &pwd = val.front();
         if (pwd != perproc_data().pwd) {
             perproc_data().pwd = std::move(pwd);
-            mark_changed_exported();
+            globals_->changed_exported();
         }
         return ENV_OK;
     }
@@ -1047,7 +1086,8 @@ void env_stack_impl_t::set_universal(const wcstring &key, wcstring_list_t val,
 
     uvars()->set(key, new_var);
     if (new_var.exports() || (oldvar && oldvar->exports())) {
-        mark_changed_exported();
+        // TODO: we need to use a generation count here, other parsers care about this.
+        export_array_.reset();
     }
 }
 
@@ -1121,7 +1161,8 @@ int env_stack_impl_t::remove(const wcstring &key, int mode, bool *out_needs_uvar
         auto flags = uvars()->get_flags(key);
         if (!flags) return false;
         if (*flags & env_var_t::flag_export) {
-            this->mark_changed_exported();
+            // TODO: need to use a generation count here.
+            export_array_.reset();
         }
         *out_needs_uvar_sync = true;
         return uvars()->remove(key);
@@ -1286,8 +1327,6 @@ void env_stack_t::pop() {
         env_dispatch_var_change(kv.first, *this);
     }
 }
-
-void env_stack_t::mark_changed_exported() { acquire_impl()->mark_changed_exported(); }
 
 env_stack_t &env_stack_t::globals() {
     static env_stack_t s_globals(env_stack_impl_t::create());

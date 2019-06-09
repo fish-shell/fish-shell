@@ -3260,10 +3260,10 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
 
             handle_readline_command(readline_cmd, rls);
 
-            if (command_ends_history_search(readline_cmd)) {
+            if (history_search.active() && command_ends_history_search(readline_cmd)) {
                 // "cancel" means to abort the whole thing, other ending commands mean to finish the
                 // search.
-                if (history_search.active() && readline_cmd == rl::cancel) {
+                if (readline_cmd == rl::cancel) {
                     history_search.go_to_end();
                     update_command_line_from_history_search();
                 }

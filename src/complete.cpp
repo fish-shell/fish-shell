@@ -243,9 +243,15 @@ static bool compare_completions_by_duplicate_arguments(const completion_t &a,
 }
 
 static bool compare_completions_by_tilde(const completion_t &a, const completion_t &b) {
-    return (a.completion.empty() < b.completion.empty()) ||
-           (a.completion.back() == L'~') < (b.completion.back() == L'~');
+    if (a.completion.empty()) {
+        return false;
+    }
+    if (b.completion.empty()) {
+        return true;
+    }
+    return ((a.completion.back() == L'~') < (b.completion.back() == L'~'));
 }
+
 /// Unique the list of completions, without perturbing their order.
 static void unique_completions_retaining_order(std::vector<completion_t> *comps) {
     std::unordered_set<wcstring> seen;

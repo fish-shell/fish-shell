@@ -1306,6 +1306,14 @@ std::shared_ptr<environment_t> env_stack_t::snapshot() const { return acquire_im
 
 void env_stack_t::set_argv(wcstring_list_t argv) { set(L"argv", ENV_LOCAL, std::move(argv)); }
 
+wcstring env_stack_t::get_pwd_slash() const {
+    wcstring pwd = acquire_impl()->perproc_data().pwd;
+    if (!string_suffixes_string(L"/", pwd)) {
+        pwd.push_back(L'/');
+    }
+    return pwd;
+}
+
 void env_stack_t::push(bool new_scope) {
     auto impl = acquire_impl();
     if (new_scope) {

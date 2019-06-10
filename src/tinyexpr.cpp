@@ -24,6 +24,7 @@
 
 // This version has been altered and ported to C++ for inclusion in fish.
 #include "tinyexpr.h"
+#include <ctype.h>
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>

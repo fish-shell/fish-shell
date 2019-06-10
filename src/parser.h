@@ -169,6 +169,10 @@ struct library_data_t {
     /// machinery when wrapping: e.g. if `tig` wraps `git` then git completions need to see git on
     /// the command line.
     wcstring_list_t transient_commandlines{};
+
+    /// A file descriptor holding the current working directory, for use in openat().
+    /// This is never null and never invalid.
+    std::shared_ptr<const autoclose_fd_t> cwd_fd{};
 };
 
 class parser_t : public std::enable_shared_from_this<parser_t> {

@@ -1,6 +1,7 @@
 // The fish parser. Contains functions for parsing and evaluating code.
 #include "config.h"  // IWYU pragma: keep
 
+#include <fcntl.h>
 #include <stdio.h>
 #include <cwchar>
 
@@ -102,6 +103,12 @@ wcstring parser_t::user_presentable_path(const wcstring &path) const {
 
 parser_t::parser_t(std::shared_ptr<env_stack_t> vars) : variables(std::move(vars)) {
     assert(variables.get() && "Null variables in parser initializer");
+    int cwd = open_cloexec(".", O_RDONLY);
+    if (cwd < 0) {
+        perror("Unable to open the current working directory");
+        abort();
+    }
+    libdata().cwd_fd = std::make_shared<const autoclose_fd_t>(cwd);
 }
 
 parser_t::parser_t() : parser_t(env_stack_t::principal_ref()) {}

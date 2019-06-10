@@ -8,9 +8,9 @@
 /// File descriptor redirection error message.
 #define FD_ERROR "An error occurred while redirecting file descriptor %s"
 
-#define NOCLOB_ERROR _(L"The file '%s' already exists")
+#define NOCLOB_ERROR _(L"The file '%ls' already exists")
 
-#define FILE_ERROR _(L"An error occurred while redirecting file '%s'")
+#define FILE_ERROR _(L"An error occurred while redirecting file '%ls'")
 
 /// Base open mode to pass to calls to open.
 #define OPEN_MASK 0666
@@ -26,12 +26,12 @@ maybe_t<dup2_list_t> dup2_list_t::resolve_chain(const io_chain_t &io_chain) {
                 // Here we definitely do not want to set CLO_EXEC because our child needs access.
                 // Open the file.
                 const io_file_t *io_file = static_cast<const io_file_t *>(io_ref.get());
-                int file_fd = open(io_file->filename_cstr, io_file->flags, OPEN_MASK);
+                int file_fd = wopen(io_file->filename, io_file->flags, OPEN_MASK);
                 if (file_fd < 0) {
                     if ((io_file->flags & O_EXCL) && (errno == EEXIST)) {
-                        debug(1, NOCLOB_ERROR, io_file->filename_cstr);
+                        debug(1, NOCLOB_ERROR, io_file->filename.c_str());
                     } else {
-                        debug(1, FILE_ERROR, io_file->filename_cstr);
+                        debug(1, FILE_ERROR, io_file->filename.c_str());
                         if (should_debug(1)) wperror(L"open");
                     }
                     return none();
@@ -43,7 +43,7 @@ maybe_t<dup2_list_t> dup2_list_t::resolve_chain(const io_chain_t &io_chain) {
                 if (file_fd != io_file->fd) {
                     file_fd = move_fd_to_unused(file_fd, io_chain, false /* cloexec */);
                     if (file_fd < 0) {
-                        debug(1, FILE_ERROR, io_file->filename_cstr);
+                        debug(1, FILE_ERROR, io_file->filename.c_str());
                         if (should_debug(1)) wperror(L"dup");
                         return none();
                     }

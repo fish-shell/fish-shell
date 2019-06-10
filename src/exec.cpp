@@ -52,7 +52,7 @@
 #define WRITE_ERROR _(L"An error occurred while writing output")
 
 /// File redirection error message.
-#define FILE_ERROR _(L"An error occurred while redirecting file '%s'")
+#define FILE_ERROR _(L"An error occurred while redirecting file '%ls'")
 
 /// Base open mode to pass to calls to open.
 #define OPEN_MASK 0666
@@ -81,8 +81,8 @@ static bool redirection_is_to_real_file(const shared_ptr<io_data_t> &io) {
     bool result = false;
     if (io && io->io_mode == io_mode_t::file) {
         // It's a file redirection. Compare the path to /dev/null.
-        const char *path = static_cast<const io_file_t *>(io.get())->filename_cstr;
-        if (std::strcmp(path, "/dev/null") != 0) {
+        const wcstring &path = static_cast<const io_file_t *>(io.get())->filename;
+        if (path != L"/dev/null") {
             // It's not /dev/null.
             result = true;
         }
@@ -223,9 +223,9 @@ static bool resolve_file_redirections_to_fds(const io_chain_t &in_chain, io_chai
             case io_mode_t::file: {
                 // We have a path-based redireciton. Resolve it to a file.
                 io_file_t *in_file = static_cast<io_file_t *>(in.get());
-                int fd = open(in_file->filename_cstr, in_file->flags, OPEN_MASK);
+                int fd = wopen(in_file->filename, in_file->flags, OPEN_MASK);
                 if (fd < 0) {
-                    debug(1, FILE_ERROR, in_file->filename_cstr);
+                    debug(1, FILE_ERROR, in_file->filename.c_str());
                     wperror(L"open");
                     success = false;
                     break;
@@ -510,9 +510,9 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
             case io_mode_t::file: {
                 const io_file_t *in_file = static_cast<const io_file_t *>(in.get());
                 locally_opened_stdin =
-                    autoclose_fd_t{open(in_file->filename_cstr, in_file->flags, OPEN_MASK)};
+                    autoclose_fd_t{wopen(in_file->filename, in_file->flags, OPEN_MASK)};
                 if (!locally_opened_stdin.valid()) {
-                    debug(1, FILE_ERROR, in_file->filename_cstr);
+                    debug(1, FILE_ERROR, in_file->filename.c_str());
                     wperror(L"open");
                 }
                 local_builtin_stdin = locally_opened_stdin.fd();

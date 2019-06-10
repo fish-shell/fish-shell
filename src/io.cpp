@@ -22,7 +22,7 @@ void io_close_t::print() const { std::fwprintf(stderr, L"close %d\n", fd); }
 
 void io_fd_t::print() const { std::fwprintf(stderr, L"FD map %d -> %d\n", old_fd, fd); }
 
-void io_file_t::print() const { std::fwprintf(stderr, L"file (%s)\n", filename_cstr); }
+void io_file_t::print() const { std::fwprintf(stderr, L"file (%ls)\n", filename.c_str()); }
 
 void io_pipe_t::print() const {
     std::fwprintf(stderr, L"pipe {%d} (input: %s)\n", pipe_fd(), is_input_ ? "yes" : "no");

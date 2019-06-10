@@ -191,17 +191,17 @@ class io_fd_t : public io_data_t {
 
 class io_file_t : public io_data_t {
    public:
-    /// Filename, malloc'd. This needs to be used after fork, so don't use wcstring here.
-    const char *const filename_cstr;
+    /// The filename.
+    wcstring filename;
     /// file creation flags to send to open.
     const int flags;
 
     void print() const override;
 
-    io_file_t(int f, const wcstring &fname, int fl = 0)
-        : io_data_t(io_mode_t::file, f), filename_cstr(wcs2str(fname)), flags(fl) {}
+    io_file_t(int f, wcstring fname, int fl = 0)
+        : io_data_t(io_mode_t::file, f), filename(std::move(fname)), flags(fl) {}
 
-    ~io_file_t() override { free((void *)filename_cstr); }
+    ~io_file_t() override = default;
 };
 
 /// Represents (one end) of a pipe.

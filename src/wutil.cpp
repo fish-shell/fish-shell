@@ -210,6 +210,11 @@ int open_cloexec(const std::string &cstring, int flags, mode_t mode, bool cloexe
     return fd;
 }
 
+int wopen(const wcstring &pathname, int flags, mode_t mode) {
+    cstring tmp = wcs2string(pathname);
+    return open(tmp.c_str(), flags, mode);
+}
+
 int wopen_cloexec(const wcstring &pathname, int flags, mode_t mode) {
     cstring tmp = wcs2string(pathname);
     return open_cloexec(tmp, flags, mode, true);

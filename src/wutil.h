@@ -72,9 +72,6 @@ const char *safe_strerror(int err);
 /// Wide character version of getcwd().
 const wcstring wgetcwd();
 
-/// Wide character version of chdir().
-int wchdir(const wcstring &dir);
-
 /// Wide character version of realpath function.
 /// \returns the canonicalized path, or none if the path is invalid.
 maybe_t<wcstring> wrealpath(const wcstring &pathname);

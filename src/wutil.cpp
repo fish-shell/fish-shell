@@ -135,11 +135,6 @@ const wcstring wgetcwd() {
     return wcstring();
 }
 
-int wchdir(const wcstring &dir) {
-    cstring tmp = wcs2string(dir);
-    return chdir(tmp.c_str());
-}
-
 FILE *wfopen(const wcstring &path, const char *mode) {
     int permissions = 0, options = 0;
     size_t idx = 0;

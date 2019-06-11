@@ -142,6 +142,7 @@ struct options_t {  //!OCLINT(too many fields)
     bool count_valid = false;
     bool entire_valid = false;
     bool filter_valid = false;
+    bool groups_only_valid = false;
     bool ignore_case_valid = false;
     bool index_valid = false;
     bool invert_valid = false;
@@ -165,6 +166,7 @@ struct options_t {  //!OCLINT(too many fields)
     bool all = false;
     bool entire = false;
     bool filter = false;
+    bool groups_only = false;
     bool ignore_case = false;
     bool index = false;
     bool invert_match = false;
@@ -340,6 +342,16 @@ static int handle_flag_f(const wchar_t **argv, parser_t &parser, io_streams_t &s
     return STATUS_INVALID_ARGS;
 }
 
+static int handle_flag_g(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
+                         const wgetopter_t &w, options_t *opts) {
+    if (opts->groups_only_valid) {
+        opts->groups_only = true;
+        return STATUS_CMD_OK;
+    }
+    string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
+    return STATUS_INVALID_ARGS;
+}
+
 static int handle_flag_i(const wchar_t **argv, parser_t &parser, io_streams_t &streams,
                          const wgetopter_t &w, options_t *opts) {
     if (opts->ignore_case_valid) {
@@ -496,6 +508,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
     if (opts->count_valid) short_opts.append(L"n:");
     if (opts->entire_valid) short_opts.append(L"e");
     if (opts->filter_valid) short_opts.append(L"f");
+    if (opts->groups_only_valid) short_opts.append(L"g");
     if (opts->ignore_case_valid) short_opts.append(L"i");
     if (opts->index_valid) short_opts.append(L"n");
     if (opts->invert_valid) short_opts.append(L"v");
@@ -526,6 +539,7 @@ static const struct woption long_options[] = {{L"all", no_argument, nullptr, 'a'
                                               {L"entire", no_argument, nullptr, 'e'},
                                               {L"end", required_argument, nullptr, 'e'},
                                               {L"filter", no_argument, nullptr, 'f'},
+                                              {L"groups-only", no_argument, nullptr, 'g'},
                                               {L"ignore-case", no_argument, nullptr, 'i'},
                                               {L"index", no_argument, nullptr, 'n'},
                                               {L"invert", no_argument, nullptr, 'v'},
@@ -548,7 +562,7 @@ static const struct woption long_options[] = {{L"all", no_argument, nullptr, 'a'
 
 static const std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
-    {'f', handle_flag_f}, {'i', handle_flag_i}, {'l', handle_flag_l}, {'m', handle_flag_m},
+    {'f', handle_flag_f}, {'g', handle_flag_g}, {'i', handle_flag_i}, {'l', handle_flag_l}, {'m', handle_flag_m},
     {'n', handle_flag_n}, {'q', handle_flag_q}, {'r', handle_flag_r}, {'s', handle_flag_s},
     {'v', handle_flag_v}, {'w', handle_flag_w}, {1, handle_flag_1}};
 
@@ -954,7 +968,8 @@ class pcre2_matcher_t final : public string_matcher_t {
         }
 
         PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(regex.match);
-        for (int j = (opts.entire ? 1 : 0); j < pcre2_rc; j++) {
+        // If we have groups-only, we skip the first match, which is the full one.
+        for (int j = (opts.entire || opts.groups_only ? 1 : 0); j < pcre2_rc; j++) {
             PCRE2_SIZE begin = ovector[2 * j];
             PCRE2_SIZE end = ovector[2 * j + 1];
 
@@ -1133,6 +1148,7 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, const
     options_t opts;
     opts.all_valid = true;
     opts.entire_valid = true;
+    opts.groups_only_valid = true;
     opts.ignore_case_valid = true;
     opts.invert_valid = true;
     opts.quiet_valid = true;
@@ -1146,6 +1162,18 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, const
     if (opts.entire && opts.index) {
         streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
                                   _(L"--entire and --index are mutually exclusive"));
+        return STATUS_INVALID_ARGS;
+    }
+
+    if (opts.invert_match && opts.groups_only) {
+        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
+                                  _(L"--invert and --groups-only are mutually exclusive"));
+        return STATUS_INVALID_ARGS;
+    }
+
+    if (opts.entire && opts.groups_only) {
+        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
+                                  _(L"--entire and --groups-only are mutually exclusive"));
         return STATUS_INVALID_ARGS;
     }
 

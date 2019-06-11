@@ -730,3 +730,28 @@ string escape \x7F
 string pad -w 8 he \eh
 # CHECK: he
 # CHECK: {{\x1bh}}
+
+string match -rg '(.*)fish' catfish
+# CHECK: cat
+string match -rg '(.*)fish' shellfish
+# CHECK: shell
+# An empty match
+string match -rg '(.*)fish' fish
+# No match at all
+string match -rg '(.*)fish' banana
+# Make sure it doesn't start matching something
+string match -r --groups-only '(.+)fish' fish
+echo $status
+# CHECK: 1
+# Multiple groups
+string match -r --groups-only '(.+)fish(.*)' catfishcolor
+# CHECK: cat
+# CHECK: color
+
+# Examples specifically called out in #6056.
+echo "foo bar baz" | string match -rg 'foo (bar) baz'
+# CHECK: bar
+echo "foo1x foo2x foo3x" | string match -arg 'foo(\d)x'
+# CHECK: 1
+# CHECK: 2
+# CHECK: 3

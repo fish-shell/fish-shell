@@ -8,9 +8,9 @@ Synopsis
 
 ::
 
-    string match [(-a | --all)] [(-e | --entire)] [(-i | --ignore-case)] [(-r | --regex)] [(-n | --index)] [(-q | --quiet)] [(-v | --invert)] PATTERN [STRING...]
+    string match [(-a | --all)] [(-e | --entire)] [(-i | --ignore-case)] [(-g | --groups-only)] [(-r | --regex)] [(-n | --index)] [(-q | --quiet)] [(-v | --invert)] PATTERN [STRING...]
 
-.. END SYNOPSIS
+. END SYNOPSIS
 
 Description
 -----------
@@ -22,6 +22,8 @@ Description
 If you specify the ``-e`` or ``--entire`` then each matching string is printed including any prefix or suffix not matched by the pattern (equivalent to ``grep`` without the ``-o`` flag). You can, obviously, achieve the same result by prepending and appending ``*`` or ``.*`` depending on whether or not you have specified the ``--regex`` flag. The ``--entire`` flag is simply a way to avoid having to complicate the pattern in that fashion and make the intent of the ``string match`` clearer. Without ``--entire`` and ``--regex``, a PATTERN will need to match the entire STRING before it will be reported.
 
 Matching can be made case-insensitive with ``--ignore-case`` or ``-i``.
+
+If ``--groups-only`` or ``-g`` is given, only the capturing groups will be reported - meaning the full match will be skipped. This is incompatible with ``--entire`` and ``--invert``, and requires ``--regex``. It is useful as a simple cutting tool instead of ``string replace``, so you can simply choose "this part" of a string.
 
 If ``--index`` or ``-n`` is given, each match is reported as a 1-based start position and a length. By default, PATTERN is interpreted as a glob pattern matched against each entire STRING argument. A glob pattern is only considered a valid match if it matches the entire STRING.
 

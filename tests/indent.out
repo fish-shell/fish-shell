@@ -103,10 +103,9 @@ f true
 en\
 d
 
-"whil\
-e" true
-    "builtin" yes
-en"d"
+while true
+    builtin yes
+end
 
 alpha | \
     beta

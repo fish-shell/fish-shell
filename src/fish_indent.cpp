@@ -36,6 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "color.h"
 #include "common.h"
 #include "env.h"
+#include "expand.h"
 #include "fish_version.h"
 #include "flog.h"
 #include "highlight.h"
@@ -251,7 +252,25 @@ void prettifier_t::prettify_node(const parse_node_tree_t &tree, node_offset_t no
                 if (prev_node_type != parse_token_type_redirection) {
                     append_whitespace(node_indent);
                 }
-                output.append(source, node.source_start, node.source_length);
+                wcstring unescaped{source, node.source_start, node.source_length};
+                // Unescape the string - this leaves special markers around if there are any expansions or anything.
+                // TODO: This also already computes backslash-escapes like \u or \x.
+                // We probably don't want that - if someone picked `\x20` to spell space, they have a reason.
+                unescape_string_in_place(&unescaped, UNESCAPE_SPECIAL);
+
+                // Remove INTERNAL_SEPARATOR because that's a quote.
+                auto quote = [](wchar_t ch) { return ch == INTERNAL_SEPARATOR; };
+                unescaped.erase(std::remove_if(unescaped.begin(), unescaped.end(), quote),
+                                unescaped.end());
+
+                // If no non-alphanumeric char is left, use the unescaped version.
+                // This can be extended to other characters, but giving the precise list is tough,
+                // can change over time (see "^", "%" and "?", in some cases "{}") and it just makes people feel more at ease.
+                if (std::find_if_not(unescaped.begin(), unescaped.end(), fish_iswalnum) == unescaped.end() && !unescaped.empty()) {
+                    output.append(unescaped);
+                } else {
+                    output.append(source, node.source_start, node.source_length);
+                }
                 has_new_line = false;
             }
         }

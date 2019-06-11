@@ -42,14 +42,17 @@ matrix:
     - os: osx
       before_install:
         - brew update
+        - brew upgrade cmake
         - brew install pcre2 # use system PCRE2
   fast_finish: true
 
 script:
-  - cmake -DCMAKE_INSTALL_PREFIX=$HOME/prefix . || cat CMakeFiles/CMakeError.log &&
-    make -j2 &&
-    make install &&
-    make test SHOW_INTERACTIVE_LOG=1
+  - mkdir build; cd build # This dancing around can be avoided with cmake -S / -B, but that requires CMake 3.13
+  - cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/prefix || cat build/CMakeFiles/CMakeError.log
+  - cd ..
+  - cmake --build build -j 2 &&
+    cmake --build build --target install &&
+    SHOW_INTERACTIVE_LOG=1 cmake --build build --target test
 
 notifications:
   # Some items are encrypted so that notifications from other repositories

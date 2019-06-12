@@ -43,7 +43,7 @@ function cd --description "Change directory"
         and set -e dirprev[1]
 
         # If dirprev, dirnext, __fish_cd_direction
-        # are set as universal variables, honour their scope.
+        # are set as universal variables, honor their scope.
 
         set -U -q dirprev
         and set -U -a dirprev $previous

@@ -61,6 +61,11 @@ class category_list_t {
 
     category_t proc_internal_proc{L"proc-internal-proc", L"Internal (non-forked) process events"};
 
+    category_t proc_reap_internal{L"proc-reap-internal",
+                                  L"Reaping internal (non-forked) processes"};
+
+    category_t proc_reap_external{L"proc-reap-external", L"Reaping external (forked) processes"};
+
     category_t env_locale{L"env-locale", L"Changes to locale variables"};
 
     category_t env_export{L"env-export", L"Changes to exported variables"};

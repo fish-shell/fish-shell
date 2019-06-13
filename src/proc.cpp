@@ -377,6 +377,10 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
                         if (proc->internal_proc_->exited()) {
                             proc->status = proc->internal_proc_->get_status();
                             proc->completed = true;
+                            FLOGF(proc_reap_internal,
+                                  "Reaped internal process '%ls' (id %llu, status %d)",
+                                  proc->argv0(), proc->internal_proc_->get_id(),
+                                  proc->status.status_value());
                         }
                     } else if (proc->pid > 0) {
                         // Try reaping an external process.
@@ -384,8 +388,10 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
                         auto pid = waitpid(proc->pid, &status, WNOHANG | WUNTRACED);
                         if (pid > 0) {
                             assert(pid == proc->pid && "Unexpcted waitpid() return");
-                            debug(4, "Reaped PID %d", pid);
                             handle_child_status(proc.get(), proc_status_t::from_waitpid(status));
+                            FLOGF(proc_reap_external,
+                                  "Reaped external process '%ls' (pid %d, status %d)",
+                                  proc->argv0(), pid, proc->status.status_value());
                         }
                     } else {
                         assert(0 && "Don't know how to reap this process");

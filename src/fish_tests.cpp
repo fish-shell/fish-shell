@@ -2554,7 +2554,6 @@ struct autoload_tester_t {
 
         run(L"rm -Rf %ls", p1.c_str());
         run(L"rm -Rf %ls", p2.c_str());
-
     }
 };
 

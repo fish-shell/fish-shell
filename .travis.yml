@@ -6,6 +6,7 @@ matrix:
   include:
     - os: linux
       compiler: gcc
+      python: 3.7
       addons:
         apt:
           packages:
@@ -43,7 +44,9 @@ matrix:
       before_install:
         - brew update
         - brew upgrade cmake
-        - brew install pcre2 # use system PCRE2
+        - brew install clang-format black pcre2 # use system PCRE2
+      env:
+        - TRAVIS_CHECK_STYLE=1
   fast_finish: true
 
 script:
@@ -53,6 +56,14 @@ script:
   - cmake --build build -j 2 &&
     cmake --build build --target install &&
     SHOW_INTERACTIVE_LOG=1 cmake --build build --target test
+  - if [[ -n "$TRAVIS_CHECK_STYLE" ]] ; then
+      PATH=$HOME/prefix/bin:$PATH build_tools/style.fish --all;
+      if [[ -n $(git status --porcelain --untracked-files=no) ]]; then
+        echo "Current source tree has unstyled changes - exiting with failure";
+        git diff;
+        exit 1;
+      fi;
+    fi
 
 notifications:
   # Some items are encrypted so that notifications from other repositories

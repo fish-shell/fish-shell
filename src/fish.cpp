@@ -265,7 +265,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
     static const struct option long_opts[] = {{"command", required_argument, NULL, 'c'},
                                               {"init-command", required_argument, NULL, 'C'},
                                               {"features", required_argument, NULL, 'f'},
-                                              {"debug-level", required_argument, NULL, 'd'},
+                                              {"debug", required_argument, NULL, 'd'},
                                               {"debug-output", required_argument, NULL, 'o'},
                                               {"debug-stack-frames", required_argument, NULL, 'D'},
                                               {"interactive", no_argument, NULL, 'i'},

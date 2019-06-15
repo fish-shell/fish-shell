@@ -612,12 +612,16 @@ typedef std::lock_guard<std::recursive_mutex> scoped_rlock;
 //
 template <typename Data>
 class acquired_lock {
-    std::unique_lock<std::mutex> lock;
-    acquired_lock(std::mutex &lk, Data *v) : lock(lk), value(v) {}
-
     template <typename T>
     friend class owning_lock;
 
+    template <typename T>
+    friend class acquired_lock;
+
+    acquired_lock(std::mutex &lk, Data *v) : lock(lk), value(v) {}
+    acquired_lock(std::unique_lock<std::mutex> &&lk, Data *v) : lock(std::move(lk)), value(v) {}
+
+    std::unique_lock<std::mutex> lock;
     Data *value;
 
    public:
@@ -631,6 +635,14 @@ class acquired_lock {
     const Data *operator->() const { return value; }
     Data &operator*() { return *value; }
     const Data &operator*() const { return *value; }
+
+    /// Implicit conversion to const version.
+    operator acquired_lock<const Data>() {
+        // We're about to give up our lock, don't hold onto the data.
+        const Data *cvalue = value;
+        value = nullptr;
+        return acquired_lock<const Data>(std::move(lock), cvalue);
+    }
 
     /// Create from a global lock.
     /// This is used in weird cases where a global lock protects more than one piece of data.

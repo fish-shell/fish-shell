@@ -6,7 +6,7 @@ string - manipulate strings
 Synopsis
 --------
 
-``string collect [(-n | --trim-newline)] [STRING...]``
+``string collect [(-N | --no-trim-newlines)] [STRING...]``
 
 ``string escape [(-n | --no-quoted)] [--style=xxx] [STRING...]``
 
@@ -53,13 +53,13 @@ The following subcommands are available.
 "collect" subcommand
 --------------------
 
-``string collect [(-n | --trim-newline)] [STRING...]``
+``string collect [(-N | --no-trim-newlines)] [STRING...]``
 
 ``string collect`` collects its input into a single output argument, without splitting the output when used in a command substitution. This is useful when trying to collect multiline output from another command into a variable. Exit status: 0 if any output argument is non-empty, or 1 otherwise.
 
 If invoked with multiple arguments instead of input, ``string collect`` preserves each argument separately, where the number of output arguments is equal to the number of arguments given to ``string collect``.
 
-``--trim-newline`` trims a single trailing newline off of each output argument. This is useful when collecting the output from another command as the trailing newline is frequently not desired.
+Any trailing newlines on the input are trimmed, just as with ``"$(cmd)"`` substitution in sh. ``--no-trim-newlines`` can be used to disable this behavior, which may be useful when running a command such as ``set contents (cat filename | string collect -N)``.
 
 "escape" and "unescape" subcommands
 -----------------------------------
@@ -352,7 +352,7 @@ Examples
     three
     "
     
-    >_ echo \"(ech one\ntwo\nthree | string collect -n)\"
+    >_ echo \"(echo one\ntwo\nthree | string collect -N)\"
     "one
     two
     three"

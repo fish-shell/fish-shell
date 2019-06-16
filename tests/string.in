@@ -396,18 +396,18 @@ logmsg string collect
 count (echo one\ntwo\nthree\nfour | string collect)
 count (echo one | string collect)
 echo [(echo one\ntwo\nthree | string collect)]
-echo [(echo one\ntwo\nthree | string collect -n)]
+echo [(echo one\ntwo\nthree | string collect -N)]
 printf '[%s]\n' (string collect one\n\n two\n)
-printf '[%s]\n' (string collect -n one\n\n two\n)
-printf '[%s]\n' (string collect --trim-newline one\n\n two\n)
+printf '[%s]\n' (string collect -N one\n\n two\n)
+printf '[%s]\n' (string collect --no-trim-newlines one\n\n two\n)
 # string collect returns 0 when it has any output, otherwise 1
 string collect >/dev/null; and echo unexpected success; or echo expected failure
 echo -n | string collect >/dev/null; and echo unexpected success; or echo expected failure
-echo | string collect >/dev/null; and echo expected success; or echo unexpected failure
-echo | string collect -n >/dev/null; and echo unexpected success; or echo expected failure
+echo | string collect -N >/dev/null; and echo expected success; or echo unexpected failure
+echo | string collect >/dev/null; and echo unexpected success; or echo expected failure
 string collect a >/dev/null; and echo expected success; or echo unexpected failure
-string collect '' >/dev/null; and echo unexpected success; or echo expected failure
-string collect -n \n >/dev/null; and echo unexpected success; or echo expected failure
+string collect -N '' >/dev/null; and echo unexpected success; or echo expected failure
+string collect \n\n >/dev/null; and echo unexpected success; or echo expected failure
 
 logmsg string collect in functions
 # This function outputs some newline-separated content, and some

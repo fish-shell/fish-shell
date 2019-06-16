@@ -490,22 +490,23 @@ Split something
 1
 [one
 two
-three
-]
+three]
 [one
 two
-three]
+three
+]
+[one]
+[two]
 [one
 
 ]
 [two
 ]
 [one
+
 ]
-[two]
-[one
+[two
 ]
-[two]
 expected failure
 expected failure
 expected success

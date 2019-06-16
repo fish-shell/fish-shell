@@ -14,7 +14,7 @@ complete -x -c string -n 'test (count (commandline -opc)) -ge 2; and string matc
 complete -f -c string -n 'test (count (commandline -opc)) -ge 2; and string match -qr split0\?\$ -- (commandline -opc)[2]' -s r -l right -d "Split right-to-left"
 complete -f -c string -n 'test (count (commandline -opc)) -ge 2; and string match -qr split0\?\$ -- (commandline -opc)[2]' -s n -l no-empty -d "Empty results excluded"
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a "collect"
-complete -f -c string -n 'test (count (commandline -opc)) -ge 2; and string match -qr collect\$ -- (commandline -opc)[2]' -s n -l trim-newline -d "Remove trailing newline"
+complete -f -c string -n 'test (count (commandline -opc)) -ge 2; and string match -qr collect\$ -- (commandline -opc)[2]' -s N -l no-trim-newlines -d "Don't trim trailing newlines"
 
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a "join"
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a "join0"

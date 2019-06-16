@@ -157,7 +157,7 @@ typedef struct {  //!OCLINT(too many fields)
     bool start_valid = false;
     bool style_valid = false;
     bool no_empty_valid = false;
-    bool trim_newline_valid = false;
+    bool no_trim_newlines_valid = false;
 
     bool all = false;
     bool entire = false;
@@ -172,7 +172,7 @@ typedef struct {  //!OCLINT(too many fields)
     bool regex = false;
     bool right = false;
     bool no_empty = false;
-    bool trim_newline = false;
+    bool no_trim_newlines = false;
 
     long count = 0;
     long length = 0;
@@ -215,6 +215,9 @@ static int handle_flag_N(wchar_t **argv, parser_t &parser, io_streams_t &streams
                          options_t *opts) {
     if (opts->no_newline_valid) {
         opts->no_newline = true;
+        return STATUS_CMD_OK;
+    } else if (opts->no_trim_newlines_valid) {
+        opts->no_trim_newlines = true;
         return STATUS_CMD_OK;
     }
     string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
@@ -332,9 +335,6 @@ static int handle_flag_n(wchar_t **argv, parser_t &parser, io_streams_t &streams
     } else if (opts->no_empty_valid) {
         opts->no_empty = true;
         return STATUS_CMD_OK;
-    } else if (opts->trim_newline_valid) {
-        opts->trim_newline = true;
-        return STATUS_CMD_OK;
     }
     string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
     return STATUS_INVALID_ARGS;
@@ -413,7 +413,7 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
     if (opts->right_valid) short_opts.append(L"r");
     if (opts->start_valid) short_opts.append(L"s:");
     if (opts->no_empty_valid) short_opts.append(L"n");
-    if (opts->trim_newline_valid) short_opts.append(L"n");
+    if (opts->no_trim_newlines_valid) short_opts.append(L"N");
     return short_opts;
 }
 
@@ -430,7 +430,7 @@ static const struct woption long_options[] = {
     {L"no-newline", no_argument, NULL, 'N'},  {L"no-quoted", no_argument, NULL, 'n'},
     {L"quiet", no_argument, NULL, 'q'},       {L"regex", no_argument, NULL, 'r'},
     {L"right", no_argument, NULL, 'r'},       {L"start", required_argument, NULL, 's'},
-    {L"style", required_argument, NULL, 1},   {L"trim-newline", no_argument, NULL, 'n'},
+    {L"style", required_argument, NULL, 1},   {L"no-trim-newlines", no_argument, NULL, 'N'},
     {NULL, 0, NULL, 0}};
 
 static const std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
@@ -1134,7 +1134,7 @@ static int string_split0(parser_t &parser, io_streams_t &streams, int argc, wcha
 
 static int string_collect(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
     options_t opts;
-    opts.trim_newline_valid = true;
+    opts.no_trim_newlines_valid = true;
     int optind;
     int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
     if (retval != STATUS_CMD_OK) return retval;
@@ -1142,12 +1142,14 @@ static int string_collect(parser_t &parser, io_streams_t &streams, int argc, wch
     auto &buff = streams.out.buffer();
     arg_iterator_t aiter(argv, optind, streams, /* don't split */ false);
     while (const wcstring *arg = aiter.nextstr()) {
-        auto end = arg->cend();
-        if (opts.trim_newline && !arg->empty() && arg->back() == L'\n') {
-            --end;
+        auto begin = arg->cbegin(), end = arg->cend();
+        if (!opts.no_trim_newlines) {
+            while (end > begin && *(end-1) == L'\n') {
+                --end;
+            }
         }
 
-        buff.append(arg->cbegin(), end, separation_type_t::explicitly);
+        buff.append(begin, end, separation_type_t::explicitly);
     }
 
     return buff.size() > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;

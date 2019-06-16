@@ -89,7 +89,7 @@ static const input_function_metadata_t input_function_metadata[] = {
     {readline_cmd_t::yank, L"yank"},
     {readline_cmd_t::yank_POP, L"yank-pop"},
     {readline_cmd_t::complete, L"complete"},
-    {readline_cmd_t::complete_AND_SEARCH, L"complete-and-search"},
+    {readline_cmd_t::complete_and_search, L"complete-and-search"},
     {readline_cmd_t::pager_toggle_search, L"pager-toggle-search"},
     {readline_cmd_t::beginning_of_history, L"beginning-of-history"},
     {readline_cmd_t::end_of_history, L"end-of-history"},

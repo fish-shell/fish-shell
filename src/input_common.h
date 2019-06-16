@@ -25,7 +25,7 @@ enum class readline_cmd_t {
     yank,
     yank_POP,
     complete,
-    complete_AND_SEARCH,
+    complete_and_search,
     pager_toggle_search,
     beginning_of_history,
     end_of_history,

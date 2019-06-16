@@ -1015,7 +1015,7 @@ static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) 
             return true;
         }
         case rl::complete:
-        case rl::complete_AND_SEARCH:
+        case rl::complete_and_search:
         case rl::backward_char:
         case rl::forward_char:
         case rl::up_line:
@@ -2490,7 +2490,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             break;
         }
         case rl::complete:
-        case rl::complete_AND_SEARCH: {
+        case rl::complete_and_search: {
             if (!complete_func) break;
 
             // Use the command line only; it doesn't make sense to complete in any other line.
@@ -2562,11 +2562,11 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 cycle_command_line = el->text;
                 cycle_cursor_pos = el->position;
 
-                bool cont_after_prefix_insertion = (c == rl::complete_AND_SEARCH);
+                bool cont_after_prefix_insertion = (c == rl::complete_and_search);
                 rls.comp_empty = handle_completions(rls.comp, cont_after_prefix_insertion);
 
                 // Show the search field if requested and if we printed a list of completions.
-                if (c == rl::complete_AND_SEARCH && !rls.comp_empty && !pager.empty()) {
+                if (c == rl::complete_and_search && !rls.comp_empty && !pager.empty()) {
                     pager.set_search_field_shown(true);
                     select_completion_in_direction(selection_motion_t::next);
                     reader_repaint_needed();

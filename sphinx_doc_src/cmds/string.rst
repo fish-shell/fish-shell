@@ -6,6 +6,8 @@ string - manipulate strings
 Synopsis
 --------
 
+``string collect [(-n | --trim-newline)] [STRING...]``
+
 ``string escape [(-n | --no-quoted)] [--style=xxx] [STRING...]``
 
 ``string join [(-q | --quiet)] SEP [STRING...]``
@@ -47,6 +49,17 @@ Arguments beginning with ``-`` are normally interpreted as switches; ``--`` caus
 Most subcommands accept a ``-q`` or ``--quiet`` switch, which suppresses the usual output but exits with the documented status.
 
 The following subcommands are available.
+
+"collect" subcommand
+--------------------
+
+``string collect [(-n | --trim-newline)] [STRING...]``
+
+``string collect`` collects its input into a single output argument, without splitting the output when used in a command substitution. This is useful when trying to collect multiline output from another command into a variable. Exit status: 0 if any output argument is non-empty, or 1 otherwise.
+
+If invoked with multiple arguments instead of input, ``string collect`` preserves each argument separately, where the number of output arguments is equal to the number of arguments given to ``string collect``.
+
+``--trim-newline`` trims a single trailing newline off of each output argument. This is useful when collecting the output from another command as the trailing newline is frequently not desired.
 
 "escape" and "unescape" subcommands
 -----------------------------------
@@ -327,6 +340,22 @@ Examples
 
     >_ string escape --style=var 'a1 b2'\\u6161
     a1_20b2__c_E6_85_A1
+
+
+
+
+::
+
+    >_ echo \"(echo one\ntwo\nthree | string collect)\"
+    "one
+    two
+    three
+    "
+    
+    >_ echo \"(ech one\ntwo\nthree | string collect -n)\"
+    "one
+    two
+    three"
 
 
 Match Glob Examples

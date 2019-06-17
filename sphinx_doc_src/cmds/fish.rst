@@ -20,7 +20,7 @@ The following options are available:
 
 - ``-C`` or ``--init-command=COMMANDS`` evaluate the specified commands after reading the configuration, before running the command specified by ``-c`` or reading interactive input
 
-- ``-d`` or ``--debug-level=DEBUG_LEVEL`` specify the verbosity level of fish. A higher number means higher verbosity. The default level is 1.
+- ``-d`` or ``--debug=DEBUG_LEVEL`` specify the verbosity level of fish. A higher number means higher verbosity. The default level is 1.
 
 - ``-o`` or ``--debug-output=path`` Specify a file path to receive the debug output. The default is stderr.
 

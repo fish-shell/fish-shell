@@ -71,6 +71,7 @@ class category_list_t {
     category_t env_export{L"env-export", L"Changes to exported variables"};
 
     category_t topic_monitor{L"topic-monitor", L"Internal details of the topic monitor"};
+    category_t char_encoding{L"char-encoding", L"Character encoding issues"};
 };
 
 /// The class responsible for logging.

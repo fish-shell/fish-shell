@@ -414,7 +414,7 @@ std::string wcs2string(const wcstring &input) {
             std::memset(converted, 0, sizeof converted);
             size_t len = std::wcrtomb(converted, wc, &state);
             if (len == (size_t)-1) {
-                debug(1, L"Wide character U+%4X has no narrow representation", wc);
+                FLOGF(char_encoding, L"Wide character U+%4X has no narrow representation", wc);
                 std::memset(&state, 0, sizeof(state));
             } else {
                 result.append(converted, len);
@@ -452,7 +452,7 @@ static char *wcs2str_internal(const wchar_t *in, char *out) {
         } else {
             size_t len = std::wcrtomb(&out[out_pos], in[in_pos], &state);
             if (len == (size_t)-1) {
-                debug(1, L"Wide character U+%4X has no narrow representation", in[in_pos]);
+                FLOGF(char_encoding, L"Wide character U+%4X has no narrow representation", in[in_pos]);
                 std::memset(&state, 0, sizeof(state));
             } else {
                 out_pos += len;

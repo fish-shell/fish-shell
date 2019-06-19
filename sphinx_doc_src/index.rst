@@ -969,6 +969,15 @@ However using variables as indices for command substitution is currently not sup
     set sequence (seq 5) # It needs to be written on two lines like this.
     echo $sequence[$index] # returns '2'
 
+When using indirect variable expansion with multiple `$` (``$$name``), you have to give all indices up to the variable you want to slice::
+
+    > set -l list 1 2 3 4 5
+    > set -l name list
+    > echo $$name[1]
+    1 2 3 4 5
+    > echo $$name[1..-1][1..3] # or $$name[1][1..3], since $name only has one element.
+    1 2 3
+
 .. _expand-home:
 
 Home directory expansion

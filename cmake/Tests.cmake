@@ -71,16 +71,7 @@ ELSE()
   ADD_CUSTOM_TARGET(symlink_functions)
 ENDIF()
 
-#
 # Prep the environment for running the unit tests.
-# test-prep: show-DESTDIR show-LN_S show-FISH_VERSION
-#   $v rm -rf test
-#   $v $(MKDIR_P) test/data test/home test/temp
-# ifdef DESTDIR
-#   $v $(LN_S) $(DESTDIR) test/root
-# else
-#   $v $(MKDIR_P) test/root
-# endif
 ADD_CUSTOM_TARGET(test_prep
                   COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/data
                   COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/home
@@ -91,34 +82,16 @@ ADD_CUSTOM_TARGET(test_prep
                   USES_TERMINAL)
 
 
-# test_high_level_test_deps = test_fishscript test_interactive test_invocation
-# test_high_level: DESTDIR = $(PWD)/test/root/
-# test_high_level: prefix = .
-# test_high_level: test-prep install-force test_fishscript test_interactive test_invocation
-# .PHONY: test_high_level
-#
-# test_invocation: $(call filter_up_to,test_invocation,$(active_test_goals))
-#   cd tests; ./invocation.sh
-# .PHONY: test_invocation
 ADD_CUSTOM_TARGET(test_invocation
                   COMMAND ./invocation.sh
                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests/
                   DEPENDS test_prep test_low_level
                   USES_TERMINAL)
 
-#
-# test_fishscript: $(call filter_up_to,test_fishscript,$(active_test_goals))
-#   cd tests; ../test/root/bin/fish test.fish
-# .PHONY: test_fishscript
-
 ADD_CUSTOM_TARGET(test_fishscript
                   COMMAND cd tests && ${TEST_ROOT_DIR}/bin/fish test.fish
                   DEPENDS test_prep test_invocation
                   USES_TERMINAL)
-#
-# test_interactive: $(call filter_up_to,test_interactive,$(active_test_goals))
-#   cd tests; ../test/root/bin/fish interactive.fish
-# .PHONY: test_interactive
 
 ADD_CUSTOM_TARGET(test_interactive
     COMMAND cd tests && ${TEST_ROOT_DIR}/bin/fish interactive.fish

@@ -36,6 +36,7 @@
 - `test` (aka `[`) now prints a stacktrace on error, making the offending call easier to find (#5771).
 - The default read limit has been increased to 100MiB (#5267).
 - `math` now also understands `x` for multiplication, provided it is followed by whitespace (#5906).
+- `functions --erase` now also prevents fish from autoloading a function for the first time (#5951).
 
 ### Interactive improvements
 - Major improvements in performance and functionality to the 'sorin' sample prompt (#5411).

@@ -245,10 +245,9 @@ bool function_set_t::remove(const wcstring &name) {
 
 void function_remove(const wcstring &name) {
     auto funcset = function_set.acquire();
-    if (funcset->remove(name)) {
-        // Prevent re-autoloading this function.
-        funcset->autoload_tombstones.insert(name);
-    }
+    funcset->remove(name);
+    // Prevent (re-)autoloading this function.
+    funcset->autoload_tombstones.insert(name);
 }
 
 bool function_get_definition(const wcstring &name, wcstring &out_definition) {

@@ -26,7 +26,7 @@ The following options are available:
 
 - ``-d DESCRIPTION`` or ``--description=DESCRIPTION`` changes the description of this function.
 
-- ``-e`` or ``--erase`` causes the specified functions to be erased.
+- ``-e`` or ``--erase`` causes the specified functions to be erased. This also means that it is prevented from autoloading.
 
 - ``-D`` or ``--details`` reports the path name where each function is defined or could be autoloaded, ``stdin`` if the function was defined interactively or on the command line or by reading stdin, and ``n/a`` if the function isn't available. If the ``--verbose`` option is also specified then five lines are written:
 

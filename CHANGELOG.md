@@ -15,6 +15,7 @@
 - The `--debug` option has been extended to allow specifying categories. Categories may be listed via `fish --print-debug-categories`.
 - `string replace` had an additional round of escaping in the replacement (not the match!), so escaping backslashes would require `string replace -ra '([ab])' '\\\\\\\$1' a`. A new feature flag `string-replace-fewer-backslashes` can be used to disable this, so that it becomes `string replace -ra '([ab])' '\\\\$1' a` (#5556).
 - Some parser errors did not set `$status` to non-zero. This has been corrected (b2a1da602f79878f4b0adc4881216c928a542608).
+- `string` has a new `collect` subcommand that disables newline-splitting on its input. This is meant to be used as the end of a command substitution pipeline to produce a single output argument potentially containing internal newlines, such as `set output (some-cmd | string collect)`. Any trailing newlines are trimmed, just like `"$(cmd)"` substitution in sh. It also supports a `--no-trim-newlines` flag to disable trailing newline trimming, which may be useful when doing something like `set contents (cat filename | string collect -N)` (#159).
 
 ### Syntax changes and new commands
 - Brace expansion now only takes place if the braces include a "," or a variable expansion, so things like `git reset HEAD@{0}` now work (#5869).

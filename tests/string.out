@@ -483,3 +483,38 @@ Split something
 ####################
 # string split0 in functions
 4
+
+####################
+# string collect
+1
+1
+[one
+two
+three]
+[one
+two
+three
+]
+[one]
+[two]
+[one
+
+]
+[two
+]
+[one
+
+]
+[two
+]
+expected failure
+expected failure
+expected success
+expected failure
+expected success
+expected failure
+expected failure
+
+####################
+# string collect in functions
+3

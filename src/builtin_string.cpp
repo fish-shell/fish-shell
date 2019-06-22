@@ -157,6 +157,7 @@ typedef struct {  //!OCLINT(too many fields)
     bool start_valid = false;
     bool style_valid = false;
     bool no_empty_valid = false;
+    bool no_trim_newlines_valid = false;
 
     bool all = false;
     bool entire = false;
@@ -171,6 +172,7 @@ typedef struct {  //!OCLINT(too many fields)
     bool regex = false;
     bool right = false;
     bool no_empty = false;
+    bool no_trim_newlines = false;
 
     long count = 0;
     long length = 0;
@@ -213,6 +215,9 @@ static int handle_flag_N(wchar_t **argv, parser_t &parser, io_streams_t &streams
                          options_t *opts) {
     if (opts->no_newline_valid) {
         opts->no_newline = true;
+        return STATUS_CMD_OK;
+    } else if (opts->no_trim_newlines_valid) {
+        opts->no_trim_newlines = true;
         return STATUS_CMD_OK;
     }
     string_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
@@ -408,12 +413,13 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
     if (opts->right_valid) short_opts.append(L"r");
     if (opts->start_valid) short_opts.append(L"s:");
     if (opts->no_empty_valid) short_opts.append(L"n");
+    if (opts->no_trim_newlines_valid) short_opts.append(L"N");
     return short_opts;
 }
 
 // Note that several long flags share the same short flag. That is okay. The caller is expected
 // to indicate that a max of one of the long flags sharing a short flag is valid.
-// Remember: adjust share/functions/string.fish when `string` options change
+// Remember: adjust share/completions/string.fish when `string` options change
 static const struct woption long_options[] = {
     {L"all", no_argument, NULL, 'a'},         {L"chars", required_argument, NULL, 'c'},
     {L"count", required_argument, NULL, 'n'}, {L"entire", no_argument, NULL, 'e'},
@@ -424,7 +430,8 @@ static const struct woption long_options[] = {
     {L"no-newline", no_argument, NULL, 'N'},  {L"no-quoted", no_argument, NULL, 'n'},
     {L"quiet", no_argument, NULL, 'q'},       {L"regex", no_argument, NULL, 'r'},
     {L"right", no_argument, NULL, 'r'},       {L"start", required_argument, NULL, 's'},
-    {L"style", required_argument, NULL, 1},   {NULL, 0, NULL, 0}};
+    {L"style", required_argument, NULL, 1},   {L"no-trim-newlines", no_argument, NULL, 'N'},
+    {NULL, 0, NULL, 0}};
 
 static const std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
@@ -1125,6 +1132,29 @@ static int string_split0(parser_t &parser, io_streams_t &streams, int argc, wcha
     return string_split_maybe0(parser, streams, argc, argv, true /* is_split0 */);
 }
 
+static int string_collect(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv) {
+    options_t opts;
+    opts.no_trim_newlines_valid = true;
+    int optind;
+    int retval = parse_opts(&opts, &optind, 0, argc, argv, parser, streams);
+    if (retval != STATUS_CMD_OK) return retval;
+
+    auto &buff = streams.out.buffer();
+    arg_iterator_t aiter(argv, optind, streams, /* don't split */ false);
+    while (const wcstring *arg = aiter.nextstr()) {
+        auto begin = arg->cbegin(), end = arg->cend();
+        if (!opts.no_trim_newlines) {
+            while (end > begin && *(end-1) == L'\n') {
+                --end;
+            }
+        }
+
+        buff.append(begin, end, separation_type_t::explicitly);
+    }
+
+    return buff.size() > 0 ? STATUS_CMD_OK : STATUS_CMD_ERROR;
+}
+
 // Helper function to abstract the repeat logic from string_repeat
 // returns the to_repeat string, repeated count times.
 static wcstring wcsrepeat(const wcstring &to_repeat, size_t count) {
@@ -1305,7 +1335,8 @@ string_subcommands[] = {
     {L"length", &string_length}, {L"match", &string_match},       {L"replace", &string_replace},
     {L"split", &string_split},   {L"split0", &string_split0},     {L"sub", &string_sub},
     {L"trim", &string_trim},     {L"lower", &string_lower},       {L"upper", &string_upper},
-    {L"repeat", &string_repeat}, {L"unescape", &string_unescape}, {NULL, NULL}};
+    {L"repeat", &string_repeat}, {L"unescape", &string_unescape}, {L"collect", &string_collect},
+    {NULL, NULL}};
 
 /// The string builtin, for manipulating strings.
 int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {

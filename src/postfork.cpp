@@ -59,7 +59,7 @@ bool child_set_group(job_t *j, process_t *p) {
                     continue;
                 } else if (errno == EINTR) {
                     // I don't think signals are blocked here. The parent (fish) redirected the
-                    // signal handlers and `setup_child_process()` calls `signal_reset_handlers()`
+                    // signal handlers and `child_setup_process()` calls `signal_reset_handlers()`
                     // after we're done here (and not `signal_unblock()`). We're already in a loop,
                     // so let's just handle EINTR just in case.
                     continue;
@@ -154,13 +154,14 @@ bool maybe_assign_terminal(const job_t *j) {
     return true;
 }
 
-int setup_child_process(process_t *p, const dup2_list_t &dup2s) {
+int child_setup_process(process_t *p, const dup2_list_t &dup2s) {
+    // Note we are called in a forked child.
     for (const auto &act : dup2s.get_actions()) {
         int err = act.target < 0 ? close(act.src) : dup2(act.src, act.target);
         if (err < 0) {
             // We have a null p if this is for the exec (non-fork) path.
             if (p != nullptr) {
-                debug_safe(4, "redirect_in_child_after_fork failed in setup_child_process");
+                debug_safe(4, "redirect_in_child_after_fork failed in child_setup_process");
                 exit_without_destructors(1);
             }
             return err;

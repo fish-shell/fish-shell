@@ -118,7 +118,7 @@ char *get_interpreter(const char *command, char *interpreter, size_t buff_size) 
 }
 
 /// This function is executed by the child process created by a call to fork(). It should be called
-/// after \c setup_child_process. It calls execve to replace the fish process image with the command
+/// after \c child_setup_process. It calls execve to replace the fish process image with the command
 /// specified in \c p. It never returns. Called in a forked child! Do not allocate memory, etc.
 static void safe_launch_process(process_t *p, const char *actual_cmd, const char *const *cargv,
                                 const char *const *cenvv) {
@@ -293,14 +293,14 @@ static bool can_use_posix_spawn_for_job(const std::shared_ptr<job_t> &job) {
 void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &all_ios) {
     // Do a regular launch -  but without forking first...
 
-    // setup_child_process makes sure signals are properly set up.
+    // child_setup_process makes sure signals are properly set up.
 
     // PCA This is for handling exec. Passing all_ios here matches what fish 2.0.0 and 1.x did.
     // It's known to be wrong - for example, it means that redirections bound for subsequent
     // commands in the pipeline will apply to exec. However, using exec in a pipeline doesn't
     // really make sense, so I'm not trying to fix it here.
     auto redirs = dup2_list_t::resolve_chain(all_ios);
-    if (redirs && !setup_child_process(0, *redirs)) {
+    if (redirs && !child_setup_process(0, *redirs)) {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
         auto shlvl_var = vars.get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
         wcstring shlvl_str = L"0";
@@ -445,7 +445,7 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
         // stdout and stderr, and then exit.
         p->pid = getpid();
         child_set_group(job.get(), p);
-        setup_child_process(p, dup2s);
+        child_setup_process(p, dup2s);
         child_action();
         DIE("Child process returned control to fork_child lambda!");
     }

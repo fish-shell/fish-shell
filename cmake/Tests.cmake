@@ -29,22 +29,6 @@ ENDIF()
 # Copy littlecheck.py
 CONFIGURE_FILE(build_tools/littlecheck.py littlecheck.py COPYONLY)
 
-# Create the 'test' target.
-# Set a policy so CMake stops complaining about the name 'test'.
-CMAKE_POLICY(PUSH)
-IF(POLICY CMP0037)
-  CMAKE_POLICY(SET CMP0037 OLD)
-ENDIF()
-ADD_CUSTOM_TARGET(test)
-CMAKE_POLICY(POP)
-
-ADD_CUSTOM_TARGET(test_low_level
-  COMMAND env XDG_DATA_HOME=test/data XDG_CONFIG_HOME=test/home ./fish_tests
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  DEPENDS fish_tests
-  USES_TERMINAL)
-ADD_DEPENDENCIES(test test_low_level tests_dir)
-
 # Make the directory in which to run tests.
 # Also symlink fish to where the tests expect it to be.
 # Lastly put fish_test_helper there too.
@@ -81,30 +65,66 @@ ADD_CUSTOM_TARGET(test_prep
                   DEPENDS tests_buildroot_target
                   USES_TERMINAL)
 
-
-ADD_CUSTOM_TARGET(test_invocation
-                  COMMAND ./invocation.sh
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests/
-                  DEPENDS test_prep test_low_level
-                  USES_TERMINAL)
-
-ADD_CUSTOM_TARGET(test_fishscript
-                  COMMAND cd tests && ${TEST_ROOT_DIR}/bin/fish test.fish
-                  DEPENDS test_prep test_invocation
-                  USES_TERMINAL)
-
-ADD_CUSTOM_TARGET(test_interactive
-    COMMAND cd tests && ${TEST_ROOT_DIR}/bin/fish interactive.fish
-    DEPENDS test_prep test_invocation test_fishscript
+# Define our individual tests.
+# Each test is conceptually independent.
+# However when running all tests, we want to run them serially for sanity's sake.
+# So define both a normal target, and a serial variant which enforces ordering.
+FOREACH(TESTTYPE test serial_test)
+  ADD_CUSTOM_TARGET(${TESTTYPE}_low_level
+    COMMAND env XDG_DATA_HOME=test/data XDG_CONFIG_HOME=test/home ./fish_tests
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS fish_tests
     USES_TERMINAL)
 
-ADD_CUSTOM_TARGET(test_high_level
-                  DEPENDS test_invocation test_fishscript test_interactive)
-ADD_DEPENDENCIES(test test_high_level)
+  ADD_CUSTOM_TARGET(${TESTTYPE}_invocation
+                    COMMAND ./invocation.sh
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests/
+                    DEPENDS test_prep
+                    USES_TERMINAL)
+
+  ADD_CUSTOM_TARGET(${TESTTYPE}_fishscript
+                    COMMAND cd tests && ${TEST_ROOT_DIR}/bin/fish test.fish
+                    DEPENDS test_prep
+                    USES_TERMINAL)
+
+  ADD_CUSTOM_TARGET(${TESTTYPE}_interactive
+      COMMAND cd tests && ${TEST_ROOT_DIR}/bin/fish interactive.fish
+      DEPENDS test_prep
+      USES_TERMINAL)
+ENDFOREACH(testtype)
+
+# Now add a dependency chain between the serial versions.
+# This ensures they run in order.
+ADD_DEPENDENCIES(serial_test_fishscript serial_test_low_level)
+ADD_DEPENDENCIES(serial_test_invocation serial_test_fishscript)
+ADD_DEPENDENCIES(serial_test_interactive serial_test_invocation)
+
+
+ADD_CUSTOM_TARGET(serial_test_high_level
+                  DEPENDS serial_test_invocation serial_test_interactive serial_test_fishscript)
+
+# Create the 'test' target.
+# Set a policy so CMake stops complaining about the name 'test'.
+CMAKE_POLICY(PUSH)
+IF(POLICY CMP0037)
+  CMAKE_POLICY(SET CMP0037 OLD)
+ENDIF()
+ADD_CUSTOM_TARGET(test)
+CMAKE_POLICY(POP)
+ADD_DEPENDENCIES(test serial_test_high_level)
 
 # Group test targets into a TestTargets folder
-SET_PROPERTY(TARGET test test_low_level test_high_level tests_dir
+SET_PROPERTY(TARGET test tests_dir
+                    test_low_level
+                    test_fishscript
+                    test_interactive
+                    test_invocation
                     test_invocation test_fishscript test_prep
                     tests_buildroot_target
+                    serial_test_high_level
+                    serial_test_low_level
+                    serial_test_fishscript
+                    serial_test_interactive
+                    serial_test_invocation
                     symlink_functions
              PROPERTY FOLDER cmake/TestTargets)

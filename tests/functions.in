@@ -74,3 +74,11 @@ or echo "Failed to find description 1" >&2
 functions -d description2 test_func_desc
 functions test_func_desc | string match --quiet '*description2*'
 or echo "Failed to find description 2" >&2
+
+# Note: This test isn't ideal - if ls was loaded before,
+# or doesn't exist, it'll succeed anyway.
+#
+# But we can't *confirm* that an ls function exists,
+# so this is the best we can do.
+functions --erase ls
+type -t ls

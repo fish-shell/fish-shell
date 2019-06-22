@@ -96,10 +96,8 @@ bool child_set_group(job_t *j, process_t *p) {
             return false;
         }
     } else {
-        // The child does not actually use this field.
         j->pgid = getpgrp();
     }
-
     return true;
 }
 
@@ -154,7 +152,7 @@ bool maybe_assign_terminal(const job_t *j) {
     return true;
 }
 
-int child_setup_process(process_t *p, const dup2_list_t &dup2s) {
+int child_setup_process(const job_t *job, process_t *p, const dup2_list_t &dup2s) {
     // Note we are called in a forked child.
     for (const auto &act : dup2s.get_actions()) {
         int err = act.target < 0 ? close(act.src) : dup2(act.src, act.target);
@@ -169,6 +167,17 @@ int child_setup_process(process_t *p, const dup2_list_t &dup2s) {
     }
     // Set the handling for job control signals back to the default.
     signal_reset_handlers();
+
+    if (job != nullptr && job->get_flag(job_flag_t::TERMINAL) && job->is_foreground()) {
+        // Assign the terminal within the child to avoid the well-known race between tcsetgrp() in
+        // the parent and the child executing. We are not interested in error handling here, except
+        // we try to avoid this for non-terminals; in particular pipelines often make non-terminal
+        // stdin.
+        if (isatty(STDIN_FILENO)) {
+            (void)tcsetpgrp(STDIN_FILENO, job->pgid);
+        }
+    }
+
     return 0;
 }
 

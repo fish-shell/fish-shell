@@ -30,7 +30,7 @@ bool maybe_assign_terminal(const job_t *j);
 ///
 /// \return 0 on sucess, -1 on failiure. When this function returns, signals are always unblocked.
 /// On failiure, signal handlers, io redirections and process group of the process is undefined.
-int child_setup_process(process_t *p, const dup2_list_t &dup2s);
+int child_setup_process(const job_t *job, process_t *p, const dup2_list_t &dup2s);
 
 /// Call fork(), optionally waiting until we are no longer multithreaded. If the forked child
 /// doesn't do anything that could allocate memory, take a lock, etc. (like call exec), then it's

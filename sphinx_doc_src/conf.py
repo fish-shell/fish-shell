@@ -177,7 +177,11 @@ def get_command_description(path, name):
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "fish", "fish-shell Documentation", [author], 1)]
+man_pages = [
+    (master_doc, "fish-doc", "fish-shell Documentation", [author], 1),
+    ("tutorial", "fish-tutorial", "fish-shell tutorial", [author], 1),
+    ("faq", "fish-faq", "fish-shell faq", [author], 1),
+]
 for path in sorted(glob.glob("cmds/*")):
     docname = strip_ext(path)
     cmd = os.path.basename(docname)

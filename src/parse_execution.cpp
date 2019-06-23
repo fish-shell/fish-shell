@@ -1231,20 +1231,23 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
         return result;
     }
 
-    shared_ptr<job_t> job = std::make_shared<job_t>(acquire_job_id(), block_io, parent_job);
-    auto &ld = parser->libdata();
-    job->tmodes = tmodes;
+    const auto &ld = parser->libdata();
+
     auto job_control_mode = get_job_control_mode();
-    job->set_flag(job_flag_t::JOB_CONTROL,
-                  (job_control_mode == job_control_t::all) ||
-                      ((job_control_mode == job_control_t::interactive) && shell_is_interactive()));
+    bool wants_job_control =
+        (job_control_mode == job_control_t::all) ||
+        ((job_control_mode == job_control_t::interactive) && shell_is_interactive());
 
-    job->set_flag(job_flag_t::FOREGROUND, !job_node_is_background(job_node));
+    job_t::properties_t props{};
+    props.foreground = !job_node_is_background(job_node);
+    props.wants_terminal = wants_job_control && !ld.is_event;
+    props.skip_notification =
+        ld.is_subshell || ld.is_block || ld.is_event || !shell_is_interactive();
 
-    job->set_flag(job_flag_t::TERMINAL, job->get_flag(job_flag_t::JOB_CONTROL) && !ld.is_event);
+    shared_ptr<job_t> job = std::make_shared<job_t>(acquire_job_id(), props, block_io, parent_job);
+    job->tmodes = tmodes;
 
-    job->set_flag(job_flag_t::SKIP_NOTIFICATION,
-                  ld.is_subshell || ld.is_block || ld.is_event || !shell_is_interactive());
+    job->set_flag(job_flag_t::JOB_CONTROL, wants_job_control);
 
     // We are about to populate a job. One possible argument to the job is a command substitution
     // which may be interested in the job that's populating it, via '--on-job-exit caller'. Record

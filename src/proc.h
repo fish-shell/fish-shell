@@ -140,6 +140,12 @@ class internal_proc_t {
     internal_proc_t();
 };
 
+/// 0 should not be used; although it is not a valid PGID in userspace,
+///   the Linux kernel will use it for kernel processes.
+/// -1 should not be used; it is a possible return value of the getpgid()
+///   function
+enum { INVALID_PID = -2 };
+
 /// A structure representing a single fish process. Contains variables for tracking process state
 /// and the process argument list. Actually, a fish process can be either a regular external
 /// process, an internal builtin which may or may not spawn a fake IO process during execution, a
@@ -255,15 +261,10 @@ enum class job_flag_t {
     /// Whether the specified job is completely constructed, i.e. completely parsed, and every
     /// process in the job has been forked, etc.
     CONSTRUCTED,
-    /// Whether the specified job is a part of a subshell, event handler or some other form of
-    /// special job that should not be reported.
-    SKIP_NOTIFICATION,
     /// Whether the exit status should be negated. This flag can only be set by the not builtin.
     NEGATE,
     /// Whether the job is under job control, i.e. has its own pgrp.
     JOB_CONTROL,
-    /// Whether the job wants to own the terminal when in the foreground.
-    TERMINAL,
     /// This job is disowned, and should be removed from the active jobs list.
     DISOWN_REQUESTED,
 
@@ -282,6 +283,25 @@ void release_job_id(job_id_t jobid);
 /// A struct represeting a job. A job is basically a pipeline of one or more processes and a couple
 /// of flags.
 class job_t {
+   public:
+    /// A set of jobs properties. These are immutable: they do not change for the lifetime of the
+    /// job.
+    struct properties_t {
+        /// Whether this job is in the foreground, i.e. whether it did NOT have a & at the end.
+        bool foreground{};
+
+        /// Whether the specified job is a part of a subshell, event handler or some other form of
+        /// special job that should not be reported.
+        bool skip_notification{};
+
+        /// Whether the job wants to own the terminal when in the foreground.
+        bool wants_terminal{};
+    };
+
+   private:
+    /// Set of immutable job properties.
+    const properties_t properties;
+
     /// The original command which led to the creation of this job. It is used for displaying
     /// messages about job status on the terminal.
     wcstring command_str;
@@ -298,7 +318,8 @@ class job_t {
     void operator=(const job_t &) = delete;
 
    public:
-    job_t(job_id_t jobid, io_chain_t bio, std::shared_ptr<job_t> parent);
+    job_t(job_id_t job_id, const properties_t &props, io_chain_t bio,
+          std::shared_ptr<job_t> parent);
     ~job_t();
 
     /// Returns whether the command is empty.
@@ -356,20 +377,28 @@ class job_t {
 
     /// Process group ID for the process group that this job is running in.
     /// Set to a nonexistent, non-return-value of getpgid() integer by the constructor
-    pid_t pgid;
+    pid_t pgid{INVALID_PID};
+
+    /// The id of this job.
+    const job_id_t job_id;
+
     /// The saved terminal modes of this job. This needs to be saved so that we can restore the
     /// terminal to the same state after temporarily taking control over the terminal when a job
     /// stops.
-    struct termios tmodes;
-    /// The job id of the job. This is a small integer that is a unique identifier of the job within
-    /// this shell, and is used e.g. in process expansion.
-    const job_id_t job_id;
+    struct termios tmodes {};
+
     /// Bitset containing information about the job. A combination of the JOB_* constants.
-    enum_set_t<job_flag_t> flags;
+    enum_set_t<job_flag_t> flags{};
 
     // Get and set flags
     bool get_flag(job_flag_t flag) const;
     void set_flag(job_flag_t flag, bool set);
+
+    /// \return if we want job control.
+    bool wants_job_control() const { return get_flag(job_flag_t::JOB_CONTROL); }
+
+    /// \return if this job wants to own the terminal in the foreground.
+    bool wants_terminal() const { return properties.wants_terminal; }
 
     /// Returns the block IO redirections associated with the job. These are things like the IO
     /// redirections associated with the begin...end statement.
@@ -382,7 +411,7 @@ class job_t {
     /// The job has been fully constructed, i.e. all its member processes have been launched
     bool is_constructed() const { return get_flag(job_flag_t::CONSTRUCTED); }
     /// The job was launched in the foreground and has control of the terminal
-    bool is_foreground() const { return get_flag(job_flag_t::FOREGROUND); }
+    bool is_foreground() const { return properties.foreground; }
     /// The job is complete, i.e. all its member processes have been reaped
     bool is_completed() const;
     /// The job is in a stopped state
@@ -391,6 +420,7 @@ class job_t {
     bool is_visible() const {
         return !is_completed() && is_constructed() && !get_flag(job_flag_t::DISOWN_REQUESTED);
     };
+    bool skip_notification() const { return properties.skip_notification; }
 
     /// \return the parent job, or nullptr.
     const std::shared_ptr<job_t> get_parent() const { return parent_job; }
@@ -508,12 +538,6 @@ pid_t terminal_acquire_before_builtin(int job_pgid);
 /// Add a pid to the list of pids we wait on even though they are not associated with any jobs.
 /// Used to avoid zombie processes after disown.
 void add_disowned_pgid(pid_t pgid);
-
-/// 0 should not be used; although it is not a valid PGID in userspace,
-///   the Linux kernel will use it for kernel processes.
-/// -1 should not be used; it is a possible return value of the getpgid()
-///   function
-enum { INVALID_PID = -2 };
 
 bool have_proc_stat();
 

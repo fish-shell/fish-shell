@@ -19,7 +19,7 @@
 /// Helper function for builtin_bg().
 static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j) {
     assert(j != NULL);
-    if (!j->get_flag(job_flag_t::JOB_CONTROL)) {
+    if (!j->wants_job_control()) {
         streams.err.append_format(
             _(L"%ls: Can't put job %d, '%ls' to background because it is not under job control\n"),
             L"bg", j->job_id, j->command_wcstr());
@@ -54,7 +54,7 @@ int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         // No jobs were specified so use the most recent (i.e., last) job.
         job_t *job = nullptr;
         for (const auto &j : parser.jobs()) {
-            if (j->is_stopped() && j->get_flag(job_flag_t::JOB_CONTROL) && (!j->is_completed())) {
+            if (j->is_stopped() && j->wants_job_control() && (!j->is_completed())) {
                 job = j.get();
                 break;
             }

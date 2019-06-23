@@ -278,10 +278,10 @@ void internal_exec_helper(parser_t &parser, parsed_source_ref_t parsed_source, t
 // foreground process group, we don't use posix_spawn if we're going to foreground the process. (If
 // we use fork(), we can call tcsetpgrp after the fork, before the exec, and avoid the race).
 static bool can_use_posix_spawn_for_job(const std::shared_ptr<job_t> &job) {
-    if (job->get_flag(job_flag_t::JOB_CONTROL)) {  //!OCLINT(collapsible if statements)
+    if (job->wants_job_control()) {  //!OCLINT(collapsible if statements)
         // We are going to use job control; therefore when we launch this job it will get its own
         // process group ID. But will it be foregrounded?
-        if (job->get_flag(job_flag_t::TERMINAL) && job->is_foreground()) {
+        if (job->wants_terminal() && job->is_foreground()) {
             // It will be foregrounded, so we will call tcsetpgrp(), therefore do not use
             // posix_spawn.
             return false;
@@ -327,7 +327,7 @@ static void on_process_created(const std::shared_ptr<job_t> &j, pid_t child_pid)
         return;
     }
 
-    if (j->get_flag(job_flag_t::JOB_CONTROL)) {
+    if (j->wants_job_control()) {
         j->pgid = child_pid;
     } else {
         j->pgid = getpgrp();
@@ -744,7 +744,7 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
         // child group has been set. See discussion here:
         // https://github.com/Microsoft/WSL/issues/2997 And confirmation that this persists
         // past glibc 2.24+ here: https://github.com/fish-shell/fish-shell/issues/4715
-        if (j->get_flag(job_flag_t::JOB_CONTROL) && getpgid(p->pid) != j->pgid) {
+        if (j->wants_job_control() && getpgid(p->pid) != j->pgid) {
             set_child_group(j.get(), p->pid);
         }
 #else

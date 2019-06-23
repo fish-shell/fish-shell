@@ -40,8 +40,7 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         for (const auto &j : parser.jobs()) {
             if (j->is_constructed() && (!j->is_completed()) &&
-                ((j->is_stopped() || (!j->is_foreground())) &&
-                 j->get_flag(job_flag_t::JOB_CONTROL))) {
+                ((j->is_stopped() || (!j->is_foreground())) && j->wants_job_control())) {
                 job = j.get();
                 break;
             }
@@ -77,7 +76,7 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             if (!job || !job->is_constructed() || job->is_completed()) {
                 streams.err.append_format(_(L"%ls: No suitable job: %d\n"), cmd, pid);
                 job = nullptr;
-            } else if (!job->get_flag(job_flag_t::JOB_CONTROL)) {
+            } else if (!job->wants_job_control()) {
                 streams.err.append_format(_(L"%ls: Can't put job %d, '%ls' to foreground because "
                                             L"it is not under job control\n"),
                                           cmd, pid, job->command_wcstr());

@@ -41,7 +41,7 @@
 /// process if it is the first in a JOB_CONTROL job.
 /// Returns true on sucess, false on failiure.
 bool child_set_group(job_t *j, process_t *p) {
-    if (j->get_flag(job_flag_t::JOB_CONTROL)) {
+    if (j->wants_job_control()) {
         if (j->pgid == INVALID_PID) {
             j->pgid = p->pid;
         }
@@ -107,7 +107,7 @@ bool child_set_group(job_t *j, process_t *p) {
 /// group in the case of JOB_CONTROL, and we can give the new process group control of the terminal
 /// if it's to run in the foreground.
 bool set_child_group(job_t *j, pid_t child_pid) {
-    if (j->get_flag(job_flag_t::JOB_CONTROL)) {
+    if (j->wants_job_control()) {
         assert(j->pgid != INVALID_PID &&
                "set_child_group called with JOB_CONTROL before job pgid determined!");
 
@@ -135,7 +135,7 @@ bool set_child_group(job_t *j, pid_t child_pid) {
 }
 
 bool maybe_assign_terminal(const job_t *j) {
-    if (j->get_flag(job_flag_t::TERMINAL) && j->is_foreground()) {  //!OCLINT(early exit)
+    if (j->wants_terminal() && j->is_foreground()) {  //!OCLINT(early exit)
         if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
             // We've already assigned the process group control of the terminal when the first
             // process in the job was started. There's no need to do so again, and on some platforms
@@ -168,7 +168,7 @@ int child_setup_process(const job_t *job, process_t *p, const dup2_list_t &dup2s
     // Set the handling for job control signals back to the default.
     signal_reset_handlers();
 
-    if (job != nullptr && job->get_flag(job_flag_t::TERMINAL) && job->is_foreground()) {
+    if (job != nullptr && job->wants_terminal() && job->is_foreground()) {
         // Assign the terminal within the child to avoid the well-known race between tcsetgrp() in
         // the parent and the child executing. We are not interested in error handling here, except
         // we try to avoid this for non-terminals; in particular pipelines often make non-terminal
@@ -241,7 +241,7 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
 
     bool should_set_process_group_id = false;
     int desired_process_group_id = 0;
-    if (j->get_flag(job_flag_t::JOB_CONTROL)) {
+    if (j->wants_job_control()) {
         should_set_process_group_id = true;
 
         // set_child_group puts each job into its own process group

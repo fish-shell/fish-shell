@@ -279,13 +279,9 @@ void process_t::check_generations_before_launch() {
     gens_ = topic_monitor_t::principal().current_generations();
 }
 
-job_t::job_t(job_id_t jobid, io_chain_t bio, std::shared_ptr<job_t> parent)
-    : block_io(std::move(bio)),
-      parent_job(std::move(parent)),
-      pgid(INVALID_PID),
-      tmodes(),
-      job_id(jobid),
-      flags{} {}
+job_t::job_t(job_id_t job_id, const properties_t &props, io_chain_t bio,
+             std::shared_ptr<job_t> parent)
+    : properties(props), block_io(std::move(bio)), parent_job(std::move(parent)), job_id(job_id) {}
 
 job_t::~job_t() { release_job_id(job_id); }
 
@@ -490,7 +486,7 @@ static bool try_clean_process_in_job(process_t *p, job_t *j, std::vector<event_t
 
     // Handle signals other than SIGPIPE.
     // Always report crashes.
-    if (j->get_flag(job_flag_t::SKIP_NOTIFICATION) && !contains(crashsignals, s.signal_code())) {
+    if (j->skip_notification() && !contains(crashsignals, s.signal_code())) {
         return false;
     }
 
@@ -540,7 +536,7 @@ static bool job_wants_message(const shared_ptr<job_t> &j) {
     if (j->get_flag(job_flag_t::NOTIFIED)) return false;
 
     // Do we just skip notifications?
-    if (j->get_flag(job_flag_t::SKIP_NOTIFICATION)) return false;
+    if (j->skip_notification()) return false;
 
     // Are we foreground?
     // The idea here is to not print status messages for jobs that execute in the foreground (i.e.
@@ -872,7 +868,7 @@ void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool se
     });
 
     if (!is_completed()) {
-        if (get_flag(job_flag_t::TERMINAL) && is_foreground()) {
+        if (wants_terminal() && is_foreground()) {
             // Put the job into the foreground and give it control of the terminal.
             // Hack: ensure that stdin is marked as blocking first (issue #176).
             make_fd_blocking(STDIN_FILENO);
@@ -980,7 +976,7 @@ void hup_background_jobs(const parser_t &parser) {
     // TODO: we should probably hup all jobs across all parsers here.
     for (const auto &j : parser.jobs()) {
         // Make sure we don't try to SIGHUP the calling builtin
-        if (j->pgid == INVALID_PID || !j->get_flag(job_flag_t::JOB_CONTROL)) {
+        if (j->pgid == INVALID_PID || !j->wants_job_control()) {
             continue;
         }
 

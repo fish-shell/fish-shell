@@ -91,7 +91,7 @@ FOREACH(TESTTYPE test serial_test)
       COMMAND cd tests && ${TEST_ROOT_DIR}/bin/fish interactive.fish
       DEPENDS test_prep
       USES_TERMINAL)
-ENDFOREACH(testtype)
+ENDFOREACH(TESTTYPE)
 
 # Now add a dependency chain between the serial versions.
 # This ensures they run in order.

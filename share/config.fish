@@ -173,10 +173,9 @@ if status --is-login
         # executable for fish; see
         # https://opensource.apple.com/source/shell_cmds/shell_cmds-203/path_helper/path_helper.c.auto.html .
         function __fish_macos_set_env -d "set an environment variable like path_helper does (macOS only)"
-            # The first argument is the variable name, the others are the files.
-            # Keep the components already there so we don't change the order
-            set -l result $$argv[1]
+            set -l result
 
+            # Populate path according to config files
             for path_file in $argv[2] $argv[3]/*
                 if [ -f $path_file ]
                     while read -l entry
@@ -185,6 +184,13 @@ if status --is-login
                             and set -a result $entry
                         end
                     end <$path_file
+                end
+            end
+
+            # Merge in any existing path elements
+            for existing_entry in $$argv[1]
+                if not contains -- $existing_entry $result
+                    set -a result $existing_entry
                 end
             end
 

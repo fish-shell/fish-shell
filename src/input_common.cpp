@@ -104,13 +104,6 @@ char_event_t input_event_queue_t::readb() {
                 }
             }
 
-            if (ioport > 0 && FD_ISSET(ioport, &fdset)) {
-                iothread_service_completion();
-                if (auto mc = pop_discard_timeouts()) {
-                    return *mc;
-                }
-            }
-
             if (FD_ISSET(STDIN_FILENO, &fdset)) {
                 unsigned char arr[1];
                 if (read_blocked(0, arr, 1) != 1) {
@@ -120,6 +113,15 @@ char_event_t input_event_queue_t::readb() {
 
                 // We read from stdin, so don't loop.
                 return arr[0];
+            }
+
+            // Check for iothread completions only if there is no data to be read from the stdin.
+            // This gives priority to the foreground.
+            if (ioport > 0 && FD_ISSET(ioport, &fdset)) {
+                iothread_service_completion();
+                if (auto mc = pop_discard_timeouts()) {
+                    return *mc;
+                }
             }
         }
     }

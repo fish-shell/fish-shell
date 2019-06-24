@@ -35,7 +35,14 @@ endif()
 # - comment because we use a bunch of those, and they're not really all that harmful.
 # - address, because that occurs for our mkostemp check (weak-linking requires us to compare `&mkostemp == nullptr`).
 # - strict-aliasing, because on old GCCs (*Travis*) those are triggered by maybe.h, so you get it every time it is included.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-implicit-fallthrough -Wno-comment -Wno-address -Wno-strict-aliasing")
+# - redundant-move, because we have one that is required on old libc
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra \
+-Wno-implicit-fallthrough \
+-Wno-comment \
+-Wno-address \
+-Wno-strict-aliasing \
+-Wno-redundant-move \
+")
 
 # Disable exception handling.
 ADD_COMPILE_OPTIONS(-fno-exceptions)

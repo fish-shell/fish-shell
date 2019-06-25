@@ -12,13 +12,13 @@ import subprocess
 import sys
 
 # A regex showing how to run the file.
-RUN_RE = re.compile(r"#\s*RUN:\s+(.*)\n")
+RUN_RE = re.compile(r"\s*#\s*RUN:\s+(.*)\n")
 
 # A regex capturing lines that should be checked against stdout.
-CHECK_STDOUT_RE = re.compile(r"#\s*CHECK:\s+(.*)\n")
+CHECK_STDOUT_RE = re.compile(r"\s*#\s*CHECK:\s+(.*)\n")
 
 # A regex capturing lines that should be checked against stderr.
-CHECK_STDERR_RE = re.compile(r"#\s*CHECKERR:\s+(.*)\n")
+CHECK_STDERR_RE = re.compile(r"\s*#\s*CHECKERR:\s+(.*)\n")
 
 
 class Config(object):

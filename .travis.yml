@@ -13,6 +13,7 @@ matrix:
             - gettext
             - libncurses5-dev
             - libpcre2-dev
+            - python
       env:
           - CXXFLAGS="-g -O2 -Werror=address"
     - os: linux
@@ -24,6 +25,7 @@ matrix:
             - gettext
             - lib32ncurses5-dev
             - g++-multilib
+            - python
       env:
           - CXXFLAGS="-g -O2 -m32 -Werror=address" CFLAGS="-g -m32"
     - os: linux
@@ -39,6 +41,7 @@ matrix:
             - gettext
             - libncurses5-dev
             - libpcre2-dev
+            - python
     - os: osx
       before_install:
         - brew update

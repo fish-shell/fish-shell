@@ -3,6 +3,7 @@ packages:
   - cmake
   - ninja
   - expect
+  - python
 sources:
   - https://git.sr.ht/~faho/fish
 tasks:

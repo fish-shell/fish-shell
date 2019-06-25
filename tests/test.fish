@@ -72,7 +72,8 @@ end
 function test_littlecheck_file
     set -l file $argv[1]
     echo "Testing file $file"
-    ../littlecheck.py -s fish=../test/root/bin/fish $file
+    set -l python (__fish_anypython)
+    $python ../littlecheck.py -s fish=../test/root/bin/fish $file
 end
 
 set -l failed

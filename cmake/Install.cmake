@@ -216,7 +216,7 @@ ENDIF()
 
 # Group install targets into a InstallTargets folder
 SET_PROPERTY(TARGET build_fish_pc CHECK-FISH-BUILD-VERSION-FILE
-                    test_invocation test_fishscript
+                    test_fishscript
                     test_prep tests_buildroot_target
              PROPERTY FOLDER cmake/InstallTargets)
 

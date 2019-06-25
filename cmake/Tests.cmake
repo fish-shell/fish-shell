@@ -76,12 +76,6 @@ FOREACH(TESTTYPE test serial_test)
     DEPENDS fish_tests
     USES_TERMINAL)
 
-  ADD_CUSTOM_TARGET(${TESTTYPE}_invocation
-                    COMMAND ./invocation.sh
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests/
-                    DEPENDS test_prep
-                    USES_TERMINAL)
-
   ADD_CUSTOM_TARGET(${TESTTYPE}_fishscript
                     COMMAND cd tests && ${TEST_ROOT_DIR}/bin/fish test.fish
                     DEPENDS test_prep
@@ -96,12 +90,11 @@ ENDFOREACH(TESTTYPE)
 # Now add a dependency chain between the serial versions.
 # This ensures they run in order.
 ADD_DEPENDENCIES(serial_test_fishscript serial_test_low_level)
-ADD_DEPENDENCIES(serial_test_invocation serial_test_fishscript)
-ADD_DEPENDENCIES(serial_test_interactive serial_test_invocation)
+ADD_DEPENDENCIES(serial_test_interactive serial_test_fishscript)
 
 
 ADD_CUSTOM_TARGET(serial_test_high_level
-                  DEPENDS serial_test_invocation serial_test_interactive serial_test_fishscript)
+                  DEPENDS serial_test_interactive serial_test_fishscript)
 
 # Create the 'test' target.
 # Set a policy so CMake stops complaining about the name 'test'.
@@ -118,13 +111,11 @@ SET_PROPERTY(TARGET test tests_dir
                     test_low_level
                     test_fishscript
                     test_interactive
-                    test_invocation
-                    test_invocation test_fishscript test_prep
+                    test_fishscript test_prep
                     tests_buildroot_target
                     serial_test_high_level
                     serial_test_low_level
                     serial_test_fishscript
                     serial_test_interactive
-                    serial_test_invocation
                     symlink_functions
              PROPERTY FOLDER cmake/TestTargets)

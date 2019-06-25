@@ -689,7 +689,9 @@ function __fish_git_prompt_set_char
     end
 
     if set -q argv[3]
-        and set -q __fish_git_prompt_show_informative_status
+        and begin set -q __fish_git_prompt_show_informative_status
+            or set -q __fish_git_prompt_use_informative_chars
+        end
         set char $argv[3]
     end
 
@@ -792,7 +794,7 @@ function __fish_git_prompt_validate_colors --description "fish_git_prompt helper
 end
 
 set -l varargs
-for var in repaint describe_style show_informative_status showdirtystate showstashstate showuntrackedfiles showupstream
+for var in repaint describe_style show_informative_status use_informative_chars showdirtystate showstashstate showuntrackedfiles showupstream
     set -a varargs --on-variable __fish_git_prompt_$var
 end
 function __fish_git_prompt_repaint $varargs --description "Event handler, repaints prompt when functionality changes"

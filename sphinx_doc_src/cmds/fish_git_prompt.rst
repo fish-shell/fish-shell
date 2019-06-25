@@ -50,7 +50,7 @@ There are numerous customization options, which can be controlled with git optio
 
 - ``$__fish_git_prompt_showcolorhints`` can be set to enable coloring for the branch name and status symbols.
 
-A number of variables set characters and color used as indicators. Many of these have a different default if used with informative status enabled. The usual default is given first, then the informative default (if it is different). If no default for the colors is given, they default to ``$__fish_git_prompt_color``.
+A number of variables set characters and color used as indicators. Many of these have a different default if used with informative status enabled, or ``$__fish_git_prompt_use_informative_chars`` set. The usual default is given first, then the informative default (if it is different). If no default for the colors is given, they default to ``$__fish_git_prompt_color``.
 
 - ``$__fish_git_prompt_char_stateseparator`` (' ', `|`)
 - ``$__fish_git_prompt_color`` ('')

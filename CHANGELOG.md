@@ -56,6 +56,7 @@
   - `bosh`
   - `vagrant`
 - The git prompt in informative mode now shows the number of stashes if enabled.
+- The git prompt now has an option ($__fish_git_prompt_use_informative_chars) to use the (more modern) informative characters without enabling informative mode.
 - The nextd and prevd functions no longer print "Hit end of history", instead using a BEL.
 - If fish_mode_prompt exists, vi-mode will only execute it on mode-switch instead of the entire prompt. This should make it much more responsive with slow prompts (#5783).
 - The path-component bindings (like ctrl-w) now also stop at ":" and "@" because those are used to denote user and host in ssh-likes (#5841).

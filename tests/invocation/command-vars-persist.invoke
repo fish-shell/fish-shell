@@ -1,1 +1,0 @@
--c 'set foo bar' -c 'echo $foo'

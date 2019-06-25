@@ -69,11 +69,19 @@ function test_in_file
     end
 end
 
+set -g python (__fish_anypython)
+
 function test_littlecheck_file
     set -l file $argv[1]
-    echo "Testing file $file"
-    set -l python (__fish_anypython)
+    echo -n "Testing file $file ... "
+    set starttime (date +%s)
     $python ../littlecheck.py -s fish=../test/root/bin/fish $file
+    set -l exit_status $status
+    set -l res ok
+    set test_duration (math (date +%s) - $starttime)
+    if test $exit_status -eq 0
+        say green "ok ($test_duration sec)"
+    end
 end
 
 set -l failed

@@ -55,7 +55,7 @@ static void string_error(io_streams_t &streams, const wchar_t *fmt, ...) {
 static void string_unknown_option(parser_t &parser, io_streams_t &streams, const wchar_t *subcmd,
                                   const wchar_t *opt) {
     string_error(streams, BUILTIN_ERR_UNKNOWN, subcmd, opt);
-    builtin_print_help(parser, streams, L"string", streams.err);
+    builtin_print_error_trailer(parser, streams.err, L"string");
 }
 
 // We read from stdin if we are the second or later process in a pipeline.
@@ -1344,7 +1344,7 @@ int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int argc = builtin_count_args(argv);
     if (argc <= 1) {
         streams.err.append_format(BUILTIN_ERR_MISSING_SUBCMD, cmd);
-        builtin_print_help(parser, streams, L"string", streams.err);
+        builtin_print_error_trailer(parser, streams.err, L"string");
         return STATUS_INVALID_ARGS;
     }
 
@@ -1359,7 +1359,7 @@ int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
     if (!subcmd->handler) {
         streams.err.append_format(BUILTIN_ERR_INVALID_SUBCMD, cmd, argv[1]);
-        builtin_print_help(parser, streams, L"string", streams.err);
+        builtin_print_error_trailer(parser, streams.err, L"string");
         return STATUS_INVALID_ARGS;
     }
 

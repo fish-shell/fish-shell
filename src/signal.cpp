@@ -325,7 +325,7 @@ static void set_interactive_handlers() {
 }
 
 /// Sets up appropriate signal handlers.
-void signal_set_handlers(bool interactive) {
+void signal_set_handlers() {
     struct sigaction act;
     act.sa_flags = 0;
     sigemptyset(&act.sa_mask);
@@ -354,17 +354,9 @@ void signal_set_handlers(bool interactive) {
         FATAL_EXIT();
     }
 
-    if (interactive) {
+    if (shell_is_interactive()) {
         set_interactive_handlers();
     }
-}
-
-void signal_set_handlers_once(bool interactive) {
-    static std::once_flag s_noninter_once;
-    std::call_once(s_noninter_once, signal_set_handlers, false);
-
-    static std::once_flag s_inter_once;
-    if (interactive) std::call_once(s_inter_once, set_interactive_handlers);
 }
 
 void signal_handle(int sig, int do_handle) {

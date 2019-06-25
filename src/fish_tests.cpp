@@ -1014,7 +1014,7 @@ static void test_cancellation() {
     // Enable fish's signal handling here. We need to make this interactive for fish to install its
     // signal handlers.
     proc_push_interactive(1);
-    signal_set_handlers(true);
+    signal_set_handlers();
 
     // This tests that we can correctly ctrl-C out of certain loop constructs, and that nothing gets
     // printed if we do.

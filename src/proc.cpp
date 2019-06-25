@@ -955,15 +955,18 @@ void proc_sanity_check(const parser_t &parser) {
 
 void proc_push_interactive(int value) {
     ASSERT_IS_MAIN_THREAD();
+    int old = is_interactive;
     interactive_stack.push_back(is_interactive);
     is_interactive = value;
-    signal_set_handlers_once(is_interactive);
+    if (old != value) signal_set_handlers();
 }
 
 void proc_pop_interactive() {
     ASSERT_IS_MAIN_THREAD();
+    int old = is_interactive;
     is_interactive = interactive_stack.back();
     interactive_stack.pop_back();
+    if (is_interactive != old) signal_set_handlers();
 }
 
 void proc_wait_any(parser_t &parser) {

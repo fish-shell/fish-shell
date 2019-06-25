@@ -8,7 +8,8 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
     type -q getent
     # Ignore zero IPs.
     and getent hosts 2>/dev/null | string match -r -v '^0.0.0.0' | string replace -r '^\s*\S+\s+' '' | string split ' '
-    or if test -r /etc/hosts
+    # We care about _getent_s status, not `string split`s.
+    if test $pipestatus[1] -ne 0; and test -r /etc/hosts
         # Ignore commented lines and functionally empty lines.
         string match -r -v '^\s*0.0.0.0|^\s*#|^\s*$' </etc/hosts | string replace -r -a '#.*$' '' | string replace -r '^\s*\S+\s+' '' | string trim | string replace -r -a '\s+' ' ' | string split ' '
     end

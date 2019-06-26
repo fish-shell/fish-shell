@@ -9,9 +9,6 @@ if test "$TRAVIS_OS_NAME" = osx
     exit 0
 end
 
-# This is a list of flakey tests that often succeed when rerun.
-set -l TESTS_TO_RETRY bind.expect pipeline.expect
-
 # Set this var to modify behavior of the code being tests. Such as avoiding running
 # `fish_update_completions` when running tests.
 set -gx FISH_UNIT_TESTS_RUNNING 1
@@ -92,14 +89,9 @@ end
 set failed
 for i in $files_to_test
     if not test_file $i
-        # Retry flakey tests once.
-        if contains $i $TESTS_TO_RETRY
-            say -o cyan "Rerunning test $i since it is known to be flakey"
-            rm -f $i.tmp.*
-            if not test_file $i
-                set failed $failed $i
-            end
-        else
+        say -o cyan "Rerunning test $i"
+        rm -f $i.tmp.*
+        if not test_file $i
             set failed $failed $i
         end
     end

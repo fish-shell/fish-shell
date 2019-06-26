@@ -2457,17 +2457,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             reader_repaint_needed();
             break;
         }
-        case rl::delete_or_exit: {
-            if (!command_line.text.empty()) {
-                command_line.position = 0;
-                command_line.text = L"";
-                update_buff_pos(&command_line, 0);
-                reader_repaint_needed();
-            } else {
-                reader_set_end_loop(true);
-            }
-            break;
-        }
         case rl::cancel: {
             // The only thing we can cancel right now is paging, which we handled up above.
             break;
@@ -2687,6 +2676,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             remove_backward();
             break;
         }
+        case rl::delete_or_exit:
         case rl::delete_char: {
             // Remove the current character in the character buffer and on the screen using
             // syntax highlighting, etc.
@@ -2694,6 +2684,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             if (el->position < el->size()) {
                 update_buff_pos(el, el->position + 1);
                 remove_backward();
+            } else if (c == rl::delete_or_exit) {
+                reader_set_end_loop(true);
             }
             break;
         }

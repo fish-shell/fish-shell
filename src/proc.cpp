@@ -472,9 +472,11 @@ static bool try_clean_process_in_job(process_t *p, job_t *j, std::vector<event_t
 
     auto s = p->status;
 
-    // Add an exit event.
-    exit_events->push_back(proc_create_event(L"PROCESS_EXIT", event_type_t::exit, p->pid,
-                                             s.normal_exited() ? s.exit_code() : -1));
+    // Add an exit event if the process did not come from a job handler.
+    if (!j->from_event_handler()) {
+        exit_events->push_back(proc_create_event(L"PROCESS_EXIT", event_type_t::exit, p->pid,
+                                                 s.normal_exited() ? s.exit_code() : -1));
+    }
 
     // Ignore SIGPIPE. We issue it ourselves to the pipe writer when the pipe reader dies.
     if (!s.signal_exited() || s.signal_code() == SIGPIPE) {
@@ -600,8 +602,9 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
             printed = true;
         }
 
-        // Prepare events for completed jobs.
-        if (j->is_completed()) {
+        // Prepare events for completed jobs, except for jobs that themselves came from event
+        // handlers.
+        if (!j->from_event_handler() && j->is_completed()) {
             if (j->pgid != INVALID_PID) {
                 exit_events.push_back(
                     proc_create_event(L"JOB_EXIT", event_type_t::exit, -j->pgid, 0));

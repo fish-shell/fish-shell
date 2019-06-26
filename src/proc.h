@@ -296,6 +296,9 @@ class job_t {
 
         /// Whether the job wants to own the terminal when in the foreground.
         bool wants_terminal{};
+
+        /// Whether this job was created as part of an event handler.
+        bool from_event_handler{};
     };
 
    private:
@@ -421,6 +424,7 @@ class job_t {
         return !is_completed() && is_constructed() && !get_flag(job_flag_t::DISOWN_REQUESTED);
     };
     bool skip_notification() const { return properties.skip_notification; }
+    bool from_event_handler() const { return properties.from_event_handler; }
 
     /// \return the parent job, or nullptr.
     const std::shared_ptr<job_t> get_parent() const { return parent_job; }

@@ -1243,6 +1243,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
     props.wants_terminal = wants_job_control && !ld.is_event;
     props.skip_notification =
         ld.is_subshell || ld.is_block || ld.is_event || !shell_is_interactive();
+    props.from_event_handler = ld.is_event;
 
     shared_ptr<job_t> job = std::make_shared<job_t>(acquire_job_id(), props, block_io, parent_job);
     job->tmodes = tmodes;

@@ -1,22 +1,31 @@
+#RUN: %fish %s
 # Validate the behavior of the `count` command.
 
-logmsg no args
+# no args
 count
+# CHECK: 0
 
-logmsg one args
+# one args
 count x
+# CHECK: 1
 
-logmsg two args
+# two args
 count x y
+# CHECK: 2
 
-logmsg args that look like flags or are otherwise special
+# args that look like flags or are otherwise special
 count -h
+# CHECK: 1
 count --help
+# CHECK: 1
 count --
+# CHECK: 1
 count -- abc
+# CHECK: 2
 count def -- abc
+# CHECK: 3
 
-logmsg big counts
+# big counts
 
 # See #5611
 for i in seq 500
@@ -28,11 +37,14 @@ for i in seq 500
     end
 end
 
-logmsg stdin
+# stdin
 # Reading from stdin still counts the arguments
 printf '%s\n' 1 2 3 4 5 | count 6 7 8 9 10
+# CHECK: 10
 
 # Reading from stdin counts newlines - like `wc -l`.
 echo -n 0 | count
+# CHECK: 0
 
 echo 1 | count
+# CHECK: 1

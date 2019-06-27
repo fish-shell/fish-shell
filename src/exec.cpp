@@ -1005,6 +1005,41 @@ static process_t *get_deferred_process(const shared_ptr<job_t> &j) {
     return nullptr;
 }
 
+/// \return true if fish should claim the process group for this job.
+/// This is true if there is at least one external process and if the first process is fish code.
+static bool should_claim_process_group_for_job(const shared_ptr<job_t> &j) {
+    // Check if there's an external process.
+    // This is because historically fish has not reported job exits for internal-only processes,
+    // which is determined by comparing the pgrp against INVALID_PID.
+    bool has_external = false;
+    for (const auto &p : j->processes) {
+        if (p->type == process_type_t::external) {
+            has_external = true;
+            break;
+        }
+    }
+    if (!has_external) {
+        return false;
+    }
+
+    // Check the first process.
+    // The terminal owner has to be the process which is permitted to read from stdin.
+    // This is the first process in the pipeline. When executing, a process in the job will
+    // claim the pgrp if it's not set; therefore set it according to the first process.
+    switch (j->processes.front()->type) {
+        case process_type_t::builtin:
+        case process_type_t::function:
+        case process_type_t::block_node:
+            // These are run internal to fish.
+            return true;
+        case process_type_t::external:
+        case process_type_t::exec:
+            // External will get its own pgroup after fork.
+            // exec will retain the pgroup.
+            return false;
+    }
+}
+
 bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     assert(j && "null job_t passed to exec_job!");
 
@@ -1026,6 +1061,10 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     if (parent_job && parent_job->pgid != INVALID_PID) {
         j->pgid = parent_job->pgid;
         j->set_flag(job_flag_t::JOB_CONTROL, true);
+    }
+
+    if (j->pgid == INVALID_PID && should_claim_process_group_for_job(j)) {
+        j->pgid = getpgrp();
     }
 
     size_t stdout_read_limit = 0;

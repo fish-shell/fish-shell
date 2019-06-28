@@ -198,73 +198,65 @@ static bool reraise_if_forked_child(int sig) {
     return true;
 }
 
-/// Standard signal handler.
-static void default_handler(int signal, siginfo_t *info, void *context) {
+/// The single signal handler. By centralizing signal handling we ensure that we can never install
+/// the "wrong" signal handler (see #5969).
+static void fish_signal_handler(int sig, siginfo_t *info, void *context) {
     UNUSED(info);
     UNUSED(context);
-    if (event_is_signal_observed(signal)) {
-        event_enqueue_signal(signal);
-    }
-}
 
+    // Check if we are a forked child.
+    if (reraise_if_forked_child(sig)) {
+        return;
+    }
+
+    // Check if fish script cares about this.
+    const bool observed = event_is_signal_observed(sig);
+    if (observed) {
+        event_enqueue_signal(sig);
+    }
+
+    // Do some signal-specific stuff.
+    switch (sig) {
 #ifdef SIGWINCH
-/// Respond to a winch signal by checking the terminal size.
-static void handle_winch(int sig, siginfo_t *info, void *context) {
-    UNUSED(info);
-    UNUSED(context);
-    if (reraise_if_forked_child(sig)) return;
-    common_handle_winch(sig);
-    default_handler(sig, 0, 0);
-}
+        case SIGWINCH:
+            /// Respond to a winch signal by checking the terminal size.
+            common_handle_winch(sig);
+            break;
 #endif
 
-/// Respond to a hup signal by exiting, unless it is caught by a shellscript function, in which case
-/// we do nothing.
-static void handle_hup(int sig, siginfo_t *info, void *context) {
-    UNUSED(info);
-    UNUSED(context);
-    if (reraise_if_forked_child(sig)) return;
-    if (event_is_signal_observed(SIGHUP)) {
-        default_handler(sig, 0, 0);
-    } else {
-        reader_force_exit();
+        case SIGHUP:
+            /// Respond to a hup signal by exiting, unless it is caught by a shellscript function,
+            /// in which case we do nothing.
+            if (!observed) {
+                reader_force_exit();
+            }
+            topic_monitor_t::principal().post(topic_t::sighupint);
+            break;
+
+        case SIGTERM:
+            /// Handle sigterm. The only thing we do is restore the front process ID, then die.
+            restore_term_foreground_process_group();
+            signal(SIGTERM, SIG_DFL);
+            raise(SIGTERM);
+            break;
+
+        case SIGINT:
+            /// Interactive mode ^C handler. Respond to int signal by setting interrupted-flag and
+            /// stopping all loops and conditionals.
+            reader_handle_sigint();
+            topic_monitor_t::principal().post(topic_t::sighupint);
+            break;
+
+        case SIGCHLD:
+            // A child process stopped or exited.
+            topic_monitor_t::principal().post(topic_t::sigchld);
+            break;
+
+        case SIGALRM:
+            // We have a sigalarm handler that does nothing. This is used in the signal torture
+            // test, to verify that we behave correctly when receiving lots of irrelevant signals.
+            break;
     }
-    topic_monitor_t::principal().post(topic_t::sighupint);
-}
-
-/// Handle sigterm. The only thing we do is restore the front process ID, then die.
-static void handle_sigterm(int sig, siginfo_t *info, void *context) {
-    UNUSED(info);
-    UNUSED(context);
-    if (reraise_if_forked_child(sig)) return;
-    restore_term_foreground_process_group();
-    signal(SIGTERM, SIG_DFL);
-    raise(SIGTERM);
-}
-
-/// Interactive mode ^C handler. Respond to int signal by setting interrupted-flag and stopping all
-/// loops and conditionals.
-static void handle_int(int sig, siginfo_t *info, void *context) {
-    if (reraise_if_forked_child(sig)) return;
-    reader_handle_sigint();
-    default_handler(sig, info, context);
-    topic_monitor_t::principal().post(topic_t::sighupint);
-}
-
-/// sigchld handler. Does notification and calls the handler in proc.c.
-static void handle_chld(int sig, siginfo_t *info, void *context) {
-    if (reraise_if_forked_child(sig)) return;
-    default_handler(sig, info, context);
-    topic_monitor_t::principal().post(topic_t::sigchld);
-}
-
-// We have a sigalarm handler that does nothing. This is used in the signal torture test, to verify
-// that we behave correctly when receiving lots of irrelevant signals.
-static void handle_sigalarm(int sig, siginfo_t *info, void *context) {
-    UNUSED(info);
-    UNUSED(context);
-    if (reraise_if_forked_child(sig)) return;
-    default_handler(sig, info, context);
 }
 
 void signal_reset_handlers() {
@@ -296,29 +288,29 @@ static void set_interactive_handlers() {
     sigaction(SIGTTOU, &act, NULL);
 
     // We don't ignore SIGTTIN because we might send it to ourself.
-    act.sa_sigaction = &default_handler;
+    act.sa_sigaction = &fish_signal_handler;
     act.sa_flags = SA_SIGINFO;
     sigaction(SIGTTIN, &act, NULL);
 
     // SIGTERM restores the terminal controlling process before dying.
-    act.sa_sigaction = &handle_sigterm;
+    act.sa_sigaction = &fish_signal_handler;
     act.sa_flags = SA_SIGINFO;
     sigaction(SIGTERM, &act, NULL);
 
     sigaction(SIGHUP, NULL, &oact);
     if (oact.sa_handler == SIG_DFL) {
-        act.sa_sigaction = &handle_hup;
+        act.sa_sigaction = &fish_signal_handler;
         act.sa_flags = SA_SIGINFO;
         sigaction(SIGHUP, &act, NULL);
     }
 
     // SIGALARM as part of our signal torture test
-    act.sa_sigaction = &handle_sigalarm;
+    act.sa_sigaction = &fish_signal_handler;
     act.sa_flags = SA_SIGINFO;
     sigaction(SIGALRM, &act, NULL);
 
 #ifdef SIGWINCH
-    act.sa_sigaction = &handle_winch;
+    act.sa_sigaction = &fish_signal_handler;
     act.sa_flags = SA_SIGINFO;
     sigaction(SIGWINCH, &act, NULL);
 #endif
@@ -341,13 +333,13 @@ void signal_set_handlers() {
     sigaction(SIGQUIT, &act, 0);
 
     // Apply our SIGINT handler.
-    act.sa_sigaction = &handle_int;
+    act.sa_sigaction = &fish_signal_handler;
     act.sa_flags = SA_SIGINFO;
     sigaction(SIGINT, &act, NULL);
 
     // Whether or not we're interactive we want SIGCHLD to not interrupt restartable syscalls.
     act.sa_flags = SA_SIGINFO;
-    act.sa_sigaction = &handle_chld;
+    act.sa_sigaction = &fish_signal_handler;
     act.sa_flags = SA_SIGINFO | SA_RESTART;
     if (sigaction(SIGCHLD, &act, 0)) {
         wperror(L"sigaction");
@@ -370,7 +362,7 @@ void signal_handle(int sig) {
     act.sa_flags = 0;
     sigemptyset(&act.sa_mask);
     act.sa_flags = SA_SIGINFO;
-    act.sa_sigaction = &default_handler;
+    act.sa_sigaction = &fish_signal_handler;
     sigaction(sig, &act, nullptr);
 }
 

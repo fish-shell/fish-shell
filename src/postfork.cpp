@@ -165,19 +165,21 @@ int child_setup_process(const job_t *job, process_t *p, const dup2_list_t &dup2s
             return err;
         }
     }
-    // Set the handling for job control signals back to the default.
-    signal_reset_handlers();
-
     if (job != nullptr && job->wants_terminal() && job->is_foreground()) {
         // Assign the terminal within the child to avoid the well-known race between tcsetgrp() in
         // the parent and the child executing. We are not interested in error handling here, except
         // we try to avoid this for non-terminals; in particular pipelines often make non-terminal
         // stdin.
         if (isatty(STDIN_FILENO)) {
+            // Ensure this doesn't send us to the background (see #5963)
+            signal(SIGTTIN, SIG_IGN);
+            signal(SIGTTOU, SIG_IGN);
             (void)tcsetpgrp(STDIN_FILENO, job->pgid);
         }
     }
-
+    // Set the handling for job control signals back to the default.
+    // Do this after any tcsetpgrp call so that we swallow SIGTTIN.
+    signal_reset_handlers();
     return 0;
 }
 

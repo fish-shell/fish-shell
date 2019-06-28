@@ -891,6 +891,9 @@ class env_stack_impl_t final : public env_scoped_impl_t {
         for (auto cursor = node; cursor; cursor = cursor->next) {
             auto iter = cursor->env.find(key);
             if (iter != cursor->env.end()) {
+                if (iter->second.exports()) {
+                    node->changed_exported();
+                }
                 cursor->env.erase(iter);
                 return true;
             }

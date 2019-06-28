@@ -359,7 +359,7 @@ void signal_set_handlers() {
     }
 }
 
-void signal_handle(int sig, int do_handle) {
+void signal_handle(int sig) {
     struct sigaction act;
 
     // These should always be handled.
@@ -369,15 +369,9 @@ void signal_handle(int sig, int do_handle) {
 
     act.sa_flags = 0;
     sigemptyset(&act.sa_mask);
-    if (do_handle) {
-        act.sa_flags = SA_SIGINFO;
-        act.sa_sigaction = &default_handler;
-    } else {
-        act.sa_flags = 0;
-        act.sa_handler = SIG_DFL;
-    }
-
-    sigaction(sig, &act, 0);
+    act.sa_flags = SA_SIGINFO;
+    act.sa_sigaction = &default_handler;
+    sigaction(sig, &act, nullptr);
 }
 
 void get_signals_with_handlers(sigset_t *set) {

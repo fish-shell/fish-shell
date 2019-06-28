@@ -200,7 +200,7 @@ static void show_all_handlers(void) {
 
 void event_add_handler(std::shared_ptr<event_handler_t> eh) {
     if (eh->desc.type == event_type_t::signal) {
-        signal_handle(eh->desc.param1.signal, 1);
+        signal_handle(eh->desc.param1.signal);
         set_signal_observed(eh->desc.param1.signal, true);
     }
 

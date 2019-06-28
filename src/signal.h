@@ -22,9 +22,7 @@ void signal_set_handlers();
 /// Tell fish what to do on the specified signal.
 ///
 /// \param sig The signal to specify the action of
-/// \param do_handle If true fish will catch the specified signal and fire an event, otherwise the
-/// default action (SIG_DFL) will be set
-void signal_handle(int sig, int do_handle);
+void signal_handle(int sig);
 
 /// Ensure we did not inherit any blocked signals. See issue #3964.
 void signal_unblock_all();

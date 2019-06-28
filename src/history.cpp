@@ -1928,7 +1928,7 @@ void history_t::remove(const wcstring &str) { impl()->remove(str); }
 void history_t::add_pending_with_file_detection(const wcstring &str,
                                                 const wcstring &working_dir_slash) {
     // Find all arguments that look like they could be file paths.
-    bool impending_exit = false;
+    bool needs_sync_write = false;
     parse_node_tree_t tree;
     parse_tree_from_string(str, parse_flag_none, &tree, NULL);
 
@@ -1948,21 +1948,25 @@ void history_t::add_pending_with_file_detection(const wcstring &str,
             // Hack hack hack - if the command is likely to trigger an exit, then don't do
             // background file detection, because we won't be able to write it to our history file
             // before we exit.
+            // Also skip it for 'echo'. This is because echo doesn't take file paths, but also
+            // because the history file test wants to find the commands in the history file
+            // immediately after running them, so it can't tolerate the asynchronous file detection.
             if (get_decoration({&tree, &node}) == parse_statement_decoration_exec) {
-                impending_exit = true;
+                needs_sync_write = true;
             }
 
             if (maybe_t<wcstring> command = command_for_plain_statement({&tree, &node}, str)) {
                 unescape_string_in_place(&*command, UNESCAPE_DEFAULT);
-                if (*command == L"exit" || *command == L"reboot") {
-                    impending_exit = true;
+                if (*command == L"exit" || *command == L"reboot" || *command == L"restart" ||
+                    *command == L"echo") {
+                    needs_sync_write = true;
                 }
             }
         }
     }
 
     // If we got a path, we'll perform file detection for autosuggestion hinting.
-    bool wants_file_detection = !potential_paths.empty() && !impending_exit;
+    bool wants_file_detection = !potential_paths.empty() && !needs_sync_write;
     auto imp = this->impl();
 
     history_identifier_t identifier = 0;
@@ -1987,7 +1991,7 @@ void history_t::add_pending_with_file_detection(const wcstring &str,
         // If we think we're about to exit, save immediately, regardless of any disabling. This may
         // cause us to lose file hinting for some commands, but it beats losing history items.
         imp->add(str, identifier, true /* pending */);
-        if (impending_exit) {
+        if (needs_sync_write) {
             imp->save();
         }
     }

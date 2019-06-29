@@ -1038,6 +1038,7 @@ static bool should_claim_process_group_for_job(const shared_ptr<job_t> &j) {
             // exec will retain the pgroup.
             return false;
     }
+    DIE("unreachable");
 }
 
 bool exec_job(parser_t &parser, shared_ptr<job_t> j) {

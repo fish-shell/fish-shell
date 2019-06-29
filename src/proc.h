@@ -287,9 +287,6 @@ class job_t {
     /// A set of jobs properties. These are immutable: they do not change for the lifetime of the
     /// job.
     struct properties_t {
-        /// Whether this job is in the foreground, i.e. whether it did NOT have a & at the end.
-        bool foreground{};
-
         /// Whether the specified job is a part of a subshell, event handler or some other form of
         /// special job that should not be reported.
         bool skip_notification{};
@@ -414,7 +411,7 @@ class job_t {
     /// The job has been fully constructed, i.e. all its member processes have been launched
     bool is_constructed() const { return get_flag(job_flag_t::CONSTRUCTED); }
     /// The job was launched in the foreground and has control of the terminal
-    bool is_foreground() const { return properties.foreground; }
+    bool is_foreground() const { return get_flag(job_flag_t::FOREGROUND); }
     /// The job is complete, i.e. all its member processes have been reaped
     bool is_completed() const;
     /// The job is in a stopped state

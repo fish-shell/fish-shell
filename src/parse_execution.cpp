@@ -1239,7 +1239,6 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
         ((job_control_mode == job_control_t::interactive) && parser->is_interactive());
 
     job_t::properties_t props{};
-    props.foreground = !job_node_is_background(job_node);
     props.wants_terminal = wants_job_control && !ld.is_event;
     props.skip_notification =
         ld.is_subshell || ld.is_block || ld.is_event || !parser->is_interactive();
@@ -1248,6 +1247,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
     shared_ptr<job_t> job = std::make_shared<job_t>(acquire_job_id(), props, block_io, parent_job);
     job->tmodes = tmodes;
 
+    job->set_flag(job_flag_t::FOREGROUND, !job_node_is_background(job_node));
     job->set_flag(job_flag_t::JOB_CONTROL, wants_job_control);
 
     // We are about to populate a job. One possible argument to the job is a command substitution

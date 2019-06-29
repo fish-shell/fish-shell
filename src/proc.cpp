@@ -211,12 +211,6 @@ static int64_t next_proc_id() {
 
 internal_proc_t::internal_proc_t() : internal_proc_id_(next_proc_id()) {}
 
-static void mark_job_complete(const job_t *j) {
-    for (auto &p : j->processes) {
-        p->completed = 1;
-    }
-}
-
 void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *failed_proc) {
     // The given process failed to even lift off (e.g. posix_spawn failed) and so doesn't have a
     // valid pid. Mark it and everything after it as dead.
@@ -684,10 +678,22 @@ void proc_update_jiffies(parser_t &parser) {
 
 // Return control of the terminal to a job's process group. restore_attrs is true if we are
 // restoring a previously-stopped job, in which case we need to restore terminal attributes.
-bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
+int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
+    enum { notneeded = 0, success = 1, error = -1 };
+
+    if (!j->wants_terminal() || !j->is_foreground()) {
+        // We don't want the job.
+        return notneeded;
+    }
+
     if (j->pgid == 0) {
         FLOG(proc_termowner, L"terminal_give_to_job() returning early due to no process group");
-        return true;
+        return notneeded;
+    }
+
+    // If we are continuing, ensure that stdin is marked as blocking first (issue #176).
+    if (continuing_from_stopped) {
+        make_fd_blocking(STDIN_FILENO);
     }
 
     // It may not be safe to call tcsetpgrp if we've already done so, as at that point we are no
@@ -749,7 +755,7 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
                 debug(1, _(L"Could not send job %d ('%ls') with pgid %d to foreground"), j->job_id,
                       j->command_wcstr(), j->pgid);
                 wperror(L"tcsetpgrp");
-                return false;
+                return error;
             }
 
             if (pgroup_terminated) {
@@ -759,15 +765,14 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
                 // process in the group terminated and didn't need to access the terminal, otherwise
                 // it would have hung waiting for terminal IO (SIGTTIN). We can safely ignore this.
                 debug(3, L"tcsetpgrp called but process group %d has terminated.\n", j->pgid);
-                mark_job_complete(j);
-                return true;
+                return notneeded;
             }
 
             break;
         }
     }
 
-    if (restore_attrs) {
+    if (continuing_from_stopped) {
         auto result = tcsetattr(STDIN_FILENO, TCSADRAIN, &j->tmodes);
         if (result == -1) {
             // No need to test for EINTR and retry since we have blocked all signals
@@ -778,11 +783,11 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
             debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id,
                   j->preview().c_str());
             wperror(L"tcsetattr");
-            return false;
+            return error;
         }
     }
 
-    return true;
+    return success;
 }
 
 pid_t terminal_acquire_before_builtin(int job_pgid) {
@@ -857,17 +862,12 @@ void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool se
     });
 
     if (!is_completed()) {
-        if (wants_terminal() && is_foreground()) {
-            // Put the job into the foreground and give it control of the terminal.
-            // Hack: ensure that stdin is marked as blocking first (issue #176).
-            make_fd_blocking(STDIN_FILENO);
-            if (!terminal_give_to_job(this, send_sigcont)) {
-                // This scenario has always returned without any error handling. Presumably that is
-                // OK.
-                return;
-            }
-            term_transferred = true;
+        int transfer = terminal_maybe_give_to_job(this, send_sigcont);
+        if (transfer < 0) {
+            // terminal_maybe_give_to_job prints an error.
+            return;
         }
+        term_transferred = (transfer > 0);
 
         // If both requested and necessary, send the job a continue signal.
         if (send_sigcont) {

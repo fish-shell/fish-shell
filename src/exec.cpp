@@ -117,13 +117,6 @@ char *get_interpreter(const char *command, char *interpreter, size_t buff_size) 
     return NULL;
 }
 
-/// Assign the terminal to a job.
-static void maybe_assign_terminal(const job_t *j) {
-    if (j->wants_terminal() && j->is_foreground()) {
-        terminal_give_to_job(j, false /*new job, so not continuing*/);
-    }
-}
-
 /// This function is executed by the child process created by a call to fork(). It should be called
 /// after \c child_setup_process. It calls execve to replace the fish process image with the command
 /// specified in \c p. It never returns. Called in a forked child! Do not allocate memory, etc.
@@ -472,7 +465,7 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
     p->pid = pid;
     on_process_created(job, p->pid);
     set_child_group(job.get(), p->pid);
-    maybe_assign_terminal(job.get());
+    terminal_maybe_give_to_job(job.get(), false);
     return true;
 }
 
@@ -763,7 +756,7 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
         }
 #endif
 
-        maybe_assign_terminal(j.get());
+        terminal_maybe_give_to_job(j.get(), false);
     } else
 #endif
     {

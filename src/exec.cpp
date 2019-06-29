@@ -117,6 +117,13 @@ char *get_interpreter(const char *command, char *interpreter, size_t buff_size) 
     return NULL;
 }
 
+/// Assign the terminal to a job.
+static void maybe_assign_terminal(const job_t *j) {
+    if (j->wants_terminal() && j->is_foreground()) {
+        terminal_give_to_job(j, false /*new job, so not continuing*/);
+    }
+}
+
 /// This function is executed by the child process created by a call to fork(). It should be called
 /// after \c child_setup_process. It calls execve to replace the fish process image with the command
 /// specified in \c p. It never returns. Called in a forked child! Do not allocate memory, etc.

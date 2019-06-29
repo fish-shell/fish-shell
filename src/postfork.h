@@ -20,7 +20,6 @@ class process_t;
 
 bool set_child_group(job_t *j, pid_t child_pid);  // called by parent
 bool child_set_group(job_t *j, process_t *p);     // called by child
-bool maybe_assign_terminal(const job_t *j);
 
 /// Initialize a new child process. This should be called right away after forking in the child
 /// process. If job control is enabled for this job, the process is put in the process group of the

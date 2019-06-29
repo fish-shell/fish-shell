@@ -134,24 +134,6 @@ bool set_child_group(job_t *j, pid_t child_pid) {
     return true;
 }
 
-bool maybe_assign_terminal(const job_t *j) {
-    if (j->wants_terminal() && j->is_foreground()) {  //!OCLINT(early exit)
-        if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
-            // We've already assigned the process group control of the terminal when the first
-            // process in the job was started. There's no need to do so again, and on some platforms
-            // this can cause an EPERM error. In addition, if we've given control of the terminal to
-            // a process group, attempting to call tcsetpgrp from the background will cause SIGTTOU
-            // to be sent to everything in our process group (unless we handle it).
-            FLOGF(proc_termowner, L"Process group %d already has control of terminal", j->pgid);
-        } else {
-            // No need to duplicate the code here, a function already exists that does just this.
-            return terminal_give_to_job(j, false /*new job, so not continuing*/);
-        }
-    }
-
-    return true;
-}
-
 int child_setup_process(const job_t *job, process_t *p, const dup2_list_t &dup2s) {
     // Note we are called in a forked child.
     for (const auto &act : dup2s.get_actions()) {

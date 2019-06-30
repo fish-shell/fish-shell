@@ -32,6 +32,8 @@ The following options are available:
 
 - ``-p`` or ``--profile=PROFILE_FILE`` when fish exits, output timing information on all executed commands to the specified file
 
+- ``-P`` or ``--private`` enables :ref:`private mode <private-mode>`, so fish will not access old or store new history.
+
 - ``--print-rusage-self`` when fish exits, output stats from getrusage
 
 - ``--print-debug-categories`` outputs the list of debug categories, and then exits.

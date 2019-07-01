@@ -300,7 +300,7 @@ void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &all_ios) {
     // commands in the pipeline will apply to exec. However, using exec in a pipeline doesn't
     // really make sense, so I'm not trying to fix it here.
     auto redirs = dup2_list_t::resolve_chain(all_ios);
-    if (redirs && !child_setup_process(nullptr, nullptr, *redirs)) {
+    if (redirs && !child_setup_process(nullptr, false, *redirs)) {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
         auto shlvl_var = vars.get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
         wcstring shlvl_str = L"0";
@@ -445,7 +445,7 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
         // stdout and stderr, and then exit.
         p->pid = getpid();
         child_set_group(job.get(), p);
-        child_setup_process(job.get(), p, dup2s);
+        child_setup_process(job.get(), true, dup2s);
         child_action();
         DIE("Child process returned control to fork_child lambda!");
     }

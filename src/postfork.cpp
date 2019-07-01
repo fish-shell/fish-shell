@@ -134,13 +134,12 @@ bool set_child_group(job_t *j, pid_t child_pid) {
     return true;
 }
 
-int child_setup_process(const job_t *job, process_t *p, const dup2_list_t &dup2s) {
+int child_setup_process(const job_t *job, bool is_forked, const dup2_list_t &dup2s) {
     // Note we are called in a forked child.
     for (const auto &act : dup2s.get_actions()) {
         int err = act.target < 0 ? close(act.src) : dup2(act.src, act.target);
         if (err < 0) {
-            // We have a null p if this is for the exec (non-fork) path.
-            if (p != nullptr) {
+            if (is_forked) {
                 debug_safe(4, "redirect_in_child_after_fork failed in child_setup_process");
                 exit_without_destructors(1);
             }

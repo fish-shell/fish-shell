@@ -29,7 +29,7 @@ bool child_set_group(job_t *j, process_t *p);     // called by child
 ///
 /// \return 0 on sucess, -1 on failiure. When this function returns, signals are always unblocked.
 /// On failiure, signal handlers, io redirections and process group of the process is undefined.
-int child_setup_process(const job_t *job, process_t *p, const dup2_list_t &dup2s);
+int child_setup_process(const job_t *job, bool is_forked, const dup2_list_t &dup2s);
 
 /// Call fork(), optionally waiting until we are no longer multithreaded. If the forked child
 /// doesn't do anything that could allocate memory, take a lock, etc. (like call exec), then it's

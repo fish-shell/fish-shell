@@ -134,7 +134,7 @@ bool set_child_group(job_t *j, pid_t child_pid) {
     return true;
 }
 
-int child_setup_process(const job_t *job, bool is_forked, const dup2_list_t &dup2s) {
+int child_setup_process(pid_t new_termowner, bool is_forked, const dup2_list_t &dup2s) {
     // Note we are called in a forked child.
     for (const auto &act : dup2s.get_actions()) {
         int err = act.target < 0 ? close(act.src) : dup2(act.src, act.target);
@@ -146,7 +146,7 @@ int child_setup_process(const job_t *job, bool is_forked, const dup2_list_t &dup
             return err;
         }
     }
-    if (job != nullptr && job->wants_terminal() && job->is_foreground()) {
+    if (new_termowner != INVALID_PID) {
         // Assign the terminal within the child to avoid the well-known race between tcsetgrp() in
         // the parent and the child executing. We are not interested in error handling here, except
         // we try to avoid this for non-terminals; in particular pipelines often make non-terminal
@@ -155,7 +155,7 @@ int child_setup_process(const job_t *job, bool is_forked, const dup2_list_t &dup
             // Ensure this doesn't send us to the background (see #5963)
             signal(SIGTTIN, SIG_IGN);
             signal(SIGTTOU, SIG_IGN);
-            (void)tcsetpgrp(STDIN_FILENO, job->pgid);
+            (void)tcsetpgrp(STDIN_FILENO, new_termowner);
         }
     }
     // Set the handling for job control signals back to the default.

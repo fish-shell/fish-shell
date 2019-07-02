@@ -9,8 +9,6 @@ test/data/	Directory
 test/data/abc/	Directory
 test/data/abcd/	Directory
 test/data/fish/	Directory
-test/data/fish-symlink/	Directory
-test/data/fish-symlink2/	Directory
 test/data/xy/	Directory
 test/data/xyz/	Directory
 # __fish_complete_directories test/data/abc

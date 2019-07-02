@@ -6,7 +6,7 @@
 ## Notable Fixes and improvements
 - fish no longer requires buffering for the last function in a pipeline.
 - Add `$pipestatus` support
-- $PATH is no longer reordered in child fishes (#5456).
+- $PATH is no longer reordered in child fishes (#5956).
 - `eval` is now implemented internally rather than being a function; as such, the evaluated code now shares the same argument scope as `eval` rather than being executed in a new scope (#4443).
 - macOS Mojave: fish.app can actually run (#5727), 10.14.4's Terminal.app no longer causes an error on launch (#5725)
 - cd now always checks the current directory, even if $CDPATH does not include it or "." (#4484).

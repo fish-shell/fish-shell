@@ -82,6 +82,7 @@ function test_littlecheck_file
     if test $exit_status -eq 0
         say green "ok ($test_duration sec)"
     end
+    return $exit_status
 end
 
 set -l failed

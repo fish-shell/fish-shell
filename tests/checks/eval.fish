@@ -16,12 +16,12 @@ false; eval false; echo $status
 # Test return status in case of parsing error
 false; eval "("; echo $status
 # CHECK: 1
-# CHECKERR: tests/checks/eval.fish (line {{\d+}}): Unexpected end of string, expecting ')'
+# CHECKERR: {{.*}}checks/eval.fish (line {{\d+}}): Unexpected end of string, expecting ')'
 # CHECKERR: (
 # CHECKERR: ^
 false; eval '""'; echo $status
 # CHECK: 1
-# CHECKERR: tests/checks/eval.fish (line {{\d+}}): The expanded command was empty.
+# CHECKERR: {{.*}}checks/eval.fish (line {{\d+}}): The expanded command was empty.
 # CHECKERR: ""
 # CHECKERR: ^
 

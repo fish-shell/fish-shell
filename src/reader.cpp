@@ -2682,7 +2682,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             if (el->position < el->size()) {
                 update_buff_pos(el, el->position + 1);
                 remove_backward();
-            } else if (c == rl::delete_or_exit) {
+            } else if (c == rl::delete_or_exit && el->empty()) {
                 reader_set_end_loop(true);
             }
             break;

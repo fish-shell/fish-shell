@@ -68,4 +68,7 @@ wcstring truncate(const wcstring &input, int max_len,
 wcstring trim(const wcstring &input);
 wcstring trim(const wcstring &input, const wchar_t *any_of);
 
+/// Converts a string to lowercase.
+wcstring wcstolower(wcstring input);
+
 #endif

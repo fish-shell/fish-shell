@@ -553,10 +553,7 @@ bool history_item_t::merge(const history_item_t &item) {
 history_item_t::history_item_t(const wcstring &str, time_t when, history_identifier_t ident)
     : creation_timestamp(when), identifier(ident) {
     contents = trim(str);
-    contents_lower.reserve(contents.size());
-    for (const auto &c : contents) {
-        contents_lower.push_back(towlower(c));
-    }
+    contents_lower = wcstolower(contents);
 }
 
 bool history_item_t::matches_search(const wcstring &term, enum history_search_type_t type,

@@ -3490,15 +3490,6 @@ static wcstring random_string() {
     return result;
 }
 
-// Helper to lowercase a string.
-static wcstring lower(const wcstring &s) {
-    wcstring result;
-    for (wchar_t c : s) {
-        result.push_back(towlower(c));
-    }
-    return result;
-}
-
 void history_tests_t::test_history() {
     history_search_t searcher;
     say(L"Testing history");
@@ -3531,7 +3522,7 @@ void history_tests_t::test_history() {
 
     // Items matching "alpha", case-insensitive.
     searcher = history_search_t(history, L"AlPhA", HISTORY_SEARCH_TYPE_CONTAINS, nocase);
-    set_expected([](const wcstring &s) { return lower(s).find(L"alpha") != wcstring::npos; });
+    set_expected([](const wcstring &s) { return wcstolower(s).find(L"alpha") != wcstring::npos; });
     test_history_matches(searcher, expected, __LINE__);
 
     // Items matching "et", case-sensitive.
@@ -3557,7 +3548,7 @@ void history_tests_t::test_history() {
 
     // Items exactly matching "alph", case-insensitive.
     searcher = history_search_t(history, L"alph", HISTORY_SEARCH_TYPE_EXACT, nocase);
-    set_expected([](const wcstring &s) { return lower(s) == L"alph"; });
+    set_expected([](const wcstring &s) { return wcstolower(s) == L"alph"; });
     test_history_matches(searcher, expected, __LINE__);
 
     // Test item removal case-sensitive.

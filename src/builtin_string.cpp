@@ -420,18 +420,27 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
 // Note that several long flags share the same short flag. That is okay. The caller is expected
 // to indicate that a max of one of the long flags sharing a short flag is valid.
 // Remember: adjust share/completions/string.fish when `string` options change
-static const struct woption long_options[] = {
-    {L"all", no_argument, NULL, 'a'},         {L"chars", required_argument, NULL, 'c'},
-    {L"count", required_argument, NULL, 'n'}, {L"entire", no_argument, NULL, 'e'},
-    {L"filter", no_argument, NULL, 'f'},      {L"ignore-case", no_argument, NULL, 'i'},
-    {L"index", no_argument, NULL, 'n'},       {L"invert", no_argument, NULL, 'v'},
-    {L"left", no_argument, NULL, 'l'},        {L"length", required_argument, NULL, 'l'},
-    {L"max", required_argument, NULL, 'm'},   {L"no-empty", no_argument, NULL, 'n'},
-    {L"no-newline", no_argument, NULL, 'N'},  {L"no-quoted", no_argument, NULL, 'n'},
-    {L"quiet", no_argument, NULL, 'q'},       {L"regex", no_argument, NULL, 'r'},
-    {L"right", no_argument, NULL, 'r'},       {L"start", required_argument, NULL, 's'},
-    {L"style", required_argument, NULL, 1},   {L"no-trim-newlines", no_argument, NULL, 'N'},
-    {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {{L"all", no_argument, NULL, 'a'},
+                                              {L"chars", required_argument, NULL, 'c'},
+                                              {L"count", required_argument, NULL, 'n'},
+                                              {L"entire", no_argument, NULL, 'e'},
+                                              {L"filter", no_argument, NULL, 'f'},
+                                              {L"ignore-case", no_argument, NULL, 'i'},
+                                              {L"index", no_argument, NULL, 'n'},
+                                              {L"invert", no_argument, NULL, 'v'},
+                                              {L"left", no_argument, NULL, 'l'},
+                                              {L"length", required_argument, NULL, 'l'},
+                                              {L"max", required_argument, NULL, 'm'},
+                                              {L"no-empty", no_argument, NULL, 'n'},
+                                              {L"no-newline", no_argument, NULL, 'N'},
+                                              {L"no-quoted", no_argument, NULL, 'n'},
+                                              {L"quiet", no_argument, NULL, 'q'},
+                                              {L"regex", no_argument, NULL, 'r'},
+                                              {L"right", no_argument, NULL, 'r'},
+                                              {L"start", required_argument, NULL, 's'},
+                                              {L"style", required_argument, NULL, 1},
+                                              {L"no-trim-newlines", no_argument, NULL, 'N'},
+                                              {NULL, 0, NULL, 0}};
 
 static const std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
@@ -1138,7 +1147,7 @@ static int string_collect(parser_t &parser, io_streams_t &streams, int argc, wch
     while (const wcstring *arg = aiter.nextstr()) {
         auto begin = arg->cbegin(), end = arg->cend();
         if (!opts.no_trim_newlines) {
-            while (end > begin && *(end-1) == L'\n') {
+            while (end > begin && *(end - 1) == L'\n') {
                 --end;
             }
         }
@@ -1324,13 +1333,14 @@ static const struct string_subcommand {
                    wchar_t **argv);                       //!OCLINT(unused param)
 }
 
-string_subcommands[] = {
-    {L"escape", &string_escape}, {L"join", &string_join},         {L"join0", &string_join0},
-    {L"length", &string_length}, {L"match", &string_match},       {L"replace", &string_replace},
-    {L"split", &string_split},   {L"split0", &string_split0},     {L"sub", &string_sub},
-    {L"trim", &string_trim},     {L"lower", &string_lower},       {L"upper", &string_upper},
-    {L"repeat", &string_repeat}, {L"unescape", &string_unescape}, {L"collect", &string_collect},
-    {NULL, NULL}};
+string_subcommands[] = {{L"escape", &string_escape},   {L"join", &string_join},
+                        {L"join0", &string_join0},     {L"length", &string_length},
+                        {L"match", &string_match},     {L"replace", &string_replace},
+                        {L"split", &string_split},     {L"split0", &string_split0},
+                        {L"sub", &string_sub},         {L"trim", &string_trim},
+                        {L"lower", &string_lower},     {L"upper", &string_upper},
+                        {L"repeat", &string_repeat},   {L"unescape", &string_unescape},
+                        {L"collect", &string_collect}, {NULL, NULL}};
 
 /// The string builtin, for manipulating strings.
 int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {

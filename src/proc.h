@@ -397,8 +397,8 @@ class job_t {
     /// \return if we want job control.
     bool wants_job_control() const { return get_flag(job_flag_t::JOB_CONTROL); }
 
-    /// \return if this job wants to own the terminal in the foreground.
-    bool wants_terminal() const { return properties.wants_terminal; }
+    /// \return if this job should own the terminal when it runs.
+    bool should_claim_terminal() const { return properties.wants_terminal && is_foreground(); }
 
     /// Returns the block IO redirections associated with the job. These are things like the IO
     /// redirections associated with the begin...end statement.

@@ -681,8 +681,8 @@ void proc_update_jiffies(parser_t &parser) {
 int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
     enum { notneeded = 0, success = 1, error = -1 };
 
-    if (!j->wants_terminal() || !j->is_foreground()) {
-        // We don't want the job.
+    if (!j->should_claim_terminal()) {
+        // The job doesn't want the terminal.
         return notneeded;
     }
 

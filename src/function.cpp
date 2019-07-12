@@ -104,7 +104,7 @@ static void try_autoload(const wcstring &name, parser_t &parser) {
     {
         auto funcset = function_set.acquire();
         if (funcset->allow_autoload(name)) {
-            path_to_autoload = funcset->autoloader.resolve_command(name, parser.vars());
+            path_to_autoload = funcset->autoloader.resolve_command(name, env_stack_t::globals());
         }
     }
 

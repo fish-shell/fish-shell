@@ -17,6 +17,7 @@
 - Some parser errors did not set `$status` to non-zero. This has been corrected (b2a1da602f79878f4b0adc4881216c928a542608).
 - `string` has a new `collect` subcommand that disables newline-splitting on its input. This is meant to be used as the end of a command substitution pipeline to produce a single output argument potentially containing internal newlines, such as `set output (some-cmd | string collect)`. Any trailing newlines are trimmed, just like `"$(cmd)"` substitution in sh. It also supports a `--no-trim-newlines` flag to disable trailing newline trimming, which may be useful when doing something like `set contents (cat filename | string collect -N)` (#159).
 - More of the documentation, including the tutorial, is now available as man pages as well.
+- Local values for `fish_complete_path` and `fish_function_path` are now ignored; only their global values are respected.
 
 ### Syntax changes and new commands
 - Brace expansion now only takes place if the braces include a "," or a variable expansion, so things like `git reset HEAD@{0}` now work (#5869).

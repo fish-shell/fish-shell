@@ -873,8 +873,9 @@ static void complete_load(const wcstring &name) {
     // It's important to NOT hold the lock around completion loading.
     // We need to take the lock to decide what to load, drop it to perform the load, then reacquire
     // it.
-    const environment_t &vars = parser_t::principal_parser().vars();
-    maybe_t<wcstring> path_to_load = completion_autoloader.acquire()->resolve_command(name, vars);
+    // Note we only look at the global fish_function_path and fish_completion_path.
+    maybe_t<wcstring> path_to_load =
+        completion_autoloader.acquire()->resolve_command(name, env_stack_t::globals());
     if (path_to_load) {
         autoload_t::perform_autoload(*path_to_load, parser);
         completion_autoloader.acquire()->mark_autoload_finished(name);

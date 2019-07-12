@@ -3,12 +3,16 @@
 # (and are the primary reason this file exists). The automatically generated completions
 # for `aws` via `fish_update_completions` are pretty useless due to non-standard formatting.
 
+function __s3_is_maybe_bucket
+    commandline -ct | string match -qr -- '^(|s|s3|s3:?/?/?[^/]*)$'
+end
+
 function __s3_is_bucket
-    commandline -ct | string match -q -r -- '^s3://[^/]?$'
+    commandline -ct | string match -q -r -- '^s3:/?/?[^/]*$'
 end
 
 function __s3_is_remote_path
-    commandline -ct | string match -q -r -- "^s3://.*/.*"
+    commandline -ct | string match -q -r -- "^s3://.+/.*"
 end
 
 function __s3_ls_buckets
@@ -20,12 +24,71 @@ function __s3_ls_dir
     printf "$dir%s\n" (aws s3 ls $dir 2>/dev/null | string replace -fr '^(:?\S+ +\S+ +\S+ |^.*PRE )(.*)' '$2')
 end
 
-# S3 remote completions
+# Determines whether the first non-switch argument to `aws s3` was in $argv
+# This accounts for things like `aws --debug s3 foo ... s3://...`
+function __s3_cmd_in
+    set -l is_s3 0
+    set -l tokens (commandline -co)
+    for token in $tokens[2..-1]
+        # Ignore switches everywhere
+        if string match -qr -- "^--" $token
+            continue
+        end
+
+        # Check if `aws` command is `s3`
+        if test $is_s3 -eq 0
+            if string match -q -- "s3" $token
+                set is_s3 1
+                continue
+            else
+                return 1
+            end
+        end
+
+        # Check if `aws s3` sub-sub-command is in $argv
+        if contains $token $argv
+            return 0
+        else
+            return 1
+        end
+    end
+
+    return 1
+end
+
+# Determines whether the first non-switch argument to `aws` was in $argv
+function __aws_cmd_in
+    set -l tokens (commandline -co)
+    for token in $tokens[2..-1]
+        if string match -qr "^--" -- $token
+            # Ignore switches everywhere
+            continue
+        else if contains $token $argv
+            return 0
+        else
+            return 1
+        end
+    end
+
+    return 1
+end
+
+# S3 completions
 complete -c 'aws' -n "__fish_prev_arg_in s3" -xa "cp mv rm help sync ls mb mv presign rb website"
+
+# When completing a remote path, complete the bucket name first, then based off
+# the bucket name, we can complete the path itself.
+
+# Commands that take only remote parameters (cannot operate on local files).
+complete -c 'aws' -n "__s3_is_maybe_bucket && __s3_cmd_in ls rb rm" -xa "(__s3_ls_buckets)"
+# Commands that can operate on local or remote files. To prevent the shell
+# locking up unnecessarily, only complete if no argument was specified or if the
+# argument being specified could be an S3 path.
+complete -c 'aws' -n "__s3_is_maybe_bucket && __s3_cmd_in mv cp presign mb sync" -a "(__s3_ls_buckets)"
+
+# Complete the paths themselves
 complete -c 'aws' -n "__s3_is_remote_path" -xa "(__s3_ls_dir)"
 complete -c 'aws' -n "__s3_is_bucket" -xa "(__s3_ls_buckets)"
-complete -c 'aws' -n "not __s3_is_remote_path && __fish_prev_arg_in ls" -xa "(__s3_ls_buckets)"
-complete -c 'aws' -n "not __s3_is_remote_path && __fish_prev_arg_in mv cp rm" -a "(__s3_ls_buckets)"
 
 # This list is extracted from the output of `aws help`, which can't be ingested directly,
 # as it emits considerable ANSI output and other terminal control characters.
@@ -207,4 +270,4 @@ set -l aws_services \
     workspaces \
     xray
 
-complete -c aws -n '__fish_is_first_arg' -xa "$aws_services"
+complete -c aws -n '__fish_is_first_token' -xa "$aws_services"

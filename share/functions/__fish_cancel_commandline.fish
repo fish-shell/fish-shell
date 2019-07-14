@@ -20,5 +20,6 @@ function __fish_cancel_commandline
         end
         commandline ""
         commandline -f repaint
+        emit fish_cancel
     end
 end

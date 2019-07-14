@@ -299,7 +299,7 @@ Some characters can not be written directly on the command line. For these chara
 - ``\r`` represents the carriage return character
 - ``\t`` represents the tab character
 - ``\v`` represents the vertical tab character
-- ``\\ `` escapes the space character
+- :code:`\ `  escapes the space character
 - ``\$`` escapes the dollar character
 - ``\\`` escapes the backslash character
 - ``\*`` escapes the star character

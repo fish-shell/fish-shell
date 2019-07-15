@@ -97,10 +97,7 @@ function fish_svn_prompt --description "Prompt function for svn"
 
     # make sure that this is a svn repo
     set -l checkout_info (command svn info 2>/dev/null)
-    if [ $status -ne 0 ]
-
-        return
-    end
+    or return
 
     # get the current revision number
     printf '(%s%s%s' (set_color $__fish_svn_prompt_color_revision) (__fish_print_svn_rev) (set_color normal)

@@ -57,9 +57,6 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Space expands abbrs _and_ inserts itself.
     bind -s --preset -M insert " " 'commandline -i " "; commandline -f expand-abbr'
 
-
-    # Add way to kill current command line while in insert mode.
-    bind -s --preset -M insert \cc __fish_cancel_commandline
     # Add a way to switch from insert to normal (command) mode.
     # Note if we are paging, we want to stay in insert mode
     # See #2871

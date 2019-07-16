@@ -32,7 +32,7 @@ complete -f -c tmutil -n '__fish_use_subcommand' -a enablelocal -d 'Turn on loca
 complete -r -c tmutil -n '__fish_use_subcommand' -a inheritbackup -d 'Claim a machine directory or sparsebundle for use by the current machine'
 complete -f -c tmutil -n '__fish_use_subcommand' -a isexcluded -d 'Determine if a file, directory, or volume are excluded from backups'
 complete -f -c tmutil -n '__fish_use_subcommand' -a latestbackup -d 'Print the path to the latest snapshot'
-complete    -c tmutil -n '__fish_use_subcommand' -a listlocalsnapshotdates -d 'List the creation dates of all local Time Machine snapshots'
+complete -c tmutil -n '__fish_use_subcommand' -a listlocalsnapshotdates -d 'List the creation dates of all local Time Machine snapshots'
 complete -r -c tmutil -n '__fish_use_subcommand' -a listlocalsnapshots -d 'List local Time Machine snapshots of the specified volume'
 complete -f -c tmutil -n '__fish_use_subcommand' -a listbackups -d 'Print paths for all snapshots'
 complete -f -c tmutil -n '__fish_use_subcommand' -a localsnapshot -d 'Create new local Time Machine snapshots of all APFS volumes included in TM backup'

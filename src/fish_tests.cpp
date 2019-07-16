@@ -1951,6 +1951,13 @@ static void test_path() {
         err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
     if (!paths_are_equivalent(L"/", L"/"))
         err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
+
+    do_test(path_apply_working_directory(L"abc", L"/def/") == L"/def/abc");
+    do_test(path_apply_working_directory(L"abc/", L"/def/") == L"/def/abc/");
+    do_test(path_apply_working_directory(L"/abc/", L"/def/") == L"/abc/");
+    do_test(path_apply_working_directory(L"/abc", L"/def/") == L"/abc");
+    do_test(path_apply_working_directory(L"", L"/def/") == L"");
+    do_test(path_apply_working_directory(L"abc", L"") == L"abc");
 }
 
 static void test_pager_navigation() {

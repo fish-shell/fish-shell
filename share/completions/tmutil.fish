@@ -54,6 +54,7 @@ complete -f -c tmutil -n '__fish_seen_subcommand_from startbackup' -s r -l rotat
 complete -r -c tmutil -n '__fish_seen_subcommand_from startbackup' -s d -l destination -d 'Backup destination'
 complete -f -c tmutil -n '__fish_use_subcommand' -a stopbackup -d 'Cancel a backup currently in progress'
 complete -f -c tmutil -n '__fish_use_subcommand' -a destinationinfo -d 'Print information about destinations'
+complete -r -c tmutil -n '__fish_use_subcommand' -a thinlocalsnapshots -d 'Thin local Time Machine snapshots for the specified volume'
 complete -r -c tmutil -n '__fish_use_subcommand' -a uniquesize -d 'Analyze the specified path and determine its unique size'
 complete -r -c tmutil -n '__fish_use_subcommand' -a verifychecksums -d 'Verify snapshot'
 complete -f -c tmutil -n '__fish_use_subcommand' -a version -d 'Print version'

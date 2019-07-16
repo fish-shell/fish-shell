@@ -38,6 +38,7 @@
 #include "iothread.h"
 #include "parse_tree.h"
 #include "parser.h"
+#include "path.h"
 #include "postfork.h"
 #include "proc.h"
 #include "reader.h"
@@ -192,7 +193,8 @@ static int has_fd(const io_chain_t &d, int fd) { return io_chain_get(d, fd).get(
 /// position.
 ///
 /// \return true on success, false on failure. Returns the output chain and opened_fds by reference.
-static bool resolve_file_redirections_to_fds(const io_chain_t &in_chain, io_chain_t *out_chain,
+static bool resolve_file_redirections_to_fds(const io_chain_t &in_chain, const wcstring &pwd,
+                                             io_chain_t *out_chain,
                                              std::vector<autoclose_fd_t> *out_opened_fds) {
     ASSERT_IS_MAIN_THREAD();
     assert(out_chain != NULL && out_opened_fds != NULL);
@@ -223,7 +225,8 @@ static bool resolve_file_redirections_to_fds(const io_chain_t &in_chain, io_chai
             case io_mode_t::file: {
                 // We have a path-based redireciton. Resolve it to a file.
                 io_file_t *in_file = static_cast<io_file_t *>(in.get());
-                int fd = wopen(in_file->filename, in_file->flags, OPEN_MASK);
+                int fd = wopen(path_apply_working_directory(in_file->filename, pwd), in_file->flags,
+                               OPEN_MASK);
                 if (fd < 0) {
                     debug(1, FILE_ERROR, in_file->filename.c_str());
                     wperror(L"open");
@@ -261,7 +264,8 @@ void internal_exec_helper(parser_t &parser, parsed_source_ref_t parsed_source, t
 
     io_chain_t morphed_chain;
     std::vector<autoclose_fd_t> opened_fds;
-    if (!resolve_file_redirections_to_fds(ios, &morphed_chain, &opened_fds)) {
+    if (!resolve_file_redirections_to_fds(ios, parser.vars().get_pwd_slash(), &morphed_chain,
+                                          &opened_fds)) {
         parser.set_last_statuses(statuses_t::just(STATUS_EXEC_FAIL));
         return;
     }

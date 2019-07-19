@@ -1219,9 +1219,9 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - A large number of variable starting with the prefixes ``fish_color`` and ``fish_pager_color``. See `Variables for changing highlighting colors <#variables-color>`__ for more information.
 
-- ``fish_emoji_width`` controls the computed width of certain characters, in particular emoji, whose rendered width varies across terminal emulators. This should be set to 1 if your terminal emulator renders emoji single-width, or 2 if double-width. Set this only if you see graphical glitching when printing emoji.
+- ``fish_emoji_width`` controls the computed width of certain characters, in particular emoji, whose rendered width changed in Unicode 9 and hence varies across terminal emulators. This should be set to 2 if your terminal emulator supports Unicode >= 9 and renders them double-width, and 1 otherwise. Set this only if you see graphical glitching when printing emoji, typically it will be automatically detected.
 
-- ``fish_ambiguous_width`` controls the computed width of ambiguous East Asian characters. This should be set to 1 if your terminal emulator renders these characters as single-width (typical), or 2 if double-width.
+- ``fish_ambiguous_width`` controls the computed width of ambiguous-width characters. This should be set to 1 if your terminal emulator renders these characters as single-width (typical), or 2 if double-width.
 
 - ``fish_escape_delay_ms`` overrides the default timeout of 30ms after seeing an escape character before giving up on matching a key binding. See the documentation for the `bind <cmds/bind.html#special-case-the-escape-character>`__ builtin command. This delay facilitates using escape as a meta key.
 

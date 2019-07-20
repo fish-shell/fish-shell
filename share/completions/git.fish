@@ -1695,7 +1695,7 @@ complete -f -c git -n '__fish_git_using_command config' -s z -l null -d 'Termina
 complete -f -c git -n '__fish_git_using_command config' -l name-only -d 'Show variable names only'
 complete -f -c git -n '__fish_git_using_command config' -l includes -d 'Respect include directives'
 complete -f -c git -n '__fish_git_using_command config' -l show-origin -d 'Show origin of configuration'
-complete -f -c git -n '__fish_git_using_command config; and __fish_seen_argument --get' -l default -d 'Use default value when missing entry'
+complete -f -c git -n '__fish_git_using_command config; and __fish_seen_argument get' -l default -d 'Use default value when missing entry'
 
 complete -c git -n '__fish_prev_arg_in bisect' -xa "help start bad good new old terms skip next reset visualize view replay log run"
 complete -c git -n '__fish_git_using_command bisect; and __fish_seen_argument --' -xa "(__fish_complete_suffix)"

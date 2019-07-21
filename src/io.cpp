@@ -31,14 +31,15 @@ void io_pipe_t::print() const {
 void io_bufferfill_t::print() const { std::fwprintf(stderr, L"bufferfill {%d}\n", write_fd_.fd()); }
 
 void io_buffer_t::append_from_stream(const output_stream_t &stream) {
-    if (stream.empty()) return;
+    const separated_buffer_t<wcstring> &input = stream.buffer();
+    if (input.elements().empty()) return;
     scoped_lock locker(append_lock_);
     if (buffer_.discarded()) return;
-    if (stream.buffer().discarded()) {
+    if (input.discarded()) {
         buffer_.set_discard();
         return;
     }
-    buffer_.append_wide_buffer(stream.buffer());
+    buffer_.append_wide_buffer(input);
 }
 
 void io_buffer_t::run_background_fillthread(autoclose_fd_t readfd) {

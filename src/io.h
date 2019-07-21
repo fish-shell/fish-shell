@@ -403,8 +403,6 @@ class output_stream_t {
 
     void append_formatv(const wchar_t *format, va_list va) { append(vformat_string(format, va)); }
 
-    bool empty() const { return buffer_.size() == 0; }
-
     wcstring contents() const { return buffer_.newline_serialized(); }
 };
 

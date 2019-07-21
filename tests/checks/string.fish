@@ -498,6 +498,12 @@ end
 count (dualsplit)
 # CHECK: 4
 
+# Ensure we handle empty outputs correctly (#5987)
+count (string split / /)
+# CHECK: 2
+count (echo -ne '\x00\x00\x00' | string split0)
+# CHECK: 3
+
 # string collect
 count (echo one\ntwo\nthree\nfour | string collect)
 count (echo one | string collect)

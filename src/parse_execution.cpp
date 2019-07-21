@@ -337,8 +337,9 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(
     int err = builtin_function(*parser, streams, arguments, pstree, body);
     parser->set_last_statuses(statuses_t::just(err));
 
-    if (!streams.err.empty()) {
-        this->report_error(header, L"%ls", streams.err.contents().c_str());
+    wcstring errtext = streams.err.contents();
+    if (!errtext.empty()) {
+        this->report_error(header, L"%ls", errtext.c_str());
         result = parse_execution_errored;
     }
 

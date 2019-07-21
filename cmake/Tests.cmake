@@ -62,7 +62,7 @@ ADD_CUSTOM_TARGET(test_prep
                   COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}/temp
                   COMMAND ${CMAKE_COMMAND} -E make_directory
                           ${TEST_DIR}/data ${TEST_DIR}/home ${TEST_DIR}/temp
-                  DEPENDS tests_buildroot_target
+                  DEPENDS tests_buildroot_target tests_dir
                   USES_TERMINAL)
 
 # Define our individual tests.

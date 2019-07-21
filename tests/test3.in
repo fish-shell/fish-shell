@@ -325,6 +325,9 @@ set -U __fish_test_PATH 1:2:3
 echo "$__fish_test_PATH" $__fish_test_PATH
 set -U --path __fish_test_path2 a:b
 echo "$__fish_test_path2" $__fish_test_path2
+set -e __fish_test_path_not
+set -e __fish_test_PATH
+
 
 logmsg Variable names in other commands
 # Test invalid variable names in loops (#5800)

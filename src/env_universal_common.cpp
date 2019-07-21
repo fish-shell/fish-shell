@@ -300,10 +300,9 @@ bool env_universal_t::remove(const wcstring &key) {
 wcstring_list_t env_universal_t::get_names(bool show_exported, bool show_unexported) const {
     wcstring_list_t result;
     scoped_lock locker(lock);
-    var_table_t::const_iterator iter;
-    for (iter = vars.begin(); iter != vars.end(); ++iter) {
-        const wcstring &key = iter->first;
-        const env_var_t &var = iter->second;
+    for (const auto &kv : vars) {
+        const wcstring &key = kv.first;
+        const env_var_t &var = kv.second;
         if ((var.exports() && show_exported) || (!var.exports() && show_unexported)) {
             result.push_back(key);
         }

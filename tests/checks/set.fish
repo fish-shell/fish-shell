@@ -405,6 +405,16 @@ echo "$__fish_test_path2" $__fish_test_path2
 
 set -e __fish_test_path2
 
+# Test empty uvars (#5992)
+set -Ux __fish_empty_uvar
+set -Uq __fish_empty_uvar
+echo $status
+# CHECK: 0
+$FISH -c 'set -Uq __fish_empty_uvar; echo $status'
+# CHECK: 0
+env | grep __fish_empty_uvar
+# CHECK: __fish_empty_uvar=
+
 # Variable names in other commands
 # Test invalid variable names in loops (#5800)
 for a,b in y 1 z 3

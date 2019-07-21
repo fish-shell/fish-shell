@@ -638,12 +638,10 @@ std::shared_ptr<const null_terminated_array_t<char>> env_scoped_impl_t::create_e
         const wcstring_list_t uni = uvars()->get_names(true, false);
         for (const wcstring &key : uni) {
             auto var = uvars()->get(key);
-
-            if (!var.missing_or_empty()) {
-                // Note that std::map::insert does NOT overwrite a value already in the map,
-                // which we depend on here.
-                vals.insert(std::pair<wcstring, env_var_t>(key, *var));
-            }
+            assert(var && "Variable should be present in uvars");
+            // Note that std::map::insert does NOT overwrite a value already in the map,
+            // which we depend on here.
+            vals.insert(std::make_pair(key, *var));
         }
     }
 

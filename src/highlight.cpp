@@ -798,7 +798,7 @@ class highlighter_t {
     }
 
     // Perform highlighting, returning an array of colors.
-    const color_array_t &highlight();
+    color_array_t highlight();
 };
 
 void highlighter_t::color_node(const parse_node_t &node, highlight_spec_t color) {
@@ -1114,7 +1114,7 @@ static bool command_is_valid(const wcstring &cmd, enum parse_statement_decoratio
     return is_valid;
 }
 
-const highlighter_t::color_array_t &highlighter_t::highlight() {
+highlighter_t::color_array_t highlighter_t::highlight() {
     // If we are doing I/O, we must be in a background thread.
     if (io_ok) {
         ASSERT_IS_BACKGROUND_THREAD();
@@ -1254,7 +1254,7 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
     }
 
     if (!this->io_ok || this->cursor_pos > this->buff.size()) {
-        return color_array;
+        return std::move(color_array);
     }
 
     // If the cursor is over an argument, and that argument is a valid path, underline it.
@@ -1278,7 +1278,7 @@ const highlighter_t::color_array_t &highlighter_t::highlight() {
         }
     }
 
-    return color_array;
+    return std::move(color_array);
 }
 
 void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos,

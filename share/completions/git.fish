@@ -932,6 +932,11 @@ complete -f -c git -n '__fish_git_using_command branch' -l set-upstream-to -d 'S
 complete -f -c git -n '__fish_git_using_command branch' -l merged -d 'List branches that have been merged'
 complete -f -c git -n '__fish_git_using_command branch' -l no-merged -d 'List branches that have not been merged'
 
+### cherry
+complete -f -c git -n '__fish_git_needs_command' -a cherry -d 'Find commits yet to be applied to upstream [upstream [head]]'
+complete -f -c git -n '__fish_git_using_command cherry' -s v -d 'Show the commit subjects next to the SHA1s'
+complete -f -c git -n '__fish_git_using_command cherry' -a '(__fish_git_refs)' -d 'Upstream'
+
 ### cherry-pick
 complete -f -c git -n '__fish_git_needs_command' -a cherry-pick -d 'Apply the change introduced by an existing commit'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -a '(__fish_git_branches --no-merged)'

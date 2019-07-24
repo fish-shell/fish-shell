@@ -64,6 +64,7 @@
 - If fish_mode_prompt exists, vi-mode will only execute it on mode-switch instead of the entire prompt. This should make it much more responsive with slow prompts (#5783).
 - The path-component bindings (like ctrl-w) now also stop at ":" and "@" because those are used to denote user and host in ssh-likes (#5841).
 - `read` no longer keeps a history, making it suitable for operations that shouldn't end up there, like password entry (#5904).
+- When syntax highlighting a string with an unclosed quote, only the quote itself will be shown as an error, instead of the whole argument.
 
 ### For distributors and developers
 - The autotools-based build system and legacy Xcode build systems have been removed, leaving only the CMake build system. All distributors and developers must migrate to the CMake build.

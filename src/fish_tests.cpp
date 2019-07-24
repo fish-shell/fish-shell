@@ -4474,7 +4474,16 @@ static void test_highlighting() {
 
     highlight_tests.push_back({
         {L"echo", highlight_role_t::command},
-        {L"'single_quote", highlight_role_t::error},
+        {L"'", highlight_role_t::error},
+        {L"single_quote", highlight_role_t::quote},
+        {L"$stuff", highlight_role_t::quote},
+    });
+
+    highlight_tests.push_back({
+        {L"echo", highlight_role_t::command},
+        {L"\"", highlight_role_t::error},
+        {L"double_quote", highlight_role_t::quote},
+        {L"$stuff", highlight_role_t::operat},
     });
 
     highlight_tests.push_back({

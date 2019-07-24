@@ -537,6 +537,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
     }
 
     enum { e_unquoted, e_single_quoted, e_double_quoted } mode = e_unquoted;
+    maybe_t<size_t> unclosed_quote_offset;
     int bracket_count = 0;
     for (size_t in_pos = 0; in_pos < buff_len; in_pos++) {
         const wchar_t c = buffstr.at(in_pos);
@@ -671,11 +672,13 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                         }
                         case L'\'': {
                             colors[in_pos] = highlight_role_t::quote;
+                            unclosed_quote_offset = in_pos;
                             mode = e_single_quoted;
                             break;
                         }
                         case L'\"': {
                             colors[in_pos] = highlight_role_t::quote;
+                            unclosed_quote_offset = in_pos;
                             mode = e_double_quoted;
                             break;
                         }
@@ -700,6 +703,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                         }
                     }
                 } else if (c == L'\'') {
+                    unclosed_quote_offset = none();
                     mode = e_unquoted;
                 }
                 break;
@@ -713,6 +717,7 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                 }
                 switch (c) {
                     case L'"': {
+                        unclosed_quote_offset = none();
                         mode = e_unquoted;
                         break;
                     }
@@ -742,6 +747,11 @@ static void color_string_internal(const wcstring &buffstr, highlight_spec_t base
                 break;
             }
         }
+    }
+
+    // Error on unclosed quotes.
+    if (unclosed_quote_offset) {
+        colors[*unclosed_quote_offset] = highlight_role_t::error;
     }
 }
 
@@ -793,7 +803,9 @@ class highlighter_t {
           working_directory(std::move(wd)),
           color_array(str.size()) {
         // Parse the tree.
-        parse_tree_from_string(buff, parse_flag_continue_after_error | parse_flag_include_comments,
+        parse_tree_from_string(buff,
+                               parse_flag_continue_after_error | parse_flag_include_comments |
+                                   parse_flag_accept_incomplete_tokens,
                                &this->parse_tree, NULL);
     }
 

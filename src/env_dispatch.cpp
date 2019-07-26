@@ -312,6 +312,7 @@ static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table() {
     var_dispatch_table->add(L"fish_term256", handle_fish_term_change);
     var_dispatch_table->add(L"fish_term24bit", handle_fish_term_change);
     var_dispatch_table->add(L"fish_escape_delay_ms", update_wait_on_escape_ms);
+    var_dispatch_table->add(L"TMOUT", update_tmout_s);
     var_dispatch_table->add(L"fish_emoji_width", guess_emoji_width);
     var_dispatch_table->add(L"fish_ambiguous_width", handle_change_ambiguous_width);
     var_dispatch_table->add(L"LINES", handle_term_size_change);

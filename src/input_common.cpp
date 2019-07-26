@@ -18,6 +18,7 @@
 #include <memory>
 #include <type_traits>
 #include <utility>
+#include <chrono>
 
 #include "common.h"
 #include "env.h"
@@ -28,19 +29,30 @@
 #include "iothread.h"
 #include "wutil.h"
 
+using namespace std::chrono;
+
 /// Time in milliseconds to wait for another byte to be available for reading
 /// after \x1B is read before assuming that escape key was pressed, and not an
 /// escape sequence.
 #define WAIT_ON_ESCAPE_DEFAULT 30
 static int wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
 
+
+/// Time in seconds to idle until timing out, implementation of TMOUT
+#define TMOUT_DEFAULT 0
+static int tmout_s = TMOUT_DEFAULT;
+static relaxed_atomic_t<steady_clock::time_point::duration> last_input;
+
 /// Callback function for handling interrupts on reading.
 static interrupt_func_t interrupt_handler;
 
-void input_common_init(interrupt_func_t func) { interrupt_handler = func; }
+void input_common_init(interrupt_func_t func) {
+    interrupt_handler = func;
+    last_input = steady_clock::now().time_since_epoch();
+}
 
 /// Internal function used by input_common_readch to read one byte from fd 0. This function should
-/// only be called by input_common_readch().
+/// only be called by input_event_queue_t::readch.
 char_event_t input_event_queue_t::readb() {
     for (;;) {
         fd_set fdset;
@@ -70,11 +82,20 @@ char_event_t input_event_queue_t::readb() {
         const unsigned long usecs_delay = notifier.usec_delay_between_polls();
         if (usecs_delay > 0) {
             unsigned long usecs_per_sec = 1000000;
-            tv.tv_sec = (int)(usecs_delay / usecs_per_sec);
-            tv.tv_usec = (int)(usecs_delay % usecs_per_sec);
+            // poll intervals can be greater than timeout
+            if (tmout_s>0 && (int)(usecs_delay / usecs_per_sec)>tmout_s){
+                tv.tv_sec = tmout_s;
+                tv.tv_usec = 0;
+            } else {
+                tv.tv_sec = (int)(usecs_delay / usecs_per_sec);
+                tv.tv_usec = (int)(usecs_delay % usecs_per_sec);
+            }
+        } else if (tmout_s > 0){
+            tv.tv_sec = tmout_s;
+            tv.tv_usec = 0;
         }
 
-        res = select(fd_max + 1, &fdset, 0, 0, usecs_delay > 0 ? &tv : NULL);
+        res = select(fd_max + 1, &fdset, 0, 0, usecs_delay > 0 || tmout_s>0 ? &tv : NULL);
         if (res == -1) {
             if (errno == EINTR || errno == EAGAIN) {
                 if (interrupt_handler) {
@@ -83,6 +104,16 @@ char_event_t input_event_queue_t::readb() {
                     } else if (auto mc = pop_discard_timeouts()) {
                         return *mc;
                     }
+                }
+                if (
+                    tmout_s > 0 &&
+                    duration_cast<seconds>(
+                        steady_clock::now().time_since_epoch()-
+                        (steady_clock::time_point::duration) last_input
+                    ).count() >= tmout_s
+                ){
+                    // return eof to terminate
+                    return char_event_type_t::eof;
                 }
             } else {
                 // The terminal has been closed.
@@ -111,6 +142,8 @@ char_event_t input_event_queue_t::readb() {
                     return char_event_type_t::eof;
                 }
 
+                last_input = steady_clock::now().time_since_epoch();
+
                 // We read from stdin, so don't loop.
                 return arr[0];
             }
@@ -122,6 +155,18 @@ char_event_t input_event_queue_t::readb() {
                 if (auto mc = pop_discard_timeouts()) {
                     return *mc;
                 }
+            }
+
+            // check if idle timeout has been reached
+            if (
+                tmout_s > 0 &&
+                duration_cast<seconds>(
+                    steady_clock::now().time_since_epoch()-
+                    (steady_clock::time_point::duration) last_input
+                ).count() >= tmout_s
+            ){
+                // return eof to terminate
+                return char_event_type_t::eof;
             }
         }
     }
@@ -144,6 +189,26 @@ void update_wait_on_escape_ms(const environment_t &vars) {
                       escape_time_ms->as_string().c_str());
     } else {
         wait_on_escape_ms = (int)tmp;
+    }
+}
+
+// Update the tmout_s value in response to the TMOUT user variable being
+// set.
+void update_tmout_s(const environment_t &vars) {
+    auto tmout_time_s = vars.get(L"TMOUT");
+    if (tmout_time_s.missing_or_empty()) {
+        tmout_s = TMOUT_DEFAULT;
+        return;
+    }
+
+    long tmp = fish_wcstol(tmout_time_s->as_string().c_str());
+    if (errno) {
+        std::fwprintf(stderr,
+                      L"ignoring TMOUT: value '%ls' "
+                      L"is not an integer\n",
+                      tmout_time_s->as_string().c_str());
+    } else {
+        tmout_s = (int)tmp;
     }
 }
 

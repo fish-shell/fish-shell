@@ -907,7 +907,7 @@ parse_execution_result_t parse_execution_context_t::expand_arguments_from_nodes(
     // may have more or fewer, if there are wildcards involved).
     out_arguments->reserve(out_arguments->size() + argument_nodes.size());
     std::vector<completion_t> arg_expanded;
-    for (const auto arg_node : argument_nodes) {
+    for (const auto &arg_node : argument_nodes) {
         // Expect all arguments to have source.
         assert(arg_node.has_source());
         const wcstring arg_str = arg_node.get_source(pstree->src);

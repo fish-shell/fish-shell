@@ -39,8 +39,8 @@ static int wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
 
 
 /// Time in seconds to idle until timing out, implementation of TMOUT
-#define TMOUT_DEFAULT 0
-static int tmout_s = TMOUT_DEFAULT;
+#define TIMEOUT_DEFAULT 0
+static int timeout_s = TIMEOUT_DEFAULT;
 static relaxed_atomic_t<steady_clock::time_point::duration> last_input;
 
 /// Callback function for handling interrupts on reading.
@@ -83,19 +83,22 @@ char_event_t input_event_queue_t::readb() {
         if (usecs_delay > 0) {
             unsigned long usecs_per_sec = 1000000;
             // poll intervals can be greater than timeout
-            if (tmout_s>0 && (int)(usecs_delay / usecs_per_sec)>tmout_s){
-                tv.tv_sec = tmout_s;
+            if (timeout_s>0 && (int)(usecs_delay / usecs_per_sec)>timeout_s){
+                tv.tv_sec = timeout_s;
                 tv.tv_usec = 0;
             } else {
                 tv.tv_sec = (int)(usecs_delay / usecs_per_sec);
                 tv.tv_usec = (int)(usecs_delay % usecs_per_sec);
             }
-        } else if (tmout_s > 0){
-            tv.tv_sec = tmout_s;
+        } else if (timeout_s > 0){
+            tv.tv_sec = timeout_s;
             tv.tv_usec = 0;
         }
 
-        res = select(fd_max + 1, &fdset, 0, 0, usecs_delay > 0 || tmout_s>0 ? &tv : NULL);
+        res = select(
+            fd_max + 1, &fdset, 0, 0,
+            usecs_delay > 0 || timeout_s>0 ? &tv : NULL
+        );
         if (res == -1) {
             if (errno == EINTR || errno == EAGAIN) {
                 if (interrupt_handler) {
@@ -106,11 +109,11 @@ char_event_t input_event_queue_t::readb() {
                     }
                 }
                 if (
-                    tmout_s > 0 &&
+                    timeout_s > 0 &&
                     duration_cast<seconds>(
                         steady_clock::now().time_since_epoch()-
                         (steady_clock::time_point::duration) last_input
-                    ).count() >= tmout_s
+                    ).count() >= timeout_s
                 ){
                     // return eof to terminate
                     return char_event_type_t::eof;
@@ -160,11 +163,11 @@ char_event_t input_event_queue_t::readb() {
 
             // check if idle timeout has been reached
             if (
-                tmout_s > 0 &&
+                timeout_s > 0 &&
                 duration_cast<seconds>(
                     steady_clock::now().time_since_epoch()-
                     (steady_clock::time_point::duration) last_input
-                ).count() >= tmout_s
+                ).count() >= timeout_s
             ){
                 // return eof to terminate
                 return char_event_type_t::eof;
@@ -193,23 +196,23 @@ void update_wait_on_escape_ms(const environment_t &vars) {
     }
 }
 
-// Update the tmout_s value in response to the TMOUT user variable being
-// set.
-void update_tmout_s(const environment_t &vars) {
-    auto tmout_time_s = vars.get(L"TMOUT");
-    if (tmout_time_s.missing_or_empty()) {
-        tmout_s = TMOUT_DEFAULT;
+// Update the timemout_s value in response to the fish_timeout user variable
+// being set.
+void update_timeout_s(const environment_t &vars) {
+    auto timeout_time_s = vars.get(L"fish_timeout");
+    if (timeout_time_s.missing_or_empty()) {
+        timeout_s = TIMEOUT_DEFAULT;
         return;
     }
 
-    long tmp = fish_wcstol(tmout_time_s->as_string().c_str());
+    long tmp = fish_wcstol(timeout_time_s->as_string().c_str());
     if (errno) {
         std::fwprintf(stderr,
-                      L"ignoring TMOUT: value '%ls' "
+                      L"ignoring fish_timeout: value '%ls' "
                       L"is not an integer\n",
-                      tmout_time_s->as_string().c_str());
+                      timeout_time_s->as_string().c_str());
     } else {
-        tmout_s = (int)tmp;
+        timeout_s = (int)tmp;
     }
 }
 

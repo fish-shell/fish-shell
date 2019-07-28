@@ -150,7 +150,7 @@ void input_common_init(interrupt_func_t func);
 class environment_t;
 void update_wait_on_escape_ms(const environment_t &vars);
 /// Adjust the idle timeout
-void update_tmout_s(const environment_t &vars);
+void update_timeout_s(const environment_t &vars);
 
 /// A class which knows how to produce a stream of input events.
 class input_event_queue_t {

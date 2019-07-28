@@ -423,6 +423,10 @@ class job_t {
     bool skip_notification() const { return properties.skip_notification; }
     bool from_event_handler() const { return properties.from_event_handler; }
 
+    /// \return whether we should report process exit events.
+    /// This implements some historical behavior which has not been justified.
+    bool should_report_process_exits() const;
+
     /// \return the parent job, or nullptr.
     const std::shared_ptr<job_t> get_parent() const { return parent_job; }
 

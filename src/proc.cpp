@@ -148,6 +148,25 @@ bool job_t::is_completed() const {
     return true;
 }
 
+bool job_t::should_report_process_exits() const {
+    // This implements the behavior of process exit events only being sent for jobs containing an
+    // external process. Bizarrely the process exit event is for the pgroup leader which may be fish
+    // itself.
+    // TODO: rationalize this.
+    // If we never got a pgid then we never launched the external process, so don't report it.
+    if (this->pgid == INVALID_PID) {
+        return false;
+    }
+
+    // Return whether we have an external process.
+    for (const auto &p : this->processes) {
+        if (p->type == process_type_t::external) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool job_t::job_chain_is_fully_constructed() const {
     const job_t *cursor = this;
     while (cursor) {
@@ -585,7 +604,7 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
         // Prepare events for completed jobs, except for jobs that themselves came from event
         // handlers.
         if (!j->from_event_handler() && j->is_completed()) {
-            if (j->pgid != INVALID_PID) {
+            if (j->should_report_process_exits()) {
                 exit_events.push_back(
                     proc_create_event(L"JOB_EXIT", event_type_t::exit, -j->pgid, 0));
             }

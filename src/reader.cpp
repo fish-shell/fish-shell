@@ -3234,6 +3234,9 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
             rls.coalescing_repaints = false;
             repaint_if_needed();
             continue;
+        } else if (event_needing_handling->is_idle()) {
+            reader_set_end_loop(true);
+            continue;
         } else if (event_needing_handling->is_eof()) {
             reader_force_exit();
             continue;

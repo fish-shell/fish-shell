@@ -115,8 +115,7 @@ char_event_t input_event_queue_t::readb() {
                         (steady_clock::time_point::duration) last_input
                     ).count() >= timeout_s
                 ){
-                    // return eof to terminate
-                    return char_event_type_t::eof;
+                    return char_event_type_t::idle;
                 }
             } else {
                 // The terminal has been closed.
@@ -169,8 +168,7 @@ char_event_t input_event_queue_t::readb() {
                     (steady_clock::time_point::duration) last_input
                 ).count() >= timeout_s
             ){
-                // return eof to terminate
-                return char_event_type_t::eof;
+                return char_event_type_t::idle;
             }
         }
     }

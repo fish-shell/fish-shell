@@ -450,7 +450,7 @@ void inputter_t::mapping_execute_matching_or_generic(bool allow_commands) {
     } else {
         debug(2, L"no generic found, ignoring char...");
         auto evt = event_queue_.readch();
-        if (evt.is_eof()) {
+        if (evt.is_eof() || evt.is_idle()) {
             event_queue_.push_front(evt);
         }
     }
@@ -508,6 +508,10 @@ char_event_t inputter_t::readch(bool allow_commands) {
         } else if (evt.is_eof()) {
             // If we have EOF, we need to immediately quit.
             // There's no need to go through the input functions.
+            return evt;
+        } else if (evt.is_idle()) {
+            // If we have an IDLE timeout we have no real input for
+            // for the input functions
             return evt;
         } else {
             event_queue_.push_front(evt);

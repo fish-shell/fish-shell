@@ -87,6 +87,9 @@ enum class char_event_type_t : uint8_t {
     /// A timeout was hit.
     timeout,
 
+    /// An idle timeout was hit.
+    idle,
+
     /// end-of-file was reached.
     eof,
 
@@ -108,6 +111,8 @@ class char_event_t {
     char_event_type_t type;
 
     bool is_timeout() const { return type == char_event_type_t::timeout; }
+
+    bool is_idle() const { return type == char_event_type_t::idle; }
 
     bool is_char() const { return type == char_event_type_t::charc; }
 

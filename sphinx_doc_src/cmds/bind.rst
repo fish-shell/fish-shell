@@ -126,6 +126,10 @@ The following special input functions are available:
 
 - ``history-search-forward``, search the history for the next match
 
+- ``history-token-search-backward``, search the history for the previous matching argument
+
+- ``history-token-search-forward``, search the history for the next matching argument
+
 - ``kill-bigword``, move the next whitespace-delimited word to the killring
 
 - ``kill-line``, move everything from the cursor to the end of the line to the killring

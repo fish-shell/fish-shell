@@ -478,9 +478,9 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
         }
     }
 
-    if (result == parse_execution_success && switch_values_expanded.size() != 1) {
+    if (result == parse_execution_success && switch_values_expanded.size() > 1) {
         result =
-            report_error(switch_value_n, _(L"switch: Expected exactly one argument, got %lu\n"),
+            report_error(switch_value_n, _(L"switch: Expected at most one argument, got %lu\n"),
                          switch_values_expanded.size());
     }
 
@@ -488,7 +488,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
         return result;
     }
 
-    const wcstring &switch_value_expanded = switch_values_expanded.at(0).completion;
+    const wcstring &switch_value_expanded = switch_values_expanded.size() == 1 ? switch_values_expanded.at(0).completion : L"";
 
     block_t *sb = parser->push_block(block_t::switch_block());
 

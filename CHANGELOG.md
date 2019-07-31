@@ -20,6 +20,7 @@
 - Local values for `fish_complete_path` and `fish_function_path` are now ignored; only their global values are respected.
 - Empty universal variables may now be exported (#5992).
 - `string split` had a bug where empty strings would be dropped if the output was only empty strings; this has been fixed (#5987).
+- `switch` now allows arguments that expand to nothing, like empty variables (#5677).
 
 ### Syntax changes and new commands
 - Brace expansion now only takes place if the braces include a "," or a variable expansion, so things like `git reset HEAD@{0}` now work (#5869).

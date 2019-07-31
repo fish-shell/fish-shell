@@ -631,7 +631,7 @@ void reader_data_t::repaint() {
     // Re-render our completions page if necessary. Limit the term size of the pager to the true
     // term size, minus the number of lines consumed by our string. (Note this doesn't yet consider
     // wrapping).
-    int full_line_count = 1 + std::count(full_line.begin(), full_line.end(), '\n');
+    int full_line_count = 1 + std::count(full_line.cbegin(), full_line.cend(), '\n');
     pager.set_term_size(std::max(1, common_get_width()),
                         std::max(1, common_get_height() - full_line_count));
     pager.update_rendering(&current_page_rendering);

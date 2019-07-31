@@ -766,7 +766,7 @@ class pcre2_matcher_t : public string_matcher_t {
                                               (unsigned long)(end - begin));
                 } else if (end > begin) {
                     // May have end < begin if \K is used.
-                    streams.out.append(wcstring(&arg[begin], end - begin));
+                    streams.out.append(arg.substr(begin, end - begin));
                 }
                 streams.out.push_back(L'\n');
             }

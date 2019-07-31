@@ -286,15 +286,17 @@ void layout_cache_t::add_prompt_layout(wcstring input, prompt_layout_t layout) {
 
 /// Calculate layout information for the given prompt. Does some clever magic to detect common
 /// escape sequences that may be embedded in a prompt, such as those to set visual attributes.
-static prompt_layout_t calc_prompt_layout(const wcstring &prompt, layout_cache_t &cache) {
-    if (auto cached_layout = cache.find_prompt_layout(prompt)) {
+/// escape sequences that may be embeded in a prompt, such as those to set visual attributes.
+static prompt_layout_t calc_prompt_layout(const wcstring &prompt_str, layout_cache_t &cache) {
+    if (auto cached_layout = cache.find_prompt_layout(prompt_str)) {
         return *cached_layout;
     }
 
     prompt_layout_t prompt_layout = {1, 0, 0};
     size_t current_line_width = 0;
 
-    for (int j = 0; prompt[j]; j++) {
+    const wchar_t *prompt = prompt_str.c_str();
+    for (size_t j = 0; prompt[j]; j++) {
         if (prompt[j] == L'\x1B') {
             // This is the start of an escape code. Skip over it if it's at least one char long.
             size_t len = escape_code_length(&prompt[j]);

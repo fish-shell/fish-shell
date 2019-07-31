@@ -109,12 +109,16 @@ Sphinx is also optionally required to build the documentation from a cloned git 
 
 ### Building from source (all platforms) - Makefile generator
 
+To install into `/usr/local`, run:
+
 ```bash
 mkdir build; cd build
 cmake ..
 make
 sudo make install
 ```
+
+The install directory can be changed using the `-DCMAKE_INSTALL_PREFIX` parameter for `cmake`.
 
 ### Building from source (macOS) - Xcode
 
@@ -123,7 +127,15 @@ mkdir build; cd build
 cmake .. -G Xcode
 ```
 
-An Xcode project will now be available in the `build` subdirectory.
+An Xcode project will now be available in the `build` subdirectory. You can open it with Xcode,
+or run the following to build and install in `/usr/local`:
+
+```bash
+xcodebuild
+xcodebuild -scheme install
+```
+
+The install directory can be changed using the `-DCMAKE_INSTALL_PREFIX` parameter for `cmake`.
 
 ### Help, it didn't build!
 

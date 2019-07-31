@@ -1,4 +1,4 @@
-# RUN: env FISH=%fish %fish %s
+# RUN: env XDG_CONFIG_HOME="$(mktemp -d)" FISH=%fish %fish %s
 
 # Environment variable tests
 

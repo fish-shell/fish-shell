@@ -1,0 +1,10 @@
+# vim: set filetype=expect:
+set fish_pid [spawn $fish]
+expect_prompt
+send_line "set fish_timeout 1"
+sleep 2
+set status [catch {exec ps -p $fishpid} output]
+if {$status == 0} {
+  puts stderr "Commands spawned by the shell still running after timeout"
+  puts stderr $output
+}

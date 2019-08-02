@@ -75,7 +75,9 @@ end
 function : -d "no-op function"
     # for compatibility with sh, bash, and others.
     # Often used to insert a comment into a chain of commands without having
-    # it eat up the remainder of the line, handy in Makefiles. 
+    # it eat up the remainder of the line, handy in Makefiles.
+    # This command always succeeds
+    true
 end
 
 #

@@ -1013,6 +1013,19 @@ static process_t *get_deferred_process(const shared_ptr<job_t> &j) {
 /// \return true if fish should claim the process group for this job.
 /// This is true if there is at least one external process and if the first process is fish code.
 static bool should_claim_process_group_for_job(const shared_ptr<job_t> &j) {
+    // Check if there's an external process.
+    // See #6011.
+    bool has_external = false;
+    for (const auto &p : j->processes) {
+        if (p->type == process_type_t::external) {
+            has_external = true;
+            break;
+        }
+    }
+    if (!has_external) {
+        return false;
+    }
+
     // Check the first process.
     // The terminal owner has to be the process which is permitted to read from stdin.
     // This is the first process in the pipeline. When executing, a process in the job will

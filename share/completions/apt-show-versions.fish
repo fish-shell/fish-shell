@@ -1,5 +1,5 @@
 #apt-show-versions
-complete -c apt-show-source -s h -l help -d 'Display help and exit'
+complete -c apt-show-versions -s h -l help -d 'Display help and exit'
 complete -r -c apt-show-versions -s p -l packages -a '(apt-cache pkgnames)' -d 'Print PKG versions'
 complete -f -c apt-show-versions -s r -l regex -d 'Using regex'
 complete -f -c apt-show-versions -s u -l upgradeable -d 'Print only upgradeable packages'

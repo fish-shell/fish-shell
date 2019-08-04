@@ -1,1 +1,1 @@
-complete -c grep -w fgrep
+complete -c fgrep -w grep

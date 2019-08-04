@@ -1,1 +1,1 @@
-complete -c grep -w egrep
+complete -c egrep -w grep

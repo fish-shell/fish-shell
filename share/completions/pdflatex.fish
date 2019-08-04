@@ -1,2 +1,2 @@
-complete -c tex -w pdflatex
+complete -c pdflatex -w tex
 

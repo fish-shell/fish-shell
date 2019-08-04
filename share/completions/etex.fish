@@ -1,1 +1,1 @@
-complete -c tex -w etex
+complete -c etex -w tex

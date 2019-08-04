@@ -680,41 +680,6 @@ template int parser_t::eval_node(parsed_source_ref_t, tnode_t<grammar::job_list>
                                  const io_chain_t &, enum block_type_t,
                                  std::shared_ptr<job_t> parent_job);
 
-bool parser_t::detect_errors_in_argument_list(const wcstring &arg_list_src, wcstring *out,
-                                              const wchar_t *prefix) const {
-    bool errored = false;
-    parse_error_list_t errors;
-
-    // Use empty string for the prefix if it's NULL.
-    if (!prefix) prefix = L"";  //!OCLINT(parameter reassignment)
-
-    // Parse the string as an argument list.
-    parse_node_tree_t tree;
-    if (!parse_tree_from_string(arg_list_src, parse_flag_none, &tree, &errors,
-                                symbol_freestanding_argument_list)) {
-        // Failed to parse.
-        errored = true;
-    }
-
-    if (!errored) {
-        // Get the root argument list and extract arguments from it.
-        assert(!tree.empty());  //!OCLINT(multiple unary operator)
-        tnode_t<grammar::freestanding_argument_list> arg_list(&tree, &tree.at(0));
-        while (auto arg = arg_list.next_in_list<grammar::argument>()) {
-            const wcstring arg_src = arg.get_source(arg_list_src);
-            if (parse_util_detect_errors_in_argument(arg, arg_src, &errors)) {
-                errored = true;
-            }
-        }
-    }
-
-    if (!errors.empty() && out != NULL) {
-        out->assign(errors.at(0).describe_with_prefix(
-            arg_list_src, prefix, false /* not interactive */, false /* don't skip caret */));
-    }
-    return errored;
-}
-
 void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &errors,
                              wcstring &output) const {
     if (!errors.empty()) {

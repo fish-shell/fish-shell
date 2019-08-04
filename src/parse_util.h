@@ -132,6 +132,11 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                                   bool allow_incomplete = true,
                                                   parsed_source_ref_t *out_pstree = NULL);
 
+/// Detect errors in the specified string when parsed as an argument list. Returns the text of an
+/// error, or none if no error occurred.
+maybe_t<wcstring> parse_util_detect_errors_in_argument_list(const wcstring &arg_list_src,
+                                                            const wcstring &prefix = {});
+
 /// Test if this argument contains any errors. Detected errors include syntax errors in command
 /// substitutions, improperly escaped characters and improper use of the variable expansion
 /// operator. This does NOT currently detect unterminated quotes.

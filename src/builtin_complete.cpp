@@ -303,11 +303,10 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         prefix.append(cmd);
         prefix.append(L": ");
 
-        wcstring err_text;
-        if (parser.detect_errors_in_argument_list(comp, &err_text, prefix.c_str())) {
+        if (maybe_t<wcstring> err_text = parse_util_detect_errors_in_argument_list(comp, prefix)) {
             streams.err.append_format(L"%ls: Completion '%ls' contained a syntax error\n", cmd,
                                       comp);
-            streams.err.append(err_text);
+            streams.err.append(*err_text);
             streams.err.push_back(L'\n');
             return STATUS_CMD_ERROR;
         }

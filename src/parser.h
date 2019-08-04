@@ -335,11 +335,6 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     void get_backtrace(const wcstring &src, const parse_error_list_t &errors,
                        wcstring &output) const;
 
-    /// Detect errors in the specified string when parsed as an argument list. Returns true if an
-    /// error occurred.
-    bool detect_errors_in_argument_list(const wcstring &arg_list_src, wcstring *out_err,
-                                        const wchar_t *prefix) const;
-
     /// Tell the parser that the specified function may not be run if not inside of a conditional
     /// block. This is to remove some possibilities of infinite recursion.
     void forbid_function(const wcstring &function);

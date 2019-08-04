@@ -1333,3 +1333,35 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
 
     return res;
 }
+
+maybe_t<wcstring> parse_util_detect_errors_in_argument_list(const wcstring &arg_list_src,
+                                                            const wcstring &prefix) {
+    // Helper to return a description of the first error.
+    auto get_error_text = [&](const parse_error_list_t &errors) {
+        assert(!errors.empty() && "Expected an error");
+        return errors.at(0).describe_with_prefix(arg_list_src, prefix, false /* not interactive */,
+                                                 false /* don't skip caret */);
+    };
+
+    // Parse the string as an argument list.
+    parse_error_list_t errors;
+    parse_node_tree_t tree;
+    if (!parse_tree_from_string(arg_list_src, parse_flag_none, &tree, &errors,
+                                symbol_freestanding_argument_list)) {
+        // Failed to parse.
+        return get_error_text(errors);
+    }
+
+    // Get the root argument list and extract arguments from it.
+    // Test each of these.
+    assert(!tree.empty() && "Should have parsed a tree");
+    tnode_t<grammar::freestanding_argument_list> arg_list(&tree, &tree.at(0));
+    while (auto arg = arg_list.next_in_list<grammar::argument>()) {
+        const wcstring arg_src = arg.get_source(arg_list_src);
+        if (parse_util_detect_errors_in_argument(arg, arg_src, &errors)) {
+            return get_error_text(errors);
+        }
+    }
+
+    return none();
+}

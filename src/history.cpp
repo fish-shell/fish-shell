@@ -835,7 +835,7 @@ struct history_impl_t {
     std::unique_ptr<history_file_contents_t> file_contents{};
 
     // The file ID of the history file.
-    file_id_t history_file_id{kInvalidFileID};
+    file_id_t history_file_id = kInvalidFileID;
 
     // The boundary timestamp distinguishes old items from new items. Items whose timestamps are <=
     // the boundary are considered "old". Items whose timestemps are > the boundary are new, and are

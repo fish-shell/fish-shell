@@ -77,3 +77,4 @@ complete -f -c jest -l watch -d 'Watch files for changes and rerun tests related
 complete -f -c jest -l watchAll -d 'Watch files for changes and rerun all tests'
 complete -f -c jest -l watchman -d 'Whether to use watchman for file crawling'
 complete -f -c jest -l no-watchman -d 'Disable using watchman for file crawling'
+complete -f -c jest -l detectOpenHandles -d 'Print out remaining open handles preventing Jest from exiting at the end of a test run.'

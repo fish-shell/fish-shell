@@ -729,8 +729,8 @@ void reader_data_t::pager_selection_changed() {
 }
 
 /// Expand abbreviations at the given cursor position. Does NOT inspect 'data'.
-bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t cursor_pos,
-                                           const environment_t &vars, wcstring *output) {
+maybe_t<wcstring> reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t cursor_pos,
+                                                        const environment_t &vars) {
     // See if we are at "command position". Get the surrounding command substitution, and get the
     // extent of the first token.
     const wchar_t *const buff = cmdline.c_str();
@@ -778,18 +778,16 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
     }
 
     // Now if we found a command node, expand it.
-    bool result = false;
+    maybe_t<wcstring> result{};
     if (matching_cmd_node) {
         const wcstring token = matching_cmd_node.get_source(subcmd);
         if (auto abbreviation = expand_abbreviation(token, vars)) {
             // There was an abbreviation! Replace the token in the full command. Maintain the
             // relative position of the cursor.
-            if (output != NULL) {
-                output->assign(cmdline);
-                source_range_t r = *matching_cmd_node.source_range();
-                output->replace(subcmd_offset + r.start, r.length, *abbreviation);
-            }
-            result = true;
+            wcstring output = cmdline;
+            source_range_t r = *matching_cmd_node.source_range();
+            output.replace(subcmd_offset + r.start, r.length, *abbreviation);
+            result = std::move(output);
         }
     }
     return result;
@@ -804,15 +802,15 @@ bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack) {
 
     if (expand_abbreviations && el == &command_line) {
         // Try expanding abbreviations.
-        wcstring new_cmdline;
         size_t cursor_pos = el->position - std::min(el->position, cursor_backtrack);
 
-        if (reader_expand_abbreviation_in_command(el->text, cursor_pos, vars(), &new_cmdline)) {
+        if (auto new_cmdline =
+                reader_expand_abbreviation_in_command(el->text, cursor_pos, vars())) {
             // We expanded an abbreviation! The cursor moves by the difference in the command line
             // lengths.
-            size_t new_buff_pos = el->position + new_cmdline.size() - el->text.size();
+            size_t new_buff_pos = el->position + new_cmdline->size() - el->text.size();
 
-            el->text = std::move(new_cmdline);
+            el->text = std::move(*new_cmdline);
             update_buff_pos(el, new_buff_pos);
             command_line_changed(el);
             result = true;

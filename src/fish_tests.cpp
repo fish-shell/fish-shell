@@ -1875,54 +1875,48 @@ static void test_abbreviations() {
     if (!mresult) err(L"Unexpected failure with foo abbreviation");
     if (*mresult != L"bar") err(L"Wrong abbreviation result for foo");
 
-    bool expanded;
-    wcstring result;
-    expanded = reader_expand_abbreviation_in_command(L"just a command", 3, vars, &result);
-    if (expanded) err(L"Command wrongly expanded on line %ld", (long)__LINE__);
-    expanded = reader_expand_abbreviation_in_command(L"gc somebranch", 0, vars, &result);
-    if (!expanded) err(L"Command not expanded on line %ld", (long)__LINE__);
+    maybe_t<wcstring> result;
+    result = reader_expand_abbreviation_in_command(L"just a command", 3, vars);
+    if (result) err(L"Command wrongly expanded on line %ld", (long)__LINE__);
+    result = reader_expand_abbreviation_in_command(L"gc somebranch", 0, vars);
+    if (!result) err(L"Command not expanded on line %ld", (long)__LINE__);
 
-    expanded =
-        reader_expand_abbreviation_in_command(L"gc somebranch", std::wcslen(L"gc"), vars, &result);
-    if (!expanded) err(L"gc not expanded");
+    result = reader_expand_abbreviation_in_command(L"gc somebranch", std::wcslen(L"gc"), vars);
+    if (!result) err(L"gc not expanded");
     if (result != L"git checkout somebranch")
-        err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
+        err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
 
     // Space separation.
-    expanded =
-        reader_expand_abbreviation_in_command(L"gx somebranch", std::wcslen(L"gc"), vars, &result);
-    if (!expanded) err(L"gx not expanded");
+    result = reader_expand_abbreviation_in_command(L"gx somebranch", std::wcslen(L"gc"), vars);
+    if (!result) err(L"gx not expanded");
     if (result != L"git checkout somebranch")
-        err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
+        err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
 
-    expanded = reader_expand_abbreviation_in_command(L"echo hi ; gc somebranch",
-                                                     std::wcslen(L"echo hi ; g"), vars, &result);
-    if (!expanded) err(L"gc not expanded on line %ld", (long)__LINE__);
+    result = reader_expand_abbreviation_in_command(L"echo hi ; gc somebranch",
+                                                   std::wcslen(L"echo hi ; g"), vars);
+    if (!result) err(L"gc not expanded on line %ld", (long)__LINE__);
     if (result != L"echo hi ; git checkout somebranch")
         err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
-    expanded = reader_expand_abbreviation_in_command(
-        L"echo (echo (echo (echo (gc ", std::wcslen(L"echo (echo (echo (echo (gc"), vars, &result);
-    if (!expanded) err(L"gc not expanded on line %ld", (long)__LINE__);
+    result = reader_expand_abbreviation_in_command(
+        L"echo (echo (echo (echo (gc ", std::wcslen(L"echo (echo (echo (echo (gc"), vars);
+    if (!result) err(L"gc not expanded on line %ld", (long)__LINE__);
     if (result != L"echo (echo (echo (echo (git checkout ")
-        err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
+        err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
 
     // If commands should be expanded.
-    expanded =
-        reader_expand_abbreviation_in_command(L"if gc", std::wcslen(L"if gc"), vars, &result);
-    if (!expanded) err(L"gc not expanded on line %ld", (long)__LINE__);
+    result = reader_expand_abbreviation_in_command(L"if gc", std::wcslen(L"if gc"), vars);
+    if (!result) err(L"gc not expanded on line %ld", (long)__LINE__);
     if (result != L"if git checkout")
-        err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
+        err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
 
     // Others should not be.
-    expanded =
-        reader_expand_abbreviation_in_command(L"of gc", std::wcslen(L"of gc"), vars, &result);
-    if (expanded) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
+    result = reader_expand_abbreviation_in_command(L"of gc", std::wcslen(L"of gc"), vars);
+    if (result) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
     // Others should not be.
-    expanded = reader_expand_abbreviation_in_command(L"command gc", std::wcslen(L"command gc"),
-                                                     vars, &result);
-    if (expanded) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
+    result = reader_expand_abbreviation_in_command(L"command gc", std::wcslen(L"command gc"), vars);
+    if (result) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
     vars.pop();
 }

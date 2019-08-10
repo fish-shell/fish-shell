@@ -36,6 +36,7 @@
 #include "common.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
 #include "highlight.h"
 #include "output.h"
 #include "pager.h"
@@ -387,7 +388,8 @@ static void s_desired_append_char(screen_t *s, wchar_t b, highlight_spec_t c, in
 
     if (b == L'\n') {
         // Current line is definitely hard wrapped.
-        s->desired.create_line(s->desired.line_count());
+        // Create the next line.
+        s->desired.create_line(s->desired.cursor.y + 1);
         s->desired.line(s->desired.cursor.y).is_soft_wrapped = false;
         int line_no = ++s->desired.cursor.y;
         s->desired.cursor.x = 0;
@@ -411,7 +413,6 @@ static void s_desired_append_char(screen_t *s, wchar_t b, highlight_spec_t c, in
         if ((s->desired.cursor.x + cw) > screen_width) {
             // Current line is soft wrapped (assuming we support it).
             s->desired.line(s->desired.cursor.y).is_soft_wrapped = true;
-            // std::fwprintf(stderr, L"\n\n1 Soft wrapping %d\n\n", s->desired.cursor.y);
 
             line_no = (int)s->desired.line_count();
             s->desired.add_line();

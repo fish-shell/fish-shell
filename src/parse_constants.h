@@ -13,7 +13,7 @@
     } while (0)
 
 // IMPORTANT: If the following enum table is modified you must also update token_enum_map below.
-enum parse_token_type_t {
+enum parse_token_type_t : uint8_t {
     token_type_invalid = 1,
     // Non-terminal tokens
     symbol_job_list,
@@ -71,7 +71,7 @@ enum parse_token_type_t {
     LAST_TOKEN_OR_SYMBOL = parse_token_type_terminate,
     FIRST_PARSE_TOKEN_TYPE = parse_token_type_string,
     LAST_PARSE_TOKEN_TYPE = parse_token_type_end
-} __packed;
+};
 
 const enum_map<parse_token_type_t> token_enum_map[] = {
     {parse_special_type_comment, L"parse_special_type_comment"},
@@ -96,7 +96,7 @@ const enum_map<parse_token_type_t> token_enum_map[] = {
 // array below.
 //
 // IMPORTANT: These enums must start at zero.
-enum parse_keyword_t {
+enum parse_keyword_t : uint8_t {
     parse_keyword_and,
     parse_keyword_begin,
     parse_keyword_builtin,
@@ -115,7 +115,7 @@ enum parse_keyword_t {
     parse_keyword_or,
     parse_keyword_switch,
     parse_keyword_while,
-} __packed;
+};
 
 const enum_map<parse_keyword_t> keyword_enum_map[] = {{parse_keyword_exclam, L"!"},
                                                       {parse_keyword_and, L"and"},

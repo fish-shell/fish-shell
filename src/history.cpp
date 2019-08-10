@@ -795,7 +795,6 @@ static size_t offset_of_next_item(const history_file_contents_t &contents, size_
     switch (contents.type()) {
         case history_type_fish_2_0:
             return offset_of_next_item_fish_2_0(contents, inout_cursor, cutoff_timestamp);
-            ;
         case history_type_fish_1_x:
             return offset_of_next_item_fish_1_x(contents.begin(), contents.length(), inout_cursor);
     }

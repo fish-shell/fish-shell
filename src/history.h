@@ -62,6 +62,7 @@ typedef uint64_t history_identifier_t;
 class history_item_t {
     friend class history_t;
     friend struct history_impl_t;
+    friend class history_lru_cache_t;
     friend class history_tests_t;
 
    private:

@@ -147,24 +147,12 @@ static bool history_file_lock(int fd, int lock_type) {
     return retval != -1;
 }
 
-/// Our LRU cache is used for restricting the amount of history we have, and limiting how long we
-/// order it.
-class history_lru_item_t {
-   public:
-    wcstring text;
-    time_t timestamp;
-    path_list_t required_paths;
-    explicit history_lru_item_t(const history_item_t &item)
-        : text(item.str()),
-          timestamp(item.timestamp()),
-          required_paths(item.get_required_paths()) {}
-};
+}  // anonymous namespace
 
-class history_lru_cache_t : public lru_cache_t<history_lru_cache_t, history_lru_item_t> {
-    typedef lru_cache_t<history_lru_cache_t, history_lru_item_t> super;
-
+class history_lru_cache_t : public lru_cache_t<history_lru_cache_t, history_item_t> {
    public:
-    using super::super;
+    explicit history_lru_cache_t(size_t max)
+        : lru_cache_t<history_lru_cache_t, history_item_t>(max) {}
 
     /// Function to add a history item.
     void add_item(const history_item_t &item) {
@@ -174,17 +162,15 @@ class history_lru_cache_t : public lru_cache_t<history_lru_cache_t, history_lru_
         // See if it's in the cache. If it is, update the timestamp. If not, we create a new node
         // and add it. Note that calling get_node promotes the node to the front.
         wcstring key = item.str();
-        history_lru_item_t *node = this->get(key);
+        history_item_t *node = this->get(key);
         if (node == NULL) {
-            this->insert(std::move(key), history_lru_item_t(item));
+            this->insert(std::move(key), item);
         } else {
-            node->timestamp = std::max(node->timestamp, item.timestamp());
+            node->creation_timestamp = std::max(node->timestamp(), item.timestamp());
             // What to do about paths here? Let's just ignore them.
         }
     }
 };
-
-}  // anonymous namespace
 
 static wcstring history_filename(const wcstring &name, const wcstring &suffix);
 
@@ -753,16 +739,16 @@ bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) cons
     // Stable-sort our items by timestamp
     // This is because we may have read "old" items with a later timestamp than our "new" items
     // This is the essential step that roughly orders items by history
-    lru.stable_sort([](const history_lru_item_t &item1, const history_lru_item_t &item2) {
-        return item1.timestamp < item2.timestamp;
+    lru.stable_sort([](const history_item_t &item1, const history_item_t &item2) {
+        return item1.timestamp() < item2.timestamp();
     });
 
     // Write them out.
     bool ok = true;
     history_output_buffer_t buffer(HISTORY_OUTPUT_BUFFER_SIZE);
     for (const auto &key_item : lru) {
-        const history_lru_item_t &item = key_item.second;
-        append_yaml_to_buffer(item.text, item.timestamp, item.required_paths, &buffer);
+        const history_item_t &item = key_item.second;
+        append_yaml_to_buffer(item.str(), item.timestamp(), item.required_paths, &buffer);
         if (buffer.output_size() >= HISTORY_OUTPUT_BUFFER_SIZE) {
             ok = buffer.flush_to_fd(dst_fd);
             if (!ok) {

@@ -309,26 +309,24 @@ static bool parse_timestamp(const char *str, time_t *out_when) {
 
 /// Returns a pointer to the start of the next line, or NULL. The next line must itself end with a
 /// newline. Note that the string is not null terminated.
-static const char *next_line(const char *start, size_t length) {
+static const char *next_line(const char *start, const char *end) {
     // Handle the hopeless case.
-    if (length < 1) return NULL;
-
-    // Get a pointer to the end, that we must not pass.
-    const char *const end = start + length;
+    if (end == start) return NULL;
 
     // Skip past the next newline.
-    const char *nextline = (const char *)std::memchr(start, '\n', length);
-    if (!nextline || nextline >= end) {
+    const char *nextline = std::find(start, end, '\n');
+    if (nextline == end) {
         return NULL;
     }
+
     // Skip past the newline character itself.
     if (++nextline >= end) {
         return NULL;
     }
 
     // Make sure this new line is itself "newline terminated". If it's not, return NULL.
-    const char *next_newline = (const char *)std::memchr(nextline, '\n', end - nextline);
-    if (!next_newline) {
+    const char *next_newline = std::find(nextline, end, '\n');
+    if (next_newline == end) {
         return NULL;
     }
 
@@ -401,9 +399,9 @@ static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &conten
             time_t timestamp = 0;
             const char *interior_line;
 
-            for (interior_line = next_line(line_start, end - line_start);
+            for (interior_line = next_line(line_start, end);
                  interior_line != NULL && !has_timestamp;
-                 interior_line = next_line(interior_line, end - interior_line)) {
+                 interior_line = next_line(interior_line, end)) {
                 // If the first character is not a space, it's not an interior line, so we're done.
                 if (interior_line[0] != ' ') break;
 

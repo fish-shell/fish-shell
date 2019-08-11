@@ -76,12 +76,11 @@ static constexpr int max_save_tries = 1024;
 
 namespace {
 
-static size_t safe_strlen(const char *s) { return s ? std::strlen(s) : 0; }
 /// Helper class for certain output. This is basically a string that allows us to ensure we only
 /// flush at record boundaries, and avoids the copying of ostringstream. Have you ever tried to
 /// implement your own streambuf? Total insanity.
 class history_output_buffer_t {
-    std::vector<char> buffer;
+    std::string buffer;
 
    public:
     /// Add a bit more to HISTORY_OUTPUT_BUFFER_SIZE because we flush once we've exceeded that size.
@@ -91,20 +90,9 @@ class history_output_buffer_t {
 
     /// Append one or more strings.
     void append(const char *s1, const char *s2 = NULL, const char *s3 = NULL) {
-        constexpr size_t ptr_count = 3;
-        const char *ptrs[ptr_count] = {s1, s2, s3};
-        size_t lengths[ptr_count] = {safe_strlen(s1), safe_strlen(s2), safe_strlen(s3)};
-
-        // Determine the additional size we'll need.
-        size_t additional_length = std::accumulate(std::begin(lengths), std::end(lengths), 0);
-        buffer.reserve(buffer.size() + additional_length);
-
-        // Append
-        for (size_t i = 0; i < ptr_count; i++) {
-            if (lengths[i] > 0) {
-                buffer.insert(buffer.end(), ptrs[i], ptrs[i] + lengths[i]);
-            }
-        }
+        if (s1) buffer.append(s1);
+        if (s2) buffer.append(s2);
+        if (s3) buffer.append(s3);
     }
 
     /// Output to a given fd, resetting our buffer. Returns true on success, false on error.
@@ -112,7 +100,7 @@ class history_output_buffer_t {
         if (buffer.empty()) {
             return true;
         }
-        bool result = write_loop(fd, &buffer.at(0), buffer.size()) >= 0;
+        bool result = write_loop(fd, buffer.data(), buffer.size()) >= 0;
         buffer.clear();
         return result;
     }

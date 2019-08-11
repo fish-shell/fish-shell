@@ -94,8 +94,8 @@ SET(FISH_SRCS
     src/color.cpp src/common.cpp src/complete.cpp src/env.cpp src/env_dispatch.cpp
     src/env_universal_common.cpp src/event.cpp src/exec.cpp src/expand.cpp
     src/fallback.cpp src/fish_version.cpp src/function.cpp src/highlight.cpp
-    src/history.cpp src/input.cpp src/input_common.cpp src/intern.cpp src/io.cpp
-    src/iothread.cpp src/kill.cpp src/output.cpp src/pager.cpp
+    src/history.cpp src/history_file.cpp src/input.cpp src/input_common.cpp src/intern.cpp
+    src/io.cpp src/iothread.cpp src/kill.cpp src/output.cpp src/pager.cpp
     src/parse_execution.cpp src/parse_productions.cpp src/parse_tree.cpp
     src/parse_util.cpp src/parser.cpp src/parser_keywords.cpp src/path.cpp
     src/postfork.cpp src/proc.cpp src/reader.cpp src/sanity.cpp src/screen.cpp

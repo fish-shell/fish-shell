@@ -208,13 +208,16 @@ bool history_item_t::merge(const history_item_t &item) {
 history_item_t::history_item_t(const wcstring &str, time_t when, history_identifier_t ident)
     : creation_timestamp(when), identifier(ident) {
     contents = trim(str);
-    contents_lower = wcstolower(contents);
 }
 
 bool history_item_t::matches_search(const wcstring &term, enum history_search_type_t type,
                                     bool case_sensitive) const {
     // Note that 'term' has already been lowercased when constructing the
     // search object if we're doing a case insensitive search.
+    wcstring contents_lower;
+    if (!case_sensitive) {
+        contents_lower = wcstolower(contents);
+    }
     const wcstring &content_to_match = case_sensitive ? contents : contents_lower;
 
     switch (type) {

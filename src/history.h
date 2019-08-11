@@ -69,8 +69,7 @@ class history_item_t {
     bool merge(const history_item_t &item);
 
     // The actual contents of the entry.
-    wcstring contents;        // value as entered by the user
-    wcstring contents_lower;  // value normalized to all lowercase for case insensitive comparisons
+    wcstring contents;
 
     // Original creation time for the entry.
     time_t creation_timestamp;
@@ -85,7 +84,6 @@ class history_item_t {
     explicit history_item_t(const wcstring &str, time_t when = 0, history_identifier_t ident = 0);
 
     const wcstring &str() const { return contents; }
-    const wcstring &str_lower() const { return contents_lower; }
 
     bool empty() const { return contents.empty(); }
 

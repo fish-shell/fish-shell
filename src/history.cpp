@@ -76,38 +76,18 @@ static constexpr int max_save_tries = 1024;
 
 namespace {
 
-/// Helper class for certain output. This is basically a string that allows us to ensure we only
-/// flush at record boundaries, and avoids the copying of ostringstream. Have you ever tried to
-/// implement your own streambuf? Total insanity.
-class history_output_buffer_t {
-    std::string buffer;
-
-   public:
-    /// Add a bit more to HISTORY_OUTPUT_BUFFER_SIZE because we flush once we've exceeded that size.
-    explicit history_output_buffer_t(size_t reserve_amt = HISTORY_OUTPUT_BUFFER_SIZE + 128) {
-        buffer.reserve(reserve_amt);
+/// If the size of \p buffer is at least \p min_size, output the contents of a string \p str to \p
+/// fd, and clear the string. \return 0 on success, an error code on failure.
+static int flush_to_fd(std::string *buffer, int fd, size_t min_size) {
+    if (buffer->empty() || buffer->size() < min_size) {
+        return 0;
     }
-
-    /// Append one or more strings.
-    void append(const char *s1, const char *s2 = NULL, const char *s3 = NULL) {
-        if (s1) buffer.append(s1);
-        if (s2) buffer.append(s2);
-        if (s3) buffer.append(s3);
+    if (write_loop(fd, buffer->data(), buffer->size()) < 0) {
+        return errno;
     }
-
-    /// Output to a given fd, resetting our buffer. Returns true on success, false on error.
-    bool flush_to_fd(int fd) {
-        if (buffer.empty()) {
-            return true;
-        }
-        bool result = write_loop(fd, buffer.data(), buffer.size()) >= 0;
-        buffer.clear();
-        return result;
-    }
-
-    /// Return how much data we've accumulated.
-    size_t output_size() const { return buffer.size(); }
-};
+    buffer->clear();
+    return 0;
+}
 
 class time_profiler_t {
     const char *what;
@@ -229,26 +209,6 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
         }
     }
     DIE("unexpected history_search_type_t value");
-}
-
-/// Append our YAML history format to the provided vector at the given offset, updating the offset.
-static void append_yaml_to_buffer(const wcstring &wcmd, time_t timestamp,
-                                  const path_list_t &required_paths,
-                                  history_output_buffer_t *buffer) {
-    std::string cmd = wcs2string(wcmd);
-    escape_yaml_fish_2_0(&cmd);
-    buffer->append("- cmd: ", cmd.c_str(), "\n");
-    buffer->append("  when: ", std::to_string(timestamp).c_str(), "\n");
-
-    if (!required_paths.empty()) {
-        buffer->append("  paths:\n");
-
-        for (auto const &wpath : required_paths) {
-            std::string path = wcs2string(wpath);
-            escape_yaml_fish_2_0(&path);
-            buffer->append("    - ", path.c_str(), "\n");
-        }
-    }
 }
 
 struct history_impl_t {
@@ -744,27 +704,22 @@ bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) cons
     });
 
     // Write them out.
-    bool ok = true;
-    history_output_buffer_t buffer(HISTORY_OUTPUT_BUFFER_SIZE);
+    int err = 0;
+    std::string buffer;
+    buffer.reserve(HISTORY_OUTPUT_BUFFER_SIZE + 128);
     for (const auto &key_item : lru) {
-        const history_item_t &item = key_item.second;
-        append_yaml_to_buffer(item.str(), item.timestamp(), item.required_paths, &buffer);
-        if (buffer.output_size() >= HISTORY_OUTPUT_BUFFER_SIZE) {
-            ok = buffer.flush_to_fd(dst_fd);
-            if (!ok) {
-                debug(2, L"Error %d when writing to temporary history file", errno);
-                break;
-            }
-        }
+        append_history_item_to_buffer(key_item.second, &buffer);
+        err = flush_to_fd(&buffer, dst_fd, HISTORY_OUTPUT_BUFFER_SIZE);
+        if (err) break;
+    }
+    if (!err) {
+        err = flush_to_fd(&buffer, dst_fd, 0);
+    }
+    if (err) {
+        debug(2, L"Error %d when writing to temporary history file", err);
     }
 
-    if (ok) {
-        ok = buffer.flush_to_fd(dst_fd);
-        if (!ok) {
-            debug(2, L"Error %d when writing to temporary history file", errno);
-        }
-    }
-    return ok;
+    return err == 0;
 }
 
 // Returns the fd of an opened temporary file, or -1 on failure
@@ -962,23 +917,20 @@ bool history_impl_t::save_internal_via_appending() {
         // write even a pending item - pending items are ignored by history within the command
         // itself, but should still be written to the file.
         // TODO: consider filling the buffer ahead of time, so we can just lock, splat, and unlock?
-        bool errored = false;
+        int err = 0;
         // Use a small buffer size for appending, we usually only have 1 item
-        history_output_buffer_t buffer(64);
+        std::string buffer;
         while (first_unwritten_new_item_index < new_items.size()) {
             const history_item_t &item = new_items.at(first_unwritten_new_item_index);
-            append_yaml_to_buffer(item.str(), item.timestamp(), item.get_required_paths(), &buffer);
-            if (buffer.output_size() >= HISTORY_OUTPUT_BUFFER_SIZE) {
-                errored = !buffer.flush_to_fd(history_fd);
-                if (errored) break;
-            }
-
+            append_history_item_to_buffer(item, &buffer);
+            err = flush_to_fd(&buffer, history_fd, HISTORY_OUTPUT_BUFFER_SIZE);
+            if (err) break;
             // We wrote this item, hooray.
             first_unwritten_new_item_index++;
         }
 
-        if (!errored && buffer.flush_to_fd(history_fd)) {
-            ok = true;
+        if (!err) {
+            err = flush_to_fd(&buffer, history_fd, 0);
         }
 
         // Since we just modified the file, update our mmap_file_id to match its current state

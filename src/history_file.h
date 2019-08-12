@@ -10,6 +10,8 @@
 
 #include <sys/mman.h>
 
+class history_item_t;
+
 // History file types.
 enum history_file_type_t { history_type_fish_2_0, history_type_fish_1_x };
 
@@ -64,6 +66,9 @@ class history_file_contents_t {
     history_file_contents_t(history_file_contents_t &&) = delete;
     void operator=(history_file_contents_t &&) = delete;
 };
+
+/// Append a history item to a buffer, in preparation for outputting it to the history file.
+void append_history_item_to_buffer(const history_item_t &item, std::string *buffer);
 
 // Support for escaping and unescaping the nonstandard "yaml" format introduced in fish 2.0.
 void escape_yaml_fish_2_0(std::string *str);

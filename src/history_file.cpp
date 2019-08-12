@@ -68,13 +68,14 @@ static void replace_all(std::string *str, const char *needle, const char *replac
     }
 }
 
-void escape_yaml_fish_2_0(std::string *str) {
+// Support for escaping and unescaping the nonstandard "yaml" format introduced in fish 2.0.
+static void escape_yaml_fish_2_0(std::string *str) {
     replace_all(str, "\\", "\\\\");  // replace one backslash with two
     replace_all(str, "\n", "\\n");   // replace newline with backslash + literal n
 }
 
 /// This function is called frequently, so it ought to be fast.
-void unescape_yaml_fish_2_0(std::string *str) {
+static void unescape_yaml_fish_2_0(std::string *str) {
     size_t cursor = 0, size = str->size();
     while (cursor < size) {
         // Operate on a const version of str, to avoid needless COWs that at() does.

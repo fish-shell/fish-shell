@@ -107,6 +107,22 @@ static void unescape_yaml_fish_2_0(std::string *str) {
     }
 }
 
+struct history_file_reader_t::impl_t {
+    size_t cursor = 0;
+};
+
+history_file_reader_t::history_file_reader_t(const history_file_contents_t &contents, time_t cutoff)
+    : contents_(contents), cutoff_(cutoff), impl_(new impl_t()) {}
+history_file_reader_t::~history_file_reader_t() = default;
+
+maybe_t<size_t> history_file_reader_t::next(history_item_t *out) {
+    auto ret = contents_.offset_of_next_item(&impl_->cursor, cutoff_);
+    if (out && ret) {
+        *out = contents_.decode_item(*ret);
+    }
+    return ret;
+}
+
 history_file_contents_t::~history_file_contents_t() { munmap(const_cast<char *>(start_), length_); }
 
 history_file_contents_t::history_file_contents_t(const char *mmap_start, size_t mmap_length,
@@ -161,7 +177,7 @@ history_item_t history_file_contents_t::decode_item(size_t offset) const {
     return history_item_t{};
 }
 
-maybe_t<size_t> history_file_contents_t::offset_of_next_item(size_t *cursor, time_t cutoff) {
+maybe_t<size_t> history_file_contents_t::offset_of_next_item(size_t *cursor, time_t cutoff) const {
     size_t offset = size_t(-1);
     switch (this->type()) {
         case history_type_fish_2_0:

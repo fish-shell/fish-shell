@@ -472,28 +472,36 @@ void history_impl_t::set_valid_file_paths(const wcstring_list_t &valid_file_path
 }
 
 void history_impl_t::get_history(wcstring_list_t &result) {
-    // If we have a pending item, we skip the first encountered (i.e. last) new item.
-    bool next_is_pending = this->has_pending_item;
-    std::unordered_set<wcstring> seen;
+    // Decode old items.
+    load_old_if_needed();
+    if (file_contents) {
+        history_file_reader_t reader(*file_contents, boundary_timestamp);
+        history_item_t old(L"");
+        while (reader.next(&old)) {
+            result.push_back(old.str());
+        }
+    }
 
     // Append new items.
-    for (auto iter = new_items.crbegin(); iter < new_items.crend(); ++iter) {
-        // Skip a pending item if we have one.
-        if (next_is_pending) {
-            next_is_pending = false;
-            continue;
-        }
-
-        if (seen.insert(iter->str()).second) result.push_back(iter->str());
+    for (const auto &item : new_items) {
+        result.push_back(item.str());
     }
 
-    // Append old items.
-    load_old_if_needed();
-    for (auto iter = old_item_offsets.crbegin(); iter != old_item_offsets.crend(); ++iter) {
-        size_t offset = *iter;
-        const history_item_t item = file_contents->decode_item(offset);
-        if (seen.insert(item.str()).second) result.push_back(item.str());
+    // Remove any pending item.
+    if (has_pending_item && !result.empty()) {
+        result.pop_back();
     }
+
+    // Our oldest items are first. We want them last.
+    // Reverse and then unique-ify our items.
+    std::reverse(result.begin(), result.end());
+
+    std::unordered_set<wcstring> seen;
+    auto new_end = std::remove_if(result.begin(), result.end(), [&seen](const wcstring &v) {
+        bool newly_inserted = seen.insert(v).second;
+        return !newly_inserted;
+    });
+    result.erase(new_end, result.end());
 }
 
 size_t history_impl_t::size() {
@@ -557,8 +565,8 @@ std::unordered_map<long, wcstring> history_impl_t::items_at_indexes(const std::v
 void history_impl_t::populate_from_file_contents() {
     old_item_offsets.clear();
     if (file_contents) {
-        size_t cursor = 0;
-        while (auto offset = file_contents->offset_of_next_item(&cursor, boundary_timestamp)) {
+        history_file_reader_t reader(*file_contents, boundary_timestamp);
+        while (auto offset = reader.next(nullptr)) {
             // Remember this item.
             old_item_offsets.push_back(*offset);
         }
@@ -683,11 +691,9 @@ bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) cons
     // Read in existing items (which may have changed out from underneath us, so don't trust our
     // old file contents).
     if (auto local_file = history_file_contents_t::create(existing_fd)) {
-        size_t cursor = 0;
-        while (auto offset = local_file->offset_of_next_item(&cursor, 0)) {
-            // Try decoding an old item.
-            history_item_t old_item = local_file->decode_item(*offset);
-
+        history_file_reader_t reader(*local_file, 0);
+        history_item_t old_item(L"");
+        while (reader.next(&old_item)) {
             if (old_item.empty() || deleted_items.count(old_item.str()) > 0) {
                 continue;
             }

@@ -26,7 +26,7 @@ function fish_clipboard_paste
     #
     # This eases pasting non-code (e.g. markdown or git commitishes).
     if __fish_commandline_is_singlequoted
-        if status test-feature string-replace-fewer-backslashes
+        if status test-feature regex-easyesc
             set data (string replace -ra "(['\\\])" '\\\\$1' -- $data)
         else
             set data (string replace -ra "(['\\\])" '\\\\\\\$1' -- $data)

@@ -1714,7 +1714,7 @@ You can see the current list of features via ``status features``::
     > status features
     stderr-nocaret  on     3.0      ^ no longer redirects stderr
     qmark-noglob    off    3.0      ? no longer globs
-    string-replace-fewer-backslashes        off     3.1     string replace -r needs fewer backslashes in the replacement
+    regex-easyesc   off    3.1      string replace -r needs fewer \\'s
 
 There are two breaking changes in fish 3.0: caret ``^`` no longer redirects stderr, and question mark ``?`` is no longer a glob.
 

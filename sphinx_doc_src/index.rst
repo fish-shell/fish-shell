@@ -1667,8 +1667,8 @@ Configuration files are evaluated in the following order:
 - Configuration snippets in files ending in ``.fish``, in the directories:
 
   - ``$__fish_config_dir/conf.d`` (by default, ``~/.config/fish/conf.d/``)
-  - ``$__fish_sysconf_dir/conf.d`` (by default, ``/etc/fish/conf.d``)
-  - ``/usr/share/fish/vendor_conf.d`` (set at compile time; by default, ``$__fish_data_dir/vendor_conf.d``)
+  - ``$__fish_sysconf_dir/conf.d`` (by default, ``/etc/fish/conf.d/``)
+  - ``/usr/share/fish/vendor_conf.d`` (set at compile time; by default, ``$__fish_data_dir/vendor_conf.d/``)
 
   If there are multiple files with the same name in these directories, only the first will be executed.
   They are executed in order of their filename, sorted (like globs) in a natural order (i.e. "01" sorts before "2").

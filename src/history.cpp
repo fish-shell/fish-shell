@@ -947,6 +947,8 @@ bool history_impl_t::save_internal_via_appending() {
         this->history_file_id = file_id_for_fd(history_fd);
 
         close(history_fd);
+
+        ok = (err == 0);
     }
 
     // If someone has replaced the file, forget our file state.

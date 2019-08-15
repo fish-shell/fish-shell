@@ -541,6 +541,8 @@ void history_impl_t::populate_from_file_contents() {
             old_item_offsets.push_back(*offset);
         }
     }
+
+    FLOGF(history, "Loaded %lu old items", old_item_offsets.size());
 }
 
 void history_impl_t::load_old_if_needed() {
@@ -739,6 +741,8 @@ static int create_temporary_file(const wcstring &name_template, wcstring *out_pa
 }
 
 bool history_impl_t::save_internal_via_rewrite() {
+    FLOGF(history, "Saving %lu items via rewrite",
+          new_items.size() - first_unwritten_new_item_index);
     bool ok = false;
 
     // We want to rewrite the file, while holding the lock for as briefly as possible
@@ -847,6 +851,8 @@ bool history_impl_t::save_internal_via_rewrite() {
 // Function called to save our unwritten history file by appending to the existing history file
 // Returns true on success, false on failure.
 bool history_impl_t::save_internal_via_appending() {
+    FLOGF(history, "Saving %lu items via appending",
+          new_items.size() - first_unwritten_new_item_index);
     // No deleting allowed.
     assert(deleted_items.empty());
 
@@ -972,6 +978,9 @@ void history_impl_t::save(bool vacuum) {
     if (!vacuum && deleted_items.empty()) {
         // Try doing a fast append.
         ok = save_internal_via_appending();
+        if (!ok) {
+            FLOGF(history, "Appending failed");
+        }
     }
     if (!ok) {
         // We did not or could not append; rewrite the file ("vacuum" it).

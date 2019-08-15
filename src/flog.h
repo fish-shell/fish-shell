@@ -72,6 +72,8 @@ class category_list_t {
 
     category_t topic_monitor{L"topic-monitor", L"Internal details of the topic monitor"};
     category_t char_encoding{L"char-encoding", L"Character encoding issues"};
+
+    category_t history{L"history", L"Command history events"};
 };
 
 /// The class responsible for logging.

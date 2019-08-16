@@ -23,7 +23,6 @@
 - `switch` now allows arguments that expand to nothing, like empty variables (#5677).
 - The null command (:) now always exits successfully, rather than echoing last return code.
 - Cursor configuration instructions for vi-mode have been added to the fish documentation.
-- A bug caused fish to rewrite the history file on every command. This has been fixed: fish will append to the file in most cases (#6042).
 
 ### Syntax changes and new commands
 - Brace expansion now only takes place if the braces include a "," or a variable expansion, so things like `git reset HEAD@{0}` now work (#5869).

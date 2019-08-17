@@ -31,7 +31,7 @@ class autoload_file_cache_t {
     using timestamp_t = std::chrono::time_point<std::chrono::steady_clock>;
 
     /// The directories from which to load.
-    const wcstring_list_t dirs_;
+    const wcstring_list_t dirs_{};
 
     /// Our LRU cache of checks that were misses.
     /// The key is the command, the  value is the time of the check.

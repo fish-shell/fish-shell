@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/utsname.h>
 #include <termios.h>
 #include <unistd.h>
 #include <wctype.h>
@@ -29,11 +30,6 @@
 #endif
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
-#endif
-
-#ifdef __linux__
-// Includes for WSL detection
-#include <sys/utsname.h>
 #endif
 
 #ifdef __FreeBSD__
@@ -157,29 +153,10 @@ bool is_windows_subsystem_for_linux() {
 #elif not defined(__linux__)
     return false;
 #else
-    // We are purposely not using std::call_once as it may invoke locking, which is an unnecessary
-    // overhead since there's no actual race condition here - even if multiple threads call this
-    // routine simultaneously the first time around, we just end up needlessly querying uname(2) one
-    // more time.
-
     static bool wsl_state = []() {
-        utsname info;
+        utsname info{};
         uname(&info);
-
-        // Sample utsname.release under WSL: 4.4.0-17763-Microsoft
-        if (std::strstr(info.release, "Microsoft") != nullptr) {
-            const char *dash = std::strchr(info.release, '-');
-            if (dash == nullptr || strtod(dash + 1, nullptr) < 17763) {
-                debug(1,
-                      "This version of WSL is not supported and fish will probably not work "
-                      "correctly!\n"
-                      "Please upgrade to Windows 10 1809 (17763) or higher to use fish!");
-            }
-
-            return true;
-        } else {
-            return false;
-        }
+        return std::strstr(info.release, "Microsoft") != nullptr;
     }();
 
     // Subsequent calls to this function may take place after fork() and before exec() in

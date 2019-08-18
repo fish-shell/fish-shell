@@ -74,6 +74,8 @@ class category_list_t {
     category_t char_encoding{L"char-encoding", L"Character encoding issues"};
 
     category_t history{L"history", L"Command history events"};
+
+    category_t profile_history{L"profile-history", L"History performance measurements"};
 };
 
 /// The class responsible for logging.

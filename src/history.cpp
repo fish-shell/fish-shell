@@ -135,7 +135,7 @@ class history_lru_cache_t : public lru_cache_t<history_lru_cache_t, history_item
         : lru_cache_t<history_lru_cache_t, history_item_t>(max) {}
 
     /// Function to add a history item.
-    void add_item(const history_item_t &item) {
+    void add_item(history_item_t item) {
         // Skip empty items.
         if (item.empty()) return;
 
@@ -144,7 +144,7 @@ class history_lru_cache_t : public lru_cache_t<history_lru_cache_t, history_item
         wcstring key = item.str();
         history_item_t *node = this->get(key);
         if (node == NULL) {
-            this->insert(std::move(key), item);
+            this->insert(std::move(key), std::move(item));
         } else {
             node->creation_timestamp = std::max(node->timestamp(), item.timestamp());
             // What to do about paths here? Let's just ignore them.
@@ -682,13 +682,13 @@ bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) cons
         size_t cursor = 0;
         while (auto offset = local_file->offset_of_next_item(&cursor, 0)) {
             // Try decoding an old item.
-            const history_item_t old_item = local_file->decode_item(*offset);
+            history_item_t old_item = local_file->decode_item(*offset);
 
             if (old_item.empty() || deleted_items.count(old_item.str()) > 0) {
                 continue;
             }
             // Add this old item.
-            lru.add_item(old_item);
+            lru.add_item(std::move(old_item));
         }
     }
 

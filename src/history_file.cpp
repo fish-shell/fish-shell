@@ -157,7 +157,7 @@ history_item_t history_file_contents_t::decode_item(size_t offset) const {
         case history_type_fish_1_x:
             return decode_item_fish_1_x(base, len);
     }
-    return history_item_t(L"");
+    return history_item_t{};
 }
 
 maybe_t<size_t> history_file_contents_t::offset_of_next_item(size_t *cursor, time_t cutoff) {

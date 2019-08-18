@@ -510,7 +510,7 @@ history_item_t history_impl_t::item_at_index(size_t idx) {
     }
 
     // Index past the valid range, so return an empty history item.
-    return history_item_t(wcstring(), 0);
+    return history_item_t{};
 }
 
 std::unordered_map<long, wcstring> history_impl_t::items_at_indexes(const std::vector<long> &idxs) {

@@ -39,7 +39,7 @@ There are numerous customization options, which can be controlled with git optio
 
 - ``$__fish_git_prompt_shorten_branch_len`` can be set to the number of characters that the branch name will be shortened to.
 
-- ``$__fish_git_prompt_describe_style`` can be set to a number of styles that describe the current HEAD:
+- ``$__fish_git_prompt_describe_style`` can be set to one of the following styles to describe the current HEAD:
 
      ``contains``
          relative to newer annotated tag, such as ``(v1.6.3.2~35)``

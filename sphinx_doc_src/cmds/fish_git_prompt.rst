@@ -20,8 +20,8 @@ There are numerous customization options, which can be controlled with git optio
 
 - ``$__fish_git_prompt_showupstream`` can be set to a number of values to determine how changes between HEAD and upstream are shown:
 
-  ``auto``
-  summarize the difference between HEAD and its upstream
+     ``auto``
+          summarize the difference between HEAD and its upstream
      ``verbose``
           show number of commits ahead/behind (+/-) upstream
      ``name``

@@ -83,9 +83,9 @@ The following optional features also have specific requirements:
 
 If you wish to use fish as your default shell, use the following command:
 
-	chsh -s /usr/local/bin/fish
+	chsh -s /usr/bin/fish
 
-`chsh` will prompt you for your password and change your default shell. (Substitute `/usr/local/bin/fish` with whatever path fish was installed to, if it differs.)
+`chsh` will prompt you for your password and change your default shell. Substitute `/usr/bin/fish` with whatever path fish was installed to, if it differs. After running the command, log out, and then log back in. Now when you open a new shell it'll use fish.
 
 Use the following command if fish isn't already added to `/etc/shells` to permit fish to be your login shell:
 

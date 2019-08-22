@@ -10,8 +10,8 @@ read
 
 logmsg Read with -a and anything other than exactly on var name is an error
 read -a
-read -a v1 v2
-read -a v1
+read --array v1 v2
+read --list v1
 
 logmsg Verify correct behavior of subcommands and splitting of input.
 begin

@@ -43,7 +43,7 @@ The following options are available:
 
 - ``-x`` or ``--export`` exports the variables to child processes.
 
-- ``-a`` or ``--array`` stores the result as a list in a single variable.
+- ``-a`` or ``--list`` stores the result as a list in a single variable. This option is also available as ``--array`` for backwards compatibility.
 
 - ``-z`` or ``--null`` marks the end of the line with the NUL character, instead of newline. This also
   disables interactive mode.

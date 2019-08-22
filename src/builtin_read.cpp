@@ -62,6 +62,7 @@ static const struct woption long_options[] = {{L"array", no_argument, NULL, 'a'}
                                               {L"global", no_argument, NULL, 'g'},
                                               {L"help", no_argument, NULL, 'h'},
                                               {L"line", no_argument, NULL, 'L'},
+                                              {L"list", no_argument, NULL, 'a'},
                                               {L"local", no_argument, NULL, 'l'},
                                               {L"nchars", required_argument, NULL, 'n'},
                                               {L"null", no_argument, NULL, 'z'},

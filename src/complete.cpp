@@ -1098,6 +1098,7 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
     // Squelch file descriptions per issue #254.
     if (this->type() == COMPLETE_AUTOSUGGEST || do_file) flags |= expand_flag::no_descriptions;
 
+    // Expand words separated by '=' separately, unless '=' is escaped or quoted.
     // We have the following cases:
     //
     // --foo=bar => expand just bar
@@ -1105,14 +1106,16 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
     // foo=bar => expand the whole thing, and also just bar
     //
     // We also support colon separator (#2178). If there's more than one, prefer the last one.
-    size_t sep_index = str.find_last_of(L"=:");
-    bool complete_from_separator = (sep_index != wcstring::npos);
+    size_t sep_index = str.size();
+    do {
+        sep_index = sep_index == 0 ? wcstring::npos : str.find_last_of(L"=:", sep_index - 1);
+    } while (sep_index != wcstring::npos && is_backslashed(str, sep_index));
+    wchar_t quote = L'\0';
+    parse_util_get_parameter_info(str, str.size(), &quote, NULL, NULL);
+    bool complete_from_separator = (quote == L'\0') && (sep_index != wcstring::npos);
     bool complete_from_start = !complete_from_separator || !string_prefixes_string(L"-", str);
 
     if (complete_from_separator) {
-        // FIXME: This just cuts the token,
-        // so any quoting or braces gets lost.
-        // See #4954.
         const wcstring sep_string = wcstring(str, sep_index + 1);
         std::vector<completion_t> local_completions;
         if (expand_string(sep_string, &local_completions, flags, vars, parser, NULL) ==

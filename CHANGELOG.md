@@ -60,6 +60,7 @@
 - Added completions for
   - `cf`
   - `bosh`
+  - `qubes-gpg-client` (#6067)
   - `vagrant`
 - The git prompt in informative mode now shows the number of stashes if enabled.
 - The git prompt now has an option ($__fish_git_prompt_use_informative_chars) to use the (more modern) informative characters without enabling informative mode.

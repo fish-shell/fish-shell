@@ -963,6 +963,7 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
     const bool escape_all = static_cast<bool>(flags & ESCAPE_ALL);
     const bool no_quoted = static_cast<bool>(flags & ESCAPE_NO_QUOTED);
     const bool no_tilde = static_cast<bool>(flags & ESCAPE_NO_TILDE);
+    const bool escape_separators = static_cast<bool>(flags & ESCAPE_SEPARATORS);
     const bool no_caret = feature_test(features_t::stderr_nocaret);
     const bool no_qmark = feature_test(features_t::qmark_noglob);
 
@@ -1062,9 +1063,12 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
                 case L';':
                 case L'"':
                 case L'%':
-                case L'~': {
+                case L'~':
+                case L':':
+                case L'=': {
                     bool char_is_normal = (c == L'~' && no_tilde) || (c == L'^' && no_caret) ||
-                                          (c == L'?' && no_qmark);
+                                          (c == L'?' && no_qmark) ||
+                                          ((c == L':' || c == L'=') && !escape_separators);
                     if (!char_is_normal) {
                         need_escape = 1;
                         if (escape_all) out += L'\\';

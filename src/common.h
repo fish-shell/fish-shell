@@ -134,7 +134,9 @@ enum {
     /// string.
     ESCAPE_NO_QUOTED = 1 << 1,
     /// Do not escape tildes.
-    ESCAPE_NO_TILDE = 1 << 2
+    ESCAPE_NO_TILDE = 1 << 2,
+    /// Escape colon and equal sign.
+    ESCAPE_SEPARATORS = 1 << 3,
 };
 typedef unsigned int escape_flags_t;
 

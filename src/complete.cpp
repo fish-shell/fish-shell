@@ -400,8 +400,7 @@ static owning_lock<autoload_t> completion_autoloader{autoload_t(L"fish_complete_
 /// Create a new completion entry.
 void append_completion(std::vector<completion_t> *completions, wcstring comp, wcstring desc,
                        complete_flags_t flags, string_fuzzy_match_t match) {
-    complete_flags_t resolved_flags = resolve_auto_space(comp, flags);
-    completion_t completion{std::move(comp), std::move(desc), match, resolved_flags};
+    completion_t completion{std::move(comp), std::move(desc), match, flags};
     completions->push_back(std::move(completion));
 }
 

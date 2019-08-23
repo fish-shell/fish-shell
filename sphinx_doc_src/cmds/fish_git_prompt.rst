@@ -18,7 +18,7 @@ There are numerous customization options, which can be controlled with git optio
 
 - ``$__fish_git_prompt_showuntrackedfiles`` or the git option ``bash.showUntrackedFiles`` can be set to show if the repository has untracked files (that aren't ignored).
 
-- ``$__fish_git_prompt_showupstream`` can be set to a space-delimited list of values to determine how changes between HEAD and upstream are shown:
+- ``$__fish_git_prompt_showupstream`` can be set to a list of values to determine how changes between HEAD and upstream are shown:
 
      ``auto``
           summarize the difference between HEAD and its upstream

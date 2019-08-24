@@ -382,6 +382,8 @@ class completer_t {
 
     bool empty() const { return completions.empty(); }
 
+    void escape_opening_brackets(const wcstring &argument);
+
     void mark_completions_duplicating_arguments(const wcstring &prefix, const arg_list_t &args);
 
    public:
@@ -1349,6 +1351,42 @@ static void walk_wrap_chain(const wcstring &command_line, source_range_t command
     }
 }
 
+/// If the argument contains a '[' typed by the user, completion by appending to the argument might
+/// produce an invalid token (#5831).
+///
+/// Check if there is any unescaped, unquoted '['; if yes, make the completions replace the entire
+/// argument instead of appending, so '[' will be escaped.
+void completer_t::escape_opening_brackets(const wcstring &argument) {
+    bool have_unquoted_unescaped_bracket = false;
+    wchar_t quote = L'\0';
+    bool escaped = false;
+    for (wchar_t c : argument) {
+        have_unquoted_unescaped_bracket |= (c == L'[') && !quote && !escaped;
+        if (quote) {
+            if (c == quote && !escaped) quote = L'\0';
+        } else {
+            if ((c == L'\'' || c == L'"') && !escaped) quote = c;
+        }
+        escaped = c == L'\\';
+    }
+    if (!have_unquoted_unescaped_bracket) return;
+    // Since completion_apply_to_command_line will escape the completion, we need to provide an
+    // unescaped version.
+    wcstring unescaped_argument;
+    if (!unescape_string(argument, &unescaped_argument, UNESCAPE_INCOMPLETE)) return;
+    for (completion_t &comp : completions) {
+        if (comp.flags & COMPLETE_REPLACES_TOKEN) continue;
+        comp.flags |= COMPLETE_REPLACES_TOKEN;
+        if (comp.flags & COMPLETE_DONT_ESCAPE) {
+            // If the completion won't be escaped, we need to do it here.
+            // Currently, this will probably never happen since COMPLETE_DONT_ESCAPE
+            // is only set for user or variable names which cannot contain '['.
+            unescaped_argument = escape_string(unescaped_argument, ESCAPE_ALL);
+        }
+        comp.completion = unescaped_argument + comp.completion;
+    }
+}
+
 /// Set the DUPLICATES_ARG flag in any completion that duplicates an argument.
 void completer_t::mark_completions_duplicating_arguments(const wcstring &prefix,
                                                          const arg_list_t &args) {
@@ -1595,6 +1633,9 @@ void completer_t::perform() {
 
             // This function wants the unescaped string.
             complete_param_expand(current_token, do_file, handle_as_special_cd);
+
+            // Escape '[' in the argument before completing it.
+            escape_opening_brackets(current_argument);
 
             // Lastly mark any completions that appear to already be present in arguments.
             mark_completions_duplicating_arguments(current_token, all_arguments);

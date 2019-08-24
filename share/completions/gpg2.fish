@@ -90,7 +90,9 @@ complete -c gpg2 -l list-signatures -xa "(__fish_complete_gpg2_user_id)" -d "Sam
 complete -c gpg2 -l check-sigs -xa "(__fish_complete_gpg2_user_id)" -d "Same as --list-keys, but the signatures are listed and verified"
 complete -c gpg2 -l check-signatures -xa "(__fish_complete_gpg2_user_id)" -d "Same as --list-keys, but the signatures are listed and verified"
 complete -c gpg2 -l fingerprint -xa "(__fish_complete_gpg2_user_id)" -d "List all keys with their fingerprints"
+
 complete -c gpg2 -l gen-key -d "Generate a new key pair"
+complete -c gpg2 -l generate-key -d "Generate a new key pair"
 
 complete -c gpg2 -l edit-key -d "Present a menu which enables you to do all key related tasks" -xa "(__fish_complete_gpg2_user_id)"
 
@@ -102,7 +104,9 @@ complete -c gpg2 -l delete-secret-key -xa "(__fish_complete_gpg2_user_id)" -d "R
 complete -c gpg2 -l delete-secret-and-public-key -xa "(__fish_complete_gpg2_user_id)" -d "Same as --delete-key, but if a secret key exists, it will be removed first"
 
 complete -c gpg2 -l gen-revoke -xa "(__fish_complete_gpg2_user_id)" -d "Generate a revocation certificate for the complete key"
+complete -c gpg2 -l generate-revocation -xa "(__fish_complete_gpg2_user_id)" -d "Generate a revocation certificate for the complete key"
 complete -c gpg2 -l desig-revoke -xa "(__fish_complete_gpg2_user_id)" -d "Generate a designated revocation certificate for a key"
+complete -c gpg2 -l generate-designated-revocation -xa "(__fish_complete_gpg2_user_id)" -d "Generate a designated revocation certificate for a key"
 
 complete -c gpg2 -l export -xa "(__fish_complete_gpg2_user_id)" -d 'Export all or the given keys from all keyrings'
 complete -c gpg2 -l send-keys -xa "(__fish_complete_gpg2_key_id)" -d "Same as --export but sends the keys to a keyserver"
@@ -116,6 +120,7 @@ complete -c gpg2 -l recv-keys -xa "(__fish_complete_gpg2_key_id)" -d "Import the
 complete -c gpg2 -l receive-keys -xa "(__fish_complete_gpg2_key_id)" -d "Import the keys with the given key IDs from a keyserver"
 complete -c gpg2 -l refresh-keys -xa "(__fish_complete_gpg2_key_id)" -d "Request updates from a keyserver for keys that already exist on the local keyring"
 complete -c gpg2 -l search-keys -xa "(__fish_complete_gpg2_user_id)" -d "Search the keyserver for the given names"
+
 complete -c gpg2 -l update-trustdb -d "Do trust database maintenance"
 complete -c gpg2 -l check-trustdb -d "Do trust database maintenance without user interaction"
 
@@ -132,12 +137,16 @@ complete -c gpg2 -l gen-random -xa "0 1 2" -d "Emit specified number of random b
 complete -c gpg2 -l version -d "Display version and supported algorithms, and exit"
 complete -c gpg2 -l warranty -d "Display warranty and exit"
 complete -c gpg2 -s h -l help -d "Display help and exit"
+
 complete -c gpg2 -l passwd -xa "(__fish_complete_gpg2_user_id)" -d "Change the passphrase of the secret key belonging to the given user id"
 complete -c gpg2 -l change-passphrase -xa "(__fish_complete_gpg2_user_id)" -d "Change the passphrase of the secret key belonging to the given user id"
+
 complete -c gpg2 -l edit-card -d "Present a menu to work with a smartcard"
 complete -c gpg2 -l card-edit -d "Present a menu to work with a smartcard"
+
 complete -c gpg2 -l locate-keys -d "Locate the keys given as arguments"
 complete -c gpg2 -l locate-external-keys -d "Locate they keys given as arguments; do not consider local keys"
+
 complete -c gpg2 -l quick-add-key -xa "(__fish_complete_gpg2_key_id)" -d "Directly add a subkey to a key"
 complete -c gpg2 -l quick-add-uid -xa "(__fish_complete_gpg2_user_id)" -d "Adds a new user id to an existing key"
 complete -c gpg2 -l quick-generate-key -xa "(__fish_complete_gpg2_user_id)" -d "Generate a standard key without needing to answer prompts"
@@ -147,7 +156,11 @@ complete -c gpg2 -l quick-lsign-key -xa "(__fish_complete_gpg2_key_id)" -d "Dire
 complete -c gpg2 -l quick-revoke-uid -xa "(__fish_complete_gpg2_user_id)" -d "Revokes a user id on an existing key"
 complete -c gpg2 -l quick-set-expire -xa "(__fish_complete_gpg2_key_id)" -d "Set the expiration time of the specified key"
 complete -c gpg2 -l quick-set-primary-uid -xa "(__fish_complete_gpg2_user_id)" -d "Sets or updates the priary uid flag for the specified key"
-complete -c gpg2 -l show-keys -d "Takes OpenPGP keys as input and prints information about them"
+
+complete -c gpg2 -l show-keys -d "Take OpenPGP keys as input and print information about them"
+
+complete -c gpg2 -l full-gen-key -d "Generate a new key pair with dialogs for all options"
+complete -c gpg2 -l full-generate-key -d "Generate a new key pair with dialogs for all options"
 
 
 #
@@ -166,6 +179,7 @@ complete -c gpg2 -l default-key -xa "(__fish_complete_gpg2_user_id)" -d "Use spe
 complete -c gpg2 -s r -l recipient -xa "(__fish_complete_gpg2_user_id)" -d "Encrypt for specified user id"
 complete -c gpg2 -s f -l recipient-file -r -d "Similar to --recipient, but encrypts to key stored in file instead"
 complete -c gpg2 -s R -l hidden-recipient -xa "(__fish_complete_gpg2_user_id)" -d "Encrypt for specified user id, but hide the keyid of the key"
+complete -c gpg2 -s F -l hidden-recipient-file -r -d "Similar to --hidden-recipient, but encrypts to key stored in file instead"
 complete -c gpg2 -l default-recipient -xa "(__fish_complete_gpg2_user_id)" -d "Use specified user id as default recipient"
 complete -c gpg2 -l default-recipient-self -d "Use the default key as default recipient"
 complete -c gpg2 -l no-default-recipient -d "Reset --default-recipient and --default-recipient-self"
@@ -365,30 +379,46 @@ complete -c gpg2 -l preserve-permissions -d "Don't change the permissions of a s
 complete -c gpg2 -l personal-cipher-preferences -x -d "Set the list of personal cipher preferences to the specified string"
 complete -c gpg2 -l personal-digest-preferences -x -d "Set the list of personal digest preferences to the specified string"
 complete -c gpg2 -l personal-compress-preferences -x -d "Set the list of personal compression preferences to the specified string"
+
 complete -c gpg2 -l default-preference-list -x -d "Set the list of default preferences to the specified string"
-complete -c gpg2 -l compliance -xa "gnupg openpgp rfc4880 rfc4880bis rfc2440 pgp6 pgp7 pgp8" -d "Set a compliance standard for GnuPG"
 complete -c gpg2 -l default-new-key-algo -x -d "Change the default algorothms for key generation"
+
+complete -c gpg2 -l compliance -xa "gnupg openpgp rfc4880 rfc4880bis rfc2440 pgp6 pgp7 pgp8" -d "Set a compliance standard for GnuPG"
+
 complete -c gpg2 -l dirmngr-program -r -d "Specify a dirmngr program to be used for keyserver access"
 complete -c gpg2 -l disable-dirmngr -d "Entirely disable the use of the Dirmngr"
 complete -c gpg2 -l disable-signer-uid -d "Don't embed the uid of the signing key in the data signature"
+
 complete -c gpg2 -l export-filter -d "Define an import/export filter to apply to an imported/exported keyblock before it is written"
 complete -c gpg2 -l import-filter -d "Define an import/export filter to apply to an imported/exported keyblock before it is written"
+
 complete -c gpg2 -l input-size-hint -r -d "Specify input size in bytes"
-complete -c gpg2 -l key-origin -d "Track the origin of a key"
+
 complete -c gpg2 -l known-notation -r -d "Tell GnuPG about a critical signature notation"
+
+complete -c gpg2 -l key-origin -d "Track the origin of a key"
+complete -c gpg2 -l request-origin -r -d "Tell gpg to assume that the operation ultimately originated at a particular origin"
+
 complete -c gpg2 -l no-autostart -d "Do not start the gpg-agent or the dirmngr if it has not been started and its service is required"
 complete -c gpg2 -l no-keyring -d "Do not use any keyring at all"
+complete -c gpg2 -l no-symkey-cache -d "Disable the passphrase cache used for symmetrical en- and decryption"
+
 complete -c gpg2 -l skip-hidden-recipients -d "During decryption, skip all anonymous recipients"
 complete -c gpg2 -l no-skip-hidden-recipients -d "During decryption, do not skip all anonymous recipients"
-complete -c gpg2 -l no-symkey-cache -d "Disable the passphrase cache used for symmetrical en- and decryption"
+
 complete -c gpg2 -l only-sign-text-ids -d "Exclude any non-text-based user ids from selection for signing"
+
 complete -c gpg2 -l pinentry-mode -xa "default ask cancel error loopback" -d "Set the pinentry mode"
-complete -c gpg2 -l request-origin -r -d "Tell gpg to assume that the operation ultimately originated at a particular origin"
+
 complete -c gpg2 -l sender -xa "(__fish_complete_gpg2_user_id)" -d "When creating a signature, tells gpg the user id of a key; when verifying, used to restrict information printed"
+
 complete -c gpg2 -l list-gcrypt-config -d "Display various internal configuration parameters of libgcrypt"
+
 complete -c gpg2 -l tofu-default-policy -xa "auto good unknown bad ask" -d "Set the default TOFU policy"
 complete -c gpg2 -l tofu-policy -xa "auto good unknown bad ask" -d "Set the default TOFU policy for the specified keys"
+
 complete -c gpg2 -l try-secret-key -xa "(__fish_complete_gpg2_key_id)" -d "Specify keys to be used for trial decryption"
+
 complete -c gpg2 -l with-icao-spelling -d "Print the ICAO spelling of the fingerprint in addition to the hex digits"
 complete -c gpg2 -l with-key-origin -d "Include the locally held information on the origin and last update of a key in a key listing"
 complete -c gpg2 -l with-keygrip -d "Include the keygrip in the key listings"

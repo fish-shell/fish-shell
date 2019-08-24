@@ -1,3 +1,16 @@
+
+# Completions for qubes-gpg-client.
+# These completions are mostly taken from fish's completions for gpg.
+#
+# Functions to generate completion options through gpg invocations
+# are not implemented for this tool, as they are incompatible with
+# Qubes's dom0 authorization prompts for split GPG (even if this worked,
+# the resulting behavior would be quite annoying)
+#
+# Completions for nearly all of qubes-gpg-client's command line options
+# are implemented-- the few that are excluded are not intended for
+# interactive usage or are poorly documented.
+
 complete -c qubes-gpg-client -s b -l detach-sign -d "Make a detached signature"
 complete -c qubes-gpg-client -s a -l armor -d "Create ASCII armored output"
 complete -c qubes-gpg-client -s c -l symmetric -d "Encrypt with a symmetric cipher using a passphrase"
@@ -65,3 +78,7 @@ complete -c qubes-gpg-client -l version -d "Display version and supported algori
 complete -c qubes-gpg-client -l with-colons -d "Print key listings delimited by colons"
 complete -c qubes-gpg-client -l with-fingerprint -d "Same as the command --fingerprint but changes only the format of the output and may be used together with another command"
 complete -c qubes-gpg-client -l with-keygrip -d "Include the keygrip in the key listings"
+
+# qubes-gpg-client-wrapper wraps qubes-gpg-client and qubes-gpg-import-key, but the latter needs no
+# completions (only takes a file as an argument)
+complete -c qubes-gpg-client-wrapper -w qubes-gpg-client

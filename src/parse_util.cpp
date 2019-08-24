@@ -548,6 +548,10 @@ wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote,
                 case L'\\':
                     result.append({L'\\', L'\\'});
                     break;
+                case L'$':
+                    if (quote == L'"') result.push_back(L'\\');
+                    result.push_back(L'$');
+                    break;
                 default:
                     if (c == quote) result.push_back(L'\\');
                     result.push_back(c);

@@ -23,6 +23,7 @@
 - `switch` now allows arguments that expand to nothing, like empty variables (#5677).
 - The null command (:) now always exits successfully, rather than echoing last return code.
 - Cursor configuration instructions for vi-mode have been added to the fish documentation.
+- Completions have been added for Qubes's split-gpg commands
 
 ### Syntax changes and new commands
 - Brace expansion now only takes place if the braces include a "," or a variable expansion, so things like `git reset HEAD@{0}` now work (#5869).

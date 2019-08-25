@@ -166,14 +166,26 @@ bool is_windows_subsystem_for_linux() {
         utsname info;
         uname(&info);
 
-        // Sample utsname.release under WSL: 4.4.0-17763-Microsoft
+        // Sample utsname.release under WSL, testing for something like `4.4.0-17763-Microsoft`
         if (std::strstr(info.release, "Microsoft") != nullptr) {
             const char *dash = std::strchr(info.release, '-');
             if (dash == nullptr || strtod(dash + 1, nullptr) < 17763) {
-                debug(1,
-                      "This version of WSL is not supported and fish will probably not work "
-                      "correctly!\n"
-                      "Please upgrade to Windows 10 1809 (17763) or higher to use fish!");
+                // #5298, #5661: There are acknowledged, published, and (later) fixed issues with
+                // job control under early WSL releases that prevent fish from running correctly,
+                // with unexpected failures when piping. Fish 3.0 nightly builds worked around this
+                // issue with some needlessly complicated code that was later stripped from the
+                // fish 3.0 release, so we just bail. Note that fish 2.0 was also broken, but we
+                // just didn't warn about it.
+
+                // #6038 & 5101bde: It's been requested that there be some sort of way to disable
+                // this check: if the environment variable FISH_NO_WSL_CHECK is present, this test
+                // is bypassed. We intentionally do not include this in the error message because
+                // it'll only allow fish to run but not to actually work. Here be dragons!
+                if (getenv("FISH_NO_WSL_CHECK") == nullptr) {
+                    debug(0,
+                          "This version of WSL has known bugs that prevent fish from working."
+                          "Please upgrade to Windows 10 1809 (17763) or higher to use fish!");
+                }
             }
 
             return true;
@@ -453,7 +465,8 @@ static char *wcs2str_internal(const wchar_t *in, char *out) {
         } else {
             size_t len = std::wcrtomb(&out[out_pos], in[in_pos], &state);
             if (len == (size_t)-1) {
-                FLOGF(char_encoding, L"Wide character U+%4X has no narrow representation", in[in_pos]);
+                FLOGF(char_encoding, L"Wide character U+%4X has no narrow representation",
+                      in[in_pos]);
                 std::memset(&state, 0, sizeof(state));
             } else {
                 out_pos += len;

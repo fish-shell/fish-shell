@@ -49,16 +49,19 @@ wcstring truncate(const wcstring &input, int max_len, ellipsis_type etype) {
     return output;
 }
 
-wcstring trim(const wcstring &input) { return trim(input, L"\t\v \r\n"); }
+wcstring trim(wcstring input) { return trim(std::move(input), L"\t\v \r\n"); }
 
-wcstring trim(const wcstring &input, const wchar_t *any_of) {
-    auto begin_offset = input.find_first_not_of(any_of);
-    if (begin_offset == wcstring::npos) {
+wcstring trim(wcstring input, const wchar_t *any_of) {
+    wcstring result = std::move(input);
+    size_t suffix = result.find_last_not_of(any_of);
+    if (suffix == wcstring::npos) {
         return wcstring{};
     }
-    auto end = input.cbegin() + input.find_last_not_of(any_of);
+    result.erase(suffix + 1);
 
-    wcstring result(input.begin() + begin_offset, end + 1);
+    auto prefix = result.find_first_not_of(any_of);
+    assert(prefix != wcstring::npos && "Should have one non-trimmed character");
+    result.erase(0, prefix);
     return result;
 }
 

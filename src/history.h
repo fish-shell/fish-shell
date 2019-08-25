@@ -82,7 +82,7 @@ class history_item_t {
     path_list_t required_paths;
 
    public:
-    explicit history_item_t(const wcstring &str = wcstring(), time_t when = 0,
+    explicit history_item_t(wcstring str = wcstring(), time_t when = 0,
                             history_identifier_t ident = 0);
 
     const wcstring &str() const { return contents; }

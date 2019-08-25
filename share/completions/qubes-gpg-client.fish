@@ -4,7 +4,7 @@
 #
 # Functions to generate completion options through gpg invocations
 # are not implemented for this tool, as they are incompatible with
-# Qubes's dom0 authorization prompts for split GPG (even if this worked,
+# Qubes's qrexec authorization prompts for split GPG (even if this worked,
 # the resulting behavior would be quite annoying)
 #
 # Completions for nearly all of qubes-gpg-client's command line options
@@ -21,27 +21,27 @@ complete -c qubes-gpg-client -s K -l list-secret-keys -d "List all keys from the
 complete -c qubes-gpg-client -s n -l dry-run -d "Don't make any changes (this is not completely implemented)"
 complete -c qubes-gpg-client -s o -l output -r -d "Write output to specified file"
 complete -c qubes-gpg-client -s q -l quiet -d "Quiet mode"
-complete -c qubes-gpg-client -s r -l recipient -d "Encrypt for specified user id"
-complete -c qubes-gpg-client -s R -l hidden-recipient -d "Encrypt for specified user id, but hide the keyid of the key"
+complete -c qubes-gpg-client -s r -l recipient -x -d "Encrypt for specified user id"
+complete -c qubes-gpg-client -s R -l hidden-recipient -x -d "Encrypt for specified user id, but hide the keyid of the key"
 complete -c qubes-gpg-client -s s -l sign -d "Make a signature"
 complete -c qubes-gpg-client -s t -l textmode -d "Treat input files as text and store them in the OpenPGP canonical text form with standard 'CRLF' line endings"
-complete -c qubes-gpg-client -s u -l local-user -d "Use specified key as the key to sign with"
+complete -c qubes-gpg-client -s u -l local-user -x -d "Use specified key as the key to sign with"
 complete -c qubes-gpg-client -s v -l verbose -d "Give more information during processing"
 complete -c qubes-gpg-client -l always-trust -d "Skip key validation and assume that used keys are always valid"
 complete -c qubes-gpg-client -l batch -d "Batch mode"
-complete -c qubes-gpg-client -l cert-digest-algo -d "Use specified message digest algorithm when signing a key"
+complete -c qubes-gpg-client -l cert-digest-algo -x -d "Use specified message digest algorithm when signing a key"
 complete -c qubes-gpg-client -l charset -l display-charset -xa " iso-8859-1 iso-8859-2 iso-8859-15 koi8-r utf-8 " -d "Set the native character set"
-complete -c qubes-gpg-client -l cipher-algo -d "Use specified cipher algorithm"
+complete -c qubes-gpg-client -l cipher-algo -x -d "Use specified cipher algorithm"
 complete -c qubes-gpg-client -l clearsign -d "Make a clear text signature"
 complete -c qubes-gpg-client -l command-fd -x -d "Read user input from specified file descriptor"
 complete -c qubes-gpg-client -l comment -x -d "Use specified string as comment string"
-complete -c qubes-gpg-client -l compress-algo -d "Use specified compression algorithm"
-complete -c qubes-gpg-client -l digest-algo -d "Use specified message digest algorithm"
-complete -c qubes-gpg-client -l disable-cipher-algo -d "Never allow the use of specified cipher algorithm"
+complete -c qubes-gpg-client -l compress-algo -x -d "Use specified compression algorithm"
+complete -c qubes-gpg-client -l digest-algo -x -d "Use specified message digest algorithm"
+complete -c qubes-gpg-client -l disable-cipher-algo -x -d "Never allow the use of specified cipher algorithm"
 complete -c qubes-gpg-client -l disable-mdc -d "Disable the use of the modification detection code"
-complete -c qubes-gpg-client -l disable-pubkey-algo -d "Never allow the use of specified public key algorithm"
+complete -c qubes-gpg-client -l disable-pubkey-algo -x -d "Never allow the use of specified public key algorithm"
 complete -c qubes-gpg-client -l emit-version -d "Include the version string in ASCII armored output"
-complete -c qubes-gpg-client -l export -d 'Export all or the given keys from all keyrings'
+complete -c qubes-gpg-client -l export -x -d 'Export all or the given keys from all keyrings'
 complete -c qubes-gpg-client -l fingerprint -d "List all keys with their fingerprints"
 complete -c qubes-gpg-client -l fixed-list-mode -d "Do not merge primary user ID and primary key in --with-colons listing mode and print all timestamps as UNIX timestamps"
 complete -c qubes-gpg-client -l force-mdc -d "Force the use of encryption with a modification detection code"
@@ -50,9 +50,9 @@ complete -c qubes-gpg-client -l force-v4-certs -d "Always use v4 key signatures 
 complete -c qubes-gpg-client -l gnupg -d "Use standard GnuPG behavior"
 complete -c qubes-gpg-client -l list-options -d "Display various internal configuration parameters of GnuPG"
 complete -c qubes-gpg-client -l list-only -d "Changes the behaviour of some commands. This is like --dry-run but different"
-complete -c qubes-gpg-client -l list-public-keys -d "List all keys from the public keyrings, or just the ones given on the command line"
+complete -c qubes-gpg-client -l list-public-keys -x -d "List all keys from the public keyrings, or just the ones given on the command line"
 complete -c qubes-gpg-client -l list-sigs -d "Same as --list-keys, but the signatures are listed too"
-complete -c qubes-gpg-client -l max-output -d "Sets a limit on the number of bytes that will be generated when processing a file" -x
+complete -c qubes-gpg-client -l max-output -x -d "Sets a limit on the number of bytes that will be generated when processing a file"
 complete -c qubes-gpg-client -l no-comments -d "Don't use a comment string"
 complete -c qubes-gpg-client -l no-emit-version -d "Don't include the version string in ASCII armored output"
 complete -c qubes-gpg-client -l no-force-v3-sigs -d "Do not force v3 signatures for signatures on data"
@@ -65,15 +65,15 @@ complete -c qubes-gpg-client -l openpgp -d "Reset all packet, cipher, and digest
 complete -c qubes-gpg-client -l personal-cipher-preferences -x -d "Set the list of personal cipher preferences to the specified string"
 complete -c qubes-gpg-client -l personal-compress-preferences -x -d "Set the list of personal compression preferences to the specified string"
 complete -c qubes-gpg-client -l personal-digest-preferences -x -d "Set the list of personal digest preferences to the specified string"
-complete -c qubes-gpg-client -l s2k-cipher-algo -d "Use specified cipher algorithm to protect secret keys"
-complete -c qubes-gpg-client -l s2k-digest-algo -d "Use specified digest algorithm to mangle the passphrases"
+complete -c qubes-gpg-client -l s2k-cipher-algo -x -d "Use specified cipher algorithm to protect secret keys"
+complete -c qubes-gpg-client -l s2k-digest-algo -x -d "Use specified digest algorithm to mangle the passphrases"
 complete -c qubes-gpg-client -l s2k-count -x -d "Specify how many times the passphrase mangling for symmetric encryption is repeated"
 complete -c qubes-gpg-client -l s2k-mode -xa "0\t'Plain passphrase' 1\t'Salted passphrase' 3\t'Repeated salted mangling'" -d "Selects how passphrases are mangled"
 complete -c qubes-gpg-client -l status-fd -x -d "Write special status strings to the specified file descriptor"
 complete -c qubes-gpg-client -l store -d "Store only (make a simple RFC1991 packet)"
 complete -c qubes-gpg-client -l trust-model -xa "pgp classic direct always" -d "Specify trust model"
 complete -c qubes-gpg-client -l use-agent -d "Try to use the GnuPG-Agent"
-complete -c qubes-gpg-client -l verify -d "Assume specified file or stdin is sigfile and verify it"
+complete -c qubes-gpg-client -l verify -r -d "Assume specified file or stdin is sigfile and verify it"
 complete -c qubes-gpg-client -l version -d "Display version and supported algorithms, and exit"
 complete -c qubes-gpg-client -l with-colons -d "Print key listings delimited by colons"
 complete -c qubes-gpg-client -l with-fingerprint -d "Same as the command --fingerprint but changes only the format of the output and may be used together with another command"

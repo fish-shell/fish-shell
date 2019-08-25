@@ -4,12 +4,24 @@
 
 #include <cstring>
 
+#include "SimpleJSON/json.hpp"
 #include "history.h"
+#include "utf8.h"
+
+// The list of keys we use.
+static const struct {
+    const char *const cmd = "cmd";
+    const char *const when = "when";
+    const char *const paths = "paths";
+} keys;
 
 // Some forward declarations.
+static history_item_t decode_item_fish_json(const char *base, size_t len);
 static history_item_t decode_item_fish_2_0(const char *base, size_t len);
 static history_item_t decode_item_fish_1_x(const char *begin, size_t length);
 
+static size_t offset_of_next_item_fish_json(const history_file_contents_t &contents,
+                                            size_t *inout_cursor, time_t cutoff_timestamp);
 static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &contents,
                                            size_t *inout_cursor, time_t cutoff_timestamp);
 static size_t offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length,
@@ -49,15 +61,17 @@ static bool read_from_fd(int fd, void *address, size_t len) {
 
 /// Try to infer the history file type based on inspecting the data.
 static maybe_t<history_file_type_t> infer_file_type(const void *data, size_t len) {
-    maybe_t<history_file_type_t> result{};
-    if (len > 0) {  // old fish started with a #
-        if (static_cast<const char *>(data)[0] == '#') {
-            result = history_type_fish_1_x;
-        } else {  // assume new fish
-            result = history_type_fish_2_0;
+    if (len > 0) {
+        switch (static_cast<const char *>(data)[0]) {
+            case '{':
+                return history_type_fish_json;
+            case '-':
+                return history_type_fish_2_0;
+            case '#':
+                return history_type_fish_1_x;
         }
     }
-    return result;
+    return none();
 }
 
 static void replace_all(std::string *str, const char *needle, const char *replacement) {
@@ -169,6 +183,8 @@ history_item_t history_file_contents_t::decode_item(size_t offset) const {
     const char *base = address_at(offset);
     size_t len = this->length() - offset;
     switch (this->type()) {
+        case history_type_fish_json:
+            return decode_item_fish_json(base, len);
         case history_type_fish_2_0:
             return decode_item_fish_2_0(base, len);
         case history_type_fish_1_x:
@@ -180,6 +196,9 @@ history_item_t history_file_contents_t::decode_item(size_t offset) const {
 maybe_t<size_t> history_file_contents_t::offset_of_next_item(size_t *cursor, time_t cutoff) const {
     size_t offset = size_t(-1);
     switch (this->type()) {
+        case history_type_fish_json:
+            offset = offset_of_next_item_fish_json(*this, cursor, cutoff);
+            break;
         case history_type_fish_2_0:
             offset = offset_of_next_item_fish_2_0(*this, cursor, cutoff);
             break;
@@ -191,6 +210,92 @@ maybe_t<size_t> history_file_contents_t::offset_of_next_item(size_t *cursor, tim
         return none();
     }
     return offset;
+}
+
+/// \return the 'when' field from a JSON object as a time_t, or none() if not present or not a
+/// number.
+static maybe_t<time_t> get_when_from_json(const json::JSON &js) {
+    using namespace json;
+    if (js.hasKey(keys.when)) {
+        const JSON &whenObj = js.at(keys.when);
+        if (whenObj.JSONType() == JSON::Class::Integral) {
+            return static_cast<time_t>(whenObj.ToInt());
+        } else if (whenObj.JSONType() == JSON::Class::Floating) {
+            return static_cast<time_t>(whenObj.ToFloat());
+        }
+    }
+    return none();
+}
+
+static history_item_t decode_item_fish_json(const char *base, size_t len) {
+    using namespace json;
+    const char *newline = static_cast<const char *>(memchr(base, '\n', len));
+    size_t objlen = (newline == nullptr ? len : newline - base);
+    std::string text(base, objlen);
+    const JSON js = JSON::Load(text);
+
+    // Helper to convert from UTF-8.
+    auto from_utf8 = [](const std::string &s) {
+        wcstring result;
+        utf8_to_wchar(s.data(), s.size(), &result, UTF8_IGNORE_ERROR);
+        return result;
+    };
+
+    wcstring cmd;
+    if (js.hasKey(keys.cmd)) {
+        cmd = from_utf8(js.at(keys.cmd).ToString());
+    }
+
+    time_t when = 0;
+    if (auto when_val = get_when_from_json(js)) {
+        when = *when_val;
+    }
+
+    wcstring_list_t paths;
+    if (js.hasKey(keys.paths)) {
+        const JSON &pathsObj = js.at(keys.paths);
+        for (const auto &path : pathsObj.ArrayRange()) {
+            wcstring wpath = from_utf8(path.ToString());
+            if (!wpath.empty()) paths.push_back(std::move(wpath));
+        }
+    }
+
+    history_item_t result(std::move(cmd), when);
+    result.set_required_paths(std::move(paths));
+    return result;
+}
+
+static size_t offset_of_next_item_fish_json(const history_file_contents_t &contents,
+                                            size_t *inout_cursor, time_t cutoff) {
+    using namespace json;
+    size_t cursor = *inout_cursor;
+    for (;;) {
+        // Cursor is where we think the next object is be.
+        // Move forward until we find it.
+        maybe_t<size_t> start = contents.find_char('{', cursor);
+        if (!start) {
+            return size_t(-1);
+        }
+
+        auto newline = contents.find_char('\n', *start);
+        size_t end = newline ? *newline : contents.length();
+        cursor = end;
+        *inout_cursor = end;
+
+        // Extract any JSON.
+        std::string text(contents.address_at(*start), end - *start);
+        const JSON js = JSON::Load(text);
+
+        // Perhaps skip this if it occurred after our cutoff.
+        bool skip = false;
+        if (cutoff > 0) {
+            auto when = get_when_from_json(js);
+            skip = when && *when > cutoff;
+        }
+        if (!skip) {
+            return *start;
+        }
+    }
 }
 
 /// Read one line, stripping off any newline, and updating cursor. Note that our input string is NOT

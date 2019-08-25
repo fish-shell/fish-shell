@@ -3,6 +3,7 @@
 
 #include "config.h"
 
+#include <string.h>
 #include <sys/mman.h>
 
 #include <cassert>
@@ -14,7 +15,7 @@
 class history_item_t;
 
 // History file types.
-enum history_file_type_t { history_type_fish_2_0, history_type_fish_1_x };
+enum history_file_type_t { history_type_fish_json, history_type_fish_2_0, history_type_fish_1_x };
 
 /// history_file_contents_t holds the read-only contents of a file.
 class history_file_contents_t {
@@ -41,6 +42,14 @@ class history_file_contents_t {
     const char *address_at(size_t offset) const {
         assert(offset <= length_ && "Invalid offset");
         return start_ + offset;
+    }
+
+    /// Find the offset of a character, starting at a given index.
+    maybe_t<size_t> find_char(char c, size_t offset) const {
+        assert(offset <= length_ && "Invalid offset");
+        const char *where = static_cast<const char *>(memchr(start_ + offset, c, length_ - offset));
+        if (where == nullptr) return none();
+        return where - start_;
     }
 
     ~history_file_contents_t();

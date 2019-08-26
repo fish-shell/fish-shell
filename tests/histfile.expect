@@ -1,9 +1,9 @@
 # vim: set filetype=expect:
 # We're going to use three history files, including the default, to verify
 # that the fish_history variable works as expected.
-set default_histfile "../test/data/fish/fish_history"
-set my_histfile "../test/data/fish/my_history"
-set env_histfile "../test/data/fish/env_history"
+set default_histfile "../test/data/fish/fish_history.json"
+set my_histfile "../test/data/fish/my_history.json"
+set env_histfile "../test/data/fish/env_history.json"
 
 # =============
 # Verify that if we spawn fish with no fish_history env var it uses the
@@ -14,7 +14,7 @@ expect_prompt
 
 # Verify that a command is recorded in the default history file.
 set cmd1 "echo $fish_pid default histfile"
-set hist_line "- cmd: $cmd1"
+set hist_line "$cmd1"
 send "$cmd1\r"
 expect_prompt
 
@@ -23,8 +23,8 @@ expect_prompt
 send "history --save\r"
 expect_prompt
 
-send "grep '^$hist_line' $default_histfile\r"
-expect_prompt -re "\r\n$hist_line\r\n" {
+send "grep -q '$hist_line' $default_histfile; echo \$status\r"
+expect_prompt -re "\r\n0\r\n" {
     puts "cmd1 found in default histfile"
 } unmatched {
     puts stderr "cmd1 not found in default histfile"
@@ -33,30 +33,29 @@ expect_prompt -re "\r\n$hist_line\r\n" {
 # Switch to a new history file and verify it is written to and the default
 # history file is not written to.
 set cmd2 "echo $fish_pid my histfile"
-set hist_line "- cmd: $cmd2"
+set hist_line "$cmd2"
 send "set fish_history my\r"
 expect_prompt
 send "$cmd2\r"
 expect_prompt
 
-send "grep '^$hist_line' $my_histfile\r"
-expect_prompt -re "\r\n$hist_line\r\n" {
+send "grep -q '$hist_line' $my_histfile; echo \$status\r"
+expect_prompt -re "\r\n0\r\n" {
     puts "cmd2 found in my histfile"
 } unmatched {
     puts stderr "cmd2 not found in my histfile"
 }
-# We expect this grep to fail to find the pattern and thus the expect_prompt
-# block is inverted.
-send "grep '^$hist_line' $default_histfile\r"
-expect_prompt -re "\r\n$hist_line\r\n" {
-    puts stderr "cmd2 found in default histfile"
-} unmatched {
+# We expect this grep to fail to find the pattern.
+send "grep -q '$hist_line' $default_histfile; echo \$status\r"
+expect_prompt -re "\r\n1\r\n" {
     puts "cmd2 not found in default histfile"
+} unmatched {
+    puts stderr "cmd2 found in default histfile"
 }
 
 # Switch back to the default history file.
 set cmd3 "echo $fish_pid default histfile again"
-set hist_line "- cmd: $cmd3"
+set hist_line "$cmd3"
 send "set fish_history default\r"
 expect_prompt
 send "$cmd3\r"
@@ -67,15 +66,15 @@ expect_prompt
 send "history --save\r"
 expect_prompt
 
-send "grep '^$hist_line' $default_histfile\r"
-expect_prompt -re "\r\n$hist_line\r\n" {
+send "grep -q '$hist_line' $default_histfile; echo \$status\r"
+expect_prompt -re "\r\n0\r\n" {
     puts "cmd3 found in default histfile"
 } unmatched {
     puts stderr "cmd3 not found in default histfile"
 }
 # We expect this grep to fail to find the pattern and thus the expect_prompt
 # block is inverted.
-send "grep '^$hist_line' $my_histfile\r"
+send "grep -q '$hist_line' $my_histfile; echo \$status\r"
 expect_prompt -re "\r\n$hist_line\r\n" {
     puts stderr "cmd3 found in my histfile"
 } unmatched {
@@ -100,7 +99,7 @@ expect_prompt
 
 # Verify that the new fish shell is using the fish_history value for history.
 set cmd4 "echo $fish_pid env histfile"
-set hist_line "- cmd: $cmd4"
+set hist_line "$cmd4"
 send "$cmd4\r"
 expect_prompt
 
@@ -109,17 +108,16 @@ expect_prompt
 # send "history --save\r"
 # expect_prompt
 
-send "grep '^$hist_line' $env_histfile\r"
-expect_prompt -re "\r\n$hist_line\r\n" {
+send "grep -q '$hist_line' $env_histfile; echo \$status\r"
+expect_prompt -re "\r\n0\r\n" {
     puts "cmd4 found in env histfile"
 } unmatched {
     puts stderr "cmd4 not found in env histfile"
 }
-# We expect this grep to fail to find the pattern and thus the expect_prompt
-# block is inverted.
-send "grep '^$hist_line' $default_histfile\r"
-expect_prompt -re "\r\n$hist_line\r\n" {
-    puts stderr "cmd4 found in default histfile"
-} unmatched {
+# We expect this grep to fail to find the pattern.
+send "grep '$hist_line' $default_histfile; echo \$status\r"
+expect_prompt -re "\r\n1\r\n" {
     puts "cmd4 not found in default histfile"
+} unmatched {
+    puts stderr "cmd4 found in default histfile"
 }

@@ -74,22 +74,7 @@ static maybe_t<history_file_type_t> infer_file_type(const void *data, size_t len
     return none();
 }
 
-static void replace_all(std::string *str, const char *needle, const char *replacement) {
-    size_t needle_len = std::strlen(needle), replacement_len = std::strlen(replacement);
-    size_t offset = 0;
-    while ((offset = str->find(needle, offset)) != std::string::npos) {
-        str->replace(offset, needle_len, replacement);
-        offset += replacement_len;
-    }
-}
-
-// Support for escaping and unescaping the nonstandard "yaml" format introduced in fish 2.0.
-static void escape_yaml_fish_2_0(std::string *str) {
-    replace_all(str, "\\", "\\\\");  // replace one backslash with two
-    replace_all(str, "\n", "\\n");   // replace newline with backslash + literal n
-}
-
-/// This function is called frequently, so it ought to be fast.
+// Support for unescaping the nonstandard "yaml" format introduced in fish 2.0.
 static void unescape_yaml_fish_2_0(std::string *str) {
     size_t cursor = 0, size = str->size();
     while (cursor < size) {
@@ -553,26 +538,22 @@ static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &conten
 }
 
 void append_history_item_to_buffer(const history_item_t &item, std::string *buffer) {
-    auto append = [=](const char *a, const char *b = nullptr, const char *c = nullptr) {
-        if (a) buffer->append(a);
-        if (b) buffer->append(b);
-        if (c) buffer->append(c);
+    // Helper to convert to UTF-8, re-using storage.
+    std::string storage;
+    auto to_utf8 = [&storage](const wcstring &s) -> const std::string & {
+        storage.clear();
+        wchar_to_utf8_string(s, &storage);
+        return storage;
     };
 
-    std::string cmd = wcs2string(item.str());
-    escape_yaml_fish_2_0(&cmd);
-    append("- cmd: ", cmd.c_str(), "\n");
-    append("  when: ", std::to_string(item.timestamp()).c_str(), "\n");
-    const path_list_t &paths = item.get_required_paths();
-    if (!paths.empty()) {
-        append("  paths:\n");
-
-        for (const auto &wpath : paths) {
-            std::string path = wcs2string(wpath);
-            escape_yaml_fish_2_0(&path);
-            append("    - ", path.c_str(), "\n");
-        }
+    json::JSON obj;
+    obj[keys.cmd] = to_utf8(item.str());
+    obj[keys.when] = item.timestamp();
+    for (const wcstring &path : item.get_required_paths()) {
+        obj[keys.paths].append(to_utf8(path));
     }
+    buffer->append(obj.dump(0, "", true /* compact */));
+    buffer->push_back('\n');
 }
 
 /// Remove backslashes from all newlines. This makes a string from the history file better formated

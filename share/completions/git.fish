@@ -1405,6 +1405,7 @@ complete -f -c git -n '__fish_git_using_command rebase' -l no-verify -d "Don't a
 complete -f -c git -n '__fish_git_using_command rebase' -s f -l force-rebase -d 'Force the rebase'
 complete -f -c git -n '__fish_git_using_command rebase' -s i -l interactive -d 'Interactive mode'
 complete -f -c git -n '__fish_git_using_command rebase' -s p -l preserve-merges -d 'Try to recreate merges'
+complete -f -c git -n '__fish_git_using_command rebase' -s r -l rebase-merges -a 'rebase-cousins no-rebase-cousins' -d 'Preserve branch structure'
 complete -f -c git -n '__fish_git_using_command rebase' -l root -d 'Rebase all reachable commits'
 complete -f -c git -n '__fish_git_using_command rebase' -l autosquash -d 'Automatic squashing'
 complete -f -c git -n '__fish_git_using_command rebase' -l no-autosquash -d 'No automatic squashing'

@@ -1425,12 +1425,42 @@ complete -f -c git -n '__fish_git_using_command reset; and contains -- -- (comma
 complete -f -c git -n '__fish_git_using_command reset; and not contains -- -- (commandline -op)' -a '(__fish_git_reflog)' -d 'Reflog'
 # TODO options
 
-### restore
+### restore and switch
+# restore options
 complete -f -c git -n '__fish_git_needs_command' -a restore -d 'Restore working tree files'
-complete -f -c git -n '__fish_git_using_command restore' -s s -l source -d 'Specify the source tree used to restore working tree'
+complete -f -c git -n '__fish_git_using_command restore' -s s -l source -d 'Specify the source tree used to restore the working tree'
 complete -f -c git -n '__fish_git_using_command restore' -s p -l patch -d 'Interactive mode'
 complete -f -c git -n '__fish_git_using_command restore' -s W -l worktree -d 'Restore working tree (default)'
 complete -f -c git -n '__fish_git_using_command restore' -s S -l staged -d 'Restore the index'
+complete -f -c git -n '__fish_git_using_command restore' -l ours -d 'When restoring files, use stage #2 (ours)'
+complete -f -c git -n '__fish_git_using_command restore' -l theirs -d 'When restoring files, use stage #3 (theirs)'
+complete -f -c git -n '__fish_git_using_command restore' -s m -l merge -d 'Recreate the conflicted merge in the unmerged paths when restoring files'
+complete -f -c git -n '__fish_git_using_command restore' -l ignore-unmerged -d 'When restoring files, do not abort the operation if there are unmerged entries'
+complete -f -c git -n '__fish_git_using_command restore' -l ignore-skip-worktree-bits -d 'Ignore the sparse-checkout file and unconditionally restore any files in <pathspec>'
+complete -f -c git -n '__fish_git_using_command restore' -l overlay -d 'Never remove files when restoring'
+complete -f -c git -n '__fish_git_using_command restore' -l no-overlay -d 'Remove files when restoring (default)'
+# switch options
+complete -f -c git -n '__fish_git_needs_command' -a switch -d 'Switch to a branch'
+complete -k -f -c git -n '__fish_git_using_command switch; and not contains -- -- (commandline -op)' -a '(__fish_git_branches)'
+complete -f -c git -n '__fish_git_using_command switch' -s c -l create -d 'Create a new branch'
+complete -f -c git -n '__fish_git_using_command switch' -s C -l force-create -d 'Force create a new branch'
+complete -f -c git -n '__fish_git_using_command switch' -s d -l detach -d 'Switch to a commit for inspection and discardable experiment'
+complete -f -c git -n '__fish_git_using_command switch' -l guess -d 'Guess branch name from remote branch (default)'
+complete -f -c git -n '__fish_git_using_command switch' -l no-guess -d 'Do not guess branch name from remote branch'
+complete -f -c git -n '__fish_git_using_command switch' -s f -l force -l discard-changes -d 'Proceed even if the index or the working tree differs from HEAD'
+complete -f -c git -n '__fish_git_using_command switch' -s m -l merge -d 'Merge the current branch and contents of the working tree into a new branch'
+complete -f -c git -n '__fish_git_using_command switch' -s t -l track -d 'Track remote branch when creating a new branch'
+complete -f -c git -n '__fish_git_using_command switch' -l no-track -d 'Do not track remote branch when creating a new branch'
+complete -f -c git -n '__fish_git_using_command switch' -l orphan -d 'Create a new orphan branch'
+complete -f -c git -n '__fish_git_using_command switch' -l ignore-other-worktrees -d 'Force check out of the reference'
+complete -f -c git -n '__fish_git_using_command switch' -l recurse-submodules -d 'Update the work trees of submodules'
+complete -f -c git -n '__fish_git_using_command switch' -l no-recurse-submodules -d 'Do not update the work trees of submodules'
+# common options
+complete -f -c git -n '__fish_git_using_command restore switch' -s q -l quiet -d 'Suppress messages'
+complete -f -c git -n '__fish_git_using_command restore switch' -l progress -d 'Report progress status to stderr (default)'
+complete -f -c git -n '__fish_git_using_command restore switch' -l no-progress -d 'Do not report progress status to stderr'
+complete -f -c git -n '__fish_git_using_command restore switch' -l 'conflict=merge' -d 'Same as --merge, but specify \'merge\' as the conflicting hunk style (default)'
+complete -f -c git -n '__fish_git_using_command restore switch' -l 'conflict=diff3' -d 'Same as --merge, but specify \'diff3\' as the conflicting hunk style'
 
 ### revert
 complete -f -c git -n '__fish_git_needs_command' -a revert -d 'Revert an existing commit'
@@ -1457,15 +1487,6 @@ complete -f -c git -n '__fish_git_using_command status' -s z -d 'Terminate entri
 complete -f -c git -n '__fish_git_using_command status' -s u -l untracked-files -x -a 'no normal all' -d 'The untracked files handling mode'
 complete -f -c git -n '__fish_git_using_command status' -l ignore-submodules -x -a 'none untracked dirty all' -d 'Ignore changes to submodules'
 # TODO options
-
-### switch
-complete -f -c git -n '__fish_git_needs_command' -a switch -d 'Switch to a branch'
-complete -k -f -c git -n '__fish_git_using_command switch; and not contains -- -- (commandline -op)' -a '(__fish_git_branches)'
-complete -f -c git -n '__fish_git_using_command switch' -s c -l create -d 'Create a new branch'
-complete -f -c git -n '__fish_git_using_command switch' -s C -l force-create -d 'Force create a new branch'
-complete -f -c git -n '__fish_git_using_command switch' -s d -l detach -d 'Switch to a commit for inspection and discardable experiment'
-complete -f -c git -n '__fish_git_using_command switch' -l no-guess -d 'Do not guess branch name from remote branch'
-complete -f -c git -n '__fish_git_using_command switch' -l orphan -d 'Create a new orphan branch'
 
 ### tag
 complete -f -c git -n '__fish_git_needs_command' -a tag -d 'Create, list, delete or verify a tag object signed with GPG'

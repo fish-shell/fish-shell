@@ -109,7 +109,7 @@ function history --description "display or manipulate interactive command histor
             end
 
             test -z "$search_mode"
-            and set search_mode "--contains"
+            and set search_mode "--exact"
 
             if test $search_mode = "--exact"
                 builtin history delete $search_mode $_flag_case_sensitive $searchterm

@@ -823,7 +823,7 @@ pid_t terminal_acquire_before_builtin(int job_pgid) {
 
 /// Returns control of the terminal to the shell, and saves the terminal attribute state to the job,
 /// so that we can restore the terminal ownership to the job at a later time.
-static bool terminal_return_from_job(job_t *j) {
+static bool terminal_return_from_job(job_t *j, int restore_attrs) {
     errno = 0;
     if (j->pgid == 0) {
         debug(2, "terminal_return_from_job() returning early due to no process group");
@@ -845,19 +845,17 @@ static bool terminal_return_from_job(job_t *j) {
         return false;
     }
 
-// Disabling this per
-// https://github.com/adityagodbole/fish-shell/commit/9d229cd18c3e5c25a8bd37e9ddd3b67ddc2d1b72 On
-// Linux, 'cd . ; ftp' prevents you from typing into the ftp prompt. See
-// https://github.com/fish-shell/fish-shell/issues/121
-#if 0
-// Restore the shell's terminal modes.
-if (tcsetattr(STDIN_FILENO, TCSADRAIN, &shell_modes) == -1) {
-if (errno == EIO) redirect_tty_output();
-debug(1, _(L"Could not return shell to foreground"));
-wperror(L"tcsetattr");
-return false;
-}
-#endif
+    // Need to restore the terminal's attributes or `bind \cF fg` will put the
+    // terminal into a broken state (until "enter" is pressed).
+    // See: https://github.com/fish-shell/fish-shell/issues/2114
+    if (restore_attrs) {
+        if (tcsetattr(STDIN_FILENO, TCSADRAIN, &shell_modes) == -1) {
+            if (errno == EIO) redirect_tty_output();
+            debug(1, _(L"Could not return shell to foreground"));
+            wperror(L"tcsetattr");
+            return false;
+        }
+    }
 
     return true;
 }
@@ -876,7 +874,10 @@ void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool se
     bool term_transferred = false;
     cleanup_t take_term_back([&]() {
         if (term_transferred && reclaim_foreground_pgrp) {
-            terminal_return_from_job(this);
+            // Only restore terminal attrs if we're continuing a job. See:
+            // https://github.com/fish-shell/fish-shell/issues/121
+            // https://github.com/fish-shell/fish-shell/issues/2114
+            terminal_return_from_job(this, send_sigcont);
         }
     });
 

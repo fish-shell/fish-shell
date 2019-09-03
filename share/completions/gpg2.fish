@@ -57,9 +57,19 @@ function __fish_print_gpg2_algo -d "Complete using all algorithms of the type sp
     #       goto loop
     #   remove everything until the first ':' of the line
     #   remove all blanks
-    #   transliterate ',' with '\n' (OSX apparently doesn't like '\n' on RHS of the s-command)
+    #   transliterate ',' with '\n' (macOS apparently doesn't like '\n' on RHS of the s-command)
     #   print result
-    gpg2 --version | sed -ne "/$argv:/"'{:loop; /,$/{N; y!\n! !; b loop}; s!^[^:]*:!!; s![ ]*!!g; y!,!\n!; p}'
+    #   sed script must be formatted with newlines instead of semicolons to be compatible
+    #   with BSD sed (eg, on macOS)
+    gpg2 --version | sed -ne "/$argv:/"'{:loop
+    /,$/{N; y!\n! !
+    b loop
+    }
+    s!^[^:]*:!!
+    s![ ]*!!g
+    y!,!\n!
+    p
+    }'
 end
 
 

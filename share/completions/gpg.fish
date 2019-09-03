@@ -59,7 +59,15 @@ function __fish_print_gpg_algo -d "Complete using all algorithms of the type spe
     # 	remove all blanks
     # 	transliterate ',' with '\n' (OSX apparently doesn't like '\n' on RHS of the s-command)
     # 	print result
-    gpg --version | sed -ne "/$argv:/"'{:loop; /,$/{N; y!\n! !; b loop}; s!^[^:]*:!!; s![ ]*!!g; y!,!\n!; p}'
+    gpg --version | sed -ne "/$argv:/"'{:loop
+    /,$/{N; y!\n! !
+    b loop
+    }
+    s!^[^:]*:!!
+    s![ ]*!!g
+    y!,!\n!
+    p
+    }'
 end
 
 

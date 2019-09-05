@@ -334,6 +334,7 @@ static void run_inits(const environment_t &vars) {
     guess_emoji_width(vars);
     update_wait_on_escape_ms(vars);
     handle_read_limit_change(vars);
+    handle_fish_use_posix_spawn_change(vars);
 }
 
 /// Updates our idea of whether we support term256 and term24bit (see issue #10222).

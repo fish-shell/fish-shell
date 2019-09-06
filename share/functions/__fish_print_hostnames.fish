@@ -121,22 +121,17 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
             read -z <$file
         end
     end |
-        # Ignore hosts that are hashed, commented or @-marked and strip the key.
-        awk '$1 !~ /[|#@]/ {
-          n=split($1, entries, ",")
-          for (i=1; i<=n; i++) {
-            # Ignore negated/wildcarded hosts.
-            if (!match(entry=entries[i], "[!*?]")) {
-              # Extract hosts with custom port.
-              if (substr(entry, 1, 1) == "[") {
-                if (pos=match(entry, "]:.*$")) {
-                  entry=substr(entry, 2, pos-2)
-                }
-              }
-              print entry
-            }
-          }
-        }'
+        # Ignore hosts that are hashed, commented or @-marked and strip the key
+        # Handle multiple comma-separated hostnames sharing a key, too.
+        #
+        # This one regex does everything we need, finding all matches including comma-separated
+        # values, but fish does not let us print only a capturing group without the entire match,
+        # and we can't use `string replace` instead (because CSV then fails).
+        # string match -ar "(?:^|,)(?![@|*!])\[?([^ ,:\]]+)\]?"
+        #
+        # Instead, manually piece together the regular expressions
+        string match -v -r '^\s*[!*|@#]' | string replace -r '^\s*(\S+) .*' '$1' |
+            string split ',' | string replace -r '\[?([^:\]]+).*' '$1'
 
     return 0
 end

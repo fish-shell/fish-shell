@@ -103,31 +103,40 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 
     for file in $ssh_configs
         if test -r $file
+            # Don't read from $file twice. We could use `while read` instead, but that is extremely
+            # slow.
+            read -z -l contents <$file
+
             # Print hosts from system wide ssh configuration file
-            string replace -rfi '^\s*Host\s+' '' <$file | string trim | string replace -r '\s+' ' ' | string split ' ' | string match -v '*\**'
-            # Extract known_host paths.
-            set known_hosts $known_hosts (string replace -rfi '.*KnownHostsFile\s*' '' <$file)
+            string replace -rfi '^\s*Host\s+(\S.*?)\s*$' '$1' -- $contents | string split ' ' | string match -v '*\**'
+            # Also extract known_host paths.
+            set known_hosts $known_hosts (string replace -rfi '.*KnownHostsFile\s*' '' -- $contents)
         end
     end
+
+    # Avoid shelling out to `awk` more than once by reading all files and operating on their
+    # combined contents
     for file in $known_hosts
         if test -r $file
-            # Ignore hosts that are hashed, commented or @-marked and strip the key.
-            awk '$1 !~ /[|#@]/ {
-            n=split($1, entries, ",")
-            for (i=1; i<=n; i++) {
-              # Ignore negated/wildcarded hosts.
-              if (!match(entry=entries[i], "[!*?]")) {
-                # Extract hosts with custom port.
-                if (substr(entry, 1, 1) == "[") {
-                  if (pos=match(entry, "]:.*$")) {
-                    entry=substr(entry, 2, pos-2)
-                  }
-                }
-                print entry
-              }
-            }
-          }' $file
+            read -z <$file
         end
-    end
+    end |
+        # Ignore hosts that are hashed, commented or @-marked and strip the key.
+        awk '$1 !~ /[|#@]/ {
+          n=split($1, entries, ",")
+          for (i=1; i<=n; i++) {
+            # Ignore negated/wildcarded hosts.
+            if (!match(entry=entries[i], "[!*?]")) {
+              # Extract hosts with custom port.
+              if (substr(entry, 1, 1) == "[") {
+                if (pos=match(entry, "]:.*$")) {
+                  entry=substr(entry, 2, pos-2)
+                }
+              }
+              print entry
+            }
+          }
+        }'
+
     return 0
 end

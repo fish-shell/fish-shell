@@ -74,7 +74,7 @@ char *tparm_solaris_kludge(char *str, long p1 = 0, long p2 = 0, long p3 = 0, lon
 ///
 /// On other platforms, use what's detected at build time.
 #if __APPLE__
-#if __DARWIN_C_LEVEL >= 200809L
+#if __DARWIN_C_LEVEL >= 200809L && __has_attribute(clang::weak_import)
 // We have to explicitly redeclare these as weak,
 // since we are forced to set the MIN_REQUIRED availability macro to 10.7
 // to use libc++, which in turn exposes these as strong

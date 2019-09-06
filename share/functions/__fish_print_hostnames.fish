@@ -1,22 +1,26 @@
 function __fish_print_hostnames -d "Print a list of known hostnames"
-    # Print all hosts from /etc/hosts. Use 'getent hosts' on OSes that support it
-    # (apparently just Cygwin does not).
-    #
-    # Test if 'getent hosts' works and redirect output so errors don't print.
-    #
-    # This is all done under the assumption that `getent` *might* print more hosts than the static /etc/hosts.
-    type -q getent
-    # Ignore zero IPs.
-    and getent hosts 2>/dev/null | string match -r -v '^0.0.0.0' | string replace -r '^\s*\S+\s+' '' | string split ' '
-    # We care about _getent_s status, not `string split`s.
-    if test $pipestatus[1] -ne 0; and test -r /etc/hosts
-        # Ignore commented lines and functionally empty lines.
-        string match -r -v '^\s*0.0.0.0|^\s*#|^\s*$' </etc/hosts | string replace -r -a '#.*$' '' | string replace -r '^\s*\S+\s+' '' | string trim | string replace -r -a '\s+' ' ' | string split ' '
-    end
+    # This function used to primarily query `getent hosts` and only read from `/etc/hosts` if
+    # `getent` did not exist or `getent hosts` failed, based off the (documented) assumption that
+    # the former *might* return more hosts than the latter, which has never been officially noted
+    # to be the case. As `getent` is several times slower, involves shelling out, and is not
+    # available on some platforms (Cygin and at least some versions of macOS, such as 10.10), that
+    # order is now reversed and `getent hosts` is only used if the hosts file is not found at
+    # `/etc/hosts` for portability reasons.
+
+    begin
+        test -r /etc/hosts && read -z </etc/hosts
+        or type -q getent && getent hosts 2>/dev/null
+    end |
+    # Ignore comments, own IP addresses (127.*, 0.0[.0[.0]], ::1), non-host IPs (fe00::*, ff00::*),
+    # and leading/trailing whitespace. Split results on whitespace to handle multiple aliases for
+    # one IP.
+        string replace -irf '^\s*?(?!(?:#|0\.|127\.|ff0|fe0|::1))\S+\s*(.*?)\s*$' '$1' |
+        string split ' '
 
     # Print nfs servers from /etc/fstab
     if test -r /etc/fstab
-        string match -r '^\s*[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3]:|^[a-zA-Z\.]*:' </etc/fstab | string replace -r ':.*' ''
+        string match -r '^\s*[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3]:|^[a-zA-Z\.]*:' </etc/fstab |
+            string replace -r ':.*' ''
     end
 
     # Check hosts known to ssh.
@@ -25,25 +29,28 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
     # The directory is available as $PREFIX/etc, but that variable name is so generic that
     # it would cause false-positives.
     # Also, some people might use /usr/local/etc.
-    set -l known_hosts ~/.ssh/known_hosts{,2} {/data/data/com.termux/files/usr,/usr/local,}/etc/ssh/{,ssh_}known_hosts{,2}
+    set -l known_hosts ~/.ssh/known_hosts{,2} \
+        {/data/data/com.termux/files/usr,/usr/local,}/etc/ssh/{,ssh_}known_hosts{,2}
     # Check default ssh configs.
-    set -l ssh_config
-    # Get alias and commandline options.
-    set -l ssh_func_tokens (functions ssh | string match '*command ssh *' | string split ' ')
-    set -l ssh_command $ssh_func_tokens (commandline -cpo)
-    # Extract ssh config path from last -F short option.
-    if contains -- '-F' $ssh_command
-        set -l ssh_config_path_is_next 1
-        for token in $ssh_command
-            if contains -- '-F' $token
-                set ssh_config_path_is_next 0
-            else if test $ssh_config_path_is_next -eq 0
-                set ssh_config (eval "echo $token")
-                set ssh_config_path_is_next 1
+    set -l ssh_config ~/.ssh/config
+
+    # Inherit settings and parameters from `ssh` aliases, if any
+    if functions -q ssh
+        # Get alias and commandline options.
+        set -l ssh_func_tokens (functions ssh | string match '*command ssh *' | string split ' ')
+        set -l ssh_command $ssh_func_tokens (commandline -cpo)
+        # Extract ssh config path from last -F short option.
+        if contains -- '-F' $ssh_command
+            set -l ssh_config_path_is_next 1
+            for token in $ssh_command
+                if contains -- '-F' $token
+                    set ssh_config_path_is_next 0
+                else if test $ssh_config_path_is_next -eq 0
+                    set ssh_config (eval "echo $token")
+                    set ssh_config_path_is_next 1
+                end
             end
         end
-    else
-        set ssh_config $ssh_config ~/.ssh/config
     end
 
     # Extract ssh config paths from Include option

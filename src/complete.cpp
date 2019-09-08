@@ -1362,12 +1362,19 @@ void completer_t::escape_opening_brackets(const wcstring &argument) {
     bool escaped = false;
     for (wchar_t c : argument) {
         have_unquoted_unescaped_bracket |= (c == L'[') && !quote && !escaped;
-        if (quote) {
-            if (c == quote && !escaped) quote = L'\0';
-        } else {
-            if ((c == L'\'' || c == L'"') && !escaped) quote = c;
+        if (escaped) {
+            escaped = false;
+        } else if (c == L'\\') {
+            escaped = true;
+        } else if (c == L'\'' || c == L'"') {
+            if (quote == c) {
+                // Closing a quote.
+                quote = L'\0';
+            } else if (quote == L'\0') {
+                // Opening a quote.
+                quote = c;
+            }
         }
-        escaped = c == L'\\';
     }
     if (!have_unquoted_unescaped_bracket) return;
     // Since completion_apply_to_command_line will escape the completion, we need to provide an

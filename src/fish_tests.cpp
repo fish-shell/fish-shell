@@ -2619,6 +2619,8 @@ static void test_complete() {
 
     if (system("mkdir -p 'test/complete_test'")) err(L"mkdir failed");
     if (system("touch 'test/complete_test/has space'")) err(L"touch failed");
+    if (system("touch 'test/complete_test/bracket[abc]'")) err(L"touch failed");
+    if (system(R"(touch 'test/complete_test/gnarlybracket\[abc]')")) err(L"touch failed");
     if (system("touch 'test/complete_test/testfile'")) err(L"touch failed");
     if (system("chmod 700 'test/complete_test/testfile'")) err(L"chmod failed");
 
@@ -2642,6 +2644,33 @@ static void test_complete() {
     complete(L"echo (ls test/complete_test/has\\ ", &completions, {}, vars, parser);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"space");
+
+    // Brackets - see #5831
+    completions.clear();
+    complete(L"echo (ls test/complete_test/bracket[", &completions, {}, vars, parser);
+    do_test(completions.size() == 1);
+    fprintf(stderr, "sup: %ls\n", completions.front().completion.c_str());
+    do_test(completions.at(0).completion == L"test/complete_test/bracket[abc]");
+
+    wcstring cmdline = L"touch test/complete_test/bracket[";
+    completions.clear();
+    complete(cmdline, &completions, {}, vars, parser);
+    do_test(completions.size() == 1);
+    do_test(completions.front().completion == L"test/complete_test/bracket[abc]");
+    size_t where = cmdline.size();
+    wcstring newcmdline = completion_apply_to_command_line(
+        completions.front().completion, completions.front().flags, cmdline, &where, false);
+    do_test(newcmdline == L"touch test/complete_test/bracket\\[abc\\] ");
+
+    completions.clear();
+    cmdline = LR"(touch test/complete_test/gnarlybracket\\[)";
+    complete(cmdline, &completions, {}, vars, parser);
+    do_test(completions.size() == 1);
+    do_test(completions.front().completion == LR"(test/complete_test/gnarlybracket\[abc])");
+    where = cmdline.size();
+    newcmdline = completion_apply_to_command_line(
+        completions.front().completion, completions.front().flags, cmdline, &where, false);
+    do_test(newcmdline == LR"(touch test/complete_test/gnarlybracket\\\[abc\] )");
 
     // Add a function and test completing it in various ways.
     // Note we're depending on function_data_t not complaining when given missing parsed_source /

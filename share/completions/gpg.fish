@@ -21,13 +21,13 @@
 
 function __fish_complete_gpg_user_id -d "Complete using gpg user ids"
     # gpg doesn't seem to like it when you use the whole key name as a
-    # completion, so we skip the <EMAIL> part and use it a s a
+    # completion, so we skip the <EMAIL> part and use it as a
     # description.
     # It also replaces colons with \x3a
     gpg --list-keys --with-colon | cut -d : -f 10 | sed -ne 's/\\\x3a/:/g' -e 's/\(.*\) <\(.*\)>/\1'\t'\2/p'
 end
 
-function __fish_complete_gpg_key_id --description 'Complete using gpg key ids'
+function __fish_complete_gpg_key_id -d 'Complete using gpg key ids'
     # Use user id as description
     set -l keyid
     gpg --list-keys --with-colons | while read garbage
@@ -36,7 +36,7 @@ function __fish_complete_gpg_key_id --description 'Complete using gpg key ids'
             case "uid*"
                 echo $garbage | cut -d ":" -f 10 | sed -e "s/\\\x3a/:/g" | read uid
                 printf "%s\t%s\n" $keyid $uid
-            # Extract key fingerprints
+            # Extract key fingerprints (no subkeys)
             case "pub*"
                 echo $garbage | cut -d ":" -f 5 | read keyid
         end

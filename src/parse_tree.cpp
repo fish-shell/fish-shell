@@ -156,6 +156,7 @@ static wcstring token_type_user_presentable_description(
 
     switch (type) {
         // Hackish. We only support the following types.
+        case symbol_decorated_statement:
         case symbol_statement:
             return L"a command";
         case symbol_argument:

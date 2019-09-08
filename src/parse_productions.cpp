@@ -314,6 +314,14 @@ RESOLVE(block_header) {
 }
 
 RESOLVE(decorated_statement) {
+    // and/or are typically parsed in job_conjunction at the beginning of a job
+    // However they may be reached here through e.g. true && and false.
+    // Refuse to parse them as a command except for --help. See #6089.
+    if ((token1.keyword == parse_keyword_and || token1.keyword == parse_keyword_or) &&
+        !token2.is_help_argument) {
+        return NO_PRODUCTION;
+    }
+
     // If this is e.g. 'command --help' then the command is 'command' and not a decoration. If the
     // second token is not a string, then this is a naked 'command' and we should execute it as
     // undecorated.

@@ -70,3 +70,32 @@ end
 # CHECK: 2
 # CHECK: 3
 # CHECK: 4
+
+# --help works
+builtin and --help >/dev/null
+echo $status
+and --help >/dev/null
+echo $status
+# CHECK: 0
+# CHECK: 0
+
+builtin and --help >/dev/null
+echo $status
+and --help >/dev/null
+echo $status
+# CHECK: 0
+# CHECK: 0
+
+builtin or --help >/dev/null
+echo $status
+or --help >/dev/null
+echo $status
+# CHECK: 0
+# CHECK: 0
+
+builtin not --help >/dev/null
+echo $status
+not --help >/dev/null
+echo $status
+# CHECK: 0
+# CHECK: 0

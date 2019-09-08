@@ -66,7 +66,11 @@ RESOLVE(job_list) {
 
 // A job decorator is AND or OR
 RESOLVE(job_decorator) {
-    UNUSED(token2);
+    // If it's followed by --help, it's not a decoration.
+    if (token2.is_help_argument) {
+        *out_tag = parse_bool_none;
+        return production_for<empty>();
+    }
 
     switch (token1.keyword) {
         case parse_keyword_and: {

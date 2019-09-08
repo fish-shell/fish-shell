@@ -27,17 +27,19 @@ function __fish_complete_gpg_user_id -d "Complete using gpg user ids"
     gpg --list-keys --with-colon | cut -d : -f 10 | sed -ne 's/\\\x3a/:/g' -e 's/\(.*\) <\(.*\)>/\1'\t'\2/p'
 end
 
-function __fish_complete_gpg_key_id -d 'Complete using gpg key ids'
-    # Use user_id as the description
-    set -l lastid
+function __fish_complete_gpg_key_id --description 'Complete using gpg key ids'
+    # Use user id as description
+    set -l keyid
     gpg --list-keys --with-colons | while read garbage
         switch $garbage
+            # Extract user ids
             case "uid*"
-                echo $garbage | cut -d ":" -f 10 | sed -e "s/\\\x3a/:/g" | read lastid
-            case "*"
-                echo $garbage | cut -d ":" -f 5 | read fingerprint
+                echo $garbage | cut -d ":" -f 10 | sed -e "s/\\\x3a/:/g" | read uid
+                printf "%s\t%s\n" $keyid $uid
+            # Extract key fingerprints
+            case "pub*"
+                echo $garbage | cut -d ":" -f 5 | read keyid
         end
-        printf "%s\t%s\n" $fingerprint $lastid
     end
 end
 

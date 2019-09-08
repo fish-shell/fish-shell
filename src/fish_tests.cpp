@@ -2649,7 +2649,6 @@ static void test_complete() {
     completions.clear();
     complete(L"echo (ls test/complete_test/bracket[", &completions, {}, vars, parser);
     do_test(completions.size() == 1);
-    fprintf(stderr, "sup: %ls\n", completions.front().completion.c_str());
     do_test(completions.at(0).completion == L"test/complete_test/bracket[abc]");
 
     wcstring cmdline = L"touch test/complete_test/bracket[";

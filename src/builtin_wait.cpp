@@ -145,7 +145,7 @@ static bool find_job_by_name(const wchar_t *proc, std::vector<job_id_t> &ids,
     bool found = false;
 
     for (const auto &j : parser.jobs()) {
-        if (j->command_is_empty()) continue;
+        if (j->command().empty()) continue;
 
         if (match_pid(j->command(), proc)) {
             if (!contains(ids, j->job_id)) {

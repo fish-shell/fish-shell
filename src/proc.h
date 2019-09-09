@@ -322,9 +322,6 @@ class job_t {
           std::shared_ptr<job_t> parent);
     ~job_t();
 
-    /// Returns whether the command is empty.
-    bool command_is_empty() const { return command_str.empty(); }
-
     /// Returns the command as a wchar_t *. */
     const wchar_t *command_wcstr() const { return command_str.c_str(); }
 
@@ -332,7 +329,7 @@ class job_t {
     const wcstring &command() const { return command_str; }
 
     /// Sets the command.
-    void set_command(const wcstring &cmd) { command_str = cmd; }
+    void set_command(wcstring cmd) { command_str = std::move(cmd); }
 
     /// \return whether it is OK to reap a given process. Sometimes we want to defer reaping a
     /// process if it is the group leader and the job is not yet constructed, because then we might

@@ -417,7 +417,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// Do what we need to do whenever our command line changes.
     void command_line_changed(const editable_line_t *el);
 
-    /// Do what we need to do whenever our pager selection.
+    /// Do what we need to do whenever our pager selection changes.
     void pager_selection_changed();
 
     /// Expand abbreviations at the current cursor position, minus backtrack_amt.
@@ -1603,8 +1603,6 @@ bool reader_data_t::handle_completions(const std::vector<completion_t> &comp,
         prefix.append(el->text, prefix_start + len - PREFIX_MAX_LEN, PREFIX_MAX_LEN);
     }
 
-    wchar_t quote;
-    parse_util_get_parameter_info(el->text, el->position, &quote, NULL, NULL);
     // Update the pager data.
     pager.set_prefix(prefix);
     pager.set_completions(surviving_completions);

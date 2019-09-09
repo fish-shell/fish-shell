@@ -180,6 +180,24 @@ function __fish_git_files
                     set -ql renamed
                     and set file (string replace -r '\t[^\t]*' '' -- "$line[10..-1]")
                     and set desc $renamed_desc
+                case '2 RM*'
+                    # Staged as renamed, with unstaged modifications (issue #6031)
+                    set -ql renamed
+                    or set -ql modified
+                    and set file (string replace -r '\t[^\t]*' '' -- "$line[10..-1]")
+                    set -ql renamed
+                    and set desc $renamed_desc
+                    set -ql modified
+                    and set --append desc $modified_desc
+                case '2 RD*'
+                    # Staged as renamed, but deleted in the worktree
+                    set -ql renamed
+                    or set -ql deleted
+                    and set file (string replace -r '\t[^\t]*' '' -- "$line[10..-1]")
+                    set -ql renamed
+                    and set desc $renamed_desc
+                    set -ql deleted
+                    and set --append desc $deleted_desc
                 case '2 .C*' '2 C.*'
                     set -ql copied
                     and set file (string replace -r '\t[^\t].*' '' -- "$line[10..-1]")
@@ -261,23 +279,25 @@ function __fish_git_files
             end
             # Only try printing if the file was selected.
             if set -q file[1]
-                # Without "-z", git sometimes _quotes_ filenames.
-                # It adds quotes around it _and_ escapes the character.
-                # e.g. `"a\\b"`.
-                # We just remove the quotes and hope it works out.
-                # If this contains newlines or tabs,
-                # there is nothing we can do, but that's a general issue with scripted completions.
-                set file (string trim -c \" -- $file)
-                # First the relative filename.
-                printf '%s\t%s\n' "$file" $desc
-                # Now from repo root.
-                # Only do this if the filename isn't a simple child,
-                # or the current token starts with ":"
-                if string match -q '../*' -- $file
-                    or string match -q ':*' -- (commandline -ct)
-                    set -l fromroot (builtin realpath -- $file 2>/dev/null)
-                    and set fromroot (string replace -- "$root/" ":/" "$fromroot")
-                    and printf '%s\t%s\n' "$fromroot" $desc
+                for d in $desc
+                    # Without "-z", git sometimes _quotes_ filenames.
+                    # It adds quotes around it _and_ escapes the character.
+                    # e.g. `"a\\b"`.
+                    # We just remove the quotes and hope it works out.
+                    # If this contains newlines or tabs,
+                    # there is nothing we can do, but that's a general issue with scripted completions.
+                    set file (string trim -c \" -- $file)
+                    # First the relative filename.
+                    printf '%s\t%s\n' "$file" $d
+                    # Now from repo root.
+                    # Only do this if the filename isn't a simple child,
+                    # or the current token starts with ":"
+                    if string match -q '../*' -- $file
+                        or string match -q ':*' -- (commandline -ct)
+                        set -l fromroot (builtin realpath -- $file 2>/dev/null)
+                        and set fromroot (string replace -- "$root/" ":/" "$fromroot")
+                        and printf '%s\t%s\n' "$fromroot" $d
+                    end
                 end
             end
         end

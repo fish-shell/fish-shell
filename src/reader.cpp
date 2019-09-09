@@ -457,7 +457,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     void mark_repaint_needed() { repaint_needed = true; }
 
-    void completion_insert(const wchar_t *val, complete_flags_t flags);
+    void completion_insert(const wchar_t *val, size_t token_end, complete_flags_t flags);
 
     bool can_autosuggest() const;
     void autosuggest_completed(autosuggestion_result_t result);
@@ -473,8 +473,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el,
               wchar_t target);
 
-    bool handle_completions(const std::vector<completion_t> &comp,
-                            bool cont_after_prefix_insertion);
+    bool handle_completions(const std::vector<completion_t> &comp, size_t token_begin,
+                            size_t token_end, bool cont_after_prefix_insertion);
 
     void sanity_check() const;
     void set_command_line_and_position(editable_line_t *el, const wcstring &new_str, size_t pos);
@@ -1230,10 +1230,18 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
 /// not and correctly escapes the string.
 ///
 /// \param val the string to insert
+/// \param token_end the position after the token to complete
 /// \param flags A union of all flags describing the completion to insert. See the completion_t
 /// struct for more information on possible values.
-void reader_data_t::completion_insert(const wchar_t *val, complete_flags_t flags) {
+void reader_data_t::completion_insert(const wchar_t *val, size_t token_end,
+                                      complete_flags_t flags) {
     editable_line_t *el = active_edit_line();
+
+    // Move the cursor to the end of the token.
+    if (el->position != token_end) {
+        update_buff_pos(el, token_end);  // repaint() is done later
+    }
+
     size_t cursor = el->position;
     wcstring new_command_line = completion_apply_to_command_line(val, flags, el->text, &cursor,
                                                                  false /* not append only */);
@@ -1460,21 +1468,19 @@ static fuzzy_match_type_t get_best_match_type(const std::vector<completion_t> &c
 /// through the completions.
 ///
 /// \param comp the list of completion strings
+/// \param token_begin the position of the token to complete
+/// \param token_end the position after the token to complete
 /// \param cont_after_prefix_insertion If we have a shared prefix, whether to print the list of
 /// completions after inserting it.
 ///
 /// Return true if we inserted text into the command line, false if we did not.
-bool reader_data_t::handle_completions(const std::vector<completion_t> &comp,
-                                       bool cont_after_prefix_insertion) {
+bool reader_data_t::handle_completions(const std::vector<completion_t> &comp, size_t token_begin,
+                                       size_t token_end, bool cont_after_prefix_insertion) {
     bool done = false;
     bool success = false;
     const editable_line_t *el = &command_line;
-    const wchar_t *begin, *end, *buff = el->text.c_str();
 
-    parse_util_token_extent(buff, el->position, &begin, 0, 0, 0);
-    end = buff + el->position;
-
-    const wcstring tok(begin, end - begin);
+    const wcstring tok(el->text.c_str() + token_begin, token_end - token_begin);
 
     // Check trivial cases.
     size_t size = comp.size();
@@ -1490,7 +1496,7 @@ bool reader_data_t::handle_completions(const std::vector<completion_t> &comp,
         // If this is a replacement completion, check that we know how to replace it, e.g. that
         // the token doesn't contain evil operators like {}.
         if (!(c.flags & COMPLETE_REPLACES_TOKEN) || reader_can_replace(tok, c.flags)) {
-            completion_insert(c.completion.c_str(), c.flags);
+            completion_insert(c.completion.c_str(), token_end, c.flags);
         }
         done = true;
         success = true;
@@ -1579,7 +1585,7 @@ bool reader_data_t::handle_completions(const std::vector<completion_t> &comp,
             // We got something. If more than one completion contributed, then it means we have
             // a prefix; don't insert a space after it.
             if (prefix_is_partial_completion) flags |= COMPLETE_NO_SPACE;
-            completion_insert(common_prefix.c_str(), flags);
+            completion_insert(common_prefix.c_str(), token_end, flags);
             success = true;
         }
     }
@@ -2527,16 +2533,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // (echo foo) the last token is 'foo)'. Don't let that happen.
                 if (token_end > cmdsub_end) token_end = cmdsub_end;
 
-                // Figure out how many steps to get from the current position to the end of the
-                // current token.
-                size_t end_of_token_offset = token_end - buff;
-
-                // Move the cursor to the end.
-                if (el->position != end_of_token_offset) {
-                    update_buff_pos(el, end_of_token_offset);
-                    repaint();
-                }
-
                 // Construct a copy of the string from the beginning of the command substitution
                 // up to the end of the token we're completing.
                 const wcstring buffcpy = wcstring(cmdsub_begin, token_end);
@@ -2551,10 +2547,11 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
 
                 // Record our cycle_command_line.
                 cycle_command_line = el->text;
-                cycle_cursor_pos = el->position;
+                cycle_cursor_pos = token_end - buff;
 
                 bool cont_after_prefix_insertion = (c == rl::complete_and_search);
-                rls.comp_empty = handle_completions(rls.comp, cont_after_prefix_insertion);
+                rls.comp_empty = handle_completions(rls.comp, token_begin - buff, token_end - buff,
+                                                    cont_after_prefix_insertion);
 
                 // Show the search field if requested and if we printed a list of completions.
                 if (c == rl::complete_and_search && !rls.comp_empty && !pager.empty()) {

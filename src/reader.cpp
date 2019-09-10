@@ -1146,6 +1146,7 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
 
     const size_t cursor_pos = *inout_cursor_pos;
     bool back_into_trailing_quote = false;
+    bool have_space_after_token = command_line[cursor_pos] == L' ';
 
     if (do_replace) {
         size_t move_cursor;
@@ -1168,7 +1169,7 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
         }
 
         if (add_space) {
-            sb.append(L" ");
+            if (!have_space_after_token) sb.append(L" ");
             move_cursor += 1;
         }
         sb.append(end);
@@ -1217,7 +1218,8 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
             // This is a quoted parameter, first print a quote.
             result.insert(new_cursor_pos++, wcstring(&quote, 1));
         }
-        result.insert(new_cursor_pos++, L" ");
+        if (!have_space_after_token) result.insert(new_cursor_pos, L" ");
+        new_cursor_pos++;
     }
     *inout_cursor_pos = new_cursor_pos;
     return result;

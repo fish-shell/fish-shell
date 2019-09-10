@@ -1589,21 +1589,15 @@ bool reader_data_t::handle_completions(const std::vector<completion_t> &comp,
     }
 
     // We didn't get a common prefix, or we want to print the list anyways.
-    size_t len, prefix_start = 0;
     wcstring prefix;
-    parse_util_get_parameter_info(el->text, el->position, NULL, &prefix_start, NULL);
-
-    assert(el->position >= prefix_start);
-    len = el->position - prefix_start;
-
     if (will_replace_token || match_type_requires_full_replacement(best_match_type)) {
         prefix.clear();  // no prefix
-    } else if (len <= PREFIX_MAX_LEN) {
-        prefix.append(el->text, prefix_start, len);
+    } else if (tok.size() <= PREFIX_MAX_LEN) {
+        prefix = tok;
     } else {
         // Append just the end of the string.
         prefix = wcstring{get_ellipsis_char()};
-        prefix.append(el->text, prefix_start + len - PREFIX_MAX_LEN, PREFIX_MAX_LEN);
+        prefix.append(tok, tok.size() - PREFIX_MAX_LEN, PREFIX_MAX_LEN);
     }
 
     // Update the pager data.

@@ -116,7 +116,7 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
 /// character. The quote can be a single quote or double quote, or L'\0' to indicate no quoting (and
 /// thus escaping should be with backslashes). Optionally do not escape tildes.
 wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote,
-                                             bool no_tilde = false);
+                                             bool no_tilde = false, bool escape_separators = false);
 
 /// Given a string, parse it as fish code and then return the indents. The return value has the same
 /// size as the string.

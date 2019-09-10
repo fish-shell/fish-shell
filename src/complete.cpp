@@ -727,7 +727,8 @@ void completer_t::complete_abbr(const wcstring &cmd) {
         assert(iter != abbrs.end() && "Abbreviation not found");
         return format_string(ABBR_DESC, iter->second.c_str());
     };
-    this->complete_strings(cmd, desc_func, possible_comp, COMPLETE_NO_SPACE);
+    this->complete_strings(cmd, desc_func, possible_comp,
+                           COMPLETE_NO_SPACE | COMPLETE_SUPPLIED_BY_USER);
 }
 
 /// Evaluate the argument list (as supplied by complete -a) and insert any
@@ -768,7 +769,8 @@ void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
         parser->libdata().is_interactive = saved_interactive;
     }
 
-    this->complete_strings(escape_string(str, ESCAPE_ALL), const_desc(desc), possible_comp, flags);
+    this->complete_strings(escape_string(str, ESCAPE_ALL), const_desc(desc), possible_comp,
+                           flags | COMPLETE_SUPPLIED_BY_USER);
 }
 
 static size_t leading_dash_count(const wchar_t *str) {

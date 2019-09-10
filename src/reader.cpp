@@ -1143,6 +1143,7 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
     bool do_replace = bool(flags & COMPLETE_REPLACES_TOKEN);
     bool do_escape = !bool(flags & COMPLETE_DONT_ESCAPE);
     bool no_tilde = bool(flags & COMPLETE_DONT_ESCAPE_TILDES);
+    bool escape_separators = !bool(flags & COMPLETE_SUPPLIED_BY_USER);
 
     const size_t cursor_pos = *inout_cursor_pos;
     bool back_into_trailing_quote = false;
@@ -1158,8 +1159,9 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
         wcstring sb(buff, begin - buff);
 
         if (do_escape) {
-            wcstring escaped = escape_string(
-                val, ESCAPE_ALL | ESCAPE_NO_QUOTED | (no_tilde ? ESCAPE_NO_TILDE : 0));
+            wcstring escaped = escape_string(val, ESCAPE_ALL | ESCAPE_NO_QUOTED |
+                                                      (no_tilde ? ESCAPE_NO_TILDE : 0) |
+                                                      (escape_separators ? ESCAPE_SEPARATORS : 0));
             sb.append(escaped);
             move_cursor = escaped.size();
         } else {
@@ -1196,7 +1198,7 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
             }
         }
 
-        replaced = parse_util_escape_string_with_quote(val, quote, no_tilde);
+        replaced = parse_util_escape_string_with_quote(val, quote, no_tilde, escape_separators);
     } else {
         replaced = val;
     }

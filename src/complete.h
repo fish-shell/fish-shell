@@ -44,7 +44,9 @@ enum {
     /// Do not sort supplied completions
     COMPLETE_DONT_SORT = 1 << 6,
     /// This completion looks to have the same string as an existing argument.
-    COMPLETE_DUPLICATES_ARGUMENT = 1 << 7
+    COMPLETE_DUPLICATES_ARGUMENT = 1 << 7,
+    /// If this completion is expanded from `complete` or `abbr`.
+    COMPLETE_SUPPLIED_BY_USER = 1 << 8,
 };
 typedef int complete_flags_t;
 

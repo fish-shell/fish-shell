@@ -745,7 +745,7 @@ void completer_t::complete_abbr(const wcstring &cmd) {
 /// @param  desc
 ///    Description of the completion
 /// @param  flags
-///    The list into which the results will be inserted
+///    The flags
 ///
 void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
                                      const wcstring &desc, complete_flags_t flags) {

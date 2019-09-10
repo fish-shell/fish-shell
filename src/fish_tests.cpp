@@ -2844,8 +2844,10 @@ static void test_completion_insertions() {
 #define TEST_1_COMPLETION(a, b, c, d, e) test_1_completion(a, b, c, d, e, __LINE__)
     say(L"Testing completion insertions");
     TEST_1_COMPLETION(L"foo^", L"bar", 0, false, L"foobar ^");
-    // We really do want to insert two spaces here - otherwise it's hidden by the cursor.
-    TEST_1_COMPLETION(L"foo^ baz", L"bar", 0, false, L"foobar ^ baz");
+    // An unambiguous completion of a token that is already trailed by a space character.
+    // After completing, the cursor moves on to the next token, suggesting to the user that the
+    // current token is finished.
+    TEST_1_COMPLETION(L"foo^ baz", L"bar", 0, false, L"foobar ^baz");
     TEST_1_COMPLETION(L"'foo^", L"bar", 0, false, L"'foobar' ^");
     TEST_1_COMPLETION(L"'foo'^", L"bar", 0, false, L"'foobar' ^");
     TEST_1_COMPLETION(L"'foo\\'^", L"bar", 0, false, L"'foo\\'bar' ^");
@@ -2853,7 +2855,7 @@ static void test_completion_insertions() {
 
     // Test append only.
     TEST_1_COMPLETION(L"foo^", L"bar", 0, true, L"foobar ^");
-    TEST_1_COMPLETION(L"foo^ baz", L"bar", 0, true, L"foobar ^ baz");
+    TEST_1_COMPLETION(L"foo^ baz", L"bar", 0, true, L"foobar ^baz");
     TEST_1_COMPLETION(L"'foo^", L"bar", 0, true, L"'foobar' ^");
     TEST_1_COMPLETION(L"'foo'^", L"bar", 0, true, L"'foo'bar ^");
     TEST_1_COMPLETION(L"'foo\\'^", L"bar", 0, true, L"'foo\\'bar' ^");

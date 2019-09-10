@@ -35,15 +35,6 @@ set __rustup_components \
 # 	__rustup_strip_common_suffix_strict $not_installed
 # end
 
-# Trim trailing attributes, e.g. "rust-whatever (default)" -> "rust-whatever"
-set -l __rustup_toolchains (rustup toolchain list | string replace -rf "\s+.*" '')
-# By default, the long name of a toolchain is used (e.g. nightly-x86_64-unknown-linux-gnu),
-# but a shorter version can be used if it is unambiguous.
-set -l __rustup_toolchains_short (__rustup_strip_common_suffix_strict $__rustup_toolchains)
-
-# Needs to be global to retain access from functions
-set __rustup_channels "beta" "stable" "nightly"
-
 # All *valid* target triples, retrieved from source
 function __rustup_triples
 	# The list below must be kept sorted alphabetically
@@ -227,6 +218,15 @@ function __rustup_installed_components
 	set -l installed (rustup component list --installed $toolchain_filter)
 	__rustup_common_suffix_strict $installed
 end
+
+# Trim trailing attributes, e.g. "rust-whatever (default)" -> "rust-whatever"
+set -l __rustup_toolchains (rustup toolchain list | string replace -rf "\s+.*" '')
+# By default, the long name of a toolchain is used (e.g. nightly-x86_64-unknown-linux-gnu),
+# but a shorter version can be used if it is unambiguous.
+set -l __rustup_toolchains_short (__rustup_strip_common_suffix_strict $__rustup_toolchains)
+
+# Needs to be global to retain access from functions
+set __rustup_channels "beta" "stable" "nightly"
 
 complete -c rustup -n "__fish_should_complete_switches" -s v -l verbose
 complete -c rustup -n "__fish_should_complete_switches" -s h -l help

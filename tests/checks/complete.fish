@@ -88,3 +88,39 @@ complete -C'complete_test_recurse1 '
 # CHECKERR: recursing
 # CHECKERR: recursing
 # CHECKERR: complete: maximum recursion depth reached
+
+# short options
+complete -c foo -f -a non-option-argument
+complete -c foo -f --short-option x
+complete -c foo -f --short-option y -a 'ARGY'
+complete -c foo -f --short-option z -a 'ARGZ' -r
+complete -c foo -f --old-option single-long-ending-in-z
+complete -c foo -f --old-option x-single-long
+complete -c foo -f --old-option y-single-long
+complete -c foo -f --old-option z-single-long
+complete -c foo -f --long-option x-long -a 'ARGLONG'
+# Make sure that arguments of concatenated short options are expanded (#332)
+complete -C'foo -xy'
+# CHECK: -xyARGY
+# CHECK: -xyz
+# A required parameter means we don't want more short options.
+complete -C'foo -yz'
+# CHECK: -yzARGZ
+# Required parameter with space: complete only the parameter (no non-option arguments).
+complete -C'foo -xz '
+# CHECK: ARGZ
+# Optional parameter with space: complete only non-option arguments.
+complete -C'foo -xy '
+# CHECK: non-option-argument
+complete -C'foo -single-long-ending-in-z'
+# CHECK: -single-long-ending-in-z
+complete -C'foo -single-long-ending-in-z '
+# CHECK: non-option-argument
+# CHECK: -x-single-long
+complete -C'foo -x' | string match -- -x-single-long
+# CHECK: -y-single-long
+complete -C'foo -y' | string match -- -y-single-long
+# This does NOT suggest -z-single-long, but will probably not occur in practise.
+# CHECK: -zARGZ
+complete -C'foo -z'
+

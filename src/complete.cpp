@@ -812,58 +812,43 @@ static const wchar_t *param_match2(const complete_entry_opt_t *e, const wchar_t 
 
     // Short options are like -DNDEBUG. Long options are like --color=auto. So check for an equal
     // sign for long options.
-    if (e->type != option_type_short) {
-        if (optstr[cursor] != L'=') {
-            return NULL;
-        }
-        cursor += 1;
+    assert(e->type != option_type_short);
+    if (optstr[cursor] != L'=') {
+        return NULL;
     }
+    cursor += 1;
     return &optstr[cursor];
 }
 
-/// Tests whether a short option is a viable completion. arg_str will be like '-xzv', nextopt will
-/// be a character like 'f' options will be the list of all options, used to validate the argument.
-static bool short_ok(const wcstring &arg, const complete_entry_opt_t *entry,
-                     const option_list_t &options) {
-    // Ensure it's a short option.
-    if (entry->type != option_type_short || entry->option.empty()) {
-        return false;
+/// Parses a token of short options plus one optional parameter like
+/// '-xzPARAM', where x and z are short options.
+///
+/// Returns the position of the last option character (e.g. the position of z which is 2).
+/// Everything after that is assumed to be part of the parameter.
+/// Returns wcstring::npos if there is no valid short option.
+size_t short_option_pos(const wcstring &arg, const option_list_t &options) {
+    if (arg.size() <= 1 || leading_dash_count(arg.c_str()) != 1) {
+        return wcstring::npos;
     }
-    const wchar_t nextopt = entry->option.at(0);
-
-    // Empty strings are always 'OK'.
-    if (arg.empty()) {
-        return true;
-    }
-
-    // The argument must start with exactly one dash.
-    if (leading_dash_count(arg.c_str()) != 1) {
-        return false;
-    }
-
-    // Short option must not be already present.
-    if (arg.find(nextopt) != wcstring::npos) {
-        return false;
-    }
-
-    // Verify that all characters in our combined short option list are present as short options in
-    // the options list. If we get a short option that can't be combined (NO_COMMON), then we stop.
-    bool result = true;
-    for (size_t i = 1; i < arg.size(); i++) {
-        wchar_t arg_char = arg.at(i);
-        const complete_entry_opt_t *match = NULL;
-        for (option_list_t::const_iterator iter = options.begin(); iter != options.end(); ++iter) {
-            if (iter->type == option_type_short && iter->option.at(0) == arg_char) {
-                match = &*iter;
+    for (size_t pos = 1; pos < arg.size(); pos++) {
+        wchar_t arg_char = arg.at(pos);
+        const complete_entry_opt_t *match = nullptr;
+        for (const complete_entry_opt_t &o : options) {
+            if (o.type == option_type_short && o.option.at(0) == arg_char) {
+                match = &o;
                 break;
             }
         }
-        if (match == NULL || (match->result_mode.requires_param)) {
-            result = false;
-            break;
+        if (match == nullptr) {
+            // The first character after the dash is not a valid option.
+            if (pos == 1) return wcstring::npos;
+            return pos - 1;
+        }
+        if (match->result_mode.requires_param) {
+            return pos;
         }
     }
-    return result;
+    return arg.size() - 1;
 }
 
 /// Load command-specific completions for the specified command.
@@ -954,13 +939,23 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
     // Now release the lock and test each option that we captured above. We have to do this outside
     // the lock because callouts (like the condition) may add or remove completions. See issue 2.
     for (const option_list_t &options : all_options) {
+        size_t short_opt_pos = short_option_pos(str, options);
+        bool last_option_requires_param = false;
         use_common = 1;
         if (use_switches) {
             if (str[0] == L'-') {
                 // Check if we are entering a combined option and argument (like --color=auto or
                 // -I/usr/include).
                 for (const complete_entry_opt_t &o : options) {
-                    const wchar_t *arg = param_match2(&o, str.c_str());
+                    const wchar_t *arg;
+                    if (o.type == option_type_short) {
+                        if (short_opt_pos == wcstring::npos) continue;
+                        if (o.option.at(0) != str.at(short_opt_pos)) continue;
+                        last_option_requires_param = o.result_mode.requires_param;
+                        arg = str.c_str() + short_opt_pos + 1;
+                    } else {
+                        arg = param_match2(&o, str.c_str());
+                    }
                     if (arg != NULL && this->condition_test(o.condition)) {
                         if (o.result_mode.requires_param) use_common = false;
                         if (o.result_mode.no_files) use_files = false;
@@ -987,17 +982,27 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
                 }
 
                 // No old style option matched, or we are not using old style options. We check if
-                // any short (or gnu style options do.
+                // any short (or gnu style) options do.
                 if (!old_style_match) {
+                    size_t prev_short_opt_pos = short_option_pos(popt, options);
                     for (const complete_entry_opt_t &o : options) {
                         // Gnu-style options with _optional_ arguments must be specified as a single
                         // token, so that it can be differed from a regular argument.
                         // Here we are testing the previous argument for a GNU-style match,
                         // to see how we should complete the current argument
-                        if (o.type == option_type_double_long && !o.result_mode.requires_param)
-                            continue;
+                        if (!o.result_mode.requires_param) continue;
 
-                        if (param_match(&o, popt.c_str()) && this->condition_test(o.condition)) {
+                        bool match = false;
+                        if (o.type == option_type_short) {
+                            match = prev_short_opt_pos != wcstring::npos &&
+                                    // Only if the option was the last char in the token,
+                                    // i.e. there is no parameter yet.
+                                    prev_short_opt_pos + 1 == popt.size() &&
+                                    o.option.at(0) == popt.at(prev_short_opt_pos);
+                        } else if (o.type == option_type_double_long) {
+                            match = param_match(&o, popt.c_str());
+                        }
+                        if (match && this->condition_test(o.condition)) {
                             if (o.result_mode.requires_param) use_common = false;
                             if (o.result_mode.no_files) use_files = false;
                             if (o.result_mode.force_files) has_force = true;
@@ -1026,7 +1031,21 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
             }
 
             // Check if the short style option matches.
-            if (short_ok(str, &o, options)) {
+            if (o.type == option_type_short) {
+                wchar_t optchar = o.option.at(0);
+                if (short_opt_pos == wcstring::npos) {
+                    // str has no short option at all (but perhaps it is the
+                    // prefix of a single long option).
+                    // Only complete short options if there is no character after the dash.
+                    if (str != L"-") continue;
+                } else {
+                    // Only complete when the last short option has no parameter yet..
+                    if (short_opt_pos + 1 != str.size()) continue;
+                    // .. and it does not require one ..
+                    if (last_option_requires_param) continue;
+                    // .. and the option is not already there.
+                    if (str.find(optchar) != wcstring::npos) continue;
+                }
                 // It's a match.
                 wcstring desc = o.localized_desc();
                 // Append a short-style option

@@ -17,18 +17,10 @@ set -l subcmds \
 	# "completions" \
 	"help"
 
-# rustup does not expose a mechanism of retrieving a list of all valid components (including non-installed)
-set __rustup_components \
-	"cargo" \
-	"clippy" \
-	"lldb-preview" \
-	"llvm-tools-preview" \
-	"miri" \
-	"rls" \
-	"rust-analysis" \
-	"rust-docs" \
-	"rust-mingw" \
-	"rust-src"
+# rustup does not really expose a mechanism of retrieving a list of all valid components without the archs appended
+function  __rustup_components
+	rustup component list | string match -r "^\S+" | string replace -f -- "-x86_64-unknown-linux-gnu" ""
+end
 
 # function __rustup_installable_components
 # 	set -l not_installed (comm -2 -3 (printf "%s\n" $__rustup_components | psub -F) (rustup component list --installed | psub -F) 2>/dev/null)
@@ -251,7 +243,7 @@ complete -c rustup -n "__fish_seen_subcommand_from toolchain; and __fish_prev_ar
 complete -c rustup -n "__fish_seen_subcommand_from component; and __fish_prev_arg_in remove uninstall" \
 	-xa "(__rustup_installed_components)"
 complete -c rustup -n "__fish_seen_subcommand_from component; and __fish_prev_arg_in add install" \
-	-xa "$__rustup_components"
+	-xa "(__rustup_components)"
 
 complete -c rustup -n "__fish_seen_subcommand_from set; and __fish_prev_arg_in default-host" \
 	-xa "(__rustup_triples)"

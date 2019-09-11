@@ -174,9 +174,10 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         for (const auto &j : parser.jobs()) {
             if (j->is_visible()) {
                 builtin_jobs_print(j.get(), mode, !streams.out_is_redirected, streams);
-                return STATUS_CMD_ERROR;
+                return STATUS_CMD_OK;
             }
         }
+        return STATUS_CMD_ERROR;
 
     } else {
         if (w.woptind < argc) {

@@ -30,3 +30,9 @@ function sleep_done_$sleep_job --on-job-exit $sleep_job
     functions --erase sleep_done_$sleep_job
 end
 sleep 2
+
+# Verify `jobs -l` works and returns the right status codes
+# https://github.com/fish-shell/fish-shell/issues/6104
+jobs --last --command; echo $status
+sleep 0.2 &
+jobs -lc; echo $status

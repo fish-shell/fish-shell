@@ -4,50 +4,28 @@
 Introduction
 ============
 
-This is the documentation for *fish*: the **f**\ riendly **i**\ nteractive **sh**\ ell.
+This is the documentation for *fish*, the **f**\ riendly **i**\ nteractive **sh**\ ell.
 
-A shell is a commandline interpreter. It reads text input from the commandline and interpretes it as commands to operating system, see: `What is a Shell`_.
+A shell is a software program which helps you operate your computer, such as by starting other programs. fish offers a command-line shell interface which is focused on usability and interactive use.
 
-So shells serve as user-interface between applications and the operating system. There are many different shells. They differ on how this interface is implemented. *fish* specializes in the following ways:
+Some of the special features of fish are:
 
-- **Extensive UI**: *fish* supports the user with syntax highlighting, autosuggestions, tab completions and selections lists, that can be navigated and filtered, see: `Autosuggestions`_ and `Tab Completion`_.
+- **Extensive UI**: `syntax highlighting`_, autosuggestions_, `tab completion`_ and selection lists that can be navigated and filtered.
 
-- **No configuration needed**: *fish* comes preconfigured so that it will be an efficient helper on the commandline out of the box.
+- **No configuration needed**: fish is designed to be ready to use immediately, without requiring extensive configuration.
 
-- **Add new commands easily**: in *fish* new commands can be added on the fly. The syntax is easy to learn and there is no administrative overhead, see `Functions`_.
+- **Easy scripting**: new functions_ can be added on the fly. The syntax is easy to learn and use.
 
-- **Interactive shell**: *fish* focuses on commands that will be run in an interactive session: While it supports job control for external commands, its own commands share the process of the shell, that started them.
+What is a shell?
+================
 
-What is a Shell
-===============
+A shell can be seen as the outermost layer to the operating system of a computer. The core of the operating system is sometimes called the "kernel", as if the computer's software is like a nut.
 
-This section is about the basics of shells. *fish* is a shell and shells have a lot in common:
+The shell communicates with the underlying operating system, allowing the user to launch additional software programs, and enables the appropriate configuration of those programs. It can also communicate the results of the program, control the concurrent operation of multiple programs and even perform various tasks itself.
 
-- `Shell Standards`_ Why shells adjust to standards
-- `Manual Pages`_: Commands usually come with a standardized manual page
-- `Command Syntax`_: Shell commands have a standard syntax
-- `Commands versus Programs`_: Commands differ from normal programs
-- `Shebang Line`_: How the shell knows the language of a script
+In general, shells are controlled with either a text-based command-line interface (CLI), or a keyboard and mouse-based graphical user interface (GUI). fish is a command-line shell.
 
-Shell Standards
----------------
-
-A shell is an interface to the operating system that reads from the commandline of a terminal. A shell's task is to identify and interpret commands. The commands can come from different applications and can be written in different programming languages.
-
-This can only work smoothly if shells adapt to some common standards. For shells there is the POSIX standard, see `Command-line interpreters  <https://en.wikipedia.org/wiki/Command-line_interface#Command-line_interpreter>`_. ``fish`` tries to satisfy the POSIX standard wherever it does not get into the way of its own design principles, see :ref:`Design <Design>`.
-
-Manual Pages
-------------
-
-There is a common standard on how to receive help on shell commands: applications provide a manual page to their commands that can be opened with the ``man`` command:
-
-
-::
-
-    > man COMMAND
-
-
-This convention helps to make sure help can be found on commands no matter where they originate from. *fish*'s internal commands all come with a manual page.
+Many command-line shells use the common interface defined in the POSIX standards. fish has a different interface, due to its :ref:`design <Design>` principles, but uses the POSIX standard where it does not conflict with these principles.
 
 Command Syntax
 --------------
@@ -137,8 +115,20 @@ This line tells the shell to execute the file with the *bash* interpreter, that 
 
 For a script, written in another language, just replace the interpreter ``/bin/bash`` with the language interpreter of that other language (for example ``/bin/python`` for a ``python`` script)
 
-This line is only needed when scripts are executed by another interpreter, so for *fish* internal commands, that are executed by *fish* the shebang line is not necessary.
+This line is only needed when scripts are executed by another interpreter, so for fish internal commands, that are executed by fish the shebang line is not necessary.
 
+Manual Pages
+------------
+
+There is a common standard on how to receive help on shell commands: applications provide a manual page to their commands that can be opened with the ``man`` command:
+
+
+::
+
+    > man COMMAND
+
+
+This convention helps to make sure help can be found on commands no matter where they originate from. fish's internal commands all come with a manual page.
 
 Installation and Start
 ======================

@@ -111,7 +111,7 @@ A scripts written in ``bash`` it would need a first line like this::
     #!/bin/bash
 
 
-This line tells the shell to execute the file with the *bash* interpreter, that is located at the path ``/bin/bash``.
+This line tells the shell to execute the file with the bash interpreter, that is located at the path ``/bin/bash``.
 
 For a script, written in another language, just replace the interpreter ``/bin/bash`` with the language interpreter of that other language (for example ``/bin/python`` for a ``python`` script)
 
@@ -133,25 +133,25 @@ This convention helps to make sure help can be found on commands no matter where
 Installation and Start
 ======================
 
-This section is on how to install, uninstall, start and exit a *fish* shell and on how to make *fish* the default shell:
+This section is on how to install, uninstall, start and exit a fish shell and on how to make fish the default shell:
 
-- `Installation`_: How to install *fish*
-- `Default Shell`_: How to switch to *fish* as the default shell
-- `Starting and Exiting`_ How to start and exit a *fish* shell
-- `Uninstalling`_: How to uninstall *fish*
-- `Executing Bash`_: How to execute *bash* commands in *fish*
+- `Installation`_: How to install fish
+- `Default Shell`_: How to switch to fish as the default shell
+- `Starting and Exiting`_ How to start and exit a fish shell
+- `Uninstalling`_: How to uninstall fish
+- `Executing Bash`_: How to execute bash commands in fish
 
 Installation
 ------------
 
-Instructions for installing fish are on the `fish homepage <https://fishshell.com/>`_. Search that page for "Go fish".
+Up-to-date instructions for installing the latest version of fish are on the `fish homepage <https://fishshell.com/>`_.
 
-To install the development version of *fish* see the instructions at the `project's GitHub page <https://github.com/fish-shell/fish-shell>`_.
+To install the development version of fish see the instructions at the `project's GitHub page <https://github.com/fish-shell/fish-shell>`_.
 
 Default Shell
 -------------
 
-You can make *fish* your default shell by adding *fish*'s  executable in two places:
+You can make fish your default shell by adding fish's  executable in two places:
 - add ``/usr/local/bin/fish``  to  ``/etc/shells``
 - change your default shell with ``chsh -s`` to ``/usr/local/bin/fish``
 
@@ -160,19 +160,19 @@ For for detailed instructions see `Switching to fish <tutorial.html#tut_switchin
 Uninstalling
 ------------
 
-For uninstalling *fish*: see :ref:`FAQ: Uninstalling fish <faq-uninstalling>`.
+For uninstalling fish: see :ref:`FAQ: Uninstalling fish <faq-uninstalling>`.
 
 Starting and Exiting
 --------------------
 
-Once *fish* has been installed, open a terminal. If *fish* is not the default shell:
+Once fish has been installed, open a terminal. If fish is not the default shell:
 
-- Enter ``fish`` to start a *fish* shell::
+- Enter ``fish`` to start a fish shell::
 
     > fish
 
 
-- Enter ``exit`` to exit a *fish* shell::
+- Enter ``exit`` to exit a fish shell::
 
     > exit
 
@@ -180,7 +180,7 @@ Once *fish* has been installed, open a terminal. If *fish* is not the default sh
 Executing Bash
 --------------
 
-If *fish* is your default shell and you want to copy commands from the internet, that are written in a different shell language, *bash* for example, you can proceed in the following way:
+If fish is your default shell and you want to copy commands from the internet, that are written in a different shell language, bash for example, you can proceed in the following way:
 
 Consider, that ``bash`` is also a command. With ``man bash`` you can see that there are two ways to do this:
 
@@ -189,7 +189,7 @@ Consider, that ``bash`` is also a command. With ``man bash`` you can see that th
     > bash -c SomeBashCommand
 
 
-or ``bash`` without a switch, opens a *bash* shell that you can use and ``exit`` afterwards.
+or ``bash`` without a switch, opens a bash shell that you can use and ``exit`` afterwards.
 
 
 .. _syntax:

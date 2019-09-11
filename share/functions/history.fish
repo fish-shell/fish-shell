@@ -33,6 +33,7 @@ function history --description "display or manipulate interactive command histor
     set -l hist_cmd
     set -l show_time
     set -l max_count
+    set -l search_mode
     set -q _flag_max
     set max_count -n$_flag_max
 
@@ -108,8 +109,10 @@ function history --description "display or manipulate interactive command histor
                 read -P"Search term: " searchterm
             end
 
-            test -z "$search_mode"
-            and set search_mode "--exact"
+            if test -z "$search_mode"
+                set search_mode "--exact"
+                set _flag_case_sensitive "-C"
+            end
 
             if test $search_mode = "--exact"
                 builtin history delete $search_mode $_flag_case_sensitive $searchterm

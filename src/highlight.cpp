@@ -992,8 +992,12 @@ void highlighter_t::color_redirection(tnode_t<g::redirection> redirection_node) 
                     path_apply_working_directory(target, this->working_directory);
                 switch (*redirect_type) {
                     case redirection_type_t::fd: {
-                        int fd = fish_wcstoi(target.c_str());
-                        target_is_valid = !errno && fd >= 0;
+                        if (target == L"-") {
+                            target_is_valid = true;
+                        } else {
+                            int fd = fish_wcstoi(target.c_str());
+                            target_is_valid = !errno && fd >= 0;
+                        }
                         break;
                     }
                     case redirection_type_t::input: {

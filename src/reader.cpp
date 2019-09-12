@@ -1184,7 +1184,17 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
     wchar_t quote = L'\0';
     wcstring replaced;
     if (do_escape) {
-        parse_util_get_parameter_info(command_line, cursor_pos, &quote, NULL, NULL);
+        // We need to figure out whether the token we complete has unclosed quotes. Since the token
+        // may be inside a command substitutions we must first determine the extents of the
+        // innermost command substitution.
+        const wchar_t *cmdsub_begin, *cmdsub_end;
+        parse_util_cmdsubst_extent(command_line.c_str(), cursor_pos, &cmdsub_begin, &cmdsub_end);
+        size_t cmdsub_offset = cmdsub_begin - command_line.c_str();
+        // Find the last quote in the token to complete. By parsing only the string inside any
+        // command substitution, we prevent the tokenizer from treating the entire command
+        // substitution as one token.
+        parse_util_get_parameter_info(command_line.substr(cmdsub_offset, (cmdsub_end - cmdsub_begin)),
+                                      cursor_pos - cmdsub_offset, &quote, NULL, NULL);
 
         // If the token is reported as unquoted, but ends with a (unescaped) quote, and we can
         // modify the command line, then delete the trailing quote so that we can insert within

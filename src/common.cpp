@@ -1277,9 +1277,10 @@ wcstring debug_escape(const wcstring &in) {
     return result;
 }
 
-/// Helper to return the last character in a string, or NOT_A_WCHAR.
-static wint_t string_last_char(const wcstring &str) {
-    return str.empty() ? NOT_A_WCHAR : str.back();
+/// Helper to return the last character in a string, or none.
+static maybe_t<wchar_t> string_last_char(const wcstring &str) {
+    if (str.empty()) return none();
+    return str.back();
 }
 
 /// Given a null terminated string starting with a backslash, read the escape as if it is unquoted,

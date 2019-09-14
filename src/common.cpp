@@ -62,8 +62,6 @@
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-constexpr wint_t NOT_A_WCHAR = static_cast<wint_t>(WEOF);
-
 struct termios shell_modes;
 
 /// This allows us to notice when we've forked.
@@ -1550,8 +1548,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     if (unescape_special) {
                         brace_count++;
                         to_append_or_none = BRACE_BEGIN;
-                        // We need to store where the brace *ends up* in the output because of
-                        // NOT_A_WCHAR.
+                        // We need to store where the brace *ends up* in the output.
                         braces.push_back(result.size());
                     }
                     break;

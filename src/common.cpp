@@ -1480,8 +1480,8 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
 
     for (size_t input_position = 0; input_position < input_len && !errored; input_position++) {
         const wchar_t c = input[input_position];
-        // Here's the character we'll append to result, or NOT_A_WCHAR to suppress it.
-        wint_t to_append_or_none = c;
+        // Here's the character we'll append to result, or none() to suppress it.
+        maybe_t<wchar_t> to_append_or_none = c;
         if (mode == mode_unquoted) {
             switch (c) {
                 case L'\\': {
@@ -1499,7 +1499,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                         input_position += *escape_chars - 1;
                     }
                     // We've already appended, don't append anything else.
-                    to_append_or_none = NOT_A_WCHAR;
+                    to_append_or_none = none();
                     break;
                 }
                 case L'~': {
@@ -1602,18 +1602,21 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                 case L'\t':
                 case L' ': {
                     if (unescape_special && brace_count > 0) {
-                        to_append_or_none = brace_text_start ? wint_t(BRACE_SPACE) : NOT_A_WCHAR;
+                        to_append_or_none =
+                            brace_text_start ? maybe_t<wchar_t>(BRACE_SPACE) : none();
                     }
                     break;
                 }
                 case L'\'': {
                     mode = mode_single_quotes;
-                    to_append_or_none = unescape_special ? wint_t(INTERNAL_SEPARATOR) : NOT_A_WCHAR;
+                    to_append_or_none =
+                        unescape_special ? maybe_t<wchar_t>(INTERNAL_SEPARATOR) : none();
                     break;
                 }
                 case L'\"': {
                     mode = mode_double_quotes;
-                    to_append_or_none = unescape_special ? wint_t(INTERNAL_SEPARATOR) : NOT_A_WCHAR;
+                    to_append_or_none =
+                        unescape_special ? maybe_t<wchar_t>(INTERNAL_SEPARATOR) : none();
                     break;
                 }
                 default: {
@@ -1652,14 +1655,16 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     }
                 }
             } else if (c == L'\'') {
-                to_append_or_none = unescape_special ? wint_t(INTERNAL_SEPARATOR) : NOT_A_WCHAR;
+                to_append_or_none =
+                    unescape_special ? maybe_t<wchar_t>(INTERNAL_SEPARATOR) : none();
                 mode = mode_unquoted;
             }
         } else if (mode == mode_double_quotes) {
             switch (c) {
                 case L'"': {
                     mode = mode_unquoted;
-                    to_append_or_none = unescape_special ? wint_t(INTERNAL_SEPARATOR) : NOT_A_WCHAR;
+                    to_append_or_none =
+                        unescape_special ? maybe_t<wchar_t>(INTERNAL_SEPARATOR) : none();
                     break;
                 }
                 case '\\': {
@@ -1681,7 +1686,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                         }
                         case '\n': {
                             /* Swallow newline */
-                            to_append_or_none = NOT_A_WCHAR;
+                            to_append_or_none = none();
                             input_position += 1; /* Skip over the backslash */
                             break;
                         }
@@ -1707,11 +1712,8 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
         }
 
         // Now maybe append the char.
-        if (to_append_or_none != NOT_A_WCHAR) {
-            wchar_t to_append_char = static_cast<wchar_t>(to_append_or_none);
-            // If result_char is not NOT_A_WCHAR, it must be a valid wchar.
-            assert((wint_t)to_append_char == to_append_or_none);
-            result.push_back(to_append_char);
+        if (to_append_or_none.has_value()) {
+            result.push_back(*to_append_or_none);
         }
     }
 

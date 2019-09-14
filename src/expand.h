@@ -70,7 +70,7 @@ using expand_flags_t = enum_set_t<expand_flag>;
 
 class completion_t;
 
-enum {
+enum : wchar_t {
     /// Character representing a home directory.
     HOME_DIRECTORY = EXPAND_RESERVED_BASE,
     /// Character representing process expansion for %self.

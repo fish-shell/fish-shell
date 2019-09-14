@@ -133,10 +133,9 @@ void builtin_bind_t::list(const wchar_t *bind_mode, bool user, io_streams_t &str
 /// are defined for this terminal are printed.
 void builtin_bind_t::key_names(bool all, io_streams_t &streams) {
     const wcstring_list_t names = input_terminfo_get_names(!all);
-    for (size_t i = 0; i < names.size(); i++) {
-        const wcstring &name = names.at(i);
-
-        streams.out.append_format(L"%ls\n", name.c_str());
+    for (const wcstring &name : names) {
+        streams.out.append(name);
+        streams.out.append(L'\n');
     }
 }
 

@@ -26,11 +26,11 @@ class builtin_bind_t {
     void list(const wchar_t *bind_mode, bool user, io_streams_t &streams);
     void key_names(bool all, io_streams_t &streams);
     void function_names(io_streams_t &streams);
-    bool add(const wchar_t *seq, const wchar_t *const *cmds, size_t cmds_len, const wchar_t *mode,
+    bool add(const wcstring &seq, const wchar_t *const *cmds, size_t cmds_len, const wchar_t *mode,
              const wchar_t *sets_mode, bool terminfo, bool user, io_streams_t &streams);
     bool erase(wchar_t **seq, bool all, const wchar_t *mode, bool use_terminfo, bool user,
                io_streams_t &streams);
-    bool get_terminfo_sequence(const wchar_t *seq, wcstring *out_seq, io_streams_t &streams);
+    bool get_terminfo_sequence(const wcstring &seq, wcstring *out_seq, io_streams_t &streams);
     bool insert(int optind, int argc, wchar_t **argv, io_streams_t &streams);
     void list_modes(io_streams_t &streams);
     bool list_one(const wcstring &seq, const wcstring &bind_mode, bool user, io_streams_t &streams);

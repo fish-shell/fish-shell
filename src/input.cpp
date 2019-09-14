@@ -34,6 +34,9 @@
 
 #define MAX_INPUT_FUNCTION_ARGS 20
 
+/// A name for our own key mapping for nul.
+static const wchar_t *k_nul_mapping_name = L"nul";
+
 /// Struct representing a keybinding. Returned by input_get_mappings.
 struct input_mapping_t {
     /// Character sequence which generates this event.
@@ -59,8 +62,17 @@ struct input_mapping_t {
 
 /// A struct representing the mapping from a terminfo key name to a terminfo character sequence.
 struct terminfo_mapping_t {
-    const wchar_t *name;  // name of key
-    const char *seq;      // character sequence generated on keypress
+    // name of key
+    const wchar_t *name;
+
+    // character sequence generated on keypress, or none if there was no mapping.
+    maybe_t<std::string> seq;
+
+    terminfo_mapping_t(const wchar_t *name, const char *s) : name(name) {
+        if (s) seq.emplace(s);
+    }
+
+    terminfo_mapping_t(const wchar_t *name, std::string s) : name(name), seq(std::move(s)) {}
 };
 
 static constexpr size_t input_function_count = R_END_INPUT_FUNCTIONS;
@@ -159,9 +171,6 @@ acquired_lock<input_mapping_set_t> input_mappings() {
 /// Terminfo map list.
 static latch_t<std::vector<terminfo_mapping_t>> s_terminfo_mappings;
 
-#define TERMINFO_ADD(key) \
-    { (L## #key) + 4, key }
-
 /// \return the input terminfo.
 static std::vector<terminfo_mapping_t> create_input_terminfo();
 
@@ -211,10 +220,10 @@ static void input_mapping_insert_sorted(mapping_list_t &ml, input_mapping_t new_
 }
 
 /// Adds an input mapping.
-void input_mapping_set_t::add(const wchar_t *sequence, const wchar_t *const *commands,
+void input_mapping_set_t::add(wcstring sequence, const wchar_t *const *commands,
                               size_t commands_len, const wchar_t *mode, const wchar_t *sets_mode,
                               bool user) {
-    assert(sequence && commands && mode && sets_mode && "Null parameter");
+    assert(commands && mode && sets_mode && "Null parameter");
 
     // Clear cached mappings.
     all_mappings_cache_.reset();
@@ -233,13 +242,14 @@ void input_mapping_set_t::add(const wchar_t *sequence, const wchar_t *const *com
     }
 
     // Add a new mapping, using the next order.
-    const input_mapping_t new_mapping = input_mapping_t(sequence, commands_vector, mode, sets_mode);
+    input_mapping_t new_mapping =
+        input_mapping_t(std::move(sequence), commands_vector, mode, sets_mode);
     input_mapping_insert_sorted(ml, std::move(new_mapping));
 }
 
-void input_mapping_set_t::add(const wchar_t *sequence, const wchar_t *command, const wchar_t *mode,
+void input_mapping_set_t::add(wcstring sequence, const wchar_t *command, const wchar_t *mode,
                               const wchar_t *sets_mode, bool user) {
-    input_mapping_set_t::add(sequence, &command, 1, mode, sets_mode, user);
+    input_mapping_set_t::add(std::move(sequence), &command, 1, mode, sets_mode, user);
 }
 
 /// Handle interruptions to key reading by reaping finished jobs and propagating the interrupt to
@@ -587,6 +597,10 @@ std::shared_ptr<const mapping_list_t> input_mapping_set_t::all_mappings() {
 static std::vector<terminfo_mapping_t> create_input_terminfo() {
     assert(curses_initialized);
     if (!cur_term) return {};  // setupterm() failed so we can't referency any key definitions
+
+#define TERMINFO_ADD(key) \
+    { (L## #key) + 4, key }
+
     return {
         TERMINFO_ADD(key_a1), TERMINFO_ADD(key_a3), TERMINFO_ADD(key_b2),
             TERMINFO_ADD(key_backspace), TERMINFO_ADD(key_beg), TERMINFO_ADD(key_btab),
@@ -670,22 +684,26 @@ static std::vector<terminfo_mapping_t> create_input_terminfo() {
             TERMINFO_ADD(key_sr), TERMINFO_ADD(key_sredo), TERMINFO_ADD(key_sreplace),
             TERMINFO_ADD(key_sright), TERMINFO_ADD(key_srsume), TERMINFO_ADD(key_ssave),
             TERMINFO_ADD(key_ssuspend), TERMINFO_ADD(key_stab), TERMINFO_ADD(key_sundo),
-            TERMINFO_ADD(key_suspend), TERMINFO_ADD(key_undo), TERMINFO_ADD(key_up)
+            TERMINFO_ADD(key_suspend), TERMINFO_ADD(key_undo), TERMINFO_ADD(key_up),
+
+            // We introduce our own name for the string containing only the nul character - see
+            // #3189. This can typically be generated via control-space.
+            terminfo_mapping_t(k_nul_mapping_name, std::string{'\0'})
     };
+#undef TERMINFO_ADD
 }
 
-bool input_terminfo_get_sequence(const wchar_t *name, wcstring *out_seq) {
+bool input_terminfo_get_sequence(const wcstring &name, wcstring *out_seq) {
     ASSERT_IS_MAIN_THREAD();
     assert(s_input_initialized);
-    assert(name && "null name");
     for (const terminfo_mapping_t &m : *s_terminfo_mappings) {
-        if (!std::wcscmp(name, m.name)) {
+        if (name == m.name) {
             // Found the mapping.
             if (!m.seq) {
                 errno = EILSEQ;
                 return false;
             } else {
-                *out_seq = str2wcstring(m.seq);
+                *out_seq = str2wcstring(*m.seq);
                 return true;
             }
         }
@@ -698,12 +716,7 @@ bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name) {
     assert(s_input_initialized);
 
     for (const terminfo_mapping_t &m : *s_terminfo_mappings) {
-        if (!m.seq) {
-            continue;
-        }
-
-        const wcstring map_buf = format_string(L"%s", m.seq);
-        if (map_buf == seq) {
+        if (m.seq && seq == str2wcstring(*m.seq)) {
             out_name->assign(m.name);
             return true;
         }

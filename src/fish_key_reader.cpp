@@ -67,29 +67,30 @@ static bool should_exit(wchar_t wc) {
 }
 
 /// Return the name if the recent sequence of characters matches a known terminfo sequence.
-static char *sequence_name(wchar_t wc) {
-    unsigned char c = wc < 0x80 ? wc : 0;
-    static char recent_chars[8] = {0};
-
-    recent_chars[0] = recent_chars[1];
-    recent_chars[1] = recent_chars[2];
-    recent_chars[2] = recent_chars[3];
-    recent_chars[3] = recent_chars[4];
-    recent_chars[4] = recent_chars[5];
-    recent_chars[5] = recent_chars[6];
-    recent_chars[6] = recent_chars[7];
-    recent_chars[7] = c;
-
-    for (int idx = 7; idx >= 0; idx--) {
-        wcstring out_name;
-        wcstring seq = str2wcstring(recent_chars + idx, 8 - idx);
-        bool found = input_terminfo_get_name(seq, &out_name);
-        if (found) {
-            return strdup(wcs2string(out_name).c_str());
-        }
+static maybe_t<wcstring> sequence_name(wchar_t wc) {
+    static std::string recent_chars;
+    if (wc >= 0x80) {
+        // Terminfo sequences are always ASCII.
+        recent_chars.clear();
+        return none();
     }
 
-    return NULL;
+    unsigned char c = wc;
+    recent_chars.push_back(c);
+    while (recent_chars.size() > 8) {
+        recent_chars.erase(recent_chars.begin());
+    }
+
+    // Check all nonempty substrings extending to the end.
+    for (size_t i = 0; i < recent_chars.size(); i++) {
+        wcstring out_name;
+        wcstring seq = str2wcstring(recent_chars.substr(i));
+        if (input_terminfo_get_name(seq, &out_name)) {
+            return out_name;
+        }
+    }
+    return none();
+    ;
 }
 
 /// Return true if the character must be escaped when used in the sequence of chars to be bound in
@@ -174,10 +175,8 @@ static void output_info_about_char(wchar_t wc) {
 }
 
 static bool output_matching_key_name(wchar_t wc) {
-    char *name = sequence_name(wc);
-    if (name) {
-        std::fwprintf(stdout, L"bind -k %s 'do something'\n", name);
-        free(name);
+    if (maybe_t<wcstring> name = sequence_name(wc)) {
+        std::fwprintf(stdout, L"bind -k %ls 'do something'\n", name->c_str());
         return true;
     }
     return false;
@@ -223,7 +222,12 @@ static void process_input(bool continuous_mode) {
 
         wchar_t wc = evt.get_char();
         prev_tstamp = output_elapsed_time(prev_tstamp, first_char_seen);
-        add_char_to_bind_command(wc, bind_chars);
+        // Hack for #3189. Do not suggest \c@ as the binding for nul, because a string containing
+        // nul cannot be passed to builtin_bind since it uses C strings. We'll output the name of
+        // this key (nul) elsewhere.
+        if (wc) {
+            add_char_to_bind_command(wc, bind_chars);
+        }
         output_info_about_char(wc);
         if (output_matching_key_name(wc)) {
             output_bind_command(bind_chars);

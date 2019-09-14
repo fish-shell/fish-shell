@@ -288,3 +288,14 @@ expect_prompt -re {git@} {
 } unmatched {
     puts stderr "ctrl-w does not stop at @"
 }
+
+# Ensure that nul can be bound properly (#3189).
+send "bind -k nul 'echo nul seen'\r"
+expect_prompt
+send -null 3
+send "\r"
+expect_prompt -re {nul seen\r\nnul seen\r\nnul seen} {
+    puts "nul seen"
+} unmatched {
+    puts stderr "nul not seen"
+}

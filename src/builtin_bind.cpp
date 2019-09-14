@@ -150,7 +150,7 @@ void builtin_bind_t::function_names(io_streams_t &streams) {
 }
 
 /// Wraps input_terminfo_get_sequence(), appending the correct error messages as needed.
-bool builtin_bind_t::get_terminfo_sequence(const wchar_t *seq, wcstring *out_seq,
+bool builtin_bind_t::get_terminfo_sequence(const wcstring &seq, wcstring *out_seq,
                                            io_streams_t &streams) {
     if (input_terminfo_get_sequence(seq, out_seq)) {
         return true;
@@ -173,13 +173,13 @@ bool builtin_bind_t::get_terminfo_sequence(const wchar_t *seq, wcstring *out_seq
 }
 
 /// Add specified key binding.
-bool builtin_bind_t::add(const wchar_t *seq, const wchar_t *const *cmds, size_t cmds_len,
+bool builtin_bind_t::add(const wcstring &seq, const wchar_t *const *cmds, size_t cmds_len,
                          const wchar_t *mode, const wchar_t *sets_mode, bool terminfo, bool user,
                          io_streams_t &streams) {
     if (terminfo) {
         wcstring seq2;
         if (get_terminfo_sequence(seq, &seq2, streams)) {
-            input_mappings_->add(seq2.c_str(), cmds, cmds_len, mode, sets_mode, user);
+            input_mappings_->add(seq2, cmds, cmds_len, mode, sets_mode, user);
         } else {
             return true;
         }

@@ -109,11 +109,10 @@ class input_mapping_set_t {
     ///
     /// \param sequence the sequence to bind
     /// \param command an input function that will be run whenever the key sequence occurs
-    void add(const wchar_t *sequence, const wchar_t *command,
-             const wchar_t *mode = DEFAULT_BIND_MODE, const wchar_t *new_mode = DEFAULT_BIND_MODE,
-             bool user = true);
+    void add(wcstring sequence, const wchar_t *command, const wchar_t *mode = DEFAULT_BIND_MODE,
+             const wchar_t *new_mode = DEFAULT_BIND_MODE, bool user = true);
 
-    void add(const wchar_t *sequence, const wchar_t *const *commands, size_t commands_len,
+    void add(wcstring sequence, const wchar_t *const *commands, size_t commands_len,
              const wchar_t *mode = DEFAULT_BIND_MODE, const wchar_t *new_mode = DEFAULT_BIND_MODE,
              bool user = true);
 
@@ -128,7 +127,7 @@ acquired_lock<input_mapping_set_t> input_mappings();
 ///
 /// If no terminfo variable of the specified name could be found, return false and set errno to
 /// ENOENT. If the terminfo variable does not have a value, return false and set errno to EILSEQ.
-bool input_terminfo_get_sequence(const wchar_t *name, wcstring *out_seq);
+bool input_terminfo_get_sequence(const wcstring &name, wcstring *out_seq);
 
 /// Return the name of the terminfo variable with the specified sequence, in out_name. Returns true
 /// if found, false if not found.

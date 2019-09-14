@@ -1289,9 +1289,9 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
                                      bool unescape_special) {
     assert(input[0] == L'\\' && "Not an escape");
 
-    // Here's the character we'll ultimately append, or NOT_A_WCHAR for none. Note that L'\0' is a
+    // Here's the character we'll ultimately append, or none. Note that L'\0' is a
     // valid thing to append.
-    wint_t result_char_or_none = NOT_A_WCHAR;
+    maybe_t<wchar_t> result_char_or_none = none();
 
     bool errored = false;
     size_t in_pos = 1;  // in_pos always tracks the next character to read (and therefore the number
@@ -1434,7 +1434,7 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
         }
         // If a backslash is followed by an actual newline, swallow them both.
         case L'\n': {
-            result_char_or_none = NOT_A_WCHAR;
+            result_char_or_none = none();
             break;
         }
         default: {
@@ -1444,11 +1444,8 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
         }
     }
 
-    if (!errored && result_char_or_none != NOT_A_WCHAR) {
-        wchar_t result_char = static_cast<wchar_t>(result_char_or_none);
-        // If result_char is not NOT_A_WCHAR, it must be a valid wchar.
-        assert((wint_t)result_char == result_char_or_none);
-        result->push_back(result_char);
+    if (!errored && result_char_or_none.has_value()) {
+        result->push_back(*result_char_or_none);
     }
     if (errored) return none();
 

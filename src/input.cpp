@@ -678,25 +678,20 @@ bool input_terminfo_get_sequence(const wchar_t *name, wcstring *out_seq) {
     ASSERT_IS_MAIN_THREAD();
     assert(s_input_initialized);
     assert(name && "null name");
-
-    const char *res = 0;
-    int err = ENOENT;
-
     for (const terminfo_mapping_t &m : *s_terminfo_mappings) {
         if (!std::wcscmp(name, m.name)) {
-            res = m.seq;
-            err = EILSEQ;
-            break;
+            // Found the mapping.
+            if (!m.seq) {
+                errno = EILSEQ;
+                return false;
+            } else {
+                *out_seq = str2wcstring(m.seq);
+                return true;
+            }
         }
     }
-
-    if (!res) {
-        errno = err;
-        return false;
-    }
-
-    *out_seq = format_string(L"%s", res);
-    return true;
+    errno = ENOENT;
+    return false;
 }
 
 bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name) {

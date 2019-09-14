@@ -26,8 +26,8 @@ send "exit\r"
 expect -re "There are still jobs active:\r
 \r
    PID  Command\r
-  *\\d+  sleep 113 &\r
-  *\\d+  sleep 111 &\r
+ *\\d+  sleep 113 &\r
+ *\\d+  sleep 111 &\r
 \r
 A second attempt to exit will terminate them.\r
 Use 'disown PID' to remove jobs from the list without terminating them.\r"

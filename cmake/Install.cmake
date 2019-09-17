@@ -44,10 +44,12 @@ SET(MANUALS ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/fish.1
 # Determine which man page we don't want to install.
 # On OS X, don't install a man page for open, since we defeat fish's open
 # function on OS X.
+# On other operating systems, don't install a realpath man page, as they almost all have a realpath
+# command, while macOS does not.
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   SET(CONDEMNED_PAGE "open.1")
 ELSE()
-  SET(CONDEMNED_PAGE "none")
+  SET(CONDEMNED_PAGE "realpath.1")
 ENDIF()
 
 # Define a function to help us create directories.

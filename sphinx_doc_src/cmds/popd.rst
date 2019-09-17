@@ -19,18 +19,16 @@ You may be interested in the :ref:`cdh <cmd-cdh>` command which provides a more 
 Example
 -------
 
-
-
 ::
 
     pushd /usr/src
     # Working directory is now /usr/src
     # Directory stack contains /usr/src
-    
+
     pushd /usr/src/fish-shell
     # Working directory is now /usr/src/fish-shell
     # Directory stack contains /usr/src /usr/src/fish-shell
-    
+
     popd
     # Working directory is now /usr/src
     # Directory stack contains /usr/src

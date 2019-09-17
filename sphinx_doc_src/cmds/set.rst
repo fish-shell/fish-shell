@@ -96,28 +96,27 @@ Examples
 
     # Prints all global, exported variables.
     set -xg
-    
+
     # Sets the value of the variable $foo to be 'hi'.
     set foo hi
-    
+
     # Appends the value "there" to the variable $foo.
     set -a foo there
-    
+
     # Does the same thing as the previous two commands the way it would be done pre-fish 3.0.
     set foo hi
     set foo $foo there
-    
+
     # Removes the variable $smurf
     set -e smurf
-    
+
     # Changes the fourth element of the $PATH list to ~/bin
     set PATH[4] ~/bin
-    
+
     # Outputs the path to Python if ``type -p`` returns true.
     if set python_path (type -p python)
         echo "Python is at $python_path"
     end
-
 
 Notes
 -----

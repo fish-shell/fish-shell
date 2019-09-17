@@ -129,7 +129,7 @@ Exit status: 0 if at least one match was found, or 1 otherwise.
 -------------------
 
 ``string repeat [(-n | --count) COUNT] [(-m | --max) MAX] [(-N | --no-newline)] [(-q | --quiet)] [STRING...]``
-  
+
 ``string repeat`` repeats the STRING ``-n`` or ``--count`` times. The ``-m`` or ``--max`` option will limit the number of outputted char (excluding the newline). This option can be used by itself or in conjunction with ``--count``. If both ``--count`` and ``--max`` are present, max char will be outputed unless the final repeated string size is less than max, in that case, the string will repeat until count has been reached. Both ``--count`` and ``--max`` will accept a number greater than or equal to zero, in the case of zero, nothing will be outputed. If ``-N`` or ``--no-newline`` is given, the output won't contain a newline character at the end. Exit status: 0 if yielded string is not empty, 1 otherwise.
 
 "replace" subcommand
@@ -162,7 +162,7 @@ See also ``read --delimiter``.
 -------------------
 
 ``string split0 [(-m | --max) MAX] [(-n | --no-empty)] [(-q | --quiet)] [(-r | --right)] [STRING...]``
-  
+
 ``string split0`` splits each STRING on the zero byte (NUL). Options are the same as ``string split`` except that no separator is given.
 
 ``split0`` has the important property that its output is not further split when used in a command substitution, allowing for the command substitution to produce elements containing newlines. This is most useful when used with Unix tools that produce zero bytes, such as ``find -print0`` or ``sort -z``. See split0 examples below.
@@ -171,14 +171,14 @@ See also ``read --delimiter``.
 ----------------
 
 ``string sub [(-s | --start) START] [(-l | --length) LENGTH] [(-q | --quiet)] [STRING...]``
-  
+
 ``string sub`` prints a substring of each string argument. The start of the substring can be specified with ``-s`` or ``--start`` followed by a 1-based index value. Positive index values are relative to the start of the string and negative index values are relative to the end of the string. The default start value is 1. The length of the substring can be specified with ``-l`` or ``--length``. If the length is not specified, the substring continues to the end of each STRING. Exit status: 0 if at least one substring operation was performed, 1 otherwise.
 
 "trim" subcommand
 -----------------
 
 ``string trim [(-l | --left)] [(-r | --right)] [(-c | --chars CHARS)] [(-q | --quiet)] [STRING...]``
-  
+
 ``string trim`` removes leading and trailing whitespace from each STRING. If ``-l`` or ``--left`` is given, only leading whitespace is removed. If ``-r`` or ``--right`` is given, only trailing whitespace is trimmed. The ``-c`` or ``--chars`` switch causes the characters in CHARS to be removed instead of whitespace. Exit status: 0 if at least one character was trimmed, or 1 otherwise.
 
 "upper" subcommand
@@ -261,88 +261,65 @@ Like ``sed``\ s `s/` command, ``string replace`` still prints strings that don't
 Examples
 --------
 
-
-
 ::
 
     >_ string length 'hello, world'
     12
-    
+
     >_ set str foo
     >_ string length -q $str; echo $status
     0
     # Equivalent to test -n $str
 
-
-
-
 ::
 
     >_ string sub --length 2 abcde
     ab
-    
+
     >_ string sub -s 2 -l 2 abcde
     bc
-    
+
     >_ string sub --start=-2 abcde
     de
-
-
-
 
 ::
 
     >_ string split . example.com
     example
     com
-    
+
     >_ string split -r -m1 / /usr/local/bin/fish
     /usr/local/bin
     fish
-    
+
     >_ string split '' abc
     a
     b
     c
-
-
-
 
 ::
 
     >_ seq 3 | string join ...
     1...2...3
 
-
-
-
 ::
 
     >_ string trim ' abc  '
     abc
-    
+
     >_ string trim --right --chars=yz xyzzy zany
     x
     zan
-
-
-
 
 ::
 
     >_ echo \\x07 | string escape
     cg
 
-
-
-
 ::
 
     >_ string escape --style=var 'a1 b2'\\u6161
     a1_20b2__c_E6_85_A1
-
-
-
 
 ::
 
@@ -351,7 +328,7 @@ Examples
     two
     three
     "
-    
+
     >_ echo \"(echo one\ntwo\nthree | string collect -N)\"
     "one
     two
@@ -361,49 +338,42 @@ Examples
 Match Glob Examples
 -------------------
 
-
-
 ::
 
     >_ string match '?' a
     a
-    
+
     >_ string match 'a*b' axxb
     axxb
-    
+
     >_ string match -i 'a??B' Axxb
     Axxb
-    
+
     >_ echo 'ok?' | string match '*\\?'
     ok?
-    
+
     # Note that only the second STRING will match here.
     >_ string match 'foo' 'foo1' 'foo' 'foo2'
     foo
-    
+
     >_ string match -e 'foo' 'foo1' 'foo' 'foo2'
     foo1
     foo
     foo2
-    
-    
+
     >_ string match 'foo?' 'foo1' 'foo' 'foo2'
     foo1
     foo
     foo2
-    
-
 
 Match Regex Examples
 --------------------
-
-
 
 ::
 
     >_ string match -r 'cat|dog|fish' 'nice dog'
     dog
-    
+
     >_ string match -r -v "c.*[12]" {cat,dog}(seq 1 4)
     dog1
     dog2
@@ -411,99 +381,86 @@ Match Regex Examples
     dog3
     cat4
     dog4
-    
+
     >_ string match -r '(\\d\\d?):(\\d\\d):(\\d\\d)' 2:34:56
     2:34:56
     2
     34
     56
-    
+
     >_ string match -r '^(\\w{{2,4}})\\g1$' papa mud murmur
     papa
     pa
     murmur
     mur
-    
+
     >_ string match -r -a -n at ratatat
     2 2
     4 2
     6 2
-    
+
     >_ string match -r -i '0x[0-9a-f]{{1,8}}' 'int magic = 0xBadC0de;'
     0xBadC0de
 
-
 NUL Delimited Examples
 ----------------------
-
-
 
 ::
 
     >_ # Count files in a directory, without being confused by newlines.
     >_ count (find . -print0 | string split0)
     42
-    
+
     >_ # Sort a list of elements which may contain newlines
     >_ set foo beta alpha\\ngamma
     >_ set foo (string join0 $foo | sort -z | string split0)
     >_ string escape $foo[1]
     alpha\\ngamma
 
-
 Replace Literal Examples
 ------------------------
-
-
 
 ::
 
     >_ string replace is was 'blue is my favorite'
     blue was my favorite
-    
+
     >_ string replace 3rd last 1st 2nd 3rd
     1st
     2nd
     last
-    
+
     >_ string replace -a ' ' _ 'spaces to underscores'
     spaces_to_underscores
 
-
 Replace Regex Examples
 ----------------------
-
-
 
 ::
 
     >_ string replace -r -a '[^\\d.]+' ' ' '0 one two 3.14 four 5x'
     0 3.14 5
-    
+
     >_ string replace -r '(\\w+)\\s+(\\w+)' '$2 $1 $$' 'left right'
     right left $
-    
+
     >_ string replace -r '\\s*newline\\s*' '\\n' 'put a newline here'
     put a
     here
 
-
 Repeat Examples
 ---------------
-
-
 
 ::
 
     >_ string repeat -n 2 'foo '
     foo foo
-    
+
     >_ echo foo | string repeat -n 2
     foofoo
-    
+
     >_ string repeat -n 2 -m 5 'foo'
     foofo
-    
+
     >_ string repeat -m 5 'foo'
     foofo
-

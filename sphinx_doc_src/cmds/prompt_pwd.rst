@@ -19,22 +19,19 @@ To change the number of characters per path component, set $fish_prompt_pwd_dir_
 Examples
 --------
 
-
-
 ::
 
     >_ cd ~/
     >_ echo $PWD
     /home/alfa
-    
+
     >_ prompt_pwd
     ~
-    
+
     >_ cd /tmp/banana/sausage/with/mustard
     >_ prompt_pwd
     /t/b/s/w/mustard
-    
+
     >_ set -g fish_prompt_pwd_dir_length 3
     >_ prompt_pwd
     /tmp/ban/sau/wit/mustard
-

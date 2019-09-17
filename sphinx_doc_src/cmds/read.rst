@@ -89,16 +89,14 @@ The following code stores the value 'hello' in the shell variable ``$foo``.
 ::
 
     echo hello|read foo
-    
+
     # This is a neat way to handle command output by-line:
     printf '%s\n' line1 line2 line3 line4 | while read -l foo
                       echo "This is another line: $foo"
                   end
-    
+
     # Delimiters given via "-d" are taken as one string
     echo a==b==c | read -d == -l a b c
     echo $a # a
     echo $b # b
     echo $c # c
-    
-

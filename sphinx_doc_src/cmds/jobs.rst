@@ -6,7 +6,9 @@ jobs - print currently running jobs
 Synopsis
 --------
 
-jobs [OPTIONS] [PID]
+::
+
+    jobs [OPTIONS] [PID]
 
 
 Description

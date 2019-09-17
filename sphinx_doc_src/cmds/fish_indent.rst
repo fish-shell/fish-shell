@@ -6,7 +6,9 @@ fish_indent - indenter and prettifier
 Synopsis
 --------
 
-fish_indent [OPTIONS] [FILE...]
+::
+
+    fish_indent [OPTIONS] [FILE...]
 
 
 Description

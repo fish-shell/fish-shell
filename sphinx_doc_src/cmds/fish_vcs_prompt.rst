@@ -3,6 +3,15 @@
 fish_vcs_prompt - output version control system information for use in a prompt
 ===============================================================================
 
+Synopsis
+--------
+
+::
+
+     function fish_prompt
+          echo -n (pwd)(fish_vcs_prompt) '$ '
+     end
+
 Description
 -----------
 

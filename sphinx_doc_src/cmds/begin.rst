@@ -6,7 +6,9 @@ begin - start a new block of code
 Synopsis
 --------
 
-begin; [COMMANDS...;] end
+::
+
+    begin; [COMMANDS...;] end
 
 
 Description

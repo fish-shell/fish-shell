@@ -6,8 +6,10 @@ source - evaluate contents of file.
 Synopsis
 --------
 
-source FILENAME [ARGUMENTS...]
-somecommand | source
+::
+
+    source FILENAME [ARGUMENTS...]
+    somecommand | source
 
 
 Description

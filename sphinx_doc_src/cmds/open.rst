@@ -6,7 +6,9 @@ open - open file in its default application
 Synopsis
 --------
 
-open FILES...
+::
+
+    open FILES...
 
 
 Description

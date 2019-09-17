@@ -3,6 +3,15 @@
 fish_svn_prompt - output Subversion information for use in a prompt
 ===================================================================
 
+Synopsis
+--------
+
+::
+
+     function fish_prompt
+          echo -n (pwd)(fish_svn_prompt) '$ '
+     end
+
 Description
 -----------
 

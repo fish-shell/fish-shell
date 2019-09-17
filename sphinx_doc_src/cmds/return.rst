@@ -6,8 +6,9 @@ return - stop the current inner function
 Synopsis
 --------
 
-function NAME; [COMMANDS...;] return [STATUS]; [COMMANDS...;] end
+::
 
+    function NAME; [COMMANDS...;] return [STATUS]; [COMMANDS...;] end
 
 Description
 -----------

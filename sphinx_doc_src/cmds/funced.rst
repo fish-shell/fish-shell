@@ -6,8 +6,9 @@ funced - edit a function interactively
 Synopsis
 --------
 
-funced [OPTIONS] NAME
+::
 
+    funced [OPTIONS] NAME
 
 Description
 -----------

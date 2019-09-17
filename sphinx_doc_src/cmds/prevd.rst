@@ -6,8 +6,9 @@ prevd - move backward through directory history
 Synopsis
 --------
 
-prevd [ -l | --list ] [POS]
+::
 
+    prevd [ -l | --list ] [POS]
 
 Description
 -----------

@@ -6,18 +6,14 @@ bind - handle fish key bindings
 Synopsis
 --------
 
-``bind [(-M | --mode) MODE] [(-m | --sets-mode) NEW_MODE] [--preset | --user] [(-s | --silent)] [(-k | --key)] SEQUENCE COMMAND [COMMAND...]``
+::
 
-``bind [(-M | --mode) MODE] [(-k | --key)] [--preset] [--user] SEQUENCE``
-
-``bind (-K | --key-names) [(-a | --all)] [--preset] [--user]``
-
-``bind (-f | --function-names)``
-
-``bind (-L | --list-modes)``
-
-``bind (-e | --erase) [(-M | --mode) MODE] [--preset] [--user] (-a | --all | [(-k | --key)] SEQUENCE [SEQUENCE...])``
-
+    bind [(-M | --mode) MODE] [(-m | --sets-mode) NEW_MODE] [--preset | --user] [(-s | --silent)] [(-k | --key)] SEQUENCE COMMAND [COMMAND...]
+    bind [(-M | --mode) MODE] [(-k | --key)] [--preset] [--user] SEQUENCE
+    bind (-K | --key-names) [(-a | --all)] [--preset] [--user]
+    bind (-f | --function-names)
+    bind (-L | --list-modes)
+    bind (-e | --erase) [(-M | --mode) MODE] [--preset] [--user] (-a | --all | [(-k | --key)] SEQUENCE [SEQUENCE...])
 
 Description
 -----------

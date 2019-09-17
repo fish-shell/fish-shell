@@ -6,7 +6,9 @@ funcsave - save the definition of a function to the user's autoload directory
 Synopsis
 --------
 
-funcsave FUNCTION_NAME
+::
+
+    funcsave FUNCTION_NAME
 
 
 Description

@@ -3,11 +3,12 @@
 cdh - change to a recently visited directory
 ============================================
 
-
 Synopsis
 --------
 
-cdh [ directory ]
+::
+
+    cdh [ directory ]
 
 
 Description

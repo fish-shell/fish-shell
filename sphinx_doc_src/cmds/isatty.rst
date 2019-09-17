@@ -6,8 +6,9 @@ isatty - test if a file descriptor is a tty.
 Synopsis
 --------
 
-isatty [FILE DESCRIPTOR]
+::
 
+    isatty [FILE DESCRIPTOR]
 
 Description
 -----------

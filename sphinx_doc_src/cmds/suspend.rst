@@ -6,8 +6,9 @@ suspend - suspend the current shell
 Synopsis
 --------
 
-suspend [--force]
+::
 
+    suspend [--force]
 
 Description
 -----------

@@ -6,8 +6,9 @@ exit - exit the shell
 Synopsis
 --------
 
-exit [STATUS]
+::
 
+    exit [STATUS]
 
 Description
 -----------

@@ -3,6 +3,12 @@
 fish_config - start the web-based configuration interface
 =========================================================
 
+Synopsis
+--------
+
+::
+
+    fish_config [TAB]
 
 Description
 -----------

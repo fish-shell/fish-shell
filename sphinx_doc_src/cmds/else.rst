@@ -6,8 +6,9 @@ else - execute command if a condition is not met
 Synopsis
 --------
 
-if CONDITION; COMMANDS_TRUE...; [else; COMMANDS_FALSE...;] end
+::
 
+    if CONDITION; COMMANDS_TRUE...; [else; COMMANDS_FALSE...;] end
 
 Description
 -----------

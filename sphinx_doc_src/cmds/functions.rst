@@ -6,12 +6,13 @@ functions - print or erase functions
 Synopsis
 --------
 
-functions [ -a | --all ] [ -n | --names ]
-functions [ -D | --details ] [ -v ] FUNCTION
-functions -c OLDNAME NEWNAME
-functions -d DESCRIPTION FUNCTION
-functions [ -e | -q ] FUNCTIONS...
+::
 
+    functions [ -a | --all ] [ -n | --names ]
+    functions [ -D | --details ] [ -v ] FUNCTION
+    functions -c OLDNAME NEWNAME
+    functions -d DESCRIPTION FUNCTION
+    functions [ -e | -q ] FUNCTIONS...
 
 Description
 -----------

@@ -6,8 +6,9 @@ realpath - Convert a path to an absolute path without symlinks
 Synopsis
 --------
 
-realpath path
+::
 
+    realpath PATH
 
 Description
 -----------

@@ -6,8 +6,9 @@ help - display fish documentation
 Synopsis
 --------
 
-help [SECTION]
+::
 
+    help [SECTION]
 
 Description
 -----------

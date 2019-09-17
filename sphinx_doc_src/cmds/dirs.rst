@@ -6,9 +6,10 @@ dirs - print directory stack
 Synopsis
 --------
 
-dirs
-dirs -c
+::
 
+    dirs
+    dirs -c
 
 Description
 -----------

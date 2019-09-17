@@ -24,7 +24,6 @@ Synopsis
           [( -d | --description ) DESCRIPTION]
   complete ( -C[STRING] | --do-complete[=STRING] )
 
-
 Description
 -----------
 

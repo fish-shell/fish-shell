@@ -6,7 +6,9 @@ break - stop the current inner loop
 Synopsis
 --------
 
-LOOP_CONSTRUCT; [COMMANDS...] break; [COMMANDS...] end
+::
+
+    LOOP_CONSTRUCT; [COMMANDS...] break; [COMMANDS...] end
 
 
 Description

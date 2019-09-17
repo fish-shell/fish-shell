@@ -6,8 +6,9 @@ continue - skip the remainder of the current iteration of the current inner loop
 Synopsis
 --------
 
-LOOP_CONSTRUCT; [COMMANDS...;] continue; [COMMANDS...;] end
+::
 
+    LOOP_CONSTRUCT; [COMMANDS...;] continue; [COMMANDS...;] end
 
 Description
 -----------

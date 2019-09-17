@@ -3,6 +3,15 @@
 fish_git_prompt - output git information for use in a prompt
 ============================================================
 
+Synopsis
+--------
+
+::
+
+     function fish_prompt
+          echo -n (pwd)(fish_git_prompt) '$ '
+     end
+
 Description
 -----------
 

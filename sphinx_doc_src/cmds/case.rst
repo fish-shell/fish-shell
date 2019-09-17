@@ -6,8 +6,9 @@ case - conditionally execute a block of commands
 Synopsis
 --------
 
-switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end
+::
 
+    switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end
 
 Description
 -----------
@@ -20,13 +21,10 @@ Note that fish does not fall through on case statements. Only the first matching
 
 Note that command substitutions in a case statement will be evaluated even if its body is not taken. All substitutions, including command substitutions, must be performed before the value can be compared against the parameter.
 
-
 Example
 -------
 
 Say \$animal contains the name of an animal. Then this code would classify it:
-
-
 
 ::
 

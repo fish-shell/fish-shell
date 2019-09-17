@@ -6,8 +6,9 @@ false - return an unsuccessful result
 Synopsis
 --------
 
-false
+::
 
+    false
 
 Description
 -----------

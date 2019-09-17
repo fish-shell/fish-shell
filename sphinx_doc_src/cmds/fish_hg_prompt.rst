@@ -3,6 +3,15 @@
 fish_hg_prompt - output Mercurial information for use in a prompt
 =================================================================
 
+Synopsis
+--------
+
+::
+
+     function fish_prompt
+          echo -n (pwd)(fish_hg_prompt) '$ '
+     end
+
 Description
 -----------
 

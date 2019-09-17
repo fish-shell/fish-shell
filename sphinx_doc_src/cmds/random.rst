@@ -6,12 +6,13 @@ random - generate random number
 Synopsis
 --------
 
-random
-random SEED
-random START END
-random START STEP END
-random choice [ITEMS...]
+::
 
+    random
+    random SEED
+    random START END
+    random START STEP END
+    random choice [ITEMS...]
 
 Description
 -----------

@@ -6,7 +6,9 @@ pwd - output the current working directory
 Synopsis
 --------
 
-pwd
+::
+
+    pwd
 
 
 Description

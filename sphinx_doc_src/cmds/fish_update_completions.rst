@@ -3,6 +3,12 @@
 fish_update_completions - Update completions using manual pages
 ===============================================================
 
+Synopsis
+--------
+
+::
+
+     fish_update_completions
 
 Description
 -----------

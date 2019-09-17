@@ -6,7 +6,9 @@ eval - evaluate the specified commands
 Synopsis
 --------
 
-eval [COMMANDS...]
+::
+
+    eval [COMMANDS...]
 
 
 Description

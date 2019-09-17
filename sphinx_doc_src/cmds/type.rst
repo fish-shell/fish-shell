@@ -6,7 +6,9 @@ type - indicate how a command would be interpreted
 Synopsis
 --------
 
-type [OPTIONS] NAME [NAME ...]
+::
+
+    type [OPTIONS] NAME [NAME ...]
 
 
 Description

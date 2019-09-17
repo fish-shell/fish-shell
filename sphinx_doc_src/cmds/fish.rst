@@ -6,8 +6,9 @@ fish - the friendly interactive shell
 Synopsis
 --------
 
-fish [OPTIONS] [-c command] [FILE [ARGUMENTS...]]
+::
 
+    fish [OPTIONS] [-c command] [FILE [ARGUMENTS...]]
 
 Description
 -----------

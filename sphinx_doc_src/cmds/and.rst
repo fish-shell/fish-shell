@@ -6,7 +6,9 @@ and - conditionally execute a command
 Synopsis
 --------
 
-COMMAND1; and COMMAND2
+::
+
+    COMMAND1; and COMMAND2
 
 
 Description

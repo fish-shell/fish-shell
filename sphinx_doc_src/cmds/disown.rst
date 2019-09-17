@@ -6,8 +6,9 @@ disown - remove a process from the list of jobs
 Synopsis
 --------
 
-``disown [ PID ... ]``
+::
 
+    disown [ PID ... ]
 
 Description
 -----------

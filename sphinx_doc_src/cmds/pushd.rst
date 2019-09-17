@@ -6,8 +6,9 @@ pushd - push directory to directory stack
 Synopsis
 --------
 
-pushd [DIRECTORY]
+::
 
+    pushd [DIRECTORY]
 
 Description
 -----------

@@ -6,12 +6,14 @@ abbr - manage fish abbreviations
 Synopsis
 --------
 
-abbr --add [SCOPE] WORD EXPANSION
-abbr --erase word
-abbr --rename [SCOPE] OLD_WORD NEW_WORD
-abbr --show
-abbr --list
-abbr --query WORD...
+::
+
+    abbr --add [SCOPE] WORD EXPANSION
+    abbr --erase word
+    abbr --rename [SCOPE] OLD_WORD NEW_WORD
+    abbr --show
+    abbr --list
+    abbr --query WORD...
 
 Description
 -----------

@@ -6,9 +6,11 @@ alias - create a function
 Synopsis
 --------
 
-alias
-alias [OPTIONS] NAME DEFINITION
-alias [OPTIONS] NAME=DEFINITION
+::
+
+    alias
+    alias [OPTIONS] NAME DEFINITION
+    alias [OPTIONS] NAME=DEFINITION
 
 
 Description

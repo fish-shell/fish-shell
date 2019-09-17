@@ -6,8 +6,9 @@ cd - change directory
 Synopsis
 --------
 
-cd [DIRECTORY]
+::
 
+    cd [DIRECTORY]
 
 Description
 -----------

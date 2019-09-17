@@ -6,8 +6,9 @@ fg - bring job to foreground
 Synopsis
 --------
 
-fg [PID]
+::
 
+    fg [PID]
 
 Description
 -----------

@@ -12,9 +12,9 @@ prompt_pwd
 Description
 -----------
 
-prompt_pwd is a function to print the current working directory in a way suitable for prompts. It will replace the home directory with "~" and shorten every path component but the last to a default of one character.
+``prompt_pwd`` is a function to print the current working directory in a way suitable for prompts. It will replace the home directory with "~" and shorten every path component but the last to a default of one character.
 
-To change the number of characters per path component, set $fish_prompt_pwd_dir_length to the number of characters. Setting it to 0 or an invalid value will disable shortening entirely.
+To change the number of characters per path component, set ``$fish_prompt_pwd_dir_length`` to the number of characters. Setting it to 0 or an invalid value will disable shortening entirely.
 
 Examples
 --------

@@ -21,6 +21,8 @@ The return status of ``source`` is the return status of the last job to execute.
 
 ``.`` (a single period) is an alias for the ``source`` command. The use of ``.`` is deprecated in favour of ``source``, and ``.`` will be removed in a future version of fish.
 
+``source`` creates a new :ref:`local scope<variables-scope>`; ``set --local`` within a sourced block will not affect variables in the enclosing scope.
+
 
 Example
 -------

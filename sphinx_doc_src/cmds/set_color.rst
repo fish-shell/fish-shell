@@ -39,7 +39,7 @@ Notes
 1. Using the *normal* keyword will reset both background and foreground colors to whatever is the default for the terminal.
 2. Setting the background color only affects subsequently written characters. Fish provides no way to set the background color for the entire terminal window. Configuring the window background color (and other attributes such as its opacity) has to be done using whatever mechanisms the terminal provides.
 3. Some terminals use the ``--bold`` escape sequence to switch to a brighter color set rather than increasing the weight of text.
-4. ``set_color`` works by printing sequences of characters to *stdout*. If used in command substitution or a pipe, these characters will also be captured. This may or may not be desirable. Checking the exit code of ``isatty stdout`` before using ``set_color`` can be useful to decide not to colorize output in a script.
+4. ``set_color`` works by printing sequences of characters to *stdout*. If used in command substitution or a pipe, these characters will also be captured. This may or may not be desirable. Checking the exit status of ``isatty stdout`` before using ``set_color`` can be useful to decide not to colorize output in a script.
 
 Examples
 --------

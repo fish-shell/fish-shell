@@ -77,7 +77,7 @@ Arguments → Program → Return Values
 
 - the side effects take the center of the stage: they transform an **input stream of data** into an **output stream of data**. Both of these streams are usually the terminal, but they can be redirected.
 - the arguments become options or switches paired with data: the switches influence the behaviour of the command
-- the return value shrinks to an **exit code**: this exit code is 0 when the command executes normally and between 1 and 255 otherwise.
+- the return value shrinks to an **exit status**: this exit status is generally 0 when the command executes normally and between 1 and 255 otherwise.
 
 This leads to another way of programming and especially of combining commands:
 

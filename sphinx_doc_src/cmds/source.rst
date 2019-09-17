@@ -17,7 +17,7 @@ Description
 
 If no file is specified and stdin is not the terminal, or if the file name '``-``' is used, stdin will be read.
 
-The return status of ``source`` is the return status of the last job to execute. If something goes wrong while opening or reading the file, ``source`` exits with a non-zero status.
+The exit status of ``source`` is the exit status of the last job to execute. If something goes wrong while opening or reading the file, ``source`` exits with a non-zero status.
 
 ``.`` (a single period) is an alias for the ``source`` command. The use of ``.`` is deprecated in favour of ``source``, and ``.`` will be removed in a future version of fish.
 

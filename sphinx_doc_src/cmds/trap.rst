@@ -32,7 +32,7 @@ If ``ARG`` is not present and ``-p`` has been supplied, then the trap commands a
 
 Signal names are case insensitive and the ``SIG`` prefix is optional.
 
-The return status is 1 if any ``REASON`` is invalid; otherwise trap returns 0.
+The exit status is 1 if any ``REASON`` is invalid; otherwise trap returns 0.
 
 Example
 -------

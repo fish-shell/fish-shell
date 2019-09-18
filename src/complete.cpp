@@ -1699,8 +1699,7 @@ wcstring complete_print() {
             }
             append_format(out, L"complete%ls", modestr);
 
-            append_switch(out, e.cmd_is_path ? L"path" : L"command",
-                          escape_string(e.cmd, ESCAPE_ALL));
+            append_switch(out, e.cmd_is_path ? L"path" : L"command", e.cmd);
 
             switch (o.type) {
                 case option_type_args_only: {

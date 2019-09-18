@@ -161,8 +161,7 @@ static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high
             case 'n': {
                 long x = fish_wcstol(w.woptarg);
                 if (errno) {
-                    streams.err.append_format(_(L"%ls: max value '%ls' is not a valid number\n"),
-                                              cmd, w.woptarg);
+                    streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, w.woptarg);
                     return STATUS_INVALID_ARGS;
                 }
                 opts.max_items = static_cast<size_t>(x);

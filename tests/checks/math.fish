@@ -103,9 +103,9 @@ not math '2 + 2 4'
 # CHECKERR: '2 + 2 4'
 # CHECKERR:        ^
 not math
-# CHECKERR: math: Expected at least 1 args, got only 0
+# CHECKERR: math: Expected at least 1 args, got 0
 not math -s 12
-# CHECKERR: math: Expected at least 1 args, got only 0
+# CHECKERR: math: Expected at least 1 args, got 0
 not math 2^999999
 # CHECKERR: math: Error: Result is infinite
 # CHECKERR: '2^999999'

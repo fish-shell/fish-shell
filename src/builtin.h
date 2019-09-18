@@ -52,9 +52,10 @@ enum { COMMAND_NOT_BUILTIN, BUILTIN_REGULAR, BUILTIN_FUNCTION };
 #define BUILTIN_ERR_UNKNOWN _(L"%ls: Unknown option '%ls'\n")
 
 /// Error message for unexpected args.
+#define BUILTIN_ERR_ARG_COUNT0 _(L"%ls: Expected an argument\n")
 #define BUILTIN_ERR_ARG_COUNT1 _(L"%ls: Expected %d args, got %d\n")
 #define BUILTIN_ERR_ARG_COUNT2 _(L"%ls %ls: Expected %d args, got %d\n")
-#define BUILTIN_ERR_MIN_ARG_COUNT1 _(L"%ls: Expected at least %d args, got only %d\n")
+#define BUILTIN_ERR_MIN_ARG_COUNT1 _(L"%ls: Expected at least %d args, got %d\n")
 #define BUILTIN_ERR_MAX_ARG_COUNT1 _(L"%ls: Expected at most %d args, got %d\n")
 
 /// Error message for invalid variable name.
@@ -66,8 +67,8 @@ enum { COMMAND_NOT_BUILTIN, BUILTIN_REGULAR, BUILTIN_FUNCTION };
 /// Error message when too many arguments are supplied to a builtin.
 #define BUILTIN_ERR_TOO_MANY_ARGUMENTS _(L"%ls: Too many arguments\n")
 
-/// Error message when number expected
-#define BUILTIN_ERR_NOT_NUMBER _(L"%ls: Argument '%ls' is not a number\n")
+/// Error message when integer expected
+#define BUILTIN_ERR_NOT_NUMBER _(L"%ls: Argument '%ls' is not a valid integer\n")
 
 /// Command that requires a subcommand was invoked without a recognized subcommand.
 #define BUILTIN_ERR_MISSING_SUBCMD _(L"%ls: Expected a subcommand to follow the command\n")

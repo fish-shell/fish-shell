@@ -321,16 +321,16 @@ string repeat -m-1 "foo"; and echo "exit 0"
 # CHECKERR: string repeat: Invalid max value '-1'
 
 string repeat -n notanumber "foo"; and echo "exit 0"
-# CHECKERR: string repeat: Argument 'notanumber' is not a number
+# CHECKERR: string repeat: Argument 'notanumber' is not a valid integer
 
 string repeat -m notanumber "foo"; and echo "exit 0"
-# CHECKERR: string repeat: Argument 'notanumber' is not a number
+# CHECKERR: string repeat: Argument 'notanumber' is not a valid integer
 
 echo "stdin" | string repeat -n1 "and arg"; and echo "exit 0"
 # CHECKERR: string repeat: Too many arguments
 
 string repeat -n; and echo "exit 0"
-# CHECKERR: string repeat: Expected argument
+# CHECKERR: string repeat: Expected argument for option -n
 
 # FIXME: Also triggers usage
 # string repeat -l fakearg

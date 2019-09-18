@@ -37,8 +37,6 @@
 
 class parser_t;
 
-#define STRING_ERR_MISSING _(L"%ls: Expected argument\n")
-
 // How many bytes we read() at once.
 // Bash uses 128 here, so we do too (see READ_CHUNK_SIZE).
 // This should be about the size of a line.
@@ -462,7 +460,7 @@ static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, wc
             int retval = fn->second(argv, parser, streams, w, opts);
             if (retval != STATUS_CMD_OK) return retval;
         } else if (opt == ':') {
-            string_error(streams, STRING_ERR_MISSING, cmd);
+            string_error(streams, BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
             return STATUS_INVALID_ARGS;
         } else if (opt == '?') {
             string_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
@@ -477,15 +475,16 @@ static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, wc
     // If the caller requires one or two mandatory args deal with that here.
     if (n_req_args) {
         opts->arg1 = string_get_arg_argv(optind, argv);
-        if (!opts->arg1) {
-            string_error(streams, STRING_ERR_MISSING, cmd);
+        if (!opts->arg1 && n_req_args == 1) {
+            string_error(streams, BUILTIN_ERR_ARG_COUNT0, cmd);
             return STATUS_INVALID_ARGS;
         }
     }
     if (n_req_args > 1) {
         opts->arg2 = string_get_arg_argv(optind, argv);
         if (!opts->arg2) {
-            string_error(streams, STRING_ERR_MISSING, cmd);
+            string_error(streams, BUILTIN_ERR_MIN_ARG_COUNT1, cmd, n_req_args,
+                         !!opts->arg2 + !!opts->arg1);
             return STATUS_INVALID_ARGS;
         }
     }

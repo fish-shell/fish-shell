@@ -29,7 +29,7 @@ argparse h-help=x
 # --max-args and --min-args work
 begin
     argparse --name min-max --min-args 1 h/help --
-    #CHECKERR: min-max: Expected at least 1 args, got only 0
+    #CHECKERR: min-max: Expected at least 1 args, got 0
     argparse --name min-max --min-args 1 --max-args 3 h/help -- arg1
     argparse --name min-max --min-args 1 --max-args 3 h/help -- arg1 arg2
     argparse --name min-max --min-args 1 --max-args 3 h/help -- --help arg1 arg2 arg3

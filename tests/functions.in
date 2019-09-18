@@ -8,7 +8,7 @@ end
 # ==========
 # Verify that `functions --details` works as expected when given too many args.
 set x (functions --details f1 f2 2>&1)
-if test "$x" != "functions: Expected exactly one function name for --details"
+if test "$x" != "functions --details: Expected 1 args, got 2"
     echo "Unexpected output for 'functions --details f1 f2': $x" >&2
 end
 

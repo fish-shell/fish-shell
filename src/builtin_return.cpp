@@ -82,7 +82,7 @@ int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     } else {
         retval = fish_wcstoi(argv[1]);
         if (errno) {
-            streams.err.append_format(_(L"%ls: Argument '%ls' must be an integer\n"), cmd, argv[1]);
+            streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, argv[1]);
             builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
         }

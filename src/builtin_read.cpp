@@ -127,8 +127,7 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
                         return STATUS_INVALID_ARGS;
                     }
 
-                    streams.err.append_format(_(L"%ls: Argument '%ls' must be an integer\n"), cmd,
-                                              w.woptarg);
+                    streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, w.woptarg);
                     builtin_print_error_trailer(parser, streams.err, cmd);
                     return STATUS_INVALID_ARGS;
                 }

@@ -64,7 +64,7 @@ int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         auto parse_ll = [&](const wchar_t *str) {
             long long ll = fish_wcstoll(str);
             if (errno) {
-                streams.err.append_format(L"%ls: %ls is not a valid integer\n", cmd, str);
+                streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, str);
                 parse_error = true;
             }
             return ll;
@@ -72,7 +72,7 @@ int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         auto parse_ull = [&](const wchar_t *str) {
             unsigned long long ull = fish_wcstoull(str);
             if (errno) {
-                streams.err.append_format(L"%ls: %ls is not a valid integer\n", cmd, str);
+                streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, str);
                 parse_error = true;
             }
             return ull;

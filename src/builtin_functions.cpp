@@ -287,7 +287,7 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Erase, desc, query, copy and list are mutually exclusive.
     bool describe = opts.description ? true : false;
     if (describe + opts.erase + opts.list + opts.query + opts.copy > 1) {
-        streams.err.append_format(_(L"%ls: Invalid combination of options\n"), cmd);
+        streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
@@ -319,8 +319,8 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (opts.report_metadata) {
         if (argc - optind != 1) {
-            streams.err.append_format(_(L"%ls: Expected exactly one function name for --details\n"),
-                                      cmd);
+            streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, argv[optind -1], 1,
+                                      argc - optind);
             return STATUS_INVALID_ARGS;
         }
 

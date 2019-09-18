@@ -34,12 +34,18 @@
 class parser_t;
 
 static void print_colors(io_streams_t &streams) {
-    const wcstring_list_t result = rgb_color_t::named_color_names();
-    size_t i;
-    for (i = 0; i < result.size(); i++) {
-        streams.out.append(result.at(i));
-        streams.out.push_back(L'\n');
-    }
+    outputter_t outp;
+
+    for (wcstring color_name : rgb_color_t::named_color_names()) {
+        if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
+            rgb_color_t color = rgb_color_t(color_name);
+            outp.set_color(color, rgb_color_t::none());
+        }
+        outp.writestr(color_name.c_str());
+        outp.writech(L'\n');
+    } // conveniently, 'normal' is always the last color so we don't need to reset here
+
+    streams.out.append(str2wcstring(outp.contents()));
 }
 
 static const wchar_t *const short_options = L":b:hvoidrcu";

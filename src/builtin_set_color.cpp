@@ -41,7 +41,7 @@ static void print_colors(io_streams_t &streams) {
             rgb_color_t color = rgb_color_t(color_name);
             outp.set_color(color, rgb_color_t::none());
         }
-        outp.writestr(color_name.c_str());
+        outp.writestr(color_name);
         outp.writech(L'\n');
     } // conveniently, 'normal' is always the last color so we don't need to reset here
 

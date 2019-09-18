@@ -54,14 +54,6 @@
 #define DEFAULT_TERM1 "ansi"
 #define DEFAULT_TERM2 "dumb"
 
-/// Some configuration path environment variables.
-#define FISH_DATADIR_VAR L"__fish_data_dir"
-#define FISH_SYSCONFDIR_VAR L"__fish_sysconf_dir"
-#define FISH_HELPDIR_VAR L"__fish_help_dir"
-#define FISH_BIN_DIR L"__fish_bin_dir"
-#define FISH_CONFIG_DIR L"__fish_config_dir"
-#define FISH_USER_DATA_DIR L"__fish_user_data_dir"
-
 /// List of all locale environment variable names that might trigger (re)initializing the locale
 /// subsystem.
 static const wcstring_list_t locale_variables({L"LANG", L"LANGUAGE", L"LC_ALL", L"LC_ADDRESS",

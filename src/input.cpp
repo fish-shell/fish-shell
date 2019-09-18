@@ -32,8 +32,6 @@
 #include "signal.h"  // IWYU pragma: keep
 #include "wutil.h"   // IWYU pragma: keep
 
-#define MAX_INPUT_FUNCTION_ARGS 20
-
 /// A name for our own key mapping for nul.
 static const wchar_t *k_nul_mapping_name = L"nul";
 

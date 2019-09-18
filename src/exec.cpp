@@ -49,9 +49,6 @@
 /// File descriptor redirection error message.
 #define FD_ERROR _(L"An error occurred while redirecting file descriptor %d")
 
-/// File descriptor redirection error message.
-#define WRITE_ERROR _(L"An error occurred while writing output")
-
 /// File redirection error message.
 #define FILE_ERROR _(L"An error occurred while redirecting file '%ls'")
 

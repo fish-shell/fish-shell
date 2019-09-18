@@ -5,9 +5,6 @@
 
 #include <fcntl.h>
 
-/// File descriptor redirection error message.
-#define FD_ERROR "An error occurred while redirecting file descriptor %s"
-
 #define NOCLOB_ERROR _(L"The file '%ls' already exists")
 
 #define FILE_ERROR _(L"An error occurred while redirecting file '%ls'")

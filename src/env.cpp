@@ -33,9 +33,6 @@
 #include "reader.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-#define DEFAULT_TERM1 "ansi"
-#define DEFAULT_TERM2 "dumb"
-
 /// Some configuration path environment variables.
 #define FISH_DATADIR_VAR L"__fish_data_dir"
 #define FISH_SYSCONFDIR_VAR L"__fish_sysconf_dir"

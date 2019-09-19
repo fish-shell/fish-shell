@@ -22,6 +22,7 @@
 #include "parser.h"
 #include "tnode.h"
 #include "tokenizer.h"
+#include "wcstringutil.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -38,6 +39,9 @@
 
 /// Error message for arguments to 'end'
 #define END_ARG_ERR_MSG _(L"'end' does not take arguments. Did you forget a ';'?")
+
+/// Maximum length of a variable name to show in error reports before truncation
+static constexpr int var_err_len = 16;
 
 int parse_util_lineno(const wchar_t *str, size_t offset) {
     if (!str) return 0;
@@ -631,7 +635,7 @@ static void compute_indents_recursive(const parse_node_tree_t &tree, node_offset
             indents->at(node.source_start) = node_indent;
         } else {
             // An empty node. We have a source offset but no source length. This can come about when
-            // a node legitimately empty:
+            // a node is legitimately empty:
             //
             //   while true; end
             //
@@ -793,22 +797,6 @@ static bool first_argument_is_help(tnode_t<grammar::plain_statement> statement,
     return is_help;
 }
 
-/// If a var name or command is too long for error reporting, make it shorter.
-static wcstring truncate_string(const wcstring &str) {
-    const size_t max_len = 16;
-    wcstring result(str, 0, max_len);
-    if (str.size() > max_len) {
-        // Truncate!
-        wchar_t ellipsis_char = get_ellipsis_char();
-        if (ellipsis_char == L'\x2026') {
-            result.at(max_len - 1) = ellipsis_char;
-        } else {
-            result.replace(max_len - 3, 3, L"...");
-        }
-    }
-    return result;
-}
-
 /// Given a wide character immediately after a dollar sign, return the appropriate error message.
 /// For example, if wc is @, then the variable name was $@ and we suggest $argv.
 static const wchar_t *error_format_for_character(wchar_t wc) {
@@ -868,7 +856,7 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
                 append_syntax_error(
                     errors, global_after_dollar_pos,
                     double_quotes ? ERROR_BRACKETED_VARIABLE_QUOTED1 : ERROR_BRACKETED_VARIABLE1,
-                    truncate_string(var_name).c_str());
+                    truncate(var_name, var_err_len).c_str());
             } else {
                 append_syntax_error(errors, global_after_dollar_pos, ERROR_BAD_VAR_CHAR1, L'{');
             }
@@ -898,7 +886,7 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
             }
 
             append_syntax_error(errors, global_dollar_pos, ERROR_BAD_VAR_SUBCOMMAND1,
-                                truncate_string(token_after_parens).c_str());
+                                truncate(token_after_parens, var_err_len).c_str());
             break;
         }
         case L'\0': {
@@ -952,7 +940,7 @@ static parser_test_error_bits_t detect_dollar_cmdsub_errors(size_t arg_src_offse
             append_syntax_error(
                 out_errors,
                 arg_src_offset + arg_src.size() - 1,  // global position of the dollar
-                ERROR_BAD_VAR_SUBCOMMAND1, truncate_string(subcommand_first_token).c_str());
+                ERROR_BAD_VAR_SUBCOMMAND1, truncate(subcommand_first_token, var_err_len).c_str());
         }
     }
 

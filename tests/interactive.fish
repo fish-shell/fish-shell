@@ -42,14 +42,14 @@ end
 function test_file
     set -l file $argv[1]
     echo -n "Testing file $file ... "
-    set starttime (date +%s)
+    set starttime (timestamp)
     begin
         set -lx TERM dumb
         expect -n -c 'source interactive.expect.rc' -f $file >$file.tmp.out 2>$file.tmp.err
     end
     set -l exit_status $status
     set -l res ok
-    set test_duration (math (date +%s) - $starttime)
+    set test_duration (delta $starttime)
     mv -f interactive.tmp.log $file.tmp.log
 
     diff $file.tmp.out $file.out >/dev/null
@@ -58,7 +58,7 @@ function test_file
     set -l err_status $status
 
     if test $out_status -eq 0 -a $err_status -eq 0 -a $exit_status -eq 0
-        say green "ok ($test_duration sec)"
+        say green "ok ($test_duration $unit)"
         # clean up tmp files
         rm -f $file.tmp.{err,out,log}
         return 0

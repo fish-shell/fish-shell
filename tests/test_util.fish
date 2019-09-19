@@ -136,7 +136,7 @@ end
 
 # lame timer
 for program in {g,}date
-    if $program --version
+    if $program --version 1>/dev/null 2>/dev/null
         set milli $program
         set unit ms
         break
@@ -145,13 +145,13 @@ for program in {g,}date
     end
 end
 
-function timestamp -V milli
+function timestamp
     set -q milli[1]
     and $milli +%s%3N
     or date +%s
 end
 
-function delta -V milli
+function delta
     set -q milli[1]
     and math "( "($milli +%s%3N)" - $argv[1])"
     or math (date +%s) - $starttime

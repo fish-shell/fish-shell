@@ -523,8 +523,7 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
 wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote, bool no_tilde) {
     wcstring result;
     if (quote == L'\0') {
-        escape_flags_t flags =
-            ESCAPE_ALL | ESCAPE_NO_QUOTED | (no_tilde ? ESCAPE_NO_TILDE : 0) | ESCAPE_SEPARATORS;
+        escape_flags_t flags = ESCAPE_ALL | ESCAPE_NO_QUOTED | (no_tilde ? ESCAPE_NO_TILDE : 0);
         result = escape_string(cmd, flags);
     } else {
         // Here we are going to escape a string with quotes.

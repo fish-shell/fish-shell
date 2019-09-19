@@ -232,8 +232,4 @@ void reader_bg_job_warning(const parser_t &parser);
 /// been executed between invocations of code.
 uint64_t reader_run_count();
 
-/// Test if the specified character in the specified string is backslashed. pos may be at the end of
-/// the string, which indicates if there is a trailing backslash.
-bool is_backslashed(const wcstring &str, size_t pos);
-
 #endif

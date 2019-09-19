@@ -488,6 +488,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 static volatile sig_atomic_t interrupted = 0;
 
 // Prototypes for a bunch of functions defined later on.
+static bool is_backslashed(const wcstring &str, size_t pos);
 static wchar_t unescaped_quote(const wcstring &str, size_t pos);
 
 /// Mode on startup, which we restore on exit.
@@ -2298,7 +2299,9 @@ static int can_read(int fd) {
     return select(fd + 1, &fds, 0, 0, &can_read_timeout) == 1;
 }
 
-bool is_backslashed(const wcstring &str, size_t pos) {
+/// Test if the specified character in the specified string is backslashed. pos may be at the end of
+/// the string, which indicates if there is a trailing backslash.
+static bool is_backslashed(const wcstring &str, size_t pos) {
     // note pos == str.size() is OK.
     if (pos > str.size()) return false;
 

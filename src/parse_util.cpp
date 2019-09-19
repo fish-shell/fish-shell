@@ -882,7 +882,7 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
 
             // Make sure we always show something.
             if (token_after_parens.empty()) {
-                token_after_parens = L"...";
+                token_after_parens = get_ellipsis_str();
             }
 
             append_syntax_error(errors, global_dollar_pos, ERROR_BAD_VAR_SUBCOMMAND1,
@@ -935,7 +935,7 @@ static parser_test_error_bits_t detect_dollar_cmdsub_errors(size_t arg_src_offse
             wcstring subcommand_first_token = tok_first(cmdsubst_src);
             if (subcommand_first_token.empty()) {
                 // e.g. $(). Report somthing.
-                subcommand_first_token = L"...";
+                subcommand_first_token = get_ellipsis_str();
             }
             append_syntax_error(
                 out_errors,

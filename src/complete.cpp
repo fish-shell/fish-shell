@@ -1662,12 +1662,19 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
 
 /// Print the short switch \c opt, and the argument \c arg to the specified
 /// wcstring, but only if \c argument isn't an empty string.
-static void append_switch(wcstring &out, const wchar_t opt, const wcstring arg) {
+static void append_switch(wcstring &out, wchar_t opt, const wcstring arg) {
     if (arg.empty()) return;
     append_format(out, L" -%lc %ls", opt, escape_string(arg, ESCAPE_ALL).c_str());
 }
-static void append_switch(wcstring &out, const wchar_t opt) {
+static void append_switch(wcstring &out, const wcstring opt, const wcstring arg) {
+    if (arg.empty()) return;
+    append_format(out, L" --%ls %ls", opt.c_str(), escape_string(arg, ESCAPE_ALL).c_str());
+}
+static void append_switch(wcstring &out, wchar_t opt) {
     append_format(out, L" -%lc", opt);
+}
+static void append_switch(wcstring &out, const wcstring opt) {
+    append_format(out, L" --%ls", opt.c_str());
 }
 
 /// Use by the bare `complete`, loaded completions are printed out as commands
@@ -1690,13 +1697,13 @@ wcstring complete_print() {
             if (o.flags & COMPLETE_DONT_SORT) append_switch(out, L'k');
 
             if (o.result_mode.no_files && o.result_mode.requires_param) {
-                append_switch(out, L'x');
+                append_switch(out, L"exclusive");
             } else if (o.result_mode.no_files) {
-                append_switch(out, L'f');
+                append_switch(out, L"no-files");
             } else if (o.result_mode.force_files) {
-                append_switch(out, L'F');
+                append_switch(out, L"force-files");
             } else if (o.result_mode.requires_param) {
-                append_switch(out, L'r');
+                append_switch(out, L"requires-param");
             }
 
             append_switch(out, e.cmd_is_path ? L'p' : L'c', e.cmd);
@@ -1728,8 +1735,10 @@ wcstring complete_print() {
     for (const auto &entry : *locked_wrappers) {
         const wcstring &src = entry.first;
         for (const wcstring &target : entry.second) {
-            append_format(out, L"complete -c %ls --wraps %ls\n", src.c_str(),
-                          target.c_str());
+            out.append(L"complete");
+            append_switch(out, L'c', src);
+            append_switch(out, L"wraps", target);
+            out.append(L"\n");
         }
     }
     return out;

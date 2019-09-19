@@ -922,9 +922,8 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
         // While it may seem like first testing `path_get_path` before resorting to an env lookup
         // may be faster, path_get_path can potentially do a lot of FS/IO access, so env.get() +
         // function_exists() should still be faster.
-        head_exists =
-            head_exists || path_get_path(cmd_orig, nullptr,
-                                         vars);  // use cmd_orig here as it is potentially pathed
+        // Use cmd_orig here as it is potentially pathed.
+        head_exists = head_exists || path_get_path(cmd_orig, nullptr, vars);
     }
 
     if (!head_exists) {
@@ -1661,15 +1660,17 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
     *out_comps = completer.acquire_completions();
 }
 
-/// Print the GNU longopt style switch \c opt, and the argument \c argument to the specified
-/// stringbuffer, but only if arguemnt is non-null and longer than 0 characters.
-static void append_switch(wcstring &out, const wcstring &opt, const wcstring &argument) {
-    if (argument.empty()) return;
-
-    wcstring esc = escape_string(argument, ESCAPE_ALL);
-    append_format(out, L" --%ls %ls", opt.c_str(), esc.c_str());
+/// Print the short switch \c opt, and the argument \c arg to the specified
+/// wcstring, but only if \c argument isn't an empty string.
+static void append_switch(wcstring &out, const wchar_t opt, const wcstring arg) {
+    if (arg.empty()) return;
+    append_format(out, L" -%lc %ls", opt, escape_string(arg, ESCAPE_ALL).c_str());
+}
+static void append_switch(wcstring &out, const wchar_t opt) {
+    append_format(out, L" -%lc", opt);
 }
 
+/// Use by the bare `complete`, loaded completions are printed out as commands
 wcstring complete_print() {
     wcstring out;
     auto completion_set = s_completion_set.acquire();
@@ -1684,41 +1685,37 @@ wcstring complete_print() {
     for (const completion_entry_t &e : all_completions) {
         const option_list_t &options = e.get_options();
         for (const complete_entry_opt_t &o : options) {
-            const wchar_t *modestr = L"";
+            out.append(L"complete");
             if (o.result_mode.no_files && o.result_mode.requires_param) {
-                modestr = L" --exclusive";
+                append_switch(out, L'x');
             } else if (o.result_mode.no_files) {
-                modestr = L" --no-files";
+                append_switch(out, L'f');
             } else if (o.result_mode.force_files) {
-                modestr = L" --force-files";
+                append_switch(out, L'F');
             } else if (o.result_mode.requires_param) {
-                modestr = L" --require-parameter";
+                append_switch(out, L'r');
             }
-            append_format(out, L"complete%ls", modestr);
 
-            append_switch(out, e.cmd_is_path ? L"path" : L"command", e.cmd);
+            append_switch(out, e.cmd_is_path ? L'p' : L'c', e.cmd);
 
             switch (o.type) {
                 case option_type_args_only: {
                     break;
                 }
                 case option_type_short: {
-                    assert(!o.option.empty());  //!OCLINT(multiple unary operator)
-                    append_format(out, L" --short-option '%lc'", o.option.at(0));
+                    append_switch(out, L's', wcstring(1, o.option.at(0)));
                     break;
                 }
                 case option_type_single_long:
                 case option_type_double_long: {
-                    append_switch(
-                        out, o.type == option_type_single_long ? L"old-option" : L"long-option",
-                        o.option);
+                    append_switch(out, o.type == option_type_single_long ? L'o' : L'l', o.option);
                     break;
                 }
             }
 
-            append_switch(out, L"description", C_(o.desc));
-            append_switch(out, L"arguments", o.comp);
-            append_switch(out, L"condition", o.condition);
+            append_switch(out, L'd', C_(o.desc));
+            append_switch(out, L'a', o.comp);
+            append_switch(out, L'n', o.condition);
             out.append(L"\n");
         }
     }
@@ -1728,7 +1725,7 @@ wcstring complete_print() {
     for (const auto &entry : *locked_wrappers) {
         const wcstring &src = entry.first;
         for (const wcstring &target : entry.second) {
-            append_format(out, L"complete --command %ls --wraps %ls\n", src.c_str(),
+            append_format(out, L"complete -c %ls --wraps %ls\n", src.c_str(),
                           target.c_str());
         }
     }

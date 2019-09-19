@@ -133,3 +133,26 @@ function colordiff -d 'Colored diff output for unified diffs'
         end
     end
 end
+
+# lame timer
+for program in {g,}date
+    if $program --version
+        set milli $program
+        set unit ms
+        break
+    else
+        set unit sec
+    end
+end
+
+function timestamp -V milli
+    set -q milli[1]
+    and $milli +%s%3N
+    or date +%s
+end
+
+function delta -V milli
+    set -q milli[1]
+    and math "( "($milli +%s%3N)" - $argv[1])"
+    or math (date +%s) - $starttime
+end

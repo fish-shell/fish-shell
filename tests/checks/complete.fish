@@ -54,8 +54,8 @@ complete
 # CHECK: complete -p '/complete test/beta1' -s Z -d 'desc, desc'
 # CHECK: complete --requires-param -c 'complete test beta2' -d desc\ \'\ desc2\ \[ -a 'foo bar'
 # CHECK: complete --exclusive -c complete_test_beta2 -o test -n false
-# CHECK: complete -c myalias{{1|2}} --wraps 'complete_test_alpha1 arg{{1|2}}'
-# CHECK: complete -c complete_test_alpha{{3|2}} --wraps 'complete_test_alpha{{2|1}} extra{{2|1}}'
-# CHECK: complete -c myalias{{2|1}} --wraps 'complete_test_alpha1 arg{{2|1}}'
-# CHECK: complete -c complete_test_alpha{{2|3}} --wraps 'complete_test_alpha{{1|2}} extra{{1|2}}'
-# CHECK: complete -c . --wraps source
+# CHECK: complete {{.*}}
+# CHECK: complete {{.*}}
+# CHECK: complete {{.*}}
+# CHECK: complete {{.*}}
+# CHECK: complete {{.*}}

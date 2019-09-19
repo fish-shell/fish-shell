@@ -9,6 +9,7 @@
 import glob
 import os.path
 import pygments
+import subprocess
 from sphinx.errors import SphinxError, SphinxWarning
 
 # -- Helper functions --------------------------------------------------------
@@ -50,10 +51,14 @@ project = "fish-shell"
 copyright = "2019, fish-shell developers"
 author = "fish-shell developers"
 
-# The short X.Y version
-version = "3.1"
+# Parsing FISH-BUILD-VERSION-FILE is possible but hard to ensure that it is in the right place
+# fish_indent is guaranteed to be on PATH for the Pygments highlighter anyway
+ret = subprocess.run(('fish_indent', '--version',),
+                      stdout=subprocess.PIPE, stderr=subprocess.PIPE).stderr.decode('utf-8')
 # The full version, including alpha/beta/rc tags
-release = "3.1.0"
+release = ret.strip().split(' ')[-1]
+# The short X.Y version
+version = release.rsplit('.', 1)[0]
 
 
 # -- General configuration ---------------------------------------------------

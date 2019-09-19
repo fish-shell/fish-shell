@@ -1297,6 +1297,25 @@ highlighter_t::color_array_t highlighter_t::highlight() {
     return std::move(color_array);
 }
 
+/// Given a string and list of colors of the same size, return the string with ANSI escape sequences
+/// representing the colors.
+std::string colorize(const wcstring &text, const std::vector<highlight_spec_t> &colors) {
+    assert(colors.size() == text.size());
+    outputter_t outp;
+
+    highlight_spec_t last_color = highlight_role_t::normal;
+    for (size_t i = 0; i < text.size(); i++) {
+        highlight_spec_t color = colors.at(i);
+        if (color != last_color) {
+            outp.set_color(highlight_get_color(color, false), rgb_color_t::normal());
+            last_color = color;
+        }
+        outp.writech(text.at(i));
+    }
+    outp.set_color(rgb_color_t::normal(), rgb_color_t::normal());
+    return outp.contents();
+}
+
 void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos,
                      wcstring_list_t *error, const environment_t &vars) {
     UNUSED(error);

@@ -17,6 +17,8 @@
 #include "parse_constants.h"
 #include "parse_util.h"
 #include "parser.h"
+#include "highlight.h"
+#include "color.h"
 #include "reader.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -378,7 +380,17 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     } else if (cmd_to_complete.empty() && path.empty()) {
         // No arguments specified, meaning we print the definitions of all specified completions
         // to stdout.
-        streams.out.append(complete_print());
+        const wcstring repr = complete_print();
+
+        // colorize if interactive
+        if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
+            std::vector<highlight_spec_t> colors;
+            size_t len = repr.size();
+            highlight_shell_no_io(repr, colors, len, nullptr, env_stack_t::globals());
+            streams.out.append(str2wcstring(colorize(repr, colors)));
+        } else {
+            streams.out.append(repr);
+        }
     } else {
         int flags = COMPLETE_AUTO_SPACE;
         if (preserve_order) {

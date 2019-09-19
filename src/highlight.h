@@ -72,6 +72,8 @@ struct highlight_spec_t {
 
 class history_item_t;
 
+std::string colorize(const wcstring &text, const std::vector<highlight_spec_t> &colors);
+
 /// Perform syntax highlighting for the shell commands in buff. The result is stored in the color
 /// array as a color_code from the HIGHLIGHT_ enum for each character in buff.
 ///

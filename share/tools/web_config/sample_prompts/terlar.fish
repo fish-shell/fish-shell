@@ -6,7 +6,7 @@ function fish_prompt --description 'Write out the prompt'
 
     # User
     set_color $fish_color_user
-    echo -n (whoami)
+    echo -n $USER
     set_color normal
 
     echo -n '@'

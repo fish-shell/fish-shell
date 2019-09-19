@@ -39,3 +39,23 @@ complete -c t -l fileoption -rF
 # Only match one file because I don't want to touch this any time we add a test file.
 complete -C't --fileoption ' | string match bind.expect
 # CHECK: bind.expect
+
+# Make sure bare `complete` is reasonable,
+complete -p '/complete test/beta1' -d 'desc, desc' -sZ
+complete -c 'complete test beta2' -r -d 'desc \' desc2 [' -a 'foo bar'
+complete -c 'complete_test_beta2' -x -n 'false' -A -o test
+complete
+
+# CHECK: complete --no-files -c complete_test_alpha1 -a '(commandline)'
+# CHECK: complete --no-files -c complete_test_alpha2
+# CHECK: complete --no-files -c complete_test_alpha3
+# CHECK: complete --force-files -c t -l fileoption
+# CHECK: complete --no-files -c t -a '(t)'
+# CHECK: complete -p '/complete test/beta1' -s Z -d 'desc, desc'
+# CHECK: complete --requires-param -c 'complete test beta2' -d desc\ \'\ desc2\ \[ -a 'foo bar'
+# CHECK: complete --exclusive -c complete_test_beta2 -o test -n false
+# CHECK: complete -c myalias1 --wraps 'complete_test_alpha1 arg1'
+# CHECK: complete -c complete_test_alpha3 --wraps 'complete_test_alpha2 extra2'
+# CHECK: complete -c myalias2 --wraps 'complete_test_alpha1 arg2'
+# CHECK: complete -c complete_test_alpha2 --wraps 'complete_test_alpha1 extra1'
+# CHECK: complete -c . --wraps source

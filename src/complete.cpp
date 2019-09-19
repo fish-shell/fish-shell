@@ -1686,6 +1686,9 @@ wcstring complete_print() {
         const option_list_t &options = e.get_options();
         for (const complete_entry_opt_t &o : options) {
             out.append(L"complete");
+
+            if (o.flags & COMPLETE_DONT_SORT) append_switch(out, L'k');
+
             if (o.result_mode.no_files && o.result_mode.requires_param) {
                 append_switch(out, L'x');
             } else if (o.result_mode.no_files) {

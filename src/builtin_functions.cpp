@@ -139,11 +139,11 @@ static wcstring functions_def(const wcstring &name) {
     // But If the function name starts with a -, we'll need to output it after all the options.
     bool defer_function_name = (name.at(0) == L'-');
     if (!defer_function_name) {
-        out.append(escape_string(name, true));
+        out.append(escape_string(name, ESCAPE_ALL));
     }
 
     if (!desc.empty()) {
-        wcstring esc_desc = escape_string(desc, true);
+        wcstring esc_desc = escape_string(desc, ESCAPE_ALL);
         out.append(L" --description ");
         out.append(esc_desc);
     }
@@ -200,7 +200,7 @@ static wcstring functions_def(const wcstring &name) {
     // Output the function name if we deferred it.
     if (defer_function_name) {
         out.append(L" -- ");
-        out.append(escape_string(name, true));
+        out.append(escape_string(name, ESCAPE_ALL));
     }
 
     // Output any inherited variables as `set -l` lines.
@@ -319,7 +319,7 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (opts.report_metadata) {
         if (argc - optind != 1) {
-            streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, argv[optind -1], 1,
+            streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, argv[optind - 1], 1,
                                       argc - optind);
             return STATUS_INVALID_ARGS;
         }

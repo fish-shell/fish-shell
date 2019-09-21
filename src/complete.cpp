@@ -19,6 +19,7 @@
 #include <list>
 #include <memory>
 #include <numeric>
+#include <set>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
@@ -1307,16 +1308,16 @@ bool completer_t::try_complete_user(const wcstring &str) {
 #endif
 }
 
-// The callback type for walk_wrap_chain
+// The callback type for walk_wrap_chain.
 using wrap_chain_visitor_t = std::function<void(const wcstring &, const wcstring &, size_t depth)>;
 
-// Helper to complete a parameter for a command and its transitive wrap chain.
-// Given a command line \p command_line and the range of the command itself within the command line
-// as \p command_range, invoke the \p receiver with the command and the command line. Then, for each
-// target wrapped by the given command, update the command line with that target and invoke this
-// recursively.
-static void walk_wrap_chain(const wcstring &command_line, source_range_t command_range,
-                            const wrap_chain_visitor_t &visitor, size_t depth = 0) {
+// A set tracking which (command, wrap) pairs we have seen.
+using wrap_chain_visited_set_t = std::set<std::pair<wcstring, wcstring>>;
+
+// Recursive implementation of walk_wrap_chain().
+static void walk_wrap_chain_recursive(const wcstring &command_line, source_range_t command_range,
+                                      const wrap_chain_visitor_t &visitor,
+                                      wrap_chain_visited_set_t *visited, size_t depth) {
     // Limit our recursion depth. This prevents cycles in the wrap chain graph from overflowing.
     if (depth > 24) return;
     if (reader_test_should_cancel()) return;
@@ -1339,12 +1340,28 @@ static void walk_wrap_chain(const wcstring &command_line, source_range_t command
         if (!wrapped_command.empty()) {
             size_t where = faux_commandline.find(wrapped_command, command_range.start);
             if (where != wcstring::npos) {
-                // Recurse with our new command and command line.
-                source_range_t faux_source_range{uint32_t(where), uint32_t(wrapped_command.size())};
-                walk_wrap_chain(faux_commandline, faux_source_range, visitor, depth + 1);
+                // Do not recurse if we have already seen this.
+                if (visited->insert({command, wrapped_command}).second) {
+                    // Recurse with our new command and command line.
+                    source_range_t faux_source_range{uint32_t(where),
+                                                     uint32_t(wrapped_command.size())};
+                    walk_wrap_chain_recursive(faux_commandline, faux_source_range, visitor, visited,
+                                              depth + 1);
+                }
             }
         }
     }
+}
+
+// Helper to complete a parameter for a command and its transitive wrap chain.
+// Given a command line \p command_line and the range of the command itself within the command line
+// as \p command_range, invoke the \p receiver with the command and the command line. Then, for each
+// target wrapped by the given command, update the command line with that target and invoke this
+// recursively.
+static void walk_wrap_chain(const wcstring &command_line, source_range_t command_range,
+                            const wrap_chain_visitor_t &visitor) {
+    wrap_chain_visited_set_t visited;
+    walk_wrap_chain_recursive(command_line, command_range, visitor, &visited, 0);
 }
 
 /// If the argument contains a '[' typed by the user, completion by appending to the argument might

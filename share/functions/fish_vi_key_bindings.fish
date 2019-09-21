@@ -55,7 +55,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
     bind -s --preset -M insert "" self-insert
     # Space expands abbrs _and_ inserts itself.
-    bind -s --preset -M insert " " 'commandline -i " "; commandline -f expand-abbr'
+    bind -s --preset -M insert " " self-insert expand-abbr
 
     # Add a way to switch from insert to normal (command) mode.
     # Note if we are paging, we want to stay in insert mode

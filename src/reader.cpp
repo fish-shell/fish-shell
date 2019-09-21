@@ -1040,7 +1040,7 @@ static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) 
         case rl::backward_delete_char:
         case rl::kill_line:
         case rl::yank:
-        case rl::yank_POP:
+        case rl::yank_pop:
         case rl::backward_kill_line:
         case rl::kill_whole_line:
         case rl::kill_word:
@@ -2650,7 +2650,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             rls.yank_len = yank_str.size();
             break;
         }
-        case rl::yank_POP: {
+        case rl::yank_pop: {
             if (rls.yank_len) {
                 for (size_t i = 0; i < rls.yank_len; i++) remove_backward();
 
@@ -3231,7 +3231,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         assert((event_needing_handling->is_char() || event_needing_handling->is_readline()) &&
                "Should have a char or readline");
 
-        if (rls.last_cmd != rl::yank && rls.last_cmd != rl::yank_POP) {
+        if (rls.last_cmd != rl::yank && rls.last_cmd != rl::yank_pop) {
             rls.yank_len = 0;
         }
 

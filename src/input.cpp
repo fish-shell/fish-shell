@@ -97,7 +97,7 @@ static const input_function_metadata_t input_function_metadata[] = {
     {readline_cmd_t::backward_delete_char, L"backward-delete-char"},
     {readline_cmd_t::kill_line, L"kill-line"},
     {readline_cmd_t::yank, L"yank"},
-    {readline_cmd_t::yank_POP, L"yank-pop"},
+    {readline_cmd_t::yank_pop, L"yank-pop"},
     {readline_cmd_t::complete, L"complete"},
     {readline_cmd_t::complete_and_search, L"complete-and-search"},
     {readline_cmd_t::pager_toggle_search, L"pager-toggle-search"},

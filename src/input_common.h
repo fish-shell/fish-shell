@@ -23,7 +23,7 @@ enum class readline_cmd_t {
     backward_delete_char,
     kill_line,
     yank,
-    yank_POP,
+    yank_pop,
     complete,
     complete_and_search,
     pager_toggle_search,

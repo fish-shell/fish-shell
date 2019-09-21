@@ -15,6 +15,7 @@
 #include "builtin.h"
 #include "builtin_functions.h"
 #include "common.h"
+#include "complete.h"
 #include "env.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
@@ -136,10 +137,16 @@ static wcstring functions_def(const wcstring &name) {
     out.append(L"function ");
 
     // Typically we prefer to specify the function name first, e.g. "function foo --description bar"
-    // But If the function name starts with a -, we'll need to output it after all the options.
+    // But if the function name starts with a -, we'll need to output it after all the options.
     bool defer_function_name = (name.at(0) == L'-');
     if (!defer_function_name) {
         out.append(escape_string(name, ESCAPE_ALL));
+    }
+
+    // Output wrap targets.
+    for (const wcstring &wrap : complete_get_wrap_targets(name)) {
+        out.append(L" --wraps=");
+        out.append(escape_string(wrap, ESCAPE_ALL));
     }
 
     if (!desc.empty()) {

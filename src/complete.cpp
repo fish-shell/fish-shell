@@ -1083,6 +1083,7 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
 /// Perform generic (not command-specific) expansions on the specified string.
 void completer_t::complete_param_expand(const wcstring &str, bool do_file,
                                         bool handle_as_special_cd) {
+    if (reader_test_should_cancel()) return;
     expand_flags_t flags =
         this->expand_flags() | expand_flag::skip_cmdsubst | expand_flag::for_completions;
 
@@ -1318,6 +1319,7 @@ static void walk_wrap_chain(const wcstring &command_line, source_range_t command
                             const wrap_chain_visitor_t &visitor, size_t depth = 0) {
     // Limit our recursion depth. This prevents cycles in the wrap chain graph from overflowing.
     if (depth > 24) return;
+    if (reader_test_should_cancel()) return;
 
     // Extract command from the command line and invoke the receiver with it.
     wcstring command(command_line, command_range.start, command_range.length);

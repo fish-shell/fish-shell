@@ -3149,10 +3149,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
             // Some commands should have been handled internally by input_readch().
         case rl::self_insert: {
-            DIE("self-insert should have been handled by input_readch");
+            DIE("self-insert should have been handled by inputter_t::readch");
         }
         case rl::func_and: {
-            DIE("self-insert should have been handled by input_readch");
+            DIE("self-insert should have been handled by inputter_t::readch");
         }
         case rl::vi_arg_digit:
         case rl::vi_delete_to: {

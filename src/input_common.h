@@ -105,7 +105,12 @@ class char_event_t {
     } v_{};
 
    public:
+    /// The type of event.
     char_event_type_t type;
+
+    /// The sequence of characters in the input mapping which generated this event.
+    /// Note that the generic self-insert case does not have any characters, so this would be empty.
+    wcstring seq{};
 
     bool is_timeout() const { return type == char_event_type_t::timeout; }
 
@@ -129,7 +134,8 @@ class char_event_t {
 
     /* implicit */ char_event_t(wchar_t c) : type(char_event_type_t::charc) { v_.c = c; }
 
-    /* implicit */ char_event_t(readline_cmd_t rl) : type(char_event_type_t::readline) {
+    /* implicit */ char_event_t(readline_cmd_t rl, wcstring seq = {})
+        : type(char_event_type_t::readline), seq(std::move(seq)) {
         v_.rl = rl;
     }
 

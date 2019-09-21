@@ -3,7 +3,7 @@
 function __fish_whatis_current_token -d "Show man page entries related to the token under the cursor"
     set -l tok (commandline -pt)
 
-    if test $tok[1]
+    if test -n "$tok[1]"
         printf "\n"
         whatis $tok[1]
 

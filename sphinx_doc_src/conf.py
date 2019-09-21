@@ -53,9 +53,9 @@ author = "fish-shell developers"
 
 # Parsing FISH-BUILD-VERSION-FILE is possible but hard to ensure that it is in the right place
 # fish_indent is guaranteed to be on PATH for the Pygments highlighter anyway
-ret = subprocess.run(
-    ("fish_indent", "--version"), stdout=subprocess.PIPE, stderr=subprocess.PIPE
-).stderr.decode("utf-8")
+ret = subprocess.check_output(
+    ("fish_indent", "--version"), stderr=subprocess.STDOUT
+).decode("utf-8")
 # The full version, including alpha/beta/rc tags
 release = ret.strip().split(" ")[-1]
 # The short X.Y version

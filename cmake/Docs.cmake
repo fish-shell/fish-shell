@@ -26,14 +26,17 @@ ADD_CUSTOM_TARGET(sphinx-docs
     DEPENDS sphinx_doc_src/fish_indent_lexer.py fish_indent
     COMMENT "Building HTML documentation with Sphinx")
 
+# sphinx-manpages needs the fish_indent binary for the version number
 ADD_CUSTOM_TARGET(sphinx-manpages
-    ${SPHINX_EXECUTABLE}
+    env PATH="$<TARGET_FILE_DIR:fish_indent>:$$PATH"
+        ${SPHINX_EXECUTABLE}
         -q -b man
         -c "${SPHINX_SRC_DIR}"
         -d "${SPHINX_CACHE_DIR}"
         "${SPHINX_SRC_DIR}"
         # TODO: This only works if we only have section 1 manpages.
         "${SPHINX_MANPAGE_DIR}/man1"
+    DEPENDS fish_indent
     COMMENT "Building man pages with Sphinx")
 
 IF(SPHINX_EXECUTABLE)

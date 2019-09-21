@@ -71,6 +71,8 @@
 - `read` no longer keeps a history, making it suitable for operations that shouldn't end up there, like password entry (#5904).
 - When syntax highlighting a string with an unclosed quote, only the quote itself will be shown as an error, instead of the whole argument.
 - The nul character can now be bound via `bind -k nul`. Terminals often generate this character via control-space. (#3189).
+- A new readline command `expand-abbr` can be used to trigger abbreviation expansion (#5762).
+- The `self-insert` readline command will now insert the binding sequence, if not empty.
 
 ### For distributors and developers
 - The autotools-based build system and legacy Xcode build systems have been removed, leaving only the CMake build system. All distributors and developers must migrate to the CMake build.

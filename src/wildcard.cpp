@@ -499,10 +499,7 @@ class wildcard_expander_t {
 
     /// Indicate whether we should cancel wildcard expansion. This latches 'interrupt'.
     bool interrupted() {
-        if (!did_interrupt) {
-            did_interrupt = (is_main_thread() ? reader_test_and_clear_interrupted()
-                                              : reader_thread_job_is_stale());
-        }
+        did_interrupt = did_interrupt || reader_test_should_cancel();
         return did_interrupt;
     }
 

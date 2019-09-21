@@ -1278,9 +1278,7 @@ bool completer_t::try_complete_user(const wcstring &str) {
     setpwent();
     // cppcheck-suppress getpwentCalled
     while (struct passwd *pw = getpwent()) {
-        bool interrupted =
-            is_main_thread() ? reader_test_and_clear_interrupted() : reader_thread_job_is_stale();
-        if (interrupted) {
+        if (reader_test_should_cancel()) {
             break;
         }
         const wcstring pw_name_str = str2wcstring(pw->pw_name);
@@ -1670,9 +1668,7 @@ static void append_switch(wcstring &out, const wcstring opt, const wcstring arg)
     if (arg.empty()) return;
     append_format(out, L" --%ls %ls", opt.c_str(), escape_string(arg, ESCAPE_ALL).c_str());
 }
-static void append_switch(wcstring &out, wchar_t opt) {
-    append_format(out, L" -%lc", opt);
-}
+static void append_switch(wcstring &out, wchar_t opt) { append_format(out, L" -%lc", opt); }
 static void append_switch(wcstring &out, const wcstring opt) {
     append_format(out, L" --%ls", opt.c_str());
 }

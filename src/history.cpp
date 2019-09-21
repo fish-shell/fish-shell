@@ -579,11 +579,10 @@ bool history_search_t::go_backwards() {
     const size_t max_index = (size_t)-1;
 
     if (current_index_ == max_index) return false;
-    const bool main_thread = is_main_thread();
 
     size_t index = current_index_;
     while (++index < max_index) {
-        if (main_thread ? reader_test_and_clear_interrupted() : reader_thread_job_is_stale()) {
+        if (reader_test_should_cancel()) {
             return false;
         }
 

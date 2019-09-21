@@ -115,8 +115,10 @@ size_t reader_get_cursor_pos();
 /// selection, true otherwise.
 bool reader_get_selection(size_t *start, size_t *len);
 
-/// Return the value of the interrupted flag, which is set by the sigint handler.
-bool reader_test_interrupted();
+/// Return whether we have been interrupted and should cancel the current operation.
+/// This may be because we received a sigint, or because we are in a background thread
+/// and the job is now stale.
+bool reader_test_should_cancel();
 
 /// Return the value of the interrupted flag, which is set by the sigint handler, and clear it if it
 /// was set.
@@ -130,11 +132,6 @@ void reader_reset_interrupted();
 /// Return the value of the interrupted flag, which is set by the sigint handler, and clear it if it
 /// was set. If the current reader is interruptible, call \c reader_exit().
 int reader_reading_interrupted();
-
-/// Returns true if the current reader generation count does not equal the generation count the
-/// current thread was started with. Note 1: currently only valid for autocompletion threads! Other
-/// threads don't set the threadlocal generation count when they start up.
-bool reader_thread_job_is_stale();
 
 /// Read one line of input. Before calling this function, reader_push() must have been called in
 /// order to set up a valid reader environment. If nchars > 0, return after reading that many

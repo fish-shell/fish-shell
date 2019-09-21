@@ -836,7 +836,13 @@ void reader_data_t::repaint_if_needed() {
 
 void reader_reset_interrupted() { interrupted = 0; }
 
-bool reader_test_interrupted() { return interrupted != 0; }
+bool reader_test_should_cancel() {
+    if (is_main_thread()) {
+        return interrupted;
+    } else {
+        return read_generation_count() != s_thread_generation;
+    }
+}
 
 bool reader_test_and_clear_interrupted() {
     int res = interrupted;
@@ -844,11 +850,6 @@ bool reader_test_and_clear_interrupted() {
         interrupted = 0;
     }
     return res != 0;
-}
-
-bool reader_thread_job_is_stale() {
-    ASSERT_IS_BACKGROUND_THREAD();
-    return read_generation_count() != s_thread_generation;
 }
 
 void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor_position) {
@@ -1275,7 +1276,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
         }
 
         history_search_t searcher(*history, search_string, HISTORY_SEARCH_TYPE_PREFIX);
-        while (!reader_thread_job_is_stale() && searcher.go_backwards()) {
+        while (!reader_test_should_cancel() && searcher.go_backwards()) {
             history_item_t item = searcher.current_item();
 
             // Skip items with newlines because they make terrible autosuggestions.
@@ -1288,7 +1289,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
         }
 
         // Maybe cancel here.
-        if (reader_thread_job_is_stale()) return nothing;
+        if (reader_test_should_cancel()) return nothing;
 
         // Here we do something a little funny. If the line ends with a space, and the cursor is not
         // at the end, don't use completion autosuggestions. It ends up being pretty weird seeing

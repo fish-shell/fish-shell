@@ -466,17 +466,14 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
 
     std::vector<rgb_color_t> candidates;
 
-    wcstring_list_t el;
-    var.to_list(el);
-
-    for (size_t j = 0; j < el.size(); j++) {
-        const wcstring &next = el.at(j);
-        wcstring color_name;
+    wcstring color_name;
+    for (const wcstring &next : var.as_list()) {
+        color_name.clear();
         if (is_background) {
             // Look for something like "--background=red".
-            const wcstring prefix = L"--background=";
+            const wchar_t *prefix = L"--background=";
             if (string_prefixes_string(prefix, next)) {
-                color_name = wcstring(next, prefix.size());
+                color_name = wcstring(next, wcslen(prefix));
             }
         } else {
             if (next == L"--bold" || next == L"-o")

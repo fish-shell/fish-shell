@@ -2869,6 +2869,9 @@ static void test_completion_insertions() {
 
     TEST_1_COMPLETION(L"foo^", L"bar", COMPLETE_REPLACES_TOKEN, false, L"bar ^");
     TEST_1_COMPLETION(L"'foo^", L"bar", COMPLETE_REPLACES_TOKEN, false, L"bar ^");
+
+    // See #6130
+    TEST_1_COMPLETION(L": (:^ ''", L"", 0, false, L": (: ^''");
 }
 
 static void perform_one_autosuggestion_cd_test(const wcstring &command, const wcstring &expected,

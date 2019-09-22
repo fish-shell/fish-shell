@@ -4,8 +4,6 @@
 #include "common.h"
 #include "wcstringutil.h"
 
-#include <wctype.h>
-
 typedef wcstring::size_type size_type;
 
 wcstring_range wcstring_tok(wcstring &str, const wcstring &needle, wcstring_range last) {
@@ -62,11 +60,5 @@ wcstring trim(wcstring input, const wchar_t *any_of) {
     auto prefix = result.find_first_not_of(any_of);
     assert(prefix != wcstring::npos && "Should have one non-trimmed character");
     result.erase(0, prefix);
-    return result;
-}
-
-wcstring wcstolower(wcstring input) {
-    wcstring result = std::move(input);
-    std::transform(result.begin(), result.end(), result.begin(), towlower);
     return result;
 }

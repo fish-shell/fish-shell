@@ -22,7 +22,6 @@
 #include <cwchar>
 #include <functional>
 #include <iterator>
-#include <locale>
 #include <map>
 #include <numeric>
 #include <type_traits>
@@ -181,7 +180,7 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
     // search object if we're doing a case insensitive search.
     wcstring contents_lower;
     if (!case_sensitive) {
-        contents_lower = std::tolower(contents);
+        contents_lower = wcstolower(contents);
     }
     const wcstring &content_to_match = case_sensitive ? contents : contents_lower;
 

@@ -79,9 +79,9 @@ enum : wchar_t {
     VARIABLE_EXPAND,
     /// Character representing variable expansion into a single element.
     VARIABLE_EXPAND_SINGLE,
-    /// Character representing the start of a brace expansion.
+    /// Character representing the start of a bracket expansion.
     BRACE_BEGIN,
-    /// Character representing the end of a brace expansion.
+    /// Character representing the end of a bracket expansion.
     BRACE_END,
     /// Character representing separation between two bracket elements.
     BRACE_SEP,

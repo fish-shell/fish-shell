@@ -633,7 +633,7 @@ class wildcard_matcher_t : public string_matcher_t {
                        io_streams_t &streams)
         : string_matcher_t(opts, streams), wcpattern(parse_util_unescape_wildcards(pattern)) {
         if (opts.ignore_case) {
-            wcpattern = std::tolower(std::move(wcpattern));
+            wcpattern = wcstolower(std::move(wcpattern));
         }
         if (opts.entire) {
             if (!wcpattern.empty()) {
@@ -654,7 +654,7 @@ class wildcard_matcher_t : public string_matcher_t {
         bool match;
 
         if (opts.ignore_case) {
-            match = wildcard_match(std::tolower(arg), wcpattern, false);
+            match = wildcard_match(wcstolower(arg), wcpattern, false);
         } else {
             match = wildcard_match(arg, wcpattern, false);
         }

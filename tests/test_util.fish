@@ -136,7 +136,7 @@ end
 
 # lame timer
 for program in {g,}date
-    if command -q $program
+    if $program --version 1>/dev/null 2>/dev/null
         set milli $program
         set unit ms
         break

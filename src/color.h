@@ -17,7 +17,7 @@ struct color24_t {
 class rgb_color_t {
     // Types
     enum { type_none, type_named, type_rgb, type_normal, type_reset };
-    unsigned char type : 4;
+    unsigned char type : 3;
 
     // Flags
     enum {

@@ -1,17 +1,11 @@
-# fish next-minor
+# fish 3.1.0
 
-## Deprecations
-- The vcs-prompt functions have been renamed to names without double-underscore, so __fish_git_prompt is now fish_git_prompt, __fish_vcs_prompt is now fish_vcs_prompt, __fish_hg_prompt is now fish_hg_prompt and __fish_svn_prompt is now fish_svn_prompt. Shims at the old names have been added, and the variables have kept their old names (#5586).
-
-## Notable Fixes and improvements
-- fish no longer requires buffering for the last function in a pipeline.
-- Add `$pipestatus` support
-- $PATH is no longer reordered in child fishes (#5956).
-- `eval` is now implemented internally rather than being a function; as such, the evaluated code now shares the same argument scope as `eval` rather than being executed in a new scope (#4443).
-- macOS Mojave: fish.app can actually run (#5727), 10.14.4's Terminal.app no longer causes an error on launch (#5725)
-- cd now always checks the current directory, even if $CDPATH does not include it or "." (#4484).
+## Notable improvements and fixes
+- A new `$pipestatus` variable contains a list of exit statuses of the previous job, for each of the separate commands in a pipeline (#5632)
+- fish no longer buffers pipes to the last function in a pipeline, improving many cases where pipes appeared to block or hang (#1396).
+- `eval` no long creates a new local variable scope, but affects variables in the scope it is called from (#4443). `source` still creates a new local scope.
+- `cd` now always checks the current directory, even if $CDPATH does not include it or "." (#4484).
 - Error messages no longer include a (rather large) help summary and the stacktrace has been shortened (#3404, #5434).
-- fish now underlines every valid entered path instead of just the last one.
 - The `--debug` option has been extended to allow specifying categories. Categories may be listed via `fish --print-debug-categories`.
 - `string replace` had an additional round of escaping in the replacement (not the match!), so escaping backslashes would require `string replace -ra '([ab])' '\\\\\\\$1' a`. A new feature flag `regex-easyesc` can be used to disable this, so that it becomes `string replace -ra '([ab])' '\\\\$1' a` (#5556).
 - Some parser errors did not set `$status` to non-zero. This has been corrected (b2a1da602f79878f4b0adc4881216c928a542608).
@@ -41,7 +35,7 @@
 - `argparse` now defaults to showing the current function name (instead of `argparse`) in its errors, making `--name` often superfluous (#5835).
 - `argparse` learned a new `--ignore-unknown` flag to keep unrecognized options, allowing multiple argparse passes to parse options (#5367).
 - `fish_indent` now handles semicolons better, including leaving them in place for `; and` and `; or` instead of breaking the line.
-- `test` (aka `[`) now prints a stacktrace on error, making the offending call easier to find (#5771).
+- `test` (aka `[`) now prints a stack trace on error, making the offending call easier to find (#5771).
 - The default read limit has been increased to 100MiB (#5267).
 - `math` now also understands `x` for multiplication, provided it is followed by whitespace (#5906).
 - `functions --erase` now also prevents fish from autoloading a function for the first time (#5951).
@@ -51,7 +45,8 @@
 - fish_clipboard_* now supports wayland by means of [wl-clipboard](https://github.com/bugaevc/wl-clipboard).
 - Pasting will now strip leading spaces if they would trigger history ignoring (#4327).
 - New color options for the pager have been added (#5524).
-- Better detection and support for using fish from the system console, where limited colors and special characters are supported (#5552 and others)
+- Better detection and support for using fish from the system console, where limited colors and special characters are supported (#5552 and others).
+- fish now underlines every valid entered path instead of just the last one.
 - The default escape delay (to differentiate between the escape key and an alt-combination) has been reduced to 30ms, down from 300ms for the default mode and 100ms for vi-mode (#3904).
 - The `path_helper` on macOS now only runs in login shells, matching the bash implementation.
 - The `forward-bigword` binding now interacts correctly with autosuggestions (#5336)
@@ -59,10 +54,33 @@
 - The locale is now reloaded when the `LOCPATH` variable is changed (#5815).
 - Lots of improvements to completions.
 - Added completions for
-  - `cf`
+  - `aws`
+  - `bat`
   - `bosh`
+  - `camcontrol`
+  - `cf`
+  - `csc`
+  - `csi`
+  - `cwebp`
+  - `epkginfo`
+  - `ffmpeg`
+  - `ffplay`
+  - `ffprobe`
+  - `fsharpc`
+  - `fsharpi`
+  - `gpg2` (#6062)
+  - `hledger`
+  - `mariner`
+  - `patool`
   - `qubes-gpg-client` (#6067)
-  - `vagrant`
+  - `rg`
+  - `rustup`
+  - `speedtest-cli`
+  - `speedtest`
+  - `src`
+  - `tokei`
+  - `tsc`
+  - `vbc`
 - The git prompt in informative mode now shows the number of stashes if enabled.
 - The git prompt now has an option ($__fish_git_prompt_use_informative_chars) to use the (more modern) informative characters without enabling informative mode.
 - The nextd and prevd functions no longer print "Hit end of history", instead using a BEL.
@@ -70,14 +88,17 @@
 - The path-component bindings (like ctrl-w) now also stop at ":" and "@" because those are used to denote user and host in ssh-likes (#5841).
 - `read` no longer keeps a history, making it suitable for operations that shouldn't end up there, like password entry (#5904).
 - When syntax highlighting a string with an unclosed quote, only the quote itself will be shown as an error, instead of the whole argument.
-- The nul character can now be bound via `bind -k nul`. Terminals often generate this character via control-space. (#3189).
+- The NULL character can now be bound via `bind -k nul`. Terminals often generate this character via control-space. (#3189).
 - A new readline command `expand-abbr` can be used to trigger abbreviation expansion (#5762).
 - The `self-insert` readline command will now insert the binding sequence, if not empty.
 
+## Deprecations
+- The vcs-prompt functions have been promoted to names without double-underscore, so __fish_git_prompt is now fish_git_prompt, __fish_vcs_prompt is now fish_vcs_prompt, __fish_hg_prompt is now fish_hg_prompt and __fish_svn_prompt is now fish_svn_prompt. Shims at the old names have been added, and the variables have kept their old names (#5586).
+
 ### For distributors and developers
-- The autotools-based build system and legacy Xcode build systems have been removed, leaving only the CMake build system. All distributors and developers must migrate to the CMake build.
-- The doxygen-based documentation system has been removed and replaced with one based on sphinx. All distributors and developers must migrate to that.
-- The INTERNAL_WCWIDTH build option to use the system wcwidth has been removed. We believe our wcwidth is a better choice, as it has a number of configuration options that the other path never gained (#5777).
+- fish 3.0 introduced a CMake-based build system. In fish 3.1, both the Autotools-based build and legacy Xcode build system have been removed, leaving only the CMake build system. All distributors and developers must install CMake.
+- The documentation is now built with Sphinx. The old Doxygen-based documentation system has been removed. Developers, and distributors who wish to rebuild the documentation, must install Sphinx.
+- The `INTERNAL_WCWIDTH` build option has been removed, as fish always uses an internal `wcwidth` function. It has a number of configuration options that make it more suitable for general use (#5777).
 
 ---
 

@@ -1429,6 +1429,8 @@ complete -f -c git -n '__fish_git_using_command rebase' -s r -l rebase-merges -a
 complete -f -c git -n '__fish_git_using_command rebase' -l root -d 'Rebase all reachable commits'
 complete -f -c git -n '__fish_git_using_command rebase' -l autosquash -d 'Automatic squashing'
 complete -f -c git -n '__fish_git_using_command rebase' -l no-autosquash -d 'No automatic squashing'
+complete -f -c git -n '__fish_git_using_command rebase' -l autostash -d 'Before starting rebase, stash local changes, and apply stash when done'
+complete -f -c git -n '__fish_git_using_command rebase' -l no-autostash -d 'Do not stash local changes before starting rebase'
 complete -f -c git -n '__fish_git_using_command rebase' -l no-ff -d 'No fast-forward'
 # This actually takes script for $SHELL, but completing that is... complicated.
 complete -r -c git -n '__fish_git_using_command rebase' -l exec -d 'Execute shellscript'

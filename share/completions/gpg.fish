@@ -73,68 +73,13 @@ function __fish_print_gpg_algo -d "Complete using all algorithms of the type spe
     }'
 end
 
-if test (gpg --version | sed '1q;d' | cut -b 13) -eq 2
-    complete -c gpg -l no-keyring -d "Do not use any keyring at all"
-    complete -c gpg -l no-skip-hidden-recipients -d "During decryption, do not skip all anonymous recipients"
-    complete -c gpg -l only-sign-text-ids -d "Exclude any non-text-based user ids from selection for signing"
-    complete -c gpg -l override-session-key-fd -x -d "Don't use the public key but the specified session key"
-    complete -c gpg -l passwd -xa "(__fish_complete_gpg_user_id)" -d "Change the passphrase of the secret key belonging to the given user id"
-    complete -c gpg -l pinentry-mode -xa "default ask cancel error loopback" -d "Set the pinentry mode"
-    complete -c gpg -l quick-add-key -xa "(__fish_complete_gpg_key_id)" -d "Directly add a subkey to a key"
-    complete -c gpg -l quick-add-uid -xa "(__fish_complete_gpg_user_id)" -d "Adds a new user id to an existing key"
-    complete -c gpg -l quick-gen-key -xa "(__fish_complete_gpg_user_id)" -d "Generate a standard key without needing to answer prompts"
-    complete -c gpg -l quick-generate-key -xa "(__fish_complete_gpg_user_id)" -d "Generate a standard key without needing to answer prompts"
-    complete -c gpg -l quick-lsign-key -xa "(__fish_complete_gpg_key_id)" -d "Directly sign a key from the passphrase; marks signatures as non-exportable"
-    complete -c gpg -l quick-revoke-uid -xa "(__fish_complete_gpg_user_id)" -d "Revokes a user id on an existing key"
-    complete -c gpg -l quick-revuid -xa "(__fish_complete_gpg_user_id)" -d "Revokes a user id on an existing key"
-    complete -c gpg -l quick-set-expire -xa "(__fish_complete_gpg_key_id)" -d "Set the expiration time of the specified key"
-    complete -c gpg -l quick-set-primary-uid -xa "(__fish_complete_gpg_user_id)" -d "Sets or updates the priary uid flag for the specified key"
-    complete -c gpg -l quick-sign-key -xa "(__fish_complete_gpg_key_id)" -d "Directly sign a key from the passphrase"
-    complete -c gpg -l receive-keys -xa "(__fish_complete_gpg_key_id)" -d "Import the keys with the given key IDs from a keyserver"
-    complete -c gpg -s f -l recipient-file -r -d "Similar to --recipient, but encrypts to key stored in file instead"
-    complete -c gpg -l request-origin -r -d "Tell gpg to assume that the operation ultimately originated at a particular origin"
-    complete -c gpg -l sender -xa "(__fish_complete_gpg_user_id)" -d "When creating a signature, tells gpg the user id of a key; when verifying, used to restrict information printed"
-    complete -c gpg -l show-keys -d "Take OpenPGP keys as input and print information about them"
-    complete -c gpg -l skip-hidden-recipients -d "During decryption, skip all anonymous recipients"
-    complete -c gpg -l tofu-default-policy -xa "auto good unknown bad ask" -d "Set the default TOFU policy"
-    complete -c gpg -l tofu-policy -xa "auto good unknown bad ask" -d "Set the default TOFU policy for the specified keys"
-    complete -c gpg -l try-secret-key -xa "(__fish_complete_gpg_key_id)" -d "Specify keys to be used for trial decryption"
-
-    complete -c gpg -l with-icao-spelling -d "Print the ICAO spelling of the fingerprint in addition to the hex digits"
-    complete -c gpg -l with-key-origin -d "Include the locally held information on the origin and last update of a key in a key listing"
-    complete -c gpg -l with-keygrip -d "Include the keygrip in the key listings"
-    complete -c gpg -l with-secret -d "Include info about the presence of a secret key in public key listings done with --with-colons"
-    complete -c gpg -l no-symkey-cache -d "Disable the passphrase cache used for symmetrical en- and decryption"
-    complete -c gpg -l no-autostart -d "Do not start the gpg-agent or the dirmngr if it has not been started and its service is required"
-    complete -c gpg -l log-file -r -d "Write log output to the specified file"
-    complete -c gpg -l locate-keys -d "Locate the keys given as arguments"
-    complete -c gpg -l locate-external-keys -d "Locate they keys given as arguments; do not consider local keys"
-    complete -c gpg -l list-signatures -xa "(__fish_complete_gpg_user_id)" -d "Same as --list-keys, but the signatures are listed too"
-    complete -c gpg -l list-gcrypt-config -d "Display various internal configuration parameters of libgcrypt"
-    complete -c gpg -l known-notation -r -d "Tell GnuPG about a critical signature notation"
-    complete -c gpg -l key-origin -d "Track the origin of a key"
-    complete -c gpg -l input-size-hint -r -d "Specify input size in bytes"
-    complete -c gpg -s F -l hidden-recipient-file -r -d "Similar to --hidden-recipient, but encrypts to key stored in file instead"
-    complete -c gpg -l generate-revocation -xa "(__fish_complete_gpg_user_id)" -d "Generate a revocation certificate for the complete key"
-    complete -c gpg -l generate-key -d "Generate a new key pair"
-    complete -c gpg -l generate-designated-revocation -xa "(__fish_complete_gpg_user_id)" -d "Generate a designated revocation certificate for a key"
-    complete -c gpg -l full-gen-key -d "Generate a new key pair with dialogs for all options"
-    complete -c gpg -l full-generate-key -d "Generate a new key pair with dialogs for all options"
-    complete -c gpg -l export-filter -d "Define an import/export filter to apply to an imported/exported keyblock before it is written"
-    complete -c gpg -l import-filter -d "Define an import/export filter to apply to an imported/exported keyblock before it is written"
-    complete -c gpg -l edit-card -d "Present a menu to work with a smartcard"
-    complete -c gpg -l card-edit -d "Present a menu to work with a smartcard"
-    complete -c gpg -l disable-signer-uid -d "Don't embed the uid of the signing key in the data signature"
-    complete -c gpg -l disable-dirmngr -d "Entirely disable the use of the Dirmngr"
-    complete -c gpg -l dirmngr-program -r -d "Specify a dirmngr program to be used for keyserver access"
-    complete -c gpg -l default-new-key-algo -x -d "Change the default algorothms for key generation"
-    complete -c gpg -l compliance -xa "gnupg openpgp rfc4880 rfc4880bis rfc2440 pgp6 pgp7 pgp8" -d "Set a compliance standard for GnuPG"
-    complete -c gpg -l change-passphrase -xa "(__fish_complete_gpg_user_id)" -d "Change the passphrase of the secret key belonging to the given user id"
-    complete -c gpg -l agent-program -d "Specify an agent program to be used for secret key operations"
-    complete -c gpg -l clear-sign -d "Make a clear text signature"
-else
+if string match -q 'gpg (GnuPG) 1.*' (gpg --version)
     complete -c gpg -l simple-sk-checksum -d 'Integrity protect secret keys by using a SHA-1 checksum'
     complete -c gpg -l no-sig-create-check -d "Do not verify each signature right after creation"
+    complete -c gpg -l pgp2 -d "Set up all options to be as PGP 2.x compliant as possible"
+    complete -c gpg -l rfc1991 "Try to be more RFC-1991 compliant"
+else
+    __fish_complete_gpg2 gpg
 end
 
 #

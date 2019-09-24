@@ -162,6 +162,7 @@ complete -c gpg2 -l locate-external-keys -d "Locate they keys given as arguments
 complete -c gpg2 -l quick-add-key -xa "(__fish_complete_gpg2_key_id)" -d "Directly add a subkey to a key"
 complete -c gpg2 -l quick-addkey -xa "(__fish_complete_gpg2_key_id)" -d "Directly add a subkey to a key"
 complete -c gpg2 -l quick-adduid -xa "(__fish_complete_gpg2_user_id)" -d "Adds a new user id to an existing key"
+complete -c gpg2 -l quick-add-uid -xa "(__fish_complete_gpg2_user_id)" -d "Adds a new user id to an existing key"
 complete -c gpg2 -l quick-generate-key -xa "(__fish_complete_gpg2_user_id)" -d "Generate a standard key without needing to answer prompts"
 complete -c gpg2 -l quick-gen-key -xa "(__fish_complete_gpg2_user_id)" -d "Generate a standard key without needing to answer prompts"
 complete -c gpg2 -l quick-sign-key -xa "(__fish_complete_gpg2_key_id)" -d "Directly sign a key from the passphrase"

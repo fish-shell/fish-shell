@@ -50,8 +50,8 @@ complete -c bind -s f -l function-names -d 'Print names of available functions'
 complete -c bind -s h -l help -d "Display help and exit"
 complete -c bind -s k -l key -d 'Specify key name, not sequence'
 complete -c bind -s K -l key-names -d 'Print names of available keys'
-complete -c bind -s M -l mode -d 'Specify the bind mode that the bind is used in'
-complete -c bind -s m -l sets-mode -d 'Change current mode after bind is executed'
+complete -c bind -s M -l mode -d 'Specify the bind mode that the bind is used in' -xa '(bind -L)'
+complete -c bind -s m -l sets-mode -d 'Change current mode after bind is executed' -xa '(bind -L)'
 complete -c bind -s L -l list-modes -d 'Display a list of defined bind modes'
 
 complete -c bind -n __fish_bind_test1 -a '(bind --key-names)' -d 'Key name' -x

@@ -94,6 +94,7 @@
   - `fsharpc` and `fsharpi` (#6016)
   - `fzf` (#6178)
   - `g++` (#6217)
+  - `gpg1` (#6139)
   - `gpg2` (#6062)
   - `grub-mkrescue` (#6182)
   - `hledger` (#6043)

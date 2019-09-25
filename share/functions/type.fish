@@ -49,11 +49,7 @@ function type --description 'Print the type of a command'
                 switch $mode
                     case normal
                         printf (_ '%s is a function with definition\n') $i
-                        if isatty stdout
-                            functions $i | fish_indent --ansi
-                        else
-                            functions $i | fish_indent
-                        end
+                        functions $i
                     case type
                         echo (_ 'function')
                     case path

@@ -20,6 +20,7 @@
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "function.h"
+#include "highlight.h"
 #include "io.h"
 #include "parser_keywords.h"
 #include "proc.h"
@@ -261,7 +262,15 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
 
     if (metadata_as_comments) {
         if (std::wcscmp(path, L"stdin")) {
-            streams.out.append_format(L"# Defined in %ls @ line %d\n", path, line_number);
+            wcstring comment;
+            append_format(comment, L"# Defined in %ls @ line %d\n", path, line_number);
+            if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
+                std::vector<highlight_spec_t> colors;
+                highlight_shell_no_io(comment, colors, comment.size(), nullptr, env_stack_t::globals());
+                streams.out.append(str2wcstring(colorize(comment, colors)));
+            } else {
+                streams.out.append(comment);
+            }
         }
     } else {
         streams.out.append_format(L"%ls\n", path);
@@ -426,7 +435,15 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 if (i != optind) streams.out.append(L"\n");
                 const wchar_t *funcname = argv[optind];
                 report_function_metadata(funcname, opts.verbose, streams, parser, true);
-                streams.out.append(functions_def(funcname));
+                wcstring def = functions_def(funcname);
+
+                if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
+                    std::vector<highlight_spec_t> colors;
+                    highlight_shell_no_io(def, colors, def.size(), nullptr, env_stack_t::globals());
+                    streams.out.append(str2wcstring(colorize(def, colors)));
+                } else {
+                    streams.out.append(def);
+                }
             }
         }
     }

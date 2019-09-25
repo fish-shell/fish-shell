@@ -93,6 +93,9 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv \ed 'set -l cmd (commandline); if test -z "$cmd"; echo; dirh; commandline -f repaint; else; commandline -f kill-word; end'
     bind --preset $argv \cd delete-or-exit
 
+    # Prepend 'sudo ' to the current commandline
+    bind --preset $argv \es __fish_prepend_sudo
+
     # Allow reading manpages by pressing F1 (many GUI applications) or Alt+h (like in zsh).
     bind --preset $argv -k f1 __fish_man_page
     bind --preset $argv \eh __fish_man_page

@@ -13,7 +13,8 @@ struct color24_t {
     unsigned char rgb[3];
 };
 
-/// A type that represents a color. We work hard to keep it at a size of 4 bytes.
+/// A type that represents a color. We work hard to keep it at a size of 4 bytes and verify with
+/// static_assert
 class rgb_color_t {
     // Types
     enum { type_none, type_named, type_rgb, type_normal, type_reset };
@@ -168,5 +169,7 @@ class rgb_color_t {
     /// Returns the names of all named colors.
     static wcstring_list_t named_color_names(void);
 };
+
+static_assert(sizeof(rgb_color_t) <= 4, "rgb_color_t is too big");
 
 #endif

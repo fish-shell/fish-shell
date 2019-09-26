@@ -4,33 +4,31 @@
 - A new `$pipestatus` variable contains a list of exit statuses of the previous job, for each of the separate commands in a pipeline (#5632)
 - fish no longer buffers pipes to the last function in a pipeline, improving many cases where pipes appeared to block or hang (#1396).
 - `eval` no long creates a new local variable scope, but affects variables in the scope it is called from (#4443). `source` still creates a new local scope.
-- `cd` now always checks the current directory, even if $CDPATH does not include it or "." (#4484).
-- Error messages no longer include a (rather large) help summary and the stacktrace has been shortened (#3404, #5434).
-- The `--debug` option has been extended to allow specifying categories. Categories may be listed via `fish --print-debug-categories`.
-- `string replace` had an additional round of escaping in the replacement (not the match!), so escaping backslashes would require `string replace -ra '([ab])' '\\\\\\\$1' a`. A new feature flag `regex-easyesc` can be used to disable this, so that it becomes `string replace -ra '([ab])' '\\\\$1' a` (#5556).
-- Some parser errors did not set `$status` to non-zero. This has been corrected (b2a1da602f79878f4b0adc4881216c928a542608).
-- `string` has a new `collect` subcommand that disables newline-splitting on its input. This is meant to be used as the end of a command substitution pipeline to produce a single output argument potentially containing internal newlines, such as `set output (some-cmd | string collect)`. Any trailing newlines are trimmed, just like `"$(cmd)"` substitution in sh. It also supports a `--no-trim-newlines` flag to disable trailing newline trimming, which may be useful when doing something like `set contents (cat filename | string collect -N)` (#159).
-- More of the documentation, including the tutorial, is now available as man pages as well.
+- Like other shells, `cd` now always looks for its argument in the current directory as a last resort, even if the `CDPATH` variable does not include it or "." (#4484).
+- Error messages from builtin commands no longer include an extensive usage summary, and have more readable stack traces (#3404, #5434).
+- `fish`'s debugging arguments have been significantly imporved. The `--debug-level` option has been removed, and a new `--debug` option replaces it. This option accepts various categories, which may be listed via `fish --print-debug-categories` (#5879). A new `--debug-output` option allows for redirection of debug output. 
+- `string replace` has an additional round of escaping in the replacement expression, so escaping backslashes requires many escapes (eg `string replace -ra '([ab])' '\\\\\\\$1' a`). The new feature flag `regex-easyesc` can be used to disable this, so that the same effect can be achieved with `string replace -ra '([ab])' '\\\\$1' a` (#5556).
+- A bug where some parser errors did not set `$status` to non-zero has been fixed.
+- `string` has a new `collect` subcommand for use in command substitutions, producing a single output instead of splitting on new lines (similar to `"$(cmd)"` in other shells) (#159).
+- The fish manual, tutorial and FAQ are now available in `man` format as `fish-doc`, `fish-tutorial` and `fish-faq` respectively (#5521).
 - Local values for `fish_complete_path` and `fish_function_path` are now ignored; only their global values are respected.
 - Empty universal variables may now be exported (#5992).
-- `string split` had a bug where empty strings would be dropped if the output was only empty strings; this has been fixed (#5987).
+- A bug where `string split` would be drop empty strings if the output was only empty strings has been fixed (#5987).
 - `switch` now allows arguments that expand to nothing, like empty variables (#5677).
-- The null command (:) now always exits successfully, rather than echoing last return code.
-- Cursor configuration instructions for vi-mode have been added to the fish documentation.
+- The null command (`:`) now always exits successfully, rather than passing through the previous exit status (#6022).
 - `jobs --last` returns 0 to indicate success when a job is found (#6104).
 
 ### Syntax changes and new commands
-- Brace expansion now only takes place if the braces include a "," or a variable expansion, so things like `git reset HEAD@{0}` now work (#5869).
+- Brace expansion now only takes place if the braces include a "," or a variable expansion, meaning common commands such as `git reset HEAD@{0}` do not require escaping (#5869).
 
 ### Scripting improvements
 - `string split0` now returns 0 if it split something (#5701).
-- mandoc can now be used to format the output from `--help` if nroff is not installed.
 - In the interest of consistency, `builtin -q` and `command -q` can now be used to query if a builtin or command exists (#5631).
 - `math` now accepts `--scale=max` for the maximum scale (#5579).
 - `complete --do-complete` now also does fuzzy matches (#5467).
-- `count` now also counts lines fed on stdin (#5744).
+- `count` now also counts lines fed on standard input (#5744).
 - `printf` prints what it can when input hasn't been fully converted to a number, but still prints an error (#5532).
-- `complete -C foo` now works instead of erroring out and requiring `complete -Cfoo`.
+- `complete -C foo` now works as expected, rather than requiring `complete -Cfoo`.
 - `complete` gained a new `--force-files` (short `-F`) switch to reenable file completions. This allows `sudo -E` and `pacman -Qo` to complete correctly (#5646).
 - `argparse` now defaults to showing the current function name (instead of `argparse`) in its errors, making `--name` often superfluous (#5835).
 - `argparse` learned a new `--ignore-unknown` flag to keep unrecognized options, allowing multiple argparse passes to parse options (#5367).
@@ -42,45 +40,40 @@
 
 ### Interactive improvements
 - Major improvements in performance and functionality to the 'sorin' sample prompt (#5411).
-- fish_clipboard_* now supports wayland by means of [wl-clipboard](https://github.com/bugaevc/wl-clipboard).
-- Pasting will now strip leading spaces if they would trigger history ignoring (#4327).
-- New color options for the pager have been added (#5524).
-- Better detection and support for using fish from the system console, where limited colors and special characters are supported (#5552 and others).
-- fish now underlines every valid entered path instead of just the last one.
+- The `fish_clipboard_*` functions support wayland by using [`wl-clipboard`](https://github.com/bugaevc/wl-clipboard) (#5450).
+- Pasting strips leading spaces to avoid pasted commands being omitted from the history (#4327).
+- New `fish_pager_color_` options have been added to control more elements of the pager's colors (#5524).
+- Better detection and support for using fish from various system consoles, where limited colors and special characters are supported (#5552 and others).
+- fish now underlines every valid entered path instead of just the last one (#5872).
 - The default escape delay (to differentiate between the escape key and an alt-combination) has been reduced to 30ms, down from 300ms for the default mode and 100ms for vi-mode (#3904).
-- The `path_helper` on macOS now only runs in login shells, matching the bash implementation.
+- fish only parses `/etc/paths` on macOS in login shells, matching the bash implementation (#5637) and avoiding changes to path ordering in child shells (#5456).
 - The `forward-bigword` binding now interacts correctly with autosuggestions (#5336)
-- Fish now tries to guess if the system supports Unicode 9 (and displays emoji as wide), hopefully making setting $fish_emoji_width superfluous in most cases (#5722).
+- fish now tries to guess if the system supports Unicode 9 (and displays emoji as wide), eliminating the need to set `$fish_emoji_width` in most cases (#5722).
 - The locale is now reloaded when the `LOCPATH` variable is changed (#5815).
-- Lots of improvements to completions.
 - Added completions for
   - `aws`
-  - `bat`
-  - `bosh`
+  - `bat` (#6052)
+  - `bosh` (#5700)
   - `camcontrol`
-  - `cf`
-  - `csc`
-  - `csi`
-  - `cwebp`
-  - `epkginfo`
-  - `ffmpeg`
-  - `ffplay`
-  - `ffprobe`
-  - `fsharpc`
-  - `fsharpi`
+  - `cf` (#5700)
+  - `csc` and `csi` (#6016)
+  - `cwebp` (#6034)
+  - `epkginfo` (#5829)
+  - `ffmpeg`, `ffplay`, and `ffprobe` (#5922)
+  - `fsharpc` and `fsharpi` (#6016)
   - `gpg2` (#6062)
-  - `hledger`
-  - `mariner`
-  - `patool`
+  - `hledger` (#6043)
+  - `mariner` (#5718)
+  - `patool` (#6083)
   - `qubes-gpg-client` (#6067)
   - `rg`
   - `rustup`
-  - `speedtest-cli`
-  - `speedtest`
-  - `src`
-  - `tokei`
-  - `tsc`
-  - `vbc`
+  - `speedtest` and `speedtest-cli` (#5840)
+  - `src` (#6026)
+  - `tokei` (#6085)
+  - `tsc` (#6016)
+  - `vbc` (#6016)
+- Lots of improvements to completions.
 - The git prompt in informative mode now shows the number of stashes if enabled.
 - The git prompt now has an option ($__fish_git_prompt_use_informative_chars) to use the (more modern) informative characters without enabling informative mode.
 - The nextd and prevd functions no longer print "Hit end of history", instead using a BEL.
@@ -99,6 +92,7 @@
 - fish 3.0 introduced a CMake-based build system. In fish 3.1, both the Autotools-based build and legacy Xcode build system have been removed, leaving only the CMake build system. All distributors and developers must install CMake.
 - The documentation is now built with Sphinx. The old Doxygen-based documentation system has been removed. Developers, and distributors who wish to rebuild the documentation, must install Sphinx.
 - The `INTERNAL_WCWIDTH` build option has been removed, as fish always uses an internal `wcwidth` function. It has a number of configuration options that make it more suitable for general use (#5777).
+- mandoc is now be used to format the output from `--help` if `nroff` is not installed, reducing the number of external dependencies on systems with `mandoc` installed (#5489).
 
 ---
 

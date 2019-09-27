@@ -161,6 +161,7 @@ class reader_history_search_t {
     enum mode_t {
         inactive,  // no search
         line,      // searching by line
+        prefix,    // searching by prefix
         token      // searching by token
     };
 
@@ -192,7 +193,7 @@ class reader_history_search_t {
     bool append_matches_from_search() {
         const size_t before = matches_.size();
         wcstring text = search_.current_string();
-        if (mode_ == line) {
+        if (mode_ == line || mode_ == prefix) {
             add_if_new(std::move(text));
         } else if (mode_ == token) {
             const wcstring &needle = search_string();
@@ -255,6 +256,8 @@ class reader_history_search_t {
 
     bool by_line() const { return mode_ == line; }
 
+    bool by_prefix() const { return mode_ == prefix; }
+
     /// Move the history search in the given direction \p dir.
     bool move_in_direction(history_search_direction_t dir) {
         return dir == history_search_direction_t::forward ? move_forwards() : move_backwards();
@@ -293,8 +296,9 @@ class reader_history_search_t {
         match_index_ = 0;
         mode_ = mode;
         // We can skip dedup in history_search_t because we do it ourselves in skips_.
-        search_ =
-            history_search_t(*hist, text, HISTORY_SEARCH_TYPE_CONTAINS, history_search_no_dedup);
+        search_ = history_search_t(
+            *hist, text, by_prefix() ? HISTORY_SEARCH_TYPE_PREFIX : HISTORY_SEARCH_TYPE_CONTAINS,
+            history_search_no_dedup);
     }
 
     /// Reset to inactive search.
@@ -1002,6 +1006,8 @@ void reader_force_exit() {
 static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) {
     using rl = readline_cmd_t;
     switch (c) {
+        case rl::history_prefix_search_backward:
+        case rl::history_prefix_search_forward:
         case rl::history_search_backward:
         case rl::history_search_forward:
         case rl::history_token_search_backward:
@@ -1068,6 +1074,8 @@ static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) 
 /// Indicates if the given command ends the history search.
 static bool command_ends_history_search(readline_cmd_t c) {
     switch (c) {
+        case readline_cmd_t::history_prefix_search_backward:
+        case readline_cmd_t::history_prefix_search_forward:
         case readline_cmd_t::history_search_backward:
         case readline_cmd_t::history_search_forward:
         case readline_cmd_t::history_token_search_backward:
@@ -1839,7 +1847,7 @@ void reader_data_t::update_command_line_from_history_search() {
                                                    : history_search.current_result();
     if (history_search.by_token()) {
         replace_current_token(new_text);
-    } else if (history_search.by_line()) {
+    } else if (history_search.by_line() || history_search.by_prefix()) {
         set_command_line_and_position(&command_line, new_text, new_text.size());
     }
 }
@@ -2772,15 +2780,23 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             break;
         }
 
+        case rl::history_prefix_search_backward:
+        case rl::history_prefix_search_forward:
         case rl::history_search_backward:
-        case rl::history_token_search_backward:
         case rl::history_search_forward:
+        case rl::history_token_search_backward:
         case rl::history_token_search_forward: {
+            reader_history_search_t::mode_t mode =
+                (c == rl::history_token_search_backward || c == rl::history_token_search_forward)
+                    ? reader_history_search_t::token
+                    : (c == rl::history_prefix_search_backward ||
+                       c == rl::history_prefix_search_forward)
+                          ? reader_history_search_t::prefix
+                          : reader_history_search_t::line;
+
             if (history_search.is_at_end()) {
                 const editable_line_t *el = &command_line;
-                bool by_token = (c == rl::history_token_search_backward) ||
-                                (c == rl::history_token_search_forward);
-                if (by_token) {
+                if (mode == reader_history_search_t::token) {
                     // Searching by token.
                     const wchar_t *begin, *end;
                     const wchar_t *buff = el->text.c_str();
@@ -2795,18 +2811,20 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                     }
                 } else {
                     // Searching by line.
-                    history_search.reset_to_mode(el->text, history, reader_history_search_t::line);
+                    history_search.reset_to_mode(el->text, history, mode);
 
                     // Skip the autosuggestion in the history unless it was truncated.
                     const wcstring &suggest = autosuggestion;
-                    if (!suggest.empty() && !screen.autosuggestion_is_truncated) {
+                    if (!suggest.empty() && !screen.autosuggestion_is_truncated &&
+                        mode != reader_history_search_t::prefix) {
                         history_search.add_skip(suggest);
                     }
                 }
             }
             if (history_search.active()) {
                 history_search_direction_t dir =
-                    (c == rl::history_search_backward || c == rl::history_token_search_backward)
+                    (c == rl::history_search_backward || c == rl::history_token_search_backward ||
+                     c == rl::history_prefix_search_backward)
                         ? history_search_direction_t::backward
                         : history_search_direction_t::forward;
                 history_search.move_in_direction(dir);

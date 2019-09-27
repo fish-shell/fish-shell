@@ -91,6 +91,8 @@ static const input_function_metadata_t input_function_metadata[] = {
     {readline_cmd_t::backward_word, L"backward-word"},
     {readline_cmd_t::forward_bigword, L"forward-bigword"},
     {readline_cmd_t::backward_bigword, L"backward-bigword"},
+    {readline_cmd_t::history_prefix_search_backward, L"history-prefix-search-backward"},
+    {readline_cmd_t::history_prefix_search_forward, L"history-prefix-search-forward"},
     {readline_cmd_t::history_search_backward, L"history-search-backward"},
     {readline_cmd_t::history_search_forward, L"history-search-forward"},
     {readline_cmd_t::delete_char, L"delete-char"},

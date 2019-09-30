@@ -2258,7 +2258,6 @@ static int read_i(parser_t &parser) {
     data->prev_end_loop = 0;
 
     while (!shell_is_exiting()) {
-        event_fire_generic(parser, L"fish_prompt");
         run_count++;
 
         if (parser.libdata().is_breakpoint && function_exists(DEBUG_PROMPT_FUNCTION_NAME, parser)) {
@@ -3207,10 +3206,11 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
 
     history_search.reset();
 
+    s_reset(&screen, screen_reset_abandon_line);
+    event_fire_generic(parser(), L"fish_prompt");
     exec_prompt();
 
     super_highlight_me_plenty();
-    s_reset(&screen, screen_reset_abandon_line);
     repaint();
 
     // Get the current terminal modes. These will be restored when the function returns.

@@ -611,7 +611,7 @@ and it will be exported like that, and when fish starts it splits the $PATH it r
 
 You can do so directly in ``config.fish``, like you might do in other shells with ``.profile``. See :ref:`this example <path_example>`.
 
-A faster way is to modify the ``$fish_user_paths`` [universal variable](#tut_universal), which is automatically prepended to ``$PATH``. For example, to permanently add ``/usr/local/bin`` to your ``$PATH``, you could write::
+A faster way is to modify the ``$fish_user_paths`` :ref:`universal variable <tut-universal>`, which is automatically prepended to ``$PATH``. For example, to permanently add ``/usr/local/bin`` to your ``$PATH``, you could write::
 
     >_ set -U fish_user_paths /usr/local/bin $fish_user_paths
 
@@ -664,6 +664,8 @@ This is the preferred way to define your prompt as well::
 
 
 See the documentation for :ref:`funced <cmd-funced>` and :ref:`funcsave <cmd-funcsave>` for ways to create these files automatically.
+
+.. _tut-universal:
 
 Universal Variables
 -------------------

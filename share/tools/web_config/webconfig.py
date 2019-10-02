@@ -1189,7 +1189,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_save_abbreviation(self, abbreviation):
         out, err = run_fish_cmd(
-            "abbr --add '%s' '%s'" % (abbreviation["word"], abbreviation["phrase"])
+            # Remove one layer of single-quotes because escape_fish_cmd adds them back.
+            "abbr --add %s %s" % (escape_fish_cmd(abbreviation["word"].strip("'")), escape_fish_cmd(abbreviation["phrase"].strip("'")))
         )
         if err:
             return err

@@ -668,7 +668,6 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         size_t skip_prefix = shared_prefix;
         if (shared_prefix < o_line.indentation) {
             if (o_line.indentation > s_line.indentation
-                && s_line.indentation != s_line.size()
                 && !has_cleared_screen && clr_eol && clr_eos) {
                 s_set_color(scr, vars, highlight_spec_t{});
                 s_move(scr, 0, (int)i);
@@ -679,16 +678,17 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
             }
             skip_prefix = o_line.indentation;
         }
-        if (!should_clear_screen_this_line) {
-            // Compute how much we should skip. At a minimum we skip over the prompt. But also skip
-            // over the shared prefix of what we want to output now, and what we output before, to
-            // avoid repeatedly outputting it.
-            if (skip_prefix > 0) {
-                size_t skip_width = shared_prefix < skip_prefix ? skip_prefix
-                    : fish_wcswidth(&o_line.text.at(0), shared_prefix);
-                if (skip_width > skip_remaining) skip_remaining = skip_width;
-            }
 
+        // Compute how much we should skip. At a minimum we skip over the prompt. But also skip
+        // over the shared prefix of what we want to output now, and what we output before, to
+        // avoid repeatedly outputting it.
+        if (skip_prefix > 0) {
+            size_t skip_width = shared_prefix < skip_prefix ? skip_prefix
+                                                : fish_wcswidth(&o_line.text.at(0), shared_prefix);
+            if (skip_width > skip_remaining) skip_remaining = skip_width;
+        }
+
+        if (!should_clear_screen_this_line) {
             // If we're soft wrapped, and if we're going to change the first character of the next
             // line, don't skip over the last two characters so that we maintain soft-wrapping.
             if (o_line.is_soft_wrapped && i + 1 < scr->desired.line_count()) {

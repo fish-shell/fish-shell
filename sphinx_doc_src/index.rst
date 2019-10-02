@@ -414,7 +414,7 @@ Most programs allow you to suspend the program's execution and return control to
 If you instead want to put a suspended job into the background, use the :ref:`bg <cmd-bg>` command.
 
 To get a listing of all currently started jobs, use the :ref:`jobs <cmd-jobs>` command.
-
+These listed jobs can be removed with the :ref:`disown <cmd-disown>` command.
 
 .. _syntax-function:
 

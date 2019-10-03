@@ -26,4 +26,6 @@ complete -c testcommand2 -x -a "(testcommand2_complete)"
 complete -c testcommand2 --wraps "testcommand2 from_wraps "
 complete -C'testcommand2 explicit '
 # CHECKERR: explicit
+# CHECKERR: complete: maximum recursive depth reached
 # CHECKERR: from_wraps explicit
+# CHECKERR: complete: maximum recursive depth reached

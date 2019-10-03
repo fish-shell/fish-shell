@@ -59,3 +59,9 @@ complete
 # CHECK: complete {{.*}}
 # CHECK: complete {{.*}}
 # CHECK: complete {{.*}}
+
+# Recursive calls to complete (see #3474)
+complete -c complete_test_recurse1 -xa '(echo recursing 1>&2; complete -C"complete_test_recurse1 ")'
+complete -C'complete_test_recurse1 '
+# CHECKERR: recursing
+# CHECKERR: complete: maximum recursive depth reached

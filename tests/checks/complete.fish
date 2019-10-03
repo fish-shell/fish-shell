@@ -64,4 +64,27 @@ complete
 complete -c complete_test_recurse1 -xa '(echo recursing 1>&2; complete -C"complete_test_recurse1 ")'
 complete -C'complete_test_recurse1 '
 # CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
+# CHECKERR: recursing
 # CHECKERR: complete: maximum recursive depth reached

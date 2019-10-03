@@ -337,7 +337,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         cleanup_t remove_transient([&] { parser.libdata().transient_commandlines.pop_back(); });
 
         // Allow a limited number of recursive calls to complete (#3474).
-        if (parser.libdata().builtin_complete_recursion_level >= 1) {
+        if (parser.libdata().builtin_complete_recursion_level >= 24) {
             streams.err.append_format(L"%ls: maximum recursive depth reached\n", cmd);
         } else {
             parser.libdata().builtin_complete_recursion_level++;

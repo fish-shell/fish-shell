@@ -6,7 +6,7 @@
 - `eval` no long creates a new local variable scope, but affects variables in the scope it is called from (#4443). `source` still creates a new local scope.
 - Like other shells, `cd` now always looks for its argument in the current directory as a last resort, even if the `CDPATH` variable does not include it or "." (#4484).
 - Error messages from builtin commands no longer include an extensive usage summary, and have more readable stack traces (#3404, #5434).
-- `fish`'s debugging arguments have been significantly imporved. The `--debug-level` option has been removed, and a new `--debug` option replaces it. This option accepts various categories, which may be listed via `fish --print-debug-categories` (#5879). A new `--debug-output` option allows for redirection of debug output. 
+- `fish`'s debugging arguments have been significantly improved. The `--debug-level` option has been removed, and a new `--debug` option replaces it. This option accepts various categories, which may be listed via `fish --print-debug-categories` (#5879). A new `--debug-output` option allows for redirection of debug output.
 - `string replace` has an additional round of escaping in the replacement expression, so escaping backslashes requires many escapes (eg `string replace -ra '([ab])' '\\\\\\\$1' a`). The new feature flag `regex-easyesc` can be used to disable this, so that the same effect can be achieved with `string replace -ra '([ab])' '\\\\$1' a` (#5556).
 - A bug where some parser errors did not set `$status` to non-zero has been fixed.
 - `string` has a new `collect` subcommand for use in command substitutions, producing a single output instead of splitting on new lines (similar to `"$(cmd)"` in other shells) (#159).
@@ -26,6 +26,7 @@
 - In the interest of consistency, `builtin -q` and `command -q` can now be used to query if a builtin or command exists (#5631).
 - `math` now accepts `--scale=max` for the maximum scale (#5579).
 - `complete --do-complete` now also does fuzzy matches (#5467).
+- `complete --do-complete` can be used inside completions, allowing limited recursion (#3474).
 - `count` now also counts lines fed on standard input (#5744).
 - `printf` prints what it can when input hasn't been fully converted to a number, but still prints an error (#5532).
 - `complete -C foo` now works as expected, rather than requiring `complete -Cfoo`.

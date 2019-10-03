@@ -448,4 +448,18 @@ set -e -U __fish_test_global_vs_universal
 echo "global-vs-universal 5: $__fish_test_global_vs_universal"
 # CHECK: global-vs-universal 5: 
 
+# Export local variables from all parent scopes (issue #6153).
+function func; echo $local; end
+set -lx local outer
+func
+# CHECK: outer
+begin
+    func
+    # CHECK: outer
+
+    set -lx local inner
+    begin; func; end
+    # CHECK: inner
+end
+
 true

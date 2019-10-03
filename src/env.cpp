@@ -855,7 +855,7 @@ class env_stack_impl_t final : public env_scoped_impl_t {
     virtual ~env_stack_impl_t() = default;
 
    private:
-    // The scopes of caller functions, which are currently shadowed.
+    /// The scopes of caller functions, which are currently shadowed.
     std::vector<env_node_ref_t> shadowed_locals_;
 
     /// A restricted set of variable flags.
@@ -936,12 +936,13 @@ void env_stack_impl_t::push_nonshadowing() {
 
 void env_stack_impl_t::push_shadowing() {
     // Propagate local exported variables.
-    // TODO: this should take all local exported variables, not just those in the top scope.
     auto node = std::make_shared<env_node_t>(true, nullptr);
-    for (const auto &var : locals_->env) {
-        if (var.second.exports()) {
-            node->env.insert(var);
-            node->changed_exported();
+    for (auto cursor = locals_; cursor; cursor = cursor->next) {
+        for (const auto &var : cursor->env) {
+            if (var.second.exports()) {
+                node->env.insert(var);
+                node->changed_exported();
+            }
         }
     }
     this->shadowed_locals_.push_back(std::move(locals_));

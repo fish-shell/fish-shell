@@ -336,7 +336,10 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         parser.libdata().transient_commandlines.push_back(do_complete_param);
         cleanup_t remove_transient([&] { parser.libdata().transient_commandlines.pop_back(); });
 
-        if (parser.libdata().builtin_complete_recursion_level < 1) {
+        // Allow a limited number of recursive calls to complete (#3474).
+        if (parser.libdata().builtin_complete_recursion_level >= 1) {
+            streams.err.append_format(L"%ls: maximum recursive depth reached\n", cmd);
+        } else {
             parser.libdata().builtin_complete_recursion_level++;
 
             std::vector<completion_t> comp;

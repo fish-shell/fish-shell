@@ -22,7 +22,7 @@ Synopsis
           [( -w | --wraps ) WRAPPED_COMMAND]...
           [( -n | --condition ) CONDITION]
           [( -d | --description ) DESCRIPTION]
-  complete ( -C[STRING] | --do-complete[=STRING] )
+  complete ( -C [STRING] | --do-complete[=STRING] )
 
 Description
 -----------

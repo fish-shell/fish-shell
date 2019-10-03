@@ -663,7 +663,7 @@ This is the preferred way to define your prompt as well::
     end
 
 
-See the documentation for :ref:`funced <cmd-funced>` and :ref:`funcsave <cmd-funcsave>` for ways to create these files automatically.
+See the documentation for :ref:`funced <cmd-funced>` and :ref:`funcsave <cmd-funcsave>` for ways to create these files automatically, and :ref:`$fish_function_path <syntax-function-autoloading>` to control their location.
 
 .. _tut-universal:
 

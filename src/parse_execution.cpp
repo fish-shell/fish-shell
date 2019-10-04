@@ -753,12 +753,18 @@ parse_execution_result_t parse_execution_context_t::expand_command(
 
     // Get the unexpanded command string. We expect to always get it here.
     wcstring unexp_cmd = *command_for_plain_statement(statement, pstree->src);
+    size_t pos_of_command_token = statement.child<0>().source_range()->start;
 
     // Expand the string to produce completions, and report errors.
     expand_result_t expand_err =
         expand_to_command_and_args(unexp_cmd, parser->vars(), out_cmd, out_args, &errors);
     if (expand_err == expand_result_t::error) {
         parser->set_last_statuses(statuses_t::just(STATUS_ILLEGAL_CMD));
+        // Issue #5812 - the expansions were done on the command token,
+        // excluding prefixes such as " " or "if ".
+        // This means that the error positions are relative to the beginning
+        // of the token; we need to make them relative to the original source.
+        for (auto &error : errors) error.source_start += pos_of_command_token;
         return report_errors(errors);
     } else if (expand_err == expand_result_t::wildcard_no_match) {
         return report_unmatched_wildcard_error(statement);

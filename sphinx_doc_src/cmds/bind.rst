@@ -122,6 +122,10 @@ The following special input functions are available:
 
 - ``history-search-forward``, search the history for the next match
 
+- ``history-prefix-search-backward``, search the history for the previous prefix match
+
+- ``history-prefix-search-forward``, search the history for the next prefix match
+
 - ``history-token-search-backward``, search the history for the previous matching argument
 
 - ``history-token-search-forward``, search the history for the next matching argument

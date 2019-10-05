@@ -18,6 +18,23 @@ function __fish_sfdx_using_command
     return 1
 end
 
+function __fish_sfdx_using_option
+    set cmd (commandline -opc)
+    if [ (count $cmd) -gt 2 ]
+        if [ $argv[1] = $cmd[2] ]
+            if [ $cmd[(count $cmd)] = $argv[2] ]
+                return 0
+            end
+        end
+    end
+    return 1
+end
+
+function __fish_sfdx_find_packagexml
+    # To find manifest (in other words package.xml)
+    printf '%s\n' (find . -type f -regex ".*/package.xml" | string sub -s 3)
+end
+
 set -l sfdx_looking -c sfdx -n '__fish_sfdx_needs_command'
 
 set -l sfdx_loglevels 'trace debug info warn error fatal TRACE DEBUG INFO WARN ERROR FATAL'
@@ -792,6 +809,8 @@ complete -c sfdx -n '__fish_sfdx_using_command force:project:create' -s p -l def
 complete -c sfdx -n '__fish_sfdx_using_command force:project:create' -s s -l namespace         -d 'project associated namespace'
 complete -c sfdx -n '__fish_sfdx_using_command force:project:create' -s t -l template          -d '[default: standard] template to use for project creation'
 complete -c sfdx -n '__fish_sfdx_using_command force:project:create' -s x -l manifest          -d 'generate a manifest (package.xml) for change-set-based development'
+complete -c sfdx -n '__fish_sfdx_using_option  force:project:create -x'                        -xa '(__fish_sfdx_find_packagexml)'
+complete -c sfdx -n '__fish_sfdx_using_option  force:project:create --manifest'                -xa '(__fish_sfdx_find_packagexml)'
 complete -c sfdx -n '__fish_sfdx_using_command force:project:create'      -l json              -d 'format output as json'
 complete -c sfdx -n '__fish_sfdx_using_command force:project:create'      -l loglevel          -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels
 
@@ -850,6 +869,8 @@ complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s r -l runt
 complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s u -l targetusername           -d 'username or alias for the target org; overrides default target org'
 complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s w -l wait                     -d '[default: 33 minutes] wait time for command to finish in minutes'
 complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s x -l manifest                 -d 'file path for manifest (package.xml) of components to deploy'
+complete -c sfdx -n '__fish_sfdx_using_option  force:source:deploy -x'                               -xa '(__fish_sfdx_find_packagexml)'
+complete -c sfdx -n '__fish_sfdx_using_option  force:source:deploy --manifest'                       -xa '(__fish_sfdx_find_packagexml)'
 complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l apiversion               -d 'override the api version used for api requests made by this command'
 complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l json                     -d 'format output as json'
 complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l loglevel                 -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels
@@ -888,6 +909,8 @@ complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve' -s p -l so
 complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve' -s u -l targetusername -d 'username or alias for the target org; overrides default target org'
 complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve' -s w -l wait           -d '[default: 33 minutes] wait time for command to finish in minutes'
 complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve' -s x -l manifest       -d 'file path for manifest (package.xml) of components to retrieve'
+complete -c sfdx -n '__fish_sfdx_using_option  force:source:retrieve -x'                     -xa '(__fish_sfdx_needs_command)'
+complete -c sfdx -n '__fish_sfdx_using_option  force:source:retrieve --manifest'             -xa '(__fish_sfdx_needs_command)'
 complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve'      -l json           -d 'format output as json'
 complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve'      -l loglevel       -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels
 complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve'      -l verbose        -d 'verbose output of retrieve result'
@@ -913,6 +936,8 @@ complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s r -l runt
 complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s u -l targetusername           -d 'username or alias for the target org; overrides default target org'
 complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s w -l wait                     -d '[default: 33 minutes] wait time for command to finish in minutes'
 complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s x -l manifest                 -d 'file path for manifest (package.xml) of components to deploy'
+complete -c sfdx -n '__fish_sfdx_using_option  force:source:deploy -x'                               -xa '(__fish_sfdx_needs_command)'
+complete -c sfdx -n '__fish_sfdx_using_option  force:source:deploy --manifest'                       -xa '(__fish_sfdx_needs_command)'
 complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l apiversion               -d 'override the api version used for api requests made by this command'
 complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l json                     -d 'format output as json'
 complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l loglevel                 -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels

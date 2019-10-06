@@ -1,1 +1,0 @@
-__fish_complete_gpg gpg1

@@ -1,13 +1,5 @@
 # Tab completion for sfdx (https://developer.salesforce.com/tools/sfdxcli).
 
-function __fish_sfdx_needs_command
-    set cmd (commandline -opc)
-    if [ (count $cmd) -eq 1 ]
-        return 0
-    end
-    return 1
-end
-
 function __fish_sfdx_using_command
     set cmd (commandline -opc)
     if [ (count $cmd) -gt 1 ]
@@ -18,24 +10,12 @@ function __fish_sfdx_using_command
     return 1
 end
 
-function __fish_sfdx_using_option
-    set cmd (commandline -opc)
-    if [ (count $cmd) -gt 2 ]
-        if [ $argv[1] = $cmd[2] ]
-            if [ $cmd[(count $cmd)] = $argv[2] ]
-                return 0
-            end
-        end
-    end
-    return 1
-end
-
 function __fish_sfdx_find_packagexml
     # To find manifest (in other words package.xml)
     printf '%s\n' (find . -type f -regex ".*/package.xml" | string sub -s 3)
 end
 
-set -l sfdx_looking -c sfdx -n '__fish_sfdx_needs_command'
+set -l sfdx_looking -c sfdx -n '__fish_use_subcommand'
 
 set -l sfdx_loglevels 'trace debug info warn error fatal TRACE DEBUG INFO WARN ERROR FATAL'
 
@@ -803,16 +783,15 @@ complete -c sfdx -n '__fish_sfdx_using_command force:package1:version:create:get
 complete $sfdx_looking -xa force:project -d 'set up a Salesforce DX project'
 
 complete $sfdx_looking -xa force:project:create -d 'create a Salesforce DX project'
-complete -c sfdx -n '__fish_sfdx_using_command force:project:create' -s d -l outputdir         -d 'folder for saving the created files'
-complete -c sfdx -n '__fish_sfdx_using_command force:project:create' -s n -l projectname       -d '(required) name of the generated project'
-complete -c sfdx -n '__fish_sfdx_using_command force:project:create' -s p -l defaultpackagedir -d '[default: force-app] default package directory name'
-complete -c sfdx -n '__fish_sfdx_using_command force:project:create' -s s -l namespace         -d 'project associated namespace'
-complete -c sfdx -n '__fish_sfdx_using_command force:project:create' -s t -l template          -d '[default: standard] template to use for project creation'
-complete -c sfdx -n '__fish_sfdx_using_command force:project:create' -s x -l manifest          -d 'generate a manifest (package.xml) for change-set-based development'
-complete -c sfdx -n '__fish_sfdx_using_option  force:project:create -x'                        -xa '(__fish_sfdx_find_packagexml)'
-complete -c sfdx -n '__fish_sfdx_using_option  force:project:create --manifest'                -xa '(__fish_sfdx_find_packagexml)'
-complete -c sfdx -n '__fish_sfdx_using_command force:project:create'      -l json              -d 'format output as json'
-complete -c sfdx -n '__fish_sfdx_using_command force:project:create'      -l loglevel          -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels
+complete -c sfdx -n '__fish_sfdx_using_command force:project:create' -s d -l outputdir                      -d 'folder for saving the created files'
+complete -c sfdx -n '__fish_sfdx_using_command force:project:create' -s n -l projectname                    -d '(required) name of the generated project'
+complete -c sfdx -n '__fish_sfdx_using_command force:project:create' -s p -l defaultpackagedir              -d '[default: force-app] default package directory name'
+complete -c sfdx -n '__fish_sfdx_using_command force:project:create' -s s -l namespace                      -d 'project associated namespace'
+complete -c sfdx -n '__fish_sfdx_using_command force:project:create' -s t -l template                       -d '[default: standard] template to use for project creation'
+complete -c sfdx -n '__fish_sfdx_using_command force:project:create' -s x -l manifest                       -d 'generate a manifest (package.xml) for change-set-based development'
+complete -c sfdx -n '__fish_sfdx_using_command force:project:create; and __fish_contains_opt -s x manifest' -xa '(__fish_sfdx_find_packagexml)'
+complete -c sfdx -n '__fish_sfdx_using_command force:project:create'      -l json                           -d 'format output as json'
+complete -c sfdx -n '__fish_sfdx_using_command force:project:create'      -l loglevel                       -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels
 
 complete $sfdx_looking -xa force:project:upgrade -d 'update project config files to the latest format'
 complete -c sfdx -n '__fish_sfdx_using_command force:project:upgrade' -s f -l forceupgrade -d 'run all upgrades even if project has already been upgraded'
@@ -858,23 +837,22 @@ complete -c sfdx -n '__fish_sfdx_using_command force:source:delete'      -l json
 complete -c sfdx -n '__fish_sfdx_using_command force:source:delete'      -l loglevel       -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels
 
 complete $sfdx_looking -xa force:source:deploy -d 'deploy source to an org'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s c -l checkonly                -d 'validate deploy but don’t save to the org'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s g -l ignorewarnings           -d 'whether a warning will allow a deployment to complete successfully'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s l -l testlevel                -d 'deployment testing level' -xa 'NoTestRun RunSpecifiedTests RunLocalTests RunAllTestsInOrg'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s m -l metadata                 -d 'comma-separated list of metadata component names'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s o -l ignoreerrors             -d 'ignore any errors and do not roll back deployment'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s p -l sourcepath               -d 'comma-separated list of paths to the local source files to deploy'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s q -l validateddeployrequestid -d 'request ID of the validated deployment to run a Quick Deploy'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s r -l runtests                 -d 'tests to run if --testlevel RunSpecifiedTests'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s u -l targetusername           -d 'username or alias for the target org; overrides default target org'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s w -l wait                     -d '[default: 33 minutes] wait time for command to finish in minutes'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s x -l manifest                 -d 'file path for manifest (package.xml) of components to deploy'
-complete -c sfdx -n '__fish_sfdx_using_option  force:source:deploy -x'                               -xa '(__fish_sfdx_find_packagexml)'
-complete -c sfdx -n '__fish_sfdx_using_option  force:source:deploy --manifest'                       -xa '(__fish_sfdx_find_packagexml)'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l apiversion               -d 'override the api version used for api requests made by this command'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l json                     -d 'format output as json'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l loglevel                 -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l verbose                  -d 'display Apex test processing details'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s c -l checkonly                      -d 'validate deploy but don’t save to the org'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s g -l ignorewarnings                 -d 'whether a warning will allow a deployment to complete successfully'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s l -l testlevel                      -d 'deployment testing level' -xa 'NoTestRun RunSpecifiedTests RunLocalTests RunAllTestsInOrg'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s m -l metadata                       -d 'comma-separated list of metadata component names'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s o -l ignoreerrors                   -d 'ignore any errors and do not roll back deployment'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s p -l sourcepath                     -d 'comma-separated list of paths to the local source files to deploy'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s q -l validateddeployrequestid       -d 'request ID of the validated deployment to run a Quick Deploy'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s r -l runtests                       -d 'tests to run if --testlevel RunSpecifiedTests'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s u -l targetusername                 -d 'username or alias for the target org; overrides default target org'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s w -l wait                           -d '[default: 33 minutes] wait time for command to finish in minutes'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s x -l manifest                       -d 'file path for manifest (package.xml) of components to deploy'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy; and __fish_contains_opt -s x manifest' -xa '(__fish_sfdx_find_packagexml)'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l apiversion                     -d 'override the api version used for api requests made by this command'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l json                           -d 'format output as json'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l loglevel                       -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l verbose                        -d 'display Apex test processing details'
 
 complete $sfdx_looking -xa force:source:open -d 'edit a Lightning Page with Lightning App Builder'
 complete -c sfdx -n '__fish_sfdx_using_command force:source:open' -s f -l sourcefile     -d  '(required) file to edit'
@@ -902,18 +880,17 @@ complete -c sfdx -n '__fish_sfdx_using_command force:source:push'      -l json  
 complete -c sfdx -n '__fish_sfdx_using_command force:source:push'      -l loglevel       -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels
 
 complete $sfdx_looking -xa force:source:retrieve -d 'retrieve source from an org'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve' -s a -l apiversion     -d 'target API version for the retrieve (default 46.0)'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve' -s m -l metadata       -d 'comma-separated list of metadata component names'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve' -s n -l packagenames   -d 'a comma-separated list of packages to retrieve'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve' -s p -l sourcepath     -d 'comma-separated list of source file paths to retrieve'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve' -s u -l targetusername -d 'username or alias for the target org; overrides default target org'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve' -s w -l wait           -d '[default: 33 minutes] wait time for command to finish in minutes'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve' -s x -l manifest       -d 'file path for manifest (package.xml) of components to retrieve'
-complete -c sfdx -n '__fish_sfdx_using_option  force:source:retrieve -x'                     -xa '(__fish_sfdx_needs_command)'
-complete -c sfdx -n '__fish_sfdx_using_option  force:source:retrieve --manifest'             -xa '(__fish_sfdx_needs_command)'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve'      -l json           -d 'format output as json'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve'      -l loglevel       -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels
-complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve'      -l verbose        -d 'verbose output of retrieve result'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve' -s a -l apiversion                     -d 'target API version for the retrieve (default 46.0)'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve' -s m -l metadata                       -d 'comma-separated list of metadata component names'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve' -s n -l packagenames                   -d 'a comma-separated list of packages to retrieve'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve' -s p -l sourcepath                     -d 'comma-separated list of source file paths to retrieve'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve' -s u -l targetusername                 -d 'username or alias for the target org; overrides default target org'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve' -s w -l wait                           -d '[default: 33 minutes] wait time for command to finish in minutes'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve' -s x -l manifest                       -d 'file path for manifest (package.xml) of components to retrieve'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve; and __fish_contains_opt -s x manifest' -xa '(__fish_use_subcommand)'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve'      -l json                           -d 'format output as json'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve'      -l loglevel                       -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels
+complete -c sfdx -n '__fish_sfdx_using_command force:source:retrieve'      -l verbose                        -d 'verbose output of retrieve result'
 
 complete $sfdx_looking -xa force:source:status -d 'list local changes and/or changes in a scratch org'
 complete -c sfdx -n '__fish_sfdx_using_command force:source:status' -s a -l all            -d 'list all the changes that have been made'
@@ -925,23 +902,22 @@ complete -c sfdx -n '__fish_sfdx_using_command force:source:status'      -l json
 complete -c sfdx -n '__fish_sfdx_using_command force:source:status'      -l loglevel       -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels
 
 complete $sfdx_looking -xa force:source:deploy -d 'deploy source to an org'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s c -l checkonly                -d 'validate deploy but don’t save to the org'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s g -l ignorewarnings           -d 'whether a warning will allow a deployment to complete successfully'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s l -l testlevel                -d 'deployment testing level' -xa 'NoTestRun RunSpecifiedTests RunLocalTests RunAllTestsInOrg'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s m -l metadata                 -d 'comma-separated list of metadata component names'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s o -l ignoreerrors             -d 'ignore any errors and do not roll back deployment'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s p -l sourcepath               -d 'comma-separated list of paths to the local source files to deploy'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s q -l validateddeployrequestid -d 'request ID of the validated deployment to run a Quick Deploy'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s r -l runtests                 -d 'tests to run if --testlevel RunSpecifiedTests'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s u -l targetusername           -d 'username or alias for the target org; overrides default target org'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s w -l wait                     -d '[default: 33 minutes] wait time for command to finish in minutes'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s x -l manifest                 -d 'file path for manifest (package.xml) of components to deploy'
-complete -c sfdx -n '__fish_sfdx_using_option  force:source:deploy -x'                               -xa '(__fish_sfdx_needs_command)'
-complete -c sfdx -n '__fish_sfdx_using_option  force:source:deploy --manifest'                       -xa '(__fish_sfdx_needs_command)'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l apiversion               -d 'override the api version used for api requests made by this command'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l json                     -d 'format output as json'
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l loglevel                 -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels
-complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l verbose                  -d 'display Apex test processing details'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s c -l checkonly                      -d 'validate deploy but don’t save to the org'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s g -l ignorewarnings                 -d 'whether a warning will allow a deployment to complete successfully'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s l -l testlevel                      -d 'deployment testing level' -xa 'NoTestRun RunSpecifiedTests RunLocalTests RunAllTestsInOrg'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s m -l metadata                       -d 'comma-separated list of metadata component names'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s o -l ignoreerrors                   -d 'ignore any errors and do not roll back deployment'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s p -l sourcepath                     -d 'comma-separated list of paths to the local source files to deploy'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s q -l validateddeployrequestid       -d 'request ID of the validated deployment to run a Quick Deploy'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s r -l runtests                       -d 'tests to run if --testlevel RunSpecifiedTests'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s u -l targetusername                 -d 'username or alias for the target org; overrides default target org'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s w -l wait                           -d '[default: 33 minutes] wait time for command to finish in minutes'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy' -s x -l manifest                       -d 'file path for manifest (package.xml) of components to deploy'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy; and __fish_contains_opt -s x manifest' -xa '(__fish_use_subcommand)'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l apiversion                     -d 'override the api version used for api requests made by this command'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l json                           -d 'format output as json'
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l loglevel                       -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels
+complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy'      -l verbose                        -d 'display Apex test processing details'
 
 complete $sfdx_looking -xa force:source:deploy:cancel -d 'cancel a source deployment'
 complete -c sfdx -n '__fish_sfdx_using_command force:source:deploy:cancel' -s i -l jobid          -d 'job ID of the deployment you want to cancel; defaults to your most recent CLI deployment if not specified'

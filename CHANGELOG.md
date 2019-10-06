@@ -40,17 +40,30 @@
 - `functions --erase` now also prevents fish from autoloading a function for the first time (#5951).
 
 ### Interactive improvements
-- Major improvements in performance and functionality to the 'sorin' sample prompt (#5411).
-- The `fish_clipboard_*` functions support wayland by using [`wl-clipboard`](https://github.com/bugaevc/wl-clipboard) (#5450).
+- fish only parses `/etc/paths` on macOS in login shells, matching the bash implementation (#5637) and avoiding changes to path ordering in child shells (#5456).
+- The locale is now reloaded when the `LOCPATH` variable is changed (#5815).
+- `read` no longer keeps a history, making it suitable for operations that shouldn't end up there, like password entry (#5904).
+#### New or improved bindings
 - Pasting strips leading spaces to avoid pasted commands being omitted from the history (#4327).
+- The default escape delay (to differentiate between the escape key and an alt-combination) has been reduced to 30ms, down from 300ms for the default mode and 100ms for vi-mode (#3904).
+- The `forward-bigword` binding now interacts correctly with autosuggestions (#5336)
+- The `fish_clipboard_*` functions support wayland by using [`wl-clipboard`](https://github.com/bugaevc/wl-clipboard) (#5450).
+- The nextd and prevd functions no longer print "Hit end of history", instead using a BEL.
+- If fish_mode_prompt exists, vi-mode will only execute it on mode-switch instead of the entire prompt. This should make it much more responsive with slow prompts (#5783).
+- The path-component bindings (like ctrl-w) now also stop at ":" and "@" because those are used to denote user and host in ssh-likes (#5841).
+- The NULL character can now be bound via `bind -k nul`. Terminals often generate this character via control-space. (#3189).
+- A new readline command `expand-abbr` can be used to trigger abbreviation expansion (#5762).
+- The `self-insert` readline command will now insert the binding sequence, if not empty.
+#### Improved prompts
+- The git prompt in informative mode now shows the number of stashes if enabled.
+- The git prompt now has an option ($__fish_git_prompt_use_informative_chars) to use the (more modern) informative characters without enabling informative mode.
+#### Improved output
 - New `fish_pager_color_` options have been added to control more elements of the pager's colors (#5524).
 - Better detection and support for using fish from various system consoles, where limited colors and special characters are supported (#5552 and others).
-- fish now underlines every valid entered path instead of just the last one (#5872).
-- The default escape delay (to differentiate between the escape key and an alt-combination) has been reduced to 30ms, down from 300ms for the default mode and 100ms for vi-mode (#3904).
-- fish only parses `/etc/paths` on macOS in login shells, matching the bash implementation (#5637) and avoiding changes to path ordering in child shells (#5456).
-- The `forward-bigword` binding now interacts correctly with autosuggestions (#5336)
 - fish now tries to guess if the system supports Unicode 9 (and displays emoji as wide), eliminating the need to set `$fish_emoji_width` in most cases (#5722).
-- The locale is now reloaded when the `LOCPATH` variable is changed (#5815).
+- fish now underlines every valid entered path instead of just the last one (#5872).
+- When syntax highlighting a string with an unclosed quote, only the quote itself will be shown as an error, instead of the whole argument.
+#### New or improved completions
 - Added completions for
   - `aws`
   - `bat` (#6052)
@@ -75,16 +88,6 @@
   - `tsc` (#6016)
   - `vbc` (#6016)
 - Lots of improvements to completions.
-- The git prompt in informative mode now shows the number of stashes if enabled.
-- The git prompt now has an option ($__fish_git_prompt_use_informative_chars) to use the (more modern) informative characters without enabling informative mode.
-- The nextd and prevd functions no longer print "Hit end of history", instead using a BEL.
-- If fish_mode_prompt exists, vi-mode will only execute it on mode-switch instead of the entire prompt. This should make it much more responsive with slow prompts (#5783).
-- The path-component bindings (like ctrl-w) now also stop at ":" and "@" because those are used to denote user and host in ssh-likes (#5841).
-- `read` no longer keeps a history, making it suitable for operations that shouldn't end up there, like password entry (#5904).
-- When syntax highlighting a string with an unclosed quote, only the quote itself will be shown as an error, instead of the whole argument.
-- The NULL character can now be bound via `bind -k nul`. Terminals often generate this character via control-space. (#3189).
-- A new readline command `expand-abbr` can be used to trigger abbreviation expansion (#5762).
-- The `self-insert` readline command will now insert the binding sequence, if not empty.
 
 ## Deprecations
 - The vcs-prompt functions have been promoted to names without double-underscore, so __fish_git_prompt is now fish_git_prompt, __fish_vcs_prompt is now fish_vcs_prompt, __fish_hg_prompt is now fish_hg_prompt and __fish_svn_prompt is now fish_svn_prompt. Shims at the old names have been added, and the variables have kept their old names (#5586).
@@ -92,8 +95,8 @@
 ### For distributors and developers
 - fish 3.0 introduced a CMake-based build system. In fish 3.1, both the Autotools-based build and legacy Xcode build system have been removed, leaving only the CMake build system. All distributors and developers must install CMake.
 - The documentation is now built with Sphinx. The old Doxygen-based documentation system has been removed. Developers, and distributors who wish to rebuild the documentation, must install Sphinx.
-- The `INTERNAL_WCWIDTH` build option has been removed, as fish always uses an internal `wcwidth` function. It has a number of configuration options that make it more suitable for general use (#5777).
-- mandoc is now be used to format the output from `--help` if `nroff` is not installed, reducing the number of external dependencies on systems with `mandoc` installed (#5489).
+- The `INTERNAL_WCWIDTH` build option has been removed, as fish now always uses an internal `wcwidth` function. It has a number of configuration options that make it more suitable for general use (#5777).
+- mandoc can now be used to format the output from `--help` if `nroff` is not installed, reducing the number of external dependencies on systems with `mandoc` installed (#5489).
 
 ---
 

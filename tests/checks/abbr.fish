@@ -85,3 +85,7 @@ abbr __abbr11 omega11
 abbr __abbr12 omega12
 abbr -r __abbr11 __abbr12
 # CHECKERR: abbr --rename: Abbreviation __abbr12 already exists, cannot rename __abbr11
+
+abbr __abbr-with-dashes omega
+complete -C__abbr-with
+# CHECK: __abbr-with-dashes	Abbreviation: omega

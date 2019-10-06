@@ -1211,7 +1211,9 @@ std::map<wcstring, wcstring> get_abbreviations(const environment_t &vars) {
     std::map<wcstring, wcstring> result;
     for (const wcstring &name : names) {
         if (string_prefixes_string(prefix, name)) {
-            result[name.substr(prefix.size())] = vars.get(name)->as_string();
+            wcstring key;
+            unescape_string(name.substr(prefix.size()), &key, UNESCAPE_DEFAULT, STRING_STYLE_VAR);
+            result[key] = vars.get(name)->as_string();
         }
     }
     return result;

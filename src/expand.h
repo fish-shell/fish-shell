@@ -177,6 +177,7 @@ wcstring replace_home_directory_with_tilde(const wcstring &str, const environmen
 maybe_t<wcstring> expand_abbreviation(const wcstring &src, const environment_t &vars);
 
 /// \return a snapshot of all abbreviations as a map abbreviation->expansion.
+/// The abbreviations are unescaped, i.e. they may not be valid variable identifiers (#6166).
 std::map<wcstring, wcstring> get_abbreviations(const environment_t &vars);
 
 // Terrible hacks

@@ -4,6 +4,8 @@ function __fish_complete_command --description 'Complete using all available com
         case '*=*'
             set ctoken (string split "=" -- $ctoken)
             printf '%s\n' $ctoken[1]=(complete -C "$ctoken[2]")
+        case '-*' # For `su -c` do not complete "-c" as command.
+            return
         case '*'
             complete -C "$ctoken"
     end

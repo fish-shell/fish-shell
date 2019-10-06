@@ -10,4 +10,4 @@ complete -c type -s q -l quiet -d "Suppress output"
 complete -c type -a "(builtin -n)" -d "Builtin"
 complete -c type -a "(functions -n)" -d "Function"
 
-complete -c type -a "(complete -C(commandline -ct))" -x
+complete -c type -a "(__fish_complete_command)" -x

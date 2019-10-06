@@ -87,4 +87,4 @@ complete -C'complete_test_recurse1 '
 # CHECKERR: recursing
 # CHECKERR: recursing
 # CHECKERR: recursing
-# CHECKERR: complete: maximum recursive depth reached
+# CHECKERR: complete: maximum recursion depth reached

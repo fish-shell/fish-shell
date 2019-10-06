@@ -338,7 +338,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         // Allow a limited number of recursive calls to complete (#3474).
         if (parser.libdata().builtin_complete_recursion_level >= 24) {
-            streams.err.append_format(L"%ls: maximum recursive depth reached\n", cmd);
+            streams.err.append_format(L"%ls: maximum recursion depth reached\n", cmd);
         } else {
             parser.libdata().builtin_complete_recursion_level++;
 

@@ -336,11 +336,16 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         parser.libdata().transient_commandlines.push_back(do_complete_param);
         cleanup_t remove_transient([&] { parser.libdata().transient_commandlines.pop_back(); });
 
-        // Allow a limited number of recursive calls to complete (#3474).
-        if (parser.libdata().builtin_complete_recursion_level >= 24) {
+        if (parser.libdata().builtin_complete_current_commandline) {
+            // Prevent accidental recursion (see #6171).
+        } else if (parser.libdata().builtin_complete_recursion_level >= 24) {
+            // Allow a limited number of recursive calls to complete (#3474).
             streams.err.append_format(L"%ls: maximum recursion depth reached\n", cmd);
         } else {
             parser.libdata().builtin_complete_recursion_level++;
+            assert(!parser.libdata().builtin_complete_current_commandline);
+	    if (!have_do_complete_param)
+                parser.libdata().builtin_complete_current_commandline = true;
 
             std::vector<completion_t> comp;
             complete(do_complete_param, &comp, completion_request_t::fuzzy_match, parser.vars(),
@@ -379,6 +384,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
 
             parser.libdata().builtin_complete_recursion_level--;
+            parser.libdata().builtin_complete_current_commandline = false;
         }
     } else if (cmd_to_complete.empty() && path.empty()) {
         // No arguments specified, meaning we print the definitions of all specified completions

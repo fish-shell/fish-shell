@@ -132,6 +132,9 @@ struct library_data_t {
     /// Number of recursive calls to builtin_complete().
     uint32_t builtin_complete_recursion_level{0};
 
+    /// Whether we called builtin_complete -C without parameter.
+    bool builtin_complete_current_commandline{false};
+
     /// Whether we are currently cleaning processes.
     bool is_cleaning_procs{false};
 

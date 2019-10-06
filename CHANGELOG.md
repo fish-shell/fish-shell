@@ -43,6 +43,7 @@
 - fish only parses `/etc/paths` on macOS in login shells, matching the bash implementation (#5637) and avoiding changes to path ordering in child shells (#5456).
 - The locale is now reloaded when the `LOCPATH` variable is changed (#5815).
 - `read` no longer keeps a history, making it suitable for operations that shouldn't end up there, like password entry (#5904).
+
 #### New or improved bindings
 - Pasting strips leading spaces to avoid pasted commands being omitted from the history (#4327).
 - The default escape delay (to differentiate between the escape key and an alt-combination) has been reduced to 30ms, down from 300ms for the default mode and 100ms for vi-mode (#3904).
@@ -54,15 +55,22 @@
 - The NULL character can now be bound via `bind -k nul`. Terminals often generate this character via control-space. (#3189).
 - A new readline command `expand-abbr` can be used to trigger abbreviation expansion (#5762).
 - The `self-insert` readline command will now insert the binding sequence, if not empty.
+- A new binding to prepend `sudo`, bound to alt-s by default (#6140).
+- The alt-w binding to describe a command should now work better with multiline prompts (#6110)
+- The alt-h binding to open a command's man page now tries to ignore `sudo` (#6122).
+- A new pair of bind functions, `history-prefix-search-backward` (and forward) was introduced (#6143).
+
 #### Improved prompts
 - The git prompt in informative mode now shows the number of stashes if enabled.
 - The git prompt now has an option ($__fish_git_prompt_use_informative_chars) to use the (more modern) informative characters without enabling informative mode.
+
 #### Improved output
 - New `fish_pager_color_` options have been added to control more elements of the pager's colors (#5524).
 - Better detection and support for using fish from various system consoles, where limited colors and special characters are supported (#5552 and others).
 - fish now tries to guess if the system supports Unicode 9 (and displays emoji as wide), eliminating the need to set `$fish_emoji_width` in most cases (#5722).
 - fish now underlines every valid entered path instead of just the last one (#5872).
 - When syntax highlighting a string with an unclosed quote, only the quote itself will be shown as an error, instead of the whole argument.
+
 #### New or improved completions
 - Added completions for
   - `aws`

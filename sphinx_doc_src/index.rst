@@ -1454,6 +1454,8 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - :kbd:`Alt+v` Same as :kbd:`Alt+e`.
 
+- :kbd:`Alt+s` Prepends `sudo` to the current commandline.
+
 .. _emacs-mode:
 
 Emacs mode commands

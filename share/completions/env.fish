@@ -16,7 +16,7 @@ function __fish_complete_env_subcommand
 
     # Then complete the rest as if it was given as a command.
     if set -q argv[1]
-        complete -C"$argv"
+        complete -C "$argv"
         return 0
     end
     return 1

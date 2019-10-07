@@ -225,6 +225,10 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     if (argc != optind) {
         if (opts.named_arguments.size()) {
             for (int i = optind; i < argc; i++) {
+                if (!valid_var_name(argv[i])) {
+                    streams.err.append_format(BUILTIN_ERR_VARNAME, cmd, argv[i]);
+                    return STATUS_INVALID_ARGS;
+                }
                 opts.named_arguments.push_back(argv[i]);
             }
         } else {

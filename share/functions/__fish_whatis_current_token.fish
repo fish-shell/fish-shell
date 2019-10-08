@@ -8,8 +8,10 @@ function __fish_whatis_current_token -d "Show man page entries related to the to
         whatis $tok[1]
 
         set -l line_count (count (fish_prompt))
-        for x in (seq 2 $line_count)
-            printf "\n"
+        if test $line_count -gt 1
+            for x in (seq 2 $line_count)
+                printf "\n"
+            end
         end
 
         commandline -f repaint

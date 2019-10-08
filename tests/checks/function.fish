@@ -6,7 +6,7 @@ end
 function t2 --argument-names a b c --no-scope-shadowing
     echo t2
 end
-#CHECKERR: function.fish (line {{\d+}}): function: Variable name '--no-scope-shadowing' is not valid. See `help identifiers`.
+#CHECKERR: checks/function.fish (line {{\d+}}): function: Variable name '--no-scope-shadowing' is not valid. See `help identifiers`.
 #CHECKERR: function t2 --argument-names a b c --no-scope-shadowing
 #CHECKERR: ^
 

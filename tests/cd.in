@@ -76,6 +76,12 @@ set -g CDPATH ./
 cd $base
 test $PWD = $base; and echo No crash with ./ CDPATH
 
+# test for directories beginning with a hyphen
+mkdir $base/-testdir
+cd $base
+cd -- -testdir
+test $PWD = $base/-testdir
+
 # cd back before removing the test directory again.
 cd $oldpwd
 rm -Rf $base

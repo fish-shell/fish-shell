@@ -100,6 +100,8 @@ The following special input functions are available:
 
 - ``delete-or-exit``, deletes one character to the right of the cursor or exits the shell if the commandline is empty.
 
+- ``down-line``, move down one line
+
 - ``downcase-word``, make the current word lowercase
 
 - ``end-of-buffer``, moves to the end of the buffer, i.e. the end of the first line
@@ -153,6 +155,8 @@ The following special input functions are available:
 - ``transpose-chars``,  transpose two characters to the left of the cursor
 
 - ``transpose-words``, transpose two words to the left of the cursor
+
+- ``up-line``, move up one line
 
 - ``upcase-word``, make the current word uppercase
 

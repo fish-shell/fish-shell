@@ -16,7 +16,7 @@ Synopsis
 Description
 -----------
 
-``if`` will execute the command ``CONDITION``. If the condition's exit status is 0, the commands ``COMMANDS_TRUE`` will execute.  If the exit status is not 0 and ``else`` is given, ``COMMANDS_FALSE`` will be executed.
+``if`` will execute the command ``CONDITION``. If the condition's exit status is 0, the commands ``COMMANDS_TRUE`` will execute.  If the exit status is not 0 and :ref:`else <cmd-else>` is given, ``COMMANDS_FALSE`` will be executed.
 
 You can use :ref:`and <cmd-and>` or :ref:`or <cmd-or>` in the condition. See the second example below.
 

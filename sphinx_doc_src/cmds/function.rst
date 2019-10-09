@@ -8,7 +8,7 @@ Synopsis
 
 ::
 
-    function NAME [OPTIONS]; BODY; end
+    function NAME [OPTIONS] [-a|--argument-names NAMES ...]; BODY; end
 
 
 Description
@@ -20,7 +20,7 @@ A function is a list of commands that will be executed when the name of the func
 
 The following options are available:
 
-- ``-a NAMES`` or ``--argument-names NAMES`` assigns the value of successive command-line arguments to the names given in NAMES.
+- ``-a NAMES`` or ``--argument-names NAMES`` assigns the value of successive command-line arguments to the names given in NAMES. If this is defined, it *must* be the last flag sent to ``function``, or the shell will complain that the variable name is invalid.
 
 - ``-d DESCRIPTION`` or ``--description=DESCRIPTION`` is a description of what the function does, suitable as a completion description.
 

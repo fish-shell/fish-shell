@@ -1,5 +1,22 @@
+#
+# Completions for the gpg program.
+#
+# This program accepts an rather large number of switches. It allows
+# you to do things like changing what file descriptor errors should be
+# written to, to make gpg use a different locale than the one
+# specified in the environment or to specify an alternative home
+# directory.
+
+# Switches related to debugging, switches whose use is not
+# recommended, switches whose behaviour is as of yet undefined,
+# switches for experimental features, switches to make gpg compliant
+# to legacy pgp-versions, dos-specific switches, switches meant for
+# the options file and deprecated or obsolete switches have all been
+# removed. The remaining list of completions is still quite
+# impressive.
+
 function __fish_complete_gpg -d "Internal function for gpg completion code deduplication" -a __fish_complete_gpg_command
-    if test (string match -q 'gpg1' $__fish_complete_gpg_command) -o (string match -q 'gpg (GnuPG) 1.*' (gpg --version))
+    if string match -q 'gpg (GnuPG) 1.*' ($__fish_complete_gpg_command --version)
         complete -c $__fish_complete_gpg_command -l simple-sk-checksum -d 'Integrity protect secret keys by using a SHA-1 checksum'
         complete -c $__fish_complete_gpg_command -l no-sig-create-check -d "Do not verify each signature right after creation"
         complete -c $__fish_complete_gpg_command -l pgp2 -d "Set up all options to be as PGP 2.x compliant as possible"

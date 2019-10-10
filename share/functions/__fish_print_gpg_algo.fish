@@ -1,4 +1,6 @@
-function __fish_print_gpg_algo -d "Complete using all algorithms of the type specified in argv[1] supported by gpg. argv[1] is a regexp" -a __fish_complete_gpg_command
+# Helper function for contextual autocompletion of GPG crypto algorithm options
+
+function __fish_print_gpg_algo -d "Complete using all algorithms of the type specified in argv[2] supported by gpg. argv[2] is a regexp" -a __fish_complete_gpg_command
     # Set a known locale, so that the output format of 'gpg --version'
     # is at least somewhat predictable. The locale will automatically
     # expire when the function goes out of scope, and the original locale

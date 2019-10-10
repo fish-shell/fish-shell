@@ -35,9 +35,9 @@ struct function_cmd_opts_t {
     wcstring_list_t wrap_targets;
 };
 
-// This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
+// This command is atypical in using the "-" (RETURN_IN_ORDER) option for flag parsing.
 // This is needed due to the semantics of the -a/--argument-names flag.
-static const wchar_t *const short_options = L"+:a:d:e:hj:p:s:v:w:SV:";
+static const wchar_t *const short_options = L"-:a:d:e:hj:p:s:v:w:SV:";
 static const struct woption long_options[] = {{L"description", required_argument, NULL, 'd'},
                                               {L"on-signal", required_argument, NULL, 's'},
                                               {L"on-job-exit", required_argument, NULL, 'j'},
@@ -56,8 +56,20 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
     const wchar_t *cmd = L"function";
     int opt;
     wgetopter_t w;
+    bool handling_named_arguments = false;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+        if (opt != 'a' && opt != 1) handling_named_arguments = false;
         switch (opt) {
+            case 1: {
+                if (handling_named_arguments) {
+                    opts.named_arguments.push_back(w.woptarg);
+                    break;
+                } else {
+                    streams.err.append_format(_(L"%ls: Unexpected positional argument '%ls'"), cmd,
+                                              w.woptarg);
+                    return STATUS_INVALID_ARGS;
+                }
+            }
             case 'd': {
                 opts.description = w.woptarg;
                 break;
@@ -122,6 +134,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                 break;
             }
             case 'a': {
+                handling_named_arguments = true;
                 opts.named_arguments.push_back(w.woptarg);
                 break;
             }

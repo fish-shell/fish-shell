@@ -1,12 +1,14 @@
 // Color class implementation.
 #include "config.h"  // IWYU pragma: keep
 
+#include "color.h"
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+
 #include <cwchar>  // IWYU pragma: keep
 
-#include "color.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 

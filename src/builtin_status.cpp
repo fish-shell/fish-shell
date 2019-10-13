@@ -1,13 +1,14 @@
 // Implementation of the status builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <stddef.h>
-#include <cwchar>
+#include "builtin_status.h"
 
+#include <stddef.h>
+
+#include <cwchar>
 #include <string>
 
 #include "builtin.h"
-#include "builtin_status.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "future_feature_flags.h"

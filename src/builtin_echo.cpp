@@ -1,11 +1,12 @@
 // Implementation of the echo builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_echo.h"
+
 #include <limits.h>
 #include <stddef.h>
 
 #include "builtin.h"
-#include "builtin_echo.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"

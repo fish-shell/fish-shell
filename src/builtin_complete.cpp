@@ -2,23 +2,23 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <stddef.h>
-#include <cwchar>
 
+#include <cwchar>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "builtin.h"
+#include "color.h"
 #include "common.h"
 #include "complete.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "highlight.h"
 #include "io.h"
 #include "parse_constants.h"
 #include "parse_util.h"
 #include "parser.h"
-#include "highlight.h"
-#include "color.h"
 #include "reader.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep

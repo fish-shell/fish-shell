@@ -1,12 +1,14 @@
 // Programmatic representation of fish code.
 #include "config.h"  // IWYU pragma: keep
 
+#include "parse_tree.h"
+
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <cwchar>
 
 #include <algorithm>
+#include <cwchar>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -16,7 +18,6 @@
 #include "flog.h"
 #include "parse_constants.h"
 #include "parse_productions.h"
-#include "parse_tree.h"
 #include "proc.h"
 #include "tnode.h"
 #include "tokenizer.h"

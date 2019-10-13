@@ -12,10 +12,10 @@
 
 #include <stddef.h>
 #include <sys/stat.h>
-#include <cwchar>
 
 #include <algorithm>
 #include <cstddef>
+#include <cwchar>
 #include <list>
 #include <memory>
 #include <unordered_map>

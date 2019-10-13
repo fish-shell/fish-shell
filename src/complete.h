@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "common.h"
-
 #include "enum_set.h"
 
 struct completion_mode_t {

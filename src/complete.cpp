@@ -5,15 +5,17 @@
 ///
 #include "config.h"  // IWYU pragma: keep
 
+#include "complete.h"
+
 #include <pthread.h>
 #include <pwd.h>
 #include <stddef.h>
 #include <wctype.h>
-#include <cwchar>
 
 #include <algorithm>
 #include <atomic>
 #include <cstddef>
+#include <cwchar>
 #include <functional>
 #include <iterator>
 #include <list>
@@ -29,7 +31,6 @@
 #include "autoload.h"
 #include "builtin.h"
 #include "common.h"
-#include "complete.h"
 #include "env.h"
 #include "exec.h"
 #include "expand.h"

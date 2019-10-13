@@ -3,6 +3,7 @@
 #define FISH_FUTURE_FEATURE_FLAGS_H
 
 #include <assert.h>
+
 #include <unordered_map>
 
 #include "common.h"

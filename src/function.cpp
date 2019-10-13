@@ -8,9 +8,9 @@
 #include <dirent.h>
 #include <pthread.h>
 #include <stddef.h>
-#include <cwchar>
 
 #include <algorithm>
+#include <cwchar>
 #include <map>
 #include <memory>
 #include <string>

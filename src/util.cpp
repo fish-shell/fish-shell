@@ -1,16 +1,18 @@
 // Generic utilities library.
 #include "config.h"  // IWYU pragma: keep
 
+#include "util.h"
+
 #include <errno.h>
 #include <stddef.h>
 #include <sys/time.h>
 #include <wctype.h>
+
 #include <cwchar>
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "util.h"
-#include "wutil.h"  // IWYU pragma: keep
+#include "wutil.h"     // IWYU pragma: keep
 
 // Compare the strings to see if they begin with an integer that can be compared and return the
 // result of that comparison.

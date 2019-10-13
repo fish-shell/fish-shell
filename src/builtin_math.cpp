@@ -1,22 +1,22 @@
 // Implementation of the math builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_math.h"
+
 #include <errno.h>
 #include <stddef.h>
-#include <cstring>
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <limits>
 #include <string>
 
-#include "tinyexpr.h"
-
 #include "builtin.h"
-#include "builtin_math.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
+#include "tinyexpr.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 

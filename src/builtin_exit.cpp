@@ -1,11 +1,12 @@
 // Implementation of the exit builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_exit.h"
+
 #include <errno.h>
 #include <stddef.h>
 
 #include "builtin.h"
-#include "builtin_exit.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"

@@ -1,6 +1,8 @@
 // Implementation of the function builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_function.h"
+
 #include <errno.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -11,7 +13,6 @@
 #include <vector>
 
 #include "builtin.h"
-#include "builtin_function.h"
 #include "common.h"
 #include "complete.h"
 #include "event.h"

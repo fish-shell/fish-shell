@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <wctype.h>
+
 #include <string>
 
 #ifdef HAVE_XLOCALE_H

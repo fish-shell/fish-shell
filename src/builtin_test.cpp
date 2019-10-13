@@ -3,22 +3,23 @@
 // Implemented from scratch (yes, really) by way of IEEE 1003.1 as reference.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin.h"
+
 #include <errno.h>
 #include <stdarg.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <wctype.h>
-#include <cstring>
-#include <cwchar>
 
 #include <cmath>
+#include <cstring>
+#include <cwchar>
 #include <memory>
 #include <string>
 #include <type_traits>
 #include <utility>
 
-#include "builtin.h"
 #include "common.h"
 #include "io.h"
 #include "parser.h"

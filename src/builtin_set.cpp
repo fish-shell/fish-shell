@@ -6,10 +6,10 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <cstring>
-#include <cwchar>
 
 #include <algorithm>
+#include <cstring>
+#include <cwchar>
 #include <iterator>
 #include <memory>
 #include <set>

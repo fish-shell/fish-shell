@@ -1,13 +1,15 @@
 // Implementation of the fg builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_fg.h"
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <cwchar>
 
 #include "builtin.h"
-#include "builtin_fg.h"
 #include "common.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep

@@ -17,17 +17,18 @@
 // 4). Use 'git add sphinx_doc_src/NAME.txt' to start tracking changes to the documentation file.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin.h"
+
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <cstring>
-#include <cwchar>
 
 #include <algorithm>
+#include <cstring>
+#include <cwchar>
 #include <memory>
 #include <string>
 
-#include "builtin.h"
 #include "builtin_argparse.h"
 #include "builtin_bg.h"
 #include "builtin_bind.h"

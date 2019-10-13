@@ -3,6 +3,7 @@
 
 #include <errno.h>
 #include <wctype.h>
+
 #include <cwchar>
 #if HAVE_TERM_H
 #include <curses.h>

@@ -2,14 +2,16 @@
 // provides recursive wildcards using **.
 #include "config.h"  // IWYU pragma: keep
 
+#include "wildcard.h"
+
 #include <dirent.h>
 #include <errno.h>
 #include <stddef.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <cwchar>
 
+#include <cwchar>
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -21,7 +23,6 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "future_feature_flags.h"
 #include "reader.h"
-#include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// Description for generic executable.

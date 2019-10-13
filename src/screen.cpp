@@ -13,6 +13,7 @@
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
+
 #include <cstring>
 #include <cwchar>
 
@@ -642,8 +643,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
     // Determine how many lines have stuff on them; we need to clear lines with stuff that we don't
     // want.
     const size_t lines_with_stuff = std::max(actual_lines_before_reset, scr->actual.line_count());
-    if (scr->desired.line_count() < lines_with_stuff)
-        need_clear_screen = true;
+    if (scr->desired.line_count() < lines_with_stuff) need_clear_screen = true;
 
     if (left_prompt != scr->actual_left_prompt) {
         s_move(scr, 0, 0);
@@ -669,12 +669,11 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         const size_t shared_prefix = line_shared_prefix(o_line, s_line);
         size_t skip_prefix = shared_prefix;
         if (shared_prefix < o_line.indentation) {
-            if (o_line.indentation > s_line.indentation
-                && !has_cleared_screen && clr_eol && clr_eos) {
+            if (o_line.indentation > s_line.indentation && !has_cleared_screen && clr_eol &&
+                clr_eos) {
                 s_set_color(scr, vars, highlight_spec_t{});
                 s_move(scr, 0, (int)i);
-                s_write_mbs(scr,
-                            should_clear_screen_this_line ? clr_eos : clr_eol);
+                s_write_mbs(scr, should_clear_screen_this_line ? clr_eos : clr_eol);
                 has_cleared_screen = should_clear_screen_this_line;
                 has_cleared_line = true;
             }
@@ -685,8 +684,9 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         // over the shared prefix of what we want to output now, and what we output before, to
         // avoid repeatedly outputting it.
         if (skip_prefix > 0) {
-            size_t skip_width = shared_prefix < skip_prefix ? skip_prefix
-                                                : fish_wcswidth(&o_line.text.at(0), shared_prefix);
+            size_t skip_width = shared_prefix < skip_prefix
+                                    ? skip_prefix
+                                    : fish_wcswidth(&o_line.text.at(0), shared_prefix);
             if (skip_width > skip_remaining) skip_remaining = skip_width;
         }
 
@@ -722,21 +722,20 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
         }
 
         // Now actually output stuff.
-        for (; ; j++) {
+        for (;; j++) {
             bool done = j >= o_line.size();
             // Clear the screen if we have not done so yet.
             // If we are about to output into the last column, clear the screen first. If we clear
             // the screen after we output into the last column, it can erase the last character due
             // to the sticky right cursor. If we clear the screen too early, we can defeat soft
             // wrapping.
-            if (should_clear_screen_this_line && !has_cleared_screen
-                && (done || j + 1 == (size_t)screen_width)) {
+            if (should_clear_screen_this_line && !has_cleared_screen &&
+                (done || j + 1 == (size_t)screen_width)) {
                 s_move(scr, current_width, (int)i);
                 s_write_mbs(scr, clr_eos);
                 has_cleared_screen = true;
             }
-            if (done)
-                break;
+            if (done) break;
 
             perform_any_impending_soft_wrap(scr, current_width, (int)i);
             s_move(scr, current_width, (int)i);

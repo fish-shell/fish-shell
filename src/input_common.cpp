@@ -3,6 +3,7 @@
 
 #include <errno.h>
 #include <unistd.h>
+
 #include <cstring>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
@@ -11,8 +12,8 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <cwchar>
 
+#include <cwchar>
 #include <deque>
 #include <list>
 #include <memory>

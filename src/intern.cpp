@@ -1,16 +1,17 @@
 // Library for pooling common strings.
 #include "config.h"  // IWYU pragma: keep
 
+#include "intern.h"
+
 #include <stddef.h>
-#include <cwchar>
 
 #include <algorithm>
+#include <cwchar>
 #include <memory>
 #include <vector>
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "intern.h"
 
 bool string_less_than_string(const wchar_t *a, const wchar_t *b) { return std::wcscmp(a, b) < 0; }
 

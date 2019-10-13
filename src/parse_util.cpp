@@ -4,10 +4,12 @@
 // that are somehow related to parsing the code.
 #include "config.h"  // IWYU pragma: keep
 
+#include "parse_util.h"
+
 #include <stdarg.h>
 #include <stdlib.h>
-#include <cwchar>
 
+#include <cwchar>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -18,7 +20,6 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "future_feature_flags.h"
 #include "parse_constants.h"
-#include "parse_util.h"
 #include "parser.h"
 #include "tnode.h"
 #include "tokenizer.h"

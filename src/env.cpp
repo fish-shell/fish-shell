@@ -1,6 +1,8 @@
 // Functions for setting and getting environment variables.
 #include "config.h"  // IWYU pragma: keep
 
+#include "env.h"
+
 #include <errno.h>
 #include <pwd.h>
 #include <stddef.h>
@@ -18,7 +20,6 @@
 
 #include "builtin_bind.h"
 #include "common.h"
-#include "env.h"
 #include "env_dispatch.h"
 #include "env_universal_common.h"
 #include "event.h"

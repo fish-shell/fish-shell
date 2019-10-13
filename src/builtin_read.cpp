@@ -1,23 +1,24 @@
 // Implementation of the read builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_read.h"
+
 #include <errno.h>
 #include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <cstring>
-#include <cwchar>
 
 #include <algorithm>
+#include <cstring>
+#include <cwchar>
 #include <memory>
 #include <numeric>
 #include <string>
 #include <vector>
 
 #include "builtin.h"
-#include "builtin_read.h"
 #include "common.h"
 #include "complete.h"
 #include "env.h"

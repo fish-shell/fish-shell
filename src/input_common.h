@@ -2,11 +2,12 @@
 #ifndef INPUT_COMMON_H
 #define INPUT_COMMON_H
 
+#include <stddef.h>
+
+#include <queue>
+
 #include "common.h"
 #include "maybe.h"
-
-#include <stddef.h>
-#include <queue>
 
 enum class readline_cmd_t {
     beginning_of_line,

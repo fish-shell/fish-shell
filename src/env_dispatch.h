@@ -4,10 +4,10 @@
 
 #include "config.h"  // IWYU pragma: keep
 
+#include <memory>
+
 #include "common.h"
 #include "env_universal_common.h"
-
-#include <memory>
 
 /// Initialize variable dispatch.
 class environment_t;

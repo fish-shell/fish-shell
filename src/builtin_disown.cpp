@@ -1,13 +1,14 @@
 // Implementation of the disown builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_disown.h"
+
 #include <errno.h>
 #include <signal.h>
 
 #include <set>
 
 #include "builtin.h"
-#include "builtin_disown.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"

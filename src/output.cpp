@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <cstring>
 #if HAVE_CURSES_H
 #include <curses.h>
@@ -17,8 +18,8 @@
 #include <ncurses/term.h>
 #endif
 #include <limits.h>
-#include <cwchar>
 
+#include <cwchar>
 #include <memory>
 #include <string>
 #include <vector>

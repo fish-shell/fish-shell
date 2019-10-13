@@ -1,8 +1,9 @@
 // Implementation of the emit builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include "builtin.h"
 #include "builtin_emit.h"
+
+#include "builtin.h"
 #include "common.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep

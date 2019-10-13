@@ -3,9 +3,9 @@
 // IWYU pragma: no_include <cstddef>
 #include <stddef.h>
 #include <wctype.h>
-#include <cwchar>
 
 #include <algorithm>
+#include <cwchar>
 #include <numeric>
 #include <type_traits>
 #include <unordered_map>

@@ -1,11 +1,11 @@
 #ifndef FISH_REDIRECTION_H
 #define FISH_REDIRECTION_H
 
+#include <vector>
+
 #include "common.h"
 #include "io.h"
 #include "maybe.h"
-
-#include <vector>
 
 /// This file supports "applying" redirections.
 

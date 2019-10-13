@@ -1,11 +1,13 @@
 // The fish parser. Contains functions for parsing and evaluating code.
 #include "config.h"  // IWYU pragma: keep
 
+#include "parser.h"
+
 #include <fcntl.h>
 #include <stdio.h>
-#include <cwchar>
 
 #include <algorithm>
+#include <cwchar>
 #include <memory>
 #include <utility>
 
@@ -19,7 +21,6 @@
 #include "parse_constants.h"
 #include "parse_execution.h"
 #include "parse_util.h"
-#include "parser.h"
 #include "proc.h"
 #include "reader.h"
 #include "sanity.h"

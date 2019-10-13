@@ -43,7 +43,7 @@ static void print_colors(io_streams_t &streams) {
         }
         outp.writestr(color_name);
         outp.writech(L'\n');
-    } // conveniently, 'normal' is always the last color so we don't need to reset here
+    }  // conveniently, 'normal' is always the last color so we don't need to reset here
 
     streams.out.append(str2wcstring(outp.contents()));
 }

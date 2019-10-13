@@ -1,13 +1,15 @@
 // Implementation of the realpath builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_realpath.h"
+
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <cstring>
 #include <cwchar>
 
 #include "builtin.h"
-#include "builtin_realpath.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"

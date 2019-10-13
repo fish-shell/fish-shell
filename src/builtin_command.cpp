@@ -1,12 +1,13 @@
 // Implementation of the command builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_command.h"
+
 #include <unistd.h>
 
 #include <string>
 
 #include "builtin.h"
-#include "builtin_command.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"

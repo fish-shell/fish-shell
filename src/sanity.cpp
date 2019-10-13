@@ -1,6 +1,8 @@
 // Functions for performing sanity checks on the program state.
 #include "config.h"  // IWYU pragma: keep
 
+#include "sanity.h"
+
 #include <unistd.h>
 
 #include "common.h"
@@ -11,7 +13,6 @@
 #include "kill.h"
 #include "proc.h"
 #include "reader.h"
-#include "sanity.h"
 
 /// Status from earlier sanity checks.
 static relaxed_atomic_bool_t insane{false};

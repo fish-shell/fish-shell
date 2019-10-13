@@ -1,6 +1,8 @@
 // Implementation of the bind builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_bind.h"
+
 #include <errno.h>
 #include <stddef.h>
 
@@ -10,7 +12,6 @@
 #include <vector>
 
 #include "builtin.h"
-#include "builtin_bind.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "input.h"     // IWYU pragma: keep

@@ -16,13 +16,13 @@
 #include <stdio.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <cstring>
-#include <stack>
 
 #include <algorithm>
+#include <cstring>
 #include <functional>
 #include <map>
 #include <memory>
+#include <stack>
 #include <string>
 #include <type_traits>
 #include <vector>

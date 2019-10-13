@@ -2,19 +2,20 @@
 // extended to support marks, tokenizing multiple strings and disposing of unused string segments.
 #include "config.h"  // IWYU pragma: keep
 
+#include "tokenizer.h"
+
 #include <fcntl.h>
 #include <limits.h>
 #include <unistd.h>
 #include <wctype.h>
-#include <cwchar>
 
+#include <cwchar>
 #include <string>
 #include <type_traits>
 
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "future_feature_flags.h"
-#include "tokenizer.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 // _(s) is already wgettext(s).c_str(), so let's not convert back to wcstring

@@ -1,11 +1,13 @@
 // Implementation of the contains builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_contains.h"
+
 #include <unistd.h>
+
 #include <cwchar>
 
 #include "builtin.h"
-#include "builtin_contains.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"

@@ -1,13 +1,15 @@
 // Implementation of the source builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_source.h"
+
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
 #include <cwchar>
 
 #include "builtin.h"
-#include "builtin_source.h"
 #include "common.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep

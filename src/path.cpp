@@ -3,12 +3,14 @@
 // issues.
 #include "config.h"  // IWYU pragma: keep
 
+#include "path.h"
+
 #include <errno.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
 #include <cstring>
 #include <cwchar>
-
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -19,7 +21,6 @@
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
-#include "path.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// Unexpected error in path_get_path().

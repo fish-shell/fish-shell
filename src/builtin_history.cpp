@@ -1,16 +1,17 @@
 // Implementation of the history builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_history.h"
+
 #include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <cwchar>
 
+#include <cwchar>
 #include <string>
 #include <vector>
 
 #include "builtin.h"
-#include "builtin_history.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "history.h"

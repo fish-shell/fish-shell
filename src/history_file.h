@@ -3,12 +3,12 @@
 
 #include "config.h"
 
-#include "maybe.h"
+#include <sys/mman.h>
 
 #include <cassert>
 #include <memory>
 
-#include <sys/mman.h>
+#include "maybe.h"
 
 class history_item_t;
 

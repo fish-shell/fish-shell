@@ -2,8 +2,9 @@
 #ifndef FISH_PARSE_CONSTANTS_H
 #define FISH_PARSE_CONSTANTS_H
 
-#include "common.h"
 #include "config.h"
+
+#include "common.h"
 
 #define PARSE_ASSERT(a) assert(a)
 #define PARSER_DIE()                   \

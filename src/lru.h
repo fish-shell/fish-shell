@@ -3,7 +3,6 @@
 #define FISH_LRU_H
 
 #include <cwchar>
-
 #include <unordered_map>
 
 #include "common.h"

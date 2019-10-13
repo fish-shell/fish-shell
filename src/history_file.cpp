@@ -1,9 +1,10 @@
 #include "config.h"
 
-#include "history.h"
 #include "history_file.h"
 
 #include <cstring>
+
+#include "history.h"
 
 // Some forward declarations.
 static history_item_t decode_item_fish_2_0(const char *base, size_t len);

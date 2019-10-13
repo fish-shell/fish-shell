@@ -1,12 +1,13 @@
 #include "config.h"  // IWYU pragma: keep
 
+#include "parse_productions.h"
+
 #include <stdio.h>
 
 #include "common.h"
 #include "flog.h"
 #include "parse_constants.h"
 #include "parse_grammar.h"
-#include "parse_productions.h"
 #include "parse_tree.h"
 
 using namespace parse_productions;

@@ -1,16 +1,16 @@
 #ifndef FISH_TOPIC_MONITOR_H
 #define FISH_TOPIC_MONITOR_H
 
-#include "common.h"
-#include "enum_set.h"
-#include "io.h"
-
 #include <array>
 #include <atomic>
 #include <bitset>
 #include <condition_variable>
 #include <limits>
 #include <numeric>
+
+#include "common.h"
+#include "enum_set.h"
+#include "io.h"
 
 /** Topic monitoring support. Topics are conceptually "a thing that can happen." For example,
  delivery of a SIGINT, a child process exits, etc. It is possible to post to a topic, which means

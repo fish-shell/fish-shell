@@ -1,12 +1,13 @@
 // Implementation of the cd builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_cd.h"
+
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 
 #include "builtin.h"
-#include "builtin_cd.h"
 #include "common.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep

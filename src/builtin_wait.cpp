@@ -1,17 +1,18 @@
 // Functions for waiting for processes completed.
+#include "builtin_wait.h"
+
+#include <sys/wait.h>
+
 #include <algorithm>
 #include <vector>
 
 #include "builtin.h"
-#include "builtin_wait.h"
 #include "common.h"
 #include "parser.h"
 #include "proc.h"
 #include "signal.h"
 #include "wgetopt.h"
 #include "wutil.h"
-
-#include <sys/wait.h>
 
 /// Return the job id to which the process with pid belongs.
 /// If a specified process has already finished but the job hasn't, parser_t::job_get_from_pid()

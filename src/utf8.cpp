@@ -15,6 +15,8 @@
  */
 #include "config.h"  // IWYU pragma: keep
 
+#include "utf8.h"
+
 #include <stdint.h>  // IWYU pragma: keep
 #include <sys/types.h>
 
@@ -22,7 +24,6 @@
 #include <string>
 
 #include "common.h"
-#include "utf8.h"
 
 #define _NXT 0x80
 #define _SEQ2 0xc0

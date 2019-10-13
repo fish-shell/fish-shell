@@ -1,17 +1,19 @@
 // Utilities for io redirection.
 #include "config.h"  // IWYU pragma: keep
 
+#include "io.h"
+
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <unistd.h>
+
 #include <cstring>
 #include <cwchar>
 
 #include "common.h"
 #include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "io.h"
 #include "iothread.h"
 #include "redirection.h"
 #include "wutil.h"  // IWYU pragma: keep

@@ -1,10 +1,11 @@
 // Implementation of the pwd builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_pwd.h"
+
 #include <cstring>
 
 #include "builtin.h"
-#include "builtin_pwd.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"

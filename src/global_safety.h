@@ -4,10 +4,10 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include "common.h"
-
 #include <atomic>
 #include <cassert>
+
+#include "common.h"
 
 // fish is multithreaded. Global (which includes function and file-level statics) when used naively
 // may therefore lead to data races. Use the following types to characterize and enforce correct

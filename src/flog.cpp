@@ -2,14 +2,14 @@
 #include "config.h"
 
 #include "flog.h"
-#include "global_safety.h"
+
+#include <vector>
 
 #include "common.h"
 #include "enum_set.h"
+#include "global_safety.h"
 #include "parse_util.h"
 #include "wildcard.h"
-
-#include <vector>
 
 namespace flog_details {
 

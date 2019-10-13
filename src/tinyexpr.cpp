@@ -24,14 +24,15 @@
 
 // This version has been altered and ported to C++ for inclusion in fish.
 #include "tinyexpr.h"
+
 #include <ctype.h>
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <cstring>
 
 #include <algorithm>
+#include <cstring>
 #include <iterator>
 #include <utility>
 
@@ -263,7 +264,7 @@ void next_token(state *s) {
                 }
             } else {
                 /* Look for an operator or special character. */
-                switch (s->next++ [0]) {
+                switch (s->next++[0]) {
                     // The "te_fun2" casts are necessary to pick the right overload.
                     case '+':
                         s->type = TOK_INFIX;

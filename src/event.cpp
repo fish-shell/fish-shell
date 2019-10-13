@@ -1,6 +1,8 @@
 // Functions for handling event triggers.
 #include "config.h"  // IWYU pragma: keep
 
+#include "event.h"
+
 #include <signal.h>
 #include <stddef.h>
 #include <unistd.h>
@@ -13,7 +15,6 @@
 #include <type_traits>
 
 #include "common.h"
-#include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "input_common.h"
 #include "io.h"

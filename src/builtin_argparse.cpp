@@ -3,12 +3,14 @@
 // See issue #4190 for the rationale behind the original behavior of this builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_argparse.h"
+
 #include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <cwchar>
 
 #include <algorithm>
+#include <cwchar>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -16,7 +18,6 @@
 #include <vector>
 
 #include "builtin.h"
-#include "builtin_argparse.h"
 #include "common.h"
 #include "env.h"
 #include "exec.h"

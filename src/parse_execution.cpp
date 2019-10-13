@@ -8,6 +8,8 @@
 // for the execution to finish to see them.
 #include "config.h"  // IWYU pragma: keep
 
+#include "parse_execution.h"
+
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -15,9 +17,9 @@
 #include <termios.h>
 #include <unistd.h>
 #include <wctype.h>
-#include <cwchar>
 
 #include <algorithm>
+#include <cwchar>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -36,7 +38,6 @@
 #include "io.h"
 #include "maybe.h"
 #include "parse_constants.h"
-#include "parse_execution.h"
 #include "parse_util.h"
 #include "parser.h"
 #include "path.h"
@@ -488,7 +489,8 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(
         return result;
     }
 
-    const wcstring &switch_value_expanded = switch_values_expanded.size() == 1 ? switch_values_expanded.at(0).completion : L"";
+    const wcstring &switch_value_expanded =
+        switch_values_expanded.size() == 1 ? switch_values_expanded.at(0).completion : L"";
 
     block_t *sb = parser->push_block(block_t::switch_block());
 

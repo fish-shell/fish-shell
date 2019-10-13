@@ -23,6 +23,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <cstring>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
@@ -33,11 +34,11 @@
 #include <time.h>
 #include <unistd.h>
 #include <wctype.h>
-#include <cwchar>
 
 #include <algorithm>
 #include <atomic>
 #include <csignal>
+#include <cwchar>
 #include <deque>
 #include <functional>
 #include <memory>
@@ -1201,8 +1202,9 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
         // Find the last quote in the token to complete. By parsing only the string inside any
         // command substitution, we prevent the tokenizer from treating the entire command
         // substitution as one token.
-        parse_util_get_parameter_info(command_line.substr(cmdsub_offset, (cmdsub_end - cmdsub_begin)),
-                                      cursor_pos - cmdsub_offset, &quote, NULL, NULL);
+        parse_util_get_parameter_info(
+            command_line.substr(cmdsub_offset, (cmdsub_end - cmdsub_begin)),
+            cursor_pos - cmdsub_offset, &quote, NULL, NULL);
 
         // If the token is reported as unquoted, but ends with a (unescaped) quote, and we can
         // modify the command line, then delete the trailing quote so that we can insert within

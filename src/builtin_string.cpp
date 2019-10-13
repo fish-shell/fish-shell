@@ -12,9 +12,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <wctype.h>
-#include <cwchar>
 
 #include <algorithm>
+#include <cwchar>
 #include <cwctype>
 #include <iterator>
 #include <memory>

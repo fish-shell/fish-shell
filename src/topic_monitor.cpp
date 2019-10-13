@@ -1,12 +1,13 @@
 #include "config.h"  // IWYU pragma: keep
 
-#include "flog.h"
-#include "iothread.h"
 #include "topic_monitor.h"
-#include "wutil.h"
 
 #include <limits.h>
 #include <unistd.h>
+
+#include "flog.h"
+#include "iothread.h"
+#include "wutil.h"
 
 // Whoof. Thread Sanitizer swallows signals and replays them at its leisure, at the point where
 // instrumented code makes certain blocking calls. But tsan cannot interrupt a signal call, so

@@ -17,6 +17,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+
 #include <cstring>
 #ifdef __CYGWIN__
 #include <sys/mman.h>
@@ -28,9 +29,9 @@
 #include <sys/time.h>   // IWYU pragma: keep
 #include <sys/types.h>  // IWYU pragma: keep
 #include <unistd.h>
-#include <cwchar>
 
 #include <atomic>
+#include <cwchar>
 #include <map>
 #include <string>
 #include <type_traits>

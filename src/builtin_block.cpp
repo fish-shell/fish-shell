@@ -1,10 +1,11 @@
 // Implementation of the bind builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_block.h"
+
 #include <stddef.h>
 
 #include "builtin.h"
-#include "builtin_block.h"
 #include "common.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep

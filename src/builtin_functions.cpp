@@ -1,11 +1,13 @@
 // Implementation of the functions builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_functions.h"
+
 #include <stddef.h>
 #include <unistd.h>
-#include <cwchar>
 
 #include <algorithm>
+#include <cwchar>
 #include <map>
 #include <memory>
 #include <string>
@@ -13,7 +15,6 @@
 #include <vector>
 
 #include "builtin.h"
-#include "builtin_functions.h"
 #include "common.h"
 #include "complete.h"
 #include "env.h"
@@ -266,7 +267,8 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
             append_format(comment, L"# Defined in %ls @ line %d\n", path, line_number);
             if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
                 std::vector<highlight_spec_t> colors;
-                highlight_shell_no_io(comment, colors, comment.size(), nullptr, env_stack_t::globals());
+                highlight_shell_no_io(comment, colors, comment.size(), nullptr,
+                                      env_stack_t::globals());
                 streams.out.append(str2wcstring(colorize(comment, colors)));
             } else {
                 streams.out.append(comment);

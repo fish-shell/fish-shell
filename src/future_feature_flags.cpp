@@ -1,7 +1,8 @@
 #include "config.h"  // IWYU pragma: keep
 
-#include <cwchar>
 #include "future_feature_flags.h"
+
+#include <cwchar>
 
 /// The set of features applying to this instance.
 static features_t global_features;

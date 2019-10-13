@@ -1,5 +1,7 @@
 #include "config.h"  // IWYU pragma: keep
 
+#include "iothread.h"
+
 #include <limits.h>
 #include <pthread.h>
 #include <signal.h>
@@ -8,16 +10,15 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <atomic>
-#include <cstring>
 
+#include <atomic>
 #include <condition_variable>
+#include <cstring>
 #include <queue>
 
 #include "common.h"
 #include "flog.h"
 #include "global_safety.h"
-#include "iothread.h"
 #include "wutil.h"
 
 #ifdef _POSIX_THREAD_THREADS_MAX

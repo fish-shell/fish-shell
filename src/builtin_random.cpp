@@ -1,15 +1,16 @@
 // Implementation of the random builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_random.h"
+
 #include <errno.h>
 #include <stdint.h>
-#include <cwchar>
 
 #include <algorithm>
+#include <cwchar>
 #include <random>
 
 #include "builtin.h"
-#include "builtin_random.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"

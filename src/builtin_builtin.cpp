@@ -1,12 +1,13 @@
 // Implementation of the builtin builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin.h"
+
 #include <stddef.h>
 
 #include <algorithm>
 #include <string>
 
-#include "builtin.h"
 #include "builtin_builtin.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep

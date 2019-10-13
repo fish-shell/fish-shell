@@ -16,9 +16,9 @@
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
+
 #include <cstring>
 #include <cwchar>
-
 #include <memory>
 #include <string>
 #include <vector>

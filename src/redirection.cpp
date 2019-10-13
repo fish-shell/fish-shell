@@ -1,9 +1,10 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include "redirection.h"
-#include "wutil.h"
 
 #include <fcntl.h>
+
+#include "wutil.h"
 
 #define NOCLOB_ERROR _(L"The file '%ls' already exists")
 

@@ -18,6 +18,7 @@
 #include <sys/types.h>  // IWYU pragma: keep
 #include <unistd.h>
 #include <wctype.h>
+
 #include <algorithm>
 #include <cstring>
 #include <cwchar>
@@ -37,7 +38,8 @@
 #include <ncurses/term.h>
 #endif
 #include <signal.h>  // IWYU pragma: keep
-#include <cwchar>    // IWYU pragma: keep
+
+#include <cwchar>  // IWYU pragma: keep
 
 #include "common.h"    // IWYU pragma: keep
 #include "fallback.h"  // IWYU pragma: keep

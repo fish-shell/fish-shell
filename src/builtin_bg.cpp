@@ -1,6 +1,8 @@
 // Implementation of the bg builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_bg.h"
+
 #include <errno.h>
 #include <stdlib.h>
 
@@ -8,7 +10,6 @@
 #include <vector>
 
 #include "builtin.h"
-#include "builtin_bg.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"

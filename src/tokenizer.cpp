@@ -16,6 +16,7 @@
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "future_feature_flags.h"
+#include "tokenizer.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 // _(s) is already wgettext(s).c_str(), so let's not convert back to wcstring
@@ -64,8 +65,7 @@ tok_t tokenizer_t::call_error(tokenizer_error_t error_type, const wchar_t *token
 
     this->has_next = false;
 
-    tok_t result;
-    result.type = TOK_ERROR;
+    tok_t result{token_type_t::error};
     result.error = error_type;
     result.offset = token_start - this->start;
     result.length = this->buff - token_start;
@@ -81,15 +81,7 @@ tokenizer_t::tokenizer_t(const wchar_t *start, tok_flags_t flags) : buff(start),
     this->show_blank_lines = static_cast<bool>(flags & TOK_SHOW_BLANK_LINES);
 }
 
-bool tokenizer_t::next(struct tok_t *result) {
-    assert(result != NULL);
-    maybe_t<tok_t> tok = this->tok_next();
-    if (!tok) {
-        return false;
-    }
-    *result = std::move(*tok);
-    return true;
-}
+tok_t::tok_t(token_type_t type) : type(type) {}
 
 /// Tests if this character can be a part of a string. The redirect ^ is allowed unless it's the
 /// first character. Hash (#) starts a comment if it's the first character in a token; otherwise it
@@ -252,31 +244,30 @@ tok_t tokenizer_t::read_string() {
     }
 
     if ((!this->accept_unfinished) && (mode != tok_modes::regular_text)) {
-        tok_t error;
-        if ((mode & tok_modes::char_escape) == tok_modes::char_escape) {
-            error = this->call_error(tokenizer_error_t::unterminated_escape, buff_start,
-                                     this->buff - 1);
-        } else if ((mode & tok_modes::array_brackets) == tok_modes::array_brackets) {
-            error = this->call_error(tokenizer_error_t::unterminated_slice, buff_start,
-                                     this->start + slice_offset);
-        } else if ((mode & tok_modes::subshell) == tok_modes::subshell) {
+        if (mode & tok_modes::char_escape) {
+            return this->call_error(tokenizer_error_t::unterminated_escape, buff_start,
+                                    this->buff - 1);
+        } else if (mode & tok_modes::array_brackets) {
+            return this->call_error(tokenizer_error_t::unterminated_slice, buff_start,
+                                    this->start + slice_offset);
+        } else if (mode & tok_modes::subshell) {
             assert(paran_offsets.size() > 0);
             size_t offset_of_open_paran = paran_offsets.back();
 
-            error = this->call_error(tokenizer_error_t::unterminated_subshell, buff_start,
-                                     this->start + offset_of_open_paran);
-        } else if ((mode & tok_modes::curly_braces) == tok_modes::curly_braces) {
+            return this->call_error(tokenizer_error_t::unterminated_subshell, buff_start,
+                                    this->start + offset_of_open_paran);
+        } else if (mode & tok_modes::curly_braces) {
             assert(brace_offsets.size() > 0);
             size_t offset_of_open_brace = brace_offsets.back();
 
-            error = this->call_error(tokenizer_error_t::unterminated_brace, buff_start,
-                                     this->start + offset_of_open_brace);
+            return this->call_error(tokenizer_error_t::unterminated_brace, buff_start,
+                                    this->start + offset_of_open_brace);
+        } else {
+            DIE("Unknown non-regular-text mode");
         }
-        return error;
     }
 
-    tok_t result;
-    result.type = TOK_STRING;
+    tok_t result(token_type_t::string);
     result.offset = buff_start - this->start;
     result.length = this->buff - buff_start;
     return result;
@@ -289,7 +280,7 @@ struct parsed_redir_or_pipe_t {
     size_t consumed{0};
 
     // The token type, always either TOK_PIPE or TOK_REDIRECT.
-    token_type type{TOK_REDIRECT};
+    token_type_t type{token_type_t::redirect};
 
     // The redirection mode if the type is TOK_REDIRECT.
     redirection_type_t redirection_mode{redirection_type_t::overwrite};
@@ -373,7 +364,7 @@ static maybe_t<parsed_redir_or_pipe_t> read_redirection_or_fd_pipe(const wchar_t
     } else if (opt_char == L'|') {
         // So the string looked like '2>|'. This is not a redirection - it's a pipe! That gets
         // handled elsewhere.
-        result.type = TOK_PIPE;
+        result.type = token_type_t::pipe;
         idx++;
     }
 
@@ -384,7 +375,7 @@ static maybe_t<parsed_redir_or_pipe_t> read_redirection_or_fd_pipe(const wchar_t
 maybe_t<redirection_type_t> redirection_type_for_string(const wcstring &str, int *out_fd) {
     auto v = read_redirection_or_fd_pipe(str.c_str());
     // Redirections only, no pipes.
-    if (!v || v->type != TOK_REDIRECT || v->fd < 0) return none();
+    if (!v || v->type != token_type_t::redirect || v->fd < 0) return none();
     if (out_fd) *out_fd = v->fd;
     return v->redirection_mode;
 }
@@ -395,7 +386,7 @@ int fd_redirected_by_pipe(const wcstring &str) {
         return STDOUT_FILENO;
     }
     auto v = read_redirection_or_fd_pipe(str.c_str());
-    return (v && v->type == TOK_PIPE) ? v->fd : -1;
+    return (v && v->type == token_type_t::pipe) ? v->fd : -1;
 }
 
 int oflags_for_redirection_type(redirection_type_t type) {
@@ -434,7 +425,7 @@ static bool iswspace_not_nl(wchar_t c) {
     }
 }
 
-maybe_t<tok_t> tokenizer_t::tok_next() {
+maybe_t<tok_t> tokenizer_t::next() {
     if (!this->has_next) {
         return none();
     }
@@ -464,8 +455,7 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
 
         // Maybe return the comment.
         if (this->show_comments) {
-            tok_t result;
-            result.type = TOK_COMMENT;
+            tok_t result(token_type_t::comment);
             result.offset = comment_start - this->start;
             result.length = comment_len;
             result.preceding_escaped_nl = preceding_escaped_nl;
@@ -476,10 +466,9 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
 
     // We made it past the comments and ate any trailing newlines we wanted to ignore.
     this->continue_line_after_comment = false;
-    size_t start_pos = this->buff - this->start;
+    const size_t start_pos = this->buff - this->start;
 
-    tok_t result;
-    result.offset = start_pos;
+    maybe_t<tok_t> result{};
     switch (*this->buff) {
         case L'\0': {
             this->has_next = false;
@@ -488,8 +477,9 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
         case L'\r':  // carriage-return
         case L'\n':  // newline
         case L';': {
-            result.type = TOK_END;
-            result.length = 1;
+            result.emplace(token_type_t::end);
+            result->offset = start_pos;
+            result->length = 1;
             this->buff++;
             // Hack: when we get a newline, swallow as many as we can. This compresses multiple
             // subsequent newlines into a single one.
@@ -503,25 +493,29 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
         }
         case L'&': {
             if (this->buff[1] == L'&') {
-                result.type = TOK_ANDAND;
-                result.length = 2;
+                result.emplace(token_type_t::andand);
+                result->offset = start_pos;
+                result->length = 2;
                 this->buff += 2;
             } else {
-                result.type = TOK_BACKGROUND;
-                result.length = 1;
+                result.emplace(token_type_t::background);
+                result->offset = start_pos;
+                result->length = 1;
                 this->buff++;
             }
             break;
         }
         case L'|': {
             if (this->buff[1] == L'|') {
-                result.type = TOK_OROR;
-                result.length = 2;
+                result.emplace(token_type_t::oror);
+                result->offset = start_pos;
+                result->length = 2;
                 this->buff += 2;
             } else {
-                result.type = TOK_PIPE;
-                result.redirected_fd = 1;
-                result.length = 1;
+                result.emplace(token_type_t::pipe);
+                result->redirected_fd = 1;
+                result->offset = start_pos;
+                result->length = 1;
                 this->buff++;
             }
             break;
@@ -535,9 +529,10 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
                 return this->call_error(tokenizer_error_t::invalid_redirect, this->buff,
                                         this->buff);
             }
-            result.type = redir_or_pipe->type;
-            result.redirected_fd = redir_or_pipe->fd;
-            result.length = redir_or_pipe->consumed;
+            result.emplace(redir_or_pipe->type);
+            result->offset = start_pos;
+            result->redirected_fd = redir_or_pipe->fd;
+            result->length = redir_or_pipe->consumed;
             this->buff += redir_or_pipe->consumed;
             break;
         }
@@ -553,13 +548,14 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
                 // It looks like a redirection or a pipe. But we don't support piping fd 0. Note
                 // that fd 0 may be -1, indicating overflow; but we don't treat that as a tokenizer
                 // error.
-                if (redir_or_pipe->type == TOK_PIPE && redir_or_pipe->fd == 0) {
+                if (redir_or_pipe->type == token_type_t::pipe && redir_or_pipe->fd == 0) {
                     return this->call_error(tokenizer_error_t::invalid_pipe, error_location,
                                             error_location);
                 }
-                result.type = redir_or_pipe->type;
-                result.redirected_fd = redir_or_pipe->fd;
-                result.length = redir_or_pipe->consumed;
+                result.emplace(redir_or_pipe->type);
+                result->redirected_fd = redir_or_pipe->fd;
+                result->offset = start_pos;
+                result->length = redir_or_pipe->consumed;
                 this->buff += redir_or_pipe->consumed;
             } else {
                 // Not a redirection or pipe, so just a string.
@@ -568,15 +564,17 @@ maybe_t<tok_t> tokenizer_t::tok_next() {
             break;
         }
     }
-    result.preceding_escaped_nl = preceding_escaped_nl;
+    assert(result.has_value() && "Should have a token");
+    result->preceding_escaped_nl = preceding_escaped_nl;
     return result;
 }
 
 wcstring tok_first(const wcstring &str) {
     tokenizer_t t(str.c_str(), 0);
-    tok_t token;
-    if (t.next(&token) && token.type == TOK_STRING) {
-        return t.text_of(token);
+    if (auto token = t.next()) {
+        if (token->type == token_type_t::string) {
+            return t.text_of(*token);
+        }
     }
     return {};
 }

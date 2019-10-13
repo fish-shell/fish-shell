@@ -564,29 +564,27 @@ static void test_convert_nulls() {
 /// Test the tokenizer.
 static void test_tokenizer() {
     say(L"Testing tokenizer");
-    tok_t token;
-
     {
-        bool got = false;
         const wchar_t *str = L"alpha beta";
         tokenizer_t t(str, 0);
+        maybe_t<tok_t> token{};
 
-        got = t.next(&token);  // alpha
-        do_test(got);
-        do_test(token.type == TOK_STRING);
-        do_test(token.offset == 0);
-        do_test(token.length == 5);
-        do_test(t.text_of(token) == L"alpha");
+        token = t.next();  // alpha
+        do_test(token.has_value());
+        do_test(token->type == token_type_t::string);
+        do_test(token->offset == 0);
+        do_test(token->length == 5);
+        do_test(t.text_of(*token) == L"alpha");
 
-        got = t.next(&token);  // beta
-        do_test(got);
-        do_test(token.type == TOK_STRING);
-        do_test(token.offset == 6);
-        do_test(token.length == 4);
-        do_test(t.text_of(token) == L"beta");
+        token = t.next();  // beta
+        do_test(token.has_value());
+        do_test(token->type == token_type_t::string);
+        do_test(token->offset == 6);
+        do_test(token->length == 4);
+        do_test(t.text_of(*token) == L"beta");
 
-        got = t.next(&token);
-        do_test(!got);
+        token = t.next();
+        do_test(!token.has_value());
     }
 
     const wchar_t *str =
@@ -595,30 +593,31 @@ static void test_tokenizer() {
         L"&&& ||| "
         L"&& || & |"
         L"Compress_Newlines\n  \n\t\n   \nInto_Just_One";
-    const int types[] = {TOK_STRING, TOK_REDIRECT,   TOK_STRING,   TOK_REDIRECT, TOK_STRING,
-                         TOK_STRING, TOK_STRING,     TOK_REDIRECT, TOK_REDIRECT, TOK_STRING,
-                         TOK_ANDAND, TOK_BACKGROUND, TOK_OROR,     TOK_PIPE,     TOK_ANDAND,
-                         TOK_OROR,   TOK_BACKGROUND, TOK_PIPE,     TOK_STRING,   TOK_END,
-                         TOK_STRING};
+    using tt = token_type_t;
+    const token_type_t types[] = {
+        tt::string, tt::redirect, tt::string,   tt::redirect, tt::string,     tt::string,
+        tt::string, tt::redirect, tt::redirect, tt::string,   tt::andand,     tt::background,
+        tt::oror,   tt::pipe,     tt::andand,   tt::oror,     tt::background, tt::pipe,
+        tt::string, tt::end,      tt::string};
 
     say(L"Test correct tokenization");
 
     {
         tokenizer_t t(str, 0);
         size_t i = 0;
-        while (t.next(&token)) {
+        while (auto token = t.next()) {
             if (i >= sizeof types / sizeof *types) {
                 err(L"Too many tokens returned from tokenizer");
-                std::fwprintf(stdout, L"Got excess token type %ld\n", (long)token.type);
+                std::fwprintf(stdout, L"Got excess token type %ld\n", (long)token->type);
                 break;
             }
-            if (types[i] != token.type) {
+            if (types[i] != token->type) {
                 err(L"Tokenization error:");
                 std::fwprintf(
                     stdout,
                     L"Token number %zu of string \n'%ls'\n, expected type %ld, got token type "
                     L"%ld\n",
-                    i + 1, str, (long)types[i], (long)token.type);
+                    i + 1, str, (long)types[i], (long)token->type);
             }
             i++;
         }
@@ -630,37 +629,44 @@ static void test_tokenizer() {
     // Test some errors.
     {
         tokenizer_t t(L"abc\\", 0);
-        do_test(t.next(&token));
-        do_test(token.type == TOK_ERROR);
-        do_test(token.error == tokenizer_error_t::unterminated_escape);
-        do_test(token.error_offset == 3);
+        auto token = t.next();
+        do_test(token.has_value());
+        do_test(token->type == token_type_t::error);
+        do_test(token->error == tokenizer_error_t::unterminated_escape);
+        do_test(token->error_offset == 3);
     }
 
     {
         tokenizer_t t(L"abc )defg(hij", 0);
-        do_test(t.next(&token));
-        do_test(t.next(&token));
-        do_test(token.type == TOK_ERROR);
-        do_test(token.error == tokenizer_error_t::closing_unopened_subshell);
-        do_test(token.error_offset == 4);
+        auto token = t.next();
+        do_test(token.has_value());
+        token = t.next();
+        do_test(token.has_value());
+        do_test(token->type == token_type_t::error);
+        do_test(token->error == tokenizer_error_t::closing_unopened_subshell);
+        do_test(token->error_offset == 4);
     }
 
     {
         tokenizer_t t(L"abc defg(hij (klm)", 0);
-        do_test(t.next(&token));
-        do_test(t.next(&token));
-        do_test(token.type == TOK_ERROR);
-        do_test(token.error == tokenizer_error_t::unterminated_subshell);
-        do_test(token.error_offset == 4);
+        auto token = t.next();
+        do_test(token.has_value());
+        token = t.next();
+        do_test(token.has_value());
+        do_test(token->type == token_type_t::error);
+        do_test(token->error == tokenizer_error_t::unterminated_subshell);
+        do_test(token->error_offset == 4);
     }
 
     {
         tokenizer_t t(L"abc defg[hij (klm)", 0);
-        do_test(t.next(&token));
-        do_test(t.next(&token));
-        do_test(token.type == TOK_ERROR);
-        do_test(token.error == tokenizer_error_t::unterminated_slice);
-        do_test(token.error_offset == 4);
+        auto token = t.next();
+        do_test(token.has_value());
+        token = t.next();
+        do_test(token.has_value());
+        do_test(token->type == token_type_t::error);
+        do_test(token->error == tokenizer_error_t::unterminated_slice);
+        do_test(token->error_offset == 4);
     }
 
     // Test redirection_type_for_string.

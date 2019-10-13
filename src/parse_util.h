@@ -110,7 +110,7 @@ bool parse_util_argument_is_help(const wchar_t *s);
 /// \param offset If not NULL, get_param will store the offset to the beginning of the parameter.
 /// \param out_type If not NULL, get_param will store the token type.
 void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_t *quote,
-                                   size_t *offset, enum token_type *out_type);
+                                   size_t *offset, token_type_t *out_type);
 
 /// Attempts to escape the string 'cmd' using the given quote type, as determined by the quote
 /// character. The quote can be a single quote or double quote, or L'\0' to indicate no quoting (and

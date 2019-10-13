@@ -39,6 +39,12 @@ static void sigint_parent() {
     fprintf(stderr, "Sent SIGINT to %d\n", parent);
 }
 
+static void print_stdout_stderr() {
+    fprintf(stdout, "stdout\n");
+    fprintf(stderr, "stderr\n");
+    fflush(nullptr);
+}
+
 int main(int argc, char *argv[]) {
     if (argc <= 1) {
         fprintf(stderr, "No commands given.\n");
@@ -51,6 +57,8 @@ int main(int argc, char *argv[]) {
             report_foreground();
         } else if (!strcmp(argv[i], "sigint_parent")) {
             sigint_parent();
+        } else if (!strcmp(argv[i], "print_stdout_stderr")) {
+            print_stdout_stderr();
         } else {
             fprintf(stderr, "%s: Unknown command: %s\n", argv[0], argv[i]);
             return EXIT_FAILURE;

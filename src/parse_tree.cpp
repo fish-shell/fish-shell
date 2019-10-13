@@ -18,6 +18,7 @@
 #include "flog.h"
 #include "parse_constants.h"
 #include "parse_productions.h"
+#include "parse_tree.h"
 #include "proc.h"
 #include "tnode.h"
 #include "tokenizer.h"
@@ -235,28 +236,25 @@ wcstring parse_token_t::user_presentable_description() const {
 
 /// Convert from tokenizer_t's token type to a parse_token_t type.
 static inline parse_token_type_t parse_token_type_from_tokenizer_token(
-    enum token_type tokenizer_token_type) {
+    enum token_type_t tokenizer_token_type) {
     switch (tokenizer_token_type) {
-        case TOK_NONE:
-            DIE("TOK_NONE passed to parse_token_type_from_tokenizer_token");
-            return token_type_invalid;
-        case TOK_STRING:
+        case token_type_t::string:
             return parse_token_type_string;
-        case TOK_PIPE:
+        case token_type_t::pipe:
             return parse_token_type_pipe;
-        case TOK_ANDAND:
+        case token_type_t::andand:
             return parse_token_type_andand;
-        case TOK_OROR:
+        case token_type_t::oror:
             return parse_token_type_oror;
-        case TOK_END:
+        case token_type_t::end:
             return parse_token_type_end;
-        case TOK_BACKGROUND:
+        case token_type_t::background:
             return parse_token_type_background;
-        case TOK_REDIRECT:
+        case token_type_t::redirect:
             return parse_token_type_redirection;
-        case TOK_ERROR:
+        case token_type_t::error:
             return parse_special_type_tokenizer_error;
-        case TOK_COMMENT:
+        case token_type_t::comment:
             return parse_special_type_comment;
     }
     FLOGF(error, L"Bad token type %d passed to %s", (int)tokenizer_token_type, __FUNCTION__);
@@ -960,9 +958,9 @@ static bool is_keyword_char(wchar_t c) {
 }
 
 /// Given a token, returns the keyword it matches, or parse_keyword_none.
-static parse_keyword_t keyword_for_token(token_type tok, const wcstring &token) {
+static parse_keyword_t keyword_for_token(token_type_t tok, const wcstring &token) {
     /* Only strings can be keywords */
-    if (tok != TOK_STRING) {
+    if (tok != token_type_t::string) {
         return parse_keyword_none;
     }
 
@@ -1009,32 +1007,35 @@ static inline bool is_help_argument(const wcstring &txt) {
 }
 
 /// Return a new parse token, advancing the tokenizer.
-static inline parse_token_t next_parse_token(tokenizer_t *tok, tok_t *token, wcstring *storage) {
-    if (!tok->next(token)) {
+static inline parse_token_t next_parse_token(tokenizer_t *tok, maybe_t<tok_t> *out_token,
+                                             wcstring *storage) {
+    *out_token = tok->next();
+    if (!out_token->has_value()) {
         return kTerminalToken;
     }
+    const tok_t &token = **out_token;
 
     // Set the type, keyword, and whether there's a dash prefix. Note that this is quite sketchy,
     // because it ignores quotes. This is the historical behavior. For example, `builtin --names`
     // lists builtins, but `builtin "--names"` attempts to run --names as a command. Amazingly as of
     // this writing (10/12/13) nobody seems to have noticed this. Squint at it really hard and it
     // even starts to look like a feature.
-    parse_token_t result{parse_token_type_from_tokenizer_token(token->type)};
-    const wcstring &text = tok->copy_text_of(*token, storage);
-    result.keyword = keyword_for_token(token->type, text);
+    parse_token_t result{parse_token_type_from_tokenizer_token(token.type)};
+    const wcstring &text = tok->copy_text_of(token, storage);
+    result.keyword = keyword_for_token(token.type, text);
     result.has_dash_prefix = !text.empty() && text.at(0) == L'-';
     result.is_help_argument = result.has_dash_prefix && is_help_argument(text);
     result.is_newline = (result.type == parse_token_type_end && text == L"\n");
-    result.preceding_escaped_nl = token->preceding_escaped_nl;
+    result.preceding_escaped_nl = token.preceding_escaped_nl;
 
     // These assertions are totally bogus. Basically our tokenizer works in size_t but we work in
     // uint32_t to save some space. If we have a source file larger than 4 GB, we'll probably just
     // crash.
-    assert(token->offset < SOURCE_OFFSET_INVALID);
-    result.source_start = (source_offset_t)token->offset;
+    assert(token.offset < SOURCE_OFFSET_INVALID);
+    result.source_start = (source_offset_t)token.offset;
 
-    assert(token->length <= SOURCE_OFFSET_INVALID);
-    result.source_length = (source_offset_t)token->length;
+    assert(token.length <= SOURCE_OFFSET_INVALID);
+    result.source_length = (source_offset_t)token.length;
 
     return result;
 }
@@ -1063,7 +1064,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
     parse_token_t queue[2] = {kInvalidToken, kInvalidToken};
 
     // Loop until we have a terminal token.
-    tok_t tokenizer_token;
+    maybe_t<tok_t> tokenizer_token{};
     for (size_t token_count = 0; queue[0].type != parse_token_type_terminate; token_count++) {
         // Push a new token onto the queue.
         queue[0] = queue[1];
@@ -1084,7 +1085,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
         // Handle tokenizer errors. This is a hack because really the parser should report this for
         // itself; but it has no way of getting the tokenizer message.
         if (queue[1].type == parse_special_type_tokenizer_error) {
-            parser.report_tokenizer_error(tokenizer_token);
+            parser.report_tokenizer_error(*tokenizer_token);
         }
 
         if (!parser.has_fatal_error()) {

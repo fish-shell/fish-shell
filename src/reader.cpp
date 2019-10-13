@@ -199,12 +199,11 @@ class reader_history_search_t {
         } else if (mode_ == token) {
             const wcstring &needle = search_string();
             tokenizer_t tok(text.c_str(), TOK_ACCEPT_UNFINISHED);
-            tok_t token;
 
             wcstring_list_t local_tokens;
-            while (tok.next(&token)) {
-                if (token.type != TOK_STRING) continue;
-                wcstring text = tok.text_of(token);
+            while (auto token = tok.next()) {
+                if (token->type != token_type_t::string) continue;
+                wcstring text = tok.text_of(*token);
                 if (text.find(needle) != wcstring::npos) {
                     local_tokens.emplace_back(std::move(text));
                 }
@@ -2346,11 +2345,11 @@ static wchar_t unescaped_quote(const wcstring &str, size_t pos) {
 /// Returns true if the last token is a comment.
 static bool text_ends_in_comment(const wcstring &text) {
     tokenizer_t tok(text.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS);
-    tok_t token;
-    while (tok.next(&token)) {
-        ;  // pass
+    bool is_comment = false;
+    while (auto token = tok.next()) {
+        is_comment = token->type == token_type_t::comment;
     }
-    return token.type == TOK_COMMENT;
+    return is_comment;
 }
 
 /// \return true if an event is a normal character that should be inserted into the buffer.

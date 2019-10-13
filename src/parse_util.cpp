@@ -20,6 +20,7 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "future_feature_flags.h"
 #include "parse_constants.h"
+#include "parse_util.h"
 #include "parser.h"
 #include "tnode.h"
 #include "tokenizer.h"
@@ -310,32 +311,32 @@ static void job_or_process_extent(const wchar_t *buff, size_t cursor_pos, const 
     assert(buffcpy != NULL);
 
     tokenizer_t tok(buffcpy, TOK_ACCEPT_UNFINISHED);
-    tok_t token;
-    while (tok.next(&token) && !finished) {
-        size_t tok_begin = token.offset;
+    for (maybe_t<tok_t> token = tok.next(); token && !finished; token = tok.next())
+        while ((token = tok.next()) && !finished) {
+            size_t tok_begin = token->offset;
 
-        switch (token.type) {
-            case TOK_PIPE: {
-                if (!process) {
+            switch (token->type) {
+                case token_type_t::pipe: {
+                    if (!process) {
+                        break;
+                    }
+                }
+                /* FALLTHROUGH */
+                case token_type_t::end:
+                case token_type_t::background: {
+                    if (tok_begin >= pos) {
+                        finished = 1;
+                        if (b) *b = (wchar_t *)begin + tok_begin;
+                    } else {
+                        if (a) *a = (wchar_t *)begin + tok_begin + 1;
+                    }
+                    break;
+                }
+                default: {
                     break;
                 }
             }
-            /* FALLTHROUGH */
-            case TOK_END:
-            case TOK_BACKGROUND: {
-                if (tok_begin >= pos) {
-                    finished = 1;
-                    if (b) *b = (wchar_t *)begin + tok_begin;
-                } else {
-                    if (a) *a = (wchar_t *)begin + tok_begin + 1;
-                }
-                break;
-            }
-            default: {
-                break;
-            }
         }
-    }
 
     free(buffcpy);
 }
@@ -380,14 +381,13 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
     const wcstring buffcpy = wcstring(cmdsubst_begin, cmdsubst_end - cmdsubst_begin);
 
     tokenizer_t tok(buffcpy.c_str(), TOK_ACCEPT_UNFINISHED);
-    tok_t token;
-    while (tok.next(&token)) {
-        size_t tok_begin = token.offset;
+    while (maybe_t<tok_t> token = tok.next()) {
+        size_t tok_begin = token->offset;
         size_t tok_end = tok_begin;
 
         // Calculate end of token.
-        if (token.type == TOK_STRING) {
-            tok_end += token.length;
+        if (token->type == token_type_t::string) {
+            tok_end += token->length;
         }
 
         // Cursor was before beginning of this token, means that the cursor is between two tokens,
@@ -399,16 +399,16 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
 
         // If cursor is inside the token, this is the token we are looking for. If so, set a and b
         // and break.
-        if (token.type == TOK_STRING && tok_end >= offset_within_cmdsubst) {
-            a = cmdsubst_begin + token.offset;
-            b = a + token.length;
+        if (token->type == token_type_t::string && tok_end >= offset_within_cmdsubst) {
+            a = cmdsubst_begin + token->offset;
+            b = a + token->length;
             break;
         }
 
         // Remember previous string token.
-        if (token.type == TOK_STRING) {
-            pa = cmdsubst_begin + token.offset;
-            pb = pa + token.length;
+        if (token->type == token_type_t::string) {
+            pa = cmdsubst_begin + token->offset;
+            pb = pa + token->length;
         }
     }
 
@@ -482,21 +482,20 @@ static wchar_t get_quote(const wcstring &cmd_str, size_t len) {
 }
 
 void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_t *quote,
-                                   size_t *offset, enum token_type *out_type) {
+                                   size_t *offset, token_type_t *out_type) {
     size_t prev_pos = 0;
     wchar_t last_quote = L'\0';
 
     tokenizer_t tok(cmd.c_str(), TOK_ACCEPT_UNFINISHED);
-    tok_t token;
-    while (tok.next(&token)) {
-        if (token.offset > pos) break;
+    while (auto token = tok.next()) {
+        if (token->offset > pos) break;
 
-        if (token.type == TOK_STRING)
-            last_quote = get_quote(tok.text_of(token), pos - token.offset);
+        if (token->type == token_type_t::string)
+            last_quote = get_quote(tok.text_of(*token), pos - token->offset);
 
-        if (out_type != NULL) *out_type = token.type;
+        if (out_type != NULL) *out_type = token->type;
 
-        prev_pos = token.offset;
+        prev_pos = token->offset;
     }
 
     wchar_t *cmd_tmp = wcsdup(cmd.c_str());

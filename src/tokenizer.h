@@ -10,17 +10,16 @@
 #include "parse_constants.h"
 
 /// Token types.
-enum token_type {
-    TOK_NONE,        /// Tokenizer not yet constructed
-    TOK_ERROR,       /// Error reading token
-    TOK_STRING,      /// String token
-    TOK_PIPE,        /// Pipe token
-    TOK_ANDAND,      /// && token
-    TOK_OROR,        /// || token
-    TOK_END,         /// End token (semicolon or newline, not literal end)
-    TOK_REDIRECT,    /// redirection token
-    TOK_BACKGROUND,  /// send job to bg token
-    TOK_COMMENT      /// comment token
+enum class token_type_t {
+    error,       /// Error reading token
+    string,      /// String token
+    pipe,        /// Pipe token
+    andand,      /// && token
+    oror,        /// || token
+    end,         /// End token (semicolon or newline, not literal end)
+    redirect,    /// redirection token
+    background,  /// send job to bg token
+    comment,     /// comment token
 };
 
 enum class redirection_type_t {
@@ -65,7 +64,7 @@ const wchar_t *tokenizer_get_error_message(tokenizer_error_t err);
 
 struct tok_t {
     // The type of the token.
-    token_type type{TOK_NONE};
+    token_type_t type;
 
     // Offset of the token.
     size_t offset{0};
@@ -85,7 +84,8 @@ struct tok_t {
     // at 'offset'.
     size_t error_offset{size_t(-1)};
 
-    tok_t() = default;
+    // Construct from a token type.
+    explicit tok_t(token_type_t type);
 };
 
 /// The tokenizer struct.
@@ -112,7 +112,6 @@ class tokenizer_t {
     tok_t call_error(tokenizer_error_t error_type, const wchar_t *token_start,
                      const wchar_t *error_loc);
     tok_t read_string();
-    maybe_t<tok_t> tok_next();
 
    public:
     /// Constructor for a tokenizer. b is the string that is to be tokenized. It is not copied, and
@@ -124,8 +123,8 @@ class tokenizer_t {
     /// token. Setting TOK_SHOW_COMMENTS will return comments as tokens
     tokenizer_t(const wchar_t *b, tok_flags_t flags);
 
-    /// Returns the next token by reference. Returns true if we got one, false if we're at the end.
-    bool next(struct tok_t *result);
+    /// Returns the next token, or none() if we are at the end.
+    maybe_t<tok_t> next();
 
     /// Returns the text of a token, as a string.
     wcstring text_of(const tok_t &tok) const { return wcstring(start + tok.offset, tok.length); }

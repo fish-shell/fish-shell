@@ -138,8 +138,7 @@ class tokenizer_t {
 /// returns the empty string.
 wcstring tok_first(const wcstring &str);
 
-/// Helper function to determine redirection type from a string, or TOK_NONE if the redirection is
-/// invalid. Also returns the fd by reference.
+/// Helper function to determine redirection type from a string. Also returns the fd by reference.
 maybe_t<redirection_type_t> redirection_type_for_string(const wcstring &str, int *out_fd = NULL);
 
 /// Helper function to determine which fd is redirected by a pipe.

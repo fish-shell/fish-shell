@@ -71,9 +71,6 @@ struct tok_t {
     // Length of the token.
     size_t length{0};
 
-    // If the token represents a redirection, the redirected fd.
-    maybe_t<int> redirected_fd{};
-
     // If an error, this is the error code.
     tokenizer_error_t error{tokenizer_error_t::none};
 

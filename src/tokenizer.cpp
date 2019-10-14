@@ -513,7 +513,6 @@ maybe_t<tok_t> tokenizer_t::next() {
                 this->buff += 2;
             } else {
                 result.emplace(token_type_t::pipe);
-                result->redirected_fd = 1;
                 result->offset = start_pos;
                 result->length = 1;
                 this->buff++;
@@ -531,7 +530,6 @@ maybe_t<tok_t> tokenizer_t::next() {
             }
             result.emplace(redir_or_pipe->type);
             result->offset = start_pos;
-            result->redirected_fd = redir_or_pipe->fd;
             result->length = redir_or_pipe->consumed;
             this->buff += redir_or_pipe->consumed;
             break;
@@ -553,7 +551,6 @@ maybe_t<tok_t> tokenizer_t::next() {
                                             error_location);
                 }
                 result.emplace(redir_or_pipe->type);
-                result->redirected_fd = redir_or_pipe->fd;
                 result->offset = start_pos;
                 result->length = redir_or_pipe->consumed;
                 this->buff += redir_or_pipe->consumed;

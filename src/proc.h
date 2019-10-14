@@ -215,7 +215,7 @@ class process_t {
     /// IO chain getter and setter.
     const io_chain_t &io_chain() const { return process_io_chain; }
 
-    void set_io_chain(const io_chain_t &chain) { this->process_io_chain = chain; }
+    void set_io_chain(io_chain_t chain) { this->process_io_chain = std::move(chain); }
 
     /// Store the current topic generations. That is, right before the process is launched, record
     /// the generations of all topics; then we can tell which generation values have changed after

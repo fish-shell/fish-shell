@@ -152,6 +152,10 @@ struct pipe_or_redir_t {
     // Ignored for pipes.
     redirection_mode_t mode{redirection_mode_t::overwrite};
 
+    // Whether, in addition to this redirection, stderr should also be dup'd to stdout
+    // For example &| or &>
+    bool stderr_merge{false};
+
     // Number of characters consumed when parsing the string.
     size_t consumed{0};
 

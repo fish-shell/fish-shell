@@ -590,15 +590,16 @@ static void test_tokenizer() {
     const wchar_t *str =
         L"string <redirection  2>&1 'nested \"quoted\" '(string containing subshells "
         L"){and,brackets}$as[$well (as variable arrays)] not_a_redirect^ ^ ^^is_a_redirect "
+        L"&| &> "
         L"&&& ||| "
         L"&& || & |"
         L"Compress_Newlines\n  \n\t\n   \nInto_Just_One";
     using tt = token_type_t;
     const token_type_t types[] = {
-        tt::string, tt::redirect, tt::string,   tt::redirect, tt::string,     tt::string,
-        tt::string, tt::redirect, tt::redirect, tt::string,   tt::andand,     tt::background,
-        tt::oror,   tt::pipe,     tt::andand,   tt::oror,     tt::background, tt::pipe,
-        tt::string, tt::end,      tt::string};
+        tt::string,     tt::redirect,   tt::string,   tt::redirect, tt::string, tt::string,
+        tt::string,     tt::redirect,   tt::redirect, tt::string,   tt::pipe,   tt::redirect,
+        tt::andand,     tt::background, tt::oror,     tt::pipe,     tt::andand, tt::oror,
+        tt::background, tt::pipe,       tt::string,   tt::end,      tt::string};
 
     say(L"Test correct tokenization");
 
@@ -685,6 +686,13 @@ static void test_tokenizer() {
     do_test(pipe_or_redir(L"9999999999999>&2")->fd == -1);
     do_test(pipe_or_redir(L"9999999999999>&2")->is_valid() == false);
     do_test(pipe_or_redir(L"9999999999999>&2")->is_valid() == false);
+
+    do_test(pipe_or_redir(L"&|")->is_pipe);
+    do_test(pipe_or_redir(L"&|")->stderr_merge);
+    do_test(!pipe_or_redir(L"&>")->is_pipe);
+    do_test(pipe_or_redir(L"&>")->stderr_merge);
+    do_test(pipe_or_redir(L"&>>")->stderr_merge);
+    do_test(pipe_or_redir(L"&>?")->stderr_merge);
 
     auto get_redir_mode = [](const wchar_t *s) -> maybe_t<redirection_mode_t> {
         if (auto redir = pipe_or_redir_t::from_string(s)) {
@@ -4607,6 +4615,12 @@ static void test_highlighting() {
         {L"%self", highlight_role_t::operat},
         {L"not%self", highlight_role_t::param},
         {L"self%not", highlight_role_t::param},
+    });
+
+    highlight_tests.push_back({
+        {L"false", highlight_role_t::command},
+        {L"&|", highlight_role_t::statement_terminator},
+        {L"true", highlight_role_t::command},
     });
 
     auto &vars = parser_t::principal_parser().vars();

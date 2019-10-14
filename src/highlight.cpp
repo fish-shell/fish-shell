@@ -958,11 +958,12 @@ void highlighter_t::color_redirection(tnode_t<g::redirection> redirection_node) 
 
     if (redir_prim) {
         wcstring target;
-        const maybe_t<redirection_type_t> redirect_type =
-            redirection_type(redirection_node, this->buff, nullptr, &target);
+        const maybe_t<pipe_or_redir_t> redirect =
+            redirection_for_node(redirection_node, this->buff, &target);
 
         // We may get a missing redirection type if the redirection is invalid.
-        auto hl = redirect_type ? highlight_role_t::redirection : highlight_role_t::error;
+        auto hl = (redirect && redirect->is_valid()) ? highlight_role_t::redirection
+                                                     : highlight_role_t::error;
         this->color_node(redir_prim, hl);
 
         // Check if the argument contains a command substitution. If so, highlight it as a param
@@ -974,7 +975,7 @@ void highlighter_t::color_redirection(tnode_t<g::redirection> redirection_node) 
             // disallow redirections into a non-existent directory.
             bool target_is_valid = true;
 
-            if (!redirect_type) {
+            if (!redirect || !redirect->is_valid()) {
                 // not a valid redirection
                 target_is_valid = false;
             } else if (!this->io_ok) {
@@ -990,8 +991,8 @@ void highlighter_t::color_redirection(tnode_t<g::redirection> redirection_node) 
                 // redirections). Note that the target is now unescaped.
                 const wcstring target_path =
                     path_apply_working_directory(target, this->working_directory);
-                switch (*redirect_type) {
-                    case redirection_type_t::fd: {
+                switch (redirect->mode) {
+                    case redirection_mode_t::fd: {
                         if (target == L"-") {
                             target_is_valid = true;
                         } else {
@@ -1000,16 +1001,16 @@ void highlighter_t::color_redirection(tnode_t<g::redirection> redirection_node) 
                         }
                         break;
                     }
-                    case redirection_type_t::input: {
+                    case redirection_mode_t::input: {
                         // Input redirections must have a readable non-directory.
                         struct stat buf = {};
                         target_is_valid = !waccess(target_path, R_OK) &&
                                           !wstat(target_path, &buf) && !S_ISDIR(buf.st_mode);
                         break;
                     }
-                    case redirection_type_t::overwrite:
-                    case redirection_type_t::append:
-                    case redirection_type_t::noclob: {
+                    case redirection_mode_t::overwrite:
+                    case redirection_mode_t::append:
+                    case redirection_mode_t::noclob: {
                         // Test whether the file exists, and whether it's writable (possibly after
                         // creating it). access() returns failure if the file does not exist.
                         bool file_exists = false, file_is_writable = false;
@@ -1053,7 +1054,7 @@ void highlighter_t::color_redirection(tnode_t<g::redirection> redirection_node) 
                         // NOCLOB means that we must not overwrite files that exist.
                         target_is_valid =
                             file_is_writable &&
-                            !(file_exists && redirect_type == redirection_type_t::noclob);
+                            !(file_exists && redirect->mode == redirection_mode_t::noclob);
                         break;
                     }
                 }

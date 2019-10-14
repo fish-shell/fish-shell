@@ -669,35 +669,60 @@ static void test_tokenizer() {
         do_test(token->error_offset == 4);
     }
 
-    // Test redirection_type_for_string.
-    if (redirection_type_for_string(L"<") != redirection_type_t::input)
+    // Test some redirection parsing.
+    auto pipe_or_redir = [](const wchar_t *s) { return pipe_or_redir_t::from_string(s); };
+    do_test(pipe_or_redir(L"|")->is_pipe);
+    do_test(pipe_or_redir(L"0>|")->is_pipe);
+    do_test(pipe_or_redir(L"0>|")->fd == 0);
+    do_test(pipe_or_redir(L"2>|")->is_pipe);
+    do_test(pipe_or_redir(L"2>|")->fd == 2);
+    do_test(pipe_or_redir(L">|")->is_pipe);
+    do_test(pipe_or_redir(L">|")->fd == STDOUT_FILENO);
+    do_test(!pipe_or_redir(L">")->is_pipe);
+    do_test(pipe_or_redir(L">")->fd == STDOUT_FILENO);
+    do_test(pipe_or_redir(L"2>")->fd == STDERR_FILENO);
+    do_test(pipe_or_redir(L"9999999999999>")->fd == -1);
+    do_test(pipe_or_redir(L"9999999999999>&2")->fd == -1);
+    do_test(pipe_or_redir(L"9999999999999>&2")->is_valid() == false);
+    do_test(pipe_or_redir(L"9999999999999>&2")->is_valid() == false);
+
+    auto get_redir_mode = [](const wchar_t *s) -> maybe_t<redirection_mode_t> {
+        if (auto redir = pipe_or_redir_t::from_string(s)) {
+            return redir->mode;
+        }
+        return none();
+    };
+
+    if (get_redir_mode(L"<") != redirection_mode_t::input)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"^") != redirection_type_t::overwrite)
+    if (get_redir_mode(L"^") != redirection_mode_t::overwrite)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L">") != redirection_type_t::overwrite)
+    if (get_redir_mode(L">") != redirection_mode_t::overwrite)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"2>") != redirection_type_t::overwrite)
+    if (get_redir_mode(L"2>") != redirection_mode_t::overwrite)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L">>") != redirection_type_t::append)
+    if (get_redir_mode(L">>") != redirection_mode_t::append)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"2>>") != redirection_type_t::append)
+    if (get_redir_mode(L"2>>") != redirection_mode_t::append)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"2>?") != redirection_type_t::noclob)
+    if (get_redir_mode(L"2>?") != redirection_mode_t::noclob)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"9999999999999999>?"))
+    if (get_redir_mode(L"9999999999999999>?") != redirection_mode_t::noclob)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"2>&3") != redirection_type_t::fd)
+    if (get_redir_mode(L"2>&3") != redirection_mode_t::fd)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-    if (redirection_type_for_string(L"2>|"))
+    if (get_redir_mode(L"3<&0") != redirection_mode_t::fd)
+        err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
+    if (get_redir_mode(L"3</tmp/filetxt") != redirection_mode_t::input)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
 
     // Test ^ with our feature flag on and off.
     auto saved_flags = fish_features();
     mutable_fish_features().set(features_t::stderr_nocaret, false);
-    if (redirection_type_for_string(L"^") != redirection_type_t::overwrite)
+    if (get_redir_mode(L"^") != redirection_mode_t::overwrite)
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
     mutable_fish_features().set(features_t::stderr_nocaret, true);
-    if (redirection_type_for_string(L"^") != none())
+    if (get_redir_mode(L"^") != none())
         err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
     mutable_fish_features() = saved_flags;
 }
@@ -1004,8 +1029,8 @@ static void test_1_cancellation(const wchar_t *src) {
     parser_t::principal_parser().eval(src, io_chain_t{filler}, TOP);
     auto buffer = io_bufferfill_t::finish(std::move(filler));
     if (buffer->buffer().size() != 0) {
-        err(L"Expected 0 bytes in out_buff, but instead found %lu bytes\n",
-            buffer->buffer().size());
+        err(L"Expected 0 bytes in out_buff, but instead found %lu bytes, for command %ls\n",
+            buffer->buffer().size(), src);
     }
     iothread_drain_all();
 }
@@ -5435,7 +5460,7 @@ int main(int argc, char **argv) {
     if (should_test_function("format")) test_format();
     if (should_test_function("convert")) test_convert();
     if (should_test_function("convert_nulls")) test_convert_nulls();
-    if (should_test_function("tok")) test_tokenizer();
+    if (should_test_function("tokenizer")) test_tokenizer();
     if (should_test_function("iothread")) test_iothread();
     if (should_test_function("pthread")) test_pthread();
     if (should_test_function("parser")) test_parser();

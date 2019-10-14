@@ -967,9 +967,15 @@ bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redir
 
     // Get all redirection nodes underneath the statement.
     while (auto redirect_node = node.next_in_list<g::redirection>()) {
-        int source_fd = -1;  // source fd
-        wcstring target;     // file path or target fd
-        auto redirect_type = redirection_type(redirect_node, pstree->src, &source_fd, &target);
+        wcstring target;  // file path or target fd
+        auto redirect = redirection_for_node(redirect_node, pstree->src, &target);
+
+        if (!redirect || !redirect->is_valid()) {
+            // TODO: improve this error message.
+            report_error(redirect_node, _(L"Invalid redirection: %ls"),
+                         redirect_node.get_source(pstree->src).c_str());
+            return false;
+        }
 
         // PCA: I can't justify this skip_variables flag. It was like this when I got here.
         bool target_expanded =
@@ -977,17 +983,17 @@ bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redir
                        parser->vars(), parser->shared());
         if (!target_expanded || target.empty()) {
             // TODO: Improve this error message.
-            errored =
-                report_error(redirect_node, _(L"Invalid redirection target: %ls"), target.c_str());
+            report_error(redirect_node, _(L"Invalid redirection target: %ls"), target.c_str());
+            return false;
         }
 
         // Generate the actual IO redirection.
         shared_ptr<io_data_t> new_io;
-        assert(redirect_type && "expected to have a valid redirection");
-        switch (*redirect_type) {
-            case redirection_type_t::fd: {
+        assert(redirect && redirect->is_valid() && "expected to have a valid redirection");
+        switch (redirect->mode) {
+            case redirection_mode_t::fd: {
                 if (target == L"-") {
-                    new_io.reset(new io_close_t(source_fd));
+                    new_io.reset(new io_close_t(redirect->fd));
                 } else {
                     int old_fd = fish_wcstoi(target.c_str());
                     if (errno || old_fd < 0) {
@@ -996,14 +1002,14 @@ bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redir
                               L"which is not a valid file descriptor");
                         errored = report_error(redirect_node, fmt, target.c_str());
                     } else {
-                        new_io.reset(new io_fd_t(source_fd, old_fd, true));
+                        new_io.reset(new io_fd_t(redirect->fd, old_fd, true));
                     }
                 }
                 break;
             }
             default: {
-                int oflags = oflags_for_redirection_type(*redirect_type);
-                io_file_t *new_io_file = new io_file_t(source_fd, target, oflags);
+                int oflags = redirect->oflags();
+                io_file_t *new_io_file = new io_file_t(redirect->fd, target, oflags);
                 new_io.reset(new_io_file);
                 break;
             }
@@ -1127,12 +1133,13 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
         tnode_t<g::statement> statement = job_cont.require_get_child<g::statement, 2>();
 
         // Handle the pipe, whose fd may not be the obvious stdout.
-        int pipe_write_fd = fd_redirected_by_pipe(get_source(pipe));
-        if (pipe_write_fd == -1) {
+        auto parsed_pipe = pipe_or_redir_t::from_string(get_source(pipe));
+        assert(parsed_pipe.has_value() && parsed_pipe->is_pipe && "Failed to parse valid pipe");
+        if (!parsed_pipe->is_valid()) {
             result = report_error(pipe, ILLEGAL_FD_ERR_MSG, get_source(pipe).c_str());
             break;
         }
-        processes.back()->pipe_write_fd = pipe_write_fd;
+        processes.back()->pipe_write_fd = parsed_pipe->fd;
 
         // Store the new process (and maybe with an error).
         processes.emplace_back(new process_t());

@@ -242,10 +242,10 @@ enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::job_decora
 enum parse_bool_statement_type_t bool_statement_type(
     tnode_t<grammar::job_conjunction_continuation> stmt);
 
-/// Given a redirection, get the redirection type (or none) and target (file path, or fd).
-maybe_t<redirection_type_t> redirection_type(tnode_t<grammar::redirection> redirection,
-                                             const wcstring &src, int *out_fd,
-                                             wcstring *out_target);
+/// Given a redirection node, get the parsed redirection and target of the redirection (file path,
+/// or fd).
+maybe_t<pipe_or_redir_t> redirection_for_node(tnode_t<grammar::redirection> redirection,
+                                              const wcstring &src, wcstring *out_target);
 
 /// Return the arguments under an arguments_list or arguments_or_redirection_list
 /// Do not return more than max.

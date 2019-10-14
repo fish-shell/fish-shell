@@ -55,19 +55,20 @@ enum parse_bool_statement_type_t bool_statement_type(
     return static_cast<parse_bool_statement_type_t>(cont.tag());
 }
 
-maybe_t<redirection_type_t> redirection_type(tnode_t<grammar::redirection> redirection,
-                                             const wcstring &src, int *out_fd,
-                                             wcstring *out_target) {
+maybe_t<pipe_or_redir_t> redirection_for_node(tnode_t<grammar::redirection> redirection,
+                                              const wcstring &src, wcstring *out_target) {
     assert(redirection && "redirection is missing");
-    maybe_t<redirection_type_t> result{};
     tnode_t<grammar::tok_redirection> prim = redirection.child<0>();  // like 2>
     assert(prim && "expected to have primitive");
 
+    maybe_t<pipe_or_redir_t> result{};
     if (prim.has_source()) {
-        result = redirection_type_for_string(prim.get_source(src), out_fd);
+        result = pipe_or_redir_t::from_string(prim.get_source(src));
+        assert(result.has_value() && "Failed to parse valid redirection");
+        assert(!result->is_pipe && "Should not be a pipe");
     }
     if (out_target != NULL) {
-        tnode_t<grammar::tok_string> target = redirection.child<1>();  // like &1 or file path
+        tnode_t<grammar::tok_string> target = redirection.child<1>();  // like 1 or file path
         *out_target = target.has_source() ? target.get_source(src) : wcstring();
     }
     return result;

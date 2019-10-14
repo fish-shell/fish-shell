@@ -22,7 +22,7 @@ enum class token_type_t {
     comment,     /// comment token
 };
 
-enum class redirection_type_t {
+enum class redirection_mode_t {
     overwrite,  // normal redirection: > file.txt
     append,     // appending redirection: >> file.txt
     input,      // input redirection: < file.txt
@@ -138,14 +138,44 @@ class tokenizer_t {
 /// returns the empty string.
 wcstring tok_first(const wcstring &str);
 
-/// Helper function to determine redirection type from a string. Also returns the fd by reference.
-maybe_t<redirection_type_t> redirection_type_for_string(const wcstring &str, int *out_fd = NULL);
+/// Struct wrapping up a parsed pipe or redirection.
+struct pipe_or_redir_t {
+    // The redirected fd, or -1 on overflow.
+    // In the common case of a pipe, this is 0 (STDOUT_FILENO).
+    // For example, in the case of "3>&1" this will be 3.
+    int fd{0};
 
-/// Helper function to determine which fd is redirected by a pipe.
-int fd_redirected_by_pipe(const wcstring &str);
+    // Whether we are a pipe (true) or redirection (false).
+    bool is_pipe{false};
 
-/// Helper function to return oflags (as in open(2)) for a redirection type.
-int oflags_for_redirection_type(redirection_type_t type);
+    // The redirection mode if the type is redirect.
+    // Ignored for pipes.
+    redirection_mode_t mode{redirection_mode_t::overwrite};
+
+    // Number of characters consumed when parsing the string.
+    size_t consumed{0};
+
+    // Construct from a string.
+    static maybe_t<pipe_or_redir_t> from_string(const wchar_t *buff);
+    static maybe_t<pipe_or_redir_t> from_string(const wcstring &buff) {
+        return from_string(buff.c_str());
+    }
+
+    // \return the oflags (as in open(2)) for this redirection.
+    int oflags() const;
+
+    // \return if we are "valid". Here "valid" means only that the source fd did not overflow.
+    // For example 99999999999> is invalid.
+    bool is_valid() const { return fd >= 0; }
+
+    // \return the token type for this redirection.
+    token_type_t token_type() const {
+        return is_pipe ? token_type_t::pipe : token_type_t::redirect;
+    }
+
+   private:
+    pipe_or_redir_t();
+};
 
 enum move_word_style_t {
     move_word_style_punctuation,      // stop at punctuation

@@ -635,7 +635,7 @@ void reader_data_t::repaint() {
     // Re-render our completions page if necessary. Limit the term size of the pager to the true
     // term size, minus the number of lines consumed by our string. (Note this doesn't yet consider
     // wrapping).
-    int full_line_count = 1 + std::count(full_line.cbegin(), full_line.cend(), '\n');
+    int full_line_count = 1 + std::count(full_line.cbegin(), full_line.cend(), L'\n');
     pager.set_term_size(std::max(1, common_get_width()),
                         std::max(1, common_get_height() - full_line_count));
     pager.update_rendering(&current_page_rendering);
@@ -1299,7 +1299,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
             history_item_t item = searcher.current_item();
 
             // Skip items with newlines because they make terrible autosuggestions.
-            if (item.str().find('\n') != wcstring::npos) continue;
+            if (item.str().find(L'\n') != wcstring::npos) continue;
 
             if (autosuggest_validate_from_history(item, working_directory, *vars)) {
                 // The command autosuggestion was handled specially, so we're done.
@@ -2734,7 +2734,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
             // If the conditions are met, insert a new line at the position of the cursor.
             if (continue_on_next_line) {
-                insert_char(el, '\n');
+                insert_char(el, L'\n');
                 break;
             }
 
@@ -2769,7 +2769,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 repaint();
             } else if (command_test_result == PARSER_TEST_INCOMPLETE) {
                 // We are incomplete, continue editing.
-                insert_char(el, '\n');
+                insert_char(el, L'\n');
             } else {
                 // Result must be some combination including an error. The error message will
                 // already be printed, all we need to do is repaint.
@@ -3510,7 +3510,7 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
                     clearerr(in_stream);
                 } else {
                     // Fatal error.
-                    debug(1, _(L"Error while reading input file"));
+                    debug(0, _(L"Unable to read input file: %s"), strerror(errno));
                     // Reset buffer on error. We won't evaluate incomplete files.
                     acc.clear();
                     break;

@@ -337,8 +337,6 @@ Most programs use three input/output (IO) streams, each represented by a number 
 
 - Standard error, FD 2, for writing errors and warnings, defaults to writing to the screen.
 
-The reason for providing for two output file descriptors is to allow separation of errors and warnings from regular program output.
-
 Any file descriptor can be directed to a different output than its default through a simple mechanism called a redirection.
 
 An example of a file redirection is ``echo hello > output.txt``, which directs the output of the echo command to the file output.txt.
@@ -358,9 +356,11 @@ An example of a file redirection is ``echo hello > output.txt``, which directs t
 
 - An ampersand followed by a minus sign (``&-``). The file descriptor will be closed.
 
+As a convenience, the redirection ``&>`` can be used to direct both stdout and stderr to the same file.
+
 Example:
 
-To redirect both standard output and standard error to the file 'all_output.txt', you can write ``echo Hello > all_output.txt 2>&1``.
+To redirect both standard output and standard error to the file 'all_output.txt', you can write ``echo Hello &> all_output.txt``, which is a convenience for ``echo Hello > all_output.txt 2>&1``.
 
 Any file descriptor can be redirected in an arbitrary way by prefixing the redirection with the file descriptor.
 
@@ -388,6 +388,7 @@ Pipes usually connect file descriptor 1 (standard output) of the first process t
 
 will attempt to build the fish program, and any errors will be shown using the less pager.
 
+As a convenience, the pipe ``&|`` may be used to redirect both stdout and stderr to the same process. (Note this is different from bash, which uses ``|&``).
 
 .. _syntax-background:
 

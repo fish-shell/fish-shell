@@ -296,6 +296,7 @@ maybe_t<pipe_or_redir_t> pipe_or_redir_t::from_string(const wchar_t *buff) {
        Note we are only responsible for parsing the redirection part, not 'cmd' or 'file'.
 
         cmd | cmd        normal pipe
+        cmd &| cmd       normal pipe plus stderr-merge
         cmd >| cmd       pipe with explicit fd
         cmd 2>| cmd      pipe with explicit fd
         cmd < file       stdin redirection
@@ -308,6 +309,7 @@ maybe_t<pipe_or_redir_t> pipe_or_redir_t::from_string(const wchar_t *buff) {
         cmd 1>&2 file    fd redirection with an explicit src fd
         cmd <&2 file     fd redirection with no explicit src fd (stdin is used)
         cmd 3<&0 file    fd redirection with an explicit src fd
+        cmd &> file      redirection with stderr merge
         cmd ^ file       caret (stderr) redirection, perhaps disabled via feature flags
         cmd ^^ file      caret (stderr) redirection, perhaps disabled via feature flags
     */
@@ -404,7 +406,25 @@ maybe_t<pipe_or_redir_t> pipe_or_redir_t::from_string(const wchar_t *buff) {
                 break;
             }
         }
-
+        case L'&': {
+            consume(L'&');
+            if (try_consume(L'|')) {
+                // &| is pipe with stderr merge.
+                result.fd = STDOUT_FILENO;
+                result.is_pipe = true;
+                result.stderr_merge = true;
+            } else if (try_consume(L'>')) {
+                result.fd = STDOUT_FILENO;
+                result.stderr_merge = true;
+                result.mode = redirection_mode_t::overwrite;
+                if (try_consume(L'>')) result.mode = redirection_mode_t::append;  // like &>>
+                if (try_consume(L'?'))
+                    result.mode = redirection_mode_t::noclob;  // like &>? or &>>?
+            } else {
+                return none();
+            }
+            break;
+        }
         default: {
             // Not a redirection.
             return none();
@@ -521,10 +541,20 @@ maybe_t<tok_t> tokenizer_t::next() {
         }
         case L'&': {
             if (this->buff[1] == L'&') {
+                // && is and.
                 result.emplace(token_type_t::andand);
                 result->offset = start_pos;
                 result->length = 2;
                 this->buff += 2;
+            } else if (this->buff[1] == L'>' || this->buff[1] == L'|') {
+                // &> and &| redirect both stdout and stderr.
+                auto redir = pipe_or_redir_t::from_string(buff);
+                assert(redir.has_value() &&
+                       "Should always succeed to parse a &> or &| redirection");
+                result.emplace(redir->token_type());
+                result->offset = start_pos;
+                result->length = redir->consumed;
+                this->buff += redir->consumed;
             } else {
                 result.emplace(token_type_t::background);
                 result->offset = start_pos;
@@ -535,6 +565,7 @@ maybe_t<tok_t> tokenizer_t::next() {
         }
         case L'|': {
             if (this->buff[1] == L'|') {
+                // || is or.
                 result.emplace(token_type_t::oror);
                 result->offset = start_pos;
                 result->length = 2;

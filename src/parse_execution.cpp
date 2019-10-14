@@ -80,6 +80,11 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
     return result;
 }
 
+/// Get a redirection from stderr to stdout (i.e. 2>&1).
+static std::shared_ptr<io_data_t> get_stderr_merge() {
+    return std::make_shared<io_fd_t>(STDERR_FILENO, STDOUT_FILENO, true /* user_supplied */);
+}
+
 parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p,
                                                      std::shared_ptr<job_t> parent)
     : pstree(std::move(pstree)), parser(p), parent_job(std::move(parent)) {}
@@ -1019,6 +1024,12 @@ bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redir
         if (new_io.get() != NULL) {
             result.push_back(new_io);
         }
+
+        if (redirect->stderr_merge) {
+            // This was a redirect like &> which also modifies stderr.
+            // Also redirect stderr to stdout.
+            result.push_back(get_stderr_merge());
+        }
     }
 
     if (out_chain && !errored) {
@@ -1141,6 +1152,13 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
             break;
         }
         processes.back()->pipe_write_fd = parsed_pipe->fd;
+        if (parsed_pipe->stderr_merge) {
+            // This was a pipe like &| which redirects both stdout and stderr.
+            // Also redirect stderr to stdout.
+            auto ios = processes.back()->io_chain();
+            ios.push_back(get_stderr_merge());
+            processes.back()->set_io_chain(std::move(ios));
+        }
 
         // Store the new process (and maybe with an error).
         processes.emplace_back(new process_t());

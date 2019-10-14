@@ -3483,7 +3483,6 @@ bool reader_get_selection(size_t *start, size_t *len) {
 /// highlighting. This is used for reading scripts and init files.
 static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
     FILE *in_stream;
-    wchar_t *buff = 0;
     std::vector<char> acc;
 
     int des = (fd == STDIN_FILENO ? dup(STDIN_FILENO) : fd);
@@ -3511,7 +3510,7 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
                     clearerr(in_stream);
                 } else {
                     // Fatal error.
-                    debug(1, _(L"Error while reading from file descriptor"));
+                    debug(1, _(L"Error while reading input file"));
                     // Reset buffer on error. We won't evaluate incomplete files.
                     acc.clear();
                     break;
@@ -3549,7 +3548,6 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
     } else {
         debug(1, _(L"Error while opening input stream"));
         wperror(L"fdopen");
-        free(buff);
         res = 1;
     }
     return res;

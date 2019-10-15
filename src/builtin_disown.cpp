@@ -35,7 +35,7 @@ static int disown_job(const wchar_t *cmd, parser_t &parser, io_streams_t &stream
     // We cannot directly remove the job from the jobs() list as `disown` might be called
     // within the context of a subjob which will cause the parent job to crash in exec_job().
     // Instead, we set a flag and the parser removes the job from the jobs list later.
-    j->set_flag(job_flag_t::DISOWN_REQUESTED, true);
+    j->mut_flags().disown_requested = true;
     add_disowned_pgid(j->pgid);
 
     return STATUS_CMD_OK;

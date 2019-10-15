@@ -177,10 +177,6 @@ bool job_t::job_chain_is_fully_constructed() const {
     return true;
 }
 
-void job_t::set_flag(job_flag_t flag, bool set) { this->flags.set(flag, set); }
-
-bool job_t::get_flag(job_flag_t flag) const { return this->flags.get(flag); }
-
 bool job_t::signal(int signal) {
     // Presumably we are distinguishing between the two cases below because we do
     // not want to send ourselves the signal in question in case the job shares
@@ -211,7 +207,7 @@ statuses_t job_t::get_statuses() const {
         st.pipestatus.push_back(p->status.status_value());
     }
     int laststatus = st.pipestatus.back();
-    st.status = (get_flag(job_flag_t::NEGATE) ? !laststatus : laststatus);
+    st.status = flags().negate ? !laststatus : laststatus;
     return st;
 }
 
@@ -453,7 +449,7 @@ void remove_disowned_jobs(job_list_t &jobs) {
     auto iter = jobs.begin();
     while (iter != jobs.end()) {
         const auto &j = *iter;
-        if (j->get_flag(job_flag_t::DISOWN_REQUESTED) && j->job_chain_is_fully_constructed()) {
+        if (j->flags().disown_requested && j->job_chain_is_fully_constructed()) {
             iter = jobs.erase(iter);
         } else {
             ++iter;
@@ -484,7 +480,7 @@ static bool try_clean_process_in_job(process_t *p, job_t *j, std::vector<event_t
     }
 
     int proc_is_job = (p->is_first_in_job && p->is_last_in_job);
-    if (proc_is_job) j->set_flag(job_flag_t::NOTIFIED, true);
+    if (proc_is_job) j->mut_flags().notified = true;
 
     // Handle signals other than SIGPIPE.
     // Always report crashes.
@@ -535,7 +531,7 @@ static bool try_clean_process_in_job(process_t *p, job_t *j, std::vector<event_t
 /// \return whether this job wants a status message printed when it stops or completes.
 static bool job_wants_message(const shared_ptr<job_t> &j) {
     // Did we already print a status message?
-    if (j->get_flag(job_flag_t::NOTIFIED)) return false;
+    if (j->flags().notified) return false;
 
     // Do we just skip notifications?
     if (j->skip_notification()) return false;
@@ -598,7 +594,7 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
         // Print the message if we need to.
         if (job_wants_message(j) && (j->is_completed() || j->is_stopped())) {
             print_job_status(j.get(), j->is_completed() ? JOB_ENDED : JOB_STOPPED);
-            j->set_flag(job_flag_t::NOTIFIED, true);
+            j->mut_flags().notified = true;
             printed = true;
         }
 
@@ -864,7 +860,7 @@ static bool terminal_return_from_job(job_t *j, int restore_attrs) {
 void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool send_sigcont) {
     // Put job first in the job list.
     parser.job_promote(this);
-    set_flag(job_flag_t::NOTIFIED, false);
+    mut_flags().notified = false;
 
     FLOGF(proc_job_run, L"%ls job %d, gid %d (%ls), %ls, %ls",
           send_sigcont ? L"Continue" : L"Start", job_id, pgid, command_wcstr(),

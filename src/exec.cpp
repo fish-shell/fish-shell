@@ -316,7 +316,7 @@ void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &all_ios) {
         // launch_process _never_ returns.
         launch_process_nofork(vars, j->processes.front().get());
     } else {
-        j->set_flag(job_flag_t::CONSTRUCTED, true);
+        j->mut_flags().constructed = true;
         j->processes.front()->completed = 1;
         return;
     }
@@ -563,15 +563,15 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
     // way, the builtin does not need to know what job it is part of. It could
     // probably figure that out by walking the job list, but it seems more robust to
     // make exec handle things.
-    const int fg = j->is_foreground();
-    j->set_flag(job_flag_t::FOREGROUND, false);
+    const bool fg = j->is_foreground();
+    j->mut_flags().foreground = false;
 
     // Note this call may block for a long time, while the builtin performs I/O.
     p->status = builtin_run(parser, j->pgid, p->get_argv(), streams);
 
     // Restore the fg flag, which is temporarily set to false during builtin
     // execution so as not to confuse some job-handling builtins.
-    j->set_flag(job_flag_t::FOREGROUND, fg);
+    j->mut_flags().foreground = fg;
 
     return true;  // "success"
 }
@@ -1062,7 +1062,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     // Perhaps inherit our parent's pgid and job control flag.
     if (parent_job && parent_job->pgid != INVALID_PID) {
         j->pgid = parent_job->pgid;
-        j->set_flag(job_flag_t::JOB_CONTROL, true);
+        j->mut_flags().job_control = true;
     }
 
     if (j->pgid == INVALID_PID && should_claim_process_group_for_job(j)) {
@@ -1085,7 +1085,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
         internal_exec(parser.vars(), j.get(), all_ios);
         // internal_exec only returns if it failed to set up redirections.
         // In case of an successful exec, this code is not reached.
-        bool status = j->get_flag(job_flag_t::NEGATE) ? 0 : 1;
+        bool status = j->flags().negate ? 0 : 1;
         parser.set_last_statuses(statuses_t::just(status));
         return false;
     }
@@ -1149,7 +1149,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     FLOGF(exec_job_exec, L"Executed job %d from command '%ls' with pgrp %d", j->job_id,
           j->command_wcstr(), j->pgid);
 
-    j->set_flag(job_flag_t::CONSTRUCTED, true);
+    j->mut_flags().constructed = true;
     if (!j->is_foreground()) {
         parser.vars().set_one(L"last_pid", ENV_GLOBAL, to_string(j->pgid));
     }

@@ -17,7 +17,6 @@
 #include <vector>
 
 #include "common.h"
-#include "enum_set.h"
 #include "event.h"
 #include "io.h"
 #include "parse_tree.h"
@@ -252,30 +251,6 @@ class process_t {
 typedef std::unique_ptr<process_t> process_ptr_t;
 typedef std::vector<process_ptr_t> process_list_t;
 
-/// Constants for the flag variable in the job struct.
-enum class job_flag_t {
-    /// Whether the user has been told about stopped job.
-    NOTIFIED,
-    /// Whether this job is in the foreground.
-    FOREGROUND,
-    /// Whether the specified job is completely constructed, i.e. completely parsed, and every
-    /// process in the job has been forked, etc.
-    CONSTRUCTED,
-    /// Whether the exit status should be negated. This flag can only be set by the not builtin.
-    NEGATE,
-    /// Whether the job is under job control, i.e. has its own pgrp.
-    JOB_CONTROL,
-    /// This job is disowned, and should be removed from the active jobs list.
-    DISOWN_REQUESTED,
-
-    JOB_FLAG_COUNT
-};
-
-template <>
-struct enum_info_t<job_flag_t> {
-    static constexpr auto count = job_flag_t::JOB_FLAG_COUNT;
-};
-
 typedef int job_id_t;
 job_id_t acquire_job_id(void);
 void release_job_id(job_id_t jobid);
@@ -384,15 +359,36 @@ class job_t {
     /// stops.
     struct termios tmodes {};
 
-    /// Bitset containing information about the job. A combination of the JOB_* constants.
-    enum_set_t<job_flag_t> flags{};
+    /// Flags associated with the job.
+    struct flags_t {
+        /// Whether the user has been told about stopped job.
+        bool notified{false};
 
-    // Get and set flags
-    bool get_flag(job_flag_t flag) const;
-    void set_flag(job_flag_t flag, bool set);
+        /// Whether this job is in the foreground.
+        bool foreground{false};
+
+        /// Whether the specified job is completely constructed, i.e. completely parsed, and every
+        /// process in the job has been forked, etc.
+        bool constructed{false};
+
+        /// Whether the exit status should be negated. This flag can only be set by the not builtin.
+        bool negate{false};
+
+        /// Whether the job is under job control, i.e. has its own pgrp.
+        bool job_control{false};
+
+        /// This job is disowned, and should be removed from the active jobs list.
+        bool disown_requested{false};
+    } job_flags{};
+
+    /// Access the job flags.
+    const flags_t &flags() const { return job_flags; }
+
+    /// Access mutable job flags.
+    flags_t &mut_flags() { return job_flags; }
 
     /// \return if we want job control.
-    bool wants_job_control() const { return get_flag(job_flag_t::JOB_CONTROL); }
+    bool wants_job_control() const { return flags().job_control; }
 
     /// \return if this job should own the terminal when it runs.
     bool should_claim_terminal() const { return properties.wants_terminal && is_foreground(); }
@@ -406,16 +402,16 @@ class job_t {
 
     // Helper functions to check presence of flags on instances of jobs
     /// The job has been fully constructed, i.e. all its member processes have been launched
-    bool is_constructed() const { return get_flag(job_flag_t::CONSTRUCTED); }
+    bool is_constructed() const { return flags().constructed; }
     /// The job was launched in the foreground and has control of the terminal
-    bool is_foreground() const { return get_flag(job_flag_t::FOREGROUND); }
+    bool is_foreground() const { return flags().foreground; }
     /// The job is complete, i.e. all its member processes have been reaped
     bool is_completed() const;
     /// The job is in a stopped state
     bool is_stopped() const;
     /// The job is OK to be externally visible, e.g. to the user via `jobs`
     bool is_visible() const {
-        return !is_completed() && is_constructed() && !get_flag(job_flag_t::DISOWN_REQUESTED);
+        return !is_completed() && is_constructed() && !flags().disown_requested;
     };
     bool skip_notification() const { return properties.skip_notification; }
     bool from_event_handler() const { return properties.from_event_handler; }

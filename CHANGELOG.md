@@ -79,6 +79,7 @@
   - `bosh` (#5700)
   - `camcontrol`
   - `cf` (#5700)
+  - `code` (#6205)
   - `csc` and `csi` (#6016)
   - `cwebp` (#6034)
   - `epkginfo` (#5829)

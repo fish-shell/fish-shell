@@ -1856,6 +1856,7 @@ Other help pages
 .. toctree::
    :maxdepth: 1
 
+   self
    commands
    design
    tutorial

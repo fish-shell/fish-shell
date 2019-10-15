@@ -29,6 +29,7 @@ def setup(app):
         os.path.join(this_dir, "fish_indent_lexer.py"), lexername="FishIndentLexer"
     )
     lexers["fish-docs-samples"] = fish_indent_lexer
+    app.add_css_file("custom.css")
 
 
 # The default language to assume

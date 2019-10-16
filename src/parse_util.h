@@ -58,8 +58,10 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
 /// \param a the start of the process
 /// \param b the end of the process
 /// \param tokens the tokens in the process
+/// \param tokens the token at or directly left of the cursor
 void parse_util_process_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **a,
-                               const wchar_t **b, std::vector<tok_t> *tokens);
+                               const wchar_t **b, std::vector<tok_t> *tokens,
+                               tok_t *token_at_cursor);
 
 /// Find the beginning and end of the job definition under the cursor
 ///

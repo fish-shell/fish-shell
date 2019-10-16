@@ -150,3 +150,29 @@ complete -C'for _ in ' | string collect >&- && echo completed some files
 # function; #5415
 complete -C'function : --arg'
 # CHECK: --argument-names	{{.*}}
+
+# Redirections and pipes
+complete -C'complete_test_pipe |'
+# CHECK: |	pipe stdout
+# CHECK: 2>|	pipe stderr
+# CHECK: &|	pipe stdout/stderr
+# CHECK: ||	"or" - run on failure
+complete -C'complete_test_redir1 >'
+# CHECK: >	write stdout to file
+# CHECK: >>	append stdout to file
+# CHECK: &>	write stdout/stderr to file
+# CHECK: &>>	append stdout/stderr to file
+# CHECK: >&2	redirect stdout to stderr
+# CHECK: 2>&1	redirect stderr to stdout
+# CHECK: 2>|	pipe stderr
+complete -C'complete_test_redir2 >>'
+# CHECK: >>	append stdout to file
+# CHECK: &>>	append stdout/stderr to file
+complete -C'complete_test_redir3 &'
+# CHECK: &	run job in background
+# CHECK: &&	"and" - run on success
+# CHECK: &>	write stdout/stderr to file
+# CHECK: &>>	append stdout/stderr to file
+# CHECK: >&2	redirect stdout to stderr
+# CHECK: 2>&1	redirect stderr to stdout
+# CHECK: &|	pipe stdout/stderr

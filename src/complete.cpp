@@ -386,7 +386,7 @@ class completer_t {
     void mark_completions_duplicating_arguments(const wcstring &prefix,
                                                 const std::vector<tok_t> &args);
 
-    bool try_complete_redirections_and_pipes();
+    bool try_complete_redirections_and_pipes(const tok_t &token_at_cursor);
 
    public:
     completer_t(const environment_t &vars, const std::shared_ptr<parser_t> &parser,
@@ -1457,6 +1457,56 @@ void completer_t::mark_completions_duplicating_arguments(const wcstring &prefix,
     }
 }
 
+bool completer_t::try_complete_redirections_and_pipes(const tok_t &token_at_cursor) {
+    static constexpr struct {
+        const wchar_t *value, *description;
+    } completion_literals[] = {
+        // clang-format off
+        {L"&", L"run job in background"},
+        {L"&&", L"\"and\" - run on success"},
+
+        {L">", L"write stdout to file"},
+        {L">>", L"append stdout to file"},
+        {L"&>", L"write stdout/stderr to file"},
+        {L"&>>", L"append stdout/stderr to file"},
+        {L">&2", L"redirect stdout to stderr"},
+        {L"2>&1", L"redirect stderr to stdout"},
+
+        {L"|", L"pipe stdout"},
+        {L"2>|", L"pipe stderr"},
+        {L"&|", L"pipe stdout/stderr"},
+        {L"||", L"\"or\" - run on failure"},
+        // clang-format on
+    };
+    // This function is only safe if there are no other completions because we modify
+    // completions.dest.
+    assert(empty());
+    // If there is a token at the cursor, there is definitely no unquoted |, &, or >
+    if (completions.dest.length) return false;
+    switch (token_at_cursor.type) {
+        case token_type_t::redirect:
+        case token_type_t::pipe:
+        case token_type_t::background:
+            break;
+        default:
+            return false;
+    }
+    wcstring token = token_at_cursor.get_source(cmd);
+    complete_flags_t the_flags =
+        COMPLETE_DONT_ESCAPE | COMPLETE_REPLACES_TOKEN | COMPLETE_DONT_SORT;
+    // The completions will replace the token left of the cursor.
+    for (size_t i = 0; i < sizeof(completion_literals) / sizeof(completion_literals[0]); i++) {
+        const auto &comp = completion_literals[i];
+        if (std::wcsstr(comp.value, token.c_str())) {
+            append_completion(&completions.choices, comp.value, comp.description, the_flags);
+        };
+    }
+    completions.dest.start -= token.size();
+    completions.dest.length += token.size();
+    assert(!empty());
+    return true;
+}
+
 void completer_t::perform() {
     const size_t cursor_pos = cmd.size();
 
@@ -1490,6 +1540,9 @@ void completer_t::perform() {
             if (!is_subcommand) break;
             tokens.erase(tokens.begin());
         };
+    }
+    if (!(flags & completion_request_t::autosuggestion)) {
+        if (try_complete_redirections_and_pipes(token_at_cursor)) return;
     }
     // Empty process (cursor is after one of ;, &, |, \n, &&, || modulo whitespace).
     if (tokens.empty()) {

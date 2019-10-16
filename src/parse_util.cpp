@@ -289,8 +289,8 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
 
 /// Get the beginning and end of the job or process definition under the cursor.
 static void job_or_process_extent(bool process, const wchar_t *buff, size_t cursor_pos,
-                                  const wchar_t **a, const wchar_t **b,
-                                  std::vector<tok_t> *tokens) {
+                                  const wchar_t **a, const wchar_t **b, std::vector<tok_t> *tokens,
+                                  tok_t *token_at_cursor) {
     assert(buff && "Null buffer");
     const wchar_t *begin = nullptr, *end = nullptr;
     int finished = 0;
@@ -314,6 +314,9 @@ static void job_or_process_extent(bool process, const wchar_t *buff, size_t curs
     while ((token = tok.next()) && !finished) {
         size_t tok_begin = token->offset;
 
+        if (token_at_cursor && token->location_in_or_at_end_of_source_range(pos)) {
+            *token_at_cursor = *token;
+        }
         switch (token->type) {
             case token_type_t::pipe: {
                 if (!process) {
@@ -345,12 +348,13 @@ static void job_or_process_extent(bool process, const wchar_t *buff, size_t curs
 }
 
 void parse_util_process_extent(const wchar_t *buff, size_t pos, const wchar_t **a,
-                               const wchar_t **b, std::vector<tok_t> *tokens) {
-    job_or_process_extent(true, buff, pos, a, b, tokens);
+                               const wchar_t **b, std::vector<tok_t> *tokens,
+                               tok_t *token_at_cursor) {
+    job_or_process_extent(true, buff, pos, a, b, tokens, token_at_cursor);
 }
 
 void parse_util_job_extent(const wchar_t *buff, size_t pos, const wchar_t **a, const wchar_t **b) {
-    job_or_process_extent(false, buff, pos, a, b, nullptr);
+    job_or_process_extent(false, buff, pos, a, b, nullptr, nullptr);
 }
 
 void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **tok_begin,

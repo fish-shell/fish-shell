@@ -1329,9 +1329,9 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
         completion_request_flags_t complete_flags = completion_request_t::autosuggestion;
         std::vector<completion_t> completions;
         complete(search_string, &completions, complete_flags, *vars, nullptr);
-        completions_sort_and_prioritize(&completions, complete_flags);
-        if (!completions.empty()) {
-            const completion_t &comp = completions.at(0);
+        completions_sort_and_prioritize(&completions.choices, complete_flags);
+        if (!completions.choices.empty()) {
+            const completion_t &comp = completions.choices.at(0);
             size_t cursor = cursor_pos;
             wcstring suggestion = completion_apply_to_command_line(
                 comp.completion, comp.flags, search_string, &cursor, true /* append only */);
@@ -1508,7 +1508,7 @@ bool reader_data_t::handle_completions(const std::vector<completion_t> &comp, si
     const wcstring tok(el->text.c_str() + token_begin, token_end - token_begin);
 
     // Check trivial cases.
-    size_t size = comp.size();
+    size_t size = comp.choices.size();
     if (size == 0) {
         // No suitable completions found, flash screen and return.
         flash();
@@ -1531,12 +1531,12 @@ bool reader_data_t::handle_completions(const std::vector<completion_t> &comp, si
         return success;
     }
 
-    fuzzy_match_type_t best_match_type = get_best_match_type(comp);
+    fuzzy_match_type_t best_match_type = get_best_match_type(comp.choices);
 
     // Determine whether we are going to replace the token or not. If any commands of the best
     // type do not require replacement, then ignore all those that want to use replacement.
     bool will_replace_token = true;
-    for (const completion_t &el : comp) {
+    for (const completion_t &el : comp.choices) {
         if (el.match.type <= best_match_type && !(el.flags & COMPLETE_REPLACES_TOKEN)) {
             will_replace_token = false;
             break;
@@ -1546,7 +1546,7 @@ bool reader_data_t::handle_completions(const std::vector<completion_t> &comp, si
     // Decide which completions survived. There may be a lot of them; it would be nice if we could
     // figure out how to avoid copying them here.
     std::vector<completion_t> surviving_completions;
-    for (const completion_t &el : comp) {
+    for (const completion_t &el : comp.choices) {
         // Ignore completions with a less suitable match type than the best.
         if (el.match.type > best_match_type) continue;
 
@@ -2572,7 +2572,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 if (token_end > buff + el->text.size()) token_end = buff + el->text.size();
 
                 // Munge our completions.
-                completions_sort_and_prioritize(&rls.comp);
+                completions_sort_and_prioritize(&rls.comp.choices);
 
                 // Record our cycle_command_line.
                 cycle_command_line = el->text;

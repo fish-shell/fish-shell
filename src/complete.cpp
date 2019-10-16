@@ -560,7 +560,7 @@ void completer_t::complete_strings(const wcstring &wc_escaped, const description
     for (const auto &comp : possible_comp) {
         const wcstring &comp_str = comp.completion;
         if (!comp_str.empty()) {
-            wildcard_complete(comp_str, wc.c_str(), desc_func, &this->completions,
+            wildcard_complete(comp_str, wc.c_str(), desc_func, &this->completions.choices,
                               this->expand_flags(), flags);
         }
     }
@@ -590,7 +590,7 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
     }
 
     bool skip = true;
-    for (const auto &c : completions) {
+    for (const auto &c : completions.choices) {
         if (c.completion.empty() || (c.completion[c.completion.size() - 1] != L'/')) {
             skip = false;
             break;
@@ -639,7 +639,7 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
         //
         // This needs to do a reallocation for every description added, but there shouldn't be that
         // many completions, so it should be ok.
-        for (auto &completion : completions) {
+        for (auto &completion : completions.choices) {
             const wcstring &el = completion.completion;
             if (el.empty()) continue;
 
@@ -677,7 +677,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd) {
 
     // Append all possible executables
     expand_result_t result =
-        expand_string(str_cmd, &this->completions,
+        expand_string(str_cmd, &this->completions.choices,
                       this->expand_flags() | expand_flag::special_for_command |
                           expand_flag::for_completions | expand_flag::executables_only,
                       vars, parser, NULL);
@@ -690,7 +690,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd) {
     expand_result_t ignore =
         // Append all matching directories
         expand_string(
-            str_cmd, &this->completions,
+            str_cmd, &this->completions.choices,
             this->expand_flags() | expand_flag::for_completions | expand_flag::directories_only,
             vars, parser, NULL);
     UNUSED(ignore);
@@ -1046,7 +1046,7 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
                 // It's a match.
                 wcstring desc = o.localized_desc();
                 // Append a short-style option
-                append_completion(&this->completions, o.option, std::move(desc), 0);
+                append_completion(&this->completions.choices, o.option, std::move(desc), 0);
             }
 
             // Check if the long style option matches.
@@ -1087,11 +1087,13 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
                 // functions.
                 wcstring completion = format_string(L"%ls=", whole_opt.c_str() + offset);
                 // Append a long-style option with a mandatory trailing equal sign
-                append_completion(&this->completions, std::move(completion), C_(o.desc), flags);
+                append_completion(&this->completions.choices, std::move(completion), C_(o.desc),
+                                  flags);
             }
 
             // Append a long-style option
-            append_completion(&this->completions, whole_opt.substr(offset), C_(o.desc), flags);
+            append_completion(&this->completions.choices, whole_opt.substr(offset), C_(o.desc),
+                              flags);
         }
     }
 
@@ -1146,8 +1148,8 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
         for (completion_t &comp : local_completions) {
             comp.prepend_token_prefix(prefix_with_sep);
         }
-        this->completions.insert(this->completions.end(), local_completions.begin(),
-                                 local_completions.end());
+        this->completions.choices.insert(this->completions.choices.end(), local_completions.begin(),
+                                         local_completions.end());
     }
 
     if (complete_from_start) {
@@ -1155,7 +1157,7 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
         // consider relaxing this if there was a preceding double-dash argument.
         if (string_prefixes_string(L"-", str)) flags.clear(expand_flag::fuzzy_match);
 
-        if (expand_string(str, &this->completions, flags, vars, parser, NULL) ==
+        if (expand_string(str, &this->completions.choices, flags, vars, parser, NULL) ==
             expand_result_t::error) {
             debug(3, L"Error while expanding string '%ls'", str.c_str());
         }
@@ -1201,7 +1203,7 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
         }
 
         // Append matching environment variables
-        append_completion(&this->completions, std::move(comp), desc, flags, match);
+        append_completion(&this->completions.choices, std::move(comp), desc, flags, match);
 
         res = true;
     }
@@ -1305,13 +1307,14 @@ bool completer_t::try_complete_user(const wcstring &str) {
         if (std::wcsncmp(user_name, pw_name, name_len) == 0) {
             wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
             // Append a user name
-            append_completion(&this->completions, &pw_name[name_len], desc, COMPLETE_NO_SPACE);
+            append_completion(&this->completions.choices, &pw_name[name_len], desc,
+                              COMPLETE_NO_SPACE);
             result = true;
         } else if (wcsncasecmp(user_name, pw_name, name_len) == 0) {
             wcstring name = format_string(L"~%ls", pw_name);
             wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
             // Append a user name
-            append_completion(&this->completions, name, desc,
+            append_completion(&this->completions.choices, name, desc,
                               COMPLETE_REPLACES_TOKEN | COMPLETE_DONT_ESCAPE | COMPLETE_NO_SPACE);
             result = true;
         }
@@ -1411,7 +1414,7 @@ void completer_t::escape_opening_brackets(const wcstring &argument) {
     // unescaped version.
     wcstring unescaped_argument;
     if (!unescape_string(argument, &unescaped_argument, UNESCAPE_INCOMPLETE)) return;
-    for (completion_t &comp : completions) {
+    for (completion_t &comp : completions.choices) {
         if (comp.flags & COMPLETE_REPLACES_TOKEN) continue;
         comp.flags |= COMPLETE_REPLACES_TOKEN;
         if (comp.flags & COMPLETE_DONT_ESCAPE) {
@@ -1439,7 +1442,7 @@ void completer_t::mark_completions_duplicating_arguments(const wcstring &prefix,
     std::sort(arg_strs.begin(), arg_strs.end());
 
     wcstring comp_str;
-    for (completion_t &comp : completions) {
+    for (completion_t &comp : completions.choices) {
         comp_str = comp.completion;
         if (!(comp.flags & COMPLETE_REPLACES_TOKEN)) {
             comp_str.insert(0, prefix);

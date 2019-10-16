@@ -351,8 +351,8 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             complete(do_complete_param, &comp, completion_request_t::fuzzy_match, parser.vars(),
                      parser.shared());
 
-            for (size_t i = 0; i < comp.size(); i++) {
-                const completion_t &next = comp.at(i);
+            for (size_t i = 0; i < comp.choices.size(); i++) {
+                const completion_t &next = comp.choices.at(i);
 
                 // Make a fake commandline, and then apply the completion to it.
                 const wcstring faux_cmdline = token;

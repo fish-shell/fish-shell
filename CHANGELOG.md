@@ -39,6 +39,7 @@
 - The default read limit has been increased to 100MiB (#5267).
 - `math` now also understands `x` for multiplication, provided it is followed by whitespace (#5906).
 - `functions --erase` now also prevents fish from autoloading a function for the first time (#5951).
+- `pacman -U` now also supports the completion of zstd compressed packages (#6212).
 
 ### Interactive improvements
 - fish only parses `/etc/paths` on macOS in login shells, matching the bash implementation (#5637) and avoiding changes to path ordering in child shells (#5456).
@@ -98,7 +99,6 @@
   - `tsc` (#6016)
   - `vbc` (#6016)
 - Lots of improvements to completions.
-  - `pacman` (#6212)
 
 ## Deprecations
 - The vcs-prompt functions have been promoted to names without double-underscore, so __fish_git_prompt is now fish_git_prompt, __fish_vcs_prompt is now fish_vcs_prompt, __fish_hg_prompt is now fish_hg_prompt and __fish_svn_prompt is now fish_svn_prompt. Shims at the old names have been added, and the variables have kept their old names (#5586).

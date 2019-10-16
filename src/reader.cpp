@@ -373,6 +373,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// The output of the last evaluation of the right prompt command.
     wcstring right_prompt_buff;
     /// Completion support.
+    source_range_t dest;
     wcstring cycle_command_line;
     size_t cycle_cursor_pos{0};
     /// Color is the syntax highlighting for buff.  The format is that color[i] is the
@@ -462,7 +463,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
 
     void mark_repaint_needed() { repaint_needed = true; }
 
-    void completion_insert(const wchar_t *val, size_t token_end, complete_flags_t flags);
+    void completion_insert(const wchar_t *val, const completion_result_t &comp,
+                           complete_flags_t flags);
 
     bool can_autosuggest() const;
     void autosuggest_completed(autosuggestion_result_t result);
@@ -478,8 +480,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el,
               wchar_t target);
 
-    bool handle_completions(const std::vector<completion_t> &comp, size_t token_begin,
-                            size_t token_end, bool cont_after_prefix_insertion);
+    bool handle_completions(const completion_result_t &comp, bool cont_after_prefix_insertion);
 
     void sanity_check() const;
     void set_command_line_and_position(editable_line_t *el, const wcstring &new_str, size_t pos);
@@ -725,7 +726,7 @@ void reader_data_t::pager_selection_changed() {
     } else {
         new_cmd_line =
             completion_apply_to_command_line(completion->completion, completion->flags,
-                                             this->cycle_command_line, &cursor_pos, false);
+                                             this->cycle_command_line, &cursor_pos, dest, false);
     }
     set_buffer_maintaining_pager(new_cmd_line, cursor_pos);
 
@@ -1147,13 +1148,14 @@ bool reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
 /// \param command_line The command line into which we will insert
 /// \param inout_cursor_pos On input, the location of the cursor within the command line. On output,
 /// the new desired position.
+/// \param dest The source range withing the commandline where the completion should be applied.
 /// \param append_only Whether we can only append to the command line, or also modify previous
 /// characters. This is used to determine whether we go inside a trailing quote.
 ///
 /// \return The completed string
 wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t flags,
                                           const wcstring &command_line, size_t *inout_cursor_pos,
-                                          bool append_only) {
+                                          source_range_t dest, bool append_only) {
     bool add_space = !bool(flags & COMPLETE_NO_SPACE);
     bool do_replace = bool(flags & COMPLETE_REPLACES_TOKEN);
     bool do_escape = !bool(flags & COMPLETE_DONT_ESCAPE);
@@ -1165,13 +1167,8 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
 
     if (do_replace) {
         size_t move_cursor;
-        const wchar_t *begin, *end;
 
-        const wchar_t *buff = command_line.c_str();
-        parse_util_token_extent(buff, cursor_pos, &begin, 0, 0, 0);
-        end = buff + cursor_pos;
-
-        wcstring sb(buff, begin - buff);
+        wcstring sb = command_line.substr(0, dest.start);
 
         if (do_escape) {
             wcstring escaped = escape_string(
@@ -1187,9 +1184,9 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
             if (!have_space_after_token) sb.append(L" ");
             move_cursor += 1;
         }
-        sb.append(end);
+        sb.append(command_line.begin() + dest.start + dest.length, command_line.end());
 
-        size_t new_cursor_pos = (begin - buff) + move_cursor;
+        size_t new_cursor_pos = dest.start + move_cursor;
         *inout_cursor_pos = new_cursor_pos;
         return sb;
     }
@@ -1197,18 +1194,11 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
     wchar_t quote = L'\0';
     wcstring replaced;
     if (do_escape) {
-        // We need to figure out whether the token we complete has unclosed quotes. Since the token
-        // may be inside a command substitutions we must first determine the extents of the
-        // innermost command substitution.
-        const wchar_t *cmdsub_begin, *cmdsub_end;
-        parse_util_cmdsubst_extent(command_line.c_str(), cursor_pos, &cmdsub_begin, &cmdsub_end);
-        size_t cmdsub_offset = cmdsub_begin - command_line.c_str();
-        // Find the last quote in the token to complete. By parsing only the string inside any
-        // command substitution, we prevent the tokenizer from treating the entire command
-        // substitution as one token.
-        parse_util_get_parameter_info(
-            command_line.substr(cmdsub_offset, (cmdsub_end - cmdsub_begin)),
-            cursor_pos - cmdsub_offset, &quote, NULL, NULL);
+        // We need to figure out whether the token we complete has unclosed quotes.
+        // Find the last quote in the token to complete.
+        parse_util_get_parameter_info(command_line.substr(dest.start, dest.length),
+                                      cursor_pos < dest.start ? 0 : cursor_pos - dest.start, &quote,
+                                      NULL, NULL);
 
         // If the token is reported as unquoted, but ends with a (unescaped) quote, and we can
         // modify the command line, then delete the trailing quote so that we can insert within
@@ -1258,18 +1248,19 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
 /// \param token_end the position after the token to complete
 /// \param flags A union of all flags describing the completion to insert. See the completion_t
 /// struct for more information on possible values.
-void reader_data_t::completion_insert(const wchar_t *val, size_t token_end,
+void reader_data_t::completion_insert(const wchar_t *val, const completion_result_t &comp,
                                       complete_flags_t flags) {
     editable_line_t *el = active_edit_line();
 
     // Move the cursor to the end of the token.
-    if (el->position != token_end) {
-        update_buff_pos(el, token_end);  // repaint() is done later
+    auto dest_end = comp.dest.start + comp.dest.length;
+    if (el->position != dest_end) {
+        update_buff_pos(el, dest_end);  // repaint() is done later
     }
 
     size_t cursor = el->position;
-    wcstring new_command_line = completion_apply_to_command_line(val, flags, el->text, &cursor,
-                                                                 false /* not append only */);
+    wcstring new_command_line = completion_apply_to_command_line(
+        val, flags, el->text, &cursor, comp.dest, false /* not append only */);
     set_buffer_maintaining_pager(new_command_line, cursor);
 }
 
@@ -1327,14 +1318,15 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
 
         // Try normal completions.
         completion_request_flags_t complete_flags = completion_request_t::autosuggestion;
-        std::vector<completion_t> completions;
+        completion_result_t completions;
         complete(search_string, &completions, complete_flags, *vars, nullptr);
         completions_sort_and_prioritize(&completions.choices, complete_flags);
         if (!completions.choices.empty()) {
             const completion_t &comp = completions.choices.at(0);
             size_t cursor = cursor_pos;
-            wcstring suggestion = completion_apply_to_command_line(
-                comp.completion, comp.flags, search_string, &cursor, true /* append only */);
+            wcstring suggestion =
+                completion_apply_to_command_line(comp.completion, comp.flags, search_string,
+                                                 &cursor, completions.dest, true /* append only */);
             return {std::move(suggestion), search_string};
         }
 
@@ -1492,20 +1484,18 @@ static fuzzy_match_type_t get_best_match_type(const std::vector<completion_t> &c
 /// show less than a screenfull and exit or use an interactive pager to allow the user to scroll
 /// through the completions.
 ///
-/// \param comp the list of completion strings
-/// \param token_begin the position of the token to complete
-/// \param token_end the position after the token to complete
+/// \param comp The available completion strings
 /// \param cont_after_prefix_insertion If we have a shared prefix, whether to print the list of
 /// completions after inserting it.
 ///
 /// Return true if we inserted text into the command line, false if we did not.
-bool reader_data_t::handle_completions(const std::vector<completion_t> &comp, size_t token_begin,
-                                       size_t token_end, bool cont_after_prefix_insertion) {
+bool reader_data_t::handle_completions(const completion_result_t &comp,
+                                       bool cont_after_prefix_insertion) {
     bool done = false;
     bool success = false;
     const editable_line_t *el = &command_line;
 
-    const wcstring tok(el->text.c_str() + token_begin, token_end - token_begin);
+    const wcstring tok = el->text.substr(comp.dest.start, comp.dest.length);
 
     // Check trivial cases.
     size_t size = comp.choices.size();
@@ -1516,12 +1506,13 @@ bool reader_data_t::handle_completions(const std::vector<completion_t> &comp, si
         success = false;
     } else if (size == 1) {
         // Exactly one suitable completion found - insert it.
-        const completion_t &c = comp.at(0);
+        const completion_t &c = comp.choices.at(0);
 
         // If this is a replacement completion, check that we know how to replace it, e.g. that
         // the token doesn't contain evil operators like {}.
+        // TODO this shouldn't be necessary anymore
         if (!(c.flags & COMPLETE_REPLACES_TOKEN) || reader_can_replace(tok, c.flags)) {
-            completion_insert(c.completion.c_str(), token_end, c.flags);
+            completion_insert(c.completion.c_str(), comp, c.flags);
         }
         done = true;
         success = true;
@@ -1610,7 +1601,7 @@ bool reader_data_t::handle_completions(const std::vector<completion_t> &comp, si
             // We got something. If more than one completion contributed, then it means we have
             // a prefix; don't insert a space after it.
             if (prefix_is_partial_completion) flags |= COMPLETE_NO_SPACE;
-            completion_insert(common_prefix.c_str(), token_end, flags);
+            completion_insert(common_prefix.c_str(), comp, flags);
             success = true;
         }
     }
@@ -2377,8 +2368,8 @@ struct readline_loop_state_t {
     /// If set, it means nothing has been inserted into the command line via completion machinery.
     bool comp_empty{true};
 
-    /// List of completions.
-    std::vector<completion_t> comp;
+    /// Available completions.
+    completion_result_t comp;
 
     /// Whether we are skipping redundant repaints.
     bool coalescing_repaints = false;
@@ -2535,52 +2526,33 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                     remove_backward();
                 }
 
-                // Get the string; we have to do this after removing any trailing backslash.
-                const wchar_t *const buff = el->text.c_str();
-
                 // Clear the completion list.
-                rls.comp.clear();
+                rls.comp.choices.clear();
+                rls.comp.dest.start = -1;   // TODO
+                rls.comp.dest.length = -1;  // TODO
 
-                // Figure out the extent of the command substitution surrounding the cursor.
-                // This is because we only look at the current command substitution to form
-                // completions - stuff happening outside of it is not interesting.
-                const wchar_t *cmdsub_begin, *cmdsub_end;
-                parse_util_cmdsubst_extent(buff, el->position, &cmdsub_begin, &cmdsub_end);
-
-                // Figure out the extent of the token within the command substitution. Note we
-                // pass cmdsub_begin here, not buff.
-                const wchar_t *token_begin, *token_end;
-                parse_util_token_extent(cmdsub_begin, el->position - (cmdsub_begin - buff),
-                                        &token_begin, &token_end, 0, 0);
-
-                // Hack: the token may extend past the end of the command substitution, e.g. in
-                // (echo foo) the last token is 'foo)'. Don't let that happen.
-                if (token_end > cmdsub_end) token_end = cmdsub_end;
-
-                // Construct a copy of the string from the beginning of the command substitution
-                // up to the end of the token we're completing.
-                const wcstring buffcpy = wcstring(cmdsub_begin, token_end);
-
-                // std::fwprintf(stderr, L"Complete (%ls)\n", buffcpy.c_str());
                 completion_request_flags_t complete_flags = {completion_request_t::descriptions,
                                                              completion_request_t::fuzzy_match};
-                complete_func(buffcpy, &rls.comp, complete_flags, vars, parser_ref);
+                complete_func(el->text, &rls.comp, complete_flags, vars, parser_ref);
 
+                // TODO SANITIZE
                 // User-supplied completions may have changed the commandline - prevent buffer
                 // overflow.
-                if (token_begin > buff + el->text.size()) token_begin = buff + el->text.size();
-                if (token_end > buff + el->text.size()) token_end = buff + el->text.size();
+                auto &d = rls.comp.dest;
+                if (d.start > el->text.size()) d.start = el->text.size();
+                if (d.start + d.length > el->text.size()) d.length = el->text.size() - d.start;
 
                 // Munge our completions.
                 completions_sort_and_prioritize(&rls.comp.choices);
 
                 // Record our cycle_command_line.
+                // dest = rls.comp.dest;
+                dest = rls.comp.dest;
                 cycle_command_line = el->text;
-                cycle_cursor_pos = token_end - buff;
+                cycle_cursor_pos = dest.start + dest.length;
 
                 bool cont_after_prefix_insertion = (c == rl::complete_and_search);
-                rls.comp_empty = handle_completions(rls.comp, token_begin - buff, token_end - buff,
-                                                    cont_after_prefix_insertion);
+                rls.comp_empty = handle_completions(rls.comp, cont_after_prefix_insertion);
 
                 // Show the search field if requested and if we printed a list of completions.
                 if (c == rl::complete_and_search && !rls.comp_empty && !pager.empty()) {
@@ -3218,6 +3190,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     // The command line before completion.
     cycle_command_line.clear();
     cycle_cursor_pos = 0;
+    dest.start = dest.length = -1;  // invalidate
 
     history_search.reset();
 

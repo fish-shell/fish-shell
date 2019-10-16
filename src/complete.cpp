@@ -310,14 +310,14 @@ class completer_t {
     /// If null, these features are disabled.
     std::shared_ptr<parser_t> parser;
 
-    /// The command to complete.
-    const wcstring cmd;
+    /// The command to complete. The cursor is at the end.
+    const wcstring &cmd;
 
     /// Flags associated with the completion request.
     const completion_request_flags_t flags;
 
     /// The output completions.
-    std::vector<completion_t> completions;
+    completion_result_t completions;
 
     /// Table of completions conditions that have already been tested and the corresponding test
     /// results.
@@ -379,21 +379,25 @@ class completer_t {
         return result;
     }
 
-    bool empty() const { return completions.empty(); }
+    bool empty() const { return completions.choices.empty(); }
 
     void escape_opening_brackets(const wcstring &argument);
 
     void mark_completions_duplicating_arguments(const wcstring &prefix,
                                                 const std::vector<tok_t> &args);
 
+    bool try_complete_redirections_and_pipes();
+
    public:
-    completer_t(const environment_t &vars, const std::shared_ptr<parser_t> &parser, wcstring c,
-                completion_request_flags_t f)
-        : vars(vars), parser(parser), cmd(std::move(c)), flags(f) {}
+    completer_t(const environment_t &vars, const std::shared_ptr<parser_t> &parser,
+                const wcstring &commandline, completion_request_flags_t f)
+        : vars(vars), parser(parser), cmd(commandline), flags(f) {
+        completions.dest.start = completions.dest.length = -1;
+    }
 
     void perform();
 
-    std::vector<completion_t> acquire_completions() { return std::move(completions); }
+    completion_result_t acquire_completions() { return std::move(completions); }
 };
 
 // Autoloader for completions.
@@ -1466,7 +1470,12 @@ void completer_t::perform() {
 
     // Get all the arguments.
     std::vector<tok_t> tokens;
-    parse_util_process_extent(cmd.c_str(), position_in_statement, nullptr, nullptr, &tokens);
+    tok_t token_at_cursor{token_type_t::error};
+    parse_util_process_extent(cmd.c_str(), cursor_pos, nullptr, nullptr, &tokens, &token_at_cursor);
+    const wchar_t *token_begin;
+    parse_util_token_extent(cmd.c_str(), cursor_pos, &token_begin, nullptr, nullptr, nullptr);
+    completions.dest.start = static_cast<uint32_t>(token_begin - cmd.c_str());
+    completions.dest.length = cmd.size() - completions.dest.start;
 
     // Hack: fix autosuggestion by removing prefixing "and"s #6249.
     if (flags & completion_request_t::autosuggestion) {
@@ -1601,18 +1610,17 @@ void completer_t::perform() {
     mark_completions_duplicating_arguments(current_token, tokens);
 }
 
-void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_comps,
+void complete(const wcstring &commandline, completion_result_t *out_comps,
               completion_request_flags_t flags, const environment_t &vars,
               const std::shared_ptr<parser_t> &parser) {
     // Determine the innermost subcommand.
-    const wchar_t *cmdsubst_begin, *cmdsubst_end;
-    parse_util_cmdsubst_extent(cmd_with_subcmds.c_str(), cmd_with_subcmds.size(), &cmdsubst_begin,
-                               &cmdsubst_end);
-    assert(cmdsubst_begin != NULL && cmdsubst_end != NULL && cmdsubst_end >= cmdsubst_begin);
-    wcstring cmd = wcstring(cmdsubst_begin, cmdsubst_end - cmdsubst_begin);
-    completer_t completer(vars, parser, std::move(cmd), flags);
+    const wchar_t *cmdsubst_begin;
+    parse_util_cmdsubst_extent(commandline.c_str(), commandline.size(), &cmdsubst_begin, nullptr);
+    wcstring cmd = cmdsubst_begin;
+    completer_t completer(vars, parser, cmd, flags);
     completer.perform();
     *out_comps = completer.acquire_completions();
+    out_comps->dest.start += cmdsubst_begin - commandline.c_str();
 }
 
 /// Print the short switch \c opt, and the argument \c arg to the specified

@@ -326,10 +326,6 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             do_complete_param = cmd;
         }
-        const wchar_t *token;
-
-        parse_util_token_extent(do_complete_param.c_str(), do_complete_param.size(), &token, 0, 0,
-                                0);
 
         // Create a scoped transient command line, so that builtin_commandline will see our
         // argument, not the reader buffer.
@@ -347,7 +343,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 	    if (!have_do_complete_param)
                 parser.libdata().builtin_complete_current_commandline = true;
 
-            std::vector<completion_t> comp;
+            completion_result_t comp;
             complete(do_complete_param, &comp, completion_request_t::fuzzy_match, parser.vars(),
                      parser.shared());
 
@@ -355,10 +351,11 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 const completion_t &next = comp.choices.at(i);
 
                 // Make a fake commandline, and then apply the completion to it.
-                const wcstring faux_cmdline = token;
+                const wcstring faux_cmdline = do_complete_param.substr(comp.dest.start);
                 size_t tmp_cursor = faux_cmdline.size();
+                source_range_t dest{0, comp.dest.length};
                 wcstring faux_cmdline_with_completion = completion_apply_to_command_line(
-                    next.completion, next.flags, faux_cmdline, &tmp_cursor, false);
+                    next.completion, next.flags, faux_cmdline, &tmp_cursor, dest, false);
 
                 // completion_apply_to_command_line will append a space unless COMPLETE_NO_SPACE
                 // is set. We don't want to set COMPLETE_NO_SPACE because that won't close

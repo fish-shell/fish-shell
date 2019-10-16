@@ -2871,8 +2871,16 @@ static void test_1_completion(wcstring line, const wcstring &completion, complet
     expected.erase(out_cursor_pos, 1);
 
     size_t cursor_pos = in_cursor_pos;
+    // Determine the innermost subcommand.
+    const wchar_t *cmdsubst_begin, *token_begin;
+    parse_util_cmdsubst_extent(line.c_str(), cursor_pos, &cmdsubst_begin, nullptr);
+    // Figure out the extent of the token to complete within the command substitution.
+    parse_util_token_extent(cmdsubst_begin, cursor_pos - (cmdsubst_begin - line.c_str()),
+                            &token_begin, nullptr, nullptr, nullptr);
+    source_range_t dest = {static_cast<uint32_t>(token_begin - line.c_str()), 0};  // TODO
+    dest.length = line.size() - dest.start;
     wcstring result =
-        completion_apply_to_command_line(completion, flags, line, &cursor_pos, append_only);
+        completion_apply_to_command_line(completion, flags, line, &cursor_pos, dest, append_only);
     if (result != expected) {
         std::fwprintf(stderr, L"line %ld: %ls + %ls -> [%ls], expected [%ls]\n", source_line,
                       line.c_str(), completion.c_str(), result.c_str(), expected.c_str());
@@ -2917,7 +2925,7 @@ static void test_completion_insertions() {
 
 static void perform_one_autosuggestion_cd_test(const wcstring &command, const wcstring &expected,
                                                const environment_t &vars, long line) {
-    std::vector<completion_t> comps;
+    completion_result_t comps;
     complete(command, &comps, completion_request_t::autosuggestion, vars, nullptr);
 
     bool expects_error = (expected == L"<error>");

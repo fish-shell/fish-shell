@@ -147,7 +147,7 @@ void reader_push(parser_t &parser, const wcstring &name);
 void reader_pop();
 
 /// Specify function to use for finding possible tab completions.
-typedef void (*complete_function_t)(const wcstring &, std::vector<completion_t> *,
+typedef void (*complete_function_t)(const wcstring &, completion_result_t *,
                                     completion_request_flags_t, const environment_t &,
                                     const std::shared_ptr<parser_t> &parser);
 void reader_set_complete_function(complete_function_t);
@@ -217,10 +217,11 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
 maybe_t<wcstring> reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t cursor_pos,
                                                         const environment_t &vars);
 
+struct source_range_t;
 /// Apply a completion string. Exposed for testing only.
 wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flags_t flags,
                                           const wcstring &command_line, size_t *inout_cursor_pos,
-                                          bool append_only);
+                                          source_range_t dest, bool append_only);
 
 /// Print warning with list of backgrounded jobs
 void reader_bg_job_warning(const parser_t &parser);

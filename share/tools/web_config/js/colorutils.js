@@ -279,6 +279,42 @@ var TomorrowTheme = {
     }
 }
 
+var nord = {
+    nord0: '2e3440',
+    nord1: '3b4252',
+    nord2: '434c5e',
+    nord3: '4c566a',
+    nord4: 'd8dee9',
+    nord5: 'e5e9f0',
+    nord6: 'eceff4',
+    nord7: '8fbcbb',
+    nord8: '88c0d0',
+    nord9: '81a1c1',
+    nord10: '5e81ac',
+    nord11: 'bf616a',
+    nord12: 'd08770',
+    nord13: 'ebcb8b',
+    nord14: 'a3be8c',
+    nord15: 'b48ead',
+};
+
+var color_scheme_nord = {
+    name: "Nord",
+    colors: dict_values(nord),
+
+    preferred_background: '#' + nord.nord0,
+
+    autosuggestion: nord.nord3,
+    command: nord.nord9,
+    comment: nord.nord2,
+    end: nord.nord8,
+    error: nord.nord13,
+    param: nord.nord6,
+    quote: nord.nord14,
+    redirection: nord.nord15,
+
+    url: 'http://www.nordtheme.com/'
+};
 
 var solarized = {
     base03: '002b36', base02: '073642', base01: '586e75', base00: '657b83', base0: '839496', base1: '93a1a1', base2: 'eee8d5', base3: 'fdf6e3', yellow: 'b58900', orange: 'cb4b16', red: 'dc322f', magenta: 'd33682', violet: '6c71c4', blue: '268bd2', cyan: '2aa198', green: '859900'

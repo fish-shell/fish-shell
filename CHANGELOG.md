@@ -98,6 +98,7 @@
   - `tsc` (#6016)
   - `vbc` (#6016)
 - Lots of improvements to completions.
+  - `pacman` (#6212)
 
 ## Deprecations
 - The vcs-prompt functions have been promoted to names without double-underscore, so __fish_git_prompt is now fish_git_prompt, __fish_vcs_prompt is now fish_vcs_prompt, __fish_hg_prompt is now fish_hg_prompt and __fish_svn_prompt is now fish_svn_prompt. Shims at the old names have been added, and the variables have kept their old names (#5586).

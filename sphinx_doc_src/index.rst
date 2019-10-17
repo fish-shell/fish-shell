@@ -504,7 +504,7 @@ Help on a specific builtin can also be obtained with the ``-h`` parameter. For i
 Autosuggestions
 ===============
 
-fish suggests commands as you type, based on command history, completions, and valid file paths. As you type commands, you will see a suggestion offered after the cursor, in a muted gray color (which can be changed with the ``fish_color_autosuggestion`` variable).
+fish suggests commands as you type, based on `command history <#history-search>`_, completions, and valid file paths. As you type commands, you will see a suggestion offered after the cursor, in a muted gray color (which can be changed with the ``fish_color_autosuggestion`` variable).
 
 To accept the autosuggestion (replacing the command line contents), press right arrow or :kbd:`Control+F`. To accept the first suggested word, press :kbd:`Alt+→,Right` or :kbd:`Alt+F`. If the autosuggestion is not what you want, just ignore it: it won't execute unless you accept it.
 
@@ -1397,7 +1397,7 @@ For a list of all builtins, functions and commands shipped with fish, see the :r
 Command line editor
 ===================
 
-The ``fish`` editor features copy and paste, a searchable history and many editor functions that can be bound to special keyboard shortcuts.
+The ``fish`` editor features copy and paste, a `searchable history <#history-search>`_ and many editor functions that can be bound to special keyboard shortcuts.
 
 Similar to bash, fish has Emacs and Vi editing modes. The default editing mode is Emacs. You can switch to Vi mode with ``fish_vi_key_bindings`` and switch back with ``fish_default_key_bindings``. You can also make your own key bindings by creating a function and setting $fish_key_bindings to its name. For example::
 
@@ -1424,9 +1424,9 @@ Some bindings are shared between emacs- and vi-mode because they aren't text edi
 
 - :kbd:`Shift,←,Left` and :kbd:`Shift,→,Right` move the cursor one word left or right, without stopping on punctuation.
 
-- :kbd:`↑` (Up) and :kbd:`↓` (Down) (or :kbd:`Control+P` and :kbd:`Control+N` for emacs aficionados) search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the `history <#history>`_ section for more information on history searching.
+- :kbd:`↑` (Up) and :kbd:`↓` (Down) (or :kbd:`Control+P` and :kbd:`Control+N` for emacs aficionados) search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the `history <#history-search>`_ section for more information on history searching.
 
-- :kbd:`Alt+↑,Up` and :kbd:`Alt+↓,Down` search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the `history <#history>`_ section for more information on history searching.
+- :kbd:`Alt+↑,Up` and :kbd:`Alt+↓,Down` search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the `history <#history-search>`_ section for more information on history searching.
 
 - :kbd:`Control+C` cancels the entire line.
 
@@ -1551,7 +1551,7 @@ Command mode is also known as normal mode.
 
 - :kbd:`u` search history backwards.
 
-- :kbd:`[` and :kbd:`]` search the command history for the previous/next token containing the token under the cursor before the search was started. See the `history <#history>`_ section for more information on history searching.
+- :kbd:`[` and :kbd:`]` search the command history for the previous/next token containing the token under the cursor before the search was started. See the `history <#history-search>`_ section for more information on history searching.
 
 - :kbd:`Backspace` moves the cursor left.
 
@@ -1606,6 +1606,8 @@ The command history is stored in the file ``~/.local/share/fish/fish_history`` (
 ``$XDG_DATA_HOME/fish/fish_history`` if that variable is set) by default. However, you can set the
 ``fish_history`` environment variable to change the name of the history session (resulting in a
 ``<session>_history`` file); both before starting the shell and while the shell is running.
+
+See the :ref:`history <cmd-history>` command for other manipulations.
 
 Examples:
 

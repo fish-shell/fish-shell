@@ -323,12 +323,14 @@ static void job_or_process_extent(const wchar_t *buff, size_t cursor_pos, const 
                 }
                 /* FALLTHROUGH */
                 case token_type_t::end:
-                case token_type_t::background: {
+                case token_type_t::background:
+                case token_type_t::andand:
+                case token_type_t::oror: {
                     if (tok_begin >= pos) {
                         finished = 1;
                         if (b) *b = (wchar_t *)begin + tok_begin;
                     } else {
-                        if (a) *a = (wchar_t *)begin + tok_begin + 1;
+                        if (a) *a = (wchar_t *)begin + tok_begin + token->length;
                     }
                     break;
                 }

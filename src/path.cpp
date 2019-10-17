@@ -161,8 +161,7 @@ maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
                                   const environment_t &env_vars) {
     int err = ENOENT;
     if (dir.empty()) return none();
-
-    assert(wd.empty() || wd.back() == L'/');
+    assert(!wd.empty() && wd.back() == L'/');
     wcstring_list_t paths;
     if (dir.at(0) == L'/') {
         // Absolute path.
@@ -181,14 +180,16 @@ maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
         cdpathsv.push_back(L".");
         for (wcstring next_path : cdpathsv) {
             if (next_path.empty()) next_path = L".";
-            if (next_path == L"." && !wd.empty()) {
+            if (next_path == L".") {
                 // next_path is just '.', and we have a working directory, so use the wd instead.
                 next_path = wd;
             }
 
-            // If next_path starts with ./ we need to replace the . with the wd.
-            if (string_prefixes_string(L"./", next_path) && !wd.empty()) {
+            // We want to return an absolute path (see issue 6220)
+            if (string_prefixes_string(L"./", next_path)) {
                 next_path = next_path.replace(0, 2, wd);
+            } else if (string_prefixes_string(L"../", next_path) || next_path == L"..") {
+                next_path = next_path.insert(0, wd);
             }
 
             expand_tilde(next_path, env_vars);

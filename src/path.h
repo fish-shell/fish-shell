@@ -58,8 +58,7 @@ wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars);
 /// are found, it is undefined which error status will be returned.
 ///
 /// \param dir The name of the directory.
-/// \param out_or_NULL If non-NULL, return the path to the resolved directory
-/// \param wd The working directory. The working directory should have a slash appended at the end.
+/// \param wd The working directory. The working directory must end with a slash.
 /// \param vars The environment variables to use (for the CDPATH variable)
 /// \return the command, or none() if it could not be found.
 maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,

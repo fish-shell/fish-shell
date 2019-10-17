@@ -17,6 +17,12 @@ set -l subcmds \
 	# "completions" \
 	"help"
 
+set -l rustup_show \
+    "active-toolchain" \
+    "home" \
+    "profile" \
+    "help"
+
 # rustup does not really expose a mechanism of retrieving a list of all valid components without the archs appended
 function  __rustup_components
 	rustup component list | string match -r "^\S+" | string replace -f -- "-x86_64-unknown-linux-gnu" ""
@@ -220,6 +226,8 @@ set -l __rustup_toolchains_short (__rustup_strip_common_suffix_strict $__rustup_
 # Needs to be global to retain access from functions
 set __rustup_channels "beta" "stable" "nightly"
 
+set rustup_profiles "minimal" "default" "complete"
+
 complete -c rustup -n "__fish_should_complete_switches" -s v -l verbose
 complete -c rustup -n "__fish_should_complete_switches" -s h -l help
 complete -c rustup -n "__fish_should_complete_switches" -s V -l version
@@ -233,7 +241,7 @@ complete -c rustup -n "__fish_prev_arg_in component" -xa "list add install remov
 complete -c rustup -n "__fish_prev_arg_in override" -xa "list set unset help"
 complete -c rustup -n "__fish_prev_arg_in run" -xa "$__rustup_toolchains_short $__rustup_toolchains"
 complete -c rustup -n "__fish_prev_arg_in self" -xa "update remove uninstall upgrade-data help"
-complete -c rustup -n "__fish_prev_arg_in set" -xa "default-host help"
+complete -c rustup -n "__fish_prev_arg_in set" -xa "default-host profile help"
 
 complete -c rustup -n "__fish_seen_subcommand_from toolchain; and __fish_prev_arg_in remove uninstall" \
 	-xa "$__rustup_toolchains $__rustup_toolchains_short"
@@ -245,8 +253,13 @@ complete -c rustup -n "__fish_seen_subcommand_from component; and __fish_prev_ar
 complete -c rustup -n "__fish_seen_subcommand_from component; and __fish_prev_arg_in add install" \
 	-xa "(__rustup_components)"
 
+complete -c rustup -n "__fish_seen_subcommand_from show;" -xa "$rustup_show"
+
 complete -c rustup -n "__fish_seen_subcommand_from set; and __fish_prev_arg_in default-host" \
 	-xa "(__rustup_triples)"
+
+complete -c rustup -n "__fish_seen_subcommand_from set; and __fish_prev_arg_in profile" \
+    -xa "$rustup_profiles"
 
 # Global argument completions where valid
 complete -c rustup -n "__fish_prev_arg_in --toolchain" -xa "$__rustup_toolchains_short $__rustup_toolchains"

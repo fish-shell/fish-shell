@@ -18,7 +18,7 @@ Synopsis
 Description
 -----------
 
-``history`` is used to search, delete, and otherwise manipulate the history of interactive commands.
+``history`` is used to search, delete, and otherwise manipulate the :ref:`history of interactive commands <history-search>`.
 
 The following operations (sub-commands) are available:
 

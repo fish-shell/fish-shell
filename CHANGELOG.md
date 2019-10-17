@@ -13,6 +13,7 @@
 - The fish manual, tutorial and FAQ are now available in `man` format as `fish-doc`, `fish-tutorial` and `fish-faq` respectively (#5521).
 - Local values for `fish_complete_path` and `fish_function_path` are now ignored; only their global values are respected.
 - Empty universal variables may now be exported (#5992).
+- Exported universal variables are no longer imported into the global scope, preventing shadowing. This makes it easier to change such variables for all fish sessions and avoids breakage when the value is a list of multiple elements (#5258).
 - A bug where local variables would not be exported to functions has been fixed (#6153).
 - A bug where `string split` would be drop empty strings if the output was only empty strings has been fixed (#5987).
 - `switch` now allows arguments that expand to nothing, like empty variables (#5677).

@@ -111,6 +111,9 @@ class env_universal_t {
     // Gets variable names.
     wcstring_list_t get_names(bool show_exported, bool show_unexported) const;
 
+    /// Get a view on the universal variable table.
+    const var_table_t &get_table() const { return vars; }
+
     /// Loads variables at the correct path, optionally migrating from a legacy path.
     bool initialize(callback_data_list_t &callbacks);
 

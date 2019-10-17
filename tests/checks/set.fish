@@ -462,4 +462,16 @@ begin
     # CHECK: inner
 end
 
+# Skip importing universal variables (#5258)
+while set -q EDITOR; set -e EDITOR; end
+set -Ux EDITOR emacs -nw
+# CHECK: $EDITOR: not set in global scope
+# CHECK: $EDITOR: set in universal scope, exported, with 2 elements
+$FISH -c 'set -S EDITOR' | string match -r -e 'global|universal'
+
+# When the variable has been changed outside of fish we accept it.
+# CHECK: $EDITOR: set in global scope, exported, with 1 elements
+# CHECK: $EDITOR: set in universal scope, exported, with 2 elements
+sh -c "EDITOR='vim -g' $FISH -c "'\'set -S EDITOR\'' | string match -r -e 'global|universal'
+
 true

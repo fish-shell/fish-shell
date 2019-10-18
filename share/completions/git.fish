@@ -1159,6 +1159,7 @@ complete -x -c git -n '__fish_git_using_command log' -l date -a '
   short
   short-local
   raw
+  human
   unix
   format:
   default

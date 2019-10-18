@@ -1445,6 +1445,14 @@ complete -f -c git -n '__fish_git_using_command rebase' -l no-ff -d 'No fast-for
 # This actually takes script for $SHELL, but completing that is... complicated.
 complete -r -c git -n '__fish_git_using_command rebase' -l exec -d 'Execute shellscript'
 
+### reflog
+set -l reflogcommands show expire delete exists
+complete -f -c git -n '__fish_git_needs_command' -a reflog -d 'Manage reflog information'
+complete -f -c git -n '__fish_git_using_command reflog' -a '(__fish_git_branches)'
+complete -f -c git -n '__fish_git_using_command reflog' -a '(__fish_git_heads)' -d 'Head'
+
+complete -f -c git -n "__fish_git_using_command reflog; and not __fish_seen_subcommand_from $reflogcommands" -a "$reflogcommands"
+
 ### reset
 complete -c git -n '__fish_git_needs_command' -a reset -d 'Reset current HEAD to the specified state'
 complete -f -c git -n '__fish_git_using_command reset' -l hard -d 'Reset files in working directory'
@@ -1734,6 +1742,7 @@ complete -f -c git -n '__fish_git_using_command help' -a pull -d 'Fetch from and
 complete -f -c git -n '__fish_git_using_command help' -a push -d 'Update remote refs along with associated objects'
 complete -f -c git -n '__fish_git_using_command help' -a range-diff -d 'Compare two commit ranges (e.g. two versions of a branch)'
 complete -f -c git -n '__fish_git_using_command help' -a rebase -d 'Forward-port local commits to the updated upstream head'
+complete -f -c git -n '__fish_git_using_command help' -a reflog -d 'Manage reflog information'
 complete -f -c git -n '__fish_git_using_command help' -a remote -d 'Manage set of tracked repositories'
 complete -f -c git -n '__fish_git_using_command help' -a reset -d 'Reset current HEAD to the specified state'
 complete -f -c git -n '__fish_git_using_command help' -a restore -d 'Restore working tree files'

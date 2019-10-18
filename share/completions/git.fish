@@ -1448,7 +1448,7 @@ complete -r -c git -n '__fish_git_using_command rebase' -l exec -d 'Execute shel
 ### reset
 complete -c git -n '__fish_git_needs_command' -a reset -d 'Reset current HEAD to the specified state'
 complete -f -c git -n '__fish_git_using_command reset' -l hard -d 'Reset files in working directory'
-complete -c git -n '__fish_git_using_command reset' -a '(__fish_git_branches)'
+complete -c git -n '__fish_git_using_command reset; and not contains -- -- (commandline -op)' -a '(__fish_git_branches)'
 # reset can either undo changes to versioned modified files,
 # or remove files from the staging area.
 # Deleted files seem to need a "--" separator.

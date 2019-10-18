@@ -289,14 +289,13 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
 
 /// Get the beginning and end of the job or process definition under the cursor.
 static void job_or_process_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **a,
-                                  const wchar_t **b, int process) {
+                                  const wchar_t **b, bool process) {
     assert(buff && "Null buffer");
-    const wchar_t *begin, *end;
-    wchar_t *buffcpy;
+    const wchar_t *begin = nullptr, *end = nullptr;
     int finished = 0;
 
-    if (a) *a = 0;
-    if (b) *b = 0;
+    if (a) *a = nullptr;
+    if (b) *b = nullptr;
     parse_util_cmdsubst_extent(buff, cursor_pos, &begin, &end);
     if (!end || !begin) {
         return;
@@ -307,49 +306,46 @@ static void job_or_process_extent(const wchar_t *buff, size_t cursor_pos, const 
 
     if (a) *a = begin;
     if (b) *b = end;
-    buffcpy = wcsndup(begin, end - begin);
-    assert(buffcpy != NULL);
 
-    tokenizer_t tok(buffcpy, TOK_ACCEPT_UNFINISHED);
-    for (maybe_t<tok_t> token = tok.next(); token && !finished; token = tok.next())
-        while ((token = tok.next()) && !finished) {
-            size_t tok_begin = token->offset;
+    const wcstring buffcpy(begin, end);
+    tokenizer_t tok(buffcpy.c_str(), TOK_ACCEPT_UNFINISHED);
+    maybe_t<tok_t> token{};
+    while ((token = tok.next()) && !finished) {
+        size_t tok_begin = token->offset;
 
-            switch (token->type) {
-                case token_type_t::pipe: {
-                    if (!process) {
-                        break;
-                    }
-                }
-                /* FALLTHROUGH */
-                case token_type_t::end:
-                case token_type_t::background:
-                case token_type_t::andand:
-                case token_type_t::oror: {
-                    if (tok_begin >= pos) {
-                        finished = 1;
-                        if (b) *b = (wchar_t *)begin + tok_begin;
-                    } else {
-                        if (a) *a = (wchar_t *)begin + tok_begin + token->length;
-                    }
-                    break;
-                }
-                default: {
+        switch (token->type) {
+            case token_type_t::pipe: {
+                if (!process) {
                     break;
                 }
             }
+            /* FALLTHROUGH */
+            case token_type_t::end:
+            case token_type_t::background:
+            case token_type_t::andand:
+            case token_type_t::oror: {
+                if (tok_begin >= pos) {
+                    finished = 1;
+                    if (b) *b = (wchar_t *)begin + tok_begin;
+                } else {
+                    if (a) *a = (wchar_t *)begin + tok_begin + token->length;
+                }
+                break;
+            }
+            default: {
+                break;
+            }
         }
-
-    free(buffcpy);
+    }
 }
 
 void parse_util_process_extent(const wchar_t *buff, size_t pos, const wchar_t **a,
                                const wchar_t **b) {
-    job_or_process_extent(buff, pos, a, b, 1);
+    job_or_process_extent(buff, pos, a, b, true);
 }
 
 void parse_util_job_extent(const wchar_t *buff, size_t pos, const wchar_t **a, const wchar_t **b) {
-    job_or_process_extent(buff, pos, a, b, 0);
+    job_or_process_extent(buff, pos, a, b, false);
 }
 
 void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **tok_begin,

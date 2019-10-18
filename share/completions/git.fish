@@ -1505,6 +1505,12 @@ complete -f -c git -n '__fish_git_using_command restore switch' -l no-progress -
 complete -f -c git -n '__fish_git_using_command restore switch' -l 'conflict=merge' -d 'Same as --merge, but specify \'merge\' as the conflicting hunk style (default)'
 complete -f -c git -n '__fish_git_using_command restore switch' -l 'conflict=diff3' -d 'Same as --merge, but specify \'diff3\' as the conflicting hunk style'
 
+### rev-parse
+complete -f -c git -n '__fish_git_needs_command' -a rev-parse -d 'Pick out and massage parameters'
+complete -f -c git -n '__fish_git_using_command rev-parse' -a '(__fish_git_branches)'
+complete -f -c git -n '__fish_git_using_command rev-parse' -a '(__fish_git_heads)' -d 'Head'
+complete -k -c git -n '__fish_git_using_command rev-parse' -a '(__fish_git_tags)' -d 'Tag'
+
 ### revert
 complete -f -c git -n '__fish_git_needs_command' -a revert -d 'Revert an existing commit'
 complete -f -c git -n '__fish_git_using_command revert' -ka '(__fish_git_commits)'
@@ -1747,6 +1753,7 @@ complete -f -c git -n '__fish_git_using_command help' -a remote -d 'Manage set o
 complete -f -c git -n '__fish_git_using_command help' -a reset -d 'Reset current HEAD to the specified state'
 complete -f -c git -n '__fish_git_using_command help' -a restore -d 'Restore working tree files'
 complete -f -c git -n '__fish_git_using_command help' -a revert -d 'Revert an existing commit'
+complete -f -c git -n '__fish_git_using_command help' -a rev-parse -d 'Pick out and massage parameters'
 complete -f -c git -n '__fish_git_using_command help' -a rm -d 'Remove files from the working tree and from the index'
 complete -f -c git -n '__fish_git_using_command help' -a show -d 'Shows the last commit of a branch'
 complete -f -c git -n '__fish_git_using_command help' -a show-branch -d 'Shows the commits on branches'

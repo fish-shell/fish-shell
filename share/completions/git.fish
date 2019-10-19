@@ -914,11 +914,11 @@ complete -f -c git -n '__fish_git_using_command add' -a '(__fish_git_files modif
 
 ### checkout
 complete -f -c git -n '__fish_git_needs_command' -a checkout -d 'Checkout and switch to a branch'
-complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -op)' -a '(__fish_git_tags)' -d 'Tag'
-complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -op)' -a '(__fish_git_heads)' -d 'Head'
-complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -op)' -a '(__fish_git_unique_remote_branches)' -d 'Unique Remote Branch'
-complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -op)' -a '(__fish_git_branches)'
-complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -op)' -a '(__fish_git_recent_commits)'
+complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -opc)' -a '(__fish_git_tags)' -d 'Tag'
+complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -opc)' -a '(__fish_git_heads)' -d 'Head'
+complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -opc)' -a '(__fish_git_unique_remote_branches)' -d 'Unique Remote Branch'
+complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -opc)' -a '(__fish_git_branches)'
+complete -k -f -c git -n '__fish_git_using_command checkout; and not contains -- -- (commandline -opc)' -a '(__fish_git_recent_commits)'
 complete -k -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_files modified deleted)'
 complete -f -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
 complete -f -c git -n '__fish_git_using_command checkout' -s t -l track -d 'Track a new branch'
@@ -1071,7 +1071,7 @@ complete -f -c git -n '__fish_git_needs_command' -a init -d 'Create an empty git
 ### log
 complete -c git -n '__fish_git_needs_command' -a shortlog -d 'Show commit shortlog'
 complete -c git -n '__fish_git_needs_command' -a log -d 'Show commit logs'
-complete -c git -n '__fish_git_using_command log; and not contains -- -- (commandline -op)' -a '(__fish_git_ranges)'
+complete -c git -n '__fish_git_using_command log; and not contains -- -- (commandline -opc)' -a '(__fish_git_ranges)'
 
 complete -c git -n '__fish_git_using_command log' -l follow -d 'Continue listing file history beyond renames'
 complete -c git -n '__fish_git_using_command log' -l no-decorate -d 'Don\'t print ref names'
@@ -1464,13 +1464,13 @@ complete -f -c git -n "__fish_git_using_command reflog; and not __fish_seen_subc
 ### reset
 complete -c git -n '__fish_git_needs_command' -a reset -d 'Reset current HEAD to the specified state'
 complete -f -c git -n '__fish_git_using_command reset' -l hard -d 'Reset files in working directory'
-complete -c git -n '__fish_git_using_command reset; and not contains -- -- (commandline -op)' -a '(__fish_git_branches)'
+complete -c git -n '__fish_git_using_command reset; and not contains -- -- (commandline -opc)' -a '(__fish_git_branches)'
 # reset can either undo changes to versioned modified files,
 # or remove files from the staging area.
 # Deleted files seem to need a "--" separator.
-complete -f -c git -n '__fish_git_using_command reset; and not contains -- -- (commandline -op)' -a '(__fish_git_files all-staged modified)'
-complete -f -c git -n '__fish_git_using_command reset; and contains -- -- (commandline -op)' -a '(__fish_git_files all-staged deleted modified)'
-complete -f -c git -n '__fish_git_using_command reset; and not contains -- -- (commandline -op)' -a '(__fish_git_reflog)' -d 'Reflog'
+complete -f -c git -n '__fish_git_using_command reset; and not contains -- -- (commandline -opc)' -a '(__fish_git_files all-staged modified)'
+complete -f -c git -n '__fish_git_using_command reset; and contains -- -- (commandline -opc)' -a '(__fish_git_files all-staged deleted modified)'
+complete -f -c git -n '__fish_git_using_command reset; and not contains -- -- (commandline -opc)' -a '(__fish_git_reflog)' -d 'Reflog'
 # TODO options
 
 ### restore and switch
@@ -1488,7 +1488,7 @@ complete -f -c git -n '__fish_git_using_command restore' -l ignore-skip-worktree
 complete -f -c git -n '__fish_git_using_command restore' -l overlay -d 'Never remove files when restoring'
 complete -f -c git -n '__fish_git_using_command restore' -l no-overlay -d 'Remove files when restoring (default)'
 complete -f -c git -n '__fish_git_using_command restore' -a '(__fish_git_files modified deleted unmerged)'
-complete -f -c git -n '__fish_git_using_command restore; and contains -- --staged (commandline -op)' -a '(__fish_git_files added modified-staged deleted-staged renamed copied)'
+complete -f -c git -n '__fish_git_using_command restore; and contains -- --staged (commandline -opc)' -a '(__fish_git_files added modified-staged deleted-staged renamed copied)'
 complete -f -c git -n '__fish_git_using_command restore; and __fish_contains_opt -s s source' -a '(git ls-files)'
 # switch options
 complete -f -c git -n '__fish_git_needs_command' -a switch -d 'Switch to a branch'

@@ -246,6 +246,9 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
     assert(ld.is_event >= 0 && "is_event should not be negative");
     scoped_push<decltype(ld.is_event)> inc_event{&ld.is_event, ld.is_event + 1};
 
+    // Suppress fish_trace during events.
+    scoped_push<bool> suppress_trace{&ld.suppress_fish_trace, true};
+
     // Capture the event handlers that match this event.
     event_handler_list_t fire;
     for (const auto &handler : *s_event_handlers.acquire()) {

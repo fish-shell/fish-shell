@@ -125,6 +125,9 @@ class logger_t {
 
     void log_fmt(const category_t &cat, const wchar_t *fmt, ...);
     void log_fmt(const category_t &cat, const char *fmt, ...);
+
+    // Log outside of the usual flog usage.
+    void log_extra(const wchar_t *s) { log1(s); }
 };
 
 extern owning_lock<logger_t> g_logger;
@@ -140,6 +143,10 @@ void set_flog_output_file(FILE *f);
 
 /// \return a list of all categories, sorted by name.
 std::vector<const flog_details::category_t *> get_flog_categories();
+
+/// Print some extra stuff to the flog file (stderr by default).
+/// This is used by the tracing machinery.
+void log_extra_to_flog_file(const wcstring &s);
 
 /// Output to the fish log a sequence of arguments, separated by spaces, and ending with a newline.
 #define FLOG(wht, ...)                                                        \

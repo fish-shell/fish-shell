@@ -860,6 +860,7 @@ void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor
     if (!term_supports_setting_title()) return;
 
     scoped_push<bool> noninteractive{&parser.libdata().is_interactive, false};
+    scoped_push<bool> in_title(&parser.libdata().suppress_fish_trace, true);
 
     wcstring fish_title_command = DEFAULT_TITLE;
     if (function_exists(L"fish_title", parser)) {
@@ -906,6 +907,9 @@ void reader_data_t::exec_prompt() {
     // Clear existing prompts.
     left_prompt_buff.clear();
     right_prompt_buff.clear();
+
+    // Suppress fish_trace while in the prompt.
+    scoped_push<bool> in_prompt(&parser().libdata().suppress_fish_trace, true);
 
     // Do not allow the exit status of the prompts to leak through.
     const bool apply_exit_status = false;
@@ -2561,10 +2565,10 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                                                              completion_request_t::fuzzy_match};
                 complete_func(buffcpy, &rls.comp, complete_flags, vars, parser_ref);
 
-
-                // User-supplied completions may have changed the commandline - prevent buffer overflow.
+                // User-supplied completions may have changed the commandline - prevent buffer
+                // overflow.
                 if (token_begin > buff + el->text.size()) token_begin = buff + el->text.size();
-                if (token_end   > buff + el->text.size()) token_end   = buff + el->text.size();
+                if (token_end > buff + el->text.size()) token_end = buff + el->text.size();
 
                 // Munge our completions.
                 completions_sort_and_prioritize(&rls.comp);
@@ -3199,6 +3203,10 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
     using rl = readline_cmd_t;
     readline_loop_state_t rls{};
     struct termios old_modes;
+
+    // Suppress fish_trace during executing key bindings.
+    // This is simply to reduce noise.
+    scoped_push<bool> in_title(&parser().libdata().suppress_fish_trace, true);
 
     // If nchars_or_0 is positive, then that's the maximum number of chars. Otherwise keep it at
     // SIZE_MAX.

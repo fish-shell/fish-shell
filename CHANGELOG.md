@@ -22,6 +22,7 @@
 - `commandline -p` and `commandline -j` now split on `&&` and `||` in addition to `;` and `&` (#6214).
 - `fish` now correctly handles CDPATH entries that starts with `..` (#6220).
 - New redirections `&>` and `&|` may be used to redirect or pipe stdout, and also redirect stderr to stdout (#6192).
+- The `fish_trace` variable may be set to trace execution. This performs a similar role as `set -x`.
 
 ### Syntax changes and new commands
 - Brace expansion now only takes place if the braces include a "," or a variable expansion, meaning common commands such as `git reset HEAD@{0}` do not require escaping (#5869).

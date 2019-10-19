@@ -23,7 +23,7 @@ The following options are available:
 
 - ``-d`` or ``--debug=CATEGORY_GLOB`` enables debug output and specifies a glob for matching debug categories (like ``fish -d``). Defaults to empty.
 
-- ``-o`` or ``--debug-output=path`` Specify a file path to receive the debug output. The default is stderr.
+- ``-o`` or ``--debug-output=path`` Specify a file path to receive the debug output, including categories and ``fish_trace``. The default is stderr.
 
 - ``-i`` or ``--interactive`` specify that fish is to run in interactive mode
 

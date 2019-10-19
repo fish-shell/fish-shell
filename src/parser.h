@@ -158,6 +158,10 @@ struct library_data_t {
     /// Whether we are currently interactive.
     bool is_interactive{false};
 
+    /// Whether to suppress fish_trace output. This occurs in the prompt, event handlers, and key
+    /// bindings.
+    bool suppress_fish_trace{false};
+
     /// Whether we should break or continue the current loop.
     enum loop_status_t loop_status { loop_status_t::normals };
 

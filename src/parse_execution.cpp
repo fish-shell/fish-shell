@@ -45,6 +45,7 @@
 #include "reader.h"
 #include "tnode.h"
 #include "tokenizer.h"
+#include "trace.h"
 #include "util.h"
 #include "wildcard.h"
 #include "wutil.h"
@@ -250,6 +251,10 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
     tnode_t<g::job_list> job_list_to_execute;
     tnode_t<g::if_clause> if_clause = statement.child<0>();
     tnode_t<g::else_clause> else_clause = statement.child<1>();
+
+    // We start with the 'if'.
+    trace_if_enabled(*parser, L"if");
+
     for (;;) {
         if (should_cancel_execution(associated_block)) {
             result = parse_execution_cancelled;
@@ -286,10 +291,12 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
                 if_clause = maybe_if_clause;
                 else_clause = else_cont.try_get_child<g::else_clause, 1>();
                 assert(else_clause && "Expected to have an else clause");
+                trace_if_enabled(*parser, L"else if");
             } else {
                 // It's the final 'else', we're done.
                 job_list_to_execute = else_cont.try_get_child<g::job_list, 1>();
                 assert(job_list_to_execute && "Should have a job list");
+                trace_if_enabled(*parser, L"else");
                 break;
             }
         }
@@ -308,6 +315,8 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
         parser->set_last_statuses(statuses_t::just(STATUS_CMD_OK));
     }
 
+    trace_if_enabled(*parser, L"end if");
+
     // It's possible there's a last-minute cancellation (issue #1297).
     if (should_cancel_execution(associated_block)) {
         result = parse_execution_cancelled;
@@ -320,10 +329,11 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
 parse_execution_result_t parse_execution_context_t::run_begin_statement(
     tnode_t<g::job_list> contents) {
     // Basic begin/end block. Push a scope block, run jobs, pop it
+    trace_if_enabled(*parser, L"begin");
     block_t *sb = parser->push_block(block_t::scope_block(BEGIN));
     parse_execution_result_t ret = run_job_list(contents, sb);
     parser->pop_block(sb);
-
+    trace_if_enabled(*parser, L"end begin");
     return ret;
 }
 
@@ -339,6 +349,7 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(
     if (result != parse_execution_success) {
         return result;
     }
+    trace_if_enabled(*parser, L"function", arguments);
     io_streams_t streams(0);  // no limit on the amount of output from builtin_function()
     int err = builtin_function(*parser, streams, arguments, pstree, body);
     parser->set_last_statuses(statuses_t::just(err));
@@ -418,6 +429,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
         return parse_execution_errored;
     }
 
+    trace_if_enabled(*parser, L"for", arguments);
     block_t *fb = parser->push_block(block_t::for_block());
 
     // Now drive the for loop.
@@ -446,6 +458,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
     }
 
     parser->pop_block(fb);
+    trace_if_enabled(*parser, L"end for");
     return ret;
 }
 
@@ -562,6 +575,8 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
     tnode_t<g::job_conjunction> condition_head = header.child<1>();
     tnode_t<g::andor_job_list> condition_boolean_tail = header.child<3>();
 
+    trace_if_enabled(*parser, L"while");
+
     // Run while the condition is true.
     for (;;) {
         // Save off the exit status if it came from the loop body. We'll restore it if the condition
@@ -596,6 +611,7 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
         // Push a while block and then check its cancellation reason.
         auto &ld = parser->libdata();
         ld.loop_status = loop_status_t::normals;
+
         block_t *wb = parser->push_block(block_t::while_block());
         this->run_job_list(contents, wb);
         auto cancel_reason = this->cancellation_reason(wb);
@@ -618,6 +634,7 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
             break;
         }
     }
+    trace_if_enabled(*parser, L"end while");
     return ret;
 }
 

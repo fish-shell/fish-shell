@@ -111,7 +111,7 @@ SET(FISH_SRCS
     src/signal.cpp src/tinyexpr.cpp src/tnode.cpp src/tokenizer.cpp src/utf8.cpp src/util.cpp
     src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp src/wutil.cpp
     src/future_feature_flags.cpp src/redirection.cpp src/topic_monitor.cpp
-    src/flog.cpp
+    src/flog.cpp src/trace.cpp
 )
 
 # Header files are just globbed.

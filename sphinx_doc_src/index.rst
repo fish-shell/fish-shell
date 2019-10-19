@@ -1224,6 +1224,8 @@ The user can change the settings of ``fish`` by changing the values of certain v
   empty string, history is not saved to disk (but is still available within the interactive
   session).
 
+- ``fish_trace``, if set and not empty, will cause fish to print commands before they execute, similar to `set -x` in bash. The trace is printed to the path given by the :ref:`--debug-output <cmd-fish>` option to fish (stderr by default).
+
 - ``fish_user_paths``, a list of directories that are prepended to ``PATH``. This can be a universal variable.
 
 - ``umask``, the current file creation mask. The preferred way to change the umask variable is through the :ref:`umask <cmd-umask>` function. An attempt to set umask to an invalid value will always fail.

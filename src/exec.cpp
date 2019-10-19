@@ -44,6 +44,7 @@
 #include "reader.h"
 #include "redirection.h"
 #include "signal.h"
+#include "trace.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// File descriptor redirection error message.
@@ -898,6 +899,12 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
     //
     // which depends on the redirection being evaluated before the pipe. So the write end of the
     // pipe comes first, the read pipe of the pipe comes last. See issue #966.
+
+    // Maybe trace this process.
+    // TODO: 'and' and 'or' will not show.
+    if (trace_enabled(parser)) {
+        trace_argv(parser, nullptr, p->get_argv_array().to_list());
+    }
 
     // The IO chain for this process.
     io_chain_t process_net_io_chain = j->block_io_chain();

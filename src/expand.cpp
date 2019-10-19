@@ -13,9 +13,6 @@
 #include <cstring>
 #include <cwchar>
 
-#ifdef HAVE_SYS_SYSCTL_H
-#include <sys/sysctl.h>  // IWYU pragma: keep
-#endif
 #ifdef SunOS
 #include <procfs.h>
 #endif
@@ -51,10 +48,6 @@
 #include "wcstringutil.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
-#ifdef KERN_PROCARGS2
-#else
-#include "tokenizer.h"
-#endif
 
 /// Characters which make a string unclean if they are the first character of the string. See \c
 /// expand_is_clean().

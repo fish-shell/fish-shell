@@ -985,8 +985,16 @@ complete -f -c git -n '__fish_git_using_command clone' -l recursive -d 'Initiali
 complete -c git -n '__fish_git_needs_command' -a commit -d 'Record changes to the repository'
 complete -c git -n '__fish_git_using_command commit' -l amend -d 'Amend the log message of the last commit'
 complete -f -c git -n '__fish_git_using_command commit' -a '(__fish_git_files modified)'
+complete -c git -n '__fish_git_using_command commit' -s a -l all -d 'Automatically stage modified and deleted files'
+complete -c git -n '__fish_git_using_command commit' -s p -l patch -d 'Use interactive patch selection interface'
 complete -f -c git -n '__fish_git_using_command commit' -l fixup -d 'Fixup commit to be used with rebase --autosquash'
-complete -f -c git -n '__fish_git_using_command commit; and __fish_contains_opt fixup' -k -a '(__fish_git_recent_commits)'
+complete -f -c git -n '__fish_git_using_command commit' -l squash -d 'Squash commit to be used with rebase --autosquash'
+complete -c git -n '__fish_git_using_command commit' -l reset-author -d 'When amending, reset author of commit to the committer'
+complete -x -c git -n '__fish_git_using_command commit' -l author -d 'Override the commit author'
+complete -x -c git -n '__fish_git_using_command commit' -l date -d 'Override the author date'
+complete -x -c git -n '__fish_git_using_command commit' -s m -l message -d 'Use the given message as the commit message'
+complete -f -c git -n '__fish_git_using_command commit' -l no-edit -d 'Use the selected commit message without launching an editor'
+complete -f -c git -n '__fish_git_using_command commit; and __fish_contains_opt fixup squash' -k -a '(__fish_git_recent_commits)'
 # TODO options
 
 ### describe
@@ -1716,6 +1724,7 @@ complete -f -c git -n '__fish_git_using_command blame' -s e -l show-email -d 'Sh
 complete -f -c git -n '__fish_git_using_command blame' -s w -d 'Ignore whitespace changes'
 
 ### help
+complete -f -c git -n '__fish_git_needs_command' -a help -d 'Display help information about Git'
 complete -f -c git -n '__fish_git_using_command help' -a '(__fish_git_help_all_concepts)'
 complete -f -c git -n '__fish_git_using_command help' -a add -d 'Add file contents to the index'
 complete -f -c git -n '__fish_git_using_command help' -a apply -d 'Apply a patch on a git index file and a working tree'

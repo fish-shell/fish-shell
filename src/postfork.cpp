@@ -40,7 +40,7 @@
 
 /// Called only by the child to set its own process group (possibly creating a new group in the
 /// process if it is the first in a JOB_CONTROL job.
-/// Returns true on sucess, false on failiure.
+/// Returns true on success, false on failure.
 bool child_set_group(job_t *j, process_t *p) {
     if (j->wants_job_control()) {
         if (j->pgid == INVALID_PID) {

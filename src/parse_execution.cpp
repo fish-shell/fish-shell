@@ -299,7 +299,7 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
         }
         parser->pop_block(ib);
     } else {
-        // No job list means no sucessful conditions, so return 0 (issue #1443).
+        // No job list means no successful conditions, so return 0 (issue #1443).
         parser->set_last_statuses(statuses_t::just(STATUS_CMD_OK));
     }
 

@@ -500,7 +500,7 @@ void append_formatv(wcstring &target, const wchar_t *format, va_list va_orig) {
     // formated string option or because the supplied destination string was to small. In GLIBC,
     // errno seems to be set to EINVAL either way.
     //
-    // Because of this, on failiure we try to increase the buffer size until the free space is
+    // Because of this, on failure we try to increase the buffer size until the free space is
     // larger than max_size, at which point it will conclude that the error was probably due to a
     // badly formated string option, and return an error. Make sure to null terminate string before
     // that, though.

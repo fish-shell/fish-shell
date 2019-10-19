@@ -29,7 +29,7 @@ bool child_set_group(job_t *j, process_t *p);     // called by child
 ///
 /// Assign the terminal to new_termowner unless it is INVALID_PID.
 ///
-/// \return 0 on sucess, -1 on failiure. When this function returns, signals are always unblocked.
+/// \return 0 on success, -1 on failure. When this function returns, signals are always unblocked.
 /// On failure, signal handlers, io redirections and process group of the process is undefined.
 int child_setup_process(pid_t new_termowner, bool is_forked, const dup2_list_t &dup2s);
 

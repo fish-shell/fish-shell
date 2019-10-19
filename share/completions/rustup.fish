@@ -264,3 +264,35 @@ complete -c rustup -n "__fish_seen_subcommand_from set; and __fish_prev_arg_in p
 # Global argument completions where valid
 complete -c rustup -n "__fish_prev_arg_in --toolchain" -xa "$__rustup_toolchains_short $__rustup_toolchains"
 
+complete -f -c rustup -n '__fish_seen_subcommand_from doc' -a '(__fish_rustup_docs_primitives)'
+complete -f -c rustup -n '__fish_seen_subcommand_from doc' -a '(__fish_rustup_docs_keywords)'
+complete -f -c rustup -n '__fish_seen_subcommand_from doc' -a '(__fish_rustup_docs_macros)'
+complete -f -c rustup -n '__fish_seen_subcommand_from doc' -a '(__fish_rustup_docs_modules)'
+
+function __fish_rustup_docs_modules
+  set -l doc_path (__rustup_doc_path)
+  command find "$doc_path"/{std,core,alloc} -name index.html \
+  | string replace --regex "$doc_path/(.+)/index\.html" '$1\tModule' \
+  | string replace --all / ::
+end
+
+function __fish_rustup_docs_keywords
+  set -l doc_path (__rustup_doc_path)
+  string replace --regex "$doc_path/std/keyword\.(.+)\.html" '$1\tKeyword' "$doc_path"/std/keyword.*.html
+end
+
+function __fish_rustup_docs_primitives
+  set -l doc_path (__rustup_doc_path)
+  string replace --regex "$doc_path/std/primitive\.(.+)\.html" '$1\tPrimitive' "$doc_path"/std/primitive.*.html
+end
+
+function __fish_rustup_docs_macros
+  set -l doc_path (__rustup_doc_path)
+  string replace --regex "$doc_path/" '' "$doc_path"/{std,core,alloc}/macro.*.html \
+  | string replace --regex 'macro\.(.+)\.html' '$1\tMacro' \
+  | string replace --all / ::
+end
+
+function __rustup_doc_path
+  rustup doc --path | string replace --regex '/[^/]*$' ''
+end

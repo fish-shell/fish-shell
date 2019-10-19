@@ -137,7 +137,7 @@ end
 # lame timer
 for program in {g,}date
     if command -q $program && $program --version 1>/dev/null 2>/dev/null
-        set milli $program
+        set -g milli $program
         set unit ms
         break
     else
@@ -154,5 +154,5 @@ end
 function delta
     set -q milli[1]
     and math "( "($milli +%s%3N)" - $argv[1])"
-    or math (date +%s) - $starttime
+    or math (date +%s) - $argv[1]
 end

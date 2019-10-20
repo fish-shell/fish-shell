@@ -1,4 +1,4 @@
-function __fish_print_help --description "Print help message for the specified fish function or builtin" --argument item
+function __fish_print_help --description "Print help message for the specified fish function or builtin" --argument item error
     if test "$item" = '.'
         set item source
     end
@@ -53,6 +53,9 @@ function __fish_print_help --description "Print help message for the specified f
     # the `-s` flag to `less` that `man` passes.
     set -l state blank
     set -l have_name
+    begin
+        set -ql error
+        and printf "%s\n" $error
     for line in $help
         # categorize the line
         set -l line_type
@@ -103,5 +106,20 @@ function __fish_print_help --description "Print help message for the specified f
                         # skip it
                 end
         end
-    end | string replace -ra '^       ' '' | ul # post-process with `ul`, to interpret the old-style grotty escapes
+    end
+    end | string replace -ra '^       ' '' | ul | # post-process with `ul`, to interpret the old-style grotty escapes
+    begin
+        set -l pager less
+        set -q PAGER
+        and set pager $PAGER
+        # similar to man, but add -F to quit paging when the help output is brief (#6227)
+        set -xl LESS "$LESS"isrFX
+        # less options:
+        # -i (--ignore-case) search case-insensitively like man
+        # -s (--squeeze-blank-lines) not strictly necessary since we already do that above
+        # -r (--raw-control-chars) to interpret bold, underline and colors once we have that
+        # -F (--quit-if-one-screen) to maintain the non-paging behavior for small outputs
+        # -X (--no-init) not sure if this is needed but git uses it
+        $pager
+    end
 end

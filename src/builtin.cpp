@@ -146,42 +146,27 @@ int parse_help_only_cmd_opts(struct help_only_cmd_opts_t &opts, int *optind, int
     return STATUS_CMD_OK;
 }
 
-/// Obtain help/usage information for the specified builtin from manpage in subshell
+/// Display help/usage information for the specified builtin or function from manpage
 ///
 /// @param  name
-///    builtin name to get up help for
+///    builtin or function name to get up help for
 ///
-/// @return
-///    A wcstring with a formatted manpage.
-///
-wcstring builtin_help_get(parser_t &parser, io_streams_t &streams, const wchar_t *name) {
-    UNUSED(parser);
+/// Process and print help for the specified builtin or function.
+void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *name,
+                        wcstring *error_message) {
     UNUSED(streams);
     // This won't ever work if no_exec is set.
-    if (no_exec()) return wcstring();
-
-    wcstring_list_t lst;
-    wcstring out;
-    const wcstring name_esc = escape_string(name, 1);
-    wcstring cmd = format_string(L"__fish_print_help %ls", name_esc.c_str());
-    if (exec_subshell(cmd, parser, lst, false /* don't apply exit status */) >= 0) {
-        for (size_t i = 0; i < lst.size(); i++) {
-            out.append(lst.at(i));
-            out.push_back(L'\n');
-        }
+    if (no_exec()) return;
+    const wcstring name_esc = escape_string(name, ESCAPE_ALL);
+    wcstring cmd = format_string(L"__fish_print_help %ls ", name_esc.c_str());
+    io_chain_t ios;
+    if (error_message) {
+        cmd.append(escape_string(*error_message, ESCAPE_ALL));
+        // redirect stdout to stderr
+        ios.push_back(std::make_shared<io_fd_t>(1, 2, false));
     }
-    return out;
-}
-
-/// Process and print for the specified builtin. If @c b is `sb_err`, also print the line
-/// information.
-///
-/// If @c b is the buffer representing standard error, and the help message is about to be printed
-/// to an interactive screen, it may be shortened to fit the screen.
-///
-void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
-                        output_stream_t &b) {
-    b.append(builtin_help_get(parser, streams, cmd));
+    parser.eval(cmd, ios, TOP);
+    // ignore the exit status of __fish_print_help
 }
 
 /// Perform error reporting for encounter with unknown option.

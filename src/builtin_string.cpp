@@ -1358,7 +1358,7 @@ int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (std::wcscmp(argv[1], L"-h") == 0 || std::wcscmp(argv[1], L"--help") == 0) {
-        builtin_print_help(parser, streams, L"string", streams.out);
+        builtin_print_help(parser, streams, L"string");
         return STATUS_CMD_OK;
     }
 

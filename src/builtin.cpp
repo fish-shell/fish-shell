@@ -146,42 +146,27 @@ int parse_help_only_cmd_opts(struct help_only_cmd_opts_t &opts, int *optind, int
     return STATUS_CMD_OK;
 }
 
-/// Obtain help/usage information for the specified builtin from manpage in subshell
+/// Display help/usage information for the specified builtin or function from manpage
 ///
 /// @param  name
-///    builtin name to get up help for
+///    builtin or function name to get up help for
 ///
-/// @return
-///    A wcstring with a formatted manpage.
-///
-wcstring builtin_help_get(parser_t &parser, io_streams_t &streams, const wchar_t *name) {
-    UNUSED(parser);
+/// Process and print help for the specified builtin or function.
+void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *name,
+                        wcstring *error_message) {
     UNUSED(streams);
     // This won't ever work if no_exec is set.
-    if (no_exec()) return wcstring();
-
-    wcstring_list_t lst;
-    wcstring out;
-    const wcstring name_esc = escape_string(name, 1);
-    wcstring cmd = format_string(L"__fish_print_help %ls", name_esc.c_str());
-    if (exec_subshell(cmd, parser, lst, false /* don't apply exit status */) >= 0) {
-        for (size_t i = 0; i < lst.size(); i++) {
-            out.append(lst.at(i));
-            out.push_back(L'\n');
-        }
+    if (no_exec()) return;
+    const wcstring name_esc = escape_string(name, ESCAPE_ALL);
+    wcstring cmd = format_string(L"__fish_print_help %ls ", name_esc.c_str());
+    io_chain_t ios;
+    if (error_message) {
+        cmd.append(escape_string(*error_message, ESCAPE_ALL));
+        // If it's an error, redirect the output of __fish_print_help to stderr
+        ios.push_back(std::make_shared<io_fd_t>(STDOUT_FILENO, STDERR_FILENO, false));
     }
-    return out;
-}
-
-/// Process and print for the specified builtin. If @c b is `sb_err`, also print the line
-/// information.
-///
-/// If @c b is the buffer representing standard error, and the help message is about to be printed
-/// to an interactive screen, it may be shortened to fit the screen.
-///
-void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
-                        output_stream_t &b) {
-    b.append(builtin_help_get(parser, streams, cmd));
+    parser.eval(cmd, ios, TOP);
+    // ignore the exit status of __fish_print_help
 }
 
 /// Perform error reporting for encounter with unknown option.
@@ -221,14 +206,14 @@ static int builtin_generic(parser_t &parser, io_streams_t &streams, wchar_t **ar
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 
     // Hackish - if we have no arguments other than the command, we are a "naked invocation" and we
     // just print help.
     if (argc == 1) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -272,9 +257,8 @@ static int builtin_break_continue(parser_t &parser, io_streams_t &streams, wchar
     int argc = builtin_count_args(argv);
 
     if (argc != 1) {
-        streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0], argv[1]);
-
-        builtin_print_help(parser, streams, argv[0], streams.err);
+        wcstring error_message = format_string(BUILTIN_ERR_UNKNOWN, argv[0], argv[1]);
+        builtin_print_help(parser, streams, argv[0], &error_message);
         return STATUS_INVALID_ARGS;
     }
 
@@ -286,8 +270,8 @@ static int builtin_break_continue(parser_t &parser, io_streams_t &streams, wchar
         if (b->type() == FUNCTION_CALL) break;
     }
     if (!has_loop) {
-        streams.err.append_format(_(L"%ls: Not inside of loop\n"), argv[0]);
-        builtin_print_help(parser, streams, argv[0], streams.err);
+        wcstring error_message = format_string(_(L"%ls: Not inside of loop\n"), argv[0]);
+        builtin_print_help(parser, streams, argv[0], &error_message);
         return STATUS_CMD_ERROR;
     }
 
@@ -455,7 +439,7 @@ proc_status_t builtin_run(parser_t &parser, int job_pgid, wchar_t **argv, io_str
     // follows the keyword by `-h` or `--help`. Since it isn't really a builtin command we need to
     // handle displaying help for it here.
     if (argv[1] && !argv[2] && parse_util_argument_is_help(argv[1]) && cmd_needs_help(argv[0])) {
-        builtin_print_help(parser, streams, argv[0], streams.out);
+        builtin_print_help(parser, streams, argv[0]);
         return proc_status_t::from_exit_code(STATUS_CMD_OK);
     }
 

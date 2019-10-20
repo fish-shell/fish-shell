@@ -807,7 +807,7 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     argc -= optind;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 

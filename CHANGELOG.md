@@ -88,6 +88,7 @@
   - `epkginfo` (#5829)
   - `ffmpeg`, `ffplay`, and `ffprobe` (#5922)
   - `fsharpc` and `fsharpi` (#6016)
+  - `gpg1` (#6139)
   - `gpg2` (#6062)
   - `hledger` (#6043)
   - `mariner` (#5718)

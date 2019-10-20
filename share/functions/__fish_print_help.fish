@@ -56,57 +56,57 @@ function __fish_print_help --description "Print help message for the specified f
     begin
         set -ql error
         and printf "%s\n" $error
-    for line in $help
-        # categorize the line
-        set -l line_type
-        switch $line
-            case ' *' \t\*
-                # starts with whitespace, check if it has non-whitespace
-                printf "%s\n" $line | read -l word __
-                if test -n $word
-                    set line_type normal
-                else
-                    # lines with just spaces probably shouldn't happen
-                    # but let's consider them to be blank
+        for line in $help
+            # categorize the line
+            set -l line_type
+            switch $line
+                case ' *' \t\*
+                    # starts with whitespace, check if it has non-whitespace
+                    printf "%s\n" $line | read -l word __
+                    if test -n $word
+                        set line_type normal
+                    else
+                        # lines with just spaces probably shouldn't happen
+                        # but let's consider them to be blank
+                        set line_type blank
+                    end
+                case ''
                     set line_type blank
-                end
-            case ''
-                set line_type blank
-            case '*'
-                # Remove man's bolding
-                set -l name (string replace -ra '(.)'\b'.' '$1' -- $line)
-                # We start after we have the name
-                contains -- $name NAME; and set have_name 1; and continue
-                # We ignore the SYNOPSIS header
-                contains -- $name SYNOPSIS; and continue
-                # Everything after COPYRIGHT is useless
-                contains -- $name COPYRIGHT; and break
+                case '*'
+                    # Remove man's bolding
+                    set -l name (string replace -ra '(.)'\b'.' '$1' -- $line)
+                    # We start after we have the name
+                    contains -- $name NAME; and set have_name 1; and continue
+                    # We ignore the SYNOPSIS header
+                    contains -- $name SYNOPSIS; and continue
+                    # Everything after COPYRIGHT is useless
+                    contains -- $name COPYRIGHT; and break
 
-                # not leading space, and not empty, so must contain a non-space
-                # in the first column. That makes it a header/footer.
-                set line_type meta
-        end
+                    # not leading space, and not empty, so must contain a non-space
+                    # in the first column. That makes it a header/footer.
+                    set line_type meta
+            end
 
-        set -q have_name[1]; or continue
-        switch $state
-            case normal
-                switch $line_type
-                    case normal meta
-                        printf "%s\n" $line
-                    case blank
-                        set state blank
-                end
-            case blank
-                switch $line_type
-                    case normal meta
-                        echo # print the blank line
-                        printf "%s\n" $line
-                        set state normal
-                    case blank meta
-                        # skip it
-                end
+            set -q have_name[1]; or continue
+            switch $state
+                case normal
+                    switch $line_type
+                        case normal meta
+                            printf "%s\n" $line
+                        case blank
+                            set state blank
+                    end
+                case blank
+                    switch $line_type
+                        case normal meta
+                            echo # print the blank line
+                            printf "%s\n" $line
+                            set state normal
+                        case blank meta
+                            # skip it
+                    end
+            end
         end
-    end
     end | string replace -ra '^       ' '' | ul | # post-process with `ul`, to interpret the old-style grotty escapes
     begin
         set -l pager less

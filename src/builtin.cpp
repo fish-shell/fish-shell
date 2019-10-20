@@ -257,9 +257,8 @@ static int builtin_break_continue(parser_t &parser, io_streams_t &streams, wchar
     int argc = builtin_count_args(argv);
 
     if (argc != 1) {
-        streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0], argv[1]);
-
-        builtin_print_help(parser, streams, argv[0], streams.err);
+        wcstring error_message = format_string(BUILTIN_ERR_UNKNOWN, argv[0], argv[1]);
+        builtin_print_help(parser, streams, argv[0], &error_message);
         return STATUS_INVALID_ARGS;
     }
 
@@ -271,8 +270,8 @@ static int builtin_break_continue(parser_t &parser, io_streams_t &streams, wchar
         if (b->type() == FUNCTION_CALL) break;
     }
     if (!has_loop) {
-        streams.err.append_format(_(L"%ls: Not inside of loop\n"), argv[0]);
-        builtin_print_help(parser, streams, argv[0], streams.err);
+        wcstring error_message = format_string(_(L"%ls: Not inside of loop\n"), argv[0]);
+        builtin_print_help(parser, streams, argv[0], &error_message);
         return STATUS_CMD_ERROR;
     }
 

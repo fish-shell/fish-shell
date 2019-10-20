@@ -42,6 +42,18 @@ matrix:
             - libncurses5-dev
             - libpcre2-dev
             - python
+    - os: linux
+      compiler: clang
+      env:
+          - CXXFLAGS="-g -O2 -fsanitize=thread"
+      addons:
+        apt:
+          packages:
+            - expect
+            - gettext
+            - libncurses5-dev
+            - libpcre2-dev
+            - python
     - os: osx
       before_install:
         - brew update

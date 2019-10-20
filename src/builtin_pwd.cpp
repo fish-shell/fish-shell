@@ -33,7 +33,7 @@ int builtin_pwd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 resolve_symlinks = true;
                 break;
             case 'h':
-                builtin_print_help(parser, streams, cmd, streams.out);
+                builtin_print_help(parser, streams, cmd);
                 return STATUS_CMD_OK;
             case '?': {
                 builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);

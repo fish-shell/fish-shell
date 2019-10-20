@@ -206,14 +206,14 @@ static int builtin_generic(parser_t &parser, io_streams_t &streams, wchar_t **ar
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 
     // Hackish - if we have no arguments other than the command, we are a "naked invocation" and we
     // just print help.
     if (argc == 1) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -439,7 +439,7 @@ proc_status_t builtin_run(parser_t &parser, int job_pgid, wchar_t **argv, io_str
     // follows the keyword by `-h` or `--help`. Since it isn't really a builtin command we need to
     // handle displaying help for it here.
     if (argv[1] && !argv[2] && parse_util_argument_is_help(argv[1]) && cmd_needs_help(argv[0])) {
-        builtin_print_help(parser, streams, argv[0], streams.out);
+        builtin_print_help(parser, streams, argv[0]);
         return proc_status_t::from_exit_code(STATUS_CMD_OK);
     }
 

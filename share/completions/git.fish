@@ -1,5 +1,32 @@
 # fish completion for git
-# Use 'command git' to avoid interactions for aliases from git to (e.g.) hub
+
+# Use this instead of calling git directly; it passes the commands that are
+# already present on the commandline to git. This is relevant for --work-tree etc, see issue #6219.
+function __fish_git
+    set -l saved_args $argv
+    set -l global_args
+    set -l cmd (commandline -opc)
+    # We assume that git is the first command until we have a better awareness of subcommands, see #2705.
+    set -e cmd[1]
+    if argparse -s (__fish_git_global_optspecs) -- $cmd 2>/dev/null
+        set -l subcommand $argv[1]
+        if set -q subcommand
+            for arg in $cmd
+                test $arg = $subcommand; and break
+                set -a global_args $arg
+            end
+        end
+    end
+    # Using 'command git' to avoid interactions for aliases from git to (e.g.) hub
+    command git $global_args $saved_args
+end
+
+# Print an optspec for argparse to handle git's options that are independent of any subcommand.
+function __fish_git_global_optspecs
+    string join \n v-version h/help C= c=+ 'e-exec-path=?' H-html-path M-man-path I-info-path p/paginate \
+    P/no-pager o-no-replace-objects b-bare G-git-dir= W-work-tree= N-namespace= S-super-prefix= \
+    l-literal-pathspecs g-glob-pathspecs O-noglob-pathspecs i-icase-pathspecs
+end
 
 function __fish_git_commits
     # Complete commits with their subject line as the description
@@ -499,16 +526,9 @@ end
 
 function __fish_git_needs_command
     # Figure out if the current invocation already has a command.
-
-    # Git has tons of options, but fortunately only a few can appear before the command.
-    # They are listed here.
-    set -l opts h-help p P-paginate N-no-pager b-bare o-no-replace-objects \
-        l-literal-pathspecs g-glob-pathspecs O-noglob-pathspecs i-icase-pathspecs \
-        e-exec-path= G-git-dir= c= C= v-version H-html-path \
-        m-man-path I-info-path w-work-tree= a-namespace= s-super-prefix=
-    set cmd (commandline -opc)
+    set -l cmd (commandline -opc)
     set -e cmd[1]
-    argparse -s $opts -- $cmd 2>/dev/null
+    argparse -s (__fish_git_global_optspecs) -- $cmd 2>/dev/null
     or return 0
     # These flags function as commands, effectively.
     set -q _flag_version; and return 1

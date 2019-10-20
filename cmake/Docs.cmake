@@ -16,7 +16,8 @@ SET(SPHINX_MANPAGE_DIR "${SPHINX_ROOT_DIR}/man")
 # sphinx-docs uses fish_indent for highlighting.
 # Prepend the output dir of fish_indent to PATH.
 ADD_CUSTOM_TARGET(sphinx-docs
-    ${CMAKE_COMMAND} -E copy_if_different ${SPHINX_SRC_DIR}/_static/pygments.css ${SPHINX_HTML_DIR}/_static/
+    mkdir -p ${SPHINX_HTML_DIR}/_static/
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SPHINX_SRC_DIR}/_static/pygments.css ${SPHINX_HTML_DIR}/_static/
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SPHINX_SRC_DIR}/_static/custom.css ${SPHINX_HTML_DIR}/_static/
     COMMAND env PATH="$<TARGET_FILE_DIR:fish_indent>:$$PATH"
         ${SPHINX_EXECUTABLE}

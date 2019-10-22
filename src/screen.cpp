@@ -285,7 +285,7 @@ void layout_cache_t::add_prompt_layout(wcstring input, prompt_layout_t layout) {
 }
 
 /// Calculate layout information for the given prompt. Does some clever magic to detect common
-/// escape sequences that may be embeded in a prompt, such as those to set visual attributes.
+/// escape sequences that may be embedded in a prompt, such as those to set visual attributes.
 static prompt_layout_t calc_prompt_layout(const wcstring &prompt, layout_cache_t &cache) {
     if (auto cached_layout = cache.find_prompt_layout(prompt)) {
         return *cached_layout;

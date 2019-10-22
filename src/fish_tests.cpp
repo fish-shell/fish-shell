@@ -106,7 +106,7 @@ static bool should_test_function(const char *func_name) {
 #define ESCAPE_TEST_COUNT 100000
 /// The average length of strings to unescape.
 #define ESCAPE_TEST_LENGTH 100
-/// The higest character number of character to try and escape.
+/// The highest character number of character to try and escape.
 #define ESCAPE_TEST_CHAR 4000
 
 /// Number of encountered errors.

@@ -805,7 +805,7 @@ void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, DIR *bas
 ///
 /// Args:
 /// base_dir: the "working directory" against which the wildcard is to be resolved
-/// wc: the wildcard string itself, e.g. foo*bar/baz (where * is acutally ANY_CHAR)
+/// wc: the wildcard string itself, e.g. foo*bar/baz (where * is actually ANY_CHAR)
 /// prefix: the string that should be prepended for completions that replace their token.
 //    This is usually the same thing as the original wildcard, but for fuzzy matching, we
 //    expand intermediate segments. effective_prefix is always either empty, or ends with a slash

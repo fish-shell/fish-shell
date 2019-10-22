@@ -121,7 +121,7 @@ class parse_execution_context_t;
 class completion_t;
 struct event_t;
 
-/// Miscelleneous data used to avoid recursion and others.
+/// Miscellaneous data used to avoid recursion and others.
 struct library_data_t {
     /// A counter incremented every time a command executes.
     uint64_t exec_count{0};

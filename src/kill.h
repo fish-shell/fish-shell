@@ -1,6 +1,6 @@
 // Prototypes for the killring.
 //
-// Works like the killring in emacs and readline. The killring is cut and paste whith a memory of
+// Works like the killring in emacs and readline. The killring is cut and paste with a memory of
 // previous cuts.
 #ifndef FISH_KILL_H
 #define FISH_KILL_H

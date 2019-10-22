@@ -41,7 +41,7 @@ The pattern below is a basic pattern:
     COMMAND [OPTIONS] ARGUMENTS
 
 
-- **COMMAND**: the name of the executeable
+- **COMMAND**: the name of the executable
 
 - **[OPTIONS]**: options can change the behaviour of a command
 
@@ -59,11 +59,11 @@ Example:
 
 ::
 
-    >echo -s Hallo World!
-    HalloWorld!
+    >echo -s Hello World!
+    HelloWorld!
 
 
--  both ``Hallo`` and ``World!`` are arguments to the echo command
+-  both ``Hello`` and ``World!`` are arguments to the echo command
 - ``-s`` is an option that suppresses spaces in the output of the command
 
 Commands versus Programs
@@ -87,7 +87,7 @@ There are two ways to combine shell commands:
 
 Example::
 
-    # Every line of the ``ls`` command is immediatelly passed on to the ``grep`` command
+    # Every line of the ``ls`` command is immediately passed on to the ``grep`` command
     >ls -l | grep "my topic"
 
 
@@ -829,7 +829,7 @@ In these cases, the expansion eliminates the string, as a result of the implicit
 
 If, in the example above, $WORD is undefined or an empty list, the "s" is not printed. However, it is printed, if $WORD is the empty string.
 
-Unlike all other expanions, variable expansion also happens in double quoted strings. Inside double quotes (``"these"``), variables will always expand to exactly one argument. If they are empty or undefined, it will result in an empty string. If they have one element, they'll expand to that element. If they have more than that, the elements will be joined with spaces.
+Unlike all other expansions, variable expansion also happens in double quoted strings. Inside double quotes (``"these"``), variables will always expand to exactly one argument. If they are empty or undefined, it will result in an empty string. If they have one element, they'll expand to that element. If they have more than that, the elements will be joined with spaces.
 
 Outside of double quotes, variables will expand to as many arguments as they have elements. That means an empty list will expand to nothing, a variable with one element will expand to that element, and a variable with multiple elements will expand to each of those elements separately.
 

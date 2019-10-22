@@ -121,7 +121,7 @@ std::unique_ptr<history_file_contents_t> history_file_contents_t::create(int fd)
     if (len <= 0 || static_cast<unsigned long>(len) >= SIZE_MAX) return nullptr;
     if (lseek(fd, 0, SEEK_SET) != 0) return nullptr;
 
-    // Read the file, possibly ussing mmap.
+    // Read the file, possibly using mmap.
     void *mmap_start = nullptr;
     if (should_mmap(fd)) {
         // We feel confident to map the file directly. Note this is still risky: if another

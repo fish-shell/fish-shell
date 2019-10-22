@@ -1307,7 +1307,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
             remove_job(*this->parser, job.get());
         }
 
-        // Update universal vaiables on external conmmands.
+        // Update universal variables on external conmmands.
         // TODO: justify this, why not on every command?
         if (job_contained_external_command) {
             parser->vars().universal_barrier();

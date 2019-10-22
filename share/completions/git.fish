@@ -9,12 +9,10 @@ function __fish_git
     # We assume that git is the first command until we have a better awareness of subcommands, see #2705.
     set -e cmd[1]
     if argparse -s (__fish_git_global_optspecs) -- $cmd 2>/dev/null
-        set -l subcommand $argv[1]
-        if set -q subcommand
-            for arg in $cmd
-                test $arg = $subcommand; and break
-                set -a global_args $arg
-            end
+        # All arguments that were parsed by argparse are global git options.
+        set -l num_global_args (math (count $cmd) - (count $argv))
+        if test $num_global_args -ne 0
+            set global_args $cmd[1..$num_global_args]
         end
     end
     # Using 'command git' to avoid interactions for aliases from git to (e.g.) hub

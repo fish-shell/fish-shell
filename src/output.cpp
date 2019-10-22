@@ -476,6 +476,10 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
             if (string_prefixes_string(prefix, next)) {
                 color_name = wcstring(next, wcslen(prefix));
             }
+            // Reverse should be meaningful in either context
+            if (next == L"--reverse" || next == L"-r") {
+                is_reverse = true;
+            }
         } else {
             if (next == L"--bold" || next == L"-o")
                 is_bold = true;

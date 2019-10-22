@@ -559,3 +559,7 @@ function dualcollect
 end
 count (dualcollect)
 # CHECK: 3
+
+string match -qer asd asd
+# CHECKERR: match: Invalid combination of options,
+# CHECKERR: --entire and --quiet are mutually exclusive

@@ -864,6 +864,12 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
         return STATUS_INVALID_ARGS;
     }
 
+    if (opts.entire && opts.quiet) {
+        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
+                                  _(L"--entire and --quiet are mutually exclusive"));
+        return STATUS_INVALID_ARGS;
+    }
+
     std::unique_ptr<string_matcher_t> matcher;
     if (opts.regex) {
         matcher = make_unique<pcre2_matcher_t>(cmd, pattern, opts, streams);

@@ -15,7 +15,7 @@
 #include "io.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-/// An implementation of the external realpath command. Desn't support any options.
+/// An implementation of the external realpath command. Doesn't support any options.
 /// In general scripts shouldn't invoke this directly. They should just use `realpath` which
 /// will fallback to this builtin if an external command cannot be found.
 int builtin_realpath(parser_t &parser, io_streams_t &streams, wchar_t **argv) {

@@ -18,7 +18,7 @@ struct io_streams_t;
 struct builtin_data_t {
     // Name of the builtin.
     const wchar_t *name;
-    // Function pointer tothe builtin implementation.
+    // Function pointer to the builtin implementation.
     int (*func)(parser_t &parser, io_streams_t &streams, wchar_t **argv);
     // Description of what the builtin does.
     const wchar_t *desc;

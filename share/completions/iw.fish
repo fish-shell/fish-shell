@@ -12,6 +12,10 @@ function __fish_iw_device
     end
 end
 
+function __fish_iw_ssid
+    iw dev $argv[1] scan dump | grep SSID | awk '{ print $2 }'
+end
+
 function __fish_complete_iw
     set -l cmd (commandline -opc)
     if not set -q cmd[2]
@@ -34,9 +38,11 @@ function __fish_complete_iw
                         printf '%s\t%s\n' stop "Stop AP functionality" \
                         start "Start AP functionality"
                     end
-                case auth
-                    # -w option?
-                case connect disconnect
+                case auth connect
+                    if not set -q cmd[5]
+                        __fish_iw_ssid $cmd[3]
+                    end
+                case disconnect
                 case cqm
                     if not set -q cmd[5]
                         echo rssi

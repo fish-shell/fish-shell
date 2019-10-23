@@ -91,6 +91,7 @@
   - `gpg2` (#6062)
   - `hledger` (#6043)
   - `mariner` (#5718)
+  - `nethack` (#6240)
   - `patool` (#6083)
   - `qubes-gpg-client` (#6067)
   - `rg`

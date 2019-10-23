@@ -98,6 +98,7 @@
   - `iw` (#6232)
   - `kak`
   - `mariner` (#5718)
+  - `nethack` (#6240)
   - `patool` (#6083)
   - `phpunit` (#6197)
   - `qubes-gpg-client` (#6067)

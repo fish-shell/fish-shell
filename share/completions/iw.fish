@@ -1,15 +1,19 @@
 # iw(8) completion for fish
 
-# The difficulty here is that iw allows abbreviating options, so we need to complete "iw a" like "iw address", but not "iw m" like "iw mroute"
-# Also the manpage and even the grammar it accepts is utter shite (options can only be before commands, some things are only in the BNF, others only in the text)
-# It also quite likes the word "dev", even though it needs it less than the BNF specifies
+# The completions for iw are based off those for ip, which has a similar options structure.
 
 set -l iw_commands dev phy reg event features commands list
+# wdev not supported since it is barely documented
 
 function __fish_iw_device
     __fish_print_interfaces | while read i
         printf '%s\t%s\n' $i "Device"
     end
+end
+
+function __fish_iw_phy
+    set -l phys /sys/class/ieee80211/*
+    echo $phys | xargs -r basename | string join \n
 end
 
 function __fish_iw_ssid
@@ -19,14 +23,13 @@ end
 function __fish_complete_iw
     set -l cmd (commandline -opc)
     if not set -q cmd[2]
-        return # Use completions from $iw_commands
+        return # Uses completions from $iw_commands
     else if not set -q cmd[3]
         switch $cmd[2]
             case dev
                 __fish_iw_device
             case phy
-                set -l phys /sys/class/ieee80211/*
-                echo $phys | xargs -r basename | string join \n
+                __fish_iw_phy
         end
         return
     end
@@ -70,7 +73,6 @@ function __fish_complete_iw
                     if not set -q cmd[5]
                         echo add
                     end
-                    # more options?
                 case link
                 case measurement
                     if not set -q cmd[5]
@@ -128,7 +130,6 @@ function __fish_complete_iw
                         dump "Dmp the current scan results"
                     end
                     # -u option?
-                    # and sched_start and sched_stop and abort and trigger and dump  commands
                 case set
                     if not set -q cmd[5]
                         printf '%s\t%s\n' bitrates "Rate masks" \

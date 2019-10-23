@@ -192,6 +192,13 @@ class process_t {
     parsed_source_ref_t block_node_source{};
     tnode_t<grammar::statement> internal_block_node{};
 
+    struct concrete_assignment {
+        wcstring variable_name;
+        wcstring_list_t values;
+    };
+    /// The expanded variable assignments for this process, as specified by the `a=b cmd` syntax.
+    std::vector<concrete_assignment> variable_assignments;
+
     /// Sets argv.
     void set_argv(const wcstring_list_t &argv) { argv_array.set(argv); }
 

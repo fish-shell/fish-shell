@@ -961,6 +961,17 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
         parser.libdata().exec_count++;
     }
 
+    const block_t *block = nullptr;
+    cleanup_t pop_block([&]() {
+        if (block) parser.pop_block(block);
+    });
+    if (!p->variable_assignments.empty()) {
+        block = parser.push_block(block_t::variable_assignment_block());
+    }
+    for (const auto &assignment : p->variable_assignments) {
+        parser.vars().set(assignment.variable_name, ENV_LOCAL | ENV_EXPORT, assignment.values);
+    }
+
     // Execute the process.
     p->check_generations_before_launch();
     switch (p->type) {

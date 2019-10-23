@@ -16,6 +16,7 @@
 - Brace expansion now only takes place if the braces include a "," or a variable expansion, meaning common commands such as `git reset HEAD@{0}` do not require escaping (#5869).
 - New redirections `&>` and `&|` may be used to redirect or pipe stdout, and also redirect stderr to stdout (#6192).
 - `switch` now allows arguments that expand to nothing, like empty variables (#5677).
+- The `VAR=val cmd` syntax can now be used to run a command in a modified environment (#6287).
 
 ### Scripting improvements
 - `string split0` now returns 0 if it split something (#5701).

@@ -43,6 +43,7 @@ enum block_type_t {
     SOURCE,                   /// Block created by the . (source) builtin
     EVENT,                    /// Block created on event notifier invocation
     BREAKPOINT,               /// Breakpoint block
+    VARIABLE_ASSIGNMENT,      /// Variable assignment before a command
 };
 
 /// Possible states for a loop.
@@ -98,6 +99,7 @@ class block_t {
     static block_t switch_block();
     static block_t scope_block(block_type_t type);
     static block_t breakpoint_block();
+    static block_t variable_assignment_block();
 
     ~block_t();
 };

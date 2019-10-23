@@ -218,6 +218,12 @@ tnode_t<Type> parse_node_tree_t::find_child(const parse_node_t &parent) const {
     return tnode_t<Type>(this, &this->find_child(parent, Type::token));
 }
 
+/// Return the arguments under an arguments_list or arguments_or_redirection_list
+/// Do not return more than max.
+using variable_assignment_node_list_t = std::vector<tnode_t<grammar::variable_assignment>>;
+variable_assignment_node_list_t get_variable_assignment_nodes(
+    tnode_t<grammar::variable_assignments>, size_t max = -1);
+
 /// Given a plain statement, get the command from the child node. Returns the command string on
 /// success, none on failure.
 maybe_t<wcstring> command_for_plain_statement(tnode_t<grammar::plain_statement> stmt,

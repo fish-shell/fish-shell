@@ -87,10 +87,14 @@ class parse_execution_context_t {
 
     enum process_type_t process_type_for_command(tnode_t<grammar::plain_statement> statement,
                                                  const wcstring &cmd) const;
+    parse_execution_result_t apply_variable_assignments(
+        process_t *proc, tnode_t<grammar::variable_assignments> variable_assignments,
+        const block_t **block);
 
     // These create process_t structures from statements.
-    parse_execution_result_t populate_job_process(job_t *job, process_t *proc,
-                                                  tnode_t<grammar::statement> statement);
+    parse_execution_result_t populate_job_process(
+        job_t *job, process_t *proc, tnode_t<grammar::statement> statement,
+        tnode_t<grammar::variable_assignments> variable_assignments);
     parse_execution_result_t populate_not_process(job_t *job, process_t *proc,
                                                   tnode_t<grammar::not_statement> not_statement);
     parse_execution_result_t populate_plain_process(job_t *job, process_t *proc,

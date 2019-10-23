@@ -85,6 +85,7 @@
   - `code` (#6205)
   - `csc` and `csi` (#6016)
   - `cwebp` (#6034)
+  - `cygpath` and `cygstart` (#6239)
   - `epkginfo` (#5829)
   - `ffmpeg`, `ffplay`, and `ffprobe` (#5922)
   - `fsharpc` and `fsharpi` (#6016)

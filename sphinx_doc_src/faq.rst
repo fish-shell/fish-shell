@@ -8,6 +8,10 @@ Use the :ref:`set <cmd-set>` command::
     set -x key value
     set -e key
 
+Since fish 3.1 you can set an environment variable for just one command using the ``key=value some command`` syntax, like in other shells.  The two lines below behave identically - unlike other shells, fish will output ``value`` both times::
+
+    key=value echo $key
+    begin; set -lx key value; echo $key; end
 
 How do I run a command every login? What's fish's equivalent to .bashrc?
 ------------------------------------------------------------------------
@@ -94,22 +98,6 @@ If you are just interested in success or failure, you can run the command direct
 
 
 See the documentation for :ref:`test <cmd-test>` and :ref:`if <cmd-if>` for more information.
-
-How do I set an environment variable for just one command?
-----------------------------------------------------------
-``SOME_VAR=1 command`` produces an error: ``Unknown command "SOME_VAR=1"``.
-
-Use the ``env`` command.
-
-``env SOME_VAR=1 command``
-
-You can also declare a local variable in a block::
-
-    begin
-        set -lx SOME_VAR 1
-        command
-    end
-
 
 How do I check whether a variable is defined?
 ---------------------------------------------

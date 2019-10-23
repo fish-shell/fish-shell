@@ -1200,6 +1200,12 @@ highlighter_t::color_array_t highlighter_t::highlight() {
                 this->color_node(node, highlight_role_t::operat);
                 break;
 
+            case symbol_variable_assignment: {
+                tnode_t<g::variable_assignment> variable_assignment = {&parse_tree, &node};
+                this->color_argument(variable_assignment.child<0>());
+                break;
+            }
+
             case parse_token_type_pipe:
             case parse_token_type_background:
             case parse_token_type_end:
@@ -1222,6 +1228,8 @@ highlighter_t::color_array_t highlighter_t::highlight() {
                 bool is_valid_cmd = false;
                 if (!this->io_ok) {
                     // We cannot check if the command is invalid, so just assume it's valid.
+                    is_valid_cmd = true;
+                } else if (variable_assignment_equals_pos(*cmd)) {
                     is_valid_cmd = true;
                 } else {
                     wcstring expanded_cmd;

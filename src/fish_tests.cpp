@@ -4626,6 +4626,7 @@ static void test_highlighting() {
     });
 
     highlight_tests.push_back({
+        {L"HOME=.", highlight_role_t::param},
         {L"false", highlight_role_t::command},
         {L"|&", highlight_role_t::error},
         {L"true", highlight_role_t::command},

@@ -314,6 +314,16 @@ RESOLVE(block_header) {
     }
 }
 
+RESOLVE(variable_assignments) {
+    UNUSED(token2);
+    UNUSED(out_tag);
+    if (token1.may_be_variable_assignment) {
+        assert(token1.type == parse_token_type_string);
+        return production_for<var>();
+    }
+    return production_for<empty>();
+}
+
 RESOLVE(decorated_statement) {
     // and/or are typically parsed in job_conjunction at the beginning of a job
     // However they may be reached here through e.g. true && and false.

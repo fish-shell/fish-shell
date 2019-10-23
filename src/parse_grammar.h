@@ -228,15 +228,27 @@ DEF_ALT(job_conjunction_continuation) {
 // like if statements, where we require a command). To represent "non-empty", we require a
 // statement, followed by a possibly empty job_continuation, and then optionally a background
 // specifier '&'
-DEF(job) produces_sequence<statement, job_continuation, optional_background>{BODY(job)};
+DEF(job)
+produces_sequence<variable_assignments, statement, job_continuation, optional_background>{
+    BODY(job)};
 
 DEF_ALT(job_continuation) {
-    using piped = seq<tok_pipe, optional_newlines, statement, job_continuation>;
+    using piped =
+        seq<tok_pipe, optional_newlines, variable_assignments, statement, job_continuation>;
     using empty = grammar::empty;
     ALT_BODY(job_continuation, piped, empty);
 };
 
-// A statement is a normal command, or an if / while / not etc.
+// A list of assignments like HOME=$PWD
+DEF_ALT(variable_assignments) {
+    using empty = grammar::empty;
+    using var = seq<variable_assignment, variable_assignments>;
+    ALT_BODY(variable_assignments, empty, var);
+};
+// A string token like VAR=value
+DEF(variable_assignment) produces_single<tok_string>{BODY(variable_assignment)};
+
+// A statement is a normal command, or an if / while / and etc
 DEF_ALT(statement) {
     using nots = single<not_statement>;
     using block = single<block_statement>;
@@ -309,8 +321,8 @@ produces_sequence<keyword<parse_keyword_function>, argument, argument_list, tok_
     BODY(function_header)};
 
 DEF_ALT(not_statement) {
-    using nots = seq<keyword<parse_keyword_not>, statement>;
-    using exclams = seq<keyword<parse_keyword_exclam>, statement>;
+    using nots = seq<keyword<parse_keyword_not>, variable_assignments, statement>;
+    using exclams = seq<keyword<parse_keyword_exclam>, variable_assignments, statement>;
     ALT_BODY(not_statement, nots, exclams);
 };
 

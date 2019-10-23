@@ -38,6 +38,7 @@ struct parse_token_t {
     bool is_help_argument{false};      // Hackish: whether the source looks like '-h' or '--help'
     bool is_newline{false};            // Hackish: if TOK_END, whether the source is a newline.
     bool preceding_escaped_nl{false};  // Whether there was an escaped newline preceding this token.
+    bool may_be_variable_assignment{false};  // Hackish: whether this token is a string like FOO=bar
     source_offset_t source_start{SOURCE_OFFSET_INVALID};
     source_offset_t source_length{0};
 
@@ -233,5 +234,8 @@ struct parsed_source_t {
 using parsed_source_ref_t = std::shared_ptr<const parsed_source_t>;
 parsed_source_ref_t parse_source(wcstring src, parse_tree_flags_t flags, parse_error_list_t *errors,
                                  parse_token_type_t goal = symbol_job_list);
+
+/// The position of the equal sign in a variable assignment like foo=bar.
+maybe_t<size_t> variable_assignment_equals_pos(const wcstring &txt);
 
 #endif

@@ -123,8 +123,8 @@ tnode_t<g::plain_statement> parse_execution_context_t::infinite_recursive_statem
     // Get the list of plain statements.
     // Ignore statements with decorations like 'builtin' or 'command', since those
     // are not infinite recursion. In particular that is what enables 'wrapper functions'.
-    tnode_t<g::statement> statement = first_job.child<0>();
-    tnode_t<g::job_continuation> continuation = first_job.child<1>();
+    tnode_t<g::statement> statement = first_job.child<1>();
+    tnode_t<g::job_continuation> continuation = first_job.child<2>();
     const null_environment_t nullenv{};
     while (statement) {
         tnode_t<g::plain_statement> plain_statement =
@@ -207,10 +207,10 @@ parse_execution_context_t::cancellation_reason(const block_t *block) const {
 
 /// Return whether the job contains a single statement, of block type, with no redirections.
 bool parse_execution_context_t::job_is_simple_block(tnode_t<g::job> job_node) const {
-    tnode_t<g::statement> statement = job_node.child<0>();
+    tnode_t<g::statement> statement = job_node.child<1>();
 
     // Must be no pipes.
-    if (job_node.child<1>().try_get_child<g::tok_pipe, 0>()) {
+    if (job_node.child<2>().try_get_child<g::tok_pipe, 0>()) {
         return false;
     }
 
@@ -713,27 +713,7 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(
     // status to 127, which is the standard number used by other shells like bash and zsh.
 
     const wchar_t *const cmd = cmd_str.c_str();
-    const wchar_t *const equals_ptr = std::wcschr(cmd, L'=');
-    if (equals_ptr != NULL) {
-        // Try to figure out if this is a pure variable assignment (foo=bar), or if this appears to
-        // be running a command (foo=bar ruby...).
-        const wcstring name_str = wcstring(cmd, equals_ptr - cmd);  // variable name, up to the =
-        const wcstring val_str = wcstring(equals_ptr + 1);          // variable value, past the =
-
-        auto args = statement.descendants<g::argument>(1);
-        if (!args.empty()) {
-            const wcstring argument = get_source(args.at(0));
-
-            // Looks like a command.
-            this->report_error(statement, ERROR_BAD_EQUALS_IN_COMMAND5, argument.c_str(),
-                               name_str.c_str(), val_str.c_str(), argument.c_str(),
-                               get_ellipsis_str());
-        } else {
-            wcstring assigned_val = reconstruct_orig_str(val_str);
-            this->report_error(statement, ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, name_str.c_str(),
-                               assigned_val.c_str());
-        }
-    } else if (err_code != ENOENT) {
+    if (err_code != ENOENT) {
         this->report_error(statement, _(L"The file '%ls' is not executable by this user"), cmd);
     } else {
         // Handle unrecognized commands with standard command not found handler that can make better
@@ -1049,8 +1029,9 @@ parse_execution_result_t parse_execution_context_t::populate_not_process(
     job_t *job, process_t *proc, tnode_t<g::not_statement> not_statement) {
     auto &flags = job->mut_flags();
     flags.negate = !flags.negate;
-    return this->populate_job_process(job, proc,
-                                      not_statement.require_get_child<g::statement, 1>());
+    return this->populate_job_process(
+        job, proc, not_statement.require_get_child<g::statement, 2>(),
+        not_statement.require_get_child<g::variable_assignments, 1>());
 }
 
 template <typename Type>
@@ -1080,12 +1061,65 @@ parse_execution_result_t parse_execution_context_t::populate_block_process(
     return parse_execution_success;
 }
 
+parse_execution_result_t parse_execution_context_t::apply_variable_assignments(
+    process_t *proc, tnode_t<grammar::variable_assignments> variable_assignments,
+    const block_t **block) {
+    variable_assignment_node_list_t assignment_list =
+        get_variable_assignment_nodes(variable_assignments);
+    if (assignment_list.empty()) return parse_execution_success;
+    *block = parser->push_block(block_t::variable_assignment_block());
+    for (const auto &variable_assignment : assignment_list) {
+        const wcstring &source = variable_assignment.get_source(pstree->src);
+        auto equals_pos = variable_assignment_equals_pos(source);
+        assert(equals_pos);
+        const wcstring &variable_name = source.substr(0, *equals_pos);
+        const wcstring expression = source.substr(*equals_pos + 1);
+        std::vector<completion_t> expression_expanded;
+        parse_error_list_t errors;
+        // TODO this is mostly copied from expand_arguments_from_nodes, maybe extract to function
+        auto expand_ret =
+            expand_string(expression, &expression_expanded, expand_flag::no_descriptions,
+                          parser->vars(), parser->shared(), &errors);
+        parse_error_offset_source_start(
+            &errors, variable_assignment.source_range()->start + *equals_pos + 1);
+        switch (expand_ret) {
+            case expand_result_t::error: {
+                this->report_errors(errors);
+                return parse_execution_errored;
+            }
+            case expand_result_t::wildcard_no_match:  // nullglob (equivalent to set)
+            case expand_result_t::wildcard_match:
+            case expand_result_t::ok: {
+                break;
+            }
+            default: {
+                DIE("unexpected expand_string() return value");
+                break;
+            }
+        }
+        wcstring_list_t vals;
+        for (auto &completion : expression_expanded) {
+            vals.emplace_back(std::move(completion.completion));
+        }
+        if (proc) proc->variable_assignments.push_back({variable_name, vals});
+        parser->vars().set(std::move(variable_name), ENV_LOCAL | ENV_EXPORT, std::move(vals));
+    }
+    return parse_execution_success;
+}
+
 parse_execution_result_t parse_execution_context_t::populate_job_process(
-    job_t *job, process_t *proc, tnode_t<grammar::statement> statement) {
+    job_t *job, process_t *proc, tnode_t<grammar::statement> statement,
+    tnode_t<grammar::variable_assignments> variable_assignments) {
     // Get the "specific statement" which is boolean / block / if / switch / decorated.
     const parse_node_t &specific_statement = statement.get_child_node<0>();
 
-    parse_execution_result_t result = parse_execution_success;
+    const block_t *block = nullptr;
+    parse_execution_result_t result =
+        this->apply_variable_assignments(proc, variable_assignments, &block);
+    cleanup_t scope([&]() {
+        if (block) parser->pop_block(block);
+    });
+    if (result != parse_execution_success) return parse_execution_errored;
 
     switch (specific_statement.type) {
         case symbol_not_statement: {
@@ -1131,25 +1165,25 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
 
     // We are going to construct process_t structures for every statement in the job. Get the first
     // statement.
-    tnode_t<g::statement> statement = job_node.child<0>();
-    assert(statement);
-
-    parse_execution_result_t result = parse_execution_success;
+    tnode_t<g::statement> statement = job_node.child<1>();
+    tnode_t<g::variable_assignments> variable_assignments = job_node.child<0>();
 
     // Create processes. Each one may fail.
     process_list_t processes;
     processes.emplace_back(new process_t());
-    result = this->populate_job_process(j, processes.back().get(), statement);
+    parse_execution_result_t result =
+        this->populate_job_process(j, processes.back().get(), statement, variable_assignments);
 
     // Construct process_ts for job continuations (pipelines), by walking the list until we hit the
     // terminal (empty) job continuation.
-    tnode_t<g::job_continuation> job_cont = job_node.child<1>();
+    tnode_t<g::job_continuation> job_cont = job_node.child<2>();
     assert(job_cont);
     while (auto pipe = job_cont.try_get_child<g::tok_pipe, 0>()) {
         if (result != parse_execution_success) {
             break;
         }
-        tnode_t<g::statement> statement = job_cont.require_get_child<g::statement, 2>();
+        auto variable_assignments = job_cont.require_get_child<g::variable_assignments, 2>();
+        auto statement = job_cont.require_get_child<g::statement, 3>();
 
         // Handle the pipe, whose fd may not be the obvious stdout.
         auto parsed_pipe = pipe_or_redir_t::from_string(get_source(pipe));
@@ -1169,10 +1203,11 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
 
         // Store the new process (and maybe with an error).
         processes.emplace_back(new process_t());
-        result = this->populate_job_process(j, processes.back().get(), statement);
+        result =
+            this->populate_job_process(j, processes.back().get(), statement, variable_assignments);
 
         // Get the next continuation.
-        job_cont = job_cont.require_get_child<g::job_continuation, 3>();
+        job_cont = job_cont.require_get_child<g::job_continuation, 4>();
         assert(job_cont);
     }
 
@@ -1231,30 +1266,39 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
     // However, if there are no redirections, then we can just jump into the block directly, which
     // is significantly faster.
     if (job_is_simple_block(job_node)) {
-        parse_execution_result_t result = parse_execution_success;
+        tnode_t<g::variable_assignments> variable_assignments = job_node.child<0>();
+        const block_t *block = nullptr;
+        parse_execution_result_t result =
+            this->apply_variable_assignments(nullptr, variable_assignments, &block);
+        cleanup_t scope([&]() {
+            if (block) parser->pop_block(block);
+        });
 
-        tnode_t<g::statement> statement = job_node.child<0>();
+        tnode_t<g::statement> statement = job_node.child<1>();
         const parse_node_t &specific_statement = statement.get_child_node<0>();
         assert(specific_statement_type_is_redirectable_block(specific_statement));
-        switch (specific_statement.type) {
-            case symbol_block_statement: {
-                result =
-                    this->run_block_statement({&tree(), &specific_statement}, associated_block);
-                break;
-            }
-            case symbol_if_statement: {
-                result = this->run_if_statement({&tree(), &specific_statement}, associated_block);
-                break;
-            }
-            case symbol_switch_statement: {
-                result = this->run_switch_statement({&tree(), &specific_statement});
-                break;
-            }
-            default: {
-                // Other types should be impossible due to the
-                // specific_statement_type_is_redirectable_block check.
-                PARSER_DIE();
-                break;
+        if (result == parse_execution_success) {
+            switch (specific_statement.type) {
+                case symbol_block_statement: {
+                    result =
+                        this->run_block_statement({&tree(), &specific_statement}, associated_block);
+                    break;
+                }
+                case symbol_if_statement: {
+                    result =
+                        this->run_if_statement({&tree(), &specific_statement}, associated_block);
+                    break;
+                }
+                case symbol_switch_statement: {
+                    result = this->run_switch_statement({&tree(), &specific_statement});
+                    break;
+                }
+                default: {
+                    // Other types should be impossible due to the
+                    // specific_statement_type_is_redirectable_block check.
+                    PARSER_DIE();
+                    break;
+                }
             }
         }
 

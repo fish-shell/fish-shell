@@ -90,6 +90,11 @@ std::vector<tnode_t<grammar::comment>> parse_node_tree_t::comment_nodes_for_node
     return result;
 }
 
+variable_assignment_node_list_t get_variable_assignment_nodes(
+    tnode_t<grammar::variable_assignments> list, size_t max) {
+    return list.descendants<grammar::variable_assignment>(max);
+}
+
 maybe_t<wcstring> command_for_plain_statement(tnode_t<grammar::plain_statement> stmt,
                                               const wcstring &src) {
     tnode_t<grammar::tok_string> cmd = stmt.child<0>();
@@ -109,7 +114,7 @@ arguments_node_list_t get_argument_nodes(tnode_t<grammar::arguments_or_redirecti
 }
 
 bool job_node_is_background(tnode_t<grammar::job> job) {
-    tnode_t<grammar::optional_background> bg = job.child<2>();
+    tnode_t<grammar::optional_background> bg = job.child<3>();
     return bg.tag() == parse_background;
 }
 
@@ -139,8 +144,8 @@ pipeline_position_t get_pipeline_position(tnode_t<grammar::statement> st) {
 
     // Check if we're the beginning of a job, and if so, whether that job
     // has a non-empty continuation.
-    tnode_t<job_continuation> jc = st.try_get_parent<job>().child<1>();
-    if (jc.try_get_child<statement, 2>()) {
+    tnode_t<job_continuation> jc = st.try_get_parent<job>().child<2>();
+    if (jc.try_get_child<statement, 3>()) {
         return pipeline_position_t::first;
     }
     return pipeline_position_t::none;

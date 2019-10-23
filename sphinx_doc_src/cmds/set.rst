@@ -119,6 +119,12 @@ Examples
         echo "Python is at $python_path"
     end
 
+    # Like other shells, fish 3.1 supports this syntax for passing a variable to just one command:
+    # Run fish with a temporary home directory.
+    HOME=(mktemp -d) fish
+    # Which is essentially the same as:
+    begin; set -lx HOME (mktemp -d); fish; end
+
 Notes
 -----
 

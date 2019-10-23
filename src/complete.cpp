@@ -1511,6 +1511,11 @@ void completer_t::perform() {
     }
 
     if (cmd_tok.location_in_or_at_end_of_source_range(cursor_pos)) {
+        maybe_t<size_t> equal_sign_pos = variable_assignment_equals_pos(current_token);
+        if (equal_sign_pos) {
+            complete_param_expand(current_token.substr(*equal_sign_pos + 1), true /* do_file */);
+            return;
+        }
         // Complete command filename.
         complete_cmd(current_token);
         complete_abbr(current_token);
@@ -1570,9 +1575,30 @@ void completer_t::perform() {
                 if (wants_transient) {
                     parser->libdata().transient_commandlines.push_back(cmdline);
                 }
-                // Now invoke any custom completions for this command.
-                if (!complete_param(cmd, previous_argument_unescape, current_argument_unescape,
-                                    !had_ddash)) {
+                bool is_variable_assignment = bool(variable_assignment_equals_pos(cmd));
+                if (is_variable_assignment && parser) {
+                    // To avoid issues like #2705 we complete commands starting with variable
+                    // assignments by recursively calling complete for the command suffix
+                    // without the first variable assignment token.
+                    wcstring unaliased_cmd;
+                    if (parser->libdata().transient_commandlines.empty()) {
+                        unaliased_cmd = cmdline;
+                    } else {
+                        unaliased_cmd = parser->libdata().transient_commandlines.back();
+                    }
+                    tokenizer_t tok(unaliased_cmd.c_str(), TOK_ACCEPT_UNFINISHED);
+                    maybe_t<tok_t> cmd_tok = tok.next();
+                    assert(cmd_tok);
+                    unaliased_cmd = unaliased_cmd.replace(0, cmd_tok->offset + cmd_tok->length, L"");
+                    parser->libdata().transient_commandlines.push_back(unaliased_cmd);
+                    cleanup_t remove_transient([&] { parser->libdata().transient_commandlines.pop_back(); });
+                    std::vector<completion_t> comp;
+                    complete(unaliased_cmd, &comp,
+                             completion_request_t::fuzzy_match, parser->vars(), parser->shared());
+                    this->completions.insert(completions.end(), comp.begin(), comp.end());
+                    do_file = false;
+                } else if (!complete_param(cmd, previous_argument_unescape, current_argument_unescape,
+                                    !had_ddash)) { // Invoke any custom completions for this command.
                     do_file = false;
                 }
                 if (wants_transient) {

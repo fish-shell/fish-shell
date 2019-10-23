@@ -40,6 +40,8 @@ enum parse_token_type_t : uint8_t {
     symbol_not_statement,
     symbol_decorated_statement,
     symbol_plain_statement,
+    symbol_variable_assignment,
+    symbol_variable_assignments,
     symbol_arguments_or_redirections_list,
     symbol_andor_job_list,
     symbol_argument_list,
@@ -276,11 +278,6 @@ void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt);
 
 /// Error issued on $.
 #define ERROR_NO_VAR_NAME _(L"Expected a variable name after this $.")
-
-/// Error on foo=bar.
-#define ERROR_BAD_EQUALS_IN_COMMAND5                                                        \
-    _(L"Unsupported use of '='. To run '%ls' with a modified environment, please use 'env " \
-      L"%ls=%ls %ls%ls'")
 
 /// Error message for Posix-style assignment: foo=bar.
 #define ERROR_BAD_COMMAND_ASSIGN_ERR_MSG \

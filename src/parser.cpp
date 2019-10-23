@@ -41,6 +41,9 @@ class io_chain_t;
 /// Breakpoint block.
 #define BREAKPOINT_BLOCK N_(L"block created by breakpoint")
 
+/// Variable assignment block.
+#define VARIABLE_ASSIGNMENT_BLOCK N_(L"block created by variable assignment prefixing a command")
+
 /// If block description.
 #define IF_BLOCK N_(L"'if' conditional block")
 
@@ -95,6 +98,7 @@ static const struct block_lookup_entry block_lookup[] = {
     {SOURCE, L"source", SOURCE_BLOCK},
     {EVENT, 0, EVENT_BLOCK},
     {BREAKPOINT, L"breakpoint", BREAKPOINT_BLOCK},
+    {VARIABLE_ASSIGNMENT, L"variable assignment", VARIABLE_ASSIGNMENT_BLOCK},
     {(block_type_t)0, 0, 0}};
 
 // Given a file path, return something nicer. Currently we just "unexpand" tildes.
@@ -789,6 +793,10 @@ wcstring block_t::description() const {
             result.append(L"breakpoint");
             break;
         }
+        case VARIABLE_ASSIGNMENT: {
+            result.append(L"variable_assignment");
+            break;
+        }
     }
 
     if (this->src_lineno >= 0) {
@@ -831,3 +839,4 @@ block_t block_t::scope_block(block_type_t type) {
     return block_t(type);
 }
 block_t block_t::breakpoint_block() { return block_t(BREAKPOINT); }
+block_t block_t::variable_assignment_block() { return block_t(VARIABLE_ASSIGNMENT); }

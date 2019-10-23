@@ -17,8 +17,8 @@ using namespace grammar;
 
 // Herein are encoded the productions for our LL2 fish grammar.
 //
-// Each symbol (e.g. symbol_job_list) has a corresponding function (e.g. resolve_job_lits). The
-// function accepts two tokens, representing the first and second lookahead, and returns returns a
+// Each symbol (e.g. symbol_job_list) has a corresponding function (e.g. resolve_job_list). The
+// function accepts two tokens, representing the first and second lookahead, and returns a
 // production representing the rule, or NULL on error. There is also a tag value which is returned
 // by reference; the tag is a sort of node annotation.
 //

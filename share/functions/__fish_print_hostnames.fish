@@ -105,10 +105,10 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
         if test -r $file
             # Don't read from $file twice. We could use `while read` instead, but that is extremely
             # slow.
-            read -z -l contents <$file
+            read -alz -d \n contents <$file
 
             # Print hosts from system wide ssh configuration file
-            string split \n -- $contents | string replace -rfi '^\s*Host\s+(\S.*?)\s*$' '$1' | string match -v '*\**'
+            string replace -rfi '^\s*Host\s+(\S.*?)\s*$' '$1' -- $contents | string match -v '*\**'
             # Also extract known_host paths.
             set known_hosts $known_hosts (string replace -rfi '.*KnownHostsFile\s*' '' -- $contents)
         end

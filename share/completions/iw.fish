@@ -4,7 +4,7 @@
 # Also the manpage and even the grammar it accepts is utter shite (options can only be before commands, some things are only in the BNF, others only in the text)
 # It also quite likes the word "dev", even though it needs it less than the BNF specifies
 
-set -l iw_commands dev phy reg event features commands
+set -l iw_commands dev phy reg event features commands list
 
 function __fish_iw_device
     __fish_print_interfaces | while read i
@@ -16,7 +16,7 @@ function __fish_complete_iw
     set -l cmd (commandline -opc)
     if not set -q cmd[2]
         return # Use completions from $iw_commands
-    if not set -q cmd[3]
+    else if not set -q cmd[3]
         switch $cmd[2]
             case dev
                 __fish_iw_device
@@ -25,6 +25,7 @@ function __fish_complete_iw
                 echo $phys | xargs -r basename | string join \n
         end
         return
+    end
     switch $cmd[2]
         case dev
             switch "$cmd[4]"
@@ -40,13 +41,13 @@ function __fish_complete_iw
                     if not set -q cmd[5]
                         echo rssi
                     else if not set -q cmd[6]
-                        echo treshold
+                        echo threshold
                         echo off
                     end
                 case ftm
                     if not set -q cmd[5]
                         printf '%s\t%s\n' start_responder "Start an FTM responder" \
-                        get_status "Get FTM responder statistics"
+                        get_stats "Get FTM responder statistics"
                     end
                 case ibss
                     if not set -q cmd[5]
@@ -109,8 +110,17 @@ function __fish_complete_iw
                         echo trigger
                     end
                 case roc
-                    # What's this?
+                    if not set -q cmd[5]
+                        echo start
+                    end
                 case scan
+                    if not set -q cmd[5]
+                        printf '%s\t%s\n' sched_stop "Stop an ongoing scheduled scan" \
+                        sched_start "Start a scheduled scan" \
+                        abort "Abort ongoing scan" \
+                        trigger "Trigger a scan" \
+                        dump "Dmp the current scan results"
+                    end
                     # -u option?
                     # and sched_start and sched_stop and abort and trigger and dump  commands
                 case set
@@ -186,7 +196,9 @@ function __fish_complete_iw
                     if not set -q cmd[5]
                         printf '%s\t%s\n' show "Show coalesce status" \
                         disable "Disable coalesce" \
-                        disable "Enable coalesce"
+                        enable "Enable coalesce"
+                    else if [ "$cmd[5]" = "enable" ] && not set -q cmd[6]
+                        __fish_complete_path # Enable takes a config file
                     end
                 case hwsim
                     if not set -q cmd[5]
@@ -243,10 +255,14 @@ end
 complete -f -c iw
 complete -f -c iw -a '(__fish_complete_iw)'
 complete -f -c iw -n "not __fish_seen_subcommand_from $iw_commands" -a "$iw_commands"
-# # Yes, iw only takes options before "objects"
+# Yes, iw only takes options before "objects"
 complete -f -c iw -l debug -d "Enable netlink message debugging" -n "not __fish_seen_subcommand_from $iw_commands"
 complete -f -c iw -l version -d "Print the version" -n "not __fish_seen_subcommand_from $iw_commands"
 
 complete -f -c iw -n "__fish_seen_subcommand_from event" -s t -d 'Print timestamp'
 complete -f -c iw -n "__fish_seen_subcommand_from event" -s r -d 'Print relative timestamp'
 complete -f -c iw -n "__fish_seen_subcommand_from event" -s f -d 'Print full frame for auth/assoc'
+
+complete -f -c iw -n "__fish_seen_subcommand_from reg" -a 'reload' -d 'Reload the kernel\'s regulatory database'
+complete -f -c iw -n "__fish_seen_subcommand_from reg" -a 'get' -d 'Print the kernel\'s current regulatory domain information'
+complete -f -c iw -n "__fish_seen_subcommand_from reg" -a 'set' -d 'Notify the kernel about the current regulatory domain'

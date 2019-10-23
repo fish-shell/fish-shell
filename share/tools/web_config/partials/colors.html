@@ -127,7 +127,7 @@ fish cannot change the background color of your terminal. Refer to your terminal
 				<div class="color_scheme_choice_label">
 					<!-- This click/clickBubble nonsense is so that we can have a separate URL inside a parent with an onClick handler -->
                                         {{colorScheme.name}}
-          <a data-ng-show="colorScheme.url" style="text-decoration: none; color: inherit;" href="{{colorScheme.url}}">&#10138;</a>
+          <a data-ng-show="colorScheme.url" style="text-decoration: none; color: inherit;" ng-href="{{colorScheme.url}}">&#10138;</a>
 				</div>
 				<div class="colorpicker_text_sample_tight" data-ng-style="{'background-color': colorScheme.preferred_background}">
 					<span data-ng-style="{'color': colorScheme.command}">/bright/vixens</span>

@@ -8,7 +8,7 @@
 
 # Filter the completions per command groups
 function __btrfs_options_groups
-    if test -z $argv
+    if not set -q argv[1]
         return 1
     end
     set -l cmd (commandline -cp)

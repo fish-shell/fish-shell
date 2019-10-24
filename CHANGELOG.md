@@ -89,8 +89,11 @@
   - `epkginfo` (#5829)
   - `ffmpeg`, `ffplay`, and `ffprobe` (#5922)
   - `fsharpc` and `fsharpi` (#6016)
+  - `g++` (#6217)
   - `gpg2` (#6062)
   - `hledger` (#6043)
+  - `iw` (#6232)
+  - `kak`
   - `mariner` (#5718)
   - `patool` (#6083)
   - `qubes-gpg-client` (#6067)

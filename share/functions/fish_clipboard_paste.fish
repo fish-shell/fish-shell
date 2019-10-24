@@ -2,6 +2,8 @@ function fish_clipboard_paste
     set -l data
     if type -q pbpaste
         set data (pbpaste)
+    else if set -q WAYLAND_DISPLAY; and type -q wl-paste
+        set data (wl-paste)
     else if type -q xsel
         # Return if `xsel` failed.
         # That way we don't print the redundant (and overly verbose for this) commandline error.
@@ -13,8 +15,6 @@ function fish_clipboard_paste
         if not set data (xclip -selection clipboard -o 2>/dev/null)
             return 1
         end
-    else if type -q wl-paste
-        set data (wl-paste)
     end
     # Also split on \r to turn it into a newline,
     # otherwise the output looks really confusing.

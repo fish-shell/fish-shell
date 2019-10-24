@@ -109,6 +109,7 @@
   - `tokei` (#6085)
   - `tsc` (#6016)
   - `vbc` (#6016)
+  - `zpaq`
 - Lots of improvements to completions.
 
 ## Deprecations

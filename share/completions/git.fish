@@ -1074,7 +1074,6 @@ complete -f -c git -n '__fish_git_using_command count-objects' -s H -l human-rea
 complete -c git -n __fish_git_needs_command -a describe -d 'Give an object a human readable name based on an available ref'
 complete -k -f -c git -n '__fish_git_using_command describe' -a '(__fish_git_tags)' -d Tag
 complete -k -f -c git -n '__fish_git_using_command describe' -a '(__fish_git_branches)'
-complete -k -f -c git -n '__fish_git_using_command describe' -a '(__fish_git_unique_remote_branches)' -d 'Unique Remote Branch'
 complete -k -f -c git -n '__fish_git_using_command describe' -a '(__fish_git_heads)' -d Head
 complete -f -c git -n '__fish_git_using_command describe' -l dirty -d 'Describe the state of the working tree, append dirty if there are local changes'
 complete -f -c git -n '__fish_git_using_command describe' -l broken -d 'Describe the state of the working tree, append -broken instead of erroring'

@@ -29,6 +29,7 @@
 - `string split0` now returns 0 if it split something (#5701).
 - In the interest of consistency, `builtin -q` and `command -q` can now be used to query if a builtin or command exists (#5631).
 - `math` now accepts `--scale=max` for the maximum scale (#5579).
+- `cd` understands the `--` argument to make it possible to change to directories starting with a hyphen (#6071).
 - `complete --do-complete` now also does fuzzy matches (#5467).
 - `complete --do-complete` can be used inside completions, allowing limited recursion (#3474).
 - `count` now also counts lines fed on standard input (#5744).
@@ -89,16 +90,20 @@
   - `epkginfo` (#5829)
   - `ffmpeg`, `ffplay`, and `ffprobe` (#5922)
   - `fsharpc` and `fsharpi` (#6016)
+  - `fzf` (#6178)
   - `g++` (#6217)
   - `gpg2` (#6062)
+  - `grub-mkrescue` (#6182)
   - `hledger` (#6043)
   - `iw` (#6232)
   - `kak`
   - `mariner` (#5718)
   - `patool` (#6083)
+  - `phpunit` (#6197)
   - `qubes-gpg-client` (#6067)
   - `rg`
   - `rustup`
+  - `sfdx` (#6149)
   - `speedtest` and `speedtest-cli` (#5840)
   - `src` (#6026)
   - `tokei` (#6085)

@@ -13,16 +13,21 @@ end
 
 function __fish_iw_phy
     set -l phys /sys/class/ieee80211/*
-    echo $phys | xargs -r basename | string join \n
+    string match --regex '[^/]*$' $phys
 end
 
 function __fish_iw_ssid
-    iw dev $argv[1] scan dump | grep SSID | awk '{ print $2 }'
+    printf '%s\n' (iw dev $argv[1] scan dump | string match --regex --entire SSID | string split ' ')[2]
 end
 
 function __fish_complete_iw
     set -l cmd (commandline -opc)
+
+    if string match --quiet -- '-*' $cmd[2]
+        set -e cmd[2] # Allow other completions to complete as normal
+    end
     if not set -q cmd[2]
+        set -e cmd[2]
         return # Uses completions from $iw_commands
     else if not set -q cmd[3]
         switch $cmd[2]

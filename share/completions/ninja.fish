@@ -1,14 +1,19 @@
+function __fish_ninja
+    set -l saved_args $argv
+    set -l dir .
+    argparse -i C/dir= -- (commandline -opc)
+    and set -ql _flag_C
+    and set -l dir $_flag_C
+    test -f $dir/build.ninja
+    and command ninja -C$dir $saved_args
+end
+
 function __fish_print_ninja_tools
-    echo list
-    if test -f build.ninja
-        ninja -t list | string match -v '*:' | string replace -r '\s+(\w+).*' '$1'
-    end
+    __fish_ninja -t list | string match -v '*:' | string replace -r '\s+(\w+).*' '$1'
 end
 
 function __fish_print_ninja_targets
-    if test -f build.ninja
-        ninja -t targets 2>/dev/null | string replace -r ':.*' ''
-    end
+    __fish_ninja -t targets 2>/dev/null | string replace -r ':.*' ''
 end
 complete -c ninja -f -a '(__fish_print_ninja_targets)' -d target
 complete -x -c ninja -s t -x -a "(__fish_print_ninja_tools)" -d subtool

@@ -88,8 +88,8 @@ end
 for condition in sync upgrade
     complete -c $progname -n "$$condition" -l asdeps -d 'Install packages as non-explicitly installed' -f
     complete -c $progname -n "$$condition" -l asexplicit -d 'Install packages as explicitly installed' -f
-    complete -c $progname -n "$$condition" -l ignore -d 'Ignore a package upgrade (can be used more than once)' -f
-    complete -c $progname -n "$$condition" -l ignoregroup -d 'Ignore a group upgrade (can be used more than once)' -f
+    complete -c $progname -n "$$condition" -l ignore -d 'Ignore a package upgrade (can be used more than once)' -xa "$listall"
+    complete -c $progname -n "$$condition" -l ignoregroup -d 'Ignore a group upgrade (can be used more than once)' -xa "$listgroups"
     complete -c $progname -n "$$condition" -l needed -d 'Do not reinstall up to date packages' -f
     complete -c $progname -n "$$condition" -l overwrite -d 'Overwrite conflicting files (can be used more than once)' -rF
 end

@@ -32,7 +32,7 @@ complete -c zpaq -f -n "$seen $commands" -o noattributes -d "Ignore/don't save f
 complete -c zpaq -r -n "$seen $commands" -o not -d "Exclude. * and ? match any string or char"
 complete -c zpaq -r -n "$seen $command2" -o not -d "Exclude. =[+-#^?] exclude by comparison result"
 complete -c zpaq -r -n "$seen $commands" -o only -d "Include only matches (default: *)"
-complete -c zpaq -x -n "$seen $command1" -o repack -a "F X" -d "Extract to new archive F with key [X] (default: none)"
+complete -c zpaq -x -n "$seen $command3" -o repack -a "F X" -d "Extract to new archive F with key [X] (default: none)"
 complete -c zpaq -x -n "$seen $commands" -o sN -d "-summary N"
 complete -c zpaq -x -n "$seen $commands" -o summary -a N -d "If N > 0 show brief progress"
 complete -c zpaq -x -n "$seen $command2" -o summary -a N -d "Show top N sorted by size. -1: show frag IDs"

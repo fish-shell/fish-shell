@@ -43,7 +43,7 @@ def isMacOS10_12_5_OrLater():
 
 def is_wsl():
     """ Return whether we are running under the Windows Subsystem for Linux """
-    if "linux" in platform.system().lower():
+    if "linux" in platform.system().lower() and os.access("/proc/version", os.R_OK):
         with open("/proc/version", "r") as f:
             if "Microsoft" in f.read():
                 return True

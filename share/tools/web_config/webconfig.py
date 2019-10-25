@@ -8,6 +8,7 @@ try:
 except ImportError:
     from cgi import escape as escape_html
 from distutils.version import LooseVersion
+from distutils.spawn import find_executable
 import glob
 import multiprocessing.pool
 import operator
@@ -48,6 +49,10 @@ def is_wsl():
             if "Microsoft" in f.read():
                 return True
     return False
+
+def is_termux():
+    """ Return whether we are running under the Termux application for Android"""
+    return 'com.termux' in os.environ['PATH'] and find_executable('termux-open-url')
 
 
 # Disable CLI web browsers
@@ -1505,6 +1510,8 @@ if isMacOS10_12_5_OrLater():
     subprocess.check_call(["open", fileurl])
 elif is_wsl():
     subprocess.call(["cmd.exe", "/c", "start %s" % url])
+elif is_termux():
+    subprocess.call(["termux-open-url", url])
 else:
     webbrowser.open(fileurl)
 

@@ -81,6 +81,7 @@
   - `aws`
   - `bat` (#6052)
   - `bosh` (#5700)
+  - `btrfs`
   - `camcontrol`
   - `cf` (#5700)
   - `code` (#6205)

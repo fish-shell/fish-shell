@@ -285,7 +285,7 @@ static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &
         if (indent > 0) indent -= 1;
     }
 
-    append_format(*result, L"%2lu - %l2u  ", *line, node_idx);
+    append_format(*result, L"%2lu - %2lu  ", *line, node_idx);
     result->append(indent * spacesPerIndent, L' ');
     result->append(node.describe());
     if (node.child_count > 0) {

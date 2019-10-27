@@ -1366,6 +1366,11 @@ int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_INVALID_ARGS;
     }
 
+    if (argc >= 3 && (std::wcscmp(argv[2], L"-h") == 0 || std::wcscmp(argv[2], L"--help") == 0)) {
+        wcstring string_dash_subcommand = wcstring(argv[0]) + L"-" + argv[1];
+        builtin_print_help(parser, streams, string_dash_subcommand.c_str());
+        return STATUS_CMD_OK;
+    }
     argc--;
     argv++;
     return subcmd->handler(parser, streams, argc, argv);

@@ -1,6 +1,7 @@
 # Completion for builtin string
 # This follows a strict command-then-options approach, so we can just test the number of tokens
 complete -f -c string
+complete -f -c string -n "test (count (commandline -opc)) -le 2" -s h -l help -d "Display help and exit"
 complete -f -c string -n "test (count (commandline -opc)) -ge 2; and not contains -- (commandline -opc)[2] escape collect" -s q -l quiet -d "Do not print output"
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a "lower"
 complete -f -c string -n "test (count (commandline -opc)) -lt 2" -a "upper"

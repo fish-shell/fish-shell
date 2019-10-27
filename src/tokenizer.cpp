@@ -36,6 +36,8 @@ const wchar_t *tokenizer_get_error_message(tokenizer_error_t err) {
             return _(L"Invalid input/output redirection");
         case tokenizer_error_t::invalid_pipe:
             return _(L"Cannot use stdin (fd 0) as pipe output");
+        case tokenizer_error_t::invalid_pipe_ampersand:
+            return _(L"|& is not valid. In fish, use &| to pipe both stdout and stderr.");
         case tokenizer_error_t::closing_unopened_subshell:
             return _(L"Unexpected ')' for unopened parenthesis");
         case tokenizer_error_t::illegal_slice:
@@ -570,6 +572,10 @@ maybe_t<tok_t> tokenizer_t::next() {
                 result->offset = start_pos;
                 result->length = 2;
                 this->buff += 2;
+            } else if (this->buff[1] == L'&') {
+                // |& is a bashism; in fish it's &|.
+                return this->call_error(tokenizer_error_t::invalid_pipe_ampersand, this->buff,
+                                        this->buff);
             } else {
                 auto pipe = pipe_or_redir_t::from_string(buff);
                 assert(pipe.has_value() && pipe->is_pipe &&

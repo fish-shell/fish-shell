@@ -24,4 +24,9 @@ cat $tmpdir/file.txt
 echo noclobber &>>? $tmpdir/file.txt
 #CHECKERR: {{.*}} The file {{.*}} already exists
 
+eval "echo foo |& false"
+#CHECKERR: {{.*}} |& is not valid. In fish, use &| to pipe both stdout and stderr.
+#CHECKERR: echo foo |& false
+#CHECKERR:          ^
+
 rm -Rf $tmpdir

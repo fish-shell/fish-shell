@@ -51,6 +51,7 @@ enum class tokenizer_error_t {
     unterminated_escape,
     invalid_redirect,
     invalid_pipe,
+    invalid_pipe_ampersand,
     closing_unopened_subshell,
     illegal_slice,
     closing_unopened_brace,

@@ -1214,7 +1214,7 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``fish_ambiguous_width`` controls the computed width of ambiguous-width characters. This should be set to 1 if your terminal emulator renders these characters as single-width (typical), or 2 if double-width.
 
-- ``fish_escape_delay_ms`` overrides the default timeout of 30ms after seeing an escape character before giving up on matching a key binding. See the documentation for the `bind <cmds/bind.html#special-case-the-escape-character>`__ builtin command. This delay facilitates using escape as a meta key.
+- ``fish_escape_delay_ms`` overrides the default timeout of 30ms after seeing an escape character before giving up on matching a key binding. See the documentation for the :ref:`bind <cmd-bind>` builtin command. This delay facilitates using escape as a meta key.
 
 - ``fish_greeting``, the greeting message printed on startup.
 
@@ -1481,7 +1481,7 @@ Emacs mode commands
 - :kbd:`Alt+t` transposes the last two words
 
 
-You can change these key bindings using the `bind <cmds/bind.html">`__ builtin.
+You can change these key bindings using the :ref:`bind <cmd-bind>` builtin.
 
 
 .. _vi-mode:

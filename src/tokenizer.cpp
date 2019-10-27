@@ -65,7 +65,14 @@ tok_t tokenizer_t::call_error(tokenizer_error_t error_type, const wchar_t *token
     assert(error_loc >= token_start && "Invalid error location");
     assert(this->buff >= token_start && "Invalid buff location");
 
-    this->has_next = false;
+    // If continue_after_error is set and we have a real token length, then skip past it.
+    // Otherwise give up.
+    if (token_length.has_value() && continue_after_error) {
+        assert(this->buff < error_loc + *token_length && "Unable to continue past error");
+        this->buff = error_loc + *token_length;
+    } else {
+        this->has_next = false;
+    }
 
     tok_t result{token_type_t::error};
     result.error = error_type;
@@ -82,6 +89,7 @@ tokenizer_t::tokenizer_t(const wchar_t *start, tok_flags_t flags) : buff(start),
     this->accept_unfinished = static_cast<bool>(flags & TOK_ACCEPT_UNFINISHED);
     this->show_comments = static_cast<bool>(flags & TOK_SHOW_COMMENTS);
     this->show_blank_lines = static_cast<bool>(flags & TOK_SHOW_BLANK_LINES);
+    this->continue_after_error = static_cast<bool>(flags & TOK_CONTINUE_AFTER_ERROR);
 }
 
 tok_t::tok_t(token_type_t type) : type(type) {}

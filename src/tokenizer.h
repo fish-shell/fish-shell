@@ -41,6 +41,9 @@ enum class redirection_mode_t {
 /// the tokenizer to return each of them as a separate END.
 #define TOK_SHOW_BLANK_LINES 4
 
+/// Make an effort to continue after an error.
+#define TOK_CONTINUE_AFTER_ERROR 8
+
 typedef unsigned int tok_flags_t;
 
 enum class tokenizer_error_t {
@@ -104,6 +107,8 @@ class tokenizer_t {
     bool show_comments{false};
     /// Whether all blank lines are returned.
     bool show_blank_lines{false};
+    /// Whether to attempt to continue after an error.
+    bool continue_after_error{false};
     /// Whether to continue the previous line after the comment.
     bool continue_line_after_comment{false};
 

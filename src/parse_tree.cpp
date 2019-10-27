@@ -1052,10 +1052,9 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
     // Construct the tokenizer.
     tok_flags_t tok_options = 0;
     if (parse_flags & parse_flag_include_comments) tok_options |= TOK_SHOW_COMMENTS;
-
     if (parse_flags & parse_flag_accept_incomplete_tokens) tok_options |= TOK_ACCEPT_UNFINISHED;
-
     if (parse_flags & parse_flag_show_blank_lines) tok_options |= TOK_SHOW_BLANK_LINES;
+    if (parse_flags & parse_flag_continue_after_error) tok_options |= TOK_CONTINUE_AFTER_ERROR;
 
     tokenizer_t tok(str.c_str(), tok_options);
 

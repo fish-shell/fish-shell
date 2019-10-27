@@ -4626,6 +4626,8 @@ static void test_highlighting() {
     highlight_tests.push_back({
         {L"false", highlight_role_t::command},
         {L"|&", highlight_role_t::error},
+        {L"true", highlight_role_t::command},
+        {L"stuff", highlight_role_t::param},
     });
 
     auto &vars = parser_t::principal_parser().vars();

@@ -1,14 +1,24 @@
-function fish_clipboard_paste
-    set -l data
-    if type -q pbpaste
-        set data (pbpaste 2>/dev/null)
-    else if set -q WAYLAND_DISPLAY; and type -q wl-paste
-        set data (wl-paste 2>/dev/null)
-    else if type -q xsel
-        set data (xsel --clipboard 2>/dev/null)
-    else if type -q xclip
-        set data (xclip -selection clipboard -o 2>/dev/null)
+# Search for and set clipboard handler only once at startup
+if type -q pbpaste
+    function __fish_clipboard_paste
+        pbpaste 2>/dev/null
     end
+else if set -q WAYLAND_DISPLAY; and type -q wl-paste
+    function __fish_clipboard_paste
+        wl-paste 2>/dev/null
+    end
+else if type -q xsel
+    function __fish_clipboard_paste
+        xsel --clipboard 2>/dev/null
+    end
+else if type -q xclip
+    function __fish_clipboard_paste
+        xclip -selection clipboard -o 2>/dev/null
+    end
+end
+
+function fish_clipboard_paste
+    set -l data (__fish_clipboard_paste)
 
     # Issue 6254: Handle zero-length clipboard content
     if not string match -qr . -- "$data"

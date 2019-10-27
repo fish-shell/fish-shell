@@ -4623,6 +4623,11 @@ static void test_highlighting() {
         {L"true", highlight_role_t::command},
     });
 
+    highlight_tests.push_back({
+        {L"false", highlight_role_t::command},
+        {L"|&", highlight_role_t::error},
+    });
+
     auto &vars = parser_t::principal_parser().vars();
     // Verify variables and wildcards in commands using /bin/cat.
     vars.set(L"VARIABLE_IN_COMMAND", ENV_LOCAL, {L"a"});

@@ -83,7 +83,7 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
     assert(line_end >= line_start);
     assert(source_start >= line_start);
 
-    // Don't include the caret and line if we're interactive this is the first line, because
+    // Don't include the caret and line if we're interactive and this is the first line, because
     // then it's obvious.
     bool interactive_skip_caret = is_interactive && source_start == 0;
     if (interactive_skip_caret) {
@@ -637,7 +637,7 @@ void parse_ll_t::parse_error_at_location(size_t source_start, size_t source_leng
 
         err.source_start = source_start;
         err.source_length = source_length;
-        this->errors.push_back(err);
+        this->errors.push_back(std::move(err));
     }
 }
 

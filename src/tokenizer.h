@@ -108,7 +108,7 @@ class tokenizer_t {
     bool continue_line_after_comment{false};
 
     tok_t call_error(tokenizer_error_t error_type, const wchar_t *token_start,
-                     const wchar_t *error_loc);
+                     const wchar_t *error_loc, maybe_t<size_t> token_length = {});
     tok_t read_string();
 
    public:

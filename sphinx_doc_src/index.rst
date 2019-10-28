@@ -1833,9 +1833,6 @@ Fish includes a built in debugging facility. The debugger allows you to stop exe
 
 To start a debug session simply run the builtin command ``breakpoint`` at the point in a function or script where you wish to gain control. Also, the default action of the TRAP signal is to call this builtin. So a running script can be debugged by sending it the TRAP signal with the ``kill`` command. Once in the debugger, it is easy to insert new breakpoints by using the funced function to edit the definition of a function.
 
-Note: At the moment the debug prompt is identical to your normal fish prompt. This can make it hard to recognize that you've entered a debug session. `Issue 1310 <https://github.com/fish-shell/fish-shell/issues/1310>`_ is open to improve this.
-
-
 .. _more-help:
 
 Further help and development

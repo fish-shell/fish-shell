@@ -288,8 +288,9 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
 }
 
 /// Get the beginning and end of the job or process definition under the cursor.
-static void job_or_process_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **a,
-                                  const wchar_t **b, bool process) {
+static void job_or_process_extent(bool process, const wchar_t *buff, size_t cursor_pos,
+                                  const wchar_t **a, const wchar_t **b,
+                                  std::vector<tok_t> *tokens) {
     assert(buff && "Null buffer");
     const wchar_t *begin = nullptr, *end = nullptr;
     int finished = 0;
@@ -323,29 +324,33 @@ static void job_or_process_extent(const wchar_t *buff, size_t cursor_pos, const 
             case token_type_t::end:
             case token_type_t::background:
             case token_type_t::andand:
-            case token_type_t::oror: {
+            case token_type_t::oror:
+            case token_type_t::comment: {
                 if (tok_begin >= pos) {
                     finished = 1;
                     if (b) *b = (wchar_t *)begin + tok_begin;
                 } else {
+                    // Statement at cursor might start after this token.
                     if (a) *a = (wchar_t *)begin + tok_begin + token->length;
+                    if (tokens) tokens->clear();
                 }
-                break;
+                continue;  // Do not add this to tokens
             }
             default: {
                 break;
             }
         }
+        if (tokens) tokens->push_back(*token);
     }
 }
 
 void parse_util_process_extent(const wchar_t *buff, size_t pos, const wchar_t **a,
-                               const wchar_t **b) {
-    job_or_process_extent(buff, pos, a, b, true);
+                               const wchar_t **b, std::vector<tok_t> *tokens) {
+    job_or_process_extent(true, buff, pos, a, b, tokens);
 }
 
 void parse_util_job_extent(const wchar_t *buff, size_t pos, const wchar_t **a, const wchar_t **b) {
-    job_or_process_extent(buff, pos, a, b, false);
+    job_or_process_extent(false, buff, pos, a, b, nullptr);
 }
 
 void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **tok_begin,

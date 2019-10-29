@@ -47,6 +47,7 @@
 - fish only parses `/etc/paths` on macOS in login shells, matching the bash implementation (#5637) and avoiding changes to path ordering in child shells (#5456).
 - The locale is now reloaded when the `LOCPATH` variable is changed (#5815).
 - `read` no longer keeps a history, making it suitable for operations that shouldn't end up there, like password entry (#5904).
+- Completion of subcommands to builtins like `and` or `not` has been fixed (#6249).
 
 #### New or improved bindings
 - Pasting strips leading spaces to avoid pasted commands being omitted from the history (#4327).

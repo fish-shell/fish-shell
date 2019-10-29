@@ -163,11 +163,12 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # the user tries [ interactively.
     #
     complete -c [ --wraps test
+    complete -c ! --wraps not
 
     #
     # Only a few builtins take filenames; initialize the rest with no file completions
     #
-    complete -c(builtin -n | string match -rv 'source|cd|exec|realpath|set|\[|test') --no-files
+    complete -c(builtin -n | string match -rv '(source|cd|exec|realpath|set|\\[|test|for)') --no-files
 
     # Reload key bindings when binding variable change
     function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings

@@ -124,3 +124,29 @@ complete -C'foo -y' | string match -- -y-single-long
 # CHECK: -zARGZ
 complete -C'foo -z'
 
+
+# Builtins (with subcommands; #2705)
+complete -c complete_test_subcommand -n 'test (commandline -op)[1] = complete_test_subcommand' -xa 'ok'
+complete -C'not complete_test_subcommand '
+# CHECK: ok
+complete -C'echo; and complete_test_subcommand '
+# CHECK: ok
+complete -C'or complete_test_subcommand '
+# CHECK: ok
+complete -C'echo && command complete_test_subcommand '
+# CHECK: ok
+complete -C'echo || exec complete_test_subcommand '
+# CHECK: ok
+complete -C'echo | builtin complete_test_subcommand '
+# CHECK: ok
+complete -C'echo & complete_test_subcommand '
+# CHECK: ok
+complete -C'if while begin begin complete_test_subcommand '
+# CHECK: ok
+
+complete -C'for _ in ' | string collect >&- && echo completed some files
+# CHECK: completed some files
+
+# function; #5415
+complete -C'function : --arg'
+# CHECK: --argument-names	{{.*}}

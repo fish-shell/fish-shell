@@ -5,11 +5,6 @@
 #include "parse_grammar.h"
 #include "parse_tree.h"
 
-struct source_range_t {
-    uint32_t start;
-    uint32_t length;
-};
-
 // Check if a child type is possible for a parent type at a given index.
 template <typename Parent, typename Child, size_t Index>
 constexpr bool child_type_possible_at_index() {

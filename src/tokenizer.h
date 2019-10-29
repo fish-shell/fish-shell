@@ -87,6 +87,13 @@ struct tok_t {
 
     // Construct from a token type.
     explicit tok_t(token_type_t type);
+
+    /// Returns whether the given location is within the source range or at its end.
+    bool location_in_or_at_end_of_source_range(size_t loc) const {
+        return offset <= loc && loc - offset <= length;
+    }
+    /// Gets source for the token, or the empty string if it has no source.
+    wcstring get_source(const wcstring &str) const { return {str, offset, length}; }
 };
 
 /// The tokenizer struct.

@@ -25,6 +25,11 @@ typedef uint32_t source_offset_t;
 
 constexpr source_offset_t SOURCE_OFFSET_INVALID = static_cast<source_offset_t>(-1);
 
+struct source_range_t {
+    uint32_t start;
+    uint32_t length;
+};
+
 /// A struct representing the token type that we use internally.
 struct parse_token_t {
     enum parse_token_type_t type;  // The type of the token as represented by the parser
@@ -135,6 +140,11 @@ class parse_node_t {
     /// Indicates if we have a preceding escaped newline.
     bool has_preceding_escaped_newline() const {
         return this->flags & parse_node_flag_preceding_escaped_nl;
+    }
+
+    source_range_t source_range() const {
+        assert(has_source());
+        return {source_start, source_length};
     }
 
     /// Gets source for the node, or the empty string if it has no source.

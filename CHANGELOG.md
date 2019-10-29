@@ -97,6 +97,7 @@
   - `gpg2` (#6062)
   - `grub-mkrescue` (#6182)
   - `hledger` (#6043)
+  - `irb` (#6260)
   - `iw` (#6232)
   - `kak`
   - `mariner` (#5718)

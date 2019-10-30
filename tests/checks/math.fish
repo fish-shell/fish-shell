@@ -91,7 +91,7 @@ not math 'ncr(1)'
 # CHECKERR: 'ncr(1)'
 # CHECKERR:       ^
 not math 'max()'
-# CHECKERR: math: Error: Expression is bogus
+# CHECKERR: math: Error: Unexpected token
 # CHECKERR: 'max()'
 # CHECKERR:    ^
 not math 'sin()'

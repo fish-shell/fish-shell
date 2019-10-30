@@ -147,6 +147,8 @@ static const wchar_t *math_describe_error(te_error_t &error) {
             return _(L"Too many arguments");
         case TE_ERROR_MISSING_OPERATOR:
             return _(L"Missing operator");
+        case TE_ERROR_UNEXPECTED_TOKEN:
+            return _(L"Unexpected token");
         case TE_ERROR_UNKNOWN:
             return _(L"Expression is bogus");
         default:

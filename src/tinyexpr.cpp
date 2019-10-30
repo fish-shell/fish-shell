@@ -367,7 +367,7 @@ static te_expr *base(state *s) {
                 }
                 if (s->type == TOK_CLOSE && i == arity - 1) {
                     next_token(s);
-                } else if (s->type != TOK_ERROR || s->error == TE_ERROR_UNKNOWN) {
+                } else if (s->type != TOK_ERROR || s->error == TE_ERROR_UNEXPECTED_TOKEN) {
                     s->type = TOK_ERROR;
                     s->error = i < arity ? TE_ERROR_TOO_FEW_ARGS : TE_ERROR_TOO_MANY_ARGS;
                 }
@@ -403,7 +403,7 @@ static te_expr *base(state *s) {
         default:
             ret = new_expr(0, 0);
             s->type = TOK_ERROR;
-            s->error = TE_ERROR_UNKNOWN;
+            s->error = TE_ERROR_UNEXPECTED_TOKEN;
             ret->value = NAN;
             break;
     }

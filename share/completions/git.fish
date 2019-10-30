@@ -1038,8 +1038,8 @@ complete -f -c git -n '__fish_git_using_command describe' -l first-parent -d 'Fo
 
 ### diff
 complete -c git -n '__fish_git_needs_command' -a diff -d 'Show changes between commits, commit and working tree, etc'
-complete -c git -n '__fish_git_using_command diff' -a '(__fish_git_ranges)'
-complete -c git -n '__fish_git_using_command diff' -l cached -d 'Show diff of changes in the index'
+complete -c git -n '__fish_git_using_command diff; and not contains -- -- (commandline -opc)' -a '(__fish_git_ranges)'
+complete -c git -n '__fish_git_using_command diff' -l cached -d 'Show diff of changes in the index (same as --staged)'
 complete -c git -n '__fish_git_using_command diff' -l no-index -d 'Compare two paths on the filesystem'
 complete -c git -n '__fish_git_using_command diff' -l exit-code -d 'Exit with 1 if there were differences or 0 if no differences'
 complete -c git -n '__fish_git_using_command diff' -s q -l quiet -d 'Disable all output of the program, implies --exit-code'
@@ -1047,8 +1047,8 @@ complete -c git -n '__fish_git_using_command diff' -s 1 -l base -d 'Compare the 
 complete -c git -n '__fish_git_using_command diff' -s 2 -l ours -d 'Compare the working tree with the "our branch"'
 complete -c git -n '__fish_git_using_command diff' -s 3 -l theirs -d 'Compare the working tree with the "their branch"'
 complete -c git -n '__fish_git_using_command diff' -s 0 -d 'Omit diff output for unmerged entries and just show "Unmerged"'
-complete -c git -n '__fish_git_using_command diff; and not __fish_contains_opt cached' -fa '(__fish_git_files modified deleted)'
-complete -c git -n '__fish_git_using_command diff; and __fish_contains_opt cached' -fa '(__fish_git_files modified-staged deleted-staged)'
+complete -c git -n '__fish_git_using_command diff; and not __fish_contains_opt cached staged' -a '(__fish_git_files modified deleted)'
+complete -c git -n '__fish_git_using_command diff; and __fish_contains_opt cached staged' -fa '(__fish_git_files all-staged)'
 
 ### Function to list available tools for git difftool and mergetool
 

@@ -35,7 +35,8 @@ typedef enum {
     TE_ERROR_TOO_FEW_ARGS = 4,
     TE_ERROR_TOO_MANY_ARGS = 5,
     TE_ERROR_MISSING_OPERATOR = 6,
-    TE_ERROR_UNKNOWN = 7
+    TE_ERROR_UNEXPECTED_TOKEN = 7,
+    TE_ERROR_UNKNOWN = 8
 } te_error_type_t;
 
 typedef struct te_error_t {

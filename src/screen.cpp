@@ -645,7 +645,6 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
     // Determine how many lines have stuff on them; we need to clear lines with stuff that we don't
     // want.
     const size_t lines_with_stuff = std::max(actual_lines_before_reset, scr->actual.line_count());
-    if (scr->desired.line_count() < lines_with_stuff) need_clear_screen = true;
 
     if (left_prompt != scr->actual_left_prompt) {
         s_move(scr, 0, 0);
@@ -795,7 +794,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
     }
 
     // Clear remaining lines (if any) if we haven't cleared the screen.
-    if (!has_cleared_screen && need_clear_screen && clr_eol) {
+    if (!has_cleared_screen && scr->desired.line_count() < lines_with_stuff && clr_eol) {
         s_set_color(scr, vars, highlight_spec_t{});
         for (size_t i = scr->desired.line_count(); i < lines_with_stuff; i++) {
             s_move(scr, 0, (int)i);

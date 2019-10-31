@@ -33,6 +33,7 @@ end
 
 function __fish_complete_sudo_subcommand
     set -l args (__fish_sudo_print_remaining_args)
+    set -lx -a PATH /sbin /usr/sbin
     complete -C"$args"
 end
 

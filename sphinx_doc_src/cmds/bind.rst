@@ -193,6 +193,7 @@ Performs a history search when the :kbd:`Page Up` key is pressed.
 
 Turns on Vi key bindings and rebinds :kbd:`Control+C` to clear the input line.
 
+.. _cmd-bind-escape:
 
 Special Case: The escape Character
 ----------------------------------

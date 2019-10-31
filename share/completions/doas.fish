@@ -23,6 +23,7 @@ end
 
 function __fish_complete_doas_subcommand
     set -l args (__fish_doas_print_remaining_args)
+    set -lx -a PATH /sbin /usr/sbin
     complete -C"$args"
 end
 

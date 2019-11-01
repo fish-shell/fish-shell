@@ -126,3 +126,8 @@ math 0x 3
 # CHECK: 20
 # CHECK: 8
 # CHECK: 0
+
+math "42 >= 1337"
+# CHECKERR: math: Error: Logical operations are not supported, use `test` instead
+# CHECKERR: '42 >= 1337'
+# CHECKERR:     ^

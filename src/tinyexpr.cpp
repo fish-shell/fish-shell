@@ -306,6 +306,15 @@ void next_token(state *s) {
                     case '\n':
                     case '\r':
                         break;
+                    case '=':
+                    case '>':
+                    case '<':
+                    case '&':
+                    case '|':
+                    case '!':
+                        s->type = TOK_ERROR;
+                        s->error = TE_ERROR_LOGICAL_OPERATOR;
+                        break;
                     default:
                         s->type = TOK_ERROR;
                         s->error = TE_ERROR_MISSING_OPERATOR;

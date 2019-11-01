@@ -99,7 +99,8 @@ ADD_CUSTOM_TARGET(serial_test_high_level
 # Create the 'test' target.
 # Set a policy so CMake stops complaining about the name 'test'.
 CMAKE_POLICY(PUSH)
-IF(POLICY CMP0037)
+
+IF(${CMAKE_VERSION} VERSION_LESS 3.11.0 AND POLICY CMP0037)
   CMAKE_POLICY(SET CMP0037 OLD)
 ENDIF()
 ADD_CUSTOM_TARGET(test)

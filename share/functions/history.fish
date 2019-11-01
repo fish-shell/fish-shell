@@ -110,8 +110,7 @@ function history --description "display or manipulate interactive command histor
             end
 
             if test -z "$search_mode"
-                set search_mode "--exact"
-                set _flag_case_sensitive "-C"
+                set search_mode "--contains"
             end
 
             if test $search_mode = "--exact"

@@ -21,6 +21,8 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
         complete -c $__fish_complete_gpg_command -l no-sig-create-check -d "Do not verify each signature right after creation"
         complete -c $__fish_complete_gpg_command -l pgp2 -d "Set up all options to be as PGP 2.x compliant as possible"
         complete -c $__fish_complete_gpg_command -l rfc1991 -d "Try to be more RFC-1991 compliant"
+        complete -c $__fish_complete_gpg_command -l delete-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Remove key from the public keyring"
+        complete -c $__fish_complete_gpg_command -l delete-secret-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Remove key from the secret and public keyring"
     else
         complete -c $__fish_complete_gpg_command -l no-keyring -d "Do not use any keyring at all"
         complete -c $__fish_complete_gpg_command -l no-skip-hidden-recipients -d "During decryption, do not skip all anonymous recipients"
@@ -80,6 +82,8 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
         complete -c $__fish_complete_gpg_command -l change-passphrase -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Change the passphrase of the secret key belonging to the given user id"
         complete -c $__fish_complete_gpg_command -l agent-program -d "Specify an agent program to be used for secret key operations"
         complete -c $__fish_complete_gpg_command -l clear-sign -d "Make a clear text signature"
+        complete -c $__fish_complete_gpg_command -l delete-keys -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Remove key from the public keyring"
+        complete -c $__fish_complete_gpg_command -l delete-secret-keys -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Remove key from the secret and public keyring"
     end
 
     #
@@ -115,8 +119,6 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
     complete -c $__fish_complete_gpg_command -l sign-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Sign a public key with your secret key"
     complete -c $__fish_complete_gpg_command -l lsign-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Sign a public key with your secret key but mark it as non exportable"
 
-    complete -c $__fish_complete_gpg_command -l delete-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Remove key from the public keyring"
-    complete -c $__fish_complete_gpg_command -l delete-secret-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Remove key from the secret and public keyring"
     complete -c $__fish_complete_gpg_command -l delete-secret-and-public-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Same as --delete-key, but if a secret key exists, it will be removed first"
 
     complete -c $__fish_complete_gpg_command -l gen-revoke -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Generate a revocation certificate for the complete key"
@@ -146,6 +148,9 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
     complete -c $__fish_complete_gpg_command -l print-mds -d "Print message digest of all algorithms for all given files or stdin"
 
     complete -c $__fish_complete_gpg_command -l gen-random -xa "0 1 2" -d "Emit specified number of random bytes of the given quality level"
+
+    complete -c $__fish_complete_gpg_command -l card-status -x -d "Print smartcard status"
+    complete -c $__fish_complete_gpg_command -l change-pin -x -d "Change smartcard PIN"
 
     complete -c $__fish_complete_gpg_command -l version -d "Display version and supported algorithms, and exit"
     complete -c $__fish_complete_gpg_command -l warranty -d "Display warranty and exit"
@@ -363,4 +368,6 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
     complete -c $__fish_complete_gpg_command -l personal-compress-preferences -x -d "Set the list of personal compression preferences to the specified string"
 
     complete -c $__fish_complete_gpg_command -l default-preference-list -x -d "Set the list of default preferences to the specified string"
+
+    complete -c $__fish_complete_gpg_command -l openpgp -x -d "Use strict OpenPGP behaviour"
 end

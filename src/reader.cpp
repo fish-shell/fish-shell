@@ -2561,6 +2561,11 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                                                              completion_request_t::fuzzy_match};
                 complete_func(buffcpy, &rls.comp, complete_flags, vars, parser_ref);
 
+
+                // User-supplied completions may have changed the commandline - prevent buffer overflow.
+                if (token_begin > buff + el->text.size()) token_begin = buff + el->text.size();
+                if (token_end   > buff + el->text.size()) token_end   = buff + el->text.size();
+
                 // Munge our completions.
                 completions_sort_and_prioritize(&rls.comp);
 

@@ -1212,20 +1212,3 @@ const parse_node_t *parse_node_tree_t::find_node_matching_source_location(
 
     return result;
 }
-
-const parse_node_t *parse_node_tree_t::find_last_node_of_type(parse_token_type_t type,
-                                                              const parse_node_t *parent) const {
-    const parse_node_t *result = NULL;
-    // Find nodes of the given type in the tree, working backwards.
-    size_t idx = this->size();
-    while (idx--) {
-        const parse_node_t &node = this->at(idx);
-        bool expected_type = (node.type == type);
-        if (expected_type && (parent == NULL || node_has_ancestor(*this, node, *parent))) {
-            // The types match and it has the right parent.
-            result = &node;
-            break;
-        }
-    }
-    return result;
-}

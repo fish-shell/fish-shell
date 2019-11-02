@@ -223,11 +223,6 @@ tnode_t<Type> parse_node_tree_t::find_child(const parse_node_t &parent) const {
     return tnode_t<Type>(this, &this->find_child(parent, Type::token));
 }
 
-template <typename Type>
-tnode_t<Type> parse_node_tree_t::find_last_node(const parse_node_t *parent) const {
-    return tnode_t<Type>(this, this->find_last_node_of_type(Type::token, parent));
-}
-
 /// Given a plain statement, get the command from the child node. Returns the command string on
 /// success, none on failure.
 maybe_t<wcstring> command_for_plain_statement(tnode_t<grammar::plain_statement> stmt,

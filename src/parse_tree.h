@@ -181,11 +181,6 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     const parse_node_t *get_parent(const parse_node_t &node,
                                    parse_token_type_t expected_type = token_type_invalid) const;
 
-    // Finds the last node of a given type, or empty if it could not be found. If parent is NULL,
-    // this finds the last node in the tree of that type.
-    template <typename Type>
-    tnode_t<Type> find_last_node(const parse_node_t *parent = NULL) const;
-
     // Finds a node containing the given source location. If 'parent' is not NULL, it must be an
     // ancestor.
     const parse_node_t *find_node_matching_source_location(parse_token_type_t type,
@@ -205,11 +200,6 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     const parse_node_t *next_node_in_node_list(const parse_node_t &node_list,
                                                parse_token_type_t item_type,
                                                const parse_node_t **list_tail) const;
-
-    // Finds the last node of a given type underneath a given node, or NULL if it could not be
-    // found. If parent is NULL, this finds the last node in the tree of that type.
-    const parse_node_t *find_last_node_of_type(parse_token_type_t type,
-                                               const parse_node_t *parent) const;
 };
 
 /// The big entry point. Parse a string, attempting to produce a tree for the given goal type.

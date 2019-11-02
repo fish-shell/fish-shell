@@ -395,23 +395,31 @@ static bool has_expand_reserved(const wcstring &str) {
     return result;
 }
 
-// Parse a command line. Return by reference the last command, and the last argument to that command
-// (as a string), if any. This is used by autosuggestions.
+// Parse a command line. Return by reference the first command, and the first argument to that
+// command (as a string), if any. This is used to validate autosuggestions.
 static bool autosuggest_parse_command(const wcstring &buff, const environment_t &vars,
-                                      wcstring *out_expanded_command, wcstring *out_last_arg) {
+                                      wcstring *out_expanded_command, wcstring *out_arg) {
     // Parse the buffer.
     parse_node_tree_t parse_tree;
     parse_tree_from_string(buff,
                            parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens,
                            &parse_tree, NULL);
 
-    // Find the last statement.
-    auto last_statement = parse_tree.find_last_node<g::plain_statement>();
-    if (last_statement &&
-        plain_statement_get_expanded_command(buff, last_statement, vars, out_expanded_command)) {
-        // Find the last argument. If we don't get one, return an invalid node.
-        if (auto last_arg = parse_tree.find_last_node<g::argument>(last_statement)) {
-            *out_last_arg = last_arg.get_source(buff);
+    // Find the first statement.
+    tnode_t<g::plain_statement> first_statement{};
+    for (const auto &node : parse_tree) {
+        if (node.type == symbol_plain_statement) {
+            first_statement = tnode_t<g::plain_statement>(&parse_tree, &node);
+            break;
+        }
+    }
+
+    if (first_statement &&
+        plain_statement_get_expanded_command(buff, first_statement, vars, out_expanded_command)) {
+        // Find the first argument.
+        auto args_and_redirs = first_statement.child<1>();
+        if (auto arg = args_and_redirs.next_in_list<grammar::argument>()) {
+            *out_arg = arg.get_source(buff);
         }
         return true;
     }

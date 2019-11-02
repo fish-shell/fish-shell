@@ -133,27 +133,6 @@ static export_generation_t next_export_generation() {
     return ++*val;
 }
 
-/// Some env vars contain a list of paths where an empty path element is equivalent to ".".
-/// Unfortunately that convention causes problems for fish scripts. So this function replaces the
-/// empty path element with an explicit ".". See issue #3914.
-void fix_colon_delimited_var(const wcstring &var_name, env_stack_t &vars) {
-    const auto paths = vars.get(var_name);
-    if (paths.missing_or_empty()) return;
-
-    // See if there's any empties.
-    const wcstring empty = wcstring();
-    const wcstring_list_t &strs = paths->as_list();
-    if (contains(strs, empty)) {
-        // Copy the list and replace empties with L"."
-        wcstring_list_t newstrs = strs;
-        std::replace(newstrs.begin(), newstrs.end(), empty, wcstring(L"."));
-        int retval = vars.set(var_name, ENV_DEFAULT | ENV_USER, std::move(newstrs));
-        if (retval != ENV_OK) {
-            FLOGF(error, L"fix_colon_delimited_var failed unexpectedly with retval %d", retval);
-        }
-    }
-}
-
 const wcstring_list_t &env_var_t::as_list() const { return *vals_; }
 
 wchar_t env_var_t::get_delimiter() const {
@@ -231,14 +210,6 @@ void misc_init() {
     }
 }
 
-/// Ensure the content of the magic path env vars is reasonable. Specifically, that empty path
-/// elements are converted to explicit "." to make the vars easier to use in fish scripts.
-static void init_path_vars() {
-    // Do not replace empties in MATHPATH - see #4158.
-    fix_colon_delimited_var(L"PATH", env_stack_t::globals());
-    fix_colon_delimited_var(L"CDPATH", env_stack_t::globals());
-}
-
 /// Make sure the PATH variable contains something.
 static void setup_path() {
     auto &vars = env_stack_t::globals();
@@ -296,8 +267,6 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     wcstring user_data_dir;
     path_get_data(user_data_dir);
     vars.set_one(FISH_USER_DATA_DIR, ENV_GLOBAL, user_data_dir);
-
-    init_path_vars();
 
     // Set up the USER and PATH variables
     setup_path();
@@ -1266,6 +1235,15 @@ int env_stack_t::set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t
     // Historical behavior.
     if (vals.size() == 1 && (key == L"PWD" || key == L"HOME")) {
         path_make_canonical(vals.front());
+    }
+
+    // Hacky stuff around PATH and CDPATH: #3914.
+    // Not MANPATH; see #4158.
+    // Replace empties with dot. Note we ignore pathvar here.
+    if (key == L"PATH" || key == L"CDPATH") {
+        auto munged_vals = colon_split(vals);
+        std::replace(munged_vals.begin(), munged_vals.end(), wcstring(L""), wcstring(L"."));
+        vals = std::move(munged_vals);
     }
 
     bool needs_uvar_sync = false;

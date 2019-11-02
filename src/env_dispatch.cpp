@@ -252,10 +252,6 @@ static void handle_tz_change(const wcstring &var_name, env_stack_t &vars) {
     handle_timezone(var_name.c_str(), vars);
 }
 
-static void handle_magic_colon_var_change(const wcstring &var_name, env_stack_t &vars) {
-    fix_colon_delimited_var(var_name, vars);
-}
-
 static void handle_locale_change(const environment_t &vars) {
     init_locale(vars);
     // We need to re-guess emoji width because the locale might have changed to a multibyte one.
@@ -301,8 +297,6 @@ static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table() {
         var_dispatch_table->add(var_name, handle_curses_change);
     }
 
-    var_dispatch_table->add(L"PATH", handle_magic_colon_var_change);
-    var_dispatch_table->add(L"CDPATH", handle_magic_colon_var_change);
     var_dispatch_table->add(L"fish_term256", handle_fish_term_change);
     var_dispatch_table->add(L"fish_term24bit", handle_fish_term_change);
     var_dispatch_table->add(L"fish_escape_delay_ms", update_wait_on_escape_ms);

@@ -141,17 +141,17 @@ static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high
                 break;
             }
             case 'p': {
-                opts.search_type = HISTORY_SEARCH_TYPE_PREFIX_GLOB;
+                opts.search_type = history_search_type_t::prefix_glob;
                 opts.history_search_type_defined = true;
                 break;
             }
             case 'c': {
-                opts.search_type = HISTORY_SEARCH_TYPE_CONTAINS_GLOB;
+                opts.search_type = history_search_type_t::contains_glob;
                 opts.history_search_type_defined = true;
                 break;
             }
             case 'e': {
-                opts.search_type = HISTORY_SEARCH_TYPE_EXACT;
+                opts.search_type = history_search_type_t::exact;
                 opts.history_search_type_defined = true;
                 break;
             }
@@ -242,8 +242,8 @@ int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Establish appropriate defaults.
     if (opts.hist_cmd == HIST_UNDEF) opts.hist_cmd = HIST_SEARCH;
     if (!opts.history_search_type_defined) {
-        if (opts.hist_cmd == HIST_SEARCH) opts.search_type = HISTORY_SEARCH_TYPE_CONTAINS_GLOB;
-        if (opts.hist_cmd == HIST_DELETE) opts.search_type = HISTORY_SEARCH_TYPE_EXACT;
+        if (opts.hist_cmd == HIST_SEARCH) opts.search_type = history_search_type_t::contains_glob;
+        if (opts.hist_cmd == HIST_DELETE) opts.search_type = history_search_type_t::exact;
     }
 
     int status = STATUS_CMD_OK;
@@ -259,7 +259,7 @@ int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             // TODO: Move this code to the history module and support the other search types
             // including case-insensitive matches. At this time we expect the non-exact deletions to
             // be handled only by the history function's interactive delete feature.
-            if (opts.search_type != HISTORY_SEARCH_TYPE_EXACT) {
+            if (opts.search_type != history_search_type_t::exact) {
                 streams.err.append_format(_(L"builtin history delete only supports --exact\n"));
                 status = STATUS_INVALID_ARGS;
                 break;

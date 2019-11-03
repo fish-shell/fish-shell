@@ -297,7 +297,8 @@ class reader_history_search_t {
         mode_ = mode;
         // We can skip dedup in history_search_t because we do it ourselves in skips_.
         search_ = history_search_t(
-            *hist, text, by_prefix() ? HISTORY_SEARCH_TYPE_PREFIX : HISTORY_SEARCH_TYPE_CONTAINS,
+            *hist, text,
+            by_prefix() ? history_search_type_t::prefix : history_search_type_t::contains,
             history_search_no_dedup);
     }
 
@@ -1298,7 +1299,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
             return nothing;
         }
 
-        history_search_t searcher(*history, search_string, HISTORY_SEARCH_TYPE_PREFIX);
+        history_search_t searcher(*history, search_string, history_search_type_t::prefix);
         while (!reader_test_should_cancel() && searcher.go_backwards()) {
             history_item_t item = searcher.current_item();
 

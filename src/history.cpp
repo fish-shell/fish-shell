@@ -186,22 +186,22 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
     const wcstring &content_to_match = case_sensitive ? contents : contents_lower;
 
     switch (type) {
-        case HISTORY_SEARCH_TYPE_EXACT: {
+        case history_search_type_t::exact: {
             return term == content_to_match;
         }
-        case HISTORY_SEARCH_TYPE_CONTAINS: {
+        case history_search_type_t::contains: {
             return content_to_match.find(term) != wcstring::npos;
         }
-        case HISTORY_SEARCH_TYPE_PREFIX: {
+        case history_search_type_t::prefix: {
             return string_prefixes_string(term, content_to_match);
         }
-        case HISTORY_SEARCH_TYPE_CONTAINS_GLOB: {
+        case history_search_type_t::contains_glob: {
             wcstring wcpattern1 = parse_util_unescape_wildcards(term);
             if (wcpattern1.front() != ANY_STRING) wcpattern1.insert(0, 1, ANY_STRING);
             if (wcpattern1.back() != ANY_STRING) wcpattern1.push_back(ANY_STRING);
             return wildcard_match(content_to_match, wcpattern1);
         }
-        case HISTORY_SEARCH_TYPE_PREFIX_GLOB: {
+        case history_search_type_t::prefix_glob: {
             wcstring wcpattern2 = parse_util_unescape_wildcards(term);
             if (wcpattern2.back() != ANY_STRING) wcpattern2.push_back(ANY_STRING);
             return wildcard_match(content_to_match, wcpattern2);

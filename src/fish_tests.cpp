@@ -3593,7 +3593,7 @@ void history_tests_t::test_history() {
     test_history_matches(searcher, expected, __LINE__);
 
     // Items matching "alpha", case-insensitive.
-    searcher = history_search_t(history, L"AlPhA", HISTORY_SEARCH_TYPE_CONTAINS, nocase);
+    searcher = history_search_t(history, L"AlPhA", history_search_type_t::contains, nocase);
     set_expected([](const wcstring &s) { return wcstolower(s).find(L"alpha") != wcstring::npos; });
     test_history_matches(searcher, expected, __LINE__);
 
@@ -3603,23 +3603,23 @@ void history_tests_t::test_history() {
     test_history_matches(searcher, expected, __LINE__);
 
     // Items starting with "be", case-sensitive.
-    searcher = history_search_t(history, L"be", HISTORY_SEARCH_TYPE_PREFIX, 0);
+    searcher = history_search_t(history, L"be", history_search_type_t::prefix, 0);
     set_expected([](const wcstring &s) { return string_prefixes_string(L"be", s); });
     test_history_matches(searcher, expected, __LINE__);
 
     // Items starting with "be", case-insensitive.
-    searcher = history_search_t(history, L"be", HISTORY_SEARCH_TYPE_PREFIX, nocase);
+    searcher = history_search_t(history, L"be", history_search_type_t::prefix, nocase);
     set_expected(
         [](const wcstring &s) { return string_prefixes_string_case_insensitive(L"be", s); });
     test_history_matches(searcher, expected, __LINE__);
 
     // Items exactly matching "alph", case-sensitive.
-    searcher = history_search_t(history, L"alph", HISTORY_SEARCH_TYPE_EXACT, 0);
+    searcher = history_search_t(history, L"alph", history_search_type_t::exact, 0);
     set_expected([](const wcstring &s) { return s == L"alph"; });
     test_history_matches(searcher, expected, __LINE__);
 
     // Items exactly matching "alph", case-insensitive.
-    searcher = history_search_t(history, L"alph", HISTORY_SEARCH_TYPE_EXACT, nocase);
+    searcher = history_search_t(history, L"alph", history_search_type_t::exact, nocase);
     set_expected([](const wcstring &s) { return wcstolower(s) == L"alph"; });
     test_history_matches(searcher, expected, __LINE__);
 

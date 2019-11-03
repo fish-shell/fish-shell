@@ -44,17 +44,17 @@ class environment_t;
 
 typedef std::vector<wcstring> path_list_t;
 
-enum history_search_type_t {
+enum class history_search_type_t {
     // Search for commands exactly matching the given string.
-    HISTORY_SEARCH_TYPE_EXACT = 1,
+    exact,
     // Search for commands containing the given string.
-    HISTORY_SEARCH_TYPE_CONTAINS,
+    contains,
     // Search for commands starting with the given string.
-    HISTORY_SEARCH_TYPE_PREFIX,
+    prefix,
     // Search for commands containing the given glob pattern.
-    HISTORY_SEARCH_TYPE_CONTAINS_GLOB,
+    contains_glob,
     // Search for commands starting with the given glob pattern.
-    HISTORY_SEARCH_TYPE_PREFIX_GLOB
+    prefix_glob,
 };
 
 typedef uint64_t history_identifier_t;
@@ -229,7 +229,7 @@ class history_search_t {
     wcstring canon_term_;
 
     // Our search type.
-    enum history_search_type_t search_type_ { HISTORY_SEARCH_TYPE_CONTAINS };
+    enum history_search_type_t search_type_ { history_search_type_t::contains };
 
     // Our flags.
     history_search_flags_t flags_{0};
@@ -264,7 +264,7 @@ class history_search_t {
 
     // Constructor.
     history_search_t(history_t &hist, const wcstring &str,
-                     enum history_search_type_t type = HISTORY_SEARCH_TYPE_CONTAINS,
+                     enum history_search_type_t type = history_search_type_t::contains,
                      history_search_flags_t flags = 0)
         : history_(&hist), orig_term_(str), canon_term_(str), search_type_(type), flags_(flags) {
         if (ignores_case()) {

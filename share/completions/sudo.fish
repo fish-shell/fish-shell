@@ -34,7 +34,7 @@ end
 function __fish_complete_sudo_subcommand
     set -l args (__fish_sudo_print_remaining_args)
     set -lx -a PATH /usr/local/sbin /sbin /usr/sbin
-    complete -C"$args"
+    complete -C "$args"
 end
 
 # All these options should be valid for GNU and OSX sudo

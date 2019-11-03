@@ -24,7 +24,7 @@ end
 function __fish_complete_doas_subcommand
     set -l args (__fish_doas_print_remaining_args)
     set -lx -a PATH /usr/local/sbin /sbin /usr/sbin
-    complete -C"$args"
+    complete -C "$args"
 end
 
 complete -c doas -n "not __fish_doas_print_remaining_args" -s a -d "Choose auth method on systems using /etc/login.conf"

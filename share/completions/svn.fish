@@ -172,7 +172,7 @@ for cmd in $blame $diff $log $merge
 end
 
 for cmd in $cleanup $merge $switch $update
-    _svn_cmpl_ $cmd -l diff3-cmd -d 'Use as merge command' -xa "(complete -C(commandline -ct))"
+    _svn_cmpl_ $cmd -l diff3-cmd -d 'Use as merge command' -xa "(__fish_complete_external_command)"
 end
 
 for cmd in $blame $info $list $log $stat
@@ -193,7 +193,7 @@ end
 
 for cmd in $diff $log
     _svn_cmpl_ $cmd -l internal-diff -d 'Override diff-cmd specified in config file'
-    _svn_cmpl_ $cmd -l diff-cmd -d 'Use external diff command' -xa "(complete -C(commandline -ct))"
+    _svn_cmpl_ $cmd -l diff-cmd -d 'Use external diff command' -xa "(__fish_complete_external_command)"
 end
 
 for cmd in $add $import

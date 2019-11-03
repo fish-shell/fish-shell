@@ -21,8 +21,6 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
         complete -c $__fish_complete_gpg_command -l no-sig-create-check -d "Do not verify each signature right after creation"
         complete -c $__fish_complete_gpg_command -l pgp2 -d "Set up all options to be as PGP 2.x compliant as possible"
         complete -c $__fish_complete_gpg_command -l rfc1991 -d "Try to be more RFC-1991 compliant"
-        complete -c $__fish_complete_gpg_command -l delete-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Remove key from the public keyring"
-        complete -c $__fish_complete_gpg_command -l delete-secret-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Remove key from the secret and public keyring"
     else
         complete -c $__fish_complete_gpg_command -l no-keyring -d "Do not use any keyring at all"
         complete -c $__fish_complete_gpg_command -l no-skip-hidden-recipients -d "During decryption, do not skip all anonymous recipients"
@@ -44,6 +42,7 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
         complete -c $__fish_complete_gpg_command -s f -l recipient-file -r -d "Similar to --recipient, but encrypts to key stored in file instead"
         complete -c $__fish_complete_gpg_command -l request-origin -r -d "Tell gpg to assume that the operation ultimately originated at a particular origin"
         complete -c $__fish_complete_gpg_command -l sender -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "When creating a signature, tells gpg the user id of a key; when verifying, used to restrict information printed"
+        complete -c $__fish_complete_gpg_command -l show-key -d "Take OpenPGP keys as input and print information about them"
         complete -c $__fish_complete_gpg_command -l show-keys -d "Take OpenPGP keys as input and print information about them"
         complete -c $__fish_complete_gpg_command -l skip-hidden-recipients -d "During decryption, skip all anonymous recipients"
         complete -c $__fish_complete_gpg_command -l tofu-default-policy -xa "auto good unknown bad ask" -d "Set the default TOFU policy"
@@ -73,7 +72,6 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
         complete -c $__fish_complete_gpg_command -l export-filter -d "Define an import/export filter to apply to an imported/exported keyblock before it is written"
         complete -c $__fish_complete_gpg_command -l import-filter -d "Define an import/export filter to apply to an imported/exported keyblock before it is written"
         complete -c $__fish_complete_gpg_command -l edit-card -d "Present a menu to work with a smartcard"
-        complete -c $__fish_complete_gpg_command -l card-edit -d "Present a menu to work with a smartcard"
         complete -c $__fish_complete_gpg_command -l disable-signer-uid -d "Don't embed the uid of the signing key in the data signature"
         complete -c $__fish_complete_gpg_command -l disable-dirmngr -d "Entirely disable the use of the Dirmngr"
         complete -c $__fish_complete_gpg_command -l dirmngr-program -r -d "Specify a dirmngr program to be used for keyserver access"
@@ -82,8 +80,6 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
         complete -c $__fish_complete_gpg_command -l change-passphrase -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Change the passphrase of the secret key belonging to the given user id"
         complete -c $__fish_complete_gpg_command -l agent-program -d "Specify an agent program to be used for secret key operations"
         complete -c $__fish_complete_gpg_command -l clear-sign -d "Make a clear text signature"
-        complete -c $__fish_complete_gpg_command -l delete-keys -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Remove key from the public keyring"
-        complete -c $__fish_complete_gpg_command -l delete-secret-keys -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Remove key from the secret and public keyring"
     end
 
     #
@@ -119,6 +115,10 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
     complete -c $__fish_complete_gpg_command -l sign-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Sign a public key with your secret key"
     complete -c $__fish_complete_gpg_command -l lsign-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Sign a public key with your secret key but mark it as non exportable"
 
+    complete -c $__fish_complete_gpg_command -l delete-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Remove key from the public keyring"
+    complete -c $__fish_complete_gpg_command -l delete-secret-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Remove key from the secret and public keyring"
+    complete -c $__fish_complete_gpg_command -l delete-keys -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Remove key from the public keyring"
+    complete -c $__fish_complete_gpg_command -l delete-secret-keys -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Remove key from the secret and public keyring"
     complete -c $__fish_complete_gpg_command -l delete-secret-and-public-key -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Same as --delete-key, but if a secret key exists, it will be removed first"
 
     complete -c $__fish_complete_gpg_command -l gen-revoke -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "Generate a revocation certificate for the complete key"
@@ -149,6 +149,7 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
 
     complete -c $__fish_complete_gpg_command -l gen-random -xa "0 1 2" -d "Emit specified number of random bytes of the given quality level"
 
+    complete -c $__fish_complete_gpg_command -l card-edit -d "Present a menu to work with a smartcard"
     complete -c $__fish_complete_gpg_command -l card-status -x -d "Print smartcard status"
     complete -c $__fish_complete_gpg_command -l change-pin -x -d "Change smartcard PIN"
 

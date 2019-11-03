@@ -257,10 +257,10 @@ class history_search_t {
     bool go_backwards();
 
     // Returns the current search result item. asserts if there is no current item.
-    history_item_t current_item() const;
+    const history_item_t &current_item() const;
 
     // Returns the current search result item contents. asserts if there is no current item.
-    wcstring current_string() const;
+    const wcstring &current_string() const;
 
     // Constructor.
     history_search_t(history_t &hist, const wcstring &str,

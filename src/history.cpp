@@ -612,15 +612,12 @@ bool history_search_t::go_backwards() {
     return false;
 }
 
-history_item_t history_search_t::current_item() const {
+const history_item_t &history_search_t::current_item() const {
     assert(current_item_ && "No current item");
     return *current_item_;
 }
 
-wcstring history_search_t::current_string() const {
-    history_item_t item = this->current_item();
-    return item.str();
-}
+const wcstring &history_search_t::current_string() const { return this->current_item().str(); }
 
 static wcstring history_filename(const wcstring &session_id, const wcstring &suffix) {
     if (session_id.empty()) return L"";
@@ -993,7 +990,8 @@ void history_impl_t::save(bool vacuum) {
 // Returns nothing. The only possible failure involves formatting the timestamp. If that happens we
 // simply omit the timestamp from the output.
 static void format_history_record(const history_item_t &item, const wchar_t *show_time_format,
-                                  bool null_terminate, wcstring &result) {
+                                  bool null_terminate, wcstring *result) {
+    result->clear();
     if (show_time_format) {
         const time_t seconds = item.timestamp();
         struct tm timestamp;
@@ -1002,17 +1000,13 @@ static void format_history_record(const history_item_t &item, const wchar_t *sho
             wchar_t timestamp_string[max_tstamp_length + 1];
             if (std::wcsftime(timestamp_string, max_tstamp_length, show_time_format, &timestamp) !=
                 0) {
-                result.append(timestamp_string);
+                result->append(timestamp_string);
             }
         }
     }
 
-    result.append(item.str());
-    if (null_terminate) {
-        result.push_back(L'\0');
-    } else {
-        result.push_back(L'\n');
-    }
+    result->append(item.str());
+    result->push_back(null_terminate ? L'\0' : L'\n');
 }
 
 void history_impl_t::disable_automatic_saving() {
@@ -1364,20 +1358,20 @@ bool history_t::search(history_search_type_t search_type, const wcstring_list_t 
     size_t hist_size = this->size();
     if (max_items > hist_size) max_items = hist_size;
 
+    wcstring formatted_record;
     if (reverse) {
         for (size_t i = max_items; i != 0; --i) {
             auto cur_item = this->item_at_index(i);
-            wcstring result;
-            format_history_record(cur_item, show_time_format, null_terminate, result);
-            streams.out.append(result);
+            format_history_record(cur_item, show_time_format, null_terminate, &formatted_record);
+            streams.out.append(formatted_record);
         }
     } else {
         // Start at one because zero is the current command.
         for (size_t i = 1; i < max_items + 1; ++i) {
             auto cur_item = this->item_at_index(i);
             wcstring result;
-            format_history_record(cur_item, show_time_format, null_terminate, result);
-            streams.out.append(result);
+            format_history_record(cur_item, show_time_format, null_terminate, &formatted_record);
+            streams.out.append(formatted_record);
         }
     }
 
@@ -1400,14 +1394,14 @@ bool history_t::search_with_args(history_search_type_t search_type,
         }
         history_search_t searcher = history_search_t(
             *this, search_string, search_type, case_sensitive ? 0 : history_search_ignore_case);
+        wcstring formatted_record;
         while (searcher.go_backwards()) {
-            wcstring result;
-            auto cur_item = searcher.current_item();
-            format_history_record(cur_item, show_time_format, null_terminate, result);
+            const auto &cur_item = searcher.current_item();
+            format_history_record(cur_item, show_time_format, null_terminate, &formatted_record);
             if (reverse) {
-                results.push_back(result);
+                results.push_back(formatted_record);
             } else {
-                streams.out.append(result);
+                streams.out.append(formatted_record);
             }
             if (--max_items == 0) break;
         }

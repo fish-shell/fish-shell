@@ -206,6 +206,9 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
             if (wcpattern2.back() != ANY_STRING) wcpattern2.push_back(ANY_STRING);
             return wildcard_match(content_to_match, wcpattern2);
         }
+        case history_search_type_t::match_everything: {
+            return true;
+        }
     }
     DIE("unexpected history_search_type_t value");
 }
@@ -1343,76 +1346,60 @@ void history_t::resolve_pending() { impl()->resolve_pending(); }
 
 void history_t::save() { impl()->save(); }
 
+/// Perform a search of \p hist for \p search_string. Invoke a function \p func for each match. If
+/// \p func returns true, continue the search; else stop it.
+static void do_1_history_search(history_t &hist, history_search_type_t search_type,
+                                const wcstring &search_string, bool case_sensitive,
+                                const std::function<bool(const history_item_t &item)> &func) {
+    history_search_t searcher = history_search_t(hist, search_string, search_type,
+                                                 case_sensitive ? 0 : history_search_ignore_case);
+    while (searcher.go_backwards()) {
+        if (!func(searcher.current_item())) {
+            break;
+        }
+    }
+}
+
 // Searches history.
 bool history_t::search(history_search_type_t search_type, const wcstring_list_t &search_args,
                        const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
                        bool null_terminate, bool reverse, io_streams_t &streams) {
-    if (!search_args.empty()) {
-        // User wants the results filtered. This is not the common case so we do it separate
-        // from the code below for unfiltered output which is much cheaper.
-        return search_with_args(search_type, search_args, show_time_format, max_items,
-                                case_sensitive, null_terminate, reverse, streams);
-    }
-
-    // scoped_lock locker(lock);
-    size_t hist_size = this->size();
-    if (max_items > hist_size) max_items = hist_size;
-
+    wcstring_list_t collected;
     wcstring formatted_record;
-    if (reverse) {
-        for (size_t i = max_items; i != 0; --i) {
-            auto cur_item = this->item_at_index(i);
-            format_history_record(cur_item, show_time_format, null_terminate, &formatted_record);
+    size_t remaining = max_items;
+
+    // The function we use to act on each item.
+    std::function<bool(const history_item_t &item)> func = [&](const history_item_t &item) -> bool {
+        if (remaining == 0) return false;
+        remaining -= 1;
+        format_history_record(item, show_time_format, null_terminate, &formatted_record);
+        if (reverse) {
+            // We need to collect this for later.
+            collected.push_back(std::move(formatted_record));
+        } else {
+            // We can output this immediately.
             streams.out.append(formatted_record);
         }
+        return true;
+    };
+
+    if (search_args.empty()) {
+        // The user had no search terms; just append everything.
+        do_1_history_search(*this, history_search_type_t::match_everything, {}, false, func);
     } else {
-        // Start at one because zero is the current command.
-        for (size_t i = 1; i < max_items + 1; ++i) {
-            auto cur_item = this->item_at_index(i);
-            wcstring result;
-            format_history_record(cur_item, show_time_format, null_terminate, &formatted_record);
-            streams.out.append(formatted_record);
-        }
-    }
-
-    return true;
-}
-
-bool history_t::search_with_args(history_search_type_t search_type,
-                                 const wcstring_list_t &search_args,
-                                 const wchar_t *show_time_format, size_t max_items,
-                                 bool case_sensitive, bool null_terminate, bool reverse,
-                                 io_streams_t &streams) {
-    wcstring_list_t results;
-    size_t hist_size = this->size();
-    if (max_items > hist_size) max_items = hist_size;
-
-    for (const wcstring &search_string : search_args) {
-        if (search_string.empty()) {
-            streams.err.append_format(L"Searching for the empty string isn't allowed");
-            return false;
-        }
-        history_search_t searcher = history_search_t(
-            *this, search_string, search_type, case_sensitive ? 0 : history_search_ignore_case);
-        wcstring formatted_record;
-        while (searcher.go_backwards()) {
-            const auto &cur_item = searcher.current_item();
-            format_history_record(cur_item, show_time_format, null_terminate, &formatted_record);
-            if (reverse) {
-                results.push_back(formatted_record);
-            } else {
-                streams.out.append(formatted_record);
+        for (const wcstring &search_string : search_args) {
+            if (search_string.empty()) {
+                streams.err.append_format(L"Searching for the empty string isn't allowed");
+                return false;
             }
-            if (--max_items == 0) break;
+            do_1_history_search(*this, search_type, search_string, case_sensitive, func);
         }
     }
 
-    if (reverse) {
-        for (auto it = results.rbegin(); it != results.rend(); it++) {
-            streams.out.append(*it);
-        }
+    // Output any items we collected (which only happens in reverse).
+    for (auto iter = collected.rbegin(); iter != collected.rend(); ++iter) {
+        streams.out.append(*iter);
     }
-
     return true;
 }
 

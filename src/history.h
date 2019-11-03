@@ -55,6 +55,8 @@ enum class history_search_type_t {
     contains_glob,
     // Search for commands starting with the given glob pattern.
     prefix_glob,
+    // Matches everything.
+    match_everything,
 };
 
 typedef uint64_t history_identifier_t;
@@ -171,10 +173,6 @@ class history_t {
     bool search(history_search_type_t search_type, const wcstring_list_t &search_args,
                 const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
                 bool null_terminate, bool reverse, io_streams_t &streams);
-
-    bool search_with_args(history_search_type_t search_type, const wcstring_list_t &search_args,
-                          const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
-                          bool null_terminate, bool reverse, io_streams_t &streams);
 
     // Irreversibly clears history.
     void clear();

@@ -673,8 +673,6 @@ static wcstring complete_function_desc(const wcstring &fn) {
 ///
 /// \param str_cmd the command string to find completions for
 void completer_t::complete_cmd(const wcstring &str_cmd) {
-    if (str_cmd.empty()) return;
-
     std::vector<completion_t> possible_comp;
 
     // Append all possible executables
@@ -697,8 +695,9 @@ void completer_t::complete_cmd(const wcstring &str_cmd) {
             vars, parser, NULL);
     UNUSED(ignore);
 
-    if (str_cmd.find(L'/') == wcstring::npos && str_cmd.at(0) != L'~') {
-        wcstring_list_t names = function_get_names(str_cmd.at(0) == L'_');
+    if (str_cmd.empty() || (str_cmd.find(L'/') == wcstring::npos && str_cmd.at(0) != L'~')) {
+        bool include_hidden = !str_cmd.empty() && str_cmd.at(0) == L'_';
+        wcstring_list_t names = function_get_names(include_hidden);
         for (wcstring &name : names) {
             // Append all known matching functions
             append_completion(&possible_comp, std::move(name));
@@ -1485,9 +1484,8 @@ void completer_t::perform() {
         // Don't autosuggest anything based on the empty string (generalizes #1631).
         if (flags & completion_request_t::autosuggestion) return;
 
-        // fish has been using generic completion of filenames relative to the current directory.
-        // TODO there's some discussion in issue #5418 on what else we could do here.
-        complete_param_expand(L"", true /* do_file */);
+        complete_cmd(L"");
+        complete_abbr(L"");
         return;
     }
 

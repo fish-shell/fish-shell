@@ -18,6 +18,11 @@ else if type -q xclip
 end
 
 function fish_clipboard_paste
+    # If not find any clipboard handler, Do not anything.
+    if not type -q __fish_clipboard_paste
+        return 1
+    end
+
     set -l data (__fish_clipboard_paste)
 
     # Issue 6254: Handle zero-length clipboard content

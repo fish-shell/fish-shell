@@ -750,7 +750,7 @@ class pcre2_matcher_t : public string_matcher_t {
             return 0;
         }
 
-        if (opts.entire) {
+        if (opts.entire && !opts.quiet) {
             streams.out.append(arg);
             streams.out.push_back(L'\n');
         }
@@ -861,12 +861,6 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
     if (opts.entire && opts.index) {
         streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
                                   _(L"--entire and --index are mutually exclusive"));
-        return STATUS_INVALID_ARGS;
-    }
-
-    if (opts.entire && opts.quiet) {
-        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
-                                  _(L"--entire and --quiet are mutually exclusive"));
         return STATUS_INVALID_ARGS;
     }
 

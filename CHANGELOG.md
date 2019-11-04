@@ -3,29 +3,18 @@
 ## Notable improvements and fixes
 - A new `$pipestatus` variable contains a list of exit statuses of the previous job, for each of the separate commands in a pipeline (#5632)
 - fish no longer buffers pipes to the last function in a pipeline, improving many cases where pipes appeared to block or hang (#1396).
-- `eval` no long creates a new local variable scope, but affects variables in the scope it is called from (#4443). `source` still creates a new local scope.
-- Like other shells, `cd` now always looks for its argument in the current directory as a last resort, even if the `CDPATH` variable does not include it or "." (#4484).
-- Error messages from builtin commands no longer include an extensive usage summary, and have more readable stack traces (#3404, #5434).
+- An overhaul of error messages for builtin commands, including a removal of the overwhelming usage summary, more readable stack traces (#3404, #5434), stack traces for `test` (aka `[`) (#5771).
 - `fish`'s debugging arguments have been significantly improved. The `--debug-level` option has been removed, and a new `--debug` option replaces it. This option accepts various categories, which may be listed via `fish --print-debug-categories` (#5879). A new `--debug-output` option allows for redirection of debug output.
-- `string replace` has an additional round of escaping in the replacement expression, so escaping backslashes requires many escapes (eg `string replace -ra '([ab])' '\\\\\\\$1' a`). The new feature flag `regex-easyesc` can be used to disable this, so that the same effect can be achieved with `string replace -ra '([ab])' '\\\\$1' a` (#5556).
-- A bug where some parser errors did not set `$status` to non-zero has been fixed.
 - `string` has a new `collect` subcommand for use in command substitutions, producing a single output instead of splitting on new lines (similar to `"$(cmd)"` in other shells) (#159).
 - The fish manual, tutorial and FAQ are now available in `man` format as `fish-doc`, `fish-tutorial` and `fish-faq` respectively (#5521).
-- Local values for `fish_complete_path` and `fish_function_path` are now ignored; only their global values are respected.
-- Empty universal variables may now be exported (#5992).
-- Exported universal variables are no longer imported into the global scope, preventing shadowing. This makes it easier to change such variables for all fish sessions and avoids breakage when the value is a list of multiple elements (#5258).
-- A bug where local variables would not be exported to functions has been fixed (#6153).
-- A bug where `string split` would be drop empty strings if the output was only empty strings has been fixed (#5987).
-- `switch` now allows arguments that expand to nothing, like empty variables (#5677).
-- The null command (`:`) now always exits successfully, rather than passing through the previous exit status (#6022).
-- `jobs --last` returns 0 to indicate success when a job is found (#6104).
-- `commandline -p` and `commandline -j` now split on `&&` and `||` in addition to `;` and `&` (#6214).
+- Like other shells, `cd` now always looks for its argument in the current directory as a last resort, even if the `CDPATH` variable does not include it or "." (#4484).
 - `fish` now correctly handles CDPATH entries that starts with `..` (#6220).
-- New redirections `&>` and `&|` may be used to redirect or pipe stdout, and also redirect stderr to stdout (#6192).
 - The `fish_trace` variable may be set to trace execution. This performs a similar role as `set -x`.
 
 ### Syntax changes and new commands
 - Brace expansion now only takes place if the braces include a "," or a variable expansion, meaning common commands such as `git reset HEAD@{0}` do not require escaping (#5869).
+- New redirections `&>` and `&|` may be used to redirect or pipe stdout, and also redirect stderr to stdout (#6192).
+- `switch` now allows arguments that expand to nothing, like empty variables (#5677).
 
 ### Scripting improvements
 - `string split0` now returns 0 if it split something (#5701).
@@ -41,10 +30,18 @@
 - `argparse` now defaults to showing the current function name (instead of `argparse`) in its errors, making `--name` often superfluous (#5835).
 - `argparse` learned a new `--ignore-unknown` flag to keep unrecognized options, allowing multiple argparse passes to parse options (#5367).
 - `fish_indent` now handles semicolons better, including leaving them in place for `; and` and `; or` instead of breaking the line.
-- `test` (aka `[`) now prints a stack trace on error, making the offending call easier to find (#5771).
 - The default read limit has been increased to 100MiB (#5267).
 - `math` now also understands `x` for multiplication, provided it is followed by whitespace (#5906).
 - `functions --erase` now also prevents fish from autoloading a function for the first time (#5951).
+- `jobs --last` returns 0 to indicate success when a job is found (#6104).
+- `commandline -p` and `commandline -j` now split on `&&` and `||` in addition to `;` and `&` (#6214).
+- A bug where `string split` would drop empty strings if the output was only empty strings has been fixed (#5987).
+- `eval` no long creates a new local variable scope, but affects variables in the scope it is called from (#4443). `source` still creates a new local scope.
+- Local values for `fish_complete_path` and `fish_function_path` are now ignored; only their global values are respected.
+- Empty universal variables may now be exported (#5992).
+- Exported universal variables are no longer imported into the global scope, preventing shadowing. This makes it easier to change such variables for all fish sessions and avoids breakage when the value is a list of multiple elements (#5258).
+- A bug where local variables would not be exported to functions has been fixed (#6153).
+- The null command (`:`) now always exits successfully, rather than passing through the previous exit status (#6022).
 
 ### Interactive improvements
 - fish only parses `/etc/paths` on macOS in login shells, matching the bash implementation (#5637) and avoiding changes to path ordering in child shells (#5456).
@@ -120,6 +117,7 @@
 
 ## Deprecations
 - The vcs-prompt functions have been promoted to names without double-underscore, so __fish_git_prompt is now fish_git_prompt, __fish_vcs_prompt is now fish_vcs_prompt, __fish_hg_prompt is now fish_hg_prompt and __fish_svn_prompt is now fish_svn_prompt. Shims at the old names have been added, and the variables have kept their old names (#5586).
+- `string replace` has an additional round of escaping in the replacement expression, so escaping backslashes requires many escapes (eg `string replace -ra '([ab])' '\\\\\\\$1' a`). The new feature flag `regex-easyesc` can be used to disable this, so that the same effect can be achieved with `string replace -ra '([ab])' '\\\\$1' a` (#5556). As a reminder, the intention behind feature flags is that this will eventually become the default and then only option, so scripts should be updated.
 
 ### For distributors and developers
 - fish 3.0 introduced a CMake-based build system. In fish 3.1, both the Autotools-based build and legacy Xcode build system have been removed, leaving only the CMake build system. All distributors and developers must install CMake.

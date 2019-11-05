@@ -1458,24 +1458,39 @@ void completer_t::mark_completions_duplicating_arguments(const wcstring &prefix,
 }
 
 bool completer_t::try_complete_redirections_and_pipes(const tok_t &token_at_cursor) {
+    enum match_kind { substring, prefix1, prefix2 };
     static constexpr struct {
         const wchar_t *value, *description;
+        enum match_kind match_kind;
     } completion_literals[] = {
         // clang-format off
-        {L"&", L"run job in background"},
-        {L"&&", L"\"and\" - run on success"},
+        {L"&", L"run job in background", substring},
+        {L"&&", L"\"and\" - run on success", substring},
 
-        {L">", L"write stdout to file"},
-        {L">>", L"append stdout to file"},
-        {L"&>", L"write stdout/stderr to file"},
-        {L"&>>", L"append stdout/stderr to file"},
-        {L">&2", L"redirect stdout to stderr"},
-        {L"2>&1", L"redirect stderr to stdout"},
+        {L">", L"write stdout to file", substring},
+        {L">>", L"append stdout to file", prefix1},
+        {L">?", L"write stdout to file - noclobber", prefix1},
+        {L">>?", L"append stdout to file - noclobber", prefix2},
 
-        {L"|", L"pipe stdout"},
-        {L"2>|", L"pipe stderr"},
-        {L"&|", L"pipe stdout/stderr"},
-        {L"||", L"\"or\" - run on failure"},
+        {L"2>", L"write stderr to file", substring},
+        {L"2>>", L"append stderr to file", prefix2},
+        {L"2>?", L"write stderr to file - noclobber", prefix2},
+        {L"2>>?", L"append stderr to file - noclobber", prefix2},
+
+        {L"&>", L"write stdout/stderr to file", substring},
+        {L"&>>", L"append stdout/stderr to file", prefix2},
+        {L"&>?", L"write stdout/stderr to file - noclobber", prefix2},
+        {L"&>>?", L"append stdout/stderr to file - noclobber", prefix2},
+
+        {L">&2", L"redirect stdout to stderr", substring},
+        {L"2>&1", L"redirect stderr to stdout", substring},
+        {L">&-", L"close stdout", prefix2},
+        {L"2>&-", L"close stderr", prefix2},
+
+        {L"|", L"pipe stdout", substring},
+        {L"2>|", L"pipe stderr", substring},
+        {L"&|", L"pipe stdout/stderr", substring},
+        {L"||", L"\"or\" - run on failure", substring},
         // clang-format on
     };
     // This function is only safe if there are no other completions because we modify
@@ -1497,13 +1512,22 @@ bool completer_t::try_complete_redirections_and_pipes(const tok_t &token_at_curs
     // The completions will replace the token left of the cursor.
     for (size_t i = 0; i < sizeof(completion_literals) / sizeof(completion_literals[0]); i++) {
         const auto &comp = completion_literals[i];
-        if (std::wcsstr(comp.value, token.c_str())) {
-            append_completion(&completions.choices, comp.value, comp.description, the_flags);
-        };
+        bool ok = false;
+        switch (comp.match_kind) {
+            case substring:
+                ok = std::wcsstr(comp.value, token.c_str());
+                break;
+            case prefix1:
+                ok = std::wcsncmp(comp.value, token.c_str(), std::max<size_t>(1, token.size())) == 0;
+                break;
+            case prefix2:
+                ok = std::wcsncmp(comp.value, token.c_str(), std::max<size_t>(2, token.size())) == 0;
+                break;
+        }
+        if (ok) append_completion(&completions.choices, comp.value, comp.description, the_flags);
     }
     completions.dest.start -= token.size();
     completions.dest.length += token.size();
-    assert(!empty());
     return true;
 }
 

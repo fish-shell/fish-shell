@@ -1190,13 +1190,18 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
 
         wcstring desc;
         if (this->wants_descriptions()) {
-            // Can't use this->vars here, it could be any variable.
-            auto var = vars.get(env_name);
-            if (!var) continue;
-
             if (this->type() != COMPLETE_AUTOSUGGEST) {
-                wcstring value = expand_escape_variable(*var);
-                desc = format_string(COMPLETE_VAR_DESC_VAL, value.c_str());
+                // $history can be huge, don't put it in the completion description; see #6288.
+                if (env_name == L"history") {
+                    desc = format_string(L"Full history of interactive commands");
+                } else {
+                    // Can't use this->vars here, it could be any variable.
+                    auto var = vars.get(env_name);
+                    if (!var) continue;
+
+                    wcstring value = expand_escape_variable(*var);
+                    desc = format_string(COMPLETE_VAR_DESC_VAL, value.c_str());
+                }
             }
         }
 

@@ -66,7 +66,7 @@ Once installed, run `fish` from your current shell to try fish out!
 Running fish requires:
 
 * curses or ncurses (preinstalled on most \*nix systems)
-* some common \*nix system utilities (currently `mktemp`), in addition to the basic POSIX utilities (`cat`, `cut`, `dirname`, `ls`, `mkdir`, `mkfifo`, `rm`, `sort`, `tr`, `uname` and `sed` at least, but the full coreutils plus find, sed and awk is preferred)
+* some common \*nix system utilities (currently `mktemp`), in addition to the basic POSIX utilities (`cat`, `cut`, `dirname`, `ls`, `mkdir`, `mkfifo`, `rm`, `sort`, `tee`, `tr`, `uname` and `sed` at least, but the full coreutils plus find, sed and awk is preferred)
 * gettext (library and `gettext` command), if compiled with translation support
 
 The following optional features also have specific requirements:

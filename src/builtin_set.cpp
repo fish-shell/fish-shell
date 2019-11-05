@@ -21,6 +21,7 @@
 #include "env.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "history.h"
 #include "io.h"
 #include "parser.h"
 #include "proc.h"
@@ -463,7 +464,7 @@ static env_mode_flags_t compute_scope(set_cmd_opts_t &opts) {
 }
 
 /// Print the names of all environment variables in the scope. It will include the values unless the
-/// `set --list` flag was used.
+/// `set --names` flag was used.
 static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, wchar_t **argv,
                             parser_t &parser, io_streams_t &streams) {
     UNUSED(cmd);
@@ -481,10 +482,17 @@ static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, 
         streams.out.append(e_key);
 
         if (!names_only) {
-            auto var = parser.vars().get(key, compute_scope(opts));
-            if (!var.missing_or_empty()) {
+            wcstring val;
+            if (key == L"history") {
+                val = history_variable_description;
+            } else {
+                auto var = parser.vars().get(key, compute_scope(opts));
+                if (!var.missing_or_empty()) {
+                    val = expand_escape_variable(*var);
+                }
+            }
+            if (!val.empty()) {
                 bool shorten = false;
-                wcstring val = expand_escape_variable(*var);
                 if (opts.shorten_ok && val.length() > 64) {
                     shorten = true;
                     val.resize(60);
@@ -596,10 +604,11 @@ static int builtin_set_show(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, 
     if (argc == 0) {  // show all vars
         wcstring_list_t names = parser.vars().get_names(ENV_USER);
         sort(names.begin(), names.end());
-        for (auto it : names) {
-            show_scope(it.c_str(), ENV_LOCAL, streams, vars);
-            show_scope(it.c_str(), ENV_GLOBAL, streams, vars);
-            show_scope(it.c_str(), ENV_UNIVERSAL, streams, vars);
+        for (const auto &name : names) {
+            if (name == L"history") continue;
+            show_scope(name.c_str(), ENV_LOCAL, streams, vars);
+            show_scope(name.c_str(), ENV_GLOBAL, streams, vars);
+            show_scope(name.c_str(), ENV_UNIVERSAL, streams, vars);
             streams.out.push_back(L'\n');
         }
     } else {

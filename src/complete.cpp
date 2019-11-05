@@ -36,6 +36,7 @@
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "function.h"
+#include "history.h"
 #include "iothread.h"
 #include "parse_constants.h"
 #include "parse_util.h"
@@ -1193,7 +1194,7 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
             if (this->type() != COMPLETE_AUTOSUGGEST) {
                 // $history can be huge, don't put it in the completion description; see #6288.
                 if (env_name == L"history") {
-                    desc = format_string(L"Full history of interactive commands");
+                    desc = history_variable_description;
                 } else {
                     // Can't use this->vars here, it could be any variable.
                     auto var = vars.get(env_name);

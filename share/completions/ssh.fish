@@ -13,7 +13,7 @@ complete -x -c ssh -d "Remote" -a "(__fish_complete_user_at_hosts)"
 # (__fish_print_users | string match -r -v '^_')@
 # "
 
-complete -c ssh -d "Command to run" -x -a '(__fish_complete_subcommand --fcs-skip=2)'
+complete -c ssh -n 'test (__fish_number_of_cmd_args_wo_opts) -ge 2' -d "Command to run" -x -a '(__fish_complete_subcommand --fcs-skip=2)'
 
 complete -c ssh -s a -d "Disables forwarding of the authentication agent"
 complete -c ssh -s A -d "Enables forwarding of the authentication agent"

@@ -3,5 +3,4 @@ complete -c command -n 'test (count (commandline -opc)) -eq 1' -s a -l all -d 'P
 complete -c command -n 'test (count (commandline -opc)) -eq 1' -s q -l quiet -d 'Do not print anything, only set exit status'
 complete -c command -n 'test (count (commandline -opc)) -eq 1' -s s -l search -d 'Print the file that would be executed'
 complete -c command -n 'test (count (commandline -opc)) -eq 1' -s s -l search -d 'Print the file that would be executed'
-complete -c command -n 'test (count (commandline -opc)) -eq 1' -xa "(__fish_complete_external_command)"
-complete -c command -n 'test (count (commandline -opc)) -ge 2' -xa "(__fish_complete_subcommand)"
+complete -c command -xa "(__fish_complete_subcommand)"

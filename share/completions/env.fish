@@ -17,7 +17,7 @@ function __fish_complete_env_subcommand
 
     # Then complete the rest as if it was given as a command.
     if test -n "$argv"
-        __fish_complete_subcomand --commandline $argv
+        __fish_complete_subcommand --commandline $argv
         return 0
     end
     return 1

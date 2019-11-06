@@ -41,7 +41,7 @@ class lru_cache_t {
         // The value from the client
         Contents value;
 
-        explicit lru_node_t(const Contents &v) : value(std::move(v)) {}
+        explicit lru_node_t(Contents &&v) : value(std::move(v)) {}
     };
 
     typedef typename std::unordered_map<wcstring, lru_node_t>::iterator node_iter_t;
@@ -217,7 +217,7 @@ class lru_cache_t {
 
     // Adds a node under the given key without triggering eviction. Returns true if the node was
     // added, false if the node was not because a node with that key is already in the set.
-    bool insert_no_eviction(wcstring key, Contents value) {
+    bool insert_no_eviction(wcstring &&key, Contents &&value) {
         // Try inserting; return false if it was already in the set.
         auto iter_inserted = this->node_map.emplace(std::move(key), lru_node_t(std::move(value)));
         if (!iter_inserted.second) {

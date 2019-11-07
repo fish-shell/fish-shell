@@ -216,7 +216,7 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
 struct history_impl_t {
     // Privately add an item. If pending, the item will not be returned by history searches until a
     // call to resolve_pending.
-    void add(const history_item_t &item, bool pending = false);
+    void add(const history_item_t &item, bool pending = false, bool do_save = true);
 
     // Internal function.
     void clear_file_state();
@@ -303,7 +303,7 @@ struct history_impl_t {
     // item_at_index until a call to resolve_pending(). Pending items are tracked with an offset
     // into the array of new items, so adding a non-pending item has the effect of resolving all
     // pending items.
-    void add(const wcstring &str, history_identifier_t ident = 0, bool pending = false);
+    void add(const wcstring &str, history_identifier_t ident = 0, bool pending = false, bool save = true);
 
     // Remove a history item.
     void remove(const wcstring &str);
@@ -351,7 +351,7 @@ struct history_impl_t {
     size_t size();
 };
 
-void history_impl_t::add(const history_item_t &item, bool pending) {
+void history_impl_t::add(const history_item_t &item, bool pending, bool do_save) {
     // Try merging with the last item.
     if (!new_items.empty() && new_items.back().merge(item)) {
         // We merged, so we don't have to add anything. Maybe this item was pending, but it just got
@@ -361,7 +361,7 @@ void history_impl_t::add(const history_item_t &item, bool pending) {
         // We have to add a new item.
         new_items.push_back(item);
         this->has_pending_item = pending;
-        save_unless_disabled();
+        if (do_save) save_unless_disabled();
     }
 }
 
@@ -399,7 +399,7 @@ void history_impl_t::save_unless_disabled() {
     countdown_to_vacuum--;
 }
 
-void history_impl_t::add(const wcstring &str, history_identifier_t ident, bool pending) {
+void history_impl_t::add(const wcstring &str, history_identifier_t ident, bool pending, bool do_save) {
     time_t when = time(NULL);
     // Big hack: do not allow timestamps equal to our boundary date. This is because we include
     // items whose timestamps are equal to our boundary when reading old history, so we can catch
@@ -409,7 +409,7 @@ void history_impl_t::add(const wcstring &str, history_identifier_t ident, bool p
         when++;
     }
 
-    this->add(history_item_t(str, when, ident), pending);
+    this->add(history_item_t(str, when, ident), pending, do_save);
 }
 
 // Remove matching history entries from our list of new items. This only supports literal,
@@ -1164,8 +1164,11 @@ void history_impl_t::populate_from_bash(FILE *stream) {
 
         wcstring wide_line = str2wcstring(line);
         // Add this line if it doesn't contain anything we know we can't handle.
-        if (should_import_bash_history_line(wide_line)) this->add(wide_line);
+        if (should_import_bash_history_line(wide_line)) {
+            this->add(wide_line, 0, false /* pending */, false /* do_save */);
+        }
     }
+    this->save_unless_disabled();
 }
 
 void history_impl_t::incorporate_external_changes() {

@@ -111,7 +111,8 @@ function __fish_config_interactive -d "Initializations that should be performed 
             set -l update_args -B $__fish_data_dir/tools/create_manpage_completions.py --manpath --cleanup-in '~/.config/fish/completions' --cleanup-in '~/.config/fish/generated_completions'
             for py in python{3,2,}
                 if command -sq $py
-                    $py $update_args >/dev/null 2>&1 &
+                    set -l c $py $update_args
+                    $c (: fish_update_completions: generating completions from man pages) >/dev/null 2>&1 &
                     break
                 end
             end

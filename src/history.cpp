@@ -1127,10 +1127,6 @@ static bool should_import_bash_history_line(const wcstring &line) {
     if (line.find(L"((") != std::string::npos) return false;
     if (line.find(L"))") != std::string::npos) return false;
 
-    // Temporarily skip lines with && and ||
-    if (line.find(L"&&") != std::string::npos) return false;
-    if (line.find(L"||") != std::string::npos) return false;
-
     // Skip lines that end with a backslash. We do not handle multiline commands from bash history.
     if (line.back() == L'\\') return false;
 

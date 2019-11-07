@@ -114,7 +114,7 @@ function __fish_print_help --description "Print help message for the specified f
         not isatty stdout
         and set pager cat # cannot use a builtin here
         # similar to man, but add -F to quit paging when the help output is brief (#6227)
-        set -xl LESS "$LESS"isrFX
+        set -xl LESS isrFX
         # less options:
         # -i (--ignore-case) search case-insensitively, like man
         # -s (--squeeze-blank-lines) not strictly necessary since we already do that above

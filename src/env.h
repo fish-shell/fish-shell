@@ -226,6 +226,9 @@ class env_stack_t final : public environment_t {
 
     explicit env_stack_t(std::unique_ptr<env_stack_impl_t> impl);
 
+    /// \return whether we are the principal stack.
+    bool is_principal() const { return this == principal_ref().get(); }
+
    public:
     ~env_stack_t() override;
     env_stack_t(env_stack_t &&);

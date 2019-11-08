@@ -1264,13 +1264,17 @@ int env_stack_t::set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t
 
     mod_result_t ret = acquire_impl()->set(key, mode, std::move(vals));
     if (ret.status == ENV_OK) {
+        // If we modified the global state, or we are principal, then dispatch changes.
         // Important to not hold the lock here.
-        env_dispatch_var_change(key, *this);
+        if (ret.global_modified || is_principal()) {
+            env_dispatch_var_change(key, *this);
+        }
         if (out_events) {
             out_events->push_back(event_t::variable(key, {L"VARIABLE", L"SET", key}));
         }
     }
-    if (ret.uvar_modified) {
+    // If the principal stack modified universal variables, then post a barrier.
+    if (ret.uvar_modified && is_principal()) {
         universal_barrier();
     }
     return ret.status;
@@ -1291,13 +1295,15 @@ int env_stack_t::set_empty(const wcstring &key, env_mode_flags_t mode,
 int env_stack_t::remove(const wcstring &key, int mode, std::vector<event_t> *out_events) {
     mod_result_t ret = acquire_impl()->remove(key, mode);
     if (ret.status == ENV_OK) {
-        // Important to not hold the lock here.
-        env_dispatch_var_change(key, *this);
+        if (ret.global_modified || is_principal()) {
+            // Important to not hold the lock here.
+            env_dispatch_var_change(key, *this);
+        }
         if (out_events) {
             out_events->push_back(event_t::variable(key, {L"VARIABLE", L"ERASE", key}));
         }
     }
-    if (ret.uvar_modified) {
+    if (ret.uvar_modified && is_principal()) {
         universal_barrier();
     }
     return ret.status;
@@ -1330,9 +1336,13 @@ void env_stack_t::push(bool new_scope) {
 
 void env_stack_t::pop() {
     auto popped = acquire_impl()->pop();
-    // TODO: we would like to coalesce locale / curses changes, so that we only re-initialize once.
-    for (const auto &kv : popped->env) {
-        env_dispatch_var_change(kv.first, *this);
+    // Only dispatch variable changes if we are the principal environment.
+    if (this == principal_ref().get()) {
+        // TODO: we would like to coalesce locale / curses changes, so that we only re-initialize
+        // once.
+        for (const auto &kv : popped->env) {
+            env_dispatch_var_change(kv.first, *this);
+        }
     }
 }
 

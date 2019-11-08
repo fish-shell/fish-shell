@@ -215,6 +215,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     #
     bind -s --preset -m replace_one r repaint-mode
     bind -s --preset -M replace_one -m default '' delete-char self-insert backward-char repaint-mode
+    bind -s --preset -M replace_one -m default \r 'commandline -f delete-char; commandline -i \n; commandline -f backward-char; commandline -f repaint-mode'
     bind -s --preset -M replace_one -m default \e cancel repaint-mode
 
     #

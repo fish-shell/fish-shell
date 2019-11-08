@@ -30,7 +30,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         set -U fish_greeting "$line1$line2"
     end
 
-    if set -q fish_private_mode and string length -q -- $fish_greeting
+    if set -q fish_private_mode; and string length -q -- $fish_greeting
         set -l line (_ "fish is running in private mode, history will not be persisted.")
         set -g fish_greeting $fish_greeting.\n$line
     end

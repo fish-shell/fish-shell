@@ -15,7 +15,7 @@ matrix:
             - libpcre2-dev
             - python
       env:
-          - CXXFLAGS="-g -O2 -Werror=address"
+          - CXXFLAGS="-Werror=address"
     - os: linux
       compiler: gcc
       addons:
@@ -27,11 +27,11 @@ matrix:
             - g++-multilib
             - python
       env:
-          - CXXFLAGS="-g -O2 -m32 -Werror=address" CFLAGS="-g -m32"
+          - CXXFLAGS="-m32 -Werror=address" CFLAGS="-m32"
     - os: linux
       compiler: clang
       env:
-          - CXXFLAGS="-g -O2 -fno-omit-frame-pointer -fsanitize=undefined -fsanitize=address"
+          - CXXFLAGS="-fno-omit-frame-pointer -fsanitize=undefined -fsanitize=address"
           - ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1
           - UBSAN_OPTIONS=print_stacktrace=1:report_error_type=1:suppressions=$TRAVIS_BUILD_DIR/build_tools/ubsan.blacklist
       addons:
@@ -45,7 +45,7 @@ matrix:
     - os: linux
       compiler: clang
       env:
-          - CXXFLAGS="-g -O2 -fsanitize=thread"
+          - CXXFLAGS="-fsanitize=thread"
       addons:
         apt:
           packages:

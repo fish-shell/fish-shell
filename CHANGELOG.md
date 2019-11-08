@@ -113,6 +113,7 @@
   - `nethack` (#6240)
   - `patool` (#6083)
   - `phpunit` (#6197)
+  - `plutil` (#6301)
   - `qubes-gpg-client` (#6067)
   - `rg`
   - `rustup`

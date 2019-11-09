@@ -103,7 +103,7 @@ class tokenizer_t {
     void operator=(const tokenizer_t &) = delete;
 
     /// A pointer into the original string, showing where the next token begins.
-    const wchar_t *buff;
+    const wchar_t *token_cursor;
     /// The start of the original string.
     const wchar_t *const start;
     /// Whether we have additional tokens.

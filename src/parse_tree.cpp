@@ -694,8 +694,9 @@ void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &sta
 
 void parse_ll_t::report_tokenizer_error(const tok_t &tok) {
     parse_error_code_t parse_error_code = parse_error_from_tokenizer_error(tok.error);
-    this->parse_error_at_location(tok.offset, tok.length, tok.offset + tok.error_offset,
-                                  parse_error_code, L"%ls", tokenizer_get_error_message(tok.error));
+    this->parse_error_at_location(tok.offset, tok.length,
+                                  tok.offset + tok.error_offset_within_token, parse_error_code,
+                                  L"%ls", tokenizer_get_error_message(tok.error));
 }
 
 void parse_ll_t::parse_error_unexpected_token(const wchar_t *expected, parse_token_t token) {

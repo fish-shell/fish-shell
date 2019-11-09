@@ -634,7 +634,7 @@ static void test_tokenizer() {
         do_test(token.has_value());
         do_test(token->type == token_type_t::error);
         do_test(token->error == tokenizer_error_t::unterminated_escape);
-        do_test(token->error_offset == 3);
+        do_test(token->error_offset_within_token == 3);
     }
 
     {
@@ -646,7 +646,7 @@ static void test_tokenizer() {
         do_test(token->type == token_type_t::error);
         do_test(token->error == tokenizer_error_t::closing_unopened_subshell);
         do_test(token->offset == 4);
-        do_test(token->error_offset == 0);
+        do_test(token->error_offset_within_token == 0);
     }
 
     {
@@ -657,7 +657,7 @@ static void test_tokenizer() {
         do_test(token.has_value());
         do_test(token->type == token_type_t::error);
         do_test(token->error == tokenizer_error_t::unterminated_subshell);
-        do_test(token->error_offset == 4);
+        do_test(token->error_offset_within_token == 4);
     }
 
     {
@@ -668,7 +668,7 @@ static void test_tokenizer() {
         do_test(token.has_value());
         do_test(token->type == token_type_t::error);
         do_test(token->error == tokenizer_error_t::unterminated_slice);
-        do_test(token->error_offset == 4);
+        do_test(token->error_offset_within_token == 4);
     }
 
     // Test some redirection parsing.

@@ -79,7 +79,7 @@ tok_t tokenizer_t::call_error(tokenizer_error_t error_type, const wchar_t *token
     result.offset = token_start - this->start;
     // If we are passed a token_length, then use it; otherwise infer it from the buffer.
     result.length = token_length ? *token_length : this->token_cursor - token_start;
-    result.error_offset = error_loc - token_start;
+    result.error_offset_within_token = error_loc - token_start;
     return result;
 }
 

@@ -83,7 +83,7 @@ struct tok_t {
 
     // If an error, this is the offset of the error within the token. A value of 0 means it occurred
     // at 'offset'.
-    size_t error_offset{size_t(-1)};
+    size_t error_offset_within_token{size_t(-1)};
 
     // Construct from a token type.
     explicit tok_t(token_type_t type);

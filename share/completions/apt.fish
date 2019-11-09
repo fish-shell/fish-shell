@@ -42,6 +42,7 @@ __fish_apt_subcommand show -r -d 'Show package information'
 
 # Install
 __fish_apt_subcommand install -r -d 'Install packages'
+__fish_apt_option install -l reinstall -d 'Reinstall package'
 
 # Remove
 __fish_apt_subcommand remove -r -d 'Remove packages'

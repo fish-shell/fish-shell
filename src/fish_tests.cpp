@@ -645,7 +645,8 @@ static void test_tokenizer() {
         do_test(token.has_value());
         do_test(token->type == token_type_t::error);
         do_test(token->error == tokenizer_error_t::closing_unopened_subshell);
-        do_test(token->error_offset == 4);
+        do_test(token->offset == 4);
+        do_test(token->error_offset == 0);
     }
 
     {
@@ -4629,6 +4630,11 @@ static void test_highlighting() {
         {L"|&", highlight_role_t::error},
         {L"true", highlight_role_t::command},
         {L"stuff", highlight_role_t::param},
+    });
+
+    highlight_tests.push_back({
+        {L"echo", highlight_role_t::command},
+        {L")", highlight_role_t::error},
     });
 
     auto &vars = parser_t::principal_parser().vars();

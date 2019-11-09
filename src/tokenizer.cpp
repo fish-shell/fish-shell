@@ -184,31 +184,30 @@ tok_t tokenizer_t::read_string() {
         } else if (c == L')') {
             if (expecting.size() > 0 && expecting.back() == L'}') {
                 return this->call_error(tokenizer_error_t::expected_bclose_found_pclose,
-                                        this->start, this->token_cursor, 1);
+                                        this->token_cursor, this->token_cursor, 1);
             }
-            switch (paran_offsets.size()) {
-                case 0:
-                    return this->call_error(tokenizer_error_t::closing_unopened_subshell,
-                                            this->start, this->token_cursor, 1);
-                case 1:
-                    mode &= ~(tok_modes::subshell);
-                default:
-                    paran_offsets.pop_back();
+            if (paran_offsets.empty()) {
+                return this->call_error(tokenizer_error_t::closing_unopened_subshell,
+                                        this->token_cursor, this->token_cursor, 1);
+            }
+            paran_offsets.pop_back();
+            if (paran_offsets.empty()) {
+                mode &= ~(tok_modes::subshell);
             }
             expecting.pop_back();
         } else if (c == L'}') {
             if (expecting.size() > 0 && expecting.back() == L')') {
                 return this->call_error(tokenizer_error_t::expected_pclose_found_bclose,
-                                        this->start, this->token_cursor, 1);
+                                        this->token_cursor, this->token_cursor, 1);
             }
-            switch (brace_offsets.size()) {
-                case 0:
-                    return this->call_error(tokenizer_error_t::closing_unopened_brace,
-                                            this->token_cursor, this->start + wcslen(this->start));
-                case 1:
-                    mode &= ~(tok_modes::curly_braces);
-                default:
-                    brace_offsets.pop_back();
+            if (brace_offsets.empty()) {
+                return this->call_error(tokenizer_error_t::closing_unopened_brace,
+                                        this->token_cursor,
+                                        this->token_cursor + wcslen(this->token_cursor));
+            }
+            brace_offsets.pop_back();
+            if (brace_offsets.empty()) {
+                mode &= ~(tok_modes::curly_braces);
             }
             expecting.pop_back();
         } else if (c == L'[') {

@@ -364,28 +364,3 @@ void function_invalidate_path() {
     }
     funcset->autoloader.clear();
 }
-
-// Setup the environment for the function. There are three components of the environment:
-// 1. argv
-// 2. named arguments
-// 3. inherited variables
-void function_prepare_environment(env_stack_t &vars, const wcstring &name, wcstring_list_t argv,
-                                  const std::map<wcstring, env_var_t> &inherited_vars) {
-    vars.set_argv(argv);
-    auto props = function_get_properties(name);
-    if (props && !props->named_arguments.empty()) {
-        auto argv_iter = argv.cbegin();
-        for (const wcstring &named_arg : props->named_arguments) {
-            if (argv_iter != argv.cend()) {
-                vars.set_one(named_arg, ENV_LOCAL | ENV_USER, std::move(*argv_iter));
-                ++argv_iter;
-            } else {
-                vars.set_empty(named_arg, ENV_LOCAL | ENV_USER);
-            }
-        }
-    }
-
-    for (const auto &kv : inherited_vars) {
-        vars.set(kv.first, ENV_LOCAL | ENV_USER, kv.second.as_list());
-    }
-}

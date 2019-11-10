@@ -769,6 +769,53 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
     return true;
 }
 
+// Given that we are about to execute a function type proc \p, push a function block and set up the
+// variable environment.
+static block_t *function_prepare_environment(parser_t &parser, const process_t *p,
+                                             const function_properties_t &props) {
+    // Extract the function name and remaining arguments.
+    wcstring func_name;
+    wcstring_list_t argv = p->get_argv_array().to_list();
+    if (!argv.empty()) {
+        // Extract and remove the function name from argv.
+        func_name = std::move(*argv.begin());
+        argv.erase(argv.begin());
+    }
+    block_t *fb = parser.push_block(block_t::function_block(func_name, argv, props.shadow_scope));
+    auto &vars = parser.vars();
+
+    // Setup the environment for the function. There are three components of the environment:
+    // 1. named arguments
+    // 2. inherited variables
+    // 3. argv
+
+    size_t idx = 0;
+    for (const wcstring &named_arg : props.named_arguments) {
+        if (idx < argv.size()) {
+            vars.set_one(named_arg, ENV_LOCAL | ENV_USER, argv.at(idx));
+        } else {
+            vars.set_empty(named_arg, ENV_LOCAL | ENV_USER);
+        }
+        idx++;
+    }
+
+    std::map<wcstring, env_var_t> inherit_vars = function_get_inherit_vars(func_name);
+    for (const auto &kv : inherit_vars) {
+        vars.set(kv.first, ENV_LOCAL | ENV_USER, kv.second.as_list());
+    }
+
+    vars.set_argv(std::move(argv));
+    return fb;
+}
+
+// Given that we are done executing a function, restore the environment.
+static void function_restore_environment(parser_t &parser, const block_t *block) {
+    parser.pop_block(block);
+
+    // If we returned due to a return statement, then stop returning now.
+    parser.libdata().returning = false;
+}
+
 /// Execute a block node or function "process".
 /// \p user_ios contains the list of user-specified ios, used so we can avoid stomping on them with
 /// our pipes.
@@ -794,30 +841,15 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
     }
 
     if (p->type == process_type_t::function) {
-        const wcstring func_name = p->argv0();
-        auto props = function_get_properties(func_name);
+        auto props = function_get_properties(p->argv0());
         if (!props) {
             FLOGF(error, _(L"Unknown function '%ls'"), p->argv0());
             return false;
         }
 
-        const std::map<wcstring, env_var_t> inherit_vars = function_get_inherit_vars(func_name);
-
-        // TODO: we want to store the args in both the function block and the environment.
-        // Find a way to share memory here?
-        wcstring_list_t argv = p->get_argv_array().to_list();
-        // Remove the function name from argv.
-        if (!argv.empty()) argv.erase(argv.begin());
-        block_t *fb =
-            parser.push_block(block_t::function_block(func_name, argv, props->shadow_scope));
-        function_prepare_environment(parser.vars(), func_name, std::move(argv), inherit_vars);
-
+        const block_t *fb = function_prepare_environment(parser, p, *props);
         internal_exec_helper(parser, props->parsed_source, props->body_node, io_chain, j);
-
-        parser.pop_block(fb);
-
-        // If we returned due to a return statement, then stop returning now.
-        parser.libdata().returning = false;
+        function_restore_environment(parser, fb);
     } else {
         assert(p->type == process_type_t::block_node);
         assert(p->block_node_source && p->internal_block_node && "Process is missing node info");

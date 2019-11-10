@@ -182,9 +182,6 @@ static void launch_process_nofork(env_stack_t &vars, process_t *p) {
     safe_launch_process(p, actual_cmd, argv_array.get(), envv);
 }
 
-/// Check if the IO redirection chains contains redirections for the specified file descriptor.
-static int has_fd(const io_chain_t &d, int fd) { return io_chain_get(d, fd).get() != NULL; }
-
 /// Make a copy of the specified io redirection chain, but change file redirection into fd
 /// redirection. This makes the redirection chain suitable for use as block-level io, since the file
 /// won't be repeatedly reopened for every command in the block, which would reset the cursor
@@ -211,7 +208,7 @@ static bool resolve_file_redirections_to_fds(const io_chain_t &in_chain, const w
     // Make our chain of redirections.
     io_chain_t result_chain;
 
-    for (const shared_ptr<io_data_t> &in : in_chain) {
+    for (const io_data_ref_t &in : in_chain) {
         switch (in->io_mode) {
             case io_mode_t::pipe:
             case io_mode_t::bufferfill:
@@ -222,7 +219,7 @@ static bool resolve_file_redirections_to_fds(const io_chain_t &in_chain, const w
             }
             case io_mode_t::file: {
                 // We have a path-based redireciton. Resolve it to a file.
-                io_file_t *in_file = static_cast<io_file_t *>(in.get());
+                const io_file_t *in_file = static_cast<const io_file_t *>(in.get());
                 int fd = wopen(path_apply_working_directory(in_file->filename, pwd), in_file->flags,
                                OPEN_MASK);
                 if (fd < 0) {
@@ -487,7 +484,7 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
     // be reading from.
     if (pipe_read) {
         local_builtin_stdin = pipe_read->pipe_fd();
-    } else if (const auto in = proc_io_chain.get_io_for_fd(STDIN_FILENO)) {
+    } else if (const auto in = proc_io_chain.io_for_fd(STDIN_FILENO)) {
         switch (in->io_mode) {
             case io_mode_t::fd: {
                 const io_fd_t *in_fd = static_cast<const io_fd_t *>(in.get());
@@ -546,13 +543,13 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
     } else {
         // We are not a pipe. Check if there is a redirection local to the process
         // that's not io_mode_t::close.
-        const shared_ptr<const io_data_t> stdin_io = io_chain_get(p->io_chain(), STDIN_FILENO);
+        const shared_ptr<const io_data_t> stdin_io = p->io_chain().io_for_fd(STDIN_FILENO);
         stdin_is_directly_redirected = stdin_io && stdin_io->io_mode != io_mode_t::close;
     }
 
     streams.stdin_fd = local_builtin_stdin;
-    streams.out_is_redirected = has_fd(proc_io_chain, STDOUT_FILENO);
-    streams.err_is_redirected = has_fd(proc_io_chain, STDERR_FILENO);
+    streams.out_is_redirected = proc_io_chain.io_for_fd(STDOUT_FILENO) != nullptr;
+    streams.err_is_redirected = proc_io_chain.io_for_fd(STDERR_FILENO) != nullptr;
     streams.stdin_is_directly_redirected = stdin_is_directly_redirected;
     streams.io_chain = &proc_io_chain;
 
@@ -594,8 +591,8 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
     // We will try to elide constructing an internal process. However if the output is going to a
     // real file, we have to do it. For example in `echo -n > file.txt` we proceed to open file.txt
     // even though there is no output, so that it is properly truncated.
-    const shared_ptr<const io_data_t> stdout_io = io_chain->get_io_for_fd(STDOUT_FILENO);
-    const shared_ptr<const io_data_t> stderr_io = io_chain->get_io_for_fd(STDERR_FILENO);
+    const shared_ptr<const io_data_t> stdout_io = io_chain->io_for_fd(STDOUT_FILENO);
+    const shared_ptr<const io_data_t> stderr_io = io_chain->io_for_fd(STDERR_FILENO);
     bool must_use_process =
         redirection_is_to_real_file(stdout_io) || redirection_is_to_real_file(stderr_io);
 
@@ -1080,7 +1077,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     // The read limit is dictated by the last bufferfill.
     for (auto &io : all_ios) {
         if ((io->io_mode == io_mode_t::bufferfill)) {
-            const auto *bf = static_cast<io_bufferfill_t *>(io.get());
+            const auto *bf = static_cast<const io_bufferfill_t *>(io.get());
             stdout_read_limit = bf->buffer()->read_limit();
         }
     }

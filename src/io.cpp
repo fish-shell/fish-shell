@@ -208,10 +208,10 @@ void io_chain_t::remove(const shared_ptr<const io_data_t> &element) {
     }
 }
 
-void io_chain_t::push_back(shared_ptr<io_data_t> element) {
+void io_chain_t::push_back(io_data_ref_t element) {
     // Ensure we never push back NULL.
     assert(element.get() != nullptr);
-    std::vector<shared_ptr<io_data_t> >::push_back(std::move(element));
+    std::vector<io_data_ref_t>::push_back(std::move(element));
 }
 
 void io_chain_t::append(const io_chain_t &chain) {
@@ -248,7 +248,7 @@ void io_print(const io_chain_t &chain)
 #endif
 
 int move_fd_to_unused(int fd, const io_chain_t &io_chain, bool cloexec) {
-    if (fd < 0 || io_chain.get_io_for_fd(fd).get() == NULL) {
+    if (fd < 0 || io_chain.io_for_fd(fd).get() == nullptr) {
         return fd;
     }
 
@@ -325,19 +325,12 @@ maybe_t<autoclose_pipes_t> make_autoclose_pipes(const io_chain_t &ios) {
     return {std::move(result)};
 }
 
-/// Return the last IO for the given fd.
-shared_ptr<const io_data_t> io_chain_t::get_io_for_fd(int fd) const {
-    size_t idx = this->size();
-    while (idx--) {
-        const shared_ptr<io_data_t> &data = this->at(idx);
+shared_ptr<const io_data_t> io_chain_t::io_for_fd(int fd) const {
+    for (auto iter = rbegin(); iter != rend(); ++iter) {
+        const auto &data = *iter;
         if (data->fd == fd) {
             return data;
         }
     }
-    return shared_ptr<const io_data_t>();
-}
-
-/// The old function returned the last match, so we mimic that.
-shared_ptr<const io_data_t> io_chain_get(const io_chain_t &src, int fd) {
-    return src.get_io_for_fd(fd);
+    return nullptr;
 }

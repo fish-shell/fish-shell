@@ -336,12 +336,10 @@ class io_chain_t : public std::vector<shared_ptr<io_data_t>> {
     void append(const io_chain_t &chain);
 
     shared_ptr<const io_data_t> get_io_for_fd(int fd) const;
-    shared_ptr<io_data_t> get_io_for_fd(int fd);
 };
 
 /// Return the last io redirection in the chain for the specified file descriptor.
 shared_ptr<const io_data_t> io_chain_get(const io_chain_t &src, int fd);
-shared_ptr<io_data_t> io_chain_get(io_chain_t &src, int fd);
 
 /// Helper type returned from making autoclose pipes.
 struct autoclose_pipes_t {

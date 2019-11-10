@@ -76,7 +76,7 @@ void exec_close(int fd) {
 }
 
 /// Returns true if the redirection is a file redirection to a file other than /dev/null.
-static bool redirection_is_to_real_file(const shared_ptr<io_data_t> &io) {
+static bool redirection_is_to_real_file(const shared_ptr<const io_data_t> &io) {
     bool result = false;
     if (io && io->io_mode == io_mode_t::file) {
         // It's a file redirection. Compare the path to /dev/null.
@@ -594,8 +594,8 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
     // We will try to elide constructing an internal process. However if the output is going to a
     // real file, we have to do it. For example in `echo -n > file.txt` we proceed to open file.txt
     // even though there is no output, so that it is properly truncated.
-    const shared_ptr<io_data_t> stdout_io = io_chain->get_io_for_fd(STDOUT_FILENO);
-    const shared_ptr<io_data_t> stderr_io = io_chain->get_io_for_fd(STDERR_FILENO);
+    const shared_ptr<const io_data_t> stdout_io = io_chain->get_io_for_fd(STDOUT_FILENO);
+    const shared_ptr<const io_data_t> stderr_io = io_chain->get_io_for_fd(STDERR_FILENO);
     bool must_use_process =
         redirection_is_to_real_file(stdout_io) || redirection_is_to_real_file(stderr_io);
 
@@ -610,7 +610,7 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
     // need for a similar check for stderr.
     bool stdout_done = false;
     if (stdout_io && stdout_io->io_mode == io_mode_t::bufferfill) {
-        auto stdout_buffer = static_cast<io_bufferfill_t *>(stdout_io.get())->buffer();
+        auto stdout_buffer = static_cast<const io_bufferfill_t *>(stdout_io.get())->buffer();
         stdout_buffer->append_from_stream(stdout_stream);
         stdout_done = true;
     }

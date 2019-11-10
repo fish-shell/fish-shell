@@ -337,20 +337,7 @@ shared_ptr<const io_data_t> io_chain_t::get_io_for_fd(int fd) const {
     return shared_ptr<const io_data_t>();
 }
 
-shared_ptr<io_data_t> io_chain_t::get_io_for_fd(int fd) {
-    size_t idx = this->size();
-    while (idx--) {
-        const shared_ptr<io_data_t> &data = this->at(idx);
-        if (data->fd == fd) {
-            return data;
-        }
-    }
-    return shared_ptr<io_data_t>();
-}
-
 /// The old function returned the last match, so we mimic that.
 shared_ptr<const io_data_t> io_chain_get(const io_chain_t &src, int fd) {
     return src.get_io_for_fd(fd);
 }
-
-shared_ptr<io_data_t> io_chain_get(io_chain_t &src, int fd) { return src.get_io_for_fd(fd); }

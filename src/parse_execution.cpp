@@ -108,11 +108,8 @@ tnode_t<g::plain_statement> parse_execution_context_t::infinite_recursive_statem
         return {};
     }
 
-    // Check to see which function call is forbidden.
-    if (parser->forbidden_function.empty()) {
-        return {};
-    }
-    const wcstring &forbidden_function_name = parser->forbidden_function.back();
+    // Get the function name of the immediate block.
+    const wcstring &forbidden_function_name = parent->function_name;
 
     // Get the first job in the job list.
     tnode_t<g::job> first_job = job_list.try_get_child<g::job_conjunction, 1>().child<0>();
@@ -823,13 +820,6 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
     // Determine the process type.
     enum process_type_t process_type = process_type_for_command(statement, cmd);
 
-    // Check for stack overflow.
-    if (process_type == process_type_t::function &&
-        parser->forbidden_function.size() > FISH_MAX_STACK_DEPTH) {
-        this->report_error(statement, CALL_STACK_LIMIT_EXCEEDED_ERR_MSG);
-        return parse_execution_errored;
-    }
-
     // Protect against exec with background processes running
     if (process_type == process_type_t::exec && parser->is_interactive()) {
         bool have_bg = false;
@@ -1451,21 +1441,24 @@ parse_execution_result_t parse_execution_context_t::eval_node(tnode_t<g::job_lis
     // Apply this block IO for the duration of this function.
     assert(job_list && "Empty node in eval_node");
     assert(job_list.matches_node_tree(tree()) && "job_list has unexpected tree");
+    assert(associated_block && "Null block");
     scoped_push<io_chain_t> block_io_push(&block_io, io);
-    enum parse_execution_result_t status = parse_execution_success;
+
+    // Check for infinite recursion: a function which immediately calls itself..
     wcstring func_name;
     auto infinite_recursive_node =
         this->infinite_recursive_statement_in_job_list(job_list, &func_name);
     if (infinite_recursive_node) {
         // We have an infinite recursion.
-        this->report_error(infinite_recursive_node, INFINITE_FUNC_RECURSION_ERR_MSG,
-                           func_name.c_str());
-        status = parse_execution_errored;
-    } else {
-        // No infinite recursion.
-        status = this->run_job_list(job_list, associated_block);
+        return this->report_error(infinite_recursive_node, INFINITE_FUNC_RECURSION_ERR_MSG,
+                                  func_name.c_str());
     }
-    return status;
+
+    // Check for stack overflow. The TOP check ensures we only do this for function calls.
+    if (associated_block->type() == TOP && parser->function_stack_is_overflowing()) {
+        return this->report_error(job_list, CALL_STACK_LIMIT_EXCEEDED_ERR_MSG);
+    }
+    return this->run_job_list(job_list, associated_block);
 }
 
 int parse_execution_context_t::line_offset_of_node(tnode_t<g::job> node) {

@@ -193,8 +193,6 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     volatile sig_atomic_t cancellation_requested = false;
     /// The current execution context.
     std::unique_ptr<parse_execution_context_t> execution_context;
-    /// List of called functions, used to help prevent infinite recursion.
-    wcstring_list_t forbidden_function;
     /// The jobs associated with this parser.
     job_list_t job_list;
     /// The list of blocks. This is a deque because we give out raw pointers to callers, who hold
@@ -342,13 +340,6 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     void get_backtrace(const wcstring &src, const parse_error_list_t &errors,
                        wcstring &output) const;
 
-    /// Tell the parser that the specified function may not be run if not inside of a conditional
-    /// block. This is to remove some possibilities of infinite recursion.
-    void forbid_function(const wcstring &function);
-
-    /// Undo last call to parser_forbid_function().
-    void allow_function();
-
     /// Output profiling data to the given filename.
     void emit_profiling(const char *path) const;
 
@@ -363,6 +354,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     /// Return a string representing the current stack trace.
     wcstring stack_trace() const;
+
+    /// \return whether the number of functions in the stack exceeds our stack depth limit.
+    bool function_stack_is_overflowing() const;
 
     /// \return a shared pointer reference to this parser.
     std::shared_ptr<parser_t> shared();

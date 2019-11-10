@@ -240,10 +240,6 @@ block_t *parser_t::block_at_index(size_t idx) {
 
 block_t *parser_t::current_block() { return block_stack.empty() ? NULL : &block_stack.back(); }
 
-void parser_t::forbid_function(const wcstring &function) { forbidden_function.push_back(function); }
-
-void parser_t::allow_function() { forbidden_function.pop_back(); }
-
 /// Print profiling information to the specified stream.
 static void print_profile(const std::vector<std::unique_ptr<profile_item_t>> &items, FILE *out) {
     for (size_t pos = 0; pos < items.size(); pos++) {
@@ -508,6 +504,21 @@ const wchar_t *parser_t::current_filename() const {
 
     // Fall back to the file being sourced.
     return libdata().current_filename;
+}
+
+bool parser_t::function_stack_is_overflowing() const {
+    // We are interested in whether the count of functions on the stack exceeds
+    // FISH_MAX_STACK_DEPTH. We don't separately track the number of functions, but we can have a
+    // fast path through the eval_level. If the eval_level is in bounds, so must be the stack depth.
+    if (eval_level <= FISH_MAX_STACK_DEPTH) {
+        return false;
+    }
+    // Count the functions.
+    int depth = 0;
+    for (const auto &b : block_stack) {
+        depth += (b.type() == FUNCTION_CALL || b.type() == FUNCTION_CALL_NO_SHADOW);
+    }
+    return depth > FISH_MAX_STACK_DEPTH;
 }
 
 wcstring parser_t::current_line() {

@@ -814,11 +814,9 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
         block_t *fb =
             parser.push_block(block_t::function_block(func_name, argv, props->shadow_scope));
         function_prepare_environment(parser.vars(), func_name, std::move(argv), inherit_vars);
-        parser.forbid_function(func_name);
 
         internal_exec_helper(parser, props->parsed_source, props->body_node, io_chain, j);
 
-        parser.allow_function();
         parser.pop_block(fb);
 
         // If we returned due to a return statement, then stop returning now.

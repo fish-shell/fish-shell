@@ -275,3 +275,5 @@ left
 #CHECKERR: {{.*}}
 #CHECKERR: {{.*}}
 #CHECKERR: {{.*}}
+#CHECKERR: {{.*}}
+#CHECKERR: {{.*}}

@@ -214,11 +214,6 @@ void io_chain_t::push_back(shared_ptr<io_data_t> element) {
     std::vector<shared_ptr<io_data_t> >::push_back(std::move(element));
 }
 
-void io_chain_t::push_front(shared_ptr<io_data_t> element) {
-    assert(element.get() != nullptr);
-    this->insert(this->begin(), std::move(element));
-}
-
 void io_chain_t::append(const io_chain_t &chain) {
     this->insert(this->end(), chain.begin(), chain.end());
 }

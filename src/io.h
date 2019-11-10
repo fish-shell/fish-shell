@@ -333,7 +333,6 @@ class io_chain_t : public std::vector<shared_ptr<io_data_t>> {
 
     void remove(const shared_ptr<const io_data_t> &element);
     void push_back(shared_ptr<io_data_t> element);
-    void push_front(shared_ptr<io_data_t> element);
     void append(const io_chain_t &chain);
 
     shared_ptr<const io_data_t> get_io_for_fd(int fd) const;

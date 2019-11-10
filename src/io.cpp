@@ -215,6 +215,7 @@ void io_chain_t::push_back(shared_ptr<io_data_t> element) {
 }
 
 void io_chain_t::append(const io_chain_t &chain) {
+    assert(&chain != this && "Cannot append self to self");
     this->insert(this->end(), chain.begin(), chain.end());
 }
 

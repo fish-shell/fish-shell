@@ -303,7 +303,8 @@ struct history_impl_t {
     // item_at_index until a call to resolve_pending(). Pending items are tracked with an offset
     // into the array of new items, so adding a non-pending item has the effect of resolving all
     // pending items.
-    void add(const wcstring &str, history_identifier_t ident = 0, bool pending = false, bool save = true);
+    void add(const wcstring &str, history_identifier_t ident = 0, bool pending = false,
+             bool save = true);
 
     // Remove a history item.
     void remove(const wcstring &str);
@@ -399,7 +400,8 @@ void history_impl_t::save_unless_disabled() {
     countdown_to_vacuum--;
 }
 
-void history_impl_t::add(const wcstring &str, history_identifier_t ident, bool pending, bool do_save) {
+void history_impl_t::add(const wcstring &str, history_identifier_t ident, bool pending,
+                         bool do_save) {
     time_t when = time(NULL);
     // Big hack: do not allow timestamps equal to our boundary date. This is because we include
     // items whose timestamps are equal to our boundary when reading old history, so we can catch

@@ -1535,7 +1535,8 @@ void completer_t::perform() {
             current_argument = current_token;
             if (tokens.size() >= 2) {
                 tok_t prev_tok = tokens.at(tokens.size() - 2);
-                if (prev_tok.type == token_type_t::string) previous_argument = prev_tok.get_source(cmd);
+                if (prev_tok.type == token_type_t::string)
+                    previous_argument = prev_tok.get_source(cmd);
             }
         }
 

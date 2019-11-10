@@ -226,8 +226,7 @@ void function_load(const wcstring &cmd, parser_t &parser) {
     }
 }
 
-int function_exists_no_autoload(const wcstring &cmd, const environment_t &vars) {
-    (void)vars;
+int function_exists_no_autoload(const wcstring &cmd) {
     if (parser_keywords_is_reserved(cmd)) return 0;
     auto funcset = function_set.acquire();
 

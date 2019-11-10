@@ -903,7 +903,7 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
     bool head_exists = builtin_exists(cmd);
     // Only reload environment variables if builtin_exists returned false, as an optimization
     if (head_exists == false) {
-        head_exists = function_exists_no_autoload(cmd, vars);
+        head_exists = function_exists_no_autoload(cmd);
         // While it may seem like first testing `path_get_path` before resorting to an env lookup
         // may be faster, path_get_path can potentially do a lot of FS/IO access, so env.get() +
         // function_exists() should still be faster.

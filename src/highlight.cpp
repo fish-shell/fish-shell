@@ -461,8 +461,7 @@ bool autosuggest_validate_from_history(const history_item_t &item,
     bool cmd_ok = false;
     if (path_get_path(parsed_command, NULL, vars)) {
         cmd_ok = true;
-    } else if (builtin_exists(parsed_command) ||
-               function_exists_no_autoload(parsed_command, vars)) {
+    } else if (builtin_exists(parsed_command) || function_exists_no_autoload(parsed_command)) {
         cmd_ok = true;
     }
 
@@ -1122,7 +1121,7 @@ static bool command_is_valid(const wcstring &cmd, enum parse_statement_decoratio
     if (!is_valid && builtin_ok) is_valid = builtin_exists(cmd);
 
     // Functions
-    if (!is_valid && function_ok) is_valid = function_exists_no_autoload(cmd, vars);
+    if (!is_valid && function_ok) is_valid = function_exists_no_autoload(cmd);
 
     // Abbreviations
     if (!is_valid && abbreviation_ok) is_valid = expand_abbreviation(cmd, vars).has_value();

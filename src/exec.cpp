@@ -799,9 +799,8 @@ static block_t *function_prepare_environment(parser_t &parser, const process_t *
         idx++;
     }
 
-    std::map<wcstring, env_var_t> inherit_vars = function_get_inherit_vars(func_name);
-    for (const auto &kv : inherit_vars) {
-        vars.set(kv.first, ENV_LOCAL | ENV_USER, kv.second.as_list());
+    for (const auto &kv : props.inherit_vars) {
+        vars.set(kv.first, ENV_LOCAL | ENV_USER, kv.second);
     }
 
     vars.set_argv(std::move(argv));

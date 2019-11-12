@@ -34,23 +34,16 @@
 class function_info_t {
    public:
     /// Immutable properties of the function.
-    std::shared_ptr<const function_properties_t> props;
+    function_properties_ref_t props;
     /// Function description. This may be changed after the function is created.
     wcstring description;
     /// File where this function was defined (intern'd string).
     const wchar_t *const definition_file;
-    /// Mapping of all variables that were inherited from the function definition scope to their
-    /// values.
-    const std::map<wcstring, env_var_t> inherit_vars;
     /// Flag for specifying that this function was automatically loaded.
     const bool is_autoload;
 
-    /// Constructs relevant information from the function_data.
-    function_info_t(function_data_t data, const environment_t &vars, const wchar_t *filename,
+    function_info_t(function_properties_ref_t props, wcstring desc, const wchar_t *def_file,
                     bool autoload);
-
-    /// Used by function_copy.
-    function_info_t(const function_info_t &data, const wchar_t *filename, bool autoload);
 };
 
 /// Type wrapping up the set of all functions.
@@ -148,30 +141,11 @@ static void autoload_names(std::unordered_set<wcstring> &names, int get_hidden) 
     }
 }
 
-static std::map<wcstring, env_var_t> snapshot_vars(const wcstring_list_t &vars,
-                                                   const environment_t &src) {
-    std::map<wcstring, env_var_t> result;
-    for (const wcstring &name : vars) {
-        auto var = src.get(name);
-        if (var) result[name] = std::move(*var);
-    }
-    return result;
-}
-
-function_info_t::function_info_t(function_data_t data, const environment_t &vars,
-                                 const wchar_t *filename, bool autoload)
-    : props(std::make_shared<const function_properties_t>(std::move(data.props))),
-      description(std::move(data.description)),
-      definition_file(intern(filename)),
-      inherit_vars(snapshot_vars(data.inherit_vars, vars)),
-      is_autoload(autoload) {}
-
-function_info_t::function_info_t(const function_info_t &data, const wchar_t *filename,
-                                 bool autoload)
-    : props(data.props),
-      description(data.description),
-      definition_file(intern(filename)),
-      inherit_vars(data.inherit_vars),
+function_info_t::function_info_t(function_properties_ref_t props, wcstring desc,
+                                 const wchar_t *def_file, bool autoload)
+    : props(std::move(props)),
+      description(std::move(desc)),
+      definition_file(intern(def_file)),
       is_autoload(autoload) {}
 
 void function_add(const function_data_t &data, const parser_t &parser) {
@@ -191,8 +165,8 @@ void function_add(const function_data_t &data, const parser_t &parser) {
 
     // Create and store a new function.
     const wchar_t *filename = parser.libdata().current_filename;
-    auto ins = funcset->funcs.emplace(data.name,
-                                      function_info_t(data, parser.vars(), filename, is_autoload));
+    auto ins = funcset->funcs.emplace(
+        data.name, function_info_t(data.props, data.description, filename, is_autoload));
     assert(ins.second && "Function should not already be present in the table");
     (void)ins;
 
@@ -261,12 +235,6 @@ bool function_get_definition(const wcstring &name, wcstring &out_definition) {
     return false;
 }
 
-std::map<wcstring, env_var_t> function_get_inherit_vars(const wcstring &name) {
-    const auto funcset = function_set.acquire();
-    const function_info_t *func = funcset->get_info(name);
-    return func ? func->inherit_vars : std::map<wcstring, env_var_t>();
-}
-
 bool function_get_desc(const wcstring &name, wcstring &out_desc) {
     const auto funcset = function_set.acquire();
     const function_info_t *func = funcset->get_info(name);
@@ -294,12 +262,14 @@ bool function_copy(const wcstring &name, const wcstring &new_name) {
         // No such function.
         return false;
     }
+    const function_info_t &src_func = iter->second;
 
     // This new instance of the function shouldn't be tied to the definition file of the
     // original, so pass NULL filename, etc.
     // Note this will NOT overwrite an existing function with the new name.
     // TODO: rationalize if this behavior is desired.
-    funcset->funcs.emplace(new_name, function_info_t(iter->second, nullptr, false));
+    funcset->funcs.emplace(new_name,
+                           function_info_t(src_func.props, src_func.description, nullptr, false));
     return true;
 }
 

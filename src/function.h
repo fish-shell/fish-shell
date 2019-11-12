@@ -36,22 +36,9 @@ struct function_properties_t {
 
 using function_properties_ref_t = std::shared_ptr<const function_properties_t>;
 
-/// Structure describing a function. This is used by the parser to store data on a function while
-/// parsing it. It is not used internally to store functions, the function_info_t structure
-/// is used for that purpose. Parhaps this should be merged with function_info_t.
-struct function_data_t {
-    /// Name of function.
-    wcstring name;
-    /// Description of function.
-    wcstring description;
-    /// Function's metadata fields
-    function_properties_ref_t props;
-    /// List of all event handlers for this function.
-    std::vector<event_description_t> events;
-};
-
 /// Add a function.
-void function_add(const function_data_t &data, const wchar_t *filename);
+void function_add(wcstring name, wcstring description, function_properties_ref_t props,
+                  const wchar_t *filename);
 
 /// Remove the function with the specified name.
 void function_remove(const wcstring &name);

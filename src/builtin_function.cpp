@@ -256,6 +256,8 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     auto props = std::make_shared<function_properties_t>();
     props->shadow_scope = opts.shadow_scope;
     props->named_arguments = std::move(opts.named_arguments);
+    props->parsed_source = source;
+    props->body_node = body;
 
     // Populate inherit_vars.
     for (const wcstring &name : opts.inherit_vars) {
@@ -264,16 +266,13 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
         }
     }
 
-    props->parsed_source = source;
-    props->body_node = body;
+    // Add the function itself.
+    function_add(function_name, opts.description, props, parser.libdata().current_filename);
 
-    function_data_t d;
-    d.name = function_name;
-    d.description = opts.description;
-    d.props = props;
-    d.events = std::move(opts.events);
-
-    function_add(std::move(d), parser.libdata().current_filename);
+    // Add any event handlers.
+    for (const event_description_t &ed : opts.events) {
+        event_add_handler(std::make_shared<event_handler_t>(ed, function_name));
+    }
 
     // Handle wrap targets by creating the appropriate completions.
     for (const wcstring &wt : opts.wrap_targets) complete_add_wrapper(function_name, wt);

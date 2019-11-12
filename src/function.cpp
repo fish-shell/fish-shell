@@ -148,31 +148,27 @@ function_info_t::function_info_t(function_properties_ref_t props, wcstring desc,
       definition_file(intern(def_file)),
       is_autoload(autoload) {}
 
-void function_add(const function_data_t &data, const wchar_t *filename) {
+void function_add(wcstring name, wcstring description, function_properties_ref_t props,
+                  const wchar_t *filename) {
     ASSERT_IS_MAIN_THREAD();
     auto funcset = function_set.acquire();
 
     // Historical check. TODO: rationalize this.
-    if (data.name.empty()) {
+    if (name.empty()) {
         return;
     }
 
     // Remove the old function.
-    funcset->remove(data.name);
+    funcset->remove(name);
 
     // Check if this is a function that we are autoloading.
-    bool is_autoload = funcset->autoloader.autoload_in_progress(data.name);
+    bool is_autoload = funcset->autoloader.autoload_in_progress(name);
 
     // Create and store a new function.
     auto ins = funcset->funcs.emplace(
-        data.name, function_info_t(data.props, data.description, filename, is_autoload));
+        std::move(name), function_info_t(props, std::move(description), filename, is_autoload));
     assert(ins.second && "Function should not already be present in the table");
     (void)ins;
-
-    // Add event handlers.
-    for (const event_description_t &ed : data.events) {
-        event_add_handler(std::make_shared<event_handler_t>(ed, data.name));
-    }
 }
 
 std::shared_ptr<const function_properties_t> function_get_properties(const wcstring &name) {

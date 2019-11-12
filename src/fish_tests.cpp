@@ -2712,11 +2712,9 @@ static void test_complete() {
     do_test(newcmdline == LR"(touch test/complete_test/gnarlybracket\\\[abc\] )");
 
     // Add a function and test completing it in various ways.
-    // Note we're depending on function_data_t not complaining when given missing parsed_source /
+    // Note we're depending on function_add not complaining when given missing parsed_source /
     // body_node.
-    struct function_data_t func_data = {};
-    func_data.name = L"scuttlebutt";
-    function_add(func_data, nullptr);
+    function_add(L"scuttlebutt", {}, nullptr, {});
 
     // Complete a function name.
     completions.clear();
@@ -2828,9 +2826,7 @@ static void test_complete() {
 
     // Test abbreviations.
     auto &pvars = parser_t::principal_parser().vars();
-    function_data_t fd;
-    fd.name = L"testabbrsonetwothreefour";
-    function_add(fd, nullptr);
+    function_add(L"testabbrsonetwothreefour", {}, nullptr, {});
     int ret = pvars.set_one(L"_fish_abbr_testabbrsonetwothreezero", ENV_LOCAL, L"expansion");
     complete(L"testabbrsonetwothree", &completions, {}, pvars, parser);
     do_test(ret == 0);

@@ -273,7 +273,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     d.props = props;
     d.events = std::move(opts.events);
 
-    function_add(std::move(d), parser);
+    function_add(std::move(d), parser.libdata().current_filename);
 
     // Handle wrap targets by creating the appropriate completions.
     for (const wcstring &wt : opts.wrap_targets) complete_add_wrapper(function_name, wt);

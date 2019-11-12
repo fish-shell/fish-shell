@@ -2716,7 +2716,7 @@ static void test_complete() {
     // body_node.
     struct function_data_t func_data = {};
     func_data.name = L"scuttlebutt";
-    function_add(func_data, parser_t::principal_parser());
+    function_add(func_data, nullptr);
 
     // Complete a function name.
     completions.clear();
@@ -2830,7 +2830,7 @@ static void test_complete() {
     auto &pvars = parser_t::principal_parser().vars();
     function_data_t fd;
     fd.name = L"testabbrsonetwothreefour";
-    function_add(fd, parser_t::principal_parser());
+    function_add(fd, nullptr);
     int ret = pvars.set_one(L"_fish_abbr_testabbrsonetwothreezero", ENV_LOCAL, L"expansion");
     complete(L"testabbrsonetwothree", &completions, {}, pvars, parser);
     do_test(ret == 0);

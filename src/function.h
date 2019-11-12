@@ -51,7 +51,7 @@ struct function_data_t {
 };
 
 /// Add a function.
-void function_add(const function_data_t &data, const parser_t &parser);
+void function_add(const function_data_t &data, const wchar_t *filename);
 
 /// Remove the function with the specified name.
 void function_remove(const wcstring &name);

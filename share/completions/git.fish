@@ -125,19 +125,20 @@ function __fish_git_files
 
     # Cache the translated descriptions so we don't have to get it
     # once per file.
+    contains -- all-staged $argv; and set -l all_staged
     contains -- unmerged $argv; and set -l unmerged
     and set -l unmerged_desc (_ "Unmerged File")
-    contains -- added $argv; or contains -- all-staged $argv; and set -l added
+    contains -- added $argv; or set -ql all_staged; and set -l added
     and set -l added_desc (_ "Added file")
     contains -- modified $argv; and set -l modified
     and set -l modified_desc (_ "Modified file")
     contains -- untracked $argv; and set -l untracked
     and set -l untracked_desc (_ "Untracked file")
-    contains -- modified-staged $argv; or contains -- all-staged $argv; and set -l modified_staged
+    contains -- modified-staged $argv; or set -ql all_staged; and set -l modified_staged
     and set -l staged_modified_desc (_ "Staged modified file")
     contains -- deleted $argv; and set -l deleted
     and set -l deleted_desc (_ "Deleted file")
-    contains -- deleted-staged $argv; or contains -- all-staged $argv; and set -l deleted_staged
+    contains -- deleted-staged $argv; or set -ql all_staged; and set -l deleted_staged
     and set -l staged_deleted_desc (_ "Staged deleted file")
     contains -- ignored $argv; and set -l ignored
     and set -l ignored_desc (_ "Ignored file")
@@ -286,7 +287,7 @@ function __fish_git_files
                     # There is both X unmodified and Y either M or D ("not updated")
                     # and Y is D and X is unmodified or [MARC] ("deleted in work tree").
                     # For our purposes, we assume this is a staged deletion.
-                    set -ql deleted-staged; or set -ql all-staged
+                    set -ql deleted_staged
                     and set file "$line[9..-1]"
                     and set desc $staged_deleted_desc
                 case "$q"' *'

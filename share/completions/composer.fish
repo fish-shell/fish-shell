@@ -267,6 +267,7 @@ complete -f -c composer -n '__fish_composer_using_command self-update' -l 'snaps
 complete -f -c composer -n '__fish_composer_using_command self-update' -l 'set-channel-only' -d 'Only store the channel as the default one and then exit'
 
 # show
+complete -f -c composer -n '__fish_composer_using_command show' -a "(__fish_composer_installed_packages)"
 complete -f -c composer -n '__fish_composer_using_command show' -l 'all' -d 'List all packages'
 complete -f -c composer -n '__fish_composer_using_command show' -l 'installed' -d 'List installed packages only (enabled by default, only present for BC).'
 complete -f -c composer -n '__fish_composer_using_command show' -l 'platform' -d 'List platform packages only'

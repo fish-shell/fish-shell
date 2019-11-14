@@ -891,6 +891,10 @@ static void test_parser() {
         err(L"unterminated pipe not reported properly");
     }
 
+    if (parse_util_detect_errors(L"echo (\nfoo\n  bar") != PARSER_TEST_INCOMPLETE) {
+        err(L"unterminated multiline subhsell not reported properly");
+    }
+
     if (parse_util_detect_errors(L"begin ; true ; end | ") != PARSER_TEST_INCOMPLETE) {
         err(L"unterminated pipe not reported properly");
     }

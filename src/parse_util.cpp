@@ -1227,9 +1227,9 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     // detecting job_continuations that have source for pipes but not the statement.
     bool has_unclosed_pipe = false;
 
-    // Whether there's an unclosed quote, and therefore unfinished. This is only set if
+    // Whether there's an unclosed quote or subshell, and therefore unfinished. This is only set if
     // allow_incomplete is set.
-    bool has_unclosed_quote = false;
+    bool has_unclosed_quote_or_subshell = false;
 
     // Parse the input string into a parse tree. Some errors are detected here.
     bool parsed = parse_tree_from_string(
@@ -1239,9 +1239,10 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     if (allow_incomplete) {
         size_t idx = parse_errors.size();
         while (idx--) {
-            if (parse_errors.at(idx).code == parse_error_tokenizer_unterminated_quote) {
+            if (parse_errors.at(idx).code == parse_error_tokenizer_unterminated_quote ||
+                parse_errors.at(idx).code == parse_error_tokenizer_unterminated_subshell) {
                 // Remove this error, since we don't consider it a real error.
-                has_unclosed_quote = true;
+                has_unclosed_quote_or_subshell = true;
                 parse_errors.erase(parse_errors.begin() + idx);
             }
         }
@@ -1250,7 +1251,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     // Issue #1238: If the only error was unterminated quote, then consider this to have parsed
     // successfully. A better fix would be to have parse_tree_from_string return this information
     // directly (but it would be a shame to munge up its nice bool return).
-    if (parse_errors.empty() && has_unclosed_quote) {
+    if (parse_errors.empty() && has_unclosed_quote_or_subshell) {
         parsed = true;
     }
 
@@ -1258,8 +1259,8 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
         errored = true;
     }
 
-    // has_unclosed_quote may only be set if allow_incomplete is true.
-    assert(!has_unclosed_quote || allow_incomplete);
+    // has_unclosed_quote_or_subshell may only be set if allow_incomplete is true.
+    assert(!has_unclosed_quote_or_subshell || allow_incomplete);
 
     // Expand all commands.
     // Verify 'or' and 'and' not used inside pipelines.
@@ -1315,7 +1316,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
 
     if (errored) res |= PARSER_TEST_ERROR;
 
-    if (has_unclosed_block || has_unclosed_quote || has_unclosed_pipe)
+    if (has_unclosed_block || has_unclosed_quote_or_subshell || has_unclosed_pipe)
         res |= PARSER_TEST_INCOMPLETE;
 
     if (out_errors != NULL) {

@@ -769,13 +769,12 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
     return true;
 }
 
-// Given that we are about to execute a function type proc \p, push a function block and set up the
+// Given that we are about to execute a function, push a function block and set up the
 // variable environment.
-static block_t *function_prepare_environment(parser_t &parser, const process_t *p,
+static block_t *function_prepare_environment(parser_t &parser, wcstring_list_t argv,
                                              const function_properties_t &props) {
     // Extract the function name and remaining arguments.
     wcstring func_name;
-    wcstring_list_t argv = p->get_argv_array().to_list();
     if (!argv.empty()) {
         // Extract and remove the function name from argv.
         func_name = std::move(*argv.begin());
@@ -846,7 +845,8 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
             return false;
         }
 
-        const block_t *fb = function_prepare_environment(parser, p, *props);
+        const block_t *fb =
+            function_prepare_environment(parser, p->get_argv_array().to_list(), *props);
         internal_exec_helper(parser, props->parsed_source, props->body_node, io_chain, j);
         function_restore_environment(parser, fb);
     } else {

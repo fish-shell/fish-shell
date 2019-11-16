@@ -17,7 +17,7 @@ function __fish_complete_subcommand -d "Complete subcommand" --no-scope-shadowin
             case '--allow-functions-and-builtins'
                 set allow_functions_and_builtins true
             case '--commandline'
-                set subcommand (string split ' ' -- $argv)
+                set subcommand $argv
                 set -e argv
                 break
         end

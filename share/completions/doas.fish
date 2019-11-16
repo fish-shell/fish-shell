@@ -14,7 +14,7 @@ function __fish_doas_print_remaining_args
     # we want.
     if test -n "$argv"
         and not string match -qr '^-' $argv[1]
-        echo $argv
+        string escape -- $argv
         return 0
     else
         return 1

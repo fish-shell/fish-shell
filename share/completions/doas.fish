@@ -14,7 +14,7 @@ function __fish_doas_print_remaining_args
     # we want.
     if test -n "$argv"
         and not string match -qr '^-' $argv[1]
-        string escape -- $argv
+        string join0 -- $argv
         return 0
     else
         return 1
@@ -22,7 +22,7 @@ function __fish_doas_print_remaining_args
 end
 
 function __fish_complete_doas_subcommand
-    set -l args (__fish_doas_print_remaining_args)
+    set -l args (__fish_complete_doas_subcommand | string split0)
     set -lx -a PATH /usr/local/sbin /sbin /usr/sbin
     __fish_complete_subcommand --commandline $args
 end

@@ -23,7 +23,7 @@ function __fish_complete_env_subcommand
     return 1
 end
 
-complete -c env -xa "(__fish_complete_env_subcommand)"
+complete -c env -a "(__fish_complete_env_subcommand)"
 
 # complete VAR= only if the cursor is left of the =, otherwise complete the file right of the =
 complete -c env -n 'not __fish_complete_env_subcommand; and not string match -eq = -- (commandline -ct)' -a "(set -n)=" -f -d "Redefine variable"

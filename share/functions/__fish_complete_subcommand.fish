@@ -17,14 +17,14 @@ function __fish_complete_subcommand -d "Complete subcommand" --no-scope-shadowin
             case '--allow-functions-and-builtins'
                 set allow_functions_and_builtins true
             case '--commandline'
-                set subcommand $argv
+                set subcommand (string split ' ' -- $argv)
                 set -e argv
                 break
         end
     end
     set -l options_with_param $argv
 
-    if not string length -q $subcommand
+    if not string length -q -- $subcommand
         set cmd (commandline -cop) (commandline -ct)
         while set -q cmd[1]
             set -l token $cmd[1]
@@ -55,4 +55,3 @@ function __fish_complete_subcommand -d "Complete subcommand" --no-scope-shadowin
     end
 
 end
-

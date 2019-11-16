@@ -594,10 +594,10 @@ void reader_data_t::update_buff_pos(editable_line_t *el, size_t buff_pos) {
     if (el == &command_line && sel_active) {
         if (sel_begin_pos <= buff_pos) {
             sel_start_pos = sel_begin_pos;
-            sel_stop_pos = buff_pos;
+            sel_stop_pos = buff_pos + 1;
         } else {
             sel_start_pos = buff_pos;
-            sel_stop_pos = sel_begin_pos;
+            sel_stop_pos = sel_begin_pos + 1;
         }
     }
 }
@@ -3095,11 +3095,12 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         case rl::begin_selection:
         case rl::end_selection: {
             sel_start_pos = command_line.position;
-            sel_stop_pos = command_line.position;
             if (c == rl::begin_selection) {
+                sel_stop_pos = command_line.position + 1;
                 sel_active = true;
                 sel_begin_pos = command_line.position;
             } else {
+                sel_stop_pos = command_line.position;
                 sel_active = false;
             }
 

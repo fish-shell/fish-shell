@@ -50,9 +50,10 @@ def is_wsl():
                 return True
     return False
 
+
 def is_termux():
     """ Return whether we are running under the Termux application for Android"""
-    return 'com.termux' in os.environ['PATH'] and find_executable('termux-open-url')
+    return "com.termux" in os.environ["PATH"] and find_executable("termux-open-url")
 
 
 # Disable CLI web browsers
@@ -1195,7 +1196,11 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_save_abbreviation(self, abbreviation):
         out, err = run_fish_cmd(
             # Remove one layer of single-quotes because escape_fish_cmd adds them back.
-            "abbr --add %s %s" % (escape_fish_cmd(abbreviation["word"].strip("'")), escape_fish_cmd(abbreviation["phrase"].strip("'")))
+            "abbr --add %s %s"
+            % (
+                escape_fish_cmd(abbreviation["word"].strip("'")),
+                escape_fish_cmd(abbreviation["phrase"].strip("'")),
+            )
         )
         if err:
             return err

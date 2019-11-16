@@ -51,7 +51,7 @@ set -l sharpness_opts '
 '
 
 function __fish_cwebp_pass_opts
-    seq 0 10 | awk '{printf "%s\t\n", $0}' - 
+    seq 0 10 | awk '{printf "%s\t\n", $0}' -
 end
 
 set -l alpha_method_opts '

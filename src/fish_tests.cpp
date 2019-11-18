@@ -590,15 +590,16 @@ static void test_tokenizer() {
     const wchar_t *str =
         L"string <redirection  2>&1 'nested \"quoted\" '(string containing subshells "
         L"){and,brackets}$as[$well (as variable arrays)] not_a_redirect^ ^ ^^is_a_redirect "
+        L"&| &> "
         L"&&& ||| "
         L"&& || & |"
         L"Compress_Newlines\n  \n\t\n   \nInto_Just_One";
     using tt = token_type_t;
     const token_type_t types[] = {
-        tt::string, tt::redirect, tt::string,   tt::redirect, tt::string,     tt::string,
-        tt::string, tt::redirect, tt::redirect, tt::string,   tt::andand,     tt::background,
-        tt::oror,   tt::pipe,     tt::andand,   tt::oror,     tt::background, tt::pipe,
-        tt::string, tt::end,      tt::string};
+        tt::string,     tt::redirect,   tt::string,   tt::redirect, tt::string, tt::string,
+        tt::string,     tt::redirect,   tt::redirect, tt::string,   tt::pipe,   tt::redirect,
+        tt::andand,     tt::background, tt::oror,     tt::pipe,     tt::andand, tt::oror,
+        tt::background, tt::pipe,       tt::string,   tt::end,      tt::string};
 
     say(L"Test correct tokenization");
 
@@ -633,7 +634,7 @@ static void test_tokenizer() {
         do_test(token.has_value());
         do_test(token->type == token_type_t::error);
         do_test(token->error == tokenizer_error_t::unterminated_escape);
-        do_test(token->error_offset == 3);
+        do_test(token->error_offset_within_token == 3);
     }
 
     {
@@ -644,7 +645,8 @@ static void test_tokenizer() {
         do_test(token.has_value());
         do_test(token->type == token_type_t::error);
         do_test(token->error == tokenizer_error_t::closing_unopened_subshell);
-        do_test(token->error_offset == 4);
+        do_test(token->offset == 4);
+        do_test(token->error_offset_within_token == 0);
     }
 
     {
@@ -655,7 +657,7 @@ static void test_tokenizer() {
         do_test(token.has_value());
         do_test(token->type == token_type_t::error);
         do_test(token->error == tokenizer_error_t::unterminated_subshell);
-        do_test(token->error_offset == 4);
+        do_test(token->error_offset_within_token == 4);
     }
 
     {
@@ -666,7 +668,7 @@ static void test_tokenizer() {
         do_test(token.has_value());
         do_test(token->type == token_type_t::error);
         do_test(token->error == tokenizer_error_t::unterminated_slice);
-        do_test(token->error_offset == 4);
+        do_test(token->error_offset_within_token == 4);
     }
 
     // Test some redirection parsing.
@@ -685,6 +687,13 @@ static void test_tokenizer() {
     do_test(pipe_or_redir(L"9999999999999>&2")->fd == -1);
     do_test(pipe_or_redir(L"9999999999999>&2")->is_valid() == false);
     do_test(pipe_or_redir(L"9999999999999>&2")->is_valid() == false);
+
+    do_test(pipe_or_redir(L"&|")->is_pipe);
+    do_test(pipe_or_redir(L"&|")->stderr_merge);
+    do_test(!pipe_or_redir(L"&>")->is_pipe);
+    do_test(pipe_or_redir(L"&>")->stderr_merge);
+    do_test(pipe_or_redir(L"&>>")->stderr_merge);
+    do_test(pipe_or_redir(L"&>?")->stderr_merge);
 
     auto get_redir_mode = [](const wchar_t *s) -> maybe_t<redirection_mode_t> {
         if (auto redir = pipe_or_redir_t::from_string(s)) {
@@ -880,6 +889,10 @@ static void test_parser() {
 
     if (parse_util_detect_errors(L"true | ") != PARSER_TEST_INCOMPLETE) {
         err(L"unterminated pipe not reported properly");
+    }
+
+    if (parse_util_detect_errors(L"echo (\nfoo\n  bar") != PARSER_TEST_INCOMPLETE) {
+        err(L"unterminated multiline subhsell not reported properly");
     }
 
     if (parse_util_detect_errors(L"begin ; true ; end | ") != PARSER_TEST_INCOMPLETE) {
@@ -2703,11 +2716,9 @@ static void test_complete() {
     do_test(newcmdline == LR"(touch test/complete_test/gnarlybracket\\\[abc\] )");
 
     // Add a function and test completing it in various ways.
-    // Note we're depending on function_data_t not complaining when given missing parsed_source /
+    // Note we're depending on function_add not complaining when given missing parsed_source /
     // body_node.
-    struct function_data_t func_data = {};
-    func_data.name = L"scuttlebutt";
-    function_add(func_data, parser_t::principal_parser());
+    function_add(L"scuttlebutt", {}, nullptr, {});
 
     // Complete a function name.
     completions.clear();
@@ -2819,9 +2830,7 @@ static void test_complete() {
 
     // Test abbreviations.
     auto &pvars = parser_t::principal_parser().vars();
-    function_data_t fd;
-    fd.name = L"testabbrsonetwothreefour";
-    function_add(fd, parser_t::principal_parser());
+    function_add(L"testabbrsonetwothreefour", {}, nullptr, {});
     int ret = pvars.set_one(L"_fish_abbr_testabbrsonetwothreezero", ENV_LOCAL, L"expansion");
     complete(L"testabbrsonetwothree", &completions, {}, pvars, parser);
     do_test(ret == 0);
@@ -3585,7 +3594,7 @@ void history_tests_t::test_history() {
     test_history_matches(searcher, expected, __LINE__);
 
     // Items matching "alpha", case-insensitive.
-    searcher = history_search_t(history, L"AlPhA", HISTORY_SEARCH_TYPE_CONTAINS, nocase);
+    searcher = history_search_t(history, L"AlPhA", history_search_type_t::contains, nocase);
     set_expected([](const wcstring &s) { return wcstolower(s).find(L"alpha") != wcstring::npos; });
     test_history_matches(searcher, expected, __LINE__);
 
@@ -3595,23 +3604,23 @@ void history_tests_t::test_history() {
     test_history_matches(searcher, expected, __LINE__);
 
     // Items starting with "be", case-sensitive.
-    searcher = history_search_t(history, L"be", HISTORY_SEARCH_TYPE_PREFIX, 0);
+    searcher = history_search_t(history, L"be", history_search_type_t::prefix, 0);
     set_expected([](const wcstring &s) { return string_prefixes_string(L"be", s); });
     test_history_matches(searcher, expected, __LINE__);
 
     // Items starting with "be", case-insensitive.
-    searcher = history_search_t(history, L"be", HISTORY_SEARCH_TYPE_PREFIX, nocase);
+    searcher = history_search_t(history, L"be", history_search_type_t::prefix, nocase);
     set_expected(
         [](const wcstring &s) { return string_prefixes_string_case_insensitive(L"be", s); });
     test_history_matches(searcher, expected, __LINE__);
 
     // Items exactly matching "alph", case-sensitive.
-    searcher = history_search_t(history, L"alph", HISTORY_SEARCH_TYPE_EXACT, 0);
+    searcher = history_search_t(history, L"alph", history_search_type_t::exact, 0);
     set_expected([](const wcstring &s) { return s == L"alph"; });
     test_history_matches(searcher, expected, __LINE__);
 
     // Items exactly matching "alph", case-insensitive.
-    searcher = history_search_t(history, L"alph", HISTORY_SEARCH_TYPE_EXACT, nocase);
+    searcher = history_search_t(history, L"alph", history_search_type_t::exact, nocase);
     set_expected([](const wcstring &s) { return wcstolower(s) == L"alph"; });
     test_history_matches(searcher, expected, __LINE__);
 
@@ -3976,6 +3985,7 @@ void history_tests_t::test_history_formats() {
         // The results are in the reverse order that they appear in the bash history file.
         // We don't expect whitespace to be elided (#4908: except for leading/trailing whitespace)
         const wchar_t *expected[] = {L"sleep 123",
+                                     L"a && echo valid construct",
                                      L"final line",
                                      L"echo supsup",
                                      L"export XVAR='exported'",
@@ -4607,6 +4617,24 @@ static void test_highlighting() {
         {L"%self", highlight_role_t::operat},
         {L"not%self", highlight_role_t::param},
         {L"self%not", highlight_role_t::param},
+    });
+
+    highlight_tests.push_back({
+        {L"false", highlight_role_t::command},
+        {L"&|", highlight_role_t::statement_terminator},
+        {L"true", highlight_role_t::command},
+    });
+
+    highlight_tests.push_back({
+        {L"false", highlight_role_t::command},
+        {L"|&", highlight_role_t::error},
+        {L"true", highlight_role_t::command},
+        {L"stuff", highlight_role_t::param},
+    });
+
+    highlight_tests.push_back({
+        {L"echo", highlight_role_t::command},
+        {L")", highlight_role_t::error},
     });
 
     auto &vars = parser_t::principal_parser().vars();

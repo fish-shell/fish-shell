@@ -263,7 +263,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 break;
             }
             case 'h': {
-                builtin_print_help(parser, streams, cmd, streams.out);
+                builtin_print_help(parser, streams, cmd);
                 return STATUS_CMD_OK;
             }
             case ':': {
@@ -398,7 +398,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             break;
         }
         case PROCESS_MODE: {
-            parse_util_process_extent(current_buffer, current_cursor_pos, &begin, &end);
+            parse_util_process_extent(current_buffer, current_cursor_pos, &begin, &end, nullptr);
             break;
         }
         case JOB_MODE: {

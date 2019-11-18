@@ -431,7 +431,7 @@ int builtin_bind_t::builtin_bind(parser_t &parser, io_streams_t &streams, wchar_
         return STATUS_CMD_OK;
     }
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 

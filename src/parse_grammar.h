@@ -236,7 +236,7 @@ DEF_ALT(job_continuation) {
     ALT_BODY(job_continuation, piped, empty);
 };
 
-// A statement is a normal command, or an if / while / and etc
+// A statement is a normal command, or an if / while / not etc.
 DEF_ALT(statement) {
     using nots = single<not_statement>;
     using block = single<block_statement>;

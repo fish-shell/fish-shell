@@ -306,6 +306,15 @@ void next_token(state *s) {
                     case '\n':
                     case '\r':
                         break;
+                    case '=':
+                    case '>':
+                    case '<':
+                    case '&':
+                    case '|':
+                    case '!':
+                        s->type = TOK_ERROR;
+                        s->error = TE_ERROR_LOGICAL_OPERATOR;
+                        break;
                     default:
                         s->type = TOK_ERROR;
                         s->error = TE_ERROR_MISSING_OPERATOR;
@@ -367,7 +376,7 @@ static te_expr *base(state *s) {
                 }
                 if (s->type == TOK_CLOSE && i == arity - 1) {
                     next_token(s);
-                } else if (s->type != TOK_ERROR || s->error == TE_ERROR_UNKNOWN) {
+                } else if (s->type != TOK_ERROR || s->error == TE_ERROR_UNEXPECTED_TOKEN) {
                     s->type = TOK_ERROR;
                     s->error = i < arity ? TE_ERROR_TOO_FEW_ARGS : TE_ERROR_TOO_MANY_ARGS;
                 }
@@ -403,7 +412,7 @@ static te_expr *base(state *s) {
         default:
             ret = new_expr(0, 0);
             s->type = TOK_ERROR;
-            s->error = TE_ERROR_UNKNOWN;
+            s->error = TE_ERROR_UNEXPECTED_TOKEN;
             ret->value = NAN;
             break;
     }
@@ -435,11 +444,23 @@ static te_expr *factor(state *s) {
     /* <factor>    =    <power> {"^" <power>} */
     te_expr *ret = power(s);
 
+    te_expr *insertion = 0;
+
     while (s->type == TOK_INFIX && (s->function == (const void *)(te_fun2)pow)) {
         te_fun2 t = (te_fun2)s->function;
         next_token(s);
-        ret = NEW_EXPR(TE_FUNCTION2, ret, power(s));
-        ret->function = (const void *)t;
+
+        if (insertion) {
+            /* Make exponentiation go right-to-left. */
+            te_expr *insert = NEW_EXPR(TE_FUNCTION2, insertion->parameters[1], power(s));
+            insert->function = (const void *)t;
+            insertion->parameters[1] = insert;
+            insertion = insert;
+        } else {
+            ret = NEW_EXPR(TE_FUNCTION2, ret, power(s));
+            ret->function = (const void *)t;
+            insertion = ret;
+        }
     }
 
     return ret;

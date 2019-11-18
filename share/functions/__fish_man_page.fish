@@ -9,8 +9,8 @@ function __fish_man_page
     end
 
     #Skip `sudo` and display then manpage of following command
-    while set -q args[2] 
-        and test $args[1] = "sudo" 
+    while set -q args[2]
+        and test $args[1] = "sudo"
         set args $args[2..-1]
     end
 

@@ -1,7 +1,7 @@
 # Visual Studio Code
 
 function __fish_complete_vscode_extensions
-  command --quiet code; and code --list-extensions
+    command --quiet code; and code --list-extensions
 end
 
 complete -c code -s d -l diff -d 'Compare two files with each other'

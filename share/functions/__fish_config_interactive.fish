@@ -30,7 +30,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         set -U fish_greeting "$line1$line2"
     end
 
-    if set -q fish_private_mode
+    if set -q fish_private_mode; and string length -q -- $fish_greeting
         set -l line (_ "fish is running in private mode, history will not be persisted.")
         set -g fish_greeting $fish_greeting.\n$line
     end
@@ -111,7 +111,8 @@ function __fish_config_interactive -d "Initializations that should be performed 
             set -l update_args -B $__fish_data_dir/tools/create_manpage_completions.py --manpath --cleanup-in '~/.config/fish/completions' --cleanup-in '~/.config/fish/generated_completions'
             for py in python{3,2,}
                 if command -sq $py
-                    $py $update_args >/dev/null 2>&1 &
+                    set -l c $py $update_args
+                    $c (: fish_update_completions: generating completions from man pages) >/dev/null 2>&1 &
                     break
                 end
             end
@@ -163,11 +164,12 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # the user tries [ interactively.
     #
     complete -c [ --wraps test
+    complete -c ! --wraps not
 
     #
     # Only a few builtins take filenames; initialize the rest with no file completions
     #
-    complete -c(builtin -n | string match -rv 'source|cd|exec|realpath') --no-files
+    complete -c(builtin -n | string match -rv '(source|cd|exec|realpath|set|\\[|test|for)') --no-files
 
     # Reload key bindings when binding variable change
     function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings

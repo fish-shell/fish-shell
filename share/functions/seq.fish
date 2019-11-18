@@ -16,28 +16,28 @@ if not command -sq seq
     end
 
     function __fish_fallback_seq --description "Fallback implementation of the seq command"
-
         set -l from 1
         set -l step 1
         set -l to 1
 
+        # Remove a "--" argument if it happens first.
+        if test "x$argv[1]" = "x--"
+            set -e argv[1]
+        end
+
         switch (count $argv)
             case 1
                 set to $argv[1]
-
             case 2
                 set from $argv[1]
                 set to $argv[2]
-
             case 3
                 set from $argv[1]
                 set step $argv[2]
                 set to $argv[3]
-
             case '*'
                 printf (_ "%s: Expected 1, 2 or 3 arguments, got %d\n") seq (count $argv)
                 return 1
-
         end
 
         for i in $from $step $to

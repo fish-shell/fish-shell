@@ -3,8 +3,10 @@ function __fish_complete_command --description 'Complete using all available com
     switch $ctoken
         case '*=*'
             set ctoken (string split "=" -- $ctoken)
-            printf '%s\n' $ctoken[1]=(complete -C$ctoken[2])
+            printf '%s\n' $ctoken[1]=(complete -C "$ctoken[2]")
+        case '-*' # do not try to complete options as commands
+            return
         case '*'
-            complete -C$ctoken
+            complete -C "$ctoken"
     end
 end

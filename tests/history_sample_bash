@@ -12,7 +12,7 @@ echo hello \
 another `command
     and arg` to skip
 backticks `are not allowed`
-a && echo invalid construct
+a && echo valid construct
 [[ x = y ]] && echo double brackets not allowed
 (( 1 = 2 )) && echo double parens not allowed
 posix_cmd_sub $(is not supported)

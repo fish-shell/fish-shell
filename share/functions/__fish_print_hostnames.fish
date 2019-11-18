@@ -14,13 +14,13 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
     # Ignore comments, own IP addresses (127.*, 0.0[.0[.0]], ::1), non-host IPs (fe00::*, ff00::*),
     # and leading/trailing whitespace. Split results on whitespace to handle multiple aliases for
     # one IP.
-        string replace -irf '^\s*?(?!(?:#|0\.|127\.|ff0|fe0|::1))\S+\s*(.*?)\s*$' '$1' |
-        string split ' '
+    string replace -irf '^\s*?(?!(?:#|0\.|127\.|ff0|fe0|::1))\S+\s*(.*?)\s*$' '$1' |
+    string split ' '
 
     # Print nfs servers from /etc/fstab
     if test -r /etc/fstab
         string match -r '^\s*[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3]:|^[a-zA-Z\.]*:' </etc/fstab |
-            string replace -r ':.*' ''
+        string replace -r ':.*' ''
     end
 
     # Check hosts known to ssh.
@@ -105,10 +105,10 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
         if test -r $file
             # Don't read from $file twice. We could use `while read` instead, but that is extremely
             # slow.
-            read -z -l contents <$file
+            read -alz -d \n contents <$file
 
             # Print hosts from system wide ssh configuration file
-            string replace -rfi '^\s*Host\s+(\S.*?)\s*$' '$1' -- $contents | string split ' ' | string match -v '*\**'
+            string replace -rfi '^\s*Host\s+(\S.*?)\s*$' '$1' -- $contents | string match -v '*\**'
             # Also extract known_host paths.
             set known_hosts $known_hosts (string replace -rfi '.*KnownHostsFile\s*' '' -- $contents)
         end
@@ -121,17 +121,17 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
             read -z <$file
         end
     end |
-        # Ignore hosts that are hashed, commented or @-marked and strip the key
-        # Handle multiple comma-separated hostnames sharing a key, too.
-        #
-        # This one regex does everything we need, finding all matches including comma-separated
-        # values, but fish does not let us print only a capturing group without the entire match,
-        # and we can't use `string replace` instead (because CSV then fails).
-        # string match -ar "(?:^|,)(?![@|*!])\[?([^ ,:\]]+)\]?"
-        #
-        # Instead, manually piece together the regular expressions
-        string match -v -r '^\s*[!*|@#]' | string replace -r '^\s*(\S+) .*' '$1' |
-            string split ',' | string replace -r '\[?([^:\]]+).*' '$1'
+    # Ignore hosts that are hashed, commented or @-marked and strip the key
+    # Handle multiple comma-separated hostnames sharing a key, too.
+    #
+    # This one regex does everything we need, finding all matches including comma-separated
+    # values, but fish does not let us print only a capturing group without the entire match,
+    # and we can't use `string replace` instead (because CSV then fails).
+    # string match -ar "(?:^|,)(?![@|*!])\[?([^ ,:\]]+)\]?"
+    #
+    # Instead, manually piece together the regular expressions
+    string match -v -r '^\s*[!*|@#]' | string replace -r '^\s*(\S+) .*' '$1' |
+    string split ',' | string replace -r '\[?([^:\]]+).*' '$1'
 
     return 0
 end

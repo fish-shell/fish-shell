@@ -239,7 +239,7 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
 #endif
             case 'h': {
-                builtin_print_help(parser, streams, cmd, streams.out);
+                builtin_print_help(parser, streams, cmd);
                 return STATUS_CMD_OK;
             }
             case ':': {

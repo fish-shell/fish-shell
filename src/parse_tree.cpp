@@ -83,7 +83,7 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
     assert(line_end >= line_start);
     assert(source_start >= line_start);
 
-    // Don't include the caret and line if we're interactive this is the first line, because
+    // Don't include the caret and line if we're interactive and this is the first line, because
     // then it's obvious.
     bool interactive_skip_caret = is_interactive && source_start == 0;
     if (interactive_skip_caret) {
@@ -285,7 +285,7 @@ static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &
         if (indent > 0) indent -= 1;
     }
 
-    append_format(*result, L"%2lu - %l2u  ", *line, node_idx);
+    append_format(*result, L"%2lu - %2lu  ", *line, node_idx);
     result->append(indent * spacesPerIndent, L' ');
     result->append(node.describe());
     if (node.child_count > 0) {
@@ -637,7 +637,7 @@ void parse_ll_t::parse_error_at_location(size_t source_start, size_t source_leng
 
         err.source_start = source_start;
         err.source_length = source_length;
-        this->errors.push_back(err);
+        this->errors.push_back(std::move(err));
     }
 }
 
@@ -694,8 +694,9 @@ void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &sta
 
 void parse_ll_t::report_tokenizer_error(const tok_t &tok) {
     parse_error_code_t parse_error_code = parse_error_from_tokenizer_error(tok.error);
-    this->parse_error_at_location(tok.offset, tok.length, tok.offset + tok.error_offset,
-                                  parse_error_code, L"%ls", tokenizer_get_error_message(tok.error));
+    this->parse_error_at_location(tok.offset, tok.length,
+                                  tok.offset + tok.error_offset_within_token, parse_error_code,
+                                  L"%ls", tokenizer_get_error_message(tok.error));
 }
 
 void parse_ll_t::parse_error_unexpected_token(const wchar_t *expected, parse_token_t token) {
@@ -1052,10 +1053,9 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
     // Construct the tokenizer.
     tok_flags_t tok_options = 0;
     if (parse_flags & parse_flag_include_comments) tok_options |= TOK_SHOW_COMMENTS;
-
     if (parse_flags & parse_flag_accept_incomplete_tokens) tok_options |= TOK_ACCEPT_UNFINISHED;
-
     if (parse_flags & parse_flag_show_blank_lines) tok_options |= TOK_SHOW_BLANK_LINES;
+    if (parse_flags & parse_flag_continue_after_error) tok_options |= TOK_CONTINUE_AFTER_ERROR;
 
     tokenizer_t tok(str.c_str(), tok_options);
 
@@ -1211,22 +1211,5 @@ const parse_node_t *parse_node_tree_t::find_node_matching_source_location(
         result = &node;
     }
 
-    return result;
-}
-
-const parse_node_t *parse_node_tree_t::find_last_node_of_type(parse_token_type_t type,
-                                                              const parse_node_t *parent) const {
-    const parse_node_t *result = NULL;
-    // Find nodes of the given type in the tree, working backwards.
-    size_t idx = this->size();
-    while (idx--) {
-        const parse_node_t &node = this->at(idx);
-        bool expected_type = (node.type == type);
-        if (expected_type && (parent == NULL || node_has_ancestor(*this, node, *parent))) {
-            // The types match and it has the right parent.
-            result = &node;
-            break;
-        }
-    }
     return result;
 }

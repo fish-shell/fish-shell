@@ -213,15 +213,11 @@ static wcstring functions_def(const wcstring &name) {
     }
 
     // Output any inherited variables as `set -l` lines.
-    std::map<wcstring, env_var_t> inherit_vars = function_get_inherit_vars(name);
-    for (const auto &kv : inherit_vars) {
-        wcstring_list_t lst;
-        kv.second.to_list(lst);
-
+    for (const auto &kv : props->inherit_vars) {
         // We don't know what indentation style the function uses,
         // so we do what fish_indent would.
         append_format(out, L"\n    set -l %ls", kv.first.c_str());
-        for (const auto &arg : lst) {
+        for (const auto &arg : kv.second) {
             wcstring earg = escape_string(arg, ESCAPE_ALL);
             out.push_back(L' ');
             out.append(earg);
@@ -298,7 +294,7 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 

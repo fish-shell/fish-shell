@@ -561,5 +561,9 @@ count (dualcollect)
 # CHECK: 3
 
 string match -qer asd asd
-# CHECKERR: match: Invalid combination of options,
-# CHECKERR: --entire and --quiet are mutually exclusive
+echo $status
+# CHECK: 0
+
+string match -eq asd asd
+echo $status
+# CHECK: 0

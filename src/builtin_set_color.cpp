@@ -109,7 +109,7 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 break;
             }
             case 'h': {
-                builtin_print_help(parser, streams, argv[0], streams.out);
+                builtin_print_help(parser, streams, argv[0]);
                 return STATUS_CMD_OK;
             }
             case 'o': {

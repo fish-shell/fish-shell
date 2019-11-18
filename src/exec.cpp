@@ -44,6 +44,7 @@
 #include "reader.h"
 #include "redirection.h"
 #include "signal.h"
+#include "trace.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// File descriptor redirection error message.
@@ -75,7 +76,7 @@ void exec_close(int fd) {
 }
 
 /// Returns true if the redirection is a file redirection to a file other than /dev/null.
-static bool redirection_is_to_real_file(const shared_ptr<io_data_t> &io) {
+static bool redirection_is_to_real_file(const shared_ptr<const io_data_t> &io) {
     bool result = false;
     if (io && io->io_mode == io_mode_t::file) {
         // It's a file redirection. Compare the path to /dev/null.
@@ -181,9 +182,6 @@ static void launch_process_nofork(env_stack_t &vars, process_t *p) {
     safe_launch_process(p, actual_cmd, argv_array.get(), envv);
 }
 
-/// Check if the IO redirection chains contains redirections for the specified file descriptor.
-static int has_fd(const io_chain_t &d, int fd) { return io_chain_get(d, fd).get() != NULL; }
-
 /// Make a copy of the specified io redirection chain, but change file redirection into fd
 /// redirection. This makes the redirection chain suitable for use as block-level io, since the file
 /// won't be repeatedly reopened for every command in the block, which would reset the cursor
@@ -210,7 +208,7 @@ static bool resolve_file_redirections_to_fds(const io_chain_t &in_chain, const w
     // Make our chain of redirections.
     io_chain_t result_chain;
 
-    for (const shared_ptr<io_data_t> &in : in_chain) {
+    for (const io_data_ref_t &in : in_chain) {
         switch (in->io_mode) {
             case io_mode_t::pipe:
             case io_mode_t::bufferfill:
@@ -221,7 +219,7 @@ static bool resolve_file_redirections_to_fds(const io_chain_t &in_chain, const w
             }
             case io_mode_t::file: {
                 // We have a path-based redireciton. Resolve it to a file.
-                io_file_t *in_file = static_cast<io_file_t *>(in.get());
+                const io_file_t *in_file = static_cast<const io_file_t *>(in.get());
                 int fd = wopen(path_apply_working_directory(in_file->filename, pwd), in_file->flags,
                                OPEN_MASK);
                 if (fd < 0) {
@@ -486,7 +484,7 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
     // be reading from.
     if (pipe_read) {
         local_builtin_stdin = pipe_read->pipe_fd();
-    } else if (const auto in = proc_io_chain.get_io_for_fd(STDIN_FILENO)) {
+    } else if (const auto in = proc_io_chain.io_for_fd(STDIN_FILENO)) {
         switch (in->io_mode) {
             case io_mode_t::fd: {
                 const io_fd_t *in_fd = static_cast<const io_fd_t *>(in.get());
@@ -545,13 +543,13 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
     } else {
         // We are not a pipe. Check if there is a redirection local to the process
         // that's not io_mode_t::close.
-        const shared_ptr<const io_data_t> stdin_io = io_chain_get(p->io_chain(), STDIN_FILENO);
+        const shared_ptr<const io_data_t> stdin_io = p->io_chain().io_for_fd(STDIN_FILENO);
         stdin_is_directly_redirected = stdin_io && stdin_io->io_mode != io_mode_t::close;
     }
 
     streams.stdin_fd = local_builtin_stdin;
-    streams.out_is_redirected = has_fd(proc_io_chain, STDOUT_FILENO);
-    streams.err_is_redirected = has_fd(proc_io_chain, STDERR_FILENO);
+    streams.out_is_redirected = proc_io_chain.io_for_fd(STDOUT_FILENO) != nullptr;
+    streams.err_is_redirected = proc_io_chain.io_for_fd(STDERR_FILENO) != nullptr;
     streams.stdin_is_directly_redirected = stdin_is_directly_redirected;
     streams.io_chain = &proc_io_chain;
 
@@ -593,8 +591,8 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
     // We will try to elide constructing an internal process. However if the output is going to a
     // real file, we have to do it. For example in `echo -n > file.txt` we proceed to open file.txt
     // even though there is no output, so that it is properly truncated.
-    const shared_ptr<io_data_t> stdout_io = io_chain->get_io_for_fd(STDOUT_FILENO);
-    const shared_ptr<io_data_t> stderr_io = io_chain->get_io_for_fd(STDERR_FILENO);
+    const shared_ptr<const io_data_t> stdout_io = io_chain->io_for_fd(STDOUT_FILENO);
+    const shared_ptr<const io_data_t> stderr_io = io_chain->io_for_fd(STDERR_FILENO);
     bool must_use_process =
         redirection_is_to_real_file(stdout_io) || redirection_is_to_real_file(stderr_io);
 
@@ -609,7 +607,7 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
     // need for a similar check for stderr.
     bool stdout_done = false;
     if (stdout_io && stdout_io->io_mode == io_mode_t::bufferfill) {
-        auto stdout_buffer = static_cast<io_bufferfill_t *>(stdout_io.get())->buffer();
+        auto stdout_buffer = static_cast<const io_bufferfill_t *>(stdout_io.get())->buffer();
         stdout_buffer->append_from_stream(stdout_stream);
         stdout_done = true;
     }
@@ -771,6 +769,51 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
     return true;
 }
 
+// Given that we are about to execute a function, push a function block and set up the
+// variable environment.
+static block_t *function_prepare_environment(parser_t &parser, wcstring_list_t argv,
+                                             const function_properties_t &props) {
+    // Extract the function name and remaining arguments.
+    wcstring func_name;
+    if (!argv.empty()) {
+        // Extract and remove the function name from argv.
+        func_name = std::move(*argv.begin());
+        argv.erase(argv.begin());
+    }
+    block_t *fb = parser.push_block(block_t::function_block(func_name, argv, props.shadow_scope));
+    auto &vars = parser.vars();
+
+    // Setup the environment for the function. There are three components of the environment:
+    // 1. named arguments
+    // 2. inherited variables
+    // 3. argv
+
+    size_t idx = 0;
+    for (const wcstring &named_arg : props.named_arguments) {
+        if (idx < argv.size()) {
+            vars.set_one(named_arg, ENV_LOCAL | ENV_USER, argv.at(idx));
+        } else {
+            vars.set_empty(named_arg, ENV_LOCAL | ENV_USER);
+        }
+        idx++;
+    }
+
+    for (const auto &kv : props.inherit_vars) {
+        vars.set(kv.first, ENV_LOCAL | ENV_USER, kv.second);
+    }
+
+    vars.set_argv(std::move(argv));
+    return fb;
+}
+
+// Given that we are done executing a function, restore the environment.
+static void function_restore_environment(parser_t &parser, const block_t *block) {
+    parser.pop_block(block);
+
+    // If we returned due to a return statement, then stop returning now.
+    parser.libdata().returning = false;
+}
+
 /// Execute a block node or function "process".
 /// \p user_ios contains the list of user-specified ios, used so we can avoid stomping on them with
 /// our pipes.
@@ -796,32 +839,16 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
     }
 
     if (p->type == process_type_t::function) {
-        const wcstring func_name = p->argv0();
-        auto props = function_get_properties(func_name);
+        auto props = function_get_properties(p->argv0());
         if (!props) {
             FLOGF(error, _(L"Unknown function '%ls'"), p->argv0());
             return false;
         }
 
-        const std::map<wcstring, env_var_t> inherit_vars = function_get_inherit_vars(func_name);
-
-        // TODO: we want to store the args in both the function block and the environment.
-        // Find a way to share memory here?
-        wcstring_list_t argv = p->get_argv_array().to_list();
-        // Remove the function name from argv.
-        if (!argv.empty()) argv.erase(argv.begin());
-        block_t *fb =
-            parser.push_block(block_t::function_block(func_name, argv, props->shadow_scope));
-        function_prepare_environment(parser.vars(), func_name, std::move(argv), inherit_vars);
-        parser.forbid_function(func_name);
-
+        const block_t *fb =
+            function_prepare_environment(parser, p->get_argv_array().to_list(), *props);
         internal_exec_helper(parser, props->parsed_source, props->body_node, io_chain, j);
-
-        parser.allow_function();
-        parser.pop_block(fb);
-
-        // If we returned due to a return statement, then stop returning now.
-        parser.libdata().returning = false;
+        function_restore_environment(parser, fb);
     } else {
         assert(p->type == process_type_t::block_node);
         assert(p->block_node_source && p->internal_block_node && "Process is missing node info");
@@ -898,6 +925,12 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
     //
     // which depends on the redirection being evaluated before the pipe. So the write end of the
     // pipe comes first, the read pipe of the pipe comes last. See issue #966.
+
+    // Maybe trace this process.
+    // TODO: 'and' and 'or' will not show.
+    if (trace_enabled(parser)) {
+        trace_argv(parser, nullptr, p->get_argv_array().to_list());
+    }
 
     // The IO chain for this process.
     io_chain_t process_net_io_chain = j->block_io_chain();
@@ -1075,7 +1108,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     // The read limit is dictated by the last bufferfill.
     for (auto &io : all_ios) {
         if ((io->io_mode == io_mode_t::bufferfill)) {
-            const auto *bf = static_cast<io_bufferfill_t *>(io.get());
+            const auto *bf = static_cast<const io_bufferfill_t *>(io.get());
             stdout_read_limit = bf->buffer()->read_limit();
         }
     }

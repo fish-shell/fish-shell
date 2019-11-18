@@ -5,11 +5,6 @@
 #include "parse_grammar.h"
 #include "parse_tree.h"
 
-struct source_range_t {
-    uint32_t start;
-    uint32_t length;
-};
-
 // Check if a child type is possible for a parent type at a given index.
 template <typename Parent, typename Child, size_t Index>
 constexpr bool child_type_possible_at_index() {
@@ -221,11 +216,6 @@ class tnode_t {
 template <typename Type>
 tnode_t<Type> parse_node_tree_t::find_child(const parse_node_t &parent) const {
     return tnode_t<Type>(this, &this->find_child(parent, Type::token));
-}
-
-template <typename Type>
-tnode_t<Type> parse_node_tree_t::find_last_node(const parse_node_t *parent) const {
-    return tnode_t<Type>(this, this->find_last_node_of_type(Type::token, parent));
 }
 
 /// Given a plain statement, get the command from the child node. Returns the command string on

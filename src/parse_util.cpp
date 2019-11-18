@@ -288,8 +288,9 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
 }
 
 /// Get the beginning and end of the job or process definition under the cursor.
-static void job_or_process_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **a,
-                                  const wchar_t **b, bool process) {
+static void job_or_process_extent(bool process, const wchar_t *buff, size_t cursor_pos,
+                                  const wchar_t **a, const wchar_t **b,
+                                  std::vector<tok_t> *tokens) {
     assert(buff && "Null buffer");
     const wchar_t *begin = nullptr, *end = nullptr;
     int finished = 0;
@@ -323,29 +324,33 @@ static void job_or_process_extent(const wchar_t *buff, size_t cursor_pos, const 
             case token_type_t::end:
             case token_type_t::background:
             case token_type_t::andand:
-            case token_type_t::oror: {
+            case token_type_t::oror:
+            case token_type_t::comment: {
                 if (tok_begin >= pos) {
                     finished = 1;
                     if (b) *b = (wchar_t *)begin + tok_begin;
                 } else {
+                    // Statement at cursor might start after this token.
                     if (a) *a = (wchar_t *)begin + tok_begin + token->length;
+                    if (tokens) tokens->clear();
                 }
-                break;
+                continue;  // Do not add this to tokens
             }
             default: {
                 break;
             }
         }
+        if (tokens) tokens->push_back(*token);
     }
 }
 
 void parse_util_process_extent(const wchar_t *buff, size_t pos, const wchar_t **a,
-                               const wchar_t **b) {
-    job_or_process_extent(buff, pos, a, b, true);
+                               const wchar_t **b, std::vector<tok_t> *tokens) {
+    job_or_process_extent(true, buff, pos, a, b, tokens);
 }
 
 void parse_util_job_extent(const wchar_t *buff, size_t pos, const wchar_t **a, const wchar_t **b) {
-    job_or_process_extent(buff, pos, a, b, false);
+    job_or_process_extent(false, buff, pos, a, b, nullptr);
 }
 
 void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **tok_begin,
@@ -1222,9 +1227,9 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     // detecting job_continuations that have source for pipes but not the statement.
     bool has_unclosed_pipe = false;
 
-    // Whether there's an unclosed quote, and therefore unfinished. This is only set if
+    // Whether there's an unclosed quote or subshell, and therefore unfinished. This is only set if
     // allow_incomplete is set.
-    bool has_unclosed_quote = false;
+    bool has_unclosed_quote_or_subshell = false;
 
     // Parse the input string into a parse tree. Some errors are detected here.
     bool parsed = parse_tree_from_string(
@@ -1234,9 +1239,10 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     if (allow_incomplete) {
         size_t idx = parse_errors.size();
         while (idx--) {
-            if (parse_errors.at(idx).code == parse_error_tokenizer_unterminated_quote) {
+            if (parse_errors.at(idx).code == parse_error_tokenizer_unterminated_quote ||
+                parse_errors.at(idx).code == parse_error_tokenizer_unterminated_subshell) {
                 // Remove this error, since we don't consider it a real error.
-                has_unclosed_quote = true;
+                has_unclosed_quote_or_subshell = true;
                 parse_errors.erase(parse_errors.begin() + idx);
             }
         }
@@ -1245,7 +1251,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     // Issue #1238: If the only error was unterminated quote, then consider this to have parsed
     // successfully. A better fix would be to have parse_tree_from_string return this information
     // directly (but it would be a shame to munge up its nice bool return).
-    if (parse_errors.empty() && has_unclosed_quote) {
+    if (parse_errors.empty() && has_unclosed_quote_or_subshell) {
         parsed = true;
     }
 
@@ -1253,8 +1259,8 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
         errored = true;
     }
 
-    // has_unclosed_quote may only be set if allow_incomplete is true.
-    assert(!has_unclosed_quote || allow_incomplete);
+    // has_unclosed_quote_or_subshell may only be set if allow_incomplete is true.
+    assert(!has_unclosed_quote_or_subshell || allow_incomplete);
 
     // Expand all commands.
     // Verify 'or' and 'and' not used inside pipelines.
@@ -1310,7 +1316,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
 
     if (errored) res |= PARSER_TEST_ERROR;
 
-    if (has_unclosed_block || has_unclosed_quote || has_unclosed_pipe)
+    if (has_unclosed_block || has_unclosed_quote_or_subshell || has_unclosed_pipe)
         res |= PARSER_TEST_INCOMPLETE;
 
     if (out_errors != NULL) {

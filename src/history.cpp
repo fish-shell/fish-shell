@@ -186,25 +186,28 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
     const wcstring &content_to_match = case_sensitive ? contents : contents_lower;
 
     switch (type) {
-        case HISTORY_SEARCH_TYPE_EXACT: {
+        case history_search_type_t::exact: {
             return term == content_to_match;
         }
-        case HISTORY_SEARCH_TYPE_CONTAINS: {
+        case history_search_type_t::contains: {
             return content_to_match.find(term) != wcstring::npos;
         }
-        case HISTORY_SEARCH_TYPE_PREFIX: {
+        case history_search_type_t::prefix: {
             return string_prefixes_string(term, content_to_match);
         }
-        case HISTORY_SEARCH_TYPE_CONTAINS_GLOB: {
+        case history_search_type_t::contains_glob: {
             wcstring wcpattern1 = parse_util_unescape_wildcards(term);
             if (wcpattern1.front() != ANY_STRING) wcpattern1.insert(0, 1, ANY_STRING);
             if (wcpattern1.back() != ANY_STRING) wcpattern1.push_back(ANY_STRING);
             return wildcard_match(content_to_match, wcpattern1);
         }
-        case HISTORY_SEARCH_TYPE_PREFIX_GLOB: {
+        case history_search_type_t::prefix_glob: {
             wcstring wcpattern2 = parse_util_unescape_wildcards(term);
             if (wcpattern2.back() != ANY_STRING) wcpattern2.push_back(ANY_STRING);
             return wildcard_match(content_to_match, wcpattern2);
+        }
+        case history_search_type_t::match_everything: {
+            return true;
         }
     }
     DIE("unexpected history_search_type_t value");
@@ -213,7 +216,7 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
 struct history_impl_t {
     // Privately add an item. If pending, the item will not be returned by history searches until a
     // call to resolve_pending.
-    void add(const history_item_t &item, bool pending = false);
+    void add(const history_item_t &item, bool pending = false, bool do_save = true);
 
     // Internal function.
     void clear_file_state();
@@ -300,7 +303,8 @@ struct history_impl_t {
     // item_at_index until a call to resolve_pending(). Pending items are tracked with an offset
     // into the array of new items, so adding a non-pending item has the effect of resolving all
     // pending items.
-    void add(const wcstring &str, history_identifier_t ident = 0, bool pending = false);
+    void add(const wcstring &str, history_identifier_t ident = 0, bool pending = false,
+             bool save = true);
 
     // Remove a history item.
     void remove(const wcstring &str);
@@ -348,7 +352,7 @@ struct history_impl_t {
     size_t size();
 };
 
-void history_impl_t::add(const history_item_t &item, bool pending) {
+void history_impl_t::add(const history_item_t &item, bool pending, bool do_save) {
     // Try merging with the last item.
     if (!new_items.empty() && new_items.back().merge(item)) {
         // We merged, so we don't have to add anything. Maybe this item was pending, but it just got
@@ -358,7 +362,7 @@ void history_impl_t::add(const history_item_t &item, bool pending) {
         // We have to add a new item.
         new_items.push_back(item);
         this->has_pending_item = pending;
-        save_unless_disabled();
+        if (do_save) save_unless_disabled();
     }
 }
 
@@ -396,7 +400,8 @@ void history_impl_t::save_unless_disabled() {
     countdown_to_vacuum--;
 }
 
-void history_impl_t::add(const wcstring &str, history_identifier_t ident, bool pending) {
+void history_impl_t::add(const wcstring &str, history_identifier_t ident, bool pending,
+                         bool do_save) {
     time_t when = time(NULL);
     // Big hack: do not allow timestamps equal to our boundary date. This is because we include
     // items whose timestamps are equal to our boundary when reading old history, so we can catch
@@ -406,7 +411,7 @@ void history_impl_t::add(const wcstring &str, history_identifier_t ident, bool p
         when++;
     }
 
-    this->add(history_item_t(str, when, ident), pending);
+    this->add(history_item_t(str, when, ident), pending, do_save);
 }
 
 // Remove matching history entries from our list of new items. This only supports literal,
@@ -612,15 +617,12 @@ bool history_search_t::go_backwards() {
     return false;
 }
 
-history_item_t history_search_t::current_item() const {
+const history_item_t &history_search_t::current_item() const {
     assert(current_item_ && "No current item");
     return *current_item_;
 }
 
-wcstring history_search_t::current_string() const {
-    history_item_t item = this->current_item();
-    return item.str();
-}
+const wcstring &history_search_t::current_string() const { return this->current_item().str(); }
 
 static wcstring history_filename(const wcstring &session_id, const wcstring &suffix) {
     if (session_id.empty()) return L"";
@@ -993,7 +995,8 @@ void history_impl_t::save(bool vacuum) {
 // Returns nothing. The only possible failure involves formatting the timestamp. If that happens we
 // simply omit the timestamp from the output.
 static void format_history_record(const history_item_t &item, const wchar_t *show_time_format,
-                                  bool null_terminate, wcstring &result) {
+                                  bool null_terminate, wcstring *result) {
+    result->clear();
     if (show_time_format) {
         const time_t seconds = item.timestamp();
         struct tm timestamp;
@@ -1002,17 +1005,13 @@ static void format_history_record(const history_item_t &item, const wchar_t *sho
             wchar_t timestamp_string[max_tstamp_length + 1];
             if (std::wcsftime(timestamp_string, max_tstamp_length, show_time_format, &timestamp) !=
                 0) {
-                result.append(timestamp_string);
+                result->append(timestamp_string);
             }
         }
     }
 
-    result.append(item.str());
-    if (null_terminate) {
-        result.push_back(L'\0');
-    } else {
-        result.push_back(L'\n');
-    }
+    result->append(item.str());
+    result->push_back(null_terminate ? L'\0' : L'\n');
 }
 
 void history_impl_t::disable_automatic_saving() {
@@ -1130,10 +1129,6 @@ static bool should_import_bash_history_line(const wcstring &line) {
     if (line.find(L"((") != std::string::npos) return false;
     if (line.find(L"))") != std::string::npos) return false;
 
-    // Temporarily skip lines with && and ||
-    if (line.find(L"&&") != std::string::npos) return false;
-    if (line.find(L"||") != std::string::npos) return false;
-
     // Skip lines that end with a backslash. We do not handle multiline commands from bash history.
     if (line.back() == L'\\') return false;
 
@@ -1167,8 +1162,11 @@ void history_impl_t::populate_from_bash(FILE *stream) {
 
         wcstring wide_line = str2wcstring(line);
         // Add this line if it doesn't contain anything we know we can't handle.
-        if (should_import_bash_history_line(wide_line)) this->add(wide_line);
+        if (should_import_bash_history_line(wide_line)) {
+            this->add(wide_line, 0, false /* pending */, false /* do_save */);
+        }
     }
+    this->save_unless_disabled();
 }
 
 void history_impl_t::incorporate_external_changes() {
@@ -1349,76 +1347,60 @@ void history_t::resolve_pending() { impl()->resolve_pending(); }
 
 void history_t::save() { impl()->save(); }
 
+/// Perform a search of \p hist for \p search_string. Invoke a function \p func for each match. If
+/// \p func returns true, continue the search; else stop it.
+static void do_1_history_search(history_t &hist, history_search_type_t search_type,
+                                const wcstring &search_string, bool case_sensitive,
+                                const std::function<bool(const history_item_t &item)> &func) {
+    history_search_t searcher = history_search_t(hist, search_string, search_type,
+                                                 case_sensitive ? 0 : history_search_ignore_case);
+    while (searcher.go_backwards()) {
+        if (!func(searcher.current_item())) {
+            break;
+        }
+    }
+}
+
 // Searches history.
 bool history_t::search(history_search_type_t search_type, const wcstring_list_t &search_args,
                        const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
                        bool null_terminate, bool reverse, io_streams_t &streams) {
-    if (!search_args.empty()) {
-        // User wants the results filtered. This is not the common case so we do it separate
-        // from the code below for unfiltered output which is much cheaper.
-        return search_with_args(search_type, search_args, show_time_format, max_items,
-                                case_sensitive, null_terminate, reverse, streams);
-    }
+    wcstring_list_t collected;
+    wcstring formatted_record;
+    size_t remaining = max_items;
 
-    // scoped_lock locker(lock);
-    size_t hist_size = this->size();
-    if (max_items > hist_size) max_items = hist_size;
-
-    if (reverse) {
-        for (size_t i = max_items; i != 0; --i) {
-            auto cur_item = this->item_at_index(i);
-            wcstring result;
-            format_history_record(cur_item, show_time_format, null_terminate, result);
-            streams.out.append(result);
+    // The function we use to act on each item.
+    std::function<bool(const history_item_t &item)> func = [&](const history_item_t &item) -> bool {
+        if (remaining == 0) return false;
+        remaining -= 1;
+        format_history_record(item, show_time_format, null_terminate, &formatted_record);
+        if (reverse) {
+            // We need to collect this for later.
+            collected.push_back(std::move(formatted_record));
+        } else {
+            // We can output this immediately.
+            streams.out.append(formatted_record);
         }
+        return true;
+    };
+
+    if (search_args.empty()) {
+        // The user had no search terms; just append everything.
+        do_1_history_search(*this, history_search_type_t::match_everything, {}, false, func);
     } else {
-        // Start at one because zero is the current command.
-        for (size_t i = 1; i < max_items + 1; ++i) {
-            auto cur_item = this->item_at_index(i);
-            wcstring result;
-            format_history_record(cur_item, show_time_format, null_terminate, result);
-            streams.out.append(result);
-        }
-    }
-
-    return true;
-}
-
-bool history_t::search_with_args(history_search_type_t search_type,
-                                 const wcstring_list_t &search_args,
-                                 const wchar_t *show_time_format, size_t max_items,
-                                 bool case_sensitive, bool null_terminate, bool reverse,
-                                 io_streams_t &streams) {
-    wcstring_list_t results;
-    size_t hist_size = this->size();
-    if (max_items > hist_size) max_items = hist_size;
-
-    for (const wcstring &search_string : search_args) {
-        if (search_string.empty()) {
-            streams.err.append_format(L"Searching for the empty string isn't allowed");
-            return false;
-        }
-        history_search_t searcher = history_search_t(
-            *this, search_string, search_type, case_sensitive ? 0 : history_search_ignore_case);
-        while (searcher.go_backwards()) {
-            wcstring result;
-            auto cur_item = searcher.current_item();
-            format_history_record(cur_item, show_time_format, null_terminate, result);
-            if (reverse) {
-                results.push_back(result);
-            } else {
-                streams.out.append(result);
+        for (const wcstring &search_string : search_args) {
+            if (search_string.empty()) {
+                streams.err.append_format(L"Searching for the empty string isn't allowed");
+                return false;
             }
-            if (--max_items == 0) break;
+            do_1_history_search(*this, search_type, search_string, case_sensitive, func);
         }
     }
 
-    if (reverse) {
-        for (auto it = results.rbegin(); it != results.rend(); it++) {
-            streams.out.append(*it);
-        }
+    // Output any items we collected (which only happens in reverse).
+    for (auto iter = collected.rbegin(); iter != collected.rend(); ++iter) {
+        streams.out.append(*iter);
     }
-
     return true;
 }
 

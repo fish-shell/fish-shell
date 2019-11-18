@@ -45,6 +45,7 @@
 #include "reader.h"
 #include "tnode.h"
 #include "tokenizer.h"
+#include "trace.h"
 #include "util.h"
 #include "wildcard.h"
 #include "wutil.h"
@@ -80,6 +81,11 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
     return result;
 }
 
+/// Get a redirection from stderr to stdout (i.e. 2>&1).
+static std::shared_ptr<io_data_t> get_stderr_merge() {
+    return std::make_shared<io_fd_t>(STDERR_FILENO, STDOUT_FILENO, true /* user_supplied */);
+}
+
 parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p,
                                                      std::shared_ptr<job_t> parent)
     : pstree(std::move(pstree)), parser(p), parent_job(std::move(parent)) {}
@@ -102,11 +108,8 @@ tnode_t<g::plain_statement> parse_execution_context_t::infinite_recursive_statem
         return {};
     }
 
-    // Check to see which function call is forbidden.
-    if (parser->forbidden_function.empty()) {
-        return {};
-    }
-    const wcstring &forbidden_function_name = parser->forbidden_function.back();
+    // Get the function name of the immediate block.
+    const wcstring &forbidden_function_name = parent->function_name;
 
     // Get the first job in the job list.
     tnode_t<g::job> first_job = job_list.try_get_child<g::job_conjunction, 1>().child<0>();
@@ -245,6 +248,10 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
     tnode_t<g::job_list> job_list_to_execute;
     tnode_t<g::if_clause> if_clause = statement.child<0>();
     tnode_t<g::else_clause> else_clause = statement.child<1>();
+
+    // We start with the 'if'.
+    trace_if_enabled(*parser, L"if");
+
     for (;;) {
         if (should_cancel_execution(associated_block)) {
             result = parse_execution_cancelled;
@@ -281,10 +288,12 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
                 if_clause = maybe_if_clause;
                 else_clause = else_cont.try_get_child<g::else_clause, 1>();
                 assert(else_clause && "Expected to have an else clause");
+                trace_if_enabled(*parser, L"else if");
             } else {
                 // It's the final 'else', we're done.
                 job_list_to_execute = else_cont.try_get_child<g::job_list, 1>();
                 assert(job_list_to_execute && "Should have a job list");
+                trace_if_enabled(*parser, L"else");
                 break;
             }
         }
@@ -303,6 +312,8 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
         parser->set_last_statuses(statuses_t::just(STATUS_CMD_OK));
     }
 
+    trace_if_enabled(*parser, L"end if");
+
     // It's possible there's a last-minute cancellation (issue #1297).
     if (should_cancel_execution(associated_block)) {
         result = parse_execution_cancelled;
@@ -315,10 +326,11 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
 parse_execution_result_t parse_execution_context_t::run_begin_statement(
     tnode_t<g::job_list> contents) {
     // Basic begin/end block. Push a scope block, run jobs, pop it
+    trace_if_enabled(*parser, L"begin");
     block_t *sb = parser->push_block(block_t::scope_block(BEGIN));
     parse_execution_result_t ret = run_job_list(contents, sb);
     parser->pop_block(sb);
-
+    trace_if_enabled(*parser, L"end begin");
     return ret;
 }
 
@@ -334,6 +346,7 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(
     if (result != parse_execution_success) {
         return result;
     }
+    trace_if_enabled(*parser, L"function", arguments);
     io_streams_t streams(0);  // no limit on the amount of output from builtin_function()
     int err = builtin_function(*parser, streams, arguments, pstree, body);
     parser->set_last_statuses(statuses_t::just(err));
@@ -413,6 +426,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
         return parse_execution_errored;
     }
 
+    trace_if_enabled(*parser, L"for", arguments);
     block_t *fb = parser->push_block(block_t::for_block());
 
     // Now drive the for loop.
@@ -441,6 +455,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(
     }
 
     parser->pop_block(fb);
+    trace_if_enabled(*parser, L"end for");
     return ret;
 }
 
@@ -557,6 +572,8 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
     tnode_t<g::job_conjunction> condition_head = header.child<1>();
     tnode_t<g::andor_job_list> condition_boolean_tail = header.child<3>();
 
+    trace_if_enabled(*parser, L"while");
+
     // Run while the condition is true.
     for (;;) {
         // Save off the exit status if it came from the loop body. We'll restore it if the condition
@@ -591,6 +608,7 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
         // Push a while block and then check its cancellation reason.
         auto &ld = parser->libdata();
         ld.loop_status = loop_status_t::normals;
+
         block_t *wb = parser->push_block(block_t::while_block());
         this->run_job_list(contents, wb);
         auto cancel_reason = this->cancellation_reason(wb);
@@ -613,6 +631,7 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
             break;
         }
     }
+    trace_if_enabled(*parser, L"end while");
     return ret;
 }
 
@@ -800,13 +819,6 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
 
     // Determine the process type.
     enum process_type_t process_type = process_type_for_command(statement, cmd);
-
-    // Check for stack overflow.
-    if (process_type == process_type_t::function &&
-        parser->forbidden_function.size() > FISH_MAX_STACK_DEPTH) {
-        this->report_error(statement, CALL_STACK_LIMIT_EXCEEDED_ERR_MSG);
-        return parse_execution_errored;
-    }
 
     // Protect against exec with background processes running
     if (process_type == process_type_t::exec && parser->is_interactive()) {
@@ -1019,6 +1031,12 @@ bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redir
         if (new_io.get() != NULL) {
             result.push_back(new_io);
         }
+
+        if (redirect->stderr_merge) {
+            // This was a redirect like &> which also modifies stderr.
+            // Also redirect stderr to stdout.
+            result.push_back(get_stderr_merge());
+        }
     }
 
     if (out_chain && !errored) {
@@ -1141,6 +1159,13 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
             break;
         }
         processes.back()->pipe_write_fd = parsed_pipe->fd;
+        if (parsed_pipe->stderr_merge) {
+            // This was a pipe like &| which redirects both stdout and stderr.
+            // Also redirect stderr to stdout.
+            auto ios = processes.back()->io_chain();
+            ios.push_back(get_stderr_merge());
+            processes.back()->set_io_chain(std::move(ios));
+        }
 
         // Store the new process (and maybe with an error).
         processes.emplace_back(new process_t());
@@ -1416,21 +1441,24 @@ parse_execution_result_t parse_execution_context_t::eval_node(tnode_t<g::job_lis
     // Apply this block IO for the duration of this function.
     assert(job_list && "Empty node in eval_node");
     assert(job_list.matches_node_tree(tree()) && "job_list has unexpected tree");
+    assert(associated_block && "Null block");
     scoped_push<io_chain_t> block_io_push(&block_io, io);
-    enum parse_execution_result_t status = parse_execution_success;
+
+    // Check for infinite recursion: a function which immediately calls itself..
     wcstring func_name;
     auto infinite_recursive_node =
         this->infinite_recursive_statement_in_job_list(job_list, &func_name);
     if (infinite_recursive_node) {
         // We have an infinite recursion.
-        this->report_error(infinite_recursive_node, INFINITE_FUNC_RECURSION_ERR_MSG,
-                           func_name.c_str());
-        status = parse_execution_errored;
-    } else {
-        // No infinite recursion.
-        status = this->run_job_list(job_list, associated_block);
+        return this->report_error(infinite_recursive_node, INFINITE_FUNC_RECURSION_ERR_MSG,
+                                  func_name.c_str());
     }
-    return status;
+
+    // Check for stack overflow. The TOP check ensures we only do this for function calls.
+    if (associated_block->type() == TOP && parser->function_stack_is_overflowing()) {
+        return this->report_error(job_list, CALL_STACK_LIMIT_EXCEEDED_ERR_MSG);
+    }
+    return this->run_job_list(job_list, associated_block);
 }
 
 int parse_execution_context_t::line_offset_of_node(tnode_t<g::job> node) {

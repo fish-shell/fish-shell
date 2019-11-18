@@ -147,6 +147,10 @@ static const wchar_t *math_describe_error(te_error_t &error) {
             return _(L"Too many arguments");
         case TE_ERROR_MISSING_OPERATOR:
             return _(L"Missing operator");
+        case TE_ERROR_UNEXPECTED_TOKEN:
+            return _(L"Unexpected token");
+        case TE_ERROR_LOGICAL_OPERATOR:
+            return _(L"Logical operations are not supported, use `test` instead");
         case TE_ERROR_UNKNOWN:
             return _(L"Expression is bogus");
         default:
@@ -243,7 +247,7 @@ int builtin_math(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 

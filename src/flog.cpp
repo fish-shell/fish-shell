@@ -94,6 +94,8 @@ void activate_flog_categories_by_pattern(const wcstring &inwc) {
 
 void set_flog_output_file(FILE *f) { g_logger.acquire()->set_file(f); }
 
+void log_extra_to_flog_file(const wcstring &s) { g_logger.acquire()->log_extra(s.c_str()); }
+
 std::vector<const category_t *> get_flog_categories() {
     std::vector<const category_t *> result(s_all_categories.begin(), s_all_categories.end());
     std::sort(result.begin(), result.end(), [](const category_t *a, const category_t *b) {

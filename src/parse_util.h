@@ -55,10 +55,11 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
 ///
 /// \param buff the string to search for subshells
 /// \param cursor_pos the position of the cursor
-/// \param a the start of the searched string
-/// \param b the end of the searched string
+/// \param a the start of the process
+/// \param b the end of the process
+/// \param tokens the tokens in the process
 void parse_util_process_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **a,
-                               const wchar_t **b);
+                               const wchar_t **b, std::vector<tok_t> *tokens);
 
 /// Find the beginning and end of the job definition under the cursor
 ///

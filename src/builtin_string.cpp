@@ -750,7 +750,7 @@ class pcre2_matcher_t : public string_matcher_t {
             return 0;
         }
 
-        if (opts.entire) {
+        if (opts.entire && !opts.quiet) {
             streams.out.append(arg);
             streams.out.push_back(L'\n');
         }
@@ -766,7 +766,7 @@ class pcre2_matcher_t : public string_matcher_t {
                                               (unsigned long)(end - begin));
                 } else if (end > begin) {
                     // May have end < begin if \K is used.
-                    streams.out.append(wcstring(&arg[begin], end - begin));
+                    streams.out.append(arg.substr(begin, end - begin));
                 }
                 streams.out.push_back(L'\n');
             }
@@ -861,12 +861,6 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
     if (opts.entire && opts.index) {
         streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
                                   _(L"--entire and --index are mutually exclusive"));
-        return STATUS_INVALID_ARGS;
-    }
-
-    if (opts.entire && opts.quiet) {
-        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
-                                  _(L"--entire and --quiet are mutually exclusive"));
         return STATUS_INVALID_ARGS;
     }
 
@@ -1358,7 +1352,7 @@ int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (std::wcscmp(argv[1], L"-h") == 0 || std::wcscmp(argv[1], L"--help") == 0) {
-        builtin_print_help(parser, streams, L"string", streams.out);
+        builtin_print_help(parser, streams, L"string");
         return STATUS_CMD_OK;
     }
 
@@ -1372,6 +1366,11 @@ int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_INVALID_ARGS;
     }
 
+    if (argc >= 3 && (std::wcscmp(argv[2], L"-h") == 0 || std::wcscmp(argv[2], L"--help") == 0)) {
+        wcstring string_dash_subcommand = wcstring(argv[0]) + L"-" + argv[1];
+        builtin_print_help(parser, streams, string_dash_subcommand.c_str());
+        return STATUS_CMD_OK;
+    }
     argc--;
     argv++;
     return subcmd->handler(parser, streams, argc, argv);

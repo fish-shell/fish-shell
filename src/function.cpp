@@ -34,23 +34,16 @@
 class function_info_t {
    public:
     /// Immutable properties of the function.
-    std::shared_ptr<const function_properties_t> props;
+    function_properties_ref_t props;
     /// Function description. This may be changed after the function is created.
     wcstring description;
     /// File where this function was defined (intern'd string).
     const wchar_t *const definition_file;
-    /// Mapping of all variables that were inherited from the function definition scope to their
-    /// values.
-    const std::map<wcstring, env_var_t> inherit_vars;
     /// Flag for specifying that this function was automatically loaded.
     const bool is_autoload;
 
-    /// Constructs relevant information from the function_data.
-    function_info_t(function_data_t data, const environment_t &vars, const wchar_t *filename,
+    function_info_t(function_properties_ref_t props, wcstring desc, const wchar_t *def_file,
                     bool autoload);
-
-    /// Used by function_copy.
-    function_info_t(const function_info_t &data, const wchar_t *filename, bool autoload);
 };
 
 /// Type wrapping up the set of all functions.
@@ -148,58 +141,34 @@ static void autoload_names(std::unordered_set<wcstring> &names, int get_hidden) 
     }
 }
 
-static std::map<wcstring, env_var_t> snapshot_vars(const wcstring_list_t &vars,
-                                                   const environment_t &src) {
-    std::map<wcstring, env_var_t> result;
-    for (const wcstring &name : vars) {
-        auto var = src.get(name);
-        if (var) result[name] = std::move(*var);
-    }
-    return result;
-}
-
-function_info_t::function_info_t(function_data_t data, const environment_t &vars,
-                                 const wchar_t *filename, bool autoload)
-    : props(std::make_shared<const function_properties_t>(std::move(data.props))),
-      description(std::move(data.description)),
-      definition_file(intern(filename)),
-      inherit_vars(snapshot_vars(data.inherit_vars, vars)),
+function_info_t::function_info_t(function_properties_ref_t props, wcstring desc,
+                                 const wchar_t *def_file, bool autoload)
+    : props(std::move(props)),
+      description(std::move(desc)),
+      definition_file(intern(def_file)),
       is_autoload(autoload) {}
 
-function_info_t::function_info_t(const function_info_t &data, const wchar_t *filename,
-                                 bool autoload)
-    : props(data.props),
-      description(data.description),
-      definition_file(intern(filename)),
-      inherit_vars(data.inherit_vars),
-      is_autoload(autoload) {}
-
-void function_add(const function_data_t &data, const parser_t &parser) {
+void function_add(wcstring name, wcstring description, function_properties_ref_t props,
+                  const wchar_t *filename) {
     ASSERT_IS_MAIN_THREAD();
     auto funcset = function_set.acquire();
 
     // Historical check. TODO: rationalize this.
-    if (data.name.empty()) {
+    if (name.empty()) {
         return;
     }
 
     // Remove the old function.
-    funcset->remove(data.name);
+    funcset->remove(name);
 
     // Check if this is a function that we are autoloading.
-    bool is_autoload = funcset->autoloader.autoload_in_progress(data.name);
+    bool is_autoload = funcset->autoloader.autoload_in_progress(name);
 
     // Create and store a new function.
-    const wchar_t *filename = parser.libdata().current_filename;
-    auto ins = funcset->funcs.emplace(data.name,
-                                      function_info_t(data, parser.vars(), filename, is_autoload));
+    auto ins = funcset->funcs.emplace(
+        std::move(name), function_info_t(props, std::move(description), filename, is_autoload));
     assert(ins.second && "Function should not already be present in the table");
     (void)ins;
-
-    // Add event handlers.
-    for (const event_description_t &ed : data.events) {
-        event_add_handler(std::make_shared<event_handler_t>(ed, data.name));
-    }
 }
 
 std::shared_ptr<const function_properties_t> function_get_properties(const wcstring &name) {
@@ -226,8 +195,7 @@ void function_load(const wcstring &cmd, parser_t &parser) {
     }
 }
 
-int function_exists_no_autoload(const wcstring &cmd, const environment_t &vars) {
-    (void)vars;
+int function_exists_no_autoload(const wcstring &cmd) {
     if (parser_keywords_is_reserved(cmd)) return 0;
     auto funcset = function_set.acquire();
 
@@ -262,12 +230,6 @@ bool function_get_definition(const wcstring &name, wcstring &out_definition) {
     return false;
 }
 
-std::map<wcstring, env_var_t> function_get_inherit_vars(const wcstring &name) {
-    const auto funcset = function_set.acquire();
-    const function_info_t *func = funcset->get_info(name);
-    return func ? func->inherit_vars : std::map<wcstring, env_var_t>();
-}
-
 bool function_get_desc(const wcstring &name, wcstring &out_desc) {
     const auto funcset = function_set.acquire();
     const function_info_t *func = funcset->get_info(name);
@@ -295,12 +257,14 @@ bool function_copy(const wcstring &name, const wcstring &new_name) {
         // No such function.
         return false;
     }
+    const function_info_t &src_func = iter->second;
 
     // This new instance of the function shouldn't be tied to the definition file of the
     // original, so pass NULL filename, etc.
     // Note this will NOT overwrite an existing function with the new name.
     // TODO: rationalize if this behavior is desired.
-    funcset->funcs.emplace(new_name, function_info_t(iter->second, nullptr, false));
+    funcset->funcs.emplace(new_name,
+                           function_info_t(src_func.props, src_func.description, nullptr, false));
     return true;
 }
 
@@ -364,29 +328,4 @@ void function_invalidate_path() {
         funcset->remove(name);
     }
     funcset->autoloader.clear();
-}
-
-// Setup the environment for the function. There are three components of the environment:
-// 1. argv
-// 2. named arguments
-// 3. inherited variables
-void function_prepare_environment(env_stack_t &vars, const wcstring &name, wcstring_list_t argv,
-                                  const std::map<wcstring, env_var_t> &inherited_vars) {
-    vars.set_argv(argv);
-    auto props = function_get_properties(name);
-    if (props && !props->named_arguments.empty()) {
-        auto argv_iter = argv.cbegin();
-        for (const wcstring &named_arg : props->named_arguments) {
-            if (argv_iter != argv.cend()) {
-                vars.set_one(named_arg, ENV_LOCAL | ENV_USER, std::move(*argv_iter));
-                ++argv_iter;
-            } else {
-                vars.set_empty(named_arg, ENV_LOCAL | ENV_USER);
-            }
-        }
-    }
-
-    for (const auto &kv : inherited_vars) {
-        vars.set(kv.first, ENV_LOCAL | ENV_USER, kv.second.as_list());
-    }
 }

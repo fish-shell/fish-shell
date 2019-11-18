@@ -5,7 +5,7 @@ end
 
 function __fish_ansible_vault_using_command
     set -l cmd (string trim (__fish_ansible_vault_no_subcommand))
-    test -z "$cmd";
+    test -z "$cmd"
     and return 1
     contains -- "$cmd" $argv
 end

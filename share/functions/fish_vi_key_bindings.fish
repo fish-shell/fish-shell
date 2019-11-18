@@ -134,6 +134,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset D kill-line
     bind -s --preset d\$ kill-line
     bind -s --preset d\^ backward-kill-line
+    bind -s --preset d0 backward-kill-line
     bind -s --preset dw kill-word
     bind -s --preset dW kill-bigword
     bind -s --preset diw forward-char forward-char backward-word kill-word
@@ -214,6 +215,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     #
     bind -s --preset -m replace_one r repaint-mode
     bind -s --preset -M replace_one -m default '' delete-char self-insert backward-char repaint-mode
+    bind -s --preset -M replace_one -m default \r 'commandline -f delete-char; commandline -i \n; commandline -f backward-char; commandline -f repaint-mode'
     bind -s --preset -M replace_one -m default \e cancel repaint-mode
 
     #

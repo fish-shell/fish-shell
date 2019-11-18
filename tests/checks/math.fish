@@ -59,6 +59,11 @@ math '-10^15'
 # CHECK: 100000000000000
 # CHECK: -1000000000000000
 
+math 3^0.5^2
+math -2^2
+# CHECK: 1.316074
+# CHECK: 4
+
 math -s0 '1.0 / 2.0'
 math -s0 '3.0 / 2.0'
 math -s0 '10^15 / 2.0'
@@ -91,7 +96,7 @@ not math 'ncr(1)'
 # CHECKERR: 'ncr(1)'
 # CHECKERR:       ^
 not math 'max()'
-# CHECKERR: math: Error: Expression is bogus
+# CHECKERR: math: Error: Unexpected token
 # CHECKERR: 'max()'
 # CHECKERR:    ^
 not math 'sin()'
@@ -126,3 +131,8 @@ math 0x 3
 # CHECK: 20
 # CHECK: 8
 # CHECK: 0
+
+math "42 >= 1337"
+# CHECKERR: math: Error: Logical operations are not supported, use `test` instead
+# CHECKERR: '42 >= 1337'
+# CHECKERR:     ^

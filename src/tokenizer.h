@@ -41,6 +41,9 @@ enum class redirection_mode_t {
 /// the tokenizer to return each of them as a separate END.
 #define TOK_SHOW_BLANK_LINES 4
 
+/// Make an effort to continue after an error.
+#define TOK_CONTINUE_AFTER_ERROR 8
+
 typedef unsigned int tok_flags_t;
 
 enum class tokenizer_error_t {
@@ -51,6 +54,7 @@ enum class tokenizer_error_t {
     unterminated_escape,
     invalid_redirect,
     invalid_pipe,
+    invalid_pipe_ampersand,
     closing_unopened_subshell,
     illegal_slice,
     closing_unopened_brace,
@@ -79,10 +83,17 @@ struct tok_t {
 
     // If an error, this is the offset of the error within the token. A value of 0 means it occurred
     // at 'offset'.
-    size_t error_offset{size_t(-1)};
+    size_t error_offset_within_token{size_t(-1)};
 
     // Construct from a token type.
     explicit tok_t(token_type_t type);
+
+    /// Returns whether the given location is within the source range or at its end.
+    bool location_in_or_at_end_of_source_range(size_t loc) const {
+        return offset <= loc && loc - offset <= length;
+    }
+    /// Gets source for the token, or the empty string if it has no source.
+    wcstring get_source(const wcstring &str) const { return {str, offset, length}; }
 };
 
 /// The tokenizer struct.
@@ -92,7 +103,7 @@ class tokenizer_t {
     void operator=(const tokenizer_t &) = delete;
 
     /// A pointer into the original string, showing where the next token begins.
-    const wchar_t *buff;
+    const wchar_t *token_cursor;
     /// The start of the original string.
     const wchar_t *const start;
     /// Whether we have additional tokens.
@@ -103,11 +114,13 @@ class tokenizer_t {
     bool show_comments{false};
     /// Whether all blank lines are returned.
     bool show_blank_lines{false};
+    /// Whether to attempt to continue after an error.
+    bool continue_after_error{false};
     /// Whether to continue the previous line after the comment.
     bool continue_line_after_comment{false};
 
     tok_t call_error(tokenizer_error_t error_type, const wchar_t *token_start,
-                     const wchar_t *error_loc);
+                     const wchar_t *error_loc, maybe_t<size_t> token_length = {});
     tok_t read_string();
 
    public:
@@ -151,6 +164,10 @@ struct pipe_or_redir_t {
     // The redirection mode if the type is redirect.
     // Ignored for pipes.
     redirection_mode_t mode{redirection_mode_t::overwrite};
+
+    // Whether, in addition to this redirection, stderr should also be dup'd to stdout
+    // For example &| or &>
+    bool stderr_merge{false};
 
     // Number of characters consumed when parsing the string.
     size_t consumed{0};

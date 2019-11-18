@@ -325,24 +325,22 @@ class io_buffer_t {
     void append_from_stream(const output_stream_t &stream);
 };
 
-class io_chain_t : public std::vector<shared_ptr<io_data_t>> {
+using io_data_ref_t = std::shared_ptr<const io_data_t>;
+
+class io_chain_t : public std::vector<io_data_ref_t> {
    public:
-    using std::vector<shared_ptr<io_data_t>>::vector;
+    using std::vector<io_data_ref_t>::vector;
     // user-declared ctor to allow const init. Do not default this, it will break the build.
     io_chain_t() {}
 
-    void remove(const shared_ptr<const io_data_t> &element);
-    void push_back(shared_ptr<io_data_t> element);
-    void push_front(shared_ptr<io_data_t> element);
+    void remove(const io_data_ref_t &element);
+    void push_back(io_data_ref_t element);
     void append(const io_chain_t &chain);
 
-    shared_ptr<const io_data_t> get_io_for_fd(int fd) const;
-    shared_ptr<io_data_t> get_io_for_fd(int fd);
+    /// \return the last io redirection in the chain for the specified file descriptor, or nullptr
+    /// if none.
+    io_data_ref_t io_for_fd(int fd) const;
 };
-
-/// Return the last io redirection in the chain for the specified file descriptor.
-shared_ptr<const io_data_t> io_chain_get(const io_chain_t &src, int fd);
-shared_ptr<io_data_t> io_chain_get(io_chain_t &src, int fd);
 
 /// Helper type returned from making autoclose pipes.
 struct autoclose_pipes_t {

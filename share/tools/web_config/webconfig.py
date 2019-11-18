@@ -8,6 +8,7 @@ try:
 except ImportError:
     from cgi import escape as escape_html
 from distutils.version import LooseVersion
+from distutils.spawn import find_executable
 import glob
 import multiprocessing.pool
 import operator
@@ -43,11 +44,16 @@ def isMacOS10_12_5_OrLater():
 
 def is_wsl():
     """ Return whether we are running under the Windows Subsystem for Linux """
-    if "linux" in platform.system().lower():
+    if "linux" in platform.system().lower() and os.access("/proc/version", os.R_OK):
         with open("/proc/version", "r") as f:
             if "Microsoft" in f.read():
                 return True
     return False
+
+
+def is_termux():
+    """ Return whether we are running under the Termux application for Android"""
+    return "com.termux" in os.environ["PATH"] and find_executable("termux-open-url")
 
 
 # Disable CLI web browsers
@@ -1190,7 +1196,11 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_save_abbreviation(self, abbreviation):
         out, err = run_fish_cmd(
             # Remove one layer of single-quotes because escape_fish_cmd adds them back.
-            "abbr --add %s %s" % (escape_fish_cmd(abbreviation["word"].strip("'")), escape_fish_cmd(abbreviation["phrase"].strip("'")))
+            "abbr --add %s %s"
+            % (
+                escape_fish_cmd(abbreviation["word"].strip("'")),
+                escape_fish_cmd(abbreviation["phrase"].strip("'")),
+            )
         )
         if err:
             return err
@@ -1505,6 +1515,8 @@ if isMacOS10_12_5_OrLater():
     subprocess.check_call(["open", fileurl])
 elif is_wsl():
     subprocess.call(["cmd.exe", "/c", "start %s" % url])
+elif is_termux():
+    subprocess.call(["termux-open-url", url])
 else:
     webbrowser.open(fileurl)
 

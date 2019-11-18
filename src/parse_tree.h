@@ -25,6 +25,11 @@ typedef uint32_t source_offset_t;
 
 constexpr source_offset_t SOURCE_OFFSET_INVALID = static_cast<source_offset_t>(-1);
 
+struct source_range_t {
+    uint32_t start;
+    uint32_t length;
+};
+
 /// A struct representing the token type that we use internally.
 struct parse_token_t {
     enum parse_token_type_t type;  // The type of the token as represented by the parser
@@ -137,6 +142,11 @@ class parse_node_t {
         return this->flags & parse_node_flag_preceding_escaped_nl;
     }
 
+    source_range_t source_range() const {
+        assert(has_source());
+        return {source_start, source_length};
+    }
+
     /// Gets source for the node, or the empty string if it has no source.
     wcstring get_source(const wcstring &str) const {
         if (!has_source())
@@ -181,11 +191,6 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     const parse_node_t *get_parent(const parse_node_t &node,
                                    parse_token_type_t expected_type = token_type_invalid) const;
 
-    // Finds the last node of a given type, or empty if it could not be found. If parent is NULL,
-    // this finds the last node in the tree of that type.
-    template <typename Type>
-    tnode_t<Type> find_last_node(const parse_node_t *parent = NULL) const;
-
     // Finds a node containing the given source location. If 'parent' is not NULL, it must be an
     // ancestor.
     const parse_node_t *find_node_matching_source_location(parse_token_type_t type,
@@ -205,11 +210,6 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     const parse_node_t *next_node_in_node_list(const parse_node_t &node_list,
                                                parse_token_type_t item_type,
                                                const parse_node_t **list_tail) const;
-
-    // Finds the last node of a given type underneath a given node, or NULL if it could not be
-    // found. If parent is NULL, this finds the last node in the tree of that type.
-    const parse_node_t *find_last_node_of_type(parse_token_type_t type,
-                                               const parse_node_t *parent) const;
 };
 
 /// The big entry point. Parse a string, attempting to produce a tree for the given goal type.

@@ -16,7 +16,7 @@ printf formats the string FORMAT with ARGUMENT, and displays the result.
 
 The string FORMAT should contain format specifiers, each of which are replaced with successive arguments according to the specifier. Specifiers are detailed below, and are taken from the C library function ``printf(3)``.
 
-Unlike ``echo``, ``printf`` does not append a new line unless it is specified as part of the string.
+Unlike :ref:`echo <cmd-echo>`, ``printf`` does not append a new line unless it is specified as part of the string.
 
 Valid format specifiers are:
 

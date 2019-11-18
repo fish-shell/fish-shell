@@ -253,18 +253,26 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
     }
 
     // We have what we need to actually define the function.
-    function_data_t d;
-    d.name = function_name;
-    if (!opts.description.empty()) d.description = opts.description;
-    // d.description = opts.description;
-    d.events = std::move(opts.events);
-    d.props.shadow_scope = opts.shadow_scope;
-    d.props.named_arguments = std::move(opts.named_arguments);
-    d.inherit_vars = std::move(opts.inherit_vars);
+    auto props = std::make_shared<function_properties_t>();
+    props->shadow_scope = opts.shadow_scope;
+    props->named_arguments = std::move(opts.named_arguments);
+    props->parsed_source = source;
+    props->body_node = body;
 
-    d.props.parsed_source = source;
-    d.props.body_node = body;
-    function_add(std::move(d), parser);
+    // Populate inherit_vars.
+    for (const wcstring &name : opts.inherit_vars) {
+        if (auto var = parser.vars().get(name)) {
+            props->inherit_vars[name] = var->as_list();
+        }
+    }
+
+    // Add the function itself.
+    function_add(function_name, opts.description, props, parser.libdata().current_filename);
+
+    // Add any event handlers.
+    for (const event_description_t &ed : opts.events) {
+        event_add_handler(std::make_shared<event_handler_t>(ed, function_name));
+    }
 
     // Handle wrap targets by creating the appropriate completions.
     for (const wcstring &wt : opts.wrap_targets) complete_add_wrapper(function_name, wt);

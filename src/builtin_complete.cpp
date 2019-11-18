@@ -247,7 +247,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 break;
             }
             case 'h': {
-                builtin_print_help(parser, streams, cmd, streams.out);
+                builtin_print_help(parser, streams, cmd);
                 return STATUS_CMD_OK;
             }
             case ':': {
@@ -344,7 +344,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         } else {
             parser.libdata().builtin_complete_recursion_level++;
             assert(!parser.libdata().builtin_complete_current_commandline);
-	    if (!have_do_complete_param)
+            if (!have_do_complete_param)
                 parser.libdata().builtin_complete_current_commandline = true;
 
             std::vector<completion_t> comp;

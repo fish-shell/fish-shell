@@ -11,10 +11,16 @@ PROJECT(fish)
 
 # We are C++11.
 SET(CMAKE_CXX_STANDARD 11)
-SET(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
-SET(CMAKE_CXX_FLAGS_RELEASE "-O2")
 SET(DEFAULT_BUILD_TYPE "RelWithDebInfo")
+
+# Use the default flags (#6296) but remove -DNDEBUG so that asserts remain enabled.
+STRING(REPLACE "-DNDEBUG" ""
+  CMAKE_CXX_FLAGS_RELWITHDEBINFO
+  "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+
+STRING(REPLACE "-DNDEBUG" ""
+  CMAKE_CXX_FLAGS_RELEASE
+  "${CMAKE_CXX_FLAGS_RELEASE}")
 
 IF(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     MESSAGE(STATUS "Setting build type to default '${DEFAULT_BUILD_TYPE}'")
@@ -111,7 +117,7 @@ SET(FISH_SRCS
     src/signal.cpp src/tinyexpr.cpp src/tnode.cpp src/tokenizer.cpp src/utf8.cpp src/util.cpp
     src/wcstringutil.cpp src/wgetopt.cpp src/wildcard.cpp src/wutil.cpp
     src/future_feature_flags.cpp src/redirection.cpp src/topic_monitor.cpp
-    src/flog.cpp
+    src/flog.cpp src/trace.cpp
 )
 
 # Header files are just globbed.

@@ -21,10 +21,10 @@
 static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j) {
     assert(j != NULL);
     if (!j->wants_job_control()) {
-        streams.err.append_format(
+        wcstring error_message = format_string(
             _(L"%ls: Can't put job %d, '%ls' to background because it is not under job control\n"),
             L"bg", j->job_id, j->command_wcstr());
-        builtin_print_help(parser, streams, L"bg", streams.err);
+        builtin_print_help(parser, streams, L"bg", &error_message);
         return STATUS_CMD_ERROR;
     }
 
@@ -47,7 +47,7 @@ int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 

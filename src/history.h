@@ -44,17 +44,19 @@ class environment_t;
 
 typedef std::vector<wcstring> path_list_t;
 
-enum history_search_type_t {
+enum class history_search_type_t {
     // Search for commands exactly matching the given string.
-    HISTORY_SEARCH_TYPE_EXACT = 1,
+    exact,
     // Search for commands containing the given string.
-    HISTORY_SEARCH_TYPE_CONTAINS,
+    contains,
     // Search for commands starting with the given string.
-    HISTORY_SEARCH_TYPE_PREFIX,
+    prefix,
     // Search for commands containing the given glob pattern.
-    HISTORY_SEARCH_TYPE_CONTAINS_GLOB,
+    contains_glob,
     // Search for commands starting with the given glob pattern.
-    HISTORY_SEARCH_TYPE_PREFIX_GLOB
+    prefix_glob,
+    // Matches everything.
+    match_everything,
 };
 
 typedef uint64_t history_identifier_t;
@@ -172,10 +174,6 @@ class history_t {
                 const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
                 bool null_terminate, bool reverse, io_streams_t &streams);
 
-    bool search_with_args(history_search_type_t search_type, const wcstring_list_t &search_args,
-                          const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
-                          bool null_terminate, bool reverse, io_streams_t &streams);
-
     // Irreversibly clears history.
     void clear();
 
@@ -229,7 +227,7 @@ class history_search_t {
     wcstring canon_term_;
 
     // Our search type.
-    enum history_search_type_t search_type_ { HISTORY_SEARCH_TYPE_CONTAINS };
+    enum history_search_type_t search_type_ { history_search_type_t::contains };
 
     // Our flags.
     history_search_flags_t flags_{0};
@@ -257,14 +255,14 @@ class history_search_t {
     bool go_backwards();
 
     // Returns the current search result item. asserts if there is no current item.
-    history_item_t current_item() const;
+    const history_item_t &current_item() const;
 
     // Returns the current search result item contents. asserts if there is no current item.
-    wcstring current_string() const;
+    const wcstring &current_string() const;
 
     // Constructor.
     history_search_t(history_t &hist, const wcstring &str,
-                     enum history_search_type_t type = HISTORY_SEARCH_TYPE_CONTAINS,
+                     enum history_search_type_t type = history_search_type_t::contains,
                      history_search_flags_t flags = 0)
         : history_(&hist), orig_term_(str), canon_term_(str), search_type_(type), flags_(flags) {
         if (ignores_case()) {
@@ -295,4 +293,9 @@ bool all_paths_are_valid(const path_list_t &paths, const wcstring &working_direc
 void start_private_mode();
 /// Queries private mode status.
 bool in_private_mode();
+
+/// The description of the $history environment variable, as offered in completions and
+/// the output of builtin set.
+constexpr const wchar_t *history_variable_description = L"Full history of interactive commands";
+
 #endif

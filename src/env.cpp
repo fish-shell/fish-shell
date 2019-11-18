@@ -133,27 +133,6 @@ static export_generation_t next_export_generation() {
     return ++*val;
 }
 
-/// Some env vars contain a list of paths where an empty path element is equivalent to ".".
-/// Unfortunately that convention causes problems for fish scripts. So this function replaces the
-/// empty path element with an explicit ".". See issue #3914.
-void fix_colon_delimited_var(const wcstring &var_name, env_stack_t &vars) {
-    const auto paths = vars.get(var_name);
-    if (paths.missing_or_empty()) return;
-
-    // See if there's any empties.
-    const wcstring empty = wcstring();
-    const wcstring_list_t &strs = paths->as_list();
-    if (contains(strs, empty)) {
-        // Copy the list and replace empties with L"."
-        wcstring_list_t newstrs = strs;
-        std::replace(newstrs.begin(), newstrs.end(), empty, wcstring(L"."));
-        int retval = vars.set(var_name, ENV_DEFAULT | ENV_USER, std::move(newstrs));
-        if (retval != ENV_OK) {
-            FLOGF(error, L"fix_colon_delimited_var failed unexpectedly with retval %d", retval);
-        }
-    }
-}
-
 const wcstring_list_t &env_var_t::as_list() const { return *vals_; }
 
 wchar_t env_var_t::get_delimiter() const {
@@ -231,14 +210,6 @@ void misc_init() {
     }
 }
 
-/// Ensure the content of the magic path env vars is reasonable. Specifically, that empty path
-/// elements are converted to explicit "." to make the vars easier to use in fish scripts.
-static void init_path_vars() {
-    // Do not replace empties in MATHPATH - see #4158.
-    fix_colon_delimited_var(L"PATH", env_stack_t::globals());
-    fix_colon_delimited_var(L"CDPATH", env_stack_t::globals());
-}
-
 /// Make sure the PATH variable contains something.
 static void setup_path() {
     auto &vars = env_stack_t::globals();
@@ -296,8 +267,6 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     wcstring user_data_dir;
     path_get_data(user_data_dir);
     vars.set_one(FISH_USER_DATA_DIR, ENV_GLOBAL, user_data_dir);
-
-    init_path_vars();
 
     // Set up the USER and PATH variables
     setup_path();
@@ -404,7 +373,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     s_universal_variables.emplace(L"");
     callback_data_list_t callbacks;
     s_universal_variables->initialize(callbacks);
-    env_universal_callbacks(&env_stack_t::principal(), callbacks);
+    env_universal_callbacks(&vars, callbacks);
 
     // Do not import variables that have the same name and value as
     // an exported universal variable. See issues #5258 and #5348.
@@ -837,17 +806,30 @@ std::shared_ptr<environment_t> env_scoped_impl_t::snapshot() const {
     return ret;
 }
 
+// A struct that wraps up the result of setting or removing a variable.
+struct mod_result_t {
+    // The publicly visible status of the set call.
+    int status{ENV_OK};
+
+    // Whether we modified the global scope.
+    bool global_modified{false};
+
+    // Whether we modified universal variables.
+    bool uvar_modified{false};
+
+    explicit mod_result_t(int status) : status(status) {}
+};
+
 /// A mutable subclass of env_scoped_impl_t.
 class env_stack_impl_t final : public env_scoped_impl_t {
    public:
     using env_scoped_impl_t::env_scoped_impl_t;
 
     /// Set a variable under the name \p key, using the given \p mode, setting its value to \p val.
-    int set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t val,
-            bool *out_needs_uvar_sync);
+    mod_result_t set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t val);
 
     /// Remove a variable under the name \p key.
-    int remove(const wcstring &key, int var_mode, bool *out_needs_uvar_sync);
+    mod_result_t remove(const wcstring &key, int var_mode);
 
     /// Push a new shadowing local scope.
     void push_shadowing();
@@ -1103,12 +1085,12 @@ void env_stack_impl_t::set_universal(const wcstring &key, wcstring_list_t val,
     uvars()->set(key, new_var);
 }
 
-int env_stack_impl_t::set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t val,
-                          bool *out_needs_uvar_sync) {
+mod_result_t env_stack_impl_t::set(const wcstring &key, env_mode_flags_t mode,
+                                   wcstring_list_t val) {
     const query_t query(mode);
     // Handle electric and read-only variables.
     if (auto ret = try_set_electric(key, query, val)) {
-        return *ret;
+        return mod_result_t{*ret};
     }
 
     // Resolve as much of our flags as we can. Note these contain maybes, and we may defer the final
@@ -1128,14 +1110,17 @@ int env_stack_impl_t::set(const wcstring &key, env_mode_flags_t mode, wcstring_l
         flags.pathvar = query.pathvar;
     }
 
+    mod_result_t result{ENV_OK};
     if (query.has_scope) {
         // The user requested a particular scope.
         if (query.universal) {
             set_universal(key, std::move(val), query);
-            *out_needs_uvar_sync = true;
+            result.uvar_modified = true;
         } else if (query.global) {
             set_in_node(globals_, key, std::move(val), flags);
+            result.global_modified = true;
         } else if (query.local) {
+            assert(locals_ != globals_ && "Locals should not be globals");
             set_in_node(locals_, key, std::move(val), flags);
         } else {
             DIE("Unknown scope");
@@ -1146,56 +1131,56 @@ int env_stack_impl_t::set(const wcstring &key, env_mode_flags_t mode, wcstring_l
     } else if (env_node_ref_t node = find_in_chain(globals_, key)) {
         // Existing global variable.
         set_in_node(node, key, std::move(val), flags);
+        result.global_modified = true;
     } else if (uvars() && uvars()->get(key)) {
         // Existing universal variable.
         set_universal(key, std::move(val), query);
-        *out_needs_uvar_sync = true;
+        result.uvar_modified = true;
     } else {
         // Unspecified scope with no existing variables.
         auto node = resolve_unspecified_scope();
         assert(node && "Should always resolve some scope");
         set_in_node(node, key, std::move(val), flags);
+        result.global_modified = (node == globals_);
     }
-    return ENV_OK;
+    return result;
 }
 
-int env_stack_impl_t::remove(const wcstring &key, int mode, bool *out_needs_uvar_sync) {
+mod_result_t env_stack_impl_t::remove(const wcstring &key, int mode) {
     const query_t query(mode);
 
     // Users can't remove read-only keys.
     if (query.user && is_read_only(key)) {
-        return ENV_SCOPE;
+        return mod_result_t{ENV_SCOPE};
     }
 
     // Helper to remove from uvars.
-    auto remove_from_uvars = [&] {
-        if (!uvars()) return false;
-        auto flags = uvars()->get_flags(key);
-        if (!flags) return false;
-        *out_needs_uvar_sync = true;
-        return uvars()->remove(key);
-    };
+    auto remove_from_uvars = [&] { return uvars() && uvars()->remove(key); };
 
+    mod_result_t result{ENV_OK};
     if (query.has_scope) {
         // The user requested erasing from a particular scope.
         if (query.universal) {
-            return remove_from_uvars() ? ENV_OK : ENV_NOT_FOUND;
+            result.status = remove_from_uvars() ? ENV_OK : ENV_NOT_FOUND;
+            result.uvar_modified = true;
         } else if (query.global) {
-            return remove_from_chain(globals_, key) ? ENV_OK : ENV_NOT_FOUND;
+            result.status = remove_from_chain(globals_, key) ? ENV_OK : ENV_NOT_FOUND;
+            result.global_modified = true;
         } else if (query.local) {
-            return remove_from_chain(locals_, key) ? ENV_OK : ENV_NOT_FOUND;
+            result.status = remove_from_chain(locals_, key) ? ENV_OK : ENV_NOT_FOUND;
         } else {
             DIE("Unknown scope");
         }
     } else if (remove_from_chain(locals_, key)) {
-        return ENV_OK;
+        // pass
     } else if (remove_from_chain(globals_, key)) {
-        return ENV_OK;
+        result.global_modified = true;
     } else if (remove_from_uvars()) {
-        return ENV_OK;
+        result.uvar_modified = true;
     } else {
-        return ENV_NOT_FOUND;
+        result.status = ENV_NOT_FOUND;
     }
+    return result;
 }
 
 bool env_stack_t::universal_barrier() {
@@ -1268,19 +1253,31 @@ int env_stack_t::set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t
         path_make_canonical(vals.front());
     }
 
-    bool needs_uvar_sync = false;
-    auto ret = acquire_impl()->set(key, mode, std::move(vals), &needs_uvar_sync);
-    if (ret == ENV_OK) {
+    // Hacky stuff around PATH and CDPATH: #3914.
+    // Not MANPATH; see #4158.
+    // Replace empties with dot. Note we ignore pathvar here.
+    if (key == L"PATH" || key == L"CDPATH") {
+        auto munged_vals = colon_split(vals);
+        std::replace(munged_vals.begin(), munged_vals.end(), wcstring(L""), wcstring(L"."));
+        vals = std::move(munged_vals);
+    }
+
+    mod_result_t ret = acquire_impl()->set(key, mode, std::move(vals));
+    if (ret.status == ENV_OK) {
+        // If we modified the global state, or we are principal, then dispatch changes.
         // Important to not hold the lock here.
-        env_dispatch_var_change(key, *this);
+        if (ret.global_modified || is_principal()) {
+            env_dispatch_var_change(key, *this);
+        }
         if (out_events) {
             out_events->push_back(event_t::variable(key, {L"VARIABLE", L"SET", key}));
         }
     }
-    if (needs_uvar_sync) {
+    // If the principal stack modified universal variables, then post a barrier.
+    if (ret.uvar_modified && is_principal()) {
         universal_barrier();
     }
-    return ret;
+    return ret.status;
 }
 
 int env_stack_t::set_one(const wcstring &key, env_mode_flags_t mode, wcstring val,
@@ -1296,19 +1293,20 @@ int env_stack_t::set_empty(const wcstring &key, env_mode_flags_t mode,
 }
 
 int env_stack_t::remove(const wcstring &key, int mode, std::vector<event_t> *out_events) {
-    bool needs_uvar_sync = false;
-    int ret = acquire_impl()->remove(key, mode, &needs_uvar_sync);
-    if (ret == ENV_OK) {
-        // Important to not hold the lock here.
-        env_dispatch_var_change(key, *this);
+    mod_result_t ret = acquire_impl()->remove(key, mode);
+    if (ret.status == ENV_OK) {
+        if (ret.global_modified || is_principal()) {
+            // Important to not hold the lock here.
+            env_dispatch_var_change(key, *this);
+        }
         if (out_events) {
             out_events->push_back(event_t::variable(key, {L"VARIABLE", L"ERASE", key}));
         }
     }
-    if (needs_uvar_sync) {
+    if (ret.uvar_modified && is_principal()) {
         universal_barrier();
     }
-    return ret;
+    return ret.status;
 }
 
 std::shared_ptr<const null_terminated_array_t<char>> env_stack_t::export_arr() {
@@ -1338,9 +1336,13 @@ void env_stack_t::push(bool new_scope) {
 
 void env_stack_t::pop() {
     auto popped = acquire_impl()->pop();
-    // TODO: we would like to coalesce locale / curses changes, so that we only re-initialize once.
-    for (const auto &kv : popped->env) {
-        env_dispatch_var_change(kv.first, *this);
+    // Only dispatch variable changes if we are the principal environment.
+    if (this == principal_ref().get()) {
+        // TODO: we would like to coalesce locale / curses changes, so that we only re-initialize
+        // once.
+        for (const auto &kv : popped->env) {
+            env_dispatch_var_change(kv.first, *this);
+        }
     }
 }
 

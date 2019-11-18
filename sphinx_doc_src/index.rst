@@ -337,8 +337,6 @@ Most programs use three input/output (IO) streams, each represented by a number 
 
 - Standard error, FD 2, for writing errors and warnings, defaults to writing to the screen.
 
-The reason for providing for two output file descriptors is to allow separation of errors and warnings from regular program output.
-
 Any file descriptor can be directed to a different output than its default through a simple mechanism called a redirection.
 
 An example of a file redirection is ``echo hello > output.txt``, which directs the output of the echo command to the file output.txt.
@@ -358,9 +356,11 @@ An example of a file redirection is ``echo hello > output.txt``, which directs t
 
 - An ampersand followed by a minus sign (``&-``). The file descriptor will be closed.
 
+As a convenience, the redirection ``&>`` can be used to direct both stdout and stderr to the same file.
+
 Example:
 
-To redirect both standard output and standard error to the file 'all_output.txt', you can write ``echo Hello > all_output.txt 2>&1``.
+To redirect both standard output and standard error to the file 'all_output.txt', you can write ``echo Hello &> all_output.txt``, which is a convenience for ``echo Hello > all_output.txt 2>&1``.
 
 Any file descriptor can be redirected in an arbitrary way by prefixing the redirection with the file descriptor.
 
@@ -388,6 +388,7 @@ Pipes usually connect file descriptor 1 (standard output) of the first process t
 
 will attempt to build the fish program, and any errors will be shown using the less pager.
 
+As a convenience, the pipe ``&|`` may be used to redirect both stdout and stderr to the same process. (Note this is different from bash, which uses ``|&``).
 
 .. _syntax-background:
 
@@ -729,7 +730,7 @@ Command substitution
 
 The output of a series of commands can be used as the parameters to another command. If a parameter contains a set of parenthesis, the text enclosed by the parenthesis will be interpreted as a list of commands. On expansion, this list is executed, and substituted by the output. If the output is more than one line long, each line will be expanded to a new parameter. Setting ``IFS`` to the empty string will disable line splitting.
 
-If the output is piped to :ref:`string split <cmd-string-split>` or `string split0 <cmd-string-split0>` as the last step, those splits are used as they appear and no additional splitting on newlines takes place.
+If the output is piped to :ref:`string split or string split0 <cmd-string-split>` as the last step, those splits are used as they appear and no additional splitting on newlines takes place.
 
 The exit status of the last run command substitution is available in the `status <#variables-status>`_ variable if the substitution occurs in the context of a ``set`` command.
 
@@ -1213,7 +1214,7 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``fish_ambiguous_width`` controls the computed width of ambiguous-width characters. This should be set to 1 if your terminal emulator renders these characters as single-width (typical), or 2 if double-width.
 
-- ``fish_escape_delay_ms`` overrides the default timeout of 30ms after seeing an escape character before giving up on matching a key binding. See the documentation for the `bind <cmds/bind.html#special-case-the-escape-character>`__ builtin command. This delay facilitates using escape as a meta key.
+- ``fish_escape_delay_ms`` overrides the default timeout of 30ms after seeing an escape character before giving up on matching a key binding. This is explained in the documentation for the :ref:`bind <cmd-bind-escape>` builtin command. This delay facilitates using escape as a meta key.
 
 - ``fish_greeting``, the greeting message printed on startup.
 
@@ -1222,6 +1223,8 @@ The user can change the settings of ``fish`` by changing the values of certain v
   variable. If unset, or set to ``default``, the default session name "fish" is used. If set to an
   empty string, history is not saved to disk (but is still available within the interactive
   session).
+
+- ``fish_trace``, if set and not empty, will cause fish to print commands before they execute, similar to `set -x` in bash. The trace is printed to the path given by the :ref:`--debug-output <cmd-fish>` option to fish (stderr by default).
 
 - ``fish_user_paths``, a list of directories that are prepended to ``PATH``. This can be a universal variable.
 
@@ -1480,7 +1483,7 @@ Emacs mode commands
 - :kbd:`Alt+t` transposes the last two words
 
 
-You can change these key bindings using the `bind <cmds/bind.html">`__ builtin.
+You can change these key bindings using the :ref:`bind <cmd-bind>` builtin.
 
 
 .. _vi-mode:
@@ -1831,9 +1834,6 @@ Debugging fish scripts
 Fish includes a built in debugging facility. The debugger allows you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt. At this prompt you can execute any fish command (there are no debug commands as such). For example, you can check or change the value of any variables using ``printf`` and ``set``. As another example, you can run ``status print-stack-trace`` to see how this breakpoint was reached. To resume normal execution of the script, simply type ``exit`` or [ctrl-D].
 
 To start a debug session simply run the builtin command ``breakpoint`` at the point in a function or script where you wish to gain control. Also, the default action of the TRAP signal is to call this builtin. So a running script can be debugged by sending it the TRAP signal with the ``kill`` command. Once in the debugger, it is easy to insert new breakpoints by using the funced function to edit the definition of a function.
-
-Note: At the moment the debug prompt is identical to your normal fish prompt. This can make it hard to recognize that you've entered a debug session. `Issue 1310 <https://github.com/fish-shell/fish-shell/issues/1310>`_ is open to improve this.
-
 
 .. _more-help:
 

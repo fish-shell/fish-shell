@@ -22,18 +22,21 @@ end
 
 function __fish_composer_required_packages
     test -f composer.json; or return
+    set -l python (__fish_anypython); or return
     echo "
+import itertools
 import json
 json_data = open('composer.json')
 data = json.load(json_data)
 json_data.close()
-packages = data['require'].keys() + data['require-dev'].keys()
-print \"\n\".join(packages)
-      " | python
+packages = itertools.chain(data['require'].keys(), data['require-dev'].keys())
+print(\"\n\".join(packages))
+      " | $python
 end
 
 function __fish_composer_installed_packages
     test -f composer.lock; or return
+    set -l python (__fish_anypython); or return
     echo "
 import json
 json_data = open('composer.lock')
@@ -44,20 +47,21 @@ for package in data['packages']:
     installed_packages.append(package['name'])
 for package in data['packages-dev']:
     installed_packages.append(package['name'])
-print \"\n\".join(installed_packages)
-" | python
+print(\"\n\".join(installed_packages))
+" | $python
 end
 
 function __fish_composer_scripts
     test -f composer.json; or return
+    set -l python (__fish_anypython); or return
     echo "
 import json
 json_data = open('composer.json')
 data = json.load(json_data)
 json_data.close()
 if 'scripts' in data and data['scripts']:
-    print \"\n\".join(data['scripts'].keys())
-" | python
+    print(\"\n\".join(data['scripts'].keys()))
+" | $python
 end
 
 # add cmds list
@@ -263,6 +267,7 @@ complete -f -c composer -n '__fish_composer_using_command self-update' -l 'snaps
 complete -f -c composer -n '__fish_composer_using_command self-update' -l 'set-channel-only' -d 'Only store the channel as the default one and then exit'
 
 # show
+complete -f -c composer -n '__fish_composer_using_command show' -a "(__fish_composer_installed_packages)"
 complete -f -c composer -n '__fish_composer_using_command show' -l 'all' -d 'List all packages'
 complete -f -c composer -n '__fish_composer_using_command show' -l 'installed' -d 'List installed packages only (enabled by default, only present for BC).'
 complete -f -c composer -n '__fish_composer_using_command show' -l 'platform' -d 'List platform packages only'

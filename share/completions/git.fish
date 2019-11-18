@@ -1,5 +1,30 @@
 # fish completion for git
-# Use 'command git' to avoid interactions for aliases from git to (e.g.) hub
+
+# Use this instead of calling git directly; it passes the commands that are
+# already present on the commandline to git. This is relevant for --work-tree etc, see issue #6219.
+function __fish_git
+    set -l saved_args $argv
+    set -l global_args
+    set -l cmd (commandline -opc)
+    # We assume that git is the first command until we have a better awareness of subcommands, see #2705.
+    set -e cmd[1]
+    if argparse -s (__fish_git_global_optspecs) -- $cmd 2>/dev/null
+        # All arguments that were parsed by argparse are global git options.
+        set -l num_global_args (math (count $cmd) - (count $argv))
+        if test $num_global_args -ne 0
+            set global_args $cmd[1..$num_global_args]
+        end
+    end
+    # Using 'command git' to avoid interactions for aliases from git to (e.g.) hub
+    command git $global_args $saved_args
+end
+
+# Print an optspec for argparse to handle git's options that are independent of any subcommand.
+function __fish_git_global_optspecs
+    string join \n v-version h/help C= c=+ 'e-exec-path=?' H-html-path M-man-path I-info-path p/paginate \
+        P/no-pager o-no-replace-objects b-bare G-git-dir= W-work-tree= N-namespace= S-super-prefix= \
+        l-literal-pathspecs g-glob-pathspecs O-noglob-pathspecs i-icase-pathspecs
+end
 
 function __fish_git_commits
     # Complete commits with their subject line as the description
@@ -13,7 +38,7 @@ function __fish_git_commits
     # that happens for 3 commits out of 600k.
     # For fish, at the time of writing, out of 12200 commits, 7 commits need 8 characters.
     # And since this takes about 1/3rd of the time that disambiguating takes...
-    command git log --pretty=tformat:"%H"\t"%<(64,trunc)%s" --all --max-count=1000 2>/dev/null \
+    __fish_git log --pretty=tformat:"%H"\t"%<(64,trunc)%s" --all --max-count=1000 2>/dev/null \
         | string replace -r '^([0-9a-f]{10})[0-9a-f]*\t(.*)' '$1\t$2'
 end
 
@@ -21,19 +46,19 @@ function __fish_git_recent_commits
     # Like __fish_git_commits, but not on all branches and limited to
     # the last 50 commits. Used for fixup, where only the current branch
     # and the latest commits make sense.
-    command git log --pretty=tformat:"%h"\t"%<(64,trunc)%s" --max-count=50 2>/dev/null
+    __fish_git log --pretty=tformat:"%h"\t"%<(64,trunc)%s" --max-count=50 2>/dev/null
 end
 
 function __fish_git_branches
     # This is much faster than using `git branch`,
     # and avoids having to deal with localized "detached HEAD" messages.
-    command git for-each-ref --format='%(refname)' refs/heads/ refs/remotes/ 2>/dev/null \
+    __fish_git for-each-ref --format='%(refname)' refs/heads/ refs/remotes/ 2>/dev/null \
         | string replace -r '^refs/heads/(.*)$' '$1\tLocal Branch' \
         | string replace -r '^refs/remotes/(.*)$' '$1\tRemote Branch'
 end
 
 function __fish_git_local_branches
-    command git for-each-ref --format='%(refname)' refs/heads/ refs/remotes/ 2>/dev/null \
+    __fish_git for-each-ref --format='%(refname)' refs/heads/ refs/remotes/ 2>/dev/null \
         | string replace -rf '^refs/heads/(.*)$' '$1\tLocal Branch'
 end
 
@@ -42,18 +67,18 @@ function __fish_git_unique_remote_branches
     # if they are unambiguous.
     # E.g. if only alice has a "frobulate" branch
     # `git checkout frobulate` is equivalent to `git checkout -b frobulate --track alice/frobulate`.
-    command git for-each-ref --format="%(refname:strip=3)" \
+    __fish_git for-each-ref --format="%(refname:strip=3)" \
         --sort="refname:strip=3" \
         "refs/remotes/*/$match*" "refs/remotes/*/*/**" 2>/dev/null | \
         uniq -u
 end
 
 function __fish_git_tags
-    command git tag --sort=-creatordate 2>/dev/null
+    __fish_git tag --sort=-creatordate 2>/dev/null
 end
 
 function __fish_git_heads
-    set -l gitdir (command git rev-parse --git-dir 2>/dev/null)
+    set -l gitdir (__fish_git rev-parse --git-dir 2>/dev/null)
     or return # No git dir, no need to even test.
     for head in HEAD FETCH_HEAD ORIG_HEAD MERGE_HEAD
         if test -f $gitdir/$head
@@ -69,7 +94,7 @@ function __fish_git_refs
 end
 
 function __fish_git_remotes
-    command git remote 2>/dev/null
+    __fish_git remote 2>/dev/null
 end
 
 function __fish_git_files
@@ -90,7 +115,7 @@ function __fish_git_files
     # to get _all_ kinds of staged files.
 
     # Save the repo root to remove it from the path later.
-    set -l root (command git rev-parse --show-toplevel --is-bare-repository 2>/dev/null)
+    set -l root (__fish_git rev-parse --show-toplevel --is-bare-repository 2>/dev/null)
     or return
 
     # Skip bare repositories.
@@ -100,19 +125,20 @@ function __fish_git_files
 
     # Cache the translated descriptions so we don't have to get it
     # once per file.
+    contains -- all-staged $argv; and set -l all_staged
     contains -- unmerged $argv; and set -l unmerged
     and set -l unmerged_desc (_ "Unmerged File")
-    contains -- added $argv; or contains -- all-staged $argv; and set -l added
+    contains -- added $argv; or set -ql all_staged; and set -l added
     and set -l added_desc (_ "Added file")
     contains -- modified $argv; and set -l modified
     and set -l modified_desc (_ "Modified file")
     contains -- untracked $argv; and set -l untracked
     and set -l untracked_desc (_ "Untracked file")
-    contains -- modified-staged $argv; or contains -- all-staged $argv; and set -l modified_staged
+    contains -- modified-staged $argv; or set -ql all_staged; and set -l modified_staged
     and set -l staged_modified_desc (_ "Staged modified file")
     contains -- deleted $argv; and set -l deleted
     and set -l deleted_desc (_ "Deleted file")
-    contains -- deleted-staged $argv; or contains -- all-staged $argv; and set -l deleted_staged
+    contains -- deleted-staged $argv; or set -ql all_staged; and set -l deleted_staged
     and set -l staged_deleted_desc (_ "Staged deleted file")
     contains -- ignored $argv; and set -l ignored
     and set -l ignored_desc (_ "Ignored file")
@@ -152,10 +178,10 @@ function __fish_git_files
 
     # We pick the v2 format if we can, because it shows relative filenames (if used without "-z").
     # We fall back on the v1 format by reading git's _version_, because trying v2 first is too slow.
-    set -l ver (command git --version | string replace -rf 'git version (\d+)\.(\d+)\.?.*' '$1\n$2')
+    set -l ver (__fish_git --version | string replace -rf 'git version (\d+)\.(\d+)\.?.*' '$1\n$2')
     # Version >= 2.11.* has the v2 format.
     if test "$ver[1]" -gt 2 2>/dev/null; or test "$ver[1]" -eq 2 -a "$ver[2]" -ge 11 2>/dev/null
-        command git $git_opt status --porcelain=2 $status_opt \
+        __fish_git $git_opt status --porcelain=2 $status_opt \
             | while read -la -d ' ' line
             set -l file
             set -l desc
@@ -261,7 +287,7 @@ function __fish_git_files
                     # There is both X unmodified and Y either M or D ("not updated")
                     # and Y is D and X is unmodified or [MARC] ("deleted in work tree").
                     # For our purposes, we assume this is a staged deletion.
-                    set -ql deleted-staged; or set -ql all-staged
+                    set -ql deleted_staged
                     and set file "$line[9..-1]"
                     and set desc $staged_deleted_desc
                 case "$q"' *'
@@ -312,7 +338,7 @@ function __fish_git_files
         set -l previous
         # Note that we can't use space as a delimiter between status and filename, because
         # the status can contain spaces - " M" is different from "M ".
-        command git $git_opt status --porcelain -z $status_opt \
+        __fish_git $git_opt status --porcelain -z $status_opt \
             | while read -lz line
             set -l desc
             # The entire line is the "from" from a rename.
@@ -499,16 +525,9 @@ end
 
 function __fish_git_needs_command
     # Figure out if the current invocation already has a command.
-
-    # Git has tons of options, but fortunately only a few can appear before the command.
-    # They are listed here.
-    set -l opts h-help p P-paginate N-no-pager b-bare o-no-replace-objects \
-        l-literal-pathspecs g-glob-pathspecs O-noglob-pathspecs i-icase-pathspecs \
-        e-exec-path= G-git-dir= c= C= v-version H-html-path \
-        m-man-path I-info-path w-work-tree= a-namespace= s-super-prefix=
-    set cmd (commandline -opc)
+    set -l cmd (commandline -opc)
     set -e cmd[1]
-    argparse -s $opts -- $cmd 2>/dev/null
+    argparse -s (__fish_git_global_optspecs) -- $cmd 2>/dev/null
     or return 0
     # These flags function as commands, effectively.
     set -q _flag_version; and return 1
@@ -591,15 +610,15 @@ function __fish_git_stash_not_using_subcommand
 end
 
 function __fish_git_complete_worktrees
-    command git worktree list --porcelain | string replace --regex --filter '^worktree\s*' ''
+    __fish_git worktree list --porcelain | string replace --regex --filter '^worktree\s*' ''
 end
 
 function __fish_git_complete_stashes
-    command git stash list --format=%gd:%gs 2>/dev/null | string replace ":" \t
+    __fish_git stash list --format=%gd:%gs 2>/dev/null | string replace ":" \t
 end
 
 function __fish_git_aliases
-    command git config -z --get-regexp '^alias\.' 2>/dev/null | while read -lz key value
+    __fish_git config -z --get-regexp '^alias\.' 2>/dev/null | while read -lz key value
         begin
             set -l name (string replace -r '^.*\.' '' -- $key)
             printf "%s\t%s\n" $name "Alias for $value"
@@ -652,7 +671,7 @@ function __fish_git_possible_commithash
 end
 
 function __fish_git_reflog
-    command git reflog --no-decorate 2>/dev/null | string replace -r '[0-9a-f]* (.+@\{[0-9]+\}): (.*)$' '$1\t$2'
+    __fish_git reflog --no-decorate 2>/dev/null | string replace -r '[0-9a-f]* (.+@\{[0-9]+\}): (.*)$' '$1\t$2'
 end
 
 function __fish_git_help_all_concepts
@@ -728,15 +747,15 @@ end
 complete -f -c git -l help -d 'Display the manual of a git command'
 complete -f -c git -n '__fish_git_needs_command' -l version -d 'Display version'
 complete -x -c git -n '__fish_git_needs_command' -s C -a '(__fish_complete_directories)' -d 'Run as if git was started in this directory'
-complete -x -c git -n '__fish_git_needs_command' -s c -a '(command git config -l 2>/dev/null | string replace = \t)' -d 'Set a configuration option'
-complete -x -c git -n '__fish_git_needs_command' -l exec-path -a '(__fish_git_complete_directories)' -d 'Get or set the path to the git programs'
+complete -x -c git -n '__fish_git_needs_command' -s c -a '(__fish_git config -l 2>/dev/null | string replace = \t)' -d 'Set a configuration option'
+complete -x -c git -n '__fish_git_needs_command' -l exec-path -a '(__fish_complete_directories)' -d 'Get or set the path to the git programs'
 complete -f -c git -n '__fish_git_needs_command' -l html-path -d 'Print the path to the html documentation'
 complete -f -c git -n '__fish_git_needs_command' -l man-path -d 'Print the path to the man documentation'
 complete -f -c git -n '__fish_git_needs_command' -l info-path -d 'Print the path to the info documentation'
 complete -f -c git -n '__fish_git_needs_command' -s p -l paginate -d 'Pipe output into a pager'
 complete -f -c git -n '__fish_git_needs_command' -l no-pager -d 'Do not pipe output into a pager'
-complete -f -c git -n '__fish_git_needs_command' -l git-dir -d 'Set the path to the repository'
-complete -f -c git -n '__fish_git_needs_command' -l work-tree -d 'Set the path to the working tree'
+complete -r -c git -n '__fish_git_needs_command' -l git-dir -d 'Set the path to the repository'
+complete -r -c git -n '__fish_git_needs_command' -l work-tree -d 'Set the path to the working tree'
 complete -f -c git -n '__fish_git_needs_command' -l namespace -d 'Set the namespace'
 complete -f -c git -n '__fish_git_needs_command' -l bare -d 'Treat the repository as bare'
 complete -f -c git -n '__fish_git_needs_command' -l no-replace-objects -d 'Do not use replacement refs to replace git objects'
@@ -1020,8 +1039,8 @@ complete -f -c git -n '__fish_git_using_command describe' -l first-parent -d 'Fo
 
 ### diff
 complete -c git -n '__fish_git_needs_command' -a diff -d 'Show changes between commits, commit and working tree, etc'
-complete -c git -n '__fish_git_using_command diff' -a '(__fish_git_ranges)'
-complete -c git -n '__fish_git_using_command diff' -l cached -d 'Show diff of changes in the index'
+complete -c git -n '__fish_git_using_command diff; and not contains -- -- (commandline -opc)' -a '(__fish_git_ranges)'
+complete -c git -n '__fish_git_using_command diff' -l cached -d 'Show diff of changes in the index (same as --staged)'
 complete -c git -n '__fish_git_using_command diff' -l no-index -d 'Compare two paths on the filesystem'
 complete -c git -n '__fish_git_using_command diff' -l exit-code -d 'Exit with 1 if there were differences or 0 if no differences'
 complete -c git -n '__fish_git_using_command diff' -s q -l quiet -d 'Disable all output of the program, implies --exit-code'
@@ -1029,8 +1048,8 @@ complete -c git -n '__fish_git_using_command diff' -s 1 -l base -d 'Compare the 
 complete -c git -n '__fish_git_using_command diff' -s 2 -l ours -d 'Compare the working tree with the "our branch"'
 complete -c git -n '__fish_git_using_command diff' -s 3 -l theirs -d 'Compare the working tree with the "their branch"'
 complete -c git -n '__fish_git_using_command diff' -s 0 -d 'Omit diff output for unmerged entries and just show "Unmerged"'
-complete -c git -n '__fish_git_using_command diff; and not __fish_contains_opt cached' -fa '(__fish_git_files modified deleted)'
-complete -c git -n '__fish_git_using_command diff; and __fish_contains_opt cached' -fa '(__fish_git_files modified-staged deleted-staged)'
+complete -c git -n '__fish_git_using_command diff; and not __fish_contains_opt cached staged' -a '(__fish_git_files modified deleted)'
+complete -c git -n '__fish_git_using_command diff; and __fish_contains_opt cached staged' -fa '(__fish_git_files all-staged)'
 
 ### Function to list available tools for git difftool and mergetool
 
@@ -1406,7 +1425,7 @@ complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_
 complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote; and string match -q ":*" -- (commandline -ct)' -a ':(__fish_git_branch_for_remote | string replace -r \t".*" "")' -d 'Delete remote branch'
 # then src:dest (where both src and dest are git objects, so we want to complete branches)
 complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote; and string match -q "+*:*" -- (commandline -ct)' -a '(commandline -ct | string replace -r ":.*" ""):(__fish_git_branch_for_remote | string replace -r \t".*" "")' -d 'Force-push local branch to remote branch'
-complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote; and string match -q "*:*" -- (commandline -ct)'  -a '(commandline -ct | string replace -r ":.*" ""):(__fish_git_branch_for_remote | string replace -r \t".*" "")' -d 'Push local branch to remote branch'
+complete -f -c git -n '__fish_git_using_command push; and __fish_git_branch_for_remote; and string match -q "*:*" -- (commandline -ct)' -a '(commandline -ct | string replace -r ":.*" ""):(__fish_git_branch_for_remote | string replace -r \t".*" "")' -d 'Push local branch to remote branch'
 complete -f -c git -n '__fish_git_using_command push' -l all -d 'Push all refs under refs/heads/'
 complete -f -c git -n '__fish_git_using_command push' -l prune -d "Remove remote branches that don't have a local counterpart"
 complete -f -c git -n '__fish_git_using_command push' -l mirror -d 'Push all refs under refs/'
@@ -1588,15 +1607,15 @@ complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcom
 complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -l lock -d 'Lock working tree after creation'
 complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from add' -s q -l quiet -d 'Suppress feedback messages'
 complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from list' -l porcelain -d 'Output in an easy-to-parse format for scripts'
-complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from lock' -a '(__fish_git_complete_worktrees)'
+complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from lock' -a '(__fish_git_complete_worktrees)' -d 'Worktree'
 complete -x -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from lock' -l reason -d 'An explanation why the working tree is locked'
-complete -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from move' -a '(__fish_git_complete_worktrees)'
-complete -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from move'
+complete -x -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from move; and not __fish_any_arg_in (__fish_git_complete_worktrees)' -a '(__fish_git_complete_worktrees)' -d 'Worktree'
+complete -x -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from move; and __fish_any_arg_in (__fish_git_complete_worktrees)' -a '(__fish_complete_directories)'
 complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from prune' -s n -l dry-run -d 'Do not remove anything'
 complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from prune' -s v -l verbose -d 'Report all removals'
 complete -x -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from prune' -l expire -d 'Only expire unused working trees older than <time>'
-complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from remove' -a '(__fish_git_complete_worktrees)'
-complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from unlock' -a '(__fish_git_complete_worktrees)'
+complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from remove' -a '(__fish_git_complete_worktrees)' -d 'Worktree'
+complete -f -c git -n '__fish_git_using_command worktree; and __fish_seen_subcommand_from unlock' -a '(__fish_git_complete_worktrees)' -d 'Worktree'
 
 ### stash
 complete -c git -n '__fish_git_needs_command' -a stash -d 'Stash away changes'
@@ -1692,7 +1711,7 @@ complete -f -c git -n '__fish_git_needs_command' -a clean -d 'Remove untracked f
 complete -f -c git -n '__fish_git_using_command clean' -s f -l force -d 'Force run'
 complete -f -c git -n '__fish_git_using_command clean' -s i -l interactive -d 'Show what would be done and clean files interactively'
 complete -f -c git -n '__fish_git_using_command clean' -s n -l dry-run -d 'Don\'t actually remove anything, just show what would be done'
-complete -f -c git -n '__fish_git_using_command clean' -s q -l quite -d 'Be quiet, only report errors'
+complete -f -c git -n '__fish_git_using_command clean' -s q -l quiet -d 'Be quiet, only report errors'
 complete -f -c git -n '__fish_git_using_command clean' -s d -d 'Remove untracked directories in addition to untracked files'
 complete -f -c git -n '__fish_git_using_command clean' -s x -d 'Remove ignored files, as well'
 complete -f -c git -n '__fish_git_using_command clean' -s X -d 'Remove only ignored files'

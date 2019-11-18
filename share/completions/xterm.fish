@@ -98,7 +98,7 @@ complete -c xterm -o wc -d 'Use wide characters'
 complete -c xterm -o wf -d 'Wait the first time for the window to be mapped'
 complete -c xterm -o Sccn -d 'Use as input/output channel for an existing program'
 
-complete -c xterm -s e -a "(complete -C(commandline -ct))" -x -d 'Run program in xterm'
+complete -c xterm -s e -a "(__fish_complete_external_command)" -x -d 'Run program in xterm'
 
 complete -r -c xterm -o bcf -d 'Blinking cursor will be off for that many milliseconds'
 complete -r -c xterm -o bcn -d 'Blinking cursor will be on for that many milliseconds'

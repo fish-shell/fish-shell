@@ -9,7 +9,7 @@ function __fish_clang_complete
     # Don't hard-code the name of the clang binary
     set -l clang (commandline -o)[1]
     # first get the completions from clang, with the prefix separated from the value by a comma
-    $clang --autocomplete=(commandline -ct | string replace -- "$prefix" "$prefix,") 2>/dev/null |
+    $clang --autocomplete=(commandline -ct | string unescape | string replace -- "$prefix" "$prefix,") 2>/dev/null |
     # and put it in a format that fish understands
     string replace -r -- '^([^ ]+)\s*(.*)' "$prefix\$1\t\$2"
 end

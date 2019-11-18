@@ -47,4 +47,4 @@ spawns five jobs in the background, and then waits until all of them finishes.
     hoge &
     wait sleep
 
-spawns five jobs and ``hoge`` in the background, and then waits until all ``sleep``s finishes, and doesn't wait for ``hoge`` finishing.
+spawns five jobs and ``hoge`` in the background, and then waits until all ``sleep``\s finish, and doesn't wait for ``hoge`` finishing.

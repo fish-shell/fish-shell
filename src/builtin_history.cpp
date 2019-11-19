@@ -87,7 +87,7 @@ static bool check_for_unexpected_hist_args(const history_cmd_opts_t &opts, const
                                   subcmd_str);
         return true;
     }
-    if (args.size() != 0) {
+    if (!args.empty()) {
         const wchar_t *subcmd_str = enum_to_str(opts.hist_cmd, hist_enum_map);
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, subcmd_str, 0, args.size());
         return true;

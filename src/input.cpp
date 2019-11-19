@@ -407,7 +407,7 @@ void inputter_t::mapping_execute(const input_mapping_t &m, bool allow_commands) 
 bool inputter_t::mapping_is_match(const input_mapping_t &m) {
     const wcstring &str = m.seq;
 
-    assert(str.size() > 0 && "zero-length input string passed to mapping_is_match!");
+    assert(!str.empty() && "zero-length input string passed to mapping_is_match!");
 
     bool timed = false;
     for (size_t i = 0; i < str.size(); ++i) {

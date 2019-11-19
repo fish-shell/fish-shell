@@ -182,7 +182,7 @@ tok_t tokenizer_t::read_string() {
             expecting.push_back(L'}');
             mode |= tok_modes::curly_braces;
         } else if (c == L')') {
-            if (expecting.size() > 0 && expecting.back() == L'}') {
+            if (!expecting.empty() && expecting.back() == L'}') {
                 return this->call_error(tokenizer_error_t::expected_bclose_found_pclose,
                                         this->token_cursor, this->token_cursor, 1);
             }
@@ -196,7 +196,7 @@ tok_t tokenizer_t::read_string() {
             }
             expecting.pop_back();
         } else if (c == L'}') {
-            if (expecting.size() > 0 && expecting.back() == L')') {
+            if (!expecting.empty() && expecting.back() == L')') {
                 return this->call_error(tokenizer_error_t::expected_pclose_found_bclose,
                                         this->token_cursor, this->token_cursor, 1);
             }
@@ -262,13 +262,13 @@ tok_t tokenizer_t::read_string() {
             return this->call_error(tokenizer_error_t::unterminated_slice, buff_start,
                                     this->start + slice_offset);
         } else if (mode & tok_modes::subshell) {
-            assert(paran_offsets.size() > 0);
+            assert(!paran_offsets.empty());
             size_t offset_of_open_paran = paran_offsets.back();
 
             return this->call_error(tokenizer_error_t::unterminated_subshell, buff_start,
                                     this->start + offset_of_open_paran);
         } else if (mode & tok_modes::curly_braces) {
-            assert(brace_offsets.size() > 0);
+            assert(!brace_offsets.empty());
             size_t offset_of_open_brace = brace_offsets.back();
 
             return this->call_error(tokenizer_error_t::unterminated_brace, buff_start,

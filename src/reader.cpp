@@ -920,7 +920,7 @@ void reader_data_t::exec_prompt() {
     (void)get_current_winsize();
 
     // If we have any prompts, they must be run non-interactively.
-    if (left_prompt.size() || right_prompt.size()) {
+    if (!left_prompt.empty() || !right_prompt.empty()) {
         scoped_push<bool> noninteractive{&parser().libdata().is_interactive, false};
 
         exec_mode_prompt();

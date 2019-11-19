@@ -205,7 +205,7 @@ static const te_builtin *find_builtin(const char *name, int len) {
                                                });
     // We need to compare again because we might have gotten the first "larger" element.
     if (found != end && std::strncmp(found->name, name, len) == 0) return found;
-    return NULL;
+    return nullptr;
 }
 
 static constexpr double add(double a, double b) { return a + b; }
@@ -336,13 +336,13 @@ static te_expr *base(state *s) {
 
     switch (s->type) {
         case TOK_NUMBER:
-            ret = new_expr(TE_CONSTANT, 0);
+            ret = new_expr(TE_CONSTANT, nullptr);
             ret->value = s->value;
             next_token(s);
             break;
 
         case TE_FUNCTION0:
-            ret = new_expr(s->type, 0);
+            ret = new_expr(s->type, nullptr);
             ret->function = s->function;
             next_token(s);
             if (s->type == TOK_OPEN) {
@@ -361,7 +361,7 @@ static te_expr *base(state *s) {
         case TE_FUNCTION3:
             arity = get_arity(s->type);
 
-            ret = new_expr(s->type, 0);
+            ret = new_expr(s->type, nullptr);
             ret->function = s->function;
             next_token(s);
 
@@ -404,13 +404,13 @@ static te_expr *base(state *s) {
             // This means we have too few things.
             // Instead of introducing another error, just call it
             // "too few args".
-            ret = new_expr(0, 0);
+            ret = new_expr(0, nullptr);
             s->type = TOK_ERROR;
             s->error = TE_ERROR_TOO_FEW_ARGS;
             ret->value = NAN;
             break;
         default:
-            ret = new_expr(0, 0);
+            ret = new_expr(0, nullptr);
             s->type = TOK_ERROR;
             s->error = TE_ERROR_UNEXPECTED_TOKEN;
             ret->value = NAN;
@@ -444,7 +444,7 @@ static te_expr *factor(state *s) {
     /* <factor>    =    <power> {"^" <power>} */
     te_expr *ret = power(s);
 
-    te_expr *insertion = 0;
+    te_expr *insertion = nullptr;
 
     while (s->type == TOK_INFIX &&
            (s->function == reinterpret_cast<const void *>(static_cast<te_fun2>(pow)))) {
@@ -566,7 +566,7 @@ te_expr *te_compile(const char *expression, te_error_t *error) {
                 error->type = TE_ERROR_TOO_MANY_ARGS;
             }
         }
-        return 0;
+        return nullptr;
     } else {
         optimize(root);
         if (error) error->position = 0;

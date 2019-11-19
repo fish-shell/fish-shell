@@ -436,7 +436,7 @@ void inputter_t::push_front(char_event_t ch) { event_queue_.push_front(ch); }
 /// \return the first mapping that matches, walking first over the user's mapping list, then the
 /// preset list. \return null if nothing matches.
 maybe_t<input_mapping_t> inputter_t::find_mapping() {
-    const input_mapping_t *generic = NULL;
+    const input_mapping_t *generic = nullptr;
     const auto &vars = parser_->vars();
     const wcstring bind_mode = input_get_bind_mode(vars);
 
@@ -553,7 +553,7 @@ std::vector<input_mapping_name_t> input_mapping_set_t::get_names(bool user) cons
 void input_mapping_set_t::clear(const wchar_t *mode, bool user) {
     all_mappings_cache_.reset();
     mapping_list_t &ml = user ? mapping_list_ : preset_mapping_list_;
-    auto should_erase = [=](const input_mapping_t &m) { return mode == NULL || mode == m.mode; };
+    auto should_erase = [=](const input_mapping_t &m) { return mode == nullptr || mode == m.mode; };
     ml.erase(std::remove_if(ml.begin(), ml.end(), should_erase), ml.end());
 }
 

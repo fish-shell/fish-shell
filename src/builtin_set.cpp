@@ -58,14 +58,14 @@ enum {
 // we stop scanning for flags when the first non-flag argument is seen.
 static const wchar_t *const short_options = L"+:LSUaeghlnpqux";
 static const struct woption long_options[] = {
-    {L"export", no_argument, NULL, 'x'},    {L"global", no_argument, NULL, 'g'},
-    {L"local", no_argument, NULL, 'l'},     {L"erase", no_argument, NULL, 'e'},
-    {L"names", no_argument, NULL, 'n'},     {L"unexport", no_argument, NULL, 'u'},
-    {L"universal", no_argument, NULL, 'U'}, {L"long", no_argument, NULL, 'L'},
-    {L"query", no_argument, NULL, 'q'},     {L"show", no_argument, NULL, 'S'},
-    {L"append", no_argument, NULL, 'a'},    {L"prepend", no_argument, NULL, 'p'},
-    {L"path", no_argument, NULL, opt_path}, {L"unpath", no_argument, NULL, opt_unpath},
-    {L"help", no_argument, NULL, 'h'},      {NULL, 0, NULL, 0}};
+    {L"export", no_argument, nullptr, 'x'},    {L"global", no_argument, nullptr, 'g'},
+    {L"local", no_argument, nullptr, 'l'},     {L"erase", no_argument, nullptr, 'e'},
+    {L"names", no_argument, nullptr, 'n'},     {L"unexport", no_argument, nullptr, 'u'},
+    {L"universal", no_argument, nullptr, 'U'}, {L"long", no_argument, nullptr, 'L'},
+    {L"query", no_argument, nullptr, 'q'},     {L"show", no_argument, nullptr, 'S'},
+    {L"append", no_argument, nullptr, 'a'},    {L"prepend", no_argument, nullptr, 'p'},
+    {L"path", no_argument, nullptr, opt_path}, {L"unpath", no_argument, nullptr, opt_unpath},
+    {L"help", no_argument, nullptr, 'h'},      {nullptr, 0, nullptr, 0}};
 
 // Hint for invalid path operation with a colon.
 #define BUILTIN_SET_PATH_ERROR _(L"%ls: Warning: $%ls entry \"%ls\" is not valid (%s)\n")
@@ -86,7 +86,7 @@ static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncs
 
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'a': {
                 opts.append = true;

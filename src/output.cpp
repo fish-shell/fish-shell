@@ -401,7 +401,7 @@ int outputter_t::writech(wint_t ch) {
 void outputter_t::writestr(const wchar_t *str) {
     assert(str && "Empty input string");
 
-    size_t len = wcstombs(0, str, 0);  // figure amount of space needed
+    size_t len = wcstombs(nullptr, str, 0);  // figure amount of space needed
     if (len == static_cast<size_t>(-1)) {
         debug(1, L"Tried to print invalid wide character string");
         return;
@@ -526,7 +526,7 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
 /// Write specified multibyte string.
 void writembs_check(outputter_t &outp, const char *mbs, const char *mbs_name, bool critical,
                     const char *file, long line) {
-    if (mbs != NULL) {
+    if (mbs != nullptr) {
         outp.term_puts(mbs, 1);
     } else if (critical) {
         auto term = env_stack_t::globals().get(L"TERM");

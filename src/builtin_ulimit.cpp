@@ -43,7 +43,7 @@ static const struct resource_t resource_arr[] = {
 #ifdef RLIMIT_AS
     {RLIMIT_AS, L"Maximum amount of virtual memory available to the shell", L'v', 1024},
 #endif
-    {0, 0, 0, 0}};
+    {0, nullptr, 0, 0}};
 
 /// Get the implicit multiplication factor for the specified resource limit.
 static int get_multiplier(int what) {
@@ -159,25 +159,25 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     static const wchar_t *const short_options = L":HSacdflmnstuvh";
     static const struct woption long_options[] = {
-        {L"all", no_argument, NULL, 'a'},
-        {L"hard", no_argument, NULL, 'H'},
-        {L"soft", no_argument, NULL, 'S'},
-        {L"core-size", no_argument, NULL, 'c'},
-        {L"data-size", no_argument, NULL, 'd'},
-        {L"file-size", no_argument, NULL, 'f'},
-        {L"lock-size", no_argument, NULL, 'l'},
-        {L"resident-set-size", no_argument, NULL, 'm'},
-        {L"file-descriptor-count", no_argument, NULL, 'n'},
-        {L"stack-size", no_argument, NULL, 's'},
-        {L"cpu-time", no_argument, NULL, 't'},
-        {L"process-count", no_argument, NULL, 'u'},
-        {L"virtual-memory-size", no_argument, NULL, 'v'},
-        {L"help", no_argument, NULL, 'h'},
-        {NULL, 0, NULL, 0}};
+        {L"all", no_argument, nullptr, 'a'},
+        {L"hard", no_argument, nullptr, 'H'},
+        {L"soft", no_argument, nullptr, 'S'},
+        {L"core-size", no_argument, nullptr, 'c'},
+        {L"data-size", no_argument, nullptr, 'd'},
+        {L"file-size", no_argument, nullptr, 'f'},
+        {L"lock-size", no_argument, nullptr, 'l'},
+        {L"resident-set-size", no_argument, nullptr, 'm'},
+        {L"file-descriptor-count", no_argument, nullptr, 'n'},
+        {L"stack-size", no_argument, nullptr, 's'},
+        {L"cpu-time", no_argument, nullptr, 't'},
+        {L"process-count", no_argument, nullptr, 'u'},
+        {L"virtual-memory-size", no_argument, nullptr, 'v'},
+        {L"help", no_argument, nullptr, 'h'},
+        {nullptr, 0, nullptr, 0}};
 
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'a': {
                 report_all = true;

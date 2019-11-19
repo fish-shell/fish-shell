@@ -90,7 +90,7 @@ const enum_map<parse_token_type_t> token_enum_map[] = {
 #define ELEM(sym) {symbol_##sym, L"symbol_" #sym},
 #include "parse_grammar_elements.inc"
     {token_type_invalid, L"token_type_invalid"},
-    {token_type_invalid, NULL}};
+    {token_type_invalid, nullptr}};
 #define token_enum_map_len (sizeof token_enum_map / sizeof *token_enum_map)
 
 // IMPORTANT: If the following enum is modified you must update the corresponding keyword_enum_map
@@ -135,7 +135,7 @@ const enum_map<parse_keyword_t> keyword_enum_map[] = {{parse_keyword_exclam, L"!
                                                       {parse_keyword_or, L"or"},
                                                       {parse_keyword_switch, L"switch"},
                                                       {parse_keyword_while, L"while"},
-                                                      {parse_keyword_none, NULL}};
+                                                      {parse_keyword_none, nullptr}};
 #define keyword_enum_map_len (sizeof keyword_enum_map / sizeof *keyword_enum_map)
 
 // Node tag values.

@@ -60,10 +60,10 @@ struct argparse_cmd_opts_t {
 
 static const wchar_t *const short_options = L"+:hn:six:N:X:";
 static const struct woption long_options[] = {
-    {L"stop-nonopt", no_argument, NULL, 's'},    {L"ignore-unknown", no_argument, NULL, 'i'},
-    {L"name", required_argument, NULL, 'n'},     {L"exclusive", required_argument, NULL, 'x'},
-    {L"help", no_argument, NULL, 'h'},           {L"min-args", required_argument, NULL, 'N'},
-    {L"max-args", required_argument, NULL, 'X'}, {NULL, 0, NULL, 0}};
+    {L"stop-nonopt", no_argument, nullptr, 's'},    {L"ignore-unknown", no_argument, nullptr, 'i'},
+    {L"name", required_argument, nullptr, 'n'},     {L"exclusive", required_argument, nullptr, 'x'},
+    {L"help", no_argument, nullptr, 'h'},           {L"min-args", required_argument, nullptr, 'N'},
+    {L"max-args", required_argument, nullptr, 'X'}, {nullptr, 0, nullptr, 0}};
 
 // Check if any pair of mutually exclusive options was seen. Note that since every option must have
 // a short name we only need to check those.
@@ -343,7 +343,7 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'n': {
                 opts.name = w.woptarg;
@@ -440,10 +440,10 @@ static void populate_option_strings(const argparse_cmd_opts_t &opts, wcstring *s
 
         if (!opt_spec->long_flag.empty()) {
             long_options->push_back(
-                {opt_spec->long_flag.c_str(), arg_type, NULL, opt_spec->short_flag});
+                {opt_spec->long_flag.c_str(), arg_type, nullptr, opt_spec->short_flag});
         }
     }
-    long_options->push_back({NULL, 0, NULL, 0});
+    long_options->push_back({nullptr, 0, nullptr, 0});
 }
 
 static int validate_arg(parser_t &parser, const argparse_cmd_opts_t &opts, option_spec_t *opt_spec,
@@ -501,7 +501,7 @@ static int validate_and_store_implicit_int(parser_t &parser, const argparse_cmd_
     opt_spec->vals.clear();
     opt_spec->vals.push_back(wcstring(val));
     opt_spec->num_seen++;
-    w.nextchar = NULL;
+    w.nextchar = nullptr;
     return STATUS_CMD_OK;
 }
 

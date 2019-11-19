@@ -55,7 +55,7 @@ int builtin_disown(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_CMD_OK;
     }
 
-    if (argv[1] == 0) {
+    if (argv[1] == nullptr) {
         // Select last constructed job (ie first job in the job queue) that is possible to disown.
         // Stopped jobs can be disowned (they will be continued).
         // Foreground jobs can be disowned.

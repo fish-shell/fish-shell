@@ -164,7 +164,7 @@ static void guess_emoji_width(const environment_t &vars) {
     double version = 0;
     if (auto version_var = vars.get(L"TERM_PROGRAM_VERSION")) {
         std::string narrow_version = wcs2string(version_var->as_string());
-        version = strtod(narrow_version.c_str(), NULL);
+        version = strtod(narrow_version.c_str(), nullptr);
     }
 
     if (term == L"Apple_Terminal" && version >= 400) {
@@ -349,7 +349,7 @@ static void update_fish_color_support(const environment_t &vars) {
         if (auto tp = vars.get(L"TERM_PROGRAM")) term_program = tp->as_string();
         if (auto tpv = vars.get(L"TERM_PROGRAM_VERSION")) {
             if (term_program == L"Apple_Terminal" &&
-                fish_wcstod(tpv->as_string().c_str(), NULL) > 299) {
+                fish_wcstod(tpv->as_string().c_str(), nullptr) > 299) {
                 // OS X Lion is version 299+, it has 256 color support (see github Wiki)
                 support_term256 = true;
                 debug(2, L"256 color support enabled for TERM=%ls on Terminal.app", term.c_str());
@@ -358,7 +358,7 @@ static void update_fish_color_support(const environment_t &vars) {
                 debug(2, L"256 color support enabled for TERM=%ls", term.c_str());
             }
         }
-    } else if (cur_term != NULL) {
+    } else if (cur_term != nullptr) {
         // See if terminfo happens to identify 256 colors
         support_term256 = (max_colors >= 256);
         debug(2, L"256 color support: %d colors per terminfo entry for %ls", max_colors,
@@ -455,7 +455,7 @@ static void init_curses(const environment_t &vars) {
     }
 
     int err_ret;
-    if (setupterm(NULL, STDOUT_FILENO, &err_ret) == ERR) {
+    if (setupterm(nullptr, STDOUT_FILENO, &err_ret) == ERR) {
         auto term = vars.get(L"TERM");
         if (is_interactive_session()) {
             debug(1, _(L"Could not set up terminal."));
@@ -484,7 +484,7 @@ static void init_curses(const environment_t &vars) {
 static void init_locale(const environment_t &vars) {
     // We have to make a copy because the subsequent setlocale() call to change the locale will
     // invalidate the pointer from the this setlocale() call.
-    char *old_msg_locale = strdup(setlocale(LC_MESSAGES, NULL));
+    char *old_msg_locale = strdup(setlocale(LC_MESSAGES, nullptr));
 
     for (const auto &var_name : locale_variables) {
         const auto var = vars.get(var_name, ENV_EXPORT);
@@ -503,7 +503,7 @@ static void init_locale(const environment_t &vars) {
     fish_setlocale();
     FLOGF(env_locale, L"init_locale() setlocale(): '%s'", locale);
 
-    const char *new_msg_locale = setlocale(LC_MESSAGES, NULL);
+    const char *new_msg_locale = setlocale(LC_MESSAGES, nullptr);
     FLOGF(env_locale, L"old LC_MESSAGES locale: '%s'", old_msg_locale);
     FLOGF(env_locale, L"new LC_MESSAGES locale: '%s'", new_msg_locale);
 #ifdef HAVE__NL_MSG_CAT_CNTR

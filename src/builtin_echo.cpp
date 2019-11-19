@@ -19,7 +19,7 @@ struct echo_cmd_opts_t {
     bool interpret_special_chars = false;
 };
 static const wchar_t *const short_options = L"+:Eens";
-static const struct woption *const long_options = NULL;
+static const struct woption *const long_options = nullptr;
 
 static int parse_cmd_opts(echo_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {
@@ -28,7 +28,7 @@ static int parse_cmd_opts(echo_cmd_opts_t &opts, int *optind, int argc, wchar_t 
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'n': {
                 opts.print_newline = false;
@@ -194,7 +194,7 @@ int builtin_echo(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     bool continue_output = true;
 
     const wchar_t *const *args_to_echo = argv + optind;
-    for (size_t idx = 0; continue_output && args_to_echo[idx] != NULL; idx++) {
+    for (size_t idx = 0; continue_output && args_to_echo[idx] != nullptr; idx++) {
         if (opts.print_spaces && idx > 0) {
             streams.out.push_back(' ');
         }

@@ -199,7 +199,7 @@ pid_t execute_fork(bool wait_for_threads_to_die) {
         // Don't sleep on the final lap - sleeping might change the value of errno, which will break
         // the error reporting below.
         if (i != FORK_LAPS - 1) {
-            nanosleep(&pollint, NULL);
+            nanosleep(&pollint, nullptr);
         }
     }
 

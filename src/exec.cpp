@@ -113,7 +113,7 @@ char *get_interpreter(const char *command, char *interpreter, size_t buff_size) 
         return interpreter + 2;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /// This function is executed by the child process created by a call to fork(). It should be called
@@ -151,7 +151,7 @@ static void safe_launch_process(process_t *p, const char *actual_cmd, const char
             argv2[0] = sh_command;
             for (size_t i = 1; i < sizeof argv2 / sizeof *argv2; i++) {
                 argv2[i] = argv[i - 1];
-                if (argv2[i] == NULL) break;
+                if (argv2[i] == nullptr) break;
             }
 
             execve(sh_command, argv2, envv);
@@ -192,7 +192,7 @@ static bool resolve_file_redirections_to_fds(const io_chain_t &in_chain, const w
                                              io_chain_t *out_chain,
                                              std::vector<autoclose_fd_t> *out_opened_fds) {
     ASSERT_IS_MAIN_THREAD();
-    assert(out_chain != NULL && out_opened_fds != NULL);
+    assert(out_chain != nullptr && out_opened_fds != nullptr);
     assert(out_chain->empty());
 
     // Just to be clear what we do for an empty chain.
@@ -1235,7 +1235,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
 
     parser.libdata().is_subshell = prev_subshell;
 
-    if (lst == NULL || !buffer) {
+    if (lst == nullptr || !buffer) {
         return subcommand_statuses.status;
     }
     // Walk over all the elements.
@@ -1256,7 +1256,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
                 // Look for the next separator.
                 const char *stop =
                     static_cast<const char *>(std::memchr(cursor, '\n', end - cursor));
-                const bool hit_separator = (stop != NULL);
+                const bool hit_separator = (stop != nullptr);
                 if (!hit_separator) {
                     // If it's not found, just use the end.
                     stop = end;
@@ -1287,5 +1287,5 @@ int exec_subshell(const wcstring &cmd, parser_t &parser, wcstring_list_t &output
 
 int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status, bool is_subcmd) {
     ASSERT_IS_MAIN_THREAD();
-    return exec_subshell_internal(cmd, parser, NULL, apply_exit_status, is_subcmd);
+    return exec_subshell_internal(cmd, parser, nullptr, apply_exit_status, is_subcmd);
 }

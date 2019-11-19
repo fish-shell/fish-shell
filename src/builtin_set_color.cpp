@@ -49,16 +49,16 @@ static void print_colors(io_streams_t &streams) {
 }
 
 static const wchar_t *const short_options = L":b:hvoidrcu";
-static const struct woption long_options[] = {{L"background", required_argument, NULL, 'b'},
-                                              {L"help", no_argument, NULL, 'h'},
-                                              {L"bold", no_argument, NULL, 'o'},
-                                              {L"underline", no_argument, NULL, 'u'},
-                                              {L"italics", no_argument, NULL, 'i'},
-                                              {L"dim", no_argument, NULL, 'd'},
-                                              {L"reverse", no_argument, NULL, 'r'},
-                                              {L"version", no_argument, NULL, 'v'},
-                                              {L"print-colors", no_argument, NULL, 'c'},
-                                              {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {{L"background", required_argument, nullptr, 'b'},
+                                              {L"help", no_argument, nullptr, 'h'},
+                                              {L"bold", no_argument, nullptr, 'o'},
+                                              {L"underline", no_argument, nullptr, 'u'},
+                                              {L"italics", no_argument, nullptr, 'i'},
+                                              {L"dim", no_argument, nullptr, 'd'},
+                                              {L"reverse", no_argument, nullptr, 'r'},
+                                              {L"version", no_argument, nullptr, 'v'},
+                                              {L"print-colors", no_argument, nullptr, 'c'},
+                                              {nullptr, 0, nullptr, 0}};
 
 #if __APPLE__
 static char sitm_esc[] = "\x1B[3m";
@@ -96,13 +96,13 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return EXIT_FAILURE;
     }
 
-    const wchar_t *bgcolor = NULL;
+    const wchar_t *bgcolor = nullptr;
     bool bold = false, underline = false, italics = false, dim = false, reverse = false;
 
     // Parse options to obtain the requested operation and the modifiers.
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'b': {
                 bgcolor = w.woptarg;
@@ -161,7 +161,7 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         fgcolors.push_back(fg);
     }
 
-    if (fgcolors.empty() && bgcolor == NULL && !bold && !underline && !italics && !dim &&
+    if (fgcolors.empty() && bgcolor == nullptr && !bold && !underline && !italics && !dim &&
         !reverse) {
         streams.err.append_format(_(L"%ls: Expected an argument\n"), argv[0]);
         return STATUS_INVALID_ARGS;
@@ -180,7 +180,7 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
     // just give up...
-    if (cur_term == NULL || !exit_attribute_mode) {
+    if (cur_term == nullptr || !exit_attribute_mode) {
         return STATUS_CMD_ERROR;
     }
     outputter_t outp;
@@ -207,7 +207,7 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         writembs_nofail(outp, enter_standout_mode);
     }
 
-    if (bgcolor != NULL && bg.is_normal()) {
+    if (bgcolor != nullptr && bg.is_normal()) {
         writembs_nofail(outp, tparm((char *)exit_attribute_mode));
     }
 
@@ -224,7 +224,7 @@ int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
     }
 
-    if (bgcolor != NULL && !bg.is_normal() && !bg.is_reset()) {
+    if (bgcolor != nullptr && !bg.is_normal() && !bg.is_reset()) {
         outp.write_color(bg, false /* not is_fg */);
     }
 

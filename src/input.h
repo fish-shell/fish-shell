@@ -91,7 +91,7 @@ class input_mapping_set_t {
     ~input_mapping_set_t();
 
     /// Erase all bindings.
-    void clear(const wchar_t *mode = NULL, bool user = true);
+    void clear(const wchar_t *mode = nullptr, bool user = true);
 
     /// Erase binding for specified key sequence.
     bool erase(const wcstring &sequence, const wcstring &mode = DEFAULT_BIND_MODE,

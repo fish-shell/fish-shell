@@ -287,7 +287,7 @@ wcstring_list_t function_get_names(int get_hidden) {
 const wchar_t *function_get_definition_file(const wcstring &name) {
     const auto funcset = function_set.acquire();
     const function_info_t *func = funcset->get_info(name);
-    return func ? func->definition_file : NULL;
+    return func ? func->definition_file : nullptr;
 }
 
 bool function_is_autoloaded(const wcstring &name) {

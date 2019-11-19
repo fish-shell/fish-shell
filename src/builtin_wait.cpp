@@ -183,12 +183,12 @@ int builtin_wait(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     bool any_flag = false;  // flag for -n option
 
     static const wchar_t *const short_options = L":n";
-    static const struct woption long_options[] = {{L"any", no_argument, NULL, 'n'},
-                                                  {NULL, 0, NULL, 0}};
+    static const struct woption long_options[] = {{L"any", no_argument, nullptr, 'n'},
+                                                  {nullptr, 0, nullptr, 0}};
 
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'n':
                 any_flag = true;

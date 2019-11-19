@@ -475,11 +475,13 @@ void format_size_safe(char buff[128], unsigned long long sz);
 
 /// Our crappier versions of debug which is guaranteed to not allocate any memory, or do anything
 /// other than call write(). This is useful after a call to fork() with threads.
-void debug_safe(int level, const char *msg, const char *param1 = NULL, const char *param2 = NULL,
-                const char *param3 = NULL, const char *param4 = NULL, const char *param5 = NULL,
-                const char *param6 = NULL, const char *param7 = NULL, const char *param8 = NULL,
-                const char *param9 = NULL, const char *param10 = NULL, const char *param11 = NULL,
-                const char *param12 = NULL);
+void debug_safe(int level, const char *msg, const char *param1 = nullptr,
+                const char *param2 = nullptr, const char *param3 = nullptr,
+                const char *param4 = nullptr, const char *param5 = nullptr,
+                const char *param6 = nullptr, const char *param7 = nullptr,
+                const char *param8 = nullptr, const char *param9 = nullptr,
+                const char *param10 = nullptr, const char *param11 = nullptr,
+                const char *param12 = nullptr);
 
 /// Writes out a long safely.
 void format_long_safe(char buff[64], long val);
@@ -529,7 +531,7 @@ char **make_null_terminated_array(const std::vector<std::string> &lst);
 // Helper class for managing a null-terminated array of null-terminated strings (of some char type).
 template <typename CharType_t>
 class null_terminated_array_t {
-    CharType_t **array{NULL};
+    CharType_t **array{nullptr};
 
     // No assignment or copying.
     void operator=(null_terminated_array_t rhs) = delete;
@@ -539,8 +541,8 @@ class null_terminated_array_t {
 
     size_t size() const {
         size_t len = 0;
-        if (array != NULL) {
-            while (array[len] != NULL) {
+        if (array != nullptr) {
+            while (array[len] != nullptr) {
                 len++;
             }
         }
@@ -549,7 +551,7 @@ class null_terminated_array_t {
 
     void free(void) {
         ::free((void *)array);
-        array = NULL;
+        array = nullptr;
     }
 
    public:
@@ -951,7 +953,7 @@ static const wchar_t *enum_to_str(T enum_val, const enum_map<T> map[]) {
             return entry->str;
         }
     }
-    return NULL;
+    return nullptr;
 };
 
 void redirect_tty_output();

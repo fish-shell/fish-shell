@@ -129,9 +129,9 @@ std::vector<int> parse_util_compute_indents(const wcstring &src);
 /// error. If out_pstree is not NULL, the resulting tree is returned by reference.
 class parse_node_tree_t;
 parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
-                                                  parse_error_list_t *out_errors = NULL,
+                                                  parse_error_list_t *out_errors = nullptr,
                                                   bool allow_incomplete = true,
-                                                  parsed_source_ref_t *out_pstree = NULL);
+                                                  parsed_source_ref_t *out_pstree = nullptr);
 
 /// Detect errors in the specified string when parsed as an argument list. Returns the text of an
 /// error, or none if no error occurred.
@@ -144,7 +144,7 @@ maybe_t<wcstring> parse_util_detect_errors_in_argument_list(const wcstring &arg_
 class parse_node_t;
 parser_test_error_bits_t parse_util_detect_errors_in_argument(
     tnode_t<grammar::argument> node, const wcstring &arg_src,
-    parse_error_list_t *out_errors = NULL);
+    parse_error_list_t *out_errors = nullptr);
 
 /// Given a string containing a variable expansion error, append an appropriate error to the errors
 /// list. The global_token_pos is the offset of the token in the larger source, and the dollar_pos

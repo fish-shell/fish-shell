@@ -126,14 +126,14 @@ std::unique_ptr<history_file_contents_t> history_file_contents_t::create(int fd)
     if (should_mmap(fd)) {
         // We feel confident to map the file directly. Note this is still risky: if another
         // process truncates the file we risk SIGBUS.
-        mmap_start = mmap(0, size_t(len), PROT_READ, MAP_PRIVATE, fd, 0);
+        mmap_start = mmap(nullptr, size_t(len), PROT_READ, MAP_PRIVATE, fd, 0);
         if (mmap_start == MAP_FAILED) return nullptr;
     } else {
         // We don't want to map the file. mmap some private memory and then read into it. We use
         // mmap instead of malloc so that the destructor can always munmap().
         mmap_start =
 #ifdef MAP_ANON
-            mmap(0, size_t(len), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+            mmap(nullptr, size_t(len), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
 #else
             mmap(0, size_t(len), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 #endif
@@ -184,7 +184,7 @@ static size_t read_line(const char *base, size_t cursor, size_t len, std::string
     assert(cursor <= len);
     const char *start = base + cursor;
     const char *a_newline = static_cast<const char *>(std::memchr(start, '\n', len - cursor));
-    if (a_newline != NULL) {  // we found a newline
+    if (a_newline != nullptr) {  // we found a newline
         result.assign(start, a_newline - start);
         // Return the amount to advance the cursor; skip over the newline.
         return a_newline - start + 1;
@@ -256,7 +256,7 @@ static history_item_t decode_item_fish_2_0(const char *base, size_t len) {
         if (key == "when") {
             // Parse an int from the timestamp. Should this fail, strtol returns 0; that's
             // acceptable.
-            char *end = NULL;
+            char *end = nullptr;
             long tmp = strtol(value.c_str(), &end, 0);
             when = tmp;
         } else if (key == "paths") {
@@ -302,7 +302,7 @@ static bool parse_timestamp(const char *str, time_t *out_when) {
 
     // Try to parse a timestamp.
     long timestamp = 0;
-    if (isdigit(*cursor) && (timestamp = strtol(cursor, NULL, 0)) > 0) {
+    if (isdigit(*cursor) && (timestamp = strtol(cursor, nullptr, 0)) > 0) {
         *out_when = static_cast<time_t>(timestamp);
         return true;
     }
@@ -313,23 +313,23 @@ static bool parse_timestamp(const char *str, time_t *out_when) {
 /// newline. Note that the string is not null terminated.
 static const char *next_line(const char *start, const char *end) {
     // Handle the hopeless case.
-    if (end == start) return NULL;
+    if (end == start) return nullptr;
 
     // Skip past the next newline.
     const char *nextline = std::find(start, end, '\n');
     if (nextline == end) {
-        return NULL;
+        return nullptr;
     }
 
     // Skip past the newline character itself.
     if (++nextline >= end) {
-        return NULL;
+        return nullptr;
     }
 
     // Make sure this new line is itself "newline terminated". If it's not, return NULL.
     const char *next_newline = std::find(nextline, end, '\n');
     if (next_newline == end) {
-        return NULL;
+        return nullptr;
     }
 
     return nextline;
@@ -352,7 +352,7 @@ static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &conten
         // Advance the cursor to the next line.
         const char *a_newline =
             static_cast<const char *>(std::memchr(line_start, '\n', length - cursor));
-        if (a_newline == NULL) break;
+        if (a_newline == nullptr) break;
 
         // Advance the cursor past this line. +1 is for the newline.
         cursor = a_newline - begin + 1;
@@ -403,7 +403,7 @@ static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &conten
             const char *interior_line;
 
             for (interior_line = next_line(line_start, end);
-                 interior_line != NULL && !has_timestamp;
+                 interior_line != nullptr && !has_timestamp;
                  interior_line = next_line(interior_line, end)) {
                 // If the first character is not a space, it's not an interior line, so we're done.
                 if (interior_line[0] != ' ') break;

@@ -211,7 +211,7 @@ bool builtin_bind_t::erase(wchar_t **seq, bool all, const wchar_t *mode, bool us
     }
 
     bool res = false;
-    if (mode == NULL) mode = DEFAULT_BIND_MODE;  //!OCLINT(parameter reassignment)
+    if (mode == nullptr) mode = DEFAULT_BIND_MODE;  //!OCLINT(parameter reassignment)
 
     while (*seq) {
         if (use_terminfo) {
@@ -253,10 +253,10 @@ bool builtin_bind_t::insert(int optind, int argc, wchar_t **argv, io_streams_t &
         // We don't overload this with user and def because we want them to be grouped.
         // First the presets, then the users (because of scrolling).
         if (opts->preset) {
-            list(opts->bind_mode_given ? opts->bind_mode : NULL, false, streams);
+            list(opts->bind_mode_given ? opts->bind_mode : nullptr, false, streams);
         }
         if (opts->user) {
-            list(opts->bind_mode_given ? opts->bind_mode : NULL, true, streams);
+            list(opts->bind_mode_given ? opts->bind_mode : nullptr, true, streams);
         }
     } else if (arg_count == 1) {
         wcstring seq;
@@ -318,23 +318,23 @@ int parse_cmd_opts(bind_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss meth
                    int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     static const wchar_t *const short_options = L":aehkKfM:Lm:s";
-    static const struct woption long_options[] = {{L"all", no_argument, NULL, 'a'},
-                                                  {L"erase", no_argument, NULL, 'e'},
-                                                  {L"function-names", no_argument, NULL, 'f'},
-                                                  {L"help", no_argument, NULL, 'h'},
-                                                  {L"key", no_argument, NULL, 'k'},
-                                                  {L"key-names", no_argument, NULL, 'K'},
-                                                  {L"list-modes", no_argument, NULL, 'L'},
-                                                  {L"mode", required_argument, NULL, 'M'},
-                                                  {L"preset", no_argument, NULL, 'p'},
-                                                  {L"sets-mode", required_argument, NULL, 'm'},
-                                                  {L"silent", no_argument, NULL, 's'},
-                                                  {L"user", no_argument, NULL, 'u'},
-                                                  {NULL, 0, NULL, 0}};
+    static const struct woption long_options[] = {{L"all", no_argument, nullptr, 'a'},
+                                                  {L"erase", no_argument, nullptr, 'e'},
+                                                  {L"function-names", no_argument, nullptr, 'f'},
+                                                  {L"help", no_argument, nullptr, 'h'},
+                                                  {L"key", no_argument, nullptr, 'k'},
+                                                  {L"key-names", no_argument, nullptr, 'K'},
+                                                  {L"list-modes", no_argument, nullptr, 'L'},
+                                                  {L"mode", required_argument, nullptr, 'M'},
+                                                  {L"preset", no_argument, nullptr, 'p'},
+                                                  {L"sets-mode", required_argument, nullptr, 'm'},
+                                                  {L"silent", no_argument, nullptr, 's'},
+                                                  {L"user", no_argument, nullptr, 'u'},
+                                                  {nullptr, 0, nullptr, 0}};
 
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case L'a': {
                 opts.all = true;
@@ -438,7 +438,7 @@ int builtin_bind_t::builtin_bind(parser_t &parser, io_streams_t &streams, wchar_
     if (!opts.have_preset && !opts.have_user) opts.user = true;
     switch (opts.mode) {
         case BIND_ERASE: {
-            const wchar_t *bind_mode = opts.bind_mode_given ? opts.bind_mode : NULL;
+            const wchar_t *bind_mode = opts.bind_mode_given ? opts.bind_mode : nullptr;
             // If we get both, we erase both.
             if (opts.user) {
                 if (erase(&argv[optind], opts.all, bind_mode, opts.use_terminfo, /* user */ true,

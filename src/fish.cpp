@@ -79,7 +79,7 @@ class fish_cmd_opts_t {
 };
 
 /// If we are doing profiling, the filename to output to.
-static const char *s_profiling_output_filename = NULL;
+static const char *s_profiling_output_filename = nullptr;
 
 /// \return a timeval converted to milliseconds.
 long long tv_to_msec(const struct timeval &tv) {
@@ -126,7 +126,7 @@ static bool get_realpath(std::string &path) {
     if ((ptr = realpath(path.c_str(), buff))) {
         path = ptr;
     }
-    return ptr != NULL;
+    return ptr != nullptr;
 }
 
 static struct config_paths_t determine_config_directory_paths(const char *argv0) {
@@ -156,7 +156,7 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
             // The next check is that we are in a reloctable directory tree
             const char *installed_suffix = "/bin/fish";
             const char *just_a_fish = "/fish";
-            const char *suffix = NULL;
+            const char *suffix = nullptr;
 
             if (has_suffix(exec_path, installed_suffix, false)) {
                 suffix = installed_suffix;
@@ -262,25 +262,26 @@ int run_command_list(std::vector<std::string> *cmds, const io_chain_t &io) {
 /// Parse the argument list, return the index of the first non-flag arguments.
 static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
     static const char *const short_opts = "+hPilnvc:C:p:d:f:D:";
-    static const struct option long_opts[] = {{"command", required_argument, NULL, 'c'},
-                                              {"init-command", required_argument, NULL, 'C'},
-                                              {"features", required_argument, NULL, 'f'},
-                                              {"debug", required_argument, NULL, 'd'},
-                                              {"debug-output", required_argument, NULL, 'o'},
-                                              {"debug-stack-frames", required_argument, NULL, 'D'},
-                                              {"interactive", no_argument, NULL, 'i'},
-                                              {"login", no_argument, NULL, 'l'},
-                                              {"no-execute", no_argument, NULL, 'n'},
-                                              {"print-rusage-self", no_argument, NULL, 1},
-                                              {"print-debug-categories", no_argument, NULL, 2},
-                                              {"profile", required_argument, NULL, 'p'},
-                                              {"private", no_argument, NULL, 'P'},
-                                              {"help", no_argument, NULL, 'h'},
-                                              {"version", no_argument, NULL, 'v'},
-                                              {NULL, 0, NULL, 0}};
+    static const struct option long_opts[] = {
+        {"command", required_argument, nullptr, 'c'},
+        {"init-command", required_argument, nullptr, 'C'},
+        {"features", required_argument, nullptr, 'f'},
+        {"debug", required_argument, nullptr, 'd'},
+        {"debug-output", required_argument, nullptr, 'o'},
+        {"debug-stack-frames", required_argument, nullptr, 'D'},
+        {"interactive", no_argument, nullptr, 'i'},
+        {"login", no_argument, nullptr, 'l'},
+        {"no-execute", no_argument, nullptr, 'n'},
+        {"print-rusage-self", no_argument, nullptr, 1},
+        {"print-debug-categories", no_argument, nullptr, 2},
+        {"profile", required_argument, nullptr, 'p'},
+        {"private", no_argument, nullptr, 'P'},
+        {"help", no_argument, nullptr, 'h'},
+        {"version", no_argument, nullptr, 'v'},
+        {nullptr, 0, nullptr, 0}};
 
     int opt;
-    while ((opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, short_opts, long_opts, nullptr)) != -1) {
         switch (opt) {
             case 'c': {
                 opts->batch_cmds.push_back(optarg);
@@ -412,7 +413,7 @@ int main(int argc, char **argv) {
     // struct stat tmp;
     // stat("----------FISH_HIT_MAIN----------", &tmp);
 
-    const char *dummy_argv[2] = {"fish", NULL};
+    const char *dummy_argv[2] = {"fish", nullptr};
     if (!argv[0]) {
         argv = (char **)dummy_argv;  //!OCLINT(parameter reassignment)
         argc = 1;                    //!OCLINT(parameter reassignment)

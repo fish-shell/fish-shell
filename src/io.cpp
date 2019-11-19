@@ -79,7 +79,7 @@ void io_buffer_t::run_background_fillthread(autoclose_fd_t readfd) {
         fd_set fds;
         FD_ZERO(&fds);
         FD_SET(fd, &fds);
-        int ret = select(fd + 1, &fds, NULL, NULL, &tv);
+        int ret = select(fd + 1, &fds, nullptr, nullptr, &tv);
         // select(2) is allowed to (and does) update `tv` to indicate how much time was left, so we
         // need to restore the desired value each time.
         tv.tv_usec = poll_timeout_usec;
@@ -234,7 +234,7 @@ void io_print(const io_chain_t &chain)
     for (size_t i=0; i < chain.size(); i++)
     {
         const shared_ptr<io_data_t> &io = chain.at(i);
-        if (io.get() == NULL)
+        if (io.get() == nullptr)
         {
             std::fwprintf(stderr, L"\t(null)\n");
         }

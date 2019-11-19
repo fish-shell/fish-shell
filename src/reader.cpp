@@ -566,8 +566,8 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
     } else {
         // We have an autosuggestion which is not a prefix of the command line, i.e. a case
         // disagreement. Decide whose case we want to use.
-        const wchar_t *begin = NULL, *cmd = cmdline.c_str();
-        parse_util_token_extent(cmd, cmdline.size() - 1, &begin, NULL, NULL, NULL);
+        const wchar_t *begin = nullptr, *cmd = cmdline.c_str();
+        parse_util_token_extent(cmd, cmdline.size() - 1, &begin, nullptr, nullptr, nullptr);
         bool last_token_contains_uppercase = false;
         if (begin) {
             const wchar_t *end = begin + std::wcslen(begin);
@@ -720,7 +720,7 @@ void reader_data_t::pager_selection_changed() {
     size_t cursor_pos = this->cycle_cursor_pos;
     wcstring new_cmd_line;
 
-    if (completion == NULL) {
+    if (completion == nullptr) {
         new_cmd_line = this->cycle_command_line;
     } else {
         new_cmd_line =
@@ -739,10 +739,10 @@ maybe_t<wcstring> reader_expand_abbreviation_in_command(const wcstring &cmdline,
     // See if we are at "command position". Get the surrounding command substitution, and get the
     // extent of the first token.
     const wchar_t *const buff = cmdline.c_str();
-    const wchar_t *cmdsub_begin = NULL, *cmdsub_end = NULL;
+    const wchar_t *cmdsub_begin = nullptr, *cmdsub_end = nullptr;
     parse_util_cmdsubst_extent(buff, cursor_pos, &cmdsub_begin, &cmdsub_end);
-    assert(cmdsub_begin != NULL && cmdsub_begin >= buff);
-    assert(cmdsub_end != NULL && cmdsub_end >= cmdsub_begin);
+    assert(cmdsub_begin != nullptr && cmdsub_begin >= buff);
+    assert(cmdsub_end != nullptr && cmdsub_end >= cmdsub_begin);
 
     // Determine the offset of this command substitution.
     const size_t subcmd_offset = cmdsub_begin - buff;
@@ -754,7 +754,7 @@ maybe_t<wcstring> reader_expand_abbreviation_in_command(const wcstring &cmdline,
     parse_node_tree_t parse_tree;
     parse_tree_from_string(subcmd,
                            parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens,
-                           &parse_tree, NULL);
+                           &parse_tree, nullptr);
 
     // Look for plain statements where the cursor is at the end of the command.
     using namespace grammar;
@@ -1168,7 +1168,7 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
         const wchar_t *begin, *end;
 
         const wchar_t *buff = command_line.c_str();
-        parse_util_token_extent(buff, cursor_pos, &begin, 0, 0, 0);
+        parse_util_token_extent(buff, cursor_pos, &begin, nullptr, nullptr, nullptr);
         end = buff + cursor_pos;
 
         wcstring sb(buff, begin - buff);
@@ -1208,7 +1208,7 @@ wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t 
         // substitution as one token.
         parse_util_get_parameter_info(
             command_line.substr(cmdsub_offset, (cmdsub_end - cmdsub_begin)),
-            cursor_pos - cmdsub_offset, &quote, NULL, NULL);
+            cursor_pos - cmdsub_offset, &quote, nullptr, nullptr);
 
         // If the token is reported as unquoted, but ends with a (unescaped) quote, and we can
         // modify the command line, then delete the trailing quote so that we can insert within
@@ -1435,7 +1435,7 @@ void reader_data_t::flash() {
 
     pollint.tv_sec = 0;
     pollint.tv_nsec = 100 * 1000000;
-    nanosleep(&pollint, NULL);
+    nanosleep(&pollint, nullptr);
 
     super_highlight_me_plenty();
     repaint();
@@ -1660,7 +1660,7 @@ static bool check_for_orphaned_process(unsigned long loop_count, pid_t shell_pgi
         char buf[L_ctermid];
         char *tty = ctermid_r(buf);
 #else
-        char *tty = ctermid(NULL);
+        char *tty = ctermid(nullptr);
 #endif
         if (!tty) {
             wperror(L"ctermid");
@@ -1834,7 +1834,7 @@ void reader_data_t::replace_current_token(const wcstring &new_token) {
     // Find current token.
     editable_line_t *el = active_edit_line();
     const wchar_t *buff = el->text.c_str();
-    parse_util_token_extent(buff, el->position, &begin, &end, 0, 0);
+    parse_util_token_extent(buff, el->position, &begin, &end, nullptr, nullptr);
 
     if (!begin || !end) return;
 
@@ -1950,12 +1950,12 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
     reader_write_title(cmd, parser);
     term_donate(outp);
 
-    gettimeofday(&time_before, NULL);
+    gettimeofday(&time_before, nullptr);
 
     parser.eval(cmd, io_chain_t(), TOP);
     job_reap(parser, true);
 
-    gettimeofday(&time_after, NULL);
+    gettimeofday(&time_after, nullptr);
 
     // update the execution duration iff a command is requested for execution
     // issue - #4926
@@ -2041,7 +2041,7 @@ static std::function<highlight_result_t(void)> get_highlight_performer(
         }
         s_thread_generation = generation_count;
         std::vector<highlight_spec_t> colors(text.size(), highlight_spec_t{});
-        highlight_func(text, colors, match_highlight_pos, NULL /* error */, *vars);
+        highlight_func(text, colors, match_highlight_pos, nullptr /* error */, *vars);
         return {std::move(colors), text};
     };
 }
@@ -2056,7 +2056,7 @@ static std::function<highlight_result_t(void)> get_highlight_performer(
 ///        an asynchronous highlight in the background, which may perform disk I/O.
 void reader_data_t::super_highlight_me_plenty(int match_highlight_pos_adjust, bool no_io) {
     const editable_line_t *el = &command_line;
-    assert(el != NULL);
+    assert(el != nullptr);
     long match_highlight_pos = static_cast<long>(el->position) + match_highlight_pos_adjust;
     assert(match_highlight_pos >= 0);
 
@@ -2318,7 +2318,7 @@ static int can_read(int fd) {
 
     FD_ZERO(&fds);
     FD_SET(fd, &fds);
-    return select(fd + 1, &fds, 0, 0, &can_read_timeout) == 1;
+    return select(fd + 1, &fds, nullptr, nullptr, &can_read_timeout) == 1;
 }
 
 /// Test if the specified character in the specified string is backslashed. pos may be at the end of
@@ -2551,7 +2551,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // pass cmdsub_begin here, not buff.
                 const wchar_t *token_begin, *token_end;
                 parse_util_token_extent(cmdsub_begin, el->position - (cmdsub_begin - buff),
-                                        &token_begin, &token_end, 0, 0);
+                                        &token_begin, &token_end, nullptr, nullptr);
 
                 // Hack: the token may extend past the end of the command substitution, e.g. in
                 // (echo foo) the last token is 'foo)'. Don't let that happen.
@@ -2771,7 +2771,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // Finished command, execute it. Don't add items that start with a leading
                 // space.
                 const editable_line_t *el = &command_line;
-                if (history != NULL && !el->empty() && el->text.at(0) != L' ') {
+                if (history != nullptr && !el->empty() && el->text.at(0) != L' ') {
                     history->add_pending_with_file_detection(el->text, vars.get_pwd_slash());
                 }
                 rls.finished = true;
@@ -2810,7 +2810,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                     // Searching by token.
                     const wchar_t *begin, *end;
                     const wchar_t *buff = el->text.c_str();
-                    parse_util_token_extent(buff, el->position, &begin, &end, 0, 0);
+                    parse_util_token_extent(buff, el->position, &begin, &end, nullptr, nullptr);
                     if (begin) {
                         wcstring token(begin, end);
                         history_search.reset_to_mode(token, history,
@@ -3452,13 +3452,13 @@ void reader_react_to_color_change() {
 const wchar_t *reader_get_buffer() {
     ASSERT_IS_MAIN_THREAD();
     reader_data_t *data = current_data_or_null();
-    return data ? data->command_line.text.c_str() : NULL;
+    return data ? data->command_line.text.c_str() : nullptr;
 }
 
 history_t *reader_get_history() {
     ASSERT_IS_MAIN_THREAD();
     reader_data_t *data = current_data_or_null();
-    return data ? data->history : NULL;
+    return data ? data->history : nullptr;
 }
 
 void reader_sanity_check() {
@@ -3486,7 +3486,7 @@ size_t reader_get_cursor_pos() {
 bool reader_get_selection(size_t *start, size_t *len) {
     bool result = false;
     reader_data_t *data = current_data_or_null();
-    if (data != NULL && data->sel_active) {
+    if (data != nullptr && data->sel_active) {
         *start = data->sel_start_pos;
         *len = std::min(data->sel_stop_pos - data->sel_start_pos, data->command_line.size());
         result = true;
@@ -3509,7 +3509,7 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
     }
 
     in_stream = fdopen(des, "r");
-    if (in_stream != 0) {
+    if (in_stream != nullptr) {
         while (!feof(in_stream)) {
             char buff[4096];
             size_t c = fread(buff, 1, 4096, in_stream);

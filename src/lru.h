@@ -24,8 +24,8 @@ class lru_cache_t {
     struct lru_link_t {
         // Our doubly linked list
         // The base class is used for the mouth only
-        lru_link_t *prev = NULL;
-        lru_link_t *next = NULL;
+        lru_link_t *prev = nullptr;
+        lru_link_t *next = nullptr;
     };
 
     // The node type in our LRU cache
@@ -36,7 +36,7 @@ class lru_cache_t {
         lru_node_t(lru_node_t &&) = default;
 
         // Our key in the map. This is owned by the map itself.
-        const wcstring *key = NULL;
+        const wcstring *key = nullptr;
 
         // The value from the client
         Contents value;
@@ -78,7 +78,7 @@ class lru_cache_t {
     // Remove the node
     void evict_node(lru_node_t *node) {
         // We should never evict the mouth.
-        assert(node != &mouth && node != NULL && node->key != NULL);
+        assert(node != &mouth && node != nullptr && node->key != nullptr);
 
         auto iter = this->node_map.find(*node->key);
         assert(iter != this->node_map.end());
@@ -188,7 +188,7 @@ class lru_cache_t {
         auto where = this->node_map.find(key);
         if (where == this->node_map.end()) {
             // not found
-            return NULL;
+            return nullptr;
         }
         promote_node(&where->second);
         return &where->second.value;

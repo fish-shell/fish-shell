@@ -18,7 +18,7 @@
 
 /// Helper function for builtin_bg().
 static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j) {
-    assert(j != NULL);
+    assert(j != nullptr);
     if (!j->wants_job_control()) {
         wcstring error_message = format_string(
             _(L"%ls: Can't put job %d, '%ls' to background because it is not under job control\n"),

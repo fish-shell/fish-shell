@@ -35,16 +35,16 @@ struct math_cmd_opts_t {
 // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
 // This is needed because of the minus, `-`, operator in math expressions.
 static const wchar_t *const short_options = L"+:hs:";
-static const struct woption long_options[] = {{L"scale", required_argument, NULL, 's'},
-                                              {L"help", no_argument, NULL, 'h'},
-                                              {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {{L"scale", required_argument, nullptr, 's'},
+                                              {L"help", no_argument, nullptr, 'h'},
+                                              {nullptr, 0, nullptr, 0}};
 
 static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     const wchar_t *cmd = L"math";
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 's': {
                 // "max" is the special value that tells us to pick the maximum scale.
@@ -97,10 +97,10 @@ static const wchar_t *math_get_arg_stdin(wcstring *storage, const io_streams_t &
         char ch = '\0';
         long rc = read_blocked(streams.stdin_fd, &ch, 1);
 
-        if (rc < 0) return NULL;  // failure
+        if (rc < 0) return nullptr;  // failure
 
         if (rc == 0) {  // EOF
-            if (arg.empty()) return NULL;
+            if (arg.empty()) return nullptr;
             break;
         }
 
@@ -115,7 +115,7 @@ static const wchar_t *math_get_arg_stdin(wcstring *storage, const io_streams_t &
 
 /// Return the next argument from argv.
 static const wchar_t *math_get_arg_argv(int *argidx, wchar_t **argv) {
-    return argv && argv[*argidx] ? argv[(*argidx)++] : NULL;
+    return argv && argv[*argidx] ? argv[(*argidx)++] : nullptr;
 }
 
 /// Get the arguments from argv or stdin based on the execution context. This mimics how builtin
@@ -196,7 +196,7 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
     // Switch locale while computing stuff.
     // This means that the "." is always the radix character,
     // so numbers work the same across locales.
-    char *saved_locale = strdup(setlocale(LC_NUMERIC, NULL));
+    char *saved_locale = strdup(setlocale(LC_NUMERIC, nullptr));
     setlocale(LC_NUMERIC, "C");
     double v = te_interp(narrow_str.c_str(), &error);
 
@@ -205,7 +205,7 @@ static int evaluate_expression(const wchar_t *cmd, parser_t &parser, io_streams_
         // TODO: Really, this should be done in tinyexpr
         // (e.g. infinite is the result of "x / 0"),
         // but that's much more work.
-        const char *error_message = NULL;
+        const char *error_message = nullptr;
         if (std::isinf(v)) {
             error_message = "Result is infinite";
         } else if (std::isnan(v)) {

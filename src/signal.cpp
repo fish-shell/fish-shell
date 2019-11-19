@@ -268,10 +268,10 @@ void signal_reset_handlers() {
     for (const auto &data : signal_table) {
         if (data.signal == SIGHUP) {
             struct sigaction oact;
-            sigaction(SIGHUP, NULL, &oact);
+            sigaction(SIGHUP, nullptr, &oact);
             if (oact.sa_handler == SIG_IGN) continue;
         }
-        sigaction(data.signal, &act, NULL);
+        sigaction(data.signal, &act, nullptr);
     }
 }
 
@@ -284,35 +284,35 @@ static void set_interactive_handlers() {
     // Interactive mode. Ignore interactive signals.  We are a shell, we know what is best for
     // the user.
     act.sa_handler = SIG_IGN;
-    sigaction(SIGTSTP, &act, NULL);
-    sigaction(SIGTTOU, &act, NULL);
+    sigaction(SIGTSTP, &act, nullptr);
+    sigaction(SIGTTOU, &act, nullptr);
 
     // We don't ignore SIGTTIN because we might send it to ourself.
     act.sa_sigaction = &fish_signal_handler;
     act.sa_flags = SA_SIGINFO;
-    sigaction(SIGTTIN, &act, NULL);
+    sigaction(SIGTTIN, &act, nullptr);
 
     // SIGTERM restores the terminal controlling process before dying.
     act.sa_sigaction = &fish_signal_handler;
     act.sa_flags = SA_SIGINFO;
-    sigaction(SIGTERM, &act, NULL);
+    sigaction(SIGTERM, &act, nullptr);
 
-    sigaction(SIGHUP, NULL, &oact);
+    sigaction(SIGHUP, nullptr, &oact);
     if (oact.sa_handler == SIG_DFL) {
         act.sa_sigaction = &fish_signal_handler;
         act.sa_flags = SA_SIGINFO;
-        sigaction(SIGHUP, &act, NULL);
+        sigaction(SIGHUP, &act, nullptr);
     }
 
     // SIGALARM as part of our signal torture test
     act.sa_sigaction = &fish_signal_handler;
     act.sa_flags = SA_SIGINFO;
-    sigaction(SIGALRM, &act, NULL);
+    sigaction(SIGALRM, &act, nullptr);
 
 #ifdef SIGWINCH
     act.sa_sigaction = &fish_signal_handler;
     act.sa_flags = SA_SIGINFO;
-    sigaction(SIGWINCH, &act, NULL);
+    sigaction(SIGWINCH, &act, nullptr);
 #endif
 }
 
@@ -326,22 +326,22 @@ void signal_set_handlers(bool interactive) {
     // this signal interrupting other syscalls or terminating us.
     act.sa_sigaction = nullptr;
     act.sa_handler = SIG_IGN;
-    sigaction(SIGPIPE, &act, 0);
+    sigaction(SIGPIPE, &act, nullptr);
 
     // Ignore SIGQUIT.
     act.sa_handler = SIG_IGN;
-    sigaction(SIGQUIT, &act, 0);
+    sigaction(SIGQUIT, &act, nullptr);
 
     // Apply our SIGINT handler.
     act.sa_sigaction = &fish_signal_handler;
     act.sa_flags = SA_SIGINFO;
-    sigaction(SIGINT, &act, NULL);
+    sigaction(SIGINT, &act, nullptr);
 
     // Whether or not we're interactive we want SIGCHLD to not interrupt restartable syscalls.
     act.sa_flags = SA_SIGINFO;
     act.sa_sigaction = &fish_signal_handler;
     act.sa_flags = SA_SIGINFO | SA_RESTART;
-    if (sigaction(SIGCHLD, &act, 0)) {
+    if (sigaction(SIGCHLD, &act, nullptr)) {
         wperror(L"sigaction");
         FATAL_EXIT();
     }
@@ -378,7 +378,7 @@ void get_signals_with_handlers(sigset_t *set) {
     sigemptyset(set);
     for (const auto &data : signal_table) {
         struct sigaction act = {};
-        sigaction(data.signal, NULL, &act);
+        sigaction(data.signal, nullptr, &act);
         // If SIGHUP is being ignored (e.g., because were were run via `nohup`) don't reset it.
         // We don't special case other signals because if they're being ignored that shouldn't
         // affect processes we spawn. They should get the default behavior for those signals.
@@ -391,7 +391,7 @@ void get_signals_with_handlers(sigset_t *set) {
 void signal_unblock_all() {
     sigset_t iset;
     sigemptyset(&iset);
-    sigprocmask(SIG_SETMASK, &iset, NULL);
+    sigprocmask(SIG_SETMASK, &iset, nullptr);
 }
 
 sigint_checker_t::sigint_checker_t() {

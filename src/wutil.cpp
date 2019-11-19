@@ -102,7 +102,7 @@ bool wreaddir(DIR *dir, wcstring &out_name) {
 }
 
 bool wreaddir_for_dirs(DIR *dir, wcstring *out_name) {
-    struct dirent *result = NULL;
+    struct dirent *result = nullptr;
     while (!result) {
         result = readdir(dir);
         if (!result) break;
@@ -162,7 +162,7 @@ FILE *wfopen(const wcstring &path, const char *mode) {
         }
         default: {
             errno = EINVAL;
-            return NULL;
+            return nullptr;
         }
     }
     // Skip binary.
@@ -172,9 +172,9 @@ FILE *wfopen(const wcstring &path, const char *mode) {
     if (mode[idx] == '+') permissions = O_RDWR;
 
     int fd = wopen_cloexec(path, permissions | options, 0666);
-    if (fd < 0) return NULL;
+    if (fd < 0) return nullptr;
     FILE *result = fdopen(fd, mode);
-    if (result == NULL) close(fd);
+    if (result == nullptr) close(fd);
     return result;
 }
 
@@ -337,7 +337,7 @@ const char *safe_strerror(int err) {
     return std::strerror(err);
 #elif defined(HAVE__SYS__ERRS) || defined(HAVE_SYS_ERRLIST)
 #ifdef HAVE_SYS_ERRLIST
-    if (err >= 0 && err < sys_nerr && sys_errlist[err] != NULL) {
+    if (err >= 0 && err < sys_nerr && sys_errlist[err] != nullptr) {
         return sys_errlist[err];
     }
 #elif defined(HAVE__SYS__ERRS)
@@ -618,7 +618,7 @@ int fish_wcswidth(const wchar_t *str) { return fish_wcswidth(str, std::wcslen(st
 int fish_wcswidth(const wcstring &str) { return fish_wcswidth(str.c_str(), str.size()); }
 
 locale_t fish_c_locale() {
-    static const locale_t loc = newlocale(LC_ALL_MASK, "C", NULL);
+    static const locale_t loc = newlocale(LC_ALL_MASK, "C", nullptr);
     return loc;
 }
 

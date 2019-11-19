@@ -269,7 +269,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
             }
         } else {
             // We do not end with a slash; it does not have to be a directory.
-            DIR *dir = NULL;
+            DIR *dir = nullptr;
             const wcstring dir_name = wdirname(abs_path);
             const wcstring filename_fragment = wbasename(abs_path);
             if (dir_name == L"/" && filename_fragment == L"/") {
@@ -287,7 +287,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
                 // access.
                 wcstring ent;
                 bool is_dir = false;
-                while (wreaddir_resolving(dir, dir_name, ent, require_dir ? &is_dir : NULL)) {
+                while (wreaddir_resolving(dir, dir_name, ent, require_dir ? &is_dir : nullptr)) {
                     // Maybe skip directories.
                     if (require_dir && !is_dir) {
                         continue;
@@ -403,7 +403,7 @@ static bool autosuggest_parse_command(const wcstring &buff, const environment_t 
     parse_node_tree_t parse_tree;
     parse_tree_from_string(buff,
                            parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens,
-                           &parse_tree, NULL);
+                           &parse_tree, nullptr);
 
     // Find the first statement.
     tnode_t<g::plain_statement> first_statement{};
@@ -459,7 +459,7 @@ bool autosuggest_validate_from_history(const history_item_t &item,
 
     // Not handled specially so handle it here.
     bool cmd_ok = false;
-    if (path_get_path(parsed_command, NULL, vars)) {
+    if (path_get_path(parsed_command, nullptr, vars)) {
         cmd_ok = true;
     } else if (builtin_exists(parsed_command) || function_exists_no_autoload(parsed_command)) {
         cmd_ok = true;
@@ -503,7 +503,7 @@ static size_t color_variable(const wchar_t *in, size_t in_len,
     // Handle a slice, up to dollar_count of them. Note that we currently don't do any validation of
     // the slice's contents, e.g. $foo[blah] will not show an error even though it's invalid.
     for (size_t slice_count = 0; slice_count < dollar_count && in[idx] == L'['; slice_count++) {
-        wchar_t *slice_begin = NULL, *slice_end = NULL;
+        wchar_t *slice_begin = nullptr, *slice_end = nullptr;
         int located = parse_util_locate_slice(in + idx, &slice_begin, &slice_end, false);
         if (located == 1) {
             size_t slice_begin_idx = slice_begin - in, slice_end_idx = slice_end - in;
@@ -813,7 +813,7 @@ class highlighter_t {
         parse_tree_from_string(buff,
                                parse_flag_continue_after_error | parse_flag_include_comments |
                                    parse_flag_accept_incomplete_tokens,
-                               &this->parse_tree, NULL);
+                               &this->parse_tree, nullptr);
     }
 
     // Perform highlighting, returning an array of colors.
@@ -975,7 +975,7 @@ void highlighter_t::color_redirection(tnode_t<g::redirection> redirection_node) 
 
         // Check if the argument contains a command substitution. If so, highlight it as a param
         // even though it's a command redirection, and don't try to do any other validation.
-        if (parse_util_locate_cmdsubst(target.c_str(), NULL, NULL, true) != 0) {
+        if (parse_util_locate_cmdsubst(target.c_str(), nullptr, nullptr, true) != 0) {
             this->color_argument(redir_target);
         } else {
             // No command substitution, so we can highlight the target file or fd. For example,
@@ -1087,7 +1087,7 @@ void highlighter_t::color_children(const parse_node_t &parent, parse_token_type_
                                    highlight_spec_t color) {
     for (node_offset_t idx = 0; idx < parent.child_count; idx++) {
         const parse_node_t *child = this->parse_tree.get_child(parent, idx);
-        if (child != NULL && child->type == type) {
+        if (child != nullptr && child->type == type) {
             this->color_node(*child, color);
         }
     }
@@ -1127,7 +1127,7 @@ static bool command_is_valid(const wcstring &cmd, enum parse_statement_decoratio
     if (!is_valid && abbreviation_ok) is_valid = expand_abbreviation(cmd, vars).has_value();
 
     // Regular commands
-    if (!is_valid && command_ok) is_valid = path_get_path(cmd, NULL, vars);
+    if (!is_valid && command_ok) is_valid = path_get_path(cmd, nullptr, vars);
 
     // Implicit cd
     if (!is_valid && implicit_cd_ok) {

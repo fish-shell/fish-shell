@@ -306,10 +306,10 @@ static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &
 
     if (node.type != parse_token_type_string) {
         if (node.has_source()) {
-            append_format(*result, L"  [%ld, %ld]", (long)node.source_start,
-                          (long)node.source_length);
+            append_format(*result, L"  [%ld, %ld]", static_cast<long>(node.source_start),
+                          static_cast<long>(node.source_length));
         } else {
-            append_format(*result, L"  [%ld, no src]", (long)node.source_start);
+            append_format(*result, L"  [%ld, no src]", static_cast<long>(node.source_start));
         }
     }
 
@@ -1033,10 +1033,10 @@ static inline parse_token_t next_parse_token(tokenizer_t *tok, maybe_t<tok_t> *o
     // uint32_t to save some space. If we have a source file larger than 4 GB, we'll probably just
     // crash.
     assert(token.offset < SOURCE_OFFSET_INVALID);
-    result.source_start = (source_offset_t)token.offset;
+    result.source_start = static_cast<source_offset_t>(token.offset);
 
     assert(token.length <= SOURCE_OFFSET_INVALID);
-    result.source_length = (source_offset_t)token.length;
+    result.source_length = static_cast<source_offset_t>(token.length);
 
     return result;
 }

@@ -36,7 +36,9 @@
 static color_support_t color_support = 0;
 
 /// Returns true if we think tparm can handle outputting a color index
-static bool term_supports_color_natively(unsigned int c) { return (unsigned)max_colors >= c + 1; }
+static bool term_supports_color_natively(unsigned int c) {
+    return static_cast<unsigned>(max_colors) >= c + 1;
+}
 
 color_support_t output_get_color_support() { return color_support; }
 
@@ -361,7 +363,7 @@ int outputter_t::term_puts(const char *str, int affcnt) {
     scoped_push<outputter_t *> push(&s_tputs_receiver, this);
     // On some systems, tputs takes a char*, on others a const char*.
     // Like tparm, we just cast it to unconst, that should work everywhere.
-    return tputs((char *)str, affcnt, tputs_writer);
+    return tputs(const_cast<char *>(str), affcnt, tputs_writer);
 }
 
 /// Write a wide character to the outputter. This should only be used when writing characters from
@@ -384,7 +386,7 @@ int outputter_t::writech(wint_t ch) {
     } else {
         mbstate_t state = {};
         len = std::wcrtomb(buff, ch, &state);
-        if (len == (size_t)-1) {
+        if (len == static_cast<size_t>(-1)) {
             return 1;
         }
     }
@@ -400,7 +402,7 @@ void outputter_t::writestr(const wchar_t *str) {
     assert(str && "Empty input string");
 
     size_t len = wcstombs(0, str, 0);  // figure amount of space needed
-    if (len == (size_t)-1) {
+    if (len == static_cast<size_t>(-1)) {
         debug(1, L"Tried to print invalid wide character string");
         return;
     }

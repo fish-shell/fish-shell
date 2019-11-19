@@ -109,7 +109,7 @@ static te_expr *new_expr(const int type, const te_expr *parameters[]) {
     const int arity = get_arity(type);
     const int psize = sizeof(te_expr *) * arity;
     const int size = sizeof(te_expr) + psize;
-    te_expr *ret = (te_expr *)malloc(size);
+    te_expr *ret = static_cast<te_expr *>(malloc(size));
     // This sets float to 0, which depends on the implementation.
     // We rely on IEEE-754 floats anyway, so it's okay.
     std::memset(ret, 0, size);
@@ -142,19 +142,19 @@ static constexpr double e() { return M_E; }
 static double fac(double a) { /* simplest version of fac */
     if (a < 0.0) return NAN;
     if (a > UINT_MAX) return INFINITY;
-    unsigned int ua = (unsigned int)(a);
+    unsigned int ua = static_cast<unsigned int>(a);
     unsigned long int result = 1, i;
     for (i = 1; i <= ua; i++) {
         if (i > ULONG_MAX / result) return INFINITY;
         result *= i;
     }
-    return (double)result;
+    return static_cast<double>(result);
 }
 
 static double ncr(double n, double r) {
     if (n < 0.0 || r < 0.0 || n < r) return NAN;
     if (n > UINT_MAX || r > UINT_MAX) return INFINITY;
-    unsigned long int un = (unsigned int)(n), ur = (unsigned int)(r), i;
+    unsigned long int un = static_cast<unsigned int>(n), ur = static_cast<unsigned int>(r), i;
     unsigned long int result = 1;
     if (ur > un / 2) ur = un - ur;
     for (i = 1; i <= ur; i++) {
@@ -169,31 +169,31 @@ static double npr(double n, double r) { return ncr(n, r) * fac(r); }
 
 static const te_builtin functions[] = {
     /* must be in alphabetical order */
-    {"abs", (const void *)(te_fun1)fabs, TE_FUNCTION1},
-    {"acos", (const void *)(te_fun1)acos, TE_FUNCTION1},
-    {"asin", (const void *)(te_fun1)asin, TE_FUNCTION1},
-    {"atan", (const void *)(te_fun1)atan, TE_FUNCTION1},
-    {"atan2", (const void *)(te_fun2)atan2, TE_FUNCTION2},
-    {"ceil", (const void *)(te_fun1)ceil, TE_FUNCTION1},
-    {"cos", (const void *)(te_fun1)cos, TE_FUNCTION1},
-    {"cosh", (const void *)(te_fun1)cosh, TE_FUNCTION1},
-    {"e", (const void *)(te_fun0)e, TE_FUNCTION0},
-    {"exp", (const void *)(te_fun1)exp, TE_FUNCTION1},
-    {"fac", (const void *)(te_fun1)fac, TE_FUNCTION1},
-    {"floor", (const void *)(te_fun1)floor, TE_FUNCTION1},
-    {"ln", (const void *)(te_fun1)log, TE_FUNCTION1},
-    {"log", (const void *)(te_fun1)log10, TE_FUNCTION1},
-    {"log10", (const void *)(te_fun1)log10, TE_FUNCTION1},
-    {"ncr", (const void *)(te_fun2)ncr, TE_FUNCTION2},
-    {"npr", (const void *)(te_fun2)npr, TE_FUNCTION2},
-    {"pi", (const void *)(te_fun0)pi, TE_FUNCTION0},
-    {"pow", (const void *)(te_fun2)pow, TE_FUNCTION2},
-    {"round", (const void *)(te_fun1)round, TE_FUNCTION1},
-    {"sin", (const void *)(te_fun1)sin, TE_FUNCTION1},
-    {"sinh", (const void *)(te_fun1)sinh, TE_FUNCTION1},
-    {"sqrt", (const void *)(te_fun1)sqrt, TE_FUNCTION1},
-    {"tan", (const void *)(te_fun1)tan, TE_FUNCTION1},
-    {"tanh", (const void *)(te_fun1)tanh, TE_FUNCTION1}};
+    {"abs", reinterpret_cast<const void *>(static_cast<te_fun1>(fabs)), TE_FUNCTION1},
+    {"acos", reinterpret_cast<const void *>(static_cast<te_fun1>(acos)), TE_FUNCTION1},
+    {"asin", reinterpret_cast<const void *>(static_cast<te_fun1>(asin)), TE_FUNCTION1},
+    {"atan", reinterpret_cast<const void *>(static_cast<te_fun1>(atan)), TE_FUNCTION1},
+    {"atan2", reinterpret_cast<const void *>(static_cast<te_fun2>(atan2)), TE_FUNCTION2},
+    {"ceil", reinterpret_cast<const void *>(static_cast<te_fun1>(ceil)), TE_FUNCTION1},
+    {"cos", reinterpret_cast<const void *>(static_cast<te_fun1>(cos)), TE_FUNCTION1},
+    {"cosh", reinterpret_cast<const void *>(static_cast<te_fun1>(cosh)), TE_FUNCTION1},
+    {"e", reinterpret_cast<const void *>(static_cast<te_fun0>(e)), TE_FUNCTION0},
+    {"exp", reinterpret_cast<const void *>(static_cast<te_fun1>(exp)), TE_FUNCTION1},
+    {"fac", reinterpret_cast<const void *>(static_cast<te_fun1>(fac)), TE_FUNCTION1},
+    {"floor", reinterpret_cast<const void *>(static_cast<te_fun1>(floor)), TE_FUNCTION1},
+    {"ln", reinterpret_cast<const void *>(static_cast<te_fun1>(log)), TE_FUNCTION1},
+    {"log", reinterpret_cast<const void *>(static_cast<te_fun1>(log10)), TE_FUNCTION1},
+    {"log10", reinterpret_cast<const void *>(static_cast<te_fun1>(log10)), TE_FUNCTION1},
+    {"ncr", reinterpret_cast<const void *>(static_cast<te_fun2>(ncr)), TE_FUNCTION2},
+    {"npr", reinterpret_cast<const void *>(static_cast<te_fun2>(npr)), TE_FUNCTION2},
+    {"pi", reinterpret_cast<const void *>(static_cast<te_fun0>(pi)), TE_FUNCTION0},
+    {"pow", reinterpret_cast<const void *>(static_cast<te_fun2>(pow)), TE_FUNCTION2},
+    {"round", reinterpret_cast<const void *>(static_cast<te_fun1>(round)), TE_FUNCTION1},
+    {"sin", reinterpret_cast<const void *>(static_cast<te_fun1>(sin)), TE_FUNCTION1},
+    {"sinh", reinterpret_cast<const void *>(static_cast<te_fun1>(sinh)), TE_FUNCTION1},
+    {"sqrt", reinterpret_cast<const void *>(static_cast<te_fun1>(sqrt)), TE_FUNCTION1},
+    {"tan", reinterpret_cast<const void *>(static_cast<te_fun1>(tan)), TE_FUNCTION1},
+    {"tanh", reinterpret_cast<const void *>(static_cast<te_fun1>(tanh)), TE_FUNCTION1}};
 
 static const te_builtin *find_builtin(const char *name, int len) {
     const auto end = std::end(functions);
@@ -231,7 +231,7 @@ void next_token(state *s) {
 
         /* Try reading a number. */
         if ((s->next[0] >= '0' && s->next[0] <= '9') || s->next[0] == '.') {
-            s->value = strtod(s->next, (char **)&s->next);
+            s->value = strtod(s->next, const_cast<char **>(&s->next));
             s->type = TOK_NUMBER;
         } else {
             /* Look for a variable or builtin function call. */
@@ -268,29 +268,29 @@ void next_token(state *s) {
                     // The "te_fun2" casts are necessary to pick the right overload.
                     case '+':
                         s->type = TOK_INFIX;
-                        s->function = (const void *)(te_fun2)add;
+                        s->function = reinterpret_cast<const void *>(static_cast<te_fun2>(add));
                         break;
                     case '-':
                         s->type = TOK_INFIX;
-                        s->function = (const void *)(te_fun2)sub;
+                        s->function = reinterpret_cast<const void *>(static_cast<te_fun2>(sub));
                         break;
                     case 'x':
                     case '*':
                         // We've already checked for whitespace above.
                         s->type = TOK_INFIX;
-                        s->function = (const void *)(te_fun2)mul;
+                        s->function = reinterpret_cast<const void *>(static_cast<te_fun2>(mul));
                         break;
                     case '/':
                         s->type = TOK_INFIX;
-                        s->function = (const void *)(te_fun2)divide;
+                        s->function = reinterpret_cast<const void *>(static_cast<te_fun2>(divide));
                         break;
                     case '^':
                         s->type = TOK_INFIX;
-                        s->function = (const void *)(te_fun2)pow;
+                        s->function = reinterpret_cast<const void *>(static_cast<te_fun2>(pow));
                         break;
                     case '%':
                         s->type = TOK_INFIX;
-                        s->function = (const void *)(te_fun2)fmod;
+                        s->function = reinterpret_cast<const void *>(static_cast<te_fun2>(fmod));
                         break;
                     case '(':
                         s->type = TOK_OPEN;
@@ -434,7 +434,7 @@ static te_expr *power(state *s) {
         ret = base(s);
     } else {
         ret = NEW_EXPR(TE_FUNCTION1, base(s));
-        ret->function = (const void *)negate;
+        ret->function = reinterpret_cast<const void *>(negate);
     }
 
     return ret;
@@ -446,19 +446,20 @@ static te_expr *factor(state *s) {
 
     te_expr *insertion = 0;
 
-    while (s->type == TOK_INFIX && (s->function == (const void *)(te_fun2)pow)) {
+    while (s->type == TOK_INFIX &&
+           (s->function == reinterpret_cast<const void *>(static_cast<te_fun2>(pow)))) {
         te_fun2 t = (te_fun2)s->function;
         next_token(s);
 
         if (insertion) {
             /* Make exponentiation go right-to-left. */
             te_expr *insert = NEW_EXPR(TE_FUNCTION2, insertion->parameters[1], power(s));
-            insert->function = (const void *)t;
+            insert->function = reinterpret_cast<const void *>(t);
             insertion->parameters[1] = insert;
             insertion = insert;
         } else {
             ret = NEW_EXPR(TE_FUNCTION2, ret, power(s));
-            ret->function = (const void *)t;
+            ret->function = reinterpret_cast<const void *>(t);
             insertion = ret;
         }
     }
@@ -470,13 +471,14 @@ static te_expr *term(state *s) {
     /* <term>      =    <factor> {("*" | "/" | "%") <factor>} */
     te_expr *ret = factor(s);
 
-    while (s->type == TOK_INFIX && (s->function == (const void *)(te_fun2)mul ||
-                                    s->function == (const void *)(te_fun2)divide ||
-                                    s->function == (const void *)(te_fun2)fmod)) {
+    while (s->type == TOK_INFIX &&
+           (s->function == reinterpret_cast<const void *>(static_cast<te_fun2>(mul)) ||
+            s->function == reinterpret_cast<const void *>(static_cast<te_fun2>(divide)) ||
+            s->function == reinterpret_cast<const void *>(static_cast<te_fun2>(fmod)))) {
         te_fun2 t = (te_fun2)s->function;
         next_token(s);
         ret = NEW_EXPR(TE_FUNCTION2, ret, factor(s));
-        ret->function = (const void *)t;
+        ret->function = reinterpret_cast<const void *>(t);
     }
 
     return ret;
@@ -490,7 +492,7 @@ static te_expr *expr(state *s) {
         te_fun2 t = (te_fun2)s->function;
         next_token(s);
         ret = NEW_EXPR(TE_FUNCTION2, ret, term(s));
-        ret->function = (const void *)t;
+        ret->function = reinterpret_cast<const void *>(t);
     }
 
     return ret;

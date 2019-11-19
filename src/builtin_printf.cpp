@@ -710,7 +710,7 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
                 wchar_t conversion = *f;
                 if (conversion > 0xFF || !ok[conversion]) {
                     this->fatal_error(_(L"%.*ls: invalid conversion specification"),
-                                      (int)(f + 1 - direc_start), direc_start);
+                                      static_cast<int>(f + 1 - direc_start), direc_start);
                     return 0;
                 }
 

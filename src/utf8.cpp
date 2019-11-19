@@ -185,23 +185,23 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
         // Get number of bytes for one wide character.
         n = 1;  // default: 1 byte. Used when skipping bytes
         if ((*p & 0x80) == 0)
-            high = (utf8_wchar_t)*p;
+            high = static_cast<utf8_wchar_t>(*p);
         else if ((*p & 0xe0) == _SEQ2) {
             n = 2;
-            high = (utf8_wchar_t)(*p & 0x1f);
+            high = static_cast<utf8_wchar_t>(*p & 0x1f);
         } else if ((*p & 0xf0) == _SEQ3) {
             n = 3;
-            high = (utf8_wchar_t)(*p & 0x0f);
+            high = static_cast<utf8_wchar_t>(*p & 0x0f);
         } else if ((*p & 0xf8) == _SEQ4) {
             n = 4;
-            high = (utf8_wchar_t)(*p & 0x07);
+            high = static_cast<utf8_wchar_t>(*p & 0x07);
         } else {
             if ((flags & UTF8_IGNORE_ERROR) == 0) return 0;
             continue;
         }
 
         // Does the sequence header tell us truth about length?
-        if ((size_t)(lim - p) <= n - 1) {
+        if (static_cast<size_t>(lim - p) <= n - 1) {
             if ((flags & UTF8_IGNORE_ERROR) == 0) return 0;
             n = 1;
             continue;  // skip
@@ -225,7 +225,7 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
         uint32_t out_val = 0;
         n_bits = 0;
         for (i = 1; i < n; i++) {
-            out_val |= (utf8_wchar_t)(p[n - i] & 0x3f) << n_bits;
+            out_val |= static_cast<utf8_wchar_t>(p[n - i] & 0x3f) << n_bits;
             n_bits += 6;  // 6 low bits in every byte
         }
         out_val |= high << n_bits;
@@ -242,7 +242,7 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
 
         if (skip) {
             total--;
-        } else if (out_val > (uint32_t)UTF8_WCHAR_MAX) {
+        } else if (out_val > static_cast<uint32_t>(UTF8_WCHAR_MAX)) {
             // wchar_t is UCS-2, but the UTF-8 specified an astral character.
             return 0;
         } else {
@@ -276,7 +276,7 @@ static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char
 
     w = in;
     wlim = w + insize;
-    p = (unsigned char *)out;
+    p = reinterpret_cast<unsigned char *>(out);
     lim = p + outsize;
     total = 0;
     for (; w < wlim; w++) {

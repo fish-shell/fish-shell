@@ -156,7 +156,7 @@ template <>
 struct hash<completion_entry_t> {
     size_t operator()(const completion_entry_t &c) const {
         std::hash<wcstring> hasher;
-        return hasher((wcstring)c.cmd);
+        return hasher(wcstring(c.cmd));
     }
 };
 template <>

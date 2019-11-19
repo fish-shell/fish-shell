@@ -95,7 +95,7 @@ static const struct block_lookup_entry block_lookup[] = {
     {SOURCE, L"source", SOURCE_BLOCK},
     {EVENT, 0, EVENT_BLOCK},
     {BREAKPOINT, L"breakpoint", BREAKPOINT_BLOCK},
-    {(block_type_t)0, 0, 0}};
+    {static_cast<block_type_t>(0), 0, 0}};
 
 // Given a file path, return something nicer. Currently we just "unexpand" tildes.
 wcstring parser_t::user_presentable_path(const wcstring &path) const {

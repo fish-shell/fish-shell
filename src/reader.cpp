@@ -2057,7 +2057,7 @@ static std::function<highlight_result_t(void)> get_highlight_performer(
 void reader_data_t::super_highlight_me_plenty(int match_highlight_pos_adjust, bool no_io) {
     const editable_line_t *el = &command_line;
     assert(el != NULL);
-    long match_highlight_pos = (long)el->position + match_highlight_pos_adjust;
+    long match_highlight_pos = static_cast<long>(el->position) + match_highlight_pos_adjust;
     assert(match_highlight_pos >= 0);
 
     sanity_check();
@@ -3478,7 +3478,7 @@ void reader_set_buffer(const wcstring &b, size_t pos) {
 
 size_t reader_get_cursor_pos() {
     reader_data_t *data = current_data_or_null();
-    if (!data) return (size_t)-1;
+    if (!data) return static_cast<size_t>(-1);
 
     return data->command_line.position;
 }

@@ -91,7 +91,8 @@ static owning_lock<event_handler_list_t> s_event_handlers;
 static volatile sig_atomic_t s_observed_signals[NSIG] = {};
 
 static void set_signal_observed(int sig, bool val) {
-    if (sig >= 0 && (size_t)sig < sizeof s_observed_signals / sizeof *s_observed_signals) {
+    if (sig >= 0 &&
+        static_cast<size_t>(sig) < sizeof s_observed_signals / sizeof *s_observed_signals) {
         s_observed_signals[sig] = val;
     }
 }
@@ -232,7 +233,8 @@ event_handler_list_t event_get_function_handlers(const wcstring &name) {
 bool event_is_signal_observed(int sig) {
     // We are in a signal handler! Don't allocate memory, etc.
     bool result = false;
-    if (sig >= 0 && (unsigned long)sig < sizeof(s_observed_signals) / sizeof(*s_observed_signals)) {
+    if (sig >= 0 && static_cast<unsigned long>(sig) <
+                        sizeof(s_observed_signals) / sizeof(*s_observed_signals)) {
         result = s_observed_signals[sig];
     }
     return result;

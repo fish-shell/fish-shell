@@ -543,7 +543,8 @@ unique_ptr<expression> test_parser::parse_args(const wcstring_list_t &args, wcst
     assert(args.size() > 1);
 
     test_parser parser(args);
-    unique_ptr<expression> result = parser.parse_expression(0, (unsigned int)args.size());
+    unique_ptr<expression> result =
+        parser.parse_expression(0, static_cast<unsigned int>(args.size()));
 
     // Handle errors.
     // For now we only show the first error.
@@ -561,7 +562,8 @@ unique_ptr<expression> test_parser::parse_args(const wcstring_list_t &args, wcst
         if (result->range.end < args.size()) {
             if (err.empty()) {
                 append_format(err, L"%ls: unexpected argument at index %lu: '%ls'\n", program_name,
-                              (unsigned long)result->range.end, args.at(result->range.end).c_str());
+                              static_cast<unsigned long>(result->range.end),
+                              args.at(result->range.end).c_str());
             }
             result.reset(NULL);
         }

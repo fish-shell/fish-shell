@@ -30,7 +30,7 @@ static const enum_map<hist_cmd_t> hist_enum_map[] = {
 
 struct history_cmd_opts_t {
     hist_cmd_t hist_cmd = HIST_UNDEF;
-    history_search_type_t search_type = (history_search_type_t)-1;
+    history_search_type_t search_type = static_cast<history_search_type_t>(-1);
     const wchar_t *show_time_format = NULL;
     size_t max_items = SIZE_MAX;
     bool print_help = false;

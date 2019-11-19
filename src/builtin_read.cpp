@@ -220,7 +220,7 @@ static int read_interactive(parser_t &parser, wcstring &buff, int nchars, bool s
     interactive.restore();
     if (mline) {
         buff = mline.acquire();
-        if (nchars > 0 && (size_t)nchars < buff.size()) {
+        if (nchars > 0 && static_cast<size_t>(nchars) < buff.size()) {
             // Line may be longer than nchars if a keybinding used `commandline -i`
             // note: we're deliberately throwing away the tail of the commandline.
             // It shouldn't be unread because it was produced with `commandline -i`,
@@ -307,13 +307,13 @@ static int read_one_char_at_a_time(int fd, wcstring &buff, int nchars, bool spli
 
             nbytes++;
             if (MB_CUR_MAX == 1) {
-                res = (unsigned char)b;
+                res = static_cast<unsigned char>(b);
                 finished = true;
             } else {
                 size_t sz = std::mbrtowc(&res, &b, 1, &state);
-                if (sz == (size_t)-1) {
+                if (sz == static_cast<size_t>(-1)) {
                     std::memset(&state, 0, sizeof(state));
-                } else if (sz != (size_t)-2) {
+                } else if (sz != static_cast<size_t>(-2)) {
                     finished = true;
                 }
             }
@@ -328,7 +328,7 @@ static int read_one_char_at_a_time(int fd, wcstring &buff, int nchars, bool spli
         if (split_null && res == L'\0') break;
 
         buff.push_back(res);
-        if (nchars > 0 && (size_t)nchars <= buff.size()) {
+        if (nchars > 0 && static_cast<size_t>(nchars) <= buff.size()) {
             break;
         }
     }

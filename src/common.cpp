@@ -222,7 +222,7 @@ bool is_windows_subsystem_for_linux() {
                 demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
             swprintf(text, sizeof(text) / sizeof(wchar_t), L"%-3d %s + %td", i - skip_levels,
                      status == 0 ? demangled : info.dli_sname == 0 ? symbols[i] : info.dli_sname,
-                     (char *)callstack[i] - (char *)info.dli_saddr);
+                     static_cast<char *>(callstack[i]) - static_cast<char *>(info.dli_saddr));
             free(demangled);
         } else {
             swprintf(text, sizeof(text) / sizeof(wchar_t), L"%-3d %s", i - skip_levels, symbols[i]);
@@ -272,7 +272,7 @@ int fgetws2(wcstring *s, FILE *f) {
             }
             default: {
                 i++;
-                s->push_back((wchar_t)c);
+                s->push_back(static_cast<wchar_t>(c));
                 break;
             }
         }
@@ -296,7 +296,7 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
     if (MB_CUR_MAX == 1) {
         // Single-byte locale, all values are legal.
         while (in_pos < in_len) {
-            result.push_back((unsigned char)in[in_pos]);
+            result.push_back(static_cast<unsigned char>(in[in_pos]));
             in_pos++;
         }
         return result;
@@ -325,10 +325,10 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
                 use_encode_direct = true;
             } else if (wc == INTERNAL_SEPARATOR) {
                 use_encode_direct = true;
-            } else if (ret == (size_t)-2) {
+            } else if (ret == static_cast<size_t>(-2)) {
                 // Incomplete sequence.
                 use_encode_direct = true;
-            } else if (ret == (size_t)-1) {
+            } else if (ret == static_cast<size_t>(-1)) {
                 // Invalid data.
                 use_encode_direct = true;
             } else if (ret > in_len - in_pos) {
@@ -343,7 +343,7 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
         }
 
         if (use_encode_direct) {
-            wc = ENCODE_DIRECT_BASE + (unsigned char)in[in_pos];
+            wc = ENCODE_DIRECT_BASE + static_cast<unsigned char>(in[in_pos]);
             result.push_back(wc);
             in_pos++;
             std::memset(&state, 0, sizeof state);
@@ -390,7 +390,7 @@ char *wcs2str(const wchar_t *in, size_t len) {
     }
 
     // Here we probably allocate a buffer probably much larger than necessary.
-    char *out = (char *)malloc(MAX_UTF8_BYTES * len + 1);
+    char *out = static_cast<char *>(malloc(MAX_UTF8_BYTES * len + 1));
     assert(out);
     // Instead of returning the return value of wcs2str_internal, return `out` directly.
     // This eliminates false warnings in coverity about resource leaks.
@@ -425,7 +425,7 @@ std::string wcs2string(const wcstring &input) {
         } else {
             std::memset(converted, 0, sizeof converted);
             size_t len = std::wcrtomb(converted, wc, &state);
-            if (len == (size_t)-1) {
+            if (len == static_cast<size_t>(-1)) {
                 FLOGF(char_encoding, L"Wide character U+%4X has no narrow representation", wc);
                 std::memset(&state, 0, sizeof(state));
             } else {
@@ -459,11 +459,11 @@ static char *wcs2str_internal(const wchar_t *in, char *out) {
             if (in[in_pos] & ~0xFF) {
                 out[out_pos++] = '?';
             } else {
-                out[out_pos++] = (unsigned char)in[in_pos];
+                out[out_pos++] = static_cast<unsigned char>(in[in_pos]);
             }
         } else {
             size_t len = std::wcrtomb(&out[out_pos], in[in_pos], &state);
-            if (len == (size_t)-1) {
+            if (len == static_cast<size_t>(-1)) {
                 FLOGF(char_encoding, L"Wide character U+%4X has no narrow representation",
                       in[in_pos]);
                 std::memset(&state, 0, sizeof(state));
@@ -483,7 +483,7 @@ static bool can_be_encoded(wchar_t wc) {
     char converted[MB_LEN_MAX];
     mbstate_t state = {};
 
-    return std::wcrtomb(converted, wc, &state) != (size_t)-1;
+    return std::wcrtomb(converted, wc, &state) != static_cast<size_t>(-1);
 }
 
 wcstring format_string(const wchar_t *format, ...) {
@@ -520,7 +520,7 @@ void append_formatv(wcstring &target, const wchar_t *format, va_list va_orig) {
                 buff[0] = '\0';
                 break;
             }
-            buff = (wchar_t *)realloc((buff == static_buff ? NULL : buff), size);
+            buff = static_cast<wchar_t *>(realloc((buff == static_buff ? NULL : buff), size));
             assert(buff != NULL);
         }
 
@@ -566,7 +566,7 @@ wchar_t *quote_end(const wchar_t *pos) {
             if (!*pos) return 0;
         } else {
             if (*pos == c) {
-                return (wchar_t *)pos;
+                return const_cast<wchar_t *>(pos);
             }
         }
     }
@@ -613,7 +613,7 @@ long read_blocked(int fd, void *buf, size_t count) {
     long bytes_read = 0;
 
     while (count) {
-        ssize_t res = read(fd, (char *)buf + bytes_read, count);
+        ssize_t res = read(fd, static_cast<char *>(buf) + bytes_read, count);
         if (res == 0) {
             break;
         } else if (res == -1) {
@@ -640,10 +640,10 @@ ssize_t write_loop(int fd, const char *buff, size_t count) {
                 return -1;
             }
         } else {
-            out_cum += (size_t)out;
+            out_cum += static_cast<size_t>(out);
         }
     }
-    return (ssize_t)out_cum;
+    return static_cast<ssize_t>(out_cum);
 }
 
 ssize_t read_loop(int fd, void *buff, size_t count) {
@@ -664,11 +664,12 @@ bool should_suppress_stderr_for_tests() {
 static void debug_shared(const wchar_t level, const wcstring &msg) {
     pid_t current_pid;
     if (!is_forked_child()) {
-        std::fwprintf(stderr, L"<%lc> %ls: %ls\n", (unsigned long)level, program_name, msg.c_str());
+        std::fwprintf(stderr, L"<%lc> %ls: %ls\n", static_cast<unsigned long>(level), program_name,
+                      msg.c_str());
     } else {
         current_pid = getpid();
-        std::fwprintf(stderr, L"<%lc> %ls: %d: %ls\n", (unsigned long)level, program_name,
-                      current_pid, msg.c_str());
+        std::fwprintf(stderr, L"<%lc> %ls: %d: %ls\n", static_cast<unsigned long>(level),
+                      program_name, current_pid, msg.c_str());
     }
 }
 
@@ -874,11 +875,11 @@ static void escape_string_url(const wcstring &in, wcstring &out) {
     const std::string narrow = wcs2string(in);
     for (auto &c1 : narrow) {
         // This silliness is so we get the correct result whether chars are signed or unsigned.
-        unsigned int c2 = (unsigned int)c1 & 0xFF;
+        unsigned int c2 = static_cast<unsigned int>(c1) & 0xFF;
         if (!(c2 & 0x80) &&
             (isalnum(c2) || c2 == '/' || c2 == '.' || c2 == '~' || c2 == '-' || c2 == '_')) {
             // The above characters don't need to be encoded.
-            out.push_back((wchar_t)c2);
+            out.push_back(static_cast<wchar_t>(c2));
         } else {
             // All other chars need to have their UTF-8 representation encoded in hex.
             wchar_t buf[4];
@@ -926,14 +927,14 @@ static void escape_string_var(const wcstring &in, wcstring &out) {
     const std::string narrow = wcs2string(in);
     for (auto c1 : narrow) {
         // This silliness is so we get the correct result whether chars are signed or unsigned.
-        unsigned int c2 = (unsigned int)c1 & 0xFF;
+        unsigned int c2 = static_cast<unsigned int>(c1) & 0xFF;
         if (!(c2 & 0x80) && isalnum(c2) && (!prev_was_hex_encoded || !is_hex_digit(c2))) {
             // ASCII alphanumerics don't need to be encoded.
             if (prev_was_hex_encoded) {
                 out.push_back(L'_');
                 prev_was_hex_encoded = false;
             }
-            out.push_back((wchar_t)c2);
+            out.push_back(static_cast<wchar_t>(c2));
         } else if (c2 == '_') {
             // Underscores are encoded by doubling them.
             out.append(L"__");
@@ -1333,7 +1334,7 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
                     max_val = WCHAR_MAX;
 
                     // Don't exceed the largest Unicode code point - see #1107.
-                    if (0x10FFFF < max_val) max_val = (wchar_t)0x10FFFF;
+                    if (0x10FFFF < max_val) max_val = static_cast<wchar_t>(0x10FFFF);
                     break;
                 }
                 case L'x': {
@@ -1368,7 +1369,8 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
             }
 
             if (res <= max_val) {
-                result_char_or_none = (wchar_t)((byte_literal ? ENCODE_DIRECT_BASE : 0) + res);
+                result_char_or_none =
+                    static_cast<wchar_t>((byte_literal ? ENCODE_DIRECT_BASE : 0) + res);
             } else {
                 errored = true;
             }
@@ -2156,11 +2158,12 @@ wcstring format_size(long long sz) {
 
         for (i = 0; sz_name[i]; i++) {
             if (sz < (1024 * 1024) || !sz_name[i + 1]) {
-                long isz = ((long)sz) / 1024;
+                long isz = (static_cast<long>(sz)) / 1024;
                 if (isz > 9)
                     result.append(format_string(L"%d%ls", isz, sz_name[i]));
                 else
-                    result.append(format_string(L"%.1f%ls", (double)sz / 1024, sz_name[i]));
+                    result.append(
+                        format_string(L"%.1f%ls", static_cast<double>(sz) / 1024, sz_name[i]));
                 break;
             }
             sz /= 1024;
@@ -2234,7 +2237,7 @@ double timef() {
     struct timeval tv;
     assert_with_errno(gettimeofday(&tv, 0) != -1);
     // return (double)tv.tv_sec + 0.000001 * tv.tv_usec;
-    return (double)tv.tv_sec + 1e-6 * tv.tv_usec;
+    return static_cast<double>(tv.tv_sec) + 1e-6 * tv.tv_usec;
 }
 
 void exit_without_destructors(int code) { _exit(code); }

@@ -150,7 +150,7 @@ wcstring expand_escape_variable(const env_var_t &var) {
 /// with [.
 static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx,
                           size_t array_size) {
-    const long size = (long)array_size;
+    const long size = static_cast<long>(array_size);
     size_t pos = 1;  // skip past the opening square brace
 
     int zero_index = -1;
@@ -234,7 +234,7 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
     }
 
     if (end_ptr) {
-        *end_ptr = (wchar_t *)(in + pos);
+        *end_ptr = const_cast<wchar_t *>(in + pos);
     }
 
     return 0;
@@ -621,7 +621,7 @@ static bool expand_cmdsubst(wcstring input, parser_t &parser, std::vector<comple
         tail_begin = slice_end;
         for (i = 0; i < slice_idx.size(); i++) {
             long idx = slice_idx.at(i);
-            if ((size_t)idx > sub_res.size() || idx < 1) {
+            if (static_cast<size_t>(idx) > sub_res.size() || idx < 1) {
                 continue;
             }
             idx = idx - 1;
@@ -811,7 +811,8 @@ wcstring replace_home_directory_with_tilde(const wcstring &str, const environmen
 /// equivalents. This is done to support skip_wildcards.
 static void remove_internal_separator(wcstring *str, bool conv) {
     // Remove all instances of INTERNAL_SEPARATOR.
-    str->erase(std::remove(str->begin(), str->end(), (wchar_t)INTERNAL_SEPARATOR), str->end());
+    str->erase(std::remove(str->begin(), str->end(), static_cast<wchar_t>(INTERNAL_SEPARATOR)),
+               str->end());
 
     // If conv is true, replace all instances of ANY_STRING with '*',
     // ANY_STRING_RECURSIVE with '*'.

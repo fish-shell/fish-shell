@@ -699,7 +699,8 @@ static wcstring reconstruct_orig_str(wcstring tokenized_str) {
         // However, anyone writing the former is asking for trouble so I don't feel bad about not
         // accurately reconstructing what they typed.
         wcstring new_str = wcstring(tokenized_str);
-        std::replace(new_str.begin(), new_str.end(), (wchar_t)VARIABLE_EXPAND_SINGLE, L'$');
+        std::replace(new_str.begin(), new_str.end(), static_cast<wchar_t>(VARIABLE_EXPAND_SINGLE),
+                     L'$');
         orig_str = L"\"" + new_str + L"\"";
     }
 
@@ -1264,7 +1265,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
             exec_time = get_time();
             profile_item->level = parser->eval_level;
             profile_item->parse = 0;
-            profile_item->exec = (int)(exec_time - start_time);
+            profile_item->exec = static_cast<int>(exec_time - start_time);
             profile_item->cmd = profiling_cmd_name_for_redirectable_block(
                 specific_statement, this->tree(), this->pstree->src);
             profile_item->skipped = false;
@@ -1342,8 +1343,8 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
     if (profile_item != NULL) {
         exec_time = get_time();
         profile_item->level = parser->eval_level;
-        profile_item->parse = (int)(parse_time - start_time);
-        profile_item->exec = (int)(exec_time - parse_time);
+        profile_item->parse = static_cast<int>(parse_time - start_time);
+        profile_item->exec = static_cast<int>(exec_time - parse_time);
         profile_item->cmd = job ? job->command() : wcstring();
         profile_item->skipped = !populated_job;
     }

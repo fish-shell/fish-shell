@@ -397,7 +397,7 @@ static bool initialize_curses_using_fallback(const char *term) {
     if (is_interactive_session()) debug(1, _(L"Using fallback terminal type '%s'."), term);
 
     int err_ret;
-    if (setupterm((char *)term, STDOUT_FILENO, &err_ret) == OK) return true;
+    if (setupterm(const_cast<char *>(term), STDOUT_FILENO, &err_ret) == OK) return true;
     if (is_interactive_session()) {
         debug(1, _(L"Could not set up terminal using the fallback terminal type '%s'."), term);
     }

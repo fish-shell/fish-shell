@@ -147,7 +147,7 @@ static wcstring full_escape(const wcstring &in) {
     for (wchar_t c : in) {
         if (is_universal_safe_to_encode_directly(c)) {
             out.push_back(c);
-        } else if (c <= (wchar_t)ASCII_MAX) {
+        } else if (c <= static_cast<wchar_t>(ASCII_MAX)) {
             // See #1225 for discussion of use of ASCII_MAX here.
             append_format(out, L"\\x%.2x", c);
         } else if (c < 65536) {
@@ -1380,7 +1380,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
                 // Oops, it already passed! Return something tiny.
                 readback_delay = 1000;
             } else {
-                readback_delay = (unsigned long)(this->readback_time_usec - now);
+                readback_delay = static_cast<unsigned long>(this->readback_time_usec - now);
             }
         }
 

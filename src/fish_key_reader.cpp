@@ -319,7 +319,7 @@ static bool parse_debug_level_flag() {
     long tmp = strtol(optarg, &end, 10);
 
     if (tmp >= 0 && tmp <= 10 && !*end && !errno) {
-        debug_level = (int)tmp;
+        debug_level = static_cast<int>(tmp);
     } else {
         std::fwprintf(stderr, _(L"Invalid value '%s' for debug-level flag\n"), optarg);
         return false;
@@ -333,7 +333,7 @@ static bool parse_debug_frames_flag() {
     char *end;
     long tmp = strtol(optarg, &end, 10);
     if (tmp > 0 && tmp <= 128 && !*end && !errno) {
-        set_debug_stack_frames((int)tmp);
+        set_debug_stack_frames(static_cast<int>(tmp));
     } else {
         std::fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag\n"), optarg);
         return false;

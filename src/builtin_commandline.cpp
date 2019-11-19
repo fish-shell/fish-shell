@@ -129,7 +129,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     const wchar_t *current_buffer = 0;
 
     // What the commandline builtin considers to be the current cursor position.
-    size_t current_cursor_pos = (size_t)(-1);
+    size_t current_cursor_pos = static_cast<size_t>(-1);
 
     wchar_t *cmd = argv[0];
     int buffer_part = 0;
@@ -368,10 +368,12 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             }
 
             current_buffer = reader_get_buffer();
-            new_pos = std::max(0L, std::min(new_pos, (long)std::wcslen(current_buffer)));
-            reader_set_buffer(current_buffer, (size_t)new_pos);
+            new_pos =
+                std::max(0L, std::min(new_pos, static_cast<long>(std::wcslen(current_buffer))));
+            reader_set_buffer(current_buffer, static_cast<size_t>(new_pos));
         } else {
-            streams.out.append_format(L"%lu\n", (unsigned long)reader_get_cursor_pos());
+            streams.out.append_format(L"%lu\n",
+                                      static_cast<unsigned long>(reader_get_cursor_pos()));
         }
         return STATUS_CMD_OK;
     }
@@ -379,7 +381,8 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     if (line_mode) {
         size_t pos = reader_get_cursor_pos();
         const wchar_t *buff = reader_get_buffer();
-        streams.out.append_format(L"%lu\n", (unsigned long)parse_util_lineno(buff, pos));
+        streams.out.append_format(L"%lu\n",
+                                  static_cast<unsigned long>(parse_util_lineno(buff, pos)));
         return STATUS_CMD_OK;
     }
 

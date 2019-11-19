@@ -104,7 +104,7 @@ static bool is_screen_name_escape_seq(const wchar_t *code, size_t *resulting_len
     }
     const wchar_t *const screen_name_end_sentinel = L"\x1B\\";
     const wchar_t *screen_name_end = std::wcsstr(&code[2], screen_name_end_sentinel);
-    if (screen_name_end == NULL) {
+    if (screen_name_end == nullptr) {
         // Consider just <esc>k to be the code.
         *resulting_length = 2;
     } else {
@@ -246,7 +246,7 @@ static bool is_visual_escape_seq(const wchar_t *code, size_t *resulting_length) 
 /// that begin with \x1B. If it doesn't we return zero. We also return zero if we don't recognize
 /// the escape sequence based on querying terminfo and other heuristics.
 size_t escape_code_length(const wchar_t *code) {
-    assert(code != NULL);
+    assert(code != nullptr);
     if (*code != L'\x1B') return 0;
 
     size_t esc_seq_len = cached_layouts.find_escape_code(code);
@@ -498,7 +498,7 @@ static void s_move(screen_t *s, int new_x, int new_y) {
         x_steps = 0;
     }
 
-    const char *multi_str = NULL;
+    const char *multi_str = nullptr;
     if (x_steps < 0) {
         str = cursor_left;
         multi_str = parm_left_cursor;
@@ -509,7 +509,7 @@ static void s_move(screen_t *s, int new_x, int new_y) {
 
     // Use the bulk ('multi') output for cursor movement if it is supported and it would be shorter
     // Note that this is required to avoid some visual glitches in iTerm (issue #1448).
-    bool use_multi = multi_str != NULL && multi_str[0] != '\0' &&
+    bool use_multi = multi_str != nullptr && multi_str[0] != '\0' &&
                      abs(x_steps) * std::strlen(str) > std::strlen(multi_str);
     if (use_multi && cur_term) {
         char *multi_param = tparm(const_cast<char *>(multi_str), abs(x_steps));
@@ -663,7 +663,7 @@ static void s_update(screen_t *scr, const wcstring &left_prompt, const wcstring 
 
         // If this is the last line, maybe we should clear the screen.
         const bool should_clear_screen_this_line =
-            need_clear_screen && i + 1 == scr->desired.line_count() && clr_eos != NULL;
+            need_clear_screen && i + 1 == scr->desired.line_count() && clr_eos != nullptr;
 
         // Note that skip_remaining is a width, not a character count.
         size_t skip_remaining = start_pos;

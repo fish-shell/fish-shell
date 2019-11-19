@@ -68,7 +68,7 @@ static bool expand_is_clean(const wcstring &in) {
     if (in.empty()) return true;
 
     // Test characters that have a special meaning in the first character position.
-    if (std::wcschr(UNCLEAN_FIRST, in.at(0)) != NULL) return false;
+    if (std::wcschr(UNCLEAN_FIRST, in.at(0)) != nullptr) return false;
 
     // Test characters that have a special meaning in any character position.
     return in.find_first_of(UNCLEAN) == wcstring::npos;
@@ -457,8 +457,8 @@ static expand_result_t expand_braces(const wcstring &instr, expand_flags_t flags
     bool syntax_error = false;
     int brace_count = 0;
 
-    const wchar_t *brace_begin = NULL, *brace_end = NULL;
-    const wchar_t *last_sep = NULL;
+    const wchar_t *brace_begin = nullptr, *brace_end = nullptr;
+    const wchar_t *last_sep = nullptr;
 
     const wchar_t *item_begin;
     size_t length_preceding_braces, length_following_braces, tot_len;
@@ -518,7 +518,7 @@ static expand_result_t expand_braces(const wcstring &instr, expand_flags_t flags
         return expand_result_t::error;
     }
 
-    if (brace_begin == NULL) {
+    if (brace_begin == nullptr) {
         append_completion(out, instr);
         return expand_result_t::ok;
     }

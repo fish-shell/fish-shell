@@ -33,7 +33,7 @@ static int cpu_use(const job_t *j) {
     for (const process_ptr_t &p : j->processes) {
         struct timeval t;
         int jiffies;
-        gettimeofday(&t, 0);
+        gettimeofday(&t, nullptr);
         jiffies = proc_get_jiffies(p.get());
 
         double t1 = 1000000.0 * p->last_time.tv_sec + p->last_time.tv_usec;
@@ -119,17 +119,17 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int print_last = 0;
 
     static const wchar_t *const short_options = L":cghlpq";
-    static const struct woption long_options[] = {{L"command", no_argument, NULL, 'c'},
-                                                  {L"group", no_argument, NULL, 'g'},
-                                                  {L"help", no_argument, NULL, 'h'},
-                                                  {L"last", no_argument, NULL, 'l'},
-                                                  {L"pid", no_argument, NULL, 'p'},
-                                                  {L"quiet", no_argument, NULL, 'q'},
-                                                  {nullptr, 0, NULL, 0}};
+    static const struct woption long_options[] = {{L"command", no_argument, nullptr, 'c'},
+                                                  {L"group", no_argument, nullptr, 'g'},
+                                                  {L"help", no_argument, nullptr, 'h'},
+                                                  {L"last", no_argument, nullptr, 'l'},
+                                                  {L"pid", no_argument, nullptr, 'p'},
+                                                  {L"quiet", no_argument, nullptr, 'q'},
+                                                  {nullptr, 0, nullptr, 0}};
 
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'p': {
                 mode = JOBS_PRINT_PID;

@@ -125,7 +125,7 @@ static void write_part(const wchar_t *begin, const wchar_t *end, int cut_at_curs
 int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Pointer to what the commandline builtin considers to be the current contents of the command
     // line buffer.
-    const wchar_t *current_buffer = 0;
+    const wchar_t *current_buffer = nullptr;
 
     // What the commandline builtin considers to be the current cursor position.
     auto current_cursor_pos = static_cast<size_t>(-1);
@@ -146,7 +146,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     int line_mode = 0;
     int search_mode = 0;
     int paging_mode = 0;
-    const wchar_t *begin = NULL, *end = NULL;
+    const wchar_t *begin = nullptr, *end = nullptr;
 
     const auto &ld = parser.libdata();
     wcstring transient_commandline;
@@ -173,28 +173,28 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     }
 
     static const wchar_t *const short_options = L":abijpctforhI:CLSsP";
-    static const struct woption long_options[] = {{L"append", no_argument, NULL, 'a'},
-                                                  {L"insert", no_argument, NULL, 'i'},
-                                                  {L"replace", no_argument, NULL, 'r'},
-                                                  {L"current-buffer", no_argument, NULL, 'b'},
-                                                  {L"current-job", no_argument, NULL, 'j'},
-                                                  {L"current-process", no_argument, NULL, 'p'},
-                                                  {L"current-selection", no_argument, NULL, 's'},
-                                                  {L"current-token", no_argument, NULL, 't'},
-                                                  {L"cut-at-cursor", no_argument, NULL, 'c'},
-                                                  {L"function", no_argument, NULL, 'f'},
-                                                  {L"tokenize", no_argument, NULL, 'o'},
-                                                  {L"help", no_argument, NULL, 'h'},
-                                                  {L"input", required_argument, NULL, 'I'},
-                                                  {L"cursor", no_argument, NULL, 'C'},
-                                                  {L"line", no_argument, NULL, 'L'},
-                                                  {L"search-mode", no_argument, NULL, 'S'},
-                                                  {L"paging-mode", no_argument, NULL, 'P'},
-                                                  {NULL, 0, NULL, 0}};
+    static const struct woption long_options[] = {{L"append", no_argument, nullptr, 'a'},
+                                                  {L"insert", no_argument, nullptr, 'i'},
+                                                  {L"replace", no_argument, nullptr, 'r'},
+                                                  {L"current-buffer", no_argument, nullptr, 'b'},
+                                                  {L"current-job", no_argument, nullptr, 'j'},
+                                                  {L"current-process", no_argument, nullptr, 'p'},
+                                                  {L"current-selection", no_argument, nullptr, 's'},
+                                                  {L"current-token", no_argument, nullptr, 't'},
+                                                  {L"cut-at-cursor", no_argument, nullptr, 'c'},
+                                                  {L"function", no_argument, nullptr, 'f'},
+                                                  {L"tokenize", no_argument, nullptr, 'o'},
+                                                  {L"help", no_argument, nullptr, 'h'},
+                                                  {L"input", required_argument, nullptr, 'I'},
+                                                  {L"cursor", no_argument, nullptr, 'C'},
+                                                  {L"line", no_argument, nullptr, 'L'},
+                                                  {L"search-mode", no_argument, nullptr, 'S'},
+                                                  {L"paging-mode", no_argument, nullptr, 'P'},
+                                                  {nullptr, 0, nullptr, 0}};
 
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case L'a': {
                 append_mode = APPEND_MODE;
@@ -408,7 +408,8 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             break;
         }
         case TOKEN_MODE: {
-            parse_util_token_extent(current_buffer, current_cursor_pos, &begin, &end, 0, 0);
+            parse_util_token_extent(current_buffer, current_cursor_pos, &begin, &end, nullptr,
+                                    nullptr);
             break;
         }
         default: {

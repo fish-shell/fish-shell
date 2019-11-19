@@ -121,7 +121,8 @@ void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter);
 wcstring event_get_desc(const event_t &e);
 
 /// Fire a generic event with the specified name.
-void event_fire_generic(parser_t &parser, const wchar_t *name, const wcstring_list_t *args = NULL);
+void event_fire_generic(parser_t &parser, const wchar_t *name,
+                        const wcstring_list_t *args = nullptr);
 
 /// Return the event type for a given name, or none.
 maybe_t<event_type_t> event_type_for_name(const wcstring &name);

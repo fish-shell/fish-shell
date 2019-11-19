@@ -61,7 +61,7 @@ const enum_map<status_cmd_t> status_enum_map[] = {
     {STATUS_STACK_TRACE, L"print-stack-trace"},
     {STATUS_STACK_TRACE, L"stack-trace"},
     {STATUS_TEST_FEATURE, L"test-feature"},
-    {STATUS_UNDEF, NULL}};
+    {STATUS_UNDEF, nullptr}};
 #define status_enum_map_len (sizeof status_enum_map / sizeof *status_enum_map)
 
 #define CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)                                        \
@@ -103,24 +103,24 @@ struct status_cmd_opts_t {
 /// scripts.
 static const wchar_t *const short_options = L":L:cbilfnhj:t";
 static const struct woption long_options[] = {
-    {L"help", no_argument, NULL, 'h'},
-    {L"current-filename", no_argument, NULL, 'f'},
-    {L"current-line-number", no_argument, NULL, 'n'},
-    {L"filename", no_argument, NULL, 'f'},
-    {L"fish-path", no_argument, NULL, STATUS_FISH_PATH},
-    {L"is-block", no_argument, NULL, 'b'},
-    {L"is-command-substitution", no_argument, NULL, 'c'},
-    {L"is-full-job-control", no_argument, NULL, STATUS_IS_FULL_JOB_CTRL},
-    {L"is-interactive", no_argument, NULL, 'i'},
-    {L"is-interactive-job-control", no_argument, NULL, STATUS_IS_INTERACTIVE_JOB_CTRL},
-    {L"is-login", no_argument, NULL, 'l'},
-    {L"is-no-job-control", no_argument, NULL, STATUS_IS_NO_JOB_CTRL},
-    {L"job-control", required_argument, NULL, 'j'},
-    {L"level", required_argument, NULL, 'L'},
-    {L"line", no_argument, NULL, 'n'},
-    {L"line-number", no_argument, NULL, 'n'},
-    {L"print-stack-trace", no_argument, NULL, 't'},
-    {NULL, 0, NULL, 0}};
+    {L"help", no_argument, nullptr, 'h'},
+    {L"current-filename", no_argument, nullptr, 'f'},
+    {L"current-line-number", no_argument, nullptr, 'n'},
+    {L"filename", no_argument, nullptr, 'f'},
+    {L"fish-path", no_argument, nullptr, STATUS_FISH_PATH},
+    {L"is-block", no_argument, nullptr, 'b'},
+    {L"is-command-substitution", no_argument, nullptr, 'c'},
+    {L"is-full-job-control", no_argument, nullptr, STATUS_IS_FULL_JOB_CTRL},
+    {L"is-interactive", no_argument, nullptr, 'i'},
+    {L"is-interactive-job-control", no_argument, nullptr, STATUS_IS_INTERACTIVE_JOB_CTRL},
+    {L"is-login", no_argument, nullptr, 'l'},
+    {L"is-no-job-control", no_argument, nullptr, STATUS_IS_NO_JOB_CTRL},
+    {L"job-control", required_argument, nullptr, 'j'},
+    {L"level", required_argument, nullptr, 'L'},
+    {L"line", no_argument, nullptr, 'n'},
+    {L"line-number", no_argument, nullptr, 'n'},
+    {L"print-stack-trace", no_argument, nullptr, 't'},
+    {nullptr, 0, nullptr, 0}};
 
 /// Remember the status subcommand and disallow selecting more than one status subcommand.
 static bool set_status_cmd(wchar_t *const cmd, status_cmd_opts_t &opts, status_cmd_t sub_cmd,
@@ -154,7 +154,7 @@ static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case STATUS_IS_FULL_JOB_CTRL: {
                 if (!set_status_cmd(cmd, opts, STATUS_IS_FULL_JOB_CTRL, streams)) {

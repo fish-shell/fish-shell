@@ -89,17 +89,17 @@ static const struct block_lookup_entry block_lookup[] = {
     {WHILE, L"while", WHILE_BLOCK},
     {FOR, L"for", FOR_BLOCK},
     {IF, L"if", IF_BLOCK},
-    {FUNCTION_CALL, 0, FUNCTION_CALL_BLOCK},
-    {FUNCTION_CALL_NO_SHADOW, 0, FUNCTION_CALL_NO_SHADOW_BLOCK},
+    {FUNCTION_CALL, nullptr, FUNCTION_CALL_BLOCK},
+    {FUNCTION_CALL_NO_SHADOW, nullptr, FUNCTION_CALL_NO_SHADOW_BLOCK},
     {SWITCH, L"switch", SWITCH_BLOCK},
-    {TOP, 0, TOP_BLOCK},
-    {SUBST, 0, SUBST_BLOCK},
+    {TOP, nullptr, TOP_BLOCK},
+    {SUBST, nullptr, SUBST_BLOCK},
     {BEGIN, L"begin", BEGIN_BLOCK},
     {SOURCE, L"source", SOURCE_BLOCK},
-    {EVENT, 0, EVENT_BLOCK},
+    {EVENT, nullptr, EVENT_BLOCK},
     {BREAKPOINT, L"breakpoint", BREAKPOINT_BLOCK},
     {VARIABLE_ASSIGNMENT, L"variable assignment", VARIABLE_ASSIGNMENT_BLOCK},
-    {static_cast<block_type_t>(0), 0, 0}};
+    {static_cast<block_type_t>(0), nullptr, nullptr}};
 
 // Given a file path, return something nicer. Currently we just "unexpand" tildes.
 wcstring parser_t::user_presentable_path(const wcstring &path) const {
@@ -141,7 +141,7 @@ block_t *parser_t::push_block(block_t &&block) {
     new_current.src_lineno = parser_t::get_lineno();
 
     const wchar_t *filename = parser_t::current_filename();
-    if (filename != NULL) {
+    if (filename != nullptr) {
         new_current.src_filename = intern(filename);
     }
 
@@ -234,15 +234,15 @@ wcstring parser_t::block_stack_description() const {
 const block_t *parser_t::block_at_index(size_t idx) const {
     // Zero corresponds to the last element in our vector.
     size_t count = block_stack.size();
-    return idx < count ? &block_stack.at(count - idx - 1) : NULL;
+    return idx < count ? &block_stack.at(count - idx - 1) : nullptr;
 }
 
 block_t *parser_t::block_at_index(size_t idx) {
     size_t count = block_stack.size();
-    return idx < count ? &block_stack.at(count - idx - 1) : NULL;
+    return idx < count ? &block_stack.at(count - idx - 1) : nullptr;
 }
 
-block_t *parser_t::current_block() { return block_stack.empty() ? NULL : &block_stack.back(); }
+block_t *parser_t::current_block() { return block_stack.empty() ? nullptr : &block_stack.back(); }
 
 /// Print profiling information to the specified stream.
 static void print_profile(const std::vector<std::unique_ptr<profile_item_t>> &items, FILE *out) {
@@ -320,7 +320,7 @@ std::vector<completion_t> parser_t::expand_argument_list(const wcstring &arg_lis
                                                          const std::shared_ptr<parser_t> &parser) {
     // Parse the string as an argument list.
     parse_node_tree_t tree;
-    if (!parse_tree_from_string(arg_list_src, parse_flag_none, &tree, NULL /* errors */,
+    if (!parse_tree_from_string(arg_list_src, parse_flag_none, &tree, nullptr /* errors */,
                                 symbol_freestanding_argument_list)) {
         // Failed to parse. Here we expect to have reported any errors in test_args.
         return {};
@@ -332,7 +332,7 @@ std::vector<completion_t> parser_t::expand_argument_list(const wcstring &arg_lis
     tnode_t<grammar::freestanding_argument_list> arg_list(&tree, &tree.at(0));
     while (auto arg = arg_list.next_in_list<grammar::argument>()) {
         const wcstring arg_src = arg.get_source(arg_list_src);
-        if (expand_string(arg_src, &result, eflags, vars, parser, NULL /* errors */) ==
+        if (expand_string(arg_src, &result, eflags, vars, parser, nullptr /* errors */) ==
             expand_result_t::error) {
             break;  // failed to expand a string
         }
@@ -434,7 +434,7 @@ const wchar_t *parser_t::is_function(size_t idx) const {
     // PCA: Have to make this a string somehow.
     ASSERT_IS_MAIN_THREAD();
 
-    const wchar_t *result = NULL;
+    const wchar_t *result = nullptr;
     for (size_t block_idx = idx; block_idx < this->block_count(); block_idx++) {
         const block_t *b = this->block_at_index(block_idx);
         if (b->type() == FUNCTION_CALL || b->type() == FUNCTION_CALL_NO_SHADOW) {
@@ -462,7 +462,7 @@ const wchar_t *parser_t::get_function_name(int level) {
             }
             idx++;
         }
-        return NULL;  // couldn't find a breakpoint frame
+        return nullptr;  // couldn't find a breakpoint frame
     } else if (level == 1) {
         // Return the function name for the current level.
         return this->is_function();
@@ -477,7 +477,7 @@ const wchar_t *parser_t::get_function_name(int level) {
         }
         idx++;
     }
-    return NULL;  // couldn't find that function level
+    return nullptr;  // couldn't find that function level
 }
 
 int parser_t::get_lineno() const {
@@ -487,7 +487,7 @@ int parser_t::get_lineno() const {
 
         // If we are executing a function, we have to add in its offset.
         const wchar_t *function_name = is_function();
-        if (function_name != NULL) {
+        if (function_name != nullptr) {
             lineno += function_get_definition_lineno(function_name);
         }
     }
@@ -569,7 +569,7 @@ wcstring parser_t::current_line() {
 }
 
 void parser_t::job_add(shared_ptr<job_t> job) {
-    assert(job != NULL);
+    assert(job != nullptr);
     assert(!job->processes.empty());
     job_list.push_front(std::move(job));
 }
@@ -591,14 +591,14 @@ job_t *parser_t::job_get(job_id_t id) {
     for (const auto &job : job_list) {
         if (id <= 0 || job->job_id == id) return job.get();
     }
-    return NULL;
+    return nullptr;
 }
 
 job_t *parser_t::job_get_from_pid(pid_t pid) const {
     pid_t pgid = getpgid(pid);
 
     if (pgid == -1) {
-        return 0;
+        return nullptr;
     }
 
     for (const auto &job : jobs()) {
@@ -610,7 +610,7 @@ job_t *parser_t::job_get_from_pid(pid_t pid) const {
             }
         }
     }
-    return 0;
+    return nullptr;
 }
 
 profile_item_t *parser_t::create_profile_item() {
@@ -802,7 +802,7 @@ wcstring block_t::description() const {
     if (this->src_lineno >= 0) {
         append_format(result, L" (line %d)", this->src_lineno);
     }
-    if (this->src_filename != NULL) {
+    if (this->src_filename != nullptr) {
         append_format(result, L" (file %ls)", this->src_filename);
     }
     return result;

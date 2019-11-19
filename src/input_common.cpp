@@ -75,7 +75,7 @@ char_event_t input_event_queue_t::readb() {
             tv.tv_usec = static_cast<int>(usecs_delay % usecs_per_sec);
         }
 
-        res = select(fd_max + 1, &fdset, 0, 0, usecs_delay > 0 ? &tv : NULL);
+        res = select(fd_max + 1, &fdset, nullptr, nullptr, usecs_delay > 0 ? &tv : nullptr);
         if (res == -1) {
             if (errno == EINTR || errno == EAGAIN) {
                 if (interrupt_handler) {
@@ -213,7 +213,7 @@ char_event_t input_event_queue_t::readch_timed(bool dequeue_timeouts) {
         FD_ZERO(&fds);
         FD_SET(STDIN_FILENO, &fds);
         struct timeval tm = {wait_on_escape_ms / 1000, 1000 * (wait_on_escape_ms % 1000)};
-        if (select(1, &fds, 0, 0, &tm) > 0) {
+        if (select(1, &fds, nullptr, nullptr, &tm) > 0) {
             result = readch();
         }
     }

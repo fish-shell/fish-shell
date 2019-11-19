@@ -9,12 +9,12 @@ const parse_node_t *parse_node_tree_t::next_node_in_node_list(
     assert(list_type != entry_type);
 
     const parse_node_t *list_cursor = &node_list;
-    const parse_node_t *list_entry = NULL;
+    const parse_node_t *list_entry = nullptr;
 
     // Loop while we don't have an item but do have a list. Note that some nodes may contain
     // nothing; e.g. job_list contains blank lines as a production.
-    while (list_entry == NULL && list_cursor != NULL) {
-        const parse_node_t *next_cursor = NULL;
+    while (list_entry == nullptr && list_cursor != nullptr) {
+        const parse_node_t *next_cursor = nullptr;
 
         // Walk through the children.
         for (node_offset_t i = 0; i < list_cursor->child_count; i++) {
@@ -32,9 +32,9 @@ const parse_node_t *parse_node_tree_t::next_node_in_node_list(
     }
 
     // Return what we got.
-    assert(list_cursor == NULL || list_cursor->type == list_type);
-    assert(list_entry == NULL || list_entry->type == entry_type);
-    if (out_list_tail != NULL) *out_list_tail = list_cursor;
+    assert(list_cursor == nullptr || list_cursor->type == list_type);
+    assert(list_entry == nullptr || list_entry->type == entry_type);
+    if (out_list_tail != nullptr) *out_list_tail = list_cursor;
     return list_entry;
 }
 
@@ -67,7 +67,7 @@ maybe_t<pipe_or_redir_t> redirection_for_node(tnode_t<grammar::redirection> redi
         assert(result.has_value() && "Failed to parse valid redirection");
         assert(!result->is_pipe && "Should not be a pipe");
     }
-    if (out_target != NULL) {
+    if (out_target != nullptr) {
         tnode_t<grammar::tok_string> target = redirection.child<1>();  // like 1 or file path
         *out_target = target.has_source() ? target.get_source(src) : wcstring();
     }

@@ -206,7 +206,7 @@ void misc_init() {
     // issue #3748.
     if (isatty(STDOUT_FILENO)) {
         fflush(stdout);
-        setvbuf(stdout, NULL, _IONBF, 0);
+        setvbuf(stdout, nullptr, _IONBF, 0);
     }
 }
 
@@ -253,7 +253,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     }
 
     // Set the given paths in the environment, if we have any.
-    if (paths != NULL) {
+    if (paths != nullptr) {
         vars.set_one(FISH_DATADIR_VAR, ENV_GLOBAL, paths->data);
         vars.set_one(FISH_SYSCONFDIR_VAR, ENV_GLOBAL, paths->sysconf);
         vars.set_one(FISH_HELPDIR_VAR, ENV_GLOBAL, paths->doc);
@@ -392,7 +392,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
 static int set_umask(const wcstring_list_t &list_val) {
     long mask = -1;
     if (list_val.size() == 1 && !list_val.front().empty()) {
-        mask = fish_wcstol(list_val.front().c_str(), NULL, 8);
+        mask = fish_wcstol(list_val.front().c_str(), nullptr, 8);
     }
 
     if (errno || mask > 0777 || mask < 0) return ENV_INVALID;
@@ -1401,14 +1401,14 @@ wcstring env_get_runtime_path() {
     // Check that the path is actually usable. Technically this is guaranteed by the fdo spec but in
     // practice it is not always the case: see #1828 and #2222.
     int mode = R_OK | W_OK | X_OK;
-    if (dir != NULL && access(dir, mode) == 0 && check_runtime_path(dir) == 0) {
+    if (dir != nullptr && access(dir, mode) == 0 && check_runtime_path(dir) == 0) {
         result = str2wcstring(dir);
     } else {
         // Don't rely on $USER being set, as setup_user() has not yet been called.
         // See https://github.com/fish-shell/fish-shell/issues/5180
         // getpeuid() can't fail, but getpwuid sure can.
         auto pwuid = getpwuid(geteuid());
-        const char *uname = pwuid ? pwuid->pw_name : NULL;
+        const char *uname = pwuid ? pwuid->pw_name : nullptr;
         // /tmp/fish.user
         std::string tmpdir = get_path_to_tmp_dir() + "/fish.";
         if (uname) {

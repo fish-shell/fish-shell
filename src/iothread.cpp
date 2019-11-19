@@ -277,7 +277,7 @@ static bool iothread_wait_for_pending_completions(long timeout_usec) {
     fd_set fds;
     FD_ZERO(&fds);
     FD_SET(fd, &fds);
-    int ret = select(fd + 1, &fds, NULL, NULL, &tv);
+    int ret = select(fd + 1, &fds, nullptr, nullptr, &tv);
     return ret > 0;
 }
 
@@ -416,7 +416,7 @@ bool make_pthread(pthread_t *result, void *(*func)(void *), void *param) {
     // unlikely that they are all on the verge of exiting, so one is likely to be ready to handle
     // extant requests. So we can ignore failure with some confidence.
     pthread_t thread = 0;
-    int err = pthread_create(&thread, NULL, func, param);
+    int err = pthread_create(&thread, nullptr, func, param);
     if (err == 0) {
         // Success, return the thread.
         debug(5, "pthread %p spawned", (void *)(intptr_t)thread);
@@ -425,7 +425,7 @@ bool make_pthread(pthread_t *result, void *(*func)(void *), void *param) {
         perror("pthread_create");
     }
     // Restore our sigmask.
-    DIE_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &saved_set, NULL));
+    DIE_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &saved_set, nullptr));
     return err == 0;
 }
 

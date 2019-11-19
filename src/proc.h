@@ -210,14 +210,14 @@ class process_t {
     /// Returns argv[idx].
     const wchar_t *argv(size_t idx) const {
         const wchar_t *const *argv = argv_array.get();
-        assert(argv != NULL);
+        assert(argv != nullptr);
         return argv[idx];
     }
 
     /// Returns argv[0], or NULL.
     const wchar_t *argv0() const {
         const wchar_t *const *argv = argv_array.get();
-        return argv ? argv[0] : NULL;
+        return argv ? argv[0] : nullptr;
     }
 
     /// IO chain getter and setter.

@@ -29,7 +29,7 @@ void validate_pointer(const void *ptr, const wchar_t *err, int null_ok) {
         sanity_lose();
     }
 
-    if ((!null_ok) && (ptr == 0)) {
+    if ((!null_ok) && (ptr == nullptr)) {
         FLOGF(error, _(L"The pointer '%ls' is null"), err);
         sanity_lose();
     }

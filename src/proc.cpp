@@ -262,7 +262,7 @@ static void handle_child_status(process_t *proc, proc_status_t status) {
                 sigemptyset(&act.sa_mask);
                 act.sa_flags = 0;
                 act.sa_handler = SIG_DFL;
-                sigaction(sig, &act, 0);
+                sigaction(sig, &act, nullptr);
                 kill(getpid(), sig);
             }
         }
@@ -560,7 +560,7 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
 
     // This may be invoked in an exit handler, after the TERM has been torn down
     // Don't try to print in that case (#3222)
-    const bool interactive = allow_interactive && cur_term != NULL;
+    const bool interactive = allow_interactive && cur_term != nullptr;
 
     // Remove all disowned jobs.
     remove_disowned_jobs(parser.jobs());
@@ -686,7 +686,7 @@ unsigned long proc_get_jiffies(process_t *p) {
 void proc_update_jiffies(parser_t &parser) {
     for (const auto &job : parser.jobs()) {
         for (process_ptr_t &p : job->processes) {
-            gettimeofday(&p->last_time, 0);
+            gettimeofday(&p->last_time, nullptr);
             p->last_jiffies = proc_get_jiffies(p.get());
         }
     }
@@ -923,7 +923,7 @@ void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool se
 }
 
 void proc_sanity_check(const parser_t &parser) {
-    const job_t *fg_job = NULL;
+    const job_t *fg_job = nullptr;
 
     for (const auto &j : parser.jobs()) {
         if (!j->is_constructed()) continue;

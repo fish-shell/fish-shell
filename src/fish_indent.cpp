@@ -353,7 +353,7 @@ static wcstring prettify(const wcstring &src, bool do_indent) {
     parse_node_tree_t parse_tree;
     int parse_flags = (parse_flag_continue_after_error | parse_flag_include_comments |
                        parse_flag_leave_unterminated | parse_flag_show_blank_lines);
-    if (!parse_tree_from_string(src, parse_flags, &parse_tree, NULL)) {
+    if (!parse_tree_from_string(src, parse_flags, &parse_tree, nullptr)) {
         return src;  // we return the original string on failure
     }
 
@@ -508,20 +508,20 @@ int main(int argc, char *argv[]) {
     bool do_indent = true;
 
     const char *short_opts = "+d:hvwiD:";
-    const struct option long_opts[] = {{"debug-level", required_argument, NULL, 'd'},
-                                       {"debug-stack-frames", required_argument, NULL, 'D'},
-                                       {"dump-parse-tree", no_argument, NULL, 'P'},
-                                       {"no-indent", no_argument, NULL, 'i'},
-                                       {"help", no_argument, NULL, 'h'},
-                                       {"version", no_argument, NULL, 'v'},
-                                       {"write", no_argument, NULL, 'w'},
-                                       {"html", no_argument, NULL, 1},
-                                       {"ansi", no_argument, NULL, 2},
-                                       {"pygments", no_argument, NULL, 3},
-                                       {NULL, 0, NULL, 0}};
+    const struct option long_opts[] = {{"debug-level", required_argument, nullptr, 'd'},
+                                       {"debug-stack-frames", required_argument, nullptr, 'D'},
+                                       {"dump-parse-tree", no_argument, nullptr, 'P'},
+                                       {"no-indent", no_argument, nullptr, 'i'},
+                                       {"help", no_argument, nullptr, 'h'},
+                                       {"version", no_argument, nullptr, 'v'},
+                                       {"write", no_argument, nullptr, 'w'},
+                                       {"html", no_argument, nullptr, 1},
+                                       {"ansi", no_argument, nullptr, 2},
+                                       {"pygments", no_argument, nullptr, 3},
+                                       {nullptr, 0, nullptr, 0}};
 
     int opt;
-    while ((opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, short_opts, long_opts, nullptr)) != -1) {
         switch (opt) {
             case 'P': {
                 dump_parse_tree = true;
@@ -633,7 +633,7 @@ int main(int argc, char *argv[]) {
         // Maybe colorize.
         std::vector<highlight_spec_t> colors;
         if (output_type != output_type_plain_text) {
-            highlight_shell_no_io(output_wtext, colors, output_wtext.size(), NULL,
+            highlight_shell_no_io(output_wtext, colors, output_wtext.size(), nullptr,
                                   env_stack_t::globals());
         }
 

@@ -62,7 +62,7 @@ static size_t wildcard_find(const wchar_t *wc) {
 
 /// Implementation of wildcard_has. Needs to take the length to handle embedded nulls (issue #1631).
 static bool wildcard_has_impl(const wchar_t *str, size_t len, bool internal) {
-    assert(str != NULL);
+    assert(str != nullptr);
     bool qmark_is_wild = !feature_test(features_t::qmark_noglob);
     const wchar_t *end = str + len;
     if (internal) {
@@ -82,7 +82,7 @@ static bool wildcard_has_impl(const wchar_t *str, size_t len, bool internal) {
 }
 
 bool wildcard_has(const wchar_t *str, bool internal) {
-    assert(str != NULL);
+    assert(str != nullptr);
     return wildcard_has_impl(str, std::wcslen(str), internal);
 }
 
@@ -183,7 +183,7 @@ struct wc_complete_pack_t {
 
 // Weirdly specific and non-reusable helper function that makes its one call site much clearer.
 static bool has_prefix_match(const std::vector<completion_t> *comps, size_t first) {
-    if (comps != NULL) {
+    if (comps != nullptr) {
         const size_t after_count = comps->size();
         for (size_t j = first; j < after_count; j++) {
             if (comps->at(j).match.type <= fuzzy_match_prefix) {
@@ -202,8 +202,8 @@ static bool has_prefix_match(const std::vector<completion_t> *comps, size_t firs
 static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
                                        const wc_complete_pack_t &params, complete_flags_t flags,
                                        std::vector<completion_t> *out, bool is_first_call = false) {
-    assert(str != NULL);
-    assert(wc != NULL);
+    assert(str != nullptr);
+    assert(wc != nullptr);
 
     // Maybe early out for hidden files. We require that the wildcard match these exactly (i.e. a
     // dot); ANY_STRING not allowed.
@@ -226,7 +226,7 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
             match_acceptable = match_type_shares_prefix(match.type);
         }
 
-        if (!match_acceptable || out == NULL) {
+        if (!match_acceptable || out == nullptr) {
             return match_acceptable;
         }
 
@@ -291,7 +291,7 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
 
                     // If out is NULL, we don't care about the actual matches. If out is not
                     // NULL but we have a prefix match, stop there.
-                    if (out == NULL || has_prefix_match(out, before_count)) {
+                    if (out == nullptr || has_prefix_match(out, before_count)) {
                         break;
                     }
                 }
@@ -316,7 +316,7 @@ bool wildcard_complete(const wcstring &str, const wchar_t *wc,
                        std::vector<completion_t> *out, expand_flags_t expand_flags,
                        complete_flags_t flags) {
     // Note out may be NULL.
-    assert(wc != NULL);
+    assert(wc != nullptr);
     wc_complete_pack_t params(str, desc_func, expand_flags);
     return wildcard_complete_internal(str.c_str(), wc, params, flags, out, true /* first call */);
 }
@@ -390,7 +390,7 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
                                               const wchar_t *wc, expand_flags_t expand_flags,
                                               std::vector<completion_t> *out) {
     // Check if it will match before stat().
-    if (!wildcard_complete(filename, wc, {}, NULL, expand_flags, 0)) {
+    if (!wildcard_complete(filename, wc, {}, nullptr, expand_flags, 0)) {
         return false;
     }
 
@@ -634,7 +634,7 @@ class wildcard_expander_t {
           did_interrupt(false),
           did_add(false),
           has_fuzzy_ancestor(false) {
-        assert(resolved_completions != NULL);
+        assert(resolved_completions != nullptr);
 
         // Insert initial completions into our set to avoid duplicates.
         for (std::vector<completion_t>::const_iterator iter = resolved_completions->begin();
@@ -813,7 +813,7 @@ void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, DIR *bas
 //    expansions
 void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
                                  const wcstring &effective_prefix) {
-    assert(wc != NULL);
+    assert(wc != nullptr);
 
     if (interrupted()) {
         return;
@@ -822,12 +822,12 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
     // Get the current segment and compute interesting properties about it.
     const size_t wc_len = std::wcslen(wc);
     const wchar_t *const next_slash = std::wcschr(wc, L'/');
-    const bool is_last_segment = (next_slash == NULL);
+    const bool is_last_segment = (next_slash == nullptr);
     const size_t wc_segment_len = next_slash ? next_slash - wc : wc_len;
     const wcstring wc_segment = wcstring(wc, wc_segment_len);
     const bool segment_has_wildcards =
         wildcard_has(wc_segment, true /* internal, i.e. look for ANY_CHAR instead of ? */);
-    const wchar_t *const wc_remainder = next_slash ? next_slash + 1 : NULL;
+    const wchar_t *const wc_remainder = next_slash ? next_slash + 1 : nullptr;
 
     if (wc_segment.empty()) {
         // Handle empty segment.
@@ -841,7 +841,7 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
     } else if (!segment_has_wildcards && !is_last_segment) {
         // Literal intermediate match. Note that we may not be able to actually read the directory
         // (issue #2099).
-        assert(next_slash != NULL);
+        assert(next_slash != nullptr);
 
         // Absolute path of the intermediate directory
         const wcstring intermediate_dirpath = base_dir + wc_segment + L'/';
@@ -859,7 +859,7 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
             waccess(intermediate_dirpath, F_OK) != 0) {
             assert(this->flags & expand_flag::for_completions);
             DIR *base_dir_fd = open_dir(base_dir);
-            if (base_dir_fd != NULL) {
+            if (base_dir_fd != nullptr) {
                 this->expand_literal_intermediate_segment_with_fuzz(
                     base_dir, base_dir_fd, wc_segment, wc_remainder, effective_prefix);
                 closedir(base_dir_fd);
@@ -874,7 +874,7 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
                 this->expand_last_segment(base_dir, dir, wc_segment, effective_prefix);
             } else {
                 // Not the last segment, nonempty wildcard.
-                assert(next_slash != NULL);
+                assert(next_slash != nullptr);
                 this->expand_intermediate_segment(base_dir, dir, wc_segment, wc_remainder,
                                                   effective_prefix + wc_segment + L'/');
             }
@@ -901,7 +901,7 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
 
 int wildcard_expand_string(const wcstring &wc, const wcstring &working_directory,
                            expand_flags_t flags, std::vector<completion_t> *output) {
-    assert(output != NULL);
+    assert(output != nullptr);
     // Fuzzy matching only if we're doing completions.
     assert(flags.get(expand_flag::for_completions) || !flags.get(expand_flag::fuzzy_match));
 

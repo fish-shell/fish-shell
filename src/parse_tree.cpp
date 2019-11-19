@@ -124,7 +124,7 @@ wcstring parse_error_t::describe(const wcstring &src, bool is_interactive) const
 }
 
 void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt) {
-    assert(errors != NULL);
+    assert(errors != nullptr);
     if (amt > 0) {
         size_t i, max = errors->size();
         for (i = 0; i < max; i++) {
@@ -593,10 +593,10 @@ void parse_ll_t::determine_node_ranges() {
 }
 
 void parse_ll_t::acquire_output(parse_node_tree_t *output, parse_error_list_t *errors) {
-    if (output != NULL) {
+    if (output != nullptr) {
         *output = std::move(this->nodes);
     }
-    if (errors != NULL) {
+    if (errors != nullptr) {
         *errors = std::move(this->errors);
     }
 }
@@ -752,14 +752,14 @@ bool parse_ll_t::report_error_for_unclosed_block() {
     // switch_statement, etc., each with different node structures. But keep descending the first
     // child and eventually you hit a keyword: begin, if, etc. That's the keyword we care about.
     const parse_node_t *end_command = this->nodes.get_parent(top_node, symbol_end_command);
-    const parse_node_t *block_node = end_command ? this->nodes.get_parent(*end_command) : NULL;
+    const parse_node_t *block_node = end_command ? this->nodes.get_parent(*end_command) : nullptr;
 
     if (block_node && block_node->type == symbol_block_statement) {
         // Get the header.
         block_node = this->nodes.get_child(*block_node, 0, symbol_block_header);
         block_node = this->nodes.get_child(*block_node, 0);  // specific statement
     }
-    if (block_node == NULL) {
+    if (block_node == nullptr) {
         return reported_error;
     }
 
@@ -773,7 +773,7 @@ bool parse_ll_t::report_error_for_unclosed_block() {
     const parse_node_t *cursor = block_node;
     while (cursor->child_count > 0) {
         cursor = this->nodes.get_child(*cursor, 0);
-        assert(cursor != NULL);
+        assert(cursor != nullptr);
     }
     if (cursor->source_start != NODE_OFFSET_INVALID) {
         const wcstring node_desc = block_type_user_presentable_description(block_node->type);
@@ -917,7 +917,7 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
         const production_element_t *production =
             production_for_token(stack_elem.type, token1, token2, &tag);
         node.tag = tag;
-        if (production == NULL) {
+        if (production == nullptr) {
             parse_error_failed_production(stack_elem, token1);
             // The above sets fatal_errored, which ends the loop.
         } else {
@@ -1066,7 +1066,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
                             parse_node_tree_t *output, parse_error_list_t *errors,
                             parse_token_type_t goal) {
     parse_ll_t parser(goal);
-    parser.set_should_generate_error_messages(errors != NULL);
+    parser.set_should_generate_error_messages(errors != nullptr);
 
     // A string whose storage we reuse.
     wcstring storage;
@@ -1147,7 +1147,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
 
 const parse_node_t *parse_node_tree_t::get_child(const parse_node_t &parent, node_offset_t which,
                                                  parse_token_type_t expected_type) const {
-    const parse_node_t *result = NULL;
+    const parse_node_t *result = nullptr;
 
     // We may get nodes with no children if we had an incomplete parse. Don't consider than an
     // error.
@@ -1185,7 +1185,7 @@ const parse_node_t &parse_node_tree_t::find_child(const parse_node_t &parent,
 
 const parse_node_t *parse_node_tree_t::get_parent(const parse_node_t &node,
                                                   parse_token_type_t expected_type) const {
-    const parse_node_t *result = NULL;
+    const parse_node_t *result = nullptr;
     if (node.parent != NODE_OFFSET_INVALID) {
         PARSE_ASSERT(node.parent < this->size());
         const parse_node_t &parent = this->at(node.parent);
@@ -1213,10 +1213,10 @@ static bool node_has_ancestor(const parse_node_tree_t &tree, const parse_node_t 
 
 const parse_node_t *parse_node_tree_t::find_node_matching_source_location(
     parse_token_type_t type, size_t source_loc, const parse_node_t *parent) const {
-    const parse_node_t *result = NULL;
+    const parse_node_t *result = nullptr;
     // Find nodes of the given type in the tree, working backwards.
     const size_t len = this->size();
-    for (size_t idx = 0; idx < len && result == NULL; idx++) {
+    for (size_t idx = 0; idx < len && result == nullptr; idx++) {
         const parse_node_t &node = this->at(idx);
 
         // Types must match.
@@ -1226,7 +1226,7 @@ const parse_node_t *parse_node_tree_t::find_node_matching_source_location(
         if (!node.location_in_or_at_end_of_source_range(source_loc)) continue;
 
         // If a parent is given, it must be an ancestor.
-        if (parent != NULL && !node_has_ancestor(*this, node, *parent)) continue;
+        if (parent != nullptr && !node_has_ancestor(*this, node, *parent)) continue;
 
         // Found it.
         result = &node;

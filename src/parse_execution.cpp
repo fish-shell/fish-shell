@@ -138,7 +138,7 @@ tnode_t<g::plain_statement> parse_execution_context_t::infinite_recursive_statem
                 cmd == forbidden_function_name) {
                 // This is it.
                 infinite_recursive_statement = plain_statement;
-                if (out_func_name != NULL) {
+                if (out_func_name != nullptr) {
                     *out_func_name = forbidden_function_name;
                 }
                 break;
@@ -783,8 +783,8 @@ parse_execution_result_t parse_execution_context_t::expand_command(
 /// Creates a 'normal' (non-block) process.
 parse_execution_result_t parse_execution_context_t::populate_plain_process(
     job_t *job, process_t *proc, tnode_t<grammar::plain_statement> statement) {
-    assert(job != NULL);
-    assert(proc != NULL);
+    assert(job != nullptr);
+    assert(proc != nullptr);
 
     // We may decide that a command should be an implicit cd.
     bool use_implicit_cd = false;
@@ -1009,7 +1009,7 @@ bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redir
         }
 
         // Append the new_io if we got one.
-        if (new_io.get() != NULL) {
+        if (new_io.get() != nullptr) {
             result.push_back(new_io);
         }
 
@@ -1258,7 +1258,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
     // Profiling support.
     long long start_time = 0, parse_time = 0, exec_time = 0;
     profile_item_t *profile_item = this->parser->create_profile_item();
-    if (profile_item != NULL) {
+    if (profile_item != nullptr) {
         start_time = get_time();
     }
 
@@ -1303,7 +1303,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
             }
         }
 
-        if (profile_item != NULL) {
+        if (profile_item != nullptr) {
             // Block-types profile a little weird. They have no 'parse' time, and their command is
             // just the block type.
             exec_time = get_time();
@@ -1353,7 +1353,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
     parser->libdata().caller_job_id = saved_caller_jid;
 
     // Store time it took to 'parse' the command.
-    if (profile_item != NULL) {
+    if (profile_item != nullptr) {
         parse_time = get_time();
     }
 
@@ -1384,7 +1384,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
         }
     }
 
-    if (profile_item != NULL) {
+    if (profile_item != nullptr) {
         exec_time = get_time();
         profile_item->level = parser->eval_level;
         profile_item->parse = static_cast<int>(parse_time - start_time);

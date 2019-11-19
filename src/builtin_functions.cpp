@@ -39,29 +39,29 @@ struct functions_cmd_opts_t {
     bool report_metadata = false;
     bool verbose = false;
     bool handlers = false;
-    wchar_t *handlers_type = NULL;
-    wchar_t *description = NULL;
+    wchar_t *handlers_type = nullptr;
+    wchar_t *description = nullptr;
 };
 static const wchar_t *const short_options = L":HDacd:ehnqv";
-static const struct woption long_options[] = {{L"erase", no_argument, NULL, 'e'},
-                                              {L"description", required_argument, NULL, 'd'},
-                                              {L"names", no_argument, NULL, 'n'},
-                                              {L"all", no_argument, NULL, 'a'},
-                                              {L"help", no_argument, NULL, 'h'},
-                                              {L"query", no_argument, NULL, 'q'},
-                                              {L"copy", no_argument, NULL, 'c'},
-                                              {L"details", no_argument, NULL, 'D'},
-                                              {L"verbose", no_argument, NULL, 'v'},
-                                              {L"handlers", no_argument, NULL, 'H'},
-                                              {L"handlers-type", required_argument, NULL, 't'},
-                                              {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {{L"erase", no_argument, nullptr, 'e'},
+                                              {L"description", required_argument, nullptr, 'd'},
+                                              {L"names", no_argument, nullptr, 'n'},
+                                              {L"all", no_argument, nullptr, 'a'},
+                                              {L"help", no_argument, nullptr, 'h'},
+                                              {L"query", no_argument, nullptr, 'q'},
+                                              {L"copy", no_argument, nullptr, 'c'},
+                                              {L"details", no_argument, nullptr, 'D'},
+                                              {L"verbose", no_argument, nullptr, 'v'},
+                                              {L"handlers", no_argument, nullptr, 'H'},
+                                              {L"handlers-type", required_argument, nullptr, 't'},
+                                              {nullptr, 0, nullptr, 0}};
 
 static int parse_cmd_opts(functions_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'v': {
                 opts.verbose = true;

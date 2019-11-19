@@ -304,7 +304,7 @@ static T string_to_scalar_type(const wchar_t *s, builtin_printf_state_t *state) 
         wchar_t ch = *++s;
         val = ch;
     } else {
-        wchar_t *end = NULL;
+        wchar_t *end = nullptr;
         errno = 0;
         val = raw_string_to_scalar_type<T>(s, &end);
         state->verify_numeric(s, end, errno);

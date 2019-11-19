@@ -19,15 +19,16 @@ struct contains_cmd_opts_t {
     bool print_index = false;
 };
 static const wchar_t *const short_options = L"+:hi";
-static const struct woption long_options[] = {
-    {L"help", no_argument, NULL, 'h'}, {L"index", no_argument, NULL, 'i'}, {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h'},
+                                              {L"index", no_argument, nullptr, 'i'},
+                                              {nullptr, 0, nullptr, 0}};
 
 static int parse_cmd_opts(contains_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'h': {
                 opts.print_help = true;

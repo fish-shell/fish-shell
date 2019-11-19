@@ -38,8 +38,8 @@ struct read_cmd_opts_t {
     bool print_help = false;
     int place = ENV_USER;
     wcstring prompt_cmd;
-    const wchar_t *prompt = NULL;
-    const wchar_t *prompt_str = NULL;
+    const wchar_t *prompt = nullptr;
+    const wchar_t *prompt_str = nullptr;
     const wchar_t *right_prompt = L"";
     const wchar_t *commandline = L"";
     // If a delimiter was given. Used to distinguish between the default
@@ -56,32 +56,32 @@ struct read_cmd_opts_t {
 };
 
 static const wchar_t *const short_options = L":ac:d:ghiLlm:n:p:sSuxzP:UR:LB";
-static const struct woption long_options[] = {{L"array", no_argument, NULL, 'a'},
-                                              {L"command", required_argument, NULL, 'c'},
-                                              {L"delimiter", required_argument, NULL, 'd'},
-                                              {L"export", no_argument, NULL, 'x'},
-                                              {L"global", no_argument, NULL, 'g'},
-                                              {L"help", no_argument, NULL, 'h'},
-                                              {L"line", no_argument, NULL, 'L'},
-                                              {L"list", no_argument, NULL, 'a'},
-                                              {L"local", no_argument, NULL, 'l'},
-                                              {L"nchars", required_argument, NULL, 'n'},
-                                              {L"null", no_argument, NULL, 'z'},
-                                              {L"prompt", required_argument, NULL, 'p'},
-                                              {L"prompt-str", required_argument, NULL, 'P'},
-                                              {L"right-prompt", required_argument, NULL, 'R'},
-                                              {L"shell", no_argument, NULL, 'S'},
-                                              {L"silent", no_argument, NULL, 's'},
-                                              {L"unexport", no_argument, NULL, 'u'},
-                                              {L"universal", no_argument, NULL, 'U'},
-                                              {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {{L"array", no_argument, nullptr, 'a'},
+                                              {L"command", required_argument, nullptr, 'c'},
+                                              {L"delimiter", required_argument, nullptr, 'd'},
+                                              {L"export", no_argument, nullptr, 'x'},
+                                              {L"global", no_argument, nullptr, 'g'},
+                                              {L"help", no_argument, nullptr, 'h'},
+                                              {L"line", no_argument, nullptr, 'L'},
+                                              {L"list", no_argument, nullptr, 'a'},
+                                              {L"local", no_argument, nullptr, 'l'},
+                                              {L"nchars", required_argument, nullptr, 'n'},
+                                              {L"null", no_argument, nullptr, 'z'},
+                                              {L"prompt", required_argument, nullptr, 'p'},
+                                              {L"prompt-str", required_argument, nullptr, 'P'},
+                                              {L"right-prompt", required_argument, nullptr, 'R'},
+                                              {L"shell", no_argument, nullptr, 'S'},
+                                              {L"silent", no_argument, nullptr, 's'},
+                                              {L"unexport", no_argument, nullptr, 'u'},
+                                              {L"universal", no_argument, nullptr, 'U'},
+                                              {nullptr, 0, nullptr, 0}};
 
 static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'a': {
                 opts.array = true;

@@ -197,7 +197,7 @@ static complete_flags_t resolve_auto_space(const wcstring &comp, complete_flags_
     if (flags & COMPLETE_AUTO_SPACE) {
         new_flags &= ~COMPLETE_AUTO_SPACE;
         size_t len = comp.size();
-        if (len > 0 && (std::wcschr(L"/=@:", comp.at(len - 1)) != 0))
+        if (len > 0 && (std::wcschr(L"/=@:", comp.at(len - 1)) != nullptr))
             new_flags |= COMPLETE_NO_SPACE;
     }
     return new_flags;
@@ -681,7 +681,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd) {
         expand_string(str_cmd, &this->completions,
                       this->expand_flags() | expand_flag::special_for_command |
                           expand_flag::for_completions | expand_flag::executables_only,
-                      vars, parser, NULL);
+                      vars, parser, nullptr);
     if (result != expand_result_t::error && this->wants_descriptions()) {
         this->complete_cmd_desc(str_cmd);
     }
@@ -693,7 +693,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd) {
         expand_string(
             str_cmd, &this->completions,
             this->expand_flags() | expand_flag::for_completions | expand_flag::directories_only,
-            vars, parser, NULL);
+            vars, parser, nullptr);
     UNUSED(ignore);
 
     if (str_cmd.empty() || (str_cmd.find(L'/') == wcstring::npos && str_cmd.at(0) != L'~')) {
@@ -793,18 +793,18 @@ static bool param_match(const complete_entry_opt_t *e, const wchar_t *optstr) {
 static const wchar_t *param_match2(const complete_entry_opt_t *e, const wchar_t *optstr) {
     // We may get a complete_entry_opt_t with no options if it's just arguments.
     if (e->option.empty()) {
-        return NULL;
+        return nullptr;
     }
 
     // Verify leading dashes.
     size_t cursor = leading_dash_count(optstr);
     if (cursor != e->expected_dash_count()) {
-        return NULL;
+        return nullptr;
     }
 
     // Verify options match.
     if (!string_prefixes_string(e->option, &optstr[cursor])) {
-        return NULL;
+        return nullptr;
     }
     cursor += e->option.length();
 
@@ -812,7 +812,7 @@ static const wchar_t *param_match2(const complete_entry_opt_t *e, const wchar_t 
     // sign for long options.
     assert(e->type != option_type_short);
     if (optstr[cursor] != L'=') {
-        return NULL;
+        return nullptr;
     }
     cursor += 1;
     return &optstr[cursor];
@@ -954,7 +954,7 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
                     } else {
                         arg = param_match2(&o, str.c_str());
                     }
-                    if (arg != NULL && this->condition_test(o.condition)) {
+                    if (arg != nullptr && this->condition_test(o.condition)) {
                         if (o.result_mode.requires_param) use_common = false;
                         if (o.result_mode.no_files) use_files = false;
                         if (o.result_mode.force_files) has_force = true;
@@ -1136,7 +1136,7 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
         // See #4954.
         const wcstring sep_string = wcstring(str, sep_index + 1);
         std::vector<completion_t> local_completions;
-        if (expand_string(sep_string, &local_completions, flags, vars, parser, NULL) ==
+        if (expand_string(sep_string, &local_completions, flags, vars, parser, nullptr) ==
             expand_result_t::error) {
             debug(3, L"Error while expanding string '%ls'", sep_string.c_str());
         }
@@ -1156,7 +1156,7 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
         // consider relaxing this if there was a preceding double-dash argument.
         if (string_prefixes_string(L"-", str)) flags.clear(expand_flag::fuzzy_match);
 
-        if (expand_string(str, &this->completions, flags, vars, parser, NULL) ==
+        if (expand_string(str, &this->completions, flags, vars, parser, nullptr) ==
             expand_result_t::error) {
             debug(3, L"Error while expanding string '%ls'", str.c_str());
         }
@@ -1638,7 +1638,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
     const wchar_t *cmdsubst_begin, *cmdsubst_end;
     parse_util_cmdsubst_extent(cmd_with_subcmds.c_str(), cmd_with_subcmds.size(), &cmdsubst_begin,
                                &cmdsubst_end);
-    assert(cmdsubst_begin != NULL && cmdsubst_end != NULL && cmdsubst_end >= cmdsubst_begin);
+    assert(cmdsubst_begin != nullptr && cmdsubst_end != nullptr && cmdsubst_end >= cmdsubst_begin);
     wcstring cmd = wcstring(cmdsubst_begin, cmdsubst_end - cmdsubst_begin);
     completer_t completer(vars, parser, std::move(cmd), flags);
     completer.perform();

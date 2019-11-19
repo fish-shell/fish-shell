@@ -809,7 +809,7 @@ bool pager_t::is_navigating_contents() const {
 void pager_t::set_fully_disclosed(bool flag) { fully_disclosed = flag; }
 
 const completion_t *pager_t::selected_completion(const page_rendering_t &rendering) const {
-    const completion_t *result = NULL;
+    const completion_t *result = nullptr;
     size_t idx = visual_selected_completion_index(rendering.rows, rendering.cols);
     if (idx != PAGER_SELECTION_NONE) {
         result = &completion_infos.at(idx).representative;

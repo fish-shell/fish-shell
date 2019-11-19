@@ -25,12 +25,12 @@ enum hist_cmd_t { HIST_SEARCH = 1, HIST_DELETE, HIST_CLEAR, HIST_MERGE, HIST_SAV
 // Must be sorted by string, not enum or random.
 static const enum_map<hist_cmd_t> hist_enum_map[] = {
     {HIST_CLEAR, L"clear"}, {HIST_DELETE, L"delete"}, {HIST_MERGE, L"merge"},
-    {HIST_SAVE, L"save"},   {HIST_SEARCH, L"search"}, {HIST_UNDEF, NULL}};
+    {HIST_SAVE, L"save"},   {HIST_SEARCH, L"search"}, {HIST_UNDEF, nullptr}};
 
 struct history_cmd_opts_t {
     hist_cmd_t hist_cmd = HIST_UNDEF;
     history_search_type_t search_type = static_cast<history_search_type_t>(-1);
-    const wchar_t *show_time_format = NULL;
+    const wchar_t *show_time_format = nullptr;
     size_t max_items = SIZE_MAX;
     bool print_help = false;
     bool history_search_type_defined = false;
@@ -44,21 +44,21 @@ struct history_cmd_opts_t {
 /// supported at least until fish 3.0 and possibly longer to avoid breaking everyones
 /// config.fish and other scripts.
 static const wchar_t *const short_options = L":CRcehmn:pt::z";
-static const struct woption long_options[] = {{L"prefix", no_argument, NULL, 'p'},
-                                              {L"contains", no_argument, NULL, 'c'},
-                                              {L"help", no_argument, NULL, 'h'},
-                                              {L"show-time", optional_argument, NULL, 't'},
-                                              {L"exact", no_argument, NULL, 'e'},
-                                              {L"max", required_argument, NULL, 'n'},
-                                              {L"null", no_argument, NULL, 'z'},
-                                              {L"case-sensitive", no_argument, NULL, 'C'},
-                                              {L"delete", no_argument, NULL, 1},
-                                              {L"search", no_argument, NULL, 2},
-                                              {L"save", no_argument, NULL, 3},
-                                              {L"clear", no_argument, NULL, 4},
-                                              {L"merge", no_argument, NULL, 5},
-                                              {L"reverse", no_argument, NULL, 'R'},
-                                              {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {{L"prefix", no_argument, nullptr, 'p'},
+                                              {L"contains", no_argument, nullptr, 'c'},
+                                              {L"help", no_argument, nullptr, 'h'},
+                                              {L"show-time", optional_argument, nullptr, 't'},
+                                              {L"exact", no_argument, nullptr, 'e'},
+                                              {L"max", required_argument, nullptr, 'n'},
+                                              {L"null", no_argument, nullptr, 'z'},
+                                              {L"case-sensitive", no_argument, nullptr, 'C'},
+                                              {L"delete", no_argument, nullptr, 1},
+                                              {L"search", no_argument, nullptr, 2},
+                                              {L"save", no_argument, nullptr, 3},
+                                              {L"clear", no_argument, nullptr, 4},
+                                              {L"merge", no_argument, nullptr, 5},
+                                              {L"reverse", no_argument, nullptr, 'R'},
+                                              {nullptr, 0, nullptr, 0}};
 
 /// Remember the history subcommand and disallow selecting more than one history subcommand.
 static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t sub_cmd,
@@ -99,7 +99,7 @@ static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 1: {
                 if (!set_hist_cmd(cmd, &opts.hist_cmd, HIST_DELETE, streams)) {
@@ -186,7 +186,7 @@ static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high
                     builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                     return STATUS_INVALID_ARGS;
                 }
-                w.nextchar = NULL;
+                w.nextchar = nullptr;
                 break;
             }
             default: {

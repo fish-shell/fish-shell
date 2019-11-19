@@ -174,8 +174,8 @@ static bool append_utf8(const wcstring &input, std::string *receiver, std::strin
 static bool append_file_entry(env_var_t::env_var_flags_t flags, const wcstring &key_in,
                               const wcstring &val_in, std::string *result, std::string *storage) {
     namespace f3 = fish3_uvars;
-    assert(storage != NULL);
-    assert(result != NULL);
+    assert(storage != nullptr);
+    assert(result != nullptr);
 
     // Record the length on entry, in case we need to back up.
     bool success = true;
@@ -1069,7 +1069,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
     volatile universal_notifier_shmem_t *region;
 
     void open_shmem() {
-        assert(region == NULL);
+        assert(region == nullptr);
 
         // Use a path based on our uid to avoid collisions.
         char path[NAME_MAX];
@@ -1108,13 +1108,13 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
 
         // Memory map the region.
         if (!errored) {
-            void *addr = mmap(NULL, sizeof(universal_notifier_shmem_t), PROT_READ | PROT_WRITE,
+            void *addr = mmap(nullptr, sizeof(universal_notifier_shmem_t), PROT_READ | PROT_WRITE,
                               MAP_SHARED, fd, 0);
             if (addr == MAP_FAILED) {
                 const char *error = std::strerror(errno);
                 FLOGF(error, _(L"Unable to memory map shared memory object with path '%s': %s"),
                       path, error);
-                this->region = NULL;
+                this->region = nullptr;
             } else {
                 this->region = static_cast<universal_notifier_shmem_t *>(addr);
             }
@@ -1136,7 +1136,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
     // This isn't "safe" in the sense that multiple simultaneous increments may result in one being
     // lost, but it should always result in the value being changed, which is sufficient.
     void post_notification() {
-        if (region != NULL) {
+        if (region != nullptr) {
             /* Read off the seed */
             uint32_t seed = ntohl(region->universal_variable_seed);  //!OCLINT(constant cond op)
 
@@ -1153,12 +1153,12 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
         }
     }
 
-    universal_notifier_shmem_poller_t() : last_change_time(0), last_seed(0), region(NULL) {
+    universal_notifier_shmem_poller_t() : last_change_time(0), last_seed(0), region(nullptr) {
         open_shmem();
     }
 
     ~universal_notifier_shmem_poller_t() {
-        if (region != NULL) {
+        if (region != nullptr) {
             // Behold: C++ in all its glory!
             void *address = const_cast<void *>(static_cast<volatile void *>(region));
             if (munmap(address, sizeof(universal_notifier_shmem_t)) < 0) {
@@ -1169,7 +1169,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
 
     bool poll() {
         bool result = false;
-        if (region != NULL) {
+        if (region != nullptr) {
             uint32_t seed = ntohl(region->universal_variable_seed);  //!OCLINT(constant cond op)
             if (seed != last_seed) {
                 result = true;
@@ -1424,7 +1424,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
         FD_ZERO(&fds);
         FD_SET(this->pipe_fd, &fds);
         struct timeval timeout = {};
-        select(this->pipe_fd + 1, &fds, NULL, NULL, &timeout);
+        select(this->pipe_fd + 1, &fds, nullptr, nullptr, &timeout);
         if (!FD_ISSET(this->pipe_fd, &fds)) {
             // No longer readable, no longer polling.
             polling_due_to_readable_fd = false;
@@ -1477,7 +1477,7 @@ std::unique_ptr<universal_notifier_t> universal_notifier_t::new_notifier_for_str
         }
     }
     DIE("should never reach this statement");
-    return NULL;
+    return nullptr;
 }
 
 // Default implementations.

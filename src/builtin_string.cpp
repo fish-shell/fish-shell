@@ -60,7 +60,7 @@ static bool string_args_from_stdin(const io_streams_t &streams) {
 }
 
 static const wchar_t *string_get_arg_argv(int *argidx, const wchar_t *const *argv) {
-    return argv && argv[*argidx] ? argv[(*argidx)++] : NULL;
+    return argv && argv[*argidx] ? argv[(*argidx)++] : nullptr;
 }
 
 // A helper type for extracting arguments from either argv or stdin.
@@ -119,13 +119,13 @@ class arg_iterator_t {
 
     const wcstring *nextstr() {
         if (string_args_from_stdin(streams_)) {
-            return get_arg_stdin() ? &storage_ : NULL;
+            return get_arg_stdin() ? &storage_ : nullptr;
         }
         if (auto arg = string_get_arg_argv(&argidx_, argv_)) {
             storage_ = arg;
             return &storage_;
         } else {
-            return NULL;
+            return nullptr;
         }
     }
 };
@@ -176,8 +176,8 @@ typedef struct {  //!OCLINT(too many fields)
     long start = 0;
 
     const wchar_t *chars_to_trim = L" \f\n\r\t";
-    const wchar_t *arg1 = NULL;
-    const wchar_t *arg2 = NULL;
+    const wchar_t *arg1 = nullptr;
+    const wchar_t *arg2 = nullptr;
 
     escape_string_style_t escape_style = STRING_STYLE_SCRIPT;
 } options_t;
@@ -416,27 +416,27 @@ static wcstring construct_short_opts(options_t *opts) {  //!OCLINT(high npath co
 // Note that several long flags share the same short flag. That is okay. The caller is expected
 // to indicate that a max of one of the long flags sharing a short flag is valid.
 // Remember: adjust share/completions/string.fish when `string` options change
-static const struct woption long_options[] = {{L"all", no_argument, NULL, 'a'},
-                                              {L"chars", required_argument, NULL, 'c'},
-                                              {L"count", required_argument, NULL, 'n'},
-                                              {L"entire", no_argument, NULL, 'e'},
-                                              {L"filter", no_argument, NULL, 'f'},
-                                              {L"ignore-case", no_argument, NULL, 'i'},
-                                              {L"index", no_argument, NULL, 'n'},
-                                              {L"invert", no_argument, NULL, 'v'},
-                                              {L"left", no_argument, NULL, 'l'},
-                                              {L"length", required_argument, NULL, 'l'},
-                                              {L"max", required_argument, NULL, 'm'},
-                                              {L"no-empty", no_argument, NULL, 'n'},
-                                              {L"no-newline", no_argument, NULL, 'N'},
-                                              {L"no-quoted", no_argument, NULL, 'n'},
-                                              {L"quiet", no_argument, NULL, 'q'},
-                                              {L"regex", no_argument, NULL, 'r'},
-                                              {L"right", no_argument, NULL, 'r'},
-                                              {L"start", required_argument, NULL, 's'},
-                                              {L"style", required_argument, NULL, 1},
-                                              {L"no-trim-newlines", no_argument, NULL, 'N'},
-                                              {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {{L"all", no_argument, nullptr, 'a'},
+                                              {L"chars", required_argument, nullptr, 'c'},
+                                              {L"count", required_argument, nullptr, 'n'},
+                                              {L"entire", no_argument, nullptr, 'e'},
+                                              {L"filter", no_argument, nullptr, 'f'},
+                                              {L"ignore-case", no_argument, nullptr, 'i'},
+                                              {L"index", no_argument, nullptr, 'n'},
+                                              {L"invert", no_argument, nullptr, 'v'},
+                                              {L"left", no_argument, nullptr, 'l'},
+                                              {L"length", required_argument, nullptr, 'l'},
+                                              {L"max", required_argument, nullptr, 'm'},
+                                              {L"no-empty", no_argument, nullptr, 'n'},
+                                              {L"no-newline", no_argument, nullptr, 'N'},
+                                              {L"no-quoted", no_argument, nullptr, 'n'},
+                                              {L"quiet", no_argument, nullptr, 'q'},
+                                              {L"regex", no_argument, nullptr, 'r'},
+                                              {L"right", no_argument, nullptr, 'r'},
+                                              {L"start", required_argument, nullptr, 's'},
+                                              {L"style", required_argument, nullptr, 1},
+                                              {L"no-trim-newlines", no_argument, nullptr, 'N'},
+                                              {nullptr, 0, nullptr, 0}};
 
 static const std::unordered_map<char, decltype(*handle_flag_N)> flag_to_function = {
     {'N', handle_flag_N}, {'a', handle_flag_a}, {'c', handle_flag_c}, {'e', handle_flag_e},
@@ -452,7 +452,7 @@ static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, wc
     const wchar_t *short_options = short_opts.c_str();
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         auto fn = flag_to_function.find(opt);
         if (fn != flag_to_function.end()) {
             int retval = fn->second(argv, parser, streams, w, opts);
@@ -685,7 +685,7 @@ struct compiled_regex_t {
 
     compiled_regex_t(const wchar_t *argv0, const wcstring &pattern, bool ignore_case,
                      io_streams_t &streams)
-        : code(0), match(0) {
+        : code(nullptr), match(nullptr) {
         // Disable some sequences that can lead to security problems.
         uint32_t options = PCRE2_NEVER_UTF;
 #if PCRE2_CODE_UNIT_WIDTH < 32
@@ -695,10 +695,10 @@ struct compiled_regex_t {
         int err_code = 0;
         PCRE2_SIZE err_offset = 0;
 
-        code =
-            pcre2_compile(PCRE2_SPTR(pattern.c_str()), pattern.length(),
-                          options | (ignore_case ? PCRE2_CASELESS : 0), &err_code, &err_offset, 0);
-        if (code == 0) {
+        code = pcre2_compile(PCRE2_SPTR(pattern.c_str()), pattern.length(),
+                             options | (ignore_case ? PCRE2_CASELESS : 0), &err_code, &err_offset,
+                             nullptr);
+        if (code == nullptr) {
             string_error(streams, _(L"%ls: Regular expression compile error: %ls\n"), argv0,
                          pcre2_strerror(err_code).c_str());
             string_error(streams, L"%ls: %ls\n", argv0, pattern.c_str());
@@ -706,15 +706,15 @@ struct compiled_regex_t {
             return;
         }
 
-        match = pcre2_match_data_create_from_pattern(code, 0);
+        match = pcre2_match_data_create_from_pattern(code, nullptr);
         assert(match);
     }
 
     ~compiled_regex_t() {
-        if (match != 0) {
+        if (match != nullptr) {
             pcre2_match_data_free(match);
         }
-        if (code != 0) {
+        if (code != nullptr) {
             pcre2_code_free(code);
         }
     }
@@ -785,7 +785,7 @@ class pcre2_matcher_t : public string_matcher_t {
     bool report_matches(const wcstring &arg) override {
         // A return value of true means all is well (even if no matches were found), false indicates
         // an unrecoverable error.
-        if (regex.code == 0) {
+        if (regex.code == nullptr) {
             // pcre2_compile() failed.
             return false;
         }
@@ -794,8 +794,8 @@ class pcre2_matcher_t : public string_matcher_t {
 
         // See pcre2demo.c for an explanation of this logic.
         PCRE2_SIZE arglen = arg.length();
-        int rc = report_match(
-            arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, 0, 0, regex.match, 0));
+        int rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, 0, 0,
+                                               regex.match, nullptr));
         if (rc < 0) {  // pcre2 match error.
             return false;
         } else if (rc == 0) {  // no match
@@ -822,7 +822,7 @@ class pcre2_matcher_t : public string_matcher_t {
             }
 
             rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, offset,
-                                               options, regex.match, 0));
+                                               options, regex.match, nullptr));
             if (rc < 0) {
                 return false;
             }
@@ -1008,7 +1008,7 @@ bool regex_replacer_t::replace_matches(const wcstring &arg) {
         pcre2_rc = pcre2_substitute(regex.code, PCRE2_SPTR(arg.c_str()), arglen,
                                     0,  // start offset
                                     options, regex.match,
-                                    0,  // match context
+                                    nullptr,  // match context
                                     PCRE2_SPTR(replacement->c_str()), replacement->length(),
                                     reinterpret_cast<PCRE2_UCHAR *>(output), &outlen);
 
@@ -1332,14 +1332,13 @@ static const struct string_subcommand {
                    wchar_t **argv);                       //!OCLINT(unused param)
 }
 
-string_subcommands[] = {{L"escape", &string_escape},   {L"join", &string_join},
-                        {L"join0", &string_join0},     {L"length", &string_length},
-                        {L"match", &string_match},     {L"replace", &string_replace},
-                        {L"split", &string_split},     {L"split0", &string_split0},
-                        {L"sub", &string_sub},         {L"trim", &string_trim},
-                        {L"lower", &string_lower},     {L"upper", &string_upper},
-                        {L"repeat", &string_repeat},   {L"unescape", &string_unescape},
-                        {L"collect", &string_collect}, {NULL, NULL}};
+string_subcommands[] = {
+    {L"escape", &string_escape}, {L"join", &string_join},         {L"join0", &string_join0},
+    {L"length", &string_length}, {L"match", &string_match},       {L"replace", &string_replace},
+    {L"split", &string_split},   {L"split0", &string_split0},     {L"sub", &string_sub},
+    {L"trim", &string_trim},     {L"lower", &string_lower},       {L"upper", &string_upper},
+    {L"repeat", &string_repeat}, {L"unescape", &string_unescape}, {L"collect", &string_collect},
+    {nullptr, nullptr}};
 
 /// The string builtin, for manipulating strings.
 int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
@@ -1357,7 +1356,7 @@ int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     const string_subcommand *subcmd = &string_subcommands[0];
-    while (subcmd->name != 0 && std::wcscmp(subcmd->name, argv[1]) != 0) {
+    while (subcmd->name != nullptr && std::wcscmp(subcmd->name, argv[1]) != 0) {
         subcmd++;
     }
     if (!subcmd->handler) {

@@ -103,6 +103,6 @@ int wcsfilecmp(const wchar_t *a, const wchar_t *b) {
 /// Return microseconds since the epoch.
 long long get_time() {
     struct timeval time_struct;
-    gettimeofday(&time_struct, 0);
+    gettimeofday(&time_struct, nullptr);
     return 1000000ll * time_struct.tv_sec + time_struct.tv_usec;
 }

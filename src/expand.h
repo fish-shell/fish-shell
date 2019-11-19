@@ -148,7 +148,7 @@ __warn_unused expand_result_t expand_string(wcstring input, std::vector<completi
 ///
 /// \return Whether expansion succeeded.
 bool expand_one(wcstring &string, expand_flags_t flags, const environment_t &vars,
-                const std::shared_ptr<parser_t> &parser, parse_error_list_t *errors = NULL);
+                const std::shared_ptr<parser_t> &parser, parse_error_list_t *errors = nullptr);
 
 /// Expand a command string like $HOME/bin/cmd into a command and list of arguments.
 /// Return the command and arguments by reference.
@@ -158,7 +158,7 @@ bool expand_one(wcstring &string, expand_flags_t flags, const environment_t &var
 // \return an expand error.
 expand_result_t expand_to_command_and_args(const wcstring &instr, const environment_t &vars,
                                            wcstring *out_cmd, wcstring_list_t *out_args,
-                                           parse_error_list_t *errors = NULL);
+                                           parse_error_list_t *errors = nullptr);
 
 /// Convert the variable value to a human readable form, i.e. escape things, handle arrays, etc.
 /// Suitable for pretty-printing.

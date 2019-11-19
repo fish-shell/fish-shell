@@ -89,11 +89,11 @@ bool builtin_data_t::operator<(const builtin_data_t *other) const {
 /// Counts the number of arguments in the specified null-terminated array
 int builtin_count_args(const wchar_t *const *argv) {
     int argc;
-    for (argc = 1; argv[argc] != NULL;) {
+    for (argc = 1; argv[argc] != nullptr;) {
         argc++;
     }
 
-    assert(argv[argc] == NULL);
+    assert(argv[argc] == nullptr);
     return argc;
 }
 
@@ -101,11 +101,11 @@ int builtin_count_args(const wchar_t *const *argv) {
 /// to stderr. Used by the builtin commands.
 void builtin_wperror(const wchar_t *s, io_streams_t &streams) {
     char *err = std::strerror(errno);
-    if (s != NULL) {
+    if (s != nullptr) {
         streams.err.append(s);
         streams.err.append(L": ");
     }
-    if (err != NULL) {
+    if (err != nullptr) {
         const wcstring werr = str2wcstring(err);
         streams.err.append(werr);
         streams.err.push_back(L'\n');
@@ -113,15 +113,15 @@ void builtin_wperror(const wchar_t *s, io_streams_t &streams) {
 }
 
 static const wchar_t *const short_options = L"+:h";
-static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
-                                              {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h'},
+                                              {nullptr, 0, nullptr, 0}};
 
 int parse_help_only_cmd_opts(struct help_only_cmd_opts_t &opts, int *optind, int argc,
                              wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {  //!OCLINT(too few branches)
             case 'h': {
                 opts.print_help = true;
@@ -283,7 +283,7 @@ static int builtin_break_continue(parser_t &parser, io_streams_t &streams, wchar
 /// Implementation of the builtin breakpoint command, used to launch the interactive debugger.
 static int builtin_breakpoint(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wchar_t *cmd = argv[0];
-    if (argv[1] != NULL) {
+    if (argv[1] != nullptr) {
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, cmd, 0, builtin_count_args(argv) - 1);
         return STATUS_INVALID_ARGS;
     }
@@ -310,7 +310,7 @@ static int builtin_breakpoint(parser_t &parser, io_streams_t &streams, wchar_t *
 int builtin_true(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     UNUSED(parser);
     UNUSED(streams);
-    if (argv[1] != NULL) {
+    if (argv[1] != nullptr) {
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, argv[0], 0, builtin_count_args(argv) - 1);
         return STATUS_INVALID_ARGS;
     }
@@ -320,7 +320,7 @@ int builtin_true(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 int builtin_false(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     UNUSED(parser);
     UNUSED(streams);
-    if (argv[1] != NULL) {
+    if (argv[1] != nullptr) {
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, argv[0], 0, builtin_count_args(argv) - 1);
         return STATUS_INVALID_ARGS;
     }
@@ -408,7 +408,7 @@ static const builtin_data_t *builtin_lookup(const wcstring &name) {
     if (found != array_end && name == found->name) {
         return found;
     }
-    return NULL;
+    return nullptr;
 }
 
 /// Initialize builtin data.
@@ -433,7 +433,8 @@ static bool cmd_needs_help(const wchar_t *cmd) { return contains(help_builtins, 
 proc_status_t builtin_run(parser_t &parser, int job_pgid, wchar_t **argv, io_streams_t &streams) {
     UNUSED(parser);
     UNUSED(streams);
-    if (argv == NULL || argv[0] == NULL) return proc_status_t::from_exit_code(STATUS_INVALID_ARGS);
+    if (argv == nullptr || argv[0] == nullptr)
+        return proc_status_t::from_exit_code(STATUS_INVALID_ARGS);
 
     // We can be handed a keyword by the parser as if it was a command. This happens when the user
     // follows the keyword by `-h` or `--help`. Since it isn't really a builtin command we need to
@@ -471,7 +472,7 @@ wcstring_list_t builtin_get_names() {
 
 /// Insert all builtin names into list.
 void builtin_get_names(std::vector<completion_t> *list) {
-    assert(list != NULL);
+    assert(list != nullptr);
     list->reserve(list->size() + BUILTIN_COUNT);
     for (size_t i = 0; i < BUILTIN_COUNT; i++) {
         append_completion(list, builtin_datas[i].name);

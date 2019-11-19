@@ -137,7 +137,7 @@ long convert_digit(wchar_t d, int base) {
 }
 
 /// Test whether the char is a valid hex digit as used by the `escape_string_*()` functions.
-static bool is_hex_digit(int c) { return std::strchr("0123456789ABCDEF", c) != NULL; }
+static bool is_hex_digit(int c) { return std::strchr("0123456789ABCDEF", c) != nullptr; }
 
 /// This is a specialization of `convert_digit()` that only handles base 16 and only uppercase.
 long convert_hex_digit(wchar_t d) {
@@ -216,13 +216,14 @@ bool is_windows_subsystem_for_linux() {
     for (int i = skip_levels; i < n_frames; i++) {
         Dl_info info;
         if (dladdr(callstack[i], &info) && info.dli_sname) {
-            char *demangled = NULL;
+            char *demangled = nullptr;
             int status = -1;
             if (info.dli_sname[0] == '_')
-                demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
-            swprintf(text, sizeof(text) / sizeof(wchar_t), L"%-3d %s + %td", i - skip_levels,
-                     status == 0 ? demangled : info.dli_sname == 0 ? symbols[i] : info.dli_sname,
-                     static_cast<char *>(callstack[i]) - static_cast<char *>(info.dli_saddr));
+                demangled = abi::__cxa_demangle(info.dli_sname, nullptr, nullptr, &status);
+            swprintf(
+                text, sizeof(text) / sizeof(wchar_t), L"%-3d %s + %td", i - skip_levels,
+                status == 0 ? demangled : info.dli_sname == nullptr ? symbols[i] : info.dli_sname,
+                static_cast<char *>(callstack[i]) - static_cast<char *>(info.dli_saddr));
             free(demangled);
         } else {
             swprintf(text, sizeof(text) / sizeof(wchar_t), L"%-3d %s", i - skip_levels, symbols[i]);
@@ -287,7 +288,7 @@ int fgetws2(wcstring *s, FILE *f) {
 /// area.
 static wcstring str2wcs_internal(const char *in, const size_t in_len) {
     if (in_len == 0) return wcstring();
-    assert(in != NULL);
+    assert(in != nullptr);
 
     wcstring result;
     result.reserve(in_len);
@@ -375,7 +376,7 @@ wcstring str2wcstring(const std::string &in, size_t len) {
 }
 
 char *wcs2str(const wchar_t *in, size_t len) {
-    if (!in) return NULL;
+    if (!in) return nullptr;
     size_t desired_size = MAX_UTF8_BYTES * len + 1;
     char local_buff[512];
     if (desired_size <= sizeof local_buff / sizeof *local_buff) {
@@ -507,7 +508,7 @@ void append_formatv(wcstring &target, const wchar_t *format, va_list va_orig) {
     const size_t max_size = (128 * 1024 * 1024);
     wchar_t static_buff[256];
     size_t size = 0;
-    wchar_t *buff = NULL;
+    wchar_t *buff = nullptr;
     int status = -1;
     while (status < 0) {
         // Reallocate if necessary.
@@ -520,8 +521,8 @@ void append_formatv(wcstring &target, const wchar_t *format, va_list va_orig) {
                 buff[0] = '\0';
                 break;
             }
-            buff = static_cast<wchar_t *>(realloc((buff == static_buff ? NULL : buff), size));
-            assert(buff != NULL);
+            buff = static_cast<wchar_t *>(realloc((buff == static_buff ? nullptr : buff), size));
+            assert(buff != nullptr);
         }
 
         // Try printing.
@@ -559,18 +560,18 @@ wchar_t *quote_end(const wchar_t *pos) {
     while (1) {
         pos++;
 
-        if (!*pos) return 0;
+        if (!*pos) return nullptr;
 
         if (*pos == L'\\') {
             pos++;
-            if (!*pos) return 0;
+            if (!*pos) return nullptr;
         } else {
             if (*pos == c) {
                 return const_cast<wchar_t *>(pos);
             }
         }
     }
-    return 0;
+    return nullptr;
 }
 
 void fish_setlocale() {
@@ -720,7 +721,7 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
     const char *cursor = msg;
     while (*cursor != '\0') {
         const char *end = std::strchr(cursor, '%');
-        if (end == NULL) end = cursor + std::strlen(cursor);
+        if (end == nullptr) end = cursor + std::strlen(cursor);
 
         ignore_result(write(STDERR_FILENO, cursor, end - cursor));
 
@@ -1721,7 +1722,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
 }
 
 bool unescape_string_in_place(wcstring *str, unescape_flags_t escape_special) {
-    assert(str != NULL);
+    assert(str != nullptr);
     wcstring output;
     bool success = unescape_string_internal(str->c_str(), str->size(), &output, escape_special);
     if (success) {
@@ -2145,7 +2146,7 @@ int create_directory(const wcstring &d) {
 
 wcstring format_size(long long sz) {
     wcstring result;
-    const wchar_t *sz_name[] = {L"kB", L"MB", L"GB", L"TB", L"PB", L"EB", L"ZB", L"YB", 0};
+    const wchar_t *sz_name[] = {L"kB", L"MB", L"GB", L"TB", L"PB", L"EB", L"ZB", L"YB", nullptr};
 
     if (sz < 0) {
         result.append(L"unknown");
@@ -2201,7 +2202,7 @@ void format_size_safe(char buff[128], unsigned long long sz) {
     const size_t max_len = buff_size - 1;  // need to leave room for a null terminator
     std::memset(buff, 0, buff_size);
     size_t idx = 0;
-    const char *const sz_name[] = {"kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB", NULL};
+    const char *const sz_name[] = {"kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB", nullptr};
     if (sz < 1) {
         strncpy(buff, "empty", buff_size);
     } else if (sz < 1024) {
@@ -2235,7 +2236,7 @@ void format_size_safe(char buff[128], unsigned long long sz) {
 /// the gettimeofday function and will have the same precision as that function.
 double timef() {
     struct timeval tv;
-    assert_with_errno(gettimeofday(&tv, 0) != -1);
+    assert_with_errno(gettimeofday(&tv, nullptr) != -1);
     // return (double)tv.tv_sec + 0.000001 * tv.tv_usec;
     return static_cast<double>(tv.tv_sec) + 1e-6 * tv.tv_usec;
 }
@@ -2389,7 +2390,7 @@ static CharType_t **make_null_terminated_array_helper(
     // Now allocate their sum.
     unsigned char *base =
         static_cast<unsigned char *>(malloc(pointers_allocation_len + strings_allocation_len));
-    if (!base) return NULL;
+    if (!base) return nullptr;
 
     // Divvy it up into the pointers and strings.
     CharType_t **pointers = reinterpret_cast<CharType_t **>(base);
@@ -2402,7 +2403,7 @@ static CharType_t **make_null_terminated_array_helper(
         strings = std::copy(str.begin(), str.end(), strings);  // copy the string into strings
         *strings++ = (CharType_t)(0);  // each string needs a null terminator
     }
-    *pointers++ = NULL;  // array of pointers needs a null terminator
+    *pointers++ = nullptr;  // array of pointers needs a null terminator
 
     // Make sure we know what we're doing.
     assert((unsigned char *)pointers - base == (std::ptrdiff_t)pointers_allocation_len);

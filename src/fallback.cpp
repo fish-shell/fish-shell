@@ -78,8 +78,8 @@ int fish_mkstemp_cloexec(char *name_template) {
 [[gnu::unused]] static wchar_t *wcsdup_fallback(const wchar_t *in) {
     size_t len = std::wcslen(in);
     wchar_t *out = static_cast<wchar_t *>(malloc(sizeof(wchar_t) * (len + 1)));
-    if (out == 0) {
-        return 0;
+    if (out == nullptr) {
+        return nullptr;
     }
 
     std::memcpy(out, in, sizeof(wchar_t) * (len + 1));
@@ -163,8 +163,8 @@ int wcsncasecmp(const wchar_t *a, const wchar_t *b, size_t n) {
 #ifndef HAVE_WCSNDUP
 wchar_t *wcsndup(const wchar_t *in, size_t c) {
     wchar_t *res = static_cast<wchar_t *>(malloc(sizeof(wchar_t) * (c + 1)));
-    if (res == 0) {
-        return 0;
+    if (res == nullptr) {
+        return nullptr;
     }
     wcslcpy(res, in, c + 1);
     return res;

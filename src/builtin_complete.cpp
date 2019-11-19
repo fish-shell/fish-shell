@@ -128,30 +128,31 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     bool preserve_order = false;
 
     static const wchar_t *const short_options = L":a:c:p:s:l:o:d:fFrxeuAn:C::w:hk";
-    static const struct woption long_options[] = {{L"exclusive", no_argument, NULL, 'x'},
-                                                  {L"no-files", no_argument, NULL, 'f'},
-                                                  {L"force-files", no_argument, NULL, 'F'},
-                                                  {L"require-parameter", no_argument, NULL, 'r'},
-                                                  {L"path", required_argument, NULL, 'p'},
-                                                  {L"command", required_argument, NULL, 'c'},
-                                                  {L"short-option", required_argument, NULL, 's'},
-                                                  {L"long-option", required_argument, NULL, 'l'},
-                                                  {L"old-option", required_argument, NULL, 'o'},
-                                                  {L"description", required_argument, NULL, 'd'},
-                                                  {L"arguments", required_argument, NULL, 'a'},
-                                                  {L"erase", no_argument, NULL, 'e'},
-                                                  {L"unauthoritative", no_argument, NULL, 'u'},
-                                                  {L"authoritative", no_argument, NULL, 'A'},
-                                                  {L"condition", required_argument, NULL, 'n'},
-                                                  {L"wraps", required_argument, NULL, 'w'},
-                                                  {L"do-complete", optional_argument, NULL, 'C'},
-                                                  {L"help", no_argument, NULL, 'h'},
-                                                  {L"keep-order", no_argument, NULL, 'k'},
-                                                  {NULL, 0, NULL, 0}};
+    static const struct woption long_options[] = {
+        {L"exclusive", no_argument, nullptr, 'x'},
+        {L"no-files", no_argument, nullptr, 'f'},
+        {L"force-files", no_argument, nullptr, 'F'},
+        {L"require-parameter", no_argument, nullptr, 'r'},
+        {L"path", required_argument, nullptr, 'p'},
+        {L"command", required_argument, nullptr, 'c'},
+        {L"short-option", required_argument, nullptr, 's'},
+        {L"long-option", required_argument, nullptr, 'l'},
+        {L"old-option", required_argument, nullptr, 'o'},
+        {L"description", required_argument, nullptr, 'd'},
+        {L"arguments", required_argument, nullptr, 'a'},
+        {L"erase", no_argument, nullptr, 'e'},
+        {L"unauthoritative", no_argument, nullptr, 'u'},
+        {L"authoritative", no_argument, nullptr, 'A'},
+        {L"condition", required_argument, nullptr, 'n'},
+        {L"wraps", required_argument, nullptr, 'w'},
+        {L"do-complete", optional_argument, nullptr, 'C'},
+        {L"help", no_argument, nullptr, 'h'},
+        {L"keep-order", no_argument, nullptr, 'k'},
+        {nullptr, 0, nullptr, 0}};
 
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'x': {
                 result_mode.no_files = true;
@@ -241,7 +242,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             case 'C': {
                 do_complete = true;
-                have_do_complete_param = w.woptarg != NULL;
+                have_do_complete_param = w.woptarg != nullptr;
                 if (have_do_complete_param) do_complete_param = w.woptarg;
                 break;
             }
@@ -317,7 +318,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         if (!have_do_complete_param) {
             // No argument given, try to use the current commandline.
             const wchar_t *cmd = reader_get_buffer();
-            if (cmd == NULL) {
+            if (cmd == nullptr) {
                 // This corresponds to using 'complete -C' in non-interactive mode.
                 // See #2361    .
                 builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
@@ -327,8 +328,8 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
         const wchar_t *token;
 
-        parse_util_token_extent(do_complete_param.c_str(), do_complete_param.size(), &token, 0, 0,
-                                0);
+        parse_util_token_extent(do_complete_param.c_str(), do_complete_param.size(), &token,
+                                nullptr, nullptr, nullptr);
 
         // Create a scoped transient command line, so that builtin_commandline will see our
         // argument, not the reader buffer.

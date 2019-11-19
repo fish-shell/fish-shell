@@ -39,9 +39,10 @@
 struct config_paths_t determine_config_directory_paths(const char *argv0);
 
 static const wchar_t *ctrl_symbolic_names[] = {
-    NULL,   NULL,   NULL,   NULL, NULL, NULL,   NULL, L"\\a", L"\\b", L"\\t", L"\\n",
-    L"\\v", L"\\f", L"\\r", NULL, NULL, NULL,   NULL, NULL,   NULL,   NULL,   NULL,
-    NULL,   NULL,   NULL,   NULL, NULL, L"\\e", NULL, NULL,   NULL,   NULL};
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, L"\\a",
+    L"\\b",  L"\\t",  L"\\n",  L"\\v",  L"\\f",  L"\\r",  nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, L"\\e",  nullptr, nullptr, nullptr, nullptr};
 static bool keep_running = true;
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.
@@ -95,7 +96,7 @@ static maybe_t<wcstring> sequence_name(wchar_t wc) {
 
 /// Return true if the character must be escaped when used in the sequence of chars to be bound in
 /// a `bind` command.
-static bool must_escape(wchar_t wc) { return std::wcschr(L"[]()<>{}*\\?$#;&|'\"", wc) != NULL; }
+static bool must_escape(wchar_t wc) { return std::wcschr(L"[]()<>{}*\\?$#;&|'\"", wc) != nullptr; }
 
 static void ctrl_to_symbol(wchar_t *buf, int buf_len, wchar_t wc, bool bind_friendly) {
     if (ctrl_symbolic_names[wc]) {
@@ -344,15 +345,15 @@ static bool parse_debug_frames_flag() {
 
 static bool parse_flags(int argc, char **argv, bool *continuous_mode) {
     const char *short_opts = "+cd:D:hv";
-    const struct option long_opts[] = {{"continuous", no_argument, NULL, 'c'},
-                                       {"debug-level", required_argument, NULL, 'd'},
-                                       {"debug-stack-frames", required_argument, NULL, 'D'},
-                                       {"help", no_argument, NULL, 'h'},
-                                       {"version", no_argument, NULL, 'v'},
-                                       {NULL, 0, NULL, 0}};
+    const struct option long_opts[] = {{"continuous", no_argument, nullptr, 'c'},
+                                       {"debug-level", required_argument, nullptr, 'd'},
+                                       {"debug-stack-frames", required_argument, nullptr, 'D'},
+                                       {"help", no_argument, nullptr, 'h'},
+                                       {"version", no_argument, nullptr, 'v'},
+                                       {nullptr, 0, nullptr, 0}};
     int opt;
     bool error = false;
-    while (!error && (opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
+    while (!error && (opt = getopt_long(argc, argv, short_opts, long_opts, nullptr)) != -1) {
         switch (opt) {
             case 'c': {
                 *continuous_mode = true;

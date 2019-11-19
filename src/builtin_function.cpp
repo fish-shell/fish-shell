@@ -39,18 +39,19 @@ struct function_cmd_opts_t {
 // This command is atypical in using the "-" (RETURN_IN_ORDER) option for flag parsing.
 // This is needed due to the semantics of the -a/--argument-names flag.
 static const wchar_t *const short_options = L"-:a:d:e:hj:p:s:v:w:SV:";
-static const struct woption long_options[] = {{L"description", required_argument, NULL, 'd'},
-                                              {L"on-signal", required_argument, NULL, 's'},
-                                              {L"on-job-exit", required_argument, NULL, 'j'},
-                                              {L"on-process-exit", required_argument, NULL, 'p'},
-                                              {L"on-variable", required_argument, NULL, 'v'},
-                                              {L"on-event", required_argument, NULL, 'e'},
-                                              {L"wraps", required_argument, NULL, 'w'},
-                                              {L"help", no_argument, NULL, 'h'},
-                                              {L"argument-names", required_argument, NULL, 'a'},
-                                              {L"no-scope-shadowing", no_argument, NULL, 'S'},
-                                              {L"inherit-variable", required_argument, NULL, 'V'},
-                                              {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {
+    {L"description", required_argument, nullptr, 'd'},
+    {L"on-signal", required_argument, nullptr, 's'},
+    {L"on-job-exit", required_argument, nullptr, 'j'},
+    {L"on-process-exit", required_argument, nullptr, 'p'},
+    {L"on-variable", required_argument, nullptr, 'v'},
+    {L"on-event", required_argument, nullptr, 'e'},
+    {L"wraps", required_argument, nullptr, 'w'},
+    {L"help", no_argument, nullptr, 'h'},
+    {L"argument-names", required_argument, nullptr, 'a'},
+    {L"no-scope-shadowing", no_argument, nullptr, 'S'},
+    {L"inherit-variable", required_argument, nullptr, 'V'},
+    {nullptr, 0, nullptr, 0}};
 
 static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
@@ -58,7 +59,7 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
     int opt;
     wgetopter_t w;
     bool handling_named_arguments = false;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         if (opt != 'a' && opt != 1) handling_named_arguments = false;
         switch (opt) {
             case 1: {

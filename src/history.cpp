@@ -144,7 +144,7 @@ class history_lru_cache_t : public lru_cache_t<history_lru_cache_t, history_item
         // and add it. Note that calling get_node promotes the node to the front.
         wcstring key = item.str();
         history_item_t *node = this->get(key);
-        if (node == NULL) {
+        if (node == nullptr) {
             this->insert(std::move(key), std::move(item));
         } else {
             node->creation_timestamp = std::max(node->timestamp(), item.timestamp());
@@ -252,7 +252,7 @@ struct history_impl_t {
     // the boundary are considered "old". Items whose timestemps are > the boundary are new, and are
     // ignored by this instance (unless they came from this instance). The timestamp may be adjusted
     // by incorporate_external_changes().
-    time_t boundary_timestamp{time(NULL)};
+    time_t boundary_timestamp{time(nullptr)};
 
     // How many items we add until the next vacuum. Initially a random value.
     int countdown_to_vacuum{-1};
@@ -378,7 +378,7 @@ void history_impl_t::save_unless_disabled() {
     // the counter.
     const int kVacuumFrequency = 25;
     if (countdown_to_vacuum < 0) {
-        unsigned int seed = static_cast<unsigned int>(time(NULL));
+        unsigned int seed = static_cast<unsigned int>(time(nullptr));
         // Generate a number in the range [0, kVacuumFrequency).
         countdown_to_vacuum = rand_r(&seed) / (RAND_MAX / kVacuumFrequency + 1);
     }
@@ -402,7 +402,7 @@ void history_impl_t::save_unless_disabled() {
 
 void history_impl_t::add(const wcstring &str, history_identifier_t ident, bool pending,
                          bool do_save) {
-    time_t when = time(NULL);
+    time_t when = time(nullptr);
     // Big hack: do not allow timestamps equal to our boundary date. This is because we include
     // items whose timestamps are equal to our boundary when reading old history, so we can catch
     // "just closed" items. But this means that we may interpret our own items, that we just wrote,
@@ -1108,7 +1108,7 @@ static bool should_import_bash_history_line(const wcstring &line) {
     if (line.empty()) return false;
 
     parse_node_tree_t parse_tree;
-    if (!parse_tree_from_string(line, parse_flag_none, &parse_tree, NULL)) return false;
+    if (!parse_tree_from_string(line, parse_flag_none, &parse_tree, nullptr)) return false;
 
     // In doing this test do not allow incomplete strings. Hence the "false" argument.
     parse_error_list_t errors;
@@ -1175,7 +1175,7 @@ void history_impl_t::incorporate_external_changes() {
     // is somehwhat expensive because we will be going back over old items. An optimization would be
     // to preserve old_item_offsets so that they don't have to be recomputed. (However, then items
     // *deleted* in other instances would not show up here).
-    time_t new_timestamp = time(NULL);
+    time_t new_timestamp = time(nullptr);
 
     // If for some reason the clock went backwards, we don't want to start dropping items; therefore
     // we only do work if time has progressed. This also makes multiple calls cheap.
@@ -1277,7 +1277,7 @@ void history_t::add_pending_with_file_detection(const wcstring &str,
     // Find all arguments that look like they could be file paths.
     bool needs_sync_write = false;
     parse_node_tree_t tree;
-    parse_tree_from_string(str, parse_flag_none, &tree, NULL);
+    parse_tree_from_string(str, parse_flag_none, &tree, nullptr);
 
     path_list_t potential_paths;
     for (const parse_node_t &node : tree) {

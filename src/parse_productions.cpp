@@ -13,7 +13,7 @@
 using namespace parse_productions;
 using namespace grammar;
 
-#define NO_PRODUCTION NULL
+#define NO_PRODUCTION nullptr
 
 // Herein are encoded the productions for our LL2 fish grammar.
 //
@@ -408,7 +408,7 @@ const production_element_t *parse_productions::production_for_token(parse_token_
     const production_element_t *(*resolver)(const parse_token_t &input1,  //!OCLINT(unused param)
                                             const parse_token_t &input2,  //!OCLINT(unused param)
                                             parse_node_tag_t *out_tag) =  //!OCLINT(unused param)
-        NULL;
+        nullptr;
     switch (node_type) {
 // Handle all of our grammar elements
 #define ELEM(SYM)                \
@@ -445,10 +445,10 @@ const production_element_t *parse_productions::production_for_token(parse_token_
             break;
         }
     }
-    PARSE_ASSERT(resolver != NULL);
+    PARSE_ASSERT(resolver != nullptr);
 
     const production_element_t *result = resolver(input1, input2, out_tag);
-    if (result == NULL) {
+    if (result == nullptr) {
         debug(5, L"Node type '%ls' has no production for input '%ls' (in %s)",
               token_type_description(node_type), input1.describe().c_str(), __FUNCTION__);
     }

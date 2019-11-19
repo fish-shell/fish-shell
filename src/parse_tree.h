@@ -66,7 +66,7 @@ enum {
 };
 typedef unsigned int parse_tree_flags_t;
 
-wcstring parse_dump_tree(const parse_node_tree_t &tree, const wcstring &src);
+wcstring parse_dump_tree(const parse_node_tree_t &nodes, const wcstring &src);
 
 const wchar_t *token_type_description(parse_token_type_t type);
 const wchar_t *keyword_description(parse_keyword_t type);
@@ -200,7 +200,7 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     // Utilities
 
     /// Given a node, return all of its comment nodes.
-    std::vector<tnode_t<grammar::comment>> comment_nodes_for_node(const parse_node_t &node) const;
+    std::vector<tnode_t<grammar::comment>> comment_nodes_for_node(const parse_node_t &parent) const;
 
    private:
     template <typename Type>
@@ -209,7 +209,7 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     /// the next element of the given type in that list, and the tail (by reference). Returns NULL
     /// if we've exhausted the list.
     const parse_node_t *next_node_in_node_list(const parse_node_t &node_list,
-                                               parse_token_type_t item_type,
+                                               parse_token_type_t entry_type,
                                                const parse_node_t **list_tail) const;
 };
 

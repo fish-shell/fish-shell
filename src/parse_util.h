@@ -84,7 +84,7 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
                              const wchar_t **prev_end);
 
 /// Get the linenumber at the specified character offset.
-int parse_util_lineno(const wchar_t *str, size_t len);
+int parse_util_lineno(const wchar_t *str, size_t offset);
 
 /// Calculate the line number of the specified cursor position.
 int parse_util_get_line_from_offset(const wcstring &str, size_t pos);
@@ -97,7 +97,7 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset);
 
 /// Return the given string, unescaping wildcard characters but not performing any other character
 /// transformation.
-wcstring parse_util_unescape_wildcards(const wcstring &in);
+wcstring parse_util_unescape_wildcards(const wcstring &str);
 
 /// Checks if the specified string is a help option.
 bool parse_util_argument_is_help(const wchar_t *s);

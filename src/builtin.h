@@ -80,15 +80,15 @@ enum { COMMAND_NOT_BUILTIN, BUILTIN_REGULAR, BUILTIN_FUNCTION };
 void builtin_init();
 bool builtin_exists(const wcstring &cmd);
 
-proc_status_t builtin_run(parser_t &parser, int job_pgrp, wchar_t **argv, io_streams_t &streams);
+proc_status_t builtin_run(parser_t &parser, int job_pgid, wchar_t **argv, io_streams_t &streams);
 
 wcstring_list_t builtin_get_names();
 void builtin_get_names(std::vector<completion_t> *list);
-const wchar_t *builtin_get_desc(const wcstring &b);
+const wchar_t *builtin_get_desc(const wcstring &name);
 
 wcstring builtin_help_get(parser_t &parser, const wchar_t *cmd);
 
-void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
+void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *name,
                         wcstring *error_message = nullptr);
 int builtin_count_args(const wchar_t *const *argv);
 

@@ -261,7 +261,7 @@ typedef std::vector<process_ptr_t> process_list_t;
 
 typedef int job_id_t;
 job_id_t acquire_job_id(void);
-void release_job_id(job_id_t jobid);
+void release_job_id(job_id_t jid);
 
 /// A struct represeting a job. A job is basically a pipeline of one or more processes and a couple
 /// of flags.
@@ -488,7 +488,7 @@ class parser_t;
 bool job_reap(parser_t &parser, bool interactive);
 
 /// Mark a process as failed to execute (and therefore completed).
-void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *p);
+void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *failed_proc);
 
 /// Use the procfs filesystem to look up how many jiffies of cpu time was used by this process. This
 /// function is only available on systems with the procfs file entry 'stat', i.e. Linux.

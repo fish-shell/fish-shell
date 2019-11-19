@@ -62,7 +62,7 @@ class env_universal_t {
     void load_from_fd(int fd, callback_data_list_t &callbacks);
 
     void set_internal(const wcstring &key, const env_var_t &var);
-    bool remove_internal(const wcstring &name);
+    bool remove_internal(const wcstring &key);
 
     // Functions concerned with saving.
     bool open_and_acquire_lock(const std::string &path, int *out_fd);
@@ -82,7 +82,7 @@ class env_universal_t {
     // vars_to_acquire.
     void acquire_variables(var_table_t &vars_to_acquire);
 
-    static bool populate_1_variable(const wchar_t *str, env_var_t::env_var_flags_t flags,
+    static bool populate_1_variable(const wchar_t *input, env_var_t::env_var_flags_t flags,
                                     var_table_t *vars, wcstring *storage);
 
     static void parse_message_2x_internal(const wcstring &msg, var_table_t *vars,
@@ -106,7 +106,7 @@ class env_universal_t {
     void set(const wcstring &key, env_var_t var);
 
     // Removes a variable. Returns true if it was found, false if not.
-    bool remove(const wcstring &name);
+    bool remove(const wcstring &key);
 
     // Gets variable names.
     wcstring_list_t get_names(bool show_exported, bool show_unexported) const;

@@ -92,7 +92,7 @@ struct builtin_printf_state_t {
     int print_formatted(const wchar_t *format, int argc, wchar_t **argv);
 
     void nonfatal_error(const wchar_t *fmt, ...);
-    void fatal_error(const wchar_t *format, ...);
+    void fatal_error(const wchar_t *fmt, ...);
 
     long print_esc(const wchar_t *escstart, bool octal_0);
     void print_esc_string(const wchar_t *str);

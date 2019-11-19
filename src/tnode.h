@@ -236,7 +236,7 @@ parse_statement_decoration_t get_decoration(tnode_t<grammar::plain_statement> st
 enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::job_decorator> stmt);
 
 enum parse_bool_statement_type_t bool_statement_type(
-    tnode_t<grammar::job_conjunction_continuation> stmt);
+    tnode_t<grammar::job_conjunction_continuation> cont);
 
 /// Given a redirection node, get the parsed redirection and target of the redirection (file path,
 /// or fd).

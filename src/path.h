@@ -44,7 +44,7 @@ void path_emit_config_directory_errors(env_stack_t &vars);
 /// Returns:
 /// false if the command can not be found else true. The result
 /// should be freed with free().
-bool path_get_path(const wcstring &cmd, wcstring *output_or_NULL, const environment_t &vars);
+bool path_get_path(const wcstring &cmd, wcstring *out_path, const environment_t &vars);
 
 /// Return all the paths that match the given command.
 wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars);

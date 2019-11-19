@@ -229,7 +229,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     wcstring user_presentable_path(const wcstring &path) const;
 
     /// Helper for stack_trace().
-    void stack_trace_internal(size_t block_idx, wcstring *out) const;
+    void stack_trace_internal(size_t block_idx, wcstring *buff) const;
 
     /// Create a parser.
     parser_t();
@@ -318,7 +318,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     block_t *push_block(block_t &&b);
 
     /// Remove the outermost block, asserting it's the given one.
-    void pop_block(const block_t *b);
+    void pop_block(const block_t *expected);
 
     /// Return a description of the given blocktype.
     const wchar_t *get_block_desc(int block) const;

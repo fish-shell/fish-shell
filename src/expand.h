@@ -146,8 +146,8 @@ __warn_unused expand_result_t expand_string(wcstring input, std::vector<completi
 /// \param parser the parser to use for command substitutions, or nullptr to disable.
 /// \param errors Resulting errors, or NULL to ignore
 ///
-/// \return Whether expansion succeeded
-bool expand_one(wcstring &inout_str, expand_flags_t flags, const environment_t &vars,
+/// \return Whether expansion succeeded.
+bool expand_one(wcstring &string, expand_flags_t flags, const environment_t &vars,
                 const std::shared_ptr<parser_t> &parser, parse_error_list_t *errors = NULL);
 
 /// Expand a command string like $HOME/bin/cmd into a command and list of arguments.

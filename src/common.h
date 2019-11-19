@@ -748,7 +748,7 @@ void append_path_component(wcstring &path, const wcstring &component);
 wcstring format_string(const wchar_t *format, ...);
 wcstring vformat_string(const wchar_t *format, va_list va_orig);
 void append_format(wcstring &str, const wchar_t *format, ...);
-void append_formatv(wcstring &str, const wchar_t *format, va_list ap);
+void append_formatv(wcstring &target, const wchar_t *format, va_list va_orig);
 
 #ifdef HAVE_STD__MAKE_UNIQUE
 using std::make_unique;
@@ -764,7 +764,7 @@ std::unique_ptr<T> make_unique(Args &&... args) {
 /// character is detemrined by examining \c in. Returns 0 on error.
 ///
 /// \param in the position of the opening quote.
-wchar_t *quote_end(const wchar_t *in);
+wchar_t *quote_end(const wchar_t *pos);
 
 /// A call to this function will reset the error counter. Some functions print out non-critical
 /// error messages. These should check the error_count before, and skip printing the message if
@@ -1031,7 +1031,7 @@ struct hash<const wcstring> {
 #endif
 
 /// Get the absolute path to the fish executable itself
-std::string get_executable_path(const char *fallback);
+std::string get_executable_path(const char *argv0);
 
 /// A RAII wrapper for resources that don't recur, so we don't have to create a separate RAII
 /// wrapper for each function. Avoids needing to call "return cleanup()" or similar / everywhere.

@@ -378,7 +378,7 @@ void history_impl_t::save_unless_disabled() {
     // the counter.
     const int kVacuumFrequency = 25;
     if (countdown_to_vacuum < 0) {
-        unsigned int seed = static_cast<unsigned int>(time(nullptr));
+        auto seed = static_cast<unsigned int>(time(nullptr));
         // Generate a number in the range [0, kVacuumFrequency).
         countdown_to_vacuum = rand_r(&seed) / (RAND_MAX / kVacuumFrequency + 1);
     }
@@ -444,8 +444,7 @@ void history_impl_t::set_valid_file_paths(const wcstring_list_t &valid_file_path
     }
 
     // Look for an item with the given identifier. It is likely to be at the end of new_items.
-    for (history_item_list_t::reverse_iterator iter = new_items.rbegin(); iter != new_items.rend();
-         ++iter) {
+    for (auto iter = new_items.rbegin(); iter != new_items.rend(); ++iter) {
         if (iter->identifier == ident) {  // found it
             iter->required_paths = valid_file_paths;
             break;
@@ -582,7 +581,7 @@ void history_impl_t::load_old_if_needed() {
 
 bool history_search_t::go_backwards() {
     // Backwards means increasing our index.
-    const size_t max_index = static_cast<size_t>(-1);
+    const auto max_index = static_cast<size_t>(-1);
 
     if (current_index_ == max_index) return false;
 

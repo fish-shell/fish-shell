@@ -127,8 +127,8 @@ static void safe_launch_process(process_t *p, const char *actual_cmd, const char
     //  debug( 1, L"exec '%ls'", p->argv[0] );
 
     // This function never returns, so we take certain liberties with constness.
-    char *const *envv = const_cast<char *const *>(cenvv);
-    char *const *argv = const_cast<char *const *>(cargv);
+    auto envv = const_cast<char *const *>(cenvv);
+    auto argv = const_cast<char *const *>(cargv);
 
     execve(actual_cmd, argv, envv);
     err = errno;
@@ -220,7 +220,7 @@ static bool resolve_file_redirections_to_fds(const io_chain_t &in_chain, const w
             }
             case io_mode_t::file: {
                 // We have a path-based redireciton. Resolve it to a file.
-                const io_file_t *in_file = static_cast<const io_file_t *>(in.get());
+                auto in_file = static_cast<const io_file_t *>(in.get());
                 int fd = wopen(path_apply_working_directory(in_file->filename, pwd), in_file->flags,
                                OPEN_MASK);
                 if (fd < 0) {
@@ -488,7 +488,7 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
     } else if (const auto in = proc_io_chain.io_for_fd(STDIN_FILENO)) {
         switch (in->io_mode) {
             case io_mode_t::fd: {
-                const io_fd_t *in_fd = static_cast<const io_fd_t *>(in.get());
+                auto in_fd = static_cast<const io_fd_t *>(in.get());
                 // Ignore user-supplied fd redirections from an fd other than the
                 // standard ones. e.g. in source <&3 don't actually read from fd 3,
                 // which is internal to fish. We still respect this redirection in
@@ -502,14 +502,14 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
                 break;
             }
             case io_mode_t::pipe: {
-                const io_pipe_t *in_pipe = static_cast<const io_pipe_t *>(in.get());
+                auto in_pipe = static_cast<const io_pipe_t *>(in.get());
                 if (in_pipe->fd == STDIN_FILENO) {
                     local_builtin_stdin = in_pipe->pipe_fd();
                 }
                 break;
             }
             case io_mode_t::file: {
-                const io_file_t *in_file = static_cast<const io_file_t *>(in.get());
+                auto in_file = static_cast<const io_file_t *>(in.get());
                 locally_opened_stdin =
                     autoclose_fd_t{wopen(in_file->filename, in_file->flags, OPEN_MASK)};
                 if (!locally_opened_stdin.valid()) {
@@ -1248,14 +1248,13 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
 
         // Not explicitly separated. We have to split it explicitly.
         assert(!elem.is_explicitly_separated() && "should not be explicitly separated");
-        const char *begin = elem.contents.data();
-        const char *end = begin + elem.contents.size();
+        auto begin = elem.contents.data();
+        auto end = begin + elem.contents.size();
         if (split_output) {
             const char *cursor = begin;
             while (cursor < end) {
                 // Look for the next separator.
-                const char *stop =
-                    static_cast<const char *>(std::memchr(cursor, '\n', end - cursor));
+                auto stop = static_cast<const char *>(std::memchr(cursor, '\n', end - cursor));
                 const bool hit_separator = (stop != nullptr);
                 if (!hit_separator) {
                     // If it's not found, just use the end.

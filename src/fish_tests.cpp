@@ -482,8 +482,8 @@ static void test_format() {
 
 /// Helper to convert a narrow string to a sequence of hex digits.
 static char *str2hex(const char *input) {
-    char *output = (char *)malloc(5 * std::strlen(input) + 1);
-    char *p = output;
+    auto output = (char *)malloc(5 * std::strlen(input) + 1);
+    auto p = output;
     for (; *input; input++) {
         sprintf(p, "0x%02X ", (int)*input & 0xFF);
         p += 5;
@@ -1324,7 +1324,7 @@ static void test_utf82wchar(const char *src, size_t slen, const wchar_t *dst, si
 // Annoying variant to handle uchar to avoid narrowing conversion warnings.
 static void test_utf82wchar(const unsigned char *usrc, size_t slen, const wchar_t *dst, size_t dlen,
                             int flags, size_t res, const char *descr) {
-    const char *src = reinterpret_cast<const char *>(usrc);
+    auto src = reinterpret_cast<const char *>(usrc);
     return test_utf82wchar(src, slen, dst, dlen, flags, res, descr);
 }
 
@@ -1369,7 +1369,7 @@ static void test_wchar2utf8(const wchar_t *src, size_t slen, const char *dst, si
 // Annoying variant to handle uchar to avoid narrowing conversion warnings.
 static void test_wchar2utf8(const wchar_t *src, size_t slen, const unsigned char *udst, size_t dlen,
                             int flags, size_t res, const char *descr) {
-    const char *dst = reinterpret_cast<const char *>(udst);
+    auto dst = reinterpret_cast<const char *>(udst);
     return test_wchar2utf8(src, slen, dst, dlen, flags, res, descr);
 }
 
@@ -2294,7 +2294,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv);
 static bool run_one_test_test(int expected, wcstring_list_t &lst, bool bracket) {
     parser_t &parser = parser_t::principal_parser();
     size_t i, count = lst.size();
-    wchar_t **argv = new wchar_t *[count + 3];
+    auto argv = new wchar_t *[count + 3];
     argv[0] = (wchar_t *)(bracket ? L"[" : L"test");
     for (i = 0; i < count; i++) {
         argv[i + 1] = (wchar_t *)lst.at(i).c_str();

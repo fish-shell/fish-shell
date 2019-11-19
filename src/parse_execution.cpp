@@ -1021,7 +1021,7 @@ bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redir
             }
             default: {
                 int oflags = redirect->oflags();
-                io_file_t *new_io_file = new io_file_t(redirect->fd, target, oflags);
+                auto new_io_file = new io_file_t(redirect->fd, target, oflags);
                 new_io.reset(new_io_file);
                 break;
             }

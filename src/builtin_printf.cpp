@@ -487,7 +487,7 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
     switch (conversion) {
         case L'd':
         case L'i': {
-            intmax_t arg = string_to_scalar_type<intmax_t>(argument, this);
+            auto arg = string_to_scalar_type<intmax_t>(argument, this);
             if (!have_field_width) {
                 if (!have_precision)
                     this->append_format_output(fmt.c_str(), arg);
@@ -505,7 +505,7 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
         case L'u':
         case L'x':
         case L'X': {
-            uintmax_t arg = string_to_scalar_type<uintmax_t>(argument, this);
+            auto arg = string_to_scalar_type<uintmax_t>(argument, this);
             if (!have_field_width) {
                 if (!have_precision)
                     this->append_format_output(fmt.c_str(), arg);
@@ -527,7 +527,7 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
         case L'F':
         case L'g':
         case L'G': {
-            long double arg = string_to_scalar_type<long double>(argument, this);
+            auto arg = string_to_scalar_type<long double>(argument, this);
             if (!have_field_width) {
                 if (!have_precision) {
                     this->append_format_output(fmt.c_str(), arg);
@@ -578,7 +578,7 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
 static inline void modify_allowed_format_specifiers(bool ok[UCHAR_MAX + 1], const char *str,
                                                     bool flag) {
     for (const char *c = str; *c != '\0'; c++) {
-        unsigned char idx = static_cast<unsigned char>(*c);
+        auto idx = static_cast<unsigned char>(*c);
         ok[idx] = flag;
     }
 }
@@ -653,7 +653,7 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
                     ++f;
                     ++direc_length;
                     if (argc > 0) {
-                        intmax_t width = string_to_scalar_type<intmax_t>(*argv, this);
+                        auto width = string_to_scalar_type<intmax_t>(*argv, this);
                         if (INT_MIN <= width && width <= INT_MAX)
                             field_width = static_cast<int>(width);
                         else
@@ -678,7 +678,7 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
                         ++f;
                         ++direc_length;
                         if (argc > 0) {
-                            intmax_t prec = string_to_scalar_type<intmax_t>(*argv, this);
+                            auto prec = string_to_scalar_type<intmax_t>(*argv, this);
                             if (prec < 0) {
                                 // A negative precision is taken as if the precision were omitted,
                                 // so -1 is safe here even if prec < INT_MIN.

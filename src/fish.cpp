@@ -83,8 +83,8 @@ static const char *s_profiling_output_filename = nullptr;
 
 /// \return a timeval converted to milliseconds.
 long long tv_to_msec(const struct timeval &tv) {
-    long long msec = static_cast<long long>(tv.tv_sec) * 1000;  // milliseconds per second
-    msec += tv.tv_usec / 1000;                                  // microseconds per millisecond
+    auto msec = static_cast<long long>(tv.tv_sec) * 1000;  // milliseconds per second
+    msec += tv.tv_usec / 1000;                             // microseconds per millisecond
     return msec;
 }
 

@@ -109,7 +109,7 @@ void outputter_t::flush_to(int fd) {
 // Exported for builtin_set_color's usage only.
 bool outputter_t::write_color(rgb_color_t color, bool is_fg) {
     if (!cur_term) return false;
-    bool supports_term24bit =
+    auto supports_term24bit =
         static_cast<bool>(output_get_color_support() & color_support_term24bit);
     if (!supports_term24bit || !color.is_rgb()) {
         // Indexed or non-24 bit color.
@@ -353,7 +353,7 @@ static outputter_t *s_tputs_receiver{nullptr};
 static int tputs_writer(tputs_arg_t b) {
     ASSERT_IS_LOCKED(s_tputs_receiver_lock);
     assert(s_tputs_receiver && "null s_tputs_receiver");
-    char c = static_cast<char>(b);
+    auto c = static_cast<char>(b);
     s_tputs_receiver->writestr(&c, 1);
     return 0;
 }
@@ -448,7 +448,7 @@ rgb_color_t best_color(const std::vector<rgb_color_t> &candidates, color_support
     }
     // If we have both RGB and named colors, then prefer rgb if term256 is supported.
     rgb_color_t result = rgb_color_t::none();
-    bool has_term256 = static_cast<bool>(support & color_support_term256);
+    auto has_term256 = static_cast<bool>(support & color_support_term256);
     if ((!first_rgb.is_none() && has_term256) || first_named.is_none()) {
         result = first_rgb;
     } else {

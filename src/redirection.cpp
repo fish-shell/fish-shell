@@ -23,7 +23,7 @@ maybe_t<dup2_list_t> dup2_list_t::resolve_chain(const io_chain_t &io_chain) {
             case io_mode_t::file: {
                 // Here we definitely do not want to set CLO_EXEC because our child needs access.
                 // Open the file.
-                const io_file_t *io_file = static_cast<const io_file_t *>(io_ref.get());
+                auto io_file = static_cast<const io_file_t *>(io_ref.get());
                 int file_fd = wopen(io_file->filename, io_file->flags, OPEN_MASK);
                 if (file_fd < 0) {
                     if ((io_file->flags & O_EXCL) && (errno == EEXIST)) {
@@ -58,26 +58,26 @@ maybe_t<dup2_list_t> dup2_list_t::resolve_chain(const io_chain_t &io_chain) {
             }
 
             case io_mode_t::close: {
-                const io_close_t *io = static_cast<const io_close_t *>(io_ref.get());
+                auto io = static_cast<const io_close_t *>(io_ref.get());
                 result.add_close(io->fd);
                 break;
             }
 
             case io_mode_t::fd: {
-                const io_fd_t *io = static_cast<const io_fd_t *>(io_ref.get());
+                auto io = static_cast<const io_fd_t *>(io_ref.get());
                 result.add_dup2(io->old_fd, io->fd);
                 break;
             }
 
             case io_mode_t::pipe: {
-                const io_pipe_t *io = static_cast<const io_pipe_t *>(io_ref.get());
+                auto io = static_cast<const io_pipe_t *>(io_ref.get());
                 result.add_dup2(io->pipe_fd(), io->fd);
                 result.add_close(io->pipe_fd());
                 break;
             }
 
             case io_mode_t::bufferfill: {
-                const io_bufferfill_t *io = static_cast<const io_bufferfill_t *>(io_ref.get());
+                auto io = static_cast<const io_bufferfill_t *>(io_ref.get());
                 result.add_dup2(io->write_fd(), io->fd);
                 result.add_close(io->write_fd());
                 break;

@@ -205,7 +205,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
                        const environment_t &vars, path_flags_t flags) {
     ASSERT_IS_BACKGROUND_THREAD();
 
-    const bool require_dir = static_cast<bool>(flags & PATH_REQUIRE_DIR);
+    const auto require_dir = static_cast<bool>(flags & PATH_REQUIRE_DIR);
     wcstring clean_potential_path_fragment;
     int has_magic = 0;
     bool result = false;

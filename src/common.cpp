@@ -391,7 +391,7 @@ char *wcs2str(const wchar_t *in, size_t len) {
     }
 
     // Here we probably allocate a buffer probably much larger than necessary.
-    char *out = static_cast<char *>(malloc(MAX_UTF8_BYTES * len + 1));
+    auto out = static_cast<char *>(malloc(MAX_UTF8_BYTES * len + 1));
     assert(out);
     // Instead of returning the return value of wcs2str_internal, return `out` directly.
     // This eliminates false warnings in coverity about resource leaks.
@@ -997,9 +997,9 @@ static bool unescape_string_var(const wchar_t *in, wcstring *out) {
 static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring &out,
                                  escape_flags_t flags) {
     const wchar_t *in = orig_in;
-    const bool escape_all = static_cast<bool>(flags & ESCAPE_ALL);
-    const bool no_quoted = static_cast<bool>(flags & ESCAPE_NO_QUOTED);
-    const bool no_tilde = static_cast<bool>(flags & ESCAPE_NO_TILDE);
+    const auto escape_all = static_cast<bool>(flags & ESCAPE_ALL);
+    const auto no_quoted = static_cast<bool>(flags & ESCAPE_NO_QUOTED);
+    const auto no_tilde = static_cast<bool>(flags & ESCAPE_NO_TILDE);
     const bool no_caret = feature_test(features_t::stderr_nocaret);
     const bool no_qmark = feature_test(features_t::qmark_noglob);
 
@@ -1241,7 +1241,7 @@ wcstring debug_escape(const wcstring &in) {
     wcstring result;
     result.reserve(in.size());
     for (wchar_t wc : in) {
-        uint32_t c = static_cast<uint32_t>(wc);
+        auto c = static_cast<uint32_t>(wc);
         if (c <= 127 && isprint(c)) {
             result.push_back(wc);
             continue;
@@ -1458,8 +1458,8 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
     wcstring result;
     result.reserve(input_len);
 
-    const bool unescape_special = static_cast<bool>(flags & UNESCAPE_SPECIAL);
-    const bool allow_incomplete = static_cast<bool>(flags & UNESCAPE_INCOMPLETE);
+    const auto unescape_special = static_cast<bool>(flags & UNESCAPE_SPECIAL);
+    const auto allow_incomplete = static_cast<bool>(flags & UNESCAPE_INCOMPLETE);
 
     // The positions of open braces.
     std::vector<size_t> braces;
@@ -2355,7 +2355,7 @@ void assert_is_background_thread(const char *who) {
 }
 
 void assert_is_locked(void *vmutex, const char *who, const char *caller) {
-    std::mutex *mutex = static_cast<std::mutex *>(vmutex);
+    auto mutex = static_cast<std::mutex *>(vmutex);
 
     // Note that std::mutex.try_lock() is allowed to return false when the mutex isn't
     // actually locked; fortunately we are checking the opposite so we're safe.
@@ -2389,13 +2389,13 @@ static CharType_t **make_null_terminated_array_helper(
     }
 
     // Now allocate their sum.
-    unsigned char *base =
+    auto base =
         static_cast<unsigned char *>(malloc(pointers_allocation_len + strings_allocation_len));
     if (!base) return nullptr;
 
     // Divvy it up into the pointers and strings.
-    CharType_t **pointers = reinterpret_cast<CharType_t **>(base);
-    CharType_t *strings = reinterpret_cast<CharType_t *>(base + pointers_allocation_len);
+    auto pointers = reinterpret_cast<CharType_t **>(base);
+    auto strings = reinterpret_cast<CharType_t *>(base + pointers_allocation_len);
 
     // Start copying.
     for (size_t i = 0; i < count; i++) {

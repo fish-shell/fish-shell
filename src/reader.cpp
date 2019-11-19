@@ -1153,10 +1153,10 @@ bool reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
 wcstring completion_apply_to_command_line(const wcstring &val, complete_flags_t flags,
                                           const wcstring &command_line, size_t *inout_cursor_pos,
                                           bool append_only) {
-    bool add_space = !bool(flags & COMPLETE_NO_SPACE);
-    bool do_replace = bool(flags & COMPLETE_REPLACES_TOKEN);
-    bool do_escape = !bool(flags & COMPLETE_DONT_ESCAPE);
-    bool no_tilde = bool(flags & COMPLETE_DONT_ESCAPE_TILDES);
+    auto add_space = !bool(flags & COMPLETE_NO_SPACE);
+    auto do_replace = bool(flags & COMPLETE_REPLACES_TOKEN);
+    auto do_escape = !bool(flags & COMPLETE_DONT_ESCAPE);
+    auto no_tilde = bool(flags & COMPLETE_DONT_ESCAPE_TILDES);
 
     const size_t cursor_pos = *inout_cursor_pos;
     bool back_into_trailing_quote = false;
@@ -1550,7 +1550,7 @@ bool reader_data_t::handle_completions(const std::vector<completion_t> &comp, si
         if (el.match.type > best_match_type) continue;
 
         // Only use completions that match replace_token.
-        bool completion_replace_token = static_cast<bool>(el.flags & COMPLETE_REPLACES_TOKEN);
+        auto completion_replace_token = static_cast<bool>(el.flags & COMPLETE_REPLACES_TOKEN);
         if (completion_replace_token != will_replace_token) continue;
 
         // Don't use completions that want to replace, if we cannot replace them.

@@ -367,8 +367,7 @@ void inputter_t::mapping_execute(const input_mapping_t &m, bool allow_commands) 
 
     if (has_commands && !allow_commands) {
         // We don't want to run commands yet. Put the characters back and return check_exit.
-        for (wcstring::const_reverse_iterator it = m.seq.rbegin(), end = m.seq.rend(); it != end;
-             ++it) {
+        for (auto it = m.seq.rbegin(), end = m.seq.rend(); it != end; ++it) {
             event_queue_.push_front(*it);
         }
         event_queue_.push_front(char_event_type_t::check_exit);
@@ -376,9 +375,7 @@ void inputter_t::mapping_execute(const input_mapping_t &m, bool allow_commands) 
     }
     if (has_functions && !has_commands) {
         // Functions are added at the head of the input queue.
-        for (wcstring_list_t::const_reverse_iterator it = m.commands.rbegin(),
-                                                     end = m.commands.rend();
-             it != end; ++it) {
+        for (auto it = m.commands.rbegin(), end = m.commands.rend(); it != end; ++it) {
             readline_cmd_t code = input_function_get_code(*it).value();
             function_push_args(code);
             event_queue_.push_front(char_event_t(code, m.seq));
@@ -564,7 +561,7 @@ bool input_mapping_set_t::erase(const wcstring &sequence, const wcstring &mode, 
 
     bool result = false;
     mapping_list_t &ml = user ? mapping_list_ : preset_mapping_list_;
-    for (std::vector<input_mapping_t>::iterator it = ml.begin(), end = ml.end(); it != end; ++it) {
+    for (auto it = ml.begin(), end = ml.end(); it != end; ++it) {
         if (sequence == it->seq && mode == it->mode) {
             ml.erase(it);
             result = true;

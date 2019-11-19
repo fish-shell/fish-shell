@@ -150,7 +150,7 @@ wcstring expand_escape_variable(const env_var_t &var) {
 /// with [.
 static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx,
                           size_t array_size) {
-    const long size = static_cast<long>(array_size);
+    const auto size = static_cast<long>(array_size);
     size_t pos = 1;  // skip past the opening square brace
 
     int zero_index = -1;

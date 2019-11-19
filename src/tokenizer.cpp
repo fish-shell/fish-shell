@@ -258,10 +258,12 @@ tok_t tokenizer_t::read_string() {
         if (mode & tok_modes::char_escape) {
             return this->call_error(tokenizer_error_t::unterminated_escape, buff_start,
                                     this->token_cursor - 1, 1);
-        } else if (mode & tok_modes::array_brackets) {
+        }
+        if (mode & tok_modes::array_brackets) {
             return this->call_error(tokenizer_error_t::unterminated_slice, buff_start,
                                     this->start + slice_offset);
-        } else if (mode & tok_modes::subshell) {
+        }
+        if (mode & tok_modes::subshell) {
             assert(!paran_offsets.empty());
             size_t offset_of_open_paran = paran_offsets.back();
 
@@ -405,17 +407,16 @@ maybe_t<pipe_or_redir_t> pipe_or_redir_t::from_string(const wchar_t *buff) {
             if (!caret_redirs()) {
                 // ^ is not special if caret_redirs is disabled.
                 return none();
-            } else {
-                if (has_fd) {
-                    return none();
-                }
-                consume(L'^');
-                result.fd = STDERR_FILENO;
-                result.mode = redirection_mode_t::overwrite;
-                if (try_consume(L'^')) result.mode = redirection_mode_t::append;
-                if (try_consume(L'?')) result.mode = redirection_mode_t::noclob;
-                break;
             }
+            if (has_fd) {
+                return none();
+            }
+            consume(L'^');
+            result.fd = STDERR_FILENO;
+            result.mode = redirection_mode_t::overwrite;
+            if (try_consume(L'^')) result.mode = redirection_mode_t::append;
+            if (try_consume(L'?')) result.mode = redirection_mode_t::noclob;
+            break;
         }
         case L'&': {
             consume(L'&');

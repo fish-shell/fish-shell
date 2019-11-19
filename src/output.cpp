@@ -81,7 +81,8 @@ static bool write_foreground_color(outputter_t &outp, unsigned char idx) {
     if (!cur_term) return false;
     if (set_a_foreground && set_a_foreground[0]) {
         return write_color_escape(outp, set_a_foreground, idx, true);
-    } else if (set_foreground && set_foreground[0]) {
+    }
+    if (set_foreground && set_foreground[0]) {
         return write_color_escape(outp, set_foreground, idx, true);
     }
     return false;
@@ -91,7 +92,8 @@ static bool write_background_color(outputter_t &outp, unsigned char idx) {
     if (!cur_term) return false;
     if (set_a_background && set_a_background[0]) {
         return write_color_escape(outp, set_a_background, idx, false);
-    } else if (set_background && set_background[0]) {
+    }
+    if (set_background && set_background[0]) {
         return write_color_escape(outp, set_background, idx, false);
     }
     return false;

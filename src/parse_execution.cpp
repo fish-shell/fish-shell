@@ -281,21 +281,20 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(
             // 'if' condition failed, no else clause, return 0, we're done.
             parser->set_last_statuses(statuses_t::just(STATUS_CMD_OK));
             break;
+        }
+        // We have an 'else continuation' (either else-if or else).
+        if (auto maybe_if_clause = else_cont.try_get_child<g::if_clause, 0>()) {
+            // it's an 'else if', go to the next one.
+            if_clause = maybe_if_clause;
+            else_clause = else_cont.try_get_child<g::else_clause, 1>();
+            assert(else_clause && "Expected to have an else clause");
+            trace_if_enabled(*parser, L"else if");
         } else {
-            // We have an 'else continuation' (either else-if or else).
-            if (auto maybe_if_clause = else_cont.try_get_child<g::if_clause, 0>()) {
-                // it's an 'else if', go to the next one.
-                if_clause = maybe_if_clause;
-                else_clause = else_cont.try_get_child<g::else_clause, 1>();
-                assert(else_clause && "Expected to have an else clause");
-                trace_if_enabled(*parser, L"else if");
-            } else {
-                // It's the final 'else', we're done.
-                job_list_to_execute = else_cont.try_get_child<g::job_list, 1>();
-                assert(job_list_to_execute && "Should have a job list");
-                trace_if_enabled(*parser, L"else");
-                break;
-            }
+            // It's the final 'else', we're done.
+            job_list_to_execute = else_cont.try_get_child<g::job_list, 1>();
+            assert(job_list_to_execute && "Should have a job list");
+            trace_if_enabled(*parser, L"else");
+            break;
         }
     }
 
@@ -594,7 +593,8 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
         // exit the loop.
         if (cond_ret != parse_execution_success) {
             break;
-        } else if (parser->get_last_status() != EXIT_SUCCESS) {
+        }
+        if (parser->get_last_status() != EXIT_SUCCESS) {
             parser->set_last_statuses(cond_saved_status);
             break;
         }
@@ -620,9 +620,8 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(
             ld.loop_status = loop_status_t::normals;
             if (do_break) {
                 break;
-            } else {
-                continue;
             }
+            continue;
         }
 
         // no_exec means that fish was invoked with -n or --no-execute. If set, we allow the loop to
@@ -788,7 +787,8 @@ parse_execution_result_t parse_execution_context_t::expand_command(
         // of the token; we need to make them relative to the original source.
         for (auto &error : errors) error.source_start += pos_of_command_token;
         return report_errors(errors);
-    } else if (expand_err == expand_result_t::wildcard_no_match) {
+    }
+    if (expand_err == expand_result_t::wildcard_no_match) {
         return report_unmatched_wildcard_error(statement);
     }
     assert(expand_err == expand_result_t::ok || expand_err == expand_result_t::wildcard_match);
@@ -841,9 +841,8 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
                 reader_bg_job_warning(*parser);
                 last_exec_run_count = current_run_count;
                 return parse_execution_errored;
-            } else {
-                hup_background_jobs(*parser);
             }
+            hup_background_jobs(*parser);
         }
     }
 

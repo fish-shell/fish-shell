@@ -101,7 +101,8 @@ int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         if (parse_error) {
             return STATUS_INVALID_ARGS;
-        } else if (start >= end) {
+        }
+        if (start >= end) {
             streams.err.append_format(L"%ls: END must be greater than START\n", cmd);
             return STATUS_INVALID_ARGS;
         } else if (step == 0) {

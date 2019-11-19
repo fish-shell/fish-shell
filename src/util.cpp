@@ -71,7 +71,8 @@ int wcsfilecmp(const wchar_t *a, const wchar_t *b) {
         if (al < bl) {
             retval = -1;
             break;
-        } else if (al > bl) {
+        }
+        if (al > bl) {
             retval = 1;
             break;
         } else {

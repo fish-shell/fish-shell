@@ -66,11 +66,10 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                 if (handling_named_arguments) {
                     opts.named_arguments.push_back(w.woptarg);
                     break;
-                } else {
-                    streams.err.append_format(_(L"%ls: Unexpected positional argument '%ls'"), cmd,
-                                              w.woptarg);
-                    return STATUS_INVALID_ARGS;
                 }
+                streams.err.append_format(_(L"%ls: Unexpected positional argument '%ls'"), cmd,
+                                          w.woptarg);
+                return STATUS_INVALID_ARGS;
             }
             case 'd': {
                 opts.description = w.woptarg;

@@ -109,7 +109,8 @@ char *get_interpreter(const char *command, char *interpreter, size_t buff_size) 
 
     if (std::strncmp(interpreter, "#! /", 4) == 0) {
         return interpreter + 3;
-    } else if (std::strncmp(interpreter, "#!/", 3) == 0) {
+    }
+    if (std::strncmp(interpreter, "#!/", 3) == 0) {
         return interpreter + 2;
     }
 
@@ -653,12 +654,11 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
             parser.set_last_statuses(j->get_statuses());
         }
         return true;
-    } else {
-        // Construct and run our background process.
-        fflush(stdout);
-        fflush(stderr);
-        return run_internal_process(p, std::move(outbuff), std::move(errbuff), *io_chain);
     }
+    // Construct and run our background process.
+    fflush(stdout);
+    fflush(stderr);
+    return run_internal_process(p, std::move(outbuff), std::move(errbuff), *io_chain);
 }
 
 /// Executes an external command.
@@ -880,12 +880,11 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
     std::string buffer_contents = block_output_buffer->buffer().newline_serialized();
     if (!buffer_contents.empty()) {
         return run_internal_process(p, std::move(buffer_contents), {} /*errdata*/, io_chain);
-    } else {
-        if (p->is_last_in_job) {
-            parser.set_last_statuses(j->get_statuses());
-        }
-        p->completed = 1;
     }
+    if (p->is_last_in_job) {
+        parser.set_last_statuses(j->get_statuses());
+    }
+    p->completed = 1;
     return true;
 }
 
@@ -1030,7 +1029,8 @@ static process_t *get_deferred_process(const shared_ptr<job_t> &j) {
         if (p->type == process_type_t::exec) {
             // No tail reordering for execs.
             return nullptr;
-        } else if (p->type != process_type_t::external) {
+        }
+        if (p->type != process_type_t::external) {
             if (p->is_last_in_job) {
                 return nullptr;
             }

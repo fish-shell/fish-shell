@@ -450,7 +450,8 @@ wcstring normalize_path(const wcstring &path) {
     for (wcstring &comp : comps) {
         if (comp.empty() || comp == L".") {
             continue;
-        } else if (comp != L"..") {
+        }
+        if (comp != L"..") {
             new_comps.push_back(std::move(comp));
         } else if (!new_comps.empty() && new_comps.back() != L"..") {
             // '..' with a real path component, drop that path component.
@@ -476,7 +477,8 @@ wcstring path_normalize_for_cd(const wcstring &wd, const wcstring &path) {
            "Invalid working directory, it must start and end with /");
     if (path.empty()) {
         return wd;
-    } else if (path.front() == sep) {
+    }
+    if (path.front() == sep) {
         return path;
     } else if (path.front() != L'.') {
         return wd + path;
@@ -839,7 +841,8 @@ template <typename T>
 int compare(T a, T b) {
     if (a < b) {
         return -1;
-    } else if (a > b) {
+    }
+    if (a > b) {
         return 1;
     }
     return 0;

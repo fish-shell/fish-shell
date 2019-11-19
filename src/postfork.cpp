@@ -58,7 +58,8 @@ bool child_set_group(job_t *j, process_t *p) {
                     // we see the same with tcsetpgrp(2) in other places and it disappears on retry.
                     debug_safe(2, "setpgid(2) returned EPERM. Retrying");
                     continue;
-                } else if (errno == EINTR) {
+                }
+                if (errno == EINTR) {
                     // I don't think signals are blocked here. The parent (fish) redirected the
                     // signal handlers and `child_setup_process()` calls `signal_reset_handlers()`
                     // after we're done here (and not `signal_unblock()`). We're already in a loop,
@@ -119,14 +120,13 @@ bool set_child_group(job_t *j, pid_t child_pid) {
             if (errno != ESRCH && errno != EPERM && errno != EACCES) {
                 safe_perror("setpgid");
                 return false;
-            } else {
-                // Just in case it's ever not right to ignore the setpgid call, (i.e. if this
-                // ever leads to a terminal hang due if both this setpgid call AND posix_spawn's
-                // internal setpgid calls failed), write to the debug log so a future developer
-                // doesn't go crazy trying to track this down.
-                debug(2, "Error %d while calling setpgid for child %d (probably harmless)", errno,
-                      child_pid);
             }
+            // Just in case it's ever not right to ignore the setpgid call, (i.e. if this
+            // ever leads to a terminal hang due if both this setpgid call AND posix_spawn's
+            // internal setpgid calls failed), write to the debug log so a future developer
+            // doesn't go crazy trying to track this down.
+            debug(2, "Error %d while calling setpgid for child %d (probably harmless)", errno,
+                  child_pid);
         }
     } else {
         j->pgid = getpgrp();

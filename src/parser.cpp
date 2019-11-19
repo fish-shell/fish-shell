@@ -436,7 +436,8 @@ const wchar_t *parser_t::is_function(size_t idx) const {
         if (b->type() == FUNCTION_CALL || b->type() == FUNCTION_CALL_NO_SHADOW) {
             result = b->function_name.c_str();
             break;
-        } else if (b->type() == SOURCE) {
+        }
+        if (b->type() == SOURCE) {
             // If a function sources a file, obviously that function's offset doesn't contribute.
             break;
         }
@@ -459,7 +460,8 @@ const wchar_t *parser_t::get_function_name(int level) {
             idx++;
         }
         return nullptr;  // couldn't find a breakpoint frame
-    } else if (level == 1) {
+    }
+    if (level == 1) {
         // Return the function name for the current level.
         return this->is_function();
     }
@@ -497,7 +499,8 @@ const wchar_t *parser_t::current_filename() const {
         const block_t *b = this->block_at_index(i);
         if (b->type() == FUNCTION_CALL || b->type() == FUNCTION_CALL_NO_SHADOW) {
             return function_get_definition_file(b->function_name);
-        } else if (b->type() == SOURCE) {
+        }
+        if (b->type() == SOURCE) {
             return b->sourced_file;
         }
     }

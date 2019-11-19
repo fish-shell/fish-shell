@@ -567,11 +567,10 @@ te_expr *te_compile(const char *expression, te_error_t *error) {
             }
         }
         return nullptr;
-    } else {
-        optimize(root);
-        if (error) error->position = 0;
-        return root;
     }
+    optimize(root);
+    if (error) error->position = 0;
+    return root;
 }
 
 double te_interp(const char *expression, te_error_t *error) {

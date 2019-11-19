@@ -134,7 +134,8 @@ RESOLVE(statement) {
         // like an option (starts with a dash), then parse it as a decorated statement.
         if (token1.keyword == parse_keyword_function && token2.is_help_argument) {
             return production_for<decorated>();
-        } else if (token1.keyword != parse_keyword_function && token2.has_dash_prefix) {
+        }
+        if (token1.keyword != parse_keyword_function && token2.has_dash_prefix) {
             return production_for<decorated>();
         }
 
@@ -224,9 +225,8 @@ RESOLVE(case_item_list) {
     UNUSED(token2);
     UNUSED(out_tag);
 
-    if (token1.keyword == parse_keyword_case)
-        return production_for<case_items>();
-    else if (token1.type == parse_token_type_end)
+    if (token1.keyword == parse_keyword_case) return production_for<case_items>();
+    if (token1.type == parse_token_type_end)
         return production_for<blank_line>();
     else
         return production_for<empty>();
@@ -250,7 +250,8 @@ RESOLVE(andor_job_list) {
 
     if (token1.type == parse_token_type_end) {
         return production_for<empty_line>();
-    } else if (token1.keyword == parse_keyword_and || token1.keyword == parse_keyword_or) {
+    }
+    if (token1.keyword == parse_keyword_and || token1.keyword == parse_keyword_or) {
         // Check that the argument to and/or is a string that's not help. Otherwise it's either 'and
         // --help' or a naked 'and', and not part of this list.
         if (token2.type == parse_token_type_string && !token2.is_help_argument) {

@@ -179,49 +179,45 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
         }
         return STATUS_CMD_ERROR;
+    }
+    if (w.woptind < argc) {
+        int i;
 
-    } else {
-        if (w.woptind < argc) {
-            int i;
+        for (i = w.woptind; i < argc; i++) {
+            const job_t *j = nullptr;
 
-            for (i = w.woptind; i < argc; i++) {
-                const job_t *j = nullptr;
-
-                if (argv[i][0] == L'%') {
-                    int jobId = -1;
-                    jobId = fish_wcstoi(argv[i] + 1);
-                    if (errno || jobId < -1) {
-                        streams.err.append_format(_(L"%ls: '%ls' is not a valid job id"), cmd,
-                                                  argv[i]);
-                        return STATUS_INVALID_ARGS;
-                    }
-                    j = job_t::from_job_id(jobId);
-                } else {
-                    int pid = fish_wcstoi(argv[i]);
-                    if (errno || pid < 0) {
-                        streams.err.append_format(_(L"%ls: '%ls' is not a valid process id\n"), cmd,
-                                                  argv[i]);
-                        return STATUS_INVALID_ARGS;
-                    }
-                    j = job_t::from_pid(pid);
+            if (argv[i][0] == L'%') {
+                int jobId = -1;
+                jobId = fish_wcstoi(argv[i] + 1);
+                if (errno || jobId < -1) {
+                    streams.err.append_format(_(L"%ls: '%ls' is not a valid job id"), cmd, argv[i]);
+                    return STATUS_INVALID_ARGS;
                 }
-
-                if (j && !j->is_completed() && j->is_constructed()) {
-                    builtin_jobs_print(j, mode, false, streams);
-                    found = true;
-                } else {
-                    streams.err.append_format(_(L"%ls: No suitable job: %ls\n"), cmd, argv[i]);
-                    return STATUS_CMD_ERROR;
+                j = job_t::from_job_id(jobId);
+            } else {
+                int pid = fish_wcstoi(argv[i]);
+                if (errno || pid < 0) {
+                    streams.err.append_format(_(L"%ls: '%ls' is not a valid process id\n"), cmd,
+                                              argv[i]);
+                    return STATUS_INVALID_ARGS;
                 }
+                j = job_t::from_pid(pid);
             }
-        } else {
-            for (const auto &j : parser.jobs()) {
-                // Ignore unconstructed jobs, i.e. ourself.
-                if (j->is_visible()) {
-                    builtin_jobs_print(j.get(), mode, !found && !streams.out_is_redirected,
-                                       streams);
-                    found = true;
-                }
+
+            if (j && !j->is_completed() && j->is_constructed()) {
+                builtin_jobs_print(j, mode, false, streams);
+                found = true;
+            } else {
+                streams.err.append_format(_(L"%ls: No suitable job: %ls\n"), cmd, argv[i]);
+                return STATUS_CMD_ERROR;
+            }
+        }
+    } else {
+        for (const auto &j : parser.jobs()) {
+            // Ignore unconstructed jobs, i.e. ourself.
+            if (j->is_visible()) {
+                builtin_jobs_print(j.get(), mode, !found && !streams.out_is_redirected, streams);
+                found = true;
             }
         }
     }

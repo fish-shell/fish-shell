@@ -66,10 +66,9 @@ static wcstring read_file(FILE *f) {
                     debug(1, "%s (byte=%X)", std::strerror(errno), ch);
                     ret = 1;
                     continue;
-                } else {
-                    wperror(L"fgetwc");
-                    exit(1);
                 }
+                wperror(L"fgetwc");
+                exit(1);
             }
             break;
         }

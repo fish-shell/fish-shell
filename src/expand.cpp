@@ -360,16 +360,15 @@ static bool expand_variables(wcstring instr, std::vector<completion_t> *out, siz
         if (!is_single) {
             // Normal expansions of missing variables successfully expand to nothing.
             return true;
-        } else {
-            // Expansion to single argument.
-            // Replace the variable name and slice with VARIABLE_EXPAND_EMPTY.
-            wcstring res(instr, 0, varexp_char_idx);
-            if (!res.empty() && res.back() == VARIABLE_EXPAND_SINGLE) {
-                res.push_back(VARIABLE_EXPAND_EMPTY);
-            }
-            res.append(instr, var_name_and_slice_stop, wcstring::npos);
-            return expand_variables(std::move(res), out, varexp_char_idx, vars, errors);
         }
+        // Expansion to single argument.
+        // Replace the variable name and slice with VARIABLE_EXPAND_EMPTY.
+        wcstring res(instr, 0, varexp_char_idx);
+        if (!res.empty() && res.back() == VARIABLE_EXPAND_SINGLE) {
+            res.push_back(VARIABLE_EXPAND_EMPTY);
+        }
+        res.append(instr, var_name_and_slice_stop, wcstring::npos);
+        return expand_variables(std::move(res), out, varexp_char_idx, vars, errors);
     }
 
     // Ok, we have a variable or a history. Let's expand it.
@@ -426,25 +425,24 @@ static bool expand_variables(wcstring instr, std::vector<completion_t> *out, siz
         res.append(join_strings(var_item_list, delimit));
         res.append(instr, var_name_and_slice_stop, wcstring::npos);
         return expand_variables(std::move(res), out, varexp_char_idx, vars, errors);
-    } else {
-        // Normal cartesian-product expansion.
-        for (const wcstring &item : var_item_list) {
-            if (varexp_char_idx == 0 && var_name_and_slice_stop == insize) {
-                append_completion(out, item);
-            } else {
-                wcstring new_in(instr, 0, varexp_char_idx);
-                if (!new_in.empty()) {
-                    if (new_in.back() != VARIABLE_EXPAND) {
-                        new_in.push_back(INTERNAL_SEPARATOR);
-                    } else if (item.empty()) {
-                        new_in.push_back(VARIABLE_EXPAND_EMPTY);
-                    }
+    }
+    // Normal cartesian-product expansion.
+    for (const wcstring &item : var_item_list) {
+        if (varexp_char_idx == 0 && var_name_and_slice_stop == insize) {
+            append_completion(out, item);
+        } else {
+            wcstring new_in(instr, 0, varexp_char_idx);
+            if (!new_in.empty()) {
+                if (new_in.back() != VARIABLE_EXPAND) {
+                    new_in.push_back(INTERNAL_SEPARATOR);
+                } else if (item.empty()) {
+                    new_in.push_back(VARIABLE_EXPAND_EMPTY);
                 }
-                new_in.append(item);
-                new_in.append(instr, var_name_and_slice_stop, wcstring::npos);
-                if (!expand_variables(std::move(new_in), out, varexp_char_idx, vars, errors)) {
-                    return false;
-                }
+            }
+            new_in.append(item);
+            new_in.append(instr, var_name_and_slice_stop, wcstring::npos);
+            if (!expand_variables(std::move(new_in), out, varexp_char_idx, vars, errors)) {
+                return false;
             }
         }
     }

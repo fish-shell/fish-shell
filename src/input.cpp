@@ -373,7 +373,8 @@ void inputter_t::mapping_execute(const input_mapping_t &m, bool allow_commands) 
         }
         event_queue_.push_front(char_event_type_t::check_exit);
         return;  // skip the input_set_bind_mode
-    } else if (has_functions && !has_commands) {
+    }
+    if (has_functions && !has_commands) {
         // Functions are added at the head of the input queue.
         for (wcstring_list_t::const_reverse_iterator it = m.commands.rbegin(),
                                                      end = m.commands.rend();
@@ -708,10 +709,9 @@ bool input_terminfo_get_sequence(const wcstring &name, wcstring *out_seq) {
             if (!m.seq) {
                 errno = EILSEQ;
                 return false;
-            } else {
-                *out_seq = str2wcstring(*m.seq);
-                return true;
             }
+            *out_seq = str2wcstring(*m.seq);
+            return true;
         }
     }
     errno = ENOENT;

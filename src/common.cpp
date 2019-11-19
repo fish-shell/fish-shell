@@ -143,7 +143,8 @@ static bool is_hex_digit(int c) { return std::strchr("0123456789ABCDEF", c) != n
 long convert_hex_digit(wchar_t d) {
     if ((d <= L'9') && (d >= L'0')) {
         return d - L'0';
-    } else if ((d <= L'Z') && (d >= L'A')) {
+    }
+    if ((d <= L'Z') && (d >= L'A')) {
         return 10 + d - L'A';
     }
 
@@ -188,9 +189,8 @@ bool is_windows_subsystem_for_linux() {
             }
 
             return true;
-        } else {
-            return false;
         }
+        return false;
     }();
 
     // Subsequent calls to this function may take place after fork() and before exec() in
@@ -617,14 +617,14 @@ long read_blocked(int fd, void *buf, size_t count) {
         ssize_t res = read(fd, static_cast<char *>(buf) + bytes_read, count);
         if (res == 0) {
             break;
-        } else if (res == -1) {
+        }
+        if (res == -1) {
             if (errno == EINTR) continue;
             if (errno == EAGAIN) return bytes_read ? bytes_read : -1;
             return -1;
-        } else {
-            bytes_read += res;
-            count -= res;
         }
+        bytes_read += res;
+        count -= res;
     }
 
     return bytes_read;
@@ -1975,9 +1975,8 @@ static bool subsequence_in_string(const wcstring &seq, const wcstring &str) {
         size_t char_loc = str.find(c, str_idx);
         if (char_loc == wcstring::npos) {
             break;  // didn't find this character
-        } else {
-            str_idx = char_loc + 1;  // we found it, continue the search just after it
         }
+        str_idx = char_loc + 1;  // we found it, continue the search just after it
     }
 
     // We succeeded if we exhausted our sequence.
@@ -2044,9 +2043,11 @@ static inline int compare_ints(T a, T b) {
 int string_fuzzy_match_t::compare(const string_fuzzy_match_t &rhs) const {
     if (this->type != rhs.type) {
         return compare_ints(this->type, rhs.type);
-    } else if (this->match_distance_first != rhs.match_distance_first) {
+    }
+    if (this->match_distance_first != rhs.match_distance_first) {
         return compare_ints(this->match_distance_first, rhs.match_distance_first);
-    } else if (this->match_distance_second != rhs.match_distance_second) {
+    }
+    if (this->match_distance_second != rhs.match_distance_second) {
         return compare_ints(this->match_distance_second, rhs.match_distance_second);
     }
     return 0;  // equal

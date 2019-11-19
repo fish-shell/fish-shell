@@ -80,7 +80,8 @@ static maybe_t<job_control_t> job_control_str_to_mode(const wchar_t *mode, wchar
                                                       io_streams_t &streams) {
     if (std::wcscmp(mode, L"full") == 0) {
         return job_control_t::all;
-    } else if (std::wcscmp(mode, L"interactive") == 0) {
+    }
+    if (std::wcscmp(mode, L"interactive") == 0) {
         return job_control_t::interactive;
     } else if (std::wcscmp(mode, L"none") == 0) {
         return job_control_t::none;
@@ -186,7 +187,8 @@ static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
                     streams.err.append_format(_(L"%ls: Invalid level value '%ls'\n"), argv[0],
                                               w.woptarg);
                     return STATUS_INVALID_ARGS;
-                } else if (errno) {
+                }
+                if (errno) {
                     streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
                     return STATUS_INVALID_ARGS;
                 }

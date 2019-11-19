@@ -212,7 +212,8 @@ static int handle_flag_N(wchar_t **argv, parser_t &parser, io_streams_t &streams
     if (opts->no_newline_valid) {
         opts->no_newline = true;
         return STATUS_CMD_OK;
-    } else if (opts->no_trim_newlines_valid) {
+    }
+    if (opts->no_trim_newlines_valid) {
         opts->no_trim_newlines = true;
         return STATUS_CMD_OK;
     }
@@ -265,7 +266,8 @@ static int handle_flag_i(wchar_t **argv, parser_t &parser, io_streams_t &streams
     if (opts->ignore_case_valid) {
         opts->ignore_case = true;
         return STATUS_CMD_OK;
-    } else if (opts->index_valid) {
+    }
+    if (opts->index_valid) {
         opts->index = true;
         return STATUS_CMD_OK;
     }
@@ -280,12 +282,14 @@ static int handle_flag_l(wchar_t **argv, parser_t &parser, io_streams_t &streams
         if (opts->length < 0 || opts->length == LONG_MIN || errno == ERANGE) {
             string_error(streams, _(L"%ls: Invalid length value '%ls'\n"), argv[0], w.woptarg);
             return STATUS_INVALID_ARGS;
-        } else if (errno) {
+        }
+        if (errno) {
             string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
             return STATUS_INVALID_ARGS;
         }
         return STATUS_CMD_OK;
-    } else if (opts->left_valid) {
+    }
+    if (opts->left_valid) {
         opts->left = true;
         return STATUS_CMD_OK;
     }
@@ -300,7 +304,8 @@ static int handle_flag_m(wchar_t **argv, parser_t &parser, io_streams_t &streams
         if (opts->max < 0 || errno == ERANGE) {
             string_error(streams, _(L"%ls: Invalid max value '%ls'\n"), argv[0], w.woptarg);
             return STATUS_INVALID_ARGS;
-        } else if (errno) {
+        }
+        if (errno) {
             string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
             return STATUS_INVALID_ARGS;
         }
@@ -317,12 +322,14 @@ static int handle_flag_n(wchar_t **argv, parser_t &parser, io_streams_t &streams
         if (opts->count < 0 || errno == ERANGE) {
             string_error(streams, _(L"%ls: Invalid count value '%ls'\n"), argv[0], w.woptarg);
             return STATUS_INVALID_ARGS;
-        } else if (errno) {
+        }
+        if (errno) {
             string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
             return STATUS_INVALID_ARGS;
         }
         return STATUS_CMD_OK;
-    } else if (opts->index_valid) {
+    }
+    if (opts->index_valid) {
         opts->index = true;
         return STATUS_CMD_OK;
     } else if (opts->no_quoted_valid) {
@@ -351,7 +358,8 @@ static int handle_flag_r(wchar_t **argv, parser_t &parser, io_streams_t &streams
     if (opts->regex_valid) {
         opts->regex = true;
         return STATUS_CMD_OK;
-    } else if (opts->right_valid) {
+    }
+    if (opts->right_valid) {
         opts->right = true;
         return STATUS_CMD_OK;
     }
@@ -366,7 +374,8 @@ static int handle_flag_s(wchar_t **argv, parser_t &parser, io_streams_t &streams
         if (opts->start == 0 || opts->start == LONG_MIN || errno == ERANGE) {
             string_error(streams, _(L"%ls: Invalid start value '%ls'\n"), argv[0], w.woptarg);
             return STATUS_INVALID_ARGS;
-        } else if (errno) {
+        }
+        if (errno) {
             string_error(streams, BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
             return STATUS_INVALID_ARGS;
         }
@@ -737,7 +746,8 @@ class pcre2_matcher_t : public string_matcher_t {
             }
 
             return opts.invert_match ? 1 : 0;
-        } else if (pcre2_rc < 0) {
+        }
+        if (pcre2_rc < 0) {
             string_error(streams, _(L"%ls: Regular expression match error: %ls\n"), argv0,
                          pcre2_strerror(pcre2_rc).c_str());
             return -1;
@@ -798,7 +808,8 @@ class pcre2_matcher_t : public string_matcher_t {
                                                regex.match, nullptr));
         if (rc < 0) {  // pcre2 match error.
             return false;
-        } else if (rc == 0) {  // no match
+        }
+        if (rc == 0) {  // no match
             return true;
         }
         matched++;

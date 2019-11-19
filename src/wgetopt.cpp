@@ -316,7 +316,8 @@ const struct woption *wgetopter_t::_find_matching_long_opt(const struct woption 
                 *indfound = option_index;
                 *exact = 1;
                 break;
-            } else if (pfound == nullptr) {
+            }
+            if (pfound == nullptr) {
                 // First nonexact match found.
                 pfound = p;
                 *indfound = option_index;

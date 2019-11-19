@@ -132,7 +132,8 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const
                 restart_is_out_of_str = (*str_x == 0);
                 wc_x++;
                 continue;
-            } else if (*wc_x == ANY_CHAR && *str_x != 0) {
+            }
+            if (*wc_x == ANY_CHAR && *str_x != 0) {
                 if (is_first && *str_x == L'.') {
                     return fuzzy_match_none;
                 }
@@ -246,7 +247,8 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
         complete_flags_t local_flags = flags | (full_replacement ? COMPLETE_REPLACES_TOKEN : 0);
         append_completion(out, out_completion, out_desc, local_flags, match);
         return match_acceptable;
-    } else if (next_wc_char_pos > 0) {
+    }
+    if (next_wc_char_pos > 0) {
         // Here we have a non-wildcard prefix. Note that we don't do fuzzy matching for stuff before
         // a wildcard, so just do case comparison and then recurse.
         if (std::wcsncmp(str, wc, next_wc_char_pos) == 0) {
@@ -536,7 +538,8 @@ class wildcard_expander_t {
             while (wreaddir_resolving(dir, abs_unique_hierarchy, child_entry, &child_is_dir)) {
                 if (child_entry.empty() || child_entry.at(0) == L'.') {
                     continue;  // either hidden, or . and .. entries -- skip them
-                } else if (child_is_dir && unique_entry.empty()) {
+                }
+                if (child_is_dir && unique_entry.empty()) {
                     unique_entry = child_entry;  // first candidate
                 } else {
                     // We either have two or more candidates, or the child is not a directory. We're

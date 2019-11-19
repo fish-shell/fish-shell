@@ -828,10 +828,9 @@ uvar_format_t env_universal_t::format_for_contents(const std::string &s) {
         // Try reading the version.
         if (!std::strcmp(versionbuf, UVARS_VERSION_3_0)) {
             return uvar_format_t::fish_3_0;
-        } else {
-            // Unknown future version.
-            return uvar_format_t::future;
         }
+        // Unknown future version.
+        return uvar_format_t::future;
     }
     // No version found, assume 2.x
     return uvar_format_t::fish_2_x;

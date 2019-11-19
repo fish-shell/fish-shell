@@ -268,7 +268,8 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         // Show current limit value.
         print(what, hard, streams);
         return STATUS_CMD_OK;
-    } else if (arg_count != 1) {
+    }
+    if (arg_count != 1) {
         streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd);
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
@@ -285,7 +286,8 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         streams.err.append_format(_(L"%ls: New limit cannot be an empty string\n"), cmd);
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
-    } else if (wcscasecmp(argv[w.woptind], L"unlimited") == 0) {
+    }
+    if (wcscasecmp(argv[w.woptind], L"unlimited") == 0) {
         new_limit = RLIM_INFINITY;
     } else if (wcscasecmp(argv[w.woptind], L"hard") == 0) {
         new_limit = get(what, 1);

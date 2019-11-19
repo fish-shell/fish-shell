@@ -665,7 +665,8 @@ static bool parse_number(const wcstring &arg, number_t *number, wcstring_list_t 
         *number = number_t{integral, 0.0};
 
         return true;
-    } else if (got_float && errno != ERANGE) {
+    }
+    if (got_float && errno != ERANGE) {
         // Here we parsed an (in range) floating point value that could not be parsed as an integer.
         // Break the floating point value into base and delta. Ensure that base is <= the floating
         // point value.
@@ -846,7 +847,8 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (argc == 0) {
         return STATUS_INVALID_ARGS;  // Per 1003.1, exit false.
-    } else if (argc == 1) {
+    }
+    if (argc == 1) {
         // Per 1003.1, exit true if the arg is non-empty.
         return args.at(0).empty() ? STATUS_CMD_ERROR : STATUS_CMD_OK;
     }

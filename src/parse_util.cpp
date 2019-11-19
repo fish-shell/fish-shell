@@ -1179,7 +1179,8 @@ static bool detect_errors_in_plain_statement(const wcstring &buff_src,
                     // This is a loop header, so we can break or continue.
                     found_loop = true;
                     break;
-                } else if (bh.try_get_child<function_header, 0>()) {
+                }
+                if (bh.try_get_child<function_header, 0>()) {
                     // This is a function header, so we cannot break or
                     // continue. We stop our search here.
                     found_loop = false;

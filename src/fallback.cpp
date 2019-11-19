@@ -89,7 +89,8 @@ int fish_mkstemp_cloexec(char *name_template) {
 [[gnu::unused]] static int wcscasecmp_fallback(const wchar_t *a, const wchar_t *b) {
     if (*a == 0) {
         return *b == 0 ? 0 : -1;
-    } else if (*b == 0) {
+    }
+    if (*b == 0) {
         return 1;
     }
     int diff = towlower(*a) - towlower(*b);
@@ -104,7 +105,8 @@ int fish_mkstemp_cloexec(char *name_template) {
 
     if (*a == 0) {
         return *b == 0 ? 0 : -1;
-    } else if (*b == 0) {
+    }
+    if (*b == 0) {
         return 1;
     }
     int diff = towlower(*a) - towlower(*b);
@@ -282,10 +284,8 @@ int fish_wcwidth(wchar_t wc) {
     // (width 1) to an emoji (probably width 2). So treat it as width 1 so the sums work. See #2652.
     // VS15 selects text presentation.
     const wchar_t variation_selector_16 = L'\uFE0F', variation_selector_15 = L'\uFE0E';
-    if (wc == variation_selector_16)
-        return 1;
-    else if (wc == variation_selector_15)
-        return 0;
+    if (wc == variation_selector_16) return 1;
+    if (wc == variation_selector_15) return 0;
 
     // Korean Hangul Jamo median vowels and final consonants.
     // These can either appear in combined form, taking 0 width themselves,

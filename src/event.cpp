@@ -153,17 +153,14 @@ wcstring event_get_desc(const event_t &evt) {
         case event_type_t::exit: {
             if (ed.param1.pid > 0) {
                 return format_string(_(L"exit handler for process %d"), ed.param1.pid);
-            } else {
-                // In events, PGIDs are stored as negative PIDs
-                job_t *j = job_t::from_pid(-ed.param1.pid);
-                if (j) {
-                    return format_string(_(L"exit handler for job %d, '%ls'"), j->job_id,
-                                         j->command_wcstr());
-                } else {
-                    return format_string(_(L"exit handler for job with process group %d"),
-                                         -ed.param1.pid);
-                }
             }
+            // In events, PGIDs are stored as negative PIDs
+            job_t *j = job_t::from_pid(-ed.param1.pid);
+            if (j) {
+                return format_string(_(L"exit handler for job %d, '%ls'"), j->job_id,
+                                     j->command_wcstr());
+            }
+            return format_string(_(L"exit handler for job with process group %d"), -ed.param1.pid);
             DIE("Unreachable");
         }
 
@@ -172,9 +169,8 @@ wcstring event_get_desc(const event_t &evt) {
             if (j) {
                 return format_string(_(L"exit handler for job %d, '%ls'"), j->job_id,
                                      j->command_wcstr());
-            } else {
-                return format_string(_(L"exit handler for job with job id %d"), ed.param1.job_id);
             }
+            return format_string(_(L"exit handler for job with job id %d"), ed.param1.job_id);
             break;
         }
 

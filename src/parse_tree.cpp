@@ -1182,7 +1182,8 @@ static bool node_has_ancestor(const parse_node_tree_t &tree, const parse_node_t 
                               const parse_node_t &proposed_ancestor) {
     if (&node == &proposed_ancestor) {
         return true;  // found it
-    } else if (node.parent == NODE_OFFSET_INVALID) {
+    }
+    if (node.parent == NODE_OFFSET_INVALID) {
         return false;  // no more parents
     }
 

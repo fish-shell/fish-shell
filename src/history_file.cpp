@@ -87,23 +87,22 @@ static void unescape_yaml_fish_2_0(std::string *str) {
         if (backslash == std::string::npos || backslash + 1 >= size) {
             // Either not found, or found as the last character.
             break;
-        } else {
-            // Backslash found. Maybe we'll do something about it. Be sure to invoke the const
-            // version of at().
-            char escaped_char = const_str.at(backslash + 1);
-            if (escaped_char == '\\') {
-                // Two backslashes in a row. Delete the second one.
-                str->erase(backslash + 1, 1);
-                size--;
-            } else if (escaped_char == 'n') {
-                // Backslash + n. Replace with a newline.
-                str->replace(backslash, 2, "\n");
-                size--;
-            }
-            // The character at index backslash has now been made whole; start at the next
-            // character.
-            cursor = backslash + 1;
         }
+        // Backslash found. Maybe we'll do something about it. Be sure to invoke the const
+        // version of at().
+        char escaped_char = const_str.at(backslash + 1);
+        if (escaped_char == '\\') {
+            // Two backslashes in a row. Delete the second one.
+            str->erase(backslash + 1, 1);
+            size--;
+        } else if (escaped_char == 'n') {
+            // Backslash + n. Replace with a newline.
+            str->replace(backslash, 2, "\n");
+            size--;
+        }
+        // The character at index backslash has now been made whole; start at the next
+        // character.
+        cursor = backslash + 1;
     }
 }
 
@@ -495,9 +494,11 @@ static history_item_t decode_item_fish_1_x(const char *begin, size_t length) {
         if (res == static_cast<size_t>(-1)) {
             pos++;
             continue;
-        } else if (res == static_cast<size_t>(-2)) {
+        }
+        if (res == static_cast<size_t>(-2)) {
             break;
-        } else if (res == static_cast<size_t>(0)) {
+        }
+        if (res == static_cast<size_t>(0)) {
             pos++;
             continue;
         }

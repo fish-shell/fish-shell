@@ -552,7 +552,8 @@ static int argparse_parse_flags(parser_t &parser, argparse_cmd_opts_t &opts,
         if (opt == ':') {
             builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
             return STATUS_INVALID_ARGS;
-        } else if (opt == '?') {
+        }
+        if (opt == '?') {
             // It's not a recognized flag. See if it's an implicit int flag.
             const wchar_t *arg_contents = argv[w.woptind - 1] + 1;
             int retval = STATUS_CMD_OK;

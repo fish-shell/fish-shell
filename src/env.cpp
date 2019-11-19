@@ -447,9 +447,8 @@ struct query_t {
     bool export_matches(const env_var_t &var) const {
         if (has_export_unexport) {
             return var.exports() ? exports : unexports;
-        } else {
-            return true;
         }
+        return true;
     }
 };
 
@@ -660,7 +659,8 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key) cons
     }
     if (key == L"PWD") {
         return env_var_t(perproc_data().pwd, env_var_t::flag_export);
-    } else if (key == L"history") {
+    }
+    if (key == L"history") {
         // Big hack. We only allow getting the history on the main thread. Note that history_t
         // may ask for an environment variable, so don't take the lock here (we don't need it).
         if (!is_main_thread()) {
@@ -674,7 +674,8 @@ maybe_t<env_var_t> env_scoped_impl_t::try_get_computed(const wcstring &key) cons
         wcstring_list_t result;
         if (history) history->get_history(result);
         return env_var_t(L"history", std::move(result));
-    } else if (key == L"pipestatus") {
+    }
+    if (key == L"pipestatus") {
         const auto &js = perproc_data().statuses;
         wcstring_list_t result;
         result.reserve(js.pipestatus.size());
@@ -1023,7 +1024,8 @@ maybe_t<int> env_stack_impl_t::try_set_electric(const wcstring &key, const query
     // Handle computed mutable electric variables.
     if (key == L"umask") {
         return set_umask(val);
-    } else if (key == L"PWD") {
+    }
+    if (key == L"PWD") {
         assert(val.size() == 1 && "Should have exactly one element in PWD");
         wcstring &pwd = val.front();
         if (pwd != perproc_data().pwd) {

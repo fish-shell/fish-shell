@@ -844,9 +844,8 @@ void reader_reset_interrupted() { interrupted = 0; }
 bool reader_test_should_cancel() {
     if (is_main_thread()) {
         return interrupted;
-    } else {
-        return read_generation_count() != s_thread_generation;
     }
+    return read_generation_count() != s_thread_generation;
 }
 
 bool reader_test_and_clear_interrupted() {
@@ -1747,22 +1746,21 @@ static void reader_interactive_init(parser_t &parser) {
             }
             if (owner == shell_pgid) {
                 break;  // success
-            } else {
-                if (check_for_orphaned_process(loop_count, shell_pgid)) {
-                    // We're orphaned, so we just die. Another sad statistic.
-                    const wchar_t *fmt =
-                        _(L"I appear to be an orphaned process, so I am quitting politely. "
-                          L"My pid is %d.");
-                    debug(1, fmt, (int)getpid());
-                    exit_without_destructors(1);
-                }
+            }
+            if (check_for_orphaned_process(loop_count, shell_pgid)) {
+                // We're orphaned, so we just die. Another sad statistic.
+                const wchar_t *fmt =
+                    _(L"I appear to be an orphaned process, so I am quitting politely. "
+                      L"My pid is %d.");
+                debug(1, fmt, (int)getpid());
+                exit_without_destructors(1);
+            }
 
-                // Try stopping us.
-                int ret = killpg(shell_pgid, SIGTTIN);
-                if (ret < 0) {
-                    wperror(L"killpg(shell_pgid, SIGTTIN)");
-                    exit_without_destructors(1);
-                }
+            // Try stopping us.
+            int ret = killpg(shell_pgid, SIGTTIN);
+            if (ret < 0) {
+                wperror(L"killpg(shell_pgid, SIGTTIN)");
+                exit_without_destructors(1);
             }
         }
 
@@ -3268,7 +3266,8 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
             rls.coalescing_repaints = false;
             repaint_if_needed();
             continue;
-        } else if (event_needing_handling->is_eof()) {
+        }
+        if (event_needing_handling->is_eof()) {
             reader_force_exit();
             continue;
         }

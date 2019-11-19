@@ -897,9 +897,8 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
         if (c == L'\n') {
             multiline = true;
             break;
-        } else {
-            first_line_width += fish_wcwidth_min_0(c);
         }
+        first_line_width += fish_wcwidth_min_0(c);
     }
     const size_t first_command_line_width = first_line_width;
 

@@ -864,8 +864,8 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     bool result = expr->evaluate(eval_errors);
     if (!eval_errors.empty()) {
         if (!should_suppress_stderr_for_tests()) {
-            for (size_t i = 0; i < eval_errors.size(); i++) {
-                streams.err.append_format(L"%ls\n", eval_errors.at(i).c_str());
+            for (const auto &eval_error : eval_errors) {
+                streams.err.append_format(L"%ls\n", eval_error.c_str());
             }
             // Add a backtrace but not the "see help" message
             // because this isn't about passing the wrong options.

@@ -543,8 +543,7 @@ std::vector<input_mapping_name_t> input_mapping_set_t::get_names(bool user) cons
     std::vector<input_mapping_name_t> result;
     result.reserve(local_list.size());
 
-    for (size_t i = 0; i < local_list.size(); i++) {
-        const input_mapping_t &m = local_list.at(i);
+    for (const auto &m : local_list) {
         result.push_back((input_mapping_name_t){m.seq, m.mode});
     }
     return result;

@@ -709,7 +709,7 @@ bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) cons
     int err = 0;
     std::string buffer;
     buffer.reserve(HISTORY_OUTPUT_BUFFER_SIZE + 128);
-    for (const auto &key_item : lru) {
+    for (const auto key_item : lru) {
         append_history_item_to_buffer(key_item.second, &buffer);
         err = flush_to_fd(&buffer, dst_fd, HISTORY_OUTPUT_BUFFER_SIZE);
         if (err) break;

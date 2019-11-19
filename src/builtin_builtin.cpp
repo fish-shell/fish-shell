@@ -102,8 +102,8 @@ int builtin_builtin(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         wcstring_list_t names = builtin_get_names();
         std::sort(names.begin(), names.end());
 
-        for (size_t i = 0; i < names.size(); i++) {
-            const wchar_t *el = names.at(i).c_str();
+        for (const auto &name : names) {
+            auto el = name.c_str();
 
             streams.out.append(el);
             streams.out.append(L"\n");

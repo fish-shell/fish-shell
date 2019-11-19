@@ -201,11 +201,11 @@ static bool is_color_escape_seq(const wchar_t *code, size_t *resulting_length) {
         set_background,
     };
 
-    for (size_t p = 0; p < sizeof esc / sizeof *esc; p++) {
-        if (!esc[p]) continue;
+    for (auto p : esc) {
+        if (!p) continue;
 
         for (int k = 0; k < max_colors; k++) {
-            size_t esc_seq_len = try_sequence(tparm(const_cast<char *>(esc[p]), k), code);
+            size_t esc_seq_len = try_sequence(tparm(const_cast<char *>(p), k), code);
             if (esc_seq_len) {
                 *resulting_length = esc_seq_len;
                 return true;
@@ -227,12 +227,12 @@ static bool is_visual_escape_seq(const wchar_t *code, size_t *resulting_length) 
         exit_shadow_mode,    enter_standout_mode, exit_standout_mode,     enter_secure_mode,
         enter_dim_mode,      enter_blink_mode,    enter_alt_charset_mode, exit_alt_charset_mode};
 
-    for (size_t p = 0; p < sizeof esc2 / sizeof *esc2; p++) {
-        if (!esc2[p]) continue;
+    for (auto p : esc2) {
+        if (!p) continue;
         // Test both padded and unpadded version, just to be safe. Most versions of tparm don't
         // actually seem to do anything these days.
-        size_t esc_seq_len = std::max(try_sequence(tparm(const_cast<char *>(esc2[p])), code),
-                                      try_sequence(esc2[p], code));
+        size_t esc_seq_len =
+            std::max(try_sequence(tparm(const_cast<char *>(p)), code), try_sequence(p, code));
         if (esc_seq_len) {
             *resulting_length = esc_seq_len;
             return true;
@@ -892,8 +892,7 @@ static screen_layout_t compute_layout(screen_t *s, size_t screen_width,
     // Get the width of the first line, and if there is more than one line.
     bool multiline = false;
     size_t first_line_width = 0;
-    for (size_t i = 0; i < commandline.size(); i++) {
-        wchar_t c = commandline.at(i);
+    for (auto c : commandline) {
         if (c == L'\n') {
             multiline = true;
             break;

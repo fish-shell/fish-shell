@@ -435,8 +435,7 @@ rgb_color_t best_color(const std::vector<rgb_color_t> &candidates, color_support
     }
 
     rgb_color_t first_rgb = rgb_color_t::none(), first_named = rgb_color_t::none();
-    for (size_t i = 0; i < candidates.size(); i++) {
-        const rgb_color_t &color = candidates.at(i);
+    for (const auto &color : candidates) {
         if (first_rgb.is_none() && color.is_rgb()) {
             first_rgb = color;
         }

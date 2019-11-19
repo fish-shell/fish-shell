@@ -877,8 +877,8 @@ void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor
     if (exec_subshell(fish_title_command, parser, lst, false /* ignore exit status */) != -1 &&
         !lst.empty()) {
         std::fputws(L"\x1B]0;", stdout);
-        for (size_t i = 0; i < lst.size(); i++) {
-            std::fputws(lst.at(i).c_str(), stdout);
+        for (const auto &i : lst) {
+            std::fputws(i.c_str(), stdout);
         }
         ignore_result(write(STDOUT_FILENO, "\a", 1));
     }
@@ -897,8 +897,8 @@ void reader_data_t::exec_mode_prompt() {
         exec_subshell(MODE_PROMPT_FUNCTION_NAME, parser(), mode_indicator_list, false);
         // We do not support multiple lines in the mode indicator, so just concatenate all of
         // them.
-        for (size_t i = 0; i < mode_indicator_list.size(); i++) {
-            mode_prompt_buff += mode_indicator_list.at(i);
+        for (const auto &i : mode_indicator_list) {
+            mode_prompt_buff += i;
         }
     }
 }
@@ -939,9 +939,9 @@ void reader_data_t::exec_prompt() {
             wcstring_list_t prompt_list;
             // Status is ignored.
             exec_subshell(right_prompt, parser(), prompt_list, apply_exit_status);
-            for (size_t i = 0; i < prompt_list.size(); i++) {
+            for (const auto &i : prompt_list) {
                 // Right prompt does not support multiple lines, so just concatenate all of them.
-                right_prompt_buff += prompt_list.at(i);
+                right_prompt_buff += i;
             }
         }
     }
@@ -1470,8 +1470,8 @@ static bool reader_can_replace(const wcstring &in, int flags) {
 /// Determine the best match type for a set of completions.
 static fuzzy_match_type_t get_best_match_type(const std::vector<completion_t> &comp) {
     fuzzy_match_type_t best_type = fuzzy_match_none;
-    for (size_t i = 0; i < comp.size(); i++) {
-        best_type = std::min(best_type, comp.at(i).match.type);
+    for (const auto &i : comp) {
+        best_type = std::min(best_type, i.match.type);
     }
     // If the best type is an exact match, reduce it to prefix match. Otherwise a tab completion
     // will only show one match if it matches a file exactly. (see issue #959).

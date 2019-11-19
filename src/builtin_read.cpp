@@ -516,8 +516,8 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             } else {
                 // Not array mode: assign each char to a separate var with the remainder being
                 // assigned to the last var.
-                for (auto c = chars.begin(); c != chars.end() && vars_left(); ++c) {
-                    vars.set_one(*var_ptr++, opts.place, *c);
+                for (const auto &c : chars) {
+                    vars.set_one(*var_ptr++, opts.place, c);
                 }
             }
         } else if (opts.array) {

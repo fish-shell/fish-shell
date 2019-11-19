@@ -637,9 +637,8 @@ class wildcard_expander_t {
         assert(resolved_completions != nullptr);
 
         // Insert initial completions into our set to avoid duplicates.
-        for (std::vector<completion_t>::const_iterator iter = resolved_completions->begin();
-             iter != resolved_completions->end(); ++iter) {
-            this->completion_set.insert(iter->completion);
+        for (const auto &resolved_completion : *resolved_completions) {
+            this->completion_set.insert(resolved_completion.completion);
         }
     }
 

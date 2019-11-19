@@ -36,7 +36,7 @@ class parser_t;
 static void print_colors(io_streams_t &streams) {
     outputter_t outp;
 
-    for (wcstring color_name : rgb_color_t::named_color_names()) {
+    for (const auto &color_name : rgb_color_t::named_color_names()) {
         if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
             rgb_color_t color = rgb_color_t(color_name);
             outp.set_color(color, rgb_color_t::none());

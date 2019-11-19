@@ -476,8 +476,7 @@ static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, 
     wcstring_list_t names = parser.vars().get_names(compute_scope(opts));
     sort(names.begin(), names.end());
 
-    for (size_t i = 0; i < names.size(); i++) {
-        const wcstring key = names.at(i);
+    for (const auto &key : names) {
         const wcstring e_key = escape_string(key, 0);
         streams.out.append(e_key);
 

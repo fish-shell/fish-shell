@@ -251,8 +251,8 @@ int run_command_list(std::vector<std::string> *cmds, const io_chain_t &io) {
     int res = 1;
     parser_t &parser = parser_t::principal_parser();
 
-    for (size_t i = 0; i < cmds->size(); i++) {
-        const wcstring cmd_wcs = str2wcstring(cmds->at(i));
+    for (const auto &cmd : *cmds) {
+        const wcstring cmd_wcs = str2wcstring(cmd);
         res = parser.eval(cmd_wcs, io, TOP);
     }
 

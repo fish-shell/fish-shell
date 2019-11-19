@@ -410,8 +410,7 @@ std::string wcs2string(const wcstring &input) {
     mbstate_t state = {};
     char converted[MB_LEN_MAX];
 
-    for (size_t i = 0; i < input.size(); i++) {
-        wchar_t wc = input[i];
+    for (auto wc : input) {
         if (wc == INTERNAL_SEPARATOR) {
             ;  // do nothing
         } else if (wc >= ENCODE_DIRECT_BASE && wc < ENCODE_DIRECT_BASE + 256) {

@@ -1040,8 +1040,8 @@ static wcstring get_machine_identifier() {
     unsigned char mac_addr[MAC_ADDRESS_MAX_LEN] = {};
     if (get_mac_address(mac_addr)) {
         result.reserve(2 * MAC_ADDRESS_MAX_LEN);
-        for (size_t i = 0; i < MAC_ADDRESS_MAX_LEN; i++) {
-            append_format(result, L"%02x", mac_addr[i]);
+        for (auto i : mac_addr) {
+            append_format(result, L"%02x", i);
         }
     } else if (!get_hostname_identifier(result)) {
         result.assign(L"nohost");  // fallback to a dummy value

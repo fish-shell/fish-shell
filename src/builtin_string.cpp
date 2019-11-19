@@ -1110,8 +1110,8 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
 
     // If we are from the right, split_about gave us reversed strings, in reversed order!
     if (opts.right) {
-        for (size_t j = 0; j < splits.size(); j++) {
-            std::reverse(splits[j].begin(), splits[j].end());
+        for (auto &split : splits) {
+            std::reverse(split.begin(), split.end());
         }
         std::reverse(splits.begin(), splits.end());
     }

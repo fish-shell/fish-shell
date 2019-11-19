@@ -89,8 +89,7 @@ bool builtin_bind_t::list_one(const wcstring &seq, const wcstring &bind_mode, bo
     }
 
     // Now show the list of commands.
-    for (size_t i = 0; i < ecmds.size(); i++) {
-        const wcstring &ecmd = ecmds.at(i);
+    for (const auto &ecmd : ecmds) {
         const wcstring escaped_ecmd = escape_string(ecmd, ESCAPE_ALL);
         streams.out.push_back(' ');
         streams.out.append(escaped_ecmd);
@@ -143,8 +142,8 @@ void builtin_bind_t::key_names(bool all, io_streams_t &streams) {
 void builtin_bind_t::function_names(io_streams_t &streams) {
     wcstring_list_t names = input_function_get_names();
 
-    for (size_t i = 0; i < names.size(); i++) {
-        const wchar_t *seq = names.at(i).c_str();
+    for (const auto &name : names) {
+        auto seq = name.c_str();
         streams.out.append_format(L"%ls\n", seq);
     }
 }

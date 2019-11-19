@@ -368,14 +368,14 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         bool is_screen = !streams.out_is_redirected && isatty(STDOUT_FILENO);
         if (is_screen) {
             wcstring buff;
-            for (size_t i = 0; i < names.size(); i++) {
-                buff.append(names.at(i));
+            for (const auto &name : names) {
+                buff.append(name);
                 buff.append(L", ");
             }
             streams.out.append(reformat_for_screen(buff));
         } else {
-            for (size_t i = 0; i < names.size(); i++) {
-                streams.out.append(names.at(i).c_str());
+            for (const auto &name : names) {
+                streams.out.append(name.c_str());
                 streams.out.append(L"\n");
             }
         }

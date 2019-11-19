@@ -464,8 +464,8 @@ proc_status_t builtin_run(parser_t &parser, int job_pgid, wchar_t **argv, io_str
 wcstring_list_t builtin_get_names() {
     wcstring_list_t result;
     result.reserve(BUILTIN_COUNT);
-    for (size_t i = 0; i < BUILTIN_COUNT; i++) {
-        result.push_back(builtin_datas[i].name);
+    for (const auto &builtin_data : builtin_datas) {
+        result.push_back(builtin_data.name);
     }
     return result;
 }
@@ -474,8 +474,8 @@ wcstring_list_t builtin_get_names() {
 void builtin_get_names(std::vector<completion_t> *list) {
     assert(list != nullptr);
     list->reserve(list->size() + BUILTIN_COUNT);
-    for (size_t i = 0; i < BUILTIN_COUNT; i++) {
-        append_completion(list, builtin_datas[i].name);
+    for (const auto &builtin_data : builtin_datas) {
+        append_completion(list, builtin_data.name);
     }
 }
 

@@ -291,10 +291,9 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                                      false /* do not accept incomplete */)) {
             streams.err.append_format(L"%ls: Condition '%ls' contained a syntax error", cmd,
                                       condition);
-            for (size_t i = 0; i < errors.size(); i++) {
+            for (const auto &error : errors) {
                 streams.err.append_format(L"\n%ls: ", cmd);
-                streams.err.append(
-                    errors.at(i).describe(condition_string, parser.is_interactive()));
+                streams.err.append(error.describe(condition_string, parser.is_interactive()));
             }
             return STATUS_CMD_ERROR;
         }
@@ -351,9 +350,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             complete(do_complete_param, &comp, completion_request_t::fuzzy_match, parser.vars(),
                      parser.shared());
 
-            for (size_t i = 0; i < comp.size(); i++) {
-                const completion_t &next = comp.at(i);
-
+            for (const auto &next : comp) {
                 // Make a fake commandline, and then apply the completion to it.
                 const wcstring faux_cmdline = token;
                 size_t tmp_cursor = faux_cmdline.size();
@@ -414,11 +411,9 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
 
         // Handle wrap targets (probably empty). We only wrap commands, not paths.
-        for (size_t w = 0; w < wrap_targets.size(); w++) {
-            const wcstring &wrap_target = wrap_targets.at(w);
-            for (size_t i = 0; i < cmd_to_complete.size(); i++) {
-                (remove ? complete_remove_wrapper : complete_add_wrapper)(cmd_to_complete.at(i),
-                                                                          wrap_target);
+        for (const auto &wrap_target : wrap_targets) {
+            for (const auto &i : cmd_to_complete) {
+                (remove ? complete_remove_wrapper : complete_add_wrapper)(i, wrap_target);
             }
         }
     }

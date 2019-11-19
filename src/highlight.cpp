@@ -215,8 +215,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
 
     // debug( 1, L"%ls -> %ls ->%ls", path, tilde, unescaped );
 
-    for (size_t i = 0; i < path_with_magic.size(); i++) {
-        wchar_t c = path_with_magic.at(i);
+    for (auto c : path_with_magic) {
         switch (c) {
             case PROCESS_EXPAND_SELF:
             case VARIABLE_EXPAND:
@@ -385,8 +384,7 @@ rgb_color_t highlight_get_color(const highlight_spec_t &highlight, bool is_backg
 
 static bool has_expand_reserved(const wcstring &str) {
     bool result = false;
-    for (size_t i = 0; i < str.size(); i++) {
-        wchar_t wc = str.at(i);
+    for (auto wc : str) {
         if (wc >= EXPAND_RESERVED_BASE && wc <= EXPAND_RESERVED_END) {
             result = true;
             break;
@@ -1282,10 +1280,7 @@ highlighter_t::color_array_t highlighter_t::highlight() {
     }
 
     // If the cursor is over an argument, and that argument is a valid path, underline it.
-    for (parse_node_tree_t::const_iterator iter = parse_tree.begin(); iter != parse_tree.end();
-         ++iter) {
-        const parse_node_t &node = *iter;
-
+    for (const auto &node : parse_tree) {
         // Must be an argument with source.
         if (node.type != symbol_argument || !node.has_source()) continue;
 

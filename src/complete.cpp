@@ -269,8 +269,8 @@ void completions_sort_and_prioritize(std::vector<completion_t> *comps,
                                      completion_request_flags_t flags) {
     // Find the best match type.
     fuzzy_match_type_t best_type = fuzzy_match_none;
-    for (size_t i = 0; i < comps->size(); i++) {
-        best_type = std::min(best_type, comps->at(i).match.type);
+    for (const auto &comp : *comps) {
+        best_type = std::min(best_type, comp.match.type);
     }
     // If the best type is an exact match, reduce it to prefix match. Otherwise a tab completion
     // will only show one match if it matches a file exactly. (see issue #959).

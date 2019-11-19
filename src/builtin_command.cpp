@@ -99,7 +99,7 @@ int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         const wchar_t *command_name = argv[idx];
         if (opts.all_paths) {
             wcstring_list_t paths = path_get_paths(command_name, parser.vars());
-            for (auto path : paths) {
+            for (const auto &path : paths) {
                 if (!opts.quiet) streams.out.append_format(L"%ls\n", path.c_str());
                 ++found;
             }

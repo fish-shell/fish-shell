@@ -109,7 +109,7 @@ static void append_cmdsub_error(parse_error_list_t *errors, size_t source_start,
     error.text = vformat_string(fmt, va);
     va_end(va);
 
-    for (auto it : *errors) {
+    for (const auto &it : *errors) {
         if (error.text == it.text) return;
     }
 
@@ -755,8 +755,8 @@ static void unexpand_tildes(const wcstring &input, const environment_t &vars,
     // We only operate on completions that replace their contents. If we don't have any, we're done.
     // In particular, empty vectors are common.
     bool has_candidate_completion = false;
-    for (size_t i = 0; i < completions->size(); i++) {
-        if (completions->at(i).flags & COMPLETE_REPLACES_TOKEN) {
+    for (const auto &completion : *completions) {
+        if (completion.flags & COMPLETE_REPLACES_TOKEN) {
             has_candidate_completion = true;
             break;
         }
@@ -772,8 +772,7 @@ static void unexpand_tildes(const wcstring &input, const environment_t &vars,
     expand_tilde(home, vars);
 
     // Now for each completion that starts with home, replace it with the username_with_tilde.
-    for (size_t i = 0; i < completions->size(); i++) {
-        completion_t &comp = completions->at(i);
+    for (auto &comp : *completions) {
         if ((comp.flags & COMPLETE_REPLACES_TOKEN) &&
             string_prefixes_string(home, comp.completion)) {
             comp.completion.replace(0, home.size(), username_with_tilde);
@@ -815,15 +814,15 @@ static void remove_internal_separator(wcstring *str, bool conv) {
     // If conv is true, replace all instances of ANY_STRING with '*',
     // ANY_STRING_RECURSIVE with '*'.
     if (conv) {
-        for (size_t idx = 0; idx < str->size(); idx++) {
-            switch (str->at(idx)) {
+        for (auto &idx : *str) {
+            switch (idx) {
                 case ANY_CHAR: {
-                    str->at(idx) = L'?';
+                    idx = L'?';
                     break;
                 }
                 case ANY_STRING:
                 case ANY_STRING_RECURSIVE: {
-                    str->at(idx) = L'*';
+                    idx = L'*';
                     break;
                 }
                 default: {
@@ -901,9 +900,9 @@ expand_result_t expander_t::stage_variables(wcstring input, std::vector<completi
     unescape_string(input, &next, UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE);
 
     if (flags & expand_flag::skip_variables) {
-        for (size_t i = 0; i < next.size(); i++) {
-            if (next.at(i) == VARIABLE_EXPAND) {
-                next[i] = L'$';
+        for (auto &i : next) {
+            if (i == VARIABLE_EXPAND) {
+                i = L'$';
             }
         }
         append_completion(out, std::move(next));
@@ -940,7 +939,7 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand,
     const bool skip_wildcards = flags & expand_flag::skip_wildcards;
 
     if (has_wildcard && (flags & expand_flag::executables_only)) {
-        ;  // don't do wildcard expansion for executables, see issue #785
+        // don't do wildcard expansion for executables, see issue #785
     } else if ((for_completions && !skip_wildcards) || has_wildcard) {
         // We either have a wildcard, or we don't have a wildcard but we're doing completion
         // expansion (so we want to get the completion of a file path). Note that if
@@ -996,9 +995,9 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand,
 
         result = expand_result_t::wildcard_no_match;
         std::vector<completion_t> expanded;
-        for (size_t wd_idx = 0; wd_idx < effective_working_dirs.size(); wd_idx++) {
-            int local_wc_res = wildcard_expand_string(
-                path_to_expand, effective_working_dirs.at(wd_idx), flags, &expanded);
+        for (const auto &effective_working_dir : effective_working_dirs) {
+            int local_wc_res =
+                wildcard_expand_string(path_to_expand, effective_working_dir, flags, &expanded);
             if (local_wc_res > 0) {
                 // Something matched,so overall we matched.
                 result = expand_result_t::wildcard_match;

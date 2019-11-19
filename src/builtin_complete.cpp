@@ -1,8 +1,7 @@
 // Functions used for implementing the complete builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <stddef.h>
-
+#include <cstddef>
 #include <cwchar>
 #include <memory>
 #include <string>

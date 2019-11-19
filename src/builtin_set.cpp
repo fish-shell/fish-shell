@@ -1,13 +1,13 @@
 // Functions used for implementing the set builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
-#include <stddef.h>
-#include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 #include <algorithm>
+#include <cerrno>
+#include <cstddef>
+#include <cstdlib>
 #include <cstring>
 #include <cwchar>
 #include <iterator>

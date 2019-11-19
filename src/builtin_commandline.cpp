@@ -1,10 +1,9 @@
 // Functions used for implementing the commandline builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
-#include <stddef.h>
-#include <stdlib.h>
-
+#include <cerrno>
+#include <cstddef>
+#include <cstdlib>
 #include <cwchar>
 
 #include "builtin.h"
@@ -129,7 +128,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     const wchar_t *current_buffer = 0;
 
     // What the commandline builtin considers to be the current cursor position.
-    size_t current_cursor_pos = static_cast<size_t>(-1);
+    auto current_cursor_pos = static_cast<size_t>(-1);
 
     wchar_t *cmd = argv[0];
     int buffer_part = 0;

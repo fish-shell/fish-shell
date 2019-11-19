@@ -3,8 +3,8 @@
 
 #include "builtin_echo.h"
 
-#include <limits.h>
-#include <stddef.h>
+#include <climits>
+#include <cstddef>
 
 #include "builtin.h"
 #include "common.h"

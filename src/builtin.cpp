@@ -19,11 +19,11 @@
 
 #include "builtin.h"
 
-#include <errno.h>
-#include <stdlib.h>
 #include <unistd.h>
 
 #include <algorithm>
+#include <cerrno>
+#include <cstdlib>
 #include <cstring>
 #include <cwchar>
 #include <memory>

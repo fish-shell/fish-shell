@@ -3,7 +3,7 @@
 
 #include "builtin_block.h"
 
-#include <stddef.h>
+#include <cstddef>
 
 #include "builtin.h"
 #include "common.h"

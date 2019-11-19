@@ -1,11 +1,12 @@
 // fish_test_helper is a little program with no fish dependencies that acts like certain other
 // programs, allowing fish to test its behavior.
 
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
+
+#include <csignal>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 static void become_foreground_then_print_stderr() {
     if (tcsetpgrp(STDOUT_FILENO, getpgrp()) < 0) {

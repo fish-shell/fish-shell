@@ -3,8 +3,7 @@
 
 #include "builtin_status.h"
 
-#include <stddef.h>
-
+#include <cstddef>
 #include <cwchar>
 #include <string>
 

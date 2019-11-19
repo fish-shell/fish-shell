@@ -3,9 +3,8 @@
 
 #include "builtin.h"
 
-#include <stddef.h>
-
 #include <algorithm>
+#include <cstddef>
 #include <string>
 
 #include "builtin_builtin.h"

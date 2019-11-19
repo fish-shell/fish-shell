@@ -5,11 +5,10 @@
 
 #include "builtin_argparse.h"
 
-#include <errno.h>
-#include <stddef.h>
-#include <stdint.h>
-
 #include <algorithm>
+#include <cerrno>
+#include <cstddef>
+#include <cstdint>
 #include <cwchar>
 #include <memory>
 #include <string>

@@ -1422,7 +1422,7 @@ static void highlight_universal_internal(const wcstring &buffstr,
             wchar_t inc_char = c;
             int level = 0;
             bool match_found = false;
-            for (long i = pos; i >= 0 && (size_t)i < buffstr.size(); i += step) {
+            for (long i = pos; i >= 0 && static_cast<size_t>(i) < buffstr.size(); i += step) {
                 const wchar_t test_char = buffstr.at(i);
                 if (test_char == inc_char) level++;
                 if (test_char == dec_char) level--;

@@ -382,7 +382,7 @@ static int parse_index(std::vector<long> &indexes, wchar_t *src, int scope, io_s
             streams.err.append_format(_(L"%ls: Invalid index starting at '%ls'\n"), L"set", src);
             return -1;
         }
-        p = (wchar_t *)end;
+        p = const_cast<wchar_t *>(end);
 
         // Convert negative index to a positive index.
         if (l_ind < 0) l_ind = var.size() + l_ind + 1;
@@ -393,7 +393,7 @@ static int parse_index(std::vector<long> &indexes, wchar_t *src, int scope, io_s
             if (errno > 0) {  // ignore errno == -1 meaning the int did not end with a '\0'
                 return -1;
             }
-            p = (wchar_t *)end;
+            p = const_cast<wchar_t *>(end);
 
             // Convert negative index to a positive index.
             if (l_ind2 < 0) l_ind2 = var.size() + l_ind2 + 1;
@@ -423,7 +423,7 @@ static int update_values(wcstring_list_t &list, std::vector<long> &indexes,
         if (ind < 0) {
             return 1;
         }
-        if ((size_t)ind >= list.size()) {
+        if (static_cast<size_t>(ind) >= list.size()) {
             list.resize(ind + 1);
         }
 
@@ -444,7 +444,7 @@ static void erase_values(wcstring_list_t &list, const std::vector<long> &indexes
     decltype(indexes_set)::const_reverse_iterator iter;
     for (iter = indexes_set.rbegin(); iter != indexes_set.rend(); ++iter) {
         long val = *iter;
-        if (val > 0 && (size_t)val <= list.size()) {
+        if (val > 0 && static_cast<size_t>(val) <= list.size()) {
             // One-based indexing!
             list.erase(list.begin() + val - 1);
         }
@@ -535,7 +535,7 @@ static int builtin_set_query(const wchar_t *cmd, set_cmd_opts_t &opts, int argc,
             if (dest_str) dest_str->to_list(result);
 
             for (auto idx : indexes) {
-                if (idx < 1 || (size_t)idx > result.size()) retval++;
+                if (idx < 1 || static_cast<size_t>(idx) > result.size()) retval++;
             }
         } else {
             if (!parser.vars().get(arg, scope)) retval++;

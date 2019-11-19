@@ -33,7 +33,13 @@
 
 typedef std::string cstring;
 
-const file_id_t kInvalidFileID = {(dev_t)-1LL, (ino_t)-1LL, (uint64_t)-1LL, -1, -1, -1, -1};
+const file_id_t kInvalidFileID = {static_cast<dev_t>(-1LL),
+                                  static_cast<ino_t>(-1LL),
+                                  static_cast<uint64_t>(-1LL),
+                                  -1,
+                                  -1,
+                                  -1,
+                                  -1};
 
 /// Map used as cache by wgettext.
 static owning_lock<std::unordered_map<wcstring, wcstring>> wgettext_map;
@@ -652,7 +658,7 @@ int fish_wcstoi(const wchar_t *str, const wchar_t **endptr, int base) {
         }
     }
     if (endptr) *endptr = _endptr;
-    return (int)result;
+    return static_cast<int>(result);
 }
 
 /// An enhanced version of wcstol().

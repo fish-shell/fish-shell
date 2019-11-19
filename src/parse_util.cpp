@@ -77,11 +77,11 @@ size_t parse_util_get_offset_from_line(const wcstring &str, int line) {
     size_t i;
     int count = 0;
 
-    if (line < 0) return (size_t)-1;
+    if (line < 0) return static_cast<size_t>(-1);
     if (line == 0) return 0;
 
     for (i = 0;; i++) {
-        if (!buff[i]) return (size_t)-1;
+        if (!buff[i]) return static_cast<size_t>(-1);
 
         if (buff[i] == L'\n') {
             count++;
@@ -96,11 +96,11 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset) {
     size_t off = parse_util_get_offset_from_line(str, line);
     size_t off2 = parse_util_get_offset_from_line(str, line + 1);
 
-    if (off == (size_t)-1) return (size_t)-1;
-    if (off2 == (size_t)-1) off2 = str.length() + 1;
+    if (off == static_cast<size_t>(-1)) return static_cast<size_t>(-1);
+    if (off2 == static_cast<size_t>(-1)) off2 = str.length() + 1;
     if (line_offset < 0) line_offset = 0;  //!OCLINT(parameter reassignment)
 
-    if ((size_t)line_offset >= off2 - off - 1) {
+    if (static_cast<size_t>(line_offset) >= off2 - off - 1) {
         line_offset = off2 - off - 1;  //!OCLINT(parameter reassignment)
     }
 
@@ -170,7 +170,7 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
     }
 
     if (end) {
-        *end = paran_count ? (wchar_t *)in + std::wcslen(in) : paran_end;
+        *end = paran_count ? const_cast<wchar_t *>(in) + std::wcslen(in) : paran_end;
     }
 
     return 1;
@@ -328,10 +328,10 @@ static void job_or_process_extent(bool process, const wchar_t *buff, size_t curs
             case token_type_t::comment: {
                 if (tok_begin >= pos) {
                     finished = 1;
-                    if (b) *b = (wchar_t *)begin + tok_begin;
+                    if (b) *b = const_cast<wchar_t *>(begin) + tok_begin;
                 } else {
                     // Statement at cursor might start after this token.
-                    if (a) *a = (wchar_t *)begin + tok_begin + token->length;
+                    if (a) *a = const_cast<wchar_t *>(begin) + tok_begin + token->length;
                     if (tokens) tokens->clear();
                 }
                 continue;  // Do not add this to tokens

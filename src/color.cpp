@@ -88,15 +88,15 @@ static int parse_hex_digit(wchar_t x) {
 }
 
 static unsigned long squared_difference(long p1, long p2) {
-    unsigned long diff = (unsigned long)labs(p1 - p2);
+    unsigned long diff = static_cast<unsigned long>(labs(p1 - p2));
     return diff * diff;
 }
 
 static unsigned char convert_color(const unsigned char rgb[3], const uint32_t *colors,
                                    size_t color_count) {
     long r = rgb[0], g = rgb[1], b = rgb[2];
-    unsigned long best_distance = (unsigned long)-1;
-    unsigned char best_index = (unsigned char)-1;
+    unsigned long best_distance = static_cast<unsigned long>(-1);
+    unsigned char best_index = static_cast<unsigned char>(-1);
     for (unsigned char idx = 0; idx < color_count; idx++) {
         uint32_t color = colors[idx];
         long test_r = (color >> 16) & 0xFF, test_g = (color >> 8) & 0xFF,
@@ -294,7 +294,7 @@ unsigned char rgb_color_t::to_name_index() const {
     assert(type == type_named || type == type_rgb);
     if (type == type_named) return data.name_idx;
     if (type == type_rgb) return term16_color_for_rgb(data.color.rgb);
-    return (unsigned char)-1;  // this is an error
+    return static_cast<unsigned char>(-1);  // this is an error
 }
 
 void rgb_color_t::parse(const wcstring &str) {
@@ -320,7 +320,7 @@ wcstring rgb_color_t::description() const {
             return L"none";
         }
         case type_named: {
-            return format_string(L"named(%d: %ls)", (int)data.name_idx,
+            return format_string(L"named(%d: %ls)", static_cast<int>(data.name_idx),
                                  name_for_color_idx(data.name_idx));
         }
         case type_rgb: {

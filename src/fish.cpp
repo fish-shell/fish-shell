@@ -83,8 +83,8 @@ static const char *s_profiling_output_filename = NULL;
 
 /// \return a timeval converted to milliseconds.
 long long tv_to_msec(const struct timeval &tv) {
-    long long msec = (long long)tv.tv_sec * 1000;  // milliseconds per second
-    msec += tv.tv_usec / 1000;                     // microseconds per millisecond
+    long long msec = static_cast<long long>(tv.tv_sec) * 1000;  // milliseconds per second
+    msec += tv.tv_usec / 1000;                                  // microseconds per millisecond
     return msec;
 }
 
@@ -299,7 +299,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 tmp = strtol(optarg, &end, 10);
 
                 if (tmp >= 0 && tmp <= 10 && !*end && !errno) {
-                    debug_level = (int)tmp;
+                    debug_level = static_cast<int>(tmp);
                 } else {
                     activate_flog_categories_by_pattern(str2wcstring(optarg));
                 }
@@ -338,7 +338,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 // Compute width of longest name.
                 int name_width = 0;
                 for (const auto *cat : cats) {
-                    name_width = std::max(name_width, (int)wcslen(cat->name));
+                    name_width = std::max(name_width, static_cast<int>(wcslen(cat->name)));
                 }
                 // A little extra space.
                 name_width += 2;
@@ -371,7 +371,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 tmp = strtol(optarg, &end, 10);
 
                 if (tmp > 0 && tmp <= 128 && !*end && !errno) {
-                    set_debug_stack_frames((int)tmp);
+                    set_debug_stack_frames(static_cast<int>(tmp));
                 } else {
                     std::fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag"),
                                   optarg);

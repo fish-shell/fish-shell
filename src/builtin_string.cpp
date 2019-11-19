@@ -676,7 +676,8 @@ class wildcard_matcher_t : public string_matcher_t {
 
 static wcstring pcre2_strerror(int err_code) {
     wchar_t buf[128];
-    pcre2_get_error_message(err_code, (PCRE2_UCHAR *)buf, sizeof(buf) / sizeof(wchar_t));
+    pcre2_get_error_message(err_code, reinterpret_cast<PCRE2_UCHAR *>(buf),
+                            sizeof(buf) / sizeof(wchar_t));
     return buf;
 }
 
@@ -762,8 +763,7 @@ class pcre2_matcher_t : public string_matcher_t {
 
             if (begin != PCRE2_UNSET && end != PCRE2_UNSET && !opts.quiet) {
                 if (opts.index) {
-                    streams.out.append_format(L"%lu %lu", (unsigned long)(begin + 1),
-                                              (unsigned long)(end - begin));
+                    streams.out.append_format(L"%lu %lu", (begin + 1), (end - begin));
                 } else if (end > begin) {
                     // May have end < begin if \K is used.
                     streams.out.append(arg.substr(begin, end - begin));
@@ -999,7 +999,7 @@ bool regex_replacer_t::replace_matches(const wcstring &arg) {
                        (opts.all ? PCRE2_SUBSTITUTE_GLOBAL : 0);
     size_t arglen = arg.length();
     PCRE2_SIZE bufsize = (arglen == 0) ? 16 : 2 * arglen;
-    wchar_t *output = (wchar_t *)malloc(sizeof(wchar_t) * bufsize);
+    wchar_t *output = static_cast<wchar_t *>(malloc(sizeof(wchar_t) * bufsize));
     int pcre2_rc;
     PCRE2_SIZE outlen = bufsize;
 
@@ -1012,13 +1012,14 @@ bool regex_replacer_t::replace_matches(const wcstring &arg) {
                                     options, regex.match,
                                     0,  // match context
                                     PCRE2_SPTR(replacement->c_str()), replacement->length(),
-                                    (PCRE2_UCHAR *)output, &outlen);
+                                    reinterpret_cast<PCRE2_UCHAR *>(output), &outlen);
 
         if (pcre2_rc != PCRE2_ERROR_NOMEMORY || bufsize >= outlen) {
             done = true;
         } else {
             bufsize = outlen;
-            wchar_t *new_output = (wchar_t *)realloc(output, sizeof(wchar_t) * bufsize);
+            wchar_t *new_output =
+                static_cast<wchar_t *>(realloc(output, sizeof(wchar_t) * bufsize));
             if (new_output) output = new_output;
         }
     }
@@ -1195,7 +1196,8 @@ static int string_repeat(parser_t &parser, io_streams_t &streams, int argc, wcha
     arg_iterator_t aiter(argv, optind, streams);
     if (const wcstring *word = aiter.nextstr()) {
         const bool limit_repeat =
-            (opts.max > 0 && word->length() * opts.count > (size_t)opts.max) || !opts.count;
+            (opts.max > 0 && word->length() * opts.count > static_cast<size_t>(opts.max)) ||
+            !opts.count;
         const wcstring repeated =
             limit_repeat ? wcsrepeat_until(*word, opts.max) : wcsrepeat(*word, opts.count);
         is_empty = repeated.empty();

@@ -183,7 +183,7 @@ static size_t read_line(const char *base, size_t cursor, size_t len, std::string
     // Locate the newline.
     assert(cursor <= len);
     const char *start = base + cursor;
-    const char *a_newline = (char *)std::memchr(start, '\n', len - cursor);
+    const char *a_newline = static_cast<const char *>(std::memchr(start, '\n', len - cursor));
     if (a_newline != NULL) {  // we found a newline
         result.assign(start, a_newline - start);
         // Return the amount to advance the cursor; skip over the newline.
@@ -303,7 +303,7 @@ static bool parse_timestamp(const char *str, time_t *out_when) {
     // Try to parse a timestamp.
     long timestamp = 0;
     if (isdigit(*cursor) && (timestamp = strtol(cursor, NULL, 0)) > 0) {
-        *out_when = (time_t)timestamp;
+        *out_when = static_cast<time_t>(timestamp);
         return true;
     }
     return false;
@@ -350,7 +350,8 @@ static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &conten
         const char *line_start = contents.address_at(cursor);
 
         // Advance the cursor to the next line.
-        const char *a_newline = (const char *)std::memchr(line_start, '\n', length - cursor);
+        const char *a_newline =
+            static_cast<const char *>(std::memchr(line_start, '\n', length - cursor));
         if (a_newline == NULL) break;
 
         // Advance the cursor past this line. +1 is for the newline.
@@ -371,7 +372,7 @@ static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &conten
         // leading "- cmd: - cmd: - cmd:". Trim all but one leading "- cmd:".
         const char *double_cmd = "- cmd: - cmd: ";
         const size_t double_cmd_len = std::strlen(double_cmd);
-        while ((size_t)(a_newline - line_start) > double_cmd_len &&
+        while (static_cast<size_t>(a_newline - line_start) > double_cmd_len &&
                !std::memcmp(line_start, double_cmd, double_cmd_len)) {
             // Skip over just one of the - cmd. In the end there will be just one left.
             line_start += std::strlen("- cmd: ");
@@ -381,7 +382,7 @@ static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &conten
         // 123456". Ignore those.
         const char *cmd_when = "- cmd:    when:";
         const size_t cmd_when_len = std::strlen(cmd_when);
-        if ((size_t)(a_newline - line_start) >= cmd_when_len &&
+        if (static_cast<size_t>(a_newline - line_start) >= cmd_when_len &&
             !std::memcmp(line_start, cmd_when, cmd_when_len)) {
             continue;
         }
@@ -485,18 +486,18 @@ static history_item_t decode_item_fish_1_x(const char *begin, size_t length) {
         mbstate_t state = {};
 
         if (MB_CUR_MAX == 1) {  // single-byte locale
-            c = (unsigned char)*pos;
+            c = static_cast<unsigned char>(*pos);
             res = 1;
         } else {
             res = std::mbrtowc(&c, pos, end - pos, &state);
         }
 
-        if (res == (size_t)-1) {
+        if (res == static_cast<size_t>(-1)) {
             pos++;
             continue;
-        } else if (res == (size_t)-2) {
+        } else if (res == static_cast<size_t>(-2)) {
             break;
-        } else if (res == (size_t)0) {
+        } else if (res == static_cast<size_t>(0)) {
             pos++;
             continue;
         }
@@ -508,7 +509,7 @@ static history_item_t decode_item_fish_1_x(const char *begin, size_t length) {
                 while (*time_string && !iswdigit(*time_string)) time_string++;
 
                 if (*time_string) {
-                    time_t tm = (time_t)fish_wcstol(time_string);
+                    time_t tm = static_cast<time_t>(fish_wcstol(time_string));
                     if (!errno && tm >= 0) {
                         timestamp = tm;
                     }
@@ -538,7 +539,7 @@ static history_item_t decode_item_fish_1_x(const char *begin, size_t length) {
 /// Adapted from history_populate_from_mmap in history.c
 static size_t offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length,
                                            size_t *inout_cursor) {
-    if (mmap_length == 0 || *inout_cursor >= mmap_length) return (size_t)-1;
+    if (mmap_length == 0 || *inout_cursor >= mmap_length) return static_cast<size_t>(-1);
 
     const char *end = begin + mmap_length;
     const char *pos;

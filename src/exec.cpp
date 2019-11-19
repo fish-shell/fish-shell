@@ -1264,7 +1264,8 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
             const char *cursor = begin;
             while (cursor < end) {
                 // Look for the next separator.
-                const char *stop = (const char *)std::memchr(cursor, '\n', end - cursor);
+                const char *stop =
+                    static_cast<const char *>(std::memchr(cursor, '\n', end - cursor));
                 const bool hit_separator = (stop != NULL);
                 if (!hit_separator) {
                     // If it's not found, just use the end.

@@ -92,19 +92,19 @@ job_id_t acquire_job_id() {
     if (slot != consumed_job_ids->end()) {
         // We found a slot. Note that slot 0 corresponds to job ID 1.
         *slot = true;
-        return (job_id_t)(slot - consumed_job_ids->begin() + 1);
+        return static_cast<job_id_t>(slot - consumed_job_ids->begin() + 1);
     }
 
     // We did not find a slot; create a new slot. The size of the vector is now the job ID
     // (since it is one larger than the slot).
     consumed_job_ids->push_back(true);
-    return (job_id_t)consumed_job_ids->size();
+    return static_cast<job_id_t>(consumed_job_ids->size());
 }
 
 void release_job_id(job_id_t jid) {
     assert(jid > 0);
     auto consumed_job_ids = locked_consumed_job_ids.acquire();
-    size_t slot = (size_t)(jid - 1), count = consumed_job_ids->size();
+    size_t slot = static_cast<size_t>(jid - 1), count = consumed_job_ids->size();
 
     // Make sure this slot is within our vector and is currently set to consumed.
     assert(slot < count);

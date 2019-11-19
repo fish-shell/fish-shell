@@ -206,7 +206,8 @@ int wgetopter_t::_handle_short_opt(int argc, wchar_t **argv) {
 
     if (temp == NULL || c == ':') {
         if (wopterr) {
-            std::fwprintf(stderr, _(L"%ls: Invalid option -- %lc\n"), argv[0], (wint_t)c);
+            std::fwprintf(stderr, _(L"%ls: Invalid option -- %lc\n"), argv[0],
+                          static_cast<wint_t>(c));
         }
         woptopt = c;
 
@@ -238,7 +239,7 @@ int wgetopter_t::_handle_short_opt(int argc, wchar_t **argv) {
             if (wopterr) {
                 // 1003.2 specifies the format of this message.
                 std::fwprintf(stderr, _(L"%ls: Option requires an argument -- %lc\n"), argv[0],
-                              (wint_t)c);
+                              static_cast<wint_t>(c));
             }
             woptopt = c;
             c = missing_arg_return_colon ? ':' : '?';
@@ -308,7 +309,8 @@ const struct woption *wgetopter_t::_find_matching_long_opt(const struct woption 
     // Test all long options for either exact match or abbreviated matches.
     for (const struct woption *p = longopts; p->name; p++, option_index++) {
         if (!std::wcsncmp(p->name, nextchar, nameend - nextchar)) {
-            if ((unsigned int)(nameend - nextchar) == (unsigned int)wcslen(p->name)) {
+            if (static_cast<unsigned int>(nameend - nextchar) ==
+                static_cast<unsigned int>(wcslen(p->name))) {
                 // Exact match found.
                 pfound = p;
                 *indfound = option_index;

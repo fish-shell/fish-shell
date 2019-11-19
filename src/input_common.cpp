@@ -71,8 +71,8 @@ char_event_t input_event_queue_t::readb() {
         const unsigned long usecs_delay = notifier.usec_delay_between_polls();
         if (usecs_delay > 0) {
             unsigned long usecs_per_sec = 1000000;
-            tv.tv_sec = (int)(usecs_delay / usecs_per_sec);
-            tv.tv_usec = (int)(usecs_delay % usecs_per_sec);
+            tv.tv_sec = static_cast<int>(usecs_delay / usecs_per_sec);
+            tv.tv_usec = static_cast<int>(usecs_delay % usecs_per_sec);
         }
 
         res = select(fd_max + 1, &fdset, 0, 0, usecs_delay > 0 ? &tv : NULL);
@@ -144,7 +144,7 @@ void update_wait_on_escape_ms(const environment_t &vars) {
                       L"is not an integer or is < 10 or >= 5000 ms\n",
                       escape_time_ms->as_string().c_str());
     } else {
-        wait_on_escape_ms = (int)tmp;
+        wait_on_escape_ms = static_cast<int>(tmp);
     }
 }
 
@@ -186,12 +186,12 @@ char_event_t input_event_queue_t::readch() {
         size_t sz = std::mbrtowc(&res, &bb, 1, &state);
 
         switch (sz) {
-            case (size_t)(-1): {
+            case static_cast<size_t>(-1): {
                 std::memset(&state, '\0', sizeof(state));
                 debug(2, L"Illegal input");
                 return char_event_type_t::check_exit;
             }
-            case (size_t)(-2): {
+            case static_cast<size_t>(-2): {
                 break;
             }
             case 0: {

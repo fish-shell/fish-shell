@@ -73,7 +73,7 @@ static wcstring read_file(FILE *f) {
             }
             break;
         }
-        result.push_back((wchar_t)c);
+        result.push_back(static_cast<wchar_t>(c));
     }
     return result;
 }
@@ -140,7 +140,7 @@ static void dump_node(indent_t node_indent, const parse_node_t &node, const wcst
     wcstring source_txt = L"";
     if (node.source_start != SOURCE_OFFSET_INVALID && node.source_length != SOURCE_OFFSET_INVALID) {
         int nextc_idx = node.source_start + node.source_length;
-        if ((size_t)nextc_idx < source.size()) {
+        if (static_cast<size_t>(nextc_idx) < source.size()) {
             nextc = source[node.source_start + node.source_length];
         }
         if (node.source_start > 0) prevc = source[node.source_start - 1];
@@ -565,7 +565,7 @@ int main(int argc, char *argv[]) {
                 tmp = strtol(optarg, &end, 10);
 
                 if (tmp >= 0 && tmp <= 10 && !*end && !errno) {
-                    debug_level = (int)tmp;
+                    debug_level = static_cast<int>(tmp);
                 } else {
                     std::fwprintf(stderr, _(L"Invalid value '%s' for debug-level flag"), optarg);
                     exit(1);
@@ -580,7 +580,7 @@ int main(int argc, char *argv[]) {
                 tmp = strtol(optarg, &end, 10);
 
                 if (tmp > 0 && tmp <= 128 && !*end && !errno) {
-                    set_debug_stack_frames((int)tmp);
+                    set_debug_stack_frames(static_cast<int>(tmp));
                 } else {
                     std::fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag"),
                                   optarg);

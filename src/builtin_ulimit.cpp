@@ -1,9 +1,10 @@
 // Functions used for implementing the ulimit builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
-#include <stddef.h>
 #include <sys/resource.h>
+
+#include <cerrno>
+#include <cstddef>
 
 #include "builtin.h"
 #include "common.h"

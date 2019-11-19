@@ -3,10 +3,9 @@
 
 #include "builtin_history.h"
 
-#include <errno.h>
-#include <stddef.h>
-#include <stdint.h>
-
+#include <cerrno>
+#include <cstddef>
+#include <cstdint>
 #include <cwchar>
 #include <string>
 #include <vector>

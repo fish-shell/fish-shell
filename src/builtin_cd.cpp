@@ -3,9 +3,10 @@
 
 #include "builtin_cd.h"
 
-#include <errno.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+
+#include <cerrno>
 
 #include "builtin.h"
 #include "common.h"

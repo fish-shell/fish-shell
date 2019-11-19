@@ -3,10 +3,9 @@
 
 #include "builtin_random.h"
 
-#include <errno.h>
-#include <stdint.h>
-
 #include <algorithm>
+#include <cerrno>
+#include <cstdint>
 #include <cwchar>
 #include <random>
 

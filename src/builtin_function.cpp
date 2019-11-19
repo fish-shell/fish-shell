@@ -3,11 +3,11 @@
 
 #include "builtin_function.h"
 
-#include <errno.h>
-#include <stddef.h>
-#include <stdlib.h>
 #include <unistd.h>
 
+#include <cerrno>
+#include <cstddef>
+#include <cstdlib>
 #include <memory>
 #include <string>
 #include <vector>

@@ -5,16 +5,16 @@
 
 #include "builtin.h"
 
-#include <errno.h>
-#include <stdarg.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <wctype.h>
 
+#include <cerrno>
 #include <cmath>
+#include <cstdarg>
 #include <cstring>
 #include <cwchar>
+#include <cwctype>
 #include <memory>
 #include <string>
 #include <type_traits>

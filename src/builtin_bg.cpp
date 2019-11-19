@@ -3,9 +3,8 @@
 
 #include "builtin_bg.h"
 
-#include <errno.h>
-#include <stdlib.h>
-
+#include <cerrno>
+#include <cstdlib>
 #include <memory>
 #include <vector>
 

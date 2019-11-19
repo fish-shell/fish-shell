@@ -3,10 +3,9 @@
 
 #include "color.h"
 
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
 #include <cwchar>  // IWYU pragma: keep
 
 #include "common.h"

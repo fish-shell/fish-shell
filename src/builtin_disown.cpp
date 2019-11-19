@@ -3,9 +3,8 @@
 
 #include "builtin_disown.h"
 
-#include <errno.h>
-#include <signal.h>
-
+#include <cerrno>
+#include <csignal>
 #include <set>
 
 #include "builtin.h"

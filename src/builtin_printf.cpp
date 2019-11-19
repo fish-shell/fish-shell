@@ -50,18 +50,18 @@
 // This file has been imported from source code of printf command in GNU Coreutils version 6.9.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
-#include <limits.h>
-#include <locale.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
 #include <sys/types.h>
-#include <wctype.h>
 
+#include <cerrno>
+#include <climits>
+#include <clocale>
+#include <cstdarg>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <cwchar>
+#include <cwctype>
 
 #include "builtin.h"
 #include "common.h"

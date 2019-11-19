@@ -1,8 +1,8 @@
 // Functions used for implementing the set_color builtin.
 #include "config.h"
 
-#include <stddef.h>
-#include <stdlib.h>
+#include <cstddef>
+#include <cstdlib>
 
 #if HAVE_CURSES_H
 #include <curses.h>

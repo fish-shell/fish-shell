@@ -3,8 +3,8 @@
 
 #include "builtin_exit.h"
 
-#include <errno.h>
-#include <stddef.h>
+#include <cerrno>
+#include <cstddef>
 
 #include "builtin.h"
 #include "common.h"

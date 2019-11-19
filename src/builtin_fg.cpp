@@ -3,10 +3,9 @@
 
 #include "builtin_fg.h"
 
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
 #include <cwchar>
 
 #include "builtin.h"

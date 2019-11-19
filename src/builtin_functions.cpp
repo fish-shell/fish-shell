@@ -3,10 +3,10 @@
 
 #include "builtin_functions.h"
 
-#include <stddef.h>
 #include <unistd.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <cwchar>
 #include <map>
 #include <memory>

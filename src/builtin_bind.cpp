@@ -3,9 +3,8 @@
 
 #include "builtin_bind.h"
 
-#include <errno.h>
-#include <stddef.h>
-
+#include <cerrno>
+#include <cstddef>
 #include <memory>
 #include <set>
 #include <string>

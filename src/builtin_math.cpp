@@ -3,11 +3,10 @@
 
 #include "builtin_math.h"
 
-#include <errno.h>
-#include <stddef.h>
-
 #include <algorithm>
+#include <cerrno>
 #include <cmath>
+#include <cstddef>
 #include <cstring>
 #include <limits>
 #include <string>

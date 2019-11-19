@@ -1,8 +1,8 @@
 // Functions for executing the eval builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
-#include <stddef.h>
+#include <cerrno>
+#include <cstddef>
 
 #include "builtin.h"
 #include "common.h"

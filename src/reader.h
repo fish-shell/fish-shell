@@ -184,7 +184,7 @@ void reader_set_allow_autosuggesting(bool flag);
 void reader_set_expand_abbreviations(bool flag);
 
 /// Sets whether the reader should exit on ^C.
-void reader_set_exit_on_interrupt(bool flag);
+void reader_set_exit_on_interrupt(bool i);
 
 void reader_set_silent_status(bool f);
 

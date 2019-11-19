@@ -354,7 +354,7 @@ class completer_t {
     void complete_cmd(const wcstring &str);
 
     /// Attempt to complete an abbreviation for the given string.
-    void complete_abbr(const wcstring &str);
+    void complete_abbr(const wcstring &cmd);
 
     void complete_from_args(const wcstring &str, const wcstring &args, const wcstring &desc,
                             complete_flags_t flags);

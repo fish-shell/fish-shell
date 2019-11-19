@@ -57,7 +57,7 @@ class parse_execution_context_t {
 
     // Report an error. Always returns true.
     parse_execution_result_t report_error(const parse_node_t &node, const wchar_t *fmt, ...) const;
-    parse_execution_result_t report_errors(const parse_error_list_t &errors) const;
+    parse_execution_result_t report_errors(const parse_error_list_t &error_list) const;
 
     // Wildcard error helper.
     parse_execution_result_t report_unmatched_wildcard_error(
@@ -109,7 +109,7 @@ class parse_execution_context_t {
     parse_execution_result_t run_if_statement(tnode_t<grammar::if_statement> statement,
                                               const block_t *associated_block);
     parse_execution_result_t run_switch_statement(tnode_t<grammar::switch_statement> statement);
-    parse_execution_result_t run_while_statement(tnode_t<grammar::while_header> statement,
+    parse_execution_result_t run_while_statement(tnode_t<grammar::while_header> header,
                                                  tnode_t<grammar::job_list> contents,
                                                  const block_t *associated_block);
     parse_execution_result_t run_function_statement(tnode_t<grammar::function_header> header,
@@ -127,7 +127,7 @@ class parse_execution_context_t {
                             io_chain_t *out_chain);
 
     parse_execution_result_t run_1_job(tnode_t<grammar::job> job, const block_t *associated_block);
-    parse_execution_result_t run_job_conjunction(tnode_t<grammar::job_conjunction> job_conj,
+    parse_execution_result_t run_job_conjunction(tnode_t<grammar::job_conjunction> job_expr,
                                                  const block_t *associated_block);
     template <typename Type>
     parse_execution_result_t run_job_list(tnode_t<Type> job_list_node,
@@ -137,7 +137,7 @@ class parse_execution_context_t {
 
     // Returns the line number of the node. Not const since it touches cached_lineno_offset.
     int line_offset_of_node(tnode_t<grammar::job> node);
-    int line_offset_of_character_at_offset(size_t char_idx);
+    int line_offset_of_character_at_offset(size_t offset);
 
    public:
     parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p,

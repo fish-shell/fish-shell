@@ -131,7 +131,7 @@ class tokenizer_t {
     /// \param flags Flags to the tokenizer. Setting TOK_ACCEPT_UNFINISHED will cause the tokenizer
     /// to accept incomplete tokens, such as a subshell without a closing parenthesis, as a valid
     /// token. Setting TOK_SHOW_COMMENTS will return comments as tokens
-    tokenizer_t(const wchar_t *b, tok_flags_t flags);
+    tokenizer_t(const wchar_t *start, tok_flags_t flags);
 
     /// Returns the next token, or none() if we are at the end.
     maybe_t<tok_t> next();
@@ -212,7 +212,7 @@ class move_word_state_machine_t {
     move_word_style_t style;
 
    public:
-    explicit move_word_state_machine_t(move_word_style_t st);
+    explicit move_word_state_machine_t(move_word_style_t syl);
     bool consume_char(wchar_t c);
     void reset();
 };

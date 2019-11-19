@@ -24,8 +24,8 @@ bool exec_job(parser_t &parser, std::shared_ptr<job_t> j);
 ///
 /// \return the status of the last job to exit, or -1 if en error was encountered.
 int exec_subshell(const wcstring &cmd, parser_t &parser, wcstring_list_t &outputs,
-                  bool preserve_exit_status, bool is_subcmd = false);
-int exec_subshell(const wcstring &cmd, parser_t &parser, bool preserve_exit_status,
+                  bool apply_exit_status, bool is_subcmd = false);
+int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status,
                   bool is_subcmd = false);
 
 /// Loops over close until the syscall was run without being interrupted.

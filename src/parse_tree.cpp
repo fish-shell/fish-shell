@@ -385,9 +385,9 @@ class parse_ll_t {
     bool top_node_handle_terminal_types(const parse_token_t &token);
 
     void parse_error_unexpected_token(const wchar_t *expected, parse_token_t token);
-    void parse_error(parse_token_t token, parse_error_code_t code, const wchar_t *format, ...);
+    void parse_error(parse_token_t token, parse_error_code_t code, const wchar_t *fmt, ...);
     void parse_error_at_location(size_t source_start, size_t source_length, size_t error_location,
-                                 parse_error_code_t code, const wchar_t *format, ...);
+                                 parse_error_code_t code, const wchar_t *fmt, ...);
     void parse_error_failed_production(struct parse_stack_element_t &elem, parse_token_t token);
     void parse_error_unbalancing_token(parse_token_t token);
 

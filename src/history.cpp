@@ -153,7 +153,7 @@ class history_lru_cache_t : public lru_cache_t<history_lru_cache_t, history_item
     }
 };
 
-static wcstring history_filename(const wcstring &name, const wcstring &suffix);
+static wcstring history_filename(const wcstring &session_id, const wcstring &suffix);
 
 /// We can merge two items if they are the same command. We use the more recent timestamp, more
 /// recent identifier, and the longer list of required paths.
@@ -327,7 +327,7 @@ struct history_impl_t {
     void populate_from_config_path();
 
     // Populates from a bash history file.
-    void populate_from_bash(FILE *f);
+    void populate_from_bash(FILE *stream);
 
     // Incorporates the history of other shells into this history.
     void incorporate_external_changes();

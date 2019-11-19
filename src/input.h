@@ -100,7 +100,7 @@ class input_mapping_set_t {
     /// Gets the command bound to the specified key sequence in the specified mode. Returns true if
     /// it exists, false if not.
     bool get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds, bool user,
-             wcstring *out_new_mode);
+             wcstring *out_sets_mode);
 
     /// Returns all mapping names and modes.
     std::vector<input_mapping_name_t> get_names(bool user = true) const;
@@ -110,10 +110,10 @@ class input_mapping_set_t {
     /// \param sequence the sequence to bind
     /// \param command an input function that will be run whenever the key sequence occurs
     void add(wcstring sequence, const wchar_t *command, const wchar_t *mode = DEFAULT_BIND_MODE,
-             const wchar_t *new_mode = DEFAULT_BIND_MODE, bool user = true);
+             const wchar_t *sets_mode = DEFAULT_BIND_MODE, bool user = true);
 
     void add(wcstring sequence, const wchar_t *const *commands, size_t commands_len,
-             const wchar_t *mode = DEFAULT_BIND_MODE, const wchar_t *new_mode = DEFAULT_BIND_MODE,
+             const wchar_t *mode = DEFAULT_BIND_MODE, const wchar_t *sets_mode = DEFAULT_BIND_MODE,
              bool user = true);
 
     /// \return a snapshot of the list of input mappings.

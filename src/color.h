@@ -35,10 +35,10 @@ class rgb_color_t {
     } data;
 
     /// Try parsing a special color name like "normal".
-    bool try_parse_special(const wcstring &str);
+    bool try_parse_special(const wcstring &special);
 
     /// Try parsing an rgb color like "#F0A030".
-    bool try_parse_rgb(const wcstring &str);
+    bool try_parse_rgb(const wcstring &name);
 
     /// Try parsing an explicit color name like "magenta".
     bool try_parse_named(const wcstring &str);

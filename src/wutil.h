@@ -56,10 +56,10 @@ int wstat(const wcstring &file_name, struct stat *buf);
 int lwstat(const wcstring &file_name, struct stat *buf);
 
 /// Wide character version of access().
-int waccess(const wcstring &pathname, int mode);
+int waccess(const wcstring &file_name, int mode);
 
 /// Wide character version of unlink().
-int wunlink(const wcstring &pathname);
+int wunlink(const wcstring &file_name);
 
 /// Wide character version of perror().
 void wperror(const wchar_t *s);
@@ -113,10 +113,10 @@ std::wstring wbasename(const std::wstring &path);
 const wcstring &wgettext(const wchar_t *in);
 
 /// Wide character version of mkdir.
-int wmkdir(const wcstring &dir, int mode);
+int wmkdir(const wcstring &name, int mode);
 
 /// Wide character version of rename.
-int wrename(const wcstring &oldName, const wcstring &newName);
+int wrename(const wcstring &oldName, const wcstring &newv);
 
 #define PUA1_START 0xE000
 #define PUA1_END 0xF900

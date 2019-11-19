@@ -1519,7 +1519,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                         // is ANY_STRING, delete the last char and store ANY_STRING_RECURSIVE to
                         // reflect the fact that ** is the recursive wildcard.
                         if (string_last_char(result) == ANY_STRING) {
-                            assert(result.size() > 0);
+                            assert(!result.empty());
                             result.resize(result.size() - 1);
                             to_append_or_none = ANY_STRING_RECURSIVE;
                         } else {
@@ -1561,10 +1561,10 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                         brace_count--;
                         brace_text_start = brace_text_start && brace_count > 0;
                         to_append_or_none = BRACE_END;
-                        if (braces.size()) {
+                        if (!braces.empty()) {
                             // If we didn't have a var or separator since the last '{',
                             // put the literal back.
-                            if (!vars_or_seps.size() || vars_or_seps.back() < braces.back()) {
+                            if (vars_or_seps.empty() || vars_or_seps.back() < braces.back()) {
                                 result[braces.back()] = L'{';
                                 // We also need to turn all spaces back.
                                 for (size_t i = braces.back() + 1; i < result.size(); i++) {
@@ -1575,8 +1575,8 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
 
                             // Remove all seps inside the current brace pair, so if we have a
                             // surrounding pair we only get seps inside *that*.
-                            if (vars_or_seps.size()) {
-                                while (vars_or_seps.size() && vars_or_seps.back() > braces.back())
+                            if (!vars_or_seps.empty()) {
+                                while (!vars_or_seps.empty() && vars_or_seps.back() > braces.back())
                                     vars_or_seps.pop_back();
                             }
                             braces.pop_back();

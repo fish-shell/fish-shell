@@ -1109,7 +1109,7 @@ static int string_split_maybe0(parser_t &parser, io_streams_t &streams, int argc
 
     const size_t split_count = splits.size();
     if (!opts.quiet) {
-        if (is_split0 && splits.size()) {
+        if (is_split0 && !splits.empty()) {
             // split0 ignores a trailing \0, so a\0b\0 is two elements.
             // In contrast to split, where a\nb\n is three - "a", "b" and "".
             //

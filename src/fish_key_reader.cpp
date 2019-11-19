@@ -160,7 +160,7 @@ static void add_char_to_bind_command(wchar_t wc, std::vector<wchar_t> &bind_char
 }
 
 static void output_bind_command(std::vector<wchar_t> &bind_chars) {
-    if (bind_chars.size()) {
+    if (!bind_chars.empty()) {
         std::fputws(L"bind ", stdout);
         for (size_t i = 0; i < bind_chars.size(); i++) {
             std::fputws(char_to_symbol(bind_chars[i], true), stdout);

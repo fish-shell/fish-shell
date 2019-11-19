@@ -272,7 +272,7 @@ static void print_profile(const std::vector<std::unique_ptr<profile_item_t>> &it
             my_time -= prev->parse + prev->exec;
         }
 
-        if (me->cmd.size() == 0) {
+        if (me->cmd.empty()) {
             continue;
         }
 

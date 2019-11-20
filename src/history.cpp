@@ -1202,7 +1202,7 @@ wcstring history_session_id(const environment_t &vars) {
         if (session_id.empty()) {
             result.clear();
         } else if (session_id == L"default") {
-            ;  // using the default value
+            // using the default value
         } else if (valid_var_name(session_id)) {
             result = session_id;
         } else {

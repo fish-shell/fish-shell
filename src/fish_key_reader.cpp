@@ -91,7 +91,6 @@ static maybe_t<wcstring> sequence_name(wchar_t wc) {
         }
     }
     return none();
-    ;
 }
 
 /// Return true if the character must be escaped when used in the sequence of chars to be bound in

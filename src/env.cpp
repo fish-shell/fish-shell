@@ -506,7 +506,7 @@ class env_scoped_impl_t : public environment_t {
 
     std::shared_ptr<environment_t> snapshot() const;
 
-    virtual ~env_scoped_impl_t() = default;
+    ~env_scoped_impl_t() override = default;
 
     std::shared_ptr<const null_terminated_array_t<char>> export_array();
 

@@ -420,7 +420,7 @@ class job_t {
     /// The job is OK to be externally visible, e.g. to the user via `jobs`
     bool is_visible() const {
         return !is_completed() && is_constructed() && !flags().disown_requested;
-    };
+    }
     bool skip_notification() const { return properties.skip_notification; }
     bool from_event_handler() const { return properties.from_event_handler; }
 

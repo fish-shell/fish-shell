@@ -857,7 +857,7 @@ bool parse_ll_t::top_node_handle_terminal_types(const parse_token_t &token) {
         } else if (stack_top.keyword == parse_keyword_end &&
                    token.type == parse_token_type_terminate &&
                    this->report_error_for_unclosed_block()) {
-            ;  // handled by report_error_for_unclosed_block
+            // handled by report_error_for_unclosed_block
         } else {
             const wcstring expected = stack_top.user_presentable_description();
             this->parse_error_unexpected_token(expected.c_str(), token);

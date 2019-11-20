@@ -412,7 +412,7 @@ std::string wcs2string(const wcstring &input) {
 
     for (auto wc : input) {
         if (wc == INTERNAL_SEPARATOR) {
-            ;  // do nothing
+            // do nothing
         } else if (wc >= ENCODE_DIRECT_BASE && wc < ENCODE_DIRECT_BASE + 256) {
             result.push_back(wc - ENCODE_DIRECT_BASE);
         } else if (MB_CUR_MAX == 1) {  // single-byte locale (C/POSIX/ISO-8859)
@@ -450,7 +450,7 @@ static char *wcs2str_internal(const wchar_t *in, char *out) {
 
     while (in[in_pos]) {
         if (in[in_pos] == INTERNAL_SEPARATOR) {
-            ;  // do nothing
+            // do nothing
         } else if (in[in_pos] >= ENCODE_DIRECT_BASE && in[in_pos] < ENCODE_DIRECT_BASE + 256) {
             out[out_pos++] = in[in_pos] - ENCODE_DIRECT_BASE;
         } else if (MB_CUR_MAX == 1)  // single-byte locale (C/POSIX/ISO-8859)

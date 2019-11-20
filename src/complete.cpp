@@ -1483,7 +1483,7 @@ void completer_t::perform() {
                                               }) != std::end(prefix_cmds);
             if (!is_subcommand) break;
             tokens.erase(tokens.begin());
-        };
+        }
     }
     // Empty process (cursor is after one of ;, &, |, \n, &&, || modulo whitespace).
     if (tokens.empty()) {

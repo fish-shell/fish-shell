@@ -208,12 +208,12 @@ extern const bool has_working_tty_timestamps;
 // `__attribute__((noreturn))` on the exit_without_destructors() function.
 // TODO: we use C++11 [[noreturn]] now, does that change things?
 #define FATAL_EXIT()                                \
-    {                                               \
+    do {                                            \
         char exit_read_buff;                        \
         show_stackframe(L'E');                      \
         ignore_result(read(0, &exit_read_buff, 1)); \
         exit_without_destructors(1);                \
-    }
+    } while (0)
 
 /// Exit the program at once after emitting an error message and stack trace if possible.
 /// We use our own private implementation of `assert()` for two reasons. First, some implementations

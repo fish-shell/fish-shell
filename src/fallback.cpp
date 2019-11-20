@@ -223,7 +223,6 @@ int futimes(int fd, const struct timeval *times) {
 #if HAVE_GETTEXT
 char *fish_gettext(const char *msgid) {
     return gettext(msgid);
-    ;
 }
 
 char *fish_bindtextdomain(const char *domainname, const char *dirname) {

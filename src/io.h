@@ -218,7 +218,7 @@ class io_pipe_t : public io_data_t {
     io_pipe_t(int fd, bool is_input, autoclose_fd_t pipe_fd)
         : io_data_t(io_mode_t::pipe, fd), pipe_fd_(std::move(pipe_fd)), is_input_(is_input) {}
 
-    ~io_pipe_t();
+    ~io_pipe_t() override;
 
     int pipe_fd() const { return pipe_fd_.fd(); }
 };
@@ -245,7 +245,7 @@ class io_bufferfill_t : public io_data_t {
           write_fd_(std::move(write_fd)),
           buffer_(std::move(buffer)) {}
 
-    ~io_bufferfill_t();
+    ~io_bufferfill_t() override;
 
     std::shared_ptr<io_buffer_t> buffer() const { return buffer_; }
 

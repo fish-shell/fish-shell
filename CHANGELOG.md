@@ -109,7 +109,7 @@
   - `irb` (#6260)
   - `iw` (#6232)
   - `kak`
-  - `keybase`
+  - `keybase` (#6335)
   - `mariner` (#5718)
   - `nethack` (#6240)
   - `patool` (#6083)

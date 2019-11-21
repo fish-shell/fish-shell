@@ -288,13 +288,13 @@ uintmax_t raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
 
 template <>
 long double raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
-    double val = std::wcstod(s, end);
+    auto val = std::wcstold(s, end);
     if (**end == L'\0') return val;
     // The conversion using the user's locale failed. That may be due to the string not being a
     // valid floating point value. It could also be due to the locale using different separator
     // characters than the normal english convention. So try again by forcing the use of a locale
     // that employs the english convention for writing floating point numbers.
-    return wcstod_l(s, end, fish_c_locale());
+    return wcstold_l(s, end, fish_c_locale());
 }
 
 template <typename T>

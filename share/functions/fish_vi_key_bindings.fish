@@ -219,6 +219,17 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M replace_one -m default \e cancel repaint-mode
 
     #
+    # Uppercase R, enters replace mode
+    #
+    bind -s --preset -m replace R repaint-mode
+    bind -s --preset -M replace '' delete-char self-insert
+    bind -s --preset -M replace -m insert \r execute repaint-mode
+    bind -s --preset -M replace -m default \e cancel repaint-mode
+    # in vim (and maybe in vi), <BS> deletes the changes
+    # but this binding just move cursor backward, not delete the changes
+    bind -s --preset -M replace -k backspace backward-char
+
+    #
     # visual mode
     #
     bind -s --preset -M visual h backward-char
@@ -263,6 +274,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # the commenting chars so the command can be further edited then executed.
     bind -s --preset -M default \# __fish_toggle_comment_commandline
     bind -s --preset -M visual \# __fish_toggle_comment_commandline
+    bind -s --preset -M replace \# __fish_toggle_comment_commandline
 
     # Set the cursor shape
     # After executing once, this will have defined functions listening for the variable.

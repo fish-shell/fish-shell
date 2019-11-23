@@ -12,6 +12,9 @@ function fish_default_mode_prompt --description "Display the default mode for th
             case replace_one
                 set_color --bold --background green white
                 echo '[R]'
+            case replace
+                set_color --bold --background cyan white
+                echo '[R]'
             case visual
                 set_color --bold --background magenta white
                 echo '[V]'

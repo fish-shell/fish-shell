@@ -108,6 +108,7 @@ static void print_rusage_self(FILE *fp) {
     fprintf(fp, "  rusage self:\n");
     fprintf(fp, "      user time: %llu ms\n", tv_to_msec(rs.ru_utime));
     fprintf(fp, "       sys time: %llu ms\n", tv_to_msec(rs.ru_stime));
+    fprintf(fp, "     total time: %llu ms\n", tv_to_msec(rs.ru_utime) + tv_to_msec(rs.ru_stime));
     fprintf(fp, "        max rss: %ld kb\n", rss_kb);
     fprintf(fp, "        signals: %ld\n", rs.ru_nsignals);
 #endif

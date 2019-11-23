@@ -27,7 +27,8 @@ int iothread_port(void);
 void iothread_service_completion(void);
 
 /// Waits for all iothreads to terminate.
-void iothread_drain_all(void);
+/// \return the number of threads that were running.
+int iothread_drain_all(void);
 
 // Internal implementation
 int iothread_perform_impl(std::function<void(void)> &&func, std::function<void(void)> &&completion);

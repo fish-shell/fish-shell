@@ -13,7 +13,7 @@
 
 #include <atomic>
 #include <condition_variable>
-#include <cstring>
+#include <functional>
 #include <queue>
 
 #include "common.h"
@@ -31,12 +31,12 @@
 #define IO_MAX_THREADS 64
 #endif
 
-// The minimum number of threads kept waiting in the pool.
-#define IO_MIN_THREADS 1
-
 // Values for the wakeup bytes sent to the ioport.
 #define IO_SERVICE_MAIN_THREAD_REQUEST_QUEUE 99
 #define IO_SERVICE_RESULT_QUEUE 100
+
+// The amount of time an IO thread many hang around to service requests, in milliseconds.
+#define IO_WAIT_FOR_WORK_DURATION_MS 500
 
 static void iothread_service_main_thread_requests();
 static void iothread_service_result_queue();
@@ -47,7 +47,8 @@ struct work_request_t {
     void_function_t handler;
     void_function_t completion;
 
-    work_request_t(void_function_t &&f, void_function_t &&comp) : handler(f), completion(comp) {}
+    work_request_t(void_function_t &&f, void_function_t &&comp)
+        : handler(std::move(f)), completion(std::move(comp)) {}
 
     // Move-only
     work_request_t &operator=(const work_request_t &) = delete;
@@ -57,7 +58,7 @@ struct work_request_t {
 };
 
 struct main_thread_request_t {
-    std::atomic<bool> done{false};
+    relaxed_atomic_bool_t done{false};
     void_function_t func;
 
     main_thread_request_t(void_function_t &&f) : func(f) {}
@@ -69,15 +70,44 @@ struct main_thread_request_t {
     main_thread_request_t(main_thread_request_t &&) = delete;
 };
 
-/// Data about the current set of IO threads and requests.
-struct thread_pool_data_t {
-    /// The queue of outstanding, unclaimed requests.
-    std::queue<work_request_t> request_queue;
+struct thread_pool_t {
+    struct data_t {
+        /// The queue of outstanding, unclaimed requests.
+        std::queue<work_request_t> request_queue{};
 
-    /// The number of extant threads which are able to run requests.
-    int thread_count = 0;
+        /// The number of threads that exist in the pool.
+        int total_threads{0};
+
+        /// The number of threads which are waiting for more work.
+        int waiting_threads{0};
+
+        /// A flag indicating we should not process new requests.
+        bool drain{false};
+    };
+
+    /// Data which needs to be atomically accessed.
+    owning_lock<data_t> data{};
+
+    /// The condition variable used to wake up waiting threads.
+    /// Note this is tied to data's lock.
+    std::condition_variable queue_cond{};
+
+    /// The minimum and maximum number of threads.
+    /// Here "minimum" means threads that are kept waiting in the pool.
+    /// Note that the pool is initially empty and threads may decide to exit based on a time wait.
+    const int soft_min_threads;
+    const int max_threads;
+
+    thread_pool_t(int soft_min_threads, int max_threads)
+        : soft_min_threads(soft_min_threads), max_threads(max_threads) {
+        assert(soft_min_threads >= 0 && max_threads >= 1 && soft_min_threads <= max_threads &&
+               "Invalid thread min and max");
+    }
 };
-static owning_lock<thread_pool_data_t> s_thread_pool;
+
+/// The thread pool for "iothreads" which are used to lift I/O off of the main thread.
+/// These are used for completions, etc.
+static thread_pool_t s_io_thread_pool(1, IO_MAX_THREADS);
 
 static owning_lock<std::queue<work_request_t>> s_result_queue;
 
@@ -113,13 +143,32 @@ static const notify_pipes_t &get_notify_pipes() {
     return s_notify_pipes;
 }
 
-static maybe_t<work_request_t> dequeue_spawn_request() {
-    maybe_t<work_request_t> result{};
-    auto requests = s_thread_pool.acquire();
-    if (!requests->request_queue.empty()) {
-        result = std::move(requests->request_queue.front());
-        requests->request_queue.pop();
+/// Dequeue a work item (perhaps waiting on the condition variable), or commit to exiting by
+/// reducing the active thread count.
+static maybe_t<work_request_t> iothread_dequeue_work_or_commit_to_exit() {
+    auto &pool = s_io_thread_pool;
+    auto data = pool.data.acquire();
+
+    while (data->request_queue.empty()) {
+        bool give_up = true;
+        if (!data->drain && data->total_threads == pool.soft_min_threads) {
+            // If we exit, it will drop below the soft min. So wait for a while before giving up.
+            data->waiting_threads += 1;
+            auto wait_ret = pool.queue_cond.wait_for(
+                data.get_lock(), std::chrono::milliseconds(IO_WAIT_FOR_WORK_DURATION_MS));
+            data->waiting_threads -= 1;
+            give_up = (wait_ret == std::cv_status::timeout);
+        }
+        if (give_up) {
+            // Balance the total_threads count from when we were spawned.
+            data->total_threads -= 1;
+            return none();
+        }
     }
+
+    // Oh! The queue has work for us!
+    maybe_t<work_request_t> result = std::move(data->request_queue.front());
+    data->request_queue.pop();
     return result;
 }
 
@@ -132,8 +181,8 @@ static void *this_thread() { return (void *)(intptr_t)pthread_self(); }
 /// The function that does thread work.
 static void *iothread_worker(void *unused) {
     UNUSED(unused);
-    while (auto req = dequeue_spawn_request()) {
-        debug(5, "pthread %p dequeued", this_thread());
+    while (auto req = iothread_dequeue_work_or_commit_to_exit()) {
+        FLOGF(iothread, L"pthread %p got work", this_thread());
 
         // Perform the work
         req->handler();
@@ -148,24 +197,12 @@ static void *iothread_worker(void *unused) {
             assert_with_errno(write_loop(notify_fd, &wakeup_byte, sizeof wakeup_byte) != -1);
         }
     }
-
-    // We believe we have exhausted the thread request queue. We want to decrement
-    // thread_count and exit. But it's possible that a request just came in. Furthermore,
-    // it's possible that the main thread saw that thread_count is full, and decided to not
-    // spawn a new thread, trusting in one of the existing threads to handle it. But we've already
-    // committed to not handling anything else. Therefore, we have to decrement
-    // the thread count under the lock. Likewise, the main thread must check the value under the
-    // lock.
-    int new_thread_count = --s_thread_pool.acquire()->thread_count;
-    assert(new_thread_count >= 0);
-
-    debug(5, "pthread %p exiting", this_thread());
-    // We're done.
-    return NULL;
+    FLOGF(iothread, L"pthread %p exiting", this_thread());
+    return nullptr;
 }
 
 /// Spawn another thread. No lock is held when this is called.
-static void iothread_spawn() {
+static pthread_t iothread_spawn() {
     // Spawn a thread. If this fails, it means there's already a bunch of threads; it is very
     // unlikely that they are all on the verge of exiting, so one is likely to be ready to handle
     // extant requests. So we can ignore failure with some confidence.
@@ -174,29 +211,43 @@ static void iothread_spawn() {
         // We will never join this thread.
         DIE_ON_FAILURE(pthread_detach(thread));
     }
+    return thread;
 }
 
 int iothread_perform_impl(void_function_t &&func, void_function_t &&completion) {
     ASSERT_IS_MAIN_THREAD();
     ASSERT_IS_NOT_FORKED_CHILD();
+    assert(func && "Null function");
 
     struct work_request_t req(std::move(func), std::move(completion));
     int local_thread_count = -1;
+    auto &pool = s_io_thread_pool;
     bool spawn_new_thread = false;
+    bool wakeup_thread = false;
     {
         // Lock around a local region.
-        auto spawn_reqs = s_thread_pool.acquire();
-        spawn_reqs->request_queue.push(std::move(req));
-        if (spawn_reqs->thread_count < IO_MAX_THREADS) {
-            spawn_reqs->thread_count++;
+        auto data = pool.data.acquire();
+        data->request_queue.push(std::move(req));
+        if (data->drain) {
+            // Do nothing here.
+        } else if (data->waiting_threads > 0) {
+            // At least one thread is waiting, we will wake it up.
+            wakeup_thread = true;
+        } else if (data->total_threads < pool.max_threads) {
+            // No threads are waiting but we can spawn a new thread.
+            data->total_threads += 1;
             spawn_new_thread = true;
         }
-        local_thread_count = spawn_reqs->thread_count;
+        local_thread_count = data->total_threads;
     }
 
     // Kick off the thread if we decided to do so.
+    if (wakeup_thread) {
+        pool.queue_cond.notify_one();
+    }
     if (spawn_new_thread) {
-        iothread_spawn();
+        pthread_t pt = iothread_spawn();
+        FLOGF(iothread, L"pthread %p spawned", pt);
     }
     return local_thread_count;
 }
@@ -230,36 +281,48 @@ static bool iothread_wait_for_pending_completions(long timeout_usec) {
     return ret > 0;
 }
 
-/// Note that this function is quite sketchy. In particular, it drains threads, not requests,
-/// meaning that it may leave requests on the queue. This is the desired behavior (it may be called
-/// before fork, and we don't want to bother servicing requests before we fork), but in the test
-/// suite we depend on it draining all requests. In practice, this works, because a thread in
-/// practice won't exit while there is outstanding requests.
-///
 /// At the moment, this function is only used in the test suite and in a
 /// drain-all-threads-before-fork compatibility mode that no architecture requires, so it's OK that
 /// it's terrible.
-void iothread_drain_all() {
+int iothread_drain_all() {
     ASSERT_IS_MAIN_THREAD();
     ASSERT_IS_NOT_FORKED_CHILD();
 
-#define TIME_DRAIN 0
-#if TIME_DRAIN
-    int thread_count = s_spawn_requests.acquire().value.thread_count;
+    int thread_count;
+    auto &pool = s_io_thread_pool;
+    // Set the drain flag.
+    {
+        auto data = pool.data.acquire();
+        assert(!data->drain && "Should not be draining already");
+        data->drain = true;
+        thread_count = data->total_threads;
+    }
+
+    // Wake everyone up.
+    pool.queue_cond.notify_all();
+
     double now = timef();
-#endif
 
     // Nasty polling via select().
-    while (s_thread_pool.acquire()->thread_count > 0) {
+    while (pool.data.acquire()->total_threads > 0) {
         if (iothread_wait_for_pending_completions(1000)) {
             iothread_service_completion();
         }
     }
-#if TIME_DRAIN
+
+    // Clear the drain flag.
+    // Even though we released the lock, nobody should have added a new thread while the drain flag
+    // is set.
+    {
+        auto data = pool.data.acquire();
+        assert(data->total_threads == 0 && "Should be no threads");
+        assert(data->drain && "Should be draining");
+        data->drain = false;
+    }
+
     double after = timef();
-    std::fwprintf(stdout, L"(Waited %.02f msec for %d thread(s) to drain)\n", 1000 * (after - now),
-                  thread_count);
-#endif
+    FLOGF(iothread, "Drained %d thread(s) in %.02f msec", thread_count, 1000 * (after - now));
+    return thread_count;
 }
 
 /// "Do on main thread" support.

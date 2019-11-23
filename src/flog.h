@@ -77,6 +77,8 @@ class category_list_t {
     category_t history{L"history", L"Command history events"};
 
     category_t profile_history{L"profile-history", L"History performance measurements"};
+
+    category_t iothread{L"iothread", L"Background IO thread events"};
 };
 
 /// The class responsible for logging.

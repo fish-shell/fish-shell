@@ -95,7 +95,7 @@ void io_buffer_t::run_background_fillthread(autoclose_fd_t readfd) {
         // allowing it to time out. Note the typical case is that the fd will be closed, in which
         // case select will return immediately.
         if (!readable) {
-            shutdown = this->shutdown_fillthread_.load(std::memory_order_relaxed);
+            shutdown = this->shutdown_fillthread_;
         }
 
         if (readable || shutdown) {
@@ -150,7 +150,7 @@ void io_buffer_t::begin_background_fillthread(autoclose_fd_t fd) {
 void io_buffer_t::complete_background_fillthread() {
     ASSERT_IS_MAIN_THREAD();
     assert(fillthread_ && "Should have a fillthread");
-    shutdown_fillthread_.store(true, std::memory_order_relaxed);
+    shutdown_fillthread_ = true;
     void *ignored = nullptr;
     int err = pthread_join(*fillthread_, &ignored);
     DIE_ON_FAILURE(err);

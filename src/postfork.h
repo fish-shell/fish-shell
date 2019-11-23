@@ -33,11 +33,8 @@ bool child_set_group(job_t *j, process_t *p);     // called by child
 /// On failure, signal handlers, io redirections and process group of the process is undefined.
 int child_setup_process(pid_t new_termowner, bool is_forked, const dup2_list_t &dup2s);
 
-/// Call fork(), optionally waiting until we are no longer multithreaded. If the forked child
-/// doesn't do anything that could allocate memory, take a lock, etc. (like call exec), then it's
-/// not necessary to wait for threads to die. If the forked child may do those things, it should
-/// wait for threads to die.
-pid_t execute_fork(bool wait_for_threads_to_die);
+/// Call fork(), retrying on failure a few times.
+pid_t execute_fork();
 
 /// Report an error from failing to exec or posix_spawn a command.
 void safe_report_exec_error(int err, const char *actual_cmd, const char *const *argv,

@@ -435,10 +435,9 @@ static bool run_internal_process(process_t *p, std::string outdata, std::string 
 /// Call fork() as part of executing a process \p p in a job \j. Execute \p child_action in the
 /// context of the child. Returns true if fork succeeded, false if fork failed.
 static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t *p,
-                                   const dup2_list_t &dup2s, bool drain_threads,
-                                   const char *fork_type,
+                                   const dup2_list_t &dup2s, const char *fork_type,
                                    const std::function<void()> &child_action) {
-    pid_t pid = execute_fork(drain_threads);
+    pid_t pid = execute_fork();
     if (pid == 0) {
         // This is the child process. Setup redirections, print correct output to
         // stdout and stderr, and then exit.
@@ -760,7 +759,7 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
     } else
 #endif
     {
-        if (!fork_child_for_process(j, p, *dup2s, false, "external command",
+        if (!fork_child_for_process(j, p, *dup2s, "external command",
                                     [&] { safe_launch_process(p, actual_cmd, argv, envv); })) {
             return false;
         }

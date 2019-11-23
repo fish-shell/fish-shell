@@ -168,10 +168,10 @@ int child_setup_process(pid_t new_termowner, bool is_forked, const dup2_list_t &
 /// This function is a wrapper around fork. If the fork calls fails with EAGAIN, it is retried
 /// FORK_LAPS times, with a very slight delay between each lap. If fork fails even then, the process
 /// will exit with an error message.
-pid_t execute_fork(bool wait_for_threads_to_die) {
+pid_t execute_fork() {
     ASSERT_IS_MAIN_THREAD();
 
-    if (wait_for_threads_to_die || JOIN_THREADS_BEFORE_FORK) {
+    if (JOIN_THREADS_BEFORE_FORK) {
         // Make sure we have no outstanding threads before we fork. This is a pretty sketchy thing
         // to do here, both because exec.cpp shouldn't have to know about iothreads, and because the
         // completion handlers may do unexpected things.

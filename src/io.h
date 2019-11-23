@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include <atomic>
+#include <future>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -279,8 +280,9 @@ class io_buffer_t {
     /// Atomic flag indicating our fillthread should shut down.
     relaxed_atomic_bool_t shutdown_fillthread_{false};
 
-    /// The background fillthread itself, if any.
-    maybe_t<pthread_t> fillthread_{};
+    /// The future allowing synchronization with the background fillthread, if the fillthread is
+    /// running. The fillthread fulfills the corresponding promise when it exits.
+    std::future<void> fillthread_waiter_{};
 
     /// Read limit of the buffer.
     const size_t read_limit_;
@@ -297,6 +299,9 @@ class io_buffer_t {
     /// End the background fillthread operation.
     void complete_background_fillthread();
 
+    /// Helper to return whether the fillthread is running.
+    bool fillthread_running() const { return fillthread_waiter_.valid(); }
+
    public:
     explicit io_buffer_t(size_t limit) : buffer_(limit), read_limit_(limit) {
         // Explicitly reset the discard flag because we share this buffer.
@@ -308,7 +313,7 @@ class io_buffer_t {
     /// Access the underlying buffer.
     /// This requires that the background fillthread be none.
     const separated_buffer_t<std::string> &buffer() const {
-        assert(!fillthread_ && "Cannot access buffer during background fill");
+        assert(!fillthread_running() && "Cannot access buffer during background fill");
         return buffer_;
     }
 

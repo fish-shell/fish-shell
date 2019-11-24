@@ -163,7 +163,7 @@ static wcstring format_double(double v, const math_cmd_opts_t &opts) {
     // As a special-case, a scale of 0 means to truncate to an integer
     // instead of rounding.
     if (opts.scale == 0) {
-        v = std::trunc(v);
+        v = trunc(v);
         return format_string(L"%.*f", opts.scale, v);
     }
 

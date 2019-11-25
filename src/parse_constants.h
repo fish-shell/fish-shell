@@ -174,9 +174,10 @@ enum parse_error_code_t {
     parse_error_tokenizer_unterminated_escape,
     parse_error_tokenizer_other,
 
-    parse_error_unbalancing_end,   // end outside of block
-    parse_error_unbalancing_else,  // else outside of if
-    parse_error_unbalancing_case   // case outside of switch
+    parse_error_unbalancing_end,           // end outside of block
+    parse_error_unbalancing_else,          // else outside of if
+    parse_error_unbalancing_case,          // case outside of switch
+    parse_error_bare_variable_assignment,  // a=b without command
 };
 
 enum { PARSER_TEST_ERROR = 1, PARSER_TEST_INCOMPLETE = 2 };

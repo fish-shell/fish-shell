@@ -76,3 +76,11 @@ complete -C'a=b xalias '
 alias envxalias='a=b x'
 complete -C'a=b envxalias '
 # CHECK: arg
+
+# Eval invalid grammar to allow fish to parse this file
+eval 'a=(echo b)'
+# CHECKERR: {{.*}}: Unsupported use of '='. In fish, please use 'set a (echo b)'.
+eval ': | a=b'
+# CHECKERR: {{.*}}: Unsupported use of '='. In fish, please use 'set a b'.
+eval 'not a=b'
+# CHECKERR: {{.*}}: Unsupported use of '='. In fish, please use 'set a b'.

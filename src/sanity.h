@@ -9,7 +9,7 @@ void sanity_lose();
 ///
 /// \param ptr The pointer to validate
 /// \param err A description of what the pointer refers to, for use in error messages
-/// \param null_ok Wheter the pointer is allowed to point to 0
+/// \param null_ok Whether the pointer is allowed to point to 0
 void validate_pointer(const void *ptr, const wchar_t *err, int null_ok);
 
 #endif

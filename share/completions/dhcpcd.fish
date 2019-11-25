@@ -18,7 +18,7 @@ complete -c dhcpcd -l logfile -s j -r -d 'Writes to specfied log file instead of
 complete -c dhcpcd -l release -s k -x -d 'Release lease and de-configure interface' -a '(__fish_print_interfaces)'
 complete -c dhcpcd -l leasetime -s l -x -d 'Request specific lease time in secs'
 complete -c dhcpcd -l master -s M -d 'Start dhcpcd in Master mode'
-complete -c dhcpcd -l metric -s m -x -d 'Set prefered interface based on given rank (lowest wins)'
+complete -c dhcpcd -l metric -s m -x -d 'Set preferred interface based on given rank (lowest wins)'
 complete -c dhcpcd -l rebind -s n -x -d 'Reload config and rebind specified interface' -a '(__fish_print_interfaces)'
 complete -c dhcpcd -l renew -s N -x -d 'Renew existing addresses on specified interface' -a '(__fish_print_interfaces)'
 complete -c dhcpcd -l option -s o -x -d 'Request DHCP option'

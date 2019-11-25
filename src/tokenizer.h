@@ -31,7 +31,7 @@ enum class redirection_mode_t {
 };
 
 /// Flag telling the tokenizer to accept incomplete parameters, i.e. parameters with mismatching
-/// paranthesis, etc. This is useful for tab-completion.
+/// parenthesis, etc. This is useful for tab-completion.
 #define TOK_ACCEPT_UNFINISHED 1
 
 /// Flag telling the tokenizer not to remove comments. Useful for syntax highlighting.

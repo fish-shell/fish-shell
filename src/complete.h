@@ -152,7 +152,7 @@ void completions_sort_and_prioritize(std::vector<completion_t> *comps,
 /// \param option_type The type of option: can be option_type_short (-x),
 ///        option_type_single_long (-foo), option_type_double_long (--bar).
 /// \param result_mode Controls how to search further completions when this completion has been
-/// succesfully matched.
+/// successfully matched.
 /// \param comp A space separated list of completions which may contain subshells.
 /// \param desc A description of the completion.
 /// \param condition a command to be run to check it this completion should be used. If \c condition

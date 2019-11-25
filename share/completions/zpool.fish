@@ -158,7 +158,7 @@ function __fish_zpool_list_rw_properties
     echo -e "bootfs\t"(_ "Default bootable dataset")" (POOL/DATASET)"
     echo -e "cachefile\t"(_ "Pool configuration cache")" (PATH, none, '')"
     echo -e "comment\t"(_ "Comment about the pool")" (COMMENT)"
-    echo -e "dedupditto\t"(_ "Threshold for writting a ditto copy of deduplicated blocks")" (COUNT)"
+    echo -e "dedupditto\t"(_ "Threshold for writing a ditto copy of deduplicated blocks")" (COUNT)"
     echo -e "delegation\t"(_ "Allow rights delegation on the pool")" (on, off)"
     echo -e "failmode\t"(_ "Behavior in case of catastrophic pool failure")" (wait, continue, panic)"
     echo -e "listsnaps\t"(_ "Display snapshots even if 'zfs list' does not use '-t'")" (on, off)"

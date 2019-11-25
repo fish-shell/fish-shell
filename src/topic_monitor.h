@@ -63,7 +63,7 @@ constexpr generation_t invalid_generation = std::numeric_limits<generation_t>::m
 /// The initial value of a generation is always 0.
 using generation_list_t = enum_array_t<generation_t, topic_t>;
 
-/// Teh topic monitor class. This permits querying the current generation values for topics,
+/// The topic monitor class. This permits querying the current generation values for topics,
 /// optionally blocking until they increase.
 class topic_monitor_t {
    private:

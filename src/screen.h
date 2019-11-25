@@ -155,7 +155,7 @@ class screen_t {
 };
 
 /// This is the main function for the screen putput library. It is used to define the desired
-/// contents of the screen. The screen command will use it's knowlege of the current contents of the
+/// contents of the screen. The screen command will use its knowledge of the current contents of the
 /// screen in order to render the desired output using as few terminal commands as possible.
 ///
 /// \param s the screen on which to write

@@ -47,7 +47,7 @@ complete -f -n '__fish_bundle_using_command install' -c bundle -l binstubs -d 'C
 complete -f -n '__fish_bundle_using_command install' -c bundle -l shebang -d 'Specify a ruby executable to use with generated binstubs'
 complete -f -n '__fish_bundle_using_command install' -c bundle -l standalone -d 'Make a bundle that can work without RubyGems or Bundler at run-time'
 complete -f -n '__fish_bundle_using_command install' -c bundle -s P -l trust-policy -d 'Apply a RubyGems security policy: {High,Medium,Low,No}Security'
-complete -f -n '__fish_bundle_using_command install' -c bundle -s j -l jobs -d 'Install  gems parallely by starting size number of parallel workers'
+complete -f -n '__fish_bundle_using_command install' -c bundle -s j -l jobs -d 'Install gems parallelly by starting size number of parallel workers'
 complete -f -n '__fish_bundle_using_command install' -c bundle -l no-cache -d 'Do not update the cache in vendor/cache with the newly bundled gems'
 complete -f -n '__fish_bundle_using_command install' -c bundle -l quiet -d 'Do not print progress information to stdout'
 complete -f -n '__fish_bundle_using_command install' -c bundle -l clean -d 'Run bundle clean automatically after install'

@@ -47,7 +47,7 @@ complete -c find -o ilname -d "File is symlink matching specified case insensiti
 complete -c find -o iname -d "File name matches case insensitive pattern" -r
 complete -c find -o inum -d "File has specified inode number" -r
 complete -c find -o ipath -o iwholename -d "File path matches case insensitive pattern" -r
-complete -c find -o iregex -d "File name matches case insensetive regex" -r
+complete -c find -o iregex -d "File name matches case insensitive regex" -r
 
 complete -c find -o links -d "File has specified number of links" -r -a "1 2 3 4 5 6 7 8 9"
 complete -c find -o lname -d "File is symlink matching specified pattern" -r

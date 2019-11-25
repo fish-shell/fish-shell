@@ -253,7 +253,7 @@ function __fish_complete_iw
                     printf '%s\t%s\n' coalesce "Interface with coalesce" \
                         hwsim "" \
                         info "Show wireless device capabilities" \
-                        interface "Add a new virutal interface" \
+                        interface "Add a new virtual interface" \
                         channels "Show available channels" \
                         reg "Manage regulatory domains" \
                         set "Set parameters" \

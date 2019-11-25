@@ -41,7 +41,7 @@ end
 echo -n X\u00FBX | display_bytes
 echo X\u00FCX | env LC_ALL=C ../test/root/bin/fish -c 'read foo; echo -n $foo' | display_bytes
 
-# The next tests deliberately spawn another fish instance to test inheritence of env vars.
+# The next tests deliberately spawn another fish instance to test inheritance of env vars.
 
 # This test is subtle. Despite the presence of the \u00fc unicode char (a "u"
 # with an umlaut) the fact the locale is C/POSIX will cause the \xfc byte to

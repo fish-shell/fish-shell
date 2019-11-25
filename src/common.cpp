@@ -655,7 +655,7 @@ ssize_t read_loop(int fd, void *buff, size_t count) {
 }
 
 /// Hack to not print error messages in the tests. Do not call this from functions in this module
-/// like `debug()`. It is only intended to supress diagnostic noise from testing things like the
+/// like `debug()`. It is only intended to suppress diagnostic noise from testing things like the
 /// fish parser where we expect a lot of diagnostic messages due to testing error conditions.
 bool should_suppress_stderr_for_tests() {
     return program_name && !std::wcscmp(program_name, TESTS_PROGRAM_NAME);

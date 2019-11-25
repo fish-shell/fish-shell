@@ -91,7 +91,7 @@ void highlight_shell(const wcstring &buffstr, std::vector<highlight_spec_t> &col
 void highlight_shell_no_io(const wcstring &buffstr, std::vector<highlight_spec_t> &color,
                            size_t pos, wcstring_list_t *error, const environment_t &vars);
 
-/// Perform syntax highlighting for the text in buff. Matching quotes and paranthesis are
+/// Perform syntax highlighting for the text in buff. Matching quotes and parenthesis are
 /// highlighted. The result is stored in the color array as a color_code from the HIGHLIGHT_ enum
 /// for each character in buff.
 ///

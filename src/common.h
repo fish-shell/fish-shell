@@ -843,7 +843,7 @@ void common_handle_winch(int signal);
 /// Write the given paragraph of output, redoing linebreaks to fit the current screen.
 wcstring reformat_for_screen(const wcstring &msg);
 
-/// Make sure the specified direcotry exists. If needed, try to create it and any currently not
+/// Make sure the specified directory exists. If needed, try to create it and any currently not
 /// existing parent directories.
 ///
 /// \return 0 if, at the time of function return the directory exists, -1 otherwise.

@@ -12,7 +12,7 @@ end
 complete -c s3cmd -f -n "__s3cmd_is_valid_remote_path" -a "(s3cmd ls (commandline -ct) 2>/dev/null | string match -r -- 's3://.*')"
 complete -c s3cmd -f -n "__s3cmd_is_remote_path"
 
-# Supress file completions for initial command
+# Suppress file completions for initial command
 complete -c s3cmd -n "__fish_is_first_token" -f
 
 # Available commands

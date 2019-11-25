@@ -2,7 +2,7 @@
 # Validate some things about command wrapping.
 
 # This tests that we do not trigger a combinatorial explosion - see #5638.
-# Ensure it completes successully.
+# Ensure it completes successfully.
 complete -c testcommand --wraps "testcommand x "
 complete -c testcommand --wraps "testcommand y "
 complete -c testcommand --no-files -a normal

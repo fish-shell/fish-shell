@@ -12,5 +12,5 @@ complete -c lsblk -s o -l output -d "output columns" -xa '( __fish_complete_list
 complete -c lsblk -s P -l pairs -d "use key='value' output format"
 complete -c lsblk -s r -l raw -d "use raw output format"
 complete -c lsblk -s t -l topology -d "output info about topology"
-complete -c lsblk -s l -l list -d "use list format ouput"
+complete -c lsblk -s l -l list -d "use list format output"
 

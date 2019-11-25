@@ -114,7 +114,7 @@ complete -c equery -n '__fish_seen_subcommand_from l list; and     __fish_contai
 complete -c equery -n '__fish_seen_subcommand_from m meta' -s d -l description -d "Show extended pkg description"
 complete -c equery -n '__fish_seen_subcommand_from m meta' -s H -l herd -d "Show pkg's herd(s)"
 complete -c equery -n '__fish_seen_subcommand_from m meta' -s k -l keywords -d "Show keywords for all matching pkg versions"
-complete -c equery -n '__fish_seen_subcommand_from m meta' -s l -l license -d "Show licenses for the best maching version"
+complete -c equery -n '__fish_seen_subcommand_from m meta' -s l -l license -d "Show licenses for the best matching version"
 complete -c equery -n '__fish_seen_subcommand_from m meta' -s m -l maintainer -d "Show the maintainer(s) for the pkg"
 complete -c equery -n '__fish_seen_subcommand_from m meta' -s S -l stablreq -d "Show STABLEREQ arches (cc's) for all matching pkg versions"
 complete -c equery -n '__fish_seen_subcommand_from m meta' -s u -l useflags -d "Show per-pkg USE flag descriptions"

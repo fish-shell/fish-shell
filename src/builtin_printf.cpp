@@ -210,7 +210,7 @@ void builtin_printf_state_t::nonfatal_error(const wchar_t *fmt, ...) {
     streams.err.append(errstr);
     if (!string_suffixes_string(L"\n", errstr)) streams.err.push_back(L'\n');
 
-    // We set the exit code to error, because one occured,
+    // We set the exit code to error, because one occurred,
     // but we don't do an early exit so we still print what we can.
     this->exit_code = STATUS_CMD_ERROR;
 }

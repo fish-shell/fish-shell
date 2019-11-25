@@ -12,7 +12,7 @@ else # OS X
     complete -c stat -s L -d "Use stat(2) instead of lsstat(2)"
     complete -c stat -s l -d "Display output in ls -lT format"
     complete -c stat -s n -d "Don't force a newline to appear at end of each piece of output"
-    complete -c stat -s q -d "Supress failure messages"
+    complete -c stat -s q -d "Suppress failure messages"
     complete -c stat -s r -d "Display raw information"
     complete -c stat -s s -d "Display informationin ``shell output'' suitable for initialising variables"
     complete -c stat -s t -d "Display timestamps using specified FORMAT" -r

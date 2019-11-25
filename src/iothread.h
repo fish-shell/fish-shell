@@ -13,7 +13,7 @@
 /// pointer, and returns an int, which is passed to the completionCallback.
 /// \param completionCallback The function to execute on the main thread once the background thread
 /// is complete. Accepts an int (the return value of handler) and the context.
-/// \param context A arbitary context pointer to pass to the handler and completion callback.
+/// \param context An arbitrary context pointer to pass to the handler and completion callback.
 /// \return A sequence number, currently not very useful.
 int iothread_perform_base(int (*handler)(void *), void (*completionCallback)(void *, int),
                           void *context);
@@ -23,7 +23,7 @@ int iothread_perform_base(int (*handler)(void *), void (*completionCallback)(voi
 /// \return A file descriptor on which to listen for completion callbacks.
 int iothread_port(void);
 
-/// Services one iothread competion callback.
+/// Services one iothread completion callback.
 void iothread_service_completion(void);
 
 /// Waits for all iothreads to terminate.

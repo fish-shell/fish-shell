@@ -220,7 +220,7 @@ begin
             set test16res $test16res $__fish_test_universal_variables_variable_foo
 
             # This sequence seems pointless but it's really verifying that we
-            # succesfully expose higher scopes as we erase the closest scope.
+            # successfully expose higher scopes as we erase the closest scope.
             set -e __fish_test_universal_variables_variable_foo
             set test16res $test16res $__fish_test_universal_variables_variable_foo
 

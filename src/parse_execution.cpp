@@ -682,31 +682,6 @@ parse_execution_result_t parse_execution_context_t::report_unmatched_wildcard_er
     return parse_execution_errored;
 }
 
-// Given a command string that might contain fish special tokens return a string without those
-// tokens.
-//
-// TODO(krader1961): Figure out what VARIABLE_EXPAND means in this context. After looking at the
-// code and doing various tests I couldn't figure out why that token would be present when this
-// code is run. I was therefore unable to determine how to substitute its presence in the error
-// message.
-static wcstring reconstruct_orig_str(wcstring tokenized_str) {
-    wcstring orig_str = tokenized_str;
-
-    if (tokenized_str.find(VARIABLE_EXPAND_SINGLE) != std::string::npos) {
-        // Variable was quoted to force expansion of multiple elements into a single element.
-        //
-        // The following isn't entirely correct. For example, $abc"$def" will become "$abc$def".
-        // However, anyone writing the former is asking for trouble so I don't feel bad about not
-        // accurately reconstructing what they typed.
-        wcstring new_str = wcstring(tokenized_str);
-        std::replace(new_str.begin(), new_str.end(), static_cast<wchar_t>(VARIABLE_EXPAND_SINGLE),
-                     L'$');
-        orig_str = L"\"" + new_str + L"\"";
-    }
-
-    return orig_str;
-}
-
 /// Handle the case of command not found.
 parse_execution_result_t parse_execution_context_t::handle_command_not_found(
     const wcstring &cmd_str, tnode_t<g::plain_statement> statement, int err_code) {

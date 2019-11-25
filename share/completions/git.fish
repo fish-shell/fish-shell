@@ -989,6 +989,9 @@ complete -f -c git -n '__fish_git_using_command cherry-pick' -s x -d 'Append inf
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s n -l no-commit -d 'Apply changes without making any commit'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s s -l signoff -d 'Add Signed-off-by line to the commit message'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -l ff -d 'Fast-forward if possible'
+complete -f -c git -n '__fish_git_using_command cherry-pick' -l continue -d 'Continue the operation in progress'
+complete -f -c git -n '__fish_git_using_command cherry-pick' -l abort -d 'Cancel the operation'
+complete -f -c git -n '__fish_git_using_command cherry-pick' -l skip -d 'Skip the current commit and continue with the rest of the sequence'
 
 ### clone
 complete -f -c git -n '__fish_git_needs_command' -a clone -d 'Clone a repository into a new directory'

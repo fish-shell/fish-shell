@@ -82,7 +82,7 @@ class pager_t {
    public:
     /// Data structure describing one or a group of related completions.
     struct comp_t {
-        /// The list of all completin strings this entry applies to.
+        /// The list of all completion strings this entry applies to.
         wcstring_list_t comp;
         /// The description.
         wcstring desc;

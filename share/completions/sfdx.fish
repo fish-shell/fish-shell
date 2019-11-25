@@ -286,7 +286,7 @@ complete $sfdx_looking -xa force:data:tree -d 'manipulate records using the tree
 
 complete $sfdx_looking -xa force:data:tree:export -d 'export data from an org into sObject tree format for force:data:tree:import consumption'
 complete -c sfdx -n '__fish_sfdx_using_command force:data:tree:export' -s d -l outputdir      -d 'directory to store files'
-complete -c sfdx -n '__fish_sfdx_using_command force:data:tree:export' -s p -l plan           -d 'generate mulitple sobject tree files and a plan definition file for aggregated import'
+complete -c sfdx -n '__fish_sfdx_using_command force:data:tree:export' -s p -l plan           -d 'generate multiple sobject tree files and a plan definition file for aggregated import'
 complete -c sfdx -n '__fish_sfdx_using_command force:data:tree:export' -s q -l query          -d '(required) soql query, or filepath of file containing a soql query, to retrieve records'
 complete -c sfdx -n '__fish_sfdx_using_command force:data:tree:export' -s u -l targetusername -d 'username or alias for the target org; overrides default target org'
 complete -c sfdx -n '__fish_sfdx_using_command force:data:tree:export' -s x -l prefix         -d 'prefix of generated files'

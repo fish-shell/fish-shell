@@ -346,7 +346,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     void emit_profiling(const char *path) const;
 
     /// Returns the file currently evaluated by the parser. This can be different than
-    /// reader_current_filename, e.g. if we are evaulating a function defined in a different file
+    /// reader_current_filename, e.g. if we are evaluating a function defined in a different file
     /// than the one curently read.
     const wchar_t *current_filename() const;
 

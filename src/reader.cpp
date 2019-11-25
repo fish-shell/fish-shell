@@ -2412,7 +2412,7 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
             break;
         }
         // Only allow commands on the first key; otherwise, we might have data we
-        // need to insert on the commandline that the commmand might need to be able
+        // need to insert on the commandline that the command might need to be able
         // to see.
         auto next_event = inputter.readch(false);
         if (event_is_normal_char(next_event)) {

@@ -1,5 +1,5 @@
 if uniq --version >/dev/null 2>/dev/null
-    complete -c uniq -s c -l count -d "Print number of occurences"
+    complete -c uniq -s c -l count -d "Print number of occurrences"
     complete -c uniq -s d -l repeated -d "Only print duplicates"
     complete -c uniq -s D -l all-repeated -d "Remove non-duplicate lines" -f -x -a "
 		none\t'Remove none-duplicate lines'

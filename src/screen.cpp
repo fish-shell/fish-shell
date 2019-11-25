@@ -80,7 +80,7 @@ static size_t try_sequence(const char *seq, const wchar_t *str) {
     return 0;  // this should never be executed
 }
 
-/// Returns the number of columns left until the next tab stop, given the current cursor postion.
+/// Returns the number of columns left until the next tab stop, given the current cursor position.
 static size_t next_tab_stop(size_t current_line_width) {
     // Assume tab stops every 8 characters if undefined.
     size_t tab_width = init_tabs > 0 ? (size_t)init_tabs : 8;
@@ -286,7 +286,7 @@ void layout_cache_t::add_prompt_layout(wcstring input, prompt_layout_t layout) {
 
 /// Calculate layout information for the given prompt. Does some clever magic to detect common
 /// escape sequences that may be embedded in a prompt, such as those to set visual attributes.
-/// escape sequences that may be embeded in a prompt, such as those to set visual attributes.
+/// escape sequences that may be embedded in a prompt, such as those to set visual attributes.
 static prompt_layout_t calc_prompt_layout(const wcstring &prompt_str, layout_cache_t &cache) {
     if (auto cached_layout = cache.find_prompt_layout(prompt_str)) {
         return *cached_layout;

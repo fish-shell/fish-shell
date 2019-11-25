@@ -593,7 +593,7 @@ static bool expand_cmdsubst(wcstring input, parser_t &parser, std::vector<comple
     if (exec_subshell(subcmd, parser, sub_res, true /* apply_exit_status */,
                       true /* is_subcmd */) == -1) {
         append_cmdsub_error(errors, SOURCE_LOCATION_UNKNOWN,
-                            L"Unknown error while evaulating command substitution");
+                            L"Unknown error while evaluating command substitution");
         return false;
     }
 

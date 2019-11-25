@@ -1,4 +1,4 @@
-# completions for quilt version 0.46 or similiar
+# completions for quilt version 0.46 or similar
 complete -c quilt -s h -d "show help"
 complete -c quilt -l version -d "show version"
 complete -c quilt -l quiltrc -r --no-file -d "specify the file to Run Control file to use"

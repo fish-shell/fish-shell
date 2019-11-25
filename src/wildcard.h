@@ -1,5 +1,5 @@
 // My own globbing implementation. Needed to implement this instead of using libs globbing to
-// support tab-expansion of globbed paramaters.
+// support tab-expansion of globbed parameters.
 #ifndef FISH_WILDCARD_H
 #define FISH_WILDCARD_H
 
@@ -17,7 +17,7 @@ enum {
     ANY_STRING,
     /// Character representing any character string.
     ANY_STRING_RECURSIVE,
-    /// This is a special psuedo-char that is not used other than to mark the
+    /// This is a special pseudo-char that is not used other than to mark the
     /// end of the the special characters so we can sanity check the enum range.
     ANY_SENTINAL
 };
@@ -32,7 +32,7 @@ enum {
 /// wildcard_expand for matches. On the last segment, matching is made to any file, and all matches
 /// are inserted to the list.
 ///
-/// If wildcard_expand encounters any errors (such as insufficient priviliges) during matching, no
+/// If wildcard_expand encounters any errors (such as insufficient privileges) during matching, no
 /// error messages will be printed and wildcard_expand will continue the matching process.
 ///
 /// \param wc The wildcard string

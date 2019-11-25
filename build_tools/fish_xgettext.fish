@@ -37,7 +37,7 @@ for f in share/config.fish share/completions/*.fish share/functions/*.fish
     rm /tmp/fish/explicit/$f.tmp
 
     # Handle `complete` / `function` description messages. The `| fish` is subtle. It basically
-    # avoids the need to use `source` with a command substituion that could affect the current
+    # avoids the need to use `source` with a command substitution that could affect the current
     # shell.
     string replace --filter --regex $implicit_regex 'echo $1' <$f | fish >/tmp/fish/implicit/$f.tmp ^/dev/null
     while read description

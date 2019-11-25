@@ -23,7 +23,7 @@ if test $all = yes
     set files (git status --porcelain --short --untracked-files=all | sed -e 's/^ *[^ ]* *//')
     if set -q files[1]
         echo
-        echo You have uncommited changes. Cowardly refusing to restyle the entire code base.
+        echo You have uncommitted changes. Cowardly refusing to restyle the entire code base.
         echo
         exit 1
     end

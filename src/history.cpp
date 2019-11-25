@@ -427,7 +427,7 @@ void history_impl_t::remove(const wcstring &str_to_remove) {
             new_items.erase(new_items.begin() + idx);
             // If this index is before our first_unwritten_new_item_index, then subtract one from
             // that index so it stays pointing at the same item. If it is equal to or larger, then
-            // we have not yet writen this item, so we don't have to adjust the index.
+            // we have not yet written this item, so we don't have to adjust the index.
             if (idx < first_unwritten_new_item_index) {
                 first_unwritten_new_item_index--;
             }

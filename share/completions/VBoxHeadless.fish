@@ -5,7 +5,7 @@ complete -c VBoxHeadless -l vrdeproperty -o vrdeproperty -s e -x -d "Set VRDE pr
 complete -c VBoxHeadless -l settingspw -x -d "Specify settings password"
 complete -c VBoxHeadless -l settingspwfile -f -d "Specify file containing setting password"
 complete -c VBoxHeadless -l start-paused -o start-paused -d "Start VM in paused state"
-complete -c VBoxHeadless -l capture -o capture -s c -x -d "Record VM screen ouput to file"
+complete -c VBoxHeadless -l capture -o capture -s c -x -d "Record VM screen output to file"
 complete -c VBoxHeadless -l width -s w -x -d "Frame width when recording"
 complete -c VBoxHeadless -l height -s h -x -d "Frame height when recording"
 complete -c VBoxHeadless -l bitrate -s r -x -d "Recording bit rate when recording"

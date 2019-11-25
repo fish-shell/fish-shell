@@ -336,7 +336,7 @@ int builtin_false(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 // NOTE: These must be kept in sorted order!
 static const builtin_data_t builtin_datas[] = {
     {L"[", &builtin_test, N_(L"Test a condition")},
-    {L"and", &builtin_generic, N_(L"Execute command if previous command suceeded")},
+    {L"and", &builtin_generic, N_(L"Execute command if previous command succeeded")},
     {L"argparse", &builtin_argparse, N_(L"Parse options in fish script")},
     {L"begin", &builtin_generic, N_(L"Create a block of code")},
     {L"bg", &builtin_bg, N_(L"Send job to background")},

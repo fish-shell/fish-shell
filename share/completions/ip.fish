@@ -248,7 +248,7 @@ function __fish_complete_ip
                                         # Lifetime
                                     case '*'
                                         printf '%s\t%s\n' forever "Keep address valid forever" \
-                                            home "(Ipv6 only) Designate address as home adress" \
+                                            home "(Ipv6 only) Designate address as home address" \
                                             nodad "(Ipv6 only) Don't perform duplicate address detection" \
                                             dev "Add address to specified device" \
                                             scope "Set scope of address" \

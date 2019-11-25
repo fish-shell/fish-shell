@@ -293,7 +293,7 @@ struct base_directory_t {
     wcstring path{};       /// the path where we attempted to create the directory.
     bool success{false};   /// whether creating the directory succeeded.
     int err{0};            /// the error code if creating the directory failed.
-    bool used_xdg{false};  /// whether an XDG variable was used in resolving the direcotry.
+    bool used_xdg{false};  /// whether an XDG variable was used in resolving the directory.
 };
 
 /// Attempt to get a base directory, creating it if necessary. If a variable named \p xdg_var is

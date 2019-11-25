@@ -248,7 +248,7 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
     const size_t bufflen = std::wcslen(buff);
     assert(cursor_pos <= bufflen);
 
-    // ap and bp are the beginning and end of the tightest command substitition found so far.
+    // ap and bp are the beginning and end of the tightest command substitution found so far.
     const wchar_t *ap = buff, *bp = buff + bufflen;
     const wchar_t *pos = buff;
     for (;;) {

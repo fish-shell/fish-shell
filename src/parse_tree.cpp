@@ -53,6 +53,15 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
     if (skip_caret && this->text.empty()) return L"";
 
     wcstring result = prefix;
+    if (code == parse_error_bare_variable_assignment) {
+        wcstring assignment_src = src.substr(this->source_start, this->source_length);
+        maybe_t<size_t> equals_pos = variable_assignment_equals_pos(assignment_src);
+        assert(equals_pos);
+        wcstring variable = assignment_src.substr(0, *equals_pos);
+        wcstring value = assignment_src.substr(*equals_pos + 1);
+        append_format(result, ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, variable.c_str(), value.c_str());
+        return result;
+    }
     result.append(this->text);
     if (skip_caret || source_start >= src.size() || source_start + source_length > src.size()) {
         return result;
@@ -918,8 +927,45 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
             production_for_token(stack_elem.type, token1, token2, &tag);
         node.tag = tag;
         if (production == nullptr) {
-            parse_error_failed_production(stack_elem, token1);
-            // The above sets fatal_errored, which ends the loop.
+            tnode_t<grammar::variable_assignments> variable_assignments;
+            if (const parse_node_t *parent = nodes.get_parent(node)) {
+                switch (parent->type) {
+                    default:
+                        break;
+                    case symbol_job:
+                        variable_assignments =
+                            tnode_t<grammar::job>(&nodes, parent)
+                                .try_get_child<grammar::variable_assignments, 0>();
+                        break;
+                    case symbol_job_continuation:
+                        variable_assignments =
+                            tnode_t<grammar::job_continuation>(&nodes, parent)
+                                .try_get_child<grammar::variable_assignments, 2>();
+                        break;
+                    case symbol_not_statement:
+                        variable_assignments =
+                            tnode_t<grammar::not_statement>(&nodes, parent)
+                                .try_get_child<grammar::variable_assignments, 1>();
+                        break;
+                }
+            }
+            tnode_t<grammar::variable_assignment> variable_assignment;
+            tnode_t<grammar::tok_string> assignment_tok;
+            if (variable_assignments &&
+                (variable_assignment =
+                     variable_assignments.try_get_child<grammar::variable_assignment, 0>()) &&
+                (assignment_tok = variable_assignment.try_get_child<grammar::tok_string, 0>())) {
+                parse_token_t token(parse_token_type_string);
+                token.source_start = assignment_tok.source_range()->start;
+                token.source_length = assignment_tok.source_range()->length;
+                parse_error(token, parse_error_bare_variable_assignment,
+                            L" " /* won't be printed but must be non-empty, see
+                                    describe_with_prefix */
+                );
+            } else {
+                parse_error_failed_production(stack_elem, token1);
+            }
+            // The above set fatal_errored, which ends the loop.
         } else {
             bool is_terminate = (token1.type == parse_token_type_terminate);
 

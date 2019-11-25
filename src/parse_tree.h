@@ -238,4 +238,7 @@ parsed_source_ref_t parse_source(wcstring src, parse_tree_flags_t flags, parse_e
 /// The position of the equal sign in a variable assignment like foo=bar.
 maybe_t<size_t> variable_assignment_equals_pos(const wcstring &txt);
 
+/// Error message for improper use of the exec builtin.
+#define EXEC_ERR_MSG _(L"The '%ls' command can not be used in a pipeline")
+
 #endif

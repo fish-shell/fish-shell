@@ -28,9 +28,6 @@
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-/// Error message for improper use of the exec builtin.
-#define EXEC_ERR_MSG _(L"The '%ls' command can not be used in a pipeline")
-
 /// Error message for use of backgrounded commands before and/or.
 #define BOOL_AFTER_BACKGROUND_ERROR_MSG \
     _(L"The '%ls' command can not be used immediately after a backgrounded job")

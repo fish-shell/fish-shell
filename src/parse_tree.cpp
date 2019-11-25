@@ -53,14 +53,23 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
     if (skip_caret && this->text.empty()) return L"";
 
     wcstring result = prefix;
-    if (code == parse_error_bare_variable_assignment) {
-        wcstring assignment_src = src.substr(this->source_start, this->source_length);
-        maybe_t<size_t> equals_pos = variable_assignment_equals_pos(assignment_src);
-        assert(equals_pos);
-        wcstring variable = assignment_src.substr(0, *equals_pos);
-        wcstring value = assignment_src.substr(*equals_pos + 1);
-        append_format(result, ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, variable.c_str(), value.c_str());
-        return result;
+    switch (code) {
+        default:
+            break;
+        case parse_error_andor_in_pipeline:
+            append_format(result, EXEC_ERR_MSG,
+                          src.substr(this->source_start, this->source_length).c_str());
+            return result;
+        case parse_error_bare_variable_assignment: {
+            wcstring assignment_src = src.substr(this->source_start, this->source_length);
+            maybe_t<size_t> equals_pos = variable_assignment_equals_pos(assignment_src);
+            assert(equals_pos);
+            wcstring variable = assignment_src.substr(0, *equals_pos);
+            wcstring value = assignment_src.substr(*equals_pos + 1);
+            append_format(result, ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, variable.c_str(),
+                          value.c_str());
+            return result;
+        }
     }
     result.append(this->text);
     if (skip_caret || source_start >= src.size() || source_start + source_length > src.size()) {
@@ -929,6 +938,17 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
         if (production == nullptr) {
             tnode_t<grammar::variable_assignments> variable_assignments;
             if (const parse_node_t *parent = nodes.get_parent(node)) {
+                if (parent->type == symbol_statement &&
+                    (token1.keyword == parse_keyword_and || token1.keyword == parse_keyword_or)) {
+                    if (const parse_node_t *grandparent = nodes.get_parent(*parent)) {
+                        if (grandparent->type == symbol_job_continuation) {
+                            parse_error(token1, parse_error_andor_in_pipeline, L" "
+                                /* won't be printed but must be non-empty, see
+                                    describe_with_prefix TODO clean that up */);
+                            continue;
+                        }
+                    }
+                }
                 switch (parent->type) {
                     default:
                         break;

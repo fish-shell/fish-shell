@@ -178,6 +178,7 @@ enum parse_error_code_t {
     parse_error_unbalancing_else,          // else outside of if
     parse_error_unbalancing_case,          // case outside of switch
     parse_error_bare_variable_assignment,  // a=b without command
+    parse_error_andor_in_pipeline,         // "and" or "or" after a pipe
 };
 
 enum { PARSER_TEST_ERROR = 1, PARSER_TEST_INCOMPLETE = 2 };

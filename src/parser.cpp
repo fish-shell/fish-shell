@@ -484,12 +484,6 @@ int parser_t::get_lineno() const {
     int lineno = -1;
     if (execution_context) {
         lineno = execution_context->get_current_line_number();
-
-        // If we are executing a function, we have to add in its offset.
-        const wchar_t *function_name = is_function();
-        if (function_name != nullptr) {
-            lineno += function_get_definition_lineno(function_name);
-        }
     }
     return lineno;
 }

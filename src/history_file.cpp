@@ -265,7 +265,7 @@ static history_item_t decode_item_fish_2_0(const char *base, size_t len) {
                 size_t advance = read_line(base, cursor, len, line);
                 if (trim_leading_spaces(line) <= indent) break;
 
-                if (std::strncmp(line.c_str(), "- ", 2)) break;
+                if (std::strncmp(line.c_str(), "- ", 2) != 0) break;
 
                 // We're going to consume this line.
                 cursor += advance;

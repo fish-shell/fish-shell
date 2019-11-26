@@ -258,7 +258,7 @@ static int report_function_metadata(const wchar_t *funcname, bool verbose, io_st
     }
 
     if (metadata_as_comments) {
-        if (std::wcscmp(path, L"stdin")) {
+        if (std::wcscmp(path, L"stdin") != 0) {
             wcstring comment;
             append_format(comment, L"# Defined in %ls @ line %d\n", path, line_number);
             if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {

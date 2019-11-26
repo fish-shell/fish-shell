@@ -507,7 +507,7 @@ static void init_locale(const environment_t &vars) {
     FLOGF(env_locale, L"old LC_MESSAGES locale: '%s'", old_msg_locale);
     FLOGF(env_locale, L"new LC_MESSAGES locale: '%s'", new_msg_locale);
 #ifdef HAVE__NL_MSG_CAT_CNTR
-    if (std::strcmp(old_msg_locale, new_msg_locale)) {
+    if (std::strcmp(old_msg_locale, new_msg_locale) != 0) {
         // Make change known to GNU gettext.
         extern int _nl_msg_cat_cntr;
         _nl_msg_cat_cntr++;

@@ -7,16 +7,21 @@
 - fish's debugging arguments have been significantly improved. The `--debug-level` option has been removed, and a new `--debug` option replaces it. This option accepts various categories, which may be listed via `fish --print-debug-categories` (#5879). A new `--debug-output` option allows for redirection of debug output.
 - `string` has a new `collect` subcommand for use in command substitutions, producing a single output instead of splitting on new lines (similar to `"$(cmd)"` in other shells) (#159).
 - The fish manual, tutorial and FAQ are now available in `man` format as `fish-doc`, `fish-tutorial` and `fish-faq` respectively (#5521).
+- The default prompt is now the "classic + VCS" prompt, providing a better experience for new users (#6375).
 - Like other shells, `cd` now always looks for its argument in the current directory as a last resort, even if the `CDPATH` variable does not include it or "." (#4484).
-- fish now correctly handles CDPATH entries that starts with `..` (#6220).
-- The `fish_trace` variable may be set to trace execution. This performs a similar role as `set -x`.
+- fish now correctly handles `CDPATH` entries that start with `..` (#6220) or contain `./` (#5887).
+- The `fish_trace` variable may be set to trace execution (#3427). This performs a similar role as `set -x` in other shells.
 - fish uses the temporary directory determined by the system, rather than relying on `/tmp` (#3845).
+- The fish Web configuration tool (`fish_config`) prints a list of commands it is executing, to help understanding and debugging (#5584).
+- Major performance improvements when pasting (#5866), executing lots of commands (#5905), importing history from bash (#6295), and when completing variables that might match `$history` (#6288).
 
 ### Syntax changes and new commands
 - Brace expansion now only takes place if the braces include a "," or a variable expansion, meaning common commands such as `git reset HEAD@{0}` do not require escaping (#5869).
 - New redirections `&>` and `&|` may be used to redirect or pipe stdout, and also redirect stderr to stdout (#6192).
 - `switch` now allows arguments that expand to nothing, like empty variables (#5677).
 - The `VAR=val cmd` syntax can now be used to run a command in a modified environment (#6287).
+- `and` is no longer recognised as a command, so that nonsensical constructs like `and and and` produce a syntax error (#6089).
+- `math`'s exponent operator, '`^`', was previously left-associative, but now uses the more commonly-used right-associative behaviour (#6280). This means that `math '3^0.5^2'` was previously calculated as '(3^0.5)^2', but is now calculated as '3^(0.5^2)'.
 
 ### Scripting improvements
 - `string split0` now returns 0 if it split something (#5701).
@@ -27,15 +32,21 @@
 - `complete --do-complete` now also does fuzzy matches (#5467).
 - `complete --do-complete` can be used inside completions, allowing limited recursion (#3474).
 - `count` now also counts lines fed on standard input (#5744).
+- `eval` produces an exit status of 0 when given no arguments, like other shells (#5692).
 - `printf` prints what it can when input hasn't been fully converted to a number, but still prints an error (#5532).
 - `complete -C foo` now works as expected, rather than requiring `complete -Cfoo`.
 - `complete` has a new `--force-files` option, to re-enable file completions. This allows `sudo -E` and `pacman -Qo` to complete correctly (#5646).
 - `argparse` now defaults to showing the current function name (instead of `argparse`) in its errors, making `--name` often superfluous (#5835).
 - `argparse` has a new `--ignore-unknown` option to keep unrecognized options, allowing multiple argparse passes to parse options (#5367).
+- `argparse` correctly handles flag value validation of options that only have short names (#5864).
 - `read -S` (short option of `--shell`) is recognised correctly (#5660).
-- `fish_indent` now handles semicolons better, including leaving them in place for `; and` and `; or` instead of breaking the line.
+- `read` understands `--list`, which acts like `--array` in reading all arguments into a list inside a single variable, but is better named (#5846).
+- `read` has a new option, `--tokenize`, which splits a string into variables according to the shell's tokenization rules, considering quoting, escaping, and so on (#3823).
+- `fish_indent` now handles semicolons better, including leaving them in place for `; and` and `; or` instead of breaking the line (#5859).
+- `fish_indent --write` now supports multiple file arguments, indenting them in turn.
 - The default read limit has been increased to 100MiB (#5267).
 - `math` now also understands `x` for multiplication, provided it is followed by whitespace (#5906).
+- `math` reports the right error when incorrect syntax is used inside parentheses (#6063), and warns when unsupported logical operations are used (#6096).
 - `functions --erase` now also prevents fish from autoloading a function for the first time (#5951).
 - `jobs --last` returns 0 to indicate success when a job is found (#6104).
 - `commandline -p` and `commandline -j` now split on `&&` and `||` in addition to `;` and `&` (#6214).
@@ -43,39 +54,63 @@
 - `eval` no long creates a new local variable scope, but affects variables in the scope it is called from (#4443). `source` still creates a new local scope.
 - `abbr` has a new `--query` option to check for the existence of an abbreviation.
 - Local values for `fish_complete_path` and `fish_function_path` are now ignored; only their global values are respected.
+- Syntax error reports now display a marker in the correct position (#5812).
 - Empty universal variables may now be exported (#5992).
 - Exported universal variables are no longer imported into the global scope, preventing shadowing. This makes it easier to change such variables for all fish sessions and avoids breakage when the value is a list of multiple elements (#5258).
+- A bug where `for` could use invalid variable names has been fixed (#5800).
 - A bug where local variables would not be exported to functions has been fixed (#6153).
 - The null command (`:`) now always exits successfully, rather than passing through the previous exit status (#6022).
+- The output of `functions FUNCTION` starts with spaces, not a tab, matching `fish_indent` (#1472), and correctly includes any `--wraps` flags (#1625).
 - `type --path` with a function argument will now output the path to the file containing the definition of that function, if it exists.
+- The `$hostname` variable is no longer truncated to 32 characters (#5758).
+- Line numbers in function backtraces are calculated correctly (#6350).
 
 ### Interactive improvements
-- fish only parses `/etc/paths` on macOS in login shells, matching the bash implementation (#5637) and avoiding changes to path ordering in child shells (#5456).
+- fish only parses `/etc/paths` on macOS in login shells, matching the bash implementation (#5637) and avoiding changes to path ordering in child shells (#5456). It now ignores blank lines like the bash implementation (#5809).
 - The locale is now reloaded when the `LOCPATH` variable is changed (#5815).
 - `read` no longer keeps a history, making it suitable for operations that shouldn't end up there, like password entry (#5904).
-- Completion of subcommands to builtins like `and` or `not` has been fixed (#6249).
-- `dirh` outputs its stack in the correct order (#5477).
+- `dirh` outputs its stack in the correct order (#5477), and behaves as documented when universal variables are used for its stack (#5797).
 - `funced` and the edit-commandline-in-buffer bindings did not work in fish 3.0 when the `$EDITOR` variable contained spaces; this has been corrected (#5625).
-- vi mode supports R to enter replace mode (#6342).
 - Builtins now pipe their help output to a pager automatically (#6227).
-- `set_color` now colors the `--print-colors` output in the matching colors if it is going to a terminal
+- `set_color` now colors the `--print-colors` output in the matching colors if it is going to a terminal.
+- fish now underlines every valid entered path instead of just the last one (#5872).
+- When syntax highlighting a string with an unclosed quote, only the quote itself will be shown as an error, instead of the whole argument.
+- Syntax highlighting works correctly with variables as commands (#5658) and redirections to close file descriptors (#6092).
+- `help` works properly on Windows Subsytem for Linux (#5759, #6338).
+- A bug where `disown` could crash the shell has been fixed (#5720).
+- fish will not autosuggest files ending with `~` unless there are no other candidates, as these are generally backup files (#985).
+- Escape in the pager works correctly (#5818).
+- Key bindings that call `fg` no longer leave the terminal in a broken state (#2114).
+- Brackets (#5831) and filenames containing `$` (#6060) are completed with appropriate escaping.
+- The output of `complete` and `functions` is now colorized in interactive terminals.
+- The Web-based configuration handles aliases that include single quotes correctly (#6120), and launches correctly under Termux (#6248).
+- `function` now correctly validates parameters for `--argument-names` as valid variable names (#6147) and correctly parses options following `--argument-names`, as in "`--argument-names foo --description bar`" (#6186).
+- History newly imported from bash includes command lines using `&&` or `||`.
+- The automatic generation of completions from manual pages is better described in job and process listings (#6269).
+- In private mode, setting `$fish_greeting` to an empty string before starting the private session will prevent the warning about history not being saved from being printed (#6299).
+- In the interactive editor, a line break (Enter) inside unclosed brackets will insert a new line, rather than executing the command and producing an error (#6316).
+- Ctrl-C always repaints the prompt (#6394).
 
 #### New or improved bindings
 - Pasting strips leading spaces to avoid pasted commands being omitted from the history (#4327).
 - Shift-Left and Shift-Right now default to moving backwards and forwards by one bigword (words separated by whitespace) (#1505).
-- The default escape delay (to differentiate between the escape key and an alt-combination) has been reduced to 30ms, down from 300ms for the default mode and 100ms for vi-mode (#3904).
-- The `forward-bigword` binding now interacts correctly with autosuggestions (#5336)
+- The default escape delay (to differentiate between the escape key and an alt-combination) has been reduced to 30ms, down from 300ms for the default mode and 100ms for Vi mode (#3904).
+- The `forward-bigword` binding now interacts correctly with autosuggestions (#5336).
 - The `fish_clipboard_*` functions support Wayland by using [`wl-clipboard`](https://github.com/bugaevc/wl-clipboard) (#5450).
-- The nextd and prevd functions no longer print "Hit end of history", instead using a bell.
-- If fish_mode_prompt exists, vi-mode will only execute it on mode-switch instead of the entire prompt. This should make it much more responsive with slow prompts (#5783).
-- The path-component bindings (like ctrl-w) now also stop at ":" and "@" because those are used to denote user and host in ssh-likes (#5841).
+- The `nextd` and `prevd` functions no longer print "Hit end of history", instead using a bell. They correctly store working directories containing symbolic links (#6395).
+- If a `fish_mode_prompt` function exists, Vi mode will only execute it on mode-switch instead of the entire prompt. This should make it much more responsive with slow prompts (#5783).
+- The path-component bindings (like Ctrl-w) now also stop at ":" and "@", because those are used to denote user and host in commands such as `ssh` (#5841).
 - The NULL character can now be bound via `bind -k nul`. Terminals often generate this character via control-space. (#3189).
 - A new readline command `expand-abbr` can be used to trigger abbreviation expansion (#5762).
+- A new readline command, `delete-or-exit`, removes a character to the right of the cursor or exits the shell if the command line is empty (moving this functionality out of the `delete-or-exit` function).
 - The `self-insert` readline command will now insert the binding sequence, if not empty.
 - A new binding to prepend `sudo`, bound to Alt-S by default (#6140).
 - The Alt-W binding to describe a command should now work better with multiline prompts (#6110)
 - The Alt-H binding to open a command's man page now tries to ignore `sudo` (#6122).
-- A new pair of bind functions, `history-prefix-search-backward` (and forward) was introduced (#6143).
+- A new pair of bind functions, `history-prefix-search-backward` (and `forward`), was introduced (#6143).
+- Vi mode now supports R to enter replace mode (#6342), and `d0` to delete the current line (#6292).
+- In Vi mode, hitting Enter in replace-one mode no longer erases the prompt (#6298).
+- Selections in Vi mode are inclusive, matching the actual behaviour of Vi (#5770).
 
 #### Improved prompts
 - The git prompt in informative mode now shows the number of stashes if enabled.
@@ -84,13 +119,13 @@
 
 #### Improved terminal output
 - New `fish_pager_color_` options have been added to control more elements of the pager's colors (#5524).
-- Better detection and support for using fish from various system consoles, where limited colors and special characters are supported (#5552 and others).
+- Better detection and support for using fish from various system consoles, where limited colors and special characters are supported (#5552).
 - fish now tries to guess if the system supports Unicode 9 (and displays emoji as wide), eliminating the need to set `$fish_emoji_width` in most cases (#5722).
-- fish now underlines every valid entered path instead of just the last one (#5872).
-- When syntax highlighting a string with an unclosed quote, only the quote itself will be shown as an error, instead of the whole argument.
+- Improvements to the display of wide characters, particularly Korean characters and emoji (#5583, #5729).
 - The Vi mode cursor is correctly redrawn when regaining focus under terminals that report focus (eg tmux) (#4788).
+- Variables that control background colors (such as `fish_pager_color_search_match`) can now use `--reverse`.
 
-#### New or improved completions
+#### Completions
 - Added completions for
   - `aws`
   - `bat` (#6052)
@@ -136,17 +171,27 @@
   - `zpaq` (#6245)
   - `zstd`, `zstdcat`, `zstdgrep`, `zstdless` and `zstdmt` (#6364)
 - Lots of improvements to completions.
+- Selecting short options which also have a long name from the completion pager is possible (#5634).
+- Tab completion will no longer add trailing spaces if they already exist (#6107).
+- Completion of subcommands to builtins like `and` or `not` now works correctly (#6249).
+- Completion of arguments to short options works correctly when multiple short options are used together (#332).
+- Activating completion in the middle of an invalid completion does not move the cursor any more, making it easier to fix a mistake (#4124).
+- Completion in empty commandlines now lists all available commands.
+- Functions listed as completions could previously leak parts of the function as other completions; this has been fixed.
 
-### Deprecations
+### Deprecations and removed features
 - The vcs-prompt functions have been promoted to names without double-underscore, so __fish_git_prompt is now fish_git_prompt, __fish_vcs_prompt is now fish_vcs_prompt, __fish_hg_prompt is now fish_hg_prompt and __fish_svn_prompt is now fish_svn_prompt. Shims at the old names have been added, and the variables have kept their old names (#5586).
 - `string replace` has an additional round of escaping in the replacement expression, so escaping backslashes requires many escapes (eg `string replace -ra '([ab])' '\\\\\\\$1' a`). The new feature flag `regex-easyesc` can be used to disable this, so that the same effect can be achieved with `string replace -ra '([ab])' '\\\\$1' a` (#5556). As a reminder, the intention behind feature flags is that this will eventually become the default and then only option, so scripts should be updated.
+- The `fish_vi_mode` function, deprecated in fish 2.3, has been removed. Use `fish_vi_key_bindings` instead (#6372).
 
 ### For distributors and developers
 - fish 3.0 introduced a CMake-based build system. In fish 3.1, both the Autotools-based build and legacy Xcode build system have been removed, leaving only the CMake build system. All distributors and developers must install CMake.
+- fish now depends on the common `tee` external command, for the `psub` process substitution function.
 - The documentation is now built with Sphinx. The old Doxygen-based documentation system has been removed. Developers, and distributors who wish to rebuild the documentation, must install Sphinx.
 - The `INTERNAL_WCWIDTH` build option has been removed, as fish now always uses an internal `wcwidth` function. It has a number of configuration options that make it more suitable for general use (#5777).
 - mandoc can now be used to format the output from `--help` if `nroff` is not installed, reducing the number of external dependencies on systems with `mandoc` installed (#5489).
 - Some bugs preventing building on Solaris-derived systems such as Illumos were fixed (#5458, #5461, #5611).
+- Completions for `npm`, `bower` and `yarn` no longer require the `jq` utility for full functionality, but will use Python instead if it is available.
 
 ---
 

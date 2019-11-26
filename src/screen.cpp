@@ -47,7 +47,7 @@
 #define INDENT_STEP 4u
 
 /// The initial screen width.
-#define SCREEN_WIDTH_UNINITIALIZED -1
+#define SCREEN_WIDTH_UNINITIALIZED (-1)
 
 /// A helper value for an invalid location.
 #define INVALID_LOCATION (screen_data_t::cursor_t(-1, -1))

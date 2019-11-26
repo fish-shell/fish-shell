@@ -1226,9 +1226,6 @@ void screen_force_clear_to_end() {
 
 screen_t::screen_t()
     : outp_(outputter_t::stdoutput()),
-      desired(),
-      actual(),
-      actual_left_prompt(),
       last_right_prompt_width(),
       actual_width(SCREEN_WIDTH_UNINITIALIZED),
       soft_wrap_location(INVALID_LOCATION),

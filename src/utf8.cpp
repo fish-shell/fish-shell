@@ -33,10 +33,10 @@
 #define _BOM 0xfeff
 
 // We can tweak the following typedef to allow us to simulate Windows-style 16 bit wchar's on Unix.
-typedef wchar_t utf8_wchar_t;
+using utf8_wchar_t = wchar_t;
 #define UTF8_WCHAR_MAX (wchar_t) std::numeric_limits<utf8_wchar_t>::max()
 
-typedef std::basic_string<utf8_wchar_t> utf8_wstring_t;
+using utf8_wstring_t = std::basic_string<utf8_wchar_t>;
 
 static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring_t *out_string,
                                      int flags);

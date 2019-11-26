@@ -7,7 +7,7 @@
 
 #include "common.h"
 
-typedef wcstring::size_type size_type;
+using size_type = wcstring::size_type;
 
 wcstring_range wcstring_tok(wcstring &str, const wcstring &needle, wcstring_range last) {
     size_type pos = last.second == wcstring::npos ? wcstring::npos : last.first;

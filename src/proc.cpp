@@ -290,7 +290,7 @@ io_chain_t job_t::all_io_redirections() const {
     return result;
 }
 
-typedef unsigned int process_generation_count_t;
+using process_generation_count_t = unsigned int;
 
 /// A list of pids/pgids that have been disowned. They are kept around until either they exit or
 /// we exit. Poll these from time-to-time to prevent zombie processes from happening (#5342).

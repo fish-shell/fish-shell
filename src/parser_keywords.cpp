@@ -9,7 +9,7 @@
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 
-typedef std::unordered_set<wcstring> string_set_t;
+using string_set_t = std::unordered_set<wcstring>;
 
 static const wcstring skip_keywords[]{
     L"else",

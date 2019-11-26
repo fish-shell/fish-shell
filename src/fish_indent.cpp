@@ -47,7 +47,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #define SPACES_PER_INDENT 4
 
 // An indent_t represents an abstract indent depth. 2 means we are in a doubly-nested block, etc.
-typedef unsigned int indent_t;
+using indent_t = unsigned int;
 static bool dump_parse_tree = false;
 static int ret = 0;
 

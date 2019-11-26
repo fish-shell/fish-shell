@@ -20,9 +20,9 @@
 #include "screen.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-typedef pager_t::comp_t comp_t;
-typedef std::vector<completion_t> completion_list_t;
-typedef std::vector<comp_t> comp_info_list_t;
+using comp_t = pager_t::comp_t;
+using completion_list_t = std::vector<completion_t>;
+using comp_info_list_t = std::vector<comp_t>;
 
 /// The minimum width (in characters) the terminal must to show completions at all.
 #define PAGER_MIN_WIDTH 16

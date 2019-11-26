@@ -29,7 +29,11 @@ def setup(app):
         os.path.join(this_dir, "fish_indent_lexer.py"), lexername="FishIndentLexer"
     )
     lexers["fish-docs-samples"] = fish_indent_lexer
-    app.add_css_file("custom.css")
+    # add_css_file only appears in Sphinx 1.8.0
+    if hasattr(app, "add_css_file"):
+        app.add_css_file("custom.css")
+    else:
+        app.add_stylesheet("custom.css")
 
 
 # The default language to assume

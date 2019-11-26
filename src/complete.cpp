@@ -586,7 +586,7 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
     // least two characters if we don't know the location of the whatis-database.
     if (cmd.length() < 2) return;
 
-    if (wildcard_has(cmd, 0)) {
+    if (wildcard_has(cmd, false)) {
         return;
     }
 
@@ -939,7 +939,7 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
     for (const option_list_t &options : all_options) {
         size_t short_opt_pos = short_option_pos(str, options);
         bool last_option_requires_param = false;
-        use_common = 1;
+        use_common = true;
         if (use_switches) {
             if (str[0] == L'-') {
                 // Check if we are entering a combined option and argument (like --color=auto or

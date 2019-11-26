@@ -171,7 +171,7 @@ char_event_t input_event_queue_t::readch() {
     }
     wchar_t res;
     mbstate_t state = {};
-    while (1) {
+    while (true) {
         auto evt = readb();
         if (!evt.is_char()) {
             return evt;

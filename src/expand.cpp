@@ -156,7 +156,7 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
     int zero_index = -1;
     bool literal_zero_index = true;
 
-    while (1) {
+    while (true) {
         while (iswspace(in[pos]) || (in[pos] == INTERNAL_SEPARATOR)) pos++;
         if (in[pos] == L']') {
             pos++;

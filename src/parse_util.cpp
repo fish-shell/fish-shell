@@ -460,7 +460,7 @@ static wchar_t get_quote(const wcstring &cmd_str, size_t len) {
     wchar_t res = 0;
     const wchar_t *const cmd = cmd_str.c_str();
 
-    while (1) {
+    while (true) {
         if (!cmd[i]) break;
 
         if (cmd[i] == L'\\') {

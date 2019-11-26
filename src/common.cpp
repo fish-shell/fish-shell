@@ -252,7 +252,7 @@ int fgetws2(wcstring *s, FILE *f) {
     int i = 0;
     wint_t c;
 
-    while (1) {
+    while (true) {
         errno = 0;
 
         c = std::fgetwc(f);
@@ -556,7 +556,7 @@ void append_format(wcstring &str, const wchar_t *format, ...) {
 wchar_t *quote_end(const wchar_t *pos) {
     wchar_t c = *pos;
 
-    while (1) {
+    while (true) {
         pos++;
 
         if (!*pos) return nullptr;
@@ -816,7 +816,7 @@ wcstring reformat_for_screen(const wcstring &msg) {
     if (screen_width) {
         const wchar_t *start = msg.c_str();
         const wchar_t *pos = start;
-        while (1) {
+        while (true) {
             int overflow = 0;
 
             int tok_width = 0;

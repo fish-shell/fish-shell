@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <chrono>
 #include <cmath>
 #include <cstring>
 #include <cwchar>
@@ -1033,10 +1034,10 @@ static void test_parser() {
 static void test_1_cancellation(const wchar_t *src) {
     auto filler = io_bufferfill_t::create(io_chain_t{});
     pthread_t thread = pthread_self();
-    double delay = 0.25 /* seconds */;
+    auto delay = static_cast<long int>(0.25 * 1E6) /* seconds */;
     iothread_perform([=]() {
         /// Wait a while and then SIGINT the main thread.
-        usleep(delay * 1E6);
+        std::this_thread::sleep_for(std::chrono::microseconds(delay));
         pthread_kill(thread, SIGINT);
     });
     parser_t::principal_parser().eval(src, io_chain_t{filler}, TOP);
@@ -3464,7 +3465,7 @@ static void trigger_or_wait_for_notification(universal_notifier_t::notifier_stra
         case universal_notifier_t::strategy_notifyd: {
             // notifyd requires a round trip to the notifyd server, which means we have to wait a
             // little bit to receive it. In practice 40 ms seems to be enough.
-            usleep(40000);
+            std::this_thread::sleep_for(std::chrono::milliseconds(40));
             break;
         }
         case universal_notifier_t::strategy_named_pipe: {
@@ -3515,7 +3516,8 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
 
         // Named pipes have special cleanup requirements.
         if (strategy == universal_notifier_t::strategy_named_pipe) {
-            usleep(1000000 / 10);  // corresponds to NAMED_PIPE_FLASH_DURATION_USEC
+            // corresponds to NAMED_PIPE_FLASH_DURATION_USEC
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
             // Have to clean up the posted one first, so that the others see the pipe become no
             // longer readable.
             poll_notifier(notifiers[post_idx]);
@@ -3679,7 +3681,7 @@ void history_tests_t::test_history() {
 static void time_barrier() {
     time_t start = time(NULL);
     do {
-        usleep(1000);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     } while (time(NULL) == start);
 }
 

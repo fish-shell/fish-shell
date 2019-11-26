@@ -3,17 +3,19 @@
 
 #include <unistd.h>
 
+#include <chrono>
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <thread>
 
 static void become_foreground_then_print_stderr() {
     if (tcsetpgrp(STDOUT_FILENO, getpgrp()) < 0) {
         perror("tcsetgrp");
         exit(EXIT_FAILURE);
     }
-    usleep(1000000 / 4);  //.25 secs
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
     fprintf(stderr, "become_foreground_then_print_stderr done\n");
 }
 
@@ -28,14 +30,14 @@ static void report_foreground() {
                 return;
             }
         }
-        usleep(1000000 / 2);
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 }
 
 static void sigint_parent() {
     // SIGINT the parent after 1 second, then exit
     int parent = getppid();
-    usleep(1000000 / 4);  //.25 secs
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
     kill(parent, SIGINT);
     fprintf(stderr, "Sent SIGINT to %d\n", parent);
 }

@@ -480,7 +480,7 @@ static history_item_t decode_item_fish_1_x(const char *begin, size_t length) {
     bool timestamp_mode = false;
     time_t timestamp = 0;
 
-    while (1) {
+    while (true) {
         wchar_t c;
         size_t res;
         mbstate_t state = {};

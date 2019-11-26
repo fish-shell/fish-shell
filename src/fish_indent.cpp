@@ -54,7 +54,7 @@ static int ret = 0;
 // Read the entire contents of a file into the specified string.
 static wcstring read_file(FILE *f) {
     wcstring result;
-    while (1) {
+    while (true) {
         wint_t c = std::fgetwc(f);
 
         if (c == WEOF) {

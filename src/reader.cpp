@@ -517,7 +517,7 @@ static bool should_exit() { return s_end_current_loop || s_exit_forced; }
 static void term_donate(outputter_t &outp) {
     outp.set_color(rgb_color_t::normal(), rgb_color_t::normal());
 
-    while (1) {
+    while (true) {
         if (tcsetattr(STDIN_FILENO, TCSANOW, &tty_modes_for_external_cmds) == -1) {
             if (errno == EIO) redirect_tty_output();
             if (errno != EINTR) {
@@ -532,7 +532,7 @@ static void term_donate(outputter_t &outp) {
 
 /// Grab control of terminal.
 static void term_steal() {
-    while (1) {
+    while (true) {
         if (tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes) == -1) {
             if (errno == EIO) redirect_tty_output();
             if (errno != EINTR) {
@@ -2224,7 +2224,7 @@ static void handle_end_loop(const parser_t &parser) {
         if (!data->prev_end_loop && bg_jobs) {
             reader_bg_job_warning(parser);
             reader_set_end_loop(false);
-            data->prev_end_loop = 1;
+            data->prev_end_loop = true;
             return;
         }
     }
@@ -2261,7 +2261,7 @@ static int read_i(parser_t &parser) {
     reader_import_history_if_necessary();
 
     reader_data_t *data = current_data();
-    data->prev_end_loop = 0;
+    data->prev_end_loop = false;
 
     while (!shell_is_exiting()) {
         run_count++;
@@ -2302,7 +2302,7 @@ static int read_i(parser_t &parser) {
             if (shell_is_exiting()) {
                 handle_end_loop(parser);
             } else {
-                data->prev_end_loop = 0;
+                data->prev_end_loop = false;
             }
         }
     }
@@ -3254,7 +3254,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         }
 
         maybe_t<char_event_t> event_needing_handling{};
-        while (1) {
+        while (true) {
             event_needing_handling = read_normal_chars(rls);
             if (event_needing_handling.has_value()) break;
 

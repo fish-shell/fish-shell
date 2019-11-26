@@ -315,7 +315,7 @@ void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &all_ios) {
         launch_process_nofork(vars, j->processes.front().get());
     } else {
         j->mut_flags().constructed = true;
-        j->processes.front()->completed = 1;
+        j->processes.front()->completed = true;
         return;
     }
 }
@@ -645,7 +645,7 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
     if (!must_use_process && outbuff.empty() && errbuff.empty()) {
         // We do not need to construct a background process.
         // TODO: factor this job-status-setting stuff into a single place.
-        p->completed = 1;
+        p->completed = true;
         if (p->is_last_in_job) {
             FLOGF(exec_job_status, L"Set status of job %d (%ls) to %d using short circuit",
                   j->job_id, j->preview().c_str(), p->status);
@@ -863,7 +863,7 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
     if (!block_output_bufferfill) {
         // No buffer, so we exit directly. This means we have to manually set the exit
         // status.
-        p->completed = 1;
+        p->completed = true;
         if (p->is_last_in_job) {
             parser.set_last_statuses(j->get_statuses());
         }
@@ -883,7 +883,7 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
         if (p->is_last_in_job) {
             parser.set_last_statuses(j->get_statuses());
         }
-        p->completed = 1;
+        p->completed = true;
     }
     return true;
 }
@@ -1128,7 +1128,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
         internal_exec(parser.vars(), j.get(), all_ios);
         // internal_exec only returns if it failed to set up redirections.
         // In case of an successful exec, this code is not reached.
-        bool status = j->flags().negate ? 0 : 1;
+        bool status = j->flags().negate ? false : true;
         parser.set_last_statuses(statuses_t::just(status));
         return false;
     }

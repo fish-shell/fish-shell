@@ -137,7 +137,7 @@ struct prettifier_t {
 static void dump_node(indent_t node_indent, const parse_node_t &node, const wcstring &source) {
     wchar_t nextc = L' ';
     wchar_t prevc = L' ';
-    wcstring source_txt = L"";
+    wcstring source_txt;
     if (node.source_start != SOURCE_OFFSET_INVALID && node.source_length != SOURCE_OFFSET_INVALID) {
         int nextc_idx = node.source_start + node.source_length;
         if (static_cast<size_t>(nextc_idx) < source.size()) {

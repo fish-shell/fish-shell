@@ -103,7 +103,7 @@ class env_universal_t {
     maybe_t<env_var_t::env_var_flags_t> get_flags(const wcstring &name) const;
 
     // Sets a variable.
-    void set(const wcstring &key, env_var_t var);
+    void set(const wcstring &key, const env_var_t &var);
 
     // Removes a variable. Returns true if it was found, false if not.
     bool remove(const wcstring &key);

@@ -1078,7 +1078,7 @@ parse_execution_result_t parse_execution_context_t::apply_variable_assignments(
             vals.emplace_back(std::move(completion.completion));
         }
         if (proc) proc->variable_assignments.push_back({variable_name, vals});
-        parser->vars().set(std::move(variable_name), ENV_LOCAL | ENV_EXPORT, std::move(vals));
+        parser->vars().set(variable_name, ENV_LOCAL | ENV_EXPORT, std::move(vals));
     }
     return parse_execution_success;
 }

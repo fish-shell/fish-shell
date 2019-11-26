@@ -208,11 +208,11 @@ completion_t::completion_t(wcstring comp, wcstring desc, string_fuzzy_match_t ma
                            complete_flags_t flags_val)
     : completion(std::move(comp)),
       description(std::move(desc)),
-      match(std::move(mat)),
+      match(mat),
       flags(resolve_auto_space(completion, flags_val)) {}
 
 completion_t::completion_t(const completion_t &him) = default;
-completion_t::completion_t(completion_t &&him) = default;
+completion_t::completion_t(completion_t &&him) noexcept = default;
 completion_t &completion_t::operator=(const completion_t &him) = default;
 completion_t &completion_t::operator=(completion_t &&him) = default;
 completion_t::~completion_t() = default;
@@ -1647,16 +1647,16 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
 
 /// Print the short switch \c opt, and the argument \c arg to the specified
 /// wcstring, but only if \c argument isn't an empty string.
-static void append_switch(wcstring &out, wchar_t opt, const wcstring arg) {
+static void append_switch(wcstring &out, wchar_t opt, const wcstring &arg) {
     if (arg.empty()) return;
     append_format(out, L" -%lc %ls", opt, escape_string(arg, ESCAPE_ALL).c_str());
 }
-static void append_switch(wcstring &out, const wcstring opt, const wcstring arg) {
+static void append_switch(wcstring &out, const wcstring &opt, const wcstring &arg) {
     if (arg.empty()) return;
     append_format(out, L" --%ls %ls", opt.c_str(), escape_string(arg, ESCAPE_ALL).c_str());
 }
 static void append_switch(wcstring &out, wchar_t opt) { append_format(out, L" -%lc", opt); }
-static void append_switch(wcstring &out, const wcstring opt) {
+static void append_switch(wcstring &out, const wcstring &opt) {
     append_format(out, L" --%ls", opt.c_str());
 }
 

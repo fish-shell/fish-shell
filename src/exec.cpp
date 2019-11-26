@@ -338,7 +338,7 @@ static void on_process_created(const std::shared_ptr<job_t> &j, pid_t child_pid)
 /// (stdout), and there is a dup2 3->1, then we need to write to fd 3. Then exit the internal
 /// process.
 static bool run_internal_process(process_t *p, std::string outdata, std::string errdata,
-                                 io_chain_t ios) {
+                                 const io_chain_t &ios) {
     p->check_generations_before_launch();
 
     // We want both the dup2s and the io_chain_ts to be kept alive by the background thread, because
@@ -818,9 +818,9 @@ static void function_restore_environment(parser_t &parser, const block_t *block)
 /// our pipes.
 /// \p allow_buffering if true, permit buffering the output.
 /// \return true on success, false on error.
-static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> j, process_t *p,
-                                       const io_chain_t &user_ios, io_chain_t io_chain,
-                                       bool allow_buffering) {
+static bool exec_block_or_func_process(parser_t &parser, const std::shared_ptr<job_t> &j,
+                                       process_t *p, const io_chain_t &user_ios,
+                                       io_chain_t io_chain, bool allow_buffering) {
     assert((p->type == process_type_t::function || p->type == process_type_t::block_node) &&
            "Unexpected process type");
 
@@ -893,7 +893,7 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
 /// \p deferred_pipes represents the pipes from our deferred process; if set ensure they get closed
 /// in any child. If \p is_deferred_run is true, then this is a deferred run; this affects how
 /// certain buffering works. \returns true on success, false on exec error.
-static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<job_t> j,
+static bool exec_process_in_job(parser_t &parser, process_t *p, const std::shared_ptr<job_t> &j,
                                 autoclose_pipes_t pipes, const io_chain_t &all_ios,
                                 const autoclose_pipes_t &deferred_pipes, size_t stdout_read_limit,
                                 bool is_deferred_run = false) {
@@ -1085,7 +1085,7 @@ static bool should_claim_process_group_for_job(const shared_ptr<job_t> &j) {
     DIE("unreachable");
 }
 
-bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
+bool exec_job(parser_t &parser, const shared_ptr<job_t> &j) {
     assert(j && "null job_t passed to exec_job!");
 
     // Set to true if something goes wrong while executing the job, in which case the cleanup

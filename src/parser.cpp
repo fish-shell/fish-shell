@@ -136,7 +136,7 @@ void parser_t::skip_all_blocks() {
 
 // Given a new-allocated block, push it onto our block stack, acquiring ownership
 block_t *parser_t::push_block(block_t &&block) {
-    block_t new_current{std::move(block)};
+    block_t new_current{block};
     const enum block_type_t type = new_current.type();
     new_current.src_lineno = parser_t::get_lineno();
 
@@ -174,7 +174,7 @@ void parser_t::pop_block(const block_t *expected) {
     }
 
     // Acquire ownership out of the block stack.
-    block_t old = std::move(block_stack.back());
+    block_t old = block_stack.back();
     block_stack.pop_back();
 
     if (old.wants_pop_env) vars().pop();
@@ -622,7 +622,7 @@ profile_item_t *parser_t::create_profile_item() {
     return result;
 }
 
-int parser_t::eval(wcstring cmd, const io_chain_t &io, enum block_type_t block_type) {
+int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type) {
     // Parse the source into a tree, if we can.
     parse_error_list_t error_list;
     parsed_source_ref_t ps = parse_source(cmd, parse_flag_none, &error_list);
@@ -638,7 +638,8 @@ int parser_t::eval(wcstring cmd, const io_chain_t &io, enum block_type_t block_t
     return this->eval(ps, io, block_type);
 }
 
-int parser_t::eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type_t block_type) {
+int parser_t::eval(const parsed_source_ref_t &ps, const io_chain_t &io,
+                   enum block_type_t block_type) {
     assert(block_type == TOP || block_type == SUBST);
     if (!ps->tree.empty()) {
         // Execute the first node.
@@ -649,8 +650,8 @@ int parser_t::eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type
 }
 
 template <typename T>
-int parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, const io_chain_t &io,
-                        block_type_t block_type, std::shared_ptr<job_t> parent_job) {
+int parser_t::eval_node(const parsed_source_ref_t &ps, tnode_t<T> node, const io_chain_t &io,
+                        block_type_t block_type, const std::shared_ptr<job_t> &parent_job) {
     static_assert(
         std::is_same<T, grammar::statement>::value || std::is_same<T, grammar::job_list>::value,
         "Unexpected node type");
@@ -689,12 +690,12 @@ int parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, const io_chain_
 }
 
 // Explicit instantiations. TODO: use overloads instead?
-template int parser_t::eval_node(parsed_source_ref_t, tnode_t<grammar::statement>,
+template int parser_t::eval_node(const parsed_source_ref_t &, tnode_t<grammar::statement>,
                                  const io_chain_t &, enum block_type_t,
-                                 std::shared_ptr<job_t> parent_job);
-template int parser_t::eval_node(parsed_source_ref_t, tnode_t<grammar::job_list>,
+                                 const std::shared_ptr<job_t> &parent_job);
+template int parser_t::eval_node(const parsed_source_ref_t &, tnode_t<grammar::job_list>,
                                  const io_chain_t &, enum block_type_t,
-                                 std::shared_ptr<job_t> parent_job);
+                                 const std::shared_ptr<job_t> &parent_job);
 
 void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &errors,
                              wcstring &output) const {

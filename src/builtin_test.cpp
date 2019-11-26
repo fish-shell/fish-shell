@@ -217,7 +217,7 @@ struct range_t {
 /// Base class for expressions.
 class expression {
    protected:
-    expression(token_t what, range_t where) : token(what), range(std::move(where)) {}
+    expression(token_t what, range_t where) : token(what), range(where) {}
 
    public:
     const token_t token;
@@ -267,7 +267,7 @@ class combining_expression : public expression {
 
     combining_expression(token_t tok, range_t where, std::vector<unique_ptr<expression>> exprs,
                          const std::vector<token_t> &combs)
-        : expression(tok, where), subjects(std::move(exprs)), combiners(std::move(combs)) {
+        : expression(tok, where), subjects(std::move(exprs)), combiners(combs) {
         // We should have one more subject than combiner.
         assert(subjects.size() == combiners.size() + 1);
     }

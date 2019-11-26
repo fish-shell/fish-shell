@@ -256,17 +256,17 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// \param block_type The type of block to push on the block stack
     ///
     /// \return 0 on success, 1 on a parse error.
-    int eval(wcstring cmd, const io_chain_t &io, enum block_type_t block_type);
+    int eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type);
 
     /// Evaluate the parsed source ps.
     /// \return 0 on success, 1 on a parse error.
-    int eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type_t block_type);
+    int eval(const parsed_source_ref_t &ps, const io_chain_t &io, enum block_type_t block_type);
 
     /// Evaluates a node.
     /// The node type must be grammar::statement or grammar::job_list.
     template <typename T>
-    int eval_node(parsed_source_ref_t ps, tnode_t<T> node, const io_chain_t &io,
-                  block_type_t block_type, std::shared_ptr<job_t> parent_job);
+    int eval_node(const parsed_source_ref_t &ps, tnode_t<T> node, const io_chain_t &io,
+                  block_type_t block_type, const std::shared_ptr<job_t> &parent_job);
 
     /// Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and
     /// cmdsubst execution on the tokens. Errors are ignored. If a parser is provided, it is used

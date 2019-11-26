@@ -56,6 +56,7 @@
 - Completion of subcommands to builtins like `and` or `not` has been fixed (#6249).
 - `dirh` outputs its stack in the correct order (#5477).
 - `funced` and the edit-commandline-in-buffer bindings did not work in fish 3.0 when the `$EDITOR` variable contained spaces; this has been corrected (#5625).
+- vi mode supports R to enter replace mode (#6342).
 
 #### New or improved bindings
 - Pasting strips leading spaces to avoid pasted commands being omitted from the history (#4327).

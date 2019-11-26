@@ -927,7 +927,7 @@ int wildcard_expand_string(const wcstring &wc, const wcstring &working_directory
     // Check for a leading slash. If we find one, we have an absolute path: the prefix is empty, the
     // base dir is /, and the wildcard is the remainder. If we don't find one, the prefix is the
     // working directory, the base dir is empty.
-    wcstring prefix = L"", base_dir = L"", effective_wc;
+    wcstring prefix, base_dir, effective_wc;
     if (string_prefixes_string(L"/", wc)) {
         base_dir = L"/";
         effective_wc = wc.substr(1);

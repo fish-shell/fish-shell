@@ -174,7 +174,7 @@ wcstring_list_t rgb_color_t::named_color_names() {
     wcstring_list_t result;
     result.reserve(1 + count);
     for (size_t i = 0; i < count; i++) {
-        if (named_colors[i].hidden == false) {
+        if (!named_colors[i].hidden) {
             result.push_back(named_colors[i].name);
         }
     }

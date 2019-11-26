@@ -1128,7 +1128,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
         internal_exec(parser.vars(), j.get(), all_ios);
         // internal_exec only returns if it failed to set up redirections.
         // In case of an successful exec, this code is not reached.
-        bool status = j->flags().negate ? false : true;
+        bool status = !j->flags().negate;
         parser.set_last_statuses(statuses_t::just(status));
         return false;
     }

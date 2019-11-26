@@ -60,10 +60,7 @@ static bool any_jobs_finished(size_t jobs_len, const parser_t &parser) {
             no_jobs_running = false;
         }
     }
-    if (no_jobs_running) {
-        return true;
-    }
-    return false;
+    return no_jobs_running;
 }
 
 static int wait_for_backgrounds(parser_t &parser, bool any_flag) {

@@ -671,8 +671,7 @@ static bool expand_cmdsubst(wcstring input, parser_t &parser, std::vector<comple
         }
     }
 
-    if (parser.get_last_status() == STATUS_READ_TOO_MUCH) return false;
-    return true;
+    return parser.get_last_status() != STATUS_READ_TOO_MUCH;
 }
 
 // Given that input[0] is HOME_DIRECTORY or tilde (ugh), return the user's name. Return the empty

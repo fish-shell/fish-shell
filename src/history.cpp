@@ -1239,10 +1239,7 @@ bool all_paths_are_valid(const path_list_t &paths, const wcstring &working_direc
 
 static bool string_could_be_path(const wcstring &potential_path) {
     // Assume that things with leading dashes aren't paths.
-    if (potential_path.empty() || potential_path.at(0) == L'-') {
-        return false;
-    }
-    return true;
+    return !(potential_path.empty() || potential_path.at(0) == L'-');
 }
 
 /// Very simple, just mark that we have no more pending items.

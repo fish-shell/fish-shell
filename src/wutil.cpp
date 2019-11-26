@@ -127,8 +127,7 @@ bool wreaddir_for_dirs(DIR *dir, wcstring *out_name) {
     if (result && out_name) {
         *out_name = str2wcstring(result->d_name);
     }
-    if (!result) return false;
-    return true;
+    return result != nullptr;
 }
 
 const wcstring wgetcwd() {

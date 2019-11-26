@@ -2240,9 +2240,7 @@ static bool selection_is_at_top() {
     if (row != 0 && row != PAGER_SELECTION_NONE) return false;
 
     size_t col = pager->get_selected_column(data->current_page_rendering);
-    if (col != 0 && col != PAGER_SELECTION_NONE) return false;
-
-    return true;
+    return !(col != 0 && col != PAGER_SELECTION_NONE);
 }
 
 static relaxed_atomic_t<uint64_t> run_count{0};

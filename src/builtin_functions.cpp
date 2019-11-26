@@ -299,7 +299,7 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     // Erase, desc, query, copy and list are mutually exclusive.
-    bool describe = opts.description ? true : false;
+    bool describe = opts.description != nullptr;
     if (describe + opts.erase + opts.list + opts.query + opts.copy > 1) {
         streams.err.append_format(BUILTIN_ERR_COMBO, cmd);
         builtin_print_error_trailer(parser, streams.err, cmd);

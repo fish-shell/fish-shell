@@ -193,7 +193,7 @@ expect_prompt -re {\r\nTENT\r\n} {
 
 # Now test that exactly the expected bind modes are defined
 send "bind --list-modes\r"
-expect_prompt -re {\r\ndefault\r\ninsert\r\npaste\r\nreplace_one\r\nvisual\r\n} {
+expect_prompt -re {\r\ndefault\r\ninsert\r\npaste\r\nreplace\r\nreplace_one\r\nvisual\r\n} {
     puts "vi bind modes"
 } unmatched {
     puts stderr "Unexpected vi bind modes"

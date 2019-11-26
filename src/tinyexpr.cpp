@@ -38,9 +38,9 @@
 
 // TODO: It would be nice not to rely on a typedef for this, especially one that can only do
 // functions with two args.
-typedef double (*te_fun2)(double, double);
-typedef double (*te_fun1)(double);
-typedef double (*te_fun0)();
+using te_fun2 = double (*)(double, double);
+using te_fun1 = double (*)(double);
+using te_fun0 = double (*)();
 
 enum {
     TE_CONSTANT = 0,

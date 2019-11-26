@@ -124,7 +124,7 @@ typedef struct complete_entry_opt {
 static std::atomic<unsigned int> k_complete_order{0};
 
 /// Struct describing a command completion.
-typedef std::list<complete_entry_opt_t> option_list_t;
+using option_list_t = std::list<complete_entry_opt_t>;
 class completion_entry_t {
    public:
     /// List of all options.
@@ -166,7 +166,7 @@ struct equal_to<completion_entry_t> {
     }
 };
 }  // namespace std
-typedef std::unordered_set<completion_entry_t> completion_entry_set_t;
+using completion_entry_set_t = std::unordered_set<completion_entry_t>;
 static owning_lock<completion_entry_set_t> s_completion_set;
 
 /// Completion "wrapper" support. The map goes from wrapping-command to wrapped-command-list.

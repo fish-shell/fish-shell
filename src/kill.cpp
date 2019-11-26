@@ -15,7 +15,7 @@
 #include "fallback.h"  // IWYU pragma: keep
 
 /** Kill ring */
-typedef std::list<wcstring> kill_list_t;
+using kill_list_t = std::list<wcstring>;
 static kill_list_t kill_list;
 
 void kill_add(wcstring str) {

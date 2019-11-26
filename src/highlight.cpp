@@ -774,7 +774,7 @@ class highlighter_t {
     // Working directory.
     const wcstring working_directory;
     // The resulting colors.
-    typedef std::vector<highlight_spec_t> color_array_t;
+    using color_array_t = std::vector<highlight_spec_t>;
     color_array_t color_array;
     // The parse tree of the buff.
     parse_node_tree_t parse_tree;

@@ -1222,7 +1222,7 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
     int nsub = 0;
     arg_iterator_t aiter(argv, optind, streams);
     while (const wcstring *s = aiter.nextstr()) {
-        typedef wcstring::size_type size_type;
+        using size_type = wcstring::size_type;
         size_type pos = 0;
         size_type count = wcstring::npos;
         if (opts.start > 0) {

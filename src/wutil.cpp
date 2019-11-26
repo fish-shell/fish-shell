@@ -31,7 +31,7 @@
 #include "flog.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-typedef std::string cstring;
+using cstring = std::string;
 
 const file_id_t kInvalidFileID = {static_cast<dev_t>(-1LL),
                                   static_cast<ino_t>(-1LL),

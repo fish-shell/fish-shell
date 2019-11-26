@@ -41,7 +41,7 @@
 static void iothread_service_main_thread_requests();
 static void iothread_service_result_queue();
 
-typedef std::function<void(void)> void_function_t;
+using void_function_t = std::function<void()>;
 
 struct work_request_t {
     void_function_t handler;

@@ -100,6 +100,8 @@ function help --description 'Show help for the fish shell'
             # Escaped quotes are necessary to work with spaces in the path
             # when the command is finally eval'd.
             set fish_browser cygstart \"$fish_browser\"
+        else
+            set need_trampoline 1
         end
     end
 
@@ -107,13 +109,13 @@ function help --description 'Show help for the fish shell'
         case "."
             set fish_help_page "cmds/source.html"
         case globbing
-            set fish_help_page "index.html\#expand"
+            set fish_help_page "index.html#expand"
         case (__fish_print_commands)
             set fish_help_page "cmds/$fish_help_item.html"
         case $help_topics
-            set fish_help_page "index.html\#$fish_help_item"
+            set fish_help_page "index.html#$fish_help_item"
         case 'tut_*'
-            set fish_help_page "tutorial.html\#$fish_help_item"
+            set fish_help_page "tutorial.html#$fish_help_item"
         case tutorial
             set fish_help_page "tutorial.html"
         case "*"
@@ -137,9 +139,11 @@ function help --description 'Show help for the fish shell'
         # Help is installed, use it
         set page_url file://$__fish_help_dir/$fish_help_page
 
-        # In Cygwin, we need to convert the base help dir to a Windows path before converting it to a file URL
+        # For Windows (Cygwin and WSL), we need to convert the base help dir to a Windows path before converting it to a file URL
         if type -q cygpath
             set page_url file://(cygpath -m $__fish_help_dir)/$fish_help_page
+        else if type -q wslpath
+            set page_url file://(wslpath -w $__fish_help_dir)/$fish_help_page
         end
     else
         # Go to the web. Only include one dot in the version string
@@ -152,7 +156,7 @@ function help --description 'Show help for the fish shell'
     if set -q need_trampoline[1]
         # If string replace doesn't replace anything, we don't actually need a
         # trampoline (they're only needed if there's a fragment in the path)
-        if set -l clean_url (string replace '\\#' '#' $page_url)
+        if set -l clean_url (string match -re '#' $page_url)
             # Write a temporary file that will redirect where we want.
             set -q TMPDIR
             or set -l TMPDIR /tmp
@@ -160,12 +164,22 @@ function help --description 'Show help for the fish shell'
             set -l tmpname $tmpdir/help.html
             echo '<meta http-equiv="refresh" content="0;URL=\''$clean_url'\'" />' >$tmpname
             set page_url file://$tmpname
+
+            # For Windows (Cygwin and WSL), we need to convert the base help dir to a Windows path before converting it to a file URL
+            if type -q cygpath
+                set page_url file://(cygpath -m $tmpname)
+            else if type -q wslpath
+                set page_url file://(wslpath -w $tmpname)
+            end
         end
     end
 
+    # URL may contain # (anchor) or $ (hidden share in Windows)
+    set page_url (string escape $page_url)
+
     # cmd.exe needs more coaxing.
     if string match -qr 'cmd.exe$' -- $fish_browser[1]
-        $fish_browser /c "start $page_url"
+        eval $fish_browser /c "start $page_url"
         # If browser is known to be graphical, put into background
     else if contains -- $fish_browser[1] $graphical_browsers
         switch $fish_browser[1]

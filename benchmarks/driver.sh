@@ -8,8 +8,8 @@ FISH_PATH=$1
 BENCHMARKS_DIR=$(dirname "$0")/benchmarks
 
 for benchmark in "$BENCHMARKS_DIR"/*; do
-    echo $(basename "$benchmark")
-    ${FISH_PATH} --print-rusage-self $benchmark > /dev/null
+    basename "$benchmark"
+    ${FISH_PATH} --print-rusage-self "$benchmark" > /dev/null
     if command -v hyperfine >/dev/null 2>&1; then
         hyperfine "${FISH_PATH} $benchmark > /dev/null"
     fi

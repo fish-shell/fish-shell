@@ -7,7 +7,7 @@
 set -e
 
 # Find the fish git directory as two levels up from script directory.
-GIT_DIR="$( cd "$( dirname $( dirname "$0" ) )" && pwd )"
+GIT_DIR="$( cd "$( dirname "$( dirname "$0" )" )" && pwd )"
 DEF_VER=unknown
 
 # First see if there is a version file (included in release tarballs),
@@ -34,7 +34,7 @@ if test -r $FBVF
 then
 	VC=$(grep -v '^#' $FBVF | tr -d '"' | sed -e 's/^FISH_BUILD_VERSION=//')
 else
-	VC=unset
+	VC="unset"
 fi
 
 # Maybe output the FBVF

@@ -38,6 +38,8 @@ The following options are available:
 
 - ``-S`` or ``--shell`` enables syntax highlighting, tab completions and command termination suitable for entering shellscript code in the interactive mode. NOTE: Prior to fish 3.0, the short opt for ``--shell`` was ``-s``, but it has been changed for compatibility with bash's ``-s`` short opt for ``--silent``.
 
+- ``-t`` -or ``--tokenize`` causes read to split the input into variables by the shell's tokenization rules. This means it will honor quotes and escaping. This option is of course incompatible with other options to control splitting like ``--delimiter`` and does not honor $IFS (like fish's tokenizer). It saves the tokens in the manner they'd be passed to commands on the commandline, so e.g. ``a\ b`` is stored as ``a b``. Note that currently it leaves command substitutions intact along with the parentheses.
+
 - ``-u`` or ``--unexport`` prevents the variables from being exported to child processes (default behaviour).
 
 - ``-U`` or ``--universal`` causes the specified shell variable to be made universal.
@@ -53,7 +55,7 @@ The following options are available:
 
 Without the ``--line`` option, ``read`` reads a single line of input from standard input, breaks it into tokens, and then assigns one token to each variable specified in ``VARIABLES``. If there are more tokens than variables, the complete remainder is assigned to the last variable.
 
-If the ``--delimiter`` argument is not given, the variable ``IFS`` is used as a list of characters to split on. Relying on the use of ``IFS`` is deprecated and this behaviour will be removed in future versions. The default value of ``IFS`` contains space, tab and newline characters. As a special case, if ``IFS`` is set to the empty string, each character of the input is considered a separate token.
+If no option to determine how to split like ``--delimiter``, ``--line`` or ``--tokenize`` is given, the variable ``IFS`` is used as a list of characters to split on. Relying on the use of ``IFS`` is deprecated and this behaviour will be removed in future versions. The default value of ``IFS`` contains space, tab and newline characters. As a special case, if ``IFS`` is set to the empty string, each character of the input is considered a separate token.
 
 With the ``--line`` option, ``read`` reads a line of input from standard input into each provided variable, stopping when each variable has been filled. The line is not tokenized.
 
@@ -101,3 +103,12 @@ The following code stores the value 'hello' in the shell variable ``$foo``.
     echo $a # a
     echo $b # b
     echo $c # c
+
+    # --tokenize honors quotes and escaping like the shell's argument passing:
+    echo 'a\ b' | read -t first second
+    echo $first # outputs "a b", $second is empty
+
+    echo 'a"foo bar"b (command echo wurst)*" "{a,b}' | read -lt -l a b c
+    echo $a # outputs 'afoo bar' (without the quotes)
+    echo $b # outputs '(command echo wurst)* {a,b}' (without the quotes)
+    echo $c # nothing

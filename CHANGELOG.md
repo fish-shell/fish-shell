@@ -111,11 +111,13 @@
   - `irb` (#6260)
   - `iw` (#6232)
   - `kak`
+  - `lz4`, `lz4c` and `lz4cat` (#6364)
   - `mariner` (#5718)
   - `nethack` (#6240)
   - `patool` (#6083)
   - `phpunit` (#6197)
   - `plutil` (#6301)
+  - `pzstd` (#6364)
   - `qubes-gpg-client` (#6067)
   - `rg`
   - `rustup`
@@ -124,8 +126,11 @@
   - `src` (#6026)
   - `tokei` (#6085)
   - `tsc` (#6016)
+  - `unlz4` (#6364)
+  - `unzstd` (#6364)
   - `vbc` (#6016)
   - `zpaq` (#6245)
+  - `zstd`, `zstdcat`, `zstdgrep`, `zstdless` and `zstdmt` (#6364)
 - Lots of improvements to completions.
 
 ### Deprecations

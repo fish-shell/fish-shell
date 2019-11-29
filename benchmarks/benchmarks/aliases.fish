@@ -44,22 +44,12 @@ function alias --description 'Creates a function wrapping a command'
         return 1
     end
 
-    # Extract the first command from the body. This is supposed to replace all non-escaped (i.e.
-    # preceded by an odd number of `\`) spaces with a newline so it splits on them. See issue #2220
-    # for why the following borderline incomprehensible code exists.
-    set -l tmp (string replace -ra -- "([^\\\ ])((\\\\\\\)*) " '$1\n' $body)
-    set first_word (string trim -- $tmp[1])
-    # If the user does something like `alias x 'foo; bar'` we need to strip the semicolon.
-    set base_command (string trim -c ';' -- $first_word)
-    if set -q tmp[2]
-        set body $tmp[2..-1]
-    else
-        set body
-    end
+    # Extract the first command from the body.
+    printf '%s\n' $body | read -lt first_word body
 
     # Prevent the alias from immediately running into an infinite recursion if
     # $body starts with the same command as $name.
-    if test $base_command = $name
+    if test $first_word = $name
         if contains $name (builtin --names)
             set prefix builtin
         else

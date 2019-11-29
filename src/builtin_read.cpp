@@ -2,7 +2,6 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include "builtin_read.h"
-
 #include <unistd.h>
 
 #include <algorithm>
@@ -46,6 +45,7 @@ struct read_cmd_opts_t {
     // empty string and a given empty delimiter.
     bool have_delimiter = false;
     wcstring delimiter;
+    bool tokenize = false;
     bool shell = false;
     bool array = false;
     bool silent = false;
@@ -55,7 +55,7 @@ struct read_cmd_opts_t {
     bool one_line = false;
 };
 
-static const wchar_t *const short_options = L":ac:d:ghiLlm:n:p:sSuxzP:UR:LB";
+static const wchar_t *const short_options = L":ac:d:ghiLlm:n:p:sStuxzP:UR:LB";
 static const struct woption long_options[] = {{L"array", no_argument, nullptr, 'a'},
                                               {L"command", required_argument, nullptr, 'c'},
                                               {L"delimiter", required_argument, nullptr, 'd'},
@@ -72,6 +72,7 @@ static const struct woption long_options[] = {{L"array", no_argument, nullptr, '
                                               {L"right-prompt", required_argument, nullptr, 'R'},
                                               {L"shell", no_argument, nullptr, 'S'},
                                               {L"silent", no_argument, nullptr, 's'},
+                                              {L"tokenize", no_argument, nullptr, 't'},
                                               {L"unexport", no_argument, nullptr, 'u'},
                                               {L"universal", no_argument, nullptr, 'U'},
                                               {nullptr, 0, nullptr, 0}};
@@ -152,6 +153,10 @@ static int parse_cmd_opts(read_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
             }
             case L'S': {
                 opts.shell = true;
+                break;
+            }
+            case L't': {
+                opts.tokenize = true;
                 break;
             }
             case L'U': {
@@ -397,6 +402,20 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
         return STATUS_INVALID_ARGS;
     }
 
+    if (opts.tokenize && opts.have_delimiter) {
+        streams.err.append_format(
+            BUILTIN_ERR_COMBO2, cmd,
+            L"--delimiter and --tokenize can not be used together");
+        return STATUS_INVALID_ARGS;
+    }
+
+    if (opts.tokenize && opts.one_line) {
+        streams.err.append_format(
+            BUILTIN_ERR_COMBO2, cmd,
+            L"--line and --tokenize can not be used together");
+        return STATUS_INVALID_ARGS;
+    }
+
     // Verify all variable names.
     for (int i = 0; i < argc; i++) {
         if (!valid_var_name(argv[i])) {
@@ -484,6 +503,43 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         if (opts.to_stdout) {
             streams.out.append(buff);
             return exit_res;
+        }
+
+        if (opts.tokenize) {
+            tokenizer_t tok{buff.c_str(), TOK_ACCEPT_UNFINISHED};
+            wcstring out;
+            if (opts.array) {
+                // Array mode: assign each token as a separate element of the sole var.
+                wcstring_list_t tokens;
+                while (auto t = tok.next()) {
+                    auto text = tok.text_of(*t);
+                    if (unescape_string(text, &out, UNESCAPE_DEFAULT)) {
+                        tokens.push_back(out);
+                    } else {
+                        tokens.push_back(text);
+                    }
+                }
+
+                vars.set(*var_ptr++, opts.place, tokens);
+            } else {
+                maybe_t<tok_t> t;
+                while ((vars_left() - 1 > 0) && (t = tok.next())) {
+                    auto text = tok.text_of(*t);
+                    if (unescape_string(text, &out, UNESCAPE_DEFAULT)) {
+                        vars.set_one(*var_ptr++, opts.place, out);
+                    } else {
+                        vars.set_one(*var_ptr++, opts.place, text);
+                    }
+                }
+
+                // If we still have tokens, set the last variable to them.
+                if (t = tok.next()) {
+                    wcstring rest = wcstring(buff, t->offset);
+                    vars.set_one(*var_ptr++, opts.place, rest);
+                }
+            }
+            // The rest of the loop is other split-modes, we don't care about those.
+            continue;
         }
 
         if (!opts.have_delimiter) {

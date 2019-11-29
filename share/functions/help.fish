@@ -143,6 +143,7 @@ function help --description 'Show help for the fish shell'
         if type -q cygpath
             set page_url file://(cygpath -m $__fish_help_dir)/$fish_help_page
         else if type -q wslpath
+        and string match -qr '.exe' $fish_browser
             set page_url file://(wslpath -w $__fish_help_dir)/$fish_help_page
         end
     else

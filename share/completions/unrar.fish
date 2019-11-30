@@ -1,5 +1,21 @@
+function __fish_complete_unrar -d "Peek inside of archives and list all files"
+    set -l cmd (commandline -poc)
+    set -e cmd[1]
+    for i in $cmd
+        switch $i
+            case '-*'
+                continue
 
-# Peek inside of archives and list all files
+            case '*.rar'
+                if test -f $i
+                    set -l file_list (unrar vb $i)
+                    printf (_ "%s\tArchived file\n") $file_list
+                end
+                return
+        end
+    end
+end
+
 complete -c unrar -a "(__fish_complete_unrar)"
 
 complete -x -c unrar -n '__fish_use_subcommand' -a e -d "Extract files to current directory"

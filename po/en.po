@@ -3442,14 +3442,6 @@ msgstr ""
 msgid "or the file was empty"
 msgstr "Treat absent files as empty"
 
-#: /tmp/fish/explicit/share/functions/__fish_complete_tar.fish:1
-#: /tmp/fish/explicit/share/functions/__fish_complete_tar.fish:2
-#: /tmp/fish/explicit/share/functions/__fish_complete_tar.fish:3
-#: /tmp/fish/explicit/share/functions/__fish_complete_tar.fish:4
-#: /tmp/fish/explicit/share/functions/__fish_complete_unrar.fish:1
-msgid "%s\\tArchived file\\n"
-msgstr "%s\\tArchived file\\n"
-
 #: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:3
 msgid "Achieved compression ratio"
 msgstr "Achieved compression ratio"
@@ -66560,11 +66552,6 @@ msgstr "Complete using path"
 #: /tmp/fish/implicit/share/functions/__fish_complete_svn_diff.fish:1
 msgid "Complete \"svn diff\" arguments"
 msgstr "Complete “svn diff” arguments"
-
-#: /tmp/fish/implicit/share/functions/__fish_complete_tar.fish:1
-#: /tmp/fish/implicit/share/functions/__fish_complete_unrar.fish:1
-msgid "Peek inside of archives and list all files"
-msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_complete_user_at_hosts.fish:1
 #, fuzzy

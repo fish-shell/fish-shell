@@ -171,9 +171,12 @@ function help --description 'Show help for the fish shell'
             set page_url file://$tmpname
 
             # For Windows (Cygwin and WSL), we need to convert the base help dir to a Windows path before converting it to a file URL
+            # but only if a Windows browser is being used
             if type -q cygpath
+            and string match -qr "cygstart" $fish_browser[1]
                 set page_url file://(cygpath -m $tmpname)
             else if type -q wslpath
+            and string match -qr '.exe' $fish_browser[1]
                 set page_url file://(wslpath -w $tmpname)
             end
         end

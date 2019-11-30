@@ -67225,11 +67225,6 @@ msgstr "Liste laufender screen-Sitzungen ausgeben"
 msgid "Print a list of local users, with the real user name as a description"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_complete_wvdial_peers.fish:1
-#, fuzzy
-msgid "Complete wvdial peers"
-msgstr "Vergleiche FILE1 mit allen Operanden"
-
 #: /tmp/fish/implicit/share/functions/__fish_complete_zfs_mountpoint_properties.fish:1
 #, fuzzy
 msgid "Completes with ZFS mountpoint properties"

@@ -66562,10 +66562,6 @@ msgstr "Print hostname and user for stdin"
 msgid "Print a list of local users, with the real user name as a description"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_complete_wvdial_peers.fish:1
-msgid "Complete wvdial peers"
-msgstr ""
-
 #: /tmp/fish/implicit/share/functions/__fish_complete_zfs_mountpoint_properties.fish:1
 msgid "Completes with ZFS mountpoint properties"
 msgstr "Completes with ZFS mountpoint properties"

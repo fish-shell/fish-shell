@@ -1589,16 +1589,19 @@ void completer_t::perform() {
                     tokenizer_t tok(unaliased_cmd.c_str(), TOK_ACCEPT_UNFINISHED);
                     maybe_t<tok_t> cmd_tok = tok.next();
                     assert(cmd_tok);
-                    unaliased_cmd = unaliased_cmd.replace(0, cmd_tok->offset + cmd_tok->length, L"");
+                    unaliased_cmd =
+                        unaliased_cmd.replace(0, cmd_tok->offset + cmd_tok->length, L"");
                     parser->libdata().transient_commandlines.push_back(unaliased_cmd);
-                    cleanup_t remove_transient([&] { parser->libdata().transient_commandlines.pop_back(); });
+                    cleanup_t remove_transient(
+                        [&] { parser->libdata().transient_commandlines.pop_back(); });
                     std::vector<completion_t> comp;
-                    complete(unaliased_cmd, &comp,
-                             completion_request_t::fuzzy_match, parser->vars(), parser->shared());
+                    complete(unaliased_cmd, &comp, completion_request_t::fuzzy_match,
+                             parser->vars(), parser->shared());
                     this->completions.insert(completions.end(), comp.begin(), comp.end());
                     do_file = false;
-                } else if (!complete_param(cmd, previous_argument_unescape, current_argument_unescape,
-                                    !had_ddash)) { // Invoke any custom completions for this command.
+                } else if (!complete_param(
+                               cmd, previous_argument_unescape, current_argument_unescape,
+                               !had_ddash)) {  // Invoke any custom completions for this command.
                     do_file = false;
                 }
                 if (wants_transient) {

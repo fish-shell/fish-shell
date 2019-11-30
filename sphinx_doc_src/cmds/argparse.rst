@@ -14,13 +14,13 @@ Synopsis
 Description
 -----------
 
-This command makes it easy for fish scripts and functions to handle arguments in a manner 100% identical to how fish builtin commands handle their arguments. You pass a sequence of arguments that define the options recognized, followed by a literal ``--``, then the arguments to be parsed (which might also include a literal ``--``). More on this in the `usage <#usage>`__ section below.
+This command makes it easy for fish scripts and functions to handle arguments like how fish builtin commands handle their arguments. You pass arguments that define the known options, followed by a literal ``--``, then the arguments to be parsed (which might also include a literal ``--``). ``argparse`` then sets variables to indicate the passed options with their values, and sets $argv (and always $argv) to the remaining arguments. More on this in the `usage <#usage>`__ section below.
 
-Each OPTION_SPEC can be written in the `domain specific language <#option-specifications>`__ described below or created using the companion :ref:`fish_opt <cmd-fish_opt>` command. All OPTION_SPECs must appear after any argparse flags and before the ``--`` that separates them from the arguments to be parsed.
+Each option specification (``OPTION_SPEC``) is written in the `domain specific language <#option-specifications>`__ described below. All OPTION_SPECs must appear after any argparse flags and before the ``--`` that separates them from the arguments to be parsed.
 
 Each option that is seen in the ARG list will result in a var name of the form ``_flag_X``, where ``X`` is the short flag letter and the long flag name. The OPTION_SPEC always requires a short flag even if it can't be used. So there will always be ``_flag_X`` var set using the short flag letter if the corresponding short or long flag is seen. The long flag name var (e.g., ``_flag_help``) will only be defined, obviously, if the OPTION_SPEC includes a long flag name.
 
-For example ``_flag_h`` and ``_flag_help`` if ``-h`` or ``--help`` is seen. The var will be set with local scope (i.e., as if the script had done ``set -l _flag_X``). If the flag is a boolean (that is, does not have an associated value) the values are the short and long flags seen. If the option is not a boolean flag the values will be zero or more values corresponding to the values collected when the ARG list is processed. If the flag was not seen the flag var will not be set.
+For example ``_flag_h`` and ``_flag_help`` if ``-h`` or ``--help`` is seen. The var will be set with local scope (i.e., as if the script had done ``set -l _flag_X``). If the flag is a boolean (that is, it just is passed or not, it doesn't have a value) the values are the short and long flags seen. If the option is not a boolean the values will be zero or more values corresponding to the values collected when the ARG list is processed. If the flag was not seen the flag var will not be set.
 
 Options
 -------
@@ -37,14 +37,14 @@ The following ``argparse`` options are available. They must appear before all OP
 
 - ``-i`` or ``--ignore-unknown`` ignores unknown options, keeping them and their arguments in $argv instead.
 
-- ``-s`` or ``--stop-nonopt`` causes scanning the arguments to stop as soon as the first non-option argument is seen. Using this arg is equivalent to calling the C function ``getopt_long()`` with the short options starting with a ``+`` symbol. This is sometimes known as "POSIXLY CORRECT". If this flag is not used then arguments are reordered (i.e., permuted) so that all non-option arguments are moved after option arguments. This mode has several uses but the main one is to implement a command that has subcommands.
+- ``-s`` or ``--stop-nonopt`` causes scanning the arguments to stop as soon as the first non-option argument is seen. Among other things, this is useful to implement subcommands that have their own options.
 
 - ``-h`` or ``--help`` displays help about using this command.
 
 Usage
 -----
 
-Using this command involves passing two sets of arguments separated by ``--``. The first set consists of one or more option specifications (``OPTION_SPEC`` above) and options that modify the behavior of ``argparse``. These must be listed before the ``--`` argument. The second set are the arguments to be parsed in accordance with the option specifications. They occur after the ``--`` argument and can be empty. More about this below but here is a simple example that might be used in a function named ``my_function``:
+Using this command requires first passing option specifications (``OPTION_SPEC`` below), then a mandatory ``--``, and then the arguments you want to have parsed. More about this below but here is a simple example that might be used in a function named ``my_function``:
 
 
 
@@ -106,7 +106,7 @@ In the following examples if a flag is not seen when parsing the arguments then 
 Flag Value Validation
 ---------------------
 
-It is common to want to validate the the value provided for an option satisfies some criteria. For example, that it is a valid integer within a specific range. You can always do this after ``argparse`` returns but you can also request that ``argparse`` perform the validation by executing arbitrary fish script. To do so simply append an ``!`` (exclamation-mark) then the fish script to be run. When that code is executed three vars will be defined:
+Sometimes you need to validate the option values. For example, that it is a valid integer within a specific range, or an ip address, or something entirely different. You can always do this after ``argparse`` returns but you can also request that ``argparse`` perform the validation by executing arbitrary fish script. To do so simply append an ``!`` (exclamation-mark) then the fish script to be run. When that code is executed three vars will be defined:
 
 - ``_argparse_cmd`` will be set to the value of the value of the ``argparse --name`` value.
 
@@ -148,8 +148,3 @@ Some OPTION_SPEC examples:
 After parsing the arguments the ``argv`` var is set with local scope to any values not already consumed during flag processing. If there are not unbound values the var is set but ``count $argv`` will be zero.
 
 If an error occurs during argparse processing it will exit with a non-zero status and print error messages to stderr.
-
-Notes
------
-
-Prior to the addition of this builtin command in the 2.7.0 release there were two main ways to parse the arguments passed to a fish script or function. One way was to use the OS provided ``getopt`` command. The problem with that is that the GNU and BSD implementations are not compatible. Which makes using that external command difficult other than in trivial situations. The other way is to iterate over ``$argv`` and use the fish ``switch`` statement to decide how to handle the argument. That, however, involves a huge amount of boilerplate code. It is also borderline impossible to implement the same behavior as builtin commands.

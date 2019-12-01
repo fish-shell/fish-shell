@@ -813,6 +813,52 @@ static void function_restore_environment(parser_t &parser, const block_t *block)
     parser.libdata().returning = false;
 }
 
+// The "performer" function of a block or function process.
+// This accepts a place to execute as \p parser, and a parent job as \p parent, and then executes
+// the result, returning a status.
+// This is factored out in this funny way in preparation for concurrent execution.
+using proc_performer_t =
+    std::function<proc_status_t(parser_t &parser, std::shared_ptr<job_t> parent)>;
+
+// \return a function which may be to run the given process \p.
+// May return an empty std::function in the rare case that the to-be called fish function no longer
+// exists. This is just a dumb artifact of the fact that we only capture the functions name, not its
+// properties, when creating the job; thus a race could delete the function before we fetch its
+// properties.
+static proc_performer_t get_performer_for_process(process_t *p, const io_chain_t &io_chain) {
+    assert((p->type == process_type_t::function || p->type == process_type_t::block_node) &&
+           "Unexpected process type");
+    if (p->type == process_type_t::block_node) {
+        const parsed_source_ref_t &source = p->block_node_source;
+        tnode_t<grammar::statement> node = p->internal_block_node;
+        assert(source && node && "Process is missing node info");
+        return [=](parser_t &parser, std::shared_ptr<job_t> parent) {
+            internal_exec_helper(parser, source, node, io_chain, parent);
+            int status = parser.get_last_status();
+            // FIXME: setting the status this way is dangerous nonsense, we need to decode the
+            // status properly if it was a signal.
+            return proc_status_t::from_exit_code(status);
+        };
+    } else {
+        assert(p->type == process_type_t::function);
+        auto props = function_get_properties(p->argv0());
+        if (!props) {
+            FLOGF(error, _(L"Unknown function '%ls'"), p->argv0());
+            return proc_performer_t{};
+        }
+        auto argv = move_to_sharedptr(p->get_argv_array().to_list());
+        return [=](parser_t &parser, std::shared_ptr<job_t> parent) {
+            const block_t *fb = function_prepare_environment(parser, *argv, *props);
+            internal_exec_helper(parser, props->parsed_source, props->body_node, io_chain, parent);
+            function_restore_environment(parser, fb);
+            int status = parser.get_last_status();
+            // FIXME: setting the status this way is dangerous nonsense, we need to decode the
+            // status properly if it was a signal.
+            return proc_status_t::from_exit_code(status);
+        };
+    }
+}
+
 /// Execute a block node or function "process".
 /// \p user_ios contains the list of user-specified ios, used so we can avoid stomping on them with
 /// our pipes.
@@ -821,9 +867,6 @@ static void function_restore_environment(parser_t &parser, const block_t *block)
 static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> j, process_t *p,
                                        const io_chain_t &user_ios, io_chain_t io_chain,
                                        bool allow_buffering) {
-    assert((p->type == process_type_t::function || p->type == process_type_t::block_node) &&
-           "Unexpected process type");
-
     // Create an output buffer if we're piping to another process.
     shared_ptr<io_bufferfill_t> block_output_bufferfill{};
     if (!p->is_last_in_job && allow_buffering) {
@@ -837,27 +880,14 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
         io_chain.push_back(block_output_bufferfill);
     }
 
-    if (p->type == process_type_t::function) {
-        auto props = function_get_properties(p->argv0());
-        if (!props) {
-            FLOGF(error, _(L"Unknown function '%ls'"), p->argv0());
-            return false;
-        }
-
-        const block_t *fb =
-            function_prepare_environment(parser, p->get_argv_array().to_list(), *props);
-        internal_exec_helper(parser, props->parsed_source, props->body_node, io_chain, j);
-        function_restore_environment(parser, fb);
+    // Get the process performer, and just execute it directly.
+    // Do it in this scoped way so that the performer function can be eagerly deallocating releasing
+    // its captured io chain.
+    if (proc_performer_t performer = get_performer_for_process(p, io_chain)) {
+        p->status = performer(parser, j);
     } else {
-        assert(p->type == process_type_t::block_node);
-        assert(p->block_node_source && p->internal_block_node && "Process is missing node info");
-        internal_exec_helper(parser, p->block_node_source, p->internal_block_node, io_chain, j);
+        return false;
     }
-
-    int status = parser.get_last_status();
-    // FIXME: setting the status this way is dangerous nonsense, we need to decode the status
-    // properly if it was a signal.
-    p->status = proc_status_t::from_exit_code(status);
 
     // If we have a block output buffer, populate it now.
     if (!block_output_bufferfill) {

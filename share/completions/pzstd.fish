@@ -14,8 +14,14 @@ end
 
 complete -c pzstd -l ultra -d "Enable compression level beyond 19"
 
-for threads in (seq 1 (count (cat /proc/cpuinfo | string match -r "processor")))
-    complete -x -c pzstd -s p -l processes -a "$threads" -d "De/compress using $threads working threads"
+## If Python 3.4 or later installed, the number of physical cores is assigned to a variable.
+set -l python (__fish_anypython)
+set -q python[1]; and set -l physical_cores ($python -c 'import os; os.cpu_count() is not None and print(os.cpu_count())' 2> /dev/null)
+
+if set -q physical_cores; and test -n "$physical_cores"
+    complete -x -c pzstd -s p -l processes -a "(seq 1 $physical_cores)" -d "De/compress using $threads working threads"
+else
+    complete -x -c pzstd -s p -l processes -a NUM -d "De/compress using NUM working threads"
 end
 
 complete -r -c pzstd -s o -d "Specify file to save"

@@ -86,7 +86,7 @@ function history --description "display or manipulate interactive command histor
             if isatty stdout
                 set -l pager less
                 set -q PAGER
-                and set pager $PAGER
+                and echo $PAGER | read -at pager
 
                 # If the user hasn't preconfigured less with the $LESS environment variable,
                 # we do so to have it behave like cat if output fits on one screen. Prevent the

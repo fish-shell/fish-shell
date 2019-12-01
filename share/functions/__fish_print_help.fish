@@ -110,7 +110,7 @@ function __fish_print_help --description "Print help message for the specified f
     begin
         set -l pager less
         set -q PAGER
-        and set pager $PAGER
+        and echo $PAGER | read -at pager
         not isatty stdout
         and set pager cat # cannot use a builtin here
         # similar to man, but add -F to quit paging when the help output is brief (#6227)

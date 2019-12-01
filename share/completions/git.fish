@@ -1016,6 +1016,11 @@ complete -f -c git -n '__fish_git_using_command commit' -l no-edit -d 'Use the s
 complete -f -c git -n '__fish_git_using_command commit; and __fish_contains_opt fixup squash' -k -a '(__fish_git_recent_commits)'
 # TODO options
 
+### count-objects
+complete -f -c git -n '__fish_git_needs_command' -a count-objects -d 'Count unpacked number of objects and their disk consumption'
+complete -f -c git -n '__fish_git_using_command count-objects' -s v -l verbose -d 'Be verbose'
+complete -f -c git -n '__fish_git_using_command count-objects' -s H -l human-readable -d 'Print in human readable format'
+
 ### describe
 complete -c git -n '__fish_git_needs_command' -a describe -d 'Give an object a human readable name based on an available ref'
 complete -k -f -c git -n '__fish_git_using_command describe' -a '(__fish_git_tags)' -d 'Tag'
@@ -1078,6 +1083,15 @@ complete -f -c git -n '__fish_git_using_command difftool' -l trust-exit-code -d 
 complete -f -c git -n '__fish_git_using_command difftool' -s x -l extcmd -d 'Specify a custom command for viewing diffs'
 # TODO options
 
+### gc
+complete -f -c git -n '__fish_git_needs_command' -a gc -d 'Cleanup unnecessary files and optimize the local repository'
+complete -f -c git -n '__fish_git_using_command gc' -l aggressive -d 'Aggressively optimize the repository'
+complete -f -c git -n '__fish_git_using_command gc' -l auto -d 'Checks any housekeeping is required and then run'
+complete -f -c git -n '__fish_git_using_command gc' -l prune -d 'Prune loose objects older than date'
+complete -f -c git -n '__fish_git_using_command gc' -l no-prune -d 'Do not prune any loose objects'
+complete -f -c git -n '__fish_git_using_command gc' -l quiet -d 'Be quiet'
+complete -f -c git -n '__fish_git_using_command gc' -l force -d 'Force `git gc` to run'
+complete -f -c git -n '__fish_git_using_command gc' -l keep-largest-pack -d 'Ignore `gc.bigPackThreshold`'
 
 ### grep
 complete -c git -n '__fish_git_needs_command' -a grep -d 'Print lines matching a pattern'
@@ -1757,12 +1771,14 @@ complete -f -c git -n '__fish_git_using_command help' -a clean -d 'Remove untrac
 complete -f -c git -n '__fish_git_using_command help' -a clone -d 'Clone a repository into a new directory'
 complete -f -c git -n '__fish_git_using_command help' -a commit -d 'Record changes to the repository'
 complete -f -c git -n '__fish_git_using_command help' -a config -d 'Set and read git configuration variables'
+complete -f -c git -n '__fish_git_using_command help' -a count-objects -d 'Count unpacked number of objects and their disk consumption'
 complete -f -c git -n '__fish_git_using_command help' -a describe -d 'Give an object a human-readable name'
 complete -f -c git -n '__fish_git_using_command help' -a diff -d 'Show changes between commits, commit and working tree, etc'
 complete -f -c git -n '__fish_git_using_command help' -a difftool -d 'Open diffs in a visual tool'
 complete -f -c git -n '__fish_git_using_command help' -a fetch -d 'Download objects and refs from another repository'
 complete -f -c git -n '__fish_git_using_command help' -a filter-branch -d 'Rewrite branches'
 complete -f -c git -n '__fish_git_using_command help' -a format-patch -d 'Generate patch series to send upstream'
+complete -f -c git -n '__fish_git_using_command help' -a gc -d 'Cleanup unnecessary files and optimize the local repository'
 complete -f -c git -n '__fish_git_using_command help' -a grep -d 'Print lines matching a pattern'
 complete -f -c git -n '__fish_git_using_command help' -a init -d 'Create an empty git repository or reinitialize an existing one'
 complete -f -c git -n '__fish_git_using_command help' -a log -d 'Show commit logs'

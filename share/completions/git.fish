@@ -1474,6 +1474,8 @@ complete -f -c git -n '__fish_git_using_command rebase' -s n -l no-stat -d "Don'
 complete -f -c git -n '__fish_git_using_command rebase' -l verify -d "Allow the pre-rebase hook to run"
 complete -f -c git -n '__fish_git_using_command rebase' -l no-verify -d "Don't allow the pre-rebase hook to run"
 complete -f -c git -n '__fish_git_using_command rebase' -s f -l force-rebase -d 'Force the rebase'
+complete -f -c git -n '__fish_git_using_command rebase' -l committer-date-is-author-date -d "Use the author date as the committer date"
+complete -f -c git -n '__fish_git_using_command rebase' -l ignore-date -d "Use the committer date as the author date"
 complete -f -c git -n '__fish_git_using_command rebase' -s i -l interactive -d 'Interactive mode'
 complete -f -c git -n '__fish_git_using_command rebase' -s p -l preserve-merges -d 'Try to recreate merges'
 complete -f -c git -n '__fish_git_using_command rebase' -s r -l rebase-merges -a 'rebase-cousins no-rebase-cousins' -d 'Preserve branch structure'

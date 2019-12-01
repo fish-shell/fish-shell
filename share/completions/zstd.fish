@@ -19,12 +19,18 @@ complete -c zstd -l fast -d "Ultra-fast compression"
 complete -c zstd -l ultra -d "Enable compression level beyond 19"
 complete -c zstd -l long -d "Enable long distance matching with specified windowLog"
 
-for threads in (seq 0 (count (cat /proc/cpuinfo | string match -r "processor")))
-    if test $threads -eq 0
-        complete -c zstd -o T"$threads" -l threads="$threads" -d "Compress using as many threads as there are CPU cores on the system"
-    else
+## If Python 3.4 or later installed, the number of physical cores is assigned to a variable.
+set -l python (__fish_anypython)
+set -q python[1]; and set -l physical_cores ($python -c 'import os; os.cpu_count() is not None and print(os.cpu_count())' 2> /dev/null)
+## When using all physical cores.
+complete -c zstd -o T0 -l threads=0 -d "Compress using as many threads as there are CPU cores on the system"
+
+if set -q physical_cores; and test -n "$physical_cores"
+    for threads in (seq 1 $physical_cores)
         complete -c zstd -o T"$threads" -l threads="$threads" -d "Compress using $threads working threads"
     end
+else
+    complete -c zstd -o TNUM -l threads=NUM -d "Compress using NUM working threads"
 end
 
 complete -c zstd -l single-thread -d "Single-thread mode"

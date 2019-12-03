@@ -1,3 +1,8 @@
+function __fish_print_lsblk_columns --description 'Print available lsblk columns'
+    lsblk --help | sed '1,/Available columns:/d; /^$/,$d; s/^\s\+//; s/\s/\t/'
+
+end
+
 complete -c lsblk -s a -l all -d "print all devices"
 complete -c lsblk -s b -l bytes -d "print SIZE in bytes rather than in human readable format"
 complete -c lsblk -s d -l nodeps -d "don't print slaves or holders"
@@ -13,4 +18,3 @@ complete -c lsblk -s P -l pairs -d "use key='value' output format"
 complete -c lsblk -s r -l raw -d "use raw output format"
 complete -c lsblk -s t -l topology -d "output info about topology"
 complete -c lsblk -s l -l list -d "use list format output"
-

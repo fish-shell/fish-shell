@@ -1,5 +1,5 @@
 # Fish completions for the OpenZFS zfs command
-# Possible enhancements:
+# TODO Possible enhancements:
 # - add a test to propose iSCSI and Trusted Extensions completions only when such system is present;
 # - Illumos man pages suggests that it does not support nbmand nor atime mount option, so these properties should be proposed only when available
 # - generally, propose properties only when the current OS and ZFS versions support them;
@@ -198,6 +198,20 @@ function __fish_zfs_list_permissions
     for i in (zpool list -o name -H)
         zfs allow $i
     end | string match -r '@[[:alnum:]]*' | sort -u
+end
+
+function __fish_print_zfs_bookmarks -d "Lists ZFS bookmarks, if the feature is enabled"
+    if __fish_is_zfs_feature_enabled 'feature@bookmarks'
+        zfs list -t bookmark -o name -H
+    end
+end
+
+function __fish_print_zfs_filesystems -d "Lists ZFS filesystems"
+    zfs list -t filesystem -o name -H
+end
+
+function __fish_print_zfs_volumes -d "Lists ZFS volumes"
+    zfs list -t volume -o name -H
 end
 
 complete -c zfs -f -n '__fish_zfs_needs_command' -s '?' -a '?' -d 'Display a help message'

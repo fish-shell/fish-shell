@@ -14,15 +14,11 @@ BuildRequires:          ncurses-devel gettext gcc-c++ autoconf
 %if 0%{?rhel} && 0%{?rhel} < 8
 BuildRequires: cmake3
 %else
-BuildRequires: cmake
+BuildRequires: cmake pcre2-devel
 %endif
 
 %if 0%{?opensuse_bs} && 0%{?rhel} && 0%{?rhel} < 7
 BuildRequires: gcc48 gcc48-c++ python-argparse
-%endif
-
-%if 0%{?is_opensuse} || 0%{?fedora}
-BuildRequires: pcre2-devel
 %endif
 
 # for tests

@@ -67455,11 +67455,6 @@ msgstr ""
 msgid "Obtain a list of ports local collections"
 msgstr "Liste laufender screen-Sitzungen ausgeben"
 
-#: /tmp/fish/implicit/share/functions/__fish_print_abook_emails.fish:1
-#, fuzzy
-msgid "Print email addresses (abook)"
-msgstr "Tote Prozesse ausgeben"
-
 #: /tmp/fish/implicit/share/functions/__fish_print_addresses.fish:1
 #, fuzzy
 msgid "Print a list of known network addresses"

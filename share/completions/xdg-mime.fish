@@ -1,3 +1,6 @@
+function __fish_print_xdg_desktop_file_ids --description 'Print all available xdg desktop file IDs'
+    find (__fish_print_xdg_applications_directories) -name \*.desktop \( -type f -or -type l \) -printf '%P\n' | tr / - | sort -u
+end
 
 # main completion
 complete -c xdg-mime -n 'not __fish_seen_subcommand_from query default install uninstall' -xa 'query default install uninstall'

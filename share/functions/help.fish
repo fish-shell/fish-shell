@@ -30,7 +30,7 @@ function help --description 'Show help for the fish shell'
     if not set -q fish_browser[1]
         if set -q BROWSER
             # User has manually set a preferred browser, so we respect that
-            set fish_browser $BROWSER
+            echo $BROWSER | read -at fish_browser
         else
             # No browser set up, inferring.
             # We check a bunch and use the last we find.
@@ -101,7 +101,7 @@ function help --description 'Show help for the fish shell'
         and not command -sq $fish_browser[1]
             # Escaped quotes are necessary to work with spaces in the path
             # when the command is finally eval'd.
-            set fish_browser cygstart \"$fish_browser\"
+            set fish_browser cygstart $fish_browser
         else
             set need_trampoline 1
         end
@@ -182,12 +182,9 @@ function help --description 'Show help for the fish shell'
         end
     end
 
-    # URL may contain # (anchor) or $ (hidden share in Windows)
-    set page_url (string escape $page_url)
-
     # cmd.exe needs more coaxing.
     if string match -qr 'cmd.exe$' -- $fish_browser[1]
-        eval $fish_browser /c "start $page_url"
+        $fish_browser /c "start $page_url"
         # If browser is known to be graphical, put into background
     else if contains -- $fish_browser[1] $graphical_browsers
         switch $fish_browser[1]
@@ -196,13 +193,13 @@ function help --description 'Show help for the fish shell'
             case '*'
                 printf (_ 'help: Help is being displayed in %s.\n') $fish_browser[1]
         end
-        eval "$fish_browser $page_url &"
+        $fish_browser $page_url &; disown
     else
         # Work around lynx bug where <div class="contents"> always has the same formatting as links (unreadable)
         # by using a custom style sheet. See https://github.com/fish-shell/fish-shell/issues/4170
         if string match -q 'lynx*' -- $fish_browser
             set fish_browser $fish_browser -lss={$__fish_data_dir}/lynx.lss
         end
-        eval $fish_browser $page_url
+        $fish_browser $page_url
     end
 end

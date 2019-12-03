@@ -52,7 +52,7 @@ function funced --description 'Edit function definition'
 
     # Break editor up to get its first command (i.e. discard flags)
     set -l editor_cmd
-    eval set editor_cmd $editor
+    echo $editor | read -ta editor_cmd
     if not type -q -f "$editor_cmd[1]"
         echo (_ "funced: The value for \$EDITOR '$editor' could not be used because the command '$editor_cmd[1]' could not be found")
         set editor fish

@@ -15,26 +15,27 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
     end
 
     # Edit the command line with the users preferred editor or vim or emacs.
-    commandline -b >$f
+    set -l editor
     if set -q VISUAL
-        __fish_disable_bracketed_paste
-        eval $VISUAL $f
-        __fish_enable_bracketed_paste
+        echo $VISUAL | read -at editor
     else if set -q EDITOR
-        __fish_disable_bracketed_paste
-        eval $EDITOR $f
-        __fish_enable_bracketed_paste
+        echo $EDITOR | read -at editor
     else
         echo
         echo (_ 'External editor requested but $VISUAL or $EDITOR not set.')
         echo (_ 'Please set VISUAL or EDITOR to your preferred editor.')
         commandline -f repaint
-        command rm $f
         return 1
     end
 
+    commandline -b >$f
+    __fish_disable_bracketed_paste
+    $editor $f
+    set -l editor_status $status
+    __fish_enable_bracketed_paste
+
     # Here we're checking the exit status of the editor.
-    if test $status -eq 0 -a -s $f
+    if test $editor_status -eq 0 -a -s $f
         # Set the command to the output of the edited command and move the cursor to the
         # end of the edited command.
         commandline -r -- (cat $f)

@@ -533,7 +533,7 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 }
 
                 // If we still have tokens, set the last variable to them.
-                if (t = tok.next()) {
+                if ((t = tok.next())) {
                     wcstring rest = wcstring(buff, t->offset);
                     vars.set_one(*var_ptr++, opts.place, rest);
                 }

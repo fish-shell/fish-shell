@@ -62536,11 +62536,6 @@ msgstr ""
 msgid "Complete using files"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_complete_svn_diff.fish:1
-#, fuzzy
-msgid "Complete \"svn diff\" arguments"
-msgstr "参数的个数的计数"
-
 #: /tmp/fish/implicit/share/functions/__fish_complete_user_at_hosts.fish:1
 msgid "Print list host-names with user@"
 msgstr ""

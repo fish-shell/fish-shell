@@ -67198,11 +67198,6 @@ msgstr ""
 msgid "Complete using files"
 msgstr "Saloppe Einhäng-Optionen tolerieren"
 
-#: /tmp/fish/implicit/share/functions/__fish_complete_svn_diff.fish:1
-#, fuzzy
-msgid "Complete \"svn diff\" arguments"
-msgstr "Anzahl der Argumente zählen"
-
 #: /tmp/fish/implicit/share/functions/__fish_complete_user_at_hosts.fish:1
 #, fuzzy
 msgid "Print list host-names with user@"

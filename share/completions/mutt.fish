@@ -1,3 +1,8 @@
+function __fish_print_abook_emails --description 'Print email addresses (abook)'
+    abook --mutt-query "" | string match -r -v '^\s*$'
+
+end
+
 if command -sq abook
     complete -c mutt -f -a '(__fish_print_abook_emails)'
     complete -c mutt -s c -x -d 'Specify a carbon-copy (CC) recipient' -a '(__fish_print_abook_emails)'
@@ -27,4 +32,3 @@ complete -r -c mutt -s i -d 'Specify a file to include into the body of a messag
 complete -r -c mutt -s m -d 'Specify a default mailbox type'
 complete -r -c mutt -s Q -d 'Query a configuration variables value'
 complete -r -c mutt -s s -d 'Specify the subject of the message'
-

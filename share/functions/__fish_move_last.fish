@@ -12,7 +12,7 @@ function __fish_move_last -d "Move the last element of a directory history from 
     end
 
     # Append current dir to the end of the destination
-    set -g (echo $dest) $$dest (command pwd)
+    set -g (echo $dest) $$dest $PWD
 
     set ssrc $$src
 

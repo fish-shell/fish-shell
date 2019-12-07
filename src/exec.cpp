@@ -848,10 +848,20 @@ static proc_performer_t get_performer_for_process(process_t *p, const io_chain_t
         }
         auto argv = move_to_sharedptr(p->get_argv_array().to_list());
         return [=](parser_t &parser, std::shared_ptr<job_t> parent) {
+            const auto &ld = parser.libdata();
+            auto saved_exec_count = ld.exec_count;
             const block_t *fb = function_prepare_environment(parser, *argv, *props);
             internal_exec_helper(parser, props->parsed_source, props->body_node, io_chain, parent);
             function_restore_environment(parser, fb);
-            int status = parser.get_last_status();
+
+            // If the function did not execute anything, treat it as success.
+            int status;
+            if (saved_exec_count == ld.exec_count) {
+                status = 0;
+            } else {
+                status = parser.get_last_status();
+            }
+
             // FIXME: setting the status this way is dangerous nonsense, we need to decode the
             // status properly if it was a signal.
             return proc_status_t::from_exit_code(status);
@@ -1015,15 +1025,6 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
                                             allow_buffering)) {
                 return false;
             }
-
-            // Functions are basically treated as named blocks, and this is the only place we can
-            // distinguish between them. A block by default does not touch $status, on the other
-            // hand, calling an empty function should clear $status.
-            if (parser.libdata().exec_count == cached_exec_count &&
-                p->type == process_type_t::function) {
-                p->status = proc_status_t::from_exit_code(0);
-            }
-
             break;
         }
 

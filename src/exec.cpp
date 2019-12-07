@@ -1020,7 +1020,6 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
             // Allow buffering unless this is a deferred run. If deferred, then processes after us
             // were already launched, so they are ready to receive (or reject) our output.
             bool allow_buffering = !is_deferred_run;
-            auto cached_exec_count = parser.libdata().exec_count;
             if (!exec_block_or_func_process(parser, j, p, all_ios, process_net_io_chain,
                                             allow_buffering)) {
                 return false;

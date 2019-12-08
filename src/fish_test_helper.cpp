@@ -52,6 +52,8 @@ static void print_pid_then_sleep() {
     usleep(1000000 / .5);  //.5 secs
 }
 
+static void print_pgrp() { fprintf(stdout, "%d\n", getpgrp()); }
+
 int main(int argc, char *argv[]) {
     if (argc <= 1) {
         fprintf(stderr, "No commands given.\n");
@@ -68,6 +70,8 @@ int main(int argc, char *argv[]) {
             print_stdout_stderr();
         } else if (!strcmp(argv[i], "print_pid_then_sleep")) {
             print_pid_then_sleep();
+        } else if (!strcmp(argv[i], "print_pgrp")) {
+            print_pgrp();
         } else {
             fprintf(stderr, "%s: Unknown command: %s\n", argv[0], argv[i]);
             return EXIT_FAILURE;

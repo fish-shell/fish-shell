@@ -56,13 +56,28 @@ void logger_t::log_fmt(const category_t &cat, const wchar_t *fmt, ...) {
 }
 
 void logger_t::log_fmt(const category_t &cat, const char *fmt, ...) {
+    // glibc dislikes mixing wide and narrow output functions.
+    // So construct a narrow string in-place and output that via wide functions.
     va_list va;
     va_start(va, fmt);
-    log1(cat.name);
-    log1(": ");
-    std::vfprintf(file_, fmt, va);
-    log1('\n');
+    int ret = vsnprintf(nullptr, 0, fmt, va);
     va_end(va);
+
+    if (ret < 0) {
+        perror("vsnprintf");
+        return;
+    }
+    size_t len = static_cast<size_t>(ret) + 1;
+    std::unique_ptr<char[]> buff(new char[len]);
+
+    va_start(va, fmt);
+    ret = vsnprintf(buff.get(), len, fmt, va);
+    va_end(va);
+    if (ret < 0) {
+        perror("vsnprintf");
+        return;
+    }
+    log_fmt(cat, L"%s", buff.get());
 }
 
 }  // namespace flog_details

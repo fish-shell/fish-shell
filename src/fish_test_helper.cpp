@@ -46,6 +46,12 @@ static void print_stdout_stderr() {
     fflush(nullptr);
 }
 
+static void print_pid_then_sleep() {
+    fprintf(stdout, "%d\n", getpid());
+    fflush(nullptr);
+    usleep(1000000 / .5);  //.5 secs
+}
+
 int main(int argc, char *argv[]) {
     if (argc <= 1) {
         fprintf(stderr, "No commands given.\n");
@@ -60,6 +66,8 @@ int main(int argc, char *argv[]) {
             sigint_parent();
         } else if (!strcmp(argv[i], "print_stdout_stderr")) {
             print_stdout_stderr();
+        } else if (!strcmp(argv[i], "print_pid_then_sleep")) {
+            print_pid_then_sleep();
         } else {
             fprintf(stderr, "%s: Unknown command: %s\n", argv[0], argv[i]);
             return EXIT_FAILURE;

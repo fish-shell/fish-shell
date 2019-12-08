@@ -3357,41 +3357,6 @@ msgstr "%s %s: Abbreviation %s already exists, cannot rename %s\\n"
 msgid "%s %s: Unexpected argument -- '%s'\\n"
 msgstr "%s %s: Unexpected argument -- '%s'\\n"
 
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:1
-msgid "%s: invalid option -- %s\\n"
-msgstr "%s: invalid option -- %s\\n"
-
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:2
-msgid "%s: %s cannot be specified along with %s\\n"
-msgstr "%s: %s cannot be specified along with %s\\n"
-
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:3
-msgid "%s: option requires an argument -- %s\\n"
-msgstr "%s: option requires an argument -- %s\\n"
-
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:4
-msgid "%s: Unexpected argument -- %s\\n"
-msgstr "%s: Unexpected argument -- %s\\n"
-
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:5
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:8
-#, fuzzy
-msgid "%s: abbreviation cannot have spaces in the key\\n"
-msgstr "%s: abbreviation must have a non-empty key\\n"
-
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:6
-msgid "%s: abbreviation must have a value\\n"
-msgstr "%s: abbreviation must have a value\\n"
-
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:7
-msgid "%s: abbreviation '%s' already exists, cannot rename\\n"
-msgstr "%s: abbreviation '%s' already exists, cannot rename\\n"
-
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:9
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:10
-msgid "%s: no such abbreviation '%s'\\n"
-msgstr "%s: no such abbreviation “%s”\\n"
-
 #: /tmp/fish/explicit/share/functions/alias.fish:1
 msgid "%s: Name cannot be empty\\n"
 msgstr "%s: Name cannot be empty\\n"
@@ -4981,7 +4946,6 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/mkvextract.fish:2
 #: /tmp/fish/implicit/share/completions/mocha.fish:1
 #: /tmp/fish/implicit/share/completions/modinfo.fish:11
-#: /tmp/fish/implicit/share/completions/netcat.fish:7
 #: /tmp/fish/implicit/share/completions/netctl-auto.fish:1
 #: /tmp/fish/implicit/share/completions/poweroff.fish:1
 #: /tmp/fish/implicit/share/completions/terraform.fish:2
@@ -13376,100 +13340,6 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/mogrify.fish:100
 msgid "Enhance or reduce the image contrast"
 msgstr ""
-
-#: /tmp/fish/implicit/share/completions/cower.fish:1
-#, fuzzy
-msgid "Show output in a more script friendly format"
-msgstr "Output filenames using the specified format"
-
-#: /tmp/fish/implicit/share/completions/cower.fish:2
-#, fuzzy
-msgid "Download [twice to fetch dependencies]"
-msgstr "Show state of dependencies"
-
-#: /tmp/fish/implicit/share/completions/cower.fish:3
-msgid "Show info for target [twice for more details]"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/cower.fish:4
-#, fuzzy
-msgid "Search for packages by maintainer"
-msgstr "Search for packages matching a pattern"
-
-#: /tmp/fish/implicit/share/completions/cower.fish:5
-#, fuzzy
-msgid "Search for packages by name"
-msgstr "Search full package name"
-
-#: /tmp/fish/implicit/share/completions/cower.fish:6
-#, fuzzy
-msgid "Check AUR packages for updates"
-msgstr "Check for patches"
-
-#: /tmp/fish/implicit/share/completions/cower.fish:7
-#, fuzzy
-msgid "Use colored output"
-msgstr "Use colors in output"
-
-#: /tmp/fish/implicit/share/completions/cower.fish:8
-#, fuzzy
-msgid "Show debug output"
-msgstr "Turn on debug output"
-
-#: /tmp/fish/implicit/share/completions/cower.fish:9
-#, fuzzy
-msgid "Overwrite existing files when downloading"
-msgstr "Overwrite existing binstubs if they exist"
-
-#: /tmp/fish/implicit/share/completions/cower.fish:10
-#, fuzzy
-msgid "Print formatted"
-msgstr "Prints formatted text"
-
-#: /tmp/fish/implicit/share/completions/cower.fish:11
-#, fuzzy
-msgid "Display help and quit"
-msgstr "Display help and exit"
-
-#: /tmp/fish/implicit/share/completions/cower.fish:12
-#, fuzzy
-msgid "Ignore a package upgrade"
-msgstr "Ignore package Holds"
-
-#: /tmp/fish/implicit/share/completions/cower.fish:13
-#, fuzzy
-msgid "Ignore a binary repo when checking for updates"
-msgstr "Ignore ancestry when calculating merges"
-
-#: /tmp/fish/implicit/share/completions/cower.fish:14
-#, fuzzy
-msgid "Specify a delimiter for list formatters"
-msgstr "Specify directory for rpm database"
-
-#: /tmp/fish/implicit/share/completions/cower.fish:15
-#, fuzzy
-msgid "Output less"
-msgstr "Output file"
-
-#: /tmp/fish/implicit/share/completions/cower.fish:16
-#, fuzzy
-msgid "Download targets to DIR"
-msgstr "Don't unlock targets"
-
-#: /tmp/fish/implicit/share/completions/cower.fish:17
-#, fuzzy
-msgid "Limit the number of threads created [10]"
-msgstr "Only print number of matches"
-
-#: /tmp/fish/implicit/share/completions/cower.fish:18
-#, fuzzy
-msgid "Curl timeout in seconds"
-msgstr "Minimum interval in seconds"
-
-#: /tmp/fish/implicit/share/completions/cower.fish:19
-#, fuzzy
-msgid "Output more"
-msgstr "Output trace"
 
 #: /tmp/fish/implicit/share/completions/cowsay.fish:1
 #: /tmp/fish/implicit/share/completions/cowthink.fish:1
@@ -45835,97 +45705,6 @@ msgstr "Show all filesystems"
 msgid "Exclude files that match any pattern in file"
 msgstr "Exclude files that match pattern in file"
 
-#: /tmp/fish/implicit/share/completions/netcat.fish:1
-#, fuzzy
-msgid "Remote hostname"
-msgstr "Remove an entry for hostname"
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:2
-msgid "Same as -e, but use /bin/sh"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:3
-msgid "Program to execute after connection"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:4
-#, fuzzy
-msgid "Allow broadcasts"
-msgstr "Allow pinging a broadcast address"
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:5
-msgid "Source-routing hop points"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:6
-msgid "Source-routing pointer"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:8
-msgid "Delay interval for lines sent, ports scaned"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:9
-#, fuzzy
-msgid "Set keepalive option"
-msgstr "Set a config option"
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:10
-msgid "Listen mode, acts as a server"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:11
-#, fuzzy
-msgid "Numeric-only IP addresses, no DNS"
-msgstr "Numerical address"
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:12
-msgid "Hex dump of traffic"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:13
-#, fuzzy
-msgid "Local port number"
-msgstr "Show record number"
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:14
-msgid "Randomize local and remote ports"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:15
-msgid "Quit after EOF on stdin and delay of secs"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:16
-#, fuzzy
-msgid "Local source address"
-msgstr "Root source tree"
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:17
-msgid "Answer Telnet negotiation"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:18
-msgid "UDP Mode"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:19
-msgid "Verbose, use twice to be more verbose"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:20
-msgid "Timeout for connects and final net reads"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:21
-#, fuzzy
-msgid "Set Type of Service"
-msgstr "Stop service"
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:22
-msgid "No I/O - used for scanning"
-msgstr ""
-
 #: /tmp/fish/implicit/share/completions/netctl-auto.fish:3
 #, fuzzy
 msgid "List all available profiles for automatic selection"
@@ -51930,24 +51709,6 @@ msgstr "Run fish with this command"
 #: /tmp/fish/implicit/share/completions/rbenv.fish:12
 msgid "Show the full path for the given Ruby command"
 msgstr ""
-
-#: /tmp/fish/implicit/share/completions/rc.d.fish:1
-#, fuzzy
-msgid "Filter started daemons"
-msgstr "Print arch daemons"
-
-#: /tmp/fish/implicit/share/completions/rc.d.fish:2
-msgid "Filter stopped daemons"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/rc.d.fish:3
-msgid "Filter auto started daemons"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/rc.d.fish:4
-#, fuzzy
-msgid "Filter manually started daemons"
-msgstr "Show manually installed packages"
 
 #: /tmp/fish/implicit/share/completions/rc-service.fish:1
 msgid "Tests if the service exists or not"
@@ -66060,10 +65821,6 @@ msgstr ""
 msgid "Manage abbreviations using new fish 3.0 scheme."
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/abbr_old.fish:1
-msgid "Manage abbreviations using old fish 2.x scheme."
-msgstr ""
-
 #: /tmp/fish/implicit/share/functions/alias.fish:1
 msgid "Creates a function wrapping a command"
 msgstr ""
@@ -66097,10 +65854,6 @@ msgstr ""
 msgid "Edit the command buffer in an external editor"
 msgstr "Edit a property with an external editor."
 
-#: /tmp/fish/implicit/share/functions/eval.fish:1
-msgid "Evaluate parameters as a command"
-msgstr "Evaluate parameters as a command"
-
 #: /tmp/fish/implicit/share/functions/_.fish:1
 msgid "Alias for the gettext command"
 msgstr "Alias for the gettext command"
@@ -66116,14 +65869,6 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_commandline_is_singlequoted.fish:1
 msgid "Return 0 if the current token has an open single-quote"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_complete_abook_formats.fish:1
-msgid "Complete abook formats"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_complete_ant_targets.fish:1
-msgid "Print list of targets from build.xml and imported files"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_complete_atool_archive_contents.fish:1
@@ -66492,10 +66237,6 @@ msgstr ""
 msgid "Complete by list of running processes"
 msgstr "Complete by list of running processes"
 
-#: /tmp/fish/implicit/share/functions/__fish_complete_setxkbmap.fish:1
-msgid "Complete setxkb options"
-msgstr "Complete setxkb options"
-
 #: /tmp/fish/implicit/share/functions/__fish_complete_ssh.fish:1
 #, fuzzy
 msgid "common completions for ssh commands"
@@ -66537,12 +66278,6 @@ msgstr "Options"
 #, fuzzy
 msgid "Complete subcommand"
 msgstr "Complete dd operands"
-
-#: /tmp/fish/implicit/share/functions/__fish_complete_subcommand_root.fish:1
-msgid ""
-"Run the __fish_complete_subcommand function using a PATH containing /sbin "
-"and /usr/sbin"
-msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_complete_suffix.fish:1
 #, fuzzy
@@ -66632,7 +66367,6 @@ msgid "Checks if a specific option has been given in the current commandline"
 msgstr "Test if adb has yet to be given the subcommand"
 
 #: /tmp/fish/implicit/share/functions/__fish_crux_packages.fish:1
-#: /tmp/fish/implicit/share/functions/__fish_prt_packages.fish:1
 #, fuzzy
 msgid "Obtain a list of installed packages"
 msgstr "Rebuild and install an installed package"
@@ -66663,16 +66397,6 @@ msgstr "Display change information for the package"
 #, fuzzy
 msgid "Command used to find descriptions for commands"
 msgstr "Use function keys for commands"
-
-#: /tmp/fish/implicit/share/functions/fish_fallback_prompt.fish:1
-msgid ""
-"A simple fallback prompt without too much color or special characters for "
-"linux VTs"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_filter_ant_targets.fish:1
-msgid "Display targets within an ant build.xml file"
-msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:1
 msgid "Helper function for __fish_git_prompt"
@@ -66795,26 +66519,13 @@ msgstr ""
 msgid "Paginate the current command using the users default pager"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_ports_dirs.fish:1
-#, fuzzy
-msgid "Obtain a list of ports local collections"
-msgstr "Print a list of local users"
-
 #: /tmp/fish/implicit/share/functions/__fish_print_addresses.fish:1
 msgid "Print a list of known network addresses"
 msgstr "Print a list of known network addresses"
 
-#: /tmp/fish/implicit/share/functions/__fish_print_arch_daemons.fish:1
-msgid "Print arch daemons"
-msgstr "Print arch daemons"
-
 #: /tmp/fish/implicit/share/functions/__fish_print_commands.fish:1
 msgid "Print a list of documented fish commands"
 msgstr "Print a list of documented fish commands"
-
-#: /tmp/fish/implicit/share/functions/__fish_print_debian_services.fish:1
-msgid "Prints services installed"
-msgstr "Prints services installed"
 
 #: /tmp/fish/implicit/share/functions/__fish_print_encodings.fish:1
 msgid "Complete using available character encodings"
@@ -66824,14 +66535,6 @@ msgstr ""
 #, fuzzy
 msgid "Print a list of all known filesystem types"
 msgstr "Print a list of known network interfaces"
-
-#: /tmp/fish/implicit/share/functions/__fish_print_function_prototypes.fish:1
-#, fuzzy
-msgid ""
-"Prints the names of all function prototypes found in the headers in the "
-"current directory"
-msgstr ""
-"Print a list of all function calls leading up to running the current command"
 
 #: /tmp/fish/implicit/share/functions/__fish_print_groups.fish:1
 msgid "Print a list of local groups"
@@ -66858,10 +66561,6 @@ msgstr "Print lpr options"
 msgid "Print lpr printers"
 msgstr "Print lpr printers"
 
-#: /tmp/fish/implicit/share/functions/__fish_print_lsblk_columns.fish:1
-msgid "Print available lsblk columns"
-msgstr "Print available lsblk columns"
-
 #: /tmp/fish/implicit/share/functions/__fish_print_mounted.fish:1
 msgid "Print mounted devices"
 msgstr "Print mounted devices"
@@ -66887,66 +66586,21 @@ msgstr "Print a list of local users"
 msgid "Print directories where desktop files are stored"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_print_xdg_desktop_file_ids.fish:1
-#, fuzzy
-msgid "Print all available xdg desktop file IDs"
-msgstr "Print available lsblk columns"
-
 #: /tmp/fish/implicit/share/functions/__fish_print_xdg_mimetypes.fish:1
 msgid "Print XDG mime types"
 msgstr "Print XDG mime types"
-
-#: /tmp/fish/implicit/share/functions/__fish_print_xrandr_modes.fish:1
-msgid "Print xrandr modes"
-msgstr "Print xrandr modes"
-
-#: /tmp/fish/implicit/share/functions/__fish_print_xrandr_outputs.fish:1
-msgid "Print xrandr outputs"
-msgstr "Print xrandr outputs"
 
 #: /tmp/fish/implicit/share/functions/__fish_print_xwindows.fish:1
 msgid "Print X windows"
 msgstr "Print X windows"
 
-#: /tmp/fish/implicit/share/functions/__fish_print_zfs_bookmarks.fish:1
-msgid "Lists ZFS bookmarks, if the feature is enabled"
-msgstr "Lists ZFS bookmarks, if the feature is enabled"
-
-#: /tmp/fish/implicit/share/functions/__fish_print_zfs_filesystems.fish:1
-msgid "Lists ZFS filesystems"
-msgstr "Lists ZFS filesystems"
-
 #: /tmp/fish/implicit/share/functions/__fish_print_zfs_snapshots.fish:1
 msgid "Lists ZFS snapshots"
 msgstr "Lists ZFS snapshots"
 
-#: /tmp/fish/implicit/share/functions/__fish_print_zfs_volumes.fish:1
-msgid "Lists ZFS volumes"
-msgstr "Lists ZFS volumes"
-
 #: /tmp/fish/implicit/share/functions/fish_prompt.fish:1
 msgid "Write out the prompt"
 msgstr "Write out the prompt"
-
-#: /tmp/fish/implicit/share/functions/__fish_prt_no_subcommand.fish:1
-#, fuzzy
-msgid "Test if prt-get has yet to be given the command"
-msgstr "Test if apt has yet to be given the subcommand"
-
-#: /tmp/fish/implicit/share/functions/__fish_prt_ports.fish:1
-#, fuzzy
-msgid "Obtain a list of ports"
-msgstr "Print a list of local users"
-
-#: /tmp/fish/implicit/share/functions/__fish_prt_use_package.fish:1
-#, fuzzy
-msgid "Test if prt-get should have packages as potential completion"
-msgstr "Test if apt command should have packages as potential completion"
-
-#: /tmp/fish/implicit/share/functions/__fish_prt_use_port.fish:1
-#, fuzzy
-msgid "Test if prt-get should have ports as potential completion"
-msgstr "Test if apt command should have packages as potential completion"
 
 #: /tmp/fish/implicit/share/functions/__fish_pwd.fish:1
 #: /tmp/fish/implicit/share/functions/__fish_pwd.fish:2
@@ -66977,10 +66631,6 @@ msgstr "Prompt function for Git"
 #: /tmp/fish/implicit/share/functions/_fish_systemctl.fish:1
 msgid "Call systemctl with some options from the current commandline"
 msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_test_arg.fish:1
-msgid "Test if the token under the cursor matches the specified wildcard"
-msgstr "Test if the token under the cursor matches the specified wildcard"
 
 #: /tmp/fish/implicit/share/functions/__fish_toggle_comment_commandline.fish:1
 msgid "Comment/uncomment the current command"

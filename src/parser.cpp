@@ -635,16 +635,18 @@ int parser_t::eval(wcstring cmd, const io_chain_t &io, enum block_type_t block_t
 int parser_t::eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type_t block_type) {
     assert(block_type == TOP || block_type == SUBST);
     if (!ps->tree.empty()) {
+        job_lineage_t lineage;
+        lineage.block_io = io;
         // Execute the first node.
         tnode_t<grammar::job_list> start{&ps->tree, &ps->tree.front()};
-        return this->eval_node(ps, start, io, block_type, nullptr /* parent */);
+        return this->eval_node(ps, start, block_type, std::move(lineage));
     }
     return 0;
 }
 
 template <typename T>
-int parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, const io_chain_t &io,
-                        block_type_t block_type, std::shared_ptr<job_t> parent_job) {
+int parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, block_type_t block_type,
+                        job_lineage_t lineage) {
     static_assert(
         std::is_same<T, grammar::statement>::value || std::is_same<T, grammar::job_list>::value,
         "Unexpected node type");
@@ -672,9 +674,9 @@ int parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, const io_chain_
 
     // Create and set a new execution context.
     using exc_ctx_ref_t = std::unique_ptr<parse_execution_context_t>;
-    scoped_push<exc_ctx_ref_t> exc(&execution_context,
-                                   make_unique<parse_execution_context_t>(ps, this, parent_job));
-    int result = execution_context->eval_node(node, scope_block, io);
+    scoped_push<exc_ctx_ref_t> exc(
+        &execution_context, make_unique<parse_execution_context_t>(ps, this, std::move(lineage)));
+    int result = execution_context->eval_node(node, scope_block);
     exc.restore();
     this->pop_block(scope_block);
 
@@ -684,11 +686,9 @@ int parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, const io_chain_
 
 // Explicit instantiations. TODO: use overloads instead?
 template int parser_t::eval_node(parsed_source_ref_t, tnode_t<grammar::statement>,
-                                 const io_chain_t &, enum block_type_t,
-                                 std::shared_ptr<job_t> parent_job);
-template int parser_t::eval_node(parsed_source_ref_t, tnode_t<grammar::job_list>,
-                                 const io_chain_t &, enum block_type_t,
-                                 std::shared_ptr<job_t> parent_job);
+                                 enum block_type_t, job_lineage_t lineage);
+template int parser_t::eval_node(parsed_source_ref_t, tnode_t<grammar::job_list>, enum block_type_t,
+                                 job_lineage_t lineage);
 
 void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &errors,
                              wcstring &output) const {

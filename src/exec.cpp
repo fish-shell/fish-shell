@@ -246,28 +246,27 @@ static bool resolve_file_redirections_to_fds(const io_chain_t &in_chain, const w
     return success;
 }
 
-/// Morph an io redirection chain into redirections suitable for passing to eval, call eval, and
-/// clean up morphed redirections.
+/// Morph an io redirection chain into redirections suitable for passing to eval, and then call
+/// eval.
 ///
 /// \param parsed_source the parsed source code containing the node to evaluate
 /// \param node the node to evaluate
 /// \param ios the io redirections to be performed on this block
 template <typename T>
 void internal_exec_helper(parser_t &parser, parsed_source_ref_t parsed_source, tnode_t<T> node,
-                          const io_chain_t &ios, std::shared_ptr<job_t> parent_job) {
+                          job_lineage_t lineage) {
     assert(parsed_source && node && "exec_helper missing source or without node");
 
     io_chain_t morphed_chain;
     std::vector<autoclose_fd_t> opened_fds;
-    if (!resolve_file_redirections_to_fds(ios, parser.vars().get_pwd_slash(), &morphed_chain,
-                                          &opened_fds)) {
+    if (!resolve_file_redirections_to_fds(lineage.block_io, parser.vars().get_pwd_slash(),
+                                          &morphed_chain, &opened_fds)) {
         parser.set_last_statuses(statuses_t::just(STATUS_EXEC_FAIL));
         return;
     }
 
-    parser.eval_node(parsed_source, node, morphed_chain, TOP, parent_job);
-
-    morphed_chain.clear();
+    lineage.block_io = std::move(morphed_chain);
+    parser.eval_node(parsed_source, node, TOP, std::move(lineage));
     job_reap(parser, false);
 }
 
@@ -817,23 +816,28 @@ static void function_restore_environment(parser_t &parser, const block_t *block)
 // This accepts a place to execute as \p parser, and a parent job as \p parent, and then executes
 // the result, returning a status.
 // This is factored out in this funny way in preparation for concurrent execution.
-using proc_performer_t =
-    std::function<proc_status_t(parser_t &parser, std::shared_ptr<job_t> parent)>;
+using proc_performer_t = std::function<proc_status_t(parser_t &parser)>;
 
 // \return a function which may be to run the given process \p.
 // May return an empty std::function in the rare case that the to-be called fish function no longer
 // exists. This is just a dumb artifact of the fact that we only capture the functions name, not its
 // properties, when creating the job; thus a race could delete the function before we fetch its
 // properties.
-static proc_performer_t get_performer_for_process(process_t *p, const io_chain_t &io_chain) {
+static proc_performer_t get_performer_for_process(process_t *p, const job_t *job,
+                                                  const io_chain_t &io_chain) {
     assert((p->type == process_type_t::function || p->type == process_type_t::block_node) &&
            "Unexpected process type");
+    // Construct a lineage, starting from the job's lineage.
+    job_lineage_t lineage = job->lineage();
+    lineage.block_io = io_chain;
+    lineage.parent_pgid = (job->pgid == INVALID_PID ? none() : maybe_t<pid_t>(job->pgid));
+
     if (p->type == process_type_t::block_node) {
         const parsed_source_ref_t &source = p->block_node_source;
         tnode_t<grammar::statement> node = p->internal_block_node;
         assert(source && node && "Process is missing node info");
-        return [=](parser_t &parser, std::shared_ptr<job_t> parent) {
-            internal_exec_helper(parser, source, node, io_chain, parent);
+        return [=](parser_t &parser) {
+            internal_exec_helper(parser, source, node, lineage);
             int status = parser.get_last_status();
             // FIXME: setting the status this way is dangerous nonsense, we need to decode the
             // status properly if it was a signal.
@@ -847,11 +851,11 @@ static proc_performer_t get_performer_for_process(process_t *p, const io_chain_t
             return proc_performer_t{};
         }
         auto argv = move_to_sharedptr(p->get_argv_array().to_list());
-        return [=](parser_t &parser, std::shared_ptr<job_t> parent) {
+        return [=](parser_t &parser) {
             const auto &ld = parser.libdata();
             auto saved_exec_count = ld.exec_count;
             const block_t *fb = function_prepare_environment(parser, *argv, *props);
-            internal_exec_helper(parser, props->parsed_source, props->body_node, io_chain, parent);
+            internal_exec_helper(parser, props->parsed_source, props->body_node, lineage);
             function_restore_environment(parser, fb);
 
             // If the function did not execute anything, treat it as success.
@@ -893,8 +897,8 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
     // Get the process performer, and just execute it directly.
     // Do it in this scoped way so that the performer function can be eagerly deallocating releasing
     // its captured io chain.
-    if (proc_performer_t performer = get_performer_for_process(p, io_chain)) {
-        p->status = performer(parser, j);
+    if (proc_performer_t performer = get_performer_for_process(p, j.get(), io_chain)) {
+        p->status = performer(parser);
     } else {
         return false;
     }
@@ -1130,11 +1134,10 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     // Check to see if we should reclaim the foreground pgrp after the job finishes or stops.
     const bool reclaim_foreground_pgrp = (tcgetpgrp(STDIN_FILENO) == getpgrp());
 
-    const std::shared_ptr<job_t> parent_job = j->get_parent();
-
-    // Perhaps inherit our parent's pgid and job control flag.
-    if (parent_job && parent_job->pgid != INVALID_PID) {
-        j->pgid = parent_job->pgid;
+    // If our lineage indicates a pgid, share it.
+    if (auto parent_pgid = j->lineage().parent_pgid) {
+        assert(*parent_pgid != INVALID_PID && "parent pgid should be none, not INVALID_PID");
+        j->pgid = *parent_pgid;
         j->mut_flags().job_control = true;
     }
 

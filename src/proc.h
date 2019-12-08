@@ -18,6 +18,7 @@
 
 #include "common.h"
 #include "event.h"
+#include "global_safety.h"
 #include "io.h"
 #include "parse_tree.h"
 #include "tnode.h"
@@ -263,6 +264,25 @@ typedef int job_id_t;
 job_id_t acquire_job_id(void);
 void release_job_id(job_id_t jid);
 
+/// Information about where a job comes from.
+/// This should be safe to copy across threads; in particular that means this cannot contain a
+/// job_t.
+struct job_lineage_t {
+    /// The pgid of the parental job.
+    /// If our job is "nested" as part of a function or block execution, and that function or block
+    /// is part of a pipeline, then this may be set.
+    maybe_t<pid_t> parent_pgid{};
+
+    /// The IO chain associated with any block containing this job.
+    /// For example, in `begin; foo ; end < file.txt` this would have the 'file.txt' IO.
+    io_chain_t block_io{};
+
+    /// A shared pointer indicating that the entire tree of jobs is safe to disown.
+    /// This is set by the "root" job after it is constructed.
+    std::shared_ptr<relaxed_atomic_bool_t> root_constructed{
+        std::make_shared<relaxed_atomic_bool_t>(false)};
+};
+
 /// A struct represeting a job. A job is basically a pipeline of one or more processes and a couple
 /// of flags.
 class job_t {
@@ -289,20 +309,15 @@ class job_t {
     /// messages about job status on the terminal.
     wcstring command_str;
 
-    // The IO chain associated with the block.
-    const io_chain_t block_io;
-
-    // The parent job. If we were created as a nested job due to execution of a block or function in
-    // a pipeline, then this refers to the job corresponding to that pipeline. Otherwise it is null.
-    const std::shared_ptr<job_t> parent_job;
+    // The lineage associated with the job.
+    const job_lineage_t job_lineage;
 
     // No copying.
     job_t(const job_t &rhs) = delete;
     void operator=(const job_t &) = delete;
 
    public:
-    job_t(job_id_t job_id, const properties_t &props, io_chain_t bio,
-          std::shared_ptr<job_t> parent);
+    job_t(job_id_t job_id, const properties_t &props, job_lineage_t lineage);
     ~job_t();
 
     /// Returns the command as a wchar_t *. */
@@ -401,9 +416,12 @@ class job_t {
     /// \return if this job should own the terminal when it runs.
     bool should_claim_terminal() const { return properties.wants_terminal && is_foreground(); }
 
+    /// \return the job lineage.
+    const job_lineage_t &lineage() const { return job_lineage; }
+
     /// Returns the block IO redirections associated with the job. These are things like the IO
     /// redirections associated with the begin...end statement.
-    const io_chain_t &block_io_chain() const { return this->block_io; }
+    const io_chain_t &block_io_chain() const { return lineage().block_io; }
 
     /// Fetch all the IO redirections associated with the job.
     io_chain_t all_io_redirections() const;
@@ -427,9 +445,6 @@ class job_t {
     /// \return whether we should report process exit events.
     /// This implements some historical behavior which has not been justified.
     bool should_report_process_exits() const;
-
-    /// \return the parent job, or nullptr.
-    const std::shared_ptr<job_t> get_parent() const { return parent_job; }
 
     /// \return whether this job and its parent chain are fully constructed.
     bool job_chain_is_fully_constructed() const;

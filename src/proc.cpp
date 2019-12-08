@@ -168,14 +168,7 @@ bool job_t::should_report_process_exits() const {
     return false;
 }
 
-bool job_t::job_chain_is_fully_constructed() const {
-    const job_t *cursor = this;
-    while (cursor) {
-        if (!cursor->is_constructed()) return false;
-        cursor = cursor->get_parent().get();
-    }
-    return true;
-}
+bool job_t::job_chain_is_fully_constructed() const { return *lineage().root_constructed; }
 
 bool job_t::signal(int signal) {
     // Presumably we are distinguishing between the two cases below because we do
@@ -275,15 +268,14 @@ void process_t::check_generations_before_launch() {
     gens_ = topic_monitor_t::principal().current_generations();
 }
 
-job_t::job_t(job_id_t job_id, const properties_t &props, io_chain_t bio,
-             std::shared_ptr<job_t> parent)
-    : properties(props), block_io(std::move(bio)), parent_job(std::move(parent)), job_id(job_id) {}
+job_t::job_t(job_id_t job_id, const properties_t &props, job_lineage_t lineage)
+    : properties(props), job_lineage(std::move(lineage)), job_id(job_id) {}
 
 job_t::~job_t() { release_job_id(job_id); }
 
 /// Return all the IO redirections. Start with the block IO, then walk over the processes.
 io_chain_t job_t::all_io_redirections() const {
-    io_chain_t result = this->block_io;
+    io_chain_t result = this->block_io_chain();
     for (const process_ptr_t &p : this->processes) {
         result.append(p->io_chain());
     }

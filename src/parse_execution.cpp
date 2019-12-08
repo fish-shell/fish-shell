@@ -87,8 +87,8 @@ static std::shared_ptr<io_data_t> get_stderr_merge() {
 }
 
 parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p,
-                                                     std::shared_ptr<job_t> parent)
-    : pstree(std::move(pstree)), parser(p), parent_job(std::move(parent)) {}
+                                                     job_lineage_t lineage)
+    : pstree(std::move(pstree)), parser(p), lineage(std::move(lineage)) {}
 
 // Utilities
 
@@ -1306,7 +1306,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
         ld.is_subshell || ld.is_block || ld.is_event || !parser->is_interactive();
     props.from_event_handler = ld.is_event;
 
-    shared_ptr<job_t> job = std::make_shared<job_t>(acquire_job_id(), props, block_io, parent_job);
+    shared_ptr<job_t> job = std::make_shared<job_t>(acquire_job_id(), props, this->lineage);
     job->tmodes = tmodes;
 
     job->mut_flags().foreground = !job_node_is_background(job_node);
@@ -1434,12 +1434,9 @@ parse_execution_result_t parse_execution_context_t::run_job_list(tnode_t<Type> j
 }
 
 parse_execution_result_t parse_execution_context_t::eval_node(tnode_t<g::statement> statement,
-                                                              const block_t *associated_block,
-                                                              const io_chain_t &io) {
+                                                              const block_t *associated_block) {
     assert(statement && "Empty node in eval_node");
     assert(statement.matches_node_tree(tree()) && "statement has unexpected tree");
-    // Apply this block IO for the duration of this function.
-    scoped_push<io_chain_t> block_io_push(&block_io, io);
     enum parse_execution_result_t status = parse_execution_success;
     if (auto block = statement.try_get_child<g::block_statement, 0>()) {
         status = this->run_block_statement(block, associated_block);
@@ -1456,13 +1453,11 @@ parse_execution_result_t parse_execution_context_t::eval_node(tnode_t<g::stateme
 }
 
 parse_execution_result_t parse_execution_context_t::eval_node(tnode_t<g::job_list> job_list,
-                                                              const block_t *associated_block,
-                                                              const io_chain_t &io) {
+                                                              const block_t *associated_block) {
     // Apply this block IO for the duration of this function.
     assert(job_list && "Empty node in eval_node");
     assert(job_list.matches_node_tree(tree()) && "job_list has unexpected tree");
     assert(associated_block && "Null block");
-    scoped_push<io_chain_t> block_io_push(&block_io, io);
 
     // Check for infinite recursion: a function which immediately calls itself..
     wcstring func_name;

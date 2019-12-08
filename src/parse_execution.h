@@ -29,15 +29,14 @@ enum parse_execution_result_t {
 class parse_execution_context_t {
    private:
     parsed_source_ref_t pstree;
-    io_chain_t block_io;
     parser_t *const parser;
     // The currently executing job node, used to indicate the line number.
     tnode_t<grammar::job> executing_job_node{};
     // Cached line number information.
     size_t cached_lineno_offset = 0;
     int cached_lineno_count = 0;
-    // The parent job for any jobs created by this context.
-    const std::shared_ptr<job_t> parent_job;
+    // The lineage for any jobs created by this context.
+    const job_lineage_t lineage;
     // No copying allowed.
     parse_execution_context_t(const parse_execution_context_t &) = delete;
     parse_execution_context_t &operator=(const parse_execution_context_t &) = delete;
@@ -144,8 +143,7 @@ class parse_execution_context_t {
     int line_offset_of_character_at_offset(size_t offset);
 
    public:
-    parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p,
-                              std::shared_ptr<job_t> parent);
+    parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p, job_lineage_t lineage);
 
     /// Returns the current line number, indexed from 1. Not const since it touches
     /// cached_lineno_offset.
@@ -163,9 +161,9 @@ class parse_execution_context_t {
     /// Start executing at the given node. Returns 0 if there was no error, 1 if there was an
     /// error.
     parse_execution_result_t eval_node(tnode_t<grammar::statement> statement,
-                                       const block_t *associated_block, const io_chain_t &io);
+                                       const block_t *associated_block);
     parse_execution_result_t eval_node(tnode_t<grammar::job_list> job_list,
-                                       const block_t *associated_block, const io_chain_t &io);
+                                       const block_t *associated_block);
 };
 
 #endif

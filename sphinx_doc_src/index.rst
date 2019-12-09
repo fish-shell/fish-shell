@@ -906,12 +906,17 @@ Examples::
 Index range expansion
 ---------------------
 
-Both command substitution and shell variable expansion support accessing only specific items by providing a set of indices in square brackets. It's often needed to access a sequence of elements. To do this, use the range operator '``..``' for this. A range '``a..b``', where range limits 'a' and 'b' are integer numbers, is expanded into a sequence of indices '``a a+1 a+2 ... b``' or '``a a-1 a-2 ... b``' depending on which of 'a' or 'b' is higher. The negative range limits are calculated from the end of the list or command substitution. Note that invalid indexes for either end are silently clamped to one or the size of the list as appropriate.
+Sometimes it's necessary to access only some of the elements of a list, or some of the lines a command substitution outputs. Both allow this by providing a set of indices in square brackets.
 
-Range expansion will go in reverse if the end element is earlier in the list than the start and forward if the end is later than the start, unless exactly one of the given indices is negative. This is to enable clamping without changing direction if the list has fewer elements than expected.
+Sequences of elements can be written with the range operator '``..``'. A range '``a..b``' ('a' and 'b' being integers) is expanded into a sequence of indices '``a a+1 a+2 ... b``' or '``a a-1 a-2 ... b``' depending on which of 'a' or 'b' is higher. Negative range limits are calculated from the end of the list. If an index is too large or small it's silently clamped to one or the size of the list as appropriate.
+
+If the end is smaller than the start, or the start is larger than the end, range expansion will go in reverse. This is unless exactly one of the given indices is negative, so the direction doesn't change if the list has fewer elements than expected.
 
 Some examples::
 
+
+    echo (seq 10)[1 2 3]
+    # Prints: 1 2 3
 
     # Limit the command substitution output
     echo (seq 10)[2..5]

@@ -36,7 +36,17 @@ complete -c xz -l memlimit-compress -d 'Set memory usage limit for compression' 
 complete -c xz -l memlimit-decompress -d 'Set memory usage limit for decompression' -x
 complete -c xz -s M -l memlimit -l memory -d 'Set a memory usage for compression/decompression'
 complete -c xz -l no-adjust -d 'Display error and exit if exceed memory usage limit'
-complete -c xz -s T -l threads -d 'Specify the number of worker threads to use' -x
+
+## If Python 3.4 or later installed, the number of physical cores is assigned to a variable.
+set -l python (__fish_anypython)
+set -q python[1]; and set -l physical_cores ($python -c 'import os; os.cpu_count() is not None and print(os.cpu_count())' 2> /dev/null)
+
+if set -q physical_cores; and test -n "$physical_cores"
+    complete -c xz -s T -l threads -a "(seq 1 $physical_cores)" -d 'Specify the number of worker threads to use' -x
+else
+    complete -c xz -s T -l threads -a NUM -d 'Specify the number of worker threads to use' -x
+end
+
 complete -c xz -l lsam1 -d 'Add LZMA1 filter to filter chain' -f
 complete -c xz -l lzma2 -d 'Add LZMA2 filter to filter chain' -f
 

@@ -57,7 +57,7 @@ Example:
 - ``-s`` is an option that suppresses spaces in the output of the command
 
 Commands versus Functions
-------------------------
+-------------------------
 
 "Functions" (or "methods" or "procedures") in other languages can often be regarded as black boxes: they get complex input and return complex output. Sometimes they produce side effects such as writing to a file or reporting an error, but the emphasis is on: arguments in and return values out:
 
@@ -316,10 +316,10 @@ Some characters can not be written directly on the command line. For these chara
 
 .. _redirects:
 
-Input/Output (IO) Redirection
+Input/Output Redirection
 -----------------------------
 
-Most programs use three input/output (IO) streams, each represented by a number called a file descriptor (FD). These are:
+Most programs use three input/output [#]_ streams, each represented by a number called a file descriptor (FD). These are:
 
 - Standard input, FD 0, for reading, defaults to reading from the keyboard.
 
@@ -336,7 +336,7 @@ An example of a file redirection is ``echo hello > output.txt``, which directs t
 - To write standard error to a file, write ``2>DESTINATION``
 - To append standard output to a file, write ``>>DESTINATION_FILE``
 - To append standard error to a file, write ``2>>DESTINATION_FILE``
-- To not overwrite ("clobber") an existing file, write ``>?DESTINATION`` or ``2>?DESTINATION``
+- To not overwrite ("clobber") an existing file, write ``>?DESTINATION`` or ``2>?DESTINATION`` (this is also known as the "noclobber" redirection)
 
 ``DESTINATION`` can be one of the following:
 
@@ -360,10 +360,12 @@ Any file descriptor can be redirected in an arbitrary way by prefixing the redir
 
 Example: ``echo Hello 2>output.stderr`` writes the standard error (file descriptor 2) of the target program to ``output.stderr``.
 
+.. [#] Also shortened as "I/O" or "IO".
+
 Piping
 ------
 
-The user can string together multiple commands into a so called pipeline. This means that the standard output of one command will be read in as standard input into the next command. This is done by separating the commands by the pipe character '``|``'. For example
+The user can string together multiple commands into a *pipeline*. This means that the standard output of one command will be read in as standard input into the next command. This is done by separating the commands by the pipe character '``|``'. For example
 
 ::
 
@@ -437,7 +439,7 @@ There are a few important things that need to be noted about aliases:
 
 - Always take care to add the ``$argv`` variable to the list of parameters to the wrapped command. This makes sure that if the user specifies any additional parameters to the function, they are passed on to the underlying command.
 
-- If the alias has the same name as the aliased command, it is necessary to prefix the call to the program with ``command`` in order to tell fish that the function should not call itself, but rather a command with the same name. Failing to do so will cause infinite recursion bugs.
+- If the alias has the same name as the aliased command, you need to prefix the call to the program with ``command`` to tell fish that the function should not call itself, but rather a command with the same name. If you forget to do so, the function would call itself until the end of time. Usually fish is smart enough to figure this out and will refrain from doing so (which is hopefully in your interest).
 
 - Autoloading isn't applicable to aliases. Since, by definition, the function is created at the time the alias command is executed. You cannot autoload aliases.
 
@@ -448,11 +450,15 @@ To easily create a function of this form, you can use the :ref:`alias <cmd-alias
 Autoloading functions
 ---------------------
 
-Functions can be defined on the commandline or in a configuration file, but they can also be automatically loaded. This method of defining functions has several advantages. An autoloaded function becomes available automatically to all running shells. If the function definition is changed, all running shells will automatically reload the altered version. Startup time and memory usage is improved, etc.
+Functions can be defined on the commandline or in a configuration file, but they can also be automatically loaded. This has some advantages:
 
-Fish automatically searches through any directories in the list variable ``$fish_function_path``, and any functions defined are automatically loaded when needed. A function definition file must have a filename consisting of the name of the function plus the suffix '``.fish``'.
+- An autoloaded function becomes available automatically to all running shells.
+- If the function definition is changed, all running shells will automatically reload the altered version.
+- Startup time and memory usage is improved, etc.
 
-By default, Fish searches the following for functions, using the first available file that it finds:
+When fish needs to load a function, it searches through any directories in the list variable ``$fish_function_path`` for a file with a name consisting of the name of the function plus the suffix '``.fish``' and loads the first it finds.
+
+By default ``$fish_function_path`` contains the following:
 
 - A directory for end-users to keep their own functions, usually ``~/.config/fish/functions`` (controlled by the ``XDG_CONFIG_HOME`` environment variable).
 - A directory for systems administrators to install functions for all users on the system, usually ``/etc/fish/functions`` (really ``$__fish_sysconfdir/functions``).
@@ -792,19 +798,20 @@ To use a "," as an element, `quote <#quotes>`_ or `escape <#escapes>`_ it.
 Variable expansion
 ------------------
 
-A dollar sign followed by a string of characters is expanded into the value of the shell variable with the same name. For an introduction to the concept of shell variables, read the `Shell variables <#variables>`_ section.
-
-Undefined and empty variables expand to nothing.
-
-To separate a variable name from text encase the variable within double-quotes or braces.
+A dollar sign followed by a string of characters is expanded into the value of the shell variable with the same name. For more on shell variables, read the `Shell variables <#variables>`_ section.
 
 Examples::
 
     echo $HOME
     # Prints the home directory of the current user.
 
+Undefined and empty variables expand to nothing::
+
+
     echo $nonexistentvariable
     # Prints no output.
+
+To separate a variable name from text encase the variable within double-quotes or braces::
 
     echo The plural of $WORD is "$WORD"s
     # Prints "The plural of cat is cats" when $WORD is set to cat.
@@ -818,9 +825,9 @@ The latter syntax ``{$WORD}`` works by exploiting `brace expansion <#expand-brac
 
 In these cases, the expansion eliminates the string, as a result of the implicit :ref:`cartesian product <cartesian-product>`.
 
-If, in the example above, $WORD is undefined or an empty list, the "s" is not printed. However, it is printed, if $WORD is the empty string.
+If, in the example above, $WORD is undefined or an empty list, the "s" is not printed. However, it is printed if $WORD is the empty string (like after ``set WORD ""``).
 
-Unlike all other expansions, variable expansion also happens in double quoted strings. Inside double quotes (``"these"``), variables will always expand to exactly one argument. If they are empty or undefined, it will result in an empty string. If they have one element, they'll expand to that element. If they have more than that, the elements will be joined with spaces.
+Unlike all the other expansions, variable expansion also happens in double quoted strings. Inside double quotes (``"these"``), variables will always expand to exactly one argument. If they are empty or undefined, it will result in an empty string. If they have one element, they'll expand to that element. If they have more than that, the elements will be joined with spaces [#]_.
 
 Outside of double quotes, variables will expand to as many arguments as they have elements. That means an empty list will expand to nothing, a variable with one element will expand to that element, and a variable with multiple elements will expand to each of those elements separately.
 
@@ -841,6 +848,8 @@ The ``$`` symbol can also be used multiple times, as a kind of "dereference" ope
 
 When using this feature together with list brackets, the brackets will always match the innermost ``$`` dereference. Thus, ``$$foo[5]`` will always mean the fifth element of the ``foo`` variable should be dereferenced, not the fifth element of the doubly dereferenced variable ``foo``. The latter can instead be expressed as ``$$foo[1][5]``.
 
+
+.. [#] Unlike bash or zsh, which will join with the first character of $IFS (which usually is space).
 
 .. _cartesian-product:
 

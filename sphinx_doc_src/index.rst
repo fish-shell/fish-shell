@@ -6,7 +6,9 @@ Introduction
 
 This is the documentation for *fish*, the **f**\ riendly **i**\ nteractive **sh**\ ell.
 
-A shell is a software program which helps you operate your computer, such as by starting other programs. fish offers a command-line shell interface which is focused on usability and interactive use.
+A shell is a software program which helps you operate your computer, such as by starting other programs. fish offers a command-line interface focused on usability and interactive use.
+
+Unlike other shells, fish does not follow the POSIX standard, but still roughly belongs to the same family.
 
 Some of the special features of fish are:
 
@@ -16,24 +18,13 @@ Some of the special features of fish are:
 
 - **Easy scripting**: new functions_ can be added on the fly. The syntax is easy to learn and use.
 
-What is a shell?
-================
-
-A shell can be seen as the outermost layer to the operating system of a computer. The core of the operating system is sometimes called the "kernel", as if the computer's software is like a nut.
-
-The shell communicates with the underlying operating system, allowing the user to launch additional software programs, and enables the appropriate configuration of those programs. It can also communicate the results of the program, control the concurrent operation of multiple programs and even perform various tasks itself.
-
-In general, shells are controlled with either a text-based command-line interface (CLI), or a keyboard and mouse-based graphical user interface (GUI). fish is a command-line shell.
-
-Many command-line shells use the common interface defined in the POSIX standards. fish has a different interface, due to its :ref:`design <Design>` principles, but uses the POSIX standard where it does not conflict with these principles.
 
 Command Syntax
 --------------
 
-Shells also support some common syntax for executing commands. That way a command can be started in the same way, regardless of the application, where it comes from, and the shell, where it is executed in.
+Shells support common syntax for executing commands. That way commands can be started in the same way, regardless of where they come from.
 
-The pattern below is a basic pattern:
-
+Below is a basic pattern common among shells:
 
 
 ::
@@ -49,12 +40,11 @@ The pattern below is a basic pattern:
 
 For external **commands** the executable is usually stored on file and the file path must be included in the variable ``$PATH``, so that the file can be found: see `Special Variables`_.
 
-**Options** come in two forms: a short name, that is a hyphen with a single letter; or a long name, consisting of two hyphens with words connected by hyphens. Example: ``-h`` and ``--help`` are often used to print a help message. Options are a fixed set, described in the manual pages of the command, see `Manual Pages <#man-page>`_.
+**Options** come in multiple forms: a short name, that is a hyphen with a single letter; or a long name, (usually) consisting of two hyphens with words connected by hyphens. Example: ``-h`` and ``--help`` are often used to print a help message. Options are a fixed set, described in the manual pages of the command, see `Manual Pages <#man-page>`_.
 
 **Arguments** are the arbitrary input part of a command: often it is a file or directory name, sometimes it is a string or a list.
 
 Example:
-
 
 
 ::
@@ -66,12 +56,12 @@ Example:
 -  both ``Hello`` and ``World!`` are arguments to the echo command
 - ``-s`` is an option that suppresses spaces in the output of the command
 
-Commands versus Programs
+Commands versus Functions
 ------------------------
 
-**Programs** in other languages can often be regarded as black boxes: they get complex input and return complex output. Sometimes they produce side effects such as writing to a file or reporting an error, but the emphasis is on: arguments in and return values out:
+"Functions" (or "methods" or "procedures") in other languages can often be regarded as black boxes: they get complex input and return complex output. Sometimes they produce side effects such as writing to a file or reporting an error, but the emphasis is on: arguments in and return values out:
 
-Arguments → Program → Return Values
+Arguments → Function → Return Values
 
 **Shell commands** are different:
 
@@ -102,7 +92,7 @@ Example::
 Shebang Line
 ------------
 
-Since script for shell commands can be written in many different languages, they need to carry information about what interpreter is needed to execute them: For this they are expected to have a first line, the shebang line, which names an executable for this purpose:
+Since scripts for shell commands can be written in many different languages, they need to carry information about what interpreter is needed to execute them: For this they are expected to have a first line, the shebang line, which names an executable for this purpose:
 
 Example:
 
@@ -115,7 +105,7 @@ This line tells the shell to execute the file with the bash interpreter, that is
 
 For a script, written in another language, just replace the interpreter ``/bin/bash`` with the language interpreter of that other language (for example ``/bin/python`` for a ``python`` script)
 
-This line is only needed when scripts are executed by another interpreter, so for fish internal commands, that are executed by fish the shebang line is not necessary.
+This line is only needed when scripts are executed without specifying the interpreter. For functions inside fish or when executing a script with ```fish /path/to/script`` they aren't required (but don't hurt either!).
 
 Manual Pages
 ------------
@@ -180,7 +170,7 @@ Once fish has been installed, open a terminal. If fish is not the default shell:
 Executing Bash
 --------------
 
-If fish is your default shell and you want to copy commands from the internet, that are written in a different shell language, bash for example, you can proceed in the following way:
+If fish is your default shell and you want to copy commands from the internet that are written in a different shell language, bash for example, you can proceed in the following way:
 
 Consider, that ``bash`` is also a command. With ``man bash`` you can see that there are two ways to do this:
 

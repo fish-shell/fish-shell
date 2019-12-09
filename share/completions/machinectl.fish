@@ -1,11 +1,3 @@
-function __fish_systemd_machine_images
-    # Like for running machines, I'm assuming machinectl doesn't allow spaces in image names
-    # This does not include the special image ".host" since it isn't valid for most operations
-    machinectl --no-legend --no-pager list-images | while read -l a b
-        echo $a
-    end
-end
-
 complete -f -e -c machinectl
 
 set -l commands list status show start login enable disable poweroff reboot \

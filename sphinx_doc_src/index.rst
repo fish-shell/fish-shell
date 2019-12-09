@@ -1006,11 +1006,11 @@ If the current directory contains the files 'foo' and 'bar', the command ``echo 
 Shell variable and function names
 =================================
 
-The names given to shell objects such as variables and function names are known as "identifiers". Each type of identifier has rules that define the valid sequence of characters which compose the identifier.
+The names given to shell objects like variables and function names are known as "identifiers". Each type of identifier has rules that define what sequences of characters are valid to use.
 
 A variable name cannot be empty. It can contain only letters, digits, and underscores. It may begin and end with any of those characters.
 
-A function name cannot be empty. It may not begin with a hyphen ("-") and may not contain a slash ("/"). All other characters, including a space, are valid.
+A function name cannot be empty. It may not begin with a hyphen ("-") and may not contain a slash ("/"). All other characters, including a space, are valid. [#]_
 
 A bind mode name (e.g., ``bind -m abc ...``) is restricted to the rules for valid variable names.
 
@@ -1038,7 +1038,11 @@ To use the value of the variable ``smurf_color``, write ``$`` (dollar symbol) fo
 Variable scope
 --------------
 
-There are three kinds of variables in fish: universal, global and local variables. Universal variables are shared between all fish sessions a user is running on one computer. Global variables are specific to the current fish session, but are not associated with any specific block scope, and will never be erased unless the user explicitly requests it using ``set -e``. Local variables are specific to the current fish session, and associated with a specific block of commands, and is automatically erased when a specific block goes out of scope. A block of commands is a series of commands that begins with one of the commands ``for``, ``while`` , ``if``, ``function``, ``begin`` or ``switch``, and ends with the command ``end``. The user can specify that a variable should have either global or local scope using the ``-g/--global`` or ``-l/--local`` switches.
+There are three kinds of variables in fish: universal, global and local variables.
+
+- Universal variables are shared between all fish sessions a user is running on one computer.
+- Global variables are specific to the current fish session, but are not associated with any specific block scope, and will never be erased unless the user explicitly requests it using ``set -e``.
+- Local variables are specific to the current fish session, and associated with a specific block of commands, and is automatically erased when a specific block goes out of scope. A block of commands is a series of commands that begins with one of the commands ``for``, ``while`` , ``if``, ``function``, ``begin`` or ``switch``, and ends with the command ``end``.
 
 Variables can be explicitly set to be universal with the ``-U`` or ``--universal`` switch, global with the ``-g`` or ``--global`` switch, or local with the ``-l`` or ``--local`` switch.  The scoping rules when creating or updating a variable are:
 
@@ -1090,7 +1094,7 @@ For example::
     end
 
     function avast
-        set phrase 'Avast, mateys'
+        set --local phrase 'Avast, mateys'
         # Calling the shiver function here can not
         # change any variables in the local scope
         shiver

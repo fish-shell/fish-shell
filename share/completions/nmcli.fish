@@ -5,35 +5,31 @@ function __fish_nmcli_list_field_values
     for i in $argv
         switch $i
             case id
-                set command "nmcli -g NAME connection show"
+                set command nmcli -g NAME connection show
                 set description "Connection name"
             case uuid
-                set command "nmcli -g UUID connection show"
+                set command nmcli -g UUID connection show
                 set description "Connection UUID"
             case path
-                set command "nmcli -g DBUS-PATH connection show"
+                set command nmcli -g DBUS-PATH connection show
                 set description "D-Bus static connection path"
             case apath
-                set command "nmcli -g ACTIVE-PATH connection show --active"
+                set command nmcli -g ACTIVE-PATH connection show --active
                 set description "D-Bus active connection path"
             case ifname
-                set command "nmcli -g DEVICE device status"
+                set command nmcli -g DEVICE device status
                 set description "Interface name"
             case ssid
-                set command "nmcli -g SSID device wifi list"
+                set command nmcli -g SSID device wifi list
                 set description "SSID"
             case bssid
-                set command "nmcli -g BSSID device wifi list"
+                set command nmcli -g BSSID device wifi list
                 set description "BSSID"
             case '*'
                 return 1
         end
 
-        if $command | string length -q
-            printf '%s\n' ($command | string trim | string replace -rf '^(.+)$' '$1\t'$description'')
-        else
-            printf '%s\t%s\n' $i $description
-        end
+        $command | string trim | string replace -rf '^(.+)$' '$1\t'$description''
     end
 end
 

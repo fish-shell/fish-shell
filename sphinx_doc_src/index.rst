@@ -1234,6 +1234,8 @@ The user can change the settings of ``fish`` by changing the values of certain v
 
 - ``fish_trace``, if set and not empty, will cause fish to print commands before they execute, similar to `set -x` in bash. The trace is printed to the path given by the :ref:`--debug-output <cmd-fish>` option to fish (stderr by default).
 
+- ``fish_transient_right_prompt``, if set, remove any right prompt from display when accepting a command line.  This may be useful with terminals with other cut/paste methods. Corresponds to ``TRANSIENT_RPROMPT`` in ``zsh``.
+
 - ``fish_user_paths``, a list of directories that are prepended to ``PATH``. This can be a universal variable.
 
 - ``umask``, the current file creation mask. The preferred way to change the umask variable is through the :ref:`umask <cmd-umask>` function. An attempt to set umask to an invalid value will always fail.

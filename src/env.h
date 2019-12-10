@@ -313,6 +313,8 @@ class env_stack_t final : public environment_t {
 
 extern bool g_use_posix_spawn;
 
+extern bool g_transient_right_prompt;
+
 extern bool term_has_xn;  // does the terminal have the "eat_newline_glitch"
 
 /// Synchronizes all universal variable changes: writes everything out, reads stuff in.

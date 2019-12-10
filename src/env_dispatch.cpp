@@ -284,6 +284,11 @@ static void handle_read_limit_change(const environment_t &vars) {
     }
 }
 
+static void handle_fish_transient_right_prompt_change(const environment_t &vars) {
+    auto transient_right_prompt = vars.get(L"fish_transient_right_prompt");
+    g_transient_right_prompt = transient_right_prompt.has_value();
+}
+
 /// Populate the dispatch table used by `env_dispatch_var_change()` to efficiently call the
 /// appropriate function to handle a change to a variable.
 /// Note this returns a new-allocated value that we expect to leak.
@@ -310,6 +315,7 @@ static std::unique_ptr<const var_dispatch_table_t> create_dispatch_table() {
     var_dispatch_table->add(L"fish_history", handle_fish_history_change);
     var_dispatch_table->add(L"TZ", handle_tz_change);
     var_dispatch_table->add(L"fish_use_posix_spawn", handle_fish_use_posix_spawn_change);
+    var_dispatch_table->add(L"fish_transient_right_prompt", handle_fish_transient_right_prompt_change);
 
     // This std::move is required to avoid a build error on old versions of libc++ (#5801)
     return std::move(var_dispatch_table);
@@ -525,3 +531,6 @@ bool g_use_posix_spawn = false;
 // Limit `read` to 100 MiB (bytes not wide chars) by default. This can be overridden by the
 // fish_read_limit variable.
 size_t read_byte_limit = 100 * 1024 * 1024;
+
+/// Transient Right Prompt.
+bool g_transient_right_prompt = false;

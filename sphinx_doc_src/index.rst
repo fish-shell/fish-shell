@@ -6,7 +6,7 @@ Introduction
 
 This is the documentation for *fish*, the **f**\ riendly **i**\ nteractive **sh**\ ell.
 
-A shell is a software program which helps you operate your computer, such as by starting other programs. fish offers a command-line interface focused on usability and interactive use.
+A shell is a program which helps you operate your computer by starting other programs. fish offers a command-line interface focused on usability and interactive use.
 
 Unlike other shells, fish does not follow the POSIX standard, but still roughly belongs to the same family.
 
@@ -18,107 +18,6 @@ Some of the special features of fish are:
 
 - **Easy scripting**: new functions_ can be added on the fly. The syntax is easy to learn and use.
 
-
-Command Syntax
---------------
-
-Shells support common syntax for executing commands. That way commands can be started in the same way, regardless of where they come from.
-
-Below is a basic pattern common among shells:
-
-
-::
-
-    COMMAND [OPTIONS] ARGUMENTS
-
-
-- **COMMAND**: the name of the executable
-
-- **[OPTIONS]**: options can change the behaviour of a command
-
-- **ARGUMENTS**: input to the command
-
-For external **commands** the executable is usually stored on file and the file path must be included in the variable ``$PATH``, so that the file can be found: see `Special Variables`_.
-
-**Options** come in multiple forms: a short name, that is a hyphen with a single letter; or a long name, (usually) consisting of two hyphens with words connected by hyphens. Example: ``-h`` and ``--help`` are often used to print a help message. Options are a fixed set, described in the manual pages of the command, see `Manual Pages <#man-page>`_.
-
-**Arguments** are the arbitrary input part of a command: often it is a file or directory name, sometimes it is a string or a list.
-
-Example:
-
-
-::
-
-    >echo -s Hello World!
-    HelloWorld!
-
-
--  both ``Hello`` and ``World!`` are arguments to the echo command
-- ``-s`` is an option that suppresses spaces in the output of the command
-
-Commands versus Functions
--------------------------
-
-"Functions" (or "methods" or "procedures") in other languages can often be regarded as black boxes: they get complex input and return complex output. Sometimes they produce side effects such as writing to a file or reporting an error, but the emphasis is on: arguments in and return values out:
-
-Arguments → Function → Return Values
-
-**Shell commands** are different:
-
-- the side effects take the center of the stage: they transform an **input stream of data** into an **output stream of data**. Both of these streams are usually the terminal, but they can be redirected.
-- the arguments become options or switches paired with data: the switches influence the behaviour of the command
-- the return value shrinks to an **exit status**: this exit status is generally 0 when the command executes normally and between 1 and 255 otherwise.
-
-This leads to another way of programming and especially of combining commands:
-
-There are two ways to combine shell commands:
-
-- Commands can pass on their streams to each other: one command takes the output stream of another command as its input stream and the two commands execute in parallel. This is called piping, see `Piping`_.
-
-Example::
-
-    # Every line of the ``ls`` command is immediately passed on to the ``grep`` command
-    >ls -l | grep "my topic"
-
-
-- Commands can pass on all their output as a chunk: the output stream of one command is bundled and taken as data argument for the second command. This is called command substitution, see `Command Substitution`_.
-
-Example::
-
-    # the output of the inner ``ls`` command is taken as the input argument for the outer ``echo`` command
-    >echo (ls a*)
-
-
-Shebang Line
-------------
-
-Since scripts for shell commands can be written in many different languages, they need to carry information about what interpreter is needed to execute them: For this they are expected to have a first line, the shebang line, which names an executable for this purpose:
-
-Example:
-
-A scripts written in ``bash`` it would need a first line like this::
-
-    #!/bin/bash
-
-
-This line tells the shell to execute the file with the bash interpreter, that is located at the path ``/bin/bash``.
-
-For a script, written in another language, just replace the interpreter ``/bin/bash`` with the language interpreter of that other language (for example ``/bin/python`` for a ``python`` script)
-
-This line is only needed when scripts are executed without specifying the interpreter. For functions inside fish or when executing a script with ```fish /path/to/script`` they aren't required (but don't hurt either!).
-
-Manual Pages
-------------
-
-There is a common standard on how to receive help on shell commands: applications provide a manual page to their commands that can be opened with the ``man`` command:
-
-
-::
-
-    > man COMMAND
-
-
-This convention helps to make sure help can be found on commands no matter where they originate from. fish's internal commands all come with a manual page.
 
 Installation and Start
 ======================
@@ -182,12 +81,30 @@ Consider, that ``bash`` is also a command. With ``man bash`` you can see that th
 or ``bash`` without a switch, opens a bash shell that you can use and ``exit`` afterwards.
 
 
+Shebang Line
+------------
+
+Since scripts for shell commands can be written in many different languages, they need to carry information about what interpreter is needed to execute them: For this they are expected to have a first line, the shebang line, which names an executable for this purpose:
+
+Example:
+
+A scripts written in ``bash`` it would need a first line like this::
+
+    #!/bin/bash
+
+
+This line tells the shell to execute the file with the bash interpreter, that is located at the path ``/bin/bash``.
+
+For a script, written in another language, just replace the interpreter ``/bin/bash`` with the language interpreter of that other language (for example ``/bin/python`` for a ``python`` script)
+
+This line is only needed when scripts are executed without specifying the interpreter. For functions inside fish or when executing a script with ```fish /path/to/script`` they aren't required (but don't hurt either!).
+
 .. _syntax:
 
 Syntax overview
 ===============
 
-Shells like fish are used by giving them commands. Every ``fish`` command follows the same simple syntax.
+Shells like fish are used by giving them commands. Every ``fish`` command follows the same basic syntax.
 
 A command is executed by writing the name of the command followed by any arguments.
 
@@ -201,7 +118,7 @@ If you want to find out more about the echo command used above, read the manual 
 
 ``man`` is a command for displaying a manual page on a given topic. The man command takes the name of the manual page to display as an argument. There are manual pages for almost every command on most computers. There are also manual pages for many other things, such as system libraries and important files.
 
-Every program on your computer can be used as a command in ``fish``. If the program file is located in one of the directories in the PATH_, it is sufficient to type the name of the program to use it. Otherwise the whole filename, including the directory (like ``/home/me/code/checkers/checkers`` or ``../checkers``) has to be used.
+Every program on your computer can be used as a command in ``fish``. If the program file is located in one of the directories in the PATH_, you can just use the name of the program to use it. Otherwise the whole filename, including the directory (like ``/home/me/code/checkers/checkers`` or ``../checkers``) has to be used.
 
 Here is a list of some useful commands:
 
@@ -333,7 +250,7 @@ An example of a file redirection is ``echo hello > output.txt``, which directs t
 
 - To read standard input from a file, write ``<SOURCE_FILE``
 - To write standard output to a file, write ``>DESTINATION``
-- To write standard error to a file, write ``2>DESTINATION``
+- To write standard error to a file, write ``2>DESTINATION`` [#]_
 - To append standard output to a file, write ``>>DESTINATION_FILE``
 - To append standard error to a file, write ``2>>DESTINATION_FILE``
 - To not overwrite ("clobber") an existing file, write ``>?DESTINATION`` or ``2>?DESTINATION`` (this is also known as the "noclobber" redirection)
@@ -361,6 +278,7 @@ Any file descriptor can be redirected in an arbitrary way by prefixing the redir
 Example: ``echo Hello 2>output.stderr`` writes the standard error (file descriptor 2) of the target program to ``output.stderr``.
 
 .. [#] Also shortened as "I/O" or "IO".
+.. [#] Previous versions of fish also allowed spelling this as ``^DESTINATION``, but that made another character special so it was deprecated and will be removed in future.
 
 Piping
 ------

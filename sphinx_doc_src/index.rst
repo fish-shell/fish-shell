@@ -247,7 +247,7 @@ Most programs use three input/output [#]_ streams, each represented by a number 
 
 - Standard error, FD 2, for writing errors and warnings, defaults to writing to the screen.
 
-Any file descriptor can be directed to a different output than its default through a simple mechanism called a redirection.
+Any file descriptor can be directed to a different output than its default through a mechanism called a redirection.
 
 An example of a file redirection is ``echo hello > output.txt``, which directs the output of the echo command to the file output.txt.
 
@@ -465,7 +465,7 @@ These are the general purpose tab completions that ``fish`` provides:
 Writing your own completions
 ----------------------------
 
-Specifying your own completions is not difficult. To specify a completion, use the ``complete`` command. ``complete`` takes as a parameter the name of the command to specify a completion for. For example, to add a completion for the program ``myprog``, one would start the completion command with ``complete -c myprog ...``
+To specify a completion, use the ``complete`` command. ``complete`` takes as a parameter the name of the command to specify a completion for. For example, to add a completion for the program ``myprog``, one would start the completion command with ``complete -c myprog ...``
 
 To provide a list of possible completions for myprog, use the ``-a`` switch. If ``myprog`` accepts the arguments start and stop, this can be specified as ``complete -c myprog -a 'start stop'``. The argument to the ``-a`` switch is always a single string. At completion time, it will be tokenized on spaces and tabs, and variable expansion, command substitution and other forms of parameter expansion will take place.
 
@@ -476,7 +476,7 @@ To provide a list of possible completions for myprog, use the ``-a`` switch. If 
 
 There are also special switches for specifying that a switch requires an argument, to disable filename completion, to create completions that are only available in some combinations, etc..  For a complete description of the various switches accepted by the ``complete`` command, see the documentation for the :ref:`complete <cmd-complete>` builtin, or write ``complete --help`` inside the ``fish`` shell.
 
-As a simple example, here's an excerpt of the completions for systemd's ``timedatectl``::
+As a more comprehensive example, here's a commented excerpt of the completions for systemd's ``timedatectl``::
 
   # All subcommands that timedatectl knows - this is useful for later.
   set -l commands status set-time set-timezone list-timezones set-local-rtc set-ntp

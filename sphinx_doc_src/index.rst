@@ -115,7 +115,7 @@ Example::
 
    echo hello world
 
-This calls the ``echo`` command. ``echo`` is a command which will write its arguments to the screen. In the example above, the output will be 'hello world'. Everything in fish is done with commands. There are commands for performing a set of commands multiple times, commands for assigning variables, commands for treating a group of commands as a single command, etc.. And every single command follows the same simple syntax.
+This calls the ``echo`` command. ``echo`` is a command which will write its arguments to the screen. In the example above, the output will be 'hello world'. Everything in fish is done with commands. There are commands for performing a set of commands multiple times, commands for assigning variables, commands for treating a group of commands as a single command, etc.. And every single command follows the same basic syntax.
 
 If you want to find out more about the echo command used above, read the manual page for the echo command by writing: ``man echo``
 
@@ -150,7 +150,7 @@ This is a short explanation of some of the commonly used words in fish.
 
 - **builtin** a command that is implemented in the shell. Builtins are commands that are so closely tied to the shell that it is impossible to implement them as external commands.
 
-- **command** a program that the shell can run.
+- **command** a program that the shell can run. In another sense also specifically an external command (i.e. neither a function or builtin).
 
 - **function** a block of commands that can be called as if they were a single command. By using functions, it is possible to string together multiple smaller commands into one more advanced command.
 

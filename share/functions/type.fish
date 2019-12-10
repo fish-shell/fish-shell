@@ -54,7 +54,7 @@ function type --description 'Print the type of a command'
                     case normal
                         printf (_ '%s is a function') $i
                         if test $succinct != yes
-                            printf (_ ' with definition\n')
+                            echo (_ ' with definition')
                             functions $i
                         else
                             echo

@@ -25,10 +25,11 @@ Installation and Start
 This section is on how to install, uninstall, start and exit a fish shell and on how to make fish the default shell:
 
 - `Installation`_: How to install fish
-- `Default Shell`_: How to switch to fish as the default shell
 - `Starting and Exiting`_ How to start and exit a fish shell
-- `Uninstalling`_: How to uninstall fish
 - `Executing Bash`_: How to execute bash commands in fish
+- `Default Shell`_: How to switch to fish as the default shell
+- `Uninstalling`_: How to uninstall fish
+
 
 Installation
 ------------
@@ -37,19 +38,6 @@ Up-to-date instructions for installing the latest version of fish are on the `fi
 
 To install the development version of fish see the instructions at the `project's GitHub page <https://github.com/fish-shell/fish-shell>`_.
 
-Default Shell
--------------
-
-You can make fish your default shell by adding fish's  executable in two places:
-- add ``/usr/local/bin/fish``  to  ``/etc/shells``
-- change your default shell with ``chsh -s`` to ``/usr/local/bin/fish``
-
-For for detailed instructions see `Switching to fish <tutorial.html#tut_switching_to_fish>`_.
-
-Uninstalling
-------------
-
-For uninstalling fish: see :ref:`FAQ: Uninstalling fish <faq-uninstalling>`.
 
 Starting and Exiting
 --------------------
@@ -80,6 +68,20 @@ Consider, that ``bash`` is also a command. With ``man bash`` you can see that th
 
 or ``bash`` without a switch, opens a bash shell that you can use and ``exit`` afterwards.
 
+
+Default Shell
+-------------
+
+You can make fish your default shell by adding fish's  executable in two places:
+- add ``/usr/local/bin/fish``  to  ``/etc/shells``
+- change your default shell with ``chsh -s`` to ``/usr/local/bin/fish``
+
+For for detailed instructions see `Switching to fish <tutorial.html#tut_switching_to_fish>`_.
+
+Uninstalling
+------------
+
+For uninstalling fish: see :ref:`FAQ: Uninstalling fish <faq-uninstalling>`.
 
 Shebang Line
 ------------
@@ -928,7 +930,7 @@ The names given to shell objects like variables and function names are known as 
 
 A variable name cannot be empty. It can contain only letters, digits, and underscores. It may begin and end with any of those characters.
 
-A function name cannot be empty. It may not begin with a hyphen ("-") and may not contain a slash ("/"). All other characters, including a space, are valid. [#]_
+A function name cannot be empty. It may not begin with a hyphen ("-") and may not contain a slash ("/"). All other characters, including a space, are valid.
 
 A bind mode name (e.g., ``bind -m abc ...``) is restricted to the rules for valid variable names.
 

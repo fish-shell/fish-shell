@@ -483,11 +483,10 @@ As a simple example, here's an excerpt of the completions for systemd's ``timeda
 
   # Disable file completions for the entire command
   # because it does not take files anywhere
-  # Note that this can't be undone,
-  # so it's often better to only disable it for certain completions.
+  # Note that this can be undone by using "-F".
   #
   # File completions also need to be disabled
-  # if you wish to offer a certain set of files (e.g. just directories).
+  # if you want to have more control over what files are offered (e.g. just directories, or just files ending in ".mp3").
   complete -c timedatectl -f
 
   # This line offers the subcommands

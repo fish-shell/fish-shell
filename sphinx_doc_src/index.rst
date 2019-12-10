@@ -420,7 +420,7 @@ Help
 Help on a specific builtin can also be obtained with the ``-h`` parameter. For instance, to obtain help on the ``fg`` builtin, either type ``fg -h`` or ``help fg``.
 
 Autosuggestions
-===============
+---------------
 
 fish suggests commands as you type, based on `command history <#history-search>`_, completions, and valid file paths. As you type commands, you will see a suggestion offered after the cursor, in a muted gray color (which can be changed with the ``fish_color_autosuggestion`` variable).
 
@@ -430,7 +430,7 @@ Autosuggestions are a powerful way to quickly summon frequently entered commands
 
 
 Tab Completion
-==============
+--------------
 
 Tab completion is one of the most time saving features of any modern shell. By tapping the tab key, the user asks ``fish`` to guess the rest of the command or parameter that the user is currently typing. If  ``fish`` can only find one possible completion, ``fish`` will write it out. If there is more than one completion, ``fish`` will write out the longest prefix that all completions have in common. If the completions differ on the first character, a list of all possible completions is printed. The list features descriptions of the completions and if the list doesn't fit the screen, it is scrollable by using the arrow keys, the page up/page down keys, the tab key or the space bar.
 
@@ -924,7 +924,7 @@ If the current directory contains the files 'foo' and 'bar', the command ``echo 
 .. _identifiers:
 
 Shell variable and function names
-=================================
+---------------------------------
 
 The names given to shell objects like variables and function names are known as "identifiers". Each type of identifier has rules that define what sequences of characters are valid to use.
 
@@ -937,7 +937,7 @@ A bind mode name (e.g., ``bind -m abc ...``) is restricted to the rules for vali
 .. _variables:
 
 Shell variables
-===============
+---------------
 
 Shell variables are named pieces of data, which can be created, deleted and their values changed and used by the user.  Variables may optionally be "exported", so that a copy of the variable is available to any subprocesses the shell creates. An exported variable is referred to as an "environment variable".
 

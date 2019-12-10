@@ -20,7 +20,7 @@ The following options are available:
 
 - ``-a`` or ``--all`` prints all of possible definitions of the specified names.
 
-- ``-s`` or ``--succinct`` suppresses function expansion when used with no options, or ``-a``/``--all``.
+- ``-s`` or ``--short`` suppresses function expansion when used with no options or with ``-a``/``--all``.
 
 - ``-f`` or ``--no-functions`` suppresses function and builtin lookup.
 

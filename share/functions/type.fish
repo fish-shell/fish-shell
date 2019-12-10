@@ -3,7 +3,7 @@ function type --description 'Print the type of a command'
     set -q argv[1]
     or return 1
 
-    set -l options 'h/help' 'a/all' 's/succinct' 'f/no-functions' 't/type' 'p/path' 'P/force-path' 'q/quiet'
+    set -l options 'h/help' 'a/all' 's/short' 'f/no-functions' 't/type' 'p/path' 'P/force-path' 'q/quiet'
     argparse -n type -x t,p,P $options -- $argv
     or return
 
@@ -16,7 +16,7 @@ function type --description 'Print the type of a command'
     set -l mode normal
     set -l multi no
     set -l selection all
-    set -l succinct no
+    set -l short no
 
     # Technically all four of these flags are mutually exclusive. However, we allow -q to be used
     # with the other three because old versions of this function explicitly allowed it by making
@@ -35,8 +35,8 @@ function type --description 'Print the type of a command'
     set -q _flag_all
     and set multi yes
 
-    set -q _flag_succinct
-    and set succinct yes
+    set -q _flag_short
+    and set short yes
 
     set -q _flag_no_functions
     and set selection files
@@ -53,12 +53,17 @@ function type --description 'Print the type of a command'
                 switch $mode
                     case normal
                         printf (_ '%s is a function') $i
-                        if test $succinct != yes
+                        if test $short != yes
                             echo (_ ' with definition')
                             functions $i
                         else
-                            echo
-                        end
+                            set -l func_path (functions --details $i)
+                            if test $func_path != -
+                                printf (_ ' (defined in %s)\n') $func_path
+                            else
+                                echo
+                            end
+                    end
                     case type
                         echo (_ 'function')
                     case path

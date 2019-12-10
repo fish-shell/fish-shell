@@ -18,6 +18,7 @@ Some of the special features of fish are:
 
 - **Easy scripting**: new functions_ can be added on the fly. The syntax is easy to learn and use.
 
+This bit of the documentation is a quick guide on how to get going. If you are new to this, see the :ref:`tutorial <tutorial>`.
 
 Installation and Start
 ======================

@@ -1,5 +1,7 @@
 .. highlight:: fish-docs-samples
 
+.. _tutorial:
+
 Tutorial
 ========
 

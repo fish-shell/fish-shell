@@ -3,7 +3,6 @@
 
 function fish_prompt --description 'Write out the prompt'
     set -l last_pipestatus $pipestatus
-    set -l last_status $status
     set -l normal (set_color normal)
 
     # Initialize our variables.
@@ -26,10 +25,7 @@ function fish_prompt --description 'Write out the prompt'
     end
 
     # Write pipestatus
-    set -l prompt_status (__fish_print_pipestatus "[" "] " "|" (set_color yellow) (set_color --bold yellow) $last_pipestatus)
-    if test $last_status -ne 0
-        set prompt_status " $prompt_status" (set_color $fish_color_status) "[$last_status]" "$normal"
-    end
+    set -l prompt_status (__fish_print_pipestatus " [" "]" "|" (set_color $fish_color_status) (set_color --bold $fish_color_status) $last_pipestatus)
 
     echo -n -s (set_color $fish_color_user) "$USER" $normal @ (set_color $fish_color_host) (prompt_hostname) $normal ' ' (set_color $color_cwd) (prompt_pwd) $normal (fish_vcs_prompt) $normal $prompt_status $suffix " "
 end

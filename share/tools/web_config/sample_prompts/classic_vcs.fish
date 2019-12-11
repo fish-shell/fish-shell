@@ -6,10 +6,6 @@ function fish_prompt --description 'Write out the prompt'
     set -l last_status $status
     set -l normal (set_color normal)
 
-    # Initialize our variables.
-    set -q fish_color_host
-    or set -U fish_color_host -o cyan
-
     # Color the prompt differently when we're root
     set -l color_cwd $fish_color_cwd
     set -l prefix

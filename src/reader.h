@@ -177,6 +177,9 @@ void reader_set_left_prompt(const wcstring &prompt);
 /// Specify string of shell commands to be run in order to generate the right prompt.
 void reader_set_right_prompt(const wcstring &prompt);
 
+/// Specify string of shell commands to be run in order to generate the transient right prompt.
+void reader_set_transient_right_prompt(const wcstring &prompt);
+
 /// Sets whether autosuggesting is allowed.
 void reader_set_allow_autosuggesting(bool flag);
 

@@ -20,6 +20,8 @@ The following options are available:
 
 - ``-a`` or ``--all`` prints all of possible definitions of the specified names.
 
+- ``-s`` or ``--short`` suppresses function expansion when used with no options or with ``-a``/``--all``.
+
 - ``-f`` or ``--no-functions`` suppresses function and builtin lookup.
 
 - ``-t`` or ``--type`` prints ``function``, ``builtin``, or ``file`` if ``NAME`` is a shell function, builtin, or disk file, respectively.

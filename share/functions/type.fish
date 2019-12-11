@@ -59,11 +59,10 @@ function type --description 'Print the type of a command'
                         else
                             set -l func_path (functions --details $i)
                             if test $func_path != -
-                                printf (_ ' (defined in %s)\n') $func_path
-                            else
-                                echo
+                                printf (_ ' (defined in %s)') $func_path
                             end
-                    end
+                            echo
+                        end
                     case type
                         echo (_ 'function')
                     case path

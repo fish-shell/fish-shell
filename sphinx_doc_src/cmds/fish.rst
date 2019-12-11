@@ -13,7 +13,7 @@ Synopsis
 Description
 -----------
 
-``fish`` is a command-line shell written mainly with interactive use in mind. The :ref:`full manual <intro>` is available in HTML by using the :ref:`help <cmd-help>` command from inside fish.
+``fish`` is a command-line shell written mainly with interactive use in mind. This page briefly describes the options for invoking fish. The :ref:`full manual <intro>` is available in HTML by using the :ref:`help <cmd-help>` command from inside fish, and in the `fish-doc(1)` man page. The :ref:`tutorial <tutorial>` is available as HTML via ``help tutorial`` or in `fish-tutorial(1)`.
 
 The following options are available:
 

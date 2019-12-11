@@ -57,6 +57,8 @@
 - `dirh` outputs its stack in the correct order (#5477).
 - `funced` and the edit-commandline-in-buffer bindings did not work in fish 3.0 when the `$EDITOR` variable contained spaces; this has been corrected (#5625).
 - vi mode supports R to enter replace mode (#6342).
+- Builtins now pipe their help output to a pager automatically (#6227).
+- `set_color` now colors the `--print-colors` output in the matching colors if it is going to a terminal
 
 #### New or improved bindings
 - Pasting strips leading spaces to avoid pasted commands being omitted from the history (#4327).

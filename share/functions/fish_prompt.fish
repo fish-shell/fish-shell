@@ -5,13 +5,8 @@ function fish_prompt --description 'Write out the prompt'
     set -l last_pipestatus $pipestatus
     set -l normal (set_color normal)
 
-    # Initialize our variables.
-    set -q fish_color_user
-    or set -U fish_color_user -o green
     set -q fish_color_host
     or set -U fish_color_host -o cyan
-    set -q fish_color_status
-    or set -U fish_color_status red
 
     # Color the prompt differently when we're root
     set -l color_cwd $fish_color_cwd

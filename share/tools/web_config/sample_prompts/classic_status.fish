@@ -5,9 +5,6 @@ function fish_prompt --description "Write out the prompt"
     # Save our status
     set -l last_pipestatus $pipestatus
 
-    set -q fish_color_status
-    or set -U fish_color_status red
-
     set -l color_cwd
     set -l suffix
     switch "$USER"

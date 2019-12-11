@@ -44,9 +44,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
     #
     # If we are starting up for the first time, set various defaults.
-    #
-    # bump this to 2_4_0 when rolling release if anything changes after 9/10/2016
-    if not set -q __fish_init_2_39_8
+    if not set -q __fish_init_3_1_0
 
         # Regular syntax highlighting colors
         __init_uvar fish_color_normal normal
@@ -61,9 +59,9 @@ function __fish_config_interactive -d "Initializations that should be performed 
         __init_uvar fish_color_quote 999900
         __init_uvar fish_color_autosuggestion 555 brblack
         __init_uvar fish_color_user brgreen
-
         __init_uvar fish_color_host normal
         __init_uvar fish_color_valid_path --underline
+        __init_uvar fish_color_status red
 
         __init_uvar fish_color_cwd green
         __init_uvar fish_color_cwd_root red
@@ -92,7 +90,8 @@ function __fish_config_interactive -d "Initializations that should be performed 
         #
         __init_uvar fish_color_history_current --bold
 
-        set -U __fish_init_2_39_8
+        set -e __fish_init_2_39_8
+        set -U __fish_init_3_1_0
     end
 
     #

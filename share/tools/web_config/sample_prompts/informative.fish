@@ -5,9 +5,6 @@ function fish_prompt --description 'Informative prompt'
     #Save the return status of the previous command
     set -l last_pipestatus $pipestatus
 
-    set -q fish_color_status
-    or set -U fish_color_status red
-
     switch "$USER"
         case root toor
             printf '%s@%s %s%s%s# ' $USER (prompt_hostname) (set -q fish_color_cwd_root

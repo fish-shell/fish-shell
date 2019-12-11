@@ -222,21 +222,15 @@ void io_chain_t::append(const io_chain_t &chain) {
     this->insert(this->end(), chain.begin(), chain.end());
 }
 
-#if 0
-// This isn't used so the lint tools were complaining about its presence. I'm keeping it in the
-// source because it could be useful for debugging.
-void io_print(const io_chain_t &chain)
-{
-    if (chain.empty())
-    {
-        std::fwprintf(stderr, L"Empty chain %p\n", &chain);
+void io_chain_t::print() const {
+    if (this->empty()) {
+        std::fwprintf(stderr, L"Empty chain %p\n", this);
         return;
     }
 
-    std::fwprintf(stderr, L"Chain %p (%ld items):\n", &chain, (long)chain.size());
-    for (size_t i=0; i < chain.size(); i++)
-    {
-        const shared_ptr<io_data_t> &io = chain.at(i);
+    std::fwprintf(stderr, L"Chain %p (%ld items):\n", this, (long)this->size());
+    for (size_t i = 0; i < this->size(); i++) {
+        const auto &io = this->at(i);
         if (io.get() == nullptr)
         {
             std::fwprintf(stderr, L"\t(null)\n");
@@ -248,7 +242,6 @@ void io_print(const io_chain_t &chain)
         }
     }
 }
-#endif
 
 int move_fd_to_unused(int fd, const io_chain_t &io_chain, bool cloexec) {
     if (fd < 0 || io_chain.io_for_fd(fd).get() == nullptr) {

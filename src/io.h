@@ -346,6 +346,9 @@ class io_chain_t : public std::vector<io_data_ref_t> {
     /// \return the last io redirection in the chain for the specified file descriptor, or nullptr
     /// if none.
     io_data_ref_t io_for_fd(int fd) const;
+
+    /// Output debugging information to stderr.
+    void print() const;
 };
 
 /// Helper type returned from making autoclose pipes.
@@ -436,9 +439,5 @@ struct io_streams_t {
     explicit io_streams_t(size_t read_limit) : out(read_limit), err(read_limit), stdin_fd(-1) {}
 };
 
-#if 0
-// Print debug information about the specified IO redirection chain to stderr.
-void io_print(const io_chain_t &chain);
-#endif
 
 #endif

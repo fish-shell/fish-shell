@@ -268,8 +268,9 @@ maybe_t<env_var_t::env_var_flags_t> env_universal_t::get_flags(const wcstring &n
 
 void env_universal_t::set_internal(const wcstring &key, const env_var_t &var) {
     ASSERT_IS_LOCKED(lock);
+    bool new_entry = vars.count(key) == 0;
     env_var_t &entry = vars[key];
-    if (entry != var) {
+    if (new_entry || entry != var) {
         entry = var;
         this->modified.insert(key);
         if (entry.exports()) export_generation += 1;

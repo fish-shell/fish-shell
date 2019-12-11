@@ -19,12 +19,15 @@ function fish_prompt --description 'Write out the prompt'
     # Write pipestatus
     set -l prompt_status (__fish_print_pipestatus " [" "]" "|" (set_color $fish_color_status) (set_color --bold $fish_color_status) $last_pipestatus)
 
-    # The kind of machine we're on - ssh or a container or vm technology.
-    # This is empty if it's just a normal local terminal
+    set -q fish_color_host_ssh
+    or set -U fish_color_host_ssh yellow
+
+    # If we're connected via ssh, color the host differently.
+    set -l hostcolor $fish_color_host
     set -l machinetype (fish_describe_machinetype)
-    if set -q machinetype[1]
-        set machinetype "[$machinetype]"
+    if contains -- ssh $machinetype
+        set hostcolor $fish_color_host_ssh
     end
 
-    echo -n -s $machinetype (set_color $fish_color_user) "$USER" $normal @ (set_color $fish_color_host) (prompt_hostname) $normal ' ' (set_color $color_cwd) (prompt_pwd) $normal (fish_vcs_prompt) $normal $prompt_status $suffix " "
+    echo -n -s $machinetype (set_color $fish_color_user) "$USER" $normal @ (set_color $hostcolor) (prompt_hostname) $normal ' ' (set_color $color_cwd) (prompt_pwd) $normal (fish_vcs_prompt) $normal $prompt_status $suffix " "
 end

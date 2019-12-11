@@ -8,8 +8,6 @@ function fish_prompt --description "Write out the prompt"
     set -q fish_color_status
     or set -U fish_color_status red
 
-    __fish_print_pipestatus "[" "] " "|" (set_color $fish_color_status) (set_color --bold $fish_color_status) $last_pipestatus
-
     set -l color_cwd
     set -l suffix
     switch "$USER"
@@ -25,5 +23,7 @@ function fish_prompt --description "Write out the prompt"
             set suffix '>'
     end
 
-    echo -n -s "$USER" @ (prompt_hostname) ' ' (set_color $color_cwd) (prompt_pwd) (set_color normal) "$suffix "
+    echo -n -s "$USER" @ (prompt_hostname) ' ' (set_color $color_cwd) (prompt_pwd) \
+    (__fish_print_pipestatus " [" "]" "|" (set_color $fish_color_status) (set_color --bold $fish_color_status) $last_pipestatus) \
+    (set_color normal) "$suffix "
 end

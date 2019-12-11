@@ -278,9 +278,8 @@ struct job_lineage_t {
     io_chain_t block_io{};
 
     /// A shared pointer indicating that the entire tree of jobs is safe to disown.
-    /// This is set by the "root" job after it is constructed.
-    std::shared_ptr<relaxed_atomic_bool_t> root_constructed{
-        std::make_shared<relaxed_atomic_bool_t>(false)};
+    /// This is set to true by the "root" job after it is constructed.
+    std::shared_ptr<relaxed_atomic_bool_t> root_constructed{};
 };
 
 /// A struct represeting a job. A job is basically a pipeline of one or more processes and a couple
@@ -310,7 +309,7 @@ class job_t {
     wcstring command_str;
 
     // The lineage associated with the job.
-    const job_lineage_t job_lineage;
+    job_lineage_t job_lineage;
 
     // No copying.
     job_t(const job_t &rhs) = delete;
@@ -382,6 +381,12 @@ class job_t {
     /// stops.
     struct termios tmodes {};
 
+    /// Whether the specified job is completely constructed, i.e. completely parsed, and every
+    /// process in the job has been forked, etc.
+    /// This is a shared_ptr because it may be passed to child jobs through the lineage.
+    const std::shared_ptr<relaxed_atomic_bool_t> constructed =
+        std::make_shared<relaxed_atomic_bool_t>(false);
+
     /// Flags associated with the job.
     struct flags_t {
         /// Whether the user has been told about stopped job.
@@ -389,10 +394,6 @@ class job_t {
 
         /// Whether this job is in the foreground.
         bool foreground{false};
-
-        /// Whether the specified job is completely constructed, i.e. completely parsed, and every
-        /// process in the job has been forked, etc.
-        bool constructed{false};
 
         /// Whether the exit status should be negated. This flag can only be set by the not builtin.
         bool negate{false};
@@ -426,9 +427,12 @@ class job_t {
     /// Fetch all the IO redirections associated with the job.
     io_chain_t all_io_redirections() const;
 
+    /// Mark this job as constructed. The job must not have previously been marked as constructed.
+    void mark_constructed();
+
     // Helper functions to check presence of flags on instances of jobs
     /// The job has been fully constructed, i.e. all its member processes have been launched
-    bool is_constructed() const { return flags().constructed; }
+    bool is_constructed() const { return *constructed; }
     /// The job was launched in the foreground and has control of the terminal
     bool is_foreground() const { return flags().foreground; }
     /// The job is complete, i.e. all its member processes have been reaped

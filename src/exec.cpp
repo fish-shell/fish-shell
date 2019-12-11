@@ -313,7 +313,7 @@ void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &all_ios) {
         // launch_process _never_ returns.
         launch_process_nofork(vars, j->processes.front().get());
     } else {
-        j->mut_flags().constructed = true;
+        j->mark_constructed();
         j->processes.front()->completed = true;
         return;
     }
@@ -1225,7 +1225,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     FLOGF(exec_job_exec, L"Executed job %d from command '%ls' with pgrp %d", j->job_id,
           j->command_wcstr(), j->pgid);
 
-    j->mut_flags().constructed = true;
+    j->mark_constructed();
     if (!j->is_foreground()) {
         parser.vars().set_one(L"last_pid", ENV_GLOBAL, to_string(j->pgid));
     }

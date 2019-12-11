@@ -269,7 +269,12 @@ void process_t::check_generations_before_launch() {
 }
 
 job_t::job_t(job_id_t job_id, const properties_t &props, job_lineage_t lineage)
-    : properties(props), job_lineage(std::move(lineage)), job_id(job_id) {}
+    : properties(props), job_lineage(std::move(lineage)), job_id(job_id) {
+    if (!job_lineage.root_constructed) {
+        // We are the root job, share our constructed pointer.
+        job_lineage.root_constructed = this->constructed;
+    }
+}
 
 job_t::~job_t() { release_job_id(job_id); }
 
@@ -280,6 +285,11 @@ io_chain_t job_t::all_io_redirections() const {
         result.append(p->io_chain());
     }
     return result;
+}
+
+void job_t::mark_constructed() {
+    assert(!is_constructed() && "Job was already constructed");
+    *constructed = true;
 }
 
 using process_generation_count_t = unsigned int;

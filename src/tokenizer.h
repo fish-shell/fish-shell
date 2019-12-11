@@ -154,9 +154,9 @@ wcstring tok_first(const wcstring &str);
 /// Struct wrapping up a parsed pipe or redirection.
 struct pipe_or_redir_t {
     // The redirected fd, or -1 on overflow.
-    // In the common case of a pipe, this is 0 (STDOUT_FILENO).
+    // In the common case of a pipe, this is 1 (STDOUT_FILENO).
     // For example, in the case of "3>&1" this will be 3.
-    int fd{0};
+    int fd{-1};
 
     // Whether we are a pipe (true) or redirection (false).
     bool is_pipe{false};

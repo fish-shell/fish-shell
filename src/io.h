@@ -284,9 +284,6 @@ class io_buffer_t {
     /// running. The fillthread fulfills the corresponding promise when it exits.
     std::future<void> fillthread_waiter_{};
 
-    /// Read limit of the buffer.
-    const size_t read_limit_;
-
     /// Lock for appending.
     std::mutex append_lock_{};
 
@@ -303,7 +300,7 @@ class io_buffer_t {
     bool fillthread_running() const { return fillthread_waiter_.valid(); }
 
    public:
-    explicit io_buffer_t(size_t limit) : buffer_(limit), read_limit_(limit) {
+    explicit io_buffer_t(size_t limit) : buffer_(limit) {
         // Explicitly reset the discard flag because we share this buffer.
         buffer_.reset_discard();
     }
@@ -322,9 +319,6 @@ class io_buffer_t {
         scoped_lock locker(append_lock_);
         buffer_.append(ptr, ptr + count);
     }
-
-    /// \return the read limit.
-    size_t read_limit() const { return read_limit_; }
 
     /// Appends data from a given output_stream_t.
     /// Marks the receiver as discarded if the stream was discarded.

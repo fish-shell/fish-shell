@@ -170,6 +170,9 @@ struct library_data_t {
     /// Whether we should return from the current function.
     bool returning{false};
 
+    /// The read limit to apply to captured subshell output, or 0 for none.
+    size_t read_limit{0};
+
     /// The current filename we are evaluating, either from builtin source or on the command line.
     /// This is an intern'd string.
     const wchar_t *current_filename{};

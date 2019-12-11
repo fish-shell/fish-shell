@@ -1145,16 +1145,8 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
         j->pgid = getpgrp();
     }
 
-    size_t stdout_read_limit = 0;
+    const size_t stdout_read_limit = parser.libdata().read_limit;
     io_chain_t all_ios = j->all_io_redirections();
-
-    // The read limit is dictated by the last bufferfill.
-    for (auto &io : all_ios) {
-        if ((io->io_mode == io_mode_t::bufferfill)) {
-            const auto *bf = static_cast<const io_bufferfill_t *>(io.get());
-            stdout_read_limit = bf->buffer()->read_limit();
-        }
-    }
 
     // Handle an exec call.
     if (j->processes.front()->type == process_type_t::exec) {
@@ -1241,23 +1233,26 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
 static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstring_list_t *lst,
                                   bool apply_exit_status, bool is_subcmd) {
     ASSERT_IS_MAIN_THREAD();
-    bool prev_subshell = parser.libdata().is_subshell;
+    auto &ld = parser.libdata();
+    bool prev_subshell = ld.is_subshell;
     auto prev_statuses = parser.get_last_statuses();
     bool split_output = false;
+
+    auto prev_read_limit = ld.read_limit;
+    ld.read_limit = is_subcmd ? read_byte_limit : 0;
 
     const auto ifs = parser.vars().get(L"IFS");
     if (!ifs.missing_or_empty()) {
         split_output = true;
     }
 
-    parser.libdata().is_subshell = true;
+    ld.is_subshell = true;
     auto subcommand_statuses = statuses_t::just(-1);  // assume the worst
 
     // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may
     // be null.
-    size_t read_limit = is_subcmd ? read_byte_limit : 0;
     std::shared_ptr<io_buffer_t> buffer;
-    if (auto bufferfill = io_bufferfill_t::create(io_chain_t{}, read_limit)) {
+    if (auto bufferfill = io_bufferfill_t::create(io_chain_t{}, ld.read_limit)) {
         if (parser.eval(cmd, io_chain_t{bufferfill}, SUBST) == 0) {
             subcommand_statuses = parser.get_last_statuses();
         }
@@ -1276,7 +1271,8 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
         parser.set_last_statuses(std::move(prev_statuses));
     }
 
-    parser.libdata().is_subshell = prev_subshell;
+    ld.is_subshell = prev_subshell;
+    ld.read_limit = prev_read_limit;
 
     if (lst == nullptr || !buffer) {
         return subcommand_statuses.status;

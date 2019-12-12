@@ -55,8 +55,9 @@ function type --description 'Print the type of a command'
                     case path
                         set -l func_path (functions --details $i)
                         switch $func_path
-                            case "n/a"
                             case "-"
+                            case "n/a"
+                            case "stdin"
                                 break
                             case "*"
                                 echo $func_path

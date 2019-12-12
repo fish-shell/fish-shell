@@ -58,7 +58,7 @@ function type --description 'Print the type of a command'
                             functions $i
                         else
                             set -l func_path (functions --details $i)
-                            if test $func_path != -
+                            if not contains $func_path - stdin
                                 printf (_ ' (defined in %s)') $func_path
                             end
                             echo

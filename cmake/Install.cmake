@@ -30,7 +30,7 @@ SET(extra_completionsdir
 
 SET(extra_functionsdir
     ${datadir}/fish/vendor_functions.d
-    CACHE STRING "Path for extra completions")
+    CACHE STRING "Path for extra functions")
 
 SET(extra_confdir
     ${datadir}/fish/vendor_conf.d

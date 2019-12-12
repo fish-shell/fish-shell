@@ -192,6 +192,7 @@
 - mandoc can now be used to format the output from `--help` if `nroff` is not installed, reducing the number of external dependencies on systems with `mandoc` installed (#5489).
 - Some bugs preventing building on Solaris-derived systems such as Illumos were fixed (#5458, #5461, #5611).
 - Completions for `npm`, `bower` and `yarn` no longer require the `jq` utility for full functionality, but will use Python instead if it is available.
+- Third-party completions are sourced first from `$XDG_DATA_DIRS/share/fish/vendor_completions.d` in addition to `(pkg-config fish --variable completionsdir)` which defaults to `$PREFIX/share/fish/vendor_completions.d`. Same for vendor_functions.d and vendor_conf.d (#5029).
 
 ---
 

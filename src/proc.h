@@ -266,7 +266,8 @@ void release_job_id(job_id_t jid);
 
 /// Information about where a job comes from.
 /// This should be safe to copy across threads; in particular that means this cannot contain a
-/// job_t.
+/// job_t. It is also important that job_t not contain this: because it stores block IO, it will
+/// extend the life of the IO which may prevent pipes from closing in a timely manner. See #6397.
 struct job_lineage_t {
     /// The pgid of the parental job.
     /// If our job is "nested" as part of a function or block execution, and that function or block
@@ -307,9 +308,6 @@ class job_t {
     /// The original command which led to the creation of this job. It is used for displaying
     /// messages about job status on the terminal.
     wcstring command_str;
-
-    // The lineage associated with the job.
-    job_lineage_t job_lineage;
 
     // No copying.
     job_t(const job_t &rhs) = delete;
@@ -387,6 +385,9 @@ class job_t {
     const std::shared_ptr<relaxed_atomic_bool_t> constructed =
         std::make_shared<relaxed_atomic_bool_t>(false);
 
+    /// Whether the root job is constructed; this may share a reference with 'constructed'.
+    const std::shared_ptr<relaxed_atomic_bool_t> root_constructed;
+
     /// Flags associated with the job.
     struct flags_t {
         /// Whether the user has been told about stopped job.
@@ -416,16 +417,6 @@ class job_t {
 
     /// \return if this job should own the terminal when it runs.
     bool should_claim_terminal() const { return properties.wants_terminal && is_foreground(); }
-
-    /// \return the job lineage.
-    const job_lineage_t &lineage() const { return job_lineage; }
-
-    /// Returns the block IO redirections associated with the job. These are things like the IO
-    /// redirections associated with the begin...end statement.
-    const io_chain_t &block_io_chain() const { return lineage().block_io; }
-
-    /// Fetch all the IO redirections associated with the job.
-    io_chain_t all_io_redirections() const;
 
     /// Mark this job as constructed. The job must not have previously been marked as constructed.
     void mark_constructed();

@@ -827,10 +827,11 @@ static proc_performer_t get_performer_for_process(process_t *p, const job_t *job
                                                   const io_chain_t &io_chain) {
     assert((p->type == process_type_t::function || p->type == process_type_t::block_node) &&
            "Unexpected process type");
-    // Construct a lineage, starting from the job's lineage.
-    job_lineage_t lineage = job->lineage();
-    lineage.block_io = io_chain;
+    // Make a lineage for our children.
+    job_lineage_t lineage;
     lineage.parent_pgid = (job->pgid == INVALID_PID ? none() : maybe_t<pid_t>(job->pgid));
+    lineage.block_io = io_chain;
+    lineage.root_constructed = job->root_constructed;
 
     if (p->type == process_type_t::block_node) {
         const parsed_source_ref_t &source = p->block_node_source;
@@ -938,9 +939,9 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
 /// in any child. If \p is_deferred_run is true, then this is a deferred run; this affects how
 /// certain buffering works. \returns true on success, false on exec error.
 static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<job_t> j,
-                                autoclose_pipes_t pipes, const io_chain_t &all_ios,
-                                const autoclose_pipes_t &deferred_pipes, size_t stdout_read_limit,
-                                bool is_deferred_run = false) {
+                                const io_chain_t &block_io, autoclose_pipes_t pipes,
+                                const io_chain_t &all_ios, const autoclose_pipes_t &deferred_pipes,
+                                size_t stdout_read_limit, bool is_deferred_run = false) {
     // The write pipe (destined for stdout) needs to occur before redirections. For example,
     // with a redirection like this:
     //
@@ -976,7 +977,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
     }
 
     // The IO chain for this process.
-    io_chain_t process_net_io_chain = j->block_io_chain();
+    io_chain_t process_net_io_chain = block_io;
     if (pipes.write.valid()) {
         process_net_io_chain.push_back(std::make_shared<io_pipe_t>(
             p->pipe_write_fd, false /* not input */, std::move(pipes.write)));
@@ -1119,7 +1120,7 @@ static bool should_claim_process_group_for_job(const shared_ptr<job_t> &j) {
     DIE("unreachable");
 }
 
-bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
+bool exec_job(parser_t &parser, shared_ptr<job_t> j, const job_lineage_t &lineage) {
     assert(j && "null job_t passed to exec_job!");
 
     // Set to true if something goes wrong while executing the job, in which case the cleanup
@@ -1135,9 +1136,10 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     const bool reclaim_foreground_pgrp = (tcgetpgrp(STDIN_FILENO) == getpgrp());
 
     // If our lineage indicates a pgid, share it.
-    if (auto parent_pgid = j->lineage().parent_pgid) {
-        assert(*parent_pgid != INVALID_PID && "parent pgid should be none, not INVALID_PID");
-        j->pgid = *parent_pgid;
+    if (lineage.parent_pgid.has_value()) {
+        assert(*lineage.parent_pgid != INVALID_PID &&
+               "parent pgid should be none, not INVALID_PID");
+        j->pgid = *lineage.parent_pgid;
         j->mut_flags().job_control = true;
     }
 
@@ -1146,7 +1148,12 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     }
 
     const size_t stdout_read_limit = parser.libdata().read_limit;
-    io_chain_t all_ios = j->all_io_redirections();
+
+    // Get the list of all IOs so we can ensure our pipes do not conflict.
+    io_chain_t all_ios = lineage.block_io;
+    for (const auto &p : j->processes) {
+        all_ios.append(p->io_chain());
+    }
 
     // Handle an exec call.
     if (j->processes.front()->type == process_type_t::exec) {
@@ -1196,8 +1203,8 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
         if (p.get() == deferred_process) {
             deferred_pipes = std::move(proc_pipes);
         } else {
-            if (!exec_process_in_job(parser, p.get(), j, std::move(proc_pipes), all_ios,
-                                     deferred_pipes, stdout_read_limit)) {
+            if (!exec_process_in_job(parser, p.get(), j, lineage.block_io, std::move(proc_pipes),
+                                     all_ios, deferred_pipes, stdout_read_limit)) {
                 exec_error = true;
                 break;
             }
@@ -1208,8 +1215,8 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j) {
     // Now execute any deferred process.
     if (!exec_error && deferred_process) {
         assert(deferred_pipes.write.valid() && "Deferred process should always have a write pipe");
-        if (!exec_process_in_job(parser, deferred_process, j, std::move(deferred_pipes), all_ios,
-                                 {}, stdout_read_limit, true)) {
+        if (!exec_process_in_job(parser, deferred_process, j, lineage.block_io,
+                                 std::move(deferred_pipes), all_ios, {}, stdout_read_limit, true)) {
             exec_error = true;
         }
     }

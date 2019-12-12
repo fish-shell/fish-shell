@@ -168,7 +168,7 @@ bool job_t::should_report_process_exits() const {
     return false;
 }
 
-bool job_t::job_chain_is_fully_constructed() const { return *lineage().root_constructed; }
+bool job_t::job_chain_is_fully_constructed() const { return *root_constructed; }
 
 bool job_t::signal(int signal) {
     // Presumably we are distinguishing between the two cases below because we do
@@ -269,23 +269,11 @@ void process_t::check_generations_before_launch() {
 }
 
 job_t::job_t(job_id_t job_id, const properties_t &props, job_lineage_t lineage)
-    : properties(props), job_lineage(std::move(lineage)), job_id(job_id) {
-    if (!job_lineage.root_constructed) {
-        // We are the root job, share our constructed pointer.
-        job_lineage.root_constructed = this->constructed;
-    }
-}
+    : properties(props),
+      job_id(job_id),
+      root_constructed(lineage.root_constructed ? lineage.root_constructed : this->constructed) {}
 
 job_t::~job_t() { release_job_id(job_id); }
-
-/// Return all the IO redirections. Start with the block IO, then walk over the processes.
-io_chain_t job_t::all_io_redirections() const {
-    io_chain_t result = this->block_io_chain();
-    for (const process_ptr_t &p : this->processes) {
-        result.append(p->io_chain());
-    }
-    return result;
-}
 
 void job_t::mark_constructed() {
     assert(!is_constructed() && "Job was already constructed");

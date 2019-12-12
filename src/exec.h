@@ -13,8 +13,9 @@
 
 /// Execute the processes specified by \p j in the parser \p.
 class job_t;
+struct job_lineage_t;
 class parser_t;
-bool exec_job(parser_t &parser, std::shared_ptr<job_t> j);
+bool exec_job(parser_t &parser, std::shared_ptr<job_t> j, const job_lineage_t &lineage);
 
 /// Evaluate the expression cmd in a subshell, add the outputs into the list l. On return, the
 /// status flag as returned bu \c proc_gfet_last_status will not be changed.

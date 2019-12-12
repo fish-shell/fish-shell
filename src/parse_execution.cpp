@@ -1348,7 +1348,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> jo
         }
 
         // Actually execute the job.
-        if (!exec_job(*this->parser, job)) {
+        if (!exec_job(*this->parser, job, lineage)) {
             remove_job(*this->parser, job.get());
         }
 

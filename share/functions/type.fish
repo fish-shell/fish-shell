@@ -68,6 +68,7 @@ function type --description 'Print the type of a command'
                     case path
                         set -l func_path (functions --details $i)
                         switch $func_path
+                            case "-"
                             case "n/a"
                             case "stdin"
                                 break
@@ -120,6 +121,7 @@ function type --description 'Print the type of a command'
 
         if test $found = 0
             and test $mode != quiet
+            and test $mode != path
             printf (_ "%s: Could not find '%s'\n") type $i >&2
         end
     end

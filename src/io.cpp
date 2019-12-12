@@ -160,7 +160,7 @@ void io_buffer_t::complete_background_fillthread() {
     fillthread_waiter_ = {};
 }
 
-shared_ptr<io_bufferfill_t> io_bufferfill_t::create(const io_chain_t &conflicts,
+shared_ptr<io_bufferfill_t> io_bufferfill_t::create(const fd_set_t &conflicts,
                                                     size_t buffer_limit) {
     // Construct our pipes.
     auto pipes = make_autoclose_pipes(conflicts);
@@ -240,64 +240,37 @@ void io_chain_t::print() const {
     }
 }
 
-int move_fd_to_unused(int fd, const io_chain_t &io_chain, bool cloexec) {
-    if (fd < 0 || io_chain.io_for_fd(fd).get() == nullptr) {
+fd_set_t io_chain_t::fd_set() const {
+    fd_set_t result;
+    for (const auto &io : *this) {
+        result.add(io->fd);
+    }
+    return result;
+}
+
+autoclose_fd_t move_fd_to_unused(autoclose_fd_t fd, const fd_set_t &fdset, bool cloexec) {
+    if (!fd.valid() || !fdset.contains(fd.fd())) {
         return fd;
     }
 
     // We have fd >= 0, and it's a conflict. dup it and recurse. Note that we recurse before
     // anything is closed; this forces the kernel to give us a new one (or report fd exhaustion).
-    int new_fd = fd;
     int tmp_fd;
     do {
-        tmp_fd = dup(fd);
+        tmp_fd = dup(fd.fd());
     } while (tmp_fd < 0 && errno == EINTR);
 
-    assert(tmp_fd != fd);
+    assert(tmp_fd != fd.fd());
     if (tmp_fd < 0) {
         // Likely fd exhaustion.
-        new_fd = -1;
-    } else {
-        // Ok, we have a new candidate fd. Recurse. If we get a valid fd, either it's the same as
-        // what we gave it, or it's a new fd and what we gave it has been closed. If we get a
-        // negative value, the fd also has been closed.
-        if (cloexec) set_cloexec(tmp_fd);
-        new_fd = move_fd_to_unused(tmp_fd, io_chain);
+        return autoclose_fd_t{};
     }
-
-    // We're either returning a new fd or an error. In both cases, we promise to close the old one.
-    assert(new_fd != fd);
-    int saved_errno = errno;
-    exec_close(fd);
-    errno = saved_errno;
-    return new_fd;
+    // Ok, we have a new candidate fd. Recurse.
+    if (cloexec) set_cloexec(tmp_fd);
+    return move_fd_to_unused(autoclose_fd_t{tmp_fd}, fdset, cloexec);
 }
 
-static bool pipe_avoid_conflicts_with_io_chain(int fds[2], const io_chain_t &ios) {
-    bool success = true;
-    for (int i = 0; i < 2; i++) {
-        fds[i] = move_fd_to_unused(fds[i], ios);
-        if (fds[i] < 0) {
-            success = false;
-            break;
-        }
-    }
-
-    // If any fd failed, close all valid fds.
-    if (!success) {
-        int saved_errno = errno;
-        for (int i = 0; i < 2; i++) {
-            if (fds[i] >= 0) {
-                exec_close(fds[i]);
-                fds[i] = -1;
-            }
-        }
-        errno = saved_errno;
-    }
-    return success;
-}
-
-maybe_t<autoclose_pipes_t> make_autoclose_pipes(const io_chain_t &ios) {
+maybe_t<autoclose_pipes_t> make_autoclose_pipes(const fd_set_t &fdset) {
     int pipes[2] = {-1, -1};
 
     if (pipe(pipes) < 0) {
@@ -308,14 +281,13 @@ maybe_t<autoclose_pipes_t> make_autoclose_pipes(const io_chain_t &ios) {
     set_cloexec(pipes[0]);
     set_cloexec(pipes[1]);
 
-    if (!pipe_avoid_conflicts_with_io_chain(pipes, ios)) {
-        // The pipes are closed on failure here.
-        return none();
-    }
-    autoclose_pipes_t result;
-    result.read = autoclose_fd_t(pipes[0]);
-    result.write = autoclose_fd_t(pipes[1]);
-    return {std::move(result)};
+    auto read = move_fd_to_unused(autoclose_fd_t{pipes[0]}, fdset, true);
+    if (!read.valid()) return none();
+
+    auto write = move_fd_to_unused(autoclose_fd_t{pipes[1]}, fdset, true);
+    if (!write.valid()) return none();
+
+    return autoclose_pipes_t(std::move(read), std::move(write));
 }
 
 shared_ptr<const io_data_t> io_chain_t::io_for_fd(int fd) const {

@@ -288,15 +288,13 @@ static bool can_use_posix_spawn_for_job(const std::shared_ptr<job_t> &job) {
     return true;
 }
 
-void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &all_ios) {
+void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_io) {
     // Do a regular launch -  but without forking first...
+    process_t *p = j->processes.front().get();
+    io_chain_t all_ios = block_io;
+    all_ios.append(p->io_chain());
 
     // child_setup_process makes sure signals are properly set up.
-
-    // PCA This is for handling exec. Passing all_ios here matches what fish 2.0.0 and 1.x did.
-    // It's known to be wrong - for example, it means that redirections bound for subsequent
-    // commands in the pipeline will apply to exec. However, using exec in a pipeline doesn't
-    // really make sense, so I'm not trying to fix it here.
     auto redirs = dup2_list_t::resolve_chain(all_ios);
     if (redirs && !child_setup_process(INVALID_PID, false, *redirs)) {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
@@ -311,7 +309,7 @@ void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &all_ios) {
         vars.set_one(L"SHLVL", ENV_GLOBAL | ENV_EXPORT, std::move(shlvl_str));
 
         // launch_process _never_ returns.
-        launch_process_nofork(vars, j->processes.front().get());
+        launch_process_nofork(vars, p);
     } else {
         j->mark_constructed();
         j->processes.front()->completed = true;
@@ -875,18 +873,17 @@ static proc_performer_t get_performer_for_process(process_t *p, const job_t *job
 }
 
 /// Execute a block node or function "process".
-/// \p user_ios contains the list of user-specified ios, used so we can avoid stomping on them with
-/// our pipes.
+/// \p conflicts contains the list of fds which pipes should avoid.
 /// \p allow_buffering if true, permit buffering the output.
 /// \return true on success, false on error.
 static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> j, process_t *p,
-                                       const io_chain_t &user_ios, io_chain_t io_chain,
+                                       const fd_set_t &conflicts, io_chain_t io_chain,
                                        bool allow_buffering) {
     // Create an output buffer if we're piping to another process.
     shared_ptr<io_bufferfill_t> block_output_bufferfill{};
     if (!p->is_last_in_job && allow_buffering) {
         // Be careful to handle failure, e.g. too many open fds.
-        block_output_bufferfill = io_bufferfill_t::create(user_ios);
+        block_output_bufferfill = io_bufferfill_t::create(conflicts);
         if (!block_output_bufferfill) {
             job_mark_process_as_failed(j, p);
             return false;
@@ -940,7 +937,7 @@ static bool exec_block_or_func_process(parser_t &parser, std::shared_ptr<job_t> 
 /// certain buffering works. \returns true on success, false on exec error.
 static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<job_t> j,
                                 const io_chain_t &block_io, autoclose_pipes_t pipes,
-                                const io_chain_t &all_ios, const autoclose_pipes_t &deferred_pipes,
+                                const fd_set_t &conflicts, const autoclose_pipes_t &deferred_pipes,
                                 size_t stdout_read_limit, bool is_deferred_run = false) {
     // The write pipe (destined for stdout) needs to occur before redirections. For example,
     // with a redirection like this:
@@ -1025,7 +1022,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
             // Allow buffering unless this is a deferred run. If deferred, then processes after us
             // were already launched, so they are ready to receive (or reject) our output.
             bool allow_buffering = !is_deferred_run;
-            if (!exec_block_or_func_process(parser, j, p, all_ios, process_net_io_chain,
+            if (!exec_block_or_func_process(parser, j, p, conflicts, process_net_io_chain,
                                             allow_buffering)) {
                 return false;
             }
@@ -1149,15 +1146,17 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j, const job_lineage_t &lineag
 
     const size_t stdout_read_limit = parser.libdata().read_limit;
 
-    // Get the list of all IOs so we can ensure our pipes do not conflict.
-    io_chain_t all_ios = lineage.block_io;
+    // Get the list of all FDs so we can ensure our pipes do not conflict.
+    fd_set_t conflicts = lineage.block_io.fd_set();
     for (const auto &p : j->processes) {
-        all_ios.append(p->io_chain());
+        for (const auto &io : p->io_chain()) {
+            conflicts.add(io->fd);
+        }
     }
 
     // Handle an exec call.
     if (j->processes.front()->type == process_type_t::exec) {
-        internal_exec(parser.vars(), j.get(), all_ios);
+        internal_exec(parser.vars(), j.get(), lineage.block_io);
         // internal_exec only returns if it failed to set up redirections.
         // In case of an successful exec, this code is not reached.
         bool status = !j->flags().negate;
@@ -1188,7 +1187,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j, const job_lineage_t &lineag
         autoclose_pipes_t proc_pipes;
         proc_pipes.read = std::move(pipe_next_read);
         if (!p->is_last_in_job) {
-            auto pipes = make_autoclose_pipes(all_ios);
+            auto pipes = make_autoclose_pipes(conflicts);
             if (!pipes) {
                 debug(1, PIPE_ERROR);
                 wperror(L"pipe");
@@ -1204,7 +1203,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j, const job_lineage_t &lineag
             deferred_pipes = std::move(proc_pipes);
         } else {
             if (!exec_process_in_job(parser, p.get(), j, lineage.block_io, std::move(proc_pipes),
-                                     all_ios, deferred_pipes, stdout_read_limit)) {
+                                     conflicts, deferred_pipes, stdout_read_limit)) {
                 exec_error = true;
                 break;
             }
@@ -1216,7 +1215,8 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j, const job_lineage_t &lineag
     if (!exec_error && deferred_process) {
         assert(deferred_pipes.write.valid() && "Deferred process should always have a write pipe");
         if (!exec_process_in_job(parser, deferred_process, j, lineage.block_io,
-                                 std::move(deferred_pipes), all_ios, {}, stdout_read_limit, true)) {
+                                 std::move(deferred_pipes), conflicts, {}, stdout_read_limit,
+                                 true)) {
             exec_error = true;
         }
     }
@@ -1259,7 +1259,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
     // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may
     // be null.
     std::shared_ptr<io_buffer_t> buffer;
-    if (auto bufferfill = io_bufferfill_t::create(io_chain_t{}, ld.read_limit)) {
+    if (auto bufferfill = io_bufferfill_t::create(fd_set_t{}, ld.read_limit)) {
         if (parser.eval(cmd, io_chain_t{bufferfill}, SUBST) == 0) {
             subcommand_statuses = parser.get_last_statuses();
         }

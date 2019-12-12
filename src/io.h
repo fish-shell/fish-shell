@@ -19,6 +19,24 @@
 
 using std::shared_ptr;
 
+/// A simple set of FDs.
+struct fd_set_t {
+    std::vector<bool> fds;
+
+    void add(int fd) {
+        assert(fd >= 0 && "Invalid fd");
+        if ((size_t)fd >= fds.size()) {
+            fds.resize(fd + 1);
+        }
+        fds[fd] = true;
+    }
+
+    bool contains(int fd) const {
+        assert(fd >= 0 && "Invalid fd");
+        return (size_t)fd < fds.size() && fds[fd];
+    }
+};
+
 /// separated_buffer_t is composed of a sequence of elements, some of which may be explicitly
 /// separated (e.g. through string spit0) and some of which the separation is inferred. This enum
 /// tracks the type.
@@ -257,9 +275,9 @@ class io_bufferfill_t : public io_data_t {
     /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
     /// \returns nullptr on failure, e.g. too many open fds.
     ///
-    /// \param conflicts A set of IO redirections. The function ensures that any pipe it makes does
+    /// \param conflicts A set of fds. The function ensures that any pipe it makes does
     /// not conflict with an fd redirection in this list.
-    static shared_ptr<io_bufferfill_t> create(const io_chain_t &conflicts, size_t buffer_limit = 0);
+    static shared_ptr<io_bufferfill_t> create(const fd_set_t &conflicts, size_t buffer_limit = 0);
 
     /// Reset the receiver (possibly closing the write end of the pipe), and complete the fillthread
     /// of the buffer. \return the buffer.
@@ -343,6 +361,9 @@ class io_chain_t : public std::vector<io_data_ref_t> {
 
     /// Output debugging information to stderr.
     void print() const;
+
+    /// \return the set of redirected FDs.
+    fd_set_t fd_set() const;
 };
 
 /// Helper type returned from making autoclose pipes.
@@ -360,13 +381,13 @@ struct autoclose_pipes_t {
 /// Call pipe(), populating autoclose fds, avoiding conflicts.
 /// The pipes are marked CLO_EXEC.
 /// \return pipes on success, none() on error.
-maybe_t<autoclose_pipes_t> make_autoclose_pipes(const io_chain_t &ios);
+maybe_t<autoclose_pipes_t> make_autoclose_pipes(const fd_set_t &fdset);
 
-/// If the given fd is used by the io chain, duplicates it repeatedly until an fd not used in the io
-/// chain is found, or we run out. If we return a new fd or an error, closes the old one.
-/// If \p cloexec is set, any fd created is marked close-on-exec.
-/// \returns -1 on failure (in which case the given fd is still closed).
-int move_fd_to_unused(int fd, const io_chain_t &io_chain, bool cloexec = true);
+/// If the given fd is present in \p fdset, duplicates it repeatedly until an fd not used in the set
+/// is found or we run out. If we return a new fd or an error, closes the old one. If \p cloexec is
+/// set, any fd created is marked close-on-exec. \returns -1 on failure (in which case the given fd
+/// is still closed).
+autoclose_fd_t move_fd_to_unused(autoclose_fd_t fd, const fd_set_t &fdset, bool cloexec = true);
 
 /// Class representing the output that a builtin can generate.
 class output_stream_t {

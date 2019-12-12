@@ -54,9 +54,10 @@
 /// The signals that signify crashes to us.
 static const int crashsignals[] = {SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGSYS};
 
-static relaxed_atomic_bool_t s_is_interactive_session{false};
-bool is_interactive_session() { return s_is_interactive_session; }
-void set_interactive_session(bool flag) { s_is_interactive_session = flag; }
+static relaxed_atomic_t<session_interactivity_t> s_is_interactive_session{
+    session_interactivity_t::not_interactive};
+session_interactivity_t session_interactivity() { return s_is_interactive_session; }
+void set_interactive_session(session_interactivity_t flag) { s_is_interactive_session = flag; }
 
 static relaxed_atomic_bool_t s_is_login{false};
 bool get_login() { return s_is_login; }
@@ -245,7 +246,7 @@ static void handle_child_status(process_t *proc, proc_status_t status) {
     if (status.signal_exited()) {
         int sig = status.signal_code();
         if (sig == SIGINT || sig == SIGQUIT) {
-            if (is_interactive_session()) {
+            if (session_interactivity() != session_interactivity_t::not_interactive) {
                 // In an interactive session, tell the principal parser to skip all blocks we're
                 // executing so control-C returns control to the user.
                 parser_t::skip_all_blocks();

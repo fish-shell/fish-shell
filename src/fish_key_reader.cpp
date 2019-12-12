@@ -287,7 +287,8 @@ static void install_our_signal_handlers() {
 
 /// Setup our environment (e.g., tty modes), process key strokes, then reset the environment.
 static void setup_and_process_keys(bool continuous_mode) {
-    set_interactive_session(true);  // by definition this program is interactive
+    set_interactive_session(
+        session_interactivity_t::implied);  // by definition this program is interactive
     set_main_thread();
     setup_fork_guards();
     env_init();

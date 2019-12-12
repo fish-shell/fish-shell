@@ -449,7 +449,8 @@ proc_status_t builtin_run(parser_t &parser, int job_pgid, wchar_t **argv, io_str
     if (const builtin_data_t *data = builtin_lookup(argv[0])) {
         // If we are interactive, save the foreground pgroup and restore it after in case the
         // builtin needs to read from the terminal. See #4540.
-        bool grab_tty = is_interactive_session() && isatty(streams.stdin_fd);
+        bool grab_tty = session_interactivity() != session_interactivity_t::not_interactive &&
+                        isatty(streams.stdin_fd);
         pid_t pgroup_to_restore = grab_tty ? terminal_acquire_before_builtin(job_pgid) : -1;
         int ret = data->func(parser, streams, argv);
         if (pgroup_to_restore >= 0) {

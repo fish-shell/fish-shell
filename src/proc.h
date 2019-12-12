@@ -475,8 +475,9 @@ class job_t {
 };
 
 /// Whether this shell is attached to the keyboard at all.
-bool is_interactive_session();
-void set_interactive_session(bool flag);
+enum class session_interactivity_t { not_interactive, implied, explicit_ };
+session_interactivity_t session_interactivity();
+void set_interactive_session(session_interactivity_t flag);
 
 /// Whether we are a login shell.
 bool get_login();

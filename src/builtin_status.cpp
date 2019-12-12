@@ -384,7 +384,7 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
         case STATUS_IS_INTERACTIVE: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = !is_interactive_session();
+            retval = session_interactivity() == session_interactivity_t::not_interactive ? 1 : 0;
             break;
         }
         case STATUS_IS_COMMAND_SUB: {

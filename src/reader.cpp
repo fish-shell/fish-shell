@@ -1772,7 +1772,8 @@ static void reader_interactive_init(parser_t &parser) {
     // It shouldn't be necessary to place fish in its own process group and force control
     // of the terminal, but that works around fish being started with an invalid pgroup,
     // such as when launched via firejail (#5295)
-    if (shell_pgid == 0) {
+    // Also become the process group leader if flag -i/--interactive was given (#5909).
+    if (shell_pgid == 0 || is_interactive_session() == SESSION_INTERACTIVE_EXPLICIT) {
         shell_pgid = getpid();
         if (setpgid(shell_pgid, shell_pgid) < 0) {
             FLOG(error, _(L"Failed to assign shell to its own process group"));

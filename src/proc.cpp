@@ -54,9 +54,9 @@
 /// The signals that signify crashes to us.
 static const int crashsignals[] = {SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGSYS};
 
-static relaxed_atomic_bool_t s_is_interactive_session{false};
-bool is_interactive_session() { return s_is_interactive_session; }
-void set_interactive_session(bool flag) { s_is_interactive_session = flag; }
+static relaxed_atomic_t<session_interactivity_t> s_is_interactive_session{SESSION_NON_INTERACTIVE};
+session_interactivity_t is_interactive_session() { return s_is_interactive_session; }
+void set_interactive_session(session_interactivity_t flag) { s_is_interactive_session = flag; }
 
 static relaxed_atomic_bool_t s_is_login{false};
 bool get_login() { return s_is_login; }

@@ -20,6 +20,9 @@ Description
 
 Multiple lines are not supported in ``fish_right_prompt``.
 
+If ``fish_right_prompt`` returns a line containing only ``TRANSIENT_RPROMPT``, right prompt will be removed from display when accepting a command line.
+This may be useful with terminals with other cut/paste methods.
+Corresponds to setting ``TRANSIENT_RPROMPT`` in zsh.
 
 Example
 -------
@@ -34,4 +37,13 @@ A simple right prompt:
         date '+%m/%d/%y'
     end
 
+A transient right prompt:
 
+
+
+::
+
+    function fish_right_prompt -d "Write out the transient right prompt"
+        echo TRANSIENT_RPROMPT
+        date '+%m/%d/%y'
+    end

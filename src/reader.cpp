@@ -96,6 +96,9 @@
 /// The name of the function that prints the fish right prompt (RPROMPT).
 #define RIGHT_PROMPT_FUNCTION_NAME L"fish_right_prompt"
 
+/// The name of the keyword that makes the fish right prompt transient (TRANSIENT_RPROMPT).
+#define TRANSIENT_RIGHT_PROMPT_KEYWORD L"TRANSIENT_RPROMPT"
+
 /// The name of the function to use in place of the left prompt if we're in the debugger context.
 #define DEBUG_PROMPT_FUNCTION_NAME L"fish_breakpoint_prompt"
 
@@ -367,6 +370,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     /// The prompt commands.
     wcstring left_prompt;
     wcstring right_prompt;
+    bool right_prompt_is_transient{false};
     /// The output of the last evaluation of the prompt command.
     wcstring left_prompt_buff;
     wcstring mode_prompt_buff;
@@ -441,7 +445,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
         : parser_ref(std::move(parser)), inputter(*parser_ref), history(hist) {}
 
     void update_buff_pos(editable_line_t *el, size_t buff_pos);
-    void repaint();
+    void repaint(bool no_right_prompt = false);
     void kill(editable_line_t *el, size_t begin_idx, size_t length, int mode, int newv);
     bool insert_string(editable_line_t *el, const wcstring &str);
 
@@ -604,7 +608,7 @@ void reader_data_t::update_buff_pos(editable_line_t *el, size_t buff_pos) {
 
 /// Repaint the entire commandline. This means reset and clear the commandline, write the prompt,
 /// perform syntax highlighting, write the commandline and move the cursor.
-void reader_data_t::repaint() {
+void reader_data_t::repaint(bool no_right_prompt) {
     editable_line_t *cmd_line = &command_line;
     // Update the indentation.
     indents = parse_util_compute_indents(cmd_line->text);
@@ -645,7 +649,7 @@ void reader_data_t::repaint() {
     size_t cursor_position = focused_on_pager ? pager.cursor_position() : cmd_line->position;
 
     // Prepend the mode prompt to the left prompt.
-    s_write(&screen, mode_prompt_buff + left_prompt_buff, right_prompt_buff, full_line,
+    s_write(&screen, mode_prompt_buff + left_prompt_buff, no_right_prompt ? L"" : right_prompt_buff, full_line,
             cmd_line->size(), colors, indents, cursor_position, current_page_rendering,
             focused_on_pager);
 
@@ -939,9 +943,14 @@ void reader_data_t::exec_prompt() {
             wcstring_list_t prompt_list;
             // Status is ignored.
             exec_subshell(right_prompt, parser(), prompt_list, apply_exit_status);
+            right_prompt_is_transient = false;
             for (const auto &i : prompt_list) {
                 // Right prompt does not support multiple lines, so just concatenate all of them.
-                right_prompt_buff += i;
+                if (i.compare(TRANSIENT_RIGHT_PROMPT_KEYWORD) == 0) {
+                    right_prompt_is_transient = true;
+                } else {
+                    right_prompt_buff += i;
+                }
             }
         }
     }
@@ -2774,7 +2783,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 }
                 rls.finished = true;
                 update_buff_pos(&command_line, command_line.size());
-                repaint();
+                repaint(right_prompt_is_transient);
             } else if (command_test_result == PARSER_TEST_INCOMPLETE) {
                 // We are incomplete, continue editing.
                 insert_char(el, L'\n');

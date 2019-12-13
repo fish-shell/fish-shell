@@ -4,13 +4,11 @@
 # This function is called by the __fish_on_interactive function, which is defined in config.fish.
 #
 function __fish_config_interactive -d "Initializations that should be performed when entering interactive mode"
-    if not set -q __fish_init_3_x
+    if test $__fish_initialized -lt 3000
         # Perform transitions relevant to going from fish 2.x to 3.x.
 
         # Migrate old universal abbreviations to the new scheme.
         __fish_abbr_old | source
-
-        set -U __fish_init_3_x
     end
 
     # Make sure this function is only run once.
@@ -24,7 +22,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     if not set -q fish_greeting
         set -l line1 (_ 'Welcome to fish, the friendly interactive shell')
         set -l line2 ''
-        if not set -q __fish_init_2_3_0
+        if test $__fish_initialized -lt 2300
             set line2 \n(_ 'Type `help` for instructions on how to use fish')
         end
         set -U fish_greeting "$line1$line2"
@@ -44,7 +42,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
     #
     # If we are starting up for the first time, set various defaults.
-    if not set -q __fish_init_3_1_0
+    if test $__fish_initialized -lt 3100
 
         # Regular syntax highlighting colors
         __init_uvar fish_color_normal normal
@@ -89,9 +87,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
         # Directory history colors
         #
         __init_uvar fish_color_history_current --bold
-
-        set -e __fish_init_2_39_8
-        set -U __fish_init_3_1_0
     end
 
     #
@@ -338,4 +333,8 @@ function __fish_config_interactive -d "Initializations that should be performed 
             end
         end
     end
+
+    # Bump this whenever some code below needs to run once when upgrading to a new version.
+    # The universal variable __fish_initialized is initialized in share/config.fish.
+    set __fish_initialized 3100
 end

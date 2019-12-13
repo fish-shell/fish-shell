@@ -8,6 +8,16 @@ set -g IFS \n\ \t
 set -qg __fish_added_user_paths
 or set -g __fish_added_user_paths
 
+# For one-off upgrades of the fish version, see __fish_config_interactive.fish
+if not set -q __fish_initialized
+    set -U __fish_initialized 0
+    if set -q __fish_init_2_39_8
+        set __fish_initialized 2398
+    else if set -q __fish_init_2_3_0
+        set __fish_initialized 2300
+    end
+end
+
 #
 # Create the default command_not_found handler
 #
@@ -154,7 +164,7 @@ end
 # Upgrade pre-existing abbreviations from the old "key=value" to the new "key value" syntax.
 # This needs to be in share/config.fish because __fish_config_interactive is called after sourcing
 # config.fish, which might contain abbr calls.
-if not set -q __fish_init_2_3_0
+if test $__fish_initialized -lt 2300
     if set -q fish_user_abbreviations
         set -l fab
         for abbr in $fish_user_abbreviations
@@ -162,7 +172,6 @@ if not set -q __fish_init_2_3_0
         end
         set fish_user_abbreviations $fab
     end
-    set -U __fish_init_2_3_0
 end
 
 #

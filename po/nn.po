@@ -1543,13 +1543,10 @@ msgid "There are still jobs active:\n"
 msgstr ""
 
 #: src/reader.cpp:2161
-#, fuzzy
 msgid ""
 "\n"
 "   PID  Command\n"
 msgstr ""
-"\n"
-"   PID  Command\n"
 
 #: src/reader.cpp:2170
 msgid "A second attempt to exit will terminate them.\n"
@@ -3272,9 +3269,8 @@ msgid "%s %s: Abbreviation %s cannot have spaces in the word\\n"
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:4
-#, fuzzy
 msgid "%s %s: Expected one argument\\n"
-msgstr "%s %s: Expected one argument\\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:6
 #: /tmp/fish/explicit/share/functions/abbr.fish:10

@@ -7,13 +7,6 @@
 #include "io.h"
 #include "wutil.h"
 
-#define NOCLOB_ERROR _(L"The file '%ls' already exists")
-
-#define FILE_ERROR _(L"An error occurred while redirecting file '%ls'")
-
-/// Base open mode to pass to calls to open.
-#define OPEN_MASK 0666
-
 dup2_list_t::~dup2_list_t() = default;
 
 maybe_t<int> redirection_spec_t::get_target_as_fd() const {

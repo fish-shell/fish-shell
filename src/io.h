@@ -192,6 +192,7 @@ class io_close_t : public io_data_t {
     explicit io_close_t(int f) : io_data_t(io_mode_t::close, f) {}
 
     void print() const override;
+    ~io_close_t() override;
 };
 
 class io_fd_t : public io_data_t {
@@ -205,6 +206,8 @@ class io_fd_t : public io_data_t {
     const bool user_supplied;
 
     void print() const override;
+
+    ~io_fd_t() override;
 
     io_fd_t(int f, int old, bool us)
         : io_data_t(io_mode_t::fd, f), old_fd(old), user_supplied(us) {}

@@ -63,9 +63,6 @@ class dup2_list_t {
     /// The list of actions.
     std::vector<action_t> actions_;
 
-    /// The list of fds that we opened, and are responsible for closing.
-    std::vector<autoclose_fd_t> opened_fds_;
-
     /// Append a dup2 action.
     void add_dup2(int src, int target) {
         assert(src >= 0 && target >= 0 && "Invalid fd in add_dup2");
@@ -85,7 +82,7 @@ class dup2_list_t {
    public:
     ~dup2_list_t();
 
-    /// Disable copying because we own our fds.
+    /// Disable copying.
     dup2_list_t(const dup2_list_t &) = delete;
     void operator=(const dup2_list_t &) = delete;
 

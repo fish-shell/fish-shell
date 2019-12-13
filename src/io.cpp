@@ -208,9 +208,9 @@ std::shared_ptr<io_buffer_t> io_bufferfill_t::finish(std::shared_ptr<io_bufferfi
 }
 
 io_pipe_t::~io_pipe_t() = default;
-
+io_fd_t::~io_fd_t() = default;
+io_close_t::~io_close_t() = default;
 io_file_t::~io_file_t() = default;
-
 io_bufferfill_t::~io_bufferfill_t() = default;
 
 io_buffer_t::~io_buffer_t() {

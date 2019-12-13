@@ -50,12 +50,6 @@
 /// File descriptor redirection error message.
 #define FD_ERROR _(L"An error occurred while redirecting file descriptor %d")
 
-/// File redirection error message.
-#define FILE_ERROR _(L"An error occurred while redirecting file '%ls'")
-
-/// Base open mode to pass to calls to open.
-#define OPEN_MASK 0666
-
 /// Number of calls to fork() or posix_spawn().
 static relaxed_atomic_t<int> s_fork_count{0};
 
@@ -69,9 +63,11 @@ void exec_close(int fd) {
     }
 
     while (close(fd) == -1) {
-        debug(1, FD_ERROR, fd);
-        wperror(L"close");
-        break;
+        if (errno != EINTR) {
+            debug(1, FD_ERROR, fd);
+            wperror(L"close");
+            break;
+        }
     }
 }
 
@@ -179,20 +175,6 @@ static void launch_process_nofork(env_stack_t &vars, process_t *p) {
     restore_term_mode();
     // Bounce to launch_process. This never returns.
     safe_launch_process(p, actual_cmd, argv_array.get(), envv);
-}
-
-/// Morph an io redirection chain into redirections suitable for passing to eval, and then call
-/// eval.
-///
-/// \param parsed_source the parsed source code containing the node to evaluate
-/// \param node the node to evaluate
-/// \param ios the io redirections to be performed on this block
-template <typename T>
-void internal_exec_helper(parser_t &parser, parsed_source_ref_t parsed_source, tnode_t<T> node,
-                          job_lineage_t lineage) {
-    assert(parsed_source && node && "exec_helper missing source or without node");
-    parser.eval_node(parsed_source, node, TOP, std::move(lineage));
-    job_reap(parser, false);
 }
 
 // Returns whether we can use posix spawn for a given process in a given job.
@@ -761,7 +743,7 @@ static proc_performer_t get_performer_for_process(process_t *p, const job_t *job
         tnode_t<grammar::statement> node = p->internal_block_node;
         assert(source && node && "Process is missing node info");
         return [=](parser_t &parser) {
-            internal_exec_helper(parser, source, node, lineage);
+            parser.eval_node(source, node, TOP, lineage);
             int status = parser.get_last_status();
             // FIXME: setting the status this way is dangerous nonsense, we need to decode the
             // status properly if it was a signal.
@@ -779,7 +761,7 @@ static proc_performer_t get_performer_for_process(process_t *p, const job_t *job
             const auto &ld = parser.libdata();
             auto saved_exec_count = ld.exec_count;
             const block_t *fb = function_prepare_environment(parser, *argv, *props);
-            internal_exec_helper(parser, props->parsed_source, props->body_node, lineage);
+            parser.eval_node(props->parsed_source, props->body_node, TOP, lineage);
             function_restore_environment(parser, fb);
 
             // If the function did not execute anything, treat it as success.

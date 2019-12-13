@@ -1528,7 +1528,7 @@ complete -f -c git -n '__fish_git_using_command restore' -l ignore-unmerged -d '
 complete -f -c git -n '__fish_git_using_command restore' -l ignore-skip-worktree-bits -d 'Ignore the sparse-checkout file and unconditionally restore any files in <pathspec>'
 complete -f -c git -n '__fish_git_using_command restore' -l overlay -d 'Never remove files when restoring'
 complete -f -c git -n '__fish_git_using_command restore' -l no-overlay -d 'Remove files when restoring (default)'
-complete -f -c git -n '__fish_git_using_command restore' -a '(__fish_git_files modified deleted unmerged)'
+complete -f -c git -n '__fish_git_using_command restore; and not contains -- --staged (commandline -opc)' -a '(__fish_git_files modified deleted unmerged)'
 complete -f -c git -n '__fish_git_using_command restore; and contains -- --staged (commandline -opc)' -a '(__fish_git_files added modified-staged deleted-staged renamed copied)'
 complete -f -c git -n '__fish_git_using_command restore; and __fish_contains_opt -s s source' -a '(git ls-files)'
 # switch options

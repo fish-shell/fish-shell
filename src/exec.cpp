@@ -292,7 +292,9 @@ void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_io) {
     // Do a regular launch -  but without forking first...
     process_t *p = j->processes.front().get();
     io_chain_t all_ios = block_io;
-    all_ios.append(p->io_chain());
+    if (!all_ios.append_from_specs(p->redirection_specs())) {
+        return;
+    }
 
     // child_setup_process makes sure signals are properly set up.
     auto redirs = dup2_list_t::resolve_chain(all_ios);
@@ -532,15 +534,19 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
     if (local_builtin_stdin == -1) return false;
 
     // Determine if we have a "direct" redirection for stdin.
-    bool stdin_is_directly_redirected;
+    bool stdin_is_directly_redirected = false;
     if (!p->is_first_in_job) {
         // We must have a pipe
         stdin_is_directly_redirected = true;
     } else {
         // We are not a pipe. Check if there is a redirection local to the process
         // that's not io_mode_t::close.
-        const shared_ptr<const io_data_t> stdin_io = p->io_chain().io_for_fd(STDIN_FILENO);
-        stdin_is_directly_redirected = stdin_io && stdin_io->io_mode != io_mode_t::close;
+        for (const auto &redir : p->redirection_specs()) {
+            if (redir.fd == STDIN_FILENO && !redir.is_close()) {
+                stdin_is_directly_redirected = true;
+                break;
+            }
+        }
     }
 
     streams.stdin_fd = local_builtin_stdin;
@@ -975,13 +981,18 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
 
     // The IO chain for this process.
     io_chain_t process_net_io_chain = block_io;
+
     if (pipes.write.valid()) {
         process_net_io_chain.push_back(std::make_shared<io_pipe_t>(
             p->pipe_write_fd, false /* not input */, std::move(pipes.write)));
     }
 
-    // The explicit IO redirections associated with the process.
-    process_net_io_chain.append(p->io_chain());
+    // Append IOs from the process's redirection specs.
+    // This may fail.
+    if (!process_net_io_chain.append_from_specs(p->redirection_specs())) {
+        // Error.
+        return false;
+    }
 
     // Read pipe goes last.
     shared_ptr<io_pipe_t> pipe_read{};
@@ -1149,8 +1160,8 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j, const job_lineage_t &lineag
     // Get the list of all FDs so we can ensure our pipes do not conflict.
     fd_set_t conflicts = lineage.block_io.fd_set();
     for (const auto &p : j->processes) {
-        for (const auto &io : p->io_chain()) {
-            conflicts.add(io->fd);
+        for (const auto &spec : p->redirection_specs()) {
+            conflicts.add(spec.fd);
         }
     }
 

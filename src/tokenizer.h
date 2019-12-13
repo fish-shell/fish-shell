@@ -8,6 +8,7 @@
 #include "common.h"
 #include "maybe.h"
 #include "parse_constants.h"
+#include "redirection.h"
 
 /// Token types.
 enum class token_type_t {
@@ -20,14 +21,6 @@ enum class token_type_t {
     redirect,    /// redirection token
     background,  /// send job to bg token
     comment,     /// comment token
-};
-
-enum class redirection_mode_t {
-    overwrite,  // normal redirection: > file.txt
-    append,     // appending redirection: >> file.txt
-    input,      // input redirection: < file.txt
-    fd,         // fd redirection: 2>&1
-    noclob      // noclobber redirection: >? file.txt
 };
 
 /// Flag telling the tokenizer to accept incomplete parameters, i.e. parameters with mismatching

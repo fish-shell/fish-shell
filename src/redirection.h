@@ -4,10 +4,49 @@
 #include <vector>
 
 #include "common.h"
-#include "io.h"
 #include "maybe.h"
 
-/// This file supports "applying" redirections.
+/// This file supports specifying and applying redirections.
+
+enum class redirection_mode_t {
+    overwrite,  // normal redirection: > file.txt
+    append,     // appending redirection: >> file.txt
+    input,      // input redirection: < file.txt
+    fd,         // fd redirection: 2>&1
+    noclob      // noclobber redirection: >? file.txt
+};
+
+class io_chain_t;
+
+/// A struct which represents a redirection specification from the user.
+/// Here the file descriptors don't represent open files - it's purely textual.
+struct redirection_spec_t {
+    /// The redirected fd, or -1 on overflow.
+    /// In the common case of a pipe, this is 1 (STDOUT_FILENO).
+    /// For example, in the case of "3>&1" this will be 3.
+    int fd{-1};
+
+    /// The redirection mode.
+    redirection_mode_t mode{redirection_mode_t::overwrite};
+
+    /// The target of the redirection.
+    /// For example in "3>&1", this will be "1".
+    /// In "< file.txt" this will be "file.txt".
+    wcstring target{};
+
+    /// \return if this is a close-type redirection.
+    bool is_close() const { return mode == redirection_mode_t::fd && target == L"-"; }
+
+    /// Attempt to parse target as an fd. Return the fd, or none() if none.
+    maybe_t<int> get_target_as_fd() const;
+
+    /// \return the open flags for this redirection.
+    int oflags() const;
+
+    redirection_spec_t(int fd, redirection_mode_t mode, wcstring target)
+        : fd(fd), mode(mode), target(std::move(target)) {}
+};
+using redirection_spec_list_t = std::vector<redirection_spec_t>;
 
 /// A class representing a sequence of basic redirections.
 class dup2_list_t {

@@ -4,6 +4,7 @@
 
 #include <fcntl.h>
 
+#include "io.h"
 #include "wutil.h"
 
 #define NOCLOB_ERROR _(L"The file '%ls' already exists")
@@ -14,6 +15,28 @@
 #define OPEN_MASK 0666
 
 dup2_list_t::~dup2_list_t() = default;
+
+maybe_t<int> redirection_spec_t::get_target_as_fd() const {
+    errno = 0;
+    int result = fish_wcstoi(target.c_str());
+    if (errno || result < 0) return none();
+    return result;
+}
+
+int redirection_spec_t::oflags() const {
+    switch (mode) {
+        case redirection_mode_t::append:
+            return O_CREAT | O_APPEND | O_WRONLY;
+        case redirection_mode_t::overwrite:
+            return O_CREAT | O_WRONLY | O_TRUNC;
+        case redirection_mode_t::noclob:
+            return O_CREAT | O_EXCL | O_WRONLY;
+        case redirection_mode_t::input:
+            return O_RDONLY;
+        case redirection_mode_t::fd:
+            DIE("Not a file redirection");
+    }
+}
 
 maybe_t<dup2_list_t> dup2_list_t::resolve_chain(const io_chain_t &io_chain) {
     ASSERT_IS_NOT_FORKED_CHILD();

@@ -125,9 +125,10 @@ class parse_execution_context_t {
                                                          wcstring_list_t *out_arguments,
                                                          globspec_t glob_behavior);
 
-    // Determines the IO chain. Returns true on success, false on error.
-    bool determine_io_chain(tnode_t<grammar::arguments_or_redirections_list> node,
-                            io_chain_t *out_chain);
+    // Determines the list of redirections for a node. Returns none() on failure, for example, an
+    // invalid fd.
+    bool determine_redirections(tnode_t<grammar::arguments_or_redirections_list> node,
+                                redirection_spec_list_t *out_redirs);
 
     parse_execution_result_t run_1_job(tnode_t<grammar::job> job, const block_t *associated_block);
     parse_execution_result_t run_job_conjunction(tnode_t<grammar::job_conjunction> job_expr,

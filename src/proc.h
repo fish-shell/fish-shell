@@ -172,7 +172,7 @@ class process_t {
    private:
     null_terminated_array_t<wchar_t> argv_array;
 
-    io_chain_t process_io_chain;
+    redirection_spec_list_t proc_redirection_specs;
 
     // No copying.
     process_t(const process_t &rhs) = delete;
@@ -221,10 +221,11 @@ class process_t {
         return argv ? argv[0] : nullptr;
     }
 
-    /// IO chain getter and setter.
-    const io_chain_t &io_chain() const { return process_io_chain; }
-
-    void set_io_chain(io_chain_t chain) { this->process_io_chain = std::move(chain); }
+    /// Redirection list getter and setter.
+    const redirection_spec_list_t &redirection_specs() const { return proc_redirection_specs; }
+    void set_redirection_specs(redirection_spec_list_t specs) {
+        this->proc_redirection_specs = std::move(specs);
+    }
 
     /// Store the current topic generations. That is, right before the process is launched, record
     /// the generations of all topics; then we can tell which generation values have changed after

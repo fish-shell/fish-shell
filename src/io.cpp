@@ -222,6 +222,30 @@ void io_chain_t::append(const io_chain_t &chain) {
     this->insert(this->end(), chain.begin(), chain.end());
 }
 
+bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs) {
+    for (const auto &spec : specs) {
+        switch (spec.mode) {
+            case redirection_mode_t::fd: {
+                if (spec.is_close()) {
+                    this->push_back(make_unique<io_close_t>(spec.fd));
+                } else {
+                    auto target_fd = spec.get_target_as_fd();
+                    assert(target_fd.has_value() &&
+                           "fd redirection should have been validated already");
+                    this->push_back(
+                        make_unique<io_fd_t>(spec.fd, *target_fd, true /* user supplied */));
+                }
+                break;
+            }
+            default: {
+                this->push_back(make_unique<io_file_t>(spec.fd, spec.target, spec.oflags()));
+                break;
+            }
+        }
+    }
+    return true;
+}
+
 void io_chain_t::print() const {
     if (this->empty()) {
         std::fwprintf(stderr, L"Empty chain %p\n", this);

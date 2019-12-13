@@ -16,6 +16,7 @@
 #include "env.h"
 #include "global_safety.h"
 #include "maybe.h"
+#include "redirection.h"
 
 using std::shared_ptr;
 
@@ -358,6 +359,10 @@ class io_chain_t : public std::vector<io_data_ref_t> {
     /// \return the last io redirection in the chain for the specified file descriptor, or nullptr
     /// if none.
     io_data_ref_t io_for_fd(int fd) const;
+
+    /// Attempt to resolve a list of redirection specs to IOs, appending to 'this'.
+    /// \return true on success, false on error, in which case an error will have been printed.
+    bool append_from_specs(const redirection_spec_list_t &specs);
 
     /// Output debugging information to stderr.
     void print() const;

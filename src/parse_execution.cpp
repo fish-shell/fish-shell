@@ -82,8 +82,9 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
 }
 
 /// Get a redirection from stderr to stdout (i.e. 2>&1).
-static std::shared_ptr<io_data_t> get_stderr_merge() {
-    return std::make_shared<io_fd_t>(STDERR_FILENO, STDOUT_FILENO, true /* user_supplied */);
+static redirection_spec_t get_stderr_merge() {
+    const wchar_t *stdout_fileno_str = L"1";
+    return redirection_spec_t{STDERR_FILENO, redirection_mode_t::fd, stdout_fileno_str};
 }
 
 parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p,
@@ -832,7 +833,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
 
     // Produce the full argument list and the set of IO redirections.
     wcstring_list_t cmd_args;
-    io_chain_t process_io_chain;
+    redirection_spec_list_t redirections;
     if (use_implicit_cd) {
         // Implicit cd is simple.
         cmd_args = {L"cd", cmd};
@@ -858,7 +859,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
         }
 
         // The set of IO redirections that we construct for the process.
-        if (!this->determine_io_chain(statement.child<1>(), &process_io_chain)) {
+        if (!this->determine_redirections(statement.child<1>(), &redirections)) {
             return parse_execution_errored;
         }
 
@@ -869,7 +870,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(
     // Populate the process.
     proc->type = process_type;
     proc->set_argv(cmd_args);
-    proc->set_io_chain(process_io_chain);
+    proc->set_redirection_specs(std::move(redirections));
     proc->actual_cmd = std::move(path_to_external_command);
     return parse_execution_success;
 }
@@ -928,18 +929,15 @@ parse_execution_result_t parse_execution_context_t::expand_arguments_from_nodes(
     return parse_execution_success;
 }
 
-bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redirections_list> node,
-                                                   io_chain_t *out_chain) {
-    io_chain_t result;
-    bool errored = false;
-
+bool parse_execution_context_t::determine_redirections(
+    tnode_t<g::arguments_or_redirections_list> node, redirection_spec_list_t *out_redirections) {
     // Get all redirection nodes underneath the statement.
     while (auto redirect_node = node.next_in_list<g::redirection>()) {
         wcstring target;  // file path or target fd
         auto redirect = redirection_for_node(redirect_node, pstree->src, &target);
 
         if (!redirect || !redirect->is_valid()) {
-            // TODO: improve this error message.
+            // TODO: figure out if this can ever happen. If so, improve this error message.
             report_error(redirect_node, _(L"Invalid redirection: %ls"),
                          redirect_node.get_source(pstree->src).c_str());
             return false;
@@ -955,50 +953,27 @@ bool parse_execution_context_t::determine_io_chain(tnode_t<g::arguments_or_redir
             return false;
         }
 
-        // Generate the actual IO redirection.
-        shared_ptr<io_data_t> new_io;
+        // Make a redirection spec from the redirect token.
         assert(redirect && redirect->is_valid() && "expected to have a valid redirection");
-        switch (redirect->mode) {
-            case redirection_mode_t::fd: {
-                if (target == L"-") {
-                    new_io.reset(new io_close_t(redirect->fd));
-                } else {
-                    int old_fd = fish_wcstoi(target.c_str());
-                    if (errno || old_fd < 0) {
-                        const wchar_t *fmt =
-                            _(L"Requested redirection to '%ls', "
-                              L"which is not a valid file descriptor");
-                        errored = report_error(redirect_node, fmt, target.c_str());
-                    } else {
-                        new_io.reset(new io_fd_t(redirect->fd, old_fd, true));
-                    }
-                }
-                break;
-            }
-            default: {
-                int oflags = redirect->oflags();
-                io_file_t *new_io_file = new io_file_t(redirect->fd, target, oflags);
-                new_io.reset(new_io_file);
-                break;
-            }
-        }
 
-        // Append the new_io if we got one.
-        if (new_io.get() != nullptr) {
-            result.push_back(new_io);
+        redirection_spec_t spec{redirect->fd, redirect->mode, std::move(target)};
+
+        // Validate this spec.
+        if (spec.mode == redirection_mode_t::fd && !spec.is_close() && !spec.get_target_as_fd()) {
+            const wchar_t *fmt =
+                _(L"Requested redirection to '%ls', which is not a valid file descriptor");
+            report_error(redirect_node, fmt, spec.target.c_str());
+            return false;
         }
+        out_redirections->push_back(std::move(spec));
 
         if (redirect->stderr_merge) {
             // This was a redirect like &> which also modifies stderr.
             // Also redirect stderr to stdout.
-            result.push_back(get_stderr_merge());
+            out_redirections->push_back(get_stderr_merge());
         }
     }
-
-    if (out_chain && !errored) {
-        *out_chain = std::move(result);
-    }
-    return !errored;
+    return true;
 }
 
 parse_execution_result_t parse_execution_context_t::populate_not_process(
@@ -1026,14 +1001,15 @@ parse_execution_result_t parse_execution_context_t::populate_block_process(
     // The set of IO redirections that we construct for the process.
     // TODO: fix this ugly find_child.
     auto arguments = specific_statement.template find_child<g::arguments_or_redirections_list>();
-    io_chain_t process_io_chain;
-    bool errored = !this->determine_io_chain(arguments, &process_io_chain);
-    if (errored) return parse_execution_errored;
+    redirection_spec_list_t redirections;
+    if (!this->determine_redirections(arguments, &redirections)) {
+        return parse_execution_errored;
+    }
 
     proc->type = process_type_t::block_node;
     proc->block_node_source = pstree;
     proc->internal_block_node = statement;
-    proc->set_io_chain(process_io_chain);
+    proc->set_redirection_specs(std::move(redirections));
     return parse_execution_success;
 }
 
@@ -1172,9 +1148,9 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(
         if (parsed_pipe->stderr_merge) {
             // This was a pipe like &| which redirects both stdout and stderr.
             // Also redirect stderr to stdout.
-            auto ios = processes.back()->io_chain();
-            ios.push_back(get_stderr_merge());
-            processes.back()->set_io_chain(std::move(ios));
+            auto specs = processes.back()->redirection_specs();
+            specs.push_back(get_stderr_merge());
+            processes.back()->set_redirection_specs(std::move(specs));
         }
 
         // Store the new process (and maybe with an error).

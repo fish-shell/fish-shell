@@ -181,55 +181,6 @@ static void launch_process_nofork(env_stack_t &vars, process_t *p) {
     safe_launch_process(p, actual_cmd, argv_array.get(), envv);
 }
 
-/// Make a copy of the specified io redirection chain, but change file redirection into fd
-/// redirection. This makes the redirection chain suitable for use as block-level io, since the file
-/// won't be repeatedly reopened for every command in the block, which would reset the cursor
-/// position.
-///
-/// \return true on success, false on failure. Returns the output chain and opened_fds by reference.
-static bool resolve_file_redirections_to_fds(const io_chain_t &in_chain, const wcstring &pwd,
-                                             io_chain_t *out_chain,
-                                             std::vector<autoclose_fd_t> *out_opened_fds) {
-    ASSERT_IS_MAIN_THREAD();
-    assert(out_chain != nullptr && out_opened_fds != nullptr);
-    assert(out_chain->empty());
-
-    // Just to be clear what we do for an empty chain.
-    if (in_chain.empty()) {
-        return true;
-    }
-
-    bool success = true;
-
-    // All of the FDs that we create.
-    std::vector<autoclose_fd_t> opened_fds{};
-
-    // Make our chain of redirections.
-    io_chain_t result_chain;
-
-    for (const io_data_ref_t &in : in_chain) {
-        switch (in->io_mode) {
-            case io_mode_t::pipe:
-            case io_mode_t::bufferfill:
-            case io_mode_t::fd:
-            case io_mode_t::file:
-            case io_mode_t::close: {
-                result_chain.push_back(in);
-                break;
-            }
-        }
-        if (!success) {
-            break;
-        }
-    }
-
-    if (success) {
-        *out_chain = std::move(result_chain);
-        *out_opened_fds = std::move(opened_fds);
-    }
-    return success;
-}
-
 /// Morph an io redirection chain into redirections suitable for passing to eval, and then call
 /// eval.
 ///
@@ -240,16 +191,6 @@ template <typename T>
 void internal_exec_helper(parser_t &parser, parsed_source_ref_t parsed_source, tnode_t<T> node,
                           job_lineage_t lineage) {
     assert(parsed_source && node && "exec_helper missing source or without node");
-
-    io_chain_t morphed_chain;
-    std::vector<autoclose_fd_t> opened_fds;
-    if (!resolve_file_redirections_to_fds(lineage.block_io, parser.vars().get_pwd_slash(),
-                                          &morphed_chain, &opened_fds)) {
-        parser.set_last_statuses(statuses_t::just(STATUS_EXEC_FAIL));
-        return;
-    }
-
-    lineage.block_io = std::move(morphed_chain);
     parser.eval_node(parsed_source, node, TOP, std::move(lineage));
     job_reap(parser, false);
 }

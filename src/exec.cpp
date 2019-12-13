@@ -80,8 +80,7 @@ static bool redirection_is_to_real_file(const shared_ptr<const io_data_t> &io) {
     bool result = false;
     if (io && io->io_mode == io_mode_t::file) {
         // It's a file redirection. Compare the path to /dev/null.
-        const wcstring &path = static_cast<const io_file_t *>(io.get())->filename;
-        if (path != L"/dev/null") {
+        if (!static_cast<const io_file_t *>(io.get())->is_dev_null()) {
             // It's not /dev/null.
             result = true;
         }
@@ -213,24 +212,9 @@ static bool resolve_file_redirections_to_fds(const io_chain_t &in_chain, const w
             case io_mode_t::pipe:
             case io_mode_t::bufferfill:
             case io_mode_t::fd:
+            case io_mode_t::file:
             case io_mode_t::close: {
                 result_chain.push_back(in);
-                break;
-            }
-            case io_mode_t::file: {
-                // We have a path-based redireciton. Resolve it to a file.
-                const io_file_t *in_file = static_cast<const io_file_t *>(in.get());
-                int fd = wopen(path_apply_working_directory(in_file->filename, pwd), in_file->flags,
-                               OPEN_MASK);
-                if (fd < 0) {
-                    debug(1, FILE_ERROR, in_file->filename.c_str());
-                    wperror(L"open");
-                    success = false;
-                    break;
-                }
-
-                opened_fds.push_back(autoclose_fd_t(fd));
-                result_chain.push_back(std::make_shared<io_fd_t>(in->fd, fd, false));
                 break;
             }
         }
@@ -292,7 +276,7 @@ void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_io) {
     // Do a regular launch -  but without forking first...
     process_t *p = j->processes.front().get();
     io_chain_t all_ios = block_io;
-    if (!all_ios.append_from_specs(p->redirection_specs())) {
+    if (!all_ios.append_from_specs(p->redirection_specs(), vars.get_pwd_slash())) {
         return;
     }
 
@@ -507,13 +491,7 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
             }
             case io_mode_t::file: {
                 const io_file_t *in_file = static_cast<const io_file_t *>(in.get());
-                locally_opened_stdin =
-                    autoclose_fd_t{wopen(in_file->filename, in_file->flags, OPEN_MASK)};
-                if (!locally_opened_stdin.valid()) {
-                    debug(1, FILE_ERROR, in_file->filename.c_str());
-                    wperror(L"open");
-                }
-                local_builtin_stdin = locally_opened_stdin.fd();
+                local_builtin_stdin = in_file->file_fd();
                 break;
             }
             case io_mode_t::close: {
@@ -989,7 +967,8 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, std::shared_ptr<
 
     // Append IOs from the process's redirection specs.
     // This may fail.
-    if (!process_net_io_chain.append_from_specs(p->redirection_specs())) {
+    if (!process_net_io_chain.append_from_specs(p->redirection_specs(),
+                                                parser.vars().get_pwd_slash())) {
         // Error.
         return false;
     }

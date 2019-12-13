@@ -2479,15 +2479,6 @@ static void test_dup2s() {
     auto act2 = list->get_actions().at(1);
     do_test(act2.src == 19);
     do_test(act2.target == 3);
-
-    // Invalid files should fail to open.
-    // Suppress the debug() message.
-    int saved_debug_level = debug_level;
-    debug_level = -1;
-    chain.push_back(make_shared<io_file_t>(2, L"/definitely/not/a/valid/path/for/this/test", 0666));
-    list = dup2_list_t::resolve_chain(chain);
-    do_test(!list.has_value());
-    debug_level = saved_debug_level;
 }
 
 static void test_dup2s_fd_for_target_fd() {

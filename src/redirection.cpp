@@ -44,40 +44,8 @@ maybe_t<dup2_list_t> dup2_list_t::resolve_chain(const io_chain_t &io_chain) {
     for (const auto &io_ref : io_chain) {
         switch (io_ref->io_mode) {
             case io_mode_t::file: {
-                // Here we definitely do not want to set CLO_EXEC because our child needs access.
-                // Open the file.
-                const io_file_t *io_file = static_cast<const io_file_t *>(io_ref.get());
-                autoclose_fd_t file_fd{wopen(io_file->filename, io_file->flags, OPEN_MASK)};
-                if (!file_fd.valid()) {
-                    if ((io_file->flags & O_EXCL) && (errno == EEXIST)) {
-                        debug(1, NOCLOB_ERROR, io_file->filename.c_str());
-                    } else {
-                        debug(1, FILE_ERROR, io_file->filename.c_str());
-                        if (should_debug(1)) wperror(L"open");
-                    }
-                    return none();
-                }
-
-                // If by chance we got the file we want, we're done. Otherwise move the fd to an
-                // unused place and dup2 it.
-                // Note move_fd_to_unused() will close the incoming file_fd.
-                if (file_fd.fd() != io_file->fd) {
-                    file_fd = move_fd_to_unused(std::move(file_fd), io_chain.fd_set(),
-                                                false /* cloexec */);
-                    if (!file_fd.valid()) {
-                        debug(1, FILE_ERROR, io_file->filename.c_str());
-                        if (should_debug(1)) wperror(L"dup");
-                        return none();
-                    }
-                }
-                assert(file_fd.valid() && "Should have a valid file_fd");
-
-                // Mark our dup2 and our close actions.
-                result.add_dup2(file_fd.fd(), io_file->fd);
-                result.add_close(file_fd.fd());
-
-                // Store our file.
-                result.opened_fds_.push_back(std::move(file_fd));
+                const io_file_t *io = static_cast<const io_file_t *>(io_ref.get());
+                result.add_dup2(io->file_fd(), io->fd);
                 break;
             }
 

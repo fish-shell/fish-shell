@@ -4,6 +4,7 @@
 #include "io.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -15,16 +16,29 @@
 #include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "iothread.h"
+#include "path.h"
 #include "redirection.h"
 #include "wutil.h"  // IWYU pragma: keep
 
+/// File redirection error message.
+#define FILE_ERROR _(L"An error occurred while redirecting file '%ls'")
+#define NOCLOB_ERROR _(L"The file '%ls' already exists")
+
+/// Base open mode to pass to calls to open.
+#define OPEN_MASK 0666
+
 io_data_t::~io_data_t() = default;
+
+io_file_t::io_file_t(int f, autoclose_fd_t file, const wcstring &path)
+    : io_data_t(io_mode_t::file, f), file_fd_(std::move(file)), is_dev_null_(path == L"/dev/null") {
+    assert(file_fd_.valid() && "File is not valid");
+}
 
 void io_close_t::print() const { std::fwprintf(stderr, L"close %d\n", fd); }
 
 void io_fd_t::print() const { std::fwprintf(stderr, L"FD map %d -> %d\n", old_fd, fd); }
 
-void io_file_t::print() const { std::fwprintf(stderr, L"file (%ls)\n", filename.c_str()); }
+void io_file_t::print() const { std::fwprintf(stderr, L"file (%d)\n", file_fd_.fd()); }
 
 void io_pipe_t::print() const {
     std::fwprintf(stderr, L"pipe {%d} (input: %s)\n", pipe_fd(), is_input_ ? "yes" : "no");
@@ -195,6 +209,8 @@ std::shared_ptr<io_buffer_t> io_bufferfill_t::finish(std::shared_ptr<io_bufferfi
 
 io_pipe_t::~io_pipe_t() = default;
 
+io_file_t::~io_file_t() = default;
+
 io_bufferfill_t::~io_bufferfill_t() = default;
 
 io_buffer_t::~io_buffer_t() {
@@ -222,7 +238,7 @@ void io_chain_t::append(const io_chain_t &chain) {
     this->insert(this->end(), chain.begin(), chain.end());
 }
 
-bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs) {
+bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const wcstring &pwd) {
     for (const auto &spec : specs) {
         switch (spec.mode) {
             case redirection_mode_t::fd: {
@@ -238,7 +254,20 @@ bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs) {
                 break;
             }
             default: {
-                this->push_back(make_unique<io_file_t>(spec.fd, spec.target, spec.oflags()));
+                // We have a path-based redireciton. Resolve it to a file.
+                wcstring path = path_apply_working_directory(spec.target, pwd);
+                int oflags = spec.oflags();
+                autoclose_fd_t file{wopen(path, oflags, OPEN_MASK)};
+                if (!file.valid()) {
+                    if ((oflags & O_EXCL) && (errno == EEXIST)) {
+                        debug(1, NOCLOB_ERROR, spec.target.c_str());
+                    } else {
+                        debug(1, FILE_ERROR, spec.target.c_str());
+                        if (should_debug(1)) wperror(L"open");
+                    }
+                    return false;
+                }
+                this->push_back(std::make_shared<io_file_t>(spec.fd, std::move(file), path));
                 break;
             }
         }

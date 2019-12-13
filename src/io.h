@@ -210,19 +210,25 @@ class io_fd_t : public io_data_t {
         : io_data_t(io_mode_t::fd, f), old_fd(old), user_supplied(us) {}
 };
 
+/// Represents a redirection to or from an opened file.
 class io_file_t : public io_data_t {
    public:
-    /// The filename.
-    wcstring filename;
-    /// file creation flags to send to open.
-    const int flags;
-
     void print() const override;
 
-    io_file_t(int f, wcstring fname, int fl = 0)
-        : io_data_t(io_mode_t::file, f), filename(std::move(fname)), flags(fl) {}
+    io_file_t(int f, autoclose_fd_t file, const wcstring &path);
 
-    ~io_file_t() override = default;
+    ~io_file_t() override;
+
+    int file_fd() const { return file_fd_.fd(); }
+
+    bool is_dev_null() const { return is_dev_null_; }
+
+   private:
+    // The fd for the file which we are writing to or reading from.
+    autoclose_fd_t file_fd_;
+
+    // Hackish - whether this is /dev/null.
+    const bool is_dev_null_;
 };
 
 /// Represents (one end) of a pipe.
@@ -362,7 +368,7 @@ class io_chain_t : public std::vector<io_data_ref_t> {
 
     /// Attempt to resolve a list of redirection specs to IOs, appending to 'this'.
     /// \return true on success, false on error, in which case an error will have been printed.
-    bool append_from_specs(const redirection_spec_list_t &specs);
+    bool append_from_specs(const redirection_spec_list_t &specs, const wcstring &pwd);
 
     /// Output debugging information to stderr.
     void print() const;

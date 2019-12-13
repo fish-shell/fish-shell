@@ -18,6 +18,8 @@ Description
 
 By defining the ``fish_prompt`` function, the user can choose a custom prompt. The ``fish_prompt`` function is executed when the prompt is to be shown, and the output is used as a prompt.
 
+``fish`` passes ``before_input`` or ``after_input`` as a parameter to ``fish_prompt`` depending on the timing of calling.
+
 The exit status of commands within ``fish_prompt`` will not modify the value of `$status <index.html#variables-status>`__ outside of the ``fish_prompt`` function.
 
 ``fish`` ships with a number of example prompts that can be chosen with the ``fish_config`` command.

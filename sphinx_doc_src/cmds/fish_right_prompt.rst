@@ -18,11 +18,13 @@ Description
 
 ``fish_right_prompt`` is similar to ``fish_prompt``, except that it appears on the right side of the terminal window.
 
+``fish`` passes ``before_input`` or ``after_input`` as a parameter to ``fish_right_prompt`` depending on the timing of calling.
+
 Multiple lines are not supported in ``fish_right_prompt``.
 
 
-Example
--------
+Examples
+--------
 
 A simple right prompt:
 
@@ -35,3 +37,14 @@ A simple right prompt:
     end
 
 
+
+A simple transient right prompt:
+
+
+
+::
+
+    function fish_right_prompt -a input_phase -d "Write out the transient right prompt"
+        test $input_phase = "before_input"
+            and date '+%m/%d/%y'
+    end

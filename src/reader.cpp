@@ -473,7 +473,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void highlight_search();
     void highlight_complete(highlight_result_t result);
     void exec_mode_prompt();
-    void exec_prompt();
+    void exec_prompt(const wcstring &input_phase = L"before_input");
 
     bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el,
               wchar_t target);
@@ -904,7 +904,7 @@ void reader_data_t::exec_mode_prompt() {
 }
 
 /// Reexecute the prompt command. The output is inserted into prompt_buff.
-void reader_data_t::exec_prompt() {
+void reader_data_t::exec_prompt(const wcstring &input_phase) {
     // Clear existing prompts.
     left_prompt_buff.clear();
     right_prompt_buff.clear();
@@ -928,7 +928,7 @@ void reader_data_t::exec_prompt() {
         if (!left_prompt.empty()) {
             wcstring_list_t prompt_list;
             // Ignore return status.
-            exec_subshell(left_prompt, parser(), prompt_list, apply_exit_status);
+            exec_subshell(left_prompt + L" " + input_phase, parser(), prompt_list, apply_exit_status);
             for (size_t i = 0; i < prompt_list.size(); i++) {
                 if (i > 0) left_prompt_buff += L'\n';
                 left_prompt_buff += prompt_list.at(i);
@@ -938,7 +938,7 @@ void reader_data_t::exec_prompt() {
         if (!right_prompt.empty()) {
             wcstring_list_t prompt_list;
             // Status is ignored.
-            exec_subshell(right_prompt, parser(), prompt_list, apply_exit_status);
+            exec_subshell(right_prompt + L" " + input_phase, parser(), prompt_list, apply_exit_status);
             for (const auto &i : prompt_list) {
                 // Right prompt does not support multiple lines, so just concatenate all of them.
                 right_prompt_buff += i;
@@ -2774,6 +2774,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 }
                 rls.finished = true;
                 update_buff_pos(&command_line, command_line.size());
+                exec_prompt(L"after_input");
                 repaint();
             } else if (command_test_result == PARSER_TEST_INCOMPLETE) {
                 // We are incomplete, continue editing.

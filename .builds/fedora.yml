@@ -29,4 +29,3 @@ tasks:
   - test: |
           cd fish/build
           env SHOW_INTERACTIVE_LOG=1 ninja test
-

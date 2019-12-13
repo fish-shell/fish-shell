@@ -928,7 +928,11 @@ void reader_data_t::exec_prompt(const wcstring &input_phase) {
         if (!left_prompt.empty()) {
             wcstring_list_t prompt_list;
             // Ignore return status.
-            exec_subshell(left_prompt + L" " + input_phase, parser(), prompt_list, apply_exit_status);
+            if (left_prompt.compare(LEFT_PROMPT_FUNCTION_NAME) == 0) {
+                exec_subshell(left_prompt + L" " + input_phase, parser(), prompt_list, apply_exit_status);
+            } else {
+                exec_subshell(left_prompt, parser(), prompt_list, apply_exit_status);
+            }
             for (size_t i = 0; i < prompt_list.size(); i++) {
                 if (i > 0) left_prompt_buff += L'\n';
                 left_prompt_buff += prompt_list.at(i);
@@ -938,7 +942,11 @@ void reader_data_t::exec_prompt(const wcstring &input_phase) {
         if (!right_prompt.empty()) {
             wcstring_list_t prompt_list;
             // Status is ignored.
-            exec_subshell(right_prompt + L" " + input_phase, parser(), prompt_list, apply_exit_status);
+            if (right_prompt.compare(RIGHT_PROMPT_FUNCTION_NAME) == 0) {
+                exec_subshell(right_prompt + L" " + input_phase, parser(), prompt_list, apply_exit_status);
+            } else {
+                exec_subshell(right_prompt, parser(), prompt_list, apply_exit_status);
+            }
             for (const auto &i : prompt_list) {
                 // Right prompt does not support multiple lines, so just concatenate all of them.
                 right_prompt_buff += i;

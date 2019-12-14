@@ -27,6 +27,7 @@ int redirection_spec_t::oflags() const {
         case redirection_mode_t::input:
             return O_RDONLY;
         case redirection_mode_t::fd:
+        default:
             DIE("Not a file redirection");
     }
 }

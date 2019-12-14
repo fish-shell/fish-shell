@@ -1,6 +1,7 @@
 // fish_test_helper is a little program with no fish dependencies that acts like certain other
 // programs, allowing fish to test its behavior.
 
+#include <fcntl.h>
 #include <unistd.h>
 
 #include <csignal>
@@ -54,6 +55,17 @@ static void print_pid_then_sleep() {
 
 static void print_pgrp() { fprintf(stdout, "%d\n", getpgrp()); }
 
+static void print_fds() {
+    bool needs_space = false;
+    for (int fd = 0; fd <= 100; fd++) {
+        if (fcntl(fd, F_GETFD) >= 0) {
+            fprintf(stdout, "%s%d", needs_space ? " " : "", fd);
+            needs_space = true;
+        }
+    }
+    fputc('\n', stdout);
+}
+
 int main(int argc, char *argv[]) {
     if (argc <= 1) {
         fprintf(stderr, "No commands given.\n");
@@ -72,6 +84,8 @@ int main(int argc, char *argv[]) {
             print_pid_then_sleep();
         } else if (!strcmp(argv[i], "print_pgrp")) {
             print_pgrp();
+        } else if (!strcmp(argv[i], "print_fds")) {
+            print_fds();
         } else {
             fprintf(stderr, "%s: Unknown command: %s\n", argv[0], argv[i]);
             return EXIT_FAILURE;

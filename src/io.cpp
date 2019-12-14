@@ -255,9 +255,10 @@ bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const w
             }
             default: {
                 // We have a path-based redireciton. Resolve it to a file.
+                // Mark it as CLO_EXEC because we don't want it to be open in any child.
                 wcstring path = path_apply_working_directory(spec.target, pwd);
                 int oflags = spec.oflags();
-                autoclose_fd_t file{wopen(path, oflags, OPEN_MASK)};
+                autoclose_fd_t file{wopen_cloexec(path, oflags, OPEN_MASK)};
                 if (!file.valid()) {
                     if ((oflags & O_EXCL) && (errno == EEXIST)) {
                         debug(1, NOCLOB_ERROR, spec.target.c_str());

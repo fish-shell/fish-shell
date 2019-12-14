@@ -15,7 +15,8 @@ matrix:
             - libpcre2-dev
             - python
       env:
-          - CXXFLAGS="-Werror=address"
+          # Some warnings upgraded to errors to match Open Build Service platforms
+          - CXXFLAGS="-Werror=address -Werror=return-type"
     - os: linux
       compiler: gcc
       addons:
@@ -27,7 +28,7 @@ matrix:
             - g++-multilib
             - python
       env:
-          - CXXFLAGS="-m32 -Werror=address" CFLAGS="-m32"
+          - CXXFLAGS="-m32 -Werror=address -Werror=return-type" CFLAGS="-m32"
     - os: linux
       compiler: clang
       env:

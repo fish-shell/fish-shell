@@ -177,17 +177,24 @@ FILE *wfopen(const wcstring &path, const char *mode) {
     return result;
 }
 
-bool set_cloexec(int fd) {
+int set_cloexec(int fd, bool should_set) {
     // Note we don't want to overwrite existing flags like O_NONBLOCK which may be set. So fetch the
-    // existing flags and OR in our new one.
+    // existing flags and modify them.
     int flags = fcntl(fd, F_GETFD, 0);
     if (flags < 0) {
-        return false;
+        return -1;
     }
-    if (flags & FD_CLOEXEC) {
-        return true;
+    int new_flags = flags;
+    if (should_set) {
+        new_flags |= FD_CLOEXEC;
+    } else {
+        new_flags &= ~FD_CLOEXEC;
     }
-    return fcntl(fd, F_SETFD, flags | FD_CLOEXEC) >= 0;
+    if (flags == new_flags) {
+        return 0;
+    } else {
+        return fcntl(fd, F_SETFD, new_flags);
+    }
 }
 
 int open_cloexec(const std::string &cstring, int flags, mode_t mode, bool cloexec) {

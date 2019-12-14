@@ -66,12 +66,9 @@ class dup2_list_t {
     /// Append a dup2 action.
     void add_dup2(int src, int target) {
         assert(src >= 0 && target >= 0 && "Invalid fd in add_dup2");
-        // TODO: this is sloppy about CLO_EXEC. For example if the user does this:
-        //   /bin/stuff 6< file.txt
-        // and file.txt happens to get fd 6, then the file will be closed.
-        if (src != target) {
-            actions_.push_back(action_t{src, target});
-        }
+        // Note: record these even if src and target is the same.
+        // This is a note that we must clear the CLO_EXEC bit.
+        actions_.push_back(action_t{src, target});
     }
 
     /// Append a close action.

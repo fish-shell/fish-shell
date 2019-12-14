@@ -138,7 +138,18 @@ bool set_child_group(job_t *j, pid_t child_pid) {
 int child_setup_process(pid_t new_termowner, bool is_forked, const dup2_list_t &dup2s) {
     // Note we are called in a forked child.
     for (const auto &act : dup2s.get_actions()) {
-        int err = act.target < 0 ? close(act.src) : dup2(act.src, act.target);
+        int err;
+        if (act.target < 0) {
+            err = close(act.src);
+        } else if (act.target != act.src) {
+            // Normal redirection.
+            err = dup2(act.src, act.target);
+        } else {
+            // This is a weird case like /bin/cmd 6< file.txt
+            // The opened file (which is CLO_EXEC) wants to be dup2'd to its own fd.
+            // We need to unset the CLO_EXEC flag.
+            err = set_cloexec(act.src, false);
+        }
         if (err < 0) {
             if (is_forked) {
                 debug_safe(4, "redirect_in_child_after_fork failed in child_setup_process");

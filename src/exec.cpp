@@ -182,7 +182,17 @@ static void launch_process_nofork(env_stack_t &vars, process_t *p) {
 // To avoid the race between the caller calling tcsetpgrp() and the client checking the
 // foreground process group, we don't use posix_spawn if we're going to foreground the process. (If
 // we use fork(), we can call tcsetpgrp after the fork, before the exec, and avoid the race).
-static bool can_use_posix_spawn_for_job(const std::shared_ptr<job_t> &job) {
+static bool can_use_posix_spawn_for_job(const std::shared_ptr<job_t> &job,
+                                        const dup2_list_t &dup2s) {
+    // Hack - do not use posix_spawn if there are self-fd redirections.
+    // For example if you were to write:
+    //   cmd 6< /dev/null
+    // it is possible that the open() of /dev/null would result in fd 6. Here even if we attempted
+    // to add a dup2 action, it would be ignored and the CLO_EXEC bit would remain. So don't use
+    // posix_spawn in this case; instead we'll call fork() and clear the CLO_EXEC bit manually.
+    for (const auto &action : dup2s.get_actions()) {
+        if (action.src == action.target) return false;
+    }
     if (job->wants_job_control()) {  //!OCLINT(collapsible if statements)
         // We are going to use job control; therefore when we launch this job it will get its own
         // process group ID. But will it be foregrounded?
@@ -594,7 +604,7 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
 
 #if FISH_USE_POSIX_SPAWN
     // Prefer to use posix_spawn, since it's faster on some systems like OS X.
-    bool use_posix_spawn = g_use_posix_spawn && can_use_posix_spawn_for_job(j);
+    bool use_posix_spawn = g_use_posix_spawn && can_use_posix_spawn_for_job(j, *dup2s);
     if (use_posix_spawn) {
         s_fork_count++;  // spawn counts as a fork+exec
         // Create posix spawn attributes and actions.

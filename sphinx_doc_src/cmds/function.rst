@@ -62,6 +62,8 @@ By using one of the event handler switches, a function can be made to run automa
 
 - ``fish_exit`` is emitted right before fish exits.
 
+- ``fish_cancel``, which is emitted when a commandline is cleared (used for terminal-shell integration).
+
 Example
 -------
 

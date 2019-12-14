@@ -1,8 +1,11 @@
 // Various functions, mostly string utilities, that are used by most parts of fish.
 #include "config.h"
 
-#include <ctype.h>
+#ifdef HAVE_BACKTRACE_SYMBOLS
 #include <cxxabi.h>
+#endif
+
+#include <ctype.h>
 #include <dlfcn.h>
 #include <errno.h>
 #include <fcntl.h>

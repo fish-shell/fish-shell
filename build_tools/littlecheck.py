@@ -250,7 +250,12 @@ class TestRun(object):
         if self.config.verbose:
             print(self.subbed_command)
         proc = subprocess.Popen(
-            self.subbed_command, stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True
+            self.subbed_command,
+            stdin=PIPE,
+            stdout=PIPE,
+            stderr=PIPE,
+            shell=True,
+            close_fds=True,  # For Python 2.6 as shipped on RHEL 6
         )
         stdout, stderr = proc.communicate()
         outlines = [

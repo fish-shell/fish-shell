@@ -62400,47 +62400,47 @@ msgstr ""
 msgid "Command used to find descriptions for commands"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:1
-msgid "Helper function for __fish_git_prompt"
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:1
+msgid "Helper function for fish_git_prompt"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:2
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:2
 msgid "Prompt function for Git"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:3
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:3
 msgid ""
-"__fish_git_prompt helper, tells whether or not the current branch has staged "
+"fish_git_prompt helper, tells whether or not the current branch has staged "
 "files"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:4
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:4
 msgid ""
-"__fish_git_prompt helper, tells whether or not the current branch has "
+"fish_git_prompt helper, tells whether or not the current branch has "
 "tracked, modified files"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:5
-msgid "__fish_git_prompt helper, returns the current Git operation and branch"
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:5
+msgid "fish_git_prompt helper, returns the current Git operation and branch"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:6
-msgid "__fish_git_prompt helper, checks char variables"
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:6
+msgid "fish_git_prompt helper, checks char variables"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:7
-msgid "__fish_git_prompt helper, checks color variables"
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:7
+msgid "fish_git_prompt helper, checks color variables"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:8
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:8
 msgid "Event handler, repaints prompt when functionality changes"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:9
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:9
 msgid "Event handler, repaints prompt when any color changes"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:10
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:10
 msgid "Event handler, repaints prompt when any char changes"
 msgstr ""
 

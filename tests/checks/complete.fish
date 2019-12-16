@@ -150,3 +150,6 @@ complete -C'for _ in ' | string collect >&- && echo completed some files
 # function; #5415
 complete -C'function : --arg'
 # CHECK: --argument-names	{{.*}}
+
+complete -C'echo > /' | string length -q && echo ok
+# CHECK: ok

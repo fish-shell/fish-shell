@@ -1542,6 +1542,7 @@ void completer_t::perform() {
                 tok_t prev_tok = tokens.at(tokens.size() - 2);
                 if (prev_tok.type == token_type_t::string)
                     previous_argument = prev_tok.get_source(cmd);
+                in_redirection = prev_tok.type == token_type_t::redirect;
             }
         }
 

@@ -120,7 +120,7 @@ struct thread_pool_t {
     static void *run_trampoline(void *vpool);
 
     /// Attempt to spawn a new pthread.
-    pthread_t spawn();
+    bool spawn();
 
     /// No copying or moving.
     thread_pool_t(const thread_pool_t &) = delete;
@@ -229,16 +229,8 @@ void *thread_pool_t::run_trampoline(void *pool) {
 }
 
 /// Spawn another thread. No lock is held when this is called.
-pthread_t thread_pool_t::spawn() {
-    // Spawn a thread. If this fails, it means there's already a bunch of threads; it is very
-    // unlikely that they are all on the verge of exiting, so one is likely to be ready to handle
-    // extant requests. So we can ignore failure with some confidence.
-    pthread_t thread = 0;
-    if (make_pthread(&thread, run_trampoline, static_cast<void *>(this))) {
-        // We will never join this thread.
-        DIE_ON_FAILURE(pthread_detach(thread));
-    }
-    return thread;
+bool thread_pool_t::spawn() {
+    return make_detached_pthread(&run_trampoline, static_cast<void *>(this));
 }
 
 int thread_pool_t::perform(void_function_t &&func, void_function_t &&completion) {
@@ -273,8 +265,11 @@ int thread_pool_t::perform(void_function_t &&func, void_function_t &&completion)
         pool.queue_cond.notify_one();
     }
     if (spawn_new_thread) {
-        if (pthread_t pt = this->spawn()) {
-            FLOGF(iothread, L"pthread %p spawned", pt);
+        // Spawn a thread. If this fails, it means there's already a bunch of threads; it is very
+        // unlikely that they are all on the verge of exiting, so one is likely to be ready to
+        // handle extant requests. So we can ignore failure with some confidence.
+        if (this->spawn()) {
+            FLOGF(iothread, L"pthread spawned");
         } else {
             // We failed to spawn a thread; decrement the thread count.
             pool.req_data.acquire()->total_threads -= 1;
@@ -441,7 +436,7 @@ void iothread_perform_on_main(void_function_t &&func) {
     assert(req.done);
 }
 
-bool make_pthread(pthread_t *result, void *(*func)(void *), void *param) {
+bool make_detached_pthread(void *(*func)(void *), void *param) {
     // The spawned thread inherits our signal mask. We don't want the thread to ever receive signals
     // on the spawned thread, so temporarily block all signals, spawn the thread, and then restore
     // it.
@@ -457,7 +452,7 @@ bool make_pthread(pthread_t *result, void *(*func)(void *), void *param) {
     if (err == 0) {
         // Success, return the thread.
         debug(5, "pthread %p spawned", (void *)(intptr_t)thread);
-        *result = thread;
+        DIE_ON_FAILURE(pthread_detach(thread));
     } else {
         perror("pthread_create");
     }
@@ -477,10 +472,10 @@ static void *func_invoker(void *param) {
     return nullptr;
 }
 
-bool make_pthread(pthread_t *result, void_func_t &&func) {
+bool make_detached_pthread(void_func_t &&func) {
     // Copy the function into a heap allocation.
     void_func_t *vf = new void_func_t(std::move(func));
-    if (make_pthread(result, func_invoker, vf)) {
+    if (make_detached_pthread(func_invoker, vf)) {
         return true;
     }
     // Thread spawning failed, clean up our heap allocation.

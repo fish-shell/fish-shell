@@ -775,13 +775,14 @@ static void test_iothread() {
 
 static void test_pthread() {
     say(L"Testing pthreads");
-    pthread_t result = {};
-    int val = 3;
-    bool made = make_pthread(&result, [&val]() { val += 2; });
+    std::atomic<int> val{3};
+    std::promise<void> promise;
+    bool made = make_detached_pthread([&]() {
+        val = val + 2;
+        promise.set_value();
+    });
     do_test(made);
-    void *ignore = nullptr;
-    int ret = pthread_join(result, &ignore);
-    do_test(ret == 0);
+    promise.get_future().wait();
     do_test(val == 5);
 }
 

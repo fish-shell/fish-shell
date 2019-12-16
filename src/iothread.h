@@ -79,10 +79,11 @@ inline int iothread_perform(std::function<void(void)> &&func) {
 void iothread_perform_on_main(std::function<void(void)> &&func);
 
 /// Creates a pthread, manipulating the signal mask so that the thread receives no signals.
+/// The thread is detached.
 /// The pthread runs \p func.
 /// \returns true on success, false on failure.
-bool make_pthread(pthread_t *result, void *(*func)(void *), void *param);
-bool make_pthread(pthread_t *result, std::function<void(void)> &&func);
+bool make_detached_pthread(void *(*func)(void *), void *param);
+bool make_detached_pthread(std::function<void(void)> &&func);
 
 /// \returns a thread ID for this thread.
 /// Thread IDs are never repeated.

@@ -66607,10 +66607,6 @@ msgstr "Write out the prompt"
 msgid "Show current path"
 msgstr "Show current path"
 
-#: /tmp/fish/implicit/share/functions/__fish_sgrep.fish:1
-msgid "Call grep without honoring GREP_OPTIONS settings"
-msgstr ""
-
 #: /tmp/fish/implicit/share/functions/__fish_shared_key_bindings.fish:1
 msgid "Bindings shared between emacs and vi mode"
 msgstr ""

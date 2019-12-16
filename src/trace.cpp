@@ -6,11 +6,13 @@
 #include "flog.h"
 #include "parser.h"
 
+static const wcstring VAR_fish_trace = L"fish_trace";
+
 bool trace_enabled(const parser_t &parser) {
     auto &ld = parser.libdata();
     if (ld.suppress_fish_trace) return false;
     // TODO: this variable lookup is somewhat expensive, consider how to make this cheaper.
-    return !parser.vars().get(L"fish_trace").missing_or_empty();
+    return !parser.vars().get(VAR_fish_trace).missing_or_empty();
 }
 
 /// Trace an "argv": a list of arguments where the first is the command.

@@ -5202,13 +5202,11 @@ static void test_illegal_command_exit_code() {
         {L"abc?def", STATUS_UNMATCHED_WILDCARD},
     };
 
-    int res = 0;
-    UNUSED(res);
     const io_chain_t empty_ios;
     parser_t &parser = parser_t::principal_parser();
 
     for (const auto &test : tests) {
-        res = parser.eval(test.txt, empty_ios, TOP);
+        parser.eval(test.txt, empty_ios, TOP);
 
         int exit_status = parser.get_last_status();
         if (exit_status != test.result) {

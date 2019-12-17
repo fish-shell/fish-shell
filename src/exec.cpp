@@ -1183,7 +1183,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
     // be null.
     std::shared_ptr<io_buffer_t> buffer;
     if (auto bufferfill = io_bufferfill_t::create(fd_set_t{}, ld.read_limit)) {
-        if (parser.eval(cmd, io_chain_t{bufferfill}, SUBST) == 0) {
+        if (parser.eval(cmd, io_chain_t{bufferfill}, SUBST) == eval_result_t::ok) {
             subcommand_statuses = parser.get_last_statuses();
         }
         buffer = io_bufferfill_t::finish(std::move(bufferfill));

@@ -616,23 +616,25 @@ profile_item_t *parser_t::create_profile_item() {
     return result;
 }
 
-int parser_t::eval(wcstring cmd, const io_chain_t &io, enum block_type_t block_type) {
+eval_result_t parser_t::eval(const wcstring &cmd, const io_chain_t &io,
+                             enum block_type_t block_type) {
     // Parse the source into a tree, if we can.
     parse_error_list_t error_list;
-    parsed_source_ref_t ps = parse_source(cmd, parse_flag_none, &error_list);
-    if (!ps) {
+    if (parsed_source_ref_t ps = parse_source(cmd, parse_flag_none, &error_list)) {
+        return this->eval(ps, io, block_type);
+    } else {
         // Get a backtrace. This includes the message.
         wcstring backtrace_and_desc;
         this->get_backtrace(cmd, error_list, backtrace_and_desc);
 
         // Print it.
         std::fwprintf(stderr, L"%ls\n", backtrace_and_desc.c_str());
-        return 1;
+        return eval_result_t::error;
     }
-    return this->eval(ps, io, block_type);
 }
 
-int parser_t::eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type_t block_type) {
+eval_result_t parser_t::eval(parsed_source_ref_t ps, const io_chain_t &io,
+                             enum block_type_t block_type) {
     assert(block_type == TOP || block_type == SUBST);
     if (!ps->tree.empty()) {
         job_lineage_t lineage;
@@ -641,12 +643,12 @@ int parser_t::eval(parsed_source_ref_t ps, const io_chain_t &io, enum block_type
         tnode_t<grammar::job_list> start{&ps->tree, &ps->tree.front()};
         return this->eval_node(ps, start, block_type, std::move(lineage));
     }
-    return 0;
+    return eval_result_t::ok;
 }
 
 template <typename T>
-int parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, block_type_t block_type,
-                        job_lineage_t lineage) {
+eval_result_t parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, block_type_t block_type,
+                                  job_lineage_t lineage) {
     static_assert(
         std::is_same<T, grammar::statement>::value || std::is_same<T, grammar::job_list>::value,
         "Unexpected node type");
@@ -655,17 +657,13 @@ int parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, block_type_t bl
     // not empty, we are still in the process of cancelling; refuse to evaluate anything.
     if (this->cancellation_requested) {
         if (!block_stack.empty()) {
-            return 1;
+            return eval_result_t::cancelled;
         }
         this->cancellation_requested = false;
     }
 
     // Only certain blocks are allowed.
-    if ((block_type != TOP) && (block_type != SUBST)) {
-        debug(1, INVALID_SCOPE_ERR_MSG, parser_t::get_block_desc(block_type));
-        bugreport();
-        return 1;
-    }
+    assert((block_type == TOP || block_type == SUBST) && "Invalid block type");
 
     job_reap(*this, false);  // not sure why we reap jobs here
 
@@ -676,19 +674,28 @@ int parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, block_type_t bl
     using exc_ctx_ref_t = std::unique_ptr<parse_execution_context_t>;
     scoped_push<exc_ctx_ref_t> exc(
         &execution_context, make_unique<parse_execution_context_t>(ps, this, std::move(lineage)));
-    int result = execution_context->eval_node(node, scope_block);
+    parse_execution_result_t res = execution_context->eval_node(node, scope_block);
     exc.restore();
     this->pop_block(scope_block);
 
     job_reap(*this, false);  // reap again
-    return result;
+    switch (res) {
+        case parse_execution_success:
+            return eval_result_t::ok;
+        case parse_execution_errored:
+            return eval_result_t::error;
+        case parse_execution_cancelled:
+            return eval_result_t::cancelled;
+        case parse_execution_skipped:
+            DIE("skipped should not be returned from run functions");
+    }
 }
 
 // Explicit instantiations. TODO: use overloads instead?
-template int parser_t::eval_node(parsed_source_ref_t, tnode_t<grammar::statement>,
-                                 enum block_type_t, job_lineage_t lineage);
-template int parser_t::eval_node(parsed_source_ref_t, tnode_t<grammar::job_list>, enum block_type_t,
-                                 job_lineage_t lineage);
+template eval_result_t parser_t::eval_node(parsed_source_ref_t, tnode_t<grammar::statement>,
+                                           enum block_type_t, job_lineage_t lineage);
+template eval_result_t parser_t::eval_node(parsed_source_ref_t, tnode_t<grammar::job_list>,
+                                           enum block_type_t, job_lineage_t lineage);
 
 void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &errors,
                              wcstring &output) const {

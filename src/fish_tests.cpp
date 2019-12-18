@@ -1033,7 +1033,6 @@ static void test_1_cancellation(const wchar_t *src) {
         pthread_kill(thread, SIGINT);
     });
     eval_result_t ret = parser_t::principal_parser().eval(src, io_chain_t{filler}, TOP);
-    fprintf(stderr, "eval: %d\n", (int)ret);
     auto buffer = io_bufferfill_t::finish(std::move(filler));
     if (buffer->buffer().size() != 0) {
         err(L"Expected 0 bytes in out_buff, but instead found %lu bytes, for command %ls\n",
@@ -1042,6 +1041,7 @@ static void test_1_cancellation(const wchar_t *src) {
     // TODO: cancelling out of command substitutions is currently reported as an error, not a
     // cancellation.
     // do_test(ret == eval_result_t::cancelled);
+    (void)ret;
     iothread_drain_all();
 }
 

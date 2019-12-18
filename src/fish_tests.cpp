@@ -127,22 +127,14 @@ static void err(const wchar_t *blah, ...) {
     va_start(va, blah);
     err_count++;
 
-    // Xcode's term doesn't support color (even though TERM claims it does).
-    bool colorize = !getenv("RUNNING_IN_XCODE");
-
     // Show errors in red.
-    if (colorize) {
-        std::fputws(L"\x1B[31m", stdout);
-    }
+    std::fputws(L"\x1B[31m", stdout);
     std::fwprintf(stdout, L"Error: ");
     std::vfwprintf(stdout, blah, va);
     va_end(va);
 
     // Return to normal color.
-    if (colorize) {
-        std::fputws(L"\x1B[0m", stdout);
-    }
-
+    std::fputws(L"\x1B[0m", stdout);
     std::fwprintf(stdout, L"\n");
 }
 
@@ -1050,10 +1042,6 @@ static void test_1_cancellation(const wchar_t *src) {
 }
 
 static void test_cancellation() {
-    if (getenv("RUNNING_IN_XCODE")) {
-        say(L"Skipping Ctrl-C cancellation test because we are running in Xcode debugger");
-        return;
-    }
     say(L"Testing Ctrl-C cancellation. If this hangs, that's a bug!");
 
     // Enable fish's signal handling here. We need to make this interactive for fish to install its

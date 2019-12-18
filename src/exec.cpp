@@ -753,11 +753,17 @@ static proc_performer_t get_performer_for_process(process_t *p, const job_t *job
         tnode_t<grammar::statement> node = p->internal_block_node;
         assert(source && node && "Process is missing node info");
         return [=](parser_t &parser) {
-            parser.eval_node(source, node, TOP, lineage);
-            int status = parser.get_last_status();
-            // FIXME: setting the status this way is dangerous nonsense, we need to decode the
-            // status properly if it was a signal.
-            return proc_status_t::from_exit_code(status);
+            eval_result_t res = parser.eval_node(source, node, TOP, lineage);
+            switch (res) {
+                case eval_result_t::ok:
+                case eval_result_t::error:
+                    return proc_status_t::from_exit_code(parser.get_last_status());
+                case eval_result_t::cancelled:
+                    // TODO: we should reflect the actual signal which was received.
+                    return proc_status_t::from_signal(SIGINT);
+                case eval_result_t::control_flow:
+                    DIE("eval_result_t::control_flow should not be returned from eval_node");
+            }
         };
     } else {
         assert(p->type == process_type_t::function);
@@ -771,20 +777,24 @@ static proc_performer_t get_performer_for_process(process_t *p, const job_t *job
             const auto &ld = parser.libdata();
             auto saved_exec_count = ld.exec_count;
             const block_t *fb = function_prepare_environment(parser, *argv, *props);
-            parser.eval_node(props->parsed_source, props->body_node, TOP, lineage);
+            auto res = parser.eval_node(props->parsed_source, props->body_node, TOP, lineage);
             function_restore_environment(parser, fb);
 
-            // If the function did not execute anything, treat it as success.
-            int status;
-            if (saved_exec_count == ld.exec_count) {
-                status = 0;
-            } else {
-                status = parser.get_last_status();
-            }
+            switch (res) {
+                case eval_result_t::ok:
+                    // If the function did not execute anything, treat it as success.
+                    return proc_status_t::from_exit_code(saved_exec_count == ld.exec_count
+                                                             ? EXIT_SUCCESS
+                                                             : parser.get_last_status());
+                case eval_result_t::error:
+                    return proc_status_t::from_exit_code(parser.get_last_status());
 
-            // FIXME: setting the status this way is dangerous nonsense, we need to decode the
-            // status properly if it was a signal.
-            return proc_status_t::from_exit_code(status);
+                case eval_result_t::cancelled:
+                    // TODO: we should reflect the actual signal which was received.
+                    return proc_status_t::from_signal(SIGINT);
+                case eval_result_t::control_flow:
+                    DIE("eval_result_t::control_flow should not be returned from eval_node");
+            }
         };
     }
 }

@@ -74,6 +74,11 @@ class proc_status_t {
         return proc_status_t(w_exitcode(ret, 0 /* sig */));
     }
 
+    /// Construct directly from a signal.
+    static proc_status_t from_signal(int sig) {
+        return proc_status_t(w_exitcode(0 /* ret */, sig));
+    }
+
     /// \return if we are stopped (as in SIGSTOP).
     bool stopped() const { return WIFSTOPPED(status_); }
 

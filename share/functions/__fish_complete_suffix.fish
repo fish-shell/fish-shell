@@ -81,6 +81,9 @@ function __fish_complete_suffix -d "Complete using files"
     set files $all $dirs
     if string match -qr '^\\./' -- $comp
         set files ./$files
+    else
+        # "Escape" files starting with a literal dash `-` with a `./`
+        set files (string replace -r -- "^-" "./-" $files)
     end
 
     # Another problem is that expanded paths are not matched, either.

@@ -154,7 +154,8 @@ generation_list_t topic_monitor_t::await_gens(const generation_list_t &input_gen
             (void)select(fd + 1, &fds, nullptr, nullptr, nullptr /* timeout */);
 #endif
             uint8_t ignored[PIPE_BUF];
-            (void)read(fd, ignored, sizeof ignored);
+            auto unused = read(fd, ignored, sizeof ignored);
+            if (unused) {}
 
             // We are finished reading. We must stop being the reader, and post on the condition
             // variable to wake up any other threads waiting for us to finish reading.

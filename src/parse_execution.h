@@ -21,9 +21,6 @@ enum parse_execution_result_t {
     parse_execution_errored,
     /// The job was cancelled (e.g. Ctrl-C).
     parse_execution_cancelled,
-    /// The job was skipped (e.g. due to a not-taken 'and' command). This is a special return
-    /// allowed only from the populate functions, not the run functions.
-    parse_execution_skipped
 };
 
 class parse_execution_context_t {

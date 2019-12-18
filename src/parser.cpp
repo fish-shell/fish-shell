@@ -686,8 +686,6 @@ eval_result_t parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, block
             return eval_result_t::error;
         case parse_execution_cancelled:
             return eval_result_t::cancelled;
-        case parse_execution_skipped:
-            DIE("skipped should not be returned from run functions");
     }
 }
 

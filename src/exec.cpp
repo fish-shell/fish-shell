@@ -793,6 +793,7 @@ static proc_performer_t get_performer_for_process(process_t *p, const job_t *job
                 case eval_result_t::cancelled:
                     // TODO: we should reflect the actual signal which was received.
                     return proc_status_t::from_signal(SIGINT);
+                default:
                 case eval_result_t::control_flow:
                     DIE("eval_result_t::control_flow should not be returned from eval_node");
             }

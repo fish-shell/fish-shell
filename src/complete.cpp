@@ -211,10 +211,10 @@ completion_t::completion_t(wcstring comp, wcstring desc, string_fuzzy_match_t ma
       match(std::move(mat)),
       flags(resolve_auto_space(completion, flags_val)) {}
 
-completion_t::completion_t(const completion_t &him) = default;
-completion_t::completion_t(completion_t &&him) = default;
-completion_t &completion_t::operator=(const completion_t &him) = default;
-completion_t &completion_t::operator=(completion_t &&him) = default;
+completion_t::completion_t(const completion_t &) = default;
+completion_t::completion_t(completion_t &&) = default;
+completion_t &completion_t::operator=(const completion_t &) = default;
+completion_t &completion_t::operator=(completion_t &&) = default;
 completion_t::~completion_t() = default;
 
 bool completion_t::is_naturally_less_than(const completion_t &a, const completion_t &b) {

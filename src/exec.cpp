@@ -762,6 +762,7 @@ static proc_performer_t get_performer_for_process(process_t *p, const job_t *job
                     // TODO: we should reflect the actual signal which was received.
                     return proc_status_t::from_signal(SIGINT);
                 case eval_result_t::control_flow:
+                default:
                     DIE("eval_result_t::control_flow should not be returned from eval_node");
             }
         };

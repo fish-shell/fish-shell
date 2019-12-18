@@ -674,19 +674,18 @@ eval_result_t parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, block
     using exc_ctx_ref_t = std::unique_ptr<parse_execution_context_t>;
     scoped_push<exc_ctx_ref_t> exc(
         &execution_context, make_unique<parse_execution_context_t>(ps, this, std::move(lineage)));
-    parse_execution_result_t res = execution_context->eval_node(node, scope_block);
+    eval_result_t res = execution_context->eval_node(node, scope_block);
     exc.restore();
     this->pop_block(scope_block);
 
     job_reap(*this, false);  // reap again
-    switch (res) {
-        case parse_execution_success:
-            return eval_result_t::ok;
-        case parse_execution_errored:
-            return eval_result_t::error;
-        case parse_execution_cancelled:
-            return eval_result_t::cancelled;
+
+    // control_flow is used internally to react to break and return.
+    // Here we treat that as success.
+    if (res == eval_result_t::control_flow) {
+        res = eval_result_t::ok;
     }
+    return res;
 }
 
 // Explicit instantiations. TODO: use overloads instead?

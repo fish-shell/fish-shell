@@ -52,7 +52,7 @@ builtin realpath .
 popd
 
 # A single symlink to a directory is correctly resolved.
-ln -s fish $XDG_DATA_HOME/fish-symlink
+ln -fs fish $XDG_DATA_HOME/fish-symlink
 set -l real_path (builtin realpath $XDG_DATA_HOME/fish-symlink)
 set -l expected_real_path "$data_home_realpath/fish"
 if test "$real_path" = "$expected_real_path"
@@ -74,9 +74,9 @@ else
 end
 
 # A path with two symlinks, first to a directory, second to a file, is correctly resolved.
-ln -s fish $XDG_DATA_HOME/fish-symlink2
+ln -fs fish $XDG_DATA_HOME/fish-symlink2
 touch $XDG_DATA_HOME/fish/real_file
-ln -s real_file $XDG_DATA_HOME/fish/symlink_file
+ln -fs real_file $XDG_DATA_HOME/fish/symlink_file
 set -l real_path (builtin realpath $XDG_DATA_HOME/fish-symlink/symlink_file)
 set -l expected_real_path "$data_home_realpath/fish/real_file"
 if test "$real_path" = "$expected_real_path"

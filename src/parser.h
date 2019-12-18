@@ -15,7 +15,6 @@
 #include "event.h"
 #include "expand.h"
 #include "parse_constants.h"
-#include "parse_execution.h"
 #include "parse_tree.h"
 #include "proc.h"
 
@@ -52,6 +51,18 @@ enum class loop_status_t {
     normals,    /// current loop block executed as normal
     breaks,     /// current loop block should be removed
     continues,  /// current loop block should be skipped
+};
+
+/// Result of the source code form of eval.
+enum class eval_result_t {
+    /// eval was able to evaluate the source or tree.
+    ok,
+
+    /// Evaluation was cancelled, e.g. because of a signal.
+    cancelled,
+
+    /// Parse or execution error (but not simply a failed command).
+    error,
 };
 
 /// block_t represents a block of commands.

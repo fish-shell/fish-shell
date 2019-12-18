@@ -111,7 +111,10 @@ function __fish_config_interactive -d "Initializations that should be performed 
             for py in python{3,2,}
                 if command -sq $py
                     set -l c $py $update_args
+                    # Run python directly in the background and swallow all output
                     $c (: fish_update_completions: generating completions from man pages) >/dev/null 2>&1 &
+                    # Then disown the job so that it continues to run in case of an early exit (#6269)
+                    disown 2>&1 >/dev/null
                     break
                 end
             end

@@ -926,6 +926,11 @@ parse_execution_result_t parse_execution_context_t::expand_arguments_from_nodes(
         }
     }
 
+    // We may have received a cancellation during this expansion.
+    if (parser->cancellation_requested) {
+        return parse_execution_cancelled;
+    }
+
     return parse_execution_success;
 }
 

@@ -146,6 +146,8 @@ int builtin_time(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 case tunit::milliseconds: return "milliseconds";
                 case tunit::microseconds: return "microseconds";
             }
+            // GCC does not recognize the exhaustive switch above
+            return "";
         };
 
         auto unit_short_name = [](tunit unit) {
@@ -155,6 +157,8 @@ int builtin_time(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 case tunit::milliseconds: return "millis";
                 case tunit::microseconds: return "micros";
             }
+            // GCC does not recognize the exhaustive switch above
+            return "";
         };
 
         auto convert = [](int64_t micros, tunit unit) {
@@ -164,6 +168,8 @@ int builtin_time(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 case tunit::milliseconds: return micros / 1.0E3;
                 case tunit::microseconds: return micros / 1.0;
             }
+            // GCC does not recognize the exhaustive switch above
+            return 0.0;
         };
 
         auto wall_unit = get_unit(net_wall_micros);

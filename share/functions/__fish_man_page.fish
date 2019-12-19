@@ -10,8 +10,8 @@ function __fish_man_page
 
     #Skip `sudo` and display then manpage of following command
     while set -q args[2]
-        and test $args[1] = "sudo"
-        set args $args[2..-1]
+        and string match -qr -- '^(sudo|.*=.*)$' $args[1]
+        set -e args[1]
     end
 
     # If there are at least two tokens not starting with "-", the second one might be a subcommand.

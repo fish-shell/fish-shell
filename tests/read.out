@@ -27,7 +27,7 @@ two
 1 ''
 1 '' 1 ''
 1 'test' 1 '' 1 ''
-1 'foo' 1 'bar' 1 '  baz'
+1 'foo' 1 'bar' 1 'baz'
 0 a
 
 ####################
@@ -129,6 +129,6 @@ c
 Multi-char delimiters with IFS
 a
 b
-..c
+c
 
 banana sausage

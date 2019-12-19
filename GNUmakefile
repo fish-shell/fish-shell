@@ -17,6 +17,16 @@ else
 BUILDFILE = Makefile
 endif
 
+
+# If CMake has generated an in-tree Makefile, use that instead (issue #6264)
+MAKE_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+ifeq ($(shell test -f $(MAKE_DIR)/Makefile && echo 1), 1)
+
+all:
+	@+$(MAKE) -f $(MAKE_DIR)/Makefile $(MAKECMDGOALS) --no-print-directory
+
+else
+
 all: .begin build/fish
 
 PHONY: .begin
@@ -28,7 +38,8 @@ build/fish: build/$(BUILDFILE)
 	$(CMAKE) --build build
 
 build/$(BUILDFILE): build
-	cd build; $(CMAKE) .. -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -G "$(GENERATOR)" -DCMAKE_INSTALL_PREFIX="$(PREFIX)" -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+	cd build; $(CMAKE) .. -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -G "$(GENERATOR)" \
+		-DCMAKE_INSTALL_PREFIX="$(PREFIX)" -DCMAKE_EXPORT_COMPILE_COMMANDS=1
 
 build:
 	mkdir -p build
@@ -52,3 +63,5 @@ run: build/fish
 .PHONY: exec
 exec: build/fish
 	exec ./build/fish
+
+endif # CMake in-tree build check

@@ -22,6 +22,8 @@ endif
 MAKE_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 ifeq ($(shell test -f $(MAKE_DIR)/Makefile && echo 1), 1)
 
+all:
+	@+$(MAKE) -f $(MAKE_DIR)/Makefile $(MAKECMDGOALS) --no-print-directory
 %:
 	@+$(MAKE) -f $(MAKE_DIR)/Makefile $(MAKECMDGOALS) --no-print-directory
 

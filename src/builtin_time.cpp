@@ -120,7 +120,7 @@ int builtin_time(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         int64_t net_usr_micros = fish_usr_micros + child_usr_micros;
         int64_t net_wall_micros = micros(wall[1]) - micros(wall[0]);
 
-        enum class unit {
+        enum class tunit {
             minutes,
             seconds,
             milliseconds,
@@ -129,40 +129,40 @@ int builtin_time(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         auto get_unit = [](int64_t micros) {
             if (micros > 900 * 1E6) {
-                return unit::minutes;
+                return tunit::minutes;
             } else if (micros > 1 * 1E6) {
-                return unit::seconds;
+                return tunit::seconds;
             } else if (micros > 1E3) {
-                return unit::milliseconds;
+                return tunit::milliseconds;
             } else {
-                return unit::microseconds;
+                return tunit::microseconds;
             }
         };
 
-        auto unit_name = [](unit unit) {
+        auto unit_name = [](tunit unit) {
             switch (unit) {
-                case unit::minutes: return "minutes";
-                case unit::seconds: return "seconds";
-                case unit::milliseconds: return "milliseconds";
-                case unit::microseconds: return "microseconds";
+                case tunit::minutes: return "minutes";
+                case tunit::seconds: return "seconds";
+                case tunit::milliseconds: return "milliseconds";
+                case tunit::microseconds: return "microseconds";
             }
         };
 
-        auto unit_short_name = [](unit unit) {
+        auto unit_short_name = [](tunit unit) {
             switch (unit) {
-                case unit::minutes: return "mins";
-                case unit::seconds: return "secs";
-                case unit::milliseconds: return "millis";
-                case unit::microseconds: return "micros";
+                case tunit::minutes: return "mins";
+                case tunit::seconds: return "secs";
+                case tunit::milliseconds: return "millis";
+                case tunit::microseconds: return "micros";
             }
         };
 
-        auto convert = [](int64_t micros, unit unit) {
+        auto convert = [](int64_t micros, tunit unit) {
             switch (unit) {
-                case unit::minutes: return micros / 1.0E6 / 60.0;
-                case unit::seconds: return micros / 1.0E6;
-                case unit::milliseconds: return micros / 1.0E3;
-                case unit::microseconds: return micros / 1.0;
+                case tunit::minutes: return micros / 1.0E6 / 60.0;
+                case tunit::seconds: return micros / 1.0E6;
+                case tunit::milliseconds: return micros / 1.0E3;
+                case tunit::microseconds: return micros / 1.0;
             }
         };
 

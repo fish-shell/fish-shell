@@ -61,6 +61,7 @@
 #include "builtin_status.h"
 #include "builtin_string.h"
 #include "builtin_test.h"
+#include "builtin_time.h"
 #include "builtin_ulimit.h"
 #include "builtin_wait.h"
 #include "common.h"
@@ -387,6 +388,7 @@ static const builtin_data_t builtin_datas[] = {
     {L"string", &builtin_string, N_(L"Manipulate strings")},
     {L"switch", &builtin_generic, N_(L"Conditionally execute a block of commands")},
     {L"test", &builtin_test, N_(L"Test a condition")},
+    {L"time", &builtin_time, N_(L"Time the execution of a job")},
     {L"true", &builtin_true, N_(L"Return a successful result")},
     {L"ulimit", &builtin_ulimit, N_(L"Set or get the shells resource usage limits")},
     {L"wait", &builtin_wait, N_(L"Wait for background processes completed")},

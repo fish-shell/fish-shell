@@ -248,8 +248,7 @@ bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const w
                     auto target_fd = spec.get_target_as_fd();
                     assert(target_fd.has_value() &&
                            "fd redirection should have been validated already");
-                    this->push_back(
-                        make_unique<io_fd_t>(spec.fd, *target_fd, true /* user supplied */));
+                    this->push_back(make_unique<io_fd_t>(spec.fd, *target_fd));
                 }
                 break;
             }

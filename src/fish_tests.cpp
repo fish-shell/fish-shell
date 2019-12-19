@@ -2460,7 +2460,7 @@ static void test_dup2s() {
     using std::make_shared;
     io_chain_t chain;
     chain.push_back(make_shared<io_close_t>(17));
-    chain.push_back(make_shared<io_fd_t>(3, 19, true));
+    chain.push_back(make_shared<io_fd_t>(3, 19));
     auto list = dup2_list_t::resolve_chain(chain);
     do_test(list.has_value());
     do_test(list->get_actions().size() == 2);
@@ -2479,10 +2479,10 @@ static void test_dup2s_fd_for_target_fd() {
     io_chain_t chain;
     // note io_fd_t params are backwards from dup2.
     chain.push_back(make_shared<io_close_t>(10));
-    chain.push_back(make_shared<io_fd_t>(9, 10, true));
-    chain.push_back(make_shared<io_fd_t>(5, 8, true));
-    chain.push_back(make_shared<io_fd_t>(1, 4, true));
-    chain.push_back(make_shared<io_fd_t>(3, 5, true));
+    chain.push_back(make_shared<io_fd_t>(9, 10));
+    chain.push_back(make_shared<io_fd_t>(5, 8));
+    chain.push_back(make_shared<io_fd_t>(1, 4));
+    chain.push_back(make_shared<io_fd_t>(3, 5));
     auto list = dup2_list_t::resolve_chain(chain);
 
     do_test(list.has_value());

@@ -403,14 +403,12 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
         switch (in->io_mode) {
             case io_mode_t::fd: {
                 const io_fd_t *in_fd = static_cast<const io_fd_t *>(in.get());
-                // Ignore user-supplied fd redirections from an fd other than the
+                // Ignore fd redirections from an fd other than the
                 // standard ones. e.g. in source <&3 don't actually read from fd 3,
                 // which is internal to fish. We still respect this redirection in
                 // that we pass it on as a block IO to the code that source runs,
-                // and therefore this is not an error. Non-user supplied fd
-                // redirections come about through transmogrification, and we need
-                // to respect those here.
-                if (!in_fd->user_supplied || (in_fd->old_fd >= 0 && in_fd->old_fd < 3)) {
+                // and therefore this is not an error.
+                if (in_fd->old_fd >= 0 && in_fd->old_fd < 3) {
                     local_builtin_stdin = in_fd->old_fd;
                 }
                 break;

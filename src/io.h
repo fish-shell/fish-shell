@@ -200,17 +200,11 @@ class io_fd_t : public io_data_t {
     /// fd to redirect specified fd to. For example, in 2>&1, old_fd is 1, and io_data_t::fd is 2.
     const int old_fd;
 
-    /// Whether this redirection was supplied by a script. For example, 'cmd <&3' would have
-    /// user_supplied set to true. But a redirection that comes about through transmogrification
-    /// would not.
-    const bool user_supplied;
-
     void print() const override;
 
     ~io_fd_t() override;
 
-    io_fd_t(int f, int old, bool us)
-        : io_data_t(io_mode_t::fd, f), old_fd(old), user_supplied(us) {}
+    io_fd_t(int f, int old) : io_data_t(io_mode_t::fd, f), old_fd(old) {}
 };
 
 /// Represents a redirection to or from an opened file.

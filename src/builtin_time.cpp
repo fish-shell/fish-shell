@@ -16,6 +16,8 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
+#include <algorithm>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -43,6 +45,14 @@ static uint64_t micros(struct timeval t) {
 static uint64_t micros(struct timespec t) {
     return (static_cast<uint64_t>(t.tv_nsec) / 1E3 + static_cast<uint64_t>(t.tv_sec * 1E6));
 };
+
+// Linux makes available CLOCK_MONOTONIC_RAW, which is monotonic even in the presence of NTP
+// adjustments.
+#ifdef CLOCK_MONOTONIC_RAW
+    #define CLOCK_SRC CLOCK_MONOTONIC_RAW
+#else
+    #define CLOCK_SRC CLOCK_MONOTONIC
+#endif
 
 /// Implementation of time builtin.
 int builtin_time(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
@@ -78,7 +88,7 @@ int builtin_time(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         // Start counters
         getrusage(RUSAGE_SELF, &fish_usage[0]);
         getrusage(RUSAGE_CHILDREN, &child_usage[0]);
-        clock_gettime(CLOCK_MONOTONIC, &wall[0]);
+        clock_gettime(CLOCK_SRC, &wall[0]);
 
         if (parser.eval(std::move(new_cmd), *streams.io_chain, block_type_t::TOP) !=
             eval_result_t::ok) {
@@ -90,17 +100,25 @@ int builtin_time(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         // Stop counters
         getrusage(RUSAGE_SELF, &fish_usage[1]);
         getrusage(RUSAGE_CHILDREN, &child_usage[1]);
-        clock_gettime(CLOCK_MONOTONIC, &wall[1]);
+        clock_gettime(CLOCK_SRC, &wall[1]);
 
+        int64_t fish_sys_micros = micros(fish_usage[1].ru_stime) - micros(fish_usage[0].ru_stime);
+        int64_t fish_usr_micros = micros(fish_usage[1].ru_utime) - micros(fish_usage[0].ru_utime);
+        int64_t child_sys_micros = micros(child_usage[1].ru_stime) - micros(child_usage[0].ru_stime);
+        int64_t child_usr_micros = micros(child_usage[1].ru_utime) - micros(child_usage[0].ru_utime);
 
-        uint64_t fish_sys_micros = micros(fish_usage[1].ru_stime) - micros(fish_usage[0].ru_stime);
-        uint64_t fish_usr_micros = micros(fish_usage[1].ru_utime) - micros(fish_usage[0].ru_utime);
-        uint64_t child_sys_micros = micros(child_usage[1].ru_stime) - micros(child_usage[0].ru_stime);
-        uint64_t child_usr_micros = micros(child_usage[1].ru_utime) - micros(child_usage[0].ru_utime);
+        // The result from getrusage is not necessarily realtime, it may be cached a few
+        // microseconds behind. In the event that execution completes extremely quickly or there is
+        // no data (say, we are measuring external execution time but no external processes have
+        // been launched), it can incorrectly appear to be negative.
+        fish_sys_micros = std::max(int64_t(0), fish_sys_micros);
+        fish_usr_micros = std::max(int64_t(0), fish_usr_micros);
+        child_sys_micros = std::max(int64_t(0), child_sys_micros);
+        child_usr_micros = std::max(int64_t(0), child_usr_micros);
 
-        uint64_t net_sys_micros = fish_sys_micros + child_sys_micros;
-        uint64_t net_usr_micros = fish_usr_micros + child_usr_micros;
-        uint64_t net_wall_micros = micros(wall[1]) - micros(wall[0]);
+        int64_t net_sys_micros = fish_sys_micros + child_sys_micros;
+        int64_t net_usr_micros = fish_usr_micros + child_usr_micros;
+        int64_t net_wall_micros = micros(wall[1]) - micros(wall[0]);
 
         enum class unit {
             minutes,
@@ -109,13 +127,12 @@ int builtin_time(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             microseconds,
         };
 
-        auto get_unit = [](uint64_t micros) {
+        auto get_unit = [](int64_t micros) {
             if (micros > 900 * 1E6) {
                 return unit::minutes;
-            }
-            else if (micros > 1 * 1E6) {
+            } else if (micros > 1 * 1E6) {
                 return unit::seconds;
-            } else if (micros > 10E3) {
+            } else if (micros > 1E3) {
                 return unit::milliseconds;
             } else {
                 return unit::microseconds;
@@ -131,7 +148,16 @@ int builtin_time(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
         };
 
-        auto convert = [](uint64_t micros, unit unit) {
+        auto unit_short_name = [](unit unit) {
+            switch (unit) {
+                case unit::minutes: return "mins";
+                case unit::seconds: return "secs";
+                case unit::milliseconds: return "millis";
+                case unit::microseconds: return "micros";
+            }
+        };
+
+        auto convert = [](int64_t micros, unit unit) {
             switch (unit) {
                 case unit::minutes: return micros / 1.0E6 / 60.0;
                 case unit::seconds: return micros / 1.0E6;
@@ -146,16 +172,43 @@ int builtin_time(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         auto usr_time = convert(net_usr_micros, cpu_unit);
         auto sys_time = convert(net_sys_micros, cpu_unit);
 
-        streams.out.append_format(
-            L"\n__________________________________"              \
-            L"\nExecuted in    %6.2F %s"               \
-            L"\n   usr time    %6.2F %s"                        \
-            L"\n   sys time    %6.2F %s"                        \
-            L"\n\n",
-            wall_time, unit_name(wall_unit),
-            usr_time, unit_name(cpu_unit),
-            sys_time, unit_name(cpu_unit)
-        );
+        if (!verbose) {
+            streams.err.append_format(
+                L"\n_______________________________"    \
+                L"\nExecuted in  %6.2F %s"              \
+                L"\n   usr time  %6.2F %s"              \
+                L"\n   sys time  %6.2F %s"              \
+                L"\n\n",
+                wall_time, unit_name(wall_unit),
+                usr_time, unit_name(cpu_unit),
+                sys_time, unit_name(cpu_unit)
+            );
+        } else {
+            auto fish_unit = get_unit((fish_sys_micros + fish_usr_micros) / 2);
+            auto child_unit = get_unit((child_sys_micros + child_usr_micros) / 2);
+            auto fish_usr_time = convert(fish_usr_micros, fish_unit);
+            auto fish_sys_time = convert(fish_sys_micros, fish_unit);
+            auto child_usr_time = convert(child_usr_micros, child_unit);
+            auto child_sys_time = convert(child_sys_micros, child_unit);
+
+            streams.err.append_format(
+                L"\n________________________________________________________"    \
+                L"\nExecuted in  %6.2F %s   %*s           %*s "                  \
+                L"\n   usr time  %6.2F %s  %6.2F %s  %6.2F %s "                  \
+                L"\n   sys time  %6.2F %s  %6.2F %s  %6.2F %s "                  \
+                L"\n\n",
+                wall_time, unit_short_name(wall_unit),
+                strlen(unit_short_name(wall_unit)) - 1, "fish",
+                strlen(unit_short_name(fish_unit)) - 1, "external",
+                usr_time, unit_short_name(cpu_unit),
+                fish_usr_time, unit_short_name(fish_unit),
+                child_usr_time, unit_short_name(child_unit),
+                sys_time, unit_short_name(cpu_unit),
+                fish_sys_time, unit_short_name(fish_unit),
+                child_sys_time, unit_short_name(child_unit)
+            );
+
+        }
 
     }
 

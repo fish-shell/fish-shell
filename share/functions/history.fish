@@ -16,7 +16,7 @@ end
 
 function history --description "display or manipulate interactive command history"
     set -l cmd history
-    set -l options --exclusive 'c,e,p' --exclusive 'S,D,M,V,C'
+    set -l options --exclusive 'c,e,p' --exclusive 'S,D,M,V,X'
     set -a options 'h/help' 'c/contains' 'e/exact' 'p/prefix'
     set -a options 'C/case-sensitive' 'R/reverse' 'z/null' 't/show-time=?' 'n#max'
     # The following options are deprecated and will be removed in the next major release.

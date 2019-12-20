@@ -71,19 +71,6 @@ void exec_close(int fd) {
     }
 }
 
-/// Returns true if the redirection is a file redirection to a file other than /dev/null.
-static bool redirection_is_to_real_file(const shared_ptr<const io_data_t> &io) {
-    bool result = false;
-    if (io && io->io_mode == io_mode_t::file) {
-        // It's a file redirection. Compare the path to /dev/null.
-        if (!static_cast<const io_file_t *>(io.get())->is_dev_null()) {
-            // It's not /dev/null.
-            result = true;
-        }
-    }
-    return result;
-}
-
 /// Returns the interpreter for the specified script. Returns NULL if file is not a script with a
 /// shebang.
 char *get_interpreter(const char *command, char *interpreter, size_t buff_size) {
@@ -499,13 +486,8 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
         p->status = proc_status_t::from_exit_code(STATUS_READ_TOO_MUCH);
     }
 
-    // We will try to elide constructing an internal process. However if the output is going to a
-    // real file, we have to do it. For example in `echo -n > file.txt` we proceed to open file.txt
-    // even though there is no output, so that it is properly truncated.
     const shared_ptr<const io_data_t> stdout_io = io_chain->io_for_fd(STDOUT_FILENO);
     const shared_ptr<const io_data_t> stderr_io = io_chain->io_for_fd(STDERR_FILENO);
-    bool must_use_process =
-        redirection_is_to_real_file(stdout_io) || redirection_is_to_real_file(stderr_io);
 
     // If we are directing output to a buffer, then we can just transfer it directly without needing
     // to write to the bufferfill pipe. Note this is how we handle explicitly separated stdout
@@ -554,7 +536,7 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
         errbuff.clear();
     }
 
-    if (!must_use_process && outbuff.empty() && errbuff.empty()) {
+    if (outbuff.empty() && errbuff.empty()) {
         // We do not need to construct a background process.
         // TODO: factor this job-status-setting stuff into a single place.
         p->completed = true;

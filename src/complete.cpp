@@ -39,6 +39,7 @@
 #include "history.h"
 #include "iothread.h"
 #include "parse_constants.h"
+#include "parser_keywords.h"
 #include "parse_util.h"
 #include "parser.h"
 #include "path.h"
@@ -1473,17 +1474,8 @@ void completer_t::perform() {
 
     // Hack: fix autosuggestion by removing prefixing "and"s #6249.
     if (flags & completion_request_t::autosuggestion) {
-        constexpr const wchar_t *prefix_cmds[] = {L"and", L"begin", L"command", L"exec",
-                                                  L"if",  L"not",   L"or",      L"while"};
-        while (!tokens.empty()) {
-            auto cmd_string = tokens.front().get_source(cmd);
-            bool is_subcommand = std::find_if(std::begin(prefix_cmds), std::end(prefix_cmds),
-                                              [&cmd_string](const wchar_t *prefix) {
-                                                  return cmd_string == prefix;
-                                              }) != std::end(prefix_cmds);
-            if (!is_subcommand) break;
+        while (!tokens.empty() && parser_keywords_is_subcommand(tokens.front().get_source(cmd)))
             tokens.erase(tokens.begin());
-        }
     }
     // Empty process (cursor is after one of ;, &, |, \n, &&, || modulo whitespace).
     if (tokens.empty()) {

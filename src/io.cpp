@@ -29,8 +29,8 @@
 
 io_data_t::~io_data_t() = default;
 
-io_file_t::io_file_t(int f, autoclose_fd_t file, const wcstring &path)
-    : io_data_t(io_mode_t::file, f), file_fd_(std::move(file)), is_dev_null_(path == L"/dev/null") {
+io_file_t::io_file_t(int f, autoclose_fd_t file)
+    : io_data_t(io_mode_t::file, f), file_fd_(std::move(file)) {
     assert(file_fd_.valid() && "File is not valid");
 }
 
@@ -267,7 +267,7 @@ bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const w
                     }
                     return false;
                 }
-                this->push_back(std::make_shared<io_file_t>(spec.fd, std::move(file), path));
+                this->push_back(std::make_shared<io_file_t>(spec.fd, std::move(file)));
                 break;
             }
         }

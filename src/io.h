@@ -212,20 +212,15 @@ class io_file_t : public io_data_t {
    public:
     void print() const override;
 
-    io_file_t(int f, autoclose_fd_t file, const wcstring &path);
+    io_file_t(int f, autoclose_fd_t file);
 
     ~io_file_t() override;
 
     int file_fd() const { return file_fd_.fd(); }
 
-    bool is_dev_null() const { return is_dev_null_; }
-
    private:
     // The fd for the file which we are writing to or reading from.
     autoclose_fd_t file_fd_;
-
-    // Hackish - whether this is /dev/null.
-    const bool is_dev_null_;
 };
 
 /// Represents (one end) of a pipe.

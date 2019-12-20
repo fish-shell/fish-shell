@@ -46,13 +46,13 @@ enum parse_statement_decoration_t get_decoration(tnode_t<grammar::plain_statemen
     return decoration;
 }
 
-enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::job_decorator> stmt) {
-    return static_cast<parse_bool_statement_type_t>(stmt.tag());
+enum parse_job_decoration_t bool_statement_type(tnode_t<grammar::job_decorator> stmt) {
+    return static_cast<parse_job_decoration_t>(stmt.tag());
 }
 
-enum parse_bool_statement_type_t bool_statement_type(
+enum parse_job_decoration_t bool_statement_type(
     tnode_t<grammar::job_conjunction_continuation> cont) {
-    return static_cast<parse_bool_statement_type_t>(cont.tag());
+    return static_cast<parse_job_decoration_t>(cont.tag());
 }
 
 maybe_t<pipe_or_redir_t> redirection_for_node(tnode_t<grammar::redirection> redirection,
@@ -118,7 +118,7 @@ bool job_node_is_background(tnode_t<grammar::job> job) {
     return bg.tag() == parse_background;
 }
 
-parse_bool_statement_type_t get_decorator(tnode_t<grammar::job_conjunction> conj) {
+parse_job_decoration_t get_decorator(tnode_t<grammar::job_conjunction> conj) {
     using namespace grammar;
     tnode_t<job_decorator> dec;
     // We have two possible parents: job_list and andor_job_list.

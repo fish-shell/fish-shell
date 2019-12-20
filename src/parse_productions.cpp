@@ -69,21 +69,25 @@ RESOLVE(job_list) {
 RESOLVE(job_decorator) {
     // If it's followed by --help, it's not a decoration.
     if (token2.is_help_argument) {
-        *out_tag = parse_bool_none;
+        *out_tag = parse_job_decoration_none;
         return production_for<empty>();
     }
 
     switch (token1.keyword) {
         case parse_keyword_and: {
-            *out_tag = parse_bool_and;
+            *out_tag = parse_job_decoration_and;
             return production_for<ands>();
         }
         case parse_keyword_or: {
-            *out_tag = parse_bool_or;
+            *out_tag = parse_job_decoration_or;
             return production_for<ors>();
         }
+        case parse_keyword_time: {
+            *out_tag = parse_job_decoration_time;
+            return production_for<times>();
+        }
         default: {
-            *out_tag = parse_bool_none;
+            *out_tag = parse_job_decoration_none;
             return production_for<empty>();
         }
     }
@@ -94,10 +98,10 @@ RESOLVE(job_conjunction_continuation) {
     UNUSED(out_tag);
     switch (token1.type) {
         case parse_token_type_andand:
-            *out_tag = parse_bool_and;
+            *out_tag = parse_job_decoration_and;
             return production_for<andands>();
         case parse_token_type_oror:
-            *out_tag = parse_bool_or;
+            *out_tag = parse_job_decoration_or;
             return production_for<orors>();
         default:
             return production_for<empty>();

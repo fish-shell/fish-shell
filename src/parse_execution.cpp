@@ -43,6 +43,7 @@
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
+#include "timer.h"
 #include "tnode.h"
 #include "tokenizer.h"
 #include "trace.h"
@@ -1354,8 +1355,8 @@ eval_result_t parse_execution_context_t::run_job_conjunction(
         bool skip = false;
         if (continuation) {
             // Check the conjunction type.
-            parse_bool_statement_type_t conj = bool_statement_type(continuation);
-            assert((conj == parse_bool_and || conj == parse_bool_or) && "Unexpected conjunction");
+            parse_job_decoration_t conj = bool_statement_type(continuation);
+            assert((conj == parse_job_decoration_and || conj == parse_job_decoration_or) && "Unexpected conjunction");
             skip = should_skip(conj);
         }
         if (!skip) {
@@ -1367,12 +1368,12 @@ eval_result_t parse_execution_context_t::run_job_conjunction(
     return result;
 }
 
-bool parse_execution_context_t::should_skip(parse_bool_statement_type_t type) const {
+bool parse_execution_context_t::should_skip(parse_job_decoration_t type) const {
     switch (type) {
-        case parse_bool_and:
+        case parse_job_decoration_and:
             // AND. Skip if the last job failed.
             return parser->get_last_status() != 0;
-        case parse_bool_or:
+        case parse_job_decoration_or:
             // OR. Skip if the last job succeeded.
             return parser->get_last_status() == 0;
         default:
@@ -1387,6 +1388,7 @@ eval_result_t parse_execution_context_t::run_job_list(tnode_t<Type> job_list,
     static_assert(Type::token == symbol_job_list || Type::token == symbol_andor_job_list,
                   "Not a job list");
 
+    static std::vector<timer_snapshot_t> active_timers;
     eval_result_t result = eval_result_t::ok;
     while (auto job_conj = job_list.template next_in_list<g::job_conjunction>()) {
         if (auto reason = check_end_execution()) {
@@ -1396,10 +1398,25 @@ eval_result_t parse_execution_context_t::run_job_list(tnode_t<Type> job_list,
 
         // Maybe skip the job if it has a leading and/or.
         // Skipping is treated as success.
+        bool timer_started = false;
+        if (get_decorator(job_conj) == parse_job_decoration_time) {
+            active_timers.emplace_back(timer_snapshot_t::take());
+            timer_started = true;
+        }
         if (should_skip(get_decorator(job_conj))) {
             result = eval_result_t::ok;
         } else {
             result = this->run_job_conjunction(job_conj, associated_block);
+        }
+        if (timer_started) {
+            auto t1 = std::move(active_timers.back());
+            active_timers.pop_back();
+            auto t2 = timer_snapshot_t::take();
+
+            // Well, this is awkward. By defining `time` as a decorator and not a built-in, there's
+            // no associated stream for its output!
+            auto output = timer_snapshot_t::print_delta(std::move(t1), std::move(t2), true);
+            std::fwprintf(stderr, L"%S\n", output.c_str());
         }
     }
 

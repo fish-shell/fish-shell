@@ -117,6 +117,7 @@ enum parse_keyword_t : uint8_t {
     parse_keyword_not,
     parse_keyword_or,
     parse_keyword_switch,
+    parse_keyword_time,
     parse_keyword_while,
 };
 
@@ -136,6 +137,7 @@ const enum_map<parse_keyword_t> keyword_enum_map[] = {{parse_keyword_exclam, L"!
                                                       {parse_keyword_not, L"not"},
                                                       {parse_keyword_or, L"or"},
                                                       {parse_keyword_switch, L"switch"},
+                                                      {parse_keyword_time, L"time"},
                                                       {parse_keyword_while, L"while"},
                                                       {parse_keyword_none, nullptr}};
 #define keyword_enum_map_len (sizeof keyword_enum_map / sizeof *keyword_enum_map)
@@ -150,8 +152,13 @@ enum parse_statement_decoration_t {
     parse_statement_decoration_exec,
 };
 
-// Boolean statement types, stored in node tag.
-enum parse_bool_statement_type_t { parse_bool_none, parse_bool_and, parse_bool_or };
+// Job decorations, stored in node tag.
+enum parse_job_decoration_t {
+    parse_job_decoration_none,
+    parse_job_decoration_and,
+    parse_job_decoration_or,
+    parse_job_decoration_time,
+};
 
 // Whether a statement is backgrounded.
 enum parse_optional_background_t { parse_no_background, parse_background };

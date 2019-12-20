@@ -233,9 +233,9 @@ maybe_t<wcstring> command_for_plain_statement(tnode_t<grammar::plain_statement> 
 parse_statement_decoration_t get_decoration(tnode_t<grammar::plain_statement> stmt);
 
 /// Return the type for a boolean statement.
-enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::job_decorator> stmt);
+parse_job_decoration_t bool_statement_type(tnode_t<grammar::job_decorator> stmt);
 
-enum parse_bool_statement_type_t bool_statement_type(
+parse_job_decoration_t bool_statement_type(
     tnode_t<grammar::job_conjunction_continuation> cont);
 
 /// Given a redirection node, get the parsed redirection and target of the redirection (file path,
@@ -256,7 +256,7 @@ bool job_node_is_background(tnode_t<grammar::job>);
 /// If the conjunction is has a decorator (and/or), return it; otherwise return none. This only
 /// considers the leading conjunction, e.g. in `and true || false` only the 'true' conjunction will
 /// return 'and'.
-parse_bool_statement_type_t get_decorator(tnode_t<grammar::job_conjunction>);
+parse_job_decoration_t get_decorator(tnode_t<grammar::job_conjunction>);
 
 /// Return whether the statement is part of a pipeline.
 /// This doesn't detect e.g. pipelines involving our parent's block statements.

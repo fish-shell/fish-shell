@@ -210,6 +210,7 @@ DEF_ALT(job_list) {
 DEF_ALT(job_decorator) {
     using ands = single<keyword<parse_keyword_and>>;
     using ors = single<keyword<parse_keyword_or>>;
+    using times = single<keyword<parse_keyword_time>>;
     using empty = grammar::empty;
     ALT_BODY(job_decorator, ands, ors, empty);
 };

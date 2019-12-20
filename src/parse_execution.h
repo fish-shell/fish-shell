@@ -74,7 +74,7 @@ class parse_execution_context_t {
                                  wcstring_list_t *out_args) const;
 
     /// Return whether we should skip a job with the given bool statement type.
-    bool should_skip(parse_bool_statement_type_t type) const;
+    bool should_skip(parse_job_decoration_t type) const;
 
     /// Indicates whether a job is a simple block (one block, no redirections).
     bool job_is_simple_block(tnode_t<grammar::job> job) const;

@@ -1079,11 +1079,11 @@ static bool detect_errors_in_backgrounded_job(tnode_t<grammar::job> job,
         // Try getting the next job's decorator.
         if (auto next_job_dec = jlist.next_in_list<g::job_decorator>()) {
             // The next job is indeed a boolean statement.
-            parse_bool_statement_type_t bool_type = bool_statement_type(next_job_dec);
-            if (bool_type == parse_bool_and) {
+            parse_job_decoration_t bool_type = bool_statement_type(next_job_dec);
+            if (bool_type == parse_job_decoration_and) {
                 errored = append_syntax_error(parse_errors, next_job_dec.source_range()->start,
                                               BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
-            } else if (bool_type == parse_bool_or) {
+            } else if (bool_type == parse_job_decoration_or) {
                 errored = append_syntax_error(parse_errors, next_job_dec.source_range()->start,
                                               BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
             }

@@ -39,11 +39,27 @@
 // deprecated in favor of getrusage(2), which offers a wider variety of metrics coalesced for SELF,
 // THREAD, or CHILDREN.
 
-static uint64_t micros(struct timeval t) {
-    return (static_cast<uint64_t>(t.tv_usec) + static_cast<uint64_t>(t.tv_sec * 1E6));
+// With regards to the C++11 `<chrono>` interface, there are three different time sources (clocks)
+// that we can use portably: `system_clock`, `steady_clock`, and `high_resolution_clock`; with
+// different properties and guarantees. While the obvious difference is the direct tradeoff between
+// period and resolution (higher resolution equals ability to measure smaller time differences more
+// accurately, but at the cost of rolling over more frequently), but unfortunately it is not as
+// simple as starting two clocks and going with the highest resolution that hasn't rolled over.
+// `system_clock` is out because it is always subject to interference due to adjustments from NTP
+// servers or super users (as it reflects the "actual" time), but `high_resolution_clock` may or may
+// not be aliased to `system_clock` or `steady_clock`. In practice, there's likely no need to worry
+// about this too much, a survey <http://howardhinnant.github.io/clock_survey.html> of the different
+// libraries indicates that `high_resolution_clock` is either an alias for `steady_clock` (in which
+// case it offers no greater resolution) or it is an alias for `system_clock` (in which case, even
+// when it offers a greater resolution than `steady_clock` it is not fit for use).
+
+static int64_t micros(struct timeval t) {
+    return (static_cast<int64_t>(t.tv_usec) + static_cast<int64_t>(t.tv_sec * 1E6));
 };
-static uint64_t micros(struct timespec t) {
-    return (static_cast<uint64_t>(t.tv_nsec) / 1E3 + static_cast<uint64_t>(t.tv_sec * 1E6));
+
+template <typename D1, typename D2>
+static int64_t micros(const std::chrono::duration<D1, D2> &d) {
+    return std::chrono::duration_cast<std::chrono::microseconds>(d).count();
 };
 
 // Linux makes available CLOCK_MONOTONIC_RAW, which is monotonic even in the presence of NTP
@@ -83,12 +99,11 @@ int builtin_time(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (argc > 1) {
         struct rusage fish_usage[2];
         struct rusage child_usage [2];
-        struct timespec wall[2] {};
 
         // Start counters
         getrusage(RUSAGE_SELF, &fish_usage[0]);
         getrusage(RUSAGE_CHILDREN, &child_usage[0]);
-        clock_gettime(CLOCK_SRC, &wall[0]);
+        auto wall_start = std::chrono::steady_clock::now();
 
         if (parser.eval(std::move(new_cmd), *streams.io_chain, block_type_t::TOP) !=
             eval_result_t::ok) {
@@ -100,7 +115,7 @@ int builtin_time(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         // Stop counters
         getrusage(RUSAGE_SELF, &fish_usage[1]);
         getrusage(RUSAGE_CHILDREN, &child_usage[1]);
-        clock_gettime(CLOCK_SRC, &wall[1]);
+        auto wall_end = std::chrono::steady_clock::now();
 
         int64_t fish_sys_micros = micros(fish_usage[1].ru_stime) - micros(fish_usage[0].ru_stime);
         int64_t fish_usr_micros = micros(fish_usage[1].ru_utime) - micros(fish_usage[0].ru_utime);
@@ -118,7 +133,7 @@ int builtin_time(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
         int64_t net_sys_micros = fish_sys_micros + child_sys_micros;
         int64_t net_usr_micros = fish_usr_micros + child_usr_micros;
-        int64_t net_wall_micros = micros(wall[1]) - micros(wall[0]);
+        int64_t net_wall_micros = micros(wall_end - wall_start);
 
         enum class tunit {
             minutes,

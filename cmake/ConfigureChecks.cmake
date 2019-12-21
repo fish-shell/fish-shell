@@ -189,6 +189,13 @@ int main () {
 FIND_PROGRAM(SED sed)
 
 # https://github.com/fish-shell/fish-shell/issues/5865
+CMAKE_PUSH_CHECK_STATE()
+# Needed until CMP0067 is set to NEW
+# g++ 4.8 needs -std=gnu+11 set to enable atomic features, but CMake < 3.8 does not add that
+# flag to TRY_COMPILE targets even when set for the project
+IF(CMAKE_COMPILER_IS_GNUCXX)
+    LIST(APPEND CMAKE_REQUIRED_FLAGS "-std=gnu++11")
+ENDIF()
 CHECK_CXX_SOURCE_COMPILES("
 #include <atomic>
 #include <cstdint>
@@ -200,3 +207,4 @@ LIBATOMIC_NOT_NEEDED)
 IF (NOT LIBATOMIC_NOT_NEEDED)
     SET(ATOMIC_LIBRARY "atomic")
 ENDIF()
+CMAKE_POP_CHECK_STATE()

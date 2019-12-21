@@ -44,6 +44,7 @@
 #include "reader.h"
 #include "redirection.h"
 #include "signal.h"
+#include "timer.h"
 #include "trace.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -1049,6 +1050,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
         parser.set_last_statuses(statuses_t::just(status));
         return false;
     }
+    cleanup_t timer = push_timer(j->flags().has_time_prefix);
 
     // Get the deferred process, if any. We will have to remember its pipes.
     autoclose_pipes_t deferred_pipes;

@@ -955,7 +955,7 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2) {
                     case symbol_job:
                         variable_assignments =
                             tnode_t<grammar::job>(&nodes, parent)
-                                .try_get_child<grammar::variable_assignments, 0>();
+                                .try_get_child<grammar::variable_assignments, 1>();
                         break;
                     case symbol_job_continuation:
                         variable_assignments =

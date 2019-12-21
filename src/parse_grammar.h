@@ -210,7 +210,6 @@ DEF_ALT(job_list) {
 DEF_ALT(job_decorator) {
     using ands = single<keyword<parse_keyword_and>>;
     using ors = single<keyword<parse_keyword_or>>;
-    using times = single<keyword<parse_keyword_time>>;
     using empty = grammar::empty;
     ALT_BODY(job_decorator, ands, ors, empty);
 };
@@ -225,13 +224,20 @@ DEF_ALT(job_conjunction_continuation) {
     ALT_BODY(job_conjunction_continuation, andands, orors, empty);
 };
 
+/// The time builtin.
+DEF_ALT(optional_time) {
+    using empty = grammar::empty;
+    using time = single<keyword<parse_keyword_time>>;
+    ALT_BODY(optional_time, empty, time);
+};
+
 // A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases
 // like if statements, where we require a command). To represent "non-empty", we require a
 // statement, followed by a possibly empty job_continuation, and then optionally a background
 // specifier '&'
 DEF(job)
-produces_sequence<variable_assignments, statement, job_continuation, optional_background>{
-    BODY(job)};
+produces_sequence<optional_time, variable_assignments, statement, job_continuation,
+                  optional_background>{BODY(job)};
 
 DEF_ALT(job_continuation) {
     using piped =
@@ -322,8 +328,9 @@ produces_sequence<keyword<parse_keyword_function>, argument, argument_list, tok_
     BODY(function_header)};
 
 DEF_ALT(not_statement) {
-    using nots = seq<keyword<parse_keyword_not>, variable_assignments, statement>;
-    using exclams = seq<keyword<parse_keyword_exclam>, variable_assignments, statement>;
+    using nots = seq<keyword<parse_keyword_not>, variable_assignments, optional_time, statement>;
+    using exclams =
+        seq<keyword<parse_keyword_exclam>, variable_assignments, optional_time, statement>;
     ALT_BODY(not_statement, nots, exclams);
 };
 

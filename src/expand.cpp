@@ -860,9 +860,9 @@ class expander_t {
     expand_result_t stage_home_and_self(wcstring input, std::vector<completion_t> *out);
     expand_result_t stage_wildcards(wcstring path_to_expand, std::vector<completion_t> *out);
 
-    expander_t(const environment_t &vars, const std::shared_ptr<parser_t> &parser,
-               expand_flags_t flags, parse_error_list_t *errors)
-        : vars(vars), parser(parser), flags(flags), errors(errors) {}
+    expander_t(const environment_t &vars, std::shared_ptr<parser_t> parser, expand_flags_t flags,
+               parse_error_list_t *errors)
+        : vars(vars), parser(std::move(parser)), flags(flags), errors(errors) {}
 
    public:
     static expand_result_t expand_string(wcstring input, std::vector<completion_t> *out_completions,

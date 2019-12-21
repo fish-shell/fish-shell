@@ -389,9 +389,9 @@ class completer_t {
                                                 const std::vector<tok_t> &args);
 
    public:
-    completer_t(const environment_t &vars, const std::shared_ptr<parser_t> &parser, wcstring c,
+    completer_t(const environment_t &vars, std::shared_ptr<parser_t> parser, wcstring c,
                 completion_request_flags_t f)
-        : vars(vars), parser(parser), cmd(std::move(c)), flags(f) {}
+        : vars(vars), parser(std::move(parser)), cmd(std::move(c)), flags(f) {}
 
     void perform();
 

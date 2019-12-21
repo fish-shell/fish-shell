@@ -901,10 +901,10 @@ class literal_replacer_t : public string_replacer_t {
     size_t patlen;
 
    public:
-    literal_replacer_t(const wchar_t *argv0, const wcstring &pattern_, const wchar_t *replacement_,
+    literal_replacer_t(const wchar_t *argv0, wcstring pattern_, const wchar_t *replacement_,
                        const options_t &opts, io_streams_t &streams)
         : string_replacer_t(argv0, opts, streams),
-          pattern(pattern_),
+          pattern(std::move(pattern_)),
           replacement(replacement_),
           patlen(pattern.length()) {}
 

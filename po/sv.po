@@ -57676,22 +57676,7 @@ msgstr ""
 msgid "Command used to find descriptions for commands"
 msgstr ""
 
-<<<<<<< HEAD
 #: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:3
-=======
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:1
-#: share/functions/__fish_git_prompt.fish:173
-msgid "Helper function for __fish_git_prompt"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:2
-#: share/functions/__fish_git_prompt.fish:348
-msgid "Prompt function for Git"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:3
-#: share/functions/__fish_git_prompt.fish:458
->>>>>>> Remove all fuzzy translations (see also #6418)
 msgid ""
 "fish_git_prompt helper, tells whether or not the current branch has staged "
 "files"
@@ -57715,24 +57700,6 @@ msgstr ""
 msgid "fish_git_prompt helper, checks color variables"
 msgstr ""
 
-<<<<<<< HEAD
-=======
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:8
-#: share/functions/__fish_git_prompt.fish:730
-msgid "Event handler, repaints prompt when functionality changes"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:9
-#: share/functions/__fish_git_prompt.fish:748
-msgid "Event handler, repaints prompt when any color changes"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:10
-#: share/functions/__fish_git_prompt.fish:768
-msgid "Event handler, repaints prompt when any char changes"
-msgstr ""
-
->>>>>>> Remove all fuzzy translations (see also #6418)
 #: /tmp/fish/implicit/share/functions/__fish_gnu_complete.fish:1
 msgid ""
 "Wrapper for the complete built-in. Skips the long completions on non-GNU "

@@ -65,7 +65,7 @@ const enum_map<status_cmd_t> status_enum_map[] = {
 #define status_enum_map_len (sizeof status_enum_map / sizeof *status_enum_map)
 
 #define CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)                                        \
-    if (args.size() != 0) {                                                                 \
+    if (!args.empty()) {                                                                    \
         const wchar_t *subcmd_str = enum_to_str(status_cmd, status_enum_map);               \
         if (!subcmd_str) subcmd_str = L"default";                                           \
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, subcmd_str, 0, args.size()); \

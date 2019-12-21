@@ -1299,7 +1299,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
 
         history_search_t searcher(*history, search_string, history_search_type_t::prefix);
         while (!reader_test_should_cancel() && searcher.go_backwards()) {
-            history_item_t item = searcher.current_item();
+            const history_item_t &item = searcher.current_item();
 
             // Skip items with newlines because they make terrible autosuggestions.
             if (item.str().find(L'\n') != wcstring::npos) continue;

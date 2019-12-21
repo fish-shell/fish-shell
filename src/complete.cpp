@@ -209,7 +209,7 @@ completion_t::completion_t(wcstring comp, wcstring desc, string_fuzzy_match_t ma
                            complete_flags_t flags_val)
     : completion(std::move(comp)),
       description(std::move(desc)),
-      match(std::move(mat)),
+      match(mat),
       flags(resolve_auto_space(completion, flags_val)) {}
 
 completion_t::completion_t(const completion_t &) = default;

@@ -110,7 +110,7 @@ void parser_t::skip_all_blocks() {
 
 // Given a new-allocated block, push it onto our block list, acquiring ownership.
 block_t *parser_t::push_block(block_t &&block) {
-    block_t new_current{std::move(block)};
+    block_t new_current{block};
     const enum block_type_t type = new_current.type();
     new_current.src_lineno = parser_t::get_lineno();
 
@@ -147,7 +147,7 @@ void parser_t::pop_block(const block_t *expected) {
     assert(!block_list.empty() && "empty block list");
 
     // Acquire ownership out of the block list.
-    block_t old = std::move(block_list.front());
+    block_t old = block_list.front();
     block_list.pop_front();
 
     if (old.wants_pop_env) vars().pop();

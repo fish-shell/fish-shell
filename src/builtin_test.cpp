@@ -311,7 +311,7 @@ unique_ptr<expression> test_parser::parse_unary_expression(unsigned int start, u
     token_t tok = token_for_string(arg(start))->tok;
     if (tok == test_bang) {
         unique_ptr<expression> subject(parse_unary_expression(start + 1, end));
-        if (subject.get()) {
+        if (subject) {
             return make_unique<unary_operator>(tok, range_t(start, subject->range.end),
                                                move(subject));
         }
@@ -496,7 +496,7 @@ unique_ptr<expression> test_parser::parse_4_arg_expression(unsigned int start, u
     token_t first_token = token_for_string(arg(start))->tok;
     if (first_token == test_bang) {
         unique_ptr<expression> subject(parse_3_arg_expression(start + 1, end));
-        if (subject.get()) {
+        if (subject) {
             result = make_unique<unary_operator>(first_token, range_t(start, subject->range.end),
                                                  move(subject));
         }

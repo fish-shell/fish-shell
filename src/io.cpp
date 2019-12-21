@@ -284,7 +284,7 @@ void io_chain_t::print() const {
     std::fwprintf(stderr, L"Chain %p (%ld items):\n", this, (long)this->size());
     for (size_t i = 0; i < this->size(); i++) {
         const auto &io = this->at(i);
-        if (io.get() == nullptr) {
+        if (io == nullptr) {
             std::fwprintf(stderr, L"\t(null)\n");
         } else {
             std::fwprintf(stderr, L"\t%lu: fd:%d, ", (unsigned long)i, io->fd);

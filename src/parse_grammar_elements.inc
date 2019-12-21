@@ -31,6 +31,7 @@ ELEM(argument)
 ELEM(redirection)
 ELEM(optional_background)
 ELEM(optional_newlines)
+ELEM(optional_time)
 ELEM(end_command)
 ELEM(freestanding_argument_list)
 #undef ELEM

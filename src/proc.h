@@ -410,6 +410,9 @@ class job_t {
 
         /// This job is disowned, and should be removed from the active jobs list.
         bool disown_requested{false};
+
+        /// Whether to print timing for this job.
+        bool has_time_prefix{false};
     } job_flags{};
 
     /// Access the job flags.

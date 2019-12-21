@@ -12,6 +12,8 @@
 class parser_t;
 struct io_streams_t;
 
+cleanup_t push_timer(bool enabled);
+
 struct timer_snapshot_t {
 public:
     struct rusage cpu_fish;

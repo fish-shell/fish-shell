@@ -25,3 +25,21 @@ time echo 'foo -s   bar'
 #CHECKERR: Executed in {{[\d,.\s]*}} {{millis|micros|secs}} {{\s*}}fish {{\s*}}external
 #CHECKERR: usr time {{[\d,.\s]*}} {{millis|micros|secs}} {{[\d,.\s]*}} {{millis|micros|secs}} {{[\d,.\s]*}} {{millis|micros|secs}}
 #CHECKERR: sys time {{[\d,.\s]*}} {{millis|micros|secs}} {{[\d,.\s]*}} {{millis|micros|secs}} {{[\d,.\s]*}} {{millis|micros|secs}}
+
+true && time a=b not builtin true | true
+#CHECKERR: ___{{.*}}
+#CHECKERR: {{.*}}
+#CHECKERR: {{.*}}
+#CHECKERR: {{.*}}
+
+PATH= time true
+#CHECKERR: fish: Unknown command: time
+#CHECKERR: {{.*}}
+#CHECKERR: PATH= time true
+#CHECKERR:       ^
+
+not time true
+#CHECKERR: ___{{.*}}
+#CHECKERR: {{.*}}
+#CHECKERR: {{.*}}
+#CHECKERR: {{.*}}

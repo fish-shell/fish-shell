@@ -114,7 +114,7 @@ arguments_node_list_t get_argument_nodes(tnode_t<grammar::arguments_or_redirecti
 }
 
 bool job_node_is_background(tnode_t<grammar::job> job) {
-    tnode_t<grammar::optional_background> bg = job.child<3>();
+    tnode_t<grammar::optional_background> bg = job.child<4>();
     return bg.tag() == parse_background;
 }
 
@@ -144,7 +144,7 @@ pipeline_position_t get_pipeline_position(tnode_t<grammar::statement> st) {
 
     // Check if we're the beginning of a job, and if so, whether that job
     // has a non-empty continuation.
-    tnode_t<job_continuation> jc = st.try_get_parent<job>().child<2>();
+    tnode_t<job_continuation> jc = st.try_get_parent<job>().child<3>();
     if (jc.try_get_child<statement, 3>()) {
         return pipeline_position_t::first;
     }

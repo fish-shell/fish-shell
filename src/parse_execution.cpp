@@ -122,13 +122,14 @@ tnode_t<g::plain_statement> parse_execution_context_t::infinite_recursive_statem
     // Here's the statement node we find that's infinite recursive.
     tnode_t<grammar::plain_statement> infinite_recursive_statement;
 
-    // Get the list of plain statements.
-    // Ignore statements with decorations like 'builtin' or 'command', since those
-    // are not infinite recursion. In particular that is what enables 'wrapper functions'.
-    tnode_t<g::statement> statement = first_job.child<1>();
-    tnode_t<g::job_continuation> continuation = first_job.child<2>();
+    // Ignore the jobs variable assigment and "time" prefixes.
+    tnode_t<g::statement> statement = first_job.child<2>();
+    tnode_t<g::job_continuation> continuation = first_job.child<3>();
     const null_environment_t nullenv{};
     while (statement) {
+        // Get the list of plain statements.
+        // Ignore statements with decorations like 'builtin' or 'command', since those
+        // are not infinite recursion. In particular that is what enables 'wrapper functions'.
         tnode_t<g::plain_statement> plain_statement =
             statement.try_get_child<g::decorated_statement, 0>()
                 .try_get_child<g::plain_statement, 0>();
@@ -203,10 +204,10 @@ maybe_t<eval_result_t> parse_execution_context_t::check_end_execution() const {
 
 /// Return whether the job contains a single statement, of block type, with no redirections.
 bool parse_execution_context_t::job_is_simple_block(tnode_t<g::job> job_node) const {
-    tnode_t<g::statement> statement = job_node.child<1>();
+    tnode_t<g::statement> statement = job_node.child<2>();
 
     // Must be no pipes.
-    if (job_node.child<2>().try_get_child<g::tok_pipe, 0>()) {
+    if (job_node.child<3>().try_get_child<g::tok_pipe, 0>()) {
         return false;
     }
 
@@ -975,8 +976,10 @@ eval_result_t parse_execution_context_t::populate_not_process(
     job_t *job, process_t *proc, tnode_t<g::not_statement> not_statement) {
     auto &flags = job->mut_flags();
     flags.negate = !flags.negate;
+    auto optional_time = not_statement.require_get_child<g::optional_time, 2>();
+    if (optional_time.tag() == parse_optional_time_time) flags.has_time_prefix = true;
     return this->populate_job_process(
-        job, proc, not_statement.require_get_child<g::statement, 2>(),
+        job, proc, not_statement.require_get_child<g::statement, 3>(),
         not_statement.require_get_child<g::variable_assignments, 1>());
 }
 
@@ -1111,18 +1114,20 @@ eval_result_t parse_execution_context_t::populate_job_from_job_node(
 
     // We are going to construct process_t structures for every statement in the job. Get the first
     // statement.
-    tnode_t<g::statement> statement = job_node.child<1>();
-    tnode_t<g::variable_assignments> variable_assignments = job_node.child<0>();
+    tnode_t<g::optional_time> optional_time = job_node.child<0>();
+    tnode_t<g::variable_assignments> variable_assignments = job_node.child<1>();
+    tnode_t<g::statement> statement = job_node.child<2>();
 
     // Create processes. Each one may fail.
     process_list_t processes;
     processes.emplace_back(new process_t());
+    if (optional_time.tag() == parse_optional_time_time) j->mut_flags().has_time_prefix = true;
     eval_result_t result =
         this->populate_job_process(j, processes.back().get(), statement, variable_assignments);
 
     // Construct process_ts for job continuations (pipelines), by walking the list until we hit the
     // terminal (empty) job continuation.
-    tnode_t<g::job_continuation> job_cont = job_node.child<2>();
+    tnode_t<g::job_continuation> job_cont = job_node.child<3>();
     assert(job_cont);
     while (auto pipe = job_cont.try_get_child<g::tok_pipe, 0>()) {
         if (result != eval_result_t::ok) {
@@ -1212,7 +1217,9 @@ eval_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_node,
     // However, if there are no redirections, then we can just jump into the block directly, which
     // is significantly faster.
     if (job_is_simple_block(job_node)) {
-        tnode_t<g::variable_assignments> variable_assignments = job_node.child<0>();
+        tnode_t<g::optional_time> optional_time = job_node.child<0>();
+        cleanup_t timer = push_timer(optional_time.tag() == parse_optional_time_time);
+        tnode_t<g::variable_assignments> variable_assignments = job_node.child<1>();
         const block_t *block = nullptr;
         eval_result_t result =
             this->apply_variable_assignments(nullptr, variable_assignments, &block);
@@ -1220,7 +1227,7 @@ eval_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_node,
             if (block) parser->pop_block(block);
         });
 
-        tnode_t<g::statement> statement = job_node.child<1>();
+        tnode_t<g::statement> statement = job_node.child<2>();
         const parse_node_t &specific_statement = statement.get_child_node<0>();
         assert(specific_statement_type_is_redirectable_block(specific_statement));
         if (result == eval_result_t::ok) {
@@ -1388,7 +1395,6 @@ eval_result_t parse_execution_context_t::run_job_list(tnode_t<Type> job_list,
     static_assert(Type::token == symbol_job_list || Type::token == symbol_andor_job_list,
                   "Not a job list");
 
-    static std::vector<timer_snapshot_t> active_timers;
     eval_result_t result = eval_result_t::ok;
     while (auto job_conj = job_list.template next_in_list<g::job_conjunction>()) {
         if (auto reason = check_end_execution()) {
@@ -1398,25 +1404,10 @@ eval_result_t parse_execution_context_t::run_job_list(tnode_t<Type> job_list,
 
         // Maybe skip the job if it has a leading and/or.
         // Skipping is treated as success.
-        bool timer_started = false;
-        if (get_decorator(job_conj) == parse_job_decoration_time) {
-            active_timers.emplace_back(timer_snapshot_t::take());
-            timer_started = true;
-        }
         if (should_skip(get_decorator(job_conj))) {
             result = eval_result_t::ok;
         } else {
             result = this->run_job_conjunction(job_conj, associated_block);
-        }
-        if (timer_started) {
-            auto t1 = std::move(active_timers.back());
-            active_timers.pop_back();
-            auto t2 = timer_snapshot_t::take();
-
-            // Well, this is awkward. By defining `time` as a decorator and not a built-in, there's
-            // no associated stream for its output!
-            auto output = timer_snapshot_t::print_delta(std::move(t1), std::move(t2), true);
-            std::fwprintf(stderr, L"%S\n", output.c_str());
         }
     }
 

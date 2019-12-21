@@ -1211,6 +1211,10 @@ highlighter_t::color_array_t highlighter_t::highlight() {
                 this->color_node(node, highlight_role_t::statement_terminator);
                 break;
             }
+            case symbol_optional_time: {
+                this->color_node(node, highlight_role_t::operat);
+                break;
+            }
             case symbol_plain_statement: {
                 tnode_t<g::plain_statement> stmt(&parse_tree, &node);
                 // Get the decoration from the parent.

@@ -82,10 +82,6 @@ RESOLVE(job_decorator) {
             *out_tag = parse_job_decoration_or;
             return production_for<ors>();
         }
-        case parse_keyword_time: {
-            *out_tag = parse_job_decoration_time;
-            return production_for<times>();
-        }
         default: {
             *out_tag = parse_job_decoration_none;
             return production_for<empty>();
@@ -397,6 +393,19 @@ RESOLVE(optional_background) {
             *out_tag = parse_no_background;
             return production_for<empty>();
         }
+    }
+}
+
+RESOLVE(optional_time) {
+    UNUSED(token2);
+
+    switch (token1.keyword) {
+        case parse_keyword_time:
+            *out_tag = parse_optional_time_time;
+            return production_for<time>();
+        default:
+            *out_tag = parse_optional_time_no_time;
+            return production_for<empty>();
     }
 }
 

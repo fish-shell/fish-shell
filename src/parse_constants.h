@@ -52,6 +52,7 @@ enum parse_token_type_t : uint8_t {
     symbol_redirection,
     symbol_optional_background,
     symbol_optional_newlines,
+    symbol_optional_time,
     symbol_end_command,
     // Terminal types.
     parse_token_type_string,
@@ -157,11 +158,13 @@ enum parse_job_decoration_t {
     parse_job_decoration_none,
     parse_job_decoration_and,
     parse_job_decoration_or,
-    parse_job_decoration_time,
 };
 
 // Whether a statement is backgrounded.
 enum parse_optional_background_t { parse_no_background, parse_background };
+
+// Whether a job is prefixed with "time".
+enum parse_optional_time_t { parse_optional_time_no_time, parse_optional_time_time };
 
 // Parse error code list.
 enum parse_error_code_t {

@@ -108,7 +108,7 @@ static owning_lock<struct winsize> s_termsize{k_invalid_termsize};
 static relaxed_atomic_bool_t s_termsize_valid{false};
 
 static char *wcs2str_internal(const wchar_t *in, char *out);
-static void debug_shared(const wchar_t msg_level, const wcstring &msg);
+static void debug_shared(wchar_t msg_level, const wcstring &msg);
 
 #if defined(OS_IS_CYGWIN) || defined(WSL)
 // MS Windows tty devices do not currently have either a read or write timestamp. Those

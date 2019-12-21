@@ -848,7 +848,7 @@ class env_stack_impl_t final : public env_scoped_impl_t {
         return make_unique<env_stack_impl_t>(std::move(local), s_global_node);
     }
 
-    virtual ~env_stack_impl_t() = default;
+    ~env_stack_impl_t() override = default;
 
    private:
     /// The scopes of caller functions, which are currently shadowed.

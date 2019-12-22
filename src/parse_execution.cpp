@@ -105,7 +105,7 @@ tnode_t<g::plain_statement> parse_execution_context_t::infinite_recursive_statem
     // on function invocation changes, then this check will break.
     const block_t *current = parser->block_at_index(0), *parent = parser->block_at_index(1);
     bool is_within_function_call =
-        (current && parent && current->type() == TOP && parent->type() == FUNCTION_CALL);
+        (current && parent && current->type() == block_type_t::top && parent->is_function_call());
     if (!is_within_function_call) {
         return {};
     }
@@ -322,7 +322,7 @@ eval_result_t parse_execution_context_t::run_if_statement(tnode_t<g::if_statemen
 eval_result_t parse_execution_context_t::run_begin_statement(tnode_t<g::job_list> contents) {
     // Basic begin/end block. Push a scope block, run jobs, pop it
     trace_if_enabled(*parser, L"begin");
-    block_t *sb = parser->push_block(block_t::scope_block(BEGIN));
+    block_t *sb = parser->push_block(block_t::scope_block(block_type_t::begin));
     eval_result_t ret = run_job_list(contents, sb);
     parser->pop_block(sb);
     trace_if_enabled(*parser, L"end begin");
@@ -380,7 +380,7 @@ bool parse_execution_context_t::is_function_context() const {
     const block_t *current = parser->block_at_index(0);
     const block_t *parent = parser->block_at_index(1);
     bool is_within_function_call =
-        (current && parent && current->type() == TOP && parent->type() == FUNCTION_CALL);
+        (current && parent && current->type() == block_type_t::top && parent->is_function_call());
     return is_within_function_call;
 }
 
@@ -1461,7 +1461,7 @@ eval_result_t parse_execution_context_t::eval_node(tnode_t<g::job_list> job_list
     }
 
     // Check for stack overflow. The TOP check ensures we only do this for function calls.
-    if (associated_block->type() == TOP && parser->function_stack_is_overflowing()) {
+    if (associated_block->type() == block_type_t::top && parser->function_stack_is_overflowing()) {
         return this->report_error(job_list, CALL_STACK_LIMIT_EXCEEDED_ERR_MSG);
     }
     return this->run_job_list(job_list, associated_block);

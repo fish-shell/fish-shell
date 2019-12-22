@@ -733,7 +733,7 @@ static proc_performer_t get_performer_for_process(process_t *p, const job_t *job
         tnode_t<grammar::statement> node = p->internal_block_node;
         assert(source && node && "Process is missing node info");
         return [=](parser_t &parser) {
-            eval_result_t res = parser.eval_node(source, node, TOP, lineage);
+            eval_result_t res = parser.eval_node(source, node, block_type_t::top, lineage);
             switch (res) {
                 case eval_result_t::ok:
                 case eval_result_t::error:
@@ -758,7 +758,8 @@ static proc_performer_t get_performer_for_process(process_t *p, const job_t *job
             const auto &ld = parser.libdata();
             auto saved_exec_count = ld.exec_count;
             const block_t *fb = function_prepare_environment(parser, *argv, *props);
-            auto res = parser.eval_node(props->parsed_source, props->body_node, TOP, lineage);
+            auto res = parser.eval_node(props->parsed_source, props->body_node, block_type_t::top,
+                                        lineage);
             function_restore_environment(parser, fb);
 
             switch (res) {
@@ -1175,7 +1176,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
     // be null.
     std::shared_ptr<io_buffer_t> buffer;
     if (auto bufferfill = io_bufferfill_t::create(fd_set_t{}, ld.read_limit)) {
-        if (parser.eval(cmd, io_chain_t{bufferfill}, SUBST) == eval_result_t::ok) {
+        if (parser.eval(cmd, io_chain_t{bufferfill}, block_type_t::subst) == eval_result_t::ok) {
             subcommand_statuses = parser.get_last_statuses();
         }
         buffer = io_bufferfill_t::finish(std::move(bufferfill));

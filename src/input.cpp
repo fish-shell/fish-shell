@@ -389,7 +389,7 @@ void inputter_t::mapping_execute(const input_mapping_t &m, bool allow_commands) 
         // see that until all other commands have also been run.
         auto last_statuses = parser_->get_last_statuses();
         for (const wcstring &cmd : m.commands) {
-            parser_->eval(cmd, io_chain_t(), TOP);
+            parser_->eval(cmd, io_chain_t(), block_type_t::top);
         }
         parser_->set_last_statuses(std::move(last_statuses));
         event_queue_.push_front(char_event_type_t::check_exit);

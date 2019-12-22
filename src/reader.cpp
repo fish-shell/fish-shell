@@ -1952,7 +1952,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     gettimeofday(&time_before, nullptr);
 
-    parser.eval(cmd, io_chain_t(), TOP);
+    parser.eval(cmd, io_chain_t(), block_type_t::top);
     job_reap(parser, true);
 
     gettimeofday(&time_after, nullptr);
@@ -2205,7 +2205,7 @@ void reader_bg_job_warning(const parser_t &parser) {
 static void handle_end_loop(const parser_t &parser) {
     if (!reader_exit_forced()) {
         for (const auto &b : parser.blocks()) {
-            if (b.type() == BREAKPOINT) {
+            if (b.type() == block_type_t::breakpoint) {
                 // We're executing within a breakpoint so we do not want to terminate the shell and
                 // kill background jobs.
                 return;
@@ -3551,7 +3551,7 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
         parsed_source_ref_t pstree;
         if (!parse_util_detect_errors(str, &errors, false /* do not accept incomplete */,
                                       &pstree)) {
-            parser.eval(pstree, io, TOP);
+            parser.eval(pstree, io, block_type_t::top);
         } else {
             wcstring sb;
             parser.get_backtrace(str, errors, sb);

@@ -117,8 +117,7 @@ int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             break;
         }
         case UNSET: {
-            while (block != nullptr && block->type() != FUNCTION_CALL &&
-                   block->type() != FUNCTION_CALL_NO_SHADOW) {
+            while (block && !block->is_function_call()) {
                 // Set it in function scope
                 block = parser.block_at_index(++block_idx);
             }

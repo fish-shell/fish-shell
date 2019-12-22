@@ -31,20 +31,20 @@ inline bool event_block_list_blocks_type(const event_blockage_list_t &ebls) {
 }
 
 /// Types of blocks.
-enum block_type_t {
-    WHILE,                    /// While loop block
-    FOR,                      /// For loop block
-    IF,                       /// If block
-    FUNCTION_CALL,            /// Function invocation block
-    FUNCTION_CALL_NO_SHADOW,  /// Function invocation block with no variable shadowing
-    SWITCH,                   /// Switch block
-    SUBST,                    /// Command substitution scope
-    TOP,                      /// Outermost block
-    BEGIN,                    /// Unconditional block
-    SOURCE,                   /// Block created by the . (source) builtin
-    EVENT,                    /// Block created on event notifier invocation
-    BREAKPOINT,               /// Breakpoint block
-    VARIABLE_ASSIGNMENT,      /// Variable assignment before a command
+enum class block_type_t {
+    while_block,              /// While loop block
+    for_block,                /// For loop block
+    if_block,                 /// If block
+    function_call,            /// Function invocation block
+    function_call_no_shadow,  /// Function invocation block with no variable shadowing
+    switch_block,             /// Switch block
+    subst,                    /// Command substitution scope
+    top,                      /// Outermost block
+    begin,                    /// Unconditional block
+    source,                   /// Block created by the . (source) builtin
+    event,                    /// Block created on event notifier invocation
+    breakpoint,               /// Breakpoint block
+    variable_assignment,      /// Variable assignment before a command
 };
 
 /// Possible states for a loop.
@@ -91,8 +91,9 @@ class block_t {
     wcstring description() const;
 
     /// \return if we are a function call (with or without shadowing).
-    bool is_function() const {
-        return type() == FUNCTION_CALL || type() == FUNCTION_CALL_NO_SHADOW;
+    bool is_function_call() const {
+        return type() == block_type_t::function_call ||
+               type() == block_type_t::function_call_no_shadow;
     }
 
     /// Entry points for creating blocks.
@@ -329,7 +330,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     void pop_block(const block_t *expected);
 
     /// Return a description of the given blocktype.
-    const wchar_t *get_block_desc(int block) const;
+    static const wchar_t *get_block_desc(block_type_t block);
 
     /// Return the function name for the specified stack frame. Default is one (current frame).
     const wchar_t *get_function_name(int level = 1);

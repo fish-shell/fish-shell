@@ -165,7 +165,7 @@ void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *
         // If it's an error, redirect the output of __fish_print_help to stderr
         ios.push_back(std::make_shared<io_fd_t>(STDOUT_FILENO, STDERR_FILENO));
     }
-    parser.eval(cmd, ios, TOP);
+    parser.eval(cmd, ios, block_type_t::top);
     // ignore the exit status of __fish_print_help
 }
 
@@ -265,11 +265,11 @@ static int builtin_break_continue(parser_t &parser, io_streams_t &streams, wchar
     // Paranoia: ensure we have a real loop.
     bool has_loop = false;
     for (const auto &b : parser.blocks()) {
-        if (b.type() == WHILE || b.type() == FOR) {
+        if (b.type() == block_type_t::while_block || b.type() == block_type_t::for_block) {
             has_loop = true;
             break;
         }
-        if (b.is_function()) break;
+        if (b.is_function_call()) break;
     }
     if (!has_loop) {
         wcstring error_message = format_string(_(L"%ls: Not inside of loop\n"), argv[0]);
@@ -298,7 +298,7 @@ static int builtin_breakpoint(parser_t &parser, io_streams_t &streams, wchar_t *
     // Ensure we don't allow creating a breakpoint at an interactive prompt. There may be a simpler
     // or clearer way to do this but this works.
     const block_t *block1 = parser.block_at_index(1);
-    if (!block1 || block1->type() == BREAKPOINT) {
+    if (!block1 || block1->type() == block_type_t::breakpoint) {
         streams.err.append_format(_(L"%ls: Command not valid at an interactive prompt\n"), cmd);
         return STATUS_ILLEGAL_CMD;
     }

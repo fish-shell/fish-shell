@@ -93,7 +93,7 @@ int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Find the function block.
     bool has_function_block = false;
     for (const auto &b : parser.blocks()) {
-        if (b.is_function()) {
+        if (b.is_function_call()) {
             has_function_block = true;
             break;
         }

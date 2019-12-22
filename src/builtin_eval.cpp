@@ -27,7 +27,7 @@ int builtin_eval(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     const auto cached_exec_count = parser.libdata().exec_count;
     int status = STATUS_CMD_OK;
     if (argc > 1) {
-        if (parser.eval(std::move(new_cmd), *streams.io_chain, block_type_t::TOP) !=
+        if (parser.eval(std::move(new_cmd), *streams.io_chain, block_type_t::top) !=
             eval_result_t::ok) {
             status = STATUS_CMD_ERROR;
         } else if (cached_exec_count == parser.libdata().exec_count) {

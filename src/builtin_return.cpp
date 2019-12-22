@@ -91,13 +91,15 @@ int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     // Find the function block.
-    size_t function_block_idx;
-    for (function_block_idx = 0; function_block_idx < parser.block_count(); function_block_idx++) {
-        const block_t *b = parser.block_at_index(function_block_idx);
-        if (b->type() == FUNCTION_CALL || b->type() == FUNCTION_CALL_NO_SHADOW) break;
+    bool has_function_block = false;
+    for (const auto &b : parser.blocks()) {
+        if (b.is_function()) {
+            has_function_block = true;
+            break;
+        }
     }
 
-    if (function_block_idx >= parser.block_count()) {
+    if (!has_function_block) {
         streams.err.append_format(_(L"%ls: Not inside of function\n"), cmd);
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_CMD_ERROR;

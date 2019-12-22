@@ -264,10 +264,12 @@ static int builtin_break_continue(parser_t &parser, io_streams_t &streams, wchar
 
     // Paranoia: ensure we have a real loop.
     bool has_loop = false;
-    for (size_t loop_idx = 0; loop_idx < parser.block_count() && !has_loop; loop_idx++) {
-        const block_t *b = parser.block_at_index(loop_idx);
-        if (b->type() == WHILE || b->type() == FOR) has_loop = true;
-        if (b->type() == FUNCTION_CALL) break;
+    for (const auto &b : parser.blocks()) {
+        if (b.type() == WHILE || b.type() == FOR) {
+            has_loop = true;
+            break;
+        }
+        if (b.is_function()) break;
     }
     if (!has_loop) {
         wcstring error_message = format_string(_(L"%ls: Not inside of loop\n"), argv[0]);

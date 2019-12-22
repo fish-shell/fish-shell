@@ -19,7 +19,7 @@ bool trace_enabled(const parser_t &parser) {
 void trace_argv(const parser_t &parser, const wchar_t *command, const wcstring_list_t &argv) {
     // Format into a string to prevent interleaving with flog in other threads.
     // Add the + prefix.
-    wcstring trace_text(parser.block_count(), '+');
+    wcstring trace_text(parser.blocks().size(), '+');
 
     if (command && command[0]) {
         trace_text.push_back(L' ');

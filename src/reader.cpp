@@ -2204,8 +2204,8 @@ void reader_bg_job_warning(const parser_t &parser) {
 /// interactive mode. It checks if it is ok to exit.
 static void handle_end_loop(const parser_t &parser) {
     if (!reader_exit_forced()) {
-        for (size_t i = 0; i < parser.block_count(); i++) {
-            if (parser.block_at_index(i)->type() == BREAKPOINT) {
+        for (const auto &b : parser.blocks()) {
+            if (b.type() == BREAKPOINT) {
                 // We're executing within a breakpoint so we do not want to terminate the shell and
                 // kill background jobs.
                 return;

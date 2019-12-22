@@ -90,6 +90,11 @@ class block_t {
     /// Description of the block, for debugging.
     wcstring description() const;
 
+    /// \return if we are a function call (with or without shadowing).
+    bool is_function() const {
+        return type() == FUNCTION_CALL || type() == FUNCTION_CALL_NO_SHADOW;
+    }
+
     /// Entry points for creating blocks.
     static block_t if_block();
     static block_t event_block(event_t evt);
@@ -203,7 +208,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     job_list_t job_list;
     /// The list of blocks. This is a deque because we give out raw pointers to callers, who hold
     /// them across manipulating this stack.
-    std::deque<block_t> block_stack;
+    /// This is in "reverse" order: the topmost block is at the front. This enables iteration from
+    /// top down using range-based for loops.
+    std::deque<block_t> block_list;
     /// The 'depth' of the fish call stack.
     int eval_level = -1;
     /// Set of variables for the parser.
@@ -231,9 +238,6 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     // Given a file path, return something nicer. Currently we just "unexpand" tildes.
     wcstring user_presentable_path(const wcstring &path) const;
-
-    /// Helper for stack_trace().
-    void stack_trace_internal(size_t block_idx, wcstring *buff) const;
 
     /// Create a parser.
     parser_t();
@@ -289,16 +293,16 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Returns the current line number.
     int get_lineno() const;
 
-    /// Returns the block at the given index. 0 corresponds to the innermost block. Returns NULL
+    /// Returns the block at the given index. 0 corresponds to the innermost block. Returns nullptr
     /// when idx is at or equal to the number of blocks.
     const block_t *block_at_index(size_t idx) const;
     block_t *block_at_index(size_t idx);
 
+    /// Return the list of blocks. The first block is at the top.
+    const std::deque<block_t> &blocks() const { return block_list; }
+
     /// Returns the current (innermost) block.
     block_t *current_block();
-
-    /// Count of blocks.
-    size_t block_count() const { return block_stack.size(); }
 
     /// Get the list of jobs.
     job_list_t &jobs() { return job_list; }

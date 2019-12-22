@@ -107,7 +107,7 @@ int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     switch (opts.scope) {
         case LOCAL: {
             // If this is the outermost block, then we're global
-            if (block_idx + 1 >= parser.block_count()) {
+            if (block_idx + 1 >= parser.blocks().size()) {
                 block = nullptr;
             }
             break;

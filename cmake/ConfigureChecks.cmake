@@ -5,11 +5,6 @@
 # This is the case for at least Cygwin and Newlib.
 LIST(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE=1)
 
-
-# Work around the fact that cmake does not propagate the language standard flag into
-# the CHECK_CXX_SOURCE_COMPILES function. See CMake issue #16456.
-LIST(APPEND CMAKE_REQUIRED_FLAGS "${CMAKE_CXX${CMAKE_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
-
 IF(APPLE)
     INCLUDE(CheckCXXCompilerFlag)
     CHECK_CXX_COMPILER_FLAG("-Werror=unguarded-availability" REQUIRES_UNGUARDED_AVAILABILITY)
@@ -181,6 +176,12 @@ int main () {
   ENDIF()
 ENDIF()
 CMAKE_POP_CHECK_STATE()
+
+# Work around the fact that cmake does not propagate the language standard flag into
+# the CHECK_CXX_SOURCE_COMPILES function. See CMake issue #16456.
+# Ensure we do this after the FIND_PACKAGE calls which use C, and will error on a C++
+# standards flag.
+LIST(APPEND CMAKE_REQUIRED_FLAGS "${CMAKE_CXX${CMAKE_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
 
 CHECK_CXX_SOURCE_COMPILES("
 #include <memory>

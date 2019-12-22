@@ -4,6 +4,12 @@
 # `wcstod_l` is a GNU-extension, sometimes hidden behind GNU-related defines.
 # This is the case for at least Cygwin and Newlib.
 LIST(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE=1)
+
+
+# Work around the fact that cmake does not propagate the language standard flag into
+# the CHECK_CXX_SOURCE_COMPILES function. See CMake issue #16456.
+LIST(APPEND CMAKE_REQUIRED_FLAGS "${CMAKE_CXX${CMAKE_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
+
 IF(APPLE)
     INCLUDE(CheckCXXCompilerFlag)
     CHECK_CXX_COMPILER_FLAG("-Werror=unguarded-availability" REQUIRES_UNGUARDED_AVAILABILITY)

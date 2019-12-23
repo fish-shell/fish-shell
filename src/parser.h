@@ -237,9 +237,6 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// every block if it is of type FUNCTION_CALL.
     const wchar_t *is_function(size_t idx = 0) const;
 
-    // Given a file path, return something nicer. Currently we just "unexpand" tildes.
-    wcstring user_presentable_path(const wcstring &path) const;
-
     /// Create a parser.
     parser_t();
     parser_t(std::shared_ptr<env_stack_t> vars);

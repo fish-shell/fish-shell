@@ -76,8 +76,8 @@ class io_chain_t;
 #define UNKNOWN_BLOCK N_(L"unknown/invalid block")
 
 // Given a file path, return something nicer. Currently we just "unexpand" tildes.
-wcstring parser_t::user_presentable_path(const wcstring &path) const {
-    return replace_home_directory_with_tilde(path, vars());
+static wcstring user_presentable_path(const wcstring &path, const environment_t &vars) {
+    return replace_home_directory_with_tilde(path, vars);
 }
 
 parser_t::parser_t(std::shared_ptr<env_stack_t> vars) : variables(std::move(vars)) {
@@ -334,80 +334,89 @@ std::vector<completion_t> parser_t::expand_argument_list(const wcstring &arg_lis
 
 std::shared_ptr<parser_t> parser_t::shared() { return shared_from_this(); }
 
-wcstring parser_t::stack_trace() const {
-    wcstring trace;
-    for (const auto &b : blocks()) {
-        if (b.type() == block_type_t::event) {
-            // This is an event handler.
+/// Append stack trace info for the block \p b to \p trace.
+static void append_block_description_to_stack_trace(const block_t &b, wcstring &trace,
+                                                    const environment_t &vars) {
+    bool print_call_site = false;
+    switch (b.type()) {
+        case block_type_t::function_call:
+        case block_type_t::function_call_no_shadow: {
+            append_format(trace, _(L"in function '%ls'"), b.function_name.c_str());
+            // Print arguments on the same line.
+            wcstring args_str;
+            for (const wcstring &arg : b.function_args) {
+                if (!args_str.empty()) args_str.push_back(L' ');
+                // We can't quote the arguments because we print this in quotes.
+                // As a special-case, add the empty argument as "".
+                if (!arg.empty()) {
+                    args_str.append(escape_string(arg, ESCAPE_ALL | ESCAPE_NO_QUOTED));
+                } else {
+                    args_str.append(L"\"\"");
+                }
+            }
+            if (!args_str.empty()) {
+                // TODO: Escape these.
+                append_format(trace, _(L" with arguments '%ls'"), args_str.c_str());
+            }
+            trace.push_back('\n');
+            print_call_site = true;
+            break;
+        }
+        case block_type_t::subst: {
+            append_format(trace, _(L"in command substitution\n"));
+            print_call_site = true;
+            break;
+        }
+        case block_type_t::source: {
+            const wchar_t *source_dest = b.sourced_file;
+            append_format(trace, _(L"from sourcing file %ls\n"),
+                          user_presentable_path(source_dest, vars).c_str());
+            print_call_site = true;
+            break;
+        }
+        case block_type_t::event: {
             assert(b.event && "Should have an event");
             wcstring description = event_get_desc(*b.event);
             append_format(trace, _(L"in event handler: %ls\n"), description.c_str());
-
-            // Stop at event handler. No reason to believe that any other code is relevant.
-            //
-            // It might make sense in the future to continue printing the stack trace of the code
-            // that invoked the event, if this is a programmatic event, but we can't currently
-            // detect that.
+            print_call_site = true;
             break;
         }
 
-        if (b.type() == block_type_t::function_call ||
-            b.type() == block_type_t::function_call_no_shadow || b.type() == block_type_t::source ||
-            b.type() == block_type_t::subst) {
-            // These types of blocks should be printed.
-            switch (b.type()) {
-                case block_type_t::source: {
-                    const wchar_t *source_dest = b.sourced_file;
-                    append_format(trace, _(L"from sourcing file %ls\n"),
-                                  user_presentable_path(source_dest).c_str());
-                    break;
-                }
-                case block_type_t::function_call:
-                case block_type_t::function_call_no_shadow: {
-                    append_format(trace, _(L"in function '%ls'"), b.function_name.c_str());
-                    // Print arguments on the same line.
-                    wcstring args_str;
-                    for (const wcstring &arg : b.function_args) {
-                        if (!args_str.empty()) args_str.push_back(L' ');
-                        // We can't quote the arguments because we print this in quotes.
-                        // As a special-case, add the empty argument as "".
-                        if (!arg.empty()) {
-                            args_str.append(escape_string(arg, ESCAPE_ALL | ESCAPE_NO_QUOTED));
-                        } else {
-                            args_str.append(L"\"\"");
-                        }
-                    }
-                    if (!args_str.empty()) {
-                        // TODO: Escape these.
-                        append_format(trace, _(L" with arguments '%ls'"), args_str.c_str());
-                    }
-                    trace.push_back('\n');
-                    break;
-                }
-                case block_type_t::subst: {
-                    append_format(trace, _(L"in command substitution\n"));
-                    break;
-                }
-                default: {
-                    break;  // can't get here
-                }
-            }
-
-            // Print where the function is called.
-            const wchar_t *file = b.src_filename;
-
-            if (file) {
-                append_format(trace, _(L"\tcalled on line %d of file %ls\n"), b.src_lineno,
-                              user_presentable_path(file).c_str());
-            } else if (is_within_fish_initialization()) {
-                append_format(trace, _(L"\tcalled during startup\n"));
-            } else {
-                // This one is way too noisy
-                // append_format(*buff, _(L"\tcalled on standard input\n"));
-            }
-        }
+        case block_type_t::top:
+        case block_type_t::begin:
+        case block_type_t::switch_block:
+        case block_type_t::while_block:
+        case block_type_t::for_block:
+        case block_type_t::if_block:
+        case block_type_t::breakpoint:
+        case block_type_t::variable_assignment:
+            break;
     }
 
+    if (print_call_site) {
+        // Print where the function is called.
+        const wchar_t *file = b.src_filename;
+        if (file) {
+            append_format(trace, _(L"\tcalled on line %d of file %ls\n"), b.src_lineno,
+                          user_presentable_path(file, vars).c_str());
+        } else if (is_within_fish_initialization()) {
+            append_format(trace, _(L"\tcalled during startup\n"));
+        }
+    }
+}
+
+wcstring parser_t::stack_trace() const {
+    wcstring trace;
+    for (const auto &b : blocks()) {
+        append_block_description_to_stack_trace(b, trace, vars());
+
+        // Stop at event handler. No reason to believe that any other code is relevant.
+        //
+        // It might make sense in the future to continue printing the stack trace of the code
+        // that invoked the event, if this is a programmatic event, but we can't currently
+        // detect that.
+        if (b.type() == block_type_t::event) break;
+    }
     return trace;
 }
 
@@ -520,8 +529,8 @@ wcstring parser_t::current_line() {
     // If we are not going to print a stack trace, at least print the line number and filename.
     if (!is_interactive() || is_function()) {
         if (file) {
-            append_format(prefix, _(L"%ls (line %d): "), user_presentable_path(file).c_str(),
-                          lineno);
+            append_format(prefix, _(L"%ls (line %d): "),
+                          user_presentable_path(file, vars()).c_str(), lineno);
         } else if (is_within_fish_initialization()) {
             append_format(prefix, L"%ls (line %d): ", _(L"Startup"), lineno);
         } else {
@@ -703,9 +712,10 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
         if (filename) {
             if (which_line > 0) {
                 prefix = format_string(_(L"%ls (line %lu): "),
-                                       user_presentable_path(filename).c_str(), which_line);
+                                       user_presentable_path(filename, vars()).c_str(), which_line);
             } else {
-                prefix = format_string(_(L"%ls: "), user_presentable_path(filename).c_str());
+                prefix =
+                    format_string(_(L"%ls: "), user_presentable_path(filename, vars()).c_str());
             }
         } else {
             prefix = L"fish: ";

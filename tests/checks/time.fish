@@ -1,5 +1,5 @@
-#RUN: %fish %s
-time sleep 1s
+#RUN: %fish -C 'set -l fish %fish' %s
+time sleep 0s
 
 # These are a tad awkward because it picks the correct unit and adapts whitespace.
 # The idea is that it's a table.
@@ -43,3 +43,13 @@ not time true
 #CHECKERR: {{.*}}
 #CHECKERR: {{.*}}
 #CHECKERR: {{.*}}
+
+$fish -c 'time true&'
+#CHECKERR: fish: {{.*}}
+#CHECKERR: time true&
+#CHECKERR: ^
+
+$fish -c 'not time true&'
+#CHECKERR: fish: {{.*}}
+#CHECKERR: not time true&
+#CHECKERR: ^

@@ -977,7 +977,13 @@ eval_result_t parse_execution_context_t::populate_not_process(
     auto &flags = job->mut_flags();
     flags.negate = !flags.negate;
     auto optional_time = not_statement.require_get_child<g::optional_time, 2>();
-    if (optional_time.tag() == parse_optional_time_time) flags.has_time_prefix = true;
+    if (optional_time.tag() == parse_optional_time_time) {
+        flags.has_time_prefix = true;
+        if (!job->mut_flags().foreground) {
+            this->report_error(not_statement, ERROR_TIME_BACKGROUND);
+            return eval_result_t::error;
+        }
+    }
     return this->populate_job_process(
         job, proc, not_statement.require_get_child<g::statement, 3>(),
         not_statement.require_get_child<g::variable_assignments, 1>());
@@ -1121,7 +1127,13 @@ eval_result_t parse_execution_context_t::populate_job_from_job_node(
     // Create processes. Each one may fail.
     process_list_t processes;
     processes.emplace_back(new process_t());
-    if (optional_time.tag() == parse_optional_time_time) j->mut_flags().has_time_prefix = true;
+    if (optional_time.tag() == parse_optional_time_time) {
+        j->mut_flags().has_time_prefix = true;
+        if (job_node_is_background(job_node)) {
+            this->report_error(job_node, ERROR_TIME_BACKGROUND);
+            return eval_result_t::error;
+        }
+    }
     eval_result_t result =
         this->populate_job_process(j, processes.back().get(), statement, variable_assignments);
 

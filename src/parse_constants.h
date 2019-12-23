@@ -295,4 +295,8 @@ void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt);
 #define ERROR_BAD_COMMAND_ASSIGN_ERR_MSG \
     _(L"Unsupported use of '='. In fish, please use 'set %ls %ls'.")
 
+/// Error message for a command like `time foo &`.
+#define ERROR_TIME_BACKGROUND \
+    _(L"'time' is not supported for background jobs. Consider using 'command time'.")
+
 #endif

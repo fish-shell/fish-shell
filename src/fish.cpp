@@ -249,16 +249,14 @@ static int read_init(const struct config_paths_t &paths) {
 }
 
 int run_command_list(std::vector<std::string> *cmds, const io_chain_t &io) {
-    int res = 1;
     parser_t &parser = parser_t::principal_parser();
 
     for (const auto &cmd : *cmds) {
         const wcstring cmd_wcs = str2wcstring(cmd);
-        eval_result_t eval_res = parser.eval(cmd_wcs, io);
-        res = (eval_res == eval_result_t::ok ? 0 : 1);
+        parser.eval(cmd_wcs, io);
     }
 
-    return res;
+    return 0;
 }
 
 /// Parse the argument list, return the index of the first non-flag arguments.

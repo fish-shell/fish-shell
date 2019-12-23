@@ -1,4 +1,16 @@
-# RUN: %fish %s
+# RUN: %fish -C 'set -l fish %fish' %s
+
+$fish -c 'function main; exit 4; true; end; main'; echo $status
+#CHECK: 4
+
+$fish -c 'begin; exit 5; true; end'; echo $status
+#CHECK: 5
+
+$fish -c 'kill -SIGHUP %self'; echo $status
+#CHECK: 129
+
+$fish -c 'function main; kill -SIGTERM %self; true; end; main'; echo $status
+#CHECK: 143
 
 function alarm --on-signal ALRM
   echo ALRM received

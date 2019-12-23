@@ -737,10 +737,8 @@ static proc_performer_t get_performer_for_process(process_t *p, const job_t *job
             switch (res) {
                 case eval_result_t::ok:
                 case eval_result_t::error:
-                    return proc_status_t::from_exit_code(parser.get_last_status());
                 case eval_result_t::cancelled:
-                    // TODO: we should reflect the actual signal which was received.
-                    return proc_status_t::from_signal(SIGINT);
+                    return proc_status_t::from_exit_code(parser.get_last_status());
                 case eval_result_t::control_flow:
                 default:
                     DIE("eval_result_t::control_flow should not be returned from eval_node");
@@ -768,11 +766,8 @@ static proc_performer_t get_performer_for_process(process_t *p, const job_t *job
                                                              ? EXIT_SUCCESS
                                                              : parser.get_last_status());
                 case eval_result_t::error:
-                    return proc_status_t::from_exit_code(parser.get_last_status());
-
                 case eval_result_t::cancelled:
-                    // TODO: we should reflect the actual signal which was received.
-                    return proc_status_t::from_signal(SIGINT);
+                    return proc_status_t::from_exit_code(parser.get_last_status());
                 default:
                 case eval_result_t::control_flow:
                     DIE("eval_result_t::control_flow should not be returned from eval_node");

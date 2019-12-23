@@ -733,7 +733,7 @@ static proc_performer_t get_performer_for_process(process_t *p, const job_t *job
         tnode_t<grammar::statement> node = p->internal_block_node;
         assert(source && node && "Process is missing node info");
         return [=](parser_t &parser) {
-            eval_result_t res = parser.eval_node(source, node, block_type_t::top, lineage);
+            eval_result_t res = parser.eval_node(source, node, lineage);
             switch (res) {
                 case eval_result_t::ok:
                 case eval_result_t::error:
@@ -758,8 +758,7 @@ static proc_performer_t get_performer_for_process(process_t *p, const job_t *job
             const auto &ld = parser.libdata();
             auto saved_exec_count = ld.exec_count;
             const block_t *fb = function_prepare_environment(parser, *argv, *props);
-            auto res = parser.eval_node(props->parsed_source, props->body_node, block_type_t::top,
-                                        lineage);
+            auto res = parser.eval_node(props->parsed_source, props->body_node, lineage);
             function_restore_environment(parser, fb);
 
             switch (res) {

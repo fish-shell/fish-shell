@@ -165,7 +165,7 @@ void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *
         // If it's an error, redirect the output of __fish_print_help to stderr
         ios.push_back(std::make_shared<io_fd_t>(STDOUT_FILENO, STDERR_FILENO));
     }
-    parser.eval(cmd, ios, block_type_t::top);
+    parser.eval(cmd, ios);
     // ignore the exit status of __fish_print_help
 }
 

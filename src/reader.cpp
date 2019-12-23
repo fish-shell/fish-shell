@@ -1952,7 +1952,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd) {
 
     gettimeofday(&time_before, nullptr);
 
-    parser.eval(cmd, io_chain_t(), block_type_t::top);
+    parser.eval(cmd, io_chain_t{});
     job_reap(parser, true);
 
     gettimeofday(&time_after, nullptr);
@@ -3551,7 +3551,7 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
         parsed_source_ref_t pstree;
         if (!parse_util_detect_errors(str, &errors, false /* do not accept incomplete */,
                                       &pstree)) {
-            parser.eval(pstree, io, block_type_t::top);
+            parser.eval(pstree, io);
         } else {
             wcstring sb;
             parser.get_backtrace(str, errors, sb);

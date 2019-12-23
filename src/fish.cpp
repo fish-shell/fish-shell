@@ -228,7 +228,7 @@ static void source_config_in_directory(const wcstring &dir) {
     const wcstring cmd = L"builtin source " + escaped_pathname;
     parser_t &parser = parser_t::principal_parser();
     set_is_within_fish_initialization(true);
-    parser.eval(cmd, io_chain_t(), block_type_t::top);
+    parser.eval(cmd, io_chain_t());
     set_is_within_fish_initialization(false);
 }
 
@@ -254,7 +254,7 @@ int run_command_list(std::vector<std::string> *cmds, const io_chain_t &io) {
 
     for (const auto &cmd : *cmds) {
         const wcstring cmd_wcs = str2wcstring(cmd);
-        eval_result_t eval_res = parser.eval(cmd_wcs, io, block_type_t::top);
+        eval_result_t eval_res = parser.eval(cmd_wcs, io);
         res = (eval_res == eval_result_t::ok ? 0 : 1);
     }
 

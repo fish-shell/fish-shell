@@ -286,7 +286,7 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
         auto prev_statuses = parser.get_last_statuses();
 
         block_t *b = parser.push_block(block_t::event_block(event));
-        parser.eval(buffer, io_chain_t(), block_type_t::top);
+        parser.eval(buffer, io_chain_t());
         parser.pop_block(b);
         parser.set_last_statuses(std::move(prev_statuses));
     }

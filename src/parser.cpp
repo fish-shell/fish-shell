@@ -634,14 +634,14 @@ eval_result_t parser_t::eval(parsed_source_ref_t ps, const io_chain_t &io,
         lineage.block_io = io;
         // Execute the first node.
         tnode_t<grammar::job_list> start{&ps->tree, &ps->tree.front()};
-        return this->eval_node(ps, start, block_type, std::move(lineage));
+        return this->eval_node(ps, start, std::move(lineage), block_type);
     }
     return eval_result_t::ok;
 }
 
 template <typename T>
-eval_result_t parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, block_type_t block_type,
-                                  job_lineage_t lineage) {
+eval_result_t parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, job_lineage_t lineage,
+                                  block_type_t block_type) {
     static_assert(
         std::is_same<T, grammar::statement>::value || std::is_same<T, grammar::job_list>::value,
         "Unexpected node type");
@@ -684,9 +684,9 @@ eval_result_t parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, block
 
 // Explicit instantiations. TODO: use overloads instead?
 template eval_result_t parser_t::eval_node(parsed_source_ref_t, tnode_t<grammar::statement>,
-                                           enum block_type_t, job_lineage_t lineage);
+                                           job_lineage_t, block_type_t);
 template eval_result_t parser_t::eval_node(parsed_source_ref_t, tnode_t<grammar::job_list>,
-                                           enum block_type_t, job_lineage_t lineage);
+                                           job_lineage_t, block_type_t);
 
 void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &errors,
                              wcstring &output) const {

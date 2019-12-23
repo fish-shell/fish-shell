@@ -1003,17 +1003,16 @@ static void test_parser() {
     // Ensure that we don't crash on infinite self recursion and mutual recursion. These must use
     // the principal parser because we cannot yet execute jobs on other parsers.
     say(L"Testing recursion detection");
-    parser->eval(L"function recursive ; recursive ; end ; recursive; ", io_chain_t(),
-                 block_type_t::top);
+    parser->eval(L"function recursive ; recursive ; end ; recursive; ", io_chain_t());
 #if 0
     // This is disabled since it produces a long backtrace. We should find a way to either visually
     // compress the backtrace, or disable error spewing.
     parser->.eval(L"function recursive1 ; recursive2 ; end ; "
-            L"function recursive2 ; recursive1 ; end ; recursive1; ", io_chain_t(), block_type_t::top);
+            L"function recursive2 ; recursive1 ; end ; recursive1; ", io_chain_t());
 #endif
 
     say(L"Testing empty function name");
-    parser->eval(L"function '' ; echo fail; exit 42 ; end ; ''", io_chain_t(), block_type_t::top);
+    parser->eval(L"function '' ; echo fail; exit 42 ; end ; ''", io_chain_t());
 
     say(L"Testing eval_args");
     completion_list_t comps = parser_t::expand_argument_list(
@@ -1033,8 +1032,7 @@ static void test_1_cancellation(const wchar_t *src) {
         usleep(delay * 1E6);
         pthread_kill(thread, SIGINT);
     });
-    eval_result_t ret =
-        parser_t::principal_parser().eval(src, io_chain_t{filler}, block_type_t::top);
+    eval_result_t ret = parser_t::principal_parser().eval(src, io_chain_t{filler});
     auto buffer = io_bufferfill_t::finish(std::move(filler));
     if (buffer->buffer().size() != 0) {
         err(L"Expected 0 bytes in out_buff, but instead found %lu bytes, for command %ls\n",
@@ -1076,7 +1074,7 @@ static void test_cancellation() {
     bool iis = is_interactive_session();
     set_interactive_session(true);
     const wchar_t *child_self_destructor = L"while true ; sh -c 'sleep .25; kill -s INT $$' ; end";
-    parser_t::principal_parser().eval(child_self_destructor, io_chain_t(), block_type_t::top);
+    parser_t::principal_parser().eval(child_self_destructor, io_chain_t());
     set_interactive_session(iis);
 
     // Restore signal handling.
@@ -5200,7 +5198,7 @@ static void test_illegal_command_exit_code() {
     parser_t &parser = parser_t::principal_parser();
 
     for (const auto &test : tests) {
-        parser.eval(test.txt, empty_ios, block_type_t::top);
+        parser.eval(test.txt, empty_ios);
 
         int exit_status = parser.get_last_status();
         if (exit_status != test.result) {

@@ -90,6 +90,8 @@ The following special input functions are available:
 
 - ``begin-selection``, start selecting text
 
+- ``cancel``, cancel the current commandline and replace it with a new empty one
+
 - ``capitalize-word``, make the current word begin with a capital letter
 
 - ``complete``, guess the remainder of the current token
@@ -114,6 +116,8 @@ The following special input functions are available:
 
 - ``expand-abbr`` expands any abbreviation currently under the cursor
 
+- ``execute`` run the current commandline
+
 - ``forward-bigword``, move one whitespace-delimited word to the right
 
 - ``forward-char``, move one character to the right
@@ -132,6 +136,12 @@ The following special input functions are available:
 
 - ``history-token-search-forward``, search the history for the next matching argument
 
+- ``forward-jump`` and ``backward-jump``, read another character and jump to its next occurence after/before the cursor
+
+- ``forward-jump-till`` and ``backward-jump-till``, jump to right *before* the next occurence
+
+- ``repeat-jump`` and ``repeat-jump-reverse``, redo the last jump in the same/opposite direction
+
 - ``kill-bigword``, move the next whitespace-delimited word to the killring
 
 - ``kill-line``, move everything from the cursor to the end of the line to the killring
@@ -148,6 +158,8 @@ The following special input functions are available:
 
 - ``repaint-mode`` reexecutes the fish_mode_prompt function and redraws the prompt. This is useful for vi-mode. If no fish_mode_prompt exists, it acts like a normal repaint.
 
+- ``force-repaint`` reexecute the prompt functions without coalescing.
+
 - ``suppress-autosuggestion``, remove the current autosuggestion
 
 - ``swap-selection-start-stop``, go to the other end of the highlighted text without changing the selection
@@ -163,7 +175,6 @@ The following special input functions are available:
 - ``yank``, insert the latest entry of the killring into the buffer
 
 - ``yank-pop``, rotate to the previous entry of the killring
-
 
 Examples
 --------

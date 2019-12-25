@@ -64,6 +64,8 @@ Special input functions
 -----------------------
 The following special input functions are available:
 
+- ``and``, only execute the next function if the previous succeeded (note: only some functions report success)
+
 - ``accept-autosuggestion``, accept the current autosuggestion completely
 
 - ``backward-char``, moves one character to the left

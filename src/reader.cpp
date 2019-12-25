@@ -1065,8 +1065,6 @@ static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) 
         case rl::upcase_word:
         case rl::downcase_word:
         case rl::capitalize_word:
-        case rl::vi_arg_digit:
-        case rl::vi_delete_to:
         case rl::beginning_of_buffer:
         case rl::end_of_buffer:
             // These commands operate on the search field if that's where the focus is.
@@ -3191,11 +3189,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::func_and: {
             DIE("self-insert should have been handled by inputter_t::readch");
-        }
-        case rl::vi_arg_digit:
-        case rl::vi_delete_to: {
-            // TODO: what needs to happen with these?
-            break;
         }
     }
 }

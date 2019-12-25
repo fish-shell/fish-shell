@@ -47,8 +47,6 @@ enum class readline_cmd_t {
     upcase_word,
     downcase_word,
     capitalize_word,
-    vi_arg_digit,
-    vi_delete_to,
     execute,
     beginning_of_buffer,
     end_of_buffer,

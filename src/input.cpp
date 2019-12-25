@@ -121,8 +121,6 @@ static const input_function_metadata_t input_function_metadata[] = {
     {readline_cmd_t::upcase_word, L"upcase-word"},
     {readline_cmd_t::downcase_word, L"downcase-word"},
     {readline_cmd_t::capitalize_word, L"capitalize-word"},
-    {readline_cmd_t::vi_arg_digit, L"vi-arg-digit"},
-    {readline_cmd_t::vi_delete_to, L"vi-delete-to"},
     {readline_cmd_t::execute, L"execute"},
     {readline_cmd_t::beginning_of_buffer, L"beginning-of-buffer"},
     {readline_cmd_t::end_of_buffer, L"end-of-buffer"},

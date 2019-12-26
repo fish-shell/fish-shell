@@ -18,10 +18,6 @@ extern bool curses_initialized;
 
 struct event_t;
 
-/// Character for separating two array elements. We use 30, i.e. the ascii record separator since
-/// that seems logical.
-#define ARRAY_SEP (wchar_t)0x1e
-
 // Flags that may be passed as the 'mode' in env_stack_t::set() / environment_t::get().
 enum {
     /// Default mode. Used with `env_stack_t::get()` to indicate the caller doesn't care what scope

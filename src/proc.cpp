@@ -281,8 +281,6 @@ void job_t::mark_constructed() {
     *constructed = true;
 }
 
-using process_generation_count_t = unsigned int;
-
 /// A list of pids/pgids that have been disowned. They are kept around until either they exit or
 /// we exit. Poll these from time-to-time to prevent zombie processes from happening (#5342).
 static owning_lock<std::vector<pid_t>> s_disowned_pids;

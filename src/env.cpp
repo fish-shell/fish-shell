@@ -878,7 +878,7 @@ class env_stack_impl_t final : public env_scoped_impl_t {
 
     /// Remove a variable from the chain \p node.
     /// \return true if the variable was found and removed.
-    bool remove_from_chain(env_node_ref_t node, const wcstring &key) const {
+    bool remove_from_chain(const env_node_ref_t &node, const wcstring &key) const {
         for (auto cursor = node; cursor; cursor = cursor->next) {
             auto iter = cursor->env.find(key);
             if (iter != cursor->env.end()) {
@@ -901,7 +901,7 @@ class env_stack_impl_t final : public env_scoped_impl_t {
     void set_universal(const wcstring &key, wcstring_list_t val, const query_t &query);
 
     /// Set a variable in a given node \p node.
-    void set_in_node(env_node_ref_t node, const wcstring &key, wcstring_list_t &&val,
+    void set_in_node(const env_node_ref_t &node, const wcstring &key, wcstring_list_t &&val,
                      const var_flags_t &flags);
 
     // Implement the default behavior of 'set' by finding the node for an unspecified scope.
@@ -970,8 +970,8 @@ static wcstring_list_t colon_split(const wcstring_list_t &val) {
     return split_val;
 }
 
-void env_stack_impl_t::set_in_node(env_node_ref_t node, const wcstring &key, wcstring_list_t &&val,
-                                   const var_flags_t &flags) {
+void env_stack_impl_t::set_in_node(const env_node_ref_t &node, const wcstring &key,
+                                   wcstring_list_t &&val, const var_flags_t &flags) {
     env_var_t &var = node->env[key];
 
     // Use an explicit exports, or inherit from the existing variable.

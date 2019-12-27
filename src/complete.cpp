@@ -1643,16 +1643,16 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
 
 /// Print the short switch \c opt, and the argument \c arg to the specified
 /// wcstring, but only if \c argument isn't an empty string.
-static void append_switch(wcstring &out, wchar_t opt, const wcstring arg) {
+static void append_switch(wcstring &out, wchar_t opt, const wcstring &arg) {
     if (arg.empty()) return;
     append_format(out, L" -%lc %ls", opt, escape_string(arg, ESCAPE_ALL).c_str());
 }
-static void append_switch(wcstring &out, const wcstring opt, const wcstring arg) {
+static void append_switch(wcstring &out, const wcstring &opt, const wcstring &arg) {
     if (arg.empty()) return;
     append_format(out, L" --%ls %ls", opt.c_str(), escape_string(arg, ESCAPE_ALL).c_str());
 }
 static void append_switch(wcstring &out, wchar_t opt) { append_format(out, L" -%lc", opt); }
-static void append_switch(wcstring &out, const wcstring opt) {
+static void append_switch(wcstring &out, const wcstring &opt) {
     append_format(out, L" --%ls", opt.c_str());
 }
 

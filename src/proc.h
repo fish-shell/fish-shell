@@ -320,7 +320,7 @@ class job_t {
     void operator=(const job_t &) = delete;
 
    public:
-    job_t(job_id_t job_id, const properties_t &props, job_lineage_t lineage);
+    job_t(job_id_t job_id, const properties_t &props, const job_lineage_t &lineage);
     ~job_t();
 
     /// Returns the command as a wchar_t *. */

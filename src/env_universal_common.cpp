@@ -277,7 +277,7 @@ void env_universal_t::set_internal(const wcstring &key, const env_var_t &var) {
     }
 }
 
-void env_universal_t::set(const wcstring &key, env_var_t var) {
+void env_universal_t::set(const wcstring &key, const env_var_t &var) {
     scoped_lock locker(lock);
     this->set_internal(key, var);
 }

@@ -269,7 +269,7 @@ void process_t::check_generations_before_launch() {
     gens_ = topic_monitor_t::principal().current_generations();
 }
 
-job_t::job_t(job_id_t job_id, const properties_t &props, job_lineage_t lineage)
+job_t::job_t(job_id_t job_id, const properties_t &props, const job_lineage_t &lineage)
     : properties(props),
       job_id(job_id),
       root_constructed(lineage.root_constructed ? lineage.root_constructed : this->constructed) {}

@@ -225,6 +225,6 @@ char_event_t input_event_queue_t::readch_timed(bool dequeue_timeouts) {
     return result;
 }
 
-void input_event_queue_t::push_back(char_event_t ch) { queue_.push_back(ch); }
+void input_event_queue_t::push_back(const char_event_t& ch) { queue_.push_back(ch); }
 
-void input_event_queue_t::push_front(char_event_t ch) { queue_.push_front(ch); }
+void input_event_queue_t::push_front(const char_event_t& ch) { queue_.push_front(ch); }

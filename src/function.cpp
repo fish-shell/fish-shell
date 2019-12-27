@@ -166,7 +166,8 @@ void function_add(wcstring name, wcstring description, function_properties_ref_t
 
     // Create and store a new function.
     auto ins = funcset->funcs.emplace(
-        std::move(name), function_info_t(props, std::move(description), filename, is_autoload));
+        std::move(name),
+        function_info_t(std::move(props), std::move(description), filename, is_autoload));
     assert(ins.second && "Function should not already be present in the table");
     (void)ins;
 }

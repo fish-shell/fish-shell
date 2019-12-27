@@ -186,11 +186,11 @@ class input_event_queue_t {
 
     /// Enqueue a character or a readline function to the queue of unread characters that
     /// readch will return before actually reading from fd 0.
-    void push_back(char_event_t ch);
+    void push_back(const char_event_t& ch);
 
     /// Add a character or a readline function to the front of the queue of unread characters.  This
     /// will be the next character returned by readch.
-    void push_front(char_event_t ch);
+    void push_front(const char_event_t& ch);
 };
 
 #endif

@@ -482,8 +482,12 @@ static int builtin_set_list(const wchar_t *cmd, set_cmd_opts_t &opts, int argc, 
 
         if (!names_only) {
             wcstring val;
-            if (key == L"history") {
-                val = history_variable_description;
+            if (opts.shorten_ok && key == L"history") {
+                history_t *history = &history_t::history_with_name(history_session_id(env_stack_t::principal()));
+                for (size_t i = 1; i < history->size() && val.size() < 64; i++) {
+                    if (i > 1) val += L' ';
+                    val += expand_escape_string(history->item_at_index(i).str());
+                }
             } else {
                 auto var = parser.vars().get(key, compute_scope(opts));
                 if (!var.missing_or_empty()) {

@@ -145,6 +145,19 @@ wcstring expand_escape_variable(const env_var_t &var) {
     return buff;
 }
 
+wcstring expand_escape_string(const wcstring &el) {
+    wcstring buff;
+    bool prefer_quotes = el.find(L' ') != wcstring::npos;
+    if (prefer_quotes && is_quotable(el)) {
+        buff.append(L"'");
+        buff.append(el);
+        buff.append(L"'");
+    } else {
+        buff.append(escape_string(el, 1));
+    }
+    return buff;
+}
+
 /// Parse an array slicing specification Returns 0 on success. If a parse error occurs, returns the
 /// index of the bad token. Note that 0 can never be a bad index because the string always starts
 /// with [.

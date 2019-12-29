@@ -164,6 +164,10 @@ expand_result_t expand_to_command_and_args(const wcstring &instr, const environm
 /// Suitable for pretty-printing.
 wcstring expand_escape_variable(const env_var_t &var);
 
+/// Convert a string value to a human readable form, i.e. escape things, handle arrays, etc.
+/// Suitable for pretty-printing.
+wcstring expand_escape_string(const wcstring &str);
+
 /// Perform tilde expansion and nothing else on the specified string, which is modified in place.
 ///
 /// \param input the string to tilde expand

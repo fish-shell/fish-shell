@@ -294,8 +294,4 @@ void start_private_mode();
 /// Queries private mode status.
 bool in_private_mode();
 
-/// The description of the $history environment variable, as offered in completions and
-/// the output of builtin set.
-constexpr const wchar_t *history_variable_description = L"Full history of interactive commands";
-
 #endif

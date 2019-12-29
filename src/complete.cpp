@@ -1193,9 +1193,13 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
         wcstring desc;
         if (this->wants_descriptions()) {
             if (this->type() != COMPLETE_AUTOSUGGEST) {
-                // $history can be huge, don't put it in the completion description; see #6288.
+                // $history can be huge, don't put all of it in the completion description; see #6288.
                 if (env_name == L"history") {
-                    desc = history_variable_description;
+                    history_t *history = &history_t::history_with_name(history_session_id(env_stack_t::principal()));
+                    for (size_t i = 1; i < history->size() && desc.size() < 64; i++) {
+                        if (i > 1) desc += L' ';
+                        desc += expand_escape_string(history->item_at_index(i).str());
+                    }
                 } else {
                     // Can't use this->vars here, it could be any variable.
                     auto var = vars.get(env_name);

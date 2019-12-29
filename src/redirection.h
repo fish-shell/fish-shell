@@ -95,7 +95,7 @@ class dup2_list_t {
     /// Produce a dup_fd_list_t from an io_chain. This may not be called before fork().
     /// The result contains the list of fd actions (dup2 and close), as well as the list
     /// of fds opened.
-    static maybe_t<dup2_list_t> resolve_chain(const io_chain_t &);
+    static dup2_list_t resolve_chain(const io_chain_t &);
 
     /// \return the fd ultimately dup'd to a target fd, or -1 if the target is closed.
     /// For example, if target fd is 1, and we have a dup2 chain 5->3 and 3->1, then we will

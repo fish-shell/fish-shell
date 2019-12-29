@@ -32,7 +32,7 @@ int redirection_spec_t::oflags() const {
     }
 }
 
-maybe_t<dup2_list_t> dup2_list_t::resolve_chain(const io_chain_t &io_chain) {
+dup2_list_t dup2_list_t::resolve_chain(const io_chain_t &io_chain) {
     ASSERT_IS_NOT_FORKED_CHILD();
     dup2_list_t result;
     for (const auto &io_ref : io_chain) {
@@ -70,7 +70,7 @@ maybe_t<dup2_list_t> dup2_list_t::resolve_chain(const io_chain_t &io_chain) {
             }
         }
     }
-    return {std::move(result)};
+    return result;
 }
 
 int dup2_list_t::fd_for_target_fd(int target) const {

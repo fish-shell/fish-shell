@@ -2462,14 +2462,13 @@ static void test_dup2s() {
     chain.push_back(make_shared<io_close_t>(17));
     chain.push_back(make_shared<io_fd_t>(3, 19));
     auto list = dup2_list_t::resolve_chain(chain);
-    do_test(list.has_value());
-    do_test(list->get_actions().size() == 2);
+    do_test(list.get_actions().size() == 2);
 
-    auto act1 = list->get_actions().at(0);
+    auto act1 = list.get_actions().at(0);
     do_test(act1.src == 17);
     do_test(act1.target == -1);
 
-    auto act2 = list->get_actions().at(1);
+    auto act2 = list.get_actions().at(1);
     do_test(act2.src == 19);
     do_test(act2.target == 3);
 }
@@ -2485,17 +2484,16 @@ static void test_dup2s_fd_for_target_fd() {
     chain.push_back(make_shared<io_fd_t>(3, 5));
     auto list = dup2_list_t::resolve_chain(chain);
 
-    do_test(list.has_value());
-    do_test(list->fd_for_target_fd(3) == 8);
-    do_test(list->fd_for_target_fd(5) == 8);
-    do_test(list->fd_for_target_fd(8) == 8);
-    do_test(list->fd_for_target_fd(1) == 4);
-    do_test(list->fd_for_target_fd(4) == 4);
-    do_test(list->fd_for_target_fd(100) == 100);
-    do_test(list->fd_for_target_fd(0) == 0);
-    do_test(list->fd_for_target_fd(-1) == -1);
-    do_test(list->fd_for_target_fd(9) == -1);
-    do_test(list->fd_for_target_fd(10) == -1);
+    do_test(list.fd_for_target_fd(3) == 8);
+    do_test(list.fd_for_target_fd(5) == 8);
+    do_test(list.fd_for_target_fd(8) == 8);
+    do_test(list.fd_for_target_fd(1) == 4);
+    do_test(list.fd_for_target_fd(4) == 4);
+    do_test(list.fd_for_target_fd(100) == 100);
+    do_test(list.fd_for_target_fd(0) == 0);
+    do_test(list.fd_for_target_fd(-1) == -1);
+    do_test(list.fd_for_target_fd(9) == -1);
+    do_test(list.fd_for_target_fd(10) == -1);
 }
 
 /// Testing colors.

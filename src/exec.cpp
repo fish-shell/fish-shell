@@ -201,8 +201,8 @@ void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_io) {
     }
 
     // child_setup_process makes sure signals are properly set up.
-    auto redirs = dup2_list_t::resolve_chain(all_ios);
-    if (redirs && !child_setup_process(INVALID_PID, false, *redirs)) {
+    dup2_list_t redirs = dup2_list_t::resolve_chain(all_ios);
+    if (!child_setup_process(INVALID_PID, false, redirs)) {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
         auto shlvl_var = vars.get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
         wcstring shlvl_str = L"0";
@@ -282,9 +282,6 @@ static bool run_internal_process(process_t *p, std::string outdata, std::string 
     // asked to truncate a file (e.g. `echo -n '' > /tmp/truncateme.txt'). The open() in the dup2
     // list resolution will ensure this happens.
     f->dup2s = dup2_list_t::resolve_chain(ios);
-    if (!f->dup2s) {
-        return false;
-    }
 
     // Figure out which source fds to write to. If they are closed (unlikely) we just exit
     // successfully.
@@ -565,7 +562,6 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
 
     // Convert our IO chain to a dup2 sequence.
     auto dup2s = dup2_list_t::resolve_chain(proc_io_chain);
-    if (!dup2s) return false;
 
     // Ensure that stdin is blocking before we hand it off (see issue #176). It's a
     // little strange that we only do this with stdin and not with stdout or stderr.
@@ -584,14 +580,14 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
 
 #if FISH_USE_POSIX_SPAWN
     // Prefer to use posix_spawn, since it's faster on some systems like OS X.
-    bool use_posix_spawn = g_use_posix_spawn && can_use_posix_spawn_for_job(j, *dup2s);
+    bool use_posix_spawn = g_use_posix_spawn && can_use_posix_spawn_for_job(j, dup2s);
     if (use_posix_spawn) {
         s_fork_count++;  // spawn counts as a fork+exec
         // Create posix spawn attributes and actions.
         pid_t pid = 0;
         posix_spawnattr_t attr = posix_spawnattr_t();
         posix_spawn_file_actions_t actions = posix_spawn_file_actions_t();
-        bool made_it = fork_actions_make_spawn_properties(&attr, &actions, j.get(), *dup2s);
+        bool made_it = fork_actions_make_spawn_properties(&attr, &actions, j.get(), dup2s);
         if (made_it) {
             // We successfully made the attributes and actions; actually call
             // posix_spawn.
@@ -653,7 +649,7 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
     } else
 #endif
     {
-        if (!fork_child_for_process(j, p, *dup2s, "external command",
+        if (!fork_child_for_process(j, p, dup2s, "external command",
                                     [&] { safe_launch_process(p, actual_cmd, argv, envv); })) {
             return false;
         }

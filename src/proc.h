@@ -315,6 +315,9 @@ class job_t {
     /// messages about job status on the terminal.
     wcstring command_str;
 
+    /// The job_id for this job.
+    job_id_t job_id_;
+
     // No copying.
     job_t(const job_t &rhs) = delete;
     void operator=(const job_t &) = delete;
@@ -378,7 +381,15 @@ class job_t {
     pid_t pgid{INVALID_PID};
 
     /// The id of this job.
-    const job_id_t job_id;
+    job_id_t job_id() const { return job_id_; }
+
+    /// Mark this job as internal. Internal jobs' job_ids are removed from the
+    /// list of jobs so that, among other things, they don't take a job_id
+    /// entry.
+    void mark_internal() {
+        release_job_id(job_id_);
+        job_id_ = -1;
+    }
 
     /// The saved terminal modes of this job. This needs to be saved so that we can restore the
     /// terminal to the same state after temporarily taking control over the terminal when a job

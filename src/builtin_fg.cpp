@@ -91,11 +91,11 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     }
 
     if (streams.err_is_redirected) {
-        streams.err.append_format(FG_MSG, job->job_id, job->command_wcstr());
+        streams.err.append_format(FG_MSG, job->job_id(), job->command_wcstr());
     } else {
         // If we aren't redirecting, send output to real stderr, since stuff in sb_err won't get
         // printed until the command finishes.
-        std::fwprintf(stderr, FG_MSG, job->job_id, job->command_wcstr());
+        std::fwprintf(stderr, FG_MSG, job->job_id(), job->command_wcstr());
     }
 
     const wcstring ft = tok_first(job->command());

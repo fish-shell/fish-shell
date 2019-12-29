@@ -20,12 +20,12 @@
 static job_id_t get_job_id_from_pid(pid_t pid, const parser_t &parser) {
     for (const auto &j : parser.jobs()) {
         if (j->pgid == pid) {
-            return j->job_id;
+            return j->job_id();
         }
         // Check if the specified pid is a child process of the job.
         for (const process_ptr_t &p : j->processes) {
             if (p->pid == pid) {
-                return j->job_id;
+                return j->job_id();
             }
         }
     }
@@ -146,9 +146,9 @@ static bool find_job_by_name(const wchar_t *proc, std::vector<job_id_t> &ids,
         if (j->command().empty()) continue;
 
         if (match_pid(j->command(), proc)) {
-            if (!contains(ids, j->job_id)) {
+            if (!contains(ids, j->job_id())) {
                 // If pids doesn't already have the pgid, add it.
-                ids.push_back(j->job_id);
+                ids.push_back(j->job_id());
             }
             found = true;
         }
@@ -158,9 +158,9 @@ static bool find_job_by_name(const wchar_t *proc, std::vector<job_id_t> &ids,
             if (p->actual_cmd.empty()) continue;
 
             if (match_pid(p->actual_cmd, proc)) {
-                if (!contains(ids, j->job_id)) {
+                if (!contains(ids, j->job_id())) {
                     // If pids doesn't already have the pgid, add it.
-                    ids.push_back(j->job_id);
+                    ids.push_back(j->job_id());
                 }
                 found = true;
             }

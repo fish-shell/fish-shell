@@ -542,7 +542,7 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
         p->completed = true;
         if (p->is_last_in_job) {
             FLOGF(exec_job_status, L"Set status of job %d (%ls) to %d using short circuit",
-                  j->job_id, j->preview().c_str(), p->status);
+                  j->job_id(), j->preview().c_str(), p->status);
             parser.set_last_statuses(j->get_statuses());
         }
         return true;
@@ -718,7 +718,7 @@ using proc_performer_t = std::function<proc_status_t(parser_t &parser)>;
 // exists. This is just a dumb artifact of the fact that we only capture the functions name, not its
 // properties, when creating the job; thus a race could delete the function before we fetch its
 // properties.
-static proc_performer_t get_performer_for_process(process_t *p, const job_t *job,
+static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
                                                   const io_chain_t &io_chain) {
     assert((p->type == process_type_t::function || p->type == process_type_t::block_node) &&
            "Unexpected process type");
@@ -746,6 +746,13 @@ static proc_performer_t get_performer_for_process(process_t *p, const job_t *job
         };
     } else {
         assert(p->type == process_type_t::function);
+        // If this function is the only process in the current job
+        // and that job is in the foreground then mark this job as internal
+        // so it doesn't increment the job id for any jobs created within this
+        // function.
+        if (p->is_first_in_job && p->is_last_in_job && job->flags().foreground) {
+            job->mark_internal();
+        }
         auto props = function_get_properties(p->argv0());
         if (!props) {
             FLOGF(error, _(L"Unknown function '%ls'"), p->argv0());
@@ -1131,7 +1138,7 @@ bool exec_job(parser_t &parser, shared_ptr<job_t> j, const job_lineage_t &lineag
         }
     }
 
-    FLOGF(exec_job_exec, L"Executed job %d from command '%ls' with pgrp %d", j->job_id,
+    FLOGF(exec_job_exec, L"Executed job %d from command '%ls' with pgrp %d", j->job_id(),
           j->command_wcstr(), j->pgid);
 
     j->mark_constructed();

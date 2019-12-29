@@ -75,7 +75,7 @@ bool child_set_group(job_t *j, process_t *p) {
             char command[64];
 
             format_long_safe(pid_buff, p->pid);
-            format_long_safe(job_id_buff, j->job_id);
+            format_long_safe(job_id_buff, j->job_id());
             format_long_safe(getpgid_buff, getpgid(p->pid));
             format_long_safe(job_pgid_buff, j->pgid);
             narrow_string_safe(argv0, p->argv0());

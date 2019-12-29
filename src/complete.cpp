@@ -1197,7 +1197,7 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
                 // #6288.
                 if (env_name == L"history") {
                     history_t *history =
-                        &history_t::history_with_name(history_session_id(env_stack_t::principal()));
+                        &history_t::history_with_name(history_session_id(parser->vars()));
                     for (size_t i = 1; i < history->size() && desc.size() < 64; i++) {
                         if (i > 1) desc += L' ';
                         desc += expand_escape_string(history->item_at_index(i).str());

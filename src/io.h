@@ -215,11 +215,12 @@ class io_file_t : public io_data_t {
    public:
     void print() const override;
 
-    io_file_t(int f, autoclose_fd_t file);
+    io_file_t(int fd, autoclose_fd_t file)
+        : io_data_t(io_mode_t::file, fd, file.fd()), file_fd_(std::move(file)) {
+        assert(file_fd_.valid() && "File is not valid");
+    }
 
     ~io_file_t() override;
-
-    int file_fd() const { return file_fd_.fd(); }
 
    private:
     // The fd for the file which we are writing to or reading from.
@@ -240,11 +241,11 @@ class io_pipe_t : public io_data_t {
     io_pipe_t(int fd, bool is_input, autoclose_fd_t pipe_fd)
         : io_data_t(io_mode_t::pipe, fd, pipe_fd.fd()),
           pipe_fd_(std::move(pipe_fd)),
-          is_input_(is_input) {}
+          is_input_(is_input) {
+        assert(pipe_fd_.valid() && "Pipe is not valid");
+    }
 
     ~io_pipe_t() override;
-
-    int pipe_fd() const { return pipe_fd_.fd(); }
 };
 
 class io_buffer_t;
@@ -267,14 +268,13 @@ class io_bufferfill_t : public io_data_t {
     io_bufferfill_t(autoclose_fd_t write_fd, std::shared_ptr<io_buffer_t> buffer)
         : io_data_t(io_mode_t::bufferfill, STDOUT_FILENO, write_fd.fd()),
           write_fd_(std::move(write_fd)),
-          buffer_(std::move(buffer)) {}
+          buffer_(std::move(buffer)) {
+        assert(write_fd_.valid() && "fd is not valid");
+    }
 
     ~io_bufferfill_t() override;
 
     std::shared_ptr<io_buffer_t> buffer() const { return buffer_; }
-
-    /// \return the fd that, when written to, fills the buffer.
-    int write_fd() const { return write_fd_.fd(); }
 
     /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
     /// \returns nullptr on failure, e.g. too many open fds.

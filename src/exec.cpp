@@ -382,45 +382,17 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
     // If this is the first process, check the io redirections and see where we should
     // be reading from.
     if (pipe_read) {
-        local_builtin_stdin = pipe_read->pipe_fd();
+        local_builtin_stdin = pipe_read->source_fd;
     } else if (const auto in = proc_io_chain.io_for_fd(STDIN_FILENO)) {
-        switch (in->io_mode) {
-            case io_mode_t::fd: {
-                const io_fd_t *in_fd = static_cast<const io_fd_t *>(in.get());
-                // Ignore fd redirections from an fd other than the
-                // standard ones. e.g. in source <&3 don't actually read from fd 3,
-                // which is internal to fish. We still respect this redirection in
-                // that we pass it on as a block IO to the code that source runs,
-                // and therefore this is not an error.
-                if (in_fd->source_fd >= 0 && in_fd->source_fd < 3) {
-                    local_builtin_stdin = in_fd->source_fd;
-                }
-                break;
-            }
-            case io_mode_t::pipe: {
-                const io_pipe_t *in_pipe = static_cast<const io_pipe_t *>(in.get());
-                if (in_pipe->fd == STDIN_FILENO) {
-                    local_builtin_stdin = in_pipe->pipe_fd();
-                }
-                break;
-            }
-            case io_mode_t::file: {
-                const io_file_t *in_file = static_cast<const io_file_t *>(in.get());
-                local_builtin_stdin = in_file->file_fd();
-                break;
-            }
-            case io_mode_t::close: {
-                // FIXME: When requesting that stdin be closed, we really don't do
-                // anything. How should this be handled?
-                local_builtin_stdin = -1;
-
-                break;
-            }
-            default: {
-                local_builtin_stdin = -1;
-                debug(1, _(L"Unknown input redirection type %d"), in->io_mode);
-                break;
-            }
+        // Ignore fd redirections from an fd other than the
+        // standard ones. e.g. in source <&3 don't actually read from fd 3,
+        // which is internal to fish. We still respect this redirection in
+        // that we pass it on as a block IO to the code that source runs,
+        // and therefore this is not an error.
+        bool ignore_redirect =
+            in->io_mode == io_mode_t::fd && in->source_fd >= 0 && in->source_fd < 3;
+        if (!ignore_redirect) {
+            local_builtin_stdin = in->source_fd;
         }
     }
 

@@ -28,11 +28,11 @@
 #define OPEN_MASK 0666
 
 io_data_t::~io_data_t() = default;
-
-io_file_t::io_file_t(int f, autoclose_fd_t file)
-    : io_data_t(io_mode_t::file, f, file_fd_.fd()), file_fd_(std::move(file)) {
-    assert(file_fd_.valid() && "File is not valid");
-}
+io_pipe_t::~io_pipe_t() = default;
+io_fd_t::~io_fd_t() = default;
+io_close_t::~io_close_t() = default;
+io_file_t::~io_file_t() = default;
+io_bufferfill_t::~io_bufferfill_t() = default;
 
 void io_close_t::print() const { std::fwprintf(stderr, L"close %d\n", fd); }
 
@@ -41,7 +41,7 @@ void io_fd_t::print() const { std::fwprintf(stderr, L"FD map %d -> %d\n", source
 void io_file_t::print() const { std::fwprintf(stderr, L"file (%d)\n", file_fd_.fd()); }
 
 void io_pipe_t::print() const {
-    std::fwprintf(stderr, L"pipe {%d} (input: %s)\n", pipe_fd(), is_input_ ? "yes" : "no");
+    std::fwprintf(stderr, L"pipe {%d} (input: %s)\n", source_fd, is_input_ ? "yes" : "no");
 }
 
 void io_bufferfill_t::print() const { std::fwprintf(stderr, L"bufferfill {%d}\n", write_fd_.fd()); }
@@ -206,12 +206,6 @@ std::shared_ptr<io_buffer_t> io_bufferfill_t::finish(std::shared_ptr<io_bufferfi
     buffer->complete_background_fillthread();
     return buffer;
 }
-
-io_pipe_t::~io_pipe_t() = default;
-io_fd_t::~io_fd_t() = default;
-io_close_t::~io_close_t() = default;
-io_file_t::~io_file_t() = default;
-io_bufferfill_t::~io_bufferfill_t() = default;
 
 io_buffer_t::~io_buffer_t() {
     assert(!fillthread_running() && "io_buffer_t destroyed with outstanding fillthread");

@@ -35,37 +35,11 @@ int redirection_spec_t::oflags() const {
 dup2_list_t dup2_list_t::resolve_chain(const io_chain_t &io_chain) {
     ASSERT_IS_NOT_FORKED_CHILD();
     dup2_list_t result;
-    for (const auto &io_ref : io_chain) {
-        switch (io_ref->io_mode) {
-            case io_mode_t::file: {
-                const io_file_t *io = static_cast<const io_file_t *>(io_ref.get());
-                result.add_dup2(io->file_fd(), io->fd);
-                break;
-            }
-
-            case io_mode_t::close: {
-                const io_close_t *io = static_cast<const io_close_t *>(io_ref.get());
-                result.add_close(io->fd);
-                break;
-            }
-
-            case io_mode_t::fd: {
-                const io_fd_t *io = static_cast<const io_fd_t *>(io_ref.get());
-                result.add_dup2(io->source_fd, io->fd);
-                break;
-            }
-
-            case io_mode_t::pipe: {
-                const io_pipe_t *io = static_cast<const io_pipe_t *>(io_ref.get());
-                result.add_dup2(io->pipe_fd(), io->fd);
-                break;
-            }
-
-            case io_mode_t::bufferfill: {
-                const io_bufferfill_t *io = static_cast<const io_bufferfill_t *>(io_ref.get());
-                result.add_dup2(io->write_fd(), io->fd);
-                break;
-            }
+    for (const auto &io : io_chain) {
+        if (io->source_fd < 0) {
+            result.add_close(io->fd);
+        } else {
+            result.add_dup2(io->source_fd, io->fd);
         }
     }
     return result;

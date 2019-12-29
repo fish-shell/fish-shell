@@ -387,10 +387,9 @@ struct autoclose_pipes_t {
 maybe_t<autoclose_pipes_t> make_autoclose_pipes(const fd_set_t &fdset);
 
 /// If the given fd is present in \p fdset, duplicates it repeatedly until an fd not used in the set
-/// is found or we run out. If we return a new fd or an error, closes the old one. If \p cloexec is
-/// set, any fd created is marked close-on-exec. \returns -1 on failure (in which case the given fd
-/// is still closed).
-autoclose_fd_t move_fd_to_unused(autoclose_fd_t fd, const fd_set_t &fdset, bool cloexec = true);
+/// is found or we run out. If we return a new fd or an error, closes the old one. Marks the fd as
+/// cloexec. \returns invalid fd on failure (in which case the given fd is still closed).
+autoclose_fd_t move_fd_to_unused(autoclose_fd_t fd, const fd_set_t &fdset);
 
 /// Class representing the output that a builtin can generate.
 class output_stream_t {

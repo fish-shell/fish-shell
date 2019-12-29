@@ -301,7 +301,7 @@ fd_set_t io_chain_t::fd_set() const {
     return result;
 }
 
-autoclose_fd_t move_fd_to_unused(autoclose_fd_t fd, const fd_set_t &fdset, bool cloexec) {
+autoclose_fd_t move_fd_to_unused(autoclose_fd_t fd, const fd_set_t &fdset) {
     if (!fd.valid() || !fdset.contains(fd.fd())) {
         return fd;
     }
@@ -319,8 +319,8 @@ autoclose_fd_t move_fd_to_unused(autoclose_fd_t fd, const fd_set_t &fdset, bool 
         return autoclose_fd_t{};
     }
     // Ok, we have a new candidate fd. Recurse.
-    if (cloexec) set_cloexec(tmp_fd);
-    return move_fd_to_unused(autoclose_fd_t{tmp_fd}, fdset, cloexec);
+    set_cloexec(tmp_fd);
+    return move_fd_to_unused(autoclose_fd_t{tmp_fd}, fdset);
 }
 
 maybe_t<autoclose_pipes_t> make_autoclose_pipes(const fd_set_t &fdset) {
@@ -334,10 +334,10 @@ maybe_t<autoclose_pipes_t> make_autoclose_pipes(const fd_set_t &fdset) {
     set_cloexec(pipes[0]);
     set_cloexec(pipes[1]);
 
-    auto read = move_fd_to_unused(autoclose_fd_t{pipes[0]}, fdset, true);
+    auto read = move_fd_to_unused(autoclose_fd_t{pipes[0]}, fdset);
     if (!read.valid()) return none();
 
-    auto write = move_fd_to_unused(autoclose_fd_t{pipes[1]}, fdset, true);
+    auto write = move_fd_to_unused(autoclose_fd_t{pipes[1]}, fdset);
     if (!write.valid()) return none();
 
     return autoclose_pipes_t(std::move(read), std::move(write));

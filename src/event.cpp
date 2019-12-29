@@ -157,7 +157,7 @@ wcstring event_get_desc(const event_t &evt) {
                 // In events, PGIDs are stored as negative PIDs
                 job_t *j = job_t::from_pid(-ed.param1.pid);
                 if (j) {
-                    return format_string(_(L"exit handler for job %d, '%ls'"), j->job_id,
+                    return format_string(_(L"exit handler for job %d, '%ls'"), j->job_id(),
                                          j->command_wcstr());
                 } else {
                     return format_string(_(L"exit handler for job with process group %d"),
@@ -170,7 +170,7 @@ wcstring event_get_desc(const event_t &evt) {
         case event_type_t::job_exit: {
             job_t *j = job_t::from_job_id(ed.param1.job_id);
             if (j) {
-                return format_string(_(L"exit handler for job %d, '%ls'"), j->job_id,
+                return format_string(_(L"exit handler for job %d, '%ls'"), j->job_id(),
                                      j->command_wcstr());
             } else {
                 return format_string(_(L"exit handler for job with job id %d"), ed.param1.job_id);

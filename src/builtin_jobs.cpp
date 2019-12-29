@@ -61,7 +61,7 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
                 streams.out.append(_(L"State\tCommand\n"));
             }
 
-            streams.out.append_format(L"%d\t%d\t", j->job_id, j->pgid);
+            streams.out.append_format(L"%d\t%d\t", j->job_id(), j->pgid);
 
             if (have_proc_stat()) {
                 streams.out.append_format(L"%d%%\t", cpu_use(j));

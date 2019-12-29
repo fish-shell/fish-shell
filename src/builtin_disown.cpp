@@ -28,7 +28,7 @@ static int disown_job(const wchar_t *cmd, parser_t &parser, io_streams_t &stream
         killpg(j->pgid, SIGCONT);
         const wchar_t *fmt =
             _(L"%ls: job %d ('%ls') was stopped and has been signalled to continue.\n");
-        streams.err.append_format(fmt, cmd, j->job_id, j->command_wcstr());
+        streams.err.append_format(fmt, cmd, j->job_id(), j->command_wcstr());
     }
 
     // We cannot directly remove the job from the jobs() list as `disown` might be called

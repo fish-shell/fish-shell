@@ -576,7 +576,7 @@ void parser_t::job_promote(job_t *job) {
 
 job_t *parser_t::job_get(job_id_t id) {
     for (const auto &job : job_list) {
-        if (id <= 0 || job->job_id == id) return job.get();
+        if (id <= 0 || job->job_id() == id) return job.get();
     }
     return nullptr;
 }

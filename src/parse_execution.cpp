@@ -1287,14 +1287,14 @@ eval_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_node,
     // the job ID here.
     auto &libdata = parser->libdata();
     const auto saved_caller_jid = libdata.caller_job_id;
-    libdata.caller_job_id = job->job_id;
+    libdata.caller_job_id = job->job_id();
 
     // Populate the job. This may fail for reasons like command_not_found. If this fails, an error
     // will have been printed.
     eval_result_t pop_result =
         this->populate_job_from_job_node(job.get(), job_node, associated_block);
 
-    assert(libdata.caller_job_id == job->job_id && "Caller job ID unexpectedly changed");
+    assert(libdata.caller_job_id == job->job_id() && "Caller job ID unexpectedly changed");
     parser->libdata().caller_job_id = saved_caller_jid;
 
     // Store time it took to 'parse' the command.

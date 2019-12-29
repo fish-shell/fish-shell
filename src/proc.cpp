@@ -271,10 +271,12 @@ void process_t::check_generations_before_launch() {
 
 job_t::job_t(job_id_t job_id, const properties_t &props, const job_lineage_t &lineage)
     : properties(props),
-      job_id(job_id),
+      job_id_(job_id),
       root_constructed(lineage.root_constructed ? lineage.root_constructed : this->constructed) {}
 
-job_t::~job_t() { release_job_id(job_id); }
+job_t::~job_t() {
+    if (job_id_ != -1) release_job_id(job_id_);
+}
 
 void job_t::mark_constructed() {
     assert(!is_constructed() && "Job was already constructed");
@@ -415,7 +417,7 @@ static void print_job_status(const job_t *j, job_status_t status) {
     if (status == JOB_STOPPED) msg = L"Job %d, '%ls' has stopped";
     outputter_t outp;
     outp.writestr("\r");
-    outp.writestr(format_string(_(msg), j->job_id, truncate_command(j->command()).c_str()));
+    outp.writestr(format_string(_(msg), j->job_id(), truncate_command(j->command()).c_str()));
     if (clr_eol) outp.term_puts(clr_eol, 1);
     outp.writestr(L"\n");
     fflush(stdout);
@@ -492,14 +494,14 @@ static bool try_clean_process_in_job(process_t *p, job_t *j, std::vector<event_t
             // We want to report the job number, unless it's the only job, in which case
             // we don't need to.
             const wcstring job_number_desc =
-                only_one_job ? wcstring() : format_string(_(L"Job %d, "), j->job_id);
+                only_one_job ? wcstring() : format_string(_(L"Job %d, "), j->job_id());
             std::fwprintf(stdout, _(L"%ls: %ls\'%ls\' terminated by signal %ls (%ls)"),
                           program_name, job_number_desc.c_str(),
                           truncate_command(j->command()).c_str(), sig2wcs(s.signal_code()),
                           signal_get_desc(s.signal_code()));
         } else {
             const wcstring job_number_desc =
-                only_one_job ? wcstring() : format_string(L"from job %d, ", j->job_id);
+                only_one_job ? wcstring() : format_string(L"from job %d, ", j->job_id());
             const wchar_t *fmt =
                 _(L"%ls: Process %d, \'%ls\' %ls\'%ls\' terminated by signal %ls (%ls)");
             std::fwprintf(stdout, fmt, program_name, p->pid, p->argv0(), job_number_desc.c_str(),
@@ -595,7 +597,7 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
                     proc_create_event(L"JOB_EXIT", event_type_t::exit, -j->pgid, 0));
             }
             exit_events.push_back(
-                proc_create_event(L"JOB_EXIT", event_type_t::job_exit, j->job_id, 0));
+                proc_create_event(L"JOB_EXIT", event_type_t::job_exit, j->job_id(), 0));
         }
     }
 
@@ -757,8 +759,8 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
                 if (errno == ENOTTY) {
                     redirect_tty_output();
                 }
-                debug(1, _(L"Could not send job %d ('%ls') with pgid %d to foreground"), j->job_id,
-                      j->command_wcstr(), j->pgid);
+                debug(1, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
+                      j->job_id(), j->command_wcstr(), j->pgid);
                 wperror(L"tcsetpgrp");
                 return error;
             }
@@ -785,7 +787,7 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
                 redirect_tty_output();
             }
 
-            debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id,
+            debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id(),
                   j->preview().c_str());
             wperror(L"tcsetattr");
             return error;
@@ -852,7 +854,7 @@ void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool se
     mut_flags().notified = false;
 
     FLOGF(proc_job_run, L"%ls job %d, gid %d (%ls), %ls, %ls",
-          send_sigcont ? L"Continue" : L"Start", job_id, pgid, command_wcstr(),
+          send_sigcont ? L"Continue" : L"Start", job_id_, pgid, command_wcstr(),
           is_completed() ? L"COMPLETED" : L"UNCOMPLETED",
           parser.libdata().is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
 

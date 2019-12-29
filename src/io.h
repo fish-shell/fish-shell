@@ -169,19 +169,23 @@ enum class io_mode_t { file, pipe, fd, close, bufferfill };
 
 /// Represents an FD redirection.
 class io_data_t {
-   private:
     // No assignment or copying allowed.
-    io_data_t(const io_data_t &rhs);
-    void operator=(const io_data_t &rhs);
+    io_data_t(const io_data_t &rhs) = delete;
+    void operator=(const io_data_t &rhs) = delete;
 
    protected:
-    io_data_t(io_mode_t m, int f) : io_mode(m), fd(f) {}
+    io_data_t(io_mode_t m, int fd, int source_fd) : io_mode(m), fd(fd), source_fd(source_fd) {}
 
    public:
     /// Type of redirect.
     const io_mode_t io_mode;
+
     /// FD to redirect.
     const int fd;
+
+    /// Source fd. This is dup2'd to fd, or if it is -1, then fd is closed.
+    /// That is, we call dup2(source_fd, fd).
+    const int source_fd;
 
     virtual void print() const = 0;
     virtual ~io_data_t() = 0;
@@ -189,7 +193,7 @@ class io_data_t {
 
 class io_close_t : public io_data_t {
    public:
-    explicit io_close_t(int f) : io_data_t(io_mode_t::close, f) {}
+    explicit io_close_t(int f) : io_data_t(io_mode_t::close, f, -1) {}
 
     void print() const override;
     ~io_close_t() override;
@@ -197,14 +201,13 @@ class io_close_t : public io_data_t {
 
 class io_fd_t : public io_data_t {
    public:
-    /// fd to redirect specified fd to. For example, in 2>&1, old_fd is 1, and io_data_t::fd is 2.
-    const int old_fd;
-
     void print() const override;
 
     ~io_fd_t() override;
 
-    io_fd_t(int f, int old) : io_data_t(io_mode_t::fd, f), old_fd(old) {}
+    /// fd to redirect specified fd to. For example, in 2>&1, source_fd is 1, and io_data_t::fd
+    /// is 2.
+    io_fd_t(int f, int source_fd) : io_data_t(io_mode_t::fd, f, source_fd) {}
 };
 
 /// Represents a redirection to or from an opened file.
@@ -235,7 +238,9 @@ class io_pipe_t : public io_data_t {
     void print() const override;
 
     io_pipe_t(int fd, bool is_input, autoclose_fd_t pipe_fd)
-        : io_data_t(io_mode_t::pipe, fd), pipe_fd_(std::move(pipe_fd)), is_input_(is_input) {}
+        : io_data_t(io_mode_t::pipe, fd, pipe_fd.fd()),
+          pipe_fd_(std::move(pipe_fd)),
+          is_input_(is_input) {}
 
     ~io_pipe_t() override;
 
@@ -260,7 +265,7 @@ class io_bufferfill_t : public io_data_t {
     // The ctor is public to support make_shared() in the static create function below.
     // Do not invoke this directly.
     io_bufferfill_t(autoclose_fd_t write_fd, std::shared_ptr<io_buffer_t> buffer)
-        : io_data_t(io_mode_t::bufferfill, STDOUT_FILENO),
+        : io_data_t(io_mode_t::bufferfill, STDOUT_FILENO, write_fd.fd()),
           write_fd_(std::move(write_fd)),
           buffer_(std::move(buffer)) {}
 

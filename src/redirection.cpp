@@ -51,7 +51,7 @@ dup2_list_t dup2_list_t::resolve_chain(const io_chain_t &io_chain) {
 
             case io_mode_t::fd: {
                 const io_fd_t *io = static_cast<const io_fd_t *>(io_ref.get());
-                result.add_dup2(io->old_fd, io->fd);
+                result.add_dup2(io->source_fd, io->fd);
                 break;
             }
 

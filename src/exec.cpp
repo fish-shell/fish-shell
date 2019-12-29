@@ -392,8 +392,8 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
                 // which is internal to fish. We still respect this redirection in
                 // that we pass it on as a block IO to the code that source runs,
                 // and therefore this is not an error.
-                if (in_fd->old_fd >= 0 && in_fd->old_fd < 3) {
-                    local_builtin_stdin = in_fd->old_fd;
+                if (in_fd->source_fd >= 0 && in_fd->source_fd < 3) {
+                    local_builtin_stdin = in_fd->source_fd;
                 }
                 break;
             }

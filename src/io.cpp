@@ -30,13 +30,13 @@
 io_data_t::~io_data_t() = default;
 
 io_file_t::io_file_t(int f, autoclose_fd_t file)
-    : io_data_t(io_mode_t::file, f), file_fd_(std::move(file)) {
+    : io_data_t(io_mode_t::file, f, file_fd_.fd()), file_fd_(std::move(file)) {
     assert(file_fd_.valid() && "File is not valid");
 }
 
 void io_close_t::print() const { std::fwprintf(stderr, L"close %d\n", fd); }
 
-void io_fd_t::print() const { std::fwprintf(stderr, L"FD map %d -> %d\n", old_fd, fd); }
+void io_fd_t::print() const { std::fwprintf(stderr, L"FD map %d -> %d\n", source_fd, fd); }
 
 void io_file_t::print() const { std::fwprintf(stderr, L"file (%d)\n", file_fd_.fd()); }
 

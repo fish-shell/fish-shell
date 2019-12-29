@@ -2,6 +2,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include "builtin_read.h"
+
 #include <unistd.h>
 
 #include <algorithm>
@@ -403,16 +404,14 @@ static int validate_read_args(const wchar_t *cmd, read_cmd_opts_t &opts, int arg
     }
 
     if (opts.tokenize && opts.have_delimiter) {
-        streams.err.append_format(
-            BUILTIN_ERR_COMBO2, cmd,
-            L"--delimiter and --tokenize can not be used together");
+        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
+                                  L"--delimiter and --tokenize can not be used together");
         return STATUS_INVALID_ARGS;
     }
 
     if (opts.tokenize && opts.one_line) {
-        streams.err.append_format(
-            BUILTIN_ERR_COMBO2, cmd,
-            L"--line and --tokenize can not be used together");
+        streams.err.append_format(BUILTIN_ERR_COMBO2, cmd,
+                                  L"--line and --tokenize can not be used together");
         return STATUS_INVALID_ARGS;
     }
 

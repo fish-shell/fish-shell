@@ -235,8 +235,7 @@ parse_statement_decoration_t get_decoration(tnode_t<grammar::plain_statement> st
 /// Return the type for a boolean statement.
 parse_job_decoration_t bool_statement_type(tnode_t<grammar::job_decorator> stmt);
 
-parse_job_decoration_t bool_statement_type(
-    tnode_t<grammar::job_conjunction_continuation> cont);
+parse_job_decoration_t bool_statement_type(tnode_t<grammar::job_conjunction_continuation> cont);
 
 /// Given a redirection node, get the parsed redirection and target of the redirection (file path,
 /// or fd).

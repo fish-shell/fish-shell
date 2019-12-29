@@ -1356,7 +1356,8 @@ eval_result_t parse_execution_context_t::run_job_conjunction(
         if (continuation) {
             // Check the conjunction type.
             parse_job_decoration_t conj = bool_statement_type(continuation);
-            assert((conj == parse_job_decoration_and || conj == parse_job_decoration_or) && "Unexpected conjunction");
+            assert((conj == parse_job_decoration_and || conj == parse_job_decoration_or) &&
+                   "Unexpected conjunction");
             skip = should_skip(conj);
         }
         if (!skip) {

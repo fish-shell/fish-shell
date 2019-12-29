@@ -1,24 +1,25 @@
 // Functions for executing the time builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "timer.h"
+
+#include <string.h>
+
+#include <algorithm>
 #include <cerrno>
-#include <ctime>
 #include <chrono>
 #include <cstddef>
+#include <ctime>
 
-#include "common.h"
 #include "builtin.h"
+#include "common.h"
 #include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
 #include "parser.h"
 #include "proc.h"
-#include "timer.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
-
-#include <algorithm>
-#include <string.h>
 
 // Measuring time is always complicated with many caveats. Quite apart from the typical
 // gotchas faced by developers attempting to choose between monotonic vs non-monotonic and system vs
@@ -60,7 +61,6 @@ static int64_t micros(const std::chrono::duration<D1, D2> &d) {
     return std::chrono::duration_cast<std::chrono::microseconds>(d).count();
 };
 
-
 timer_snapshot_t timer_snapshot_t::take() {
     timer_snapshot_t snapshot;
 
@@ -71,8 +71,8 @@ timer_snapshot_t timer_snapshot_t::take() {
     return snapshot;
 }
 
-wcstring
-timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2, bool verbose /* = true */) {
+wcstring timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2,
+                                       bool verbose /* = true */) {
     int64_t fish_sys_micros = micros(t2.cpu_fish.ru_stime) - micros(t1.cpu_fish.ru_stime);
     int64_t fish_usr_micros = micros(t2.cpu_fish.ru_utime) - micros(t1.cpu_fish.ru_utime);
     int64_t child_sys_micros = micros(t2.cpu_children.ru_stime) - micros(t1.cpu_children.ru_stime);
@@ -112,10 +112,14 @@ timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2, bool ver
 
     auto unit_name = [](tunit unit) {
         switch (unit) {
-            case tunit::minutes: return "minutes";
-            case tunit::seconds: return "seconds";
-            case tunit::milliseconds: return "milliseconds";
-            case tunit::microseconds: return "microseconds";
+            case tunit::minutes:
+                return "minutes";
+            case tunit::seconds:
+                return "seconds";
+            case tunit::milliseconds:
+                return "milliseconds";
+            case tunit::microseconds:
+                return "microseconds";
         }
         // GCC does not recognize the exhaustive switch above
         return "";
@@ -123,10 +127,14 @@ timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2, bool ver
 
     auto unit_short_name = [](tunit unit) {
         switch (unit) {
-            case tunit::minutes: return "mins";
-            case tunit::seconds: return "secs";
-            case tunit::milliseconds: return "millis";
-            case tunit::microseconds: return "micros";
+            case tunit::minutes:
+                return "mins";
+            case tunit::seconds:
+                return "secs";
+            case tunit::milliseconds:
+                return "millis";
+            case tunit::microseconds:
+                return "micros";
         }
         // GCC does not recognize the exhaustive switch above
         return "";
@@ -134,10 +142,14 @@ timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2, bool ver
 
     auto convert = [](int64_t micros, tunit unit) {
         switch (unit) {
-            case tunit::minutes: return micros / 1.0E6 / 60.0;
-            case tunit::seconds: return micros / 1.0E6;
-            case tunit::milliseconds: return micros / 1.0E3;
-            case tunit::microseconds: return micros / 1.0;
+            case tunit::minutes:
+                return micros / 1.0E6 / 60.0;
+            case tunit::seconds:
+                return micros / 1.0E6;
+            case tunit::milliseconds:
+                return micros / 1.0E3;
+            case tunit::microseconds:
+                return micros / 1.0;
         }
         // GCC does not recognize the exhaustive switch above
         return 0.0;
@@ -152,15 +164,13 @@ timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2, bool ver
     wcstring output;
     if (!verbose) {
         append_format(output,
-            L"\n_______________________________"    \
-            L"\nExecuted in  %6.2F %s"              \
-            L"\n   usr time  %6.2F %s"              \
-            L"\n   sys time  %6.2F %s"              \
-            L"\n",
-            wall_time, unit_name(wall_unit),
-            usr_time, unit_name(cpu_unit),
-            sys_time, unit_name(cpu_unit)
-        );
+                      L"\n_______________________________"
+                      L"\nExecuted in  %6.2F %s"
+                      L"\n   usr time  %6.2F %s"
+                      L"\n   sys time  %6.2F %s"
+                      L"\n",
+                      wall_time, unit_name(wall_unit), usr_time, unit_name(cpu_unit), sys_time,
+                      unit_name(cpu_unit));
     } else {
         auto fish_unit = get_unit((fish_sys_micros + fish_usr_micros) / 2);
         auto child_unit = get_unit((child_sys_micros + child_usr_micros) / 2);
@@ -170,22 +180,17 @@ timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2, bool ver
         auto child_sys_time = convert(child_sys_micros, child_unit);
 
         append_format(output,
-            L"\n________________________________________________________"    \
-            L"\nExecuted in  %6.2F %s   %*s           %*s "                  \
-            L"\n   usr time  %6.2F %s  %6.2F %s  %6.2F %s "                  \
-            L"\n   sys time  %6.2F %s  %6.2F %s  %6.2F %s "                  \
-            L"\n",
-            wall_time, unit_short_name(wall_unit),
-            strlen(unit_short_name(wall_unit)) - 1, "fish",
-            strlen(unit_short_name(fish_unit)) - 1, "external",
-            usr_time, unit_short_name(cpu_unit),
-            fish_usr_time, unit_short_name(fish_unit),
-            child_usr_time, unit_short_name(child_unit),
-            sys_time, unit_short_name(cpu_unit),
-            fish_sys_time, unit_short_name(fish_unit),
-            child_sys_time, unit_short_name(child_unit)
-        );
-
+                      L"\n________________________________________________________"
+                      L"\nExecuted in  %6.2F %s   %*s           %*s "
+                      L"\n   usr time  %6.2F %s  %6.2F %s  %6.2F %s "
+                      L"\n   sys time  %6.2F %s  %6.2F %s  %6.2F %s "
+                      L"\n",
+                      wall_time, unit_short_name(wall_unit), strlen(unit_short_name(wall_unit)) - 1,
+                      "fish", strlen(unit_short_name(fish_unit)) - 1, "external", usr_time,
+                      unit_short_name(cpu_unit), fish_usr_time, unit_short_name(fish_unit),
+                      child_usr_time, unit_short_name(child_unit), sys_time,
+                      unit_short_name(cpu_unit), fish_sys_time, unit_short_name(fish_unit),
+                      child_sys_time, unit_short_name(child_unit));
     }
 
     return output;

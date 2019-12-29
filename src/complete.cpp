@@ -39,9 +39,9 @@
 #include "history.h"
 #include "iothread.h"
 #include "parse_constants.h"
-#include "parser_keywords.h"
 #include "parse_util.h"
 #include "parser.h"
+#include "parser_keywords.h"
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
@@ -1193,9 +1193,11 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
         wcstring desc;
         if (this->wants_descriptions()) {
             if (this->type() != COMPLETE_AUTOSUGGEST) {
-                // $history can be huge, don't put all of it in the completion description; see #6288.
+                // $history can be huge, don't put all of it in the completion description; see
+                // #6288.
                 if (env_name == L"history") {
-                    history_t *history = &history_t::history_with_name(history_session_id(env_stack_t::principal()));
+                    history_t *history =
+                        &history_t::history_with_name(history_session_id(env_stack_t::principal()));
                     for (size_t i = 1; i < history->size() && desc.size() < 64; i++) {
                         if (i > 1) desc += L' ';
                         desc += expand_escape_string(history->item_at_index(i).str());

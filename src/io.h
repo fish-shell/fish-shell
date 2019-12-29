@@ -457,5 +457,4 @@ struct io_streams_t {
     explicit io_streams_t(size_t read_limit) : out(read_limit), err(read_limit), stdin_fd(-1) {}
 };
 
-
 #endif

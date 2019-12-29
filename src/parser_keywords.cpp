@@ -16,9 +16,8 @@ static const wcstring skip_keywords[]{
     L"begin",
 };
 
-static const wcstring subcommand_keywords[]{L"command", L"builtin", L"while", L"exec",
-                                            L"if",      L"and",     L"or",    L"not",
-                                            L"time",    L"begin"};
+static const wcstring subcommand_keywords[]{L"command", L"builtin", L"while", L"exec", L"if",
+                                            L"and",     L"or",      L"not",   L"time", L"begin"};
 
 static const string_set_t block_keywords = {L"for",      L"while",  L"if",
                                             L"function", L"switch", L"begin"};

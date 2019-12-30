@@ -58,6 +58,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         __init_uvar fish_color_autosuggestion 555 brblack
         __init_uvar fish_color_user brgreen
         __init_uvar fish_color_host normal
+        __init_uvar fish_color_host_remote yellow
         __init_uvar fish_color_valid_path --underline
         __init_uvar fish_color_status red
 

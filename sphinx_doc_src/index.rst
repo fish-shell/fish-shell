@@ -1096,6 +1096,8 @@ The following variables are available to change the highlighting colors in fish:
 
 - ``fish_color_host``, the color used to print the current host system in some of fish default prompts
 
+- ``fish_color_host_remote``, the color used to print the current host system in some of fish default prompts, if fish is running remotely (via ssh or similar)
+
 - ``fish_color_cancel``, the color for the '^C' indicator on a canceled command
 
 Additionally, the following variables are available to change the highlighting in the completion pager:

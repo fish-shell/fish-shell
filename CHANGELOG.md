@@ -80,6 +80,7 @@
 #### Improved prompts
 - The git prompt in informative mode now shows the number of stashes if enabled.
 - The git prompt now has an option (`$__fish_git_prompt_use_informative_chars`) to use the (more modern) informative characters without enabling informative mode.
+- The default prompt now also features VCS integration and will color the host if running via SSH (#6375).
 
 #### Improved terminal output
 - New `fish_pager_color_` options have been added to control more elements of the pager's colors (#5524).

@@ -10,15 +10,14 @@ function func100
     sleep 100 &
     set -g tokill $tokill $last_pid
 end
+func100
 
-function func200
+# The redirection ensures this becomes a real job.
+begin
     sleep 200 &
     set -g tokill $tokill $last_pid
-end
+end </dev/null
 
-
-func100
-func200
 
 sleep 300 &
 set -g tokill $tokill $last_pid

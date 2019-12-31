@@ -24,7 +24,7 @@ set -g tokill $tokill $last_pid
 
 jobs
 
-#CHECK: Job	Group	CPU	State	Command
+#CHECK: Job	Group{{.*}}
 #CHECK: 3{{.*\t}}sleep 300 &
 #CHECK: 2{{.*\t}}sleep 200 &
 #CHECK: 1{{.*\t}}sleep 100 &

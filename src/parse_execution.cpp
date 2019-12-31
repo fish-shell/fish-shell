@@ -1049,7 +1049,7 @@ eval_result_t parse_execution_context_t::apply_variable_assignments(
             vals.emplace_back(std::move(completion.completion));
         }
         if (proc) proc->variable_assignments.push_back({variable_name, vals});
-        parser->vars().set(std::move(variable_name), ENV_LOCAL | ENV_EXPORT, std::move(vals));
+        parser->vars().set(variable_name, ENV_LOCAL | ENV_EXPORT, std::move(vals));
     }
     return eval_result_t::ok;
 }
@@ -1410,13 +1410,13 @@ eval_result_t parse_execution_context_t::run_job_list(tnode_t<Type> job_list,
             result = this->run_job_conjunction(job_conj, associated_block);
         }
         if (timer_started) {
-            auto t1 = std::move(active_timers.back());
+            auto t1 = active_timers.back();
             active_timers.pop_back();
             auto t2 = timer_snapshot_t::take();
 
             // Well, this is awkward. By defining `time` as a decorator and not a built-in, there's
             // no associated stream for its output!
-            auto output = timer_snapshot_t::print_delta(std::move(t1), std::move(t2), true);
+            auto output = timer_snapshot_t::print_delta(t1, t2, true);
             std::fwprintf(stderr, L"%S\n", output.c_str());
         }
     }

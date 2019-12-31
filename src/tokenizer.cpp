@@ -136,7 +136,7 @@ enum {
     curly_braces = 1 << 2,
     char_escape = 1 << 3,
 };
-}
+}  // namespace tok_modes
 using tok_mode_t = uint32_t;
 
 /// Read the next token as a string.

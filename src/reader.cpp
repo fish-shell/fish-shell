@@ -1299,7 +1299,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
 
         history_search_t searcher(*history, search_string, history_search_type_t::prefix);
         while (!reader_test_should_cancel() && searcher.go_backwards()) {
-            history_item_t item = searcher.current_item();
+            const history_item_t &item = searcher.current_item();
 
             // Skip items with newlines because they make terrible autosuggestions.
             if (item.str().find(L'\n') != wcstring::npos) continue;
@@ -2754,7 +2754,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 if (abbreviation_expanded) {
                     // It's our reponsibility to rehighlight and repaint. But everything we do
                     // below triggers a repaint.
-                    command_test_result = test_func(parser(), el->text.c_str());
+                    command_test_result = test_func(parser(), el->text);
 
                     // If the command is OK, then we're going to execute it. We still want to do
                     // syntax highlighting, but a synchronous variant that performs no I/O, so

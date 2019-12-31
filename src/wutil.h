@@ -71,7 +71,7 @@ void safe_perror(const char *message);
 const char *safe_strerror(int err);
 
 /// Wide character version of getcwd().
-const wcstring wgetcwd();
+wcstring wgetcwd();
 
 /// Wide character version of realpath function.
 /// \returns the canonicalized path, or none if the path is invalid.

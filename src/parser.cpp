@@ -110,7 +110,7 @@ void parser_t::skip_all_blocks() {
 
 // Given a new-allocated block, push it onto our block list, acquiring ownership.
 block_t *parser_t::push_block(block_t &&block) {
-    block_t new_current{std::move(block)};
+    block_t new_current{block};
     const enum block_type_t type = new_current.type();
     new_current.src_lineno = parser_t::get_lineno();
 
@@ -147,7 +147,7 @@ void parser_t::pop_block(const block_t *expected) {
     assert(!block_list.empty() && "empty block list");
 
     // Acquire ownership out of the block list.
-    block_t old = std::move(block_list.front());
+    block_t old = block_list.front();
     block_list.pop_front();
 
     if (old.wants_pop_env) vars().pop();
@@ -626,7 +626,7 @@ eval_result_t parser_t::eval(const wcstring &cmd, const io_chain_t &io,
     }
 }
 
-eval_result_t parser_t::eval(parsed_source_ref_t ps, const io_chain_t &io,
+eval_result_t parser_t::eval(const parsed_source_ref_t &ps, const io_chain_t &io,
                              enum block_type_t block_type) {
     assert(block_type == block_type_t::top || block_type == block_type_t::subst);
     if (!ps->tree.empty()) {
@@ -640,8 +640,8 @@ eval_result_t parser_t::eval(parsed_source_ref_t ps, const io_chain_t &io,
 }
 
 template <typename T>
-eval_result_t parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, job_lineage_t lineage,
-                                  block_type_t block_type) {
+eval_result_t parser_t::eval_node(const parsed_source_ref_t &ps, tnode_t<T> node,
+                                  job_lineage_t lineage, block_type_t block_type) {
     static_assert(
         std::is_same<T, grammar::statement>::value || std::is_same<T, grammar::job_list>::value,
         "Unexpected node type");
@@ -683,9 +683,9 @@ eval_result_t parser_t::eval_node(parsed_source_ref_t ps, tnode_t<T> node, job_l
 }
 
 // Explicit instantiations. TODO: use overloads instead?
-template eval_result_t parser_t::eval_node(parsed_source_ref_t, tnode_t<grammar::statement>,
+template eval_result_t parser_t::eval_node(const parsed_source_ref_t &, tnode_t<grammar::statement>,
                                            job_lineage_t, block_type_t);
-template eval_result_t parser_t::eval_node(parsed_source_ref_t, tnode_t<grammar::job_list>,
+template eval_result_t parser_t::eval_node(const parsed_source_ref_t &, tnode_t<grammar::job_list>,
                                            job_lineage_t, block_type_t);
 
 void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &errors,

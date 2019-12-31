@@ -278,7 +278,7 @@ maybe_t<prompt_layout_t> layout_cache_t::find_prompt_layout(const wcstring &inpu
 
 void layout_cache_t::add_prompt_layout(wcstring input, prompt_layout_t layout) {
     assert(!find_prompt_layout(input) && "Should not have a prompt layout for this input");
-    prompt_cache_.emplace_front(std::move(input), std::move(layout));
+    prompt_cache_.emplace_front(std::move(input), layout);
     if (prompt_cache_.size() > prompt_cache_max_size) {
         prompt_cache_.pop_back();
     }

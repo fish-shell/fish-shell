@@ -130,7 +130,7 @@ bool wreaddir_for_dirs(DIR *dir, wcstring *out_name) {
     return result != nullptr;
 }
 
-const wcstring wgetcwd() {
+wcstring wgetcwd() {
     char cwd[PATH_MAX];
     char *res = getcwd(cwd, sizeof(cwd));
     if (res) {

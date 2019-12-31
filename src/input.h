@@ -57,10 +57,10 @@ class inputter_t {
 
     /// Enqueue a char event to the queue of unread characters that input_readch will return before
     /// actually reading from fd 0.
-    void queue_ch(char_event_t ch);
+    void queue_ch(const char_event_t &ch);
 
     /// Enqueue a char event to the front of the queue; this will be the next event returned.
-    void push_front(char_event_t ch);
+    void push_front(const char_event_t &ch);
 
     /// Sets the return status of the most recently executed input function.
     void function_set_status(bool status) { function_status_ = status; }

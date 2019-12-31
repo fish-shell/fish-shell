@@ -217,7 +217,7 @@ struct range_t {
 /// Base class for expressions.
 class expression {
    protected:
-    expression(token_t what, range_t where) : token(what), range(std::move(where)) {}
+    expression(token_t what, range_t where) : token(what), range(where) {}
 
    public:
     const token_t token;
@@ -266,7 +266,7 @@ class combining_expression : public expression {
     const std::vector<token_t> combiners;
 
     combining_expression(token_t tok, range_t where, std::vector<unique_ptr<expression>> exprs,
-                         const std::vector<token_t> &combs)
+                         std::vector<token_t> combs)
         : expression(tok, where), subjects(std::move(exprs)), combiners(std::move(combs)) {
         // We should have one more subject than combiner.
         assert(subjects.size() == combiners.size() + 1);
@@ -311,7 +311,7 @@ unique_ptr<expression> test_parser::parse_unary_expression(unsigned int start, u
     token_t tok = token_for_string(arg(start))->tok;
     if (tok == test_bang) {
         unique_ptr<expression> subject(parse_unary_expression(start + 1, end));
-        if (subject.get()) {
+        if (subject) {
             return make_unique<unary_operator>(tok, range_t(start, subject->range.end),
                                                move(subject));
         }
@@ -496,7 +496,7 @@ unique_ptr<expression> test_parser::parse_4_arg_expression(unsigned int start, u
     token_t first_token = token_for_string(arg(start))->tok;
     if (first_token == test_bang) {
         unique_ptr<expression> subject(parse_3_arg_expression(start + 1, end));
-        if (subject.get()) {
+        if (subject) {
             result = make_unique<unary_operator>(first_token, range_t(start, subject->range.end),
                                                  move(subject));
         }

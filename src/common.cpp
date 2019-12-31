@@ -108,7 +108,7 @@ static owning_lock<struct winsize> s_termsize{k_invalid_termsize};
 static relaxed_atomic_bool_t s_termsize_valid{false};
 
 static char *wcs2str_internal(const wchar_t *in, char *out);
-static void debug_shared(const wchar_t msg_level, const wcstring &msg);
+static void debug_shared(wchar_t msg_level, const wcstring &msg);
 
 #if defined(OS_IS_CYGWIN) || defined(WSL)
 // MS Windows tty devices do not currently have either a read or write timestamp. Those
@@ -205,8 +205,7 @@ bool is_windows_subsystem_for_linux() {
 #ifdef HAVE_BACKTRACE_SYMBOLS
 // This function produces a stack backtrace with demangled function & method names. It is based on
 // https://gist.github.com/fmela/591333 but adapted to the style of the fish project.
-[[gnu::noinline]] static const wcstring_list_t demangled_backtrace(int max_frames,
-                                                                   int skip_levels) {
+[[gnu::noinline]] static wcstring_list_t demangled_backtrace(int max_frames, int skip_levels) {
     void *callstack[128];
     const int n_max_frames = sizeof(callstack) / sizeof(callstack[0]);
     int n_frames = backtrace(callstack, n_max_frames);

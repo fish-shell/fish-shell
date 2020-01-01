@@ -568,7 +568,8 @@ void history_impl_t::load_old_if_needed() {
 
     time_profiler_t profiler("load_old");  //!OCLINT(side-effect)
     if (maybe_t<wcstring> filename = history_filename(name)) {
-        int fd = wopen_cloexec(*filename, O_RDONLY);
+        autoclose_fd_t file{wopen_cloexec(*filename, O_RDONLY)};
+        int fd = file.fd();
         if (fd >= 0) {
             // Take a read lock to guard against someone else appending. This is released when the
             // file is closed (below). We will read the file after releasing the lock, but that's
@@ -584,7 +585,6 @@ void history_impl_t::load_old_if_needed() {
             file_contents = history_file_contents_t::create(fd);
             this->history_file_id = file_contents ? file_id_for_fd(fd) : kInvalidFileID;
             if (!history_t::chaos_mode) history_file_lock(fd, LOCK_UN);
-            close(fd);
 
             time_profiler_t profiler("populate_from_file_contents");  //!OCLINT(side-effect)
             this->populate_from_file_contents();
@@ -723,20 +723,17 @@ bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) cons
     return err == 0;
 }
 
-// Returns the fd of an opened temporary file, or -1 on failure
-static int create_temporary_file(const wcstring &name_template, wcstring *out_path) {
-    int out_fd = -1;
-    char *narrow_str = nullptr;
-    for (size_t attempt = 0; attempt < 10 && out_fd == -1; attempt++) {
-        narrow_str = wcs2str(name_template);
-        out_fd = fish_mkstemp_cloexec(narrow_str);
+// Returns the fd of an opened temporary file, or an invalid fd on failure.
+static autoclose_fd_t create_temporary_file(const wcstring &name_template, wcstring *out_path) {
+    for (int attempt = 0; attempt < 10; attempt++) {
+        std::string narrow_str = wcs2string(name_template);
+        autoclose_fd_t out_fd{fish_mkstemp_cloexec(&narrow_str[0])};
+        if (out_fd.valid()) {
+            *out_path = str2wcstring(narrow_str);
+            return out_fd;
+        }
     }
-
-    if (out_fd >= 0) {
-        *out_path = str2wcstring(narrow_str);
-    }
-    free(narrow_str);
-    return out_fd;
+    return autoclose_fd_t{};
 }
 
 bool history_impl_t::save_internal_via_rewrite() {
@@ -756,20 +753,19 @@ bool history_impl_t::save_internal_via_rewrite() {
     // Make our temporary file
     // Remember that we have to close this fd!
     wcstring tmp_name;
-    int tmp_fd = create_temporary_file(*tmp_name_template, &tmp_name);
-    if (tmp_fd < 0) {
+    autoclose_fd_t tmp_file = create_temporary_file(*tmp_name_template, &tmp_name);
+    if (!tmp_file.valid()) {
         return false;
     }
-
+    const int tmp_fd = tmp_file.fd();
     bool done = false;
     for (int i = 0; i < max_save_tries && !done; i++) {
         // Open any target file, but do not lock it right away
-        int target_fd_before = wopen_cloexec(*target_name, O_RDONLY | O_CREAT, history_file_mode);
-        file_id_t orig_file_id = file_id_for_fd(target_fd_before);  // possibly invalid
-        bool wrote = this->rewrite_to_temporary_file(target_fd_before, tmp_fd);
-        if (target_fd_before >= 0) {
-            close(target_fd_before);
-        }
+        autoclose_fd_t target_fd_before{
+            wopen_cloexec(*target_name, O_RDONLY | O_CREAT, history_file_mode)};
+        file_id_t orig_file_id = file_id_for_fd(target_fd_before.fd());  // possibly invalid
+        bool wrote = this->rewrite_to_temporary_file(target_fd_before.fd(), tmp_fd);
+        target_fd_before.close();
         if (!wrote) {
             // Failed to write, no good
             break;
@@ -779,13 +775,13 @@ bool history_impl_t::save_internal_via_rewrite() {
         // were rewriting it. Make an effort to take the lock before checking, to avoid racing.
         // If the open fails, then proceed; this may be because there is no current history
         file_id_t new_file_id = kInvalidFileID;
-        int target_fd_after = wopen_cloexec(*target_name, O_RDONLY);
-        if (target_fd_after >= 0) {
+        autoclose_fd_t target_fd_after{wopen_cloexec(*target_name, O_RDONLY)};
+        if (target_fd_after.valid()) {
             // critical to take the lock before checking file IDs,
             // and hold it until after we are done replacing
             // Also critical to check the file at the path, NOT based on our fd
             // It's only OK to replace the file while holding the lock
-            history_file_lock(target_fd_after, LOCK_EX);
+            history_file_lock(target_fd_after.fd(), LOCK_EX);
             new_file_id = file_id_for_path(*target_name);
         }
         bool can_replace_file = (new_file_id == orig_file_id || new_file_id == kInvalidFileID);
@@ -805,7 +801,7 @@ bool history_impl_t::save_internal_via_rewrite() {
             // did, it would be tricky to set the permissions correctly. (bash doesn't get this
             // case right either).
             struct stat sbuf;
-            if (target_fd_after >= 0 && fstat(target_fd_after, &sbuf) >= 0) {
+            if (target_fd_after.valid() && fstat(target_fd_after.fd(), &sbuf) >= 0) {
                 if (fchown(tmp_fd, sbuf.st_uid, sbuf.st_gid) == -1) {
                     debug(2, L"Error %d when changing ownership of history file", errno);
                 }
@@ -822,15 +818,10 @@ bool history_impl_t::save_internal_via_rewrite() {
             // We did it
             done = true;
         }
-
-        if (target_fd_after >= 0) {
-            close(target_fd_after);
-        }
     }
 
     // Ensure we never leave the old file around
     wunlink(tmp_name);
-    close(tmp_fd);
 
     if (done) {
         // We've saved everything, so we have no more unsaved items.
@@ -871,10 +862,10 @@ bool history_impl_t::save_internal_via_appending() {
     // After locking it, we need to stat the file at the path; if there is a new file there, it
     // means the file was replaced and we have to try again.
     // Limit our max tries so we don't do this forever.
-    int history_fd = -1;
+    autoclose_fd_t history_fd{};
     for (int i = 0; i < max_save_tries; i++) {
-        int fd = wopen_cloexec(history_path, O_WRONLY | O_APPEND);
-        if (fd < 0) {
+        autoclose_fd_t fd{wopen_cloexec(history_path, O_WRONLY | O_APPEND)};
+        if (!fd.valid()) {
             // can't open, we're hosed
             break;
         }
@@ -885,23 +876,20 @@ bool history_impl_t::save_internal_via_appending() {
         // by writing with O_APPEND.
         //
         // Simulate a failing lock in chaos_mode
-        if (!history_t::chaos_mode) history_file_lock(fd, LOCK_EX);
-        const file_id_t file_id = file_id_for_fd(fd);
-        if (file_id_for_path(history_path) != file_id) {
-            // The file has changed, we're going to retry
-            close(fd);
-        } else {
+        if (!history_t::chaos_mode) history_file_lock(fd.fd(), LOCK_EX);
+        const file_id_t file_id = file_id_for_fd(fd.fd());
+        if (file_id_for_path(history_path) == file_id) {
             // File IDs match, so the file we opened is still at that path
             // We're going to use this fd
             if (file_id != this->history_file_id) {
                 file_changed = true;
             }
-            history_fd = fd;
+            history_fd = std::move(fd);
             break;
         }
     }
 
-    if (history_fd >= 0) {
+    if (history_fd.valid()) {
         // We (hopefully successfully) took the exclusive lock. Append to the file.
         // Note that this is sketchy for a few reasons:
         //   - Another shell may have appended its own items with a later timestamp, so our file may
@@ -929,14 +917,14 @@ bool history_impl_t::save_internal_via_appending() {
         while (first_unwritten_new_item_index < new_items.size()) {
             const history_item_t &item = new_items.at(first_unwritten_new_item_index);
             append_history_item_to_buffer(item, &buffer);
-            err = flush_to_fd(&buffer, history_fd, HISTORY_OUTPUT_BUFFER_SIZE);
+            err = flush_to_fd(&buffer, history_fd.fd(), HISTORY_OUTPUT_BUFFER_SIZE);
             if (err) break;
             // We wrote this item, hooray.
             first_unwritten_new_item_index++;
         }
 
         if (!err) {
-            err = flush_to_fd(&buffer, history_fd, 0);
+            err = flush_to_fd(&buffer, history_fd.fd(), 0);
         }
 
         // Since we just modified the file, update our mmap_file_id to match its current state
@@ -944,12 +932,11 @@ bool history_impl_t::save_internal_via_appending() {
         // write.
         // We don't update the mapping since we only appended to the file, and everything we
         // appended remains in our new_items
-        this->history_file_id = file_id_for_fd(history_fd);
-
-        close(history_fd);
+        this->history_file_id = file_id_for_fd(history_fd.fd());
 
         ok = (err == 0);
     }
+    history_fd.close();
 
     // If someone has replaced the file, forget our file state.
     if (file_changed) {
@@ -1080,26 +1067,23 @@ void history_impl_t::populate_from_config_path() {
         old_file.append(L"/");
         old_file.append(name);
         old_file.append(L"_history");
-        int src_fd = wopen_cloexec(old_file, O_RDONLY, 0);
-        if (src_fd != -1) {
+        autoclose_fd_t src_fd{wopen_cloexec(old_file, O_RDONLY, 0)};
+        if (src_fd.valid()) {
             // Clear must come after we've retrieved the new_file name, and before we open
             // destination file descriptor, since it destroys the name and the file.
             this->clear();
 
-            int dst_fd = wopen_cloexec(*new_file, O_WRONLY | O_CREAT, history_file_mode);
+            autoclose_fd_t dst_fd{wopen_cloexec(*new_file, O_WRONLY | O_CREAT, history_file_mode)};
             char buf[BUFSIZ];
             ssize_t size;
-            while ((size = read(src_fd, buf, BUFSIZ)) > 0) {
-                ssize_t written = write(dst_fd, buf, static_cast<size_t>(size));
+            while ((size = read(src_fd.fd(), buf, BUFSIZ)) > 0) {
+                ssize_t written = write(dst_fd.fd(), buf, static_cast<size_t>(size));
                 if (written < 0) {
                     // This message does not have high enough priority to be shown by default.
                     debug(2, L"Error when writing history file");
                     break;
                 }
             }
-
-            close(src_fd);
-            close(dst_fd);
         }
     }
 }

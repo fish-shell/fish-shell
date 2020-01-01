@@ -3544,7 +3544,7 @@ class history_tests_t {
    public:
     static void test_history();
     static void test_history_merge();
-    static void test_history_formats();
+    static void test_history_legacy_formats();
     // static void test_history_speed(void);
     static void test_history_races();
     static void test_history_races_pound_on_history(size_t item_count);
@@ -3896,7 +3896,7 @@ void history_tests_t::test_history_merge() {
     everything->clear();
 }
 
-static bool install_sample_history(const wchar_t *name) {
+static bool install_sample_legacy_history(const wchar_t *name) {
     wcstring path;
     if (!path_get_data(path)) {
         err(L"Failed to get data directory");
@@ -3927,7 +3927,8 @@ static bool history_equals(history_t &hist, const wchar_t *const *strings) {
         history_item_t item = hist.item_at_index(history_idx);
         if (expected == NULL) {
             if (!item.empty()) {
-                err(L"Expected empty item at history index %lu", history_idx);
+                err(L"Expected empty item at history index %lu, instead got %ls", history_idx,
+                    item.str().c_str());
             }
             break;
         } else {
@@ -3943,13 +3944,13 @@ static bool history_equals(history_t &hist, const wchar_t *const *strings) {
     return true;
 }
 
-void history_tests_t::test_history_formats() {
+void history_tests_t::test_history_legacy_formats() {
     const wchar_t *name;
 
     // Test inferring and reading legacy and bash history formats.
     name = L"history_sample_fish_1_x";
     say(L"Testing %ls", name);
-    if (!install_sample_history(name)) {
+    if (!install_sample_legacy_history(name)) {
         err(L"Couldn't open file tests/%ls", name);
     } else {
         // Note: This is backwards from what appears in the file.
@@ -3957,6 +3958,7 @@ void history_tests_t::test_history_formats() {
             L"#def", L"echo #abc", L"function yay\necho hi\nend", L"cd foobar", L"ls /", NULL};
 
         history_t &test_history = history_t::history_with_name(name);
+        test_history.populate_from_legacy_paths();
         if (!history_equals(test_history, expected)) {
             err(L"test_history_formats failed for %ls\n", name);
         }
@@ -3965,13 +3967,14 @@ void history_tests_t::test_history_formats() {
 
     name = L"history_sample_fish_2_0";
     say(L"Testing %ls", name);
-    if (!install_sample_history(name)) {
+    if (!install_sample_legacy_history(name)) {
         err(L"Couldn't open file tests/%ls", name);
     } else {
         const wchar_t *const expected[] = {L"echo this has\\\nbackslashes",
                                            L"function foo\necho bar\nend", L"echo alpha", NULL};
 
         history_t &test_history = history_t::history_with_name(name);
+        test_history.populate_from_legacy_paths();
         if (!history_equals(test_history, expected)) {
             err(L"test_history_formats failed for %ls\n", name);
         }
@@ -3998,17 +4001,19 @@ void history_tests_t::test_history_formats() {
         if (!history_equals(test_history, expected)) {
             err(L"test_history_formats failed for bash import\n");
         }
-        test_history.clear();
+        test_history.save();
+        // test_history.clear();
         fclose(f);
     }
 
     name = L"history_sample_corrupt1";
     say(L"Testing %ls", name);
-    if (!install_sample_history(name)) {
+    if (!install_sample_legacy_history(name)) {
         err(L"Couldn't open file tests/%ls", name);
     } else {
         // We simply invoke get_string_representation. If we don't die, the test is a success.
         history_t &test_history = history_t::history_with_name(name);
+        test_history.populate_from_legacy_paths();
         const wchar_t *expected[] = {L"no_newline_at_end_of_file", L"corrupt_prefix",
                                      L"this_command_is_ok", NULL};
         if (!history_equals(test_history, expected)) {
@@ -5537,7 +5542,7 @@ int main(int argc, char **argv) {
         // this test always fails under WSL
         if (should_test_function("history_races")) history_tests_t::test_history_races();
     }
-    if (should_test_function("history_formats")) history_tests_t::test_history_formats();
+    if (should_test_function("history_formats")) history_tests_t::test_history_legacy_formats();
     if (should_test_function("string")) test_string();
     if (should_test_function("illegal_command_exit_code")) test_illegal_command_exit_code();
     if (should_test_function("maybe")) test_maybe();

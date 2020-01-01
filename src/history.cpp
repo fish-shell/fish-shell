@@ -108,7 +108,8 @@ class time_profiler_t {
 
 /// \return the path for the history file for the given \p session_id, or none() if it could not be
 /// loaded. If suffix is provided, append that suffix to the path; this is used for temporary files.
-static maybe_t<wcstring> history_filename(const wcstring &session_id, const wcstring &suffix = {}) {
+static maybe_t<wcstring> history_filename(const wcstring &session_id, const wcstring &suffix = {},
+                                          bool json = true) {
     if (session_id.empty()) return none();
 
     wcstring result;
@@ -116,7 +117,7 @@ static maybe_t<wcstring> history_filename(const wcstring &session_id, const wcst
 
     result.append(L"/");
     result.append(session_id);
-    result.append(L"_history.json");
+    result.append(json ? L"_history.json" : L"_history");
     result.append(suffix);
     return result;
 }
@@ -336,8 +337,13 @@ struct history_impl_t {
     // Irreversibly clears history.
     void clear();
 
-    // Populates from older location ()in config path, rather than data path).
-    void populate_from_config_path();
+    // Populates from the legacy, unsuffixed fish history file.
+    // \return true if successful.
+    bool try_populate_from_nonjson_path();
+
+    // Populates from older location (in config path, rather than data path).
+    // \return true if successful.
+    bool try_populate_from_config_path();
 
     // Populates from a bash history file.
     void populate_from_bash(FILE *stream);
@@ -1067,36 +1073,56 @@ bool history_impl_t::is_empty() {
 /// Populates from older location (in config path, rather than data path) This is accomplished by
 /// clearing ourselves, and copying the contents of the old history file to the new history file.
 /// The new contents will automatically be re-mapped later.
-void history_impl_t::populate_from_config_path() {
+bool history_impl_t::try_populate_from_config_path() {
     maybe_t<wcstring> new_file = history_filename(name);
-    if (!new_file.has_value()) {
-        return;
-    }
-
+    if (!new_file.has_value()) return false;
     wcstring old_file;
-    if (path_get_config(old_file)) {
-        old_file.append(L"/");
-        old_file.append(name);
-        old_file.append(L"_history");
-        autoclose_fd_t src_fd{wopen_cloexec(old_file, O_RDONLY, 0)};
-        if (src_fd.valid()) {
-            // Clear must come after we've retrieved the new_file name, and before we open
-            // destination file descriptor, since it destroys the name and the file.
-            this->clear();
+    if (!path_get_config(old_file)) return false;
 
-            autoclose_fd_t dst_fd{wopen_cloexec(*new_file, O_WRONLY | O_CREAT, history_file_mode)};
-            char buf[BUFSIZ];
-            ssize_t size;
-            while ((size = read(src_fd.fd(), buf, BUFSIZ)) > 0) {
-                ssize_t written = write(dst_fd.fd(), buf, static_cast<size_t>(size));
-                if (written < 0) {
-                    // This message does not have high enough priority to be shown by default.
-                    debug(2, L"Error when writing history file");
-                    break;
-                }
+    old_file.append(L"/");
+    old_file.append(name);
+    old_file.append(L"_history");
+    autoclose_fd_t src_fd{wopen_cloexec(old_file, O_RDONLY, 0)};
+    if (src_fd.valid()) {
+        // Clear must come after we've retrieved the new_file name, and before we open
+        // destination file descriptor, since it destroys the name and the file.
+        this->clear();
+
+        autoclose_fd_t dst_fd{wopen_cloexec(*new_file, O_WRONLY | O_CREAT, history_file_mode)};
+        char buf[BUFSIZ];
+        ssize_t size;
+        while ((size = read(src_fd.fd(), buf, BUFSIZ)) > 0) {
+            ssize_t written = write(dst_fd.fd(), buf, static_cast<size_t>(size));
+            if (written < 0) {
+                // This message does not have high enough priority to be shown by default.
+                debug(2, L"Error when writing history file");
+                break;
             }
         }
     }
+    return src_fd.valid();
+}
+
+bool history_impl_t::try_populate_from_nonjson_path() {
+    // We read all of these and store them as new items.
+    maybe_t<wcstring> old_path = history_filename(name, {} /* suffix */, false /* not json */);
+    if (!old_path.has_value()) return false;
+
+    autoclose_fd_t old_fd{wopen_cloexec(*old_path, O_RDONLY)};
+    if (!old_fd.valid()) return false;
+
+    auto old_contents = history_file_contents_t::create(old_fd.fd());
+    if (!old_contents) return false;
+
+    history_file_reader_t reader(*old_contents, 0 /* no cutoff */);
+    unsigned long count = 0;
+    history_item_t item{};
+    while (reader.next(&item)) {
+        new_items.push_back(std::move(item));
+        count++;
+    }
+    FLOGF(history, "Imported %lu legacy items", count);
+    return count > 0;
 }
 
 /// Decide whether we ought to import a bash history line into fish. This is a very crude heuristic.
@@ -1405,7 +1431,12 @@ bool history_t::search(history_search_type_t search_type, const wcstring_list_t 
 
 void history_t::clear() { impl()->clear(); }
 
-void history_t::populate_from_config_path() { impl()->populate_from_config_path(); }
+void history_t::populate_from_legacy_paths() {
+    auto im = impl();
+    if (!im->try_populate_from_nonjson_path()) {
+        im->try_populate_from_config_path();
+    }
+}
 
 void history_t::populate_from_bash(FILE *f) { impl()->populate_from_bash(f); }
 

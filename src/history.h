@@ -177,8 +177,10 @@ class history_t {
     // Irreversibly clears history.
     void clear();
 
-    // Populates from older location (in config path, rather than data path).
-    void populate_from_config_path();
+    // Populates from older locations:
+    // 1. The unsuffixed pre-JSON path.
+    // 2. In config path, rather than data path.
+    void populate_from_legacy_paths();
 
     // Populates from a bash history file.
     void populate_from_bash(FILE *f);

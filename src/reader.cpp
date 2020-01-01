@@ -2163,7 +2163,7 @@ void reader_import_history_if_necessary() {
     // Import history from older location (config path) if our current history is empty.
     reader_data_t *data = current_data();
     if (data->history && data->history->is_empty()) {
-        data->history->populate_from_config_path();
+        data->history->populate_from_legacy_paths();
     }
 
     // Import history from bash, etc. if our current history is still empty and is the default

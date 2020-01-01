@@ -5416,9 +5416,55 @@ static void test_topic_monitor_torture() {
     for (auto &t : threads) t.join();
 }
 
+// Set up some HOME directory variables.
+// \return the HOME path.
+static wcstring setup_tests_home() {
+    char home_template[] = "/tmp/fish_tests_home.XXXXXX";
+    if (!mkdtemp(home_template)) {
+        wperror(L"mkdtemp");
+        exit(EXIT_FAILURE);
+    }
+    std::string home_path = home_template;
+
+    if (setenv("HOME", home_path.c_str(), 1 /* overwrite */)) {
+        wperror(L"setenv");
+        exit(EXIT_FAILURE);
+    }
+
+    struct {
+        const char *name;
+        const char *dir;
+    } vars[] = {
+        {"XDG_DATA_HOME", "data"},
+        {"XDG_CONFIG_HOME", "config"},
+        {"XDG_RUNTIME_DIR", "runtime"},
+        {"XDG_CACHE_HOME", "cache"},
+    };
+    for (const auto &var : vars) {
+        // Only set the var if it's already set.
+        // This prevents setting unnatural vars on e.g. Mac.
+        if (!getenv(var.name)) continue;
+
+        std::string path = home_path + "/" + var.dir;
+        if (mkdir(path.c_str(), 0755)) {
+            wperror(L"mkdir");
+            exit(EXIT_FAILURE);
+        }
+        if (setenv(var.name, path.c_str(), 1 /* overwrite */)) {
+            wperror(L"setenv");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    return str2wcstring(home_path);
+}
+
 /// Main test.
 int main(int argc, char **argv) {
     UNUSED(argc);
+
+    wcstring home = setup_tests_home();
+
     // Look for the file tests/test.fish. We expect to run in a directory containing that file.
     // If we don't find it, walk up the directory hierarchy until we do, or error.
     while (access("./tests/test.fish", F_OK) != 0) {
@@ -5448,7 +5494,7 @@ int main(int argc, char **argv) {
     struct utsname uname_info;
     uname(&uname_info);
 
-    say(L"Testing low-level functionality");
+    say(L"Testing low-level functionality. HOME=%ls", home.c_str());
     set_main_thread();
     setup_fork_guards();
     proc_init();
@@ -5546,7 +5592,11 @@ int main(int argc, char **argv) {
     say(L"Encountered %d errors in low-level tests", err_count);
     if (s_test_run_count == 0) say(L"*** No Tests Were Actually Run! ***");
 
-    if (err_count != 0) {
-        return 1;
+    if (err_count == 0) {
+        say(L"All tests passed, deleting temporary home %ls", home.c_str());
+        char command[512];
+        snprintf(command, sizeof command, "rm -Rf %ls", home.c_str());
+        system(command);
     }
+    return err_count ? EXIT_FAILURE : EXIT_SUCCESS;
 }

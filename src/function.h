@@ -20,8 +20,10 @@ struct function_properties_t {
     /// Parsed source containing the function.
     parsed_source_ref_t parsed_source;
 
-    /// Node containing the function body, pointing into parsed_source.
-    tnode_t<grammar::job_list> body_node;
+    /// Node containing the function statement, pointing into parsed_source.
+    /// We store block_statement, not job_list, so that comments attached to the header are
+    /// preserved.
+    tnode_t<grammar::block_statement> func_node;
 
     /// List of all named arguments for this function.
     wcstring_list_t named_arguments;

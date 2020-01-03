@@ -331,8 +331,8 @@ eval_result_t parse_execution_context_t::run_begin_statement(tnode_t<g::job_list
 }
 
 // Define a function.
-eval_result_t parse_execution_context_t::run_function_statement(tnode_t<g::function_header> header,
-                                                                tnode_t<g::job_list> body) {
+eval_result_t parse_execution_context_t::run_function_statement(
+    tnode_t<grammar::block_statement> statement, tnode_t<grammar::function_header> header) {
     // Get arguments.
     wcstring_list_t arguments;
     argument_node_list_t arg_nodes = header.descendants<g::argument>();
@@ -343,7 +343,7 @@ eval_result_t parse_execution_context_t::run_function_statement(tnode_t<g::funct
     }
     trace_if_enabled(*parser, L"function", arguments);
     io_streams_t streams(0);  // no limit on the amount of output from builtin_function()
-    int err = builtin_function(*parser, streams, arguments, pstree, body);
+    int err = builtin_function(*parser, streams, arguments, pstree, statement);
     parser->set_last_statuses(statuses_t::just(err));
 
     wcstring errtext = streams.err.contents();
@@ -366,7 +366,7 @@ eval_result_t parse_execution_context_t::run_block_statement(tnode_t<g::block_st
     } else if (auto header = bheader.try_get_child<g::while_header, 0>()) {
         ret = run_while_statement(header, contents, associated_block);
     } else if (auto header = bheader.try_get_child<g::function_header, 0>()) {
-        ret = run_function_statement(header, contents);
+        ret = run_function_statement(statement, header);
     } else if (auto header = bheader.try_get_child<g::begin_header, 0>()) {
         ret = run_begin_statement(contents);
     } else {

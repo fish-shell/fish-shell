@@ -722,10 +722,12 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
         }
         auto argv = move_to_sharedptr(p->get_argv_array().to_list());
         return [=](parser_t &parser) {
+            // Pull out the job list from the function.
+            tnode_t<grammar::job_list> body = props->func_node.child<1>();
             const auto &ld = parser.libdata();
             auto saved_exec_count = ld.exec_count;
             const block_t *fb = function_prepare_environment(parser, *argv, *props);
-            auto res = parser.eval_node(props->parsed_source, props->body_node, lineage);
+            auto res = parser.eval_node(props->parsed_source, body, lineage);
             function_restore_environment(parser, fb);
 
             switch (res) {

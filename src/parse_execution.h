@@ -110,8 +110,8 @@ class parse_execution_context_t {
     eval_result_t run_while_statement(tnode_t<grammar::while_header> header,
                                       tnode_t<grammar::job_list> contents,
                                       const block_t *associated_block);
-    eval_result_t run_function_statement(tnode_t<grammar::function_header> header,
-                                         tnode_t<grammar::job_list> body);
+    eval_result_t run_function_statement(tnode_t<grammar::block_statement> statement,
+                                         tnode_t<grammar::function_header> header);
     eval_result_t run_begin_statement(tnode_t<grammar::job_list> contents);
 
     enum globspec_t { failglob, nullglob };

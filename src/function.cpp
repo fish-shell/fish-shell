@@ -221,14 +221,23 @@ void function_remove(const wcstring &name) {
 
 bool function_get_definition(const wcstring &name, wcstring &out_definition) {
     const auto funcset = function_set.acquire();
-    if (const function_info_t *func = funcset->get_info(name)) {
-        auto props = func->props;
-        if (props && props->parsed_source) {
-            out_definition = props->body_node.get_source(props->parsed_source->src);
-        }
-        return true;
+    const function_info_t *func = funcset->get_info(name);
+    if (!func || !func->props) return false;
+    // We want to preserve comments that the AST attaches to the header (#5285).
+    // Take everything from the end of the header to the end of the body.
+    const auto &props = func->props;
+    namespace g = grammar;
+    tnode_t<g::block_header> header = props->func_node.child<0>();
+    tnode_t<g::job_list> jobs = props->func_node.child<1>();
+    auto header_src = header.source_range();
+    auto jobs_src = jobs.source_range();
+    if (header_src && jobs_src) {
+        uint32_t body_start = header_src->start + header_src->length;
+        uint32_t body_end = jobs_src->start + jobs_src->length;
+        assert(body_start <= jobs_src->start && "job list must come after header");
+        out_definition = wcstring(props->parsed_source->src, body_start, body_end - body_start);
     }
-    return false;
+    return true;
 }
 
 bool function_get_desc(const wcstring &name, wcstring &out_desc) {
@@ -304,9 +313,7 @@ int function_get_definition_lineno(const wcstring &name) {
     // return one plus the number of newlines at offsets less than the start of our function's
     // statement (which includes the header).
     // TODO: merge with line_offset_of_character_at_offset?
-    auto block_stat = func->props->body_node.try_get_parent<grammar::block_statement>();
-    assert(block_stat && "Function body is not part of block statement");
-    auto source_range = block_stat.source_range();
+    auto source_range = func->props->func_node.source_range();
     assert(source_range && "Function has no source range");
     uint32_t func_start = source_range->start;
     const wcstring &source = func->props->parsed_source->src;

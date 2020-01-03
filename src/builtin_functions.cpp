@@ -223,9 +223,8 @@ static wcstring functions_def(const wcstring &name) {
             out.append(earg);
         }
     }
-
-    // More forced indentation.
-    append_format(out, L"\n    %ls", def.c_str());
+    out.push_back('\n');
+    out.append(def);
 
     // Append a newline before the 'end', unless there already is one there.
     if (!string_suffixes_string(L"\n", def)) {

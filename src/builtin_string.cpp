@@ -790,8 +790,6 @@ class pcre2_matcher_t : public string_matcher_t {
             return false;
         }
 
-        int matched = 0;
-
         // See pcre2demo.c for an explanation of this logic.
         PCRE2_SIZE arglen = arg.length();
         int rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, 0, 0,
@@ -801,7 +799,6 @@ class pcre2_matcher_t : public string_matcher_t {
         } else if (rc == 0) {  // no match
             return true;
         }
-        matched++;
         total_matched++;
 
         if (opts.invert_match) {
@@ -810,7 +807,7 @@ class pcre2_matcher_t : public string_matcher_t {
 
         // Report any additional matches.
         PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(regex.match);
-        while (opts.all || matched == 0) {
+        while (opts.all) {
             uint32_t options = 0;
             PCRE2_SIZE offset = ovector[1];  // start at end of previous match
 
@@ -833,7 +830,6 @@ class pcre2_matcher_t : public string_matcher_t {
                 ovector[1] = offset + 1;
                 continue;
             }
-            matched++;
             total_matched++;
         }
         return true;
@@ -1008,7 +1004,7 @@ bool regex_replacer_t::replace_matches(const wcstring &arg) {
         pcre2_rc = pcre2_substitute(regex.code, PCRE2_SPTR(arg.c_str()), arglen,
                                     0,  // start offset
                                     options, regex.match,
-                                    nullptr,  // match context
+                                    nullptr,  // match_data
                                     PCRE2_SPTR(replacement->c_str()), replacement->length(),
                                     reinterpret_cast<PCRE2_UCHAR *>(output), &outlen);
 

@@ -680,7 +680,7 @@ static bool expand_cmdsubst(wcstring input, parser_t &parser, std::vector<comple
             whole_item.append(tail_item);
 
             // al_push( out, whole_item.buff );
-            append_completion(out_list, whole_item);
+            append_completion(out_list, std::move(whole_item));
         }
     }
 

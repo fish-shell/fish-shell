@@ -244,7 +244,7 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
         // Note: out_completion may be empty if the completion really is empty, e.g. tab-completing
         // 'foo' when a file 'foo' exists.
         complete_flags_t local_flags = flags | (full_replacement ? COMPLETE_REPLACES_TOKEN : 0);
-        append_completion(out, out_completion, out_desc, local_flags, match);
+        append_completion(out, out_completion, out_desc, local_flags, std::move(match));
         return match_acceptable;
     } else if (next_wc_char_pos > 0) {
         // Here we have a non-wildcard prefix. Note that we don't do fuzzy matching for stuff before

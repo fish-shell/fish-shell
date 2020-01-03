@@ -218,7 +218,8 @@ completion_t &completion_t::operator=(const completion_t &) = default;
 completion_t &completion_t::operator=(completion_t &&) = default;
 completion_t::~completion_t() = default;
 
-bool completion_t::is_naturally_less_than(const completion_t &a, const completion_t &b) {
+__attribute__((always_inline)) static inline bool natural_compare_completions(
+    const completion_t &a, const completion_t &b) {
     // For this to work, stable_sort must be used because results aren't interchangeable.
     if (a.flags & b.flags & COMPLETE_DONT_SORT) {
         // Both completions are from a source with the --keep-order flag.
@@ -227,29 +228,29 @@ bool completion_t::is_naturally_less_than(const completion_t &a, const completio
     return wcsfilecmp(a.completion.c_str(), b.completion.c_str()) < 0;
 }
 
+bool completion_t::is_naturally_less_than(const completion_t &a, const completion_t &b) {
+    return natural_compare_completions(a, b);
+}
+
 void completion_t::prepend_token_prefix(const wcstring &prefix) {
     if (this->flags & COMPLETE_REPLACES_TOKEN) {
         this->completion.insert(0, prefix);
     }
 }
 
-static bool compare_completions_by_match_type(const completion_t &a, const completion_t &b) {
-    return a.match.type < b.match.type;
-}
-
-static bool compare_completions_by_duplicate_arguments(const completion_t &a,
-                                                       const completion_t &b) {
+// If these functions aren't force inlined, it is actually faster to call
+// stable_sort twice rather than to iterate once performing all comparisons in one go!
+__attribute__((always_inline)) static inline bool compare_completions_by_duplicate_arguments(
+    const completion_t &a, const completion_t &b) {
     bool ad = a.flags & COMPLETE_DUPLICATES_ARGUMENT;
     bool bd = b.flags & COMPLETE_DUPLICATES_ARGUMENT;
     return ad < bd;
 }
 
-static bool compare_completions_by_tilde(const completion_t &a, const completion_t &b) {
-    if (a.completion.empty()) {
+__attribute__((always_inline)) static inline bool compare_completions_by_tilde(
+    const completion_t &a, const completion_t &b) {
+    if (a.completion.empty() || b.completion.empty()) {
         return false;
-    }
-    if (b.completion.empty()) {
-        return true;
     }
     return ((a.completion.back() == L'~') < (b.completion.back() == L'~'));
 }
@@ -272,6 +273,10 @@ void completions_sort_and_prioritize(std::vector<completion_t> *comps,
     fuzzy_match_type_t best_type = fuzzy_match_none;
     for (const auto &comp : *comps) {
         best_type = std::min(best_type, comp.match.type);
+        if (best_type <= fuzzy_match_prefix) {
+            // We can't get better than this (see below)
+            break;
+        }
     }
     // If the best type is an exact match, reduce it to prefix match. Otherwise a tab completion
     // will only show one match if it matches a file exactly. (see issue #959).
@@ -285,21 +290,23 @@ void completions_sort_and_prioritize(std::vector<completion_t> *comps,
                        [&](const completion_t &comp) { return comp.match.type > best_type; }),
         comps->end());
 
-    // Sort, provided COMPLETE_DONT_SORT isn't set.
-    stable_sort(comps->begin(), comps->end(), completion_t::is_naturally_less_than);
-
     // Deduplicate both sorted and unsorted results.
     unique_completions_retaining_order(comps);
 
-    // Sort the remainder by match type. They're already sorted alphabetically.
-    stable_sort(comps->begin(), comps->end(), compare_completions_by_match_type);
+    // Sort, provided COMPLETE_DONT_SORT isn't set.
+    stable_sort(comps->begin(), comps->end(), [](const completion_t &a, const completion_t &b) {
+        return a.match.type < b.match.type || natural_compare_completions(a, b);
+    });
 
     // Lastly, if this is for an autosuggestion, prefer to avoid completions that duplicate
     // arguments, and penalize files that end in tilde - they're frequently autosave files from e.g.
     // emacs.
     if (flags & completion_request_t::autosuggestion) {
-        stable_sort(comps->begin(), comps->end(), compare_completions_by_duplicate_arguments);
-        stable_sort(comps->begin(), comps->end(), compare_completions_by_tilde);
+        stable_sort(comps->begin(), comps->end(),
+                    [](const completion_t &a, const completion_t &b) {
+                        return compare_completions_by_duplicate_arguments(a, b) ||
+                               compare_completions_by_tilde(a, b);
+                    });
     }
 }
 
@@ -403,9 +410,8 @@ static owning_lock<autoload_t> completion_autoloader{autoload_t(L"fish_complete_
 
 /// Create a new completion entry.
 void append_completion(std::vector<completion_t> *completions, wcstring comp, wcstring desc,
-                       complete_flags_t flags, string_fuzzy_match_t match) {
-    completion_t completion{std::move(comp), std::move(desc), match, flags};
-    completions->push_back(std::move(completion));
+                       complete_flags_t flags, string_fuzzy_match_t &&match) {
+    completions->emplace_back(std::move(comp), std::move(desc), match, flags);
 }
 
 /// Test if the specified script returns zero. The result is cached, so that if multiple completions
@@ -437,7 +443,7 @@ bool completer_t::condition_test(const wcstring &condition) {
 /// Locate the specified entry. Create it if it doesn't exist. Must be called while locked.
 static completion_entry_t &complete_get_exact_entry(completion_entry_set_t &completion_set,
                                                     const wcstring &cmd, bool cmd_is_path) {
-    auto ins = completion_set.emplace(completion_entry_t(cmd, cmd_is_path));
+    auto ins = completion_set.emplace(cmd, cmd_is_path);
 
     // NOTE SET_ELEMENTS_ARE_IMMUTABLE: Exposing mutable access here is only okay as long as callers
     // do not change any field that matters to ordering - affecting order without telling std::set
@@ -606,14 +612,16 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
     wcstring lookup_cmd(L"__fish_describe_command ");
     lookup_cmd.append(escape_string(cmd, ESCAPE_ALL));
 
+    // See the ASSERT_IS_MAIN_THREAD() above, making it safe to make this a static variable.
+    // This lets us reuse the heap-allocated memory across calls.
+    static std::unordered_map<wcstring, wcstring> lookup;
+    static wcstring_list_t list;
     // First locate a list of possible descriptions using a single call to apropos or a direct
     // search if we know the location of the whatis database. This can take some time on slower
     // systems with a large set of manuals, but it should be ok since apropos is only called once.
-    wcstring_list_t list;
+    lookup.clear();
+    list.clear();
     if (exec_subshell(lookup_cmd, *parser, list, false /* don't apply exit status */) != -1) {
-        std::unordered_map<wcstring, wcstring> lookup;
-        lookup.reserve(list.size());
-
         // Then discard anything that is not a possible completion and put the result into a
         // hashtable with the completion as key and the description as value.
         //
@@ -1214,7 +1222,8 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
         }
 
         // Append matching environment variables
-        append_completion(&this->completions, std::move(comp), desc, flags, match);
+        append_completion(&this->completions, std::move(comp), std::move(desc), flags,
+                          std::move(match));
 
         res = true;
     }
@@ -1318,13 +1327,14 @@ bool completer_t::try_complete_user(const wcstring &str) {
         if (std::wcsncmp(user_name, pw_name, name_len) == 0) {
             wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
             // Append a user name
-            append_completion(&this->completions, &pw_name[name_len], desc, COMPLETE_NO_SPACE);
+            append_completion(&this->completions, &pw_name[name_len], std::move(desc),
+                              COMPLETE_NO_SPACE);
             result = true;
         } else if (wcsncasecmp(user_name, pw_name, name_len) == 0) {
             wcstring name = format_string(L"~%ls", pw_name);
             wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
             // Append a user name
-            append_completion(&this->completions, name, desc,
+            append_completion(&this->completions, std::move(name), std::move(desc),
                               COMPLETE_REPLACES_TOKEN | COMPLETE_DONT_ESCAPE | COMPLETE_NO_SPACE);
             result = true;
         }
@@ -1665,13 +1675,13 @@ static void append_switch(wcstring &out, const wcstring &opt) {
 /// Use by the bare `complete`, loaded completions are printed out as commands
 wcstring complete_print() {
     wcstring out;
+    out.reserve(40);  // just a guess
     auto completion_set = s_completion_set.acquire();
 
     // Get a list of all completions in a vector, then sort it by order.
     std::vector<std::reference_wrapper<const completion_entry_t>> all_completions;
-    for (const completion_entry_t &i : *completion_set) {
-        all_completions.emplace_back(i);
-    }
+    all_completions.insert(all_completions.cbegin(), completion_set->cbegin(),
+                           completion_set->cend());
     sort(all_completions.begin(), all_completions.end(), compare_completions_by_order);
 
     for (const completion_entry_t &e : all_completions) {

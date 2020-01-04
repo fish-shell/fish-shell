@@ -1018,9 +1018,6 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
         return true;
     }
 
-    // Check to see if we should reclaim the foreground pgrp after the job finishes or stops.
-    const bool reclaim_foreground_pgrp = (tcgetpgrp(STDIN_FILENO) == getpgrp());
-
     // If our lineage indicates a pgid, share it.
     if (lineage.parent_pgid.has_value()) {
         assert(*lineage.parent_pgid != INVALID_PID &&
@@ -1029,8 +1026,12 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
         j->mut_flags().job_control = true;
     }
 
+    pid_t pgrp = getpgrp();
+    // Check to see if we should reclaim the foreground pgrp after the job finishes or stops.
+    const bool reclaim_foreground_pgrp = (tcgetpgrp(STDIN_FILENO) == pgrp);
+
     if (j->pgid == INVALID_PID && should_claim_process_group_for_job(j)) {
-        j->pgid = getpgrp();
+        j->pgid = pgrp;
     }
 
     const size_t stdout_read_limit = parser.libdata().read_limit;

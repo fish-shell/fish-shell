@@ -794,43 +794,32 @@ class pcre2_matcher_t : public string_matcher_t {
         PCRE2_SIZE arglen = arg.length();
         int rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, 0, 0,
                                                regex.match, nullptr));
-        if (rc < 0) {  // pcre2 match error.
-            return false;
-        } else if (rc == 0) {  // no match
-            return true;
-        }
-        total_matched++;
 
-        if (opts.invert_match) {
-            return true;
-        }
+        if (rc < 0 /* pcre2 error */) return false;
+        else if (rc == 0 /* no match */) return true;
+        else total_matched++;
+
+        if (opts.invert_match) return true;
 
         // Report any additional matches.
-        PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(regex.match);
-        while (opts.all) {
+        for (auto *ovector = pcre2_get_ovector_pointer(regex.match); opts.all; total_matched++) {
             uint32_t options = 0;
             PCRE2_SIZE offset = ovector[1];  // start at end of previous match
 
             if (ovector[0] == ovector[1]) {
-                if (ovector[0] == arglen) {
-                    break;
-                }
+                if (ovector[0] == arglen) break;
                 options = PCRE2_NOTEMPTY_ATSTART | PCRE2_ANCHORED;
             }
 
             rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, offset,
                                                options, regex.match, nullptr));
-            if (rc < 0) {
-                return false;
-            }
-            if (rc == 0) {
-                if (options == 0) {  // all matches found
-                    break;
-                }
+
+            if (rc < 0 /* pcre2 error */) return false;
+            else if (rc == 0 /* no matches */) {
+                if (options == 0 /* all matches found now */) break;
                 ovector[1] = offset + 1;
                 continue;
             }
-            total_matched++;
         }
         return true;
     }

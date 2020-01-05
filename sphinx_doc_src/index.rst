@@ -455,7 +455,7 @@ Examples:
 
 - ``**`` matches any files and directories in the current directory and all of its subdirectories.
 
-Note that for most commands, if any wildcard fails to expand, the command is not executed, :ref:`$status <variables-status>` is set to nonzero, and a warning is printed. This behavior is consistent with setting ``shopt -s failglob`` in bash. There are exactly 3 exceptions, namely :ref:`set <cmd-set>`, :ref:`count <cmd-count>` and :ref:`for <cmd-for>`. Their globs are permitted to expand to zero arguments, as with ``shopt -s nullglob`` in bash.
+Note that for most commands, if any wildcard fails to expand, the command is not executed, :ref:`$status <variables-status>` is set to nonzero, and a warning is printed. This behavior is consistent with setting ``shopt -s failglob`` in bash. There are exactly 4 exceptions, namely :ref:`set <cmd-set>`, overriding variables in :ref:`overrides <variables-override>`, :ref:`count <cmd-count>` and :ref:`for <cmd-for>`. Their globs are permitted to expand to zero arguments, as with ``shopt -s nullglob`` in bash.
 
 Examples::
 
@@ -814,6 +814,28 @@ The following code will not output anything::
 
     echo $pirate
     # This will not output anything, since the pirate was local
+
+.. _variables-override:
+
+Overriding variables for a single command
+-----------------------------------------
+
+If you want to override a variable for a single command, you can use "var=val" statements before the command::
+
+  # Call git status on another directory (can also be done via `git -C somerepo status`)
+  GIT_DIR=somerepo git status
+
+Note that, unlike other shells, fish will first set the variable and then perform other expansions on the line, so::
+
+  set foo banana
+  foo=gagaga echo $foo # prints gagaga, while in other shells it might print "banana"
+
+Multiple elements can be given in a :ref:`brace expansion<expand-brace>`::
+
+  # Call bash with a reasonable default path.
+  PATH={/usr,}/{s,}bin bash
+
+This syntax is supported since fish 3.1.
 
 .. _variables-universal:
 

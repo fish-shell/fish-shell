@@ -1680,8 +1680,9 @@ wcstring complete_print() {
 
     // Get a list of all completions in a vector, then sort it by order.
     std::vector<std::reference_wrapper<const completion_entry_t>> all_completions;
-    all_completions.insert(all_completions.cbegin(), completion_set->cbegin(),
-                           completion_set->cend());
+    // These should be "c"begin/end, but then gcc from ~~the dark ages~~ RHEL 7 would complain.
+    all_completions.insert(all_completions.begin(), completion_set->begin(),
+                           completion_set->end());
     sort(all_completions.begin(), all_completions.end(), compare_completions_by_order);
 
     for (const completion_entry_t &e : all_completions) {

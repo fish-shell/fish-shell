@@ -366,6 +366,11 @@ struct history_impl_t {
 };
 
 void history_impl_t::add(const history_item_t &item, bool pending, bool do_save) {
+    // We use empty items as sentinels to indicate the end of history.
+    // Do not allow them to be added (#6032).
+    if (item.contents.empty()) {
+        return;
+    }
     // Try merging with the last item.
     if (!new_items.empty() && new_items.back().merge(item)) {
         // We merged, so we don't have to add anything. Maybe this item was pending, but it just got
@@ -1256,6 +1261,12 @@ void history_t::remove(const wcstring &str) { impl()->remove(str); }
 
 void history_t::add_pending_with_file_detection(const wcstring &str,
                                                 const wcstring &working_dir_slash) {
+    // We use empty items as sentinels to indicate the end of history.
+    // Do not allow them to be added (#6032).
+    if (str.empty()) {
+        return;
+    }
+
     // Find all arguments that look like they could be file paths.
     bool needs_sync_write = false;
     parse_node_tree_t tree;

@@ -3654,6 +3654,10 @@ void history_tests_t::test_history() {
     }
     history.save();
 
+    // Empty items should just be dropped (#6032).
+    history.add(L"");
+    do_test(!history.item_at_index(1).contents.empty());
+
     // Read items back in reverse order and ensure they're the same.
     for (i = 100; i >= 1; i--) {
         history_item_t item = history.item_at_index(i);

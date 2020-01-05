@@ -1,5 +1,5 @@
 #RUN: %fish -C 'set -l fish %fish' %s
-time sleep 0s
+time sleep 0
 
 # These are a tad awkward because it picks the correct unit and adapts whitespace.
 # The idea is that it's a table.

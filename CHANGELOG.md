@@ -114,7 +114,7 @@
   - `irb` (#6260)
   - `iw` (#6232)
   - `kak`
-  - `keybase`
+  - `keybase` (#6410)
   - `lz4`, `lz4c` and `lz4cat` (#6364)
   - `mariner` (#5718)
   - `nethack` (#6240)

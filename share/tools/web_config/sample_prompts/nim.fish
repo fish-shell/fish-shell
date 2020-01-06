@@ -76,6 +76,8 @@ function fish_prompt
     _nim_prompt_wrapper $retc '' (date +%X)
 
     # Virtual Environment
+    set -q VIRTUAL_ENV_DISABLE_PROMPT
+    or set -g VIRTUAL_ENV_DISABLE_PROMPT true
     set -q VIRTUAL_ENV
     and _nim_prompt_wrapper $retc V (basename "$VIRTUAL_ENV")
 

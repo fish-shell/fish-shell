@@ -13,7 +13,7 @@ Since fish 3.1 you can set an environment variable for just one command using th
     key=value echo $key
     begin; set -lx key value; echo $key; end
 
-How do I run a command every login? What's fish's equivalent to .bashrc?
+How do I run a command every login? What's fish's equivalent to .bashrc or .profile?
 ------------------------------------------------------------------------
 Edit the file ``~/.config/fish/config.fish``, creating it if it does not exist (Note the leading period).
 
@@ -58,7 +58,7 @@ That means if you run
     echo x(printf '%s ' a b c)x
 
 
-It will print ``xa b c x``. But if you do
+It will print ``xa b c x``, because the "a b c " is used in one piece. But if you do
 
 ::
 
@@ -97,6 +97,11 @@ If you are just interested in success or failure, you can run the command direct
     end
 
 
+Or if you just want to do one command in case the first succeeded or failed, use ``and`` or ``or``::
+
+    somecommand
+    or someothercommand
+
 See the documentation for :ref:`test <cmd-test>` and :ref:`if <cmd-if>` for more information.
 
 How do I check whether a variable is defined?
@@ -108,7 +113,7 @@ Use ``set -q var``.  For example, ``if set -q var; echo variable defined; end``.
         echo either variable defined
     end
 
-Keep in mind that a defined variabled could be empty. Both of these commands define an empty variable: ``set var`` and ``set var ""``.
+Keep in mind that a defined variabled could also be empty, either by having no elements (if set like ``set var``) or only empty elements (if set like ``set var ""``). Read on for how to deal with those.
 
 
 How do I check whether a variable is not empty?
@@ -125,6 +130,9 @@ Alternatively, use ``test -n "$var"``, but remember that **the variable must be 
     if test -n "$var1" -o -n "$var2" -o -n "$var3"
         echo at least one of these variables is not empty
     end
+
+
+If you want to know if a variable has *no elements*, use ``set -q var[1]``.
 
 
 Why doesn't ``set -Ux`` (exported universal variables) seem to work?

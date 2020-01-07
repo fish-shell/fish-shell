@@ -292,7 +292,7 @@ static bool run_internal_process(process_t *p, std::string outdata, std::string 
     // If we have nothing to write we can elide the thread.
     // TODO: support eliding output to /dev/null.
     if (f->skip_out() && f->skip_err()) {
-        f->internal_proc->mark_exited(proc_status_t::from_exit_code(EXIT_SUCCESS));
+        f->internal_proc->mark_exited(p->status);
         return true;
     }
 

@@ -550,7 +550,7 @@ static int argparse_parse_flags(parser_t &parser, argparse_cmd_opts_t &opts,
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, &long_idx)) != -1) {
         if (opt == ':') {
-            builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
+            streams.err.append_format(BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
             return STATUS_INVALID_ARGS;
         } else if (opt == '?') {
             // It's not a recognized flag. See if it's an implicit int flag.
@@ -611,7 +611,7 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
 
     // "+" means stop at nonopt, "-" means give nonoptions the option character code `1`, and don't
     // reorder.
-    wcstring short_options = opts.stop_nonopt ? L"+:" : L"-";
+    wcstring short_options = opts.stop_nonopt ? L"+:" : L"-:";
     std::vector<woption> long_options;
     populate_option_strings(opts, &short_options, &long_options);
 

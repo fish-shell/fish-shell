@@ -1,5 +1,8 @@
 #RUN: %fish %s
 ##########
+
+set -g LANG C
+
 # Start by verifying a bunch of error conditions.
 
 # No args is an error
@@ -300,3 +303,7 @@ begin
     # CHECK: argv
     # CHECK: saved_status 57
 end
+
+# #6483 - error messages for missing arguments
+argparse -n foo r/required= -- foo -r
+# CHECKERR: foo: Expected argument for option -r

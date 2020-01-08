@@ -665,12 +665,7 @@ static wcstring complete_function_desc(const wcstring &fn) {
     bool has_description = function_get_desc(fn, result);
     if (!has_description) {
         function_get_definition(fn, result);
-        // Consider complete -a '(complete -C "prefix")':
-        // If some functions whose name starts with prefix and whose
-        // definition includes a line that starts with prefix, this line
-        // would be suggested as completion.
-        // Replace newlines by spaces to avoid these excess lines.
-        // The completion description will be shown in one line regardless.
+        // A completion description is a single line.
         for (wchar_t &c : result) {
             if (c == L'\n') c = L' ';
         }

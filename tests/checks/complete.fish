@@ -153,3 +153,11 @@ complete -C'function : --arg'
 
 complete -C'echo > /' | string length -q && echo ok
 # CHECK: ok
+
+function some_function
+     echo line1
+     echo line2
+end
+complete -c complete_test_function_desc -xa '(complete -Csome_function)'
+complete -C'complete_test_function_desc ' | count
+# CHECK: 1

@@ -178,9 +178,14 @@ void builtin_unknown_option(parser_t &parser, io_streams_t &streams, const wchar
 
 /// Perform error reporting for encounter with missing argument.
 void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
-                              const wchar_t *opt) {
-    streams.err.append_format(BUILTIN_ERR_MISSING, cmd, opt + std::wcslen(opt) - 1);
-    builtin_print_error_trailer(parser, streams.err, cmd);
+                              const wchar_t *opt, bool print_hints) {
+    if (opt[0] == L'-' && opt[1] != L'-') {
+        opt += std::wcslen(opt) - 1;
+    }
+    streams.err.append_format(BUILTIN_ERR_MISSING, cmd, opt);
+    if (print_hints) {
+        builtin_print_error_trailer(parser, streams.err, cmd);
+    }
 }
 
 /// Print the backtrace and call for help that we use at the end of error messages.

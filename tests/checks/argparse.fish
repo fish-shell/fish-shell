@@ -307,3 +307,6 @@ end
 # #6483 - error messages for missing arguments
 argparse -n foo q r/required= -- foo -qr
 # CHECKERR: foo: Expected argument for option r
+
+argparse r/required= -- foo --required
+# CHECKERR: argparse: Expected argument for option --required

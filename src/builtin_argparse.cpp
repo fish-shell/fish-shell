@@ -550,8 +550,8 @@ static int argparse_parse_flags(parser_t &parser, argparse_cmd_opts_t &opts,
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, &long_idx)) != -1) {
         if (opt == ':') {
-            const wchar_t *arg = argv[w.woptind - 1];
-            streams.err.append_format(BUILTIN_ERR_MISSING, cmd, arg + std::wcslen(arg) - 1);
+            builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1],
+                                     false /* print_hints */);
             return STATUS_INVALID_ARGS;
         } else if (opt == '?') {
             // It's not a recognized flag. See if it's an implicit int flag.

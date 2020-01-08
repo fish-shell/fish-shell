@@ -96,7 +96,7 @@ void builtin_unknown_option(parser_t &parser, io_streams_t &streams, const wchar
                             const wchar_t *opt);
 
 void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
-                              const wchar_t *opt);
+                              const wchar_t *opt, bool print_hints = true);
 
 void builtin_print_error_trailer(parser_t &parser, output_stream_t &b, const wchar_t *cmd);
 

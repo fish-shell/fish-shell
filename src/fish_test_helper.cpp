@@ -50,7 +50,7 @@ static void print_stdout_stderr() {
 static void print_pid_then_sleep() {
     fprintf(stdout, "%d\n", getpid());
     fflush(nullptr);
-    usleep(1000000 / .5);  //.5 secs
+    usleep(1000000 / 2);  //.5 secs
 }
 
 static void print_pgrp() { fprintf(stdout, "%d\n", getpgrp()); }

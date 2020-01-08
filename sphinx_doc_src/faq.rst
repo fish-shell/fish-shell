@@ -14,7 +14,7 @@ Since fish 3.1 you can set an environment variable for just one command using th
     begin; set -lx key value; echo $key; end
 
 How do I run a command every login? What's fish's equivalent to .bashrc or .profile?
-------------------------------------------------------------------------
+------------------------------------------------------------------------------------
 Edit the file ``~/.config/fish/config.fish``, creating it if it does not exist (Note the leading period).
 
 

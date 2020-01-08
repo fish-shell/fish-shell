@@ -330,7 +330,7 @@ echo "stdin" | string repeat -n1 "and arg"; and echo "exit 0"
 # CHECKERR: string repeat: Too many arguments
 
 string repeat -n; and echo "exit 0"
-# CHECKERR: string repeat: Expected argument for option -n
+# CHECKERR: string repeat: Expected argument for option n
 
 # FIXME: Also triggers usage
 # string repeat -l fakearg

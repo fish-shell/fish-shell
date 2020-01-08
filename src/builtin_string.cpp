@@ -458,7 +458,8 @@ static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, wc
             int retval = fn->second(argv, parser, streams, w, opts);
             if (retval != STATUS_CMD_OK) return retval;
         } else if (opt == ':') {
-            string_error(streams, BUILTIN_ERR_MISSING, cmd, argv[w.woptind - 1]);
+            const wchar_t *arg = argv[w.woptind - 1];
+            string_error(streams, BUILTIN_ERR_MISSING, cmd, arg + std::wcslen(arg) - 1);
             return STATUS_INVALID_ARGS;
         } else if (opt == '?') {
             string_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);

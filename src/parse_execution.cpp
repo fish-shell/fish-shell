@@ -376,15 +376,6 @@ eval_result_t parse_execution_context_t::run_block_statement(tnode_t<g::block_st
     return ret;
 }
 
-/// Return true if the current execution context is within a function block, else false.
-bool parse_execution_context_t::is_function_context() const {
-    const block_t *current = parser->block_at_index(0);
-    const block_t *parent = parser->block_at_index(1);
-    bool is_within_function_call =
-        (current && parent && current->type() == block_type_t::top && parent->is_function_call());
-    return is_within_function_call;
-}
-
 eval_result_t parse_execution_context_t::run_for_statement(
     tnode_t<grammar::for_header> header, tnode_t<grammar::job_list> block_contents) {
     // Get the variable name: `for var_name in ...`. We expand the variable name. It better result
@@ -404,17 +395,19 @@ eval_result_t parse_execution_context_t::run_for_statement(
         return ret;
     }
 
-    auto &vars = parser->vars();
-    auto var = vars.get(for_var_name, ENV_LOCAL);
-    if (!var && !is_function_context()) var = vars.get(for_var_name, ENV_DEFAULT);
-    if (!var || var->read_only()) {
-        int retval = parser->vars().set_empty(for_var_name, ENV_LOCAL | ENV_USER);
-        if (retval != ENV_OK) {
-            report_error(var_name_node, L"You cannot use read-only variable '%ls' in a for loop",
-                         for_var_name.c_str());
-            return eval_result_t::error;
-        }
+    auto var = parser->vars().get(for_var_name, ENV_DEFAULT);
+    if (var && var->read_only()) {
+        report_error(var_name_node, L"You cannot use read-only variable '%ls' in a for loop",
+                     for_var_name.c_str());
+        return eval_result_t::error;
     }
+    int retval;
+    if (var) {
+        retval = parser->vars().set(for_var_name, ENV_LOCAL | ENV_USER, var->as_list());
+    } else {
+        retval = parser->vars().set_empty(for_var_name, ENV_LOCAL | ENV_USER);
+    }
+    assert(retval == ENV_OK);
 
     if (!valid_var_name(for_var_name)) {
         report_error(var_name_node, BUILTIN_ERR_VARNAME, L"for", for_var_name.c_str());

@@ -148,6 +148,10 @@ stdin and stdout can be redirected via the familiar `<` and `<`. stderr is redir
     > grep fish < /etc/shells > ~/output.txt 2> ~/errors.txt
 
 
+To redirect stdout and stderr into one file, you need to first redirect stdout, and then stderr into stdout::
+
+    > make > make_output.txt 2>&1
+
 
 Autosuggestions
 ---------------

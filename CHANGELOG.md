@@ -99,6 +99,7 @@
   - `camcontrol`
   - `cf` (#5700)
   - `code` (#6205)
+  - `cryptsetup` (#6488)
   - `csc` and `csi` (#6016)
   - `cwebp` (#6034)
   - `cygpath` and `cygstart` (#6239)

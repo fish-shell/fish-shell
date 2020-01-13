@@ -502,6 +502,10 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
         errbuff.clear();
     }
 
+    // Some historical behavior.
+    if (!outbuff.empty()) fflush(stdout);
+    if (!errbuff.empty()) fflush(stderr);
+
     if (outbuff.empty() && errbuff.empty()) {
         // We do not need to construct a background process.
         // TODO: factor this job-status-setting stuff into a single place.
@@ -514,8 +518,6 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
         return true;
     } else {
         // Construct and run our background process.
-        fflush(stdout);
-        fflush(stderr);
         return run_internal_process(p, std::move(outbuff), std::move(errbuff), *io_chain);
     }
 }

@@ -781,23 +781,15 @@ static bool exec_block_or_func_process(parser_t &parser, const std::shared_ptr<j
     }
 
     // If we have a block output buffer, populate it now.
-    if (!block_output_bufferfill) {
-        // No buffer, so we exit directly. This means we have to manually set the exit
-        // status.
-        p->completed = true;
-        if (p->is_last_in_job) {
-            parser.set_last_statuses(j->get_statuses());
-        }
-        return true;
+    std::string buffer_contents;
+    if (block_output_bufferfill) {
+        // Remove our write pipe and forget it. This may close the pipe, unless another thread has
+        // claimed it (background write) or another process has inherited it.
+        io_chain.remove(block_output_bufferfill);
+        auto block_output_buffer = io_bufferfill_t::finish(std::move(block_output_bufferfill));
+        buffer_contents = block_output_buffer->buffer().newline_serialized();
     }
-    assert(block_output_bufferfill && "Must have a block output bufferfiller");
 
-    // Remove our write pipe and forget it. This may close the pipe, unless another thread has
-    // claimed it (background write) or another process has inherited it.
-    io_chain.remove(block_output_bufferfill);
-    auto block_output_buffer = io_bufferfill_t::finish(std::move(block_output_bufferfill));
-
-    std::string buffer_contents = block_output_buffer->buffer().newline_serialized();
     if (!buffer_contents.empty()) {
         return run_internal_process(p, std::move(buffer_contents), {} /*errdata*/, io_chain);
     } else {

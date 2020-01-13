@@ -606,7 +606,7 @@ bool env_universal_t::open_and_acquire_lock(const std::string &path, int *out_fd
             }
 #endif
             const char *error = std::strerror(errno);
-            FLOGF(error, _(L"Unable to open universal variable file '%ls': %s"), path.c_str(),
+            FLOGF(error, _(L"Unable to open universal variable file '%s': %s"), path.c_str(),
                   error);
             break;
         }

@@ -22,13 +22,13 @@ complete -c fzf -l tiebreak -d 'Comma-separated list of sort criteria to apply w
 complete -c fzf -s m -l multi -d 'Enable multi-select with tab/shift-tab'
 complete -c fzf -l no-multi -d 'Disable multi-select'
 complete -c fzf -n 'string match "+*" -- (commandline -ct)' -a +m -d 'Disable multi-select'
-complete -c fzf -l no-mouse -d  'Disable mouse'
-complete -c fzf -l bind -d  'Comma-separated list of custom key bindings' -x
+complete -c fzf -l no-mouse -d 'Disable mouse'
+complete -c fzf -l bind -d 'Comma-separated list of custom key bindings' -x
 complete -c fzf -l cycle -d 'Enable cyclic scroll'
 complete -c fzf -l no-hscroll -d 'Disable horizontal scroll'
 complete -c fzf -l hscroll-off -d 'Number of screen columns to keep to the right of the highlighted substring' -x
 complete -c fzf -l filepath-word -d 'Make word-wise movements and actions respect path separators'
-complete -c fzf -l jump-labels  -d 'Make word-wise movements and actions respect path separators' -x
+complete -c fzf -l jump-labels -d 'Make word-wise movements and actions respect path separators' -x
 
 # layout
 complete -c fzf -l height -d 'Display fzf window below the cursor with the given height instead of using the full screen' -x

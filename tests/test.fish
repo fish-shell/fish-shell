@@ -76,9 +76,9 @@ function test_littlecheck_file
     echo -n "Testing file $file ... "
     set starttime (timestamp)
     $python ../littlecheck.py \
-      -s fish=../test/root/bin/fish \
-      -s fish_test_helper=../test/root/bin/fish_test_helper \
-      $file
+        -s fish=../test/root/bin/fish \
+        -s fish_test_helper=../test/root/bin/fish_test_helper \
+        $file
     set -l exit_status $status
     set -l res ok
     set test_duration (delta $starttime)

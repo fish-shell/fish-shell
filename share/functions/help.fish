@@ -67,8 +67,8 @@ function help --description 'Show help for the fish shell'
             # If the OS appears to be Windows (graphical), try to use cygstart
             if type -q cygstart
                 set fish_browser cygstart
-            # If xdg-open is available, just use that
-            # but only if an X session is running
+                # If xdg-open is available, just use that
+                # but only if an X session is running
             else if type -q xdg-open; and set -q -x DISPLAY
                 set fish_browser xdg-open
             end
@@ -78,7 +78,7 @@ function help --description 'Show help for the fish shell'
             # We use this instead of xdg-open because that's useless without a backend
             # like wsl-open which we'll check in a minute.
             if not type -q cygstart
-            and set -l cmd (command -s cmd.exe /mnt/c/Windows/System32/cmd.exe)
+                and set -l cmd (command -s cmd.exe /mnt/c/Windows/System32/cmd.exe)
                 # Use the first of these.
                 set fish_browser $cmd[1]
             end
@@ -99,7 +99,7 @@ function help --description 'Show help for the fish shell'
     # only if a Windows browser is to be used.
     if type -q cygstart
         if test $fish_browser != "cygstart"
-        and not command -sq $fish_browser[1]
+            and not command -sq $fish_browser[1]
             # Escaped quotes are necessary to work with spaces in the path
             # when the command is finally eval'd.
             set fish_browser cygstart $fish_browser
@@ -145,10 +145,10 @@ function help --description 'Show help for the fish shell'
         # For Windows (Cygwin and WSL), we need to convert the base help dir to a Windows path before converting it to a file URL
         # but only if a Windows browser is being used
         if type -q cygpath
-        and string match -qr "cygstart" $fish_browser[1]
+            and string match -qr "cygstart" $fish_browser[1]
             set page_url file://(cygpath -m $__fish_help_dir)/$fish_help_page
         else if type -q wslpath
-        and string match -qr '.exe' $fish_browser[1]
+            and string match -qr '.exe' $fish_browser[1]
             set page_url file://(wslpath -w $__fish_help_dir)/$fish_help_page
         end
     else
@@ -174,10 +174,10 @@ function help --description 'Show help for the fish shell'
             # For Windows (Cygwin and WSL), we need to convert the base help dir to a Windows path before converting it to a file URL
             # but only if a Windows browser is being used
             if type -q cygpath
-            and string match -qr "cygstart" $fish_browser[1]
+                and string match -qr "cygstart" $fish_browser[1]
                 set page_url file://(cygpath -m $tmpname)
             else if type -q wslpath
-            and string match -qr '.exe' $fish_browser[1]
+                and string match -qr '.exe' $fish_browser[1]
                 set page_url file://(wslpath -w $tmpname)
             end
         end
@@ -194,7 +194,8 @@ function help --description 'Show help for the fish shell'
             case '*'
                 printf (_ 'help: Help is being displayed in %s.\n') $fish_browser[1]
         end
-        $fish_browser $page_url &; disown
+        $fish_browser $page_url &
+        disown
     else
         # Work around lynx bug where <div class="contents"> always has the same formatting as links (unreadable)
         # by using a custom style sheet. See https://github.com/fish-shell/fish-shell/issues/4170

@@ -1,5 +1,7 @@
 # RUN: %fish %s
-function complete_test_alpha1; echo $argv; end
+function complete_test_alpha1
+    echo $argv
+end
 
 complete -c complete_test_alpha1 --no-files -a '(commandline)'
 complete -c complete_test_alpha2 --no-files -w 'complete_test_alpha1 extra1'
@@ -29,7 +31,9 @@ complete -C'myalias2 call3 '
 
 # Ensure that commands can't wrap themselves - if this did,
 # the completion would be executed a bunch of times.
-function t --wraps t; echo t; end
+function t --wraps t
+    echo t
+end
 complete -c t -fa '(t)'
 complete -C't '
 # CHECK: t
@@ -155,8 +159,8 @@ complete -C'echo > /' | string length -q && echo ok
 # CHECK: ok
 
 function some_function
-     echo line1
-     echo line2
+    echo line1
+    echo line2
 end
 complete -c complete_test_function_desc -xa '(complete -Csome_function)'
 complete -C'complete_test_function_desc ' | count

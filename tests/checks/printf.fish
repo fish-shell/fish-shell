@@ -61,10 +61,10 @@ printf '\376' | display_bytes
 # Verify that floating point conversions and output work correctly with
 # different combinations of locales and floating point strings. See issue
 # #3334. This starts by assuming an locale using english conventions.
-printf '%e\n' "1.23"  # should succeed, output should be 1.230000e+00
+printf '%e\n' "1.23" # should succeed, output should be 1.230000e+00
 # CHECK: 1.230000e+00
 
-printf '%e\n' "2,34"  # should fail
+printf '%e\n' "2,34" # should fail
 # CHECK: 2.000000e+00
 # CHECKERR: 2,34: value not completely converted
 
@@ -86,8 +86,8 @@ end
 # OpenBSD's wcstod does not honor LC_NUMERIC, meaning this feature is broken there.
 if set -q numeric_locale[1]; and test (uname) != "OpenBSD"
     set -x LC_NUMERIC $numeric_locale
-    printf '%e\n' "3,45"  # should succeed, output should be 3,450000e+00
-    printf '%e\n' "4.56"  # should succeed, output should be 4,560000e+00
+    printf '%e\n' "3,45" # should succeed, output should be 3,450000e+00
+    printf '%e\n' "4.56" # should succeed, output should be 4,560000e+00
 else
     echo '3,450000e+00'
     echo '4,560000e+00'

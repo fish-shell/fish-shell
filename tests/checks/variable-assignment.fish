@@ -58,13 +58,20 @@ xPATH={/usr,}/bin sh -c 'echo $xPATH'
 yPATH=/usr/bin:/bin count $yPATH
 
 # CHECK: b
-a=b begin; true | echo $a; end
+a=b begin
+    true | echo $a
+end
 
 # CHECK: b
-a=b if true; echo $a; end
+a=b if true
+    echo $a
+end
 
 # CHECK: b
-a=b switch x; case x; echo $a; end
+a=b switch x
+    case x
+        echo $a
+end
 
 complete -c x --erase
 complete -c x -xa arg

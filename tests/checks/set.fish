@@ -449,7 +449,9 @@ echo "global-vs-universal 5: $__fish_test_global_vs_universal"
 # CHECK: global-vs-universal 5: 
 
 # Export local variables from all parent scopes (issue #6153).
-function func; echo $local; end
+function func
+    echo $local
+end
 set -lx local outer
 func
 # CHECK: outer
@@ -458,12 +460,16 @@ begin
     # CHECK: outer
 
     set -lx local inner
-    begin; func; end
+    begin
+        func
+    end
     # CHECK: inner
 end
 
 # Skip importing universal variables (#5258)
-while set -q EDITOR; set -e EDITOR; end
+while set -q EDITOR
+    set -e EDITOR
+end
 set -Ux EDITOR emacs -nw
 # CHECK: $EDITOR: not set in global scope
 # CHECK: $EDITOR: set in universal scope, exported, with 2 elements

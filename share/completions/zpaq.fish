@@ -17,7 +17,7 @@ complete -c zpaq -f -n "not $seen $commands" -a l -d "list"
 complete -c zpaq -f -n "not $seen $commands" -a list -d "List or compare external files to archive"
 
 #options
-complete -c zpaq -x -n "$seen $commands" -o all -a N -d "Extract/list versions in N [4] digit directories" 
+complete -c zpaq -x -n "$seen $commands" -o all -a N -d "Extract/list versions in N [4] digit directories"
 complete -c zpaq -f -n "$seen $commands" -s f -d "-force"
 complete -c zpaq -f -n "$seen $command1" -o force -d "Append files if contents have changed"
 complete -c zpaq -f -n "$seen $command2" -o force -d "Compare file contents instead of dates"

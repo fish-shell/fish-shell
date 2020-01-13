@@ -10,10 +10,10 @@ function fish_prompt --description 'Write out the prompt'
     set -l prefix
     set -l suffix '>'
     if contains -- $USER root toor
-            if set -q fish_color_cwd_root
-                set color_cwd $fish_color_cwd_root
-            end
-            set suffix '#'
+        if set -q fish_color_cwd_root
+            set color_cwd $fish_color_cwd_root
+        end
+        set suffix '#'
     end
 
     # If we're running via SSH, change the host color.

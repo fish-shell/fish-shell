@@ -237,7 +237,7 @@ static void on_process_created(const std::shared_ptr<job_t> &j, pid_t child_pid)
 /// stdout and \p errdata to stderr, respecting the io chain \p ios. For example if target_fd is 1
 /// (stdout), and there is a dup2 3->1, then we need to write to fd 3. Then exit the internal
 /// process.
-static bool run_internal_process(process_t *p, std::string outdata, std::string errdata,
+static void run_internal_process(process_t *p, std::string outdata, std::string errdata,
                                  const io_chain_t &ios) {
     p->check_generations_before_launch();
 
@@ -289,7 +289,7 @@ static bool run_internal_process(process_t *p, std::string outdata, std::string 
     // TODO: support eliding output to /dev/null.
     if (f->skip_out() && f->skip_err()) {
         f->internal_proc->mark_exited(p->status);
-        return true;
+        return;
     }
 
     // Ensure that ios stays alive, it may own fds.
@@ -326,7 +326,6 @@ static bool run_internal_process(process_t *p, std::string outdata, std::string 
         }
         f->internal_proc->mark_exited(status);
     });
-    return true;
 }
 
 /// Call fork() as part of executing a process \p p in a job \j. Execute \p child_action in the
@@ -515,11 +514,11 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
                   j->job_id(), j->preview().c_str(), p->status);
             parser.set_last_statuses(j->get_statuses());
         }
-        return true;
     } else {
         // Construct and run our background process.
-        return run_internal_process(p, std::move(outbuff), std::move(errbuff), *io_chain);
+        run_internal_process(p, std::move(outbuff), std::move(errbuff), *io_chain);
     }
+    return true;
 }
 
 /// Executes an external command.
@@ -793,7 +792,7 @@ static bool exec_block_or_func_process(parser_t &parser, const std::shared_ptr<j
     }
 
     if (!buffer_contents.empty()) {
-        return run_internal_process(p, std::move(buffer_contents), {} /*errdata*/, io_chain);
+        run_internal_process(p, std::move(buffer_contents), {} /*errdata*/, io_chain);
     } else {
         if (p->is_last_in_job) {
             parser.set_last_statuses(j->get_statuses());

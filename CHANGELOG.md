@@ -133,6 +133,7 @@
   - `btrfs`
   - `camcontrol`
   - `cf` (#5700)
+  - `chronyc` (#6496)
   - `code` (#6205)
   - `cryptsetup` (#6488)
   - `csc` and `csi` (#6016)
@@ -147,6 +148,7 @@
   - `gpg2` (#6062)
   - `grub-mkrescue` (#6182)
   - `hledger` (#6043)
+  - `hwinfo` (#6496)
   - `irb` (#6260)
   - `iw` (#6232)
   - `kak`

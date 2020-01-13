@@ -193,7 +193,7 @@ static bool can_use_posix_spawn_for_job(const std::shared_ptr<job_t> &job,
     return true;
 }
 
-void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_io) {
+static void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_io) {
     // Do a regular launch -  but without forking first...
     process_t *p = j->processes.front().get();
     io_chain_t all_ios = block_io;
@@ -203,7 +203,7 @@ void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_io) {
 
     // child_setup_process makes sure signals are properly set up.
     dup2_list_t redirs = dup2_list_t::resolve_chain(all_ios);
-    if (!child_setup_process(INVALID_PID, false, redirs)) {
+    if (child_setup_process(INVALID_PID, false, redirs) == 0) {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
         auto shlvl_var = vars.get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
         wcstring shlvl_str = L"0";
@@ -217,10 +217,6 @@ void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_io) {
 
         // launch_process _never_ returns.
         launch_process_nofork(vars, p);
-    } else {
-        j->mark_constructed();
-        j->processes.front()->completed = true;
-        return;
     }
 }
 
@@ -1049,8 +1045,10 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
         internal_exec(parser.vars(), j.get(), lineage.block_io);
         // internal_exec only returns if it failed to set up redirections.
         // In case of an successful exec, this code is not reached.
-        bool status = !j->flags().negate;
+        int status = j->flags().negate ? 0 : 1;
         parser.set_last_statuses(statuses_t::just(status));
+
+        // A false return tells the caller to remove the job from the list.
         return false;
     }
     cleanup_t timer = push_timer(j->flags().has_time_prefix);

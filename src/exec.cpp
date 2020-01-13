@@ -237,7 +237,7 @@ static void on_process_created(const std::shared_ptr<job_t> &j, pid_t child_pid)
 /// stdout and \p errdata to stderr, respecting the io chain \p ios. For example if target_fd is 1
 /// (stdout), and there is a dup2 3->1, then we need to write to fd 3. Then exit the internal
 /// process.
-static void run_internal_process(process_t *p, std::string outdata, std::string errdata,
+static void run_internal_process(process_t *p, std::string &&outdata, std::string &&errdata,
                                  const io_chain_t &ios) {
     p->check_generations_before_launch();
 
@@ -326,6 +326,23 @@ static void run_internal_process(process_t *p, std::string outdata, std::string 
         }
         f->internal_proc->mark_exited(status);
     });
+}
+
+/// If \p outdata or \p errdata are both empty, then mark the process as completed immediately.
+/// Otherwise, run an internal process.
+static void run_internal_process_or_short_circuit(parser_t &parser, const std::shared_ptr<job_t> &j,
+                                                  process_t *p, std::string &&outdata,
+                                                  std::string &&errdata, const io_chain_t &ios) {
+    if (outdata.empty() && errdata.empty()) {
+        p->completed = true;
+        if (p->is_last_in_job) {
+            FLOGF(exec_job_status, L"Set status of job %d (%ls) to %d using short circuit",
+                  j->job_id(), j->preview().c_str(), p->status);
+            parser.set_last_statuses(j->get_statuses());
+        }
+    } else {
+        run_internal_process(p, std::move(outdata), std::move(errdata), ios);
+    }
 }
 
 /// Call fork() as part of executing a process \p p in a job \j. Execute \p child_action in the
@@ -505,19 +522,9 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
     if (!outbuff.empty()) fflush(stdout);
     if (!errbuff.empty()) fflush(stderr);
 
-    if (outbuff.empty() && errbuff.empty()) {
-        // We do not need to construct a background process.
-        // TODO: factor this job-status-setting stuff into a single place.
-        p->completed = true;
-        if (p->is_last_in_job) {
-            FLOGF(exec_job_status, L"Set status of job %d (%ls) to %d using short circuit",
-                  j->job_id(), j->preview().c_str(), p->status);
-            parser.set_last_statuses(j->get_statuses());
-        }
-    } else {
-        // Construct and run our background process.
-        run_internal_process(p, std::move(outbuff), std::move(errbuff), *io_chain);
-    }
+    // Construct and run our background process.
+    run_internal_process_or_short_circuit(parser, j, p, std::move(outbuff), std::move(errbuff),
+                                          *io_chain);
     return true;
 }
 
@@ -791,14 +798,8 @@ static bool exec_block_or_func_process(parser_t &parser, const std::shared_ptr<j
         buffer_contents = block_output_buffer->buffer().newline_serialized();
     }
 
-    if (!buffer_contents.empty()) {
-        run_internal_process(p, std::move(buffer_contents), {} /*errdata*/, io_chain);
-    } else {
-        if (p->is_last_in_job) {
-            parser.set_last_statuses(j->get_statuses());
-        }
-        p->completed = true;
-    }
+    run_internal_process_or_short_circuit(parser, j, p, std::move(buffer_contents),
+                                          {} /* errdata */, io_chain);
     return true;
 }
 

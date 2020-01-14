@@ -102,10 +102,9 @@ parser_t &parser_t::principal_parser() {
     return *principal;
 }
 
-void parser_t::skip_all_blocks() {
-    // Tell all blocks to skip.
-    // This may be called from a signal handler!
-    principal->cancellation_requested = true;
+void parser_t::cancel_requested(int sig) {
+    assert(sig != 0 && "Signal must not be 0");
+    principal->cancellation_signal = sig;
 }
 
 // Given a new-allocated block, push it onto our block list, acquiring ownership.
@@ -648,11 +647,11 @@ eval_result_t parser_t::eval_node(const parsed_source_ref_t &ps, tnode_t<T> node
     // Handle cancellation requests. If our block stack is currently empty, then we already did
     // successfully cancel (or there was nothing to cancel); clear the flag. If our block stack is
     // not empty, we are still in the process of cancelling; refuse to evaluate anything.
-    if (this->cancellation_requested) {
+    if (this->cancellation_signal) {
         if (!block_list.empty()) {
             return eval_result_t::cancelled;
         }
-        this->cancellation_requested = false;
+        this->cancellation_signal = 0;
     }
 
     // Only certain blocks are allowed.

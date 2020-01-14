@@ -189,7 +189,7 @@ maybe_t<eval_result_t> parse_execution_context_t::check_end_execution() const {
     if (shell_is_exiting()) {
         return eval_result_t::cancelled;
     }
-    if (parser && parser->cancellation_requested) {
+    if (parser && parser->cancellation_signal) {
         return eval_result_t::cancelled;
     }
     const auto &ld = parser->libdata();
@@ -643,7 +643,7 @@ eval_result_t parse_execution_context_t::report_error(const parse_node_t &node, 
 }
 
 eval_result_t parse_execution_context_t::report_errors(const parse_error_list_t &error_list) const {
-    if (!parser->cancellation_requested) {
+    if (!parser->cancellation_signal) {
         if (error_list.empty()) {
             FLOG(error, L"Error reported but no error text found.");
         }

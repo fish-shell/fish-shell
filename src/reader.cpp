@@ -489,7 +489,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void remove_backward();
 };
 
-/// This variable is set to true by the signal handler when ^C is pressed.
+/// This variable is set to a signal by the signal handler when ^C is pressed.
 static volatile sig_atomic_t interrupted = 0;
 
 // Prototypes for a bunch of functions defined later on.
@@ -686,8 +686,8 @@ void reader_data_t::kill(editable_line_t *el, size_t begin_idx, size_t length, i
 
 // This is called from a signal handler!
 void reader_handle_sigint() {
-    parser_t::skip_all_blocks();
-    interrupted = 1;
+    parser_t::cancel_requested(SIGINT);
+    interrupted = SIGINT;
 }
 
 /// Make sure buffers are large enough to hold the current string length.
@@ -849,12 +849,12 @@ bool reader_test_should_cancel() {
     }
 }
 
-bool reader_test_and_clear_interrupted() {
+int reader_test_and_clear_interrupted() {
     int res = interrupted;
     if (res) {
         interrupted = 0;
     }
-    return res != 0;
+    return res;
 }
 
 void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor_position) {
@@ -3411,7 +3411,7 @@ int reader_reading_interrupted() {
     reader_data_t *data = current_data_or_null();
     if (res && data && data->exit_on_interrupt) {
         reader_set_end_loop(true);
-        parser_t::skip_all_blocks();
+        parser_t::cancel_requested(res);
         // We handled the interrupt ourselves, our caller doesn't need to handle it.
         return 0;
     }

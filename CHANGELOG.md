@@ -1,13 +1,12 @@
 # fish 3.1.0
 
 ## Notable improvements and fixes
-- A new `$pipestatus` variable contains a list of exit statuses of the previous job, for each of the separate commands in a pipeline (#5632)
+- A new `$pipestatus` variable contains a list of exit statuses of the previous job, for each of the separate commands in a pipeline (#5632).
 - fish no longer buffers pipes to the last function in a pipeline, improving many cases where pipes appeared to block or hang (#1396).
 - An overhaul of error messages for builtin commands, including a removal of the overwhelming usage summary, more readable stack traces (#3404, #5434), and stack traces for `test` (aka `[`) (#5771).
 - fish's debugging arguments have been significantly improved. The `--debug-level` option has been removed, and a new `--debug` option replaces it. This option accepts various categories, which may be listed via `fish --print-debug-categories` (#5879). A new `--debug-output` option allows for redirection of debug output.
 - `string` has a new `collect` subcommand for use in command substitutions, producing a single output instead of splitting on new lines (similar to `"$(cmd)"` in other shells) (#159).
 - The fish manual, tutorial and FAQ are now available in `man` format as `fish-doc`, `fish-tutorial` and `fish-faq` respectively (#5521).
-- The default prompt is now the "classic + VCS" prompt, providing a better experience for new users (#6375).
 - Like other shells, `cd` now always looks for its argument in the current directory as a last resort, even if the `CDPATH` variable does not include it or "." (#4484).
 - fish now correctly handles `CDPATH` entries that start with `..` (#6220) or contain `./` (#5887).
 - The `fish_trace` variable may be set to trace execution (#3427). This performs a similar role as `set -x` in other shells.
@@ -16,12 +15,14 @@
 - Major performance improvements when pasting (#5866), executing lots of commands (#5905), importing history from bash (#6295), and when completing variables that might match `$history` (#6288).
 
 ### Syntax changes and new commands
+- A new builtin command, `time`, which allows timing of fish functions and builtins as well as external commands (#117).
 - Brace expansion now only takes place if the braces include a "," or a variable expansion, meaning common commands such as `git reset HEAD@{0}` do not require escaping (#5869).
 - New redirections `&>` and `&|` may be used to redirect or pipe stdout, and also redirect stderr to stdout (#6192).
 - `switch` now allows arguments that expand to nothing, like empty variables (#5677).
 - The `VAR=val cmd` syntax can now be used to run a command in a modified environment (#6287).
 - `and` is no longer recognised as a command, so that nonsensical constructs like `and and and` produce a syntax error (#6089).
 - `math`'s exponent operator, '`^`', was previously left-associative, but now uses the more commonly-used right-associative behaviour (#6280). This means that `math '3^0.5^2'` was previously calculated as '(3^0.5)^2', but is now calculated as '3^(0.5^2)'.
+- In fish 3.0, the variable used with `for` loops inside command substitutions could leak into enclosing scopes; this was an inadvertent behaviour change and has been reverted (#6480).
 
 ### Scripting improvements
 - `string split0` now returns 0 if it split something (#5701).
@@ -42,6 +43,7 @@
 - `read -S` (short option of `--shell`) is recognised correctly (#5660).
 - `read` understands `--list`, which acts like `--array` in reading all arguments into a list inside a single variable, but is better named (#5846).
 - `read` has a new option, `--tokenize`, which splits a string into variables according to the shell's tokenization rules, considering quoting, escaping, and so on (#3823).
+- `read` interacts more correctly with the deprecated `$IFS` variable, in particular removing multiple separators when splitting a variable into a list (#6406), matching other shells.
 - `fish_indent` now handles semicolons better, including leaving them in place for `; and` and `; or` instead of breaking the line (#5859).
 - `fish_indent --write` now supports multiple file arguments, indenting them in turn.
 - The default read limit has been increased to 100MiB (#5267).
@@ -60,10 +62,13 @@
 - A bug where `for` could use invalid variable names has been fixed (#5800).
 - A bug where local variables would not be exported to functions has been fixed (#6153).
 - The null command (`:`) now always exits successfully, rather than passing through the previous exit status (#6022).
-- The output of `functions FUNCTION` starts with spaces, not a tab, matching `fish_indent` (#1472), and correctly includes any `--wraps` flags (#1625).
+- The output of `functions FUNCTION` matches the declaration of the function, correctly including comments or blank lines (#5285), and correctly includes any `--wraps` flags (#1625).
+- `type` supports a new option, `--short`, which suppress function expansion (#6403).
 - `type --path` with a function argument will now output the path to the file containing the definition of that function, if it exists.
+- `type --force-path` with an argument that cannot be found now correctly outputs nothing, as documented (#6411).
 - The `$hostname` variable is no longer truncated to 32 characters (#5758).
 - Line numbers in function backtraces are calculated correctly (#6350).
+- A new `fish_cancel` event is emitted when the command line is cancelled, which is useful for terminal integration (#5973).
 
 ### Interactive improvements
 - fish only parses `/etc/paths` on macOS in login shells, matching the bash implementation (#5637) and avoiding changes to path ordering in child shells (#5456). It now ignores blank lines like the bash implementation (#5809).
@@ -86,10 +91,13 @@
 - The Web-based configuration handles aliases that include single quotes correctly (#6120), and launches correctly under Termux (#6248).
 - `function` now correctly validates parameters for `--argument-names` as valid variable names (#6147) and correctly parses options following `--argument-names`, as in "`--argument-names foo --description bar`" (#6186).
 - History newly imported from bash includes command lines using `&&` or `||`.
-- The automatic generation of completions from manual pages is better described in job and process listings (#6269).
+- The automatic generation of completions from manual pages is better described in job and process listings, and no longer produces a warning when exiting fish (#6269).
 - In private mode, setting `$fish_greeting` to an empty string before starting the private session will prevent the warning about history not being saved from being printed (#6299).
 - In the interactive editor, a line break (Enter) inside unclosed brackets will insert a new line, rather than executing the command and producing an error (#6316).
 - Ctrl-C always repaints the prompt (#6394).
+- When run interactively from another program (such as Python), fish will correctly start a new process group, like other shells (#5909).
+- Job identifiers (for example, for background jobs) are assigned more logically (#6053).
+- A bug where history would appear truncated if an empty command was executed was fixed (#6032).
 
 #### New or improved bindings
 - Pasting strips leading spaces to avoid pasted commands being omitted from the history (#4327).
@@ -113,9 +121,11 @@
 - Selections in Vi mode are inclusive, matching the actual behaviour of Vi (#5770).
 
 #### Improved prompts
-- The git prompt in informative mode now shows the number of stashes if enabled.
-- The git prompt now has an option (`$__fish_git_prompt_use_informative_chars`) to use the (more modern) informative characters without enabling informative mode.
+- The Git prompt in informative mode now shows the number of stashes if enabled.
+- The Git prompt now has an option (`$__fish_git_prompt_use_informative_chars`) to use the (more modern) informative characters without enabling informative mode.
 - The default prompt now also features VCS integration and will color the host if running via SSH (#6375).
+- The default and example prompts print the pipe status if an earlier command in the pipe fails.
+- The default and example prompts try to resolve exit statuses to signal names when appropriate.
 
 #### Improved terminal output
 - New `fish_pager_color_` options have been added to control more elements of the pager's colors (#5524).

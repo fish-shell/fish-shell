@@ -32,6 +32,7 @@
 #include "path.h"
 #include "tnode.h"
 #include "tokenizer.h"
+#include "wcstringutil.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 

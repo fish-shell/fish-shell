@@ -19,6 +19,7 @@
 #include "parse_util.h"
 #include "parser.h"
 #include "reader.h"
+#include "wcstringutil.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 

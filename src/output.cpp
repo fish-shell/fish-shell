@@ -30,6 +30,7 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "flog.h"
 #include "output.h"
+#include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// Whether term256 and term24bit are supported.

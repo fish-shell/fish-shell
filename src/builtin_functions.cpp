@@ -26,6 +26,7 @@
 #include "parser_keywords.h"
 #include "proc.h"
 #include "signal.h"
+#include "wcstringutil.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 

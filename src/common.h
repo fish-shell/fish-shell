@@ -287,69 +287,6 @@ char *wcs2str(const wchar_t *in);
 char *wcs2str(const wcstring &in);
 std::string wcs2string(const wcstring &input);
 
-/// Test if a string prefixes another. Returns true if a is a prefix of b.
-bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value);
-bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &value);
-bool string_prefixes_string(const wchar_t *proposed_prefix, const wchar_t *value);
-bool string_prefixes_string(const char *proposed_prefix, const std::string &value);
-bool string_prefixes_string(const char *proposed_prefix, const char *value);
-
-/// Test if a string is a suffix of another.
-bool string_suffixes_string(const wcstring &proposed_suffix, const wcstring &value);
-bool string_suffixes_string(const wchar_t *proposed_suffix, const wcstring &value);
-bool string_suffixes_string_case_insensitive(const wcstring &proposed_suffix,
-                                             const wcstring &value);
-
-/// Test if a string prefixes another without regard to case. Returns true if a is a prefix of b.
-bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix,
-                                             const wcstring &value);
-
-/// Case-insensitive string search, modeled after std::string::find().
-/// \param fuzzy indicates this is being used for fuzzy matching and case insensitivity is
-/// expanded to include symbolic characters (#3584).
-/// \return the offset of the first case-insensitive matching instance of `needle` within
-/// `haystack`, or `string::npos()` if no results were found.
-size_t ifind(const wcstring &haystack, const wcstring &needle, bool fuzzy = false);
-size_t ifind(const std::string &haystack, const std::string &needle, bool fuzzy = false);
-
-/// Split a string by a separator character.
-wcstring_list_t split_string(const wcstring &val, wchar_t sep);
-
-/// Join a list of strings by a separator character.
-wcstring join_strings(const wcstring_list_t &vals, wchar_t sep);
-
-/// Support for iterating over a newline-separated string.
-template <typename Collection>
-class line_iterator_t {
-    // Storage for each line.
-    Collection storage;
-
-    // The collection we're iterating. Note we hold this by reference.
-    const Collection &coll;
-
-    // The current location in the iteration.
-    typename Collection::const_iterator current;
-
-   public:
-    /// Construct from a collection (presumably std::string or std::wcstring).
-    line_iterator_t(const Collection &coll) : coll(coll), current(coll.cbegin()) {}
-
-    /// Access the storage in which the last line was stored.
-    const Collection &line() const { return storage; }
-
-    /// Advances to the next line. \return true on success, false if we have exhausted the string.
-    bool next() {
-        if (current == coll.end()) return false;
-        auto newline_or_end = std::find(current, coll.cend(), '\n');
-        storage.assign(current, newline_or_end);
-        current = newline_or_end;
-
-        // Skip the newline.
-        if (current != coll.cend()) ++current;
-        return true;
-    }
-};
-
 enum fuzzy_match_type_t {
     // We match the string exactly: FOOBAR matches FOOBAR.
     fuzzy_match_exact = 0,
@@ -483,114 +420,6 @@ void format_ullong_safe(wchar_t buff[64], unsigned long long val);
 /// "Narrows" a wide character string. This just grabs any ASCII characters and trunactes.
 void narrow_string_safe(char buff[64], const wchar_t *s);
 
-inline wcstring to_string(long x) {
-    wchar_t buff[64];
-    format_long_safe(buff, x);
-    return wcstring(buff);
-}
-
-inline wcstring to_string(unsigned long long x) {
-    wchar_t buff[64];
-    format_ullong_safe(buff, x);
-    return wcstring(buff);
-}
-
-inline wcstring to_string(int x) { return to_string(static_cast<long>(x)); }
-
-inline wcstring to_string(size_t x) { return to_string(static_cast<unsigned long long>(x)); }
-
-inline bool bool_from_string(const std::string &x) {
-    if (x.empty()) return false;
-    switch (x.front()) {
-        case 'Y':
-        case 'T':
-        case 'y':
-        case 't':
-        case '1':
-            return true;
-        default:
-            return false;
-    }
-}
-
-inline bool bool_from_string(const wcstring &x) {
-    return !x.empty() && std::wcschr(L"YTyt1", x.at(0));
-}
-
-wchar_t **make_null_terminated_array(const wcstring_list_t &lst);
-char **make_null_terminated_array(const std::vector<std::string> &lst);
-
-// Helper class for managing a null-terminated array of null-terminated strings (of some char type).
-template <typename CharType_t>
-class null_terminated_array_t {
-    CharType_t **array{nullptr};
-
-    // No assignment or copying.
-    void operator=(null_terminated_array_t rhs) = delete;
-    null_terminated_array_t(const null_terminated_array_t &) = delete;
-
-    typedef std::vector<std::basic_string<CharType_t>> string_list_t;
-
-    size_t size() const {
-        size_t len = 0;
-        if (array != nullptr) {
-            while (array[len] != nullptr) {
-                len++;
-            }
-        }
-        return len;
-    }
-
-    void free(void) {
-        ::free((void *)array);
-        array = nullptr;
-    }
-
-   public:
-    null_terminated_array_t() = default;
-
-    explicit null_terminated_array_t(const string_list_t &argv)
-        : array(make_null_terminated_array(argv)) {}
-
-    ~null_terminated_array_t() { this->free(); }
-
-    null_terminated_array_t(null_terminated_array_t &&rhs) : array(rhs.array) {
-        rhs.array = nullptr;
-    }
-
-    null_terminated_array_t operator=(null_terminated_array_t &&rhs) {
-        free();
-        array = rhs.array;
-        rhs.array = nullptr;
-    }
-
-    void set(const string_list_t &argv) {
-        this->free();
-        this->array = make_null_terminated_array(argv);
-    }
-
-    /// Convert from a null terminated list to a vector of strings.
-    static string_list_t to_list(const CharType_t *const *arr) {
-        string_list_t result;
-        for (const auto *cursor = arr; cursor && *cursor; cursor++) {
-            result.push_back(*cursor);
-        }
-        return result;
-    }
-
-    /// Instance method.
-    string_list_t to_list() const { return to_list(array); }
-
-    const CharType_t *const *get() const { return array; }
-    CharType_t **get() { return array; }
-
-    void clear() { this->free(); }
-};
-
-// Helper function to convert from a null_terminated_array_t<wchar_t> to a
-// null_terminated_array_t<char_t>.
-void convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &arr,
-                                  null_terminated_array_t<char> *output);
 typedef std::lock_guard<std::mutex> scoped_lock;
 typedef std::lock_guard<std::recursive_mutex> scoped_rlock;
 
@@ -735,9 +564,6 @@ class autoclose_fd_t {
     explicit autoclose_fd_t(int fd = -1) : fd_(fd) {}
     ~autoclose_fd_t() { close(); }
 };
-
-/// Appends a path component, with a / if necessary.
-void append_path_component(wcstring &path, const wcstring &component);
 
 wcstring format_string(const wchar_t *format, ...);
 wcstring vformat_string(const wchar_t *format, va_list va_orig);

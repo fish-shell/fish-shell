@@ -9,6 +9,7 @@
 #include "enum_set.h"
 #include "global_safety.h"
 #include "parse_util.h"
+#include "wcstringutil.h"
 #include "wildcard.h"
 
 namespace flog_details {

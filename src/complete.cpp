@@ -47,6 +47,7 @@
 #include "reader.h"
 #include "tnode.h"
 #include "util.h"
+#include "wcstringutil.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 

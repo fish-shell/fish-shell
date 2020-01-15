@@ -86,4 +86,7 @@ bool paths_are_same_file(const wcstring &path1, const wcstring &path2);
 /// directory. This operates on unescaped paths only (so a ~ means a literal ~).
 wcstring path_apply_working_directory(const wcstring &path, const wcstring &working_directory);
 
+/// Appends a path component, with a / if necessary.
+void append_path_component(wcstring &path, const wcstring &component);
+
 #endif

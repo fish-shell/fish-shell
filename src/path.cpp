@@ -442,3 +442,21 @@ bool paths_are_same_file(const wcstring &path1, const wcstring &path2) {
 
     return false;
 }
+
+void append_path_component(wcstring &path, const wcstring &component) {
+    if (path.empty() || component.empty()) {
+        path.append(component);
+    } else {
+        size_t path_len = path.size();
+        bool path_slash = path.at(path_len - 1) == L'/';
+        bool comp_slash = component.at(0) == L'/';
+        if (!path_slash && !comp_slash) {
+            // Need a slash
+            path.push_back(L'/');
+        } else if (path_slash && comp_slash) {
+            // Too many slashes.
+            path.erase(path_len - 1, 1);
+        }
+        path.append(component);
+    }
+}

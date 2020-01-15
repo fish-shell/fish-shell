@@ -55,6 +55,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "proc.h"
 #include "reader.h"
 #include "signal.h"
+#include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 // container to hold the options specified within the command line

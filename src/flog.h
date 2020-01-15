@@ -11,6 +11,7 @@
 #include <utility>
 
 #include "global_safety.h"
+#include "wcstringutil.h"
 
 using wcstring = std::wstring;
 using wcstring_list_t = std::vector<wcstring>;

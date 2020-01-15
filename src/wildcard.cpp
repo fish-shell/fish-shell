@@ -465,13 +465,13 @@ class wildcard_expander_t {
     // Resolved items get inserted into here. This is transient of course.
     std::vector<completion_t> *resolved_completions;
     // Whether we have been interrupted.
-    bool did_interrupt;
+    bool did_interrupt{false};
     // Whether we have successfully added any completions.
-    bool did_add;
+    bool did_add{false};
     // Whether some parent expansion is fuzzy, and therefore completions always prepend their prefix
     // This variable is a little suspicious - it should be passed along, not stored here
     // If we ever try to do parallel wildcard expansion we'll have to remove this
-    bool has_fuzzy_ancestor;
+    bool has_fuzzy_ancestor{false};
 
     /// We are a trailing slash - expand at the end.
     void expand_trailing_slash(const wcstring &base_dir, const wcstring &prefix);
@@ -628,12 +628,7 @@ class wildcard_expander_t {
 
    public:
     wildcard_expander_t(wcstring wd, expand_flags_t f, std::vector<completion_t> *r)
-        : working_directory(std::move(wd)),
-          flags(f),
-          resolved_completions(r),
-          did_interrupt(false),
-          did_add(false),
-          has_fuzzy_ancestor(false) {
+        : working_directory(std::move(wd)), flags(f), resolved_completions(r) {
         assert(resolved_completions != nullptr);
 
         // Insert initial completions into our set to avoid duplicates.

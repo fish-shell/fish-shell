@@ -250,38 +250,6 @@ bool is_windows_subsystem_for_linux() {
 }
 #endif  // HAVE_BACKTRACE_SYMBOLS
 
-int fgetws2(wcstring *s, FILE *f) {
-    int i = 0;
-    wint_t c;
-
-    while (true) {
-        errno = 0;
-
-        c = std::fgetwc(f);
-        if (errno == EILSEQ || errno == EINTR) {
-            continue;
-        }
-
-        switch (c) {
-            // End of line.
-            case WEOF:
-            case L'\n':
-            case L'\0': {
-                return i;
-            }
-            // Ignore carriage returns.
-            case L'\r': {
-                break;
-            }
-            default: {
-                i++;
-                s->push_back(static_cast<wchar_t>(c));
-                break;
-            }
-        }
-    }
-}
-
 /// Converts the narrow character string \c in into its wide equivalent, and return it.
 ///
 /// The string may contain embedded nulls.

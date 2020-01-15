@@ -269,14 +269,6 @@ std::shared_ptr<T> move_to_sharedptr(T &&v) {
 /// Print a stack trace to stderr.
 void show_stackframe(const wchar_t msg_level, int frame_count = 100, int skip_levels = 0);
 
-/// Read a line from the stream f into the string. Returns the number of bytes read or -1 on
-/// failure.
-///
-/// If the carriage return character is encountered, it is ignored. fgetws() considers the line to
-/// end if reading the file results in either a newline (L'\n') character, the null (L'\\0')
-/// character or the end of file (WEOF) character.
-int fgetws2(wcstring *s, FILE *f);
-
 /// Returns a  wide character string equivalent of the specified multibyte character string.
 ///
 /// This function encodes illegal character sequences in a reversible way using the private use
@@ -767,12 +759,6 @@ std::unique_ptr<T> make_unique(Args &&... args) {
 ///
 /// \param in the position of the opening quote.
 wchar_t *quote_end(const wchar_t *pos);
-
-/// A call to this function will reset the error counter. Some functions print out non-critical
-/// error messages. These should check the error_count before, and skip printing the message if
-/// MAX_ERROR_COUNT messages have been printed. The error_reset() should be called after each
-/// interactive command executes, to allow new messages to be printed.
-void error_reset();
 
 /// This function should be called after calling `setlocale()` to perform fish specific locale
 /// initialization.

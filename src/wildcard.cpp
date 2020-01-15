@@ -645,11 +645,11 @@ class wildcard_expander_t {
     // Do wildcard expansion. This is recursive.
     void expand(const wcstring &base_dir, const wchar_t *wc, const wcstring &prefix);
 
-    int status_code() const {
+    wildcard_expand_result_t status_code() const {
         if (this->did_interrupt) {
-            return -1;
+            return wildcard_expand_result_t::cancel;
         }
-        return this->did_add ? 1 : 0;
+        return this->did_add ? wildcard_expand_result_t::match : wildcard_expand_result_t::no_match;
     }
 };
 
@@ -898,8 +898,10 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
     }
 }
 
-int wildcard_expand_string(const wcstring &wc, const wcstring &working_directory,
-                           expand_flags_t flags, std::vector<completion_t> *output) {
+wildcard_expand_result_t wildcard_expand_string(const wcstring &wc,
+                                                const wcstring &working_directory,
+                                                expand_flags_t flags,
+                                                std::vector<completion_t> *output) {
     assert(output != nullptr);
     // Fuzzy matching only if we're doing completions.
     assert(flags.get(expand_flag::for_completions) || !flags.get(expand_flag::fuzzy_match));
@@ -916,7 +918,7 @@ int wildcard_expand_string(const wcstring &wc, const wcstring &working_directory
     // embedded nulls are never allowed in a filename, so we just check for them and return 0 (no
     // matches) if there is an embedded null.
     if (wc.find(L'\0') != wcstring::npos) {
-        return 0;
+        return wildcard_expand_result_t::no_match;
     }
 
     // Compute the prefix and base dir. The prefix is what we prepend for filesystem operations

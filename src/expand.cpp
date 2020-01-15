@@ -1010,15 +1010,18 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand,
         result = expand_result_t::wildcard_no_match;
         std::vector<completion_t> expanded;
         for (const auto &effective_working_dir : effective_working_dirs) {
-            int local_wc_res =
+            wildcard_expand_result_t expand_res =
                 wildcard_expand_string(path_to_expand, effective_working_dir, flags, &expanded);
-            if (local_wc_res > 0) {
-                // Something matched,so overall we matched.
-                result = expand_result_t::wildcard_match;
-            } else if (local_wc_res < 0) {
-                // Cancellation
-                result = expand_result_t::error;
-                break;
+            switch (expand_res) {
+                case wildcard_expand_result_t::match:
+                    // Something matched,so overall we matched.
+                    result = expand_result_t::wildcard_match;
+                    break;
+                case wildcard_expand_result_t::no_match:
+                    break;
+                case wildcard_expand_result_t::cancel:
+                    result = expand_result_t::error;
+                    break;
             }
         }
 

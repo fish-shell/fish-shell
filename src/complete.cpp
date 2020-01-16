@@ -1347,7 +1347,7 @@ static void walk_wrap_chain_recursive(const wcstring &command_line, source_range
                                       wrap_chain_visited_set_t *visited, size_t depth) {
     // Limit our recursion depth. This prevents cycles in the wrap chain graph from overflowing.
     if (depth > 24) return;
-    if (reader_test_should_cancel()) return;
+    if (cancel_checker()) return;
 
     // Extract command from the command line and invoke the receiver with it.
     wcstring command(command_line, command_range.start, command_range.length);

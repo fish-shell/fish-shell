@@ -605,10 +605,6 @@ bool history_search_t::go_backwards() {
 
     size_t index = current_index_;
     while (++index < max_index) {
-        if (reader_test_should_cancel()) {
-            return false;
-        }
-
         history_item_t item = history_->item_at_index(index);
 
         // We're done if it's empty or we cancelled.
@@ -1344,10 +1340,11 @@ void history_t::save() { impl()->save(); }
 /// \p func returns true, continue the search; else stop it.
 static void do_1_history_search(history_t &hist, history_search_type_t search_type,
                                 const wcstring &search_string, bool case_sensitive,
-                                const std::function<bool(const history_item_t &item)> &func) {
+                                const std::function<bool(const history_item_t &item)> &func,
+                                const cancel_checker_t &cancel_check) {
     history_search_t searcher = history_search_t(hist, search_string, search_type,
                                                  case_sensitive ? 0 : history_search_ignore_case);
-    while (searcher.go_backwards()) {
+    while (!cancel_check() && searcher.go_backwards()) {
         if (!func(searcher.current_item())) {
             break;
         }
@@ -1357,7 +1354,8 @@ static void do_1_history_search(history_t &hist, history_search_type_t search_ty
 // Searches history.
 bool history_t::search(history_search_type_t search_type, const wcstring_list_t &search_args,
                        const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
-                       bool null_terminate, bool reverse, io_streams_t &streams) {
+                       bool null_terminate, bool reverse, const cancel_checker_t &cancel_check,
+                       io_streams_t &streams) {
     wcstring_list_t collected;
     wcstring formatted_record;
     size_t remaining = max_items;
@@ -1379,14 +1377,16 @@ bool history_t::search(history_search_type_t search_type, const wcstring_list_t 
 
     if (search_args.empty()) {
         // The user had no search terms; just append everything.
-        do_1_history_search(*this, history_search_type_t::match_everything, {}, false, func);
+        do_1_history_search(*this, history_search_type_t::match_everything, {}, false, func,
+                            cancel_check);
     } else {
         for (const wcstring &search_string : search_args) {
             if (search_string.empty()) {
                 streams.err.append_format(L"Searching for the empty string isn't allowed");
                 return false;
             }
-            do_1_history_search(*this, search_type, search_string, case_sensitive, func);
+            do_1_history_search(*this, search_type, search_string, case_sensitive, func,
+                                cancel_check);
         }
     }
 

@@ -127,10 +127,6 @@ enum class jump_precision_t { till, to };
 /// background threads to notice it and skip doing work that they would otherwise have to do.
 static std::atomic<unsigned> s_generation;
 
-/// This pthreads generation count is set when an autosuggestion background thread starts up, so it
-/// can easily check if the work it is doing is no longer useful.
-static thread_local unsigned s_thread_generation;
-
 /// Helper to get the generation count
 static inline unsigned read_generation_count() {
     return s_generation.load(std::memory_order_relaxed);
@@ -853,14 +849,6 @@ void reader_data_t::repaint_if_needed() {
 
 void reader_reset_interrupted() { interrupted = 0; }
 
-bool reader_test_should_cancel() {
-    if (is_main_thread()) {
-        return interrupted;
-    } else {
-        return read_generation_count() != s_thread_generation;
-    }
-}
-
 int reader_test_and_clear_interrupted() {
     int res = interrupted;
     if (res) {
@@ -1300,7 +1288,6 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
         if (ctx.check_cancel()) {
             return nothing;
         }
-        s_thread_generation = generation_count;
 
         // Let's make sure we aren't using the empty string.
         if (search_string.empty()) {

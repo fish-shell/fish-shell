@@ -172,7 +172,8 @@ class history_t {
     // Searches history.
     bool search(history_search_type_t search_type, const wcstring_list_t &search_args,
                 const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
-                bool null_terminate, bool reverse, io_streams_t &streams);
+                bool null_terminate, bool reverse, const cancel_checker_t &cancel_check,
+                io_streams_t &streams);
 
     // Irreversibly clears history.
     void clear();

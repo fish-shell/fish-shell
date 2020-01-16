@@ -171,10 +171,10 @@ void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &opti
 /// Removes all completions for a given command.
 void complete_remove_all(const wcstring &cmd, bool cmd_is_path);
 
-/// Find all completions of the command cmd, insert them into out.
+/// \return all completions of the command cmd.
 class parser_t;
-void complete(const wcstring &cmd, completion_list_t *out_comps, completion_request_flags_t flags,
-              const environment_t &vars, const std::shared_ptr<parser_t> &parser);
+completion_list_t complete(const wcstring &cmd, completion_request_flags_t flags,
+                           const environment_t &vars, const std::shared_ptr<parser_t> &parser);
 
 /// Return a list of all current completions.
 wcstring complete_print();

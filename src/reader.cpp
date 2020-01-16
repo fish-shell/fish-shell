@@ -1325,8 +1325,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
 
         // Try normal completions.
         completion_request_flags_t complete_flags = completion_request_t::autosuggestion;
-        completion_list_t completions;
-        complete(search_string, &completions, complete_flags, *vars, nullptr);
+        completion_list_t completions = complete(search_string, complete_flags, *vars, nullptr);
         completions_sort_and_prioritize(&completions, complete_flags);
         if (!completions.empty()) {
             const completion_t &comp = completions.at(0);
@@ -2567,7 +2566,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // std::fwprintf(stderr, L"Complete (%ls)\n", buffcpy.c_str());
                 completion_request_flags_t complete_flags = {completion_request_t::descriptions,
                                                              completion_request_t::fuzzy_match};
-                complete_func(buffcpy, &rls.comp, complete_flags, vars, parser_ref);
+                rls.comp = complete_func(buffcpy, complete_flags, vars, parser_ref);
 
                 // User-supplied completions may have changed the commandline - prevent buffer
                 // overflow.

@@ -2612,8 +2612,13 @@ static void test_complete() {
 
     auto parser = parser_t::principal_parser().shared();
 
+    auto do_complete = [&](const wcstring &cmd, completion_request_flags_t flags) {
+        return complete(cmd, flags, vars, parser);
+    };
+
     completion_list_t completions;
-    complete(L"$", &completions, {}, vars, parser);
+
+    completions = do_complete(L"$", {});
     completions_sort_and_prioritize(&completions);
     do_test(completions.size() == 6);
     do_test(completions.at(0).completion == L"Bar1");
@@ -2623,21 +2628,18 @@ static void test_complete() {
     do_test(completions.at(4).completion == L"Foo2");
     do_test(completions.at(5).completion == L"Foo3");
 
-    completions.clear();
-    complete(L"$F", &completions, {}, vars, parser);
+    completions = do_complete(L"$F", {});
     completions_sort_and_prioritize(&completions);
     do_test(completions.size() == 3);
     do_test(completions.at(0).completion == L"oo1");
     do_test(completions.at(1).completion == L"oo2");
     do_test(completions.at(2).completion == L"oo3");
 
-    completions.clear();
-    complete(L"$1", &completions, {}, vars, parser);
+    completions = do_complete(L"$1", {});
     completions_sort_and_prioritize(&completions);
     do_test(completions.empty());
 
-    completions.clear();
-    complete(L"$1", &completions, completion_request_t::fuzzy_match, vars, parser);
+    completions = do_complete(L"$1", completion_request_t::fuzzy_match);
     completions_sort_and_prioritize(&completions);
     do_test(completions.size() == 2);
     do_test(completions.at(0).completion == L"$Bar1");
@@ -2650,36 +2652,30 @@ static void test_complete() {
     if (system("touch 'test/complete_test/testfile'")) err(L"touch failed");
     if (system("chmod 700 'test/complete_test/testfile'")) err(L"chmod failed");
 
-    completions.clear();
-    complete(L"echo (test/complete_test/testfil", &completions, {}, vars, parser);
+    completions = do_complete(L"echo (test/complete_test/testfil", {});
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"e");
 
-    completions.clear();
-    complete(L"echo (ls test/complete_test/testfil", &completions, {}, vars, parser);
+    completions = do_complete(L"echo (ls test/complete_test/testfil", {});
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"e");
 
-    completions.clear();
-    complete(L"echo (command ls test/complete_test/testfil", &completions, {}, vars, parser);
+    completions = do_complete(L"echo (command ls test/complete_test/testfil", {});
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"e");
 
     // Completing after spaces - see #2447
-    completions.clear();
-    complete(L"echo (ls test/complete_test/has\\ ", &completions, {}, vars, parser);
+    completions = do_complete(L"echo (ls test/complete_test/has\\ ", {});
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"space");
 
     // Brackets - see #5831
-    completions.clear();
-    complete(L"echo (ls test/complete_test/bracket[", &completions, {}, vars, parser);
+    completions = do_complete(L"echo (ls test/complete_test/bracket[", {});
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"test/complete_test/bracket[abc]");
 
     wcstring cmdline = L"touch test/complete_test/bracket[";
-    completions.clear();
-    complete(cmdline, &completions, {}, vars, parser);
+    completions = do_complete(cmdline, {});
     do_test(completions.size() == 1);
     do_test(completions.front().completion == L"test/complete_test/bracket[abc]");
     size_t where = cmdline.size();
@@ -2687,9 +2683,8 @@ static void test_complete() {
         completions.front().completion, completions.front().flags, cmdline, &where, false);
     do_test(newcmdline == L"touch test/complete_test/bracket\\[abc\\] ");
 
-    completions.clear();
     cmdline = LR"(touch test/complete_test/gnarlybracket\\[)";
-    complete(cmdline, &completions, {}, vars, parser);
+    completions = do_complete(cmdline, {});
     do_test(completions.size() == 1);
     do_test(completions.front().completion == LR"(test/complete_test/gnarlybracket\[abc])");
     where = cmdline.size();
@@ -2703,24 +2698,20 @@ static void test_complete() {
     function_add(L"scuttlebutt", {}, nullptr, {});
 
     // Complete a function name.
-    completions.clear();
-    complete(L"echo (scuttlebut", &completions, {}, vars, parser);
+    completions = do_complete(L"echo (scuttlebut", {});
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"t");
 
     // But not with the command prefix.
-    completions.clear();
-    complete(L"echo (command scuttlebut", &completions, {}, vars, parser);
+    completions = do_complete(L"echo (command scuttlebut", {});
     do_test(completions.size() == 0);
 
     // Not with the builtin prefix.
-    completions.clear();
-    complete(L"echo (builtin scuttlebut", &completions, {}, vars, parser);
+    completions = do_complete(L"echo (builtin scuttlebut", {});
     do_test(completions.size() == 0);
 
     // Not after a redirection.
-    completions.clear();
-    complete(L"echo hi > scuttlebut", &completions, {}, vars, parser);
+    completions = do_complete(L"echo hi > scuttlebut", {});
     do_test(completions.size() == 0);
 
     // Trailing spaces (#1261).
@@ -2728,83 +2719,65 @@ static void test_complete() {
     no_files.no_files = true;
     complete_add(L"foobarbaz", false, wcstring(), option_type_args_only, no_files, NULL, L"qux",
                  NULL, COMPLETE_AUTO_SPACE);
-    completions.clear();
-    complete(L"foobarbaz ", &completions, {}, vars, parser);
+    completions = do_complete(L"foobarbaz ", {});
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"qux");
 
     // Don't complete variable names in single quotes (#1023).
-    completions.clear();
-    complete(L"echo '$Foo", &completions, {}, vars, parser);
+    completions = do_complete(L"echo '$Foo", {});
     do_test(completions.empty());
-    completions.clear();
-    complete(L"echo \\$Foo", &completions, {}, vars, parser);
+    completions = do_complete(L"echo \\$Foo", {});
     do_test(completions.empty());
 
     // File completions.
-    completions.clear();
-    complete(L"cat test/complete_test/te", &completions, {}, vars, parser);
+    completions = do_complete(L"cat test/complete_test/te", {});
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
-    completions.clear();
-    complete(L"echo sup > test/complete_test/te", &completions, {}, vars, parser);
+    completions = do_complete(L"echo sup > test/complete_test/te", {});
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
-    completions.clear();
-    complete(L"echo sup > test/complete_test/te", &completions, {}, vars, parser);
+    completions = do_complete(L"echo sup > test/complete_test/te", {});
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
 
     if (!pushd("test/complete_test")) return;
-    complete(L"cat te", &completions, {}, vars, parser);
+    completions = do_complete(L"cat te", {});
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
     do_test(!(completions.at(0).flags & COMPLETE_REPLACES_TOKEN));
     do_test(!(completions.at(0).flags & COMPLETE_DUPLICATES_ARGUMENT));
-    completions.clear();
-    complete(L"cat testfile te", &completions, {}, vars, parser);
+    completions = do_complete(L"cat testfile te", {});
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
     do_test(completions.at(0).flags & COMPLETE_DUPLICATES_ARGUMENT);
-    completions.clear();
-    complete(L"cat testfile TE", &completions, {}, vars, parser);
+    completions = do_complete(L"cat testfile TE", {});
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"testfile");
     do_test(completions.at(0).flags & COMPLETE_REPLACES_TOKEN);
     do_test(completions.at(0).flags & COMPLETE_DUPLICATES_ARGUMENT);
-    completions.clear();
-    complete(L"something --abc=te", &completions, {}, vars, parser);
+    completions = do_complete(L"something --abc=te", {});
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
-    completions.clear();
-    complete(L"something -abc=te", &completions, {}, vars, parser);
+    completions = do_complete(L"something -abc=te", {});
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
-    completions.clear();
-    complete(L"something abc=te", &completions, {}, vars, parser);
+    completions = do_complete(L"something abc=te", {});
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
-    completions.clear();
-    complete(L"something abc=stfile", &completions, {}, vars, parser);
+    completions = do_complete(L"something abc=stfile", {});
     do_test(completions.size() == 0);
-    completions.clear();
-    complete(L"something abc=stfile", &completions, completion_request_t::fuzzy_match, vars,
-             parser);
+    completions = do_complete(L"something abc=stfile", completion_request_t::fuzzy_match);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"abc=testfile");
 
     // Zero escapes can cause problems. See issue #1631.
-    completions.clear();
-    complete(L"cat foo\\0", &completions, {}, vars, parser);
+    completions = do_complete(L"cat foo\\0", {});
     do_test(completions.empty());
-    completions.clear();
-    complete(L"cat foo\\0bar", &completions, {}, vars, parser);
+    completions = do_complete(L"cat foo\\0bar", {});
     do_test(completions.empty());
-    completions.clear();
-    complete(L"cat \\0", &completions, {}, vars, parser);
+    completions = do_complete(L"cat \\0", {});
     do_test(completions.empty());
-    completions.clear();
-    complete(L"cat te\\0", &completions, {}, vars, parser);
+    completions = do_complete(L"cat te\\0", {});
     do_test(completions.empty());
 
     popd();
@@ -2814,7 +2787,7 @@ static void test_complete() {
     auto &pvars = parser_t::principal_parser().vars();
     function_add(L"testabbrsonetwothreefour", {}, nullptr, {});
     int ret = pvars.set_one(L"_fish_abbr_testabbrsonetwothreezero", ENV_LOCAL, L"expansion");
-    complete(L"testabbrsonetwothree", &completions, {}, pvars, parser);
+    completions = complete(L"testabbrsonetwothree", {}, pvars, parser);
     do_test(ret == 0);
     do_test(completions.size() == 2);
     do_test(completions.at(0).completion == L"four");
@@ -2898,8 +2871,8 @@ static void test_completion_insertions() {
 
 static void perform_one_autosuggestion_cd_test(const wcstring &command, const wcstring &expected,
                                                const environment_t &vars, long line) {
-    completion_list_t comps;
-    complete(command, &comps, completion_request_t::autosuggestion, vars, nullptr);
+    completion_list_t comps =
+        complete(command, completion_request_t::autosuggestion, vars, nullptr);
 
     bool expects_error = (expected == L"<error>");
 
@@ -2934,8 +2907,7 @@ static void perform_one_autosuggestion_cd_test(const wcstring &command, const wc
 
 static void perform_one_completion_cd_test(const wcstring &command, const wcstring &expected,
                                            const environment_t &vars, long line) {
-    completion_list_t comps;
-    complete(command, &comps, {}, vars, nullptr);
+    completion_list_t comps = complete(command, {}, vars, nullptr);
 
     bool expects_error = (expected == L"<error>");
 
@@ -3074,8 +3046,8 @@ static void test_autosuggest_suggest_special() {
 }
 
 static void perform_one_autosuggestion_should_ignore_test(const wcstring &command, long line) {
-    completion_list_t comps;
-    complete(command, &comps, completion_request_t::autosuggestion, null_environment_t{}, nullptr);
+    completion_list_t comps =
+        complete(command, completion_request_t::autosuggestion, null_environment_t{}, nullptr);
     do_test(comps.empty());
     if (!comps.empty()) {
         const wcstring &suggestion = comps.front().completion;

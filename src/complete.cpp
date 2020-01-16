@@ -1595,9 +1595,9 @@ void completer_t::perform() {
                     parser->libdata().transient_commandlines.push_back(unaliased_cmd);
                     cleanup_t remove_transient(
                         [&] { parser->libdata().transient_commandlines.pop_back(); });
-                    completion_list_t comp;
-                    complete(unaliased_cmd, &comp, completion_request_t::fuzzy_match,
-                             parser->vars(), parser->shared());
+                    completion_list_t comp =
+                        complete(unaliased_cmd, completion_request_t::fuzzy_match, parser->vars(),
+                                 parser->shared());
                     this->completions.insert(completions.end(), comp.begin(), comp.end());
                     do_file = false;
                 } else if (!complete_param(
@@ -1635,9 +1635,8 @@ void completer_t::perform() {
     mark_completions_duplicating_arguments(current_token, tokens);
 }
 
-void complete(const wcstring &cmd_with_subcmds, completion_list_t *out_comps,
-              completion_request_flags_t flags, const environment_t &vars,
-              const std::shared_ptr<parser_t> &parser) {
+completion_list_t complete(const wcstring &cmd_with_subcmds, completion_request_flags_t flags,
+                           const environment_t &vars, const std::shared_ptr<parser_t> &parser) {
     // Determine the innermost subcommand.
     const wchar_t *cmdsubst_begin, *cmdsubst_end;
     parse_util_cmdsubst_extent(cmd_with_subcmds.c_str(), cmd_with_subcmds.size(), &cmdsubst_begin,
@@ -1646,7 +1645,7 @@ void complete(const wcstring &cmd_with_subcmds, completion_list_t *out_comps,
     wcstring cmd = wcstring(cmdsubst_begin, cmdsubst_end - cmdsubst_begin);
     completer_t completer(vars, parser, std::move(cmd), flags);
     completer.perform();
-    *out_comps = completer.acquire_completions();
+    return completer.acquire_completions();
 }
 
 /// Print the short switch \c opt, and the argument \c arg to the specified

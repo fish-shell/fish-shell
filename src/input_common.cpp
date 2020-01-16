@@ -57,7 +57,7 @@ char_event_t input_event_queue_t::readb() {
         }
 
         // Get our uvar notifier.
-        universal_notifier_t &notifier = universal_notifier_t::default_notifier();
+        universal_notifier_t& notifier = universal_notifier_t::default_notifier();
 
         // Get the notification fd (possibly none).
         int notifier_fd = notifier.notification_fd();
@@ -130,7 +130,7 @@ char_event_t input_event_queue_t::readb() {
 
 // Update the wait_on_escape_ms value in response to the fish_escape_delay_ms user variable being
 // set.
-void update_wait_on_escape_ms(const environment_t &vars) {
+void update_wait_on_escape_ms(const environment_t& vars) {
     auto escape_time_ms = vars.get(L"fish_escape_delay_ms");
     if (escape_time_ms.missing_or_empty()) {
         wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;

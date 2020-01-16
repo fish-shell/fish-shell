@@ -1178,8 +1178,8 @@ void s_reset(screen_t *s, screen_reset_mode_t mode) {
             abandon_line_string.append(get_omitted_newline_str());
 
             if (cur_term && exit_attribute_mode) {
-                abandon_line_string.append(
-                                           str2wcstring(tparm((char *)exit_attribute_mode)));  // normal text ANSI escape sequence
+                abandon_line_string.append(str2wcstring(
+                    tparm((char *)exit_attribute_mode)));  // normal text ANSI escape sequence
             }
 
             int newline_glitch_width = term_has_xn ? 0 : 1;

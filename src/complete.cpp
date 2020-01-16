@@ -303,11 +303,10 @@ void completions_sort_and_prioritize(std::vector<completion_t> *comps,
     // arguments, and penalize files that end in tilde - they're frequently autosave files from e.g.
     // emacs.
     if (flags & completion_request_t::autosuggestion) {
-        stable_sort(comps->begin(), comps->end(),
-                    [](const completion_t &a, const completion_t &b) {
-                        return compare_completions_by_duplicate_arguments(a, b) ||
-                               compare_completions_by_tilde(a, b);
-                    });
+        stable_sort(comps->begin(), comps->end(), [](const completion_t &a, const completion_t &b) {
+            return compare_completions_by_duplicate_arguments(a, b) ||
+                   compare_completions_by_tilde(a, b);
+        });
     }
 }
 
@@ -1677,8 +1676,7 @@ wcstring complete_print() {
     // Get a list of all completions in a vector, then sort it by order.
     std::vector<std::reference_wrapper<const completion_entry_t>> all_completions;
     // These should be "c"begin/end, but then gcc from ~~the dark ages~~ RHEL 7 would complain.
-    all_completions.insert(all_completions.begin(), completion_set->begin(),
-                           completion_set->end());
+    all_completions.insert(all_completions.begin(), completion_set->begin(), completion_set->end());
     sort(all_completions.begin(), all_completions.end(), compare_completions_by_order);
 
     for (const completion_entry_t &e : all_completions) {

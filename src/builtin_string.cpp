@@ -459,7 +459,8 @@ static int parse_opts(options_t *opts, int *optind, int n_req_args, int argc, wc
             if (retval != STATUS_CMD_OK) return retval;
         } else if (opt == ':') {
             streams.err.append(L"string ");  // clone of string_error
-            builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], false /* print_hints */);
+            builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1],
+                                     false /* print_hints */);
             return STATUS_INVALID_ARGS;
         } else if (opt == '?') {
             string_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
@@ -796,9 +797,12 @@ class pcre2_matcher_t : public string_matcher_t {
         int rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, 0, 0,
                                                regex.match, nullptr));
 
-        if (rc < 0 /* pcre2 error */) return false;
-        else if (rc == 0 /* no match */) return true;
-        else total_matched++;
+        if (rc < 0 /* pcre2 error */)
+            return false;
+        else if (rc == 0 /* no match */)
+            return true;
+        else
+            total_matched++;
 
         if (opts.invert_match) return true;
 
@@ -815,7 +819,8 @@ class pcre2_matcher_t : public string_matcher_t {
             rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg.c_str()), arglen, offset,
                                                options, regex.match, nullptr));
 
-            if (rc < 0 /* pcre2 error */) return false;
+            if (rc < 0 /* pcre2 error */)
+                return false;
             else if (rc == 0 /* no matches */) {
                 if (options == 0 /* all matches found now */) break;
                 ovector[1] = offset + 1;

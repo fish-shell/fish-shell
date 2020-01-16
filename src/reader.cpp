@@ -1774,7 +1774,8 @@ static void reader_interactive_init(parser_t &parser) {
     if (shell_pgid == 0 || session_interactivity() == session_interactivity_t::explicit_) {
         shell_pgid = getpid();
         if (setpgid(shell_pgid, shell_pgid) < 0) {
-            // If we're session leader setpgid returns EPERM. The other cases where we'd get EPERM don't apply as we passed our own pid.
+            // If we're session leader setpgid returns EPERM. The other cases where we'd get EPERM
+            // don't apply as we passed our own pid.
             //
             // This should be harmless, so we ignore it.
             if (errno != EPERM) {

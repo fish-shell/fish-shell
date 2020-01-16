@@ -134,6 +134,7 @@
 - Improvements to the display of wide characters, particularly Korean characters and emoji (#5583, #5729).
 - The Vi mode cursor is correctly redrawn when regaining focus under terminals that report focus (eg tmux) (#4788).
 - Variables that control background colors (such as `fish_pager_color_search_match`) can now use `--reverse`.
+- Added Base16 color options to `fish_config`
 
 #### Completions
 - Added completions for

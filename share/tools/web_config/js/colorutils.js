@@ -293,8 +293,11 @@ var Base16Theme = {
         receiver['end'] = theme.base0E
         receiver['error'] = theme.base08
         receiver['param'] = theme.base05
+        receiver['operator'] = theme.base0D
+        receiver['escape'] = theme.base0C
         receiver['quote'] = theme.base0A
         receiver['redirection'] = theme.base05
+        receiver['match'] = theme.base0D
 
         receiver['colors'] = []
         for (var key in theme) receiver['colors'].push(theme[key])

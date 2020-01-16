@@ -17,6 +17,8 @@
 class environment_t;
 class history_t;
 class io_chain_t;
+class operation_context_t;
+class parser_t;
 
 /// Helper class for storing a command line.
 class editable_line_t {
@@ -146,16 +148,12 @@ void reader_push(parser_t &parser, const wcstring &name);
 /// Return to previous reader environment.
 void reader_pop();
 
-/// Specify function to use for finding possible tab completions.
-typedef completion_list_t (*complete_function_t)(const wcstring &, completion_request_flags_t,
-                                                 const environment_t &,
-                                                 const std::shared_ptr<parser_t> &parser);
-
-void reader_set_complete_function(complete_function_t);
+/// Mark whether tab completion is enabled.
+void reader_set_complete_ok(bool flag);
 
 /// The type of a highlight function.
 using highlight_function_t = void (*)(const wcstring &, std::vector<highlight_spec_t> &, size_t,
-                                      wcstring_list_t *, const environment_t &vars);
+                                      const operation_context_t &ctx);
 
 /// Function type for testing if a string is valid for the reader to return.
 using test_function_t = parser_test_error_bits_t (*)(parser_t &, const wcstring &);

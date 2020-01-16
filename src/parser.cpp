@@ -306,8 +306,8 @@ void parser_t::emit_profiling(const char *path) const {
 }
 
 completion_list_t parser_t::expand_argument_list(const wcstring &arg_list_src,
-                                                 expand_flags_t eflags, const environment_t &vars,
-                                                 const std::shared_ptr<parser_t> &parser) {
+                                                 expand_flags_t eflags,
+                                                 const operation_context_t &ctx) {
     // Parse the string as an argument list.
     parse_node_tree_t tree;
     if (!parse_tree_from_string(arg_list_src, parse_flag_none, &tree, nullptr /* errors */,
@@ -322,8 +322,7 @@ completion_list_t parser_t::expand_argument_list(const wcstring &arg_list_src,
     tnode_t<grammar::freestanding_argument_list> arg_list(&tree, &tree.at(0));
     while (auto arg = arg_list.next_in_list<grammar::argument>()) {
         const wcstring arg_src = arg.get_source(arg_list_src);
-        if (expand_string(arg_src, &result, eflags, vars, parser, nullptr /* errors */) ==
-            expand_result_t::error) {
+        if (expand_string(arg_src, &result, eflags, ctx) == expand_result_t::error) {
             break;  // failed to expand a string
         }
     }
@@ -331,6 +330,14 @@ completion_list_t parser_t::expand_argument_list(const wcstring &arg_list_src,
 }
 
 std::shared_ptr<parser_t> parser_t::shared() { return shared_from_this(); }
+
+cancel_checker_t parser_t::cancel_checker() const {
+    return [this]() { return this->cancellation_signal != 0; };
+}
+
+operation_context_t parser_t::context() {
+    return operation_context_t{this->shared(), this->vars(), this->cancel_checker()};
+}
 
 /// Append stack trace info for the block \p b to \p trace.
 static void append_block_description_to_stack_trace(const block_t &b, wcstring &trace,
@@ -660,12 +667,13 @@ eval_result_t parser_t::eval_node(const parsed_source_ref_t &ps, tnode_t<T> node
     job_reap(*this, false);  // not sure why we reap jobs here
 
     // Start it up
+    operation_context_t op_ctx = this->context();
     block_t *scope_block = this->push_block(block_t::scope_block(block_type));
 
     // Create and set a new execution context.
     using exc_ctx_ref_t = std::unique_ptr<parse_execution_context_t>;
-    scoped_push<exc_ctx_ref_t> exc(
-        &execution_context, make_unique<parse_execution_context_t>(ps, this, std::move(lineage)));
+    scoped_push<exc_ctx_ref_t> exc(&execution_context, make_unique<parse_execution_context_t>(
+                                                           ps, this, op_ctx, std::move(lineage)));
     eval_result_t res = execution_context->eval_node(node, scope_block);
     exc.restore();
     this->pop_block(scope_block);

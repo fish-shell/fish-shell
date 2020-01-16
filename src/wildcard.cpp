@@ -456,6 +456,8 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath, const wc
 }
 
 class wildcard_expander_t {
+    // A function to call to check cancellation.
+    cancel_checker_t cancel_checker;
     // The working directory to resolve paths against
     const wcstring working_directory;
     // The set of items we have resolved, used to efficiently avoid duplication.
@@ -502,7 +504,7 @@ class wildcard_expander_t {
 
     /// Indicate whether we should cancel wildcard expansion. This latches 'interrupt'.
     bool interrupted() {
-        did_interrupt = did_interrupt || reader_test_should_cancel();
+        did_interrupt = did_interrupt || cancel_checker();
         return did_interrupt;
     }
 
@@ -629,8 +631,12 @@ class wildcard_expander_t {
     }
 
    public:
-    wildcard_expander_t(wcstring wd, expand_flags_t f, completion_list_t *r)
-        : working_directory(std::move(wd)), flags(f), resolved_completions(r) {
+    wildcard_expander_t(wcstring wd, expand_flags_t f, const cancel_checker_t &cancel_checker,
+                        completion_list_t *r)
+        : cancel_checker(cancel_checker),
+          working_directory(std::move(wd)),
+          flags(f),
+          resolved_completions(r) {
         assert(resolved_completions != nullptr);
 
         // Insert initial completions into our set to avoid duplicates.
@@ -897,7 +903,9 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc,
 
 wildcard_expand_result_t wildcard_expand_string(const wcstring &wc,
                                                 const wcstring &working_directory,
-                                                expand_flags_t flags, completion_list_t *output) {
+                                                expand_flags_t flags,
+                                                const cancel_checker_t &cancel_checker,
+                                                completion_list_t *output) {
     assert(output != nullptr);
     // Fuzzy matching only if we're doing completions.
     assert(flags.get(expand_flag::for_completions) || !flags.get(expand_flag::fuzzy_match));
@@ -934,7 +942,7 @@ wildcard_expand_result_t wildcard_expand_string(const wcstring &wc,
         effective_wc = wc;
     }
 
-    wildcard_expander_t expander(prefix, flags, output);
+    wildcard_expander_t expander(prefix, flags, cancel_checker, output);
     expander.expand(base_dir, effective_wc.c_str(), base_dir);
     return expander.status_code();
 }

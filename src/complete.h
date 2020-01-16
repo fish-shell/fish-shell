@@ -117,6 +117,9 @@ struct enum_info_t<completion_request_t> {
 
 using completion_request_flags_t = enum_set_t<completion_request_t>;
 
+class completion_t;
+using completion_list_t = std::vector<completion_t>;
+
 enum complete_option_type_t {
     option_type_args_only,    // no option
     option_type_short,        // -x
@@ -172,9 +175,9 @@ void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &opti
 void complete_remove_all(const wcstring &cmd, bool cmd_is_path);
 
 /// \return all completions of the command cmd.
-class parser_t;
+class operation_context_t;
 completion_list_t complete(const wcstring &cmd, completion_request_flags_t flags,
-                           const environment_t &vars, const std::shared_ptr<parser_t> &parser);
+                           const operation_context_t &ctx);
 
 /// Return a list of all current completions.
 wcstring complete_print();

@@ -1129,8 +1129,8 @@ static bool detect_errors_in_plain_statement(const wcstring &buff_src,
     if (maybe_t<wcstring> unexp_command = command_for_plain_statement(pst, buff_src)) {
         wcstring command;
         // Check that we can expand the command.
-        if (expand_to_command_and_args(*unexp_command, null_environment_t{}, &command, nullptr,
-                                       parse_errors) == expand_result_t::error) {
+        if (expand_to_command_and_args(*unexp_command, operation_context_t::empty(), &command,
+                                       nullptr, parse_errors) == expand_result_t::error) {
             errored = true;
             parse_error_offset_source_start(parse_errors, source_start);
         }
@@ -1193,7 +1193,7 @@ static bool detect_errors_in_plain_statement(const wcstring &buff_src,
 
         // Check that we don't do an invalid builtin (issue #1252).
         if (!errored && decoration == parse_statement_decoration_builtin &&
-            expand_one(*unexp_command, expand_flag::skip_cmdsubst, null_environment_t{}, nullptr,
+            expand_one(*unexp_command, expand_flag::skip_cmdsubst, operation_context_t::empty(),
                        parse_errors) &&
             !builtin_exists(*unexp_command)) {
             errored = append_syntax_error(parse_errors, source_start, UNKNOWN_BUILTIN_ERR_MSG,

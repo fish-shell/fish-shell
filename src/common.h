@@ -266,6 +266,10 @@ std::shared_ptr<T> move_to_sharedptr(T &&v) {
     return std::make_shared<T>(std::move(v));
 }
 
+/// A function type to check for cancellation.
+/// \return true if execution should cancel.
+using cancel_checker_t = std::function<bool()>;
+
 /// Print a stack trace to stderr.
 void show_stackframe(const wchar_t msg_level, int frame_count = 100, int skip_levels = 0);
 

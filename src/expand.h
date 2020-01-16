@@ -21,6 +21,7 @@
 class environment_t;
 class env_var_t;
 class environment_t;
+class operation_context_t;
 
 /// Set of flags controlling expansions.
 enum class expand_flag {
@@ -125,18 +126,15 @@ enum class expand_result_t {
 /// \param output The list to which the result will be appended.
 /// \param flags Specifies if any expansion pass should be skipped. Legal values are any combination
 /// of skip_cmdsubst skip_variables and skip_wildcards
-/// \param vars variables used during expansion.
-/// \param parser the parser to use for command substitutions, or nullptr to disable.
-/// \param errors Resulting errors, or NULL to ignore
+/// \param ctx The parser, variables, and cancellation checker for this operation.  The parser may
+/// be null. \param errors Resulting errors, or nullptr to ignore
 ///
 /// \return An expand_result_t.
 /// wildcard_no_match and wildcard_match are normal exit conditions used only on
 /// strings containing wildcards to tell if the wildcard produced any matches.
-class parser_t;
 __warn_unused expand_result_t expand_string(wcstring input, completion_list_t *output,
-                                            expand_flags_t flags, const environment_t &vars,
-                                            const std::shared_ptr<parser_t> &parser,
-                                            parse_error_list_t *errors);
+                                            expand_flags_t flags, const operation_context_t &ctx,
+                                            parse_error_list_t *errors = nullptr);
 
 /// expand_one is identical to expand_string, except it will fail if in expands to more than one
 /// string. This is used for expanding command names.
@@ -144,12 +142,12 @@ __warn_unused expand_result_t expand_string(wcstring input, completion_list_t *o
 /// \param inout_str The parameter to expand in-place
 /// \param flags Specifies if any expansion pass should be skipped. Legal values are any combination
 /// of skip_cmdsubst skip_variables and skip_wildcards
-/// \param parser the parser to use for command substitutions, or nullptr to disable.
-/// \param errors Resulting errors, or NULL to ignore
+/// \param ctx The parser, variables, and cancellation checker for this operation. The parser may be
+/// null. \param errors Resulting errors, or nullptr to ignore
 ///
 /// \return Whether expansion succeeded.
-bool expand_one(wcstring &string, expand_flags_t flags, const environment_t &vars,
-                const std::shared_ptr<parser_t> &parser, parse_error_list_t *errors = nullptr);
+bool expand_one(wcstring &string, expand_flags_t flags, const operation_context_t &ctx,
+                parse_error_list_t *errors = nullptr);
 
 /// Expand a command string like $HOME/bin/cmd into a command and list of arguments.
 /// Return the command and arguments by reference.
@@ -157,7 +155,7 @@ bool expand_one(wcstring &string, expand_flags_t flags, const environment_t &var
 /// that API does not distinguish between expansion resulting in an empty command (''), and
 /// expansion resulting in no command (e.g. unset variable).
 // \return an expand error.
-expand_result_t expand_to_command_and_args(const wcstring &instr, const environment_t &vars,
+expand_result_t expand_to_command_and_args(const wcstring &instr, const operation_context_t &ctx,
                                            wcstring *out_cmd, wcstring_list_t *out_args,
                                            parse_error_list_t *errors = nullptr);
 

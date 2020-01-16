@@ -59,6 +59,7 @@
 #include "iothread.h"
 #include "lru.h"
 #include "maybe.h"
+#include "operation_context.h"
 #include "pager.h"
 #include "parse_constants.h"
 #include "parse_tree.h"
@@ -1015,8 +1016,8 @@ static void test_parser() {
     parser->eval(L"function '' ; echo fail; exit 42 ; end ; ''", io_chain_t());
 
     say(L"Testing eval_args");
-    completion_list_t comps = parser_t::expand_argument_list(
-        L"alpha 'beta gamma' delta", expand_flags_t{}, parser->vars(), parser);
+    completion_list_t comps = parser_t::expand_argument_list(L"alpha 'beta gamma' delta",
+                                                             expand_flags_t{}, parser->context());
     do_test(comps.size() == 3);
     do_test(comps.at(0).completion == L"alpha");
     do_test(comps.at(1).completion == L"beta gamma");
@@ -1083,6 +1084,7 @@ static void test_cancellation() {
 
     // Ensure that we don't think we should cancel.
     reader_reset_interrupted();
+    parser.clear_cancel();
 }
 
 static void test_indents() {
@@ -1644,14 +1646,14 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
     bool res = true;
     wchar_t *arg;
     parse_error_list_t errors;
-    auto parser = parser_t::principal_parser().shared();
+    pwd_environment_t pwd{};
+    operation_context_t ctx{parser_t::principal_parser().shared(), pwd, no_cancel};
 
-    if (expand_string(in, &output, flags, pwd_environment_t{}, parser, &errors) ==
-        expand_result_t::error) {
+    if (expand_string(in, &output, flags, ctx, &errors) == expand_result_t::error) {
         if (errors.empty()) {
             err(L"Bug: Parse error reported but no error text found.");
         } else {
-            err(L"%ls", errors.at(0).describe(in, parser->is_interactive()).c_str());
+            err(L"%ls", errors.at(0).describe(in, ctx.parser->is_interactive()).c_str());
         }
         return false;
     }
@@ -2311,8 +2313,9 @@ static bool run_test_test(int expected, const wcstring &str) {
     // We need to tokenize the string in the same manner a normal shell would do. This is because we
     // need to test things like quoted strings that have leading and trailing whitespace.
     auto parser = parser_t::principal_parser().shared();
-    completion_list_t comps =
-        parser_t::expand_argument_list(str, expand_flags_t{}, null_environment_t{}, parser);
+    null_environment_t nullenv{};
+    operation_context_t ctx{parser, nullenv, no_cancel};
+    completion_list_t comps = parser_t::expand_argument_list(str, expand_flags_t{}, ctx);
 
     wcstring_list_t argv;
     for (const auto &c : comps) {
@@ -2613,7 +2616,7 @@ static void test_complete() {
     auto parser = parser_t::principal_parser().shared();
 
     auto do_complete = [&](const wcstring &cmd, completion_request_flags_t flags) {
-        return complete(cmd, flags, vars, parser);
+        return complete(cmd, flags, operation_context_t{parser, vars, no_cancel});
     };
 
     completion_list_t completions;
@@ -2787,7 +2790,7 @@ static void test_complete() {
     auto &pvars = parser_t::principal_parser().vars();
     function_add(L"testabbrsonetwothreefour", {}, nullptr, {});
     int ret = pvars.set_one(L"_fish_abbr_testabbrsonetwothreezero", ENV_LOCAL, L"expansion");
-    completions = complete(L"testabbrsonetwothree", {}, pvars, parser);
+    completions = complete(L"testabbrsonetwothree", {}, parser->context());
     do_test(ret == 0);
     do_test(completions.size() == 2);
     do_test(completions.at(0).completion == L"four");
@@ -2872,7 +2875,7 @@ static void test_completion_insertions() {
 static void perform_one_autosuggestion_cd_test(const wcstring &command, const wcstring &expected,
                                                const environment_t &vars, long line) {
     completion_list_t comps =
-        complete(command, completion_request_t::autosuggestion, vars, nullptr);
+        complete(command, completion_request_t::autosuggestion, operation_context_t{vars});
 
     bool expects_error = (expected == L"<error>");
 
@@ -2907,7 +2910,7 @@ static void perform_one_autosuggestion_cd_test(const wcstring &command, const wc
 
 static void perform_one_completion_cd_test(const wcstring &command, const wcstring &expected,
                                            const environment_t &vars, long line) {
-    completion_list_t comps = complete(command, {}, vars, nullptr);
+    completion_list_t comps = complete(command, {}, operation_context_t{vars});
 
     bool expects_error = (expected == L"<error>");
 
@@ -3047,7 +3050,7 @@ static void test_autosuggest_suggest_special() {
 
 static void perform_one_autosuggestion_should_ignore_test(const wcstring &command, long line) {
     completion_list_t comps =
-        complete(command, completion_request_t::autosuggestion, null_environment_t{}, nullptr);
+        complete(command, completion_request_t::autosuggestion, operation_context_t::empty());
     do_test(comps.empty());
     if (!comps.empty()) {
         const wcstring &suggestion = comps.front().completion;
@@ -4647,7 +4650,7 @@ static void test_highlighting() {
         do_test(expected_colors.size() == text.size());
 
         std::vector<highlight_spec_t> colors(text.size());
-        highlight_shell(text, colors, 20, NULL, vars);
+        highlight_shell(text, colors, 20, operation_context_t{vars});
 
         if (expected_colors.size() != colors.size()) {
             err(L"Color vector has wrong size! Expected %lu, actual %lu", expected_colors.size(),

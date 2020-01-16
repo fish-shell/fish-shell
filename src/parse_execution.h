@@ -11,6 +11,7 @@
 #include "proc.h"
 
 class block_t;
+class operation_context_t;
 class parser_t;
 
 /// An eval_result represents evaluation errors including wildcards which failed to match, syntax
@@ -34,6 +35,7 @@ class parse_execution_context_t {
    private:
     parsed_source_ref_t pstree;
     parser_t *const parser;
+    const operation_context_t &ctx;
     // The currently executing job node, used to indicate the line number.
     tnode_t<grammar::job> executing_job_node{};
     // Cached line number information.
@@ -137,7 +139,8 @@ class parse_execution_context_t {
     int line_offset_of_character_at_offset(size_t offset);
 
    public:
-    parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p, job_lineage_t lineage);
+    parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p,
+                              const operation_context_t &ctx, job_lineage_t lineage);
 
     /// Returns the current line number, indexed from 1. Not const since it touches
     /// cached_lineno_offset.

@@ -89,8 +89,9 @@ static redirection_spec_t get_stderr_merge() {
 }
 
 parse_execution_context_t::parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p,
+                                                     const operation_context_t &ctx,
                                                      job_lineage_t lineage)
-    : pstree(std::move(pstree)), parser(p), lineage(std::move(lineage)) {}
+    : pstree(std::move(pstree)), parser(p), ctx(ctx), lineage(std::move(lineage)) {}
 
 // Utilities
 
@@ -136,8 +137,7 @@ tnode_t<g::plain_statement> parse_execution_context_t::infinite_recursive_statem
         if (plain_statement) {
             maybe_t<wcstring> cmd = command_for_plain_statement(plain_statement, pstree->src);
             if (cmd &&
-                expand_one(*cmd, {expand_flag::skip_cmdsubst, expand_flag::skip_variables}, nullenv,
-                           nullptr) &&
+                expand_one(*cmd, {expand_flag::skip_cmdsubst, expand_flag::skip_variables}, ctx) &&
                 cmd == forbidden_function_name) {
                 // This is it.
                 infinite_recursive_statement = plain_statement;
@@ -382,7 +382,7 @@ eval_result_t parse_execution_context_t::run_for_statement(
     // in just one.
     tnode_t<g::tok_string> var_name_node = header.child<1>();
     wcstring for_var_name = get_source(var_name_node);
-    if (!expand_one(for_var_name, expand_flags_t{}, parser->vars(), parser->shared())) {
+    if (!expand_one(for_var_name, expand_flags_t{}, ctx)) {
         report_error(var_name_node, FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG, for_var_name.c_str());
         return eval_result_t::error;
     }
@@ -458,9 +458,8 @@ eval_result_t parse_execution_context_t::run_switch_statement(
     // Expand it. We need to offset any errors by the position of the string.
     completion_list_t switch_values_expanded;
     parse_error_list_t errors;
-    auto expand_ret =
-        expand_string(switch_value, &switch_values_expanded, expand_flag::no_descriptions,
-                      parser->vars(), parser->shared(), &errors);
+    auto expand_ret = expand_string(switch_value, &switch_values_expanded,
+                                    expand_flag::no_descriptions, ctx, &errors);
     parse_error_offset_source_start(&errors, switch_value_n.source_range()->start);
 
     switch (expand_ret) {
@@ -720,7 +719,7 @@ eval_result_t parse_execution_context_t::expand_command(tnode_t<grammar::plain_s
 
     // Expand the string to produce completions, and report errors.
     expand_result_t expand_err =
-        expand_to_command_and_args(unexp_cmd, parser->vars(), out_cmd, out_args, &errors);
+        expand_to_command_and_args(unexp_cmd, ctx, out_cmd, out_args, &errors);
     if (expand_err == expand_result_t::error) {
         parser->set_last_statuses(statuses_t::just(STATUS_ILLEGAL_CMD));
         // Issue #5812 - the expansions were done on the command token,
@@ -877,8 +876,8 @@ eval_result_t parse_execution_context_t::expand_arguments_from_nodes(
         // Expand this string.
         parse_error_list_t errors;
         arg_expanded.clear();
-        auto expand_ret = expand_string(arg_str, &arg_expanded, expand_flag::no_descriptions,
-                                        parser->vars(), parser->shared(), &errors);
+        auto expand_ret =
+            expand_string(arg_str, &arg_expanded, expand_flag::no_descriptions, ctx, &errors);
         parse_error_offset_source_start(&errors, arg_node.source_range()->start);
         switch (expand_ret) {
             case expand_result_t::error: {
@@ -934,8 +933,7 @@ bool parse_execution_context_t::determine_redirections(
 
         // PCA: I can't justify this skip_variables flag. It was like this when I got here.
         bool target_expanded =
-            expand_one(target, no_exec() ? expand_flag::skip_variables : expand_flags_t{},
-                       parser->vars(), parser->shared());
+            expand_one(target, no_exec() ? expand_flag::skip_variables : expand_flags_t{}, ctx);
         if (!target_expanded || target.empty()) {
             // TODO: Improve this error message.
             report_error(redirect_node, _(L"Invalid redirection target: %ls"), target.c_str());
@@ -1026,9 +1024,8 @@ eval_result_t parse_execution_context_t::apply_variable_assignments(
         completion_list_t expression_expanded;
         parse_error_list_t errors;
         // TODO this is mostly copied from expand_arguments_from_nodes, maybe extract to function
-        auto expand_ret =
-            expand_string(expression, &expression_expanded, expand_flag::no_descriptions,
-                          parser->vars(), parser->shared(), &errors);
+        auto expand_ret = expand_string(expression, &expression_expanded,
+                                        expand_flag::no_descriptions, ctx, &errors);
         parse_error_offset_source_start(
             &errors, variable_assignment.source_range()->start + *equals_pos + 1);
         switch (expand_ret) {

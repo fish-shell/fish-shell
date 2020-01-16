@@ -38,6 +38,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "env.h"
 #include "fish_version.h"
 #include "highlight.h"
+#include "operation_context.h"
 #include "output.h"
 #include "parse_constants.h"
 #include "print_help.h"
@@ -313,7 +314,7 @@ static const char *highlight_role_to_string(highlight_role_t role) {
 static std::string make_pygments_csv(const wcstring &src) {
     const size_t len = src.size();
     std::vector<highlight_spec_t> colors;
-    highlight_shell_no_io(src, colors, src.size(), nullptr, env_stack_t::globals());
+    highlight_shell_no_io(src, colors, src.size(), operation_context_t::globals());
     assert(colors.size() == len && "Colors and src should have same size");
 
     struct token_range_t {
@@ -633,8 +634,8 @@ int main(int argc, char *argv[]) {
         // Maybe colorize.
         std::vector<highlight_spec_t> colors;
         if (output_type != output_type_plain_text) {
-            highlight_shell_no_io(output_wtext, colors, output_wtext.size(), nullptr,
-                                  env_stack_t::globals());
+            highlight_shell_no_io(output_wtext, colors, output_wtext.size(),
+                                  operation_context_t::globals());
         }
 
         std::string colored_output;

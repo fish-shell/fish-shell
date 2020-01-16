@@ -14,6 +14,7 @@
 #include "common.h"
 #include "event.h"
 #include "expand.h"
+#include "operation_context.h"
 #include "parse_constants.h"
 #include "parse_execution.h"
 #include "parse_tree.h"
@@ -197,6 +198,8 @@ struct library_data_t {
     std::shared_ptr<const autoclose_fd_t> cwd_fd{};
 };
 
+class operation_context_t;
+
 class parser_t : public std::enable_shared_from_this<parser_t> {
     friend class parse_execution_context_t;
 
@@ -251,6 +254,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Indicates that we should stop execution due to the given signal.
     static void cancel_requested(int sig);
 
+    /// Clear any cancel.
+    void clear_cancel() { cancellation_signal = 0; }
+
     /// Global event blocks.
     event_blockage_list_t global_event_blocks;
 
@@ -280,8 +286,8 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// cmdsubst execution on the tokens. Errors are ignored. If a parser is provided, it is used
     /// for command substitution expansion.
     static completion_list_t expand_argument_list(const wcstring &arg_list_src,
-                                                  expand_flags_t flags, const environment_t &vars,
-                                                  const std::shared_ptr<parser_t> &parser);
+                                                  expand_flags_t flags,
+                                                  const operation_context_t &ctx);
 
     /// Returns a string describing the current parser position in the format 'FILENAME (line
     /// LINE_NUMBER): LINE'. Example:
@@ -369,6 +375,12 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     /// \return a shared pointer reference to this parser.
     std::shared_ptr<parser_t> shared();
+
+    /// \return a cancel poller for checking if this parser has been signalled.
+    cancel_checker_t cancel_checker() const;
+
+    /// \return the operation context for this parser.
+    operation_context_t context();
 
     ~parser_t();
 };

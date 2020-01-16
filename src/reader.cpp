@@ -136,6 +136,18 @@ static inline unsigned read_generation_count() {
     return s_generation.load(std::memory_order_relaxed);
 }
 
+/// \return an operation context for a background operation..
+/// Crucially the operation context itself does not contain a parser.
+/// It is the caller's responsibility to ensure the environment lives as long as the result.
+operation_context_t get_bg_context(const std::shared_ptr<environment_t> &env,
+                                   unsigned int generation_count) {
+    cancel_checker_t cancel_checker = [generation_count] {
+        // Cancel if the generation count changed.
+        return generation_count != read_generation_count();
+    };
+    return operation_context_t{nullptr, *env, std::move(cancel_checker)};
+}
+
 void editable_line_t::insert_string(const wcstring &str, size_t start, size_t len) {
     // Clamp the range to something valid.
     size_t string_length = str.size();
@@ -380,8 +392,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     std::vector<highlight_spec_t> colors;
     /// An array defining the block level at each character.
     std::vector<int> indents;
-    /// Function for tab completion.
-    complete_function_t complete_func{nullptr};
+    /// Whether tab completion is allowed.
+    bool complete_ok{false};
     /// Function for syntax highlighting.
     highlight_function_t highlight_func{highlight_universal};
     /// Function for testing if the string can be returned.
@@ -1283,11 +1295,9 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
     // this should use shared_ptr
     return [=]() -> autosuggestion_result_t {
         ASSERT_IS_BACKGROUND_THREAD();
-
         const autosuggestion_result_t nothing = {};
-        // If the main thread has moved on, skip all the work.
-        // Otherwise record the generation.
-        if (generation_count != read_generation_count()) {
+        operation_context_t ctx = get_bg_context(vars, generation_count);
+        if (ctx.check_cancel()) {
             return nothing;
         }
         s_thread_generation = generation_count;
@@ -1297,21 +1307,22 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
             return nothing;
         }
 
-        history_search_t searcher(*history, search_string, history_search_type_t::prefix);
-        while (!reader_test_should_cancel() && searcher.go_backwards()) {
+        history_search_t searcher(*history, search_string, history_search_type_t::prefix,
+                                  history_search_flags_t{});
+        while (!ctx.check_cancel() && searcher.go_backwards()) {
             const history_item_t &item = searcher.current_item();
 
             // Skip items with newlines because they make terrible autosuggestions.
             if (item.str().find(L'\n') != wcstring::npos) continue;
 
-            if (autosuggest_validate_from_history(item, working_directory, *vars)) {
+            if (autosuggest_validate_from_history(item, working_directory, ctx)) {
                 // The command autosuggestion was handled specially, so we're done.
                 return {searcher.current_string(), search_string};
             }
         }
 
         // Maybe cancel here.
-        if (reader_test_should_cancel()) return nothing;
+        if (ctx.check_cancel()) return nothing;
 
         // Here we do something a little funny. If the line ends with a space, and the cursor is not
         // at the end, don't use completion autosuggestions. It ends up being pretty weird seeing
@@ -1325,7 +1336,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
 
         // Try normal completions.
         completion_request_flags_t complete_flags = completion_request_t::autosuggestion;
-        completion_list_t completions = complete(search_string, complete_flags, *vars, nullptr);
+        completion_list_t completions = complete(search_string, complete_flags, ctx);
         completions_sort_and_prioritize(&completions, complete_flags);
         if (!completions.empty()) {
             const completion_t &comp = completions.at(0);
@@ -2036,16 +2047,12 @@ static std::function<highlight_result_t(void)> get_highlight_performer(
     parser_t &parser, const wcstring &text, long match_highlight_pos,
     highlight_function_t highlight_func) {
     auto vars = parser.vars().snapshot();
-    unsigned int generation_count = read_generation_count();
+    unsigned generation_count = read_generation_count();
     return [=]() -> highlight_result_t {
         if (text.empty()) return {};
-        if (generation_count != read_generation_count()) {
-            // The gen count has changed, so don't do anything.
-            return {};
-        }
-        s_thread_generation = generation_count;
+        operation_context_t ctx = get_bg_context(vars, generation_count);
         std::vector<highlight_spec_t> colors(text.size(), highlight_spec_t{});
-        highlight_func(text, colors, match_highlight_pos, nullptr /* error */, *vars);
+        highlight_func(text, colors, match_highlight_pos, ctx);
         return {std::move(colors), text};
     };
 }
@@ -2152,7 +2159,7 @@ void reader_set_allow_autosuggesting(bool flag) { current_data()->allow_autosugg
 
 void reader_set_expand_abbreviations(bool flag) { current_data()->expand_abbreviations = flag; }
 
-void reader_set_complete_function(complete_function_t f) { current_data()->complete_func = f; }
+void reader_set_complete_ok(bool flag) { current_data()->complete_ok = flag; }
 
 void reader_set_highlight_function(highlight_function_t func) {
     current_data()->highlight_func = func;
@@ -2255,7 +2262,7 @@ uint64_t reader_run_count() { return run_count; }
 /// Read interactively. Read input from stdin while providing editing facilities.
 static int read_i(parser_t &parser) {
     reader_push(parser, history_session_id(parser.vars()));
-    reader_set_complete_function(&complete);
+    reader_set_complete_ok(true);
     reader_set_highlight_function(&highlight_shell);
     reader_set_test_function(&reader_shell_test);
     reader_set_allow_autosuggesting(true);
@@ -2514,7 +2521,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::complete:
         case rl::complete_and_search: {
-            if (!complete_func) break;
+            if (!complete_ok) break;
 
             // Use the command line only; it doesn't make sense to complete in any other line.
             editable_line_t *el = &command_line;
@@ -2540,9 +2547,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // Get the string; we have to do this after removing any trailing backslash.
                 const wchar_t *const buff = el->text.c_str();
 
-                // Clear the completion list.
-                rls.comp.clear();
-
                 // Figure out the extent of the command substitution surrounding the cursor.
                 // This is because we only look at the current command substitution to form
                 // completions - stuff happening outside of it is not interesting.
@@ -2566,7 +2570,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // std::fwprintf(stderr, L"Complete (%ls)\n", buffcpy.c_str());
                 completion_request_flags_t complete_flags = {completion_request_t::descriptions,
                                                              completion_request_t::fuzzy_match};
-                rls.comp = complete_func(buffcpy, complete_flags, vars, parser_ref);
+                rls.comp = complete(buffcpy, complete_flags, parser_ref->context());
 
                 // User-supplied completions may have changed the commandline - prevent buffer
                 // overflow.

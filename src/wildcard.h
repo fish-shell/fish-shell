@@ -48,7 +48,9 @@ enum class wildcard_expand_result_t {
 };
 wildcard_expand_result_t wildcard_expand_string(const wcstring &wc,
                                                 const wcstring &working_directory,
-                                                expand_flags_t flags, completion_list_t *out);
+                                                expand_flags_t flags,
+                                                const cancel_checker_t &cancel_checker,
+                                                completion_list_t *out);
 
 /// Test whether the given wildcard matches the string. Does not perform any I/O.
 ///

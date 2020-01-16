@@ -101,6 +101,8 @@ class completion_t {
     void prepend_token_prefix(const wcstring &prefix);
 };
 
+using completion_list_t = std::vector<completion_t>;
+
 enum class completion_request_t {
     autosuggestion,  // indicates the completion is for an autosuggestion
     descriptions,    // indicates that we want descriptions
@@ -124,7 +126,7 @@ enum complete_option_type_t {
 
 /// Sorts and remove any duplicate completions in the completion list, then puts them in priority
 /// order.
-void completions_sort_and_prioritize(std::vector<completion_t> *comps,
+void completions_sort_and_prioritize(completion_list_t *comps,
                                      completion_request_flags_t flags = {});
 
 /// Add a completion.
@@ -171,9 +173,8 @@ void complete_remove_all(const wcstring &cmd, bool cmd_is_path);
 
 /// Find all completions of the command cmd, insert them into out.
 class parser_t;
-void complete(const wcstring &cmd, std::vector<completion_t> *out_comps,
-              completion_request_flags_t flags, const environment_t &vars,
-              const std::shared_ptr<parser_t> &parser);
+void complete(const wcstring &cmd, completion_list_t *out_comps, completion_request_flags_t flags,
+              const environment_t &vars, const std::shared_ptr<parser_t> &parser);
 
 /// Return a list of all current completions.
 wcstring complete_print();
@@ -191,8 +192,8 @@ bool complete_is_valid_argument(const wcstring &str, const wcstring &opt, const 
 /// \param comp The completion string
 /// \param desc The description of the completion
 /// \param flags completion flags
-void append_completion(std::vector<completion_t> *completions, wcstring comp,
-                       wcstring desc = wcstring(), int flags = 0,
+void append_completion(completion_list_t *completions, wcstring comp, wcstring desc = wcstring(),
+                       int flags = 0,
                        string_fuzzy_match_t &&match = string_fuzzy_match_t(fuzzy_match_exact));
 
 /// Support for "wrap targets." A wrap target is a command that completes like another command.

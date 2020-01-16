@@ -305,10 +305,9 @@ void parser_t::emit_profiling(const char *path) const {
     }
 }
 
-std::vector<completion_t> parser_t::expand_argument_list(const wcstring &arg_list_src,
-                                                         expand_flags_t eflags,
-                                                         const environment_t &vars,
-                                                         const std::shared_ptr<parser_t> &parser) {
+completion_list_t parser_t::expand_argument_list(const wcstring &arg_list_src,
+                                                 expand_flags_t eflags, const environment_t &vars,
+                                                 const std::shared_ptr<parser_t> &parser) {
     // Parse the string as an argument list.
     parse_node_tree_t tree;
     if (!parse_tree_from_string(arg_list_src, parse_flag_none, &tree, nullptr /* errors */,
@@ -318,7 +317,7 @@ std::vector<completion_t> parser_t::expand_argument_list(const wcstring &arg_lis
     }
 
     // Get the root argument list and extract arguments from it.
-    std::vector<completion_t> result;
+    completion_list_t result;
     assert(!tree.empty());
     tnode_t<grammar::freestanding_argument_list> arg_list(&tree, &tree.at(0));
     while (auto arg = arg_list.next_in_list<grammar::argument>()) {

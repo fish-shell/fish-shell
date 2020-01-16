@@ -69,6 +69,7 @@ struct enum_info_t<expand_flag> {
 using expand_flags_t = enum_set_t<expand_flag>;
 
 class completion_t;
+using completion_list_t = std::vector<completion_t>;
 
 enum : wchar_t {
     /// Character representing a home directory.
@@ -132,7 +133,7 @@ enum class expand_result_t {
 /// wildcard_no_match and wildcard_match are normal exit conditions used only on
 /// strings containing wildcards to tell if the wildcard produced any matches.
 class parser_t;
-__warn_unused expand_result_t expand_string(wcstring input, std::vector<completion_t> *output,
+__warn_unused expand_result_t expand_string(wcstring input, completion_list_t *output,
                                             expand_flags_t flags, const environment_t &vars,
                                             const std::shared_ptr<parser_t> &parser,
                                             parse_error_list_t *errors);

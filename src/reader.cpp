@@ -478,8 +478,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el,
               wchar_t target);
 
-    bool handle_completions(const std::vector<completion_t> &comp, size_t token_begin,
-                            size_t token_end, bool cont_after_prefix_insertion);
+    bool handle_completions(const completion_list_t &comp, size_t token_begin, size_t token_end,
+                            bool cont_after_prefix_insertion);
 
     void sanity_check() const;
     void set_command_line_and_position(editable_line_t *el, const wcstring &new_str, size_t pos);
@@ -1325,7 +1325,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
 
         // Try normal completions.
         completion_request_flags_t complete_flags = completion_request_t::autosuggestion;
-        std::vector<completion_t> completions;
+        completion_list_t completions;
         complete(search_string, &completions, complete_flags, *vars, nullptr);
         completions_sort_and_prioritize(&completions, complete_flags);
         if (!completions.empty()) {
@@ -1466,7 +1466,7 @@ static bool reader_can_replace(const wcstring &in, int flags) {
 }
 
 /// Determine the best match type for a set of completions.
-static fuzzy_match_type_t get_best_match_type(const std::vector<completion_t> &comp) {
+static fuzzy_match_type_t get_best_match_type(const completion_list_t &comp) {
     fuzzy_match_type_t best_type = fuzzy_match_none;
     for (const auto &i : comp) {
         best_type = std::min(best_type, i.match.type);
@@ -1497,7 +1497,7 @@ static fuzzy_match_type_t get_best_match_type(const std::vector<completion_t> &c
 /// completions after inserting it.
 ///
 /// Return true if we inserted text into the command line, false if we did not.
-bool reader_data_t::handle_completions(const std::vector<completion_t> &comp, size_t token_begin,
+bool reader_data_t::handle_completions(const completion_list_t &comp, size_t token_begin,
                                        size_t token_end, bool cont_after_prefix_insertion) {
     bool done = false;
     bool success = false;
@@ -1543,7 +1543,7 @@ bool reader_data_t::handle_completions(const std::vector<completion_t> &comp, si
 
     // Decide which completions survived. There may be a lot of them; it would be nice if we could
     // figure out how to avoid copying them here.
-    std::vector<completion_t> surviving_completions;
+    completion_list_t surviving_completions;
     for (const completion_t &el : comp) {
         // Ignore completions with a less suitable match type than the best.
         if (el.match.type > best_match_type) continue;
@@ -2381,7 +2381,7 @@ struct readline_loop_state_t {
     bool comp_empty{true};
 
     /// List of completions.
-    std::vector<completion_t> comp;
+    completion_list_t comp;
 
     /// Whether we are skipping redundant repaints.
     bool coalescing_repaints = false;

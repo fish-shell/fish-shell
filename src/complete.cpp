@@ -257,7 +257,7 @@ __attribute__((always_inline)) static inline bool compare_completions_by_tilde(
 }
 
 /// Unique the list of completions, without perturbing their order.
-static void unique_completions_retaining_order(std::vector<completion_t> *comps) {
+static void unique_completions_retaining_order(completion_list_t *comps) {
     std::unordered_set<wcstring> seen;
     seen.reserve(comps->size());
     auto pred = [&seen](const completion_t &c) {
@@ -268,8 +268,7 @@ static void unique_completions_retaining_order(std::vector<completion_t> *comps)
     comps->erase(std::remove_if(comps->begin(), comps->end(), pred), comps->end());
 }
 
-void completions_sort_and_prioritize(std::vector<completion_t> *comps,
-                                     completion_request_flags_t flags) {
+void completions_sort_and_prioritize(completion_list_t *comps, completion_request_flags_t flags) {
     // Find the best match type.
     fuzzy_match_type_t best_type = fuzzy_match_none;
     for (const auto &comp : *comps) {
@@ -326,7 +325,7 @@ class completer_t {
     const completion_request_flags_t flags;
 
     /// The output completions.
-    std::vector<completion_t> completions;
+    completion_list_t completions;
 
     /// Table of completions conditions that have already been tested and the corresponding test
     /// results.
@@ -374,7 +373,7 @@ class completer_t {
     bool condition_test(const wcstring &condition);
 
     void complete_strings(const wcstring &wc_escaped, const description_func_t &desc_func,
-                          const std::vector<completion_t> &possible_comp, complete_flags_t flags);
+                          const completion_list_t &possible_comp, complete_flags_t flags);
 
     expand_flags_t expand_flags() const {
         // Never do command substitution in autosuggestions. Sadly, we also can't yet do job
@@ -402,14 +401,14 @@ class completer_t {
 
     void perform();
 
-    std::vector<completion_t> acquire_completions() { return std::move(completions); }
+    completion_list_t acquire_completions() { return std::move(completions); }
 };
 
 // Autoloader for completions.
 static owning_lock<autoload_t> completion_autoloader{autoload_t(L"fish_complete_path")};
 
 /// Create a new completion entry.
-void append_completion(std::vector<completion_t> *completions, wcstring comp, wcstring desc,
+void append_completion(completion_list_t *completions, wcstring comp, wcstring desc,
                        complete_flags_t flags, string_fuzzy_match_t &&match) {
     completions->emplace_back(std::move(comp), std::move(desc), match, flags);
 }
@@ -555,8 +554,7 @@ static void parse_cmd_string(const wcstring &str, wcstring *path, wcstring *cmd,
 /// @param  flags
 ///    The flags
 void completer_t::complete_strings(const wcstring &wc_escaped, const description_func_t &desc_func,
-                                   const std::vector<completion_t> &possible_comp,
-                                   complete_flags_t flags) {
+                                   const completion_list_t &possible_comp, complete_flags_t flags) {
     wcstring tmp = wc_escaped;
     if (!expand_one(tmp,
                     this->expand_flags() | expand_flag::skip_cmdsubst | expand_flag::skip_wildcards,
@@ -678,7 +676,7 @@ static wcstring complete_function_desc(const wcstring &fn) {
 ///
 /// \param str_cmd the command string to find completions for
 void completer_t::complete_cmd(const wcstring &str_cmd) {
-    std::vector<completion_t> possible_comp;
+    completion_list_t possible_comp;
 
     // Append all possible executables
     expand_result_t result =
@@ -720,7 +718,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd) {
 
 void completer_t::complete_abbr(const wcstring &cmd) {
     std::map<wcstring, wcstring> abbrs = get_abbreviations(vars);
-    std::vector<completion_t> possible_comp;
+    completion_list_t possible_comp;
     possible_comp.reserve(abbrs.size());
     for (const auto &kv : abbrs) {
         possible_comp.emplace_back(kv.first);
@@ -765,8 +763,7 @@ void completer_t::complete_from_args(const wcstring &str, const wcstring &args,
         eflags |= expand_flag::skip_cmdsubst;
     }
 
-    std::vector<completion_t> possible_comp =
-        parser_t::expand_argument_list(args, eflags, vars, parser);
+    completion_list_t possible_comp = parser_t::expand_argument_list(args, eflags, vars, parser);
 
     if (parser) {
         parser->libdata().is_interactive = saved_interactive;
@@ -1139,7 +1136,7 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
         // so any quoting or braces gets lost.
         // See #4954.
         const wcstring sep_string = wcstring(str, sep_index + 1);
-        std::vector<completion_t> local_completions;
+        completion_list_t local_completions;
         if (expand_string(sep_string, &local_completions, flags, vars, parser, nullptr) ==
             expand_result_t::error) {
             debug(3, L"Error while expanding string '%ls'", sep_string.c_str());
@@ -1598,7 +1595,7 @@ void completer_t::perform() {
                     parser->libdata().transient_commandlines.push_back(unaliased_cmd);
                     cleanup_t remove_transient(
                         [&] { parser->libdata().transient_commandlines.pop_back(); });
-                    std::vector<completion_t> comp;
+                    completion_list_t comp;
                     complete(unaliased_cmd, &comp, completion_request_t::fuzzy_match,
                              parser->vars(), parser->shared());
                     this->completions.insert(completions.end(), comp.begin(), comp.end());
@@ -1638,7 +1635,7 @@ void completer_t::perform() {
     mark_completions_duplicating_arguments(current_token, tokens);
 }
 
-void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_comps,
+void complete(const wcstring &cmd_with_subcmds, completion_list_t *out_comps,
               completion_request_flags_t flags, const environment_t &vars,
               const std::shared_ptr<parser_t> &parser) {
     // Determine the innermost subcommand.

@@ -13,6 +13,7 @@ class parser_t;
 class proc_status_t;
 class output_stream_t;
 struct io_streams_t;
+using completion_list_t = std::vector<completion_t>;
 
 /// Data structure to describe a builtin.
 struct builtin_data_t {
@@ -83,7 +84,7 @@ bool builtin_exists(const wcstring &cmd);
 proc_status_t builtin_run(parser_t &parser, int job_pgid, wchar_t **argv, io_streams_t &streams);
 
 wcstring_list_t builtin_get_names();
-void builtin_get_names(std::vector<completion_t> *list);
+void builtin_get_names(completion_list_t *list);
 const wchar_t *builtin_get_desc(const wcstring &name);
 
 wcstring builtin_help_get(parser_t &parser, const wchar_t *cmd);

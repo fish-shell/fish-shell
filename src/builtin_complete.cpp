@@ -347,7 +347,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             if (!have_do_complete_param)
                 parser.libdata().builtin_complete_current_commandline = true;
 
-            std::vector<completion_t> comp;
+            completion_list_t comp;
             complete(do_complete_param, &comp, completion_request_t::fuzzy_match, parser.vars(),
                      parser.shared());
 

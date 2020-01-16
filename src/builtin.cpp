@@ -479,7 +479,7 @@ wcstring_list_t builtin_get_names() {
 }
 
 /// Insert all builtin names into list.
-void builtin_get_names(std::vector<completion_t> *list) {
+void builtin_get_names(completion_list_t *list) {
     assert(list != nullptr);
     list->reserve(list->size() + BUILTIN_COUNT);
     for (const auto &builtin_data : builtin_datas) {

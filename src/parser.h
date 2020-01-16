@@ -279,10 +279,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and
     /// cmdsubst execution on the tokens. Errors are ignored. If a parser is provided, it is used
     /// for command substitution expansion.
-    static std::vector<completion_t> expand_argument_list(const wcstring &arg_list_src,
-                                                          expand_flags_t flags,
-                                                          const environment_t &vars,
-                                                          const std::shared_ptr<parser_t> &parser);
+    static completion_list_t expand_argument_list(const wcstring &arg_list_src,
+                                                  expand_flags_t flags, const environment_t &vars,
+                                                  const std::shared_ptr<parser_t> &parser);
 
     /// Returns a string describing the current parser position in the format 'FILENAME (line
     /// LINE_NUMBER): LINE'. Example:

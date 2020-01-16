@@ -456,7 +456,7 @@ eval_result_t parse_execution_context_t::run_switch_statement(
     const wcstring switch_value = get_source(switch_value_n);
 
     // Expand it. We need to offset any errors by the position of the string.
-    std::vector<completion_t> switch_values_expanded;
+    completion_list_t switch_values_expanded;
     parse_error_list_t errors;
     auto expand_ret =
         expand_string(switch_value, &switch_values_expanded, expand_flag::no_descriptions,
@@ -868,7 +868,7 @@ eval_result_t parse_execution_context_t::expand_arguments_from_nodes(
     // Get all argument nodes underneath the statement. We guess we'll have that many arguments (but
     // may have more or fewer, if there are wildcards involved).
     out_arguments->reserve(out_arguments->size() + argument_nodes.size());
-    std::vector<completion_t> arg_expanded;
+    completion_list_t arg_expanded;
     for (const auto &arg_node : argument_nodes) {
         // Expect all arguments to have source.
         assert(arg_node.has_source());
@@ -1023,7 +1023,7 @@ eval_result_t parse_execution_context_t::apply_variable_assignments(
         assert(equals_pos);
         const wcstring &variable_name = source.substr(0, *equals_pos);
         const wcstring expression = source.substr(*equals_pos + 1);
-        std::vector<completion_t> expression_expanded;
+        completion_list_t expression_expanded;
         parse_error_list_t errors;
         // TODO this is mostly copied from expand_arguments_from_nodes, maybe extract to function
         auto expand_ret =

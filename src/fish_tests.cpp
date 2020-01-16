@@ -1639,7 +1639,7 @@ struct pwd_environment_t : public environment_t {
 /// After the zero terminator comes one more arg, a string, which is the error
 /// message to print if the test fails.
 static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
-    std::vector<completion_t> output;
+    completion_list_t output;
     va_list va;
     bool res = true;
     wchar_t *arg;
@@ -1665,7 +1665,7 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
     va_end(va);
 
     std::set<wcstring> remaining(expected.begin(), expected.end());
-    std::vector<completion_t>::const_iterator out_it = output.begin(), out_end = output.end();
+    completion_list_t::const_iterator out_it = output.begin(), out_end = output.end();
     for (; out_it != out_end; ++out_it) {
         if (!remaining.erase(out_it->completion)) {
             res = false;
@@ -1690,7 +1690,7 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...) {
             }
             msg += L"], found [";
             first = true;
-            for (std::vector<completion_t>::const_iterator it = output.begin(), end = output.end();
+            for (completion_list_t::const_iterator it = output.begin(), end = output.end();
                  it != end; ++it) {
                 if (!first) msg += L", ";
                 first = false;
@@ -2898,7 +2898,7 @@ static void test_completion_insertions() {
 
 static void perform_one_autosuggestion_cd_test(const wcstring &command, const wcstring &expected,
                                                const environment_t &vars, long line) {
-    std::vector<completion_t> comps;
+    completion_list_t comps;
     complete(command, &comps, completion_request_t::autosuggestion, vars, nullptr);
 
     bool expects_error = (expected == L"<error>");
@@ -2934,7 +2934,7 @@ static void perform_one_autosuggestion_cd_test(const wcstring &command, const wc
 
 static void perform_one_completion_cd_test(const wcstring &command, const wcstring &expected,
                                            const environment_t &vars, long line) {
-    std::vector<completion_t> comps;
+    completion_list_t comps;
     complete(command, &comps, {}, vars, nullptr);
 
     bool expects_error = (expected == L"<error>");

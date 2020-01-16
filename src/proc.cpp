@@ -81,42 +81,27 @@ void set_job_control_mode(job_control_t mode) { job_control_mode = mode; }
 
 void proc_init() { signal_set_handlers_once(false); }
 
-// Basic thread safe job IDs. The vector consumed_job_ids has a true value wherever the job ID
-// corresponding to that slot is in use. The job ID corresponding to slot 0 is 1.
-static owning_lock<std::vector<bool>> locked_consumed_job_ids;
+// Basic thread safe sorted vector of job IDs in use.
+static owning_lock<std::vector<job_id_t>> locked_consumed_job_ids;
 
 job_id_t acquire_job_id() {
     auto consumed_job_ids = locked_consumed_job_ids.acquire();
 
-    // Find the index of the first 0 slot.
-    auto slot = std::find(consumed_job_ids->begin(), consumed_job_ids->end(), false);
-    if (slot != consumed_job_ids->end()) {
-        // We found a slot. Note that slot 0 corresponds to job ID 1.
-        *slot = true;
-        return static_cast<job_id_t>(slot - consumed_job_ids->begin() + 1);
-    }
-
-    // We did not find a slot; create a new slot. The size of the vector is now the job ID
-    // (since it is one larger than the slot).
-    consumed_job_ids->push_back(true);
-    return static_cast<job_id_t>(consumed_job_ids->size());
+    // The new job ID should be larger than the largest currently used ID (#6053).
+    job_id_t jid = consumed_job_ids->empty() ? 1 : consumed_job_ids->back() + 1;
+    consumed_job_ids->push_back(jid);
+    return jid;
 }
 
 void release_job_id(job_id_t jid) {
     assert(jid > 0);
     auto consumed_job_ids = locked_consumed_job_ids.acquire();
-    size_t slot = static_cast<size_t>(jid - 1), count = consumed_job_ids->size();
 
-    // Make sure this slot is within our vector and is currently set to consumed.
-    assert(slot < count);
-    assert(consumed_job_ids->at(slot) == true);
-
-    // Clear it and then resize the vector to eliminate unused trailing job IDs.
-    consumed_job_ids->at(slot) = false;
-    while (count--) {
-        if (consumed_job_ids->at(count)) break;
-    }
-    consumed_job_ids->resize(count + 1);
+    // Our job ID vector is sorted, but the number of jobs is typically 1 or 2 so a binary search
+    // isn't worth it.
+    auto where = std::find(consumed_job_ids->begin(), consumed_job_ids->end(), jid);
+    assert(where != consumed_job_ids->end() && "JobID was not in use");
+    consumed_job_ids->erase(where);
 }
 
 job_t *job_t::from_job_id(job_id_t id) {

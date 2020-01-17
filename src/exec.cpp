@@ -1157,7 +1157,12 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
     // If the caller asked us to preserve the exit status, restore the old status. Otherwise set the
     // status of the subcommand.
     if (apply_exit_status) {
-        parser.set_last_statuses(subcommand_statuses);
+        // Hack: If the evaluation failed, avoid returning -1 to the user.
+        if (subcommand_statuses.status == -1) {
+            parser.set_last_statuses(statuses_t::just(255));
+        } else {
+            parser.set_last_statuses(subcommand_statuses);
+        }
     } else {
         parser.set_last_statuses(std::move(prev_statuses));
     }

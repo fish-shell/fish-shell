@@ -1019,7 +1019,7 @@ eval_result_t parse_execution_context_t::apply_variable_assignments(
         const wcstring &source = variable_assignment.get_source(pstree->src);
         auto equals_pos = variable_assignment_equals_pos(source);
         assert(equals_pos);
-        const wcstring &variable_name = source.substr(0, *equals_pos);
+        const wcstring variable_name = source.substr(0, *equals_pos);
         const wcstring expression = source.substr(*equals_pos + 1);
         completion_list_t expression_expanded;
         parse_error_list_t errors;

@@ -1572,8 +1572,30 @@ void completer_t::perform() {
                 if (wants_transient) {
                     ctx.parser->libdata().transient_commandlines.push_back(cmdline);
                 }
-                bool is_variable_assignment = bool(variable_assignment_equals_pos(cmd));
+                maybe_t<size_t> equals_pos = variable_assignment_equals_pos(cmd);
+                bool is_variable_assignment = bool(equals_pos);
                 if (is_variable_assignment && ctx.parser) {
+                    // clone of parse_execution_context_t::apply_variable_assignments
+                    // but this is not smart enough to report correct error locations, so we ignore
+                    // errors and this create one scope for each assignment instead of just one;
+                    // that should hardly matter
+                    const block_t *block = block =
+                        ctx.parser->push_block(block_t::variable_assignment_block());
+                    const wcstring variable_name = cmd.substr(0, *equals_pos);
+                    const wcstring expression = cmd.substr(*equals_pos + 1);
+                    completion_list_t expression_expanded;
+                    auto expand_ret = expand_string(expression, &expression_expanded,
+                                                    expand_flag::no_descriptions, ctx);
+                    wcstring_list_t vals;
+                    if (expand_ret != expand_result_t::error) {
+                        for (auto &completion : expression_expanded)
+                            vals.emplace_back(std::move(completion.completion));
+                        ctx.parser->vars().set(variable_name, ENV_LOCAL | ENV_EXPORT,
+                                               std::move(vals));
+                    }
+                    cleanup_t scope([&] {
+                        if (block) ctx.parser->pop_block(block);
+                    });
                     // To avoid issues like #2705 we complete commands starting with variable
                     // assignments by recursively calling complete for the command suffix
                     // without the first variable assignment token.

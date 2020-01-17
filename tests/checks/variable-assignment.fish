@@ -91,3 +91,7 @@ eval ': | a=b'
 # CHECKERR: {{.*}}: Unsupported use of '='. In fish, please use 'set a b'.
 eval 'not a=b'
 # CHECKERR: {{.*}}: Unsupported use of '='. In fish, please use 'set a b'.
+
+complete -c foo -xa '$a'
+a=b complete -C'foo '
+#CHECK: b

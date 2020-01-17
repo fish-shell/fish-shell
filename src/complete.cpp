@@ -1579,7 +1579,7 @@ void completer_t::perform() {
                     // but this is not smart enough to report correct error locations, so we ignore
                     // errors and this create one scope for each assignment instead of just one;
                     // that should hardly matter
-                    const block_t *block = block =
+                    const block_t *block =
                         ctx.parser->push_block(block_t::variable_assignment_block());
                     const wcstring variable_name = cmd.substr(0, *equals_pos);
                     const wcstring expression = cmd.substr(*equals_pos + 1);

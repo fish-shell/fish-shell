@@ -21,21 +21,11 @@
 #include "global_safety.h"
 #include "wutil.h"
 
-#ifdef PTHREAD_THREADS_MAX
-#if PTHREAD_THREADS_MAX < 64
-#define IO_MAX_THREADS PTHREAD_THREADS_MAX
-#endif
-#else
-#ifdef _POSIX_THREAD_THREADS_MAX
-#if _POSIX_THREAD_THREADS_MAX < 64
-#define IO_MAX_THREADS _POSIX_THREAD_THREADS_MAX
-#endif
-#endif
-#endif
-
-#ifndef IO_MAX_THREADS
-#define IO_MAX_THREADS 64
-#endif
+// We just define a thread limit of 1024.
+// On all systems I've seen the limit is higher,
+// but on some (like linux with glibc) the setting for _POSIX_THREAD_THREADS_MAX is 64,
+// which is too low, even tho the system can handle more than 64 threads.
+#define IO_MAX_THREADS 1024
 
 // Values for the wakeup bytes sent to the ioport.
 #define IO_SERVICE_MAIN_THREAD_REQUEST_QUEUE 99

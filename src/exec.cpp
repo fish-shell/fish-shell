@@ -301,7 +301,7 @@ static void run_internal_process(process_t *p, std::string &&outdata, std::strin
     // builtin_run provide this directly, rather than setting it in the process.
     f->success_status = p->status;
 
-    iothread_perform([f]() {
+    iothread_perform_cantwait([f]() {
         proc_status_t status = f->success_status;
         if (!f->skip_out()) {
             ssize_t ret = write_loop(f->src_outfd, f->outdata.data(), f->outdata.size());

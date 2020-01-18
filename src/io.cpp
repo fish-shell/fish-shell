@@ -157,7 +157,7 @@ void io_buffer_t::begin_background_fillthread(autoclose_fd_t fd) {
     // Run our function to read until the receiver is closed.
     // It's OK to capture 'this' by value because 'this' owns the background thread and waits for it
     // before dtor.
-    iothread_perform([this, promise, fdref]() {
+    iothread_perform_cantwait([this, promise, fdref]() {
         this->run_background_fillthread(std::move(*fdref));
         promise->set_value();
     });

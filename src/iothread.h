@@ -31,7 +31,7 @@ void iothread_service_completion(void);
 int iothread_drain_all(void);
 
 // Internal implementation
-int iothread_perform_impl(std::function<void(void)> &&func, std::function<void(void)> &&completion);
+int iothread_perform_impl(std::function<void(void)> &&func, std::function<void(void)> &&completion, bool cant_wait = false);
 
 // Template helpers
 // This is the glue part of the handler-completion handoff
@@ -73,6 +73,13 @@ int iothread_perform(const HANDLER &handler, const COMPLETION &completion) {
 // variant of iothread_perform without a completion handler
 inline int iothread_perform(std::function<void(void)> &&func) {
     return iothread_perform_impl(std::move(func), {});
+}
+
+/// Variant of iothread_perform that disrespects the thread limit.
+/// It does its best to spawn a new thread if all other threads are occupied.
+/// This is for cases where deferring a new thread might lead to deadlock.
+inline int iothread_perform_cantwait(std::function<void(void)> &&func) {
+    return iothread_perform_impl(std::move(func), {}, true);
 }
 
 /// Performs a function on the main thread, blocking until it completes.

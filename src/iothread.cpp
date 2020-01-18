@@ -101,7 +101,9 @@ struct thread_pool_t {
     /// Enqueue a new work item onto the thread pool.
     /// The function \p func will execute in one of the pool's threads.
     /// \p completion will run on the main thread, if it is not missing.
-    int perform(void_function_t &&func, void_function_t &&completion);
+    /// If \p cant_wait is set, disrespect the thread limit, because extant threads may
+    ///want to wait for new threads.
+    int perform(void_function_t &&func, void_function_t &&completion, bool cant_wait);
 
    private:
     /// The worker loop for this thread.
@@ -229,7 +231,7 @@ bool thread_pool_t::spawn() {
     return make_detached_pthread(&run_trampoline, static_cast<void *>(this));
 }
 
-int thread_pool_t::perform(void_function_t &&func, void_function_t &&completion) {
+int thread_pool_t::perform(void_function_t &&func, void_function_t &&completion, bool cant_wait) {
     assert(func && "Missing function");
     // Note we permit an empty completion.
     struct work_request_t req(std::move(func), std::move(completion));
@@ -247,8 +249,8 @@ int thread_pool_t::perform(void_function_t &&func, void_function_t &&completion)
         } else if (data->waiting_threads >= data->request_queue.size()) {
             // There's enough waiting threads, wake one up.
             wakeup_thread = true;
-        } else if (data->total_threads < pool.max_threads) {
-            // No threads are waiting but we can spawn a new thread.
+        } else if (cant_wait || data->total_threads < pool.max_threads) {
+            // No threads are waiting but we can or must spawn a new thread.
             data->total_threads += 1;
             spawn_new_thread = true;
         }
@@ -274,10 +276,10 @@ int thread_pool_t::perform(void_function_t &&func, void_function_t &&completion)
     return local_thread_count;
 }
 
-int iothread_perform_impl(void_function_t &&func, void_function_t &&completion) {
+int iothread_perform_impl(void_function_t &&func, void_function_t &&completion, bool cant_wait) {
     ASSERT_IS_MAIN_THREAD();
     ASSERT_IS_NOT_FORKED_CHILD();
-    return s_io_thread_pool.perform(std::move(func), std::move(completion));
+    return s_io_thread_pool.perform(std::move(func), std::move(completion), cant_wait);
 }
 
 int iothread_port() { return get_notify_pipes().read; }

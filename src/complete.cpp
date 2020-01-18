@@ -1502,8 +1502,10 @@ void completer_t::perform() {
     // If we are completing a variable name or a tilde expansion user name, we do that and return.
     // No need for any other completions.
     const wcstring current_token = cur_tok.get_source(cmd);
-    if (try_complete_variable(current_token) || try_complete_user(current_token)) {
-        return;
+    if (cur_tok.location_in_or_at_end_of_source_range(cursor_pos)) {
+        if (try_complete_variable(current_token) || try_complete_user(current_token)) {
+            return;
+        }
     }
 
     if (cmd_tok.location_in_or_at_end_of_source_range(cursor_pos)) {

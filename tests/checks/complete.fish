@@ -165,3 +165,6 @@ end
 complete -c complete_test_function_desc -xa '(complete -Csome_function)'
 complete -C'complete_test_function_desc ' | count
 # CHECK: 1
+
+complete -c prev-arg-variable -f
+complete -C'prev-arg-variable $HOME '

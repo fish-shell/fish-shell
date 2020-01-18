@@ -25,15 +25,15 @@ SET(configure_input
  DO NOT MANUALLY EDIT THIS FILE!")
 
 SET(extra_completionsdir
-    ${datadir}/fish/vendor_completions.d
+    /usr/local/share/fish/vendor_completions.d
     CACHE STRING "Path for extra completions")
 
 SET(extra_functionsdir
-    ${datadir}/fish/vendor_functions.d
+    /usr/local/share/fish/vendor_functions.d
     CACHE STRING "Path for extra functions")
 
 SET(extra_confdir
-    ${datadir}/fish/vendor_conf.d
+    /usr/local/share/fish/vendor_conf.d
     CACHE STRING "Path for extra configuration")
 
 # These are the man pages that go in system manpath; all manpages go in the fish-specific manpath.

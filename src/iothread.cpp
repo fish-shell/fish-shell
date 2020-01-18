@@ -21,9 +21,15 @@
 #include "global_safety.h"
 #include "wutil.h"
 
+#ifdef PTHREAD_THREADS_MAX
+#if PTHREAD_THREADS_MAX < 64
+#define IO_MAX_THREADS PTHREAD_THREADS_MAX
+#endif
+#else
 #ifdef _POSIX_THREAD_THREADS_MAX
 #if _POSIX_THREAD_THREADS_MAX < 64
 #define IO_MAX_THREADS _POSIX_THREAD_THREADS_MAX
+#endif
 #endif
 #endif
 

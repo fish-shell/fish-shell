@@ -449,7 +449,7 @@ bool make_detached_pthread(void *(*func)(void *), void *param) {
     int err = pthread_create(&thread, nullptr, func, param);
     if (err == 0) {
         // Success, return the thread.
-        debug(5, "pthread %p spawned", (void *)(intptr_t)thread);
+        FLOGF(iothread, "pthread %p spawned", (void *)(intptr_t)thread);
         DIE_ON_FAILURE(pthread_detach(thread));
     } else {
         perror("pthread_create");

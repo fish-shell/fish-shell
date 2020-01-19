@@ -736,7 +736,7 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
                 } else {
                     // Debug the original tcsetpgrp error (not the waitpid errno) to the log, and
                     // then retry until not EPERM or the process group has exited.
-                    debug(2, L"terminal_give_to_job(): EPERM.\n", j->pgid);
+                    FLOGF(proc_termowner, L"terminal_give_to_job(): EPERM.\n", j->pgid);
                     continue;
                 }
             } else {
@@ -755,7 +755,7 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
                 // job/group have been started, the only way this can happen is if the very last
                 // process in the group terminated and didn't need to access the terminal, otherwise
                 // it would have hung waiting for terminal IO (SIGTTIN). We can safely ignore this.
-                debug(3, L"tcsetpgrp called but process group %d has terminated.\n", j->pgid);
+                FLOGF(proc_termowner, L"tcsetpgrp called but process group %d has terminated.\n", j->pgid);
                 return notneeded;
             }
 

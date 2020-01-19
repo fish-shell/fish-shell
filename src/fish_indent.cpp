@@ -37,6 +37,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "common.h"
 #include "env.h"
 #include "fish_version.h"
+#include "flog.h"
 #include "highlight.h"
 #include "operation_context.h"
 #include "output.h"
@@ -64,7 +65,7 @@ static wcstring read_file(FILE *f) {
                     // Illegal byte sequence. Try to skip past it.
                     clearerr(f);
                     int ch = fgetc(f);  // for printing the warning, and seeks forward 1 byte.
-                    debug(1, "%s (byte=%X)", std::strerror(errno), ch);
+                    FLOGF(warning, "%s (byte=%X)", std::strerror(errno), ch);
                     ret = 1;
                     continue;
                 } else {

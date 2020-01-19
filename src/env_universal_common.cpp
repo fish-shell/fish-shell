@@ -554,7 +554,7 @@ bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *o
 static bool check_duration(double start_time) {
     double duration = timef() - start_time;
     if (duration > 0.25) {
-        debug(1, _(L"Locking the universal var file took too long (%.3f seconds)."), duration);
+        FLOGF(warning, _(L"Locking the universal var file took too long (%.3f seconds)."), duration);
         return false;
     }
     return true;
@@ -902,7 +902,7 @@ void env_universal_t::parse_message_30_internal(const wcstring &msgstr, var_tabl
 
     const wchar_t *cursor = msg;
     if (!match(&cursor, f3::SETUVAR)) {
-        debug(1, PARSE_ERR, msg);
+        FLOGF(warning, PARSE_ERR, msg);
         return;
     }
     // Parse out flags.
@@ -922,7 +922,7 @@ void env_universal_t::parse_message_30_internal(const wcstring &msgstr, var_tabl
 
     // Populate the variable with these flags.
     if (!populate_1_variable(cursor, flags, vars, storage)) {
-        debug(1, PARSE_ERR, msg);
+        FLOGF(warning, PARSE_ERR, msg);
     }
 }
 
@@ -942,12 +942,12 @@ void env_universal_t::parse_message_2x_internal(const wcstring &msgstr, var_tabl
     } else if (match(&cursor, f2x::SET)) {
         flags |= 0;
     } else {
-        debug(1, PARSE_ERR, msg);
+        FLOGF(warning, PARSE_ERR, msg);
         return;
     }
 
     if (!populate_1_variable(cursor, flags, vars, storage)) {
-        debug(1, PARSE_ERR, msg);
+        FLOGF(warning, PARSE_ERR, msg);
     }
 }
 
@@ -1216,8 +1216,8 @@ class universal_notifier_notifyd_t : public universal_notifier_t {
         uint32_t status =
             notify_register_file_descriptor(name.c_str(), &this->notify_fd, 0, &this->token);
         if (status != NOTIFY_STATUS_OK) {
-            debug(1, "notify_register_file_descriptor() failed with status %u.", status);
-            debug(1, "Universal variable notifications may not be received.");
+            FLOGF(warning, "notify_register_file_descriptor() failed with status %u.", status);
+            FLOGF(warning, "Universal variable notifications may not be received.");
         }
         if (this->notify_fd >= 0) {
             // Mark us for non-blocking reads, and CLO_EXEC.
@@ -1265,7 +1265,7 @@ class universal_notifier_notifyd_t : public universal_notifier_t {
     void post_notification() {
         uint32_t status = notify_post(name.c_str());
         if (status != NOTIFY_STATUS_OK) {
-            debug(1, "notify_post() failed with status %u. Uvar notifications may not be sent.",
+            FLOGF(warning, "notify_post() failed with status %u. Uvar notifications may not be sent.",
                   status);
         }
     }

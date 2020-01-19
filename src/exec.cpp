@@ -66,7 +66,7 @@ void exec_close(int fd) {
 
     while (close(fd) == -1) {
         if (errno != EINTR) {
-            debug(1, FD_ERROR, fd);
+            FLOGF(warning, FD_ERROR, fd);
             wperror(L"close");
             break;
         }
@@ -364,7 +364,7 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
     }
 
     if (pid < 0) {
-        debug(1, L"Failed to fork %s!\n", fork_type);
+        FLOGF(warning, L"Failed to fork %s!\n", fork_type);
         job_mark_process_as_failed(job, p);
         return false;
     }
@@ -1073,7 +1073,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
         if (!p->is_last_in_job) {
             auto pipes = make_autoclose_pipes(conflicts);
             if (!pipes) {
-                debug(1, PIPE_ERROR);
+                FLOGF(warning, PIPE_ERROR);
                 wperror(L"pipe");
                 job_mark_process_as_failed(j, p.get());
                 exec_error = true;

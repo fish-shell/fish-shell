@@ -131,7 +131,7 @@ static bool history_file_lock(int fd, int lock_type) {
     int retval = flock(fd, lock_type);
     double duration = timef() - start_time;
     if (duration > 0.25) {
-        debug(1, _(L"Locking the history file took too long (%.3f seconds)."), duration);
+        FLOGF(warning, _(L"Locking the history file took too long (%.3f seconds)."), duration);
         // we've decided to stop doing any locking behavior
         // but make sure we don't leave the file locked!
         if (retval == 0 && lock_type != LOCK_UN) {

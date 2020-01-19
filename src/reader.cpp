@@ -529,7 +529,7 @@ static void term_donate(outputter_t &outp) {
         if (tcsetattr(STDIN_FILENO, TCSANOW, &tty_modes_for_external_cmds) == -1) {
             if (errno == EIO) redirect_tty_output();
             if (errno != EINTR) {
-                debug(1, _(L"Could not set terminal mode for new job"));
+                FLOGF(warning, _(L"Could not set terminal mode for new job"));
                 wperror(L"tcsetattr");
                 break;
             }
@@ -544,7 +544,7 @@ static void term_steal() {
         if (tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes) == -1) {
             if (errno == EIO) redirect_tty_output();
             if (errno != EINTR) {
-                debug(1, _(L"Could not set terminal mode for shell"));
+                FLOGF(warning, _(L"Could not set terminal mode for shell"));
                 perror("tcsetattr");
                 break;
             }
@@ -1736,7 +1736,7 @@ static void reader_interactive_init(parser_t &parser) {
                 }
                 // No TTY, cannot be interactive?
                 redirect_tty_output();
-                debug(1, _(L"No TTY for interactive shell (tcgetpgrp failed)"));
+                FLOGF(warning, _(L"No TTY for interactive shell (tcgetpgrp failed)"));
                 wperror(L"setpgid");
                 exit_without_destructors(1);
             }
@@ -1748,7 +1748,7 @@ static void reader_interactive_init(parser_t &parser) {
                     const wchar_t *fmt =
                         _(L"I appear to be an orphaned process, so I am quitting politely. "
                           L"My pid is %d.");
-                    debug(1, fmt, (int)getpid());
+                    FLOGF(warning, fmt, (int)getpid());
                     exit_without_destructors(1);
                 }
 
@@ -1797,7 +1797,7 @@ static void reader_interactive_init(parser_t &parser) {
             if (errno == EIO) {
                 redirect_tty_output();
             }
-            debug(1, _(L"Failed to set startup terminal mode!"));
+            FLOGF(warning, _(L"Failed to set startup terminal mode!"));
             wperror(L"tcsetattr");
         }
     }
@@ -3528,7 +3528,7 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
         acc.clear();
 
         if (fclose(in_stream)) {
-            debug(1, _(L"Error while closing input stream"));
+            FLOGF(warning, _(L"Error while closing input stream"));
             wperror(L"fclose");
             res = 1;
         }
@@ -3550,7 +3550,7 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
             res = 1;
         }
     } else {
-        debug(1, _(L"Error while opening input stream"));
+        FLOGF(warning, _(L"Error while opening input stream"));
         wperror(L"fdopen");
         res = 1;
     }

@@ -291,7 +291,7 @@ void parser_t::emit_profiling(const char *path) const {
     // dying (and hence will not fork).
     FILE *f = fopen(path, "w");
     if (!f) {
-        debug(1, _(L"Could not write profiling information to file '%s'"), path);
+        FLOGF(warning, _(L"Could not write profiling information to file '%s'"), path);
     } else {
         if (std::fwprintf(f, _(L"Time\tSum\tCommand\n"), profile_items.size()) < 0) {
             wperror(L"fwprintf");

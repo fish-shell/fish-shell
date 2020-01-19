@@ -277,7 +277,7 @@ static void handle_read_limit_change(const environment_t &vars) {
     if (!read_byte_limit_var.missing_or_empty()) {
         size_t limit = fish_wcstoull(read_byte_limit_var->as_string().c_str());
         if (errno) {
-            debug(1, "Ignoring fish_read_limit since it is not valid");
+            FLOGF(warning, "Ignoring fish_read_limit since it is not valid");
         } else {
             read_byte_limit = limit;
         }
@@ -395,12 +395,12 @@ static bool initialize_curses_using_fallback(const char *term) {
     if (term_env == DEFAULT_TERM1 || term_env == DEFAULT_TERM2) return false;
 
     if (session_interactivity() != session_interactivity_t::not_interactive)
-        debug(1, _(L"Using fallback terminal type '%s'."), term);
+        FLOGF(warning, _(L"Using fallback terminal type '%s'."), term);
 
     int err_ret;
     if (setupterm(const_cast<char *>(term), STDOUT_FILENO, &err_ret) == OK) return true;
     if (session_interactivity() != session_interactivity_t::not_interactive) {
-        debug(1, _(L"Could not set up terminal using the fallback terminal type '%s'."), term);
+        FLOGF(warning, _(L"Could not set up terminal using the fallback terminal type '%s'."), term);
     }
     return false;
 }
@@ -459,12 +459,12 @@ static void init_curses(const environment_t &vars) {
     if (setupterm(nullptr, STDOUT_FILENO, &err_ret) == ERR) {
         auto term = vars.get(L"TERM");
         if (session_interactivity() != session_interactivity_t::not_interactive) {
-            debug(1, _(L"Could not set up terminal."));
+            FLOGF(warning, _(L"Could not set up terminal."));
             if (term.missing_or_empty()) {
-                debug(1, _(L"TERM environment variable not set."));
+                FLOGF(warning, _(L"TERM environment variable not set."));
             } else {
-                debug(1, _(L"TERM environment variable set to '%ls'."), term->as_string().c_str());
-                debug(1, _(L"Check that this terminal type is supported on this system."));
+                FLOGF(warning, _(L"TERM environment variable set to '%ls'."), term->as_string().c_str());
+                FLOGF(warning, _(L"Check that this terminal type is supported on this system."));
             }
         }
 

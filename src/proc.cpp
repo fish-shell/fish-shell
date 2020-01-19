@@ -743,7 +743,7 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
                 if (errno == ENOTTY) {
                     redirect_tty_output();
                 }
-                debug(1, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
+                FLOGF(warning, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
                       j->job_id(), j->command_wcstr(), j->pgid);
                 wperror(L"tcsetpgrp");
                 return error;
@@ -771,7 +771,7 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
                 redirect_tty_output();
             }
 
-            debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id(),
+            FLOGF(warning, _(L"Could not send job %d ('%ls') to foreground"), j->job_id(),
                   j->preview().c_str());
             wperror(L"tcsetattr");
             return error;
@@ -804,7 +804,7 @@ static bool terminal_return_from_job(job_t *j, int restore_attrs) {
 
     if (tcsetpgrp(STDIN_FILENO, getpgrp()) == -1) {
         if (errno == ENOTTY) redirect_tty_output();
-        debug(1, _(L"Could not return shell to foreground"));
+        FLOGF(warning, _(L"Could not return shell to foreground"));
         wperror(L"tcsetpgrp");
         return false;
     }
@@ -812,7 +812,7 @@ static bool terminal_return_from_job(job_t *j, int restore_attrs) {
     // Save jobs terminal modes.
     if (tcgetattr(STDIN_FILENO, &j->tmodes)) {
         if (errno == EIO) redirect_tty_output();
-        debug(1, _(L"Could not return shell to foreground"));
+        FLOGF(warning, _(L"Could not return shell to foreground"));
         wperror(L"tcgetattr");
         return false;
     }
@@ -823,7 +823,7 @@ static bool terminal_return_from_job(job_t *j, int restore_attrs) {
     if (restore_attrs) {
         if (tcsetattr(STDIN_FILENO, TCSADRAIN, &shell_modes) == -1) {
             if (errno == EIO) redirect_tty_output();
-            debug(1, _(L"Could not return shell to foreground"));
+            FLOGF(warning, _(L"Could not return shell to foreground"));
             wperror(L"tcsetattr");
             return false;
         }

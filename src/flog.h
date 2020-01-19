@@ -51,6 +51,8 @@ class category_list_t {
 
     category_t debug{L"debug", L"Debugging aid (on by default)", true};
 
+    category_t warning{L"warning", L"Warnings (on by default)", true};
+
     category_t exec_job_status{L"exec-job-status", L"Jobs changing status"};
 
     category_t exec_job_exec{L"exec-job-exec", L"Jobs being executed"};

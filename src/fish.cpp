@@ -438,7 +438,7 @@ int main(int argc, char **argv) {
 
     // No-exec is prohibited when in interactive mode.
     if (opts.is_interactive_session && opts.no_exec) {
-        debug(1, _(L"Can not use the no-execute mode when running an interactive session"));
+        FLOGF(warning, _(L"Can not use the no-execute mode when running an interactive session"));
         opts.no_exec = false;
     }
 
@@ -513,7 +513,7 @@ int main(int argc, char **argv) {
                                                            intern(rel_filename.c_str())};
                 res = reader_read(parser, fd, {});
                 if (res) {
-                    debug(1, _(L"Error while reading file %ls\n"),
+                    FLOGF(warning, _(L"Error while reading file %ls\n"),
                           ld.current_filename ? ld.current_filename : _(L"Standard input"));
                 }
             }

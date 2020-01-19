@@ -107,7 +107,7 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                     break;
                 }
                 default: {
-                    debug(1, MISSING_COMMAND_ERR_MSG, next_path.c_str());
+                    FLOGF(warning, MISSING_COMMAND_ERR_MSG, next_path.c_str());
                     wperror(L"access");
                     break;
                 }

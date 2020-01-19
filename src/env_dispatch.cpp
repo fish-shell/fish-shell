@@ -152,7 +152,7 @@ static void guess_emoji_width(const environment_t &vars) {
     if (auto width_str = vars.get(L"fish_emoji_width")) {
         int new_width = fish_wcstol(width_str->as_string().c_str());
         g_fish_emoji_width = std::max(0, new_width);
-        debug(2, "'fish_emoji_width' preference: %d, overwriting default", g_fish_emoji_width);
+        FLOGF(term_support, "'fish_emoji_width' preference: %d, overwriting default", g_fish_emoji_width);
         return;
     }
 
@@ -170,18 +170,18 @@ static void guess_emoji_width(const environment_t &vars) {
     if (term == L"Apple_Terminal" && version >= 400) {
         // Apple Terminal on High Sierra
         g_guessed_fish_emoji_width = 2;
-        debug(2, "default emoji width: 2 for %ls", term.c_str());
+        FLOGF(term_support, "default emoji width: 2 for %ls", term.c_str());
     } else if (term == L"iTerm.app") {
         // iTerm2 defaults to Unicode 8 sizes.
         // See https://gitlab.com/gnachman/iterm2/wikis/unicodeversionswitching
         g_guessed_fish_emoji_width = 1;
-        debug(2, "default emoji width: 1");
+        FLOGF(term_support, "default emoji width: 1");
     } else {
         // Default to whatever system wcwidth says to U+1F603,
         // but only if it's at least 1.
         int w = wcwidth(L'😃');
         g_guessed_fish_emoji_width = w > 0 ? w : 1;
-        debug(2, "default emoji width: %d", g_guessed_fish_emoji_width);
+        FLOGF(term_support, "default emoji width: %d", g_guessed_fish_emoji_width);
     }
 }
 
@@ -338,11 +338,11 @@ static void update_fish_color_support(const environment_t &vars) {
     if (auto fish_term256 = vars.get(L"fish_term256")) {
         // $fish_term256
         support_term256 = bool_from_string(fish_term256->as_string());
-        debug(2, L"256 color support determined by '$fish_term256'");
+        FLOGF(term_support, L"256 color support determined by '$fish_term256'");
     } else if (term.find(L"256color") != wcstring::npos) {
         // TERM is *256color*: 256 colors explicitly supported
         support_term256 = true;
-        debug(2, L"256 color support enabled for TERM=%ls", term.c_str());
+        FLOGF(term_support, L"256 color support enabled for TERM=%ls", term.c_str());
     } else if (term.find(L"xterm") != wcstring::npos) {
         // Assume that all 'xterm's can handle 256, except for Terminal.app from Snow Leopard
         wcstring term_program;
@@ -352,23 +352,23 @@ static void update_fish_color_support(const environment_t &vars) {
                 fish_wcstod(tpv->as_string().c_str(), nullptr) > 299) {
                 // OS X Lion is version 299+, it has 256 color support (see github Wiki)
                 support_term256 = true;
-                debug(2, L"256 color support enabled for TERM=%ls on Terminal.app", term.c_str());
+                FLOGF(term_support, L"256 color support enabled for TERM=%ls on Terminal.app", term.c_str());
             } else {
                 support_term256 = true;
-                debug(2, L"256 color support enabled for TERM=%ls", term.c_str());
+                FLOGF(term_support, L"256 color support enabled for TERM=%ls", term.c_str());
             }
         }
     } else if (cur_term != nullptr) {
         // See if terminfo happens to identify 256 colors
         support_term256 = (max_colors >= 256);
-        debug(2, L"256 color support: %d colors per terminfo entry for %ls", max_colors,
+        FLOGF(term_support, L"256 color support: %d colors per terminfo entry for %ls", max_colors,
               term.c_str());
     }
 
     // Handle $fish_term24bit
     if (auto fish_term24bit = vars.get(L"fish_term24bit")) {
         support_term24bit = bool_from_string(fish_term24bit->as_string());
-        debug(2, L"'fish_term24bit' preference: 24-bit color %ls",
+        FLOGF(term_support, L"'fish_term24bit' preference: 24-bit color %ls",
               support_term24bit ? L"enabled" : L"disabled");
     } else {
         // We don't attempt to infer term24 bit support yet.
@@ -446,11 +446,11 @@ static void init_curses(const environment_t &vars) {
         std::string name = wcs2string(var_name);
         const auto var = vars.get(var_name, ENV_EXPORT);
         if (var.missing_or_empty()) {
-            debug(2, L"curses var %s missing or empty", name.c_str());
+            FLOGF(term_support, L"curses var %s missing or empty", name.c_str());
             unsetenv_lock(name.c_str());
         } else {
             std::string value = wcs2string(var->as_string());
-            debug(2, L"curses var %s='%s'", name.c_str(), value.c_str());
+            FLOGF(term_support, L"curses var %s='%s'", name.c_str(), value.c_str());
             setenv_lock(name.c_str(), value.c_str(), 1);
         }
     }

@@ -92,6 +92,8 @@ class category_list_t {
     category_t iothread{L"iothread", L"Background IO thread events"};
 
     category_t term_support{L"term-support", L"Terminal feature detection"};
+
+    category_t reader{L"reader", L"The interactive reader/input system"};
 };
 
 /// The class responsible for logging.

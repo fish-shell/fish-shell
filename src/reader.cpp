@@ -3311,7 +3311,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
             } else {
                 // This can happen if the user presses a control char we don't recognize. No
                 // reason to report this to the user unless they've enabled debugging output.
-                debug(2, _(L"Unknown key binding 0x%X"), c);
+                FLOGF(reader, _(L"Unknown key binding 0x%X"), c);
             }
             rls.last_cmd = none();
         }

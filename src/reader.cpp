@@ -3514,7 +3514,7 @@ static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
                     clearerr(in_stream);
                 } else {
                     // Fatal error.
-                    debug(0, _(L"Unable to read input file: %s"), strerror(errno));
+                    FLOGF(error, _(L"Unable to read input file: %s"), strerror(errno));
                     // Reset buffer on error. We won't evaluate incomplete files.
                     acc.clear();
                     break;

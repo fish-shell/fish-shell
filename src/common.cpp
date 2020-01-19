@@ -184,7 +184,7 @@ bool is_windows_subsystem_for_linux() {
                 // is bypassed. We intentionally do not include this in the error message because
                 // it'll only allow fish to run but not to actually work. Here be dragons!
                 if (getenv("FISH_NO_WSL_CHECK") == nullptr) {
-                    debug(0,
+                    FLOGF(error,
                           "This version of WSL has known bugs that prevent fish from working."
                           "Please upgrade to Windows 10 1809 (17763) or higher to use fish!");
                 }

@@ -182,3 +182,6 @@ void log_extra_to_flog_file(const wcstring &s);
     } while (0)
 
 #endif
+
+#define should_flog(wht) \
+    (flog_details::category_list_t::g_instance->wht.enabled)

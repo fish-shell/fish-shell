@@ -257,7 +257,7 @@ bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const w
                         FLOGF(warning, NOCLOB_ERROR, spec.target.c_str());
                     } else {
                         FLOGF(warning, FILE_ERROR, spec.target.c_str());
-                        if (should_debug(1)) wperror(L"open");
+                        if (should_flog(warning)) wperror(L"open");
                     }
                     return false;
                 }

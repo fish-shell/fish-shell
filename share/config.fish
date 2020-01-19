@@ -71,14 +71,14 @@ end
 set -l xdg_data_dirs
 if set -q XDG_DATA_DIRS
     set --path xdg_data_dirs $XDG_DATA_DIRS
-    set xdg_data_dirs (string replace -r '([^/])/$' '$1' -- $xdg_data_dirs)
+    set xdg_data_dirs (string replace -r '([^/])/$' '$1' -- $xdg_data_dirs)/fish
 else
     set xdg_data_dirs $__fish_data_dir
 end
 
-set -l vendor_completionsdirs $xdg_data_dirs/fish/vendor_completions.d
-set -l vendor_functionsdirs $xdg_data_dirs/fish/vendor_functions.d
-set -l vendor_confdirs $xdg_data_dirs/fish/vendor_conf.d
+set -l vendor_completionsdirs $xdg_data_dirs/vendor_completions.d
+set -l vendor_functionsdirs $xdg_data_dirs/vendor_functions.d
+set -l vendor_confdirs $xdg_data_dirs/vendor_conf.d
 
 # Ensure that extra directories are always included.
 if not contains -- $__extra_completionsdir $vendor_completionsdirs

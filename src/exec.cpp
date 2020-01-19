@@ -107,7 +107,6 @@ static void safe_launch_process(process_t *p, const char *actual_cmd, const char
                                 const char *const *cenvv) {
     UNUSED(p);
     int err;
-    //  debug( 1, L"exec '%ls'", p->argv[0] );
 
     // This function never returns, so we take certain liberties with constness.
     char *const *envv = const_cast<char *const *>(cenvv);

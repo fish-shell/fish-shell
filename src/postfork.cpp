@@ -374,9 +374,6 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
         default: {
             const char *err = safe_strerror(errno);
             debug_safe(0, "exec: %s", err);
-
-            // FLOGF(error, L"The file '%ls' is marked as an executable but could not be run by the
-            // operating system.", p->actual_cmd);
             break;
         }
     }

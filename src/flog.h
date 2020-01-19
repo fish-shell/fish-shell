@@ -98,6 +98,7 @@ class category_list_t {
 
     category_t reader{L"reader", L"The interactive reader/input system"};
     category_t complete{L"complete", L"The completion system"};
+    category_t path{L"path", L"Searching/using paths"};
 };
 
 /// The class responsible for logging.

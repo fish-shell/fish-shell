@@ -122,7 +122,7 @@ bool path_get_path(const wcstring &cmd, wcstring *out_path, const environment_t 
 }
 
 wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars) {
-    debug(3, L"path_get_paths('%ls')", cmd.c_str());
+    FLOGF(path, L"path_get_paths('%ls')", cmd.c_str());
     wcstring_list_t paths;
 
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother

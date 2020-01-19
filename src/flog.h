@@ -74,6 +74,7 @@ class category_list_t {
                                   L"Reaping internal (non-forked) processes"};
 
     category_t proc_reap_external{L"proc-reap-external", L"Reaping external (forked) processes"};
+    category_t proc_pgroup{L"proc-pgroup", L"Process groups"};
 
     category_t env_locale{L"env-locale", L"Changes to locale variables"};
 

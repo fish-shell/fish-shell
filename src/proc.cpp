@@ -798,7 +798,7 @@ pid_t terminal_acquire_before_builtin(int job_pgid) {
 static bool terminal_return_from_job(job_t *j, int restore_attrs) {
     errno = 0;
     if (j->pgid == 0) {
-        debug(2, "terminal_return_from_job() returning early due to no process group");
+        FLOG(proc_pgroup, "terminal_return_from_job() returning early due to no process group");
         return true;
     }
 
@@ -868,7 +868,7 @@ void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool se
             // signal individually. job_t::signal() does the same, but uses the shell's own pgroup
             // to make that distinction.
             if (!signal(SIGCONT)) {
-                debug(2, "Failed to send SIGCONT to any processes in pgroup %d!", pgid);
+                FLOGF(proc_pgroup, "Failed to send SIGCONT to any processes in pgroup %d!", pgid);
                 // This returns without bubbling up the error. Presumably that is OK.
                 return;
             }

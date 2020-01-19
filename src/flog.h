@@ -80,6 +80,8 @@ class category_list_t {
 
     category_t env_export{L"env-export", L"Changes to exported variables"};
 
+    category_t env_dispatch{L"env-dispatch", L"Reacting to variables"};
+
     category_t uvar_file{L"uvar-file", L"Writing/reading the universal variable store"};
 
     category_t topic_monitor{L"topic-monitor", L"Internal details of the topic monitor"};

@@ -135,7 +135,7 @@ void env_dispatch_init(const environment_t &vars) {
 /// Properly sets all timezone information.
 static void handle_timezone(const wchar_t *env_var_name, const environment_t &vars) {
     const auto var = vars.get(env_var_name, ENV_DEFAULT);
-    debug(2, L"handle_timezone() current timezone var: |%ls| => |%ls|", env_var_name,
+    FLOGF(env_dispatch, L"handle_timezone() current timezone var: |%ls| => |%ls|", env_var_name,
           !var ? L"MISSING" : var->as_string().c_str());
     const std::string &name = wcs2string(env_var_name);
     if (var.missing_or_empty()) {

@@ -95,6 +95,7 @@ class category_list_t {
     category_t term_support{L"term-support", L"Terminal feature detection"};
 
     category_t reader{L"reader", L"The interactive reader/input system"};
+    category_t complete{L"complete", L"The completion system"};
 };
 
 /// The class responsible for logging.

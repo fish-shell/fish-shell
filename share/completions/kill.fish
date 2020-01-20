@@ -4,6 +4,7 @@ for sig in $__kill_signals[-1..1]
     set number (string split ' ' $sig)[1]
     set name (string split ' ' $sig)[2]
     complete -c kill -o $number -d $name
+    complete -c kill -o $name -d $number
     complete -c kill -k -s s -x -a "$name\t$number"
 end
 

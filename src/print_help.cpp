@@ -3,9 +3,8 @@
 
 #include "print_help.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 #include "common.h"

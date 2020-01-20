@@ -6,8 +6,8 @@
 
 #include "parse_util.h"
 
-#include <stdarg.h>
-#include <stdlib.h>
+#include <cstdarg>
+#include <cstdlib>
 
 #include <cwchar>
 #include <memory>

@@ -2,13 +2,13 @@
 // IWYU pragma: no_include <cstddef>
 #include "config.h"
 
-#include <errno.h>
+#include <cerrno>
 #include <pwd.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdlib.h>
+#include <cstdarg>
+#include <cstddef>
+#include <cstdlib>
 #include <unistd.h>
-#include <wctype.h>
+#include <cwctype>
 
 #include <cstring>
 #include <cwchar>

@@ -3,12 +3,12 @@
 #include "config.h"
 
 #include <dirent.h>
-#include <errno.h>
+#include <cerrno>
 #include <fcntl.h>
 #include <libgen.h>
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <climits>
+#include <cstdio>
+#include <cstdlib>
 #include <sys/stat.h>
 
 #include <cstring>
@@ -19,7 +19,7 @@
 #include <sys/statvfs.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <wctype.h>
+#include <cwctype>
 
 #include <atomic>
 #include <cwchar>

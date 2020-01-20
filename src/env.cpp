@@ -3,11 +3,11 @@
 
 #include "env.h"
 
-#include <errno.h>
+#include <cerrno>
 #include <pwd.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstddef>
+#include <cstdio>
+#include <cstdlib>
 #include <sys/stat.h>
 #include <unistd.h>
 

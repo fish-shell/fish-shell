@@ -3,7 +3,7 @@
 
 #include "wcstringutil.h"
 
-#include <wctype.h>
+#include <cwctype>
 
 #include <locale>
 

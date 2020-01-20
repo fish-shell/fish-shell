@@ -1,8 +1,8 @@
 #include "config.h"  // IWYU pragma: keep
 
 // IWYU pragma: no_include <cstddef>
-#include <stddef.h>
-#include <wctype.h>
+#include <cstddef>
+#include <cwctype>
 
 #include <algorithm>
 #include <cwchar>

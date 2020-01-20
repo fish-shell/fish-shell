@@ -5,23 +5,23 @@
 #include <cxxabi.h>
 #endif
 
-#include <ctype.h>
+#include <cctype>
 #include <dlfcn.h>
-#include <errno.h>
+#include <cerrno>
 #include <fcntl.h>
-#include <limits.h>
+#include <climits>
 #include <paths.h>
 #include <pthread.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdarg>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <termios.h>
 #include <unistd.h>
-#include <wctype.h>
+#include <cwctype>
 
 #include <cstring>
 #include <cwchar>
@@ -61,7 +61,7 @@
 #include "iothread.h"
 #include "parser.h"
 #include "proc.h"
-#include "signal.h"
+#include "signal.h" // NOLINT
 #include "wcstringutil.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep

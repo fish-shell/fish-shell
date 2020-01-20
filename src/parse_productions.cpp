@@ -2,7 +2,7 @@
 
 #include "parse_productions.h"
 
-#include <stdio.h>
+#include <cstdio>
 
 #include "common.h"
 #include "flog.h"

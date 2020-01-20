@@ -2,11 +2,14 @@
 
 #include "iothread.h"
 
-#include <limits.h>
+#include <climits>
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
+#include <csignal>
+#include <cstdio>
+#include <cstring>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <sys/types.h>

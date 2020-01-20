@@ -2,21 +2,21 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <arpa/inet.h>  // IWYU pragma: keep
-#include <errno.h>
+#include <cerrno>
 #include <fcntl.h>
 // We need the sys/file.h for the flock() declaration on Linux but not OS X.
 #include <sys/file.h>  // IWYU pragma: keep
 // We need the ioctl.h header so we can check if SIOCGIFHWADDR is defined by it so we know if we're
 // on a Linux system.
-#include <limits.h>
+#include <climits>
 #include <netinet/in.h>  // IWYU pragma: keep
 #include <sys/ioctl.h>   // IWYU pragma: keep
 #if !defined(__APPLE__) && !defined(__CYGWIN__)
 #include <pwd.h>
 #endif
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
 
 #include <cstring>
 #ifdef __CYGWIN__

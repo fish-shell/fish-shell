@@ -1,15 +1,15 @@
 // Implementation file for the low level input library.
 #include "config.h"
 
-#include <errno.h>
+#include <cerrno>
 #include <unistd.h>
 
 #include <cstring>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <sys/time.h>
 #include <sys/types.h>
 

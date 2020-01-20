@@ -1,9 +1,9 @@
 // The library for various signal related issues.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
-#include <signal.h>
-#include <stdio.h>
+#include <cerrno>
+#include <csignal>
+#include <cstdio>
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
@@ -15,7 +15,7 @@
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"
-#include "signal.h"
+#include "signal.h" // NOLINT
 #include "topic_monitor.h"
 #include "wutil.h"  // IWYU pragma: keep
 

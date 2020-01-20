@@ -3,10 +3,10 @@
 
 #include "io.h"
 
-#include <errno.h>
+#include <cerrno>
 #include <fcntl.h>
-#include <stddef.h>
-#include <stdio.h>
+#include <cstddef>
+#include <cstdio>
 #include <unistd.h>
 
 #include <cstring>

@@ -8,12 +8,12 @@
 // Type "exit" or "quit" to terminate the program.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
+#include <cerrno>
 #include <getopt.h>
-#include <signal.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <csignal>
+#include <cstddef>
+#include <cstdio>
+#include <cstdlib>
 #include <termios.h>
 #include <unistd.h>
 
@@ -33,7 +33,7 @@
 #include "print_help.h"
 #include "proc.h"
 #include "reader.h"
-#include "signal.h"
+#include "signal.h" // NOLINT
 #include "wutil.h"  // IWYU pragma: keep
 
 struct config_paths_t determine_config_directory_paths(const char *argv0);

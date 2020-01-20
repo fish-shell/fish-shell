@@ -3,8 +3,8 @@
 
 #include "event.h"
 
-#include <signal.h>
-#include <stddef.h>
+#include <csignal>
+#include <cstddef>
 #include <unistd.h>
 
 #include <algorithm>
@@ -20,7 +20,7 @@
 #include "io.h"
 #include "parser.h"
 #include "proc.h"
-#include "signal.h"
+#include "signal.h" // NOLINT
 #include "wutil.h"  // IWYU pragma: keep
 
 class pending_signals_t {

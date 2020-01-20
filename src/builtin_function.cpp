@@ -22,7 +22,7 @@
 #include "parser.h"
 #include "parser_keywords.h"
 #include "proc.h"
-#include "signal.h"
+#include "signal.h" // NOLINT
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 

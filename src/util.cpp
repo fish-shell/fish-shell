@@ -3,10 +3,10 @@
 
 #include "util.h"
 
-#include <errno.h>
-#include <stddef.h>
+#include <cerrno>
+#include <cstddef>
 #include <sys/time.h>
-#include <wctype.h>
+#include <cwctype>
 
 #include <cwchar>
 

@@ -3,7 +3,7 @@
 
 // IWYU pragma: no_include <cstddef>
 #include <dirent.h>
-#include <errno.h>
+#include <cerrno>
 #include <sys/stat.h>
 #include <unistd.h>
 

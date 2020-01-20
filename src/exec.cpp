@@ -4,16 +4,16 @@
 // performed have been massive.
 #include "config.h"
 
-#include <errno.h>
+#include <cerrno>
 #include <fcntl.h>
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
-#include <signal.h>
+#include <csignal>
 #ifdef HAVE_SPAWN_H
 #include <spawn.h>
 #endif
-#include <stdio.h>
+#include <cstdio>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -44,7 +44,7 @@
 #include "proc.h"
 #include "reader.h"
 #include "redirection.h"
-#include "signal.h"
+#include <csignal>
 #include "timer.h"
 #include "trace.h"
 #include "wutil.h"  // IWYU pragma: keep

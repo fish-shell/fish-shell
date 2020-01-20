@@ -6,12 +6,12 @@
 // IWYU pragma: no_include <__bit_reference>
 #include "config.h"
 
-#include <errno.h>
+#include <cerrno>
+#include <csignal>
+#include <cstdio>
 #include <fcntl.h>
-#include <signal.h>
-#include <stdio.h>
 #include <unistd.h>
-#include <wctype.h>
+#include <cwctype>
 
 #include <atomic>
 #include <cwchar>
@@ -49,7 +49,7 @@
 #include "proc.h"
 #include "reader.h"
 #include "sanity.h"
-#include "signal.h"
+#include "signal.h" // NOLINT
 #include "wutil.h"  // IWYU pragma: keep
 
 /// The signals that signify crashes to us.

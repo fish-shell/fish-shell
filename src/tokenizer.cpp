@@ -5,9 +5,9 @@
 #include "tokenizer.h"
 
 #include <fcntl.h>
-#include <limits.h>
+#include <climits>
 #include <unistd.h>
-#include <wctype.h>
+#include <cwctype>
 
 #include <cwchar>
 #include <string>

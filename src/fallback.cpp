@@ -8,16 +8,16 @@
 // IWYU likes to recommend adding term.h when we want ncurses.h.
 // IWYU pragma: no_include term.h
 #include <dirent.h>  // IWYU pragma: keep
-#include <errno.h>   // IWYU pragma: keep
+#include <cerrno>   // IWYU pragma: keep
 #include <fcntl.h>   // IWYU pragma: keep
-#include <limits.h>  // IWYU pragma: keep
-#include <stdarg.h>  // IWYU pragma: keep
-#include <stdio.h>   // IWYU pragma: keep
-#include <stdlib.h>
+#include <climits>  // IWYU pragma: keep
+#include <cstdarg>  // IWYU pragma: keep
+#include <cstdio>   // IWYU pragma: keep
+#include <cstdlib>
 #include <sys/stat.h>   // IWYU pragma: keep
 #include <sys/types.h>  // IWYU pragma: keep
 #include <unistd.h>
-#include <wctype.h>
+#include <cwctype>
 
 #include <algorithm>
 #include <cstring>
@@ -37,7 +37,7 @@
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
 #endif
-#include <signal.h>  // IWYU pragma: keep
+#include <csignal>  // IWYU pragma: keep
 
 #include <cwchar>  // IWYU pragma: keep
 

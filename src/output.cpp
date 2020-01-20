@@ -1,8 +1,8 @@
 // Generic output functions.
 #include "config.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 #include <cstring>
 #if HAVE_CURSES_H
@@ -17,7 +17,7 @@
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
 #endif
-#include <limits.h>
+#include <climits>
 
 #include <cwchar>
 #include <memory>

@@ -18,15 +18,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 #include "config.h"
 
-#include <errno.h>
+#include <cerrno>
 #include <fcntl.h>
 #include <getopt.h>
-#include <limits.h>
-#include <locale.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <climits>
+#include <clocale>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -54,7 +54,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
-#include "signal.h"
+#include "signal.h" // NOLINT
 #include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 

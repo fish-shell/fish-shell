@@ -9,8 +9,8 @@
 
 #include <pthread.h>
 #include <pwd.h>
-#include <stddef.h>
-#include <wctype.h>
+#include <cstddef>
+#include <cwctype>
 
 #include <algorithm>
 #include <atomic>

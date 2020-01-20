@@ -3,7 +3,7 @@
 
 #include "intern.h"
 
-#include <stddef.h>
+#include <cstddef>
 
 #include <algorithm>
 #include <cwchar>

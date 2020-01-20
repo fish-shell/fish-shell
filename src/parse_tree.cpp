@@ -3,9 +3,9 @@
 
 #include "parse_tree.h"
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdio.h>
+#include <cstdarg>
+#include <cstddef>
+#include <cstdio>
 
 #include <algorithm>
 #include <cwchar>

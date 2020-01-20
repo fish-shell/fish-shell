@@ -7,7 +7,7 @@
 // IWYU pragma: no_include <type_traits>
 #include <dirent.h>
 #include <pthread.h>
-#include <stddef.h>
+#include <cstddef>
 
 #include <algorithm>
 #include <cwchar>

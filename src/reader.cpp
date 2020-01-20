@@ -14,15 +14,15 @@
 #include "config.h"
 
 // IWYU pragma: no_include <type_traits>
-#include <errno.h>
+#include <cerrno>
 #include <fcntl.h>
 #include <pthread.h>
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <csignal>
+#include <cstdio>
+#include <cstdlib>
 
 #include <cstring>
 #ifdef HAVE_SYS_SELECT_H
@@ -31,9 +31,9 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <termios.h>
-#include <time.h>
+#include <ctime>
 #include <unistd.h>
-#include <wctype.h>
+#include <cwctype>
 
 #include <algorithm>
 #include <atomic>
@@ -73,7 +73,7 @@
 #include "reader.h"
 #include "sanity.h"
 #include "screen.h"
-#include "signal.h"
+#include "signal.h" // NOLINT
 #include "tnode.h"
 #include "tokenizer.h"
 #include "wutil.h"  // IWYU pragma: keep

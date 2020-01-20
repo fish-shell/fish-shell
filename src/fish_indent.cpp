@@ -17,13 +17,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
+#include <cerrno>
 #include <getopt.h>
-#include <locale.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <wctype.h>
+#include <clocale>
+#include <cstddef>
+#include <cstdio>
+#include <cstdlib>
+#include <cwctype>
 
 #include <cstring>
 #include <cwchar>

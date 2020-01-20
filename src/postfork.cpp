@@ -1,11 +1,11 @@
 // Functions that we may safely call after fork().
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
+#include <cerrno>
 #include <fcntl.h>
-#include <signal.h>
-#include <stdio.h>
-#include <time.h>
+#include <csignal>
+#include <cstdio>
+#include <ctime>
 
 #include <cstring>
 #include <memory>
@@ -22,7 +22,7 @@
 #include "postfork.h"
 #include "proc.h"
 #include "redirection.h"
-#include "signal.h"
+#include "signal.h" // NOLINT
 #include "wutil.h"  // IWYU pragma: keep
 
 #ifndef JOIN_THREADS_BEFORE_FORK

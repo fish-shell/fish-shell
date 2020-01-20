@@ -2,7 +2,7 @@
 
 #include "topic_monitor.h"
 
-#include <limits.h>
+#include <climits>
 #include <unistd.h>
 
 #include "flog.h"

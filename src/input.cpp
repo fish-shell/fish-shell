@@ -1,8 +1,8 @@
 // Functions for reading a character of input from stdin.
 #include "config.h"
 
-#include <errno.h>
-#include <wctype.h>
+#include <cerrno>
+#include <cwctype>
 
 #include <cwchar>
 #if HAVE_TERM_H
@@ -31,7 +31,7 @@
 #include "parser.h"
 #include "proc.h"
 #include "reader.h"
-#include "signal.h"  // IWYU pragma: keep
+#include <csignal>  // IWYU pragma: keep
 #include "wutil.h"   // IWYU pragma: keep
 
 /// A name for our own key mapping for nul.

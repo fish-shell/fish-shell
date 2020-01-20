@@ -1,12 +1,12 @@
 // Support for dispatching on environment changes.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
-#include <limits.h>
-#include <locale.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <time.h>
+#include <cerrno>
+#include <climits>
+#include <clocale>
+#include <cstddef>
+#include <cstdlib>
+#include <ctime>
 #include <unistd.h>
 
 #include <cstring>
@@ -25,7 +25,7 @@
 #include <ncurses/term.h>
 #endif
 
-#include <assert.h>
+#include <cassert>
 
 #include <algorithm>
 #include <functional>

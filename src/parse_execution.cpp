@@ -10,13 +10,13 @@
 
 #include "parse_execution.h"
 
-#include <errno.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cerrno>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
 #include <termios.h>
 #include <unistd.h>
-#include <wctype.h>
+#include <cwctype>
 
 #include <algorithm>
 #include <cwchar>

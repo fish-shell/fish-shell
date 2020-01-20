@@ -7,11 +7,11 @@
 // IWYU pragma: no_include <cstddef>
 #include "config.h"
 
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstddef>
+#include <cstdio>
+#include <cstdlib>
 #include <termios.h>
-#include <time.h>
+#include <ctime>
 #include <unistd.h>
 
 #include <cstring>

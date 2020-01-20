@@ -30,16 +30,13 @@ function __fish_make_completion_signals --description 'Make list of kill signals
         # Posix systems print out the name of a signal using 'kill -l SIGNUM'.
         complete -c kill -s l --description "List names of available signals"
         for i in (seq 31)
-            set -a __kill_signals $i" "(kill -l $i | tr '[:lower:]' '[:upper:]')
+            set -a __kill_signals $i" "(kill -l $i | string upper)
         end
     else
-        # Debian and some related systems use 'kill -L' to write out a numbered list
+        # util-linux (on Arch) and procps-ng (on Debian) kill use 'kill -L' to write out a numbered list
         # of signals. Use this to complete on both number _and_ on signal name.
         complete -c kill -s L --description "List codes and names of available signals"
-        kill -L | sed -e 's/^ //; s/  */ /g; y/ /\n/' | while read -l signo
-            test -z "$signo"
-            and break # the sed above produces one blank line at the end
-            read -l signame
+        kill -L | string trim | string replace -ra '   *' \n | while read -l signo signame
             set -a __kill_signals "$signo $signame"
         end
     end

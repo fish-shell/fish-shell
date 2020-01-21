@@ -102,7 +102,7 @@ struct thread_pool_t {
     /// The function \p func will execute in one of the pool's threads.
     /// \p completion will run on the main thread, if it is not missing.
     /// If \p cant_wait is set, disrespect the thread limit, because extant threads may
-    ///want to wait for new threads.
+    /// want to wait for new threads.
     int perform(void_function_t &&func, void_function_t &&completion, bool cant_wait);
 
    private:

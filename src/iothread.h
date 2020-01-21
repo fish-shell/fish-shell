@@ -31,7 +31,8 @@ void iothread_service_completion(void);
 int iothread_drain_all(void);
 
 // Internal implementation
-int iothread_perform_impl(std::function<void(void)> &&func, std::function<void(void)> &&completion, bool cant_wait = false);
+int iothread_perform_impl(std::function<void(void)> &&func, std::function<void(void)> &&completion,
+                          bool cant_wait = false);
 
 // Template helpers
 // This is the glue part of the handler-completion handoff

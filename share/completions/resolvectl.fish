@@ -15,7 +15,7 @@ complete -c resolvectl -x -n "not $seen $commands" -l interface -a "INTERFACE" -
 complete -c resolvectl -x -n "not $seen $commands" -l legend -a "yes" -d "Print headers and additional info"
 complete -c resolvectl -x -n "not $seen $commands" -l no-pager -d "Do not pipe output into a pager"
 complete -c resolvectl -x -n "not $seen $commands" -l protocol -a "PROTO" -s p -d "Look via protocol"
-complete -c resolvectl -x -n "not $seen $commands" -l raw -a "[payload\|packet]" -d "Dump the answer as binary data"
+complete -c resolvectl -f -n "not $seen $commands" -l raw -a "packet payload" -d "Dump the answer as binary data"
 complete -c resolvectl -x -n "not $seen $commands" -l search -a "yes" -d "Use search domains for single-label names"
 complete -c resolvectl -x -n "not $seen $commands" -l service-address -a "yes" -d "Resolve address for services"
 complete -c resolvectl -x -n "not $seen $commands" -l service-txt -a "yes" -d "Resolve TXT records for services"

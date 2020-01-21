@@ -3,7 +3,7 @@
 #
 
 #
-# Test if we are using GNU sed
+# Test if we are using GNU df
 #
 
 set -l is_gnu

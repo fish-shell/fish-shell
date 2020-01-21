@@ -1477,10 +1477,15 @@ url = "http://localhost:%d/%s/%s" % (PORT, authkey, initial_tab)
 # Create temporary file to hold redirect to real server. This prevents exposing
 # the URL containing the authentication key on the command line (see
 # CVE-2014-2914 or https://github.com/fish-shell/fish-shell/issues/1438).
-if "XDG_CACHE_HOME" in os.environ:
-    dirname = os.path.expanduser(os.path.expandvars("$XDG_CACHE_HOME/fish/"))
+if platform.system() == 'OpenBSD':
+    # On OpenBSD the main browsers use unveil, which prevents file access
+    # on most of the disk. ~/Downloads is unrestricted in both, so use that.
+    dirname = os.path.expanduser("~/.Downloads/fish/")
 else:
-    dirname = os.path.expanduser("~/.cache/fish/")
+    if "XDG_CACHE_HOME" in os.environ:
+        dirname = os.path.expanduser(os.path.expandvars("$XDG_CACHE_HOME/fish/"))
+    else:
+        dirname = os.path.expanduser("~/.cache/fish/")
 
 os.umask(0o0077)
 try:

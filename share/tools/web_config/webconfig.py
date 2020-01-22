@@ -1480,7 +1480,7 @@ url = "http://localhost:%d/%s/%s" % (PORT, authkey, initial_tab)
 if platform.system() == 'OpenBSD':
     # On OpenBSD the main browsers use unveil, which prevents file access
     # on most of the disk. ~/Downloads is unrestricted in both, so use that.
-    dirname = os.path.expanduser("~/.Downloads/fish/")
+    dirname = os.path.expanduser("~/Downloads/fish/")
 else:
     if "XDG_CACHE_HOME" in os.environ:
         dirname = os.path.expanduser(os.path.expandvars("$XDG_CACHE_HOME/fish/"))

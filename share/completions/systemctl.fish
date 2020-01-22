@@ -38,7 +38,7 @@ complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a set-d
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a set-property -d 'Sets one or more properties of a unit'
 
 # Command completion done via argparse.
-complete -c systemctl -a '(_fish_systemctl)' -f
+complete -c systemctl -a '(__fish_systemctl)' -f
 
 # These "--x=help" outputs always have lines like "Available unit types:". We use the fact that they end in a ":" to filter them out.
 complete -f -c systemctl -s t -l type -d 'List of unit types' -xa '(systemctl --type=help --no-legend --no-pager | string match -v "*:")'

@@ -25,7 +25,7 @@ end
 
 function __fish_print_p4_changelists -d "Reformat output from `p4 changes` to simple format. Specify 'detailed!' as first argument to use username@workspace prefix"
     set -l detailed
-    if test -n "$argv"
+    if string length -q "$argv"
         and test $argv[1] = "detailed!"
         set detailed true
         set -e argv[1]
@@ -46,13 +46,13 @@ function __fish_print_p4_changelists -d "Reformat output from `p4 changes` to si
         end
         # see output format ^^^
         set -l change_match (string match -ar '^Change ([0-9]+) on [0-9/]+ by (\S+).*$' $line)
-        if test -n "$change_match"
-            if test -n "$result"
+        if string length -q "$change_match"
+            if string length -q "$result"
                 echo $result
                 set result
             end
             set result $change_match[2]\t
-            if test -n "$detailed"
+            if string length -q "$detailed"
                 set result $result $change_match[3]:
             end
         else
@@ -60,7 +60,7 @@ function __fish_print_p4_changelists -d "Reformat output from `p4 changes` to si
         end
     end
 
-    if test -n "$result"
+    if string length -q "$result"
         echo $result
     end
 end
@@ -125,7 +125,7 @@ end
 
 function __fish_print_p4_workspace_changelists -d "Lists all changelists for current user"
     set -l client (__fish_print_p4_client_name)
-    if test -n "$client"
+    if string length -q "$client"
         __fish_print_p4_changelists -c $client $argv
     end
 end
@@ -235,17 +235,17 @@ end
 
 function __fish_print_p4_parallel_options -d "Values for --parallel option in various commands"
     set -l mode
-    if test -n "$argv"
+    if string length -q "$argv"
         set mode $argv[1]
     end
 
     # for now only looks that mode is set, later it will need to have a specific setting
     echo 'threads='\t"sends files concurrently using N independent network connections"
     echo 'batch='\t"specifies the number of files in a batch"
-    test -n "$mode"
+    string length -q "$mode"
     or echo 'batchsize='\t"specifies the number of bytes in a batch"
     echo 'min='\t"specifies the minimum number of files in a parallel sync"
-    test -n "$mode"
+    string length -q "$mode"
     or echo 'minsize='\t"specifies the minimum number of bytes in a parallel sync"
 end
 

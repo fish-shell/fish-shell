@@ -127,7 +127,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         else
             # The greeting used to be skipped when fish_greeting was empty (not just undefined)
             # Keep it that way to not print superfluous newlines on old configuration
-            test -n "$fish_greeting"
+            string length -q "$fish_greeting"
             and echo $fish_greeting
         end
     end

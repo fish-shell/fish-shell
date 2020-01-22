@@ -12,7 +12,7 @@ function __fish_doas_print_remaining_args
     argparse -s $opts -- $tokens 2>/dev/null
     # The remaining argv is the subcommand with all its options, which is what
     # we want.
-    if test -n "$argv"
+    if string length -q "$argv"
         and not string match -qr '^-' $argv[1]
         string join0 -- $argv
         return 0

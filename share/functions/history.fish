@@ -2,7 +2,7 @@
 # Wrap the builtin history command to provide additional functionality.
 #
 function __fish_unexpected_hist_args --no-scope-shadowing
-    if test -n "$search_mode"
+    if string length -q "$search_mode"
         or set -q show_time[1]
         printf (_ "%ls: you cannot use any options with the %ls command\n") $cmd $hist_cmd >&2
         return 0

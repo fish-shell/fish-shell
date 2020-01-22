@@ -61,7 +61,7 @@ function psub --description "Read from stdin into a file and output the filename
     # Make sure we erase file when caller exits
     function $funcname --on-job-exit caller --inherit-variable filename --inherit-variable dirname --inherit-variable funcname
         command rm $filename
-        if test -n "$dirname"
+        if string length -q "$dirname"
             command rmdir $dirname
         end
         functions -e $funcname

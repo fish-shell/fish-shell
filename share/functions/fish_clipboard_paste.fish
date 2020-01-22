@@ -36,7 +36,7 @@ function fish_clipboard_paste
         # so we don't trigger ignoring history.
         set data[1] (string trim -l -- $data[1])
     end
-    if test -n "$data"
+    if string length -q "$data"
         commandline -i -- $data
     end
 end

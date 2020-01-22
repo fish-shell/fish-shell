@@ -12,7 +12,7 @@ function __fish_print_help --description "Print help message for the specified f
     set -l help
     set -l format
     set -l cols
-    if test -n "$COLUMNS"
+    if string length -q "$COLUMNS"
         set cols (math $COLUMNS - 4) # leave a bit of space on the right
     end
 
@@ -22,12 +22,12 @@ function __fish_print_help --description "Print help message for the specified f
         if test -e $__fish_data_dir/groff/fish.tmac
             set -a format -M$__fish_data_dir/groff -mfish
         end
-        if test -n "$cols"
+        if string length -q "$cols"
             set -a format -rLL={$cols}n
         end
     else if command -qs mandoc
         set format mandoc -c
-        if test -n "$cols"
+        if string length -q "$cols"
             set -a format -O width=$cols
         end
     else
@@ -62,7 +62,7 @@ function __fish_print_help --description "Print help message for the specified f
                 case ' *' \t\*
                     # starts with whitespace, check if it has non-whitespace
                     printf "%s\n" $line | read -l word __
-                    if test -n $word
+                    if string length -q $word
                         set line_type normal
                     else
                         # lines with just spaces probably shouldn't happen

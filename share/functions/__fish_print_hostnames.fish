@@ -93,7 +93,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
                 end
             end
 
-            if test -n "$new_paths"
+            if string length -q "$new_paths"
                 _recursive $new_paths
             end
         end

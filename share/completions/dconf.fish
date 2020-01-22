@@ -11,7 +11,7 @@ function __fish_dconf_keys
         if string match -q "[*]" -- $line
             # New directory - just save it for the keys
             set dir /(string trim -c "[]" -- $line)
-        else if test -n "$line"
+        else if string length -q "$line"
             # New key - output with the dir prepended.
             echo $dir/(string replace -r '=.*' '' -- $line)
         end

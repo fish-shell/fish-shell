@@ -4,7 +4,7 @@ function __fish_not_contain_opt -d "Checks that a specific option is not in the 
     set -l long_opt
 
     for i in $argv
-        if test -n "$next_short"
+        if string length -q "$next_short"
             set next_short
             set short_opt $short_opt $i
         else

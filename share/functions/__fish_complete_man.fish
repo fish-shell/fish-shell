@@ -29,7 +29,7 @@ function __fish_complete_man
         set token "."
     end
 
-    if test -n "$token"
+    if string length -q "$token"
         # Do the actual search
         apropos $token 2>/dev/null | awk '
                 BEGIN { FS="[\t ]- "; OFS="\t"; }

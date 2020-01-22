@@ -4,7 +4,7 @@ function __fish_contains_opt -d "Checks if a specific option has been given in t
     set -l long_opt
 
     for i in $argv
-        if test -n "$next_short"
+        if string length -q "$next_short"
             set next_short
             set -a short_opt $i
         else

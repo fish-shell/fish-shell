@@ -24,7 +24,7 @@ function __fish_adb_run_command -d 'Runs adb with any -s parameters already give
     set -l cmd (commandline -poc)
     set -e cmd[1]
     for i in $cmd
-        if test -n "$sopt_is_next"
+        if string length -q "$sopt_is_next"
             set sopt -s $i
             break
         else

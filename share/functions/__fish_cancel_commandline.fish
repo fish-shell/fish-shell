@@ -4,7 +4,7 @@ function __fish_cancel_commandline
     commandline -f cancel
 
     set -l cmd (commandline)
-    if test -n "$cmd"
+    if string length -q "$cmd"
         commandline -C 1000000
         if set -q fish_color_cancel
             echo -ns (set_color $fish_color_cancel) "^C" (set_color normal)

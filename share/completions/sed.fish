@@ -14,7 +14,7 @@ __fish_gnu_complete -c sed -s e -l expression -x -d "Evaluate expression" $is_gn
 __fish_gnu_complete -c sed -s f -l file -r -d "Evalute file" $is_gnu
 __fish_gnu_complete -c sed -s i -l in-place -d "Edit files in place" $is_gnu
 
-if test -n "$is_gnu"
+if string length -q "$is_gnu"
 
     # GNU specific features
 

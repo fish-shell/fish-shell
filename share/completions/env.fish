@@ -16,7 +16,7 @@ function __fish_complete_env_subcommand
     end
 
     # Then complete the rest as if it was given as a command.
-    if test -n "$argv"
+    if string length -q "$argv"
         __fish_complete_subcommand --commandline $argv
         return 0
     end

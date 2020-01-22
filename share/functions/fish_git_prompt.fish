@@ -198,12 +198,12 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
         switch $key
             case bash.showupstream
                 set show_upstream $value
-                test -n "$show_upstream"
+                string length -q "$show_upstream"
                 or return
             case svn-remote.'*'.url
                 set svn_remote $svn_remote $value
                 # Avoid adding \| to the beginning to avoid needing #?? later
-                if test -n "$svn_url_pattern"
+                if string length -q "$svn_url_pattern"
                     set svn_url_pattern $svn_url_pattern"|$value"
                 else
                     set svn_url_pattern $value
@@ -260,7 +260,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
 
                 if test -z "$svn_upstream"
                     # default branch name for checkouts with no layout:
-                    if test -n "$GIT_SVN_ID"
+                    if string length -q "$GIT_SVN_ID"
                         set upstream $GIT_SVN_ID
                     else
                         set upstream git-svn
@@ -270,7 +270,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
 
                     # Use fetch config to fix upstream
                     set -l fetch_val (command git config "$cur_prefix".fetch)
-                    if test -n "$fetch_val"
+                    if string length -q "$fetch_val"
                         string split -m1 : -- "$fetch_val" | read -l trunk pattern
                         set upstream (string replace -r -- "/$trunk\$" '' $pattern) /$upstream
                     end
@@ -284,7 +284,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
     set count (command git rev-list --count --left-right $upstream...HEAD 2>/dev/null | string replace \t " ")
 
     # calculate the result
-    if test -n "$verbose"
+    if string length -q "$verbose"
         # Verbose has a space by default
         set -l prefix "$___fish_git_prompt_char_upstream_prefix"
         # Using two underscore version to check if user explicitly set to nothing
@@ -307,7 +307,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
         if test -n "$count" -a -n "$name"
             echo " "(command git rev-parse --abbrev-ref "$upstream" 2>/dev/null)
         end
-    else if test -n "$informative"
+    else if string length -q "$informative"
         echo $count | read -l behind ahead
         switch "$count"
             case '' # no upstream
@@ -344,7 +344,7 @@ function fish_git_prompt --description "Prompt function for Git"
         return 1
     end
     set -l repo_info (command git rev-parse --git-dir --is-inside-git-dir --is-bare-repository --is-inside-work-tree HEAD 2>/dev/null)
-    test -n "$repo_info"
+    string length -q "$repo_info"
     or return
 
     set -l git_dir $repo_info[1]
@@ -438,16 +438,16 @@ function fish_git_prompt --description "Prompt function for Git"
         end
     end
 
-    if test -n "$w"
+    if string length -q "$w"
         set w "$___fish_git_prompt_color_dirtystate$w$___fish_git_prompt_color_dirtystate_done"
     end
-    if test -n "$i"
+    if string length -q "$i"
         set i "$___fish_git_prompt_color_stagedstate$i$___fish_git_prompt_color_stagedstate_done"
     end
-    if test -n "$s"
+    if string length -q "$s"
         set s "$___fish_git_prompt_color_stashstate$s$___fish_git_prompt_color_stashstate_done"
     end
-    if test -n "$u"
+    if string length -q "$u"
         set u "$___fish_git_prompt_color_untrackedfiles$u$___fish_git_prompt_color_untrackedfiles_done"
     end
 
@@ -457,23 +457,23 @@ function fish_git_prompt --description "Prompt function for Git"
     if string match -qr '^\d+$' "$__fish_git_prompt_shorten_branch_len"; and test (string length "$b") -gt $__fish_git_prompt_shorten_branch_len
         set b (string sub -l "$__fish_git_prompt_shorten_branch_len" "$b")"$__fish_git_prompt_shorten_branch_char_suffix"
     end
-    if test -n "$b"
+    if string length -q "$b"
         set b "$branch_color$b$branch_done"
     end
 
-    if test -n "$c"
+    if string length -q "$c"
         set c "$___fish_git_prompt_color_bare$c$___fish_git_prompt_color_bare_done"
     end
-    if test -n "$r"
+    if string length -q "$r"
         set r "$___fish_git_prompt_color_merging$r$___fish_git_prompt_color_merging_done"
     end
-    if test -n "$p"
+    if string length -q "$p"
         set p "$___fish_git_prompt_color_upstream$p$___fish_git_prompt_color_upstream_done"
     end
 
     # Formatting
     set -l f "$w$i$s$u"
-    if test -n "$f"
+    if string length -q "$f"
         set f "$space$f"
     end
     set -l format $argv[1]
@@ -491,7 +491,7 @@ function __fish_git_prompt_staged --description "fish_git_prompt helper, tells w
     set -l staged
     set -l ret 0
 
-    if test -n "$sha"
+    if string length -q "$sha"
         # The "diff" functions all return > 0 if there _is_ a diff,
         # but we want to return 0 if there are staged changes.
         # So we invert the status.
@@ -745,7 +745,7 @@ function __fish_git_prompt_set_color
     set -l variable_done "$variable"_done
 
     if not set -q $variable
-        if test -n "$user_variable"
+        if string length -q "$user_variable"
             set -g $variable (set_color $user_variable)
             set -g $variable_done (set_color normal)
         else

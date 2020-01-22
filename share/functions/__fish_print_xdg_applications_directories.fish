@@ -11,8 +11,8 @@ function __fish_print_xdg_applications_directories --description 'Print director
 
     set data_dirs $data_home:$data_dirs
 
-    for path in (string split : $data_dirs)
-        set path $path"applications"
+    # We don't know if the dir ended in a "/" or not, but duplicate slashes are okay.
+    for path in (string split : $data_dirs)/applications
         if test -d $path
             echo $path
         end

@@ -99,13 +99,14 @@ enum : wchar_t {
     EXPAND_SENTINAL
 };
 
-/// These are the possible return values for expand_string. Note how zero value is the only error.
+/// These are the possible return values for expand_string.
 enum class expand_result_t {
-    /// Error
+    /// There was a syntax error, for example, unmatched braces.
     error,
-    /// Ok
+    /// Expansion succeeded.
     ok,
-    /// Ok, a wildcard in the string matched no files.
+    /// Expansion succeeded, but a wildcard in the string matched no files,
+    /// so the output is empty.
     wildcard_no_match,
 };
 

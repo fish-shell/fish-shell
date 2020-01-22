@@ -1012,7 +1012,7 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand, completion_
                 case wildcard_expand_result_t::no_match:
                     break;
                 case wildcard_expand_result_t::cancel:
-                    result = expand_result_t::error;
+                    result = expand_result_t::cancel;
                     break;
             }
         }
@@ -1055,6 +1055,10 @@ expand_result_t expander_t::expand_string(wcstring input, completion_list_t *out
     expand_result_t total_result = expand_result_t::ok;
     for (stage_t stage : stages) {
         for (completion_t &comp : completions) {
+            if (ctx.check_cancel()) {
+                total_result = expand_result_t::cancel;
+                break;
+            }
             expand_result_t this_result =
                 (expand.*stage)(std::move(comp.completion), &output_storage);
             total_result = this_result;

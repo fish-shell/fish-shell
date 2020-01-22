@@ -680,6 +680,9 @@ void completer_t::complete_cmd(const wcstring &str_cmd) {
                       this->expand_flags() | expand_flag::special_for_command |
                           expand_flag::for_completions | expand_flag::executables_only,
                       ctx);
+    if (result == expand_result_t::cancel) {
+        return;
+    }
     if (result != expand_result_t::error && this->wants_descriptions()) {
         this->complete_cmd_desc(str_cmd);
     }

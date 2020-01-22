@@ -465,6 +465,9 @@ eval_result_t parse_execution_context_t::run_switch_statement(
         case expand_result_t::error:
             return report_errors(errors);
 
+        case expand_result_t::cancel:
+            return eval_result_t::cancelled;
+
         case expand_result_t::wildcard_no_match:
             return report_unmatched_wildcard_error(switch_value_n);
 
@@ -874,6 +877,9 @@ eval_result_t parse_execution_context_t::expand_arguments_from_nodes(
             case expand_result_t::error: {
                 return this->report_errors(errors);
             }
+            case expand_result_t::cancel: {
+                return eval_result_t::cancelled;
+            }
             case expand_result_t::wildcard_no_match: {
                 if (glob_behavior == failglob) {
                     // Report the unmatched wildcard error and stop processing.
@@ -1022,6 +1028,9 @@ eval_result_t parse_execution_context_t::apply_variable_assignments(
             case expand_result_t::error: {
                 this->report_errors(errors);
                 return eval_result_t::error;
+            }
+            case expand_result_t::cancel: {
+                return eval_result_t::cancelled;
             }
             case expand_result_t::wildcard_no_match:  // nullglob (equivalent to set)
             case expand_result_t::ok: {

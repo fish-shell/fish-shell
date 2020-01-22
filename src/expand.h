@@ -105,6 +105,8 @@ enum class expand_result_t {
     error,
     /// Expansion succeeded.
     ok,
+    /// Expansion was cancelled (e.g. control-C).
+    cancel,
     /// Expansion succeeded, but a wildcard in the string matched no files,
     /// so the output is empty.
     wildcard_no_match,

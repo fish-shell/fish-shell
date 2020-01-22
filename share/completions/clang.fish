@@ -3,7 +3,7 @@
 # This could potentially be moved to __fish_config_interactive.fish in the future.
 
 # This pattern unfortunately matches clang-format, etc. as well.
-complete -p '*clang*' -n '__fish_should_complete_switches' -xa '(__fish_clang_complete)'
+complete -p '*clang*' -n '__fish_should_complete_switches' -xa '(__fish_complete_clang)'
 complete -c 'clang' -n 'not __fish_should_complete_switches' \
     -xa "(__fish_complete_suffix .o; __fish_complete_suffix .out; __fish_complete_suffix .c; __fish_complete_suffix .cpp; __fish_complete_suffix .so; __fish_complete_suffix .dylib)"
 

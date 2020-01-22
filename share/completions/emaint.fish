@@ -1,4 +1,4 @@
-function __fish_portage_print_repository_names --description 'Print the names of all configured repositories'
+function __fish_print_portage_repository_names --description 'Print the names of all configured repositories'
     # repos.conf may be a file or a directory
     find /etc/portage/repos.conf -type f -exec cat '{}' + | string replace -r --filter '^\s*\[([[:alnum:]_][[:alnum:]_-]*)\]' '$1' | string match -v -e DEFAULT
 end
@@ -32,6 +32,6 @@ complete -c emaint -n '__fish_seen_subcommand_from logs' -s C -l clean -d "Clean
 complete -c emaint -n '__fish_seen_subcommand_from sync' -s a -l auto -d "Sync auto-sync enabled repos only"
 complete -c emaint -n '__fish_seen_subcommand_from sync' -s A -l allrepos -d "Sync all repos that have a sync-url defined"
 complete -c emaint -n '__fish_seen_subcommand_from sync' -s r -l repo -d "Sync the specified repo" \
-    -xa "(__fish_portage_print_repository_names)"
+    -xa "(__fish_print_portage_repository_names)"
 complete -c emaint -n '__fish_seen_subcommand_from sync' -l sync-submodule -d "Restrict sync to the specified submodule(s)" \
     -xa "glsa news profiles"

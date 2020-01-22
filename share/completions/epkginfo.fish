@@ -1,4 +1,4 @@
-complete -c epkginfo -xa "(__fish_portage_print_available_pkgs)"
+complete -c epkginfo -xa "(__fish_print_portage_available_pkgs)"
 ## Opts
 complete -c epkginfo -s h -l help -d "display help"
 complete -c epkginfo -s d -l description -d "extended pkg description"

@@ -1,7 +1,7 @@
 # This function is compatible with clang, clang++, and variations thereof, and is shared
 # by clang.fish and clang++.fish.
 # We dynamically query the head at `(commandline -o)[1]` to get the correct completions.
-function __fish_clang_complete
+function __fish_complete_clang
     # If the result is for a value, clang only prints the value, so completions
     # for `-std=` print `c++11` and not `-std=c++11` like we need. See #4174.
     set -l prefix (commandline -ct | string replace -fr -- '^(.*=)[^=]*' '$1')

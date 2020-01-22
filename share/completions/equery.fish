@@ -40,9 +40,9 @@ complete -c equery -n '__fish_use_subcommand' -xa 'which' -d "Print full path to
 
 ## Arguments
 complete -c equery -n '__fish_seen_subcommand_from c changes d depends g depgraph y keywords m meta u uses w which' \
-    -xa '(__fish_portage_print_available_pkgs)'
+    -xa '(__fish_print_portage_available_pkgs)'
 complete -c equery -n '__fish_seen_subcommand_from k check f files s size' \
-    -xa '(__fish_portage_print_installed_pkgs)'
+    -xa '(__fish_print_portage_installed_pkgs)'
 
 ## Local opts
 # belongs
@@ -106,9 +106,9 @@ complete -c equery -n '__fish_seen_subcommand_from l list' -s o -l overlay-tree 
 complete -c equery -n '__fish_seen_subcommand_from l list' -s p -l portage-tree -d "List pkgs in the main portage tree"
 #complete -c equery -n '__fish_seen_subcommand_from l list' -s F -l format=TMPL       -d "Specify a custom output format"
 complete -c equery -n '__fish_seen_subcommand_from l list; and not __fish_contains_opt -s p portage-tree' \
-    -xa "(__fish_portage_print_installed_pkgs)"
+    -xa "(__fish_print_portage_installed_pkgs)"
 complete -c equery -n '__fish_seen_subcommand_from l list; and     __fish_contains_opt -s p portage-tree' \
-    -xa "(__fish_portage_print_available_pkgs)"
+    -xa "(__fish_print_portage_available_pkgs)"
 
 # meta
 complete -c equery -n '__fish_seen_subcommand_from m meta' -s d -l description -d "Show extended pkg description"

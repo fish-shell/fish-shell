@@ -347,7 +347,7 @@ static bool plain_statement_get_expanded_command(const wcstring &src,
     maybe_t<wcstring> cmd = command_for_plain_statement(stmt, src);
     if (!cmd) return false;
     expand_result_t err = expand_to_command_and_args(*cmd, ctx, out_cmd, nullptr);
-    return err == expand_result_t::ok || err == expand_result_t::wildcard_match;
+    return err == expand_result_t::ok;
 }
 
 rgb_color_t highlight_get_color(const highlight_spec_t &highlight, bool is_background) {

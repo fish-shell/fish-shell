@@ -107,8 +107,6 @@ enum class expand_result_t {
     ok,
     /// Ok, a wildcard in the string matched no files.
     wildcard_no_match,
-    /// Ok, a wildcard in the string matched a file.
-    wildcard_match,
 };
 
 /// The string represented by PROCESS_EXPAND_SELF

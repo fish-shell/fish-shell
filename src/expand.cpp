@@ -1007,8 +1007,7 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand, completion_
                 path_to_expand, effective_working_dir, flags, ctx.cancel_checker, &expanded);
             switch (expand_res) {
                 case wildcard_expand_result_t::match:
-                    // Something matched,so overall we matched.
-                    result = expand_result_t::wildcard_match;
+                    result = expand_result_t::ok;
                     break;
                 case wildcard_expand_result_t::no_match:
                     break;
@@ -1058,12 +1057,7 @@ expand_result_t expander_t::expand_string(wcstring input, completion_list_t *out
         for (completion_t &comp : completions) {
             expand_result_t this_result =
                 (expand.*stage)(std::move(comp.completion), &output_storage);
-            // If this_result was no match, but total_result is that we have a match, then don't
-            // change it.
-            if (!(this_result == expand_result_t::wildcard_no_match &&
-                  total_result == expand_result_t::wildcard_match)) {
-                total_result = this_result;
-            }
+            total_result = this_result;
             if (total_result == expand_result_t::error) {
                 break;
             }
@@ -1075,6 +1069,16 @@ expand_result_t expander_t::expand_string(wcstring input, completion_list_t *out
         if (total_result == expand_result_t::error) {
             break;
         }
+    }
+
+    // This is a little tricky: if one wildcard failed to match but we still got output, it
+    // means that a previous expansion resulted in multiple strings. For example:
+    //   set dirs ./a ./b
+    //   echo $dirs/*.txt
+    // Here if ./a/*.txt matches and ./b/*.txt does not, then we don't want to report a failed
+    // wildcard. So swallow failed-wildcard errors if we got any output.
+    if (total_result == expand_result_t::wildcard_no_match && !completions.empty()) {
+        total_result = expand_result_t::ok;
     }
 
     if (total_result != expand_result_t::error) {
@@ -1127,7 +1131,7 @@ expand_result_t expand_to_command_and_args(const wcstring &instr, const operatio
         instr, &completions,
         {expand_flag::skip_cmdsubst, expand_flag::no_descriptions, expand_flag::skip_jobs}, ctx,
         errors);
-    if (expand_err == expand_result_t::ok || expand_err == expand_result_t::wildcard_match) {
+    if (expand_err == expand_result_t::ok) {
         // The first completion is the command, any remaning are arguments.
         bool first = true;
         for (auto &comp : completions) {

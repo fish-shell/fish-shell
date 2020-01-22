@@ -449,7 +449,6 @@ eval_result_t parse_execution_context_t::run_for_statement(
 
 eval_result_t parse_execution_context_t::run_switch_statement(
     tnode_t<grammar::switch_statement> statement) {
-    eval_result_t result = eval_result_t::ok;
 
     // Get the switch variable.
     tnode_t<grammar::argument> switch_value_n = statement.child<1>();
@@ -463,37 +462,29 @@ eval_result_t parse_execution_context_t::run_switch_statement(
     parse_error_offset_source_start(&errors, switch_value_n.source_range()->start);
 
     switch (expand_ret) {
-        case expand_result_t::error: {
-            result = report_errors(errors);
+        case expand_result_t::error:
+            return report_errors(errors);
+
+        case expand_result_t::wildcard_no_match:
+            return report_unmatched_wildcard_error(switch_value_n);
+
+        case expand_result_t::ok:
+            if (switch_values_expanded.size() > 1) {
+                return report_error(switch_value_n,
+                                    _(L"switch: Expected at most one argument, got %lu\n"),
+                                    switch_values_expanded.size());
+            }
             break;
-        }
-        case expand_result_t::wildcard_no_match: {
-            result = report_unmatched_wildcard_error(switch_value_n);
-            break;
-        }
-        case expand_result_t::wildcard_match:
-        case expand_result_t::ok: {
-            break;
-        }
-        default: {
-            DIE("unexpected expand_string() return value");
-            break;
-        }
     }
 
-    if (result == eval_result_t::ok && switch_values_expanded.size() > 1) {
-        result =
-            report_error(switch_value_n, _(L"switch: Expected at most one argument, got %lu\n"),
-                         switch_values_expanded.size());
+    // If we expanded to nothing, match the empty string.
+    assert(switch_values_expanded.size() <= 1 && "Should have at most one expansion");
+    wcstring switch_value_expanded = L"";
+    if (!switch_values_expanded.empty()) {
+        switch_value_expanded = std::move(switch_values_expanded.front().completion);
     }
 
-    if (result != eval_result_t::ok) {
-        return result;
-    }
-
-    const wcstring &switch_value_expanded =
-        switch_values_expanded.size() == 1 ? switch_values_expanded.at(0).completion : L"";
-
+    eval_result_t result = eval_result_t::ok;
     block_t *sb = parser->push_block(block_t::switch_block());
 
     // Expand case statements.
@@ -731,7 +722,7 @@ eval_result_t parse_execution_context_t::expand_command(tnode_t<grammar::plain_s
     } else if (expand_err == expand_result_t::wildcard_no_match) {
         return report_unmatched_wildcard_error(statement);
     }
-    assert(expand_err == expand_result_t::ok || expand_err == expand_result_t::wildcard_match);
+    assert(expand_err == expand_result_t::ok);
 
     // Complain if the resulting expansion was empty, or expanded to an empty string.
     if (out_cmd->empty()) {
@@ -891,7 +882,6 @@ eval_result_t parse_execution_context_t::expand_arguments_from_nodes(
                 }
                 break;
             }
-            case expand_result_t::wildcard_match:
             case expand_result_t::ok: {
                 break;
             }
@@ -1034,7 +1024,6 @@ eval_result_t parse_execution_context_t::apply_variable_assignments(
                 return eval_result_t::error;
             }
             case expand_result_t::wildcard_no_match:  // nullglob (equivalent to set)
-            case expand_result_t::wildcard_match:
             case expand_result_t::ok: {
                 break;
             }

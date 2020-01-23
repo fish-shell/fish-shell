@@ -18,11 +18,7 @@ complete -c ssh -n 'test (__fish_number_of_cmd_args_wo_opts) -ge 2' -d "Command 
 complete -c ssh -s a -d "Disables forwarding of the authentication agent"
 complete -c ssh -s A -d "Enables forwarding of the authentication agent"
 
-if type -q jq
-    ip -json -family inet address show | jq -r '.[] | select(.ifname != "lo") | .addr_info[0] | "\(.local) \(.label)"' | while read -l ipaddr intf
-        complete -x -c ssh -s b -d "Bind to $intf" -a "$ipaddr"
-    end
-end
+complete -x -c ssh -s b -d "Local address to bind to" -a "(__fish_print_addresses)"
 
 complete -x -c ssh -s e -d "Escape character" -a "\^ none"
 complete -c ssh -s f -d "Go to background"

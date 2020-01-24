@@ -615,41 +615,40 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
     // systems with a large set of manuals, but it should be ok since apropos is only called once.
     lookup.clear();
     list.clear();
-    if (exec_subshell(lookup_cmd, *ctx.parser, list, false /* don't apply exit status */) != -1) {
-        // Then discard anything that is not a possible completion and put the result into a
-        // hashtable with the completion as key and the description as value.
-        //
-        // Should be reasonably fast, since no memory allocations are needed.
-        // mqudsi: I don't know if the above were ever true, but it's certainly not any more.
-        // Plenty of allocations below.
-        for (const wcstring &elstr : list) {
-            if (elstr.length() < cmd.length()) continue;
-            const wcstring fullkey(elstr, cmd.length());
+    (void)exec_subshell(lookup_cmd, *ctx.parser, list, false /* don't apply exit status */);
+    // Then discard anything that is not a possible completion and put the result into a
+    // hashtable with the completion as key and the description as value.
+    //
+    // Should be reasonably fast, since no memory allocations are needed.
+    // mqudsi: I don't know if the above were ever true, but it's certainly not any more.
+    // Plenty of allocations below.
+    for (const wcstring &elstr : list) {
+        if (elstr.length() < cmd.length()) continue;
+        const wcstring fullkey(elstr, cmd.length());
 
-            size_t tab_idx = fullkey.find(L'\t');
-            if (tab_idx == wcstring::npos) continue;
+        size_t tab_idx = fullkey.find(L'\t');
+        if (tab_idx == wcstring::npos) continue;
 
-            const wcstring key(fullkey, 0, tab_idx);
-            wcstring val(fullkey, tab_idx + 1);
+        const wcstring key(fullkey, 0, tab_idx);
+        wcstring val(fullkey, tab_idx + 1);
 
-            // And once again I make sure the first character is uppercased because I like it that
-            // way, and I get to decide these things.
-            if (!val.empty()) val[0] = towupper(val[0]);
-            lookup[key] = val;
-        }
+        // And once again I make sure the first character is uppercased because I like it that
+        // way, and I get to decide these things.
+        if (!val.empty()) val[0] = towupper(val[0]);
+        lookup[key] = val;
+    }
 
-        // Then do a lookup on every completion and if a match is found, change to the new
-        // description.
-        //
-        // This needs to do a reallocation for every description added, but there shouldn't be that
-        // many completions, so it should be ok.
-        for (auto &completion : completions) {
-            const wcstring &el = completion.completion;
-            if (el.empty()) continue;
+    // Then do a lookup on every completion and if a match is found, change to the new
+    // description.
+    //
+    // This needs to do a reallocation for every description added, but there shouldn't be that
+    // many completions, so it should be ok.
+    for (auto &completion : completions) {
+        const wcstring &el = completion.completion;
+        if (el.empty()) continue;
 
-            auto new_desc_iter = lookup.find(el);
-            if (new_desc_iter != lookup.end()) completion.description = new_desc_iter->second;
-        }
+        auto new_desc_iter = lookup.find(el);
+        if (new_desc_iter != lookup.end()) completion.description = new_desc_iter->second;
     }
 }
 
@@ -683,7 +682,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd) {
     if (result == expand_result_t::cancel) {
         return;
     }
-    if (result != expand_result_t::error && this->wants_descriptions()) {
+    if (result == expand_result_t::ok && this->wants_descriptions()) {
         this->complete_cmd_desc(str_cmd);
     }
 
@@ -1592,7 +1591,7 @@ void completer_t::perform() {
                     auto expand_ret = expand_string(expression, &expression_expanded,
                                                     expand_flag::no_descriptions, ctx);
                     wcstring_list_t vals;
-                    if (expand_ret != expand_result_t::error) {
+                    if (expand_ret == expand_result_t::ok) {
                         for (auto &completion : expression_expanded)
                             vals.emplace_back(std::move(completion.completion));
                         ctx.parser->vars().set(variable_name, ENV_LOCAL | ENV_EXPORT,

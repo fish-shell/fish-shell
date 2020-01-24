@@ -21,14 +21,14 @@ echo $status
 false
 eval "("
 echo $status
-# CHECK: 1
+# CHECK: 123
 # CHECKERR: {{.*}}checks/eval.fish (line {{\d+}}): Unexpected end of string, expecting ')'
 # CHECKERR: (
 # CHECKERR: ^
 false
 eval '""'
 echo $status
-# CHECK: 1
+# CHECK: 123
 # CHECKERR: {{.*}}checks/eval.fish (line {{\d+}}): The expanded command was empty.
 # CHECKERR: ""
 # CHECKERR: ^

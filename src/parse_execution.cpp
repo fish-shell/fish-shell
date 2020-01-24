@@ -259,8 +259,8 @@ end_execution_reason_t parse_execution_context_t::run_if_statement(
         tnode_t<g::job_conjunction> condition_head = if_clause.child<1>();
         tnode_t<g::andor_job_list> condition_boolean_tail = if_clause.child<3>();
 
-        // Check the condition and the tail. We treat end_execution_reason_t::error here as failure, in
-        // accordance with historic behavior.
+        // Check the condition and the tail. We treat end_execution_reason_t::error here as failure,
+        // in accordance with historic behavior.
         end_execution_reason_t cond_ret = run_job_conjunction(condition_head, associated_block);
         if (cond_ret == end_execution_reason_t::ok) {
             cond_ret = run_job_list(condition_boolean_tail, associated_block);
@@ -350,10 +350,8 @@ end_execution_reason_t parse_execution_context_t::run_function_statement(
 
     wcstring errtext = streams.err.contents();
     if (!errtext.empty()) {
-        this->report_error(header, L"%ls", errtext.c_str());
-        result = end_execution_reason_t::error;
+        return this->report_error(err, header, L"%ls", errtext.c_str());
     }
-
     return result;
 }
 
@@ -385,8 +383,8 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
     tnode_t<g::tok_string> var_name_node = header.child<1>();
     wcstring for_var_name = get_source(var_name_node);
     if (!expand_one(for_var_name, expand_flags_t{}, ctx)) {
-        report_error(var_name_node, FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG, for_var_name.c_str());
-        return end_execution_reason_t::error;
+        return report_error(STATUS_EXPAND_ERROR, var_name_node,
+                            FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG, for_var_name.c_str());
     }
 
     // Get the contents to iterate over.
@@ -399,9 +397,9 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
 
     auto var = parser->vars().get(for_var_name, ENV_DEFAULT);
     if (var && var->read_only()) {
-        report_error(var_name_node, L"You cannot use read-only variable '%ls' in a for loop",
-                     for_var_name.c_str());
-        return end_execution_reason_t::error;
+        return report_error(STATUS_INVALID_ARGS, var_name_node,
+                            L"You cannot use read-only variable '%ls' in a for loop",
+                            for_var_name.c_str());
     }
     int retval;
     if (var) {
@@ -412,8 +410,8 @@ end_execution_reason_t parse_execution_context_t::run_for_statement(
     assert(retval == ENV_OK);
 
     if (!valid_var_name(for_var_name)) {
-        report_error(var_name_node, BUILTIN_ERR_VARNAME, L"for", for_var_name.c_str());
-        return end_execution_reason_t::error;
+        return report_error(STATUS_INVALID_ARGS, var_name_node, BUILTIN_ERR_VARNAME, L"for",
+                            for_var_name.c_str());
     }
 
     trace_if_enabled(*parser, L"for", arguments);
@@ -462,19 +460,20 @@ end_execution_reason_t parse_execution_context_t::run_switch_statement(
                                     expand_flag::no_descriptions, ctx, &errors);
     parse_error_offset_source_start(&errors, switch_value_n.source_range()->start);
 
-    switch (expand_ret) {
+    switch (expand_ret.result) {
         case expand_result_t::error:
-            return report_errors(errors);
+            return report_errors(expand_ret.status, errors);
 
         case expand_result_t::cancel:
             return end_execution_reason_t::cancelled;
 
         case expand_result_t::wildcard_no_match:
-            return report_unmatched_wildcard_error(switch_value_n);
+            return report_error(STATUS_UNMATCHED_WILDCARD, switch_value_n, WILDCARD_ERR_MSG,
+                                get_source(switch_value_n).c_str());
 
         case expand_result_t::ok:
             if (switch_values_expanded.size() > 1) {
-                return report_error(switch_value_n,
+                return report_error(STATUS_INVALID_ARGS, switch_value_n,
                                     _(L"switch: Expected at most one argument, got %lu\n"),
                                     switch_values_expanded.size());
             }
@@ -617,9 +616,8 @@ end_execution_reason_t parse_execution_context_t::run_while_statement(
     return ret;
 }
 
-// Reports an error. Always returns end_execution_reason_t::error, so you can assign the result to an
-// 'errored' variable.
-end_execution_reason_t parse_execution_context_t::report_error(const parse_node_t &node,
+// Reports an error. Always returns end_execution_reason_t::error.
+end_execution_reason_t parse_execution_context_t::report_error(int status, const parse_node_t &node,
                                                                const wchar_t *fmt, ...) const {
     // Create an error.
     parse_error_list_t error_list = parse_error_list_t(1);
@@ -633,12 +631,11 @@ end_execution_reason_t parse_execution_context_t::report_error(const parse_node_
     error->text = vformat_string(fmt, va);
     va_end(va);
 
-    this->report_errors(error_list);
-    return end_execution_reason_t::error;
+    return this->report_errors(status, error_list);
 }
 
 end_execution_reason_t parse_execution_context_t::report_errors(
-    const parse_error_list_t &error_list) const {
+    int status, const parse_error_list_t &error_list) const {
     if (!parser->cancellation_signal) {
         if (error_list.empty()) {
             FLOG(error, L"Error reported but no error text found.");
@@ -652,15 +649,10 @@ end_execution_reason_t parse_execution_context_t::report_errors(
         if (!should_suppress_stderr_for_tests()) {
             std::fwprintf(stderr, L"%ls", backtrace_and_desc.c_str());
         }
-    }
-    return end_execution_reason_t::error;
-}
 
-/// Reports an unmatched wildcard error and returns end_execution_reason_t::error.
-end_execution_reason_t parse_execution_context_t::report_unmatched_wildcard_error(
-    const parse_node_t &unmatched_wildcard) const {
-    parser->set_last_statuses(statuses_t::just(STATUS_UNMATCHED_WILDCARD));
-    report_error(unmatched_wildcard, WILDCARD_ERR_MSG, get_source(unmatched_wildcard).c_str());
+        // Mark status.
+        parser->set_last_statuses(statuses_t::just(status));
+    }
     return end_execution_reason_t::error;
 }
 
@@ -672,7 +664,8 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
 
     const wchar_t *const cmd = cmd_str.c_str();
     if (err_code != ENOENT) {
-        this->report_error(statement, _(L"The file '%ls' is not executable by this user"), cmd);
+        return this->report_error(STATUS_NOT_EXECUTABLE, statement,
+                                  _(L"The file '%ls' is not executable by this user"), cmd);
     } else {
         // Handle unrecognized commands with standard command not found handler that can make better
         // error messages.
@@ -692,14 +685,8 @@ end_execution_reason_t parse_execution_context_t::handle_command_not_found(
         event_fire_generic(*parser, L"fish_command_not_found", &event_args);
 
         // Here we want to report an error (so it shows a backtrace), but with no text.
-        this->report_error(statement, L"");
+        return this->report_error(STATUS_CMD_UNKNOWN, statement, L"");
     }
-
-    // Set the last proc status appropriately.
-    int status = err_code == ENOENT ? STATUS_CMD_UNKNOWN : STATUS_NOT_EXECUTABLE;
-    parser->set_last_statuses(statuses_t::just(status));
-
-    return end_execution_reason_t::error;
 }
 
 end_execution_reason_t parse_execution_context_t::expand_command(
@@ -718,21 +705,22 @@ end_execution_reason_t parse_execution_context_t::expand_command(
     expand_result_t expand_err =
         expand_to_command_and_args(unexp_cmd, ctx, out_cmd, out_args, &errors);
     if (expand_err == expand_result_t::error) {
-        parser->set_last_statuses(statuses_t::just(STATUS_ILLEGAL_CMD));
         // Issue #5812 - the expansions were done on the command token,
         // excluding prefixes such as " " or "if ".
         // This means that the error positions are relative to the beginning
         // of the token; we need to make them relative to the original source.
         for (auto &error : errors) error.source_start += pos_of_command_token;
-        return report_errors(errors);
+        return report_errors(STATUS_ILLEGAL_CMD, errors);
     } else if (expand_err == expand_result_t::wildcard_no_match) {
-        return report_unmatched_wildcard_error(statement);
+        return report_error(STATUS_UNMATCHED_WILDCARD, statement, WILDCARD_ERR_MSG,
+                            get_source(statement).c_str());
     }
     assert(expand_err == expand_result_t::ok);
 
     // Complain if the resulting expansion was empty, or expanded to an empty string.
     if (out_cmd->empty()) {
-        return this->report_error(statement, _(L"The expanded command was empty."));
+        return this->report_error(STATUS_ILLEGAL_CMD, statement,
+                                  _(L"The expanded command was empty."));
     }
     return end_execution_reason_t::ok;
 }
@@ -840,8 +828,9 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
         }
 
         // The set of IO redirections that we construct for the process.
-        if (!this->determine_redirections(statement.child<1>(), &redirections)) {
-            return end_execution_reason_t::error;
+        auto reason = this->determine_redirections(statement.child<1>(), &redirections);
+        if (reason != end_execution_reason_t::ok) {
+            return reason;
         }
 
         // Determine the process type.
@@ -876,18 +865,19 @@ end_execution_reason_t parse_execution_context_t::expand_arguments_from_nodes(
         auto expand_ret =
             expand_string(arg_str, &arg_expanded, expand_flag::no_descriptions, ctx, &errors);
         parse_error_offset_source_start(&errors, arg_node.source_range()->start);
-        switch (expand_ret) {
+        switch (expand_ret.result) {
             case expand_result_t::error: {
-                return this->report_errors(errors);
+                return this->report_errors(expand_ret.status, errors);
             }
+
             case expand_result_t::cancel: {
                 return end_execution_reason_t::cancelled;
             }
             case expand_result_t::wildcard_no_match: {
                 if (glob_behavior == failglob) {
                     // Report the unmatched wildcard error and stop processing.
-                    report_unmatched_wildcard_error(arg_node);
-                    return end_execution_reason_t::error;
+                    return report_error(STATUS_UNMATCHED_WILDCARD, arg_node, WILDCARD_ERR_MSG,
+                                        get_source(arg_node).c_str());
                 }
                 break;
             }
@@ -916,7 +906,7 @@ end_execution_reason_t parse_execution_context_t::expand_arguments_from_nodes(
     return end_execution_reason_t::ok;
 }
 
-bool parse_execution_context_t::determine_redirections(
+end_execution_reason_t parse_execution_context_t::determine_redirections(
     tnode_t<g::arguments_or_redirections_list> node, redirection_spec_list_t *out_redirections) {
     // Get all redirection nodes underneath the statement.
     while (auto redirect_node = node.next_in_list<g::redirection>()) {
@@ -925,9 +915,8 @@ bool parse_execution_context_t::determine_redirections(
 
         if (!redirect || !redirect->is_valid()) {
             // TODO: figure out if this can ever happen. If so, improve this error message.
-            report_error(redirect_node, _(L"Invalid redirection: %ls"),
-                         redirect_node.get_source(pstree->src).c_str());
-            return false;
+            return report_error(STATUS_INVALID_ARGS, redirect_node, _(L"Invalid redirection: %ls"),
+                                redirect_node.get_source(pstree->src).c_str());
         }
 
         // PCA: I can't justify this skip_variables flag. It was like this when I got here.
@@ -935,8 +924,8 @@ bool parse_execution_context_t::determine_redirections(
             expand_one(target, no_exec() ? expand_flag::skip_variables : expand_flags_t{}, ctx);
         if (!target_expanded || target.empty()) {
             // TODO: Improve this error message.
-            report_error(redirect_node, _(L"Invalid redirection target: %ls"), target.c_str());
-            return false;
+            return report_error(STATUS_INVALID_ARGS, redirect_node,
+                                _(L"Invalid redirection target: %ls"), target.c_str());
         }
 
         // Make a redirection spec from the redirect token.
@@ -948,8 +937,7 @@ bool parse_execution_context_t::determine_redirections(
         if (spec.mode == redirection_mode_t::fd && !spec.is_close() && !spec.get_target_as_fd()) {
             const wchar_t *fmt =
                 _(L"Requested redirection to '%ls', which is not a valid file descriptor");
-            report_error(redirect_node, fmt, spec.target.c_str());
-            return false;
+            return report_error(STATUS_INVALID_ARGS, redirect_node, fmt, spec.target.c_str());
         }
         out_redirections->push_back(std::move(spec));
 
@@ -959,7 +947,7 @@ bool parse_execution_context_t::determine_redirections(
             out_redirections->push_back(get_stderr_merge());
         }
     }
-    return true;
+    return end_execution_reason_t::ok;
 }
 
 end_execution_reason_t parse_execution_context_t::populate_not_process(
@@ -970,8 +958,7 @@ end_execution_reason_t parse_execution_context_t::populate_not_process(
     if (optional_time.tag() == parse_optional_time_time) {
         flags.has_time_prefix = true;
         if (!job->mut_flags().foreground) {
-            this->report_error(not_statement, ERROR_TIME_BACKGROUND);
-            return end_execution_reason_t::error;
+            return this->report_error(STATUS_INVALID_ARGS, not_statement, ERROR_TIME_BACKGROUND);
         }
     }
     return this->populate_job_process(
@@ -996,15 +983,14 @@ end_execution_reason_t parse_execution_context_t::populate_block_process(
     // TODO: fix this ugly find_child.
     auto arguments = specific_statement.template find_child<g::arguments_or_redirections_list>();
     redirection_spec_list_t redirections;
-    if (!this->determine_redirections(arguments, &redirections)) {
-        return end_execution_reason_t::error;
+    auto reason = this->determine_redirections(arguments, &redirections);
+    if (reason == end_execution_reason_t::ok) {
+        proc->type = process_type_t::block_node;
+        proc->block_node_source = pstree;
+        proc->internal_block_node = statement;
+        proc->set_redirection_specs(std::move(redirections));
     }
-
-    proc->type = process_type_t::block_node;
-    proc->block_node_source = pstree;
-    proc->internal_block_node = statement;
-    proc->set_redirection_specs(std::move(redirections));
-    return end_execution_reason_t::ok;
+    return reason;
 }
 
 end_execution_reason_t parse_execution_context_t::apply_variable_assignments(
@@ -1027,18 +1013,17 @@ end_execution_reason_t parse_execution_context_t::apply_variable_assignments(
                                         expand_flag::no_descriptions, ctx, &errors);
         parse_error_offset_source_start(
             &errors, variable_assignment.source_range()->start + *equals_pos + 1);
-        switch (expand_ret) {
-            case expand_result_t::error: {
-                this->report_errors(errors);
-                return end_execution_reason_t::error;
-            }
-            case expand_result_t::cancel: {
+        switch (expand_ret.result) {
+            case expand_result_t::error:
+                return this->report_errors(expand_ret.status, errors);
+
+            case expand_result_t::cancel:
                 return end_execution_reason_t::cancelled;
-            }
+
             case expand_result_t::wildcard_no_match:  // nullglob (equivalent to set)
-            case expand_result_t::ok: {
+            case expand_result_t::ok:
                 break;
-            }
+
             default: {
                 DIE("unexpected expand_string() return value");
                 break;
@@ -1066,7 +1051,7 @@ end_execution_reason_t parse_execution_context_t::populate_job_process(
     cleanup_t scope([&]() {
         if (block) parser->pop_block(block);
     });
-    if (result != end_execution_reason_t::ok) return end_execution_reason_t::error;
+    if (result != end_execution_reason_t::ok) return result;
 
     switch (specific_statement.type) {
         case symbol_not_statement: {
@@ -1122,8 +1107,7 @@ end_execution_reason_t parse_execution_context_t::populate_job_from_job_node(
     if (optional_time.tag() == parse_optional_time_time) {
         j->mut_flags().has_time_prefix = true;
         if (job_node_is_background(job_node)) {
-            this->report_error(job_node, ERROR_TIME_BACKGROUND);
-            return end_execution_reason_t::error;
+            return this->report_error(STATUS_INVALID_ARGS, job_node, ERROR_TIME_BACKGROUND);
         }
     }
     end_execution_reason_t result =
@@ -1144,7 +1128,8 @@ end_execution_reason_t parse_execution_context_t::populate_job_from_job_node(
         auto parsed_pipe = pipe_or_redir_t::from_string(get_source(pipe));
         assert(parsed_pipe.has_value() && parsed_pipe->is_pipe && "Failed to parse valid pipe");
         if (!parsed_pipe->is_valid()) {
-            result = report_error(pipe, ILLEGAL_FD_ERR_MSG, get_source(pipe).c_str());
+            result = report_error(STATUS_INVALID_ARGS, pipe, ILLEGAL_FD_ERR_MSG,
+                                  get_source(pipe).c_str());
             break;
         }
         processes.back()->pipe_write_fd = parsed_pipe->fd;
@@ -1200,6 +1185,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
     if (parser->is_interactive() && tcgetattr(STDIN_FILENO, &tmodes)) {
         // Need real error handling here.
         wperror(L"tcgetattr");
+        parser->set_last_statuses(statuses_t::just(STATUS_CMD_ERROR));
         return end_execution_reason_t::error;
     }
 
@@ -1452,13 +1438,13 @@ end_execution_reason_t parse_execution_context_t::eval_node(tnode_t<g::job_list>
         this->infinite_recursive_statement_in_job_list(job_list, &func_name);
     if (infinite_recursive_node) {
         // We have an infinite recursion.
-        return this->report_error(infinite_recursive_node, INFINITE_FUNC_RECURSION_ERR_MSG,
-                                  func_name.c_str());
+        return this->report_error(STATUS_CMD_ERROR, infinite_recursive_node,
+                                  INFINITE_FUNC_RECURSION_ERR_MSG, func_name.c_str());
     }
 
     // Check for stack overflow. The TOP check ensures we only do this for function calls.
     if (associated_block->type() == block_type_t::top && parser->function_stack_is_overflowing()) {
-        return this->report_error(job_list, CALL_STACK_LIMIT_EXCEEDED_ERR_MSG);
+        return this->report_error(STATUS_CMD_ERROR, job_list, CALL_STACK_LIMIT_EXCEEDED_ERR_MSG);
     }
     return this->run_job_list(job_list, associated_block);
 }

@@ -528,7 +528,7 @@ static expand_result_t expand_braces(const wcstring &instr, expand_flags_t flags
 
     if (syntax_error) {
         append_syntax_error(errors, SOURCE_LOCATION_UNKNOWN, _(L"Mismatched braces"));
-        return expand_result_t::error;
+        return expand_result_t::make_error(STATUS_EXPAND_ERROR);
     }
 
     if (brace_begin == nullptr) {
@@ -574,9 +574,10 @@ static expand_result_t expand_braces(const wcstring &instr, expand_flags_t flags
     return expand_result_t::ok;
 }
 
-/// Perform cmdsubst expansion.
-static bool expand_cmdsubst(wcstring input, parser_t &parser, completion_list_t *out_list,
-                            parse_error_list_t *errors) {
+/// Expand a command substitution \p input, executing on \p parser, and inserting the results into
+/// \p out_list, or any errors into \p errors. \return an expand result.
+static expand_result_t expand_cmdsubst(wcstring input, parser_t &parser,
+                                       completion_list_t *out_list, parse_error_list_t *errors) {
     wchar_t *paren_begin = nullptr, *paren_end = nullptr;
     wchar_t *tail_begin = nullptr;
     size_t i, j;
@@ -586,11 +587,11 @@ static bool expand_cmdsubst(wcstring input, parser_t &parser, completion_list_t 
     switch (parse_util_locate_cmdsubst(in, &paren_begin, &paren_end, false)) {
         case -1: {
             append_syntax_error(errors, SOURCE_LOCATION_UNKNOWN, L"Mismatched parenthesis");
-            return false;
+            return expand_result_t::make_error(STATUS_EXPAND_ERROR);
         }
         case 0: {
             append_completion(out_list, std::move(input));
-            return true;
+            return expand_result_t::ok;
         }
         case 1: {
             break;
@@ -603,18 +604,23 @@ static bool expand_cmdsubst(wcstring input, parser_t &parser, completion_list_t 
 
     wcstring_list_t sub_res;
     const wcstring subcmd(paren_begin + 1, paren_end - paren_begin - 1);
-    if (exec_subshell(subcmd, parser, sub_res, true /* apply_exit_status */,
-                      true /* is_subcmd */) == -1) {
-        append_cmdsub_error(errors, SOURCE_LOCATION_UNKNOWN,
-                            L"Unknown error while evaluating command substitution");
-        return false;
-    }
-
-    if (parser.get_last_status() == STATUS_READ_TOO_MUCH) {
-        append_cmdsub_error(
-            errors, in - paren_begin,
-            _(L"Too much data emitted by command substitution so it was discarded\n"));
-        return false;
+    int subshell_status = exec_subshell_for_expand(subcmd, parser, sub_res);
+    if (subshell_status != 0) {
+        // TODO: Ad-hoc switch, how can we enumerate the possible errors more safely?
+        const wchar_t *err;
+        switch (subshell_status) {
+            case STATUS_READ_TOO_MUCH:
+                err = L"Too much data emitted by command substitution so it was discarded";
+                break;
+            case STATUS_CMD_ERROR:
+                err = L"Too many active file descriptors";
+                break;
+            default:
+                err = L"Unknown error while evaluating command substitution";
+                break;
+        }
+        append_cmdsub_error(errors, in - paren_begin, _(err));
+        return expand_result_t::make_error(subshell_status);
     }
 
     tail_begin = paren_end + 1;
@@ -627,7 +633,7 @@ static bool expand_cmdsubst(wcstring input, parser_t &parser, completion_list_t 
         bad_pos = parse_slice(slice_begin, &slice_end, slice_idx, sub_res.size());
         if (bad_pos != 0) {
             append_syntax_error(errors, slice_begin - in + bad_pos, L"Invalid index value");
-            return false;
+            return expand_result_t::make_error(STATUS_EXPAND_ERROR);
         }
 
         wcstring_list_t sub_res2;
@@ -684,7 +690,7 @@ static bool expand_cmdsubst(wcstring input, parser_t &parser, completion_list_t 
         }
     }
 
-    return parser.get_last_status() != STATUS_READ_TOO_MUCH;
+    return expand_result_t::ok;
 }
 
 // Given that input[0] is HOME_DIRECTORY or tilde (ugh), return the user's name. Return the empty
@@ -885,21 +891,18 @@ expand_result_t expander_t::stage_cmdsubst(wcstring input, completion_list_t *ou
         switch (parse_util_locate_cmdsubst_range(input, &cur, nullptr, &start, &end, true)) {
             case 0:
                 append_completion(out, std::move(input));
-                break;
+                return expand_result_t::ok;
             case 1:
                 append_cmdsub_error(errors, start, L"Command substitutions not allowed");
                 /* intentionally falls through */
             case -1:
             default:
-                return expand_result_t::error;
+                return expand_result_t::make_error(STATUS_EXPAND_ERROR);
         }
     } else {
         assert(ctx.parser && "Must have a parser to expand command substitutions");
-        bool cmdsubst_ok = expand_cmdsubst(std::move(input), *ctx.parser, out, errors);
-        if (!cmdsubst_ok) return expand_result_t::error;
+        return expand_cmdsubst(std::move(input), *ctx.parser, out, errors);
     }
-
-    return expand_result_t::ok;
 }
 
 expand_result_t expander_t::stage_variables(wcstring input, completion_list_t *out) {
@@ -918,7 +921,7 @@ expand_result_t expander_t::stage_variables(wcstring input, completion_list_t *o
     } else {
         size_t size = next.size();
         if (!expand_variables(std::move(next), out, size, ctx.vars, errors)) {
-            return expand_result_t::error;
+            return expand_result_t::make_error(STATUS_EXPAND_ERROR);
         }
     }
     return expand_result_t::ok;
@@ -1085,7 +1088,7 @@ expand_result_t expander_t::expand_string(wcstring input, completion_list_t *out
         total_result = expand_result_t::ok;
     }
 
-    if (total_result != expand_result_t::error) {
+    if (total_result == expand_result_t::ok) {
         // Hack to un-expand tildes (see #647).
         if (!(flags & expand_flag::skip_home_directories)) {
             unexpand_tildes(input, ctx.vars, &completions);
@@ -1113,7 +1116,7 @@ bool expand_one(wcstring &string, expand_flags_t flags, const operation_context_
     }
 
     if (expand_string(std::move(string), &completions, flags | expand_flag::no_descriptions, ctx,
-                      errors) != expand_result_t::error &&
+                      errors) == expand_result_t::ok &&
         completions.size() == 1) {
         string = std::move(completions.at(0).completion);
         return true;

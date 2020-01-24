@@ -100,16 +100,39 @@ enum : wchar_t {
 };
 
 /// These are the possible return values for expand_string.
-enum class expand_result_t {
-    /// There was a syntax error, for example, unmatched braces.
-    error,
-    /// Expansion succeeded.
-    ok,
-    /// Expansion was cancelled (e.g. control-C).
-    cancel,
-    /// Expansion succeeded, but a wildcard in the string matched no files,
-    /// so the output is empty.
-    wildcard_no_match,
+struct expand_result_t {
+    enum result_t {
+        /// There was an error, for example, unmatched braces.
+        error,
+        /// Expansion succeeded.
+        ok,
+        /// Expansion was cancelled (e.g. control-C).
+        cancel,
+        /// Expansion succeeded, but a wildcard in the string matched no files,
+        /// so the output is empty.
+        wildcard_no_match,
+    };
+
+    /// The result of expansion.
+    result_t result;
+
+    /// If expansion resulted in an error, this is an appropriate value with which to populate
+    /// $status.
+    int status{0};
+
+    /* implicit */ expand_result_t(result_t result) : result(result) {}
+
+    /// operator== allows for comparison against result_t values.
+    bool operator==(result_t rhs) const { return result == rhs; }
+    bool operator!=(result_t rhs) const { return !(*this == rhs); }
+
+    /// Make an error value with the given status.
+    static expand_result_t make_error(int status) {
+        assert(status != 0 && "status cannot be 0 for an error result");
+        expand_result_t result(error);
+        result.status = status;
+        return result;
+    }
 };
 
 /// The string represented by PROCESS_EXPAND_SELF

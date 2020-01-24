@@ -52,13 +52,11 @@ class parse_execution_context_t {
     // This will never return end_execution_reason_t::ok.
     maybe_t<end_execution_reason_t> check_end_execution() const;
 
-    // Report an error. Always returns 'end_execution_reason_t::error'.
-    end_execution_reason_t report_error(const parse_node_t &node, const wchar_t *fmt, ...) const;
-    end_execution_reason_t report_errors(const parse_error_list_t &error_list) const;
-
-    // Wildcard error helper.
-    end_execution_reason_t report_unmatched_wildcard_error(
-        const parse_node_t &unmatched_wildcard) const;
+    // Report an error, setting $status to \p status. Always returns
+    // 'end_execution_reason_t::error'.
+    end_execution_reason_t report_error(int status, const parse_node_t &node, const wchar_t *fmt,
+                                        ...) const;
+    end_execution_reason_t report_errors(int status, const parse_error_list_t &error_list) const;
 
     /// Command not found support.
     end_execution_reason_t handle_command_not_found(const wcstring &cmd,
@@ -122,10 +120,10 @@ class parse_execution_context_t {
                                                        wcstring_list_t *out_arguments,
                                                        globspec_t glob_behavior);
 
-    // Determines the list of redirections for a node. Returns none() on failure, for example, an
-    // invalid fd.
-    bool determine_redirections(tnode_t<grammar::arguments_or_redirections_list> node,
-                                redirection_spec_list_t *out_redirections);
+    // Determines the list of redirections for a node.
+    end_execution_reason_t determine_redirections(
+        tnode_t<grammar::arguments_or_redirections_list> node,
+        redirection_spec_list_t *out_redirections);
 
     end_execution_reason_t run_1_job(tnode_t<grammar::job> job, const block_t *associated_block);
     end_execution_reason_t run_job_conjunction(tnode_t<grammar::job_conjunction> job_expr,

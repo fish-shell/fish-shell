@@ -29,7 +29,6 @@ set --show b
 #CHECK: $b: not set in global scope
 #CHECK: $b: not set in universal scope
 #CHECKERR: {{.*}}: Too much data emitted by command substitution so it was discarded
-#CHECKERR: 
 #CHECKERR: set b (string repeat -n 512 x)
 #CHECKERR:       ^
 
@@ -43,7 +42,6 @@ set --show c
 #CHECK: $c[1]: length=0 value=||
 #CHECK: $c: not set in universal scope
 #CHECKERR: {{.*}}: Too much data emitted by command substitution so it was discarded
-#CHECKERR: 
 #CHECKERR:     set -l x (string repeat -n $argv x)
 #CHECKERR:              ^
 #CHECKERR: in function 'subme' with arguments '513'
@@ -62,6 +60,5 @@ test $saved_status -eq 122
 or echo expected status 122, saw $saved_status >&2
 
 #CHECKERR: {{.*}}: Too much data emitted by command substitution so it was discarded
-#CHECKERR: 
 #CHECKERR: echo this will fail (string repeat --max 513 b) to output anything
 #CHECKERR:                     ^

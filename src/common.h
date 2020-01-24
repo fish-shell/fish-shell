@@ -817,6 +817,8 @@ enum {
     STATUS_ILLEGAL_CMD = 123,
     /// The status code used when `read` is asked to consume too much data.
     STATUS_READ_TOO_MUCH = 122,
+    /// The status code when an expansion fails, for example, "$foo["
+    STATUS_EXPAND_ERROR = 121,
 };
 
 /* Normally casting an expression to void discards its value, but GCC

@@ -874,8 +874,8 @@ void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor
     }
 
     wcstring_list_t lst;
-    if (exec_subshell(fish_title_command, parser, lst, false /* ignore exit status */) != -1 &&
-        !lst.empty()) {
+    (void)exec_subshell(fish_title_command, parser, lst, false /* ignore exit status */);
+    if (!lst.empty()) {
         std::fputws(L"\x1B]0;", stdout);
         for (const auto &i : lst) {
             std::fputws(i.c_str(), stdout);

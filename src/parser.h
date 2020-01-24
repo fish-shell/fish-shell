@@ -200,6 +200,24 @@ struct library_data_t {
 
 class operation_context_t;
 
+/// The result of parser_t::eval family.
+struct eval_res_t {
+    /// The value for $status.
+    proc_status_t status;
+
+    /// If set, there was an error that should be considered a failed expansion, such as
+    /// command-not-found. For example, `touch (not-a-command)` will not invoke 'touch' because
+    /// command-not-found will mark break_expand.
+    bool break_expand;
+
+    /// If set, no commands were executed and there we no errors.
+    bool was_empty{false};
+
+    /* implicit */ eval_res_t(proc_status_t status, bool break_expand = false,
+                              bool was_empty = false)
+        : status(status), break_expand(break_expand), was_empty(was_empty) {}
+};
+
 class parser_t : public std::enable_shared_from_this<parser_t> {
     friend class parse_execution_context_t;
 
@@ -266,22 +284,23 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// \param io io redirections to perform on all started jobs
     /// \param block_type The type of block to push on the block stack, which must be either 'top'
     /// or 'subst'.
+    /// \param break_expand If not null, return by reference whether the error ought to be an expand
+    /// error. This includes nested expand errors, and command-not-found.
     ///
-    /// \return the eval result,
-    end_execution_reason_t eval(const wcstring &cmd, const io_chain_t &io,
-                                block_type_t block_type = block_type_t::top);
+    /// \return the result of evaluation.
+    eval_res_t eval(const wcstring &cmd, const io_chain_t &io,
+                    block_type_t block_type = block_type_t::top);
 
     /// Evaluate the parsed source ps.
     /// Because the source has been parsed, a syntax error is impossible.
-    end_execution_reason_t eval(const parsed_source_ref_t &ps, const io_chain_t &io,
-                                block_type_t block_type = block_type_t::top);
+    eval_res_t eval(const parsed_source_ref_t &ps, const io_chain_t &io,
+                    block_type_t block_type = block_type_t::top);
 
     /// Evaluates a node.
     /// The node type must be grammar::statement or grammar::job_list.
     template <typename T>
-    end_execution_reason_t eval_node(const parsed_source_ref_t &ps, tnode_t<T> node,
-                                     job_lineage_t lineage,
-                                     block_type_t block_type = block_type_t::top);
+    eval_res_t eval_node(const parsed_source_ref_t &ps, tnode_t<T> node, job_lineage_t lineage,
+                         block_type_t block_type = block_type_t::top);
 
     /// Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and
     /// cmdsubst execution on the tokens. Errors are ignored. If a parser is provided, it is used

@@ -614,8 +614,7 @@ profile_item_t *parser_t::create_profile_item() {
     return result;
 }
 
-end_execution_reason_t parser_t::eval(const wcstring &cmd, const io_chain_t &io,
-                                      enum block_type_t block_type) {
+eval_res_t parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type) {
     // Parse the source into a tree, if we can.
     parse_error_list_t error_list;
     if (parsed_source_ref_t ps = parse_source(cmd, parse_flag_none, &error_list)) {
@@ -627,12 +626,16 @@ end_execution_reason_t parser_t::eval(const wcstring &cmd, const io_chain_t &io,
 
         // Print it.
         std::fwprintf(stderr, L"%ls\n", backtrace_and_desc.c_str());
-        return end_execution_reason_t::error;
+
+        // Set a valid status.
+        this->set_last_statuses(statuses_t::just(STATUS_ILLEGAL_CMD));
+        bool break_expand = true;
+        return eval_res_t{proc_status_t::from_exit_code(STATUS_ILLEGAL_CMD), break_expand};
     }
 }
 
-end_execution_reason_t parser_t::eval(const parsed_source_ref_t &ps, const io_chain_t &io,
-                                      enum block_type_t block_type) {
+eval_res_t parser_t::eval(const parsed_source_ref_t &ps, const io_chain_t &io,
+                          enum block_type_t block_type) {
     assert(block_type == block_type_t::top || block_type == block_type_t::subst);
     if (!ps->tree.empty()) {
         job_lineage_t lineage;
@@ -640,13 +643,17 @@ end_execution_reason_t parser_t::eval(const parsed_source_ref_t &ps, const io_ch
         // Execute the first node.
         tnode_t<grammar::job_list> start{&ps->tree, &ps->tree.front()};
         return this->eval_node(ps, start, std::move(lineage), block_type);
+    } else {
+        auto status = proc_status_t::from_exit_code(get_last_status());
+        bool break_expand = false;
+        bool was_empty = true;
+        return eval_res_t{status, break_expand, was_empty};
     }
-    return end_execution_reason_t::ok;
 }
 
 template <typename T>
-end_execution_reason_t parser_t::eval_node(const parsed_source_ref_t &ps, tnode_t<T> node,
-                                           job_lineage_t lineage, block_type_t block_type) {
+eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, tnode_t<T> node,
+                               job_lineage_t lineage, block_type_t block_type) {
     static_assert(
         std::is_same<T, grammar::statement>::value || std::is_same<T, grammar::job_list>::value,
         "Unexpected node type");
@@ -655,7 +662,7 @@ end_execution_reason_t parser_t::eval_node(const parsed_source_ref_t &ps, tnode_
     // not empty, we are still in the process of cancelling; refuse to evaluate anything.
     if (this->cancellation_signal) {
         if (!block_list.empty()) {
-            return end_execution_reason_t::cancelled;
+            return proc_status_t::from_signal(this->cancellation_signal);
         }
         this->cancellation_signal = 0;
     }
@@ -674,25 +681,33 @@ end_execution_reason_t parser_t::eval_node(const parsed_source_ref_t &ps, tnode_
     using exc_ctx_ref_t = std::unique_ptr<parse_execution_context_t>;
     scoped_push<exc_ctx_ref_t> exc(&execution_context, make_unique<parse_execution_context_t>(
                                                            ps, this, op_ctx, std::move(lineage)));
-    end_execution_reason_t res = execution_context->eval_node(node, scope_block);
+
+    // Check the exec count so we know if anything got executed.
+    const size_t prev_exec_count = libdata().exec_count;
+    end_execution_reason_t reason = execution_context->eval_node(node, scope_block);
+    const size_t new_exec_count = libdata().exec_count;
+
     exc.restore();
     this->pop_block(scope_block);
 
     job_reap(*this, false);  // reap again
 
-    // control_flow is used internally to react to break and return.
-    // Here we treat that as success.
-    if (res == end_execution_reason_t::control_flow) {
-        res = end_execution_reason_t::ok;
+    if (this->cancellation_signal) {
+        // We were signalled.
+        return proc_status_t::from_signal(this->cancellation_signal);
+    } else {
+        auto status = proc_status_t::from_exit_code(this->get_last_status());
+        bool break_expand = (reason == end_execution_reason_t::error);
+        bool was_empty = !break_expand && prev_exec_count == new_exec_count;
+        return eval_res_t{status, break_expand, was_empty};
     }
-    return res;
 }
 
 // Explicit instantiations. TODO: use overloads instead?
-template end_execution_reason_t parser_t::eval_node(const parsed_source_ref_t &, tnode_t<grammar::statement>,
-                                           job_lineage_t, block_type_t);
-template end_execution_reason_t parser_t::eval_node(const parsed_source_ref_t &, tnode_t<grammar::job_list>,
-                                           job_lineage_t, block_type_t);
+template eval_res_t parser_t::eval_node(const parsed_source_ref_t &, tnode_t<grammar::statement>,
+                                        job_lineage_t, block_type_t);
+template eval_res_t parser_t::eval_node(const parsed_source_ref_t &, tnode_t<grammar::job_list>,
+                                        job_lineage_t, block_type_t);
 
 void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &errors,
                              wcstring &output) const {

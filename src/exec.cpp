@@ -706,18 +706,7 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
         const parsed_source_ref_t &source = p->block_node_source;
         tnode_t<grammar::statement> node = p->internal_block_node;
         assert(source && node && "Process is missing node info");
-        return [=](parser_t &parser) {
-            end_execution_reason_t res = parser.eval_node(source, node, lineage);
-            switch (res) {
-                case end_execution_reason_t::ok:
-                case end_execution_reason_t::error:
-                case end_execution_reason_t::cancelled:
-                    return proc_status_t::from_exit_code(parser.get_last_status());
-                case end_execution_reason_t::control_flow:
-                default:
-                    DIE("end_execution_reason_t::control_flow should not be returned from eval_node");
-            }
-        };
+        return [=](parser_t &parser) { return parser.eval_node(source, node, lineage).status; };
     } else {
         assert(p->type == process_type_t::function);
         auto props = function_get_properties(p->argv0());
@@ -729,25 +718,15 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
         return [=](parser_t &parser) {
             // Pull out the job list from the function.
             tnode_t<grammar::job_list> body = props->func_node.child<1>();
-            const auto &ld = parser.libdata();
-            auto saved_exec_count = ld.exec_count;
             const block_t *fb = function_prepare_environment(parser, *argv, *props);
             auto res = parser.eval_node(props->parsed_source, body, lineage);
             function_restore_environment(parser, fb);
 
-            switch (res) {
-                case end_execution_reason_t::ok:
-                    // If the function did not execute anything, treat it as success.
-                    return proc_status_t::from_exit_code(saved_exec_count == ld.exec_count
-                                                             ? EXIT_SUCCESS
-                                                             : parser.get_last_status());
-                case end_execution_reason_t::error:
-                case end_execution_reason_t::cancelled:
-                    return proc_status_t::from_exit_code(parser.get_last_status());
-                default:
-                case end_execution_reason_t::control_flow:
-                    DIE("end_execution_reason_t::control_flow should not be returned from eval_node");
+            // If the function did not execute anything, treat it as success.
+            if (res.was_empty) {
+                res = proc_status_t::from_exit_code(EXIT_SUCCESS);
             }
+            return res.status;
         };
     }
 }
@@ -879,7 +858,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, const std::share
     }
 
     if (p->type != process_type_t::block_node) {
-        // An simple `begin ... end` should not be considered an execution of a command.
+        // A simple `begin ... end` should not be considered an execution of a command.
         parser.libdata().exec_count++;
     }
 
@@ -1121,60 +1100,10 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
     return true;
 }
 
-static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstring_list_t *lst,
-                                  bool apply_exit_status, bool is_subcmd) {
-    ASSERT_IS_MAIN_THREAD();
-    auto &ld = parser.libdata();
-    bool prev_subshell = ld.is_subshell;
-    auto prev_statuses = parser.get_last_statuses();
-    bool split_output = false;
-
-    auto prev_read_limit = ld.read_limit;
-    ld.read_limit = is_subcmd ? read_byte_limit : 0;
-
-    const auto ifs = parser.vars().get(L"IFS");
-    if (!ifs.missing_or_empty()) {
-        split_output = true;
-    }
-
-    ld.is_subshell = true;
-    auto subcommand_statuses = statuses_t::just(-1);  // assume the worst
-
-    // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may
-    // be null.
-    std::shared_ptr<io_buffer_t> buffer;
-    if (auto bufferfill = io_bufferfill_t::create(fd_set_t{}, ld.read_limit)) {
-        if (parser.eval(cmd, io_chain_t{bufferfill}, block_type_t::subst) == end_execution_reason_t::ok) {
-            subcommand_statuses = parser.get_last_statuses();
-        }
-        buffer = io_bufferfill_t::finish(std::move(bufferfill));
-    }
-
-    if (buffer && buffer->buffer().discarded()) {
-        subcommand_statuses = statuses_t::just(STATUS_READ_TOO_MUCH);
-    }
-
-    // If the caller asked us to preserve the exit status, restore the old status. Otherwise set the
-    // status of the subcommand.
-    if (apply_exit_status) {
-        // Hack: If the evaluation failed, avoid returning -1 to the user.
-        if (subcommand_statuses.status == -1) {
-            parser.set_last_statuses(statuses_t::just(255));
-        } else {
-            parser.set_last_statuses(subcommand_statuses);
-        }
-    } else {
-        parser.set_last_statuses(std::move(prev_statuses));
-    }
-
-    ld.is_subshell = prev_subshell;
-    ld.read_limit = prev_read_limit;
-
-    if (lst == nullptr || !buffer) {
-        return subcommand_statuses.status;
-    }
+/// Populate \p lst with the output of \p buffer, perhaps splitting lines according to \p split.
+static void populate_subshell_output(wcstring_list_t *lst, const io_buffer_t &buffer, bool split) {
     // Walk over all the elements.
-    for (const auto &elem : buffer->buffer().elements()) {
+    for (const auto &elem : buffer.buffer().elements()) {
         if (elem.is_explicitly_separated()) {
             // Just append this one.
             lst->push_back(str2wcstring(elem.contents));
@@ -1185,7 +1114,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
         assert(!elem.is_explicitly_separated() && "should not be explicitly separated");
         const char *begin = elem.contents.data();
         const char *end = begin + elem.contents.size();
-        if (split_output) {
+        if (split) {
             const char *cursor = begin;
             while (cursor < end) {
                 // Look for the next separator.
@@ -1210,17 +1139,73 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
             lst->push_back(str2wcstring(begin, end - begin));
         }
     }
+}
 
-    return subcommand_statuses.status;
+/// Execute \p cmd in a subshell in \p parser. If \p lst is not null, populate it with the output.
+/// Return $status in \p out_status.
+/// If \p apply_exit_status is false, then reset $status back to its original value.
+/// \p is_subcmd controls whether we apply a read limit.
+/// \p break_expand is used to propagate whether the result should be "expansion breaking" in the
+/// sense that subshells used during string expansion should halt that expansion. \return the value
+/// of $status.
+static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstring_list_t *lst,
+                                  bool *break_expand, bool apply_exit_status, bool is_subcmd) {
+    ASSERT_IS_MAIN_THREAD();
+    auto &ld = parser.libdata();
+
+    scoped_push<bool> is_subshell(&ld.is_subshell, true);
+    scoped_push<size_t> read_limit(&ld.read_limit, is_subcmd ? read_byte_limit : 0);
+
+    auto prev_statuses = parser.get_last_statuses();
+    const cleanup_t put_back([&] {
+        if (!apply_exit_status) {
+            parser.set_last_statuses(prev_statuses);
+        }
+    });
+
+    const bool split_output = !parser.vars().get(L"IFS").missing_or_empty();
+
+    // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may
+    // be null.
+    auto bufferfill = io_bufferfill_t::create(fd_set_t{}, ld.read_limit);
+    if (!bufferfill) {
+        *break_expand = true;
+        return STATUS_CMD_ERROR;
+    }
+    eval_res_t eval_res = parser.eval(cmd, io_chain_t{bufferfill}, block_type_t::subst);
+    std::shared_ptr<io_buffer_t> buffer = io_bufferfill_t::finish(std::move(bufferfill));
+    if (buffer->buffer().discarded()) {
+        *break_expand = true;
+        return STATUS_READ_TOO_MUCH;
+    }
+
+    if (eval_res.break_expand) {
+        *break_expand = true;
+        return eval_res.status.status_value();
+    }
+
+    if (lst) {
+        populate_subshell_output(lst, *buffer, split_output);
+    }
+    *break_expand = false;
+    return eval_res.status.status_value();
+}
+
+int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser, wcstring_list_t &outputs) {
+    ASSERT_IS_MAIN_THREAD();
+    bool break_expand = false;
+    int ret = exec_subshell_internal(cmd, parser, &outputs, &break_expand, true, true);
+    // Only return an error code if we should break expansion.
+    return break_expand ? ret : STATUS_CMD_OK;
+}
+
+int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status) {
+    bool break_expand = false;
+    return exec_subshell_internal(cmd, parser, nullptr, &break_expand, apply_exit_status, false);
 }
 
 int exec_subshell(const wcstring &cmd, parser_t &parser, wcstring_list_t &outputs,
-                  bool apply_exit_status, bool is_subcmd) {
-    ASSERT_IS_MAIN_THREAD();
-    return exec_subshell_internal(cmd, parser, &outputs, apply_exit_status, is_subcmd);
-}
-
-int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status, bool is_subcmd) {
-    ASSERT_IS_MAIN_THREAD();
-    return exec_subshell_internal(cmd, parser, nullptr, apply_exit_status, is_subcmd);
+                  bool apply_exit_status) {
+    bool break_expand = false;
+    return exec_subshell_internal(cmd, parser, &outputs, &break_expand, apply_exit_status, false);
 }

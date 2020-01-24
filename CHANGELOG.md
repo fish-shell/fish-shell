@@ -165,6 +165,7 @@
   - `kak`
   - `keepassxc-cli` (#6505)
   - `keybase` (#6410)
+  - `loginctl` (#6501)
   - `lz4`, `lz4c` and `lz4cat` (#6364)
   - `mariner` (#5718)
   - `nethack` (#6240)
@@ -173,6 +174,7 @@
   - `plutil` (#6301)
   - `pzstd` (#6364)
   - `qubes-gpg-client` (#6067)
+  - `resolvectl` (#6501)
   - `rg`
   - `rustup`
   - `sfdx` (#6149)

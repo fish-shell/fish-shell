@@ -17,10 +17,8 @@ complete -c ssh -n 'test (__fish_number_of_cmd_args_wo_opts) -ge 2' -d "Command 
 
 complete -c ssh -s a -d "Disables forwarding of the authentication agent"
 complete -c ssh -s A -d "Enables forwarding of the authentication agent"
-# TODO: Improve this since /proc/net/arp is not POSIX compliant.
-complete -x -c ssh -s b -d "Interface to transmit from" -a "
-(cut -d ' ' -f 1 /proc/net/arp 2>/dev/null | string match -r -v '^IP')
-"
+
+complete -x -c ssh -s b -d "Local address to bind to" -a "(__fish_print_addresses)"
 
 complete -x -c ssh -s e -d "Escape character" -a "\^ none"
 complete -c ssh -s f -d "Go to background"
@@ -43,13 +41,13 @@ complete -c ssh -s R -d "Remotely forwarded ports"
 complete -c ssh -s D -d "Dynamic port forwarding"
 complete -c ssh -s c -d "Encryption cipher" -xa "(ssh -Q cipher)"
 
-# Also look up hosts from the history
+# Also retrieve `user@host` entries from history
 function __ssh_history_completions --argument limit
     if string match -q ""
         set limit 100
     end
 
-    history --prefix ssh | sed -n "s/.* \([A-Za-z0-9._:-]\+@[A-Za-z0-9._:-]\+\).*/\1/p" | head -n $limit
+    history --prefix ssh | string replace -rf '.* ([A-Za-z0-9._:-]+@[A-Za-z0-9._:-]+).*' '$1' | head -n $limit
 end
 
 complete -k -c ssh -a '(__ssh_history_completions 100)' -f -d "Remote"

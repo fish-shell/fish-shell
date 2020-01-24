@@ -707,15 +707,15 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
         tnode_t<grammar::statement> node = p->internal_block_node;
         assert(source && node && "Process is missing node info");
         return [=](parser_t &parser) {
-            eval_result_t res = parser.eval_node(source, node, lineage);
+            end_execution_reason_t res = parser.eval_node(source, node, lineage);
             switch (res) {
-                case eval_result_t::ok:
-                case eval_result_t::error:
-                case eval_result_t::cancelled:
+                case end_execution_reason_t::ok:
+                case end_execution_reason_t::error:
+                case end_execution_reason_t::cancelled:
                     return proc_status_t::from_exit_code(parser.get_last_status());
-                case eval_result_t::control_flow:
+                case end_execution_reason_t::control_flow:
                 default:
-                    DIE("eval_result_t::control_flow should not be returned from eval_node");
+                    DIE("end_execution_reason_t::control_flow should not be returned from eval_node");
             }
         };
     } else {
@@ -736,17 +736,17 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
             function_restore_environment(parser, fb);
 
             switch (res) {
-                case eval_result_t::ok:
+                case end_execution_reason_t::ok:
                     // If the function did not execute anything, treat it as success.
                     return proc_status_t::from_exit_code(saved_exec_count == ld.exec_count
                                                              ? EXIT_SUCCESS
                                                              : parser.get_last_status());
-                case eval_result_t::error:
-                case eval_result_t::cancelled:
+                case end_execution_reason_t::error:
+                case end_execution_reason_t::cancelled:
                     return proc_status_t::from_exit_code(parser.get_last_status());
                 default:
-                case eval_result_t::control_flow:
-                    DIE("eval_result_t::control_flow should not be returned from eval_node");
+                case end_execution_reason_t::control_flow:
+                    DIE("end_execution_reason_t::control_flow should not be returned from eval_node");
             }
         };
     }
@@ -1144,7 +1144,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
     // be null.
     std::shared_ptr<io_buffer_t> buffer;
     if (auto bufferfill = io_bufferfill_t::create(fd_set_t{}, ld.read_limit)) {
-        if (parser.eval(cmd, io_chain_t{bufferfill}, block_type_t::subst) == eval_result_t::ok) {
+        if (parser.eval(cmd, io_chain_t{bufferfill}, block_type_t::subst) == end_execution_reason_t::ok) {
             subcommand_statuses = parser.get_last_statuses();
         }
         buffer = io_bufferfill_t::finish(std::move(bufferfill));

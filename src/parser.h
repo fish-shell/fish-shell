@@ -268,19 +268,20 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// or 'subst'.
     ///
     /// \return the eval result,
-    eval_result_t eval(const wcstring &cmd, const io_chain_t &io,
-                       block_type_t block_type = block_type_t::top);
+    end_execution_reason_t eval(const wcstring &cmd, const io_chain_t &io,
+                                block_type_t block_type = block_type_t::top);
 
     /// Evaluate the parsed source ps.
     /// Because the source has been parsed, a syntax error is impossible.
-    eval_result_t eval(const parsed_source_ref_t &ps, const io_chain_t &io,
-                       block_type_t block_type = block_type_t::top);
+    end_execution_reason_t eval(const parsed_source_ref_t &ps, const io_chain_t &io,
+                                block_type_t block_type = block_type_t::top);
 
     /// Evaluates a node.
     /// The node type must be grammar::statement or grammar::job_list.
     template <typename T>
-    eval_result_t eval_node(const parsed_source_ref_t &ps, tnode_t<T> node, job_lineage_t lineage,
-                            block_type_t block_type = block_type_t::top);
+    end_execution_reason_t eval_node(const parsed_source_ref_t &ps, tnode_t<T> node,
+                                     job_lineage_t lineage,
+                                     block_type_t block_type = block_type_t::top);
 
     /// Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and
     /// cmdsubst execution on the tokens. Errors are ignored. If a parser is provided, it is used

@@ -33,6 +33,8 @@ jobs
 
 status job-control interactive
 command kill -9 $tokill[2]
+# Wait for the job to die - the signal needs to be delivered.
+wait $tokill[2] 2>/dev/null
 set -e tokill[2]
 status job-control full
 sleep 400 &

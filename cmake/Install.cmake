@@ -216,6 +216,9 @@ IF(GETTEXT_FOUND)
   ENDFOREACH()
 ENDIF()
 
+INSTALL(FILES fish.desktop DESTINATION ${rel_datadir}/applications)
+INSTALL(FILES fish.png DESTINATION ${rel_datadir}/pixmaps)
+
 # Group install targets into a InstallTargets folder
 SET_PROPERTY(TARGET build_fish_pc CHECK-FISH-BUILD-VERSION-FILE
                     test_fishscript

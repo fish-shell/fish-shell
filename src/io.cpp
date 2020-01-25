@@ -48,7 +48,7 @@ void io_bufferfill_t::print() const { std::fwprintf(stderr, L"bufferfill {%d}\n"
 
 void io_buffer_t::append_from_stream(const output_stream_t &stream) {
     const separated_buffer_t<wcstring> &input = stream.buffer();
-    if (input.elements().empty()) return;
+    if (input.elements().empty() && !input.discarded()) return;
     scoped_lock locker(append_lock_);
     if (buffer_.discarded()) return;
     if (input.discarded()) {

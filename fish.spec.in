@@ -121,3 +121,7 @@ fi
 
 # pkgconfig
 %{_datadir}/pkgconfig/fish.pc
+
+# FreeDesktop entry
+%{_datadir}/applications/fish.desktop
+%{_datadir}/pixmaps/fish.png

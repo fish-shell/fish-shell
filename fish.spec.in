@@ -17,6 +17,10 @@ BuildRequires: cmake3
 BuildRequires: cmake pcre2-devel
 %endif
 
+%if 0%{?suse_version}
+BuildRequires: update-desktop-files
+%endif
+
 %if 0%{?opensuse_bs} && 0%{?rhel} && 0%{?rhel} < 7
 BuildRequires: gcc48 gcc48-c++ python-argparse
 %endif
@@ -73,6 +77,10 @@ make %{?_smp_mflags}
 %make_install
 %endif
 %find_lang %{name}
+# OpenSUSE has strong opinions about categories which do not apply to other systems
+%if 0%{?suse_version}
+%suse_update_desktop_file fish "System;TerminalEmulator;Shell"
+%endif
 
 %check
 # OpenSUSE does out-of-tree builds and defines __builddir

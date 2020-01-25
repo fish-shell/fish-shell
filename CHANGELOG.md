@@ -1,4 +1,4 @@
-# fish 3.1.0
+# fish 3.1b1
 
 ## Notable improvements and fixes
 - A new `$pipestatus` variable contains a list of exit statuses of the previous job, for each of the separate commands in a pipeline (#5632).
@@ -71,6 +71,7 @@
 - A new `fish_cancel` event is emitted when the command line is cancelled, which is useful for terminal integration (#5973).
 
 ### Interactive improvements
+- New Base16 color options are available through the Web-based configuration (#6504).
 - fish only parses `/etc/paths` on macOS in login shells, matching the bash implementation (#5637) and avoiding changes to path ordering in child shells (#5456). It now ignores blank lines like the bash implementation (#5809).
 - The locale is now reloaded when the `LOCPATH` variable is changed (#5815).
 - `read` no longer keeps a history, making it suitable for operations that shouldn't end up there, like password entry (#5904).
@@ -88,7 +89,7 @@
 - Key bindings that call `fg` no longer leave the terminal in a broken state (#2114).
 - Brackets (#5831) and filenames containing `$` (#6060) are completed with appropriate escaping.
 - The output of `complete` and `functions` is now colorized in interactive terminals.
-- The Web-based configuration handles aliases that include single quotes correctly (#6120), and launches correctly under Termux (#6248).
+- The Web-based configuration handles aliases that include single quotes correctly (#6120), and launches correctly under Termux (#6248) and OpenBSD (#6522).
 - `function` now correctly validates parameters for `--argument-names` as valid variable names (#6147) and correctly parses options following `--argument-names`, as in "`--argument-names foo --description bar`" (#6186).
 - History newly imported from bash includes command lines using `&&` or `||`.
 - The automatic generation of completions from manual pages is better described in job and process listings, and no longer produces a warning when exiting fish (#6269).
@@ -134,7 +135,6 @@
 - Improvements to the display of wide characters, particularly Korean characters and emoji (#5583, #5729).
 - The Vi mode cursor is correctly redrawn when regaining focus under terminals that report focus (eg tmux) (#4788).
 - Variables that control background colors (such as `fish_pager_color_search_match`) can now use `--reverse`.
-- Added Base16 color options to `fish_config`
 
 #### Completions
 - Added completions for

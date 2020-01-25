@@ -1,6 +1,6 @@
 Source: fish
 Section: shells
-Priority: extra
+Priority: optional
 Maintainer: ridiculous_fish <corydoras@ridiculousfish.com>
 Uploaders: David Adam <zanchey@ucc.gu.uwa.edu.au>
 Build-Depends: debhelper (>= 9.0.0), libncurses5-dev, cmake3 (>= 3.2.0) | cmake (>= 3.2.0), gettext,
@@ -37,7 +37,6 @@ Description: friendly interactive shell (architecture-independent files)
 Package: fish-dbg
 Architecture: any
 Section: debug
-Priority: extra
 Depends: fish (= ${binary:Version}), ${misc:Depends}
 Description: debugging symbols for friendly interactive shell
  Fish is a command-line shell for modern systems, focusing on user-friendliness,

@@ -1,4 +1,4 @@
-# fish 3.1b1
+# fish 3.1b1 (released January 26, 2020)
 
 ## Notable improvements and fixes
 - A new `$pipestatus` variable contains a list of exit statuses of the previous job, for each of the separate commands in a pipeline (#5632).

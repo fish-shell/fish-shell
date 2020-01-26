@@ -24,6 +24,7 @@
 #include "env.h"
 #include "env_universal_common.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
 #include "global_safety.h"
 #include "input_common.h"
 #include "iothread.h"
@@ -188,7 +189,7 @@ char_event_t input_event_queue_t::readch() {
         switch (sz) {
             case static_cast<size_t>(-1): {
                 std::memset(&state, '\0', sizeof(state));
-                debug(2, L"Illegal input");
+                FLOG(reader, L"Illegal input");
                 return char_event_type_t::check_exit;
             }
             case static_cast<size_t>(-2): {

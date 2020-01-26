@@ -736,14 +736,14 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
                 } else {
                     // Debug the original tcsetpgrp error (not the waitpid errno) to the log, and
                     // then retry until not EPERM or the process group has exited.
-                    debug(2, L"terminal_give_to_job(): EPERM.\n", j->pgid);
+                    FLOGF(proc_termowner, L"terminal_give_to_job(): EPERM.\n", j->pgid);
                     continue;
                 }
             } else {
                 if (errno == ENOTTY) {
                     redirect_tty_output();
                 }
-                debug(1, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
+                FLOGF(warning, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
                       j->job_id(), j->command_wcstr(), j->pgid);
                 wperror(L"tcsetpgrp");
                 return error;
@@ -755,7 +755,7 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
                 // job/group have been started, the only way this can happen is if the very last
                 // process in the group terminated and didn't need to access the terminal, otherwise
                 // it would have hung waiting for terminal IO (SIGTTIN). We can safely ignore this.
-                debug(3, L"tcsetpgrp called but process group %d has terminated.\n", j->pgid);
+                FLOGF(proc_termowner, L"tcsetpgrp called but process group %d has terminated.\n", j->pgid);
                 return notneeded;
             }
 
@@ -771,7 +771,7 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
                 redirect_tty_output();
             }
 
-            debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id(),
+            FLOGF(warning, _(L"Could not send job %d ('%ls') to foreground"), j->job_id(),
                   j->preview().c_str());
             wperror(L"tcsetattr");
             return error;
@@ -798,13 +798,13 @@ pid_t terminal_acquire_before_builtin(int job_pgid) {
 static bool terminal_return_from_job(job_t *j, int restore_attrs) {
     errno = 0;
     if (j->pgid == 0) {
-        debug(2, "terminal_return_from_job() returning early due to no process group");
+        FLOG(proc_pgroup, "terminal_return_from_job() returning early due to no process group");
         return true;
     }
 
     if (tcsetpgrp(STDIN_FILENO, getpgrp()) == -1) {
         if (errno == ENOTTY) redirect_tty_output();
-        debug(1, _(L"Could not return shell to foreground"));
+        FLOGF(warning, _(L"Could not return shell to foreground"));
         wperror(L"tcsetpgrp");
         return false;
     }
@@ -812,7 +812,7 @@ static bool terminal_return_from_job(job_t *j, int restore_attrs) {
     // Save jobs terminal modes.
     if (tcgetattr(STDIN_FILENO, &j->tmodes)) {
         if (errno == EIO) redirect_tty_output();
-        debug(1, _(L"Could not return shell to foreground"));
+        FLOGF(warning, _(L"Could not return shell to foreground"));
         wperror(L"tcgetattr");
         return false;
     }
@@ -823,7 +823,7 @@ static bool terminal_return_from_job(job_t *j, int restore_attrs) {
     if (restore_attrs) {
         if (tcsetattr(STDIN_FILENO, TCSADRAIN, &shell_modes) == -1) {
             if (errno == EIO) redirect_tty_output();
-            debug(1, _(L"Could not return shell to foreground"));
+            FLOGF(warning, _(L"Could not return shell to foreground"));
             wperror(L"tcsetattr");
             return false;
         }
@@ -868,7 +868,7 @@ void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool se
             // signal individually. job_t::signal() does the same, but uses the shell's own pgroup
             // to make that distinction.
             if (!signal(SIGCONT)) {
-                debug(2, "Failed to send SIGCONT to any processes in pgroup %d!", pgid);
+                FLOGF(proc_pgroup, "Failed to send SIGCONT to any processes in pgroup %d!", pgid);
                 // This returns without bubbling up the error. Presumably that is OK.
                 return;
             }

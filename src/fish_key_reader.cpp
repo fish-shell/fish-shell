@@ -274,13 +274,6 @@ static void install_our_signal_handlers() {
     for (int signo = 1; signo < 32; signo++) {
         if (sigaction(signo, &new_sa, &old_sa) != -1) {
             std::memcpy(&old_sigactions[signo], &old_sa, sizeof(old_sa));
-            if (old_sa.sa_handler == SIG_IGN) {
-                debug(3, "signal #%d (%ls) was being ignored", signo, sig2wcs(signo));
-            }
-            if (old_sa.sa_flags && ~SA_SIGINFO != 0) {
-                debug(3, L"signal #%d (%ls) handler had flags 0x%X", signo, sig2wcs(signo),
-                      old_sa.sa_flags);
-            }
         }
     }
 }

@@ -35,8 +35,6 @@ const wcstring_list_t dflt_pathsv({L"/bin", L"/usr/bin", PREFIX L"/bin"});
 
 static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                                const maybe_t<env_var_t> &bin_path_var) {
-    debug(5, L"path_get_path( '%ls' )", cmd.c_str());
-
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
     // looking for a matching command.
     if (cmd.find(L'/') != wcstring::npos) {
@@ -107,7 +105,7 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                     break;
                 }
                 default: {
-                    debug(1, MISSING_COMMAND_ERR_MSG, next_path.c_str());
+                    FLOGF(warning, MISSING_COMMAND_ERR_MSG, next_path.c_str());
                     wperror(L"access");
                     break;
                 }
@@ -124,7 +122,7 @@ bool path_get_path(const wcstring &cmd, wcstring *out_path, const environment_t 
 }
 
 wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars) {
-    debug(3, L"path_get_paths('%ls')", cmd.c_str());
+    FLOGF(path, L"path_get_paths('%ls')", cmd.c_str());
     wcstring_list_t paths;
 
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother

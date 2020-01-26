@@ -215,8 +215,6 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
     wcstring path_with_magic(potential_path_fragment);
     if (flags & PATH_EXPAND_TILDE) expand_tilde(path_with_magic, vars);
 
-    // debug( 1, L"%ls -> %ls ->%ls", path, tilde, unescaped );
-
     for (auto c : path_with_magic) {
         switch (c) {
             case PROCESS_EXPAND_SELF:

@@ -131,7 +131,7 @@ static bool history_file_lock(int fd, int lock_type) {
     int retval = flock(fd, lock_type);
     double duration = timef() - start_time;
     if (duration > 0.25) {
-        debug(1, _(L"Locking the history file took too long (%.3f seconds)."), duration);
+        FLOGF(warning, _(L"Locking the history file took too long (%.3f seconds)."), duration);
         // we've decided to stop doing any locking behavior
         // but make sure we don't leave the file locked!
         if (retval == 0 && lock_type != LOCK_UN) {
@@ -718,7 +718,7 @@ bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) cons
         err = flush_to_fd(&buffer, dst_fd, 0);
     }
     if (err) {
-        debug(2, L"Error %d when writing to temporary history file", err);
+        FLOGF(history_file, L"Error %d when writing to temporary history file", err);
     }
 
     return err == 0;
@@ -790,7 +790,7 @@ bool history_impl_t::save_internal_via_rewrite() {
             // The file has changed, so we're going to re-read it
             // Truncate our tmp_fd so we can reuse it
             if (ftruncate(tmp_fd, 0) == -1 || lseek(tmp_fd, 0, SEEK_SET) == -1) {
-                debug(2, L"Error %d when truncating temporary history file", errno);
+                FLOGF(history_file, L"Error %d when truncating temporary history file", errno);
             }
         } else {
             // The file is unchanged, or the new file doesn't exist or we can't read it
@@ -804,16 +804,16 @@ bool history_impl_t::save_internal_via_rewrite() {
             struct stat sbuf;
             if (target_fd_after.valid() && fstat(target_fd_after.fd(), &sbuf) >= 0) {
                 if (fchown(tmp_fd, sbuf.st_uid, sbuf.st_gid) == -1) {
-                    debug(2, L"Error %d when changing ownership of history file", errno);
+                    FLOGF(history_file, L"Error %d when changing ownership of history file", errno);
                 }
                 if (fchmod(tmp_fd, sbuf.st_mode) == -1) {
-                    debug(2, L"Error %d when changing mode of history file", errno);
+                    FLOGF(history_file, L"Error %d when changing mode of history file", errno);
                 }
             }
 
             // Slide it into place
             if (wrename(tmp_name, *target_name) == -1) {
-                debug(2, L"Error %d when renaming history file", errno);
+                FLOGF(history_file, L"Error %d when renaming history file", errno);
             }
 
             // We did it
@@ -1081,7 +1081,7 @@ void history_impl_t::populate_from_config_path() {
                 ssize_t written = write(dst_fd.fd(), buf, static_cast<size_t>(size));
                 if (written < 0) {
                     // This message does not have high enough priority to be shown by default.
-                    debug(2, L"Error when writing history file");
+                    FLOGF(history_file, L"Error when writing history file");
                     break;
                 }
             }

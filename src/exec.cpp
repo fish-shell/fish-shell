@@ -59,7 +59,7 @@ void exec_close(int fd) {
     assert(fd >= 0 && "Invalid fd");
     while (close(fd) == -1) {
         if (errno != EINTR) {
-            debug(1, FD_ERROR, fd);
+            FLOGF(warning, FD_ERROR, fd);
             wperror(L"close");
             break;
         }
@@ -100,7 +100,6 @@ static void safe_launch_process(process_t *p, const char *actual_cmd, const char
                                 const char *const *cenvv) {
     UNUSED(p);
     int err;
-    //  debug( 1, L"exec '%ls'", p->argv[0] );
 
     // This function never returns, so we take certain liberties with constness.
     char *const *envv = const_cast<char *const *>(cenvv);
@@ -357,7 +356,7 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
     }
 
     if (pid < 0) {
-        debug(1, L"Failed to fork %s!\n", fork_type);
+        FLOGF(warning, L"Failed to fork %s!\n", fork_type);
         job_mark_process_as_failed(job, p);
         return false;
     }
@@ -1045,7 +1044,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
         if (!p->is_last_in_job) {
             auto pipes = make_autoclose_pipes(conflicts);
             if (!pipes) {
-                debug(1, PIPE_ERROR);
+                FLOGF(warning, PIPE_ERROR);
                 wperror(L"pipe");
                 job_mark_process_as_failed(j, p.get());
                 exec_error = true;

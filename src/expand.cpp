@@ -194,7 +194,6 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
         if (errno > 0) {
             return pos;
         }
-        // debug( 0, L"Push idx %d", tmp );
 
         long i1 = tmp > -1 ? tmp : size + tmp + 1;
         pos = end - in;
@@ -210,7 +209,6 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
             }
             pos = end - in;
 
-            // debug( 0, L"Push range %d %d", tmp, tmp1 );
             long i2 = tmp1 > -1 ? tmp1 : size + tmp1 + 1;
             // Skip sequences that are entirely outside.
             // This means "17..18" expands to nothing if there are less than 17 elements.
@@ -229,7 +227,6 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
                 i1 = i1 < size ? i1 : size;
                 i2 = i2 < size ? i2 : size;
             }
-            // debug( 0, L"Push range idx %d %d", i1, i2 );
             for (long jjj = i1; jjj * direction <= i2 * direction; jjj += direction) {
                 // FLOGF(error, L"Expand range [subst]: %i\n", jjj);
                 idx.push_back(jjj);
@@ -237,7 +234,6 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
             continue;
         }
 
-        // debug( 0, L"Push idx %d", tmp );
         literal_zero_index = literal_zero_index && tmp == 0;
         idx.push_back(i1);
     }
@@ -646,9 +642,6 @@ static expand_result_t expand_cmdsubst(wcstring input, parser_t &parser,
             idx = idx - 1;
 
             sub_res2.push_back(sub_res.at(idx));
-            // debug( 0, L"Pushing item '%ls' with index %d onto sliced result", al_get(
-            // sub_res, idx ), idx );
-            // sub_res[idx] = 0; // ??
         }
         sub_res = std::move(sub_res2);
     }

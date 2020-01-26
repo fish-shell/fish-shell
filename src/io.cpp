@@ -185,7 +185,7 @@ shared_ptr<io_bufferfill_t> io_bufferfill_t::create(const fd_set_t &conflicts,
     // because our fillthread needs to poll to decide if it should shut down, and also accept input
     // from direct buffer transfers.
     if (make_fd_nonblocking(pipes->read.fd())) {
-        debug(1, PIPE_ERROR);
+        FLOGF(warning, PIPE_ERROR);
         wperror(L"fcntl");
         return nullptr;
     }
@@ -254,10 +254,10 @@ bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const w
                 autoclose_fd_t file{wopen_cloexec(path, oflags, OPEN_MASK)};
                 if (!file.valid()) {
                     if ((oflags & O_EXCL) && (errno == EEXIST)) {
-                        debug(1, NOCLOB_ERROR, spec.target.c_str());
+                        FLOGF(warning, NOCLOB_ERROR, spec.target.c_str());
                     } else {
-                        debug(1, FILE_ERROR, spec.target.c_str());
-                        if (should_debug(1)) wperror(L"open");
+                        FLOGF(warning, FILE_ERROR, spec.target.c_str());
+                        if (should_flog(warning)) wperror(L"open");
                     }
                     return false;
                 }
@@ -321,7 +321,7 @@ maybe_t<autoclose_pipes_t> make_autoclose_pipes(const fd_set_t &fdset) {
     int pipes[2] = {-1, -1};
 
     if (pipe(pipes) < 0) {
-        debug(1, PIPE_ERROR);
+        FLOGF(warning, PIPE_ERROR);
         wperror(L"pipe");
         return none();
     }

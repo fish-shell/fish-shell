@@ -914,7 +914,7 @@ bool completer_t::complete_param(const wcstring &cmd_orig, const wcstring &popt,
         // This prevents errors caused during the execution of completion providers for
         // tools that do not exist. Applies to both manual completions ("cm<TAB>", "cmd <TAB>")
         // and automatic completions ("gi" autosuggestion provider -> git)
-        debug(4, "Skipping completions for non-existent head\n");
+        FLOG(complete, "Skipping completions for non-existent head");
     } else {
         run_on_main_thread([&]() { complete_load(cmd); });
     }
@@ -1135,7 +1135,7 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
         const wcstring sep_string = wcstring(str, sep_index + 1);
         completion_list_t local_completions;
         if (expand_string(sep_string, &local_completions, flags, ctx) == expand_result_t::error) {
-            debug(3, L"Error while expanding string '%ls'", sep_string.c_str());
+            FLOGF(complete, L"Error while expanding string '%ls'", sep_string.c_str());
         }
 
         // Any COMPLETE_REPLACES_TOKEN will also stomp the separator. We need to "repair" them by
@@ -1154,7 +1154,7 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file,
         if (string_prefixes_string(L"-", str)) flags.clear(expand_flag::fuzzy_match);
 
         if (expand_string(str, &this->completions, flags, ctx) == expand_result_t::error) {
-            debug(3, L"Error while expanding string '%ls'", str.c_str());
+            FLOGF(complete, L"Error while expanding string '%ls'", str.c_str());
         }
     }
 }

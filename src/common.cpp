@@ -184,7 +184,7 @@ bool is_windows_subsystem_for_linux() {
                 // is bypassed. We intentionally do not include this in the error message because
                 // it'll only allow fish to run but not to actually work. Here be dragons!
                 if (getenv("FISH_NO_WSL_CHECK") == nullptr) {
-                    debug(0,
+                    FLOGF(error,
                           "This version of WSL has known bugs that prevent fish from working."
                           "Please upgrade to Windows 10 1809 (17763) or higher to use fish!");
                 }
@@ -1777,8 +1777,8 @@ static void validate_new_termsize(struct winsize *new_termsize, const environmen
 #ifdef HAVE_WINSIZE
         // Highly hackish. This seems like it should be moved.
         if (is_main_thread() && parser_t::principal_parser().is_interactive()) {
-            debug(1, _(L"Current terminal parameters have rows and/or columns set to zero."));
-            debug(1, _(L"The stty command can be used to correct this "
+            FLOGF(warning, _(L"Current terminal parameters have rows and/or columns set to zero."));
+            FLOGF(warning, _(L"The stty command can be used to correct this "
                        L"(e.g., stty rows 80 columns 24)."));
         }
 #endif
@@ -1801,8 +1801,8 @@ static void validate_new_termsize(struct winsize *new_termsize, const environmen
     if (new_termsize->ws_col < MIN_TERM_COL || new_termsize->ws_row < MIN_TERM_ROW) {
         // Also highly hackisk.
         if (is_main_thread() && parser_t::principal_parser().is_interactive()) {
-            debug(1, _(L"Current terminal parameters set terminal size to unreasonable value."));
-            debug(1, _(L"Defaulting terminal size to 80x24."));
+            FLOGF(warning, _(L"Current terminal parameters set terminal size to unreasonable value."));
+            FLOGF(warning, _(L"Defaulting terminal size to 80x24."));
         }
         new_termsize->ws_col = DFLT_TERM_COL;
         new_termsize->ws_row = DFLT_TERM_ROW;

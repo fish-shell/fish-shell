@@ -278,8 +278,6 @@ static void event_fire_internal(parser_t &parser, const event_t &event) {
             buffer.append(escape_string(arg, ESCAPE_ALL));
         }
 
-        // debug( 1, L"Event handler fires command '%ls'", buffer.c_str() );
-
         // Event handlers are not part of the main flow of code, so they are marked as
         // non-interactive.
         scoped_push<bool> interactive{&ld.is_interactive, false};

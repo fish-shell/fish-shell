@@ -79,7 +79,7 @@ make %{?_smp_mflags}
 %find_lang %{name}
 # OpenSUSE has strong opinions about categories which do not apply to other systems
 %if 0%{?suse_version}
-%suse_update_desktop_file fish "System;TerminalEmulator;Shell"
+%suse_update_desktop_file fish "System;TerminalEmulator"
 %endif
 
 %check

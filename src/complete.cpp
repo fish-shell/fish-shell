@@ -606,47 +606,46 @@ void completer_t::complete_cmd_desc(const wcstring &str) {
     wcstring lookup_cmd(L"__fish_describe_command ");
     lookup_cmd.append(escape_string(cmd, ESCAPE_ALL));
 
-    // See the ASSERT_IS_MAIN_THREAD() above, making it safe to make this a static variable.
-    // This lets us reuse the heap-allocated memory across calls.
-    static std::unordered_map<wcstring, wcstring> lookup;
-    static wcstring_list_t list;
     // First locate a list of possible descriptions using a single call to apropos or a direct
     // search if we know the location of the whatis database. This can take some time on slower
     // systems with a large set of manuals, but it should be ok since apropos is only called once.
-    lookup.clear();
-    list.clear();
+    wcstring_list_t list;
     (void)exec_subshell(lookup_cmd, *ctx.parser, list, false /* don't apply exit status */);
+
     // Then discard anything that is not a possible completion and put the result into a
     // hashtable with the completion as key and the description as value.
-    //
-    // Should be reasonably fast, since no memory allocations are needed.
-    // mqudsi: I don't know if the above were ever true, but it's certainly not any more.
-    // Plenty of allocations below.
+    std::unordered_map<wcstring, wcstring> lookup;
+    // A typical entry is the command name, followed by a tab, followed by a description.
     for (const wcstring &elstr : list) {
-        if (elstr.length() < cmd.length()) continue;
-        const wcstring fullkey(elstr, cmd.length());
+        // Skip keys that are too short.
+        if (elstr.size() < cmd.size()) continue;
 
-        size_t tab_idx = fullkey.find(L'\t');
-        if (tab_idx == wcstring::npos) continue;
+        // Skip cases without a tab, or without a description, or bizarre cases where the tab is
+        // part of the command.
+        size_t tab_idx = elstr.find(L'\t');
+        if (tab_idx == wcstring::npos || tab_idx + 1 >= elstr.size() || tab_idx < cmd.size())
+            continue;
 
-        const wcstring key(fullkey, 0, tab_idx);
-        wcstring val(fullkey, tab_idx + 1);
+        // Make the key. This is the stuff after the command.
+        // For example:
+        //  elstr = lsmod
+        //  cmd = ls
+        //  key = mod
+        // Note an empty key is common and natural, if 'cmd' were already valid.
+        wcstring key(elstr, cmd.size(), tab_idx - cmd.size());
+        wcstring val(elstr, tab_idx + 1);
+        assert(!val.empty() && "tab index should not have been at the end.");
 
         // And once again I make sure the first character is uppercased because I like it that
         // way, and I get to decide these things.
-        if (!val.empty()) val[0] = towupper(val[0]);
-        lookup[key] = val;
+        val.at(0) = towupper(val.at(0));
+        lookup.insert(std::make_pair(std::move(key), std::move(val)));
     }
 
     // Then do a lookup on every completion and if a match is found, change to the new
     // description.
-    //
-    // This needs to do a reallocation for every description added, but there shouldn't be that
-    // many completions, so it should be ok.
     for (auto &completion : completions) {
         const wcstring &el = completion.completion;
-        if (el.empty()) continue;
-
         auto new_desc_iter = lookup.find(el);
         if (new_desc_iter != lookup.end()) completion.description = new_desc_iter->second;
     }

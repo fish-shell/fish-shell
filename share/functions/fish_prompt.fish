@@ -7,7 +7,6 @@ function fish_prompt --description 'Write out the prompt'
 
     # Color the prompt differently when we're root
     set -l color_cwd $fish_color_cwd
-    set -l prefix
     set -l suffix '>'
     if contains -- $USER root toor
         if set -q fish_color_cwd_root

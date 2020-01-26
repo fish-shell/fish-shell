@@ -56,14 +56,7 @@
 static relaxed_atomic_t<int> s_fork_count{0};
 
 void exec_close(int fd) {
-    ASSERT_IS_MAIN_THREAD();
-
-    // This may be called in a child of fork(), so don't allocate memory.
-    if (fd < 0) {
-        FLOG(error, L"Called close on invalid file descriptor ");
-        return;
-    }
-
+    assert(fd >= 0 && "Invalid fd");
     while (close(fd) == -1) {
         if (errno != EINTR) {
             debug(1, FD_ERROR, fd);

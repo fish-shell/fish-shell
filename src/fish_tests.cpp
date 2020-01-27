@@ -1049,7 +1049,6 @@ static void test_cancellation() {
     // Enable fish's signal handling here. We need to make this interactive for fish to install its
     // signal handlers.
     parser_t &parser = parser_t::principal_parser();
-    scoped_push<bool> interactive{&parser.libdata().is_interactive, true};
     signal_set_handlers(true);
 
     // This tests that we can correctly ctrl-C out of certain loop constructs, and that nothing gets

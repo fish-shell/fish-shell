@@ -1,3 +1,9 @@
+# fish next-minor
+
+#### Completions
+- Added completions for
+  - `wireshark`, `tshark`, and `dumpcap`
+
 # fish 3.1b1 (released January 26, 2020)
 
 ## Notable improvements and fixes

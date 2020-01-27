@@ -82,10 +82,11 @@ void set_job_control_mode(job_control_t mode) { job_control_mode = mode; }
 void proc_init() { signal_set_handlers_once(false); }
 
 // Basic thread safe sorted vector of job IDs in use.
-static owning_lock<std::vector<job_id_t>> locked_consumed_job_ids;
+// This is deliberately leaked to avoid dtor ordering issues - see #6539.
+static auto *const locked_consumed_job_ids = new owning_lock<std::vector<job_id_t>>();
 
 job_id_t acquire_job_id() {
-    auto consumed_job_ids = locked_consumed_job_ids.acquire();
+    auto consumed_job_ids = locked_consumed_job_ids->acquire();
 
     // The new job ID should be larger than the largest currently used ID (#6053).
     job_id_t jid = consumed_job_ids->empty() ? 1 : consumed_job_ids->back() + 1;
@@ -95,7 +96,7 @@ job_id_t acquire_job_id() {
 
 void release_job_id(job_id_t jid) {
     assert(jid > 0);
-    auto consumed_job_ids = locked_consumed_job_ids.acquire();
+    auto consumed_job_ids = locked_consumed_job_ids->acquire();
 
     // Our job ID vector is sorted, but the number of jobs is typically 1 or 2 so a binary search
     // isn't worth it.

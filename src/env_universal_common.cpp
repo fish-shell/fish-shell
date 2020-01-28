@@ -414,7 +414,7 @@ bool env_universal_t::load_from_path(const std::string &path, callback_data_list
     }
 
     bool result = false;
-    int fd = open_cloexec(path, O_RDONLY);
+    int fd = open_cloexec(path.c_str(), O_RDONLY);
     if (fd >= 0) {
         FLOGF(uvar_file, L"universal log reading from file");
         this->load_from_fd(fd, callbacks);

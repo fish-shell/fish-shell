@@ -197,19 +197,19 @@ int set_cloexec(int fd, bool should_set) {
     }
 }
 
-int open_cloexec(const std::string &cstring, int flags, mode_t mode, bool cloexec) {
+int open_cloexec(const std::string &path, int flags, mode_t mode) {
+    return open_cloexec(path.c_str(), flags, mode);
+}
+
+int open_cloexec(const char *path, int flags, mode_t mode) {
     ASSERT_IS_NOT_FORKED_CHILD();
     int fd;
 
 #ifdef O_CLOEXEC
     // Prefer to use O_CLOEXEC. It has to both be defined and nonzero.
-    if (cloexec) {
-        fd = open(cstring.c_str(), flags | O_CLOEXEC, mode);
-    } else {
-        fd = open(cstring.c_str(), flags, mode);
-    }
+    fd = open(path, flags | O_CLOEXEC, mode);
 #else
-    fd = open(cstring.c_str(), flags, mode);
+    fd = open(path, flags, mode);
     if (fd >= 0 && !set_cloexec(fd)) {
         close(fd);
         fd = -1;
@@ -225,7 +225,7 @@ int wopen(const wcstring &pathname, int flags, mode_t mode) {
 
 int wopen_cloexec(const wcstring &pathname, int flags, mode_t mode) {
     cstring tmp = wcs2string(pathname);
-    return open_cloexec(tmp, flags, mode, true);
+    return open_cloexec(tmp, flags, mode);
 }
 
 DIR *wopendir(const wcstring &name) {

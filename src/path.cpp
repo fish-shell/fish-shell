@@ -285,6 +285,29 @@ static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &
     ignore_result(write(STDERR_FILENO, "\n", 1));
 }
 
+/// Make sure the specified directory exists. If needed, try to create it and any currently not
+/// existing parent directories, like mkdir -p,.
+///
+/// \return 0 if, at the time of function return the directory exists, -1 otherwise.
+static int create_directory(const wcstring &d) {
+    bool ok = false;
+    struct stat buf;
+    int stat_res = 0;
+
+    while ((stat_res = wstat(d, &buf)) != 0) {
+        if (errno != EAGAIN) break;
+    }
+
+    if (stat_res == 0) {
+        if (S_ISDIR(buf.st_mode)) ok = true;
+    } else if (errno == ENOENT) {
+        wcstring dir = wdirname(d);
+        if (!create_directory(dir) && !wmkdir(d, 0700)) ok = true;
+    }
+
+    return ok ? 0 : -1;
+}
+
 /// The following type wraps up a user's "base" directories, corresponding (conceptually if not
 /// actually) to XDG spec.
 struct base_directory_t {

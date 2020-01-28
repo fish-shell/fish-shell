@@ -1965,25 +1965,6 @@ int string_fuzzy_match_t::compare(const string_fuzzy_match_t &rhs) const {
     return 0;  // equal
 }
 
-int create_directory(const wcstring &d) {
-    bool ok = false;
-    struct stat buf;
-    int stat_res = 0;
-
-    while ((stat_res = wstat(d, &buf)) != 0) {
-        if (errno != EAGAIN) break;
-    }
-
-    if (stat_res == 0) {
-        if (S_ISDIR(buf.st_mode)) ok = true;
-    } else if (errno == ENOENT) {
-        wcstring dir = wdirname(d);
-        if (!create_directory(dir) && !wmkdir(d, 0700)) ok = true;
-    }
-
-    return ok ? 0 : -1;
-}
-
 [[gnu::noinline]] void bugreport() {
     FLOG(error, _(L"This is a bug. Break on 'bugreport' to debug."));
     FLOG(error, _(L"If you can reproduce it, please report: "), PACKAGE_BUGREPORT, L'.');

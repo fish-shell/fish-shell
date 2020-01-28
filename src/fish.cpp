@@ -493,14 +493,11 @@ int main(int argc, char **argv) {
             // Implicitly interactive mode.
             res = reader_read(parser, STDIN_FILENO, {});
         } else {
-            char *file = *(argv + (my_optind++));
-            int fd = open(file, O_RDONLY);
-            if (fd == -1) {
+            const char *file = *(argv + (my_optind++));
+            autoclose_fd_t fd(open_cloexec(file, O_RDONLY));
+            if (!fd.valid()) {
                 perror(file);
             } else {
-                // OK to not do this atomically since we cannot have gone multithreaded yet.
-                set_cloexec(fd);
-
                 wcstring_list_t list;
                 for (char **ptr = argv + my_optind; *ptr; ptr++) {
                     list.push_back(str2wcstring(*ptr));
@@ -511,7 +508,7 @@ int main(int argc, char **argv) {
                 wcstring rel_filename = str2wcstring(file);
                 scoped_push<const wchar_t *> filename_push{&ld.current_filename,
                                                            intern(rel_filename.c_str())};
-                res = reader_read(parser, fd, {});
+                res = reader_read(parser, fd.fd(), {});
                 if (res) {
                     FLOGF(warning, _(L"Error while reading file %ls\n"),
                           ld.current_filename ? ld.current_filename : _(L"Standard input"));

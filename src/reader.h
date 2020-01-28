@@ -49,6 +49,7 @@ class editable_line_t {
 };
 
 /// Read commands from \c fd until encountering EOF.
+/// The fd is not closed.
 int reader_read(parser_t &parser, int fd, const io_chain_t &io);
 
 /// Tell the shell whether it should exit after the currently running command finishes.

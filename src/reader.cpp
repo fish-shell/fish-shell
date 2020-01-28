@@ -3486,76 +3486,56 @@ bool reader_get_selection(size_t *start, size_t *len) {
 
 /// Read non-interactively.  Read input from stdin without displaying the prompt, using syntax
 /// highlighting. This is used for reading scripts and init files.
+/// The file is not closed.
 static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
-    FILE *in_stream;
-    std::vector<char> acc;
+    // Read all data into a std::string.
+    std::string fd_contents;
+    for (;;) {
+        char buff[4096];
+        size_t amt = read(fd, buff, sizeof buff);
+        if (amt > 0) {
+            fd_contents.append(buff, amt);
+        } else if (amt == 0) {
+            // EOF.
+            break;
+        } else {
+            int err = errno;
+            if (err == EINTR) {
+                continue;
+            } else if ((err == EAGAIN || err == EWOULDBLOCK) && make_fd_blocking(fd)) {
+                // We succeeded in making the fd blocking, keep going.
+                continue;
+            } else {
+                // Fatal error.
+                FLOGF(error, _(L"Unable to read input file: %s"), strerror(err));
+                // Reset buffer on error. We won't evaluate incomplete files.
+                fd_contents.clear();
+            }
+        }
+    }
 
-    int des = (fd == STDIN_FILENO ? dup(STDIN_FILENO) : fd);
-    int res = 0;
+    wcstring str = str2wcstring(fd_contents);
 
-    if (des == -1) {
-        wperror(L"dup");
+    // Eagerly deallocate to save memory.
+    fd_contents.clear();
+    fd_contents.shrink_to_fit();
+
+    // Swallow a BOM (issue #1518).
+    if (!str.empty() && str.at(0) == UTF8_BOM_WCHAR) {
+        str.erase(0, 1);
+    }
+
+    parse_error_list_t errors;
+    parsed_source_ref_t pstree;
+    if (!parse_util_detect_errors(str, &errors, false /* do not accept incomplete */, &pstree)) {
+        parser.eval(pstree, io);
+        return 0;
+    } else {
+        wcstring sb;
+        parser.get_backtrace(str, errors, sb);
+        std::fwprintf(stderr, L"%ls", sb.c_str());
         return 1;
     }
-
-    in_stream = fdopen(des, "r");
-    if (in_stream != nullptr) {
-        while (!feof(in_stream)) {
-            char buff[4096];
-            size_t c = fread(buff, 1, 4096, in_stream);
-
-            if (ferror(in_stream)) {
-                if (errno == EINTR) {
-                    // We got a signal, just keep going. Be sure that we call insert() below because
-                    // we may get data as well as EINTR.
-                    clearerr(in_stream);
-                } else if ((errno == EAGAIN || errno == EWOULDBLOCK) &&
-                           make_fd_blocking(des) == 0) {
-                    // We succeeded in making the fd blocking, keep going.
-                    clearerr(in_stream);
-                } else {
-                    // Fatal error.
-                    FLOGF(error, _(L"Unable to read input file: %s"), strerror(errno));
-                    // Reset buffer on error. We won't evaluate incomplete files.
-                    acc.clear();
-                    break;
-                }
-            }
-
-            acc.insert(acc.end(), buff, buff + c);
-        }
-
-        wcstring str = acc.empty() ? wcstring() : str2wcstring(&acc.at(0), acc.size());
-        acc.clear();
-
-        if (fclose(in_stream)) {
-            FLOGF(warning, _(L"Error while closing input stream"));
-            wperror(L"fclose");
-            res = 1;
-        }
-
-        // Swallow a BOM (issue #1518).
-        if (!str.empty() && str.at(0) == UTF8_BOM_WCHAR) {
-            str.erase(0, 1);
-        }
-
-        parse_error_list_t errors;
-        parsed_source_ref_t pstree;
-        if (!parse_util_detect_errors(str, &errors, false /* do not accept incomplete */,
-                                      &pstree)) {
-            parser.eval(pstree, io);
-        } else {
-            wcstring sb;
-            parser.get_backtrace(str, errors, sb);
-            std::fwprintf(stderr, L"%ls", sb.c_str());
-            res = 1;
-        }
-    } else {
-        FLOGF(warning, _(L"Error while opening input stream"));
-        wperror(L"fdopen");
-        res = 1;
-    }
-    return res;
 }
 
 int reader_read(parser_t &parser, int fd, const io_chain_t &io) {
@@ -3582,7 +3562,7 @@ int reader_read(parser_t &parser, int fd, const io_chain_t &io) {
     scoped_push<bool> interactive_push{&parser.libdata().is_interactive, interactive};
     signal_set_handlers_once(interactive);
 
-    res = parser.is_interactive() ? read_i(parser) : read_ni(parser, fd, io);
+    res = interactive ? read_i(parser) : read_ni(parser, fd, io);
 
     // If the exit command was called in a script, only exit the script, not the program.
     reader_set_end_loop(false);

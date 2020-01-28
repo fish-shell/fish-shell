@@ -37,7 +37,12 @@ int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_CMD_OK;
     }
 
-    int fd;
+    // If we open a file, this ensures we close it.
+    autoclose_fd_t opened_fd;
+
+    // The fd that we read from, either from opened_fd or stdin.
+    int fd = -1;
+
     struct stat buf;
     const wchar_t *fn, *fn_intern;
 
@@ -49,17 +54,18 @@ int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
         fn = L"-";
         fn_intern = fn;
-        fd = dup(streams.stdin_fd);
+        fd = streams.stdin_fd;
     } else {
-        if ((fd = wopen_cloexec(argv[optind], O_RDONLY)) == -1) {
+        opened_fd = autoclose_fd_t(wopen_cloexec(argv[optind], O_RDONLY));
+        if (!opened_fd.valid()) {
             streams.err.append_format(_(L"%ls: Error encountered while sourcing file '%ls':\n"),
                                       cmd, argv[optind]);
             builtin_wperror(cmd, streams);
             return STATUS_CMD_ERROR;
         }
 
+        fd = opened_fd.fd();
         if (fstat(fd, &buf) == -1) {
-            close(fd);
             streams.err.append_format(_(L"%ls: Error encountered while sourcing file '%ls':\n"),
                                       cmd, argv[optind]);
             builtin_wperror(L"source", streams);
@@ -67,13 +73,13 @@ int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
 
         if (!S_ISREG(buf.st_mode)) {
-            close(fd);
             streams.err.append_format(_(L"%ls: '%ls' is not a file\n"), cmd, argv[optind]);
             return STATUS_CMD_ERROR;
         }
 
         fn_intern = intern(argv[optind]);
     }
+    assert(fd >= 0 && "Should have a valid fd");
 
     const block_t *sb = parser.push_block(block_t::source_block(fn_intern));
     auto &ld = parser.libdata();

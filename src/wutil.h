@@ -25,9 +25,6 @@ FILE *wfopen(const wcstring &path, const char *mode);
 /// Sets CLO_EXEC on a given fd according to the value of \p should_set.
 int set_cloexec(int fd, bool should_set = true);
 
-/// Wide character version of open().
-int wopen(const wcstring &pathname, int flags, mode_t mode = 0);
-
 /// Wide character version of open() that also sets the close-on-exec flag (atomically when
 /// possible).
 int wopen_cloexec(const wcstring &pathname, int flags, mode_t mode = 0);

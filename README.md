@@ -19,20 +19,16 @@ You can quickly play with fish right in your browser by clicking the button belo
 
 ## Getting fish
 
-### macOS
-
-fish can be installed:
-
-* using [Homebrew](http://brew.sh/): `brew install fish`
-* using [MacPorts](https://www.macports.org/): `sudo port install fish`
-* using the [installer from fishshell.com](https://fishshell.com/)
-* as a [standalone app from fishshell.com](https://fishshell.com/)
-
 ### Packages for Linux
 
 Packages for Debian, Fedora, openSUSE, and Red Hat Enterprise Linux/CentOS are available from the
 [openSUSE Build
 Service](https://software.opensuse.org/download.html?project=shells%3Afish&package=fish).
+
+On Debian, you can simply install Fish by running
+```
+sudo apt-get install fish
+```
 
 Packages for Ubuntu are available from the [fish
 PPA](https://launchpad.net/~fish-shell/+archive/ubuntu/release-3), and can be installed using the
@@ -45,6 +41,16 @@ sudo apt-get install fish
 ```
 
 Instructions for other distributions may be found at [fishshell.com](https://fishshell.com).
+
+
+### macOS
+
+fish can be installed:
+
+* using [Homebrew](http://brew.sh/): `brew install fish`
+* using [MacPorts](https://www.macports.org/): `sudo port install fish`
+* using the [installer from fishshell.com](https://fishshell.com/)
+* as a [standalone app from fishshell.com](https://fishshell.com/)
 
 ### Windows
 

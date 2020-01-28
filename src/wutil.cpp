@@ -141,42 +141,6 @@ wcstring wgetcwd() {
     return wcstring();
 }
 
-FILE *wfopen(const wcstring &path, const char *mode) {
-    int permissions = 0, options = 0;
-    size_t idx = 0;
-    switch (mode[idx++]) {
-        case 'r': {
-            permissions = O_RDONLY;
-            break;
-        }
-        case 'w': {
-            permissions = O_WRONLY;
-            options = O_CREAT | O_TRUNC;
-            break;
-        }
-        case 'a': {
-            permissions = O_WRONLY;
-            options = O_CREAT | O_APPEND;
-            break;
-        }
-        default: {
-            errno = EINVAL;
-            return nullptr;
-        }
-    }
-    // Skip binary.
-    if (mode[idx] == 'b') idx++;
-
-    // Consider append option.
-    if (mode[idx] == '+') permissions = O_RDWR;
-
-    int fd = wopen_cloexec(path, permissions | options, 0666);
-    if (fd < 0) return nullptr;
-    FILE *result = fdopen(fd, mode);
-    if (result == nullptr) close(fd);
-    return result;
-}
-
 int set_cloexec(int fd, bool should_set) {
     // Note we don't want to overwrite existing flags like O_NONBLOCK which may be set. So fetch the
     // existing flags and modify them.
@@ -197,19 +161,19 @@ int set_cloexec(int fd, bool should_set) {
     }
 }
 
-int open_cloexec(const std::string &cstring, int flags, mode_t mode, bool cloexec) {
+int open_cloexec(const std::string &path, int flags, mode_t mode) {
+    return open_cloexec(path.c_str(), flags, mode);
+}
+
+int open_cloexec(const char *path, int flags, mode_t mode) {
     ASSERT_IS_NOT_FORKED_CHILD();
     int fd;
 
 #ifdef O_CLOEXEC
     // Prefer to use O_CLOEXEC. It has to both be defined and nonzero.
-    if (cloexec) {
-        fd = open(cstring.c_str(), flags | O_CLOEXEC, mode);
-    } else {
-        fd = open(cstring.c_str(), flags, mode);
-    }
+    fd = open(path, flags | O_CLOEXEC, mode);
 #else
-    fd = open(cstring.c_str(), flags, mode);
+    fd = open(path, flags, mode);
     if (fd >= 0 && !set_cloexec(fd)) {
         close(fd);
         fd = -1;
@@ -218,14 +182,9 @@ int open_cloexec(const std::string &cstring, int flags, mode_t mode, bool cloexe
     return fd;
 }
 
-int wopen(const wcstring &pathname, int flags, mode_t mode) {
-    cstring tmp = wcs2string(pathname);
-    return open(tmp.c_str(), flags, mode);
-}
-
 int wopen_cloexec(const wcstring &pathname, int flags, mode_t mode) {
     cstring tmp = wcs2string(pathname);
-    return open_cloexec(tmp, flags, mode, true);
+    return open_cloexec(tmp, flags, mode);
 }
 
 DIR *wopendir(const wcstring &name) {

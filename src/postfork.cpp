@@ -124,7 +124,7 @@ bool set_child_group(job_t *j, pid_t child_pid) {
                 // ever leads to a terminal hang due if both this setpgid call AND posix_spawn's
                 // internal setpgid calls failed), write to the debug log so a future developer
                 // doesn't go crazy trying to track this down.
-                debug(2, "Error %d while calling setpgid for child %d (probably harmless)", errno,
+                FLOGF(proc_pgroup, "Error %d while calling setpgid for child %d (probably harmless)", errno,
                       child_pid);
             }
         }
@@ -374,9 +374,6 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
         default: {
             const char *err = safe_strerror(errno);
             debug_safe(0, "exec: %s", err);
-
-            // FLOGF(error, L"The file '%ls' is marked as an executable but could not be run by the
-            // operating system.", p->actual_cmd);
             break;
         }
     }

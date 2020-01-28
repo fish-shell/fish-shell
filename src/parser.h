@@ -14,6 +14,7 @@
 #include "common.h"
 #include "event.h"
 #include "expand.h"
+#include "operation_context.h"
 #include "parse_constants.h"
 #include "parse_execution.h"
 #include "parse_tree.h"
@@ -197,12 +198,32 @@ struct library_data_t {
     std::shared_ptr<const autoclose_fd_t> cwd_fd{};
 };
 
+class operation_context_t;
+
+/// The result of parser_t::eval family.
+struct eval_res_t {
+    /// The value for $status.
+    proc_status_t status;
+
+    /// If set, there was an error that should be considered a failed expansion, such as
+    /// command-not-found. For example, `touch (not-a-command)` will not invoke 'touch' because
+    /// command-not-found will mark break_expand.
+    bool break_expand;
+
+    /// If set, no commands were executed and there we no errors.
+    bool was_empty{false};
+
+    /* implicit */ eval_res_t(proc_status_t status, bool break_expand = false,
+                              bool was_empty = false)
+        : status(status), break_expand(break_expand), was_empty(was_empty) {}
+};
+
 class parser_t : public std::enable_shared_from_this<parser_t> {
     friend class parse_execution_context_t;
 
    private:
-    /// Indication that we should skip all blocks.
-    volatile sig_atomic_t cancellation_requested = false;
+    /// If not zero, the signal triggering cancellation.
+    volatile sig_atomic_t cancellation_signal = 0;
     /// The current execution context.
     std::unique_ptr<parse_execution_context_t> execution_context;
     /// The jobs associated with this parser.
@@ -248,9 +269,11 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// Get the "principal" parser, whatever that is.
     static parser_t &principal_parser();
 
-    /// Indicates that execution of all blocks in the principal parser should stop. This is called
-    /// from signal handlers!
-    static void skip_all_blocks();
+    /// Indicates that we should stop execution due to the given signal.
+    static void cancel_requested(int sig);
+
+    /// Clear any cancel.
+    void clear_cancel() { cancellation_signal = 0; }
 
     /// Global event blocks.
     event_blockage_list_t global_event_blocks;
@@ -261,29 +284,30 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     /// \param io io redirections to perform on all started jobs
     /// \param block_type The type of block to push on the block stack, which must be either 'top'
     /// or 'subst'.
+    /// \param break_expand If not null, return by reference whether the error ought to be an expand
+    /// error. This includes nested expand errors, and command-not-found.
     ///
-    /// \return the eval result,
-    eval_result_t eval(const wcstring &cmd, const io_chain_t &io,
-                       block_type_t block_type = block_type_t::top);
+    /// \return the result of evaluation.
+    eval_res_t eval(const wcstring &cmd, const io_chain_t &io,
+                    block_type_t block_type = block_type_t::top);
 
     /// Evaluate the parsed source ps.
     /// Because the source has been parsed, a syntax error is impossible.
-    eval_result_t eval(const parsed_source_ref_t &ps, const io_chain_t &io,
-                       block_type_t block_type = block_type_t::top);
+    eval_res_t eval(const parsed_source_ref_t &ps, const io_chain_t &io,
+                    block_type_t block_type = block_type_t::top);
 
     /// Evaluates a node.
     /// The node type must be grammar::statement or grammar::job_list.
     template <typename T>
-    eval_result_t eval_node(const parsed_source_ref_t &ps, tnode_t<T> node, job_lineage_t lineage,
-                            block_type_t block_type = block_type_t::top);
+    eval_res_t eval_node(const parsed_source_ref_t &ps, tnode_t<T> node, job_lineage_t lineage,
+                         block_type_t block_type = block_type_t::top);
 
     /// Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and
     /// cmdsubst execution on the tokens. Errors are ignored. If a parser is provided, it is used
     /// for command substitution expansion.
-    static std::vector<completion_t> expand_argument_list(const wcstring &arg_list_src,
-                                                          expand_flags_t flags,
-                                                          const environment_t &vars,
-                                                          const std::shared_ptr<parser_t> &parser);
+    static completion_list_t expand_argument_list(const wcstring &arg_list_src,
+                                                  expand_flags_t flags,
+                                                  const operation_context_t &ctx);
 
     /// Returns a string describing the current parser position in the format 'FILENAME (line
     /// LINE_NUMBER): LINE'. Example:
@@ -371,6 +395,12 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     /// \return a shared pointer reference to this parser.
     std::shared_ptr<parser_t> shared();
+
+    /// \return a cancel poller for checking if this parser has been signalled.
+    cancel_checker_t cancel_checker() const;
+
+    /// \return the operation context for this parser.
+    operation_context_t context();
 
     ~parser_t();
 };

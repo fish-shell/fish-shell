@@ -21,6 +21,7 @@ import socket
 import string
 import subprocess
 import sys
+import tempfile
 from itertools import chain
 
 FISH_BIN_PATH = False  # will be set later
@@ -1477,32 +1478,14 @@ url = "http://localhost:%d/%s/%s" % (PORT, authkey, initial_tab)
 # Create temporary file to hold redirect to real server. This prevents exposing
 # the URL containing the authentication key on the command line (see
 # CVE-2014-2914 or https://github.com/fish-shell/fish-shell/issues/1438).
-if "XDG_CACHE_HOME" in os.environ:
-    dirname = os.path.expanduser(os.path.expandvars("$XDG_CACHE_HOME/fish/"))
-else:
-    dirname = os.path.expanduser("~/.cache/fish/")
+f = tempfile.NamedTemporaryFile(prefix='web_config', suffix='.html', mode='w')
 
-os.umask(0o0077)
-try:
-    os.makedirs(dirname, 0o0700)
-except OSError as e:
-    if e.errno == 17:
-        pass
-    else:
-        raise e
-
-randtoken = "".join(
-    random.choice(string.ascii_uppercase + string.digits) for _ in range(6)
-)
-filename = dirname + "web_config-%s.html" % randtoken
-
-f = open(filename, "w")
 f.write(redirect_template_html % (url, url))
-f.close()
+f.flush()
 
 # Open temporary file as URL
 # Use open on macOS >= 10.12.5 to work around #4035.
-fileurl = "file://" + filename
+fileurl = "file://" + f.name
 
 esc = get_special_ansi_escapes()
 print(
@@ -1536,4 +1519,4 @@ except KeyboardInterrupt:
     print("\nShutting down.")
 
 # Clean up temporary file
-os.remove(filename)
+f.close()

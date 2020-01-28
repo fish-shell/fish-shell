@@ -55,6 +55,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "proc.h"
 #include "reader.h"
 #include "signal.h"
+#include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 // container to hold the options specified within the command line
@@ -135,13 +136,13 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
     bool done = false;
     std::string exec_path = get_executable_path(argv0);
     if (get_realpath(exec_path)) {
-        debug(2, L"exec_path: '%s', argv[0]: '%s'", exec_path.c_str(), argv0);
+        FLOGF(config, L"exec_path: '%s', argv[0]: '%s'", exec_path.c_str(), argv0);
         // TODO: we should determine program_name from argv0 somewhere in this file
 
 #ifdef CMAKE_BINARY_DIR
         // Detect if we're running right out of the CMAKE build directory
         if (string_prefixes_string(CMAKE_BINARY_DIR, exec_path.c_str())) {
-            debug(2,
+            FLOGF(config,
                   "Running out of build directory, using paths relative to CMAKE_SOURCE_DIR:\n %s",
                   CMAKE_SOURCE_DIR);
 
@@ -162,7 +163,7 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
             if (has_suffix(exec_path, installed_suffix, false)) {
                 suffix = installed_suffix;
             } else if (has_suffix(exec_path, just_a_fish, false)) {
-                debug(2, L"'fish' not in a 'bin/', trying paths relative to source tree");
+                FLOGF(config, L"'fish' not in a 'bin/', trying paths relative to source tree");
                 suffix = just_a_fish;
             }
 
@@ -193,14 +194,14 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
 
     if (!done) {
         // Fall back to what got compiled in.
-        debug(2, L"Using compiled in paths:");
+        FLOGF(config, L"Using compiled in paths:");
         paths.data = L"" DATADIR "/fish";
         paths.sysconf = L"" SYSCONFDIR "/fish";
         paths.doc = L"" DOCDIR;
         paths.bin = L"" BINDIR;
     }
 
-    debug(2,
+    FLOGF(config,
           L"determine_config_directory_paths() results:\npaths.data: %ls\npaths.sysconf: "
           L"%ls\npaths.doc: %ls\npaths.bin: %ls",
           paths.data.c_str(), paths.sysconf.c_str(), paths.doc.c_str(), paths.bin.c_str());
@@ -220,10 +221,10 @@ static void source_config_in_directory(const wcstring &dir) {
     const wcstring escaped_dir = escape_string(dir, ESCAPE_ALL);
     const wcstring escaped_pathname = escaped_dir + L"/config.fish";
     if (waccess(config_pathname, R_OK) != 0) {
-        debug(2, L"not sourcing %ls (not readable or does not exist)", escaped_pathname.c_str());
+        FLOGF(config, L"not sourcing %ls (not readable or does not exist)", escaped_pathname.c_str());
         return;
     }
-    debug(2, L"sourcing %ls", escaped_pathname.c_str());
+    FLOGF(config, L"sourcing %ls", escaped_pathname.c_str());
 
     const wcstring cmd = L"builtin source " + escaped_pathname;
     parser_t &parser = parser_t::principal_parser();
@@ -437,7 +438,7 @@ int main(int argc, char **argv) {
 
     // No-exec is prohibited when in interactive mode.
     if (opts.is_interactive_session && opts.no_exec) {
-        debug(1, _(L"Can not use the no-execute mode when running an interactive session"));
+        FLOGF(warning, _(L"Can not use the no-execute mode when running an interactive session"));
         opts.no_exec = false;
     }
 
@@ -492,14 +493,11 @@ int main(int argc, char **argv) {
             // Implicitly interactive mode.
             res = reader_read(parser, STDIN_FILENO, {});
         } else {
-            char *file = *(argv + (my_optind++));
-            int fd = open(file, O_RDONLY);
-            if (fd == -1) {
+            const char *file = *(argv + (my_optind++));
+            autoclose_fd_t fd(open_cloexec(file, O_RDONLY));
+            if (!fd.valid()) {
                 perror(file);
             } else {
-                // OK to not do this atomically since we cannot have gone multithreaded yet.
-                set_cloexec(fd);
-
                 wcstring_list_t list;
                 for (char **ptr = argv + my_optind; *ptr; ptr++) {
                     list.push_back(str2wcstring(*ptr));
@@ -510,9 +508,9 @@ int main(int argc, char **argv) {
                 wcstring rel_filename = str2wcstring(file);
                 scoped_push<const wchar_t *> filename_push{&ld.current_filename,
                                                            intern(rel_filename.c_str())};
-                res = reader_read(parser, fd, {});
+                res = reader_read(parser, fd.fd(), {});
                 if (res) {
-                    debug(1, _(L"Error while reading file %ls\n"),
+                    FLOGF(warning, _(L"Error while reading file %ls\n"),
                           ld.current_filename ? ld.current_filename : _(L"Standard input"));
                 }
             }

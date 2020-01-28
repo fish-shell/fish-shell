@@ -35,8 +35,6 @@ const wcstring_list_t dflt_pathsv({L"/bin", L"/usr/bin", PREFIX L"/bin"});
 
 static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                                const maybe_t<env_var_t> &bin_path_var) {
-    debug(5, L"path_get_path( '%ls' )", cmd.c_str());
-
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
     // looking for a matching command.
     if (cmd.find(L'/') != wcstring::npos) {
@@ -107,7 +105,7 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                     break;
                 }
                 default: {
-                    debug(1, MISSING_COMMAND_ERR_MSG, next_path.c_str());
+                    FLOGF(warning, MISSING_COMMAND_ERR_MSG, next_path.c_str());
                     wperror(L"access");
                     break;
                 }
@@ -124,7 +122,7 @@ bool path_get_path(const wcstring &cmd, wcstring *out_path, const environment_t 
 }
 
 wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars) {
-    debug(3, L"path_get_paths('%ls')", cmd.c_str());
+    FLOGF(path, L"path_get_paths('%ls')", cmd.c_str());
     wcstring_list_t paths;
 
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
@@ -287,6 +285,29 @@ static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &
     ignore_result(write(STDERR_FILENO, "\n", 1));
 }
 
+/// Make sure the specified directory exists. If needed, try to create it and any currently not
+/// existing parent directories, like mkdir -p,.
+///
+/// \return 0 if, at the time of function return the directory exists, -1 otherwise.
+static int create_directory(const wcstring &d) {
+    bool ok = false;
+    struct stat buf;
+    int stat_res = 0;
+
+    while ((stat_res = wstat(d, &buf)) != 0) {
+        if (errno != EAGAIN) break;
+    }
+
+    if (stat_res == 0) {
+        if (S_ISDIR(buf.st_mode)) ok = true;
+    } else if (errno == ENOENT) {
+        wcstring dir = wdirname(d);
+        if (!create_directory(dir) && !wmkdir(d, 0700)) ok = true;
+    }
+
+    return ok ? 0 : -1;
+}
+
 /// The following type wraps up a user's "base" directories, corresponding (conceptually if not
 /// actually) to XDG spec.
 struct base_directory_t {
@@ -441,4 +462,22 @@ bool paths_are_same_file(const wcstring &path1, const wcstring &path2) {
     }
 
     return false;
+}
+
+void append_path_component(wcstring &path, const wcstring &component) {
+    if (path.empty() || component.empty()) {
+        path.append(component);
+    } else {
+        size_t path_len = path.size();
+        bool path_slash = path.at(path_len - 1) == L'/';
+        bool comp_slash = component.at(0) == L'/';
+        if (!path_slash && !comp_slash) {
+            // Need a slash
+            path.push_back(L'/');
+        } else if (path_slash && comp_slash) {
+            // Too many slashes.
+            path.erase(path_len - 1, 1);
+        }
+        path.append(component);
+    }
 }

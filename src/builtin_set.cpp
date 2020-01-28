@@ -25,6 +25,7 @@
 #include "io.h"
 #include "parser.h"
 #include "proc.h"
+#include "wcstringutil.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 

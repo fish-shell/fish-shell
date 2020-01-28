@@ -3,7 +3,9 @@
 function __fish_keybase_line_ends_with
     set -l line (commandline -poc | string match -v -r '^-')
     for i in (seq -1 -1 -(count $argv))
-        if test "$line[$i]" != "$argv[$i]"; return 1; end
+        if test "$line[$i]" != "$argv[$i]"
+            return 1
+        end
     end
 end
 

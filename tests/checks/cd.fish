@@ -23,10 +23,9 @@ rm -rf $tmp
 cd $oldpwd
 
 # Create a test directory to store our stuff.
-set -l base /tmp/cdcomp_test
-rm -Rf $base
-mkdir -p $base
-set real (mktemp -d)
+# macOS likes to return symlinks from (mktemp -d), make sure it does not.
+set -l base (realpath (mktemp -d))
+set real (realpath (mktemp -d))
 set link $base/link
 ln -s $real $link
 cd $link
@@ -83,7 +82,7 @@ ln -s $base/realhome $base/linkhome
 cd $base/linkhome
 set -l real_getcwd (pwd -P)
 env HOME=$base/linkhome $fish -c 'echo PWD is $PWD'
-#CHECK: PWD is /tmp/cdcomp_test/linkhome
+#CHECK: PWD is {{.*}}/linkhome
 
 
 # Do not inherit a virtual PWD that fails to resolve to getcwd (#5647)

@@ -11,12 +11,13 @@
 #include "proc.h"
 
 class block_t;
+class operation_context_t;
 class parser_t;
 
 /// An eval_result represents evaluation errors including wildcards which failed to match, syntax
 /// errors, or other expansion errors. It also tracks when evaluation was skipped due to signal
 /// cancellation. Note it does not track the exit status of commands.
-enum class eval_result_t {
+enum class end_execution_reason_t {
     /// Evaluation was successfull.
     ok,
 
@@ -34,6 +35,7 @@ class parse_execution_context_t {
    private:
     parsed_source_ref_t pstree;
     parser_t *const parser;
+    const operation_context_t &ctx;
     // The currently executing job node, used to indicate the line number.
     tnode_t<grammar::job> executing_job_node{};
     // Cached line number information.
@@ -47,20 +49,19 @@ class parse_execution_context_t {
 
     // Check to see if we should end execution.
     // \return the eval result to end with, or none() to continue on.
-    // This will never return eval_result_t::ok.
-    maybe_t<eval_result_t> check_end_execution() const;
+    // This will never return end_execution_reason_t::ok.
+    maybe_t<end_execution_reason_t> check_end_execution() const;
 
-    // Report an error. Always returns 'eval_result_t::error'.
-    eval_result_t report_error(const parse_node_t &node, const wchar_t *fmt, ...) const;
-    eval_result_t report_errors(const parse_error_list_t &error_list) const;
-
-    // Wildcard error helper.
-    eval_result_t report_unmatched_wildcard_error(const parse_node_t &unmatched_wildcard) const;
+    // Report an error, setting $status to \p status. Always returns
+    // 'end_execution_reason_t::error'.
+    end_execution_reason_t report_error(int status, const parse_node_t &node, const wchar_t *fmt,
+                                        ...) const;
+    end_execution_reason_t report_errors(int status, const parse_error_list_t &error_list) const;
 
     /// Command not found support.
-    eval_result_t handle_command_not_found(const wcstring &cmd,
-                                           tnode_t<grammar::plain_statement> statement,
-                                           int err_code);
+    end_execution_reason_t handle_command_not_found(const wcstring &cmd,
+                                                    tnode_t<grammar::plain_statement> statement,
+                                                    int err_code);
 
     // Utilities
     wcstring get_source(const parse_node_t &node) const;
@@ -69,8 +70,8 @@ class parse_execution_context_t {
 
     // Expand a command which may contain variables, producing an expand command and possibly
     // arguments. Prints an error message on error.
-    eval_result_t expand_command(tnode_t<grammar::plain_statement> statement, wcstring *out_cmd,
-                                 wcstring_list_t *out_args) const;
+    end_execution_reason_t expand_command(tnode_t<grammar::plain_statement> statement,
+                                          wcstring *out_cmd, wcstring_list_t *out_args) const;
 
     /// Return whether we should skip a job with the given bool statement type.
     bool should_skip(parse_job_decoration_t type) const;
@@ -80,64 +81,66 @@ class parse_execution_context_t {
 
     enum process_type_t process_type_for_command(tnode_t<grammar::plain_statement> statement,
                                                  const wcstring &cmd) const;
-    eval_result_t apply_variable_assignments(
+    end_execution_reason_t apply_variable_assignments(
         process_t *proc, tnode_t<grammar::variable_assignments> variable_assignments,
         const block_t **block);
 
     // These create process_t structures from statements.
-    eval_result_t populate_job_process(job_t *job, process_t *proc,
-                                       tnode_t<grammar::statement> statement,
-                                       tnode_t<grammar::variable_assignments> variable_assignments);
-    eval_result_t populate_not_process(job_t *job, process_t *proc,
-                                       tnode_t<grammar::not_statement> not_statement);
-    eval_result_t populate_plain_process(job_t *job, process_t *proc,
-                                         tnode_t<grammar::plain_statement> statement);
+    end_execution_reason_t populate_job_process(
+        job_t *job, process_t *proc, tnode_t<grammar::statement> statement,
+        tnode_t<grammar::variable_assignments> variable_assignments);
+    end_execution_reason_t populate_not_process(job_t *job, process_t *proc,
+                                                tnode_t<grammar::not_statement> not_statement);
+    end_execution_reason_t populate_plain_process(job_t *job, process_t *proc,
+                                                  tnode_t<grammar::plain_statement> statement);
 
     template <typename Type>
-    eval_result_t populate_block_process(job_t *job, process_t *proc,
-                                         tnode_t<grammar::statement> statement,
-                                         tnode_t<Type> specific_statement);
+    end_execution_reason_t populate_block_process(job_t *job, process_t *proc,
+                                                  tnode_t<grammar::statement> statement,
+                                                  tnode_t<Type> specific_statement);
 
     // These encapsulate the actual logic of various (block) statements.
-    eval_result_t run_block_statement(tnode_t<grammar::block_statement> statement,
-                                      const block_t *associated_block);
-    eval_result_t run_for_statement(tnode_t<grammar::for_header> header,
-                                    tnode_t<grammar::job_list> contents);
-    eval_result_t run_if_statement(tnode_t<grammar::if_statement> statement,
-                                   const block_t *associated_block);
-    eval_result_t run_switch_statement(tnode_t<grammar::switch_statement> statement);
-    eval_result_t run_while_statement(tnode_t<grammar::while_header> header,
-                                      tnode_t<grammar::job_list> contents,
-                                      const block_t *associated_block);
-    eval_result_t run_function_statement(tnode_t<grammar::block_statement> statement,
-                                         tnode_t<grammar::function_header> header);
-    eval_result_t run_begin_statement(tnode_t<grammar::job_list> contents);
+    end_execution_reason_t run_block_statement(tnode_t<grammar::block_statement> statement,
+                                               const block_t *associated_block);
+    end_execution_reason_t run_for_statement(tnode_t<grammar::for_header> header,
+                                             tnode_t<grammar::job_list> contents);
+    end_execution_reason_t run_if_statement(tnode_t<grammar::if_statement> statement,
+                                            const block_t *associated_block);
+    end_execution_reason_t run_switch_statement(tnode_t<grammar::switch_statement> statement);
+    end_execution_reason_t run_while_statement(tnode_t<grammar::while_header> header,
+                                               tnode_t<grammar::job_list> contents,
+                                               const block_t *associated_block);
+    end_execution_reason_t run_function_statement(tnode_t<grammar::block_statement> statement,
+                                                  tnode_t<grammar::function_header> header);
+    end_execution_reason_t run_begin_statement(tnode_t<grammar::job_list> contents);
 
     enum globspec_t { failglob, nullglob };
     using argument_node_list_t = std::vector<tnode_t<grammar::argument>>;
-    eval_result_t expand_arguments_from_nodes(const argument_node_list_t &argument_nodes,
-                                              wcstring_list_t *out_arguments,
-                                              globspec_t glob_behavior);
+    end_execution_reason_t expand_arguments_from_nodes(const argument_node_list_t &argument_nodes,
+                                                       wcstring_list_t *out_arguments,
+                                                       globspec_t glob_behavior);
 
-    // Determines the list of redirections for a node. Returns none() on failure, for example, an
-    // invalid fd.
-    bool determine_redirections(tnode_t<grammar::arguments_or_redirections_list> node,
-                                redirection_spec_list_t *out_redirections);
+    // Determines the list of redirections for a node.
+    end_execution_reason_t determine_redirections(
+        tnode_t<grammar::arguments_or_redirections_list> node,
+        redirection_spec_list_t *out_redirections);
 
-    eval_result_t run_1_job(tnode_t<grammar::job> job, const block_t *associated_block);
-    eval_result_t run_job_conjunction(tnode_t<grammar::job_conjunction> job_expr,
-                                      const block_t *associated_block);
+    end_execution_reason_t run_1_job(tnode_t<grammar::job> job, const block_t *associated_block);
+    end_execution_reason_t run_job_conjunction(tnode_t<grammar::job_conjunction> job_expr,
+                                               const block_t *associated_block);
     template <typename Type>
-    eval_result_t run_job_list(tnode_t<Type> job_list_node, const block_t *associated_block);
-    eval_result_t populate_job_from_job_node(job_t *j, tnode_t<grammar::job> job_node,
-                                             const block_t *associated_block);
+    end_execution_reason_t run_job_list(tnode_t<Type> job_list_node,
+                                        const block_t *associated_block);
+    end_execution_reason_t populate_job_from_job_node(job_t *j, tnode_t<grammar::job> job_node,
+                                                      const block_t *associated_block);
 
     // Returns the line number of the node. Not const since it touches cached_lineno_offset.
     int line_offset_of_node(tnode_t<grammar::job> node);
     int line_offset_of_character_at_offset(size_t offset);
 
    public:
-    parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p, job_lineage_t lineage);
+    parse_execution_context_t(parsed_source_ref_t pstree, parser_t *p,
+                              const operation_context_t &ctx, job_lineage_t lineage);
 
     /// Returns the current line number, indexed from 1. Not const since it touches
     /// cached_lineno_offset.
@@ -154,8 +157,10 @@ class parse_execution_context_t {
 
     /// Start executing at the given node. Returns 0 if there was no error, 1 if there was an
     /// error.
-    eval_result_t eval_node(tnode_t<grammar::statement> statement, const block_t *associated_block);
-    eval_result_t eval_node(tnode_t<grammar::job_list> job_list, const block_t *associated_block);
+    end_execution_reason_t eval_node(tnode_t<grammar::statement> statement,
+                                     const block_t *associated_block);
+    end_execution_reason_t eval_node(tnode_t<grammar::job_list> job_list,
+                                     const block_t *associated_block);
 };
 
 #endif

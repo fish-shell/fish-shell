@@ -155,7 +155,7 @@ void input_common_init(interrupt_func_t func);
 
 /// Adjust the escape timeout.
 class environment_t;
-void update_wait_on_escape_ms(const environment_t &vars);
+void update_wait_on_escape_ms(const environment_t& vars);
 
 /// A class which knows how to produce a stream of input events.
 class input_event_queue_t {

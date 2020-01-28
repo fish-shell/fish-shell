@@ -1,5 +1,5 @@
 function __rsync_remote_target
-    commandline -ct | string match -r '.*::?(?:.*/)?'
+    commandline -ct | string match -r '.*::?(?:.*/)?' | string unescape
 end
 
 complete -c rsync -s v -l verbose -d "Increase verbosity"
@@ -125,12 +125,14 @@ complete -c rsync -d Hostname -a "
 #
 # Remote path
 #
-complete -c rsync -d "Remote path" -n "commandline -ct | string match -q '*:*'" -a "
+complete -c rsync -d "Remote path" -n "commandline -ct | string match -q '*:*'" -xa "
 (
 	# Prepend any user@host:/path information supplied before the remote completion.
         __rsync_remote_target
 )(
 	# Get the list of remote files from the specified rsync server.
-        rsync --list-only (__rsync_remote_target) 2>/dev/null | string replace -r '^d.*' '\$0/' | tr -s ' ' | cut -d' ' -f 5-
+        rsync --list-only (__rsync_remote_target) 2>/dev/null | string replace -r '^d.*' '\$0/' |
+        string replace -r '(\S+\s+){4}' '' | # drop the first four columns
+        string escape -n
 )
 "

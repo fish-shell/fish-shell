@@ -21,7 +21,6 @@ owning_lock<std::vector<const wchar_t *>> string_table;
 static const wchar_t *intern_with_dup(const wchar_t *in, bool dup) {
     if (!in) return nullptr;
 
-    debug(5, L"intern %ls", in);
     auto table = string_table.acquire();
 
     const wchar_t *result;

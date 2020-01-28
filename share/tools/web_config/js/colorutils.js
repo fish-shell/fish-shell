@@ -279,6 +279,31 @@ var TomorrowTheme = {
     }
 }
 
+var Base16Theme = {
+    base16_default_dark: { base00: '181818', base01: '282828', base02: '383838', base03: '585858', base04: 'b8b8b8', base05: 'd8d8d8', base06: 'e8e8e8', base07: 'f8f8f8', base08: 'ab4642', base09: 'dc9656', base0A: 'f7ca88', base0B: 'a1b56c', base0C: '86c1b9', base0D: '7cafc2', base0E: 'ba8baf', base0F: 'a16946' },
+
+    base16_default_light: { base00: 'f8f8f8', base01: 'e8e8e8', base02: 'd8d8d8', base03: 'b8b8b8', base04: '585858', base05: '383838', base06: '282828', base07: '181818', base08: 'ab4642', base09: 'dc9656', base0A: 'f7ca88', base0B: 'a1b56c', base0C: '86c1b9', base0D: '7cafc2', base0E: 'ba8baf', base0F: 'a16946' },
+
+    base16_eighties: { base00: '2d2d2d', base01: '393939', base02: '515151', base03: '747369', base04: 'a09f93', base05: 'd3d0c8', base06: 'e8e6df', base07: 'f2f0ec', base08: 'f2777a', base09: 'f99157', base0A: 'ffcc66', base0B: '99cc99', base0C: '66cccc', base0D: '6699cc', base0E: 'cc99cc', base0F: 'd27b53' },
+
+    apply: function(theme, receiver) {
+        receiver['autosuggestion'] = theme.base03
+        receiver['command'] = theme.base0B
+        receiver['comment'] = theme.base0A
+        receiver['end'] = theme.base0E
+        receiver['error'] = theme.base08
+        receiver['param'] = theme.base05
+        receiver['operator'] = theme.base0D
+        receiver['escape'] = theme.base0C
+        receiver['quote'] = theme.base0A
+        receiver['redirection'] = theme.base05
+        receiver['match'] = theme.base0D
+
+        receiver['colors'] = []
+        for (var key in theme) receiver['colors'].push(theme[key])
+    },
+}
+
 var nord = {
     nord0: '2e3440',
     nord1: '3b4252',
@@ -384,9 +409,29 @@ var color_scheme_tomorrow_night_bright = {
     'name': 'Tomorrow Night Bright',
     'preferred_background': 'black',
     'url': 'https://github.com/chriskempson/tomorrow-theme',
-
 }
 TomorrowTheme.apply(TomorrowTheme.tomorrow_night_bright, color_scheme_tomorrow_night_bright)
+
+var color_scheme_base16_default_dark = {
+    name: 'Base16 Default Dark',
+    preferred_background: Base16Theme.base16_default_dark.base00,
+    url: 'https://github.com/chriskempson/base16-default-schemes',
+}
+Base16Theme.apply(Base16Theme.base16_default_dark, color_scheme_base16_default_dark)
+
+var color_scheme_base16_default_light = {
+    name: 'Base16 Default Light',
+    preferred_background: Base16Theme.base16_default_light.base00,
+    url: 'https://github.com/chriskempson/base16-default-schemes',
+}
+Base16Theme.apply(Base16Theme.base16_default_light, color_scheme_base16_default_light)
+
+var color_scheme_base16_eighties = {
+    name: 'Base16 Eighties',
+    preferred_background: Base16Theme.base16_eighties.base00,
+    url: 'https://github.com/chriskempson/base16-default-schemes',
+}
+Base16Theme.apply(Base16Theme.base16_eighties, color_scheme_base16_eighties)
 
 function construct_scheme_analogous(label, background, color_list) {
     return {

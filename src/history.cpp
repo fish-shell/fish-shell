@@ -131,7 +131,7 @@ static bool history_file_lock(int fd, int lock_type) {
     int retval = flock(fd, lock_type);
     double duration = timef() - start_time;
     if (duration > 0.25) {
-        debug(1, _(L"Locking the history file took too long (%.3f seconds)."), duration);
+        FLOGF(warning, _(L"Locking the history file took too long (%.3f seconds)."), duration);
         // we've decided to stop doing any locking behavior
         // but make sure we don't leave the file locked!
         if (retval == 0 && lock_type != LOCK_UN) {
@@ -605,10 +605,6 @@ bool history_search_t::go_backwards() {
 
     size_t index = current_index_;
     while (++index < max_index) {
-        if (reader_test_should_cancel()) {
-            return false;
-        }
-
         history_item_t item = history_->item_at_index(index);
 
         // We're done if it's empty or we cancelled.
@@ -722,7 +718,7 @@ bool history_impl_t::rewrite_to_temporary_file(int existing_fd, int dst_fd) cons
         err = flush_to_fd(&buffer, dst_fd, 0);
     }
     if (err) {
-        debug(2, L"Error %d when writing to temporary history file", err);
+        FLOGF(history_file, L"Error %d when writing to temporary history file", err);
     }
 
     return err == 0;
@@ -794,7 +790,7 @@ bool history_impl_t::save_internal_via_rewrite() {
             // The file has changed, so we're going to re-read it
             // Truncate our tmp_fd so we can reuse it
             if (ftruncate(tmp_fd, 0) == -1 || lseek(tmp_fd, 0, SEEK_SET) == -1) {
-                debug(2, L"Error %d when truncating temporary history file", errno);
+                FLOGF(history_file, L"Error %d when truncating temporary history file", errno);
             }
         } else {
             // The file is unchanged, or the new file doesn't exist or we can't read it
@@ -808,16 +804,16 @@ bool history_impl_t::save_internal_via_rewrite() {
             struct stat sbuf;
             if (target_fd_after.valid() && fstat(target_fd_after.fd(), &sbuf) >= 0) {
                 if (fchown(tmp_fd, sbuf.st_uid, sbuf.st_gid) == -1) {
-                    debug(2, L"Error %d when changing ownership of history file", errno);
+                    FLOGF(history_file, L"Error %d when changing ownership of history file", errno);
                 }
                 if (fchmod(tmp_fd, sbuf.st_mode) == -1) {
-                    debug(2, L"Error %d when changing mode of history file", errno);
+                    FLOGF(history_file, L"Error %d when changing mode of history file", errno);
                 }
             }
 
             // Slide it into place
             if (wrename(tmp_name, *target_name) == -1) {
-                debug(2, L"Error %d when renaming history file", errno);
+                FLOGF(history_file, L"Error %d when renaming history file", errno);
             }
 
             // We did it
@@ -1085,7 +1081,7 @@ void history_impl_t::populate_from_config_path() {
                 ssize_t written = write(dst_fd.fd(), buf, static_cast<size_t>(size));
                 if (written < 0) {
                     // This message does not have high enough priority to be shown by default.
-                    debug(2, L"Error when writing history file");
+                    FLOGF(history_file, L"Error when writing history file");
                     break;
                 }
             }
@@ -1344,10 +1340,11 @@ void history_t::save() { impl()->save(); }
 /// \p func returns true, continue the search; else stop it.
 static void do_1_history_search(history_t &hist, history_search_type_t search_type,
                                 const wcstring &search_string, bool case_sensitive,
-                                const std::function<bool(const history_item_t &item)> &func) {
+                                const std::function<bool(const history_item_t &item)> &func,
+                                const cancel_checker_t &cancel_check) {
     history_search_t searcher = history_search_t(hist, search_string, search_type,
                                                  case_sensitive ? 0 : history_search_ignore_case);
-    while (searcher.go_backwards()) {
+    while (!cancel_check() && searcher.go_backwards()) {
         if (!func(searcher.current_item())) {
             break;
         }
@@ -1357,7 +1354,8 @@ static void do_1_history_search(history_t &hist, history_search_type_t search_ty
 // Searches history.
 bool history_t::search(history_search_type_t search_type, const wcstring_list_t &search_args,
                        const wchar_t *show_time_format, size_t max_items, bool case_sensitive,
-                       bool null_terminate, bool reverse, io_streams_t &streams) {
+                       bool null_terminate, bool reverse, const cancel_checker_t &cancel_check,
+                       io_streams_t &streams) {
     wcstring_list_t collected;
     wcstring formatted_record;
     size_t remaining = max_items;
@@ -1379,14 +1377,16 @@ bool history_t::search(history_search_type_t search_type, const wcstring_list_t 
 
     if (search_args.empty()) {
         // The user had no search terms; just append everything.
-        do_1_history_search(*this, history_search_type_t::match_everything, {}, false, func);
+        do_1_history_search(*this, history_search_type_t::match_everything, {}, false, func,
+                            cancel_check);
     } else {
         for (const wcstring &search_string : search_args) {
             if (search_string.empty()) {
                 streams.err.append_format(L"Searching for the empty string isn't allowed");
                 return false;
             }
-            do_1_history_search(*this, search_type, search_string, case_sensitive, func);
+            do_1_history_search(*this, search_type, search_string, case_sensitive, func,
+                                cancel_check);
         }
     }
 

@@ -11,6 +11,7 @@
 #include <utility>
 
 #include "global_safety.h"
+#include "wcstringutil.h"
 
 using wcstring = std::wstring;
 using wcstring_list_t = std::vector<wcstring>;
@@ -50,11 +51,18 @@ class category_list_t {
 
     category_t debug{L"debug", L"Debugging aid (on by default)", true};
 
+    category_t warning{L"warning", L"Warnings (on by default)", true};
+
+    category_t config{L"config", L"Finding and reading configuration"};
+
     category_t exec_job_status{L"exec-job-status", L"Jobs changing status"};
 
     category_t exec_job_exec{L"exec-job-exec", L"Jobs being executed"};
 
     category_t exec_fork{L"exec-fork", L"Calls to fork()"};
+
+    category_t parse_productions{L"parse-productions", L"Resolving tokens"};
+    category_t parse_productions_chatty{L"parse-productions-chatty", L"Resolving tokens (chatty messages)"};
 
     category_t proc_job_run{L"proc-job-run", L"Jobs getting started or continued"};
 
@@ -66,19 +74,31 @@ class category_list_t {
                                   L"Reaping internal (non-forked) processes"};
 
     category_t proc_reap_external{L"proc-reap-external", L"Reaping external (forked) processes"};
+    category_t proc_pgroup{L"proc-pgroup", L"Process groups"};
 
     category_t env_locale{L"env-locale", L"Changes to locale variables"};
 
     category_t env_export{L"env-export", L"Changes to exported variables"};
 
+    category_t env_dispatch{L"env-dispatch", L"Reacting to variables"};
+
+    category_t uvar_file{L"uvar-file", L"Writing/reading the universal variable store"};
+
     category_t topic_monitor{L"topic-monitor", L"Internal details of the topic monitor"};
     category_t char_encoding{L"char-encoding", L"Character encoding issues"};
 
     category_t history{L"history", L"Command history events"};
+    category_t history_file{L"history-file", L"Reading/Writing the history file"};
 
     category_t profile_history{L"profile-history", L"History performance measurements"};
 
     category_t iothread{L"iothread", L"Background IO thread events"};
+
+    category_t term_support{L"term-support", L"Terminal feature detection"};
+
+    category_t reader{L"reader", L"The interactive reader/input system"};
+    category_t complete{L"complete", L"The completion system"};
+    category_t path{L"path", L"Searching/using paths"};
 };
 
 /// The class responsible for logging.
@@ -169,3 +189,6 @@ void log_extra_to_flog_file(const wcstring &s);
     } while (0)
 
 #endif
+
+#define should_flog(wht) \
+    (flog_details::category_list_t::g_instance->wht.enabled)

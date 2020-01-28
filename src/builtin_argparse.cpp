@@ -23,6 +23,7 @@
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
 #include "parser.h"
+#include "wcstringutil.h"
 #include "wgetopt.h"  // IWYU pragma: keep
 #include "wutil.h"    // IWYU pragma: keep
 

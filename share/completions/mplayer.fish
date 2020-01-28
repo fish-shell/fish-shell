@@ -21,7 +21,7 @@ set mplayer_lang "
 	hu\tHungarian
 	pl\tPolish
 	pt\tPortugese
-	se\Swedish
+	se\tSwedish
 "
 
 complete -c mplayer -o autoq -d "Dynamically change postprocessing" -x

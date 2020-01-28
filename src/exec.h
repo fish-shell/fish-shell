@@ -17,17 +17,22 @@ struct job_lineage_t;
 class parser_t;
 bool exec_job(parser_t &parser, const std::shared_ptr<job_t> &j, const job_lineage_t &lineage);
 
-/// Evaluate the expression cmd in a subshell, add the outputs into the list l. On return, the
-/// status flag as returned bu \c proc_gfet_last_status will not be changed.
+/// Evaluate a command.
 ///
 /// \param cmd the command to execute
-/// \param outputs The list to insert output into.
+/// \param parser the parser with which to execute code
+/// \param outputs the list to insert output into.
+/// \param apply_exit_status if set, update $status within the parser, otherwise do not.
 ///
-/// \return the status of the last job to exit, or -1 if en error was encountered.
+/// \return a value appropriate for populating $status.
+int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status);
 int exec_subshell(const wcstring &cmd, parser_t &parser, wcstring_list_t &outputs,
-                  bool apply_exit_status, bool is_subcmd = false);
-int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status,
-                  bool is_subcmd = false);
+                  bool apply_exit_status);
+
+/// Like exec_subshell, but only returns expansion-breaking errors. That is, a zero return means
+/// "success" (even though the command may have failed), a non-zero return means that we should
+/// halt expansion.
+int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser, wcstring_list_t &outputs);
 
 /// Loops over close until the syscall was run without being interrupted.
 void exec_close(int fd);

@@ -60,8 +60,6 @@ enum class selection_motion_t {
 // How many rows we will show in the "initial" pager.
 #define PAGER_UNDISCLOSED_MAX_ROWS 4
 
-typedef std::vector<completion_t> completion_list_t;
-
 class pager_t {
     size_t available_term_width;
     size_t available_term_height;

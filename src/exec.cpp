@@ -36,6 +36,7 @@
 #include "function.h"
 #include "io.h"
 #include "iothread.h"
+#include "null_terminated_array.h"
 #include "parse_tree.h"
 #include "parser.h"
 #include "path.h"
@@ -55,17 +56,10 @@
 static relaxed_atomic_t<int> s_fork_count{0};
 
 void exec_close(int fd) {
-    ASSERT_IS_MAIN_THREAD();
-
-    // This may be called in a child of fork(), so don't allocate memory.
-    if (fd < 0) {
-        FLOG(error, L"Called close on invalid file descriptor ");
-        return;
-    }
-
+    assert(fd >= 0 && "Invalid fd");
     while (close(fd) == -1) {
         if (errno != EINTR) {
-            debug(1, FD_ERROR, fd);
+            FLOGF(warning, FD_ERROR, fd);
             wperror(L"close");
             break;
         }
@@ -106,7 +100,6 @@ static void safe_launch_process(process_t *p, const char *actual_cmd, const char
                                 const char *const *cenvv) {
     UNUSED(p);
     int err;
-    //  debug( 1, L"exec '%ls'", p->argv[0] );
 
     // This function never returns, so we take certain liberties with constness.
     char *const *envv = const_cast<char *const *>(cenvv);
@@ -193,7 +186,7 @@ static bool can_use_posix_spawn_for_job(const std::shared_ptr<job_t> &job,
     return true;
 }
 
-void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_io) {
+static void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_io) {
     // Do a regular launch -  but without forking first...
     process_t *p = j->processes.front().get();
     io_chain_t all_ios = block_io;
@@ -203,7 +196,7 @@ void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_io) {
 
     // child_setup_process makes sure signals are properly set up.
     dup2_list_t redirs = dup2_list_t::resolve_chain(all_ios);
-    if (!child_setup_process(INVALID_PID, false, redirs)) {
+    if (child_setup_process(INVALID_PID, false, redirs) == 0) {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
         auto shlvl_var = vars.get(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
         wcstring shlvl_str = L"0";
@@ -217,10 +210,6 @@ void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_io) {
 
         // launch_process _never_ returns.
         launch_process_nofork(vars, p);
-    } else {
-        j->mark_constructed();
-        j->processes.front()->completed = true;
-        return;
     }
 }
 
@@ -241,7 +230,7 @@ static void on_process_created(const std::shared_ptr<job_t> &j, pid_t child_pid)
 /// stdout and \p errdata to stderr, respecting the io chain \p ios. For example if target_fd is 1
 /// (stdout), and there is a dup2 3->1, then we need to write to fd 3. Then exit the internal
 /// process.
-static bool run_internal_process(process_t *p, std::string outdata, std::string errdata,
+static void run_internal_process(process_t *p, std::string &&outdata, std::string &&errdata,
                                  const io_chain_t &ios) {
     p->check_generations_before_launch();
 
@@ -293,7 +282,7 @@ static bool run_internal_process(process_t *p, std::string outdata, std::string 
     // TODO: support eliding output to /dev/null.
     if (f->skip_out() && f->skip_err()) {
         f->internal_proc->mark_exited(p->status);
-        return true;
+        return;
     }
 
     // Ensure that ios stays alive, it may own fds.
@@ -304,7 +293,7 @@ static bool run_internal_process(process_t *p, std::string outdata, std::string 
     // builtin_run provide this directly, rather than setting it in the process.
     f->success_status = p->status;
 
-    iothread_perform([f]() {
+    iothread_perform_cantwait([f]() {
         proc_status_t status = f->success_status;
         if (!f->skip_out()) {
             ssize_t ret = write_loop(f->src_outfd, f->outdata.data(), f->outdata.size());
@@ -330,7 +319,23 @@ static bool run_internal_process(process_t *p, std::string outdata, std::string 
         }
         f->internal_proc->mark_exited(status);
     });
-    return true;
+}
+
+/// If \p outdata or \p errdata are both empty, then mark the process as completed immediately.
+/// Otherwise, run an internal process.
+static void run_internal_process_or_short_circuit(parser_t &parser, const std::shared_ptr<job_t> &j,
+                                                  process_t *p, std::string &&outdata,
+                                                  std::string &&errdata, const io_chain_t &ios) {
+    if (outdata.empty() && errdata.empty()) {
+        p->completed = true;
+        if (p->is_last_in_job) {
+            FLOGF(exec_job_status, L"Set status of job %d (%ls) to %d using short circuit",
+                  j->job_id(), j->preview().c_str(), p->status);
+            parser.set_last_statuses(j->get_statuses());
+        }
+    } else {
+        run_internal_process(p, std::move(outdata), std::move(errdata), ios);
+    }
 }
 
 /// Call fork() as part of executing a process \p p in a job \j. Execute \p child_action in the
@@ -351,7 +356,7 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
     }
 
     if (pid < 0) {
-        debug(1, L"Failed to fork %s!\n", fork_type);
+        FLOGF(warning, L"Failed to fork %s!\n", fork_type);
         job_mark_process_as_failed(job, p);
         return false;
     }
@@ -506,22 +511,14 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
         errbuff.clear();
     }
 
-    if (outbuff.empty() && errbuff.empty()) {
-        // We do not need to construct a background process.
-        // TODO: factor this job-status-setting stuff into a single place.
-        p->completed = true;
-        if (p->is_last_in_job) {
-            FLOGF(exec_job_status, L"Set status of job %d (%ls) to %d using short circuit",
-                  j->job_id(), j->preview().c_str(), p->status);
-            parser.set_last_statuses(j->get_statuses());
-        }
-        return true;
-    } else {
-        // Construct and run our background process.
-        fflush(stdout);
-        fflush(stderr);
-        return run_internal_process(p, std::move(outbuff), std::move(errbuff), *io_chain);
-    }
+    // Some historical behavior.
+    if (!outbuff.empty()) fflush(stdout);
+    if (!errbuff.empty()) fflush(stderr);
+
+    // Construct and run our background process.
+    run_internal_process_or_short_circuit(parser, j, p, std::move(outbuff), std::move(errbuff),
+                                          *io_chain);
+    return true;
 }
 
 /// Executes an external command.
@@ -701,18 +698,7 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
         const parsed_source_ref_t &source = p->block_node_source;
         tnode_t<grammar::statement> node = p->internal_block_node;
         assert(source && node && "Process is missing node info");
-        return [=](parser_t &parser) {
-            eval_result_t res = parser.eval_node(source, node, lineage);
-            switch (res) {
-                case eval_result_t::ok:
-                case eval_result_t::error:
-                case eval_result_t::cancelled:
-                    return proc_status_t::from_exit_code(parser.get_last_status());
-                case eval_result_t::control_flow:
-                default:
-                    DIE("eval_result_t::control_flow should not be returned from eval_node");
-            }
-        };
+        return [=](parser_t &parser) { return parser.eval_node(source, node, lineage).status; };
     } else {
         assert(p->type == process_type_t::function);
         auto props = function_get_properties(p->argv0());
@@ -724,25 +710,15 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
         return [=](parser_t &parser) {
             // Pull out the job list from the function.
             tnode_t<grammar::job_list> body = props->func_node.child<1>();
-            const auto &ld = parser.libdata();
-            auto saved_exec_count = ld.exec_count;
             const block_t *fb = function_prepare_environment(parser, *argv, *props);
             auto res = parser.eval_node(props->parsed_source, body, lineage);
             function_restore_environment(parser, fb);
 
-            switch (res) {
-                case eval_result_t::ok:
-                    // If the function did not execute anything, treat it as success.
-                    return proc_status_t::from_exit_code(saved_exec_count == ld.exec_count
-                                                             ? EXIT_SUCCESS
-                                                             : parser.get_last_status());
-                case eval_result_t::error:
-                case eval_result_t::cancelled:
-                    return proc_status_t::from_exit_code(parser.get_last_status());
-                default:
-                case eval_result_t::control_flow:
-                    DIE("eval_result_t::control_flow should not be returned from eval_node");
+            // If the function did not execute anything, treat it as success.
+            if (res.was_empty) {
+                res = proc_status_t::from_exit_code(EXIT_SUCCESS);
             }
+            return res.status;
         };
     }
 }
@@ -785,31 +761,17 @@ static bool exec_block_or_func_process(parser_t &parser, const std::shared_ptr<j
     }
 
     // If we have a block output buffer, populate it now.
-    if (!block_output_bufferfill) {
-        // No buffer, so we exit directly. This means we have to manually set the exit
-        // status.
-        p->completed = true;
-        if (p->is_last_in_job) {
-            parser.set_last_statuses(j->get_statuses());
-        }
-        return true;
+    std::string buffer_contents;
+    if (block_output_bufferfill) {
+        // Remove our write pipe and forget it. This may close the pipe, unless another thread has
+        // claimed it (background write) or another process has inherited it.
+        io_chain.remove(block_output_bufferfill);
+        auto block_output_buffer = io_bufferfill_t::finish(std::move(block_output_bufferfill));
+        buffer_contents = block_output_buffer->buffer().newline_serialized();
     }
-    assert(block_output_bufferfill && "Must have a block output bufferfiller");
 
-    // Remove our write pipe and forget it. This may close the pipe, unless another thread has
-    // claimed it (background write) or another process has inherited it.
-    io_chain.remove(block_output_bufferfill);
-    auto block_output_buffer = io_bufferfill_t::finish(std::move(block_output_bufferfill));
-
-    std::string buffer_contents = block_output_buffer->buffer().newline_serialized();
-    if (!buffer_contents.empty()) {
-        return run_internal_process(p, std::move(buffer_contents), {} /*errdata*/, io_chain);
-    } else {
-        if (p->is_last_in_job) {
-            parser.set_last_statuses(j->get_statuses());
-        }
-        p->completed = true;
-    }
+    run_internal_process_or_short_circuit(parser, j, p, std::move(buffer_contents),
+                                          {} /* errdata */, io_chain);
     return true;
 }
 
@@ -888,7 +850,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, const std::share
     }
 
     if (p->type != process_type_t::block_node) {
-        // An simple `begin ... end` should not be considered an execution of a command.
+        // A simple `begin ... end` should not be considered an execution of a command.
         parser.libdata().exec_count++;
     }
 
@@ -1049,8 +1011,10 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
         internal_exec(parser.vars(), j.get(), lineage.block_io);
         // internal_exec only returns if it failed to set up redirections.
         // In case of an successful exec, this code is not reached.
-        bool status = !j->flags().negate;
+        int status = j->flags().negate ? 0 : 1;
         parser.set_last_statuses(statuses_t::just(status));
+
+        // A false return tells the caller to remove the job from the list.
         return false;
     }
     cleanup_t timer = push_timer(j->flags().has_time_prefix);
@@ -1080,7 +1044,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
         if (!p->is_last_in_job) {
             auto pipes = make_autoclose_pipes(conflicts);
             if (!pipes) {
-                debug(1, PIPE_ERROR);
+                FLOGF(warning, PIPE_ERROR);
                 wperror(L"pipe");
                 job_mark_process_as_failed(j, p.get());
                 exec_error = true;
@@ -1128,55 +1092,10 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
     return true;
 }
 
-static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstring_list_t *lst,
-                                  bool apply_exit_status, bool is_subcmd) {
-    ASSERT_IS_MAIN_THREAD();
-    auto &ld = parser.libdata();
-    bool prev_subshell = ld.is_subshell;
-    auto prev_statuses = parser.get_last_statuses();
-    bool split_output = false;
-
-    auto prev_read_limit = ld.read_limit;
-    ld.read_limit = is_subcmd ? read_byte_limit : 0;
-
-    const auto ifs = parser.vars().get(L"IFS");
-    if (!ifs.missing_or_empty()) {
-        split_output = true;
-    }
-
-    ld.is_subshell = true;
-    auto subcommand_statuses = statuses_t::just(-1);  // assume the worst
-
-    // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may
-    // be null.
-    std::shared_ptr<io_buffer_t> buffer;
-    if (auto bufferfill = io_bufferfill_t::create(fd_set_t{}, ld.read_limit)) {
-        if (parser.eval(cmd, io_chain_t{bufferfill}, block_type_t::subst) == eval_result_t::ok) {
-            subcommand_statuses = parser.get_last_statuses();
-        }
-        buffer = io_bufferfill_t::finish(std::move(bufferfill));
-    }
-
-    if (buffer && buffer->buffer().discarded()) {
-        subcommand_statuses = statuses_t::just(STATUS_READ_TOO_MUCH);
-    }
-
-    // If the caller asked us to preserve the exit status, restore the old status. Otherwise set the
-    // status of the subcommand.
-    if (apply_exit_status) {
-        parser.set_last_statuses(subcommand_statuses);
-    } else {
-        parser.set_last_statuses(std::move(prev_statuses));
-    }
-
-    ld.is_subshell = prev_subshell;
-    ld.read_limit = prev_read_limit;
-
-    if (lst == nullptr || !buffer) {
-        return subcommand_statuses.status;
-    }
+/// Populate \p lst with the output of \p buffer, perhaps splitting lines according to \p split.
+static void populate_subshell_output(wcstring_list_t *lst, const io_buffer_t &buffer, bool split) {
     // Walk over all the elements.
-    for (const auto &elem : buffer->buffer().elements()) {
+    for (const auto &elem : buffer.buffer().elements()) {
         if (elem.is_explicitly_separated()) {
             // Just append this one.
             lst->push_back(str2wcstring(elem.contents));
@@ -1187,7 +1106,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
         assert(!elem.is_explicitly_separated() && "should not be explicitly separated");
         const char *begin = elem.contents.data();
         const char *end = begin + elem.contents.size();
-        if (split_output) {
+        if (split) {
             const char *cursor = begin;
             while (cursor < end) {
                 // Look for the next separator.
@@ -1212,17 +1131,73 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstrin
             lst->push_back(str2wcstring(begin, end - begin));
         }
     }
+}
 
-    return subcommand_statuses.status;
+/// Execute \p cmd in a subshell in \p parser. If \p lst is not null, populate it with the output.
+/// Return $status in \p out_status.
+/// If \p apply_exit_status is false, then reset $status back to its original value.
+/// \p is_subcmd controls whether we apply a read limit.
+/// \p break_expand is used to propagate whether the result should be "expansion breaking" in the
+/// sense that subshells used during string expansion should halt that expansion. \return the value
+/// of $status.
+static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, wcstring_list_t *lst,
+                                  bool *break_expand, bool apply_exit_status, bool is_subcmd) {
+    ASSERT_IS_MAIN_THREAD();
+    auto &ld = parser.libdata();
+
+    scoped_push<bool> is_subshell(&ld.is_subshell, true);
+    scoped_push<size_t> read_limit(&ld.read_limit, is_subcmd ? read_byte_limit : 0);
+
+    auto prev_statuses = parser.get_last_statuses();
+    const cleanup_t put_back([&] {
+        if (!apply_exit_status) {
+            parser.set_last_statuses(prev_statuses);
+        }
+    });
+
+    const bool split_output = !parser.vars().get(L"IFS").missing_or_empty();
+
+    // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may
+    // be null.
+    auto bufferfill = io_bufferfill_t::create(fd_set_t{}, ld.read_limit);
+    if (!bufferfill) {
+        *break_expand = true;
+        return STATUS_CMD_ERROR;
+    }
+    eval_res_t eval_res = parser.eval(cmd, io_chain_t{bufferfill}, block_type_t::subst);
+    std::shared_ptr<io_buffer_t> buffer = io_bufferfill_t::finish(std::move(bufferfill));
+    if (buffer->buffer().discarded()) {
+        *break_expand = true;
+        return STATUS_READ_TOO_MUCH;
+    }
+
+    if (eval_res.break_expand) {
+        *break_expand = true;
+        return eval_res.status.status_value();
+    }
+
+    if (lst) {
+        populate_subshell_output(lst, *buffer, split_output);
+    }
+    *break_expand = false;
+    return eval_res.status.status_value();
+}
+
+int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser, wcstring_list_t &outputs) {
+    ASSERT_IS_MAIN_THREAD();
+    bool break_expand = false;
+    int ret = exec_subshell_internal(cmd, parser, &outputs, &break_expand, true, true);
+    // Only return an error code if we should break expansion.
+    return break_expand ? ret : STATUS_CMD_OK;
+}
+
+int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status) {
+    bool break_expand = false;
+    return exec_subshell_internal(cmd, parser, nullptr, &break_expand, apply_exit_status, false);
 }
 
 int exec_subshell(const wcstring &cmd, parser_t &parser, wcstring_list_t &outputs,
-                  bool apply_exit_status, bool is_subcmd) {
-    ASSERT_IS_MAIN_THREAD();
-    return exec_subshell_internal(cmd, parser, &outputs, apply_exit_status, is_subcmd);
-}
-
-int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status, bool is_subcmd) {
-    ASSERT_IS_MAIN_THREAD();
-    return exec_subshell_internal(cmd, parser, nullptr, apply_exit_status, is_subcmd);
+                  bool apply_exit_status) {
+    bool break_expand = false;
+    return exec_subshell_internal(cmd, parser, &outputs, &break_expand, apply_exit_status, false);
 }

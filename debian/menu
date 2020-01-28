@@ -1,2 +1,0 @@
-?package(fish):needs="text" section="Applications/Shells"\
-  title="fish" command="/usr/bin/fish"

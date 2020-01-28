@@ -41,9 +41,16 @@ enum {
 /// executables_only
 /// \param out The list in which to put the output
 ///
-/// \return 1 if matches where found, 0 otherwise. Return -1 on abort (I.e. ^C was pressed).
-int wildcard_expand_string(const wcstring &wc, const wcstring &working_directory,
-                           expand_flags_t flags, std::vector<completion_t> *out);
+enum class wildcard_expand_result_t {
+    no_match,  /// The wildcard did not match.
+    match,     /// The wildcard did match.
+    cancel,    /// Expansion was cancelled (e.g. control-C).
+};
+wildcard_expand_result_t wildcard_expand_string(const wcstring &wc,
+                                                const wcstring &working_directory,
+                                                expand_flags_t flags,
+                                                const cancel_checker_t &cancel_checker,
+                                                completion_list_t *out);
 
 /// Test whether the given wildcard matches the string. Does not perform any I/O.
 ///
@@ -62,7 +69,6 @@ bool wildcard_has(const wchar_t *, bool internal);
 
 /// Test wildcard completion.
 bool wildcard_complete(const wcstring &str, const wchar_t *wc, const description_func_t &desc_func,
-                       std::vector<completion_t> *out, expand_flags_t expand_flags,
-                       complete_flags_t flags);
+                       completion_list_t *out, expand_flags_t expand_flags, complete_flags_t flags);
 
 #endif

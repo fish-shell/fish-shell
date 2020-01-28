@@ -14,6 +14,7 @@
 
 #include "common.h"
 #include "env.h"
+#include "flog.h"
 #include "global_safety.h"
 #include "maybe.h"
 #include "redirection.h"
@@ -116,8 +117,6 @@ class separated_buffer_t {
         contents_size_ = 0;
         discard = true;
     }
-
-    void reset_discard() { discard = false; }
 
     /// Serialize the contents to a single string, where explicitly separated elements have a
     /// newline appended.
@@ -322,10 +321,7 @@ class io_buffer_t {
     bool fillthread_running() const { return fillthread_waiter_.valid(); }
 
    public:
-    explicit io_buffer_t(size_t limit) : buffer_(limit) {
-        // Explicitly reset the discard flag because we share this buffer.
-        buffer_.reset_discard();
-    }
+    explicit io_buffer_t(size_t limit) : buffer_(limit) {}
 
     ~io_buffer_t();
 

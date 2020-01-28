@@ -296,10 +296,12 @@ string repeat -n0; or echo "exit 1"
 string repeat -m0; or echo "exit 1"
 # CHECK: exit 1
 
-string repeat -n1 -N "there is "; echo "no newline"
+string repeat -n1 -N "there is "
+echo "no newline"
 # CHECK: there is no newline
 
-string repeat -n1 --no-newline "there is "; echo "no newline"
+string repeat -n1 --no-newline "there is "
+echo "no newline"
 # CHECK: there is no newline
 
 string repeat -n10 -m4 "foo"
@@ -491,9 +493,9 @@ count (string join0 $tmp | string split0)
 # This function outputs some newline-separated content, and some
 # explicitly separated content.
 function dualsplit
-  echo alpha
-  echo beta
-  echo -ne 'gamma\x00delta' | string split0
+    echo alpha
+    echo beta
+    echo -ne 'gamma\x00delta' | string split0
 end
 count (dualsplit)
 # CHECK: 4
@@ -553,9 +555,9 @@ string collect \n\n >/dev/null; and echo unexpected success; or echo expected fa
 # This function outputs some newline-separated content, and some
 # explicitly un-separated content.
 function dualcollect
-  echo alpha
-  echo beta
-  echo gamma\ndelta\nomega | string collect
+    echo alpha
+    echo beta
+    echo gamma\ndelta\nomega | string collect
 end
 count (dualcollect)
 # CHECK: 3

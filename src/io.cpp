@@ -48,7 +48,7 @@ void io_bufferfill_t::print() const { std::fwprintf(stderr, L"bufferfill {%d}\n"
 
 void io_buffer_t::append_from_stream(const output_stream_t &stream) {
     const separated_buffer_t<wcstring> &input = stream.buffer();
-    if (input.elements().empty()) return;
+    if (input.elements().empty() && !input.discarded()) return;
     scoped_lock locker(append_lock_);
     if (buffer_.discarded()) return;
     if (input.discarded()) {
@@ -157,7 +157,7 @@ void io_buffer_t::begin_background_fillthread(autoclose_fd_t fd) {
     // Run our function to read until the receiver is closed.
     // It's OK to capture 'this' by value because 'this' owns the background thread and waits for it
     // before dtor.
-    iothread_perform([this, promise, fdref]() {
+    iothread_perform_cantwait([this, promise, fdref]() {
         this->run_background_fillthread(std::move(*fdref));
         promise->set_value();
     });
@@ -185,7 +185,7 @@ shared_ptr<io_bufferfill_t> io_bufferfill_t::create(const fd_set_t &conflicts,
     // because our fillthread needs to poll to decide if it should shut down, and also accept input
     // from direct buffer transfers.
     if (make_fd_nonblocking(pipes->read.fd())) {
-        debug(1, PIPE_ERROR);
+        FLOGF(warning, PIPE_ERROR);
         wperror(L"fcntl");
         return nullptr;
     }
@@ -254,10 +254,10 @@ bool io_chain_t::append_from_specs(const redirection_spec_list_t &specs, const w
                 autoclose_fd_t file{wopen_cloexec(path, oflags, OPEN_MASK)};
                 if (!file.valid()) {
                     if ((oflags & O_EXCL) && (errno == EEXIST)) {
-                        debug(1, NOCLOB_ERROR, spec.target.c_str());
+                        FLOGF(warning, NOCLOB_ERROR, spec.target.c_str());
                     } else {
-                        debug(1, FILE_ERROR, spec.target.c_str());
-                        if (should_debug(1)) wperror(L"open");
+                        FLOGF(warning, FILE_ERROR, spec.target.c_str());
+                        if (should_flog(warning)) wperror(L"open");
                     }
                     return false;
                 }
@@ -321,7 +321,7 @@ maybe_t<autoclose_pipes_t> make_autoclose_pipes(const fd_set_t &fdset) {
     int pipes[2] = {-1, -1};
 
     if (pipe(pipes) < 0) {
-        debug(1, PIPE_ERROR);
+        FLOGF(warning, PIPE_ERROR);
         wperror(L"pipe");
         return none();
     }

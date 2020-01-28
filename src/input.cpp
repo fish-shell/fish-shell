@@ -458,7 +458,7 @@ void inputter_t::mapping_execute_matching_or_generic(bool allow_commands) {
     if (auto mapping = find_mapping()) {
         mapping_execute(*mapping, allow_commands);
     } else {
-        debug(2, L"no generic found, ignoring char...");
+        FLOGF(reader, L"no generic found, ignoring char...");
         auto evt = event_queue_.readch();
         if (evt.is_eof()) {
             event_queue_.push_front(evt);

@@ -383,7 +383,7 @@ By default ``$fish_function_path`` contains the following:
 
 - A directory for end-users to keep their own functions, usually ``~/.config/fish/functions`` (controlled by the ``XDG_CONFIG_HOME`` environment variable).
 - A directory for systems administrators to install functions for all users on the system, usually ``/etc/fish/functions`` (really ``$__fish_sysconfdir/functions``).
-- A directory for third-party software vendors to ship their own functions for their software, usually ``/usr/share/fish/vendor_functions.d``. (set at compile time; by default, ``$__fish_data_dir/vendor_functions.d``)
+- Directories for third-party software vendors to ship their own functions for their software. Fish searches the directories in the ``XDG_DATA_DIRS`` environment variable for a ``fish/vendor_functions.d`` directory; if this variable is not defined, the default is usually to search ``/usr/share/fish/vendor_functions.d`` and ``/usr/local/share/fish/vendor_functions.d``.
 - The functions shipped with fish, usually installed in ``/usr/share/fish/functions`` (really ``$__fish_data_dir/functions``).
 
 These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.
@@ -396,7 +396,7 @@ Autoloading also won't work for `event handlers <#event>`_, since fish cannot kn
 
 Autoloading is not applicable to functions created by the ``alias`` command. For functions simple enough that you prefer to use the ``alias`` command to define them you'll need to put those commands in your ``~/.config/fish/config.fish`` script or some other script run when the shell starts.
 
-If you are developing another program, you may wish to install functions which are available for all users of the fish shell on a system. They can be installed to the "vendor" functions directory. As this path may vary from system to system, the ``pkgconfig`` framework should be used to discover this path with the output of ``pkg-config --variable functionsdir fish``.
+If you are developing another program, you may wish to install functions which are available for all users of the fish shell on a system. They can be installed to the "vendor" functions directory. As this path may vary from system to system, the ``pkgconfig`` framework should be used to discover this path with the output of ``pkg-config --variable functionsdir fish``. Your installation system should support a custom path to override the pkgconfig path, as other distributors may need to alter it easily.
 
 .. _syntax-conditional:
 
@@ -1340,9 +1340,9 @@ By default, Fish searches the following for completions, using the first availab
 
 - A directory for end-users to keep their own completions, usually ``~/.config/fish/completions`` (controlled by the ``XDG_CONFIG_HOME`` environment variable);
 - A directory for systems administrators to install completions for all users on the system, usually ``/etc/fish/completions``;
-- A directory for third-party software vendors to ship their own completions for their software, usually ``/usr/share/fish/vendor_completions.d``;
+- Directories for third-party software vendors to ship their own completions for their software. Fish searches the directories in the ``XDG_DATA_DIRS`` environment variable for a ``fish/vendor_completions.d`` directory; if this variable is not defined, the default is usually to search ``/usr/share/fish/vendor_completions.d`` and ``/usr/local/share/fish/vendor_completions.d``;
 - The completions shipped with fish, usually installed in ``/usr/share/fish/completions``; and
-- Completions automatically generated from the operating system's manual, usually stored in ``~/.local/share/fish/generated_completions``.
+- Completions automatically generated from the operating system's manuals, usually stored in ``~/.local/share/fish/generated_completions``.
 
 These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.
 
@@ -1350,7 +1350,7 @@ This wide search may be confusing. If you are unsure, your completions probably 
 
 If you have written new completions for a common Unix command, please consider sharing your work by submitting it via the instructions in `Further help and development <#more-help>`_.
 
-If you are developing another program and would like to ship completions with your program, install them to the "vendor" completions directory. As this path may vary from system to system, the ``pkgconfig`` framework should be used to discover this path with the output of ``pkg-config --variable completionsdir fish``.
+If you are developing another program and would like to ship completions with your program, install them to the "vendor" completions directory. As this path may vary from system to system, the pkgconfig framework should be used to discover this path with the output of ``pkg-config --variable completionsdir fish``. Your installation system should support a custom path to override the pkgconfig path, as other distributors may need to alter it easily.
 
 
 .. _editor:
@@ -1623,7 +1623,7 @@ Configuration files are evaluated in the following order:
 
   - ``$__fish_config_dir/conf.d`` (by default, ``~/.config/fish/conf.d/``)
   - ``$__fish_sysconf_dir/conf.d`` (by default, ``/etc/fish/conf.d/``)
-  - ``/usr/share/fish/vendor_conf.d`` (set at compile time; by default, ``$__fish_data_dir/vendor_conf.d/``)
+  - Directories for third-party software vendors to ship their own configuration snippets for their software. Fish searches the directories in the ``XDG_DATA_DIRS`` environment variable for a ``fish/vendor_conf.d`` directory; if this variable is not defined, the default is usually to search ``/usr/share/fish/vendor_conf.d`` and ``/usr/local/share/fish/vendor_conf.d``
 
   If there are multiple files with the same name in these directories, only the first will be executed.
   They are executed in order of their filename, sorted (like globs) in a natural order (i.e. "01" sorts before "2").

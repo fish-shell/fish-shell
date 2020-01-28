@@ -19,6 +19,7 @@
 #include "parse_util.h"
 #include "parser.h"
 #include "reader.h"
+#include "wcstringutil.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -346,9 +347,8 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             if (!have_do_complete_param)
                 parser.libdata().builtin_complete_current_commandline = true;
 
-            std::vector<completion_t> comp;
-            complete(do_complete_param, &comp, completion_request_t::fuzzy_match, parser.vars(),
-                     parser.shared());
+            completion_list_t comp =
+                complete(do_complete_param, completion_request_t::fuzzy_match, parser.context());
 
             for (const auto &next : comp) {
                 // Make a fake commandline, and then apply the completion to it.
@@ -392,7 +392,7 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
             std::vector<highlight_spec_t> colors;
             size_t len = repr.size();
-            highlight_shell_no_io(repr, colors, len, nullptr, env_stack_t::globals());
+            highlight_shell_no_io(repr, colors, len, operation_context_t::globals());
             streams.out.append(str2wcstring(colorize(repr, colors)));
         } else {
             streams.out.append(repr);

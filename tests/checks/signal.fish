@@ -1,27 +1,31 @@
 # RUN: %fish -C 'set -l fish %fish' %s
 
-$fish -c 'function main; exit 4; true; end; main'; echo $status
+$fish -c 'function main; exit 4; true; end; main'
+echo $status
 #CHECK: 4
 
-$fish -c 'begin; exit 5; true; end'; echo $status
+$fish -c 'begin; exit 5; true; end'
+echo $status
 #CHECK: 5
 
-$fish -c 'kill -SIGHUP %self'; echo $status
+$fish -c 'kill -SIGHUP %self'
+echo $status
 #CHECK: 129
 
-$fish -c 'function main; kill -SIGTERM %self; true; end; main'; echo $status
+$fish -c 'function main; kill -SIGTERM %self; true; end; main'
+echo $status
 #CHECK: 143
 
 function alarm --on-signal ALRM
-  echo ALRM received
+    echo ALRM received
 end
 
 kill -s ALRM $fish_pid
 # CHECK: ALRM received
 
 function anychild --on-process-exit 0
-  # Type and exit status
-  echo $argv[1] $argv[3]
+    # Type and exit status
+    echo $argv[1] $argv[3]
 end
 
 echo "command false:"
@@ -44,9 +48,9 @@ command false | command true
 # CHECK: JOB_EXIT 0
 
 function test_blocks
-  block -l
-  command echo "This is the process whose exit event shuld be blocked"
-  echo "This should come before the event handler"
+    block -l
+    command echo "This is the process whose exit event shuld be blocked"
+    echo "This should come before the event handler"
 end
 test_blocks
 # CHECK: This is the process whose exit event shuld be blocked

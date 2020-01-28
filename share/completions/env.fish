@@ -8,7 +8,7 @@ function __fish_complete_env_subcommand
     # Remove all VAR=VAL arguments up to the first that isn't
     while set -q argv[1]
         if string match -q '*=*' -- $argv[1]
-        or string match -q -- '-*' $argv[1]
+            or string match -q -- '-*' $argv[1]
             set -e argv[1]
         else
             break

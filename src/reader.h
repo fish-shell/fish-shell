@@ -17,6 +17,8 @@
 class environment_t;
 class history_t;
 class io_chain_t;
+class operation_context_t;
+class parser_t;
 
 /// Helper class for storing a command line.
 class editable_line_t {
@@ -47,6 +49,7 @@ class editable_line_t {
 };
 
 /// Read commands from \c fd until encountering EOF.
+/// The fd is not closed.
 int reader_read(parser_t &parser, int fd, const io_chain_t &io);
 
 /// Tell the shell whether it should exit after the currently running command finishes.
@@ -115,14 +118,9 @@ size_t reader_get_cursor_pos();
 /// selection, true otherwise.
 bool reader_get_selection(size_t *start, size_t *len);
 
-/// Return whether we have been interrupted and should cancel the current operation.
-/// This may be because we received a sigint, or because we are in a background thread
-/// and the job is now stale.
-bool reader_test_should_cancel();
-
 /// Return the value of the interrupted flag, which is set by the sigint handler, and clear it if it
-/// was set.
-bool reader_test_and_clear_interrupted();
+/// was set. In practice this will return 0 or SIGINT.
+int reader_test_and_clear_interrupted();
 
 /// Clear the interrupted flag unconditionally without handling anything. The flag could have been
 /// set e.g. when an interrupt arrived just as we were ending an earlier \c reader_readline
@@ -146,15 +144,12 @@ void reader_push(parser_t &parser, const wcstring &name);
 /// Return to previous reader environment.
 void reader_pop();
 
-/// Specify function to use for finding possible tab completions.
-typedef void (*complete_function_t)(const wcstring &, std::vector<completion_t> *,
-                                    completion_request_flags_t, const environment_t &,
-                                    const std::shared_ptr<parser_t> &parser);
-void reader_set_complete_function(complete_function_t);
+/// Mark whether tab completion is enabled.
+void reader_set_complete_ok(bool flag);
 
 /// The type of a highlight function.
 using highlight_function_t = void (*)(const wcstring &, std::vector<highlight_spec_t> &, size_t,
-                                      wcstring_list_t *, const environment_t &vars);
+                                      const operation_context_t &ctx);
 
 /// Function type for testing if a string is valid for the reader to return.
 using test_function_t = parser_test_error_bits_t (*)(parser_t &, const wcstring &);

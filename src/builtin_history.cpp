@@ -249,7 +249,8 @@ int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     switch (opts.hist_cmd) {
         case HIST_SEARCH: {
             if (!history->search(opts.search_type, args, opts.show_time_format, opts.max_items,
-                                 opts.case_sensitive, opts.null_terminate, opts.reverse, streams)) {
+                                 opts.case_sensitive, opts.null_terminate, opts.reverse,
+                                 parser.cancel_checker(), streams)) {
                 status = STATUS_CMD_ERROR;
             }
             break;

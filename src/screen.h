@@ -24,6 +24,7 @@
 
 #include "common.h"
 #include "highlight.h"
+#include "wcstringutil.h"
 
 class page_rendering_t;
 

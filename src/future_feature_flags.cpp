@@ -4,6 +4,8 @@
 
 #include <cwchar>
 
+#include "wcstringutil.h"
+
 /// The set of features applying to this instance.
 static features_t global_features;
 

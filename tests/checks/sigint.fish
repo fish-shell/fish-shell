@@ -4,7 +4,8 @@
 
 echo About to sigint
 $helper sigint_parent &
-while true ; end
+while true
+end
 echo I should not be printed because I got sigint
 
 #CHECK: About to sigint

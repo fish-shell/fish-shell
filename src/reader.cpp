@@ -127,13 +127,21 @@ enum class jump_precision_t { till, to };
 /// background threads to notice it and skip doing work that they would otherwise have to do.
 static std::atomic<unsigned> s_generation;
 
-/// This pthreads generation count is set when an autosuggestion background thread starts up, so it
-/// can easily check if the work it is doing is no longer useful.
-static thread_local unsigned s_thread_generation;
-
 /// Helper to get the generation count
 static inline unsigned read_generation_count() {
     return s_generation.load(std::memory_order_relaxed);
+}
+
+/// \return an operation context for a background operation..
+/// Crucially the operation context itself does not contain a parser.
+/// It is the caller's responsibility to ensure the environment lives as long as the result.
+operation_context_t get_bg_context(const std::shared_ptr<environment_t> &env,
+                                   unsigned int generation_count) {
+    cancel_checker_t cancel_checker = [generation_count] {
+        // Cancel if the generation count changed.
+        return generation_count != read_generation_count();
+    };
+    return operation_context_t{nullptr, *env, std::move(cancel_checker)};
 }
 
 void editable_line_t::insert_string(const wcstring &str, size_t start, size_t len) {
@@ -380,8 +388,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     std::vector<highlight_spec_t> colors;
     /// An array defining the block level at each character.
     std::vector<int> indents;
-    /// Function for tab completion.
-    complete_function_t complete_func{nullptr};
+    /// Whether tab completion is allowed.
+    bool complete_ok{false};
     /// Function for syntax highlighting.
     highlight_function_t highlight_func{highlight_universal};
     /// Function for testing if the string can be returned.
@@ -478,8 +486,8 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     bool jump(jump_direction_t dir, jump_precision_t precision, editable_line_t *el,
               wchar_t target);
 
-    bool handle_completions(const std::vector<completion_t> &comp, size_t token_begin,
-                            size_t token_end, bool cont_after_prefix_insertion);
+    bool handle_completions(const completion_list_t &comp, size_t token_begin, size_t token_end,
+                            bool cont_after_prefix_insertion);
 
     void sanity_check() const;
     void set_command_line_and_position(editable_line_t *el, const wcstring &new_str, size_t pos);
@@ -489,7 +497,7 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void remove_backward();
 };
 
-/// This variable is set to true by the signal handler when ^C is pressed.
+/// This variable is set to a signal by the signal handler when ^C is pressed.
 static volatile sig_atomic_t interrupted = 0;
 
 // Prototypes for a bunch of functions defined later on.
@@ -521,7 +529,7 @@ static void term_donate(outputter_t &outp) {
         if (tcsetattr(STDIN_FILENO, TCSANOW, &tty_modes_for_external_cmds) == -1) {
             if (errno == EIO) redirect_tty_output();
             if (errno != EINTR) {
-                debug(1, _(L"Could not set terminal mode for new job"));
+                FLOGF(warning, _(L"Could not set terminal mode for new job"));
                 wperror(L"tcsetattr");
                 break;
             }
@@ -536,7 +544,7 @@ static void term_steal() {
         if (tcsetattr(STDIN_FILENO, TCSANOW, &shell_modes) == -1) {
             if (errno == EIO) redirect_tty_output();
             if (errno != EINTR) {
-                debug(1, _(L"Could not set terminal mode for shell"));
+                FLOGF(warning, _(L"Could not set terminal mode for shell"));
                 perror("tcsetattr");
                 break;
             }
@@ -686,8 +694,8 @@ void reader_data_t::kill(editable_line_t *el, size_t begin_idx, size_t length, i
 
 // This is called from a signal handler!
 void reader_handle_sigint() {
-    parser_t::skip_all_blocks();
-    interrupted = 1;
+    parser_t::cancel_requested(SIGINT);
+    interrupted = SIGINT;
 }
 
 /// Make sure buffers are large enough to hold the current string length.
@@ -841,20 +849,12 @@ void reader_data_t::repaint_if_needed() {
 
 void reader_reset_interrupted() { interrupted = 0; }
 
-bool reader_test_should_cancel() {
-    if (is_main_thread()) {
-        return interrupted;
-    } else {
-        return read_generation_count() != s_thread_generation;
-    }
-}
-
-bool reader_test_and_clear_interrupted() {
+int reader_test_and_clear_interrupted() {
     int res = interrupted;
     if (res) {
         interrupted = 0;
     }
-    return res != 0;
+    return res;
 }
 
 void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor_position) {
@@ -874,8 +874,8 @@ void reader_write_title(const wcstring &cmd, parser_t &parser, bool reset_cursor
     }
 
     wcstring_list_t lst;
-    if (exec_subshell(fish_title_command, parser, lst, false /* ignore exit status */) != -1 &&
-        !lst.empty()) {
+    (void)exec_subshell(fish_title_command, parser, lst, false /* ignore exit status */);
+    if (!lst.empty()) {
         std::fputws(L"\x1B]0;", stdout);
         for (const auto &i : lst) {
             std::fputws(i.c_str(), stdout);
@@ -1283,35 +1283,33 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
     // this should use shared_ptr
     return [=]() -> autosuggestion_result_t {
         ASSERT_IS_BACKGROUND_THREAD();
-
         const autosuggestion_result_t nothing = {};
-        // If the main thread has moved on, skip all the work.
-        // Otherwise record the generation.
-        if (generation_count != read_generation_count()) {
+        operation_context_t ctx = get_bg_context(vars, generation_count);
+        if (ctx.check_cancel()) {
             return nothing;
         }
-        s_thread_generation = generation_count;
 
         // Let's make sure we aren't using the empty string.
         if (search_string.empty()) {
             return nothing;
         }
 
-        history_search_t searcher(*history, search_string, history_search_type_t::prefix);
-        while (!reader_test_should_cancel() && searcher.go_backwards()) {
+        history_search_t searcher(*history, search_string, history_search_type_t::prefix,
+                                  history_search_flags_t{});
+        while (!ctx.check_cancel() && searcher.go_backwards()) {
             const history_item_t &item = searcher.current_item();
 
             // Skip items with newlines because they make terrible autosuggestions.
             if (item.str().find(L'\n') != wcstring::npos) continue;
 
-            if (autosuggest_validate_from_history(item, working_directory, *vars)) {
+            if (autosuggest_validate_from_history(item, working_directory, ctx)) {
                 // The command autosuggestion was handled specially, so we're done.
                 return {searcher.current_string(), search_string};
             }
         }
 
         // Maybe cancel here.
-        if (reader_test_should_cancel()) return nothing;
+        if (ctx.check_cancel()) return nothing;
 
         // Here we do something a little funny. If the line ends with a space, and the cursor is not
         // at the end, don't use completion autosuggestions. It ends up being pretty weird seeing
@@ -1325,8 +1323,7 @@ static std::function<autosuggestion_result_t(void)> get_autosuggestion_performer
 
         // Try normal completions.
         completion_request_flags_t complete_flags = completion_request_t::autosuggestion;
-        std::vector<completion_t> completions;
-        complete(search_string, &completions, complete_flags, *vars, nullptr);
+        completion_list_t completions = complete(search_string, complete_flags, ctx);
         completions_sort_and_prioritize(&completions, complete_flags);
         if (!completions.empty()) {
             const completion_t &comp = completions.at(0);
@@ -1466,7 +1463,7 @@ static bool reader_can_replace(const wcstring &in, int flags) {
 }
 
 /// Determine the best match type for a set of completions.
-static fuzzy_match_type_t get_best_match_type(const std::vector<completion_t> &comp) {
+static fuzzy_match_type_t get_best_match_type(const completion_list_t &comp) {
     fuzzy_match_type_t best_type = fuzzy_match_none;
     for (const auto &i : comp) {
         best_type = std::min(best_type, i.match.type);
@@ -1497,7 +1494,7 @@ static fuzzy_match_type_t get_best_match_type(const std::vector<completion_t> &c
 /// completions after inserting it.
 ///
 /// Return true if we inserted text into the command line, false if we did not.
-bool reader_data_t::handle_completions(const std::vector<completion_t> &comp, size_t token_begin,
+bool reader_data_t::handle_completions(const completion_list_t &comp, size_t token_begin,
                                        size_t token_end, bool cont_after_prefix_insertion) {
     bool done = false;
     bool success = false;
@@ -1543,7 +1540,7 @@ bool reader_data_t::handle_completions(const std::vector<completion_t> &comp, si
 
     // Decide which completions survived. There may be a lot of them; it would be nice if we could
     // figure out how to avoid copying them here.
-    std::vector<completion_t> surviving_completions;
+    completion_list_t surviving_completions;
     for (const completion_t &el : comp) {
         // Ignore completions with a less suitable match type than the best.
         if (el.match.type > best_match_type) continue;
@@ -1739,7 +1736,7 @@ static void reader_interactive_init(parser_t &parser) {
                 }
                 // No TTY, cannot be interactive?
                 redirect_tty_output();
-                debug(1, _(L"No TTY for interactive shell (tcgetpgrp failed)"));
+                FLOGF(warning, _(L"No TTY for interactive shell (tcgetpgrp failed)"));
                 wperror(L"setpgid");
                 exit_without_destructors(1);
             }
@@ -1751,7 +1748,7 @@ static void reader_interactive_init(parser_t &parser) {
                     const wchar_t *fmt =
                         _(L"I appear to be an orphaned process, so I am quitting politely. "
                           L"My pid is %d.");
-                    debug(1, fmt, (int)getpid());
+                    FLOGF(warning, fmt, (int)getpid());
                     exit_without_destructors(1);
                 }
 
@@ -1774,9 +1771,15 @@ static void reader_interactive_init(parser_t &parser) {
     if (shell_pgid == 0 || session_interactivity() == session_interactivity_t::explicit_) {
         shell_pgid = getpid();
         if (setpgid(shell_pgid, shell_pgid) < 0) {
-            FLOG(error, _(L"Failed to assign shell to its own process group"));
-            wperror(L"setpgid");
-            exit_without_destructors(1);
+            // If we're session leader setpgid returns EPERM. The other cases where we'd get EPERM
+            // don't apply as we passed our own pid.
+            //
+            // This should be harmless, so we ignore it.
+            if (errno != EPERM) {
+                FLOG(error, _(L"Failed to assign shell to its own process group"));
+                wperror(L"setpgid");
+                exit_without_destructors(1);
+            }
         }
 
         // Take control of the terminal
@@ -1794,7 +1797,7 @@ static void reader_interactive_init(parser_t &parser) {
             if (errno == EIO) {
                 redirect_tty_output();
             }
-            debug(1, _(L"Failed to set startup terminal mode!"));
+            FLOGF(warning, _(L"Failed to set startup terminal mode!"));
             wperror(L"tcsetattr");
         }
     }
@@ -2031,16 +2034,12 @@ static std::function<highlight_result_t(void)> get_highlight_performer(
     parser_t &parser, const wcstring &text, long match_highlight_pos,
     highlight_function_t highlight_func) {
     auto vars = parser.vars().snapshot();
-    unsigned int generation_count = read_generation_count();
+    unsigned generation_count = read_generation_count();
     return [=]() -> highlight_result_t {
         if (text.empty()) return {};
-        if (generation_count != read_generation_count()) {
-            // The gen count has changed, so don't do anything.
-            return {};
-        }
-        s_thread_generation = generation_count;
+        operation_context_t ctx = get_bg_context(vars, generation_count);
         std::vector<highlight_spec_t> colors(text.size(), highlight_spec_t{});
-        highlight_func(text, colors, match_highlight_pos, nullptr /* error */, *vars);
+        highlight_func(text, colors, match_highlight_pos, ctx);
         return {std::move(colors), text};
     };
 }
@@ -2147,7 +2146,7 @@ void reader_set_allow_autosuggesting(bool flag) { current_data()->allow_autosugg
 
 void reader_set_expand_abbreviations(bool flag) { current_data()->expand_abbreviations = flag; }
 
-void reader_set_complete_function(complete_function_t f) { current_data()->complete_func = f; }
+void reader_set_complete_ok(bool flag) { current_data()->complete_ok = flag; }
 
 void reader_set_highlight_function(highlight_function_t func) {
     current_data()->highlight_func = func;
@@ -2175,8 +2174,9 @@ void reader_import_history_if_necessary() {
         const auto var = data->vars().get(L"HISTFILE");
         wcstring path = (var ? var->as_string() : L"~/.bash_history");
         expand_tilde(path, data->vars());
-        FILE *f = wfopen(path, "r");
-        if (f) {
+        int fd = wopen_cloexec(path, O_RDONLY);
+        if (fd >= 0) {
+            FILE *f = fdopen(fd, "r");
             data->history->populate_from_bash(f);
             fclose(f);
         }
@@ -2250,7 +2250,7 @@ uint64_t reader_run_count() { return run_count; }
 /// Read interactively. Read input from stdin while providing editing facilities.
 static int read_i(parser_t &parser) {
     reader_push(parser, history_session_id(parser.vars()));
-    reader_set_complete_function(&complete);
+    reader_set_complete_ok(true);
     reader_set_highlight_function(&highlight_shell);
     reader_set_test_function(&reader_shell_test);
     reader_set_allow_autosuggesting(true);
@@ -2375,7 +2375,7 @@ struct readline_loop_state_t {
     bool comp_empty{true};
 
     /// List of completions.
-    std::vector<completion_t> comp;
+    completion_list_t comp;
 
     /// Whether we are skipping redundant repaints.
     bool coalescing_repaints = false;
@@ -2509,7 +2509,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
         }
         case rl::complete:
         case rl::complete_and_search: {
-            if (!complete_func) break;
+            if (!complete_ok) break;
 
             // Use the command line only; it doesn't make sense to complete in any other line.
             editable_line_t *el = &command_line;
@@ -2535,9 +2535,6 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // Get the string; we have to do this after removing any trailing backslash.
                 const wchar_t *const buff = el->text.c_str();
 
-                // Clear the completion list.
-                rls.comp.clear();
-
                 // Figure out the extent of the command substitution surrounding the cursor.
                 // This is because we only look at the current command substitution to form
                 // completions - stuff happening outside of it is not interesting.
@@ -2561,7 +2558,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 // std::fwprintf(stderr, L"Complete (%ls)\n", buffcpy.c_str());
                 completion_request_flags_t complete_flags = {completion_request_t::descriptions,
                                                              completion_request_t::fuzzy_match};
-                complete_func(buffcpy, &rls.comp, complete_flags, vars, parser_ref);
+                rls.comp = complete(buffcpy, complete_flags, parser_ref->context());
 
                 // User-supplied completions may have changed the commandline - prevent buffer
                 // overflow.
@@ -3315,7 +3312,7 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
             } else {
                 // This can happen if the user presses a control char we don't recognize. No
                 // reason to report this to the user unless they've enabled debugging output.
-                debug(2, _(L"Unknown key binding 0x%X"), c);
+                FLOGF(reader, _(L"Unknown key binding 0x%X"), c);
             }
             rls.last_cmd = none();
         }
@@ -3406,7 +3403,7 @@ int reader_reading_interrupted() {
     reader_data_t *data = current_data_or_null();
     if (res && data && data->exit_on_interrupt) {
         reader_set_end_loop(true);
-        parser_t::skip_all_blocks();
+        parser_t::cancel_requested(res);
         // We handled the interrupt ourselves, our caller doesn't need to handle it.
         return 0;
     }
@@ -3489,76 +3486,56 @@ bool reader_get_selection(size_t *start, size_t *len) {
 
 /// Read non-interactively.  Read input from stdin without displaying the prompt, using syntax
 /// highlighting. This is used for reading scripts and init files.
+/// The file is not closed.
 static int read_ni(parser_t &parser, int fd, const io_chain_t &io) {
-    FILE *in_stream;
-    std::vector<char> acc;
+    // Read all data into a std::string.
+    std::string fd_contents;
+    for (;;) {
+        char buff[4096];
+        size_t amt = read(fd, buff, sizeof buff);
+        if (amt > 0) {
+            fd_contents.append(buff, amt);
+        } else if (amt == 0) {
+            // EOF.
+            break;
+        } else {
+            int err = errno;
+            if (err == EINTR) {
+                continue;
+            } else if ((err == EAGAIN || err == EWOULDBLOCK) && make_fd_blocking(fd)) {
+                // We succeeded in making the fd blocking, keep going.
+                continue;
+            } else {
+                // Fatal error.
+                FLOGF(error, _(L"Unable to read input file: %s"), strerror(err));
+                // Reset buffer on error. We won't evaluate incomplete files.
+                fd_contents.clear();
+            }
+        }
+    }
 
-    int des = (fd == STDIN_FILENO ? dup(STDIN_FILENO) : fd);
-    int res = 0;
+    wcstring str = str2wcstring(fd_contents);
 
-    if (des == -1) {
-        wperror(L"dup");
+    // Eagerly deallocate to save memory.
+    fd_contents.clear();
+    fd_contents.shrink_to_fit();
+
+    // Swallow a BOM (issue #1518).
+    if (!str.empty() && str.at(0) == UTF8_BOM_WCHAR) {
+        str.erase(0, 1);
+    }
+
+    parse_error_list_t errors;
+    parsed_source_ref_t pstree;
+    if (!parse_util_detect_errors(str, &errors, false /* do not accept incomplete */, &pstree)) {
+        parser.eval(pstree, io);
+        return 0;
+    } else {
+        wcstring sb;
+        parser.get_backtrace(str, errors, sb);
+        std::fwprintf(stderr, L"%ls", sb.c_str());
         return 1;
     }
-
-    in_stream = fdopen(des, "r");
-    if (in_stream != nullptr) {
-        while (!feof(in_stream)) {
-            char buff[4096];
-            size_t c = fread(buff, 1, 4096, in_stream);
-
-            if (ferror(in_stream)) {
-                if (errno == EINTR) {
-                    // We got a signal, just keep going. Be sure that we call insert() below because
-                    // we may get data as well as EINTR.
-                    clearerr(in_stream);
-                } else if ((errno == EAGAIN || errno == EWOULDBLOCK) &&
-                           make_fd_blocking(des) == 0) {
-                    // We succeeded in making the fd blocking, keep going.
-                    clearerr(in_stream);
-                } else {
-                    // Fatal error.
-                    debug(0, _(L"Unable to read input file: %s"), strerror(errno));
-                    // Reset buffer on error. We won't evaluate incomplete files.
-                    acc.clear();
-                    break;
-                }
-            }
-
-            acc.insert(acc.end(), buff, buff + c);
-        }
-
-        wcstring str = acc.empty() ? wcstring() : str2wcstring(&acc.at(0), acc.size());
-        acc.clear();
-
-        if (fclose(in_stream)) {
-            debug(1, _(L"Error while closing input stream"));
-            wperror(L"fclose");
-            res = 1;
-        }
-
-        // Swallow a BOM (issue #1518).
-        if (!str.empty() && str.at(0) == UTF8_BOM_WCHAR) {
-            str.erase(0, 1);
-        }
-
-        parse_error_list_t errors;
-        parsed_source_ref_t pstree;
-        if (!parse_util_detect_errors(str, &errors, false /* do not accept incomplete */,
-                                      &pstree)) {
-            parser.eval(pstree, io);
-        } else {
-            wcstring sb;
-            parser.get_backtrace(str, errors, sb);
-            std::fwprintf(stderr, L"%ls", sb.c_str());
-            res = 1;
-        }
-    } else {
-        debug(1, _(L"Error while opening input stream"));
-        wperror(L"fdopen");
-        res = 1;
-    }
-    return res;
 }
 
 int reader_read(parser_t &parser, int fd, const io_chain_t &io) {
@@ -3585,7 +3562,7 @@ int reader_read(parser_t &parser, int fd, const io_chain_t &io) {
     scoped_push<bool> interactive_push{&parser.libdata().is_interactive, interactive};
     signal_set_handlers_once(interactive);
 
-    res = parser.is_interactive() ? read_i(parser) : read_ni(parser, fd, io);
+    res = interactive ? read_i(parser) : read_ni(parser, fd, io);
 
     // If the exit command was called in a script, only exit the script, not the program.
     reader_set_end_loop(false);

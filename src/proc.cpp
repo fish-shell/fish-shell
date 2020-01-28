@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -81,42 +82,28 @@ void set_job_control_mode(job_control_t mode) { job_control_mode = mode; }
 
 void proc_init() { signal_set_handlers_once(false); }
 
-// Basic thread safe job IDs. The vector consumed_job_ids has a true value wherever the job ID
-// corresponding to that slot is in use. The job ID corresponding to slot 0 is 1.
-static owning_lock<std::vector<bool>> locked_consumed_job_ids;
+// Basic thread safe sorted vector of job IDs in use.
+// This is deliberately leaked to avoid dtor ordering issues - see #6539.
+static auto *const locked_consumed_job_ids = new owning_lock<std::vector<job_id_t>>();
 
 job_id_t acquire_job_id() {
-    auto consumed_job_ids = locked_consumed_job_ids.acquire();
+    auto consumed_job_ids = locked_consumed_job_ids->acquire();
 
-    // Find the index of the first 0 slot.
-    auto slot = std::find(consumed_job_ids->begin(), consumed_job_ids->end(), false);
-    if (slot != consumed_job_ids->end()) {
-        // We found a slot. Note that slot 0 corresponds to job ID 1.
-        *slot = true;
-        return static_cast<job_id_t>(slot - consumed_job_ids->begin() + 1);
-    }
-
-    // We did not find a slot; create a new slot. The size of the vector is now the job ID
-    // (since it is one larger than the slot).
-    consumed_job_ids->push_back(true);
-    return static_cast<job_id_t>(consumed_job_ids->size());
+    // The new job ID should be larger than the largest currently used ID (#6053).
+    job_id_t jid = consumed_job_ids->empty() ? 1 : consumed_job_ids->back() + 1;
+    consumed_job_ids->push_back(jid);
+    return jid;
 }
 
 void release_job_id(job_id_t jid) {
     assert(jid > 0);
-    auto consumed_job_ids = locked_consumed_job_ids.acquire();
-    size_t slot = static_cast<size_t>(jid - 1), count = consumed_job_ids->size();
+    auto consumed_job_ids = locked_consumed_job_ids->acquire();
 
-    // Make sure this slot is within our vector and is currently set to consumed.
-    assert(slot < count);
-    assert(consumed_job_ids->at(slot) == true);
-
-    // Clear it and then resize the vector to eliminate unused trailing job IDs.
-    consumed_job_ids->at(slot) = false;
-    while (count--) {
-        if (consumed_job_ids->at(count)) break;
-    }
-    consumed_job_ids->resize(count + 1);
+    // Our job ID vector is sorted, but the number of jobs is typically 1 or 2 so a binary search
+    // isn't worth it.
+    auto where = std::find(consumed_job_ids->begin(), consumed_job_ids->end(), jid);
+    assert(where != consumed_job_ids->end() && "JobID was not in use");
+    consumed_job_ids->erase(where);
 }
 
 job_t *job_t::from_job_id(job_id_t id) {
@@ -249,7 +236,7 @@ static void handle_child_status(process_t *proc, proc_status_t status) {
             if (session_interactivity() != session_interactivity_t::not_interactive) {
                 // In an interactive session, tell the principal parser to skip all blocks we're
                 // executing so control-C returns control to the user.
-                parser_t::skip_all_blocks();
+                parser_t::cancel_requested(sig);
             } else {
                 // Deliver the SIGINT or SIGQUIT signal to ourself since we're not interactive.
                 struct sigaction act;
@@ -358,8 +345,7 @@ static void process_mark_finished_children(parser_t &parser, bool block_ok) {
                     if (proc->internal_proc_) {
                         // Try reaping an internal process.
                         if (proc->internal_proc_->exited()) {
-                            proc->status = proc->internal_proc_->get_status();
-                            proc->completed = true;
+                            handle_child_status(proc.get(), proc->internal_proc_->get_status());
                             FLOGF(proc_reap_internal,
                                   "Reaped internal process '%ls' (id %llu, status %d)",
                                   proc->argv0(), proc->internal_proc_->get_id(),
@@ -635,15 +621,11 @@ bool job_reap(parser_t &parser, bool allow_interactive) {
     return printed;
 }
 
-/// Maximum length of a /proc/[PID]/stat filename.
-#define FN_SIZE 256
-
 /// Get the CPU time for the specified process.
 unsigned long proc_get_jiffies(process_t *p) {
     if (!have_proc_stat()) return 0;
     if (p->pid <= 0) return 0;
 
-    wchar_t fn[FN_SIZE];
     char state;
     int pid, ppid, pgrp, session, tty_nr, tpgid, exit_signal, processor;
     long int cutime, cstime, priority, nice, placeholder, itrealvalue, rss;
@@ -652,11 +634,16 @@ unsigned long proc_get_jiffies(process_t *p) {
         wchan, nswap, cnswap;
     char comm[1024];
 
-    std::swprintf(fn, FN_SIZE, L"/proc/%d/stat", p->pid);
-    FILE *f = wfopen(fn, "r");
-    if (!f) return 0;
+    /// Maximum length of a /proc/[PID]/stat filename.
+    constexpr size_t FN_SIZE = 256;
+    char fn[FN_SIZE];
+    std::snprintf(fn, FN_SIZE, "/proc/%d/stat", p->pid);
+    // Don't use autoclose_fd here, we will fdopen() and then fclose() instead.
+    int fd = open_cloexec(fn, O_RDONLY);
+    if (fd < 0) return 0;
 
     // TODO: replace the use of fscanf() as it is brittle and should never be used.
+    FILE *f = fdopen(fd, "r");
     int count = fscanf(f,
                        "%9d %1023s %c %9d %9d %9d %9d %9d %9lu "
                        "%9lu %9lu %9lu %9lu %9lu %9lu %9ld %9ld %9ld "
@@ -752,14 +739,14 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
                 } else {
                     // Debug the original tcsetpgrp error (not the waitpid errno) to the log, and
                     // then retry until not EPERM or the process group has exited.
-                    debug(2, L"terminal_give_to_job(): EPERM.\n", j->pgid);
+                    FLOGF(proc_termowner, L"terminal_give_to_job(): EPERM.\n", j->pgid);
                     continue;
                 }
             } else {
                 if (errno == ENOTTY) {
                     redirect_tty_output();
                 }
-                debug(1, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
+                FLOGF(warning, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
                       j->job_id(), j->command_wcstr(), j->pgid);
                 wperror(L"tcsetpgrp");
                 return error;
@@ -771,7 +758,7 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
                 // job/group have been started, the only way this can happen is if the very last
                 // process in the group terminated and didn't need to access the terminal, otherwise
                 // it would have hung waiting for terminal IO (SIGTTIN). We can safely ignore this.
-                debug(3, L"tcsetpgrp called but process group %d has terminated.\n", j->pgid);
+                FLOGF(proc_termowner, L"tcsetpgrp called but process group %d has terminated.\n", j->pgid);
                 return notneeded;
             }
 
@@ -787,7 +774,7 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
                 redirect_tty_output();
             }
 
-            debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id(),
+            FLOGF(warning, _(L"Could not send job %d ('%ls') to foreground"), j->job_id(),
                   j->preview().c_str());
             wperror(L"tcsetattr");
             return error;
@@ -814,13 +801,13 @@ pid_t terminal_acquire_before_builtin(int job_pgid) {
 static bool terminal_return_from_job(job_t *j, int restore_attrs) {
     errno = 0;
     if (j->pgid == 0) {
-        debug(2, "terminal_return_from_job() returning early due to no process group");
+        FLOG(proc_pgroup, "terminal_return_from_job() returning early due to no process group");
         return true;
     }
 
     if (tcsetpgrp(STDIN_FILENO, getpgrp()) == -1) {
         if (errno == ENOTTY) redirect_tty_output();
-        debug(1, _(L"Could not return shell to foreground"));
+        FLOGF(warning, _(L"Could not return shell to foreground"));
         wperror(L"tcsetpgrp");
         return false;
     }
@@ -828,7 +815,7 @@ static bool terminal_return_from_job(job_t *j, int restore_attrs) {
     // Save jobs terminal modes.
     if (tcgetattr(STDIN_FILENO, &j->tmodes)) {
         if (errno == EIO) redirect_tty_output();
-        debug(1, _(L"Could not return shell to foreground"));
+        FLOGF(warning, _(L"Could not return shell to foreground"));
         wperror(L"tcgetattr");
         return false;
     }
@@ -839,7 +826,7 @@ static bool terminal_return_from_job(job_t *j, int restore_attrs) {
     if (restore_attrs) {
         if (tcsetattr(STDIN_FILENO, TCSADRAIN, &shell_modes) == -1) {
             if (errno == EIO) redirect_tty_output();
-            debug(1, _(L"Could not return shell to foreground"));
+            FLOGF(warning, _(L"Could not return shell to foreground"));
             wperror(L"tcsetattr");
             return false;
         }
@@ -884,7 +871,7 @@ void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool se
             // signal individually. job_t::signal() does the same, but uses the shell's own pgroup
             // to make that distinction.
             if (!signal(SIGCONT)) {
-                debug(2, "Failed to send SIGCONT to any processes in pgroup %d!", pgid);
+                FLOGF(proc_pgroup, "Failed to send SIGCONT to any processes in pgroup %d!", pgid);
                 // This returns without bubbling up the error. Presumably that is OK.
                 return;
             }

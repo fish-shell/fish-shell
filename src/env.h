@@ -12,6 +12,7 @@
 
 #include "common.h"
 #include "maybe.h"
+#include "null_terminated_array.h"
 
 extern size_t read_byte_limit;
 extern bool curses_initialized;

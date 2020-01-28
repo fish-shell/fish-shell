@@ -1,5 +1,5 @@
 function __history_completions --argument limit
-    if echo $limit | string match -q ""
+    if string match -q "" -- "$limit"
         set limit 25
     end
 

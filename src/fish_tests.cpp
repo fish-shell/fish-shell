@@ -1046,8 +1046,7 @@ static void test_1_cancellation(const wchar_t *src) {
 static void test_cancellation() {
     say(L"Testing Ctrl-C cancellation. If this hangs, that's a bug!");
 
-    // Enable fish's signal handling here. We need to make this interactive for fish to install its
-    // signal handlers.
+    // Enable fish's signal handling here.
     parser_t &parser = parser_t::principal_parser();
     signal_set_handlers(true);
 

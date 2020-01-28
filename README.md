@@ -21,11 +21,7 @@ You can quickly play with fish right in your browser by clicking the button belo
 
 ### Packages for Linux
 
-Packages for Debian, Fedora, openSUSE, and Red Hat Enterprise Linux/CentOS are available from the
-[openSUSE Build
-Service](https://software.opensuse.org/download.html?project=shells%3Afish&package=fish).
-
-On Debian, you can simply install Fish by running
+On Debian, you can simply install Fish by running:
 ```
 sudo apt-get install fish
 ```
@@ -39,6 +35,10 @@ sudo apt-add-repository ppa:fish-shell/release-3
 sudo apt-get update
 sudo apt-get install fish
 ```
+
+Packages for Debian, Fedora, openSUSE, and Red Hat Enterprise Linux/CentOS are available from the
+[openSUSE Build
+Service](https://software.opensuse.org/download.html?project=shells%3Afish&package=fish).
 
 Instructions for other distributions may be found at [fishshell.com](https://fishshell.com).
 

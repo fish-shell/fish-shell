@@ -141,42 +141,6 @@ wcstring wgetcwd() {
     return wcstring();
 }
 
-FILE *wfopen(const wcstring &path, const char *mode) {
-    int permissions = 0, options = 0;
-    size_t idx = 0;
-    switch (mode[idx++]) {
-        case 'r': {
-            permissions = O_RDONLY;
-            break;
-        }
-        case 'w': {
-            permissions = O_WRONLY;
-            options = O_CREAT | O_TRUNC;
-            break;
-        }
-        case 'a': {
-            permissions = O_WRONLY;
-            options = O_CREAT | O_APPEND;
-            break;
-        }
-        default: {
-            errno = EINVAL;
-            return nullptr;
-        }
-    }
-    // Skip binary.
-    if (mode[idx] == 'b') idx++;
-
-    // Consider append option.
-    if (mode[idx] == '+') permissions = O_RDWR;
-
-    int fd = wopen_cloexec(path, permissions | options, 0666);
-    if (fd < 0) return nullptr;
-    FILE *result = fdopen(fd, mode);
-    if (result == nullptr) close(fd);
-    return result;
-}
-
 int set_cloexec(int fd, bool should_set) {
     // Note we don't want to overwrite existing flags like O_NONBLOCK which may be set. So fetch the
     // existing flags and modify them.

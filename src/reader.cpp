@@ -2174,8 +2174,9 @@ void reader_import_history_if_necessary() {
         const auto var = data->vars().get(L"HISTFILE");
         wcstring path = (var ? var->as_string() : L"~/.bash_history");
         expand_tilde(path, data->vars());
-        FILE *f = wfopen(path, "r");
-        if (f) {
+        int fd = wopen_cloexec(path, O_RDONLY);
+        if (fd >= 0) {
+            FILE *f = fdopen(fd, "r");
             data->history->populate_from_bash(f);
             fclose(f);
         }

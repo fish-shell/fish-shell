@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -620,15 +621,11 @@ bool job_reap(parser_t &parser, bool allow_interactive) {
     return printed;
 }
 
-/// Maximum length of a /proc/[PID]/stat filename.
-#define FN_SIZE 256
-
 /// Get the CPU time for the specified process.
 unsigned long proc_get_jiffies(process_t *p) {
     if (!have_proc_stat()) return 0;
     if (p->pid <= 0) return 0;
 
-    wchar_t fn[FN_SIZE];
     char state;
     int pid, ppid, pgrp, session, tty_nr, tpgid, exit_signal, processor;
     long int cutime, cstime, priority, nice, placeholder, itrealvalue, rss;
@@ -637,11 +634,16 @@ unsigned long proc_get_jiffies(process_t *p) {
         wchan, nswap, cnswap;
     char comm[1024];
 
-    std::swprintf(fn, FN_SIZE, L"/proc/%d/stat", p->pid);
-    FILE *f = wfopen(fn, "r");
-    if (!f) return 0;
+    /// Maximum length of a /proc/[PID]/stat filename.
+    constexpr size_t FN_SIZE = 256;
+    char fn[FN_SIZE];
+    std::snprintf(fn, FN_SIZE, "/proc/%d/stat", p->pid);
+    // Don't use autoclose_fd here, we will fdopen() and then fclose() instead.
+    int fd = open_cloexec(fn, O_RDONLY);
+    if (fd < 0) return 0;
 
     // TODO: replace the use of fscanf() as it is brittle and should never be used.
+    FILE *f = fdopen(fd, "r");
     int count = fscanf(f,
                        "%9d %1023s %c %9d %9d %9d %9d %9d %9lu "
                        "%9lu %9lu %9lu %9lu %9lu %9lu %9ld %9ld %9ld "

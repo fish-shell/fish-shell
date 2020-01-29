@@ -37,7 +37,4 @@ int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser, wcstring_lis
 /// Loops over close until the syscall was run without being interrupted.
 void exec_close(int fd);
 
-/// Gets the interpreter for a given command.
-char *get_interpreter(const char *command, char *interpreter, size_t buff_size);
-
 #endif

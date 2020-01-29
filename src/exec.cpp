@@ -66,33 +66,6 @@ void exec_close(int fd) {
     }
 }
 
-/// Returns the interpreter for the specified script. Returns NULL if file is not a script with a
-/// shebang.
-char *get_interpreter(const char *command, char *interpreter, size_t buff_size) {
-    // OK to not use CLO_EXEC here because this is only called after fork.
-    int fd = open(command, O_RDONLY);
-    if (fd >= 0) {
-        size_t idx = 0;
-        while (idx + 1 < buff_size) {
-            char ch;
-            ssize_t amt = read(fd, &ch, sizeof ch);
-            if (amt <= 0) break;
-            if (ch == '\n') break;
-            interpreter[idx++] = ch;
-        }
-        interpreter[idx++] = '\0';
-        close(fd);
-    }
-
-    if (std::strncmp(interpreter, "#! /", 4) == 0) {
-        return interpreter + 3;
-    } else if (std::strncmp(interpreter, "#!/", 3) == 0) {
-        return interpreter + 2;
-    }
-
-    return nullptr;
-}
-
 /// This function is executed by the child process created by a call to fork(). It should be called
 /// after \c child_setup_process. It calls execve to replace the fish process image with the command
 /// specified in \c p. It never returns. Called in a forked child! Do not allocate memory, etc.

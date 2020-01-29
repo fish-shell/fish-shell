@@ -38,6 +38,8 @@
 /// Fork error message.
 #define FORK_ERROR "Could not create child process - exiting"
 
+static char *get_interpreter(const char *command, char *buffer, size_t buff_size);
+
 /// Called only by the child to set its own process group (possibly creating a new group in the
 /// process if it is the first in a JOB_CONTROL job.
 /// Returns true on success, false on failure.
@@ -353,8 +355,9 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
             // an open file action fails. These cases appear to be impossible to distinguish. We
             // address this by not using posix_spawn for file redirections, so all the ENOENTs we
             // find must be errors from exec().
-            char interpreter_buff[128] = {}, *interpreter;
-            interpreter = get_interpreter(actual_cmd, interpreter_buff, sizeof interpreter_buff);
+            char interpreter_buff[128] = {};
+            const char *interpreter =
+                get_interpreter(actual_cmd, interpreter_buff, sizeof interpreter_buff);
             if (interpreter && 0 != access(interpreter, X_OK)) {
                 debug_safe(0,
                            "The file '%s' specified the interpreter '%s', which is not an "
@@ -377,4 +380,30 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
             break;
         }
     }
+}
+
+/// Returns the interpreter for the specified script. Returns NULL if file is not a script with a
+/// shebang.
+static char *get_interpreter(const char *command, char *buffer, size_t buff_size) {
+    // OK to not use CLO_EXEC here because this is only called after fork.
+    int fd = open(command, O_RDONLY);
+    if (fd >= 0) {
+        size_t idx = 0;
+        while (idx + 1 < buff_size) {
+            char ch;
+            ssize_t amt = read(fd, &ch, sizeof ch);
+            if (amt <= 0) break;
+            if (ch == '\n') break;
+            buffer[idx++] = ch;
+        }
+        buffer[idx++] = '\0';
+        close(fd);
+    }
+
+    if (std::strncmp(buffer, "#! /", 4) == 0) {
+        return buffer + 3;
+    } else if (std::strncmp(buffer, "#!/", 3) == 0) {
+        return buffer + 2;
+    }
+    return nullptr;
 }

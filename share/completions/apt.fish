@@ -3,8 +3,9 @@
 set -l all_subcmds update upgrade full-upgrade search list install show remove edit-sources purge changelog autoremove depends rdepends
 set -l pkg_subcmds install upgrade full-upgrade show search purge changelog policy depends rdepends
 set -l installed_pkg_subcmds remove
+set -l handle_file_pkg_subcmds install
 
-function __fish_apt_subcommand
+function __fish_apt_subcommand --no-scope-shadowing
     set subcommand $argv[1]
     set -e argv[1]
     complete -f -c apt -n "not __fish_seen_subcommand_from $all_subcmds" -a $subcommand $argv
@@ -16,17 +17,20 @@ function __fish_apt_option
     complete -f -c apt -n "__fish_seen_subcommand_from $subcommand" $argv
 end
 
-complete -c apt -n "__fish_seen_subcommand_from $pkg_subcmds" -a '(__fish_print_packages | head -n 250)'
+complete -c apt -f
+
+complete -k -c apt -n "__fish_seen_subcommand_from $pkg_subcmds" -a '(__fish_print_packages | head -n 250 | sort)'
 complete -c apt -n "__fish_seen_subcommand_from $installed_pkg_subcmds" -a '(__fish_print_packages --installed | string match -re -- "(?:\\b|_)"(commandline -ct | string escape --style=regex) | head -n 250)' -d 'Package'
+complete -k -c apt -n "__fish_seen_subcommand_from $handle_file_pkg_subcmds" -a '(__fish_complete_suffix .deb)'
 
 # Support flags
-complete -x -f -c apt -s h -l help -d 'Display help'
-complete -x -f -c apt -s v -l version -d 'Display version and exit'
+complete -f -c apt -s h -l help -d 'Display help'
+complete -f -c apt -s v -l version -d 'Display version and exit'
 
 # General options
-complete -f -c apt -s o -l option -d 'Set a configuration option'
-complete -f -c apt -s c -l config-file -d 'Configuration file'
-complete -f -c apt -s t -d 'Target release'
+complete -x -c apt -s o -l option -d 'Set a configuration option'
+complete -r -c apt -s c -l config-file -d 'Configuration file'
+complete -x -c apt -s t -d 'Target release'
 
 # List
 __fish_apt_subcommand list -d 'List packages'
@@ -76,3 +80,5 @@ __fish_apt_subcommand depends -r -d 'List package dependencies'
 
 # Rdepends
 __fish_apt_subcommand rdepends -r -d 'List package reverse dependencies'
+
+functions -e __fish_apt_subcommand __fish_apt_option

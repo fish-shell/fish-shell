@@ -1663,18 +1663,16 @@ static bool check_for_orphaned_process(unsigned long loop_count, pid_t shell_pgi
         }
 
         // Open the tty. Presumably this is stdin, but maybe not?
-        int tty_fd = open(tty, O_RDONLY | O_NONBLOCK);
-        if (tty_fd < 0) {
+        autoclose_fd_t tty_fd{open(tty, O_RDONLY | O_NONBLOCK)};
+        if (!tty_fd.valid()) {
             wperror(L"open");
             exit_without_destructors(1);
         }
 
         char tmp;
-        if (read(tty_fd, &tmp, 1) < 0 && errno == EIO) {
+        if (read(tty_fd.fd(), &tmp, 1) < 0 && errno == EIO) {
             we_think_we_are_orphaned = true;
         }
-
-        close(tty_fd);
     }
 
     // Just give up if we've done it a lot times.

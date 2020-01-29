@@ -518,34 +518,29 @@ bool env_universal_t::initialize(callback_data_list_t &callbacks) {
     return success;
 }
 
-bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *out_path,
-                                          int *out_fd) {
+autoclose_fd_t env_universal_t::open_temporary_file(const wcstring &directory, wcstring *out_path) {
     // Create and open a temporary file for writing within the given directory. Try to create a
     // temporary file, up to 10 times. We don't use mkstemps because we want to open it CLO_EXEC.
     // This should almost always succeed on the first try.
     assert(!string_suffixes_string(L"/", directory));  //!OCLINT(multiple unary operator)
 
-    bool success = false;
     int saved_errno;
     const wcstring tmp_name_template = directory + L"/fishd.tmp.XXXXXX";
-
+    autoclose_fd_t result;
     char *narrow_str = nullptr;
-    for (size_t attempt = 0; attempt < 10 && !success; attempt++) {
+    for (size_t attempt = 0; attempt < 10 && !result.valid(); attempt++) {
         narrow_str = wcs2str(tmp_name_template);
-        int result_fd = fish_mkstemp_cloexec(narrow_str);
+        result.reset(fish_mkstemp_cloexec(narrow_str));
         saved_errno = errno;
-        success = result_fd != -1;
-        *out_fd = result_fd;
     }
-
     *out_path = str2wcstring(narrow_str);
     free(narrow_str);
 
-    if (!success) {
+    if (!result.valid()) {
         const char *error = std::strerror(saved_errno);
         FLOGF(error, _(L"Unable to open temporary file '%ls': %s"), out_path->c_str(), error);
     }
-    return success;
+    return result;
 }
 
 /// Check how long the operation took and print a message if it took too long.
@@ -717,17 +712,18 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
 bool env_universal_t::save(const wcstring &directory, const wcstring &vars_path) {
     assert(ok_to_save && "It's not OK to save");
 
-    int private_fd = -1;
     wcstring private_file_path;
 
     // Open adjacent temporary file.
-    bool success = this->open_temporary_file(directory, &private_file_path, &private_fd);
+    autoclose_fd_t private_fd = this->open_temporary_file(directory, &private_file_path);
+    bool success = private_fd.valid();
+
     if (!success) FLOGF(uvar_file, L"universal log open_temporary_file() failed");
 
     // Write to it.
     if (success) {
-        assert(private_fd >= 0);
-        success = this->write_to_fd(private_fd, private_file_path);
+        assert(private_fd.valid());
+        success = this->write_to_fd(private_fd.fd(), private_file_path);
         if (!success) FLOGF(uvar_file, L"universal log write_to_fd() failed");
     }
 
@@ -735,9 +731,10 @@ bool env_universal_t::save(const wcstring &directory, const wcstring &vars_path)
         // Ensure we maintain ownership and permissions (#2176).
         struct stat sbuf;
         if (wstat(vars_path, &sbuf) >= 0) {
-            if (fchown(private_fd, sbuf.st_uid, sbuf.st_gid) == -1)
+            if (fchown(private_fd.fd(), sbuf.st_uid, sbuf.st_gid) == -1)
                 FLOGF(uvar_file, L"universal log fchown() failed");
-            if (fchmod(private_fd, sbuf.st_mode) == -1) FLOGF(uvar_file, L"universal log fchmod() failed");
+            if (fchmod(private_fd.fd(), sbuf.st_mode) == -1)
+                FLOGF(uvar_file, L"universal log fchmod() failed");
         }
 
         // Linux by default stores the mtime with low precision, low enough that updates that occur
@@ -752,7 +749,7 @@ bool env_universal_t::save(const wcstring &directory, const wcstring &vars_path)
         struct timespec times[2] = {};
         times[0].tv_nsec = UTIME_OMIT;  // don't change ctime
         if (0 == clock_gettime(CLOCK_REALTIME, &times[1])) {
-            futimens(private_fd, times);
+            futimens(private_fd.fd(), times);
         }
 #endif
 
@@ -767,9 +764,6 @@ bool env_universal_t::save(const wcstring &directory, const wcstring &vars_path)
     }
 
     // Clean up.
-    if (private_fd >= 0) {
-        close(private_fd);
-    }
     if (!private_file_path.empty()) {
         wunlink(private_file_path);
     }
@@ -1069,8 +1063,8 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
                  getuid());
 
         bool errored = false;
-        int fd = shm_open(path, O_RDWR | O_CREAT, 0600);
-        if (fd < 0) {
+        autoclose_fd_t fd{shm_open(path, O_RDWR | O_CREAT, 0600)};
+        if (!fd.valid()) {
             const char *error = std::strerror(errno);
             FLOGF(error, _(L"Unable to open shared memory with path '%s': %s"), path, error);
             errored = true;
@@ -1080,7 +1074,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
         off_t size = 0;
         if (!errored) {
             struct stat buf = {};
-            if (fstat(fd, &buf) < 0) {
+            if (fstat(fd.fd(), &buf) < 0) {
                 const char *error = std::strerror(errno);
                 FLOGF(error, _(L"Unable to fstat shared memory object with path '%s': %s"), path,
                       error);
@@ -1113,9 +1107,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
         }
 
         // Close the fd, even if the mapping succeeded.
-        if (fd >= 0) {
-            close(fd);
-        }
+        fd.close();
 
         // Read the current seed.
         this->poll();

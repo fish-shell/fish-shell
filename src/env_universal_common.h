@@ -66,7 +66,7 @@ class env_universal_t {
 
     // Functions concerned with saving.
     bool open_and_acquire_lock(const std::string &path, autoclose_fd_t *out_fd);
-    bool open_temporary_file(const wcstring &directory, wcstring *out_path, int *out_fd);
+    autoclose_fd_t open_temporary_file(const wcstring &directory, wcstring *out_path);
     bool write_to_fd(int fd, const wcstring &path);
     bool move_new_vars_file_into_place(const wcstring &src, const wcstring &dst);
 

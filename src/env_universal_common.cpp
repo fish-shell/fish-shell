@@ -414,11 +414,10 @@ bool env_universal_t::load_from_path(const std::string &path, callback_data_list
     }
 
     bool result = false;
-    int fd = open_cloexec(path.c_str(), O_RDONLY);
-    if (fd >= 0) {
+    autoclose_fd_t fd{open_cloexec(path.c_str(), O_RDONLY)};
+    if (fd.valid()) {
         FLOGF(uvar_file, L"universal log reading from file");
-        this->load_from_fd(fd, callbacks);
-        close(fd);
+        this->load_from_fd(fd.fd(), callbacks);
         result = true;
     }
     return result;
@@ -571,7 +570,7 @@ static bool lock_uvar_file(int fd) {
     return check_duration(start_time);
 }
 
-bool env_universal_t::open_and_acquire_lock(const std::string &path, int *out_fd) {
+bool env_universal_t::open_and_acquire_lock(const std::string &path, autoclose_fd_t *out_fd) {
     // Attempt to open the file for reading at the given path, atomically acquiring a lock. On BSD,
     // we can use O_EXLOCK. On Linux, we open the file, take a lock, and then compare fstat() to
     // stat(); if they match, it means that the file was not replaced before we acquired the lock.
@@ -589,11 +588,11 @@ bool env_universal_t::open_and_acquire_lock(const std::string &path, int *out_fd
     }
 #endif
 
-    int fd = -1;
-    while (fd == -1) {
+    autoclose_fd_t fd{};
+    while (!fd.valid()) {
         double start_time = timef();
-        fd = open_cloexec(path, flags, 0644);
-        if (fd == -1) {
+        fd = autoclose_fd_t{open_cloexec(path, flags, 0644)};
+        if (!fd.valid()) {
             if (errno == EINTR) continue;  // signaled; try again
 #ifdef O_EXLOCK
             if (do_locking && (errno == ENOTSUP || errno == EOPNOTSUPP)) {
@@ -611,7 +610,7 @@ bool env_universal_t::open_and_acquire_lock(const std::string &path, int *out_fd
             break;
         }
 
-        assert(fd >= 0);  // if we get here, we must have a valid fd
+        assert(fd.valid() && "Should have a valid fd here");
         if (!needs_lock && do_locking) {
             do_locking = check_duration(start_time);
         }
@@ -619,20 +618,19 @@ bool env_universal_t::open_and_acquire_lock(const std::string &path, int *out_fd
         // Try taking the lock, if necessary. If we failed, we may be on lockless NFS, etc.; in that
         // case we pretend we succeeded. See the comment in save_to_path for the rationale.
         if (needs_lock && do_locking) {
-            do_locking = lock_uvar_file(fd);
+            do_locking = lock_uvar_file(fd.fd());
         }
 
         // Hopefully we got the lock. However, it's possible the file changed out from under us
         // while we were waiting for the lock. Make sure that didn't happen.
-        if (file_id_for_fd(fd) != file_id_for_path(path)) {
+        if (file_id_for_fd(fd.fd()) != file_id_for_path(path)) {
             // Oops, it changed! Try again.
-            close(fd);
-            fd = -1;
+            fd.close();
         }
     }
 
-    *out_fd = fd;
-    return fd >= 0;
+    *out_fd = std::move(fd);
+    return out_fd->valid();
 }
 
 // Returns true if modified variables were written, false if not. (There may still be variable
@@ -692,7 +690,7 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
 
     const wcstring directory = wdirname(explicit_vars_path);
     bool success = true;
-    int vars_fd = -1;
+    autoclose_fd_t vars_fd{};
 
     FLOGF(uvar_file, L"universal log performing full sync");
 
@@ -704,19 +702,13 @@ bool env_universal_t::sync(callback_data_list_t &callbacks) {
 
     // Read from it.
     if (success) {
-        assert(vars_fd >= 0);
-        this->load_from_fd(vars_fd, callbacks);
+        assert(vars_fd.valid());
+        this->load_from_fd(vars_fd.fd(), callbacks);
     }
 
     if (success && ok_to_save) {
         success = this->save(directory, explicit_vars_path);
     }
-
-    // Clean up.
-    if (vars_fd >= 0) {
-        close(vars_fd);
-    }
-
     return success;
 }
 

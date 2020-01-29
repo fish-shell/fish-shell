@@ -49,22 +49,8 @@
 #include "trace.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-/// File descriptor redirection error message.
-#define FD_ERROR _(L"An error occurred while redirecting file descriptor %d")
-
 /// Number of calls to fork() or posix_spawn().
 static relaxed_atomic_t<int> s_fork_count{0};
-
-void exec_close(int fd) {
-    assert(fd >= 0 && "Invalid fd");
-    while (close(fd) == -1) {
-        if (errno != EINTR) {
-            FLOGF(warning, FD_ERROR, fd);
-            wperror(L"close");
-            break;
-        }
-    }
-}
 
 /// This function is executed by the child process created by a call to fork(). It should be called
 /// after \c child_setup_process. It calls execve to replace the fish process image with the command

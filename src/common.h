@@ -569,6 +569,9 @@ class autoclose_fd_t {
     ~autoclose_fd_t() { close(); }
 };
 
+/// Close a file descriptor \p fd, retrying on EINTR.
+void exec_close(int fd);
+
 wcstring format_string(const wchar_t *format, ...);
 wcstring vformat_string(const wchar_t *format, va_list va_orig);
 void append_format(wcstring &str, const wchar_t *format, ...);

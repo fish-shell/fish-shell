@@ -171,11 +171,14 @@ std::vector<const flog_details::category_t *> get_flog_categories();
 void log_extra_to_flog_file(const wcstring &s);
 
 /// Output to the fish log a sequence of arguments, separated by spaces, and ending with a newline.
+/// We save and restore errno because we don't want this to affect other code.
 #define FLOG(wht, ...)                                                        \
     do {                                                                      \
         if (flog_details::category_list_t::g_instance->wht.enabled) {         \
+            auto old_errno = errno;                                           \
             flog_details::g_logger.acquire()->log_args(                       \
                 flog_details::category_list_t::g_instance->wht, __VA_ARGS__); \
+            errno = old_errno;                                                \
         }                                                                     \
     } while (0)
 
@@ -183,8 +186,10 @@ void log_extra_to_flog_file(const wcstring &s);
 #define FLOGF(wht, ...)                                                       \
     do {                                                                      \
         if (flog_details::category_list_t::g_instance->wht.enabled) {         \
+            auto old_errno = errno;                                           \
             flog_details::g_logger.acquire()->log_fmt(                        \
                 flog_details::category_list_t::g_instance->wht, __VA_ARGS__); \
+            errno = old_errno;                                                \
         }                                                                     \
     } while (0)
 

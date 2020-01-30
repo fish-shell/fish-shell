@@ -265,7 +265,12 @@ bool process_t::is_internal() const {
         case process_type_t::external:
         case process_type_t::exec:
             return false;
+        default:
+            assert(false && "The fish developers forgot to include a process_t. Please report a bug");
+            return true;
     }
+    assert(false && "process_t::is_internal: Total logic failure, universe is broken. Please replace universe and retry.");
+    return true;
 }
 
 job_t::job_t(job_id_t job_id, const properties_t &props, const job_lineage_t &lineage)

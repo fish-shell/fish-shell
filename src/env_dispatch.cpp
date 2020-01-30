@@ -152,7 +152,8 @@ static void guess_emoji_width(const environment_t &vars) {
     if (auto width_str = vars.get(L"fish_emoji_width")) {
         int new_width = fish_wcstol(width_str->as_string().c_str());
         g_fish_emoji_width = std::max(0, new_width);
-        FLOGF(term_support, "'fish_emoji_width' preference: %d, overwriting default", g_fish_emoji_width);
+        FLOGF(term_support, "'fish_emoji_width' preference: %d, overwriting default",
+              g_fish_emoji_width);
         return;
     }
 
@@ -352,7 +353,8 @@ static void update_fish_color_support(const environment_t &vars) {
                 fish_wcstod(tpv->as_string().c_str(), nullptr) > 299) {
                 // OS X Lion is version 299+, it has 256 color support (see github Wiki)
                 support_term256 = true;
-                FLOGF(term_support, L"256 color support enabled for TERM=%ls on Terminal.app", term.c_str());
+                FLOGF(term_support, L"256 color support enabled for TERM=%ls on Terminal.app",
+                      term.c_str());
             } else {
                 support_term256 = true;
                 FLOGF(term_support, L"256 color support enabled for TERM=%ls", term.c_str());
@@ -400,7 +402,8 @@ static bool initialize_curses_using_fallback(const char *term) {
     int err_ret;
     if (setupterm(const_cast<char *>(term), STDOUT_FILENO, &err_ret) == OK) return true;
     if (session_interactivity() != session_interactivity_t::not_interactive) {
-        FLOGF(warning, _(L"Could not set up terminal using the fallback terminal type '%s'."), term);
+        FLOGF(warning, _(L"Could not set up terminal using the fallback terminal type '%s'."),
+              term);
     }
     return false;
 }
@@ -463,7 +466,8 @@ static void init_curses(const environment_t &vars) {
             if (term.missing_or_empty()) {
                 FLOGF(warning, _(L"TERM environment variable not set."));
             } else {
-                FLOGF(warning, _(L"TERM environment variable set to '%ls'."), term->as_string().c_str());
+                FLOGF(warning, _(L"TERM environment variable set to '%ls'."),
+                      term->as_string().c_str());
                 FLOGF(warning, _(L"Check that this terminal type is supported on this system."));
             }
         }

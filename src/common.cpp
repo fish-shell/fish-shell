@@ -1779,7 +1779,7 @@ static void validate_new_termsize(struct winsize *new_termsize, const environmen
         if (is_main_thread() && parser_t::principal_parser().is_interactive()) {
             FLOGF(warning, _(L"Current terminal parameters have rows and/or columns set to zero."));
             FLOGF(warning, _(L"The stty command can be used to correct this "
-                       L"(e.g., stty rows 80 columns 24)."));
+                             L"(e.g., stty rows 80 columns 24)."));
         }
 #endif
         // Fallback to the environment vars.
@@ -1801,7 +1801,8 @@ static void validate_new_termsize(struct winsize *new_termsize, const environmen
     if (new_termsize->ws_col < MIN_TERM_COL || new_termsize->ws_row < MIN_TERM_ROW) {
         // Also highly hackisk.
         if (is_main_thread() && parser_t::principal_parser().is_interactive()) {
-            FLOGF(warning, _(L"Current terminal parameters set terminal size to unreasonable value."));
+            FLOGF(warning,
+                  _(L"Current terminal parameters set terminal size to unreasonable value."));
             FLOGF(warning, _(L"Defaulting terminal size to 80x24."));
         }
         new_termsize->ws_col = DFLT_TERM_COL;

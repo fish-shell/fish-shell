@@ -548,7 +548,8 @@ autoclose_fd_t env_universal_t::open_temporary_file(const wcstring &directory, w
 static bool check_duration(double start_time) {
     double duration = timef() - start_time;
     if (duration > 0.25) {
-        FLOGF(warning, _(L"Locking the universal var file took too long (%.3f seconds)."), duration);
+        FLOGF(warning, _(L"Locking the universal var file took too long (%.3f seconds)."),
+              duration);
         return false;
     }
     return true;
@@ -1248,7 +1249,8 @@ class universal_notifier_notifyd_t : public universal_notifier_t {
     void post_notification() {
         uint32_t status = notify_post(name.c_str());
         if (status != NOTIFY_STATUS_OK) {
-            FLOGF(warning, "notify_post() failed with status %u. Uvar notifications may not be sent.",
+            FLOGF(warning,
+                  "notify_post() failed with status %u. Uvar notifications may not be sent.",
                   status);
         }
     }

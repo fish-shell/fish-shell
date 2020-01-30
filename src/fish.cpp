@@ -221,7 +221,8 @@ static void source_config_in_directory(const wcstring &dir) {
     const wcstring escaped_dir = escape_string(dir, ESCAPE_ALL);
     const wcstring escaped_pathname = escaped_dir + L"/config.fish";
     if (waccess(config_pathname, R_OK) != 0) {
-        FLOGF(config, L"not sourcing %ls (not readable or does not exist)", escaped_pathname.c_str());
+        FLOGF(config, L"not sourcing %ls (not readable or does not exist)",
+              escaped_pathname.c_str());
         return;
     }
     FLOGF(config, L"sourcing %ls", escaped_pathname.c_str());

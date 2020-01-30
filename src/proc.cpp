@@ -758,7 +758,8 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
                 // job/group have been started, the only way this can happen is if the very last
                 // process in the group terminated and didn't need to access the terminal, otherwise
                 // it would have hung waiting for terminal IO (SIGTTIN). We can safely ignore this.
-                FLOGF(proc_termowner, L"tcsetpgrp called but process group %d has terminated.\n", j->pgid);
+                FLOGF(proc_termowner, L"tcsetpgrp called but process group %d has terminated.\n",
+                      j->pgid);
                 return notneeded;
             }
 

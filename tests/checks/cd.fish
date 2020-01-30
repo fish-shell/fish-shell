@@ -19,8 +19,8 @@ begin
     cd x
     pwd
 end
-rm -rf $tmp
 cd $oldpwd
+rm -rf $tmp
 
 # Create a test directory to store our stuff.
 set -l base /tmp/cdcomp_test

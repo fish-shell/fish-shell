@@ -578,21 +578,10 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
         p->pid = pid;
         maybe_assign_pgid_from_child(j, p->pid);
 
-        // We explicitly don't call set_child_group() for spawned processes because that
-        // a) isn't necessary, and b) causes issues like fish-shell/fish-shell#4715
-
-#if defined(__GLIBC__)
-        // Unfortunately, using posix_spawn() is not the panacea it would appear to be,
-        // glibc has a penchant for using fork() instead of vfork() when posix_spawn() is
-        // called, meaning that atomicity is not guaranteed and we can get here before the
-        // child group has been set. See discussion here:
-        // https://github.com/Microsoft/WSL/issues/2997 And confirmation that this persists
-        // past glibc 2.24+ here: https://github.com/fish-shell/fish-shell/issues/4715
-        if (j->wants_job_control() && getpgid(p->pid) != j->pgid) {
-            set_child_group(j.get(), p->pid);
-        }
-#endif
-
+        // In glibc, posix_spawn uses fork() and the pgid group is set on the child side;
+        // therefore the parent may not have seen it be set yet.
+        // Ensure it gets set. See #4715, also https://github.com/Microsoft/WSL/issues/2997.
+        set_child_group(j.get(), p->pid);
         terminal_maybe_give_to_job(j.get(), false);
     } else
 #endif

@@ -91,7 +91,7 @@ typedef struct state {
     te_error_type_t error;
 } state;
 
-/* Parses the input expression and binds variables. */
+/* Parses the input expression. */
 /* Returns NULL on error. */
 te_expr *te_compile(const char *expression, te_error_t *error);
 
@@ -234,7 +234,7 @@ void next_token(state *s) {
             s->value = strtod(s->next, const_cast<char **>(&s->next));
             s->type = TOK_NUMBER;
         } else {
-            /* Look for a variable or builtin function call. */
+            /* Look for a function call. */
             // But not when it's an "x" followed by whitespace
             // - that's the alternative multiplication operator.
             if (s->next[0] >= 'a' && s->next[0] <= 'z' &&
@@ -260,7 +260,7 @@ void next_token(state *s) {
                 } else if (s->type != TOK_ERROR || s->error == TE_ERROR_UNKNOWN) {
                     // Our error is more specific, so it takes precedence.
                     s->type = TOK_ERROR;
-                    s->error = TE_ERROR_UNKNOWN_VARIABLE;
+                    s->error = TE_ERROR_UNKNOWN_FUNCTION;
                 }
             } else {
                 /* Look for an operator or special character. */
@@ -329,7 +329,7 @@ static te_expr *expr(state *s);
 static te_expr *power(state *s);
 
 static te_expr *base(state *s) {
-    /* <base>      =    <constant> | <variable> | <function-0> {"(" ")"} | <function-1> <power> |
+    /* <base>      =    <constant> | <function-0> {"(" ")"} | <function-1> <power> |
      * <function-X> "(" <expr> {"," <expr>} ")" | "(" <list> ")" */
     te_expr *ret;
     int arity;

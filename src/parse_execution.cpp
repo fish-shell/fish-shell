@@ -1303,7 +1303,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
     // Clean up the job on failure or cancellation.
     if (pop_result == end_execution_reason_t::ok) {
         // Set the pgroup assignment mode, now that the job is populated.
-        job->pgroup_mode = get_pgroup_provenance(job, lineage);
+        job->pgroup_provenance = get_pgroup_provenance(job, lineage);
 
         // Success. Give the job to the parser - it will clean it up.
         parser->job_add(job);

@@ -206,7 +206,8 @@ static void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_i
 /// If our pgroup assignment mode wants us to use the first external proc, then apply it here.
 static void maybe_assign_pgid_from_child(const std::shared_ptr<job_t> &j, pid_t child_pid) {
     // If our assignment mode is the first process, then assign it.
-    if (j->pgid == INVALID_PID && j->pgroup_mode == pgroup_provenance_t::first_external_proc) {
+    if (j->pgid == INVALID_PID &&
+        j->pgroup_provenance == pgroup_provenance_t::first_external_proc) {
         j->pgid = child_pid;
     }
 }
@@ -925,7 +926,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
 
     // Perhaps we know our pgroup already.
     assert(j->pgid == INVALID_PID && "Should not yet have a pid.");
-    switch (j->pgroup_mode) {
+    switch (j->pgroup_provenance) {
         case pgroup_provenance_t::lineage:
             assert(*lineage.parent_pgid != INVALID_PID && "pgid should be none, not INVALID_PID");
             j->pgid = *lineage.parent_pgid;

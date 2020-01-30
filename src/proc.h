@@ -406,7 +406,7 @@ class job_t {
     pid_t pgid{INVALID_PID};
 
     /// How the above pgroup is assigned. This should be set at construction and not modified after.
-    pgroup_provenance_t pgroup_mode{};
+    pgroup_provenance_t pgroup_provenance{};
 
     /// The id of this job.
     job_id_t job_id() const { return job_id_; }

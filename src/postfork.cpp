@@ -40,68 +40,65 @@
 
 static char *get_interpreter(const char *command, char *buffer, size_t buff_size);
 
+/// Report the error code \p err for a failed setpgid call.
+static void report_setpgid_error(int err, const job_t *j, const process_t *p) {
+    char pid_buff[128];
+    char job_id_buff[128];
+    char getpgid_buff[128];
+    char job_pgid_buff[128];
+    char argv0[64];
+    char command[64];
+
+    format_long_safe(pid_buff, p->pid);
+    format_long_safe(job_id_buff, j->job_id());
+    format_long_safe(getpgid_buff, getpgid(p->pid));
+    format_long_safe(job_pgid_buff, j->pgid);
+    narrow_string_safe(argv0, p->argv0());
+    narrow_string_safe(command, j->command_wcstr());
+
+    debug_safe(1, "Could not send own process %s, '%s' in job %s, '%s' from group %s to group %s",
+               pid_buff, argv0, job_id_buff, command, getpgid_buff, job_pgid_buff);
+
+    if (is_windows_subsystem_for_linux() && errno == EPERM) {
+        debug_safe(1,
+                   "Please update to Windows 10 1809/17763 or higher to address known issues "
+                   "with process groups and zombie processes.");
+    }
+
+    errno = err;
+    safe_perror("setpgid");
+}
+
 /// Called only by the child to set its own process group (possibly creating a new group in the
 /// process if it is the first in a JOB_CONTROL job.
 /// Returns true on success, false on failure.
 bool child_set_group(job_t *j, process_t *p) {
-    if (j->wants_job_control()) {
-        if (j->pgid == INVALID_PID) {
-            j->pgid = p->pid;
-        }
-
-        for (int i = 0; setpgid(p->pid, j->pgid) != 0; ++i) {
-            // Put a cap on how many times we retry so we are never stuck here
-            if (i < 100) {
-                if (errno == EPERM) {
-                    // The setpgid(2) man page says that EPERM is returned only if attempts are made
-                    // to move processes into groups across session boundaries (which can never be
-                    // the case in fish, anywhere) or to change the process group ID of a session
-                    // leader (again, can never be the case). I'm pretty sure this is a WSL bug, as
-                    // we see the same with tcsetpgrp(2) in other places and it disappears on retry.
-                    debug_safe(2, "setpgid(2) returned EPERM. Retrying");
-                    continue;
-                } else if (errno == EINTR) {
-                    // I don't think signals are blocked here. The parent (fish) redirected the
-                    // signal handlers and `child_setup_process()` calls `signal_reset_handlers()`
-                    // after we're done here (and not `signal_unblock()`). We're already in a loop,
-                    // so let's just handle EINTR just in case.
-                    continue;
-                }
-            }
-
-            char pid_buff[128];
-            char job_id_buff[128];
-            char getpgid_buff[128];
-            char job_pgid_buff[128];
-            char argv0[64];
-            char command[64];
-
-            format_long_safe(pid_buff, p->pid);
-            format_long_safe(job_id_buff, j->job_id());
-            format_long_safe(getpgid_buff, getpgid(p->pid));
-            format_long_safe(job_pgid_buff, j->pgid);
-            narrow_string_safe(argv0, p->argv0());
-            narrow_string_safe(command, j->command_wcstr());
-
-            debug_safe(
-                1, "Could not send own process %s, '%s' in job %s, '%s' from group %s to group %s",
-                pid_buff, argv0, job_id_buff, command, getpgid_buff, job_pgid_buff);
-
-            if (is_windows_subsystem_for_linux() && errno == EPERM) {
-                debug_safe(
-                    1,
-                    "Please update to Windows 10 1809/17763 or higher to address known issues "
-                    "with process groups and zombie processes.");
-            }
-
-            safe_perror("setpgid");
-
-            return false;
-        }
-    } else {
-        j->pgid = getpgrp();
+    if (j->pgid == INVALID_PID) {
+        assert(j->pgroup_provenance == pgroup_provenance_t::first_external_proc &&
+               "pgroup should only be unset if we need to become the leader");
+        j->pgid = p->pid;
     }
-    return true;
+    // Put a cap on how many times we retry so we are never stuck here.
+    for (int i = 0; i < 100; i++) {
+        if (setpgid(p->pid, j->pgid) == 0) {
+            return true;
+        } else if (errno == EPERM) {
+            // The setpgid(2) man page says that EPERM is returned only if attempts are made
+            // to move processes into groups across session boundaries (which can never be
+            // the case in fish, anywhere) or to change the process group ID of a session
+            // leader (again, can never be the case). I'm pretty sure this is a WSL bug, as
+            // we see the same with tcsetpgrp(2) in other places and it disappears on retry.
+            debug_safe(2, "setpgid(2) returned EPERM. Retrying");
+            continue;
+        } else if (errno == EINTR) {
+            // Retry on EINTR.
+            continue;
+        } else {
+            break;
+        }
+    }
+    report_setpgid_error(errno, j, p);
+    return false;
 }
 
 /// Called only by the parent only after a child forks and successfully calls child_set_group,

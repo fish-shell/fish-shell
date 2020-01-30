@@ -237,6 +237,9 @@ class process_t {
     /// launch. This helps us avoid spurious waitpid calls.
     void check_generations_before_launch();
 
+    /// \return whether this process type is internal (block, function, or builtin).
+    bool is_internal() const;
+
     /// Actual command to pass to exec in case of process_type_t::external or process_type_t::exec.
     wcstring actual_cmd;
 
@@ -291,6 +294,24 @@ struct job_lineage_t {
     /// A shared pointer indicating that the entire tree of jobs is safe to disown.
     /// This is set to true by the "root" job after it is constructed.
     std::shared_ptr<relaxed_atomic_bool_t> root_constructed{};
+};
+
+/// A job has a mode which describes how its pgroup is assigned (before the value is known).
+/// This is a constant property of the job.
+enum class pgroup_provenance_t {
+    /// The job has no pgroup assignment. This is used for e.g. a simple function invocation with no
+    /// pipeline.
+    unassigned,
+
+    /// The job's pgroup is fish's pgroup. This is used when fish needs to read from the terminal,
+    /// or if job control is disabled.
+    fish_itself,
+
+    /// The job's pgroup will come from its first external process.
+    first_external_proc,
+
+    /// The job's pgroup will come from its lineage. This is used for jobs that are run nested.
+    lineage,
 };
 
 /// A struct represeting a job. A job is basically a pipeline of one or more processes and a couple
@@ -384,6 +405,9 @@ class job_t {
     /// Set to a nonexistent, non-return-value of getpgid() integer by the constructor
     pid_t pgid{INVALID_PID};
 
+    /// How the above pgroup is assigned. This should be set at construction and not modified after.
+    pgroup_provenance_t pgroup_mode{};
+
     /// The id of this job.
     job_id_t job_id() const { return job_id_; }
 
@@ -444,6 +468,12 @@ class job_t {
 
     /// Mark this job as constructed. The job must not have previously been marked as constructed.
     void mark_constructed();
+
+    /// \return whether we have internal or external procs, respectively.
+    /// Internal procs are builtins, blocks, and functions.
+    /// External procs include exec and external.
+    bool has_internal_proc() const;
+    bool has_external_proc() const;
 
     // Helper functions to check presence of flags on instances of jobs
     /// The job has been fully constructed, i.e. all its member processes have been launched

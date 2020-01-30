@@ -52,6 +52,37 @@
 /// Number of calls to fork() or posix_spawn().
 static relaxed_atomic_t<int> s_fork_count{0};
 
+pgroup_provenance_t get_pgroup_provenance(const shared_ptr<job_t> &j,
+                                          const job_lineage_t &lineage) {
+    bool first_proc_is_internal = j->processes.front()->is_internal();
+    bool has_internal = j->has_internal_proc();
+    bool has_external = j->has_external_proc();
+    assert(first_proc_is_internal ? has_internal : has_external);
+
+    if (lineage.parent_pgid.has_value()) {
+        // Our lineage indicates a pgid. This means the job is "nested" as a function or block
+        // inside another job, which has a real pgroup. We're going to use that.
+        return pgroup_provenance_t::lineage;
+    } else if (!j->wants_job_control()) {
+        // This job doesn't need job control, it can just live in the fish pgroup.
+        return pgroup_provenance_t::fish_itself;
+    } else if (has_external && !first_proc_is_internal) {
+        // The first process is external, it will own the pgroup.
+        return pgroup_provenance_t::first_external_proc;
+    } else if (has_external && first_proc_is_internal) {
+        // The terminal owner has to be the process which is permitted to read from stdin.
+        // This is the first process in the pipeline. When executing, a process in the job will
+        // claim the pgrp if it's not set; therefore set it according to the first process.
+        // Only do this if there's an external process - see #6011.
+        return pgroup_provenance_t::fish_itself;
+    } else {
+        assert(has_internal && !has_external && "Should be internal only");
+        // This job consists of only internal functions or builtins; we do not need to assign a
+        // pgroup (yet).
+        return pgroup_provenance_t::unassigned;
+    }
+}
+
 /// This function is executed by the child process created by a call to fork(). It should be called
 /// after \c child_setup_process. It calls execve to replace the fish process image with the command
 /// specified in \c p. It never returns. Called in a forked child! Do not allocate memory, etc.
@@ -172,16 +203,11 @@ static void internal_exec(env_stack_t &vars, job_t *j, const io_chain_t &block_i
     }
 }
 
-static void on_process_created(const std::shared_ptr<job_t> &j, pid_t child_pid) {
-    // We only need to do this the first time a child is forked/spawned
-    if (j->pgid != INVALID_PID) {
-        return;
-    }
-
-    if (j->wants_job_control()) {
+/// If our pgroup assignment mode wants us to use the first external proc, then apply it here.
+static void maybe_assign_pgid_from_child(const std::shared_ptr<job_t> &j, pid_t child_pid) {
+    // If our assignment mode is the first process, then assign it.
+    if (j->pgid == INVALID_PID && j->pgroup_mode == pgroup_provenance_t::first_external_proc) {
         j->pgid = child_pid;
-    } else {
-        j->pgid = getpgrp();
     }
 }
 
@@ -327,7 +353,7 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
           p->argv0());
 
     p->pid = pid;
-    on_process_created(job, p->pid);
+    maybe_assign_pgid_from_child(job, p->pid);
     set_child_group(job.get(), p->pid);
     terminal_maybe_give_to_job(job.get(), false);
     return true;
@@ -550,7 +576,7 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
 
         // these are all things do_fork() takes care of normally (for forked processes):
         p->pid = pid;
-        on_process_created(j, p->pid);
+        maybe_assign_pgid_from_child(j, p->pid);
 
         // We explicitly don't call set_child_group() for spawned processes because that
         // a) isn't necessary, and b) causes issues like fish-shell/fish-shell#4715
@@ -564,13 +590,6 @@ static bool exec_external_command(parser_t &parser, const std::shared_ptr<job_t>
         // past glibc 2.24+ here: https://github.com/fish-shell/fish-shell/issues/4715
         if (j->wants_job_control() && getpgid(p->pid) != j->pgid) {
             set_child_group(j.get(), p->pid);
-        }
-#else
-        // In do_fork, the pid of the child process is used as the group leader if j->pgid
-        // invalid, posix_spawn assigned the new group a pgid equal to its own id if
-        // j->pgid was invalid, so this is what we do instead of calling set_child_group
-        if (j->pgid == INVALID_PID) {
-            j->pgid = pid;
         }
 #endif
 
@@ -893,41 +912,6 @@ static process_t *get_deferred_process(const shared_ptr<job_t> &j) {
     return nullptr;
 }
 
-/// \return true if fish should claim the process group for this job.
-/// This is true if there is at least one external process and if the first process is fish code.
-static bool should_claim_process_group_for_job(const shared_ptr<job_t> &j) {
-    // Check if there's an external process.
-    // See #6011.
-    bool has_external = false;
-    for (const auto &p : j->processes) {
-        if (p->type == process_type_t::external) {
-            has_external = true;
-            break;
-        }
-    }
-    if (!has_external) {
-        return false;
-    }
-
-    // Check the first process.
-    // The terminal owner has to be the process which is permitted to read from stdin.
-    // This is the first process in the pipeline. When executing, a process in the job will
-    // claim the pgrp if it's not set; therefore set it according to the first process.
-    switch (j->processes.front()->type) {
-        case process_type_t::builtin:
-        case process_type_t::function:
-        case process_type_t::block_node:
-            // These are run internal to fish.
-            return true;
-        case process_type_t::external:
-        case process_type_t::exec:
-            // External will get its own pgroup after fork.
-            // exec will retain the pgroup.
-            return false;
-    }
-    DIE("unreachable");
-}
-
 bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t &lineage) {
     assert(j && "null job_t passed to exec_job!");
 
@@ -940,13 +924,6 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
         return true;
     }
 
-    // If our lineage indicates a pgid, share it.
-    if (lineage.parent_pgid.has_value()) {
-        assert(*lineage.parent_pgid != INVALID_PID &&
-               "parent pgid should be none, not INVALID_PID");
-        j->pgid = *lineage.parent_pgid;
-    }
-
     pid_t pgrp = getpgrp();
     // Check to see if we should reclaim the foreground pgrp after the job finishes or stops.
     const bool reclaim_foreground_pgrp = (tcgetpgrp(STDIN_FILENO) == pgrp);
@@ -957,8 +934,22 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
         j->mut_flags().job_control = true;
     }
 
-    if (j->pgid == INVALID_PID && should_claim_process_group_for_job(j)) {
-        j->pgid = pgrp;
+    // Perhaps we know our pgroup already.
+    assert(j->pgid == INVALID_PID && "Should not yet have a pid.");
+    switch (j->pgroup_mode) {
+        case pgroup_provenance_t::lineage:
+            assert(*lineage.parent_pgid != INVALID_PID && "pgid should be none, not INVALID_PID");
+            j->pgid = *lineage.parent_pgid;
+            break;
+
+        case pgroup_provenance_t::fish_itself:
+            j->pgid = pgrp;
+            break;
+
+        // The remaining cases are all deferred until later.
+        case pgroup_provenance_t::unassigned:
+        case pgroup_provenance_t::first_external_proc:
+            break;
     }
 
     const size_t stdout_read_limit = parser.libdata().read_limit;

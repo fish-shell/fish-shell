@@ -7,14 +7,12 @@
 #include <vector>
 
 #include "common.h"
+#include "proc.h"
 
 /// Pipe redirection error message.
 #define PIPE_ERROR _(L"An error occurred while setting up pipe")
 
 /// Execute the processes specified by \p j in the parser \p.
-class job_t;
-struct job_lineage_t;
-class parser_t;
 bool exec_job(parser_t &parser, const std::shared_ptr<job_t> &j, const job_lineage_t &lineage);
 
 /// Evaluate a command.
@@ -37,4 +35,8 @@ int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser, wcstring_lis
 /// Loops over close until the syscall was run without being interrupted.
 void exec_close(int fd);
 
+/// Compute the "pgroup provenance" for a job. This is a description of how the pgroup is
+/// assigned. It's factored out because the logic has subtleties, and this centralizes it.
+pgroup_provenance_t get_pgroup_provenance(const std::shared_ptr<job_t> &j,
+                                          const job_lineage_t &lineage);
 #endif

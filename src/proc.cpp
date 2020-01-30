@@ -256,6 +256,18 @@ void process_t::check_generations_before_launch() {
     gens_ = topic_monitor_t::principal().current_generations();
 }
 
+bool process_t::is_internal() const {
+    switch (type) {
+        case process_type_t::builtin:
+        case process_type_t::function:
+        case process_type_t::block_node:
+            return true;
+        case process_type_t::external:
+        case process_type_t::exec:
+            return false;
+    }
+}
+
 job_t::job_t(job_id_t job_id, const properties_t &props, const job_lineage_t &lineage)
     : properties(props),
       job_id_(job_id),
@@ -268,6 +280,20 @@ job_t::~job_t() {
 void job_t::mark_constructed() {
     assert(!is_constructed() && "Job was already constructed");
     *constructed = true;
+}
+
+bool job_t::has_internal_proc() const {
+    for (const auto &p : processes) {
+        if (p->is_internal()) return true;
+    }
+    return false;
+}
+
+bool job_t::has_external_proc() const {
+    for (const auto &p : processes) {
+        if (!p->is_internal()) return true;
+    }
+    return false;
 }
 
 /// A list of pids/pgids that have been disowned. They are kept around until either they exit or

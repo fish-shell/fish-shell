@@ -78,7 +78,19 @@ static relaxed_atomic_t<job_control_t> job_control_mode{job_control_t::interacti
 
 job_control_t get_job_control_mode() { return job_control_mode; }
 
-void set_job_control_mode(job_control_t mode) { job_control_mode = mode; }
+void set_job_control_mode(job_control_t mode) {
+    job_control_mode = mode;
+
+    // HACK: when fish (or any shell) launches a job with job control, it will put the job into its
+    // own pgroup and call tcsetpgrp() to allow that pgroup to own the terminal (making fish a
+    // background process). When the job finishes, fish will try to reclaim the terminal via
+    // tcsetpgrp(), but as fish is now a background process it will receive SIGTTOU and stop! Ensure
+    // that doesn't happen by ignoring SIGTTOU.
+    // Note that if we become interactive, we also ignore SIGTTOU.
+    if (mode == job_control_t::all) {
+        signal(SIGTTOU, SIG_IGN);
+    }
+}
 
 void proc_init() { signal_set_handlers_once(false); }
 
@@ -776,10 +788,11 @@ int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
             } else {
                 if (errno == ENOTTY) {
                     redirect_tty_output();
+                } else {
+                    FLOGF(warning, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
+                          j->job_id(), j->command_wcstr(), j->pgid);
+                    wperror(L"tcsetpgrp");
                 }
-                FLOGF(warning, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
-                      j->job_id(), j->command_wcstr(), j->pgid);
-                wperror(L"tcsetpgrp");
                 return error;
             }
 

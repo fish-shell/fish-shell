@@ -652,6 +652,7 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
     lineage.parent_pgid = (job->pgid == INVALID_PID ? none() : maybe_t<pid_t>(job->pgid));
     lineage.block_io = io_chain;
     lineage.root_constructed = job->root_constructed;
+    lineage.root_has_job_control = job->wants_job_control();
 
     if (p->type == process_type_t::block_node) {
         const parsed_source_ref_t &source = p->block_node_source;
@@ -944,12 +945,17 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
         assert(*lineage.parent_pgid != INVALID_PID &&
                "parent pgid should be none, not INVALID_PID");
         j->pgid = *lineage.parent_pgid;
-        j->mut_flags().job_control = true;
     }
 
     pid_t pgrp = getpgrp();
     // Check to see if we should reclaim the foreground pgrp after the job finishes or stops.
     const bool reclaim_foreground_pgrp = (tcgetpgrp(STDIN_FILENO) == pgrp);
+
+    // If we are running nested inside a function or block with job control, then we need job
+    // control too.
+    if (lineage.root_has_job_control) {
+        j->mut_flags().job_control = true;
+    }
 
     if (j->pgid == INVALID_PID && should_claim_process_group_for_job(j)) {
         j->pgid = pgrp;

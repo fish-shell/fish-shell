@@ -280,6 +280,10 @@ struct job_lineage_t {
     /// is part of a pipeline, then this may be set.
     maybe_t<pid_t> parent_pgid{};
 
+    /// Whether job control is on for the root.
+    /// This is set if our job is nested as part of a function or block execution.
+    bool root_has_job_control{false};
+
     /// The IO chain associated with any block containing this job.
     /// For example, in `begin; foo ; end < file.txt` this would have the 'file.txt' IO.
     io_chain_t block_io{};

@@ -1086,7 +1086,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
 
         // Set the size, if it's too small.
         bool set_size = !errored && size < (off_t)sizeof(universal_notifier_shmem_t);
-        if (set_size && ftruncate(fd, sizeof(universal_notifier_shmem_t)) < 0) {
+        if (set_size && ftruncate(fd.fd(), sizeof(universal_notifier_shmem_t)) < 0) {
             const char *error = std::strerror(errno);
             FLOGF(error, _(L"Unable to truncate shared memory object with path '%s': %s"), path,
                   error);
@@ -1096,7 +1096,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t {
         // Memory map the region.
         if (!errored) {
             void *addr = mmap(nullptr, sizeof(universal_notifier_shmem_t), PROT_READ | PROT_WRITE,
-                              MAP_SHARED, fd, 0);
+                              MAP_SHARED, fd.fd(), 0);
             if (addr == MAP_FAILED) {
                 const char *error = std::strerror(errno);
                 FLOGF(error, _(L"Unable to memory map shared memory object with path '%s': %s"),

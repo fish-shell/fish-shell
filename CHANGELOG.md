@@ -1,3 +1,9 @@
+# fish 3.1.0
+
+Compared to the beta release of fish 3.1b1, fish version 3.1.0 fixes a number of problems in compiling on Cygwin and Solaris-derived systems such as Illumos.
+
+If you are upgrading from version 2.5.0 or before, please also review the release notes for 3.1b1 (included below).
+
 # fish 3.1b1 (released January 26, 2020)
 
 ## Notable improvements and fixes

@@ -233,7 +233,7 @@ Fish history recall is very simple yet effective:
 
   - If you want to reuse several arguments from the same line ("!!:3*" and the like), consider recalling the whole line and removing what you don't need (:kbd:`Alt+D` and :kbd:`Alt+Backspace` are your friends).
 
-See `documentation <index.html#editor>`__ for more details about line editing in fish.
+See :ref:`documentation <editor>` for more details about line editing in fish.
 
 
 How can I use ``-`` as a shortcut for ``cd -``?

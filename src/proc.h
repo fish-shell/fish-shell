@@ -594,10 +594,6 @@ void hup_background_jobs(const parser_t &parser);
 /// \return 1 if transferred, 0 if no transfer was necessary, -1 on error.
 int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped);
 
-/// Given that we are about to run a builtin, acquire the terminal if it is owned by the given job.
-/// Returns the pid to restore after running the builtin, or -1 if there is no pid to restore.
-pid_t terminal_acquire_before_builtin(int job_pgid);
-
 /// Add a pid to the list of pids we wait on even though they are not associated with any jobs.
 /// Used to avoid zombie processes after disown.
 void add_disowned_pgid(pid_t pgid);

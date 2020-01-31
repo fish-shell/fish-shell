@@ -437,7 +437,7 @@ static const wchar_t *const help_builtins[] = {L"for", L"while",  L"function", L
 static bool cmd_needs_help(const wchar_t *cmd) { return contains(help_builtins, cmd); }
 
 /// Execute a builtin command
-proc_status_t builtin_run(parser_t &parser, int job_pgid, wchar_t **argv, io_streams_t &streams) {
+proc_status_t builtin_run(parser_t &parser, wchar_t **argv, io_streams_t &streams) {
     UNUSED(parser);
     UNUSED(streams);
     if (argv == nullptr || argv[0] == nullptr)
@@ -452,15 +452,7 @@ proc_status_t builtin_run(parser_t &parser, int job_pgid, wchar_t **argv, io_str
     }
 
     if (const builtin_data_t *data = builtin_lookup(argv[0])) {
-        // If we are interactive, save the foreground pgroup and restore it after in case the
-        // builtin needs to read from the terminal. See #4540.
-        bool grab_tty = session_interactivity() != session_interactivity_t::not_interactive &&
-                        isatty(streams.stdin_fd);
-        pid_t pgroup_to_restore = grab_tty ? terminal_acquire_before_builtin(job_pgid) : -1;
         int ret = data->func(parser, streams, argv);
-        if (pgroup_to_restore >= 0) {
-            tcsetpgrp(STDIN_FILENO, pgroup_to_restore);
-        }
         return proc_status_t::from_exit_code(ret);
     }
 

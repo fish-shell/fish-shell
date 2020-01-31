@@ -20,7 +20,7 @@ Description
 
 ``bind`` adds a binding for the specified key sequence to the specified command.
 
-SEQUENCE is the character sequence to bind to. These should be written as `fish escape sequences <index.html#escapes>`__. For example, because pressing the Alt key and another character sends that character prefixed with an escape character, Alt-based key bindings can be written using the ``\e`` escape. For example, :kbd:`Alt+w` can be written as ``\ew``. The control character can be written in much the same way using the ``\c`` escape, for example :kbd:`Control+X` (^X) can be written as ``\cx``. Note that Alt-based key bindings are case sensitive and Control-based key bindings are not. This is a constraint of text-based terminals, not ``fish``.
+SEQUENCE is the character sequence to bind to. These should be written as :ref:`fish escape sequences <escapes>`. For example, because pressing the Alt key and another character sends that character prefixed with an escape character, Alt-based key bindings can be written using the ``\e`` escape. For example, :kbd:`Alt+w` can be written as ``\ew``. The control character can be written in much the same way using the ``\c`` escape, for example :kbd:`Control+X` (^X) can be written as ``\cx``. Note that Alt-based key bindings are case sensitive and Control-based key bindings are not. This is a constraint of text-based terminals, not ``fish``.
 
 The default key binding can be set by specifying a ``SEQUENCE`` of the empty string (that is, ``''`` ). It will be used whenever no other binding matches. For most key bindings, it makes sense to use the ``self-insert`` function (i.e. ``bind '' self-insert``) as the default keybinding. This will insert any keystrokes not specifically bound to into the editor. Non- printable characters are ignored by the editor, so this will not result in control sequences being printable.
 
@@ -36,7 +36,7 @@ When multiple ``COMMAND``\s are provided, they are all run in the specified orde
 
 If no ``SEQUENCE`` is provided, all bindings (or just the bindings in the specified ``MODE``) are printed. If ``SEQUENCE`` is provided without ``COMMAND``, just the binding matching that sequence is printed.
 
-To save custom keybindings, put the ``bind`` statements into `config.fish <index.html#initialization>`__. Alternatively, fish also automatically executes a function called ``fish_user_key_bindings`` if it exists.
+To save custom keybindings, put the ``bind`` statements into :ref:`config.fish <initialization>`. Alternatively, fish also automatically executes a function called ``fish_user_key_bindings`` if it exists.
 
 Key bindings may use "modes", which mimics Vi's modal input behavior. The default mode is "default", and every bind applies to a single mode. The mode can be viewed/changed with the ``$fish_bind_mode`` variable.
 

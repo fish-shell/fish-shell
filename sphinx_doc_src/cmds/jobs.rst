@@ -14,7 +14,7 @@ Synopsis
 Description
 -----------
 
-``jobs`` prints a list of the currently running `jobs <index.html#syntax-job-control>`__ and their status.
+``jobs`` prints a list of the currently running :ref:`jobs <syntax-job-control>` and their status.
 
 jobs accepts the following switches:
 

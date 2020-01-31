@@ -13,7 +13,7 @@ Synopsis
 Description
 -----------
 
-``disown`` removes the specified `job <index.html#syntax-job-control>`__ from the list of jobs. The job itself continues to exist, but fish does not keep track of it any longer.
+``disown`` removes the specified :ref:`job <syntax-job-control>` from the list of jobs. The job itself continues to exist, but fish does not keep track of it any longer.
 
 Jobs in the list of jobs are sent a hang-up signal when fish terminates, which usually causes the job to terminate; ``disown`` allows these processes to continue regardless.
 

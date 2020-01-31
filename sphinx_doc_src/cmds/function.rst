@@ -44,7 +44,7 @@ The following options are available:
 
 - ``-V`` or ``--inherit-variable NAME`` snapshots the value of the variable ``NAME`` and defines a local variable with that same name and value when the function is defined. This is similar to a closure in other languages like Python but a bit different. Note the word "snapshot" in the first sentence. If you change the value of the variable after defining the function, even if you do so in the same scope (typically another function) the new value will not be used by the function you just created using this option. See the ``function notify`` example below for how this might be used.
 
-If the user enters any additional arguments after the function, they are inserted into the environment `variable list <index.html#variables-lists>`__ ``$argv``. If the ``--argument-names`` option is provided, the arguments are also assigned to names specified in that option.
+If the user enters any additional arguments after the function, they are inserted into the environment :ref:`variable list <variables-lists>` ``$argv``. If the ``--argument-names`` option is provided, the arguments are also assigned to names specified in that option.
 
 By using one of the event handler switches, a function can be made to run automatically at specific events. The user may generate new events using the :ref:`emit <cmd-emit>` builtin. Fish generates the following named events:
 

@@ -1,5 +1,5 @@
 /**
- * widechar_width.h, generated on 2019-05-14.
+ * widechar_width.h, generated on 2020-01-30.
  * See https://github.com/ridiculousfish/widecharwidth/
  *
  * SHA1 file hashes:
@@ -30,8 +30,8 @@ enum {
 
 /* An inclusive range of characters. */
 struct widechar_range {
-  wchar_t lo;
-  wchar_t hi;
+  uint32_t lo;
+  uint32_t hi;
 };
 
 /* Simple ASCII characters - used a lot, so we check them first. */
@@ -506,14 +506,14 @@ static const struct widechar_range widechar_widened_table[] = {
 };
 
 template<typename Collection>
-bool widechar_in_table(const Collection &arr, wchar_t c) {
+bool widechar_in_table(const Collection &arr, uint32_t c) {
     auto where = std::lower_bound(std::begin(arr), std::end(arr), c,
-        [](widechar_range p, wchar_t c) { return p.hi < c; });
+        [](widechar_range p, uint32_t c) { return p.hi < c; });
     return where != std::end(arr) && where->lo <= c;
 }
 
 /* Return the width of character c, or a special negative value. */
-int widechar_wcwidth(wchar_t c) {
+int widechar_wcwidth(uint32_t c) {
     if (widechar_in_table(widechar_ascii_table, c))
         return 1;
     if (widechar_in_table(widechar_private_table, c))

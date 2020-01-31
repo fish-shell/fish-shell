@@ -1683,84 +1683,97 @@ static bool check_for_orphaned_process(unsigned long loop_count, pid_t shell_pgi
     return we_think_we_are_orphaned;
 }
 
-/// Initialize data for interactive use.
-static void reader_interactive_init(parser_t &parser) {
-    // See if we are running interactively.
-    pid_t shell_pgid;
-
-    init_input();
-    shell_pgid = getpgrp();
-
-    // This should enable job control on fish, even if our parent process did not enable it for us.
+// Ensure that fish owns the terminal, possibly waiting. If we cannot acquire the terminal, then
+// report an error and exit.
+static void acquire_tty_or_exit(pid_t shell_pgid) {
+    ASSERT_IS_MAIN_THREAD();
 
     // Check if we are in control of the terminal, so that we don't do semi-expensive things like
     // reset signal handlers unless we really have to, which we often don't.
-    if (tcgetpgrp(STDIN_FILENO) != shell_pgid) {
-        // Bummer, we are not in control of the terminal. Stop until parent has given us control of
-        // it.
-        //
-        // In theory, reseting signal handlers could cause us to miss signal deliveries. In
-        // practice, this code should only be run during startup, when we're not waiting for any
-        // signals.
-        signal_reset_handlers();
+    // Common case.
+    if (tcgetpgrp(STDIN_FILENO) == shell_pgid) {
+        return;
+    }
 
-        // Ok, signal handlers are taken out of the picture. Stop ourself in a loop until we are in
-        // control of the terminal. However, the call to signal(SIGTTIN) may silently not do
-        // anything if we are orphaned.
-        //
-        // As far as I can tell there's no really good way to detect that we are orphaned. One way
-        // is to just detect if the group leader exited, via kill(shell_pgid, 0). Another
-        // possibility is that read() from the tty fails with EIO - this is more reliable but it's
-        // harder, because it may succeed or block. So we loop for a while, trying those strategies.
-        // Eventually we just give up and assume we're orphaend.
-        for (unsigned long loop_count = 0;; loop_count++) {
-            pid_t owner = tcgetpgrp(STDIN_FILENO);
-            // 0 is a valid return code from `tcgetpgrp()` under at least FreeBSD and testing
-            // indicates that a subsequent call to `tcsetpgrp()` will succeed. 0 is the
-            // pid of the top-level kernel process, so I'm not sure if this means ownership
-            // of the terminal has gone back to the kernel (i.e. it's not owned) or if it is
-            // just an "invalid" pid for all intents and purposes.
-            if (owner == 0) {
-                tcsetpgrp(STDIN_FILENO, shell_pgid);
-                // Since we expect the above to work, call `tcgetpgrp()` immediately to
-                // avoid a second pass through this loop.
-                owner = tcgetpgrp(STDIN_FILENO);
+    // Bummer, we are not in control of the terminal. Stop until parent has given us control of
+    // it.
+    //
+    // In theory, reseting signal handlers could cause us to miss signal deliveries. In
+    // practice, this code should only be run during startup, when we're not waiting for any
+    // signals.
+    signal_reset_handlers();
+    cleanup_t restore_sigs([] { signal_set_handlers(true); });
+
+    // Ok, signal handlers are taken out of the picture. Stop ourself in a loop until we are in
+    // control of the terminal. However, the call to signal(SIGTTIN) may silently not do
+    // anything if we are orphaned.
+    //
+    // As far as I can tell there's no really good way to detect that we are orphaned. One way
+    // is to just detect if the group leader exited, via kill(shell_pgid, 0). Another
+    // possibility is that read() from the tty fails with EIO - this is more reliable but it's
+    // harder, because it may succeed or block. So we loop for a while, trying those strategies.
+    // Eventually we just give up and assume we're orphaend.
+    for (unsigned loop_count = 0;; loop_count++) {
+        pid_t owner = tcgetpgrp(STDIN_FILENO);
+        // 0 is a valid return code from `tcgetpgrp()` under at least FreeBSD and testing
+        // indicates that a subsequent call to `tcsetpgrp()` will succeed. 0 is the
+        // pid of the top-level kernel process, so I'm not sure if this means ownership
+        // of the terminal has gone back to the kernel (i.e. it's not owned) or if it is
+        // just an "invalid" pid for all intents and purposes.
+        if (owner == 0) {
+            tcsetpgrp(STDIN_FILENO, shell_pgid);
+            // Since we expect the above to work, call `tcgetpgrp()` immediately to
+            // avoid a second pass through this loop.
+            owner = tcgetpgrp(STDIN_FILENO);
+        }
+        if (owner == -1 && errno == ENOTTY) {
+            if (session_interactivity() == session_interactivity_t::not_interactive) {
+                // It's OK if we're not able to take control of the terminal. We handle
+                // the fallout from this in a few other places.
+                break;
             }
-            if (owner == -1 && errno == ENOTTY) {
-                if (session_interactivity() == session_interactivity_t::not_interactive) {
-                    // It's OK if we're not able to take control of the terminal. We handle
-                    // the fallout from this in a few other places.
-                    break;
-                }
-                // No TTY, cannot be interactive?
-                redirect_tty_output();
-                FLOGF(warning, _(L"No TTY for interactive shell (tcgetpgrp failed)"));
-                wperror(L"setpgid");
+            // No TTY, cannot be interactive?
+            redirect_tty_output();
+            FLOGF(warning, _(L"No TTY for interactive shell (tcgetpgrp failed)"));
+            wperror(L"setpgid");
+            exit_without_destructors(1);
+        }
+        if (owner == shell_pgid) {
+            break;  // success
+        } else {
+            if (check_for_orphaned_process(loop_count, shell_pgid)) {
+                // We're orphaned, so we just die. Another sad statistic.
+                const wchar_t *fmt =
+                    _(L"I appear to be an orphaned process, so I am quitting politely. "
+                      L"My pid is %d.");
+                FLOGF(warning, fmt, (int)getpid());
                 exit_without_destructors(1);
             }
-            if (owner == shell_pgid) {
-                break;  // success
-            } else {
-                if (check_for_orphaned_process(loop_count, shell_pgid)) {
-                    // We're orphaned, so we just die. Another sad statistic.
-                    const wchar_t *fmt =
-                        _(L"I appear to be an orphaned process, so I am quitting politely. "
-                          L"My pid is %d.");
-                    FLOGF(warning, fmt, (int)getpid());
-                    exit_without_destructors(1);
-                }
 
-                // Try stopping us.
-                int ret = killpg(shell_pgid, SIGTTIN);
-                if (ret < 0) {
-                    wperror(L"killpg(shell_pgid, SIGTTIN)");
-                    exit_without_destructors(1);
-                }
+            // Try stopping us.
+            int ret = killpg(shell_pgid, SIGTTIN);
+            if (ret < 0) {
+                wperror(L"killpg(shell_pgid, SIGTTIN)");
+                exit_without_destructors(1);
             }
         }
-
-        signal_set_handlers(parser.is_interactive());
     }
+}
+
+/// Initialize data for interactive use.
+static void reader_interactive_init(parser_t &parser) {
+    ASSERT_IS_MAIN_THREAD();
+
+    pid_t shell_pgid = getpgrp();
+
+    // Set up key bindings.
+    init_input();
+
+    // Ensure interactive signal handling is enabled.
+    signal_set_handlers_once(true);
+
+    // Wait until we own the terminal.
+    acquire_tty_or_exit(shell_pgid);
 
     // It shouldn't be necessary to place fish in its own process group and force control
     // of the terminal, but that works around fish being started with an invalid pgroup,

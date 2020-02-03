@@ -1435,7 +1435,6 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
     // The positions of variable expansions or brace ","s.
     // We only read braces as expanders if there's a variable expansion or "," in them.
     std::vector<size_t> vars_or_seps;
-    bool brace_text_start = false;
     int brace_count = 0;
 
     bool errored = false;
@@ -1531,7 +1530,6 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                         // assert(brace_count > 0 && "imbalanced brackets are a tokenizer error, we
                         // shouldn't be able to get here");
                         brace_count--;
-                        brace_text_start = brace_text_start && brace_count > 0;
                         to_append_or_none = BRACE_END;
                         if (!braces.empty()) {
                             // If we didn't have a var or separator since the last '{',
@@ -1559,17 +1557,13 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                 case L',': {
                     if (unescape_special && brace_count > 0) {
                         to_append_or_none = BRACE_SEP;
-                        brace_text_start = false;
                         vars_or_seps.push_back(input_position);
                     }
                     break;
                 }
-                case L'\n':
-                case L'\t':
                 case L' ': {
                     if (unescape_special && brace_count > 0) {
-                        to_append_or_none =
-                            brace_text_start ? maybe_t<wchar_t>(BRACE_SPACE) : none();
+                        to_append_or_none = BRACE_SPACE;
                     }
                     break;
                 }
@@ -1586,9 +1580,6 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     break;
                 }
                 default: {
-                    if (unescape_special && brace_count > 0) {
-                        brace_text_start = true;
-                    }
                     break;
                 }
             }

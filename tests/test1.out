@@ -7,20 +7,6 @@
 2b
 
 ####################
-# Brace expansion
-x-{1}
-x-1 x-2
-foo-1 foo-23 foo-24
-foo-{}
-foo-{} foo-{}
-foo-{a} foo-{}
-foo-{}
-banana
-
-foo- foo- foo- foo-
-foo- foo-, foo-
-
-####################
 # Escaped newlines
 foo bar
 foobar

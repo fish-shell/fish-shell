@@ -11,21 +11,6 @@ for i in 1 2 # Comment on same line as command
 	end;
 end
 
-logmsg Brace expansion
-echo x-{1}
-echo x-{1,2}
-echo foo-{1,2{3,4}}
-
-echo foo-{} # literal "{}" expands to itself
-echo foo-{{},{}} # the inner "{}" expand to themselves, the outer pair expands normally.
-echo foo-{{a},{}} # also works with something in the braces.
-echo foo-{""} # still expands to foo-{}
-echo banana # just as a marker
-echo foo-{$undefinedvar} # still expands to nothing
-
-echo foo-{,,,} # four empty items in the braces.
-echo foo-{,\,,} # an empty item, a "," and an empty item.
-
 logmsg Escaped newlines
 echo foo\ bar
 echo foo\

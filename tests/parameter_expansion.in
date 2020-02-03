@@ -14,12 +14,6 @@ echo \'{ hello , world }\'
 for phrase in {good\,,   beautiful ,morning}; echo -n "$phrase "; end | string trim;
 for phrase in {goodbye\,,\ cruel\ ,world\n}; echo -n $phrase; end;
 
-# whitespace within entries converted to spaces in a single entry
-for foo in {a, hello
-world }
-	echo \'$foo\'
-end
-
 # dual expansion cartesian product
 echo { alpha, beta }\ {lambda, gamma }, |  string replace -r ',$' ''
 

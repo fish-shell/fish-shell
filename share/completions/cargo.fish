@@ -35,7 +35,7 @@ end
 
 for x in bench build run rustc test
     complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l bin -d 'Only the specified binary'
-    complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l example -d 'Only the specified example'
+    complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l example -a "(cargo run --example 2>&1 | string replace -rf '^\s+' '')"
 end
 
 for x in build run rustc test

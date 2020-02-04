@@ -22,27 +22,34 @@ class parser_t;
 
 /// Helper class for storing a command line.
 class editable_line_t {
-   public:
     /// The command line.
-    wcstring text;
+    wcstring text_;
     /// The current position of the cursor in the command line.
-    size_t position;
+    size_t position_;
 
-    const wcstring &get_text() const { return text; }
+   public:
+    const wcstring &text() const { return text_; }
+
+    size_t position() const { return position_; }
+    void set_position(size_t position) { position_ = position; } 
+
+    // TODO remove these overloads!
+    wcstring &text() { return text_; }
+    size_t &position() { return position_; }
 
     // Gets the length of the text.
-    size_t size() const { return text.size(); }
+    size_t size() const { return text().size(); }
 
-    bool empty() const { return text.empty(); }
+    bool empty() const { return text().empty(); }
 
     void clear() {
-        text.clear();
-        position = 0;
+        text_.clear();
+        set_position(0);
     }
 
-    wchar_t at(size_t idx) { return text.at(idx); }
+    wchar_t at(size_t idx) { return text().at(idx); }
 
-    editable_line_t() : text(), position(0) {}
+    editable_line_t() : text_(), position_(0) {}
 
     /// Inserts a substring of str given by start, len at the cursor position.
     void insert_string(const wcstring &str, size_t start = 0, size_t len = wcstring::npos);

@@ -347,7 +347,7 @@ bool pager_t::completion_info_passes_filter(const comp_t &info) const {
     // If we have no filter, everything passes.
     if (!search_field_shown || this->search_field_line.empty()) return true;
 
-    const wcstring &needle = this->search_field_line.text;
+    const wcstring &needle = this->search_field_line.text();
 
     // We do full fuzzy matching just like the completion code itself.
     const fuzzy_match_type_t limit = fuzzy_match_none;
@@ -515,7 +515,7 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     }
 
     // Add the search field.
-    wcstring search_field_text = search_field_line.text;
+    wcstring search_field_text = search_field_line.text();
     // Append spaces to make it at least the required width.
     if (search_field_text.size() < PAGER_SEARCH_FIELD_WIDTH) {
         search_field_text.append(PAGER_SEARCH_FIELD_WIDTH - search_field_text.size(), L' ');
@@ -581,8 +581,8 @@ void pager_t::update_rendering(page_rendering_t *rendering) const {
         rendering->selected_completion_idx !=
             this->visual_selected_completion_index(rendering->rows, rendering->cols) ||
         rendering->search_field_shown != this->search_field_shown ||
-        rendering->search_field_line.text != this->search_field_line.text ||
-        rendering->search_field_line.position != this->search_field_line.position ||
+        rendering->search_field_line.text() != this->search_field_line.text() ||
+        rendering->search_field_line.position() != this->search_field_line.position() ||
         (rendering->remaining_to_disclose > 0 && this->fully_disclosed)) {
         *rendering = this->render();
     }
@@ -848,7 +848,7 @@ void pager_t::set_search_field_shown(bool flag) { this->search_field_shown = fla
 bool pager_t::is_search_field_shown() const { return this->search_field_shown; }
 
 size_t pager_t::cursor_position() const {
-    size_t result = std::wcslen(SEARCH_FIELD_PROMPT) + this->search_field_line.position;
+    size_t result = std::wcslen(SEARCH_FIELD_PROMPT) + this->search_field_line.position();
     // Clamp it to the right edge.
     if (available_term_width > 0 && result + 1 > available_term_width) {
         result = available_term_width - 1;

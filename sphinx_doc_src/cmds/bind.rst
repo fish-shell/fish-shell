@@ -172,6 +172,8 @@ The following special input functions are available:
 
 - ``up-line``, move up one line
 
+- ``undo`` and ``redo``, revert or redo the most recent edits on the command line
+
 - ``upcase-word``, make the current word uppercase
 
 - ``yank``, insert the latest entry of the killring into the buffer

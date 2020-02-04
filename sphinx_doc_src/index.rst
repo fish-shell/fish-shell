@@ -1440,6 +1440,10 @@ Emacs mode commands
 
 - :kbd:`Alt+t` transposes the last two words
 
+- :kbd:`Control+_` (:kbd:`Control+/` on some terminals) undoes the most recent edit of the line
+
+- :kbd:`Alt+/` reverts the most recent undo
+
 
 You can change these key bindings using the :ref:`bind <cmd-bind>` builtin.
 

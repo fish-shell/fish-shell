@@ -69,6 +69,8 @@ enum class readline_cmd_t {
     expand_abbr,
     delete_or_exit,
     cancel,
+    undo,
+    redo,
     repeat_jump,
     // NOTE: This one has to be last.
     reverse_repeat_jump

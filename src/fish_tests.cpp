@@ -2000,46 +2000,55 @@ static void test_abbreviations() {
     if (*mresult != L"bar") err(L"Wrong abbreviation result for foo");
 
     maybe_t<wcstring> result;
-    result = reader_expand_abbreviation_in_command(L"just a command", 3, vars);
+    auto expand_abbreviation_in_command = [](const wcstring &cmdline, size_t cursor_pos,
+                                             const environment_t &vars) -> maybe_t<wcstring> {
+        if (auto edit = reader_expand_abbreviation_in_command(cmdline, cursor_pos, vars)) {
+            wcstring cmdline_expanded = cmdline;
+            apply_edit(&cmdline_expanded, *edit);
+            return cmdline_expanded;
+        }
+        return none_t();
+    };
+    result = expand_abbreviation_in_command(L"just a command", 3, vars);
     if (result) err(L"Command wrongly expanded on line %ld", (long)__LINE__);
-    result = reader_expand_abbreviation_in_command(L"gc somebranch", 0, vars);
+    result = expand_abbreviation_in_command(L"gc somebranch", 0, vars);
     if (!result) err(L"Command not expanded on line %ld", (long)__LINE__);
 
-    result = reader_expand_abbreviation_in_command(L"gc somebranch", std::wcslen(L"gc"), vars);
+    result = expand_abbreviation_in_command(L"gc somebranch", std::wcslen(L"gc"), vars);
     if (!result) err(L"gc not expanded");
     if (result != L"git checkout somebranch")
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
 
     // Space separation.
-    result = reader_expand_abbreviation_in_command(L"gx somebranch", std::wcslen(L"gc"), vars);
+    result = expand_abbreviation_in_command(L"gx somebranch", std::wcslen(L"gc"), vars);
     if (!result) err(L"gx not expanded");
     if (result != L"git checkout somebranch")
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
 
-    result = reader_expand_abbreviation_in_command(L"echo hi ; gc somebranch",
-                                                   std::wcslen(L"echo hi ; g"), vars);
+    result = expand_abbreviation_in_command(L"echo hi ; gc somebranch", std::wcslen(L"echo hi ; g"),
+                                            vars);
     if (!result) err(L"gc not expanded on line %ld", (long)__LINE__);
     if (result != L"echo hi ; git checkout somebranch")
         err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
-    result = reader_expand_abbreviation_in_command(
-        L"echo (echo (echo (echo (gc ", std::wcslen(L"echo (echo (echo (echo (gc"), vars);
+    result = expand_abbreviation_in_command(L"echo (echo (echo (echo (gc ",
+                                            std::wcslen(L"echo (echo (echo (echo (gc"), vars);
     if (!result) err(L"gc not expanded on line %ld", (long)__LINE__);
     if (result != L"echo (echo (echo (echo (git checkout ")
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
 
     // If commands should be expanded.
-    result = reader_expand_abbreviation_in_command(L"if gc", std::wcslen(L"if gc"), vars);
+    result = expand_abbreviation_in_command(L"if gc", std::wcslen(L"if gc"), vars);
     if (!result) err(L"gc not expanded on line %ld", (long)__LINE__);
     if (result != L"if git checkout")
         err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result->c_str());
 
     // Others should not be.
-    result = reader_expand_abbreviation_in_command(L"of gc", std::wcslen(L"of gc"), vars);
+    result = expand_abbreviation_in_command(L"of gc", std::wcslen(L"of gc"), vars);
     if (result) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
     // Others should not be.
-    result = reader_expand_abbreviation_in_command(L"command gc", std::wcslen(L"command gc"), vars);
+    result = expand_abbreviation_in_command(L"command gc", std::wcslen(L"command gc"), vars);
     if (result) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
     vars.pop();
@@ -3259,6 +3268,64 @@ static void test_line_iterator() {
     line_iterator_t<wcstring> iter2(text2);
     while (iter2.next()) lines2.push_back(iter2.line());
     do_test((lines2 == wcstring_list_t{L"", L"", L"Alpha", L"Beta", L"Gamma", L"", L"Delta"}));
+}
+
+static void test_undo() {
+    say(L"Testing undo/redo setting and restoring text and cursor position.");
+
+    editable_line_t line;
+    do_test(!line.undo());  // nothing to undo
+    do_test(line.text() == L"");
+    do_test(line.position() == 0);
+    line.push_edit(edit_t(0, 0, L"a b c"));
+    do_test(line.text() == L"a b c");
+    do_test(line.position() == 5);
+    line.set_position(2);
+    line.replace_substring(2, 1, L"B");  // replacement right of cursor
+    do_test(line.text() == L"a B c");
+    line.undo();
+    do_test(line.text() == L"a b c");
+    do_test(line.position() == 2);
+    line.redo();
+    do_test(line.text() == L"a B c");
+    do_test(line.position() == 3);
+
+    do_test(!line.redo());  // nothing to redo
+
+    line.erase_substring(0, 2);  // deletion left of cursor
+    do_test(line.text() == L"B c");
+    do_test(line.position() == 1);
+    line.undo();
+    do_test(line.text() == L"a B c");
+    do_test(line.position() == 3);
+    line.redo();
+    do_test(line.text() == L"B c");
+    do_test(line.position() == 1);
+
+    line.replace_substring(0, line.size(), L"a b c");  // replacement left and right of cursor
+    do_test(line.text() == L"a b c");
+    do_test(line.position() == 5);
+
+    say(L"Testing undoing coalesced edits.");
+    line.clear();
+    line.insert_string(L"a");
+    line.insert_string(L"b");
+    line.insert_string(L"c");
+    do_test(line.undo_history.edits.size() == 1);
+    line.insert_string(L" ");
+    do_test(line.undo_history.edits.size() == 2);
+    line.undo();
+    line.undo();
+    line.redo();
+    do_test(line.text() == L"abc");
+    do_test(line.undo_history.edits.size() == 2);
+    // This removes the space insertion from the history, bu tdoes not coalesce with the first edit.
+    line.insert_string(L"d");
+    do_test(line.undo_history.edits.size() == 2);
+    line.insert_string(L"e");
+    do_test(line.text() == L"abcde");
+    line.undo();
+    do_test(line.text() == L"abc");
 }
 
 #define UVARS_PER_THREAD 8
@@ -5580,6 +5647,7 @@ int main(int argc, char **argv) {
     if (should_test_function("input")) test_input();
     if (should_test_function("io")) test_fd_set();
     if (should_test_function("line_iterator")) test_line_iterator();
+    if (should_test_function("undo")) test_undo();
     if (should_test_function("universal")) test_universal();
     if (should_test_function("universal")) test_universal_output();
     if (should_test_function("universal")) test_universal_parsing();

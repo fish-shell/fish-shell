@@ -69,6 +69,8 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
     bind --preset $argv \cf forward-char
     bind --preset $argv \cb backward-char
     bind --preset $argv \ct transpose-chars
+    bind --preset $argv \c_ undo
+    bind --preset $argv \e/ redo
     bind --preset $argv \et transpose-words
     bind --preset $argv \eu upcase-word
 

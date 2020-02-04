@@ -145,7 +145,10 @@ static const input_function_metadata_t input_function_metadata[] = {
     {readline_cmd_t::func_and, L"and"},
     {readline_cmd_t::expand_abbr, L"expand-abbr"},
     {readline_cmd_t::delete_or_exit, L"delete-or-exit"},
-    {readline_cmd_t::cancel, L"cancel"}};
+    {readline_cmd_t::cancel, L"cancel"},
+    {readline_cmd_t::undo, L"undo"},
+    {readline_cmd_t::redo, L"redo"},
+};
 
 static_assert(sizeof(input_function_metadata) / sizeof(input_function_metadata[0]) ==
                   input_function_count,

@@ -9,6 +9,7 @@
 ### Interactive improvements
 
 #### New or improved bindings
+- New readline commands `undo` (Ctrl+_) and `redo` (Alt-/) can be used to revert changes to the command line or the pager search field (#6570).
 
 #### Improved prompts
 - The default and example prompts print the correct exit status for commands prefixed with `not` (#6566).

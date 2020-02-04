@@ -20,39 +20,98 @@ class io_chain_t;
 class operation_context_t;
 class parser_t;
 
+/// An edit action that can be undone.
+struct edit_t {
+    /// When undoing the edit we use this to restore the previous cursor position.
+    size_t cursor_position_before_edit = 0;
+
+    /// The span of text that is replaced by this edit.
+    size_t offset, length;
+
+    /// The strings that are removed and added by this edit, respectively.
+    wcstring old, replacement;
+
+    explicit edit_t(size_t offset, size_t length, wcstring replacement)
+        : offset(offset), length(length), replacement(std::move(replacement)) {}
+
+    /// Used for testing.
+    bool operator==(const edit_t &other) const;
+};
+
+/// Modify a string according to the given edit.
+/// Currently exposed for testing only.
+void apply_edit(wcstring *target, const edit_t &edit);
+
+/// The history of all edits to some command line.
+struct undo_history_t {
+    /// The stack of edits that can be undone or redone atomically.
+    std::vector<edit_t> edits;
+
+    /// The position in the undo stack that corresponds to the current
+    /// state of the input line.
+    /// Invariants:
+    ///     edits_applied - 1 is the index of the next edit to undo.
+    ///     edits_applied     is the index of the next edit to redo.
+    ///
+    /// For example, if nothing was undone, edits_applied is edits.size().
+    /// If every single edit was undone, edits_applied is 0.
+    size_t edits_applied = 0;
+
+    /// Whether we allow the next edit to be grouped together with the
+    /// last one.
+    bool may_coalesce = false;
+
+    /// Empty the history.
+    void clear();
+};
+
 /// Helper class for storing a command line.
 class editable_line_t {
     /// The command line.
     wcstring text_;
     /// The current position of the cursor in the command line.
-    size_t position_;
+    size_t position_ = 0;
 
    public:
+    undo_history_t undo_history;
+
     const wcstring &text() const { return text_; }
+    /// Set the text directly without maintaining undo invariants. Use with caution.
+    void set_text_bypassing_undo_history(wcstring &&text) { text_ = text; }
 
     size_t position() const { return position_; }
-    void set_position(size_t position) { position_ = position; } 
-
-    // TODO remove these overloads!
-    wcstring &text() { return text_; }
-    size_t &position() { return position_; }
+    void set_position(size_t position) { position_ = position; }
 
     // Gets the length of the text.
     size_t size() const { return text().size(); }
 
     bool empty() const { return text().empty(); }
 
+    wchar_t at(size_t idx) { return text().at(idx); }
+
     void clear() {
-        text_.clear();
+        undo_history.clear();
+        if (empty()) return;
+        set_text_bypassing_undo_history(L"");
         set_position(0);
     }
 
-    wchar_t at(size_t idx) { return text().at(idx); }
+    /// Modify the commandline according to @edit. Most modifications to the
+    /// text should pass through this function. You can use one of the wrappers below.
+    void push_edit(edit_t &&edit);
 
-    editable_line_t() : text_(), position_(0) {}
-
+    /// Erase @length characters starting at @offset.
+    void erase_substring(size_t offset, size_t length);
+    /// Replace the text of length @length at @offset by @replacement.
+    void replace_substring(size_t offset, size_t length, wcstring &&replacement);
     /// Inserts a substring of str given by start, len at the cursor position.
     void insert_string(const wcstring &str, size_t start = 0, size_t len = wcstring::npos);
+
+    /// Undo the most recent edit that was not yet undone. Returns true on success.
+    bool undo();
+
+    /// Redo the most recent undo. Returns true on success.
+    bool redo();
 };
 
 /// Read commands from \c fd until encountering EOF.
@@ -216,8 +275,8 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline,
 
 /// Expand abbreviations at the given cursor position. Exposed for testing purposes only.
 /// \return none if no abbreviations were expanded, otherwise the new command line.
-maybe_t<wcstring> reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t cursor_pos,
-                                                        const environment_t &vars);
+maybe_t<edit_t> reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t cursor_pos,
+                                                      const environment_t &vars);
 
 /// Apply a completion string. Exposed for testing only.
 wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flags_t flags,

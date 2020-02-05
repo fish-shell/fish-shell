@@ -308,11 +308,12 @@ class io_buffer_t {
     /// Lock for appending.
     std::mutex append_lock_{};
 
-    /// Called in the background thread to run it.
-    void run_background_fillthread(autoclose_fd_t readfd);
+    /// Read a bit, filling the buffer. The append lock must be held.
+    /// \return positive on success, 0 if closed, -1 on error (in which case errno will be set).
+    ssize_t read_once(int fd);
 
-    /// Begin the background fillthread operation, reading from the given fd.
-    void begin_background_fillthread(autoclose_fd_t readfd);
+    /// Begin the fill operation, reading from the given fd in the background.
+    void begin_filling(autoclose_fd_t readfd);
 
     /// End the background fillthread operation.
     void complete_background_fillthread();

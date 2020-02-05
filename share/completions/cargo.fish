@@ -7,7 +7,7 @@ complete -c cargo -l list -d 'List installed commands'
 complete -c cargo -s v -l verbose -d 'Use verbose output'
 complete -c cargo -s q -l quiet -d 'No output printed to stdout'
 
-set __fish_cargo_subcommands (cargo --list | tail -n +2 | string trim | string replace -r '\s+' '\t')
+set __fish_cargo_subcommands (cargo --list 2>&1 | string replace -rf '^\s+([^\s]+)\s+(.*)' '$1\t$2')
 
 complete -c cargo -f -c cargo -n '__fish_use_subcommand' -a '$__fish_cargo_subcommands'
 complete -c cargo -x -c cargo -n '__fish_seen_subcommand_from help' -a '$__fish_cargo_subcommands'
@@ -28,13 +28,13 @@ for x in bench build clean doc run rustc test
 end
 
 for x in bench build rustc test
-    complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l bench -d 'Only the specified benchmark'
+    complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l bench -a "(cargo bench --bench 2>&1 | string replace -rf '^\s+' '')"
     complete -c cargo -n "__fish_seen_subcommand_from $x" -l lib -d 'Only this package\'s library'
-    complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l test -d 'Only the specified test'
+    complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l test -a "(cargo test --test 2>&1 | string replace -rf '^\s+' '')"
 end
 
 for x in bench build run rustc test
-    complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l bin -d 'Only the specified binary'
+    complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l bin -a "(cargo run --bin 2>&1 | string replace -rf '^\s+' '')"
     complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l example -a "(cargo run --example 2>&1 | string replace -rf '^\s+' '')"
 end
 

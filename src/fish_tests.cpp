@@ -49,6 +49,7 @@
 #include "event.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "fd_monitor.h"
 #include "function.h"
 #include "future_feature_flags.h"
 #include "highlight.h"
@@ -740,6 +741,107 @@ static int test_iothread_thread_call(std::atomic<int> *addr) {
         err(L"Failed to increment from background thread");
     }
     return after;
+}
+
+static void test_fd_monitor() {
+    say(L"Testing fd_monitor");
+
+    // Helper to make an item which counts how many times its callback is invoked.
+    struct item_maker_t {
+        std::atomic<bool> did_timeout{false};
+        std::atomic<size_t> length_read{0};
+        std::atomic<size_t> total_calls{0};
+        bool always_exit{false};
+        fd_monitor_item_t item;
+        autoclose_fd_t writer;
+
+        explicit item_maker_t(uint64_t timeout_usec) {
+            auto pipes = make_autoclose_pipes({}).acquire();
+            writer = std::move(pipes.write);
+            auto callback = [this](autoclose_fd_t &fd, bool timed_out) {
+                bool was_closed = false;
+                if (timed_out) {
+                    this->did_timeout = true;
+                } else {
+                    char buff[4096];
+                    ssize_t amt = read(fd.fd(), buff, sizeof buff);
+                    length_read += amt;
+                    was_closed = (amt == 0);
+                }
+                total_calls += 1;
+                if (always_exit || was_closed) {
+                    fd.close();
+                }
+            };
+            item = fd_monitor_item_t(std::move(pipes.read), std::move(callback), timeout_usec);
+        }
+
+        item_maker_t(const item_maker_t &) = delete;
+
+        // Write 42 bytes to our write end.
+        void write42() {
+            char buff[42] = {0};
+            (void)write_loop(writer.fd(), buff, sizeof buff);
+        }
+    };
+
+    constexpr uint64_t usec_per_msec = 1000;
+
+    // Items which will never receive data or be called back.
+    item_maker_t item_never(fd_monitor_item_t::kNoTimeout);
+    item_maker_t item_hugetimeout(100000000llu * usec_per_msec);
+
+    // Item which should get no data, and time out.
+    item_maker_t item0_timeout(16 * usec_per_msec);
+
+    // Item which should get exactly 42 bytes, then time out.
+    item_maker_t item42_timeout(16 * usec_per_msec);
+
+    // Item which should get exactly 42 bytes, and not time out.
+    item_maker_t item42_nottimeout(fd_monitor_item_t::kNoTimeout);
+
+    // Item which should get 42 bytes, then get notified it is closed.
+    item_maker_t item42_thenclose(16 * usec_per_msec);
+
+    // Item which should be called back once.
+    item_maker_t item_oneshot(16 * usec_per_msec);
+    item_oneshot.always_exit = true;
+    {
+        fd_monitor_t monitor;
+        for (auto *item : {&item_never, &item_hugetimeout, &item0_timeout, &item42_timeout,
+                           &item42_nottimeout, &item42_thenclose, &item_oneshot}) {
+            monitor.add(std::move(item->item));
+        }
+        item42_timeout.write42();
+        item42_nottimeout.write42();
+        item42_thenclose.write42();
+        item42_thenclose.writer.close();
+        item_oneshot.write42();
+        std::this_thread::sleep_for(std::chrono::milliseconds(84));
+    }
+
+    do_test(!item_never.did_timeout);
+    do_test(item_never.length_read == 0);
+
+    do_test(!item_hugetimeout.did_timeout);
+    do_test(item_hugetimeout.length_read == 0);
+
+    do_test(item0_timeout.length_read == 0);
+    do_test(item0_timeout.did_timeout);
+
+    do_test(item42_timeout.length_read == 42);
+    do_test(item42_timeout.did_timeout);
+
+    do_test(item42_nottimeout.length_read == 42);
+    do_test(!item42_nottimeout.did_timeout);
+
+    do_test(item42_thenclose.did_timeout == false);
+    do_test(item42_thenclose.length_read == 42);
+    do_test(item42_thenclose.total_calls == 2);
+
+    do_test(!item_oneshot.did_timeout);
+    do_test(item_oneshot.length_read == 42);
+    do_test(item_oneshot.total_calls == 1);
 }
 
 static void test_iothread() {
@@ -5447,6 +5549,7 @@ int main(int argc, char **argv) {
     if (should_test_function("convert")) test_convert();
     if (should_test_function("convert_nulls")) test_convert_nulls();
     if (should_test_function("tokenizer")) test_tokenizer();
+    if (should_test_function("fd_monitor")) test_fd_monitor();
     if (should_test_function("iothread")) test_iothread();
     if (should_test_function("pthread")) test_pthread();
     if (should_test_function("parser")) test_parser();

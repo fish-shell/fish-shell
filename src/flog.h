@@ -94,6 +94,7 @@ class category_list_t {
     category_t profile_history{L"profile-history", L"History performance measurements"};
 
     category_t iothread{L"iothread", L"Background IO thread events"};
+    category_t fd_monitor{L"fd-monitor", L"FD monitor events"};
 
     category_t term_support{L"term-support", L"Terminal feature detection"};
 

@@ -123,7 +123,7 @@ end
 # system utilities.
 #
 
-if test -d /usr/xpg4/bin
+if begin; not set -q FISH_UNIT_TESTS_RUNNING; and test -d /usr/xpg4/bin; end
     not contains -- /usr/xpg4/bin $PATH
     and set PATH /usr/xpg4/bin $PATH
 end

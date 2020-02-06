@@ -26,7 +26,7 @@ BuildRequires: gcc48 gcc48-c++ python-argparse
 %endif
 
 # for tests
-%if 0%{?fedora} || 0%{?rhel} && 0%{?rhel} > 7
+%if 0%{?fedora} || ( 0%{?rhel} && 0%{?rhel} > 7 )
 # Need the en_US.utf-8 locale at a minimum
 BuildRequires: glibc-langpack-en
 %endif

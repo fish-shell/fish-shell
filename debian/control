@@ -24,7 +24,7 @@ Description: friendly interactive shell
 Package: fish-common
 Architecture: all
 Depends: ${misc:Depends}
-Recommends: fish, python3 (>= 3.3) | python (>=2.7)
+Recommends: fish, python3 (>= 3.5)
 Suggests: xdg-utils
 Replaces: fish (<= 2.1.1.dfsg-2)
 Description: friendly interactive shell (architecture-independent files)

@@ -153,7 +153,7 @@ function help --description 'Show help for the fish shell'
         end
     else
         # Go to the web. Only include one dot in the version string
-        set -l version_string (echo $version| cut -d . -f 1,2)
+        set -l version_string (string cut --length 3 $version)
         set page_url https://fishshell.com/docs/$version_string/$fish_help_page
         # We don't need a trampoline for a remote URL.
         set need_trampoline

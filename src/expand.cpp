@@ -460,9 +460,9 @@ static bool expand_variables(wcstring instr, completion_list_t *out, size_t last
     return true;
 }
 
-/// Perform brace expansion.
-static expand_result_t expand_braces(const wcstring &instr, expand_flags_t flags,
-                                     completion_list_t *out, parse_error_list_t *errors) {
+/// Perform brace expansion, placing the expanded strings into \p out.
+static expand_result_t expand_braces(wcstring &&instr, expand_flags_t flags, completion_list_t *out,
+                                     parse_error_list_t *errors) {
     bool syntax_error = false;
     int brace_count = 0;
 
@@ -518,7 +518,7 @@ static expand_result_t expand_braces(const wcstring &instr, expand_flags_t flags
             }
 
             // Note: this code looks very fishy, apparently it has never worked.
-            return expand_braces(mod, expand_flag::skip_cmdsubst, out, errors);
+            return expand_braces(std::move(mod), expand_flag::skip_cmdsubst, out, errors);
         }
     }
 
@@ -528,7 +528,7 @@ static expand_result_t expand_braces(const wcstring &instr, expand_flags_t flags
     }
 
     if (brace_begin == nullptr) {
-        append_completion(out, instr);
+        append_completion(out, std::move(instr));
         return expand_result_t::ok;
     }
 
@@ -553,7 +553,7 @@ static expand_result_t expand_braces(const wcstring &instr, expand_flags_t flags
             whole_item.append(in, length_preceding_braces);
             whole_item.append(item.begin(), item.end());
             whole_item.append(brace_end + 1);
-            expand_braces(whole_item, flags, out, errors);
+            expand_braces(std::move(whole_item), flags, out, errors);
 
             item_begin = pos + 1;
             if (pos == brace_end) break;
@@ -921,7 +921,7 @@ expand_result_t expander_t::stage_variables(wcstring input, completion_list_t *o
 }
 
 expand_result_t expander_t::stage_braces(wcstring input, completion_list_t *out) {
-    return expand_braces(input, flags, out, errors);
+    return expand_braces(std::move(input), flags, out, errors);
 }
 
 expand_result_t expander_t::stage_home_and_self(wcstring input, completion_list_t *out) {

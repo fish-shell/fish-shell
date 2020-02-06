@@ -1,8 +1,29 @@
 # fish next-minor
 
+## Notable improvements and fixes
+
+### Syntax changes and new commands
+
+### Scripting improvements
+
+### Interactive improvements
+
+#### New or improved bindings
+
+#### Improved prompts
+- The default and example prompts print the correct exit status for commands prefixed with `not` (#6566).
+
+#### Improved terminal output
+
 #### Completions
 - Added completions for
   - `wireshark`, `tshark`, and `dumpcap`
+
+### Deprecations and removed features
+
+### For distributors and developers
+
+---
 
 # fish 3.1b1 (released January 26, 2020)
 

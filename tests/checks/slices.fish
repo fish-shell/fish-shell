@@ -3,6 +3,8 @@ set n 10
 set test (seq $n)
 echo $test[1..$n]      # normal range
 #CHECK: 1 2 3 4 5 6 7 8 9 10
+echo $test[1 .. 2]     # spaces are allowed
+#CHECK: 1 2
 echo $test[$n..1]      # inverted range
 #CHECK: 10 9 8 7 6 5 4 3 2 1
 echo $test[2..5 8..6]  # several ranges
@@ -31,3 +33,36 @@ echo $test[(count $test)..1]
 #CHECK: 10 9 8 7 6 5 4 3 2 1
 echo $test[1..(count $test)]
 #CHECK: 1 2 3 4 5 6 7 8 9 10
+
+echo $test[ .. ]
+#CHECK: 1 2 3 4 5 6 7 8 9 10
+echo $test[ ..3]
+#CHECK: 1 2 3
+echo $test[8.. ]
+#CHECK: 8 9 10
+echo $test[..2 5]
+# CHECK: 1 2 5
+echo $test[2 9..]
+# CHECK: 2 9 10
+
+# missing start, cannot use implied range
+echo $test[1..2..]
+#CHECKERR: {{.*}}: Invalid index value
+#CHECKERR: echo $test[1..2..]
+#CHECKERR:                ^
+echo $test[..1..2]
+#CHECKERR: {{.*}}: Invalid index value
+#CHECKERR: echo $test[..1..2]
+#CHECKERR:               ^
+
+set -l empty
+echo $test[ $empty..]
+#CHECK:
+echo $test[.."$empty"]
+#CHECK: 1 2 3 4 5 6 7 8 9 10
+echo $test["$empty"..]
+#CHECK: 1 2 3 4 5 6 7 8 9 10
+echo $test[ (true)..3]
+#CHECK:
+echo $test[ (string join \n 1 2 3)..3 ]
+#CHECK: 1 2 3 2 3 3

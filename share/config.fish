@@ -115,19 +115,6 @@ function : -d "no-op function"
     true
 end
 
-#
-# This is a Solaris-specific test to modify the PATH so that
-# Posix-conformant tools are used by default. It is separate from the
-# other PATH code because this directory needs to be prepended, not
-# appended, since it contains POSIX-compliant replacements for various
-# system utilities.
-#
-
-if test -d /usr/xpg4/bin
-    not contains -- /usr/xpg4/bin $PATH
-    and set PATH /usr/xpg4/bin $PATH
-end
-
 # Add a handler for when fish_user_path changes, so we can apply the same changes to PATH
 function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" --on-variable fish_user_paths
     set -l local_path $PATH

@@ -1,11 +1,15 @@
+#RUN: %fish %s
 ech\
 o echo
+#CHECK: echo
 
 buil\
 tin echo builtin echo
+#CHECK: builtin echo
 
 true; an\
 d echo true
+#CHECK: true
 
 \i\
 \U00000066\
@@ -15,6 +19,7 @@ d echo true
 \145n\
 d\
 ;
+#CHECK: if true
 
 'if'\
  true
@@ -23,3 +28,4 @@ d\
 en\
 d\
 ";
+#CHECK: if true

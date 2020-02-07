@@ -1,5 +1,4 @@
-# vim: set filetype=fish:
-#
+#RUN: %fish %s
 # Test the `functions` builtin
 
 function f1
@@ -15,10 +14,8 @@ end
 # ==========
 # Verify that `functions --details` works as expected when given the name of a
 # known function.
-set x (functions --details f1)
-if test "$x" != "stdin"
-    echo "Unexpected output for 'functions --details f1': $x" >&2
-end
+functions --details f1
+#CHECK: {{.*}}checks/functions.fish
 
 # ==========
 # Verify that `functions --details` works as expected when given the name of an
@@ -82,3 +79,4 @@ or echo "Failed to find description 2" >&2
 # so this is the best we can do.
 functions --erase ls
 type -t ls
+#CHECK: file

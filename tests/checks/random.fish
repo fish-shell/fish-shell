@@ -1,3 +1,4 @@
+#RUN: %fish %s
 set -l max 9223372036854775807
 set -l close_max 9223372036854775806
 set -l min -9223372036854775807
@@ -6,21 +7,37 @@ set -l diff_max 18446744073709551614
 
 # check failure cases
 random a
+#CHECKERR: random: Argument 'a' is not a valid integer
 random $diff_max
+#CHECKERR: random: Argument '18446744073709551614' is not a valid integer
 random -- 1 2 3 4
+#CHECKERR: random: Too many arguments
 random -- 10 -10
+#CHECKERR: random: END must be greater than START
 random -- 10 $diff_max
+#CHECKERR: random: Argument '18446744073709551614' is not a valid integer
 random -- 1 1d
 random -- 1 1c 10
+#CHECKERR: random: Argument '1d' is not a valid integer
+#CHECKERR: random: Argument '1c' is not a valid integer
 random -- 10 10
+#CHECKERR: random: END must be greater than START
 random -- 1 - 10
+#CHECKERR: random: Argument '-' is not a valid integer
 random -- 1 -1 10
+#CHECKERR: random: Argument '-1' is not a valid integer
 random -- 1 $min 10
+#CHECKERR: random: Argument '-9223372036854775807' is not a valid integer
 random -- 1 0 10
+#CHECKERR: random: STEP must be a positive integer
 random -- 1 11 10
+#CHECKERR: random: range contains only one possible value
 random -- 0 $diff_max $max
+#CHECKERR: random: range contains only one possible value
 random choice
+#CHECKERR: random: nothing to choose from
 random choic a b c
+#CHECKERR: random: Too many arguments
 
 function check_boundaries
     if not test $argv[1] -ge $argv[2] -a $argv[1] -le $argv[3] 

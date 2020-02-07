@@ -5,6 +5,7 @@
 ### Syntax changes and new commands
 
 ### Scripting improvements
+- Range limits in index range expansions like `$x[$start..$end]` may be omitted: `$start` and `$end` default to 1 and -1 (the last item) respectively.
 
 ### Interactive improvements
 

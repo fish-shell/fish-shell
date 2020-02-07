@@ -188,11 +188,20 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
         }
 
         const wchar_t *end;
-        long tmp = fish_wcstol(&in[pos], &end);
-        // We don't test `*end` as is typically done because we expect it to not be the null char.
-        // Ignore the case of errno==-1 because it means the end char wasn't the null char.
-        if (errno > 0) {
-            return pos;
+        long tmp;
+        if (idx.empty() && in[pos] == L'.' && in[pos + 1] == L'.') {
+            // If we are at the first index expression, a missing start index means the range starts
+            // at the first item.
+            tmp = 1; // first index
+            end = &in[pos];
+        } else {
+            tmp = fish_wcstol(&in[pos], &end);
+            if (errno > 0) {
+                // We don't test `*end` as is typically done because we expect it to not be the null
+                // char. Ignore the case of errno==-1 because it means the end char wasn't the null
+                // char.
+                return pos;
+            }
         }
 
         long i1 = tmp > -1 ? tmp : size + tmp + 1;
@@ -201,11 +210,20 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
         if (in[pos] == L'.' && in[pos + 1] == L'.') {
             pos += 2;
             while (in[pos] == INTERNAL_SEPARATOR) pos++;
+            while (iswspace(in[pos])) pos++; // Allow the space in "[.. ]".
 
-            long tmp1 = fish_wcstol(&in[pos], &end);
-            // Ignore the case of errno==-1 because it means the end char wasn't the null char.
-            if (errno > 0) {
-                return pos;
+            long tmp1;
+            // Check if we are at the last index range expression, a missing end index means the
+            // range spans until the last item.
+            if (in[pos] == L']') {
+                tmp1 = -1; // last index
+                end = &in[pos];
+            } else {
+                tmp1 = fish_wcstol(&in[pos], &end);
+                // Ignore the case of errno==-1 because it means the end char wasn't the null char.
+                if (errno > 0) {
+                    return pos;
+                }
             }
             pos = end - in;
 

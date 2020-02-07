@@ -661,6 +661,8 @@ Sequences of elements can be written with the range operator '``..``'. A range '
 
 If the end is smaller than the start, or the start is larger than the end, range expansion will go in reverse. This is unless exactly one of the given indices is negative, so the direction doesn't change if the list has fewer elements than expected.
 
+A missing starting index in a range defaults to 1. This is allowed if the range is the first index expression of the sequence. Similarly, a missing ending index, defaulting to -1 is allowed for the last index range in the sequence.
+
 Some examples::
 
 
@@ -671,6 +673,9 @@ Some examples::
     echo (seq 10)[2..5]
     # Uses elements from 2 to 5
     # Output is: 2 3 4 5
+
+    echo (seq 10)[7..]
+    # Prints: 7 8 9 10
 
     # Use overlapping ranges:
     echo (seq 10)[2..5 1..3]

@@ -1251,7 +1251,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
     bool wants_job_control =
         (job_control_mode == job_control_t::all) ||
         ((job_control_mode == job_control_t::interactive) && parser->is_interactive()) ||
-        lineage.root_has_job_control;
+        (lineage.job_tree && lineage.job_tree->wants_job_control());
 
     job_t::properties_t props{};
     props.wants_terminal = wants_job_control && !ld.is_event;

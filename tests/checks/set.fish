@@ -1,5 +1,4 @@
 # RUN: env XDG_CONFIG_HOME="$(mktemp -d)" FISH=%fish %fish %s
-
 # Environment variable tests
 
 # Test if variables can be properly set
@@ -479,5 +478,175 @@ $FISH -c 'set -S EDITOR' | string match -r -e 'global|universal'
 # CHECK: $EDITOR: set in global scope, exported, with 1 elements
 # CHECK: $EDITOR: set in universal scope, exported, with 2 elements
 sh -c "EDITOR='vim -g' $FISH -c "'\'set -S EDITOR\'' | string match -r -e 'global|universal'
+
+# Verify behavior of `set --show` given an invalid var name
+set --show 'argle bargle'
+#CHECKERR: $argle bargle: invalid var name
+
+# Verify behavior of `set --show`
+set semiempty ''
+set --show semiempty
+#CHECK: $semiempty: not set in local scope
+#CHECK: $semiempty: set in global scope, unexported, with 1 elements
+#CHECK: $semiempty[1]: length=0 value=||
+#CHECK: $semiempty: not set in universal scope
+
+set -U var1 hello
+set --show var1
+#CHECK: $var1: not set in local scope
+#CHECK: $var1: not set in global scope
+#CHECK: $var1: set in universal scope, unexported, with 1 elements
+#CHECK: $var1[1]: length=5 value=|hello|
+
+set -l var1
+set -g var1 goodbye "and don't come back"
+set --show var1
+#CHECK: $var1: set in local scope, unexported, with 0 elements
+#CHECK: $var1: set in global scope, unexported, with 2 elements
+#CHECK: $var1[1]: length=7 value=|goodbye|
+#CHECK: $var1[2]: length=19 value=|and don\'t come back|
+#CHECK: $var1: set in universal scope, unexported, with 1 elements
+#CHECK: $var1[1]: length=5 value=|hello|
+
+set -g var2
+set --show _unset_var var2
+#CHECK: $_unset_var: not set in local scope
+#CHECK: $_unset_var: not set in global scope
+#CHECK: $_unset_var: not set in universal scope
+#CHECK: 
+#CHECK: $var2: not set in local scope
+#CHECK: $var2: set in global scope, unexported, with 0 elements
+#CHECK: $var2: not set in universal scope
+
+# Appending works
+set -g var3a a b c
+set -a var3a
+set -a var3a d
+set -a var3a e f
+set --show var3a
+#CHECK: $var3a: not set in local scope
+#CHECK: $var3a: set in global scope, unexported, with 6 elements
+#CHECK: $var3a[1]: length=1 value=|a|
+#CHECK: $var3a[2]: length=1 value=|b|
+#CHECK: $var3a[3]: length=1 value=|c|
+#CHECK: $var3a[4]: length=1 value=|d|
+#CHECK: $var3a[5]: length=1 value=|e|
+#CHECK: $var3a[6]: length=1 value=|f|
+#CHECK: $var3a: not set in universal scope
+set -g var3b
+set -a var3b
+set --show var3b
+#CHECK: $var3b: not set in local scope
+#CHECK: $var3b: set in global scope, unexported, with 0 elements
+#CHECK: $var3b: not set in universal scope
+set -g var3c
+set -a var3c 'one string'
+set --show var3c
+#CHECK: $var3c: not set in local scope
+#CHECK: $var3c: set in global scope, unexported, with 1 elements
+#CHECK: $var3c[1]: length=10 value=|one string|
+#CHECK: $var3c: not set in universal scope
+
+# Prepending works
+set -g var4a a b c
+set -p var4a
+set -p var4a d
+set -p var4a e f
+set --show var4a
+#CHECK: $var4a: not set in local scope
+#CHECK: $var4a: set in global scope, unexported, with 6 elements
+#CHECK: $var4a[1]: length=1 value=|e|
+#CHECK: $var4a[2]: length=1 value=|f|
+#CHECK: $var4a[3]: length=1 value=|d|
+#CHECK: $var4a[4]: length=1 value=|a|
+#CHECK: $var4a[5]: length=1 value=|b|
+#CHECK: $var4a[6]: length=1 value=|c|
+#CHECK: $var4a: not set in universal scope
+set -g var4b
+set -p var4b
+set --show var4b
+#CHECK: $var4b: not set in local scope
+#CHECK: $var4b: set in global scope, unexported, with 0 elements
+#CHECK: $var4b: not set in universal scope
+set -g var4c
+set -p var4c 'one string'
+set --show var4c
+#CHECK: $var4c: not set in local scope
+#CHECK: $var4c: set in global scope, unexported, with 1 elements
+#CHECK: $var4c[1]: length=10 value=|one string|
+#CHECK: $var4c: not set in universal scope
+
+# Appending and prepending at same time works
+set -g var5 abc def
+set -a -p var5 0 x 0
+set --show var5
+#CHECK: $var5: not set in local scope
+#CHECK: $var5: set in global scope, unexported, with 8 elements
+#CHECK: $var5[1]: length=1 value=|0|
+#CHECK: $var5[2]: length=1 value=|x|
+#CHECK: $var5[3]: length=1 value=|0|
+#CHECK: $var5[4]: length=3 value=|abc|
+#CHECK: $var5[5]: length=3 value=|def|
+#CHECK: $var5[6]: length=1 value=|0|
+#CHECK: $var5[7]: length=1 value=|x|
+#CHECK: $var5[8]: length=1 value=|0|
+#CHECK: $var5: not set in universal scope
+
+# Setting local scope when no local scope of the var uses the closest scope
+set -g var6 ghi jkl
+begin
+    set -l -a var6 mno
+    set --show var6
+end
+#CHECK: $var6: set in local scope, unexported, with 3 elements
+#CHECK: $var6[1]: length=3 value=|ghi|
+#CHECK: $var6[2]: length=3 value=|jkl|
+#CHECK: $var6[3]: length=3 value=|mno|
+#CHECK: $var6: set in global scope, unexported, with 2 elements
+#CHECK: $var6[1]: length=3 value=|ghi|
+#CHECK: $var6[2]: length=3 value=|jkl|
+#CHECK: $var6: not set in universal scope
+
+# Exporting works
+set -x TESTVAR0
+set -x TESTVAR1 a
+set -x TESTVAR2 a b
+env | grep TESTVAR | cat -v
+#CHECK: TESTVAR0=
+#CHECK: TESTVAR1=a
+#CHECK: TESTVAR2=a b
+
+# if/for/while scope
+function test_ifforwhile_scope
+    if set -l ifvar1 (true && echo val1) ; end
+    if set -l ifvar2 (echo val2 && false) ; end
+    if false ; else if set -l ifvar3 (echo val3 && false) ; end
+    while set -l whilevar1 (echo val3 ; false) ; end
+    set --show ifvar1 ifvar2 ifvar3 whilevar1
+end
+test_ifforwhile_scope
+#CHECK: $ifvar1: set in local scope, unexported, with 1 elements
+#CHECK: $ifvar1[1]: length=4 value=|val1|
+#CHECK: $ifvar1: not set in global scope
+#CHECK: $ifvar1: not set in universal scope
+#CHECK: 
+#CHECK: $ifvar2: set in local scope, unexported, with 1 elements
+#CHECK: $ifvar2[1]: length=4 value=|val2|
+#CHECK: $ifvar2: not set in global scope
+#CHECK: $ifvar2: not set in universal scope
+#CHECK: 
+#CHECK: $ifvar3: set in local scope, unexported, with 1 elements
+#CHECK: $ifvar3[1]: length=4 value=|val3|
+#CHECK: $ifvar3: not set in global scope
+#CHECK: $ifvar3: not set in universal scope
+#CHECK: 
+#CHECK: $whilevar1: set in local scope, unexported, with 1 elements
+#CHECK: $whilevar1[1]: length=4 value=|val3|
+#CHECK: $whilevar1: not set in global scope
+#CHECK: $whilevar1: not set in universal scope
+
+# $status should always be read-only, setting it makes no sense because it's immediately overwritten.
+set -g status 5
+#CHECKERR: set: Tried to change the read-only variable 'status'
 
 true

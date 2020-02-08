@@ -154,6 +154,41 @@ class internal_proc_t {
 ///   function
 enum { INVALID_PID = -2 };
 
+/// job_tree_t is conceptually similar to the idea of a process group. It represents data which
+/// is shared among all of the "subjobs" that may be spawned by a single job.
+/// For example, two fish functions in a pipeline may themselves spawn multiple jobs, but all will
+/// share the same job tree.
+/// There is also a notion of a "placeholder" job tree. Placeholders are used when executing a
+/// foreground function or block. These are not jobs as the user understands them - they do not
+/// consume a job ID, they do not show up in job lists, and they do not have a pgid because they
+/// contain no external procs.
+/// Note that job_tree_t is intended to eventually be shared between threads, and so must be thread
+/// safe.
+class job_t;
+class job_tree_t;
+using job_tree_ref_t = std::shared_ptr<job_tree_t>;
+
+class job_tree_t {
+   public:
+    /// Set the pgid for this job tree, latching it to this value.
+    /// The pgid should not already have been set.
+    /// Of course this does not keep the pgid alive by itself.
+    /// The placeholder job tree does not have a pgid and it is an error to set it.
+    void set_pgid(pid_t pgid);
+
+    /// Get the pgid, or none() if it has not been set.
+    maybe_t<pid_t> get_pgid() const;
+
+    /// \return whether this is a placeholder.
+    bool is_placeholder() const { return is_placeholder_; }
+
+   private:
+    maybe_t<pid_t> pgid_{};
+    const bool is_placeholder_;
+
+    explicit job_tree_t(bool placeholder);
+};
+
 /// A structure representing a single fish process. Contains variables for tracking process state
 /// and the process argument list. Actually, a fish process can be either a regular external
 /// process, an internal builtin which may or may not spawn a fake IO process during execution, a

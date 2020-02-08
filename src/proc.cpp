@@ -235,6 +235,16 @@ void print_exit_warning_for_jobs(const job_list_t &jobs) {
     fputws(_(L"Use 'disown PID' to remove jobs from the list without terminating them.\n"), stdout);
 }
 
+job_tree_t::job_tree_t(bool placeholder) : is_placeholder_(placeholder) {}
+
+void job_tree_t::set_pgid(pid_t pgid) {
+    // TODO: thread safety?
+    assert(!pgid_.has_value() && "Already has a pgid");
+    assert(!is_placeholder() && "Cannot set a pgid on the placeholder");
+    assert(pgid >= 0 && "Invalid pgid");
+    pgid_ = pgid;
+}
+
 void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *failed_proc) {
     // The given process failed to even lift off (e.g. posix_spawn failed) and so doesn't have a
     // valid pid. Mark it and everything after it as dead.

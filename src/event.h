@@ -118,7 +118,7 @@ void event_enqueue_signal(int signal);
 void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter);
 
 /// Returns a string describing the specified event.
-wcstring event_get_desc(const event_t &e);
+wcstring event_get_desc(const parser_t &parser, const event_t &e);
 
 /// Fire a generic event with the specified name.
 void event_fire_generic(parser_t &parser, const wchar_t *name,

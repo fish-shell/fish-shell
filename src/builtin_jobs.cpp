@@ -203,7 +203,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                                                   argv[i]);
                         return STATUS_INVALID_ARGS;
                     }
-                    j = job_t::from_pid(pid);
+                    j = parser.job_get_from_pid(pid);
                 }
 
                 if (j && !j->is_completed() && j->is_constructed()) {

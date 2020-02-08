@@ -90,7 +90,7 @@ int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Background all existing jobs that match the pids.
     // Non-existent jobs aren't an error, but information about them is useful.
     for (auto p : pids) {
-        if (job_t *j = job_t::from_pid(p)) {
+        if (job_t *j = parser.job_get_from_pid(p)) {
             retval |= send_to_bg(parser, streams, j);
         } else {
             streams.err.append_format(_(L"%ls: Could not find job '%d'\n"), cmd, p);

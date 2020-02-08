@@ -517,9 +517,6 @@ class job_t {
     /// Return the job instance matching this unique job id.
     /// If id is 0 or less, return the last job used.
     static job_t *from_job_id(job_id_t id);
-
-    /// Return the job containing the process identified by the unique pid provided.
-    static job_t *from_pid(pid_t pid);
 };
 
 /// Whether this shell is attached to the keyboard at all.

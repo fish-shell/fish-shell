@@ -123,11 +123,6 @@ job_t *job_t::from_job_id(job_id_t id) {
     return parser_t::principal_parser().job_get(id);
 }
 
-job_t *job_t::from_pid(pid_t pid) {
-    ASSERT_IS_MAIN_THREAD();
-    return parser_t::principal_parser().job_get_from_pid(pid);
-}
-
 /// Return true if all processes in the job have stopped or completed.
 bool job_t::is_stopped() const {
     for (const process_ptr_t &p : processes) {

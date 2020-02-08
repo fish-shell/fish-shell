@@ -56,7 +56,7 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         bool found_job = false;
         int pid = fish_wcstoi(argv[optind]);
         if (errno == 0 && pid > 0) {
-            found_job = (job_t::from_pid(pid) != nullptr);
+            found_job = (parser.job_get_from_pid(pid) != nullptr);
         }
 
         if (found_job) {
@@ -73,7 +73,7 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, argv[optind]);
             builtin_print_error_trailer(parser, streams.err, cmd);
         } else {
-            job = job_t::from_pid(pid);
+            job = parser.job_get_from_pid(pid);
             if (!job || !job->is_constructed() || job->is_completed()) {
                 streams.err.append_format(_(L"%ls: No suitable job: %d\n"), cmd, pid);
                 job = nullptr;

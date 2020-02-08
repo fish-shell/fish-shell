@@ -138,7 +138,7 @@ static int event_is_blocked(parser_t &parser, const event_t &e) {
     return event_block_list_blocks_type(parser.global_event_blocks);
 }
 
-wcstring event_get_desc(const event_t &evt) {
+wcstring event_get_desc(const parser_t &parser, const event_t &evt) {
     const event_description_t &ed = evt.desc;
     switch (ed.type) {
         case event_type_t::signal: {
@@ -155,7 +155,7 @@ wcstring event_get_desc(const event_t &evt) {
                 return format_string(_(L"exit handler for process %d"), ed.param1.pid);
             } else {
                 // In events, PGIDs are stored as negative PIDs
-                job_t *j = job_t::from_pid(-ed.param1.pid);
+                job_t *j = parser.job_get_from_pid(-ed.param1.pid);
                 if (j) {
                     return format_string(_(L"exit handler for job %d, '%ls'"), j->job_id(),
                                          j->command_wcstr());

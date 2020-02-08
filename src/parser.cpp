@@ -340,8 +340,8 @@ operation_context_t parser_t::context() {
 }
 
 /// Append stack trace info for the block \p b to \p trace.
-static void append_block_description_to_stack_trace(const block_t &b, wcstring &trace,
-                                                    const environment_t &vars) {
+static void append_block_description_to_stack_trace(const parser_t &parser, const block_t &b,
+                                                    wcstring &trace) {
     bool print_call_site = false;
     switch (b.type()) {
         case block_type_t::function_call:
@@ -375,13 +375,13 @@ static void append_block_description_to_stack_trace(const block_t &b, wcstring &
         case block_type_t::source: {
             const wchar_t *source_dest = b.sourced_file;
             append_format(trace, _(L"from sourcing file %ls\n"),
-                          user_presentable_path(source_dest, vars).c_str());
+                          user_presentable_path(source_dest, parser.vars()).c_str());
             print_call_site = true;
             break;
         }
         case block_type_t::event: {
             assert(b.event && "Should have an event");
-            wcstring description = event_get_desc(*b.event);
+            wcstring description = event_get_desc(parser, *b.event);
             append_format(trace, _(L"in event handler: %ls\n"), description.c_str());
             print_call_site = true;
             break;
@@ -403,7 +403,7 @@ static void append_block_description_to_stack_trace(const block_t &b, wcstring &
         const wchar_t *file = b.src_filename;
         if (file) {
             append_format(trace, _(L"\tcalled on line %d of file %ls\n"), b.src_lineno,
-                          user_presentable_path(file, vars).c_str());
+                          user_presentable_path(file, parser.vars()).c_str());
         } else if (is_within_fish_initialization()) {
             append_format(trace, _(L"\tcalled during startup\n"));
         }
@@ -413,7 +413,7 @@ static void append_block_description_to_stack_trace(const block_t &b, wcstring &
 wcstring parser_t::stack_trace() const {
     wcstring trace;
     for (const auto &b : blocks()) {
-        append_block_description_to_stack_trace(b, trace, vars());
+        append_block_description_to_stack_trace(*this, b, trace);
 
         // Stop at event handler. No reason to believe that any other code is relevant.
         //

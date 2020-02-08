@@ -1283,17 +1283,13 @@ eval_result_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_node,
     // We are about to populate a job. One possible argument to the job is a command substitution
     // which may be interested in the job that's populating it, via '--on-job-exit caller'. Record
     // the job ID here.
-    auto &libdata = parser->libdata();
-    const auto saved_caller_jid = libdata.caller_job_id;
-    libdata.caller_job_id = job->job_id();
+    scoped_push<internal_job_id_t> caller_id(&parser->libdata().caller_id, job->internal_job_id);
 
     // Populate the job. This may fail for reasons like command_not_found. If this fails, an error
     // will have been printed.
     eval_result_t pop_result =
         this->populate_job_from_job_node(job.get(), job_node, associated_block);
-
-    assert(libdata.caller_job_id == job->job_id() && "Caller job ID unexpectedly changed");
-    parser->libdata().caller_job_id = saved_caller_jid;
+    caller_id.restore();
 
     // Store time it took to 'parse' the command.
     if (profile_item != nullptr) {

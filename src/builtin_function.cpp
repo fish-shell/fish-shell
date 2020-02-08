@@ -104,19 +104,15 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
                 event_description_t e(event_type_t::any);
 
                 if ((opt == 'j') && (wcscasecmp(w.woptarg, L"caller") == 0)) {
-                    job_id_t job_id = -1;
-
-                    if (parser.libdata().is_subshell) {
-                        job_id = parser.libdata().caller_job_id;
-                    }
-
-                    if (job_id == -1) {
+                    internal_job_id_t caller_id =
+                        parser.libdata().is_subshell ? parser.libdata().caller_id : 0;
+                    if (caller_id == 0) {
                         streams.err.append_format(
                             _(L"%ls: Cannot find calling job for event handler"), cmd);
                         return STATUS_INVALID_ARGS;
                     }
-                    e.type = event_type_t::job_exit;
-                    e.param1.job_id = job_id;
+                    e.type = event_type_t::caller_exit;
+                    e.param1.caller_id = caller_id;
                 } else if ((opt == 'p') && (wcscasecmp(w.woptarg, L"%self") == 0)) {
                     pid = getpid();
                     e.type = event_type_t::exit;

@@ -183,8 +183,8 @@ static wcstring functions_def(const wcstring &name) {
                     append_format(out, L" --on-job-exit %d", -d.param1.pid);
                 break;
             }
-            case event_type_t::job_exit: {
-                const job_t *j = job_t::from_job_id(d.param1.job_id);
+            case event_type_t::caller_exit: {
+                const job_t *j = job_t::from_job_id(d.param1.caller_id);
                 if (j) append_format(out, L" --on-job-exit %d", j->pgid);
                 break;
             }

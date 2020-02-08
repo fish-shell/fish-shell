@@ -148,9 +148,9 @@ struct library_data_t {
     /// Whether we are currently cleaning processes.
     bool is_cleaning_procs{false};
 
-    /// The job id of the job being populated.
+    /// The internal job id of the job being populated, or 0 if none.
     /// This supports the '--on-job-exit caller' feature.
-    job_id_t caller_job_id{-1};
+    internal_job_id_t caller_id{0};
 
     /// Whether we are running a subshell command.
     bool is_subshell{false};

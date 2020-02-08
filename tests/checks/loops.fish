@@ -78,3 +78,15 @@ false
 while false; end
 echo "Empty Loop Status: $status"
 #CHECK: Empty Loop Status: 0
+
+# Loop control in conditions, should have no output.
+for i in 1 2 3
+   while break; end
+   echo $i
+end
+for i in 1 2 3
+   while continue; end
+   echo $i
+end
+
+if false ; or --help ; end

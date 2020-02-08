@@ -70,3 +70,7 @@ end
 false; echo_last; echo $status #1
 #CHECK: 1
 #CHECK: 0
+
+# Verify that if swallows failure - see #1061
+if false ; end ; echo $status
+#CHECK: 0

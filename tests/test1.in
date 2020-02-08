@@ -138,49 +138,6 @@ echo "/bin/echo pipe 10 <&10 10<&-" | source 10<&0
 echo "/bin/echo pipe 11 <&11 11<&-" | source 11<&0
 echo "/bin/echo pipe 12 <&12 12<&-" | source 12<&0
 
-logmsg "Make sure while loops don't run forever with no-exec (#1543)"
-echo "Checking for infinite loops in no-execute"
-echo "while true; end" | ../test/root/bin/fish --no-execute
-
-logmsg "For loops with read-only vars is an error (#4342)"
-for status in a b c
-  echo $status
-end
-
-logmsg "That goes for non-electric ones as well (#5548)"
-for hostname in a b c
-    echo $hostname
-end
-
-logmsg For loop control vars available outside the for block
-begin
-  set -l loop_var initial-value
-  for loop_var in a b c
-    # do nothing
-  end
-  set --show loop_var
-end
-
-set -g loop_var global_val
-function loop_test
-  for loop_var in a b c
-    if test $loop_var = b
-      break
-    end
-  end
-  set --show loop_var
-end
-loop_test
-set --show loop_var
-
-begin
-  set -l loop_var
-  for loop_var in aa bb cc
-  end
-  set --show loop_var
-end
-set --show loop_var
-
 logmsg 'Comments allowed in between lines (#1987)'
 echo before comment \
   # comment

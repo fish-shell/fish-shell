@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %fish -C 'set -g fish %fish' %s
 
 function never_runs
 	while false
@@ -36,11 +36,11 @@ function set_status ; return $argv[1]; end
 # loop body.
 set_status 36
 while begin
-     set -l saved $status
-     echo "Condition Status: $status"
-     set_status $saved
-  end
-  true
+    set -l saved $status
+    echo "Condition Status: $status"
+    set_status $saved
+end
+true
 end
 #CHECK: Condition Status: 36
 
@@ -81,12 +81,86 @@ echo "Empty Loop Status: $status"
 
 # Loop control in conditions, should have no output.
 for i in 1 2 3
-   while break; end
-   echo $i
+    while break; end
+    echo $i
 end
 for i in 1 2 3
-   while continue; end
-   echo $i
+    while continue; end
+    echo $i
 end
 
 if false ; or --help ; end
+
+# Make sure while loops don't run forever with no-exec (#1543)
+echo "while true; end" | $fish --no-execute
+
+# For loops with read-only vars is an error (#4342)
+for status in a b c
+    echo $status
+end
+#CHECKERR: {{.*}}loops.fish (line {{\d+}}): You cannot use read-only variable 'status' in a for loop
+#CHECKERR: for status in a b c
+#CHECKERR: ^
+
+# "That goes for non-electric ones as well (#5548)"
+for hostname in a b c
+    echo $hostname
+end
+#CHECKERR: {{.*}}loops.fish (line {{\d+}}): You cannot use read-only variable 'hostname' in a for loop
+#CHECKERR: for hostname in a b c
+#CHECKERR: ^
+
+# For loop control vars available outside the for block
+begin
+    set -l loop_var initial-value
+    for loop_var in a b c
+        # do nothing
+    end
+    set --show loop_var
+end
+
+set -g loop_var global_val
+function loop_test
+    for loop_var in a b c
+        if test $loop_var = b
+            break
+        end
+    end
+    set --show loop_var
+end
+loop_test
+set --show loop_var
+
+begin
+    set -l loop_var
+    for loop_var in aa bb cc
+    end
+    set --show loop_var
+end
+set --show loop_var
+#CHECK: $loop_var: set in local scope, unexported, with 1 elements
+#CHECK: $loop_var[1]: length=1 value=|c|
+#CHECK: $loop_var: not set in global scope
+#CHECK: $loop_var: not set in universal scope
+#CHECK: 
+#CHECK: $loop_var: set in local scope, unexported, with 1 elements
+#CHECK: $loop_var[1]: length=1 value=|b|
+#CHECK: $loop_var: set in global scope, unexported, with 1 elements
+#CHECK: $loop_var[1]: length=10 value=|global_val|
+#CHECK: $loop_var: not set in universal scope
+#CHECK: 
+#CHECK: $loop_var: not set in local scope
+#CHECK: $loop_var: set in global scope, unexported, with 1 elements
+#CHECK: $loop_var[1]: length=10 value=|global_val|
+#CHECK: $loop_var: not set in universal scope
+#CHECK: 
+#CHECK: $loop_var: set in local scope, unexported, with 1 elements
+#CHECK: $loop_var[1]: length=2 value=|cc|
+#CHECK: $loop_var: set in global scope, unexported, with 1 elements
+#CHECK: $loop_var[1]: length=10 value=|global_val|
+#CHECK: $loop_var: not set in universal scope
+#CHECK: 
+#CHECK: $loop_var: not set in local scope
+#CHECK: $loop_var: set in global scope, unexported, with 1 elements
+#CHECK: $loop_var[1]: length=10 value=|global_val|
+#CHECK: $loop_var: not set in universal scope

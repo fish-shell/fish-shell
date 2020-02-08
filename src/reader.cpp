@@ -1997,10 +1997,10 @@ void reader_data_t::update_command_line_from_history_search() {
     }
     if (history_search.by_token()) {
         replace_current_token(std::move(new_text));
-    } else {
-        assert((history_search.by_line() || history_search.by_prefix()) &&
-               "Unknown history search type");
+    } else if (history_search.by_line() || history_search.by_prefix()) {
         el->replace_substring(0, el->size(), std::move(new_text));
+    } else {
+        return;
     }
     command_line_has_transient_edit = true;
     assert(el == &command_line);

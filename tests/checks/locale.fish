@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %fish -C "set fish %fish" %s
 # A function to display bytes, necessary because GNU and BSD implementations of `od` have different output.
 # We used to use xxd, but it's not available everywhere. See #3797.
 #
@@ -56,7 +56,7 @@ end
 # output should be "58c3bb58" for the first statement and "58c3bc58" for the
 # second.
 echo -n X\u00FBX | display_bytes
-echo X\u00FCX | env LC_ALL=C ../test/root/bin/fish -c 'read foo; echo -n $foo' | display_bytes
+echo X\u00FCX | env LC_ALL=C $fish -c 'read foo; echo -n $foo' | display_bytes
 #CHECK: 0000000 130 303 273 130
 #CHECK: 0000004
 #CHECK: 0000000 130 303 274 130
@@ -70,13 +70,13 @@ echo X\u00FCX | env LC_ALL=C ../test/root/bin/fish -c 'read foo; echo -n $foo' |
 # few single-byte unicode chars (that are not ASCII) are generally in the
 # ISO 8859-x char sets which are encompassed by the C locale. The output should
 # be "59fc59".
-env LC_ALL=C ../test/root/bin/fish -c 'echo -n Y\u00FCY' | display_bytes
+env LC_ALL=C $fish -c 'echo -n Y\u00FCY' | display_bytes
 #CHECK: 0000000 131 374 131
 #CHECK: 0000003
 
 # The user can specify a wide unicode character (one requiring more than a
 # single byte). In the C/POSIX locales we substitute a question-mark for the
 # unencodable wide char. The output should be "543f54".
-env LC_ALL=C ../test/root/bin/fish -c 'echo -n T\u01FDT' | display_bytes
+env LC_ALL=C $fish -c 'echo -n T\u01FDT' | display_bytes
 #CHECK: 0000000 124 077 124
 #CHECK: 0000003

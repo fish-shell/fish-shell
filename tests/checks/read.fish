@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %fish -C "set fish %fish" %s
 # Set term again explicitly to ensure behavior.
 set -gx TERM xterm
 # Read with no vars is not an error
@@ -245,7 +245,7 @@ if test (string length "$x") -ne $fish_read_limit
 end
 
 # Confirm reading non-interactively works -- \#4206 regression
-echo abc\ndef | ../test/root/bin/fish -i -c 'read a; read b; set --show a; set --show b'
+echo abc\ndef | $fish -i -c 'read a; read b; set --show a; set --show b'
 #CHECK: $a: not set in local scope
 #CHECK: $a: set in global scope, unexported, with 1 elements
 #CHECK: $a[1]: length=3 value=|abc|

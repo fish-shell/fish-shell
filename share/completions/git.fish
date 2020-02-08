@@ -1606,6 +1606,9 @@ complete -c git -n '__fish_git_using_command rev-parse' -l abbrev-ref -d 'A non-
 ### revert
 complete -f -c git -n __fish_git_needs_command -a revert -d 'Revert an existing commit'
 complete -f -c git -n '__fish_git_using_command revert' -ka '(__fish_git_commits)'
+complete -f -c git -n '__fish_git_using_command revert' -l continue -d 'Continue the operation in progress'
+complete -f -c git -n '__fish_git_using_command revert' -l abort -d 'Cancel the operation'
+complete -f -c git -n '__fish_git_using_command revert' -l skip -d 'Skip the current commit and continue with the rest of the sequence'
 # TODO options
 
 ### rm

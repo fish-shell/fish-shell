@@ -275,9 +275,15 @@ bool process_t::is_internal() const {
     return true;
 }
 
+static uint64_t next_internal_job_id() {
+    static std::atomic<uint64_t> s_next{};
+    return ++s_next;
+}
+
 job_t::job_t(job_id_t job_id, const properties_t &props, const job_lineage_t &lineage)
     : properties(props),
       job_id_(job_id),
+      internal_job_id(next_internal_job_id()),
       root_constructed(lineage.root_constructed ? lineage.root_constructed : this->constructed) {}
 
 job_t::~job_t() {
@@ -447,6 +453,7 @@ event_t proc_create_event(const wchar_t *msg, event_type_t type, pid_t pid, int 
     event_t event{type};
     event.desc.param1.pid = pid;
 
+    event.arguments.reserve(3);
     event.arguments.push_back(msg);
     event.arguments.push_back(to_string(pid));
     event.arguments.push_back(to_string(status));
@@ -617,6 +624,7 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
             }
             exit_events.push_back(
                 proc_create_event(L"JOB_EXIT", event_type_t::caller_exit, j->job_id(), 0));
+            exit_events.back().desc.param1.caller_id = j->internal_job_id;
         }
     }
 

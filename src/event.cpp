@@ -114,7 +114,7 @@ static bool handler_matches(const event_handler_t &classv, const event_t &instan
             return classv.desc.param1.pid == instance.desc.param1.pid;
         }
         case event_type_t::caller_exit: {
-            return classv.desc.param1.job_id == instance.desc.param1.job_id;
+            return classv.desc.param1.caller_id == instance.desc.param1.caller_id;
         }
         case event_type_t::generic: {
             return classv.desc.str_param1 == instance.desc.str_param1;
@@ -378,7 +378,7 @@ void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter) {
                       case event_type_t::exit:
                           return d1.param1.pid < d2.param1.pid;
                       case event_type_t::caller_exit:
-                          return d1.param1.job_id < d2.param1.job_id;
+                          return d1.param1.caller_id < d2.param1.caller_id;
                       case event_type_t::variable:
                       case event_type_t::any:
                       case event_type_t::generic:

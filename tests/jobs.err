@@ -1,4 +1,0 @@
-bg: invalid option -23
-fg: No suitable job: 3
-bg: Could not find job '3'
-disown: 'foo' is not a valid job specifier

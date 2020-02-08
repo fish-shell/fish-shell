@@ -29,8 +29,8 @@ enum class event_type_t {
     variable,
     /// An event triggered by a job or process exit.
     exit,
-    /// An event triggered by a job exit.
-    job_exit,
+    /// An event triggered by a caller exit.
+    caller_exit,
     /// A generic event.
     generic,
 };
@@ -44,10 +44,11 @@ struct event_description_t {
     ///
     /// signal: Signal number for signal-type events.Use EVENT_ANY_SIGNAL to match any signal
     /// pid: Process id for process-type events. Use EVENT_ANY_PID to match any pid. (Negative
-    /// values are used for PGIDs). job_id: Job id for EVENT_JOB_ID type events
+    /// values are used for PGIDs).
+    /// caller_id: Internal job id for caller_exit type events
     union {
         int signal;
-        int job_id;
+        uint64_t caller_id;
         pid_t pid;
     } param1{};
 

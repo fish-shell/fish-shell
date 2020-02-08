@@ -266,7 +266,12 @@ class process_t {
 typedef std::unique_ptr<process_t> process_ptr_t;
 typedef std::vector<process_ptr_t> process_list_t;
 
-typedef int job_id_t;
+/// The non user-visible, never-recycled job ID.
+/// Every job has a unique positive value for this.
+using internal_job_id_t = uint64_t;
+
+/// The user-visible, optional, recycled job ID.
+using job_id_t = int;
 job_id_t acquire_job_id(void);
 void release_job_id(job_id_t jid);
 
@@ -381,7 +386,11 @@ class job_t {
     pid_t pgid{INVALID_PID};
 
     /// The id of this job.
+    /// This is user-visible, is recycled, and may be -1.
     job_id_t job_id() const { return job_id_; }
+
+    /// A non-user-visible, never-recycled job ID.
+    const internal_job_id_t internal_job_id;
 
     /// Mark this job as internal. Internal jobs' job_ids are removed from the
     /// list of jobs so that, among other things, they don't take a job_id

@@ -69,3 +69,34 @@ end
 #CHECKERR: fish: 'case' builtin not inside of switch block
 #CHECKERR:      case a
 #CHECKERR:           ^
+
+set smurf green
+
+switch $smurf;
+	case "*ee*"
+		echo Test 1 pass
+	case "*"
+		echo Test 1 fail
+end;
+#CHECK: Test 1 pass
+
+switch $smurf
+	case *ee*
+		echo Test 2 fail
+	case red green blue
+		echo Test 2 pass
+	case "*"
+		echo Test 2 fail
+end
+#CHECKERR: {{.*}}switch.fish (line {{\d+}}): No matches for wildcard '*ee*'. See `help expand`.
+#CHECKERR: case *ee*
+#CHECKERR: ^
+#CHECK: Test 2 pass
+
+switch $smurf
+	case cyan magenta yellow
+		echo Test 3 fail
+	case "*"
+		echo Test 3 pass
+end
+#CHECK: Test 3 pass

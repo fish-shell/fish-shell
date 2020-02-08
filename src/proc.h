@@ -314,8 +314,7 @@ enum class pgroup_provenance_t {
     lineage,
 };
 
-/// A struct represeting a job. A job is basically a pipeline of one or more processes and a couple
-/// of flags.
+/// A struct representing a job. A job is a pipeline of one or more processes.
 class job_t {
    public:
     /// A set of jobs properties. These are immutable: they do not change for the lifetime of the

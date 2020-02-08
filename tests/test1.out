@@ -29,21 +29,6 @@ Test 4 pass
 Test 5 pass
 
 ####################
-# Verify that we can turn stderr into stdout and then pipe it
-errput
-output
-errput
-output
-
-####################
-# Test that trailing ^ doesn't trigger redirection, see #1873
-caret_no_redirect 12345^
-
-####################
-# Verify that we can pipe something other than stdout
-is_stdout
-
-####################
 # echo tests
 abc\ndef
 abc
@@ -61,19 +46,6 @@ abc
 Catch your breath
 abc!def
 abc!1def
-
-####################
-# Verify that pipes don't conflict with fd redirections
-pipe 3
-pipe 4
-pipe 5
-pipe 6
-pipe 7
-pipe 8
-pipe 9
-pipe 10
-pipe 11
-pipe 12
 
 ####################
 # Comments allowed in between lines (#1987)

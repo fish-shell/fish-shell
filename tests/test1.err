@@ -12,19 +12,7 @@
 # Testing builtin status
 
 ####################
-# Verify that we can turn stderr into stdout and then pipe it
-
-####################
-# Test that trailing ^ doesn't trigger redirection, see #1873
-
-####################
-# Verify that we can pipe something other than stdout
-
-####################
 # echo tests
-
-####################
-# Verify that pipes don't conflict with fd redirections
 
 ####################
 # Comments allowed in between lines (#1987)

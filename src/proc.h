@@ -179,14 +179,23 @@ class job_tree_t {
     /// Get the pgid, or none() if it has not been set.
     maybe_t<pid_t> get_pgid() const;
 
+    /// \return whether we want job control
+    bool wants_job_control() const { return job_control_; }
+
     /// \return whether this is a placeholder.
     bool is_placeholder() const { return is_placeholder_; }
 
+    /// Given a job and a proposed job tree (possibly null), return the job tree to actually use.
+    /// The proposed tree is the tree from the parent job, or null if this is a root.
+    static job_tree_ref_t decide_tree_for_job(const job_t *job,
+                                              const job_tree_ref_t &proposed_tree);
+
    private:
     maybe_t<pid_t> pgid_{};
+    const bool job_control_;
     const bool is_placeholder_;
 
-    explicit job_tree_t(bool placeholder);
+    explicit job_tree_t(bool job_control, bool placeholder);
 };
 
 /// A structure representing a single fish process. Contains variables for tracking process state
@@ -321,10 +330,10 @@ void release_job_id(job_id_t jid);
 /// job_t. It is also important that job_t not contain this: because it stores block IO, it will
 /// extend the life of the IO which may prevent pipes from closing in a timely manner. See #6397.
 struct job_lineage_t {
-    /// The pgid of the parental job.
+    /// The job tree.
     /// If our job is "nested" as part of a function or block execution, and that function or block
     /// is part of a pipeline, then this may be set.
-    maybe_t<pid_t> parent_pgid{};
+    job_tree_ref_t job_tree{};
 
     /// Whether job control is on for the root.
     /// This is set if our job is nested as part of a function or block execution.
@@ -445,6 +454,10 @@ class job_t {
 
     /// All the processes in this job.
     process_list_t processes;
+
+    // The tree containing this job.
+    // This is never null and not changed after construction.
+    job_tree_ref_t job_tree{};
 
     /// Process group ID for the process group that this job is running in.
     /// Set to a nonexistent, non-return-value of getpgid() integer by the constructor

@@ -640,12 +640,12 @@ profile_item_t *parser_t::create_profile_item() {
     return result;
 }
 
-eval_res_t parser_t::eval(const wcstring &cmd, const io_chain_t &io, maybe_t<pid_t> parent_pgid,
+eval_res_t parser_t::eval(const wcstring &cmd, const io_chain_t &io, const job_tree_ref_t &job_tree,
                           enum block_type_t block_type) {
     // Parse the source into a tree, if we can.
     parse_error_list_t error_list;
     if (parsed_source_ref_t ps = parse_source(cmd, parse_flag_none, &error_list)) {
-        return this->eval(ps, io, parent_pgid, block_type);
+        return this->eval(ps, io, job_tree, block_type);
     } else {
         // Get a backtrace. This includes the message.
         wcstring backtrace_and_desc;
@@ -662,12 +662,12 @@ eval_res_t parser_t::eval(const wcstring &cmd, const io_chain_t &io, maybe_t<pid
 }
 
 eval_res_t parser_t::eval(const parsed_source_ref_t &ps, const io_chain_t &io,
-                          maybe_t<pid_t> parent_pgid, enum block_type_t block_type) {
+                          const job_tree_ref_t &job_tree, enum block_type_t block_type) {
     assert(block_type == block_type_t::top || block_type == block_type_t::subst);
     if (!ps->tree.empty()) {
         job_lineage_t lineage;
         lineage.block_io = io;
-        lineage.parent_pgid = parent_pgid;
+        lineage.job_tree = job_tree;
         // Execute the first node.
         tnode_t<grammar::job_list> start{&ps->tree, &ps->tree.front()};
         return this->eval_node(ps, start, std::move(lineage), block_type);
@@ -705,8 +705,8 @@ eval_res_t parser_t::eval_node(const parsed_source_ref_t &ps, tnode_t<T> node,
     operation_context_t op_ctx = this->context();
     block_t *scope_block = this->push_block(block_t::scope_block(block_type));
 
-    // Propogate any parent pgid.
-    op_ctx.parent_pgid = lineage.parent_pgid;
+    // Propogate our job tree.
+    op_ctx.job_tree = lineage.job_tree;
 
     // Create and set a new execution context.
     using exc_ctx_ref_t = std::unique_ptr<parse_execution_context_t>;

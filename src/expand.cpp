@@ -622,7 +622,7 @@ static expand_result_t expand_cmdsubst(wcstring input, const operation_context_t
 
     wcstring_list_t sub_res;
     const wcstring subcmd(paren_begin + 1, paren_end - paren_begin - 1);
-    int subshell_status = exec_subshell_for_expand(subcmd, *ctx.parser, ctx.parent_pgid, sub_res);
+    int subshell_status = exec_subshell_for_expand(subcmd, *ctx.parser, ctx.job_tree, sub_res);
     if (subshell_status != 0) {
         // TODO: Ad-hoc switch, how can we enumerate the possible errors more safely?
         const wchar_t *err;

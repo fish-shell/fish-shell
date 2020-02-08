@@ -235,7 +235,8 @@ void print_exit_warning_for_jobs(const job_list_t &jobs) {
     fputws(_(L"Use 'disown PID' to remove jobs from the list without terminating them.\n"), stdout);
 }
 
-job_tree_t::job_tree_t(bool placeholder) : is_placeholder_(placeholder) {}
+job_tree_t::job_tree_t(bool job_control, bool placeholder)
+    : job_control_(job_control), is_placeholder_(placeholder) {}
 
 void job_tree_t::set_pgid(pid_t pgid) {
     // TODO: thread safety?
@@ -243,6 +244,39 @@ void job_tree_t::set_pgid(pid_t pgid) {
     assert(!is_placeholder() && "Cannot set a pgid on the placeholder");
     assert(pgid >= 0 && "Invalid pgid");
     pgid_ = pgid;
+}
+
+maybe_t<pid_t> job_tree_t::get_pgid() const { return pgid_; }
+
+job_tree_ref_t job_tree_t::decide_tree_for_job(const job_t *job, const job_tree_ref_t &proposed) {
+    // Note there's three cases to consider:
+    //  nullptr         -> this is a root job, there is no inherited job tree
+    //  placeholder     -> we are running as part of a simple function execution, create a new job
+    //                      tree for any spawned jobs
+    //  non-placeholder -> we are running as part of a real pipeline
+    // Decide if this job can use the placeholder tree.
+    // This is true if it's a simple foreground execution of an internal proc.
+
+    bool can_use_placeholder =
+        job->is_foreground() && job->processes.size() == 1 && job->processes.front()->is_internal();
+
+    bool needs_new_tree = false;
+    if (!proposed) {
+        // We don't have a tree yet.
+        needs_new_tree = true;
+    } else if (!job->is_foreground()) {
+        // Background jobs always get a new tree.
+        needs_new_tree = true;
+    } else if (proposed->is_placeholder() && !can_use_placeholder) {
+        // We cannot use the placeholder tree for this job.
+        needs_new_tree = true;
+    }
+
+    if (!needs_new_tree) {
+        return proposed;
+    } else {
+        return job_tree_ref_t(new job_tree_t(job->wants_job_control(), can_use_placeholder));
+    }
 }
 
 void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *failed_proc) {

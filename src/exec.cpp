@@ -59,7 +59,7 @@ pgroup_provenance_t get_pgroup_provenance(const shared_ptr<job_t> &j,
     bool has_external = j->has_external_proc();
     assert(first_proc_is_internal ? has_internal : has_external);
 
-    if (lineage.parent_pgid.has_value() && j->is_foreground()) {
+    if (lineage.job_tree && lineage.job_tree->get_pgid().has_value() && j->is_foreground()) {
         // Our lineage indicates a pgid. This means the job is "nested" as a function or block
         // inside another job, which has a real pgroup. We're going to use that, unless it's
         // backgrounded, in which case it should not inherit a pgroup.
@@ -209,6 +209,7 @@ static void maybe_assign_pgid_from_child(const std::shared_ptr<job_t> &j, pid_t 
     // If our assignment mode is the first process, then assign it.
     if (j->pgid == INVALID_PID &&
         j->pgroup_provenance == pgroup_provenance_t::first_external_proc) {
+        j->job_tree->set_pgid(child_pid);
         j->pgid = child_pid;
     }
 }
@@ -659,7 +660,7 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
            "Unexpected process type");
     // Make a lineage for our children.
     job_lineage_t lineage;
-    lineage.parent_pgid = (job->pgid == INVALID_PID ? none() : maybe_t<pid_t>(job->pgid));
+    lineage.job_tree = job->job_tree;
     lineage.block_io = io_chain;
     lineage.root_constructed = job->root_constructed;
     lineage.root_has_job_control = job->wants_job_control();
@@ -862,7 +863,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, const std::share
 
         case process_type_t::builtin: {
             io_streams_t builtin_io_streams{stdout_read_limit};
-            if (j->pgid != INVALID_PID) builtin_io_streams.parent_pgid = j->pgid;
+            builtin_io_streams.job_tree = j->job_tree;
             if (!exec_internal_builtin_proc(parser, p, pipe_read.get(), process_net_io_chain,
                                             builtin_io_streams)) {
                 return false;
@@ -956,13 +957,19 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
     // Perhaps we know our pgroup already.
     assert(j->pgid == INVALID_PID && "Should not yet have a pid.");
     switch (j->pgroup_provenance) {
-        case pgroup_provenance_t::lineage:
-            assert(*lineage.parent_pgid != INVALID_PID && "pgid should be none, not INVALID_PID");
-            j->pgid = *lineage.parent_pgid;
+        case pgroup_provenance_t::lineage: {
+            auto pgid = lineage.job_tree->get_pgid();
+            assert(pgid && *pgid != INVALID_PID && "Should have valid pgid");
+            j->pgid = *pgid;
             break;
+        }
 
         case pgroup_provenance_t::fish_itself:
             j->pgid = pgrp;
+            // TODO: should not need this 'if' here. Rationalize this.
+            if (! j->job_tree->is_placeholder()) {
+                j->job_tree->set_pgid(pgrp);
+            }
             break;
 
         // The remaining cases are all deferred until later.
@@ -1114,15 +1121,15 @@ static void populate_subshell_output(wcstring_list_t *lst, const io_buffer_t &bu
 
 /// Execute \p cmd in a subshell in \p parser. If \p lst is not null, populate it with the output.
 /// Return $status in \p out_status.
-/// If \p parent_pgid is set, any spawned commands should join that pgroup.
+/// If \p job_tree is set, any spawned commands should join that job tree.
 /// If \p apply_exit_status is false, then reset $status back to its original value.
 /// \p is_subcmd controls whether we apply a read limit.
 /// \p break_expand is used to propagate whether the result should be "expansion breaking" in the
 /// sense that subshells used during string expansion should halt that expansion. \return the value
 /// of $status.
-static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, maybe_t<pid_t> parent_pgid,
-                                  wcstring_list_t *lst, bool *break_expand, bool apply_exit_status,
-                                  bool is_subcmd) {
+static int exec_subshell_internal(const wcstring &cmd, parser_t &parser,
+                                  const job_tree_ref_t &job_tree, wcstring_list_t *lst,
+                                  bool *break_expand, bool apply_exit_status, bool is_subcmd) {
     ASSERT_IS_MAIN_THREAD();
     auto &ld = parser.libdata();
 
@@ -1145,8 +1152,7 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, maybe_t
         *break_expand = true;
         return STATUS_CMD_ERROR;
     }
-    eval_res_t eval_res =
-        parser.eval(cmd, io_chain_t{bufferfill}, parent_pgid, block_type_t::subst);
+    eval_res_t eval_res = parser.eval(cmd, io_chain_t{bufferfill}, job_tree, block_type_t::subst);
     std::shared_ptr<io_buffer_t> buffer = io_bufferfill_t::finish(std::move(bufferfill));
     if (buffer->buffer().discarded()) {
         *break_expand = true;
@@ -1165,24 +1171,24 @@ static int exec_subshell_internal(const wcstring &cmd, parser_t &parser, maybe_t
     return eval_res.status.status_value();
 }
 
-int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser, maybe_t<pid_t> parent_pgid,
+int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser, const job_tree_ref_t &job_tree,
                              wcstring_list_t &outputs) {
     ASSERT_IS_MAIN_THREAD();
     bool break_expand = false;
-    int ret = exec_subshell_internal(cmd, parser, parent_pgid, &outputs, &break_expand, true, true);
+    int ret = exec_subshell_internal(cmd, parser, job_tree, &outputs, &break_expand, true, true);
     // Only return an error code if we should break expansion.
     return break_expand ? ret : STATUS_CMD_OK;
 }
 
 int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status) {
     bool break_expand = false;
-    return exec_subshell_internal(cmd, parser, none(), nullptr, &break_expand, apply_exit_status,
+    return exec_subshell_internal(cmd, parser, nullptr, nullptr, &break_expand, apply_exit_status,
                                   false);
 }
 
 int exec_subshell(const wcstring &cmd, parser_t &parser, wcstring_list_t &outputs,
                   bool apply_exit_status) {
     bool break_expand = false;
-    return exec_subshell_internal(cmd, parser, none(), &outputs, &break_expand, apply_exit_status,
+    return exec_subshell_internal(cmd, parser, nullptr, &outputs, &break_expand, apply_exit_status,
                                   false);
 }

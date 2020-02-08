@@ -918,12 +918,6 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
     // Check to see if we should reclaim the foreground pgrp after the job finishes or stops.
     const bool reclaim_foreground_pgrp = (tcgetpgrp(STDIN_FILENO) == pgrp);
 
-    // If we are running nested inside a function or block with job control, then we need job
-    // control too.
-    if (lineage.root_has_job_control) {
-        j->mut_flags().job_control = true;
-    }
-
     // Perhaps we know our pgroup already.
     assert(j->pgid == INVALID_PID && "Should not yet have a pid.");
     switch (j->pgroup_provenance) {

@@ -1273,12 +1273,12 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
     props.skip_notification =
         ld.is_subshell || ld.is_block || ld.is_event || !parser->is_interactive();
     props.from_event_handler = ld.is_event;
+    props.job_control = wants_job_control;
 
     shared_ptr<job_t> job = std::make_shared<job_t>(acquire_job_id(), props, this->lineage);
     job->tmodes = tmodes;
 
     job->mut_flags().foreground = !job_node_is_background(job_node);
-    job->mut_flags().job_control = wants_job_control;
 
     // We are about to populate a job. One possible argument to the job is a command substitution
     // which may be interested in the job that's populating it, via '--on-job-exit caller'. Record

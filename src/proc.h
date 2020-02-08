@@ -329,6 +329,9 @@ class job_t {
 
         /// Whether this job was created as part of an event handler.
         bool from_event_handler{};
+
+        /// Whether the job is under job control, i.e. has its own pgrp.
+        bool job_control{};
     };
 
    private:
@@ -443,9 +446,6 @@ class job_t {
         /// Whether the exit status should be negated. This flag can only be set by the not builtin.
         bool negate{false};
 
-        /// Whether the job is under job control, i.e. has its own pgrp.
-        bool job_control{false};
-
         /// This job is disowned, and should be removed from the active jobs list.
         bool disown_requested{false};
 
@@ -460,7 +460,7 @@ class job_t {
     flags_t &mut_flags() { return job_flags; }
 
     /// \return if we want job control.
-    bool wants_job_control() const { return flags().job_control; }
+    bool wants_job_control() const { return properties.job_control; }
 
     /// \return if this job should own the terminal when it runs.
     bool should_claim_terminal() const { return properties.wants_terminal && is_foreground(); }

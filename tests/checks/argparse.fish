@@ -310,3 +310,81 @@ argparse -n foo q r/required= -- foo -qr
 
 argparse r/required= -- foo --required
 # CHECKERR: argparse: Expected argument for option --required
+
+### The fish_opt wrapper:
+# No args is an error
+fish_opt
+and echo unexpected status $status
+#CHECKERR: fish_opt: The --short flag is required and must be a single character
+
+# No short flag or an invalid short flag is an error
+fish_opt -l help
+and echo unexpected status $status
+#CHECKERR: fish_opt: The --short flag is required and must be a single character
+fish_opt -s help
+and echo unexpected status $status
+#CHECKERR: fish_opt: The --short flag is required and must be a single character
+
+# A required and optional arg makes no sense
+fish_opt -s h -l help -r --optional-val
+and echo unexpected status $status
+#CHECKERR: fish_opt: Mutually exclusive flags 'o/optional-val' and `r/required-val` seen
+
+# A repeated and optional arg makes no sense
+fish_opt -s h -l help --multiple-vals --optional-val
+and echo unexpected status $status
+#CHECKERR: fish_opt: Mutually exclusive flags 'multiple-vals' and `o/optional-val` seen
+
+# An unexpected arg not associated with a flag is an error
+fish_opt -s h -l help hello
+and echo unexpected status $status
+#CHECKERR: fish_opt: Expected at most 0 args, got 1
+
+# Now verify that valid combinations of options produces the correct output.
+
+# Bool, short only
+fish_opt -s h
+or echo unexpected status $status
+#CHECK: h
+
+# Bool, short and long
+fish_opt --short h --long help
+or echo unexpected status $status
+#CHECK: h/help
+
+# Bool, short and long but the short var cannot be used
+fish_opt --short h --long help --long-only
+#CHECK: h-help
+
+# Required val, short and long but the short var cannot be used
+fish_opt --short h --long help -r --long-only
+or echo unexpected status $status
+#CHECK: h-help=
+
+# Optional val, short and long valid
+fish_opt --short h -l help --optional-val
+or echo unexpected status $status
+#CHECK: h/help=?
+
+# Optional val, short and long but the short var cannot be used
+fish_opt --short h -l help --optional-val --long-only
+or echo unexpected status $status
+#CHECK: h-help=?
+
+# Repeated val, short and long valid
+fish_opt --short h -l help --multiple-vals
+or echo unexpected status $status
+#CHECK: h/help=+
+
+# Repeated val, short and long but short not valid
+fish_opt --short h -l help --multiple-vals --long-only
+or echo unexpected status $status
+#CHECK: h-help=+
+
+# Repeated val, short only
+fish_opt -s h --multiple-vals
+or echo unexpected status $status
+fish_opt -s h --multiple-vals --long-only
+or echo unexpected status $status
+#CHECK: h=+
+#CHECK: h=+

@@ -1260,7 +1260,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
     props.from_event_handler = ld.is_event;
     props.job_control = wants_job_control;
 
-    shared_ptr<job_t> job = std::make_shared<job_t>(acquire_job_id(), props, this->lineage);
+    shared_ptr<job_t> job = std::make_shared<job_t>(props);
     job->tmodes = tmodes;
 
     job->mut_flags().foreground = !job_node_is_background(job_node);
@@ -1285,7 +1285,8 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
     if (pop_result == end_execution_reason_t::ok) {
         // Set the pgroup assignment mode and job tree, now that the job is populated.
         job->pgroup_provenance = get_pgroup_provenance(job, lineage);
-        job->job_tree = job_tree_t::decide_tree_for_job(job.get(), lineage.job_tree);
+        job_tree_t::populate_tree_for_job(job.get(), lineage.job_tree);
+        assert(job->job_tree && "Should have a job tree");
 
         // Success. Give the job to the parser - it will clean it up.
         parser->job_add(job);

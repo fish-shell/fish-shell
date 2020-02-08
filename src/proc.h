@@ -154,6 +154,12 @@ class internal_proc_t {
 ///   function
 enum { INVALID_PID = -2 };
 
+/// A job ID, corresponding to what is printed in 'jobs'.
+/// 1 is the first valid job ID.
+using job_id_t = int;
+job_id_t acquire_job_id(void);
+void release_job_id(job_id_t jid);
+
 /// job_tree_t is conceptually similar to the idea of a process group. It represents data which
 /// is shared among all of the "subjobs" that may be spawned by a single job.
 /// For example, two fish functions in a pipeline may themselves spawn multiple jobs, but all will
@@ -185,15 +191,27 @@ class job_tree_t {
     /// \return whether this is a placeholder.
     bool is_placeholder() const { return is_placeholder_; }
 
-    /// Given a job and a proposed job tree (possibly null), return the job tree to actually use.
+    /// \return the job ID, or -1 if none.
+    job_id_t get_id() const { return job_id_; }
+
+    /// Mark the root as constructed.
+    /// This is used to avoid reaping a process group leader while there are still procs that may
+    /// want to enter its group.
+    void mark_root_constructed() { root_constructed_ = true; };
+    bool is_root_constructed() const { return root_constructed_; }
+
+    /// Given a job and a proposed job tree (possibly null), populate the job's tree.
     /// The proposed tree is the tree from the parent job, or null if this is a root.
-    static job_tree_ref_t decide_tree_for_job(const job_t *job,
-                                              const job_tree_ref_t &proposed_tree);
+    static void populate_tree_for_job(job_t *job, const job_tree_ref_t &proposed_tree);
+
+    ~job_tree_t();
 
    private:
     maybe_t<pid_t> pgid_{};
     const bool job_control_;
     const bool is_placeholder_;
+    const job_id_t job_id_;
+    relaxed_atomic_bool_t root_constructed_{};
 
     explicit job_tree_t(bool job_control, bool placeholder);
 };
@@ -338,10 +356,6 @@ struct job_lineage_t {
     /// The IO chain associated with any block containing this job.
     /// For example, in `begin; foo ; end < file.txt` this would have the 'file.txt' IO.
     io_chain_t block_io{};
-
-    /// A shared pointer indicating that the entire tree of jobs is safe to disown.
-    /// This is set to true by the "root" job after it is constructed.
-    std::shared_ptr<relaxed_atomic_bool_t> root_constructed{};
 };
 
 /// A job has a mode which describes how its pgroup is assigned (before the value is known).
@@ -390,15 +404,12 @@ class job_t {
     /// messages about job status on the terminal.
     wcstring command_str;
 
-    /// The job_id for this job.
-    job_id_t job_id_;
-
     // No copying.
     job_t(const job_t &rhs) = delete;
     void operator=(const job_t &) = delete;
 
    public:
-    job_t(job_id_t job_id, const properties_t &props, const job_lineage_t &lineage);
+    explicit job_t(const properties_t &props);
     ~job_t();
 
     /// Returns the command as a wchar_t *. */
@@ -464,35 +475,22 @@ class job_t {
 
     /// The id of this job.
     /// This is user-visible, is recycled, and may be -1.
-    job_id_t job_id() const { return job_id_; }
+    job_id_t job_id() const { return job_tree->get_id(); }
 
     /// A non-user-visible, never-recycled job ID.
     const internal_job_id_t internal_job_id;
-
-    /// Mark this job as internal. Internal jobs' job_ids are removed from the
-    /// list of jobs so that, among other things, they don't take a job_id
-    /// entry.
-    void mark_internal() {
-        release_job_id(job_id_);
-        job_id_ = -1;
-    }
 
     /// The saved terminal modes of this job. This needs to be saved so that we can restore the
     /// terminal to the same state after temporarily taking control over the terminal when a job
     /// stops.
     struct termios tmodes {};
 
-    /// Whether the specified job is completely constructed, i.e. completely parsed, and every
-    /// process in the job has been forked, etc.
-    /// This is a shared_ptr because it may be passed to child jobs through the lineage.
-    const std::shared_ptr<relaxed_atomic_bool_t> constructed =
-        std::make_shared<relaxed_atomic_bool_t>(false);
-
-    /// Whether the root job is constructed; this may share a reference with 'constructed'.
-    const std::shared_ptr<relaxed_atomic_bool_t> root_constructed;
-
     /// Flags associated with the job.
     struct flags_t {
+        /// Whether the specified job is completely constructed: every process in the job has been
+        /// forked, etc.
+        bool constructed{false};
+
         /// Whether the user has been told about stopped job.
         bool notified{false};
 
@@ -507,6 +505,10 @@ class job_t {
 
         /// Whether to print timing for this job.
         bool has_time_prefix{false};
+
+        // Indicates that we are the "tree root." Any other jobs using this tree are nested.
+        bool is_tree_root{false};
+
     } job_flags{};
 
     /// Access the job flags.
@@ -532,7 +534,7 @@ class job_t {
 
     // Helper functions to check presence of flags on instances of jobs
     /// The job has been fully constructed, i.e. all its member processes have been launched
-    bool is_constructed() const { return *constructed; }
+    bool is_constructed() const { return flags().constructed; }
     /// The job was launched in the foreground and has control of the terminal
     bool is_foreground() const { return flags().foreground; }
     /// The job is complete, i.e. all its member processes have been reaped

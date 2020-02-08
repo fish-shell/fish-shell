@@ -149,6 +149,12 @@ bool job_t::should_report_process_exits() const {
         return false;
     }
 
+    // Only report root job exits.
+    // For example in `ls | begin ; cat ; end` we don't need to report the cat sub-job.
+    if (!flags().is_tree_root) {
+        return false;
+    }
+
     // Return whether we have an external process.
     for (const auto &p : this->processes) {
         if (p->type == process_type_t::external) {
@@ -158,7 +164,7 @@ bool job_t::should_report_process_exits() const {
     return false;
 }
 
-bool job_t::job_chain_is_fully_constructed() const { return *root_constructed; }
+bool job_t::job_chain_is_fully_constructed() const { return job_tree->is_root_constructed(); }
 
 bool job_t::signal(int signal) {
     // Presumably we are distinguishing between the two cases below because we do
@@ -236,7 +242,15 @@ void print_exit_warning_for_jobs(const job_list_t &jobs) {
 }
 
 job_tree_t::job_tree_t(bool job_control, bool placeholder)
-    : job_control_(job_control), is_placeholder_(placeholder) {}
+    : job_control_(job_control),
+      is_placeholder_(placeholder),
+      job_id_(placeholder ? -1 : acquire_job_id()) {}
+
+job_tree_t::~job_tree_t() {
+    if (job_id_ > 0) {
+        release_job_id(job_id_);
+    }
+}
 
 void job_tree_t::set_pgid(pid_t pgid) {
     // TODO: thread safety?
@@ -248,7 +262,7 @@ void job_tree_t::set_pgid(pid_t pgid) {
 
 maybe_t<pid_t> job_tree_t::get_pgid() const { return pgid_; }
 
-job_tree_ref_t job_tree_t::decide_tree_for_job(const job_t *job, const job_tree_ref_t &proposed) {
+void job_tree_t::populate_tree_for_job(job_t *job, const job_tree_ref_t &proposed) {
     // Note there's three cases to consider:
     //  nullptr         -> this is a root job, there is no inherited job tree
     //  placeholder     -> we are running as part of a simple function execution, create a new job
@@ -256,7 +270,6 @@ job_tree_ref_t job_tree_t::decide_tree_for_job(const job_t *job, const job_tree_
     //  non-placeholder -> we are running as part of a real pipeline
     // Decide if this job can use the placeholder tree.
     // This is true if it's a simple foreground execution of an internal proc.
-
     bool can_use_placeholder =
         job->is_foreground() && job->processes.size() == 1 && job->processes.front()->is_internal();
 
@@ -272,10 +285,13 @@ job_tree_ref_t job_tree_t::decide_tree_for_job(const job_t *job, const job_tree_
         needs_new_tree = true;
     }
 
+    job->mut_flags().is_tree_root = needs_new_tree;
+
     if (!needs_new_tree) {
-        return proposed;
+        job->job_tree = proposed;
     } else {
-        return job_tree_ref_t(new job_tree_t(job->wants_job_control(), can_use_placeholder));
+        job->job_tree =
+            job_tree_ref_t(new job_tree_t(job->wants_job_control(), can_use_placeholder));
     }
 }
 
@@ -354,19 +370,17 @@ static uint64_t next_internal_job_id() {
     return ++s_next;
 }
 
-job_t::job_t(job_id_t job_id, const properties_t &props, const job_lineage_t &lineage)
-    : properties(props),
-      job_id_(job_id),
-      internal_job_id(next_internal_job_id()),
-      root_constructed(lineage.root_constructed ? lineage.root_constructed : this->constructed) {}
+job_t::job_t(const properties_t &props)
+    : properties(props), internal_job_id(next_internal_job_id()) {}
 
-job_t::~job_t() {
-    if (job_id_ != -1) release_job_id(job_id_);
-}
+job_t::~job_t() = default;
 
 void job_t::mark_constructed() {
     assert(!is_constructed() && "Job was already constructed");
-    *constructed = true;
+    mut_flags().constructed = true;
+    if (flags().is_tree_root) {
+        job_tree->mark_root_constructed();
+    }
 }
 
 bool job_t::has_internal_proc() const {
@@ -944,7 +958,7 @@ void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool se
     mut_flags().notified = false;
 
     FLOGF(proc_job_run, L"%ls job %d, gid %d (%ls), %ls, %ls",
-          send_sigcont ? L"Continue" : L"Start", job_id_, pgid, command_wcstr(),
+          send_sigcont ? L"Continue" : L"Start", job_id(), pgid, command_wcstr(),
           is_completed() ? L"COMPLETED" : L"UNCOMPLETED",
           parser.libdata().is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
 

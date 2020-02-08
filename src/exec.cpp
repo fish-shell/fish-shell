@@ -662,7 +662,6 @@ static proc_performer_t get_performer_for_process(process_t *p, job_t *job,
     job_lineage_t lineage;
     lineage.job_tree = job->job_tree;
     lineage.block_io = io_chain;
-    lineage.root_constructed = job->root_constructed;
 
     if (p->type == process_type_t::block_node) {
         const parsed_source_ref_t &source = p->block_node_source;
@@ -711,14 +710,6 @@ static bool exec_block_or_func_process(parser_t &parser, const std::shared_ptr<j
         }
         // Teach the job about its bufferfill, and add it to our io chain.
         io_chain.push_back(block_output_bufferfill);
-    }
-
-    // If this function is the only process in the current job
-    // and that job is in the foreground then mark this job as internal
-    // so it doesn't increment the job id for any jobs created within this
-    // function.
-    if (p->is_first_in_job && p->is_last_in_job && j->flags().foreground) {
-        j->mark_internal();
     }
 
     // Get the process performer, and just execute it directly.

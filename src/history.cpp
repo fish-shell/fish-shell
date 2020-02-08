@@ -1437,13 +1437,12 @@ history_t &history_t::history_with_name(const wcstring &name) {
     return *hist;
 }
 
-static std::atomic<bool> private_mode{false};
+static relaxed_atomic_bool_t private_mode{false};
 
-void start_private_mode() {
-    private_mode.store(true);
-    auto &vars = parser_t::principal_parser().vars();
+void start_private_mode(env_stack_t &vars) {
+    private_mode = true;
     vars.set_one(L"fish_history", ENV_GLOBAL, L"");
     vars.set_one(L"fish_private_mode", ENV_GLOBAL, L"1");
 }
 
-bool in_private_mode() { return private_mode.load(); }
+bool in_private_mode() { return private_mode; }

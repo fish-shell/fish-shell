@@ -77,6 +77,8 @@ class fish_cmd_opts_t {
     bool is_login{false};
     /// Whether this is an interactive session.
     bool is_interactive_session{false};
+    /// Whether to enable private mode.
+    bool enable_private_mode{false};
 };
 
 /// If we are doing profiling, the filename to output to.
@@ -209,7 +211,7 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
 }
 
 // Source the file config.fish in the given directory.
-static void source_config_in_directory(const wcstring &dir) {
+static void source_config_in_directory(parser_t &parser, const wcstring &dir) {
     // If the config.fish file doesn't exist or isn't readable silently return. Fish versions up
     // thru 2.2.0 would instead try to source the file with stderr redirected to /dev/null to deal
     // with that possibility.
@@ -228,33 +230,30 @@ static void source_config_in_directory(const wcstring &dir) {
     FLOGF(config, L"sourcing %ls", escaped_pathname.c_str());
 
     const wcstring cmd = L"builtin source " + escaped_pathname;
-    parser_t &parser = parser_t::principal_parser();
     set_is_within_fish_initialization(true);
     parser.eval(cmd, io_chain_t());
     set_is_within_fish_initialization(false);
 }
 
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
-static int read_init(const struct config_paths_t &paths) {
-    source_config_in_directory(paths.data);
-    source_config_in_directory(paths.sysconf);
+static int read_init(parser_t &parser, const struct config_paths_t &paths) {
+    source_config_in_directory(parser, paths.data);
+    source_config_in_directory(parser, paths.sysconf);
 
     // We need to get the configuration directory before we can source the user configuration file.
     // If path_get_config returns false then we have no configuration directory and no custom config
     // to load.
     wcstring config_dir;
     if (path_get_config(config_dir)) {
-        source_config_in_directory(config_dir);
+        source_config_in_directory(parser, config_dir);
     }
 
     return 1;
 }
 
-int run_command_list(std::vector<std::string> *cmds, const io_chain_t &io) {
-    parser_t &parser = parser_t::principal_parser();
-
+int run_command_list(parser_t &parser, std::vector<std::string> *cmds, const io_chain_t &io) {
     for (const auto &cmd : *cmds) {
-        const wcstring cmd_wcs = str2wcstring(cmd);
+        wcstring cmd_wcs = str2wcstring(cmd);
         parser.eval(cmd_wcs, io);
     }
 
@@ -357,7 +356,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 break;
             }
             case 'P': {
-                start_private_mode();
+                opts->enable_private_mode = true;
                 break;
             }
             case 'v': {
@@ -447,6 +446,7 @@ int main(int argc, char **argv) {
     if (opts.is_login) mark_login();
     if (opts.no_exec) mark_no_exec();
     if (opts.is_interactive_session) set_interactive_session(session_interactivity_t::explicit_);
+    if (opts.enable_private_mode) start_private_mode(env_stack_t::globals());
 
     // Only save (and therefore restore) the fg process group if we are interactive. See issues
     // #197 and #1002.
@@ -456,6 +456,7 @@ int main(int argc, char **argv) {
 
     const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
     env_init(&paths);
+
     // Set features early in case other initialization depends on them.
     // Start with the ones set in the environment, then those set on the command line (so the
     // command line takes precedence).
@@ -472,13 +473,13 @@ int main(int argc, char **argv) {
 
     parser_t &parser = parser_t::principal_parser();
 
-    if (read_init(paths)) {
+    if (read_init(parser, paths)) {
         // Stomp the exit status of any initialization commands (issue #635).
         parser.set_last_statuses(statuses_t::just(STATUS_CMD_OK));
 
         // Run post-config commands specified as arguments, if any.
         if (!opts.postconfig_cmds.empty()) {
-            res = run_command_list(&opts.postconfig_cmds, {});
+            res = run_command_list(parser, &opts.postconfig_cmds, {});
         }
 
         if (!opts.batch_cmds.empty()) {
@@ -488,7 +489,7 @@ int main(int argc, char **argv) {
                 fish_xdm_login_hack_hack_hack_hack(&opts.batch_cmds, argc - my_optind,
                                                    argv + my_optind);
             }
-            res = run_command_list(&opts.batch_cmds, {});
+            res = run_command_list(parser, &opts.batch_cmds, {});
             reader_set_end_loop(false);
         } else if (my_optind == argc) {
             // Implicitly interactive mode.

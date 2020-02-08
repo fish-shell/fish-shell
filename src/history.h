@@ -22,6 +22,7 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 struct io_streams_t;
+class env_stack_t;
 class environment_t;
 
 // Fish supports multiple shells writing to history at once. Here is its strategy:
@@ -291,7 +292,7 @@ path_list_t valid_paths(const path_list_t &paths, const wcstring &working_direct
 bool all_paths_are_valid(const path_list_t &paths, const wcstring &working_directory);
 
 /// Sets private mode on. Once in private mode, it cannot be turned off.
-void start_private_mode();
+void start_private_mode(env_stack_t &vars);
 /// Queries private mode status.
 bool in_private_mode();
 

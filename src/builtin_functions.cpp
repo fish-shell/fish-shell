@@ -130,7 +130,7 @@ static int parse_cmd_opts(functions_cmd_opts_t &opts, int *optind,  //!OCLINT(hi
 }
 
 /// Return a definition of the specified function. Used by the functions builtin.
-static wcstring functions_def(const wcstring &name) {
+static wcstring functions_def(const parser_t &parser, const wcstring &name) {
     assert(!name.empty() && "Empty name");
     wcstring out;
     wcstring desc, def;
@@ -184,7 +184,7 @@ static wcstring functions_def(const wcstring &name) {
                 break;
             }
             case event_type_t::job_exit: {
-                const job_t *j = job_t::from_job_id(d.param1.job_id);
+                const job_t *j = parser.job_get(d.param1.job_id);
                 if (j) append_format(out, L" --on-job-exit %d", j->pgid);
                 break;
             }
@@ -435,7 +435,7 @@ int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 if (i != optind) streams.out.append(L"\n");
                 const wchar_t *funcname = argv[optind];
                 report_function_metadata(funcname, opts.verbose, streams, parser, true);
-                wcstring def = functions_def(funcname);
+                wcstring def = functions_def(parser, funcname);
 
                 if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
                     std::vector<highlight_spec_t> colors;

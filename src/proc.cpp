@@ -118,11 +118,6 @@ void release_job_id(job_id_t jid) {
     consumed_job_ids->erase(where);
 }
 
-job_t *job_t::from_job_id(job_id_t id) {
-    ASSERT_IS_MAIN_THREAD();
-    return parser_t::principal_parser().job_get(id);
-}
-
 /// Return true if all processes in the job have stopped or completed.
 bool job_t::is_stopped() const {
     for (const process_ptr_t &p : processes) {

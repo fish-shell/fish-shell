@@ -76,9 +76,9 @@ static int wait_for_backgrounds(parser_t &parser, bool any_flag) {
     return 0;
 }
 
-static bool all_specified_jobs_finished(const std::vector<job_id_t> &ids) {
+static bool all_specified_jobs_finished(const parser_t &parser, const std::vector<job_id_t> &ids) {
     for (auto id : ids) {
-        if (job_t *j = job_t::from_job_id(id)) {
+        if (const job_t *j = parser.job_get(id)) {
             // If any specified job is not completed, return false.
             // If there are stopped jobs, they are ignored.
             if (j->is_constructed() && !j->is_completed() && !j->is_stopped()) {
@@ -89,9 +89,9 @@ static bool all_specified_jobs_finished(const std::vector<job_id_t> &ids) {
     return true;
 }
 
-static bool any_specified_jobs_finished(const std::vector<job_id_t> &ids) {
+static bool any_specified_jobs_finished(const parser_t &parser, const std::vector<job_id_t> &ids) {
     for (auto id : ids) {
-        if (job_t *j = job_t::from_job_id(id)) {
+        if (const job_t *j = parser.job_get(id)) {
             // If any specified job is completed, return true.
             if (j->is_constructed() && (j->is_completed() || j->is_stopped())) {
                 return true;
@@ -107,8 +107,8 @@ static bool any_specified_jobs_finished(const std::vector<job_id_t> &ids) {
 static int wait_for_backgrounds_specified(parser_t &parser, const std::vector<job_id_t> &ids,
                                           bool any_flag) {
     sigint_checker_t sigint;
-    while ((!any_flag && !all_specified_jobs_finished(ids)) ||
-           (any_flag && !any_specified_jobs_finished(ids))) {
+    while ((!any_flag && !all_specified_jobs_finished(parser, ids)) ||
+           (any_flag && !any_specified_jobs_finished(parser, ids))) {
         if (sigint.check()) {
             return 128 + SIGINT;
         }

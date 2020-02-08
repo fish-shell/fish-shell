@@ -364,6 +364,7 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
 
     /// Return the job with the specified job id. If id is 0 or less, return the last job used.
     job_t *job_get(job_id_t job_id);
+    const job_t *job_get(job_id_t job_id) const;
 
     /// Returns the job with the given pid.
     job_t *job_get_from_pid(pid_t pid) const;

@@ -513,10 +513,6 @@ class job_t {
 
     /// \returns the statuses for this job.
     statuses_t get_statuses() const;
-
-    /// Return the job instance matching this unique job id.
-    /// If id is 0 or less, return the last job used.
-    static job_t *from_job_id(job_id_t id);
 };
 
 /// Whether this shell is attached to the keyboard at all.

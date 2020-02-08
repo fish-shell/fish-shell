@@ -168,7 +168,7 @@ wcstring event_get_desc(const parser_t &parser, const event_t &evt) {
         }
 
         case event_type_t::job_exit: {
-            job_t *j = job_t::from_job_id(ed.param1.job_id);
+            const job_t *j = parser.job_get(ed.param1.job_id);
             if (j) {
                 return format_string(_(L"exit handler for job %d, '%ls'"), j->job_id(),
                                      j->command_wcstr());

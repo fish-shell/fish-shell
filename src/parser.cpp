@@ -586,6 +586,13 @@ job_t *parser_t::job_get(job_id_t id) {
     return nullptr;
 }
 
+const job_t *parser_t::job_get(job_id_t id) const {
+    for (const auto &job : job_list) {
+        if (id <= 0 || job->job_id() == id) return job.get();
+    }
+    return nullptr;
+}
+
 job_t *parser_t::job_get_from_pid(pid_t pid) const {
     pid_t pgid = getpgid(pid);
 

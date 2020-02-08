@@ -188,14 +188,13 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 const job_t *j = nullptr;
 
                 if (argv[i][0] == L'%') {
-                    int jobId = -1;
-                    jobId = fish_wcstoi(argv[i] + 1);
-                    if (errno || jobId < -1) {
+                    int job_id = fish_wcstoi(argv[i] + 1);
+                    if (errno || job_id < -1) {
                         streams.err.append_format(_(L"%ls: '%ls' is not a valid job id"), cmd,
                                                   argv[i]);
                         return STATUS_INVALID_ARGS;
                     }
-                    j = job_t::from_job_id(jobId);
+                    j = parser.job_get(job_id);
                 } else {
                     int pid = fish_wcstoi(argv[i]);
                     if (errno || pid < 0) {

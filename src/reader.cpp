@@ -2252,11 +2252,30 @@ parser_test_error_bits_t reader_shell_test(parser_t &parser, const wcstring &b) 
 
 /// Called to set the highlight flag for search results.
 void reader_data_t::highlight_search() {
+    const wcstring &needle = history_search.search_string();
+    const editable_line_t *el = &command_line;
+    if (history_search.by_line() || history_search.by_prefix()) {  // TODO token search
+        if (!history_search.active()) {
+            return;
+        }
+        size_t match_pos = history_search.match_position();
+        size_t end = match_pos + needle.size();
+
+        // If the search string spans the entire command line, the
+        // highlighting not unhelpful but annoying, don't highlight here.
+        if (match_pos == 0 && end == command_line.size()) {
+            return;
+        }
+        assert(end <= command_line.size());
+        for (size_t i = match_pos; i < end; i++) {
+            colors.at(i).background = highlight_role_t::search_match;
+        }
+        return;
+    }
+
     if (history_search.is_at_end()) {
         return;
     }
-    const wcstring &needle = history_search.search_string();
-    const editable_line_t *el = &command_line;
     size_t match_pos = el->text().find(needle);
     if (match_pos != wcstring::npos) {
         size_t end = match_pos + needle.size();

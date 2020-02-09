@@ -39,7 +39,6 @@
 #include <atomic>
 #include <csignal>
 #include <cwchar>
-#include <deque>
 #include <functional>
 #include <memory>
 #include <set>
@@ -305,7 +304,7 @@ class reader_history_search_t {
     history_search_t search_;
 
     /// The ordered list of matches. This may grow long.
-    std::deque<wcstring> matches_;
+    std::vector<wcstring> matches_;
 
     /// A set of new items to skip, corresponding to matches_ and anything added in skip().
     std::set<wcstring> skips_;

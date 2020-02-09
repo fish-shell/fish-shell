@@ -123,8 +123,6 @@ static const size_t TAB_COMPLETE_WILDCARD_MAX_EXPANSION = 256;
 /// current contents of the kill buffer.
 #define KILL_PREPEND 1
 
-enum class history_search_direction_t { forward, backward };
-
 enum class jump_direction_t { forward, backward };
 enum class jump_precision_t { till, to };
 
@@ -445,7 +443,7 @@ class reader_history_search_t {
         }
 
         // Add more items from our search.
-        while (search_.go_backwards()) {
+        while (search_.go_to_next_match(history_search_direction_t::backward)) {
             if (append_matches_from_search()) {
                 match_index_++;
                 assert(match_index_ < matches_.size() && "Should have found more matches");
@@ -1242,7 +1240,8 @@ static history_pager_result_t history_pager_search(const std::shared_ptr<history
     completion_list_t completions;
     history_search_t search{history, search_string, history_search_type_t::contains,
                             smartcase_flags(search_string)};
-    while (completions.size() < page_size && search.go_backwards()) {
+    while (completions.size() < page_size &&
+           search.go_to_next_match(history_search_direction_t::backward)) {
         const history_item_t &item = search.current_item();
         completions.push_back(completion_t{
             item.str(), L"", string_fuzzy_match_t::exact_match(),
@@ -1841,7 +1840,8 @@ static std::function<autosuggestion_t(void)> get_autosuggestion_performer(
         // Search history for a matching item.
         history_search_t searcher(history.get(), search_string, history_search_type_t::prefix,
                                   history_search_flags_t{});
-        while (!ctx.check_cancel() && searcher.go_backwards()) {
+        while (!ctx.check_cancel() &&
+               searcher.go_to_next_match(history_search_direction_t::backward)) {
             const history_item_t &item = searcher.current_item();
 
             // Skip items with newlines because they make terrible autosuggestions.

@@ -3793,7 +3793,7 @@ static void test_autosuggestion_combining() {
 static void test_history_matches(history_search_t &search, const wcstring_list_t &expected,
                                  unsigned from_line) {
     wcstring_list_t found;
-    while (search.go_backwards()) {
+    while (search.go_to_next_match(history_search_direction_t::backward)) {
         found.push_back(search.current_string());
     }
     do_test_from(expected == found, from_line);

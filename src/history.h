@@ -129,6 +129,8 @@ using history_item_list_t = std::deque<history_item_t>;
 
 struct history_impl_t;
 
+enum class history_search_direction_t { forward, backward };
+
 class history_t : noncopyable_t, nonmovable_t {
     friend class history_tests_t;
     struct impl_wrapper_t;
@@ -269,8 +271,8 @@ class history_search_t {
     /// Gets the original search term.
     const wcstring &original_term() const { return orig_term_; }
 
-    /// Finds the previous search result (backwards in time). Returns true if one was found.
-    bool go_backwards();
+    // Finds the next search result. Returns true if one was found.
+    bool go_to_next_match(history_search_direction_t direction);
 
     /// Returns the current search result item. asserts if there is no current item.
     const history_item_t &current_item() const;

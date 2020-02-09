@@ -627,14 +627,24 @@ void history_impl_t::load_old_if_needed() {
     }
 }
 
-bool history_search_t::go_backwards() {
+bool history_search_t::go_to_next_match(history_search_direction_t direction) {
     // Backwards means increasing our index.
-    const auto max_index = static_cast<size_t>(-1);
+    size_t invalid_index;
+    ssize_t increment;
 
-    if (current_index_ == max_index) return false;
+    if (direction == history_search_direction_t::backward) {
+        invalid_index = static_cast<size_t>(-1);
+        increment = 1;
+    } else {
+        assert(direction == history_search_direction_t::forward);
+        invalid_index = 0;
+        increment = -1;
+    }
+
+    if (current_index_ == invalid_index) return false;
 
     size_t index = current_index_;
-    while (++index < max_index) {
+    while ((index += increment) != invalid_index) {
         history_item_t item = history_->item_at_index(index);
 
         // We're done if it's empty or we cancelled.
@@ -1460,7 +1470,7 @@ static void do_1_history_search(history_t *hist, history_search_type_t search_ty
                                 const cancel_checker_t &cancel_check) {
     history_search_t searcher = history_search_t(hist, search_string, search_type,
                                                  case_sensitive ? 0 : history_search_ignore_case);
-    while (!cancel_check() && searcher.go_backwards()) {
+    while (!cancel_check() && searcher.go_to_next_match(history_search_direction_t::backward)) {
         if (!func(searcher.current_item())) {
             break;
         }

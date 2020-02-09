@@ -1210,6 +1210,8 @@ void reader_data_t::delete_char(bool backward) {
     }
     size_t pos_end = pos;
 
+    if (el->position() == 0 && backward) return;
+
     // Fake composed character sequences by continuing to delete until we delete a character of
     // width at least 1.
     int width;

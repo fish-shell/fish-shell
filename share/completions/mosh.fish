@@ -4,7 +4,7 @@ complete -x -c mosh -d Hostname -a "(__fish_complete_user_at_hosts)"
 complete -x -c mosh -d User -a "
 (__fish_print_users)@
 "
-complete -c mosh -d "Command to run" -x -a '(__fish_complete_subcommand --fcs-skip=2)'
+complete -c mosh -n 'test (__fish_number_of_cmd_args_wo_opts) -ge 2' -d "Command to run" -x -a '(__fish_complete_subcommand --fcs-skip=2)'
 
 complete -c mosh -l client -d 'Path to client helper on local machine (default: "mosh-client")'
 complete -c mosh -l server -d 'Command to run server helper on remote machine (default: "mosh-server")'

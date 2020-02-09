@@ -222,7 +222,7 @@ complete -c fossil -n '__fish_fossil_command finfo' -s s -l status -d 'Select st
 complete -c fossil -n __fish_fossil_needs_command -f -a help -d 'Display help'
 complete -c fossil -n '__fish_fossil_command help' -s a -l all -d 'Show main and auxiliary commands'
 complete -c fossil -n '__fish_fossil_command help' -s t -l test -d 'Show test commands only'
-complete -c fossil -n '__fish_fossil_command help' -s x -l aux -d 'Show auxilary commands only'
+complete -c fossil -n '__fish_fossil_command help' -s x -l aux -d 'Show auxiliary commands only'
 complete -c fossil -n '__fish_fossil_command help' -s w -l www -d 'Show list of web UI pages'
 
 # import

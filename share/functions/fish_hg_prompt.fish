@@ -16,7 +16,7 @@ set -g fish_prompt_hg_status_modified '*'
 set -g fish_prompt_hg_status_copied '⇒'
 set -g fish_prompt_hg_status_deleted '✖'
 set -g fish_prompt_hg_status_untracked '?'
-set -g fish_prompt_hg_status_unmerged '!'
+set -g fish_prompt_hg_status_unmerged !
 
 set -g fish_prompt_hg_status_order added modified copied deleted untracked unmerged
 
@@ -38,9 +38,8 @@ function fish_hg_prompt --description 'Write out the hg prompt'
 
     echo -n '|'
 
-    # For some reason, "-q" still prints the same output, but ~20% faster.
     # Disabling color and pager is always a good idea.
-    set -l repo_status (hg status -q --color never --pager never | string sub -l 2 | sort -u)
+    set -l repo_status (hg status | string sub -l 2 | sort -u)
 
     # Show nice color for a clean repo
     if test -z "$repo_status"

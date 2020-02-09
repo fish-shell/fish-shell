@@ -3,12 +3,13 @@
 // See issue #4190 for the rationale behind the original behavior of this builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <wchar.h>
+#include "builtin_argparse.h"
 
 #include <algorithm>
+#include <cerrno>
+#include <cstddef>
+#include <cstdint>
+#include <cwchar>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -16,13 +17,13 @@
 #include <vector>
 
 #include "builtin.h"
-#include "builtin_argparse.h"
 #include "common.h"
 #include "env.h"
 #include "exec.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
 #include "parser.h"
+#include "wcstringutil.h"
 #include "wgetopt.h"  // IWYU pragma: keep
 #include "wutil.h"    // IWYU pragma: keep
 
@@ -44,12 +45,13 @@ struct option_spec_t {
 using option_spec_ref_t = std::unique_ptr<option_spec_t>;
 
 struct argparse_cmd_opts_t {
+    bool ignore_unknown = false;
     bool print_help = false;
     bool stop_nonopt = false;
     size_t min_args = 0;
     size_t max_args = SIZE_MAX;
     wchar_t implicit_int_flag = L'\0';
-    wcstring name = L"argparse";
+    wcstring name = L"";
     wcstring_list_t raw_exclusive_flags;
     wcstring_list_t argv;
     std::unordered_map<wchar_t, option_spec_ref_t> options;
@@ -57,14 +59,12 @@ struct argparse_cmd_opts_t {
     std::vector<std::vector<wchar_t>> exclusive_flag_sets;
 };
 
-static const wchar_t *const short_options = L"+:hn:sx:N:X:";
-static const struct woption long_options[] = {{L"stop-nonopt", no_argument, NULL, 's'},
-                                              {L"name", required_argument, NULL, 'n'},
-                                              {L"exclusive", required_argument, NULL, 'x'},
-                                              {L"help", no_argument, NULL, 'h'},
-                                              {L"min-args", required_argument, NULL, 'N'},
-                                              {L"max-args", required_argument, NULL, 'X'},
-                                              {NULL, 0, NULL, 0}};
+static const wchar_t *const short_options = L"+:hn:six:N:X:";
+static const struct woption long_options[] = {
+    {L"stop-nonopt", no_argument, nullptr, 's'},    {L"ignore-unknown", no_argument, nullptr, 'i'},
+    {L"name", required_argument, nullptr, 'n'},     {L"exclusive", required_argument, nullptr, 'x'},
+    {L"help", no_argument, nullptr, 'h'},           {L"min-args", required_argument, nullptr, 'N'},
+    {L"max-args", required_argument, nullptr, 'X'}, {nullptr, 0, nullptr, 0}};
 
 // Check if any pair of mutually exclusive options was seen. Note that since every option must have
 // a short name we only need to check those.
@@ -105,9 +105,7 @@ static int check_for_mutually_exclusive_flags(const argparse_cmd_opts_t &opts,
                         // We want the flag order to be deterministic. Primarily to make unit
                         // testing easier.
                         if (flag1 > flag2) {
-                            wcstring tmp(flag1);
-                            flag1 = flag2;
-                            flag2 = tmp;
+                            std::swap(flag1, flag2);
                         }
                         streams.err.append_format(
                             _(L"%ls: Mutually exclusive flags '%ls' and `%ls` seen\n"),
@@ -184,6 +182,8 @@ static bool parse_flag_modifiers(const argparse_cmd_opts_t &opts, const option_s
     if (*s == L'!') {
         s++;
         opt_spec->validation_command = wcstring(s);
+        // Move cursor to the end so we don't expect a long flag.
+        while (*s) s++;
     } else if (*s) {
         streams.err.append_format(BUILTIN_ERR_INVALID_OPT_SPEC, opts.name.c_str(),
                                   option_spec.c_str(), *s);
@@ -316,7 +316,7 @@ static int collect_option_specs(argparse_cmd_opts_t &opts, int *optind, int argc
     wchar_t *cmd = argv[0];
 
     while (true) {
-        if (wcscmp(L"--", argv[*optind]) == 0) {
+        if (std::wcscmp(L"--", argv[*optind]) == 0) {
             ++*optind;
             break;
         }
@@ -344,7 +344,7 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'n': {
                 opts.name = w.woptarg;
@@ -352,6 +352,10 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
             }
             case 's': {
                 opts.stop_nonopt = true;
+                break;
+            }
+            case 'i': {
+                opts.ignore_unknown = true;
                 break;
             }
             case 'x': {
@@ -401,10 +405,19 @@ static int parse_cmd_opts(argparse_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
 
     if (opts.print_help) return STATUS_CMD_OK;
 
-    if (argc == w.woptind || wcscmp(L"--", argv[w.woptind - 1]) == 0) {
+    if (argc == w.woptind || std::wcscmp(L"--", argv[w.woptind - 1]) == 0) {
         // The user didn't specify any option specs.
         streams.err.append_format(_(L"%ls: No option specs were provided\n"), cmd);
         return STATUS_INVALID_ARGS;
+    }
+
+    if (opts.name.empty()) {
+        // If no name has been given, we default to the function name.
+        // If any error happens, the backtrace will show which argparse it was.
+        const wchar_t *fn = parser.get_function_name(1);
+
+        if (!fn) fn = L"argparse";
+        opts.name = fn;
     }
 
     *optind = w.woptind;
@@ -428,10 +441,10 @@ static void populate_option_strings(const argparse_cmd_opts_t &opts, wcstring *s
 
         if (!opt_spec->long_flag.empty()) {
             long_options->push_back(
-                {opt_spec->long_flag.c_str(), arg_type, NULL, opt_spec->short_flag});
+                {opt_spec->long_flag.c_str(), arg_type, nullptr, opt_spec->short_flag});
         }
     }
-    long_options->push_back({NULL, 0, NULL, 0});
+    long_options->push_back({nullptr, 0, nullptr, 0});
 }
 
 static int validate_arg(parser_t &parser, const argparse_cmd_opts_t &opts, option_spec_t *opt_spec,
@@ -448,8 +461,7 @@ static int validate_arg(parser_t &parser, const argparse_cmd_opts_t &opts, optio
     if (is_long_flag) {
         vars.set_one(var_name_prefix + L"name", ENV_LOCAL, opt_spec->long_flag);
     } else {
-        vars.set_one(var_name_prefix + L"name", ENV_LOCAL,
-                     wcstring(1, opt_spec->short_flag).c_str());
+        vars.set_one(var_name_prefix + L"name", ENV_LOCAL, wcstring(1, opt_spec->short_flag));
     }
     vars.set_one(var_name_prefix + L"value", ENV_LOCAL, woptarg);
 
@@ -490,7 +502,7 @@ static int validate_and_store_implicit_int(parser_t &parser, const argparse_cmd_
     opt_spec->vals.clear();
     opt_spec->vals.push_back(wcstring(val));
     opt_spec->num_seen++;
-    w.nextchar = NULL;
+    w.nextchar = nullptr;
     return STATUS_CMD_OK;
 }
 
@@ -530,7 +542,7 @@ static int handle_flag(parser_t &parser, const argparse_cmd_opts_t &opts, option
     return STATUS_CMD_OK;
 }
 
-static int argparse_parse_flags(parser_t &parser, const argparse_cmd_opts_t &opts,
+static int argparse_parse_flags(parser_t &parser, argparse_cmd_opts_t &opts,
                                 const wchar_t *short_options, const woption *long_options,
                                 const wchar_t *cmd, int argc, wchar_t **argv, int *optind,
                                 io_streams_t &streams) {
@@ -539,23 +551,43 @@ static int argparse_parse_flags(parser_t &parser, const argparse_cmd_opts_t &opt
     wgetopter_t w;
     while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, &long_idx)) != -1) {
         if (opt == ':') {
-            builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
+            builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1],
+                                     false /* print_hints */);
             return STATUS_INVALID_ARGS;
-        }
-
-        if (opt == '?') {
+        } else if (opt == '?') {
             // It's not a recognized flag. See if it's an implicit int flag.
             const wchar_t *arg_contents = argv[w.woptind - 1] + 1;
             int retval = STATUS_CMD_OK;
             if (is_implicit_int(opts, arg_contents)) {
                 retval = validate_and_store_implicit_int(parser, opts, arg_contents, w, long_idx,
                                                          streams);
-            } else {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
+            } else if (!opts.ignore_unknown) {
+                streams.err.append_format(BUILTIN_ERR_UNKNOWN, cmd, argv[w.woptind - 1]);
+                // We don't use builtin_print_error_trailer as that
+                // says to use the cmd help,
+                // which doesn't work if it's a command that does not belong to fish.
+                //
+                // Plus this particular error is not an error in argparse usage.
+                streams.err.append(parser.current_line());
                 retval = STATUS_INVALID_ARGS;
+            } else {
+                // Any unrecognized option is put back if ignore_unknown is used.
+                // This allows reusing the same argv in multiple argparse calls,
+                // or just ignoring the error (e.g. in completions).
+                opts.argv.push_back(arg_contents - 1);
+                // Work around weirdness with wgetopt, which crashes if we `continue` here.
+                if (w.woptind == argc) break;
             }
             if (retval != STATUS_CMD_OK) return retval;
             long_idx = -1;
+            continue;
+        } else if (opt == 1) {
+            // A non-option argument.
+            // We use `-` as the first option-string-char to disable GNU getopt's reordering,
+            // otherwise we'd get ignored options first and normal arguments later.
+            // E.g. `argparse -i -- -t tango -w` needs to keep `-t tango -w` in $argv, not `-t -w
+            // tango`.
+            opts.argv.push_back(argv[w.woptind - 1]);
             continue;
         }
 
@@ -579,7 +611,9 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
                                parser_t &parser, io_streams_t &streams) {
     if (args.empty()) return STATUS_CMD_OK;
 
-    wcstring short_options = opts.stop_nonopt ? L"+:" : L":";
+    // "+" means stop at nonopt, "-" means give nonoptions the option character code `1`, and don't
+    // reorder.
+    wcstring short_options = opts.stop_nonopt ? L"+:" : L"-:";
     std::vector<woption> long_options;
     populate_option_strings(opts, &short_options, &long_options);
 
@@ -602,7 +636,9 @@ static int argparse_parse_args(argparse_cmd_opts_t &opts, const wcstring_list_t 
     retval = check_for_mutually_exclusive_flags(opts, streams);
     if (retval != STATUS_CMD_OK) return retval;
 
-    for (int i = optind; argv[i]; i++) opts.argv.push_back(argv[i]);
+    for (int i = optind; argv[i]; i++) {
+        opts.argv.push_back(argv[i]);
+    }
 
     return STATUS_CMD_OK;
 }
@@ -637,8 +673,8 @@ static void set_argparse_result_vars(env_stack_t &vars, const argparse_cmd_opts_
             // We do a simple replacement of all non alphanum chars rather than calling
             // escape_string(long_flag, 0, STRING_STYLE_VAR).
             wcstring long_flag = opt_spec->long_flag;
-            for (size_t pos = 0; pos < long_flag.size(); pos++) {
-                if (!iswalnum(long_flag[pos])) long_flag[pos] = L'_';
+            for (auto &pos : long_flag) {
+                if (!iswalnum(pos)) pos = L'_';
             }
             vars.set(var_name_prefix + long_flag, ENV_LOCAL, opt_spec->vals);
         }
@@ -664,7 +700,7 @@ int builtin_argparse(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 

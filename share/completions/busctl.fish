@@ -7,22 +7,22 @@
 
 # A simple wrapper to call busctl with the correct mode and output
 function __fish_busctl
-	# TODO: If there's a "--address" argument we need to pass that
-	# We also need to pass the _last_ of these (`busctl --user --system` operates on the system bus)
-	set -l mode
+    # TODO: If there's a "--address" argument we need to pass that
+    # We also need to pass the _last_ of these (`busctl --user --system` operates on the system bus)
+    set -l mode
     if __fish_contains_opt user
-		set mode "--user"
-	else
-		set mode "--system"
-	end
+        set mode "--user"
+    else
+        set mode "--system"
+    end
     command busctl $mode $argv --no-legend --no-pager 2>/dev/null
 end
 
 function _fish_busctl
     set -l args a-address= s-show-machine u-unique A-acquired ä-activatable \
-    m-match= S-size= l-list q-quiet v-verbose e-expect-reply= Ä-auto-start= \
-    1-allow-interactive-authorization= t-timeout= 2-augment-creds= U-user 3-system \
-    H/host= M/machine= n-no-pager N-no-legend h/help V-version
+        m-match= S-size= l-list q-quiet v-verbose e-expect-reply= Ä-auto-start= \
+        1-allow-interactive-authorization= t-timeout= 2-augment-creds= U-user 3-system \
+        H/host= M/machine= n-no-pager N-no-legend h/help V-version
     set -l cmdline (commandline -opc) (commandline -ct)
     set -e cmdline[1]
     argparse $args -- $cmdline 2>/dev/null
@@ -91,27 +91,29 @@ function _fish_busctl
 end
 
 function __fish_busctl_busnames
-	__fish_busctl list --acquired | string replace -r '\s+.*$' ''
-	# Describe unique names (":1.32") with their process (e.g. `:1.32\tsteam`)
-	__fish_busctl list --unique | string replace -r '\s+\S+\s+(\S+)\s+.*$' '\t$1'
+    __fish_busctl list --acquired | string replace -r '\s+.*$' ''
+    # Describe unique names (":1.32") with their process (e.g. `:1.32\tsteam`)
+    __fish_busctl list --unique | string replace -r '\s+\S+\s+(\S+)\s+.*$' '\t$1'
 end
 
 function __fish_busctl_objects -a busname
-	__fish_busctl tree --list $busname | string replace -r '\s+.*$' ''
+    __fish_busctl tree --list $busname | string replace -r '\s+.*$' ''
 end
 
 function __fish_busctl_interfaces -a busname -a object
-	__fish_busctl introspect --list $busname $object | string replace -r '\s+.*$' ''
+    __fish_busctl introspect --list $busname $object | string replace -r '\s+.*$' ''
 end
 
 function __fish_busctl_members -a type -a busname -a object -a interface
-	__fish_busctl introspect --list $busname $object $interface \
-	| string match -- "* $type *" | string replace -r '.(\S+) .*' '$1'
+    __fish_busctl introspect --list $busname $object $interface \
+        | string match -- "* $type *" | string replace -r '.(\S+) .*' '$1'
 end
 
 function __fish_busctl_signature -a busname -a object -a interface -a member
-	__fish_busctl introspect --list $busname $object $interface \
-	| string match ".$member *" | while read a b c d; echo $c; end
+    __fish_busctl introspect --list $busname $object $interface \
+        | string match ".$member *" | while read a b c d
+        echo $c
+    end
 end
 
 ### Commands

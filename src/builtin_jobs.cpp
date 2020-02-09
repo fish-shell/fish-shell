@@ -1,16 +1,16 @@
 // Functions for executing the jobs builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
-#include <stddef.h>
-#ifdef HAVE__PROC_SELF_STAT
 #include <sys/time.h>
-#endif
+
+#include <cerrno>
+#include <cstddef>
 
 #include "builtin.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
+#include "parser.h"
 #include "proc.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -23,10 +23,9 @@ enum {
     JOBS_PRINT_PID,      // print pid of each process in job
     JOBS_PRINT_COMMAND,  // print command name of each process in job
     JOBS_PRINT_GROUP,    // print group id of job
-    JOBS_PRINT_NOTHING,    // print nothing (exit status only)
+    JOBS_PRINT_NOTHING,  // print nothing (exit status only)
 };
 
-#ifdef HAVE__PROC_SELF_STAT
 /// Calculates the cpu usage (in percent) of the specified job.
 static int cpu_use(const job_t *j) {
     double u = 0;
@@ -34,18 +33,17 @@ static int cpu_use(const job_t *j) {
     for (const process_ptr_t &p : j->processes) {
         struct timeval t;
         int jiffies;
-        gettimeofday(&t, 0);
+        gettimeofday(&t, nullptr);
         jiffies = proc_get_jiffies(p.get());
 
         double t1 = 1000000.0 * p->last_time.tv_sec + p->last_time.tv_usec;
         double t2 = 1000000.0 * t.tv_sec + t.tv_usec;
 
-        // fwprintf( stderr, L"t1 %f t2 %f p1 %d p2 %d\n", t1, t2, jiffies, p->last_jiffies );
-        u += ((double)(jiffies - p->last_jiffies)) / (t2 - t1);
+        // std::fwprintf( stderr, L"t1 %f t2 %f p1 %d p2 %d\n", t1, t2, jiffies, p->last_jiffies );
+        u += (static_cast<double>(jiffies - p->last_jiffies)) / (t2 - t1);
     }
     return u * 1000000;
 }
-#endif
 
 /// Print information about the specified job.
 static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_t &streams) {
@@ -57,17 +55,18 @@ static void builtin_jobs_print(const job_t *j, int mode, int header, io_streams_
             if (header) {
                 // Print table header before first job.
                 streams.out.append(_(L"Job\tGroup\t"));
-#ifdef HAVE__PROC_SELF_STAT
-                streams.out.append(_(L"CPU\t"));
-#endif
+                if (have_proc_stat()) {
+                    streams.out.append(_(L"CPU\t"));
+                }
                 streams.out.append(_(L"State\tCommand\n"));
             }
 
-            streams.out.append_format(L"%d\t%d\t", j->job_id, j->pgid);
+            streams.out.append_format(L"%d\t%d\t", j->job_id(), j->pgid);
 
-#ifdef HAVE__PROC_SELF_STAT
-            streams.out.append_format(L"%d%%\t", cpu_use(j));
-#endif
+            if (have_proc_stat()) {
+                streams.out.append_format(L"%d%%\t", cpu_use(j));
+            }
+
             streams.out.append(j->is_stopped() ? _(L"stopped") : _(L"running"));
             streams.out.append(L"\t");
             streams.out.append(j->command_wcstr());
@@ -120,18 +119,17 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int print_last = 0;
 
     static const wchar_t *const short_options = L":cghlpq";
-    static const struct woption long_options[] = {
-        {L"command", no_argument, NULL, 'c'},
-        {L"group", no_argument, NULL, 'g'},
-        {L"help", no_argument, NULL, 'h'},
-        {L"last", no_argument, NULL, 'l'},
-        {L"pid", no_argument, NULL, 'p'},
-        {L"quiet", no_argument, NULL, 'q'},
-        {nullptr, 0, NULL, 0}};
+    static const struct woption long_options[] = {{L"command", no_argument, nullptr, 'c'},
+                                                  {L"group", no_argument, nullptr, 'g'},
+                                                  {L"help", no_argument, nullptr, 'h'},
+                                                  {L"last", no_argument, nullptr, 'l'},
+                                                  {L"pid", no_argument, nullptr, 'p'},
+                                                  {L"quiet", no_argument, nullptr, 'q'},
+                                                  {nullptr, 0, nullptr, 0}};
 
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'p': {
                 mode = JOBS_PRINT_PID;
@@ -154,7 +152,7 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 break;
             }
             case 'h': {
-                builtin_print_help(parser, streams, cmd, streams.out);
+                builtin_print_help(parser, streams, cmd);
                 return STATUS_CMD_OK;
             }
             case ':': {
@@ -174,14 +172,13 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     if (print_last) {
         // Ignore unconstructed jobs, i.e. ourself.
-        job_iterator_t jobs;
-        const job_t *j;
-        while ((j = jobs.next())) {
-            if (j->is_constructed() && !j->is_completed()) {
-                builtin_jobs_print(j, mode, !streams.out_is_redirected, streams);
-                return STATUS_CMD_ERROR;
+        for (const auto &j : parser.jobs()) {
+            if (j->is_visible()) {
+                builtin_jobs_print(j.get(), mode, !streams.out_is_redirected, streams);
+                return STATUS_CMD_OK;
             }
         }
+        return STATUS_CMD_ERROR;
 
     } else {
         if (w.woptind < argc) {
@@ -191,21 +188,21 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 const job_t *j = nullptr;
 
                 if (argv[i][0] == L'%') {
-                    int jobId = -1;
-                    jobId = fish_wcstoi(argv[i] + 1);
-                    if (errno || jobId < -1) {
-                        streams.err.append_format(_(L"%ls: '%ls' is not a valid job id"), cmd, argv[i]);
+                    int job_id = fish_wcstoi(argv[i] + 1);
+                    if (errno || job_id < -1) {
+                        streams.err.append_format(_(L"%ls: '%ls' is not a valid job id"), cmd,
+                                                  argv[i]);
                         return STATUS_INVALID_ARGS;
                     }
-                    j = job_t::from_job_id(jobId);
-                }
-                else {
+                    j = parser.job_get(job_id);
+                } else {
                     int pid = fish_wcstoi(argv[i]);
                     if (errno || pid < 0) {
-                        streams.err.append_format(_(L"%ls: '%ls' is not a valid process id\n"), cmd, argv[i]);
+                        streams.err.append_format(_(L"%ls: '%ls' is not a valid process id\n"), cmd,
+                                                  argv[i]);
                         return STATUS_INVALID_ARGS;
                     }
-                    j = job_t::from_pid(pid);
+                    j = parser.job_get_from_pid(pid);
                 }
 
                 if (j && !j->is_completed() && j->is_constructed()) {
@@ -217,12 +214,11 @@ int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 }
             }
         } else {
-            job_iterator_t jobs;
-            const job_t *j;
-            while ((j = jobs.next())) {
+            for (const auto &j : parser.jobs()) {
                 // Ignore unconstructed jobs, i.e. ourself.
-                if (j->is_constructed() && !j->is_completed()) {
-                    builtin_jobs_print(j, mode, !found && !streams.out_is_redirected, streams);
+                if (j->is_visible()) {
+                    builtin_jobs_print(j.get(), mode, !found && !streams.out_is_redirected,
+                                       streams);
                     found = true;
                 }
             }

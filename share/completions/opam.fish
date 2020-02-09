@@ -91,7 +91,7 @@ complete -f -c opam -n '__fish_opam_needs_command' -a "remove uninstall" -d "Rem
 complete -f -c opam -n '__fish_opam_needs_command' -a "repository remote" -d "Manage OPAM repositories."
 complete -f -c opam -n '__fish_opam_needs_command' -a "search" -d "Search into the package list."
 complete -f -c opam -n '__fish_opam_needs_command' -a "show info" -d "Display information about specific packages."
-complete -f -c opam -n '__fish_opam_needs_command' -a "switch" -d "Manage multiple installation of compilers."
+complete -f -c opam -n '__fish_opam_needs_command' -a switch -d "Manage multiple installation of compilers."
 complete -f -c opam -n '__fish_opam_needs_command' -a "update" -d "Update the list of available packages."
 complete -f -c opam -n '__fish_opam_needs_command' -a "upgrade" -d "Upgrade the installed package to latest version."
 ## admin

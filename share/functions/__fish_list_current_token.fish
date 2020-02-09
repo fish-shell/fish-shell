@@ -7,7 +7,7 @@ function __fish_list_current_token -d "List contents of token under the cursor i
     if test -d $val
         ls $val
     else
-        set dir (dirname $val)
+        set dir (dirname -- $val)
         if test $dir != . -a -d $dir
             ls $dir
         else

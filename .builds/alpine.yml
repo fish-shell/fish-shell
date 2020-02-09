@@ -5,6 +5,7 @@ packages:
   - ncurses-dev
   - pcre2-dev
   - expect
+  - python
 sources:
   - https://git.sr.ht/~faho/fish
 tasks:

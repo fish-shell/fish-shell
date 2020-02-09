@@ -1,3 +1,9 @@
+set -l cname (string escape -- (nmcli -g NAME connection show --active)\t"Active connection")
+set -a cname (string escape -- (nmcli -g NAME connection show)\t"Connection")
+set -l ifname (string escape -- (nmcli -g DEVICE device status)\t"Interface name")
+set -l ssid (string escape -- (nmcli -g SSID device wifi list)\t"SSID")
+set -l bssid (string escape -- (nmcli -g BSSID device wifi list | string replace --all \\ '')\t"BSSID")
+
 set -l nmcli_commands general networking radio connection device agent monitor help
 set -l nmcli_general status hostname permissions logging help
 set -l nmcli_networking on off connectivity help
@@ -47,33 +53,42 @@ complete -c nmcli -n "__fish_seen_subcommand_from connection; and not __fish_see
 complete -c nmcli -n "__fish_seen_subcommand_from connection; and not __fish_seen_subcommand_from $nmcli_connection" -xa "edit" -d "Interactive edit"
 complete -c nmcli -n "contains_seq connection show -- (commandline -op)" -l active -d 'List only active profiles'
 complete -c nmcli -n "contains_seq connection show -- (commandline -op)" -l order -d 'Custom connection ordering'
-complete -c nmcli -n "contains_seq connection show -- (commandline -op)" -xa 'id uuid path apath help'
-complete -c nmcli -n "contains_seq connection up -- (commandline -op)" -xa 'id uuid path ifname help'
-complete -c nmcli -n "contains_seq connection up -- (commandline -op)" -xa 'ap' -d 'Specify AP to connect to (only for Wi-Fi)'
+complete -c nmcli -n "contains_seq connection show -- (commandline -op)" -xa "help $cname" -k
+complete -c nmcli -n "contains_seq connection up -- (commandline -op) && not contains -- (commandline -op)[-1] ifname ap" -xa "help $cname" -k
+complete -c nmcli -n "contains_seq connection up -- (commandline -op) && test (commandline -op)[-1] = ifname" -xa "$ifname" -k
+complete -c nmcli -n "contains_seq connection up -- (commandline -op) && test (commandline -op)[-1] = ap" -xa "$bssid"
 complete -c nmcli -n "contains_seq connection up -- (commandline -op)" -xa 'nsp' -d 'Specify NSP to connect to (only for WiMAX)'
 complete -c nmcli -n "contains_seq connection up -- (commandline -op)" -xa 'passwd-file' -d 'password file to activate the connection'
-complete -c nmcli -n "contains_seq connection down -- (commandline -op)" -xa 'id uuid path apath help'
+complete -c nmcli -n "contains_seq connection down -- (commandline -op)" -xa "help $cname" -k
 complete -c nmcli -n "contains_seq connection add -- (commandline -op)" -xa 'type ifname con-name autoconnect save master slave-type help'
+complete -c nmcli -n "contains_seq connection add -- (commandline -op) && test (commandline -op)[-1] = ifname" -xa "$ifname"
 complete -c nmcli -n "contains_seq connection modify -- (commandline -op)" -l temporary
-complete -c nmcli -n "contains_seq connection modify -- (commandline -op)" -xa 'id uuid path help'
+complete -c nmcli -n "contains_seq connection modify -- (commandline -op)" -xa "help $cname" -k
 complete -c nmcli -n "contains_seq connection clone -- (commandline -op)" -l temporary
-complete -c nmcli -n "contains_seq connection clone -- (commandline -op)" -xa 'id uuid path help'
-complete -c nmcli -n "contains_seq connection edit -- (commandline -op)" -xa 'id uuid path type help'
+complete -c nmcli -n "contains_seq connection clone -- (commandline -op)" -xa "help $cname" -k
+complete -c nmcli -n "contains_seq connection edit -- (commandline -op)" -xa "type help $cname" -k
 complete -c nmcli -n "contains_seq connection edit type -- (commandline -op)" -xa 'con-name'
-complete -c nmcli -n "contains_seq connection delete -- (commandline -op)" -xa 'id uuid path help'
-complete -c nmcli -n "contains_seq connection monitor -- (commandline -op)" -xa 'id uuid path help'
+complete -c nmcli -n "contains_seq connection delete -- (commandline -op)" -xa "help $cname" -k
+complete -c nmcli -n "contains_seq connection monitor -- (commandline -op)" -xa "help $cname" -k
 complete -c nmcli -n "contains_seq connection import -- (commandline -op)" -l temporary
 complete -c nmcli -n "contains_seq connection import -- (commandline -op)" -xa 'type file help'
-complete -c nmcli -n "contains_seq connection export -- (commandline -op)" -xa 'id uuid path help'
+complete -c nmcli -n "contains_seq connection export -- (commandline -op)" -xa "help $cname" -k
 
 set -l wifi_commands list connect hotspot rescan help
 complete -c nmcli -n "__fish_seen_subcommand_from device; and not __fish_seen_subcommand_from $nmcli_device" -xa "$nmcli_device"
 complete -c nmcli -n "contains_seq device set -- (commandline -op)" -xa 'ifname autoconnect managed'
 complete -c nmcli -n "contains_seq device wifi -- (commandline -op); and not __fish_seen_subcommand_from $wifi_commands" -xa "$wifi_commands"
 complete -c nmcli -n "contains_seq device wifi list -- (commandline -op)" -xa 'ifname bssid'
-complete -c nmcli -n "contains_seq device wifi connect -- (commandline -op)" -xa 'password wep-key-type ifname bssid name private hidden'
+complete -c nmcli -n "contains_seq device wifi list ifname -- (commandline -op)" -xa "$ifname"
+complete -c nmcli -n "contains_seq device wifi list bssid -- (commandline -op)" -xa "$bssid"
+complete -c nmcli -n "contains_seq device wifi connect -- (commandline -op)" -xa "$ssid $bssid password wep-key-type ifname bssid name private hidden" -k
+complete -c nmcli -n "contains_seq device wifi connect ifname -- (commandline -op)" -xa "$ifname"
+complete -c nmcli -n "contains_seq device wifi connect bssid -- (commandline -op)" -xa "$bssid"
 complete -c nmcli -n "contains_seq device wifi hotspot -- (commandline -op)" -xa 'ifname con-name ssid band channel password'
+complete -c nmcli -n "contains_seq device wifi hotspot ifname -- (commandline -op)" -xa "$ifname"
 complete -c nmcli -n "contains_seq device wifi rescan -- (commandline -op)" -xa 'ifname ssid'
+complete -c nmcli -n "contains_seq device wifi rescan ifname -- (commandline -op)" -xa "$ifname"
+complete -c nmcli -n "contains_seq device wifi rescan ssid -- (commandline -op)" -xa "$ssid"
 complete -c nmcli -n "contains_seq device lldp -- (commandline -op)" -xa 'list'
 
 complete -c nmcli -n "__fish_seen_subcommand_from agent; and not __fish_seen_subcommand_from $nmcli_agent" -xa "secret" -d "Register nmcli as NM secret agent"

@@ -5,6 +5,7 @@
 #include <array>
 #include <tuple>
 #include <type_traits>
+
 #include "parse_constants.h"
 #include "tokenizer.h"
 
@@ -214,9 +215,7 @@ DEF_ALT(job_decorator) {
 };
 
 // A job_conjunction is a job followed by a continuation.
-DEF(job_conjunction) produces_sequence<job, job_conjunction_continuation> {
-    BODY(job_conjunction)
-};
+DEF(job_conjunction) produces_sequence<job, job_conjunction_continuation>{BODY(job_conjunction)};
 
 DEF_ALT(job_conjunction_continuation) {
     using andands = seq<tok_andand, optional_newlines, job_conjunction>;
@@ -225,17 +224,36 @@ DEF_ALT(job_conjunction_continuation) {
     ALT_BODY(job_conjunction_continuation, andands, orors, empty);
 };
 
+/// The time builtin.
+DEF_ALT(optional_time) {
+    using empty = grammar::empty;
+    using time = single<keyword<parse_keyword_time>>;
+    ALT_BODY(optional_time, empty, time);
+};
+
 // A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases
 // like if statements, where we require a command). To represent "non-empty", we require a
 // statement, followed by a possibly empty job_continuation, and then optionally a background
 // specifier '&'
-DEF(job) produces_sequence<statement, job_continuation, optional_background>{BODY(job)};
+DEF(job)
+produces_sequence<optional_time, variable_assignments, statement, job_continuation,
+                  optional_background>{BODY(job)};
 
 DEF_ALT(job_continuation) {
-    using piped = seq<tok_pipe, optional_newlines, statement, job_continuation>;
+    using piped =
+        seq<tok_pipe, optional_newlines, variable_assignments, statement, job_continuation>;
     using empty = grammar::empty;
     ALT_BODY(job_continuation, piped, empty);
 };
+
+// A list of assignments like HOME=$PWD
+DEF_ALT(variable_assignments) {
+    using empty = grammar::empty;
+    using var = seq<variable_assignment, variable_assignments>;
+    ALT_BODY(variable_assignments, empty, var);
+};
+// A string token like VAR=value
+DEF(variable_assignment) produces_single<tok_string>{BODY(variable_assignment)};
 
 // A statement is a normal command, or an if / while / and etc
 DEF_ALT(statement) {
@@ -279,9 +297,8 @@ DEF_ALT(case_item_list) {
     ALT_BODY(case_item_list, empty, case_items, blank_line);
 };
 
-DEF(case_item) produces_sequence<keyword<parse_keyword_case>, argument_list, tok_end, job_list> {
-    BODY(case_item)
-};
+DEF(case_item)
+produces_sequence<keyword<parse_keyword_case>, argument_list, tok_end, job_list>{BODY(case_item)};
 
 DEF(block_statement)
 produces_sequence<block_header, job_list, end_command, arguments_or_redirections_list>{
@@ -297,9 +314,7 @@ DEF_ALT(block_header) {
 
 DEF(for_header)
 produces_sequence<keyword<parse_keyword_for>, tok_string, keyword<parse_keyword_in>, argument_list,
-                  tok_end> {
-    BODY(for_header)
-};
+                  tok_end>{BODY(for_header)};
 
 DEF(while_header)
 produces_sequence<keyword<parse_keyword_while>, job_conjunction, tok_end, andor_job_list>{
@@ -313,8 +328,9 @@ produces_sequence<keyword<parse_keyword_function>, argument, argument_list, tok_
     BODY(function_header)};
 
 DEF_ALT(not_statement) {
-    using nots = seq<keyword<parse_keyword_not>, statement>;
-    using exclams = seq<keyword<parse_keyword_exclam>, statement>;
+    using nots = seq<keyword<parse_keyword_not>, variable_assignments, optional_time, statement>;
+    using exclams =
+        seq<keyword<parse_keyword_exclam>, variable_assignments, optional_time, statement>;
     ALT_BODY(not_statement, nots, exclams);
 };
 

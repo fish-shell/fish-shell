@@ -12,7 +12,7 @@ max_line_length = 100
 [{Makefile,*.in}]
 indent_style = tab
 
-[*.md]
+[*.{md,rst}]
 trim_trailing_whitespace = false
 
 [*.{sh,ac}]

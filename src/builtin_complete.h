@@ -2,9 +2,8 @@
 #ifndef FISH_BUILTIN_COMPLETE_H
 #define FISH_BUILTIN_COMPLETE_H
 
-#include <wchar.h>
-
 #include <cstring>
+#include <cwchar>
 
 class parser_t;
 

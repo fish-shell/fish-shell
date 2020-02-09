@@ -1,11 +1,14 @@
+.. _cmd-echo:
+
 echo - display a line of text
 =============================
 
 Synopsis
 --------
 
-echo [OPTIONS] [STRING]
+::
 
+    echo [OPTIONS] [STRING]
 
 Description
 -----------

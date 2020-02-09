@@ -1,12 +1,14 @@
 // Print help message for the specified command.
 #include "config.h"  // IWYU pragma: keep
 
+#include "print_help.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+
+#include <cstring>
 
 #include "common.h"
-#include "print_help.h"
 
 #define CMD_LEN 1024
 
@@ -17,6 +19,6 @@ void print_help(const char *c, int fd) {
     int printed = snprintf(cmd, CMD_LEN, "fish -c '__fish_print_help %s >&%d'", c, fd);
 
     if (printed < CMD_LEN && system(cmd) == -1) {
-        write_loop(2, HELP_ERR, strlen(HELP_ERR));
+        write_loop(2, HELP_ERR, std::strlen(HELP_ERR));
     }
 }

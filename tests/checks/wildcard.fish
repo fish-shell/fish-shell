@@ -1,0 +1,31 @@
+# RUN: %fish %s
+
+# Ensure that, if variable expansion results in multiple strings
+# and one of them fails a glob, that we don't fail the entire expansion.
+set -l oldpwd (pwd)
+set dir (mktemp -d)
+cd $dir
+mkdir a
+mkdir b
+touch ./b/file.txt
+
+set dirs ./a ./b
+echo $dirs/*.txt
+# CHECK: ./b/file.txt
+
+cd $oldpwd
+rm -Rf $dir
+
+
+# Verify that we can do wildcard expansion when we
+# don't have read access to some path components
+# See #2099
+set -l where ../test/temp/fish_wildcard_permissions_test/noaccess/yesaccess
+mkdir -p $where
+chmod 300 (dirname $where) # no read permissions
+mkdir -p $where
+touch $where/alpha.txt $where/beta.txt $where/delta.txt
+echo $where/*
+#CHECK: ../test/temp/fish_wildcard_permissions_test/noaccess/yesaccess/alpha.txt ../test/temp/fish_wildcard_permissions_test/noaccess/yesaccess/beta.txt ../test/temp/fish_wildcard_permissions_test/noaccess/yesaccess/delta.txt
+chmod 700 (dirname $where) # so we can delete it
+rm -rf ../test/temp/fish_wildcard_permissions_test

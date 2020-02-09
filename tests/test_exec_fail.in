@@ -1,6 +1,0 @@
-exec cat < nosuchfile
-echo "failed: $status"
-not exec cat < nosuchfile
-echo "neg failed: $status"
-exec cat < /dev/null
-echo "not reached"

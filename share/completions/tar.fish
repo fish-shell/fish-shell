@@ -1,5 +1,23 @@
+function __fish_complete_tar -d "Peek inside of archives and list all files"
+    set -l args (commandline -poc)
+    while count $args >/dev/null
+        switch $args[1]
+            case '-*f' '--file'
+                set -e args[1]
+                if test -f $args[1]
+                    set -l file_list (tar -atf $args[1] 2> /dev/null)
+                    if test -n "$file_list"
+                        printf (_ "%s\tArchived file\n") $file_list
+                    end
+                    return
+                end
+            case '*'
+                set -e args[1]
+                continue
+        end
+    end
+end
 
-# Peek inside of archives and list all files
 complete -c tar -a "(__fish_complete_tar)"
 
 complete -c tar -s A -l catenate -d "Append archive to archive"
@@ -25,7 +43,7 @@ complete -c tar -s G -l incremental -d "Use old incremental GNU format"
 complete -c tar -s g -l listed-incremental -d "Use new incremental GNU format"
 complete -c tar -s h -l dereference -d "Dereference symlinks"
 complete -c tar -s i -l ignore-zeros -d "Ignore zero block in archive"
-complete -c tar -s j -l bzip -d "Filter through bzip2"
+complete -c tar -s j -l bzip2 -d "Filter through bzip2"
 complete -c tar -l ignore-failed-read -d "Don't exit on unreadable files"
 complete -c tar -s k -l keep-old-files -d "Don't overwrite"
 complete -c tar -s K -l starting-file -r -d "Starting file in archive"
@@ -66,3 +84,7 @@ complete -c tar -s z -l gzip -d "Filter through gzip"
 complete -c tar -l gunzip -d "Filter through gzip"
 complete -c tar -l use-compress-program -r -d "Filter through specified program"
 complete -c tar -s J -l xz -d "Filter through xz"
+complete -c tar -l lzip -d "Filter through lzip"
+complete -c tar -l lzma -d "Filter through lzma"
+complete -c tar -l lzop -d "Filter through lzop"
+complete -c tar -l zstd -d "Filter through zstd"

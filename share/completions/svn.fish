@@ -1,3 +1,29 @@
+function __fish_complete_svn_diff --description 'Complete "svn diff" arguments'
+    set -l cmdl (commandline -cop)
+    #set -l cmdl svn diff --diff-cmd diff --extensions '-a -b'
+    set -l diff diff
+    set -l args
+    while set -q cmdl[1]
+        switch $cmdl[1]
+            case --diff-cmd
+                if set -q cmdl[2]
+                    set diff $cmdl[2]
+                    set -e cmd[2]
+                end
+
+            case --extensions
+                if set -q cmdl[2]
+                    set args $cmdl[2]
+                    set -e cmdl[2]
+                end
+        end
+        set -e cmdl[1]
+    end
+    set -l token (commandline -cpt)
+    complete -C"$diff $args $token"
+
+end
+
 function _svn_cmpl_ -d 'Make a completion for a subcommand' --no-scope-shadowing --argument-names subcommand
     set -e argv[1]
     complete -c svn -n "__fish_seen_subcommand_from $subcommand" $argv
@@ -166,13 +192,11 @@ for cmd in $blame $diff $log $merge
     _svn_cmpl_ $cmd -l extensions -s x -d 'Ignore all whitespace' -xa '-w --ignore-all-space'
     _svn_cmpl_ $cmd -l extensions -s x -d 'Ignore eol style' -xa '-w --ignore-eol-style'
     _svn_cmpl_ $cmd -l extensions -s x -d 'Show C function name' -xa '-p --show-c-function'
-
-    # Next completion doesn't work, since fish doesn't respect -x key
-    #_svn_cmpl_ $cmd -l extensions -n '__fish_seen_subcommand_from --diff-cmd' -xa '(__fish_complete_svn_diff)'
+    _svn_cmpl_ $cmd -l extensions -n '__fish_seen_subcommand_from --diff-cmd' -xa '(__fish_complete_svn_diff)'
 end
 
 for cmd in $cleanup $merge $switch $update
-    _svn_cmpl_ $cmd -l diff3-cmd -d 'Use as merge command' -xa "(complete -C(commandline -ct))"
+    _svn_cmpl_ $cmd -l diff3-cmd -d 'Use as merge command' -xa "(__fish_complete_external_command)"
 end
 
 for cmd in $blame $info $list $log $stat
@@ -193,7 +217,7 @@ end
 
 for cmd in $diff $log
     _svn_cmpl_ $cmd -l internal-diff -d 'Override diff-cmd specified in config file'
-    _svn_cmpl_ $cmd -l diff-cmd -d 'Use external diff command' -xa "(complete -C(commandline -ct))"
+    _svn_cmpl_ $cmd -l diff-cmd -d 'Use external diff command' -xa "(__fish_complete_external_command)"
 end
 
 for cmd in $add $import

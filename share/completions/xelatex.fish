@@ -1,2 +1,2 @@
-complete -c tex -w xelatex
+complete -c xelatex -w latex
 

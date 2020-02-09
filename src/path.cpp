@@ -3,12 +3,14 @@
 // issues.
 #include "config.h"  // IWYU pragma: keep
 
+#include "path.h"
+
 #include <errno.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <wchar.h>
 
+#include <cstring>
+#include <cwchar>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -18,7 +20,7 @@
 #include "env.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
-#include "path.h"
+#include "flog.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// Unexpected error in path_get_path().
@@ -33,17 +35,16 @@ const wcstring_list_t dflt_pathsv({L"/bin", L"/usr/bin", PREFIX L"/bin"});
 
 static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                                const maybe_t<env_var_t> &bin_path_var) {
-    debug(5, L"path_get_path( '%ls' )", cmd.c_str());
-
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
     // looking for a matching command.
     if (cmd.find(L'/') != wcstring::npos) {
-        if (waccess(cmd, X_OK) != 0) {
+        std::string narrow = wcs2string(cmd);
+        if (access(narrow.c_str(), X_OK) != 0) {
             return false;
         }
 
         struct stat buff;
-        if (wstat(cmd, &buff)) {
+        if (stat(narrow.c_str(), &buff)) {
             return false;
         }
         if (S_ISREG(buff.st_mode)) {
@@ -65,9 +66,10 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
     for (auto next_path : *pathsv) {
         if (next_path.empty()) continue;
         append_path_component(next_path, cmd);
-        if (waccess(next_path, X_OK) == 0) {
+        std::string narrow = wcs2string(next_path);
+        if (access(narrow.c_str(), X_OK) == 0) {
             struct stat buff;
-            if (wstat(next_path, &buff) == -1) {
+            if (stat(narrow.c_str(), &buff) == -1) {
                 if (errno != EACCES) {
                     wperror(L"stat");
                 }
@@ -87,23 +89,23 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path,
                     break;
                 }
 #ifdef __sun
-                //Solaris 5.11 can return any of the following three if the path
-                //does not exist. Yes, even 0. No, none of this is documented.
+                // Solaris 5.11 can return any of the following three if the path
+                // does not exist. Yes, even 0. No, none of this is documented.
                 case 0:
                 case EAGAIN:
                 case EEXIST: {
                     break;
                 }
 #endif
-                //WSL has a bug where access(2) can return EINVAL
-                //See https://github.com/Microsoft/BashOnWindows/issues/2522
-                //The only other way EINVAL can happen is if the wrong
-                //mode was specified, but we have X_OK hard-coded above.
+                // WSL has a bug where access(2) can return EINVAL
+                // See https://github.com/Microsoft/BashOnWindows/issues/2522
+                // The only other way EINVAL can happen is if the wrong
+                // mode was specified, but we have X_OK hard-coded above.
                 case EINVAL: {
                     break;
                 }
                 default: {
-                    debug(1, MISSING_COMMAND_ERR_MSG, next_path.c_str());
+                    FLOGF(warning, MISSING_COMMAND_ERR_MSG, next_path.c_str());
                     wperror(L"access");
                     break;
                 }
@@ -120,7 +122,7 @@ bool path_get_path(const wcstring &cmd, wcstring *out_path, const environment_t 
 }
 
 wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars) {
-    debug(3, L"path_get_paths('%ls')", cmd.c_str());
+    FLOGF(path, L"path_get_paths('%ls')", cmd.c_str());
     wcstring_list_t paths;
 
     // If the command has a slash, it must be an absolute or relative path and thus we don't bother
@@ -135,7 +137,7 @@ wcstring_list_t path_get_paths(const wcstring &cmd, const environment_t &vars) {
     }
 
     auto path_var = vars.get(L"PATH");
-    std::vector<wcstring> pathsv;
+    wcstring_list_t pathsv;
     if (path_var) path_var->to_list(pathsv);
     for (auto path : pathsv) {
         if (path.empty()) continue;
@@ -157,8 +159,7 @@ maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
                                   const environment_t &env_vars) {
     int err = ENOENT;
     if (dir.empty()) return none();
-
-    assert(wd.empty() || wd.back() == L'/');
+    assert(!wd.empty() && wd.back() == L'/');
     wcstring_list_t paths;
     if (dir.at(0) == L'/') {
         // Absolute path.
@@ -173,20 +174,26 @@ maybe_t<wcstring> path_get_cdpath(const wcstring &dir, const wcstring &wd,
         if (auto cdpaths = env_vars.get(L"CDPATH")) {
             cdpathsv = cdpaths->as_list();
         }
-        if (cdpathsv.empty()) {
-            cdpathsv.push_back(L".");
-        }
+        // Always append $PWD
+        cdpathsv.push_back(L".");
         for (wcstring next_path : cdpathsv) {
             if (next_path.empty()) next_path = L".";
-            if (next_path == L"." && !wd.empty()) {
+            if (next_path == L".") {
                 // next_path is just '.', and we have a working directory, so use the wd instead.
-                // TODO: if next_path starts with ./ we need to replace the . with the wd.
                 next_path = wd;
             }
+
+            // We want to return an absolute path (see issue 6220)
+            if (string_prefixes_string(L"./", next_path)) {
+                next_path = next_path.replace(0, 2, wd);
+            } else if (string_prefixes_string(L"../", next_path) || next_path == L"..") {
+                next_path = next_path.insert(0, wd);
+            }
+
             expand_tilde(next_path, env_vars);
             if (next_path.empty()) continue;
 
-            wcstring whole_path = next_path;
+            wcstring whole_path = std::move(next_path);
             append_path_component(whole_path, dir);
             paths.push_back(whole_path);
         }
@@ -256,96 +263,122 @@ wcstring path_apply_working_directory(const wcstring &path, const wcstring &work
 /// a function) we don't want that subshell to issue the same warnings.
 static void maybe_issue_path_warning(const wcstring &which_dir, const wcstring &custom_error_msg,
                                      bool using_xdg, const wcstring &xdg_var, const wcstring &path,
-                                     int saved_errno) {
-    auto &vars = env_stack_t::globals();
+                                     int saved_errno, env_stack_t &vars) {
     wcstring warning_var_name = L"_FISH_WARNED_" + which_dir;
-    auto var = vars.get(warning_var_name, ENV_GLOBAL | ENV_EXPORT);
-    if (!var) return;
+    if (vars.get(warning_var_name, ENV_GLOBAL | ENV_EXPORT)) {
+        return;
+    }
     vars.set_one(warning_var_name, ENV_GLOBAL | ENV_EXPORT, L"1");
 
-    debug(0, custom_error_msg.c_str());
+    FLOG(error, custom_error_msg.c_str());
     if (path.empty()) {
-        debug(0, _(L"Unable to locate the %ls directory."), which_dir.c_str());
-        debug(0, _(L"Please set the %ls or HOME environment variable before starting fish."),
+        FLOGF(error, _(L"Unable to locate the %ls directory."), which_dir.c_str());
+        FLOGF(error, _(L"Please set the %ls or HOME environment variable before starting fish."),
               xdg_var.c_str());
     } else {
         const wchar_t *env_var = using_xdg ? xdg_var.c_str() : L"HOME";
-        debug(0, _(L"Unable to locate %ls directory derived from $%ls: '%ls'."), which_dir.c_str(),
-              env_var, path.c_str());
-        debug(0, _(L"The error was '%s'."), strerror(saved_errno));
-        debug(0, _(L"Please set $%ls to a directory where you have write access."), env_var);
+        FLOGF(error, _(L"Unable to locate %ls directory derived from $%ls: '%ls'."),
+              which_dir.c_str(), env_var, path.c_str());
+        FLOGF(error, _(L"The error was '%s'."), std::strerror(saved_errno));
+        FLOGF(error, _(L"Please set $%ls to a directory where you have write access."), env_var);
     }
     ignore_result(write(STDERR_FILENO, "\n", 1));
 }
 
-static void path_create(wcstring &path, const wcstring &xdg_var, const wcstring &which_dir,
-                        const wcstring &custom_error_msg) {
-    bool path_done = false;
-    bool using_xdg = false;
-    int saved_errno = 0;
+/// Make sure the specified directory exists. If needed, try to create it and any currently not
+/// existing parent directories, like mkdir -p,.
+///
+/// \return 0 if, at the time of function return the directory exists, -1 otherwise.
+static int create_directory(const wcstring &d) {
+    bool ok = false;
+    struct stat buf;
+    int stat_res = 0;
 
+    while ((stat_res = wstat(d, &buf)) != 0) {
+        if (errno != EAGAIN) break;
+    }
+
+    if (stat_res == 0) {
+        if (S_ISDIR(buf.st_mode)) ok = true;
+    } else if (errno == ENOENT) {
+        wcstring dir = wdirname(d);
+        if (!create_directory(dir) && !wmkdir(d, 0700)) ok = true;
+    }
+
+    return ok ? 0 : -1;
+}
+
+/// The following type wraps up a user's "base" directories, corresponding (conceptually if not
+/// actually) to XDG spec.
+struct base_directory_t {
+    wcstring path{};       /// the path where we attempted to create the directory.
+    bool success{false};   /// whether creating the directory succeeded.
+    int err{0};            /// the error code if creating the directory failed.
+    bool used_xdg{false};  /// whether an XDG variable was used in resolving the directory.
+};
+
+/// Attempt to get a base directory, creating it if necessary. If a variable named \p xdg_var is
+/// set, use that directory; otherwise use the path \p non_xdg_homepath rooted in $HOME. \return the
+/// result; see the base_directory_t fields.
+static base_directory_t make_base_directory(const wcstring &xdg_var,
+                                            const wchar_t *non_xdg_homepath) {
     // The vars we fetch must be exported. Allowing them to be universal doesn't make sense and
     // allowing that creates a lock inversion that deadlocks the shell since we're called before
     // uvars are available.
     const auto &vars = env_stack_t::globals();
+    base_directory_t result{};
     const auto xdg_dir = vars.get(xdg_var, ENV_GLOBAL | ENV_EXPORT);
     if (!xdg_dir.missing_or_empty()) {
-        using_xdg = true;
-        path = xdg_dir->as_string() + L"/fish";
-        if (create_directory(path) != -1) {
-            path_done = true;
-        } else {
-            saved_errno = errno;
-        }
+        result.path = xdg_dir->as_string() + L"/fish";
+        result.used_xdg = true;
     } else {
         const auto home = vars.get(L"HOME", ENV_GLOBAL | ENV_EXPORT);
         if (!home.missing_or_empty()) {
-            path = home->as_string() +
-                   (which_dir == L"config" ? L"/.config/fish" : L"/.local/share/fish");
-            if (create_directory(path) != -1) {
-                path_done = true;
-            } else {
-                saved_errno = errno;
-            }
+            result.path = home->as_string() + non_xdg_homepath;
         }
     }
 
-    if (!path_done) {
-        maybe_issue_path_warning(which_dir, custom_error_msg, using_xdg, xdg_var, path,
-                                 saved_errno);
-        path.clear();
-    }
-
-    return;
+    errno = 0;
+    result.success = !result.path.empty() && create_directory(result.path) != -1;
+    result.err = errno;
+    return result;
 }
 
-/// Cache the config path.
+static const base_directory_t &get_data_directory() {
+    static base_directory_t s_dir = make_base_directory(L"XDG_DATA_HOME", L"/.local/share/fish");
+    return s_dir;
+}
+
+static const base_directory_t &get_config_directory() {
+    static base_directory_t s_dir = make_base_directory(L"XDG_CONFIG_HOME", L"/.config/fish");
+    return s_dir;
+}
+
+void path_emit_config_directory_errors(env_stack_t &vars) {
+    const auto &data = get_data_directory();
+    if (!data.success) {
+        maybe_issue_path_warning(L"data", _(L"Your history will not be saved."), data.used_xdg,
+                                 L"XDG_DATA_HOME", data.path, data.err, vars);
+    }
+
+    const auto &config = get_config_directory();
+    if (!config.success) {
+        maybe_issue_path_warning(L"config", _(L"Your personal settings will not be saved."),
+                                 config.used_xdg, L"XDG_CONFIG_HOME", config.path, config.err,
+                                 vars);
+    }
+}
+
 bool path_get_config(wcstring &path) {
-    static bool config_path_done = false;
-    static wcstring config_path(L"");
-
-    if (!config_path_done) {
-        path_create(config_path, L"XDG_CONFIG_HOME", L"config",
-                    _(L"Your personal settings will not be saved."));
-        config_path_done = true;
-    }
-
-    path = config_path;
-    return !config_path.empty();
+    const auto &dir = get_config_directory();
+    path = dir.success ? dir.path : L"";
+    return dir.success;
 }
 
-/// Cache the data path.
 bool path_get_data(wcstring &path) {
-    static bool data_path_done = false;
-    static wcstring data_path(L"");
-
-    if (!data_path_done) {
-        data_path_done = true;
-        path_create(data_path, L"XDG_DATA_HOME", L"data", _(L"Your history will not be saved."));
-    }
-
-    path = data_path;
-    return !data_path.empty();
+    const auto &dir = get_data_directory();
+    path = dir.success ? dir.path : L"";
+    return dir.success;
 }
 
 void path_make_canonical(wcstring &path) {
@@ -429,4 +462,22 @@ bool paths_are_same_file(const wcstring &path1, const wcstring &path2) {
     }
 
     return false;
+}
+
+void append_path_component(wcstring &path, const wcstring &component) {
+    if (path.empty() || component.empty()) {
+        path.append(component);
+    } else {
+        size_t path_len = path.size();
+        bool path_slash = path.at(path_len - 1) == L'/';
+        bool comp_slash = component.at(0) == L'/';
+        if (!path_slash && !comp_slash) {
+            // Need a slash
+            path.push_back(L'/');
+        } else if (path_slash && comp_slash) {
+            // Too many slashes.
+            path.erase(path_len - 1, 1);
+        }
+        path.append(component);
+    }
 }

@@ -297,7 +297,13 @@ sudo ln -s /usr/bin/clang-format-3.9 /usr/bin/clang-format
 
 ## Message Translations
 
-Fish uses the GNU gettext library to translate messages from English to other languages. To create or update a translation run `make po/[LANGUAGE CODE].po` where `LANGUAGE CODE` is the two letter ISO 639-1 language code of the language you are translating to (e.g. `de` for German). Make sure that you have the `xgettext`, `msgfmt` and `msgmerge` commands installed in order to do this.
+Fish uses the GNU gettext library to translate messages from English to other languages.
+
+All non-debug messages output for user consumption should be marked for translation. In C++, this requires the use of the `_` (underscore) macro:
+
+```
+streams.out.append_format(_(L"%ls: There are no jobs\n"), argv[0]);
+```
 
 All messages in fish script must be enclosed in single or double quote characters. They must also be translated via a subcommand. This means that the following are **not** valid:
 
@@ -315,6 +321,18 @@ echo (_ "goodbye")
 
 Note that you can use either single or double quotes to enclose the message to be translated. You can also optionally include spaces after the opening parentheses and once again before the closing parentheses.
 
-Be cautious about blindly updating an existing translation file. Trivial changes to an existing message (e.g., changing the punctuation) will cause existing translations to be removed, since the tools do literal string matching. Therefore, in general, you need to carefully review any recommended deletions.
+Creating and updating translations requires the Gettext tools, including `xgettext`, `msgfmt` and `msgmerge`. Translation sources are stored in the `po` directory, named `LANG.po`, where `LANG` is the two letter ISO 639-1 language code of the target language (eg `de` for German).
+
+To create a new translation, for example for German:
+* generate a `messages.pot` file by running `build_tools/fish_xgettext.fish` from the source tree
+* copy `messages.pot` to `po/LANG.po` ()
+
+To update a translation:
+* generate a `messages.pot` file by running `build_tools/fish_xgettext.fish` from the source tree
+* update the existing translation by running `msgmerge --update --no-fuzzy-matching po/LANG.po messages.pot`
+
+Many tools are available for editing translation files, including command-line and graphical user interface programs.
+
+Be cautious about blindly updating an existing translation file. Trivial changes to an existing message (eg changing the punctuation) will cause existing translations to be removed, since the tools do literal string matching. Therefore, in general, you need to carefully review any recommended deletions.
 
 Read the [translations wiki](https://github.com/fish-shell/fish-shell/wiki/Translations) for more information.

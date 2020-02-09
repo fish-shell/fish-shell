@@ -9,12 +9,12 @@ complete -f -c systemd-analzye -l system -d 'Talk to the service manager of the 
 
 set -l commands time blame critical-chain plot dot set-log-level set-log-target dump verify
 
-complete -c systemd-analyze -n "not __fish_seen_subcommand_from $commands" -a time -d  "Print time spent in the kernel" -f
-complete -c systemd-analyze -n "not __fish_seen_subcommand_from $commands" -a blame -d  "Print list of running units ordered by time to init" -f
-complete -c systemd-analyze -n "not __fish_seen_subcommand_from $commands" -a critical-chain -d  "Print a tree of the time critical chain of units" -f
-complete -c systemd-analyze -n "not __fish_seen_subcommand_from $commands" -a plot -d  "Output SVG graphic showing service initialization" -f
-complete -c systemd-analyze -n "not __fish_seen_subcommand_from $commands" -a dot -d  "Output dependency graph in dot(1) format" -f
-complete -c systemd-analyze -n "not __fish_seen_subcommand_from $commands" -a set-log-level -d  "Set logging threshold for manager" -f
-complete -c systemd-analyze -n "not __fish_seen_subcommand_from $commands" -a set-log-target -d  "Set logging target for manager" -f
-complete -c systemd-analyze -n "not __fish_seen_subcommand_from $commands" -a dump -d  "Output state serialization of service manager" -f
-complete -c systemd-analyze -n "not __fish_seen_subcommand_from $commands" -a verify -d  "Check unit files for correctness"
+complete -c systemd-analyze -n "not __fish_seen_subcommand_from $commands" -a time -d "Print time spent in the kernel" -f
+complete -c systemd-analyze -n "not __fish_seen_subcommand_from $commands" -a blame -d "Print list of running units ordered by time to init" -f
+complete -c systemd-analyze -n "not __fish_seen_subcommand_from $commands" -a critical-chain -d "Print a tree of the time critical chain of units" -f
+complete -c systemd-analyze -n "not __fish_seen_subcommand_from $commands" -a plot -d "Output SVG graphic showing service initialization" -f
+complete -c systemd-analyze -n "not __fish_seen_subcommand_from $commands" -a dot -d "Output dependency graph in dot(1) format" -f
+complete -c systemd-analyze -n "not __fish_seen_subcommand_from $commands" -a set-log-level -d "Set logging threshold for manager" -f
+complete -c systemd-analyze -n "not __fish_seen_subcommand_from $commands" -a set-log-target -d "Set logging target for manager" -f
+complete -c systemd-analyze -n "not __fish_seen_subcommand_from $commands" -a dump -d "Output state serialization of service manager" -f
+complete -c systemd-analyze -n "not __fish_seen_subcommand_from $commands" -a verify -d "Check unit files for correctness"

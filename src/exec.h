@@ -7,31 +7,36 @@
 #include <vector>
 
 #include "common.h"
+#include "proc.h"
 
 /// Pipe redirection error message.
 #define PIPE_ERROR _(L"An error occurred while setting up pipe")
 
 /// Execute the processes specified by \p j in the parser \p.
-class job_t;
-class parser_t;
-bool exec_job(parser_t &parser, std::shared_ptr<job_t> j);
+bool exec_job(parser_t &parser, const std::shared_ptr<job_t> &j, const job_lineage_t &lineage);
 
-/// Evaluate the expression cmd in a subshell, add the outputs into the list l. On return, the
-/// status flag as returned bu \c proc_gfet_last_status will not be changed.
+/// Evaluate a command.
 ///
 /// \param cmd the command to execute
-/// \param outputs The list to insert output into.
+/// \param parser the parser with which to execute code
+/// \param outputs the list to insert output into.
+/// \param apply_exit_status if set, update $status within the parser, otherwise do not.
 ///
-/// \return the status of the last job to exit, or -1 if en error was encountered.
-int exec_subshell(const wcstring &cmd, parser_t &parser, std::vector<wcstring> &outputs,
-                  bool preserve_exit_status, bool is_subcmd = false);
-int exec_subshell(const wcstring &cmd, parser_t &parser, bool preserve_exit_status,
-                  bool is_subcmd = false);
+/// \return a value appropriate for populating $status.
+int exec_subshell(const wcstring &cmd, parser_t &parser, bool apply_exit_status);
+int exec_subshell(const wcstring &cmd, parser_t &parser, wcstring_list_t &outputs,
+                  bool apply_exit_status);
+
+/// Like exec_subshell, but only returns expansion-breaking errors. That is, a zero return means
+/// "success" (even though the command may have failed), a non-zero return means that we should
+/// halt expansion.
+int exec_subshell_for_expand(const wcstring &cmd, parser_t &parser, wcstring_list_t &outputs);
 
 /// Loops over close until the syscall was run without being interrupted.
 void exec_close(int fd);
 
-/// Gets the interpreter for a given command.
-char *get_interpreter(const char *command, char *interpreter, size_t buff_size);
-
+/// Compute the "pgroup provenance" for a job. This is a description of how the pgroup is
+/// assigned. It's factored out because the logic has subtleties, and this centralizes it.
+pgroup_provenance_t get_pgroup_provenance(const std::shared_ptr<job_t> &j,
+                                          const job_lineage_t &lineage);
 #endif

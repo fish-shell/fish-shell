@@ -76,7 +76,7 @@ set rpm_select -c rpm -n "__fish_contains_opt -s q -s V query verify"
 
 complete $rpm_select -a "(__fish_print_packages)"
 complete $rpm_select -s a -l all -d 'Query all installed packages'
-complete $rpm_select -s f -l file -d 'Query package owning specified file' -r
+complete $rpm_select -s f -l file -d 'Query package owning specified file' -rF
 complete $rpm_select -l fileid -d 'Query package that contains a given file identifier, i.e. the MD5 digest of the file contents' -x
 complete $rpm_select -s g -l group -d 'Query packages with the specified group' -x
 complete $rpm_select -l hdrid -d 'Query package that contains a given header identifier, i.e. the SHA1 digest of the immutable header region' -x

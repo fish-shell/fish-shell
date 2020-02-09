@@ -1,5 +1,5 @@
 function __bower_cmds
-	echo -en "cache\tManage bower cache
+    echo -en "cache\tManage bower cache
 help\tDisplay help information about Bower
 home\tOpens a package homepage into your favorite browser
 info\tInfo of a particular package
@@ -20,7 +20,7 @@ version\tBump a package version
 end
 
 function __bower_args
-	echo -en "-f\tMakes various commands more forceful
+    echo -en "-f\tMakes various commands more forceful
 --force\tMakes various commands more forceful
 -j\tOutput consumable JSON
 --json\tOutput consumable JSON
@@ -41,20 +41,27 @@ function __bower_args
 end
 
 function __bower_matching_pkgs
-	bower search (commandline -ct) | string match -r "\S+[^\s]" | string match -v "Search"
+    bower search (commandline -ct) | string match -r "\S+[^\s]" | string match -v "Search"
 end
 
-# Output of `bower list` is a) slow, b) convoluted. Use `jq` instead.
+# Output of `bower list` is a) slow, b) convoluted. Use `python` or `jq` instead.
 function __bower_list_installed
-	if not type -q jq
-		return 1
-	end
+    if not test -e bower.json
+        return 1
+    end
 
-	if not test -e bower.json
-		return 1
-	end
+    if set -l python (__fish_anypython)
+        # Warning: That weird indentation is necessary, because python.
+        $python -c 'import json, sys; data = json.load(sys.stdin);
+for k,v in data["dependencies"].items(): print(k + "\t" + v[:18])' bower.json 2>/dev/null
+        return
+    end
 
-	jq -r '.dependencies | to_entries[] | .key' bower.json
+    if not type -q jq
+        return 1
+    end
+
+    jq -r '.dependencies | to_entries[] | .key' bower.json
 end
 
 complete -c bower -n "__fish_is_first_token" -x -a '(__bower_cmds)'

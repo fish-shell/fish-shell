@@ -1,16 +1,20 @@
+.. _cmd-break:
+
 break - stop the current inner loop
 ===================================
 
 Synopsis
 --------
 
-LOOP_CONSTRUCT; [COMMANDS...] break; [COMMANDS...] end
+::
+
+    LOOP_CONSTRUCT; [COMMANDS...] break; [COMMANDS...] end
 
 
 Description
 -----------
 
-``break`` halts a currently running loop, such as a <a href="#for">for</a> loop or a <a href="#while">while</a> loop. It is usually added inside of a conditional block such as an <a href="#if">if</a> statement or a <a href="#switch">switch</a> statement.
+``break`` halts a currently running loop, such as a :ref:`switch <cmd-switch>`, :ref:`for <cmd-for>` or :ref:`while <cmd-while>` loop. It is usually added inside of a conditional block such as an :ref:`if <cmd-if>` block.
 
 There are no parameters for ``break``.
 

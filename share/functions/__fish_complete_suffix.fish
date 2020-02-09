@@ -51,8 +51,6 @@ function __fish_complete_suffix -d "Complete using files"
     # Strip leading ./ as it confuses the detection of base and suffix
     # It is conditionally re-added below.
     set base $prefix(string replace -r '^("\')?\\./' '' -- $comp | string trim -c '\'"') # " make emacs syntax highlighting happy
-    # echo "base: $base" > /dev/tty
-    # echo "suffix: $suff" > /dev/tty
 
     set -l all
     set -l dirs
@@ -61,11 +59,10 @@ function __fish_complete_suffix -d "Complete using files"
     # correct form.
 
     # Also do directory completion, since there might be files with the correct
-    # suffix in a subdirectory. `eval` is used since $suff may be passed in
-    # as {.foo,.bar} and we want to expand that.
-    eval "set all $base*$suff"
+    # suffix in a subdirectory.
+    set all $base*$suff
     if not string match -qr '/$' -- $suff
-        eval "set dirs $base*/"
+        set dirs $base*/
 
         # The problem is that we now have each directory included twice in the output,
         # once as `dir` and once as `dir/`. The runtime here is O(n) for n directories
@@ -81,27 +78,21 @@ function __fish_complete_suffix -d "Complete using files"
     set files $all $dirs
     if string match -qr '^\\./' -- $comp
         set files ./$files
-    end
-
-    # Another problem is that expanded paths are not matched, either.
-    # So an expression like $HOME/foo*.zip will expand to /home/rdahl/foo-bar.zip
-    # but that no longer matches the expression at the command line.
-    if string match -qr '[${}*~]' -- $comp
-        set -l expanded
-        eval "set expanded $comp"
-        set files (string replace -- $expanded $comp $files)
+    else
+        # "Escape" files starting with a literal dash `-` with a `./`
+        set files (string replace -r -- "^-" "./-" $files)
     end
 
     if set -q files[1]
         if string match -qr -- . "$desc"
-           set desc "\t$desc"
+            set desc "\t$desc"
         end
         if string match -qr -- . "$prefix"
             # Ideally, only replace in the beginning of the string, but we have no
             # way of doing a pcre2 escape so we can use a regex replace instead
             set files (string replace $prefix "" $files)
         end
-        printf "%s$desc\n" $files #| sort -u
+        printf "%s$desc\n" $files
     end
 
 end

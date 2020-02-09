@@ -25,14 +25,20 @@ typedef uint32_t source_offset_t;
 
 constexpr source_offset_t SOURCE_OFFSET_INVALID = static_cast<source_offset_t>(-1);
 
+struct source_range_t {
+    uint32_t start;
+    uint32_t length;
+};
+
 /// A struct representing the token type that we use internally.
 struct parse_token_t {
     enum parse_token_type_t type;  // The type of the token as represented by the parser
-    enum parse_keyword_t keyword{parse_keyword_none};  // Any keyword represented by this token
-    bool has_dash_prefix{false};          // Hackish: whether the source contains a dash prefix
-    bool is_help_argument{false};         // Hackish: whether the source looks like '-h' or '--help'
-    bool is_newline{false};               // Hackish: if TOK_END, whether the source is a newline.
-    bool preceding_escaped_nl{false};     // Whether there was an escaped newline preceding this token.
+    enum parse_keyword_t keyword { parse_keyword_none };  // Any keyword represented by this token
+    bool has_dash_prefix{false};       // Hackish: whether the source contains a dash prefix
+    bool is_help_argument{false};      // Hackish: whether the source looks like '-h' or '--help'
+    bool is_newline{false};            // Hackish: if TOK_END, whether the source is a newline.
+    bool preceding_escaped_nl{false};  // Whether there was an escaped newline preceding this token.
+    bool may_be_variable_assignment{false};  // Hackish: whether this token is a string like FOO=bar
     source_offset_t source_start{SOURCE_OFFSET_INVALID};
     source_offset_t source_length{0};
 
@@ -60,7 +66,7 @@ enum {
 };
 typedef unsigned int parse_tree_flags_t;
 
-wcstring parse_dump_tree(const parse_node_tree_t &tree, const wcstring &src);
+wcstring parse_dump_tree(const parse_node_tree_t &nodes, const wcstring &src);
 
 const wchar_t *token_type_description(parse_token_type_t type);
 const wchar_t *keyword_description(parse_keyword_t type);
@@ -130,13 +136,16 @@ class parse_node_t {
     }
 
     /// Indicate if the node has comment nodes.
-    bool has_comments() const {
-        return this->flags & parse_node_flag_has_comments;
-    }
+    bool has_comments() const { return this->flags & parse_node_flag_has_comments; }
 
     /// Indicates if we have a preceding escaped newline.
     bool has_preceding_escaped_newline() const {
         return this->flags & parse_node_flag_preceding_escaped_nl;
+    }
+
+    source_range_t source_range() const {
+        assert(has_source());
+        return {source_start, source_length};
     }
 
     /// Gets source for the node, or the empty string if it has no source.
@@ -183,11 +192,6 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     const parse_node_t *get_parent(const parse_node_t &node,
                                    parse_token_type_t expected_type = token_type_invalid) const;
 
-    // Finds the last node of a given type, or empty if it could not be found. If parent is NULL,
-    // this finds the last node in the tree of that type.
-    template <typename Type>
-    tnode_t<Type> find_last_node(const parse_node_t *parent = NULL) const;
-
     // Finds a node containing the given source location. If 'parent' is not NULL, it must be an
     // ancestor.
     const parse_node_t *find_node_matching_source_location(parse_token_type_t type,
@@ -196,7 +200,7 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     // Utilities
 
     /// Given a node, return all of its comment nodes.
-    std::vector<tnode_t<grammar::comment>> comment_nodes_for_node(const parse_node_t &node) const;
+    std::vector<tnode_t<grammar::comment>> comment_nodes_for_node(const parse_node_t &parent) const;
 
    private:
     template <typename Type>
@@ -205,13 +209,8 @@ class parse_node_tree_t : public std::vector<parse_node_t> {
     /// the next element of the given type in that list, and the tail (by reference). Returns NULL
     /// if we've exhausted the list.
     const parse_node_t *next_node_in_node_list(const parse_node_t &node_list,
-                                               parse_token_type_t item_type,
+                                               parse_token_type_t entry_type,
                                                const parse_node_t **list_tail) const;
-
-    // Finds the last node of a given type underneath a given node, or NULL if it could not be
-    // found. If parent is NULL, this finds the last node in the tree of that type.
-    const parse_node_t *find_last_node_of_type(parse_token_type_t type,
-                                               const parse_node_t *parent) const;
 };
 
 /// The big entry point. Parse a string, attempting to produce a tree for the given goal type.
@@ -235,5 +234,11 @@ struct parsed_source_t {
 using parsed_source_ref_t = std::shared_ptr<const parsed_source_t>;
 parsed_source_ref_t parse_source(wcstring src, parse_tree_flags_t flags, parse_error_list_t *errors,
                                  parse_token_type_t goal = symbol_job_list);
+
+/// The position of the equal sign in a variable assignment like foo=bar.
+maybe_t<size_t> variable_assignment_equals_pos(const wcstring &txt);
+
+/// Error message for improper use of the exec builtin.
+#define EXEC_ERR_MSG _(L"The '%ls' command can not be used in a pipeline")
 
 #endif

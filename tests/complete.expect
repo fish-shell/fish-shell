@@ -1,0 +1,20 @@
+# vim: set filetype=expect:
+spawn $fish
+set sid $spawn_id
+expect_prompt
+
+send_line {
+    complete -c my_is -n 'test (count (commandline -opc)) = 1' -xa arg
+    complete -c my_is -n '__fish_seen_subcommand_from not' -xa '(
+	set -l cmd (commandline -opc) (commandline -ct)
+	set cmd (string join " " my_is $cmd[3..-1])" "
+	commandline --replace --current-process $cmd
+	complete -C"$cmd"
+    )'
+}
+send "my_is not \t"
+send "still.alive"
+expect -re {.*still.alive} {
+} eof {
+    error "did fish crash?"
+}

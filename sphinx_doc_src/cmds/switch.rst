@@ -1,11 +1,14 @@
+.. _cmd-switch:
+
 switch - conditionally execute a block of commands
 ==================================================
 
 Synopsis
 --------
 
-switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end
+::
 
+    switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end
 
 Description
 -----------

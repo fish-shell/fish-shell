@@ -1,10 +1,11 @@
 // Implementation of the bind builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <stddef.h>
+#include "builtin_block.h"
+
+#include <cstddef>
 
 #include "builtin.h"
-#include "builtin_block.h"
 #include "common.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
@@ -24,15 +25,15 @@ static int parse_cmd_opts(block_cmd_opts_t &opts, int *optind,  //!OCLINT(high n
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     static const wchar_t *const short_options = L":eghl";
-    static const struct woption long_options[] = {{L"erase", no_argument, NULL, 'e'},
-                                                  {L"local", no_argument, NULL, 'l'},
-                                                  {L"global", no_argument, NULL, 'g'},
-                                                  {L"help", no_argument, NULL, 'h'},
-                                                  {NULL, 0, NULL, 0}};
+    static const struct woption long_options[] = {{L"erase", no_argument, nullptr, 'e'},
+                                                  {L"local", no_argument, nullptr, 'l'},
+                                                  {L"global", no_argument, nullptr, 'g'},
+                                                  {L"help", no_argument, nullptr, 'h'},
+                                                  {nullptr, 0, nullptr, 0}};
 
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'h': {
                 opts.print_help = true;
@@ -80,7 +81,7 @@ int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 
@@ -106,18 +107,17 @@ int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     switch (opts.scope) {
         case LOCAL: {
             // If this is the outermost block, then we're global
-            if (block_idx + 1 >= parser.block_count()) {
-                block = NULL;
+            if (block_idx + 1 >= parser.blocks().size()) {
+                block = nullptr;
             }
             break;
         }
         case GLOBAL: {
-            block = NULL;
+            block = nullptr;
             break;
         }
         case UNSET: {
-            while (block != NULL && block->type() != FUNCTION_CALL &&
-                   block->type() != FUNCTION_CALL_NO_SHADOW) {
+            while (block && !block->is_function_call()) {
                 // Set it in function scope
                 block = parser.block_at_index(++block_idx);
             }

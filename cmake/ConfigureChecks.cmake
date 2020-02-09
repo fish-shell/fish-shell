@@ -4,6 +4,7 @@
 # `wcstod_l` is a GNU-extension, sometimes hidden behind GNU-related defines.
 # This is the case for at least Cygwin and Newlib.
 LIST(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE=1)
+
 IF(APPLE)
     INCLUDE(CheckCXXCompilerFlag)
     CHECK_CXX_COMPILER_FLAG("-Werror=unguarded-availability" REQUIRES_UNGUARDED_AVAILABILITY)
@@ -61,6 +62,7 @@ CHECK_CXX_SYMBOL_EXISTS(futimens sys/stat.h HAVE_FUTIMENS)
 CHECK_CXX_SYMBOL_EXISTS(futimes sys/time.h HAVE_FUTIMES)
 CHECK_CXX_SYMBOL_EXISTS(getifaddrs ifaddrs.h HAVE_GETIFADDRS)
 CHECK_CXX_SYMBOL_EXISTS(getpwent pwd.h HAVE_GETPWENT)
+CHECK_CXX_SYMBOL_EXISTS(getrusage sys/resource.h HAVE_GETRUSAGE)
 CHECK_CXX_SYMBOL_EXISTS(gettext libintl.h HAVE_GETTEXT)
 CHECK_CXX_SYMBOL_EXISTS(killpg "sys/types.h;signal.h" HAVE_KILLPG)
 CHECK_CXX_SYMBOL_EXISTS(lrand48_r stdlib.h HAVE_LRAND48_R)
@@ -127,9 +129,6 @@ IF(STRUCT_WINSIZE GREATER -1 AND HAVE_TIOCGWINSZ EQUAL 1)
 ENDIF()
 CMAKE_POP_CHECK_STATE()
 
-IF(EXISTS "/proc/self/stat")
-  SET(HAVE__PROC_SELF_STAT 1)
-ENDIF()
 CHECK_TYPE_SIZE("wchar_t[8]" WCHAR_T_BITS LANGUAGE CXX)
 
 # Solaris, NetBSD and X/Open-conforming systems have a fixed-args tparm
@@ -178,6 +177,15 @@ int main () {
 ENDIF()
 CMAKE_POP_CHECK_STATE()
 
+# Work around the fact that cmake does not propagate the language standard flag into
+# the CHECK_CXX_SOURCE_COMPILES function. See CMake issue #16456.
+# Ensure we do this after the FIND_PACKAGE calls which use C, and will error on a C++
+# standards flag.
+# Also see https://github.com/fish-shell/fish-shell/issues/5865
+IF(NOT POLICY CMP0067)
+  LIST(APPEND CMAKE_REQUIRED_FLAGS "${CMAKE_CXX${CMAKE_CXX_STANDARD}_EXTENSION_COMPILE_OPTION}")
+ENDIF()
+
 CHECK_CXX_SOURCE_COMPILES("
 #include <memory>
 
@@ -189,3 +197,15 @@ int main () {
 )
 
 FIND_PROGRAM(SED sed)
+
+CHECK_CXX_SOURCE_COMPILES("
+#include <atomic>
+#include <cstdint>
+std::atomic<uint64_t> x;
+int main() {
+   return x;
+}"
+LIBATOMIC_NOT_NEEDED)
+IF (NOT LIBATOMIC_NOT_NEEDED)
+    SET(ATOMIC_LIBRARY "atomic")
+ENDIF()

@@ -7,18 +7,6 @@
 2b
 
 ####################
-# Bracket expansion
-x-1
-x-1 x-2
-foo-1 foo-23 foo-24
-foo-{}
-foo-{} foo-{}
-foo-
-
-foo- foo- foo- foo-
-foo- foo-, foo-
-
-####################
 # Escaped newlines
 foo bar
 foobar
@@ -37,25 +25,8 @@ Test 3b pass
 Test 4 pass
 
 ####################
-# Ensure eval doesn't unnecessarily mess with the exit status
-1
-0
+# Testing builtin status
 Test 5 pass
-
-####################
-# Verify that we can turn stderr into stdout and then pipe it
-errput
-output
-errput
-output
-
-####################
-# Test that trailing ^ doesn't trigger redirection, see #1873
-caret_no_redirect 12345^
-
-####################
-# Verify that we can pipe something other than stdout
-is_stdout
 
 ####################
 # echo tests
@@ -75,59 +46,6 @@ abc
 Catch your breath
 abc!def
 abc!1def
-
-####################
-# Verify that pipes don't conflict with fd redirections
-pipe 3
-pipe 4
-pipe 5
-pipe 6
-pipe 7
-pipe 8
-pipe 9
-pipe 10
-pipe 11
-pipe 12
-
-####################
-# Make sure while loops don't run forever with no-exec (#1543)
-Checking for infinite loops in no-execute
-
-####################
-# For loops with read-only vars is an error (#4342)
-
-####################
-# That goes for non-electric ones as well (#5548)
-
-####################
-# For loop control vars available outside the for block
-$loop_var: set in local scope, unexported, with 1 elements
-$loop_var[1]: length=1 value=|c|
-$loop_var: not set in global scope
-$loop_var: not set in universal scope
-
-$loop_var: set in local scope, unexported, with 1 elements
-$loop_var[1]: length=1 value=|b|
-$loop_var: set in global scope, unexported, with 1 elements
-$loop_var[1]: length=10 value=|global_val|
-$loop_var: not set in universal scope
-
-$loop_var: not set in local scope
-$loop_var: set in global scope, unexported, with 1 elements
-$loop_var[1]: length=10 value=|global_val|
-$loop_var: not set in universal scope
-
-$loop_var: set in local scope, unexported, with 1 elements
-$loop_var[1]: length=2 value=|cc|
-$loop_var: set in global scope, unexported, with 1 elements
-$loop_var[1]: length=10 value=|global_val|
-$loop_var: not set in universal scope
-
-$loop_var: not set in local scope
-$loop_var: set in global scope, unexported, with 1 elements
-$loop_var[1]: length=10 value=|global_val|
-$loop_var: not set in universal scope
-
 
 ####################
 # Comments allowed in between lines (#1987)

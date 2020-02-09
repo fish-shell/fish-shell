@@ -1,21 +1,20 @@
 function fish_clipboard_paste
     set -l data
     if type -q pbpaste
-        set data (pbpaste)
+        set data (pbpaste 2>/dev/null)
+    else if set -q WAYLAND_DISPLAY; and type -q wl-paste
+        set data (wl-paste 2>/dev/null)
     else if type -q xsel
-        # Return if `xsel` failed.
-        # That way we don't print the redundant (and overly verbose for this) commandline error.
-        # Also require non-empty contents to not clear the buffer.
-        if not set data (xsel --clipboard 2>/dev/null)
-            return 1
-        end
+        set data (xsel --clipboard 2>/dev/null)
     else if type -q xclip
-        if not set data (xclip -selection clipboard -o 2>/dev/null)
-            return 1
-        end
-    else if type -q wl-paste
-        set data (wl-paste)
+        set data (xclip -selection clipboard -o 2>/dev/null)
     end
+
+    # Issue 6254: Handle zero-length clipboard content
+    if not string match -qr . -- "$data"
+        return 1
+    end
+
     # Also split on \r to turn it into a newline,
     # otherwise the output looks really confusing.
     set data (string split \r -- $data)
@@ -26,7 +25,16 @@ function fish_clipboard_paste
     #
     # This eases pasting non-code (e.g. markdown or git commitishes).
     if __fish_commandline_is_singlequoted
-        set data (string replace -ra "(['\\\])" '\\\\\\\$1' -- $data)
+        if status test-feature regex-easyesc
+            set data (string replace -ra "(['\\\])" '\\\\$1' -- $data)
+        else
+            set data (string replace -ra "(['\\\])" '\\\\\\\$1' -- $data)
+        end
+    end
+    if not string length -q -- (commandline -c)
+        # If we're at the beginning of the first line, trim whitespace from the start,
+        # so we don't trigger ignoring history.
+        set data[1] (string trim -l -- $data[1])
     end
     if test -n "$data"
         commandline -i -- $data

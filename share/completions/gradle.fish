@@ -5,7 +5,7 @@ complete -c gradle -l help -s h -d 'Show help'
 complete -c gradle -l no-rebuild -s a -d 'Don\'t rebuild dependencies'
 complete -c gradle -l build-file -s b -r -d 'Specify build file'
 complete -c gradle -l settings-file -s c -r -d 'Specify settings file'
-complete -c gradle -l configure-on-demand -d 'Only relevent project are configured'
+complete -c gradle -l configure-on-demand -d 'Only relevant project are configured'
 complete -c gradle -l console -x -d 'Specify console output type' -a 'plan auto rich'
 complete -c gradle -l continue -d 'Continue task execution after failure'
 complete -c gradle -l system-prop -s D -r -d 'Set system property of the JVM'
@@ -39,22 +39,22 @@ complete -c gradle -l exclude-task -s x -x -d 'Specify task to be excluded from 
 
 # https://github.com/hanny24/gradle-fish/blob/master/gradle.load
 function __cache_or_get_gradle_completion
-  # Set up cache directory
-  if test -z $XDG_CACHE_HOME
-    set XDG_CACHE_HOME $HOME/.cache/
-  end
-  mkdir -m 700 -p $XDG_CACHE_HOME/gradle-completions
+    # Set up cache directory
+    if test -z $XDG_CACHE_HOME
+        set XDG_CACHE_HOME $HOME/.cache/
+    end
+    mkdir -m 700 -p $XDG_CACHE_HOME/gradle-completions
 
-  set -l hashed_pwd (fish_md5 -s $PWD)
-  set -l gradle_cache_file $XDG_CACHE_HOME/gradle-completions/$hashed_pwd
-  if not test -f $gradle_cache_file; or command test build.gradle -nt $gradle_cache_file
-    command gradle -q tasks 2>/dev/null | string match -r '^[[:alnum:]]+ - .*' | string replace ' - ' \t > $gradle_cache_file
-  end
-  cat $gradle_cache_file
+    set -l hashed_pwd (fish_md5 -s $PWD)
+    set -l gradle_cache_file $XDG_CACHE_HOME/gradle-completions/$hashed_pwd
+    if not test -f $gradle_cache_file; or command test build.gradle -nt $gradle_cache_file
+        command gradle -q tasks 2>/dev/null | string match -r '^[[:alnum:]]+ - .*' | string replace ' - ' \t >$gradle_cache_file
+    end
+    cat $gradle_cache_file
 end
 
 function __contains_gradle_build
-  test -f build.gradle
+    test -f build.gradle
 end
 
 complete -x -c gradle -n '__contains_gradle_build' -a "(__cache_or_get_gradle_completion)"

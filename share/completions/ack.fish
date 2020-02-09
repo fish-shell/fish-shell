@@ -83,9 +83,9 @@ complete -c ack -l thpppt -d 'Bill the Cat'
 complete -c ack -l bar -d 'The warning admiral'
 
 # File types
-if type ack > /dev/null
-	for type in (ack --dump 2>/dev/null | perl -lne 'print $1 if /^\s+--type-add=([^:]+)/' | uniq)
-		complete -c ack -l $type -d "Allow $type file type"
-		complete -c ack -l no$type -l no-$type -d "Don't allow $type file type"
-	end
+if type ack >/dev/null
+    for type in (ack --dump 2>/dev/null | perl -lne 'print $1 if /^\s+--type-add=([^:]+)/' | uniq)
+        complete -c ack -l $type -d "Allow $type file type"
+        complete -c ack -l no$type -l no-$type -d "Don't allow $type file type"
+    end
 end

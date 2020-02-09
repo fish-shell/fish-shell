@@ -7,6 +7,7 @@ packages:
   - cmake
   - gmake
   - pcre2
+  - python
 sources:
   - https://git.sr.ht/~faho/fish
 tasks:

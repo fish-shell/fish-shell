@@ -3,7 +3,7 @@
 
 # todo
 # +[num]        : Position the cursor on line number
-# +/{pat}       : Position the cursor on the first occurence of {pat}
+# +/{pat}       : Position the cursor on the first occurrence of {pat}
 # +{command}    : Execute Ex command after the first file has been read
 complete -c vim -s c -r -d 'Execute Ex command after the first file has been read'
 complete -c vim -s S -r -d 'Source file after the first file has been read'

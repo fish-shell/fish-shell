@@ -3,28 +3,30 @@
 // Implemented from scratch (yes, really) by way of IEEE 1003.1 as reference.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
-#include <stdarg.h>
-#include <string.h>
+#include "builtin.h"
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <wchar.h>
-#include <wctype.h>
 
+#include <cerrno>
 #include <cmath>
+#include <cstdarg>
+#include <cstring>
+#include <cwchar>
+#include <cwctype>
 #include <memory>
 #include <string>
 #include <type_traits>
 #include <utility>
 
-#include "builtin.h"
 #include "common.h"
 #include "io.h"
+#include "parser.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-using std::unique_ptr;
 using std::move;
+using std::unique_ptr;
 
 namespace {
 namespace test_expressions {
@@ -215,7 +217,7 @@ struct range_t {
 /// Base class for expressions.
 class expression {
    protected:
-    expression(token_t what, range_t where) : token(what), range(std::move(where)) {}
+    expression(token_t what, range_t where) : token(what), range(where) {}
 
    public:
     const token_t token;
@@ -264,7 +266,7 @@ class combining_expression : public expression {
     const std::vector<token_t> combiners;
 
     combining_expression(token_t tok, range_t where, std::vector<unique_ptr<expression>> exprs,
-                         const std::vector<token_t> &combs)
+                         std::vector<token_t> combs)
         : expression(tok, where), subjects(std::move(exprs)), combiners(std::move(combs)) {
         // We should have one more subject than combiner.
         assert(subjects.size() == combiners.size() + 1);
@@ -286,7 +288,7 @@ class parenthetical_expression : public expression {
 };
 
 void test_parser::add_error(const wchar_t *fmt, ...) {
-    assert(fmt != NULL);
+    assert(fmt != nullptr);
     va_list va;
     va_start(va, fmt);
     this->errors.push_back(vformat_string(fmt, va));
@@ -294,12 +296,12 @@ void test_parser::add_error(const wchar_t *fmt, ...) {
 }
 
 unique_ptr<expression> test_parser::error(const wchar_t *fmt, ...) {
-    assert(fmt != NULL);
+    assert(fmt != nullptr);
     va_list va;
     va_start(va, fmt);
     this->errors.push_back(vformat_string(fmt, va));
     va_end(va);
-    return NULL;
+    return nullptr;
 }
 
 unique_ptr<expression> test_parser::parse_unary_expression(unsigned int start, unsigned int end) {
@@ -309,11 +311,11 @@ unique_ptr<expression> test_parser::parse_unary_expression(unsigned int start, u
     token_t tok = token_for_string(arg(start))->tok;
     if (tok == test_bang) {
         unique_ptr<expression> subject(parse_unary_expression(start + 1, end));
-        if (subject.get()) {
+        if (subject) {
             return make_unique<unary_operator>(tok, range_t(start, subject->range.end),
                                                move(subject));
         }
-        return NULL;
+        return nullptr;
     }
     return parse_primary(start, end);
 }
@@ -321,7 +323,7 @@ unique_ptr<expression> test_parser::parse_unary_expression(unsigned int start, u
 /// Parse a combining expression (AND, OR).
 unique_ptr<expression> test_parser::parse_combining_expression(unsigned int start,
                                                                unsigned int end) {
-    if (start >= end) return NULL;
+    if (start >= end) return nullptr;
 
     std::vector<unique_ptr<expression>> subjects;
     std::vector<token_t> combiners;
@@ -361,7 +363,7 @@ unique_ptr<expression> test_parser::parse_combining_expression(unsigned int star
     }
 
     if (subjects.empty()) {
-        return NULL;  // no subjects
+        return nullptr;  // no subjects
     }
     // Our new expression takes ownership of all expressions we created. The token we pass is
     // irrelevant.
@@ -380,7 +382,7 @@ unique_ptr<expression> test_parser::parse_unary_primary(unsigned int start, unsi
 
     // All our unary primaries are prefix, so the operator is at start.
     const token_info_t *info = token_for_string(arg(start));
-    if (!(info->flags & UNARY_PRIMARY)) return NULL;
+    if (!(info->flags & UNARY_PRIMARY)) return nullptr;
 
     return make_unique<unary_primary>(info->tok, range_t(start, start + 2), arg(start + 1));
 }
@@ -414,7 +416,7 @@ unique_ptr<expression> test_parser::parse_binary_primary(unsigned int start, uns
 
     // All our binary primaries are infix, so the operator is at start + 1.
     const token_info_t *info = token_for_string(arg(start + 1));
-    if (!(info->flags & BINARY_PRIMARY)) return NULL;
+    if (!(info->flags & BINARY_PRIMARY)) return nullptr;
 
     return make_unique<binary_primary>(info->tok, range_t(start, start + 3), arg(start),
                                        arg(start + 2));
@@ -422,15 +424,15 @@ unique_ptr<expression> test_parser::parse_binary_primary(unsigned int start, uns
 
 unique_ptr<expression> test_parser::parse_parenthentical(unsigned int start, unsigned int end) {
     // We need at least three arguments: open paren, argument, close paren.
-    if (start + 3 >= end) return NULL;
+    if (start + 3 >= end) return nullptr;
 
     // Must start with an open expression.
     const token_info_t *open_paren = token_for_string(arg(start));
-    if (open_paren->tok != test_paren_open) return NULL;
+    if (open_paren->tok != test_paren_open) return nullptr;
 
     // Parse a subexpression.
     unique_ptr<expression> subexpr = parse_expression(start + 1, end);
-    if (!subexpr) return NULL;
+    if (!subexpr) return nullptr;
 
     // Parse a close paren.
     unsigned close_index = subexpr->range.end;
@@ -453,7 +455,7 @@ unique_ptr<expression> test_parser::parse_primary(unsigned int start, unsigned i
         return error(L"Missing argument at index %u", start);
     }
 
-    unique_ptr<expression> expr = NULL;
+    unique_ptr<expression> expr = nullptr;
     if (!expr) expr = parse_parenthentical(start, end);
     if (!expr) expr = parse_unary_primary(start, end);
     if (!expr) expr = parse_binary_primary(start, end);
@@ -464,7 +466,7 @@ unique_ptr<expression> test_parser::parse_primary(unsigned int start, unsigned i
 // See IEEE 1003.1 breakdown of the behavior for different parameter counts.
 unique_ptr<expression> test_parser::parse_3_arg_expression(unsigned int start, unsigned int end) {
     assert(end - start == 3);
-    unique_ptr<expression> result = NULL;
+    unique_ptr<expression> result = nullptr;
 
     const token_info_t *center_token = token_for_string(arg(start + 1));
     if (center_token->flags & BINARY_PRIMARY) {
@@ -489,12 +491,12 @@ unique_ptr<expression> test_parser::parse_3_arg_expression(unsigned int start, u
 
 unique_ptr<expression> test_parser::parse_4_arg_expression(unsigned int start, unsigned int end) {
     assert(end - start == 4);
-    unique_ptr<expression> result = NULL;
+    unique_ptr<expression> result = nullptr;
 
     token_t first_token = token_for_string(arg(start))->tok;
     if (first_token == test_bang) {
         unique_ptr<expression> subject(parse_3_arg_expression(start + 1, end));
-        if (subject.get()) {
+        if (subject) {
             result = make_unique<unary_operator>(first_token, range_t(start, subject->range.end),
                                                  move(subject));
         }
@@ -529,7 +531,9 @@ unique_ptr<expression> test_parser::parse_expression(unsigned int start, unsigne
         case 4: {
             return parse_4_arg_expression(start, end);
         }
-        default: { return parse_combining_expression(start, end); }
+        default: {
+            return parse_combining_expression(start, end);
+        }
     }
 }
 
@@ -539,7 +543,8 @@ unique_ptr<expression> test_parser::parse_args(const wcstring_list_t &args, wcst
     assert(args.size() > 1);
 
     test_parser parser(args);
-    unique_ptr<expression> result = parser.parse_expression(0, (unsigned int)args.size());
+    unique_ptr<expression> result =
+        parser.parse_expression(0, static_cast<unsigned int>(args.size()));
 
     // Handle errors.
     // For now we only show the first error.
@@ -557,9 +562,10 @@ unique_ptr<expression> test_parser::parse_args(const wcstring_list_t &args, wcst
         if (result->range.end < args.size()) {
             if (err.empty()) {
                 append_format(err, L"%ls: unexpected argument at index %lu: '%ls'\n", program_name,
-                              (unsigned long)result->range.end, args.at(result->range.end).c_str());
+                              static_cast<unsigned long>(result->range.end),
+                              args.at(result->range.end).c_str());
             }
-            result.reset(NULL);
+            result.reset(nullptr);
         }
     }
 
@@ -623,7 +629,7 @@ bool combining_expression::evaluate(wcstring_list_t &errors) {
     }
 
     errors.push_back(format_string(L"Unknown token type in %s", __func__));
-    return STATUS_INVALID_ARGS;
+    return false;
 }
 
 bool parenthetical_expression::evaluate(wcstring_list_t &errors) {
@@ -635,7 +641,7 @@ static bool parse_double(const wchar_t *arg, double *out_res) {
     // Consume leading spaces.
     while (arg && *arg != L'\0' && iswspace(*arg)) arg++;
     errno = 0;
-    wchar_t *end = NULL;
+    wchar_t *end = nullptr;
     *out_res = fish_wcstod(arg, &end);
     // Consume trailing spaces.
     while (end && *end != L'\0' && iswspace(*end)) end++;
@@ -672,10 +678,10 @@ static bool parse_number(const wcstring &arg, number_t *number, wcstring_list_t 
         // We could not parse a float or an int.
         // Check for special fish_wcsto* value or show standard EINVAL/ERANGE error.
         if (errno == -1) {
-            errors.push_back(format_string(_(L"Integer %lld in '%ls' followed by non-digit"),
-                                           integral, argcs));
+            errors.push_back(
+                format_string(_(L"Integer %lld in '%ls' followed by non-digit"), integral, argcs));
         } else {
-            errors.push_back(format_string(L"%s: '%ls'", strerror(errno), argcs));
+            errors.push_back(format_string(L"%s: '%ls'", std::strerror(errno), argcs));
         }
         return false;
     }
@@ -817,7 +823,7 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     // Whether we are invoked with bracket '[' or not.
     wchar_t *program_name = argv[0];
-    const bool is_bracket = !wcscmp(program_name, L"[");
+    const bool is_bracket = !std::wcscmp(program_name, L"[");
 
     size_t argc = 0;
     while (argv[argc + 1]) argc++;
@@ -825,11 +831,12 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // If we're bracket, the last argument ought to be ]; we ignore it. Note that argc is the number
     // of arguments after the command name; thus argv[argc] is the last argument.
     if (is_bracket) {
-        if (!wcscmp(argv[argc], L"]")) {
+        if (!std::wcscmp(argv[argc], L"]")) {
             // Ignore the closing bracket from now on.
             argc--;
         } else {
             streams.err.append(L"[: the last argument must be ']'\n");
+            builtin_print_error_trailer(parser, streams.err, program_name);
             return STATUS_INVALID_ARGS;
         }
     }
@@ -848,14 +855,8 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wcstring err;
     unique_ptr<expression> expr = test_parser::parse_args(args, err, program_name);
     if (!expr) {
-#if 0
-        streams.err.append(L"Oops! test was given args:\n");
-        for (size_t i=0; i < argc; i++) {
-            streams.err.append_format(L"\t%ls\n", args.at(i).c_str());
-        }
-        streams.err.append_format(L"and returned parse error: %ls\n", err.c_str());
-#endif
         streams.err.append(err);
+        builtin_print_error_trailer(parser, streams.err, program_name);
         return STATUS_CMD_ERROR;
     }
 
@@ -863,9 +864,12 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     bool result = expr->evaluate(eval_errors);
     if (!eval_errors.empty()) {
         if (!should_suppress_stderr_for_tests()) {
-            for (size_t i = 0; i < eval_errors.size(); i++) {
-                streams.err.append_format(L"\t%ls\n", eval_errors.at(i).c_str());
+            for (const auto &eval_error : eval_errors) {
+                streams.err.append_format(L"%ls\n", eval_error.c_str());
             }
+            // Add a backtrace but not the "see help" message
+            // because this isn't about passing the wrong options.
+            streams.err.append(parser.current_line());
         }
         return STATUS_INVALID_ARGS;
     }

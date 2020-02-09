@@ -9,12 +9,12 @@ const parse_node_t *parse_node_tree_t::next_node_in_node_list(
     assert(list_type != entry_type);
 
     const parse_node_t *list_cursor = &node_list;
-    const parse_node_t *list_entry = NULL;
+    const parse_node_t *list_entry = nullptr;
 
     // Loop while we don't have an item but do have a list. Note that some nodes may contain
     // nothing; e.g. job_list contains blank lines as a production.
-    while (list_entry == NULL && list_cursor != NULL) {
-        const parse_node_t *next_cursor = NULL;
+    while (list_entry == nullptr && list_cursor != nullptr) {
+        const parse_node_t *next_cursor = nullptr;
 
         // Walk through the children.
         for (node_offset_t i = 0; i < list_cursor->child_count; i++) {
@@ -32,9 +32,9 @@ const parse_node_t *parse_node_tree_t::next_node_in_node_list(
     }
 
     // Return what we got.
-    assert(list_cursor == NULL || list_cursor->type == list_type);
-    assert(list_entry == NULL || list_entry->type == entry_type);
-    if (out_list_tail != NULL) *out_list_tail = list_cursor;
+    assert(list_cursor == nullptr || list_cursor->type == list_type);
+    assert(list_entry == nullptr || list_entry->type == entry_type);
+    if (out_list_tail != nullptr) *out_list_tail = list_cursor;
     return list_entry;
 }
 
@@ -46,27 +46,29 @@ enum parse_statement_decoration_t get_decoration(tnode_t<grammar::plain_statemen
     return decoration;
 }
 
-enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::job_decorator> stmt) {
-    return static_cast<parse_bool_statement_type_t>(stmt.tag());
+enum parse_job_decoration_t bool_statement_type(tnode_t<grammar::job_decorator> stmt) {
+    return static_cast<parse_job_decoration_t>(stmt.tag());
 }
 
-enum parse_bool_statement_type_t bool_statement_type(tnode_t<grammar::job_conjunction_continuation> cont) {
-    return static_cast<parse_bool_statement_type_t>(cont.tag());
+enum parse_job_decoration_t bool_statement_type(
+    tnode_t<grammar::job_conjunction_continuation> cont) {
+    return static_cast<parse_job_decoration_t>(cont.tag());
 }
 
-maybe_t<redirection_type_t> redirection_type(tnode_t<grammar::redirection> redirection,
-                                             const wcstring &src, int *out_fd,
-                                             wcstring *out_target) {
+maybe_t<pipe_or_redir_t> redirection_for_node(tnode_t<grammar::redirection> redirection,
+                                              const wcstring &src, wcstring *out_target) {
     assert(redirection && "redirection is missing");
-    maybe_t<redirection_type_t> result{};
     tnode_t<grammar::tok_redirection> prim = redirection.child<0>();  // like 2>
     assert(prim && "expected to have primitive");
 
+    maybe_t<pipe_or_redir_t> result{};
     if (prim.has_source()) {
-        result = redirection_type_for_string(prim.get_source(src), out_fd);
+        result = pipe_or_redir_t::from_string(prim.get_source(src));
+        assert(result.has_value() && "Failed to parse valid redirection");
+        assert(!result->is_pipe && "Should not be a pipe");
     }
-    if (out_target != NULL) {
-        tnode_t<grammar::tok_string> target = redirection.child<1>();  // like &1 or file path
+    if (out_target != nullptr) {
+        tnode_t<grammar::tok_string> target = redirection.child<1>();  // like 1 or file path
         *out_target = target.has_source() ? target.get_source(src) : wcstring();
     }
     return result;
@@ -88,6 +90,11 @@ std::vector<tnode_t<grammar::comment>> parse_node_tree_t::comment_nodes_for_node
     return result;
 }
 
+variable_assignment_node_list_t get_variable_assignment_nodes(
+    tnode_t<grammar::variable_assignments> list, size_t max) {
+    return list.descendants<grammar::variable_assignment>(max);
+}
+
 maybe_t<wcstring> command_for_plain_statement(tnode_t<grammar::plain_statement> stmt,
                                               const wcstring &src) {
     tnode_t<grammar::tok_string> cmd = stmt.child<0>();
@@ -107,11 +114,11 @@ arguments_node_list_t get_argument_nodes(tnode_t<grammar::arguments_or_redirecti
 }
 
 bool job_node_is_background(tnode_t<grammar::job> job) {
-    tnode_t<grammar::optional_background> bg = job.child<2>();
+    tnode_t<grammar::optional_background> bg = job.child<4>();
     return bg.tag() == parse_background;
 }
 
-parse_bool_statement_type_t get_decorator(tnode_t<grammar::job_conjunction> conj) {
+parse_job_decoration_t get_decorator(tnode_t<grammar::job_conjunction> conj) {
     using namespace grammar;
     tnode_t<job_decorator> dec;
     // We have two possible parents: job_list and andor_job_list.
@@ -137,8 +144,8 @@ pipeline_position_t get_pipeline_position(tnode_t<grammar::statement> st) {
 
     // Check if we're the beginning of a job, and if so, whether that job
     // has a non-empty continuation.
-    tnode_t<job_continuation> jc = st.try_get_parent<job>().child<1>();
-    if (jc.try_get_child<statement, 2>()) {
+    tnode_t<job_continuation> jc = st.try_get_parent<job>().child<3>();
+    if (jc.try_get_child<statement, 3>()) {
         return pipeline_position_t::first;
     }
     return pipeline_position_t::none;

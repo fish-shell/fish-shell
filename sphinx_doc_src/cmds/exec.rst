@@ -1,11 +1,14 @@
+.. _cmd-exec:
+
 exec - execute command in current process
 =========================================
 
 Synopsis
 --------
 
-exec COMMAND [OPTIONS...]
+::
 
+    exec COMMAND [OPTIONS...]
 
 Description
 -----------

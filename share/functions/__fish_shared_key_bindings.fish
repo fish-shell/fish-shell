@@ -80,7 +80,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv \e. history-token-search-backward
 
     bind --preset $argv \el __fish_list_current_token
-    bind --preset $argv \ew 'set tok (commandline -pt); if test -n "$tok[1]"; echo; whatis $tok[1]; commandline -f repaint; end'
+    bind --preset $argv \ew __fish_whatis_current_token
     # ncurses > 6.0 sends a "delete scrollback" sequence along with clear.
     # This string replace removes it.
     bind --preset $argv \cl 'echo -n (clear | string replace \e\[3J ""); commandline -f repaint'
@@ -92,6 +92,9 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
 
     bind --preset $argv \ed 'set -l cmd (commandline); if test -z "$cmd"; echo; dirh; commandline -f repaint; else; commandline -f kill-word; end'
     bind --preset $argv \cd delete-or-exit
+
+    # Prepend 'sudo ' to the current commandline
+    bind --preset $argv \es __fish_prepend_sudo
 
     # Allow reading manpages by pressing F1 (many GUI applications) or Alt+h (like in zsh).
     bind --preset $argv -k f1 __fish_man_page
@@ -110,14 +113,13 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv \ee edit_command_buffer
     bind --preset $argv \ev edit_command_buffer
 
-
     # Tmux' focus events.
     # Exclude paste mode because that should get _everything_ literally.
     for mode in (bind --list-modes | string match -v paste)
         # We only need the in-focus event currently (to redraw the vi-cursor).
-        bind -M $mode \e\[I 'emit fish_focus_in'
-        bind -M $mode \e\[O false
-        bind -M $mode \e\[\?1004h false
+        bind --preset -M $mode \e\[I 'emit fish_focus_in'
+        bind --preset -M $mode \e\[O false
+        bind --preset -M $mode \e\[\?1004h false
     end
 
     # Support for "bracketed paste"
@@ -129,23 +131,17 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     #
     # We enable it after every command and disable it before (in __fish_config_interactive.fish)
     #
-    # Support for this seems to be ubiquitous - emacs enables it unconditionally (!) since 25.1 (though it only supports it since then,
-    # it seems to be the last term to gain support).
-    # TODO: Should we disable this in older emacsen?
+    # Support for this seems to be ubiquitous - emacs enables it unconditionally (!) since 25.1
+    # (though it only supports it since then, it seems to be the last term to gain support).
     #
     # NOTE: This is more of a "security" measure than a proper feature.
     # The better way to paste remains the `fish_clipboard_paste` function (bound to \cv by default).
     # We don't disable highlighting here, so it will be redone after every character (which can be slow),
-    # and it doesn't handle "paste-stop" sequences in the paste (which the terminal needs to strip, but KDE konsole doesn't).
+    # and it doesn't handle "paste-stop" sequences in the paste (which the terminal needs to strip).
     #
-    # See http://thejh.net/misc/website-terminal-copy-paste. The second case will not be caught in KDE konsole.
+    # See http://thejh.net/misc/website-terminal-copy-paste.
+
     # Bind the starting sequence in every bind mode, even user-defined ones.
-
-    # We usually just pass the text through as-is to facilitate pasting code,
-    # but when the current token contains an unbalanced single-quote (`'`),
-    # we escape all single-quotes and backslashes, effectively turning the paste
-    # into one literal token, to facilitate pasting non-code (e.g. markdown or git commitishes)
-
     # Exclude paste mode or there'll be an additional binding after switching between emacs and vi
     for mode in (bind --list-modes | string match -v paste)
         bind --preset -M $mode -m paste \e\[200~ '__fish_start_bracketed_paste'
@@ -155,10 +151,17 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # In paste-mode, everything self-inserts except for the sequence to get out of it
     bind --preset -M paste "" self-insert
     # Without this, a \r will overwrite the other text, rendering it invisible - which makes the exercise kinda pointless.
-    # TODO: Test this in windows (\r\n line endings)
     bind --preset -M paste \r "commandline -i \n"
+
+    # We usually just pass the text through as-is to facilitate pasting code,
+    # but when the current token contains an unbalanced single-quote (`'`),
+    # we escape all single-quotes and backslashes, effectively turning the paste
+    # into one literal token, to facilitate pasting non-code (e.g. markdown or git commitishes)
     bind --preset -M paste "'" "__fish_commandline_insert_escaped \' \$__fish_paste_quoted"
     bind --preset -M paste \\ "__fish_commandline_insert_escaped \\\ \$__fish_paste_quoted"
+    # Only insert spaces if we're either quoted or not at the beginning of the commandline
+    # - this strips leading spaces if they would trigger histignore.
+    bind --preset -M paste \  'if set -q __fish_paste_quoted[1]; or string length -q -- (commandline -c); commandline -i " "; end'
 end
 
 function __fish_commandline_insert_escaped --description 'Insert the first arg escaped if a second arg is given'

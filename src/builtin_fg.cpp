@@ -1,13 +1,14 @@
 // Implementation of the fg builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <wchar.h>
+#include "builtin_fg.h"
+
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
+#include <cwchar>
 
 #include "builtin.h"
-#include "builtin_fg.h"
 #include "common.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
@@ -29,37 +30,33 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 
-    job_t *j = NULL;
-
+    job_t *job = nullptr;
     if (optind == argc) {
-        // Select last constructed job (I.e. first job in the job que) that is possible to put in
-        // the foreground.
-        job_iterator_t jobs;
-        while ((j = jobs.next())) {
+        // Select last constructed job (i.e. first job in the job queue) that can be brought
+        // to the foreground.
+
+        for (const auto &j : parser.jobs()) {
             if (j->is_constructed() && (!j->is_completed()) &&
-                ((j->is_stopped() || (!j->is_foreground())) &&
-                 j->get_flag(job_flag_t::JOB_CONTROL))) {
+                ((j->is_stopped() || (!j->is_foreground())) && j->wants_job_control())) {
+                job = j.get();
                 break;
             }
         }
-        if (!j) {
+        if (!job) {
             streams.err.append_format(_(L"%ls: There are no suitable jobs\n"), cmd);
         }
     } else if (optind + 1 < argc) {
         // Specifying more than one job to put to the foreground is a syntax error, we still
-        // try to locate the job argv[1], since we want to know if this is an ambigous job
-        // specification or if this is an malformed job id.
-        int pid;
+        // try to locate the job $argv[1], since we need to determine which error message to
+        // emit (ambigous job specification vs malformed job id).
         bool found_job = false;
-
-        pid = fish_wcstoi(argv[optind]);
-        if (!(errno || pid < 0)) {
-            j = job_t::from_pid(pid);
-            if (j) found_job = true;
+        int pid = fish_wcstoi(argv[optind]);
+        if (errno == 0 && pid > 0) {
+            found_job = (parser.job_get_from_pid(pid) != nullptr);
         }
 
         if (found_job) {
@@ -68,48 +65,47 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             streams.err.append_format(_(L"%ls: '%ls' is not a job\n"), cmd, argv[optind]);
         }
 
-        builtin_print_help(parser, streams, cmd, streams.err);
-
-        j = 0;
+        job = nullptr;
+        builtin_print_error_trailer(parser, streams.err, cmd);
     } else {
         int pid = abs(fish_wcstoi(argv[optind]));
         if (errno) {
             streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, argv[optind]);
-            builtin_print_help(parser, streams, cmd, streams.err);
+            builtin_print_error_trailer(parser, streams.err, cmd);
         } else {
-            j = job_t::from_pid(pid);
-            if (!j || !j->is_constructed() || j->is_completed()) {
+            job = parser.job_get_from_pid(pid);
+            if (!job || !job->is_constructed() || job->is_completed()) {
                 streams.err.append_format(_(L"%ls: No suitable job: %d\n"), cmd, pid);
-                j = 0;
-            } else if (!j->get_flag(job_flag_t::JOB_CONTROL)) {
+                job = nullptr;
+            } else if (!job->wants_job_control()) {
                 streams.err.append_format(_(L"%ls: Can't put job %d, '%ls' to foreground because "
                                             L"it is not under job control\n"),
-                                          cmd, pid, j->command_wcstr());
-                j = 0;
+                                          cmd, pid, job->command_wcstr());
+                job = nullptr;
             }
         }
     }
 
-    if (!j) {
+    if (!job) {
         return STATUS_INVALID_ARGS;
     }
 
     if (streams.err_is_redirected) {
-        streams.err.append_format(FG_MSG, j->job_id, j->command_wcstr());
+        streams.err.append_format(FG_MSG, job->job_id(), job->command_wcstr());
     } else {
         // If we aren't redirecting, send output to real stderr, since stuff in sb_err won't get
         // printed until the command finishes.
-        fwprintf(stderr, FG_MSG, j->job_id, j->command_wcstr());
+        std::fwprintf(stderr, FG_MSG, job->job_id(), job->command_wcstr());
     }
 
-    const wcstring ft = tok_first(j->command());
-    //For compatibility with fish 2.0's $_, now replaced with `status current-command`
+    const wcstring ft = tok_first(job->command());
+    // For compatibility with fish 2.0's $_, now replaced with `status current-command`
     if (!ft.empty()) parser.vars().set_one(L"_", ENV_EXPORT, ft);
-    reader_write_title(j->command());
+    reader_write_title(job->command(), parser);
 
-    j->promote();
-    j->set_flag(job_flag_t::FOREGROUND, true);
+    parser.job_promote(job);
+    job->mut_flags().foreground = true;
 
-    j->continue_job(j->is_stopped());
+    job->continue_job(parser, true, job->is_stopped());
     return STATUS_CMD_OK;
 }

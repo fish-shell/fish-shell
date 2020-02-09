@@ -15,7 +15,7 @@ cd (dirname (status -f))
 if set -q argv[1]
     set files_to_test $argv.in
 else
-    set files_to_test *.in
+    set files_to_test *.in checks/*.fish
 end
 
 # These env vars should not be inherited from the user environment because they can affect the
@@ -29,17 +29,17 @@ or exit
 
 say -o cyan "Testing high level script functionality"
 
-function test_file
+function test_in_file
     set -l file $argv[1]
     set -l base (basename $file .in)
 
     echo -n "Testing file $file ... "
-    set starttime (date +%s)
+    set starttime (timestamp)
 
     ../test/root/bin/fish <$file >$base.tmp.out 2>$base.tmp.err
     set -l exit_status $status
     set -l res ok
-    set test_duration (math (date +%s) - $starttime)
+    set test_duration (delta $starttime)
 
     diff $base.tmp.out $base.out >/dev/null
     set -l out_status $status
@@ -47,7 +47,7 @@ function test_file
     set -l err_status $status
 
     if test $out_status -eq 0 -a $err_status -eq 0 -a $exit_status -eq 0
-        say green "ok ($test_duration sec)"
+        say green "ok ($test_duration $unit)"
         # clean up tmp files
         rm -f $base.tmp.{err,out}
         return 0
@@ -55,11 +55,11 @@ function test_file
         say red "fail"
         if test $out_status -ne 0
             say yellow "Output differs for file $file. Diff follows:"
-            colordiff -u $base.tmp.out $base.out
+            colordiff -u $base.out $base.tmp.out
         end
         if test $err_status -ne 0
             say yellow "Error output differs for file $file. Diff follows:"
-            colordiff -u $base.tmp.err $base.err
+            colordiff -u $base.err $base.tmp.err
         end
         if test $exit_status -ne 0
             say yellow "Exit status differs for file $file."
@@ -69,10 +69,37 @@ function test_file
     end
 end
 
+set -g python (__fish_anypython)
+
+function test_littlecheck_file
+    set -l file $argv[1]
+    echo -n "Testing file $file ... "
+    set starttime (timestamp)
+    $python ../littlecheck.py \
+        -s fish=../test/root/bin/fish \
+        -s fish_test_helper=../test/root/bin/fish_test_helper \
+        $file
+    set -l exit_status $status
+    set -l res ok
+    set test_duration (delta $starttime)
+    if test $exit_status -eq 0
+        say green "ok ($test_duration $unit)"
+    end
+    return $exit_status
+end
+
 set -l failed
 for i in $files_to_test
-    if not test_file $i
-        set failed $failed $i
+    if string match --quiet '*.fish' $i
+        if not test_littlecheck_file $i
+            # littlecheck test
+            set failed $failed $i
+        end
+    else
+        # .in test
+        if not test_in_file $i
+            set failed $failed $i
+        end
     end
 end
 

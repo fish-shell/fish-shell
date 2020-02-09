@@ -36,7 +36,6 @@ function hello_world
     echo sup
     echo hello
 
-
     echo hello
 end
 
@@ -98,13 +97,16 @@ echo <stdin >>appended yes 2>&1 no >stdout maybe 2>&4 | cat 2>| cat
 
 Test normalization of keywords
 
-if true
+i\
+f true
     echo yes
-end
+en\
+d
 
-while true
-    builtin yes
-end
+"whil\
+e" true
+    "builtin" yes
+en"d"
 
 alpha | \
     beta
@@ -125,3 +127,13 @@ end
 echo hi |
 
 echo bye
+a
+echo
+echo
+a; and b
+a
+and b
+a
+and b
+a
+b

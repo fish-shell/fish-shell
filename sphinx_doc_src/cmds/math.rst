@@ -1,10 +1,14 @@
+.. _cmd-math:
+
 math - Perform mathematics calculations
 =======================================
 
 Synopsis
 --------
 
-math [-sN | --scale=N] [--] EXPRESSION
+::
+
+    math [-sN | --scale=N] [--] EXPRESSION
 
 
 Description
@@ -14,7 +18,7 @@ Description
 
 By default, the output is as a float with trailing zeroes trimmed. To get a fixed representation, the ``--scale`` option can be used, including ``--scale=0`` for integer output.
 
-Keep in mind that parameter expansion takes before expressions are evaluated. This can be very useful in order to perform calculations involving shell variables or the output of command substitutions, but it also means that parenthesis (``()``) and the asterisk (``*``) glob character have to be escaped or quoted.
+Keep in mind that parameter expansion takes before expressions are evaluated. This can be very useful in order to perform calculations involving shell variables or the output of command substitutions, but it also means that parenthesis (``()``) and the asterisk (``*``) glob character have to be escaped or quoted. ``x`` can also be used to denote multiplication, but it needs to be followed by whitespace to distinguish it from hexadecimal numbers.
 
 ``math`` ignores whitespace between arguments and takes its input as multiple arguments (internally joined with a space), so ``math 2 +2`` and ``math "2 +    2"`` work the same. ``math 2 2`` is an error.
 
@@ -41,7 +45,7 @@ Operators
 
 - ``+`` for addition and ``-`` for subtraction.
 
-- ``*`` for multiplication, ``/`` for division. (Note that ``*`` is the glob character and needs to be quoted or escaped.)
+- ``*`` or ``x`` for multiplication, ``/`` for division. (Note that ``*`` is the glob character and needs to be quoted or escaped, ``x`` needs to be followed by whitespace or it looks like ``0x`` hexadecimal notation.)
 
 - ``^`` for exponentiation.
 
@@ -107,6 +111,8 @@ Examples
 ``math "sin(pi)"`` outputs ``0``.
 
 ``math 5 \* 2`` or ``math "5 * 2"`` or ``math 5 "*" 2`` all output ``10``.
+
+``math 0xFF`` outputs 255, ``math 0 x 3`` outputs 0 (because it computes 0 multiplied by 3).
 
 Compatibility notes
 -------------------

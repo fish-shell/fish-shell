@@ -13,7 +13,7 @@ complete -c history -n '__fish_seen_subcommand_from search delete' \
 complete -c history -n '__fish_seen_subcommand_from search delete' \
     -s C -l case-sensitive -d "Match items in a case-sensitive manner"
 complete -c history -n '__fish_seen_subcommand_from search' \
-    -s n -l max -d "Limit output to the first 'n' matches"
+    -s n -l max -d "Limit output to the first 'n' matches" -x
 
 # We don't include a completion for the "save" subcommand because it should not be used
 # interactively.

@@ -6,13 +6,15 @@
 // IWYU pragma: no_include <__bit_reference>
 #include "config.h"
 
-#include <atomic>
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <wchar.h>
 #include <wctype.h>
+
+#include <atomic>
+#include <cwchar>
 
 #if HAVE_TERM_H
 #include <curses.h>
@@ -38,6 +40,8 @@
 #include "common.h"
 #include "event.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
+#include "global_safety.h"
 #include "io.h"
 #include "output.h"
 #include "parse_tree.h"
@@ -46,146 +50,72 @@
 #include "reader.h"
 #include "sanity.h"
 #include "signal.h"
-#include "util.h"
 #include "wutil.h"  // IWYU pragma: keep
-
-/// Statuses of last job's processes to exit - ensure we start off with one entry of 0.
-static owning_lock<statuses_t> last_statuses{statuses_t::just(0)};
 
 /// The signals that signify crashes to us.
 static const int crashsignals[] = {SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGSYS};
 
-bool job_list_is_empty() {
-    ASSERT_IS_MAIN_THREAD();
-    return parser_t::principal_parser().job_list().empty();
+static relaxed_atomic_t<session_interactivity_t> s_is_interactive_session{
+    session_interactivity_t::not_interactive};
+session_interactivity_t session_interactivity() { return s_is_interactive_session; }
+void set_interactive_session(session_interactivity_t flag) { s_is_interactive_session = flag; }
+
+static relaxed_atomic_bool_t s_is_login{false};
+bool get_login() { return s_is_login; }
+void mark_login() { s_is_login = true; }
+
+static relaxed_atomic_bool_t s_no_exec{false};
+bool no_exec() { return s_no_exec; }
+void mark_no_exec() { s_no_exec = true; }
+
+bool have_proc_stat() {
+    // Check for /proc/self/stat to see if we are running with Linux-style procfs.
+    static const bool s_result = (access("/proc/self/stat", R_OK) == 0);
+    return s_result;
 }
 
-void job_iterator_t::reset() {
-    this->current = job_list->begin();
-    this->end = job_list->end();
-}
+static relaxed_atomic_t<job_control_t> job_control_mode{job_control_t::interactive};
 
-job_iterator_t::job_iterator_t(job_list_t &jobs) : job_list(&jobs) { this->reset(); }
+job_control_t get_job_control_mode() { return job_control_mode; }
 
-job_iterator_t::job_iterator_t() : job_list(&parser_t::principal_parser().job_list()) {
-    ASSERT_IS_MAIN_THREAD();
-    this->reset();
-}
+void set_job_control_mode(job_control_t mode) {
+    job_control_mode = mode;
 
-size_t job_iterator_t::count() const { return this->job_list->size(); }
-
-bool is_interactive_session = false;
-bool is_subshell = false;
-bool is_block = false;
-bool is_breakpoint = false;
-bool is_login = false;
-int is_event = 0;
-int job_control_mode = JOB_CONTROL_INTERACTIVE;
-int no_exec = 0;
-
-static int is_interactive = -1;
-
-static bool proc_had_barrier = false;
-
-bool shell_is_interactive() {
-    ASSERT_IS_MAIN_THREAD();
-    // is_interactive is statically initialized to -1. Ensure it has been dynamically set
-    // before we're called.
-    assert(is_interactive != -1);
-    return is_interactive > 0;
-}
-
-bool get_proc_had_barrier() {
-    ASSERT_IS_MAIN_THREAD();
-    return proc_had_barrier;
-}
-
-void set_proc_had_barrier(bool flag) {
-    ASSERT_IS_MAIN_THREAD();
-    proc_had_barrier = flag;
-}
-
-/// A stack containing the values of is_interactive. Used by proc_push_interactive and
-/// proc_pop_interactive.
-static std::vector<int> interactive_stack;
-
-void proc_init() { proc_push_interactive(0); }
-
-/// Remove job from list of jobs.
-static int job_remove(job_t *j) {
-    ASSERT_IS_MAIN_THREAD();
-    return parser_t::principal_parser().job_remove(j);
-}
-
-void job_t::promote() {
-    ASSERT_IS_MAIN_THREAD();
-    parser_t::principal_parser().job_promote(this);
-}
-
-void proc_destroy() {
-    job_list_t &jobs = parser_t::principal_parser().job_list();
-    while (!jobs.empty()) {
-        job_t *job = jobs.front().get();
-        debug(2, L"freeing leaked job %ls", job->command_wcstr());
-        job_remove(job);
+    // HACK: when fish (or any shell) launches a job with job control, it will put the job into its
+    // own pgroup and call tcsetpgrp() to allow that pgroup to own the terminal (making fish a
+    // background process). When the job finishes, fish will try to reclaim the terminal via
+    // tcsetpgrp(), but as fish is now a background process it will receive SIGTTOU and stop! Ensure
+    // that doesn't happen by ignoring SIGTTOU.
+    // Note that if we become interactive, we also ignore SIGTTOU.
+    if (mode == job_control_t::all) {
+        signal(SIGTTOU, SIG_IGN);
     }
 }
 
-void proc_set_last_statuses(statuses_t s) {
-    ASSERT_IS_MAIN_THREAD();
-    *last_statuses.acquire() = std::move(s);
-}
+void proc_init() { signal_set_handlers_once(false); }
 
-int proc_get_last_status() { return last_statuses.acquire()->status; }
-
-statuses_t proc_get_last_statuses() { return *last_statuses.acquire(); }
-
-// Basic thread safe job IDs. The vector consumed_job_ids has a true value wherever the job ID
-// corresponding to that slot is in use. The job ID corresponding to slot 0 is 1.
-static owning_lock<std::vector<bool>> locked_consumed_job_ids;
+// Basic thread safe sorted vector of job IDs in use.
+// This is deliberately leaked to avoid dtor ordering issues - see #6539.
+static auto *const locked_consumed_job_ids = new owning_lock<std::vector<job_id_t>>();
 
 job_id_t acquire_job_id() {
-    auto consumed_job_ids = locked_consumed_job_ids.acquire();
+    auto consumed_job_ids = locked_consumed_job_ids->acquire();
 
-    // Find the index of the first 0 slot.
-    auto slot = std::find(consumed_job_ids->begin(), consumed_job_ids->end(), false);
-    if (slot != consumed_job_ids->end()) {
-        // We found a slot. Note that slot 0 corresponds to job ID 1.
-        *slot = true;
-        return (job_id_t)(slot - consumed_job_ids->begin() + 1);
-    }
-
-    // We did not find a slot; create a new slot. The size of the vector is now the job ID
-    // (since it is one larger than the slot).
-    consumed_job_ids->push_back(true);
-    return (job_id_t)consumed_job_ids->size();
+    // The new job ID should be larger than the largest currently used ID (#6053).
+    job_id_t jid = consumed_job_ids->empty() ? 1 : consumed_job_ids->back() + 1;
+    consumed_job_ids->push_back(jid);
+    return jid;
 }
 
 void release_job_id(job_id_t jid) {
     assert(jid > 0);
-    auto consumed_job_ids = locked_consumed_job_ids.acquire();
-    size_t slot = (size_t)(jid - 1), count = consumed_job_ids->size();
+    auto consumed_job_ids = locked_consumed_job_ids->acquire();
 
-    // Make sure this slot is within our vector and is currently set to consumed.
-    assert(slot < count);
-    assert(consumed_job_ids->at(slot) == true);
-
-    // Clear it and then resize the vector to eliminate unused trailing job IDs.
-    consumed_job_ids->at(slot) = false;
-    while (count--) {
-        if (consumed_job_ids->at(count)) break;
-    }
-    consumed_job_ids->resize(count + 1);
-}
-
-job_t *job_t::from_job_id(job_id_t id) {
-    ASSERT_IS_MAIN_THREAD();
-    return parser_t::principal_parser().job_get(id);
-}
-
-job_t *job_t::from_pid(pid_t pid) {
-    ASSERT_IS_MAIN_THREAD();
-    return parser_t::principal_parser().job_get_from_pid(pid);
+    // Our job ID vector is sorted, but the number of jobs is typically 1 or 2 so a binary search
+    // isn't worth it.
+    auto where = std::find(consumed_job_ids->begin(), consumed_job_ids->end(), jid);
+    assert(where != consumed_job_ids->end() && "JobID was not in use");
+    consumed_job_ids->erase(where);
 }
 
 /// Return true if all processes in the job have stopped or completed.
@@ -209,18 +139,26 @@ bool job_t::is_completed() const {
     return true;
 }
 
-bool job_t::job_chain_is_fully_constructed() const {
-    const job_t *cursor = this;
-    while (cursor) {
-        if (!cursor->is_constructed()) return false;
-        cursor = cursor->get_parent().get();
+bool job_t::should_report_process_exits() const {
+    // This implements the behavior of process exit events only being sent for jobs containing an
+    // external process. Bizarrely the process exit event is for the pgroup leader which may be fish
+    // itself.
+    // TODO: rationalize this.
+    // If we never got a pgid then we never launched the external process, so don't report it.
+    if (this->pgid == INVALID_PID) {
+        return false;
     }
-    return true;
+
+    // Return whether we have an external process.
+    for (const auto &p : this->processes) {
+        if (p->type == process_type_t::external) {
+            return true;
+        }
+    }
+    return false;
 }
 
-void job_t::set_flag(job_flag_t flag, bool set) { this->flags.set(flag, set); }
-
-bool job_t::get_flag(job_flag_t flag) const { return this->flags.get(flag); }
+bool job_t::job_chain_is_fully_constructed() const { return *root_constructed; }
 
 bool job_t::signal(int signal) {
     // Presumably we are distinguishing between the two cases below because we do
@@ -252,7 +190,7 @@ statuses_t job_t::get_statuses() const {
         st.pipestatus.push_back(p->status.status_value());
     }
     int laststatus = st.pipestatus.back();
-    st.status = (get_flag(job_flag_t::NEGATE) ? !laststatus : laststatus);
+    st.status = flags().negate ? !laststatus : laststatus;
     return st;
 }
 
@@ -261,13 +199,16 @@ void internal_proc_t::mark_exited(proc_status_t status) {
     status_.store(status, std::memory_order_relaxed);
     exited_.store(true, std::memory_order_release);
     topic_monitor_t::principal().post(topic_t::internal_exit);
+    FLOG(proc_internal_proc, L"Internal proc", internal_proc_id_, L"exited with status",
+         status.status_value());
 }
 
-static void mark_job_complete(const job_t *j) {
-    for (auto &p : j->processes) {
-        p->completed = 1;
-    }
+static int64_t next_proc_id() {
+    static std::atomic<uint64_t> s_next{};
+    return ++s_next;
 }
+
+internal_proc_t::internal_proc_t() : internal_proc_id_(next_proc_id()) {}
 
 void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *failed_proc) {
     // The given process failed to even lift off (e.g. posix_spawn failed) and so doesn't have a
@@ -294,17 +235,17 @@ static void handle_child_status(process_t *proc, proc_status_t status) {
     if (status.signal_exited()) {
         int sig = status.signal_code();
         if (sig == SIGINT || sig == SIGQUIT) {
-            if (is_interactive_session) {
+            if (session_interactivity() != session_interactivity_t::not_interactive) {
                 // In an interactive session, tell the principal parser to skip all blocks we're
                 // executing so control-C returns control to the user.
-                parser_t::skip_all_blocks();
+                parser_t::cancel_requested(sig);
             } else {
                 // Deliver the SIGINT or SIGQUIT signal to ourself since we're not interactive.
                 struct sigaction act;
                 sigemptyset(&act.sa_mask);
                 act.sa_flags = 0;
                 act.sa_handler = SIG_DFL;
-                sigaction(sig, &act, 0);
+                sigaction(sig, &act, nullptr);
                 kill(getpid(), sig);
             }
         }
@@ -317,30 +258,60 @@ void process_t::check_generations_before_launch() {
     gens_ = topic_monitor_t::principal().current_generations();
 }
 
-job_t::job_t(job_id_t jobid, io_chain_t bio, std::shared_ptr<job_t> parent)
-    : block_io(std::move(bio)),
-      parent_job(std::move(parent)),
-      pgid(INVALID_PID),
-      tmodes(),
-      job_id(jobid),
-      flags{} {}
-
-job_t::~job_t() { release_job_id(job_id); }
-
-/// Return all the IO redirections. Start with the block IO, then walk over the processes.
-io_chain_t job_t::all_io_redirections() const {
-    io_chain_t result = this->block_io;
-    for (const process_ptr_t &p : this->processes) {
-        result.append(p->io_chain());
+bool process_t::is_internal() const {
+    switch (type) {
+        case process_type_t::builtin:
+        case process_type_t::function:
+        case process_type_t::block_node:
+            return true;
+        case process_type_t::external:
+        case process_type_t::exec:
+            return false;
+        default:
+            assert(false && "The fish developers forgot to include a process_t. Please report a bug");
+            return true;
     }
-    return result;
+    assert(false && "process_t::is_internal: Total logic failure, universe is broken. Please replace universe and retry.");
+    return true;
 }
 
-typedef unsigned int process_generation_count_t;
+static uint64_t next_internal_job_id() {
+    static std::atomic<uint64_t> s_next{};
+    return ++s_next;
+}
+
+job_t::job_t(job_id_t job_id, const properties_t &props, const job_lineage_t &lineage)
+    : properties(props),
+      job_id_(job_id),
+      internal_job_id(next_internal_job_id()),
+      root_constructed(lineage.root_constructed ? lineage.root_constructed : this->constructed) {}
+
+job_t::~job_t() {
+    if (job_id_ != -1) release_job_id(job_id_);
+}
+
+void job_t::mark_constructed() {
+    assert(!is_constructed() && "Job was already constructed");
+    *constructed = true;
+}
+
+bool job_t::has_internal_proc() const {
+    for (const auto &p : processes) {
+        if (p->is_internal()) return true;
+    }
+    return false;
+}
+
+bool job_t::has_external_proc() const {
+    for (const auto &p : processes) {
+        if (!p->is_internal()) return true;
+    }
+    return false;
+}
 
 /// A list of pids/pgids that have been disowned. They are kept around until either they exit or
 /// we exit. Poll these from time-to-time to prevent zombie processes from happening (#5342).
-static std::vector<pid_t> s_disowned_pids;
+static owning_lock<std::vector<pid_t>> s_disowned_pids;
 
 void add_disowned_pgid(pid_t pgid) {
     // NEVER add our own (or an invalid) pgid as they are not unique to only
@@ -348,14 +319,25 @@ void add_disowned_pgid(pid_t pgid) {
     if (pgid != getpgrp() && pgid > 0) {
         // waitpid(2) is signalled to wait on a process group rather than a
         // process id by using the negative of its value.
-        s_disowned_pids.push_back(pgid * -1);
+        s_disowned_pids.acquire()->push_back(pgid * -1);
     }
+}
+
+// Reap any pids in our disowned list that have exited. This is used to avoid zombies.
+static void reap_disowned_pids() {
+    auto disowned_pids = s_disowned_pids.acquire();
+    auto try_reap1 = [](pid_t pid) {
+        int status;
+        return waitpid(pid, &status, WNOHANG) > 0;
+    };
+    disowned_pids->erase(std::remove_if(disowned_pids->begin(), disowned_pids->end(), try_reap1),
+                         disowned_pids->end());
 }
 
 /// See if any reapable processes have exited, and mark them accordingly.
 /// \param block_ok if no reapable processes have exited, block until one is (or until we receive a
 /// signal).
-static void process_mark_finished_children(bool block_ok) {
+static void process_mark_finished_children(parser_t &parser, bool block_ok) {
     ASSERT_IS_MAIN_THREAD();
 
     // Get the exit and signal generations of all reapable processes.
@@ -365,8 +347,7 @@ static void process_mark_finished_children(bool block_ok) {
     topic_set_t reaptopics{};
     generation_list_t gens{};
     gens.fill(invalid_generation);
-    job_iterator_t jobs;
-    while (auto *j = jobs.next()) {
+    for (const auto &j : parser.jobs()) {
         for (const auto &proc : j->processes) {
             if (auto mtopic = j->reap_topic_for_process(proc.get())) {
                 topic_t topic = *mtopic;
@@ -391,8 +372,7 @@ static void process_mark_finished_children(bool block_ok) {
 
     // We got some changes. Since we last checked we received SIGCHLD, and or HUP/INT.
     // Update the hup/int generations and reap any reapable processes.
-    jobs.reset();
-    while (auto *j = jobs.next()) {
+    for (const auto &j : parser.jobs()) {
         for (const auto &proc : j->processes) {
             if (auto mtopic = j->reap_topic_for_process(proc.get())) {
                 // Update the signal hup/int gen.
@@ -404,8 +384,11 @@ static void process_mark_finished_children(bool block_ok) {
                     if (proc->internal_proc_) {
                         // Try reaping an internal process.
                         if (proc->internal_proc_->exited()) {
-                            proc->status = proc->internal_proc_->get_status();
-                            proc->completed = true;
+                            handle_child_status(proc.get(), proc->internal_proc_->get_status());
+                            FLOGF(proc_reap_internal,
+                                  "Reaped internal process '%ls' (id %llu, status %d)",
+                                  proc->argv0(), proc->internal_proc_->get_id(),
+                                  proc->status.status_value());
                         }
                     } else if (proc->pid > 0) {
                         // Try reaping an external process.
@@ -413,8 +396,10 @@ static void process_mark_finished_children(bool block_ok) {
                         auto pid = waitpid(proc->pid, &status, WNOHANG | WUNTRACED);
                         if (pid > 0) {
                             assert(pid == proc->pid && "Unexpcted waitpid() return");
-                            debug(4, "Reaped PID %d", pid);
                             handle_child_status(proc.get(), proc_status_t::from_waitpid(status));
+                            FLOGF(proc_reap_external,
+                                  "Reaped external process '%ls' (pid %d, status %d)",
+                                  proc->argv0(), pid, proc->status.status_value());
                         }
                     } else {
                         assert(0 && "Don't know how to reap this process");
@@ -424,12 +409,8 @@ static void process_mark_finished_children(bool block_ok) {
         }
     }
 
-    // Poll disowned processes/process groups, but do nothing with the result. Only used to avoid
-    // zombie processes. Entries have already been converted to negative for process groups.
-    int status;
-    s_disowned_pids.erase(std::remove_if(s_disowned_pids.begin(), s_disowned_pids.end(),
-                [&status](pid_t pid) { return waitpid(pid, &status, WNOHANG) > 0; }),
-            s_disowned_pids.end());
+    // Remove any zombies.
+    reap_disowned_pids();
 }
 
 /// Given a command like "cat file", truncate it to a reasonable length.
@@ -441,7 +422,8 @@ static wcstring truncate_command(const wcstring &cmd) {
     }
 
     // Truncation required.
-    const size_t ellipsis_length = wcslen(ellipsis_str);  // no need for wcwidth
+    const wchar_t *ellipsis_str = get_ellipsis_str();
+    const size_t ellipsis_length = std::wcslen(ellipsis_str);  // no need for wcwidth
     size_t trunc_length = max_len - ellipsis_length;
     // Eat trailing whitespace.
     while (trunc_length > 0 && iswspace(cmd.at(trunc_length - 1))) {
@@ -460,179 +442,231 @@ static void print_job_status(const job_t *j, job_status_t status) {
     if (status == JOB_STOPPED) msg = L"Job %d, '%ls' has stopped";
     outputter_t outp;
     outp.writestr("\r");
-    outp.writestr(format_string(_(msg), j->job_id, truncate_command(j->command()).c_str()));
+    outp.writestr(format_string(_(msg), j->job_id(), truncate_command(j->command()).c_str()));
     if (clr_eol) outp.term_puts(clr_eol, 1);
     outp.writestr(L"\n");
     fflush(stdout);
     outp.flush_to(STDOUT_FILENO);
 }
 
-void proc_fire_event(const wchar_t *msg, event_type_t type, pid_t pid, int status) {
+event_t proc_create_event(const wchar_t *msg, event_type_t type, pid_t pid, int status) {
     event_t event{type};
     event.desc.param1.pid = pid;
 
+    event.arguments.reserve(3);
     event.arguments.push_back(msg);
     event.arguments.push_back(to_string(pid));
     event.arguments.push_back(to_string(status));
-    event_fire(event);
+    return event;
 }
 
-static bool process_clean_after_marking(bool allow_interactive) {
-    ASSERT_IS_MAIN_THREAD();
-    bool found = false;
-
-    // this function may fire an event handler, we do not want to call ourselves recursively (to
-    // avoid infinite recursion).
-    static bool locked = false;
-    if (locked) {
-        return 0;
+/// Remove all disowned jobs whose job chain is fully constructed (that is, do not erase disowned
+/// jobs that still have an in-flight parent job). Note we never print statuses for such jobs.
+void remove_disowned_jobs(job_list_t &jobs) {
+    auto iter = jobs.begin();
+    while (iter != jobs.end()) {
+        const auto &j = *iter;
+        if (j->flags().disown_requested && j->job_chain_is_fully_constructed()) {
+            iter = jobs.erase(iter);
+        } else {
+            ++iter;
+        }
     }
-    locked = true;
+}
 
-    // this may be invoked in an exit handler, after the TERM has been torn down
-    // don't try to print in that case (#3222)
-    const bool interactive = allow_interactive && cur_term != NULL;
+/// Given a a process in a job, print the status message for the process as appropriate, and then
+/// mark the status code so we don't print again. Populate any events into \p exit_events.
+/// \return true if we printed a status message, false if not.
+static bool try_clean_process_in_job(process_t *p, job_t *j, std::vector<event_t> *exit_events,
+                                     bool only_one_job) {
+    if (!p->completed || !p->pid) {
+        return false;
+    }
 
-    job_iterator_t jobs;
-    const bool only_one_job = jobs.count() == 1;
-    while (job_t *const j = jobs.next()) {
-        // If we are reaping only jobs who do not need status messages sent to the console, do not
-        // consider reaping jobs that need status messages.
-        if ((!j->get_flag(job_flag_t::SKIP_NOTIFICATION)) && (!interactive) &&
-            (!j->is_foreground())) {
+    auto s = p->status;
+
+    // Add an exit event if the process did not come from a job handler.
+    if (!j->from_event_handler()) {
+        exit_events->push_back(proc_create_event(L"PROCESS_EXIT", event_type_t::exit, p->pid,
+                                                 s.normal_exited() ? s.exit_code() : -1));
+    }
+
+    // Ignore SIGPIPE. We issue it ourselves to the pipe writer when the pipe reader dies.
+    if (!s.signal_exited() || s.signal_code() == SIGPIPE) {
+        return false;
+    }
+
+    int proc_is_job = (p->is_first_in_job && p->is_last_in_job);
+    if (proc_is_job) j->mut_flags().notified = true;
+
+    // Handle signals other than SIGPIPE.
+    // Always report crashes.
+    if (j->skip_notification() && !contains(crashsignals, s.signal_code())) {
+        return false;
+    }
+
+    // Print nothing if we get SIGINT in the foreground process group, to avoid spamming
+    // obvious stuff on the console (#1119). If we get SIGINT for the foreground
+    // process, assume the user typed ^C and can see it working. It's possible they
+    // didn't, and the signal was delivered via pkill, etc., but the SIGINT/SIGTERM
+    // distinction is precisely to allow INT to be from a UI
+    // and TERM to be programmatic, so this assumption is keeping with the design of
+    // signals. If echoctl is on, then the terminal will have written ^C to the console.
+    // If off, it won't have. We don't echo ^C either way, so as to respect the user's
+    // preference.
+    bool printed = false;
+    if (s.signal_code() != SIGINT || !j->is_foreground()) {
+        if (proc_is_job) {
+            // We want to report the job number, unless it's the only job, in which case
+            // we don't need to.
+            const wcstring job_number_desc =
+                only_one_job ? wcstring() : format_string(_(L"Job %d, "), j->job_id());
+            std::fwprintf(stdout, _(L"%ls: %ls\'%ls\' terminated by signal %ls (%ls)"),
+                          program_name, job_number_desc.c_str(),
+                          truncate_command(j->command()).c_str(), sig2wcs(s.signal_code()),
+                          signal_get_desc(s.signal_code()));
+        } else {
+            const wcstring job_number_desc =
+                only_one_job ? wcstring() : format_string(L"from job %d, ", j->job_id());
+            const wchar_t *fmt =
+                _(L"%ls: Process %d, \'%ls\' %ls\'%ls\' terminated by signal %ls (%ls)");
+            std::fwprintf(stdout, fmt, program_name, p->pid, p->argv0(), job_number_desc.c_str(),
+                          truncate_command(j->command()).c_str(), sig2wcs(s.signal_code()),
+                          signal_get_desc(s.signal_code()));
+        }
+
+        if (clr_eol) outputter_t::stdoutput().term_puts(clr_eol, 1);
+        std::fwprintf(stdout, L"\n");
+        printed = true;
+    }
+    // Clear status so it is not reported more than once.
+    // TODO: this seems like a clumsy way to ensure that.
+    p->status = proc_status_t::from_exit_code(0);
+    return printed;
+}
+
+/// \return whether this job wants a status message printed when it stops or completes.
+static bool job_wants_message(const shared_ptr<job_t> &j) {
+    // Did we already print a status message?
+    if (j->flags().notified) return false;
+
+    // Do we just skip notifications?
+    if (j->skip_notification()) return false;
+
+    // Are we foreground?
+    // The idea here is to not print status messages for jobs that execute in the foreground (i.e.
+    // without & and without being `bg`).
+    if (j->is_foreground()) return false;
+
+    return true;
+}
+
+/// Remove completed jobs from the job list, printing status messages as appropriate.
+/// \return whether something was printed.
+static bool process_clean_after_marking(parser_t &parser, bool allow_interactive) {
+    ASSERT_IS_MAIN_THREAD();
+    bool printed = false;
+
+    // This function may fire an event handler, we do not want to call ourselves recursively (to
+    // avoid infinite recursion).
+    if (parser.libdata().is_cleaning_procs) {
+        return false;
+    }
+    parser.libdata().is_cleaning_procs = true;
+    const cleanup_t cleanup([&] { parser.libdata().is_cleaning_procs = false; });
+
+    // This may be invoked in an exit handler, after the TERM has been torn down
+    // Don't try to print in that case (#3222)
+    const bool interactive = allow_interactive && cur_term != nullptr;
+
+    // Remove all disowned jobs.
+    remove_disowned_jobs(parser.jobs());
+
+    // Accumulate exit events into a new list, which we fire after the list manipulation is
+    // complete.
+    std::vector<event_t> exit_events;
+
+    // Print status messages for completed or stopped jobs.
+    const bool only_one_job = parser.jobs().size() == 1;
+    for (const auto &j : parser.jobs()) {
+        // Skip unconstructed jobs.
+        if (!j->is_constructed()) {
             continue;
         }
 
-        for (const process_ptr_t &p : j->processes) {
-            if (!p->completed) continue;
-
-            if (!p->pid) continue;
-
-            auto s = p->status;
-
-            // TODO: The generic process-exit event is useless and unused.
-            // Remove this in future.
-            // Update: This event is used for cleaning up the psub temporary files and folders.
-            // Removing it breaks the psub tests as a result.
-            proc_fire_event(L"PROCESS_EXIT", event_type_t::exit, p->pid,
-                            (s.signal_exited() ? -1 : s.exit_code()));
-
-            // Ignore signal SIGPIPE.We issue it ourselves to the pipe writer when the pipe reader
-            // dies.
-            if (!s.signal_exited() || s.signal_code() == SIGPIPE) {
-                continue;
-            }
-
-            // Handle signals other than SIGPIPE.
-            int proc_is_job = (p->is_first_in_job && p->is_last_in_job);
-            if (proc_is_job) j->set_flag(job_flag_t::NOTIFIED, true);
-            // Always report crashes.
-            if (j->get_flag(job_flag_t::SKIP_NOTIFICATION) &&
-                !contains(crashsignals, s.signal_code())) {
-                continue;
-            }
-
-            // Print nothing if we get SIGINT in the foreground process group, to avoid spamming
-            // obvious stuff on the console (#1119). If we get SIGINT for the foreground
-            // process, assume the user typed ^C and can see it working. It's possible they
-            // didn't, and the signal was delivered via pkill, etc., but the SIGINT/SIGTERM
-            // distinction is precisely to allow INT to be from a UI
-            // and TERM to be programmatic, so this assumption is keeping with the design of
-            // signals. If echoctl is on, then the terminal will have written ^C to the console.
-            // If off, it won't have. We don't echo ^C either way, so as to respect the user's
-            // preference.
-            if (s.signal_code() != SIGINT || !j->is_foreground()) {
-                if (proc_is_job) {
-                    // We want to report the job number, unless it's the only job, in which case
-                    // we don't need to.
-                    const wcstring job_number_desc =
-                        only_one_job ? wcstring() : format_string(_(L"Job %d, "), j->job_id);
-                    fwprintf(stdout, _(L"%ls: %ls\'%ls\' terminated by signal %ls (%ls)"),
-                             program_name, job_number_desc.c_str(),
-                             truncate_command(j->command()).c_str(), sig2wcs(s.signal_code()),
-                             signal_get_desc(s.signal_code()));
-                } else {
-                    const wcstring job_number_desc =
-                        only_one_job ? wcstring() : format_string(L"from job %d, ", j->job_id);
-                    const wchar_t *fmt =
-                        _(L"%ls: Process %d, \'%ls\' %ls\'%ls\' terminated by signal %ls (%ls)");
-                    fwprintf(stdout, fmt, program_name, p->pid, p->argv0(), job_number_desc.c_str(),
-                             truncate_command(j->command()).c_str(), sig2wcs(s.signal_code()),
-                             signal_get_desc(s.signal_code()));
-                }
-
-                if (clr_eol) outputter_t::stdoutput().term_puts(clr_eol, 1);
-                fwprintf(stdout, L"\n");
-            }
-            found = false;
-            // clear status so it is not reported more than once
-            p->status = proc_status_t::from_exit_code(0);
+        // If we are not interactive, skip cleaning jobs that want to print an interactive message.
+        if (!interactive && job_wants_message(j)) {
+            continue;
         }
 
-        // If all processes have completed, tell the user the job has completed and delete it from
-        // the active job list.
-        if (j->is_completed()) {
-            if (!j->is_foreground() && !j->get_flag(job_flag_t::NOTIFIED) &&
-                !j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
-                print_job_status(j, JOB_ENDED);
-                found = true;
+        // Clean processes within the job.
+        // Note this may print the message on behalf of the job, affecting the result of
+        // job_wants_message().
+        for (process_ptr_t &p : j->processes) {
+            if (try_clean_process_in_job(p.get(), j.get(), &exit_events, only_one_job)) {
+                printed = true;
             }
-            // TODO: The generic process-exit event is useless and unused.
-            // Remove this in future.
-            // Don't fire the exit-event for jobs with pgid INVALID_PID.
-            // That's our "sentinel" pgid, for jobs that don't (yet) have a pgid,
-            // or jobs that consist entirely of builtins (and hence don't have a process).
-            // This causes issues if fish is PID 2, which is quite common on WSL. See #4582.
-            if (j->pgid != INVALID_PID) {
-                proc_fire_event(L"JOB_EXIT", event_type_t::exit, -j->pgid, 0);
-            }
-            proc_fire_event(L"JOB_EXIT", event_type_t::job_exit, j->job_id, 0);
+        }
 
-            job_remove(j);
-        } else if (j->is_stopped() && !j->get_flag(job_flag_t::NOTIFIED)) {
-            // Notify the user about newly stopped jobs.
-            if (!j->get_flag(job_flag_t::SKIP_NOTIFICATION)) {
-                print_job_status(j, JOB_STOPPED);
-                found = true;
+        // Print the message if we need to.
+        if (job_wants_message(j) && (j->is_completed() || j->is_stopped())) {
+            print_job_status(j.get(), j->is_completed() ? JOB_ENDED : JOB_STOPPED);
+            j->mut_flags().notified = true;
+            printed = true;
+        }
+
+        // Prepare events for completed jobs, except for jobs that themselves came from event
+        // handlers.
+        if (!j->from_event_handler() && j->is_completed()) {
+            if (j->should_report_process_exits()) {
+                exit_events.push_back(
+                    proc_create_event(L"JOB_EXIT", event_type_t::exit, -j->pgid, 0));
             }
-            j->set_flag(job_flag_t::NOTIFIED, true);
+            exit_events.push_back(
+                proc_create_event(L"JOB_EXIT", event_type_t::caller_exit, j->job_id(), 0));
+            exit_events.back().desc.param1.caller_id = j->internal_job_id;
         }
     }
 
-    if (found) fflush(stdout);
+    // Remove completed jobs.
+    // Do this before calling out to user code in the event handler below, to ensure an event
+    // handler doesn't remove jobs on our behalf.
+    auto is_complete = [](const shared_ptr<job_t> &j) { return j->is_completed(); };
+    auto &jobs = parser.jobs();
+    jobs.erase(std::remove_if(jobs.begin(), jobs.end(), is_complete), jobs.end());
 
-    locked = false;
+    // Post pending exit events.
+    for (const auto &evt : exit_events) {
+        event_fire(parser, evt);
+    }
 
-    return found;
+    if (printed) {
+        fflush(stdout);
+    }
+
+    return printed;
 }
 
-bool job_reap(bool allow_interactive) {
+bool job_reap(parser_t &parser, bool allow_interactive) {
     ASSERT_IS_MAIN_THREAD();
-    bool found = false;
-
-    process_mark_finished_children(false);
+    process_mark_finished_children(parser, false);
 
     // Preserve the exit status.
-    auto saved_statuses = proc_get_last_statuses();
+    auto saved_statuses = parser.get_last_statuses();
 
-    found = process_clean_after_marking(allow_interactive);
+    bool printed = process_clean_after_marking(parser, allow_interactive);
 
     // Restore the exit status.
-    proc_set_last_statuses(std::move(saved_statuses));
+    parser.set_last_statuses(std::move(saved_statuses));
 
-    return found;
+    return printed;
 }
-
-#ifdef HAVE__PROC_SELF_STAT
-
-/// Maximum length of a /proc/[PID]/stat filename.
-#define FN_SIZE 256
 
 /// Get the CPU time for the specified process.
 unsigned long proc_get_jiffies(process_t *p) {
+    if (!have_proc_stat()) return 0;
     if (p->pid <= 0) return 0;
 
-    wchar_t fn[FN_SIZE];
     char state;
     int pid, ppid, pgrp, session, tty_nr, tpgid, exit_signal, processor;
     long int cutime, cstime, priority, nice, placeholder, itrealvalue, rss;
@@ -641,11 +675,16 @@ unsigned long proc_get_jiffies(process_t *p) {
         wchan, nswap, cnswap;
     char comm[1024];
 
-    swprintf(fn, FN_SIZE, L"/proc/%d/stat", p->pid);
-    FILE *f = wfopen(fn, "r");
-    if (!f) return 0;
+    /// Maximum length of a /proc/[PID]/stat filename.
+    constexpr size_t FN_SIZE = 256;
+    char fn[FN_SIZE];
+    std::snprintf(fn, FN_SIZE, "/proc/%d/stat", p->pid);
+    // Don't use autoclose_fd here, we will fdopen() and then fclose() instead.
+    int fd = open_cloexec(fn, O_RDONLY);
+    if (fd < 0) return 0;
 
     // TODO: replace the use of fscanf() as it is brittle and should never be used.
+    FILE *f = fdopen(fd, "r");
     int count = fscanf(f,
                        "%9d %1023s %c %9d %9d %9d %9d %9d %9lu "
                        "%9lu %9lu %9lu %9lu %9lu %9lu %9ld %9ld %9ld "
@@ -663,26 +702,33 @@ unsigned long proc_get_jiffies(process_t *p) {
 }
 
 /// Update the CPU time for all jobs.
-void proc_update_jiffies() {
-    job_t *job;
-    job_iterator_t j;
-
-    for (job = j.next(); job; job = j.next()) {
+void proc_update_jiffies(parser_t &parser) {
+    for (const auto &job : parser.jobs()) {
         for (process_ptr_t &p : job->processes) {
-            gettimeofday(&p->last_time, 0);
+            gettimeofday(&p->last_time, nullptr);
             p->last_jiffies = proc_get_jiffies(p.get());
         }
     }
 }
 
-#endif
+// Return control of the terminal to a job's process group. restore_attrs is true if we are
+// restoring a previously-stopped job, in which case we need to restore terminal attributes.
+int terminal_maybe_give_to_job(const job_t *j, bool continuing_from_stopped) {
+    enum { notneeded = 0, success = 1, error = -1 };
 
-// Return control of the terminal to a job's process group. restore_attrs is true if we are restoring
-// a previously-stopped job, in which case we need to restore terminal attributes.
-bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
+    if (!j->should_claim_terminal()) {
+        // The job doesn't want the terminal.
+        return notneeded;
+    }
+
     if (j->pgid == 0) {
-        debug(2, "terminal_give_to_job() returning early due to no process group");
-        return true;
+        FLOG(proc_termowner, L"terminal_give_to_job() returning early due to no process group");
+        return notneeded;
+    }
+
+    // If we are continuing, ensure that stdin is marked as blocking first (issue #176).
+    if (continuing_from_stopped) {
+        make_fd_blocking(STDIN_FILENO);
     }
 
     // It may not be safe to call tcsetpgrp if we've already done so, as at that point we are no
@@ -696,10 +742,10 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
     // to hand over control of the terminal to this process group, which is a no-op if it's already
     // been done.
     if (j->pgid == INVALID_PID || tcgetpgrp(STDIN_FILENO) == j->pgid) {
-        debug(4, L"Process group %d already has control of terminal\n", j->pgid);
+        FLOGF(proc_termowner, L"Process group %d already has control of terminal", j->pgid);
     } else {
-        debug(4,
-              L"Attempting to bring process group to foreground via tcsetpgrp for job->pgid %d\n",
+        FLOGF(proc_termowner,
+              L"Attempting to bring process group to foreground via tcsetpgrp for job->pgid %d",
               j->pgid);
 
         // The tcsetpgrp(2) man page says that EPERM is thrown if "pgrp has a supported value, but
@@ -712,7 +758,7 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
         // guarantee the process isn't going to exit while we wait (which would cause us to possibly
         // block indefinitely).
         while (tcsetpgrp(STDIN_FILENO, j->pgid) != 0) {
-            debug(3, "tcsetpgrp failed: %d", errno);
+            FLOGF(proc_termowner, L"tcsetpgrp failed: %d", errno);
 
             bool pgroup_terminated = false;
             // No need to test for EINTR as we are blocking signals
@@ -734,17 +780,18 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
                 } else {
                     // Debug the original tcsetpgrp error (not the waitpid errno) to the log, and
                     // then retry until not EPERM or the process group has exited.
-                    debug(2, L"terminal_give_to_job(): EPERM.\n", j->pgid);
+                    FLOGF(proc_termowner, L"terminal_give_to_job(): EPERM.\n", j->pgid);
                     continue;
                 }
             } else {
                 if (errno == ENOTTY) {
                     redirect_tty_output();
+                } else {
+                    FLOGF(warning, _(L"Could not send job %d ('%ls') with pgid %d to foreground"),
+                          j->job_id(), j->command_wcstr(), j->pgid);
+                    wperror(L"tcsetpgrp");
                 }
-                debug(1, _(L"Could not send job %d ('%ls') with pgid %d to foreground"), j->job_id,
-                      j->command_wcstr(), j->pgid);
-                wperror(L"tcsetpgrp");
-                return false;
+                return error;
             }
 
             if (pgroup_terminated) {
@@ -753,16 +800,16 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
                 // job/group have been started, the only way this can happen is if the very last
                 // process in the group terminated and didn't need to access the terminal, otherwise
                 // it would have hung waiting for terminal IO (SIGTTIN). We can safely ignore this.
-                debug(3, L"tcsetpgrp called but process group %d has terminated.\n", j->pgid);
-                mark_job_complete(j);
-                return true;
+                FLOGF(proc_termowner, L"tcsetpgrp called but process group %d has terminated.\n",
+                      j->pgid);
+                return notneeded;
             }
 
             break;
         }
     }
 
-    if (restore_attrs) {
+    if (continuing_from_stopped) {
         auto result = tcsetattr(STDIN_FILENO, TCSADRAIN, &j->tmodes);
         if (result == -1) {
             // No need to test for EINTR and retry since we have blocked all signals
@@ -770,8 +817,47 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
                 redirect_tty_output();
             }
 
-            debug(1, _(L"Could not send job %d ('%ls') to foreground"), j->job_id,
+            FLOGF(warning, _(L"Could not send job %d ('%ls') to foreground"), j->job_id(),
                   j->preview().c_str());
+            wperror(L"tcsetattr");
+            return error;
+        }
+    }
+
+    return success;
+}
+
+/// Returns control of the terminal to the shell, and saves the terminal attribute state to the job,
+/// so that we can restore the terminal ownership to the job at a later time.
+static bool terminal_return_from_job(job_t *j, int restore_attrs) {
+    errno = 0;
+    if (j->pgid == 0) {
+        FLOG(proc_pgroup, "terminal_return_from_job() returning early due to no process group");
+        return true;
+    }
+
+    if (tcsetpgrp(STDIN_FILENO, getpgrp()) == -1) {
+        if (errno == ENOTTY) redirect_tty_output();
+        FLOGF(warning, _(L"Could not return shell to foreground"));
+        wperror(L"tcsetpgrp");
+        return false;
+    }
+
+    // Save jobs terminal modes.
+    if (tcgetattr(STDIN_FILENO, &j->tmodes)) {
+        if (errno == EIO) redirect_tty_output();
+        FLOGF(warning, _(L"Could not return shell to foreground"));
+        wperror(L"tcgetattr");
+        return false;
+    }
+
+    // Need to restore the terminal's attributes or `bind \cF fg` will put the
+    // terminal into a broken state (until "enter" is pressed).
+    // See: https://github.com/fish-shell/fish-shell/issues/2114
+    if (restore_attrs) {
+        if (tcsetattr(STDIN_FILENO, TCSADRAIN, &shell_modes) == -1) {
+            if (errno == EIO) redirect_tty_output();
+            FLOGF(warning, _(L"Could not return shell to foreground"));
             wperror(L"tcsetattr");
             return false;
         }
@@ -780,88 +866,34 @@ bool terminal_give_to_job(const job_t *j, bool restore_attrs) {
     return true;
 }
 
-pid_t terminal_acquire_before_builtin(int job_pgid) {
-    pid_t selfpgid = getpgrp();
-
-    pid_t current_owner = tcgetpgrp(STDIN_FILENO);
-    if (current_owner >= 0 && current_owner != selfpgid && current_owner == job_pgid) {
-        if (tcsetpgrp(STDIN_FILENO, selfpgid) == 0) {
-            return current_owner;
-        }
-    }
-    return -1;
-}
-
-/// Returns control of the terminal to the shell, and saves the terminal attribute state to the job,
-/// so that we can restore the terminal ownership to the job at a later time.
-static bool terminal_return_from_job(job_t *j) {
-    errno = 0;
-    if (j->pgid == 0) {
-        debug(2, "terminal_return_from_job() returning early due to no process group");
-        return true;
-    }
-
-    if (tcsetpgrp(STDIN_FILENO, getpgrp()) == -1) {
-        if (errno == ENOTTY) redirect_tty_output();
-        debug(1, _(L"Could not return shell to foreground"));
-        wperror(L"tcsetpgrp");
-        return false;
-    }
-
-    // Save jobs terminal modes.
-    if (tcgetattr(STDIN_FILENO, &j->tmodes)) {
-        if (errno == EIO) redirect_tty_output();
-        debug(1, _(L"Could not return shell to foreground"));
-        wperror(L"tcgetattr");
-        return false;
-    }
-
-// Disabling this per
-// https://github.com/adityagodbole/fish-shell/commit/9d229cd18c3e5c25a8bd37e9ddd3b67ddc2d1b72 On
-// Linux, 'cd . ; ftp' prevents you from typing into the ftp prompt. See
-// https://github.com/fish-shell/fish-shell/issues/121
-#if 0
-// Restore the shell's terminal modes.
-if (tcsetattr(STDIN_FILENO, TCSADRAIN, &shell_modes) == -1) {
-if (errno == EIO) redirect_tty_output();
-debug(1, _(L"Could not return shell to foreground"));
-wperror(L"tcsetattr");
-return false;
-}
-#endif
-
-    return true;
-}
-
-void job_t::continue_job(bool send_sigcont) {
+void job_t::continue_job(parser_t &parser, bool reclaim_foreground_pgrp, bool send_sigcont) {
     // Put job first in the job list.
-    promote();
-    set_flag(job_flag_t::NOTIFIED, false);
+    parser.job_promote(this);
+    mut_flags().notified = false;
 
-    debug(4, L"%ls job %d, gid %d (%ls), %ls, %ls", send_sigcont ? L"Continue" : L"Start", job_id,
-          pgid, command_wcstr(), is_completed() ? L"COMPLETED" : L"UNCOMPLETED",
-          is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
+    FLOGF(proc_job_run, L"%ls job %d, gid %d (%ls), %ls, %ls",
+          send_sigcont ? L"Continue" : L"Start", job_id_, pgid, command_wcstr(),
+          is_completed() ? L"COMPLETED" : L"UNCOMPLETED",
+          parser.libdata().is_interactive ? L"INTERACTIVE" : L"NON-INTERACTIVE");
 
     // Make sure we retake control of the terminal before leaving this function.
     bool term_transferred = false;
     cleanup_t take_term_back([&]() {
-        if (term_transferred) {
-            terminal_return_from_job(this);
+        if (term_transferred && reclaim_foreground_pgrp) {
+            // Only restore terminal attrs if we're continuing a job. See:
+            // https://github.com/fish-shell/fish-shell/issues/121
+            // https://github.com/fish-shell/fish-shell/issues/2114
+            terminal_return_from_job(this, send_sigcont);
         }
     });
 
     if (!is_completed()) {
-        if (get_flag(job_flag_t::TERMINAL) && is_foreground()) {
-            // Put the job into the foreground and give it control of the terminal.
-            // Hack: ensure that stdin is marked as blocking first (issue #176).
-            make_fd_blocking(STDIN_FILENO);
-            if (!terminal_give_to_job(this, send_sigcont)) {
-                // This scenario has always returned without any error handling. Presumably that is
-                // OK.
-                return;
-            }
-            term_transferred = true;
+        int transfer = terminal_maybe_give_to_job(this, send_sigcont);
+        if (transfer < 0) {
+            // terminal_maybe_give_to_job prints an error.
+            return;
         }
+        term_transferred = (transfer > 0);
 
         // If both requested and necessary, send the job a continue signal.
         if (send_sigcont) {
@@ -870,7 +902,7 @@ void job_t::continue_job(bool send_sigcont) {
             // signal individually. job_t::signal() does the same, but uses the shell's own pgroup
             // to make that distinction.
             if (!signal(SIGCONT)) {
-                debug(2, "Failed to send SIGCONT to any processes in pgroup %d!", pgid);
+                FLOGF(proc_pgroup, "Failed to send SIGCONT to any processes in pgroup %d!", pgid);
                 // This returns without bubbling up the error. Presumably that is OK.
                 return;
             }
@@ -884,7 +916,7 @@ void job_t::continue_job(bool send_sigcont) {
         if (is_foreground()) {
             // Wait for the status of our own job to change.
             while (!reader_exit_forced() && !is_stopped() && !is_completed()) {
-                process_mark_finished_children(true);
+                process_mark_finished_children(parser, true);
             }
         }
     }
@@ -894,42 +926,41 @@ void job_t::continue_job(bool send_sigcont) {
         // finished and is not a short-circuited builtin.
         auto &p = processes.back();
         if (p->status.normal_exited() || p->status.signal_exited()) {
-            proc_set_last_statuses(get_statuses());
+            parser.set_last_statuses(get_statuses());
         }
     }
 }
 
-void proc_sanity_check() {
-    const job_t *fg_job = NULL;
+void proc_sanity_check(const parser_t &parser) {
+    const job_t *fg_job = nullptr;
 
-    job_iterator_t jobs;
-    while (const job_t *j = jobs.next()) {
+    for (const auto &j : parser.jobs()) {
         if (!j->is_constructed()) continue;
 
         // More than one foreground job?
         if (j->is_foreground() && !(j->is_stopped() || j->is_completed())) {
             if (fg_job) {
-                debug(0, _(L"More than one job in foreground: job 1: '%ls' job 2: '%ls'"),
+                FLOGF(error, _(L"More than one job in foreground: job 1: '%ls' job 2: '%ls'"),
                       fg_job->command_wcstr(), j->command_wcstr());
                 sanity_lose();
             }
-            fg_job = j;
+            fg_job = j.get();
         }
 
         for (const process_ptr_t &p : j->processes) {
             // Internal block nodes do not have argv - see issue #1545.
-            bool null_ok = (p->type == INTERNAL_BLOCK_NODE);
+            bool null_ok = (p->type == process_type_t::block_node);
             validate_pointer(p->get_argv(), _(L"Process argument list"), null_ok);
             validate_pointer(p->argv0(), _(L"Process name"), null_ok);
 
             if ((p->stopped & (~0x00000001)) != 0) {
-                debug(0, _(L"Job '%ls', process '%ls' has inconsistent state \'stopped\'=%d"),
+                FLOGF(error, _(L"Job '%ls', process '%ls' has inconsistent state \'stopped\'=%d"),
                       j->command_wcstr(), p->argv0(), p->stopped);
                 sanity_lose();
             }
 
             if ((p->completed & (~0x00000001)) != 0) {
-                debug(0, _(L"Job '%ls', process '%ls' has inconsistent state \'completed\'=%d"),
+                FLOGF(error, _(L"Job '%ls', process '%ls' has inconsistent state \'completed\'=%d"),
                       j->command_wcstr(), p->argv0(), p->completed);
                 sanity_lose();
             }
@@ -937,34 +968,17 @@ void proc_sanity_check() {
     }
 }
 
-void proc_push_interactive(int value) {
+void proc_wait_any(parser_t &parser) {
     ASSERT_IS_MAIN_THREAD();
-    int old = is_interactive;
-    interactive_stack.push_back(is_interactive);
-    is_interactive = value;
-    if (old != value) signal_set_handlers();
+    process_mark_finished_children(parser, true /* block_ok */);
+    process_clean_after_marking(parser, parser.libdata().is_interactive);
 }
 
-void proc_pop_interactive() {
-    ASSERT_IS_MAIN_THREAD();
-    int old = is_interactive;
-    is_interactive = interactive_stack.back();
-    interactive_stack.pop_back();
-    if (is_interactive != old) signal_set_handlers();
-}
-
-void proc_wait_any() {
-    ASSERT_IS_MAIN_THREAD();
-    process_mark_finished_children(true /* block_ok */);
-    process_clean_after_marking(is_interactive);
-}
-
-void hup_background_jobs() {
-    job_iterator_t jobs;
-
-    while (job_t *j = jobs.next()) {
+void hup_background_jobs(const parser_t &parser) {
+    // TODO: we should probably hup all jobs across all parsers here.
+    for (const auto &j : parser.jobs()) {
         // Make sure we don't try to SIGHUP the calling builtin
-        if (j->pgid == INVALID_PID || !j->get_flag(job_flag_t::JOB_CONTROL)) {
+        if (j->pgid == INVALID_PID || !j->wants_job_control()) {
             continue;
         }
 

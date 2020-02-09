@@ -8,6 +8,12 @@ function __fish_man_page
         return
     end
 
+    #Skip `sudo` and display then manpage of following command
+    while set -q args[2]
+        and string match -qr -- '^(sudo|.*=.*)$' $args[1]
+        set -e args[1]
+    end
+
     # If there are at least two tokens not starting with "-", the second one might be a subcommand.
     # Try "man first-second" and fall back to "man first" if that doesn't work out.
     set -l maincmd (basename $args[1])

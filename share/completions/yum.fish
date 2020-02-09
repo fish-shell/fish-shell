@@ -6,12 +6,12 @@
 
 # Test if completing using package names is appropriate
 function __fish_yum_package_ok
-	for i in (commandline -poc)
-		if contains -- $i update upgrade remove erase install reinstall
-			return 0
-		end
-	end
-	return 1
+    for i in (commandline -poc)
+        if contains -- $i update upgrade remove erase install reinstall
+            return 0
+        end
+    end
+    return 1
 end
 
 complete -c yum -n '__fish_use_subcommand' -xa install -d "Install the latest version of a package"

@@ -1,10 +1,10 @@
 function __fish_exercism_no_subcommand -d 'Test if exercism has yet to be given the subcommand'
-        for i in (commandline -opc)
-                if contains -- $i demo debug configure fetch restore submit unsubmit tracks download help
-                        return 1
-                end
+    for i in (commandline -opc)
+        if contains -- $i demo debug configure fetch restore submit unsubmit tracks download help
+            return 1
         end
-        return 0
+    end
+    return 0
 end
 
 complete -c exercism -s c -l config -d 'path to config file [$EXERCISM_CONFIG_FILE, $XDG_CONFIG_HOME]'

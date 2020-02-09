@@ -140,20 +140,21 @@ function __fish_complete_mount_opts
     set -l token (commandline -tc | string replace -r '^-o' -- '')
     set -l args (string split , -- $token)
 
-    set -l last_arg $args[-1]
-    set -e args[-1]
+    if test (count $args) -ne 0
+        set -l last_arg $args[-1]
+        set -e args[-1]
 
-    switch (string replace -r '=.*' '=' -- $last_arg)
-        case uid=
-            set -a fish_mount_opts uid=(__fish_print_user_ids)
-        case gid=
-            set -a fish_mount_opts gid=(__fish_print_group_ids)
-        case setuid=
-            set -a fish_mount_opts setuid=(__fish_print_user_ids)
-        case setgid=
-            set -a fish_mount_opts setgid=(__fish_print_group_ids)
+        switch (string replace -r '=.*' '=' -- $last_arg)
+            case uid=
+                set -a fish_mount_opts uid=(__fish_print_user_ids)
+            case gid=
+                set -a fish_mount_opts gid=(__fish_print_group_ids)
+            case setuid=
+                set -a fish_mount_opts setuid=(__fish_print_user_ids)
+            case setgid=
+                set -a fish_mount_opts setgid=(__fish_print_group_ids)
+        end
     end
-
 
     set -l prefix ''
     if set -q args[1]

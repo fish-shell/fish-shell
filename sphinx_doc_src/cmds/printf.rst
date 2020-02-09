@@ -1,11 +1,14 @@
+.. _cmd-printf:
+
 printf - display text according to a format string
 ==================================================
 
 Synopsis
 --------
 
-printf format [argument...]
+::
 
+    printf FORMAT [ARGUMENT ...]
 
 Description
 -----------
@@ -13,27 +16,27 @@ printf formats the string FORMAT with ARGUMENT, and displays the result.
 
 The string FORMAT should contain format specifiers, each of which are replaced with successive arguments according to the specifier. Specifiers are detailed below, and are taken from the C library function ``printf(3)``.
 
-Unlike ``echo``, ``printf`` does not append a new line unless it is specified as part of the string.
+Unlike :ref:`echo <cmd-echo>`, ``printf`` does not append a new line unless it is specified as part of the string.
 
 Valid format specifiers are:
 
-- ``%%d``: Argument will be used as decimal integer (signed or unsigned)
+- ``%d``: Argument will be used as decimal integer (signed or unsigned)
 
-- ``%%i``: Argument will be used as a signed integer
+- ``%i``: Argument will be used as a signed integer
 
-- ``%%o``: An octal unsigned integer
+- ``%o``: An octal unsigned integer
 
-- ``%%u``: An unsigned decimal integer
+- ``%u``: An unsigned decimal integer
 
-- ``%%x`` or ``%%X``: An unsigned hexadecimal integer
+- ``%x`` or ``%X``: An unsigned hexadecimal integer
 
-- ``%%f``, ``%%g`` or ``%%G``: A floating-point number
+- ``%f``, ``%g`` or ``%G``: A floating-point number
 
-- ``%%e`` or ``%%E``: A floating-point number in scientific (XXXeYY) notation
+- ``%e`` or ``%E``: A floating-point number in scientific (XXXeYY) notation
 
-- ``%%s``: A string
+- ``%s``: A string
 
-- ``%%b``: As a string, interpreting backslash escapes, except that octal escapes are of the form \0 or \0ooo.
+- ``%b``: As a string, interpreting backslash escapes, except that octal escapes are of the form \0 or \0ooo.
 
 ``%%`` signifies a literal "%".
 

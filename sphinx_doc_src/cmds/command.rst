@@ -1,11 +1,14 @@
+.. _cmd-command:
+
 command - run a program
 =======================
 
 Synopsis
 --------
 
-command [OPTIONS] COMMANDNAME [ARGS...]
+::
 
+    command [OPTIONS] COMMANDNAME [ARGS...]
 
 Description
 -----------
@@ -14,9 +17,9 @@ Description
 
 The following options are available:
 
-- ``-a`` or ``--all`` returns all the external commands that are found in ``$PATH`` in the order they are found.
+- ``-a`` or ``--all`` returns all the external COMMANDNAMEs that are found in ``$PATH`` in the order they are found.
 
-- ``-q`` or ``--quiet``, silences the output and prints nothing, setting only the exit code. Implies ``--search``.
+- ``-q`` or ``--quiet``, silences the output and prints nothing, setting only the exit status. Implies ``--search``.
 
 - ``-s`` or ``--search`` returns the name of the external command that would be executed, or nothing if no file with the specified name could be found in the ``$PATH``.
 

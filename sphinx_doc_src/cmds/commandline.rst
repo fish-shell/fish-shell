@@ -1,11 +1,14 @@
+.. _cmd-commandline:
+
 commandline - set or get the current command line buffer
 ========================================================
 
 Synopsis
 --------
 
-commandline [OPTIONS] [CMD]
+::
 
+    commandline [OPTIONS] [CMD]
 
 Description
 -----------
@@ -20,7 +23,7 @@ The following options are available:
 
 - ``-C`` or ``--cursor`` set or get the current cursor position, not the contents of the buffer. If no argument is given, the current cursor position is printed, otherwise the argument is interpreted as the new cursor position.
 
-- ``-f`` or ``--function`` inject readline functions into the reader. This option cannot be combined with any other option. It will cause any additional arguments to be interpreted as readline functions, and these functions will be injected into the reader, so that they will be returned to the reader before any additional actual key presses are read.
+- ``-f`` or ``--function`` causes any additional arguments to be interpreted as input functions, and puts them into the queue, so that they will be read before any additional actual key presses are. This option cannot be combined with any other option. See :ref:`bind <cmd-bind>` for a list of input functions.
 
 The following options change the way ``commandline`` updates the command line buffer:
 

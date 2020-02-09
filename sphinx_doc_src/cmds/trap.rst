@@ -1,16 +1,19 @@
+.. _cmd-trap:
+
 trap - perform an action when the shell receives a signal
 =========================================================
 
 Synopsis
 --------
 
-trap [OPTIONS] [[ARG] REASON ... ]
+::
 
+    trap [OPTIONS] [[ARG] REASON ... ]
 
 Description
 -----------
 
-``trap`` is a wrapper around the fish event delivery framework. It exists for backwards compatibility with POSIX shells. For other uses, it is recommended to define an <a href='index.html#event'>event handler</a>.
+``trap`` is a wrapper around the fish event delivery framework. It exists for backwards compatibility with POSIX shells. For other uses, it is recommended to define an :ref:`event handler <event>`.
 
 The following parameters are available:
 
@@ -30,7 +33,7 @@ If ``ARG`` is not present and ``-p`` has been supplied, then the trap commands a
 
 Signal names are case insensitive and the ``SIG`` prefix is optional.
 
-The return status is 1 if any ``REASON`` is invalid; otherwise trap returns 0.
+The exit status is 1 if any ``REASON`` is invalid; otherwise trap returns 0.
 
 Example
 -------

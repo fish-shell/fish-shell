@@ -6,8 +6,8 @@
 
 set -e
 
-# Find the fish git directory as two levels up from script directory.
-GIT_DIR="$( cd "$( dirname $( dirname "$0" ) )" && pwd )"
+# Find the fish directory as two levels up from script directory.
+FISH_BASE_DIR="$( cd "$( dirname "$( dirname "$0" )" )" && pwd )"
 DEF_VER=unknown
 
 # First see if there is a version file (included in release tarballs),
@@ -15,7 +15,7 @@ DEF_VER=unknown
 if test -f version
 then
 	VN=$(cat version) || VN="$DEF_VER"
-elif ! VN=$(git -C "$GIT_DIR" describe --always --dirty 2>/dev/null); then
+elif ! VN=$(git -C "$FISH_BASE_DIR" describe --always --dirty 2>/dev/null); then
 	VN="$DEF_VER"
 fi
 
@@ -34,7 +34,7 @@ if test -r $FBVF
 then
 	VC=$(grep -v '^#' $FBVF | tr -d '"' | sed -e 's/^FISH_BUILD_VERSION=//')
 else
-	VC=unset
+	VC="unset"
 fi
 
 # Maybe output the FBVF

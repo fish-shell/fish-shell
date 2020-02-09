@@ -5,7 +5,8 @@
 #
 set git_clang_format no
 set c_files
-set f_files
+set fish_files
+set python_files
 set all no
 
 if test "$argv[1]" = "--all"
@@ -22,15 +23,13 @@ if test $all = yes
     set files (git status --porcelain --short --untracked-files=all | sed -e 's/^ *[^ ]* *//')
     if set -q files[1]
         echo
-        echo You have uncommited changes. Cowardly refusing to restyle the entire code base.
+        echo You have uncommitted changes. Cowardly refusing to restyle the entire code base.
         echo
         exit 1
     end
     set c_files src/*.h src/*.cpp src/*.c
-    # For now we don't restyle all fish scripts other than completion scripts. That's because people
-    # really like to vertically align the elements of the `complete` command and fish_indent
-    # currently does not honor that whitespace.
-    set f_files (printf '%s\n' share/***.fish | grep -v /completions/)
+    set fish_files (printf '%s\n' share/***.fish)
+    set python_files **.py
 else
     # We haven't been asked to reformat all the source. If there are uncommitted changes reformat
     # those using `git clang-format`. Else reformat the files in the most recent commit.
@@ -49,17 +48,20 @@ else
         test -f $file; and set c_files $c_files $file
     end
     # Extract just the fish files.
-    set f_files (string match -r '^.*\.fish$' -- $files)
+    set fish_files (string match -r '^.*\.fish$' -- $files)
+    set python_files (string match -r '^.*\.py$' -- $files)
 end
+
+set -l red (set_color red)
+set -l green (set_color green)
+set -l blue (set_color blue)
+set -l normal (set_color normal)
 
 # Run the C++ reformatter if we have any C++ files.
 if set -q c_files[1]
     if test $git_clang_format = yes
         if type -q git-clang-format
-            echo
-            echo ========================================
-            echo Running git-clang-format
-            echo ========================================
+            echo === Running "$red"git-clang-format"$normal"
             git add $c_files
             git-clang-format
         else
@@ -68,10 +70,7 @@ if set -q c_files[1]
             echo
         end
     else if type -q clang-format
-        echo
-        echo ========================================
-        echo Running clang-format
-        echo ========================================
+        echo === Running "$red"clang-format"$normal"
         for file in $c_files
             cp $file $file.new # preserves mode bits
             clang-format $file >$file.new
@@ -90,23 +89,22 @@ if set -q c_files[1]
 end
 
 # Run the fish reformatter if we have any fish files.
-if set -q f_files[1]
+if set -q fish_files[1]
     if not type -q fish_indent
         make fish_indent
         set PATH . $PATH
     end
-    echo
-    echo ========================================
-    echo Running fish_indent
-    echo ========================================
-    for file in $f_files
-        cp $file $file.new # preserves mode bits
-        fish_indent <$file >$file.new
-        if cmp --quiet $file $file.new
-            rm $file.new
-        else
-            echo $file was NOT correctly formatted
-            mv $file.new $file
-        end
+    echo === Running "$green"fish_indent"$normal"
+    fish_indent -w -- $fish_files
+end
+
+if set -q python_files[1]
+    if not type -q black
+        echo
+        echo Please install "`black`" to style python
+        echo
+    else
+        echo === Running "$blue"black"$normal"
+        black $python_files
     end
 end

@@ -1,43 +1,42 @@
+.. _cmd-bind:
+
 bind - handle fish key bindings
 ===============================
 
 Synopsis
 --------
 
-bind [(-M | --mode) MODE] [(-m | --sets-mode) NEW_MODE]
-     [--preset | --user]
-     [(-s | --silent)] [(-k | --key)] SEQUENCE COMMAND [COMMAND...]
-bind [(-M | --mode) MODE] [(-k | --key)] [--preset] [--user] SEQUENCE
-bind (-K | --key-names) [(-a | --all)] [--preset] [--user]
-bind (-f | --function-names)
-bind (-L | --list-modes)
-bind (-e | --erase) [(-M | --mode) MODE]
-     [--preset] [--user]
-     (-a | --all | [(-k | --key)] SEQUENCE [SEQUENCE...])
+::
 
+    bind [(-M | --mode) MODE] [(-m | --sets-mode) NEW_MODE] [--preset | --user] [(-s | --silent)] [(-k | --key)] SEQUENCE COMMAND [COMMAND...]
+    bind [(-M | --mode) MODE] [(-k | --key)] [--preset] [--user] SEQUENCE
+    bind (-K | --key-names) [(-a | --all)] [--preset] [--user]
+    bind (-f | --function-names)
+    bind (-L | --list-modes)
+    bind (-e | --erase) [(-M | --mode) MODE] [--preset] [--user] (-a | --all | [(-k | --key)] SEQUENCE [SEQUENCE...])
 
 Description
 -----------
 
 ``bind`` adds a binding for the specified key sequence to the specified command.
 
-SEQUENCE is the character sequence to bind to. These should be written as <a href="index.html#escapes">fish escape sequences</a>. For example, because pressing the Alt key and another character sends that character prefixed with an escape character, Alt-based key bindings can be written using the ``\e`` escape. For example, @key{Alt,w} can be written as ``\ew``. The control character can be written in much the same way using the ``\c`` escape, for example @key{Control,X} (^X) can be written as ``\cx``. Note that Alt-based key bindings are case sensitive and Control-based key bindings are not. This is a constraint of text-based terminals, not ``fish``.
+SEQUENCE is the character sequence to bind to. These should be written as :ref:`fish escape sequences <escapes>`. For example, because pressing the Alt key and another character sends that character prefixed with an escape character, Alt-based key bindings can be written using the ``\e`` escape. For example, :kbd:`Alt+w` can be written as ``\ew``. The control character can be written in much the same way using the ``\c`` escape, for example :kbd:`Control+X` (^X) can be written as ``\cx``. Note that Alt-based key bindings are case sensitive and Control-based key bindings are not. This is a constraint of text-based terminals, not ``fish``.
 
-The default key binding can be set by specifying a ``SEQUENCE`` of the empty string (that is, ``''`` ). It will be used whenever no other binding matches. For most key bindings, it makes sense to use the ``self-insert`` function (i.e. ``````bind '' self-insert``````) as the default keybinding. This will insert any keystrokes not specifically bound to into the editor. Non- printable characters are ignored by the editor, so this will not result in control sequences being printable.
+The default key binding can be set by specifying a ``SEQUENCE`` of the empty string (that is, ``''`` ). It will be used whenever no other binding matches. For most key bindings, it makes sense to use the ``self-insert`` function (i.e. ``bind '' self-insert``) as the default keybinding. This will insert any keystrokes not specifically bound to into the editor. Non- printable characters are ignored by the editor, so this will not result in control sequences being printable.
 
-If the ``-k`` switch is used, the name of the key (such as 'down', 'up' or 'backspace') is used instead of a sequence. The names used are the same as the corresponding curses variables, but without the 'key_' prefix. (See ``terminfo(5)`` for more information, or use ``bind --key-names`` for a list of all available named keys.) If used in conjunction with the ``-s`` switch, ``bind`` will silently ignore bindings to named keys that are not found in termcap for the current ``$TERMINAL``, otherwise a warning is emitted.
+If the ``-k`` switch is used, the name of the key (such as 'down', 'up' or 'backspace') is used instead of a sequence. The names used are the same as the corresponding curses variables, but without the 'key\_' prefix. (See ``terminfo(5)`` for more information, or use ``bind --key-names`` for a list of all available named keys.) If used in conjunction with the ``-s`` switch, ``bind`` will silently ignore bindings to named keys that are not found in termcap for the current ``$TERMINAL``, otherwise a warning is emitted.
 
 ``COMMAND`` can be any fish command, but it can also be one of a set of special input functions. These include functions for moving the cursor, operating on the kill-ring, performing tab completion, etc. Use ``bind --function-names`` for a complete list of these input functions.
 
-When ``COMMAND`` is a shellscript command, it is a good practice to put the actual code into a <a href="#function">function</a> and simply bind to the function name. This way it becomes significantly easier to test the function while editing, and the result is usually more readable as well.
+When ``COMMAND`` is a shellscript command, it is a good practice to put the actual code into a `function <#function>`__ and simply bind to the function name. This way it becomes significantly easier to test the function while editing, and the result is usually more readable as well.
 
 If a script produces output, it should finish by calling ``commandline -f repaint`` to tell fish that a repaint is in order.
 
-When multiple ``COMMAND``s are provided, they are all run in the specified order when the key is pressed. Note that special input functions cannot be combined with ordinary shell script commands. The commands must be entirely a sequence of special input functions (from ``bind -f``) or all shell script commands (i.e., valid fish script).
+When multiple ``COMMAND``\s are provided, they are all run in the specified order when the key is pressed. Note that special input functions cannot be combined with ordinary shell script commands. The commands must be entirely a sequence of special input functions (from ``bind -f``) or all shell script commands (i.e., valid fish script).
 
 If no ``SEQUENCE`` is provided, all bindings (or just the bindings in the specified ``MODE``) are printed. If ``SEQUENCE`` is provided without ``COMMAND``, just the binding matching that sequence is printed.
 
-To save custom keybindings, put the ``bind`` statements into <a href="index.html#initialization">config.fish</a>. Alternatively, fish also automatically executes a function called ``fish_user_key_bindings`` if it exists.
+To save custom keybindings, put the ``bind`` statements into :ref:`config.fish <initialization>`. Alternatively, fish also automatically executes a function called ``fish_user_key_bindings`` if it exists.
 
 Key bindings may use "modes", which mimics Vi's modal input behavior. The default mode is "default", and every bind applies to a single mode. The mode can be viewed/changed with the ``$fish_bind_mode`` variable.
 
@@ -65,6 +64,8 @@ Special input functions
 -----------------------
 The following special input functions are available:
 
+- ``and``, only execute the next function if the previous succeeded (note: only some functions report success)
+
 - ``accept-autosuggestion``, accept the current autosuggestion completely
 
 - ``backward-char``, moves one character to the left
@@ -77,9 +78,9 @@ The following special input functions are available:
 
 - ``backward-kill-line``, move everything from the beginning of the line to the cursor to the killring
 
-- ``backward-kill-path-component``, move one path component to the left of the cursor (everything from the last "/" or whitespace exclusive) to the killring
+- ``backward-kill-path-component``, move one path component to the left of the cursor to the killring. A path component is everything likely to belong to a path component, i.e. not any of the following: `/={,}'\":@ |;<>&`, plus newlines and tabs.
 
-- ``backward-kill-word``, move the word to the left of the cursor to the killring
+- ``backward-kill-word``, move the word to the left of the cursor to the killring. The "word" here is everything up to punctuation or whitespace.
 
 - ``backward-word``, move one word to the left
 
@@ -91,6 +92,8 @@ The following special input functions are available:
 
 - ``begin-selection``, start selecting text
 
+- ``cancel``, cancel the current commandline and replace it with a new empty one
+
 - ``capitalize-word``, make the current word begin with a capital letter
 
 - ``complete``, guess the remainder of the current token
@@ -98,6 +101,10 @@ The following special input functions are available:
 - ``complete-and-search``, invoke the searchable pager on completion options (for convenience, this also moves backwards in the completion pager)
 
 - ``delete-char``, delete one character to the right of the cursor
+
+- ``delete-or-exit``, deletes one character to the right of the cursor or exits the shell if the commandline is empty.
+
+- ``down-line``, move down one line
 
 - ``downcase-word``, make the current word lowercase
 
@@ -109,6 +116,10 @@ The following special input functions are available:
 
 - ``end-selection``, end selecting text
 
+- ``expand-abbr`` expands any abbreviation currently under the cursor
+
+- ``execute`` run the current commandline
+
 - ``forward-bigword``, move one whitespace-delimited word to the right
 
 - ``forward-char``, move one character to the right
@@ -118,6 +129,20 @@ The following special input functions are available:
 - ``history-search-backward``, search the history for the previous match
 
 - ``history-search-forward``, search the history for the next match
+
+- ``history-prefix-search-backward``, search the history for the previous prefix match
+
+- ``history-prefix-search-forward``, search the history for the next prefix match
+
+- ``history-token-search-backward``, search the history for the previous matching argument
+
+- ``history-token-search-forward``, search the history for the next matching argument
+
+- ``forward-jump`` and ``backward-jump``, read another character and jump to its next occurence after/before the cursor
+
+- ``forward-jump-till`` and ``backward-jump-till``, jump to right *before* the next occurence
+
+- ``repeat-jump`` and ``repeat-jump-reverse``, redo the last jump in the same/opposite direction
 
 - ``kill-bigword``, move the next whitespace-delimited word to the killring
 
@@ -131,6 +156,12 @@ The following special input functions are available:
 
 - ``pager-toggle-search``, toggles the search field if the completions pager is visible.
 
+- ``repaint`` reexecutes the prompt functions and redraws the prompt. Multiple successive repaints are coalesced.
+
+- ``repaint-mode`` reexecutes the fish_mode_prompt function and redraws the prompt. This is useful for vi-mode. If no fish_mode_prompt exists, it acts like a normal repaint.
+
+- ``force-repaint`` reexecute the prompt functions without coalescing.
+
 - ``suppress-autosuggestion``, remove the current autosuggestion
 
 - ``swap-selection-start-stop``, go to the other end of the highlighted text without changing the selection
@@ -139,12 +170,15 @@ The following special input functions are available:
 
 - ``transpose-words``, transpose two words to the left of the cursor
 
+- ``up-line``, move up one line
+
+- ``undo`` and ``redo``, revert or redo the most recent edits on the command line
+
 - ``upcase-word``, make the current word uppercase
 
 - ``yank``, insert the latest entry of the killring into the buffer
 
 - ``yank-pop``, rotate to the previous entry of the killring
-
 
 Examples
 --------
@@ -153,9 +187,9 @@ Examples
 
 ::
 
-    bind <asis>\\cd</asis> 'exit'
+    bind \cd 'exit'
 
-Causes ``fish`` to exit when @key{Control,D} is pressed.
+Causes ``fish`` to exit when :kbd:`Control+D` is pressed.
 
 
 
@@ -163,17 +197,18 @@ Causes ``fish`` to exit when @key{Control,D} is pressed.
 
     bind -k ppage history-search-backward
 
-Performs a history search when the @key{Page Up} key is pressed.
+Performs a history search when the :kbd:`Page Up` key is pressed.
 
 
 
 ::
 
     set -g fish_key_bindings fish_vi_key_bindings
-    bind -M insert \\cc kill-whole-line force-repaint
+    bind -M insert \cc kill-whole-line force-repaint
 
-Turns on Vi key bindings and rebinds @key{Control,C} to clear the input line.
+Turns on Vi key bindings and rebinds :kbd:`Control+C` to clear the input line.
 
+.. _cmd-bind-escape:
 
 Special Case: The escape Character
 ----------------------------------

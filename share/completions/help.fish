@@ -1,5 +1,5 @@
 if test -d "$__fish_data_dir/man/man1/"
-	complete -c help -x -a '(__fish_print_commands)' -d 'Help for this command'
+    complete -c help -x -a '(__fish_print_commands)' -d 'Help for this command'
 end
 
 # Help topics

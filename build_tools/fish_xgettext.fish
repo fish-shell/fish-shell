@@ -1,5 +1,8 @@
 #!/usr/bin/env fish
 #
+# Tool to generate messages.pot
+# Extended to replace the old Makefile rule which did not port easily to CMak
+
 # This script was originally motivated to work around a quirk (or bug depending on your viewpoint)
 # of the xgettext command. See https://lists.gnu.org/archive/html/bug-gettext/2014-11/msg00006.html.
 # However, it turns out that even if that quirk did not exist we would still need something like
@@ -8,13 +11,18 @@
 # all the strings we want translated. So we extract and normalize all such strings into a format
 # that `xgettext` can handle.
 
+# Start with the C++ source
+xgettext -k -k_ -kN_ -LC++ --no-wrap -o messages.pot src/*.cpp src/*.h
+
 # This regex handles descriptions for `complete` and `function` statements. These messages are not
 # particularly important to translate. Hence the "implicit" label.
-set implicit_regex '(?:^| +)(?:complete|function) .*? (?:-d|--description) (([\'"]).+?(?<!\\\\)\\2).*'
+set implicit_regex '(?:^| +)(?:complete|function).*? (?:-d|--description) (([\'"]).+?(?<!\\\\)\\2).*'
 
 # This regex handles explicit requests to translate a message. These are more important to translate
 # than messages which should be implicitly translated.
 set explicit_regex '.*\( *_ (([\'"]).+?(?<!\\\\)\\2) *\).*'
+
+rm -r /tmp/fish
 
 mkdir -p /tmp/fish/implicit/share/completions /tmp/fish/implicit/share/functions
 mkdir -p /tmp/fish/explicit/share/completions /tmp/fish/explicit/share/functions
@@ -29,7 +37,7 @@ for f in share/config.fish share/completions/*.fish share/functions/*.fish
     rm /tmp/fish/explicit/$f.tmp
 
     # Handle `complete` / `function` description messages. The `| fish` is subtle. It basically
-    # avoids the need to use `source` with a command substituion that could affect the current
+    # avoids the need to use `source` with a command substitution that could affect the current
     # shell.
     string replace --filter --regex $implicit_regex 'echo $1' <$f | fish >/tmp/fish/implicit/$f.tmp ^/dev/null
     while read description
@@ -40,3 +48,8 @@ for f in share/config.fish share/completions/*.fish share/functions/*.fish
     end </tmp/fish/implicit/$f.tmp >/tmp/fish/implicit/$f
     rm /tmp/fish/implicit/$f.tmp
 end
+
+xgettext -j -k -kN_ -LShell --from-code=UTF-8 -cDescription --no-wrap -o messages.pot /tmp/fish/explicit/share/*/*.fish
+xgettext -j -k -kN_ -LShell --from-code=UTF-8 -cDescription --no-wrap -o messages.pot /tmp/fish/implicit/share/*/*.fish
+
+rm -r /tmp/fish

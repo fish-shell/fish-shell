@@ -3,11 +3,8 @@
 
 function fish_prompt --description "Write out the prompt"
     # Save our status
+    set -l last_pipestatus $pipestatus
     set -l last_status $status
-
-    if test $last_status -ne 0
-        printf "%s(%d)%s " (set_color red --bold) $last_status (set_color normal)
-    end
 
     set -l color_cwd
     set -l suffix
@@ -24,5 +21,7 @@ function fish_prompt --description "Write out the prompt"
             set suffix '>'
     end
 
-    echo -n -s "$USER" @ (prompt_hostname) ' ' (set_color $color_cwd) (prompt_pwd) (set_color normal) "$suffix "
+    echo -n -s "$USER" @ (prompt_hostname) ' ' (set_color $color_cwd) (prompt_pwd) \
+        (__fish_print_pipestatus $last_status " [" "]" "|" (set_color $fish_color_status) (set_color --bold $fish_color_status) $last_pipestatus) \
+        (set_color normal) "$suffix "
 end

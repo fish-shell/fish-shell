@@ -2,8 +2,7 @@
 #ifndef FISH_COLOR_H
 #define FISH_COLOR_H
 
-#include <string.h>
-
+#include <cstring>
 #include <string>
 
 #include "common.h"
@@ -13,11 +12,12 @@ struct color24_t {
     unsigned char rgb[3];
 };
 
-/// A type that represents a color. We work hard to keep it at a size of 4 bytes.
+/// A type that represents a color. We work hard to keep it at a size of 4 bytes and verify with
+/// static_assert
 class rgb_color_t {
     // Types
     enum { type_none, type_named, type_rgb, type_normal, type_reset };
-    unsigned char type : 4;
+    unsigned char type : 3;
 
     // Flags
     enum {
@@ -35,10 +35,10 @@ class rgb_color_t {
     } data;
 
     /// Try parsing a special color name like "normal".
-    bool try_parse_special(const wcstring &str);
+    bool try_parse_special(const wcstring &special);
 
     /// Try parsing an rgb color like "#F0A030".
-    bool try_parse_rgb(const wcstring &str);
+    bool try_parse_rgb(const wcstring &name);
 
     /// Try parsing an explicit color name like "magenta".
     bool try_parse_named(const wcstring &str);
@@ -159,7 +159,7 @@ class rgb_color_t {
 
     /// Compare two colors for equality.
     bool operator==(const rgb_color_t &other) const {
-        return type == other.type && !memcmp(&data, &other.data, sizeof data);
+        return type == other.type && !std::memcmp(&data, &other.data, sizeof data);
     }
 
     /// Compare two colors for inequality.
@@ -168,5 +168,7 @@ class rgb_color_t {
     /// Returns the names of all named colors.
     static wcstring_list_t named_color_names(void);
 };
+
+static_assert(sizeof(rgb_color_t) <= 4, "rgb_color_t is too big");
 
 #endif

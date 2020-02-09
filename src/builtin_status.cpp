@@ -1,13 +1,13 @@
 // Implementation of the status builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <stddef.h>
-#include <wchar.h>
+#include "builtin_status.h"
 
+#include <cstddef>
+#include <cwchar>
 #include <string>
 
 #include "builtin.h"
-#include "builtin_status.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "future_feature_flags.h"
@@ -61,11 +61,11 @@ const enum_map<status_cmd_t> status_enum_map[] = {
     {STATUS_STACK_TRACE, L"print-stack-trace"},
     {STATUS_STACK_TRACE, L"stack-trace"},
     {STATUS_TEST_FEATURE, L"test-feature"},
-    {STATUS_UNDEF, NULL}};
+    {STATUS_UNDEF, nullptr}};
 #define status_enum_map_len (sizeof status_enum_map / sizeof *status_enum_map)
 
 #define CHECK_FOR_UNEXPECTED_STATUS_ARGS(status_cmd)                                        \
-    if (args.size() != 0) {                                                                 \
+    if (!args.empty()) {                                                                    \
         const wchar_t *subcmd_str = enum_to_str(status_cmd, status_enum_map);               \
         if (!subcmd_str) subcmd_str = L"default";                                           \
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, subcmd_str, 0, args.size()); \
@@ -76,24 +76,25 @@ const enum_map<status_cmd_t> status_enum_map[] = {
 /// Values that may be returned from the test-feature option to status.
 enum { TEST_FEATURE_ON, TEST_FEATURE_OFF, TEST_FEATURE_NOT_RECOGNIZED };
 
-int job_control_str_to_mode(const wchar_t *mode, wchar_t *cmd, io_streams_t &streams) {
-    if (wcscmp(mode, L"full") == 0) {
-        return JOB_CONTROL_ALL;
-    } else if (wcscmp(mode, L"interactive") == 0) {
-        return JOB_CONTROL_INTERACTIVE;
-    } else if (wcscmp(mode, L"none") == 0) {
-        return JOB_CONTROL_NONE;
+static maybe_t<job_control_t> job_control_str_to_mode(const wchar_t *mode, wchar_t *cmd,
+                                                      io_streams_t &streams) {
+    if (std::wcscmp(mode, L"full") == 0) {
+        return job_control_t::all;
+    } else if (std::wcscmp(mode, L"interactive") == 0) {
+        return job_control_t::interactive;
+    } else if (std::wcscmp(mode, L"none") == 0) {
+        return job_control_t::none;
     }
     streams.err.append_format(L"%ls: Invalid job control mode '%ls'\n", cmd, mode);
-    return -1;
+    return none();
 }
 
 struct status_cmd_opts_t {
-    bool print_help = false;
-    int level = 1;
-    int new_job_control_mode = -1;
-    const wchar_t *feature_name;
-    status_cmd_t status_cmd = STATUS_UNDEF;
+    int level{1};
+    maybe_t<job_control_t> new_job_control_mode{};
+    const wchar_t *feature_name{};
+    status_cmd_t status_cmd{STATUS_UNDEF};
+    bool print_help{false};
 };
 
 /// Note: Do not add new flags that represent subcommands. We're encouraging people to switch to
@@ -101,24 +102,25 @@ struct status_cmd_opts_t {
 /// least until fish 3.0 and possibly longer to avoid breaking everyones config.fish and other
 /// scripts.
 static const wchar_t *const short_options = L":L:cbilfnhj:t";
-static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
-          {L"current-filename", no_argument, NULL, 'f'},
-          {L"current-line-number", no_argument, NULL, 'n'},
-          {L"filename", no_argument, NULL, 'f'},
-          {L"fish-path", no_argument, NULL, STATUS_FISH_PATH},
-          {L"is-block", no_argument, NULL, 'b'},
-          {L"is-command-substitution", no_argument, NULL, 'c'},
-          {L"is-full-job-control", no_argument, NULL, STATUS_IS_FULL_JOB_CTRL},
-          {L"is-interactive", no_argument, NULL, 'i'},
-          {L"is-interactive-job-control", no_argument, NULL, STATUS_IS_INTERACTIVE_JOB_CTRL},
-          {L"is-login", no_argument, NULL, 'l'},
-          {L"is-no-job-control", no_argument, NULL, STATUS_IS_NO_JOB_CTRL},
-          {L"job-control", required_argument, NULL, 'j'},
-          {L"level", required_argument, NULL, 'L'},
-          {L"line", no_argument, NULL, 'n'},
-          {L"line-number", no_argument, NULL, 'n'},
-          {L"print-stack-trace", no_argument, NULL, 't'},
-          {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {
+    {L"help", no_argument, nullptr, 'h'},
+    {L"current-filename", no_argument, nullptr, 'f'},
+    {L"current-line-number", no_argument, nullptr, 'n'},
+    {L"filename", no_argument, nullptr, 'f'},
+    {L"fish-path", no_argument, nullptr, STATUS_FISH_PATH},
+    {L"is-block", no_argument, nullptr, 'b'},
+    {L"is-command-substitution", no_argument, nullptr, 'c'},
+    {L"is-full-job-control", no_argument, nullptr, STATUS_IS_FULL_JOB_CTRL},
+    {L"is-interactive", no_argument, nullptr, 'i'},
+    {L"is-interactive-job-control", no_argument, nullptr, STATUS_IS_INTERACTIVE_JOB_CTRL},
+    {L"is-login", no_argument, nullptr, 'l'},
+    {L"is-no-job-control", no_argument, nullptr, STATUS_IS_NO_JOB_CTRL},
+    {L"job-control", required_argument, nullptr, 'j'},
+    {L"level", required_argument, nullptr, 'L'},
+    {L"line", no_argument, nullptr, 'n'},
+    {L"line-number", no_argument, nullptr, 'n'},
+    {L"print-stack-trace", no_argument, nullptr, 't'},
+    {nullptr, 0, nullptr, 0}};
 
 /// Remember the status subcommand and disallow selecting more than one status subcommand.
 static bool set_status_cmd(wchar_t *const cmd, status_cmd_opts_t &opts, status_cmd_t sub_cmd,
@@ -127,9 +129,9 @@ static bool set_status_cmd(wchar_t *const cmd, status_cmd_opts_t &opts, status_c
         wchar_t err_text[1024];
         const wchar_t *subcmd_str1 = enum_to_str(opts.status_cmd, status_enum_map);
         const wchar_t *subcmd_str2 = enum_to_str(sub_cmd, status_enum_map);
-        swprintf(err_text, sizeof(err_text) / sizeof(wchar_t),
-                 _(L"you cannot do both '%ls' and '%ls' in the same invocation"), subcmd_str1,
-                 subcmd_str2);
+        std::swprintf(err_text, sizeof(err_text) / sizeof(wchar_t),
+                      _(L"you cannot do both '%ls' and '%ls' in the same invocation"), subcmd_str1,
+                      subcmd_str2);
         streams.err.append_format(BUILTIN_ERR_COMBO2, cmd, err_text);
         return false;
     }
@@ -152,7 +154,7 @@ static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case STATUS_IS_FULL_JOB_CTRL: {
                 if (!set_status_cmd(cmd, opts, STATUS_IS_FULL_JOB_CTRL, streams)) {
@@ -230,10 +232,11 @@ static int parse_cmd_opts(status_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
                 if (!set_status_cmd(cmd, opts, STATUS_SET_JOB_CONTROL, streams)) {
                     return STATUS_CMD_ERROR;
                 }
-                opts.new_job_control_mode = job_control_str_to_mode(w.woptarg, cmd, streams);
-                if (opts.new_job_control_mode == -1) {
+                auto job_mode = job_control_str_to_mode(w.woptarg, cmd, streams);
+                if (!job_mode) {
                     return STATUS_CMD_ERROR;
                 }
+                opts.new_job_control_mode = job_mode;
                 break;
             }
             case 't': {
@@ -276,7 +279,7 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 
@@ -301,22 +304,23 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     switch (opts.status_cmd) {
         case STATUS_UNDEF: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            if (is_login) {
+            if (get_login()) {
                 streams.out.append_format(_(L"This is a login shell\n"));
             } else {
                 streams.out.append_format(_(L"This is not a login shell\n"));
             }
 
+            auto job_control_mode = get_job_control_mode();
             streams.out.append_format(
                 _(L"Job control: %ls\n"),
-                job_control_mode == JOB_CONTROL_INTERACTIVE
+                job_control_mode == job_control_t::interactive
                     ? _(L"Only on interactive jobs")
-                    : (job_control_mode == JOB_CONTROL_NONE ? _(L"Never") : _(L"Always")));
+                    : (job_control_mode == job_control_t::none ? _(L"Never") : _(L"Always")));
             streams.out.append(parser.stack_trace());
             break;
         }
         case STATUS_SET_JOB_CONTROL: {
-            if (opts.new_job_control_mode != -1) {
+            if (opts.new_job_control_mode) {
                 // Flag form was used.
                 CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
             } else {
@@ -326,12 +330,14 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                                               args.size());
                     return STATUS_INVALID_ARGS;
                 }
-                opts.new_job_control_mode = job_control_str_to_mode(args[0].c_str(), cmd, streams);
-                if (opts.new_job_control_mode == -1) {
+                auto new_mode = job_control_str_to_mode(args[0].c_str(), cmd, streams);
+                if (!new_mode) {
                     return STATUS_CMD_ERROR;
                 }
+                opts.new_job_control_mode = new_mode;
             }
-            job_control_mode = opts.new_job_control_mode;
+            assert(opts.new_job_control_mode && "Should have a new mode");
+            set_job_control_mode(*opts.new_job_control_mode);
             break;
         }
         case STATUS_FEATURES: {
@@ -378,42 +384,42 @@ int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
         case STATUS_IS_INTERACTIVE: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = !is_interactive_session;
+            retval = session_interactivity() == session_interactivity_t::not_interactive ? 1 : 0;
             break;
         }
         case STATUS_IS_COMMAND_SUB: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = !is_subshell;
+            retval = parser.libdata().is_subshell ? 0 : 1;
             break;
         }
         case STATUS_IS_BLOCK: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = !is_block;
+            retval = parser.libdata().is_block ? 0 : 1;
             break;
         }
         case STATUS_IS_BREAKPOINT: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = !is_breakpoint;
+            retval = parser.libdata().is_breakpoint ? 0 : 1;
             break;
         }
         case STATUS_IS_LOGIN: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = !is_login;
+            retval = !get_login();
             break;
         }
         case STATUS_IS_FULL_JOB_CTRL: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = job_control_mode != JOB_CONTROL_ALL;
+            retval = get_job_control_mode() != job_control_t::all;
             break;
         }
         case STATUS_IS_INTERACTIVE_JOB_CTRL: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = job_control_mode != JOB_CONTROL_INTERACTIVE;
+            retval = get_job_control_mode() != job_control_t::interactive;
             break;
         }
         case STATUS_IS_NO_JOB_CTRL: {
             CHECK_FOR_UNEXPECTED_STATUS_ARGS(opts.status_cmd)
-            retval = job_control_mode != JOB_CONTROL_NONE;
+            retval = get_job_control_mode() != job_control_t::none;
             break;
         }
         case STATUS_STACK_TRACE: {

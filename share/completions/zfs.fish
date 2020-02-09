@@ -1,5 +1,5 @@
 # Fish completions for the OpenZFS zfs command
-# Possible enhancements:
+# TODO Possible enhancements:
 # - add a test to propose iSCSI and Trusted Extensions completions only when such system is present;
 # - Illumos man pages suggests that it does not support nbmand nor atime mount option, so these properties should be proposed only when available
 # - generally, propose properties only when the current OS and ZFS versions support them;
@@ -20,27 +20,19 @@ switch (uname)
         set OS "FreeBSD"
     case SunOS
         set OS "SunOS"
-    # Others?
+        # Others?
     case "*"
         set OS "unknown"
-end
-
-function __fish_zfs_append -d "Internal completion function for appending string to the ZFS commandline"
-    set str (commandline -tc | string replace -rf '(.*,)[^,]*' '$1' | string replace -r -- '--.*=' '')
-    printf "%s\n" "$str"$argv
 end
 
 # Does the current invocation need a command?
 function __fish_zfs_needs_command
     set -l bookmark ""
     if __fish_is_zfs_feature_enabled "feature@bookmarks"
-        set -l bookmark "|bookmark"
+        set bookmark "bookmark"
     end
-    if commandline -c | grep -E -q " (\?|create|destroy|snap(shot)?|rollback|clone|promote|rename|list|set|get|inherit|upgrade|(user|group)space|(un?)?mount|(un)?share$bookmark|send|receive|recv|(un)?allow|holds?|release|diff|program) "
-        return 1
-    else
-        return 0
-    end
+
+    not __fish_seen_subcommand_from \? create destroy snap{,shot} rollback clone promote rename list set get inherit upgrade {user,group}space {u,un,}mount {un,}share $bookmark send receive recv {un,}allow hold{s,} release diff program
 end
 
 function __fish_zfs_using_command # ZFS command whose completions are looked for
@@ -118,7 +110,7 @@ function __fish_zfs_list_permissions
     echo -e "userused"
     # The remaining code of the function is almost a duplicate of __fish_complete_zfs_rw_properties and __fish_complete_zfs_ro_properties, but almost only, hence the duplication
     # RO properties
-    echo -e "volblocksize\t"(_ "Volume block size") 
+    echo -e "volblocksize\t"(_ "Volume block size")
     # R/W properties
     echo -e "aclinherit\t"(_ "Inheritance of ACL entries")" (discard, noallow, restricted, passthrough, passthrough-x)"
     echo -e "atime\t"(_ "Update access time on read")" (on, off)"
@@ -203,7 +195,23 @@ function __fish_zfs_list_permissions
         echo -e "casesensitivity\t"(_ "Case sensitivity")" (sensitive, insensitive, mixed)"
     end
     # Permissions set; if none are found, or if permission sets are not supported, no output is expected, even an error
-    for i in (zpool list -o name -H); zfs allow $i; end | grep -o '@[[:alnum:]]*' | sort -u
+    for i in (zpool list -o name -H)
+        zfs allow $i
+    end | string match -r '@[[:alnum:]]*' | sort -u
+end
+
+function __fish_print_zfs_bookmarks -d "Lists ZFS bookmarks, if the feature is enabled"
+    if __fish_is_zfs_feature_enabled 'feature@bookmarks'
+        zfs list -t bookmark -o name -H
+    end
+end
+
+function __fish_print_zfs_filesystems -d "Lists ZFS filesystems"
+    zfs list -t filesystem -o name -H
+end
+
+function __fish_print_zfs_volumes -d "Lists ZFS volumes"
+    zfs list -t volume -o name -H
 end
 
 complete -c zfs -f -n '__fish_zfs_needs_command' -s '?' -a '?' -d 'Display a help message'
@@ -245,7 +253,7 @@ end
 # create completions
 complete -c zfs -f -n '__fish_zfs_using_command create' -s p -d 'Create all needed non-existing parent datasets'
 if test $OS = 'Linux' # Only Linux supports the comma-separated format; others need multiple -o calls
-    complete -c zfs -x -n '__fish_zfs_using_command create' -s o -d 'Dataset property' -a '(__fish_zfs_append (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties))'
+    complete -c zfs -x -n '__fish_zfs_using_command create' -s o -d 'Dataset property' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties))'
 else
     complete -c zfs -x -n '__fish_zfs_using_command create' -s o -d 'Dataset property' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties)'
 end
@@ -268,7 +276,7 @@ complete -c zfs -x -n '__fish_zfs_using_command destroy' -d 'Dataset to destroy'
 # snapshot completions
 complete -c zfs -f -n '__fish_zfs_using_command snapshot; or __fish_zfs_using_command snap' -s r -d 'Recursively snapshot children'
 if test $OS = 'Linux' # Only Linux supports the comma-separated format; others need multiple -o calls
-    complete -c zfs -x -n '__fish_zfs_using_command snapshot; or __fish_zfs_using_command snap' -s o -d 'Snapshot property' -a '(__fish_zfs_append (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties))'
+    complete -c zfs -x -n '__fish_zfs_using_command snapshot; or __fish_zfs_using_command snap' -s o -d 'Snapshot property' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties))'
 else
     complete -c zfs -x -n '__fish_zfs_using_command snapshot; or __fish_zfs_using_command snap' -s o -d 'Snapshot property' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties)'
 end
@@ -283,7 +291,7 @@ complete -c zfs -x -n '__fish_zfs_using_command rollback' -d 'Snapshot to roll b
 # clone completions
 complete -c zfs -f -n '__fish_zfs_using_command clone' -s p -d 'Create all needed non-existing parent datasets'
 if test $OS = 'Linux' # Only Linux supports the comma-separated format; others need multiple -o calls
-    complete -c zfs -x -n '__fish_zfs_using_command clone' -s o -d 'Clone property' -a '(__fish_zfs_append (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties))'
+    complete -c zfs -x -n '__fish_zfs_using_command clone' -s o -d 'Clone property' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties))'
 else
     complete -c zfs -x -n '__fish_zfs_using_command clone' -s o -d 'Clone property' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties)'
 end
@@ -307,7 +315,7 @@ complete -c zfs -x -n '__fish_zfs_using_command rename' -d 'Dataset to rename' -
 complete -c zfs -f -n '__fish_zfs_using_command list' -s H -d 'Print output in a machine-parsable format'
 complete -c zfs -f -n '__fish_zfs_using_command list' -s r -d 'Operate recursively on datasets'
 complete -c zfs -x -n '__fish_zfs_using_command list; and __fish_contains_opt -s r' -s d -d 'Maximum recursion depth'
-complete -c zfs -x -n '__fish_zfs_using_command list' -s o -d 'Property to list' -a '(__fish_zfs_append (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo -e "name\t"(_ "Dataset name")"; echo -e "space\t"(_ "Space properties")"))'
+complete -c zfs -x -n '__fish_zfs_using_command list' -s o -d 'Property to list' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo -e "name\t"(_ "Dataset name")"; echo -e "space\t"(_ "Space properties")"))'
 complete -c zfs -f -n '__fish_zfs_using_command list' -s p -d 'Print parsable (exact) values for numbers'
 complete -c zfs -x -n '__fish_zfs_using_command list; and __fish_not_contain_opt -s S' -s s -d 'Property to use for sorting output by ascending order' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo -e "name\t"(_ "Dataset name"))'
 complete -c zfs -x -n '__fish_zfs_using_command list; and __fish_not_contain_opt -s s' -s S -d 'Property to use for sorting output by descending order' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo -e "name\t"(_ "Dataset name"))'
@@ -322,11 +330,11 @@ complete -c zfs -x -n '__fish_zfs_using_command set; and string match -q -r "zfs
 complete -c zfs -f -n '__fish_zfs_using_command get' -s r -d 'Operate recursively on datasets'
 complete -c zfs -x -n '__fish_zfs_using_command get; and __fish_contains_opt -s r' -s d -d 'Maximum recursion depth'
 complete -c zfs -f -n '__fish_zfs_using_command get' -s H -d 'Print output in a machine-parsable format'
-complete -c zfs -x -n '__fish_zfs_using_command get' -s o -d 'Fields to display' -a '(__fish_zfs_append (__fish_zfs_list_get_fields))'
-complete -c zfs -x -n '__fish_zfs_using_command get' -s s -d 'Property source to display' -a '(__fish_zfs_append (__fish_zfs_list_source_types))'
+complete -c zfs -x -n '__fish_zfs_using_command get' -s o -d 'Fields to display' -a '(__fish_append , (__fish_zfs_list_get_fields))'
+complete -c zfs -x -n '__fish_zfs_using_command get' -s s -d 'Property source to display' -a '(__fish_append , (__fish_zfs_list_source_types))'
 complete -c zfs -f -n '__fish_zfs_using_command get' -s p -d 'Print parsable (exact) values for numbers'
-complete -c zfs -x -n '__fish_zfs_using_command get' -s t -d 'Dataset type' -a '(__fish_zfs_append (__fish_zfs_list_dataset_types))'
-complete -c zfs -x -n '__fish_zfs_using_command get' -d 'Property to get' -a '(__fish_zfs_append (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo "all"))'
+complete -c zfs -x -n '__fish_zfs_using_command get' -s t -d 'Dataset type' -a '(__fish_append , (__fish_zfs_list_dataset_types))'
+complete -c zfs -x -n '__fish_zfs_using_command get' -d 'Property to get' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo "all"))'
 complete -c zfs -x -n '__fish_zfs_using_command get' -d 'Dataset which properties is to be got' -a '(__fish_print_zfs_filesystems; __fish_print_zfs_volumes; __fish_print_zfs_snapshots)'
 
 # inherit completions
@@ -346,16 +354,16 @@ complete -c zfs -f -n '__fish_zfs_using_command userspace' -s n -d 'Print UID in
 complete -c zfs -f -n '__fish_zfs_using_command groupspace' -s n -d 'Print GID instead of group name'
 complete -c zfs -f -n '__fish_zfs_using_command userspace; or __fish_zfs_using_command groupspace' -s H -d 'Print output in a machine-parsable format'
 complete -c zfs -f -n '__fish_zfs_using_command userspace; or __fish_zfs_using_command groupspace' -s p -d 'Print parsable (exact) values for numbers'
-complete -c zfs -x -n '__fish_zfs_using_command userspace; or __fish_zfs_using_command groupspace' -s o -d 'Field to display' -a '(__fish_zfs_append (__fish_zfs_list_space_fields))'
+complete -c zfs -x -n '__fish_zfs_using_command userspace; or __fish_zfs_using_command groupspace' -s o -d 'Field to display' -a '(__fish_append , (__fish_zfs_list_space_fields))'
 complete -c zfs -x -n '__fish_zfs_using_command userspace; or __fish_zfs_using_command groupspace; and __fish_not_contain_opt -s S' -s s -d 'Property to use for sorting output by ascending order' -a '__fish_zfs_list_space_fields'
 complete -c zfs -x -n '__fish_zfs_using_command userspace; or __fish_zfs_using_command groupspace; and __fish_not_contain_opt -s s' -s S -d 'Property to use for sorting output by descending order' -a '__fish_zfs_list_space_fields'
-complete -c zfs -x -n '__fish_zfs_using_command userspace' -s t -d 'Identity types to display' -a '(__fish_zfs_append (__fish_zfs_list_userspace_types))'
-complete -c zfs -x -n '__fish_zfs_using_command groupspace' -s t -d 'Identity types to display' -a '(__fish_zfs_append (__fish_zfs_list_groupspace_types))'
+complete -c zfs -x -n '__fish_zfs_using_command userspace' -s t -d 'Identity types to display' -a '(__fish_append , (__fish_zfs_list_userspace_types))'
+complete -c zfs -x -n '__fish_zfs_using_command groupspace' -s t -d 'Identity types to display' -a '(__fish_append , (__fish_zfs_list_groupspace_types))'
 complete -c zfs -f -n '__fish_zfs_using_command userspace; or __fish_zfs_using_command groupspace' -s i -d 'Translate S(amba)ID to POSIX ID'
 complete -c zfs -x -n '__fish_zfs_using_command userspace; or __fish_zfs_using_command groupspace' -d 'Dataset which space usage is to be got' -a '(__fish_print_zfs_filesystems; __fish_print_zfs_snapshots)'
 
 # mount completions
-complete -c zfs -x -n '__fish_zfs_using_command mount' -s o -d 'Temporary mount point property' -a '(__fish_zfs_append (__fish_complete_zfs_mountpoint_properties))'
+complete -c zfs -x -n '__fish_zfs_using_command mount' -s o -d 'Temporary mount point property' -a '(__fish_append , (__fish_complete_zfs_mountpoint_properties))'
 complete -c zfs -f -n '__fish_zfs_using_command mount' -s v -d 'Report progress'
 complete -c zfs -f -n '__fish_zfs_using_command mount' -s a -d 'Mount all available ZFS filesystems'
 if contains -- $OS Linux SunOS
@@ -424,23 +432,23 @@ complete -c zfs -x -n '__fish_zfs_using_command receive; or __fish_zfs_using_com
 # allow completions
 complete -c zfs -f -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s d' -s l -d 'Delegate permissions only on the specified dataset'
 complete -c zfs -f -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s l' -s d -d 'Delegate permissions only on the descendents dataset'
-complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s e' -s u -d 'User to delegate permissions to' -a '(__fish_zfs_append (__fish_complete_users))'
-complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s e' -s g -d 'Group to delegate permissions to' -a '(__fish_zfs_append (__fish_complete_groups))'
+complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s e' -s u -d 'User to delegate permissions to' -a '(__fish_append , (__fish_complete_users))'
+complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s e' -s g -d 'Group to delegate permissions to' -a '(__fish_append , (__fish_complete_groups))'
 if contains -- $OS SunOS FreeBSD
     complete -c zfs -f -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s u -s g -s e' -a 'everyone' -d 'Delegate permission to everyone'
 end
 complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s u -s g everyone' -s e -d 'Delegate permission to everyone'
-complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s l -s d -s e -s g -s u -s s' -s c -d 'Delegate permissions only to the creator of later descendent datasets' -a '(__fish_zfs_append (__fish_zfs_list_permissions))'
+complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s l -s d -s e -s g -s u -s s' -s c -d 'Delegate permissions only to the creator of later descendent datasets' -a '(__fish_zfs_append , (__fish_zfs_list_permissions))'
 complete -c zfs -x -n '__fish_zfs_using_command allow; and __fish_not_contain_opt -s l -s d -s e -s g -s u -s c' -s s -d 'Create a permission set or add permissions to an existing one'
 complete -c zfs -x -n '__fish_zfs_using_command allow' -d 'Dataset on which delegation is to be applied' -a '(__fish_print_zfs_filesystems; __fish_print_zfs_volumes)'
 
 # unallow completions
 complete -c zfs -f -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s d' -s l -d 'Remove permissions only on the specified dataset'
 complete -c zfs -f -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s l' -s d -d 'Remove permissions only on the descendents dataset'
-complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s e' -s u -d 'User to remove permissions from' -a '(__fish_zfs_append (__fish_complete_users))'
-complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s e' -s g -d 'Group to remove permissions from' -a '(__fish_zfs_append (__fish_complete_groups))'
+complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s e' -s u -d 'User to remove permissions from' -a '(__fish_zfs_append , (__fish_complete_users))'
+complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s e' -s g -d 'Group to remove permissions from' -a '(__fish_zfs_append , (__fish_complete_groups))'
 complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s u -s g everyone' -s e -d 'Remove permission from everyone'
-complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s l -s d -s e -s g -s u -s s' -s c -d 'Remove permissions only on later created descendent datasets' -a '(__fish_zfs_append (__fish_zfs_list_permissions))'
+complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s l -s d -s e -s g -s u -s s' -s c -d 'Remove permissions only on later created descendent datasets' -a '(__fish_zfs_append , (__fish_zfs_list_permissions))'
 complete -c zfs -x -n '__fish_zfs_using_command unallow; and __fish_not_contain_opt -s l -s d -s e -s g -s u -s c' -s s -d 'Remove a permission set or remove permissions from an existing one'
 if test $OS = 'SunOS'
     complete -c zfs -f -n '__fish_zfs_using_command unallow' -s r -d 'Remove permissions recursively'

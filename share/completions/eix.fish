@@ -43,7 +43,7 @@ complete -c eix -s 2 -l slots -d "Match packages with two different slots"
 complete -c eix -s u -l update -d "Match packages without best slotted version"
 complete -c eix -s o -l overlay -d "Match packages from overlays"
 complete -c eix -s T -l test-obsolete -d "Match packages with obsolete entries"
-complete -c eix -s '!' -l not -d "Invert the expression (toggle)"
+complete -c eix -s ! -l not -d "Invert the expression (toggle)"
 complete -c eix -s '|' -l pipe -d "Use input from pipe of emerge -pv"
 ###
 # Search Fields

@@ -84,10 +84,19 @@ function __fish_parse_npm_run_completions
 end
 
 function __fish_npm_run
-    # Like above, only try to call npm if there's a command by that name to facilitate aliases that call nvm.
-    if command -sq jq; and test -e package.json
-        jq -r '.scripts | to_entries[] | .key,.value' <package.json | __fish_parse_npm_run_completions
+    # Complete `npm run` scripts
+    # These are stored in package.json, which we need a tool to read.
+    # python is very probably installed (we use it for other things!),
+    # jq is slower but also a common tool,
+    # npm is dog-slow and might check for updates online!
+    if test -e package.json; and set -l python (__fish_anypython)
+        # Warning: That weird indentation is necessary, because python.
+        $python -c 'import json, sys; data = json.load(sys.stdin);
+for k,v in data["scripts"].items(): print(k + "\t" + v[:18])' <package.json 2>/dev/null
+    else if command -sq jq; and test -e package.json
+        jq -r '.scripts | to_entries | map("\(.key)\t\(.value | tostring | .[0:20])") | .[]' package.json
     else if command -sq npm
+        # Like above, only try to call npm if there's a command by that name to facilitate aliases that call nvm.
         command npm run | string match -r -v '^[^ ]|^$' | string trim | __fish_parse_npm_run_completions
     end
 end
@@ -105,13 +114,13 @@ complete -f -c npm -n '__fish_npm_using_command cache' -a 'ls' -d 'Show the data
 
 # config
 for c in 'c' 'config'
-  complete -f -c npm -n "__fish_npm_needs_command" -a "$c" -d 'Manage the npm configuration files'
-  complete -f -c npm -n "__fish_npm_using_command $c" -a 'set' -d 'Sets the config key to the value'
-  complete -f -c npm -n "__fish_npm_using_command $c" -a 'get' -d 'Echo the config value to stdout'
-  complete -f -c npm -n "__fish_npm_using_command $c" -a 'delete' -d 'Deletes the key from all configuration files'
-  complete -f -c npm -n "__fish_npm_using_command $c" -a 'list' -d 'Show all the config settings'
-  complete -f -c npm -n "__fish_npm_using_command $c" -a 'ls' -d 'Show all the config settings'
-  complete -f -c npm -n "__fish_npm_using_command $c" -a 'edit' -d 'Opens the config file in an editor'
+    complete -f -c npm -n "__fish_npm_needs_command" -a "$c" -d 'Manage the npm configuration files'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a 'set' -d 'Sets the config key to the value'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a 'get' -d 'Echo the config value to stdout'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a 'delete' -d 'Deletes the key from all configuration files'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a 'list' -d 'Show all the config settings'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a 'ls' -d 'Show all the config settings'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a 'edit' -d 'Opens the config file in an editor'
 end
 # get, set also exist as shorthands
 complete -f -c npm -n "__fish_npm_needs_command" -a 'get' -d 'Echo the config value to stdout'
@@ -127,12 +136,12 @@ end
 
 # list
 for c in 'la' 'list' 'll' 'ls'
-  complete -f -c npm -n '__fish_npm_needs_command' -a "$c" -d 'List installed packages'
-  complete -f -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'List packages in the global install prefix instead of in the current project'
-  complete -f -c npm -n "__fish_npm_using_command $c" -l json -d 'Show information in JSON format'
-  complete -f -c npm -n "__fish_npm_using_command $c" -l long -d 'Show extended information'
-  complete -f -c npm -n "__fish_npm_using_command $c" -l parseable -d 'Show parseable output instead of tree view'
-  complete -x -c npm -n "__fish_npm_using_command $c" -l depth -d 'Max display depth of the dependency tree'
+    complete -f -c npm -n '__fish_npm_needs_command' -a "$c" -d 'List installed packages'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'List packages in the global install prefix instead of in the current project'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l json -d 'Show information in JSON format'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l long -d 'Show extended information'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l parseable -d 'Show parseable output instead of tree view'
+    complete -x -c npm -n "__fish_npm_using_command $c" -l depth -d 'Max display depth of the dependency tree'
 end
 
 # owner

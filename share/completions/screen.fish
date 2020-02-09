@@ -6,7 +6,7 @@ function __fish_detect_screen_socket_dir -d "Detect which folder screen uses"
 end
 
 function __fish_complete_screen_general_list_mac -d "Get the socket list on mac"
-    pushd $__fish_screen_socket_dir > /dev/null
+    pushd $__fish_screen_socket_dir >/dev/null
     set -l sockets (ls)
     if test (count $sockets) -ne 0
         switch $argv
@@ -16,7 +16,7 @@ function __fish_complete_screen_general_list_mac -d "Get the socket list on mac"
                 stat -f "%Lp %SB %N" -t "%D %T" $sockets | string match -r '^7\d{2} .*$' | string replace -r '^7\d{2} (\S+ \S+) (\S+)' '$2\t$1 Attached'
         end
     end
-    popd > /dev/null
+    popd >/dev/null
 end
 
 function __fish_complete_screen_general_list -d "Get the socket list"

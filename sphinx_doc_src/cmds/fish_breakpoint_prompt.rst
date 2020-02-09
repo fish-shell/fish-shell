@@ -1,8 +1,12 @@
+.. _cmd-fish_breakpoint_prompt:
+
 fish_breakpoint_prompt - define the prompt when stopped at a breakpoint
 =======================================================================
 
 Synopsis
 --------
+
+::
 
     function fish_breakpoint_prompt
         ...
@@ -12,9 +16,9 @@ Synopsis
 Description
 -----------
 
-By defining the ``fish_breakpoint_prompt`` function, the user can choose a custom prompt when asking for input in response to a ``breakpoint`` command. The ``fish_breakpoint_prompt`` function is executed when the prompt is to be shown, and the output is used as a prompt.
+By defining the ``fish_breakpoint_prompt`` function, the user can choose a custom prompt when asking for input in response to a :ref:`breakpoint <cmd-breakpoint>` command. The ``fish_breakpoint_prompt`` function is executed when the prompt is to be shown, and the output is used as a prompt.
 
-The exit status of commands within ``fish_breakpoint_prompt`` will not modify the value of <a href="index.html#variables-status">$status</a> outside of the ``fish_breakpoint_prompt`` function.
+The exit status of commands within ``fish_breakpoint_prompt`` will not modify the value of :ref:`$status <variables-status>` outside of the ``fish_breakpoint_prompt`` function.
 
 ``fish`` ships with a default version of this function that displays the function name and line number of the current execution context.
 

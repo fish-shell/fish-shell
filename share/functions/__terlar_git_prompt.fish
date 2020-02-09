@@ -16,7 +16,7 @@ set -g fish_prompt_git_status_renamed '➜'
 set -g fish_prompt_git_status_copied '⇒'
 set -g fish_prompt_git_status_deleted '✖'
 set -g fish_prompt_git_status_untracked '?'
-set -g fish_prompt_git_status_unmerged '!'
+set -g fish_prompt_git_status_unmerged !
 
 set -g fish_prompt_git_status_order added modified renamed copied deleted untracked unmerged
 

@@ -2,16 +2,16 @@ function __fish_paginate -d "Paginate the current command using the users defaul
 
     set -l cmd less
     if set -q PAGER
-        set cmd $PAGER
+        echo $PAGER | read -at cmd
     end
 
-    if test -z (commandline -j)
+    if test -z (commandline -j | string join '')
         commandline -a $history[1]
     end
 
     if commandline -j | string match -q -r -v "$cmd *\$"
 
-        commandline -aj " 2>&1 | $cmd;"
+        commandline -aj " &| $cmd;"
     end
 
 end

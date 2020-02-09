@@ -39,8 +39,9 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <stdio.h>
-#include <wchar.h>
-#include <string.h>
+
+#include <cstring>
+#include <cwchar>
 
 // This version of `getopt' appears to the caller like standard Unix `getopt' but it behaves
 // differently for the user, since it allows the user to intersperse the options with the other
@@ -114,7 +115,7 @@ void wgetopter_t::_wgetopt_initialize(const wchar_t *optstring) {
     // Start processing options with ARGV-element 1 (since ARGV-element 0 is the program name); the
     // sequence of previously skipped non-option ARGV-elements is empty.
     first_nonopt = last_nonopt = woptind = 1;
-    nextchar = NULL;
+    nextchar = nullptr;
 
     // Determine how to handle the ordering of options and nonoptions.
     if (optstring[0] == '-') {
@@ -159,7 +160,7 @@ int wgetopter_t::_advance_to_next_argv(  //!OCLINT(high cyclomatic complexity)
     // The special ARGV-element `--' means premature end of options. Skip it like a null option,
     // then exchange with previous non-options as if it were an option, then skip everything
     // else like a non-option.
-    if (woptind != argc && !wcscmp(argv[woptind], L"--")) {
+    if (woptind != argc && !std::wcscmp(argv[woptind], L"--")) {
         woptind++;
 
         if (first_nonopt != last_nonopt && last_nonopt != woptind) {
@@ -190,7 +191,7 @@ int wgetopter_t::_advance_to_next_argv(  //!OCLINT(high cyclomatic complexity)
     }
 
     // We have found another option-ARGV-element. Skip the initial punctuation.
-    nextchar = (argv[woptind] + 1 + (longopts != NULL && argv[woptind][1] == '-'));
+    nextchar = (argv[woptind] + 1 + (longopts != nullptr && argv[woptind][1] == '-'));
     return 0;
 }
 
@@ -198,14 +199,15 @@ int wgetopter_t::_advance_to_next_argv(  //!OCLINT(high cyclomatic complexity)
 int wgetopter_t::_handle_short_opt(int argc, wchar_t **argv) {
     // Look at and handle the next short option-character.
     wchar_t c = *nextchar++;
-    const wchar_t *temp = wcschr(shortopts, c);
+    const wchar_t *temp = std::wcschr(shortopts, c);
 
     // Increment `woptind' when we start to process its last character.
     if (*nextchar == '\0') ++woptind;
 
-    if (temp == NULL || c == ':') {
+    if (temp == nullptr || c == ':') {
         if (wopterr) {
-            fwprintf(stderr, _(L"%ls: Invalid option -- %lc\n"), argv[0], (wint_t)c);
+            std::fwprintf(stderr, _(L"%ls: Invalid option -- %lc\n"), argv[0],
+                          static_cast<wint_t>(c));
         }
         woptopt = c;
 
@@ -223,9 +225,9 @@ int wgetopter_t::_handle_short_opt(int argc, wchar_t **argv) {
             woptarg = nextchar;
             woptind++;
         } else {
-            woptarg = NULL;
+            woptarg = nullptr;
         }
-        nextchar = NULL;
+        nextchar = nullptr;
     } else {
         // This is an option that requires an argument.
         if (*nextchar != '\0') {
@@ -236,8 +238,8 @@ int wgetopter_t::_handle_short_opt(int argc, wchar_t **argv) {
         } else if (woptind == argc) {
             if (wopterr) {
                 // 1003.2 specifies the format of this message.
-                fwprintf(stderr, _(L"%ls: Option requires an argument -- %lc\n"), argv[0],
-                         (wint_t)c);
+                std::fwprintf(stderr, _(L"%ls: Option requires an argument -- %lc\n"), argv[0],
+                              static_cast<wint_t>(c));
             }
             woptopt = c;
             c = missing_arg_return_colon ? ':' : '?';
@@ -246,7 +248,7 @@ int wgetopter_t::_handle_short_opt(int argc, wchar_t **argv) {
             // ARGV-elt as argument.
             woptarg = argv[woptind++];
         }
-        nextchar = NULL;
+        nextchar = nullptr;
     }
 
     return c;
@@ -263,14 +265,14 @@ void wgetopter_t::_update_long_opt(int argc, wchar_t **argv, const struct woptio
         else {
             if (wopterr) {
                 if (argv[woptind - 1][1] == '-')  // --option
-                    fwprintf(stderr, _(L"%ls: Option '--%ls' doesn't allow an argument\n"), argv[0],
-                             pfound->name);
+                    std::fwprintf(stderr, _(L"%ls: Option '--%ls' doesn't allow an argument\n"),
+                                  argv[0], pfound->name);
                 else
                     // +option or -option
-                    fwprintf(stderr, _(L"%ls: Option '%lc%ls' doesn't allow an argument\n"),
-                             argv[0], argv[woptind - 1][0], pfound->name);
+                    std::fwprintf(stderr, _(L"%ls: Option '%lc%ls' doesn't allow an argument\n"),
+                                  argv[0], argv[woptind - 1][0], pfound->name);
             }
-            nextchar += wcslen(nextchar);
+            nextchar += std::wcslen(nextchar);
             *retval = '?';
             return;
         }
@@ -279,16 +281,16 @@ void wgetopter_t::_update_long_opt(int argc, wchar_t **argv, const struct woptio
             woptarg = argv[woptind++];
         else {
             if (wopterr)
-                fwprintf(stderr, _(L"%ls: Option '%ls' requires an argument\n"), argv[0],
-                         argv[woptind - 1]);
-            nextchar += wcslen(nextchar);
+                std::fwprintf(stderr, _(L"%ls: Option '%ls' requires an argument\n"), argv[0],
+                              argv[woptind - 1]);
+            nextchar += std::wcslen(nextchar);
             *retval = missing_arg_return_colon ? ':' : '?';
             return;
         }
     }
 
-    nextchar += wcslen(nextchar);
-    if (longind != NULL) *longind = option_index;
+    nextchar += std::wcslen(nextchar);
+    if (longind != nullptr) *longind = option_index;
     if (pfound->flag) {
         *(pfound->flag) = pfound->val;
         *retval = 0;
@@ -301,19 +303,20 @@ void wgetopter_t::_update_long_opt(int argc, wchar_t **argv, const struct woptio
 const struct woption *wgetopter_t::_find_matching_long_opt(const struct woption *longopts,
                                                            wchar_t *nameend, int *exact, int *ambig,
                                                            int *indfound) {
-    const struct woption *pfound = NULL;
+    const struct woption *pfound = nullptr;
     int option_index = 0;
 
     // Test all long options for either exact match or abbreviated matches.
     for (const struct woption *p = longopts; p->name; p++, option_index++) {
-        if (!wcsncmp(p->name, nextchar, nameend - nextchar)) {
-            if ((unsigned int)(nameend - nextchar) == (unsigned int)wcslen(p->name)) {
+        if (!std::wcsncmp(p->name, nextchar, nameend - nextchar)) {
+            if (static_cast<unsigned int>(nameend - nextchar) ==
+                static_cast<unsigned int>(wcslen(p->name))) {
                 // Exact match found.
                 pfound = p;
                 *indfound = option_index;
                 *exact = 1;
                 break;
-            } else if (pfound == NULL) {
+            } else if (pfound == nullptr) {
                 // First nonexact match found.
                 pfound = p;
                 *indfound = option_index;
@@ -342,9 +345,9 @@ bool wgetopter_t::_handle_long_opt(int argc, wchar_t **argv, const struct woptio
 
     if (ambig && !exact) {
         if (wopterr) {
-            fwprintf(stderr, _(L"%ls: Option '%ls' is ambiguous\n"), argv[0], argv[woptind]);
+            std::fwprintf(stderr, _(L"%ls: Option '%ls' is ambiguous\n"), argv[0], argv[woptind]);
         }
-        nextchar += wcslen(nextchar);
+        nextchar += std::wcslen(nextchar);
         woptind++;
         *retval = '?';
         return true;
@@ -358,14 +361,14 @@ bool wgetopter_t::_handle_long_opt(int argc, wchar_t **argv, const struct woptio
     // Can't find it as a long option.  If this is not getopt_long_only, or the option starts
     // with '--' or is not a valid short option, then it's an error. Otherwise interpret it as a
     // short option.
-    if (!long_only || argv[woptind][1] == '-' || wcschr(shortopts, *nextchar) == NULL) {
+    if (!long_only || argv[woptind][1] == '-' || std::wcschr(shortopts, *nextchar) == nullptr) {
         if (wopterr) {
             if (argv[woptind][1] == '-')  // --option
-                fwprintf(stderr, _(L"%ls: Unrecognized option '--%ls'\n"), argv[0], nextchar);
+                std::fwprintf(stderr, _(L"%ls: Unrecognized option '--%ls'\n"), argv[0], nextchar);
             else
                 // +option or -option
-                fwprintf(stderr, _(L"%ls: Unrecognized option '%lc%ls'\n"), argv[0],
-                         argv[woptind][0], nextchar);
+                std::fwprintf(stderr, _(L"%ls: Unrecognized option '%lc%ls'\n"), argv[0],
+                              argv[woptind][0], nextchar);
         }
         nextchar = (wchar_t *)L"";
         woptind++;
@@ -419,9 +422,9 @@ bool wgetopter_t::_handle_long_opt(int argc, wchar_t **argv, const struct woptio
 int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *optstring,
                                    const struct woption *longopts, int *longind, int long_only) {
     if (!initialized) _wgetopt_initialize(optstring);
-    woptarg = NULL;
+    woptarg = nullptr;
 
-    if (nextchar == NULL || *nextchar == '\0') {
+    if (nextchar == nullptr || *nextchar == '\0') {
         int retval = _advance_to_next_argv(argc, argv, longopts);
         if (retval != 0) return retval;
     }
@@ -439,9 +442,9 @@ int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *opts
     // "u".
     //
     // This distinction seems to be the most useful approach.
-    if (longopts != NULL &&
+    if (longopts != nullptr &&
         (argv[woptind][1] == '-' ||
-         (long_only && (argv[woptind][2] || !wcschr(shortopts, argv[woptind][1]))))) {
+         (long_only && (argv[woptind][2] || !std::wcschr(shortopts, argv[woptind][1]))))) {
         int retval;
         if (_handle_long_opt(argc, argv, longopts, longind, long_only, &retval)) return retval;
     }

@@ -20,7 +20,6 @@ class process_t;
 
 bool set_child_group(job_t *j, pid_t child_pid);  // called by parent
 bool child_set_group(job_t *j, process_t *p);     // called by child
-bool maybe_assign_terminal(const job_t *j);
 
 /// Initialize a new child process. This should be called right away after forking in the child
 /// process. If job control is enabled for this job, the process is put in the process group of the
@@ -28,18 +27,14 @@ bool maybe_assign_terminal(const job_t *j);
 /// inside the exec function, which blocks all signals), and all IO redirections and other file
 /// descriptor actions are performed.
 ///
-/// \param p the child process to set up
-/// \param dup2 the dup2 list to apply
+/// Assign the terminal to new_termowner unless it is INVALID_PID.
 ///
-/// \return 0 on sucess, -1 on failiure. When this function returns, signals are always unblocked.
-/// On failiure, signal handlers, io redirections and process group of the process is undefined.
-int setup_child_process(process_t *p, const dup2_list_t &dup2s);
+/// \return 0 on success, -1 on failure. When this function returns, signals are always unblocked.
+/// On failure, signal handlers, io redirections and process group of the process is undefined.
+int child_setup_process(pid_t new_termowner, bool is_forked, const dup2_list_t &dup2s);
 
-/// Call fork(), optionally waiting until we are no longer multithreaded. If the forked child
-/// doesn't do anything that could allocate memory, take a lock, etc. (like call exec), then it's
-/// not necessary to wait for threads to die. If the forked child may do those things, it should
-/// wait for threads to die.
-pid_t execute_fork(bool wait_for_threads_to_die);
+/// Call fork(), retrying on failure a few times.
+pid_t execute_fork();
 
 /// Report an error from failing to exec or posix_spawn a command.
 void safe_report_exec_error(int err, const char *actual_cmd, const char *const *argv,

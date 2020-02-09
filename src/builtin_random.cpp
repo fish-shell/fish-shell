@@ -1,19 +1,30 @@
 // Implementation of the random builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
-#include <stdint.h>
-#include <wchar.h>
+#include "builtin_random.h"
 
 #include <algorithm>
+#include <cerrno>
+#include <cstdint>
+#include <cwchar>
 #include <random>
 
 #include "builtin.h"
-#include "builtin_random.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
 #include "wutil.h"  // IWYU pragma: keep
+
+/// \return a random-seeded engine.
+static std::minstd_rand get_seeded_engine() {
+    std::minstd_rand engine;
+    // seed engine with 2*32 bits of random data
+    // for the 64 bits of internal state of minstd_rand
+    std::random_device rd;
+    std::seed_seq seed{rd(), rd()};
+    engine.seed(seed);
+    return engine;
+}
 
 /// The random builtin generates random numbers.
 int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
@@ -26,26 +37,20 @@ int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 
-    static bool seeded = false;
-    static std::minstd_rand engine;
-    if (!seeded) {
-        // seed engine with 2*32 bits of random data
-        // for the 64 bits of internal state of minstd_rand
-        std::random_device rd;
-        std::seed_seq seed{rd(), rd()};
-        engine.seed(seed);
-        seeded = true;
-    }
+    // We have a single engine which we lazily seed. Lock it here.
+    static owning_lock<std::minstd_rand> s_engine{get_seeded_engine()};
+    auto engine_lock = s_engine.acquire();
+    std::minstd_rand &engine = *engine_lock;
 
     int arg_count = argc - optind;
     long long start, end;
     unsigned long long step;
     bool choice = false;
-    if (arg_count >= 1 && !wcscmp(argv[optind], L"choice")) {
+    if (arg_count >= 1 && !std::wcscmp(argv[optind], L"choice")) {
         if (arg_count == 1) {
             streams.err.append_format(L"%ls: nothing to choose from\n", cmd);
             return STATUS_INVALID_ARGS;
@@ -59,7 +64,7 @@ int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         auto parse_ll = [&](const wchar_t *str) {
             long long ll = fish_wcstoll(str);
             if (errno) {
-                streams.err.append_format(L"%ls: %ls is not a valid integer\n", cmd, str);
+                streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, str);
                 parse_error = true;
             }
             return ll;
@@ -67,7 +72,7 @@ int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         auto parse_ull = [&](const wchar_t *str) {
             unsigned long long ull = fish_wcstoull(str);
             if (errno) {
-                streams.err.append_format(L"%ls: %ls is not a valid integer\n", cmd, str);
+                streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, str);
                 parse_error = true;
             }
             return ull;

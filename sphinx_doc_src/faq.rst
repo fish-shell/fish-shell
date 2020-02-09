@@ -3,14 +3,18 @@ Frequently asked questions
 
 How do I set or clear an environment variable?
 ----------------------------------------------
-Use the <a href="commands.html#set">``set``</a> command::
+Use the :ref:`set <cmd-set>` command::
 
     set -x key value
     set -e key
 
+Since fish 3.1 you can set an environment variable for just one command using the ``key=value some command`` syntax, like in other shells.  The two lines below behave identically - unlike other shells, fish will output ``value`` both times::
 
-How do I run a command every login? What's fish's equivalent to .bashrc?
-------------------------------------------------------------------------
+    key=value echo $key
+    begin; set -lx key value; echo $key; end
+
+How do I run a command every login? What's fish's equivalent to .bashrc or .profile?
+------------------------------------------------------------------------------------
 Edit the file ``~/.config/fish/config.fish``, creating it if it does not exist (Note the leading period).
 
 
@@ -26,12 +30,12 @@ The prompt is the output of the ``fish_prompt`` function. Put it in ``~/.config/
     end
 
 
-You can also use the Web configuration tool, <a href="commands.html#fish_config">``fish_config``</a>, to preview and choose from a gallery of sample prompts.
+You can also use the Web configuration tool, :ref:`fish_config <cmd-fish_config>`, to preview and choose from a gallery of sample prompts.
 
 
 How do I run a command from history?
 ------------------------------------
-Type some part of the command, and then hit the @cursor_key{&uarr;,up} or @cursor_key{&darr;,down} arrow keys to navigate through history matches.
+Type some part of the command, and then hit the :kbd:`↑` (up) or :kbd:`↓` (down) arrow keys to navigate through history matches. Additional default key bindings include :kbd:`Control+P` (up) and :kbd:`Control+N` (down).
 
 
 How do I run a subcommand? The backtick doesn't work!
@@ -54,7 +58,7 @@ That means if you run
     echo x(printf '%s ' a b c)x
 
 
-It will print ``xa b c x``. But if you do
+It will print ``xa b c x``, because the "a b c " is used in one piece. But if you do
 
 ::
 
@@ -93,23 +97,42 @@ If you are just interested in success or failure, you can run the command direct
     end
 
 
-See the documentation for <a href="commands.html#test">``test``</a> and <a href="commands.html#if">``if``</a> for more information.
+Or if you just want to do one command in case the first succeeded or failed, use ``and`` or ``or``::
 
-~~
-How do I set an environment variable for just one command?
-----------------------------------------------------------
-``SOME_VAR=1 command`` produces an error: ``Unknown command "SOME_VAR=1"``.
+    somecommand
+    or someothercommand
 
-Use the ``env`` command.
+See the documentation for :ref:`test <cmd-test>` and :ref:`if <cmd-if>` for more information.
 
-``env SOME_VAR=1 command``
+How do I check whether a variable is defined?
+---------------------------------------------
 
-You can also declare a local variable in a block::
+Use ``set -q var``.  For example, ``if set -q var; echo variable defined; end``.  To check multiple variables you can combine with ``and`` and ``or`` like so::
 
-    begin
-        set -lx SOME_VAR 1
-        command
+    if set -q var1; or set -q var2
+        echo either variable defined
     end
+
+Keep in mind that a defined variabled could also be empty, either by having no elements (if set like ``set var``) or only empty elements (if set like ``set var ""``). Read on for how to deal with those.
+
+
+How do I check whether a variable is not empty?
+-----------------------------------------------
+
+Use ``string length -q -- $var``.  For example, ``if string length -q -- $var; echo not empty; end``.  Note that ``string length`` will interpret a list of multiple variables as a disjunction (meaning any/or)::
+
+    if string length -q -- $var1 $var2 $var3
+        echo at least one of these variables is not empty
+    end
+
+Alternatively, use ``test -n "$var"``, but remember that **the variable must be double-quoted**.  For example, ``if test -n "$var"; echo not empty; end``. The ``test`` command provides its own and (-a) and or (-o)::
+
+    if test -n "$var1" -o -n "$var2" -o -n "$var3"
+        echo at least one of these variables is not empty
+    end
+
+
+If you want to know if a variable has *no elements*, use ``set -q var[1]``.
 
 
 Why doesn't ``set -Ux`` (exported universal variables) seem to work?
@@ -118,15 +141,14 @@ A global variable of the same name already exists.
 
 Environment variables such as ``EDITOR`` or ``TZ`` can be set universally using ``set -Ux``.  However, if
 there is an environment variable already set before fish starts (such as by login scripts or system
-administrators), it is imported into fish as a global variable. The <a
-href="index.html#variables-scope">variable scopes</a> are searched from the "inside out", which
+administrators), it is imported into fish as a global variable. The :ref:`variable scopes <variables-scope>` are searched from the "inside out", which
 means that local variables are checked first, followed by global variables, and finally universal
 variables.
 
 This means that the global value takes precedence over the universal value.
 
 To avoid this problem, consider changing the setting which fish inherits. If this is not possible,
-add a statement to your <a href="index.html#">user initialization file</a> (usually
+add a statement to your :ref:`user initialization file <initialization>` (usually
 ``~/.config/fish/config.fish``)::
 
     set -gx EDITOR vim
@@ -134,14 +156,12 @@ add a statement to your <a href="index.html#">user initialization file</a> (usua
 
 How do I customize my syntax highlighting colors?
 -------------------------------------------------
-Use the web configuration tool, <a href="commands.html#fish_config">``fish_config``</a>, or alter the <a href="index.html#variables-color">``fish_color`` family of environment variables</a>.
+Use the web configuration tool, :ref:`fish_config <cmd-fish_config>`, or alter the `fish_color family of environment variables <index#variables-color>`__.
 
-~~
 How do I update man page completions?
 -------------------------------------
-Use the <a href="commands.html#fish_update_completions">``fish_update_completions``</a> command.
+Use the :ref:`fish_update_completions <cmd-fish_update_completions>` command.
 
-~~
 I accidentally entered a directory path and fish changed directory. What happened?
 ----------------------------------------------------------------------------------
 If fish is unable to locate a command with a given name, and it starts with '``.``', '``/``' or '``~``', fish will test if a directory of that name exists. If it does, it is implicitly assumed that you want to change working directory. For example, the fastest way to switch to your home directory is to simply press ``~`` and enter.
@@ -149,7 +169,7 @@ If fish is unable to locate a command with a given name, and it starts with '``.
 
 The open command doesn't work.
 ------------------------------
-The ``open`` command uses the MIME type database and the ``.desktop`` files used by Gnome and KDE to identify filetypes and default actions. If at least one of these environments is installed, but the open command is not working, this probably means that the relevant files are installed in a non-standard location. Consider <a href="index.html#more-help">asking for more help</a>.
+The ``open`` command uses the MIME type database and the ``.desktop`` files used by Gnome and KDE to identify filetypes and default actions. If at least one of these environments is installed, but the open command is not working, this probably means that the relevant files are installed in a non-standard location. Consider `asking for more help <index#more-help>`__.
 
 
 How do I make fish my default shell?
@@ -203,17 +223,17 @@ Because history substitution is an awkward interface that was invented before in
 
 Fish history recall is very simple yet effective:
 
-- As in any modern shell, the Up arrow, @cursor_key{&uarr;,Up} recalls whole lines, starting from the last line executed.  A single press replaces "!!", later presses replace "!-3" and the like.
+- As in any modern shell, the Up arrow, :kbd:`↑` recalls whole lines, starting from the last line executed.  A single press replaces "!!", later presses replace "!-3" and the like.
 
   - If the line you want is far back in the history, type any part of the line and then press Up one or more times.  This will constrain the recall to lines that include this text, and you will get to the line you want much faster.  This replaces "!vi", "!?bar.c" and the like.
 
-- @key{Alt,&uarr;,Up} recalls individual arguments, starting from the last argument in the last line executed.  A single press replaces "!$", later presses replace "!!:4" and the like.
+- :kbd:`Alt+↑,Up` recalls individual arguments, starting from the last argument in the last line executed.  A single press replaces "!$", later presses replace "!!:4" and the like. An alternate key binding is :kbd:`Alt+.`.
 
-  - If the argument you want is far back in history (e.g. 2 lines back - that's a lot of words!), type any part of it and then press @key{Alt,&uarr;,Up}.  This will show only arguments containing that part and you will get what you want much faster.  Try it out, this is very convenient!
+  - If the argument you want is far back in history (e.g. 2 lines back - that's a lot of words!), type any part of it and then press :kbd:`Alt+↑,Up`.  This will show only arguments containing that part and you will get what you want much faster.  Try it out, this is very convenient!
 
-  - If you want to reuse several arguments from the same line ("!!:3*" and the like), consider recalling the whole line and removing what you don't need (@key{Alt,D} and @key{Alt,Backspace} are your friends).
+  - If you want to reuse several arguments from the same line ("!!:3*" and the like), consider recalling the whole line and removing what you don't need (:kbd:`Alt+D` and :kbd:`Alt+Backspace` are your friends).
 
-See <a href='index.html#editor'>documentation</a> for more details about line editing in fish.
+See :ref:`documentation <editor>` for more details about line editing in fish.
 
 
 How can I use ``-`` as a shortcut for ``cd -``?
@@ -222,6 +242,7 @@ In fish versions prior to 2.5.0 it was possible to create a function named ``-``
 
     abbr -a -- - 'cd -'
 
+.. _faq-uninstalling:
 
 Uninstalling fish
 -----------------
@@ -238,7 +259,7 @@ Next, do the following (assuming fish was installed to /usr/local)::
 
 Unicode private-use characters reserved by fish
 -----------------------------------------------
-Fish reserves the <a href="http://www.unicode.org/faq/private_use.html">Unicode private-use character range</a> from U+F600 thru U+F73F for internal use. Any attempt to feed characters in that range to fish will result in them being replaced by the Unicode "replacement character" U+FFFD. This includes both interactive input as well as any file read by fish (but not programs run by fish).
+Fish reserves the `Unicode private-use character range <http://www.unicode.org/faq/private_use.html>`__ from U+F600 thru U+F73F for internal use. Any attempt to feed characters in that range to fish will result in them being replaced by the Unicode "replacement character" U+FFFD. This includes both interactive input as well as any file read by fish (but not programs run by fish).
 
 
 Where can I find extra tools for fish?

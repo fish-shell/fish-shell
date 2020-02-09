@@ -1,10 +1,11 @@
 // Implementation of the pwd builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <string.h>
+#include "builtin_pwd.h"
+
+#include <cstring>
 
 #include "builtin.h"
-#include "builtin_pwd.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
@@ -13,9 +14,9 @@
 #include "wutil.h"  // IWYU pragma: keep
 
 /// The pwd builtin. Respect -P to resolve symbolic links. Respect -L to not do that (the default).
-static const wchar_t * const short_options = L"LPh";
-static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
-                                              {NULL, 0, NULL, 0}};
+static const wchar_t *const short_options = L"LPh";
+static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h'},
+                                              {nullptr, 0, nullptr, 0}};
 int builtin_pwd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     UNUSED(parser);
     const wchar_t *cmd = argv[0];
@@ -23,7 +24,7 @@ int builtin_pwd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     bool resolve_symlinks = false;
     wgetopter_t w;
     int opt;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'L':
                 resolve_symlinks = false;
@@ -32,7 +33,7 @@ int builtin_pwd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 resolve_symlinks = true;
                 break;
             case 'h':
-                builtin_print_help(parser, streams, cmd, streams.out);
+                builtin_print_help(parser, streams, cmd);
                 return STATUS_CMD_OK;
             case '?': {
                 builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
@@ -58,7 +59,7 @@ int builtin_pwd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         if (auto real_pwd = wrealpath(pwd)) {
             pwd = std::move(*real_pwd);
         } else {
-            const char *error = strerror(errno);
+            const char *error = std::strerror(errno);
             streams.err.append_format(L"%ls: realpath failed:", cmd, error);
             return STATUS_CMD_ERROR;
         }

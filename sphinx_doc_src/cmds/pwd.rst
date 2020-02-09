@@ -1,10 +1,14 @@
+.. _cmd-pwd:
+
 pwd - output the current working directory
 ==========================================
 
 Synopsis
 --------
 
-pwd
+::
+
+    pwd
 
 
 Description

@@ -69,7 +69,7 @@ class outputter_t {
     }
 
     /// Write a narrow NUL-terminated string.
-    void writestr(const char *str) { writestr(str, strlen(str)); }
+    void writestr(const char *str) { writestr(str, std::strlen(str)); }
 
     /// Write a narrow character.
     void push_back(char c) {
@@ -108,15 +108,15 @@ void writembs_check(outputter_t &outp, const char *mbs, const char *mbs_name, bo
 #define writembs(outp, mbs) writembs_check((outp), (mbs), #mbs, true, __FILE__, __LINE__)
 #define writembs_nofail(outp, mbs) writembs_check((outp), (mbs), #mbs, false, __FILE__, __LINE__)
 
-rgb_color_t parse_color(const env_var_t &val, bool is_background);
+rgb_color_t parse_color(const env_var_t &var, bool is_background);
 
 /// Sets what colors are supported.
 enum { color_support_term256 = 1 << 0, color_support_term24bit = 1 << 1 };
 typedef unsigned int color_support_t;
 color_support_t output_get_color_support();
-void output_set_color_support(color_support_t support);
+void output_set_color_support(color_support_t val);
 
-rgb_color_t best_color(const std::vector<rgb_color_t> &colors, color_support_t support);
+rgb_color_t best_color(const std::vector<rgb_color_t> &candidates, color_support_t support);
 
 unsigned char index_for_color(rgb_color_t c);
 

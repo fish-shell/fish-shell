@@ -1,10 +1,14 @@
+.. _cmd-ulimit:
+
 ulimit - set or get resource usage limits
 =========================================
 
 Synopsis
 --------
 
-ulimit [OPTIONS] [LIMIT]
+::
+
+    ulimit [OPTIONS] [LIMIT]
 
 
 Description
@@ -38,7 +42,7 @@ Note that not all these limits are available in all operating systems.
 
 The value of limit can be a number in the unit specified for the resource or one of the special values ``hard``, ``soft``, or ``unlimited``, which stand for the current hard limit, the current soft limit, and no limit, respectively.
 
-If limit is given, it is the new value of the specified resource. If no option is given, then ``-f`` is assumed. Values are in kilobytes, except for ``-t``, which is in seconds and ``-n`` and ``-u``, which are unscaled values. The return status is 0 unless an invalid option or argument is supplied, or an error occurs while setting a new limit.
+If limit is given, it is the new value of the specified resource. If no option is given, then ``-f`` is assumed. Values are in kilobytes, except for ``-t``, which is in seconds and ``-n`` and ``-u``, which are unscaled values. The exit status is 0 unless an invalid option or argument is supplied, or an error occurs while setting a new limit.
 
 ``ulimit`` also accepts the following switches that determine what type of limit to set:
 

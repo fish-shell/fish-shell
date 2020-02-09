@@ -19,6 +19,9 @@ function __fish_cancel_commandline
             echo ""
         end
         commandline ""
-        commandline -f repaint
+        emit fish_cancel
     end
+    # Repaint even if we haven't cancelled anything,
+    # so the prompt refreshes and the terminal scrolls to it.
+    commandline -f repaint
 end

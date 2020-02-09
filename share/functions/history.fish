@@ -16,7 +16,7 @@ end
 
 function history --description "display or manipulate interactive command history"
     set -l cmd history
-    set -l options --exclusive 'c,e,p' --exclusive 'S,D,M,V,C'
+    set -l options --exclusive 'c,e,p' --exclusive 'S,D,M,V,X'
     set -a options 'h/help' 'c/contains' 'e/exact' 'p/prefix'
     set -a options 'C/case-sensitive' 'R/reverse' 'z/null' 't/show-time=?' 'n#max'
     # The following options are deprecated and will be removed in the next major release.
@@ -33,6 +33,7 @@ function history --description "display or manipulate interactive command histor
     set -l hist_cmd
     set -l show_time
     set -l max_count
+    set -l search_mode
     set -q _flag_max
     set max_count -n$_flag_max
 
@@ -85,7 +86,7 @@ function history --description "display or manipulate interactive command histor
             if isatty stdout
                 set -l pager less
                 set -q PAGER
-                and set pager $PAGER
+                and echo $PAGER | read -at pager
 
                 # If the user hasn't preconfigured less with the $LESS environment variable,
                 # we do so to have it behave like cat if output fits on one screen. Prevent the
@@ -103,25 +104,24 @@ function history --description "display or manipulate interactive command histor
 
         case delete # interactively delete history
             # TODO: Fix this to deal with history entries that have multiple lines.
+            set -l searchterm $argv
             if not set -q argv[1]
-                printf (_ "You must specify at least one search term when deleting entries\n") >&2
-                return 1
+                read -P"Search term: " searchterm
             end
 
-            test -z "$search_mode"
-            and set search_mode "--contains"
+            if test -z "$search_mode"
+                set search_mode "--contains"
+            end
 
             if test $search_mode = "--exact"
-                builtin history delete $search_mode $_flag_case_sensitive $argv
+                builtin history delete $search_mode $_flag_case_sensitive $searchterm
                 return
             end
 
             # TODO: Fix this so that requesting history entries with a timestamp works:
             #   set -l found_items (builtin history search $search_mode $show_time -- $argv)
             set -l found_items
-            builtin history search $search_mode $_flag_case_sensitive --null -- $argv | while read -lz x
-                set found_items $found_items $x
-            end
+            set found_items (builtin history search $search_mode $_flag_case_sensitive --null -- $searchterm | string split0)
             if set -q found_items[1]
                 set -l found_items_count (count $found_items)
                 for i in (seq $found_items_count)

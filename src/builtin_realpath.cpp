@@ -1,19 +1,20 @@
 // Implementation of the realpath builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <wchar.h>
+#include "builtin_realpath.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cwchar>
 
 #include "builtin.h"
-#include "builtin_realpath.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-/// An implementation of the external realpath command. Desn't support any options.
+/// An implementation of the external realpath command. Doesn't support any options.
 /// In general scripts shouldn't invoke this directly. They should just use `realpath` which
 /// will fallback to this builtin if an external command cannot be found.
 int builtin_realpath(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
@@ -26,13 +27,13 @@ int builtin_realpath(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 
-    if (optind + 1 != argc) { // TODO: allow arbitrary args. `realpath *` should print many paths
+    if (optind + 1 != argc) {  // TODO: allow arbitrary args. `realpath *` should print many paths
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT1, cmd, 1, argc - optind);
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -43,7 +44,7 @@ int builtin_realpath(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             // realpath() just couldn't do it. Report the error and make it clear
             // this is an error from our builtin, not the system's realpath.
             streams.err.append_format(L"builtin %ls: %ls: %s\n", cmd, argv[optind],
-                                      strerror(errno));
+                                      std::strerror(errno));
         } else {
             // Who knows. Probably a bug in our wrealpath() implementation.
             streams.err.append_format(_(L"builtin %ls: Invalid path: %ls\n"), cmd, argv[optind]);

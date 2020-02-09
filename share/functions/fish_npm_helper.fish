@@ -12,7 +12,7 @@ function __yarn_helper_installed
             set -l old (commandline)
             commandline -r ""
             echo \nfish: Run `$argv[1] all-the-package-names` to gain intelligent \
-                package completion > /dev/stderr
+                package completion >&2
             commandline -f repaint
             commandline -r $old
             set -g __fish_yarn_pkg_info_shown 1
@@ -38,7 +38,7 @@ function __yarn_filtered_list_packages
 end
 
 function __yarn_find_package_json
-    set parents (__fish_parent_directories (pwd))
+    set parents (__fish_parent_directories (pwd -P))
 
     for p in $parents
         if test -f "$p/package.json"
@@ -57,7 +57,10 @@ function __yarn_installed_packages
         return 1
     end
 
-    if type -q jq
+    if set -l python (__fish_anypython)
+        $python -c 'import json, sys; data = json.load(sys.stdin);
+print("\n".join(data["dependencies"])); print("\n".join(data["devDependencies"]))' <$package_json 2>/dev/null
+    else if type -q jq
         jq -r '.dependencies as $a1 | .devDependencies as $a2 | ($a1 + $a2) | to_entries[] | .key' $package_json
     else
         set -l depsFound 0

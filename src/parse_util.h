@@ -13,8 +13,8 @@
 /// Find the beginning and end of the first subshell in the specified string.
 ///
 /// \param in the string to search for subshells
-/// \param begin the starting paranthesis of the subshell
-/// \param end the ending paranthesis of the subshell
+/// \param begin the starting parenthesis of the subshell
+/// \param end the ending parenthesis of the subshell
 /// \param accept_incomplete whether to permit missing closing parenthesis
 /// \return -1 on syntax error, 0 if no subshells exist and 1 on success
 int parse_util_locate_cmdsubst(const wchar_t *in, wchar_t **begin, wchar_t **end,
@@ -55,10 +55,11 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
 ///
 /// \param buff the string to search for subshells
 /// \param cursor_pos the position of the cursor
-/// \param a the start of the searched string
-/// \param b the end of the searched string
+/// \param a the start of the process
+/// \param b the end of the process
+/// \param tokens the tokens in the process
 void parse_util_process_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **a,
-                               const wchar_t **b);
+                               const wchar_t **b, std::vector<tok_t> *tokens);
 
 /// Find the beginning and end of the job definition under the cursor
 ///
@@ -83,7 +84,7 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
                              const wchar_t **prev_end);
 
 /// Get the linenumber at the specified character offset.
-int parse_util_lineno(const wchar_t *str, size_t len);
+int parse_util_lineno(const wchar_t *str, size_t offset);
 
 /// Calculate the line number of the specified cursor position.
 int parse_util_get_line_from_offset(const wcstring &str, size_t pos);
@@ -96,7 +97,7 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset);
 
 /// Return the given string, unescaping wildcard characters but not performing any other character
 /// transformation.
-wcstring parse_util_unescape_wildcards(const wcstring &in);
+wcstring parse_util_unescape_wildcards(const wcstring &str);
 
 /// Checks if the specified string is a help option.
 bool parse_util_argument_is_help(const wchar_t *s);
@@ -110,7 +111,7 @@ bool parse_util_argument_is_help(const wchar_t *s);
 /// \param offset If not NULL, get_param will store the offset to the beginning of the parameter.
 /// \param out_type If not NULL, get_param will store the token type.
 void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_t *quote,
-                                   size_t *offset, enum token_type *out_type);
+                                   size_t *offset, token_type_t *out_type);
 
 /// Attempts to escape the string 'cmd' using the given quote type, as determined by the quote
 /// character. The quote can be a single quote or double quote, or L'\0' to indicate no quoting (and
@@ -128,9 +129,14 @@ std::vector<int> parse_util_compute_indents(const wcstring &src);
 /// error. If out_pstree is not NULL, the resulting tree is returned by reference.
 class parse_node_tree_t;
 parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
-                                                  parse_error_list_t *out_errors = NULL,
+                                                  parse_error_list_t *out_errors = nullptr,
                                                   bool allow_incomplete = true,
-                                                  parsed_source_ref_t *out_pstree = NULL);
+                                                  parsed_source_ref_t *out_pstree = nullptr);
+
+/// Detect errors in the specified string when parsed as an argument list. Returns the text of an
+/// error, or none if no error occurred.
+maybe_t<wcstring> parse_util_detect_errors_in_argument_list(const wcstring &arg_list_src,
+                                                            const wcstring &prefix = {});
 
 /// Test if this argument contains any errors. Detected errors include syntax errors in command
 /// substitutions, improperly escaped characters and improper use of the variable expansion
@@ -138,7 +144,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
 class parse_node_t;
 parser_test_error_bits_t parse_util_detect_errors_in_argument(
     tnode_t<grammar::argument> node, const wcstring &arg_src,
-    parse_error_list_t *out_errors = NULL);
+    parse_error_list_t *out_errors = nullptr);
 
 /// Given a string containing a variable expansion error, append an appropriate error to the errors
 /// list. The global_token_pos is the offset of the token in the larger source, and the dollar_pos

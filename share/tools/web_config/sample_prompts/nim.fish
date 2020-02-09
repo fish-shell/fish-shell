@@ -24,6 +24,9 @@ function fish_prompt
     # │ 1	15048	0%	arrêtée	sleep 100000
     # ╰─>$ echo there
 
+    set -l retc red
+    test $status = 0; and set retc green
+
     set -q __fish_git_prompt_showupstream
     or set -g __fish_git_prompt_showupstream auto
 
@@ -45,8 +48,6 @@ function fish_prompt
         set_color -o green
         echo -n ']'
     end
-    and set retc green
-    or set retc red
 
     set_color $retc
     echo -n '┬─'
@@ -75,6 +76,8 @@ function fish_prompt
     _nim_prompt_wrapper $retc '' (date +%X)
 
     # Virtual Environment
+    set -q VIRTUAL_ENV_DISABLE_PROMPT
+    or set -g VIRTUAL_ENV_DISABLE_PROMPT true
     set -q VIRTUAL_ENV
     and _nim_prompt_wrapper $retc V (basename "$VIRTUAL_ENV")
 

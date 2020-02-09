@@ -2,7 +2,7 @@
 
 # Script to generate a tarball
 # We use git to output a tree. But we also want to build the user documentation
-# and put that in the tarball, so that nobody needs to have doxygen installed
+# and put that in the tarball, so that nobody needs to have sphinx installed
 # to build it.
 # Outputs to $FISH_ARTEFACT_PATH or ~/fish_built by default
 
@@ -32,7 +32,7 @@ fi
 wd="$PWD"
 
 # Get the version from git-describe
-VERSION=`git describe --dirty 2>/dev/null`
+VERSION=$(git describe --dirty 2>/dev/null)
 
 # The name of the prefix, which is the directory that you get when you untar
 prefix="fish-$VERSION"
@@ -48,10 +48,10 @@ rm -f "$path" "$path".gz
 git archive --format=tar --prefix="$prefix"/ HEAD > "$path"
 
 # tarball out the documentation, generate a version file
-PREFIX_TMPDIR=`mktemp -d`
-cd $PREFIX_TMPDIR
-echo $VERSION > version
-cmake $wd
+PREFIX_TMPDIR=$(mktemp -d)
+cd "$PREFIX_TMPDIR"
+echo "$VERSION" > version
+cmake "$wd"
 make doc
 
 TAR_APPEND="$TAR --append --file=$path --mtime=now --owner=0 --group=0 \

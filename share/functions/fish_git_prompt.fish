@@ -102,6 +102,7 @@
 #     invalidstate    (✖)
 #     stagedstate     (●)
 #     untrackedfiles  (…)
+#     stashstate      (⚑)
 #     cleanstate      (✔)
 #
 #
@@ -280,7 +281,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
     end
 
     # Find how many commits we are ahead/behind our upstream
-    set count (command git rev-list --count --left-right $upstream...HEAD 2>/dev/null)
+    set count (command git rev-list --count --left-right $upstream...HEAD 2>/dev/null | string replace \t " ")
 
     # calculate the result
     if test -n "$verbose"
@@ -288,17 +289,17 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
         set -l prefix "$___fish_git_prompt_char_upstream_prefix"
         # Using two underscore version to check if user explicitly set to nothing
         if not set -q __fish_git_prompt_char_upstream_prefix
-            set -l prefix " "
+            set prefix " "
         end
 
         echo $count | read -l behind ahead
         switch "$count"
             case '' # no upstream
-            case "0	0" # equal to upstream
+            case "0 0" # equal to upstream
                 echo "$prefix$___fish_git_prompt_char_upstream_equal"
-            case "0	*" # ahead of upstream
+            case "0 *" # ahead of upstream
                 echo "$prefix$___fish_git_prompt_char_upstream_ahead$ahead"
-            case "*	0" # behind upstream
+            case "* 0" # behind upstream
                 echo "$prefix$___fish_git_prompt_char_upstream_behind$behind"
             case '*' # diverged from upstream
                 echo "$prefix$___fish_git_prompt_char_upstream_diverged$ahead-$behind"
@@ -310,10 +311,10 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
         echo $count | read -l behind ahead
         switch "$count"
             case '' # no upstream
-            case "0	0" # equal to upstream
-            case "0	*" # ahead of upstream
+            case "0 0" # equal to upstream
+            case "0 *" # ahead of upstream
                 echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
-            case "*	0" # behind upstream
+            case "* 0" # behind upstream
                 echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
             case '*' # diverged from upstream
                 echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead$___fish_git_prompt_char_upstream_behind$behind"
@@ -321,16 +322,19 @@ function __fish_git_prompt_show_upstream --description "Helper function for fish
     else
         switch "$count"
             case '' # no upstream
-            case "0	0" # equal to upstream
+            case "0 0" # equal to upstream
                 echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_equal"
-            case "0	*" # ahead of upstream
+            case "0 *" # ahead of upstream
                 echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead"
-            case "*	0" # behind upstream
+            case "* 0" # behind upstream
                 echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind"
             case '*' # diverged from upstream
                 echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_diverged"
         end
     end
+
+    # For the return status
+    test "$count" = "0 0"
 end
 
 function fish_git_prompt --description "Prompt function for Git"
@@ -401,7 +405,7 @@ function fish_git_prompt --description "Prompt function for Git"
                 and test "$dirty" != false
                 and test "$untracked" != false
             end
-            set informative_status "$space"(__fish_git_prompt_informative_status)
+            set informative_status "$space"(__fish_git_prompt_informative_status $git_dir)
         else
             # This has to be set explicitly.
             if test "$dirty" = true
@@ -484,39 +488,51 @@ end
 
 function __fish_git_prompt_staged --description "fish_git_prompt helper, tells whether or not the current branch has staged files"
     set -l sha $argv[1]
-
     set -l staged
+    set -l ret 0
 
     if test -n "$sha"
-        command git diff-index --cached --quiet HEAD -- 2>/dev/null
-        or set staged $___fish_git_prompt_char_stagedstate
+        # The "diff" functions all return > 0 if there _is_ a diff,
+        # but we want to return 0 if there are staged changes.
+        # So we invert the status.
+        not command git diff-index --cached --quiet HEAD -- 2>/dev/null
+        and set staged $___fish_git_prompt_char_stagedstate
+        set ret $status
     else
         set staged $___fish_git_prompt_char_invalidstate
+        set ret 2
     end
     echo $staged
+    return $ret
 end
 
 function __fish_git_prompt_untracked --description "fish_git_prompt helper, tells whether or not the current repository has untracked files"
-    set -l untracked
+    set -l ret 1
     if command git ls-files --others --exclude-standard --directory --no-empty-directory --error-unmatch -- :/ >/dev/null 2>&1
+        set ret $status
         set untracked $___fish_git_prompt_char_untrackedfiles
     end
     echo $untracked
+    return $ret
 end
 
 function __fish_git_prompt_dirty --description "fish_git_prompt helper, tells whether or not the current branch has tracked, modified files"
     set -l dirty
 
-    set -l os
-    command git diff --no-ext-diff --quiet --exit-code 2>/dev/null
-    set os $status
-    if test $os -ne 0
+    # Like staged, invert the status because we want 0 to mean there are dirty files.
+    not command git diff --no-ext-diff --quiet --exit-code 2>/dev/null
+    set -l os $status
+    if test $os -eq 0
         set dirty $___fish_git_prompt_char_dirtystate
     end
     echo $dirty
+    return $os
 end
 
 set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles
+if set -q __fish_git_prompt_showstashstate
+    set -a ___fish_git_prompt_status_order stashstate
+end
 
 function __fish_git_prompt_informative_status
 
@@ -529,12 +545,17 @@ function __fish_git_prompt_informative_status
     set -l x (count $stagedFiles)
     set -l invalidstate (count (string match -r "U" -- $stagedFiles))
     set -l stagedstate (math $x - $invalidstate)
-    set -l untrackedfiles (command git ls-files --others --exclude-standard | wc -l | string trim)
+    set -l untrackedfiles (command git ls-files --others --exclude-standard | count)
+    set -l stashstate 0
+    set -l stashfile "$argv[1]/logs/refs/stash"
+    if set -q __fish_git_prompt_showstashstate; and test -e "$stashfile"
+        set stashstate (count < $stashfile)
+    end
 
     set -l info
 
     # If `math` fails for some reason, assume the state is clean - it's the simpler path
-    set -l state (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles 2>/dev/null)
+    set -l state (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles + $stashstate 2>/dev/null)
     if test -z "$state"
         or test "$state" = 0
         set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done
@@ -668,7 +689,9 @@ function __fish_git_prompt_set_char
     end
 
     if set -q argv[3]
-        and set -q __fish_git_prompt_show_informative_status
+        and begin set -q __fish_git_prompt_show_informative_status
+            or set -q __fish_git_prompt_use_informative_chars
+        end
         set char $argv[3]
     end
 
@@ -686,7 +709,7 @@ function __fish_git_prompt_validate_chars --description "fish_git_prompt helper,
     __fish_git_prompt_set_char __fish_git_prompt_char_dirtystate '*' '✚'
     __fish_git_prompt_set_char __fish_git_prompt_char_invalidstate '#' '✖'
     __fish_git_prompt_set_char __fish_git_prompt_char_stagedstate '+' '●'
-    __fish_git_prompt_set_char __fish_git_prompt_char_stashstate '$'
+    __fish_git_prompt_set_char __fish_git_prompt_char_stashstate '$' '⚑'
     __fish_git_prompt_set_char __fish_git_prompt_char_stateseparator ' ' '|'
     __fish_git_prompt_set_char __fish_git_prompt_char_untrackedfiles '%' '…'
     __fish_git_prompt_set_char __fish_git_prompt_char_upstream_ahead '>' '↑'
@@ -771,16 +794,18 @@ function __fish_git_prompt_validate_colors --description "fish_git_prompt helper
 end
 
 set -l varargs
-for var in repaint describe_style show_informative_status showdirtystate showstashstate showuntrackedfiles showupstream
+for var in repaint describe_style show_informative_status use_informative_chars showdirtystate showstashstate showuntrackedfiles showupstream
     set -a varargs --on-variable __fish_git_prompt_$var
 end
 function __fish_git_prompt_repaint $varargs --description "Event handler, repaints prompt when functionality changes"
     if status --is-interactive
         if test $argv[3] = __fish_git_prompt_show_informative_status
             # Clear characters that have different defaults with/without informative status
-            for name in cleanstate dirtystate invalidstate stagedstate stateseparator untrackedfiles upstream_ahead upstream_behind
+            for name in cleanstate dirtystate invalidstate stagedstate stashstate stateseparator untrackedfiles upstream_ahead upstream_behind
                 set -e ___fish_git_prompt_char_$name
             end
+            # Clear init so we reset the chars next time.
+            set -e ___fish_git_prompt_init
         end
 
         commandline -f repaint 2>/dev/null

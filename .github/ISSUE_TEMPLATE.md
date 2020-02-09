@@ -11,7 +11,4 @@ Please tell us if you tried fish without third-party customizations by executing
   sh -c 'env HOME=$(mktemp -d) fish'
 
 Tell us how to reproduce the problem. Including an asciinema.org recording is useful for problems that involve the visual display of fish output such as its prompt.
-
-If you are reporting a bug in fish 3.0, please make sure to indicate whether or not this is a
-regression from fish 2.7.1.
 -->

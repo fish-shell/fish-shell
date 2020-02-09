@@ -1,0 +1,37 @@
+# RUN: env fth=%fish_test_helper %fish %s
+
+# Ensure that lots of nested jobs all end up in the same pgroup.
+
+function save_pgroup -a var_name
+    $fth print_pgrp | read -g $var_name
+end
+
+# Here everything should live in the pgroup of the first fish_test_helper.
+$fth print_pgrp | read -g global_group | save_pgroup g1 | begin
+    save_pgroup g2
+end
+
+[ "$global_group" -eq "$g1" ] && [ "$g1" -eq "$g2" ]
+and echo "All pgroups agreed"
+or echo "Pgroups disagreed. Should be in $global_group but found $g1 and $g2"
+# CHECK: All pgroups agreed
+
+# Here everything should live in fish's pgroup.
+# Unfortunately we don't know what fish's pgroup is (it may not be fish's pid).
+# So run it twice and verify that everything agrees; this implies that it could
+# not have used any of the pids of the child procs.
+function nothing
+end
+nothing | $fth print_pgrp | read -g a0 | save_pgroup a1 | begin
+    save_pgroup a2
+end
+nothing | $fth print_pgrp | read -g b0 | save_pgroup b1 | begin
+    save_pgroup b2
+end
+
+[ "$a0" -eq "$a1" ] && [ "$a1" -eq "$a2" ] \
+    && [ "$b0" -eq "$b1" ] && [ "$b1" -eq "$b2" ] \
+    && [ "$a0" -eq "$b0" ]
+and echo "All pgroups agreed"
+or echo "Pgroups disagreed. Found $a0 $a1 $a2, and $b0 $b1 $b2"
+# CHECK: All pgroups agreed

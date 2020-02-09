@@ -1,21 +1,21 @@
 #completion for apt-mark
 
 function __fish_apt_no_subcommand -d 'Test if apt has yet to be given the subcommand'
-	for i in (commandline -opc)
-		if contains -- $i auto manual hold unhold showauto showmanual showhold
-			return 1
-		end
-	end
-	return 0
+    for i in (commandline -opc)
+        if contains -- $i auto manual hold unhold showauto showmanual showhold
+            return 1
+        end
+    end
+    return 0
 end
 
 function __fish_apt_use_package -d 'Test if apt command should have packages as potential completion'
-	for i in (commandline -opc)
-		if contains -- $i contains auto manual hold unhold
-			return 0
-		end
-	end
-	return 1
+    for i in (commandline -opc)
+        if contains -- $i contains auto manual hold unhold
+            return 0
+        end
+    end
+    return 1
 end
 
 complete -c apt-mark -n '__fish_apt_use_package' -a '(__fish_print_packages)' -d 'Package'

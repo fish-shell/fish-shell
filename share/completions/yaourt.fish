@@ -39,11 +39,11 @@ complete -c $progname -s F -f -l files -n $noopt -d 'Query the files database'
 complete -c $progname -s V -f -l version -d 'Display version and exit'
 complete -c $progname -s h -f -l help -d 'Display help'
 # $progname operations
-complete -c $progname -n $noopt -s B    -l backup      -d "Backup or restore alpm local database"
-complete -c $progname -n $noopt -s C -f                -d "Manage .pac* files"
+complete -c $progname -n $noopt -s B -l backup -d "Backup or restore alpm local database"
+complete -c $progname -n $noopt -s C -f -d "Manage .pac* files"
 complete -c $progname -n $noopt -s G -f -l getpkgbuild -d "Get PKGBUILD from ABS or AUR"
-complete -c $progname -n $noopt -s P    -l pkgbuild    -d "Build package from PKGBUILD found in a local directory"
-complete -c $progname -n $noopt      -f -l stats       -d "Show some statistics about your packages"
+complete -c $progname -n $noopt -s P -l pkgbuild -d "Build package from PKGBUILD found in a local directory"
+complete -c $progname -n $noopt -f -l stats -d "Show some statistics about your packages"
 
 # General options
 # Only offer these once a command has been given so they get prominent display
@@ -59,14 +59,14 @@ complete -c $progname -n $hasopt -l hookdir -d 'Hook file directory'
 complete -c $progname -n $hasopt -l logfile -d 'Specify alternative log file'
 complete -c $progname -n $hasopt -l noconfirm -d 'Bypass any question' -f
 # General options (yaourt only)
-complete -c $progname -n $hasopt -l color     -d 'Force color'
-complete -c $progname -n $hasopt -l force     -d 'Force installation or updates'
-complete -c $progname -n $hasopt -l insecure  -d 'Allow to perform "insecure" SSL connections'
-complete -c $progname -n $hasopt -l nocolor   -d 'Disable color'
-complete -c $progname -n $hasopt -l confirm   -d 'Always ask for confirmation'
-complete -c $progname -n $hasopt -l pager     -d 'Use $PAGER to show search results'
+complete -c $progname -n $hasopt -l color -d 'Force color'
+complete -c $progname -n $hasopt -l force -d 'Force installation or updates'
+complete -c $progname -n $hasopt -l insecure -d 'Allow to perform "insecure" SSL connections'
+complete -c $progname -n $hasopt -l nocolor -d 'Disable color'
+complete -c $progname -n $hasopt -l confirm -d 'Always ask for confirmation'
+complete -c $progname -n $hasopt -l pager -d 'Use $PAGER to show search results'
 complete -c $progname -n $hasopt -l export -x -a '(__fish_complete_directories)' -d 'Export built packages and their sources to DIR'
-complete -c $progname -n $hasopt -l tmp    -x -a '(__fish_complete_directories)' -d 'Use DIR as temporary folder'
+complete -c $progname -n $hasopt -l tmp -x -a '(__fish_complete_directories)' -d 'Use DIR as temporary folder'
 
 # Transaction options (sync, remove, upgrade)
 for condition in sync remove upgrade
@@ -101,10 +101,10 @@ for condition in query sync
     complete -c $progname -n $$condition -s s -l search -r -d 'Search packages for regexp' -f
     # Yaourt only
     complete -c $progname -n $$condition -l conflicts -d 'Show packages that conflict with one of the targets'
-    complete -c $progname -n $$condition -l depends   -d 'Show packages that depend on one of the targets'
-    complete -c $progname -n $$condition -l provides  -d 'Show packages that provide one of the targets'
-    complete -c $progname -n $$condition -l replaces  -d 'Show packages that replace one of the targets'
-    complete -c $progname -n $$condition -l nameonly  -d 'Query the package names only'
+    complete -c $progname -n $$condition -l depends -d 'Show packages that depend on one of the targets'
+    complete -c $progname -n $$condition -l provides -d 'Show packages that provide one of the targets'
+    complete -c $progname -n $$condition -l replaces -d 'Show packages that replace one of the targets'
+    complete -c $progname -n $$condition -l nameonly -d 'Query the package names only'
 end
 
 # Query options
@@ -114,7 +114,7 @@ complete -c $progname -n $query -s e -l explicit -d 'List only explicitly instal
 complete -c $progname -n $query -s k -l check -d 'Check if all files owned by PACKAGE are present' -f
 complete -c $progname -n $query -s l -l list -d 'List all files owned by PACKAGE' -f
 complete -c $progname -n $query -s m -l foreign -d 'List all packages not in the database' -f
-complete -c $progname -n $query -s o -l owns -r -d 'Search for the package that owns FILE'
+complete -c $progname -n $query -s o -l owns -rF -d 'Search for the package that owns FILE'
 complete -c $progname -n $query -s p -l file -d 'Apply the query to a package file, not package'
 complete -c $progname -n $query -s t -l unrequired -d 'List only unrequired packages' -f
 complete -c $progname -n $query -s u -l upgrades -d 'List only out-of-date packages' -f
@@ -122,7 +122,7 @@ complete -c $progname -n "$query" -d 'Installed package' -xa $listinstalled -f
 # Yaourt only query options
 # Backup file is always saved as pacman-$date.tar.bz2
 complete -c $progname -n $query -r -l backupfile -a '(__fish_complete_suffix tar.bz2)' -d 'Query FILE instead of alpm/aur'
-complete -c $progname -n $query    -l date       -d 'List queries result sorted by installation date'
+complete -c $progname -n $query -l date -d 'List queries result sorted by installation date'
 
 # Remove options
 complete -c $progname -n $remove -s c -l cascade -d 'Also remove packages depending on PACKAGE' -f
@@ -140,15 +140,15 @@ complete -c $progname -n $sync -s w -l downloadonly -d 'Only download the target
 complete -c $progname -n $sync -s y -l refresh -d 'Download fresh copy of the package list'
 complete -c $progname -n "$sync" -xa "$listall $listgroups"
 # Additional sync options
-complete -c $progname -n $sync -s a -l aur           -d 'Also search in AUR database'
-complete -c $progname -n $sync -s A -l ignorearch    -d 'Pass -A or --ignorearch option to makepkg'
-complete -c $progname -n $sync      -l aur-url    -x -d 'Specify a custom AUR url'
+complete -c $progname -n $sync -s a -l aur -d 'Also search in AUR database'
+complete -c $progname -n $sync -s A -l ignorearch -d 'Pass -A or --ignorearch option to makepkg'
+complete -c $progname -n $sync -l aur-url -x -d 'Specify a custom AUR url'
 set -l has_build_opt '__fish_contains_opt -s b build'
 complete -c $progname -n "$sync; and not $has_build_opt" -s b -l build -d 'Build from sources(AUR or ABS)'
 complete -c $progname -n "$sync; and     $has_build_opt" -s b -l build -d 'Also build all dependencies'
-complete -c $progname -n $sync      -l devel         -d 'Search an update for devel packages'
-complete -c $progname -n $sync      -l maintainer    -d 'Search packages by maintainer instead of name (AUR only)'
-complete -c $progname -n $sync      -l m-arg         -d 'Pass additional options to makepkg'
+complete -c $progname -n $sync -l devel -d 'Search an update for devel packages'
+complete -c $progname -n $sync -l maintainer -d 'Search packages by maintainer instead of name (AUR only)'
+complete -c $progname -n $sync -l m-arg -d 'Pass additional options to makepkg'
 
 # Database options
 set -l has_db_opt '__fish_contains_opt asdeps asexplicit'
@@ -172,9 +172,8 @@ complete -c $progname -n "$files" -l machinereadable -d 'Show in machine readabl
 
 # Upgrade options
 # Theoretically, pacman reads packages in all formats that libarchive supports
-# In practice, it's going to be tar, tar.xz or tar.gz
-# Using "pkg.tar*" here would change __fish_complete_suffix's descriptions to "unknown"
-complete -c $progname -n "$upgrade" -xa '(__fish_complete_suffix pkg.tar\{,.xz,.gz\})' -d 'Package file'
+# In practice, it's going to be tar.xz, tar.gz or tar.zst
+complete -c $progname -n "$upgrade" -xa '(__fish_complete_suffix pkg.tar.zst; __fish_complete_suffix pkg.tar.xz; __fish_complete_suffix pkg.tar.gz)' -d 'Package file'
 
 ## Yaourt only stuff
 # Clean options

@@ -1,2 +1,2 @@
-complete -c tex -w lualatex
+complete -c lualatex -w tex
 

@@ -178,7 +178,7 @@ atom.io registry"
     complete -x -c apm -n "__fish_apm_using_command login" -l token -d "Specify API token"
 
     # outdated & upgrade & update
-    set  -l upgrade_commands "outdated upgrade update"
+    set -l upgrade_commands "outdated upgrade update"
     complete -f -c apm -n '__fish_apm_needs_command' -a $upgrade_commands -d "Upgrade out of date packages"
     complete -f -c apm -n "__fish_apm_using_command $upgrade_commands" -l json -d "Output outdated packages as JSON array"
     complete -x -c apm -n "__fish_apm_using_command $upgrade_commands" -l compatible -d "Only install packages/themes compatible with specified Atom version"

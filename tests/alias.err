@@ -1,6 +1,0 @@
-
-####################
-# Avoid regressions of issue #3860 wherein the first word of the alias ends with a semicolon
-
-####################
-# Bare `alias` should list the aliases we have created and nothing else

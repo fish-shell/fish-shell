@@ -1,6 +1,6 @@
 // Prototypes for the killring.
 //
-// Works like the killring in emacs and readline. The killring is cut and paste whith a memory of
+// Works like the killring in emacs and readline. The killring is cut and paste with a memory of
 // previous cuts.
 #ifndef FISH_KILL_H
 #define FISH_KILL_H
@@ -11,12 +11,12 @@
 void kill_replace(const wcstring &old, const wcstring &newv);
 
 /// Add a string to the top of the killring.
-void kill_add(const wcstring &str);
+void kill_add(wcstring str);
 
 /// Rotate the killring.
-const wchar_t *kill_yank_rotate();
+wcstring kill_yank_rotate();
 
 /// Paste from the killring.
-const wchar_t *kill_yank();
+wcstring kill_yank();
 
 #endif

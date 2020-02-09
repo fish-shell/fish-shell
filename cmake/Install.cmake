@@ -25,15 +25,15 @@ SET(configure_input
  DO NOT MANUALLY EDIT THIS FILE!")
 
 SET(extra_completionsdir
-    ${datadir}/fish/vendor_completions.d
+    /usr/local/share/fish/vendor_completions.d
     CACHE STRING "Path for extra completions")
 
 SET(extra_functionsdir
-    ${datadir}/fish/vendor_functions.d
-    CACHE STRING "Path for extra completions")
+    /usr/local/share/fish/vendor_functions.d
+    CACHE STRING "Path for extra functions")
 
 SET(extra_confdir
-    ${datadir}/fish/vendor_conf.d
+    /usr/local/share/fish/vendor_conf.d
     CACHE STRING "Path for extra configuration")
 
 # These are the man pages that go in system manpath; all manpages go in the fish-specific manpath.
@@ -44,18 +44,18 @@ SET(MANUALS ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/fish.1
 # Determine which man page we don't want to install.
 # On OS X, don't install a man page for open, since we defeat fish's open
 # function on OS X.
+# On other operating systems, don't install a realpath man page, as they almost all have a realpath
+# command, while macOS does not.
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   SET(CONDEMNED_PAGE "open.1")
 ELSE()
-  SET(CONDEMNED_PAGE "none")
+  SET(CONDEMNED_PAGE "realpath.1")
 ENDIF()
 
 # Define a function to help us create directories.
 FUNCTION(FISH_CREATE_DIRS)
   FOREACH(dir ${ARGV})
-      IF(NOT EXISTS ${CMAKE_INSTALL_PREFIX}/${dir})
-        INSTALL(DIRECTORY DESTINATION ${dir})
-      ENDIF()
+    INSTALL(DIRECTORY DESTINATION ${dir})
   ENDFOREACH(dir)
 ENDFUNCTION(FISH_CREATE_DIRS)
 
@@ -113,13 +113,13 @@ INSTALL(FILES share/config.fish
 # -$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir)
 # -$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir)
 # -$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir)
-FISH_CREATE_DIRS(${rel_datadir}/pkgconfig)
-# Don't try too hard to create these directories as they may be outside our writeable area
-# https://github.com/Homebrew/homebrew-core/pull/2813
-FISH_TRY_CREATE_DIRS(${extra_completionsdir} ${extra_functionsdir} ${extra_confdir})
+# Create only the vendor directories inside the prefix (#5029 / #6508)
+FISH_CREATE_DIRS(${rel_datadir}/fish/vendor_completions.d ${rel_datadir}/fish/vendor_functions.d
+    ${rel_datadir}/fish/vendor_conf.d)
 
 # @echo "Installing pkgconfig file"
 # $v $(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig
+FISH_TRY_CREATE_DIRS(${rel_datadir}/pkgconfig)
 CONFIGURE_FILE(fish.pc.in fish.pc.noversion)
 
 ADD_CUSTOM_COMMAND(OUTPUT fish.pc
@@ -216,9 +216,12 @@ IF(GETTEXT_FOUND)
   ENDFOREACH()
 ENDIF()
 
+INSTALL(FILES fish.desktop DESTINATION ${rel_datadir}/applications)
+INSTALL(FILES fish.png DESTINATION ${rel_datadir}/pixmaps)
+
 # Group install targets into a InstallTargets folder
 SET_PROPERTY(TARGET build_fish_pc CHECK-FISH-BUILD-VERSION-FILE
-                    test_invocation test_fishscript
+                    test_fishscript
                     test_prep tests_buildroot_target
              PROPERTY FOLDER cmake/InstallTargets)
 

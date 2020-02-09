@@ -1,104 +1,89 @@
 function fish_vi_cursor -d 'Set cursor shape for different vi modes'
-    # Check hard if we are in a supporting terminal.
-    #
-    # Challenges here are term-in-a-terms (emacs ansi-term does not support this, tmux does),
-    # that we can only figure out if we are in konsole/iterm/vte via exported variables,
-    # and ancient xterm versions.
-    #
-    # tmux defaults to $TERM = screen, but can do this if it is in a supporting terminal.
-    # Unfortunately, we can only detect this via the exported variables, so we miss some cases.
-    #
-    # We will also miss some cases of terminal-stacking,
-    # e.g. tmux started in suckless' st (no support) started in konsole.
-    # But since tmux in konsole seems rather common and that case so uncommon,
-    # we will just fail there (though it seems that tmux or st swallow it anyway).
-
     # If we're not interactive, there is effectively no bind mode.
     if not status is-interactive
         return
     end
 
+    # This is hard to test in expect, since the exact sequences depend on the environment.
+    # Instead disable it.
+    if set -q FISH_UNIT_TESTS_RUNNING
+        return
+    end
+
+    # Emacs Makes All Cursors Suck
     if set -q INSIDE_EMACS
         return
     end
 
-    # vte-based terms set $TERM = xterm*, but only gained support relatively recently.
+    # vte-based terms set $TERM = xterm*, but only gained support in 2015.
     # From https://bugzilla.gnome.org/show_bug.cgi?id=720821, it appears it was version 0.40.0
     if set -q VTE_VERSION
         and test "$VTE_VERSION" -lt 4000 2>/dev/null
         return
     end
 
-    # We use the `tput` here just to see if terminfo thinks we can change the cursor.
-    # We cannot use that sequence directly as it's not the correct one for konsole and iTerm,
-    # and because we may want to change the cursor even though terminfo says we can't (tmux).
-    if begin; not command -sq tput; or not tput Ss >/dev/null 2>/dev/null; end
-        # Whitelist tmux...
-        and not begin
-            set -q TMUX
-            # ...in a supporting term...
-            and begin set -q KONSOLE_PROFILE_NAME
-                or set -q ITERM_PROFILE
-                or set -q VTE_VERSION # which version is already checked above
-                or begin
-                    set -q XTERM_VERSION
-                    and test (string replace -r "XTerm\((\d+)\)" '$1' -- $XTERM_VERSION) -ge 280
-                end
-            end
-            # .. unless an unsupporting terminal has been started in tmux inside a supporting one
-            and begin string match -q "screen*" -- $TERM
-                or string match -q "tmux*" -- $TERM
-            end
-        end
-        and not string match -q "konsole*" -- $TERM
-        or begin
-            # TERM = xterm is special because plenty of things claim to be it, but aren't fully compatible
-            # This includes old vte-terms (without $VTE_VERSION), old xterms (without $XTERM_VERSION or < 280)
-            # and maybe other stuff.
-            # This needs to be kept _at least_ as long as Ubuntu 14.04 is still a thing
-            # because that ships a gnome-terminal without support and without $VTE_VERSION.
-            string match -q 'xterm*' -- $TERM
-            and not begin set -q KONSOLE_PROFILE_NAME
-                or set -q ITERM_PROFILE
-                or set -q VTE_VERSION # which version is already checked above
-                # If $XTERM_VERSION is undefined, this will return 1 and print an error. Silence it.
-                or test (string replace -r "XTerm\((\d+)\)" '$1' -- $XTERM_VERSION) -ge 280 2>/dev/null
-            end
-        end
+    # Similarly, genuine XTerm can do it since v280.
+    if set -q XTERM_VERSION
+        and not test (string replace -r "XTerm\((\d+)\)" '$1' -- "$XTERM_VERSION") -ge 280 2>/dev/null
+        return
+    end
 
+    # We need one of these terms.
+    # It would be lovely if we could rely on terminfo, but:
+    # - The "Ss" entry isn't a thing in macOS' old and crusty terminfo
+    # - It is set for xterm, and everyone and their dog claims to be xterm
+    #
+    # So we just don't care about $TERM, unless it is one of the few terminals that actually have their own entry.
+    #
+    # Note: Previous versions also checked $TMUX, and made sure that then $TERM was screen* or tmux*.
+    # We don't care, since we *cannot* handle term-in-a-terms 100% correctly.
+    if not set -q KONSOLE_PROFILE_NAME
+        and not set -q ITERM_PROFILE
+        and not set -q VTE_VERSION # which version is already checked above
+        and not set -q XTERM_VERSION
+        and not string match -rq '^st(-.*)$' -- $TERM
+        and not string match -q 'xterm-kitty*' -- $TERM
+        and not string match -q 'rxvt*' -- $TERM
+        return
+    end
+
+    # HACK: Explicitly disable on ITERM because of #3696, which is weirdness with multi-line prompts.
+    # We allow an explicit "--force-iterm" as first argument to skip this.
+    # It's recommended only if you don't use a multi-line prompt.
+    if contains -- $argv[1] --force-iterm
+        set -e argv[1]
+    else if set -q ITERM_PROFILE
         return
     end
 
     set -l terminal $argv[1]
     set -q terminal[1]
     or set terminal auto
-    set -l uses_echo
 
     set -l function
     switch "$terminal"
         case auto
+            # TODO: Konsole as of 18.08 knows the xterm sequences,
+            # but there's still bugs with it (as of konsole 19.04.0).
+            #
+            # If it is fixed, we'd have to read $KONSOLE_VERSION for a while,
+            # though that was only introduced in 18.08 as well.
             if set -q KONSOLE_PROFILE_NAME
                 set function __fish_cursor_konsole
-                set uses_echo 1
             else if set -q ITERM_PROFILE
                 set function __fish_cursor_1337
-                set uses_echo 1
             else
                 set function __fish_cursor_xterm
-                set uses_echo 1
             end
         case konsole
             set function __fish_cursor_konsole
-            set uses_echo 1
         case xterm
             set function __fish_cursor_xterm
-            set uses_echo 1
     end
 
     set -l tmux_prefix
     set -l tmux_postfix
     if set -q TMUX
-        and set -q uses_echo[1]
         set tmux_prefix echo -ne "'\ePtmux;\e'"
         set tmux_postfix echo -ne "'\e\\\\'"
     end

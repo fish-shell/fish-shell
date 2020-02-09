@@ -2,18 +2,6 @@
 #ifndef FISH_UTIL_H
 #define FISH_UTIL_H
 
-/// Returns the larger of two ints.
-template <typename T>
-inline T maxi(T a, T b) {
-    return a > b ? a : b;
-}
-
-/// Returns the smaller of two ints.
-template <typename T>
-inline T mini(T a, T b) {
-    return a < b ? a : b;
-}
-
 /// Compares two wide character strings with an (arguably) intuitive ordering. This function tries
 /// to order strings in a way which is intuitive to humans with regards to sorting strings
 /// containing numbers.

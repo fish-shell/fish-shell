@@ -1,6 +1,6 @@
 
 # Checks if we are using GNU tools
-if mkdir --version > /dev/null 2>/dev/null
+if mkdir --version >/dev/null 2>/dev/null
     complete -c mkdir -l version -d 'Output version'
     complete -c mkdir -s m -l mode -d 'Set file mode (as in chmod)' -x
     complete -c mkdir -s p -l parents -d 'Make parent directories as needed'
@@ -14,6 +14,6 @@ else
 end
 
 # Checks if SELinux is installed
-if command -s sestatus > /dev/null 2>/dev/null
+if command -s sestatus >/dev/null 2>/dev/null
     complete -c mkdir -l context -s Z -d 'Set SELinux security context of each created directory to the default type'
 end

@@ -1,23 +1,25 @@
 // Functions used for implementing the complete builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <stddef.h>
-#include <wchar.h>
-
+#include <cstddef>
+#include <cwchar>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "builtin.h"
+#include "color.h"
 #include "common.h"
 #include "complete.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "highlight.h"
 #include "io.h"
 #include "parse_constants.h"
 #include "parse_util.h"
 #include "parser.h"
 #include "reader.h"
+#include "wcstringutil.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -27,86 +29,82 @@
 // complete_add function only accepts one short switch and one long switch.
 
 /// Silly function.
-static void builtin_complete_add2(const wchar_t *cmd, int cmd_type, const wchar_t *short_opt,
-                                  const wcstring_list_t &gnu_opt, const wcstring_list_t &old_opt,
-                                  int result_mode, const wchar_t *condition, const wchar_t *comp,
-                                  const wchar_t *desc, int flags) {
-    size_t i;
-    const wchar_t *s;
-
-    for (s = short_opt; *s; s++) {
-        complete_add(cmd, cmd_type, wcstring(1, *s), option_type_short, result_mode, condition,
+static void builtin_complete_add2(const wchar_t *cmd, bool cmd_is_path, const wchar_t *short_opt,
+                                  const wcstring_list_t &gnu_opts, const wcstring_list_t &old_opts,
+                                  completion_mode_t result_mode, const wchar_t *condition,
+                                  const wchar_t *comp, const wchar_t *desc, int flags) {
+    for (const wchar_t *s = short_opt; *s; s++) {
+        complete_add(cmd, cmd_is_path, wcstring{*s}, option_type_short, result_mode, condition,
                      comp, desc, flags);
     }
 
-    for (i = 0; i < gnu_opt.size(); i++) {
-        complete_add(cmd, cmd_type, gnu_opt.at(i), option_type_double_long, result_mode, condition,
+    for (const wcstring &gnu_opt : gnu_opts) {
+        complete_add(cmd, cmd_is_path, gnu_opt, option_type_double_long, result_mode, condition,
                      comp, desc, flags);
     }
 
-    for (i = 0; i < old_opt.size(); i++) {
-        complete_add(cmd, cmd_type, old_opt.at(i), option_type_single_long, result_mode, condition,
+    for (const wcstring &old_opt : old_opts) {
+        complete_add(cmd, cmd_is_path, old_opt, option_type_single_long, result_mode, condition,
                      comp, desc, flags);
     }
 
-    if (old_opt.empty() && gnu_opt.empty() && wcslen(short_opt) == 0) {
-        complete_add(cmd, cmd_type, wcstring(), option_type_args_only, result_mode, condition, comp,
-                     desc, flags);
+    if (old_opts.empty() && gnu_opts.empty() && short_opt[0] == L'\0') {
+        complete_add(cmd, cmd_is_path, wcstring(), option_type_args_only, result_mode, condition,
+                     comp, desc, flags);
     }
 }
 
 /// Silly function.
-static void builtin_complete_add(const wcstring_list_t &cmd, const wcstring_list_t &path,
+static void builtin_complete_add(const wcstring_list_t &cmds, const wcstring_list_t &paths,
                                  const wchar_t *short_opt, wcstring_list_t &gnu_opt,
-                                 wcstring_list_t &old_opt, int result_mode,
+                                 wcstring_list_t &old_opt, completion_mode_t result_mode,
                                  const wchar_t *condition, const wchar_t *comp, const wchar_t *desc,
                                  int flags) {
-    for (size_t i = 0; i < cmd.size(); i++) {
-        builtin_complete_add2(cmd.at(i).c_str(), COMMAND, short_opt, gnu_opt, old_opt, result_mode,
-                              condition, comp, desc, flags);
+    for (const wcstring &cmd : cmds) {
+        builtin_complete_add2(cmd.c_str(), false /* not path */, short_opt, gnu_opt, old_opt,
+                              result_mode, condition, comp, desc, flags);
     }
 
-    for (size_t i = 0; i < path.size(); i++) {
-        builtin_complete_add2(path.at(i).c_str(), PATH, short_opt, gnu_opt, old_opt, result_mode,
-                              condition, comp, desc, flags);
+    for (const wcstring &path : paths) {
+        builtin_complete_add2(path.c_str(), true /* is path */, short_opt, gnu_opt, old_opt,
+                              result_mode, condition, comp, desc, flags);
     }
 }
 
-static void builtin_complete_remove_cmd(const wcstring &cmd, int cmd_type, const wchar_t *short_opt,
-                                        const wcstring_list_t &gnu_opt,
+static void builtin_complete_remove_cmd(const wcstring &cmd, bool cmd_is_path,
+                                        const wchar_t *short_opt, const wcstring_list_t &gnu_opt,
                                         const wcstring_list_t &old_opt) {
     bool removed = false;
-    size_t i;
-    for (i = 0; short_opt[i] != L'\0'; i++) {
-        complete_remove(cmd, cmd_type, wcstring(1, short_opt[i]), option_type_short);
+    for (const wchar_t *s = short_opt; *s; s++) {
+        complete_remove(cmd, cmd_is_path, wcstring{*s}, option_type_short);
         removed = true;
     }
 
-    for (i = 0; i < old_opt.size(); i++) {
-        complete_remove(cmd, cmd_type, old_opt.at(i), option_type_single_long);
+    for (const wcstring &opt : old_opt) {
+        complete_remove(cmd, cmd_is_path, opt, option_type_single_long);
         removed = true;
     }
 
-    for (i = 0; i < gnu_opt.size(); i++) {
-        complete_remove(cmd, cmd_type, gnu_opt.at(i), option_type_double_long);
+    for (const wcstring &opt : gnu_opt) {
+        complete_remove(cmd, cmd_is_path, opt, option_type_double_long);
         removed = true;
     }
 
     if (!removed) {
         // This means that all loops were empty.
-        complete_remove_all(cmd, cmd_type);
+        complete_remove_all(cmd, cmd_is_path);
     }
 }
 
-static void builtin_complete_remove(const wcstring_list_t &cmd, const wcstring_list_t &path,
+static void builtin_complete_remove(const wcstring_list_t &cmds, const wcstring_list_t &paths,
                                     const wchar_t *short_opt, const wcstring_list_t &gnu_opt,
                                     const wcstring_list_t &old_opt) {
-    for (size_t i = 0; i < cmd.size(); i++) {
-        builtin_complete_remove_cmd(cmd.at(i), COMMAND, short_opt, gnu_opt, old_opt);
+    for (const wcstring &cmd : cmds) {
+        builtin_complete_remove_cmd(cmd, false /* not path */, short_opt, gnu_opt, old_opt);
     }
 
-    for (size_t i = 0; i < path.size(); i++) {
-        builtin_complete_remove_cmd(path.at(i), PATH, short_opt, gnu_opt, old_opt);
+    for (const wcstring &path : paths) {
+        builtin_complete_remove_cmd(path, true /* is path */, short_opt, gnu_opt, old_opt);
     }
 }
 
@@ -114,57 +112,63 @@ static void builtin_complete_remove(const wcstring_list_t &cmd, const wcstring_l
 // complete.cpp for any heavy lifting.
 int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     ASSERT_IS_MAIN_THREAD();
-    static int recursion_level = 0;
 
     wchar_t *cmd = argv[0];
     int argc = builtin_count_args(argv);
-    int result_mode = SHARED;
+    completion_mode_t result_mode{};
     int remove = 0;
     wcstring short_opt;
     wcstring_list_t gnu_opt, old_opt;
     const wchar_t *comp = L"", *desc = L"", *condition = L"";
     bool do_complete = false;
+    bool have_do_complete_param = false;
     wcstring do_complete_param;
     wcstring_list_t cmd_to_complete;
     wcstring_list_t path;
     wcstring_list_t wrap_targets;
     bool preserve_order = false;
 
-    static const wchar_t *const short_options = L":a:c:p:s:l:o:d:frxeuAn:C::w:hk";
-    static const struct woption long_options[] = {{L"exclusive", no_argument, NULL, 'x'},
-                                                  {L"no-files", no_argument, NULL, 'f'},
-                                                  {L"require-parameter", no_argument, NULL, 'r'},
-                                                  {L"path", required_argument, NULL, 'p'},
-                                                  {L"command", required_argument, NULL, 'c'},
-                                                  {L"short-option", required_argument, NULL, 's'},
-                                                  {L"long-option", required_argument, NULL, 'l'},
-                                                  {L"old-option", required_argument, NULL, 'o'},
-                                                  {L"description", required_argument, NULL, 'd'},
-                                                  {L"arguments", required_argument, NULL, 'a'},
-                                                  {L"erase", no_argument, NULL, 'e'},
-                                                  {L"unauthoritative", no_argument, NULL, 'u'},
-                                                  {L"authoritative", no_argument, NULL, 'A'},
-                                                  {L"condition", required_argument, NULL, 'n'},
-                                                  {L"wraps", required_argument, NULL, 'w'},
-                                                  {L"do-complete", optional_argument, NULL, 'C'},
-                                                  {L"help", no_argument, NULL, 'h'},
-                                                  {L"keep-order", no_argument, NULL, 'k'},
-                                                  {NULL, 0, NULL, 0}};
+    static const wchar_t *const short_options = L":a:c:p:s:l:o:d:fFrxeuAn:C::w:hk";
+    static const struct woption long_options[] = {
+        {L"exclusive", no_argument, nullptr, 'x'},
+        {L"no-files", no_argument, nullptr, 'f'},
+        {L"force-files", no_argument, nullptr, 'F'},
+        {L"require-parameter", no_argument, nullptr, 'r'},
+        {L"path", required_argument, nullptr, 'p'},
+        {L"command", required_argument, nullptr, 'c'},
+        {L"short-option", required_argument, nullptr, 's'},
+        {L"long-option", required_argument, nullptr, 'l'},
+        {L"old-option", required_argument, nullptr, 'o'},
+        {L"description", required_argument, nullptr, 'd'},
+        {L"arguments", required_argument, nullptr, 'a'},
+        {L"erase", no_argument, nullptr, 'e'},
+        {L"unauthoritative", no_argument, nullptr, 'u'},
+        {L"authoritative", no_argument, nullptr, 'A'},
+        {L"condition", required_argument, nullptr, 'n'},
+        {L"wraps", required_argument, nullptr, 'w'},
+        {L"do-complete", optional_argument, nullptr, 'C'},
+        {L"help", no_argument, nullptr, 'h'},
+        {L"keep-order", no_argument, nullptr, 'k'},
+        {nullptr, 0, nullptr, 0}};
 
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'x': {
-                result_mode |= EXCLUSIVE;
+                result_mode.no_files = true;
+                result_mode.requires_param = true;
                 break;
             }
             case 'f': {
-                result_mode |= NO_FILES;
+                result_mode.no_files = true;
                 break;
             }
+            case 'F': {
+                result_mode.force_files = true;
+            }
             case 'r': {
-                result_mode |= NO_COMMON;
+                result_mode.requires_param = true;
                 break;
             }
             case 'k': {
@@ -239,18 +243,12 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
             case 'C': {
                 do_complete = true;
-                const wchar_t *arg = w.woptarg ? w.woptarg : reader_get_buffer();
-                if (arg == NULL) {
-                    // This corresponds to using 'complete -C' in non-interactive mode.
-                    // See #2361.
-                    builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
-                    return STATUS_INVALID_ARGS;
-                }
-                do_complete_param = arg;
+                have_do_complete_param = w.woptarg != nullptr;
+                if (have_do_complete_param) do_complete_param = w.woptarg;
                 break;
             }
             case 'h': {
-                builtin_print_help(parser, streams, cmd, streams.out);
+                builtin_print_help(parser, streams, cmd);
                 return STATUS_CMD_OK;
             }
             case ':': {
@@ -268,61 +266,91 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
     }
 
-    if (w.woptind != argc) {
-        streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
+    if (result_mode.no_files && result_mode.force_files) {
+        streams.err.append_format(BUILTIN_ERR_COMBO2, L"complete",
+                                  L"'--no-files' and '--force-files'");
         return STATUS_INVALID_ARGS;
     }
 
-    if (condition && wcslen(condition)) {
+    if (w.woptind != argc) {
+        // Use one left-over arg as the do-complete argument
+        // to enable `complete -C "git check"`.
+        if (do_complete && !have_do_complete_param && argc == w.woptind + 1) {
+            do_complete_param = argv[argc - 1];
+            have_do_complete_param = true;
+        } else {
+            streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd);
+            builtin_print_error_trailer(parser, streams.err, cmd);
+            return STATUS_INVALID_ARGS;
+        }
+    }
+
+    if (condition && std::wcslen(condition)) {
         const wcstring condition_string = condition;
         parse_error_list_t errors;
         if (parse_util_detect_errors(condition_string, &errors,
                                      false /* do not accept incomplete */)) {
             streams.err.append_format(L"%ls: Condition '%ls' contained a syntax error", cmd,
                                       condition);
-            for (size_t i = 0; i < errors.size(); i++) {
-                streams.err.append_format(L"\n%s: ", cmd);
-                streams.err.append(errors.at(i).describe(condition_string));
+            for (const auto &error : errors) {
+                streams.err.append_format(L"\n%ls: ", cmd);
+                streams.err.append(error.describe(condition_string, parser.is_interactive()));
             }
             return STATUS_CMD_ERROR;
         }
     }
 
-    if (comp && wcslen(comp)) {
+    if (comp && std::wcslen(comp)) {
         wcstring prefix;
         prefix.append(cmd);
         prefix.append(L": ");
 
-        wcstring err_text;
-        if (parser.detect_errors_in_argument_list(comp, &err_text, prefix.c_str())) {
+        if (maybe_t<wcstring> err_text = parse_util_detect_errors_in_argument_list(comp, prefix)) {
             streams.err.append_format(L"%ls: Completion '%ls' contained a syntax error\n", cmd,
                                       comp);
-            streams.err.append(err_text);
+            streams.err.append(*err_text);
             streams.err.push_back(L'\n');
             return STATUS_CMD_ERROR;
         }
     }
 
     if (do_complete) {
+        if (!have_do_complete_param) {
+            // No argument given, try to use the current commandline.
+            const wchar_t *cmd = reader_get_buffer();
+            if (cmd == nullptr) {
+                // This corresponds to using 'complete -C' in non-interactive mode.
+                // See #2361    .
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1]);
+                return STATUS_INVALID_ARGS;
+            }
+            do_complete_param = cmd;
+        }
         const wchar_t *token;
 
-        parse_util_token_extent(do_complete_param.c_str(), do_complete_param.size(), &token, 0, 0,
-                                0);
+        parse_util_token_extent(do_complete_param.c_str(), do_complete_param.size(), &token,
+                                nullptr, nullptr, nullptr);
 
-        // Create a scoped transient command line, so that bulitin_commandline will see our
+        // Create a scoped transient command line, so that builtin_commandline will see our
         // argument, not the reader buffer.
-        builtin_commandline_scoped_transient_t temp_buffer(do_complete_param);
+        parser.libdata().transient_commandlines.push_back(do_complete_param);
+        cleanup_t remove_transient([&] { parser.libdata().transient_commandlines.pop_back(); });
 
-        if (recursion_level < 1) {
-            recursion_level++;
+        if (parser.libdata().builtin_complete_current_commandline) {
+            // Prevent accidental recursion (see #6171).
+        } else if (parser.libdata().builtin_complete_recursion_level >= 24) {
+            // Allow a limited number of recursive calls to complete (#3474).
+            streams.err.append_format(L"%ls: maximum recursion depth reached\n", cmd);
+        } else {
+            parser.libdata().builtin_complete_recursion_level++;
+            assert(!parser.libdata().builtin_complete_current_commandline);
+            if (!have_do_complete_param)
+                parser.libdata().builtin_complete_current_commandline = true;
 
-            std::vector<completion_t> comp;
-            complete(do_complete_param, &comp, COMPLETION_REQUEST_DEFAULT, parser.vars());
+            completion_list_t comp =
+                complete(do_complete_param, completion_request_t::fuzzy_match, parser.context());
 
-            for (size_t i = 0; i < comp.size(); i++) {
-                const completion_t &next = comp.at(i);
-
+            for (const auto &next : comp) {
                 // Make a fake commandline, and then apply the completion to it.
                 const wcstring faux_cmdline = token;
                 size_t tmp_cursor = faux_cmdline.size();
@@ -352,12 +380,23 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 streams.out.push_back(L'\n');
             }
 
-            recursion_level--;
+            parser.libdata().builtin_complete_recursion_level--;
+            parser.libdata().builtin_complete_current_commandline = false;
         }
     } else if (cmd_to_complete.empty() && path.empty()) {
         // No arguments specified, meaning we print the definitions of all specified completions
         // to stdout.
-        streams.out.append(complete_print());
+        const wcstring repr = complete_print();
+
+        // colorize if interactive
+        if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
+            std::vector<highlight_spec_t> colors;
+            size_t len = repr.size();
+            highlight_shell_no_io(repr, colors, len, operation_context_t::globals());
+            streams.out.append(str2wcstring(colorize(repr, colors)));
+        } else {
+            streams.out.append(repr);
+        }
     } else {
         int flags = COMPLETE_AUTO_SPACE;
         if (preserve_order) {
@@ -372,11 +411,9 @@ int builtin_complete(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
 
         // Handle wrap targets (probably empty). We only wrap commands, not paths.
-        for (size_t w = 0; w < wrap_targets.size(); w++) {
-            const wcstring &wrap_target = wrap_targets.at(w);
-            for (size_t i = 0; i < cmd_to_complete.size(); i++) {
-                (remove ? complete_remove_wrapper : complete_add_wrapper)(cmd_to_complete.at(i),
-                                                                          wrap_target);
+        for (const auto &wrap_target : wrap_targets) {
+            for (const auto &i : cmd_to_complete) {
+                (remove ? complete_remove_wrapper : complete_add_wrapper)(i, wrap_target);
             }
         }
     }

@@ -25,3 +25,20 @@ echo $$paren
 
 ####################
 # Test path variables
+
+####################
+# Test fatal syntax errors
+fish: $, is not a valid variable in fish.
+echo $,foo
+      ^
+fish: Unexpected end of string, incomplete parameter expansion
+echo {
+     ^
+
+fish: Unexpected '}' for unopened brace expansion
+echo {}}
+       ^
+
+fish: Command substitutions not allowed
+command (asd)
+        ^

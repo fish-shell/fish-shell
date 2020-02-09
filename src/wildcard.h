@@ -1,5 +1,5 @@
 // My own globbing implementation. Needed to implement this instead of using libs globbing to
-// support tab-expansion of globbed paramaters.
+// support tab-expansion of globbed parameters.
 #ifndef FISH_WILDCARD_H
 #define FISH_WILDCARD_H
 
@@ -17,7 +17,7 @@ enum {
     ANY_STRING,
     /// Character representing any character string.
     ANY_STRING_RECURSIVE,
-    /// This is a special psuedo-char that is not used other than to mark the
+    /// This is a special pseudo-char that is not used other than to mark the
     /// end of the the special characters so we can sanity check the enum range.
     ANY_SENTINAL
 };
@@ -32,18 +32,25 @@ enum {
 /// wildcard_expand for matches. On the last segment, matching is made to any file, and all matches
 /// are inserted to the list.
 ///
-/// If wildcard_expand encounters any errors (such as insufficient priviliges) during matching, no
+/// If wildcard_expand encounters any errors (such as insufficient privileges) during matching, no
 /// error messages will be printed and wildcard_expand will continue the matching process.
 ///
 /// \param wc The wildcard string
 /// \param working_directory The working directory
-/// \param flags flags for the search. Can be any combination of EXPAND_FOR_COMPLETIONS and
-/// EXECUTABLES_ONLY
+/// \param flags flags for the search. Can be any combination of for_completions and
+/// executables_only
 /// \param out The list in which to put the output
 ///
-/// \return 1 if matches where found, 0 otherwise. Return -1 on abort (I.e. ^C was pressed).
-int wildcard_expand_string(const wcstring &wc, const wcstring &working_directory,
-                           expand_flags_t flags, std::vector<completion_t> *out);
+enum class wildcard_expand_result_t {
+    no_match,  /// The wildcard did not match.
+    match,     /// The wildcard did match.
+    cancel,    /// Expansion was cancelled (e.g. control-C).
+};
+wildcard_expand_result_t wildcard_expand_string(const wcstring &wc,
+                                                const wcstring &working_directory,
+                                                expand_flags_t flags,
+                                                const cancel_checker_t &cancel_checker,
+                                                completion_list_t *out);
 
 /// Test whether the given wildcard matches the string. Does not perform any I/O.
 ///
@@ -62,7 +69,6 @@ bool wildcard_has(const wchar_t *, bool internal);
 
 /// Test wildcard completion.
 bool wildcard_complete(const wcstring &str, const wchar_t *wc, const description_func_t &desc_func,
-                       std::vector<completion_t> *out, expand_flags_t expand_flags,
-                       complete_flags_t flags);
+                       completion_list_t *out, expand_flags_t expand_flags, complete_flags_t flags);
 
 #endif

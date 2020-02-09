@@ -11,19 +11,6 @@ for i in 1 2 # Comment on same line as command
 	end;
 end
 
-logmsg Bracket expansion
-echo x-{1}
-echo x-{1,2}
-echo foo-{1,2{3,4}}
-
-echo foo-{} # literal "{}" expands to itself
-echo foo-{{},{}} # the inner "{}" expand to themselves, the outer pair expands normally.
-echo foo-{""} # still expands to foo-
-echo foo-{$undefinedvar} # still expands to nothing
-
-echo foo-{,,,} # four empty items in the braces.
-echo foo-{,\,,} # an empty item, a "," and an empty item.
-
 logmsg Escaped newlines
 echo foo\ bar
 echo foo\
@@ -92,10 +79,7 @@ else
 end
 echo Test 4 $sta
 
-logmsg "Ensure eval doesn't unnecessarily mess with the exit status"
-function empty_func ; end
-false ; eval empty_func ; echo $status
-true ; eval empty_func ; echo $status
+logmsg "Testing builtin status"
 
 function test_builtin_status
 	return 1
@@ -107,19 +91,6 @@ else
 	set sta fail
 end
 echo Test 5 $sta
-
-logmsg Verify that we can turn stderr into stdout and then pipe it
-# Note that the order here seems unspecified - 'errput' appears before 'output', why?
-begin ; echo output ; echo errput 1>&2  ; end 2>&1 | tee ../test/temp/tee_test.txt ; cat ../test/temp/tee_test.txt
-
-logmsg "Test that trailing ^ doesn't trigger redirection, see #1873"
-echo caret_no_redirect 12345^
-
-logmsg Verify that we can pipe something other than stdout
-# The first line should be printed, since we output to stdout but pipe stderr to /dev/null
-# The second line should not be printed, since we output to stderr and pipe it to /dev/null
-begin ; echo is_stdout ; end 2>| cat > /dev/null
-begin ; echo is_stderr 1>&2 ; end 2>| cat > /dev/null
 
 ####################
 logmsg echo tests
@@ -138,64 +109,6 @@ echo -ne '\376' | display_bytes
 echo -e Catch your breath
 echo -e 'abc\x21def'
 echo -e 'abc\x211def'
-
-logmsg "Verify that pipes don't conflict with fd redirections"
-# This code is very similar to eval. We go over a bunch of fads
-# to make it likely that we will nominally conflict with a pipe
-# fish is supposed to detect this case and dup the pipe to something else
-echo "/bin/echo pipe 3 <&3 3<&-" | source 3<&0
-echo "/bin/echo pipe 4 <&4 4<&-" | source 4<&0
-echo "/bin/echo pipe 5 <&5 5<&-" | source 5<&0
-echo "/bin/echo pipe 6 <&6 6<&-" | source 6<&0
-echo "/bin/echo pipe 7 <&7 7<&-" | source 7<&0
-echo "/bin/echo pipe 8 <&8 8<&-" | source 8<&0
-echo "/bin/echo pipe 9 <&9 9<&-" | source 9<&0
-echo "/bin/echo pipe 10 <&10 10<&-" | source 10<&0
-echo "/bin/echo pipe 11 <&11 11<&-" | source 11<&0
-echo "/bin/echo pipe 12 <&12 12<&-" | source 12<&0
-
-logmsg "Make sure while loops don't run forever with no-exec (#1543)"
-echo "Checking for infinite loops in no-execute"
-echo "while true; end" | ../test/root/bin/fish --no-execute
-
-logmsg "For loops with read-only vars is an error (#4342)"
-for status in a b c
-  echo $status
-end
-
-logmsg "That goes for non-electric ones as well (#5548)"
-for hostname in a b c
-    echo $hostname
-end
-
-logmsg For loop control vars available outside the for block
-begin
-  set -l loop_var initial-value
-  for loop_var in a b c
-    # do nothing
-  end
-  set --show loop_var
-end
-
-set -g loop_var global_val
-function loop_test
-  for loop_var in a b c
-    if test $loop_var = b
-      break
-    end
-  end
-  set --show loop_var
-end
-loop_test
-set --show loop_var
-
-begin
-  set -l loop_var
-  for loop_var in aa bb cc
-  end
-  set --show loop_var
-end
-set --show loop_var
 
 logmsg 'Comments allowed in between lines (#1987)'
 echo before comment \

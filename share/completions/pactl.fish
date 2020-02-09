@@ -10,41 +10,41 @@
 set -l commands (pacmd help | string match -r '^ +[-\w]+' | string trim)
 # These are the actual commands for pactl - we complete only these, and then the cmd commands in that completion
 set -l ctlcommands stat info list exit {upload,play,remove}-sample {load,unload}-module \
-move-{sink-input,source-output} suspend-{sink,source} set-{card-profile,default-sink,sink-port,source-port,port-latency-offset} \
-set-{sink,source,sink-input,source-output}-{volume,mute} set-sink-formats subscribe
+    move-{sink-input,source-output} suspend-{sink,source} set-{card-profile,default-sink,sink-port,source-port,port-latency-offset} \
+    set-{sink,source,sink-input,source-output}-{volume,mute} set-sink-formats subscribe
 
 function __fish_pa_complete_type
-	pactl list short $argv
-	# The default is to show the number, then the name and then some info - also show the name, then the number as it's a bit friendlier
-	pactl list short $argv | string replace -r  '(\w+)\t([-\w]+)' '$2\t$1'
+    pactl list short $argv
+    # The default is to show the number, then the name and then some info - also show the name, then the number as it's a bit friendlier
+    pactl list short $argv | string replace -r '(\w+)\t([-\w]+)' '$2\t$1'
 end
 
 function __fish_pa_print_type
-	pactl list short $argv
-	# Pa allows both a numerical index and a name
-	pactl list short $argv | string replace -r  '(\w+)\t.*' '$1'
+    pactl list short $argv
+    # Pa allows both a numerical index and a name
+    pactl list short $argv | string replace -r '(\w+)\t.*' '$1'
 end
 
 function __fish_pa_list_ports
-	# Yes, this is localized
-	env LC_ALL=C pactl list cards 2>/dev/null | sed -n -e '/Ports:/,$p' | string match -r '^\t\t\w.*$' | string replace -r '\s+([-+\w:]+): (\w.+)' '$1\t$2'
+    # Yes, this is localized
+    env LC_ALL=C pactl list cards 2>/dev/null | sed -n -e '/Ports:/,$p' | string match -r '^\t\t\w.*$' | string replace -r '\s+([-+\w:]+): (\w.+)' '$1\t$2'
 end
 
 function __fish_pa_list_profiles
-	env LC_ALL=C pactl list cards 2>/dev/null | sed -n -e '/Profiles:/,/Active Profile/p' | string match -r '\t\t.*' | string replace -r '\s+([-+\w:]+): (\w.+)' '$1\t$2'
+    env LC_ALL=C pactl list cards 2>/dev/null | sed -n -e '/Profiles:/,/Active Profile/p' | string match -r '\t\t.*' | string replace -r '\s+([-+\w:]+): (\w.+)' '$1\t$2'
 end
 
 # This is needed to filter out loaded modules
 function __fish_pa_complete_unloaded_modules
-	# We need to get just the module names
-	set -l loaded (__fish_pa_print_type modules | string replace -r '^\w*\t([-\w]+).*' '$1')
-	pulseaudio --dump-modules | while read name description
-		# This is a potential source of slowness, but on my system it's instantaneous
-		# with 73 modules
-		if not contains -- $name $loaded
-			printf "%s\t%s\n" $name $description
-		end
-	end
+    # We need to get just the module names
+    set -l loaded (__fish_pa_print_type modules | string replace -r '^\w*\t([-\w]+).*' '$1')
+    pulseaudio --dump-modules | while read name description
+        # This is a potential source of slowness, but on my system it's instantaneous
+        # with 73 modules
+        if not contains -- $name $loaded
+            printf "%s\t%s\n" $name $description
+        end
+    end
 end
 
 complete -f -e -c pactl
@@ -66,48 +66,48 @@ complete -f -c pactl -n "__fish_seen_subcommand_from unload-module" -a '(__fish_
 complete -f -c pactl -n "__fish_seen_subcommand_from load-module" -a '(__fish_pa_complete_unloaded_modules)'
 
 complete -f -c pactl -n "__fish_seen_subcommand_from move-sink-input; and not __fish_seen_subcommand_from (__fish_pa_print_type sink-inputs)" \
--a '(__fish_pa_complete_type sink-inputs)'
+    -a '(__fish_pa_complete_type sink-inputs)'
 complete -f -c pactl -n "__fish_seen_subcommand_from move-sink-input; and __fish_seen_subcommand_from (__fish_pa_print_type sink-inputs)" \
--a '(__fish_pa_complete_type sinks)'
+    -a '(__fish_pa_complete_type sinks)'
 complete -f -c pactl -n "__fish_seen_subcommand_from move-source-output; and not __fish_seen_subcommand_from (__fish_pa_print_type source-outputs)" \
--a '(__fish_pa_complete_type source-outputs)'
+    -a '(__fish_pa_complete_type source-outputs)'
 complete -f -c pactl -n "__fish_seen_subcommand_from move-source-output; and __fish_seen_subcommand_from (__fish_pa_print_type source-outputs)" \
--a '(__fish_pa_complete_type sources)'
+    -a '(__fish_pa_complete_type sources)'
 
 # Suspend
 for t in source sink
-	complete -f -c pactl -n "__fish_seen_subcommand_from suspend-$t; and not __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-	-a "(__fish_pa_complete_type "$t"s)"
-	complete -f -c pactl -n "__fish_seen_subcommand_from suspend-$t; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-	-a '0 false off' -d "Resume"
-	complete -f -c pactl -n "__fish_seen_subcommand_from suspend-$t; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-	-a '1 true on' -d "Suspend"
-	complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-port; and not __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-	-a "(__fish_pa_complete_type "$t"s)"
-	complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-port; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-	-a "(__fish_pa_list_ports)"
+    complete -f -c pactl -n "__fish_seen_subcommand_from suspend-$t; and not __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
+        -a "(__fish_pa_complete_type "$t"s)"
+    complete -f -c pactl -n "__fish_seen_subcommand_from suspend-$t; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
+        -a '0 false off' -d "Resume"
+    complete -f -c pactl -n "__fish_seen_subcommand_from suspend-$t; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
+        -a '1 true on' -d "Suspend"
+    complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-port; and not __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
+        -a "(__fish_pa_complete_type "$t"s)"
+    complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-port; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
+        -a "(__fish_pa_list_ports)"
 end
 
 # Volume and mute
 for t in source sink source-output sink-input
-	complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-volume; and not __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-	-a "(__fish_pa_complete_type "$t"s)"
-	complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-volume; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-	-a "(seq 0 100)%"
-	complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-mute; and not __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-	-a "(__fish_pa_complete_type "$t"s)"
-	complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-mute; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-	-a "1 true on" -d "Muted"
-	complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-mute; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-	-a "0 false off" -d "Unmuted"
-	complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-mute; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-	-a "toggle"
+    complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-volume; and not __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
+        -a "(__fish_pa_complete_type "$t"s)"
+    complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-volume; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
+        -a "(seq 0 100)%"
+    complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-mute; and not __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
+        -a "(__fish_pa_complete_type "$t"s)"
+    complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-mute; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
+        -a "1 true on" -d "Muted"
+    complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-mute; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
+        -a "0 false off" -d "Unmuted"
+    complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-mute; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
+        -a "toggle"
 end
 
 complete -f -c pactl -n "__fish_seen_subcommand_from set-card-profile; and not __fish_seen_subcommand_from (__fish_pa_print_type cards)" \
--a "(__fish_pa_complete_type cards)"
+    -a "(__fish_pa_complete_type cards)"
 complete -f -c pactl -n "__fish_seen_subcommand_from set-card-profile; and __fish_seen_subcommand_from (__fish_pa_print_type cards)" \
--a "(__fish_pa_list_profiles)"
+    -a "(__fish_pa_list_profiles)"
 
 complete -f -c pactl -n "__fish_seen_subcommand_from set-default-sink" -a "(__fish_pa_complete_type sinks)"
 

@@ -14,18 +14,14 @@ switch (uname)
         set OS "FreeBSD"
     case SunOS
         set OS "SunOS"
-    # Others?
+        # Others?
     case "*"
         set OS "unknown"
 end
 
 # Does the current invocation need a command?
 function __fish_zpool_needs_command
-    if commandline -c | grep -E -q " (\?|add|attach|clear|create|destroy|detach|events|get|history|import|iostat|labelclear|list|offline|online|reguid|reopen|remove|replace|scrub|set|split|status|upgrade) "
-        return 1
-    else
-        return 0
-    end
+    not __fish_seen_subcommand_from \? add attach clear create destroy detach events get history import iostat labelclear list offline online reguid reopen remove replace scrub set split status upgrade
 end
 
 function __fish_zpool_using_command # zpool command whose completions are looked for
@@ -40,26 +36,19 @@ function __fish_zpool_using_command # zpool command whose completions are looked
     end
 end
 
-function __fish_zpool_append -d "Internal completion function for appending string to the zpool commandline"
-    set str (commandline -tc| sed -ne "s/\(.*,\)[^,]*/\1/p"|sed -e "s/--.*=//")
-    printf "%s\n" "$str"$argv
-end
-
 function __fish_zpool_list_used_vdevs -a pool
-    if test -z "$pool"
-        zpool list -H -v | grep -E "^\s" | cut -f2 | grep -x -E -v "(spare|log|cache|mirror|raidz.?)"
-    else
-        zpool list -H -v $pool | grep -E "^\s" | cut -f2 | grep -x -E -v "(spare|log|cache|mirror|raidz.?)"
-    end
+    # See discussion and variants discussed at
+    # https://github.com/fish-shell/fish-shell/pull/5743#pullrequestreview-217432149
+    zpool list -Hv | string replace -rf "^\t([^\t]+).*" '$1' | string match -rv '^(spare|log|cache|mirror|raidz.?)'
 end
 
 function __fish_zpool_list_available_vdevs
     if test $OS = 'Linux'
-        find /dev -type b | cut -d'/' -f3
+        find /dev -type b | string replace '/dev/' ''
     else if test $OS = 'FreeBSD'
-        for i in (camcontrol devlist | cut -d "(" -f 2 | cut -d "," -f 1); ls /dev | grep "^$i"; end
+        sysctl -an kern.disks | string split ' '
     else if test $OS = 'SunOS'
-        ls /dev/dsk
+        find /dev/dsk -type b | string replace '/dev/' ''
     end
 end
 
@@ -68,12 +57,8 @@ function __fish_zpool_complete_vdevs
     # We can display the physical devices, as they are relevant whereas we are in a vdev definition or not
     __fish_zpool_list_available_vdevs
     # First, reverse token list to analyze it from the end
-    set -l reversedTokens ""
-    for i in (commandline -co)
-        set reversedTokens "$i $reversedTokens"
-    end
     set -l tokens 0
-    for i in (echo "$reversedTokens" | sed "s/ /\n/g")
+    for i in (commandline -co)[-1..1]
         switch $i
             case spare log cache # At least 1 item expected
                 if test $tokens -ge 1
@@ -95,17 +80,16 @@ function __fish_zpool_complete_vdevs
                     __fish_zpool_list_vdev_types
                 end
                 return
-            # Here, we accept any possible zpool command; this way, the developper will not have to augment or reduce the list when adding the current function to or removing it from the completions for the said command
+                # Here, we accept any possible zpool command; this way, the developper will not have to augment or reduce the list when adding the current function to or removing it from the completions for the said command
             case \? add attach clear create destroy detach events get history import iostat labelclear list offline online reguid reopen remove replace scrub set split status upgrade
                 __fish_zpool_list_vdev_types
                 return
             case "" # Au cas où
-                echo "" > /dev/null
-            case "*"
-                if echo "$i" | grep -q -E '^((-.*)|(.*(=|,).*))$' # The token is an option or an option argument; as no option uses a vdev as its argument, we can abandon commandline parsing
-                    __fish_zpool_list_vdev_types
-                    return
-                end
+                echo "" >/dev/null
+            case "-*" "*=*" "*,*"
+                # The token is an option or an option argument; as no option uses a vdev as its argument, we can abandon commandline parsing
+                __fish_zpool_list_vdev_types
+                return
         end
         set tokens (math $tokens+1)
     end
@@ -139,7 +123,7 @@ function __fish_zpool_list_ro_properties
         echo -e "bootsize\t"(_ "System boot partition size")
     end
     echo -e "capacity\t"(_ "Usage percentage of pool")
-    echo -e "dedupratio\t"(_ "Deduplication ratio") 
+    echo -e "dedupratio\t"(_ "Deduplication ratio")
     echo -e "expandsize\t"(_ "Amount of uninitialized space within the pool")
     echo -e "fragmentation\t"(_ "Fragmentation percentage of pool")
     echo -e "free\t"(_ "Free pool space")
@@ -149,7 +133,7 @@ function __fish_zpool_list_ro_properties
     echo -e "size\t"(_ "Total pool space")
     echo -e "used\t"(_ "Used pool space")
     # Unsupported features
-    for i in (zpool list -o all | head -n1 | tr -s "[:blank:]" | tr ' ' '\n' | tr "[:upper:]" "[:lower:]" | grep unsupported); echo $i; end
+    zpool list -o all | head -n1 | string replace -ra ' +' '\n' | string lower | string match -r unsupported
 end
 
 function __fish_zpool_list_device_properties
@@ -174,17 +158,13 @@ function __fish_zpool_list_rw_properties
     echo -e "bootfs\t"(_ "Default bootable dataset")" (POOL/DATASET)"
     echo -e "cachefile\t"(_ "Pool configuration cache")" (PATH, none, '')"
     echo -e "comment\t"(_ "Comment about the pool")" (COMMENT)"
-    echo -e "dedupditto\t"(_ "Threshold for writting a ditto copy of deduplicated blocks")" (COUNT)"
+    echo -e "dedupditto\t"(_ "Threshold for writing a ditto copy of deduplicated blocks")" (COUNT)"
     echo -e "delegation\t"(_ "Allow rights delegation on the pool")" (on, off)"
     echo -e "failmode\t"(_ "Behavior in case of catastrophic pool failure")" (wait, continue, panic)"
     echo -e "listsnaps\t"(_ "Display snapshots even if 'zfs list' does not use '-t'")" (on, off)"
     echo -e "version\t"(_ "On-disk version of pool")" (VERSION)"
     # Feature properties
-    for featureLong in (zpool list -o all | tr -s "[:blank:]" | tr ' ' '\n' | tr "[:upper:]" "[:lower:]" | grep '^feature@')
-        set -l featureShort (echo $featureLong | sed -e 's/feature@\(.*\)/\1/g')
-        set featureLong (echo -e "$featureLong\t")
-        printf (_ "%sEnable the %s feature\n") $featureLong $featureShort
-    end
+    zpool list -o all | string replace -ra ' +' '\n' | string lower | string replace -rf '^feature@(.*)' '$1'
 end
 
 complete -c zpool -f -n '__fish_zpool_needs_command' -s '?' -d 'Display a help message'
@@ -289,9 +269,9 @@ complete -c zpool -x -n '__fish_zpool_using_command export' -d 'Pool to export' 
 complete -c zpool -f -n '__fish_zpool_using_command get' -s p -d 'Print parsable (exact) values for numbers'
 complete -c zpool -f -n '__fish_zpool_using_command get' -s H -d 'Print output in a machine-parsable format'
 if contains -- $OS FreeBSD SunOS
-    complete -c zpool -x -n '__fish_zpool_using_command get' -s o -d 'Fields to display' -a '(__fish_zpool_append (__fish_zpool_list_get_fields))'
+    complete -c zpool -x -n '__fish_zpool_using_command get' -s o -d 'Fields to display' -a '(__fish_append , (__fish_zpool_list_get_fields))'
 end
-complete -c zpool -x -n '__fish_zpool_using_command get' -d 'Properties to get' -a '(__fish_zpool_append (__fish_zpool_list_importtime_properties; __fish_zpool_list_rw_properties; __fish_zpool_list_writeonce_properties; __fish_zpool_list_ro_properties; __fish_zpool_list_device_properties; echo -e "all\t"(_ "All properties")))'
+complete -c zpool -x -n '__fish_zpool_using_command get' -d 'Properties to get' -a '(__fish_append , (__fish_zpool_list_importtime_properties; __fish_zpool_list_rw_properties; __fish_zpool_list_writeonce_properties; __fish_zpool_list_ro_properties; __fish_zpool_list_device_properties; echo -e "all\t"(_ "All properties")))'
 complete -c zpool -x -n '__fish_zpool_using_command get' -d 'Pool to get properties of' -a '(__fish_complete_zfs_pools)'
 
 # history completions
@@ -303,7 +283,7 @@ complete -c zpool -f -n '__fish_zpool_using_command history' -d 'Pool to get com
 complete -c zpool -r -n '__fish_zpool_using_command import; and __fish_not_contain_opt -s d' -s c -d 'Read configuration from specified cache file'
 complete -c zpool -r -n '__fish_zpool_using_command import; and __fish_not_contain_opt -s c' -s d -d 'Search for devices or files in specified directory'
 complete -c zpool -f -n '__fish_zpool_using_command import' -s D -d 'List or import destroyed pools only (requires -f for importation)'
-complete -c zpool -x -n '__fish_zpool_using_command import' -s o -d 'Mount properties for contained datasets' -a '(__fish_zpool_append (__fish_complete_zfs_mountpoint_properties))'
+complete -c zpool -x -n '__fish_zpool_using_command import' -s o -d 'Mount properties for contained datasets' -a '(__fish_append , (__fish_complete_zfs_mountpoint_properties))'
 complete -c zpool -x -n '__fish_zpool_using_command import' -s o -d 'Properties of the imported pool' -a '(__fish_complete_zfs_mountpoint_properties; __fish_zpool_list_importtime_properties; __fish_zpool_list_rw_properties)'
 complete -c zpool -f -n '__fish_zpool_using_command import' -s f -d 'Force import'
 complete -c zpool -f -n '__fish_zpool_using_command import' -s F -d 'Recovery mode'
@@ -343,7 +323,7 @@ end
 complete -c zpool -f -n '__fish_zpool_using_command list' -s P -d 'Display device full path'
 complete -c zpool -x -n '__fish_zpool_using_command list' -s T -d 'Display a timestamp using specified format'
 complete -c zpool -f -n '__fish_zpool_using_command list' -s v -d 'Print verbose statistics'
-complete -c zpool -x -n '__fish_zpool_using_command list' -s o -d 'Property to list' -a '(__fish_zpool_append (__fish_zpool_list_importtime_properties; __fish_zpool_list_rw_properties; __fish_zpool_list_writeonce_properties; __fish_zpool_list_ro_properties; __fish_zpool_list_device_properties))'
+complete -c zpool -x -n '__fish_zpool_using_command list' -s o -d 'Property to list' -a '(__fish_append , (__fish_zpool_list_importtime_properties; __fish_zpool_list_rw_properties; __fish_zpool_list_writeonce_properties; __fish_zpool_list_ro_properties; __fish_zpool_list_device_properties))'
 complete -c zpool -f -n '__fish_zpool_using_command list' -d 'Pool to list properties of' -a '(__fish_complete_zfs_pools)'
 
 # offline completions
@@ -396,7 +376,7 @@ complete -c zpool -f -n '__fish_zpool_using_command split' -s n -d 'Dry run: onl
 complete -c zpool -r -n '__fish_zpool_using_command split' -s R -d 'Set altroot for newpool and automatically import it'
 complete -c zpool -x -n '__fish_zpool_using_command split' -s o -d 'Pool property' -a '(__fish_zpool_list_writeonce_properties; __fish_zpool_list_rw_properties)'
 if test $OS = 'FreeBSD'
-    complete -c zpool -x -n '__fish_zpool_using_command split; and __fish_contains_opt -s R' -s o -d 'Mount properties for contained datasets' -a '(__fish_zpool_append (__fish_complete_zfs_mountpoint_properties))'
+    complete -c zpool -x -n '__fish_zpool_using_command split; and __fish_contains_opt -s R' -s o -d 'Mount properties for contained datasets' -a '(__fish_append , (__fish_complete_zfs_mountpoint_properties))'
 end
 complete -c zpool -x -n '__fish_zpool_using_command split' -d 'Pool to split' -a '(__fish_complete_zfs_pools)'
 

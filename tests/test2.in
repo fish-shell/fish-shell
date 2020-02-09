@@ -1,6 +1,0 @@
-#Tests complex parameter expantions
-
-set a A
-set aa AA
-set aaa AAA
-echo {$aa}a{1,2,3}(for a in 1 2 3; echo $a; end)

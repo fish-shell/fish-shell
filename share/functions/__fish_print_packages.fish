@@ -1,7 +1,7 @@
 # Use --installed to limit to installed packages only
 function __fish_print_packages
     argparse --name=__fish_print_packages 'i/installed' -- $argv
-    or return;
+    or return
 
     set -l only_installed 1
     if not set -q _flag_installed

@@ -1,4 +1,4 @@
-function __fish_print_help --description "Print help message for the specified fish function or builtin" --argument item
+function __fish_print_help --description "Print help message for the specified fish function or builtin" --argument item error_message
     if test "$item" = '.'
         set item source
     end
@@ -52,48 +52,75 @@ function __fish_print_help --description "Print help message for the specified f
     # blank line, to duplicate the default behavior of `man`, or more accurately,
     # the `-s` flag to `less` that `man` passes.
     set -l state blank
-    for line in $help
-        # categorize the line
-        set -l line_type
-        switch $line
-            case ' *' \t\*
-                # starts with whitespace, check if it has non-whitespace
-                printf "%s\n" $line | read -l word __
-                if test -n $word
-                    set line_type normal
-                else
-                    # lines with just spaces probably shouldn't happen
-                    # but let's consider them to be blank
+    set -l have_name
+    begin
+        string join \n $error_message
+        for line in $help
+            # categorize the line
+            set -l line_type
+            switch $line
+                case ' *' \t\*
+                    # starts with whitespace, check if it has non-whitespace
+                    printf "%s\n" $line | read -l word __
+                    if test -n $word
+                        set line_type normal
+                    else
+                        # lines with just spaces probably shouldn't happen
+                        # but let's consider them to be blank
+                        set line_type blank
+                    end
+                case ''
                     set line_type blank
-                end
-            case ''
-                set line_type blank
-            case '*'
-                # not leading space, and not empty, so must contain a non-space
-                # in the first column. That makes it a header/footer.
-                set line_type meta
-        end
+                case '*'
+                    # Remove man's bolding
+                    set -l name (string replace -ra '(.)'\b'.' '$1' -- $line)
+                    # We start after we have the name
+                    contains -- $name NAME; and set have_name 1; and continue
+                    # We ignore the SYNOPSIS header
+                    contains -- $name SYNOPSIS; and continue
+                    # Everything after COPYRIGHT is useless
+                    contains -- $name COPYRIGHT; and break
 
-        switch $state
-            case normal
-                switch $line_type
-                    case normal
-                        printf "%s\n" $line
-                    case blank
-                        set state blank
-                    case meta
-                        # skip it
-                end
-            case blank
-                switch $line_type
-                    case normal
-                        echo # print the blank line
-                        printf "%s\n" $line
-                        set state normal
-                    case blank meta
-                        # skip it
-                end
+                    # not leading space, and not empty, so must contain a non-space
+                    # in the first column. That makes it a header/footer.
+                    set line_type meta
+            end
+
+            set -q have_name[1]; or continue
+            switch $state
+                case normal
+                    switch $line_type
+                        case normal meta
+                            printf "%s\n" $line
+                        case blank
+                            set state blank
+                    end
+                case blank
+                    switch $line_type
+                        case normal meta
+                            echo # print the blank line
+                            printf "%s\n" $line
+                            set state normal
+                        case blank meta
+                            # skip it
+                    end
+            end
         end
-    end | ul # post-process with `ul`, to interpret the old-style grotty escapes
-    echo # print a trailing blank line
+    end | string replace -ra '^       ' '' | ul | # post-process with `ul`, to interpret the old-style grotty escapes
+    begin
+        set -l pager less
+        set -q PAGER
+        and echo $PAGER | read -at pager
+        not isatty stdout
+        and set pager cat # cannot use a builtin here
+        # similar to man, but add -F to quit paging when the help output is brief (#6227)
+        set -xl LESS isrFX
+        # less options:
+        # -i (--ignore-case) search case-insensitively, like man
+        # -s (--squeeze-blank-lines) not strictly necessary since we already do that above
+        # -r (--raw-control-chars) to display bold, underline and colors
+        # -F (--quit-if-one-screen) to maintain the non-paging behavior for small outputs
+        # -X (--no-init) not sure if this is needed but git uses it
+        $pager
+    end
 end

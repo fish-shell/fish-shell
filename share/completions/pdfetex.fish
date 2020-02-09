@@ -1,3 +1,3 @@
-complete -c tex -w pdfetex
+complete -c pdfetex -w tex
 
 

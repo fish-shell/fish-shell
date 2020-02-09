@@ -13,23 +13,33 @@ SET(SPHINX_CACHE_DIR "${SPHINX_ROOT_DIR}/doctrees")
 SET(SPHINX_HTML_DIR "${SPHINX_ROOT_DIR}/html")
 SET(SPHINX_MANPAGE_DIR "${SPHINX_ROOT_DIR}/man")
 
+# sphinx-docs uses fish_indent for highlighting.
+# Prepend the output dir of fish_indent to PATH.
 ADD_CUSTOM_TARGET(sphinx-docs
-    ${SPHINX_EXECUTABLE}
+    mkdir -p ${SPHINX_HTML_DIR}/_static/
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SPHINX_SRC_DIR}/_static/pygments.css ${SPHINX_HTML_DIR}/_static/
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SPHINX_SRC_DIR}/_static/custom.css ${SPHINX_HTML_DIR}/_static/
+    COMMAND env PATH="$<TARGET_FILE_DIR:fish_indent>:$$PATH"
+        ${SPHINX_EXECUTABLE}
         -q -b html
         -c "${SPHINX_SRC_DIR}"
         -d "${SPHINX_CACHE_DIR}"
         "${SPHINX_SRC_DIR}"
         "${SPHINX_HTML_DIR}"
+    DEPENDS sphinx_doc_src/fish_indent_lexer.py fish_indent
     COMMENT "Building HTML documentation with Sphinx")
 
+# sphinx-manpages needs the fish_indent binary for the version number
 ADD_CUSTOM_TARGET(sphinx-manpages
-    ${SPHINX_EXECUTABLE}
+    env PATH="$<TARGET_FILE_DIR:fish_indent>:$$PATH"
+        ${SPHINX_EXECUTABLE}
         -q -b man
         -c "${SPHINX_SRC_DIR}"
         -d "${SPHINX_CACHE_DIR}"
         "${SPHINX_SRC_DIR}"
         # TODO: This only works if we only have section 1 manpages.
         "${SPHINX_MANPAGE_DIR}/man1"
+    DEPENDS fish_indent
     COMMENT "Building man pages with Sphinx")
 
 IF(SPHINX_EXECUTABLE)

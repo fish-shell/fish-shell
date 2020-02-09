@@ -1,11 +1,15 @@
+.. _cmd-test:
+
 test - perform tests on files and text
 ======================================
 
 Synopsis
 --------
 
-test [EXPRESSION]
-[ [EXPRESSION] ]
+::
+
+    test [EXPRESSION]
+    [ [EXPRESSION] ]
 
 
 Description
@@ -187,7 +191,7 @@ which is logically equivalent to the following:
 Standards
 ---------
 
-``test`` implements a subset of the <a href="http://www.unix.com/man-page/POSIX/1/test/">IEEE Std 1003.1-2008 (POSIX.1) standard</a>. The following exceptions apply:
+``test`` implements a subset of the `IEEE Std 1003.1-2008 (POSIX.1) standard <http://www.unix.com/man-page/POSIX/1/test/>`__. The following exceptions apply:
 
 - The ``<`` and ``>`` operators for comparing strings are not implemented.
 

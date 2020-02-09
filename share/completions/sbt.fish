@@ -33,7 +33,7 @@ complete -c sbt -f -a '(string split "\n" "
     and not contains -- "client" (commandline -cpo)'
 
 # These cannot be combined with any other commands and require an argument
-complete -c sbt -f -n '[ (count (commandline -cpo)) = 1 ]' -a 'new'    -d 'Create a new sbt project from the given template'
+complete -c sbt -f -n '[ (count (commandline -cpo)) = 1 ]' -a 'new' -d 'Create a new sbt project from the given template'
 complete -c sbt -f -n '[ (count (commandline -cpo)) = 1 ]' -a 'client' -d 'Connect to a server with an interactive sbt prompt'
 
 
@@ -44,31 +44,31 @@ complete -c sbt -f -n '[ (count (commandline -cpo)) = 1 ]' -a 'client' -d 'Conne
 # This is based on the output of `sbt -help`:
 
 # general options without arguments
-complete -c sbt -o help    -s h  -f -d "Print options help message"
-complete -c sbt -o verbose -s v  -f -d "Print more details"
-complete -c sbt -o debug   -s d  -f -d "Set log level to debug"
-complete -c sbt -o no-colors     -f -d "Disable ANSI color codes"
-complete -c sbt -o sbt-create    -f -d "Launch even if there's no sbt project"
-complete -c sbt -o no-share      -f -d "Use all local caches"
-complete -c sbt -o no-global     -f -d "Use global caches, but not global ~/.sbt directory"
-complete -c sbt -o batch         -f -d "Disable interactive mode"
+complete -c sbt -o help -s h -f -d "Print options help message"
+complete -c sbt -o verbose -s v -f -d "Print more details"
+complete -c sbt -o debug -s d -f -d "Set log level to debug"
+complete -c sbt -o no-colors -f -d "Disable ANSI color codes"
+complete -c sbt -o sbt-create -f -d "Launch even if there's no sbt project"
+complete -c sbt -o no-share -f -d "Use all local caches"
+complete -c sbt -o no-global -f -d "Use global caches, but not global ~/.sbt directory"
+complete -c sbt -o batch -f -d "Disable interactive mode"
 
 # general options with arguments
-complete -c sbt -o sbt-dir  -d "Specify path to global settings/plugins"       -r # path
-complete -c sbt -o sbt-boot -d "Specify path to shared boot directory"         -r # path
-complete -c sbt -o ivy      -d "Specify path to local Ivy repository"          -r # path
-complete -c sbt -o mem      -d "Set memory options"                            -x # integer? (default: -Xms1024m -Xmx1024m -XX:ReservedCodeCacheSize=128m -XX:MaxPermSize=256m)
-complete -c sbt -o port     -d "Turn on JVM debugging, open at the given port" -r # port
+complete -c sbt -o sbt-dir -d "Specify path to global settings/plugins" -r # path
+complete -c sbt -o sbt-boot -d "Specify path to shared boot directory" -r # path
+complete -c sbt -o ivy -d "Specify path to local Ivy repository" -r # path
+complete -c sbt -o mem -d "Set memory options" -x # integer? (default: -Xms1024m -Xmx1024m -XX:ReservedCodeCacheSize=128m -XX:MaxPermSize=256m)
+complete -c sbt -o port -d "Turn on JVM debugging, open at the given port" -r # port
 
 # sbt version
-complete -c sbt -o sbt-version  -d "Use specified version of sbt"          -x -a '0.13.(seq 0 6)\t"" 1.0.0\t""'
-complete -c sbt -o sbt-jar      -d "Use specified jar as the sbt launcher" -r # jar path
-complete -c sbt -o sbt-rc       -d "Use an RC version of sbt"              -f
-complete -c sbt -o sbt-snapshot -d "Use a snapshot version of sbt"         -f
+complete -c sbt -o sbt-version -d "Use specified version of sbt" -x -a '0.13.(seq 0 6)\t"" 1.0.0\t""'
+complete -c sbt -o sbt-jar -d "Use specified jar as the sbt launcher" -r # jar path
+complete -c sbt -o sbt-rc -d "Use an RC version of sbt" -f
+complete -c sbt -o sbt-snapshot -d "Use a snapshot version of sbt" -f
 
 # java-related
-complete -c sbt -o java-home -d "Alternate JAVA_HOME"                         -r # path
-complete -c sbt -o D         -d "Pass -D option directly to the Java runtime" -x # -Dkey=val
-complete -c sbt -o J-X       -d "Pass -X option directly to the Java runtime" -x # -X*
-complete -c sbt -o S-X       -d "Pass -X option to sbt's scalacOptions"       -x # -X*
+complete -c sbt -o java-home -d "Alternate JAVA_HOME" -r # path
+complete -c sbt -o D -d "Pass -D option directly to the Java runtime" -x # -Dkey=val
+complete -c sbt -o J-X -d "Pass -X option directly to the Java runtime" -x # -X*
+complete -c sbt -o S-X -d "Pass -X option to sbt's scalacOptions" -x # -X*
 # TODO: list available -X options if it's possible to do in an automatic way

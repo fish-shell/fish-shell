@@ -5,6 +5,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <stddef.h>
+
 #include <algorithm>
 #include <list>
 #include <memory>
@@ -14,13 +15,14 @@
 #include "fallback.h"  // IWYU pragma: keep
 
 /** Kill ring */
-typedef std::list<wcstring> kill_list_t;
+using kill_list_t = std::list<wcstring>;
 static kill_list_t kill_list;
 
-void kill_add(const wcstring &str) {
+void kill_add(wcstring str) {
     ASSERT_IS_MAIN_THREAD();
-    if (str.empty()) return;
-    kill_list.push_front(str);
+    if (!str.empty()) {
+        kill_list.push_front(std::move(str));
+    }
 }
 
 /// Remove first match for specified string from circular list.
@@ -35,19 +37,19 @@ void kill_replace(const wcstring &old, const wcstring &newv) {
     kill_add(newv);
 }
 
-const wchar_t *kill_yank_rotate() {
+wcstring kill_yank_rotate() {
     ASSERT_IS_MAIN_THREAD();
     // Move the first element to the end.
     if (kill_list.empty()) {
-        return NULL;
+        return {};
     }
     kill_list.splice(kill_list.end(), kill_list, kill_list.begin());
-    return kill_list.front().c_str();
+    return kill_list.front();
 }
 
-const wchar_t *kill_yank() {
+wcstring kill_yank() {
     if (kill_list.empty()) {
-        return L"";
+        return {};
     }
-    return kill_list.front().c_str();
+    return kill_list.front();
 }

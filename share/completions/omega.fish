@@ -1,2 +1,2 @@
-complete -c tex -w omega
+complete -c omega -w tex
 

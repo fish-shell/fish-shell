@@ -36,14 +36,29 @@ class page_rendering_t {
     page_rendering_t();
 };
 
+enum class selection_motion_t {
+    // Visual directions.
+    north,
+    east,
+    south,
+    west,
+    page_north,
+    page_south,
+
+    // Logical directions.
+    next,
+    prev,
+
+    // Special value that means deselect.
+    deselect
+};
+
 // The space between adjacent completions.
 #define PAGER_SPACER_STRING L"  "
 #define PAGER_SPACER_STRING_WIDTH 2
 
 // How many rows we will show in the "initial" pager.
 #define PAGER_UNDISCLOSED_MAX_ROWS 4
-
-typedef std::vector<completion_t> completion_list_t;
 
 class pager_t {
     size_t available_term_width;
@@ -65,7 +80,7 @@ class pager_t {
    public:
     /// Data structure describing one or a group of related completions.
     struct comp_t {
-        /// The list of all completin strings this entry applies to.
+        /// The list of all completion strings this entry applies to.
         wcstring_list_t comp;
         /// The description.
         wcstring desc;
@@ -114,7 +129,7 @@ class pager_t {
 
     bool completion_info_passes_filter(const comp_t &info) const;
 
-    void completion_print(size_t cols, const size_t *width_per_column, size_t row_start,
+    void completion_print(size_t cols, const size_t *width_by_column, size_t row_start,
                           size_t row_stop, const wcstring &prefix, const comp_info_list_t &lst,
                           page_rendering_t *rendering) const;
     line_t completion_print_item(const wcstring &prefix, const comp_t *c, size_t row, size_t column,
@@ -126,7 +141,7 @@ class pager_t {
     editable_line_t search_field_line;
 
     // Sets the set of completions.
-    void set_completions(const completion_list_t &comp);
+    void set_completions(const completion_list_t &raw_completions);
 
     // Sets the prefix.
     void set_prefix(const wcstring &pref);
@@ -136,7 +151,7 @@ class pager_t {
 
     // Changes the selected completion in the given direction according to the layout of the given
     // rendering. Returns true if the selection changed.
-    bool select_next_completion_in_direction(selection_direction_t direction,
+    bool select_next_completion_in_direction(selection_motion_t direction,
                                              const page_rendering_t &rendering);
 
     // Returns the currently selected completion for the given rendering.

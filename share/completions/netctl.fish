@@ -1,7 +1,7 @@
 set -l cmds list store restore stop-all start stop restart switch-to status enable disable reenable is-enabled edit
 
 function __fish_netctl_get_profiles
-  command netctl list | sed -e 's/^[ \t*]*//'
+    command netctl list | string trim -l -c ' *'\t
 end
 
 complete -f -c netctl -l help -d 'Display help'

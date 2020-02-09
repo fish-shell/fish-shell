@@ -1,15 +1,15 @@
 // Functions used for implementing the ulimit builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
-#include <stddef.h>
 #include <sys/resource.h>
+
+#include <cerrno>
+#include <cstddef>
 
 #include "builtin.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
-#include "util.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -43,7 +43,7 @@ static const struct resource_t resource_arr[] = {
 #ifdef RLIMIT_AS
     {RLIMIT_AS, L"Maximum amount of virtual memory available to the shell", L'v', 1024},
 #endif
-    {0, 0, 0, 0}};
+    {0, nullptr, 0, 0}};
 
 /// Get the implicit multiplication factor for the specified resource limit.
 static int get_multiplier(int what) {
@@ -81,7 +81,7 @@ static void print_all(int hard, io_streams_t &streams) {
     int w = 0;
 
     for (i = 0; resource_arr[i].desc; i++) {
-        w = maxi(w, fish_wcswidth(resource_arr[i].desc));
+        w = std::max(w, fish_wcswidth(resource_arr[i].desc));
     }
 
     for (i = 0; resource_arr[i].desc; i++) {
@@ -159,25 +159,25 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
 
     static const wchar_t *const short_options = L":HSacdflmnstuvh";
     static const struct woption long_options[] = {
-        {L"all", no_argument, NULL, 'a'},
-        {L"hard", no_argument, NULL, 'H'},
-        {L"soft", no_argument, NULL, 'S'},
-        {L"core-size", no_argument, NULL, 'c'},
-        {L"data-size", no_argument, NULL, 'd'},
-        {L"file-size", no_argument, NULL, 'f'},
-        {L"lock-size", no_argument, NULL, 'l'},
-        {L"resident-set-size", no_argument, NULL, 'm'},
-        {L"file-descriptor-count", no_argument, NULL, 'n'},
-        {L"stack-size", no_argument, NULL, 's'},
-        {L"cpu-time", no_argument, NULL, 't'},
-        {L"process-count", no_argument, NULL, 'u'},
-        {L"virtual-memory-size", no_argument, NULL, 'v'},
-        {L"help", no_argument, NULL, 'h'},
-        {NULL, 0, NULL, 0}};
+        {L"all", no_argument, nullptr, 'a'},
+        {L"hard", no_argument, nullptr, 'H'},
+        {L"soft", no_argument, nullptr, 'S'},
+        {L"core-size", no_argument, nullptr, 'c'},
+        {L"data-size", no_argument, nullptr, 'd'},
+        {L"file-size", no_argument, nullptr, 'f'},
+        {L"lock-size", no_argument, nullptr, 'l'},
+        {L"resident-set-size", no_argument, nullptr, 'm'},
+        {L"file-descriptor-count", no_argument, nullptr, 'n'},
+        {L"stack-size", no_argument, nullptr, 's'},
+        {L"cpu-time", no_argument, nullptr, 't'},
+        {L"process-count", no_argument, nullptr, 'u'},
+        {L"virtual-memory-size", no_argument, nullptr, 'v'},
+        {L"help", no_argument, nullptr, 'h'},
+        {nullptr, 0, nullptr, 0}};
 
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'a': {
                 report_all = true;
@@ -240,7 +240,7 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             }
 #endif
             case 'h': {
-                builtin_print_help(parser, streams, cmd, streams.out);
+                builtin_print_help(parser, streams, cmd);
                 return STATUS_CMD_OK;
             }
             case ':': {
@@ -270,7 +270,7 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         return STATUS_CMD_OK;
     } else if (arg_count != 1) {
         streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -283,7 +283,7 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     rlim_t new_limit;
     if (*argv[w.woptind] == L'\0') {
         streams.err.append_format(_(L"%ls: New limit cannot be an empty string\n"), cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     } else if (wcscasecmp(argv[w.woptind], L"unlimited") == 0) {
         new_limit = RLIM_INFINITY;
@@ -295,7 +295,7 @@ int builtin_ulimit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         new_limit = fish_wcstol(argv[w.woptind]);
         if (errno) {
             streams.err.append_format(_(L"%ls: Invalid limit '%ls'\n"), cmd, argv[w.woptind]);
-            builtin_print_help(parser, streams, cmd, streams.err);
+            builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
         }
         new_limit *= get_multiplier(what);

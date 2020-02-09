@@ -1,10 +1,10 @@
 function __history_completions --argument limit
-	if echo $limit | string match -q ""
-	    set limit 25
-	end
+    if string match -q "" -- "$limit"
+        set limit 25
+    end
 
-	set -l tokens (commandline --current-process --tokenize)
-	history --prefix (commandline) | string replace -r \^$tokens[1]\\s\* "" | head -n$limit
+    set -l tokens (commandline --current-process --tokenize)
+    history --prefix (commandline) | string replace -r \^$tokens[1]\\s\* "" | head -n$limit
 end
 
 # erase the stock autojump completions, which are no longer needed with this

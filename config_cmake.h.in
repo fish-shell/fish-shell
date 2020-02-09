@@ -31,6 +31,9 @@
 /* Define to 1 if you have the `getpwent' function. */
 #cmakedefine HAVE_GETPWENT 1
 
+/* Define to 1 if you have the 'getrusage' function. */
+#cmakedefine HAVE_GETRUSAGE 1
+
 /* Define to 1 if you have the `gettext' function. */
 #cmakedefine HAVE_GETTEXT 1
 
@@ -124,8 +127,8 @@
 /* Define to 1 if the _nl_msg_cat_cntr symbol is exported. */
 #cmakedefine HAVE__NL_MSG_CAT_CNTR 1
 
-/* Define to 1 if you have the file `/proc/self/stat'. */
-#cmakedefine HAVE__PROC_SELF_STAT 1
+/* Define to 1 if std::make_unique is available. */
+#cmakedefine HAVE_STD__MAKE_UNIQUE 1
 
 /* Define to 1 if the _sys_errs array is available. */
 #cmakedefine HAVE__SYS__ERRS 1
@@ -142,7 +145,7 @@
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "fish"
 
-/* Define to 1 if tparm accepts a fixed amount of paramters. */
+/* Define to 1 if tparm accepts a fixed amount of parameters. */
 #cmakedefine TPARM_SOLARIS_KLUDGE 1
 
 /* Enable GNU extensions on systems that have them.  */
@@ -165,14 +168,6 @@
 #ifndef __warn_unused
 #define __warn_unused __attribute__ ((warn_unused_result))
 #endif
-#ifndef __sentinel
-#define __sentinel __attribute__ ((sentinel))
-#endif
-#ifndef __packed
-#define __packed __attribute__ ((packed))
-#endif
 #else
 #define __warn_unused
-#define __sentinel
-#define __packed
 #endif

@@ -1,16 +1,20 @@
+.. _cmd-fish_indent:
+
 fish_indent - indenter and prettifier
 =====================================
 
 Synopsis
 --------
 
-fish_indent [OPTIONS]
+::
+
+    fish_indent [OPTIONS] [FILE...]
 
 
 Description
 -----------
 
-``fish_indent`` is used to indent a piece of fish code. ``fish_indent`` reads commands from standard input and outputs them to standard output or a specified file.
+``fish_indent`` is used to indent a piece of fish code. ``fish_indent`` reads commands from standard input or the given filenames and outputs them to standard output or a specified file (if `-w` is given).
 
 The following options are available:
 
@@ -24,7 +28,7 @@ The following options are available:
 
 - ``--html`` outputs HTML, which supports syntax highlighting if the appropriate CSS is defined. The CSS class names are the same as the variable names, such as ``fish_color_command``.
 
-- ``-d`` or ``--debug-level=DEBUG_LEVEL`` enables debug output and specifies a verbosity level (like ``fish -d``). Defaults to 0.
+- ``-d`` or ``--debug=CATEGORY_GLOB`` enables debug output and specifies a glob for matching debug categories (like ``fish -d``). Defaults to empty.
 
 - ``-D`` or ``--debug-stack-frames=DEBUG_LEVEL`` specify how many stack frames to display when debug messages are written. The default is zero. A value of 3 or 4 is usually sufficient to gain insight into how a given debug call was reached but you can specify a value up to 128.
 

@@ -4,7 +4,7 @@
 function cd --description "Change directory"
     set -l MAX_DIR_HIST 25
 
-    if test (count $argv) -gt 1
+    if test (count $argv) -gt (test "$argv[1]" = "--" && echo 2 || echo 1)
         printf "%s\n" (_ "Too many args for cd command")
         return 1
     end
@@ -41,9 +41,21 @@ function cd --description "Change directory"
         or set -l dirprev
         set -q dirprev[$MAX_DIR_HIST]
         and set -e dirprev[1]
-        set -g -a dirprev $previous
-        set -e dirnext
-        set -g __fish_cd_direction prev
+
+        # If dirprev, dirnext, __fish_cd_direction
+        # are set as universal variables, honor their scope.
+
+        set -U -q dirprev
+        and set -U -a dirprev $previous
+        or set -g -a dirprev $previous
+
+        set -U -q dirnext
+        and set -U -e dirnext
+        or set -e dirnext
+
+        set -U -q __fish_cd_direction
+        and set -U __fish_cd_direction prev
+        or set -g __fish_cd_direction prev
     end
 
     return $cd_status

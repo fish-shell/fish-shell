@@ -11,22 +11,17 @@
 #include <vector>
 
 #include "common.h"
+#include "enum_set.h"
 
-/// Use all completions.
-#define SHARED 0
-/// Do not use file completion.
-#define NO_FILES 1
-/// Require a parameter after completion.
-#define NO_COMMON 2
-/// Only use the argument list specifies with completion after option. This is the same as (NO_FILES
-/// | NO_COMMON).
-#define EXCLUSIVE 3
-/// Command is a path.
-#define PATH 1
-/// Command is not a path.
-#define COMMAND 0
-/// Separator between completion and description.
-#define COMPLETE_SEP L'\004'
+struct completion_mode_t {
+    /// If set, skip file completions.
+    bool no_files{false};
+    bool force_files{false};
+
+    /// If set, require a parameter after completion.
+    bool requires_param{false};
+};
+
 /// Character that separates the completion and description on programmable completions.
 #define PROG_COMPLETE_SEP L'\t'
 
@@ -73,7 +68,7 @@ class completion_t {
     wcstring description;
     /// The type of fuzzy match.
     string_fuzzy_match_t match;
-    /// Flags determining the completion behaviour.
+    /// Flags determining the completion behavior.
     ///
     /// Determines whether a space should be inserted after this completion if it is the only
     /// possible completion using the COMPLETE_NO_SPACE flag. The COMPLETE_NO_CASE can be used to
@@ -106,14 +101,24 @@ class completion_t {
     void prepend_token_prefix(const wcstring &prefix);
 };
 
-enum {
-    COMPLETION_REQUEST_DEFAULT = 0,
-    COMPLETION_REQUEST_AUTOSUGGESTION = 1
-                                        << 0,  // indicates the completion is for an autosuggestion
-    COMPLETION_REQUEST_DESCRIPTIONS = 1 << 1,  // indicates that we want descriptions
-    COMPLETION_REQUEST_FUZZY_MATCH = 1 << 2    // indicates that we don't require a prefix match
+using completion_list_t = std::vector<completion_t>;
+
+enum class completion_request_t {
+    autosuggestion,  // indicates the completion is for an autosuggestion
+    descriptions,    // indicates that we want descriptions
+    fuzzy_match,     // indicates that we don't require a prefix match
+    COUNT
 };
-typedef uint32_t completion_request_flags_t;
+
+template <>
+struct enum_info_t<completion_request_t> {
+    static constexpr auto count = completion_request_t::COUNT;
+};
+
+using completion_request_flags_t = enum_set_t<completion_request_t>;
+
+class completion_t;
+using completion_list_t = std::vector<completion_t>;
 
 enum complete_option_type_t {
     option_type_args_only,    // no option
@@ -124,8 +129,8 @@ enum complete_option_type_t {
 
 /// Sorts and remove any duplicate completions in the completion list, then puts them in priority
 /// order.
-void completions_sort_and_prioritize(std::vector<completion_t> *comps,
-                                     completion_request_flags_t flags = COMPLETION_REQUEST_DEFAULT);
+void completions_sort_and_prioritize(completion_list_t *comps,
+                                     completion_request_flags_t flags = {});
 
 /// Add a completion.
 ///
@@ -151,19 +156,16 @@ void completions_sort_and_prioritize(std::vector<completion_t> *comps,
 /// \param option The name of an option.
 /// \param option_type The type of option: can be option_type_short (-x),
 ///        option_type_single_long (-foo), option_type_double_long (--bar).
-/// \param result_mode Whether to search further completions when this completion has been
-/// succesfully matched. If result_mode is SHARED, any other completions may also be used. If
-/// result_mode is NO_FILES, file completion should not be used, but other completions may be used.
-/// If result_mode is NO_COMMON, on option may follow it - only a parameter. If result_mode is
-/// EXCLUSIVE, no option may follow it, and file completion is not performed.
+/// \param result_mode Controls how to search further completions when this completion has been
+/// successfully matched.
 /// \param comp A space separated list of completions which may contain subshells.
 /// \param desc A description of the completion.
 /// \param condition a command to be run to check it this completion should be used. If \c condition
 /// is empty, the completion is always used.
 /// \param flags A set of completion flags
 void complete_add(const wchar_t *cmd, bool cmd_is_path, const wcstring &option,
-                  complete_option_type_t option_type, int result_mode, const wchar_t *condition,
-                  const wchar_t *comp, const wchar_t *desc, int flags);
+                  complete_option_type_t option_type, completion_mode_t result_mode,
+                  const wchar_t *condition, const wchar_t *comp, const wchar_t *desc, int flags);
 
 /// Remove a previously defined completion.
 void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &option,
@@ -172,9 +174,10 @@ void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &opti
 /// Removes all completions for a given command.
 void complete_remove_all(const wcstring &cmd, bool cmd_is_path);
 
-/// Find all completions of the command cmd, insert them into out.
-void complete(const wcstring &cmd, std::vector<completion_t> *out_comps,
-              completion_request_flags_t flags, const environment_t &vars);
+/// \return all completions of the command cmd.
+class operation_context_t;
+completion_list_t complete(const wcstring &cmd, completion_request_flags_t flags,
+                           const operation_context_t &ctx);
 
 /// Return a list of all current completions.
 wcstring complete_print();
@@ -192,14 +195,13 @@ bool complete_is_valid_argument(const wcstring &str, const wcstring &opt, const 
 /// \param comp The completion string
 /// \param desc The description of the completion
 /// \param flags completion flags
-void append_completion(std::vector<completion_t> *completions, wcstring comp,
-                       wcstring desc = wcstring(), int flags = 0,
-                       string_fuzzy_match_t match = string_fuzzy_match_t(fuzzy_match_exact));
-
+void append_completion(completion_list_t *completions, wcstring comp, wcstring desc = wcstring(),
+                       int flags = 0,
+                       string_fuzzy_match_t &&match = string_fuzzy_match_t(fuzzy_match_exact));
 
 /// Support for "wrap targets." A wrap target is a command that completes like another command.
-bool complete_add_wrapper(const wcstring &command, const wcstring &wrap_target);
-bool complete_remove_wrapper(const wcstring &command, const wcstring &wrap_target);
+bool complete_add_wrapper(const wcstring &command, const wcstring &new_target);
+bool complete_remove_wrapper(const wcstring &command, const wcstring &target_to_remove);
 
 /// Returns a list of wrap targets for a given command.
 wcstring_list_t complete_get_wrap_targets(const wcstring &command);

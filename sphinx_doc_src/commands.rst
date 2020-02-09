@@ -1,4 +1,4 @@
-.. highlight:: fish
+.. _commands:
 
 Commands
 ============

@@ -1,10 +1,10 @@
 // Functions used for implementing the commandline builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <wchar.h>
+#include <cerrno>
+#include <cstddef>
+#include <cstdlib>
+#include <cwchar>
 
 #include "builtin.h"
 #include "common.h"
@@ -12,10 +12,10 @@
 #include "input.h"
 #include "io.h"
 #include "parse_util.h"
+#include "parser.h"
 #include "proc.h"
 #include "reader.h"
 #include "tokenizer.h"
-#include "util.h"
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
@@ -35,36 +35,6 @@ enum {
     INSERT_MODE,       // insert at cursor position
     APPEND_MODE        // insert at end of current token/command/buffer
 };
-
-static owning_lock<wcstring_list_t> &get_transient_stack() {
-    ASSERT_IS_MAIN_THREAD();
-    static owning_lock<wcstring_list_t> s_transient_stack;
-    return s_transient_stack;
-}
-
-static bool get_top_transient(wcstring *out_result) {
-    auto stack = get_transient_stack().acquire();
-    if (stack->empty()) {
-        return false;
-    }
-    out_result->assign(stack->back());
-    return true;
-}
-
-builtin_commandline_scoped_transient_t::builtin_commandline_scoped_transient_t(
-    const wcstring &cmd) {
-    ASSERT_IS_MAIN_THREAD();
-    auto stack = get_transient_stack().acquire();
-    stack->push_back(cmd);
-    this->token = stack->size();
-}
-
-builtin_commandline_scoped_transient_t::~builtin_commandline_scoped_transient_t() {
-    ASSERT_IS_MAIN_THREAD();
-    auto stack = get_transient_stack().acquire();
-    assert(this->token == stack->size());
-    stack->pop_back();
-}
 
 /// Replace/append/insert the selection with/at/after the specified string.
 ///
@@ -86,7 +56,7 @@ static void replace_part(const wchar_t *begin, const wchar_t *end, const wchar_t
     switch (append_mode) {
         case REPLACE_MODE: {
             out.append(insert);
-            out_pos = wcslen(insert) + (begin - buff);
+            out_pos = std::wcslen(insert) + (begin - buff);
             break;
         }
         case APPEND_MODE: {
@@ -99,7 +69,7 @@ static void replace_part(const wchar_t *begin, const wchar_t *end, const wchar_t
             out.append(begin, cursor);
             out.append(insert);
             out.append(begin + cursor, end - begin - cursor);
-            out_pos += wcslen(insert);
+            out_pos += std::wcslen(insert);
             break;
         }
         default: {
@@ -125,16 +95,15 @@ static void write_part(const wchar_t *begin, const wchar_t *end, int cut_at_curs
     size_t pos = cursor_pos - (begin - buffer);
 
     if (tokenize) {
-        // fwprintf( stderr, L"Subshell: %ls, end char %lc\n", buff, *end );
+        // std::fwprintf( stderr, L"Subshell: %ls, end char %lc\n", buff, *end );
         wcstring out;
         wcstring buff(begin, end - begin);
         tokenizer_t tok(buff.c_str(), TOK_ACCEPT_UNFINISHED);
-        tok_t token;
-        while (tok.next(&token)) {
-            if ((cut_at_cursor) && (token.offset + token.length >= pos)) break;
+        while (auto token = tok.next()) {
+            if ((cut_at_cursor) && (token->offset + token->length >= pos)) break;
 
-            if (token.type == TOK_STRING) {
-                wcstring tmp = tok.text_of(token);
+            if (token->type == token_type_t::string) {
+                wcstring tmp = tok.text_of(*token);
                 unescape_string_in_place(&tmp, UNESCAPE_INCOMPLETE);
                 out.append(tmp);
                 out.push_back(L'\n');
@@ -156,10 +125,10 @@ static void write_part(const wchar_t *begin, const wchar_t *end, int cut_at_curs
 int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Pointer to what the commandline builtin considers to be the current contents of the command
     // line buffer.
-    const wchar_t *current_buffer = 0;
+    const wchar_t *current_buffer = nullptr;
 
     // What the commandline builtin considers to be the current cursor position.
-    size_t current_cursor_pos = (size_t)(-1);
+    auto current_cursor_pos = static_cast<size_t>(-1);
 
     wchar_t *cmd = argv[0];
     int buffer_part = 0;
@@ -177,10 +146,12 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     int line_mode = 0;
     int search_mode = 0;
     int paging_mode = 0;
-    const wchar_t *begin = NULL, *end = NULL;
+    const wchar_t *begin = nullptr, *end = nullptr;
 
+    const auto &ld = parser.libdata();
     wcstring transient_commandline;
-    if (get_top_transient(&transient_commandline)) {
+    if (!ld.transient_commandlines.empty()) {
+        transient_commandline = ld.transient_commandlines.back();
         current_buffer = transient_commandline.c_str();
         current_cursor_pos = transient_commandline.size();
     } else {
@@ -189,7 +160,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     }
 
     if (!current_buffer) {
-        if (is_interactive_session) {
+        if (session_interactivity() != session_interactivity_t::not_interactive) {
             // Prompt change requested while we don't have a prompt, most probably while reading the
             // init files. Just ignore it.
             return STATUS_CMD_ERROR;
@@ -197,33 +168,33 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 
         streams.err.append(argv[0]);
         streams.err.append(L": Can not set commandline in non-interactive mode\n");
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_CMD_ERROR;
     }
 
     static const wchar_t *const short_options = L":abijpctforhI:CLSsP";
-    static const struct woption long_options[] = {{L"append", no_argument, NULL, 'a'},
-                                                  {L"insert", no_argument, NULL, 'i'},
-                                                  {L"replace", no_argument, NULL, 'r'},
-                                                  {L"current-buffer", no_argument, NULL, 'b'},
-                                                  {L"current-job", no_argument, NULL, 'j'},
-                                                  {L"current-process", no_argument, NULL, 'p'},
-                                                  {L"current-selection", no_argument, NULL, 's'},
-                                                  {L"current-token", no_argument, NULL, 't'},
-                                                  {L"cut-at-cursor", no_argument, NULL, 'c'},
-                                                  {L"function", no_argument, NULL, 'f'},
-                                                  {L"tokenize", no_argument, NULL, 'o'},
-                                                  {L"help", no_argument, NULL, 'h'},
-                                                  {L"input", required_argument, NULL, 'I'},
-                                                  {L"cursor", no_argument, NULL, 'C'},
-                                                  {L"line", no_argument, NULL, 'L'},
-                                                  {L"search-mode", no_argument, NULL, 'S'},
-                                                  {L"paging-mode", no_argument, NULL, 'P'},
-                                                  {NULL, 0, NULL, 0}};
+    static const struct woption long_options[] = {{L"append", no_argument, nullptr, 'a'},
+                                                  {L"insert", no_argument, nullptr, 'i'},
+                                                  {L"replace", no_argument, nullptr, 'r'},
+                                                  {L"current-buffer", no_argument, nullptr, 'b'},
+                                                  {L"current-job", no_argument, nullptr, 'j'},
+                                                  {L"current-process", no_argument, nullptr, 'p'},
+                                                  {L"current-selection", no_argument, nullptr, 's'},
+                                                  {L"current-token", no_argument, nullptr, 't'},
+                                                  {L"cut-at-cursor", no_argument, nullptr, 'c'},
+                                                  {L"function", no_argument, nullptr, 'f'},
+                                                  {L"tokenize", no_argument, nullptr, 'o'},
+                                                  {L"help", no_argument, nullptr, 'h'},
+                                                  {L"input", required_argument, nullptr, 'I'},
+                                                  {L"cursor", no_argument, nullptr, 'C'},
+                                                  {L"line", no_argument, nullptr, 'L'},
+                                                  {L"search-mode", no_argument, nullptr, 'S'},
+                                                  {L"paging-mode", no_argument, nullptr, 'P'},
+                                                  {nullptr, 0, nullptr, 0}};
 
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case L'a': {
                 append_mode = APPEND_MODE;
@@ -267,7 +238,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             }
             case 'I': {
                 current_buffer = w.woptarg;
-                current_cursor_pos = wcslen(w.woptarg);
+                current_cursor_pos = std::wcslen(w.woptarg);
                 break;
             }
             case 'C': {
@@ -291,7 +262,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 break;
             }
             case 'h': {
-                builtin_print_help(parser, streams, cmd, streams.out);
+                builtin_print_help(parser, streams, cmd);
                 return STATUS_CMD_OK;
             }
             case ':': {
@@ -316,7 +287,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         if (buffer_part || cut_at_cursor || append_mode || tokenize || cursor_mode || line_mode ||
             search_mode || paging_mode) {
             streams.err.append_format(BUILTIN_ERR_COMBO, argv[0]);
-            builtin_print_help(parser, streams, cmd, streams.err);
+            builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
         }
 
@@ -326,14 +297,12 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         }
 
         for (i = w.woptind; i < argc; i++) {
-            wchar_t c = input_function_get_code(argv[i]);
-            if (c != INPUT_CODE_NONE) {
-                // input_unreadch inserts the specified keypress or readline function at the back of
-                // the queue of unused keypresses.
-                input_queue_ch(c);
+            if (auto mc = input_function_get_code(argv[i])) {
+                // Inserts the readline function at the back of the queue.
+                reader_queue_ch(*mc);
             } else {
                 streams.err.append_format(_(L"%ls: Unknown input function '%ls'"), cmd, argv[i]);
-                builtin_print_help(parser, streams, cmd, streams.err);
+                builtin_print_error_trailer(parser, streams.err, cmd);
                 return STATUS_INVALID_ARGS;
             }
         }
@@ -352,15 +321,15 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 
     // Check for invalid switch combinations.
     if ((search_mode || line_mode || cursor_mode || paging_mode) && (argc - w.woptind > 1)) {
-        streams.err.append_format(L"%ls: Too many arguments", argv[0]);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
     if ((buffer_part || tokenize || cut_at_cursor) &&
         (cursor_mode || line_mode || search_mode || paging_mode)) {
         streams.err.append_format(BUILTIN_ERR_COMBO, argv[0]);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -368,7 +337,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         streams.err.append_format(
             BUILTIN_ERR_COMBO2, cmd,
             L"--cut-at-cursor and --tokenize can not be used when setting the commandline");
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -376,7 +345,7 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         streams.err.append_format(
             BUILTIN_ERR_COMBO2, cmd,
             L"insertion mode switches can not be used when not in insertion mode");
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -394,14 +363,16 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             long new_pos = fish_wcstol(argv[w.woptind]);
             if (errno) {
                 streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, argv[w.woptind]);
-                builtin_print_help(parser, streams, cmd, streams.err);
+                builtin_print_error_trailer(parser, streams.err, cmd);
             }
 
             current_buffer = reader_get_buffer();
-            new_pos = maxi(0L, mini(new_pos, (long)wcslen(current_buffer)));
-            reader_set_buffer(current_buffer, (size_t)new_pos);
+            new_pos =
+                std::max(0L, std::min(new_pos, static_cast<long>(std::wcslen(current_buffer))));
+            reader_set_buffer(current_buffer, static_cast<size_t>(new_pos));
         } else {
-            streams.out.append_format(L"%lu\n", (unsigned long)reader_get_cursor_pos());
+            streams.out.append_format(L"%lu\n",
+                                      static_cast<unsigned long>(reader_get_cursor_pos()));
         }
         return STATUS_CMD_OK;
     }
@@ -409,7 +380,8 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     if (line_mode) {
         size_t pos = reader_get_cursor_pos();
         const wchar_t *buff = reader_get_buffer();
-        streams.out.append_format(L"%lu\n", (unsigned long)parse_util_lineno(buff, pos));
+        streams.out.append_format(L"%lu\n",
+                                  static_cast<unsigned long>(parse_util_lineno(buff, pos)));
         return STATUS_CMD_OK;
     }
 
@@ -424,11 +396,11 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     switch (buffer_part) {
         case STRING_MODE: {
             begin = current_buffer;
-            end = begin + wcslen(begin);
+            end = begin + std::wcslen(begin);
             break;
         }
         case PROCESS_MODE: {
-            parse_util_process_extent(current_buffer, current_cursor_pos, &begin, &end);
+            parse_util_process_extent(current_buffer, current_cursor_pos, &begin, &end, nullptr);
             break;
         }
         case JOB_MODE: {
@@ -436,7 +408,8 @@ int builtin_commandline(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             break;
         }
         case TOKEN_MODE: {
-            parse_util_token_extent(current_buffer, current_cursor_pos, &begin, &end, 0, 0);
+            parse_util_token_extent(current_buffer, current_cursor_pos, &begin, &end, nullptr,
+                                    nullptr);
             break;
         }
         default: {

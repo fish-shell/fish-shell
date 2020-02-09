@@ -1,14 +1,37 @@
 #include "config.h"  // IWYU pragma: keep
 
-#include "limits.h"
 #include "topic_monitor.h"
+
+#include <limits.h>
+#include <unistd.h>
+
+#include "flog.h"
+#include "iothread.h"
 #include "wutil.h"
 
-#include <unistd.h>
+// Whoof. Thread Sanitizer swallows signals and replays them at its leisure, at the point where
+// instrumented code makes certain blocking calls. But tsan cannot interrupt a signal call, so
+// if we're blocked in read() (like the topic monitor wants to be!), we'll never receive SIGCHLD
+// and so deadlock. So if tsan is enabled, we mark our fd as non-blocking (so reads will never
+// block) and use use select() to poll it.
+#if defined(__has_feature)
+#if __has_feature(thread_sanitizer)
+#define TOPIC_MONITOR_TSAN_WORKAROUND 1
+#endif
+#endif
+#if __SANITIZE_THREAD__
+#define TOPIC_MONITOR_TSAN_WORKAROUND 1
+#endif
 
 /// Implementation of the principal monitor. This uses new (and leaks) to avoid registering a
 /// pointless at-exit handler for the dtor.
 static topic_monitor_t *const s_principal = new topic_monitor_t();
+
+/// \return the metagen for a topic generation list.
+/// The metagen is simply the sum of topic generations. Note it is monotone.
+static generation_t metagen_for(const generation_list_t &lst) {
+    return std::accumulate(lst.begin(), lst.end(), generation_t{0});
+}
 
 topic_monitor_t &topic_monitor_t::principal() {
     // Do not attempt to move s_principal to a function-level static, it needs to be accessed from a
@@ -25,6 +48,10 @@ topic_monitor_t::topic_monitor_t() {
     // Make sure that our write side doesn't block, else we risk hanging in a signal handler.
     // The read end must block to avoid spinning in await.
     DIE_ON_FAILURE(make_fd_nonblocking(pipes_.write.fd()));
+
+#if TOPIC_MONITOR_TSAN_WORKAROUND
+    DIE_ON_FAILURE(make_fd_nonblocking(pipes_.read.fd()));
+#endif
 }
 
 topic_monitor_t::~topic_monitor_t() = default;
@@ -51,45 +78,107 @@ void topic_monitor_t::post(topic_t topic) {
     // Ignore EAGAIN and other errors (which conceivably could occur during shutdown).
 }
 
-void topic_monitor_t::await_metagen(generation_t mgen) {
-    // Fast check of the metagen before taking the lock. If it's changed we're done.
-    if (mgen != current_metagen()) return;
+generation_list_t topic_monitor_t::updated_gens_in_data(acquired_lock<data_t> &data) {
+    // Atomically acquire the pending updates, swapping in 0.
+    // If there are no pending updates (likely), just return.
+    // Otherwise CAS in 0 and update our topics.
+    const auto relaxed = std::memory_order_relaxed;
+    topic_set_raw_t raw;
+    bool cas_success;
+    do {
+        raw = pending_updates_.load(relaxed);
+        if (raw == 0) return data->current_gens;
+        cas_success = pending_updates_.compare_exchange_weak(raw, 0, relaxed, relaxed);
+    } while (!cas_success);
 
-    // Take the lock (which may take a long time) and then check again.
-    std::unique_lock<std::mutex> locker{wait_queue_lock_};
-    if (mgen != current_metagen()) return;
-
-    // Our metagen hasn't changed. Push our metagen onto the queue, then wait until we're the
-    // lowest. If multiple waiters are the lowest, then anyone can be the observer.
-    // Note the reason for picking the lowest metagen is to avoid a priority inversion where a lower
-    // metagen (therefore someone who should see changes) is blocked waiting for a higher metagen
-    // (who has already seen the changes).
-    wait_queue_.push(mgen);
-    while (wait_queue_.top() != mgen) {
-        wait_queue_notifier_.wait(locker);
+    // Update the current generation with our topics and return it.
+    auto topics = topic_set_t::from_raw(raw);
+    for (topic_t topic : topic_iter_t{}) {
+        if (topics.get(topic)) {
+            data->current_gens.at(topic) += 1;
+            FLOG(topic_monitor, "Updating topic", (int)topic, "to", data->current_gens.at(topic));
+        }
     }
-    wait_queue_.pop();
+    // Report our change.
+    data_notifier_.notify_all();
+    return data->current_gens;
+}
 
-    // We now have the lowest metagen in the wait queue. Notice we still hold the lock.
-    // Read until the metagen changes. It may already have changed.
-    // Note because changes are coalesced, we can read a lot, potentially draining the pipe.
-    while (mgen == current_metagen()) {
-        uint8_t ignored[PIPE_BUF];
-        (void)read(pipes_.read.fd(), ignored, sizeof ignored);
+generation_list_t topic_monitor_t::updated_gens() {
+    auto data = data_.acquire();
+    return updated_gens_in_data(data);
+}
+
+bool topic_monitor_t::try_update_gens_maybe_becoming_reader(generation_list_t *gens) {
+    bool become_reader = false;
+    auto data = data_.acquire();
+    for (;;) {
+        // See if the updated gen list has changed. If so we don't need to become the reader.
+        auto current = updated_gens_in_data(data);
+        FLOG(topic_monitor, "TID", thread_id(), "local mgen", metagen_for(*gens), ": current",
+             metagen_for(current));
+        if (*gens != current) {
+            *gens = current;
+            break;
+        }
+
+        // The generations haven't changed. Perhaps we become the reader.
+        if (!data->has_reader) {
+            become_reader = true;
+            data->has_reader = true;
+            break;
+        }
+        // Not the reader, wait until the reader notifies us and loop again.
+        data_notifier_.wait(data.get_lock());
     }
+    return become_reader;
+}
 
-    // Release the lock and wake up the remaining waiters.
-    locker.unlock();
-    wait_queue_notifier_.notify_all();
+generation_list_t topic_monitor_t::await_gens(const generation_list_t &input_gens) {
+    generation_list_t gens = input_gens;
+    while (gens == input_gens) {
+        bool become_reader = try_update_gens_maybe_becoming_reader(&gens);
+        if (become_reader) {
+            // Now we are the reader. Read from the pipe, and then update with any changes.
+            // Note we no longer hold the lock.
+            assert(gens == input_gens &&
+                   "Generations should not have changed if we are the reader.");
+            int fd = pipes_.read.fd();
+#if TOPIC_MONITOR_TSAN_WORKAROUND
+            // Under tsan our notifying pipe is non-blocking, so we would busy-loop on the read()
+            // call until data is available (that is, fish would use 100% cpu while waiting for
+            // processes). The select prevents that.
+            fd_set fds;
+            FD_ZERO(&fds);
+            FD_SET(fd, &fds);
+            (void)select(fd + 1, &fds, nullptr, nullptr, nullptr /* timeout */);
+#endif
+            uint8_t ignored[PIPE_BUF];
+            auto unused = read(fd, ignored, sizeof ignored);
+            if (unused) {
+            }
+
+            // We are finished reading. We must stop being the reader, and post on the condition
+            // variable to wake up any other threads waiting for us to finish reading.
+            auto data = data_.acquire();
+            gens = data->current_gens;
+            FLOG(topic_monitor, "TID", thread_id(), "local mgen", metagen_for(input_gens),
+                 "read() complete, current mgen is", metagen_for(gens));
+            assert(data->has_reader && "We should be the reader");
+            data->has_reader = false;
+            data_notifier_.notify_all();
+        }
+    }
+    return gens;
 }
 
 topic_set_t topic_monitor_t::check(generation_list_t *gens, topic_set_t topics, bool wait) {
     if (topics.none()) return topics;
 
+    generation_list_t current = updated_gens();
     topic_set_t changed{};
     for (;;) {
         // Load the topic list and see if anything has changed.
-        generation_list_t current = updated_gens();
         for (topic_t topic : topic_iter_t{}) {
             if (topics.get(topic)) {
                 assert(gens->at(topic) <= current.at(topic) &&
@@ -106,9 +195,8 @@ topic_set_t topic_monitor_t::check(generation_list_t *gens, topic_set_t topics, 
             break;
         }
 
-        // Try again. Note that we use the metagen corresponding to the topic list we just
-        // inspected, not the current one (which may have updates since we checked).
-        await_metagen(metagen_for(current));
+        // Wait until our gens change.
+        current = await_gens(current);
     }
     return changed;
 }

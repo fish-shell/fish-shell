@@ -27,7 +27,7 @@
 
 /// Convert a string between UTF8 and UCS-2/4 (depending on size of wchar_t). Returns true if
 /// successful, storing the result of the conversion in *result*.
-bool wchar_to_utf8_string(const std::wstring &input, std::string *result);
+bool wchar_to_utf8_string(const std::wstring &str, std::string *result);
 
 /// Convert a string between UTF8 and UCS-2/4 (depending on size of wchar_t). Returns nonzero if
 /// successful, storing the result of the conversion in *out*.

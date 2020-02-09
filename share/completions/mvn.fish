@@ -27,62 +27,62 @@
 complete -c mvn -f -a 'pre-clean clean post-clean validate initialize generate-sources process-sources generate-resources process-resources compile process-classes generate-test-sources process-test-sources generate-test-resources process-test-resources test-compile process-test-classes testprepare-package package pre-integration-test integration-test post-integration-test verify install deploy pre-site site post-site site-deploy'
 
 # All options form mvn --help
-complete -c mvn -f -o am -l also-make                        -d "If project list is specified, also build projects required by the list"
-complete -c mvn -f -o amd -l also-make-dependents            -d "If project list is specified, also build projects that depend on projects on the list"
-complete -c mvn -f -o B -l batch-mode                        -d "Run in non-interactive (batch) mode"
-complete -c mvn -r -f -o b -l builder                      -d "The id of the build strategy to use."
-complete -c mvn -f -o C -l strict-checksums                  -d "Fail the build if checksums don't match"
-complete -c mvn -f -o c -l lax-checksums                     -d "Warn if checksums don't match"
-complete -c mvn -f -o cpu -l check-plugin-updates            -d "Ineffective, only kept for backward compatibility"
-complete -c mvn -f -o D -l define                      -d "Define a system property"
-complete -c mvn -f -o e -l errors                            -d "Produce execution error messages"
-complete -c mvn -f -o emp -l encrypt-master-password   -d "Encrypt master security password"
-complete -c mvn -f -o ep -l encrypt-password           -d "Encrypt server password"
-complete -c mvn -r -o f -l file                        -d "Force the use of an alternate POM file (or directory with pom.xml)."
-complete -c mvn -f -o fae -l fail-at-end                     -d "Only fail the build afterwards; allow all non-impacted builds to continue"
-complete -c mvn -f -o ff -l fail-fast                        -d "Stop at first failure in reactorized builds"
-complete -c mvn -f -o fn -l fail-never                       -d "NEVER fail the build, regardless of project result"
-complete -c mvn -r -o gs -l global-settings            -d "Alternate path for the global settings file"
-complete -c mvn -f -o h -l help                              -d "Display help information"
-complete -c mvn -r -o l -l log-file                    -d "Log file to where all build output will go."
-complete -c mvn -f -o llr -l legacy-local-repository         -d "Use Maven 2 Legacy Local Repository behaviour, ie no use of _remote.repositories. Can also be activated by using -Dmaven.legacyLocalRepo=true"
-complete -c mvn -f -o N -l non-recursive                     -d "Do not recurse into sub-projects"
-complete -c mvn -f -o npr -l no-plugin-registry              -d "Ineffective, only kept for backward compatibility"
-complete -c mvn -f -o npu -l no-plugin-updates               -d "Ineffective, only kept for backward compatibility"
-complete -c mvn -f -o nsu -l no-snapshot-updates             -d "Suppress SNAPSHOT updates"
-complete -c mvn -f -o o -l offline                           -d "Work offline"
-complete -c mvn -r -f -o pl -l projects                   -d "Comma-delimited list of specified reactor projects to build instead of all projects. A project can be specified by [groupId]:artifactId or by its relative path."
-complete -c mvn -f -o q -l quiet                             -d "Quiet output - only show errors"
-complete -c mvn -r -f -o rf -l resume-from                -d "Resume reactor from specified project"
-complete -c mvn -r -o s -l settings                    -d "Alternate path for the user settings file"
-complete -c mvn -r -f -o T -l threads                     -d "Thread count, for instance 2.0C where C is core multiplied"
-complete -c mvn -r -o t -l toolchains                  -d "Alternate path for the user toolchains file"
-complete -c mvn -f -o U -l update-snapshots                  -d "Forces a check for missing releases and updated snapshots on remote repositories"
-complete -c mvn -f -o up -l update-plugins                   -d "Ineffective, only kept for backward compatibility"
-complete -c mvn -f -o V -l show-version                      -d "Display version information WITHOUT stopping build"
-complete -c mvn -f -o v -l version                           -d "Display version information"
-complete -c mvn -f -o X -l debug                             -d "Produce execution debug output"
+complete -c mvn -f -o am -l also-make -d "If project list is specified, also build projects required by the list"
+complete -c mvn -f -o amd -l also-make-dependents -d "If project list is specified, also build projects that depend on projects on the list"
+complete -c mvn -f -o B -l batch-mode -d "Run in non-interactive (batch) mode"
+complete -c mvn -r -f -o b -l builder -d "The id of the build strategy to use."
+complete -c mvn -f -o C -l strict-checksums -d "Fail the build if checksums don't match"
+complete -c mvn -f -o c -l lax-checksums -d "Warn if checksums don't match"
+complete -c mvn -f -o cpu -l check-plugin-updates -d "Ineffective, only kept for backward compatibility"
+complete -c mvn -f -o D -l define -d "Define a system property"
+complete -c mvn -f -o e -l errors -d "Produce execution error messages"
+complete -c mvn -f -o emp -l encrypt-master-password -d "Encrypt master security password"
+complete -c mvn -f -o ep -l encrypt-password -d "Encrypt server password"
+complete -c mvn -r -o f -l file -d "Force the use of an alternate POM file (or directory with pom.xml)."
+complete -c mvn -f -o fae -l fail-at-end -d "Only fail the build afterwards; allow all non-impacted builds to continue"
+complete -c mvn -f -o ff -l fail-fast -d "Stop at first failure in reactorized builds"
+complete -c mvn -f -o fn -l fail-never -d "NEVER fail the build, regardless of project result"
+complete -c mvn -r -o gs -l global-settings -d "Alternate path for the global settings file"
+complete -c mvn -f -o h -l help -d "Display help information"
+complete -c mvn -r -o l -l log-file -d "Log file to where all build output will go."
+complete -c mvn -f -o llr -l legacy-local-repository -d "Use Maven 2 Legacy Local Repository behaviour, ie no use of _remote.repositories. Can also be activated by using -Dmaven.legacyLocalRepo=true"
+complete -c mvn -f -o N -l non-recursive -d "Do not recurse into sub-projects"
+complete -c mvn -f -o npr -l no-plugin-registry -d "Ineffective, only kept for backward compatibility"
+complete -c mvn -f -o npu -l no-plugin-updates -d "Ineffective, only kept for backward compatibility"
+complete -c mvn -f -o nsu -l no-snapshot-updates -d "Suppress SNAPSHOT updates"
+complete -c mvn -f -o o -l offline -d "Work offline"
+complete -c mvn -r -f -o pl -l projects -d "Comma-delimited list of specified reactor projects to build instead of all projects. A project can be specified by [groupId]:artifactId or by its relative path."
+complete -c mvn -f -o q -l quiet -d "Quiet output - only show errors"
+complete -c mvn -r -f -o rf -l resume-from -d "Resume reactor from specified project"
+complete -c mvn -r -o s -l settings -d "Alternate path for the user settings file"
+complete -c mvn -r -f -o T -l threads -d "Thread count, for instance 2.0C where C is core multiplied"
+complete -c mvn -r -o t -l toolchains -d "Alternate path for the user toolchains file"
+complete -c mvn -f -o U -l update-snapshots -d "Forces a check for missing releases and updated snapshots on remote repositories"
+complete -c mvn -f -o up -l update-plugins -d "Ineffective, only kept for backward compatibility"
+complete -c mvn -f -o V -l show-version -d "Display version information WITHOUT stopping build"
+complete -c mvn -f -o v -l version -d "Display version information"
+complete -c mvn -f -o X -l debug -d "Produce execution debug output"
 
 #
 # Profiles
 #
 #TODO search pom.xml hierarchy
 function __fish_mvn_profiles
-	# find line opening the profile-tag
-	# read next line
-	# extract contents of id-tag
-	sed -n -e '/<profile>/{n; s!^.*<id>\([^<]*\)</id>.*$!\1!; p}' ~/.m2/settings.xml pom.xml ^/dev/null
+    # find line opening the profile-tag
+    # read next line
+    # extract contents of id-tag
+    sed -n -e '/<profile>/{n; s!^.*<id>\([^<]*\)</id>.*$!\1!; p}' ~/.m2/settings.xml pom.xml ^/dev/null
 end
 
-complete -c mvn -f -r -o P -l activate-profiles -a "(__fish_mvn_profiles)"    -d "Comma-delimited list of profiles to activate"
+complete -c mvn -f -r -o P -l activate-profiles -a "(__fish_mvn_profiles)" -d "Comma-delimited list of profiles to activate"
 
 
 #default properties for some plugins / profiles
-complete -c mvn -o DskipTests                             -d "Skipping JUnit Tests"
-complete -c mvn -o DbuildInstaller                        -d "Build installer (if profile is available in project)"
-complete -c mvn -o DperformRelease                        -d "Use release profile (create javadoc and attach sources)"
-complete -c mvn -o Dmaven.surefire.debug                  -d "Run surefire tests with debugging on port 5005"
-complete -c mvn -o Dmaven.javadoc.skip                  -d "Skip Javadoc generation"
+complete -c mvn -o DskipTests -d "Skipping JUnit Tests"
+complete -c mvn -o DbuildInstaller -d "Build installer (if profile is available in project)"
+complete -c mvn -o DperformRelease -d "Use release profile (create javadoc and attach sources)"
+complete -c mvn -o Dmaven.surefire.debug -d "Run surefire tests with debugging on port 5005"
+complete -c mvn -o Dmaven.javadoc.skip -d "Skip Javadoc generation"
 
 
 #
@@ -110,7 +110,7 @@ complete -c mvn -a "resources:copy-resources" -d "Copy resources of the configur
 complete -c mvn -a "resources:help" -d "Display help information on maven-resources-plugin. Call mvn resources:help -Ddetail=true -Dgoal=<goal-name> to display parameter details."
 complete -c mvn -a "resources:resources" -d "Copy resources for the main source code to the main output directory. Always uses the project.build.resources element to specify the resources to copy."
 complete -c mvn -a "site:attach-descriptor" -d "Adds the site descriptor (site.xml) to the list of files to be installed/deployed. For Maven-2.x this is enabled by default only when the project has pom packaging since it will be used by modules inheriting, but this can be enabled for other projects packaging if needed. This default execution has been removed from the built-in lifecycle of Maven 3.x for pom-projects. Users that actually use those projects to provide a common site descriptor for sub modules will need to explicitly define this goal execution to restore the intended behavior."
-complete -c mvn -a "site:deploy" -d "Deploys the generated site using wagon supported protocols to the site URL specified in the <distributionManagement> section of the POM. For scp protocol, the website files are packaged by wagon into zip archive, then the archive is transfered to the remote host, next it is un-archived which is much faster than making a file by file copy. "
+complete -c mvn -a "site:deploy" -d "Deploys the generated site using wagon supported protocols to the site URL specified in the <distributionManagement> section of the POM. For scp protocol, the website files are packaged by wagon into zip archive, then the archive is transferred to the remote host, next it is un-archived which is much faster than making a file by file copy. "
 complete -c mvn -a "site:effective-site" -d "Displays the effective site descriptor as an XML for this build, after inheritance and interpolation of site.xml."
 complete -c mvn -a "site:help" -d "Display help information on maven-site-plugin. Call mvn site:help -Ddetail=true -Dgoal=<goal-name> to display parameter details."
 complete -c mvn -a "site:jar" -d "Bundles the site output into a JAR so that it can be deployed to a repository."
@@ -522,7 +522,7 @@ complete -c mvn -a "fitnesse:help" -d "Display help information on fitnesse-mave
 complete -c mvn -a "fitnesse:run" -d "This goal uses the fitnesse.runner.TestRunner class for calling a remote FitNesse web page and executes the tests or suites locally into a forked JVM. It's possible to define several pages and/or servers."
 complete -c mvn -a "fitnesse:fitnesse" -d "Generates a FitNesse report from a FitNesse web server. The generated report is an external report generated FitNesse itself. If the project use Clover for code coverage and if FitNesse has clover dependency (ie use the ArtifactId-Version-clover.jar), the code executed during the FitNesse execution (phase integration-test) will be had to the unit-test code coverage. See the clover example."
 complete -c mvn -a "selenium:start-server" -d "Start the Selenium server."
-complete -c mvn -a "selenium:xvfb" -d "Starts an Xvfb instance suitable for handling X11 displays for headless systems. Use this in combonation with the start-server goal to allow browsers to be launched on headless unix systems. Optionally uses 'xauth' to setup authentication for the Xvfb instance to allow running tests using the frame buffer server when another X server is already running. "
+complete -c mvn -a "selenium:xvfb" -d "Starts an Xvfb instance suitable for handling X11 displays for headless systems. Use this in combination with the start-server goal to allow browsers to be launched on headless unix systems. Optionally uses 'xauth' to setup authentication for the Xvfb instance to allow running tests using the frame buffer server when another X server is already running. "
 complete -c mvn -a "selenium:stop-server" -d "Stop the Selenium server."
 complete -c mvn -a "selenium:selenese" -d "Run a suite of HTML Selenese tests."
 complete -c mvn -a "selenium:help" -d "Display help information on selenium-maven-plugin. Call   mvn selenium:help -Ddetail=true -Dgoal=<goal-name> to display parameter details."
@@ -732,7 +732,7 @@ complete -c mvn -a "android:connect" -d "Connect external IP addresses to the AD
 complete -c mvn -a "android:deploy" -d "Deploys the apk(s) of the current project(s) to all attached devices and emulators. Automatically skips other projects in a multi-module build that do not use packaging apk without terminating. Deploymnet is automatically performed when running mvn integration-test (or mvn install) on a project with instrumentation tests."
 complete -c mvn -a "android:deploy-apk" -d "Deploys a specified Android application apk to attached devices and emulators. By default it will deploy to all, but a subset or single one can be configured with the device and devices parameters.This goal can be used in non-android projects and as standalone execution on the command line. "
 complete -c mvn -a "android:deploy-dependencies" -d "Deploys all directly declared dependencies of <type>apk</type> in this project's pom. Usually used in a project with instrumentation tests, to deploy the apk to test onto the device before running the deploying and running the instrumentation tests apk. Automatically performed when running mvn integration-test (or mvn install) on a project with instrumentation tests."
-complete -c mvn -a "android:devices" -d "DevicesMojo lists all attached devices and emulators found with the android debug bridge. It uses the same naming convention for the emulator as used in other places in the Android Maven Plugin and adds the status of the device in the list. TODO The goal is very simple and could be enhanced for better display, a verbose option to display and to take the android.device paramter into account."
+complete -c mvn -a "android:devices" -d "DevicesMojo lists all attached devices and emulators found with the android debug bridge. It uses the same naming convention for the emulator as used in other places in the Android Maven Plugin and adds the status of the device in the list. TODO The goal is very simple and could be enhanced for better display, a verbose option to display and to take the android.device parameter into account."
 complete -c mvn -a "android:dex" -d "Converts compiled Java classes to the Android dex format."
 complete -c mvn -a "android:disconnect" -d "Disconnect external IP addresses from the ADB server."
 complete -c mvn -a "android:emma" -d "After compiled Java classes use emma tool"

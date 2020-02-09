@@ -1,22 +1,26 @@
+.. _cmd-abbr:
+
 abbr - manage fish abbreviations
 ================================
 
 Synopsis
 --------
 
-abbr --add [SCOPE] WORD EXPANSION
-abbr --erase word
-abbr --rename [SCOPE] OLD_WORD NEW_WORD
-abbr --show
-abbr --list
-abbr --query WORD...
+::
+
+    abbr --add [SCOPE] WORD EXPANSION
+    abbr --erase word
+    abbr --rename [SCOPE] OLD_WORD NEW_WORD
+    abbr --show
+    abbr --list
+    abbr --query WORD...
 
 Description
 -----------
 
 ``abbr`` manages abbreviations - user-defined words that are replaced with longer phrases after they are entered.
 
-For example, a frequently-run command like ``git checkout`` can be abbreviated to ``gco``. After entering ``gco`` and pressing @key{Space} or @key{Enter}, the full text ``git checkout`` will appear in the command line.
+For example, a frequently-run command like ``git checkout`` can be abbreviated to ``gco``. After entering ``gco`` and pressing :kbd:`Space` or :kbd:`Enter`, the full text ``git checkout`` will appear in the command line.
 
 Options
 -------

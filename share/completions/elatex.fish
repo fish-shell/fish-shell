@@ -1,2 +1,2 @@
-complete -c tex -w elatex
+complete -c elatex -w tex
 

@@ -14,21 +14,26 @@ BuildRequires:          ncurses-devel gettext gcc-c++ autoconf
 %if 0%{?rhel} && 0%{?rhel} < 8
 BuildRequires: cmake3
 %else
-BuildRequires: cmake
+BuildRequires: cmake pcre2-devel
+%endif
+
+%if 0%{?suse_version}
+BuildRequires: update-desktop-files
 %endif
 
 %if 0%{?opensuse_bs} && 0%{?rhel} && 0%{?rhel} < 7
-BuildRequires: gcc48 gcc48-c++
-%endif
-
-%if 0%{?is_opensuse} || 0%{?fedora}
-BuildRequires: pcre2-devel
+BuildRequires: gcc48 gcc48-c++ python-argparse
 %endif
 
 # for tests
-%if 0%{?fedora}
+%if 0%{?fedora} || ( 0%{?rhel} && 0%{?rhel} > 7 )
 # Need the en_US.utf-8 locale at a minimum
 BuildRequires: glibc-langpack-en
+%endif
+%if 0%{?rhel} && 0%{?rhel} < 8
+BuildRequires: python
+%else
+BuildRequires: python3
 %endif
 
 BuildRoot:              %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
@@ -74,6 +79,10 @@ make %{?_smp_mflags}
 %make_install
 %endif
 %find_lang %{name}
+# OpenSUSE has strong opinions about categories which do not apply to other systems
+%if 0%{?suse_version}
+%suse_update_desktop_file fish "System;TerminalEmulator"
+%endif
 
 %check
 # OpenSUSE does out-of-tree builds and defines __builddir
@@ -122,3 +131,7 @@ fi
 
 # pkgconfig
 %{_datadir}/pkgconfig/fish.pc
+
+# FreeDesktop entry
+%{_datadir}/applications/fish.desktop
+%{_datadir}/pixmaps/fish.png

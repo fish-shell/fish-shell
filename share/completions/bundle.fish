@@ -1,25 +1,25 @@
 # Completion for bundler
 
 function __fish_bundle_no_command -d 'Test if bundle has been given no subcommand'
-  set cmd (commandline -opc)
-  if [ (count $cmd) -eq 1 ]
-    return 0
-  end
-  return 1
+    set cmd (commandline -opc)
+    if [ (count $cmd) -eq 1 ]
+        return 0
+    end
+    return 1
 end
 
 function __fish_bundle_using_command -d 'Test if bundle has been given a specific subcommand'
-  set cmd (commandline -opc)
-  if [ (count $cmd) -gt 1 ]
-    if [ $argv[1] = $cmd[2] ]
-      return 0
+    set cmd (commandline -opc)
+    if [ (count $cmd) -gt 1 ]
+        if [ $argv[1] = $cmd[2] ]
+            return 0
+        end
     end
-  end
-  return 1
+    return 1
 end
 
 function __fish_bundled_gems
-  bundle list | sed '1 d' | sed -e 's/\*//g' -e 's/(.*)//g' -e 's/^ *//g' -e 's/ *$//g'
+    bundle list | sed '1 d' | sed -e 's/\*//g' -e 's/(.*)//g' -e 's/^ *//g' -e 's/ *$//g'
 end
 
 # Options for all commands
@@ -47,7 +47,7 @@ complete -f -n '__fish_bundle_using_command install' -c bundle -l binstubs -d 'C
 complete -f -n '__fish_bundle_using_command install' -c bundle -l shebang -d 'Specify a ruby executable to use with generated binstubs'
 complete -f -n '__fish_bundle_using_command install' -c bundle -l standalone -d 'Make a bundle that can work without RubyGems or Bundler at run-time'
 complete -f -n '__fish_bundle_using_command install' -c bundle -s P -l trust-policy -d 'Apply a RubyGems security policy: {High,Medium,Low,No}Security'
-complete -f -n '__fish_bundle_using_command install' -c bundle -s j -l jobs -d 'Install  gems parallely by starting size number of parallel workers'
+complete -f -n '__fish_bundle_using_command install' -c bundle -s j -l jobs -d 'Install gems parallelly by starting size number of parallel workers'
 complete -f -n '__fish_bundle_using_command install' -c bundle -l no-cache -d 'Do not update the cache in vendor/cache with the newly bundled gems'
 complete -f -n '__fish_bundle_using_command install' -c bundle -l quiet -d 'Do not print progress information to stdout'
 complete -f -n '__fish_bundle_using_command install' -c bundle -l clean -d 'Run bundle clean automatically after install'
@@ -56,7 +56,7 @@ complete -f -n '__fish_bundle_using_command install' -c bundle -l no-prune -d 'D
 complete -f -n '__fish_bundle_using_command install' -c bundle -l frozen -d 'Do not allow the Gemfile.lock to be updated after this install'
 
 # Update
-complete -f -n '__fish_bundle_no_command' -c bundle -a 'update'  -d 'Update dependencies to their latest versions'
+complete -f -n '__fish_bundle_no_command' -c bundle -a 'update' -d 'Update dependencies to their latest versions'
 complete -f -n '__fish_bundle_using_command update' -c bundle -l source -d 'The name of a :git or :path source used in the Gemfile'
 complete -f -n '__fish_bundle_using_command update' -c bundle -l local -d 'Do not attempt to fetch gems remotely and use the gem cache instead'
 complete -f -n '__fish_bundle_using_command update' -c bundle -l quiet -d 'Only output warnings and errors'
@@ -75,7 +75,7 @@ complete -f -n '__fish_bundle_using_command binstubs' -c bundle -l force -d 'Ove
 complete -f -n '__fish_bundle_using_command binstubs' -c bundle -a '(__fish_bundled_gems)'
 
 # Exec
-complete -f -n '__fish_bundle_no_command' -c bundle -a 'exec' -d 'Execute a script in the context of the current bundle'
+complete -f -n '__fish_bundle_no_command' -c bundle -a exec -d 'Execute a script in the context of the current bundle'
 complete -f -n '__fish_bundle_using_command exec' -c bundle -l keep-file-descriptors -d 'Exec runs a command, providing it access to the gems in the bundle'
 
 # Help
@@ -83,7 +83,7 @@ complete -f -n '__fish_bundle_no_command' -c bundle -a 'help' -d 'Describe avail
 complete -f -n '__fish_bundle_using_command help' -c bundle -a 'install' -d 'Install the gems specified by the Gemfile or Gemfile.lock'
 complete -f -n '__fish_bundle_using_command help' -c bundle -a 'update' -d 'Update dependencies to their latest versions'
 complete -f -n '__fish_bundle_using_command help' -c bundle -a 'package' -d 'Package .gem files into the vendor/cache directory'
-complete -f -n '__fish_bundle_using_command help' -c bundle -a 'exec' -d 'Execute a script in the context of the current bundle'
+complete -f -n '__fish_bundle_using_command help' -c bundle -a exec -d 'Execute a script in the context of the current bundle'
 complete -f -n '__fish_bundle_using_command help' -c bundle -a 'config' -d 'Specify and read configuration options for bundler'
 complete -f -n '__fish_bundle_using_command help' -c bundle -a 'check' -d 'Check bundler requirements for your application'
 complete -f -n '__fish_bundle_using_command help' -c bundle -a 'list' -d 'Show all of the gems in the current bundle'
@@ -145,7 +145,7 @@ complete -f -n '__fish_bundle_using_command init' -c bundle -l gemspec -d 'Use a
 
 # Gem
 complete -f -n '__fish_bundle_no_command' -c bundle -a 'gem' -d 'Create a simple gem, suitable for development with bundler'
-complete -f -n '__fish_bundle_using_command gem' -c bundle -s b -l bin  -d 'Generate a binary for your library'
+complete -f -n '__fish_bundle_using_command gem' -c bundle -s b -l bin -d 'Generate a binary for your library'
 complete -f -n '__fish_bundle_using_command gem' -c bundle -s t -l test -d 'Generate a test directory for your library (rspec or minitest)'
 complete -f -n '__fish_bundle_using_command gem' -c bundle -s e -l edit -d 'Path to your editor'
 complete -f -n '__fish_bundle_using_command gem' -c bundle -l ext -d 'Generate the boilerplate for C extension code'
@@ -155,7 +155,7 @@ complete -f -n '__fish_bundle_no_command' -c bundle -a 'platform' -d 'Displays p
 complete -f -n '__fish_bundle_using_command platform' -c bundle -l ruby -d 'Only display Ruby directive information'
 
 # Clean
-complete -f -n '__fish_bundle_no_command' -c bundle -a 'clean'    -d 'Cleans up unused gems in your bundler directory'
+complete -f -n '__fish_bundle_no_command' -c bundle -a 'clean' -d 'Cleans up unused gems in your bundler directory'
 complete -f -n '__fish_bundle_using_command clean' -c bundle -l dry-run -d 'Only print out changes, do not actually clean gems'
 complete -f -n '__fish_bundle_using_command clean' -c bundle -l force -d 'Forces clean even if --path is not set'
 

@@ -1,11 +1,12 @@
 // Implementation of the return builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
-#include <stddef.h>
+#include "builtin_return.h"
+
+#include <cerrno>
+#include <cstddef>
 
 #include "builtin.h"
-#include "builtin_return.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
@@ -18,8 +19,8 @@ struct return_cmd_opts_t {
     bool print_help = false;
 };
 static const wchar_t *const short_options = L":h";
-static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
-                                              {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h'},
+                                              {nullptr, 0, nullptr, 0}};
 
 static int parse_cmd_opts(return_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncss method)
                           int argc, wchar_t **argv, parser_t &parser, io_streams_t &streams) {
@@ -28,7 +29,7 @@ static int parse_cmd_opts(return_cmd_opts_t &opts, int *optind,  //!OCLINT(high 
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {  //!OCLINT(too few branches)
             case 'h': {
                 opts.print_help = true;
@@ -67,46 +68,45 @@ int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 
     if (optind + 1 < argc) {
         streams.err.append_format(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
     if (optind == argc) {
-        retval = proc_get_last_status();
+        retval = parser.get_last_status();
     } else {
         retval = fish_wcstoi(argv[1]);
         if (errno) {
-            streams.err.append_format(_(L"%ls: Argument '%ls' must be an integer\n"), cmd, argv[1]);
-            builtin_print_help(parser, streams, cmd, streams.err);
+            streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, argv[1]);
+            builtin_print_error_trailer(parser, streams.err, cmd);
             return STATUS_INVALID_ARGS;
         }
         retval &= 0xFF;
     }
 
     // Find the function block.
-    size_t function_block_idx;
-    for (function_block_idx = 0; function_block_idx < parser.block_count(); function_block_idx++) {
-        const block_t *b = parser.block_at_index(function_block_idx);
-        if (b->type() == FUNCTION_CALL || b->type() == FUNCTION_CALL_NO_SHADOW) break;
+    bool has_function_block = false;
+    for (const auto &b : parser.blocks()) {
+        if (b.is_function_call()) {
+            has_function_block = true;
+            break;
+        }
     }
 
-    if (function_block_idx >= parser.block_count()) {
+    if (!has_function_block) {
         streams.err.append_format(_(L"%ls: Not inside of function\n"), cmd);
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_CMD_ERROR;
     }
 
-    // Skip everything up to and including the function block.
-    for (size_t i = 0; i <= function_block_idx; i++) {
-        block_t *b = parser.block_at_index(i);
-        b->skip = true;
-    }
+    // Mark a return in the libdata.
+    parser.libdata().returning = true;
 
     return retval;
 }

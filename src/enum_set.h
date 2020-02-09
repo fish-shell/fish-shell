@@ -1,5 +1,7 @@
-#pragma once
+#ifndef FISH_ENUM_SET_H
+#define FISH_ENUM_SET_H
 
+#include <array>
 #include <bitset>
 #include <cassert>
 #include <iterator>
@@ -25,6 +27,7 @@ class enum_set_t : private std::bitset<enum_count<T>()> {
     static size_t index_of(T t) { return static_cast<size_t>(t); }
 
     explicit enum_set_t(unsigned long raw) : super(raw) {}
+    explicit enum_set_t(super sup) : super(sup) {}
 
    public:
     enum_set_t() = default;
@@ -52,6 +55,32 @@ class enum_set_t : private std::bitset<enum_count<T>()> {
     bool operator==(const enum_set_t &rhs) const { return super::operator==(rhs); }
 
     bool operator!=(const enum_set_t &rhs) const { return super::operator!=(rhs); }
+
+    /// OR in a single flag, returning a new set.
+    enum_set_t operator|(T rhs) const {
+        enum_set_t result = *this;
+        result.set(rhs);
+        return result;
+    }
+
+    /// Compute the union of two sets.
+    enum_set_t operator|(enum_set_t rhs) const { return from_raw(to_raw() | rhs.to_raw()); }
+
+    /// OR in a single flag, modifying the set in place.
+    enum_set_t operator|=(T rhs) {
+        *this = *this | rhs;
+        return *this;
+    }
+
+    /// Set this to the union of two sets.
+    enum_set_t operator|=(enum_set_t rhs) {
+        *this = *this | rhs;
+        return *this;
+    }
+
+    /// Test a value of a single flag. Note this does not return an enum_set_t; there is no such
+    /// boolean conversion. This simply makes flags work more naturally as bit masks.
+    bool operator&(T rhs) const { return get(rhs); }
 };
 
 /// An array of Elem indexed by an enum class.
@@ -109,3 +138,5 @@ class enum_iter_t {
     iterator_t begin() const { return iterator_t{0}; }
     iterator_t end() const { return iterator_t{static_cast<base_type_t>(enum_count<T>())}; }
 };
+
+#endif

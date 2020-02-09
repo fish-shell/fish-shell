@@ -20,8 +20,8 @@ set committers_from_tag (mktemp)
 # Unicode collation tables mean that this is fraught with danger; for example, the
 # "“" character will not case-fold in UTF-8 locales. sort suggests using the C locale!
 
-git log "$TAG"   --format="%aN" --reverse | sort -u > $committers_to_tag
-git log "$TAG".. --format="%aN" --reverse | sort -u > $committers_from_tag
+git log "$TAG" --format="%aN" --reverse | sort -u >$committers_to_tag
+git log "$TAG".. --format="%aN" --reverse | sort -u >$committers_from_tag
 
 echo New committers:
 echo (comm -13 $committers_to_tag $committers_from_tag)','

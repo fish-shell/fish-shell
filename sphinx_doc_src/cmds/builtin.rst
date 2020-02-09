@@ -1,12 +1,15 @@
+.. _cmd-builtin:
+
 builtin - run a builtin command
 ===============================
 
 Synopsis
 --------
 
-builtin [OPTIONS...] BUILTINNAME
-builtin --query BUILTINNAMES...
+::
 
+    builtin [OPTIONS...] BUILTINNAME
+    builtin --query BUILTINNAMES...
 
 Description
 -----------

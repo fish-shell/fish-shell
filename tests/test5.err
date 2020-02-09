@@ -1,3 +1,0 @@
-fish: No matches for wildcard '*ee*'. See `help expand`.
-	case *ee*
-	     ^

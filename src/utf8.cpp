@@ -15,6 +15,8 @@
  */
 #include "config.h"  // IWYU pragma: keep
 
+#include "utf8.h"
+
 #include <stdint.h>  // IWYU pragma: keep
 #include <sys/types.h>
 
@@ -22,7 +24,6 @@
 #include <string>
 
 #include "common.h"
-#include "utf8.h"
 
 #define _NXT 0x80
 #define _SEQ2 0xc0
@@ -32,12 +33,12 @@
 #define _BOM 0xfeff
 
 // We can tweak the following typedef to allow us to simulate Windows-style 16 bit wchar's on Unix.
-typedef wchar_t utf8_wchar_t;
+using utf8_wchar_t = wchar_t;
 #define UTF8_WCHAR_MAX (wchar_t) std::numeric_limits<utf8_wchar_t>::max()
 
-typedef std::basic_string<utf8_wchar_t> utf8_wstring_t;
+using utf8_wstring_t = std::basic_string<utf8_wchar_t>;
 
-static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring_t *result,
+static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring_t *out_string,
                                      int flags);
 static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char *out,
                                      size_t outsize, int flags);
@@ -64,7 +65,7 @@ bool wchar_to_utf8_string(const std::wstring &str, std::string *result) {
 
     bool success = false;
     const wchar_t *input = str.c_str();
-    size_t outlen = wchar_to_utf8(input, inlen, NULL, 0, 0);
+    size_t outlen = wchar_to_utf8(input, inlen, nullptr, 0, 0);
     if (outlen > 0) {
         char *tmp = new char[outlen];
         size_t outlen2 = wchar_to_utf8(input, inlen, tmp, outlen, 0);
@@ -78,15 +79,15 @@ bool wchar_to_utf8_string(const std::wstring &str, std::string *result) {
 }
 
 size_t utf8_to_wchar(const char *in, size_t insize, std::wstring *out, int flags) {
-    if (in == NULL || insize == 0) {
+    if (in == nullptr || insize == 0) {
         return 0;
     }
 
     size_t result;
     if (sizeof(wchar_t) == sizeof(utf8_wchar_t)) {  //!OCLINT(constant if expression)
         result = utf8_to_wchar_internal(in, insize, reinterpret_cast<utf8_wstring_t *>(out), flags);
-    } else if (out == NULL) {
-        result = utf8_to_wchar_internal(in, insize, NULL, flags);
+    } else if (out == nullptr) {
+        result = utf8_to_wchar_internal(in, insize, nullptr, flags);
     } else {
         // Allocate a temporary buffer to hold the output, invoke the conversion with the temporary,
         // and then copy it back.
@@ -98,7 +99,7 @@ size_t utf8_to_wchar(const char *in, size_t insize, std::wstring *out, int flags
 }
 
 size_t wchar_to_utf8(const wchar_t *in, size_t insize, char *out, size_t outsize, int flags) {
-    if (in == NULL || insize == 0 || (outsize == 0 && out != NULL)) {
+    if (in == nullptr || insize == 0 || (outsize == 0 && out != nullptr)) {
         return 0;
     }
 
@@ -139,7 +140,9 @@ static int __utf8_forbitten(unsigned char octet) {
         case 0xff: {
             return -1;
         }
-        default: { return 0; }
+        default: {
+            return 0;
+        }
     }
 }
 
@@ -168,9 +171,9 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
     utf8_wchar_t high;
     size_t n, total, i, n_bits;
 
-    if (in == NULL || insize == 0) return 0;
+    if (in == nullptr || insize == 0) return 0;
 
-    if (out_string != NULL) out_string->clear();
+    if (out_string != nullptr) out_string->clear();
 
     total = 0;
     p = (unsigned char *)in;
@@ -182,23 +185,23 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
         // Get number of bytes for one wide character.
         n = 1;  // default: 1 byte. Used when skipping bytes
         if ((*p & 0x80) == 0)
-            high = (utf8_wchar_t)*p;
+            high = static_cast<utf8_wchar_t>(*p);
         else if ((*p & 0xe0) == _SEQ2) {
             n = 2;
-            high = (utf8_wchar_t)(*p & 0x1f);
+            high = static_cast<utf8_wchar_t>(*p & 0x1f);
         } else if ((*p & 0xf0) == _SEQ3) {
             n = 3;
-            high = (utf8_wchar_t)(*p & 0x0f);
+            high = static_cast<utf8_wchar_t>(*p & 0x0f);
         } else if ((*p & 0xf8) == _SEQ4) {
             n = 4;
-            high = (utf8_wchar_t)(*p & 0x07);
+            high = static_cast<utf8_wchar_t>(*p & 0x07);
         } else {
             if ((flags & UTF8_IGNORE_ERROR) == 0) return 0;
             continue;
         }
 
         // Does the sequence header tell us truth about length?
-        if ((size_t)(lim - p) <= n - 1) {
+        if (static_cast<size_t>(lim - p) <= n - 1) {
             if ((flags & UTF8_IGNORE_ERROR) == 0) return 0;
             n = 1;
             continue;  // skip
@@ -217,12 +220,12 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
         }
 
         total++;
-        if (out_string == NULL) continue;
+        if (out_string == nullptr) continue;
 
         uint32_t out_val = 0;
         n_bits = 0;
         for (i = 1; i < n; i++) {
-            out_val |= (utf8_wchar_t)(p[n - i] & 0x3f) << n_bits;
+            out_val |= static_cast<utf8_wchar_t>(p[n - i] & 0x3f) << n_bits;
             n_bits += 6;  // 6 low bits in every byte
         }
         out_val |= high << n_bits;
@@ -239,7 +242,7 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
 
         if (skip) {
             total--;
-        } else if (out_val > (uint32_t)UTF8_WCHAR_MAX) {
+        } else if (out_val > static_cast<uint32_t>(UTF8_WCHAR_MAX)) {
             // wchar_t is UCS-2, but the UTF-8 specified an astral character.
             return 0;
         } else {
@@ -269,11 +272,11 @@ static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char
     unsigned char *p, *lim;
     size_t total, n;
 
-    if (in == NULL || insize == 0 || (outsize == 0 && out != NULL)) return 0;
+    if (in == nullptr || insize == 0 || (outsize == 0 && out != nullptr)) return 0;
 
     w = in;
     wlim = w + insize;
-    p = (unsigned char *)out;
+    p = reinterpret_cast<unsigned char *>(out);
     lim = p + outsize;
     total = 0;
     for (; w < wlim; w++) {
@@ -303,7 +306,7 @@ static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char
 
         total += n;
 
-        if (out == NULL) continue;
+        if (out == nullptr) continue;
         if (size_t(lim - p) <= n - 1) return 0;  // no space left
 
         // Extract the wchar_t as big-endian. If wchar_t is UCS-16, the first two bytes will be 0.

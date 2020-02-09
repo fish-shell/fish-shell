@@ -10,7 +10,7 @@
 // between the weak linking of `wcsdup` and `wcscasecmp` via `#define`s below and the declarations
 // in <wchar.h>. At least on OS X if we don't do this we get compilation errors do to the macro
 // substitution if wchar.h is included after this header.
-#include <wchar.h>  // IWYU pragma: keep
+#include <cwchar>  // IWYU pragma: keep
 
 /// The column width of ambiguous East Asian characters.
 extern int g_fish_ambiguous_width;
@@ -60,24 +60,24 @@ struct winsize {
 #endif
 
 #if defined(TPARM_SOLARIS_KLUDGE)
-/// Solaris tparm has a set fixed of paramters in its curses implementation, work around this here.
+/// Solaris tparm has a set fixed of parameters in its curses implementation, work around this here.
 #define tparm tparm_solaris_kludge
 char *tparm_solaris_kludge(char *str, long p1 = 0, long p2 = 0, long p3 = 0, long p4 = 0,
                            long p5 = 0, long p6 = 0, long p7 = 0, long p8 = 0, long p9 = 0);
 #endif
 
-/// On OS X, use weak linking for wcsdup and wcscasecmp. Weak linking allows you to call the
-/// function only if it exists at runtime. You can detect it by testing the function pointer against
-/// NULL. To avoid making the callers do that, redefine wcsdup to wcsdup_use_weak, and likewise with
-/// wcscasecmp. This lets us use the same binary on SnowLeopard (10.6) and Lion+ (10.7), even though
-/// these functions only exist on 10.7+.
-///
-/// On other platforms, use what's detected at build time.
+// On OS X, use weak linking for wcsdup and wcscasecmp. Weak linking allows you to call the
+// function only if it exists at runtime. You can detect it by testing the function pointer against
+// NULL. To avoid making the callers do that, redefine wcsdup to wcsdup_use_weak, and likewise with
+// wcscasecmp. This lets us use the same binary on SnowLeopard (10.6) and Lion+ (10.7), even though
+// these functions only exist on 10.7+.
+//
+// On other platforms, use what's detected at build time.
 #if __APPLE__
-#if __DARWIN_C_LEVEL >= 200809L
-// We have to explicitly redeclare these as weak,
-// since we are forced to set the MIN_REQUIRED availability macro to 10.7
-// to use libc++, which in turn exposes these as strong
+// Avoid warnings about unknown `clang::weak_import` attribute (e.g. GCC 8.2.0 on macOS 10.10)
+#if __DARWIN_C_LEVEL >= 200809L && __clang__ && __has_attribute(weak_import)
+// We have to explicitly redeclare these as weak, since we are forced to set the MIN_REQUIRED
+// availability macro to 10.7 to use libc++, which in turn exposes these as strong
 [[clang::weak_import]] wchar_t *wcsdup(const wchar_t *);
 [[clang::weak_import]] int wcscasecmp(const wchar_t *, const wchar_t *);
 [[clang::weak_import]] int wcsncasecmp(const wchar_t *, const wchar_t *, size_t n);
@@ -92,8 +92,8 @@ wchar_t *wcsdup(const wchar_t *in);
 int wcscasecmp(const wchar_t *a, const wchar_t *b);
 int wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
 wchar_t *wcsndup(const wchar_t *in, size_t c);
-#endif
-#else  //__APPLE__
+#endif  // clang::weak_import
+#else   // __APPLE__
 
 /// These functions are missing from Solaris 10, and only accessible from
 /// Solaris 11 in the std:: namespace.
@@ -137,7 +137,7 @@ wchar_t *wcsndup(const wchar_t *in, size_t c);
 
 #ifndef HAVE_WCSLCPY
 /// Copy src to string dst of size siz.  At most siz-1 characters will be copied.  Always NUL
-/// terminates (unless siz == 0).  Returns wcslen(src); if retval >= siz, truncation occurred.
+/// terminates (unless siz == 0).  Returns std::wcslen(src); if retval >= siz, truncation occurred.
 ///
 /// This is the OpenBSD strlcpy function, modified for wide characters, and renamed to reflect this
 /// change.
@@ -196,8 +196,8 @@ int flock(int fd, int op);
 #endif
 
 // NetBSD _has_ wcstod_l, but it's doing some weak linking hullabaloo that I don't get.
-// Since it doesn't have uselocale (yes, the standard function isn't there, the non-standard extension is),
-// we can't try to use the fallback.
+// Since it doesn't have uselocale (yes, the standard function isn't there, the non-standard
+// extension is), we can't try to use the fallback.
 #if !defined(HAVE_WCSTOD_L) && !defined(__NetBSD__)
 // On some platforms if this is incorrectly detected and a system-defined
 // defined version of `wcstod_l` exists, calling `wcstod` from our own
@@ -207,7 +207,7 @@ int flock(int fd, int op);
 // duplication.
 #undef wcstod_l
 namespace fish_compat {
-    double wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t loc);
+double wcstod_l(const wchar_t *enptr, wchar_t **endptr, locale_t loc);
 }
 #define wcstod_l(x, y, z) fish_compat::wcstod_l(x, y, z)
 #endif

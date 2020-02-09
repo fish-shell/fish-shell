@@ -1,21 +1,24 @@
+.. _cmd-or:
+
 or - conditionally execute a command
 ====================================
 
 Synopsis
 --------
 
-COMMAND1; or COMMAND2
+::
 
+    COMMAND1; or COMMAND2
 
 Description
 -----------
 
 ``or`` is used to execute a command if the previous command was not successful (returned a status of something other than 0).
 
-``or`` statements may be used as part of the condition in an <a href="#if">``and``</a> or <a href="#while">``while``</a> block. See the documentation
-for <a href="#if">``if``</a> and <a href="#while">``while``</a> for examples.
+``or`` statements may be used as part of the condition in an :ref:`and <cmd-if>` or :ref:`while <cmd-while>` block. See the documentation
+for :ref:`if <cmd-if>` and :ref:`while <cmd-while>` for examples.
 
-``or`` does not change the current exit status itself, but the command it runs most likely will. The exit status of the last foreground command to exit can always be accessed using the <a href="index.html#variables-status">$status</a> variable.
+``or`` does not change the current exit status itself, but the command it runs most likely will. The exit status of the last foreground command to exit can always be accessed using the :ref:`$status <variables-status>` variable.
 
 Example
 -------

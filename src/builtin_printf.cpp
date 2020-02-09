@@ -50,21 +50,23 @@
 // This file has been imported from source code of printf command in GNU Coreutils version 6.9.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
-#include <limits.h>
-#include <locale.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/types.h>
-#include <wchar.h>
-#include <wctype.h>
+
+#include <cerrno>
+#include <climits>
+#include <clocale>
+#include <cstdarg>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <cwchar>
+#include <cwctype>
 
 #include "builtin.h"
 #include "common.h"
 #include "io.h"
+#include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 class parser_t;
@@ -90,7 +92,8 @@ struct builtin_printf_state_t {
 
     int print_formatted(const wchar_t *format, int argc, wchar_t **argv);
 
-    void fatal_error(const wchar_t *format, ...);
+    void nonfatal_error(const wchar_t *fmt, ...);
+    void fatal_error(const wchar_t *fmt, ...);
 
     long print_esc(const wchar_t *escstart, bool octal_0);
     void print_esc_string(const wchar_t *str);
@@ -159,7 +162,9 @@ static int hex_to_bin(const wchar_t &c) {
         case L'F': {
             return 15;
         }
-        default: { return -1; }
+        default: {
+            return -1;
+        }
     }
 }
 
@@ -189,8 +194,26 @@ static int octal_to_bin(wchar_t c) {
         case L'7': {
             return 7;
         }
-        default: { return -1; }
+        default: {
+            return -1;
+        }
     }
+}
+
+void builtin_printf_state_t::nonfatal_error(const wchar_t *fmt, ...) {
+    // Don't error twice.
+    if (early_exit) return;
+
+    va_list va;
+    va_start(va, fmt);
+    wcstring errstr = vformat_string(fmt, va);
+    va_end(va);
+    streams.err.append(errstr);
+    if (!string_suffixes_string(L"\n", errstr)) streams.err.push_back(L'\n');
+
+    // We set the exit code to error, because one occurred,
+    // but we don't do an early exit so we still print what we can.
+    this->exit_code = STATUS_CMD_ERROR;
 }
 
 void builtin_printf_state_t::fatal_error(const wchar_t *fmt, ...) {
@@ -207,7 +230,6 @@ void builtin_printf_state_t::fatal_error(const wchar_t *fmt, ...) {
     this->exit_code = STATUS_CMD_ERROR;
     this->early_exit = true;
 }
-
 void builtin_printf_state_t::append_output(wchar_t c) {
     // Don't output if we're done.
     if (early_exit) return;
@@ -238,13 +260,15 @@ void builtin_printf_state_t::verify_numeric(const wchar_t *s, const wchar_t *end
         if (errcode == ERANGE) {
             this->fatal_error(L"%ls: %ls", s, _(L"Number out of range"));
         } else {
-            this->fatal_error(L"%ls: %s", s, strerror(errcode));
+            this->fatal_error(L"%ls: %s", s, std::strerror(errcode));
         }
     } else if (*end) {
-        if (s == end)
+        if (s == end) {
             this->fatal_error(_(L"%ls: expected a numeric value"), s);
-        else
-            this->fatal_error(_(L"%ls: value not completely converted"), s);
+        } else {
+            // This isn't entirely fatal - the value should still be printed.
+            this->nonfatal_error(_(L"%ls: value not completely converted"), s);
+        }
     }
 }
 
@@ -255,17 +279,17 @@ static T raw_string_to_scalar_type(const wchar_t *s, wchar_t **end);
 // #626
 template <>
 intmax_t raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
-    return wcstoll(s, end, 0);
+    return std::wcstoll(s, end, 0);
 }
 
 template <>
 uintmax_t raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
-    return wcstoull(s, end, 0);
+    return std::wcstoull(s, end, 0);
 }
 
 template <>
 long double raw_string_to_scalar_type(const wchar_t *s, wchar_t **end) {
-    double val = wcstod(s, end);
+    double val = std::wcstod(s, end);
     if (**end == L'\0') return val;
     // The conversion using the user's locale failed. That may be due to the string not being a
     // valid floating point value. It could also be due to the locale using different separator
@@ -281,7 +305,7 @@ static T string_to_scalar_type(const wchar_t *s, builtin_printf_state_t *state) 
         wchar_t ch = *++s;
         val = ch;
     } else {
-        wchar_t *end = NULL;
+        wchar_t *end = nullptr;
         errno = 0;
         val = raw_string_to_scalar_type<T>(s, &end);
         state->verify_numeric(s, end, errno);
@@ -358,7 +382,7 @@ long builtin_printf_state_t::print_esc(const wchar_t *escstart, bool octal_0) {
              ++esc_length, ++p)
             esc_value = esc_value * 8 + octal_to_bin(*p);
         this->append_output(ENCODE_DIRECT_BASE + esc_value % 256);
-    } else if (*p && wcschr(L"\"\\abcefnrtv", *p)) {
+    } else if (*p && std::wcschr(L"\"\\abcefnrtv", *p)) {
         print_esc_char(*p++);
     } else if (*p == L'u' || *p == L'U') {
         wchar_t esc_char = *p;
@@ -453,7 +477,9 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
             fmt.append(L"l");
             break;
         }
-        default: { break; }
+        default: {
+            break;
+        }
     }
 
     // Append the conversion itself.
@@ -685,7 +711,7 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
                 wchar_t conversion = *f;
                 if (conversion > 0xFF || !ok[conversion]) {
                     this->fatal_error(_(L"%.*ls: invalid conversion specification"),
-                                      (int)(f + 1 - direc_start), direc_start);
+                                      static_cast<int>(f + 1 - direc_start), direc_start);
                     return 0;
                 }
 
@@ -717,7 +743,7 @@ int builtin_printf(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 

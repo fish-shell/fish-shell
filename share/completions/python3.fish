@@ -17,7 +17,7 @@ complete -c python3 -n '__fish_is_first_token' -fa "(__fish_complete_suffix .py)
 complete -c python3 -f -n '__fish_is_first_token' -a '-' -d 'Read program from stdin'
 complete -c python3 -s q -d 'Don\'t print version and copyright messages on interactive startup'
 complete -c python3 -s X -x -d 'Set implementation-specific option'
-complete -c python3 -s b  -d 'Issue warnings about str(bytes_instance), str(bytearray_instance) and comparing bytes/bytearray with str'
+complete -c python3 -s b -d 'Issue warnings about str(bytes_instance), str(bytearray_instance) and comparing bytes/bytearray with str'
 complete -c python3 -o bb -d 'Issue errors'
 complete -c python3 -s m -d 'Run library module as a script (terminates option list)' -xa '(python3 -c "import pkgutil; print(\'\n\'.join([p[1] for p in pkgutil.iter_modules()]))")'
 

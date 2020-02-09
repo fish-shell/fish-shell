@@ -22,14 +22,14 @@ complete -x -c optipng -n '__fish_should_complete_switches' -a '-snip\t"cut one 
 complete -x -c optipng -n '__fish_should_complete_switches' -a '-strip\t"strip specified metadata objects (e.g. "all")"'
 
 for n in (seq 0 9)
-	complete -x -c optipng -n '__fish_should_complete_switches' -a "-o$n\t\"PNG optimization level $n\""
+    complete -x -c optipng -n '__fish_should_complete_switches' -a "-o$n\t\"PNG optimization level $n\""
 end
 
 complete -x -c optipng -n '__fish_should_complete_switches' -a '-i0\t"PNG interlace type 0"'
 complete -x -c optipng -n '__fish_should_complete_switches' -a '-i1\t"PNG interlace type 1"'
 
 for n in (seq 0 5)
-	complete -x -c optipng -n '__fish_should_complete_switches' -a "-f$n\t'PNG delta filters $n'"
+    complete -x -c optipng -n '__fish_should_complete_switches' -a "-f$n\t'PNG delta filters $n'"
 end
 
 complete -x -c optipng -n '__fish_should_complete_switches' -a '-out\t"write output file to <file>"'
@@ -37,5 +37,6 @@ complete -x -c optipng -n '__fish_should_complete_switches' -a '-dir\t"write out
 complete -x -c optipng -n '__fish_should_complete_switches' -a '-log\t"log messages to <file>"'
 
 complete -x -c optipng -n 'not __fish_prev_arg_in -out -dir -log' \
-					-a '(__fish_complete_suffix ".{png,PNG,pnm,PNM,tiff,TIFF,bmp,BMP}")'
-complete -x -c optipng -n '__fish_prev_arg_in -dir' -a '(__fish_complete_suffix \'{}\')' # hack to list directories only
+    -a '(__fish_complete_suffix .png;  __fish_complete_suffix .pnm;  __fish_complete_suffix .tiff;  __fish_complete_suffix .bmp)
+
+complete -x -c optipng -n '__fish_prev_arg_in -dir' -a '(__fish_complete_directories)'

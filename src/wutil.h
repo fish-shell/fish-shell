@@ -3,11 +3,13 @@
 #define FISH_WUTIL_H
 
 #include <dirent.h>
+#include <locale.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <time.h>
-#include <locale.h>
+#include <wctype.h>
+
 #include <string>
 
 #ifdef HAVE_XLOCALE_H
@@ -17,15 +19,16 @@
 #include "common.h"
 #include "maybe.h"
 
-/// Wide character version of fopen(). This sets CLO_EXEC.
-FILE *wfopen(const wcstring &path, const char *mode);
-
-/// Sets CLO_EXEC on a given fd.
-bool set_cloexec(int fd);
+/// Sets CLO_EXEC on a given fd according to the value of \p should_set.
+int set_cloexec(int fd, bool should_set = true);
 
 /// Wide character version of open() that also sets the close-on-exec flag (atomically when
 /// possible).
 int wopen_cloexec(const wcstring &pathname, int flags, mode_t mode = 0);
+
+/// Narrow versions of wopen_cloexec.
+int open_cloexec(const std::string &path, int flags, mode_t mode = 0);
+int open_cloexec(const char *path, int flags, mode_t mode = 0);
 
 /// Mark an fd as nonblocking; returns errno or 0 on success.
 int make_fd_nonblocking(int fd);
@@ -48,10 +51,10 @@ int wstat(const wcstring &file_name, struct stat *buf);
 int lwstat(const wcstring &file_name, struct stat *buf);
 
 /// Wide character version of access().
-int waccess(const wcstring &pathname, int mode);
+int waccess(const wcstring &file_name, int mode);
 
 /// Wide character version of unlink().
-int wunlink(const wcstring &pathname);
+int wunlink(const wcstring &file_name);
 
 /// Wide character version of perror().
 void wperror(const wchar_t *s);
@@ -59,14 +62,11 @@ void wperror(const wchar_t *s);
 /// Async-safe version of perror().
 void safe_perror(const char *message);
 
-/// Async-safe version of strerror().
+/// Async-safe version of std::strerror().
 const char *safe_strerror(int err);
 
 /// Wide character version of getcwd().
-const wcstring wgetcwd();
-
-/// Wide character version of chdir().
-int wchdir(const wcstring &dir);
+wcstring wgetcwd();
 
 /// Wide character version of realpath function.
 /// \returns the canonicalized path, or none if the path is invalid.
@@ -108,10 +108,10 @@ std::wstring wbasename(const std::wstring &path);
 const wcstring &wgettext(const wchar_t *in);
 
 /// Wide character version of mkdir.
-int wmkdir(const wcstring &dir, int mode);
+int wmkdir(const wcstring &name, int mode);
 
 /// Wide character version of rename.
-int wrename(const wcstring &oldName, const wcstring &newName);
+int wrename(const wcstring &oldName, const wcstring &newv);
 
 #define PUA1_START 0xE000
 #define PUA1_END 0xF900
@@ -137,10 +137,11 @@ int fish_wcswidth(const wcstring &str);
 // returns an immortal locale_t corresponding to the C locale.
 locale_t fish_c_locale();
 
-int fish_wcstoi(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10);
-long fish_wcstol(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10);
-long long fish_wcstoll(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10);
-unsigned long long fish_wcstoull(const wchar_t *str, const wchar_t **endptr = NULL, int base = 10);
+int fish_wcstoi(const wchar_t *str, const wchar_t **endptr = nullptr, int base = 10);
+long fish_wcstol(const wchar_t *str, const wchar_t **endptr = nullptr, int base = 10);
+long long fish_wcstoll(const wchar_t *str, const wchar_t **endptr = nullptr, int base = 10);
+unsigned long long fish_wcstoull(const wchar_t *str, const wchar_t **endptr = nullptr,
+                                 int base = 10);
 double fish_wcstod(const wchar_t *str, wchar_t **endptr);
 
 /// Class for representing a file's inode. We use this to detect and avoid symlink loops, among
@@ -180,20 +181,21 @@ struct dir_t {
 #ifndef HASH_FILE_ID
 #define HASH_FILE_ID 1
 namespace std {
-    template<>
-    struct hash<file_id_t> {
-        size_t operator()(const file_id_t &f) const {
-            std::hash<decltype(f.device)> hasher1;
-            std::hash<decltype(f.inode)> hasher2;
+template <>
+struct hash<file_id_t> {
+    size_t operator()(const file_id_t &f) const {
+        std::hash<decltype(f.device)> hasher1;
+        std::hash<decltype(f.inode)> hasher2;
 
-            return hasher1(f.device) ^ hasher2(f.inode);
-        }
-    };
-}
+        return hasher1(f.device) ^ hasher2(f.inode);
+    }
+};
+}  // namespace std
 #endif
 
 file_id_t file_id_for_fd(int fd);
 file_id_t file_id_for_path(const wcstring &path);
+file_id_t file_id_for_path(const std::string &path);
 
 extern const file_id_t kInvalidFileID;
 

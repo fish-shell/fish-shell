@@ -1,16 +1,16 @@
 // Implementation of the history builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <wchar.h>
+#include "builtin_history.h"
 
+#include <cerrno>
+#include <cstddef>
+#include <cstdint>
+#include <cwchar>
 #include <string>
 #include <vector>
 
 #include "builtin.h"
-#include "builtin_history.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "history.h"
@@ -25,15 +25,15 @@ enum hist_cmd_t { HIST_SEARCH = 1, HIST_DELETE, HIST_CLEAR, HIST_MERGE, HIST_SAV
 // Must be sorted by string, not enum or random.
 static const enum_map<hist_cmd_t> hist_enum_map[] = {
     {HIST_CLEAR, L"clear"}, {HIST_DELETE, L"delete"}, {HIST_MERGE, L"merge"},
-    {HIST_SAVE, L"save"},   {HIST_SEARCH, L"search"}, {HIST_UNDEF, NULL}};
+    {HIST_SAVE, L"save"},   {HIST_SEARCH, L"search"}, {HIST_UNDEF, nullptr}};
 
 struct history_cmd_opts_t {
-    bool print_help = false;
     hist_cmd_t hist_cmd = HIST_UNDEF;
-    history_search_type_t search_type = (history_search_type_t)-1;
+    history_search_type_t search_type = static_cast<history_search_type_t>(-1);
+    const wchar_t *show_time_format = nullptr;
     size_t max_items = SIZE_MAX;
+    bool print_help = false;
     bool history_search_type_defined = false;
-    const wchar_t *show_time_format = NULL;
     bool case_sensitive = false;
     bool null_terminate = false;
     bool reverse = false;
@@ -44,21 +44,21 @@ struct history_cmd_opts_t {
 /// supported at least until fish 3.0 and possibly longer to avoid breaking everyones
 /// config.fish and other scripts.
 static const wchar_t *const short_options = L":CRcehmn:pt::z";
-static const struct woption long_options[] = {{L"prefix", no_argument, NULL, 'p'},
-                                              {L"contains", no_argument, NULL, 'c'},
-                                              {L"help", no_argument, NULL, 'h'},
-                                              {L"show-time", optional_argument, NULL, 't'},
-                                              {L"exact", no_argument, NULL, 'e'},
-                                              {L"max", required_argument, NULL, 'n'},
-                                              {L"null", no_argument, NULL, 'z'},
-                                              {L"case-sensitive", no_argument, NULL, 'C'},
-                                              {L"delete", no_argument, NULL, 1},
-                                              {L"search", no_argument, NULL, 2},
-                                              {L"save", no_argument, NULL, 3},
-                                              {L"clear", no_argument, NULL, 4},
-                                              {L"merge", no_argument, NULL, 5},
-                                              {L"reverse", no_argument, NULL, 'R'},
-                                              {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {{L"prefix", no_argument, nullptr, 'p'},
+                                              {L"contains", no_argument, nullptr, 'c'},
+                                              {L"help", no_argument, nullptr, 'h'},
+                                              {L"show-time", optional_argument, nullptr, 't'},
+                                              {L"exact", no_argument, nullptr, 'e'},
+                                              {L"max", required_argument, nullptr, 'n'},
+                                              {L"null", no_argument, nullptr, 'z'},
+                                              {L"case-sensitive", no_argument, nullptr, 'C'},
+                                              {L"delete", no_argument, nullptr, 1},
+                                              {L"search", no_argument, nullptr, 2},
+                                              {L"save", no_argument, nullptr, 3},
+                                              {L"clear", no_argument, nullptr, 4},
+                                              {L"merge", no_argument, nullptr, 5},
+                                              {L"reverse", no_argument, nullptr, 'R'},
+                                              {nullptr, 0, nullptr, 0}};
 
 /// Remember the history subcommand and disallow selecting more than one history subcommand.
 static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t sub_cmd,
@@ -67,9 +67,9 @@ static bool set_hist_cmd(wchar_t *const cmd, hist_cmd_t *hist_cmd, hist_cmd_t su
         wchar_t err_text[1024];
         const wchar_t *subcmd_str1 = enum_to_str(*hist_cmd, hist_enum_map);
         const wchar_t *subcmd_str2 = enum_to_str(sub_cmd, hist_enum_map);
-        swprintf(err_text, sizeof(err_text) / sizeof(wchar_t),
-                 _(L"you cannot do both '%ls' and '%ls' in the same invocation"), subcmd_str1,
-                 subcmd_str2);
+        std::swprintf(err_text, sizeof(err_text) / sizeof(wchar_t),
+                      _(L"you cannot do both '%ls' and '%ls' in the same invocation"), subcmd_str1,
+                      subcmd_str2);
         streams.err.append_format(BUILTIN_ERR_COMBO2, cmd, err_text);
         return false;
     }
@@ -86,7 +86,7 @@ static bool check_for_unexpected_hist_args(const history_cmd_opts_t &opts, const
                                   subcmd_str);
         return true;
     }
-    if (args.size() != 0) {
+    if (!args.empty()) {
         const wchar_t *subcmd_str = enum_to_str(opts.hist_cmd, hist_enum_map);
         streams.err.append_format(BUILTIN_ERR_ARG_COUNT2, cmd, subcmd_str, 0, args.size());
         return true;
@@ -99,7 +99,7 @@ static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 1: {
                 if (!set_hist_cmd(cmd, &opts.hist_cmd, HIST_DELETE, streams)) {
@@ -140,17 +140,17 @@ static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high
                 break;
             }
             case 'p': {
-                opts.search_type = HISTORY_SEARCH_TYPE_PREFIX_GLOB;
+                opts.search_type = history_search_type_t::prefix_glob;
                 opts.history_search_type_defined = true;
                 break;
             }
             case 'c': {
-                opts.search_type = HISTORY_SEARCH_TYPE_CONTAINS_GLOB;
+                opts.search_type = history_search_type_t::contains_glob;
                 opts.history_search_type_defined = true;
                 break;
             }
             case 'e': {
-                opts.search_type = HISTORY_SEARCH_TYPE_EXACT;
+                opts.search_type = history_search_type_t::exact;
                 opts.history_search_type_defined = true;
                 break;
             }
@@ -161,8 +161,7 @@ static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high
             case 'n': {
                 long x = fish_wcstol(w.woptarg);
                 if (errno) {
-                    streams.err.append_format(_(L"%ls: max value '%ls' is not a valid number\n"),
-                                              cmd, w.woptarg);
+                    streams.err.append_format(BUILTIN_ERR_NOT_NUMBER, cmd, w.woptarg);
                     return STATUS_INVALID_ARGS;
                 }
                 opts.max_items = static_cast<size_t>(x);
@@ -187,7 +186,7 @@ static int parse_cmd_opts(history_cmd_opts_t &opts, int *optind,  //!OCLINT(high
                     builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1]);
                     return STATUS_INVALID_ARGS;
                 }
-                w.nextchar = NULL;
+                w.nextchar = nullptr;
                 break;
             }
             default: {
@@ -212,7 +211,7 @@ int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 
@@ -242,15 +241,16 @@ int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     // Establish appropriate defaults.
     if (opts.hist_cmd == HIST_UNDEF) opts.hist_cmd = HIST_SEARCH;
     if (!opts.history_search_type_defined) {
-        if (opts.hist_cmd == HIST_SEARCH) opts.search_type = HISTORY_SEARCH_TYPE_CONTAINS_GLOB;
-        if (opts.hist_cmd == HIST_DELETE) opts.search_type = HISTORY_SEARCH_TYPE_EXACT;
+        if (opts.hist_cmd == HIST_SEARCH) opts.search_type = history_search_type_t::contains_glob;
+        if (opts.hist_cmd == HIST_DELETE) opts.search_type = history_search_type_t::exact;
     }
 
     int status = STATUS_CMD_OK;
     switch (opts.hist_cmd) {
         case HIST_SEARCH: {
             if (!history->search(opts.search_type, args, opts.show_time_format, opts.max_items,
-                                 opts.case_sensitive, opts.null_terminate, opts.reverse, streams)) {
+                                 opts.case_sensitive, opts.null_terminate, opts.reverse,
+                                 parser.cancel_checker(), streams)) {
                 status = STATUS_CMD_ERROR;
             }
             break;
@@ -259,7 +259,7 @@ int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
             // TODO: Move this code to the history module and support the other search types
             // including case-insensitive matches. At this time we expect the non-exact deletions to
             // be handled only by the history function's interactive delete feature.
-            if (opts.search_type != HISTORY_SEARCH_TYPE_EXACT) {
+            if (opts.search_type != history_search_type_t::exact) {
                 streams.err.append_format(_(L"builtin history delete only supports --exact\n"));
                 status = STATUS_INVALID_ARGS;
                 break;

@@ -1,30 +1,33 @@
+.. _cmd-complete:
+
 complete - edit command specific tab-completions
 ================================================
 
 Synopsis
 --------
 
-complete ( -c | --command | -p | --path ) COMMAND
-        [( -c | --command | -p | --path ) COMMAND]...
-        [( -e | --erase )]
-        [( -s | --short-option ) SHORT_OPTION]...
-        [( -l | --long-option | -o | --old-option ) LONG_OPTION]...
-        [( -a | --arguments ) OPTION_ARGUMENTS]
-        [( -k | --keep-order )]
-        [( -f | --no-files )]
-        [( -r | --require-parameter )]
-        [( -x | --exclusive )]
-        [( -w | --wraps ) WRAPPED_COMMAND]...
-        [( -n | --condition ) CONDITION]
-        [( -d | --description ) DESCRIPTION]
-complete ( -C[STRING] | --do-complete[=STRING] )
+::
 
+  complete ( -c | --command | -p | --path ) COMMAND
+          [( -c | --command | -p | --path ) COMMAND]...
+          [( -e | --erase )]
+          [( -s | --short-option ) SHORT_OPTION]...
+          [( -l | --long-option | -o | --old-option ) LONG_OPTION]...
+          [( -a | --arguments ) OPTION_ARGUMENTS]
+          [( -k | --keep-order )]
+          [( -f | --no-files )]
+          [( -F | --force-files )]
+          [( -r | --require-parameter )]
+          [( -x | --exclusive )]
+          [( -w | --wraps ) WRAPPED_COMMAND]...
+          [( -n | --condition ) CONDITION]
+          [( -d | --description ) DESCRIPTION]
+  complete ( -C [STRING] | --do-complete[=STRING] )
 
 Description
 -----------
 
-For an introduction to specifying completions, see <a
-href='index.html#completion-own'>Writing your own completions</a> in
+For an introduction to specifying completions, see :ref:`Writing your own completions <completion-own>` in
 the fish manual.
 
 - ``COMMAND`` is the name of the command for which to add a completion.
@@ -51,11 +54,13 @@ the fish manual.
 
 - ``-a OPTION_ARGUMENTS`` or ``--arguments=OPTION_ARGUMENTS`` adds the specified option arguments to the completions list.
 
-- ``-k`` or ``--keep-order`` preserves the order of the ``OPTION_ARGUMENTS`` specified via ``-a`` or ``--arguments`` instead of sorting alphabetically.
+- ``-k`` or ``--keep-order`` preserves the order of the ``OPTION_ARGUMENTS`` specified via ``-a`` or ``--arguments`` instead of sorting alphabetically. Multiple ``complete`` calls with ``-k`` result in arguments of the later ones displayed first.
 
-- ``-f`` or ``--no-files`` specifies that the options specified by this completion may not be followed by a filename.
+- ``-f`` or ``--no-files`` says that the options specified by this completion may not be followed by a filename.
 
-- ``-r`` or ``--require-parameter`` specifies that the options specified by this completion always must have an option argument, i.e. may not be followed by another option.
+- ``-F`` or ``--force-files`` says that the options specified by this completion may be followed by a filename, even if another applicable ``complete`` specified ``--no-files``.
+
+- ``-r`` or ``--require-parameter`` says that the options specified by this completion must have an option argument, i.e. may not be followed by another option.
 
 - ``-x`` or ``--exclusive`` implies both ``-r`` and ``-f``.
 

@@ -1,16 +1,19 @@
+.. _cmd-bg:
+
 bg - send jobs to background
 ============================
 
 Synopsis
 --------
 
-bg [PID...]
+::
 
+    bg [PID...]
 
 Description
 -----------
 
-``bg`` sends <a href="index.html#syntax-job-control">jobs</a> to the background, resuming them if they are stopped.
+``bg`` sends :ref:`jobs <syntax-job-control>` to the background, resuming them if they are stopped.
 
 A background job is executed simultaneously with fish, and does not have access to the keyboard. If no job is specified, the last job to be used is put in the background. If PID is specified, the jobs with the specified process group IDs are put in the background.
 

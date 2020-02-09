@@ -1,27 +1,30 @@
+.. _cmd-history:
+
 history - Show and manipulate command history
 =============================================
 
 Synopsis
 --------
 
-history search [ --show-time ] [ --case-sensitive ] [ --exact | --prefix | --contains ] [ --max=n ] [ --null ] [ -R | --reverse ] [ "search string"... ]
-history delete [ --show-time ] [ --case-sensitive ] [ --exact | --prefix | --contains ] "search string"...
-history merge
-history save
-history clear
-history ( -h | --help )
+::
 
+    history search [ --show-time ] [ --case-sensitive ] [ --exact | --prefix | --contains ] [ --max=n ] [ --null ] [ -R | --reverse ] [ "search string"... ]
+    history delete [ --show-time ] [ --case-sensitive ] [ --exact | --prefix | --contains ] "search string"...
+    history merge
+    history save
+    history clear
+    history ( -h | --help )
 
 Description
 -----------
 
-``history`` is used to search, delete, and otherwise manipulate the history of interactive commands.
+``history`` is used to search, delete, and otherwise manipulate the :ref:`history of interactive commands <history-search>`.
 
 The following operations (sub-commands) are available:
 
 - ``search`` returns history items matching the search string. If no search string is provided it returns all history items. This is the default operation if no other operation is specified. You only have to explicitly say ``history search`` if you wish to search for one of the subcommands. The ``--contains`` search option will be used if you don't specify a different search option. Entries are ordered newest to oldest unless you use the ``--reverse`` flag. If stdout is attached to a tty the output will be piped through your pager by the history function. The history builtin simply writes the results to stdout.
 
-- ``delete`` deletes history items. Without the ``--prefix`` or ``--contains`` options, the exact match of the specified text will be deleted. If you don't specify ``--exact`` a prompt will be displayed before any items are deleted asking you which entries are to be deleted. You can enter the word "all" to delete all matching entries. You can enter a single ID (the number in square brackets) to delete just that single entry. You can enter more than one ID separated by a space to delete multiple entries. Just press [enter] to not delete anything. Note that the interactive delete behavior is a feature of the history function. The history builtin only supports ``--exact --case-sensitive`` deletion.
+- ``delete`` deletes history items. The ``--contains`` search option will be used if you don't specify a different search option. If you don't specify ``--exact`` a prompt will be displayed before any items are deleted asking you which entries are to be deleted. You can enter the word "all" to delete all matching entries. You can enter a single ID (the number in square brackets) to delete just that single entry. You can enter more than one ID separated by a space to delete multiple entries. Just press [enter] to not delete anything. Note that the interactive delete behavior is a feature of the history function. The history builtin only supports ``--exact --case-sensitive`` deletion.
 
 - ``merge`` immediately incorporates history changes from other sessions. Ordinarily ``fish`` ignores history changes from sessions started after the current one. This command applies those changes immediately.
 

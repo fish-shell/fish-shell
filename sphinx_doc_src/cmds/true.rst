@@ -1,10 +1,14 @@
+.. _cmd-true:
+
 true - return a successful result
 =================================
 
 Synopsis
 --------
 
-true
+::
+
+    true
 
 
 Description

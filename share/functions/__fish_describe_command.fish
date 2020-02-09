@@ -2,6 +2,23 @@
 # This function is used internally by the fish command completion code
 #
 
+# macOS 10.15 "Catalina" has some major issues.
+# The whatis database is non-existent, so apropos tries (and fails) to create it every time,
+# which takes about half a second.
+#
+# So we disable this entirely in that case.
+if test (uname) = Darwin
+    set -l darwin_version (uname -r | string split .)
+    # macOS 15 is Darwin 19, this is an issue at least up to 10.15.3.
+    # If this is fixed in later versions uncomment the second check.
+    if test "$darwin_version[1]" = 19 # -a "$darwin_version[2]" -le 3
+        function __fish_describe_command
+        end
+        # (remember: exit when `source`ing only exits the file, not the shell)
+        exit
+    end
+end
+
 function __fish_describe_command -d "Command used to find descriptions for commands"
     # We're going to try to build a regex out of $argv inside awk.
     # Make sure $argv has no special characters.

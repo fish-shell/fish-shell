@@ -1,4 +1,4 @@
-if which -v > /dev/null 2>/dev/null # GNU
+if which -v >/dev/null 2>/dev/null # GNU
     complete -c which -s a -l all -d "Print all matching executables in PATH, not just the first"
     complete -c which -s i -l read-alias -d "Read aliases from stdin, reporting matching ones on stdout"
     complete -c which -l skip-alias -d "Ignore option '--read-alias'"
@@ -16,4 +16,4 @@ else # OSX
     complete -c which -s s -d "Print no output, only return 0 if found"
 end
 
-complete -c which -a "(complete -C(commandline -ct))" -x
+complete -c which -a "(__fish_complete_external_command)" -x

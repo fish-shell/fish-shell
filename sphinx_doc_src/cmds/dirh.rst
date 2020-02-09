@@ -1,11 +1,14 @@
+.. _cmd-dirh:
+
 dirh - print directory history
 ==============================
 
 Synopsis
 --------
 
-dirh
+::
 
+    dirh
 
 Description
 -----------

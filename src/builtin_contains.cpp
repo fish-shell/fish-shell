@@ -1,11 +1,13 @@
 // Implementation of the contains builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_contains.h"
+
 #include <unistd.h>
-#include <wchar.h>
+
+#include <cwchar>
 
 #include "builtin.h"
-#include "builtin_contains.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
@@ -17,15 +19,16 @@ struct contains_cmd_opts_t {
     bool print_index = false;
 };
 static const wchar_t *const short_options = L"+:hi";
-static const struct woption long_options[] = {
-    {L"help", no_argument, NULL, 'h'}, {L"index", no_argument, NULL, 'i'}, {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h'},
+                                              {L"index", no_argument, nullptr, 'i'},
+                                              {nullptr, 0, nullptr, 0}};
 
 static int parse_cmd_opts(contains_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'h': {
                 opts.print_help = true;
@@ -66,7 +69,7 @@ int builtin_contains(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 
@@ -75,7 +78,7 @@ int builtin_contains(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         streams.err.append_format(_(L"%ls: Key not specified\n"), cmd);
     } else {
         for (int i = optind + 1; i < argc; i++) {
-            if (!wcscmp(needle, argv[i])) {
+            if (!std::wcscmp(needle, argv[i])) {
                 if (opts.print_index) streams.out.append_format(L"%d\n", i - optind);
                 return STATUS_CMD_OK;
             }

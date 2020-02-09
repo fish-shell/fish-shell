@@ -1,13 +1,13 @@
 // Implementation of the disown builtin.
 #include "config.h"  // IWYU pragma: keep
 
-#include <errno.h>
-#include <signal.h>
+#include "builtin_disown.h"
 
+#include <cerrno>
+#include <csignal>
 #include <set>
 
 #include "builtin.h"
-#include "builtin_disown.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
@@ -17,9 +17,9 @@
 
 /// Helper for builtin_disown.
 static int disown_job(const wchar_t *cmd, parser_t &parser, io_streams_t &streams, job_t *j) {
-    if (j == 0) {
+    if (j == nullptr) {
         streams.err.append_format(_(L"%ls: Unknown job '%ls'\n"), L"bg");
-        builtin_print_help(parser, streams, cmd, streams.err);
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -28,15 +28,15 @@ static int disown_job(const wchar_t *cmd, parser_t &parser, io_streams_t &stream
         killpg(j->pgid, SIGCONT);
         const wchar_t *fmt =
             _(L"%ls: job %d ('%ls') was stopped and has been signalled to continue.\n");
-        streams.err.append_format(fmt, cmd, j->job_id, j->command_wcstr());
+        streams.err.append_format(fmt, cmd, j->job_id(), j->command_wcstr());
     }
 
-    pid_t pgid = j->pgid;
-    if (!parser.job_remove(j)) {
-        return STATUS_CMD_ERROR;
-    }
+    // We cannot directly remove the job from the jobs() list as `disown` might be called
+    // within the context of a subjob which will cause the parent job to crash in exec_job().
+    // Instead, we set a flag and the parser removes the job from the jobs list later.
+    j->mut_flags().disown_requested = true;
+    add_disowned_pgid(j->pgid);
 
-    add_disowned_pgid(pgid);
     return STATUS_CMD_OK;
 }
 
@@ -51,25 +51,25 @@ int builtin_disown(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 
-    if (argv[1] == 0) {
-        job_t *j;
+    if (argv[1] == nullptr) {
         // Select last constructed job (ie first job in the job queue) that is possible to disown.
         // Stopped jobs can be disowned (they will be continued).
         // Foreground jobs can be disowned.
         // Even jobs that aren't under job control can be disowned!
-        job_iterator_t jobs;
-        while ((j = jobs.next())) {
+        job_t *job = nullptr;
+        for (const auto &j : parser.jobs()) {
             if (j->is_constructed() && (!j->is_completed())) {
+                job = j.get();
                 break;
             }
         }
 
-        if (j) {
-            retval = disown_job(cmd, parser, streams, j);
+        if (job) {
+            retval = disown_job(cmd, parser, streams, job);
         } else {
             streams.err.append_format(_(L"%ls: There are no suitable jobs\n"), cmd);
             retval = STATUS_CMD_ERROR;
@@ -100,7 +100,7 @@ int builtin_disown(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         }
 
         // Disown all target jobs
-        for (auto j : jobs) {
+        for (const auto &j : jobs) {
             retval |= disown_job(cmd, parser, streams, j);
         }
     }

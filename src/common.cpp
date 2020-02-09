@@ -1,8 +1,11 @@
 // Various functions, mostly string utilities, that are used by most parts of fish.
 #include "config.h"
 
-#include <ctype.h>
+#ifdef HAVE_BACKTRACE_SYMBOLS
 #include <cxxabi.h>
+#endif
+
+#include <ctype.h>
 #include <dlfcn.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -14,13 +17,14 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <termios.h>
 #include <unistd.h>
-#include <wchar.h>
 #include <wctype.h>
+
+#include <cstring>
+#include <cwchar>
 #ifdef HAVE_EXECINFO_H
 #include <execinfo.h>
 #endif
@@ -33,7 +37,6 @@
 
 #ifdef __linux__
 // Includes for WSL detection
-#include <cstring>
 #include <sys/utsname.h>
 #endif
 
@@ -45,7 +48,6 @@
 
 #include <algorithm>
 #include <atomic>
-#include <locale>
 #include <memory>  // IWYU pragma: keep
 #include <type_traits>
 
@@ -53,63 +55,60 @@
 #include "env.h"
 #include "expand.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
 #include "future_feature_flags.h"
+#include "global_safety.h"
+#include "iothread.h"
+#include "parser.h"
 #include "proc.h"
+#include "signal.h"
+#include "wcstringutil.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-constexpr wint_t NOT_A_WCHAR = static_cast<wint_t>(WEOF);
-
 struct termios shell_modes;
 
-/// This allows us to determine if we're running on the main thread
-static std::atomic<size_t> thread_id { 0 };
 /// This allows us to notice when we've forked.
-static bool is_forked_proc = false;
+static relaxed_atomic_bool_t is_forked_proc{false};
 /// This allows us to bypass the main thread checks
-static bool thread_asserts_cfg_for_testing = false;
+static relaxed_atomic_bool_t thread_asserts_cfg_for_testing{false};
 
-wchar_t ellipsis_char;
-const wchar_t *ellipsis_str = nullptr;
-wchar_t omitted_newline_char;
-wchar_t obfuscation_read_char;
+static relaxed_atomic_t<wchar_t> ellipsis_char;
+wchar_t get_ellipsis_char() { return ellipsis_char; }
+
+static relaxed_atomic_t<const wchar_t *> ellipsis_str;
+const wchar_t *get_ellipsis_str() { return ellipsis_str; }
+
+static relaxed_atomic_t<const wchar_t *> omitted_newline_str;
+const wchar_t *get_omitted_newline_str() { return omitted_newline_str; }
+
+static relaxed_atomic_t<int> omitted_newline_width;
+int get_omitted_newline_width() { return omitted_newline_width; }
+
+static relaxed_atomic_t<wchar_t> obfuscation_read_char;
+wchar_t get_obfuscation_read_char() { return obfuscation_read_char; }
+
 bool g_profiling_active = false;
 const wchar_t *program_name;
-int debug_level = 1;         // default maximum debug output level (errors and warnings)
-int debug_stack_frames = 0;  // default number of stack frames to show on debug() calls
+std::atomic<int> debug_level{1};  // default maximum debug output level (errors and warnings)
 
+static relaxed_atomic_t<int> debug_stack_frames{0};
+void set_debug_stack_frames(int v) { debug_stack_frames = v; }
+int get_debug_stack_frames() { return debug_stack_frames; }
 
 /// Be able to restore the term's foreground process group.
 /// This is set during startup and not modified after.
-static pid_t initial_fg_process_group = -1;
+static relaxed_atomic_t<pid_t> initial_fg_process_group{-1};
 
 /// This struct maintains the current state of the terminal size. It is updated on demand after
-/// receiving a SIGWINCH. Do not touch this struct directly, it's managed with a rwlock. Use
-/// common_get_width()/common_get_height().
-static std::mutex termsize_lock;
-static struct winsize termsize = {USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX};
-static volatile bool termsize_valid = false;
+/// receiving a SIGWINCH. Use common_get_width()/common_get_height() to read it lazily.
+static constexpr struct winsize k_invalid_termsize = {USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX};
+static owning_lock<struct winsize> s_termsize{k_invalid_termsize};
+
+static relaxed_atomic_bool_t s_termsize_valid{false};
 
 static char *wcs2str_internal(const wchar_t *in, char *out);
-static void debug_shared(const wchar_t msg_level, const wcstring &msg);
-
-bool is_whitespace(wchar_t c) {
-    switch (c) {
-        case ' ':
-        case '\t':
-        case '\r':
-        case '\n':
-        case '\v':
-            return true;
-        default:
-            return false;
-    }
-}
-
-bool is_whitespace(const wcstring &input) {
-    bool (*pred)(wchar_t c) = is_whitespace;
-    return std::all_of(input.begin(), input.end(), pred);
-}
+static void debug_shared(wchar_t msg_level, const wcstring &msg);
 
 #if defined(OS_IS_CYGWIN) || defined(WSL)
 // MS Windows tty devices do not currently have either a read or write timestamp. Those
@@ -141,7 +140,7 @@ long convert_digit(wchar_t d, int base) {
 }
 
 /// Test whether the char is a valid hex digit as used by the `escape_string_*()` functions.
-static bool is_hex_digit(int c) { return strchr("0123456789ABCDEF", c) != NULL; }
+static bool is_hex_digit(int c) { return std::strchr("0123456789ABCDEF", c) != nullptr; }
 
 /// This is a specialization of `convert_digit()` that only handles base 16 and only uppercase.
 long convert_hex_digit(wchar_t d) {
@@ -169,12 +168,26 @@ bool is_windows_subsystem_for_linux() {
         utsname info;
         uname(&info);
 
-        // Sample utsname.release under WSL: 4.4.0-17763-Microsoft
-        if (strstr(info.release, "Microsoft") != nullptr) {
-            const char *dash = strchr(info.release, '-');
+        // Sample utsname.release under WSL, testing for something like `4.4.0-17763-Microsoft`
+        if (std::strstr(info.release, "Microsoft") != nullptr) {
+            const char *dash = std::strchr(info.release, '-');
             if (dash == nullptr || strtod(dash + 1, nullptr) < 17763) {
-                debug(1, "This version of WSL is not supported and fish will probably not work correctly!\n"
-                        "Please upgrade to Windows 10 1809 (17763) or higher to use fish!");
+                // #5298, #5661: There are acknowledged, published, and (later) fixed issues with
+                // job control under early WSL releases that prevent fish from running correctly,
+                // with unexpected failures when piping. Fish 3.0 nightly builds worked around this
+                // issue with some needlessly complicated code that was later stripped from the
+                // fish 3.0 release, so we just bail. Note that fish 2.0 was also broken, but we
+                // just didn't warn about it.
+
+                // #6038 & 5101bde: It's been requested that there be some sort of way to disable
+                // this check: if the environment variable FISH_NO_WSL_CHECK is present, this test
+                // is bypassed. We intentionally do not include this in the error message because
+                // it'll only allow fish to run but not to actually work. Here be dragons!
+                if (getenv("FISH_NO_WSL_CHECK") == nullptr) {
+                    FLOGF(error,
+                          "This version of WSL has known bugs that prevent fish from working."
+                          "Please upgrade to Windows 10 1809 (17763) or higher to use fish!");
+                }
             }
 
             return true;
@@ -192,27 +205,27 @@ bool is_windows_subsystem_for_linux() {
 #ifdef HAVE_BACKTRACE_SYMBOLS
 // This function produces a stack backtrace with demangled function & method names. It is based on
 // https://gist.github.com/fmela/591333 but adapted to the style of the fish project.
-[[gnu::noinline]] static const wcstring_list_t
-demangled_backtrace(int max_frames, int skip_levels) {
+[[gnu::noinline]] static wcstring_list_t demangled_backtrace(int max_frames, int skip_levels) {
     void *callstack[128];
     const int n_max_frames = sizeof(callstack) / sizeof(callstack[0]);
     int n_frames = backtrace(callstack, n_max_frames);
     char **symbols = backtrace_symbols(callstack, n_frames);
     wchar_t text[1024];
-    std::vector<wcstring> backtrace_text;
+    wcstring_list_t backtrace_text;
 
     if (skip_levels + max_frames < n_frames) n_frames = skip_levels + max_frames;
 
     for (int i = skip_levels; i < n_frames; i++) {
         Dl_info info;
         if (dladdr(callstack[i], &info) && info.dli_sname) {
-            char *demangled = NULL;
+            char *demangled = nullptr;
             int status = -1;
             if (info.dli_sname[0] == '_')
-                demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
-            swprintf(text, sizeof(text) / sizeof(wchar_t), L"%-3d %s + %td", i - skip_levels,
-                     status == 0 ? demangled : info.dli_sname == 0 ? symbols[i] : info.dli_sname,
-                     (char *)callstack[i] - (char *)info.dli_saddr);
+                demangled = abi::__cxa_demangle(info.dli_sname, nullptr, nullptr, &status);
+            swprintf(
+                text, sizeof(text) / sizeof(wchar_t), L"%-3d %s + %td", i - skip_levels,
+                status == 0 ? demangled : info.dli_sname == nullptr ? symbols[i] : info.dli_sname,
+                static_cast<char *>(callstack[i]) - static_cast<char *>(info.dli_saddr));
             free(demangled);
         } else {
             swprintf(text, sizeof(text) / sizeof(wchar_t), L"%-3d %s", i - skip_levels, symbols[i]);
@@ -226,18 +239,8 @@ demangled_backtrace(int max_frames, int skip_levels) {
 [[gnu::noinline]] void show_stackframe(const wchar_t msg_level, int frame_count, int skip_levels) {
     if (frame_count < 1) return;
 
-    // TODO: Decide if this is still needed. I'm commenting it out because it caused me some grief
-    // while trying to debug a test failure. And the tests run just fine without spurious failures
-    // if this check is not done.
-    //
-    // Hack to avoid showing backtraces in the tester.
-    // if (program_name && !wcscmp(program_name, L"(ignore)")) return;
-
-    debug_shared(msg_level, L"Backtrace:");
-    std::vector<wcstring> bt = demangled_backtrace(frame_count, skip_levels + 2);
-    for (int i = 0; (size_t)i < bt.size(); i++) {
-        debug_shared(msg_level, bt[i]);
-    }
+    wcstring_list_t bt = demangled_backtrace(frame_count, skip_levels + 2);
+    debug_shared(msg_level, L"Backtrace:\n" + join_strings(bt, L'\n') + L'\n');
 }
 
 #else   // HAVE_BACKTRACE_SYMBOLS
@@ -247,38 +250,6 @@ demangled_backtrace(int max_frames, int skip_levels) {
 }
 #endif  // HAVE_BACKTRACE_SYMBOLS
 
-int fgetws2(wcstring *s, FILE *f) {
-    int i = 0;
-    wint_t c;
-
-    while (1) {
-        errno = 0;
-
-        c = fgetwc(f);
-        if (errno == EILSEQ || errno == EINTR) {
-            continue;
-        }
-
-        switch (c) {
-            // End of line.
-            case WEOF:
-            case L'\n':
-            case L'\0': {
-                return i;
-            }
-            // Ignore carriage returns.
-            case L'\r': {
-                break;
-            }
-            default: {
-                i++;
-                s->push_back((wchar_t)c);
-                break;
-            }
-        }
-    }
-}
-
 /// Converts the narrow character string \c in into its wide equivalent, and return it.
 ///
 /// The string may contain embedded nulls.
@@ -287,7 +258,7 @@ int fgetws2(wcstring *s, FILE *f) {
 /// area.
 static wcstring str2wcs_internal(const char *in, const size_t in_len) {
     if (in_len == 0) return wcstring();
-    assert(in != NULL);
+    assert(in != nullptr);
 
     wcstring result;
     result.reserve(in_len);
@@ -296,7 +267,7 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
     if (MB_CUR_MAX == 1) {
         // Single-byte locale, all values are legal.
         while (in_pos < in_len) {
-            result.push_back((unsigned char)in[in_pos]);
+            result.push_back(static_cast<unsigned char>(in[in_pos]));
             in_pos++;
         }
         return result;
@@ -309,26 +280,26 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
         wchar_t wc = 0;
 
         if ((in[in_pos] & 0xF8) == 0xF8) {
-            // Protect against broken mbrtowc() implementations which attempt to encode UTF-8
+            // Protect against broken std::mbrtowc() implementations which attempt to encode UTF-8
             // sequences longer than four bytes (e.g., OS X Snow Leopard).
             use_encode_direct = true;
         } else if (sizeof(wchar_t) == 2 &&  //!OCLINT(constant if expression)
                    (in[in_pos] & 0xF8) == 0xF0) {
             // Assume we are in a UTF-16 environment (e.g., Cygwin) using a UTF-8 encoding.
             // The bits set check will be true for a four byte UTF-8 sequence that requires
-            // two UTF-16 chars. Something that doesn't work with our simple use of mbrtowc().
+            // two UTF-16 chars. Something that doesn't work with our simple use of std::mbrtowc().
             use_encode_direct = true;
         } else {
-            ret = mbrtowc(&wc, &in[in_pos], in_len - in_pos, &state);
+            ret = std::mbrtowc(&wc, &in[in_pos], in_len - in_pos, &state);
             // Determine whether to encode this character with our crazy scheme.
             if (wc >= ENCODE_DIRECT_BASE && wc < ENCODE_DIRECT_BASE + 256) {
                 use_encode_direct = true;
             } else if (wc == INTERNAL_SEPARATOR) {
                 use_encode_direct = true;
-            } else if (ret == (size_t)-2) {
+            } else if (ret == static_cast<size_t>(-2)) {
                 // Incomplete sequence.
                 use_encode_direct = true;
-            } else if (ret == (size_t)-1) {
+            } else if (ret == static_cast<size_t>(-1)) {
                 // Invalid data.
                 use_encode_direct = true;
             } else if (ret > in_len - in_pos) {
@@ -343,14 +314,14 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
         }
 
         if (use_encode_direct) {
-            wc = ENCODE_DIRECT_BASE + (unsigned char)in[in_pos];
+            wc = ENCODE_DIRECT_BASE + static_cast<unsigned char>(in[in_pos]);
             result.push_back(wc);
             in_pos++;
-            memset(&state, 0, sizeof state);
+            std::memset(&state, 0, sizeof state);
         } else if (ret == 0) {  // embedded null byte!
             result.push_back(L'\0');
             in_pos++;
-            memset(&state, 0, sizeof state);
+            std::memset(&state, 0, sizeof state);
         } else {  // normal case
             result.push_back(wc);
             in_pos += ret;
@@ -362,7 +333,7 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len) {
 
 wcstring str2wcstring(const char *in, size_t len) { return str2wcs_internal(in, len); }
 
-wcstring str2wcstring(const char *in) { return str2wcs_internal(in, strlen(in)); }
+wcstring str2wcstring(const char *in) { return str2wcs_internal(in, std::strlen(in)); }
 
 wcstring str2wcstring(const std::string &in) {
     // Handles embedded nulls!
@@ -375,7 +346,7 @@ wcstring str2wcstring(const std::string &in, size_t len) {
 }
 
 char *wcs2str(const wchar_t *in, size_t len) {
-    if (!in) return NULL;
+    if (!in) return nullptr;
     size_t desired_size = MAX_UTF8_BYTES * len + 1;
     char local_buff[512];
     if (desired_size <= sizeof local_buff / sizeof *local_buff) {
@@ -390,7 +361,7 @@ char *wcs2str(const wchar_t *in, size_t len) {
     }
 
     // Here we probably allocate a buffer probably much larger than necessary.
-    char *out = (char *)malloc(MAX_UTF8_BYTES * len + 1);
+    char *out = static_cast<char *>(malloc(MAX_UTF8_BYTES * len + 1));
     assert(out);
     // Instead of returning the return value of wcs2str_internal, return `out` directly.
     // This eliminates false warnings in coverity about resource leaks.
@@ -398,7 +369,7 @@ char *wcs2str(const wchar_t *in, size_t len) {
     return out;
 }
 
-char *wcs2str(const wchar_t *in) { return wcs2str(in, wcslen(in)); }
+char *wcs2str(const wchar_t *in) { return wcs2str(in, std::wcslen(in)); }
 char *wcs2str(const wcstring &in) { return wcs2str(in.c_str(), in.length()); }
 
 /// This function is distinguished from wcs2str_internal in that it allows embedded null bytes.
@@ -409,10 +380,9 @@ std::string wcs2string(const wcstring &input) {
     mbstate_t state = {};
     char converted[MB_LEN_MAX];
 
-    for (size_t i = 0; i < input.size(); i++) {
-        wchar_t wc = input[i];
+    for (auto wc : input) {
         if (wc == INTERNAL_SEPARATOR) {
-            ;  // do nothing
+            // do nothing
         } else if (wc >= ENCODE_DIRECT_BASE && wc < ENCODE_DIRECT_BASE + 256) {
             result.push_back(wc - ENCODE_DIRECT_BASE);
         } else if (MB_CUR_MAX == 1) {  // single-byte locale (C/POSIX/ISO-8859)
@@ -423,11 +393,11 @@ std::string wcs2string(const wcstring &input) {
             converted[0] = wc;
             result.append(converted, 1);
         } else {
-            memset(converted, 0, sizeof converted);
-            size_t len = wcrtomb(converted, wc, &state);
-            if (len == (size_t)-1) {
-                debug(1, L"Wide character U+%4X has no narrow representation", wc);
-                memset(&state, 0, sizeof(state));
+            std::memset(converted, 0, sizeof converted);
+            size_t len = std::wcrtomb(converted, wc, &state);
+            if (len == static_cast<size_t>(-1)) {
+                FLOGF(char_encoding, L"Wide character U+%4X has no narrow representation", wc);
+                std::memset(&state, 0, sizeof(state));
             } else {
                 result.append(converted, len);
             }
@@ -443,16 +413,14 @@ std::string wcs2string(const wcstring &input) {
 /// This function decodes illegal character sequences in a reversible way using the private use
 /// area.
 static char *wcs2str_internal(const wchar_t *in, char *out) {
-    CHECK(in, 0);
-    CHECK(out, 0);
-
+    assert(in && out && "in and out must not be null");
     size_t in_pos = 0;
     size_t out_pos = 0;
     mbstate_t state = {};
 
     while (in[in_pos]) {
         if (in[in_pos] == INTERNAL_SEPARATOR) {
-            ;  // do nothing
+            // do nothing
         } else if (in[in_pos] >= ENCODE_DIRECT_BASE && in[in_pos] < ENCODE_DIRECT_BASE + 256) {
             out[out_pos++] = in[in_pos] - ENCODE_DIRECT_BASE;
         } else if (MB_CUR_MAX == 1)  // single-byte locale (C/POSIX/ISO-8859)
@@ -461,13 +429,14 @@ static char *wcs2str_internal(const wchar_t *in, char *out) {
             if (in[in_pos] & ~0xFF) {
                 out[out_pos++] = '?';
             } else {
-                out[out_pos++] = (unsigned char)in[in_pos];
+                out[out_pos++] = static_cast<unsigned char>(in[in_pos]);
             }
         } else {
-            size_t len = wcrtomb(&out[out_pos], in[in_pos], &state);
-            if (len == (size_t)-1) {
-                debug(1, L"Wide character U+%4X has no narrow representation", in[in_pos]);
-                memset(&state, 0, sizeof(state));
+            size_t len = std::wcrtomb(&out[out_pos], in[in_pos], &state);
+            if (len == static_cast<size_t>(-1)) {
+                FLOGF(char_encoding, L"Wide character U+%4X has no narrow representation",
+                      in[in_pos]);
+                std::memset(&state, 0, sizeof(state));
             } else {
                 out_pos += len;
             }
@@ -484,7 +453,7 @@ static bool can_be_encoded(wchar_t wc) {
     char converted[MB_LEN_MAX];
     mbstate_t state = {};
 
-    return wcrtomb(converted, wc, &state) != (size_t)-1;
+    return std::wcrtomb(converted, wc, &state) != static_cast<size_t>(-1);
 }
 
 wcstring format_string(const wchar_t *format, ...) {
@@ -501,14 +470,14 @@ void append_formatv(wcstring &target, const wchar_t *format, va_list va_orig) {
     // formated string option or because the supplied destination string was to small. In GLIBC,
     // errno seems to be set to EINVAL either way.
     //
-    // Because of this, on failiure we try to increase the buffer size until the free space is
+    // Because of this, on failure we try to increase the buffer size until the free space is
     // larger than max_size, at which point it will conclude that the error was probably due to a
     // badly formated string option, and return an error. Make sure to null terminate string before
     // that, though.
     const size_t max_size = (128 * 1024 * 1024);
     wchar_t static_buff[256];
     size_t size = 0;
-    wchar_t *buff = NULL;
+    wchar_t *buff = nullptr;
     int status = -1;
     while (status < 0) {
         // Reallocate if necessary.
@@ -521,14 +490,14 @@ void append_formatv(wcstring &target, const wchar_t *format, va_list va_orig) {
                 buff[0] = '\0';
                 break;
             }
-            buff = (wchar_t *)realloc((buff == static_buff ? NULL : buff), size);
-            assert(buff != NULL);
+            buff = static_cast<wchar_t *>(realloc((buff == static_buff ? nullptr : buff), size));
+            assert(buff != nullptr);
         }
 
         // Try printing.
         va_list va;
         va_copy(va, va_orig);
-        status = vswprintf(buff, size / sizeof(wchar_t), format, va);
+        status = std::vswprintf(buff, size / sizeof(wchar_t), format, va);
         va_end(va);
     }
 
@@ -557,21 +526,21 @@ void append_format(wcstring &str, const wchar_t *format, ...) {
 wchar_t *quote_end(const wchar_t *pos) {
     wchar_t c = *pos;
 
-    while (1) {
+    while (true) {
         pos++;
 
-        if (!*pos) return 0;
+        if (!*pos) return nullptr;
 
         if (*pos == L'\\') {
             pos++;
-            if (!*pos) return 0;
+            if (!*pos) return nullptr;
         } else {
             if (*pos == c) {
-                return (wchar_t *)pos;
+                return const_cast<wchar_t *>(pos);
             }
         }
     }
-    return 0;
+    return nullptr;
 }
 
 void fish_setlocale() {
@@ -587,13 +556,25 @@ void fish_setlocale() {
         ellipsis_char = L'$';  // "horizontal ellipsis"
         ellipsis_str = L"...";
     }
+
     if (is_windows_subsystem_for_linux()) {
         // neither of \u23CE and \u25CF can be displayed in the default fonts on Windows, though
         // they can be *encoded* just fine. Use alternative glyphs.
-        omitted_newline_char = can_be_encoded(L'\u00b6') ? L'\u00b6' : L'~';   // "pilcrow"
-        obfuscation_read_char = can_be_encoded(L'\u2022') ? L'\u2022' : L'*';  // "bullet"
+        omitted_newline_str = L"\u00b6";  // "pilcrow"
+        omitted_newline_width = 1;
+        obfuscation_read_char = L'\u2022';  // "bullet"
+    } else if (is_console_session()) {
+        omitted_newline_str = L"^J";
+        omitted_newline_width = 2;
+        obfuscation_read_char = L'*';
     } else {
-        omitted_newline_char = can_be_encoded(L'\u23CE') ? L'\u23CE' : L'~';   // "return"
+        if (can_be_encoded(L'\u23CE')) {
+            omitted_newline_str = L"\u23CE";
+            omitted_newline_width = 1;
+        } else {
+            omitted_newline_str = L"^J";
+            omitted_newline_width = 2;
+        }
         obfuscation_read_char = can_be_encoded(L'\u25CF') ? L'\u25CF' : L'#';  // "black circle"
     }
 }
@@ -602,7 +583,7 @@ long read_blocked(int fd, void *buf, size_t count) {
     long bytes_read = 0;
 
     while (count) {
-        ssize_t res = read(fd, (char *)buf + bytes_read, count);
+        ssize_t res = read(fd, static_cast<char *>(buf) + bytes_read, count);
         if (res == 0) {
             break;
         } else if (res == -1) {
@@ -629,10 +610,10 @@ ssize_t write_loop(int fd, const char *buff, size_t count) {
                 return -1;
             }
         } else {
-            out_cum += (size_t)out;
+            out_cum += static_cast<size_t>(out);
         }
     }
-    return (ssize_t)out_cum;
+    return static_cast<ssize_t>(out_cum);
 }
 
 ssize_t read_loop(int fd, void *buff, size_t count) {
@@ -644,20 +625,21 @@ ssize_t read_loop(int fd, void *buff, size_t count) {
 }
 
 /// Hack to not print error messages in the tests. Do not call this from functions in this module
-/// like `debug()`. It is only intended to supress diagnostic noise from testing things like the
+/// like `debug()`. It is only intended to suppress diagnostic noise from testing things like the
 /// fish parser where we expect a lot of diagnostic messages due to testing error conditions.
 bool should_suppress_stderr_for_tests() {
-    return program_name && !wcscmp(program_name, TESTS_PROGRAM_NAME);
+    return program_name && !std::wcscmp(program_name, TESTS_PROGRAM_NAME);
 }
 
 static void debug_shared(const wchar_t level, const wcstring &msg) {
     pid_t current_pid;
     if (!is_forked_child()) {
-        fwprintf(stderr, L"<%lc> %ls: %ls\n", (unsigned long)level, program_name, msg.c_str());
+        std::fwprintf(stderr, L"<%lc> %ls: %ls\n", static_cast<unsigned long>(level), program_name,
+                      msg.c_str());
     } else {
         current_pid = getpid();
-        fwprintf(stderr, L"<%lc> %ls: %d: %ls\n", (unsigned long)level, program_name, current_pid,
-                 msg.c_str());
+        std::fwprintf(stderr, L"<%lc> %ls: %d: %ls\n", static_cast<unsigned long>(level),
+                      program_name, current_pid, msg.c_str());
     }
 }
 
@@ -707,8 +689,8 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
     size_t param_idx = 0;
     const char *cursor = msg;
     while (*cursor != '\0') {
-        const char *end = strchr(cursor, '%');
-        if (end == NULL) end = cursor + strlen(cursor);
+        const char *end = std::strchr(cursor, '%');
+        if (end == nullptr) end = cursor + std::strlen(cursor);
 
         ignore_result(write(STDERR_FILENO, cursor, end - cursor));
 
@@ -717,7 +699,7 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
             assert(param_idx < sizeof params / sizeof *params);
             const char *format = params[param_idx++];
             if (!format) format = "(null)";
-            ignore_result(write(STDERR_FILENO, format, strlen(format)));
+            ignore_result(write(STDERR_FILENO, format, std::strlen(format)));
             cursor = end + 2;
         } else if (end[0] == '\0') {
             // Must be at the end of the string.
@@ -804,13 +786,13 @@ wcstring reformat_for_screen(const wcstring &msg) {
     if (screen_width) {
         const wchar_t *start = msg.c_str();
         const wchar_t *pos = start;
-        while (1) {
+        while (true) {
             int overflow = 0;
 
             int tok_width = 0;
 
             // Tokenize on whitespace, and also calculate the width of the token.
-            while (*pos && (!wcschr(L" \n\r\t", *pos))) {
+            while (*pos && (!std::wcschr(L" \n\r\t", *pos))) {
                 // Check is token is wider than one line. If so we mark it as an overflow and break
                 // the token.
                 if ((tok_width + fish_wcwidth(*pos)) > (screen_width - 1)) {
@@ -863,11 +845,11 @@ static void escape_string_url(const wcstring &in, wcstring &out) {
     const std::string narrow = wcs2string(in);
     for (auto &c1 : narrow) {
         // This silliness is so we get the correct result whether chars are signed or unsigned.
-        unsigned int c2 = (unsigned int)c1 & 0xFF;
+        unsigned int c2 = static_cast<unsigned int>(c1) & 0xFF;
         if (!(c2 & 0x80) &&
             (isalnum(c2) || c2 == '/' || c2 == '.' || c2 == '~' || c2 == '-' || c2 == '_')) {
             // The above characters don't need to be encoded.
-            out.push_back((wchar_t)c2);
+            out.push_back(static_cast<wchar_t>(c2));
         } else {
             // All other chars need to have their UTF-8 representation encoded in hex.
             wchar_t buf[4];
@@ -915,14 +897,14 @@ static void escape_string_var(const wcstring &in, wcstring &out) {
     const std::string narrow = wcs2string(in);
     for (auto c1 : narrow) {
         // This silliness is so we get the correct result whether chars are signed or unsigned.
-        unsigned int c2 = (unsigned int)c1 & 0xFF;
+        unsigned int c2 = static_cast<unsigned int>(c1) & 0xFF;
         if (!(c2 & 0x80) && isalnum(c2) && (!prev_was_hex_encoded || !is_hex_digit(c2))) {
             // ASCII alphanumerics don't need to be encoded.
             if (prev_was_hex_encoded) {
                 out.push_back(L'_');
                 prev_was_hex_encoded = false;
             }
-            out.push_back((wchar_t)c2);
+            out.push_back(static_cast<wchar_t>(c2));
         } else if (c2 == '_') {
             // Underscores are encoded by doubling them.
             out.append(L"__");
@@ -1142,7 +1124,7 @@ static void escape_string_script(const wchar_t *orig_in, size_t in_len, wcstring
 /// \param in is the raw string to be searched for literally when substituted in a PCRE2 expression.
 static wcstring escape_string_pcre2(const wcstring &in) {
     wcstring out;
-    out.reserve(in.size() * 1.3); // a wild guess
+    out.reserve(in.size() * 1.3);  // a wild guess
 
     for (auto c : in) {
         switch (c) {
@@ -1159,8 +1141,9 @@ static wcstring escape_string_pcre2(const wcstring &in) {
             case L'}':
             case L'\\':
             case L'|':
-            // these two only *need* to be escaped within a character class, and technically it makes
-            // no sense to ever use process substitution output to compose a character class, but...
+            // these two only *need* to be escaped within a character class, and technically it
+            // makes no sense to ever use process substitution output to compose a character class,
+            // but...
             case L'-':
             case L']':
                 out.push_back('\\');
@@ -1178,7 +1161,7 @@ wcstring escape_string(const wchar_t *in, escape_flags_t flags, escape_string_st
 
     switch (style) {
         case STRING_STYLE_SCRIPT: {
-            escape_string_script(in, wcslen(in), result, flags);
+            escape_string_script(in, std::wcslen(in), result, flags);
             break;
         }
         case STRING_STYLE_URL: {
@@ -1260,9 +1243,10 @@ wcstring debug_escape(const wcstring &in) {
     return result;
 }
 
-/// Helper to return the last character in a string, or NOT_A_WCHAR.
-static wint_t string_last_char(const wcstring &str) {
-    return str.empty() ? NOT_A_WCHAR : str.back();
+/// Helper to return the last character in a string, or none.
+static maybe_t<wchar_t> string_last_char(const wcstring &str) {
+    if (str.empty()) return none();
+    return str.back();
 }
 
 /// Given a null terminated string starting with a backslash, read the escape as if it is unquoted,
@@ -1271,9 +1255,9 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
                                      bool unescape_special) {
     assert(input[0] == L'\\' && "Not an escape");
 
-    // Here's the character we'll ultimately append, or NOT_A_WCHAR for none. Note that L'\0' is a
+    // Here's the character we'll ultimately append, or none. Note that L'\0' is a
     // valid thing to append.
-    wint_t result_char_or_none = NOT_A_WCHAR;
+    maybe_t<wchar_t> result_char_or_none = none();
 
     bool errored = false;
     size_t in_pos = 1;  // in_pos always tracks the next character to read (and therefore the number
@@ -1320,7 +1304,7 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
                     max_val = WCHAR_MAX;
 
                     // Don't exceed the largest Unicode code point - see #1107.
-                    if (0x10FFFF < max_val) max_val = (wchar_t)0x10FFFF;
+                    if (0x10FFFF < max_val) max_val = static_cast<wchar_t>(0x10FFFF);
                     break;
                 }
                 case L'x': {
@@ -1355,7 +1339,8 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
             }
 
             if (res <= max_val) {
-                result_char_or_none = (wchar_t)((byte_literal ? ENCODE_DIRECT_BASE : 0) + res);
+                result_char_or_none =
+                    static_cast<wchar_t>((byte_literal ? ENCODE_DIRECT_BASE : 0) + res);
             } else {
                 errored = true;
             }
@@ -1416,7 +1401,7 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
         }
         // If a backslash is followed by an actual newline, swallow them both.
         case L'\n': {
-            result_char_or_none = NOT_A_WCHAR;
+            result_char_or_none = none();
             break;
         }
         default: {
@@ -1426,11 +1411,8 @@ maybe_t<size_t> read_unquoted_escape(const wchar_t *input, wcstring *result, boo
         }
     }
 
-    if (!errored && result_char_or_none != NOT_A_WCHAR) {
-        wchar_t result_char = static_cast<wchar_t>(result_char_or_none);
-        // If result_char is not NOT_A_WCHAR, it must be a valid wchar.
-        assert((wint_t)result_char == result_char_or_none);
-        result->push_back(result_char);
+    if (!errored && result_char_or_none.has_value()) {
+        result->push_back(*result_char_or_none);
     }
     if (errored) return none();
 
@@ -1448,7 +1430,11 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
     const bool unescape_special = static_cast<bool>(flags & UNESCAPE_SPECIAL);
     const bool allow_incomplete = static_cast<bool>(flags & UNESCAPE_INCOMPLETE);
 
-    bool brace_text_start = false;
+    // The positions of open braces.
+    std::vector<size_t> braces;
+    // The positions of variable expansions or brace ","s.
+    // We only read braces as expanders if there's a variable expansion or "," in them.
+    std::vector<size_t> vars_or_seps;
     int brace_count = 0;
 
     bool errored = false;
@@ -1456,13 +1442,12 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
         mode_unquoted,
         mode_single_quotes,
         mode_double_quotes,
-        mode_braces
     } mode = mode_unquoted;
 
     for (size_t input_position = 0; input_position < input_len && !errored; input_position++) {
         const wchar_t c = input[input_position];
-        // Here's the character we'll append to result, or NOT_A_WCHAR to suppress it.
-        wint_t to_append_or_none = c;
+        // Here's the character we'll append to result, or none() to suppress it.
+        maybe_t<wchar_t> to_append_or_none = c;
         if (mode == mode_unquoted) {
             switch (c) {
                 case L'\\': {
@@ -1480,7 +1465,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                         input_position += *escape_chars - 1;
                     }
                     // We've already appended, don't append anything else.
-                    to_append_or_none = NOT_A_WCHAR;
+                    to_append_or_none = none();
                     break;
                 }
                 case L'~': {
@@ -1493,10 +1478,9 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     // Note that this only recognizes %self if the string is literally %self.
                     // %self/foo will NOT match this.
                     if (unescape_special && input_position == 0 &&
-                        !wcscmp(input, PROCESS_EXPAND_SELF_STR)) {
+                        !std::wcscmp(input, PROCESS_EXPAND_SELF_STR)) {
                         to_append_or_none = PROCESS_EXPAND_SELF;
-                        input_position +=
-                            wcslen(PROCESS_EXPAND_SELF_STR) - 1;  // skip over 'self' part.
+                        input_position += PROCESS_EXPAND_SELF_STR_LEN - 1;  // skip over 'self's
                     }
                     break;
                 }
@@ -1506,7 +1490,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                         // is ANY_STRING, delete the last char and store ANY_STRING_RECURSIVE to
                         // reflect the fact that ** is the recursive wildcard.
                         if (string_last_char(result) == ANY_STRING) {
-                            assert(result.size() > 0);
+                            assert(!result.empty());
                             result.resize(result.size() - 1);
                             to_append_or_none = ANY_STRING_RECURSIVE;
                         } else {
@@ -1524,6 +1508,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                 case L'$': {
                     if (unescape_special) {
                         to_append_or_none = VARIABLE_EXPAND;
+                        vars_or_seps.push_back(input_position);
                     }
                     break;
                 }
@@ -1531,6 +1516,8 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     if (unescape_special) {
                         brace_count++;
                         to_append_or_none = BRACE_BEGIN;
+                        // We need to store where the brace *ends up* in the output.
+                        braces.push_back(result.size());
                     }
                     break;
                 }
@@ -1543,40 +1530,56 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                         // assert(brace_count > 0 && "imbalanced brackets are a tokenizer error, we
                         // shouldn't be able to get here");
                         brace_count--;
-                        brace_text_start = brace_text_start && brace_count > 0;
                         to_append_or_none = BRACE_END;
+                        if (!braces.empty()) {
+                            // If we didn't have a var or separator since the last '{',
+                            // put the literal back.
+                            if (vars_or_seps.empty() || vars_or_seps.back() < braces.back()) {
+                                result[braces.back()] = L'{';
+                                // We also need to turn all spaces back.
+                                for (size_t i = braces.back() + 1; i < result.size(); i++) {
+                                    if (result[i] == BRACE_SPACE) result[i] = L' ';
+                                }
+                                to_append_or_none = L'}';
+                            }
+
+                            // Remove all seps inside the current brace pair, so if we have a
+                            // surrounding pair we only get seps inside *that*.
+                            if (!vars_or_seps.empty()) {
+                                while (!vars_or_seps.empty() && vars_or_seps.back() > braces.back())
+                                    vars_or_seps.pop_back();
+                            }
+                            braces.pop_back();
+                        }
                     }
                     break;
                 }
                 case L',': {
                     if (unescape_special && brace_count > 0) {
                         to_append_or_none = BRACE_SEP;
-                        brace_text_start = false;
+                        vars_or_seps.push_back(input_position);
                     }
                     break;
                 }
-                case L'\n':
-                case L'\t':
                 case L' ': {
                     if (unescape_special && brace_count > 0) {
-                        to_append_or_none = brace_text_start ? wint_t(BRACE_SPACE) : NOT_A_WCHAR;
+                        to_append_or_none = BRACE_SPACE;
                     }
                     break;
                 }
                 case L'\'': {
                     mode = mode_single_quotes;
-                    to_append_or_none = unescape_special ? wint_t(INTERNAL_SEPARATOR) : NOT_A_WCHAR;
+                    to_append_or_none =
+                        unescape_special ? maybe_t<wchar_t>(INTERNAL_SEPARATOR) : none();
                     break;
                 }
                 case L'\"': {
                     mode = mode_double_quotes;
-                    to_append_or_none = unescape_special ? wint_t(INTERNAL_SEPARATOR) : NOT_A_WCHAR;
+                    to_append_or_none =
+                        unescape_special ? maybe_t<wchar_t>(INTERNAL_SEPARATOR) : none();
                     break;
                 }
                 default: {
-                    if (unescape_special && brace_count > 0) {
-                        brace_text_start = true;
-                    }
                     break;
                 }
             }
@@ -1609,14 +1612,16 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                     }
                 }
             } else if (c == L'\'') {
-                to_append_or_none = unescape_special ? wint_t(INTERNAL_SEPARATOR) : NOT_A_WCHAR;
+                to_append_or_none =
+                    unescape_special ? maybe_t<wchar_t>(INTERNAL_SEPARATOR) : none();
                 mode = mode_unquoted;
             }
         } else if (mode == mode_double_quotes) {
             switch (c) {
                 case L'"': {
                     mode = mode_unquoted;
-                    to_append_or_none = unescape_special ? wint_t(INTERNAL_SEPARATOR) : NOT_A_WCHAR;
+                    to_append_or_none =
+                        unescape_special ? maybe_t<wchar_t>(INTERNAL_SEPARATOR) : none();
                     break;
                 }
                 case '\\': {
@@ -1638,7 +1643,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                         }
                         case '\n': {
                             /* Swallow newline */
-                            to_append_or_none = NOT_A_WCHAR;
+                            to_append_or_none = none();
                             input_position += 1; /* Skip over the backslash */
                             break;
                         }
@@ -1653,19 +1658,19 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
                 case '$': {
                     if (unescape_special) {
                         to_append_or_none = VARIABLE_EXPAND_SINGLE;
+                        vars_or_seps.push_back(input_position);
                     }
                     break;
                 }
-                default: { break; }
+                default: {
+                    break;
+                }
             }
         }
 
         // Now maybe append the char.
-        if (to_append_or_none != NOT_A_WCHAR) {
-            wchar_t to_append_char = static_cast<wchar_t>(to_append_or_none);
-            // If result_char is not NOT_A_WCHAR, it must be a valid wchar.
-            assert((wint_t)to_append_char == to_append_or_none);
-            result.push_back(to_append_char);
+        if (to_append_or_none.has_value()) {
+            result.push_back(*to_append_or_none);
         }
     }
 
@@ -1677,7 +1682,7 @@ static bool unescape_string_internal(const wchar_t *const input, const size_t in
 }
 
 bool unescape_string_in_place(wcstring *str, unescape_flags_t escape_special) {
-    assert(str != NULL);
+    assert(str != nullptr);
     wcstring output;
     bool success = unescape_string_internal(str->c_str(), str->size(), &output, escape_special);
     if (success) {
@@ -1691,7 +1696,7 @@ bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t es
     bool success = false;
     switch (style) {
         case STRING_STYLE_SCRIPT: {
-            success = unescape_string_internal(input, wcslen(input), output, escape_special);
+            success = unescape_string_internal(input, std::wcslen(input), output, escape_special);
             break;
         }
         case STRING_STYLE_URL: {
@@ -1742,19 +1747,18 @@ bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t e
 /// COLUMNS or LINES variables are changed. This is also invoked when the shell regains control of
 /// the tty since it is possible the terminal size changed while an external command was running.
 void invalidate_termsize(bool invalidate_vars) {
-    termsize_valid = false;
+    s_termsize_valid = false;
     if (invalidate_vars) {
-        termsize.ws_col = termsize.ws_row = USHRT_MAX;
+        auto termsize = s_termsize.acquire();
+        termsize->ws_col = termsize->ws_row = USHRT_MAX;
     }
 }
 
 /// Handle SIGWINCH. This is also invoked when the shell regains control of the tty since it is
 /// possible the terminal size changed while an external command was running.
 void common_handle_winch(int signal) {
-    // Don't run ioctl() here. Technically it's not safe to use in signals although in practice it
-    // is safe on every platform I've used. But we want to be conservative on such matters.
-    UNUSED(signal);
-    invalidate_termsize(false);
+    (void)signal;
+    s_termsize_valid = false;
 }
 
 /// Validate the new terminal size. Fallback to the env vars if necessary. Ensure the values are
@@ -1762,10 +1766,11 @@ void common_handle_winch(int signal) {
 static void validate_new_termsize(struct winsize *new_termsize, const environment_t &vars) {
     if (new_termsize->ws_col == 0 || new_termsize->ws_row == 0) {
 #ifdef HAVE_WINSIZE
-        if (shell_is_interactive()) {
-            debug(1, _(L"Current terminal parameters have rows and/or columns set to zero."));
-            debug(1, _(L"The stty command can be used to correct this "
-                       L"(e.g., stty rows 80 columns 24)."));
+        // Highly hackish. This seems like it should be moved.
+        if (is_main_thread() && parser_t::principal_parser().is_interactive()) {
+            FLOGF(warning, _(L"Current terminal parameters have rows and/or columns set to zero."));
+            FLOGF(warning, _(L"The stty command can be used to correct this "
+                             L"(e.g., stty rows 80 columns 24)."));
         }
 #endif
         // Fallback to the environment vars.
@@ -1785,9 +1790,11 @@ static void validate_new_termsize(struct winsize *new_termsize, const environmen
     }
 
     if (new_termsize->ws_col < MIN_TERM_COL || new_termsize->ws_row < MIN_TERM_ROW) {
-        if (shell_is_interactive()) {
-            debug(1, _(L"Current terminal parameters set terminal size to unreasonable value."));
-            debug(1, _(L"Defaulting terminal size to 80x24."));
+        // Also highly hackisk.
+        if (is_main_thread() && parser_t::principal_parser().is_interactive()) {
+            FLOGF(warning,
+                  _(L"Current terminal parameters set terminal size to unreasonable value."));
+            FLOGF(warning, _(L"Defaulting terminal size to 80x24."));
         }
         new_termsize->ws_col = DFLT_TERM_COL;
         new_termsize->ws_row = DFLT_TERM_ROW;
@@ -1812,89 +1819,48 @@ static void export_new_termsize(struct winsize *new_termsize, env_stack_t &vars)
 #endif
 }
 
-/// Updates termsize as needed, and returns a copy of the winsize.
-struct winsize get_current_winsize() {
-    scoped_lock guard(termsize_lock);
-
-    if (termsize_valid) return termsize;
+/// Get the current termsize, lazily computing it. Return by reference if it changed.
+static struct winsize get_current_winsize_prim(bool *changed, const environment_t &vars) {
+    auto termsize = s_termsize.acquire();
+    if (s_termsize_valid) return *termsize;
 
     struct winsize new_termsize = {0, 0, 0, 0};
 #ifdef HAVE_WINSIZE
     errno = 0;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &new_termsize) != -1 &&
-        new_termsize.ws_col == termsize.ws_col && new_termsize.ws_row == termsize.ws_row) {
-        termsize_valid = true;
-        return termsize;
+        new_termsize.ws_col == termsize->ws_col && new_termsize.ws_row == termsize->ws_row) {
+        s_termsize_valid = true;
+        return *termsize;
     }
 #endif
-    auto &vars = env_stack_t::globals();
     validate_new_termsize(&new_termsize, vars);
-    export_new_termsize(&new_termsize, vars);
-    termsize.ws_col = new_termsize.ws_col;
-    termsize.ws_row = new_termsize.ws_row;
-    termsize_valid = true;
+    termsize->ws_col = new_termsize.ws_col;
+    termsize->ws_row = new_termsize.ws_row;
+    *changed = true;
+    s_termsize_valid = true;
+    return *termsize;
+}
+
+/// Updates termsize as needed, and returns a copy of the winsize.
+struct winsize get_current_winsize() {
+    bool changed = false;
+    auto &vars = env_stack_t::globals();
+    struct winsize termsize = get_current_winsize_prim(&changed, vars);
+    if (changed) {
+        // TODO: this may call us reentrantly through the environment dispatch mechanism. We need to
+        // rationalize this.
+        export_new_termsize(&termsize, vars);
+        // Hack: due to the dispatch the termsize may have just become invalid. Stomp it back to
+        // valid. What a mess.
+        *s_termsize.acquire() = termsize;
+        s_termsize_valid = true;
+    }
     return termsize;
 }
 
 int common_get_width() { return get_current_winsize().ws_col; }
 
 int common_get_height() { return get_current_winsize().ws_row; }
-
-bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &value) {
-    return string_prefixes_string(proposed_prefix, value.c_str());
-}
-
-bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value) {
-    size_t prefix_size = proposed_prefix.size();
-    return prefix_size <= value.size() && value.compare(0, prefix_size, proposed_prefix) == 0;
-}
-
-bool string_prefixes_string(const wchar_t *proposed_prefix, const wchar_t *value) {
-    for (size_t idx = 0; proposed_prefix[idx] != L'\0'; idx++) {
-        // Note if the prefix is longer than value, then we will compare a nonzero prefix character
-        // against a zero value character, and so we'll return false;
-        if (proposed_prefix[idx] != value[idx]) return false;
-    }
-    // We must have that proposed_prefix[idx] == L'\0', so we have a prefix match.
-    return true;
-}
-
-bool string_prefixes_string(const char *proposed_prefix, const std::string &value) {
-    return string_prefixes_string(proposed_prefix, value.c_str());
-}
-
-bool string_prefixes_string(const char *proposed_prefix, const char *value) {
-    for (size_t idx = 0; proposed_prefix[idx] != L'\0'; idx++) {
-        if (proposed_prefix[idx] != value[idx]) return false;
-    }
-    return true;
-}
-
-bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix,
-                                             const wcstring &value) {
-    size_t prefix_size = proposed_prefix.size();
-    return prefix_size <= value.size() &&
-           wcsncasecmp(proposed_prefix.c_str(), value.c_str(), prefix_size) == 0;
-}
-
-bool string_suffixes_string(const wcstring &proposed_suffix, const wcstring &value) {
-    size_t suffix_size = proposed_suffix.size();
-    return suffix_size <= value.size() &&
-           value.compare(value.size() - suffix_size, suffix_size, proposed_suffix) == 0;
-}
-
-bool string_suffixes_string(const wchar_t *proposed_suffix, const wcstring &value) {
-    size_t suffix_size = wcslen(proposed_suffix);
-    return suffix_size <= value.size() &&
-           value.compare(value.size() - suffix_size, suffix_size, proposed_suffix) == 0;
-}
-
-bool string_suffixes_string_case_insensitive(const wcstring &proposed_suffix,
-                                             const wcstring &value) {
-    size_t suffix_size = proposed_suffix.size();
-    return suffix_size <= value.size() && wcsncasecmp(value.c_str() + (value.size() - suffix_size),
-                                                      proposed_suffix.c_str(), suffix_size) == 0;
-}
 
 /// Returns true if seq, represented as a subsequence, is contained within string.
 static bool subsequence_in_string(const wcstring &seq, const wcstring &str) {
@@ -1991,101 +1957,14 @@ int string_fuzzy_match_t::compare(const string_fuzzy_match_t &rhs) const {
     return 0;  // equal
 }
 
-template <bool Fuzzy, typename T>
-size_t ifind_impl(const T &haystack, const T &needle) {
-    using char_t = typename T::value_type;
-    std::locale locale;
-
-    auto ieq = [&locale](char_t c1, char_t c2) {
-        if (c1 == c2 || std::toupper(c1, locale) == std::toupper(c2, locale)) return true;
-
-        // In fuzzy matching treat treat `-` and `_` as equal (#3584).
-        if (Fuzzy) {
-            if ((c1 == '-' || c1 == '_') && (c2 == '-' || c2 == '_')) return true;
-        }
-        return false;
-    };
-
-    auto result = std::search(haystack.begin(), haystack.end(), needle.begin(), needle.end(), ieq);
-    if (result != haystack.end()) {
-        return result - haystack.begin();
-    }
-    return T::npos;
-}
-
-size_t ifind(const wcstring &haystack, const wcstring &needle, bool fuzzy) {
-    return fuzzy ? ifind_impl<true>(haystack, needle) : ifind_impl<false>(haystack, needle);
-}
-
-size_t ifind(const std::string &haystack, const std::string &needle, bool fuzzy) {
-    return fuzzy ? ifind_impl<true>(haystack, needle) : ifind_impl<false>(haystack, needle);
-}
-
-wcstring_list_t split_string(const wcstring &val, wchar_t sep) {
-    wcstring_list_t out;
-    size_t pos = 0, end = val.size();
-    while (pos <= end) {
-        size_t next_pos = val.find(sep, pos);
-        if (next_pos == wcstring::npos) {
-            next_pos = end;
-        }
-        out.emplace_back(val, pos, next_pos - pos);
-        pos = next_pos + 1;  // skip the separator, or skip past the end
-    }
-    return out;
-}
-
-wcstring join_strings(const wcstring_list_t &vals, wchar_t sep) {
-    if (vals.empty()) return wcstring{};
-
-    // Reserve the size we will need.
-    // count-1 separators, plus the length of all strings.
-    size_t size = vals.size() - 1;
-    for (const wcstring &s : vals) {
-        size += s.size();
-    }
-
-    // Construct the string.
-    wcstring result;
-    result.reserve(size);
-    bool first = true;
-    for (const wcstring &s : vals) {
-        if (!first) {
-            result.push_back(sep);
-        }
-        result.append(s);
-        first = false;
-    }
-    return result;
-}
-
-int create_directory(const wcstring &d) {
-    bool ok = false;
-    struct stat buf;
-    int stat_res = 0;
-
-    while ((stat_res = wstat(d, &buf)) != 0) {
-        if (errno != EAGAIN) break;
-    }
-
-    if (stat_res == 0) {
-        if (S_ISDIR(buf.st_mode)) ok = true;
-    } else if (errno == ENOENT) {
-        wcstring dir = wdirname(d);
-        if (!create_directory(dir) && !wmkdir(d, 0700)) ok = true;
-    }
-
-    return ok ? 0 : -1;
-}
-
 [[gnu::noinline]] void bugreport() {
-    debug(0, _(L"This is a bug. Break on 'bugreport' to debug."));
-    debug(0, _(L"If you can reproduce it, please report: %s."), PACKAGE_BUGREPORT);
+    FLOG(error, _(L"This is a bug. Break on 'bugreport' to debug."));
+    FLOG(error, _(L"If you can reproduce it, please report: "), PACKAGE_BUGREPORT, L'.');
 }
 
 wcstring format_size(long long sz) {
     wcstring result;
-    const wchar_t *sz_name[] = {L"kB", L"MB", L"GB", L"TB", L"PB", L"EB", L"ZB", L"YB", 0};
+    const wchar_t *sz_name[] = {L"kB", L"MB", L"GB", L"TB", L"PB", L"EB", L"ZB", L"YB", nullptr};
 
     if (sz < 0) {
         result.append(L"unknown");
@@ -2098,11 +1977,12 @@ wcstring format_size(long long sz) {
 
         for (i = 0; sz_name[i]; i++) {
             if (sz < (1024 * 1024) || !sz_name[i + 1]) {
-                long isz = ((long)sz) / 1024;
+                long isz = (static_cast<long>(sz)) / 1024;
                 if (isz > 9)
                     result.append(format_string(L"%d%ls", isz, sz_name[i]));
                 else
-                    result.append(format_string(L"%.1f%ls", (double)sz / 1024, sz_name[i]));
+                    result.append(
+                        format_string(L"%.1f%ls", static_cast<double>(sz) / 1024, sz_name[i]));
                 break;
             }
             sz /= 1024;
@@ -2138,9 +2018,9 @@ void append_str(char *buff, const char *str, size_t *inout_idx, size_t max_len) 
 void format_size_safe(char buff[128], unsigned long long sz) {
     const size_t buff_size = 128;
     const size_t max_len = buff_size - 1;  // need to leave room for a null terminator
-    memset(buff, 0, buff_size);
+    std::memset(buff, 0, buff_size);
     size_t idx = 0;
-    const char *const sz_name[] = {"kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB", NULL};
+    const char *const sz_name[] = {"kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB", nullptr};
     if (sz < 1) {
         strncpy(buff, "empty", buff_size);
     } else if (sz < 1024) {
@@ -2174,88 +2054,54 @@ void format_size_safe(char buff[128], unsigned long long sz) {
 /// the gettimeofday function and will have the same precision as that function.
 double timef() {
     struct timeval tv;
-    assert_with_errno(gettimeofday(&tv, 0) != -1);
+    assert_with_errno(gettimeofday(&tv, nullptr) != -1);
     // return (double)tv.tv_sec + 0.000001 * tv.tv_usec;
-    return (double)tv.tv_sec + 1e-6 * tv.tv_usec;
+    return static_cast<double>(tv.tv_sec) + 1e-6 * tv.tv_usec;
 }
 
 void exit_without_destructors(int code) { _exit(code); }
 
-/// Helper function to convert from a null_terminated_array_t<wchar_t> to a
-/// null_terminated_array_t<char_t>.
-void convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &wide_arr,
-                                  null_terminated_array_t<char> *output) {
-    const wchar_t *const *arr = wide_arr.get();
-    if (!arr) {
-        output->clear();
-        return;
-    }
-
-    std::vector<std::string> list;
-    for (size_t i = 0; arr[i]; i++) {
-        list.push_back(wcs2string(arr[i]));
-    }
-    output->set(list);
-}
-
 void autoclose_fd_t::close() {
     if (fd_ < 0) return;
-    if (::close(fd_) == -1) {
-        wperror(L"close");
-    }
+    exec_close(fd_);
     fd_ = -1;
 }
 
-void append_path_component(wcstring &path, const wcstring &component) {
-    if (path.empty() || component.empty()) {
-        path.append(component);
-    } else {
-        size_t path_len = path.size();
-        bool path_slash = path.at(path_len - 1) == L'/';
-        bool comp_slash = component.at(0) == L'/';
-        if (!path_slash && !comp_slash) {
-            // Need a slash
-            path.push_back(L'/');
-        } else if (path_slash && comp_slash) {
-            // Too many slashes.
-            path.erase(path_len - 1, 1);
+void exec_close(int fd) {
+    assert(fd >= 0 && "Invalid fd");
+    while (close(fd) == -1) {
+        if (errno != EINTR) {
+            wperror(L"close");
+            break;
         }
-        path.append(component);
     }
 }
 
 extern "C" {
 [[gnu::noinline]] void debug_thread_error(void) {
-    while (1) sleep(9999999);
+    // Wait for a SIGINT. We can't use sigsuspend() because the signal may be delivered on another
+    // thread.
+    sigint_checker_t sigint;
+    sigint.wait();
 }
 }
 
 void set_main_thread() {
-    // Just call is_main_thread() once to force increment of thread_id.
-    bool x = is_main_thread();
-    assert(x && "set_main_thread should be main thread");
-    (void)x;
+    // Just call thread_id() once to force increment of thread_id.
+    uint64_t tid = thread_id();
+    assert(tid == 1 && "main thread should have thread ID 1");
+    (void)tid;
 }
 
 void configure_thread_assertions_for_testing() { thread_asserts_cfg_for_testing = true; }
 
-bool is_forked_child() {
-    return is_forked_proc;
-}
+bool is_forked_child() { return is_forked_proc; }
 
 void setup_fork_guards() {
-    static bool already_initialized = false;
-
     is_forked_proc = false;
-    if (already_initialized) {
-        // Just mark this process as main and exit
-        return;
-    }
-
-    already_initialized = true;
-    pthread_atfork(nullptr, nullptr, []() {
-        is_forked_proc = true;
-    });
+    static std::once_flag fork_guard_flag;
+    std::call_once(fork_guard_flag,
+                   [] { pthread_atfork(nullptr, nullptr, [] { is_forked_proc = true; }); });
 }
 
 void save_term_foreground_process_group() {
@@ -2272,31 +2118,28 @@ void restore_term_foreground_process_group() {
     }
 }
 
-bool is_main_thread() {
-    static thread_local int local_thread_id = thread_id++;
-    return local_thread_id == 0;
-}
+bool is_main_thread() { return thread_id() == 1; }
 
 void assert_is_main_thread(const char *who) {
     if (!is_main_thread() && !thread_asserts_cfg_for_testing) {
-        debug(0, "%s called off of main thread.", who);
-        debug(0, "Break on debug_thread_error to debug.");
+        FLOGF(error, L"%s called off of main thread.", who);
+        FLOGF(error, L"Break on debug_thread_error to debug.");
         debug_thread_error();
     }
 }
 
 void assert_is_not_forked_child(const char *who) {
     if (is_forked_child()) {
-        debug(0, "%s called in a forked child.", who);
-        debug(0, "Break on debug_thread_error to debug.");
+        FLOGF(error, L"%s called in a forked child.", who);
+        FLOG(error, L"Break on debug_thread_error to debug.");
         debug_thread_error();
     }
 }
 
 void assert_is_background_thread(const char *who) {
     if (is_main_thread() && !thread_asserts_cfg_for_testing) {
-        debug(0, "%s called on the main thread (may block!).", who);
-        debug(0, "Break on debug_thread_error to debug.");
+        FLOGF(error, L"%s called on the main thread (may block!).", who);
+        FLOG(error, L"Break on debug_thread_error to debug.");
         debug_thread_error();
     }
 }
@@ -2307,68 +2150,11 @@ void assert_is_locked(void *vmutex, const char *who, const char *caller) {
     // Note that std::mutex.try_lock() is allowed to return false when the mutex isn't
     // actually locked; fortunately we are checking the opposite so we're safe.
     if (mutex->try_lock()) {
-        debug(0, "%s is not locked when it should be in '%s'", who, caller);
-        debug(0, "Break on debug_thread_error to debug.");
+        FLOGF(error, L"%s is not locked when it should be in '%s'", who, caller);
+        FLOG(error, L"Break on debug_thread_error to debug.");
         debug_thread_error();
         mutex->unlock();
     }
-}
-
-template <typename CharType_t>
-static CharType_t **make_null_terminated_array_helper(
-    const std::vector<std::basic_string<CharType_t> > &argv) {
-    size_t count = argv.size();
-
-    // We allocate everything in one giant block. First compute how much space we need.
-    // N + 1 pointers.
-    size_t pointers_allocation_len = (count + 1) * sizeof(CharType_t *);
-
-    // In the very unlikely event that CharType_t has stricter alignment requirements than does a
-    // pointer, round us up to the size of a CharType_t.
-    pointers_allocation_len += sizeof(CharType_t) - 1;
-    pointers_allocation_len -= pointers_allocation_len % sizeof(CharType_t);
-
-    // N null terminated strings.
-    size_t strings_allocation_len = 0;
-    for (size_t i = 0; i < count; i++) {
-        // The size of the string, plus a null terminator.
-        strings_allocation_len += (argv.at(i).size() + 1) * sizeof(CharType_t);
-    }
-
-    // Now allocate their sum.
-    unsigned char *base =
-        static_cast<unsigned char *>(malloc(pointers_allocation_len + strings_allocation_len));
-    if (!base) return NULL;
-
-    // Divvy it up into the pointers and strings.
-    CharType_t **pointers = reinterpret_cast<CharType_t **>(base);
-    CharType_t *strings = reinterpret_cast<CharType_t *>(base + pointers_allocation_len);
-
-    // Start copying.
-    for (size_t i = 0; i < count; i++) {
-        const std::basic_string<CharType_t> &str = argv.at(i);
-        *pointers++ = strings;  // store the current string pointer into self
-        strings = std::copy(str.begin(), str.end(), strings);  // copy the string into strings
-        *strings++ = (CharType_t)(0);  // each string needs a null terminator
-    }
-    *pointers++ = NULL;  // array of pointers needs a null terminator
-
-    // Make sure we know what we're doing.
-    assert((unsigned char *)pointers - base == (std::ptrdiff_t)pointers_allocation_len);
-    assert((unsigned char *)strings - (unsigned char *)pointers ==
-           (std::ptrdiff_t)strings_allocation_len);
-    assert((unsigned char *)strings - base ==
-           (std::ptrdiff_t)(pointers_allocation_len + strings_allocation_len));
-
-    return reinterpret_cast<CharType_t **>(base);
-}
-
-wchar_t **make_null_terminated_array(const wcstring_list_t &lst) {
-    return make_null_terminated_array_helper(lst);
-}
-
-char **make_null_terminated_array(const std::vector<std::string> &lst) {
-    return make_null_terminated_array_helper(lst);
 }
 
 /// Test if the specified character is in a range that fish uses interally to store special tokens.
@@ -2381,8 +2167,7 @@ char **make_null_terminated_array(const std::vector<std::string> &lst) {
 // TODO: Actually implement the replacement as documented above.
 bool fish_reserved_codepoint(wchar_t c) {
     return (c >= RESERVED_CHAR_BASE && c < RESERVED_CHAR_END) ||
-           (c >= ENCODE_DIRECT_BASE && c < ENCODE_DIRECT_END) ||
-           (c >= INPUT_COMMON_BASE && c < INPUT_COMMON_END);
+           (c >= ENCODE_DIRECT_BASE && c < ENCODE_DIRECT_END);
 }
 
 /// Reopen stdin, stdout and/or stderr on /dev/null. This is invoked when we find that our tty has
@@ -2402,10 +2187,10 @@ void redirect_tty_output() {
 /// Display a failed assertion message, dump a stack trace if possible, then die.
 [[noreturn]] void __fish_assert(const char *msg, const char *file, size_t line, int error) {
     if (error) {
-        debug(0, L"%s:%zu: failed assertion: %s: errno %d (%s)", file, line, msg, error,
-              strerror(error));
+        FLOGF(error, L"%s:%zu: failed assertion: %s: errno %d (%s)", file, line, msg, error,
+              std::strerror(error));
     } else {
-        debug(0, L"%s:%zu: failed assertion: %s", file, line, msg);
+        FLOGF(error, L"%s:%zu: failed assertion: %s", file, line, msg);
     }
     show_stackframe(L'E', 99, 1);
     abort();
@@ -2415,21 +2200,13 @@ void redirect_tty_output() {
 bool valid_var_name_char(wchar_t chr) { return fish_iswalnum(chr) || chr == L'_'; }
 
 /// Test if the given string is a valid variable name.
-bool valid_var_name(const wchar_t *str) {
-    if (str[0] == L'\0') return false;
-    while (*str) {
-        if (!valid_var_name_char(*str)) return false;
-        str++;
-    }
-    return true;
+bool valid_var_name(const wcstring &str) {
+    return std::find_if_not(str.begin(), str.end(), valid_var_name_char) == str.end();
 }
-
-/// Test if the given string is a valid variable name.
-bool valid_var_name(const wcstring &str) { return valid_var_name(str.c_str()); }
 
 /// Test if the string is a valid function name.
 bool valid_func_name(const wcstring &str) {
-    if (str.size() == 0) return false;
+    if (str.empty()) return false;
     if (str.at(0) == L'-') return false;
     if (str.find_first_of(L'/') != wcstring::npos) return false;
     return true;
@@ -2450,12 +2227,11 @@ std::string get_executable_path(const char *argv0) {
     // Linux compatibility layer. Per sysctl(3), passing in a process ID of -1 returns
     // the value for the current process.
     size_t buff_size = sizeof buff;
-    int name[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
+    int name[] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
     int result = sysctl(name, sizeof(name) / sizeof(int), buff, &buff_size, nullptr, 0);
     if (result != 0) {
         wperror(L"sysctl KERN_PROC_PATHNAME");
-    }
-    else {
+    } else {
         return std::string(buff);
     }
 #else
@@ -2501,4 +2277,29 @@ std::string get_path_to_tmp_dir() {
 #else
     return "/tmp";
 #endif
+}
+
+// This function attempts to distinguish between a console session (at the actual login vty) and a
+// session within a terminal emulator inside a desktop environment or over SSH. Unfortunately
+// there are few values of $TERM that we can interpret as being exclusively console sessions, and
+// most common operating systems do not use them. The value is cached for the duration of the fish
+// session. We err on the side of assuming it's not a console session. This approach isn't
+// bullet-proof and that's OK.
+bool is_console_session() {
+    static const bool console_session = []() {
+        ASSERT_IS_MAIN_THREAD();
+
+        const char *tty_name = ttyname(0);
+        auto len = strlen("/dev/tty");
+        const char *TERM = getenv("TERM");
+        return
+            // Test that the tty matches /dev/(console|dcons|tty[uv\d])
+            tty_name &&
+            ((strncmp(tty_name, "/dev/tty", len) == 0 &&
+              (tty_name[len] == 'u' || tty_name[len] == 'v' || isdigit(tty_name[len]))) ||
+             strcmp(tty_name, "/dev/dcons") == 0 || strcmp(tty_name, "/dev/console") == 0)
+            // and that $TERM is simple, e.g. `xterm` or `vt100`, not `xterm-something`
+            && (!TERM || !strchr(TERM, '-') || !strcmp(TERM, "sun-color"));
+    }();
+    return console_session;
 }

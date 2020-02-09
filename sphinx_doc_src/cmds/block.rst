@@ -1,16 +1,20 @@
+.. _cmd-block:
+
 block - temporarily block delivery of events
 ============================================
 
 Synopsis
 --------
 
-block [OPTIONS...]
+::
+
+    block [OPTIONS...]
 
 
 Description
 -----------
 
-``block`` prevents events triggered by ``fish`` or the <a href="commands.html#emit">``emit``</a> command from being delivered and acted upon while the block is in place.
+``block`` prevents events triggered by ``fish`` or the :ref:`emit <cmd-emit>` command from being delivered and acted upon while the block is in place.
 
 In functions, ``block`` can be useful while performing work that should not be interrupted by the shell.
 
@@ -30,22 +34,19 @@ The following parameters are available:
 Example
 -------
 
-
-
 ::
 
     # Create a function that listens for events
     function --on-event foo foo; echo 'foo fired'; end
-    
+
     # Block the delivery of events
     block -g
-    
+
     emit foo
     # No output will be produced
-    
+
     block -e
     # 'foo fired' will now be printed
-
 
 
 Notes

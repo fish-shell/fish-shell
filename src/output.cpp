@@ -3,7 +3,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+
+#include <cstring>
 #if HAVE_CURSES_H
 #include <curses.h>
 #elif HAVE_NCURSES_H
@@ -17,8 +18,8 @@
 #include <ncurses/term.h>
 #endif
 #include <limits.h>
-#include <wchar.h>
 
+#include <cwchar>
 #include <memory>
 #include <string>
 #include <vector>
@@ -27,14 +28,18 @@
 #include "common.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "flog.h"
 #include "output.h"
+#include "wcstringutil.h"
 #include "wutil.h"  // IWYU pragma: keep
 
 /// Whether term256 and term24bit are supported.
 static color_support_t color_support = 0;
 
 /// Returns true if we think tparm can handle outputting a color index
-static bool term_supports_color_natively(unsigned int c) { return (unsigned)max_colors >= c + 1; }
+static bool term_supports_color_natively(unsigned int c) {
+    return static_cast<unsigned>(max_colors) >= c + 1;
+}
 
 color_support_t output_get_color_support() { return color_support; }
 
@@ -127,7 +132,7 @@ bool outputter_t::write_color(rgb_color_t color, bool is_fg) {
 /// Since the terminfo string this function emits can potentially cause the screen to flicker, the
 /// function takes care to write as little as possible.
 ///
-/// Possible values for colors are rgb_color_t colors or special values like rgb_color_t::normal() 
+/// Possible values for colors are rgb_color_t colors or special values like rgb_color_t::normal()
 ///
 /// In order to set the color to normal, three terminfo strings may have to be written.
 ///
@@ -180,7 +185,7 @@ void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
         was_italics = false;
         was_dim = false;
         was_reverse = false;
-        // If we exit attibute mode, we must first set a color, or previously coloured text might
+        // If we exit attibute mode, we must first set a color, or previously colored text might
         // lose it's color. Terminals are weird...
         write_foreground_color(*this, 0);
         writembs(*this, exit_attribute_mode);
@@ -234,7 +239,7 @@ void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
         if (c == c2) c = (c2 == rgb_color_t::white()) ? rgb_color_t::black() : rgb_color_t::white();
     }
 
-    if ((enter_bold_mode != 0) && (strlen(enter_bold_mode) > 0)) {
+    if (enter_bold_mode && enter_bold_mode[0] != '\0') {
         if (bg_set && !last_bg_set) {
             // Background color changed and is set, so we enter bold mode to make reading easier.
             // This means bold mode is _always_ on when the background color is set.
@@ -295,7 +300,7 @@ void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
     }
 
     // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
-    if (is_bold && !was_bold && enter_bold_mode && strlen(enter_bold_mode) > 0 && !bg_set) {
+    if (is_bold && !was_bold && enter_bold_mode && enter_bold_mode[0] != '\0' && !bg_set) {
         // The unconst cast is for NetBSD's benefit. DO NOT REMOVE!
         writembs_nofail(*this, tparm((char *)enter_bold_mode));
         was_bold = is_bold;
@@ -310,27 +315,27 @@ void outputter_t::set_color(rgb_color_t c, rgb_color_t c2) {
     }
     was_underline = is_underline;
 
-    if (was_italics && !is_italics && enter_italics_mode && strlen(enter_italics_mode) > 0) {
+    if (was_italics && !is_italics && enter_italics_mode && enter_italics_mode[0] != '\0') {
         writembs_nofail(*this, exit_italics_mode);
         was_italics = is_italics;
     }
 
-    if (!was_italics && is_italics && enter_italics_mode && strlen(enter_italics_mode) > 0) {
+    if (!was_italics && is_italics && enter_italics_mode && enter_italics_mode[0] != '\0') {
         writembs_nofail(*this, enter_italics_mode);
         was_italics = is_italics;
     }
 
-    if (is_dim && !was_dim && enter_dim_mode && strlen(enter_dim_mode) > 0) {
+    if (is_dim && !was_dim && enter_dim_mode && enter_dim_mode[0] != '\0') {
         writembs_nofail(*this, enter_dim_mode);
         was_dim = is_dim;
     }
 
     if (is_reverse && !was_reverse) {
         // Some terms do not have a reverse mode set, so standout mode is a fallback.
-        if (enter_reverse_mode && strlen(enter_reverse_mode) > 0) {
+        if (enter_reverse_mode && enter_reverse_mode[0] != '\0') {
             writembs_nofail(*this, enter_reverse_mode);
             was_reverse = is_reverse;
-        } else if (enter_standout_mode && strlen(enter_standout_mode) > 0) {
+        } else if (enter_standout_mode && enter_standout_mode[0] != '\0') {
             writembs_nofail(*this, enter_standout_mode);
             was_reverse = is_reverse;
         }
@@ -357,7 +362,9 @@ int outputter_t::term_puts(const char *str, int affcnt) {
     // scoped_push will restore it.
     scoped_lock locker{s_tputs_receiver_lock};
     scoped_push<outputter_t *> push(&s_tputs_receiver, this);
-    return tputs(str, affcnt, tputs_writer);
+    // On some systems, tputs takes a char*, on others a const char*.
+    // Like tparm, we just cast it to unconst, that should work everywhere.
+    return tputs(const_cast<char *>(str), affcnt, tputs_writer);
 }
 
 /// Write a wide character to the outputter. This should only be used when writing characters from
@@ -379,8 +386,8 @@ int outputter_t::writech(wint_t ch) {
         len = 1;
     } else {
         mbstate_t state = {};
-        len = wcrtomb(buff, ch, &state);
-        if (len == (size_t)-1) {
+        len = std::wcrtomb(buff, ch, &state);
+        if (len == static_cast<size_t>(-1)) {
             return 1;
         }
     }
@@ -389,21 +396,15 @@ int outputter_t::writech(wint_t ch) {
 }
 
 /// Write a wide character string to stdout. This should not be used to output things like warning
-/// messages; just use debug() or fwprintf() for that. It should only be used to output user
+/// messages; just use debug() or std::fwprintf() for that. It should only be used to output user
 /// supplied strings that might contain literal bytes; e.g., "\342\224\214" from issue #1894. This
 /// is needed because those strings may contain chars specially encoded using ENCODE_DIRECT_BASE.
 void outputter_t::writestr(const wchar_t *str) {
     assert(str && "Empty input string");
 
-    if (MB_CUR_MAX == 1) {
-        // Single-byte locale (C/POSIX/ISO-8859).
-        this->writestr(str);
-        return;
-    }
-
-    size_t len = wcstombs(0, str, 0);  // figure amount of space needed
-    if (len == (size_t)-1) {
-        debug(1, L"Tried to print invalid wide character string");
+    size_t len = wcstombs(nullptr, str, 0);  // figure amount of space needed
+    if (len == static_cast<size_t>(-1)) {
+        FLOGF(warning, L"Tried to print invalid wide character string");
         return;
     }
 
@@ -415,8 +416,9 @@ void outputter_t::writestr(const wchar_t *str) {
     } else {
         buffer = new char[len];
     }
-    wcstombs(buffer, str, len);
-    this->writestr(buffer);
+
+    int new_len = wcstombs(buffer, str, len);
+    this->writestr(buffer, new_len);
     if (buffer != static_buffer) delete[] buffer;
 }
 
@@ -434,8 +436,7 @@ rgb_color_t best_color(const std::vector<rgb_color_t> &candidates, color_support
     }
 
     rgb_color_t first_rgb = rgb_color_t::none(), first_named = rgb_color_t::none();
-    for (size_t i = 0; i < candidates.size(); i++) {
-        const rgb_color_t &color = candidates.at(i);
+    for (const auto &color : candidates) {
         if (first_rgb.is_none() && color.is_rgb()) {
             first_rgb = color;
         }
@@ -468,17 +469,18 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
 
     std::vector<rgb_color_t> candidates;
 
-    wcstring_list_t el;
-    var.to_list(el);
-
-    for (size_t j = 0; j < el.size(); j++) {
-        const wcstring &next = el.at(j);
-        wcstring color_name;
+    wcstring color_name;
+    for (const wcstring &next : var.as_list()) {
+        color_name.clear();
         if (is_background) {
             // Look for something like "--background=red".
-            const wcstring prefix = L"--background=";
+            const wchar_t *prefix = L"--background=";
             if (string_prefixes_string(prefix, next)) {
-                color_name = wcstring(next, prefix.size());
+                color_name = wcstring(next, wcslen(prefix));
+            }
+            // Reverse should be meaningful in either context
+            if (next == L"--reverse" || next == L"-r") {
+                is_reverse = true;
             }
         } else {
             if (next == L"--bold" || next == L"-o")
@@ -514,7 +516,7 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
 
 #if 0
     wcstring desc = result.description();
-    fwprintf(stdout, L"Parsed %ls from %ls (%s)\n", desc.c_str(), val.c_str(),
+    std::fwprintf(stdout, L"Parsed %ls from %ls (%s)\n", desc.c_str(), val.c_str(),
              is_background ? "background" : "foreground");
 #endif
 
@@ -524,14 +526,14 @@ rgb_color_t parse_color(const env_var_t &var, bool is_background) {
 /// Write specified multibyte string.
 void writembs_check(outputter_t &outp, const char *mbs, const char *mbs_name, bool critical,
                     const char *file, long line) {
-    if (mbs != NULL) {
+    if (mbs != nullptr) {
         outp.term_puts(mbs, 1);
     } else if (critical) {
         auto term = env_stack_t::globals().get(L"TERM");
         const wchar_t *fmt =
             _(L"Tried to use terminfo string %s on line %ld of %s, which is "
               L"undefined in terminal of type \"%ls\". Please report this error to %s");
-        debug(0, fmt, mbs_name, line, file, term ? term->as_string().c_str() : L"",
-              PACKAGE_BUGREPORT);
+        FLOG(error, fmt, mbs_name, line, file, term ? term->as_string().c_str() : L"",
+             PACKAGE_BUGREPORT);
     }
 }

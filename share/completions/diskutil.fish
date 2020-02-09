@@ -5,11 +5,13 @@
 #############
 
 function __fish_diskutil_devices
-    set -l mountpoints /dev/disk*; printf '%s\n' $mountpoints
+    set -l mountpoints /dev/disk*
+    printf '%s\n' $mountpoints
 end
 
 function __fish_diskutil_mounted_volumes
-    set -l mountpoints /Volumes/*; printf '%s\n' $mountpoints
+    set -l mountpoints /Volumes/*
+    printf '%s\n' $mountpoints
 end
 
 function __fish_diskutil_using_not_subcommand

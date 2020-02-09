@@ -1,18 +1,21 @@
+.. _cmd-funced:
+
 funced - edit a function interactively
 ======================================
 
 Synopsis
 --------
 
-funced [OPTIONS] NAME
+::
 
+    funced [OPTIONS] NAME
 
 Description
 -----------
 
 ``funced`` provides an interface to edit the definition of the function ``NAME``.
 
-If the ``$VISUAL`` environment variable is set, it will be used as the program to edit the function. If ``$VISUAL`` is unset but ``$EDITOR`` is set, that will be used. Otherwise, a built-in editor will be used. Note that to enter a literal newline using the built-in editor you should press @key{Alt,Enter}. Pressing @key{Enter} signals that you are done editing the function. This does not apply to an external editor like emacs or vim.
+If the ``$VISUAL`` environment variable is set, it will be used as the program to edit the function. If ``$VISUAL`` is unset but ``$EDITOR`` is set, that will be used. Otherwise, a built-in editor will be used. Note that to enter a literal newline using the built-in editor you should press :kbd:`Alt+Enter`. Pressing :kbd:`Enter` signals that you are done editing the function. This does not apply to an external editor like emacs or vim.
 
 If there is no function called ``NAME`` a new function will be created with the specified name
 

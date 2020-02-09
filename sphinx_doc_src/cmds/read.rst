@@ -1,11 +1,14 @@
+.. _cmd-read:
+
 read - read line of input into variables
 ========================================
 
 Synopsis
 --------
 
-read [OPTIONS] [VARIABLE ...]
+::
 
+    read [OPTIONS] [VARIABLE ...]
 
 Description
 -----------
@@ -27,13 +30,15 @@ The following options are available:
 - ``-n NCHARS`` or ``--nchars=NCHARS`` makes ``read`` return after reading NCHARS characters or the end of
   the line, whichever comes first.
 
-- ``-p PROMPT_CMD`` or ``--prompt=PROMPT_CMD`` uses the output of the shell command ``PROMPT_CMD`` as the prompt for the interactive mode. The default prompt command is <code>set_color green; echo read; set_color normal; echo "> "</code>.
+- ``-p PROMPT_CMD`` or ``--prompt=PROMPT_CMD`` uses the output of the shell command ``PROMPT_CMD`` as the prompt for the interactive mode. The default prompt command is `set_color green; echo read; set_color normal; echo "> "`
 
-- ``-P PROMPT_STR`` or ``--prompt-str=PROMPT_STR`` uses the string as the prompt for the interactive mode. It is equivalent to <code>echo PROMPT_STR</code> and is provided solely to avoid the need to frame the prompt as a command. All special characters in the string are automatically escaped before being passed to the <code>echo</code> command.
+- ``-P PROMPT_STR`` or ``--prompt-str=PROMPT_STR`` uses the string as the prompt for the interactive mode. It is equivalent to `echo PROMPT_STR` and is provided solely to avoid the need to frame the prompt as a command. All special characters in the string are automatically escaped before being passed to the `echo` command.
 
 - ``-R RIGHT_PROMPT_CMD`` or ``--right-prompt=RIGHT_PROMPT_CMD`` uses the output of the shell command ``RIGHT_PROMPT_CMD`` as the right prompt for the interactive mode. There is no default right prompt command.
 
 - ``-S`` or ``--shell`` enables syntax highlighting, tab completions and command termination suitable for entering shellscript code in the interactive mode. NOTE: Prior to fish 3.0, the short opt for ``--shell`` was ``-s``, but it has been changed for compatibility with bash's ``-s`` short opt for ``--silent``.
+
+- ``-t`` -or ``--tokenize`` causes read to split the input into variables by the shell's tokenization rules. This means it will honor quotes and escaping. This option is of course incompatible with other options to control splitting like ``--delimiter`` and does not honor $IFS (like fish's tokenizer). It saves the tokens in the manner they'd be passed to commands on the commandline, so e.g. ``a\ b`` is stored as ``a b``. Note that currently it leaves command substitutions intact along with the parentheses.
 
 - ``-u`` or ``--unexport`` prevents the variables from being exported to child processes (default behaviour).
 
@@ -41,7 +46,7 @@ The following options are available:
 
 - ``-x`` or ``--export`` exports the variables to child processes.
 
-- ``-a`` or ``--array`` stores the result as an array in a single variable.
+- ``-a`` or ``--list`` stores the result as a list in a single variable. This option is also available as ``--array`` for backwards compatibility.
 
 - ``-z`` or ``--null`` marks the end of the line with the NUL character, instead of newline. This also
   disables interactive mode.
@@ -50,7 +55,7 @@ The following options are available:
 
 Without the ``--line`` option, ``read`` reads a single line of input from standard input, breaks it into tokens, and then assigns one token to each variable specified in ``VARIABLES``. If there are more tokens than variables, the complete remainder is assigned to the last variable.
 
-If the ``--delimiter`` argument is not given, the variable ``IFS`` is used as a list of characters to split on. Relying on the use of ``IFS`` is deprecated and this behaviour will be removed in future versions. The default value of ``IFS`` contains space, tab and newline characters. As a special case, if ``IFS`` is set to the empty string, each character of the input is considered a separate token.
+If no option to determine how to split like ``--delimiter``, ``--line`` or ``--tokenize`` is given, the variable ``IFS`` is used as a list of characters to split on. Relying on the use of ``IFS`` is deprecated and this behaviour will be removed in future versions. The default value of ``IFS`` contains space, tab and newline characters. As a special case, if ``IFS`` is set to the empty string, each character of the input is considered a separate token.
 
 With the ``--line`` option, ``read`` reads a line of input from standard input into each provided variable, stopping when each variable has been filled. The line is not tokenized.
 
@@ -60,7 +65,7 @@ If no variable names are provided, ``read`` enters a special case that simply pr
 
 When running in this mode, ``read`` does not split the input in any way and text is redirected to standard output without any further processing or manipulation.
 
-If ``-a`` or ``--array`` is provided, only one variable name is allowed and the tokens are stored as an array in this variable.
+If ``-a`` or ``--array`` is provided, only one variable name is allowed and the tokens are stored as a list in this variable.
 
 See the documentation for ``set`` for more details on the scoping rules for variables.
 
@@ -68,7 +73,7 @@ When ``read`` reaches the end-of-file (EOF) instead of the terminator, the exit 
 Otherwise, it is set to 0.
 
 In order to protect the shell from consuming too many system resources, ``read`` will only consume a
-maximum of 10 MiB (1048576 bytes); if the terminator is not reached before this limit then VARIABLE
+maximum of 100 MiB (104857600 bytes); if the terminator is not reached before this limit then VARIABLE
 is set to empty and the exit status is set to 122. This limit can be altered with the
 ``fish_read_limit`` variable. If set to 0 (zero), the limit is removed.
 
@@ -87,16 +92,23 @@ The following code stores the value 'hello' in the shell variable ``$foo``.
 ::
 
     echo hello|read foo
-    
+
     # This is a neat way to handle command output by-line:
     printf '%s\n' line1 line2 line3 line4 | while read -l foo
                       echo "This is another line: $foo"
                   end
-    
+
     # Delimiters given via "-d" are taken as one string
     echo a==b==c | read -d == -l a b c
     echo $a # a
     echo $b # b
     echo $c # c
-    
 
+    # --tokenize honors quotes and escaping like the shell's argument passing:
+    echo 'a\ b' | read -t first second
+    echo $first # outputs "a b", $second is empty
+
+    echo 'a"foo bar"b (command echo wurst)*" "{a,b}' | read -lt -l a b c
+    echo $a # outputs 'afoo bar' (without the quotes)
+    echo $b # outputs '(command echo wurst)* {a,b}' (without the quotes)
+    echo $c # nothing

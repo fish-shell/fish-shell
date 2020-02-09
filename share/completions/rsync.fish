@@ -1,5 +1,5 @@
 function __rsync_remote_target
-    commandline -ct | string match -r '.*::?(?:.*/)?'
+    commandline -ct | string match -r '.*::?(?:.*/)?' | string unescape
 end
 
 complete -c rsync -s v -l verbose -d "Increase verbosity"
@@ -11,7 +11,7 @@ complete -c rsync -s r -l recursive -d "Recurse into directories"
 complete -c rsync -s R -l relative -d "Use relative path names"
 complete -c rsync -l no-implied-dirs -d "Don’t send implied dirs with --relative"
 complete -c rsync -s b -l backup -d "Make backups (see --suffix & --backup-dir)"
-complete -c rsync -l backup-dir -d "Make backups into hierarchy based in DIR"
+complete -c rsync -l backup-dir -xa '(__fish_complete_directories)' -d "Make backups into hierarchy based in DIR"
 complete -c rsync -l suffix -d "Backup suffix (default ~ w/o --backup-dir)"
 complete -c rsync -s u -l update -d "Skip files that are newer on the receiver"
 complete -c rsync -l inplace -d "Update destination files in-place"
@@ -56,33 +56,33 @@ complete -c rsync -l delete-after -d "Receiver deletes after transfer, not befor
 complete -c rsync -l delete-excluded -d "Also delete excluded files on receiver"
 complete -c rsync -l ignore-errors -d "Delete even if there are I/O errors"
 complete -c rsync -l force -d "Force deletion of dirs even if not empty"
-complete -c rsync -l max-delete=NUM -d "Don’t delete more than NUM files"
-complete -c rsync -l max-size=SIZE -d "Don’t transfer any file larger than SIZE"
-complete -c rsync -l min-size=SIZE -d "Don’t transfer any file smaller than SIZE"
+complete -c rsync -l max-delete -xa '(seq 0 10)' -d "Don’t delete more than NUM files"
+complete -c rsync -l max-size -xa '(seq 0 10){K,M,G}' -d "Don’t transfer any file larger than SIZE"
+complete -c rsync -l min-size -xa '(seq 0 10){K,M,G}' -d "Don’t transfer any file smaller than SIZE"
 complete -c rsync -l partial -d "Keep partially transferred files"
-complete -c rsync -l partial-dir=DIR -d "Put a partially transferred file into DIR"
+complete -c rsync -l partial-dir -xa '(__fish_complete_directories)' -d "Put a partially transferred file into DIR"
 complete -c rsync -l delay-updates -d "Put all updated files into place at end"
 complete -c rsync -s m -l prune-empty-dirs -d "Prune empty directory chains from file-list"
 complete -c rsync -l numeric-ids -d "Don’t map uid/gid values by user/group name"
 complete -c rsync -l timeout -d "Set I/O timeout in seconds"
 complete -c rsync -s I -l ignore-times -d "Don’t skip files that match size and time"
 complete -c rsync -l size-only -d "Skip files that match in size"
-complete -c rsync -l modify-window=NUM -d "Compare mod-times with reduced accuracy"
-complete -c rsync -s T -l temp-dir=DIR -d "Create temporary files in directory DIR"
+complete -c rsync -l modify-window -xa '(seq 0 10)' -d "Compare NUM mod-times with reduced accuracy"
+complete -c rsync -s T -l temp-dir -xa '(__fish_complete_directories)' -d "Create temporary files in directory DIR"
 complete -c rsync -s y -l fuzzy -d "Find similar file for basis if no dest file"
-complete -c rsync -l compare-dest -x -d "Also compare received files relative to DIR"
-complete -c rsync -l copy-dest -x -d "Also compare received files relative to DIR and include copies of unchanged files"
-complete -c rsync -l link-dest=DIR -d "Hardlink to files in DIR when unchanged"
+complete -c rsync -l compare-dest -xa '(__fish_complete_directories)' -d "Also compare received files relative to DIR"
+complete -c rsync -l copy-dest -xa '(__fish_complete_directories)' -d "Also compare received files relative to DIR and include copies of unchanged files"
+complete -c rsync -l link-dest -xa '(__fish_complete_directories)' -d "Hardlink to files in DIR when unchanged"
 complete -c rsync -s z -l compress -d "Compress file data during the transfer"
 complete -c rsync -l compress-level -d "Explicitly set compression level"
 complete -c rsync -s C -l cvs-exclude -d "Auto-ignore files in the same way CVS does"
 complete -c rsync -s f -l filter -d "Add a file-filtering RULE"
 complete -c rsync -s F -d "Same as --filter=’dir-merge /.rsync-filter’ repeated: --filter='- .rsync-filter'"
 complete -c rsync -l exclude -d "Exclude files matching PATTERN"
-complete -c rsync -l exclude-from -d "Read exclude patterns from FILE"
+complete -c rsync -l exclude-from -d "Read exclude patterns from FILE" -r
 complete -c rsync -l include -d "Don’t exclude files matching PATTERN"
-complete -c rsync -l include-from=FILE -d "Read include patterns from FILE"
-complete -c rsync -l files-from=FILE -d "Read list of source-file names from FILE"
+complete -c rsync -l include-from -r -d "Read include patterns from FILE"
+complete -c rsync -l files-from -r -d "Read list of source-file names from FILE"
 complete -c rsync -s 0 -l from0 -d "All *from/filter files are delimited by 0s"
 complete -c rsync -l address -d "Bind address for outgoing socket to daemon"
 complete -c rsync -l port -d "Specify double-colon alternate port number"
@@ -125,12 +125,14 @@ complete -c rsync -d Hostname -a "
 #
 # Remote path
 #
-complete -c rsync -d "Remote path" -n "commandline -ct | string match -q '*:*'" -a "
+complete -c rsync -d "Remote path" -n "commandline -ct | string match -q '*:*'" -xa "
 (
 	# Prepend any user@host:/path information supplied before the remote completion.
         __rsync_remote_target
 )(
 	# Get the list of remote files from the specified rsync server.
-        rsync --list-only (__rsync_remote_target) 2>/dev/null | string replace -r '^d.*' '\$0/' | tr -s ' ' | cut -d' ' -f 5-
+        rsync --list-only (__rsync_remote_target) 2>/dev/null | string replace -r '^d.*' '\$0/' |
+        string replace -r '(\S+\s+){4}' '' | # drop the first four columns
+        string escape -n
 )
 "

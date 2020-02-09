@@ -6,5 +6,11 @@
 BasedOnStyle: Google
 ColumnLimit: 100
 IndentWidth: 4
+
+# Place config.h first always.
+IncludeCategories:
+  - Regex: '^"config.h"'
+    Priority: -1
+
 # We don't want OCLint pragmas to be reformatted.
 CommentPragmas: '^!OCLINT'

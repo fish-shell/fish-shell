@@ -1,24 +1,36 @@
-fish_vcs_prompt - output vcs information for use in a prompt
-============================================================
+.. _cmd-fish_vcs_prompt:
+
+fish_vcs_prompt - output version control system information for use in a prompt
+===============================================================================
+
+Synopsis
+--------
+
+::
+
+     function fish_prompt
+          echo -n (pwd)(fish_vcs_prompt) '$ '
+     end
 
 Description
 -----------
 
-The fish_vcs_prompt function can be used to display information about the current vcs repository, if any.
+The ``fish_vcs_prompt`` function displays information about the current version control system (VCS) repository, if any.
 
-It calls out to vcs-specific functions. The currently supported ones are:
+It calls out to VCS-specific functions. The currently supported systems are:
 
-- fish_git_prompt
-- fish_hg_prompt
-- fish_svn_prompt
+- :ref:`fish_git_prompt <cmd-fish_git_prompt>`
+- :ref:`fish_hg_prompt <cmd-fish_hg_prompt>`
+- :ref:`fish_svn_prompt <cmd-fish_svn_prompt>`
 
-If a vcs isn't installed, the respective function does nothing.
+If a VCS isn't installed, the respective function does nothing.
 
-For more information, see their documentation.
+For more information, see the documentation for each of the functions above.
 
-\subsection fish_vcs_prompt-example Example
+Example
+-------
 
-A simple prompt that displays vcs info::
+A simple prompt that displays all known VCS info::
 
     function fish_prompt
         ...

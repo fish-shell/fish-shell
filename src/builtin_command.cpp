@@ -1,12 +1,13 @@
 // Implementation of the command builtin.
 #include "config.h"  // IWYU pragma: keep
 
+#include "builtin_command.h"
+
 #include <unistd.h>
 
 #include <string>
 
 #include "builtin.h"
-#include "builtin_command.h"
 #include "common.h"
 #include "fallback.h"  // IWYU pragma: keep
 #include "io.h"
@@ -22,18 +23,18 @@ struct command_cmd_opts_t {
     bool all_paths = false;
 };
 static const wchar_t *const short_options = L":ahqsv";
-static const struct woption long_options[] = {{L"help", no_argument, NULL, 'h'},
-                                              {L"all", no_argument, NULL, 'a'},
-                                              {L"quiet", no_argument, NULL, 'q'},
-                                              {L"search", no_argument, NULL, 's'},
-                                              {NULL, 0, NULL, 0}};
+static const struct woption long_options[] = {{L"help", no_argument, nullptr, 'h'},
+                                              {L"all", no_argument, nullptr, 'a'},
+                                              {L"quiet", no_argument, nullptr, 'q'},
+                                              {L"search", no_argument, nullptr, 's'},
+                                              {nullptr, 0, nullptr, 0}};
 
 static int parse_cmd_opts(command_cmd_opts_t &opts, int *optind, int argc, wchar_t **argv,
                           parser_t &parser, io_streams_t &streams) {
     wchar_t *cmd = argv[0];
     int opt;
     wgetopter_t w;
-    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+    while ((opt = w.wgetopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
         switch (opt) {
             case 'a': {
                 opts.all_paths = true;
@@ -83,13 +84,13 @@ int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     if (retval != STATUS_CMD_OK) return retval;
 
     if (opts.print_help) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_CMD_OK;
     }
 
     // Quiet implies find_path.
     if (!opts.find_path && !opts.all_paths && !opts.quiet) {
-        builtin_print_help(parser, streams, cmd, streams.out);
+        builtin_print_help(parser, streams, cmd);
         return STATUS_INVALID_ARGS;
     }
 
@@ -98,11 +99,11 @@ int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         const wchar_t *command_name = argv[idx];
         if (opts.all_paths) {
             wcstring_list_t paths = path_get_paths(command_name, parser.vars());
-            for (auto path : paths) {
+            for (const auto &path : paths) {
                 if (!opts.quiet) streams.out.append_format(L"%ls\n", path.c_str());
                 ++found;
             }
-        } else { // Either find_path explicitly or just quiet.
+        } else {  // Either find_path explicitly or just quiet.
             wcstring path;
             if (path_get_path(command_name, &path, parser.vars())) {
                 if (!opts.quiet) streams.out.append_format(L"%ls\n", path.c_str());

@@ -1,9 +1,9 @@
 
 function __fish_complete_apropos
-	if test (commandline -ct)
-		set str (commandline -ct)
-		apropos $str 2>/dev/null |sed -e "s/^\(.*$str\([^ ]*\).*\)\$/$str\2"\t"\1/"
-	end
+    if test (commandline -ct)
+        set str (commandline -ct)
+        apropos $str 2>/dev/null | sed -e "s/^\(.*$str\([^ ]*\).*\)\$/$str\2"\t"\1/"
+    end
 end
 
 complete -xc apropos -a '(__fish_complete_apropos)' -d "whatis entry"

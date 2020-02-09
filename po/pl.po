@@ -33,14 +33,14 @@ msgid "%ls: Mutually exclusive flags '%ls' and `%ls` seen\n"
 msgstr ""
 
 #: src/builtin_argparse.cpp:160
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: exclusive flag string '%ls' is not valid\n"
-msgstr "%ls: maksymalna wartość '%ls' nie jest prawidłową liczbą\n"
+msgstr ""
 
 #: src/builtin_argparse.cpp:176
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: exclusive flag '%ls' is not valid\n"
-msgstr "%ls: maksymalna wartość '%ls' nie jest prawidłową liczbą\n"
+msgstr ""
 
 #: src/builtin_argparse.cpp:196
 #, c-format
@@ -79,14 +79,14 @@ msgid "%ls: No option specs were provided\n"
 msgstr ""
 
 #: src/builtin_argparse.cpp:391
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Invalid --min-args value '%ls'\n"
-msgstr "%ls: Nieprawidłową wartość początkowa '%ls'\n"
+msgstr ""
 
 #: src/builtin_argparse.cpp:401
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Invalid --max-args value '%ls'\n"
-msgstr "%ls: Nieprawidłową wartość początkowa '%ls'\n"
+msgstr ""
 
 #: src/builtin_bg.cpp:23
 #, c-format
@@ -106,9 +106,9 @@ msgid "%ls: There are no suitable jobs\n"
 msgstr "%ls: Brak pasujących zadań\n"
 
 #: src/builtin_bg.cpp:80 src/builtin_disown.cpp:82 src/builtin_wait.cpp:147
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: '%ls' is not a valid job specifier\n"
-msgstr "%ls: '%ls' nie jest zadaniem\n"
+msgstr ""
 
 #: src/builtin_bg.cpp:95 src/builtin_disown.cpp:89 src/builtin_wait.cpp:163
 #, c-format
@@ -191,29 +191,29 @@ msgid "%ls: Could not set PWD variable\n"
 msgstr "%ls: Nie można ustawić zmiennej PWD\n"
 
 #: src/builtin_commandline.cpp:344
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Unknown input function '%ls'"
-msgstr "%ls: Nieznane wejście funkcji '%ls'"
+msgstr ""
 
 #: src/builtin_complete.cpp:183
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Invalid token '%ls'\n"
-msgstr "%ls: Nieprawidłowa ścieżka: %ls\n"
+msgstr ""
 
 #: src/builtin_complete.cpp:203
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: -s requires a non-empty string\n"
-msgstr "%ls: Nazwa zmiennej nie może być pustym ciągiem znaków \n"
+msgstr ""
 
 #: src/builtin_complete.cpp:211
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: -l requires a non-empty string\n"
-msgstr "%ls: Nazwa zmiennej nie może być pustym ciągiem znaków \n"
+msgstr ""
 
 #: src/builtin_complete.cpp:219
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: -o requires a non-empty string\n"
-msgstr "%ls: Nazwa zmiennej nie może być pustym ciągiem znaków \n"
+msgstr ""
 
 #: src/builtin_contains.cpp:75
 #, c-format
@@ -492,9 +492,9 @@ msgid "%ls: Cannot find calling job for event handler"
 msgstr ""
 
 #: src/builtin_function.cpp:121
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Invalid process id '%ls'"
-msgstr "%ls: Nieprawidłowy identyfikator procesu %ls"
+msgstr ""
 
 #: src/builtin_function.cpp:179
 #, c-format
@@ -516,9 +516,9 @@ msgstr ""
 "i nie może być wykorzystywana jako nazwa funkcji"
 
 #: src/builtin_function.cpp:239
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Unexpected positional argument '%ls'"
-msgstr "%ls: Oczekiwano jeden argument, otrzymano %lu"
+msgstr ""
 
 #: src/builtin_functions.cpp:275 src/builtin.h:38
 #, c-format
@@ -536,9 +536,9 @@ msgid "%ls: Function '%ls' does not exist\n"
 msgstr "%ls: Funkcja '%ls' nie istnieje\n"
 
 #: src/builtin_functions.cpp:307
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Expected exactly one function name for --details\n"
-msgstr "%ls: Oczekiwano dokładnie jednej nazwy funkcji\n"
+msgstr ""
 
 #: src/builtin_functions.cpp:342
 #, c-format
@@ -619,9 +619,9 @@ msgid "%ls: There are no jobs\n"
 msgstr "%ls: Nie ma żadnych zadań\n"
 
 #: src/builtin_math.cpp:44
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: '%ls' is not a valid scale value\n"
-msgstr "%ls: '%ls' nie jest zadaniem\n"
+msgstr ""
 
 #: src/builtin_math.cpp:148
 #, c-format
@@ -634,9 +634,9 @@ msgid "More than %d var names in math expression."
 msgstr ""
 
 #: src/builtin_math.cpp:194
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Invalid expression: %ls\n"
-msgstr "%ls: Nieprawidłowy identyfikator procesu %ls\n"
+msgstr ""
 
 #: src/builtin_printf.cpp:243
 msgid "Number out of range"
@@ -769,9 +769,9 @@ msgid "%ls: Invalid index starting at '%ls'\n"
 msgstr ""
 
 #: src/builtin_set.cpp:537
-#, fuzzy, c-format
+#, c-format
 msgid "$%ls: not set in %ls scope\n"
-msgstr "%ls: Nieznana opcja '%ls'\n"
+msgstr ""
 
 #: src/builtin_set.cpp:542
 msgid "exported"
@@ -792,9 +792,9 @@ msgid "$%ls[%d]: length=%d value=|%ls|\n"
 msgstr ""
 
 #: src/builtin_set.cpp:578
-#, fuzzy, c-format
+#, c-format
 msgid "$%ls: invalid var name\n"
-msgstr "%ls: Nieprawidłowy stan\n"
+msgstr ""
 
 #: src/builtin_set.cpp:584
 #, c-format
@@ -817,9 +817,9 @@ msgid "%ls: Error while reading file '%ls'\n"
 msgstr "%ls: Nie udało się odczytać '%ls'\n"
 
 #: src/builtin_status.cpp:155
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Invalid level value '%ls'\n"
-msgstr "%ls: Nieprawidłowa wartość długości  '%ls'\n"
+msgstr ""
 
 #: src/builtin_status.cpp:276
 msgid "This is a login shell\n"
@@ -851,9 +851,8 @@ msgid "Standard input"
 msgstr "Standardowe wejście"
 
 #: src/builtin_status.cpp:320
-#, fuzzy
 msgid "Not a function"
-msgstr "Zdefiniuj nową funkcję"
+msgstr ""
 
 #: src/builtin_string.cpp:39
 #, c-format
@@ -861,9 +860,9 @@ msgid "%ls: Expected argument\n"
 msgstr "%ls: Oczekiwano argumentu\n"
 
 #: src/builtin_string.cpp:160
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Invalid escape style '%ls'\n"
-msgstr "%ls: Nieprawidłową wartość początkowa '%ls'\n"
+msgstr ""
 
 #: src/builtin_string.cpp:238
 #, c-format
@@ -871,14 +870,14 @@ msgid "%ls: Invalid length value '%ls'\n"
 msgstr "%ls: Nieprawidłowa wartość długości  '%ls'\n"
 
 #: src/builtin_string.cpp:258
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Invalid max value '%ls'\n"
-msgstr "%ls: Nieprawidłową wartość początkowa '%ls'\n"
+msgstr ""
 
 #: src/builtin_string.cpp:275
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Invalid count value '%ls'\n"
-msgstr "%ls: Nieprawidłowa wartość długości  '%ls'\n"
+msgstr ""
 
 #: src/builtin_string.cpp:321
 #, c-format
@@ -910,19 +909,19 @@ msgid "%ls: Regular expression substitute error: %ls\n"
 msgstr ""
 
 #: src/builtin_test.cpp:608
-#, fuzzy, c-format
+#, c-format
 msgid "invalid integer '%ls'"
-msgstr "Nieprawidłowy cel przekierowania: %ls"
+msgstr ""
 
 #: src/builtin_ulimit.cpp:285
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: New limit cannot be an empty string\n"
-msgstr "%ls: Nazwa zmiennej nie może być pustym ciągiem znaków \n"
+msgstr ""
 
 #: src/builtin_ulimit.cpp:297
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Invalid limit '%ls'\n"
-msgstr "%ls: Nieprawidłowa ścieżka: %ls\n"
+msgstr ""
 
 #: src/common.cpp:1551
 msgid "Current terminal parameters have rows and/or columns set to zero."
@@ -969,35 +968,31 @@ msgid "Tried to pop empty environment stack."
 msgstr ""
 
 #: src/env.cpp:537
-#, fuzzy, c-format
+#, c-format
 msgid "Using fallback terminal type '%s'."
-msgstr "Używanie zapasowego typu terminala '%ls'"
+msgstr ""
 
 #: src/env.cpp:542
-#, fuzzy, c-format
+#, c-format
 msgid "Could not set up terminal using the fallback terminal type '%s'."
 msgstr ""
-"Nie można skonfigurować terminala używając zapasowego typu terminala '%ls' - "
-"opuszczanie"
 
 #: src/env.cpp:574
-#, fuzzy
 msgid "Could not set up terminal."
-msgstr "Nie mozna skonfigurować terminala"
+msgstr ""
 
 #: src/env.cpp:576
 msgid "TERM environment variable not set."
 msgstr ""
 
 #: src/env.cpp:578
-#, fuzzy, c-format
+#, c-format
 msgid "TERM environment variable set to '%ls'."
-msgstr "Zmienna środowiskowa TERM ustawiona jest do '%ls'"
+msgstr ""
 
 #: src/env.cpp:579
-#, fuzzy
 msgid "Check that this terminal type is supported on this system."
-msgstr "Sprawdź czy ten typ terminala jest obsługiwany przez ten system"
+msgstr ""
 
 #: src/env.cpp:673
 msgid ""
@@ -1561,13 +1556,10 @@ msgid "There are still jobs active:\n"
 msgstr ""
 
 #: src/reader.cpp:2161
-#, fuzzy
 msgid ""
 "\n"
 "   PID  Command\n"
 msgstr ""
-"\n"
-"   Komenda\n"
 
 #: src/reader.cpp:2170
 msgid "A second attempt to exit will terminate them.\n"
@@ -1913,34 +1905,34 @@ msgid "%ls: Unknown option '%ls'\n"
 msgstr "%ls: Nieznana opcja '%ls'\n"
 
 #: src/builtin.h:54
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Expected %d args, got %d\n"
-msgstr "%ls: oczekiwano %d argumentów, otrzymano %d\n"
+msgstr ""
 
 #: src/builtin.h:55
-#, fuzzy, c-format
+#, c-format
 msgid "%ls %ls: Expected %d args, got %d\n"
-msgstr "%ls: %ls oczekiwał %d argumentów, otrzymał %d\n"
+msgstr ""
 
 #: src/builtin.h:56
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Expected at least %d args, got only %d\n"
-msgstr "%ls: oczekiwano %d argumentów, otrzymano %d\n"
+msgstr ""
 
 #: src/builtin.h:57
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Expected at most %d args, got %d\n"
-msgstr "%ls: oczekiwano %d argumentów, otrzymano %d\n"
+msgstr ""
 
 #: src/builtin.h:60
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Variable name '%ls' is not valid. See `help identifiers`.\n"
-msgstr "%ls: maksymalna wartość '%ls' nie jest prawidłową liczbą\n"
+msgstr ""
 
 #: src/builtin.h:63
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: mode name '%ls' is not valid. See `help identifiers`.\n"
-msgstr "%ls: maksymalna wartość '%ls' nie jest prawidłową liczbą\n"
+msgstr ""
 
 #: src/builtin.h:66
 #, c-format
@@ -1953,14 +1945,14 @@ msgid "%ls: Argument '%ls' is not a number\n"
 msgstr "%ls: Argument '%ls' nie jest liczbą \n"
 
 #: src/builtin.h:72
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Expected a subcommand to follow the command\n"
-msgstr "%ls: Oczekiwano argumentu dla funkcji\n"
+msgstr ""
 
 #: src/builtin.h:73
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Subcommand '%ls' is not valid\n"
-msgstr "%ls: '%ls' nie jest plikiem\n"
+msgstr ""
 
 #: src/builtin.h:76
 #, c-format
@@ -2327,9 +2319,8 @@ msgid "Prints a description of a domain or service"
 msgstr ""
 
 #: /tmp/fish/explicit/share/completions/launchctl.fish:12
-#, fuzzy
 msgid "Prints information about the service cache"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/launchctl.fish:13
 msgid "Prints which services are disabled"
@@ -2342,14 +2333,12 @@ msgid ""
 msgstr ""
 
 #: /tmp/fish/explicit/share/completions/launchctl.fish:15
-#, fuzzy
 msgid "Prints port information about a process"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/launchctl.fish:16
-#, fuzzy
 msgid "Prints port information about the host"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/launchctl.fish:17
 msgid "Resolves a port name from a process to an endpoint in launchd"
@@ -2401,9 +2390,8 @@ msgid "Unloads the specified service name"
 msgstr ""
 
 #: /tmp/fish/explicit/share/completions/launchctl.fish:29
-#, fuzzy
 msgid "Lists information about services"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/launchctl.fish:30
 msgid "Starts the specified service"
@@ -2609,23 +2597,20 @@ msgid "Update array UUID"
 msgstr ""
 
 #: /tmp/fish/explicit/share/completions/mdadm.fish:46
-#, fuzzy
 msgid "Update array name"
-msgstr "Nazwa procesu"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/mdadm.fish:47
-#, fuzzy
 msgid "Update array nodes"
-msgstr "Nazwa procesu"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/mdadm.fish:48
 msgid "Update array homehost"
 msgstr ""
 
 #: /tmp/fish/explicit/share/completions/mdadm.fish:49
-#, fuzzy
 msgid "Update array cluster name"
-msgstr "Nazwa procesu"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/mdadm.fish:50
 msgid "Mark the array as dirty, thus forcing resync"
@@ -2660,9 +2645,8 @@ msgid "Reset preferred minor to current one"
 msgstr ""
 
 #: /tmp/fish/explicit/share/completions/mdadm.fish:58
-#, fuzzy
 msgid "Abort currently running actions"
-msgstr "Wypisz obecnie uruchomione zadania"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/mdadm.fish:59
 msgid "Abort currently running actions, prevent their restart"
@@ -2754,9 +2738,8 @@ msgid "ZFS filesystem snapshot"
 msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zfs.fish:3
-#, fuzzy
 msgid "ZFS block storage device"
-msgstr "Nie określono bloków"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zfs.fish:4
 msgid "ZFS snapshot bookmark"
@@ -2783,9 +2766,8 @@ msgid "Value received by 'zfs receive'"
 msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zfs.fish:10
-#, fuzzy
 msgid "Value valid for the current mount"
-msgstr "Zatrzymaj obecnie używaną funkcję"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zfs.fish:11
 msgid "Read-only value"
@@ -2819,9 +2801,8 @@ msgid "Identity type"
 msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zfs.fish:17
-#, fuzzy
 msgid "Identity name"
-msgstr "Nazwa procesu"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zfs.fish:18
 msgid "Space usage"
@@ -2964,9 +2945,8 @@ msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zfs.fish:51
 #: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:14
-#, fuzzy
 msgid "Max number of snapshots"
-msgstr "Wylicz liczbę argumentów"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zfs.fish:52
 #: /tmp/fish/explicit/share/functions/__fish_complete_zfs_mountpoint_properties.fish:4
@@ -3022,9 +3002,8 @@ msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zfs.fish:62
 #: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:25
-#, fuzzy
 msgid "Hide .zfs directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zfs.fish:63
 #: /tmp/fish/explicit/share/functions/__fish_complete_zfs_rw_properties.fish:26
@@ -3121,9 +3100,8 @@ msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zfs.fish:84
 #: /tmp/fish/explicit/share/functions/__fish_complete_zfs_write_once_properties.fish:1
-#, fuzzy
 msgid "Unicode normalization"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zfs.fish:85
 #: /tmp/fish/explicit/share/functions/__fish_complete_zfs_write_once_properties.fish:2
@@ -3143,14 +3121,12 @@ msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zfs.fish:89
 #: /tmp/fish/explicit/share/completions/zfs.fish:90
-#, fuzzy
 msgid "Dataset name"
-msgstr "Nazwa procesu"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zpool.fish:1
-#, fuzzy
 msgid "Pool full name"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zpool.fish:5
 msgid "Mirror of at least two devices"
@@ -3189,9 +3165,8 @@ msgstr ""
 #: /tmp/fish/explicit/share/completions/zpool.fish:15
 #: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:1
 #: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:2
-#, fuzzy
 msgid "Available space"
-msgstr "Zmienna"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zpool.fish:16
 msgid "System boot partition size"
@@ -3202,9 +3177,8 @@ msgid "Usage percentage of pool"
 msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zpool.fish:18
-#, fuzzy
 msgid "Deduplication ratio"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zpool.fish:19
 msgid "Amount of uninitialized space within the pool"
@@ -3244,9 +3218,8 @@ msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zpool.fish:28
 #: /tmp/fish/explicit/share/completions/zpool.fish:29
-#, fuzzy
 msgid "Alternate root directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zpool.fish:30
 #: /tmp/fish/explicit/share/completions/zpool.fish:31
@@ -3268,9 +3241,8 @@ msgid "Default bootable dataset"
 msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zpool.fish:37
-#, fuzzy
 msgid "Pool configuration cache"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/explicit/share/completions/zpool.fish:38
 msgid "Comment about the pool"
@@ -3305,14 +3277,12 @@ msgid "All properties"
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:1
-#, fuzzy
 msgid "%s: Could not figure out what to do!\\n"
-msgstr "%s: Nie można odnaleźć katalogu domowego\\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:2
-#, fuzzy
 msgid "%s %s: Requires at least two arguments\\n"
-msgstr "%s: Opcja wymaga argumentu -- %s\\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:3
 #: /tmp/fish/explicit/share/functions/abbr.fish:5
@@ -3322,9 +3292,8 @@ msgid "%s %s: Abbreviation %s cannot have spaces in the word\\n"
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:4
-#, fuzzy
 msgid "%s %s: Expected one argument\\n"
-msgstr "%s %s: Oczekiwano argumentu\\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:6
 #: /tmp/fish/explicit/share/functions/abbr.fish:10
@@ -3332,9 +3301,8 @@ msgid "%s %s: No abbreviation named %s\\n"
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:7
-#, fuzzy
 msgid "%s %s: Requires exactly two arguments\\n"
-msgstr "%s %s: Opcja wymaga argumentu\\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:11
 msgid "%s %s: Abbreviation %s already exists, cannot rename %s\\n"
@@ -3342,52 +3310,12 @@ msgstr ""
 
 #: /tmp/fish/explicit/share/functions/abbr.fish:12
 #: /tmp/fish/explicit/share/functions/abbr.fish:13
-#, fuzzy
 msgid "%s %s: Unexpected argument -- '%s'\\n"
-msgstr "%s %s: Oczekiwano argumentu -- '%s'\\n"
-
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:1
-#, fuzzy
-msgid "%s: invalid option -- %s\\n"
-msgstr "%s: Nieprawidłowa opcja -- %s\\n"
-
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:2
-msgid "%s: %s cannot be specified along with %s\\n"
-msgstr ""
-
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:3
-#, fuzzy
-msgid "%s: option requires an argument -- %s\\n"
-msgstr "%s: Opcja wymaga argumentu -- %s\\n"
-
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:4
-#, fuzzy
-msgid "%s: Unexpected argument -- %s\\n"
-msgstr "%s: Oczekiwano argumentu -- %s\\n"
-
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:5
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:8
-msgid "%s: abbreviation cannot have spaces in the key\\n"
-msgstr ""
-
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:6
-msgid "%s: abbreviation must have a value\\n"
-msgstr ""
-
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:7
-#, fuzzy
-msgid "%s: abbreviation '%s' already exists, cannot rename\\n"
-msgstr "%s: Funkcja '%ls' już istnieje. Nie można utworzyć kopii\\n"
-
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:9
-#: /tmp/fish/explicit/share/functions/abbr_old.fish:10
-msgid "%s: no such abbreviation '%s'\\n"
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/alias.fish:1
-#, fuzzy
 msgid "%s: Name cannot be empty\\n"
-msgstr "%s: Nazwa zmiennej nie może być pustym ciągiem znaków\\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/alias.fish:2
 msgid "%s: Body cannot be empty\\n"
@@ -3398,9 +3326,8 @@ msgid "Too many args for cd command"
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/cdh.fish:1
-#, fuzzy
 msgid "cdh: Expected zero or one arguments"
-msgstr "cdh: Oczekiwano 0 lub 1 argument"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/cdh.fish:2
 msgid "No previous directories to select. You have to cd at least once."
@@ -3433,14 +3360,6 @@ msgstr ""
 
 #: /tmp/fish/explicit/share/functions/edit_command_buffer.fish:4
 msgid "or the file was empty"
-msgstr ""
-
-#: /tmp/fish/explicit/share/functions/__fish_complete_tar.fish:1
-#: /tmp/fish/explicit/share/functions/__fish_complete_tar.fish:2
-#: /tmp/fish/explicit/share/functions/__fish_complete_tar.fish:3
-#: /tmp/fish/explicit/share/functions/__fish_complete_tar.fish:4
-#: /tmp/fish/explicit/share/functions/__fish_complete_unrar.fish:1
-msgid "%s\\tArchived file\\n"
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/__fish_complete_zfs_ro_properties.fish:3
@@ -3578,9 +3497,8 @@ msgstr ""
 
 #: /tmp/fish/explicit/share/functions/fish_md5.fish:1
 #: /tmp/fish/explicit/share/functions/fish_md5.fish:2
-#, fuzzy
 msgid "%s: Too many arguments %s\\n"
-msgstr "%s: Zbyt dużo argumentów %s\\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/__fish_move_last.fish:1
 msgid "Hit end of history…\\n"
@@ -3627,19 +3545,16 @@ msgid "Cancelled function editing"
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/funcsave.fish:1
-#, fuzzy
 msgid "%s: Could not create configuration directory\\n"
-msgstr "%s: Nie można odnaleźć katalogu domowego\\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/funcsave.fish:2
-#, fuzzy
 msgid "%s: Unknown function '%s'\\n"
-msgstr "%s: Nieznana funkcja '%s'"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/help.fish:1
-#, fuzzy
 msgid "%s: Could not find a web browser.\\n"
-msgstr "%s: Nie można odnaleźć katalogu domowego\\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/help.fish:3
 msgid "help: Help is being displayed in your default browser.\\n"
@@ -3650,14 +3565,12 @@ msgid "help: Help is being displayed in %s.\\n"
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/history.fish:1
-#, fuzzy
 msgid "%ls: you cannot use any options with the %ls command\\n"
-msgstr "%ls: nie możesz używać opcji z komendą %ls\\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/history.fish:2
-#, fuzzy
 msgid "%ls: %ls expected %d args, got %d\\n"
-msgstr "%ls: %ls oczekiwał %d argumentów, otrzymał %d\\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/history.fish:3
 msgid "You must specify at least one search term when deleting entries\\n"
@@ -3677,9 +3590,8 @@ msgid "You did not say 'yes' so I will not clear your command history\\n"
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/isatty.fish:1
-#, fuzzy
 msgid "%s: Too many arguments"
-msgstr "%ls: Zbyt dużo argumentów"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/nextd.fish:1
 #: /tmp/fish/explicit/share/functions/prevd.fish:1
@@ -3703,9 +3615,8 @@ msgid "%s: These flags are not allowed by fish realpath: '%s'"
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/seq.fish:1
-#, fuzzy
 msgid "%s: Expected 1, 2 or 3 arguments, got %d\\n"
-msgstr "%s: Oczekiwano 0 lub 1 argument, otrzymano %d\\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/seq.fish:2
 msgid "%s: '%s' is not a number\\n"
@@ -3745,15 +3656,13 @@ msgid "file"
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/type.fish:7
-#, fuzzy
 msgid "%s: Could not find '%s'\\n"
-msgstr "%s: Nie można odnaleźć katalogu domowego '%s'\\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/umask.fish:1
 #: /tmp/fish/explicit/share/functions/umask.fish:2
-#, fuzzy
 msgid "%s: Invalid mask '%s'\\n"
-msgstr "%s: Nieprawidłowa ścieżka: '%s'\\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/_validate_int.fish:1
 msgid "%s: Value '%s' for flag '%s' is not an integer\\n"
@@ -3768,9 +3677,8 @@ msgid "%s: Value '%s' for flag '%s' greater than max allowed of '%s'\\n"
 msgstr ""
 
 #: /tmp/fish/explicit/share/functions/vared.fish:1
-#, fuzzy
 msgid "%s: Unknown option %s\\n"
-msgstr "%s: Nieznana opcja '%s'\\n"
+msgstr ""
 
 #: /tmp/fish/explicit/share/functions/vared.fish:2
 msgid ""
@@ -3937,9 +3845,8 @@ msgid "Output the part of line matching pattern"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ack.fish:12
-#, fuzzy
 msgid "Print all lines"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ack.fish:13
 msgid "Specify pattern explicitly"
@@ -4077,9 +3984,8 @@ msgid "Read the list of files to search from STDIN"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ack.fish:46
-#, fuzzy
 msgid "Ignore directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ack.fish:47
 msgid "Don't ignore directory"
@@ -4134,9 +4040,8 @@ msgid "Removes all filters associated with type"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ack.fish:58
-#, fuzzy
 msgid "Ignores environment variables and ackrc files"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ack.fish:59
 msgid "Specifies location of ackrc file"
@@ -4289,7 +4194,6 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/echo.fish:5
 #: /tmp/fish/implicit/share/completions/entr.fish:3
 #: /tmp/fish/implicit/share/completions/env.fish:5
-#: /tmp/fish/implicit/share/completions/eval.fish:1
 #: /tmp/fish/implicit/share/completions/exec.fish:1
 #: /tmp/fish/implicit/share/completions/exit.fish:1
 #: /tmp/fish/implicit/share/completions/fg.fish:1
@@ -4459,9 +4363,8 @@ msgid "Port forwarding"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/adb.fish:20
-#, fuzzy
 msgid "Return bugreport information"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/adb.fish:21
 msgid "Perform device backup"
@@ -4621,9 +4524,8 @@ msgid "Package(s) to backup"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/adb.fish:60
-#, fuzzy
 msgid "List all forward socket connections"
-msgstr "Wypisz lub usuń funkcje"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/adb.fish:61
 msgid "Fails the forward if local is already forwarded"
@@ -4682,9 +4584,8 @@ msgid ""
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/adduser.fish:8
-#, fuzzy
 msgid "Display brief instructions"
-msgstr "Niedozwolona instrukcja"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/adduser.fish:9
 msgid "Use specified directory as the user's home directory"
@@ -4827,9 +4728,8 @@ msgid "Remove runstate file at first"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/alsactl.fish:22
-#, fuzzy
 msgid "Set environment variable"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/alsactl.fish:23
 msgid "The configuration file for init"
@@ -4844,9 +4744,8 @@ msgid "The PID file to use"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/alsactl.fish:26
-#, fuzzy
 msgid "Run the task in background"
-msgstr "Przenieś zadanie w tło"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/alsactl.fish:27
 msgid "Use syslog for messages"
@@ -4876,7 +4775,6 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/mkvextract.fish:2
 #: /tmp/fish/implicit/share/completions/mocha.fish:1
 #: /tmp/fish/implicit/share/completions/modinfo.fish:11
-#: /tmp/fish/implicit/share/completions/netcat.fish:7
 #: /tmp/fish/implicit/share/completions/netctl-auto.fish:1
 #: /tmp/fish/implicit/share/completions/poweroff.fish:1
 #: /tmp/fish/implicit/share/completions/terraform.fish:2
@@ -4929,9 +4827,8 @@ msgid "print version of this program"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/amixer.fish:7
-#, fuzzy
 msgid "be quiet"
-msgstr "Przymusowe wyjście"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/amixer.fish:8
 msgid "show also inactive controls"
@@ -5336,9 +5233,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/mogrify.fish:80
 #: /tmp/fish/implicit/share/completions/montage.fish:68
 #: /tmp/fish/implicit/share/completions/stream.fish:27
-#, fuzzy
 msgid "Print detailed information about the image"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/animate.fish:42
 #: /tmp/fish/implicit/share/completions/display.fish:49
@@ -5483,9 +5379,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/import.fish:53
 #: /tmp/fish/implicit/share/completions/montage.fish:101
 #: /tmp/fish/implicit/share/completions/stream.fish:30
-#, fuzzy
 msgid "Print program options"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/animate.fish:60
 #: /tmp/fish/implicit/share/completions/compare.fish:42
@@ -5849,9 +5744,8 @@ msgid "Runs the package's tests contained within the spec directory"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apm.fish:76
-#, fuzzy
 msgid "Path to atom command"
-msgstr "Zakończ zestaw komend"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apm.fish:77
 msgid "Delete the symlink in ~/.atom/packages for the package"
@@ -6098,9 +5992,8 @@ msgid "Build source without install"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-build.fish:11
-#, fuzzy
 msgid "Clean source directories"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-build.fish:12
 msgid "Update source and rebuild"
@@ -6268,9 +6161,8 @@ msgid "Auto-gen package cache"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-cache.fish:24
-#, fuzzy
 msgid "Print all names"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-cache.fish:25
 msgid "Dep and rdep recursive"
@@ -6380,9 +6272,8 @@ msgid "Pattern is regexp"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-file.fish:12
-#, fuzzy
 msgid "Set arch"
-msgstr "wyszukiwanie:"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-file.fish:13
 msgid "Set sources.list file"
@@ -6426,9 +6317,8 @@ msgid "Target release"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-ftparchive.fish:2
-#, fuzzy
 msgid "Generate package from source"
-msgstr "Zwróć losową liczbę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-ftparchive.fish:3
 msgid "Generate source index file"
@@ -6439,18 +6329,16 @@ msgid "Generate contents file"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-ftparchive.fish:5
-#, fuzzy
 msgid "Generate release file"
-msgstr "Zwróć losową liczbę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-ftparchive.fish:6
 msgid "Remove records"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-ftparchive.fish:7
-#, fuzzy
 msgid "Generate MD5 sums"
-msgstr "Zwróć losową liczbę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-ftparchive.fish:8
 msgid "Use a binary db"
@@ -6593,9 +6481,8 @@ msgid "Do not upgrade packages"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-get.fish:33
-#, fuzzy
 msgid "Force yes"
-msgstr "Wymuszono zatrzymanie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-get.fish:34
 msgid "Print the URIs"
@@ -7063,18 +6950,16 @@ msgid "Fetch source package from STDIN"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-move.fish:17
-#, fuzzy
 msgid "Process all packages"
-msgstr "Nazwa procesu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-move.fish:18
 msgid "Use specific conffile"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-move.fish:19
-#, fuzzy
 msgid "Force deletion"
-msgstr "Wymuszono zatrzymanie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-move.fish:20
 msgid "Suppresses normal output"
@@ -7109,9 +6994,8 @@ msgid "Show build dependencies"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-rdepends.fish:3
-#, fuzzy
 msgid "Generate a dotty graph"
-msgstr "Zwróć losową liczbę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-rdepends.fish:4
 msgid "Show state of dependencies"
@@ -7147,9 +7031,8 @@ msgid "Probe a CD"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-setup.fish:2
-#, fuzzy
 msgid "Run in non-interactive mode"
-msgstr "Tylko dla zadań interaktywnych"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-show-source.fish:2
 #: /tmp/fish/implicit/share/completions/apt-show-source.fish:3
@@ -7186,9 +7069,8 @@ msgid "Print only upgradeable packages"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-show-versions.fish:5
-#, fuzzy
 msgid "Print all versions"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-show-versions.fish:6
 msgid "Print package name/distro"
@@ -7211,9 +7093,8 @@ msgid "Specify conffile"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-spy.fish:2
-#, fuzzy
 msgid "Debian distribution"
-msgstr "Niedozwolona instrukcja"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-spy.fish:3
 msgid "Servers in the areas"
@@ -7224,9 +7105,8 @@ msgid "Conf file"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-spy.fish:5
-#, fuzzy
 msgid "Finish after number of servers"
-msgstr "Wylicz liczbę argumentów"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-spy.fish:6
 msgid "File to grab servers"
@@ -7334,9 +7214,8 @@ msgid "Specify a dir"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-src.fish:17
-#, fuzzy
 msgid "Run on current dir"
-msgstr "Uruchom komendę w obecnym procesie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/apt-src.fish:18
 msgid "Omit debian version"
@@ -7425,9 +7304,8 @@ msgid "Specify the Conduit token"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/arc.fish:8
-#, fuzzy
 msgid "Force a version"
-msgstr "Wymuszono zatrzymanie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/arc.fish:9
 msgid "Sets the timeout"
@@ -7458,9 +7336,8 @@ msgid "Reads an arc configuration option"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/arc.fish:16
-#, fuzzy
 msgid "Show detailed information about options"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/arc.fish:17
 msgid "Download a file to local disk"
@@ -7554,9 +7431,8 @@ msgid "Delete the flag on an object"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/arc.fish:39
-#, fuzzy
 msgid "Set the note on a flag"
-msgstr "Ustaw kolor terminala"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/arc.fish:40
 msgid "Export the local changeset to a file"
@@ -7743,9 +7619,8 @@ msgid "Alias for arc feature"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/arc.fish:85
-#, fuzzy
 msgid "Amend the working copy"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/arc.fish:87
 msgid "Show the amended commit message"
@@ -7760,9 +7635,8 @@ msgid "Shows the help"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/arc.fish:90
-#, fuzzy
 msgid "Print detailed information about each command"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/arc.fish:91
 msgid "Share and grab text using the Paste application"
@@ -7785,18 +7659,16 @@ msgid "Commit a revision which has been accepted by a reviewer"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/arc.fish:96
-#, fuzzy
 msgid "Commit a specific revision"
-msgstr "Edytuj sugestie do określonej komendy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/arc.fish:97
 msgid "Show the command which would be issued"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/arc.fish:98
-#, fuzzy
 msgid "Apply changes to the working copy"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/arc.fish:99
 msgid "Do not run any sanity checks"
@@ -7961,9 +7833,8 @@ msgid "Always disable coverage information"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/arc.fish:142
-#, fuzzy
 msgid "Backouts on a previous commit"
-msgstr "Wykonaj komendę jeżeli poprzednia komenda zakończy się niepowodzeniem"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/arc.fish:143
 msgid "Make a raw Conduit method call"
@@ -8178,37 +8049,32 @@ msgid "Take addr from filename, default /etc/ethers"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:1
-#, fuzzy
 msgid "Omit false conditionals"
-msgstr "blok warunkowy 'if'"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:2
-#, fuzzy
 msgid "Omit debugging directives"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:3
-#, fuzzy
 msgid "Include general information"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:4
 msgid "Include high-level source"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:5
-#, fuzzy
 msgid "Include assembly"
-msgstr "Katalog"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:6
 msgid "Include macro expansions"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:7
-#, fuzzy
 msgid "Omit forms processing"
-msgstr "Proces potomny"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:8
 msgid "Include symbols"
@@ -8231,14 +8097,12 @@ msgid "Produce assembler debugging messages"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:13
-#, fuzzy
 msgid "Remap debug information"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:14
-#, fuzzy
 msgid "Redefine symbols"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:15
 msgid "Require executable stack for this object"
@@ -8265,9 +8129,8 @@ msgid "Skip whitespace and comment preprocessing"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:21
-#, fuzzy
 msgid "Generate debugging information"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:22
 msgid "Generate STABS debugging information"
@@ -8286,19 +8149,16 @@ msgid "Generate per-function section names for DWARF line information"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:26
-#, fuzzy
 msgid "Set the hash table size close"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:27
-#, fuzzy
 msgid "Show help message and exit"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:28
-#, fuzzy
 msgid "Show target specific options"
-msgstr "Edytuj sugestie do określonej komendy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:29
 msgid "Add DIR to search list for .include directives"
@@ -8321,9 +8181,8 @@ msgid "Assemble in MRI compatibility mode"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:34
-#, fuzzy
 msgid "Write dependency information in given file"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:35
 msgid "Do not pad the end of sections to alignment boundaries"
@@ -8354,9 +8213,8 @@ msgid "Use same format as native assembler when possible"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:42
-#, fuzzy
 msgid "Print assembler version number and exit"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:43
 #: /tmp/fish/implicit/share/completions/gunzip.fish:8
@@ -8365,9 +8223,8 @@ msgid "Suppress warnings"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:44
-#, fuzzy
 msgid "Don't suppress warnings"
-msgstr "Zmiana rozmiaru okna"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:45
 msgid "Treat warnings as errors"
@@ -8382,9 +8239,8 @@ msgid "Read option from given file"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:48
-#, fuzzy
 msgid "Print assembler version number"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:49
 msgid "Don't optimize code alignment"
@@ -8403,18 +8259,16 @@ msgid "Generate 64 bits code"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:53
-#, fuzzy
 msgid "Generate x32 code"
-msgstr "Zwróć losową liczbę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:54
 msgid "Encode SSE instructions with VEX prefix"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:55
-#, fuzzy
 msgid "Check SSE instructions"
-msgstr "Niedozwolona instrukcja"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:56
 msgid "Check operand combinations for validity"
@@ -8441,9 +8295,8 @@ msgid "Use specfied mnemonic"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:62
-#, fuzzy
 msgid "Use specfied syntax"
-msgstr "Sygnał zdefiniowany przez użytkownika 1"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:63
 msgid "Support pseudo index registers"
@@ -8470,9 +8323,8 @@ msgid "Strip all lock prefixes"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:70
-#, fuzzy
 msgid "Generate relax relocations"
-msgstr "Zwróć losową liczbę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/as.fish:71
 msgid "Accept only AMD64 ISA"
@@ -8495,9 +8347,8 @@ msgid "Show the full history of the target, with file diffs"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/asp.fish:3
-#, fuzzy
 msgid "Put the source files in current directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/asp.fish:4
 msgid "Collect garbage"
@@ -8600,9 +8451,8 @@ msgid "Keep the browser process in the foreground."
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/atom.fish:3
-#, fuzzy
 msgid "Print usage message."
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/atom.fish:4
 msgid "Log all output to file."
@@ -8835,9 +8685,8 @@ msgid "Show settings while running"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/aura.fish:14
-#, fuzzy
 msgid "Do not use powerpill"
-msgstr "Nie mozna skonfigurować terminala"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/aura.fish:15
 msgid "Show available languages"
@@ -9131,9 +8980,8 @@ msgid "Restores a record kept with -B"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/aura.fish:69
-#, fuzzy
 msgid "Backup to directory"
-msgstr "Nawiązanie symboliczne do katalogu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/aura.fish:70
 msgid "Save this many versions"
@@ -9392,9 +9240,8 @@ msgid "Wrap encoded line after given number of caracters (default 76)"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/bc.fish:1
-#, fuzzy
 msgid "Force interactive mode"
-msgstr "Tylko dla zadań interaktywnych"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/bc.fish:2
 msgid "Define math library"
@@ -9453,9 +9300,8 @@ msgid "Change current bind mode to named mode"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/bind.fish:9
-#, fuzzy
 msgid "Key name"
-msgstr "Nazwa procesu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/bind.fish:10
 #: /tmp/fish/implicit/share/completions/commandline.fish:17
@@ -9707,9 +9553,8 @@ msgid "Open brew/formula's homepage"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/brew.fish:43
-#, fuzzy
 msgid "Display information about formula"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/brew.fish:44
 msgid "Display info for all formulae"
@@ -9726,9 +9571,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/brew.fish:47
 #: /tmp/fish/implicit/share/completions/prt-get.fish:35
 #: /tmp/fish/implicit/share/completions/prt-get.fish:94
-#, fuzzy
 msgid "Force install"
-msgstr "Wymuszono zatrzymanie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/brew.fish:48
 msgid "If install fails, open shell in temp directory"
@@ -10388,9 +10232,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/gunzip.fish:5
 #: /tmp/fish/implicit/share/completions/gzip.fish:5
 #: /tmp/fish/implicit/share/completions/zcat.fish:3
-#, fuzzy
 msgid "Print license"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/busctl.fish:1
 msgid "Suppress message payload display"
@@ -10453,9 +10296,8 @@ msgid "List all help topics"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/bzr.fish:3
-#, fuzzy
 msgid "List all commands"
-msgstr "Zakończ zestaw komend"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/bzr.fish:4
 msgid "Help about supported formats"
@@ -10810,9 +10652,8 @@ msgid "Default port to use for HTTPS"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/caddy.fish:14
-#, fuzzy
 msgid "Process log file"
-msgstr "Nazwa procesu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/caddy.fish:15
 msgid "Path to write pid file"
@@ -10931,9 +10772,8 @@ msgid "Add feed"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/canto.fish:11
-#, fuzzy
 msgid "Set configuration directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/canto.fish:12
 #: /tmp/fish/implicit/share/completions/pine.fish:10
@@ -10949,16 +10789,14 @@ msgid "Set feed directory"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/canto.fish:15
-#, fuzzy
 msgid "Set script directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cargo.fish:1
 #: /tmp/fish/implicit/share/completions/light.fish:2
 #: /tmp/fish/implicit/share/completions/rustc.fish:1
-#, fuzzy
 msgid "Print version info and exit"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cargo.fish:2
 msgid "List installed commands"
@@ -11256,9 +11094,8 @@ msgid "Allows the user to manually select a driver for the device"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cdrecord.fish:37
-#, fuzzy
 msgid "Set driver specific options"
-msgstr "Edytuj sugestie do określonej komendy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cdrecord.fish:38
 msgid ""
@@ -11459,9 +11296,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/chgrp.fish:2
 #: /tmp/fish/implicit/share/completions/chown.fish:2
-#, fuzzy
 msgid "Dereference symbolic links"
-msgstr "Nawiązanie symboliczne"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/chgrp.fish:3
 #: /tmp/fish/implicit/share/completions/chown.fish:3
@@ -11530,18 +11366,16 @@ msgid "Username"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/chsh.fish:1
-#, fuzzy
 msgid "Specify your login shell"
-msgstr "To jest powłoka logowania"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/chsh.fish:2
 msgid "Display help and exit\t"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/chsh.fish:4
-#, fuzzy
 msgid "List available shells and exit"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/climate.fish:2
 msgid "Update your climate install"
@@ -11597,9 +11431,8 @@ msgid "Find the biggest files recursively"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/climate.fish:17
-#, fuzzy
 msgid "Find the biggest directories"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/climate.fish:18
 msgid "Find directory size"
@@ -11614,14 +11447,12 @@ msgid "Extract any given archive"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/climate.fish:21
-#, fuzzy
 msgid "Report duplicate files in a directory"
-msgstr "Nawiązanie symboliczne do katalogu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/climate.fish:22
-#, fuzzy
 msgid "Count the number of occurences"
-msgstr "Wylicz liczbę argumentów"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/climate.fish:23
 msgid "Monitor file for changes"
@@ -11660,9 +11491,8 @@ msgid "List open ports"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/climate.fish:32
-#, fuzzy
 msgid "Edit the hosts file"
-msgstr "Opuść powłokę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/climate.fish:33
 msgid "http-server serving the current directory"
@@ -11737,9 +11567,8 @@ msgid "Find the trash size"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/climate.fish:51
-#, fuzzy
 msgid "Empty the trash"
-msgstr "Opuść powłokę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/combine.fish:1
 msgid "Combine sets of lines from two files using boolean operations"
@@ -11774,9 +11603,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/setsid.fish:1
 #: /tmp/fish/implicit/share/completions/ssh.fish:1
 #: /tmp/fish/implicit/share/completions/sudo.fish:20
-#, fuzzy
 msgid "Command to run"
-msgstr "Komenda"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/commandline.fish:2
 msgid "Add text to the end of the selected area"
@@ -11970,9 +11798,8 @@ msgid "Old style long option to complete"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/complete.fish:6
-#, fuzzy
 msgid "Do not use file completion"
-msgstr "Edytuj sugestie do określonej komendy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/complete.fish:7
 msgid "Require parameter"
@@ -12017,9 +11844,8 @@ msgid "User script"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/composer.fish:2
-#, fuzzy
 msgid "Short information about Composer"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/composer.fish:3
 msgid "Create an archive of this composer package"
@@ -12378,9 +12204,8 @@ msgid "Do not create output files"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/configure.fish:7
-#, fuzzy
 msgid "Set source directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/configure.fish:8
 msgid "Architecture-independent install directory"
@@ -12744,83 +12569,6 @@ msgstr ""
 msgid "Enhance or reduce the image contrast"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/cower.fish:1
-msgid "Show output in a more script friendly format"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/cower.fish:2
-msgid "Download [twice to fetch dependencies]"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/cower.fish:3
-msgid "Show info for target [twice for more details]"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/cower.fish:4
-msgid "Search for packages by maintainer"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/cower.fish:5
-msgid "Search for packages by name"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/cower.fish:6
-msgid "Check AUR packages for updates"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/cower.fish:7
-msgid "Use colored output"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/cower.fish:8
-msgid "Show debug output"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/cower.fish:9
-msgid "Overwrite existing files when downloading"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/cower.fish:10
-#, fuzzy
-msgid "Print formatted"
-msgstr "Zwraca sformatowany tekst"
-
-#: /tmp/fish/implicit/share/completions/cower.fish:11
-msgid "Display help and quit"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/cower.fish:12
-msgid "Ignore a package upgrade"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/cower.fish:13
-msgid "Ignore a binary repo when checking for updates"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/cower.fish:14
-msgid "Specify a delimiter for list formatters"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/cower.fish:15
-msgid "Output less"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/cower.fish:16
-msgid "Download targets to DIR"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/cower.fish:17
-msgid "Limit the number of threads created [10]"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/cower.fish:18
-msgid "Curl timeout in seconds"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/cower.fish:19
-msgid "Output more"
-msgstr ""
-
 #: /tmp/fish/implicit/share/completions/cowsay.fish:1
 #: /tmp/fish/implicit/share/completions/cowthink.fish:1
 msgid "Specify eye string"
@@ -13072,9 +12820,8 @@ msgid "Kerberos server mode"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cvs.fish:33
-#, fuzzy
 msgid "Print out history information for files"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cvs.fish:34
 msgid "Prompt for password for authenticating server"
@@ -13125,18 +12872,16 @@ msgid "Server mode"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cvs.fish:46
-#, fuzzy
 msgid "Display status information on checked out files"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cvs.fish:47
 msgid "Add a symbolic tag to checked out version of files"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cvs.fish:48
-#, fuzzy
 msgid "Undo an edit command"
-msgstr "Zakończ zestaw komend"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cvs.fish:49
 msgid "Bring work tree in sync with repository"
@@ -13147,9 +12892,8 @@ msgid "Show current CVS version(s)"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cvs.fish:51
-#, fuzzy
 msgid "Set watches"
-msgstr "(brak pasujących wyników)"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cvs.fish:52
 msgid "See who is watching a file"
@@ -13184,9 +12928,8 @@ msgid "[users]  Remove (comma-separated) user names from access list"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cvs.fish:60
-#, fuzzy
 msgid "Run interactively."
-msgstr "Tylko dla zadań interaktywnych"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cvs.fish:61
 msgid "Set keyword substitution mode:"
@@ -13612,9 +13355,8 @@ msgid "Last modified (committed or modified report)"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cvs.fish:165
-#, fuzzy
 msgid "Working directory must match"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cvs.fish:166
 msgid "Since date (Many formats)"
@@ -13806,9 +13548,8 @@ msgid "Revision - symbolic or numeric."
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cvs.fish:221
-#, fuzzy
 msgid "Delete the given directory."
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cvs.fish:222
 msgid "Delete the file before removing it."
@@ -13909,9 +13650,8 @@ msgid "Download missing sources"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cygport.fish:7
-#, fuzzy
 msgid "Prepare source directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cygport.fish:8
 msgid "Build software"
@@ -13974,9 +13714,8 @@ msgid "Send announcement email"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cygport.fish:23
-#, fuzzy
 msgid "Delete working directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/cygport.fish:24
 msgid "Same as prep build inst pkg"
@@ -14352,9 +14091,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/darcs.fish:978
 #: /tmp/fish/implicit/share/completions/darcs.fish:996
 #: /tmp/fish/implicit/share/completions/darcs.fish:1016
-#, fuzzy
 msgid "Suppress informational output"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/darcs.fish:429
 #: /tmp/fish/implicit/share/completions/darcs.fish:473
@@ -14616,9 +14354,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/darcs.fish:707
 #: /tmp/fish/implicit/share/completions/darcs.fish:760
 #: /tmp/fish/implicit/share/completions/darcs.fish:803
-#, fuzzy
 msgid "Generate XML formatted output"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/darcs.fish:455
 #: /tmp/fish/implicit/share/completions/darcs.fish:493
@@ -14648,9 +14385,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/darcs.fish:633
 #: /tmp/fish/implicit/share/completions/darcs.fish:709
 #: /tmp/fish/implicit/share/completions/darcs.fish:762
-#, fuzzy
 msgid "Don't summarize changes"
-msgstr "Zmiana rozmiaru okna"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/darcs.fish:460
 msgid "Show changes in reverse order"
@@ -15121,9 +14857,8 @@ msgid "Reorder the patches in the repository"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/darcs.fish:938
-#, fuzzy
 msgid "Specify a sibling directory"
-msgstr "Nawiązanie symboliczne do katalogu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/darcs.fish:939
 msgid "Relink random internal data to a sibling"
@@ -15142,9 +14877,8 @@ msgid "Optimize hashed pristine layout"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/darcs.fish:953
-#, fuzzy
 msgid "Uncompress patches"
-msgstr "(brak pasujących wyników)"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/dconf.fish:1
 msgid "Read the value of a key"
@@ -15313,14 +15047,12 @@ msgid "Use last acquired lease if cannot obtain one even if expired"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/dhcpcd.fish:7
-#, fuzzy
 msgid "Push given value the environment"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/dhcpcd.fish:8
-#, fuzzy
 msgid "Reapply configuration for each interface"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/dhcpcd.fish:9
 msgid "Request DHCP server to update DNS using FQDN instead of hostname"
@@ -15387,9 +15119,8 @@ msgid "Request given address in DHCP INFORM message"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/dhcpcd.fish:25
-#, fuzzy
 msgid "Perform DHCPv6 Information Request"
-msgstr "Żądanie informacji"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/dhcpcd.fish:26
 msgid "Configure static DHCP value"
@@ -15576,17 +15307,15 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/lsof.fish:1
 #: /tmp/fish/implicit/share/completions/lua.fish:5
 #: /tmp/fish/implicit/share/completions/wicd-cli.fish:1
-#, fuzzy
 msgid "Print help and exit"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/dig.fish:14
 #: /tmp/fish/implicit/share/completions/feh.fish:55
 #: /tmp/fish/implicit/share/completions/fuser.fish:12
 #: /tmp/fish/implicit/share/completions/tree.fish:43
-#, fuzzy
 msgid "Print version and exit"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/dig.fish:15
 msgid "TCP mode"
@@ -15751,9 +15480,8 @@ msgid "Get detailed information about a specific whole disk or partition"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/diskutil.fish:5
-#, fuzzy
 msgid "Process all disks"
-msgstr "Lista argumentów procesu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/diskutil.fish:6
 msgid "Continuously display system-wide disk manipulation activity"
@@ -16246,9 +15974,8 @@ msgid "Use 1kB block size"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/du.fish:10
-#, fuzzy
 msgid "Count hard links multiple times"
-msgstr "Wykonaj komendę wielokrotnie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/du.fish:11
 msgid "Dereference all symlinks"
@@ -16612,9 +16339,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/elixir.fish:1
 #: /tmp/fish/implicit/share/completions/iex.fish:1
-#, fuzzy
 msgid "Prints version and exit"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/elixir.fish:2
 #: /tmp/fish/implicit/share/completions/iex.fish:2
@@ -16690,9 +16416,8 @@ msgid "do not do interactive display; implies -q"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/emacs.fish:2
-#, fuzzy
 msgid "change to directory DIR"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/emacs.fish:3
 msgid "start a server in the background"
@@ -16786,9 +16511,8 @@ msgid "override color mode for character terminals"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/emacs.fish:28
-#, fuzzy
 msgid "window background color"
-msgstr "Przenieś zadanie w tło"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/emacs.fish:29
 msgid "disable many display features; used for debugging Emacs"
@@ -16933,9 +16657,8 @@ msgid "WARNING: Delete all packages that are neither deps nor in world"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/emerge.fish:12
-#, fuzzy
 msgid "Process all meta-cache files"
-msgstr "Lista argumentów procesu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/emerge.fish:13
 msgid "WARNING: Remove all but the latest version of package"
@@ -17090,9 +16813,8 @@ msgid "Unmount when idle for specified MINUTES"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/encfs.fish:2
-#, fuzzy
 msgid "Run in the foreground"
-msgstr "Nie można przywrócić powłoki na pierwszy plan"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/encfs.fish:3
 msgid "Verbose messages when run foreground"
@@ -17107,9 +16829,8 @@ msgid "Enables debugging within the FUSE library"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/encfs.fish:6
-#, fuzzy
 msgid "Return data even from corrupted files"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/encfs.fish:7
 msgid "Make files public to all other users"
@@ -17162,16 +16883,14 @@ msgid "Output version information"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/env.fish:1
-#, fuzzy
 msgid "Redefine variable"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/env.fish:2
 #: /tmp/fish/implicit/share/completions/nice.fish:1
 #: /tmp/fish/implicit/share/completions/time.fish:1
-#, fuzzy
 msgid "Command"
-msgstr "Komenda"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/env.fish:3
 msgid "Start with an empty environment"
@@ -17331,18 +17050,16 @@ msgid "show help"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/exercism.fish:5
-#, fuzzy
 msgid "print the version"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/exercism.fish:6
 msgid "Writes config values to a JSON file."
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/exercism.fish:7
-#, fuzzy
 msgid "Outputs useful debug information."
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/exercism.fish:8
 msgid "Downloads a solution given the ID of the latest iteration."
@@ -17381,9 +17098,8 @@ msgid "Submits a new iteration to a problem on exercism.io."
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/exercism.fish:16
-#, fuzzy
 msgid "Lists the available language tracks."
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/exercism.fish:17
 msgid "REMOVED"
@@ -17450,14 +17166,12 @@ msgid "dump diffs between jail initialisation and freeze time into a flavour"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ezjail-admin.fish:12
-#, fuzzy
 msgid "create the basejail from binary packages"
-msgstr "Stwórz blok kodu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ezjail-admin.fish:13
-#, fuzzy
 msgid "list all jails"
-msgstr "Zakończ zestaw komend"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ezjail-admin.fish:14
 msgid "restart a running jail"
@@ -17484,9 +17198,8 @@ msgid "check for reasons for the jails to fail"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ezjail-admin.fish:24
-#, fuzzy
 msgid "create or update the basejail from source"
-msgstr "Zwróć losową liczbę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fab.fish:1
 #: /tmp/fish/implicit/share/completions/pkgfile.fish:2
@@ -17494,9 +17207,8 @@ msgid "show this help message and exit"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fab.fish:2
-#, fuzzy
 msgid "print detailed info about command NAME"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fab.fish:3
 msgid "formats --list, choices: short, normal, nested"
@@ -17511,9 +17223,8 @@ msgid "Force sudo password prompt up-front"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fab.fish:6
-#, fuzzy
 msgid "print list of possible commands and exit"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fab.fish:7
 msgid "comma separated KEY=VALUE pairs to set Fab env vars"
@@ -17545,9 +17256,8 @@ msgid "specify location of config file to use"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fab.fish:14
-#, fuzzy
 msgid "Color error output"
-msgstr "Wymuszono zatrzymanie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fab.fish:15
 msgid "do not load user known_hosts file"
@@ -17826,9 +17536,8 @@ msgid "Disable Xinerama support"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/feh.fish:37
-#, fuzzy
 msgid "Save files to given directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/feh.fish:38
 msgid "Preload images"
@@ -17949,9 +17658,8 @@ msgid "Set font to print title on index"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/feh.fish:69
-#, fuzzy
 msgid "Center file on background"
-msgstr "Przenieś zadanie w tło"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/feh.fish:70
 msgid "Fit file into background by zooming until image fits"
@@ -17980,9 +17688,8 @@ msgid "Select font"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/figlet.fish:2
-#, fuzzy
 msgid "Change font directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/figlet.fish:3
 msgid "Center output horizontally"
@@ -18001,9 +17708,8 @@ msgid "Set justification according to text direction"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/figlet.fish:7
-#, fuzzy
 msgid "Set output to terminal width"
-msgstr "Ustaw kolor terminala"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/figlet.fish:8
 msgid "Set output width"
@@ -18054,9 +17760,8 @@ msgid "Print right-to-left"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/figlet.fish:25
-#, fuzzy
 msgid "Print with default text direction"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/file.fish:1
 msgid "Do not prepend filenames to output lines"
@@ -18216,14 +17921,12 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/find.fish:24
 #: /tmp/fish/implicit/share/completions/test.fish:31
-#, fuzzy
 msgid "File is executable"
-msgstr "Wykonywalny"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/find.fish:25
-#, fuzzy
 msgid "Always false"
-msgstr "Zawsze"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/find.fish:26
 msgid "File is on filesystem of specified type"
@@ -18310,9 +18013,8 @@ msgid "File uses specified units of space"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/find.fish:47
-#, fuzzy
 msgid "Always true"
-msgstr "Zawsze"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/find.fish:48
 msgid "File is of specified type"
@@ -18347,9 +18049,8 @@ msgid "Delete selected files"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/find.fish:55
-#, fuzzy
 msgid "Execute specified command for each located file"
-msgstr "Wykonaj komendę jeżeli poprzednia komenda zakończy się niepowodzeniem"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/find.fish:56
 msgid "Execute specified command for each located file, in the files directory"
@@ -18390,18 +18091,16 @@ msgid "Print null separated full file names"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/find.fish:65
-#, fuzzy
 msgid "Print formated data"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/find.fish:66
 msgid "Do not recurse unless -depth is specified"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/find.fish:67
-#, fuzzy
 msgid "Exit at once"
-msgstr "Opuść powłokę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/find.fish:68
 msgid "List file in ls -dils format"
@@ -18428,9 +18127,8 @@ msgid "Only parse input, do not execute"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fish.fish:5
-#, fuzzy
 msgid "Run in interactive mode"
-msgstr "Tylko dla zadań interaktywnych"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fish.fish:6
 msgid "Run in login mode"
@@ -18916,9 +18614,8 @@ msgid "Check all repositories"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:14
-#, fuzzy
 msgid "List changes"
-msgstr "Zmiana rozmiaru okna"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:15
 #: /tmp/fish/implicit/share/completions/fossil.fish:16
@@ -19026,9 +18723,8 @@ msgid "Show all versions"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:47
-#, fuzzy
 msgid "Undo latest bad/good command."
-msgstr "Zakończ zestaw komend"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:48
 #: /tmp/fish/implicit/share/completions/git.fish:88
@@ -19044,9 +18740,8 @@ msgid "Make branch local"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:51
-#, fuzzy
 msgid "Set background color"
-msgstr "Ostatnie zadanie działające w tle"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:52
 #: /tmp/fish/implicit/share/completions/fossil.fish:106
@@ -19084,9 +18779,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/fossil.fish:177
 #: /tmp/fish/implicit/share/completions/fossil.fish:180
 #: /tmp/fish/implicit/share/completions/fossil.fish:267
-#, fuzzy
 msgid "Run command on repository"
-msgstr "Uruchom komendę w obecnym procesie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:61
 msgid "Print a file"
@@ -19547,18 +19241,16 @@ msgid "Display actions without runing"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:203
-#, fuzzy
 msgid "Manage settings"
-msgstr "Zmień wartości ciągów znaków"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:204
 msgid "Log accesses"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:205
-#, fuzzy
 msgid "Allow symbolic links"
-msgstr "Nawiązanie symboliczne"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:206
 msgid "Allow automatically filling CAPTCHA"
@@ -19593,9 +19285,8 @@ msgid "Allow binary files to be diffed"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:217
-#, fuzzy
 msgid "External diff command"
-msgstr "Zakończ zestaw komend"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:218
 msgid "Disallow pushing to the repository"
@@ -19732,9 +19423,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:252
 #: /tmp/fish/implicit/share/completions/fossil.fish:253
-#, fuzzy
 msgid "Show information about files"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:254
 msgid "Show stash contents"
@@ -19814,9 +19504,8 @@ msgid "Find tag type"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:279
-#, fuzzy
 msgid "Limit number of tags"
-msgstr "Wylicz liczbę argumentów"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:281
 #: /tmp/fish/implicit/share/completions/git.fish:293
@@ -19884,9 +19573,8 @@ msgid "Use SCGI rather than HTTP"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:297
-#, fuzzy
 msgid "Undo the changes"
-msgstr "Zmiana rozmiaru okna"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:299
 msgid "Update version"
@@ -19897,9 +19585,8 @@ msgid "Print debug information"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:304
-#, fuzzy
 msgid "Print information about all files"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fossil.fish:305
 msgid "Print fossil version"
@@ -19930,24 +19617,21 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/funced.fish:1
 #: /tmp/fish/implicit/share/completions/funcsave.fish:1
-#, fuzzy
 msgid "Save function"
-msgstr "Zdefiniuj nową funkcję"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/funced.fish:2
 msgid "Open function in external editor"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/funced.fish:3
-#, fuzzy
 msgid "Edit in interactive mode"
-msgstr "Tylko dla zadań interaktywnych"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/function.fish:1
 #: /tmp/fish/implicit/share/completions/functions.fish:5
-#, fuzzy
 msgid "Set function description"
-msgstr "'return' poza definicją funkcji"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/function.fish:2
 #: /tmp/fish/implicit/share/completions/functions.fish:2
@@ -19981,9 +19665,8 @@ msgid "Make the function a generic event handler"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/function.fish:9
-#, fuzzy
 msgid "Specify named arguments"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/function.fish:10
 msgid "Do not shadow variable scope of calling function"
@@ -19994,9 +19677,8 @@ msgid "Inherit completions from the given command"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/functions.fish:1
-#, fuzzy
 msgid "Erase function"
-msgstr "Zdefiniuj nową funkcję"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/functions.fish:3
 msgid "Show hidden functions"
@@ -20015,14 +19697,12 @@ msgid "Copy the specified function to the specified new name"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/functions.fish:9
-#, fuzzy
 msgid "Display information about the function"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/functions.fish:10
-#, fuzzy
 msgid "Print more output"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/fuser.fish:1
 msgid "Show all files specified on the command line"
@@ -20093,9 +19773,8 @@ msgid "Lazy unmount"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gcc.fish:1
-#, fuzzy
 msgid "Standard mode"
-msgstr "Standardowe wejście"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gcc.fish:2
 msgid "Place output in file"
@@ -23136,9 +22815,8 @@ msgid "Do not use floating point double instructions"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gcc.fish:701
-#, fuzzy
 msgid "Use media instructions"
-msgstr "Niedozwolona instrukcja"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gcc.fish:702
 msgid "Do not use media instructions"
@@ -23213,9 +22891,8 @@ msgid "Use all eight media accumulator registers"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gcc.fish:717
-#, fuzzy
 msgid "Pack VLIW instructions"
-msgstr "Niedozwolona instrukcja"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gcc.fish:718
 msgid "Do not pack VLIW instructions"
@@ -23395,14 +23072,12 @@ msgid "Generate the predefine, \"_SIO\", for server IO"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gcc.fish:764
-#, fuzzy
 msgid "Use GNU ld specific options"
-msgstr "Edytuj sugestie do określonej komendy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gcc.fish:765
-#, fuzzy
 msgid "Use HP ld specific options"
-msgstr "Edytuj sugestie do określonej komendy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gcc.fish:766
 msgid "Generate code that uses long call sequences"
@@ -25605,18 +25280,16 @@ msgid "Use file file as a core dump to examine"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gdb.fish:7
-#, fuzzy
 msgid "Execute GDB commands from file file"
-msgstr "Wykonaj komendę jeżeli poprzednia komenda zakończy się niepowodzeniem"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gdb.fish:8
 msgid "Add directory to the path to search for source files"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gdb.fish:9
-#, fuzzy
 msgid "Do not execute commands from any .gdbinit files"
-msgstr "Wykonaj komendę jeżeli poprzednia komenda zakończy się niepowodzeniem"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gdb.fish:11
 #: /tmp/fish/implicit/share/completions/root.fish:1
@@ -25652,14 +25325,12 @@ msgid "Run GDB using a text (console) user interface"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gem.fish:1
-#, fuzzy
 msgid "Print usage informations and quit"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gem.fish:2
-#, fuzzy
 msgid "Print the version and quit"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gem.fish:3
 msgid "Use URL as the remote source for gems"
@@ -26059,9 +25730,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/git.fish:276
 #: /tmp/fish/implicit/share/completions/mdadm.fish:12
 #: /tmp/fish/implicit/share/completions/update-eix-remote.fish:1
-#, fuzzy
 msgid "Be quiet"
-msgstr "Przymusowe wyjście"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:24
 #: /tmp/fish/implicit/share/completions/git.fish:41
@@ -26260,9 +25930,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:72
 #: /tmp/fish/implicit/share/completions/git.fish:259
-#, fuzzy
 msgid "Interactive mode"
-msgstr "Tylko dla zadań interaktywnych"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:73
 msgid "Interactively choose hunks to stage"
@@ -26320,9 +25989,8 @@ msgid "Track a new branch"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:90
-#, fuzzy
 msgid "Keep staged changes"
-msgstr "Zmiana rozmiaru okna"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:91
 msgid "Keep unmerged changes"
@@ -26912,9 +26580,8 @@ msgid "Reset current HEAD to the specified state"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:266
-#, fuzzy
 msgid "Reset files in working directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:270
 msgid "Reflog"
@@ -27181,9 +26848,8 @@ msgid "Show commit summary"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:342
-#, fuzzy
 msgid "Run command on each submodule"
-msgstr "Uruchom komendę w obecnym procesie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:343
 msgid "Sync submodules' URL with .gitmodules"
@@ -27251,9 +26917,8 @@ msgid "Remove untracked files from the working tree"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:359
-#, fuzzy
 msgid "Force run"
-msgstr "Przymusowe wyjście"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/git.fish:360
 msgid "Show what would be done and clean files interactively"
@@ -27490,9 +27155,8 @@ msgid "print packages being built"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/go.fish:7
-#, fuzzy
 msgid "print and preserve work directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/go.fish:8
 msgid "print the commands"
@@ -27866,9 +27530,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gpg.fish:22
 #: /tmp/fish/implicit/share/completions/signify.fish:2
-#, fuzzy
 msgid "Generate a new key pair"
-msgstr "Zwróć losową liczbę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gpg.fish:23
 msgid "Present a menu which enables you to do all key related tasks"
@@ -28168,9 +27831,8 @@ msgid "Use specified file instead of the default trustdb"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gpg.fish:96
-#, fuzzy
 msgid "Set the home directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gpg.fish:97
 msgid "Set the native character set"
@@ -28770,9 +28432,8 @@ msgid "List files in folder"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gphoto2.fish:45
-#, fuzzy
 msgid "Create a directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gphoto2.fish:46
 msgid "Remove a directory"
@@ -28863,9 +28524,8 @@ msgid "Overwrite files without asking"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gprof.fish:1
-#, fuzzy
 msgid "Print annotated source"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gprof.fish:2
 msgid "Do not print explanations"
@@ -29068,9 +28728,8 @@ msgid "Set project property for build script"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gradle.fish:22
-#, fuzzy
 msgid "Specify start directory"
-msgstr "Nawiązanie symboliczne do katalogu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gradle.fish:23
 msgid "Build project in parallel"
@@ -29201,9 +28860,8 @@ msgid "Pattern is basic regex"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/grep.fish:19
-#, fuzzy
 msgid "Print filename"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/grep.fish:20
 msgid "Suppress printing filename"
@@ -29451,18 +29109,16 @@ msgid "Check if given file is BIOS bootsector"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/grub-file.fish:32
-#, fuzzy
 msgid "Display usage and exit"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/grub-install.fish:1
 msgid "Compress GRUB files"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/grub-install.fish:2
-#, fuzzy
 msgid "Use image and modules under given directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/grub-install.fish:3
 msgid "Install given fonts"
@@ -29477,9 +29133,8 @@ msgid "Embed given file as public key for signature checking"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/grub-install.fish:6
-#, fuzzy
 msgid "Use translations under given directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/grub-install.fish:7
 msgid "Install only given locales"
@@ -29534,9 +29189,8 @@ msgid "Use given color for label"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/grub-install.fish:21
-#, fuzzy
 msgid "Use given file for label"
-msgstr "Sygnał zdefiniowany przez użytkownika 2"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/grub-install.fish:22
 msgid "Use given directory for PPC Mac install"
@@ -29555,9 +29209,8 @@ msgid "Don't apply any reed-solomon codes when embedding core.img"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/grub-install.fish:26
-#, fuzzy
 msgid "Set product version"
-msgstr "'return' poza definicją funkcji"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/grub-install.fish:27
 msgid "Delete device map if it already exists"
@@ -29580,9 +29233,8 @@ msgid "Print the grunt version. Combine with --verbose for more info"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gsettings.fish:1
-#, fuzzy
 msgid "Print the version information"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/gsettings.fish:2
 msgid "Specify a custom schemas directory"
@@ -30149,9 +29801,8 @@ msgid "Autosuggestions"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:2
-#, fuzzy
 msgid "Builtin commands"
-msgstr "Zakończ zestaw komend"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:3
 msgid "Cartesian Products"
@@ -30178,33 +29829,28 @@ msgid "Writing your own completions"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:9
-#, fuzzy
 msgid "Where to put completions"
-msgstr "Edytuj sugestie do określonej komendy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:10
 msgid "Debugging fish scripts"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:12
-#, fuzzy
 msgid "Command line editor"
-msgstr "Komenda"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:13
-#, fuzzy
 msgid "Emacs mode commands"
-msgstr "Zakończ zestaw komend"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:14
-#, fuzzy
 msgid "Escaping characters"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:15
-#, fuzzy
 msgid "Event handlers"
-msgstr "blok obsługi zdarzenia"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:16
 #: /tmp/fish/implicit/share/completions/help.fish:25
@@ -30216,14 +29862,12 @@ msgid "Brace expansion {a,b,c}"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:18
-#, fuzzy
 msgid "Command substitution"
-msgstr "w zastępstwie polecenia"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:19
-#, fuzzy
 msgid "Command substitution (SUBCOMMAND)"
-msgstr "w zastępstwie polecenia"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:20
 msgid "Home directory expansion ~USER"
@@ -30262,9 +29906,8 @@ msgid "Initialization files"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:31
-#, fuzzy
 msgid "Introduction"
-msgstr "Niedozwolona instrukcja"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:32
 msgid "Common issues with fish"
@@ -30303,23 +29946,20 @@ msgid "Quotes"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:41
-#, fuzzy
 msgid "Input/Output (IO) redirection"
-msgstr "Katalog"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:42
-#, fuzzy
 msgid "Shared bindings"
-msgstr "Steruj przypisaniami klawiszy fish'a"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:43
 msgid "Introduction to the fish syntax"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:44
-#, fuzzy
 msgid "Background jobs"
-msgstr "Ostatnie zadanie działające w tle"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:45
 msgid "Conditional execution of code and flow control"
@@ -30331,32 +29971,28 @@ msgid "Functions"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:47
-#, fuzzy
 msgid "Autoloading functions"
-msgstr "Zdefiniuj nową funkcję"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:48
 msgid "Defining aliases"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:49
-#, fuzzy
 msgid "Job control"
-msgstr "Kontrola zadania"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:50
-#, fuzzy
 msgid "Some common words"
-msgstr "Stan Komenda"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:51
 msgid "Programmable title"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:52
-#, fuzzy
 msgid "Shell variables"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:53
 msgid "Arrays"
@@ -30367,54 +30003,44 @@ msgid "Variables for changing highlighting colors"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:55
-#, fuzzy
 msgid "Exporting variables"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:56
-#, fuzzy
 msgid "Variable scope for functions"
-msgstr "Zdefiniuj nową funkcję"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:57
-#, fuzzy
 msgid "Locale variables"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:58
-#, fuzzy
 msgid "Variable scope"
-msgstr "Zmienna"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:59
-#, fuzzy
 msgid "Special variables"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:60
-#, fuzzy
 msgid "The status variable"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:61
-#, fuzzy
 msgid "More on universal variables"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:62
-#, fuzzy
 msgid "Vi mode commands"
-msgstr "Zakończ zestaw komend"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:63
-#, fuzzy
 msgid "Command mode"
-msgstr "Komenda"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:64
-#, fuzzy
 msgid "Insert mode"
-msgstr "Tylko dla zadań interaktywnych"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:65
 msgid "Visual mode"
@@ -30433,18 +30059,16 @@ msgid "Combiners (And, Or, Not)"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:70
-#, fuzzy
 msgid "Command Substitutions"
-msgstr "w zastępstwie polecenia"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:71
 msgid "Conditionals (If, Else, Switch)"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:72
-#, fuzzy
 msgid "Exit Status"
-msgstr "Opuść powłokę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:73
 msgid "Exports (Shell Variables)"
@@ -30471,18 +30095,16 @@ msgid "Ready for more?"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:81
-#, fuzzy
 msgid "Pipes and Redirections"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:82
 msgid "Prompt"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:83
-#, fuzzy
 msgid "Running Commands"
-msgstr "Uruchom komendę w obecnym procesie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:84
 msgid "Separating Commands (Semicolon)"
@@ -30501,14 +30123,12 @@ msgid "Tab Completions"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:88
-#, fuzzy
 msgid "Universal Variables"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:89
-#, fuzzy
 msgid "Variables"
-msgstr "Zmienna"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/help.fish:90
 msgid "Why fish?"
@@ -30794,9 +30414,8 @@ msgid "downloads database backup"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/heroku.fish:73
-#, fuzzy
 msgid "get information about a specific backup"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/heroku.fish:74
 msgid "restore a backup (default latest) to a database"
@@ -30885,9 +30504,8 @@ msgid "repository root directory or name of overlay bundle file"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:2
-#, fuzzy
 msgid "change working directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:3
 msgid "do not prompt, automatically pick the first choice for all prompts"
@@ -31388,9 +31006,8 @@ msgid "mark a branch as closed, hiding it from the branch list"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:108
-#, fuzzy
 msgid "amend the parent of the working directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:109
 #: /tmp/fish/implicit/share/completions/hg.fish:423
@@ -31615,14 +31232,12 @@ msgid "directory strip option for patch"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:205
-#, fuzzy
 msgid "don't commit, just update the working directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:206
-#, fuzzy
 msgid "apply patch without touching the working directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:207
 msgid "apply patch to the nodes from which it was generated"
@@ -31717,9 +31332,8 @@ msgid "include revisions where files were removed"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:250
-#, fuzzy
 msgid "revisions committed by user"
-msgstr "Historia komend wykonanych przez użytkownika"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:251
 msgid "show changesets within the given named branch"
@@ -31822,9 +31436,8 @@ msgid "print first line of patch header"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:321
-#, fuzzy
 msgid "do not update the new working directories"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:323
 msgid "location of source patch repository"
@@ -31878,9 +31491,8 @@ msgid "drop all guards"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:350
-#, fuzzy
 msgid "import file in patch directory"
-msgstr "Nawiązanie symboliczne do katalogu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:351
 msgid "name of patch file"
@@ -32026,9 +31638,8 @@ msgid "print patches not in series"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:422
-#, fuzzy
 msgid "amend the parent of the working dir"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:436
 msgid "record delete for missing files"
@@ -32081,9 +31692,8 @@ msgid "name of access log file to write to"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:466
-#, fuzzy
 msgid "run server in background"
-msgstr "Przenieś zadanie w tło"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:467
 msgid "used internally by daemon mode"
@@ -32119,9 +31729,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:475
 #: /tmp/fish/implicit/share/completions/hg.fish:476
-#, fuzzy
 msgid "for remote clients"
-msgstr "Wypisz lub usuń funkcje"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:477
 msgid "web templates to use"
@@ -32208,9 +31817,8 @@ msgid "check for push and pull"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:507
-#, fuzzy
 msgid "force tag"
-msgstr "Wymuszono zatrzymanie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hg.fish:508
 msgid "make the tag local"
@@ -32259,9 +31867,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/highlight.fish:5
 #: /tmp/fish/implicit/share/completions/hugo.fish:57
 #: /tmp/fish/implicit/share/completions/tex.fish:10
-#, fuzzy
 msgid "Output directory"
-msgstr "Katalog"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/highlight.fish:6
 msgid "Set type of the source code"
@@ -32304,14 +31911,12 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:2
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:127
-#, fuzzy
 msgid "Debug output"
-msgstr "Wymuszono zatrzymanie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:3
-#, fuzzy
 msgid "Enable logging"
-msgstr "Link wykonywalny"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:4
 msgid "Log file"
@@ -32337,18 +31942,16 @@ msgid "Include content marked as draft"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:10
-#, fuzzy
 msgid "Include expired content"
-msgstr "Katalog"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:11
 msgid "Include content with publishdate in the future"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:12
-#, fuzzy
 msgid "Cache directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:13
 msgid "Canonicalize all relative URLs using baseurl"
@@ -32359,14 +31962,12 @@ msgid "Remove files from destination not found in static directories"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:15
-#, fuzzy
 msgid "Content directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:16
-#, fuzzy
 msgid "Destination directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:17
 msgid "Do not build 404 page"
@@ -32401,14 +32002,12 @@ msgid "Print missing translations"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:25
-#, fuzzy
 msgid "Ignore the cache directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:26
-#, fuzzy
 msgid "Layout directory"
-msgstr "Katalog"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:27
 msgid "Do not sync permission mode of files"
@@ -32435,9 +32034,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/hugo.fish:58
 #: /tmp/fish/implicit/share/completions/hugo.fish:92
 #: /tmp/fish/implicit/share/completions/hugo.fish:103
-#, fuzzy
 msgid "Source directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:33
 #: /tmp/fish/implicit/share/completions/hugo.fish:46
@@ -32446,9 +32044,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:34
 #: /tmp/fish/implicit/share/completions/hugo.fish:47
-#, fuzzy
 msgid "Display metrics about template executions"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:35
 #: /tmp/fish/implicit/share/completions/hugo.fish:48
@@ -32460,9 +32057,8 @@ msgid "Theme to use"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:37
-#, fuzzy
 msgid "Themes directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:38
 msgid "Use /filename.html instead of /filename/"
@@ -32509,9 +32105,8 @@ msgid "Help for ulimit"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:53
-#, fuzzy
 msgid "Print the site configuration"
-msgstr "Wypisz obecnie uruchomione zadania"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:54
 msgid "Help for config"
@@ -32554,9 +32149,8 @@ msgid "Help for toYAML"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:66
-#, fuzzy
 msgid "Print Hugo version and environment info"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:67
 msgid "Help for env"
@@ -32611,23 +32205,20 @@ msgid "Generate Markdown documentation for the Hugo CLI"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:80
-#, fuzzy
 msgid "Doc directory"
-msgstr "Katalog"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:81
 msgid "Help for doc"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:82
-#, fuzzy
 msgid "Generate man pages for the Hugo CLI"
-msgstr "Zwróć losową liczbę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:83
-#, fuzzy
 msgid "Man pages directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:84
 msgid "Help for man"
@@ -32646,9 +32237,8 @@ msgid "Import from Jekyll"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:88
-#, fuzzy
 msgid "Allow import into non-empty target directory"
-msgstr "Nawiązanie symboliczne do katalogu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:89
 msgid "Help for jekyll"
@@ -32659,23 +32249,20 @@ msgid "List various types of content"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:91
-#, fuzzy
 msgid "Help for list"
-msgstr "Katalog domowy dla %ls"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:93
-#, fuzzy
 msgid "List all drafts"
-msgstr "Zakończ zestaw komend"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:94
 msgid "Help for drafts"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:95
-#, fuzzy
 msgid "List all expired posts"
-msgstr "Zakończ zestaw komend"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:96
 msgid "Help for expired"
@@ -32690,9 +32277,8 @@ msgid "Help for future"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:99
-#, fuzzy
 msgid "Create new content"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:100
 msgid "Editor to use"
@@ -32707,28 +32293,24 @@ msgid "Content type to create"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:104
-#, fuzzy
 msgid "Create a new site"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:105
-#, fuzzy
 msgid "Create site inside non-empty directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:106
 msgid "Config and front matter format"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:107
-#, fuzzy
 msgid "Help for site"
-msgstr "Katalog domowy dla %ls"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:108
-#, fuzzy
 msgid "Create a new theme"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:109
 msgid "Help for theme"
@@ -32783,9 +32365,8 @@ msgid "Port on which the server will listen"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:122
-#, fuzzy
 msgid "Render to destination directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:123
 msgid "Reset the content draft status"
@@ -32796,14 +32377,12 @@ msgid "Help for undraft"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:125
-#, fuzzy
 msgid "Print the version number of Hugo"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/hugo.fish:126
-#, fuzzy
 msgid "Help for version"
-msgstr "Wymuszono zatrzymanie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/i3-msg.fish:1
 msgid "Only send ipc message and suppress output"
@@ -32814,9 +32393,8 @@ msgid "Display version number and exit"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/i3-msg.fish:4
-#, fuzzy
 msgid "Set socket"
-msgstr "Gniazdo"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/i3-msg.fish:5
 msgid "Specify ipc message type"
@@ -32929,32 +32507,28 @@ msgid "Print out the address"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ifdata.fish:5
-#, fuzzy
 msgid "Print netmask"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ifdata.fish:6
-#, fuzzy
 msgid "Print network address"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ifdata.fish:7
 msgid "Print broadcast"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ifdata.fish:8
-#, fuzzy
 msgid "Print mtu"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ifdata.fish:9
 msgid "Print out the hardware address"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ifdata.fish:10
-#, fuzzy
 msgid "Print flags"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ifdata.fish:11
 msgid "Print all statistics on input"
@@ -32973,9 +32547,8 @@ msgid "Print # of in errors"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ifdata.fish:15
-#, fuzzy
 msgid "Print # of in drops"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ifdata.fish:16
 msgid "Print # of in fifo overruns"
@@ -33184,9 +32757,8 @@ msgid "Use specified network namespace"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ip.fish:17
-#, fuzzy
 msgid "Execute command for all objects"
-msgstr "Wykonaj komendę jeżeli poprzednia komenda zakończy się niepowodzeniem"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ipset.fish:1
 msgid "Create a set identified with SETNAME"
@@ -33206,9 +32778,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ipset.fish:5
 #: /tmp/fish/implicit/share/completions/ipset.fish:6
-#, fuzzy
 msgid "Destroy the specified set or all sets"
-msgstr "Szukaj określonego ciągu znaków w liście"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ipset.fish:7
 msgid "a"
@@ -33438,9 +33009,8 @@ msgid "Print debugging info about your jest config"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/jest.fish:22
-#, fuzzy
 msgid "The test environment used for all tests"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/jest.fish:23
 msgid "Use this flag to show full diffs instead of a patch"
@@ -33483,9 +33053,8 @@ msgid "Maps code coverage reports against original source code"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/jest.fish:33
-#, fuzzy
 msgid "Specifies the maximum number of workers"
-msgstr "Wylicz liczbę argumentów"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/jest.fish:34
 msgid "Directory names to be searched recursively up from the requiring module"
@@ -33558,9 +33127,8 @@ msgid "Paths to directories that Jest should use to search for files in"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/jest.fish:51
-#, fuzzy
 msgid "Run all tests serially in the current process"
-msgstr "Uruchom komendę w obecnym procesie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/jest.fish:52
 msgid "The paths to modules to configure the testing environment"
@@ -33571,9 +33139,8 @@ msgid "The path to a module to configure the testing framework"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/jest.fish:54
-#, fuzzy
 msgid "Print your jest config and then exits"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/jest.fish:55
 msgid "Prevent tests from printing messages through the console"
@@ -33653,9 +33220,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/jest.fish:73
 #: /tmp/fish/implicit/share/completions/snap.fish:15
 #: /tmp/fish/implicit/share/completions/vagrant.fish:3
-#, fuzzy
 msgid "Print the version and exit"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/jest.fish:74
 msgid "Watch files for changes and rerun tests related to changed files"
@@ -33678,14 +33244,12 @@ msgid "Enable debugger"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/jhipster.fish:2
-#, fuzzy
 msgid "Output usage information"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/jhipster.fish:3
-#, fuzzy
 msgid "Output version number"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/jhipster.fish:4
 msgid "Create a new JHipster application"
@@ -33732,9 +33296,8 @@ msgid "Create entities from the JDL file passed in argument"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/jhipster.fish:14
-#, fuzzy
 msgid "Display information about your current project and system"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/jhipster.fish:15
 msgid "Deploy the current application to Kubernetes"
@@ -33759,18 +33322,16 @@ msgid "Create a new JHipster server-side application"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/jhipster.fish:20
-#, fuzzy
 msgid "Create a new Spring service bean"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/jhipster.fish:21
 msgid "Upgrade the JHipster version and the generated application"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/jhipster.fish:22
-#, fuzzy
 msgid "Print command completion script"
-msgstr "Edytuj sugestie do określonej komendy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/jobs.fish:2
 msgid "Show the process id of each process in the job"
@@ -33797,9 +33358,8 @@ msgid "OR"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/journalctl.fish:4
-#, fuzzy
 msgid "Prints a short help text and exits"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/journalctl.fish:5
 msgid "Prints a short version string and exits"
@@ -33814,9 +33374,8 @@ msgid "Show live tail of entries"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/journalctl.fish:9
-#, fuzzy
 msgid "Controls the number of journal lines"
-msgstr "Wylicz liczbę argumentów"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/journalctl.fish:10
 msgid "Show all lines, even in follow mode"
@@ -33863,9 +33422,8 @@ msgid "Print all possible data values"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/journalctl.fish:21
-#, fuzzy
 msgid "Specify journal directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/journalctl.fish:22
 msgid "Generate a new 128 bit ID"
@@ -34028,9 +33586,8 @@ msgid "Show help information and exit"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/kdeconnect-cli.fish:1
-#, fuzzy
 msgid "List all devices"
-msgstr "Zakończ zestaw komend"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/kdeconnect-cli.fish:2
 msgid "List available (paired and reachable) devices"
@@ -34087,47 +33644,40 @@ msgid "Phone number to send the message"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/kdeconnect-cli.fish:15
-#, fuzzy
 msgid "Device ID"
-msgstr "Zdefiniuj nową funkcję"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/kdeconnect-cli.fish:16
-#, fuzzy
 msgid "Device Name"
-msgstr "Nazwa procesu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/kdeconnect-cli.fish:17
-#, fuzzy
 msgid "Get encryption info about said device"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/kdeconnect-cli.fish:18
 msgid "Lists remote commands and their ids"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/kdeconnect-cli.fish:19
-#, fuzzy
 msgid "Executes a remote command by id"
-msgstr "Wykonaj komendę jeżeli poprzednia komenda zakończy się niepowodzeniem"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/kdeconnect-cli.fish:20
 msgid "Displays this help."
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/kdeconnect-cli.fish:21
-#, fuzzy
 msgid "Displays version information."
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/kdeconnect-cli.fish:22
-#, fuzzy
 msgid "Show author information."
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/kdeconnect-cli.fish:23
-#, fuzzy
 msgid "Show license information."
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/kdeconnect-cli.fish:24
 msgid "The base file name of the desktop entry for this application."
@@ -34209,9 +33759,8 @@ msgid "Describe available commands or one specific command"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/kitchen.fish:4
-#, fuzzy
 msgid "Lists one or more instances"
-msgstr "Wypisz lub usuń funkcje"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/kitchen.fish:5
 msgid "List the name of each instance only, one per line"
@@ -34667,9 +34216,8 @@ msgid "Display status column"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/less.fish:19
-#, fuzzy
 msgid "Specify key bindings file"
-msgstr "Steruj przypisaniami klawiszy fish'a"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/less.fish:21
 msgid "Prompt with percentage"
@@ -34914,9 +34462,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/localectl.fish:4
 #: /tmp/fish/implicit/share/completions/systemd-nspawn.fish:37
 #: /tmp/fish/implicit/share/completions/timedatectl.fish:7
-#, fuzzy
 msgid "Print a short help text and exit"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/localectl.fish:5
 #: /tmp/fish/implicit/share/completions/systemd-nspawn.fish:38
@@ -34958,9 +34505,8 @@ msgid "Ignore case distinctions"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/locate.fish:10
-#, fuzzy
 msgid "Limit  the number of matches"
-msgstr "Wylicz liczbę argumentów"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/locate.fish:11
 msgid "Use ASCII NUL as a separator"
@@ -35304,9 +34850,8 @@ msgid ""
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/lpstat.fish:6
-#, fuzzy
 msgid "Shows the current default destination"
-msgstr "Zatrzymaj obecnie używaną funkcję"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/lpstat.fish:7
 msgid "Shows a long listing of printers, classes, or jobs"
@@ -35365,9 +34910,8 @@ msgid "output info about filesystems"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/lsblk.fish:7
-#, fuzzy
 msgid "usage information (this)"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/lsblk.fish:8
 msgid "use ascii characters only"
@@ -35514,9 +35058,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ls.fish:22
 #: /tmp/fish/implicit/share/completions/ls.fish:77
-#, fuzzy
 msgid "Print inode number of files"
-msgstr "Wylicz liczbę argumentów"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ls.fish:23
 #: /tmp/fish/implicit/share/completions/ls.fish:78
@@ -35554,9 +35097,8 @@ msgid "Display only security context and file name"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ls.fish:33
-#, fuzzy
 msgid "Print author"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ls.fish:34
 #: /tmp/fish/implicit/share/completions/xz.fish:19
@@ -35573,9 +35115,8 @@ msgid "Use colors"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ls.fish:37
-#, fuzzy
 msgid "Generate dired output"
-msgstr "Zwróć losową liczbę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ls.fish:38
 msgid "List format"
@@ -35595,9 +35136,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ls.fish:44
 #: /tmp/fish/implicit/share/completions/ls.fish:67
-#, fuzzy
 msgid "Print raw entry names"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ls.fish:45
 msgid "Long format without groups"
@@ -35755,9 +35295,8 @@ msgid "Show usage and help"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/lua.fish:1
-#, fuzzy
 msgid "Execute string"
-msgstr "Link wykonywalny"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/lua.fish:2
 msgid "Require library"
@@ -35849,9 +35388,8 @@ msgid "Print help."
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/lxc.fish:9
-#, fuzzy
 msgid "Manipulate container images."
-msgstr "Zmień wartości ciągów znaków"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/lxc.fish:10
 msgid "List information on LXD servers and containers."
@@ -36023,9 +35561,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/machinectl.fish:3
 #: /tmp/fish/implicit/share/completions/systemctl.fish:39
 #: /tmp/fish/implicit/share/completions/systemd-analyze.fish:3
-#, fuzzy
 msgid "Print a short help and exit"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/machinectl.fish:4
 #: /tmp/fish/implicit/share/completions/pactl.fish:9
@@ -36056,9 +35593,8 @@ msgid "Also show machines starting with a '.'"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/machinectl.fish:11
-#, fuzzy
 msgid "Show information about machine"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/machinectl.fish:12
 msgid "Do not ellipsize process tree entries"
@@ -36129,9 +35665,8 @@ msgid "Bind-mount a directory to a machine"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/machinectl.fish:29
-#, fuzzy
 msgid "Create destination directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/machinectl.fish:30
 msgid "Apply read-only mount"
@@ -36341,9 +35876,8 @@ msgid "Define"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/makedepend.fish:2
-#, fuzzy
 msgid "Include directory"
-msgstr "Katalog"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/makedepend.fish:3
 msgid "Replace include directories"
@@ -36392,9 +35926,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/make.fish:3
 #: /tmp/fish/implicit/share/completions/tar.fish:15
 #: /tmp/fish/implicit/share/functions/cd.fish:1
-#, fuzzy
 msgid "Change directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/make.fish:5
 msgid "Environment before makefile"
@@ -36425,9 +35958,8 @@ msgid "Ignore specified file"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/make.fish:13
-#, fuzzy
 msgid "Print database"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/make.fish:14
 msgid "Question mode"
@@ -36446,9 +35978,8 @@ msgid "Touch files, don't run commands"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/make.fish:20
-#, fuzzy
 msgid "Print working directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/make.fish:21
 msgid "Pretend file is modified"
@@ -36519,9 +36050,8 @@ msgid "Disable color in output messages"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/makepkg.fish:17
-#, fuzzy
 msgid "Only download and extract files"
-msgstr "Tylko dla zadań interaktywnych"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/makepkg.fish:18
 msgid "Use alternative <buildscript>"
@@ -36620,9 +36150,8 @@ msgid "Library section"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/man.fish:4
-#, fuzzy
 msgid "Device section"
-msgstr "Zdefiniuj nową funkcję"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/man.fish:5
 msgid "File format section"
@@ -36709,9 +36238,8 @@ msgid "Set system"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/man.fish:28
-#, fuzzy
 msgid "Preprocessors"
-msgstr "Proces"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/man.fish:29
 msgid "Format for printing"
@@ -36779,9 +36307,8 @@ msgid "Save the ftpfs dialog with the server in FILE"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mc.fish:15
-#, fuzzy
 msgid "Print the last working directory to FILE"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mc.fish:16
 msgid "Set alternative mode drawing of frameworks"
@@ -36852,9 +36379,8 @@ msgid "Build a legacy array without superblocks"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:3
-#, fuzzy
 msgid "Create a new array"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:4
 msgid "Select monitor mode"
@@ -36883,19 +36409,16 @@ msgid "Be more verbose"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:13
-#, fuzzy
 msgid "Force operation"
-msgstr "Wymuszono zatrzymanie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:14
-#, fuzzy
 msgid "Specify config file or directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:15
-#, fuzzy
 msgid "Scan for missing information"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:16
 msgid "Set metadata style to use"
@@ -36914,14 +36437,12 @@ msgid "Give cluster name"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:20
-#, fuzzy
 msgid "Specify the number of active devices"
-msgstr "Wylicz liczbę argumentów"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:21
-#, fuzzy
 msgid "Specify the number of spare devices"
-msgstr "Wylicz liczbę argumentów"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:22
 msgid "Specify the space to use from each drive"
@@ -36936,18 +36457,16 @@ msgid "Specify the chunk size"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:25
-#, fuzzy
 msgid "Specify rounding factor"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:26
 msgid "Specify RAID level"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:27
-#, fuzzy
 msgid "Specify data layout"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:28
 msgid "Specify file for write-intent bitmap"
@@ -36982,18 +36501,16 @@ msgid "Use this file as a backup"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:36
-#, fuzzy
 msgid "Specify start of array data"
-msgstr "Nawiązanie symboliczne do katalogu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:37
 msgid "Resume frozen --grow command"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:38
-#, fuzzy
 msgid "Set array name"
-msgstr "Nazwa procesu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:39
 msgid "Run array despite warnings"
@@ -37008,14 +36525,12 @@ msgid "Add devices to array"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:42
-#, fuzzy
 msgid "Specify max nodes in the cluster"
-msgstr "Nawiązanie symboliczne do katalogu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:43
-#, fuzzy
 msgid "Specify journal device for RAID-4/5/6 array"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:44
 msgid "UUID of array to assemble"
@@ -37042,9 +36557,8 @@ msgid "Freeze --grow command"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:50
-#, fuzzy
 msgid "Test mode"
-msgstr "Wymuszono zatrzymanie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:51
 msgid "Hot-add listed devices"
@@ -37087,41 +36601,36 @@ msgid "Print details on array"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:61
-#, fuzzy
 msgid "Print details on platform capabilities"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:62
 msgid "Format data output as key=value pairs"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:63
-#, fuzzy
 msgid "Print content of device metadata"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:64
 msgid "Fix examination for buggy SPARC 2.2 kernel RAID"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:65
-#, fuzzy
 msgid "Print report about bitmap"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:66
 msgid "List recorded bad blocks"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:67
-#, fuzzy
 msgid "Dump metadata to directory"
-msgstr "Nawiązanie symboliczne do katalogu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:68
-#, fuzzy
 msgid "Restore metadata from directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdadm.fish:69
 msgid "Deactivate array"
@@ -37241,9 +36750,8 @@ msgid "Test that code samples compile"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mdbook.fish:12
-#, fuzzy
 msgid "Watch file changes"
-msgstr "Zmiana rozmiaru okna"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mddiagnose.fish:2
 msgid "Ignore unknown options"
@@ -37274,9 +36782,8 @@ msgid "Evaluate indexing information for path"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mddiagnose.fish:9
-#, fuzzy
 msgid "Evaluate permissions information for path"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mddiagnose.fish:10
 msgid "Write the diagnostic to the specified path"
@@ -37428,9 +36935,8 @@ msgid "When logging hits line file:N, emit a stack trace (default :0)"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/minikube.fish:3
-#, fuzzy
 msgid "Write log files in this directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/minikube.fish:4
 msgid "Log to standard error instead of files"
@@ -37445,9 +36951,8 @@ msgid "Logs at or above this threshold go to stderr (default 2)"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/minikube.fish:7
-#, fuzzy
 msgid "Log level for logs"
-msgstr "Katalog domowy dla"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/minikube.fish:8
 msgid "Comma-separated list of pattern=N settings for file-filtered logging"
@@ -37521,18 +37026,16 @@ msgid "Display the kubernetes dashboard URL instead of opening it"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/minikube.fish:31
-#, fuzzy
 msgid "Add machine IP to NO_PROXY environment variable"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/minikube.fish:32
 msgid "Force environment to be configured for a specified shell"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/minikube.fish:33
-#, fuzzy
 msgid "Unset variables"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/minikube.fish:35
 msgid "List the URLs for the services in local cluster"
@@ -37767,9 +37270,8 @@ msgid "Runs a project's tests"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mix.fish:27
-#, fuzzy
 msgid "specify input directory"
-msgstr "Nawiązanie symboliczne do katalogu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mix.fish:28
 msgid "specify output file name"
@@ -38095,9 +37597,8 @@ msgid "Extract timecodes of a track as timecode v2 file"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mkvextract.fish:9
-#, fuzzy
 msgid "Extract cue information as text file"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mkvextract.fish:10
 msgid "Parse the whole file instead of relying on the index"
@@ -38235,9 +37736,8 @@ msgid "watch files for changes"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mocha.fish:21
-#, fuzzy
 msgid "check for global variable leaks"
-msgstr "obsługa zmiennej"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mocha.fish:22
 msgid "display the full stack trace"
@@ -38351,9 +37851,8 @@ msgid "Print program version and exit"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mocp.fish:2
-#, fuzzy
 msgid "Print usage and exit"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mocp.fish:3
 msgid "Turn on logging to a file"
@@ -38933,9 +38432,8 @@ msgid "Enable strict Uniforum mode"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/msgfmt.fish:10
-#, fuzzy
 msgid "Resource name"
-msgstr "Nazwa procesu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/msgfmt.fish:11
 msgid "Locale name, either language or language_COUNTRY"
@@ -39107,9 +38605,8 @@ msgid "Backup suffix"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mv.fish:7
-#, fuzzy
 msgid "Target directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mv.fish:8
 msgid "Do not overwrite newer files"
@@ -39555,9 +39052,8 @@ msgid ""
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mvn.fish:92
-#, fuzzy
 msgid "Generate a changelog report."
-msgstr "Zwróć losową liczbę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/mvn.fish:93
 msgid "Generate a file activity report."
@@ -43268,90 +42764,6 @@ msgstr ""
 msgid "Exclude files that match any pattern in file"
 msgstr ""
 
-#: /tmp/fish/implicit/share/completions/netcat.fish:1
-msgid "Remote hostname"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:2
-msgid "Same as -e, but use /bin/sh"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:3
-msgid "Program to execute after connection"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:4
-msgid "Allow broadcasts"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:5
-msgid "Source-routing hop points"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:6
-msgid "Source-routing pointer"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:8
-msgid "Delay interval for lines sent, ports scaned"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:9
-msgid "Set keepalive option"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:10
-msgid "Listen mode, acts as a server"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:11
-msgid "Numeric-only IP addresses, no DNS"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:12
-msgid "Hex dump of traffic"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:13
-msgid "Local port number"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:14
-msgid "Randomize local and remote ports"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:15
-msgid "Quit after EOF on stdin and delay of secs"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:16
-msgid "Local source address"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:17
-msgid "Answer Telnet negotiation"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:18
-msgid "UDP Mode"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:19
-msgid "Verbose, use twice to be more verbose"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:20
-msgid "Timeout for connects and final net reads"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:21
-msgid "Set Type of Service"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/netcat.fish:22
-msgid "No I/O - used for scanning"
-msgstr ""
-
 #: /tmp/fish/implicit/share/completions/netctl-auto.fish:3
 msgid "List all available profiles for automatic selection"
 msgstr ""
@@ -43458,9 +42870,8 @@ msgid "Add specified amount to niceness value"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ninja.fish:1
-#, fuzzy
 msgid "change to specified directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ninja.fish:2
 msgid "specify build file [default=build.ninja]"
@@ -43495,9 +42906,8 @@ msgid "adjust warnings, specify flags"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ninja.fish:11
-#, fuzzy
 msgid "print ninja version"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/nl.fish:1
 msgid "use STYLE for numbering body lines"
@@ -43702,9 +43112,8 @@ msgid "Throw errors on deprecations"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/node.fish:8
-#, fuzzy
 msgid "Print v8 command line options"
-msgstr "Edytuj sugestie do określonej komendy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/node.fish:9
 msgid "Set max v8 stack size (bytes)"
@@ -44715,9 +44124,8 @@ msgid "Check for outdated packages"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/npm.fish:52
-#, fuzzy
 msgid "Create a tarball from a package"
-msgstr "Stwórz blok kodu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/npm.fish:53
 msgid "Display NPM prefix"
@@ -45124,9 +44532,8 @@ msgid "Do not dump metadata about files"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/obnam.fish:34
-#, fuzzy
 msgid "Generate man page"
-msgstr "Zwróć losową liczbę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/obnam.fish:35
 msgid "Which generation to restore"
@@ -45369,9 +44776,8 @@ msgid "Do not check directories"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/obnam.fish:96
-#, fuzzy
 msgid "Check directories"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/obnam.fish:97
 msgid "Do not check files"
@@ -45510,14 +44916,12 @@ msgid "Produce no output to stderr"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/oggenc.fish:2
-#, fuzzy
 msgid "Print this help text"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/oggenc.fish:3
-#, fuzzy
 msgid "Print the version number"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/oggenc.fish:4
 msgid "Set bits/sample for raw input. Default is 16"
@@ -45723,9 +45127,8 @@ msgid "Recursive query."
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/opam.fish:28
-#, fuzzy
 msgid "Display environment variables as an s-expression."
-msgstr "Zmienna środowiskowa TERM ustawiona jest do"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/opam.fish:29
 msgid "Use sh-compatible mode for configuring OPAM."
@@ -45828,9 +45231,8 @@ msgid "Search into the package list."
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/opam.fish:52
-#, fuzzy
 msgid "Display information about specific packages."
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/opam.fish:53
 msgid "Manage multiple installation of compilers."
@@ -46059,9 +45461,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/pacaur.fish:29
 #: /tmp/fish/implicit/share/completions/pacman.fish:20
 #: /tmp/fish/implicit/share/completions/yaourt.fish:26
-#, fuzzy
 msgid "Hook file directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pacaur.fish:32
 msgid "Apply only for AUR targets"
@@ -46510,9 +45911,8 @@ msgid "Only search the AUR"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pbget.fish:5
-#, fuzzy
 msgid "Set the output directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pbget.fish:6
 msgid "Display this message"
@@ -46690,9 +46090,8 @@ msgid "Execute command"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/perl.fish:19
-#, fuzzy
 msgid "Execute command, enable optional features"
-msgstr "Wykonaj komendę jeżeli poprzednia komenda zakończy się niepowodzeniem"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/perl.fish:20
 msgid "Disable sitecustomize.pl"
@@ -46783,9 +46182,8 @@ msgid "Flush filter params specified by mod"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pfctl.fish:3
-#, fuzzy
 msgid "Table command"
-msgstr "Stan Komenda"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pgrep.fish:1
 msgid "Output delimiter"
@@ -46996,9 +46394,8 @@ msgid "omit the user's full name, remote host and idle time in short format"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pkg_add.fish:1
-#, fuzzy
 msgid "failsafe to overwrite"
-msgstr "Wymuszono zatrzymanie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pkg_add.fish:2
 #: /tmp/fish/implicit/share/completions/pkg_delete.fish:3
@@ -47010,9 +46407,8 @@ msgid "Automated package installation"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pkg_add.fish:5
-#, fuzzy
 msgid "Update packages"
-msgstr "Stwórz blok kodu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pkg_add.fish:6
 msgid "Fuzzy match"
@@ -47249,9 +46645,8 @@ msgid "Convert package from pkg_add format"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pkg.fish:22
-#, fuzzy
 msgid "Create a package"
-msgstr "Stwórz blok kodu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pkg.fish:23
 #: /tmp/fish/implicit/share/completions/pkg.fish:31
@@ -47352,9 +46747,8 @@ msgid "Force installation with missing dependencies"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pkg.fish:49
-#, fuzzy
 msgid "Force quiet output"
-msgstr "Przymusowe wyjście"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pkg.fish:50
 msgid "Do not make changes"
@@ -47495,18 +46889,16 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/pkgmk.fish:12
 #: /tmp/fish/implicit/share/completions/prt-get.fish:36
 #: /tmp/fish/implicit/share/completions/prt-get.fish:95
-#, fuzzy
 msgid "Force rebuild"
-msgstr "Przymusowe wyjście"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pkgmk.fish:13
 msgid "Remove package and sources"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pkgmk.fish:14
-#, fuzzy
 msgid "Keep working dir"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pkgmk.fish:15
 msgid "Use another config"
@@ -47544,9 +46936,8 @@ msgid "Displays help information"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/poff.fish:7
-#, fuzzy
 msgid "Prints the version and exits"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/portmaster.fish:1
 msgid "run 'make config' for all ports (overrides -G)."
@@ -47721,9 +47112,8 @@ msgid "display the version number El ENVIRONMENT The d… [See Man Page]"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/portmaster.fish:44
-#, fuzzy
 msgid "Ports Directory"
-msgstr "Katalog"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/portmaster.fish:45
 msgid "Installed Package"
@@ -47839,9 +47229,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/prt-get.fish:15
 #: /tmp/fish/implicit/share/completions/prt-get.fish:76
-#, fuzzy
 msgid "Search for a pattern in the footprints in the ports tree"
-msgstr "Szukaj określonego ciągu znaków w liście"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/prt-get.fish:16
 #: /tmp/fish/implicit/share/completions/prt-get.fish:77
@@ -47879,9 +47268,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/prt-get.fish:23
 #: /tmp/fish/implicit/share/completions/prt-get.fish:83
-#, fuzzy
 msgid "Print formatted list of ports"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/prt-get.fish:25
 #: /tmp/fish/implicit/share/completions/prt-get.fish:85
@@ -47899,9 +47287,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/prt-get.fish:28
 #: /tmp/fish/implicit/share/completions/prt-get.fish:87
-#, fuzzy
 msgid "Print the listing of the directory of a port"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/prt-get.fish:29
 #: /tmp/fish/implicit/share/completions/prt-get.fish:88
@@ -47940,9 +47327,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/prt-get.fish:42
 #: /tmp/fish/implicit/share/completions/prt-get.fish:101
-#, fuzzy
 msgid "Keep work directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/prt-get.fish:43
 #: /tmp/fish/implicit/share/completions/prt-get.fish:102
@@ -48088,9 +47474,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ps.fish:17
 #: /tmp/fish/implicit/share/completions/ps.fish:23
-#, fuzzy
 msgid "User defined format"
-msgstr "Sygnał zdefiniowany przez użytkownika 2"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ps.fish:18
 #: /tmp/fish/implicit/share/completions/ps.fish:25
@@ -48170,9 +47555,8 @@ msgid "run only single command (SQL or internal) and exit"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/psql.fish:3
-#, fuzzy
 msgid "execute commands from file, then exit"
-msgstr "Wykonaj komendę jeżeli poprzednia komenda zakończy się niepowodzeniem"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/psql.fish:4
 msgid "list available databases, then exit"
@@ -48351,23 +47735,20 @@ msgid "Wait given time (in secs) between updates"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pv.fish:19
-#, fuzzy
 msgid "Set terminal width"
-msgstr "Ustaw kolor terminala"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pv.fish:20
-#, fuzzy
 msgid "Set terminal height"
-msgstr "Ustaw kolor terminala"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pv.fish:21
 msgid "Prefix output with given name"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pv.fish:22
-#, fuzzy
 msgid "Force output"
-msgstr "Wymuszono zatrzymanie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/pv.fish:23
 msgid "Use cursor positioning escape sequence instead of \\r"
@@ -48551,9 +47932,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/python2.fish:4
 #: /tmp/fish/implicit/share/completions/python3.fish:4
 #: /tmp/fish/implicit/share/completions/python.fish:4
-#, fuzzy
 msgid "Ignore environment variables"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/python2.fish:6
 #: /tmp/fish/implicit/share/completions/python3.fish:6
@@ -48637,9 +48017,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/python3.fish:18
 #: /tmp/fish/implicit/share/completions/python.fish:22
-#, fuzzy
 msgid "Set implementation-specific option"
-msgstr "Edytuj sugestie do określonej komendy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/python3.fish:19
 #: /tmp/fish/implicit/share/completions/python.fish:23
@@ -48801,9 +48180,8 @@ msgid "Activate clean mode"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ranger.fish:3
-#, fuzzy
 msgid "Change configuration directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ranger.fish:4
 msgid "Create copies of the default configuration"
@@ -48818,9 +48196,8 @@ msgid "Pick multiple files with ranger"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ranger.fish:7
-#, fuzzy
 msgid "Pick directory"
-msgstr "Katalog"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ranger.fish:8
 msgid "Open ranger with given file selected"
@@ -48839,9 +48216,8 @@ msgid "Print statistics of CPU usage on exit"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ranger.fish:12
-#, fuzzy
 msgid "Execute command after configuration file read"
-msgstr "Wykonaj komendę jeżeli poprzednia komenda zakończy się niepowodzeniem"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/rbenv.fish:1
 msgid "List all rbenv commands"
@@ -48876,9 +48252,8 @@ msgid "Set or show the shell-specific Ruby version"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/rbenv.fish:9
-#, fuzzy
 msgid "Show the current Ruby version"
-msgstr "Zatrzymaj obecnie używaną funkcję"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/rbenv.fish:10
 msgid "List all Ruby versions known by rbenv"
@@ -48890,22 +48265,6 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/rbenv.fish:12
 msgid "Show the full path for the given Ruby command"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/rc.d.fish:1
-msgid "Filter started daemons"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/rc.d.fish:2
-msgid "Filter stopped daemons"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/rc.d.fish:3
-msgid "Filter auto started daemons"
-msgstr ""
-
-#: /tmp/fish/implicit/share/completions/rc.d.fish:4
-msgid "Filter manually started daemons"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/rc-service.fish:1
@@ -49081,9 +48440,8 @@ msgid "Remove each component of path"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/rmmod.fish:1
-#, fuzzy
 msgid "Prints the help text."
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/rmmod.fish:2
 msgid "Send errors to syslog instead of standard error."
@@ -49128,9 +48486,8 @@ msgid "Run with memory usage monitoring"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/rpm.fish:5
-#, fuzzy
 msgid "List of rpm configuration files"
-msgstr "Wypisz lub usuń funkcje"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/rpm.fish:6
 msgid "Pipe output through specified command"
@@ -49348,9 +48705,8 @@ msgid "List packages on which this package depends"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/rpm.fish:53
-#, fuzzy
 msgid "List the package specific scriptlets"
-msgstr "Edytuj sugestie do określonej komendy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/rpm.fish:54
 msgid ""
@@ -49523,9 +48879,8 @@ msgid "Turn off an implied OPTION (e.g. --no-D)"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/rsync.fish:6
-#, fuzzy
 msgid "Recurse into directories"
-msgstr "Nawiązanie symboliczne do katalogu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/rsync.fish:7
 msgid "Use relative path names"
@@ -49992,9 +49347,8 @@ msgid "Disk usage by buckets"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:12
-#, fuzzy
 msgid "Get various information about Buckets or Files"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:13
 msgid "Copy object"
@@ -50113,9 +49467,8 @@ msgid "Run interactive (re)configuration tool"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:44
-#, fuzzy
 msgid "Dump current configuration"
-msgstr "Wypisz obecnie uruchomione zadania"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:45
 msgid "AWS Access Key"
@@ -50134,9 +49487,8 @@ msgid "Dry run, test only"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:49
-#, fuzzy
 msgid "Use HTTPS (default)"
-msgstr "(domyślne)"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:50
 msgid "Don't use HTTPS"
@@ -50151,9 +49503,8 @@ msgid "Don't encrypt files"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:53
-#, fuzzy
 msgid "Force overwrite"
-msgstr "Wymuszono zatrzymanie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:54
 msgid "Resume partially downloaded file"
@@ -50168,9 +49519,8 @@ msgid "Resume multipart upload by UploadId"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:57
-#, fuzzy
 msgid "Skip existing files at destination"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:58
 msgid "Upload/download/delete recursively"
@@ -50329,9 +49679,8 @@ msgid "Don't use mime magic when guessing"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:97
-#, fuzzy
 msgid "Force MIME-type"
-msgstr "Wymuszono zatrzymanie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:98
 msgid "Add HTTP header"
@@ -50350,9 +49699,8 @@ msgid "Encrypt with specified AWS KMS-managed key"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:102
-#, fuzzy
 msgid "Use specified encoding"
-msgstr "Edytuj sugestie do określonej komendy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:103
 msgid "Add encoding to CSV extension list"
@@ -50411,14 +49759,12 @@ msgid "Show file transfer stats"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:117
-#, fuzzy
 msgid "Enable CloudFront distribution"
-msgstr "Niedozwolona instrukcja"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:118
-#, fuzzy
 msgid "Disable CloudFront distribution"
-msgstr "Niedozwolona instrukcja"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:119
 msgid "Invalidate CloudFront file"
@@ -50453,9 +49799,8 @@ msgid "Cache FILE containing MD5 values"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:131
-#, fuzzy
 msgid "Silence stdout output"
-msgstr "Przymusowe wyjście"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/s3cmd.fish:132
 msgid "Path to SSL CA certificate FILE"
@@ -50701,19 +50046,16 @@ msgid "Connect to a server with an interactive sbt prompt"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sbt.fish:3
-#, fuzzy
 msgid "Print options help message"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sbt.fish:4
-#, fuzzy
 msgid "Print more details"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sbt.fish:5
-#, fuzzy
 msgid "Set log level to debug"
-msgstr "Katalog domowy dla"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sbt.fish:6
 msgid "Disable ANSI color codes"
@@ -50732,27 +50074,24 @@ msgid "Use global caches, but not global ~/.sbt directory"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sbt.fish:10
-#, fuzzy
 msgid "Disable interactive mode"
-msgstr "Tylko dla zadań interaktywnych"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sbt.fish:11
 msgid "Specify path to global settings/plugins"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sbt.fish:12
-#, fuzzy
 msgid "Specify path to shared boot directory"
-msgstr "Nawiązanie symboliczne do katalogu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sbt.fish:13
 msgid "Specify path to local Ivy repository"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sbt.fish:14
-#, fuzzy
 msgid "Set memory options"
-msgstr "Edytuj sugestie do określonej komendy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sbt.fish:15
 msgid "Turn on JVM debugging, open at the given port"
@@ -50976,9 +50315,8 @@ msgid ""
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/scons.fish:9
-#, fuzzy
 msgid "Debug the build process"
-msgstr "Proces potomny"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/scons.fish:10
 msgid ""
@@ -51042,9 +50380,8 @@ msgid ""
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/scons.fish:23
-#, fuzzy
 msgid "No execute"
-msgstr "Wykonywalny"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/scons.fish:24
 msgid ""
@@ -51237,14 +50574,12 @@ msgid "Preselect window"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/screen.fish:30
-#, fuzzy
 msgid "Set shell"
-msgstr "Opuść powłokę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/screen.fish:31
-#, fuzzy
 msgid "Session name"
-msgstr "Nazwa procesu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/screen.fish:32
 msgid "Session title"
@@ -51263,9 +50598,8 @@ msgid "Multi attach"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/screen.fish:37
-#, fuzzy
 msgid "Send command"
-msgstr "Stan Komenda"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/scrot.fish:2
 msgid "Display version information and exit"
@@ -51292,9 +50626,8 @@ msgid "Image quality [1-100]"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/scrot.fish:8
-#, fuzzy
 msgid "Grab shot from multiple heads"
-msgstr "Wykonaj zestaw komend wielokrotnie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/scrot.fish:9
 msgid "Select a window or rectangle with the mouse"
@@ -51325,9 +50658,8 @@ msgid "How to link generated output to the source files."
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/service.fish:1
-#, fuzzy
 msgid "Service name"
-msgstr "Nazwa procesu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/set_color.fish:1
 msgid "Color"
@@ -51335,9 +50667,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/set_color.fish:2
 #: /tmp/fish/implicit/share/completions/set.fish:12
-#, fuzzy
 msgid "Change background color"
-msgstr "Ostatnie zadanie działające w tle"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/set_color.fish:3
 #: /tmp/fish/implicit/share/completions/set.fish:13
@@ -51509,9 +50840,8 @@ msgid "Verify a signed checksum list"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/signify.fish:3
-#, fuzzy
 msgid "Sign specified message"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/signify.fish:4
 msgid "Verify a signed message and sig"
@@ -51539,33 +50869,28 @@ msgid "List installed snaps"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/snap.fish:8
-#, fuzzy
 msgid "List of interfaces"
-msgstr "Wypisz lub usuń funkcje"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/snap.fish:9
-#, fuzzy
 msgid "List change IDs"
-msgstr "Zmiana rozmiaru okna"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/snap.fish:10
-#, fuzzy
 msgid "List aliases"
-msgstr "Zmiana rozmiaru okna"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/snap.fish:11
-#, fuzzy
 msgid "Check that no assertion type is used yet"
-msgstr "Sprawdź czy ten typ terminala jest obsługiwany przez ten system"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/snap.fish:12
 msgid "Check if certain assertion type is used"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/snap.fish:13
-#, fuzzy
 msgid "List assertion filters"
-msgstr "Wypisz lub usuń funkcje"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/snap.fish:14
 msgid "Show this help message"
@@ -51640,9 +50965,8 @@ msgid "Field separator"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sort.fish:19
-#, fuzzy
 msgid "Set temporary directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sort.fish:20
 msgid "Output only first of equal lines"
@@ -51665,9 +50989,8 @@ msgid "Interface to transmit from"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ssh.fish:6
-#, fuzzy
 msgid "Go to background"
-msgstr "Przenieś zadanie w tło"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/ssh.fish:7
 msgid "Allow remote host to connect to local forwarded ports"
@@ -52011,14 +51334,12 @@ msgid "Subcommands specific to package signatures (experimental)"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/status.fish:2
-#, fuzzy
 msgid "Test if this is a login shell"
-msgstr "To jest powłoka logowania"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/status.fish:3
-#, fuzzy
 msgid "Test if this is an interactive shell"
-msgstr "To jest powłoka logowania"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/status.fish:4
 msgid "Test if a command substitution is currently evaluated"
@@ -52045,14 +51366,12 @@ msgid "Test if all new jobs are put under job control"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/status.fish:10
-#, fuzzy
 msgid "Print the filename of the currently running script"
-msgstr "Wypisz obecnie uruchomione zadania"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/status.fish:11
-#, fuzzy
 msgid "Print the line number of the currently running script"
-msgstr "Wypisz obecnie uruchomione zadania"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/status.fish:12
 msgid ""
@@ -52144,14 +51463,12 @@ msgid "Remove newline"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/subl.fish:1
-#, fuzzy
 msgid "Load the given project"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/subl.fish:2
-#, fuzzy
 msgid "Run the given command"
-msgstr "Przenieś zadanie w tło"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/subl.fish:3
 msgid "Open a new window"
@@ -52200,23 +51517,20 @@ msgid "Read password from stdin"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sudo.fish:8
-#, fuzzy
 msgid "Run command in the background"
-msgstr "Uruchom komendę w obecnym procesie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sudo.fish:9
 msgid "Edit"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sudo.fish:10
-#, fuzzy
 msgid "Run command as group"
-msgstr "Uruchom komendę w obecnym procesie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sudo.fish:12
-#, fuzzy
 msgid "Run a login shell"
-msgstr "To jest powłoka logowania"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sudo.fish:13
 msgid "Reset or ignore the credential timestamp"
@@ -52241,27 +51555,24 @@ msgid "Run the given command in a shell"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sudo.fish:18
-#, fuzzy
 msgid "Run command as user"
-msgstr "Uruchom komendę w obecnym procesie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/sudo.fish:19
 msgid "Validate the credentials, extending timeout"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/su.fish:1
-#, fuzzy
 msgid "Make login shell"
-msgstr "To jest powłoka logowania"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/su.fish:2
 msgid "Pass command to shell"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/su.fish:3
-#, fuzzy
 msgid "Pass -f to the shell"
-msgstr "Opuść powłokę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/svn.fish:1
 msgid "Make a completion for a subcommand"
@@ -52397,9 +51708,8 @@ msgid "Restore pristine working copy file (undo most local edits)."
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/svn.fish:33
-#, fuzzy
 msgid "Print the status of working copy files and directories."
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/svn.fish:34
 msgid "Update the working copy to a different URL."
@@ -52430,9 +51740,8 @@ msgid "Do not cache authentication tokens"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/svn.fish:41
-#, fuzzy
 msgid "Do no interactive prompting"
-msgstr "Tylko dla zadań interaktywnych"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/svn.fish:42
 msgid ""
@@ -53020,9 +52329,8 @@ msgid "Mount directories as overlayfs in the container"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/systemd-nspawn.fish:30
-#, fuzzy
 msgid "Pass environment variables to init in the container"
-msgstr "Zmienna środowiskowa TERM ustawiona jest do"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/systemd-nspawn.fish:31
 msgid "Share the system with the host [See Man Page]"
@@ -53166,9 +52474,8 @@ msgid "Reblock while reading"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tar.fish:16
-#, fuzzy
 msgid "Print directory names"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tar.fish:17
 msgid "Archive file"
@@ -53268,9 +52575,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tar.fish:44
 #: /tmp/fish/implicit/share/completions/tar.fish:45
-#, fuzzy
 msgid "Do not sort file arguments"
-msgstr "printf: brak wystarczających argumentów"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tar.fish:46
 msgid "Preserve file ownership"
@@ -53352,9 +52658,8 @@ msgid "The role to set the termite window to report itself with"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/termite.fish:5
-#, fuzzy
 msgid "Set the termite window's title"
-msgstr "Ustaw kolor terminala"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/termite.fish:6
 msgid "Tell termite to change to <dir> when launching"
@@ -53446,9 +52751,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/terraform.fish:9
 #: /tmp/fish/implicit/share/completions/terraform.fish:26
 #: /tmp/fish/implicit/share/completions/terraform.fish:84
-#, fuzzy
 msgid "Limit the number of concurrent operations"
-msgstr "Wylicz liczbę argumentów"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/terraform.fish:10
 #: /tmp/fish/implicit/share/completions/terraform.fish:27
@@ -53516,9 +52820,8 @@ msgid "Don't ask for input for destroy confirmation"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/terraform.fish:33
-#, fuzzy
 msgid "Environment management"
-msgstr "Zmienna środowiskowa TERM ustawiona jest do"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/terraform.fish:34
 msgid "List environments"
@@ -53760,18 +53063,16 @@ msgid "Left integer not equal to right integer"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/test.fish:15
-#, fuzzy
 msgid "File is block device"
-msgstr "Nie określono bloków"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/test.fish:16
 msgid "File is character device"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/test.fish:17
-#, fuzzy
 msgid "File is directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/test.fish:18
 msgid "File exists"
@@ -53995,9 +53296,8 @@ msgid "Delete one or more snapshots"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmutil.fish:24
-#, fuzzy
 msgid "Print information about destinations"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmutil.fish:25
 msgid "Turn off automatic backups"
@@ -54033,9 +53333,8 @@ msgid "Print paths for all snapshots"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmutil.fish:33
-#, fuzzy
 msgid "Print the path to the current machine directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmutil.fish:34
 msgid "Removes a backup destination"
@@ -54110,9 +53409,8 @@ msgid "connected clients"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:3
-#, fuzzy
 msgid "window panes"
-msgstr "Zmiana rozmiaru okna"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:4
 msgid "Force tmux to assume the terminal supports 256 colours"
@@ -54123,9 +53421,8 @@ msgid "Like -2, but indicates that the terminal supports 88 colours"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:6
-#, fuzzy
 msgid "Behave as a login shell"
-msgstr "To jest powłoka logowania"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:7
 msgid "Set the quiet server option"
@@ -54144,9 +53441,8 @@ msgid "Report the tmux version"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:11
-#, fuzzy
 msgid "Execute command using the default shell"
-msgstr "Wykonaj komendę jeżeli poprzednia komenda zakończy się niepowodzeniem"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:13
 msgid "Specify the name of the server socket to use"
@@ -54251,9 +53547,8 @@ msgid "save msgs in status bar in per-client msg log"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:38
-#, fuzzy
 msgid "execute commands from path"
-msgstr "Wykonaj komendę jeżeli poprzednia komenda zakończy się niepowodzeniem"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:39
 msgid "start tmux server if not running; do not create a session"
@@ -54303,9 +53598,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:51
 #: /tmp/fish/implicit/share/completions/tmux.fish:74
-#, fuzzy
 msgid "bind key to command"
-msgstr "Zakończ zestaw komend"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:52
 msgid "bind for command mode instead of normal mode"
@@ -54325,15 +53619,13 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:56
 #: /tmp/fish/implicit/share/completions/tmux.fish:58
-#, fuzzy
 msgid "list all key bindings"
-msgstr "Steruj przypisaniami klawiszy fish'a"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:57
 #: /tmp/fish/implicit/share/completions/tmux.fish:68
-#, fuzzy
 msgid "key table"
-msgstr "Wykonywalny"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:59
 msgid "reset terminal state"
@@ -54357,9 +53649,8 @@ msgid "unbind the command bound to key"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:65
-#, fuzzy
 msgid "remove all key bindings"
-msgstr "Steruj przypisaniami klawiszy fish'a"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:66
 msgid "binding for command mode"
@@ -54370,15 +53661,13 @@ msgid "command bound to key without a prefix (if any) removed"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:69
-#, fuzzy
 msgid "Set or unset an environment variable"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:70
 #: /tmp/fish/implicit/share/completions/tmux.fish:75
-#, fuzzy
 msgid "global environment"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tmux.fish:71
 msgid "remove from environment before starting a new process"
@@ -54629,9 +53918,8 @@ msgid "List session information from the server"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/transmission-remote.fish:31
-#, fuzzy
 msgid "List statistical information from the server"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/transmission-remote.fish:32
 msgid "List all torrents"
@@ -54690,9 +53978,8 @@ msgid "Try to download the specified files last"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/transmission-remote.fish:47
-#, fuzzy
 msgid "Set the maximum number of peers"
-msgstr "Wylicz liczbę argumentów"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/transmission-remote.fish:48
 msgid "Remove the current torrents"
@@ -54735,14 +54022,12 @@ msgid "Remove a tracker from a torrent"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/transmission-remote.fish:58
-#, fuzzy
 msgid "Start the current torrents"
-msgstr "Zatrzymaj obecnie używaną funkcję"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/transmission-remote.fish:59
-#, fuzzy
 msgid "Stop the current torrents"
-msgstr "Zatrzymaj obecnie używaną funkcję"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/transmission-remote.fish:60
 msgid "Start added torrents paused"
@@ -54869,9 +54154,8 @@ msgid "Displays or changes the API endpoint"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/travis.fish:11
-#, fuzzy
 msgid "Show or modify build environment variables"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/travis.fish:12
 msgid "Helps you out when in dire need of information"
@@ -55006,9 +54290,8 @@ msgid "List directories only"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tree.fish:3
-#, fuzzy
 msgid "Follow symbolic links like directories"
-msgstr "Nawiązanie symboliczne do katalogu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/tree.fish:4
 msgid "Print the full path prefix for each file"
@@ -55332,9 +54615,8 @@ msgid "Suppress function and builtin lookup"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/type.fish:4
-#, fuzzy
 msgid "Print command type"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/type.fish:5
 msgid "Print path to command, or nothing if name is not a command"
@@ -55399,19 +54681,16 @@ msgid "Set SMART data for a drive"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/udisksctl.fish:15
-#, fuzzy
 msgid "Object to get information about"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/udisksctl.fish:16
-#, fuzzy
 msgid "Block device to get information about"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/udisksctl.fish:17
-#, fuzzy
 msgid "Drive to get information about"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/udisksctl.fish:18
 msgid "Filesystem type to use"
@@ -55619,23 +54898,20 @@ msgid "Print kernel version"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/uname.fish:13
-#, fuzzy
 msgid "Print machine name"
-msgstr "Nazwa procesu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/uname.fish:14
-#, fuzzy
 msgid "Print processor"
-msgstr "Proces potomny"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/uname.fish:15
 msgid "Print hardware platform"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/uname.fish:16
-#, fuzzy
 msgid "Print operating system"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/unexpand.fish:1
 msgid "convert all blanks, instead of just initial blanks"
@@ -55726,9 +55002,8 @@ msgid "Override cache method for a specified overlay"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/update-eix-remote.fish:2
-#, fuzzy
 msgid "Be verbose (default)"
-msgstr "(domyślne)"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/update-eix-remote.fish:3
 msgid "Call wget as the given USER"
@@ -55804,9 +55079,8 @@ msgid "Change user's password file comment"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/usermod.fish:3
-#, fuzzy
 msgid "Change user's login directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/usermod.fish:4
 msgid "Date on which the user account will be disabled"
@@ -55841,9 +55115,8 @@ msgid "Allow non-unique UID"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/usermod.fish:13
-#, fuzzy
 msgid "Apply changes in this directory"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/usermod.fish:14
 msgid "The name of the user's new login shell"
@@ -55954,9 +55227,8 @@ msgid "Shuts down the running machine"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/vagrant.fish:21
-#, fuzzy
 msgid "Force shut down"
-msgstr "Wymuszono zatrzymanie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/vagrant.fish:22
 msgid "Initializes the Vagrant environment"
@@ -56513,28 +55785,24 @@ msgid "be quiet and make the output more parseable"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/vim-addons.fish:12
-#, fuzzy
 msgid "set the registry directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/vim-addons.fish:13
-#, fuzzy
 msgid "set the addons source directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/vim-addons.fish:14
-#, fuzzy
 msgid "set the addons target directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/vim-addons.fish:15
 msgid "increase verbosity"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/vim-addons.fish:16
-#, fuzzy
 msgid "set the system-wide target directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/vim-addons.fish:17
 msgid "set target directory to the system-wide one"
@@ -56549,9 +55817,8 @@ msgid "Source file after the first file has been read"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/vim.fish:3
-#, fuzzy
 msgid "Execute Ex command before loading any vimrc"
-msgstr "Wykonaj komendę jeżeli poprzednia komenda zakończy się niepowodzeniem"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/vim.fish:4
 msgid "Use device as terminal (Amiga only)"
@@ -56590,9 +55857,8 @@ msgid "Set the cursor to tag"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/vim.fish:13
-#, fuzzy
 msgid "Terminal name"
-msgstr "Terminal zawieszony"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/vim.fish:14
 msgid "Use alternative vimrc"
@@ -56757,9 +56023,8 @@ msgid "Set server name"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/vim.fish:59
-#, fuzzy
 msgid "Print version information and exit"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/vim.fish:60
 msgid "Run gvim in another window (GTK GUI only)"
@@ -56891,9 +56156,8 @@ msgid "Remove packages listed in a file"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/wajig.fish:33
-#, fuzzy
 msgid "Search for a file within installed packages"
-msgstr "Szukaj określonego ciągu znaków w liście"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/wajig.fish:34
 #: /tmp/fish/implicit/share/completions/wajig.fish:115
@@ -57122,9 +56386,8 @@ msgid "Convert a RedHat .rpm file to a Debian .deb file"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/wajig.fish:94
-#, fuzzy
 msgid "Search for packages containing listed words"
-msgstr "Szukaj określonego ciągu znaków w liście"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/wajig.fish:95
 msgid "Find local Debian archives suitable for sources.list"
@@ -57266,14 +56529,12 @@ msgid "Pass command to exec instead of \"sh -c\""
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/wc.fish:1
-#, fuzzy
 msgid "Print byte counts"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/wc.fish:2
-#, fuzzy
 msgid "Print character counts"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/wc.fish:3
 msgid "Print newline counts"
@@ -57284,9 +56545,8 @@ msgid "Print length of longest line"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/wc.fish:5
-#, fuzzy
 msgid "Print word counts"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/wesnoth.fish:1
 msgid "Number sets BitsPerPixel value"
@@ -57431,9 +56691,8 @@ msgid "Go to background immediately after startup"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/wget.fish:4
-#, fuzzy
 msgid "Execute command as if part of .wgetrc"
-msgstr "Wykonaj komendę jeżeli poprzednia komenda zakończy się niepowodzeniem"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/wget.fish:5
 msgid "Log all messages to logfile"
@@ -57862,9 +57121,8 @@ msgid "Print time of last boot"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/who.fish:3
-#, fuzzy
 msgid "Print dead processes"
-msgstr "Proces potomny"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/who.fish:4
 msgid "Print line of headings"
@@ -57875,9 +57133,8 @@ msgid "Print idle time"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/who.fish:6
-#, fuzzy
 msgid "Print login process"
-msgstr "Proces potomny"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/who.fish:7
 msgid "Canonicalize hostnames via DNS"
@@ -57896,9 +57153,8 @@ msgid "Print all login names and number of users logged on"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/who.fish:11
-#, fuzzy
 msgid "Print current runlevel"
-msgstr "Wypisz obecnie uruchomione zadania"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/who.fish:12
 msgid "Print name, line, and time"
@@ -58108,9 +57364,8 @@ msgid "set/list network variables"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/wpa_cli.fish:28
-#, fuzzy
 msgid "get network variables"
-msgstr "Operuj zmiennymi środowiskowymi"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/wpa_cli.fish:29
 msgid "save the current configuration"
@@ -58210,9 +57465,8 @@ msgid "Print the command line on the standard error output before executing it"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/xargs.fish:15
-#, fuzzy
 msgid "Exit if the size is exceeded"
-msgstr "Przekroczony limit rozmiaru pliku"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/xargs.fish:16
 msgid "Run up to max-procs processes at a time"
@@ -58457,9 +57711,8 @@ msgid "Show the main window"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/xpdf.fish:1
-#, fuzzy
 msgid "Set the initial window geometry"
-msgstr "Ustaw kolor terminala"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/xpdf.fish:2
 msgid "Set the window title"
@@ -58486,9 +57739,8 @@ msgid "Set the color for background outside the page area"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/xpdf.fish:8
-#, fuzzy
 msgid "Set the initial zoom factor"
-msgstr "Ustaw kolor terminala"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/xpdf.fish:9
 msgid "Start in continuous view mode"
@@ -58785,9 +58037,8 @@ msgid "Don't define a primary output"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/xrandr.fish:43
-#, fuzzy
 msgid "Print current screen configuration"
-msgstr "Wypisz obecnie uruchomione zadania"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/xrandr.fish:44
 msgid ""
@@ -58942,9 +58193,8 @@ msgid "Do not detach from the controlling terminal"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/xsel.fish:17
-#, fuzzy
 msgid "Print informative messages"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/xterm.fish:1
 msgid "Never highlight the text cursor"
@@ -59211,9 +58461,8 @@ msgid "Use pseudo-terminal's sense of the stty erase value"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/xterm.fish:67
-#, fuzzy
 msgid "Force insert mode"
-msgstr "Wymuszono zatrzymanie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/xterm.fish:68
 msgid "Treat C1 control characters as printable"
@@ -59464,9 +58713,8 @@ msgid "Test the integrity of compressed files"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/xz.fish:4
-#, fuzzy
 msgid "Print information about compressed files"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/xz.fish:5
 msgid "Don't delete the input files"
@@ -59605,9 +58853,8 @@ msgid "Show some statistics about your packages"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/yaourt.fish:29
-#, fuzzy
 msgid "Force color"
-msgstr "Wymuszono zatrzymanie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/yaourt.fish:30
 msgid "Force installation or updates"
@@ -59878,9 +59125,8 @@ msgid "Set maximum delay between commands"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/yum.fish:18
-#, fuzzy
 msgid "Run commands from cache"
-msgstr "Uruchom komendę w obecnym procesie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/yum.fish:20
 msgid "Specify installroot"
@@ -59945,32 +59191,28 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:2
 #: /tmp/fish/implicit/share/completions/zpool.fish:2
-#, fuzzy
 msgid "Display a help message"
-msgstr "Wypisz argumenty"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:3
-#, fuzzy
 msgid "Create a volume or filesystem"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:4
 msgid "Destroy a dataset"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:5
-#, fuzzy
 msgid "Create a snapshot"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:6
 msgid "Roll back a filesystem to a previous snapshot"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:7
-#, fuzzy
 msgid "Create a clone of a snapshot"
-msgstr "Stwórz blok kodu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:8
 msgid ""
@@ -60079,9 +59321,8 @@ msgid "Volume size"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:35
-#, fuzzy
 msgid "Create a sparse volume"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:36
 msgid "Blocksize"
@@ -60096,14 +59337,12 @@ msgid "Recursively destroy all dependents"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:39
-#, fuzzy
 msgid "Force unmounting"
-msgstr "Wymuszono zatrzymanie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:41
-#, fuzzy
 msgid "Print machine-parsable verbose information"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:43
 msgid "Defer snapshot deletion"
@@ -60199,9 +59438,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/zfs.fish:80
 #: /tmp/fish/implicit/share/completions/zfs.fish:95
 #: /tmp/fish/implicit/share/completions/zpool.fish:66
-#, fuzzy
 msgid "Print parsable (exact) values for numbers"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:69
 #: /tmp/fish/implicit/share/completions/zfs.fish:97
@@ -60232,9 +59470,8 @@ msgid "Fields to display"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:79
-#, fuzzy
 msgid "Property source to display"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:82
 msgid "Property to get"
@@ -60257,9 +59494,8 @@ msgid "Upgrade all eligible filesystems"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:90
-#, fuzzy
 msgid "Upgrade to the specified version"
-msgstr "Szukaj określonego ciągu znaków w liście"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:91
 msgid "Filesystem to upgrade"
@@ -60295,9 +59531,8 @@ msgid "Temporary mount point property"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:104
-#, fuzzy
 msgid "Report progress"
-msgstr "Proces potomny"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:105
 msgid "Mount all available ZFS filesystems"
@@ -60355,9 +59590,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:119
 #: /tmp/fish/implicit/share/completions/zfs.fish:128
-#, fuzzy
 msgid "Generate a deduplicated stream"
-msgstr "Zwróć losową liczbę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:120
 #: /tmp/fish/implicit/share/completions/zfs.fish:129
@@ -60371,36 +59605,31 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:122
 #: /tmp/fish/implicit/share/completions/zfs.fish:131
-#, fuzzy
 msgid "Print verbose information about the stream in a machine-parsable format"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:123
-#, fuzzy
 msgid "Generate compressed stream"
-msgstr "Zwróć losową liczbę"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:125
 #: /tmp/fish/implicit/share/completions/zfs.fish:133
-#, fuzzy
 msgid "Include dataset properties"
-msgstr "Katalog"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:126
 #: /tmp/fish/implicit/share/completions/zfs.fish:134
-#, fuzzy
 msgid "Print verbose information about the stream"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:135
 msgid "Dataset to send"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:136
-#, fuzzy
 msgid ""
 "Print verbose information about the stream and the time spent processing it"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zfs.fish:137
 msgid "Dry run: do not actually receive the stream"
@@ -60642,9 +59871,8 @@ msgid "Exclude extra file attributes"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zip.fish:26
-#, fuzzy
 msgid "Store symbolic links as links"
-msgstr "Pętla nawiązań symbolicznych"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zip.fish:27
 msgid "PKZIP recursion"
@@ -60676,9 +59904,8 @@ msgid "Clear devices errors in pool"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:6
-#, fuzzy
 msgid "Create a new storage pool"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:7
 msgid "Destroy a storage pool"
@@ -60701,9 +59928,8 @@ msgid "Get one or several pool properties"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:12
-#, fuzzy
 msgid "Display pool command history"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:13
 msgid "List importable pools, or import some"
@@ -60722,9 +59948,8 @@ msgid "List pools with health status and space usage"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:17
-#, fuzzy
 msgid "Take the specified devices offline"
-msgstr "Edytuj sugestie do określonej komendy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:18
 msgid "Bring the specified devices back online"
@@ -60791,9 +60016,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/completions/zpool.fish:101
 #: /tmp/fish/implicit/share/completions/zpool.fish:128
 #: /tmp/fish/implicit/share/completions/zpool.fish:136
-#, fuzzy
 msgid "Resolve device path symbolic links"
-msgstr "Nawiązanie symboliczne"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:32
 #: /tmp/fish/implicit/share/completions/zpool.fish:93
@@ -60830,9 +60054,8 @@ msgid "Virtual device to operate on"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:40
-#, fuzzy
 msgid "Initiate recovery mode"
-msgstr "Tylko dla zadań interaktywnych"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:41
 #: /tmp/fish/implicit/share/completions/zpool.fish:85
@@ -60893,9 +60116,8 @@ msgid "Physical device to detach"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:58
-#, fuzzy
 msgid "Print verbose event information"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:60
 msgid "Output appended data as the log grows"
@@ -60930,23 +60152,20 @@ msgid "Also display internal events"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:72
-#, fuzzy
 msgid "Display log records using long format"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:73
 msgid "Pool to get command history of"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:74
-#, fuzzy
 msgid "Read configuration from specified cache file"
-msgstr "Zmień katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:75
-#, fuzzy
 msgid "Search for devices or files in specified directory"
-msgstr "Nawiązanie symboliczne do katalogu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:76
 msgid "List or import destroyed pools only (requires -f for importation)"
@@ -60962,14 +60181,12 @@ msgid "Properties of the imported pool"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:79
-#, fuzzy
 msgid "Force import"
-msgstr "Wymuszono zatrzymanie"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:80
-#, fuzzy
 msgid "Recovery mode"
-msgstr "Tylko dla zadań interaktywnych"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:81
 msgid "Search for and import all pools found"
@@ -61011,9 +60228,8 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:95
 #: /tmp/fish/implicit/share/completions/zpool.fish:104
-#, fuzzy
 msgid "Print verbose statistics"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:96
 msgid "Pool to retrieve I/O stats from"
@@ -61024,9 +60240,8 @@ msgid "Treat exported or foreign devices as inactive"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:98
-#, fuzzy
 msgid "Device to clear ZFS label information from"
-msgstr "Zwróć informacje o fish"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:106
 msgid "Pool to list properties of"
@@ -61131,9 +60346,8 @@ msgid "Display upgradeable ZFS versions"
 msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zpool.fish:146
-#, fuzzy
 msgid "Upgrade to the specified legacy version"
-msgstr "Szukaj określonego ciągu znaków w liście"
+msgstr ""
 
 #: /tmp/fish/implicit/share/completions/zypper.fish:2
 msgid "Repo"
@@ -62116,18 +61330,13 @@ msgstr ""
 msgid "Manage abbreviations using new fish 3.0 scheme."
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/abbr_old.fish:1
-msgid "Manage abbreviations using old fish 2.x scheme."
-msgstr ""
-
 #: /tmp/fish/implicit/share/functions/alias.fish:1
 msgid "Creates a function wrapping a command"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/cdh.fish:1
-#, fuzzy
 msgid "Menu based cd command"
-msgstr "Stan Komenda"
+msgstr ""
 
 #: /tmp/fish/implicit/share/functions/contains_seq.fish:1
 msgid "Return true if array contains a sequence"
@@ -62138,9 +61347,8 @@ msgid "Print the current directory history (the prev and next lists)"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/dirs.fish:1
-#, fuzzy
 msgid "Print directory stack"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/functions/down-or-search.fish:1
 msgid ""
@@ -62150,10 +61358,6 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/functions/edit_command_buffer.fish:1
 msgid "Edit the command buffer in an external editor"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/eval.fish:1
-msgid "Evaluate parameters as a command"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/_.fish:1
@@ -62170,14 +61374,6 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_commandline_is_singlequoted.fish:1
 msgid "Return 0 if the current token has an open single-quote"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_complete_abook_formats.fish:1
-msgid "Complete abook formats"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_complete_ant_targets.fish:1
-msgid "Print list of targets from build.xml and imported files"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_complete_atool_archive_contents.fish:1
@@ -62321,9 +61517,8 @@ msgid "Complete ftp, pftp"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_complete_ftp.fish:2
-#, fuzzy
 msgid "Hostname"
-msgstr "Nazwa procesu"
+msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_complete_ftp.fish:3
 msgid "Use only IPv4 to contact any host"
@@ -62438,9 +61633,8 @@ msgid "Scale image files to use up to number percent of the page"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_complete_lpr.fish:17
-#, fuzzy
 msgid "Set the number of characters per inch to use"
-msgstr "Wylicz liczbę argumentów"
+msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_complete_lpr.fish:18
 msgid "Set the number of lines per inch to use"
@@ -62530,10 +61724,6 @@ msgstr ""
 msgid "Complete by list of running processes"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_complete_setxkbmap.fish:1
-msgid "Complete setxkb options"
-msgstr ""
-
 #: /tmp/fish/implicit/share/functions/__fish_complete_ssh.fish:1
 msgid "common completions for ssh commands"
 msgstr ""
@@ -62574,23 +61764,8 @@ msgstr ""
 msgid "Complete subcommand"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_complete_subcommand_root.fish:1
-msgid ""
-"Run the __fish_complete_subcommand function using a PATH containing /sbin "
-"and /usr/sbin"
-msgstr ""
-
 #: /tmp/fish/implicit/share/functions/__fish_complete_suffix.fish:1
 msgid "Complete using files"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_complete_svn_diff.fish:1
-msgid "Complete \"svn diff\" arguments"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_complete_tar.fish:1
-#: /tmp/fish/implicit/share/functions/__fish_complete_unrar.fish:1
-msgid "Peek inside of archives and list all files"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_complete_user_at_hosts.fish:1
@@ -62599,10 +61774,6 @@ msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_complete_users.fish:1
 msgid "Print a list of local users, with the real user name as a description"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_complete_wvdial_peers.fish:1
-msgid "Complete wvdial peers"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_complete_zfs_mountpoint_properties.fish:1
@@ -62676,7 +61847,6 @@ msgid "Checks if a specific option has been given in the current commandline"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_crux_packages.fish:1
-#: /tmp/fish/implicit/share/functions/__fish_prt_packages.fish:1
 msgid "Obtain a list of installed packages"
 msgstr ""
 
@@ -62704,57 +61874,47 @@ msgstr ""
 msgid "Command used to find descriptions for commands"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/fish_fallback_prompt.fish:1
-msgid ""
-"A simple fallback prompt without too much color or special characters for "
-"linux VTs"
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:1
+msgid "Helper function for fish_git_prompt"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_filter_ant_targets.fish:1
-msgid "Display targets within an ant build.xml file"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:1
-msgid "Helper function for __fish_git_prompt"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:2
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:2
 msgid "Prompt function for Git"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:3
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:3
 msgid ""
-"__fish_git_prompt helper, tells whether or not the current branch has staged "
+"fish_git_prompt helper, tells whether or not the current branch has staged "
 "files"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:4
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:4
 msgid ""
-"__fish_git_prompt helper, tells whether or not the current branch has "
+"fish_git_prompt helper, tells whether or not the current branch has "
 "tracked, modified files"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:5
-msgid "__fish_git_prompt helper, returns the current Git operation and branch"
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:5
+msgid "fish_git_prompt helper, returns the current Git operation and branch"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:6
-msgid "__fish_git_prompt helper, checks char variables"
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:6
+msgid "fish_git_prompt helper, checks char variables"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:7
-msgid "__fish_git_prompt helper, checks color variables"
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:7
+msgid "fish_git_prompt helper, checks color variables"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:8
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:8
 msgid "Event handler, repaints prompt when functionality changes"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:9
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:9
 msgid "Event handler, repaints prompt when any color changes"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_git_prompt.fish:10
+#: /tmp/fish/implicit/share/functions/fish_git_prompt.fish:10
 msgid "Event handler, repaints prompt when any char changes"
 msgstr ""
 
@@ -62817,9 +61977,8 @@ msgid "Move the last element of a directory history from src to dest"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_no_arguments.fish:1
-#, fuzzy
 msgid "Internal fish function"
-msgstr "Niedozwolona instrukcja"
+msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_not_contain_opt.fish:1
 msgid "Checks that a specific option is not in the current command line"
@@ -62829,29 +61988,12 @@ msgstr ""
 msgid "Paginate the current command using the users default pager"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_ports_dirs.fish:1
-msgid "Obtain a list of ports local collections"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_print_abook_emails.fish:1
-msgid "Print email addresses (abook)"
-msgstr ""
-
 #: /tmp/fish/implicit/share/functions/__fish_print_addresses.fish:1
 msgid "Print a list of known network addresses"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_print_arch_daemons.fish:1
-#, fuzzy
-msgid "Print arch daemons"
-msgstr "Wypisz argumenty"
-
 #: /tmp/fish/implicit/share/functions/__fish_print_commands.fish:1
 msgid "Print a list of documented fish commands"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_print_debian_services.fish:1
-msgid "Prints services installed"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_print_encodings.fish:1
@@ -62862,16 +62004,9 @@ msgstr ""
 msgid "Print a list of all known filesystem types"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_print_function_prototypes.fish:1
-msgid ""
-"Prints the names of all function prototypes found in the headers in the "
-"current directory"
-msgstr ""
-
 #: /tmp/fish/implicit/share/functions/__fish_print_groups.fish:1
-#, fuzzy
 msgid "Print a list of local groups"
-msgstr "Zwraca sformatowany tekst"
+msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_print_help.fish:1
 msgid "Print help message for the specified fish function or builtin"
@@ -62890,12 +62025,7 @@ msgid "Print lpr options"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_print_lpr_printers.fish:1
-#, fuzzy
 msgid "Print lpr printers"
-msgstr "Wypisz argumenty"
-
-#: /tmp/fish/implicit/share/functions/__fish_print_lsblk_columns.fish:1
-msgid "Print available lsblk columns"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_print_mounted.fish:1
@@ -62922,71 +62052,25 @@ msgstr ""
 msgid "Print directories where desktop files are stored"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_print_xdg_desktop_file_ids.fish:1
-msgid "Print all available xdg desktop file IDs"
-msgstr ""
-
 #: /tmp/fish/implicit/share/functions/__fish_print_xdg_mimetypes.fish:1
 msgid "Print XDG mime types"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_print_xrandr_modes.fish:1
-#, fuzzy
-msgid "Print xrandr modes"
-msgstr "Wypisz argumenty"
-
-#: /tmp/fish/implicit/share/functions/__fish_print_xrandr_outputs.fish:1
-#, fuzzy
-msgid "Print xrandr outputs"
-msgstr "Wypisz argumenty"
-
 #: /tmp/fish/implicit/share/functions/__fish_print_xwindows.fish:1
 msgid "Print X windows"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_print_zfs_bookmarks.fish:1
-msgid "Lists ZFS bookmarks, if the feature is enabled"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_print_zfs_filesystems.fish:1
-msgid "Lists ZFS filesystems"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_print_zfs_snapshots.fish:1
 msgid "Lists ZFS snapshots"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_print_zfs_volumes.fish:1
-msgid "Lists ZFS volumes"
-msgstr ""
-
 #: /tmp/fish/implicit/share/functions/fish_prompt.fish:1
 msgid "Write out the prompt"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_prt_no_subcommand.fish:1
-msgid "Test if prt-get has yet to be given the command"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_prt_ports.fish:1
-msgid "Obtain a list of ports"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_prt_use_package.fish:1
-msgid "Test if prt-get should have packages as potential completion"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_prt_use_port.fish:1
-msgid "Test if prt-get should have ports as potential completion"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_pwd.fish:1
 #: /tmp/fish/implicit/share/functions/__fish_pwd.fish:2
 msgid "Show current path"
-msgstr ""
-
-#: /tmp/fish/implicit/share/functions/__fish_sgrep.fish:1
-msgid "Call grep without honoring GREP_OPTIONS settings"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_shared_key_bindings.fish:1
@@ -63009,18 +62093,13 @@ msgstr ""
 msgid "Call systemctl with some options from the current commandline"
 msgstr ""
 
-#: /tmp/fish/implicit/share/functions/__fish_test_arg.fish:1
-msgid "Test if the token under the cursor matches the specified wildcard"
-msgstr ""
-
 #: /tmp/fish/implicit/share/functions/__fish_toggle_comment_commandline.fish:1
 msgid "Comment/uncomment the current command"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/fish_update_completions.fish:1
-#, fuzzy
 msgid "Update man-page based completions"
-msgstr "Edytuj sugestie do określonej komendy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/functions/__fish_use_subcommand.fish:1
 msgid "Test if a non-switch argument has been given in the current commandline"
@@ -63039,9 +62118,8 @@ msgid "vi-like key bindings for fish"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/funced.fish:1
-#, fuzzy
 msgid "Edit function definition"
-msgstr "'return' poza definicją funkcji"
+msgstr ""
 
 #: /tmp/fish/implicit/share/functions/funcsave.fish:1
 msgid "Save the current definition of all specified functions to file"
@@ -63076,9 +62154,8 @@ msgstr ""
 #: /tmp/fish/implicit/share/functions/ls.fish:1
 #: /tmp/fish/implicit/share/functions/ls.fish:2
 #: /tmp/fish/implicit/share/functions/ls.fish:3
-#, fuzzy
 msgid "List contents of directory"
-msgstr "Zwróć katalog roboczy"
+msgstr ""
 
 #: /tmp/fish/implicit/share/functions/man.fish:1
 msgid "Format and display the on-line manual pages"
@@ -63127,9 +62204,8 @@ msgid "print the resolved path [command grealpath]"
 msgstr ""
 
 #: /tmp/fish/implicit/share/functions/realpath.fish:3
-#, fuzzy
 msgid "return an absolute path without symlinks"
-msgstr "Zamień ścieżkę na ścieżkę bezwzględną bez nawiązań symbolicznych"
+msgstr ""
 
 #: /tmp/fish/implicit/share/functions/seq.fish:1
 msgid "Print sequences of numbers"
@@ -63188,18 +62264,14 @@ msgstr ""
 #~ msgid "getopt_long() unexpectedly returned zero\n"
 #~ msgstr "getopt_long() nieoczekiwanie zwrócił 0\n"
 
-#, fuzzy
 #~ msgid "terminal_give_to_job(): Could not send job %d ('%ls') to foreground"
 #~ msgstr "Nie można przenieść zadania %d ('%ls') na pierwszy plan"
 
-#, fuzzy
 #~ msgid "funced: You must specify one function name"
 #~ msgstr "Oczekiwano dokładnie jednej nazwy funkcji"
 
-#, fuzzy
 #~ msgid "%s: Expected function name\\n"
 #~ msgstr "%s: Oczekiwano nazwy funkcji"
 
-#, fuzzy
 #~ msgid "%ls: Invalid combination of options,\\n%ls\\n"
 #~ msgstr "%ls: Nieprawidłowa kombinacja opcji,\\n%ls\\n"

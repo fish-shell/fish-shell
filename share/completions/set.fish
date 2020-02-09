@@ -13,40 +13,51 @@ set -g __fish_locale_vars LANG LC_ALL LC_COLLATE LC_CTYPE LC_MESSAGES LC_MONETAR
 #
 
 function __fish_set_is_color -d 'Test if We are specifying a color value for the prompt'
-	set cmd (commandline -poc)
-	set -e cmd[1]
-	for i in $cmd
-		switch $i
+    set cmd (commandline -poc)
+    set -e cmd[1]
+    for i in $cmd
+        switch $i
 
-			case 'fish_color_*' 'fish_pager_color_*'
-				return 0
+            case 'fish_color_*' 'fish_pager_color_*'
+                return 0
 
-			case '-*'
+            case '-*'
 
-			case '*'
-				 return 1
-		end
-	end
-	return 1
+            case '*'
+                return 1
+        end
+    end
+    return 1
 end
 
 function __fish_set_is_locale -d 'Test if We are specifying a locale value for the prompt'
-	set cmd (commandline -poc)
-	set -e cmd[1]
-	for i in $cmd
-		switch $i
+    set cmd (commandline -poc)
+    set -e cmd[1]
+    for i in $cmd
+        switch $i
 
-			case $__fish_locale_vars
-				return 0
+            case $__fish_locale_vars
+                return 0
 
-			case '-*'
-				continue
+            case '-*'
+                continue
 
-			case '*'
-				 return 1
-		end
-	end
-	return 1
+            case '*'
+                return 1
+        end
+    end
+    return 1
+end
+
+function __fish_set_special_vars
+    printf %s\t%s\n CDPATH "A list of dirs that cd uses"
+    printf %s\t%s\n fish_emoji_width "How wide your terminal displays emoji (2 since Unicode 9, 1 previously)"
+    printf %s\t%s\n fish_ambiguous_width "How wide your terminal displays ambiguous chars (1 or 2)"
+    printf %s\t%s\n fish_escape_delay_ms "How long fish waits to distinguish escape and alt"
+    printf %s\t%s\n fish_greeting "The message to display at start (also a function)"
+    printf %s\t%s\n fish_history "The session id to store history under"
+    printf %s\t%s\n fish_user_paths "A list of dirs to prepend to PATH"
+    printf %s\t%s\n BROWSER "The browser to use"
 end
 
 #
@@ -75,6 +86,8 @@ complete -c set -n '__fish_is_first_token' -s S -l show -d "Show variable"
 complete -c set -n '__fish_is_first_token; and not __fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s g -s U -l local -l global -l universal' -x -a "(set -l | string match -rv '^__' | string replace ' ' \t'Local Variable: ')"
 complete -c set -n '__fish_is_first_token; and not __fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s g -s U -l local -l global -l universal' -x -a "(set -g | string match -rv '^__' | string replace ' ' \t'Global Variable: ')"
 complete -c set -n '__fish_is_first_token; and not __fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s g -s U -l local -l global -l universal' -x -a "(set -U | string match -rv '^__' | string replace ' ' \t'Universal Variable: ')"
+# Complete some fish configuration variables even if they aren't set.
+complete -c set -n '__fish_is_first_token; and not __fish_seen_argument -s e -l erase' -x -a "(__fish_set_special_vars)"
 # Complete scope-specific variables
 complete -c set -n '__fish_is_first_token; and __fish_seen_argument -s l -l local' -x -a "(set -l | string match -rv '^__' | string replace ' ' \t'Local Variable: ')"
 complete -c set -n '__fish_is_first_token; and __fish_seen_argument -s g -l global' -x -a "(set -g | string match -rv '^__' | string replace ' ' \t'Global Variable: ')"
@@ -86,7 +99,7 @@ complete -c set -n '__fish_seen_argument -s e -l erase; and not __fish_seen_argu
 complete -c set -n '__fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s U -s g -l local -l global -l Universal' -f -a "(set -U | string match -rv '^_|^fish_' | string replace ' ' \tUniversal\ Variable:\ )"
 # Complete scope-specific variables for `set --erase`
 complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument -s g -l global' -f -a "(set -g | string match -rv '^_|^fish_' | string replace ' ' \t'Global Variable: ')"
-complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument -s U -l universal' -f -a "(set -u | string match -rv '^_|^fish_' | string replace ' ' \t'Universal Variable: ')"
+complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument -s U -l universal' -f -a "(set -U | string match -rv '^_|^fish_' | string replace ' ' \t'Universal Variable: ')"
 complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument -s l -l local' -f -a "(set -l | string match -rv '^_|^fish_' | string replace ' ' \t'Local Variable: ')"
 
 # Color completions

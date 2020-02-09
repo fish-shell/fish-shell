@@ -12,13 +12,12 @@
 
 #include "common.h"
 #include "maybe.h"
+#include "null_terminated_array.h"
 
 extern size_t read_byte_limit;
 extern bool curses_initialized;
 
-/// Character for separating two array elements. We use 30, i.e. the ascii record separator since
-/// that seems logical.
-#define ARRAY_SEP (wchar_t)0x1e
+struct event_t;
 
 // Flags that may be passed as the 'mode' in env_stack_t::set() / environment_t::get().
 enum {
@@ -59,20 +58,46 @@ struct config_paths_t {
     wcstring bin;      // e.g., /usr/local/bin
 };
 
+/// A collection of status and pipestatus.
+struct statuses_t {
+    /// Status of the last job to exit.
+    int status{0};
+
+    /// Pipestatus value.
+    std::vector<int> pipestatus{};
+
+    /// Return a statuses for a single process status.
+    static statuses_t just(int s) {
+        statuses_t result{};
+        result.status = s;
+        result.pipestatus.push_back(s);
+        return result;
+    }
+};
+
 /// Initialize environment variable data.
-void env_init(const struct config_paths_t *paths = NULL);
+void env_init(const struct config_paths_t *paths = nullptr);
 
 /// Various things we need to initialize at run-time that don't really fit any of the other init
 /// routines.
 void misc_init();
 
+/// env_var_t is an immutable value-type data structure representing the value of an environment
+/// variable.
 class env_var_t {
    public:
     using env_var_flags_t = uint8_t;
 
    private:
-    wcstring_list_t vals;  // list of values assigned to the var
-    env_var_flags_t flags;
+    env_var_t(std::shared_ptr<const wcstring_list_t> vals, env_var_flags_t flags)
+        : vals_(std::move(vals)), flags_(flags) {}
+
+    /// The list of values in this variable.
+    /// shared_ptr allows for cheap copying.
+    std::shared_ptr<const wcstring_list_t> vals_{empty_list()};
+
+    /// Flag in this variable.
+    env_var_flags_t flags_{};
 
    public:
     enum {
@@ -82,24 +107,27 @@ class env_var_t {
     };
 
     // Constructors.
+    env_var_t() = default;
     env_var_t(const env_var_t &) = default;
     env_var_t(env_var_t &&) = default;
-    env_var_t(wcstring_list_t vals, env_var_flags_t flags) : vals(std::move(vals)), flags(flags) {}
+
+    env_var_t(wcstring_list_t vals, env_var_flags_t flags)
+        : env_var_t(std::make_shared<wcstring_list_t>(std::move(vals)), flags) {}
+
     env_var_t(wcstring val, env_var_flags_t flags)
         : env_var_t(wcstring_list_t{std::move(val)}, flags) {}
 
     // Constructors that infer the flags from a name.
     env_var_t(const wchar_t *name, wcstring_list_t vals)
         : env_var_t(std::move(vals), flags_for(name)) {}
+
     env_var_t(const wchar_t *name, wcstring val) : env_var_t(std::move(val), flags_for(name)) {}
 
-    env_var_t() = default;
-
-    bool empty() const { return vals.empty() || (vals.size() == 1 && vals[0].empty()); }
-    bool read_only() const { return flags & flag_read_only; }
-    bool exports() const { return flags & flag_export; }
-    bool is_pathvar() const { return flags & flag_pathvar; }
-    env_var_flags_t get_flags() const { return flags; }
+    bool empty() const { return vals_->empty() || (vals_->size() == 1 && vals_->front().empty()); }
+    bool read_only() const { return flags_ & flag_read_only; }
+    bool exports() const { return flags_ & flag_export; }
+    bool is_pathvar() const { return flags_ & flag_pathvar; }
+    env_var_flags_t get_flags() const { return flags_; }
 
     wcstring as_string() const;
     void to_list(wcstring_list_t &out) const;
@@ -108,40 +136,53 @@ class env_var_t {
     /// \return the character used when delimiting quoted expansion.
     wchar_t get_delimiter() const;
 
-    void set_vals(wcstring_list_t v) { vals = std::move(v); }
+    /// \return a copy of this variable with new values.
+    env_var_t setting_vals(wcstring_list_t vals) const {
+        return env_var_t{std::move(vals), flags_};
+    }
 
-    void set_exports(bool exportv) {
+    env_var_t setting_exports(bool exportv) const {
+        env_var_flags_t flags = flags_;
         if (exportv) {
             flags |= flag_export;
         } else {
             flags &= ~flag_export;
         }
+        return env_var_t{vals_, flags};
     }
 
-    void set_pathvar(bool pathvar) {
+    env_var_t setting_pathvar(bool pathvar) const {
+        env_var_flags_t flags = flags_;
         if (pathvar) {
             flags |= flag_pathvar;
         } else {
             flags &= ~flag_pathvar;
         }
+        return env_var_t{vals_, flags};
     }
 
-    void set_read_only(bool read_only) {
+    env_var_t setting_read_only(bool read_only) const {
+        env_var_flags_t flags = flags_;
         if (read_only) {
             flags |= flag_read_only;
         } else {
             flags &= ~flag_read_only;
         }
+        return env_var_t{vals_, flags};
     }
 
     static env_var_flags_t flags_for(const wchar_t *name);
+    static std::shared_ptr<const wcstring_list_t> empty_list();
 
     env_var_t &operator=(const env_var_t &var) = default;
     env_var_t &operator=(env_var_t &&) = default;
 
-    bool operator==(const env_var_t &rhs) const { return vals == rhs.vals && flags == rhs.flags; }
-    bool operator!=(const env_var_t &rhs) const { return ! (*this == rhs); }
+    bool operator==(const env_var_t &rhs) const {
+        return *vals_ == *rhs.vals_ && flags_ == rhs.flags_;
+    }
+    bool operator!=(const env_var_t &rhs) const { return !(*this == rhs); }
 };
+typedef std::map<wcstring, env_var_t> var_table_t;
 
 /// An environment is read-only access to variable values.
 class environment_t {
@@ -155,57 +196,59 @@ class environment_t {
     virtual ~environment_t();
 
     /// Returns the PWD with a terminating slash.
-    wcstring get_pwd_slash() const;
+    virtual wcstring get_pwd_slash() const;
 };
 
 /// The null environment contains nothing.
 class null_environment_t : public environment_t {
    public:
-    null_environment_t();
+    null_environment_t() = default;
     ~null_environment_t() override;
 
     maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
     wcstring_list_t get_names(int flags) const override;
 };
 
-/// Synchronizes all universal variable changes: writes everything out, reads stuff in.
-void env_universal_barrier();
-
-/// A environment stack of scopes. This is the main class that tracks fish variables.
-struct var_stack_t;
-class env_node_t;
+/// A mutable environment which allows scopes to be pushed and popped.
+class env_stack_impl_t;
 class env_stack_t final : public environment_t {
     friend class parser_t;
-    std::unique_ptr<var_stack_t> vars_;
 
-    int set_internal(const wcstring &key, env_mode_flags_t var_mode, wcstring_list_t val);
+    /// The implementation. Do not access this directly.
+    const std::unique_ptr<env_stack_impl_t> impl_;
 
-    bool try_remove(std::shared_ptr<env_node_t> n, const wchar_t *key, int var_mode);
-    std::shared_ptr<env_node_t> get_node(const wcstring &key);
+    /// All environment stacks are guarded by a global lock.
+    acquired_lock<env_stack_impl_t> acquire_impl();
+    acquired_lock<const env_stack_impl_t> acquire_impl() const;
 
-    static env_stack_t make_principal();
+    explicit env_stack_t(std::unique_ptr<env_stack_impl_t> impl);
 
-    var_stack_t &vars_stack();
-    const var_stack_t &vars_stack() const;
-
-    explicit env_stack_t(std::unique_ptr<var_stack_t> vars_);
-    env_stack_t();
-    ~env_stack_t() override;
-
-    env_stack_t(env_stack_t &&);
+    /// \return whether we are the principal stack.
+    bool is_principal() const { return this == principal_ref().get(); }
 
    public:
-    /// Gets the variable with the specified name, or none() if it does not exist.
+    ~env_stack_t() override;
+    env_stack_t(env_stack_t &&);
+
+    /// Implementation of environment_t.
     maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
 
+    /// Implementation of environment_t.
+    wcstring_list_t get_names(int flags) const override;
+
     /// Sets the variable with the specified name to the given values.
-    int set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals);
+    /// If \p out_events is supplied, populate it with any events generated through setting the
+    /// variable.
+    int set(const wcstring &key, env_mode_flags_t mode, wcstring_list_t vals,
+            std::vector<event_t> *out_events = nullptr);
 
     /// Sets the variable with the specified name to a single value.
-    int set_one(const wcstring &key, env_mode_flags_t mode, wcstring val);
+    int set_one(const wcstring &key, env_mode_flags_t mode, wcstring val,
+                std::vector<event_t> *out_events = nullptr);
 
     /// Sets the variable with the specified name to no values.
-    int set_empty(const wcstring &key, env_mode_flags_t mode);
+    int set_empty(const wcstring &key, env_mode_flags_t mode,
+                  std::vector<event_t> *out_events = nullptr);
 
     /// Update the PWD variable based on the result of getcwd.
     void set_pwd_from_getcwd();
@@ -216,9 +259,11 @@ class env_stack_t final : public environment_t {
     /// \param mode should be ENV_USER if this is a remove request from the user, 0 otherwise. If
     /// this is a user request, read-only variables can not be removed. The mode may also specify
     /// the scope of the variable that should be erased.
+    /// \param out_events if non-null, populate it with any events generated from removing this
+    /// variable.
     ///
     /// \return zero if the variable existed, and non-zero if the variable did not exist
-    int remove(const wcstring &key, int mode);
+    int remove(const wcstring &key, int mode, std::vector<event_t> *out_events = nullptr);
 
     /// Push the variable stack. Used for implementing local variables for functions and for-loops.
     void push(bool new_scope);
@@ -227,69 +272,60 @@ class env_stack_t final : public environment_t {
     void pop();
 
     /// Synchronizes all universal variable changes: writes everything out, reads stuff in.
-    void universal_barrier();
+    /// \return true if something changed, false otherwise.
+    bool universal_barrier();
 
-    /// Returns an array containing all exported variables in a format suitable for execv
-    const char *const *export_arr();
+    /// Returns an array containing all exported variables in a format suitable for execv.
+    std::shared_ptr<const null_terminated_array_t<char>> export_arr();
 
-    /// Returns all variable names.
-    wcstring_list_t get_names(int flags) const override;
+    /// Snapshot this environment. This means returning a read-only copy. Local variables are copied
+    /// but globals are shared (i.e. changes to global will be visible to this snapshot). This
+    /// returns a shared_ptr for convenience, since the most common reason to snapshot is because
+    /// you want to read from another thread.
+    std::shared_ptr<environment_t> snapshot() const;
+
+    /// Helpers to get and set the proc statuses.
+    /// These correspond to $status and $pipestatus.
+    statuses_t get_last_statuses() const;
+    int get_last_status() const;
+    void set_last_statuses(statuses_t s);
 
     /// Update the termsize variable.
     void set_termsize();
 
-    /// Update the PWD variable directory.
-    bool set_pwd();
+    /// Sets up argv as the given list of strings.
+    void set_argv(wcstring_list_t argv);
 
-    /// Sets up argv as the given null terminated array of strings.
-    void set_argv(const wchar_t *const *argv);
-
-    /// Update the read_byte_limit variable.
-    void set_read_limit();
-
-    /// Mark that exported variables have changed.
-    void mark_changed_exported();
+    /// Slightly optimized implementation.
+    wcstring get_pwd_slash() const override;
 
     // Compatibility hack; access the "environment stack" from back when there was just one.
-    static env_stack_t &principal();
+    static const std::shared_ptr<env_stack_t> &principal_ref();
+    static env_stack_t &principal() { return *principal_ref(); }
 
     // Access a variable stack that only represents globals.
     // Do not push or pop from this.
     static env_stack_t &globals();
 };
 
-class env_vars_snapshot_t : public environment_t {
-    std::map<wcstring, env_var_t> vars;
-    wcstring_list_t names;
-
-   public:
-    env_vars_snapshot_t() = default;
-    env_vars_snapshot_t(const env_vars_snapshot_t &) = default;
-    env_vars_snapshot_t &operator=(const env_vars_snapshot_t &) = default;
-    env_vars_snapshot_t(const environment_t &source, const wchar_t *const *keys);
-    ~env_vars_snapshot_t() override;
-
-    maybe_t<env_var_t> get(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT) const override;
-
-    wcstring_list_t get_names(int flags) const override;
-
-    // Vars necessary for highlighting.
-    static const wchar_t *const highlighting_keys[];
-
-    // Vars necessary for completion.
-    static const wchar_t *const completing_keys[];
-};
-
-extern int g_fork_count;
 extern bool g_use_posix_spawn;
 
-typedef std::map<wcstring, env_var_t> var_table_t;
-
 extern bool term_has_xn;  // does the terminal have the "eat_newline_glitch"
+
+/// Synchronizes all universal variable changes: writes everything out, reads stuff in.
+/// \return true if any value changed.
+bool env_universal_barrier();
 
 /// Returns true if we think the terminal supports setting its title.
 bool term_supports_setting_title();
 
 /// Gets a path appropriate for runtime storage
 wcstring env_get_runtime_path();
+
+/// A wrapper around setenv() and unsetenv() which use a lock.
+/// In general setenv() and getenv() are highly incompatible with threads. This makes it only
+/// slightly safer.
+void setenv_lock(const char *name, const char *value, int overwrite);
+void unsetenv_lock(const char *name);
+
 #endif

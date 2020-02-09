@@ -193,7 +193,7 @@ expect_prompt -re {\r\nTENT\r\n} {
 
 # Now test that exactly the expected bind modes are defined
 send "bind --list-modes\r"
-expect_prompt -re {\r\ndefault\r\ninsert\r\npaste\r\nreplace_one\r\nvisual\r\n} {
+expect_prompt -re {\r\ndefault\r\ninsert\r\npaste\r\nreplace\r\nreplace_one\r\nvisual\r\n} {
     puts "vi bind modes"
 } unmatched {
     puts stderr "Unexpected vi bind modes"
@@ -270,4 +270,32 @@ expect_prompt -re {ctrl-o seen} {
     puts "ctrl-o seen"
 } unmatched {
     puts stderr "ctrl-o not seen"
+}
+
+# \x17 is ctrl-w.
+send "echo git@github.com:fish-shell/fish-shell"
+send "\x17\x17\r"
+expect_prompt -re {git@github.com:} {
+    puts "ctrl-w stops at :"
+} unmatched {
+    puts stderr "ctrl-w does not stop at :"
+}
+
+send "echo git@github.com:fish-shell/fish-shell"
+send "\x17\x17\x17\r"
+expect_prompt -re {git@} {
+    puts "ctrl-w stops at @"
+} unmatched {
+    puts stderr "ctrl-w does not stop at @"
+}
+
+# Ensure that nul can be bound properly (#3189).
+send "bind -k nul 'echo nul seen'\r"
+expect_prompt
+send -null 3
+send "\r"
+expect_prompt -re {nul seen\r\nnul seen\r\nnul seen} {
+    puts "nul seen"
+} unmatched {
+    puts stderr "nul not seen"
 }

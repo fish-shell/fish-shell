@@ -1,18 +1,18 @@
 # Fish Shell command-line completions for Test Kitchen
 
 function __fish_kitchen_no_command -d 'Test if kitchen has yet to be given the main command'
-  set -l cmd (commandline -opc)
-  test (count $cmd) -eq 1
+    set -l cmd (commandline -opc)
+    test (count $cmd) -eq 1
 end
 
 function __fish_kitchen_using_command
-  set -l cmd (commandline -opc)
-  set -q cmd[2]; and test "$argv[1]" = $cmd[2]
+    set -l cmd (commandline -opc)
+    set -q cmd[2]; and test "$argv[1]" = $cmd[2]
 end
 
 function __fish_kitchen_using_command_and_no_subcommand
-  set -l cmd (commandline -opc)
-  test (count $cmd) -eq 2; and test "$argv[1]" = "$cmd[2]"
+    set -l cmd (commandline -opc)
+    test (count $cmd) -eq 2; and test "$argv[1]" = "$cmd[2]"
 end
 
 function __fish_kitchen_using_subcommand --argument-names cmd_main cmd_sub
@@ -46,9 +46,9 @@ complete -c kitchen -f -n '__fish_kitchen_using_command list' -a '(__fish_kitche
 # diagnose commands
 complete -c kitchen -f -n '__fish_kitchen_no_command' -a diagnose -d "Show computed diagnostic configuration"
 complete -c kitchen -f -n '__fish_kitchen_using_command diagnose' -s "l" -l "log_level" -d "Set the log level (debug, info, warn, error, fatal)"
-complete -c kitchen -f -n '__fish_kitchen_using_command diagnose'  -l "loader" -d "Include data loader diagnostics"
-complete -c kitchen -f -n '__fish_kitchen_using_command diagnose'  -l "instances" -d "Include instances diagnostics"
-complete -c kitchen -f -n '__fish_kitchen_using_command diagnose'  -l "all" -d "Include all diagnostics"
+complete -c kitchen -f -n '__fish_kitchen_using_command diagnose' -l "loader" -d "Include data loader diagnostics"
+complete -c kitchen -f -n '__fish_kitchen_using_command diagnose' -l "instances" -d "Include instances diagnostics"
+complete -c kitchen -f -n '__fish_kitchen_using_command diagnose' -l "all" -d "Include all diagnostics"
 
 # diagnose help
 complete -c kitchen -f -n '__fish_kitchen_using_command help' -a diagnose -d "Show computed diagnostic configuration"
@@ -122,7 +122,7 @@ complete -c kitchen -f -n '__fish_kitchen_using_command test' -s "c" -l "concurr
 complete -c kitchen -f -n '__fish_kitchen_using_command test' -s "p" -l "parallel" -d "[Future DEPRECATION, use --concurrency] Run a test against all matching instances concurrently. "
 complete -c kitchen -f -n '__fish_kitchen_using_command test' -s "l" -l "log_level" -d "Set the log level (debug, info, warn, error, fatal)"
 complete -c kitchen -f -n '__fish_kitchen_using_command test' -s "d" -l "destroy" -d "Destroy strategy to use after testing (passing, always, never)."
-complete -c kitchen -f -n '__fish_kitchen_using_command test'  -l "auto_init" -d "Invoke init command if .kitchen.yml is missing"
+complete -c kitchen -f -n '__fish_kitchen_using_command test' -l "auto_init" -d "Invoke init command if .kitchen.yml is missing"
 
 # test help
 complete -c kitchen -f -n '__fish_kitchen_using_command help' -a test -d "Test (destroy, create, converge, setup, verify and destroy) one or more instances"
@@ -143,7 +143,7 @@ complete -c kitchen -f -n '__fish_kitchen_using_command login' -a '(__fish_kitch
 # exec commands
 complete -c kitchen -f -n '__fish_kitchen_no_command' -a exec -d "Execute command on one or more instance"
 complete -c kitchen -f -n '__fish_kitchen_using_command exec' -s "l" -l "log_level" -d "Set the log level (debug, info, warn, error, fatal)"
-complete -c kitchen -f -n '__fish_kitchen_using_command exec' -s "c" -l "command" -d "execute via ssh"
+complete -c kitchen -f -n '__fish_kitchen_using_command exec' -s "c" -l command -d "execute via ssh"
 
 # exec help
 complete -c kitchen -f -n '__fish_kitchen_using_command help' -a exec -d "Execute command on one or more instance"
@@ -173,7 +173,7 @@ complete -c kitchen -f -n '__fish_kitchen_using_command help' -a console -d "Kit
 complete -c kitchen -f -n '__fish_kitchen_no_command' -a init -d "Adds some configuration to your cookbook so Kitchen can rock"
 complete -c kitchen -f -n '__fish_kitchen_using_command init' -s "D" -l "driver" -d "One or more Kitchen Driver gems to be installed or added to a Gemfile "
 complete -c kitchen -f -n '__fish_kitchen_using_command init' -s "P" -l "provisioner" -d "The default Kitchen Provisioner to use "
-complete -c kitchen -f -n '__fish_kitchen_using_command init'  -l "create_gemfile" -d "Whether or not to create a Gemfile if one does not exist. Default: false "
+complete -c kitchen -f -n '__fish_kitchen_using_command init' -l "create_gemfile" -d "Whether or not to create a Gemfile if one does not exist. Default: false "
 
 # init help
 complete -c kitchen -f -n '__fish_kitchen_using_command help' -a init -d "Adds some configuration to your cookbook so Kitchen can rock"

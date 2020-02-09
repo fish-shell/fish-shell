@@ -5,16 +5,18 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
-#include <string.h>
 #include <time.h>
+
+#include <cstring>
 #include <memory>
 #if FISH_USE_POSIX_SPAWN
 #include <spawn.h>
 #endif
-#include <wchar.h>
+#include <cwchar>
 
 #include "common.h"
 #include "exec.h"
+#include "flog.h"
 #include "io.h"
 #include "iothread.h"
 #include "postfork.h"
@@ -36,68 +38,67 @@
 /// Fork error message.
 #define FORK_ERROR "Could not create child process - exiting"
 
-/// Called only by the child to set its own process group (possibly creating a new group in the
-/// process if it is the first in a JOB_CONTROL job.
-/// Returns true on sucess, false on failiure.
-bool child_set_group(job_t *j, process_t *p) {
-    if (j->get_flag(job_flag_t::JOB_CONTROL)) {
-        if (j->pgid == INVALID_PID) {
-            j->pgid = p->pid;
-        }
+static char *get_interpreter(const char *command, char *buffer, size_t buff_size);
 
-        for (int i = 0; setpgid(p->pid, j->pgid) != 0; ++i) {
-            // Put a cap on how many times we retry so we are never stuck here
-            if (i < 100) {
-                if (errno == EPERM) {
-                    // The setpgid(2) man page says that EPERM is returned only if attempts are made to
-                    // move processes into groups across session boundaries (which can never be the case
-                    // in fish, anywhere) or to change the process group ID of a session leader (again,
-                    // can never be the case). I'm pretty sure this is a WSL bug, as we see the same
-                    // with tcsetpgrp(2) in other places and it disappears on retry.
-                    debug_safe(2, "setpgid(2) returned EPERM. Retrying");
-                    continue;
-                } else if (errno == EINTR) {
-                    // I don't think signals are blocked here. The parent (fish) redirected the signal
-                    // handlers and `setup_child_process()` calls `signal_reset_handlers()` after we're
-                    // done here (and not `signal_unblock()`). We're already in a loop, so let's just
-                    // handle EINTR just in case.
-                    continue;
-                }
-            }
+/// Report the error code \p err for a failed setpgid call.
+static void report_setpgid_error(int err, const job_t *j, const process_t *p) {
+    char pid_buff[128];
+    char job_id_buff[128];
+    char getpgid_buff[128];
+    char job_pgid_buff[128];
+    char argv0[64];
+    char command[64];
 
-            char pid_buff[128];
-            char job_id_buff[128];
-            char getpgid_buff[128];
-            char job_pgid_buff[128];
-            char argv0[64];
-            char command[64];
+    format_long_safe(pid_buff, p->pid);
+    format_long_safe(job_id_buff, j->job_id());
+    format_long_safe(getpgid_buff, getpgid(p->pid));
+    format_long_safe(job_pgid_buff, j->pgid);
+    narrow_string_safe(argv0, p->argv0());
+    narrow_string_safe(command, j->command_wcstr());
 
-            format_long_safe(pid_buff, p->pid);
-            format_long_safe(job_id_buff, j->job_id);
-            format_long_safe(getpgid_buff, getpgid(p->pid));
-            format_long_safe(job_pgid_buff, j->pgid);
-            narrow_string_safe(argv0, p->argv0());
-            narrow_string_safe(command, j->command_wcstr());
+    debug_safe(1, "Could not send own process %s, '%s' in job %s, '%s' from group %s to group %s",
+               pid_buff, argv0, job_id_buff, command, getpgid_buff, job_pgid_buff);
 
-            debug_safe(
-                1, "Could not send own process %s, '%s' in job %s, '%s' from group %s to group %s",
-                pid_buff, argv0, job_id_buff, command, getpgid_buff, job_pgid_buff);
-
-            if (is_windows_subsystem_for_linux() && errno == EPERM) {
-                debug_safe(1, "Please update to Windows 10 1809/17763 or higher to address known issues "
-                        "with process groups and zombie processes.");
-            }
-
-            safe_perror("setpgid");
-
-            return false;
-        }
-    } else {
-        // The child does not actually use this field.
-        j->pgid = getpgrp();
+    if (is_windows_subsystem_for_linux() && errno == EPERM) {
+        debug_safe(1,
+                   "Please update to Windows 10 1809/17763 or higher to address known issues "
+                   "with process groups and zombie processes.");
     }
 
-    return true;
+    errno = err;
+    safe_perror("setpgid");
+}
+
+/// Called only by the child to set its own process group (possibly creating a new group in the
+/// process if it is the first in a JOB_CONTROL job.
+/// Returns true on success, false on failure.
+bool child_set_group(job_t *j, process_t *p) {
+    if (j->pgid == INVALID_PID) {
+        assert(j->pgroup_provenance == pgroup_provenance_t::first_external_proc &&
+               "pgroup should only be unset if we need to become the leader");
+        j->pgid = p->pid;
+    }
+    // Put a cap on how many times we retry so we are never stuck here.
+    for (int i = 0; i < 100; i++) {
+        if (setpgid(p->pid, j->pgid) == 0) {
+            return true;
+        } else if (errno == EPERM) {
+            // The setpgid(2) man page says that EPERM is returned only if attempts are made
+            // to move processes into groups across session boundaries (which can never be
+            // the case in fish, anywhere) or to change the process group ID of a session
+            // leader (again, can never be the case). I'm pretty sure this is a WSL bug, as
+            // we see the same with tcsetpgrp(2) in other places and it disappears on retry.
+            debug_safe(2, "setpgid(2) returned EPERM. Retrying");
+            continue;
+        } else if (errno == EINTR) {
+            // Retry on EINTR.
+            continue;
+        } else {
+            break;
+        }
+    }
+    report_setpgid_error(errno, j, p);
+    return false;
 }
 
 /// Called only by the parent only after a child forks and successfully calls child_set_group,
@@ -106,9 +107,9 @@ bool child_set_group(job_t *j, process_t *p) {
 /// group in the case of JOB_CONTROL, and we can give the new process group control of the terminal
 /// if it's to run in the foreground.
 bool set_child_group(job_t *j, pid_t child_pid) {
-    if (j->get_flag(job_flag_t::JOB_CONTROL)) {
-        assert (j->pgid != INVALID_PID
-                && "set_child_group called with JOB_CONTROL before job pgid determined!");
+    if (j->wants_job_control()) {
+        assert(j->pgid != INVALID_PID &&
+               "set_child_group called with JOB_CONTROL before job pgid determined!");
 
         // The parent sets the child's group. This incurs the well-known unavoidable race with the
         // child exiting, so ignore ESRCH and EPERM (in case the pid was recycled).
@@ -117,14 +118,14 @@ bool set_child_group(job_t *j, pid_t child_pid) {
             if (errno != ESRCH && errno != EPERM && errno != EACCES) {
                 safe_perror("setpgid");
                 return false;
-            }
-            else {
+            } else {
                 // Just in case it's ever not right to ignore the setpgid call, (i.e. if this
                 // ever leads to a terminal hang due if both this setpgid call AND posix_spawn's
                 // internal setpgid calls failed), write to the debug log so a future developer
                 // doesn't go crazy trying to track this down.
-                debug(2, "Error %d while calling setpgid for child %d (probably harmless)",
-                        errno, child_pid);
+                FLOGF(proc_pgroup,
+                      "Error %d while calling setpgid for child %d (probably harmless)", errno,
+                      child_pid);
             }
         }
     } else {
@@ -134,51 +135,54 @@ bool set_child_group(job_t *j, pid_t child_pid) {
     return true;
 }
 
-bool maybe_assign_terminal(const job_t *j) {
-    if (j->get_flag(job_flag_t::TERMINAL) && j->is_foreground()) {  //!OCLINT(early exit)
-        if (tcgetpgrp(STDIN_FILENO) == j->pgid) {
-            // We've already assigned the process group control of the terminal when the first
-            // process in the job was started. There's no need to do so again, and on some platforms
-            // this can cause an EPERM error. In addition, if we've given control of the terminal to
-            // a process group, attempting to call tcsetpgrp from the background will cause SIGTTOU
-            // to be sent to everything in our process group (unless we handle it).
-            debug(4, L"Process group %d already has control of terminal\n", j->pgid);
-        } else {
-            // No need to duplicate the code here, a function already exists that does just this.
-            return terminal_give_to_job(j, false /*new job, so not continuing*/);
-        }
-    }
-
-    return true;
-}
-
-int setup_child_process(process_t *p, const dup2_list_t &dup2s) {
+int child_setup_process(pid_t new_termowner, bool is_forked, const dup2_list_t &dup2s) {
+    // Note we are called in a forked child.
     for (const auto &act : dup2s.get_actions()) {
-        int err = act.target < 0 ? close(act.src) : dup2(act.src, act.target);
+        int err;
+        if (act.target < 0) {
+            err = close(act.src);
+        } else if (act.target != act.src) {
+            // Normal redirection.
+            err = dup2(act.src, act.target);
+        } else {
+            // This is a weird case like /bin/cmd 6< file.txt
+            // The opened file (which is CLO_EXEC) wants to be dup2'd to its own fd.
+            // We need to unset the CLO_EXEC flag.
+            err = set_cloexec(act.src, false);
+        }
         if (err < 0) {
-            // We have a null p if this is for the exec (non-fork) path.
-            if (p != nullptr) {
-                debug_safe(4, "redirect_in_child_after_fork failed in setup_child_process");
+            if (is_forked) {
+                debug_safe(4, "redirect_in_child_after_fork failed in child_setup_process");
                 exit_without_destructors(1);
             }
             return err;
         }
     }
+    if (new_termowner != INVALID_PID) {
+        // Assign the terminal within the child to avoid the well-known race between tcsetgrp() in
+        // the parent and the child executing. We are not interested in error handling here, except
+        // we try to avoid this for non-terminals; in particular pipelines often make non-terminal
+        // stdin.
+        if (isatty(STDIN_FILENO)) {
+            // Ensure this doesn't send us to the background (see #5963)
+            signal(SIGTTIN, SIG_IGN);
+            signal(SIGTTOU, SIG_IGN);
+            (void)tcsetpgrp(STDIN_FILENO, new_termowner);
+        }
+    }
     // Set the handling for job control signals back to the default.
+    // Do this after any tcsetpgrp call so that we swallow SIGTTIN.
     signal_reset_handlers();
     return 0;
 }
 
-
-int g_fork_count = 0;
-
 /// This function is a wrapper around fork. If the fork calls fails with EAGAIN, it is retried
 /// FORK_LAPS times, with a very slight delay between each lap. If fork fails even then, the process
 /// will exit with an error message.
-pid_t execute_fork(bool wait_for_threads_to_die) {
+pid_t execute_fork() {
     ASSERT_IS_MAIN_THREAD();
 
-    if (wait_for_threads_to_die || JOIN_THREADS_BEFORE_FORK) {
+    if (JOIN_THREADS_BEFORE_FORK) {
         // Make sure we have no outstanding threads before we fork. This is a pretty sketchy thing
         // to do here, both because exec.cpp shouldn't have to know about iothreads, and because the
         // completion handlers may do unexpected things.
@@ -189,8 +193,6 @@ pid_t execute_fork(bool wait_for_threads_to_die) {
     pid_t pid;
     struct timespec pollint;
     int i;
-
-    g_fork_count++;
 
     for (i = 0; i < FORK_LAPS; i++) {
         pid = fork();
@@ -208,7 +210,7 @@ pid_t execute_fork(bool wait_for_threads_to_die) {
         // Don't sleep on the final lap - sleeping might change the value of errno, which will break
         // the error reporting below.
         if (i != FORK_LAPS - 1) {
-            nanosleep(&pollint, NULL);
+            nanosleep(&pollint, nullptr);
         }
     }
 
@@ -234,7 +236,7 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr,
 
     bool should_set_process_group_id = false;
     int desired_process_group_id = 0;
-    if (j->get_flag(job_flag_t::JOB_CONTROL)) {
+    if (j->wants_job_control()) {
         should_set_process_group_id = true;
 
         // set_child_group puts each job into its own process group
@@ -308,11 +310,11 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
             size_t sz = 0;
             const char *const *p;
             for (p = argv; *p; p++) {
-                sz += strlen(*p) + 1;
+                sz += std::strlen(*p) + 1;
             }
 
             for (p = envv; *p; p++) {
-                sz += strlen(*p) + 1;
+                sz += std::strlen(*p) + 1;
             }
 
             format_size_safe(sz1, sz);
@@ -351,8 +353,9 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
             // an open file action fails. These cases appear to be impossible to distinguish. We
             // address this by not using posix_spawn for file redirections, so all the ENOENTs we
             // find must be errors from exec().
-            char interpreter_buff[128] = {}, *interpreter;
-            interpreter = get_interpreter(actual_cmd, interpreter_buff, sizeof interpreter_buff);
+            char interpreter_buff[128] = {};
+            const char *interpreter =
+                get_interpreter(actual_cmd, interpreter_buff, sizeof interpreter_buff);
             if (interpreter && 0 != access(interpreter, X_OK)) {
                 debug_safe(0,
                            "The file '%s' specified the interpreter '%s', which is not an "
@@ -372,10 +375,33 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char *const *
         default: {
             const char *err = safe_strerror(errno);
             debug_safe(0, "exec: %s", err);
-
-            // debug(0, L"The file '%ls' is marked as an executable but could not be run by the
-            // operating system.", p->actual_cmd);
             break;
         }
     }
+}
+
+/// Returns the interpreter for the specified script. Returns NULL if file is not a script with a
+/// shebang.
+static char *get_interpreter(const char *command, char *buffer, size_t buff_size) {
+    // OK to not use CLO_EXEC here because this is only called after fork.
+    int fd = open(command, O_RDONLY);
+    if (fd >= 0) {
+        size_t idx = 0;
+        while (idx + 1 < buff_size) {
+            char ch;
+            ssize_t amt = read(fd, &ch, sizeof ch);
+            if (amt <= 0) break;
+            if (ch == '\n') break;
+            buffer[idx++] = ch;
+        }
+        buffer[idx++] = '\0';
+        close(fd);
+    }
+
+    if (std::strncmp(buffer, "#! /", 4) == 0) {
+        return buffer + 3;
+    } else if (std::strncmp(buffer, "#!/", 3) == 0) {
+        return buffer + 2;
+    }
+    return nullptr;
 }

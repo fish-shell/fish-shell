@@ -4,10 +4,12 @@
 // that are somehow related to parsing the code.
 #include "config.h"  // IWYU pragma: keep
 
+#include "parse_util.h"
+
 #include <stdarg.h>
 #include <stdlib.h>
-#include <wchar.h>
 
+#include <cwchar>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -22,12 +24,9 @@
 #include "parser.h"
 #include "tnode.h"
 #include "tokenizer.h"
-#include "util.h"
+#include "wcstringutil.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
-
-/// Error message for improper use of the exec builtin.
-#define EXEC_ERR_MSG _(L"The '%ls' command can not be used in a pipeline")
 
 /// Error message for use of backgrounded commands before and/or.
 #define BOOL_AFTER_BACKGROUND_ERROR_MSG \
@@ -39,6 +38,9 @@
 
 /// Error message for arguments to 'end'
 #define END_ARG_ERR_MSG _(L"'end' does not take arguments. Did you forget a ';'?")
+
+/// Maximum length of a variable name to show in error reports before truncation
+static constexpr int var_err_len = 16;
 
 int parse_util_lineno(const wchar_t *str, size_t offset) {
     if (!str) return 0;
@@ -72,11 +74,11 @@ size_t parse_util_get_offset_from_line(const wcstring &str, int line) {
     size_t i;
     int count = 0;
 
-    if (line < 0) return (size_t)-1;
+    if (line < 0) return static_cast<size_t>(-1);
     if (line == 0) return 0;
 
     for (i = 0;; i++) {
-        if (!buff[i]) return (size_t)-1;
+        if (!buff[i]) return static_cast<size_t>(-1);
 
         if (buff[i] == L'\n') {
             count++;
@@ -91,11 +93,11 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset) {
     size_t off = parse_util_get_offset_from_line(str, line);
     size_t off2 = parse_util_get_offset_from_line(str, line + 1);
 
-    if (off == (size_t)-1) return (size_t)-1;
-    if (off2 == (size_t)-1) off2 = str.length() + 1;
+    if (off == static_cast<size_t>(-1)) return static_cast<size_t>(-1);
+    if (off2 == static_cast<size_t>(-1)) off2 = str.length() + 1;
     if (line_offset < 0) line_offset = 0;  //!OCLINT(parameter reassignment)
 
-    if ((size_t)line_offset >= off2 - off - 1) {
+    if (static_cast<size_t>(line_offset) >= off2 - off - 1) {
         line_offset = off2 - off - 1;  //!OCLINT(parameter reassignment)
     }
 
@@ -111,13 +113,13 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
     int syntax_error = 0;
     int paran_count = 0;
 
-    wchar_t *paran_begin = 0, *paran_end = 0;
+    wchar_t *paran_begin = nullptr, *paran_end = nullptr;
 
-    CHECK(in, 0);
+    assert(in && "null parameter");
 
     for (pos = const_cast<wchar_t *>(in); *pos; pos++) {
         if (prev != '\\') {
-            if (wcschr(L"\'\"", *pos)) {
+            if (std::wcschr(L"\'\"", *pos)) {
                 wchar_t *q_end = quote_end(pos);
                 if (q_end && *q_end) {
                     pos = q_end;
@@ -126,7 +128,7 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
                 }
             } else {
                 if (*pos == open_type) {
-                    if ((paran_count == 0) && (paran_begin == 0)) {
+                    if ((paran_count == 0) && (paran_begin == nullptr)) {
                         paran_begin = pos;
                     }
 
@@ -134,7 +136,7 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
                 } else if (*pos == close_type) {
                     paran_count--;
 
-                    if ((paran_count == 0) && (paran_end == 0)) {
+                    if ((paran_count == 0) && (paran_end == nullptr)) {
                         paran_end = pos;
                         break;
                     }
@@ -156,7 +158,7 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
         return -1;
     }
 
-    if (paran_begin == 0) {
+    if (paran_begin == nullptr) {
         return 0;
     }
 
@@ -165,7 +167,7 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
     }
 
     if (end) {
-        *end = paran_count ? (wchar_t *)in + wcslen(in) : paran_end;
+        *end = paran_count ? const_cast<wchar_t *>(in) + std::wcslen(in) : paran_end;
     }
 
     return 1;
@@ -186,7 +188,7 @@ static int parse_util_locate_brackets_range(const wcstring &str, size_t *inout_c
                                             size_t *out_end, bool accept_incomplete,
                                             wchar_t open_type, wchar_t close_type) {
     // Clear the return values.
-    out_contents->clear();
+    if (out_contents != nullptr) out_contents->clear();
     *out_start = 0;
     *out_end = str.size();
 
@@ -197,7 +199,7 @@ static int parse_util_locate_brackets_range(const wcstring &str, size_t *inout_c
     const wchar_t *const buff = str.c_str();
     const wchar_t *const valid_range_start = buff + *inout_cursor_offset,
                          *valid_range_end = buff + str.size();
-    wchar_t *bracket_range_begin = NULL, *bracket_range_end = NULL;
+    wchar_t *bracket_range_begin = nullptr, *bracket_range_end = nullptr;
     int ret = parse_util_locate_brackets_of_type(valid_range_start, &bracket_range_begin,
                                                  &bracket_range_end, accept_incomplete, open_type,
                                                  close_type);
@@ -207,14 +209,16 @@ static int parse_util_locate_brackets_range(const wcstring &str, size_t *inout_c
 
     // The command substitutions must not be NULL and must be in the valid pointer range, and
     // the end must be bigger than the beginning.
-    assert(bracket_range_begin != NULL && bracket_range_begin >= valid_range_start &&
+    assert(bracket_range_begin != nullptr && bracket_range_begin >= valid_range_start &&
            bracket_range_begin <= valid_range_end);
-    assert(bracket_range_end != NULL && bracket_range_end > bracket_range_begin &&
+    assert(bracket_range_end != nullptr && bracket_range_end > bracket_range_begin &&
            bracket_range_end >= valid_range_start && bracket_range_end <= valid_range_end);
 
     // Assign the substring to the out_contents.
     const wchar_t *interior_begin = bracket_range_begin + 1;
-    out_contents->assign(interior_begin, bracket_range_end - interior_begin);
+    if (out_contents != nullptr) {
+        out_contents->assign(interior_begin, bracket_range_end - interior_begin);
+    }
 
     // Return the start and end.
     *out_start = bracket_range_begin - buff;
@@ -235,24 +239,23 @@ int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_o
 
 void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **a,
                                 const wchar_t **b) {
+    assert(buff && "Null buffer");
     const wchar_t *const cursor = buff + cursor_pos;
 
-    CHECK(buff, );
-
-    const size_t bufflen = wcslen(buff);
+    const size_t bufflen = std::wcslen(buff);
     assert(cursor_pos <= bufflen);
 
-    // ap and bp are the beginning and end of the tightest command substitition found so far.
+    // ap and bp are the beginning and end of the tightest command substitution found so far.
     const wchar_t *ap = buff, *bp = buff + bufflen;
     const wchar_t *pos = buff;
     for (;;) {
-        wchar_t *begin = NULL, *end = NULL;
+        wchar_t *begin = nullptr, *end = nullptr;
         if (parse_util_locate_cmdsubst(pos, &begin, &end, true) <= 0) {
             // No subshell found, all done.
             break;
         }
         // Interpret NULL to mean the end.
-        if (end == NULL) {
+        if (end == nullptr) {
             end = const_cast<wchar_t *>(buff) + bufflen;
         }
 
@@ -277,21 +280,20 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
         }
     }
 
-    if (a != NULL) *a = ap;
-    if (b != NULL) *b = bp;
+    if (a != nullptr) *a = ap;
+    if (b != nullptr) *b = bp;
 }
 
 /// Get the beginning and end of the job or process definition under the cursor.
-static void job_or_process_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **a,
-                                  const wchar_t **b, int process) {
-    const wchar_t *begin, *end;
-    wchar_t *buffcpy;
+static void job_or_process_extent(bool process, const wchar_t *buff, size_t cursor_pos,
+                                  const wchar_t **a, const wchar_t **b,
+                                  std::vector<tok_t> *tokens) {
+    assert(buff && "Null buffer");
+    const wchar_t *begin = nullptr, *end = nullptr;
     int finished = 0;
 
-    CHECK(buff, );
-
-    if (a) *a = 0;
-    if (b) *b = 0;
+    if (a) *a = nullptr;
+    if (b) *b = nullptr;
     parse_util_cmdsubst_extent(buff, cursor_pos, &begin, &end);
     if (!end || !begin) {
         return;
@@ -302,53 +304,57 @@ static void job_or_process_extent(const wchar_t *buff, size_t cursor_pos, const 
 
     if (a) *a = begin;
     if (b) *b = end;
-    buffcpy = wcsndup(begin, end - begin);
-    assert(buffcpy != NULL);
 
-    tokenizer_t tok(buffcpy, TOK_ACCEPT_UNFINISHED);
-    tok_t token;
-    while (tok.next(&token) && !finished) {
-        size_t tok_begin = token.offset;
+    const wcstring buffcpy(begin, end);
+    tokenizer_t tok(buffcpy.c_str(), TOK_ACCEPT_UNFINISHED);
+    maybe_t<tok_t> token{};
+    while ((token = tok.next()) && !finished) {
+        size_t tok_begin = token->offset;
 
-        switch (token.type) {
-            case TOK_PIPE: {
+        switch (token->type) {
+            case token_type_t::pipe: {
                 if (!process) {
                     break;
                 }
             }
             /* FALLTHROUGH */
-            case TOK_END:
-            case TOK_BACKGROUND: {
+            case token_type_t::end:
+            case token_type_t::background:
+            case token_type_t::andand:
+            case token_type_t::oror:
+            case token_type_t::comment: {
                 if (tok_begin >= pos) {
                     finished = 1;
-                    if (b) *b = (wchar_t *)begin + tok_begin;
+                    if (b) *b = const_cast<wchar_t *>(begin) + tok_begin;
                 } else {
-                    if (a) *a = (wchar_t *)begin + tok_begin + 1;
+                    // Statement at cursor might start after this token.
+                    if (a) *a = const_cast<wchar_t *>(begin) + tok_begin + token->length;
+                    if (tokens) tokens->clear();
                 }
+                continue;  // Do not add this to tokens
+            }
+            default: {
                 break;
             }
-            default: { break; }
         }
+        if (tokens) tokens->push_back(*token);
     }
-
-    free(buffcpy);
 }
 
 void parse_util_process_extent(const wchar_t *buff, size_t pos, const wchar_t **a,
-                               const wchar_t **b) {
-    job_or_process_extent(buff, pos, a, b, 1);
+                               const wchar_t **b, std::vector<tok_t> *tokens) {
+    job_or_process_extent(true, buff, pos, a, b, tokens);
 }
 
 void parse_util_job_extent(const wchar_t *buff, size_t pos, const wchar_t **a, const wchar_t **b) {
-    job_or_process_extent(buff, pos, a, b, 0);
+    job_or_process_extent(false, buff, pos, a, b, nullptr);
 }
 
 void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **tok_begin,
                              const wchar_t **tok_end, const wchar_t **prev_begin,
                              const wchar_t **prev_end) {
-    const wchar_t *a = NULL, *b = NULL, *pa = NULL, *pb = NULL;
-
-    CHECK(buff, );
+    assert(buff && "Null buffer");
+    const wchar_t *a = nullptr, *b = nullptr, *pa = nullptr, *pb = nullptr;
 
     const wchar_t *cmdsubst_begin, *cmdsubst_end;
     parse_util_cmdsubst_extent(buff, cursor_pos, &cmdsubst_begin, &cmdsubst_end);
@@ -360,7 +366,7 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
     // pos is equivalent to cursor_pos within the range of the command substitution {begin, end}.
     size_t offset_within_cmdsubst = cursor_pos - (cmdsubst_begin - buff);
 
-    size_t bufflen = wcslen(buff);
+    size_t bufflen = std::wcslen(buff);
 
     a = cmdsubst_begin + offset_within_cmdsubst;
     b = a;
@@ -375,14 +381,13 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
     const wcstring buffcpy = wcstring(cmdsubst_begin, cmdsubst_end - cmdsubst_begin);
 
     tokenizer_t tok(buffcpy.c_str(), TOK_ACCEPT_UNFINISHED);
-    tok_t token;
-    while (tok.next(&token)) {
-        size_t tok_begin = token.offset;
+    while (maybe_t<tok_t> token = tok.next()) {
+        size_t tok_begin = token->offset;
         size_t tok_end = tok_begin;
 
         // Calculate end of token.
-        if (token.type == TOK_STRING) {
-            tok_end += token.length;
+        if (token->type == token_type_t::string) {
+            tok_end += token->length;
         }
 
         // Cursor was before beginning of this token, means that the cursor is between two tokens,
@@ -394,16 +399,16 @@ void parse_util_token_extent(const wchar_t *buff, size_t cursor_pos, const wchar
 
         // If cursor is inside the token, this is the token we are looking for. If so, set a and b
         // and break.
-        if (token.type == TOK_STRING && tok_end >= offset_within_cmdsubst) {
-            a = cmdsubst_begin + token.offset;
-            b = a + token.length;
+        if (token->type == token_type_t::string && tok_end >= offset_within_cmdsubst) {
+            a = cmdsubst_begin + token->offset;
+            b = a + token->length;
             break;
         }
 
         // Remember previous string token.
-        if (token.type == TOK_STRING) {
-            pa = cmdsubst_begin + token.offset;
-            pb = pa + token.length;
+        if (token->type == token_type_t::string) {
+            pa = cmdsubst_begin + token->offset;
+            pb = pa + token->length;
         }
     }
 
@@ -452,7 +457,7 @@ static wchar_t get_quote(const wcstring &cmd_str, size_t len) {
     wchar_t res = 0;
     const wchar_t *const cmd = cmd_str.c_str();
 
-    while (1) {
+    while (true) {
         if (!cmd[i]) break;
 
         if (cmd[i] == L'\\') {
@@ -462,8 +467,8 @@ static wchar_t get_quote(const wcstring &cmd_str, size_t len) {
         } else {
             if (cmd[i] == L'\'' || cmd[i] == L'\"') {
                 const wchar_t *end = quote_end(&cmd[i]);
-                // fwprintf( stderr, L"Jump %d\n",  end-cmd );
-                if ((end == 0) || (!*end) || (end > cmd + len)) {
+                // std::fwprintf( stderr, L"Jump %d\n",  end-cmd );
+                if ((end == nullptr) || (!*end) || (end > cmd + len)) {
                     res = cmd[i];
                     break;
                 }
@@ -477,21 +482,20 @@ static wchar_t get_quote(const wcstring &cmd_str, size_t len) {
 }
 
 void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_t *quote,
-                                   size_t *offset, enum token_type *out_type) {
+                                   size_t *offset, token_type_t *out_type) {
     size_t prev_pos = 0;
     wchar_t last_quote = L'\0';
 
     tokenizer_t tok(cmd.c_str(), TOK_ACCEPT_UNFINISHED);
-    tok_t token;
-    while (tok.next(&token)) {
-        if (token.offset > pos) break;
+    while (auto token = tok.next()) {
+        if (token->offset > pos) break;
 
-        if (token.type == TOK_STRING)
-            last_quote = get_quote(tok.text_of(token), pos - token.offset);
+        if (token->type == token_type_t::string)
+            last_quote = get_quote(tok.text_of(*token), pos - token->offset);
 
-        if (out_type != NULL) *out_type = token.type;
+        if (out_type != nullptr) *out_type = token->type;
 
-        prev_pos = token.offset;
+        prev_pos = token->offset;
     }
 
     wchar_t *cmd_tmp = wcsdup(cmd.c_str());
@@ -499,17 +503,18 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
     size_t cmdlen = pos;
     bool finished = cmdlen != 0;
     if (finished) {
-        finished = (quote == NULL);
-        if (finished && wcschr(L" \t\n\r", cmd_tmp[cmdlen - 1])) {
+        finished = (quote == nullptr);
+        if (finished && std::wcschr(L" \t\n\r", cmd_tmp[cmdlen - 1])) {
             finished = cmdlen > 1 && cmd_tmp[cmdlen - 2] == L'\\';
         }
     }
 
     if (quote) *quote = last_quote;
 
-    if (offset != 0) {
+    if (offset != nullptr) {
         if (finished) {
-            while ((cmd_tmp[prev_pos] != 0) && (wcschr(L";|", cmd_tmp[prev_pos]) != 0)) prev_pos++;
+            while ((cmd_tmp[prev_pos] != 0) && (std::wcschr(L";|", cmd_tmp[prev_pos]) != nullptr))
+                prev_pos++;
             *offset = prev_pos;
         } else {
             *offset = pos;
@@ -545,6 +550,10 @@ wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote,
                     break;
                 case L'\\':
                     result.append({L'\\', L'\\'});
+                    break;
+                case L'$':
+                    if (quote == L'"') result.push_back(L'\\');
+                    result.push_back(L'$');
                     break;
                 default:
                     if (c == quote) result.push_back(L'\\');
@@ -626,7 +635,7 @@ static void compute_indents_recursive(const parse_node_tree_t &tree, node_offset
             indents->at(node.source_start) = node_indent;
         } else {
             // An empty node. We have a source offset but no source length. This can come about when
-            // a node legitimately empty:
+            // a node is legitimately empty:
             //
             //   while true; end
             //
@@ -673,9 +682,10 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
     // foo ; cas', we get an invalid parse tree (since 'cas' is not valid) but we indent it as if it
     // were a case item list.
     parse_node_tree_t tree;
-    parse_tree_from_string(src, parse_flag_continue_after_error | parse_flag_include_comments |
-                                    parse_flag_accept_incomplete_tokens,
-                           &tree, NULL /* errors */);
+    parse_tree_from_string(src,
+                           parse_flag_continue_after_error | parse_flag_include_comments |
+                               parse_flag_accept_incomplete_tokens,
+                           &tree, nullptr /* errors */);
 
     // Start indenting at the first node. If we have a parse error, we'll have to start indenting
     // from the top again.
@@ -729,7 +739,7 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
             // indentation level if a new line starts with whitespace.
             size_t prev_char_idx = i;
             while (prev_char_idx--) {
-                if (!wcschr(L" \n\t\r", src.at(prev_char_idx))) break;
+                if (!std::wcschr(L" \n\t\r", src.at(prev_char_idx))) break;
                 indents.at(prev_char_idx) = last_indent;
             }
         }
@@ -739,7 +749,7 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
     // indented even if it is empty.
     size_t suffix_idx = src_size;
     while (suffix_idx--) {
-        if (!wcschr(L" \n\t\r", src.at(suffix_idx))) break;
+        if (!std::wcschr(L" \n\t\r", src.at(suffix_idx))) break;
         indents.at(suffix_idx) = last_trailing_indent;
     }
 
@@ -771,7 +781,7 @@ static int parser_is_pipe_forbidden(const wcstring &word) {
 }
 
 bool parse_util_argument_is_help(const wchar_t *s) {
-    return wcscmp(L"-h", s) == 0 || wcscmp(L"--help", s) == 0;
+    return std::wcscmp(L"-h", s) == 0 || std::wcscmp(L"--help", s) == 0;
 }
 
 /// Check if the first argument under the given node is --help.
@@ -785,21 +795,6 @@ static bool first_argument_is_help(tnode_t<grammar::plain_statement> statement,
         is_help = parse_util_argument_is_help(first_arg_src.c_str());
     }
     return is_help;
-}
-
-/// If a var name or command is too long for error reporting, make it shorter.
-static wcstring truncate_string(const wcstring &str) {
-    const size_t max_len = 16;
-    wcstring result(str, 0, max_len);
-    if (str.size() > max_len) {
-        // Truncate!
-        if (ellipsis_char == L'\x2026') {
-            result.at(max_len - 1) = ellipsis_char;
-        } else {
-            result.replace(max_len - 3, 3, L"...");
-        }
-    }
-    return result;
 }
 
 /// Given a wide character immediately after a dollar sign, return the appropriate error message.
@@ -824,7 +819,9 @@ static const wchar_t *error_format_for_character(wchar_t wc) {
         case VARIABLE_EXPAND_EMPTY: {
             return ERROR_NOT_PID;
         }
-        default: { return ERROR_BAD_VAR_CHAR1; }
+        default: {
+            return ERROR_BAD_VAR_CHAR1;
+        }
     }
 }
 
@@ -832,7 +829,7 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
                                       size_t dollar_pos, parse_error_list_t *errors) {
     // Note that dollar_pos is probably VARIABLE_EXPAND or VARIABLE_EXPAND_SINGLE, not a literal
     // dollar sign.
-    assert(errors != NULL);
+    assert(errors != nullptr);
     assert(dollar_pos < token.size());
     const bool double_quotes = token.at(dollar_pos) == VARIABLE_EXPAND_SINGLE;
     const size_t start_error_count = errors->size();
@@ -859,7 +856,7 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
                 append_syntax_error(
                     errors, global_after_dollar_pos,
                     double_quotes ? ERROR_BRACKETED_VARIABLE_QUOTED1 : ERROR_BRACKETED_VARIABLE1,
-                    truncate_string(var_name).c_str());
+                    truncate(var_name, var_err_len).c_str());
             } else {
                 append_syntax_error(errors, global_after_dollar_pos, ERROR_BAD_VAR_CHAR1, L'{');
             }
@@ -885,11 +882,11 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
 
             // Make sure we always show something.
             if (token_after_parens.empty()) {
-                token_after_parens = L"...";
+                token_after_parens = get_ellipsis_str();
             }
 
             append_syntax_error(errors, global_dollar_pos, ERROR_BAD_VAR_SUBCOMMAND1,
-                                truncate_string(token_after_parens).c_str());
+                                truncate(token_after_parens, var_err_len).c_str());
             break;
         }
         case L'\0': {
@@ -934,16 +931,16 @@ static parser_test_error_bits_t detect_dollar_cmdsub_errors(size_t arg_src_offse
     wchar_t last = unescaped_arg_src.at(unescaped_arg_src.size() - 1);
     if (last == VARIABLE_EXPAND) {
         result_bits |= PARSER_TEST_ERROR;
-        if (out_errors != NULL) {
+        if (out_errors != nullptr) {
             wcstring subcommand_first_token = tok_first(cmdsubst_src);
             if (subcommand_first_token.empty()) {
                 // e.g. $(). Report somthing.
-                subcommand_first_token = L"...";
+                subcommand_first_token = get_ellipsis_str();
             }
             append_syntax_error(
                 out_errors,
                 arg_src_offset + arg_src.size() - 1,  // global position of the dollar
-                ERROR_BAD_VAR_SUBCOMMAND1, truncate_string(subcommand_first_token).c_str());
+                ERROR_BAD_VAR_SUBCOMMAND1, truncate(subcommand_first_token, var_err_len).c_str());
         }
     }
 
@@ -995,7 +992,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(tnode_t<grammar::a
                 size_t error_offset = cmd_sub_start + 1 + source_start;
                 parse_error_offset_source_start(&subst_errors, error_offset);
 
-                if (out_errors != NULL) {
+                if (out_errors != nullptr) {
                     out_errors->insert(out_errors->end(), subst_errors.begin(), subst_errors.end());
 
                     // Hackish. Take this opportunity to report $(...) errors. We do this because
@@ -1082,11 +1079,11 @@ static bool detect_errors_in_backgrounded_job(tnode_t<grammar::job> job,
         // Try getting the next job's decorator.
         if (auto next_job_dec = jlist.next_in_list<g::job_decorator>()) {
             // The next job is indeed a boolean statement.
-            parse_bool_statement_type_t bool_type = bool_statement_type(next_job_dec);
-            if (bool_type == parse_bool_and) {
+            parse_job_decoration_t bool_type = bool_statement_type(next_job_dec);
+            if (bool_type == parse_job_decoration_and) {
                 errored = append_syntax_error(parse_errors, next_job_dec.source_range()->start,
                                               BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
-            } else if (bool_type == parse_bool_or) {
+            } else if (bool_type == parse_job_decoration_or) {
                 errored = append_syntax_error(parse_errors, next_job_dec.source_range()->start,
                                               BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
             }
@@ -1132,9 +1129,10 @@ static bool detect_errors_in_plain_statement(const wcstring &buff_src,
     if (maybe_t<wcstring> unexp_command = command_for_plain_statement(pst, buff_src)) {
         wcstring command;
         // Check that we can expand the command.
-        if (expand_to_command_and_args(*unexp_command, null_environment_t{}, &command, nullptr,
-                                       parse_errors) == EXPAND_ERROR) {
+        if (expand_to_command_and_args(*unexp_command, operation_context_t::empty(), &command,
+                                       nullptr, parse_errors) == expand_result_t::error) {
             errored = true;
+            parse_error_offset_source_start(parse_errors, source_start);
         }
 
         // Check that pipes are sound.
@@ -1195,7 +1193,8 @@ static bool detect_errors_in_plain_statement(const wcstring &buff_src,
 
         // Check that we don't do an invalid builtin (issue #1252).
         if (!errored && decoration == parse_statement_decoration_builtin &&
-            expand_one(*unexp_command, 0, null_environment_t{}, parse_errors) &&
+            expand_one(*unexp_command, expand_flag::skip_cmdsubst, operation_context_t::empty(),
+                       parse_errors) &&
             !builtin_exists(*unexp_command)) {
             errored = append_syntax_error(parse_errors, source_start, UNKNOWN_BUILTIN_ERR_MSG,
                                           unexp_command->c_str());
@@ -1225,9 +1224,9 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     // detecting job_continuations that have source for pipes but not the statement.
     bool has_unclosed_pipe = false;
 
-    // Whether there's an unclosed quote, and therefore unfinished. This is only set if
+    // Whether there's an unclosed quote or subshell, and therefore unfinished. This is only set if
     // allow_incomplete is set.
-    bool has_unclosed_quote = false;
+    bool has_unclosed_quote_or_subshell = false;
 
     // Parse the input string into a parse tree. Some errors are detected here.
     bool parsed = parse_tree_from_string(
@@ -1237,9 +1236,10 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     if (allow_incomplete) {
         size_t idx = parse_errors.size();
         while (idx--) {
-            if (parse_errors.at(idx).code == parse_error_tokenizer_unterminated_quote) {
+            if (parse_errors.at(idx).code == parse_error_tokenizer_unterminated_quote ||
+                parse_errors.at(idx).code == parse_error_tokenizer_unterminated_subshell) {
                 // Remove this error, since we don't consider it a real error.
-                has_unclosed_quote = true;
+                has_unclosed_quote_or_subshell = true;
                 parse_errors.erase(parse_errors.begin() + idx);
             }
         }
@@ -1248,7 +1248,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
     // Issue #1238: If the only error was unterminated quote, then consider this to have parsed
     // successfully. A better fix would be to have parse_tree_from_string return this information
     // directly (but it would be a shame to munge up its nice bool return).
-    if (parse_errors.empty() && has_unclosed_quote) {
+    if (parse_errors.empty() && has_unclosed_quote_or_subshell) {
         parsed = true;
     }
 
@@ -1256,8 +1256,8 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
         errored = true;
     }
 
-    // has_unclosed_quote may only be set if allow_incomplete is true.
-    assert(!has_unclosed_quote || allow_incomplete);
+    // has_unclosed_quote_or_subshell may only be set if allow_incomplete is true.
+    assert(!has_unclosed_quote_or_subshell || allow_incomplete);
 
     // Expand all commands.
     // Verify 'or' and 'and' not used inside pipelines.
@@ -1313,16 +1313,48 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
 
     if (errored) res |= PARSER_TEST_ERROR;
 
-    if (has_unclosed_block || has_unclosed_quote || has_unclosed_pipe)
+    if (has_unclosed_block || has_unclosed_quote_or_subshell || has_unclosed_pipe)
         res |= PARSER_TEST_INCOMPLETE;
 
-    if (out_errors != NULL) {
+    if (out_errors != nullptr) {
         *out_errors = std::move(parse_errors);
     }
 
-    if (out_pstree != NULL) {
+    if (out_pstree != nullptr) {
         *out_pstree = std::make_shared<parsed_source_t>(buff_src, std::move(node_tree));
     }
 
     return res;
+}
+
+maybe_t<wcstring> parse_util_detect_errors_in_argument_list(const wcstring &arg_list_src,
+                                                            const wcstring &prefix) {
+    // Helper to return a description of the first error.
+    auto get_error_text = [&](const parse_error_list_t &errors) {
+        assert(!errors.empty() && "Expected an error");
+        return errors.at(0).describe_with_prefix(arg_list_src, prefix, false /* not interactive */,
+                                                 false /* don't skip caret */);
+    };
+
+    // Parse the string as an argument list.
+    parse_error_list_t errors;
+    parse_node_tree_t tree;
+    if (!parse_tree_from_string(arg_list_src, parse_flag_none, &tree, &errors,
+                                symbol_freestanding_argument_list)) {
+        // Failed to parse.
+        return get_error_text(errors);
+    }
+
+    // Get the root argument list and extract arguments from it.
+    // Test each of these.
+    assert(!tree.empty() && "Should have parsed a tree");
+    tnode_t<grammar::freestanding_argument_list> arg_list(&tree, &tree.at(0));
+    while (auto arg = arg_list.next_in_list<grammar::argument>()) {
+        const wcstring arg_src = arg.get_source(arg_list_src);
+        if (parse_util_detect_errors_in_argument(arg, arg_src, &errors)) {
+            return get_error_text(errors);
+        }
+    }
+
+    return none();
 }

@@ -29,8 +29,8 @@ enum class event_type_t {
     variable,
     /// An event triggered by a job or process exit.
     exit,
-    /// An event triggered by a job exit.
-    job_exit,
+    /// An event triggered by a job exit, triggering the 'caller'-style events only.
+    caller_exit,
     /// A generic event.
     generic,
 };
@@ -44,10 +44,11 @@ struct event_description_t {
     ///
     /// signal: Signal number for signal-type events.Use EVENT_ANY_SIGNAL to match any signal
     /// pid: Process id for process-type events. Use EVENT_ANY_PID to match any pid. (Negative
-    /// values are used for PGIDs). job_id: Job id for EVENT_JOB_ID type events
+    /// values are used for PGIDs).
+    /// caller_id: Internal job id for caller_exit type events
     union {
         int signal;
-        int job_id;
+        uint64_t caller_id;
         pid_t pid;
     } param1{};
 
@@ -90,6 +91,8 @@ struct event_t {
     static event_t variable(wcstring name, wcstring_list_t args);
 };
 
+class parser_t;
+
 /// Add an event handler.
 void event_add_handler(std::shared_ptr<event_handler_t> eh);
 
@@ -103,11 +106,11 @@ event_handler_list_t event_get_function_handlers(const wcstring &name);
 /// a signal handler.
 bool event_is_signal_observed(int signal);
 
-/// Fire the specified event \p event.
-void event_fire(const event_t &event);
+/// Fire the specified event \p event, executing it on \p parser.
+void event_fire(parser_t &parser, const event_t &event);
 
-/// Fire all delayed eents.
-void event_fire_delayed();
+/// Fire all delayed events attached to the given parser.
+void event_fire_delayed(parser_t &parser);
 
 /// Enqueue a signal event. Invoked from a signal handler.
 void event_enqueue_signal(int signal);
@@ -116,10 +119,11 @@ void event_enqueue_signal(int signal);
 void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter);
 
 /// Returns a string describing the specified event.
-wcstring event_get_desc(const event_t &e);
+wcstring event_get_desc(const parser_t &parser, const event_t &e);
 
 /// Fire a generic event with the specified name.
-void event_fire_generic(const wchar_t *name, const wcstring_list_t *args = NULL);
+void event_fire_generic(parser_t &parser, const wchar_t *name,
+                        const wcstring_list_t *args = nullptr);
 
 /// Return the event type for a given name, or none.
 maybe_t<event_type_t> event_type_for_name(const wcstring &name);

@@ -1,7 +1,0 @@
-# Tests for the "builtin" builtin/keyword.
-builtin -q string; and echo String exists
-builtin -q; and echo None exists
-builtin -q string echo banana; and echo Some of these exist
-builtin -nq string
-echo $status
-exit 0

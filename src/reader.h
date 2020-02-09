@@ -97,15 +97,13 @@ class editable_line_t {
     }
 
     /// Modify the commandline according to @edit. Most modifications to the
-    /// text should pass through this function. You can use one of the wrappers below.
+    /// text should pass through this function.
     void push_edit(edit_t &&edit);
 
-    /// Erase @length characters starting at @offset.
-    void erase_substring(size_t offset, size_t length);
-    /// Replace the text of length @length at @offset by @replacement.
-    void replace_substring(size_t offset, size_t length, wcstring &&replacement);
-    /// Inserts a substring of str given by start, len at the cursor position.
-    void insert_string(const wcstring &str, size_t start = 0, size_t len = wcstring::npos);
+    /// Modify the commandline by inserting a string at the cursor.
+    /// Does not create a new undo point, but adds to the last edit which
+    /// must be an insertion, too.
+    void insert_coalesce(const wcstring &str);
 
     /// Undo the most recent edit that was not yet undone. Returns true on success.
     bool undo();

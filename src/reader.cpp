@@ -207,32 +207,6 @@ static bool want_to_coalesce_insertion_of(const editable_line_t &el, const wcstr
     return true;
 }
 
-void editable_line_t::insert_string(const wcstring &str, size_t start, size_t len) {
-    // Clamp the range to something valid.
-    size_t string_length = str.size();
-    start = std::min(start, string_length);      //!OCLINT(parameter reassignment)
-    len = std::min(len, string_length - start);  //!OCLINT(parameter reassignment)
-    if (want_to_coalesce_insertion_of(*this, str)) {
-        edit_t &edit = undo_history.edits.back();
-        edit.replacement.append(str);
-        apply_edit(&text_, edit_t(position(), 0, str));
-        set_position(position() + len);
-    } else {
-        push_edit(edit_t(position(), 0, str.substr(start, len)));
-    }
-    undo_history.may_coalesce = (str.size() == 1);
-}
-
-void editable_line_t::erase_substring(size_t offset, size_t length) {
-    push_edit(edit_t(offset, length, L""));
-    undo_history.may_coalesce = false;
-}
-
-void editable_line_t::replace_substring(size_t offset, size_t length, wcstring &&replacement) {
-    push_edit(edit_t(offset, length, replacement));
-    undo_history.may_coalesce = false;
-}
-
 bool editable_line_t::undo() {
     if (undo_history.edits_applied == 0) return false;  // nothing to undo
     const edit_t &edit = undo_history.edits.at(undo_history.edits_applied - 1);
@@ -264,6 +238,13 @@ void editable_line_t::push_edit(edit_t &&edit) {
     assert(undo_history.edits_applied == undo_history.edits.size());
     undo_history.edits_applied++;
     undo_history.edits.emplace_back(edit);
+}
+
+void editable_line_t::insert_coalesce(const wcstring &str) {
+    edit_t &edit = undo_history.edits.back();
+    edit.replacement.append(str);
+    apply_edit(&text_, edit_t(position(), 0, str));
+    set_position(position() + str.size());
 }
 
 bool editable_line_t::redo() {
@@ -630,7 +611,14 @@ class reader_data_t : public std::enable_shared_from_this<reader_data_t> {
     void update_buff_pos(editable_line_t *el, maybe_t<size_t> new_pos = none_t());
 
     void kill(editable_line_t *el, size_t begin_idx, size_t length, int mode, int newv);
+    /// Inserts a substring of str given by start, len at the cursor position.
     void insert_string(editable_line_t *el, const wcstring &str);
+    /// Erase @length characters starting at @offset.
+    void erase_substring(editable_line_t *el, size_t offset, size_t length);
+    /// Replace the text of length @length at @offset by @replacement.
+    void replace_substring(editable_line_t *el, size_t offset, size_t length,
+                           wcstring &&replacement);
+    void push_edit(editable_line_t *el, edit_t &&edit);
 
     /// Insert the character into the command line buffer and print it to the screen using syntax
     /// highlighting, etc.
@@ -994,7 +982,7 @@ void reader_data_t::kill(editable_line_t *el, size_t begin_idx, size_t length, i
 
         kill_replace(old, kill_item);
     }
-    el->erase_substring(begin_idx, length);
+    erase_substring(el, begin_idx, length);
 }
 
 // This is called from a signal handler!
@@ -1107,9 +1095,8 @@ bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack) {
         size_t cursor_pos = el->position() - std::min(el->position(), cursor_backtrack);
 
         if (auto edit = reader_expand_abbreviation_in_command(el->text(), cursor_pos, vars())) {
-            el->push_edit(std::move(*edit));
+            push_edit(el, std::move(*edit));
             update_buff_pos(el);
-            el->undo_history.may_coalesce = false;
             result = true;
         }
     }
@@ -1374,27 +1361,49 @@ void reader_data_t::delete_char(bool backward) {
         pos--;
         width = fish_wcwidth(el->text().at(pos));
     } while (width == 0 && pos > 0);
-    el->erase_substring(pos, pos_end - pos);
+    erase_substring(el, pos, pos_end - pos);
     update_buff_pos(el);
     suppress_autosuggestion = true;
-    // The pager needs to be refiltered.
-    if (el == &this->pager.search_field_line) {
-        command_line_changed(el);
-    }
 }
 
 /// Insert the characters of the string into the command line buffer and print them to the screen
 /// using syntax highlighting, etc.
 /// Returns true if the string changed.
 void reader_data_t::insert_string(editable_line_t *el, const wcstring &str) {
-    if (!str.empty()) {
-        el->insert_string(str, 0, str.size());
-        if (el == &command_line) suppress_autosuggestion = false;
-        // The pager needs to be refiltered.
-        if (el == &this->pager.search_field_line) {
-            command_line_changed(el);
-        }
+    if (str.empty()) return;
+
+    command_line_has_transient_edit = false;
+    if (!history_search.active() && want_to_coalesce_insertion_of(*el, str)) {
+        el->insert_coalesce(str);
+        assert(el->undo_history.may_coalesce);
+    } else {
+        el->push_edit(edit_t(el->position(), 0, str));
+        el->undo_history.may_coalesce = (str.size() == 1);
     }
+
+    if (el == &command_line) suppress_autosuggestion = false;
+    // The pager needs to be refiltered.
+    if (el == &this->pager.search_field_line) {
+        command_line_changed(el);
+    }
+}
+
+void reader_data_t::push_edit(editable_line_t *el, edit_t &&edit) {
+    el->push_edit(std::move(edit));
+    el->undo_history.may_coalesce = false;
+    // The pager needs to be refiltered.
+    if (el == &this->pager.search_field_line) {
+        command_line_changed(el);
+    }
+}
+
+void reader_data_t::erase_substring(editable_line_t *el, size_t offset, size_t length) {
+    push_edit(el, edit_t(offset, length, L""));
+}
+
+void reader_data_t::replace_substring(editable_line_t *el, size_t offset, size_t length,
+                                      wcstring &&replacement) {
+    push_edit(el, edit_t(offset, length, replacement));
 }
 
 /// Insert the string in the given command line at the given cursor position. The function checks if
@@ -1670,10 +1679,10 @@ void reader_data_t::accept_autosuggestion(bool full, bool single, move_word_styl
         // Accept the autosuggestion.
         if (full) {
             // Just take the whole thing.
-            command_line.replace_substring(0, command_line.size(), std::move(autosuggestion));
+            replace_substring(&command_line, 0, command_line.size(), std::move(autosuggestion));
         } else if (single) {
-            command_line.replace_substring(command_line.size(), 0,
-                                           autosuggestion.substr(command_line.size(), 1));
+            replace_substring(&command_line, command_line.size(), 0,
+                              autosuggestion.substr(command_line.size(), 1));
         } else {
             // Accept characters according to the specified style.
             move_word_state_machine_t state(style);
@@ -1683,8 +1692,8 @@ void reader_data_t::accept_autosuggestion(bool full, bool single, move_word_styl
                 if (!state.consume_char(wc)) break;
             }
             size_t have = command_line.size();
-            command_line.replace_substring(command_line.size(), 0,
-                                           autosuggestion.substr(have, want - have));
+            replace_substring(&command_line, command_line.size(), 0,
+                              autosuggestion.substr(have, want - have));
         }
     }
 }
@@ -2120,9 +2129,8 @@ static void reader_interactive_destroy() {
 /// Set the specified string as the current buffer.
 void reader_data_t::set_command_line_and_position(editable_line_t *el, wcstring &&new_str,
                                                   size_t pos) {
-    el->push_edit(edit_t(0, el->size(), std::move(new_str)));
+    push_edit(el, edit_t(0, el->size(), std::move(new_str)));
     el->set_position(pos);
-    el->undo_history.may_coalesce = false;
     update_buff_pos(el, pos);
 }
 
@@ -2148,7 +2156,7 @@ void reader_data_t::replace_current_token(wcstring &&new_token) {
 
     size_t offset = begin - buff;
     size_t length = end - begin;
-    el->replace_substring(offset, length, std::move(new_token));
+    replace_substring(el, offset, length, std::move(new_token));
 }
 
 /// Apply the history search to the command line.
@@ -2163,7 +2171,7 @@ void reader_data_t::update_command_line_from_history_search() {
         replace_current_token(std::move(new_text));
     } else {
         assert(history_search.by_line() || history_search.by_prefix());
-        el->replace_substring(0, el->size(), std::move(new_text));
+        replace_substring(&command_line, 0, command_line.size(), std::move(new_text));
     }
     command_line_has_transient_edit = true;
     assert(el == &command_line);
@@ -2229,7 +2237,7 @@ void reader_data_t::set_buffer_maintaining_pager(const wcstring &b, size_t pos, 
         }
         command_line_has_transient_edit = true;
     }
-    command_line.replace_substring(0, command_line.size(), wcstring(b));
+    replace_substring(&command_line, 0, command_line.size(), wcstring(b));
     command_line_changed(&command_line);
 
     // Don't set a position past the command line length.
@@ -2525,7 +2533,6 @@ static int read_i(parser_t &parser) {
         conf.left_prompt_cmd = LEFT_PROMPT_FUNCTION_NAME;
         conf.right_prompt_cmd = RIGHT_PROMPT_FUNCTION_NAME;
     }
-
 
     std::shared_ptr<reader_data_t> data =
         reader_push_ret(parser, history_session_id(parser.vars()), std::move(conf));
@@ -2955,8 +2962,8 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 editable_line_t *el = active_edit_line();
                 wcstring yank_str = kill_yank_rotate();
                 size_t new_yank_len = yank_str.size();
-                el->replace_substring(el->position() - rls.yank_len, rls.yank_len,
-                                      std::move(yank_str));
+                replace_substring(el, el->position() - rls.yank_len, rls.yank_len,
+                                  std::move(yank_str));
                 update_buff_pos(el);
                 rls.yank_len = new_yank_len;
                 suppress_autosuggestion = true;
@@ -3359,7 +3366,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 }
 
                 replacement.push_back(chr);
-                el->replace_substring(buff_pos, (size_t)1, std::move(replacement));
+                replace_substring(el, buff_pos, (size_t)1, std::move(replacement));
 
                 // Restore the buffer position since replace_substring moves
                 // the buffer position ahead of the replaced text.
@@ -3391,7 +3398,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                     replacement.push_back(chr);
                 }
 
-                el->replace_substring(start, len, std::move(replacement));
+                replace_substring(el, start, len, std::move(replacement));
 
                 // Restore the buffer position since replace_substring moves
                 // the buffer position ahead of the replaced text.
@@ -3431,7 +3438,7 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
                 replacement.push_back(chr);
                 capitalized_first = capitalized_first || make_uppercase;
             }
-            el->replace_substring(init_pos, pos - init_pos, std::move(replacement));
+            replace_substring(el, init_pos, pos - init_pos, std::move(replacement));
             update_buff_pos(el);
             break;
         }

@@ -100,29 +100,25 @@ static int parse_cmd_opts(function_cmd_opts_t &opts, int *optind,  //!OCLINT(hig
             }
             case 'j':
             case 'p': {
-                pid_t pid;
                 event_description_t e(event_type_t::any);
 
                 if ((opt == 'j') && (wcscasecmp(w.woptarg, L"caller") == 0)) {
                     job_id_t job_id = -1;
-
                     if (parser.libdata().is_subshell) {
                         job_id = parser.libdata().caller_job_id;
                     }
-
                     if (job_id == -1) {
                         streams.err.append_format(
                             _(L"%ls: Cannot find calling job for event handler"), cmd);
                         return STATUS_INVALID_ARGS;
                     }
-                    e.type = event_type_t::job_exit;
+                    e.type = event_type_t::caller_exit;
                     e.param1.job_id = job_id;
                 } else if ((opt == 'p') && (wcscasecmp(w.woptarg, L"%self") == 0)) {
-                    pid = getpid();
                     e.type = event_type_t::exit;
-                    e.param1.pid = pid;
+                    e.param1.pid = getpid();
                 } else {
-                    pid = fish_wcstoi(w.woptarg);
+                    pid_t pid = fish_wcstoi(w.woptarg);
                     if (errno || pid < 0) {
                         streams.err.append_format(_(L"%ls: Invalid process id '%ls'"), cmd,
                                                   w.woptarg);

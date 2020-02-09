@@ -29,8 +29,8 @@ enum class event_type_t {
     variable,
     /// An event triggered by a job or process exit.
     exit,
-    /// An event triggered by a job exit.
-    job_exit,
+    /// An event triggered by a job exit, triggering the 'caller'-style events only.
+    caller_exit,
     /// A generic event.
     generic,
 };

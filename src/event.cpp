@@ -113,7 +113,7 @@ static bool handler_matches(const event_handler_t &classv, const event_t &instan
             if (classv.desc.param1.pid == EVENT_ANY_PID) return true;
             return classv.desc.param1.pid == instance.desc.param1.pid;
         }
-        case event_type_t::job_exit: {
+        case event_type_t::caller_exit: {
             return classv.desc.param1.job_id == instance.desc.param1.job_id;
         }
         case event_type_t::generic: {
@@ -167,15 +167,8 @@ wcstring event_get_desc(const parser_t &parser, const event_t &evt) {
             DIE("Unreachable");
         }
 
-        case event_type_t::job_exit: {
-            const job_t *j = parser.job_get(ed.param1.job_id);
-            if (j) {
-                return format_string(_(L"exit handler for job %d, '%ls'"), j->job_id(),
-                                     j->command_wcstr());
-            } else {
-                return format_string(_(L"exit handler for job with job id %d"), ed.param1.job_id);
-            }
-            break;
+        case event_type_t::caller_exit: {
+            return _(L"exit handler for command substitution caller");
         }
 
         case event_type_t::generic: {
@@ -349,7 +342,7 @@ struct event_type_name_t {
 static const event_type_name_t events_mapping[] = {{event_type_t::signal, L"signal"},
                                                    {event_type_t::variable, L"variable"},
                                                    {event_type_t::exit, L"exit"},
-                                                   {event_type_t::job_exit, L"job-id"},
+                                                   {event_type_t::caller_exit, L"caller-exit"},
                                                    {event_type_t::generic, L"generic"}};
 
 maybe_t<event_type_t> event_type_for_name(const wcstring &name) {
@@ -384,7 +377,7 @@ void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter) {
                           return d1.signal < d2.signal;
                       case event_type_t::exit:
                           return d1.param1.pid < d2.param1.pid;
-                      case event_type_t::job_exit:
+                      case event_type_t::caller_exit:
                           return d1.param1.job_id < d2.param1.job_id;
                       case event_type_t::variable:
                       case event_type_t::any:
@@ -412,9 +405,9 @@ void event_print(io_streams_t &streams, maybe_t<event_type_t> type_filter) {
                                           evt->function_name.c_str());
                 break;
             case event_type_t::exit:
-            case event_type_t::job_exit:
-                streams.out.append_format(L"%d %ls\n", evt->desc.param1,
-                                          evt->function_name.c_str());
+                break;
+            case event_type_t::caller_exit:
+                streams.out.append_format(L"caller-exit %ls\n", evt->function_name.c_str());
                 break;
             case event_type_t::variable:
             case event_type_t::generic:

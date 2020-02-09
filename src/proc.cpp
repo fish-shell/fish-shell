@@ -616,7 +616,7 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
                     proc_create_event(L"JOB_EXIT", event_type_t::exit, -j->pgid, 0));
             }
             exit_events.push_back(
-                proc_create_event(L"JOB_EXIT", event_type_t::job_exit, j->job_id(), 0));
+                proc_create_event(L"JOB_EXIT", event_type_t::caller_exit, j->job_id(), 0));
         }
     }
 

@@ -266,6 +266,12 @@ class history_search_t {
     maybe_t<size_t> modify_search_term(std::function<void(wcstring &)> &&change,
                                        maybe_t<size_t> preferred_match_offset);
 
+    // Get the current position in the history.
+    size_t current_index() const { return current_index_; }
+
+    // Update the position in the history as well as the current item.
+    void set_current_index(size_t index);
+
     // Returns the current search result item. asserts if there is no current item.
     const history_item_t &current_item() const;
 

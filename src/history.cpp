@@ -683,6 +683,11 @@ maybe_t<size_t> history_search_t::modify_search_term(std::function<void(wcstring
                                          preferred_match_offset);
 }
 
+void history_search_t::set_current_index(size_t index) {
+    current_index_ = index;
+    current_item_ = history_->item_at_index(index);
+}
+
 const history_item_t &history_search_t::current_item() const {
     assert(current_item_ && "No current item");
     return *current_item_;

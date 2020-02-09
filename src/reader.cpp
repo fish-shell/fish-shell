@@ -297,8 +297,18 @@ class reader_history_search_t {
     /// Index into our matches list.
     maybe_t<size_t> match_index_;
 
+    /// The position of the last successful match, this is even valid when match_index_ is none.
+    maybe_t<size_t> last_match_offset;
+
     /// Move to an existing match.
-    void set_match_index(maybe_t<size_t> index) { match_index_ = index; }
+    void set_match_index(maybe_t<size_t> index) {
+        match_index_ = index;
+        if (match_index_) {
+            last_match_offset = matches_.at(*match_index_).match_offset;
+        } else {
+            last_match_offset = none_t();
+        }
+    }
 
     /// Adds the given match if we haven't seen it before.
     void add_if_new(wcstring text, size_t match_offset, history_search_direction_t dir) {
@@ -367,6 +377,18 @@ class reader_history_search_t {
     bool by_line() const { return mode_ == line; }
 
     bool by_prefix() const { return mode_ == prefix; }
+
+    size_t match_position() const {
+        assert(by_line() || by_prefix());
+        if (!is_at_end()) {
+            assert(*match_index_ < matches_.size());
+            assert(*last_match_offset == matches_.at(*match_index_).match_offset);
+        }
+        if (!last_match_offset) {
+            return 0;
+        }
+        return *last_match_offset;
+    }
 
     /// Move the history search in the given direction \p dir.
     bool move_in_direction(history_search_direction_t dir) {
@@ -446,6 +468,7 @@ class reader_history_search_t {
         matches_.clear();
         match_index_ = none_t();
         mode_ = mode;
+        last_match_offset = none_t();
         // We can skip dedup in history_search_t because we do it ourselves in skips_.
         search_ = history_search_t(
             *hist, text,
@@ -458,6 +481,7 @@ class reader_history_search_t {
         matches_.clear();
         skips_.clear();
         match_index_ = none_t();
+        last_match_offset = none_t();
         mode_ = inactive;
         search_ = history_search_t();
     }

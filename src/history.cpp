@@ -624,23 +624,35 @@ void history_impl_t::load_old_if_needed() {
     }
 }
 
-bool history_search_t::go_backwards() {
+maybe_t<size_t> history_search_t::go_to_next_match(history_search_direction_t direction) {
     // Backwards means increasing our index.
-    const auto max_index = static_cast<size_t>(-1);
+    size_t invalid_index;
+    ssize_t increment;
 
-    if (current_index_ == max_index) return false;
+    if (direction == history_search_direction_t::backward) {
+        invalid_index = static_cast<size_t>(-1);
+        increment = 1;
+    } else {
+        assert(direction == history_search_direction_t::forward);
+        invalid_index = 0;
+        increment = -1;
+    }
+
+    if (current_index_ == invalid_index) return none_t();
 
     size_t index = current_index_;
-    while (++index < max_index) {
+    while ((index += increment) != invalid_index) {
         history_item_t item = history_->item_at_index(index);
 
         // We're done if it's empty or we cancelled.
         if (item.empty()) {
-            return false;
+            return none_t();
         }
 
         // Look for an item that matches and (if deduping) that we haven't seen before.
-        if (!item.matches_search(canon_term_, search_type_, !ignores_case(), none_t())) {
+        auto match_offset =
+            item.matches_search(canon_term_, search_type_, !ignores_case(), none_t());
+        if (!match_offset) {
             continue;
         }
 
@@ -652,9 +664,9 @@ bool history_search_t::go_backwards() {
         // This is our new item.
         current_item_ = std::move(item);
         current_index_ = index;
-        return true;
+        return match_offset;
     }
-    return false;
+    return none_t();
 }
 
 const history_item_t &history_search_t::current_item() const {
@@ -1371,7 +1383,7 @@ static void do_1_history_search(history_t &hist, history_search_type_t search_ty
                                 const cancel_checker_t &cancel_check) {
     history_search_t searcher = history_search_t(hist, search_string, search_type,
                                                  case_sensitive ? 0 : history_search_ignore_case);
-    while (!cancel_check() && searcher.go_backwards()) {
+    while (!cancel_check() && searcher.go_to_next_match(history_search_direction_t::backward)) {
         if (!func(searcher.current_item())) {
             break;
         }

@@ -114,6 +114,8 @@ typedef std::deque<history_item_t> history_item_list_t;
 class history_file_contents_t;
 struct history_impl_t;
 
+enum class history_search_direction_t { forward, backward };
+
 class history_t {
     friend class history_tests_t;
     const std::unique_ptr<owning_lock<history_impl_t>> impl_;
@@ -255,8 +257,9 @@ class history_search_t {
     // Gets the original search term.
     const wcstring &original_term() const { return orig_term_; }
 
-    // Finds the previous search result (backwards in time). Returns true if one was found.
-    bool go_backwards();
+    // Finds the next search result; direction "backward" means go back in time.
+    // Returns the offset of the match within the commandline if found.
+    maybe_t<size_t> go_to_next_match(history_search_direction_t direction);
 
     // Returns the current search result item. asserts if there is no current item.
     const history_item_t &current_item() const;

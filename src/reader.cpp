@@ -429,6 +429,31 @@ class reader_history_search_t {
         return false;
     }
 
+    void modify_search_string(std::function<void(wcstring &)> &&change) {
+        assert(by_line() || by_prefix());
+        bool was_at_end = is_at_end();
+        maybe_t<match_t> current_match;
+        maybe_t<size_t> previous_match_offset;
+        if (!is_at_end()) {
+            current_match = matches_.at(*match_index_);
+            previous_match_offset = last_match_offset;
+        }
+        auto match_offset = search_.modify_search_term(std::move(change), previous_match_offset);
+        matches_.clear();
+        skips_ = {search_string()};
+        match_index_ = none_t();
+
+        if (was_at_end) {
+            return;
+        }
+        if (match_offset) {
+            matches_.emplace_back(
+                match_t{search_.current_item().str(), search_.current_index(), *match_offset});
+            set_match_index(0);
+            search_.set_current_index(matches_.at(*match_index_).index_in_history);
+        }
+    }
+
     /// Go to the beginning (earliest) of the search.
     void go_to_beginning() {
         if (matches_.empty()) {
@@ -464,10 +489,18 @@ class reader_history_search_t {
     /// Reset, beginning a new line or token mode search.
     void reset_to_mode(const wcstring &text, history_t *hist, mode_t mode) {
         assert(mode != inactive && "mode cannot be inactive in this setter");
+        bool already_active = active();
+        mode_ = mode;
+        // If the search is already active, we just need to update the search string.
+        if (already_active && (by_line() || by_prefix())) {  // TODO token search
+            if (text != search_string()) {
+                modify_search_string([&text](wcstring &search_string) { search_string = text; });
+            }
+            return;
+        }
         skips_ = {text};
         matches_.clear();
         match_index_ = none_t();
-        mode_ = mode;
         last_match_offset = none_t();
         // We can skip dedup in history_search_t because we do it ourselves in skips_.
         search_ = history_search_t(

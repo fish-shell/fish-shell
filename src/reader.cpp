@@ -282,8 +282,14 @@ class reader_history_search_t {
     /// Our history search itself.
     history_search_t search_;
 
+    struct match_t {
+        wcstring str;
+        size_t index_in_history;
+        size_t match_offset;
+    };
+
     /// The ordered list of matches. This may grow long.
-    std::deque<wcstring> matches_;
+    std::deque<match_t> matches_;
 
     /// A set of new items to skip, corresponding to matches_ and anything added in skip().
     std::set<wcstring> skips_;
@@ -291,20 +297,27 @@ class reader_history_search_t {
     /// Index into our matches list.
     maybe_t<size_t> match_index_;
 
+    /// Move to an existing match.
+    void set_match_index(maybe_t<size_t> index) { match_index_ = index; }
+
     /// Adds the given match if we haven't seen it before.
-    void add_if_new(wcstring text) {
+    void add_if_new(wcstring text, size_t match_offset, history_search_direction_t dir) {
         if (add_skip(text)) {
-            matches_.push_back(std::move(text));
+            size_t index = search_.current_index();
+            if (dir == history_search_direction_t::backward)
+                matches_.emplace_back(match_t{std::move(text), index, match_offset});
+            else
+                matches_.emplace_front(match_t{std::move(text), index, match_offset});
         }
     }
 
     /// Attempt to append matches from the current history item.
     /// \return true if something was appended.
-    bool append_matches_from_search() {
+    bool append_matches_from_search(history_search_direction_t dir, size_t match_offset) {
         const size_t before = matches_.size();
         wcstring text = search_.current_string();
         if (mode_ == line || mode_ == prefix) {
-            add_if_new(std::move(text));
+            add_if_new(std::move(text), match_offset, dir);
         } else if (mode_ == token) {
             const wcstring &needle = search_string();
             tokenizer_t tok(text.c_str(), TOK_ACCEPT_UNFINISHED);
@@ -320,41 +333,25 @@ class reader_history_search_t {
 
             // Make sure tokens are added in reverse order. See #5150
             for (auto i = local_tokens.rbegin(); i != local_tokens.rend(); ++i) {
-                add_if_new(std::move(*i));
+                add_if_new(std::move(*i), 0, dir);  // TODO token search needs a proper match_offset
             }
         }
-        return matches_.size() > before;
-    }
-
-    bool move_forwards() {
-        // Try to move within our previously discovered matches.
-        if (is_at_end()) return false;
-        if (*match_index_ > 0) {
-            (*match_index_)--;
-            if (*match_index_ == 0) match_index_ = none_t();
-            return true;
-        }
-        return false;
-    }
-
-    bool move_backwards() {
-        if (is_at_end()) match_index_ = 0;
-        // Try to move backwards within our previously discovered matches.
-        if (*match_index_ + 1 < matches_.size()) {
-            (*match_index_)++;
-            return true;
-        }
-
-        // Add more items from our search.
-        while (search_.go_to_next_match(history_search_direction_t::backward)) {
-            if (append_matches_from_search()) {
-                (*match_index_)++;
-                assert(*match_index_ < matches_.size() && "Should have found more matches");
-                return true;
+        // adjust match_index
+        if (matches_.size() > before) {
+            if (!match_index_) {
+                match_index_ = 0;
+            } else if (dir == history_search_direction_t::backward) {
+                if (*match_index_ + 1 < matches_.size()) {
+                    (*match_index_)++;
+                }
+            } else {
+                if (*match_index_ != 0) {
+                    (*match_index_)--;
+                }
             }
+            set_match_index(*match_index_);
+            return true;
         }
-
-        match_index_ = none_t();
         // Here we failed to go backwards past the last history item.
         return false;
     }
@@ -373,22 +370,63 @@ class reader_history_search_t {
 
     /// Move the history search in the given direction \p dir.
     bool move_in_direction(history_search_direction_t dir) {
-        return dir == history_search_direction_t::forward ? move_forwards() : move_backwards();
+        maybe_t<size_t> old_match_index = match_index_;
+        ssize_t increment = dir == history_search_direction_t::backward ? 1 : -1;
+        size_t last_index = dir == history_search_direction_t::backward ? matches_.size() - 1 : 0;
+        // First, try to move within our previously discovered matches.
+        if (is_at_end()) {
+            if (dir == history_search_direction_t::backward && !matches_.empty()) {
+                // Go from the original command line to the youngest match.
+                set_match_index(0);
+                // Make sure we use the youngest entry.
+                search_.set_current_index(matches_.at(0).index_in_history);
+                return true;
+            }
+        } else if (!matches_.empty() && *match_index_ != last_index) {
+            set_match_index(*match_index_ + increment);
+            search_.set_current_index(matches_.at(*match_index_).index_in_history);
+            return true;
+        }
+        // Add more items from our search.
+        while (auto match_offset = search_.go_to_next_match(dir)) {
+            if (append_matches_from_search(dir, *match_offset)) {
+                return true;
+            }
+        }
+        // If we did not find anything, reset the match index (as we set it to 0 above).
+        if (dir == history_search_direction_t::forward) {
+            // Go to the original commandline with search term.
+            set_match_index(none_t());
+        } else {
+            if (old_match_index) {
+                set_match_index(*old_match_index);
+            } else {
+                set_match_index(none_t());
+            }
+        }
+        return false;
     }
 
     /// Go to the beginning (earliest) of the search.
     void go_to_beginning() {
-        while (move_forwards())
-            ;
+        if (matches_.empty()) {
+            return;
+        }
+        set_match_index(matches_.size() - 1);
     }
 
     /// Go to the end (most recent) of the search.
-    void go_to_end() { match_index_ = none_t(); }
+    void go_to_end() {
+        if (matches_.empty()) {
+            return;
+        }
+        set_match_index(none_t());
+    }
 
     /// \return the current search result.
     const wcstring &current_result() const {
         assert(*match_index_ < matches_.size() && "Invalid match index");
-        return matches_.at(*match_index_);
+        return matches_.at(*match_index_).str;
     }
 
     /// \return the string we are searching for.
@@ -405,7 +443,7 @@ class reader_history_search_t {
     void reset_to_mode(const wcstring &text, history_t *hist, mode_t mode) {
         assert(mode != inactive && "mode cannot be inactive in this setter");
         skips_ = {text};
-        matches_ = {text};
+        matches_.clear();
         match_index_ = none_t();
         mode_ = mode;
         // We can skip dedup in history_search_t because we do it ourselves in skips_.

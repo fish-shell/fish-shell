@@ -395,8 +395,8 @@ class reader_history_search_t {
 
     /// Go to the beginning (earliest) of the search.
     void go_to_beginning() {
-        while (move_forwards())
-            ;
+        if (matches_.empty()) return;
+        match_index_ = matches_.size() - 1;
     }
 
     /// Go to the end (most recent) of the search.
@@ -1241,6 +1241,8 @@ static bool command_ends_history_search(readline_cmd_t c) {
         case readline_cmd_t::history_search_forward:
         case readline_cmd_t::history_token_search_backward:
         case readline_cmd_t::history_token_search_forward:
+        case readline_cmd_t::beginning_of_history:
+        case readline_cmd_t::end_of_history:
         case readline_cmd_t::repaint:
         case readline_cmd_t::force_repaint:
             return false;

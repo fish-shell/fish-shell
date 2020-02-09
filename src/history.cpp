@@ -669,6 +669,20 @@ maybe_t<size_t> history_search_t::go_to_next_match(history_search_direction_t di
     return none_t();
 }
 
+maybe_t<size_t> history_search_t::modify_search_term(std::function<void(wcstring &)> &&change,
+                                                     maybe_t<size_t> preferred_match_offset) {
+    change(orig_term_);
+    canon_term_ = orig_term_;
+    if (ignores_case()) {
+        std::transform(canon_term_.begin(), canon_term_.end(), canon_term_.begin(), towlower);
+    }
+    if (!current_item_) {
+        return none_t();
+    }
+    return current_item().matches_search(canon_term_, search_type_, !ignores_case(),
+                                         preferred_match_offset);
+}
+
 const history_item_t &history_search_t::current_item() const {
     assert(current_item_ && "No current item");
     return *current_item_;

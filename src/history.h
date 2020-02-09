@@ -261,6 +261,11 @@ class history_search_t {
     // Returns the offset of the match within the commandline if found.
     maybe_t<size_t> go_to_next_match(history_search_direction_t direction);
 
+    // Update the search term. Returns the match offset, if the current item matches the new term.
+    // The given match offset is tried first, see history_item_t::matches_search.
+    maybe_t<size_t> modify_search_term(std::function<void(wcstring &)> &&change,
+                                       maybe_t<size_t> preferred_match_offset);
+
     // Returns the current search result item. asserts if there is no current item.
     const history_item_t &current_item() const;
 
@@ -271,10 +276,8 @@ class history_search_t {
     history_search_t(history_t &hist, const wcstring &str,
                      enum history_search_type_t type = history_search_type_t::contains,
                      history_search_flags_t flags = 0)
-        : history_(&hist), orig_term_(str), canon_term_(str), search_type_(type), flags_(flags) {
-        if (ignores_case()) {
-            std::transform(canon_term_.begin(), canon_term_.end(), canon_term_.begin(), towlower);
-        }
+        : history_(&hist), orig_term_(str), search_type_(type), flags_(flags) {
+        modify_search_term([](wcstring &) {}, none_t());
     }
 
     // Default constructor.

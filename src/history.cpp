@@ -189,8 +189,9 @@ bool history_item_t::merge(const history_item_t &item) {
 history_item_t::history_item_t(wcstring str, time_t when, history_identifier_t ident)
     : contents(trim(std::move(str))), creation_timestamp(when), identifier(ident) {}
 
-bool history_item_t::matches_search(const wcstring &term, enum history_search_type_t type,
-                                    bool case_sensitive) const {
+maybe_t<size_t> history_item_t::matches_search(const wcstring &term,
+                                               enum history_search_type_t type, bool case_sensitive,
+                                               maybe_t<size_t> preferred_match_offset) const {
     // Note that 'term' has already been lowercased when constructing the
     // search object if we're doing a case insensitive search.
     wcstring contents_lower;
@@ -201,27 +202,50 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
 
     switch (type) {
         case history_search_type_t::exact: {
-            return term == content_to_match;
+            if (term == content_to_match) {
+                return 0;
+            }
+            return none_t();
         }
         case history_search_type_t::contains: {
-            return content_to_match.find(term) != wcstring::npos;
+            if (preferred_match_offset &&
+                *preferred_match_offset + term.size() <= content_to_match.size() &&
+                term == content_to_match.substr(*preferred_match_offset, term.size())) {
+                return preferred_match_offset;
+            }
+            size_t offset = content_to_match.find(term);
+            if (offset != wcstring::npos) {
+                return offset;
+            }
+            return none_t();
         }
         case history_search_type_t::prefix: {
-            return string_prefixes_string(term, content_to_match);
+            if (string_prefixes_string(term, content_to_match)) {
+                return 0;
+            }
+            return none_t();
         }
         case history_search_type_t::contains_glob: {
             wcstring wcpattern1 = parse_util_unescape_wildcards(term);
             if (wcpattern1.front() != ANY_STRING) wcpattern1.insert(0, 1, ANY_STRING);
             if (wcpattern1.back() != ANY_STRING) wcpattern1.push_back(ANY_STRING);
-            return wildcard_match(content_to_match, wcpattern1);
+            if (wildcard_match(content_to_match, wcpattern1)) {
+                // This one does not yet return an accurate match offset, but
+                // glob search is not used interactively, currently don't need an offset.
+                return 0;
+            }
+            return none_t();
         }
         case history_search_type_t::prefix_glob: {
             wcstring wcpattern2 = parse_util_unescape_wildcards(term);
             if (wcpattern2.back() != ANY_STRING) wcpattern2.push_back(ANY_STRING);
-            return wildcard_match(content_to_match, wcpattern2);
+            if (wildcard_match(content_to_match, wcpattern2)) {
+                return 0;
+            }
+            return none_t();
         }
         case history_search_type_t::match_everything: {
-            return true;
+            return 0;
         }
     }
     DIE("unexpected history_search_type_t value");
@@ -616,7 +640,7 @@ bool history_search_t::go_backwards() {
         }
 
         // Look for an item that matches and (if deduping) that we haven't seen before.
-        if (!item.matches_search(canon_term_, search_type_, !ignores_case())) {
+        if (!item.matches_search(canon_term_, search_type_, !ignores_case(), none_t())) {
             continue;
         }
 

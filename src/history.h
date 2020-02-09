@@ -92,9 +92,11 @@ class history_item_t {
 
     bool empty() const { return contents.empty(); }
 
-    // Whether our contents matches a search term.
-    bool matches_search(const wcstring &term, enum history_search_type_t type,
-                        bool case_sensitive) const;
+    // Returns the offset where the search term matchs our content.
+    // Tries to match at a specific offset if given before trying to match anywhere.
+    maybe_t<size_t> matches_search(const wcstring &term, enum history_search_type_t type,
+                                   bool case_sensitive,
+                                   maybe_t<size_t> preferred_match_offset) const;
 
     time_t timestamp() const { return creation_timestamp; }
 

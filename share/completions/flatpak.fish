@@ -1,5 +1,6 @@
 # Completions for flatpak, an "Application deployment framework for desktop apps"
 # (http://flatpak.org)
+set -l flatversion (flatpak --version | string match -r '[\d.]+' | string split .)
 set -l commands install update uninstall list info run override make-current enter document-{export,unexport,info,list} \
     remote-{add,modify,delete,list,ls} build build-{init,finish,export,bundle,import-bundle,sign,update-repo}
 
@@ -30,9 +31,21 @@ complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a build-i
 complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a build-sign -d 'Sign an application or runtime'
 complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a build-update-repo -d 'Update the summary file in a repository'
 
-complete -f -c flatpak -n "__fish_seen_subcommand_from run" -a "(flatpak list --app | string match -r '\S+')"
-complete -f -c flatpak -n "__fish_seen_subcommand_from info uninstall" -a "(flatpak list | string match -r '\S+')"
-complete -f -c flatpak -n "__fish_seen_subcommand_from remote-ls remote-modify remote-delete" -a "(flatpak remote-list | string match -r '\S+')"
+if test (string join . "$flatversion[1]" "$flatversion[2]") -ge 1.2
+    for line in (flatpak list --app --columns=application,name)
+        set -l info (string split \t "$line")
+        complete -f -c flatpak -n "__fish_seen_subcommand_from run" -a "$info[1]" -d "$info[2]"
+    end
+    for line in (flatpak list --columns=application,name)
+        set -l info (string split \t "$line")
+        complete -f -c flatpak -n "__fish_seen_subcommand_from info uninstall" -a "$info[1]" -d "$info[2]"
+    end
+    complete -f -c flatpak -n "__fish_seen_subcommand_from remote-ls remote-modify remote-delete" -a "(flatpak remote-list --columns=name)"
+else
+    complete -f -c flatpak -n "__fish_seen_subcommand_from run" -a "(flatpak list --app | string match -r '\S+')"
+    complete -f -c flatpak -n "__fish_seen_subcommand_from info uninstall" -a "(flatpak list | string match -r '\S+')"
+    complete -f -c flatpak -n "__fish_seen_subcommand_from remote-ls remote-modify remote-delete" -a "(flatpak remote-list | string match -r '\S+')"
+end
 
 # Note that "remote-ls" opens an internet connection, so we don't want to complete "install"
 # Plenty of the other stuff is too free-form to complete (e.g. remote-add).

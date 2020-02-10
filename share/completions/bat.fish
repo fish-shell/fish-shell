@@ -56,7 +56,7 @@ set -l tabs_opts '
 '
 
 complete -c bat -n 'not __fish_seen_subcommand_from cache' -x -s l -l language -a '(__bat_complete_languages_and_extensions)' -d 'Set language for syntax highlighting'
-complete -c bat -n 'not __fish_seen_subcommand_from cache' -f -s L -l list-language -d 'List supported languages for syntax highlighting'
+complete -c bat -n 'not __fish_seen_subcommand_from cache' -f -s L -l list-languages -d 'List supported languages for syntax highlighting'
 complete -c bat -n 'not __fish_seen_subcommand_from cache' -x -s m -l map-syntax -d 'Map file name/extension to existing syntax'
 complete -c bat -n 'not __fish_seen_subcommand_from cache' -x -l theme -a '(__bat_complete_themes)' -d 'Set theme for syntax highlighting'
 complete -c bat -n 'not __fish_seen_subcommand_from cache' -f -l list-themes -d 'List syntax-highlighting themes'

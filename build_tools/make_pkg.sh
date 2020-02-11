@@ -24,9 +24,9 @@ OUTPUT_PATH=${FISH_ARTEFACT_PATH:-~/fish_built}
 
 mkdir -p "$PKGDIR/build" "$PKGDIR/root" "$PKGDIR/intermediates" "$PKGDIR/dst"
 { cd "$PKGDIR/build" && cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo "$SRC_DIR" && make -j 4 && env DESTDIR="$PKGDIR/root/" make install; }
-pkgbuild --scripts build_tools/osx_package_scripts --root "$PKGDIR/root/" --identifier 'com.ridiculousfish.fish-shell-pkg' --version "$VERSION" "$PKGDIR/intermediates/fish.pkg"
+pkgbuild --scripts "$SRC_DIR/build_tools/osx_package_scripts" --root "$PKGDIR/root/" --identifier 'com.ridiculousfish.fish-shell-pkg' --version "$VERSION" "$PKGDIR/intermediates/fish.pkg"
 
-productbuild  --package-path "$PKGDIR/intermediates" --distribution build_tools/osx_distribution.xml --resources build_tools/osx_package_resources/ "$OUTPUT_PATH/fish-$VERSION.pkg"
+productbuild  --package-path "$PKGDIR/intermediates" --distribution "$SRC_DIR/build_tools/osx_distribution.xml" --resources "$SRC_DIR/build_tools/osx_package_resources/" "$OUTPUT_PATH/fish-$VERSION.pkg"
 
 
 # Make the app

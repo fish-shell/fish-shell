@@ -31,7 +31,7 @@ function __fish_conda_config_keys
 end
 
 function __fish_conda_environments
-    conda env list | string match -rv '^#' | string match -r '^\w+'
+    conda env list | string match -rv '^#' | string match -r '^\S+'
 end
 
 # common options

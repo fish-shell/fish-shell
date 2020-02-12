@@ -6,7 +6,9 @@ Compared to the beta release of fish 3.1b1, fish version 3.1.0:
 - fixes the process for building macOS packages; and
 - contains some improvements to the documentation and a small number of completions.
 
-If you are upgrading from version 2.5.0 or before, please also review the release notes for 3.1b1 (included below).
+If you are upgrading from version 3.0.0 or before, please also review the release notes for 3.1b1 (included below).
+
+---
 
 # fish 3.1b1 (released January 26, 2020)
 

@@ -1,4 +1,4 @@
-# fish 3.1.0
+# fish 3.1.0 (released February 12, 2020)
 
 Compared to the beta release of fish 3.1b1, fish version 3.1.0:
 - fixes a regression where spaces after a brace were removed despite brace expansion not occurring (#6564)

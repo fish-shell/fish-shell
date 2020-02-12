@@ -55,4 +55,14 @@ ADD_CUSTOM_COMMAND(TARGET fish_macapp POST_BUILD
             --build ${CMAKE_CURRENT_BINARY_DIR} --target install
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${MACAPP_FISH_BUILDROOT}/..
             $<TARGET_BUNDLE_CONTENT_DIR:fish_macapp>/Resources/
+    VERBATIM
+)
+
+# Target to sign the macapp.
+# Note that a POST_BUILD step happens before resources are copied,
+# and therefore would be too early.
+ADD_CUSTOM_TARGET(signed_fish_macapp
+    DEPENDS fish_macapp
+    COMMAND codesign --force --deep --options runtime --sign "${MAC_CODESIGN_ID}" $<TARGET_BUNDLE_DIR:fish_macapp>
+    VERBATIM
 )

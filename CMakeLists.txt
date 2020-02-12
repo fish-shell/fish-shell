@@ -163,10 +163,26 @@ ADD_DEFINITIONS(-D_REENTRANT)
 # Set up PCRE2
 INCLUDE(cmake/PCRE2.cmake)
 
+# Code signing ID on Mac. A default '-' is ad-hoc codesign.
+SET(MAC_CODESIGN_ID "-" CACHE STRING "Mac code-signing identity")
+
+FUNCTION(CODESIGN_ON_MAC target)
+  IF(APPLE)
+    ADD_CUSTOM_COMMAND(
+      TARGET ${target}
+      POST_BUILD
+      COMMAND codesign --force --deep --options runtime --sign "${MAC_CODESIGN_ID}" $<TARGET_FILE:${target}>
+      VERBATIM
+    )
+  ENDIF()
+ENDFUNCTION(CODESIGN_ON_MAC target)
+
+
 # Define a function to link dependencies.
-FUNCTION(FISH_LINK_DEPS target)
+FUNCTION(FISH_LINK_DEPS_AND_SIGN target)
   TARGET_LINK_LIBRARIES(${target} fishlib)
-ENDFUNCTION(FISH_LINK_DEPS)
+  CODESIGN_ON_MAC(${target})
+ENDFUNCTION(FISH_LINK_DEPS_AND_SIGN)
 
 # Define libfish.a.
 ADD_LIBRARY(fishlib STATIC ${FISH_SRCS})
@@ -177,17 +193,17 @@ TARGET_LINK_LIBRARIES(fishlib
 
 # Define fish.
 ADD_EXECUTABLE(fish src/fish.cpp)
-FISH_LINK_DEPS(fish)
+FISH_LINK_DEPS_AND_SIGN(fish)
 
 # Define fish_indent.
 ADD_EXECUTABLE(fish_indent
                src/fish_indent.cpp src/print_help.cpp)
-FISH_LINK_DEPS(fish_indent)
+FISH_LINK_DEPS_AND_SIGN(fish_indent)
 
 # Define fish_key_reader.
 ADD_EXECUTABLE(fish_key_reader
                src/fish_key_reader.cpp src/print_help.cpp)
-FISH_LINK_DEPS(fish_key_reader)
+FISH_LINK_DEPS_AND_SIGN(fish_key_reader)
 
 # Set up the docs.
 INCLUDE(cmake/Docs.cmake)

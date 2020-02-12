@@ -1,12 +1,10 @@
 # fish 3.1.0
 
 Compared to the beta release of fish 3.1b1, fish version 3.1.0:
-
-- Fixes a number of problems in compiling and running the test suite on Cygwin and Solaris-derived systems such as Illumos
-- Also disables any `apropos` invocations on macos via the man completion, not just command completion.
-- Fixes a regression where spaces after a brace were removed when brace expansion wasn't triggered (#6564)
-- Fixes some broken links in the documentation.
-- Fixes a typo in the `bat` completions (#6580)
+- fixes a regression where spaces after a brace were removed despite brace expansion not occurring (#6564)
+- fixes a number of problems in compiling and testing on Cygwin (#6549) and Solaris-derived systems such as Illumos (#6553, #6554, #6555, #6556, and #6558); 
+- fixes the process for building macOS packages; and
+- contains some improvements to the documentation and a small number of completions.
 
 If you are upgrading from version 2.5.0 or before, please also review the release notes for 3.1b1 (included below).
 

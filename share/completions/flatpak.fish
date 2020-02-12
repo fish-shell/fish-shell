@@ -5,13 +5,13 @@ set -l commands install update uninstall list info config repair create-usb sear
     documents document-{export,unexport,info} permissions permission-{show,reset} remotes remote-{add,modify,delete,ls,info} \
     build build-{init,finish,export,bundle,import-bundle,sign,update-repo,commit-from} repo
 
-if test $flatversion -ge 1.1
+if test $flatversion -ge 1.1 2>/dev/null
     set commands $commands history kill
     complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a history -d 'Show history'
     complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a kill -d 'Stop a running application'
 end
 
-if test $flatversion -ge 1.5
+if test $flatversion -ge 1.5 2>/dev/null
     set commands $commands mask permission-{remove,set}
     complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a mask -d 'Mask out updates and automatic installation'
     complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a permission-remove -d 'Remove item from permission store'
@@ -56,15 +56,9 @@ complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a build-u
 complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a build-commit-from -d 'Create new commit based on existing ref'
 complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a repo -d 'Show information about a repo'
 
-if test $flatversion -ge 1.2
-    for line in (flatpak list --app --columns=application,name)
-        set -l info (string split \t "$line")
-        complete -f -c flatpak -n "__fish_seen_subcommand_from run" -a "$info[1]" -d "$info[2]"
-    end
-    for line in (flatpak list --columns=application,name)
-        set -l info (string split \t "$line")
-        complete -f -c flatpak -n "__fish_seen_subcommand_from info uninstall" -a "$info[1]" -d "$info[2]"
-    end
+if test $flatversion -ge 1.2 2>/dev/null
+    complete -f -c flatpak -n "__fish_seen_subcommand_from run" -a "(flatpak list --app --columns=application,name)"
+    complete -f -c flatpak -n "__fish_seen_subcommand_from info uninstall" -a "(flatpak list --columns=application,name)"
     complete -f -c flatpak -n "__fish_seen_subcommand_from remote-info remote-ls remote-modify remote-delete" -a "(flatpak remotes --columns=name)"
 else
     complete -f -c flatpak -n "__fish_seen_subcommand_from run" -a "(flatpak list --app | string match -r '\S+')"

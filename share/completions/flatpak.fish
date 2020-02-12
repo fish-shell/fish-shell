@@ -59,6 +59,7 @@ complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a repo -d
 if test $flatversion -ge 1.2 2>/dev/null
     complete -f -c flatpak -n "__fish_seen_subcommand_from run" -a "(flatpak list --app --columns=application,name)"
     complete -f -c flatpak -n "__fish_seen_subcommand_from info uninstall" -a "(flatpak list --columns=application,name)"
+    complete -f -c flatpak -n "__fish_seen_subcommand_from enter kill" -a "(flatpak ps --columns=instance,application)"
     complete -f -c flatpak -n "__fish_seen_subcommand_from remote-info remote-ls remote-modify remote-delete" -a "(flatpak remotes --columns=name)"
 else
     complete -f -c flatpak -n "__fish_seen_subcommand_from run" -a "(flatpak list --app | string match -r '\S+')"

@@ -27,6 +27,19 @@
 
 ---
 
+# fish 3.1.0 (released February 12, 2020)
+
+Compared to the beta release of fish 3.1b1, fish version 3.1.0:
+- fixes a regression where spaces after a brace were removed despite brace expansion not occurring (#6564)
+- fixes a number of problems in compiling and testing on Cygwin (#6549) and Solaris-derived systems such as Illumos (#6553, #6554, #6555, #6556, and #6558);
+- fixes the process for building macOS packages;
+- fixes a regression where excessive error messages are printed if Unicode characters are emitted in non-Unicode-capable locales (#6584); and
+- contains some improvements to the documentation and a small number of completions.
+
+If you are upgrading from version 3.0.0 or before, please also review the release notes for 3.1b1 (included below).
+
+---
+
 # fish 3.1b1 (released January 26, 2020)
 
 ## Notable improvements and fixes

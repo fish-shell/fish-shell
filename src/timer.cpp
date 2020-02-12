@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cerrno>
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <ctime>
 
@@ -128,13 +129,13 @@ wcstring timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2,
     auto unit_short_name = [](tunit unit) {
         switch (unit) {
             case tunit::minutes:
-                return "mins";
+                return "min";
             case tunit::seconds:
-                return "secs";
+                return "sec";
             case tunit::milliseconds:
-                return "millis";
+                return "ms";
             case tunit::microseconds:
-                return "micros";
+                return "\u03BCs";
         }
         // GCC does not recognize the exhaustive switch above
         return "";
@@ -152,7 +153,7 @@ wcstring timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2,
                 return micros / 1.0;
         }
         // GCC does not recognize the exhaustive switch above
-        return 0.0;
+        return std::nan("");
     };
 
     auto wall_unit = get_unit(net_wall_micros);
@@ -165,9 +166,9 @@ wcstring timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2,
     if (!verbose) {
         append_format(output,
                       L"\n_______________________________"
-                      L"\nExecuted in  %6.2F %s"
-                      L"\n   usr time  %6.2F %s"
-                      L"\n   sys time  %6.2F %s"
+                      L"\nDuration\t%6.3G %s:"
+                      L"\n user time\t%6.3G %s"
+                      L"\n kernel time\t%6.3G %s"
                       L"\n",
                       wall_time, unit_name(wall_unit), usr_time, unit_name(cpu_unit), sys_time,
                       unit_name(cpu_unit));
@@ -181,9 +182,9 @@ wcstring timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2,
 
         append_format(output,
                       L"\n________________________________________________________"
-                      L"\nExecuted in  %6.2F %s   %*s           %*s "
-                      L"\n   usr time  %6.2F %s  %6.2F %s  %6.2F %s "
-                      L"\n   sys time  %6.2F %s  %6.2F %s  %6.2F %s "
+                      L"\nDuration     %6.3G %s   %*s           %*s "
+                      L"\n user time   %6.3G %s  %6.3G %s  %6.3G %s "
+                      L"\n kernel time %6.3G %s  %6.3G %s  %6.3G %s "
                       L"\n",
                       wall_time, unit_short_name(wall_unit), strlen(unit_short_name(wall_unit)) - 1,
                       "fish", strlen(unit_short_name(fish_unit)) - 1, "external", usr_time,

@@ -11,22 +11,23 @@ true | false | true; echo $pipestatus : $status
 #CHECK: 0 1 0 : 0
 
 # pipestatus variable - no builtins
+# Note: On some systems `command false` fails with 255, not 1. We allow both.
 command false | command false | command false; echo $pipestatus : $status
-#CHECK: 1 1 1 : 1
+#CHECK: {{1|255}} {{1|255}} {{1|255}} : 1
 command true | command true | command true; echo $pipestatus : $status
 #CHECK: 0 0 0 : 0
 command false | command true | command false; echo $pipestatus : $status
-#CHECK: 1 0 1 : 1
+#CHECK: {{1|255}} 0 {{1|255}} : 1
 command true | command false | command true; echo $pipestatus : $status
-#CHECK: 0 1 0 : 0
+#CHECK: 0 {{1|255}} 0 : 0
 
 # pipestatus variable - mixed
 command false | command false | false; echo $pipestatus : $status
-#CHECK: 1 1 1 : 1
+#CHECK: {{1|255}} {{1|255}} 1 : 1
 command true | true | command true; echo $pipestatus : $status
 #CHECK: 0 0 0 : 0
 false | command true | command false; echo $pipestatus : $status
-#CHECK: 1 0 1 : 1
+#CHECK: 1 0 {{1|255}} : 1
 true | false | command true; echo $pipestatus : $status
 #CHECK: 0 1 0 : 0
 sh -c 'exit 5' | sh -c 'exit 2'; echo $pipestatus : $status
@@ -44,7 +45,7 @@ false; echo $pipestatus : $status
 command true; echo $pipestatus : $status
 #CHECK: 0 : 0
 command false; echo $pipestatus : $status
-#CHECK: 1 : 1
+#CHECK: {{1|255}} : 1
 sh -c 'exit 4'; echo $pipestatus : $status
 #CHECK: 4 : 4
 
@@ -58,9 +59,9 @@ sh -c 'exit 4'; echo $pipestatus : $status
 ! true | command true | true; echo $pipestatus : $status
 #CHECK: 0 0 0 : 1
 ! false | true | command false; echo $pipestatus : $status
-#CHECK: 1 0 1 : 0
+#CHECK: 1 0 {{1|255}} : 0
 ! command true | command false | command true; echo $pipestatus : $status
-#CHECK: 0 1 0 : 1
+#CHECK: 0 {{1|255}} 0 : 1
 ! sh -c 'exit 9' | true | sh -c 'exit 3'; echo $pipestatus : $status
 #CHECK: 9 0 3 : 0
 

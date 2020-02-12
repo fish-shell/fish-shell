@@ -404,7 +404,7 @@ void outputter_t::writestr(const wchar_t *str) {
 
     size_t len = wcstombs(nullptr, str, 0);  // figure amount of space needed
     if (len == static_cast<size_t>(-1)) {
-        debug(1, L"Tried to print invalid wide character string");
+        debug(3, L"Tried to print invalid wide character string");
         return;
     }
 

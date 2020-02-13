@@ -7,6 +7,8 @@ IF(POLICY CMP0067)
   CMAKE_POLICY(SET CMP0067 NEW)
 ENDIF()
 
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
+
 PROJECT(fish)
 
 # We are C++11.

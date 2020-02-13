@@ -269,40 +269,9 @@ static void setup_and_process_keys(bool continuous_mode) {
     _exit(0);
 }
 
-static bool parse_debug_level_flag() {
-    errno = 0;
-    char *end;
-    long tmp = strtol(optarg, &end, 10);
-
-    if (tmp >= 0 && tmp <= 10 && !*end && !errno) {
-        debug_level = static_cast<int>(tmp);
-    } else {
-        std::fwprintf(stderr, _(L"Invalid value '%s' for debug-level flag\n"), optarg);
-        return false;
-    }
-
-    return true;
-}
-
-static bool parse_debug_frames_flag() {
-    errno = 0;
-    char *end;
-    long tmp = strtol(optarg, &end, 10);
-    if (tmp > 0 && tmp <= 128 && !*end && !errno) {
-        set_debug_stack_frames(static_cast<int>(tmp));
-    } else {
-        std::fwprintf(stderr, _(L"Invalid value '%s' for debug-stack-frames flag\n"), optarg);
-        return false;
-    }
-
-    return true;
-}
-
 static bool parse_flags(int argc, char **argv, bool *continuous_mode) {
-    const char *short_opts = "+cd:D:hv";
+    const char *short_opts = "+chv";
     const struct option long_opts[] = {{"continuous", no_argument, nullptr, 'c'},
-                                       {"debug-level", required_argument, nullptr, 'd'},
-                                       {"debug-stack-frames", required_argument, nullptr, 'D'},
                                        {"help", no_argument, nullptr, 'h'},
                                        {"version", no_argument, nullptr, 'v'},
                                        {nullptr, 0, nullptr, 0}};
@@ -317,14 +286,6 @@ static bool parse_flags(int argc, char **argv, bool *continuous_mode) {
             case 'h': {
                 print_help("fish_key_reader", 0);
                 error = true;
-                break;
-            }
-            case 'd': {
-                error = !parse_debug_level_flag();
-                break;
-            }
-            case 'D': {
-                error = !parse_debug_frames_flag();
                 break;
             }
             case 'v': {

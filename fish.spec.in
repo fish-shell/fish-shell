@@ -38,7 +38,11 @@ BuildRequires: python3
 
 BuildRoot:              %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
+%if 0%{?rhel} && 0%{?rhel} < 8
 Requires:		python
+%else
+Requires:		python3
+%endif
 Requires:		man
 
 %description

@@ -4,7 +4,7 @@ set ::env(fish_escape_delay_ms) 10
 spawn $fish_key_reader -c
 
 # Do we get the expected startup prompt?
-expect -ex "Press a key" {
+expect -ex "Press a key:" {
     puts "saw expected startup prompt"
 } unmatched {
     puts stderr "didn't see expected startup prompt"

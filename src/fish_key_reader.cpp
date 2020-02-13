@@ -203,7 +203,7 @@ static void process_input(bool continuous_mode) {
     input_event_queue_t queue;
     std::vector<wchar_t> bind_chars;
 
-    std::fwprintf(stderr, L"Press a key\n\n");
+    std::fwprintf(stderr, L"Press a key:\n");
     for (;;) {
         char_event_t evt{0};
         if (reader_test_and_clear_interrupted()) {

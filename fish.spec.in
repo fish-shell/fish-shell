@@ -9,7 +9,7 @@ Group:                  System/Shells
 URL:                    https://fishshell.com/
 
 Source0:                %{name}_@VERSION@.orig.tar.xz
-BuildRequires:          ncurses-devel gettext gcc-c++ autoconf xz
+BuildRequires:          ncurses-devel gettext gcc-c++ xz
 
 %if 0%{?rhel} && 0%{?rhel} < 8
 BuildRequires: cmake3

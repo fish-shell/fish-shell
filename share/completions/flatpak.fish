@@ -1,6 +1,6 @@
 # Completions for flatpak, an "Application deployment framework for desktop apps"
 # (http://flatpak.org)
-set -l flatversion (flatpak --version | string match -r '[\d.]+' | string split . | head -n 2 | string join .)
+set -l flatversion (flatpak --version | string match -r '[\d.]+' | cut -f -2 -d .)
 set -l commands install update uninstall list info config repair create-usb search run override make-current enter ps \
     documents document-{export,unexport,info} permissions permission-{show,reset} remotes remote-{add,modify,delete,ls,info} \
     build build-{init,finish,export,bundle,import-bundle,sign,update-repo,commit-from} repo

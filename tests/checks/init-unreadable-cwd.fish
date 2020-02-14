@@ -10,7 +10,7 @@ cd $tmpdir
 chmod 000 .
 $fish -c 'echo Look Ma! No crashing!'
 #CHECK: Look Ma! No crashing!
-#CHECKERR: Unable to open the current working directory: Permission denied
+#CHECKERR: {{.*}}
 
 # Careful here, Solaris' rm tests if the directory is in $PWD, so we need to cd back
 cd $oldpwd

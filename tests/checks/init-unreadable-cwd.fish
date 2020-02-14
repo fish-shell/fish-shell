@@ -8,9 +8,9 @@ set -l tmpdir (mktemp -d)
 set -l fish (builtin realpath $fish)
 cd $tmpdir
 chmod 000 .
-$fish -c 'echo Look Ma! No crashing!'
+# There's an error, but we don't really care about the specific one.
+$fish -c 'echo Look Ma! No crashing!' 2>/dev/null
 #CHECK: Look Ma! No crashing!
-#CHECKERR: {{.*}}
 
 # Careful here, Solaris' rm tests if the directory is in $PWD, so we need to cd back
 cd $oldpwd

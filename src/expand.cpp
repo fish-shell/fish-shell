@@ -45,6 +45,7 @@
 #include "path.h"
 #include "proc.h"
 #include "reader.h"
+#include "util.h"
 #include "wcstringutil.h"
 #include "wildcard.h"
 #include "wutil.h"  // IWYU pragma: keep
@@ -1031,7 +1032,11 @@ expand_result_t expander_t::stage_wildcards(wcstring path_to_expand, completion_
             }
         }
 
-        std::sort(expanded.begin(), expanded.end(), completion_t::is_naturally_less_than);
+        std::sort(expanded.begin(), expanded.end(),
+                  [&](const completion_t &a, const completion_t &b) {
+                      return wcsfilecmp_glob(a.completion.c_str(), b.completion.c_str()) < 0;
+                  });
+
         std::move(expanded.begin(), expanded.end(), std::back_inserter(*out));
     } else {
         // Can't fully justify this check. I think it's that SKIP_WILDCARDS is used when completing

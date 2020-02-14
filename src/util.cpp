@@ -100,6 +100,55 @@ int wcsfilecmp(const wchar_t *a, const wchar_t *b) {
     return 1;  // string b is a prefix of a and a is longer
 }
 
+/// wcsfilecmp, but frozen in time for glob usage.
+int wcsfilecmp_glob(const wchar_t *a, const wchar_t *b) {
+    assert(a && b && "Null parameter");
+    const wchar_t *orig_a = a;
+    const wchar_t *orig_b = b;
+    int retval = 0;  // assume the strings will be equal
+
+    while (*a && *b) {
+        if (iswdigit(*a) && iswdigit(*b)) {
+            retval = wcsfilecmp_leading_digits(&a, &b);
+            // If we know the strings aren't logically equal or we've reached the end of one or both
+            // strings we can stop iterating over the chars in each string.
+            if (retval || *a == 0 || *b == 0) break;
+        }
+
+        wint_t al = towlower(*a);
+        wint_t bl = towlower(*b);
+        if (al < bl) {
+            retval = -1;
+            break;
+        } else if (al > bl) {
+            retval = 1;
+            break;
+        } else {
+            a++;
+            b++;
+        }
+    }
+
+    if (retval != 0) return retval;  // we already know the strings aren't logically equal
+
+    if (*a == 0) {
+        if (*b == 0) {
+            // The strings are logically equal. They may or may not be the same length depending on
+            // whether numbers were present but that doesn't matter. Disambiguate strings that
+            // differ by letter case or length. We don't bother optimizing the case where the file
+            // names are literally identical because that won't occur given how this function is
+            // used. And even if it were to occur (due to being reused in some other context) it
+            // would be so rare that it isn't worth optimizing for.
+            retval = wcscmp(orig_a, orig_b);
+            return retval < 0 ? -1 : retval == 0 ? 0 : 1;
+        }
+        return -1;  // string a is a prefix of b and b is longer
+    }
+
+    assert(*b == 0);
+    return 1;  // string b is a prefix of a and a is longer
+}
+
 /// Return microseconds since the epoch.
 long long get_time() {
     struct timeval time_struct;

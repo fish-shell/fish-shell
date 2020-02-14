@@ -128,10 +128,10 @@ complete -f -c npm -n "__fish_npm_needs_command" -a 'set' -d 'Sets the config ke
 
 # install
 for c in 'install' 'isntall' 'i'
-    complete -f -c npm -n '__fish_npm_needs_command' -a "$c" -d 'install a package'
-    complete -f -c npm -n "__fish_npm_using_command $c" -l save-dev -d 'Save to devDependencies in package.json'
-    complete -f -c npm -n "__fish_npm_using_command $c" -l save -d 'Save to dependencies in package.json'
-    complete -f -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'Install package globally'
+    complete -c npm -n '__fish_npm_needs_command' -a "$c" -d 'install a package'
+    complete -c npm -n "__fish_npm_using_command $c" -l save-dev -d 'Save to devDependencies in package.json'
+    complete -c npm -n "__fish_npm_using_command $c" -l save -d 'Save to dependencies in package.json'
+    complete -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'Install package globally'
 end
 
 # list

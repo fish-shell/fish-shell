@@ -412,7 +412,12 @@ maybe_t<pipe_or_redir_t> pipe_or_redir_t::from_string(const wchar_t *buff) {
                 consume(L'^');
                 result.fd = STDERR_FILENO;
                 result.mode = redirection_mode_t::overwrite;
-                if (try_consume(L'^')) result.mode = redirection_mode_t::append;
+                if (try_consume(L'^')) {
+                    result.mode = redirection_mode_t::append;
+                } else if (try_consume(L'&')) {
+                    // This is a redirection to an fd.
+                    result.mode = redirection_mode_t::fd;
+                }
                 if (try_consume(L'?')) result.mode = redirection_mode_t::noclob;
                 break;
             }

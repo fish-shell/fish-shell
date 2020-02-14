@@ -85,7 +85,7 @@ parser_t::parser_t(std::shared_ptr<env_stack_t> vars) : variables(std::move(vars
     int cwd = open_cloexec(".", O_RDONLY);
     if (cwd < 0) {
         perror("Unable to open the current working directory");
-        abort();
+        return;
     }
     libdata().cwd_fd = std::make_shared<const autoclose_fd_t>(cwd);
 }

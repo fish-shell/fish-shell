@@ -14,7 +14,6 @@
 
 #include <atomic>
 #include <condition_variable>
-#include <cstdint> // for uint64_t
 #include <functional>
 #include <queue>
 

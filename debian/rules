@@ -7,6 +7,7 @@ export DH_VERBOSE=1
 %:
 	dh $@
 
+# Setting the build system is still required, because otherwise the GNUmakefile gets picked up
 override_dh_auto_configure:
 	dh_auto_configure --buildsystem=cmake --parallel
 

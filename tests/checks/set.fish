@@ -649,4 +649,11 @@ test_ifforwhile_scope
 set -g status 5
 #CHECKERR: set: Tried to change the read-only variable 'status'
 
+while set -e __fish_test_universal_exported_var
+end
+set -xU __fish_test_universal_exported_var 1
+$FISH -c 'set __fish_test_universal_exported_var 2'
+env | string match -e __fish_test_universal_exported_var
+#CHECK: __fish_test_universal_exported_var=2
+
 true

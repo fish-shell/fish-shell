@@ -346,11 +346,12 @@ void env_universal_t::generate_callbacks_and_update_exports(const var_table_t &n
 
         bool old_exports = (existing != this->vars.end() && existing->second.exports());
         bool export_changed = (old_exports != new_entry.exports());
-        if (export_changed) {
+        bool value_changed = existing != this->vars.end() && existing->second != new_entry;
+        if (export_changed || value_changed) {
             export_generation += 1;
         }
-        if (existing == this->vars.end() || export_changed || existing->second != new_entry) {
-            // Value has changed.
+        if (existing == this->vars.end() || export_changed || value_changed) {
+            // Value is set for the first time, or has changed.
             callbacks.push_back(callback_data_t(key, new_entry.as_string()));
         }
     }

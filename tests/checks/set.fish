@@ -480,4 +480,11 @@ $FISH -c 'set -S EDITOR' | string match -r -e 'global|universal'
 # CHECK: $EDITOR: set in universal scope, exported, with 2 elements
 sh -c "EDITOR='vim -g' $FISH -c "'\'set -S EDITOR\'' | string match -r -e 'global|universal'
 
+while set -e __fish_test_universal_exported_var
+end
+set -xU __fish_test_universal_exported_var 1
+$FISH -c 'set __fish_test_universal_exported_var 2'
+env | string match -e __fish_test_universal_exported_var
+#CHECK: __fish_test_universal_exported_var=2
+
 true

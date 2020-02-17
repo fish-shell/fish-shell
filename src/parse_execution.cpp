@@ -1186,6 +1186,9 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
         return *ret;
     }
 
+    // We definitely do not want to execute anything if we're told we're --no-execute!
+    if (no_exec()) return end_execution_reason_t::ok;
+
     // Get terminal modes.
     struct termios tmodes = {};
     if (parser->is_interactive() && tcgetattr(STDIN_FILENO, &tmodes)) {

@@ -1214,7 +1214,8 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
     // is significantly faster.
     if (job_is_simple_block(job_node)) {
         tnode_t<g::optional_time> optional_time = job_node.child<0>();
-        cleanup_t timer = push_timer(optional_time.tag() == parse_optional_time_time);
+        // If no-exec has been given, there is nothing to time.
+        cleanup_t timer = push_timer(optional_time.tag() == parse_optional_time_time && !no_exec());
         tnode_t<g::variable_assignments> variable_assignments = job_node.child<1>();
         const block_t *block = nullptr;
         end_execution_reason_t result =

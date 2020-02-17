@@ -5,6 +5,11 @@ echo "type foo" | $fish -n
 echo $status
 #CHECK: 0
 
+# Test that it doesn't time non-execution.
+echo "time echo foo" | $fish -n
+echo $status
+#CHECK: 0
+
 # Test that it doesn't check globs.
 echo "echo /asfjidhfiusnlkxcnvklxcvlkmcxlv*" | $fish -n
 echo $status

@@ -957,7 +957,7 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
         // A false return tells the caller to remove the job from the list.
         return false;
     }
-    cleanup_t timer = push_timer(j->flags().has_time_prefix);
+    cleanup_t timer = push_timer(j->flags().has_time_prefix && !no_exec());
 
     // Get the deferred process, if any. We will have to remember its pipes.
     autoclose_pipes_t deferred_pipes;

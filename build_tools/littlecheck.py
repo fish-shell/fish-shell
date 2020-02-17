@@ -117,7 +117,7 @@ class RunCmd(object):
 
 
 class TestFailure(object):
-    def __init__(self, line, check, testrun, after = None):
+    def __init__(self, line, check, testrun, after=None):
         self.line = line
         self.check = check
         self.testrun = testrun
@@ -185,7 +185,7 @@ class TestFailure(object):
             fmtstrs += [
                 "  additional output:",
                 "    {BOLD}{additional_output}{RESET}",
-                ]
+            ]
         fmtstrs += ["  when running command:", "    {subbed_command}"]
         return "\n".join(fmtstrs).format(**fields)
 
@@ -243,7 +243,14 @@ class TestRun(object):
                 # Failed to match.
                 lineq.pop()
                 # Add context, ignoring empty lines.
-                return TestFailure(line, check, self, after = [line.text for line in lineq[::-1] if not line.is_empty_space()])
+                return TestFailure(
+                    line,
+                    check,
+                    self,
+                    after=[
+                        line.text for line in lineq[::-1] if not line.is_empty_space()
+                    ],
+                )
         # Drain empties.
         while lineq and lineq[-1].is_empty_space():
             lineq.pop()
@@ -440,14 +447,15 @@ def get_argparse():
     parser.add_argument(
         "-p",
         "--progress",
-        action='store_true',
-        dest='progress',
+        action="store_true",
+        dest="progress",
         help="Show the files to be checked",
         default=False,
     )
     parser.add_argument("file", nargs="+", help="File to check")
     parser.add_argument(
-        "-A", "--after",
+        "-A",
+        "--after",
         type=int,
         help="How many non-empty lines of output after a failure to print (default: 5)",
         action="store",
@@ -471,7 +479,7 @@ def main():
     for path in args.file:
         fields["path"] = path
         if config.progress:
-            print("Testing file {path} ... ".format(**fields), end='')
+            print("Testing file {path} ... ".format(**fields), end="")
         subs = def_subs.copy()
         subs["s"] = path
         if not check_path(path, subs, config, TestFailure.print_message):

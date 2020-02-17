@@ -1478,7 +1478,7 @@ url = "http://localhost:%d/%s/%s" % (PORT, authkey, initial_tab)
 # Create temporary file to hold redirect to real server. This prevents exposing
 # the URL containing the authentication key on the command line (see
 # CVE-2014-2914 or https://github.com/fish-shell/fish-shell/issues/1438).
-f = tempfile.NamedTemporaryFile(prefix='web_config', suffix='.html', mode='w')
+f = tempfile.NamedTemporaryFile(prefix="web_config", suffix=".html", mode="w")
 
 f.write(redirect_template_html % (url, url))
 f.flush()

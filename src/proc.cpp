@@ -268,10 +268,13 @@ bool process_t::is_internal() const {
         case process_type_t::exec:
             return false;
         default:
-            assert(false && "The fish developers forgot to include a process_t. Please report a bug");
+            assert(false &&
+                   "The fish developers forgot to include a process_t. Please report a bug");
             return true;
     }
-    assert(false && "process_t::is_internal: Total logic failure, universe is broken. Please replace universe and retry.");
+    assert(false &&
+           "process_t::is_internal: Total logic failure, universe is broken. Please replace "
+           "universe and retry.");
     return true;
 }
 

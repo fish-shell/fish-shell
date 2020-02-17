@@ -375,7 +375,8 @@ maybe_t<pipe_or_redir_t> pipe_or_redir_t::from_string(const wchar_t *buff) {
                                    : STDOUT_FILENO;              // like >|
             } else if (try_consume(L'&')) {
                 // This is a redirection to an fd.
-                // Note that we allow ">>&", but it's still just writing to the fd - "appending" to it doesn't make sense.
+                // Note that we allow ">>&", but it's still just writing to the fd - "appending" to
+                // it doesn't make sense.
                 result.mode = redirection_mode_t::fd;
                 result.fd = has_fd ? parse_fd(fd_start, fd_end)  // like 1>&2
                                    : STDOUT_FILENO;              // like >&2
@@ -383,7 +384,8 @@ maybe_t<pipe_or_redir_t> pipe_or_redir_t::from_string(const wchar_t *buff) {
                 // This is a redirection to a file.
                 result.fd = has_fd ? parse_fd(fd_start, fd_end)  // like 1> file.txt
                                    : STDOUT_FILENO;              // like > file.txt
-                if (result.mode != redirection_mode_t::append) result.mode = redirection_mode_t::overwrite;
+                if (result.mode != redirection_mode_t::append)
+                    result.mode = redirection_mode_t::overwrite;
                 // Note 'echo abc >>? file' is valid: it means append and noclobber.
                 // But here "noclobber" means the file must not exist, so appending
                 // can be ignored.

@@ -17,8 +17,8 @@
 #include <procfs.h>
 #endif
 #if __APPLE__
-#include <sys/time.h> // Required to build with old SDK versions
 #include <sys/proc.h>
+#include <sys/time.h>  // Required to build with old SDK versions
 #else
 #include <dirent.h>
 #include <sys/stat.h>
@@ -194,7 +194,7 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
         if (idx.empty() && in[pos] == L'.' && in[pos + 1] == L'.') {
             // If we are at the first index expression, a missing start index means the range starts
             // at the first item.
-            tmp = 1; // first index
+            tmp = 1;  // first index
             end = &in[pos];
         } else {
             tmp = fish_wcstol(&in[pos], &end);
@@ -212,13 +212,13 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
         if (in[pos] == L'.' && in[pos + 1] == L'.') {
             pos += 2;
             while (in[pos] == INTERNAL_SEPARATOR) pos++;
-            while (iswspace(in[pos])) pos++; // Allow the space in "[.. ]".
+            while (iswspace(in[pos])) pos++;  // Allow the space in "[.. ]".
 
             long tmp1;
             // Check if we are at the last index range expression, a missing end index means the
             // range spans until the last item.
             if (in[pos] == L']') {
-                tmp1 = -1; // last index
+                tmp1 = -1;  // last index
                 end = &in[pos];
             } else {
                 tmp1 = fish_wcstol(&in[pos], &end);

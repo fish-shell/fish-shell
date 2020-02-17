@@ -95,7 +95,7 @@ complete -f -c rbenv -n '__fish_rbenv_using_command shims' -a '--short'
 complete -f -c rbenv -n '__fish_rbenv_needs_command' -a version -d 'Show the current Ruby version & how it was selected'
 
 ### version-file
-complete -f -c rbenv -n '__fish_rbenv_needs_command' -a version-file 'Detect the file that sets the current rbenv version'
+complete -f -c rbenv -n '__fish_rbenv_needs_command' -a version-file -d 'Detect the file that sets the current rbenv version'
 
 ### version-file-read
 complete -f -c rbenv -n '__fish_rbenv_needs_command' -a version-file-read

@@ -718,7 +718,8 @@ end_execution_reason_t parse_execution_context_t::expand_command(
     assert(expand_err == expand_result_t::ok);
 
     // Complain if the resulting expansion was empty, or expanded to an empty string.
-    if (out_cmd->empty()) {
+    // For no-exec it's okay, as we can't really perform the expansion.
+    if (out_cmd->empty() && !no_exec()) {
         return this->report_error(STATUS_ILLEGAL_CMD, statement,
                                   _(L"The expanded command was empty."));
     }
@@ -741,6 +742,8 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
     if (ret != end_execution_reason_t::ok) {
         return ret;
     }
+    // For no-exec, having an empty command is okay. We can't do anything more with it tho.
+    if (no_exec()) return end_execution_reason_t::ok;
     assert(!cmd.empty() && "expand_command should not produce an empty command");
 
     // Determine the process type.
@@ -795,7 +798,8 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
         }
 
         if (!has_command && !use_implicit_cd) {
-            // No command.
+            // No command. If we're --no-execute return okay - it might be a function.
+            if (no_exec()) return end_execution_reason_t::ok;
             return this->handle_command_not_found(cmd, statement, no_cmd_err_code);
         }
     }
@@ -875,6 +879,8 @@ end_execution_reason_t parse_execution_context_t::expand_arguments_from_nodes(
             }
             case expand_result_t::wildcard_no_match: {
                 if (glob_behavior == failglob) {
+                    // For no_exec, ignore the error - this might work at runtime.
+                    if (no_exec()) return end_execution_reason_t::ok;
                     // Report the unmatched wildcard error and stop processing.
                     return report_error(STATUS_UNMATCHED_WILDCARD, arg_node, WILDCARD_ERR_MSG,
                                         get_source(arg_node).c_str());

@@ -1,6 +1,7 @@
 # fish next-minor
 
 ## Notable improvements and fixes
+- `fish --no-execute` will no longer complain about unknown commands or non-matching wildcards, as these could be defined differently at runtime (especially for functions). #977
 
 ### Syntax changes and new commands
 

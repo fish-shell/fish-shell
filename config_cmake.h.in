@@ -145,6 +145,9 @@
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "fish"
 
+/* Use a variadic tparm on NetBSD curses. */
+#cmakedefine TPARM_VARARGS 1
+
 /* Define to 1 if tparm accepts a fixed amount of parameters. */
 #cmakedefine TPARM_SOLARIS_KLUDGE 1
 

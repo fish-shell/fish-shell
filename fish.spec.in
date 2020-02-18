@@ -87,6 +87,8 @@ make %{?_smp_mflags}
 %if 0%{?suse_version}
 %suse_update_desktop_file fish "System;TerminalEmulator"
 %endif
+cp -a README.md %{buildroot}%{_pkgdocdir}
+cp -a CONTRIBUTING.md %{buildroot}%{_pkgdocdir}
 
 %check
 # OpenSUSE does out-of-tree builds and defines __builddir
@@ -115,12 +117,10 @@ fi
 %defattr(-,root,root,-)
 
 # The documentation directory
-%docdir %{_datadir}/doc/fish/
-%{_datadir}/doc/fish/
+%doc %{_datadir}/doc/fish/
 
 # man files
 %{_mandir}/man1/*
-%docdir %{_datadir}/fish/man/man1/
 %{_datadir}/fish/man/man1/
 
 # The program binaries

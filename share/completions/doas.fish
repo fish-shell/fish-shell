@@ -1,5 +1,3 @@
-#!/usr/bin/fish
-#
 # Completion for doas https://github.com/multiplexd/doas
 # based on the sudo completions
 #

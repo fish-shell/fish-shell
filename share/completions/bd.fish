@@ -1,4 +1,3 @@
-#!/usr/bin/env fish
 # -*-  mode:fish; tab-width:4  -*-
 #
 # fish-completion for fish-bd

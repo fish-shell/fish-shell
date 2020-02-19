@@ -360,12 +360,10 @@ static bool fork_child_for_process(const std::shared_ptr<job_t> &job, process_t 
     return true;
 }
 
-/// Execute an internal builtin. Given a parser, a job within that parser, and a process within that
-/// job corresponding to a builtin, execute the builtin with the given streams. If pipe_read is set,
-/// assign stdin to it; otherwise infer stdin from the IO chain.
+/// Execute an internal builtin. Given a parser and a builtin process, execute the builtin with the
+/// given streams. If pipe_read is set, assign stdin to it; otherwise infer stdin from the IO chain.
 /// \return true on success, false if there is an exec error.
-static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<job_t> &j,
-                                       process_t *p, const io_pipe_t *pipe_read,
+static bool exec_internal_builtin_proc(parser_t &parser, process_t *p, const io_pipe_t *pipe_read,
                                        const io_chain_t &proc_io_chain, io_streams_t &streams) {
     assert(p->type == process_type_t::builtin && "Process must be a builtin");
     int local_builtin_stdin = STDIN_FILENO;
@@ -412,24 +410,8 @@ static bool exec_internal_builtin_proc(parser_t &parser, const std::shared_ptr<j
     streams.stdin_is_directly_redirected = stdin_is_directly_redirected;
     streams.io_chain = &proc_io_chain;
 
-    // Since this may be the foreground job, and since a builtin may execute another
-    // foreground job, we need to pretend to suspend this job while running the
-    // builtin, in order to avoid a situation where two jobs are running at once.
-    //
-    // The reason this is done here, and not by the relevant builtins, is that this
-    // way, the builtin does not need to know what job it is part of. It could
-    // probably figure that out by walking the job list, but it seems more robust to
-    // make exec handle things.
-    const bool fg = j->is_foreground();
-    j->mut_flags().foreground = false;
-
     // Note this call may block for a long time, while the builtin performs I/O.
     p->status = builtin_run(parser, p->get_argv(), streams);
-
-    // Restore the fg flag, which is temporarily set to false during builtin
-    // execution so as not to confuse some job-handling builtins.
-    j->mut_flags().foreground = fg;
-
     return true;  // "success"
 }
 
@@ -851,7 +833,7 @@ static bool exec_process_in_job(parser_t &parser, process_t *p, const std::share
 
         case process_type_t::builtin: {
             io_streams_t builtin_io_streams{stdout_read_limit};
-            if (!exec_internal_builtin_proc(parser, j, p, pipe_read.get(), process_net_io_chain,
+            if (!exec_internal_builtin_proc(parser, p, pipe_read.get(), process_net_io_chain,
                                             builtin_io_streams)) {
                 return false;
             }

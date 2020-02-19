@@ -270,8 +270,8 @@ void job_tree_t::populate_tree_for_job(job_t *job, const job_tree_ref_t &propose
     //  non-placeholder -> we are running as part of a real pipeline
     // Decide if this job can use the placeholder tree.
     // This is true if it's a simple foreground execution of an internal proc.
-    bool can_use_placeholder =
-        job->is_foreground() && job->processes.size() == 1 && job->processes.front()->is_internal();
+    bool can_use_placeholder = !job->is_initially_background() && job->processes.size() == 1 &&
+                               job->processes.front()->is_internal();
 
     bool needs_new_tree = false;
     if (!proposed) {

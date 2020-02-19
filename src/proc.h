@@ -389,6 +389,11 @@ class job_t {
         /// Whether the job wants to own the terminal when in the foreground.
         bool wants_terminal{};
 
+        /// Whether the job had the background ampersand when constructed, e.g. /bin/echo foo &
+        /// Note that a job may move between foreground and background; this just describes what the
+        /// initial state should be.
+        bool initial_background{};
+
         /// Whether this job was created as part of an event handler.
         bool from_event_handler{};
 
@@ -522,6 +527,10 @@ class job_t {
 
     /// \return if this job should own the terminal when it runs.
     bool should_claim_terminal() const { return properties.wants_terminal && is_foreground(); }
+
+    /// \return whether this job is initially going to run in the background, because & was
+    /// specified.
+    bool is_initially_background() const { return properties.initial_background; }
 
     /// Mark this job as constructed. The job must not have previously been marked as constructed.
     void mark_constructed();

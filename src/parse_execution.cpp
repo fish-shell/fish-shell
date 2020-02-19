@@ -1255,6 +1255,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
 
     job_t::properties_t props{};
     props.wants_terminal = wants_job_control && !ld.is_event;
+    props.initial_background = job_node_is_background(job_node);
     props.skip_notification =
         ld.is_subshell || ld.is_block || ld.is_event || !parser->is_interactive();
     props.from_event_handler = ld.is_event;
@@ -1263,7 +1264,7 @@ end_execution_reason_t parse_execution_context_t::run_1_job(tnode_t<g::job> job_
     shared_ptr<job_t> job = std::make_shared<job_t>(props);
     job->tmodes = tmodes;
 
-    job->mut_flags().foreground = !job_node_is_background(job_node);
+    job->mut_flags().foreground = !props.initial_background;
 
     // We are about to populate a job. One possible argument to the job is a command substitution
     // which may be interested in the job that's populating it, via '--on-job-exit caller'. Record

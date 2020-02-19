@@ -28,7 +28,7 @@ which means you are all set up and can start using fish::
 
 
 This prompt that you see above is the ``fish`` default prompt: it shows your username, hostname, and working directory.
-- to change this prompt see `how to change your prompt <prompt>`_
+- to change this prompt see `how to change your prompt <#prompt>`_
 - to switch to fish permanently see `switch your default shell to fish <#switching-to-fish>`_.
 
 From now on, we'll pretend your prompt is just a '``>``' to save space.

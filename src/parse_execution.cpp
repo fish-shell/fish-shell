@@ -749,32 +749,6 @@ end_execution_reason_t parse_execution_context_t::populate_plain_process(
     // Determine the process type.
     enum process_type_t process_type = process_type_for_command(statement, cmd);
 
-    // Protect against exec with background processes running
-    if (process_type == process_type_t::exec && parser->is_interactive()) {
-        bool have_bg = false;
-        for (const auto &bg : parser->jobs()) {
-            // The assumption here is that if it is a foreground job,
-            // it's related to us.
-            // This stops us from asking if we're doing `exec` inside a function.
-            if (!bg->is_completed() && !bg->is_foreground()) {
-                have_bg = true;
-                break;
-            }
-        }
-
-        if (have_bg) {
-            uint64_t current_run_count = reader_run_count();
-            uint64_t &last_exec_run_count = parser->libdata().last_exec_run_counter;
-            if (isatty(STDIN_FILENO) && current_run_count - 1 != last_exec_run_count) {
-                reader_bg_job_warning(*parser);
-                last_exec_run_count = current_run_count;
-                return end_execution_reason_t::error;
-            } else {
-                hup_background_jobs(*parser);
-            }
-        }
-    }
-
     wcstring path_to_external_command;
     if (process_type == process_type_t::external || process_type == process_type_t::exec) {
         // Determine the actual command. This may be an implicit cd.

@@ -553,6 +553,14 @@ void set_job_control_mode(job_control_t mode);
 class parser_t;
 bool job_reap(parser_t &parser, bool interactive);
 
+/// \return the list of background jobs which we should warn the user about, if the user attempts to
+/// exit. An empty result (common) means no such jobs.
+job_list_t jobs_requiring_warning_on_exit(const parser_t &parser);
+
+/// Print the exit warning for the given jobs, which should have been obtained via
+/// jobs_requiring_warning_on_exit().
+void print_exit_warning_for_jobs(const job_list_t &jobs);
+
 /// Mark a process as failed to execute (and therefore completed).
 void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *failed_proc);
 

@@ -2341,14 +2341,12 @@ void reader_import_history_if_necessary() {
 
 bool shell_is_exiting() { return should_exit(); }
 
-void reader_bg_job_warning(const parser_t &parser) {
+void reader_bg_job_warning(const job_list_t &jobs) {
     std::fputws(_(L"There are still jobs active:\n"), stdout);
     std::fputws(_(L"\n   PID  Command\n"), stdout);
 
-    for (const auto &j : parser.jobs()) {
-        if (!j->is_completed()) {
-            std::fwprintf(stdout, L"%6d  %ls\n", j->processes[0]->pid, j->command_wcstr());
-        }
+    for (const auto &j : jobs) {
+        std::fwprintf(stdout, L"%6d  %ls\n", j->processes[0]->pid, j->command_wcstr());
     }
     fputws(L"\n", stdout);
     fputws(_(L"A second attempt to exit will terminate them.\n"), stdout);
@@ -2367,17 +2365,10 @@ static void handle_end_loop(const parser_t &parser) {
             }
         }
 
-        bool bg_jobs = false;
-        for (const auto &j : parser.jobs()) {
-            if (!j->is_completed()) {
-                bg_jobs = true;
-                break;
-            }
-        }
-
         reader_data_t *data = current_data();
-        if (!data->prev_end_loop && bg_jobs) {
-            reader_bg_job_warning(parser);
+        auto bg_jobs = jobs_requiring_warning_on_exit(parser);
+        if (!data->prev_end_loop && !bg_jobs.empty()) {
+            print_exit_warning_for_jobs(bg_jobs);
             reader_set_end_loop(false);
             data->prev_end_loop = true;
             return;

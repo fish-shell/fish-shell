@@ -283,9 +283,6 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
                                           const wcstring &command_line, size_t *inout_cursor_pos,
                                           bool append_only);
 
-/// Print warning with list of backgrounded jobs
-void reader_bg_job_warning(const parser_t &parser);
-
 /// Return the current interactive reads loop count. Useful for determining how many commands have
 /// been executed between invocations of code.
 uint64_t reader_run_count();

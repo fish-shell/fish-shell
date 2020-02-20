@@ -884,6 +884,30 @@ static process_t *get_deferred_process(const shared_ptr<job_t> &j) {
     return nullptr;
 }
 
+// Given that we are about to execute an exec() call, check if the parser is interactive and there
+// are extant background jobs. If so, warn the user and do not exec().
+// \return true if we should allow exec, false to disallow it.
+static bool allow_exec_with_background_jobs(parser_t &parser) {
+    // If we're not interactive, we cannot warn.
+    if (!parser.is_interactive()) return true;
+
+    // Construct the list of running background jobs.
+    job_list_t bgs = jobs_requiring_warning_on_exit(parser);
+    if (bgs.empty()) return true;
+
+    // Compare run counts, so we only warn once.
+    uint64_t current_run_count = reader_run_count();
+    uint64_t &last_exec_run_count = parser.libdata().last_exec_run_counter;
+    if (isatty(STDIN_FILENO) && current_run_count - 1 != last_exec_run_count) {
+        print_exit_warning_for_jobs(bgs);
+        last_exec_run_count = current_run_count;
+        return false;
+    } else {
+        hup_background_jobs(parser);
+        return true;
+    }
+}
+
 bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t &lineage) {
     assert(j && "null job_t passed to exec_job!");
 
@@ -930,6 +954,11 @@ bool exec_job(parser_t &parser, const shared_ptr<job_t> &j, const job_lineage_t 
 
     // Handle an exec call.
     if (j->processes.front()->type == process_type_t::exec) {
+        // If we are interactive, perhaps disallow exec if there are background jobs.
+        if (!allow_exec_with_background_jobs(parser)) {
+            return false;
+        }
+
         internal_exec(parser.vars(), j.get(), lineage.block_io);
         // internal_exec only returns if it failed to set up redirections.
         // In case of an successful exec, this code is not reached.

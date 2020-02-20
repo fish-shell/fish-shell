@@ -210,6 +210,27 @@ static int64_t next_proc_id() {
 
 internal_proc_t::internal_proc_t() : internal_proc_id_(next_proc_id()) {}
 
+job_list_t jobs_requiring_warning_on_exit(const parser_t &parser) {
+    job_list_t result;
+    for (const auto &job : parser.jobs()) {
+        if (!job->is_foreground() && job->is_constructed() && !job->is_completed()) {
+            result.push_back(job);
+        }
+    }
+    return result;
+}
+
+void print_exit_warning_for_jobs(const job_list_t &jobs) {
+    fputws(_(L"There are still jobs active:\n"), stdout);
+    fputws(_(L"\n   PID  Command\n"), stdout);
+    for (const auto &j : jobs) {
+        fwprintf(stdout, L"%6d  %ls\n", j->processes[0]->pid, j->command_wcstr());
+    }
+    fputws(L"\n", stdout);
+    fputws(_(L"A second attempt to exit will terminate them.\n"), stdout);
+    fputws(_(L"Use 'disown PID' to remove jobs from the list without terminating them.\n"), stdout);
+}
+
 void job_mark_process_as_failed(const std::shared_ptr<job_t> &job, const process_t *failed_proc) {
     // The given process failed to even lift off (e.g. posix_spawn failed) and so doesn't have a
     // valid pid. Mark it and everything after it as dead.

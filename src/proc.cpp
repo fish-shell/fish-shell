@@ -998,15 +998,10 @@ void proc_wait_any(parser_t &parser) {
     process_clean_after_marking(parser, parser.libdata().is_interactive);
 }
 
-void hup_background_jobs(const parser_t &parser) {
-    // TODO: we should probably hup all jobs across all parsers here.
-    for (const auto &j : parser.jobs()) {
-        // Make sure we don't try to SIGHUP the calling builtin
-        if (j->pgid == INVALID_PID || !j->wants_job_control()) {
-            continue;
-        }
-
-        if (!j->is_completed()) {
+void hup_jobs(const job_list_t &jobs) {
+    pid_t fish_pgrp = getpgrp();
+    for (const auto &j : jobs) {
+        if (j->pgid != INVALID_PID && j->pgid != fish_pgrp && !j->is_completed()) {
             if (j->is_stopped()) {
                 j->signal(SIGCONT);
             }

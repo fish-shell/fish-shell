@@ -903,7 +903,7 @@ static bool allow_exec_with_background_jobs(parser_t &parser) {
         last_exec_run_count = current_run_count;
         return false;
     } else {
-        hup_background_jobs(parser);
+        hup_jobs(parser.jobs());
         return true;
     }
 }

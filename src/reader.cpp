@@ -2365,6 +2365,7 @@ static void handle_end_loop(const parser_t &parser) {
             }
         }
 
+        // Perhaps print a warning before exiting.
         reader_data_t *data = current_data();
         auto bg_jobs = jobs_requiring_warning_on_exit(parser);
         if (!data->prev_end_loop && !bg_jobs.empty()) {
@@ -2376,7 +2377,7 @@ static void handle_end_loop(const parser_t &parser) {
     }
 
     // Kill remaining jobs before exiting.
-    hup_background_jobs(parser);
+    hup_jobs(parser.jobs());
 }
 
 static bool selection_is_at_top() {

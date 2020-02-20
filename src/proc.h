@@ -591,8 +591,8 @@ void proc_wait_any(parser_t &parser);
 void set_is_within_fish_initialization(bool flag);
 bool is_within_fish_initialization();
 
-/// Terminate all background jobs
-void hup_background_jobs(const parser_t &parser);
+/// Send SIGHUP to the list \p jobs, excepting those which are in fish's pgroup.
+void hup_jobs(const job_list_t &jobs);
 
 /// Give ownership of the terminal to the specified job, if it wants it.
 ///

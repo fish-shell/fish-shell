@@ -59,9 +59,10 @@ pgroup_provenance_t get_pgroup_provenance(const shared_ptr<job_t> &j,
     bool has_external = j->has_external_proc();
     assert(first_proc_is_internal ? has_internal : has_external);
 
-    if (lineage.parent_pgid.has_value()) {
+    if (lineage.parent_pgid.has_value() && j->is_foreground()) {
         // Our lineage indicates a pgid. This means the job is "nested" as a function or block
-        // inside another job, which has a real pgroup. We're going to use that.
+        // inside another job, which has a real pgroup. We're going to use that, unless it's
+        // backgrounded, in which case it should not inherit a pgroup.
         return pgroup_provenance_t::lineage;
     } else if (!j->wants_job_control()) {
         // This job doesn't need job control, it can just live in the fish pgroup.

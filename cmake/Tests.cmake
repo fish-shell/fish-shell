@@ -1,7 +1,7 @@
 # Define fish_tests.
 ADD_EXECUTABLE(fish_tests EXCLUDE_FROM_ALL
                src/fish_tests.cpp)
-FISH_LINK_DEPS(fish_tests)
+FISH_LINK_DEPS_AND_SIGN(fish_tests)
 
 # The "test" directory.
 SET(TEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/test)

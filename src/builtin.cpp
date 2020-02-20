@@ -11,10 +11,10 @@
 // 2). Add a line like { L"NAME", &builtin_NAME, N_(L"Bla bla bla") }, to the builtin_data_t
 // variable. The description is used by the completion system. Note that this array is sorted.
 //
-// 3). Create a file sphinx_doc_src/NAME.rst, containing the manual for the builtin in
+// 3). Create a file doc_src/NAME.rst, containing the manual for the builtin in
 // reStructuredText-format. Check the other builtin manuals for proper syntax.
 //
-// 4). Use 'git add sphinx_doc_src/NAME.txt' to start tracking changes to the documentation file.
+// 4). Use 'git add doc_src/NAME.txt' to start tracking changes to the documentation file.
 #include "config.h"  // IWYU pragma: keep
 
 #include "builtin.h"

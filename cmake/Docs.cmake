@@ -6,7 +6,7 @@ FIND_PROGRAM(SPHINX_EXECUTABLE NAMES sphinx-build
 
 INCLUDE(FeatureSummary)
 
-SET(SPHINX_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/sphinx_doc_src")
+SET(SPHINX_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/doc_src")
 SET(SPHINX_ROOT_DIR "${CMAKE_CURRENT_BINARY_DIR}/user_doc")
 SET(SPHINX_BUILD_DIR "${SPHINX_ROOT_DIR}/build")
 SET(SPHINX_CACHE_DIR "${SPHINX_ROOT_DIR}/doctrees")
@@ -26,7 +26,7 @@ ADD_CUSTOM_TARGET(sphinx-docs
         -d "${SPHINX_CACHE_DIR}"
         "${SPHINX_SRC_DIR}"
         "${SPHINX_HTML_DIR}"
-    DEPENDS sphinx_doc_src/fish_indent_lexer.py fish_indent
+    DEPENDS ${SPHINX_SRC_DIR}/fish_indent_lexer.py fish_indent
     COMMENT "Building HTML documentation with Sphinx")
 
 # sphinx-manpages needs the fish_indent binary for the version number

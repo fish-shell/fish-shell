@@ -96,7 +96,7 @@ static unsigned char convert_color(const unsigned char rgb[3], const uint32_t *c
     long r = rgb[0], g = rgb[1], b = rgb[2];
     auto best_distance = static_cast<unsigned long>(-1);
     auto best_index = static_cast<unsigned char>(-1);
-    for (unsigned char idx = 0; idx < color_count; idx++) {
+    for (size_t idx = 0; idx < color_count; idx++) {
         uint32_t color = colors[idx];
         long test_r = (color >> 16) & 0xFF, test_g = (color >> 8) & 0xFF,
              test_b = (color >> 0) & 0xFF;

@@ -443,7 +443,7 @@ static bool handle_builtin_output(parser_t &parser, const std::shared_ptr<job_t>
     // need for a similar check for stderr.
     bool stdout_done = false;
     if (stdout_io && stdout_io->io_mode == io_mode_t::bufferfill) {
-        auto stdout_buffer = static_cast<const io_bufferfill_t *>(stdout_io.get())->buffer();
+        auto stdout_buffer = dynamic_cast<const io_bufferfill_t *>(stdout_io.get())->buffer();
         stdout_buffer->append_from_stream(stdout_stream);
         stdout_done = true;
     }

@@ -72,23 +72,11 @@ FUNCTION(FISH_TRY_CREATE_DIRS)
   ENDFOREACH()
 ENDFUNCTION(FISH_TRY_CREATE_DIRS)
 
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(bindir)
-# $v for i in $(PROGRAMS); do\
-#   $(INSTALL) -m 755 $$i $(DESTDIR)$(bindir);\
-#   echo " Installing $(bo)$$i$(sgr0)";\
-#   true ;\
-# done;
-
 INSTALL(TARGETS ${PROGRAMS}
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ
                     GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
         DESTINATION ${bindir})
 
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish/conf.d
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish/completions
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish/functions
-# $v $(INSTALL) -m 644 etc/config.fish $(DESTDIR)$(sysconfdir)/fish/
 FISH_CREATE_DIRS(${sysconfdir}/fish/conf.d ${sysconfdir}/fish/completions
     ${sysconfdir}/fish/functions)
 INSTALL(FILES etc/config.fish DESTINATION ${sysconfdir}/fish/)
@@ -101,24 +89,15 @@ FISH_CREATE_DIRS(${rel_datadir}/fish ${rel_datadir}/fish/completions
                  ${rel_datadir}/fish/tools/web_config/partials
                  ${rel_datadir}/fish/tools/web_config/sample_prompts)
 
-# $v $(INSTALL) -m 644 share/config.fish $(DESTDIR)$(datadir)/fish/
-# $v $(INSTALL) -m 644 share/__fish_build_paths.fish    $(DESTDIR)$(datadir)/fish/
 CONFIGURE_FILE(share/__fish_build_paths.fish.in share/__fish_build_paths.fish)
 INSTALL(FILES share/config.fish
               ${CMAKE_CURRENT_BINARY_DIR}/share/__fish_build_paths.fish
         DESTINATION ${rel_datadir}/fish)
 
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/pkgconfig
-# @echo "Creating placeholder vendor/'extra_' directories"
-# -$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir)
-# -$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir)
-# -$v $(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir)
 # Create only the vendor directories inside the prefix (#5029 / #6508)
 FISH_CREATE_DIRS(${rel_datadir}/fish/vendor_completions.d ${rel_datadir}/fish/vendor_functions.d
     ${rel_datadir}/fish/vendor_conf.d)
 
-# @echo "Installing pkgconfig file"
-# $v $(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig
 FISH_TRY_CREATE_DIRS(${rel_datadir}/pkgconfig)
 CONFIGURE_FILE(fish.pc.in fish.pc.noversion)
 
@@ -134,24 +113,17 @@ ADD_CUSTOM_TARGET(build_fish_pc ALL DEPENDS fish.pc)
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/fish.pc
         DESTINATION ${rel_datadir}/pkgconfig)
 
-# @echo "Installing the $(bo)fish completion library$(sgr0)...";
-# $v $(INSTALL) -m 644 $(COMPLETIONS_DIR_FILES:%='%') $(DESTDIR)$(datadir)/fish/completions/
 INSTALL(DIRECTORY share/completions/
         DESTINATION ${rel_datadir}/fish/completions
         FILES_MATCHING PATTERN "*.fish")
 
-# @echo "Installing $(bo)fish functions$(sgr0)";
-# $v $(INSTALL) -m 644 $(FUNCTIONS_DIR_FILES:%='%') $(DESTDIR)$(datadir)/fish/functions/
 INSTALL(DIRECTORY share/functions/
         DESTINATION ${rel_datadir}/fish/functions
         FILES_MATCHING PATTERN "*.fish")
 
-# @echo "Installing $(bo)man pages$(sgr0)";
-# $v $(INSTALL) -m 644 share/groff/* $(DESTDIR)$(datadir)/fish/groff/
 INSTALL(DIRECTORY share/groff
         DESTINATION ${rel_datadir}/fish)
 
-# $v test -z "$(wildcard share/man/man1/*.1)" || $(INSTALL) -m 644 $(filter-out $(addprefix share/man/man1/, $(CONDEMNED_PAGES)), $(wildcard share/man/man1/*.1)) $(DESTDIR)$(datadir)/fish/man/man1/
 # CONDEMNED_PAGE is managed by the conditional above
 # Building the man pages is optional: if sphinx isn't installed, they're not built
 INSTALL(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/
@@ -160,16 +132,8 @@ INSTALL(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/
         PATTERN "*.1"
         PATTERN ${CONDEMNED_PAGE} EXCLUDE)
 
-# @echo "Installing helper tools";
-# $v $(INSTALL) -m 755 share/tools/*.py $(DESTDIR)$(datadir)/fish/tools/
 INSTALL(PROGRAMS share/tools/create_manpage_completions.py share/tools/deroff.py
         DESTINATION ${rel_datadir}/fish/tools/)
-
-# $v $(INSTALL) -m 644 share/tools/web_config/*.* $(DESTDIR)$(datadir)/fish/tools/web_config/
-# $v $(INSTALL) -m 644 share/tools/web_config/js/*.* $(DESTDIR)$(datadir)/fish/tools/web_config/js/
-# $v $(INSTALL) -m 644 share/tools/web_config/partials/* $(DESTDIR)$(datadir)/fish/tools/web_config/partials/
-# $v $(INSTALL) -m 644 share/tools/web_config/sample_prompts/*.fish $(DESTDIR)$(datadir)/fish/tools/web_config/sample_prompts/
-# $v $(INSTALL) -m 755 share/tools/web_config/*.py $(DESTDIR)$(datadir)/fish/tools/web_config/
 
 INSTALL(DIRECTORY share/tools/web_config
         DESTINATION ${rel_datadir}/fish/tools/
@@ -181,29 +145,12 @@ INSTALL(DIRECTORY share/tools/web_config
         PATTERN "*.js"
         PATTERN "*.fish")
 
-# @echo "Installing more man pages";
-# $v $(INSTALL) -m 755 -d $(DESTDIR)$(mandir)/man1;
-# $v for i in $(MANUALS); do \
-#   $(INSTALL) -m 644 $$i $(DESTDIR)$(mandir)/man1/; \
-#   true; \
-# done;
 # Building the man pages is optional: if Sphinx isn't installed, they're not built
 INSTALL(FILES ${MANUALS} DESTINATION ${mandir}/man1/ OPTIONAL)
-
-#install-doc: $(user_doc)
-#    @echo "Installing online user documentation";
-#    $v $(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
-#    $v for i in user_doc/html/* CHANGELOG.md; do \
-#        if test -f $$i; then \
-#            $(INSTALL) -m 644 $$i $(DESTDIR)$(docdir); \
-#        fi; \
-#    done;
-# Building the manual is optional
 INSTALL(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/user_doc/html/ # Trailing slash is important!
         DESTINATION ${docdir} OPTIONAL)
 INSTALL(FILES CHANGELOG.md DESTINATION ${docdir})
 
-# $v $(INSTALL) -m 644 share/lynx.lss $(DESTDIR)$(datadir)/fish/
 INSTALL(FILES share/lynx.lss DESTINATION ${rel_datadir}/fish/)
 
 # These files are built by cmake/gettext.cmake, but using GETTEXT_PROCESS_PO_FILES's

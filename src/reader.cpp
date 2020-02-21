@@ -233,7 +233,7 @@ bool editable_line_t::undo() {
 }
 
 void editable_line_t::push_edit(edit_t &&edit) {
-    bool edit_does_nothing = edit.length == 0 && edit.replacement == L"";
+    bool edit_does_nothing = edit.length == 0 && edit.replacement.empty();
     if (edit_does_nothing) return;
     if (undo_history.edits_applied != undo_history.edits.size()) {
         // After undoing some edits, the user is making a new edit;

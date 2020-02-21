@@ -176,7 +176,7 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
     if (out_string != nullptr) out_string->clear();
 
     total = 0;
-    p = (unsigned char *)in;
+    p = reinterpret_cast<unsigned char *>(const_cast<char *>(in));
     lim = p + insize;
 
     for (; p < lim; p += n) {

@@ -265,7 +265,7 @@ int fd_check_is_remote(int fd) {
     // Linux has constants for these like NFS_SUPER_MAGIC, SMB_SUPER_MAGIC, CIFS_MAGIC_NUMBER but
     // these are in varying headers. Simply hard code them.
     // NOTE: The cast is necessary for 32-bit systems because of the 4-byte CIFS_MAGIC_NUMBER
-    switch ((unsigned int)buf.f_type) {
+    switch (static_cast<unsigned int>(buf.f_type)) {
         case 0x6969:       // NFS_SUPER_MAGIC
         case 0x517B:       // SMB_SUPER_MAGIC
         case 0xFF534D42u:  // CIFS_MAGIC_NUMBER

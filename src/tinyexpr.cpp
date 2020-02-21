@@ -448,7 +448,7 @@ static te_expr *factor(state *s) {
 
     while (s->type == TOK_INFIX &&
            (s->function == reinterpret_cast<const void *>(static_cast<te_fun2>(pow)))) {
-        auto t = (te_fun2)s->function;
+        auto t = reinterpret_cast<te_fun2>(const_cast<void *>(s->function));
         next_token(s);
 
         if (insertion) {
@@ -475,7 +475,7 @@ static te_expr *term(state *s) {
            (s->function == reinterpret_cast<const void *>(static_cast<te_fun2>(mul)) ||
             s->function == reinterpret_cast<const void *>(static_cast<te_fun2>(divide)) ||
             s->function == reinterpret_cast<const void *>(static_cast<te_fun2>(fmod)))) {
-        auto t = (te_fun2)s->function;
+        auto t = reinterpret_cast<te_fun2>(const_cast<void *>(s->function));
         next_token(s);
         ret = NEW_EXPR(TE_FUNCTION2, ret, factor(s));
         ret->function = reinterpret_cast<const void *>(t);
@@ -489,7 +489,7 @@ static te_expr *expr(state *s) {
     te_expr *ret = term(s);
 
     while (s->type == TOK_INFIX && (s->function == add || s->function == sub)) {
-        auto t = (te_fun2)s->function;
+        auto t = reinterpret_cast<te_fun2>(const_cast<void *>(s->function));
         next_token(s);
         ret = NEW_EXPR(TE_FUNCTION2, ret, term(s));
         ret->function = reinterpret_cast<const void *>(t);

@@ -370,7 +370,7 @@ bool wgetopter_t::_handle_long_opt(int argc, wchar_t **argv, const struct woptio
                 std::fwprintf(stderr, _(L"%ls: Unrecognized option '%lc%ls'\n"), argv[0],
                               argv[woptind][0], nextchar);
         }
-        nextchar = (wchar_t *)L"";
+        nextchar = const_cast<wchar_t *>(L"");
         woptind++;
         *retval = '?';
         return true;

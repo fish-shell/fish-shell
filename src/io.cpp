@@ -264,13 +264,13 @@ void io_chain_t::print() const {
         return;
     }
 
-    std::fwprintf(stderr, L"Chain %p (%ld items):\n", this, (long)this->size());
+    std::fwprintf(stderr, L"Chain %p (%ld items):\n", this, static_cast<long>(this->size()));
     for (size_t i = 0; i < this->size(); i++) {
         const auto &io = this->at(i);
         if (io == nullptr) {
             std::fwprintf(stderr, L"\t(null)\n");
         } else {
-            std::fwprintf(stderr, L"\t%lu: fd:%d, ", (unsigned long)i, io->fd);
+            std::fwprintf(stderr, L"\t%lu: fd:%d, ", static_cast<unsigned long>(i), io->fd);
             io->print();
         }
     }

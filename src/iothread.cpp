@@ -199,7 +199,9 @@ static void enqueue_thread_result(work_request_t req) {
     s_result_queue.acquire()->push(std::move(req));
 }
 
-static void *this_thread() { return (void *)(intptr_t)pthread_self(); }
+static void *this_thread() {
+    return reinterpret_cast<void *>((intptr_t)pthread_self());
+}
 
 void *thread_pool_t::run() {
     while (auto req = dequeue_work_or_commit_to_exit()) {

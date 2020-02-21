@@ -956,7 +956,7 @@ static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN],
     const int dummy = socket(AF_INET, SOCK_STREAM, 0);
     if (dummy >= 0) {
         struct ifreq r;
-        strncpy((char *)r.ifr_name, interface, sizeof r.ifr_name - 1);
+        strncpy(const_cast<char *>(r.ifr_name), interface, sizeof r.ifr_name - 1);
         r.ifr_name[sizeof r.ifr_name - 1] = 0;
         if (ioctl(dummy, SIOCGIFHWADDR, &r) >= 0) {
             std::memcpy(macaddr, r.ifr_hwaddr.sa_data, MAC_ADDRESS_MAX_LEN);

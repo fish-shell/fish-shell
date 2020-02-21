@@ -486,7 +486,7 @@ class parse_ll_t {
         while (idx--) {
             production_element_t elem = production[idx];
             PARSE_ASSERT(production_element_is_valid(elem));
-            symbol_stack.push_back(parse_stack_element_t(elem, child_start + idx));
+            symbol_stack.emplace_back(elem, child_start + idx);
         }
     }
 
@@ -731,7 +731,7 @@ void parse_ll_t::reset_symbols(enum parse_token_type_t goal) {
     nodes.push_back(parse_node_t(goal));
 
     symbol_stack.clear();
-    symbol_stack.push_back(parse_stack_element_t(goal, where));  // goal token
+    symbol_stack.emplace_back(goal, where);  // goal token
     this->fatal_errored = false;
 }
 

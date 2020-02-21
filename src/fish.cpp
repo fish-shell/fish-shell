@@ -285,11 +285,11 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
     while ((opt = getopt_long(argc, argv, short_opts, long_opts, nullptr)) != -1) {
         switch (opt) {
             case 'c': {
-                opts->batch_cmds.push_back(optarg);
+                opts->batch_cmds.emplace_back(optarg);
                 break;
             }
             case 'C': {
-                opts->postconfig_cmds.push_back(optarg);
+                opts->postconfig_cmds.emplace_back(optarg);
                 break;
             }
             case 'd': {
@@ -315,7 +315,7 @@ static int fish_parse_opt(int argc, char **argv, fish_cmd_opts_t *opts) {
                 break;
             }
             case 'h': {
-                opts->batch_cmds.push_back("__fish_print_help fish");
+                opts->batch_cmds.emplace_back("__fish_print_help fish");
                 break;
             }
             case 'i': {

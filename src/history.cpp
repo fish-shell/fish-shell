@@ -79,7 +79,7 @@ namespace {
 
 /// If the size of \p buffer is at least \p min_size, output the contents of a string \p str to \p
 /// fd, and clear the string. \return 0 on success, an error code on failure.
-static int flush_to_fd(std::string *buffer, int fd, size_t min_size) {
+int flush_to_fd(std::string *buffer, int fd, size_t min_size) {
     if (buffer->empty() || buffer->size() < min_size) {
         return 0;
     }
@@ -108,7 +108,7 @@ class time_profiler_t {
 
 /// \return the path for the history file for the given \p session_id, or none() if it could not be
 /// loaded. If suffix is provided, append that suffix to the path; this is used for temporary files.
-static maybe_t<wcstring> history_filename(const wcstring &session_id, const wcstring &suffix = {}) {
+maybe_t<wcstring> history_filename(const wcstring &session_id, const wcstring &suffix = {}) {
     if (session_id.empty()) return none();
 
     wcstring result;
@@ -123,7 +123,7 @@ static maybe_t<wcstring> history_filename(const wcstring &session_id, const wcst
 
 /// Lock the history file.
 /// Returns true on success, false on failure.
-static bool history_file_lock(int fd, int lock_type) {
+bool history_file_lock(int fd, int lock_type) {
     static std::atomic<bool> do_locking(true);
     if (!do_locking) return false;
 

@@ -199,13 +199,13 @@ wcstring timer_snapshot_t::print_delta(timer_snapshot_t t1, timer_snapshot_t t2,
 static std::vector<timer_snapshot_t> active_timers;
 
 static void pop_timer() {
-    auto t1 = std::move(active_timers.back());
+    auto t1 = active_timers.back();
     active_timers.pop_back();
     auto t2 = timer_snapshot_t::take();
 
     // Well, this is awkward. By defining `time` as a decorator and not a built-in, there's
     // no associated stream for its output!
-    auto output = timer_snapshot_t::print_delta(std::move(t1), std::move(t2), true);
+    auto output = timer_snapshot_t::print_delta(t1, t2, true);
     std::fwprintf(stderr, L"%S\n", output.c_str());
 }
 

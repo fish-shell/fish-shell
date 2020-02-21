@@ -226,7 +226,7 @@ bool editable_line_t::undo() {
     edit_t inverse = edit_t(edit.offset, edit.replacement.size(), L"");
     inverse.replacement = edit.old;
     size_t old_position = edit.cursor_position_before_edit;
-    apply_edit(&text_, std::move(inverse));
+    apply_edit(&text_, inverse);
     set_position(old_position);
     undo_history.may_coalesce = false;
     return true;

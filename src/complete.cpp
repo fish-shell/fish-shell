@@ -216,7 +216,7 @@ completion_t::completion_t(wcstring comp, wcstring desc, string_fuzzy_match_t ma
 completion_t::completion_t(const completion_t &) = default;
 completion_t::completion_t(completion_t &&) = default;
 completion_t &completion_t::operator=(const completion_t &) = default;
-completion_t &completion_t::operator=(completion_t &&) = default;
+completion_t &completion_t::operator=(completion_t &&) noexcept = default;
 completion_t::~completion_t() = default;
 
 __attribute__((always_inline)) static inline bool natural_compare_completions(
@@ -404,7 +404,7 @@ static owning_lock<autoload_t> completion_autoloader{autoload_t(L"fish_complete_
 
 /// Create a new completion entry.
 void append_completion(completion_list_t *completions, wcstring comp, wcstring desc,
-                       complete_flags_t flags, string_fuzzy_match_t &&match) {
+                       complete_flags_t flags, string_fuzzy_match_t match) {
     completions->emplace_back(std::move(comp), std::move(desc), match, flags);
 }
 
@@ -1209,8 +1209,7 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset) {
         }
 
         // Append matching environment variables
-        append_completion(&this->completions, std::move(comp), std::move(desc), flags,
-                          std::move(match));
+        append_completion(&this->completions, std::move(comp), std::move(desc), flags, match);
 
         res = true;
     }

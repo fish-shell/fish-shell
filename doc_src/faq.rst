@@ -32,6 +32,14 @@ The prompt is the output of the ``fish_prompt`` function. Put it in ``~/.config/
 
 You can also use the Web configuration tool, :ref:`fish_config <cmd-fish_config>`, to preview and choose from a gallery of sample prompts.
 
+Why does my prompt show a `[I]`?
+--------------------------------
+
+That's the :ref:`fish_mode_prompt <cmd-fish_mode_prompt>`. It is displayed by default when you've activated :ref:`vi mode <cmd-fish_vi_key_bindings>`.
+
+If you haven't activated vi mode on purpose, you might have installed a third-party theme that does it.
+
+If you want to change or disable this display, modify the `fish_mode_prompt` function, for instance via :ref:`funced <cmd-funced>`.
 
 How do I run a command from history?
 ------------------------------------

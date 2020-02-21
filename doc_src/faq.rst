@@ -217,19 +217,19 @@ Change the value of the variable ``fish_greeting`` or create a ``fish_greeting``
 
 Why doesn't history substitution ("!$" etc.) work?
 --------------------------------------------------
-Because history substitution is an awkward interface that was invented before interactive line editing was even possible.  Fish drops it in favor of perfecting the interactive history recall interface.  Switching requires a small change of habits: if you want to modify an old line/word, first recall it, then edit.  E.g. don't type "sudo !!" - first press Up, then Home, then type "sudo ".
+Because history substitution is an awkward interface that was invented before interactive line editing was even possible. Instead of adding this pseudo-syntax, fish opts for nice history searching and recall features.  Switching requires a small change of habits: if you want to modify an old line/word, first recall it, then edit.  E.g. don't type "sudo !!" - first press Up, then Home, then type "sudo ".
 
-Fish history recall is very simple yet effective:
+Fish's history recall is very simple yet effective:
 
-- As in any modern shell, the Up arrow, :kbd:`↑` recalls whole lines, starting from the last line executed.  A single press replaces "!!", later presses replace "!-3" and the like.
+- Like other shells, the Up arrow, :kbd:`↑` recalls whole lines, starting from the last executed line.  A single press replaces "!!", later presses replace "!-3" and the like.
 
-  - If the line you want is far back in the history, type any part of the line and then press Up one or more times.  This will constrain the recall to lines that include this text, and you will get to the line you want much faster.  This replaces "!vi", "!?bar.c" and the like.
+- If the line you want is far back in the history, type any part of the line and then press Up one or more times.  This will filter the recalled lines to ones that include this text, and you will get to the line you want much faster.  This replaces "!vi", "!?bar.c" and the like.
 
-- :kbd:`Alt+↑,Up` recalls individual arguments, starting from the last argument in the last line executed.  A single press replaces "!$", later presses replace "!!:4" and the like. An alternate key binding is :kbd:`Alt+.`.
+- :kbd:`Alt+↑,Up` recalls individual arguments, starting from the last argument in the last executed line.  A single press replaces "!$", later presses replace "!!:4" and such. An alternate key binding is :kbd:`Alt+.`.
 
-  - If the argument you want is far back in history (e.g. 2 lines back - that's a lot of words!), type any part of it and then press :kbd:`Alt+↑,Up`.  This will show only arguments containing that part and you will get what you want much faster.  Try it out, this is very convenient!
+- If the argument you want is far back in history (e.g. 2 lines back - that's a lot of words!), type any part of it and then press :kbd:`Alt+↑,Up`.  This will show only arguments containing that part and you will get what you want much faster.  Try it out, this is very convenient!
 
-  - If you want to reuse several arguments from the same line ("!!:3*" and the like), consider recalling the whole line and removing what you don't need (:kbd:`Alt+D` and :kbd:`Alt+Backspace` are your friends).
+- If you want to reuse several arguments from the same line ("!!:3*" and the like), consider recalling the whole line and removing what you don't need (:kbd:`Alt+D` and :kbd:`Alt+Backspace` are your friends).
 
 See :ref:`documentation <editor>` for more details about line editing in fish.
 

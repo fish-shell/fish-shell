@@ -631,9 +631,9 @@ class wildcard_expander_t {
     }
 
    public:
-    wildcard_expander_t(wcstring wd, expand_flags_t f, const cancel_checker_t &cancel_checker,
+    wildcard_expander_t(wcstring wd, expand_flags_t f, cancel_checker_t cancel_checker,
                         completion_list_t *r)
-        : cancel_checker(cancel_checker),
+        : cancel_checker(std::move(cancel_checker)),
           working_directory(std::move(wd)),
           flags(f),
           resolved_completions(r) {

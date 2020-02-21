@@ -460,7 +460,7 @@ static wcstring truncate_command(const wcstring &cmd) {
 }
 
 /// Format information about job status for the user to look at.
-typedef enum { JOB_STOPPED, JOB_ENDED } job_status_t;
+using job_status_t = enum { JOB_STOPPED, JOB_ENDED };
 static void print_job_status(const job_t *j, job_status_t status) {
     const wchar_t *msg = L"Job %d, '%ls' has ended";  // this is the most common status msg
     if (status == JOB_STOPPED) msg = L"Job %d, '%ls' has stopped";

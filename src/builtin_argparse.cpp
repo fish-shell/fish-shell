@@ -40,7 +40,7 @@ struct option_spec_t {
     int num_allowed{0};
     int num_seen{0};
 
-    option_spec_t(wchar_t s) : short_flag(s) {}
+    explicit option_spec_t(wchar_t s) : short_flag(s) {}
 };
 using option_spec_ref_t = std::unique_ptr<option_spec_t>;
 

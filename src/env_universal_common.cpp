@@ -1299,7 +1299,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t {
     }
 
    public:
-    universal_notifier_named_pipe_t(const wchar_t *test_path)
+    explicit universal_notifier_named_pipe_t(const wchar_t *test_path)
         : pipe_fd(-1),
           readback_time_usec(0),
           readback_amount(0),

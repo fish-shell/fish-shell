@@ -59,7 +59,7 @@ class scoped_buffer_t {
     screen_t &screen_;
 
    public:
-    scoped_buffer_t(screen_t &s) : screen_(s) { screen_.outp().beginBuffering(); }
+    explicit scoped_buffer_t(screen_t &s) : screen_(s) { screen_.outp().beginBuffering(); }
 
     ~scoped_buffer_t() { screen_.outp().endBuffering(); }
 };

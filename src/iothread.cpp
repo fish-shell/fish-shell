@@ -58,7 +58,7 @@ struct main_thread_request_t {
     relaxed_atomic_bool_t done{false};
     void_function_t func;
 
-    main_thread_request_t(void_function_t &&f) : func(f) {}
+    explicit main_thread_request_t(void_function_t &&f) : func(f) {}
 
     // No moving OR copying
     // main_thread_requests are always stack allocated, and we deal in pointers to them

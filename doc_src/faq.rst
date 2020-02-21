@@ -161,24 +161,17 @@ add a statement to your :ref:`user initialization file <initialization>` (usuall
 
     set -gx EDITOR vim
 
-
 How do I customize my syntax highlighting colors?
 -------------------------------------------------
 Use the web configuration tool, :ref:`fish_config <cmd-fish_config>`, or alter the `fish_color family of environment variables <index#variables-color>`__.
-
-How do I update man page completions?
--------------------------------------
-Use the :ref:`fish_update_completions <cmd-fish_update_completions>` command.
 
 I accidentally entered a directory path and fish changed directory. What happened?
 ----------------------------------------------------------------------------------
 If fish is unable to locate a command with a given name, and it starts with '``.``', '``/``' or '``~``', fish will test if a directory of that name exists. If it does, it is implicitly assumed that you want to change working directory. For example, the fastest way to switch to your home directory is to simply press ``~`` and enter.
 
-
 The open command doesn't work.
 ------------------------------
 The ``open`` command uses the MIME type database and the ``.desktop`` files used by Gnome and KDE to identify filetypes and default actions. If at least one of these environments is installed, but the open command is not working, this probably means that the relevant files are installed in a non-standard location. Consider `asking for more help <index#more-help>`__.
-
 
 How do I make fish my default shell?
 ------------------------------------
@@ -216,14 +209,11 @@ Fish is trying to set the titlebar message of your terminal. While screen itself
 
 Note that fish has a default titlebar message, which will be used if the fish_title function is undefined. So simply unsetting the fish_title function will not work.
 
-
 How do I change the greeting message?
 -------------------------------------
 Change the value of the variable ``fish_greeting`` or create a ``fish_greeting`` function. For example, to remove the greeting use::
 
     set fish_greeting
-
-
 
 Why doesn't history substitution ("!$" etc.) work?
 --------------------------------------------------
@@ -243,7 +233,6 @@ Fish history recall is very simple yet effective:
 
 See :ref:`documentation <editor>` for more details about line editing in fish.
 
-
 How can I use ``-`` as a shortcut for ``cd -``?
 -----------------------------------------------
 In fish versions prior to 2.5.0 it was possible to create a function named ``-`` that would do ``cd -``. Changes in the 2.5.0 release included several bug fixes that enforce the rule that a bare hyphen is not a valid function (or variable) name. However, you can achieve the same effect via an abbreviation::
@@ -262,13 +251,6 @@ Next, do the following (assuming fish was installed to /usr/local)::
     rm /usr/local/share/man/man1/fish*.1
     cd /usr/local/bin
     rm -f fish fish_indent
-
-
-
-Unicode private-use characters reserved by fish
------------------------------------------------
-Fish reserves the `Unicode private-use character range <http://www.unicode.org/faq/private_use.html>`__ from U+F600 thru U+F73F for internal use. Any attempt to feed characters in that range to fish will result in them being replaced by the Unicode "replacement character" U+FFFD. This includes both interactive input as well as any file read by fish (but not programs run by fish).
-
 
 Where can I find extra tools for fish?
 --------------------------------------

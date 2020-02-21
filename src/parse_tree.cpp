@@ -452,7 +452,7 @@ class parse_ll_t {
         // it's lowest on the stack)
         const size_t child_start_big = nodes.size();
         assert(child_start_big < NODE_OFFSET_INVALID);
-        node_offset_t child_start = static_cast<node_offset_t>(child_start_big);
+        auto child_start = static_cast<node_offset_t>(child_start_big);
 
         // To avoid constructing multiple nodes, we make a single one that we modify.
         parse_node_t representative_child(token_type_invalid);
@@ -727,7 +727,7 @@ void parse_ll_t::parse_error_unexpected_token(const wchar_t *expected, parse_tok
 
 void parse_ll_t::reset_symbols(enum parse_token_type_t goal) {
     // Add a new goal node, and then reset our symbol list to point at it.
-    node_offset_t where = static_cast<node_offset_t>(nodes.size());
+    auto where = static_cast<node_offset_t>(nodes.size());
     nodes.push_back(parse_node_t(goal));
 
     symbol_stack.clear();

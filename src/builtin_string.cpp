@@ -988,7 +988,7 @@ bool regex_replacer_t::replace_matches(const wcstring &arg) {
                        (opts.all ? PCRE2_SUBSTITUTE_GLOBAL : 0);
     size_t arglen = arg.length();
     PCRE2_SIZE bufsize = (arglen == 0) ? 16 : 2 * arglen;
-    wchar_t *output = static_cast<wchar_t *>(malloc(sizeof(wchar_t) * bufsize));
+    auto output = static_cast<wchar_t *>(malloc(sizeof(wchar_t) * bufsize));
     int pcre2_rc;
     PCRE2_SIZE outlen = bufsize;
 
@@ -1007,8 +1007,7 @@ bool regex_replacer_t::replace_matches(const wcstring &arg) {
             done = true;
         } else {
             bufsize = outlen;
-            wchar_t *new_output =
-                static_cast<wchar_t *>(realloc(output, sizeof(wchar_t) * bufsize));
+            auto new_output = static_cast<wchar_t *>(realloc(output, sizeof(wchar_t) * bufsize));
             if (new_output) output = new_output;
         }
     }
@@ -1220,7 +1219,7 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
             pos = static_cast<size_type>(opts.start - 1);
         } else if (opts.start < 0) {
             assert(opts.start != LONG_MIN);  // checked above
-            size_type n = static_cast<size_type>(-opts.start);
+            auto n = static_cast<size_type>(-opts.start);
             pos = n > s->length() ? 0 : s->length() - n;
         }
         if (pos > s->length()) {

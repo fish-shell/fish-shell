@@ -22,13 +22,13 @@ static CharT **make_null_terminated_array_helper(
     }
 
     // Now allocate their sum.
-    unsigned char *base =
+    auto base =
         static_cast<unsigned char *>(malloc(pointers_allocation_len + strings_allocation_len));
     if (!base) return nullptr;
 
     // Divvy it up into the pointers and strings.
-    CharT **pointers = reinterpret_cast<CharT **>(base);
-    CharT *strings = reinterpret_cast<CharT *>(base + pointers_allocation_len);
+    auto pointers = reinterpret_cast<CharT **>(base);
+    auto strings = reinterpret_cast<CharT *>(base + pointers_allocation_len);
 
     // Start copying.
     for (size_t i = 0; i < count; i++) {

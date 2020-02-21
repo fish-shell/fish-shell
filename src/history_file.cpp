@@ -29,7 +29,7 @@ static bool should_mmap(int fd) {
 // Return true on success, false on failure.
 static bool read_from_fd(int fd, void *address, size_t len) {
     size_t remaining = len;
-    char *ptr = static_cast<char *>(address);
+    auto ptr = static_cast<char *>(address);
     while (remaining > 0) {
         ssize_t amt = read(fd, ptr, remaining);
         if (amt < 0) {
@@ -162,7 +162,7 @@ history_item_t history_file_contents_t::decode_item(size_t offset) const {
 }
 
 maybe_t<size_t> history_file_contents_t::offset_of_next_item(size_t *cursor, time_t cutoff) {
-    size_t offset = size_t(-1);
+    auto offset = size_t(-1);
     switch (this->type()) {
         case history_type_fish_2_0:
             offset = offset_of_next_item_fish_2_0(*this, cursor, cutoff);
@@ -183,7 +183,7 @@ static size_t read_line(const char *base, size_t cursor, size_t len, std::string
     // Locate the newline.
     assert(cursor <= len);
     const char *start = base + cursor;
-    const char *a_newline = static_cast<const char *>(std::memchr(start, '\n', len - cursor));
+    const auto a_newline = static_cast<const char *>(std::memchr(start, '\n', len - cursor));
     if (a_newline != nullptr) {  // we found a newline
         result.assign(start, a_newline - start);
         // Return the amount to advance the cursor; skip over the newline.
@@ -342,7 +342,7 @@ static const char *next_line(const char *start, const char *end) {
 static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &contents,
                                            size_t *inout_cursor, time_t cutoff_timestamp) {
     size_t cursor = *inout_cursor;
-    size_t result = size_t(-1);
+    auto result = size_t(-1);
     const size_t length = contents.length();
     const char *const begin = contents.begin();
     const char *const end = contents.end();
@@ -350,7 +350,7 @@ static size_t offset_of_next_item_fish_2_0(const history_file_contents_t &conten
         const char *line_start = contents.address_at(cursor);
 
         // Advance the cursor to the next line.
-        const char *a_newline =
+        const auto a_newline =
             static_cast<const char *>(std::memchr(line_start, '\n', length - cursor));
         if (a_newline == nullptr) break;
 
@@ -509,7 +509,7 @@ static history_item_t decode_item_fish_1_x(const char *begin, size_t length) {
                 while (*time_string && !iswdigit(*time_string)) time_string++;
 
                 if (*time_string) {
-                    time_t tm = static_cast<time_t>(fish_wcstol(time_string));
+                    auto tm = static_cast<time_t>(fish_wcstol(time_string));
                     if (!errno && tm >= 0) {
                         timestamp = tm;
                     }

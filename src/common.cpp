@@ -361,7 +361,7 @@ char *wcs2str(const wchar_t *in, size_t len) {
     }
 
     // Here we probably allocate a buffer probably much larger than necessary.
-    char *out = static_cast<char *>(malloc(MAX_UTF8_BYTES * len + 1));
+    auto out = static_cast<char *>(malloc(MAX_UTF8_BYTES * len + 1));
     assert(out);
     // Instead of returning the return value of wcs2str_internal, return `out` directly.
     // This eliminates false warnings in coverity about resource leaks.
@@ -1210,7 +1210,7 @@ wcstring debug_escape(const wcstring &in) {
     wcstring result;
     result.reserve(in.size());
     for (wchar_t wc : in) {
-        uint32_t c = static_cast<uint32_t>(wc);
+        auto c = static_cast<uint32_t>(wc);
         if (c <= 127 && isprint(c)) {
             result.push_back(wc);
             continue;
@@ -2145,7 +2145,7 @@ void assert_is_background_thread(const char *who) {
 }
 
 void assert_is_locked(void *vmutex, const char *who, const char *caller) {
-    std::mutex *mutex = static_cast<std::mutex *>(vmutex);
+    auto mutex = static_cast<std::mutex *>(vmutex);
 
     // Note that std::mutex.try_lock() is allowed to return false when the mutex isn't
     // actually locked; fortunately we are checking the opposite so we're safe.

@@ -67,7 +67,7 @@ bool wchar_to_utf8_string(const std::wstring &str, std::string *result) {
     const wchar_t *input = str.c_str();
     size_t outlen = wchar_to_utf8(input, inlen, nullptr, 0, 0);
     if (outlen > 0) {
-        char *tmp = new char[outlen];
+        auto tmp = new char[outlen];
         size_t outlen2 = wchar_to_utf8(input, inlen, tmp, outlen, 0);
         if (outlen2 > 0) {
             result->assign(tmp, outlen2);
@@ -110,7 +110,7 @@ size_t wchar_to_utf8(const wchar_t *in, size_t insize, char *out, size_t outsize
     } else {
         // Allocate a temporary buffer to hold the input the std::copy performs the size conversion.
         // Note: insize may be 0.
-        utf8_wchar_t *tmp_input = new utf8_wchar_t[insize];
+        auto tmp_input = new utf8_wchar_t[insize];
         if (!safe_copy_wchar_to_utf8_wchar(in, tmp_input, insize)) {
             // Our utf8_wchar_t is UCS-16 and there was an astral character.
             result = 0;

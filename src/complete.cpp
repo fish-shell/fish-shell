@@ -325,7 +325,7 @@ class completer_t {
 
     /// Table of completions conditions that have already been tested and the corresponding test
     /// results.
-    typedef std::unordered_map<wcstring, bool> condition_cache_t;
+    using condition_cache_t = std::unordered_map<wcstring, bool>;
     condition_cache_t condition_cache;
 
     enum complete_type_t { COMPLETE_DEFAULT, COMPLETE_AUTOSUGGEST };

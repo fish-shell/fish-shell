@@ -1384,7 +1384,7 @@ Shared bindings
 
 Some bindings are shared between emacs- and vi-mode because they aren't text editing bindings or because what Vi/Vim does for a particular key doesn't make sense for a shell.
 
-- :kbd:`Tab` `completes <#completion>`_ the current token. :kbd:`Shift, Tab` completes the current token and starts the pager's search mode.
+- :kbd:`Tab` `completes <#tab-completion>`_ the current token. :kbd:`Shift, Tab` completes the current token and starts the pager's search mode.
 
 - :kbd:`Alt+←,Left` and :kbd:`Alt+→,Right` move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`Alt+→,Right` (or :kbd:`Alt+F`) accepts the first word in the suggestion.
 

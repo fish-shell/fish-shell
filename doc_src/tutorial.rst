@@ -82,19 +82,23 @@ Getting Help
 Syntax Highlighting
 -------------------
 
-You'll quickly notice that ``fish`` performs syntax highlighting as you type. Invalid commands are colored red by default::
+.. role:: red
+.. role:: gray
+.. role:: underline
 
-    > <red>/bin/mkd</red>
+You'll quickly notice that ``fish`` performs syntax highlighting as you type. Invalid commands are colored red by default
 
+
+> :red:`/bin/mkd`
 
 A command may be invalid because it does not exist, or refers to a file that you cannot execute. When the command becomes valid, it is shown in a different color::
 
     > /bin/mkdir
 
 
-``fish`` will underline valid file paths as you type them::
+``fish`` will underline valid file paths as you type them
 
-    > cat <underline>~/somefi</underline>
+> cat :underline:`~/somefi`
 
 
 This tells you that there exists a file that starts with '``somefi``', which is useful feedback as you type.
@@ -156,19 +160,19 @@ To redirect stdout and stderr into one file, you need to first redirect stdout, 
 Autosuggestions
 ---------------
 
-``fish`` suggests commands as you type, and shows the suggestion to the right of the cursor, in gray. For example::
+``fish`` suggests commands as you type, and shows the suggestion to the right of the cursor, in gray. For example
 
-    > <red>/bin/h</red><gray>ostname</gray>
-
-
-It knows about paths and options::
-
-    > grep --i<gray>gnore-case</gray>
+> :red:`/bin/h`:gray:`ostname`
 
 
-And history too. Type a command once, and you can re-summon it by just typing a few letters::
+It knows about paths and options
 
-    > <red>r</red><gray>sync -avze ssh . myname@somelonghost.com:/some/long/path/doo/dee/doo/dee/doo</gray>
+`> grep --i`:gray:`gnore-case`
+
+
+And history too. Type a command once, and you can re-summon it by just typing a few letters
+
+> :red:`r`:gray:`sync -avze ssh . myname@somelonghost.com:/some/long/path/doo/dee/doo/dee/doo`
 
 
 To accept the autosuggestion, hit :kbd:`→` (right arrow) or :kbd:`Control+F`. To accept a single word of the autosuggestion, :kbd:`Alt+→` (right arrow). If the autosuggestion is not what you want, just ignore it.
@@ -178,15 +182,15 @@ Tab Completions
 
 ``fish`` comes with a rich set of tab completions, that work "out of the box."
 
-Press :kbd:`Tab`, and ``fish`` will attempt to complete the command, argument, or path::
+Press :kbd:`Tab`, and ``fish`` will attempt to complete the command, argument, or path
 
-    > <red>/pri</red> :kbd:`Tab` => /private/
+> :red:`/pri` :kbd:`Tab` => /private/
 
 
-If there's more than one possibility, it will list them::
+If there's more than one possibility, it will list them
 
-    > <red>~/stuff/s</red> :kbd:`Tab`
-    ~/stuff/script.sh  (Executable, 4.8kB)  ~/stuff/sources/  (Directory)
+> :red:`~/stuff/s` :kbd:`Tab`
+~/stuff/script.sh  (Executable, 4.8kB)  ~/stuff/sources/  (Directory)
 
 
 Hit tab again to cycle through the possibilities.

@@ -194,6 +194,7 @@ function __rustup_strip_common_suffix_strict
 end
 
 function __rustup_all_toolchains
+    set -l __rustup_channels "beta" "stable" "nightly"
     printf "%s\n" $__rustup_channels
     printf "%s\n" $__rustup_channels-(__rustup_triples)
 end
@@ -223,10 +224,7 @@ set -l __rustup_toolchains (rustup toolchain list | string replace -r "\s+.*" ''
 # but a shorter version can be used if it is unambiguous.
 set -l __rustup_toolchains_short (__rustup_strip_common_suffix_strict $__rustup_toolchains)
 
-# Needs to be global to retain access from functions
-set __rustup_channels "beta" "stable" "nightly"
-
-set rustup_profiles "minimal" "default" "complete"
+set -l rustup_profiles "minimal" "default" "complete"
 
 complete -c rustup -n "__fish_should_complete_switches" -s v -l verbose
 complete -c rustup -n "__fish_should_complete_switches" -s h -l help

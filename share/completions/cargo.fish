@@ -7,10 +7,10 @@ complete -c cargo -l list -d 'List installed commands'
 complete -c cargo -s v -l verbose -d 'Use verbose output'
 complete -c cargo -s q -l quiet -d 'No output printed to stdout'
 
-set __fish_cargo_subcommands (cargo --list 2>&1 | string replace -rf '^\s+([^\s]+)\s+(.*)' '$1\t$2')
+set -l __fish_cargo_subcommands (cargo --list 2>&1 | string replace -rf '^\s+([^\s]+)\s+(.*)' '$1\t$2')
 
-complete -c cargo -f -c cargo -n '__fish_use_subcommand' -a '$__fish_cargo_subcommands'
-complete -c cargo -x -c cargo -n '__fish_seen_subcommand_from help' -a '$__fish_cargo_subcommands'
+complete -c cargo -f -c cargo -n '__fish_use_subcommand' -a "$__fish_cargo_subcommands"
+complete -c cargo -x -c cargo -n '__fish_seen_subcommand_from help' -a "$__fish_cargo_subcommands"
 
 for x in bench build clean doc fetch generate-lockfile \
     locate-project package pkgid publish \
@@ -88,4 +88,3 @@ complete -c cargo -x -n '__fish_seen_subcommand_from update' -l precise -d 'Upda
 
 complete -c cargo -x -n '__fish_seen_subcommand_from yank' -l vers -d 'The version to yank or un-yank'
 complete -c cargo -n '__fish_seen_subcommand_from yank' -l undo -d 'Undo a yank, putting a version back into the index'
-

@@ -1,7 +1,5 @@
-set __fish_facl_spec_keywords default user group mask other
-
 function __fish_facl_list_spec_keyword
-    for keyword in $__fish_facl_spec_keywords
+    for keyword in default user group mask other
         echo $keyword:
     end
 end

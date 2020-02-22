@@ -1,5 +1,6 @@
-set __fish_lscpu_columns CPU\tLogical\ CPU\ number\ of\ a\ CPU\nCORE\tLogical\ core\ number\nSOCKET\tLogical\ socket\ number\nBOOK\tLogical\ book\ number\nNODE\tLogical\ NUMA\ node\ number\nCACHE\tInformation\ about\ how\ caches\ are\ shared\nPOLARIZATION\tCPU\ dispatching\ mode\ on\ virtual\ hardware\nADDRESS\tPhysical\ address\nCONFIGURED\tShows\ if\ the\ hypervisor\ has\ allocated\ the\ CPU\nONLINE\tShows\ if\ Linux\ currently\ use\ the\ CPU\nMAXMHZ\tShows\ the\ maximum\ MHz\nMINMHZ\tShows\ the\ minimum\ MHz
+set -l __fish_lscpu_columns CPU\tLogical\ CPU\ number\ of\ a\ CPU\nCORE\tLogical\ core\ number\nSOCKET\tLogical\ socket\ number\nBOOK\tLogical\ book\ number\nNODE\tLogical\ NUMA\ node\ number\nCACHE\tInformation\ about\ how\ caches\ are\ shared\nPOLARIZATION\tCPU\ dispatching\ mode\ on\ virtual\ hardware\nADDRESS\tPhysical\ address\nCONFIGURED\tShows\ if\ the\ hypervisor\ has\ allocated\ the\ CPU\nONLINE\tShows\ if\ Linux\ currently\ use\ the\ CPU\nMAXMHZ\tShows\ the\ maximum\ MHz\nMINMHZ\tShows\ the\ minimum\ MHz
 
+complete -c lscpu -f
 complete -c lscpu -l all -s a -d "Print both online and offline CPUs"
 complete -c lscpu -l online -s b -d "Print online CPUs only"
 complete -c lscpu -l offline -s c -d "Print offline CPUs only"

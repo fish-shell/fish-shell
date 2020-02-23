@@ -32,12 +32,6 @@ true && time a=b not builtin true | true
 #CHECKERR: {{.*}}
 #CHECKERR: {{.*}}
 
-PATH= time true
-#CHECKERR: fish: Unknown command: time
-#CHECKERR: {{.*}}
-#CHECKERR: PATH= time true
-#CHECKERR:       ^
-
 not time true
 #CHECKERR: ___{{.*}}
 #CHECKERR: {{.*}}

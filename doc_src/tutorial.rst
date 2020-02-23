@@ -143,7 +143,7 @@ You can pipe between commands with the usual vertical bar::
           1       2      12
 
 
-stdin and stdout can be redirected via the familiar `<` and `<`. stderr is redirected with a `2>`.
+stdin and stdout can be redirected via the familiar `<` and `>`. stderr is redirected with a `2>`.
 
 
 

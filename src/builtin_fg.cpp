@@ -98,7 +98,7 @@ int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
         std::fwprintf(stderr, FG_MSG, job->job_id(), job->command_wcstr());
     }
 
-    const wcstring ft = tok_first(job->command());
+    const wcstring ft = tok_command(job->command());
     // For compatibility with fish 2.0's $_, now replaced with `status current-command`
     if (!ft.empty()) parser.vars().set_one(L"_", ENV_EXPORT, ft);
     reader_write_title(job->command(), parser);

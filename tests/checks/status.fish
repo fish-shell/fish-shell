@@ -43,6 +43,9 @@ status job-control none
 status current-function
 #CHECK: Not a function
 
+a=b status current-command
+#CHECK: status
+
 function test_function
     status current-function
 end

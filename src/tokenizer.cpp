@@ -665,6 +665,21 @@ wcstring tok_first(const wcstring &str) {
     return {};
 }
 
+wcstring tok_command(const wcstring &str) {
+    tokenizer_t t(str.c_str(), 0);
+    while (auto token = t.next()) {
+        if (token->type != token_type_t::string) {
+            return {};
+        }
+        wcstring text = t.text_of(*token);
+        if (variable_assignment_equals_pos(text)) {
+            continue;
+        }
+        return text;
+    }
+    return {};
+}
+
 bool move_word_state_machine_t::consume_char_punctuation(wchar_t c) {
     enum { s_always_one = 0, s_rest, s_whitespace_rest, s_whitespace, s_alphanumeric, s_end };
 

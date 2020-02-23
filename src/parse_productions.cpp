@@ -397,16 +397,12 @@ RESOLVE(optional_background) {
 }
 
 RESOLVE(optional_time) {
-    UNUSED(token2);
-
-    switch (token1.keyword) {
-        case parse_keyword_time:
-            *out_tag = parse_optional_time_time;
-            return production_for<time>();
-        default:
-            *out_tag = parse_optional_time_no_time;
-            return production_for<empty>();
+    if (token1.keyword == parse_keyword_time && !token2.is_help_argument) {
+        *out_tag = parse_optional_time_time;
+        return production_for<time>();
     }
+    *out_tag = parse_optional_time_no_time;
+    return production_for<empty>();
 }
 
 const production_element_t *parse_productions::production_for_token(parse_token_type_t node_type,

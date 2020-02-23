@@ -37,6 +37,9 @@ status job-control none
 # Check status -u outside functions
 status current-function
 
+a=b status current-command
+#CHECK: status
+
 function test_function
     status current-function
 end

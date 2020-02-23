@@ -1943,7 +1943,7 @@ void set_env_cmd_duration(struct timeval *after, struct timeval *before, env_sta
 void reader_run_command(parser_t &parser, const wcstring &cmd) {
     struct timeval time_before, time_after;
 
-    wcstring ft = tok_first(cmd);
+    wcstring ft = tok_command(cmd);
 
     // For compatibility with fish 2.0's $_, now replaced with `status current-command`
     if (!ft.empty()) parser.vars().set_one(L"_", ENV_GLOBAL, ft);

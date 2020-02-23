@@ -48,73 +48,73 @@ function __fish_zfs_using_command # ZFS command whose completions are looked for
 end
 
 function __fish_zfs_list_dataset_types
-    echo -e "filesystem\t"(_ "ZFS filesystem")
-    echo -e "snapshot\t"(_ "ZFS filesystem snapshot")
-    echo -e "volume\t"(_ "ZFS block storage device")
-    echo -e "bookmark\t"(_ "ZFS snapshot bookmark")
-    echo -e "all\t"(_ "Any ZFS dataset")
+    echo -e "filesystem\tZFS filesystem"
+    echo -e "snapshot\tZFS filesystem snapshot"
+    echo -e "volume\tZFS block storage device"
+    echo -e "bookmark\tZFS snapshot bookmark"
+    echo -e "all\tAny ZFS dataset"
 end
 
 function __fish_zfs_list_source_types
-    echo -e "local\t"(_ "Dataset-specific value")
-    echo -e "default\t"(_ "Default ZFS value")
-    echo -e "inherited\t"(_ "Value inherited from parent dataset")
-    echo -e "received\t"(_ "Value received by 'zfs receive'")
-    echo -e "temporary\t"(_ "Value valid for the current mount")
-    echo -e "none\t"(_ "Read-only value")
+    echo -e "local\tDataset-specific value"
+    echo -e "default\tDefault ZFS value"
+    echo -e "inherited\tValue inherited from parent dataset"
+    echo -e "received\tValue received by 'zfs receive'"
+    echo -e "temporary\tValue valid for the current mount"
+    echo -e "none\tRead-only value"
 end
 
 function __fish_zfs_list_get_fields
-    echo -e "name\t"(_ "Dataset full name")
-    echo -e "property\t"(_ "Property")
-    echo -e "value\t"(_ "Property value")
-    echo -e "source\t"(_ "Property value origin")
+    echo -e "name\tDataset full name"
+    echo -e "property\tProperty"
+    echo -e "value\tProperty value"
+    echo -e "source\tProperty value origin"
 end
 
 function __fish_zfs_list_space_fields
-    echo -e "type\t"(_ "Identity type")
-    echo -e "name\t"(_ "Identity name")
-    echo -e "used\t"(_ "Space usage")
-    echo -e "quota\t"(_ "Space quota")
+    echo -e "type\tIdentity type"
+    echo -e "name\tIdentity name"
+    echo -e "used\tSpace usage"
+    echo -e "quota\tSpace quota"
 end
 
 function __fish_zfs_list_userspace_types
-    echo -e "posixuser\t"(_ "POSIX user")
-    echo -e "smbuser\t"(_ "Samba user")
-    echo -e "all\t"(_ "Both types")
+    echo -e "posixuser\tPOSIX user"
+    echo -e "smbuser\tSamba user"
+    echo -e "all\tBoth types"
 end
 
 function __fish_zfs_list_groupspace_types
-    echo -e "posixgroup\t"(_ "POSIX group")
-    echo -e "smbgroup\t"(_ "Samba group")
-    echo -e "all\t"(_ "Both types")
+    echo -e "posixgroup\tPOSIX group"
+    echo -e "smbgroup\tSamba group"
+    echo -e "all\tBoth types"
 end
 
 function __fish_zfs_list_permissions -V OS
-    echo -e "allow\t"(_ "Also needs the permission to be allowed")
-    echo -e "clone\t"(_ "Also needs the 'create' and 'mount' permissions in the origin filesystem")
-    echo -e "create\t"(_ "Also needs the 'mount' permission")
-    echo -e "destroy\t"(_ "Also needs the 'mount' permission")
+    echo -e "allow\tAlso needs the permission to be allowed"
+    echo -e "clone\tAlso needs the 'create' and 'mount' permissions in the origin filesystem"
+    echo -e "create\tAlso needs the 'mount' permission"
+    echo -e "destroy\tAlso needs the 'mount' permission"
     echo -e "mount"
-    echo -e "promote\t"(_ "Also needs the 'promote' and 'mount' permissions in the origin filesystem")
-    echo -e "receive\t"(_ "Also needs the 'create' and 'mount' permissions")
-    echo -e "rename\t"(_ "Also needs the 'create' and 'mount' permissions in the new parent")
-    echo -e "rollback\t"(_ "Also needs the 'mount' permission")
+    echo -e "promote\tAlso needs the 'promote' and 'mount' permissions in the origin filesystem"
+    echo -e "receive\tAlso needs the 'create' and 'mount' permissions"
+    echo -e "rename\tAlso needs the 'create' and 'mount' permissions in the new parent"
+    echo -e "rollback\tAlso needs the 'mount' permission"
     echo -e "send"
-    echo -e "share\t"(_ "For SMB and NFS shares")
-    echo -e "snapshot\t"(_ "Also needs the 'mount' permission")
+    echo -e "share\tFor SMB and NFS shares"
+    echo -e "snapshot\tAlso needs the 'mount' permission"
     echo -e "groupquota"
     echo -e "groupused"
-    echo -e "userprop\t"(_ "Allows changing any user property")
+    echo -e "userprop\tAllows changing any user property"
     echo -e "userquota"
     echo -e "userused"
     # The remaining code of the function is almost a duplicate of __fish_complete_zfs_rw_properties and __fish_complete_zfs_ro_properties, but almost only, hence the duplication
     # RO properties
-    echo -e "volblocksize\t"(_ "Volume block size")
+    echo -e "volblocksize\tVolume block size"
     # R/W properties
-    echo -e "aclinherit\t"(_ "Inheritance of ACL entries")" (discard, noallow, restricted, passthrough, passthrough-x)"
-    echo -e "atime\t"(_ "Update access time on read")" (on, off)"
-    echo -e "canmount\t"(_ "Is the dataset mountable")" (on, off, noauto)"
+    echo -e "aclinherit\tInheritance of ACL entries (discard, noallow, restricted, passthrough, passthrough-x)"
+    echo -e "atime\tUpdate access time on read (on, off)"
+    echo -e "canmount\tIs the dataset mountable (on, off, noauto)"
     set -l additional_cksum_algs ''
     set -l additional_dedup_algs ''
     if contains -- $OS FreeBSD SunOS
@@ -132,67 +132,67 @@ function __fish_zfs_list_permissions -V OS
         set additional_cksum_algs "$additional_cksum_algs, edonr"
         set additional_dedup_algs "$additional_dedup_algs, edonr[,verify]"
     end
-    echo -e "checksum\t"(_ "Data checksum")" (on, off, fletcher2, fletcher4, sha256$additional_cksum_algs)"
+    echo -e "checksum\tData checksum (on, off, fletcher2, fletcher4, sha256$additional_cksum_algs)"
     set -e additional_cksum_algs
     set -l additional_compress_algs ''
     if __fish_is_zfs_feature_enabled "feature@lz4_compress"
         set additional_compress_algs ", lz4"
     end
-    echo -e "compression\t"(_ "Compression algorithm")" (on, off, lzjb$additional_compress_algs, gzip, gzip-[1-9], zle)"
+    echo -e "compression\tCompression algorithm (on, off, lzjb$additional_compress_algs, gzip, gzip-[1-9], zle)"
     set -e additional_compress_algs
-    echo -e "copies\t"(_ "Number of copies of data")" (1, 2, 3)"
-    echo -e "dedup\t"(_ "Deduplication")" (on, off, verify, sha256[,verify]$additional_dedup_algs)"
+    echo -e "copies\tNumber of copies of data (1, 2, 3)"
+    echo -e "dedup\tDeduplication (on, off, verify, sha256[,verify]$additional_dedup_algs)"
     set -e additional_dedup_algs
-    echo -e "devices\t"(_ "Are contained device nodes openable")" (on, off)"
-    echo -e "exec\t"(_ "Can contained executables be executed")" (on, off)"
-    echo -e "filesystem_limit\t"(_ "Max number of filesystems and volumes")" (COUNT, none)"
-    echo -e "mountpoint\t"(_ "Mountpoint")" (PATH, none, legacy)"
-    echo -e "primarycache\t"(_ "Which data to cache in ARC")" (all, none, metadata)"
-    echo -e "quota\t"(_ "Max size of dataset and children")" (SIZE, none)"
-    echo -e "snapshot_limit\t"(_ "Max number of snapshots")" (COUNT, none)"
-    echo -e "readonly\t"(_ "Read-only")" (on, off)"
-    echo -e "recordsize\t"(_ "Suggest block size")" (SIZE)"
-    echo -e "redundant_metadata\t"(_ "How redundant are the metadata")" (all, most)"
-    echo -e "refquota\t"(_ "Max space used by dataset itself")" (SIZE, none)"
-    echo -e "refreservation\t"(_ "Min space guaranteed to dataset itself")" (SIZE, none)"
-    echo -e "reservation\t"(_ "Min space guaranteed to dataset")" (SIZE, none)"
-    echo -e "secondarycache\t"(_ "Which data to cache in L2ARC")" (all, none, metadata)"
-    echo -e "setuid\t"(_ "Respect set-UID bit")" (on, off)"
-    echo -e "sharenfs\t"(_ "Share in NFS")" (on, off, OPTS)"
-    echo -e "logbias\t"(_ "Hint for handling of synchronous requests")" (latency, throughput)"
-    echo -e "snapdir\t"(_ "Hide .zfs directory")" (hidden, visible)"
-    echo -e "sync\t"(_ "Handle of synchronous requests")" (standard, always, disabled)"
-    echo -e "volsize\t"(_ "Volume logical size")" (SIZE)"
+    echo -e "devices\tAre contained device nodes openable (on, off)"
+    echo -e "exec\tCan contained executables be executed (on, off)"
+    echo -e "filesystem_limit\tMax number of filesystems and volumes (COUNT, none)"
+    echo -e "mountpoint\tMountpoint (PATH, none, legacy)"
+    echo -e "primarycache\tWhich data to cache in ARC (all, none, metadata)"
+    echo -e "quota\tMax size of dataset and children (SIZE, none)"
+    echo -e "snapshot_limit\tMax number of snapshots (COUNT, none)"
+    echo -e "readonly\tRead-only (on, off)"
+    echo -e "recordsize\tSuggest block size (SIZE)"
+    echo -e "redundant_metadata\tHow redundant are the metadata (all, most)"
+    echo -e "refquota\tMax space used by dataset itself (SIZE, none)"
+    echo -e "refreservation\tMin space guaranteed to dataset itself (SIZE, none)"
+    echo -e "reservation\tMin space guaranteed to dataset (SIZE, none)"
+    echo -e "secondarycache\tWhich data to cache in L2ARC (all, none, metadata)"
+    echo -e "setuid\tRespect set-UID bit (on, off)"
+    echo -e "sharenfs\tShare in NFS (on, off, OPTS)"
+    echo -e "logbias\tHint for handling of synchronous requests (latency, throughput)"
+    echo -e "snapdir\tHide .zfs directory (hidden, visible)"
+    echo -e "sync\tHandle of synchronous requests (standard, always, disabled)"
+    echo -e "volsize\tVolume logical size (SIZE)"
     if test $OS = "SunOS"
-        echo -e "zoned\t"(_ "Managed from a non-global zone")" (on, off)"
-        echo -e "mlslabel\t"(_ "Can the dataset be mounted in a zone with Trusted Extensions enabled")" (LABEL, none)"
-        echo -e "nbmand\t"(_ "Mount with Non Blocking mandatory locks")" (on, off)"
-        echo -e "sharesmb\t"(_ "Share in Samba")" (on, off)"
-        echo -e "shareiscsi\t"(_ "Share as an iSCSI target")" (on, off)"
-        echo -e "version\t"(_ "On-disk version of filesystem")" (1, 2, current)"
-        echo -e "vscan\t"(_ "Scan regular files for viruses on opening and closing")" (on, off)"
-        echo -e "xattr\t"(_ "Extended attributes")" (on, off, sa)"
+        echo -e "zoned\tManaged from a non-global zone (on, off)"
+        echo -e "mlslabel\tCan the dataset be mounted in a zone with Trusted Extensions enabled (LABEL, none)"
+        echo -e "nbmand\tMount with Non Blocking mandatory locks (on, off)"
+        echo -e "sharesmb\tShare in Samba (on, off)"
+        echo -e "shareiscsi\tShare as an iSCSI target (on, off)"
+        echo -e "version\tOn-disk version of filesystem (1, 2, current)"
+        echo -e "vscan\tScan regular files for viruses on opening and closing (on, off)"
+        echo -e "xattr\tExtended attributes (on, off, sa)"
     else if test $OS = "Linux"
-        echo -e "acltype\t"(_ "Use no ACL or POSIX ACL")" (noacl, posixacl)"
-        echo -e "nbmand\t"(_ "Mount with Non Blocking mandatory locks")" (on, off)"
-        echo -e "relatime\t"(_ "Sometimes update access time on read")" (on, off)"
-        echo -e "shareiscsi\t"(_ "Share as an iSCSI target")" (on, off)"
-        echo -e "sharesmb\t"(_ "Share in Samba")" (on, off)"
-        echo -e "snapdev\t"(_ "Hide volume snapshots")" (hidden, visible)"
-        echo -e "version\t"(_ "On-disk version of filesystem")" (1, 2, current)"
-        echo -e "vscan\t"(_ "Scan regular files for viruses on opening and closing")" (on, off)"
-        echo -e "xattr\t"(_ "Extended attributes")" (on, off, sa)"
+        echo -e "acltype\tUse no ACL or POSIX ACL (noacl, posixacl)"
+        echo -e "nbmand\tMount with Non Blocking mandatory locks (on, off)"
+        echo -e "relatime\tSometimes update access time on read (on, off)"
+        echo -e "shareiscsi\tShare as an iSCSI target (on, off)"
+        echo -e "sharesmb\tShare in Samba (on, off)"
+        echo -e "snapdev\tHide volume snapshots (hidden, visible)"
+        echo -e "version\tOn-disk version of filesystem (1, 2, current)"
+        echo -e "vscan\tScan regular files for viruses on opening and closing (on, off)"
+        echo -e "xattr\tExtended attributes (on, off, sa)"
     else if test $OS = "FreeBSD"
-        echo -e "aclmode\t"(_ "How is ACL modified by chmod")" (discard, groupmask, passthrough, restricted)"
-        echo -e "volmode\t"(_ "How to expose volumes to OS")" (default, geom, dev, none)"
+        echo -e "aclmode\tHow is ACL modified by chmod (discard, groupmask, passthrough, restricted)"
+        echo -e "volmode\tHow to expose volumes to OS (default, geom, dev, none)"
     end
     # Write-once properties
-    echo -e "normalization\t"(_ "Unicode normalization")" (none, formC, formD, formKC, formKD)"
-    echo -e "utf8only\t"(_ "Reject non-UTF-8-compliant filenames")" (on, off)"
+    echo -e "normalization\tUnicode normalization (none, formC, formD, formKC, formKD)"
+    echo -e "utf8only\tReject non-UTF-8-compliant filenames (on, off)"
     if test $OS = "Linux"
-        echo -e "casesensitivity\t"(_ "Case sensitivity")" (sensitive, insensitive)"
+        echo -e "casesensitivity\tCase sensitivity (sensitive, insensitive)"
     else # FreeBSD, SunOS and virtually all others
-        echo -e "casesensitivity\t"(_ "Case sensitivity")" (sensitive, insensitive, mixed)"
+        echo -e "casesensitivity\tCase sensitivity (sensitive, insensitive, mixed)"
     end
     # Permissions set; if none are found, or if permission sets are not supported, no output is expected, even an error
     for i in (zpool list -o name -H)
@@ -315,10 +315,10 @@ complete -c zfs -x -n '__fish_zfs_using_command rename' -d 'Dataset to rename' -
 complete -c zfs -f -n '__fish_zfs_using_command list' -s H -d 'Print output in a machine-parsable format'
 complete -c zfs -f -n '__fish_zfs_using_command list' -s r -d 'Operate recursively on datasets'
 complete -c zfs -x -n '__fish_zfs_using_command list; and __fish_contains_opt -s r' -s d -d 'Maximum recursion depth'
-complete -c zfs -x -n '__fish_zfs_using_command list' -s o -d 'Property to list' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo -e "name\t"(_ "Dataset name")"; echo -e "space\t"(_ "Space properties")"))'
+complete -c zfs -x -n '__fish_zfs_using_command list' -s o -d 'Property to list' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo -e "name\tDataset name""; echo -e "space\tSpace properties"")'
 complete -c zfs -f -n '__fish_zfs_using_command list' -s p -d 'Print parsable (exact) values for numbers'
-complete -c zfs -x -n '__fish_zfs_using_command list; and __fish_not_contain_opt -s S' -s s -d 'Property to use for sorting output by ascending order' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo -e "name\t"(_ "Dataset name"))'
-complete -c zfs -x -n '__fish_zfs_using_command list; and __fish_not_contain_opt -s s' -s S -d 'Property to use for sorting output by descending order' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo -e "name\t"(_ "Dataset name"))'
+complete -c zfs -x -n '__fish_zfs_using_command list; and __fish_not_contain_opt -s S' -s s -d 'Property to use for sorting output by ascending order' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo -e "name\tDataset name")'
+complete -c zfs -x -n '__fish_zfs_using_command list; and __fish_not_contain_opt -s s' -s S -d 'Property to use for sorting output by descending order' -a '(__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo -e "name\tDataset name")'
 complete -c zfs -x -n '__fish_zfs_using_command list' -s t -d 'Dataset type' -a '(__fish_zfs_list_dataset_types)'
 complete -c zfs -x -n '__fish_zfs_using_command list' -d 'Dataset which properties is to be listed' -a '(__fish_print_zfs_filesystems; __fish_print_zfs_volumes; __fish_print_zfs_snapshots)'
 
@@ -334,7 +334,7 @@ complete -c zfs -x -n '__fish_zfs_using_command get' -s o -d 'Fields to display'
 complete -c zfs -x -n '__fish_zfs_using_command get' -s s -d 'Property source to display' -a '(__fish_append , (__fish_zfs_list_source_types))'
 complete -c zfs -f -n '__fish_zfs_using_command get' -s p -d 'Print parsable (exact) values for numbers'
 complete -c zfs -x -n '__fish_zfs_using_command get' -s t -d 'Dataset type' -a '(__fish_append , (__fish_zfs_list_dataset_types))'
-complete -c zfs -x -n '__fish_zfs_using_command get' -d 'Property to get' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo "all"))'
+complete -c zfs -x -n '__fish_zfs_using_command get' -d 'Property to get' -a '(__fish_append , (__fish_complete_zfs_rw_properties; __fish_complete_zfs_write_once_properties; __fish_complete_zfs_ro_properties; echo "all")'
 complete -c zfs -x -n '__fish_zfs_using_command get' -d 'Dataset which properties is to be got' -a '(__fish_print_zfs_filesystems; __fish_print_zfs_volumes; __fish_print_zfs_snapshots)'
 
 # inherit completions

@@ -10,37 +10,37 @@
 #     as their absence has already been checked, because this absence caused evaluation of __fish_not_contain_opt
 
 function __fish_mdadm_metadata_options
-    echo -e "0\t"(_ "Use original 0.90 format superblock")
-    echo -e "0.90\t"(_ "Use original 0.90 format superblock")
-    echo -e "1\t"(_ "Use last 1.x format superblock")
-    echo -e "default\t"(_ "Use last 1.x format superblock")
-    echo -e "1.0\t"(_ "Use 1.0 format superblock")
-    echo -e "1.1\t"(_ "Use 1.1 format superblock")
-    echo -e "1.2\t"(_ "Use 1.2 format superblock")
-    echo -e "ddf\t"(_ "Use DDF (Disk Data Format) format")
-    echo -e "imsm\t"(_ "Use Intel(R) Matrix Storage Manager format")
+    echo -e "0\tUse original 0.90 format superblock"
+    echo -e "0.90\tUse original 0.90 format superblock"
+    echo -e "1\tUse last 1.x format superblock"
+    echo -e "default\tUse last 1.x format superblock"
+    echo -e "1.0\tUse 1.0 format superblock"
+    echo -e "1.1\tUse 1.1 format superblock"
+    echo -e "1.2\tUse 1.2 format superblock"
+    echo -e "ddf\tUse DDF (Disk Data Format) format"
+    echo -e "imsm\tUse Intel(R) Matrix Storage Manager format"
 end
 
 function __fish_mdadm_level_options
-    echo -e "linear\t"(_ "JBOD")
-    echo -e "raid0\t"(_ "Stripped volume (RAID 0)")
-    echo -e "0\t"(_ "Stripped volume (RAID 0)")
-    echo -e "stripe\t"(_ "Stripped volume (RAID 0)")
-    echo -e "raid1\t"(_ "Mirrored volume (RAID 1)")
-    echo -e "1\t"(_ "Mirrored volume (RAID 1)")
-    echo -e "mirror\t"(_ "Mirrored volume (RAID 1)")
-    echo -e "raid4\t"(_ "Stripped volume with parity disk (RAID 4)")
-    echo -e "4\t"(_ "Stripped volume with parity disk (RAID 4)")
-    echo -e "raid5\t"(_ "Stripped volume with distributed parity (RAID 5)")
-    echo -e "5\t"(_ "Stripped volume with distributed parity (RAID 5)")
-    echo -e "raid6\t"(_ "Stripped volume with double distributed parity (RAID 5)")
-    echo -e "6\t"(_ "Stripped volume with double distributed parity (RAID 5)")
-    echo -e "raid10\t"(_ "Mirrored stripped volume (RAID 10)")
-    echo -e "10\t"(_ "Mirrored stripped volume (RAID 10)")
-    echo -e "multipath\t"(_ "Multiple access device, AKA multipath (deprecated)")
-    echo -e "mp\t"(_ "Multiple access device, AKA multipath (deprecated)")
-    echo -e "faulty\t"(_ "Pseudo RAID layer for single device (akin faulty RAID 1)")
-    echo -e "container\t"(_ "Container") # To be clarified
+    echo -e "linear\tJBOD"
+    echo -e "raid0\tStripped volume (RAID 0)"
+    echo -e "0\tStripped volume (RAID 0)"
+    echo -e "stripe\tStripped volume (RAID 0)"
+    echo -e "raid1\tMirrored volume (RAID 1)"
+    echo -e "1\tMirrored volume (RAID 1)"
+    echo -e "mirror\tMirrored volume (RAID 1)"
+    echo -e "raid4\tStripped volume with parity disk (RAID 4)"
+    echo -e "4\tStripped volume with parity disk (RAID 4)"
+    echo -e "raid5\tStripped volume with distributed parity (RAID 5)"
+    echo -e "5\tStripped volume with distributed parity (RAID 5)"
+    echo -e "raid6\tStripped volume with double distributed parity (RAID 5)"
+    echo -e "6\tStripped volume with double distributed parity (RAID 5)"
+    echo -e "raid10\tMirrored stripped volume (RAID 10)"
+    echo -e "10\tMirrored stripped volume (RAID 10)"
+    echo -e "multipath\tMultiple access device, AKA multipath (deprecated)"
+    echo -e "mp\tMultiple access device, AKA multipath (deprecated)"
+    echo -e "faulty\tPseudo RAID layer for single device (akin faulty RAID 1)"
+    echo -e "container\tContainer" # To be clarified
 end
 
 function __fish_mdadm_layout_options # To be clarified
@@ -48,10 +48,10 @@ function __fish_mdadm_layout_options # To be clarified
     echo -e "left-symmetric"
     echo -e "right-asymmetric"
     echo -e "right-symmetric"
-    echo -e "la\t"(_ "Alias of left-asymmetric")
-    echo -e "ra\t"(_ "Alias of right-asymmetric")
-    echo -e "ls\t"(_ "Alias of left-symmetric")
-    echo -e "rs\t"(_ "Alias of right-symmetric")
+    echo -e "la\tAlias of left-asymmetric"
+    echo -e "ra\tAlias of right-asymmetric"
+    echo -e "ls\tAlias of left-symmetric"
+    echo -e "rs\tAlias of right-symmetric"
     echo -e "parity-first"
     echo -e "parity-last"
     echo -e "ddf-zero-restart"
@@ -63,16 +63,16 @@ function __fish_mdadm_layout_options # To be clarified
     echo -e "right-asymmetric-6"
     echo -e "parity-first-6"
     echo -e "write-transient"
-    echo -e "wt\t"(_ "Alias of write-transient")
+    echo -e "wt\tAlias of write-transient"
     echo -e "read-transient"
-    echo -e "rt\t"(_ "Alias of read-transient")
+    echo -e "rt\tAlias of read-transient"
     echo -e "write-persistent"
-    echo -e "wp\t"(_ "Alias of write-persistent")
+    echo -e "wp\tAlias of write-persistent"
     echo -e "read-persistent"
-    echo -e "rp\t"(_ "Alias of read-persistent")
+    echo -e "rp\tAlias of read-persistent"
     echo -e "write-all"
     echo -e "read-fixable"
-    echo -e "rf\t"(_ "Alias of read-fixable")
+    echo -e "rf\tAlias of read-fixable"
     echo -e "clear"
     echo -e "flush"
     echo -e "none"
@@ -84,36 +84,36 @@ function __fish_mdadm_layout_options # To be clarified
 end
 
 function __fish_mdadm_level_options
-    echo -e "yes\t"(_ "Use standard format (default)")
-    echo -e "md\t"(_ "Use a non-partitionable array")
-    echo -e "mdp\t"(_ "Use a partitionable array")
-    echo -e "part\t"(_ "Use a partitionable array")
-    echo -e "p\t"(_ "Use a partitionable array")
+    echo -e "yes\tUse standard format (default)"
+    echo -e "md\tUse a non-partitionable array"
+    echo -e "mdp\tUse a partitionable array"
+    echo -e "part\tUse a partitionable array"
+    echo -e "p\tUse a partitionable array"
 end
 
 function __fish_mdadm_update_options
-    echo -e "sparc2.2\t"(_ "Remove superblock misalignement from SPARC kernel 2.2")
-    echo -e "summaries\t"(_ "Correct superblock summaries")
-    echo -e "uuid\t"(_ "Update array UUID")
-    echo -e "name\t"(_ "Update array name")
-    echo -e "nodes\t"(_ "Update array nodes")
-    echo -e "homehost\t"(_ "Update array homehost")
-    echo -e "home-cluster\t"(_ "Update array cluster name")
-    echo -e "resync\t"(_ "Mark the array as dirty, thus forcing resync")
-    echo -e "byteorder\t"(_ "Reverse superblock endianness")
-    echo -e "devicesize\t"(_ "Refresh device size")
-    echo -e "no-bitmap\t"(_ "Assume bitmap absence")
-    echo -e "bbl\t"(_ "Reserve space for bad block list")
-    echo -e "no-bbl\t"(_ "Free reserved space for bad block list")
-    echo -e "metadata\t"(_ "Convert 0.90 metadata to 1.0")
-    echo -e "super-minor\t"(_ "Reset preferred minor to current one")
+    echo -e "sparc2.2\tRemove superblock misalignement from SPARC kernel 2.2"
+    echo -e "summaries\tCorrect superblock summaries"
+    echo -e "uuid\tUpdate array UUID"
+    echo -e "name\tUpdate array name"
+    echo -e "nodes\tUpdate array nodes"
+    echo -e "homehost\tUpdate array homehost"
+    echo -e "home-cluster\tUpdate array cluster name"
+    echo -e "resync\tMark the array as dirty, thus forcing resync"
+    echo -e "byteorder\tReverse superblock endianness"
+    echo -e "devicesize\tRefresh device size"
+    echo -e "no-bitmap\tAssume bitmap absence"
+    echo -e "bbl\tReserve space for bad block list"
+    echo -e "no-bbl\tFree reserved space for bad block list"
+    echo -e "metadata\tConvert 0.90 metadata to 1.0"
+    echo -e "super-minor\tReset preferred minor to current one"
 end
 
 function __fish_mdadm_action_options
-    echo -e "idle\t"(_ "Abort currently running actions")
-    echo -e "frozen\t"(_ "Abort currently running actions, prevent their restart")
-    echo -e "check\t"(_ "Scrub the array (i.e. check constistency)")
-    echo -e "repair\t"(_ "Check, then resync")
+    echo -e "idle\tAbort currently running actions"
+    echo -e "frozen\tAbort currently running actions, prevent their restart"
+    echo -e "check\tScrub the array (i.e. check constistency)"
+    echo -e "repair\tCheck, then resync"
 end
 
 # In the next 7 lines, the tested option is maintained into the search list to prevent suggesting it if it has already been used, as they cannot be used twice

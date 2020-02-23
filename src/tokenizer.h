@@ -210,4 +210,7 @@ class move_word_state_machine_t {
     void reset();
 };
 
+/// The position of the equal sign in a variable assignment like foo=bar.
+maybe_t<size_t> variable_assignment_equals_pos(const wcstring &txt);
+
 #endif

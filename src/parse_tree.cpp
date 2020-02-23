@@ -1073,26 +1073,6 @@ static inline bool is_help_argument(const wcstring &txt) {
     return txt == L"-h" || txt == L"--help";
 }
 
-// Return the location of the equals sign, or npos if the string does
-// not look like a variable assignment like FOO=bar.  The detection
-// works similar as in some POSIX shells: only letters and numbers qre
-// allowed on the left hand side, no quotes or escaping.
-maybe_t<size_t> variable_assignment_equals_pos(const wcstring &txt) {
-    enum { init, has_some_variable_identifier } state = init;
-    // TODO bracket indexing
-    for (size_t i = 0; i < txt.size(); i++) {
-        wchar_t c = txt[i];
-        if (state == init) {
-            if (!valid_var_name_char(c)) return {};
-            state = has_some_variable_identifier;
-        } else {
-            if (c == '=') return {i};
-            if (!valid_var_name_char(c)) return {};
-        }
-    }
-    return {};
-}
-
 /// Return a new parse token, advancing the tokenizer.
 static inline parse_token_t next_parse_token(tokenizer_t *tok, maybe_t<tok_t> *out_token,
                                              wcstring *storage) {

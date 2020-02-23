@@ -151,6 +151,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset dt begin-selection forward-jump backward-char kill-selection end-selection
     bind -s --preset dF begin-selection backward-jump kill-selection end-selection
     bind -s --preset dT begin-selection backward-jump forward-char kill-selection end-selection
+    bind -s --preset dh backward-char delete-char
+    bind -s --preset dl delete-char
 
     bind -s --preset -m insert s delete-char repaint-mode
     bind -s --preset -m insert S kill-whole-line repaint-mode
@@ -158,6 +160,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -m insert C kill-line repaint-mode
     bind -s --preset -m insert c\$ kill-line repaint-mode
     bind -s --preset -m insert c\^ backward-kill-line repaint-mode
+    bind -s --preset -m insert c0 backward-kill-line repaint-mode
     bind -s --preset -m insert cw kill-word repaint-mode
     bind -s --preset -m insert cW kill-bigword repaint-mode
     bind -s --preset -m insert ciw forward-char forward-char backward-word kill-word repaint-mode
@@ -170,6 +173,12 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -m insert cB backward-kill-bigword repaint-mode
     bind -s --preset -m insert cge backward-kill-word repaint-mode
     bind -s --preset -m insert cgE backward-kill-bigword repaint-mode
+    bind -s --preset -m insert cf begin-selection forward-jump kill-selection end-selection repaint-mode
+    bind -s --preset -m insert ct begin-selection forward-jump backward-char kill-selection end-selection repaint-mode
+    bind -s --preset -m insert cF begin-selection backward-jump kill-selection end-selection repaint-mode
+    bind -s --preset -m insert cT begin-selection backward-jump forward-char kill-selection end-selection repaint-mode
+    bind -s --preset -m insert ch backward-char begin-selection kill-selection end-selection repaint-mode
+    bind -s --preset -m insert cl begin-selection kill-selection end-selection repaint-mode
 
     bind -s --preset '~' capitalize-word
     bind -s --preset gu downcase-word
@@ -182,6 +191,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset Y kill-whole-line yank
     bind -s --preset y\$ kill-line yank
     bind -s --preset y\^ backward-kill-line yank
+    bind -s --preset y0 backward-kill-line yank
     bind -s --preset yw kill-word yank
     bind -s --preset yW kill-bigword yank
     bind -s --preset yiw forward-char forward-char backward-word kill-word yank

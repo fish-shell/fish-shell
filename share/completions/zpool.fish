@@ -96,73 +96,73 @@ function __fish_zpool_complete_vdevs
 end
 
 function __fish_zpool_list_get_fields
-    echo -e "name\t"(_ "Pool full name")
-    echo -e "property\t"(_ "Property")
-    echo -e "value\t"(_ "Property value")
-    echo -e "source\t"(_ "Property value origin")
+    echo -e "name\tPool full name"
+    echo -e "property\tProperty"
+    echo -e "value\tProperty value"
+    echo -e "source\tProperty value origin"
 end
 
 function __fish_zpool_list_vdev_types
-    echo -e "mirror\t"(_ "Mirror of at least two devices")
-    echo -e "raidz\t"(_ "ZFS RAID-5 variant, single parity")
-    echo -e "raidz1\t"(_ "ZFS RAID-5 variant, single parity")
-    echo -e "raidz2\t"(_ "ZFS RAID-5 variant, double parity")
-    echo -e "raidz3\t"(_ "ZFS RAID-5 variant, triple parity")
-    echo -e "spare\t"(_ "Pseudo vdev for pool hot spares")
-    echo -e "log\t"(_ "SLOG device")
-    echo -e "cache\t"(_ "L2ARC device")
+    echo -e "mirror\tMirror of at least two devices"
+    echo -e "raidz\tZFS RAID-5 variant, single parity"
+    echo -e "raidz1\tZFS RAID-5 variant, single parity"
+    echo -e "raidz2\tZFS RAID-5 variant, double parity"
+    echo -e "raidz3\tZFS RAID-5 variant, triple parity"
+    echo -e "spare\tPseudo vdev for pool hot spares"
+    echo -e "log\tSLOG device"
+    echo -e "cache\tL2ARC device"
 end
 
 function __fish_zpool_list_ro_properties
-    echo -e "alloc\t"(_ "Physically allocated space")
+    echo -e "alloc\tPhysically allocated space"
     if contains -- $OS SunOS Linux
-        echo -e "available\t"(_ "Available space")
-        echo -e "avail\t"(_ "Available space")
+        echo -e "available\tAvailable space"
+        echo -e "avail\tAvailable space"
     end
     if test $OS = 'SunOS'
-        echo -e "bootsize\t"(_ "System boot partition size")
+        echo -e "bootsize\tSystem boot partition size"
     end
-    echo -e "capacity\t"(_ "Usage percentage of pool")
-    echo -e "dedupratio\t"(_ "Deduplication ratio")
-    echo -e "expandsize\t"(_ "Amount of uninitialized space within the pool")
-    echo -e "fragmentation\t"(_ "Fragmentation percentage of pool")
-    echo -e "free\t"(_ "Free pool space")
-    echo -e "freeing\t"(_ "Remaining pool space to be freed")
-    echo -e "guid\t"(_ "Pool GUID")
-    echo -e "health\t"(_ "Current pool health")
-    echo -e "size\t"(_ "Total pool space")
-    echo -e "used\t"(_ "Used pool space")
+    echo -e "capacity\tUsage percentage of pool"
+    echo -e "dedupratio\tDeduplication ratio"
+    echo -e "expandsize\tAmount of uninitialized space within the pool"
+    echo -e "fragmentation\tFragmentation percentage of pool"
+    echo -e "free\tFree pool space"
+    echo -e "freeing\tRemaining pool space to be freed"
+    echo -e "guid\tPool GUID"
+    echo -e "health\tCurrent pool health"
+    echo -e "size\tTotal pool space"
+    echo -e "used\tUsed pool space"
     # Unsupported features
     zpool list -o all | head -n1 | string replace -ra ' +' '\n' | string lower | string match -r unsupported
 end
 
 function __fish_zpool_list_device_properties
-    echo -e "ashift\t"(_ "Pool sector size exponent")" (COUNT)"
+    echo -e "ashift\tPool sector size exponent (COUNT)"
 end
 
 function __fish_zpool_list_writeonce_properties
-    echo -e "altroot\t"(_ "Alternate root directory")" (PATH)"
+    echo -e "altroot\tAlternate root directory (PATH)"
 end
 
 function __fish_zpool_list_importtime_properties
-    echo -e "altroot\t"(_ "Alternate root directory")" (PATH)"
-    echo -e "readonly\t"(_ "Import pool in read-only mode")" (on, off)"
-    echo -e "rdonly\t"(_ "Import pool in read-only mode")" (on, off)"
+    echo -e "altroot\tAlternate root directory (PATH)"
+    echo -e "readonly\tImport pool in read-only mode (on, off)"
+    echo -e "rdonly\tImport pool in read-only mode (on, off)"
 end
 
 function __fish_zpool_list_rw_properties
-    echo -e "autoexpand\t"(_ "Automatic pool expansion on LUN growing")" (on, off)"
-    echo -e "expand\t"(_ "Automatic pool expansion on LUN growing")" (on, off)"
-    echo -e "autoreplace\t"(_ "Automatic use of replacement device")" (on, off)"
-    echo -e "replace\t"(_ "Automatic use of replacement device")" (on, off)"
-    echo -e "bootfs\t"(_ "Default bootable dataset")" (POOL/DATASET)"
-    echo -e "cachefile\t"(_ "Pool configuration cache")" (PATH, none, '')"
-    echo -e "comment\t"(_ "Comment about the pool")" (COMMENT)"
-    echo -e "dedupditto\t"(_ "Threshold for writing a ditto copy of deduplicated blocks")" (COUNT)"
-    echo -e "delegation\t"(_ "Allow rights delegation on the pool")" (on, off)"
-    echo -e "failmode\t"(_ "Behavior in case of catastrophic pool failure")" (wait, continue, panic)"
-    echo -e "listsnaps\t"(_ "Display snapshots even if 'zfs list' does not use '-t'")" (on, off)"
-    echo -e "version\t"(_ "On-disk version of pool")" (VERSION)"
+    echo -e "autoexpand\tAutomatic pool expansion on LUN growing (on, off)"
+    echo -e "expand\tAutomatic pool expansion on LUN growing (on, off)"
+    echo -e "autoreplace\tAutomatic use of replacement device (on, off)"
+    echo -e "replace\tAutomatic use of replacement device (on, off)"
+    echo -e "bootfs\tDefault bootable dataset (POOL/DATASET)"
+    echo -e "cachefile\tPool configuration cache (PATH, none, '')"
+    echo -e "comment\tComment about the pool (COMMENT)"
+    echo -e "dedupditto\tThreshold for writing a ditto copy of deduplicated blocks (COUNT)"
+    echo -e "delegation\tAllow rights delegation on the pool (on, off)"
+    echo -e "failmode\tBehavior in case of catastrophic pool failure (wait, continue, panic)"
+    echo -e "listsnaps\tDisplay snapshots even if 'zfs list' does not use '-t' (on, off)"
+    echo -e "version\tOn-disk version of pool (VERSION)"
     # Feature properties
     zpool list -o all | string replace -ra ' +' '\n' | string lower | string replace -rf '^feature@(.*)' '$1'
 end
@@ -271,7 +271,7 @@ complete -c zpool -f -n '__fish_zpool_using_command get' -s H -d 'Print output i
 if contains -- $OS FreeBSD SunOS
     complete -c zpool -x -n '__fish_zpool_using_command get' -s o -d 'Fields to display' -a '(__fish_append , (__fish_zpool_list_get_fields))'
 end
-complete -c zpool -x -n '__fish_zpool_using_command get' -d 'Properties to get' -a '(__fish_append , (__fish_zpool_list_importtime_properties; __fish_zpool_list_rw_properties; __fish_zpool_list_writeonce_properties; __fish_zpool_list_ro_properties; __fish_zpool_list_device_properties; echo -e "all\t"(_ "All properties")))'
+complete -c zpool -x -n '__fish_zpool_using_command get' -d 'Properties to get' -a '(__fish_append , (__fish_zpool_list_importtime_properties; __fish_zpool_list_rw_properties; __fish_zpool_list_writeonce_properties; __fish_zpool_list_ro_properties; __fish_zpool_list_device_properties; echo -e "all\tAll properties"))'
 complete -c zpool -x -n '__fish_zpool_using_command get' -d 'Pool to get properties of' -a '(__fish_complete_zfs_pools)'
 
 # history completions

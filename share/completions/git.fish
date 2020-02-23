@@ -127,25 +127,25 @@ function __fish_git_files
     # once per file.
     contains -- all-staged $argv; and set -l all_staged
     contains -- unmerged $argv; and set -l unmerged
-    and set -l unmerged_desc (_ "Unmerged File")
+    and set -l unmerged_desc "Unmerged File"
     contains -- added $argv; or set -ql all_staged; and set -l added
-    and set -l added_desc (_ "Added file")
+    and set -l added_desc "Added file"
     contains -- modified $argv; and set -l modified
-    and set -l modified_desc (_ "Modified file")
+    and set -l modified_desc "Modified file"
     contains -- untracked $argv; and set -l untracked
-    and set -l untracked_desc (_ "Untracked file")
+    and set -l untracked_desc "Untracked file"
     contains -- modified-staged $argv; or set -ql all_staged; and set -l modified_staged
-    and set -l staged_modified_desc (_ "Staged modified file")
+    and set -l staged_modified_desc "Staged modified file"
     contains -- deleted $argv; and set -l deleted
-    and set -l deleted_desc (_ "Deleted file")
+    and set -l deleted_desc "Deleted file"
     contains -- deleted-staged $argv; or set -ql all_staged; and set -l deleted_staged
-    and set -l staged_deleted_desc (_ "Staged deleted file")
+    and set -l staged_deleted_desc "Staged deleted file"
     contains -- ignored $argv; and set -l ignored
-    and set -l ignored_desc (_ "Ignored file")
+    and set -l ignored_desc "Ignored file"
     contains -- renamed $argv; and set -l renamed
-    and set -l renamed_desc (_ "Renamed file")
+    and set -l renamed_desc "Renamed file"
     contains -- copied $argv; and set -l copied
-    and set -l copied_desc (_ "Copied file")
+    and set -l copied_desc "Copied file"
 
     # A literal "?" for use in `case`.
     set -l q '\\?'

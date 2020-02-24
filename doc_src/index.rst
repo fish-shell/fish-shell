@@ -547,20 +547,21 @@ To use a "," as an element, `quote <#quotes>`_ or `escape <#escapes>`_ it.
 Variable expansion
 ------------------
 
-A dollar sign followed by a string of characters is expanded into the value of the shell variable with the same name. For more on shell variables, read the `Shell variables <#variables>`_ section.
+One of the most important expansions in fish is the "variable expansion". This is the replacing of a dollar sign (`$`) followed by a variable name with the _value_ of that variable. For more on shell variables, read the `Shell variables <#variables>`_ section.
 
-Examples::
+In the simplest case, this is just something like::
 
     echo $HOME
-    # Prints the home directory of the current user.
 
-Undefined and empty variables expand to nothing::
+which will replace `$HOME` with the home directory of the current user, and pass it to :ref:`echo <cmd-echo>`, which will then print it.
+
+Sometimes a variable has no value because it is undefined or empty, and it expands to nothing::
 
 
     echo $nonexistentvariable
     # Prints no output.
 
-To separate a variable name from text encase the variable within double-quotes or braces::
+To separate a variable name from text you can encase the variable within double-quotes or braces::
 
     echo The plural of $WORD is "$WORD"s
     # Prints "The plural of cat is cats" when $WORD is set to cat.
@@ -574,13 +575,13 @@ The latter syntax ``{$WORD}`` works by exploiting `brace expansion <#expand-brac
 
 In these cases, the expansion eliminates the string, as a result of the implicit :ref:`cartesian product <cartesian-product>`.
 
-If, in the example above, $WORD is undefined or an empty list, the "s" is not printed. However, it is printed if $WORD is the empty string (like after ``set WORD ""``).
+If $WORD here is undefined or an empty list, the "s" is not printed. However, it is printed if $WORD is the empty string (like after ``set WORD ""``).
 
-Unlike all the other expansions, variable expansion also happens in double quoted strings. Inside double quotes (``"these"``), variables will always expand to exactly one argument. If they are empty or undefined, it will result in an empty string. If they have one element, they'll expand to that element. If they have more than that, the elements will be joined with spaces [#]_.
+Unlike all the other expansions, variable expansion also happens in double quoted strings. Inside double quotes (``"these"``), variables will always expand to exactly one argument. If they are empty or undefined, it will result in an empty string. If they have one element, they'll expand to that element. If they have more than that, the elements will be joined with spaces, unless the variable is a :ref:`path variable <variables-path>` - in that case it will use a colon (`:`) instead [#]_.
 
 Outside of double quotes, variables will expand to as many arguments as they have elements. That means an empty list will expand to nothing, a variable with one element will expand to that element, and a variable with multiple elements will expand to each of those elements separately.
 
-When two unquoted expansions directly follow each other, you need to watch out for expansions that expand to nothing. This includes undefined variables and empty lists, but also command substitutions with no output. See the :ref:`cartesian product <cartesian-product>` section for more information.
+If a variable expands to nothing, it will cancel out any other strings attached to it. See the :ref:`cartesian product <cartesian-product>` section for more information.
 
 The ``$`` symbol can also be used multiple times, as a kind of "dereference" operator (the ``*`` in C or C++), like in the following code::
 
@@ -595,7 +596,7 @@ The ``$`` symbol can also be used multiple times, as a kind of "dereference" ope
     # 20
     # 30
 
-When using this feature together with list brackets, the brackets will always match the innermost ``$`` dereference. Thus, ``$$foo[5]`` will always mean the fifth element of the ``foo`` variable should be dereferenced, not the fifth element of the doubly dereferenced variable ``foo``. The latter can instead be expressed as ``$$foo[1][5]``.
+When using this feature together with list brackets, the brackets will be used from the inside out. ``$$foo[5]`` will use the fifth element of the ``$foo`` variable as a variable name, instead of giving the fifth element of all the variables $foo refers to. That would instead be expressed as ``$$foo[1][5]`` (take the first element of ``$foo``, use it as a variable name, then give the fifth element of that).
 
 
 .. [#] Unlike bash or zsh, which will join with the first character of $IFS (which usually is space).

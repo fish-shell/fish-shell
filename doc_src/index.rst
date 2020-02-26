@@ -1086,7 +1086,7 @@ If a process exits through a signal, the exit status will be 128 plus the number
 Variables for changing highlighting colors
 ------------------------------------------
 
-The colors used by fish for syntax highlighting can be configured by changing the values of a various variables. The value of these variables can be one of the colors accepted by the `set_color <cmds/set.html_color>`_ command. The ``--bold`` or ``-b`` switches accepted by ``set_color`` are also accepted.
+The colors used by fish for syntax highlighting can be configured by changing the values of a various variables. The value of these variables can be one of the colors accepted by the :ref:`set_color <cmd-set_color>` command. The ``--bold`` or ``-b`` switches accepted by ``set_color`` are also accepted.
 
 The following variables are available to change the highlighting colors in fish:
 

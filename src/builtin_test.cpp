@@ -665,10 +665,12 @@ static bool parse_number(const wcstring &arg, number_t *number, wcstring_list_t 
         *number = number_t{integral, 0.0};
 
         return true;
-    } else if (got_float && errno != ERANGE) {
+    } else if (got_float && errno != ERANGE && std::isfinite(floating)) {
         // Here we parsed an (in range) floating point value that could not be parsed as an integer.
         // Break the floating point value into base and delta. Ensure that base is <= the floating
         // point value.
+        //
+        // Note that a non-finite number like infinity or NaN doesn't work for us, so we checked above.
         double intpart = std::floor(floating);
         double delta = floating - intpart;
         *number = number_t{static_cast<long long>(intpart), delta};
@@ -680,6 +682,11 @@ static bool parse_number(const wcstring &arg, number_t *number, wcstring_list_t 
         if (errno == -1) {
             errors.push_back(
                 format_string(_(L"Integer %lld in '%ls' followed by non-digit"), integral, argcs));
+        } else if (std::isnan(floating)) {
+            // NaN is an error as far as we're concerned.
+            errors.push_back(_(L"Not a number"));
+        } else if (std::isinf(floating)) {
+            errors.push_back(_(L"Number is infinite"));
         } else {
             errors.push_back(format_string(L"%s: '%ls'", std::strerror(errno), argcs));
         }

@@ -1,3 +1,22 @@
+# fish 3.1.1 (released X)
+
+This is a bug fix release containing important fixes since 3.1.0. It
+
+- fixes a regression where `psub` would clean its temporary file before it was usable, breaking `. (something | psub)` (#6613)
+- drops the rg and bat completions, which commonly conflicted with files installed into the fish rather than the vendor location by rg and bat packages (#5822)
+- undoes a change to glob ordering that also affected the order conf.d files were `source`d in (#6593)
+- readds the inadvertently removed `^&1` and `2>>&1` redirections. Note that `^` to redirect stderr is still deprecated and will be removed in future (#6591, #6614)
+- lists `time` as a builtin (#6598)
+- fixes an issue where exported universal variables sometimes wouldn't update properly (#6612)
+- fixes `status current-command` when the command includes variable overrides (#6635)
+- fixes a crash when $PWD wasn't readable at start (#6597)
+- fixes a crash when `test` is passed "inf" or "nan" with a numerical test (#6655)
+- improves compatibility with newer glibc (#6604) and 32-bit systems (#6609)
+- fixes compilation on old macOS (#6602)
+- improves compatibility with macOS code signing
+- improves the `flatpak` (#6581) and `kill` (#6636) completions
+- plus some typo and link fixes and minor adjustments to the documentation (#6627, #6642, #6646, #6647, #6657)
+
 # fish 3.1.0 (released February 12, 2020)
 
 Compared to the beta release of fish 3.1b1, fish version 3.1.0:

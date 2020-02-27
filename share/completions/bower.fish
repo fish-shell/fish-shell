@@ -53,7 +53,7 @@ function __bower_list_installed
     if set -l python (__fish_anypython)
         # Warning: That weird indentation is necessary, because python.
         $python -S -c 'import json, sys; data = json.load(sys.stdin);
-for k,v in data["dependencies"].items(): print(k + "\t" + v[:18])' bower.json 2>/dev/null
+for k,v in data["dependencies"].items(): print(k + "\t" + v[:18])' <bower.json 2>/dev/null
         return
     end
 

@@ -297,11 +297,7 @@ static inline void safe_append(char *buffer, const char *s, size_t buffsize) {
 // have to grub through sys_nerr and sys_errlist directly On GNU toolchain, this will produce a
 // deprecation warning from the linker (!!), which appears impossible to suppress!
 const char *safe_strerror(int err) {
-#if defined(__UCLIBC__)
-    // uClibc does not have sys_errlist, however, its strerror is believed to be async-safe.
-    // See issue #808.
-    return std::strerror(err);
-#elif defined(HAVE__SYS__ERRS) || defined(HAVE_SYS_ERRLIST)
+#ifdef __GLIBC__
 #ifdef HAVE_SYS_ERRLIST
     if (err >= 0 && err < sys_nerr && sys_errlist[err] != nullptr) {
         return sys_errlist[err];
@@ -315,6 +311,9 @@ const char *safe_strerror(int err) {
         return &_sys_errs[_sys_index[err]];
     }
 #endif  // either HAVE__SYS__ERRS or HAVE_SYS_ERRLIST
+#else
+    // Most platforms have a thread-safe strerror implementation
+    return std::strerror(err);
 #endif  // defined(HAVE__SYS__ERRS) || defined(HAVE_SYS_ERRLIST)
 
     int saved_err = errno;

@@ -31,7 +31,7 @@ data = json.load(json_data)
 json_data.close()
 packages = itertools.chain(data['require'].keys(), data['require-dev'].keys())
 print(\"\n\".join(packages))
-      " | $python
+      " | $python -S
 end
 
 function __fish_composer_installed_packages
@@ -48,7 +48,7 @@ for package in data['packages']:
 for package in data['packages-dev']:
     installed_packages.append(package['name'])
 print(\"\n\".join(installed_packages))
-" | $python
+" | $python -S
 end
 
 function __fish_composer_scripts
@@ -61,7 +61,7 @@ data = json.load(json_data)
 json_data.close()
 if 'scripts' in data and data['scripts']:
     print(\"\n\".join(data['scripts'].keys()))
-" | $python
+" | $python -S
 end
 
 # add cmds list

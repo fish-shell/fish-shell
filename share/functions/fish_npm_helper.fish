@@ -58,7 +58,7 @@ function __yarn_installed_packages
     end
 
     if set -l python (__fish_anypython)
-        $python -c 'import json, sys; data = json.load(sys.stdin);
+        $python -S -c 'import json, sys; data = json.load(sys.stdin);
 print("\n".join(data["dependencies"])); print("\n".join(data["devDependencies"]))' <$package_json 2>/dev/null
     else if type -q jq
         jq -r '.dependencies as $a1 | .devDependencies as $a2 | ($a1 + $a2) | to_entries[] | .key' $package_json

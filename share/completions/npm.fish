@@ -91,7 +91,7 @@ function __fish_npm_run
     # npm is dog-slow and might check for updates online!
     if test -e package.json; and set -l python (__fish_anypython)
         # Warning: That weird indentation is necessary, because python.
-        $python -c 'import json, sys; data = json.load(sys.stdin);
+        $python -S -c 'import json, sys; data = json.load(sys.stdin);
 for k,v in data["scripts"].items(): print(k + "\t" + v[:18])' <package.json 2>/dev/null
     else if command -sq jq; and test -e package.json
         jq -r '.scripts | to_entries | map("\(.key)\t\(.value | tostring | .[0:20])") | .[]' package.json

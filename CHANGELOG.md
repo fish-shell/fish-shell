@@ -21,6 +21,7 @@
 #### Completions
 - Added completions for
   - `wireshark`, `tshark`, and `dumpcap`
+  - `dropdb`, `createdb`, `pg_restore`, `pg_dump` and `pg_dumpall`
 
 ### Deprecations and removed features
 

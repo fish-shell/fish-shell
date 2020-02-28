@@ -16,9 +16,6 @@ function __fish_print_packages
             return
     end
 
-    #Get the word 'Package' in the current language
-    set -l package (_ "Package")
-
     if type -q -f apt-cache
         if not set -q only_installed
             # Do not generate the cache as apparently sometimes this is slow.
@@ -74,7 +71,7 @@ function __fish_print_packages
         end
 
         # prints: <package name>	Package
-        pacman -Ssq | sed -e 's/$/\t'$package'/' >$cache_file &
+        pacman -Ssq | sed -e 's/$/\t'Package'/' >$cache_file &
         return
     end
 
@@ -82,7 +79,7 @@ function __fish_print_packages
     if type -q -f zypper
         # Use libzypp cache file if available
         if test -f /var/cache/zypp/solv/@System/solv.idx
-            awk '!/application:|srcpackage:|product:|pattern:|patch:/ {print $1'\t$package'}' /var/cache/zypp/solv/*/solv.idx
+            awk '!/application:|srcpackage:|product:|pattern:|patch:/ {print $1'\tPackage'}' /var/cache/zypp/solv/*/solv.idx
             return
         end
 
@@ -99,7 +96,7 @@ function __fish_print_packages
         end
 
         # Remove package version information from output and pipe into cache file
-        zypper --quiet --non-interactive search --type=package | tail -n +4 | sed -r 's/^. \| ((\w|[-_.])+).*/\1\t'$package'/g' >$cache_file &
+        zypper --quiet --non-interactive search --type=package | tail -n +4 | sed -r 's/^. \| ((\w|[-_.])+).*/\1\t'Package'/g' >$cache_file &
         return
     end
 
@@ -119,7 +116,7 @@ function __fish_print_packages
         end
 
         # Remove package version information from output and pipe into cache file
-        /usr/share/yum-cli/completion-helper.py list all -d 0 -C | sed "s/\..*/\t$package/" >$cache_file &
+        /usr/share/yum-cli/completion-helper.py list all -d 0 -C | sed "s/\..*/\tPackage/" >$cache_file &
         return
     end
 
@@ -141,7 +138,7 @@ function __fish_print_packages
         end
 
         # Remove package version information from output and pipe into cache file
-        rpm -qa | sed -e 's/-[^-]*-[^-]*$/\t'$package'/' >$cache_file &
+        rpm -qa | sed -e 's/-[^-]*-[^-]*$/\t'Package'/' >$cache_file &
         return
     end
 

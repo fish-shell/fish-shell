@@ -9,7 +9,7 @@ Synopsis
 ::
 
     abbr --add [SCOPE] WORD EXPANSION
-    abbr --erase word
+    abbr --erase WORD
     abbr --rename [SCOPE] OLD_WORD NEW_WORD
     abbr --show
     abbr --list
@@ -27,7 +27,7 @@ Options
 
 The following options are available:
 
-- ``-a WORD EXPANSION`` or ``--add WORD EXPANSION`` Adds a new abbreviation, causing WORD to be expanded to PHRASE.
+- ``-a WORD EXPANSION`` or ``--add WORD EXPANSION`` Adds a new abbreviation, causing WORD to be expanded to EXPANSION.
 
 - ``-r OLD_WORD NEW_WORD`` or ``--rename OLD_WORD NEW_WORD`` Renames an abbreviation, from OLD_WORD to NEW_WORD.
 
@@ -39,7 +39,7 @@ The following options are available:
 
 - ``-q`` or ``--query`` Return 0 (true) if one of the WORDs is an abbreviation.
 
-In addition, when adding abbreviations:
+In addition, when adding or renaming abbreviations:
 
 - ``-g`` or ``--global`` to use a global variable.
 - ``-U`` or ``--universal`` to use a universal variable (default).

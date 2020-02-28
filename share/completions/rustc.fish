@@ -67,6 +67,3 @@ for line in $rust_docs
     complete -c rustc -x -s D -l deny -a (string escape -- "$docs[1]") -d "$docs[2]"
     complete -c rustc -x -s F -l forbid -a (string escape -- "$docs[1]") -d "$docs[2]"
 end
-
-set -e rust_codegen
-

@@ -6,7 +6,7 @@
 # incomplete. Please send in additions.
 #
 
-set mplayer_lang "
+set -l mplayer_lang "
 	de\tGerman
 	dk\tDanish
 	en\tEnglish
@@ -81,5 +81,3 @@ complete -c mplayer -o vfm -x -d "Video output" -a "
 
 complete -c mplayer -l help -d "Display help and exit"
 complete -c mplayer -l version -d "Display version and exit"
-
-set -e mplayer_lang

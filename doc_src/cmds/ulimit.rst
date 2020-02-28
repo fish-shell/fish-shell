@@ -50,7 +50,7 @@ If limit is given, it is the new value of the specified resource. If no option i
 
 - ``-S`` or ``--soft`` sets soft resource limit
 
-A hard limit can only be decreased. Once it is set it cannot be increased; a soft limit may be increased up to the value of the hard limit. If neither -H nor -S is specified, both the soft and hard limits are updated when assigning a new limit value, and the soft limit is used when reporting the current value.
+A hard limit can only be decreased. Once it is set it cannot be increased; a soft limit may be increased up to the value of the hard limit. If neither ``-H`` nor ``-S`` is specified, both the soft and hard limits are updated when assigning a new limit value, and the soft limit is used when reporting the current value.
 
 The following additional options are also understood by ``ulimit``:
 
@@ -62,7 +62,7 @@ The ``fish`` implementation of ``ulimit`` should behave identically to the imple
 
 - Fish ``ulimit`` does not support the ``-p`` option for getting the pipe size. The bash implementation consists of a compile-time check that empirically guesses this number by writing to a pipe and waiting for SIGPIPE. Fish does not do this because it this method of determining pipe size is unreliable. Depending on bash version, there may also be further additional limits to set in bash that do not exist in fish.
 
-- Fish ``ulimit`` does not support getting or setting multiple limits in one command, except reporting all values using the -a switch
+- Fish ``ulimit`` does not support getting or setting multiple limits in one command, except reporting all values using the ``-a`` switch
 
 
 Example

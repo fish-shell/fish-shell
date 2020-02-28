@@ -339,7 +339,7 @@ function __fish_git_files
         # Note that we can't use space as a delimiter between status and filename, because
         # the status can contain spaces - " M" is different from "M ".
         __fish_git $git_opt status --porcelain -z $status_opt \
-            | while read -lz line
+            | while read -lz -d' ' line
             set -l desc
             # The entire line is the "from" from a rename.
             if set -q use_next[1]

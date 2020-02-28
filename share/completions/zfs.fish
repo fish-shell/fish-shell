@@ -10,7 +10,7 @@
 # - for the program command, complete the script to be executed
 # - for commands accepting several arguments of different types, propose arguments in the right order: for get, once the ZFS parameters have been given, only propose datasets
 
-set OS ""
+set -lx OS ""
 switch (uname)
     case Linux
         set OS "Linux"
@@ -90,7 +90,7 @@ function __fish_zfs_list_groupspace_types
     echo -e "all\tBoth types"
 end
 
-function __fish_zfs_list_permissions
+function __fish_zfs_list_permissions -V OS
     echo -e "allow\tAlso needs the permission to be allowed"
     echo -e "clone\tAlso needs the 'create' and 'mount' permissions in the origin filesystem"
     echo -e "create\tAlso needs the 'mount' permission"

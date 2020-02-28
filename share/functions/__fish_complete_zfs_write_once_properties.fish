@@ -13,18 +13,18 @@ function __fish_complete_zfs_write_once_properties -d "Completes with ZFS proper
         case "*"
             set OS "unknown"
     end
-    echo -e "normalization\t"(_ "Unicode normalization")" (none, formC, formD, formKC, formKD)"
-    echo -e "utf8only\t"(_ "Reject non-UTF-8-compliant filenames")" (on, off)"
+    echo -e "normalization\tUnicode normalization (none, formC, formD, formKC, formKD)"
+    echo -e "utf8only\tReject non-UTF-8-compliant filenames (on, off)"
     if test $OS = "Linux"
-        echo -e "overlay\t"(_ "Allow overlay mount")" (on, off)"
+        echo -e "overlay\tAllow overlay mount (on, off)"
         if command -sq sestatus # SELinux is enabled
-            echo -e "context\t"(_ "SELinux context for the child filesystem")
-            echo -e "fscontext\t"(_ "SELinux context for the filesystem being mounted")
-            echo -e "defcontext\t"(_ "SELinux context for unlabeled files")
-            echo -e "rootcontext\t"(_ "SELinux context for the root inode of the filesystem")
+            echo -e "context\tSELinux context for the child filesystem"
+            echo -e "fscontext\tSELinux context for the filesystem being mounted"
+            echo -e "defcontext\tSELinux context for unlabeled files"
+            echo -e "rootcontext\tSELinux context for the root inode of the filesystem"
         end
-        echo -e "casesensitivity\t"(_ "Case sensitivity")" (sensitive, insensitive)"
+        echo -e "casesensitivity\tCase sensitivity (sensitive, insensitive)"
     else
-        echo -e "casesensitivity\t"(_ "Case sensitivity")" (sensitive, insensitive, mixed)"
+        echo -e "casesensitivity\tCase sensitivity (sensitive, insensitive, mixed)"
     end
 end

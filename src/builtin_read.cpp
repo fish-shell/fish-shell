@@ -607,14 +607,6 @@ int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                     wcstring substr;
                     loc = wcstring_tok(buff, (vars_left() > 1) ? opts.delimiter : wcstring(), loc);
                     if (loc.first != wcstring::npos) {
-                        if (vars_left() == 1) {  // Discard trailing delimiters, see #6406
-                            loc.first =
-                                std::find_if(buff.begin() + loc.first, buff.end(),
-                                             [&opts](wchar_t c) {
-                                                 return opts.delimiter.find(c) == wcstring::npos;
-                                             }) -
-                                buff.begin();
-                        }
                         substr = wcstring(buff, loc.first, loc.second);
                     }
                     vars.set_one(*var_ptr++, opts.place, substr);

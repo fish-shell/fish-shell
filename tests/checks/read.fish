@@ -65,7 +65,7 @@ print_vars one two three
 #CHECK: 1 'test' 1 '' 1 ''
 echo 'foo   bar   baz' | read -l one two three
 print_vars one two three
-#CHECK: 1 'foo' 1 'bar' 1 'baz'
+#CHECK: 1 'foo' 1 'bar' 1 '  baz'
 echo -n 'a' | read -l one
 echo "$status $one"
 #CHECK: 0 a
@@ -323,7 +323,7 @@ begin
 end
 #CHECK: a
 #CHECK: b
-#CHECK: c
+#CHECK: ..c
 
 # At one point, whatever was read was printed _before_ banana
 echo banana (echo sausage | read)

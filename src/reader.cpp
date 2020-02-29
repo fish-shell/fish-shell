@@ -3653,7 +3653,7 @@ bool reader_get_selection(size_t *start, size_t *len) {
     reader_data_t *data = current_data_or_null();
     if (data != nullptr && data->sel_active) {
         *start = data->sel_start_pos;
-        *len = std::min(data->sel_stop_pos - data->sel_start_pos, data->command_line.size());
+        *len = std::min(data->sel_stop_pos, data->command_line.size()) - data->sel_start_pos;
         result = true;
     }
     return result;

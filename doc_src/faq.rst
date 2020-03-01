@@ -35,7 +35,7 @@ You can also use the Web configuration tool, :ref:`fish_config <cmd-fish_config>
 Why does my prompt show a `[I]`?
 --------------------------------
 
-That's the :ref:`fish_mode_prompt <cmd-fish_mode_prompt>`. It is displayed by default when you've activated :ref:`vi mode <cmd-fish_vi_key_bindings>`.
+That's the :ref:`fish_mode_prompt <cmd-fish_mode_prompt>`. It is displayed by default when you've activated vi mode using ``fish_vi_key_bindings``.
 
 If you haven't activated vi mode on purpose, you might have installed a third-party theme that does it.
 

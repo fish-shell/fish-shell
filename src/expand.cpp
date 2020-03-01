@@ -17,8 +17,9 @@
 #include <procfs.h>
 #endif
 #if __APPLE__
-#include <sys/proc.h>
 #include <sys/time.h>  // Required to build with old SDK versions
+// proc.h needs to be included *after* time.h, this comment stops clang-format from reordering.
+#include <sys/proc.h>
 #else
 #include <dirent.h>
 #include <sys/stat.h>

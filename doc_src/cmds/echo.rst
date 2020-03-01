@@ -57,18 +57,19 @@ If ``-e`` is used, the following sequences are recognized:
 Example
 -------
 
-
-
 ::
 
     echo 'Hello World'
 
 Print hello world to stdout
 
-
-
 ::
 
     echo -e 'Top\\nBottom'
 
 Print Top and Bottom on separate lines, using an escape sequence
+
+See Also
+--------
+
+- the :ref:`printf <cmd-printf>` command, for more control over output formatting

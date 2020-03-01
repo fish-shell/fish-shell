@@ -1,4 +1,4 @@
-source $__fish_data_dir/functions/fish_npm_helper.fish
+source $__fish_data_dir/functions/__fish_npm_helper.fish
 set -l yarn_add "yarn global add"
 
 # Typically there is no need to check if (commandline -ct) begins with `--`

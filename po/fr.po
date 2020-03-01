@@ -3711,8 +3711,8 @@ msgstr "Contexte SELinux pour l’i-nœud racine du système de fichiers"
 msgid "Welcome to fish, the friendly interactive shell"
 msgstr "Bienvenue dans fish, le shell amical et interactif"
 
-#: /tmp/fish/explicit/share/functions/fish_md5.fish:1
-#: /tmp/fish/explicit/share/functions/fish_md5.fish:2
+#: /tmp/fish/explicit/share/functions/__fish_md5.fish:1
+#: /tmp/fish/explicit/share/functions/__fish_md5.fish:2
 msgid "%s: Too many arguments %s\\n"
 msgstr "%s: Trop d'arguments %s\\n"
 

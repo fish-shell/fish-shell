@@ -297,6 +297,8 @@ void event_fire_delayed(parser_t &parser) {
     auto &ld = parser.libdata();
     // Do not invoke new event handlers from within event handlers.
     if (ld.is_event) return;
+    // Do not invoke new event handlers if we are unwinding (#6649).
+    if (parser.get_cancel_signal()) return;
 
     std::vector<shared_ptr<event_t>> to_send;
     to_send.swap(ld.blocked_events);

@@ -23,6 +23,7 @@
   - `wireshark`, `tshark`, and `dumpcap`
   - `dropdb`, `createdb`, `pg_restore`, `pg_dump` and `pg_dumpall`
   - `dhclient`
+  - `tcpdump`
 
 ### Deprecations and removed features
 

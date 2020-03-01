@@ -17,8 +17,8 @@
 #include <procfs.h>
 #endif
 #if __APPLE__
-#include <sys/proc.h>
 #include <sys/time.h>  // Required to build with old SDK versions
+#include <sys/proc.h>
 #else
 #include <dirent.h>
 #include <sys/stat.h>

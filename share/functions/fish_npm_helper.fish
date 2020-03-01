@@ -1,4 +1,4 @@
-# This file is explicitly sourced by the npm and fish completions
+# This file is explicitly sourced by the npm and yarn completions
 # It is used to enumerate entries from the npm registry, interact with a locally installed
 # package.json file, and more.
 # Other completions that would depend on this include jspm, pnpm, etc.

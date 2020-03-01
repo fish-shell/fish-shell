@@ -66,18 +66,19 @@ This file has been imported from the printf in GNU Coreutils version 6.9. If you
 Example
 -------
 
-
-
 ::
 
     printf '%s\\t%s\\n' flounder fish
 
 Will print "flounder	fish" (separated with a tab character), followed by a newline character. This is useful for writing completions, as fish expects completion scripts to output the option followed by the description, separated with a tab character.
 
-
-
 ::
 
     printf '%s: %d' "Number of bananas in my pocket" 42
 
 Will print "Number of bananas in my pocket: 42", _without_ a newline.
+
+See Also
+--------
+
+- the :ref:`echo <cmd-echo>` command, for simpler output

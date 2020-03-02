@@ -4,6 +4,7 @@ if command -q wc && command wc --version >/dev/null 2>/dev/null
     complete -c wc -s l -l lines -d "Print number of lines"
     complete -c wc -s L -l max-line-length -d "Print length of longest line"
     complete -c wc -s w -l words -d "Print number of words"
+    complete -c wc -l files0-from -d "Read input from NUL-terminated filenames in the given file" -r
     complete -c wc -l help -d "Display help and exit"
     complete -c wc -l version -d "Display version and exit"
 else

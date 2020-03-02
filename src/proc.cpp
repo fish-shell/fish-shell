@@ -551,18 +551,18 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
     // complete.
     std::vector<event_t> exit_events;
 
+    // A helper to indicate if we should process a job.
+    auto should_process_job = [=](const shared_ptr<job_t> &j) {
+        // Do not attempt to process jobs which are not yet constructed.
+        // Do not attempt to process jobs that need to print a status message,
+        // unless we are interactive, in which case printing is OK.
+        return j->is_constructed() && (interactive || !job_wants_message(j));
+    };
+
     // Print status messages for completed or stopped jobs.
     const bool only_one_job = parser.jobs().size() == 1;
     for (const auto &j : parser.jobs()) {
-        // Skip unconstructed jobs.
-        if (!j->is_constructed()) {
-            continue;
-        }
-
-        // If we are not interactive, skip cleaning jobs that want to print an interactive message.
-        if (!interactive && job_wants_message(j)) {
-            continue;
-        }
+        if (!should_process_job(j)) continue;
 
         // Clean processes within the job.
         // Note this may print the message on behalf of the job, affecting the result of
@@ -596,9 +596,11 @@ static bool process_clean_after_marking(parser_t &parser, bool allow_interactive
     // Remove completed jobs.
     // Do this before calling out to user code in the event handler below, to ensure an event
     // handler doesn't remove jobs on our behalf.
-    auto is_complete = [](const shared_ptr<job_t> &j) { return j->is_completed(); };
+    auto should_remove = [&](const shared_ptr<job_t> &j) {
+        return should_process_job(j) && j->is_completed();
+    };
     auto &jobs = parser.jobs();
-    jobs.erase(std::remove_if(jobs.begin(), jobs.end(), is_complete), jobs.end());
+    jobs.erase(std::remove_if(jobs.begin(), jobs.end(), should_remove), jobs.end());
 
     // Post pending exit events.
     for (const auto &evt : exit_events) {

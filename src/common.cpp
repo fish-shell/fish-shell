@@ -1230,11 +1230,11 @@ wcstring debug_escape(const wcstring &in) {
             TEST(BRACE_SPACE)
             TEST(INTERNAL_SEPARATOR)
             TEST(VARIABLE_EXPAND_EMPTY)
-            TEST(EXPAND_SENTINAL)
+            TEST(EXPAND_SENTINEL)
             TEST(ANY_CHAR)
             TEST(ANY_STRING)
             TEST(ANY_STRING_RECURSIVE)
-            TEST(ANY_SENTINAL)
+            TEST(ANY_SENTINEL)
             default:
                 append_format(result, L"<\\x%02x>", c);
                 break;

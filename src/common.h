@@ -736,7 +736,7 @@ struct enum_map {
     const wchar_t *const str;
 };
 
-/// Given a string return the matching enum. Return the sentinal enum if no match is made. The map
+/// Given a string return the matching enum. Return the sentinel enum if no match is made. The map
 /// must be sorted by the `str` member. A binary search is twice as fast as a linear search with 16
 /// elements in the map.
 template <typename T>

@@ -2,11 +2,17 @@
 #
 # Test signal handling for interactive shells.
 
+set pid [spawn $fish]
+expect_prompt
+
+send_line "function stuffs --on-signal INT; echo SIGINT spotted; end"
+expect_prompt
+exec -- kill -INT $pid
+expect "SIGINT spotted"
+
 # Verify that sending SIGHUP to the shell, such as will happen when the tty is
 # closed by the terminal, terminates the shell and the foreground command and
 # any background commands run from that shell.
-set pid [spawn $fish]
-expect_prompt
 send "sleep 130 &\r"
 expect_prompt
 send "sleep 131 &\r"

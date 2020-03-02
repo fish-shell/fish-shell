@@ -860,6 +860,7 @@ static bool terminal_return_from_job(job_t *j, int restore_attrs) {
         return true;
     }
 
+    FLOG(proc_pgroup, "fish reclaiming terminal after job pgid", j->pgid);
     if (tcsetpgrp(STDIN_FILENO, getpgrp()) == -1) {
         if (errno == ENOTTY) redirect_tty_output();
         FLOGF(warning, _(L"Could not return shell to foreground"));

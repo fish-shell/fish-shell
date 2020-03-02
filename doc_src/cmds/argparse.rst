@@ -114,7 +114,7 @@ Sometimes you need to validate the option values. For example, that it is a vali
 
 - ``_flag_value`` will be set to the value associated with the flag being processed.
 
-If you do this via a function it should be defined with the ``--no-scope-shadowing`` flag. Otherwise it won't have access to those variables.
+These variables are passed to the function as local exported variables.
 
 The script should write any error messages to stdout, not stderr. It should return a status of zero if the flag value is valid otherwise a non-zero status to indicate it is invalid.
 

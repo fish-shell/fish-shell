@@ -28,7 +28,7 @@ SRC_DIR=$PWD
 OUTPUT_PATH=${FISH_ARTEFACT_PATH:-~/fish_built}
 
 mkdir -p "$PKGDIR/build" "$PKGDIR/root" "$PKGDIR/intermediates" "$PKGDIR/dst"
-{ cd "$PKGDIR/build" && cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DMAC_CODESIGN_ID="${MAC_CODESIGN_ID}" "$SRC_DIR" && make -j 12 && env DESTDIR="$PKGDIR/root/" make install; }
+{ cd "$PKGDIR/build" && cmake -DMAC_INJECT_GET_TASK_ALLOW=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DMAC_CODESIGN_ID="${MAC_CODESIGN_ID}" "$SRC_DIR" && make -j 12 && env DESTDIR="$PKGDIR/root/" make install; }
 pkgbuild --scripts "$SRC_DIR/build_tools/osx_package_scripts" --root "$PKGDIR/root/" --identifier 'com.ridiculousfish.fish-shell-pkg' --version "$VERSION" "$PKGDIR/intermediates/fish.pkg"
 productbuild  --package-path "$PKGDIR/intermediates" --distribution "$SRC_DIR/build_tools/osx_distribution.xml" --resources "$SRC_DIR/build_tools/osx_package_resources/" "$OUTPUT_PATH/fish-$VERSION.pkg"
 productsign --sign "${MAC_PRODUCTSIGN_ID}" "$OUTPUT_PATH/fish-$VERSION.pkg" "$OUTPUT_PATH/fish-$VERSION-signed.pkg" && mv "$OUTPUT_PATH/fish-$VERSION-signed.pkg" "$OUTPUT_PATH/fish-$VERSION.pkg"

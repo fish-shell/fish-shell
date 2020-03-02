@@ -457,13 +457,13 @@ static int validate_arg(parser_t &parser, const argparse_cmd_opts_t &opts, optio
     auto &vars = parser.vars();
 
     vars.push(true);
-    vars.set_one(L"_argparse_cmd", ENV_LOCAL, opts.name);
+    vars.set_one(L"_argparse_cmd", ENV_LOCAL | ENV_EXPORT, opts.name);
     if (is_long_flag) {
-        vars.set_one(var_name_prefix + L"name", ENV_LOCAL, opt_spec->long_flag);
+        vars.set_one(var_name_prefix + L"name", ENV_LOCAL | ENV_EXPORT, opt_spec->long_flag);
     } else {
-        vars.set_one(var_name_prefix + L"name", ENV_LOCAL, wcstring(1, opt_spec->short_flag));
+        vars.set_one(var_name_prefix + L"name", ENV_LOCAL | ENV_EXPORT, wcstring(1, opt_spec->short_flag));
     }
-    vars.set_one(var_name_prefix + L"value", ENV_LOCAL, woptarg);
+    vars.set_one(var_name_prefix + L"value", ENV_LOCAL | ENV_EXPORT, woptarg);
 
     int retval = exec_subshell(opt_spec->validation_command, parser, cmd_output, false);
     for (const auto &output : cmd_output) {

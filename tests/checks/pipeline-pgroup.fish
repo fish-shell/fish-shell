@@ -35,3 +35,15 @@ end
 and echo "All pgroups agreed"
 or echo "Pgroups disagreed. Found $a0 $a1 $a2, and $b0 $b1 $b2"
 # CHECK: All pgroups agreed
+
+# Ensure that if a background job launches another background job, that they have different pgroups.
+# The pipeline here will arrange for the two pgroups to be printed on the same line, like:
+#   123 124
+# Our regex will capture the first pgroup and use a negative lookahead on the second.
+status job-control full
+$fth print_pgrp | begin
+    tr \n ' '
+    $fth print_pgrp &
+end &
+wait
+# CHECK: {{(\d+) (?!\1)\d+}}

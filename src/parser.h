@@ -376,6 +376,9 @@ class parser_t : public std::enable_shared_from_this<parser_t> {
     void get_backtrace(const wcstring &src, const parse_error_list_t &errors,
                        wcstring &output) const;
 
+    /// \return the signal triggering cancellation, or 0 if none.
+    int get_cancel_signal() const { return cancellation_signal; }
+
     /// Output profiling data to the given filename.
     void emit_profiling(const char *path) const;
 

@@ -96,7 +96,7 @@ enum : wchar_t {
     VARIABLE_EXPAND_EMPTY,
     /// This is a special pseudo-char that is not used other than to mark the end of the the special
     /// characters so we can sanity check the enum range.
-    EXPAND_SENTINAL
+    EXPAND_SENTINEL
 };
 
 /// These are the possible return values for expand_string.

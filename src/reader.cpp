@@ -1963,7 +1963,9 @@ void reader_data_t::set_command_line_and_position(editable_line_t *el, wcstring 
 
 /// Undo the transient edit und update commandline accordingly.
 void reader_data_t::clear_transient_edit() {
-    assert(command_line_has_transient_edit);
+    if (!command_line_has_transient_edit) {
+        return;
+    }
     command_line.undo();
     update_buff_pos(&command_line);
     command_line_changed(&command_line);
@@ -3653,7 +3655,7 @@ bool reader_get_selection(size_t *start, size_t *len) {
     reader_data_t *data = current_data_or_null();
     if (data != nullptr && data->sel_active) {
         *start = data->sel_start_pos;
-        *len = std::min(data->sel_stop_pos - data->sel_start_pos, data->command_line.size());
+        *len = std::min(data->sel_stop_pos, data->command_line.size()) - data->sel_start_pos;
         result = true;
     }
     return result;

@@ -19,7 +19,7 @@ enum {
     ANY_STRING_RECURSIVE,
     /// This is a special pseudo-char that is not used other than to mark the
     /// end of the the special characters so we can sanity check the enum range.
-    ANY_SENTINAL
+    ANY_SENTINEL
 };
 
 /// Expand the wildcard by matching against the filesystem.

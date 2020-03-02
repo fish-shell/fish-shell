@@ -1,7 +1,5 @@
 # RUN: env fth=%fish_test_helper %fish %s
 
-status job-control full
-
 # Ensure that lots of nested jobs all end up in the same pgroup.
 
 function save_pgroup -a var_name

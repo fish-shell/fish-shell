@@ -29,6 +29,9 @@ endif()
 # Copy littlecheck.py
 configure_file(build_tools/littlecheck.py littlecheck.py COPYONLY)
 
+# Copy pexpect_helper.py
+configure_file(build_tools/pexpect_helper.py pexpect_helper.py COPYONLY)
+
 # Make the directory in which to run tests.
 # Also symlink fish to where the tests expect it to be.
 # Lastly put fish_test_helper there too.

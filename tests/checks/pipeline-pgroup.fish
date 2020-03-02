@@ -43,7 +43,8 @@ or echo "Pgroups disagreed. Found $a0 $a1 $a2, and $b0 $b1 $b2"
 status job-control full
 $fth print_pgrp | begin
     tr \n ' '
-    $fth print_pgrp &
+    $fth print_pgrp | tr \n ' ' &
 end &
 wait
+echo
 # CHECK: {{(\d+) (?!\1)\d+}}

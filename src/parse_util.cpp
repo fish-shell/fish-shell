@@ -677,6 +677,12 @@ std::vector<int> parse_util_compute_indents(const wcstring &src) {
     const size_t src_size = src.size();
     std::vector<int> indents(src_size, -1);
 
+    // Simple trick: if our source does not contain a newline, then all indents are 0.
+    if (src.find('\n') == wcstring::npos) {
+        std::fill(indents.begin(), indents.end(), 0);
+        return indents;
+    }
+
     // Parse the string. We pass continue_after_error to produce a forest; the trailing indent of
     // the last node we visited becomes the input indent of the next. I.e. in the case of 'switch
     // foo ; cas', we get an invalid parse tree (since 'cas' is not valid) but we indent it as if it

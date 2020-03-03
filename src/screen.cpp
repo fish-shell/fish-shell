@@ -1000,6 +1000,8 @@ void s_write(screen_t *s, const wcstring &left_prompt, const wcstring &right_pro
              const wcstring &commandline, size_t explicit_len,
              const std::vector<highlight_spec_t> &colors, const std::vector<int> &indent,
              size_t cursor_pos, const page_rendering_t &pager, bool cursor_is_within_pager) {
+    static relaxed_atomic_t<uint32_t> s_repaints{0};
+    FLOGF(screen, "Repaint %u", (unsigned)++s_repaints);
     screen_data_t::cursor_t cursor_arr;
 
     // Turn the command line into the explicit portion and the autosuggestion.

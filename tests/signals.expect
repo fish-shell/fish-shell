@@ -7,6 +7,7 @@ expect_prompt
 
 send_line "function stuffs --on-signal INT; echo SIGINT spotted; end"
 expect_prompt
+after 20
 exec -- kill -INT $pid
 expect "SIGINT spotted"
 

@@ -2572,8 +2572,24 @@ maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rl
         }
     }
 
+    // If we are in bracketed paste mode, only insert spaces if we're either quoted or not
+    // at the beginning of the commandline. This strips leading spaces if they would trigger histignore.
+    // See also the paste bindings in __fish_shared_key_bindings where __fish_paste_quoted is set.
+    static const wcstring var_fish_paste_quoted = L"__fish_paste_quoted";
+    static const wcstring var_fish_bind_mode = FISH_BIND_MODE_VAR;
+    size_t pasted_spaces = 0;
+    if (auto bind_mode = parser().vars().get(var_fish_bind_mode)) {
+        const auto &bm = bind_mode->as_list();
+        if (!bm.empty() && bm.at(0) == L"paste" && command_line.position() == 0 &&
+            parser().vars().get(var_fish_paste_quoted).missing_or_empty()) {
+            while (arr[pasted_spaces] != L'\0' && arr[pasted_spaces] == L' ') {
+                pasted_spaces++;
+            }
+        }
+    }
+
     editable_line_t *el = active_edit_line();
-    insert_string(el, arr);
+    insert_string(el, arr + pasted_spaces);
 
     // End paging upon inserting into the normal command line.
     if (el == &command_line) {

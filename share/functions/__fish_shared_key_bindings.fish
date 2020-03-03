@@ -159,9 +159,6 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # into one literal token, to facilitate pasting non-code (e.g. markdown or git commitishes)
     bind --preset -M paste "'" "__fish_commandline_insert_escaped \' \$__fish_paste_quoted"
     bind --preset -M paste \\ "__fish_commandline_insert_escaped \\\ \$__fish_paste_quoted"
-    # Only insert spaces if we're either quoted or not at the beginning of the commandline
-    # - this strips leading spaces if they would trigger histignore.
-    bind --preset -M paste \  'if set -q __fish_paste_quoted[1]; or string length -q -- (commandline -c); commandline -i " "; end'
 end
 
 function __fish_commandline_insert_escaped --description 'Insert the first arg escaped if a second arg is given'

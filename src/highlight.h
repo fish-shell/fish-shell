@@ -126,6 +126,6 @@ enum {
 };
 typedef unsigned int path_flags_t;
 bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_list_t &directories,
-                       const environment_t &vars, path_flags_t flags);
+                       const operation_context_t &ctx, path_flags_t flags);
 
 #endif

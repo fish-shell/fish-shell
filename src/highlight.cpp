@@ -204,8 +204,10 @@ bool fs_is_case_insensitive(const wcstring &path, int fd,
 ///
 /// We expect the path to already be unescaped.
 bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_list_t &directories,
-                       const environment_t &vars, path_flags_t flags) {
+                       const operation_context_t &ctx, path_flags_t flags) {
     ASSERT_IS_BACKGROUND_THREAD();
+
+    if (ctx.check_cancel()) return false;
 
     const bool require_dir = static_cast<bool>(flags & PATH_REQUIRE_DIR);
     wcstring clean_potential_path_fragment;
@@ -213,7 +215,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
     bool result = false;
 
     wcstring path_with_magic(potential_path_fragment);
-    if (flags & PATH_EXPAND_TILDE) expand_tilde(path_with_magic, vars);
+    if (flags & PATH_EXPAND_TILDE) expand_tilde(path_with_magic, ctx.vars);
 
     for (auto c : path_with_magic) {
         switch (c) {
@@ -250,9 +252,8 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
     // Keep a cache of which paths / filesystems are case sensitive.
     case_sensitivity_cache_t case_sensitivity_cache;
 
-    for (size_t wd_idx = 0; wd_idx < directories.size() && !result; wd_idx++) {
-        const wcstring &wd = directories.at(wd_idx);
-
+    for (const wcstring &wd : directories) {
+        if (ctx.check_cancel()) return false;
         const wcstring abs_path = path_apply_working_directory(clean_potential_path_fragment, wd);
 
         // Skip this if it's empty or we've already checked it.
@@ -275,6 +276,8 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
                 // cd ///.... No autosuggestion.
                 result = true;
             } else if ((dir = wopendir(dir_name))) {
+                cleanup_t cleanup_dir([&] { closedir(dir); });
+
                 // Check if we're case insensitive.
                 const bool do_case_insensitive =
                     fs_is_case_insensitive(dir_name, dirfd(dir), case_sensitivity_cache);
@@ -287,6 +290,8 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
                 wcstring ent;
                 bool is_dir = false;
                 while (wreaddir_resolving(dir, dir_name, ent, require_dir ? &is_dir : nullptr)) {
+                    if (ctx.check_cancel()) return false;
+
                     // Maybe skip directories.
                     if (require_dir && !is_dir) {
                         continue;
@@ -299,7 +304,6 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
                         break;
                     }
                 }
-                closedir(dir);
 
                 result = !matched_file.empty();  // we succeeded if we found a match
             }
@@ -312,7 +316,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
 // Given a string, return whether it prefixes a path that we could cd into. Return that path in
 // out_path. Expects path to be unescaped.
 static bool is_potential_cd_path(const wcstring &path, const wcstring &working_directory,
-                                 const environment_t &vars, path_flags_t flags) {
+                                 const operation_context_t &ctx, path_flags_t flags) {
     wcstring_list_t directories;
 
     if (string_prefixes_string(L"./", path)) {
@@ -320,7 +324,7 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
         directories.push_back(working_directory);
     } else {
         // Get the CDPATH.
-        auto cdpath = vars.get(L"CDPATH");
+        auto cdpath = ctx.vars.get(L"CDPATH");
         wcstring_list_t pathsv =
             cdpath.missing_or_empty() ? wcstring_list_t{L"."} : cdpath->as_list();
 
@@ -332,7 +336,7 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
     }
 
     // Call is_potential_path with all of these directories.
-    return is_potential_path(path, directories, vars, flags | PATH_REQUIRE_DIR);
+    return is_potential_path(path, directories, ctx, flags | PATH_REQUIRE_DIR);
 }
 
 // Given a plain statement node in a parse tree, get the command and return it, expanded
@@ -905,7 +909,8 @@ void highlighter_t::color_argument(tnode_t<g::tok_string> node) {
 /// Indicates whether the source range of the given node forms a valid path in the given
 /// working_directory.
 static bool node_is_potential_path(const wcstring &src, const parse_node_t &node,
-                                   const environment_t &vars, const wcstring &working_directory) {
+                                   const operation_context_t &ctx,
+                                   const wcstring &working_directory) {
     if (!node.has_source()) return false;
 
     // Get the node source, unescape it, and then pass it to is_potential_path along with the
@@ -918,7 +923,7 @@ static bool node_is_potential_path(const wcstring &src, const parse_node_t &node
         if (!token.empty() && token.at(0) == HOME_DIRECTORY) token.at(0) = L'~';
 
         const wcstring_list_t working_directory_list(1, working_directory);
-        result = is_potential_path(token, working_directory_list, vars, PATH_EXPAND_TILDE);
+        result = is_potential_path(token, working_directory_list, ctx, PATH_EXPAND_TILDE);
     }
     return result;
 }
@@ -948,7 +953,7 @@ void highlighter_t::color_arguments(const std::vector<tnode_t<g::argument>> &arg
                 bool is_help = string_prefixes_string(param, L"--help") ||
                                string_prefixes_string(param, L"-h");
                 if (!is_help && this->io_ok &&
-                    !is_potential_cd_path(param, working_directory, ctx.vars, PATH_EXPAND_TILDE)) {
+                    !is_potential_cd_path(param, working_directory, ctx, PATH_EXPAND_TILDE)) {
                     this->color_node(arg, highlight_role_t::error);
                 }
             }
@@ -1301,7 +1306,7 @@ highlighter_t::color_array_t highlighter_t::highlight() {
         if (ctx.check_cancel()) return std::move(color_array);
 
         // Underline every valid path.
-        if (node_is_potential_path(buff, node, ctx.vars, working_directory)) {
+        if (node_is_potential_path(buff, node, ctx, working_directory)) {
             // It is, underline it.
             for (size_t i = node.source_start; i < node.source_start + node.source_length; i++) {
                 // Don't color highlight_role_t::error because it looks dorky. For example,

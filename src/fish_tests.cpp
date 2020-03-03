@@ -2356,26 +2356,26 @@ static void test_is_potential_path() {
     const wcstring wd = L"test/is_potential_path_test/";
     const wcstring_list_t wds({L".", wd});
 
-    const auto &vars = env_stack_t::principal();
-    do_test(is_potential_path(L"al", wds, vars, PATH_REQUIRE_DIR));
-    do_test(is_potential_path(L"alpha/", wds, vars, PATH_REQUIRE_DIR));
-    do_test(is_potential_path(L"aard", wds, vars, 0));
+    operation_context_t ctx{env_stack_t::principal()};
+    do_test(is_potential_path(L"al", wds, ctx, PATH_REQUIRE_DIR));
+    do_test(is_potential_path(L"alpha/", wds, ctx, PATH_REQUIRE_DIR));
+    do_test(is_potential_path(L"aard", wds, ctx, 0));
 
-    do_test(!is_potential_path(L"balpha/", wds, vars, PATH_REQUIRE_DIR));
-    do_test(!is_potential_path(L"aard", wds, vars, PATH_REQUIRE_DIR));
-    do_test(!is_potential_path(L"aarde", wds, vars, PATH_REQUIRE_DIR));
-    do_test(!is_potential_path(L"aarde", wds, vars, 0));
+    do_test(!is_potential_path(L"balpha/", wds, ctx, PATH_REQUIRE_DIR));
+    do_test(!is_potential_path(L"aard", wds, ctx, PATH_REQUIRE_DIR));
+    do_test(!is_potential_path(L"aarde", wds, ctx, PATH_REQUIRE_DIR));
+    do_test(!is_potential_path(L"aarde", wds, ctx, 0));
 
-    do_test(is_potential_path(L"test/is_potential_path_test/aardvark", wds, vars, 0));
-    do_test(is_potential_path(L"test/is_potential_path_test/al", wds, vars, PATH_REQUIRE_DIR));
-    do_test(is_potential_path(L"test/is_potential_path_test/aardv", wds, vars, 0));
+    do_test(is_potential_path(L"test/is_potential_path_test/aardvark", wds, ctx, 0));
+    do_test(is_potential_path(L"test/is_potential_path_test/al", wds, ctx, PATH_REQUIRE_DIR));
+    do_test(is_potential_path(L"test/is_potential_path_test/aardv", wds, ctx, 0));
 
     do_test(
-        !is_potential_path(L"test/is_potential_path_test/aardvark", wds, vars, PATH_REQUIRE_DIR));
-    do_test(!is_potential_path(L"test/is_potential_path_test/al/", wds, vars, 0));
-    do_test(!is_potential_path(L"test/is_potential_path_test/ar", wds, vars, 0));
+        !is_potential_path(L"test/is_potential_path_test/aardvark", wds, ctx, PATH_REQUIRE_DIR));
+    do_test(!is_potential_path(L"test/is_potential_path_test/al/", wds, ctx, 0));
+    do_test(!is_potential_path(L"test/is_potential_path_test/ar", wds, ctx, 0));
 
-    do_test(is_potential_path(L"/usr", wds, vars, PATH_REQUIRE_DIR));
+    do_test(is_potential_path(L"/usr", wds, ctx, PATH_REQUIRE_DIR));
 }
 
 /// Test the 'test' builtin.

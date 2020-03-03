@@ -398,6 +398,19 @@ Autoloading is not applicable to functions created by the ``alias`` command. For
 
 If you are developing another program, you may wish to install functions which are available for all users of the fish shell on a system. They can be installed to the "vendor" functions directory. As this path may vary from system to system, the ``pkgconfig`` framework should be used to discover this path with the output of ``pkg-config --variable functionsdir fish``. Your installation system should support a custom path to override the pkgconfig path, as other distributors may need to alter it easily.
 
+.. _abbreviations:
+
+Abbreviations
+-------------
+
+To avoid needless typing, a frequently-run command like ``git checkout`` can be abbreviated to ``gco`` using the :ref:`abbr <cmd-abbr>` command.
+
+::
+
+  abbr -a gco git checkout
+
+After entering ``gco`` and pressing :kbd:`Space` or :kbd:`Enter`, the full text ``git checkout`` will appear in the command line.
+
 .. _syntax-conditional:
 
 Conditional execution of code and flow control

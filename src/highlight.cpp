@@ -1152,6 +1152,7 @@ highlighter_t::color_array_t highlighter_t::highlight() {
 
     // Walk the node tree.
     for (const parse_node_t &node : parse_tree) {
+        if (ctx.check_cancel()) return std::move(color_array);
         switch (node.type) {
             // Color direct string descendants, e.g. 'for' and 'in'.
             case symbol_while_header:
@@ -1296,6 +1297,8 @@ highlighter_t::color_array_t highlighter_t::highlight() {
     for (const auto &node : parse_tree) {
         // Must be an argument with source.
         if (node.type != symbol_argument || !node.has_source()) continue;
+
+        if (ctx.check_cancel()) return std::move(color_array);
 
         // Underline every valid path.
         if (node_is_potential_path(buff, node, ctx.vars, working_directory)) {

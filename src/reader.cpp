@@ -2357,8 +2357,6 @@ static bool text_ends_in_comment(const wcstring &text) {
 /// \return true if an event is a normal character that should be inserted into the buffer.
 static bool event_is_normal_char(const char_event_t &evt) {
     if (!evt.is_char()) return false;
-    // Non-normal insertion styles are treated as a non-normal character.
-    if (evt.input_style != char_event_t::style_normal) return false;
     auto c = evt.get_char();
     return !fish_reserved_codepoint(c) && c > 31 && c != 127;
 }
@@ -2393,47 +2391,36 @@ struct readline_loop_state_t {
 /// Read normal characters, inserting them into the command line.
 /// \return the next unhandled event.
 maybe_t<char_event_t> reader_data_t::read_normal_chars(readline_loop_state_t &rls) {
-    maybe_t<char_event_t> event_needing_handling = inputter.readch();
-
-    if (!event_is_normal_char(*event_needing_handling) || !can_read(STDIN_FILENO))
-        return event_needing_handling;
-
-    // This is a normal character input.
-    // We are going to handle it directly, accumulating more.
-    char_event_t evt = event_needing_handling.acquire();
+    maybe_t<char_event_t> event_needing_handling{};
+    wcstring accumulated_chars;
     size_t limit = std::min(rls.nchars - command_line.size(), READAHEAD_MAX);
-
-    wchar_t arr[READAHEAD_MAX + 1] = {};
-    arr[0] = evt.get_char();
-
-    for (size_t i = 1; i < limit; ++i) {
-        if (!can_read(0)) {
+    while (accumulated_chars.size() < limit) {
+        bool allow_commands = (accumulated_chars.empty());
+        auto evt = inputter.readch(allow_commands);
+        if (!event_is_normal_char(evt) || !can_read(STDIN_FILENO)) {
+            event_needing_handling = std::move(evt);
             break;
-        }
-        // Only allow commands on the first key; otherwise, we might have data we
-        // need to insert on the commandline that the command might need to be able
-        // to see.
-        auto next_event = inputter.readch(false);
-        if (event_is_normal_char(next_event)) {
-            arr[i] = next_event.get_char();
+        } else if (evt.input_style == char_event_t::style_notfirst && accumulated_chars.empty() &&
+                   active_edit_line()->position == 0) {
+            // The cursor is at the beginning and nothing is accumulated, so skip this character.
+            continue;
         } else {
-            // We need to process this in the outer loop.
-            assert(!event_needing_handling && "Should not have an unhandled event");
-            event_needing_handling = next_event;
-            break;
+            accumulated_chars.push_back(evt.get_char());
         }
     }
 
-    editable_line_t *el = active_edit_line();
-    insert_string(el, arr);
+    if (!accumulated_chars.empty()) {
+        editable_line_t *el = active_edit_line();
+        insert_string(el, accumulated_chars);
 
-    // End paging upon inserting into the normal command line.
-    if (el == &command_line) {
-        clear_pager();
+        // End paging upon inserting into the normal command line.
+        if (el == &command_line) {
+            clear_pager();
+        }
+
+        // Since we handled a normal character, we don't have a last command.
+        rls.last_cmd.reset();
     }
-
-    // Since we handled a normal character, we don't have a last command.
-    rls.last_cmd.reset();
     return event_needing_handling;
 }
 

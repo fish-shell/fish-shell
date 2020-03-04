@@ -299,3 +299,15 @@ expect_prompt -re {nul seen\r\nnul seen\r\nnul seen} {
 } unmatched {
     puts stderr "nul not seen"
 }
+
+# Test self-insert-notfirst. (#6603)
+# Here the leading 'q's should be stripped, but the trailing ones not.
+send "bind q self-insert-notfirst\r"
+expect_prompt
+send "qqqecho qqq"
+send "\r"
+expect_prompt -re {qqq} {
+    puts "Leading q properly stripped"
+} unmatched {
+    puts stderr "Leading qs not stripped"
+}

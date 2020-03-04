@@ -2357,6 +2357,8 @@ static bool text_ends_in_comment(const wcstring &text) {
 /// \return true if an event is a normal character that should be inserted into the buffer.
 static bool event_is_normal_char(const char_event_t &evt) {
     if (!evt.is_char()) return false;
+    // Non-normal insertion styles are treated as a non-normal character.
+    if (evt.input_style != char_event_t::style_normal) return false;
     auto c = evt.get_char();
     return !fish_reserved_codepoint(c) && c > 31 && c != 127;
 }
@@ -3298,8 +3300,11 @@ maybe_t<wcstring> reader_data_t::readline(int nchars_or_0) {
         } else {
             // Ordinary char.
             wchar_t c = event_needing_handling->get_char();
-            if (!fish_reserved_codepoint(c) && (c >= L' ' || c == L'\n' || c == L'\r') &&
-                c != 0x7F) {
+            if (event_needing_handling->input_style == char_event_t::style_notfirst &&
+                active_edit_line()->position == 0) {
+                // This character is skipped.
+            } else if (!fish_reserved_codepoint(c) && (c >= L' ' || c == L'\n' || c == L'\r') &&
+                       c != 0x7F) {
                 // Regular character.
                 editable_line_t *el = active_edit_line();
                 insert_char(active_edit_line(), c);

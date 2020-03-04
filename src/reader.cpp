@@ -1060,6 +1060,7 @@ static bool command_ends_paging(readline_cmd_t c, bool focused_on_search_field) 
         case rl::backward_kill_path_component:
         case rl::backward_kill_bigword:
         case rl::self_insert:
+        case rl::self_insert_notfirst:
         case rl::transpose_chars:
         case rl::transpose_words:
         case rl::upcase_word:
@@ -3179,12 +3180,11 @@ void reader_data_t::handle_readline_command(readline_cmd_t c, readline_loop_stat
             }
             break;
         }
-            // Some commands should have been handled internally by input_readch().
-        case rl::self_insert: {
-            DIE("self-insert should have been handled by inputter_t::readch");
-        }
+            // Some commands should have been handled internally by inputter_t::readch().
+        case rl::self_insert:
+        case rl::self_insert_notfirst:
         case rl::func_and: {
-            DIE("self-insert should have been handled by inputter_t::readch");
+            DIE("should have been handled by inputter_t::readch");
         }
     }
 }

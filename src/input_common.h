@@ -42,6 +42,7 @@ enum class readline_cmd_t {
     history_token_search_backward,
     history_token_search_forward,
     self_insert,
+    self_insert_notfirst,
     transpose_chars,
     transpose_words,
     upcase_word,
@@ -108,6 +109,17 @@ class char_event_t {
    public:
     /// The type of event.
     char_event_type_t type;
+
+    /// Hackish: the input style, which describes how char events (only) are applied to the command
+    /// line. Note this is set only after applying bindings; it is not set from readb().
+    enum input_style_t : uint8_t {
+        // Insert characters normally.
+        style_normal,
+
+        // Insert characters only if the cursor is not at the beginning. Otherwise, discard them.
+        style_notfirst,
+    };
+    input_style_t input_style{style_normal};
 
     /// The sequence of characters in the input mapping which generated this event.
     /// Note that the generic self-insert case does not have any characters, so this would be empty.

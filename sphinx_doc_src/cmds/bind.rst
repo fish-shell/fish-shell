@@ -162,6 +162,10 @@ The following special input functions are available:
 
 - ``repaint-mode`` reexecutes the fish_mode_prompt function and redraws the prompt. This is useful for vi-mode. If no fish_mode_prompt exists, it acts like a normal repaint.
 
+- ``self-insert``, inserts the matching sequence into the command line
+
+- ``self-insert-notfirst``, inserts the matching sequence into the command line, unless the cursor is at the beginning
+
 - ``suppress-autosuggestion``, remove the current autosuggestion
 
 - ``swap-selection-start-stop``, go to the other end of the highlighted text without changing the selection

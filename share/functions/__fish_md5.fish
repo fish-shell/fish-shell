@@ -1,4 +1,4 @@
-function fish_md5
+function __fish_md5
     if type -q md5sum
         # GNU systems
         if set -q argv[2]

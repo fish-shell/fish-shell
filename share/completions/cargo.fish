@@ -9,8 +9,8 @@ complete -c cargo -s q -l quiet -d 'No output printed to stdout'
 
 set -l __fish_cargo_subcommands (cargo --list 2>&1 | string replace -rf '^\s+([^\s]+)\s+(.*)' '$1\t$2')
 
-complete -c cargo -f -c cargo -n '__fish_use_subcommand' -a "$__fish_cargo_subcommands"
-complete -c cargo -x -c cargo -n '__fish_seen_subcommand_from help' -a "$__fish_cargo_subcommands"
+complete -c cargo -f -c cargo -n '__fish_use_subcommand' -a '$__fish_cargo_subcommands'
+complete -c cargo -x -c cargo -n '__fish_seen_subcommand_from help' -a '$__fish_cargo_subcommands'
 
 for x in bench build clean doc fetch generate-lockfile \
     locate-project package pkgid publish \
